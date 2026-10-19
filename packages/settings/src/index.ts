@@ -9,5 +9,7 @@ export * from './resolver';
 export * from './prisma-backend';
 export * from './sync';
 export * from './admin';
+export * from './owner-data';
+export * from './schemas';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

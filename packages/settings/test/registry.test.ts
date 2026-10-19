@@ -1,6 +1,16 @@
 // Pure checks on the registry: no database.
 import { describe, expect, it } from 'vitest';
-import { constraintsOf, definitionColumns, lookup, messages, registry, registryVersion } from '../src';
+import {
+  constraintsOf,
+  definitionColumns,
+  lookup,
+  messages,
+  ownerSettingKeys,
+  registry,
+  registryVersion,
+  tokensOf,
+  underOwnerPrefix,
+} from '../src';
 
 const entries = Object.entries(registry);
 
@@ -43,11 +53,48 @@ describe('settings registry (PR 491)', () => {
     for (const [key, spec] of entries) if (spec.isOwnerData) expect(spec.default, key).toBeNull();
   });
 
-  it('holds no business numbers or secrets (nothing priced, no vault references yet)', () => {
+  it('money rule (CLAUDE.md rule 6): every money setting and every owner decision ships empty and needs his OK', () => {
     for (const [key, spec] of entries) {
-      expect(['MONEY_MINOR', 'SECRET_REF']).not.toContain(spec.valueType);
-      expect(spec.requiresOwnerOk ?? false, key).toBe(false);
+      if (spec.valueType === 'MONEY_MINOR') expect(spec.requiresOwnerOk, key).toBe(true);
+      if (spec.requiresOwnerOk) {
+        // An owner decision is the owner's own data (real prices and charges are owner data, App. B.4 #13).
+        expect(spec.isOwnerData, key).toBe(true);
+        expect(spec.default, key).toBeNull();
+      }
     }
+    expect(entries.filter(([, s]) => s.valueType === 'MONEY_MINOR').map(([k]) => k)).toEqual(
+      expect.arrayContaining(['delivery.freeOverMinor', 'ai.monthlyCapMinor']),
+    );
+  });
+
+  it('holds no vault references yet (keys live in the vault, PR 493)', () => {
+    for (const [, spec] of entries) expect(spec.valueType).not.toBe('SECRET_REF');
+  });
+
+  it('PR 509: every key under an owner prefix is declared as owner data', () => {
+    for (const [key, spec] of entries) if (underOwnerPrefix(key)) expect(spec.isOwnerData, key).toBe(true);
+    expect(ownerSettingKeys(registry)).toEqual(
+      expect.arrayContaining(['store.name', 'brand.logo', 'contact.phone', 'legal.dbid', 'social.facebook', 'payment.bank.accounts']),
+    );
+  });
+
+  it('PR 508: policy texts default to both languages and only name their own {tokens}', () => {
+    const exchange = registry['policy.exchange.summary'];
+    expect(tokensOf(exchange.default.en)).toEqual(['windowHours']);
+    expect(tokensOf(exchange.default.bn)).toEqual(['windowHours']);
+    expect(exchange.schema.safeParse({ en: 'Within {windowHours} hours', bn: '{windowHours} ঘণ্টা' }).success).toBe(true);
+    expect(exchange.schema.safeParse({ en: 'Pay {chargeInside}', bn: 'x' }).success).toBe(false);
+    expect(registry['policy.orderEdit.summary'].schema.safeParse(registry['policy.orderEdit.summary'].default).success).toBe(true);
+  });
+
+  it('validates phones, links and wallet numbers', () => {
+    expect(registry['contact.phone'].schema.safeParse('+8801000000000').success).toBe(true);
+    expect(registry['contact.phone'].schema.safeParse('017 not a number').success).toBe(false);
+    expect(registry['social.facebook'].schema.safeParse('https://example.com/page').success).toBe(true);
+    expect(registry['social.facebook'].schema.safeParse('http://example.com/page').success).toBe(false);
+    expect(registry['payment.wallet.numbers'].schema.safeParse([{ provider: 'mock', number: '+8801000000000', kind: 'merchant' }]).success).toBe(true);
+    expect(registry['theme.preset'].schema.safeParse('noir').success).toBe(true);
+    expect(registry['theme.preset'].schema.safeParse('neon').success).toBe(false);
   });
 
   it('validates locale, time zone, currency and host', () => {

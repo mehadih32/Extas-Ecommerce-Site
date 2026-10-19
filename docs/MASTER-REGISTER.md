@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 15/19 · total 27/598**
+**Progress: S0A 12/12 · S00 18/19 · total 30/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -62,6 +62,9 @@ the server.*
 | 15 | S00 | merged | 2026-10-20 | `packages/auth`: staff login (e-mail + password, scrypt hash, wrong-try pause, login alerts), customer password login per store; opaque session tokens stored hashed in httpOnly `__Host-` cookies, idle and total time limits, device list, "log out everywhere"; 2FA by authenticator app (seed in the vault, owner setting, default off); every rule a `security.*` setting; first owner set up on the server (`auth create-owner`), no owner data in the repo. SMS code on a new device comes with PR 130 |
 | 16 | S00 | merged | 2026-10-20 | permission check on every admin action on the server (`guardAdmin` + the auth functions themselves), per store or for every store; `/api/admin/settings` now needs `settings.read`; changes to staff and roles written to the append-only audit log (who, when, from where) |
 | 495 | S00 | merged | 2026-10-20 | role builder: permission catalogue in code, roles as data; seeded owner role always holds every permission and cannot be archived or stripped; nobody grants more than they hold; the last owner cannot be paused or removed; roles archived, never deleted; admin API under `/api/admin/roles`, `/staff`, `/permissions` (screens come with the admin shell) |
+| 509 | S00 | merged | 2026-10-20 | "My own data" register as data (`packages/settings/src/owner-data.ts`): owner settings (store name, logo, slogan, contact, legal, social, bank/wallet, every money setting and owner decision — no default), 5 key prefixes, 23 tables (vault, Dhaka area list, accounts, people, customers, orders), 2 columns, all media; mirrored into OwnerDataEntry on every settings sync. CI owner-data check (`pnpm --filter @extas/seed owner-data:check`) + installation export/import that leaves all of it out and refuses on any owner value |
+| 508 | S00 | merged | 2026-10-20 | general default pack (`packages/seed/data/default-pack.json`): garment types, 7 categories (hidden), 3 delivery bands (off, no charge), 14 SMS/WhatsApp/e-mail templates (Bengali + English, 2 SMS + 1 WhatsApp on, later steps off); policy, AI and theme settings in the registry; money and COD left empty for the owner; add-only, re-run changes nothing |
+| 14 | S00 | merged | 2026-10-20 | sample catalogue (`pnpm --filter @extas/seed sample`): the demo's 17 products, 17 colours, 10 sizes, 227 variants with stock, 7 size charts, collections, tags and one demo order, all in a "Sample" store with `storeId`; sample names, +88010 phone, example.com e-mail, demo sample prices; second run changes nothing (CI) |
 
 ## The stage table
 

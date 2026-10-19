@@ -7,6 +7,9 @@ import {
   describeSync,
   INSTALLATION,
   messages,
+  ownerDataRegister,
+  ownerDataRows,
+  ownerRowName,
   prismaBackend,
   registry,
   registryVersion,
@@ -33,7 +36,7 @@ describe('definition diff (pure)', () => {
       changed: [],
       retired: ['c.d'],
       restored: [],
-      ownerData: { added: [], archived: [], restored: [] },
+      ownerData: { added: [], archived: [], restored: [], updated: [] },
       recorded: true,
       warnings: [],
     });
@@ -47,8 +50,10 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
   let db: TestDatabase;
   let storeId: number;
   const keys = Object.keys(registry).sort();
-  // The registry's own version; the derived registries below are one, two and three versions ahead of it.
+  // Versions are relative to the registry this code ships, so adding settings never breaks these tests.
   const V = registryVersion(registry);
+  const ownerKeys = keys.filter((k) => registry[k as keyof typeof registry].isOwnerData);
+  const registerNames = ownerDataRows(messages).map(ownerRowName);
 
   const counts = async () => ({
     definitions: await db.prisma.settingDefinition.count(),
@@ -72,7 +77,10 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
     const r = await syncSettings(db.prisma, { registry, messages, appVersion: 'sha-one' });
     expect(r).toMatchObject({ status: 'applied', registryVersion: V, installationVersionBefore: 0, recorded: true });
     expect(r.added).toEqual(keys);
-    expect(r.ownerData.added).toEqual(['store.name']);
+    expect(r.ownerData.added).toEqual([...ownerKeys, ...registerNames]);
+    expect(ownerKeys).toContain('store.name');
+    expect(registerNames).toEqual(expect.arrayContaining(['TABLE:StoreSecret', 'TABLE:AreaBand', 'TABLE:Store.name', 'SETTING_PREFIX:contact.', 'MEDIA_FOLDER:/']));
+    expect(await db.prisma.ownerDataEntry.count()).toBe(ownerKeys.length + registerNames.length);
 
     const locale = await db.prisma.settingDefinition.findUniqueOrThrow({ where: { key: 'store.locale' } });
     expect(locale).toMatchObject({
@@ -180,5 +188,23 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
     const r = await syncSettings(db.prisma, { registry: v4, messages });
     expect(r).toMatchObject({ status: 'applied', changed: ['store.currency'], recorded: false });
     expect(r.warnings[0]).toMatch(/bump/);
+  });
+
+  it('PR 509: a table that leaves the register is archived (never deleted) and comes back when listed again', async () => {
+    const v4: RegistryShape = {
+      ...registry,
+      'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: V + 2 },
+      'store.currency': { ...registry['store.currency'], sortOrder: 41, version: V + 3 },
+    };
+    const smaller = { ...ownerDataRegister, tables: ownerDataRegister.tables.filter((t) => t.target !== 'AreaBand') };
+    const before = await db.prisma.ownerDataEntry.count();
+    const r = await syncSettings(db.prisma, { registry: v4, messages, register: smaller });
+    expect(r.ownerData).toMatchObject({ archived: ['TABLE:AreaBand'], added: [], restored: [] });
+    expect(await db.prisma.ownerDataEntry.count()).toBe(before);
+    expect((await db.prisma.ownerDataEntry.findUniqueOrThrow({ where: { kind_target: { kind: 'TABLE', target: 'AreaBand' } } })).archivedAt).toBeInstanceOf(Date);
+
+    const back = await syncSettings(db.prisma, { registry: v4, messages });
+    expect(back.ownerData).toMatchObject({ restored: ['TABLE:AreaBand'], archived: [], added: [] });
+    expect(await syncSettings(db.prisma, { registry: v4, messages })).toMatchObject({ status: 'unchanged' });
   });
 });

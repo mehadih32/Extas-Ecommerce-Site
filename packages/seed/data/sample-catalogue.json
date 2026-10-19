@@ -1,0 +1,863 @@
+{
+  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer and order are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation.",
+  "version": 1,
+  "marker": "Sample",
+  "store": {
+    "slug": "sample",
+    "name": "Sample store",
+    "defaultLocale": "bn-BD",
+    "currency": "BDT",
+    "timezone": "Asia/Dhaka"
+  },
+  "brand": {
+    "slug": "sample-label",
+    "name": "Sample Label",
+    "isOwnLabel": true
+  },
+  "warehouse": {
+    "code": "SAMPLE-WH",
+    "name": "Sample warehouse",
+    "location": {
+      "code": "SAMPLE-MAIN",
+      "name": "Sample main shelf",
+      "kind": "WAREHOUSE"
+    }
+  },
+  "publishedAt": "2026-10-01T00:00:00.000Z",
+  "visibleCategories": ["polos", "tshirts", "shirts", "panjabi", "trousers", "hoodies"],
+  "colours": [
+    {
+      "key": "navy",
+      "nameEn": "Navy",
+      "nameBn": "নেভি",
+      "hex": "#1F2A44",
+      "noteEn": "Deep navy. Can look almost black in low light — see the daylight photo."
+    },
+    {
+      "key": "black",
+      "nameEn": "Black",
+      "nameBn": "কালো",
+      "hex": "#1E1E20",
+      "noteEn": "True black, no blue tint."
+    },
+    {
+      "key": "white",
+      "nameEn": "White",
+      "nameBn": "সাদা",
+      "hex": "#F4F2EC",
+      "noteEn": "Clean white, slightly soft — not optic bright."
+    },
+    {
+      "key": "olive",
+      "nameEn": "Olive",
+      "nameBn": "অলিভ",
+      "hex": "#4A5240",
+      "noteEn": "Muted army green. Looks a little browner indoors."
+    },
+    {
+      "key": "red",
+      "nameEn": "Red",
+      "nameBn": "লাল",
+      "hex": "#9E2B2B",
+      "noteEn": "Rich brick red, not bright fire-engine red."
+    },
+    {
+      "key": "maroon",
+      "nameEn": "Maroon",
+      "nameBn": "মেরুন",
+      "hex": "#5C1F27",
+      "noteEn": "Deep wine maroon."
+    },
+    {
+      "key": "sky",
+      "nameEn": "Sky Blue",
+      "nameBn": "আকাশি",
+      "hex": "#9DB8D3",
+      "noteEn": "Soft pale blue, classic office shade."
+    },
+    {
+      "key": "pink",
+      "nameEn": "Pink",
+      "nameBn": "গোলাপি",
+      "hex": "#E3B7B9"
+    },
+    {
+      "key": "khaki",
+      "nameEn": "Khaki",
+      "nameBn": "খাকি",
+      "hex": "#C3A97E",
+      "noteEn": "Warm sandy khaki."
+    },
+    {
+      "key": "charcoal",
+      "nameEn": "Charcoal",
+      "nameBn": "চারকোল",
+      "hex": "#3A3B3E",
+      "noteEn": "Deep grey, not black."
+    },
+    {
+      "key": "ecru",
+      "nameEn": "Ecru",
+      "nameBn": "অফ-হোয়াইট",
+      "hex": "#E6DCC8",
+      "noteEn": "Natural off-white with a warm tone."
+    },
+    {
+      "key": "bottle",
+      "nameEn": "Bottle Green",
+      "nameBn": "বোতল সবুজ",
+      "hex": "#1F4A3A",
+      "noteEn": "Dark bottle green."
+    },
+    {
+      "key": "grey",
+      "nameEn": "Grey Melange",
+      "nameBn": "ছাই মেলাঞ্জ",
+      "hex": "#9A9A9A"
+    },
+    {
+      "key": "sand",
+      "nameEn": "Sand",
+      "nameBn": "বালু রং",
+      "hex": "#CDBB9C"
+    },
+    {
+      "key": "mustard",
+      "nameEn": "Mustard",
+      "nameBn": "সরিষা হলুদ",
+      "hex": "#C99A2E"
+    },
+    {
+      "key": "brown",
+      "nameEn": "Brown",
+      "nameBn": "বাদামি",
+      "hex": "#6B4A32"
+    },
+    {
+      "key": "mixed",
+      "nameEn": "Mixed",
+      "nameBn": "মিশ্র",
+      "hex": "#7D8A96"
+    }
+  ],
+  "sizes": [
+    {
+      "key": "s",
+      "label": "S",
+      "sortOrder": 10
+    },
+    {
+      "key": "m",
+      "label": "M",
+      "sortOrder": 20
+    },
+    {
+      "key": "l",
+      "label": "L",
+      "sortOrder": 30
+    },
+    {
+      "key": "xl",
+      "label": "XL",
+      "sortOrder": 40
+    },
+    {
+      "key": "xxl",
+      "label": "XXL",
+      "sortOrder": 50
+    },
+    {
+      "key": "w30",
+      "label": "30",
+      "sortOrder": 60
+    },
+    {
+      "key": "w32",
+      "label": "32",
+      "sortOrder": 70
+    },
+    {
+      "key": "w34",
+      "label": "34",
+      "sortOrder": 80
+    },
+    {
+      "key": "w36",
+      "label": "36",
+      "sortOrder": 90
+    },
+    {
+      "key": "one-size",
+      "label": "One size",
+      "sortOrder": 100
+    }
+  ],
+  "collections": [
+    {
+      "slug": "essentials",
+      "nameEn": "Essentials"
+    },
+    {
+      "slug": "knitwear",
+      "nameEn": "Knitwear"
+    },
+    {
+      "slug": "weekend",
+      "nameEn": "Weekend"
+    },
+    {
+      "slug": "office",
+      "nameEn": "Office"
+    },
+    {
+      "slug": "eid-edit",
+      "nameEn": "Eid Edit"
+    },
+    {
+      "slug": "winter-2026",
+      "nameEn": "Winter 2026"
+    },
+    {
+      "slug": "extras",
+      "nameEn": "Extras"
+    }
+  ],
+  "tags": [
+    {
+      "slug": "bestseller",
+      "name": "Bestseller"
+    },
+    {
+      "slug": "new",
+      "name": "New"
+    },
+    {
+      "slug": "eid-edit",
+      "name": "Eid edit"
+    },
+    {
+      "slug": "winter-2026",
+      "name": "Winter 2026"
+    }
+  ],
+  "sizeCharts": [
+    {
+      "key": "polo-regular",
+      "name": "Polo · Regular fit",
+      "garmentType": "polo",
+      "fitKey": "regular",
+      "columns": ["chest", "length", "shoulder", "sleeve"],
+      "rows": [
+        {
+          "size": "s",
+          "values": [38, 27, 16.5, 7.5]
+        },
+        {
+          "size": "m",
+          "values": [40, 28, 17, 8]
+        },
+        {
+          "size": "l",
+          "values": [42, 29, 18, 8.25]
+        },
+        {
+          "size": "xl",
+          "values": [44, 30, 19, 8.5]
+        },
+        {
+          "size": "xxl",
+          "values": [46, 31, 20, 8.75]
+        }
+      ],
+      "categories": ["polos"]
+    },
+    {
+      "key": "polo-slim",
+      "name": "Polo · Slim fit",
+      "garmentType": "polo",
+      "fitKey": "slim",
+      "columns": ["chest", "length", "shoulder", "sleeve"],
+      "rows": [
+        {
+          "size": "s",
+          "values": [37, 27, 16, 7.5]
+        },
+        {
+          "size": "m",
+          "values": [39, 28, 16.5, 7.75]
+        },
+        {
+          "size": "l",
+          "values": [41, 29, 17.5, 8]
+        },
+        {
+          "size": "xl",
+          "values": [43, 30, 18.5, 8.25]
+        },
+        {
+          "size": "xxl",
+          "values": [45, 31, 19.5, 8.5]
+        }
+      ],
+      "categories": []
+    },
+    {
+      "key": "tee-regular",
+      "name": "T-shirt · Regular",
+      "garmentType": "tee",
+      "fitKey": "regular",
+      "columns": ["chest", "length", "shoulder", "sleeve"],
+      "rows": [
+        {
+          "size": "s",
+          "values": [38, 27, 17, 7.5]
+        },
+        {
+          "size": "m",
+          "values": [40, 28, 17.5, 8]
+        },
+        {
+          "size": "l",
+          "values": [42, 29, 18.5, 8.25]
+        },
+        {
+          "size": "xl",
+          "values": [44, 30, 19.5, 8.5]
+        },
+        {
+          "size": "xxl",
+          "values": [46, 31, 20.5, 9]
+        }
+      ],
+      "categories": ["tshirts"]
+    },
+    {
+      "key": "shirt-regular",
+      "name": "Shirt · Regular",
+      "garmentType": "shirt",
+      "fitKey": "regular",
+      "columns": ["chest", "length", "shoulder", "sleeve"],
+      "rows": [
+        {
+          "size": "s",
+          "values": [39, 28.5, 17, 24]
+        },
+        {
+          "size": "m",
+          "values": [41, 29.5, 17.5, 24.5]
+        },
+        {
+          "size": "l",
+          "values": [43, 30.5, 18, 25]
+        },
+        {
+          "size": "xl",
+          "values": [45, 31.5, 18.5, 25.5]
+        },
+        {
+          "size": "xxl",
+          "values": [47, 32.5, 19, 26]
+        }
+      ],
+      "categories": ["shirts"]
+    },
+    {
+      "key": "panjabi-classic",
+      "name": "Panjabi · Classic",
+      "garmentType": "panjabi",
+      "fitKey": "classic",
+      "columns": ["chest", "length", "shoulder", "sleeve"],
+      "rows": [
+        {
+          "size": "s",
+          "values": [39, 40, 17, 23.5]
+        },
+        {
+          "size": "m",
+          "values": [41, 41, 17.5, 24]
+        },
+        {
+          "size": "l",
+          "values": [43, 42, 18, 24.5]
+        },
+        {
+          "size": "xl",
+          "values": [45, 43, 18.5, 25]
+        },
+        {
+          "size": "xxl",
+          "values": [47, 44, 19, 25.5]
+        }
+      ],
+      "categories": ["panjabi"]
+    },
+    {
+      "key": "hoodie-regular",
+      "name": "Hoodie · Regular",
+      "garmentType": "hoodie",
+      "fitKey": "regular",
+      "columns": ["chest", "length", "shoulder", "sleeve"],
+      "rows": [
+        {
+          "size": "s",
+          "values": [40, 26.5, 17.5, 24]
+        },
+        {
+          "size": "m",
+          "values": [42, 27.5, 18, 24.5]
+        },
+        {
+          "size": "l",
+          "values": [44, 28.5, 19, 25]
+        },
+        {
+          "size": "xl",
+          "values": [46, 29.5, 20, 25.5]
+        },
+        {
+          "size": "xxl",
+          "values": [48, 30.5, 21, 26]
+        }
+      ],
+      "categories": ["hoodies"]
+    },
+    {
+      "key": "chino-slim",
+      "name": "Chino · Slim",
+      "garmentType": "trouser",
+      "fitKey": "slim",
+      "columns": ["waist", "hip", "thigh", "length", "legOpening"],
+      "rows": [
+        {
+          "size": "w30",
+          "values": [30, 39, 23, 40, 13]
+        },
+        {
+          "size": "w32",
+          "values": [32, 41, 24, 40.5, 13.5]
+        },
+        {
+          "size": "w34",
+          "values": [34, 43, 25, 41, 14]
+        },
+        {
+          "size": "w36",
+          "values": [36, 45, 26, 41.5, 14.5]
+        }
+      ],
+      "categories": ["trousers"]
+    }
+  ],
+  "products": [
+    {
+      "slug": "essential-pique-polo",
+      "code": "EPP",
+      "nameEn": "Essential Piqué Polo",
+      "category": "polos",
+      "collection": "essentials",
+      "tag": "bestseller",
+      "templateKey": "T1",
+      "sortRank": 170,
+      "descriptionEn": "Our everyday polo in breathable cotton piqué. Ribbed collar that stays flat, 2-button placket, side vents.",
+      "careEn": "Wash inside out, cold · Do not bleach · Dry in shade",
+      "fabric": "100% combed cotton piqué · 220 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "freeDelivery": true,
+      "samplePriceMinor": 85000,
+      "colours": ["navy", "black", "white", "olive", "red"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [5, 6, 2, 4, 0],
+        "black": [4, 7, 6, 3, 2],
+        "white": [3, 5, 4, 4, 1],
+        "olive": [2, 4, 3, 0, 1],
+        "red": [3, 2, 0, 2, 1]
+      }
+    },
+    {
+      "slug": "textured-knit-polo",
+      "code": "TKP",
+      "nameEn": "Textured Knit Polo",
+      "category": "polos",
+      "collection": "knitwear",
+      "tag": "new",
+      "templateKey": "T2",
+      "sortRank": 160,
+      "descriptionEn": "A refined knit polo with a soft waffle texture. Dresses up with chinos, down with denim.",
+      "careEn": "Hand wash or gentle cycle · Dry flat",
+      "fabric": "100% cotton textured knit · 260 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 115000,
+      "colours": ["charcoal", "ecru", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "charcoal": [3, 5, 4, 2, 0],
+        "ecru": [2, 3, 3, 2, 1],
+        "bottle": [1, 4, 2, 2, 0]
+      }
+    },
+    {
+      "slug": "contrast-collar-polo",
+      "code": "CCP",
+      "nameEn": "Contrast Collar Polo",
+      "category": "polos",
+      "collection": "essentials",
+      "templateKey": "T3",
+      "sortRank": 150,
+      "descriptionEn": "Classic polo with contrast-tipped collar and cuffs.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton piqué with contrast tipping",
+      "fit": "Regular fit",
+      "fitNote": "Runs slightly small — between sizes, go up.",
+      "samplePriceMinor": 95000,
+      "sampleCompareAtMinor": 119000,
+      "colours": ["navy", "white", "black"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [2, 3, 3, 1, 0],
+        "white": [1, 2, 2, 2, 0],
+        "black": [2, 2, 1, 1, 1]
+      }
+    },
+    {
+      "slug": "jersey-zip-polo",
+      "code": "JZP",
+      "nameEn": "Jersey Zip Polo",
+      "category": "polos",
+      "collection": "weekend",
+      "templateKey": "T1",
+      "sortRank": 140,
+      "descriptionEn": "Smooth jersey polo with a short zip neck. Slim through the body.",
+      "careEn": "Wash cold",
+      "fabric": "Cotton-rich jersey with stretch",
+      "fit": "Slim fit",
+      "fitNote": "Slim fit — take one size up for a relaxed look.",
+      "sizeChart": "polo-slim",
+      "samplePriceMinor": 105000,
+      "colours": ["black", "grey", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [3, 4, 2, 2, 0],
+        "grey": [2, 3, 3, 1, 0],
+        "navy": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "striped-rib-polo",
+      "code": "SRP",
+      "nameEn": "Striped Rib Polo",
+      "category": "polos",
+      "collection": "weekend",
+      "templateKey": "T1",
+      "sortRank": 130,
+      "descriptionEn": "Yarn-dyed stripes on a soft rib knit.",
+      "careEn": "Wash cold · Dry flat",
+      "fabric": "Ribbed cotton with yarn-dyed stripes",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 99000,
+      "colours": ["navy", "mustard"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [2, 3, 0, 2, 1],
+        "mustard": [1, 2, 0, 1, 0]
+      }
+    },
+    {
+      "slug": "long-sleeve-polo",
+      "code": "LSP",
+      "nameEn": "Long Sleeve Polo",
+      "category": "polos",
+      "collection": "essentials",
+      "tag": "new",
+      "templateKey": "T1",
+      "sortRank": 120,
+      "descriptionEn": "The Essential polo with long sleeves for cooler evenings.",
+      "careEn": "Wash cold",
+      "fabric": "Cotton piqué · long sleeves with ribbed cuffs",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 119000,
+      "colours": ["white", "navy", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [2, 3, 3, 2, 1],
+        "navy": [2, 4, 3, 2, 0],
+        "olive": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "everyday-crew-tee",
+      "code": "ECT",
+      "nameEn": "Everyday Crew T-Shirt",
+      "category": "tshirts",
+      "collection": "essentials",
+      "tag": "bestseller",
+      "templateKey": "T1",
+      "sortRank": 110,
+      "descriptionEn": "The tee you reach for every day. Soft, breathable, keeps its shape.",
+      "careEn": "Machine wash cold",
+      "fabric": "100% cotton single jersey · 180 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 55000,
+      "colours": ["white", "black", "navy", "grey"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [8, 9, 7, 6, 3],
+        "black": [6, 8, 8, 5, 3],
+        "navy": [4, 6, 5, 4, 2],
+        "grey": [3, 5, 4, 3, 2]
+      }
+    },
+    {
+      "slug": "heavy-cotton-tee",
+      "code": "HCT",
+      "nameEn": "Heavy Cotton Tee",
+      "category": "tshirts",
+      "collection": "essentials",
+      "templateKey": "T1",
+      "sortRank": 100,
+      "descriptionEn": "A thick, structured tee with a slightly boxy shape.",
+      "careEn": "Machine wash cold",
+      "fabric": "Heavyweight cotton · 240 GSM",
+      "fit": "Relaxed fit",
+      "fitNote": "Relaxed fit — size down for a closer fit.",
+      "samplePriceMinor": 65000,
+      "colours": ["ecru", "black", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "ecru": [3, 4, 4, 3, 2],
+        "black": [4, 5, 5, 4, 2],
+        "olive": [2, 3, 3, 2, 1]
+      }
+    },
+    {
+      "slug": "pocket-tee",
+      "code": "PT",
+      "nameEn": "Pocket Tee",
+      "category": "tshirts",
+      "collection": "weekend",
+      "templateKey": "T1",
+      "sortRank": 90,
+      "descriptionEn": "Easy pocket tee in a soft slub cotton.",
+      "careEn": "Machine wash cold",
+      "fabric": "Cotton slub jersey",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 60000,
+      "colours": ["sky", "white", "sand"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "sky": [2, 3, 3, 2, 1],
+        "white": [3, 3, 2, 2, 1],
+        "sand": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "oxford-cotton-shirt",
+      "code": "OCS",
+      "nameEn": "Oxford Cotton Shirt",
+      "category": "shirts",
+      "collection": "office",
+      "templateKey": "T1",
+      "sortRank": 80,
+      "descriptionEn": "Button-down Oxford shirt that works from office to dinner.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "100% cotton Oxford weave",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 125000,
+      "colours": ["sky", "white", "pink"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "sky": [3, 4, 5, 3, 1],
+        "white": [4, 5, 5, 4, 2],
+        "pink": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "linen-blend-shirt",
+      "code": "LBS",
+      "nameEn": "Linen Blend Shirt",
+      "category": "shirts",
+      "collection": "weekend",
+      "templateKey": "T2",
+      "sortRank": 70,
+      "descriptionEn": "Breathable linen-cotton for hot days.",
+      "careEn": "Wash cold · Line dry",
+      "fabric": "55% linen, 45% cotton",
+      "fit": "Relaxed fit",
+      "fitNote": "Relaxed fit.",
+      "samplePriceMinor": 145000,
+      "sampleCompareAtMinor": 169000,
+      "colours": ["white", "sand", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [2, 3, 3, 2, 1],
+        "sand": [2, 2, 3, 1, 0],
+        "olive": [1, 2, 1, 1, 0]
+      }
+    },
+    {
+      "slug": "classic-cotton-panjabi",
+      "code": "CCPX",
+      "nameEn": "Classic Cotton Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": "eid-edit",
+      "templateKey": "T2",
+      "sortRank": 60,
+      "descriptionEn": "A soft, breathable panjabi with a neat mandarin collar.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Fine cotton voile with self-stripe",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "samplePriceMinor": 185000,
+      "colours": ["white", "sky", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [3, 5, 5, 4, 2],
+        "sky": [2, 3, 4, 2, 1],
+        "maroon": [1, 3, 3, 2, 1]
+      }
+    },
+    {
+      "slug": "slim-chino-trousers",
+      "code": "SCT",
+      "nameEn": "Slim Chino Trousers",
+      "category": "trousers",
+      "collection": "office",
+      "templateKey": "T1",
+      "sortRank": 50,
+      "descriptionEn": "Slim chinos with a touch of stretch. Tapered leg, 4 pockets.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton twill with 2% stretch",
+      "fit": "Slim fit",
+      "fitNote": "Fits true to waist size.",
+      "samplePriceMinor": 145000,
+      "colours": ["khaki", "navy", "charcoal"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "khaki": [3, 4, 3, 0],
+        "navy": [2, 3, 3, 1],
+        "charcoal": [2, 2, 2, 1]
+      }
+    },
+    {
+      "slug": "relaxed-twill-trousers",
+      "code": "RTT",
+      "nameEn": "Relaxed Twill Trousers",
+      "category": "trousers",
+      "collection": "weekend",
+      "templateKey": "T1",
+      "sortRank": 40,
+      "descriptionEn": "Easy relaxed trousers with a soft brushed finish.",
+      "careEn": "Wash cold",
+      "fabric": "Brushed cotton twill",
+      "fit": "Relaxed fit",
+      "fitNote": "Relaxed through the leg.",
+      "samplePriceMinor": 135000,
+      "sampleCompareAtMinor": 160000,
+      "colours": ["olive", "black"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "olive": [2, 3, 2, 1],
+        "black": [3, 3, 3, 2]
+      }
+    },
+    {
+      "slug": "heavyweight-hoodie",
+      "code": "HH",
+      "nameEn": "Heavyweight Hoodie 320 GSM",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": "winter-2026",
+      "templateKey": "T1",
+      "sortRank": 30,
+      "descriptionEn": "Thick brushed fleece, double-layer hood, kangaroo pocket.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "320 GSM cotton fleece · 80% cotton, 20% polyester",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "samplePriceMinor": 165000,
+      "sampleCompareAtMinor": 210000,
+      "colours": ["black", "grey", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [2, 4, 4, 3, 0],
+        "grey": [2, 3, 3, 2, 0],
+        "olive": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "cotton-socks-3",
+      "code": "CS3",
+      "nameEn": "Cotton Socks, 3 pairs",
+      "category": "extras",
+      "collection": "extras",
+      "templateKey": "T1",
+      "sortRank": 20,
+      "descriptionEn": "Soft everyday socks, pack of 3.",
+      "careEn": "Machine wash",
+      "fabric": "Combed cotton with stretch",
+      "fit": "One size",
+      "fitNote": "Fits UK 6–10.",
+      "samplePriceMinor": 35000,
+      "colours": ["mixed"],
+      "sizes": ["one-size"],
+      "stock": {
+        "mixed": [40]
+      }
+    },
+    {
+      "slug": "leather-look-belt",
+      "code": "LLB",
+      "nameEn": "Classic Leather-look Belt",
+      "category": "extras",
+      "collection": "extras",
+      "templateKey": "T1",
+      "sortRank": 10,
+      "descriptionEn": "Smart belt that goes with chinos and denim.",
+      "careEn": "Wipe clean",
+      "fabric": "PU with metal buckle",
+      "fit": "One size",
+      "fitNote": "Adjustable 30–38.",
+      "samplePriceMinor": 65000,
+      "colours": ["brown"],
+      "sizes": ["one-size"],
+      "stock": {
+        "brown": [20]
+      }
+    }
+  ],
+  "customer": {
+    "name": "Sample Customer",
+    "phone": "+8801000000001",
+    "email": "sample.customer@example.com"
+  },
+  "order": {
+    "number": "SAMPLE-0001",
+    "idempotencyKey": "sample-order-0001",
+    "placedAt": "2026-10-02T04:30:00.000Z",
+    "source": "WEBSITE",
+    "paymentMethod": "COD",
+    "address": "Sample address, not a real place",
+    "items": [
+      {
+        "product": "essential-pique-polo",
+        "colour": "navy",
+        "size": "m",
+        "quantity": 2
+      },
+      {
+        "product": "slim-chino-trousers",
+        "colour": "khaki",
+        "size": "w32",
+        "quantity": 1
+      }
+    ]
+  }
+}
