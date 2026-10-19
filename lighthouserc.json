@@ -4,7 +4,8 @@
       "startServerCommand": "node apps/web/.next/standalone/apps/web/server.js",
       "startServerReadyPattern": "Ready|started server|Local:",
       "url": [
-        "http://127.0.0.1:3000/status"
+        "http://127.0.0.1:3000/status",
+        "http://127.0.0.1:3000/admin/login"
       ],
       "numberOfRuns": 3,
       "settings": {
