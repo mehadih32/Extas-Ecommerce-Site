@@ -53,6 +53,14 @@ describe.skipIf(!url)('vault with PostgreSQL', () => {
     await db.installationSecret.update({ where: { name: 'courier.apiKey' }, data: { revokedAt: new Date() } });
   });
 
+  it('seals a value kept in another table and opens it only with the same binding (PR 15, TOTP seeds)', async () => {
+    const v = createVault(db, master);
+    const sealed = await v.sealValue('staff-totp:sample', Buffer.from('seed-bytes'), who);
+    expect(Buffer.from(sealed.ciphertext).toString()).not.toContain('seed-bytes');
+    expect((await v.openValue('staff-totp:sample', sealed)).toString()).toBe('seed-bytes');
+    await expect(v.openValue('staff-totp:other', sealed)).rejects.toThrow();
+  });
+
   it('survives data-key and master-key rotation', async () => {
     const v = createVault(db, master);
     const before = (await v.list({}))[0]?.keyVersion;

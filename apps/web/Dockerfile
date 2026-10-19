@@ -1,7 +1,7 @@
 # Web app image and its database-migration image. Built on the VM by deploy.yml (context = repository root) and in CI
 # as a check:
 #   docker build -f apps/web/Dockerfile -t extas-web:<sha> .                    the app (last stage, `run`)
-#   docker build -f apps/web/Dockerfile --target migrate -t extas-migrate:<sha> . schema migrations + settings sync
+#   docker build -f apps/web/Dockerfile --target migrate -t extas-migrate:<sha> . schema migrations + settings and auth sync
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1 COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 # Prisma's engines need libssl (the slim image has none).
@@ -14,6 +14,8 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/web/package.json apps/web/
 COPY packages/settings/package.json packages/settings/
+COPY packages/vault/package.json packages/vault/
+COPY packages/auth/package.json packages/auth/
 # @extas/db generates the Prisma client on install, so its schema and CLI wrapper come in with the manifests.
 COPY packages/db/package.json packages/db/
 COPY packages/db/scripts packages/db/scripts
@@ -27,14 +29,16 @@ ENV GIT_SHA=$GIT_SHA
 RUN pnpm status:gen && pnpm --filter @extas/web build
 
 # Runs once per deploy, before the new colour starts (infra/deploy/deploy.sh): `prisma migrate deploy` straight to
-# PostgreSQL (DATABASE_DIRECT_URL), then the settings migration (PR 496). Needs no app build.
+# PostgreSQL (DATABASE_DIRECT_URL), then the settings migration (PR 496), then the auth sync (PR 16/495: permission
+# catalogue + owner role). Needs no app build. The same image holds the owner set-up command (packages/auth, cli.ts
+# create-owner).
 FROM deps AS migrate
 COPY packages/ packages/
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA NODE_ENV=production PRISMA_HIDE_UPDATE_MESSAGE=1
 USER node
 WORKDIR /repo/packages/settings
-CMD ["sh", "-c", "cd /repo/packages/db && node scripts/prisma.mjs migrate deploy && cd /repo/packages/settings && exec ./node_modules/.bin/tsx src/cli.ts sync"]
+CMD ["sh", "-c", "cd /repo/packages/db && node scripts/prisma.mjs migrate deploy && cd /repo/packages/settings && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/auth && exec ./node_modules/.bin/tsx src/cli.ts sync"]
 
 FROM node:22-bookworm-slim AS run
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends openssl ca-certificates >/dev/null \
