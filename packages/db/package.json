@@ -1,0 +1,33 @@
+{
+  "name": "@extas/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "EXTAS database: the full Prisma schema (PR 13), the index pack (PR 603) and the client.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "postinstall": "node scripts/prisma.mjs generate --no-hints",
+    "generate": "node scripts/prisma.mjs generate --no-hints",
+    "validate": "node scripts/prisma.mjs validate",
+    "format": "node scripts/prisma.mjs format",
+    "format:check": "node scripts/prisma.mjs format --check",
+    "migrate:diff": "node scripts/prisma.mjs migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script",
+    "migrate:deploy": "node scripts/prisma.mjs migrate deploy",
+    "lint": "node scripts/prisma.mjs validate && node scripts/prisma.mjs format --check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "prisma": "6.19.3",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}
