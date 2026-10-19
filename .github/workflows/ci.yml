@@ -75,3 +75,34 @@ jobs:
           retention-days: 7
       - name: Production image builds
         run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
+
+  # PR 13 / 603 — the schema's migrations apply to a real PostgreSQL 17 with pg_trgm (throwaway CI database).
+  db:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
+    env:
+      DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+      DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Apply the migrations
+        run: pnpm --filter @extas/db migrate:deploy
+      - name: Schema matches the migrations (no drift)
+        run: |
+          cd packages/db
+          node scripts/prisma.mjs migrate diff --from-url "$DATABASE_DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --exit-code

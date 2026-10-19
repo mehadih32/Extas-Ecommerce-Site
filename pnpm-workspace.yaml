@@ -1,3 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# PR 13: Prisma's install scripts (engine download and client generation) are allowed to run; pnpm 10 blocks
+# dependency build scripts unless they are listed here.
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "prisma"
