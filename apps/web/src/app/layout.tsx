@@ -4,8 +4,8 @@ import './globals.css';
 import dict from '../../messages/status.bn.json';
 import { t } from '@/lib/i18n';
 
-const bengali = Hind_Siliguri({ subsets: ['bengali', 'latin'], weight: ['400', '600'], variable: '--font-bengali', display: 'swap', preload: false });
-// preload off: the text paints at once in the fallback font, the Bengali font swaps in without competing with the page.
+const bengali = Hind_Siliguri({ subsets: ['bengali', 'latin'], weight: ['400', '600'], variable: '--font-bengali', display: 'optional' });
+// display optional: the text never waits for or re-paints with the web font; returning visits use the cached font.
 
 export const metadata: Metadata = {
   title: t(dict, 'title'),

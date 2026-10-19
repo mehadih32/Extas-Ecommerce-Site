@@ -74,6 +74,7 @@ jobs:
         with:
           name: lighthouse
           path: .lighthouseci
+          include-hidden-files: true
           retention-days: 7
       - name: Production image builds
         run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
