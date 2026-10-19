@@ -57,7 +57,7 @@ the server.*
 | 491 | S00 | merged | 2026-10-20 | `packages/settings`: every setting is declared once (key, type, default, validation, who may change it, Bengali/English label); `pnpm --filter @extas/settings sync` writes the declarations to the database, idempotent behind a lock; deploy runs schema migrations + sync before the new colour starts |
 | 492 | S00 | merged | 2026-10-20 | two-tier resolver: store value → installation value → declared default, cached in memory and refreshed when any setting changes (works through PgBouncer); the status page reads its language and time zone through it |
 | 496 | S00 | merged | 2026-10-20 | settings changes are validated, versioned and logged (who, when, old → new); an old value is never deleted |
-| 510 | S00 | merged | 2026-10-20 | reset to default: a setting goes back to the level above it (store → installation → declared default), logged like any change; `/api/admin/settings` (admin role) lists, sets and resets |
+| 510 | S00 | merged | 2026-10-20 | reset to default: a setting goes back to the level above it (store → installation → declared default), logged like any change. Read-only `/api/admin/settings` lists keys, effective values and their source (never owner data or vault entries); the admin login guarding it comes with PR 15/16 |
 
 ## The stage table
 
