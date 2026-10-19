@@ -2,7 +2,16 @@
   "groups": {
     "store": "Store",
     "system": "System",
-    "security": "Security and logins"
+    "security": "Security and logins",
+    "brand": "Brand",
+    "contact": "Contact",
+    "legal": "Legal details",
+    "social": "Social links",
+    "payment": "Payment",
+    "policy": "Policies",
+    "delivery": "Delivery",
+    "ai": "AI",
+    "theme": "Theme"
   },
   "store": {
     "name": {
@@ -29,7 +38,20 @@
     }
   },
   "ownerData": {
-    "settingReason": "The owner's own data: kept out of every export to a new installation."
+    "settingReason": "The owner's own data: kept out of every export to a new installation.",
+    "reasons": {
+      "contact": "Your shop's phone, WhatsApp, e-mail and address: never exported to a new installation.",
+      "legal": "Your registered name, trade licence and DBID: never exported.",
+      "social": "Your social page links: never exported.",
+      "payment": "Your bank and mobile wallet details: never exported.",
+      "vault": "Every key and password in the vault: never exported, not even encrypted.",
+      "areaList": "Your own Dhaka area list (which area is in which delivery band): never exported.",
+      "connections": "Your accounts with couriers, ad platforms, social pages and chat, and your domains: never exported.",
+      "people": "Your staff, blog authors and photo models: never exported.",
+      "brand": "Your shop's name, logo and brand voice: never exported.",
+      "records": "Your customers and orders: never exported. An export carries settings and structure only.",
+      "media": "Every file you uploaded (photos, logo, documents): never exported."
+    }
   },
   "security": {
     "staffPasswordMinLength": {
@@ -83,6 +105,169 @@
     "staffLoginAlerts": {
       "label": "Alert on every staff login",
       "help": "Records every staff login and every login from a new device, so you are told about it."
+    }
+  },
+  "brand": {
+    "logo": {
+      "label": "Logo",
+      "help": "Your logo file from the media library. Your own data: it never goes to another installation."
+    },
+    "slogan": {
+      "label": "Slogan",
+      "help": "The line under the logo, in English and Bengali. Your own data."
+    }
+  },
+  "contact": {
+    "phone": {
+      "label": "Hotline",
+      "help": "The number customers call, with the country code (+880…). Your own data."
+    },
+    "whatsapp": {
+      "label": "WhatsApp number",
+      "help": "With the country code (+880…). Your own data."
+    },
+    "email": {
+      "label": "Support e-mail",
+      "help": "Where customers write to you. Your own data."
+    },
+    "address": {
+      "label": "Shop address",
+      "help": "Shown on Contact, the invoice and the policies. Empty = the line is hidden. Your own data."
+    }
+  },
+  "legal": {
+    "registeredName": {
+      "label": "Registered business name",
+      "help": "As on the trade licence. Your own data."
+    },
+    "tradeLicence": {
+      "label": "Trade licence number",
+      "help": "Your own data."
+    },
+    "dbid": {
+      "label": "DBID",
+      "help": "Digital Business ID. Your own data."
+    }
+  },
+  "social": {
+    "facebook": {
+      "label": "Facebook page"
+    },
+    "instagram": {
+      "label": "Instagram"
+    },
+    "youtube": {
+      "label": "YouTube channel"
+    },
+    "tiktok": {
+      "label": "TikTok"
+    }
+  },
+  "payment": {
+    "bank": {
+      "accounts": {
+        "label": "Bank accounts",
+        "help": "Shown to customers who pay by bank transfer. Your own data."
+      }
+    },
+    "wallet": {
+      "numbers": {
+        "label": "Mobile wallet numbers",
+        "help": "bKash, Nagad and other numbers shown to customers. Your own data."
+      }
+    },
+    "cod": {
+      "enabled": {
+        "label": "Cash on delivery",
+        "help": "Your decision: empty until you switch it on or off. Changing it needs your written OK."
+      }
+    }
+  },
+  "policy": {
+    "exchange": {
+      "enabled": {
+        "label": "Size exchange",
+        "help": "Customers may exchange for another size, and get a free replacement for a faulty, damaged or wrong item."
+      },
+      "windowHours": {
+        "label": "Exchange window (hours)",
+        "help": "Counted from the courier's Delivered time. Every text on the site reads this number."
+      },
+      "perItem": {
+        "label": "Exchanges per item",
+        "help": "Empty = not set yet."
+      },
+      "excludedCategories": {
+        "label": "Categories that cannot be exchanged",
+        "help": "Category web addresses, for example underwear."
+      },
+      "summary": {
+        "label": "Exchange policy, short text",
+        "help": "{windowHours} is replaced by the exchange window."
+      }
+    },
+    "returns": {
+      "afterDelivery": {
+        "label": "Returns after delivery",
+        "help": "Off = once delivered, items can be exchanged for size but not returned or refunded."
+      },
+      "summary": {
+        "label": "Return policy, short text",
+        "help": "Shown on the product page, checkout and My account."
+      }
+    },
+    "orderEdit": {
+      "maxEdits": {
+        "label": "Edits per order",
+        "help": "How many times a customer may edit an order before it goes into processing."
+      },
+      "summary": {
+        "label": "Order editing, short text",
+        "help": "{maxEdits} is replaced by the number of edits."
+      }
+    }
+  },
+  "delivery": {
+    "freeOverMinor": {
+      "label": "Free delivery over",
+      "help": "Order total from which delivery is free. Empty = no free delivery. Your decision: changing it needs your written OK."
+    }
+  },
+  "ai": {
+    "enabled": {
+      "label": "AI helpers",
+      "help": "Off until an AI provider is connected in Keys & connections. Until then every job runs on its plain fallback."
+    },
+    "costSaver": {
+      "label": "Cost saver",
+      "help": "Uses the cheaper model wherever it does the job."
+    },
+    "monthlyCapMinor": {
+      "label": "Monthly AI spending cap",
+      "help": "Empty = not set, and AI stays off. Your decision: changing it needs your written OK."
+    }
+  },
+  "theme": {
+    "preset": {
+      "label": "Theme",
+      "help": "Classic, Noir, Ivory or Festive. The whole site, the dashboard included, changes together."
+    },
+    "largeText": {
+      "label": "Large text",
+      "help": "Bigger text for customers who need it."
+    }
+  },
+  "defaults": {
+    "policy": {
+      "exchange": {
+        "summary": "Size exchange within {windowHours} hours of delivery. Free if the mistake is ours."
+      },
+      "returns": {
+        "summary": "Once delivered, items can be exchanged for size, not returned or refunded."
+      },
+      "orderEdit": {
+        "summary": "You can edit your order up to {maxEdits} times before we start processing it."
+      }
     }
   }
 }

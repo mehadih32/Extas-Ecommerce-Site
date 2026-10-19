@@ -1,0 +1,36 @@
+{
+  "name": "@extas/seed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Installation data: the general default pack (PR 508), the owner-data check and installation export (PR 509), and the sample catalogue (PR 14).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "owner-data:check": "tsx src/cli.ts check",
+    "pack:apply": "tsx src/cli.ts pack",
+    "sample": "tsx src/cli.ts sample",
+    "export:installation": "tsx src/cli.ts export",
+    "import:installation": "tsx src/cli.ts import",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/db": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

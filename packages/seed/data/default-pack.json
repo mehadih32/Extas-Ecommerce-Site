@@ -1,0 +1,205 @@
+{
+  "$comment": "PR 508 — the general default pack: neutral, editable defaults seeded into every store of every installation. Structure only: no money (every band ships off, without a charge; prices, discounts, COD and charges are the owner's decisions, CLAUDE.md rule 6), no owner data (PR 509), no media. Applying it only adds what is missing; it never overwrites a row the owner edited. The policy shapes, AI settings and theme are settings in packages/settings/src/registry.ts (seeded by the settings migration, reset with PR 510). Roles are seeded by the role builder (PR 15, 16, 495).",
+  "key": "general",
+  "version": 1,
+  "garmentTypes": [
+    {
+      "key": "polo",
+      "nameEn": "Polo",
+      "nameBn": "পোলো",
+      "measurementFields": [
+        { "key": "chest", "labelEn": "Chest", "labelBn": "বুক", "unit": "inch" },
+        { "key": "length", "labelEn": "Length", "labelBn": "লম্বা", "unit": "inch" },
+        { "key": "shoulder", "labelEn": "Shoulder", "labelBn": "কাঁধ", "unit": "inch" },
+        { "key": "sleeve", "labelEn": "Sleeve", "labelBn": "হাতা", "unit": "inch" }
+      ]
+    },
+    {
+      "key": "tee",
+      "nameEn": "T-shirt",
+      "nameBn": "টি-শার্ট",
+      "measurementFields": [
+        { "key": "chest", "labelEn": "Chest", "labelBn": "বুক", "unit": "inch" },
+        { "key": "length", "labelEn": "Length", "labelBn": "লম্বা", "unit": "inch" },
+        { "key": "shoulder", "labelEn": "Shoulder", "labelBn": "কাঁধ", "unit": "inch" },
+        { "key": "sleeve", "labelEn": "Sleeve", "labelBn": "হাতা", "unit": "inch" }
+      ]
+    },
+    {
+      "key": "shirt",
+      "nameEn": "Shirt",
+      "nameBn": "শার্ট",
+      "measurementFields": [
+        { "key": "chest", "labelEn": "Chest", "labelBn": "বুক", "unit": "inch" },
+        { "key": "length", "labelEn": "Length", "labelBn": "লম্বা", "unit": "inch" },
+        { "key": "shoulder", "labelEn": "Shoulder", "labelBn": "কাঁধ", "unit": "inch" },
+        { "key": "sleeve", "labelEn": "Sleeve", "labelBn": "হাতা", "unit": "inch" }
+      ]
+    },
+    {
+      "key": "panjabi",
+      "nameEn": "Panjabi",
+      "nameBn": "পাঞ্জাবি",
+      "measurementFields": [
+        { "key": "chest", "labelEn": "Chest", "labelBn": "বুক", "unit": "inch" },
+        { "key": "length", "labelEn": "Length", "labelBn": "লম্বা", "unit": "inch" },
+        { "key": "shoulder", "labelEn": "Shoulder", "labelBn": "কাঁধ", "unit": "inch" },
+        { "key": "sleeve", "labelEn": "Sleeve", "labelBn": "হাতা", "unit": "inch" }
+      ]
+    },
+    {
+      "key": "trouser",
+      "nameEn": "Trouser",
+      "nameBn": "ট্রাউজার",
+      "measurementFields": [
+        { "key": "waist", "labelEn": "Waist", "labelBn": "কোমর", "unit": "inch" },
+        { "key": "hip", "labelEn": "Hip", "labelBn": "হিপ", "unit": "inch" },
+        { "key": "thigh", "labelEn": "Thigh", "labelBn": "উরু", "unit": "inch" },
+        { "key": "length", "labelEn": "Length", "labelBn": "লম্বা", "unit": "inch" },
+        { "key": "legOpening", "labelEn": "Leg opening", "labelBn": "পায়ের মুখ", "unit": "inch" }
+      ]
+    },
+    {
+      "key": "hoodie",
+      "nameEn": "Hoodie",
+      "nameBn": "হুডি",
+      "measurementFields": [
+        { "key": "chest", "labelEn": "Chest", "labelBn": "বুক", "unit": "inch" },
+        { "key": "length", "labelEn": "Length", "labelBn": "লম্বা", "unit": "inch" },
+        { "key": "shoulder", "labelEn": "Shoulder", "labelBn": "কাঁধ", "unit": "inch" },
+        { "key": "sleeve", "labelEn": "Sleeve", "labelBn": "হাতা", "unit": "inch" }
+      ]
+    },
+    { "key": "accessory", "nameEn": "Accessory", "nameBn": "অন্যান্য", "measurementFields": [] }
+  ],
+  "categories": [
+    { "slug": "polos", "nameEn": "Polos", "nameBn": "পোলো", "garmentType": "polo", "sortOrder": 10, "introEn": "Piqué, knit and jersey polos in regular and slim fits." },
+    { "slug": "tshirts", "nameEn": "T-Shirts", "nameBn": "টি-শার্ট", "garmentType": "tee", "sortOrder": 20, "introEn": "Everyday cotton tees: crew, pocket and heavyweight." },
+    { "slug": "shirts", "nameEn": "Shirts", "nameBn": "শার্ট", "garmentType": "shirt", "sortOrder": 30, "introEn": "Oxford and linen-blend shirts for office and weekends." },
+    { "slug": "panjabi", "nameEn": "Panjabi", "nameBn": "পাঞ্জাবি", "garmentType": "panjabi", "sortOrder": 40, "introEn": "Classic cotton panjabi for Eid, Puja and every celebration." },
+    { "slug": "trousers", "nameEn": "Trousers", "nameBn": "ট্রাউজার", "garmentType": "trouser", "sortOrder": 50, "introEn": "Slim chinos and relaxed twill trousers." },
+    { "slug": "hoodies", "nameEn": "Hoodies", "nameBn": "হুডি", "garmentType": "hoodie", "sortOrder": 60, "introEn": "Heavyweight hoodies for the winter months." },
+    { "slug": "extras", "nameEn": "Extras", "nameBn": "অন্যান্য", "garmentType": "accessory", "sortOrder": 70, "introEn": "Socks and belts." }
+  ],
+  "deliveryBands": [
+    { "key": "dhaka-city", "nameEn": "Inside Dhaka City", "nameBn": "ঢাকা সিটির ভেতরে", "hoursMin": 24, "hoursMax": 48, "sortOrder": 10 },
+    { "key": "dhaka-sub-area", "nameEn": "Dhaka sub-area", "nameBn": "ঢাকার আশপাশের এলাকা", "sortOrder": 20 },
+    { "key": "outside-dhaka", "nameEn": "Outside Dhaka City", "nameBn": "ঢাকা সিটির বাইরে", "hoursMin": 48, "hoursMax": 72, "sortOrder": 30 }
+  ],
+  "notificationTemplates": [
+    {
+      "key": "order.placed",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Order placed",
+      "enabled": true,
+      "body": "{storeName}: আপনার অর্ডার {orderNumber} পেয়েছি। মোট {total}। ধন্যবাদ!"
+    },
+    {
+      "key": "order.placed",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Order placed",
+      "enabled": true,
+      "body": "{storeName}: we got your order {orderNumber}. Total {total}. Thank you!"
+    },
+    {
+      "key": "order.processing",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Order on its way",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} পাঠানো হচ্ছে। ট্র্যাক করুন: {trackingLink}"
+    },
+    {
+      "key": "order.processing",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Order on its way",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is on its way. Track it: {trackingLink}"
+    },
+    {
+      "key": "order.processing",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Order being packed",
+      "enabled": true,
+      "body": "{customerName}, {storeName} থেকে আপনার অর্ডার {orderNumber} প্যাক হচ্ছে। এখানে ট্র্যাক করুন: {trackingLink}"
+    },
+    {
+      "key": "order.processing",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Order being packed",
+      "enabled": true,
+      "body": "Hi {customerName}, your order {orderNumber} from {storeName} is being packed. Track it here: {trackingLink}"
+    },
+    {
+      "key": "order.placed",
+      "channel": "EMAIL",
+      "locale": "bn",
+      "name": "Order confirmation e-mail",
+      "enabled": true,
+      "subject": "আপনার অর্ডার {orderNumber}",
+      "body": "{customerName},\n\nঅর্ডার {orderNumber} এর জন্য ধন্যবাদ। মোট: {total}।\nএখানে অর্ডারের খবর দেখুন: {orderLink}\n\n{storeName}"
+    },
+    {
+      "key": "order.placed",
+      "channel": "EMAIL",
+      "locale": "en",
+      "name": "Order confirmation e-mail",
+      "enabled": true,
+      "subject": "Your order {orderNumber}",
+      "body": "Hi {customerName},\n\nThank you for your order {orderNumber}. Total: {total}.\nFollow it here: {orderLink}\n\n{storeName}"
+    },
+    {
+      "key": "order.pickedUp",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Picked up by the courier (off by default)",
+      "enabled": false,
+      "body": "{storeName}: অর্ডার {orderNumber} কুরিয়ার নিয়ে গেছে। ট্র্যাক করুন: {trackingLink}"
+    },
+    {
+      "key": "order.pickedUp",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Picked up by the courier (off by default)",
+      "enabled": false,
+      "body": "{storeName}: the courier has picked up order {orderNumber}. Track it: {trackingLink}"
+    },
+    {
+      "key": "order.outForDelivery",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Out for delivery (off by default)",
+      "enabled": false,
+      "body": "{storeName}: অর্ডার {orderNumber} আজ আপনার কাছে পৌঁছাবে।"
+    },
+    {
+      "key": "order.outForDelivery",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Out for delivery (off by default)",
+      "enabled": false,
+      "body": "{storeName}: order {orderNumber} is out for delivery today."
+    },
+    {
+      "key": "order.delivered",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Delivered (off by default)",
+      "enabled": false,
+      "body": "{storeName}: অর্ডার {orderNumber} পৌঁছে গেছে। ধন্যবাদ!"
+    },
+    {
+      "key": "order.delivered",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Delivered (off by default)",
+      "enabled": false,
+      "body": "{storeName}: order {orderNumber} has been delivered. Thank you!"
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import type { PrismaClient } from '@extas/db/client';
 import { canonicalJson } from './backend';
 import { registryVersion, type RegistryShape, type SettingSpec } from './define';
 import { pair, type SettingsMessages } from './messages';
+import { ownerDataRegister, ownerDataRows, ownerRowName, type OwnerDataRegister } from './owner-data';
 import { jsonOrDbNull, jsonValue } from './prisma-backend';
 
 export interface SyncOptions {
@@ -20,6 +21,8 @@ export interface SyncOptions {
   /** Release that ran the sync (the image's GIT_SHA), kept on the Installation row. */
   appVersion?: string | null;
   now?: () => Date;
+  /** The PR 509 register mirrored into OwnerDataEntry (default: the built-in register). */
+  register?: OwnerDataRegister;
 }
 
 export interface SyncReport {
@@ -32,7 +35,11 @@ export interface SyncReport {
   retired: string[];
   /** Keys that were retired and are back in the registry. */
   restored: string[];
-  ownerData: { added: string[]; archived: string[]; restored: string[] };
+  /**
+   * PR 509 register changes. Setting keys by name; the other entries as `KIND:target` (e.g. `TABLE:StoreSecret`).
+   * `updated` = an entry whose reason text changed.
+   */
+  ownerData: { added: string[]; archived: string[]; restored: string[]; updated: string[] };
   /** A SettingsMigration row was written for this registry version. */
   recorded: boolean;
   warnings: string[];
@@ -87,6 +94,7 @@ export async function syncSettings(prisma: PrismaClient, opts: SyncOptions): Pro
   // Labels and schemas are checked before anything is written, so a bad registry never half-applies.
   const wanted = new Map(keys.map((k) => [k, definitionColumns(k, opts.registry[k]!, opts.messages)]));
   const ownerReason = pair(opts.messages, 'ownerData.settingReason');
+  const registerRows = ownerDataRows(opts.messages, opts.register ?? ownerDataRegister);
 
   return prisma.$transaction(
     async (tx) => {
@@ -99,7 +107,7 @@ export async function syncSettings(prisma: PrismaClient, opts: SyncOptions): Pro
         changed: [],
         retired: [],
         restored: [],
-        ownerData: { added: [], archived: [], restored: [] },
+        ownerData: { added: [], archived: [], restored: [], updated: [] },
         recorded: false,
         warnings: [],
       };
@@ -180,6 +188,35 @@ export async function syncSettings(prisma: PrismaClient, opts: SyncOptions): Pro
           report.ownerData.archived.push(key);
         }
       }
+      // A SETTING_KEY entry whose key left the registry altogether keeps its row: the key is retired, not deleted, and
+      // its stored values stay the owner's.
+
+      // The rest of the register: prefixes, tables, columns and media.
+      const others = await tx.ownerDataEntry.findMany({ where: { kind: { not: 'SETTING_KEY' } } });
+      const otherByName = new Map(others.map((e) => [ownerRowName(e), e]));
+      const wantedNames = new Set(registerRows.map(ownerRowName));
+      for (const want of registerRows) {
+        const name = ownerRowName(want);
+        const entry = otherByName.get(name);
+        if (!entry) {
+          await tx.ownerDataEntry.create({ data: want });
+          report.ownerData.added.push(name);
+          continue;
+        }
+        const reasonChanged = entry.reasonEn !== want.reasonEn || entry.reasonBn !== want.reasonBn;
+        if (!entry.archivedAt && !reasonChanged) continue;
+        await tx.ownerDataEntry.update({
+          where: { id: entry.id },
+          data: { reasonEn: want.reasonEn, reasonBn: want.reasonBn, archivedAt: null },
+        });
+        if (entry.archivedAt) report.ownerData.restored.push(name);
+        if (reasonChanged) report.ownerData.updated.push(name);
+      }
+      for (const entry of others) {
+        if (wantedNames.has(ownerRowName(entry)) || entry.archivedAt) continue;
+        await tx.ownerDataEntry.update({ where: { id: entry.id }, data: { archivedAt: at } });
+        report.ownerData.archived.push(ownerRowName(entry));
+      }
 
       const changedAny =
         report.added.length + report.changed.length + report.retired.length + report.restored.length > 0;
@@ -211,7 +248,11 @@ export async function syncSettings(prisma: PrismaClient, opts: SyncOptions): Pro
       }
 
       const ownerChanged =
-        report.ownerData.added.length + report.ownerData.archived.length + report.ownerData.restored.length > 0;
+        report.ownerData.added.length +
+          report.ownerData.archived.length +
+          report.ownerData.restored.length +
+          report.ownerData.updated.length >
+        0;
       report.status = changedAny || ownerChanged || report.recorded ? 'applied' : 'unchanged';
       return report;
     },
@@ -238,6 +279,7 @@ export function describeSync(r: SyncReport): string[] {
   list('owner-data register added', r.ownerData.added);
   list('owner-data register archived', r.ownerData.archived);
   list('owner-data register restored', r.ownerData.restored);
+  list('owner-data register reason updated', r.ownerData.updated);
   if (r.recorded) lines.push(`  recorded SettingsMigration v${r.registryVersion}`);
   for (const w of r.warnings) lines.push(`  WARNING: ${w}`);
   return lines;
