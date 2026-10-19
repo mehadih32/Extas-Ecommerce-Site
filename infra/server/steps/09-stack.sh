@@ -11,6 +11,8 @@ write_stack_env() {
   gen_secret "$s/meili.env" MEILI_MASTER_KEY 48
   gen_secret "$s/app.env" SESSION_SECRET 64
   gen_secret "$s/app.env" VAULT_MASTER_KEY 64      # encrypts the credential vault (PR 493); never in Git
+  # Rotation (workflow input rotate_staging_password): drop the old preview password so a new one is generated.
+  if [ "${ROTATE_STAGING:-no}" = yes ] && [ -f "$s/staging.env" ]; then sed -i '/^STAGING_PASSWORD=/d' "$s/staging.env"; fi
   gen_secret "$s/staging.env" STAGING_PASSWORD 20
   # shellcheck disable=SC1091
   . "$EXTAS_ROOT/config/profile.env"
@@ -144,9 +146,11 @@ CONF
     : | write_file "$d/noindex.caddy" 0644 >/dev/null
   fi
   pw="$(secret_get "$EXTAS_SECRETS_DIR/staging.env" STAGING_PASSWORD)"
-  if [ ! -s "$d/auth.caddy" ] || ! grep -q "^# for $EXTAS_STAGING_USER$" "$d/auth.caddy"; then
+  # Re-hash whenever the user or the password changed (a short fingerprint is kept, never the password).
+  local tag; tag="# for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12)"
+  if [ ! -s "$d/auth.caddy" ] || ! grep -qxF "$tag" "$d/auth.caddy"; then
     hash="$(docker run --rm --quiet "$IMG_CADDY" caddy hash-password --plaintext "$pw")"
-    printf '# for %s\nbasic_auth {\n\t%s %s\n}\n' "$EXTAS_STAGING_USER" "$EXTAS_STAGING_USER" "$hash" \
+    printf '%s\nbasic_auth {\n\t%s %s\n}\n' "$tag" "$EXTAS_STAGING_USER" "$hash" \
       | write_file "$d/auth.caddy" 0644 >/dev/null
   fi
   # The upstream belongs to deploy.yml once the app exists; until then the static page.
@@ -209,11 +213,7 @@ step_stack() {
   report OK "PR 6 · Redis" "cache (LRU, NVMe) + queue (no eviction, AOF on data disk)"
   report OK "PR 7 · Caddy" "$EXTAS_STAGING_HOST, auto HTTPS, HTTP/3, password + noindex"
   report INFO "stack health" "$up"
-  # Owner delivery: the preview password goes to the owner once, through a 1-day private workflow artifact.
-  # The workflow writes the "delivered" marker only after the upload succeeded.
-  if [ ! -f "$EXTAS_STATE_DIR/staging-password.delivered" ] && [ -n "${DELIVERY_DIR:-}" ]; then
-    install -d -m 0700 "$DELIVERY_DIR"
-    printf 'address: https://%s\nuser: %s\npassword: %s\n' "$EXTAS_STAGING_HOST" "$EXTAS_STAGING_USER" \
-      "$(secret_get "$EXTAS_SECRETS_DIR/staging.env" STAGING_PASSWORD)" > "$DELIVERY_DIR/staging-login.txt"
-  fi
+  # The preview password is never sent anywhere (not in chat, not in Git, not as an artifact). The owner reads it
+  # on the VM himself: Azure portal → Run command → /usr/local/sbin/extas-preview-login (docs/owner/PREVIEW-LOGIN.md).
+  install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-preview-login" /usr/local/sbin/extas-preview-login
 }

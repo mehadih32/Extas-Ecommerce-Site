@@ -35,18 +35,18 @@ the server.*
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
-| 1 | S0A | merged | 2026-10-20 | specs recorded from the VM by every setup run (`docs/reports/server/latest.md`) |
-| 2 | S0A | merged | 2026-10-20 | Ubuntu 24.04 verified, full upgrade each run |
-| 3 | S0A | merged | 2026-10-20 | SSH key-only, fail2ban, unattended upgrades, UFW 22/80/443; data-disk LVM (8 volumes + 16 GB swap) |
-| 4 | S0A | merged | 2026-10-20 | Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime app deploy comes with `deploy.yml` (S00) |
-| 5 | S0A | merged | 2026-10-20 | PostgreSQL 17 tuned from the profile, PgBouncer, temp on NVMe, WAL archive, slow log 100 ms |
-| 6 | S0A | merged | 2026-10-20 | Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk) |
-| 7 | S0A | merged | 2026-10-20 | Caddy auto HTTPS + HTTP/3, password + noindex; Cloudflare Origin cert waits for the Cloudflare key (PR 493/500) |
-| 8 | S0A | merged | 2026-10-20 | daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys |
-| 9 | S0A | merged | 2026-10-20 | monitor every minute → `health.json`; Telegram once the bot key is in the vault, log until then |
-| 10 | S0A | merged | 2026-10-20 | k6 baseline recorded on the server; `docs/SERVER.md` in Bengali |
-| 601 | S0A | merged | 2026-10-20 | NVMe boot unit before Docker; Direct Disk only; OS-disk fallback + alert |
-| 604 | S0A | merged | 2026-10-20 | auto profile in `infra/config/server.conf`; exact A2.9.5 table on 8 vCPU / 64 GB, scales elsewhere |
+| 1 | S0A | live | 2026-10-20 | specs recorded from the VM by every setup run (`docs/reports/server/latest.md`) |
+| 2 | S0A | live | 2026-10-20 | Ubuntu 24.04 verified, full upgrade each run |
+| 3 | S0A | live | 2026-10-20 | SSH key-only, fail2ban, unattended upgrades, UFW 22/80/443; data-disk LVM (8 volumes + 16 GB swap) |
+| 4 | S0A | live | 2026-10-20 | Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime app deploy comes with `deploy.yml` (S00) |
+| 5 | S0A | live | 2026-10-20 | PostgreSQL 17 tuned from the profile, PgBouncer, temp on NVMe, WAL archive, slow log 100 ms |
+| 6 | S0A | live | 2026-10-20 | Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk) |
+| 7 | S0A | live | 2026-10-20 | Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500) |
+| 8 | S0A | live | 2026-10-20 | daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys |
+| 9 | S0A | live | 2026-10-20 | monitor every minute → `health.json`; Telegram once the bot key is in the vault, log until then |
+| 10 | S0A | live | 2026-10-20 | k6 baseline recorded on the server; `docs/SERVER.md` in Bengali |
+| 601 | S0A | live | 2026-10-20 | NVMe boot unit before Docker; Direct Disk only; OS-disk fallback + alert |
+| 604 | S0A | live | 2026-10-20 | auto profile in `infra/config/server.conf`; exact A2.9.5 table on 8 vCPU / 64 GB, scales elsewhere |
 
 ## The stage table
 
@@ -181,7 +181,7 @@ built handover-ready from day one.
 | 4 | Docker and Docker Compose, with the project's network and volume layout. **Updated 19 Oct 23:33 (owner server spec):** Docker Compose stays (not PM2) — each service its own container with RAM/CPU limits from the one config file (PR 604) and auto-restart; volumes on the data disk, scratch on NVMe (PR 601); **zero-downtime deploys** — rolling/blue-green with health checks and automatic rollback |
 | 5 | PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum. **Updated 19 Oct 23:33 (owner server spec):** size confirmed (E8ds_v6), nothing to re-size. 16 GB RAM, 2–3 CPU; `shared_buffers` 16 GB, `effective_cache_size` ~~48 GB~~ 40 GB, `work_mem` by workload, `max_connections` kept low behind **PgBouncer**; `temp_tablespaces` on NVMe (PR 601); data on the data disk; slow query log for anything over 100 ms (PR 603); WAL archived to Blob for point-in-time restore (PR 8); a low-priority report pool (PR 603) |
 | 6 | Redis, and BullMQ queues with their dead-letter handling. **Updated 19 Oct 23:33 (owner server spec):** Redis ~~2 GB~~ 6 GB, 1 CPU, `maxmemory` with LRU eviction; working cache on NVMe, persistence (AOF/RDB) on the data disk; holds settings, the Dhaka area list, products, categories and the 15 s stock display cache (PR 602). Queues: image/video worker (separate process, 6 GB, 2 CPU) and background jobs (courier sync, e-mail, reports; 4 GB, 1 CPU) — heavy image and video work never runs in the web process |
-| 7 | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers. **Updated 19 Oct 23:33 (owner server spec):** Caddy stays (not Nginx) — automatic SSL renewal on all three domains, 1 GB, 1 CPU; **Cloudflare in front in Full (strict) mode** with a Cloudflare Origin certificate (PR 362) |
+| 7 | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers. **Updated 19 Oct 23:33 (owner server spec):** Caddy stays (not Nginx) — automatic SSL renewal on all three domains, 1 GB, 1 CPU; **Cloudflare in front in Full (strict) mode** with a Cloudflare Origin certificate (PR 362) **Updated 20 Oct 2026 (CN-007): the preview password is never sent through chat, logs or artifacts; the owner reads it on the VM (`extas-preview-login`, `docs/owner/PREVIEW-LOGIN.md`), and `server-setup` can rotate it.** |
 | 8 | Nightly encrypted backup of database, uploads and configuration to **Google Drive**, with one-command restore. **Updated 19 Oct 23:33 (owner server spec): Azure Blob is added** (supersedes "Drive only, no Blob"). **Blob:** continuous WAL archive for point-in-time restore to any minute; daily full backups; soft delete and versioning or immutability on, so a mistake or ransomware cannot wipe it; images and media in Blob with soft delete and versioning. **Google Drive stays mandatory:** the daily full encrypted copy, off-site with a different company; the second add-only Drive is a third copy. Zip staging on NVMe → upload → delete. Retention from settings. **Restore:** one command, defaults to Blob (same region, fast), Drive is the fallback; choose a point in time; staging first, typed confirmation for production (PR 396). Monthly automatic restore test (PR 395/507). Blob is billed separately from the VM — roughly US$5–15 a month for backups plus media at launch scale; same-region restore traffic is free. The owner creates the Storage account later with a guide; its key goes into the vault (PR 493) |
 | 9 | Monitoring — uptime, queue depth, error rate, disk and memory, alerting to Telegram. **Updated 19 Oct 23:33 (owner server spec):** Telegram alerts (through the AI 360 channel) when a disk passes 80%, a service goes down, a backup fails (Blob or Drive), the site slows down, or the NVMe goes missing; per-service RAM and CPU against its limit; the plain-language admin Server page is PR 423 — pre-launch required |
 | 10 | k6 performance baseline, recorded as the number every later change is measured against. **Updated 19 Oct 23:33 (owner server spec):** plus the speed targets, measured from Dhaka on a phone over 4G: LCP < 2.5 s, CLS < 0.1, INP < 200 ms, TTFB < 600 ms, category page under 1 MB, admin page under 1 s; measured automatically every month with results in the admin (PR 234, 423) — not done = not finished |
