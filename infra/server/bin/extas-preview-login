@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Shows the preview (staging) login to the owner. He runs it himself in Azure portal → VM → Run command →
+# RunShellScript, so the password never travels through chat, Git or GitHub (project rule).
+set -eu
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+pw="$(grep '^STAGING_PASSWORD=' "$EXTAS_ROOT/config/secrets/staging.env" | cut -d= -f2-)"
+echo "ঠিকানা: https://$EXTAS_STAGING_HOST"
+echo "নাম: $EXTAS_STAGING_USER"
+echo "পাসওয়ার্ড: $pw"

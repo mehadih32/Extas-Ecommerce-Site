@@ -787,6 +787,9 @@ to read code or open GitHub.
 ## A1. How this build runs
 
 
+> **CN-007 · 20 Oct 2026 (project rule: no passwords in chat).** The preview password for new.extas.com.bd is never sent to the owner through chat, a workflow artifact or a log. It stays in the server vault file; the owner reads it on the VM himself (Azure portal → Run command → `extas-preview-login`, `docs/owner/PREVIEW-LOGIN.md`). It can be rotated with the `server-setup` input `rotate_staging_password`. Update on PR 7; no new PR. The first password, which had been shown in chat, was rotated.
+
+
 > **CN-006 · 20 Oct 2026 02:33 (owner).** The build never stops for the owner: no stop at the wave boundary (A1.1 rule 7 replaced — report and continue), no permission asks for build/test/merge/deploy to new.extas.com.bd, blocked items go to BLOCKED.md, usage limits resume automatically from PROGRESS.md. Only money/prices/deletion/irreversible items and the go-live domain switch need him.
 
 

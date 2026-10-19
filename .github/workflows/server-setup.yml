@@ -18,6 +18,10 @@ on:
         description: "Re-measure the k6 baseline"
         type: boolean
         default: false
+      rotate_staging_password:
+        description: "Make a new preview (new.extas.com.bd) password. The owner reads it on the VM, see docs/owner/PREVIEW-LOGIN.md"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -47,37 +51,15 @@ jobs:
           ONLY: ${{ inputs.only }}
           DATA_DISK: ${{ inputs.data_disk }}
           K6_FORCE: ${{ inputs.k6_force && 'yes' || 'no' }}
+          ROTATE_STAGING: ${{ inputs.rotate_staging_password && 'yes' || 'no' }}
         run: |
           args=()
           [ -n "$ONLY" ] && args=(--only "$ONLY")
-          sudo env EXTAS_DATA_DISK="$DATA_DISK" K6_FORCE="$K6_FORCE" DELIVERY_DIR="$RUNNER_TEMP/deliver" \
+          sudo env EXTAS_DATA_DISK="$DATA_DISK" K6_FORCE="$K6_FORCE" ROTATE_STAGING="$ROTATE_STAGING" \
             GITHUB_SHA="$GITHUB_SHA" bash infra/server/setup.sh "${args[@]}"
 
-      - name: Check for the one-time owner delivery
-        id: deliver
-        run: |
-          if sudo test -f "$RUNNER_TEMP/deliver/staging-login.txt"; then
-            sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/deliver"
-            echo "has=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # The preview password is generated on the server and never committed. It reaches the owner once through
-      # this private, 1-day artifact; the build agent reads it and tells him in chat (START-HERE step 5).
-      - name: Upload preview login (private, 1 day)
-        if: steps.deliver.outputs.has == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-login
-          path: ${{ runner.temp }}/deliver/staging-login.txt
-          retention-days: 1
-
-      - name: Mark delivered and remove the local copy
-        if: steps.deliver.outputs.has == 'true'
-        run: |
-          sudo touch /srv/extas/state/staging-password.delivered
-          shred -u "$RUNNER_TEMP/deliver/staging-login.txt"
+      # The preview password is generated on the server and never leaves it: no artifact, no log, no chat.
+      # The owner reads it on the VM with `extas-preview-login` (docs/owner/PREVIEW-LOGIN.md).
 
       - name: Commit the machine report
         if: always()

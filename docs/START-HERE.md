@@ -56,7 +56,9 @@ The repository already holds the docs. Session 0 (repo setup) was done from the 
 
    This is how the owner follows progress.
    - The staging password is generated on the server and **never committed**.
-   - Tell it to the owner once in chat. It only protects a preview.
+   - ~~Tell it to the owner once in chat. It only protects a preview.~~
+   - **Updated 20 Oct 2026 (CN-007):** never in chat, a log or an artifact. The owner reads it on the VM himself
+     (Azure portal → Run command → `/usr/local/sbin/extas-preview-login`), steps in `docs/owner/PREVIEW-LOGIN.md`.
 6. **Cloudflare.** The owner adds an A record `new` → the VM's public IP, proxied (orange cloud).
    - If HTTPS fails because of the Cloudflare SSL mode, write the exact Bengali click-steps for the owner in
      `BLOCKED.md`.
