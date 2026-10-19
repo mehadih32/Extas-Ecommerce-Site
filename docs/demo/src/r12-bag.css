@@ -1,0 +1,225 @@
+/* ================= round 12 · sets, add-to-bag sheet, bag =================
+   Every rule is scoped to one of four roots so nothing can leak into another
+   page while the rest of the site is being worked on at the same time:
+     .cb-wrap / .cb-mbar          ready-made set page  (#/combo/:id)
+     .bs-wrap / .bs-mbar          build your own set   (#/set)
+     [data-testid="bag-modal"]    the sheet that rises after Add to Bag
+     .bg-page / .bg-wrap          view bag             (#/bag)
+   Rules that override a <style> block injected at runtime (css-bag, cb-css,
+   bs-css) carry one extra class so they win on specificity, not on order. */
+
+/* ---------------- 26a. Popular pairs — three across at 440px -------------
+   A wrapping flex row fitted two chips and left the right third of the phone
+   empty. A real grid fits three; cb_pairs now returns 1, 2, 3 or 6 so the
+   second row is never a lonely chip. */
+.cb-wrap .cb-pairs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cb-wrap .cb-pairs .chip{min-width:0;min-height:46px;padding:7px 8px;gap:5px;
+  font-size:12px;justify-content:center}
+.cb-wrap .cb-pairs .cb-dots{flex-shrink:0}
+.cb-wrap .cb-pairs .cb-dots .cb-dot{width:13px;height:13px;box-shadow:none}
+.cb-wrap .cb-pairs .cb-dots .cb-dot+.cb-dot{margin-left:-3px}
+.cb-wrap .cb-pairs .cb-pairname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:768px){
+  .cb-wrap .cb-pairs{grid-template-columns:repeat(auto-fit,minmax(144px,1fr))}
+  .cb-wrap .cb-pairs .chip{font-size:13px;padding:7px 12px}
+}
+
+/* ---------------- 26b. the item thumbnails catch the eye ----------------
+   He asked for a black border first and withdrew it himself: picking one
+   already turns it near-black, so a border would fight the selected state.
+   Depth does the job instead — a soft drop shadow, deeper when selected. */
+.cb-wrap .cb-tabs .chip{min-height:44px;
+  box-shadow:0 3px 10px rgba(28,24,18,.17), 0 1px 2px rgba(28,24,18,.10)}
+.cb-wrap .cb-tabs .chip.on{
+  box-shadow:0 7px 18px rgba(28,24,18,.32), 0 2px 5px rgba(28,24,18,.20)}
+.cb-wrap .cb-thumb{box-shadow:0 3px 9px rgba(28,24,18,.14)}
+.cb-wrap .cb-thumb.on{box-shadow:0 0 0 1px var(--brand), 0 6px 16px rgba(28,24,18,.24)}
+
+/* ---------------- 26c. the rest of the set page, top to bottom ---------- */
+/* five size pills used two thirds of the row and left the right third bare */
+.cb-wrap .cb-pills{display:grid;grid-template-columns:repeat(auto-fit,minmax(54px,1fr));gap:8px}
+.cb-wrap .cb-pills .size-pill{min-width:0;padding-left:4px;padding-right:4px}
+/* 10.5px captions sat under the readable floor the rest of the site uses */
+.cb-wrap .cb-cap{font-size:12px;padding:5px 3px 6px}
+/* 38px controls sat under the 44px touch floor */
+.cb-wrap .cb-stagebtn{min-height:44px;padding:9px 13px;font-size:13.5px}
+.cb-wrap .cb-finder{min-height:60px}
+/* the set price and the saving are the two numbers that sell this page */
+.cb-wrap .cb-pricebox .cb-big{font-size:36px}
+.cb-wrap .cb-pricebox .tag.sale{font-size:13px}
+.cb-wrap .cb-reg .small{font-size:13.5px}
+/* summary: the heading was smaller than the body type under it */
+.cb-wrap #cb-summary .h3{font-size:17px}
+.cb-wrap #cb-summary .cb-sum-line .small{font-size:14px}
+/* 40. button labels you can read at arm's length */
+.cb-wrap .cb-ctas .btn,
+.cb-mbar.mbar .cb-ctas .btn{font-size:16.5px;font-weight:700;min-height:54px}
+.cb-wrap .btn-primary.btn-block{font-size:16.5px;font-weight:700;min-height:54px}
+.cb-wrap .cb-wabtn{min-height:50px;font-size:15px}
+.cb-mbar.mbar .price{font-size:20px}
+/* the build-your-own card sat alone in a two-column row and left the whole
+   right half of the phone empty */
+@media(max-width:767px){.cb-wrap .cb-build{grid-column:1/-1}}
+
+/* the fixed WhatsApp button is parked halfway down the right edge (50px wide,
+   z-index 44) and swallows the tap on anything right-aligned that scrolls
+   through it. These two links are tucked clear of that lane, and lifted above
+   it as well in case the button is ever moved. */
+.cb-wrap .sec-hd>.link,
+.bg-page .ups-hd>.link{position:relative;z-index:45;min-height:44px;font-size:14.5px}
+@media(max-width:1023px){
+  .cb-wrap .sec-hd>.link,
+  .bg-page .ups-hd>.link{margin-right:54px}
+}
+
+/* ---------------- build your own set ---------------- */
+.bs-wrap .btn-primary.btn-block,
+.bs-mbar.mbar .btn-primary{font-size:16.5px;font-weight:700;min-height:54px}
+.bs-wrap .bs-slot.empty{min-height:128px}
+
+/* ---------------- 34/35. the add-to-bag sheet ----------------
+   34. The name, the size and the price are the three things he checks before
+   tapping Checkout, and all three were set in the site's smallest type. */
+[data-testid="bag-modal"] .row>.grow>.small.bold{font-size:17px;font-weight:700;line-height:1.3}
+[data-testid="bag-modal"] .row>.grow>.xs.text2{font-size:15.5px;font-weight:700;color:var(--ink);margin-top:3px}
+[data-testid="bag-modal"] .row>.price.small{font-size:19px;font-weight:700}
+[data-testid="bag-modal"] .soft .row.between.small>.text2{font-size:16px;font-weight:700;color:var(--ink)}
+[data-testid="bag-modal"] .soft .row.between.small>.price{font-size:21px;font-weight:700}
+[data-testid="bag-modal"] .btn{font-size:16px;font-weight:700;min-height:50px}
+[data-testid="bag-modal"] .btn-primary{font-size:18px;font-weight:800;min-height:56px}
+/* 35. what replaces the delivery gap: the two things that actually remove the
+   risk at the moment someone has just said yes. */
+.atb-reassure{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--line2)}
+.atb-reassure>span{display:inline-flex;align-items:center;gap:6px;
+  font-size:13.5px;font-weight:600;color:var(--text2)}
+.atb-reassure svg{color:var(--brand);flex-shrink:0}
+
+/* ---------------- 36. a gap under the EXTAS header band ---------------- */
+.bg-wrap.bg-wrap{padding-top:24px}
+@media(min-width:1024px){.bg-wrap.bg-wrap{padding-top:36px}}
+
+/* ---------------- 37. "3 items" reads like a count ----------------
+   Bigger and bold, with the same light sweep that runs through the EXTAS mark
+   in the header (@keyframes logoSheen), but still a step under "Your bag". */
+.bg-page .bg-title{gap:0}
+.bg-page .bg-title .cnt{margin-left:16px;font-size:20px;font-weight:700;letter-spacing:0;
+  background-image:linear-gradient(100deg,
+    var(--text2) 0 42%, #C6BFB2 49%, #EFEBE3 51%, #C6BFB2 53%, var(--text2) 60% 100%);
+  background-size:320% 100%;background-position:170% 0;
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent!important;-webkit-text-fill-color:transparent;
+  animation:logoSheen 7s ease-in-out 2.2s infinite}
+@media(prefers-reduced-motion:reduce){
+  .bg-page .bg-title .cnt{animation:none;color:var(--text2)!important;
+    -webkit-text-fill-color:var(--text2)}}
+
+/* ---------------- 38. "See the set" inside its button ---------------- */
+.bg-page .bg-offer-slot .btn{font-size:16px;font-weight:700;min-height:48px;padding:10px 18px}
+.bg-page .bg-offer-slot .h3{font-size:15.5px}
+.bg-page .bg-offer-slot .small{font-size:13.5px}
+
+/* ---------------- 39. order summary, one step up throughout ---------- */
+.bg-page [data-testid="bag-summary"] .h2{font-size:21px;margin-bottom:14px}
+.bg-page .bg-sr{font-size:15px;padding:6px 0}
+.bg-page .bg-sr-item span:first-child{font-size:15px}
+.bg-page .bg-tot{font-size:18px;padding-top:14px}
+.bg-page .bg-tot .price{font-size:27px}
+.bg-page [data-testid="bag-summary"] .link{font-size:14.5px}
+.bg-page [data-testid="bag-summary"] .xs{font-size:13.5px}
+.bg-page .bg-trust>div{font-size:12.5px}
+
+/* ---------------- 40. the Checkout label ---------------- */
+.bg-page [data-testid="bag-checkout"]{font-size:19px;font-weight:800;min-height:58px}
+.bg-page .bg-mbar .btn{font-size:19px;font-weight:800;min-height:60px}
+
+/* ---------------- 41. "Goes well with your bag" ----------------
+   Two pixels up, two more between it and everything under it, so the polo
+   images are not crowded by the heading. */
+.bg-page .ups-hd{margin-top:-2px;margin-bottom:14px}
+.bg-page .ups-sub{margin-bottom:14px}
+.bg-page .ups-row{margin-top:14px}
+
+/* the second-polo chips were cut off at the right edge of a 440px screen */
+.bg-page .bg-duo-cols{flex-wrap:wrap;overflow-x:visible}
+.bg-page .bg-duo-cols .chip{min-height:44px}
+
+/* the slot used to show a name with its last word chopped off ("Essential
+   Piqué"); it now carries the whole name over two lines */
+.bs-wrap .bs-slotname{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;line-height:1.25;min-height:2.5em}
+
+/* --- The set page's first screen was one enormous photograph: the price, the
+   saving and the buttons all sat below the fold, which is exactly the fault
+   the product page was just cured of. Cap the stage on a phone so the set
+   price and the two buttons are visible without scrolling. --- */
+@media(max-width:767px){
+  .cb-stage .pimg{height:min(38vh,320px)!important;max-height:min(38vh,320px)!important;
+    aspect-ratio:auto!important;object-fit:cover}
+  .cb-stage .pimg svg{max-height:86%}
+  /* the thumbnail rail keeps its own small size — it must not inherit the
+     stage's height, or the rail becomes taller than the photograph */
+  .cb-rail .cb-thumb{height:auto!important}
+  .cb-rail .pimg{height:56px!important;max-height:56px!important;aspect-ratio:auto!important}
+  .cb-rail .pimg svg{max-height:84%}
+}
+
+/* ================= round 13 · the owner's bag notes (26–30) ============== */
+
+/* ---- 30/36. free delivery, said once and seen ----
+   The progress bar only belongs on a bag that still has to reach the
+   threshold. When delivery is already free this strip replaces it: one line,
+   brand-tinted, with the word FREE as a badge. It is also ~70px shorter,
+   which is what gets Checkout above the fold with one product in the bag. */
+.bg-page .bg-freebar{display:flex;align-items:center;gap:12px;
+  background:var(--brand-tint);border:1.5px solid var(--brand-line);
+  border-radius:var(--card-radius);padding:12px 14px;color:var(--ink)}
+.bg-page .bg-freebar>svg{color:var(--brand);flex-shrink:0}
+.bg-page .bg-freebar b{display:block;font-size:15.5px;font-weight:700;line-height:1.25}
+.bg-page .bg-freebar span>span{display:block;font-size:12.5px;color:var(--text2);
+  line-height:1.35;margin-top:2px}
+.bg-freeb{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
+  background:var(--brand);color:var(--brand-ink);border-radius:999px;
+  padding:5px 11px;font-size:12.5px;font-weight:800;letter-spacing:.06em}
+:root[data-theme="festive"] .bg-freeb{background:var(--gold);color:#1B1403}
+
+/* the same badge inside the order summary's delivery row */
+.bg-page .bg-sr.bg-free{align-items:center;padding:8px 0}
+.bg-page .bg-sr.bg-free>span:first-child{display:inline-flex;align-items:center;gap:7px;
+  font-weight:700;color:var(--ink)}
+
+/* ---- 29. the set price is the best news in the summary ---- */
+.bg-page .bg-sr.bg-setdisc{align-items:center;gap:10px;margin:4px 0;padding:9px 11px;
+  background:var(--brand-tint);border:1px solid var(--brand-line);
+  border-radius:var(--radius);color:var(--ink);font-weight:600}
+.bg-page .bg-sr.bg-setdisc>span:first-child{display:inline-flex;align-items:center;gap:8px;
+  min-width:0;line-height:1.3}
+.bg-page .bg-sr.bg-setdisc svg{color:var(--brand);flex-shrink:0}
+.bg-page .bg-setamt{font-weight:800;color:var(--brand);white-space:nowrap}
+:root[data-theme="festive"] .bg-page .bg-setamt{color:var(--gold)}
+
+/* ---- 27. the money inside the second-polo offer ---- */
+.bg-page .bg-duoline{margin-top:3px;line-height:1.45}
+.bg-page .bg-save{display:inline-flex;align-items:center;background:var(--brand);
+  color:var(--brand-ink);border-radius:999px;padding:2px 9px;margin-left:4px;
+  font-size:13px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+:root[data-theme="festive"] .bg-page .bg-save{background:var(--gold);color:#1B1403}
+
+/* ---- 26. four colours across, sold-out ones shaded and silent ---- */
+.bg-page .bg-duo-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;margin-top:11px;overflow:visible}
+.bg-page .bg-duo-cols .chip.bg-duoc{min-height:46px;min-width:0;padding:6px 4px;gap:5px;
+  flex-direction:column;justify-content:center;font-size:11.5px;font-weight:600;line-height:1.1}
+.bg-page .bg-duo-cols .chip.bg-duoc .bg-duon{min-width:0;max-width:100%;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.bg-page .bg-duo-cols .chip.bg-duoc .swatch.sm{width:15px;height:15px}
+.bg-page .bg-duo-cols .chip.bg-duoc.out{opacity:.4;cursor:not-allowed;
+  background:var(--surface2);border-style:dashed}
+@media(min-width:420px){.bg-page .bg-duo-cols .chip.bg-duoc{font-size:12.5px}}
+
+/* ---- 28. the sticky bar steps aside when the real Checkout is on screen ---- */
+.bg-page .bg-mbar{transition:transform .2s ease, opacity .18s ease}
+.bg-page .bg-mbar.bg-mbar-off{transform:translateY(120%);opacity:0;pointer-events:none}
+/* the floating WhatsApp button owns a 50px lane down the right edge; the
+   fourth colour must not sit under it (same tuck as the links above) */
+@media(max-width:1023px){.bg-page .bg-duo-cols{margin-right:48px}}

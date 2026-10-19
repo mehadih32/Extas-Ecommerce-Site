@@ -1,0 +1,34 @@
+/* r12-zsearch.css — help & policy answers in search (07-help-search.js)
+   Live suggestions under the search box + the "Help & policies" block on #/search.
+   Uses the shop's own tokens so it follows every theme. */
+.hs-sugg{margin-top:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.hs-sugg[hidden]{display:none}
+.srch-form + .hs-sugg{max-width:640px;margin-top:10px}
+form.hs-on > .row.wrap.mt12{display:none}            /* popular chips step aside while suggestions show */
+.hs-gh{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:11px 14px 4px}
+.hs-for{text-transform:none;letter-spacing:0;font-weight:500}
+.hs-item{display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:56px;color:var(--ink);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.hs-item:hover,.hs-item:focus-visible{background:var(--surface2)}
+.hs-list .hs-item+.hs-item{border-top:1px solid var(--line2)}
+.hs-ic{width:36px;height:36px;border-radius:50%;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+:root[data-theme="festive"] .hs-ic{color:var(--gold)}
+.hs-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.hs-tx b{font-size:14px;font-weight:600;line-height:1.35}
+.hs-ans{font-size:12.5px;color:var(--text2);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hs-ans .price{font-size:13px}
+.hs-go{color:var(--muted);flex-shrink:0;display:flex}
+.hs-thumb{flex-shrink:0;width:40px}
+.hs-thumb .pimg{width:40px;height:50px;border-radius:8px}
+.hs-thumb .pimg svg.garment{width:78%}
+.hs-all{display:flex;gap:8px;align-items:center;width:100%;border:0;border-top:1px solid var(--line);background:var(--surface2);padding:12px 14px;min-height:46px;
+  font:inherit;font-weight:600;font-size:13.5px;color:var(--brand);cursor:pointer;text-align:left}
+.hs-all span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* results page */
+.hs-block .sec-hd{margin-bottom:12px}
+.hs-cards{display:grid;gap:10px}
+@media(min-width:768px){.hs-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hs-card{border:1px solid var(--line);border-radius:var(--card-radius);background:var(--surface);padding:14px 16px;align-items:flex-start;min-height:0}
+.hs-card .hs-ic{margin-top:1px}
+.hs-card .hs-tx b{font-size:15px}
+.hs-card .hs-ans{font-size:13.5px;-webkit-line-clamp:3}
+.hs-card .hs-go{align-self:center}

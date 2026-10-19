@@ -1,0 +1,264 @@
+/* ================= round 12 — category page (r12-cat.css) ================= */
+
+/* ---------- 13. Filter · sort · On sale read as one set of three ----------
+   Same height, same border, same transparent box, same type. The sort control
+   used to be a white <select> two points smaller, so it looked like a stray
+   input dropped between two buttons. */
+/* "Recommended" is the longest label of the three, so its column gets a
+   little more room — same box, same border, same type, just not clipped. */
+.cat-ptools{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr)}
+.cat-ptools .cat-fbtn,
+.cat-ptools .cat-sortbtn,
+.cat-ptools .cat-salebtn{
+  width:100%;height:46px;min-height:46px;padding:0 8px;gap:6px;
+  font-size:13.5px;font-weight:700;
+  background:transparent;color:var(--ink)!important;
+  border:1.5px solid var(--input);border-radius:var(--btn-radius)}
+.cat-ptools .cat-fbtn svg,
+.cat-ptools .cat-sortbtn svg,
+.cat-ptools .cat-salebtn svg{width:17px;height:17px;flex-shrink:0}
+/* a disabled On sale must still read as the same empty box, only quieter */
+.cat-ptools .cat-salebtn[disabled]{background:transparent;border-color:var(--line);
+  color:var(--muted)!important;opacity:1}
+/* narrow phones: shrink all three together so they never stop matching */
+@media(max-width:409px){
+  .cat-ptools .cat-fbtn,
+  .cat-ptools .cat-sortbtn,
+  .cat-ptools .cat-salebtn{font-size:12.5px;padding:0 6px;gap:5px}
+  .cat-ptools .cat-fbtn svg,
+  .cat-ptools .cat-sortbtn svg,
+  .cat-ptools .cat-salebtn svg{width:16px;height:16px}
+}
+
+/* ---------- 14. our own sort menu, anchored under its own button ----------
+   A native <select> popup is drawn by the phone browser at the bottom of the
+   screen and cannot be styled, so the control is a button and the list is
+   ours: same background and border as the three boxes above it. */
+.cat-sortwrap{position:relative;min-width:0}
+.cat-sortwrap.is-open{z-index:40}
+.cat-sortbtn{justify-content:space-between}
+.cat-sortv{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cat-sortwrap.is-open .cat-sortbtn{border-color:var(--ink)}
+.cat-sortwrap.is-open .cat-sortbtn svg{transform:rotate(180deg)}
+/* catches the next tap anywhere else; invisible on purpose */
+.cat-sortveil{position:fixed;inset:0;z-index:1;background:transparent;border:0;cursor:default}
+.cat-sortmenu{position:absolute;z-index:2;top:calc(100% + 6px);right:0;
+  min-width:232px;max-width:min(320px,86vw);padding:4px;
+  background:var(--bg);border:1.5px solid var(--input);border-radius:var(--btn-radius);
+  box-shadow:0 18px 38px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);
+  animation:cat-sortin .14s ease-out}
+@keyframes cat-sortin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.cat-sortmenu{animation:none}}
+.cat-sortopt{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;min-height:46px;padding:0 12px;cursor:pointer;
+  background:transparent;border:0;border-radius:calc(var(--btn-radius) - 4px);
+  font-family:inherit;font-size:14.5px;font-weight:600;color:var(--ink);text-align:left}
+.cat-sortopt+.cat-sortopt{margin-top:2px}
+.cat-sortopt:hover{background:var(--line2)}
+.cat-sortopt.on{background:var(--brand);color:var(--brand-ink)}
+.cat-sortopt.on:hover{background:var(--brand)}
+.cat-sortopt svg{flex-shrink:0}
+/* desktop: the same control, sized for the sort line in the toolbar */
+@media(min-width:1024px){
+  .cat-bar .cat-sortbtn{width:auto;min-width:186px;height:42px;min-height:42px;
+    padding:0 12px;font-size:14px;font-weight:600;justify-content:space-between;
+    background:var(--surface);border:1px solid var(--input);border-radius:var(--radius)}
+  .cat-bar .cat-sortwrap.is-open .cat-sortbtn{border-color:var(--ink)}
+}
+
+/* ---------- 15. the quick-filter chips are one even row ----------
+   They used to be natural-width and left-packed, which left a dead strip on
+   the right at 440px. Now they are equal columns that fill the row exactly:
+   four across the phone, and the row scrolls once there are more. */
+.cat-chiprow.cat-ph{
+  display:grid;grid-auto-flow:column;
+  grid-auto-columns:minmax(calc((100% - 24px)/4),1fr);
+  gap:8px;margin:12px 0 16px;padding:0;
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.cat-chiprow.cat-ph::-webkit-scrollbar{display:none}
+.cat-chiprow.cat-ph .chip{
+  width:100%;min-width:0;min-height:44px;padding:0 6px;gap:4px;
+  justify-content:center;text-align:center;font-size:12.5px;font-weight:600;
+  overflow:hidden;scroll-snap-align:start}
+.cat-chiprow.cat-ph .chip svg{flex-shrink:0}
+@media(max-width:409px){
+  /* three across below 410px — four would clip "৳800–1,200" */
+  .cat-chiprow.cat-ph{grid-auto-columns:minmax(calc((100% - 16px)/3),1fr)}
+}
+
+/* ---------- 16/17. the bundle row: ONE row, two cards per phone ----------
+   The scroller is the track itself, because SMOOTH clones the track's own
+   children to make the loop seamless. No gap property: the spacing is a
+   margin on every tile, so one lap is exactly n × (tile + margin) and the
+   wrap point is invisible. */
+.cat-sl{display:flex;flex-wrap:nowrap;align-items:flex-start;
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;scroll-snap-type:none;
+  margin:0 -16px;padding:0}
+.cat-sl::-webkit-scrollbar{display:none}
+.cat-pick{flex:0 0 172px;width:172px;margin:0 8px 0 0}
+.cat-pick .cat-pick-n{font-size:13px;line-height:1.3;margin-top:7px;font-weight:500}
+.cat-pick .cat-pick-p{font-size:12.5px;margin-top:2px}
+.cat-bn-picks{margin-top:16px}
+@media(min-width:1024px){
+  .cat-sl{margin:0}
+  .cat-pick{flex:0 0 158px;width:158px}
+}
+
+/* ---------- extra: touch targets the audit found under 44px ---------- */
+/* "Read more", "Show all 6", "+ 4 more colours", "Clear all" were 36px high */
+.cat-main .link,.cat-info .link,.cat-side .link{min-height:44px;display:inline-flex;align-items:center}
+/* "Find my size" inside the FAQ answer was 31px high */
+.cat-fms{min-height:44px;padding:0;align-items:center}
+/* the search page's suggestion and category chips were 36px high */
+.srch-empty .chip,.srch-form+.row .chip{min-height:44px;padding:0 14px}
+
+/* =====================================================================
+   K2. THE QUICK-FILTER CHIPS WERE BEING CLIPPED ON EVERY CATEGORY.
+   ---------------------------------------------------------------------
+   Not the chip's own text — measured at 440px the widest label, "Under
+   ৳800", is 73.3px inside a 94px box. The clipping came from the shared
+   scroll-fade in styles.css:
+
+     .cat-chiprow{ mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent) }
+
+   a 26px fade on the right edge that says "this row scrolls". The grid
+   lays out exactly four equal columns that fill the row to the pixel, so
+   the FOURTH chip always ended inside that fade: its right border and the
+   last character of "Over ৳1,200", "Regular fit", "Relaxed fit" were
+   washed out on every category, at every scroll position.
+
+   The fix is the rule, not the chip: the row now reserves the fade's 26px
+   as trailing padding, so the columns are laid out in the space BEFORE the
+   fade and the fade falls on the gap (and, once the row is scrolled, on
+   the next chip peeking in — which is what a scroll hint is for).
+     440px: content box 408 - 26 = 382 -> 4 cols of 89.5 + 3 gaps of 8
+     360px: content box 328 - 26 = 302 -> 3 cols of 95.3 + 2 gaps of 8
+   The widest label fits in both with room to spare.
+   ===================================================================== */
+.cat-chiprow.cat-ph{
+  padding-right:26px;
+  /* THREE across, not four, and the track grows if a label needs it.
+     minmax(1/3 of the row, max-content) means:
+       - a short label still gets a third of the row, so the chips stay an
+         even set instead of a ragged line;
+       - a long one — "Under ৳1,000" is 81.5px, and the computed price bands
+         of K1 can make it longer still — widens its own track instead of
+         being cut. Clipping is now structurally impossible, at any width,
+         in any language, whatever the bands work out to.
+     At 440px: content box 408 - 26 reserve = 382 -> 3 x 122 + 2 x 8 gap,
+     and the fourth chip peeks 18px into the fade, which is what tells the
+     shopper the row scrolls. */
+  grid-auto-columns:minmax(calc((100% - 16px)/3),max-content);
+}
+.cat-chiprow.cat-ph .chip{white-space:nowrap}
+/* when the row has so few chips that it cannot scroll, there is nothing to
+   hint at and the fade should not be there at all */
+.cat-chiprow.cat-ph:not(.is-scrollable){
+  -webkit-mask-image:none;mask-image:none;padding-right:0}
+
+/* =====================================================================
+   K3. The in-grid banner slot. ONE standard size on every device, so the
+   same artwork and the same sentence work from a 320px phone to a desktop
+   and the rows above and below never reflow around it.
+   Nothing is rendered at all when no banner is configured, so there is no
+   empty cell and no gap — see cat_offerBanner() in 21-category.js.
+   ===================================================================== */
+.cat-ob{
+  grid-column:1 / -1;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  min-height:104px;height:104px;padding:0 18px;margin:6px 0;
+  border-radius:var(--card-radius);overflow:hidden;
+  background:var(--brand);color:var(--brand-ink)}
+.cat-ob-txt{min-width:0}
+.cat-ob .cat-ob-e{color:var(--brand-ink);opacity:.74;margin-bottom:3px}
+.cat-ob-t{font-family:var(--font-display);font-weight:700;font-size:18px;line-height:1.2}
+.cat-ob-s{font-size:12.5px;opacity:.84;margin-top:4px;line-height:1.35}
+.cat-ob .cat-ob-cta{flex-shrink:0;min-height:40px;padding:0 14px;
+  background:var(--brand-ink);color:var(--brand)!important;border-color:var(--brand-ink);
+  font-size:13.5px;font-weight:700}
+/* an occasion reads warmer, a campaign reads as ink — same box, same size */
+.cat-ob-occasion{background:var(--gold-bg);color:var(--gold)}
+.cat-ob-occasion .cat-ob-e{color:var(--gold)}
+.cat-ob-occasion .cat-ob-cta{background:var(--gold);color:var(--gold-bg)!important;border-color:var(--gold)}
+.cat-ob-campaign{background:var(--ink);color:var(--bg)}
+.cat-ob-campaign .cat-ob-e{color:var(--bg)}
+.cat-ob-campaign .cat-ob-cta{background:var(--bg);color:var(--ink)!important;border-color:var(--bg)}
+@media(min-width:768px){
+  .cat-ob{min-height:120px;height:120px;padding:0 26px}
+  .cat-ob-t{font-size:22px}
+  .cat-ob-s{font-size:13.5px}
+}
+@media(max-width:359px){
+  .cat-ob{padding:0 14px;gap:10px}
+  .cat-ob-t{font-size:16px}
+  .cat-ob .cat-ob-cta{padding:0 11px;font-size:12.5px}
+}
+
+/* =====================================================================
+   R14. THE TOOLBAR ADJUSTS ITSELF (owner points 14.3 / 14.4 and the
+   fifteen-phone gate).
+   ---------------------------------------------------------------------
+   Top row. A flex row of whatever buttons the owner left on: each box
+   starts from an equal share (the sort a quarter more, for its longer
+   label) and is never narrower than its own label, so a switched-off
+   button leaves no hole and a long label takes room from a short one
+   instead of being cut. The buttons take their type from the ROW (1em);
+   if the labels together are wider than the phone, AUTO-FIT steps the
+   row's size down until they fit — never below 10.5px. Past that, the
+   leading icons go (.fit-x) and the row fits again.
+   Measured before: at 320px "Recommended" was cut to "Recomm…" and the
+   On-sale badge stuck 6px out of its own box.
+   ===================================================================== */
+/* overflow-x:clip: until AUTO-FIT has run, labels that do not fit yet must
+   not widen the whole page (a phone grows its layout viewport to fit any
+   overflow, and the fit would then measure the widened page). clip, not
+   hidden, so the sort menu can still drop below the row. */
+.cat-ptools.cat-ph{display:flex;font-size:13.5px;overflow-x:clip;overflow-y:visible}
+.cat-ptools.cat-ph>*{flex:1 1 0;min-width:max-content;width:auto}
+.cat-ptools.cat-ph>.cat-sortwrap{flex-grow:1.25}
+.cat-ptools.cat-ph .cat-sortv{overflow:visible;min-width:auto}
+.cat-ptools .cat-fbtn,
+.cat-ptools .cat-sortbtn,
+.cat-ptools .cat-salebtn{font-size:1em;padding:0 .5em;gap:.4em;white-space:nowrap}
+.cat-ptools .cat-tl{min-width:0}
+.cat-ptools .cat-sortv{text-overflow:clip}
+.cat-ptools .cat-count{flex-shrink:0;font-size:.8em;min-width:1.5em;height:1.5em;padding:0 .36em}
+@media(max-width:409px){
+  .cat-ptools.cat-ph{font-size:13px}
+  .cat-ptools .cat-fbtn,
+  .cat-ptools .cat-sortbtn,
+  .cat-ptools .cat-salebtn{font-size:1em;padding:0 .45em;gap:.35em}
+}
+.cat-ptools.fit-x .cat-fbtn>svg,
+.cat-ptools.fit-x .cat-salebtn>svg{display:none}
+/* one or two buttons left: they share the row, nothing stretches oddly */
+.cat-ptools[data-n="1"] .cat-sortbtn{justify-content:center;gap:.6em}
+
+/* Chip row. A grid track that is allowed to grow to max-content only grows
+   when there is free space — and a row that scrolls has none, so every
+   track sat at its one-third minimum and "Under ৳1,000" was cut at 320px.
+   Flex instead: every chip is at least a third of the row, grows to its
+   own label, never shrinks below it, and the row scrolls once the chips
+   are wider than the screen. A label can never be cut. */
+.cat-chiprow.cat-ph{display:flex;gap:8px;grid-auto-columns:auto}
+.cat-chiprow.cat-ph .chip{flex:1 0 auto;width:auto;min-width:calc((100% - 16px) / 3);
+  overflow:visible;padding:0 12px}
+.cat-chiprow.cat-ph:not(.is-scrollable) .chip{min-width:calc((100% - 16px) / 3)}
+
+/* Product card meta line (swatches · fit). On a 136px card at 320px the fit
+   label was cut to "Regula" or pushed onto a second line. The label now
+   shrinks with the card (AUTO-FIT) and, if it still cannot sit beside the
+   swatches, it steps out (.fit-x) — the fit is on the product page. */
+.pcard .pinfo>.row.between{flex-wrap:nowrap;gap:6px;min-width:0}
+.pcard .pinfo>.row.between>.tiny{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-align:right}
+.pcard .pinfo>.row.between.fit-x>.tiny{display:none}
+/* The image badge ("BESTSELLER", "WINTER 2026") must stop short of the
+   heart; it shrinks first and steps out only if it truly cannot fit. */
+.pcard .badge-img{max-width:calc(100% - 66px);white-space:nowrap;overflow:hidden;box-sizing:border-box;
+  padding:.36em .62em;letter-spacing:.045em}
+.pcard .badge-img.fit-x{display:none}
+/* chip row switched off (or empty): the grid keeps the same breathing room
+   under the sticky toolbar that the chip row used to give it */
+.cat-ptools.cat-ph + .grid{margin-top:16px}

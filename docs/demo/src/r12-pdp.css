@@ -1,0 +1,715 @@
+/* =====================================================================
+   ROUND 12 — PRODUCT PAGE
+   Everything is scoped to .pdp-page. Loaded after r11-pdp.css, so a rule
+   here with the same weight wins.
+   ===================================================================== */
+
+.pdp-page{
+  /* one "space" — the unit the price row and the bar are measured in */
+  --pdp-sp:5px;
+  --pdp-barsp:calc(var(--pdp-sp) * 2);   /* 27. two spaces each side of the bar */
+}
+/* 27. ...reduced to one space each on a phone narrower than the owner's 440 */
+@media(max-width:400px){ .pdp-page{ --pdp-sp:4px; --pdp-barsp:var(--pdp-sp) } }
+
+/* ---------------------------------------------------------------
+   33. THE FIRST-SCREEN BUDGET
+   The photo height now arrives from pdp_budget() as an inline
+   --pdp-img on .pdp-page. The r11 declaration stays as the value the
+   first paint uses before the measurement runs, so nothing flashes.
+   .pdp-tight is the last-resort compaction the budget turns on when
+   even the smallest photo cannot buy enough room.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page.pdp-tight{--pdp-gap:6px}
+  .pdp-page.pdp-tight .pdp-name{font-size:22px;line-height:1.1}
+  .pdp-page.pdp-tight .pdp-prow{min-height:40px;margin-top:5px}
+  .pdp-page.pdp-tight .size-pill{min-height:44px;font-size:15.5px}
+  .pdp-page.pdp-tight .pdp-thumbs .pdp-thumb{height:46px}
+}
+/* On a genuinely short screen — an old 640px Android, or a phone held
+   sideways — the compaction also gives up the parts of the first screen a
+   customer can reach by scrolling: the crumb trail, the star line and the
+   thumbnail strip. The photograph and the buy decision stay. */
+@media(max-width:1023px) and (max-height:720px){
+  .pdp-page.pdp-tight .pdp-crumbs,
+  .pdp-page.pdp-tight .pdp-rating,
+  .pdp-page.pdp-tight .pdp-thumbs{display:none}
+  .pdp-page.pdp-tight .pdp-prow{margin-top:4px}
+}
+
+/* ---------------------------------------------------------------
+   31 / 32 / 25. THE MEASUREMENT LINE KEEPS ITS OWN ROOM
+   A trouser size writes three numbers and wraps onto a second line at
+   440px, which is how "34" used to push hip and length under the buy
+   bar. The line now always reserves two lines and sets its text against
+   the bottom of them, so the figures land in the same place whatever
+   size is tapped and the photo never resizes under the customer.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page .pdp-fitline{
+    min-height:41px;                       /* 2 x 14px x 1.45 */
+    align-items:flex-end;
+    margin-bottom:1.5px;                   /* 31. never touches what is under it */
+  }
+  .pdp-page .pdp-fitline>span{display:block}
+}
+
+/* ---------------------------------------------------------------
+   24. FIND MY SIZE — always a sliver of air under it
+   On a panjabi-shaped page this card is the last thing on the first
+   screen, and the budget lands it 1.25px above the bar; the margin
+   below guarantees the same on any page where something follows it.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-fmssec{margin-bottom:2px}
+
+/* ---------------------------------------------------------------
+   20. THE PHOTOGRAPH IS SWIPEABLE, AND THE THUMBNAILS FOLLOW
+   touch-action keeps a vertical flick scrolling the page while a
+   horizontal one changes the photo; the live thumbnail is a ring, not
+   a hairline, so the strip visibly follows the arrows.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-main{touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.pdp-page .pdp-main img,.pdp-page .pdp-main svg{-webkit-user-drag:none;pointer-events:none}
+.pdp-page .pdp-arrow{pointer-events:auto}
+.pdp-page .pdp-thumb{transition:border-color .16s,box-shadow .16s}
+/* AUDIT: the live thumbnail was lifted 1px, which put the strip on two
+   baselines — 458.8 for the active cell, 459.8 for the other four. The ring
+   alone marks it now, so all five tops are equal. */
+.pdp-page .pdp-thumb.on{
+  border-color:var(--brand);
+  box-shadow:0 0 0 2px var(--brand), 0 6px 16px rgba(0,0,0,.14);
+}
+@media(prefers-reduced-motion:reduce){.pdp-page .pdp-thumb{transition:none}}
+
+/* ---------------------------------------------------------------
+   21. "ALL N COLOURS" LANDS ON THE SIZE-CHART BUTTON'S LINE
+   It is the last cell of the swatch row and takes the whole remaining
+   width, so three, five or six swatches all push it to the same right
+   edge as the Size-chart chip without a single hard-coded number.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-sw{padding-right:0;padding-left:0}
+.pdp-page .pdp-allc{
+  margin-left:auto;margin-right:0;
+  font-size:16.5px;font-weight:800;letter-spacing:-.005em;    /* 21. raised a step */
+  position:relative;
+}
+/* a 44px tap target that costs the row no height */
+.pdp-page .pdp-allc::before{content:"";position:absolute;left:-10px;right:-6px;top:50%;
+  height:44px;transform:translateY(-50%)}
+.pdp-page .pdp-rating{position:relative}
+.pdp-page .pdp-rating::before{content:"";position:absolute;left:-6px;right:-6px;top:50%;
+  height:44px;transform:translateY(-50%)}
+/* the size-chart chip grows to a comfortable thumb size */
+.pdp-page .pdp-chartbtn.v2{min-height:40px;font-size:14.5px;padding:0 13px 0 12px}
+
+/* ---------------------------------------------------------------
+   23. THE PRICE ROW STARTS TWO SPACES IN, AND READS BIGGER
+   --------------------------------------------------------------- */
+.pdp-page .pdp-prow{padding-left:calc(var(--pdp-sp) * 2);padding-right:0}
+.pdp-page .price.pdp-pbig{font-size:34px;line-height:1.06}
+.pdp-page .pdp-pbar{margin:0 var(--pdp-barsp);height:40px}
+/* the payment line is pushed a further two spaces clear of the bar */
+.pdp-page .pdp-prow:not(.freed):not(.dafter) .pdp-pside{margin-left:calc(var(--pdp-sp) * 2)}
+.pdp-page .pdp-psmall{font-size:14px;font-weight:700}
+.pdp-page .pdp-pside svg{width:22px;height:22px}
+.pdp-page .pdp-fd svg{width:26px;height:26px}
+.pdp-page .pdp-pside b{font-size:18px}
+@media(max-width:400px){
+  .pdp-page .price.pdp-pbig{font-size:29px}
+  .pdp-page .pdp-pside b{font-size:16px}
+  .pdp-page .pdp-psmall{font-size:12.5px}
+}
+
+/* ---------------------------------------------------------------
+   27. A DISCOUNTED PRODUCT: THE SAVING SITS AFTER THE BAR
+   The COD | bKash | Nagad line is dropped — the page already says
+   Cash on Delivery in the strip at the very top — and the struck
+   price, the per-cent badge and the saving take the far side, two
+   lines deep so all three read at 440px without shrinking.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-prow.dafter .pdp-pside{align-self:center;color:inherit}
+.pdp-page .pdp-prow.dafter .pdp-pbar{height:46px}
+.pdp-page .pdp-pdisc{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pdp-page .pdp-pd1{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.pdp-page .pdp-pd1 .strike{font-size:15px;font-weight:600}
+.pdp-page .pdp-prow.dafter .tag.pdp-pct{font-size:11.5px;font-weight:800;padding:2px 7px;letter-spacing:.01em}
+.pdp-page .pdp-pd2{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pdp-page .pdp-prow.dafter .pdp-saved{font-size:14px;font-weight:800;color:var(--sale)}
+.pdp-page .pdp-pfd{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;
+  font-weight:750;color:var(--brand-dark);white-space:nowrap}
+.pdp-page .pdp-pfd svg{width:17px!important;height:17px!important;color:var(--brand-dark)}
+/* .sweep paints its letters with a background gradient, so a swept element
+   without one of its own disappears. This is that gradient for the small
+   free-delivery line that rides with a discount. */
+.pdp-page .pdp-pfd.sweep{background-image:linear-gradient(100deg,
+  var(--brand-dark) 0 34%, #9ED3B4 44%, #F2FFF7 50%, #9ED3B4 56%, var(--brand-dark) 66% 100%);
+  animation:pdpSheenQ 4.6s ease-in-out infinite}
+.pdp-page .pdp-pfd.sweep svg{-webkit-text-fill-color:initial;color:var(--brand-dark)}
+@media(prefers-reduced-motion:reduce){
+  .pdp-page .pdp-pfd.sweep{background-image:none!important;color:var(--brand-dark)!important;
+    -webkit-text-fill-color:currentColor!important}
+}
+@media(max-width:400px){
+  .pdp-page .pdp-pd1 .strike{font-size:13.5px}
+  .pdp-page .pdp-prow.dafter .pdp-saved{font-size:13px}
+  .pdp-page .pdp-pfd{font-size:11.5px}
+}
+
+/* ---------------------------------------------------------------
+   22 + 29. THE LIGHT SWEEPS
+   The travelling part is quicker (15% of the cycle instead of 26%)
+   and the cycle itself is 4.6s, which is the calm 4–5 second rhythm
+   the owner asked for. Two new switches: pdpSweep.sizeLabel and
+   pdpSweep.sizePills.
+   --------------------------------------------------------------- */
+@keyframes pdpSheenQ{0%{background-position:170% 0}15%{background-position:-70% 0}100%{background-position:-70% 0}}
+.pdp-page .pdp-lbl.sweep,
+.pdp-page .pdp-allc.sweep{animation:pdpSheenQ 4.6s ease-in-out infinite}
+.pdp-page .pdp-stock.sweep>span{animation:pdpSheenQ 4.8s ease-in-out infinite}
+/* the size label is the colour label's twin, so it carries the same gradient */
+.pdp-page .pdp-lblrow .pdp-lbl.sweep{background-image:linear-gradient(100deg,
+  var(--ink) 0 34%, #A8A194 44%, #EFEBE3 50%, #A8A194 56%, var(--ink) 66% 100%)}
+
+/* 22. the size boxes: a shine that travels across the row, so the letters keep
+   their full contrast. It is deliberately NOT called .sweep — that class sets
+   -webkit-text-fill-color:transparent, which inherits, and would have wiped the
+   letters out of every box. */
+@keyframes pdpPillShine{
+  0%{transform:translateX(-130%)}
+  18%{transform:translateX(130%)}
+  100%{transform:translateX(130%)}
+}
+.pdp-page .pdp-pills.shine .size-pill{position:relative}
+.pdp-page .pdp-pills.shine .size-pill::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  clip-path:inset(0 round var(--radius));
+  background:linear-gradient(104deg,rgba(255,255,255,0) 34%,rgba(255,255,255,.72) 50%,rgba(255,255,255,0) 66%);
+  transform:translateX(-130%);
+  /* A13. Was `infinite`: one endless animation per size box, five of them,
+     all inside the first screen, running for as long as the page was open.
+     Three passes and stop — the same rhythm the shared .sweep engine settled
+     on in 02-core/styles.css. The row still catches the eye on arrival; the
+     phone's compositor goes quiet about fifteen seconds later. */
+  animation:pdpPillShine 4.6s ease-in-out 3 both;
+}
+.pdp-page .pdp-pills.shine .size-pill.on::after{
+  background:linear-gradient(104deg,rgba(255,255,255,0) 34%,rgba(255,255,255,.34) 50%,rgba(255,255,255,0) 66%);
+}
+.pdp-page .pdp-pills.shine .size-pill.out::after{display:none}
+/* the shine runs across the row, one box after the next */
+.pdp-page .pdp-pills.shine .size-pill:nth-child(2)::after{animation-delay:.10s}
+.pdp-page .pdp-pills.shine .size-pill:nth-child(3)::after{animation-delay:.20s}
+.pdp-page .pdp-pills.shine .size-pill:nth-child(4)::after{animation-delay:.30s}
+.pdp-page .pdp-pills.shine .size-pill:nth-child(5)::after{animation-delay:.40s}
+.pdp-page .pdp-pills.shine .size-pill:nth-child(6)::after{animation-delay:.50s}
+.pdp-page .pdp-pills.shine .size-pill:nth-child(7)::after{animation-delay:.60s}
+.pdp-page .pdp-pills.shine .size-pill:nth-child(8)::after{animation-delay:.70s}
+@media(prefers-reduced-motion:reduce){
+  .pdp-page .pdp-pills.shine .size-pill::after{display:none}
+}
+
+/* ---------------------------------------------------------------
+   28. THE SIZE-CHART POPUP STAYS PUT
+   body{overflow:hidden} never stopped the page behind the sheet,
+   because the scrolling box is the document element, not the body —
+   so a drag anywhere on the sheet took the page with it. Scoped to a
+   product page so no other page's modals change behaviour.
+   --------------------------------------------------------------- */
+html:has(.pdp-page):has(.modal-back){overflow:hidden!important;overscroll-behavior:none}
+html:has(.pdp-page):has(.modal-back) body{overflow:hidden!important}
+.pdp-page ~ .modal-back,.modal-back{overscroll-behavior:contain}
+.modal-back:has(.pdp-chart){touch-action:none}
+.modal-back:has(.pdp-chart) .modal,.modal-back:has(.pdp-chart) .modal-bd{touch-action:pan-y}
+
+/* ---------------------------------------------------------------
+   30. ADD TO BAG AND ORDER NOW ARE A PAIR
+   Five combinations were rendered for the owner (shots/cta-options.png).
+   The live one is set by PDP_CTA_STYLE in 30-product.js — change that
+   one string to switch. All five use brand tokens only, so they follow
+   the festive, mono and midnight themes with no extra work.
+   --------------------------------------------------------------- */
+.btn-addbag{background:var(--brand-tint);color:var(--brand-dark)!important;
+  border-color:var(--brand-line);font-weight:800}
+.btn-addbag svg{color:currentColor}
+.btn-addbag:hover{background:var(--brand-line);border-color:var(--brand)}
+
+/* 1 — tinted secondary (shipped) */
+.cta1 .btn-addbag{background:var(--brand-tint);color:var(--brand-dark)!important;border-color:var(--brand-line)}
+.cta1 .btn-addbag:hover{background:var(--brand-line);border-color:var(--brand)}
+/* 2 — outlined, on the tint */
+.cta2 .btn-addbag{background:var(--brand-tint);color:var(--brand)!important;
+  border-color:var(--brand);border-width:2px}
+.cta2 .btn-addbag:hover{background:var(--surface)}
+/* 3 — two weights of the same green */
+.cta3 .btn-addbag{background:var(--brand);color:var(--brand-ink)!important;border-color:var(--brand)}
+@supports(background:color-mix(in srgb,#000 50%,#fff)){
+  .cta3 .btn-addbag{background:color-mix(in srgb, var(--brand) 74%, var(--surface));
+    border-color:color-mix(in srgb, var(--brand) 80%, var(--surface));color:#fff!important}
+  .cta3 .btn-primary{background:var(--brand-dark);border-color:var(--brand-dark)}
+}
+/* 4 — warm neutral against the green */
+.cta4 .btn-addbag{background:var(--surface2);color:var(--ink)!important;border-color:var(--input)}
+@supports(background:color-mix(in srgb,#000 50%,#fff)){
+  .cta4 .btn-addbag{background:color-mix(in srgb, var(--gold-bg) 72%, var(--surface));
+    border-color:color-mix(in srgb, var(--gold) 26%, var(--input))}
+}
+/* 5 — gold accent */
+.cta5 .btn-addbag{background:var(--gold-bg);color:var(--gold)!important;
+  border-color:var(--gold);border-width:1.5px}
+.cta5 .btn-addbag:hover{background:var(--gold);color:#fff!important}
+
+/* ---------------------------------------------------------------
+   HOUSEKEEPING FOUND WHILE AUDITING AT 440
+   --------------------------------------------------------------- */
+/* THUMB-SIZED TARGETS WITHOUT A TALLER PAGE
+   Several controls are drawn small on purpose — a 36px swatch, a 26px rule
+   link. Each gets an invisible 44px pad through ::before, so the finger target
+   meets the guideline while the row keeps the height the budget counted on. */
+.pdp-page .swatch,
+.pdp-page .pdp-rule .link,
+.pdp-page .sec-hd .link,
+.pdp-page .pdp-act,
+.pdp-page .pdp-chartbtn,
+.pdp-page .pdp-unit{position:relative}
+/* the arrows are already absolutely positioned on the photo — giving them
+   position:relative would drop both of them into the corner */
+.pdp-page .swatch::before,
+.pdp-page .pdp-rule .link::before,
+.pdp-page .sec-hd .link::before,
+.pdp-page .pdp-act::before,
+.pdp-page .pdp-chartbtn::before,
+.pdp-page .pdp-unit::before,
+.pdp-page .pdp-arrow::before{
+  content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:max(100%,44px);height:max(100%,44px);border-radius:inherit;
+}
+/* A4. THE GALLERY ARROWS — 44px and legible.
+   They were 40px (under the touch minimum) and 72%-white on a light-grey
+   photograph, which measured 1.15:1 against the picture behind them. A solid
+   face, a real edge and a lift give the disc a measurable boundary; the glyph
+   is full --ink on near-white, so it reads at any brightness. */
+.pdp-page .pdp-arrow{
+  width:44px;height:44px;
+  background:rgba(255,255,255,.96);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid rgba(23,23,21,.16);
+  color:var(--ink);
+  box-shadow:0 4px 14px rgba(23,23,21,.22);
+  transition:opacity .15s,background .15s;
+}
+.pdp-page .pdp-arrow:hover{background:#fff}
+/* at either end of the strip the arrow has nothing to do, and says so */
+.pdp-page .pdp-arrow.off{opacity:.32;pointer-events:none}
+@media(max-width:1023px){
+  .pdp-page .pdp-arrow.l{left:9px}
+  .pdp-page .pdp-arrow.r{right:9px}
+}
+@media(prefers-reduced-motion:reduce){.pdp-page .pdp-arrow{transition:none}}
+/* the buy bar is the last thing on the first screen, so it carries a soft
+   lift instead of a hairline — it reads as a layer, not a seam */
+.pdp-page .pdp-mbar{box-shadow:0 -6px 20px rgba(23,23,21,.07)}
+/* nothing on this page may push the page sideways */
+.pdp-page{overflow-x:clip}
+
+/* =====================================================================
+   ROUND 13 — the owner's product-page list, and the 440x956 audit.
+   Everything below is scoped to .pdp-page.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------
+   P7. "Size – L" — two steps bigger, and one space in from the edge
+   The Colour label is its twin and keeps 16px, so the pair still reads
+   as one step; only the line the owner pointed at grows. The row has a
+   40px size-chart chip in it, so 18px x 1.25 = 22.5px costs no height.
+   --------------------------------------------------------------- */
+.pdp-page #pdp-sizes .pdp-lbl,
+.pdp-page .pdp-t3-sizes .pdp-lbl,
+.pdp-page.pdp-tpl-T2 #pdp-sizes .pdp-lbl{
+  font-size:18px;                       /* 16px -> 18px */
+  padding-left:var(--pdp-sp);           /* one space to the right */
+}
+
+/* ---------------------------------------------------------------
+   P9. "In stock — ships today if you order before 5 pm"
+   13px / 400 was the quietest line on the page and it carries the one
+   promise that closes a cash-on-delivery sale. 14.5px / 700, and the
+   free width to its right absorbs it without a second line.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-stock{font-size:14.5px;font-weight:700;color:var(--ink)}
+.pdp-page .pdp-stock svg{flex-shrink:0}
+.pdp-page .pdp-stock.low{font-weight:750}
+
+/* ---------------------------------------------------------------
+   A1. THE ICON RAIL NO LONGER SITS ON "ALL N COLOURS"
+   Measured overlap was 28 x 8px. The rail is 40px wide at right:4px,
+   so it owns x 396-436; the swatch row ended at 424. The row — and
+   only the row the rail actually crosses — now stops at 376. Every
+   other block still runs to the full 424 right edge, which is what the
+   owner asked for when the old 46px gutter was removed.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-colsec .pdp-sw{padding-right:48px}
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-colsec .pdp-lblrow{padding-right:48px}
+}
+
+/* ---------------------------------------------------------------
+   P4. THE PAYMENT LINE'S FOUR OWNER SETTINGS
+   size / font / weight arrive as inline style from PDP_PAYLINE (see
+   30-product.js); highlight and shimmer are these classes. Every value
+   is a theme token, so all four highlights follow festive, mono and
+   midnight with no extra work.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-psmall{white-space:normal;line-height:1.25}
+.pdp-page .pdp-psmall.pay-hl-none{color:var(--text2)}
+.pdp-page .pdp-psmall.pay-hl-ink{color:var(--ink)}
+.pdp-page .pdp-psmall.pay-hl-tint{
+  color:var(--brand-dark);background:var(--brand-tint);
+  border-radius:999px;padding:3px 10px;display:inline-block}
+.pdp-page .pdp-psmall.pay-hl-box{
+  color:var(--ink);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px;display:inline-block}
+/* The travelling light is OFF unless the owner asks for it, and when he does
+   it is the one shared .sweep engine in styles.css doing the work — the light
+   passes over the words, they keep their colour, and it stops after three
+   passes. No second implementation lives here. */
+.pdp-page .pdp-psmall.pay-shim{display:inline-block}
+
+/* ---------------------------------------------------------------
+   P3. THE FALLBACK OFFER ROW
+   Same chrome as a real combo nudge, so a product with no combo and
+   no set rule keeps the block's height and the page has no hole.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-nudge-go{width:100%;border:0;cursor:pointer;font:inherit;text-align:left;
+  border-radius:var(--card-radius)}
+.pdp-page .pdp-nudge-go .ic{color:var(--brand)}
+
+/* ---------------------------------------------------------------
+   P10. THE SECOND QUESTION BLOCK
+   Six real questions per product, folded. Folded is the point: the
+   answers are there for the customer who wants them without adding
+   six paragraphs to a page the audit already called too long. The
+   first one is open so the block never reads as an empty list.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-qa-more .h3{margin-bottom:4px}
+.pdp-page .pdp-qa-i{border-top:1px solid var(--line2)}
+.pdp-page .pdp-qa-i summary{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  list-style:none;cursor:pointer;padding:11px 0;min-height:44px;
+  color:var(--ink);font-weight:650;font-size:14px;line-height:1.35}
+.pdp-page .pdp-qa-i summary::-webkit-details-marker{display:none}
+.pdp-page .pdp-qa-i summary svg{flex-shrink:0;color:var(--muted);transition:transform .16s}
+.pdp-page .pdp-qa-i[open] summary svg{transform:rotate(45deg)}
+.pdp-page .pdp-qa-i .pdp-qa-a{padding:0 0 12px;line-height:1.6;max-width:62ch}
+.pdp-page .pdp-qa-wa{border-top:1px solid var(--line2);padding-top:14px;margin-top:4px}
+.pdp-page .pdp-qa-wa .wa-btn{width:100%}
+@media(prefers-reduced-motion:reduce){.pdp-page .pdp-qa-i summary svg{transition:none}}
+
+/* ---------------------------------------------------------------
+   A10. WHATSAPP GREEN ON THE PRODUCT PAGE
+   White on #1FA855 measures 3.09:1 — under the 4.5 floor for 15px
+   bold. #13833F is the same hue two steps down and measures 4.83:1.
+   (The token itself lives in r12-acct.css, which belongs to another
+   agent — see HANDOFF-B.md. This scopes the fix to the product page.)
+   --------------------------------------------------------------- */
+/* an existing #pdp-qa rule outranks a class selector, so these carry
+   !important rather than an arms race of ids */
+.pdp-page .wa-btn,
+.pdp-page #pdp-qa .wa-btn,
+.pdp-page .wa-btn.btn-block{background:#13833F!important;border-color:#0F6C33!important;color:#fff!important}
+.pdp-page .wa-btn svg,.pdp-page .wa-btn .wa-glyph{color:#fff}
+.pdp-page .wa-btn:hover,.pdp-page #pdp-qa .wa-btn:hover{background:#0F6C33!important}
+
+/* AUDIT (found while measuring, not on the list): the struck original price
+   on a discounted product is --strike #7F796F on #F4F3F0 = 3.89:1. It is the
+   number that proves the saving is real, so it has to be readable. #6F6960
+   measures 4.89:1 on the default page, 5.43 on mono and 4.90 on festive;
+   midnight keeps its own token, which is already far above the floor. */
+.pdp-page .strike,.pdp-page .pdp-pd1 .strike,.pdp-page .pdp-psave .strike{color:#6F6960}
+:root[data-theme="midnight"] .pdp-page .strike,
+:root[data-theme="midnight"] .pdp-page .pdp-pd1 .strike{color:var(--strike)}
+
+/* ---------------------------------------------------------------
+   A12. HONEST TIGHTENING — spacing only, no section removed
+   Every number below was measured at 440x956 before it was changed,
+   and every one of them is BELOW the fold, so the first-screen rule
+   is untouched. Nothing the owner approved has been taken away.
+   --------------------------------------------------------------- */
+/* the three promises were drawing three lines each (icon / value / word)
+   for 88px; the icon belongs beside the value, which is two lines and 60px */
+.pdp-page .pdp-trust{padding-top:10px!important;padding-bottom:10px!important}
+.pdp-page .pdp-trust span{display:block!important;text-align:center;line-height:1.3}
+.pdp-page .pdp-trust span svg{display:inline-block;vertical-align:-3px;margin-right:5px}
+.pdp-page .pdp-trust span b{display:inline}
+/* the sections' own air: 28px above each was more than this page needs when
+   four of them run back to back */
+.pdp-page>section.section{padding-top:18px}
+.pdp-page .sec-hd{margin-bottom:10px}
+.pdp-page .pdp-box.p20{padding:16px}
+/* the two cross-sell rows */
+.pdp-page .pdp-rowblk+.pdp-rowblk{margin-top:18px}
+/* the rules box and the three accordions */
+.pdp-page .pdp-rules{padding-top:10px;padding-bottom:10px}
+.pdp-page .pdp-acc-h{padding:13px 16px;min-height:48px}
+.pdp-page .pdp-acc-b{padding-bottom:15px}
+/* the question blocks */
+.pdp-page #pdp-qa .split{gap:14px}
+.pdp-page #pdp-qa .pdp-box{padding:16px}
+.pdp-page .pdp-qa-i summary{padding:10px 0}
+.pdp-page .pdp-revgrid{gap:12px}
+
+/* ---------------------------------------------------------------
+   A1 (part two). THE RAIL MUST NOT SIT ON A CONTROL
+   The rail is position:fixed in the middle of the viewport, so as the
+   page scrolls it crosses every block in turn — the frosted face is
+   the approved answer for the words it passes over. A tap it swallows
+   is a different matter: the accordion headers and the question rows
+   both put their open/close marker at the far right, exactly in the
+   rail's 396-436px column. Those two rows (and only those two) keep
+   their marker clear of it, and only while the rail is switched on.
+   Everything else still runs to the full 424px right edge.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-acc-h{padding-right:50px}
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-qa-i summary{padding-right:34px}
+}
+/* the payment words need air around their separators at 14px bold */
+.pdp-page .pdp-psmall .pdp-bar{margin:0 3px;opacity:.5}
+
+/* =====================================================================
+   ROUND 14 — AUTO ADJUST, TESTED ON FIFTEEN PHONES (320x640 -> 440x956)
+   The owner's rule: nothing is fixed. Every part of a shared line can
+   shrink; when shrinking is not enough it steps down to a shorter form
+   (pdp_fitRows in 30-product.js); it never drops to a second line and
+   never covers anything. Designed at 320 first, then allowed to grow.
+   ===================================================================== */
+
+/* ---- the step-down forms: only the current level's text is drawn ---- */
+.pdp-page .pdp-fx .pf{display:none}
+.pdp-page .pdp-fx[data-l="0"] .pf0,
+.pdp-page .pdp-fx[data-l="1"] .pf1,
+.pdp-page .pdp-fx[data-l="2"] .pf2{display:inline}
+
+/* ---- both label lines: one line, label shrinks, control never wraps ---- */
+.pdp-page .pdp-lblrow{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;
+  gap:10px;min-width:0;min-height:30px}
+.pdp-page .pdp-lblrow>.pdp-lbl{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* type tightens a little on the narrowest phones before anything steps down */
+.pdp-page .pdp-colsec .pdp-lbl,
+.pdp-page.pdp-tpl-T2 .pdp-colsec .pdp-lbl{font-size:clamp(15px, 4.4vw, 16px)}
+.pdp-page #pdp-sizes .pdp-lbl,
+.pdp-page .pdp-t3-sizes .pdp-lbl,
+.pdp-page.pdp-tpl-T2 #pdp-sizes .pdp-lbl{font-size:clamp(16px, 4.8vw, 18px)}
+
+/* ---- 14.6 / 14.7. The chosen value is bold; its dash is the brand colour ----
+   (was weight 500 with a #E6E3DE dash on #F4F3F0 = 1.15:1). The prompt shown
+   before a size is picked stays quiet, so tapping a size visibly changes it. */
+.pdp-page .pdp-lblv,
+.pdp-page.pdp-tpl-T2 .pdp-lblv{font-weight:700;color:var(--ink)}
+.pdp-page .pdp-lblv::before{content:"\2013\00a0";color:var(--brand);font-weight:700}
+:root[data-theme="festive"] .pdp-page .pdp-lblv::before{color:var(--gold)}
+.pdp-page .pdp-lblv.unset,
+.pdp-page.pdp-tpl-T2 .pdp-lblv.unset{font-weight:500;color:var(--text2)}
+.pdp-page .pdp-lblv.unset::before{color:var(--muted);font-weight:500}
+
+/* ---- 14.10 / 14.11. "All N colours" on the Colour line, right-hand side ----
+   Same family and size as the label beside it, brand colour, underlined.
+   Its 44px finger pad stops 2px short of the swatches' own pads below it,
+   so no two tap areas share a pixel. */
+.pdp-page .pdp-colsec .pdp-allc{flex:0 0 auto;margin:0;padding:0;min-height:30px;gap:3px;
+  font-family:inherit;font-size:clamp(15px, 4.4vw, 16px);font-weight:750;letter-spacing:-.005em;
+  line-height:1.25;white-space:nowrap;text-underline-offset:3px;display:inline-flex;align-items:center}
+.pdp-page .pdp-colsec .pdp-allc::before{top:-12px;bottom:-2px;height:auto;transform:none;left:-8px;right:-4px}
+.pdp-page .pdp-allc .pdp-allc-chev{display:inline-flex;text-decoration:none}
+.pdp-page .pdp-allc .pdp-allc-chev svg{margin-top:1px}
+.pdp-page .pdp-allc .pf2{align-items:center;gap:4px}
+.pdp-page .pdp-allc[data-l="2"] .pf2{display:inline-flex}
+.pdp-page .pdp-allc[data-l="2"] .pdp-allc-chev{display:none}
+
+/* ---- the swatches: ONE row at every width, sized from the row itself ----
+   --n is the number of colours (written by the markup). The pitch (swatch +
+   gap) is the row width shared out, capped at 48px; the swatch is the pitch
+   less a 12px gap, between 28 and 36px. At 320px with six colours that is a
+   32px swatch on a 44px pitch, so each 44px finger pad meets the next one
+   edge to edge and never overlaps it — a tap on Black can never land on White.
+   Four or five colours keep the full 36px. */
+.pdp-page .pdp-sw{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;
+  gap:0;container-type:inline-size;min-width:0}
+.pdp-page .pdp-sw .swatch{
+  --pp:min(48px, calc((100cqw + 12px) / var(--n, 5)));
+  --d:clamp(28px, calc(var(--pp) - 12px), 36px);
+  width:var(--d);height:var(--d);flex:0 0 auto;margin:0}
+.pdp-page .pdp-sw .swatch+.swatch{margin-left:calc(var(--pp) - var(--d))}
+.pdp-page .pdp-sw .swatch::before,
+.pdp-page .pdp-sw .swatch::after{width:44px;height:44px}
+/* the floating icon rail owns x = W-46 .. W-4 on the first screen; the
+   colour line, the swatches and the price line stop short of it (was 48px,
+   which cost the six-colour row its last swatch at 320px) */
+@media(max-width:1023px){
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-colsec .pdp-sw,
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-colsec .pdp-lblrow{padding-right:36px}
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-prow{padding-right:36px}
+}
+
+/* ---- 14.12. The Size-chart chip gives way before the label does ---- */
+.pdp-page .pdp-chartbtn{flex:0 0 auto;white-space:nowrap}
+.pdp-page .pdp-chartbtn .pdp-cbc{display:inline-flex}
+.pdp-page .pdp-chartbtn[data-l="1"] .pdp-cbc,
+.pdp-page .pdp-chartbtn[data-l="2"] .pdp-cbc,
+.pdp-page .pdp-chartbtn[data-l="2"] .pdp-cbt{display:none}
+.pdp-page .pdp-chartbtn.v2[data-l="2"]{padding:0;min-width:40px;justify-content:center}
+
+/* ---- 14.9. The measurement line: every field, wraps only between pairs ---- */
+.pdp-page .pdp-fitline{font-size:clamp(12.5px, 3.6vw, 14px)}
+.pdp-page .pdp-fitline .pdp-fsz{font-size:1.1em}
+.pdp-page .pdp-fitx{min-width:0}
+.pdp-page .pdp-fi{white-space:nowrap}
+@media(max-width:1023px){
+  .pdp-page .pdp-fitline{min-height:3.05em}          /* two lines, at whatever size the type is */
+  /* kept in the compact mode too: the line has the same room before and after
+     a size is tapped, so the photograph never jumps under the thumb */
+  .pdp-page.pdp-tight .pdp-fitline{min-height:3.05em}
+}
+
+/* ---- 14.13. Price · space · bar · space · delivery — the same on every product ----
+   One space token each side of the bar, and no extra push on some products
+   (the payment line used to carry two more spaces than the free-delivery
+   line). The icon after the bar is drawn 2px inside its own box, so it is
+   pulled back by exactly that, and the INK on both sides sits equally far
+   from the bar. */
+.pdp-page{--pdp-barsp:clamp(7px, 2.4vw, 10px)}
+.pdp-page .pdp-pbar,
+.pdp-page .pdp-prow.disc .pdp-pbar{margin:0 var(--pdp-barsp)}
+.pdp-page .pdp-prow .pdp-pside,
+.pdp-page .pdp-prow:not(.freed):not(.dafter) .pdp-pside{margin-left:0}
+.pdp-page .pdp-pside>svg:first-child,
+.pdp-page .pdp-pside>.pdp-fd>svg:first-child{margin-left:-2px}
+.pdp-page .pdp-fd{min-width:0;max-width:100%}
+.pdp-page .pdp-fd>b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---- 14.14. Three questions, then one button for the rest ---- */
+.pdp-page .pdp-qa-i[hidden]{display:none}
+.pdp-page .pdp-qa-all{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;
+  padding:11px 0;margin:0;border:0;border-top:1px solid var(--line2);background:none;cursor:pointer;
+  font:inherit;font-size:14px;font-weight:750;color:var(--brand);text-align:left}
+.pdp-page .pdp-qa-all .pdp-qa-n{color:var(--text2);font-weight:600;font-size:13px}
+.pdp-page .pdp-qa-all svg{margin-left:auto;flex-shrink:0}
+@media(max-width:1023px){
+  .pdp-page:has(.pdp-acts:not(.off)) .pdp-qa-all{padding-right:34px}
+}
+
+/* ---- the payment line beside the price steps down too ---- */
+.pdp-page .pdp-prow:not(.freed):not(.dafter) .pdp-pside{display:flex;align-items:center;gap:6px}
+.pdp-page .pdp-prow .pdp-psmall.pdp-fx{display:block;flex:0 1 auto;min-width:0;overflow:hidden;
+  line-height:1.25;text-wrap:balance}
+.pdp-page .pdp-prow .pdp-psmall.pdp-fx[data-l="0"]{white-space:nowrap}
+.pdp-page .pdp-prow .pdp-psmall.pdp-fx[data-l="1"]{white-space:normal}
+
+/* ===========================================================================
+   R15 · NOTE 2 — the owner's product-page points from his iPhone 15 Pro Max
+   (these come last in the bundle and win over the older rules above)
+   =========================================================================== */
+
+/* ---- 2.3 The heart right after the title; no floating column ---- */
+.pdp-page .pdp-titlerow{display:flex;align-items:center;gap:2px;min-width:0}
+.pdp-page .pdp-titlerow .pdp-name{flex:0 1 auto;min-width:0;margin:0 0 2px}
+.pdp-page .pdp-wish{flex:0 0 auto;position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;margin:-6px -8px -6px 0;padding:0;border:0;background:none;border-radius:50%;
+  color:var(--ink);cursor:pointer;transition:transform .15s ease}
+.pdp-page .pdp-wish::before{content:"";position:absolute;inset:-2px;border-radius:50%}
+.pdp-page .pdp-wish svg{width:24px;height:24px}
+.pdp-page .pdp-wish:active{transform:scale(.9)}
+@media(hover:hover){ .pdp-page .pdp-wish:hover{transform:scale(1.08)} }
+/* with the column gone, nothing keeps a right-hand gutter for it any more */
+.pdp-page:not(:has(.pdp-acts)) .pdp-head .pdp-rating,
+.pdp-page:not(:has(.pdp-acts)) .pdp-head .price,
+.pdp-page:not(:has(.pdp-acts)) .pdp-head .pdp-free,
+.pdp-page:not(:has(.pdp-acts)) .pdp-head .pdp-pay{max-width:none}
+.pdp-page:not(:has(.pdp-acts)) .pdp-prow,
+.pdp-page:not(:has(.pdp-acts)) .pdp-colsec .pdp-sw,
+.pdp-page:not(:has(.pdp-acts)) .pdp-colsec .pdp-lblrow{padding-right:0}
+
+/* ---- 2.2 "All N colours": after the last swatch up to 5, on the label line from 6 ---- */
+.pdp-page .pdp-colsec.allc-sw .pdp-sw .pdp-allc{flex:0 0 auto;margin:0 0 0 16px;padding:0;min-height:30px;gap:3px;
+  font-family:inherit;font-size:clamp(15px, 4.4vw, 16px);font-weight:750;letter-spacing:-.005em;line-height:1.25;
+  white-space:nowrap;text-underline-offset:3px;display:inline-flex;align-items:center;position:relative}
+.pdp-page .pdp-colsec.allc-sw .pdp-sw .pdp-allc::before{content:"";position:absolute;left:-6px;right:-4px;top:50%;
+  height:44px;transform:translateY(-50%)}
+/* ---- 2.8 +3px between "Colour – Black" and the swatches ---- */
+.pdp-page .pdp-colsec .pdp-sw{margin-top:9px!important}
+
+/* ---- 2.5 The measurement line: ONE line; what does not fit hides (pdp_fitLineTrim) ---- */
+.pdp-page .pdp-fitline{flex-wrap:nowrap}
+.pdp-page .pdp-fitx{display:block;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden}
+.pdp-page .pdp-fitx [hidden]{display:none!important}
+/* ---- 2.8 ...and it sits in the middle of the room between the size boxes
+   and the buy bar: this margin is the air above it, and the budget engine
+   (pdp_fitPass) leaves the same air below it. 14.6px at 14px type. ---- */
+@media(max-width:1023px){
+  /* the same air is kept under the line inside its own section, so the next
+     block (Find my size, its own top margin dropped) starts exactly at the bar's top
+     edge and never peeks out above the bar */
+  .pdp-page .pdp-fitline,
+  .pdp-page.pdp-tight .pdp-fitline{min-height:0;margin-top:calc(1em + .6px)!important;
+    margin-bottom:calc(1em + .6px);align-items:center}
+  .pdp-page.pdp-tight .pdp-fitline{margin-top:calc(.7em)!important;margin-bottom:calc(.7em)}
+  .pdp-page #pdp-sizes + .pdp-fmssec{margin-top:0!important}
+  /* (flow-root, so that margin stays inside the section instead of melting
+     into the next block's 9px) */
+  .pdp-page #pdp-sizes{display:flow-root}
+}
+
+/* ---- 2.6 The price line is ONE line on every phone (pdp_payFit) ---- */
+.pdp-page .pdp-prow{flex-wrap:nowrap}
+.pdp-page .pdp-prow .pdp-pside{flex:1 1 auto;min-width:0}
+.pdp-page .pdp-payfit{display:block;flex:0 1 auto;min-width:0;white-space:nowrap!important;overflow:hidden;text-wrap:nowrap}
+.pdp-page .pdp-payfit .pdp-pm[hidden]{display:none}
+.pdp-page .pdp-prow .pdp-pd1,
+.pdp-page .pdp-prow .pdp-pd2,
+.pdp-page .pdp-prow .pdp-psave{white-space:nowrap}
+
+/* ---- 2.1 The buy bar never sinks under the bottom of an iPhone ----
+   viewport-fit=cover (in the page head) makes iOS report the home-indicator
+   strip as env(safe-area-inset-bottom); the bar lifts its buttons above it.
+   On a phone without that strip the bar keeps its 12px. The page no longer
+   rubber-bands at the top or bottom, which is what was dragging the fixed bar
+   down off the screen in the owner's recording. */
+html,body{overscroll-behavior-y:none}
+@media(max-width:1023px){
+  .has-bnav:has(.mbar.dm-hide) .mbar.dm-hide{padding-bottom:max(12px, env(safe-area-inset-bottom, 0px))!important}
+  .has-bnav:has(.pdp-page){padding-bottom:calc(88px + env(safe-area-inset-bottom, 0px))!important}
+}
+
+/* ===========================================================================
+   R15 · NOTE 3 — product page
+   =========================================================================== */
+/* 3.7 the title fills line one; the heart is glued to the last word */
+.pdp-page .pdp-name{text-wrap:wrap!important}
+.pdp-page .pdp-titlerow .pdp-name{flex:1 1 auto}
+.pdp-page .pdp-nmend{white-space:nowrap}
+.pdp-page .pdp-name .pdp-wish{display:inline-flex;vertical-align:middle;width:34px;height:34px;margin:-6px -6px -4px 2px;
+  font-size:16px;line-height:1}
+.pdp-page .pdp-name .pdp-wish svg{width:24px;height:24px}
+.pdp-page .pdp-name .pdp-wish::before{inset:-5px}
+/* 3.8 the Size chart chip sits 2px higher: more air above the size boxes */
+.pdp-page #pdp-sizes .pdp-chartbtn{top:-2px}
+/* 3.10 the second bar and what follows it */
+.pdp-page .pdp-prow .pdp-pside.has-x{flex:0 0 auto}
+.pdp-page .pdp-pbar2{flex:0 0 auto}
+.pdp-page .pdp-pextra{flex:0 1 auto;min-width:0;display:inline-flex;align-items:center;gap:6px;color:var(--brand-dark);
+  font-size:15px;font-weight:800;line-height:1.12;white-space:nowrap;position:relative}
+.pdp-page .pdp-pextra svg{flex-shrink:0;width:20px;height:20px;color:var(--brand)}
+.pdp-page .pdp-pextra .pdp-px2{flex-direction:column;align-items:flex-start;gap:1px}
+.pdp-page .pdp-pextra[data-l="1"] .pf1,.pdp-page .pdp-pextra[data-l="2"] .pf2{display:inline-flex!important}
+.pdp-page .pdp-pextra .pdp-px2 b{font-size:15px;font-weight:800}
+.pdp-page .pdp-pextra .pdp-px2 span{font-size:12.5px;font-weight:700}
+.pdp-page .pdp-pextra.pdp-fitt{overflow:hidden}
+.pdp-page .pdp-fx[data-l="3"] .pf3{display:inline}
+/* the narrowest phones: the two bars come in a little so "Free" keeps its word */
+@media(max-width:340px){ .pdp-page .pdp-prow.dafter .pdp-pbar{margin:0 6px} .pdp-page .pdp-pextra{gap:4px} .pdp-page .pdp-pextra svg{width:18px;height:18px} }
+/* 3.11 Add to Bag: a near shade of Order Now's colour */
+.add-s1 .btn-addbag{background:color-mix(in srgb, var(--brand) 76%, #fff)!important;color:#fff!important;border-color:transparent!important}
+.add-s1 .btn-addbag:hover{background:color-mix(in srgb, var(--brand) 86%, #fff)!important}
+.add-s2 .btn-addbag{background:color-mix(in srgb, var(--brand) 52%, #fff)!important;color:var(--brand-dark)!important;border-color:transparent!important}
+.add-s3 .btn-addbag{background:color-mix(in srgb, var(--brand) 24%, #fff)!important;color:var(--brand-dark)!important;border-color:color-mix(in srgb, var(--brand) 40%, #fff)!important}
+.add-s1 .btn-addbag svg{color:#fff}

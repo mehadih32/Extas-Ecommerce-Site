@@ -1,0 +1,498 @@
+/* ================= round 12 — checkout, thank-you, My account =================
+   Class names are doubled (.co-help.co-help) where a rule has to beat the
+   same selector injected at runtime by bag_css() from the page's own JS.
+   That style element lands in <head> after this file, so equal specificity
+   would lose. ============================================================== */
+
+/* ---------------------------------------------------------------- 43 + 48
+   The help strip: no slab behind it, the wording on both sides is readable,
+   and one slow light runs across it on the same 7s rhythm as the logo sheen
+   (@keyframes logoSheen) and the primary-button sheen (@keyframes ctaSheen). */
+.co-help.co-help{
+  position:relative;overflow:hidden;
+  background:transparent;border-bottom:1px solid var(--line2)}
+.co-help.co-help .container{
+  padding-top:11px;padding-bottom:11px;gap:10px;align-items:center}
+/* the sweep: a soft band of light, nothing else moves */
+.co-help.co-help::after{
+  content:"";position:absolute;top:0;bottom:0;left:-40%;width:34%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.95),transparent);
+  animation:coHelpSheen 7s ease-in-out 1.8s infinite;pointer-events:none}
+@keyframes coHelpSheen{0%{left:-40%}17%{left:118%}100%{left:118%}}
+@media(prefers-reduced-motion:reduce){.co-help.co-help::after{display:none}}
+
+/* 48. "Need help" is the size of real body copy now — there is room for it */
+.co-helpt.co-helpt{
+  font-size:17.5px;font-weight:700;color:var(--ink);line-height:1.25;
+  letter-spacing:-.01em;min-width:0;white-space:nowrap}
+/* the long sentence fits from 430px up; below that the short one. (The old
+   breakpoint was 768px, so a phone only ever saw "Need help?") */
+.co-hl{display:none}.co-hs{display:inline}
+@media(min-width:480px){.co-hl{display:inline}.co-hs{display:none}}
+@media(max-width:389px){.co-helpt.co-helpt{font-size:15px}}
+/* the demo gear is parked at top:72px right:10px on phones (styles.css), which
+   is exactly on top of this strip — keep the button clear of it */
+@media(max-width:1023px){.co-help.co-help .container{padding-right:56px}}
+
+/* ------------------------------------------------- the WhatsApp control
+   waGlyph() is the real mark; these rules make the wording sit beside it
+   properly instead of being squeezed out. */
+.wa-btn.wa-real{gap:9px;white-space:nowrap}
+.wa-btn.wa-real .wa-lbl{display:inline-flex;align-items:baseline;gap:4px}
+.wa-btn .wa-glyph,.wa-btn svg{flex-shrink:0}
+.co-help .wa-btn.co-wa{
+  min-height:44px;padding:9px 17px;font-size:15px;font-weight:700;flex-shrink:0;
+  background:#1FA855;border-color:#17904A;color:#fff!important;
+  box-shadow:0 2px 8px rgba(31,168,85,.26)}
+.co-help .wa-btn.co-wa:hover{background:#17904A}
+.co-help .wa-btn.co-wa svg{color:#fff}
+.co-help .wa-btn.co-wa b{font-weight:800;letter-spacing:.005em}
+.co-help .wa-btn.co-wa .co-wa-s{font-weight:600;opacity:.92}
+@media(max-width:389px){
+  .co-help .wa-btn.co-wa{padding:9px 13px;font-size:14px}
+  .co-help .wa-btn.co-wa .co-wa-s{display:none}}
+.co-sidehelp .wa-glyph{color:#1FA855}
+
+/* --------------------------------------------------------------------- 44
+   The summary bar: the amount is what people look for, so it is two sizes up;
+   the label is one size up and still clearly a button. */
+.co-msum-btn.co-msum-btn{
+  min-height:60px;padding:13px 16px;
+  font-size:16px;font-weight:700;letter-spacing:-.005em}
+.co-msum-btn.co-msum-btn .price{
+  font-size:25px;font-weight:800;letter-spacing:-.015em;color:var(--ink)}
+.co-msum-btn.co-msum-btn>span:first-child{min-width:0;gap:9px}
+.co-msum-chev{width:24px;height:24px}
+@media(max-width:389px){
+  .co-msum-btn.co-msum-btn{font-size:15px}
+  .co-msum-btn.co-msum-btn .price{font-size:22px}}
+
+/* --------------------------------------------------------------------- 45
+   Subtotal / Delivery — label AND amount. They were 14px next to a 25px
+   total, which is why the owner could not read them. */
+.co-rows .co-r{font-size:16px;padding:7px 0;gap:14px;line-height:1.35}
+.co-rows .co-r>span:first-child{color:var(--text2);font-weight:600}
+.co-rows .co-r>span:last-child{
+  font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap;text-align:right}
+.co-rows .co-r.disc>span:last-child{color:var(--brand)}
+:root[data-theme="festive"] .co-rows .co-r.disc>span:last-child{color:var(--gold)}
+.co-rows .co-r .strike,.co-rows .co-r .xs{font-size:14px}
+.co-rows{border-top:1px solid var(--line);margin-top:11px;padding-top:12px}
+.co-tot{font-size:18px;padding-top:13px}
+.co-tot .price{font-size:26px;letter-spacing:-.015em}
+
+/* same complaint, same answer, on the thank-you page's order block */
+.ty-r{font-size:15.5px;padding:5px 0}
+.ty-r>span:last-child{font-weight:700;color:var(--ink);white-space:nowrap}
+.ty-r.disc>span:last-child{color:var(--brand)}
+.ty-tot{border-top:1px solid var(--line);margin-top:8px;padding-top:11px;
+  font-weight:700;font-size:17px}
+.ty-tot .price{font-size:22px}
+
+/* --------------------------------------------------------------------- 46
+   The sheet behind the open summary. It sits above the page (so a tap there
+   closes the panel) but below the sticky confirm bar (z 30) and the header
+   (z 40), so neither of those stops working. */
+.co-sumback{
+  position:fixed;inset:0;z-index:20;background:rgba(23,23,21,.14);
+  -webkit-tap-highlight-color:transparent;cursor:pointer;border:0}
+.co-msum.open{position:relative;z-index:21}
+@media(min-width:1024px){.co-sumback{display:none}}
+
+/* --------------------------------------------------------------------- 47
+   The confirm button. Enabled: big label, the amount louder. Disabled: it no
+   longer looks switched off — it says what is missing and that confirming is
+   what happens next, on a warm background, with the same sweep. */
+.co-confirm.co-confirm{
+  min-height:62px;font-size:18px;font-weight:800;letter-spacing:-.005em;
+  position:relative;overflow:hidden;gap:10px}
+.co-confirm.co-confirm .co-amt{font-size:20px;font-weight:800;margin-left:1px}
+.co-confirm.co-confirm svg{width:19px;height:19px}
+
+.co-confirm.co-need-on{
+  background:var(--warn-bg)!important;border-color:#C9A24A!important;
+  color:#5A3E12!important;opacity:1;cursor:not-allowed;
+  padding:9px 16px;box-shadow:inset 0 0 0 1px rgba(201,162,74,.45)}
+.co-need{display:flex;flex-direction:column;align-items:center;gap:2px;
+  line-height:1.2;min-width:0;width:100%}
+.co-need b{font-size:17px;font-weight:800;letter-spacing:-.005em}
+.co-need span{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;
+  justify-content:center;font-size:12.5px;font-weight:600;opacity:.9;
+  white-space:normal;line-height:1.3}
+.co-need span svg{width:13px;height:13px;flex-shrink:0}
+/* the sweep runs on the disabled state too — that is the point of it here */
+.co-confirm.co-need-on::after{
+  content:"";position:absolute;top:0;bottom:0;width:38%;left:-45%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);
+  animation:coSheen 5.5s ease-in-out 1s infinite;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.co-confirm.co-need-on::after{display:none}}
+
+/* --------------------------------------------- bigger primary button text
+   "why don't you make button text bigger" — every primary call to action on
+   my three pages, not only the confirm bar. */
+.co-wrap .btn-primary,.ty-wrap .btn-primary,.ty-hero .btn-primary,
+.acc-page .btn-primary,.ord-page .btn-primary,.inv-wrap .btn{
+  font-size:16.5px;font-weight:700;min-height:52px}
+.co-wrap .btn-secondary,.ty-wrap .btn-secondary,
+.acc-page .btn-secondary,.ord-page .btn-secondary{font-size:15.5px;font-weight:700}
+.co-wrap .btn-sm,.ty-wrap .btn-sm,.acc-page .btn-sm,.ord-page .btn-sm{
+  font-size:14px;font-weight:700;min-height:44px}
+.ty-endbtns .btn{min-height:54px;font-size:16.5px;font-weight:700}
+.co-msum-close{min-height:46px;font-size:14px}
+
+/* --------------------------------------------------------------------- 49
+   "Questions? Message us on WhatsApp" fills its column, like every other
+   call to action around it. */
+.ty-wrap .wa-btn.ty-wa,.wa-btn.btn-block{
+  display:flex;width:100%;justify-content:center;
+  min-height:54px;font-size:16px;font-weight:700;
+  background:#1FA855;border-color:#17904A;color:#fff!important;
+  box-shadow:0 2px 10px rgba(31,168,85,.22)}
+.ty-wrap .wa-btn.ty-wa:hover,.wa-btn.btn-block:hover{background:#17904A}
+.ty-wrap .wa-btn.ty-wa svg,.wa-btn.btn-block svg{color:#fff;width:21px;height:21px}
+.ty-wrap .wa-btn.ty-wa .wa-lbl{white-space:normal;text-align:center}
+.ty-ic-wa{color:#1FA855;border-color:#BFE6CE}
+.ty-wamark .wa-glyph{color:#1FA855}
+@media(min-width:768px){.ty-endbtns .ty-keep{grid-column:1 / -1}}
+
+/* --------------------------------------------------------------------- 51
+   The offer banner on My account. Never empty: wallet first when there is
+   credit, then the customer's own offers, then the standing member offer. */
+.acc-ob{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--hero) 0%,var(--brand-dark) 100%);
+  color:var(--hero-ink);border-radius:var(--card-radius);
+  padding:16px 16px 18px}
+.acc-ob::after{
+  content:"";position:absolute;top:0;bottom:0;left:-40%;width:32%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.14),transparent);
+  animation:coHelpSheen 9s ease-in-out 2.4s infinite;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.acc-ob::after{display:none}}
+.acc-ob-hd{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.acc-ob-eb{display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--hero-sub)}
+.acc-ob-all{display:inline-flex;align-items:center;gap:3px;min-height:34px;
+  font-size:13.5px;font-weight:700;color:var(--hero-ink);opacity:.92;text-decoration:none}
+.acc-ob-all:hover{opacity:1;text-decoration:underline}
+.acc-ob-wal{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-top:10px}
+.acc-ob-wal .k{flex:1 1 100%;font-size:12.5px;color:var(--hero-sub)}
+.acc-ob-wal .v{font-family:var(--font-display);font-size:34px;font-weight:800;
+  line-height:1.05;letter-spacing:-.02em}
+.acc-ob-wal .s{font-size:12.5px;color:var(--hero-sub);line-height:1.35}
+.acc-ob-list{display:grid;gap:8px;margin-top:14px}
+.acc-ob-row{display:flex;align-items:flex-start;gap:10px;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);
+  border-radius:var(--radius);padding:10px 12px}
+.acc-ob-row .ic{flex-shrink:0;color:var(--hero-ink);opacity:.9;margin-top:1px}
+.acc-ob-row .tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.acc-ob-row .tx b{font-size:14.5px;font-weight:700;line-height:1.25}
+.acc-ob-row .tx span{font-size:12.5px;color:var(--hero-sub);line-height:1.4}
+.acc-ob-code{flex-shrink:0;align-self:center;font-size:11.5px;font-weight:800;
+  letter-spacing:.06em;background:var(--hero-ink);color:var(--hero);
+  border-radius:3px;padding:4px 8px}
+.acc-ob-cta{display:flex;width:100%;justify-content:center;gap:7px;margin-top:14px;
+  min-height:50px;font-size:16px;font-weight:800;
+  background:var(--hero-ink);color:var(--hero)!important;border-color:var(--hero-ink)}
+.acc-ob-cta:hover{opacity:.9}
+@media(min-width:640px){
+  .acc-ob{padding:20px 22px 22px}
+  .acc-ob-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .acc-ob-cta{width:auto;align-self:flex-start;padding-left:26px;padding-right:22px}}
+
+/* --------------------------------------------------------------------- 52
+   Profile photo: the picker, the preview and the avatar everywhere else. */
+.acc-avatar.has-photo{padding:0;overflow:hidden;background:var(--line2)}
+.acc-avatar.has-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.acc-ph-row{display:flex;align-items:flex-start;gap:16px}
+.acc-ph-pic{position:relative;flex-shrink:0;width:86px;height:86px;border-radius:50%;
+  background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;
+  justify-content:center;overflow:hidden;cursor:pointer;
+  box-shadow:0 0 0 3px var(--surface),0 0 0 4.5px var(--line)}
+.acc-ph-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.acc-ph-ini{font-family:var(--font-display);font-size:30px;font-weight:800;letter-spacing:.03em}
+.acc-ph-cam{position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;
+  background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--surface)}
+.acc-ph-btns{gap:8px;margin-top:11px}
+.acc-ph-pick{cursor:pointer}
+.acc-ph .acc-err{margin-top:10px}
+/* the input itself is screen-reader-only; the <label> is the real target */
+.acc-ph-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* --------------------------------------------------------------------- 53
+   Invoice: the row on the order page, and the preview dialog. */
+.ord-invrow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;padding:14px 16px;border-top:1px solid var(--line2);
+  background:var(--surface2)}
+.inv-wrap{display:flex;flex-direction:column}
+.inv-frame{width:100%;height:46vh;min-height:260px;border:1px solid var(--line);
+  border-radius:var(--radius);background:#fff;display:block}
+.inv-acts{display:grid;gap:10px;margin-top:14px}
+@media(min-width:620px){
+  .inv-acts{grid-template-columns:1fr 1fr}
+  .inv-frame{height:52vh}}
+
+/* ------------------------------------------------------- round-12 defects
+   Found while auditing at 440x956, not on the owner's list. */
+
+/* the summary thumbnails and the amount were fighting for the last 60px, so
+   a long product name pushed the price off the right edge */
+.co-it>.price,.co-it>.small.price{min-width:76px;text-align:right}
+.ty-it .price{white-space:nowrap;flex-shrink:0;padding-left:10px}
+
+/* the "change" link in the delivery card was a 17px tap target */
+.co-zchg{display:inline-flex;align-items:center;min-height:32px;padding:0 2px;
+  font-size:13px;font-weight:700}
+/* the quantity buttons inside the open summary were under 44px */
+.co-qrow .qty button{min-width:38px;min-height:38px}
+.co-qrow .link{min-height:38px;display:inline-flex;align-items:center}
+
+/* order-number row: "Copy" was a 36px target and the pill overflowed at 360px */
+.ty-ord{flex-wrap:wrap;justify-content:center;max-width:100%}
+.ty-ord .btn-sm{min-height:44px}
+
+/* account chips: the last chip was flush against the edge with no hint that
+   the row scrolls, which is the "dead space on the right" complaint */
+.acc-chips{padding-right:16px;scroll-padding-right:16px;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 34px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 34px),transparent)}
+.acc-chips .chip{min-height:44px;font-size:14px;font-weight:700}
+
+/* order cards and the account nav: everything is a real 44px target */
+.acc-nav a{min-height:46px}
+.acc-ocard .btn-sm{min-height:44px}
+
+/* --------------------------------------------- touch targets under 44px
+   Measured at 440x956 on my four pages. Inline text links in a sentence are
+   left alone — these are real controls that were too small to hit. */
+.ty-wrap .ty-sw{width:30px;height:30px;position:relative}
+/* the hit area reaches 44px without the dot growing */
+.ty-wrap .ty-sw::before{content:"";position:absolute;inset:-7px}
+.ty-wrap #ty-waist{min-height:44px;padding:8px 10px!important;font-size:14px!important}
+.ty-wrap .ty-look .link,.ty-wrap .ty-acc .link,.ty-wrap .ups-hd .link{
+  min-height:44px;display:inline-flex;align-items:center}
+.ty-wrap .btn-sm,.ord-page .btn-sm{min-height:44px}
+.ord-page .rule-v,.ty-wrap .rule-v,.acc-page .rule-v{min-height:44px}
+.acc-page .seg button{min-height:44px}
+.acc-page .switch{min-height:30px}
+.acc-page .acc-nrow .switch{transform:scale(1.12);transform-origin:right center}
+
+/* ================= round 13 · the owner's checkout notes (32–42) ========= */
+
+/* ---- 32. the WhatsApp control on checkout ----
+   Pinned hard to the right edge of the content, and with no white plate
+   behind it: the mark and the word sit straight on the page. */
+.co-help.co-help .container{padding-right:16px;justify-content:space-between}
+.co-help .wa-btn.co-wa{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  color:#0F6E37!important;padding:9px 0 9px 10px;margin-right:0;min-height:44px;
+  font-size:15.5px;font-weight:800}
+.co-help .wa-btn.co-wa:hover{background:transparent!important;text-decoration:underline}
+.co-help .wa-btn.co-wa svg{color:#25D366}
+.co-help .wa-btn.co-wa b,.co-help .wa-btn.co-wa .co-wa-s{color:#0F6E37} /* R15c AX02: 5.6:1 on #F3F1EC */
+
+/* ---- 36. free delivery, stated once, with no charge anywhere near it ---- */
+.co-freebox{display:flex;align-items:center;gap:12px;background:var(--brand-tint);
+  border:1.5px solid var(--brand-line);border-radius:var(--radius);padding:12px 13px}
+.co-freebox>svg{color:var(--brand);flex-shrink:0}
+.co-freebox .h3{font-size:16.5px;line-height:1.2}
+.co-freebox .small{margin-top:2px;line-height:1.35}
+.co-fdays{display:flex;align-items:flex-start;gap:7px;margin:9px 0 0;
+  font-size:12.5px;color:var(--text2);line-height:1.4}
+.co-fdays svg{color:var(--text2);flex-shrink:0;margin-top:1px}
+
+/* ---- 38. "Where is this address?" — one line, plain words ---- */
+.co-zask{margin:10px 0 9px;font-size:14.5px;font-weight:700;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---- 39/C9. the payment step before it opens: never an empty box ---- */
+.co-soon .co-soonrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.co-soon .co-badge{margin:0}
+
+/* ---- 42. the blocked field: highlighted, and spoken to in Bengali ------- */
+.co-f{position:relative}
+.co-f.ask .input{border-color:#C9A24A;background:#FFFCF4;
+  box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+.co-f.ask .label{color:#8A6514}
+.co-askmsg{display:flex;align-items:flex-start;gap:8px;margin-top:-1px;
+  background:#FBF3DF;border:1px solid #C9A24A;border-top:0;
+  border-radius:0 0 var(--radius) var(--radius);padding:9px 11px 10px}
+.co-askmsg svg{color:#8A6514;flex-shrink:0;margin-top:2px}
+.co-askmsg b{display:block;font-size:14.5px;font-weight:700;color:#5A3E12;line-height:1.45}
+.co-askmsg span span{display:block;font-size:12px;color:#7A5E2A;margin-top:2px;line-height:1.35}
+@keyframes coAskIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.co-askmsg{animation:coAskIn .18s ease-out}
+@media(prefers-reduced-motion:reduce){.co-askmsg{animation:none}}
+
+/* ---- 46. the saved-address chooser at the top of step 1 ---- */
+.co-book{display:grid;gap:8px;margin-top:12px}
+.co-bookb{display:flex;align-items:flex-start;gap:9px;text-align:left;width:100%;
+  min-height:52px;padding:10px 12px;border:1.5px solid var(--input);
+  border-radius:var(--radius);background:var(--surface);color:var(--ink);cursor:pointer;
+  font-size:13.5px;line-height:1.35}
+.co-bookb svg{color:var(--text2);flex-shrink:0;margin-top:1px}
+.co-bookb.on{border-color:var(--brand);background:var(--brand-tint)}
+.co-bookb.on svg{color:var(--brand)}
+.co-bookadd{display:inline-flex;align-items:center;gap:5px;min-height:40px;font-size:13.5px}
+
+/* ---- C12. the delivery note is inside a card like everything else ---- */
+.co-notecard .co-noteadd{display:flex;align-items:center;gap:9px;width:100%;
+  min-height:46px;background:none;border:0;padding:0;cursor:pointer;
+  color:var(--brand);font-size:14.5px;font-weight:700;text-align:left}
+.co-notecard .co-noteadd svg{flex-shrink:0}
+
+/* ---- 33. the regular price, struck, beside the total ---- */
+.co-was{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;
+  margin-top:3px;flex-wrap:wrap}
+.co-was .strike{font-size:14.5px;color:var(--muted);text-decoration:line-through}
+.co-saved{font-size:13px;font-weight:800;color:var(--brand)}
+:root[data-theme="festive"] .co-saved{color:var(--gold)}
+
+/* ---- C10. inputs match the buttons around them (42px → 48px) ---- */
+.co-wrap .co-sec .input{min-height:48px}
+.co-wrap .co-sec textarea.input{min-height:62px}
+.co-wrap .co-sec .input.co-addr{min-height:62px}
+
+/* ---- 40. the payment block on one screen ---- */
+@media(max-width:1023px){
+  .co-paysec .co-po-hd{min-height:50px;padding:8px 12px}
+  .co-paysec .co-po-hd .h3{font-size:14.5px}
+  .co-paysec .co-po-bd{padding:0 12px 9px 42px}
+  .co-paysec .co-po-bd .chip{min-height:38px;padding:6px 12px;font-size:13px}
+  .co-paysec .stack.s8{gap:7px}
+  .co-paysec .co-badge{margin:3px 3px 0 0}
+}
+.co-zboth{display:flex;align-items:flex-start;gap:7px;margin:0 0 10px;
+  font-size:12.5px;color:var(--text2);line-height:1.4}
+.co-zboth svg{color:var(--warn);flex-shrink:0;margin-top:1px}
+.co-zboth b{color:var(--ink)}
+/* 33. the saving is readable without opening the summary */
+.co-msum-amt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.co-msum-was{display:flex;align-items:baseline;gap:7px;margin-top:2px}
+.co-msum-was .strike{font-size:13px;color:var(--muted);text-decoration:line-through;font-weight:600}
+.co-msum-save{font-size:12.5px;font-weight:800;color:var(--brand)}
+:root[data-theme="festive"] .co-msum-save{color:var(--gold)}
+
+/* ================= round 13 · thank-you (43) and the return note ======== */
+
+/* ---- 43. the order number was white on white ----
+   It is the one thing from this page a customer writes down or reads out on
+   WhatsApp, so it is now the loudest thing on it after the tick. */
+.ty-hero .ty-ord{background:var(--brand-tint);border:1.5px solid var(--brand);
+  padding:8px 8px 8px 16px;gap:10px;box-shadow:0 2px 10px rgba(31,78,70,.10)}
+.ty-hero .ty-ord>.small.muted{color:var(--text2);font-weight:600}
+.ty-hero .ty-ord [data-testid="ty-id"]{font-size:23px;font-weight:800;
+  letter-spacing:.01em;color:var(--brand-dark)}
+:root[data-theme="festive"] .ty-hero .ty-ord [data-testid="ty-id"]{color:var(--ink)}
+.ty-hero .ty-ord .btn-sm{background:var(--surface);border-color:var(--brand-line)}
+@media(max-width:389px){.ty-hero .ty-ord [data-testid="ty-id"]{font-size:20px}}
+
+/* ---- the owner's alignment note on the account credentials ----
+   "Log in with", then the password, then the phone number: one left edge,
+   one gap, in that order. */
+.ty-cred3{border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface2);padding:12px 14px}
+.ty-cred3-hd{font-size:12px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted)}
+.ty-crow{display:flex;align-items:baseline;gap:10px;margin-top:10px}
+.ty-crow .k{flex:0 0 108px;font-size:13px;color:var(--text2)}
+.ty-crow .v{display:flex;align-items:baseline;gap:10px;min-width:0}
+.ty-crow .v b{font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+.ty-crow .link{min-height:34px;display:inline-flex;align-items:center}
+
+/* ---- 37. the return note, one wording, three places ---- */
+.bag-retnote{display:flex;align-items:flex-start;gap:9px;
+  background:var(--surface2);border:1px solid var(--line);
+  border-radius:var(--radius);padding:10px 12px;margin-top:12px;
+  font-size:12.5px;color:var(--text2);line-height:1.45}
+.bag-retnote svg{color:var(--warn);flex-shrink:0;margin-top:1px}
+.bag-retnote b{color:var(--ink);font-weight:700}
+.bag-retnote .bn{display:block;margin-top:3px;font-size:12.5px;color:var(--text2)}
+
+/* ================= round 13 · My account (44–48) ======================== */
+
+/* ---- 44. the parcel's journey, in pictures, on the order card ---- */
+.acc-ordmid{display:flex;flex-direction:column;gap:12px;min-width:0}
+@media(min-width:768px){.acc-ordmid{gap:14px}}
+.acc-flow{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:2px;position:relative;text-decoration:none!important;color:inherit;
+  background:var(--surface2);border:1px solid var(--line2);border-radius:var(--radius);
+  padding:11px 10px 9px}
+.acc-flow:hover{border-color:var(--brand-line);background:var(--brand-tint)}
+.acc-fstep{position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:5px;flex:1 1 0;min-width:0}
+.acc-fdot{display:flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:50%;background:var(--surface);
+  border:1.5px solid var(--line);color:var(--muted);position:relative;z-index:2;
+  transition:transform .2s ease}
+.acc-fstep.done .acc-fdot{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.acc-fstep.raw.done .acc-fdot{background:var(--surface);border-color:var(--brand);padding:0}
+.acc-fstep.raw .acc-fdot{padding:0;overflow:hidden}
+.acc-fstep.now .acc-fdot{box-shadow:0 0 0 4px var(--brand-tint);transform:scale(1.06)}
+.acc-flbl{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--muted);
+  text-align:center;line-height:1.2;max-width:76px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.acc-fstep.done .acc-flbl{color:var(--ink)}
+.acc-fstep.now .acc-flbl{color:var(--brand)}
+.acc-fline{position:absolute;top:19px;left:calc(50% + 22px);right:calc(-50% + 22px);
+  height:2px;background:var(--line);z-index:1}
+.acc-fline.on{background:var(--brand)}
+.acc-cour{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;
+  font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:.02em}
+:root[data-theme="festive"] .acc-fstep.done .acc-fdot{background:var(--gold);color:#1B1403;border-color:var(--gold)}
+
+/* ---- 48. the offer that reads his order history ---- */
+.acc-po{position:relative;overflow:hidden;border-radius:var(--card-radius);
+  background:var(--surface);border:1.5px solid var(--brand-line);padding:15px 16px 14px}
+.acc-po-hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.acc-po-eb{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--brand)}
+.acc-po-all{display:inline-flex;align-items:center;gap:3px;min-height:34px;
+  font-size:13px;font-weight:700;color:var(--text2)}
+.acc-po-t{font-family:var(--font-display);font-weight:800;font-size:21px;line-height:1.15;
+  margin-top:8px;color:var(--ink)}
+.acc-po-n{font-size:12.5px;color:var(--text2);margin-top:3px;line-height:1.4}
+.acc-po-stage{position:relative;margin-top:12px;height:86px}
+.acc-po-slide{position:absolute;inset:0;display:flex;align-items:center;gap:12px;
+  opacity:0;visibility:hidden;transform:translateY(6px);
+  transition:opacity .45s ease, transform .45s ease, visibility .45s}
+.acc-po-slide.on{opacity:1;visibility:visible;transform:none}
+.acc-po-img{width:86px;flex-shrink:0;border-radius:var(--radius);overflow:hidden;display:block}
+.acc-po-img .pimg{border-radius:var(--radius)}
+.acc-po-img .pimg-label{display:none}
+.acc-po-tx{min-width:0}
+.acc-po-name{display:block;font-size:15px;font-weight:700;color:var(--ink)!important;
+  line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-po-price{display:flex;align-items:baseline;gap:9px;margin-top:5px;flex-wrap:wrap}
+.acc-po-price b{font-family:var(--font-display);font-size:21px;font-weight:800;color:var(--ink)}
+.acc-po-price .strike{font-size:13.5px;color:var(--muted);text-decoration:line-through}
+.acc-po-save{font-size:12px;font-weight:800;background:var(--brand);color:var(--brand-ink);
+  border-radius:999px;padding:2px 8px}
+:root[data-theme="festive"] .acc-po-save{background:var(--gold);color:#1B1403}
+.acc-po-dots{display:flex;gap:5px;margin-top:10px}
+.acc-po-dot{width:6px;height:6px;border-radius:50%;background:var(--line);transition:background .3s ease, width .3s ease}
+.acc-po-dot.on{background:var(--brand);width:16px;border-radius:3px}
+
+/* ---- 47. the way home, on every account page ---- */
+.acc-home{display:grid;gap:10px;margin-top:4px}
+@media(min-width:620px){.acc-home{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.acc-home .btn{min-height:50px;font-size:15px;font-weight:700}
+
+/* ---- 46. the address list ---- */
+.acc-addrs{display:grid;gap:12px}
+.acc-addr-add{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+  min-height:46px;padding:0;background:none;border:0;cursor:pointer;
+  color:var(--brand);font-size:14.5px;font-weight:700}
+.acc-addr-add svg{flex-shrink:0;border:1.5px solid var(--brand);border-radius:50%;padding:3px;
+  width:26px;height:26px}
+
+/* ---- 45. one Preferences card instead of three small ones ---- */
+.acc-prefs .seg{margin-top:0;flex-shrink:0}
+.acc-prefs .acc-nrow:first-of-type{border-top:0}
+
+/* ---- the tab row used to open already scrolled, with the first tab cut off
+   at x=0. The row snaps its chips to the start edge, and with no
+   scroll-padding the snap point ignored the 16px gutter — so it parked the
+   first chip against the screen edge the moment it was drawn. ---- */
+.acc-chips{scroll-padding-left:16px}

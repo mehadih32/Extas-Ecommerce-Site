@@ -1,0 +1,1542 @@
+/* ============ EXTAS demo — design tokens & components ============ */
+:root, :root[data-theme="classic"]{
+  --bg:#F4F3F0; --surface:#FFFFFF; --surface2:#FAFAF8; --ink:#171715; --ink2:#2F2D29; --text2:#54504A; --muted:#6E675E; --strike:#7F796F;
+  --line:#E6E3DE; --line2:#EFEDE8; --input:#D8D4CD;
+  --brand:#1F4E46; --brand-dark:#15302B; --brand-ink:#FFFFFF; --brand-tint:#EEF3F1; --brand-line:#D5E1DC;
+  --sale:#B4453C; --gold:#8A6420; --gold-bg:#F6EFDF; --warn:#8A5A1E; --warn-bg:#F6EFDF;
+  --hero:#22403A; --hero-ink:#FFFFFF; --hero-sub:#CBDED7; --announce:#15302B; --announce-ink:#E8EFEC;
+  --footer:#121211; --footer-ink:#C9C4BC; --footer-line:#2A2926;
+  --radius:2px; --btn-radius:2px; --card-radius:2px;
+  --font-body:'Instrument Sans','Hind Siliguri',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-display:'Archivo','Hind Siliguri',system-ui,sans-serif;
+  --display-weight:800; --display-case:none; --display-track:-0.01em;
+}
+:root[data-theme="noir"]{
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface2:#F7F7F7; --ink:#0E0E0E; --ink2:#1E1E1E; --text2:#444; --muted:#5E5E5E; --strike:#777;
+  --line:#E7E7E7; --line2:#F0F0F0; --input:#CFCFCF;
+  --brand:#0E0E0E; --brand-dark:#000; --brand-ink:#FFF; --brand-tint:#F3F1EC; --brand-line:#DCD6CA;
+  --hero:#1A1A1A; --hero-ink:#FFF; --hero-sub:#D6CFC2; --announce:#0E0E0E; --announce-ink:#E9E3D7;
+  --footer:#0B0B0B; --footer-line:#262626;
+  --radius:0px; --btn-radius:0px; --card-radius:0px;
+  --display-case:uppercase; --display-track:0.06em; --display-weight:700;
+}
+:root[data-theme="ivory"]{
+  --bg:#F7F3EA; --surface:#FFFDF8; --surface2:#FBF7EE; --ink:#2B2620; --ink2:#3A332B; --text2:#5A5046; --muted:#6F655A; --strike:#857A6E;
+  --line:#E7DFD0; --line2:#EFE8DA; --input:#D9CFBD;
+  --brand:#8A5A3B; --brand-dark:#5E3C26; --brand-ink:#FFF; --brand-tint:#F3E9DF; --brand-line:#E4D2C1;
+  --hero:#D9CBB4; --hero-ink:#2B2620; --hero-sub:#4C4237; --announce:#5E3C26; --announce-ink:#F6EDE3;
+  --footer:#2B2620; --footer-ink:#D9CFC2; --footer-line:#433B32;
+  --font-display:'Cormorant Garamond','Archivo',serif; --display-weight:600; --display-track:0;
+}
+:root[data-theme="festive"]{
+  --bg:#0F1B33; --surface:#17264A; --surface2:#1B2C55; --ink:#F3EBDD; --ink2:#EFE6D6; --text2:#D8CFBF; --muted:#BEB5A6; --strike:#A79F92;
+  --line:#2A3A63; --line2:#24345A; --input:#3A4B76;
+  --brand:#C9A14A; --brand-dark:#A8832F; --brand-ink:#0F1B33; --brand-tint:#22335E; --brand-line:#3B4C78;
+  --sale:#E07A6E; --gold:#E3C77E; --gold-bg:#2A3866; --warn:#E3C77E; --warn-bg:#2A3866;
+  --hero:#1B2C55; --hero-ink:#F3EBDD; --hero-sub:#E3C77E; --announce:#C9A14A; --announce-ink:#0F1B33;
+  --footer:#0A1326; --footer-ink:#D8CFBF; --footer-line:#22325A;
+  --btn-radius:999px; --card-radius:10px; --radius:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:none}
+:root[data-theme="festive"] a{color:var(--gold)}
+button{font-family:inherit;color:inherit}
+img,svg{display:block}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink)}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.container{width:100%;max-width:1240px;margin:0 auto;padding:0 16px}
+@media(min-width:768px){.container{padding:0 24px}}
+@media(min-width:1024px){.container{padding:0 32px}}
+.display{font-family:var(--font-display);font-weight:var(--display-weight);letter-spacing:var(--display-track);text-transform:var(--display-case);line-height:1.08;margin:0}
+.h1{font-family:var(--font-display);font-weight:var(--display-weight);letter-spacing:var(--display-track);text-transform:var(--display-case);font-size:26px;line-height:1.15;margin:0}
+.h2{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.25;margin:0}
+.h3{font-size:15px;font-weight:600;margin:0}
+@media(min-width:1024px){.h1{font-size:34px}.h2{font-size:22px}}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.muted{color:var(--muted)} .text2{color:var(--text2)} .small{font-size:13px} .xs{font-size:12px} .tiny{font-size:11px}
+.bold{font-weight:600} .b7{font-weight:700}
+.price{font-family:var(--font-display);font-weight:700;letter-spacing:0} .strike{color:var(--strike);text-decoration:line-through;font-weight:400}
+.sale{color:var(--sale)} .brandc{color:var(--brand)} :root[data-theme="festive"] .brandc{color:var(--gold)}
+.row{display:flex;align-items:center;gap:10px} .row.wrap{flex-wrap:wrap} .row.top{align-items:flex-start} .row.between{justify-content:space-between} .row.end{justify-content:flex-end}
+.stack{display:flex;flex-direction:column;gap:12px} .stack.s6{gap:6px} .stack.s8{gap:8px} .stack.s16{gap:16px} .stack.s24{gap:24px}
+.grow{flex:1 1 auto;min-width:0} .shrink0{flex-shrink:0}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt48{margin-top:48px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb24{margin-bottom:24px}
+.p16{padding:16px}.p20{padding:20px}.p24{padding:24px}
+.center{text-align:center}
+@media(max-width:1023px){.hide-m{display:none!important}} @media(min-width:1024px){.hide-d{display:none!important}}
+.flex-d{display:block} @media(min-width:1024px){.flex-d{display:flex}}
+/* grids */
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(2,minmax(0,1fr))} @media(min-width:768px){.g3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.g4{grid-template-columns:repeat(2,minmax(0,1fr))} @media(min-width:768px){.g4{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(min-width:1024px){.g4{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}}
+.g6{grid-template-columns:repeat(3,minmax(0,1fr))} @media(min-width:1024px){.g6{grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}}
+@media(min-width:1024px){.grid{gap:20px}}
+/* split layouts */
+.split{display:grid;gap:24px} @media(min-width:1024px){.split{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:start}}
+.split-side{display:grid;gap:20px} @media(min-width:1024px){.split-side{grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:start}}
+.sticky-d{position:static} @media(min-width:1024px){.sticky-d{position:sticky;top:96px}}
+/* surfaces */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--card-radius)}
+.panel{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+@media(min-width:1024px){.panel{border:1px solid var(--line);border-radius:var(--card-radius)}}
+.tint{background:var(--brand-tint);border:1px solid var(--brand-line);border-radius:var(--radius)}
+.soft{background:var(--bg);border-radius:var(--radius)}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:var(--radius)}
+.divider{height:1px;background:var(--line);border:0;margin:0}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:12px 20px;border-radius:var(--btn-radius);font-size:15px;font-weight:600;cursor:pointer;border:1.5px solid transparent;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn-primary{background:var(--brand);color:var(--brand-ink)!important;border-color:var(--brand)}
+.btn-primary:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
+.btn-secondary{background:var(--surface);color:var(--brand)!important;border-color:var(--brand)}
+:root[data-theme="festive"] .btn-secondary{color:var(--gold)!important;border-color:var(--gold)}
+.btn-secondary:hover{background:var(--brand-tint)}
+.btn-ghost{background:transparent;color:var(--ink)!important;border-color:var(--input)}
+.btn-dark{background:var(--ink);color:var(--bg)!important;border-color:var(--ink)}
+.btn-block{display:flex;width:100%}
+.btn-sm{min-height:36px;padding:7px 12px;font-size:13px}
+.btn[disabled],.btn.is-disabled{background:var(--line);border-color:var(--line);color:var(--muted)!important;cursor:not-allowed}
+.link{background:none;border:none;padding:4px 0;color:var(--brand);font-weight:600;text-decoration:underline;cursor:pointer;font-size:13px}
+:root[data-theme="festive"] .link{color:var(--gold)}
+.iconbtn{background:none;border:none;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative;color:var(--ink);border-radius:var(--radius)}
+.iconbtn:hover{background:var(--line2)}
+.wa-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:var(--btn-radius);background:var(--brand-tint);border:1px solid var(--brand-line);color:var(--brand-dark)!important;font-weight:600;font-size:14px;cursor:pointer}
+:root[data-theme="festive"] .wa-btn{color:var(--ink)!important}
+/* chips & pills */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;border:1px solid var(--input);background:var(--surface);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--ink)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;font-size:11.5px;font-weight:600;background:var(--brand-tint);color:var(--brand-dark)}
+:root[data-theme="festive"] .tag{color:var(--gold)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)} .tag.sale{background:var(--sale);color:#fff} .tag.dark{background:var(--ink);color:var(--bg)} .tag.plain{background:var(--line2);color:var(--text2)} .tag.gold{background:var(--gold-bg);color:var(--gold)}
+.badge-img{position:absolute;top:10px;left:10px;background:var(--surface);color:var(--ink);font-size:10px;font-weight:700;padding:4px 8px;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--radius)}
+.badge-img.sale{background:var(--sale);color:#fff}
+.swatch{width:34px;height:34px;border-radius:50%;border:1px solid var(--input);cursor:pointer;padding:0;flex-shrink:0}
+.swatch.sm{width:14px;height:14px;cursor:default}
+.swatch.on{outline:2px solid var(--brand);outline-offset:2px}
+:root[data-theme="festive"] .swatch.on{outline-color:var(--gold)}
+.size-pill{min-width:54px;min-height:44px;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--input);background:var(--surface);font-weight:600;font-size:14px;cursor:pointer;color:var(--ink)}
+.size-pill.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.size-pill.out{background:var(--bg);border-style:dashed;color:#AEA89F;text-decoration:line-through;cursor:not-allowed}
+.size-pill.tagged{position:relative}
+/* inputs */
+.label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+.input{width:100%;border:1px solid var(--input);border-radius:var(--radius);padding:13px 12px;background:var(--surface);color:var(--ink);font-size:15px}
+.input:focus,textarea:focus,select:focus{outline:2px solid var(--brand);outline-offset:1px}
+textarea.input{resize:vertical;line-height:1.5}
+.input.ok{border-color:var(--brand)} .input.warn{border-color:#C08A3E}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13.5px}
+.check input{width:18px;height:18px;accent-color:var(--brand);margin-top:2px;flex-shrink:0}
+.switch{position:relative;width:44px;height:26px;border-radius:13px;border:none;cursor:pointer;background:#CFCAC2;flex-shrink:0;padding:0}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.switch.on{background:var(--brand)} .switch.on::after{left:21px}
+.seg{display:inline-flex;border:1px solid var(--input);border-radius:20px;padding:2px;background:var(--surface)}
+.seg button{border:none;background:transparent;padding:6px 12px;border-radius:18px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--text2)}
+.seg button.on{background:var(--brand);color:var(--brand-ink)}
+/* product imagery */
+.pimg{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:var(--card-radius)}
+.pimg svg.garment{width:72%;height:auto;max-height:86%;filter:drop-shadow(0 8px 14px rgba(0,0,0,.10))}
+.pimg .pimg-label{position:absolute;left:8px;bottom:6px;font-size:9.5px;color:rgba(0,0,0,.45);letter-spacing:.04em}
+.ratio-45{aspect-ratio:4/5} .ratio-34{aspect-ratio:3/4} .ratio-11{aspect-ratio:1/1} .ratio-wide{aspect-ratio:16/9}
+/* product card */
+.pcard{display:block;background:var(--surface);border-radius:var(--card-radius);overflow:hidden;color:var(--ink)!important;transition:transform .15s}
+.pcard:hover{transform:translateY(-2px)}
+.pcard .pinfo{padding:10px 10px 13px}
+.pcard .pname{font-size:13.5px;font-weight:500;line-height:1.35;margin-bottom:5px;color:var(--ink)}
+@media(min-width:1024px){.pcard .pinfo{padding:12px 14px 16px}.pcard .pname{font-size:14.5px}}
+.pcard .heart{position:absolute;top:8px;right:8px;background:var(--surface);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+/* header */
+.announce{background:var(--announce);color:var(--announce-ink);text-align:center;padding:8px 16px;font-size:12.5px;letter-spacing:.02em}
+.hdr{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;height:60px;gap:12px}
+@media(min-width:1024px){.hdr-in{height:72px}}
+.logo{font-family:'Archivo',sans-serif;font-weight:800;font-size:21px;letter-spacing:.22em;color:var(--ink)!important;padding-left:.22em}
+@media(min-width:1024px){.logo{font-size:24px}}
+.nav-d{display:none} @media(min-width:1024px){.nav-d{display:flex;gap:26px;align-items:center}}
+.nav-d a{color:var(--ink);font-size:14px;font-weight:500;padding:6px 0;border-bottom:2px solid transparent}
+.nav-d a.on,.nav-d a:hover{border-color:var(--brand)}
+.langpill{background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;gap:5px}
+.count-dot{position:absolute;top:2px;right:0;background:var(--brand);color:var(--brand-ink);font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bnav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:7px 0 9px;z-index:45}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted)}
+.bnav a.on{color:var(--brand);font-weight:700}
+:root[data-theme="festive"] .bnav a.on{color:var(--gold)}
+@media(min-width:1024px){.bnav{display:none}}
+.has-bnav{padding-bottom:64px} @media(min-width:1024px){.has-bnav{padding-bottom:0}}
+/* footer */
+.ftr{background:var(--footer);color:var(--footer-ink);margin-top:48px}
+.ftr a{color:#E6E1D9}
+.ftr-promise{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--footer-line)}
+.ftr-promise>div{padding:16px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#fff;line-height:1.3}
+.ftr-promise>div+div{border-left:1px solid var(--footer-line)}
+@media(min-width:1024px){.ftr-promise>div{flex-direction:row;justify-content:center;font-size:13px;padding:20px 8px;gap:10px}}
+.ftr-cols{display:grid;grid-template-columns:repeat(3,1fr);padding:20px 0;border-bottom:1px solid var(--footer-line)}
+.ftr-cols>div{display:flex;flex-direction:column;gap:11px;padding:0 10px 0 14px}
+.ftr-cols>div+div{border-left:1px solid var(--footer-line)}
+.ftr-cols a{font-size:13px}
+.ftr-h{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#8A857D;font-weight:700;margin-bottom:2px}
+.ftr-main{display:grid;gap:0} @media(min-width:1024px){.ftr-main{grid-template-columns:1.1fr 1.6fr 1fr;gap:32px;padding:36px 0}.ftr-main .ftr-cols{border-bottom:0;padding:0}}
+/* modal / sheet */
+.modal-back{position:fixed;inset:0;background:rgba(15,15,14,.55);z-index:80;display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:768px){.modal-back{align-items:center;padding:24px}}
+.modal{background:var(--surface);color:var(--ink);width:100%;max-height:92vh;overflow:auto;border-radius:14px 14px 0 0;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+@media(min-width:768px){.modal{max-width:560px;border-radius:var(--card-radius)}.modal.wide{max-width:860px}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 10px 20px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--surface);z-index:2}
+.modal-bd{padding:18px 20px 22px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:var(--radius);font-size:13.5px;z-index:90;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media(min-width:1024px){.toast{bottom:28px}}
+/* sticky bottom action bar (mobile) */
+.mbar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px 12px;z-index:30}
+@media(min-width:1024px){.mbar.dm-hide{display:none}}
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th,.tbl td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--line2)}
+.tbl th{font-weight:600;background:var(--surface2);font-size:12.5px}
+.tbl tr.sel td{background:var(--brand-tint);font-weight:600}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius)}
+/* stepper / timeline */
+.tl{display:flex;flex-direction:column}
+.tl-step{display:flex;gap:12px}
+.tl-dot{width:24px;height:24px;border-radius:50%;border:1.5px solid #B9B3AA;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0}
+.tl-dot.done{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.tl-dot.now{border:2px solid var(--brand);color:var(--brand)}
+.tl-line{width:2px;flex:1;background:var(--line);min-height:22px;margin:2px auto}
+.tl-line.done{background:var(--brand-line)}
+/* demo bar */
+.demo-fab{position:fixed;right:14px;bottom:78px;z-index:70;background:#111;color:#fff;border:none;border-radius:22px;padding:10px 14px;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;gap:7px;align-items:center}
+@media(min-width:1024px){.demo-fab{bottom:20px}}
+.demo-panel{position:fixed;right:14px;bottom:126px;z-index:71;width:320px;max-width:calc(100vw - 28px);background:#fff;color:#171715;border:1px solid #E6E3DE;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,.25);padding:16px;font-size:13px;max-height:70vh;overflow:auto}
+@media(min-width:1024px){.demo-panel{bottom:68px}}
+.demo-panel .seg button.on{background:#1F4E46;color:#fff}
+/* admin */
+.admin{display:grid;min-height:100vh;background:#F2F1EE;color:#171715}
+@media(min-width:1024px){.admin{grid-template-columns:240px minmax(0,1fr)}}
+.admin-side{background:#15302B;color:#DDE8E4;padding:18px 14px;display:none}
+@media(min-width:1024px){.admin-side{display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}}
+.admin-side a{color:#DDE8E4;padding:9px 12px;border-radius:6px;font-size:14px;display:flex;gap:10px;align-items:center}
+.admin-side a.on,.admin-side a:hover{background:rgba(255,255,255,.1);color:#fff}
+.admin-side a.soon{opacity:.5;pointer-events:none}
+.admin-top{background:#15302B;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+@media(min-width:1024px){.admin-top{display:none}}
+.admin-main{padding:20px 16px 90px;min-width:0}
+@media(min-width:1024px){.admin-main{padding:28px 36px 60px}}
+.admin .card{border-radius:8px}
+.admin-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.kpi{background:#fff;border:1px solid #E6E3DE;border-radius:8px;padding:14px}
+.kpi .v{font-family:'Archivo',sans-serif;font-size:22px;font-weight:800}
+/* misc */
+.scroll-x{display:flex;gap:12px;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
+.scroll-x>*{flex-shrink:0}
+.fitbar{position:relative;height:4px;background:var(--line);border-radius:2px}
+.fitbar span{position:absolute;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--brand);border:2px solid var(--surface)}
+.crumbs{font-size:12.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.crumbs a{color:var(--muted)}
+.section{padding:28px 0 4px} @media(min-width:1024px){.section{padding:56px 0 8px}}
+.sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+@media(min-width:1024px){.sec-hd{margin-bottom:22px}}
+.bar-progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar-progress>div{height:4px;background:var(--brand)}
+.notice{font-size:11px;color:var(--strike)}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--input);border-radius:var(--radius)}
+.qty button{background:none;border:none;width:34px;height:34px;font-size:17px;cursor:pointer;color:var(--text2)}
+.qty span{width:26px;text-align:center;font-weight:600;font-family:var(--font-display)}
+.empty{padding:48px 16px;text-align:center;color:var(--muted)}
+.page{min-height:60vh}
+
+/* phone: a page with its own sticky action bar hides the bottom nav; demo button & toast clear the bar */
+@media(max-width:1023px){
+  .has-bnav:has(.mbar.dm-hide) .bnav{display:none}
+  .has-bnav:has(.mbar.dm-hide){padding-bottom:0}
+  .has-bnav .mbar.dm-hide{bottom:0!important}
+  .demo-fab{bottom:142px;right:10px;width:42px;height:42px;padding:0;justify-content:center;border-radius:50%;opacity:.92}
+  .demo-fab .demo-fab-t{display:none}
+  .demo-panel{bottom:186px}
+  .toast{bottom:196px}
+}
+
+/* ============================================================
+   MOBILE HARDENING PASS — audit fixes, 2026-10-17
+   No layout or visual redesign: sizes, hit areas, contrast,
+   touch behaviour and safe areas only.
+   ============================================================ */
+
+/* 1. iOS auto-zoom on focus: every field must be >= 16px */
+.input,select.cat-sort,#ty-waist,textarea,select{font-size:16px}
+
+/* 2. kill double-tap-to-zoom on controls (pinch-zoom still works) */
+a,button,input,select,textarea,label,summary,
+[data-act],[role="button"],.chip,.size-pill,.swatch,.pcard,.bnav a,.iconbtn,.pdp-thumb
+{touch-action:manipulation}
+
+/* 3. toast must never eat a tap */
+.toast{pointer-events:none}
+@media(max-height:700px){.toast{bottom:124px}}
+
+/* 4. sticky action bar: fixed + real space reserved, so nothing hides under it */
+@media(max-width:1023px){
+  .has-bnav:has(.mbar.dm-hide) .mbar.dm-hide{
+    position:fixed;left:0;right:0;bottom:0;
+    padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  }
+  .has-bnav:has(.mbar.dm-hide){padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
+  .has-bnav:has(.pdp-page){padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
+  .input{scroll-margin-bottom:104px}
+}
+
+/* 5. horizontal scrollers must LOOK scrollable */
+.cat-chiprow,.acc-chips,.bs-tabs,.lp-thumbs,.hm-hscroll{
+  -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent);
+          mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent);
+  scroll-snap-type:x proximity;
+}
+.cat-chiprow>*,.acc-chips>*,.bs-tabs>*{scroll-snap-align:start}
+.hm-hscroll{scrollbar-width:thin!important}
+.hm-hscroll::-webkit-scrollbar{height:3px}
+.hm-hscroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
+@media(min-width:1024px){.hm-hscroll{-webkit-mask-image:none;mask-image:none}}
+@media(max-width:400px){.bs-tabs{-webkit-mask-image:none;mask-image:none}.bs-tabs>*{min-width:0;flex:1 1 0}}
+
+/* 6. bottom nav: clear of the home indicator, 48px targets, readable labels */
+.bnav{padding:8px 0 calc(10px + env(safe-area-inset-bottom,0px))}
+.bnav a{min-height:48px;justify-content:center;font-size:12px}
+.has-bnav{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+@media(min-width:1024px){.has-bnav{padding-bottom:0}}
+.toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+@media(min-width:1024px){.toast{bottom:28px}}
+
+/* 7. sold-out sizes must be readable (was 2.13:1) */
+.size-pill.out{color:#6B655C}
+.size-pill.bs-pill{font-size:14px!important}
+
+/* 8. the search submit keeps its word on mobile */
+.srch-form .hide-m{display:inline!important}
+.iconbtn{min-width:44px;min-height:44px;padding:10px}
+
+/* 9. 44x44 hit areas — circles stay the same size on screen */
+.swatch{position:relative}
+.swatch:not(.sm)::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
+.bs-sw{width:30px!important;height:30px!important}
+.pcard .heart{width:44px;height:44px;top:4px;right:4px}
+.pdp-unit{min-height:36px!important;padding:6px 12px!important;font-size:13px!important}
+.cat-chiprow .chip,.acc-chips .chip{min-height:44px!important}
+.btn-sm{min-height:44px}
+input[type=checkbox]{width:22px;height:22px}
+.hm-more,.link{min-height:36px;display:inline-flex;align-items:center}
+.ftr-cols a{min-height:34px;display:inline-flex;align-items:center}
+
+/* 10. readable floor — the lines that actually sell */
+.xs{font-size:13px} .tiny{font-size:12.5px} .tag{font-size:12.5px}
+.eyebrow{font-size:12px} .badge-img{font-size:11.5px}
+.ftr-cols a{font-size:14px} .ftr-h{font-size:11.5px}
+.ftr-promise>div{font-size:12.5px}
+.langpill{font-size:12.5px} .notice{font-size:12.5px}
+.count-dot{font-size:11px}
+
+/* 11. contrast on struck prices and the disabled confirm button */
+.strike{color:#6B655C}
+.btn-primary:disabled{color:#5C564E}
+
+/* 12. demo button out of the thumb zone */
+.demo-fab{min-width:44px;min-height:44px;opacity:.88}
+@media(max-width:1023px){.demo-fab{bottom:calc(150px + env(safe-area-inset-bottom,0px));width:44px;height:44px}}
+
+/* 13. proper screen-reader-only */
+.sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* 14. remaining sub-11px text raised to a readable floor */
+.pimg .pimg-label{font-size:11.5px}
+.cb-cap{font-size:12px!important}
+.pdp-chart .oos{font-size:12px!important}
+.co-badge{font-size:12px!important}
+.exc-sp .m{font-size:12px!important}
+.alp-pvurl{font-size:12px!important}
+
+/* ============================================================
+   ROUND 2 — defects the owner found by hand, 2026-10-17
+   ============================================================ */
+
+/* B1. page must not drag sideways; carousels must not chain their overscroll */
+html,body{overscroll-behavior-x:none}
+.hm-hscroll,.cat-chiprow,.acc-chips,.bs-tabs,.lp-thumbs,.scroll-x,
+.pdp-gal,.pdp-galT2,.pdp-thumbs,.tbl-wrap,.cb-row{overscroll-behavior-x:contain}
+
+/* B2. sheets and modals fill the phone screen — no gap at the top, one scroll area */
+@media(max-width:767px){
+  /* A short sheet stays a sheet rising from the bottom; a tall one fills the screen
+     with no gap at the top. One scroll area only: the body. */
+  .modal-back{align-items:flex-end}
+  .modal{max-height:100dvh;height:auto;border-radius:16px 16px 0 0;overflow:hidden;
+    overscroll-behavior:contain;display:flex;flex-direction:column}
+  .modal-hd{flex:0 0 auto}
+  .modal-bd{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  /* grab handle so it reads as a sheet */
+  .modal::before{content:"";display:block;width:38px;height:4px;border-radius:2px;
+    background:var(--line);margin:8px auto 0;flex:0 0 auto}
+}
+
+/* B3. Sets size pills — the 14px floor was applied without widening the pill, so glyphs spilled.
+   The grid forced 5 equal columns of ~28px; "XXL" needs 34px. Let the row wrap instead. */
+.bs-pills{grid-template-columns:repeat(auto-fit,minmax(36px,1fr))!important;gap:4px!important}
+.size-pill.bs-pill{font-size:13px!important;padding:0 2px!important;min-width:0!important;
+  overflow:hidden!important;white-space:nowrap!important}
+
+/* B4. the 16px iOS guard is a PHONE rule — it must not resize desktop controls */
+@media(min-width:1024px){
+  .input,select.cat-sort,#ty-waist,textarea,select{font-size:15px}
+}
+/* category sort control: stop it stretching, stop the row being taller than its controls */
+.cat-sort{flex:0 1 auto!important;max-width:200px}
+@media(max-width:1023px){.cat-sort{max-width:none;flex:1 1 auto!important}}
+
+/* B5. size-chart entry must be findable — a real bordered control, 44px, not a text link */
+.pdp-ilink{border:1px solid var(--input)!important;border-radius:var(--radius);
+  min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;
+  font-size:13.5px;font-weight:600;background:var(--surface);color:var(--ink)!important;
+  text-decoration:none!important}
+.pdp-ilink:hover{background:var(--line2)}
+
+/* B6. desktop: Delivery / Exchange / Returns side by side instead of three stacked rows */
+@media(min-width:1024px){
+  [data-testid="pdp-rules"]{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
+  [data-testid="pdp-rules"]>.row{margin:0}
+}
+
+/* B7. footer legal on one line */
+.ftr-legal{display:inline;line-height:1.7}
+@media(max-width:520px){.ftr-sep{opacity:.45}}
+
+/* B8. the hero's negative margin must not overhang a desktop scrollbar */
+.hm-hero-media{max-width:100%}
+
+/* round 2b — wordmark a touch larger and better spaced */
+.logo{font-size:24px!important;letter-spacing:.2em!important}
+@media(min-width:1024px){.logo{font-size:26px!important}}
+
+/* ============================================================
+   ROUND 2c — product page, bag, thank-you, menu, icons
+   ============================================================ */
+
+/* P1. phone: cap the gallery so price + colour reach the first screen */
+@media(max-width:1023px){
+  /* cap only the main photo — the thumbnail strip must stay visible */
+  .pdp-main .pimg{height:34vh;max-height:34vh;width:100%;overflow:hidden;
+    display:flex;align-items:center;justify-content:center}
+  .pdp-main .pimg>svg,.pdp-main .pimg img{width:100%;height:100%;object-fit:cover;max-height:none}
+  .pdp-thumbs{padding-top:6px;padding-bottom:0;gap:6px}
+  .pdp-thumb{width:46px;max-height:58px}
+  .pdp-thumb .pimg,.pdp-thumb svg,.pdp-thumb img{max-height:58px}
+  /* the sticky buy bar is slim until the customer starts scrolling */
+  .pdp-mbar{padding:7px 14px 9px}
+  .pdp-mbar .btn{min-height:46px;font-size:15px}
+}
+
+/* P2. announce strip on one line */
+.announce{padding-top:7px;padding-bottom:7px;font-size:12px;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* P3. phone: Delivery · Exchange · Returns on ONE row, bar-separated */
+@media(max-width:1023px){
+  [data-testid="pdp-rules"]{display:flex;flex-direction:row;gap:0;padding:10px 4px;align-items:stretch}
+  [data-testid="pdp-rules"]>.row{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;
+    text-align:center;gap:4px;padding:2px 8px;margin:0}
+  [data-testid="pdp-rules"]>.row+.row{border-left:1px solid var(--line2)}
+  [data-testid="pdp-rules"] .pdp-ric{margin:0}
+  [data-testid="pdp-rules"] .h3{font-size:12.5px;margin:0}
+  [data-testid="pdp-rules"] .small.text2{display:none}
+  [data-testid="pdp-rules"] .link{font-size:11.5px;min-height:28px}
+  /* the opened panel breaks out to full width under the three */
+  [data-testid="pdp-rules"]{flex-wrap:wrap}
+  [data-testid="pdp-rules"] .soft{flex-basis:100%;order:9;text-align:left;margin-top:8px}
+}
+
+/* P4. primary buy buttons: bigger, with one slow sheen so the eye finds them */
+.pdp-mbar .btn,.pdp-ctas .btn{min-height:52px;font-size:16px;font-weight:800}
+.btn-primary:not(:disabled){position:relative;overflow:hidden}
+.btn-primary:not(:disabled)::after{content:"";position:absolute;top:0;bottom:0;width:38%;left:-45%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.20),transparent);
+  animation:ctaSheen 7s ease-in-out 2s infinite;pointer-events:none}
+@keyframes ctaSheen{0%{left:-45%}15%{left:115%}100%{left:115%}}
+@media(prefers-reduced-motion:reduce){.btn-primary::after{display:none}}
+/* a size just chosen wakes the buy button up, once */
+.pdp-mbar.woke .btn-primary{box-shadow:0 0 0 3px var(--brand-tint)}
+
+/* P5. size-chart modal: full-width WhatsApp, proper heading */
+.modal .wa-btn{display:flex;width:100%;justify-content:center;min-height:50px;
+  background:#1FA855;color:#fff;border-color:#1FA855;font-weight:700;font-size:15px}
+.modal .wa-btn svg{color:#fff}
+.modal-hd .h2,.modal-hd .h3{font-family:var(--font-display);letter-spacing:.01em}
+
+/* P6. bag page: tighter, and the WhatsApp line noticed */
+@media(max-width:1023px){
+  .bg-page .card{padding:12px 14px}
+  .bg-page .stack.s16{gap:10px}
+}
+.bg-page .wa-btn,.ty-wrap .wa-btn{background:#1FA855;color:#fff;border-color:#1FA855;font-weight:700}
+.bg-page .wa-btn svg,.ty-wrap .wa-btn svg{color:#fff}
+
+/* P7. thank-you page: tighter on the phone */
+@media(max-width:1023px){
+  .ty-wrap{padding-top:12px!important;padding-bottom:28px!important}
+  .ty-wrap .card{padding:12px 14px}
+  .ty-wrap .stack.s16{gap:10px}
+  .ty-wrap .section{padding:16px 0 4px}
+  .ty-hero{padding-top:14px!important;padding-bottom:14px!important}
+}
+
+/* P8. menu drawer: clearer type, bigger rows */
+.drawer a,.sheet-nav a{font-size:16px!important;font-weight:600!important}
+.drawer .ftr-h,.sheet-nav .ftr-h{font-size:11.5px;letter-spacing:.16em}
+
+/* P9. header icons a little more present */
+.iconbtn svg{stroke-width:1.9}
+
+/* round 2d — menu drawer */
+.modal-flush{padding:0}
+.mn-quick{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.mn-q{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-height:68px;background:none;border:0;cursor:pointer;color:var(--ink);font-size:12px;font-weight:600}
+.mn-q+.mn-q{border-left:1px solid var(--line2)}
+.mn-row{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:54px;
+  border-bottom:1px solid var(--line2);color:var(--ink)!important;font-size:16px;font-weight:600;
+  font-family:var(--font-display);letter-spacing:.005em}
+.mn-row .mn-ic{color:var(--muted);display:inline-flex}
+.mn-row:hover{background:var(--line2)}
+.mn-h{padding:16px 16px 6px;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:700;color:var(--muted)}
+.mn-foot{padding:16px}
+.mn-foot .btn{min-height:48px}
+
+/* round 2e — buy the last pixels so price AND colour land on the first phone screen */
+@media(max-width:1023px){
+  .pdp-page .crumbs{display:none}          /* the header already has a back arrow */
+  .pdp-b .eyebrow{font-size:11.5px;letter-spacing:.1em}
+  .pdp-b .pdp-sec:first-child{padding-top:10px}
+  .pdp-b .h1,.pdp-b .pdp-title{line-height:1.15;margin-top:2px}
+}
+
+/* ============================================================
+   ROUND 3 — owner's review
+   ============================================================ */
+
+/* free-delivery badge, right under the price */
+.pdp-free{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:6px 11px;
+  border-radius:var(--radius);font-size:13.5px;background:var(--surface2);border:1px solid var(--line);color:var(--text2)}
+.pdp-free b{font-weight:700;color:var(--ink)}
+.pdp-free span{font-size:12px;opacity:.8}
+.pdp-free.on{background:var(--brand-tint);border-color:var(--brand);color:var(--brand-dark)}
+.pdp-free.on b,.pdp-free.on svg{color:var(--brand-dark)}
+
+/* payment line with bars */
+.pdp-bar{opacity:.35;padding:0 1px}
+.pdp-pay{flex-wrap:wrap}
+
+/* WhatsApp nudge inside the first screen */
+/* floating WhatsApp on the product page */
+.pdp-wafab{position:fixed;right:14px;bottom:92px;max-width:calc(100vw - 28px);z-index:60;display:flex;align-items:center;gap:0;
+  width:52px;height:52px;border-radius:26px;background:#1FA855;color:#fff!important;
+  justify-content:center;box-shadow:0 6px 20px rgba(31,168,85,.35);text-decoration:none!important;
+  transition:width .18s ease,gap .18s ease,padding .18s ease}
+.pdp-wafab svg{flex-shrink:0;color:#fff}
+.pdp-wafab-t{font-size:13.5px;font-weight:700;white-space:nowrap;max-width:0;overflow:hidden;opacity:0;
+  transition:max-width .18s ease,opacity .15s ease}
+.pdp-wafab:hover,.pdp-wafab:focus-visible{width:auto;gap:9px;padding:0 18px 0 15px}
+.pdp-wafab:hover .pdp-wafab-t,.pdp-wafab:focus-visible .pdp-wafab-t{max-width:260px;opacity:1}
+@media(min-width:1024px){.pdp-wafab{right:24px;bottom:24px;width:56px;height:56px;border-radius:28px}}
+/* on a phone it names itself once, then settles to the circle */
+@media(max-width:1023px){
+  .pdp-wafab{animation:waIntro 7s ease 1.4s 1 forwards}
+  @keyframes waIntro{0%{width:48px}6%{width:186px;gap:9px;padding:0 18px 0 15px}
+    30%{width:186px;gap:9px;padding:0 18px 0 15px}40%{width:48px;gap:0;padding:0}100%{width:48px}}
+  .pdp-wafab{overflow:hidden}
+  .pdp-wafab-t{animation:waIntroT 7s ease 1.4s 1 forwards}
+  @keyframes waIntroT{0%{max-width:0;opacity:0}8%{max-width:200px;opacity:1}30%{max-width:200px;opacity:1}
+    40%{max-width:0;opacity:0}100%{max-width:0;opacity:0}}
+}
+@media(prefers-reduced-motion:reduce){.pdp-wafab,.pdp-wafab-t{animation:none}}
+/* the demo gear moves aside so the two never overlap */
+@media(max-width:1023px){.demo-fab{bottom:calc(152px + env(safe-area-inset-bottom,0px))}}
+
+/* "All N colours" */
+.pdp-allc{display:inline-flex;align-items:center;gap:2px;min-height:34px;font-size:13px;font-weight:700}
+.allc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:620px){.allc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.allc{display:flex;flex-direction:column;gap:0;padding:0;border:1.5px solid var(--input);border-radius:var(--radius);
+  background:var(--surface);cursor:pointer;overflow:hidden;text-align:left}
+.allc.on{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.allc.so{opacity:.5;cursor:not-allowed}
+.allc-img{display:block}
+.allc-n{display:block;padding:8px 10px 0;font-size:13.5px;font-weight:700;color:var(--ink)}
+.allc-s{display:block;padding:1px 10px 9px;font-size:11.5px;color:var(--muted)}
+.allc.on .allc-s{color:var(--brand);font-weight:700}
+
+/* size chart footer: one row */
+.pdp-chartft{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pdp-chartft .btn,.pdp-chartft .wa-btn{min-height:48px;width:100%;justify-content:center}
+
+/* sheets start below the header, not over it */
+@media(max-width:1023px){
+  .modal-back{padding-top:calc(61px + 3px)}
+  .modal{max-height:calc(100dvh - 64px)}
+}
+
+/* content pages: the text was clipping on the left */
+.pg{padding-left:16px;padding-right:16px}
+@media(min-width:1024px){.pg{padding-left:24px;padding-right:24px}}
+.pg h1,.pg .pg-lede,.pg p,.pg li,.pg h2{overflow-wrap:anywhere}
+
+/* announce strip: fixed when it fits, a gentle pulse so it is noticed */
+.announce{position:relative;overflow:hidden}
+.announce::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);
+  transform:translateX(-100%);animation:annSweep 9s ease-in-out 3s infinite}
+@keyframes annSweep{0%{transform:translateX(-100%)}18%{transform:translateX(100%)}100%{transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){.announce::after{display:none}}
+
+/* round 3b — the floating buttons must not cover anything tappable */
+@media(max-width:1023px){
+  .pdp-wafab{bottom:82px;right:12px;width:48px;height:48px}
+  /* keep "All N colours" clear of the floating button */
+  .pdp-sec .row.between:has(.pdp-allc){padding-right:58px}
+  /* the demo gear is demo chrome — park it under the header, out of the content */
+  .demo-fab{top:72px;right:10px;bottom:auto!important;width:38px;height:38px;opacity:.75}
+  .demo-panel{top:120px;bottom:auto}
+}
+@media(min-width:1024px){ .pdp-wafab{bottom:28px;right:28px} }
+
+/* round 3c — rule values, fabric peek */
+.rule-v{font-weight:700;font-size:13px}
+.rule-v.hot{color:var(--brand);background:var(--brand-tint);border-radius:20px;padding:3px 10px;
+  display:inline-flex;align-items:center;min-height:30px}
+@media(max-width:1023px){
+  [data-testid="pdp-rules"] .rule-v{font-size:12.5px}
+  [data-testid="pdp-rules"] .rule-v.hot{padding:2px 9px;min-height:26px}
+}
+.pdp-acc.peek .pdp-acc-b{max-height:72px;overflow:hidden;position:relative;
+  -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
+.pdp-acc.peek .pdp-accmore{position:absolute;left:0;bottom:0;font-weight:700}
+
+/* round 3d — bag help block: heading + one full-width WhatsApp button, nothing else */
+.bg-help{padding:14px}
+.bg-help .h3{margin:0 0 10px}
+.bg-help .wa-btn,.bg-wa{display:flex;width:100%;justify-content:center;min-height:50px;
+  background:#1FA855;color:#fff!important;border:1px solid #1FA855;font-weight:700;font-size:15px;border-radius:var(--radius)}
+.bg-help .wa-btn svg{color:#fff}
+
+/* round 3e — thank-you: a Track order button beside the order number */
+.ty-ord{flex-wrap:wrap;gap:8px}
+.ty-track{min-height:44px;font-weight:700}
+@media(max-width:1023px){.ty-track{flex:1 1 100%;justify-content:center;margin-top:4px}}
+
+/* ============================================================
+   ROUND 4 — owner's review
+   ============================================================ */
+
+/* softly rounded buttons everywhere */
+:root{--btn-radius:10px!important; --radius:8px!important; --card-radius:12px!important}
+.btn,.chip,.size-pill,.input,.card,.co-po,.pdp-box,.soft,.tint{border-radius:var(--radius)}
+.btn{border-radius:var(--btn-radius)}
+.card,.modal{border-radius:var(--card-radius)}
+@media(max-width:767px){.modal{border-radius:14px 14px 0 0}}
+
+/* free-delivery strip: full width, a shadow rather than a boxed-in look */
+.pdp-free{display:flex;width:100%;align-items:center;gap:9px;margin-top:10px;padding:10px 13px;
+  border:0;border-radius:var(--radius);background:var(--brand-tint);color:var(--brand-dark);
+  box-shadow:0 2px 10px rgba(21,91,64,.10);font-size:13.5px;flex-wrap:wrap}
+.pdp-free b{font-weight:800;color:var(--brand-dark)}
+.pdp-free svg{color:var(--brand-dark);flex-shrink:0}
+.pdp-fsep{opacity:.35}
+.pdp-fsub{font-size:13px;opacity:.95}
+
+/* the colour row must never touch the buy bar */
+@media(max-width:1023px){
+  .pdp-b .pdp-sec:last-of-type{padding-bottom:10px}
+  .pdp-sw{margin-bottom:6px}
+}
+
+/* fabric peek: first line only */
+.pdp-acc.peek .pdp-acc-b{max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none;position:relative;padding-bottom:30px}
+.pdp-acc.peek .pdp-acc-b>*{display:none}
+.pdp-acc.peek .pdp-acc-b>.acc-first{display:block}
+.pdp-acc.peek .pdp-accmore{position:absolute;left:0;bottom:4px;font-weight:700}
+
+/* size chart: two equal option cards side by side, then How to measure full width */
+.pdp-chartft{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chart-opt{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px 12px;text-align:left;
+  border:1.5px solid var(--input);border-radius:var(--radius);background:var(--surface);
+  color:var(--ink)!important;cursor:pointer;text-decoration:none!important}
+.chart-opt b{display:block;font-size:13.5px;font-weight:700}
+.chart-opt span span{display:block;font-size:12px;color:var(--text2)}
+.chart-opt svg{flex-shrink:0;color:var(--text2)}
+.chart-opt:hover{border-color:var(--brand);background:var(--brand-tint)}
+.chart-opt.wa{border-color:#1FA855;background:#F2FBF5}
+.chart-opt.wa svg{color:#1FA855}
+.chart-opt.wa b{color:#136B37}
+.chart-how{margin-top:14px}
+
+/* bag: breathing room between the summary and the sticky checkout bar */
+@media(max-width:1023px){
+  .bg-page .bg-sum,.bg-page .card:last-of-type{margin-bottom:14px}
+  .has-bnav:has(.bg-mbar){padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+}
+.bg-free b{color:var(--brand);font-weight:800}
+.bg-free span{display:inline-flex;align-items:center;gap:6px}
+
+/* thank-you: full-width Track your order */
+.ty-track{min-height:52px;font-weight:800;font-size:16px;margin-top:10px}
+
+/* the floating WhatsApp is an icon only, clear of everything */
+.pdp-wafab{width:52px!important;height:52px!important;padding:0!important;gap:0!important;animation:none!important}
+.pdp-wafab-t{display:none!important}
+@media(max-width:1023px){.pdp-wafab{right:14px;bottom:88px}}
+@media(min-width:1024px){.pdp-wafab{right:28px;bottom:28px;width:56px!important;height:56px!important}}
+
+/* keep the free-delivery strip on ONE line on a phone */
+.pdp-free{flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+@media(max-width:520px){.pdp-free .hide-s{display:none}}
+
+/* round 4b — on a phone WhatsApp lives in the buy bar, so it can never sit over text.
+   On desktop it stays a floating button in the empty margin. */
+.pdp-mbar-in{grid-template-columns:52px 1fr 1fr!important;gap:8px!important}
+.pdp-mbar-wa{display:flex;align-items:center;justify-content:center;width:52px;height:46px;
+  border-radius:var(--btn-radius);background:#1FA855;color:#fff!important;flex-shrink:0;text-decoration:none!important}
+.pdp-mbar-wa svg{color:#fff}
+@media(max-width:1023px){.pdp-wafab{display:none}}
+@media(min-width:1024px){.pdp-mbar-wa{display:none}}
+
+/* ============================================================
+   ROUND 5 — owner's review
+   ============================================================ */
+
+/* long product titles must not break the first screen: two lines max, then ellipsis */
+.pdp-name{font-size:26px;line-height:1.14;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;text-overflow:ellipsis}
+@media(max-width:400px){.pdp-name{font-size:23px}}
+@media(min-width:1024px){.pdp-name{font-size:30px;-webkit-line-clamp:3}}
+
+/* WhatsApp is an icon beside the heart and share — never over text, never in the buy bar */
+.pdp-wabtn{color:#1FA855!important}
+.pdp-wabtn svg{color:#1FA855}
+.pdp-wabtn:hover{background:#E6F7EC}
+.pdp-mbar-in{grid-template-columns:1fr 1fr!important}
+.pdp-mbar-wa{display:none!important}
+.pdp-wafab{display:none!important}
+
+/* free-delivery strip: same height, bigger type and icon, filling the width */
+.pdp-free{padding:9px 14px;font-size:15px;justify-content:flex-start}
+.pdp-free b{font-size:15.5px}
+.pdp-free svg{width:21px;height:21px}
+.pdp-fsub{font-size:14.5px}
+
+/* size chart option cards: one calm pair, not green against white */
+.chart-opt{background:var(--surface2);border-color:var(--line)}
+.chart-opt:hover{border-color:var(--brand);background:var(--brand-tint)}
+.chart-opt.wa{background:var(--surface2);border-color:var(--line)}
+.chart-opt.wa svg{color:#1FA855}
+.chart-opt.wa b{color:var(--ink)}
+.chart-opt.wa:hover{background:#F2FBF5;border-color:#1FA855}
+
+/* the size-chart sheet floats: a gap on all four sides so the page shows behind it */
+@media(max-width:767px){
+  .modal-back{padding:calc(61px + 6px) 6px 8px}
+  .modal{max-height:calc(100dvh - 75px);border-radius:14px}
+  .modal::before{display:none}
+}
+
+/* footer language pill back to EN | বাং */
+.lp-s{opacity:.45;margin:0 5px}
+.lp-b{opacity:.9}
+
+/* thank-you: the tracking button must be impossible to miss */
+.ty-track{display:flex;width:100%;max-width:420px;margin:12px auto 0;min-height:54px;
+  font-size:16.5px;font-weight:800}
+
+/* ============================================================
+   ROUND 6
+   ============================================================ */
+
+/* the three actions stack down the right, bigger, so the title gets the width */
+.pdp-acts{display:flex;flex-direction:column;gap:6px;margin:2px -4px 0 6px}
+.pdp-act{display:flex;align-items:center;justify-content:center;width:46px;height:46px;
+  border:1px solid var(--line);border-radius:50%;background:var(--surface);cursor:pointer;
+  color:var(--ink)!important;text-decoration:none!important;padding:0}
+.pdp-act:hover{background:var(--line2)}
+.pdp-act.wa{border-color:#BFE8CF;background:#F2FBF5}
+.pdp-act.wa svg{color:#1FA855}
+.pdp-act.wa:hover{background:#E2F6EA}
+.pdp-name{font-size:25px}
+@media(min-width:1024px){.pdp-acts{flex-direction:column}.pdp-act{width:48px;height:48px}}
+
+/* share sheet */
+.shr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(min-width:520px){.shr-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.shr{display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  color:var(--ink)!important;text-decoration:none!important;font-size:12.5px;font-weight:600;min-height:84px;justify-content:center}
+.shr:hover{border-color:var(--brand);background:var(--brand-tint)}
+.shr-ic{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:var(--surface2)}
+.shr-ic.facebook{background:#E8F0FE;color:#1877F2}
+.shr-ic.whatsapp{background:#E6F7EC;color:#1FA855}
+.shr-ic.instagram{background:#FCE9F1;color:#C13584}
+.shr-ic.chat{background:#E8F0FE;color:#0A7CFF}
+.shr-ic.mail{background:var(--surface2);color:var(--text2)}
+
+/* thumbnails must fill their frame — no white strip on the right */
+.pdp-thumb .pimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pdp-thumb .pimg>svg,.pdp-thumb img{width:100%;height:100%;object-fit:cover}
+@media(max-width:1023px){.pdp-thumb{flex:0 0 52px;height:62px}}
+
+/* a real gap under the colour swatches, above the buy bar */
+@media(max-width:1023px){
+  .pdp-b>.pdp-sec:last-of-type{padding-bottom:14px}
+  .pdp-sw{margin-bottom:10px}
+}
+
+/* the action column floats beside the title block — it never adds height to the page */
+.pdp-head{position:relative}
+.pdp-acts{position:absolute;top:0;right:0;margin:0}
+.pdp-head>.row.between.top{padding-right:56px}
+.pdp-head .pdp-rating,.pdp-head .price,.pdp-head .pdp-free,.pdp-head .pdp-pay{max-width:calc(100% - 56px)}
+@media(min-width:1024px){.pdp-head>.row.between.top{padding-right:60px}}
+
+/* ROUND 7 — inline share row, clean gap under the colours */
+.shr-bar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+.shr-b{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:var(--radius);
+  border:1px solid var(--line);background:var(--surface);color:var(--ink)!important;cursor:pointer;text-decoration:none!important}
+.shr-b.facebook{background:#E8F0FE;border-color:#D2E3FC;color:#1877F2!important}
+.shr-b.chat{background:#E8F0FE;border-color:#D2E3FC;color:#0A7CFF!important}
+.shr-b.whatsapp{background:#E6F7EC;border-color:#C7EBD6;color:#1FA855!important}
+.shr-b.instagram{background:#FCE9F1;border-color:#F6D3E3;color:#C13584!important}
+.shr-b.copy{background:var(--surface2)}
+.shr-b:hover{filter:brightness(.97)}
+.pdp-acts.off{display:none}
+
+/* the first screen ends in a clean gap under the colour swatches */
+@media(max-width:1023px){ .pdp-colsec{padding-bottom:46px} }
+.pdp-cnote{margin-top:10px}
+
+/* long titles wrap on whole words and stay tidy */
+.pdp-name{overflow-wrap:break-word;hyphens:none;text-wrap:balance}
+
+/* On a phone the first screen ends at the swatches with a clean gap — the colour note
+   sits on the next screen. The owner can switch it back on from the dashboard. */
+@media(max-width:1023px){ .pdp-cnote{display:none} .pdp-colsec{padding-bottom:22px} }
+
+/* ============================================================
+   ROUND 8 — Option B locked, share floats
+   ============================================================ */
+
+/* price line: thick aligned bar, then free delivery (or the payment line) */
+.pdp-pbar{display:inline-block;width:5px;height:30px;border-radius:3px;background:var(--brand);
+  opacity:.55;margin:0 14px;align-self:center;flex-shrink:0}
+.pdp-pside{display:inline-flex;align-items:center;gap:9px;color:var(--brand-dark);font-size:16px;align-self:center}
+.pdp-pside b{font-weight:800;font-size:16.5px}
+.pdp-pside svg{color:var(--brand);flex-shrink:0}
+.pdp-pside:not(.free){color:var(--text2)}
+.pdp-pside:not(.free) svg{color:var(--text2)}
+.pdp-psmall{font-size:13.5px;white-space:nowrap}
+@media(max-width:400px){.pdp-pside b{font-size:15px}.pdp-psmall{font-size:12.5px}.pdp-pbar{margin:0 10px}}
+
+/* the share row floats over the page — nothing below it moves */
+.shr-wrap{position:static}
+.shr-bar{position:absolute;top:158px;left:16px;right:16px;z-index:40;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;
+  background:var(--surface);padding:8px;border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.16);border:1px solid var(--line)}
+
+/* ============================================================
+   ROUND 9 — tracking welcome, upsells
+   ============================================================ */
+.ord-welcome{padding:16px;border:1.5px solid var(--brand);background:var(--brand-tint);margin-bottom:12px}
+.ord-wic{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;
+  background:var(--surface);color:var(--brand);flex-shrink:0}
+.ord-cred{display:grid;gap:8px;background:var(--surface);border-radius:var(--radius);padding:12px 14px}
+@media(min-width:560px){.ord-cred{grid-template-columns:1fr 1fr;gap:14px}}
+.ord-cred>div{display:flex;flex-direction:column;gap:2px}
+.ord-cred b{font-size:15px;font-weight:700;letter-spacing:.01em}
+
+/* ===================== ROUND 10 ===================== */
+
+/* --- 15. Size pills: the customer's second-biggest decision, so they read
+       at the weight of the price, not of a footnote. --- */
+.pdp-pills{display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:9px}
+.size-pill{min-width:60px;min-height:54px;padding:10px 8px;font-size:18px;font-weight:800;
+  letter-spacing:.01em;border-width:1.5px;color:var(--ink)}
+.size-pill.on{box-shadow:0 2px 10px rgba(0,0,0,.14)}
+.pdp-pills .size-pill.tagged{padding-top:14px}
+.pdp-ystag{font-size:9.5px;font-weight:800;letter-spacing:.04em}
+
+/* --- 17. The measurement line was grey on cream and vanished on a phone. --- */
+.pdp-fitline{color:#4A443C;font-size:12.5px;line-height:1.5}
+.pdp-fitline b{color:var(--ink)}
+
+/* --- 16+17. Trust row: three columns, one line, readable. --- */
+.pdp-trust{display:grid!important;grid-template-columns:repeat(3,1fr);gap:8px;
+  font-size:11.5px;color:#4A443C;background:var(--bg);border:1px solid var(--line);
+  border-radius:var(--radius);padding:11px 8px}
+.pdp-trust span{display:flex!important;flex-direction:column;align-items:center;text-align:center;gap:4px;line-height:1.35}
+.pdp-trust span b{font-size:12.5px;color:var(--ink)}
+.pdp-trust svg{color:var(--brand);opacity:.9}
+
+/* --- 7+8. Share row: no panel. Floating tiles, the page visible between them. --- */
+.shr-bar{background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important}
+.shr-bar .shr-b{width:38px;height:38px;border-radius:12px;background:var(--surface);
+  box-shadow:0 6px 18px rgba(0,0,0,.20);border:1px solid rgba(0,0,0,.06);
+  display:inline-flex;align-items:center;justify-content:center}
+.shr-bar .shr-lbl{display:none}
+
+/* --- 9+10. The three actions leave the title row and become a floating
+       column that rides the scroll, vertically centred. The title then gets
+       the whole width, and the icons are reachable from anywhere on the page. --- */
+.pdp-acts{position:fixed;top:50%;transform:translateY(-50%);right:10px;z-index:70;
+  margin:0;gap:9px;align-items:flex-end}
+.pdp-acts.off{display:none}
+.pdp-act{width:44px;height:44px;box-shadow:0 6px 18px rgba(0,0,0,.16);border-color:rgba(0,0,0,.07)}
+.pdp-head>.row.between.top{padding-right:0!important}
+/* desktop: just outside the content column, 3px clear of the Order Now row */
+@media(min-width:1024px){
+  .pdp-acts{right:max(14px, calc((100vw - 1240px)/2 - 59px));gap:10px}
+  .pdp-act{width:50px;height:50px}
+  /* 11. hover label, so a desktop customer knows what the green circle does */
+  .pdp-act[title]{position:relative}
+  .pdp-act[title]::after{content:attr(title);position:absolute;right:calc(100% + 10px);
+    top:50%;transform:translateY(-50%) translateX(6px);white-space:nowrap;
+    background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:7px 11px;
+    border-radius:9px;opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;
+    box-shadow:0 8px 22px rgba(0,0,0,.22)}
+  .pdp-act[title]:hover::after,.pdp-act[title]:focus-visible::after{opacity:1;transform:translateY(-50%) translateX(0)}
+}
+/* share tiles float beside the icon column, same vertical centre */
+.shr-wrap{position:static}
+.shr-bar{position:fixed!important;top:50%;transform:translateY(-50%);
+  right:62px;left:auto!important;width:auto!important;z-index:70;
+  display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+@media(min-width:1024px){
+  .shr-bar{right:max(72px, calc((100vw - 1240px)/2 - 1px));gap:10px}
+  .shr-bar .shr-b{width:44px;height:44px}
+}
+
+/* the rail owns a strip down the right of the buy column, so nothing
+   important ever sits under a floating icon */
+@media(max-width:1023px){
+  .pdp-acts{right:7px;gap:8px}
+  .pdp-act{width:42px;height:42px}
+  .pdp-b .pdp-sec{margin-right:46px}
+  .pdp-pills{grid-template-columns:repeat(auto-fit,minmax(50px,1fr));gap:8px}
+  .size-pill{min-width:50px;min-height:52px;font-size:17px;padding:8px 4px}
+  .shr-bar{right:56px}
+  .shr-bar .shr-b{width:36px;height:36px}
+}
+
+/* price row never breaks: the payment line shrinks instead of dropping under
+   the bar and leaving it dangling */
+.pdp-head .row.wrap.mt8{flex-wrap:nowrap!important;align-items:center!important}
+.pdp-pside{min-width:0;display:inline-flex;align-items:center;gap:7px}
+.pdp-psmall{font-size:13px;font-weight:600;color:#4A443C;white-space:nowrap}
+@media(max-width:1023px){
+  .pdp-psmall{font-size:11.5px;letter-spacing:-.1px}
+  .pdp-pside svg{width:20px;height:20px}
+}
+
+/* --- 19. The Q&A WhatsApp button was a pale outline that read as disabled.
+       Real WhatsApp green, full width, with the icon in a white disc. --- */
+#pdp-qa .wa-btn{display:flex;width:100%;justify-content:center;min-height:52px;
+  background:#1FA855;border-color:#1FA855;color:#fff!important;font-weight:700;font-size:15px;
+  box-shadow:0 6px 18px rgba(31,168,85,.26)}
+#pdp-qa .wa-btn svg{color:#fff;width:21px;height:21px}
+#pdp-qa .wa-btn:hover{background:#18924A;border-color:#18924A}
+
+/* --- 22. The size warning: full width of the cart column, short, and the same
+       surface as everything around it instead of a coloured island. --- */
+.bg-brk{background:var(--surface)!important;border:1px solid var(--line);
+  border-left:3px solid var(--gold);border-radius:var(--radius);
+  padding:11px 14px!important;margin:10px 0 0}
+.bg-brk .h3{font-size:14px;margin:0}
+.bg-brk .bg-ic{width:30px;height:30px;flex-shrink:0}
+.bg-inl{margin-left:0!important;margin-right:0!important;width:auto}
+
+/* --- 24+25+26. The offer slot: one place, full width, short. --- */
+.bg-offer-slot{display:flex;align-items:center;gap:12px;width:100%;
+  background:var(--brand-tint);border:1px solid var(--brand-line);
+  border-radius:var(--radius);padding:12px 14px}
+.bg-offer-slot .h3{font-size:14.5px;margin:0;line-height:1.3}
+.bg-offer-slot .small{margin-top:2px;line-height:1.35}
+.bg-offer-slot .bg-ic{width:34px;height:34px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;border-radius:50%;background:var(--surface);color:var(--brand)}
+@media(max-width:767px){
+  .bg-offer-slot{flex-wrap:wrap}
+  .bg-offer-slot .btn{width:100%;justify-content:center}
+}
+
+/* --- 23. Named lines in the order summary --- */
+.bg-sr-item span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:62%;color:#4A443C}
+.bg-sr .b{font-weight:800;color:var(--ink)}
+.bg-sr-sub{border-top:1px solid var(--line);margin-top:6px;padding-top:9px}
+
+/* the duo offer: one scrolling row of colours instead of a block that grows
+   taller with every colour the shop adds */
+.bg-duo-cols{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.bg-duo-cols::-webkit-scrollbar{display:none}
+.bg-duo-cols .chip{flex:0 0 auto;min-height:40px}
+.bg-offer.tint{padding:12px 14px!important}
+.bg-offer .h3{font-size:14.5px;line-height:1.3}
+
+/* --- 30+31+37. Checkout header --- */
+.dm-only{display:none}
+@media(min-width:1024px){.dm-only{display:flex}}
+.ckh{background:linear-gradient(180deg,#FBF9F6 0%,#F4F1EB 100%);
+  border-bottom:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.ckh .hdr-in{justify-content:space-between}
+.ckh-l{display:flex;align-items:center;gap:6px;min-width:0}
+.ckh-l .logo{padding-left:.22em}
+/* 31 (corrected). The owner wanted the opposite: the same 7-second light
+   sweep that runs across the green buttons should run across the EXTAS mark
+   in the header too, and the checkout and thank-you buttons keep theirs. */
+/* The mark is dark letters on a light strip, so a white overlay would be
+   invisible. The light runs through the letters themselves instead. */
+.hdr .logo{
+  background-image:linear-gradient(100deg,
+    var(--ink) 0 42%, #B9B2A6 49%, #EDE9E1 51%, #B9B2A6 53%, var(--ink) 60% 100%);
+  background-size:320% 100%;background-position:170% 0;
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent!important;-webkit-text-fill-color:transparent;
+  animation:logoSheen 7s ease-in-out 2.2s infinite}
+@keyframes logoSheen{0%{background-position:170% 0}18%{background-position:-70% 0}100%{background-position:-70% 0}}
+@media(prefers-reduced-motion:reduce){
+  .hdr .logo{animation:none;color:var(--ink)!important;-webkit-text-fill-color:var(--ink)}}
+.ckh-steps{align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#8A8278}
+.ckh-s{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.ckh-s .n{width:21px;height:21px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:800;background:var(--line2);color:#8A8278}
+.ckh-s.on{color:var(--ink)}
+.ckh-s.on .n{background:var(--brand);color:var(--brand-ink)}
+.ckh-s.done{color:var(--brand-dark)}
+.ckh-s.done .n{background:var(--brand-tint);color:var(--brand-dark);border:1px solid var(--brand-line)}
+.ckh-d{width:26px;height:1.5px;background:var(--line);flex-shrink:0}
+
+/* --- 33+34. The expanded summary gets a tint of its own, and breathing room
+       before "Where should we deliver?" --- */
+.co-msum.open .co-msum-bd{background:#F7F4EF;border-top:1px solid var(--line)}
+.co-msum-bd{padding:14px 16px 6px}
+.co-msum-close{display:flex;width:100%;justify-content:center;align-items:center;gap:7px;
+  margin:10px 0 2px;padding:11px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);font-size:13px;font-weight:700;color:var(--text2);cursor:pointer}
+.co-msum{margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.co-wrap{padding-top:4px}
+
+/* the help strip belongs to the phone only */
+@media(min-width:1024px){.co-help-m{display:none}}
+
+/* --- 39+40. The summary column lines up with the first card and rides the
+       scroll, with the help line one row beneath it. --- */
+@media(min-width:1024px){
+  .co-side{align-self:start}
+  .co-float{position:sticky;top:92px;display:flex;flex-direction:column;gap:14px}
+  /* the left column opens with the "Checkout" heading; the summary skips it
+     so both boxes start on the same line */
+  .co-side{padding-top:74px}
+}
+.co-sidehelp{display:flex;align-items:center;gap:10px;padding:13px 16px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--ink)!important;text-decoration:none!important;font-size:13.5px;white-space:nowrap}
+.co-sidehelp svg:first-child{color:#1FA855;flex-shrink:0}
+.co-sidehelp span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.co-sidehelp:hover{border-color:var(--brand-line);background:var(--brand-tint)}
+@media(max-width:1023px){.co-sidehelp{display:none}}
+
+/* --- 41. quantity inside the checkout summary --- */
+.co-qrow{display:flex;align-items:center;gap:12px;margin-top:7px}
+.qty-xs{display:inline-flex;align-items:center;border:1px solid var(--input);
+  border-radius:10px;background:var(--surface);overflow:hidden}
+.qty-xs button{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  border:0;background:transparent;cursor:pointer;color:var(--ink)}
+.qty-xs button:disabled{opacity:.35;cursor:not-allowed}
+.qty-xs span{min-width:26px;text-align:center;font-size:13px;font-weight:700}
+.co-qrow .link{font-size:12px}
+.co-many{display:flex;gap:6px;align-items:flex-start;margin-top:7px;padding:7px 9px;
+  background:#FFF8E8;border:1px solid #F0E2BE;border-radius:9px;font-size:11.5px;
+  line-height:1.4;color:#6B5A2E}
+.co-many svg{flex-shrink:0;margin-top:1px}
+
+/* --- 42. account box: two credentials side by side, one line of explanation --- */
+.ty-cred2{display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  background:var(--surface2);border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px}
+.ty-cred2>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ty-cred2 b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ty-cred2 .ty-pw{letter-spacing:.06em}
+.ty-accnote{margin:9px 0 0;line-height:1.4;color:#6B655C}
+
+/* --- 47. the offer / wallet strip --- */
+.ty-offer{display:flex;gap:10px;align-items:flex-start;margin-top:11px;padding:11px 13px;
+  background:var(--brand-tint);border:1px solid var(--brand-line);border-radius:var(--radius)}
+.ty-offer .ic{flex-shrink:0;color:var(--brand)}
+.ty-offer>span:last-child{display:flex;flex-direction:column;gap:2px;font-size:12px;line-height:1.4;color:#4A443C}
+.ty-offer b{font-size:13.5px;color:var(--ink)}
+
+/* --- 45. Track beside Copy on desktop, under it on a phone --- */
+.ty-ordrow{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:12px}
+@media(min-width:768px){
+  .ty-ordrow{flex-direction:row;justify-content:center;gap:12px}
+  .ty-ordrow .ty-ord{margin-bottom:0}
+  .ty-ordrow .ty-track{min-height:52px}
+}
+
+/* --- 46. the two end buttons, full width, after the upsell --- */
+.ty-endbtns{display:grid;gap:10px}
+.ty-endbtns .btn{min-height:54px;font-size:15.5px;font-weight:700}
+@media(min-width:768px){.ty-endbtns{grid-template-columns:1fr 1fr}}
+/* the upsell sits inside the column now, so its own container must not add width */
+.ty-ups .ups{padding:0;background:transparent}
+.ty-ups .ups .container{padding:0;max-width:none}
+
+/* --- 48. The welcome panel gives its height back to the tracking steps:
+       credentials side by side on every width, tighter padding. --- */
+.ord-welcome{padding:13px 14px;margin-bottom:10px}
+.ord-wic{width:34px;height:34px}
+.ord-welcome .h3{font-size:15px}
+.ord-cred{grid-template-columns:1fr 1fr!important;gap:10px!important;padding:10px 12px!important;margin-top:10px!important}
+.ord-cred b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ord-cred .link{font-size:12px}
+
+/* --- 49+50. The upsell block had air above it and none below, so it sat on
+       the photographs of whatever came next. Same gap both sides. --- */
+.ups{padding-top:28px;padding-bottom:28px}
+.bg-page .ups,.ty-wrap+.ups{margin-top:8px}
+.ups+*{margin-top:28px}
+.ty-ups .ups{padding-top:4px;padding-bottom:4px}
+.ty-ups{margin-bottom:4px}
+/* --- 51. and the reassurance cards keep clear of what follows --- */
+.ups-why{margin-top:22px;margin-bottom:4px}
+
+/* ===== 1. Winter banner slider ===== */
+.hm-slider{position:relative;flex:1;min-width:0;align-self:stretch;display:flex}
+.hm-sltrack{display:flex;gap:2px;overflow-x:auto;scroll-snap-type:x mandatory;
+  flex:1;min-width:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;cursor:grab}
+.hm-sltrack::-webkit-scrollbar{display:none}
+.hm-sl{position:relative;flex:0 0 50%;scroll-snap-align:start;display:flex;
+  align-items:center;justify-content:center;aspect-ratio:1/1;
+  text-decoration:none!important;color:inherit!important;overflow:hidden}
+.hm-sl svg{width:84%;height:84%}
+.hm-sl .hm-pin{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;
+  gap:1px;background:rgba(255,255,255,.95);border-radius:11px;padding:7px 11px;
+  box-shadow:0 6px 18px rgba(0,0,0,.14);font-size:12px;color:var(--ink)}
+.hm-sl .hm-pin b{font-size:12.5px;white-space:nowrap}
+.hm-sl .hm-pin .price{font-size:13px}
+.hm-slnav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(255,255,255,.94);display:none;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--ink);box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.hm-slnav.prev{left:10px}.hm-slnav.next{right:10px}
+.hm-slider:hover .hm-slnav{display:flex}
+@media(min-width:1024px){
+  .hm-sl{flex:0 0 33.3333%}
+  /* the text panel sits above the track, so a slide passes under it */
+  .hm-hero-txt{position:relative;z-index:2;background:var(--hero)}
+  .hm-hero-txt::after{content:"";position:absolute;top:0;bottom:0;left:100%;width:64px;
+    background:var(--hero);pointer-events:none}
+  .hm-hero-media{position:relative;z-index:1}
+}
+
+/* --- 2. Flash sale: the clock stays on the right on a phone too, instead of
+       dropping under the heading and making the section tall. --- */
+.hm-flash-hd{flex-wrap:nowrap!important;align-items:center!important;gap:10px!important}
+.hm-cd-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}
+@media(max-width:767px){
+  .hm-flash-hd .h2{font-size:19px}
+  .hm-flash-hd .hm-sub{font-size:11.5px;margin-top:2px}
+  .hm-flash-hd .tag.sale{font-size:10.5px;padding:2px 7px}
+  .hm-cd-wrap{gap:6px}
+  .hm-cd-wrap .xs{font-size:10px;letter-spacing:.02em;line-height:1.1;max-width:30px}
+  .hm-cd-row{gap:2px}
+  .hm-cd-row>span:not(.hm-cd-sep){min-width:27px;padding:3px 2px}
+  .hm-cd-row b,.hm-cd-row strong{font-size:13px}
+  .hm-cd-sep{font-size:11px}
+}
+
+/* --- 3. Ten reviews, scrolled sideways --- */
+.hm-revs .hm-rev{min-height:0}
+.hm-revs blockquote{font-size:13.5px;line-height:1.5}
+
+/* ===== Footer, round 10 ===== */
+/* 4. icons beside every link */
+.ftr-cols a{display:flex;align-items:center;gap:9px;min-height:32px}
+.ftr-ic{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:6px;background:rgba(255,255,255,.06);color:#B9D3CA;flex-shrink:0}
+.ftr-cols a:hover .ftr-ic{background:rgba(255,255,255,.12)}
+
+/* 5. the three columns sit centred between the dividers */
+.ftr-cols>div{align-items:center;padding:0 8px!important}
+.ftr-cols>div>*{width:100%;max-width:190px}
+.ftr-h{width:100%;max-width:190px}
+
+/* 6. the social row fills the width on a phone */
+.ftr-soc{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
+.ftr-soc a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:10px 4px;border:1px solid #3A3834;border-radius:10px;font-size:11px;color:#E6E1D9!important;
+  text-decoration:none!important;min-height:52px}
+.ftr-soc a svg{color:#B9D3CA}
+.ftr-soc a:hover{background:rgba(255,255,255,.06)}
+@media(min-width:1024px){.ftr-soc{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:767px){
+  .ftr-cols a{font-size:12.5px;gap:7px}
+  .ftr-ic{width:20px;height:20px}
+  .ftr-cols>div{padding:0 5px!important}
+}
+
+/* --- 20+21. Desktop: the buy buttons belong in the first window. The offer
+       and Find my size move below them; nobody scrolls to find a button they
+       cannot see. --- */
+@media(min-width:1024px){
+  .pdp-b{display:flex;flex-direction:column}
+  .pdp-head{order:1}
+  .pdp-colsec{order:2}
+  #pdp-sizes{order:3}
+  .pdp-stocksec{order:4}
+  .pdp-ctas{order:5;margin-top:4px}
+  .pdp-trust{order:6}
+  .pdp-fmssec{order:7}
+  .pdp-nudgesec{order:8}
+  .pdp-wafab{order:9}
+  /* tighten the parts above the buttons */
+  .pdp-b .pdp-sec{margin-top:14px}
+  .pdp-colsec .pdp-colnote{margin-top:4px}
+  #pdp-sizes .pdp-fitline{margin-top:9px!important}
+  /* 21. the price carries more weight on a big screen */
+  .pdp-head .price{font-weight:900;letter-spacing:-.015em}
+  .pdp-psmall{font-size:14px;font-weight:700;color:#3A352E}
+  .pdp-pbar{height:34px;width:6px;opacity:.8}
+}
+.bg-setlink{color:var(--text2)!important;text-decoration:none!important;border-bottom:1px solid var(--line)}
+.bg-setlink:hover{color:var(--ink)!important;border-bottom-color:var(--ink)}
+
+/* summary rows: the amount never breaks, the thumbnail sits at the top */
+.co-it{align-items:flex-start!important}
+.co-it>.price,.co-it>.small.price{white-space:nowrap;flex-shrink:0;padding-left:10px;padding-top:2px}
+.co-many{max-width:100%}
+
+/* --- 36. the phone help strip picks up the header's tint instead of the mint
+       slab, and the button fits inside it --- */
+.co-help{background:#F4F1EB;border-bottom:1px solid var(--line)}
+.co-help .container{padding-top:9px;padding-bottom:9px;align-items:center}
+.co-help .wa-btn{min-height:40px;padding:8px 14px;font-size:13px;flex-shrink:0;
+  background:#1FA855;border-color:#1FA855;color:#fff!important}
+.co-help .wa-btn svg{color:#fff;width:17px;height:17px}
+.co-helpt{font-size:13.5px;font-weight:700;color:var(--ink)}
+.co-help .wa-btn.co-wa{padding:8px 16px}
+@media(min-width:1024px){
+  /* the slider runs all the way to the right edge of the window */
+  .hm-hero-media{margin-right:0!important;
+    width:calc(100% + 32px + max(0px,(100vw - 1240px)/2))}
+}
+@media(min-width:1024px){
+  /* extend the whole hero grid to the right edge instead of the media alone:
+     a percentage width on a grid item feeds back into the track and collapses */
+  .hm-hero-in{margin-right:-32px}
+  .hm-hero-media{margin-right:0!important;width:auto!important}
+  .hm-hero-txt{padding-right:40px}
+}
+
+/* =====================================================================
+   ROUND 13 — SHARED CORE CORRECTIONS
+   This block is loaded FIRST in the bundle, so anything that has to beat a
+   later r11-/r12- file carries the class twice or three times. That is not
+   decoration: it is the specificity needed to win without rewriting a file
+   this agent does not own.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   C1. THE SHIMMER — the light now travels OVER the words, not through them.
+   ---------------------------------------------------------------------
+   What was wrong: .sweep painted the letters with a moving gradient
+   (background-clip:text + transparent text fill). Measured against the
+   #F4F3F0 page the bright stop of that gradient was 1.06:1 and the mid stop
+   2.31:1 — so "Free home delivery", "Colour", "Size", "All 5 colours" and
+   "In stock — ships today" each carried a band that was invisible, on an
+   endless loop.
+   What happens now: the words keep their own solid colour at every frame,
+   and a translucent warm-white band is drawn on top of the element's own box
+   and moved across it. The band peaks at 30% white, which on this palette
+   costs the text a little contrast at the instant it passes and nothing at
+   all before or after — measured in the report, never below 4.5:1.
+   And it is finite: three passes, then it stops. Shimmer kept, flicker gone.
+   --------------------------------------------------------------------- */
+/* The band is moved with background-position inside a pseudo-element that is
+   exactly the element's own box. It is deliberately NOT a transform plus
+   overflow:hidden — `.pdp-allc` hangs a 44px ::before tap target outside its
+   own 36px box, and an overflow:hidden on the parent would have clipped that
+   target back to 36px. Nothing here changes any element's box. */
+@keyframes sweepOver{
+  0%  {background-position:170% 0}
+  24% {background-position:-70% 0}
+  100%{background-position:-70% 0}
+}
+.sweep.sweep.sweep{
+  position:relative;
+  background-image:none!important;
+  -webkit-background-clip:border-box!important;background-clip:border-box!important;
+  color:inherit!important;
+  -webkit-text-fill-color:currentColor!important;
+  animation:none!important;
+}
+/* each swept line keeps the colour it was designed in — these are the same
+   values r11-pdp.css falls back to when the phone asks for reduced motion */
+.pdp-fd.sweep.sweep.sweep,
+.pdp-fd.sweep.sweep.sweep b,
+.pdp-pfd.sweep.sweep.sweep{color:var(--brand-dark)!important}
+.pdp-allc.sweep.sweep.sweep{color:var(--brand)!important}
+.pdp-lbl.sweep.sweep.sweep{color:var(--ink)!important}
+/* the stock line painted its inner <span>, so that span needs clearing too */
+.pdp-stock.sweep.sweep.sweep>span,
+.sweep.sweep.sweep>span,
+.sweep.sweep.sweep>b{
+  background-image:none!important;
+  -webkit-background-clip:border-box!important;background-clip:border-box!important;
+  color:inherit!important;-webkit-text-fill-color:currentColor!important;
+  animation:none!important;
+}
+/* the travelling highlight itself */
+.sweep.sweep.sweep::after{
+  content:"";position:absolute;inset:0;
+  pointer-events:none;z-index:2;border-radius:inherit;
+  background-image:linear-gradient(100deg,
+    rgba(255,255,255,0)   0 34%,
+    rgba(255,252,245,.16)  44%,
+    rgba(255,255,255,.30)  50%,
+    rgba(255,252,245,.16)  56%,
+    rgba(255,255,255,0)   66% 100%);
+  background-size:300% 100%;background-position:170% 0;
+  animation:sweepOver 3.2s ease-in-out .5s 3 both;
+}
+/* a swept line that sits on a dark band needs a dark band of light, not a
+   white one, or the highlight would be the only thing anyone sees */
+:root[data-theme="festive"] .sweep.sweep.sweep::after{
+  background-image:linear-gradient(100deg,
+    rgba(255,255,255,0) 0 34%, rgba(227,199,126,.14) 44%,
+    rgba(227,199,126,.26) 50%, rgba(227,199,126,.14) 56%, rgba(255,255,255,0) 66% 100%);
+}
+@media(prefers-reduced-motion:reduce){
+  .sweep.sweep.sweep::after{display:none}
+}
+
+/* ---------------------------------------------------------------------
+   C1b (same defect, same technique, not on the list but found while fixing
+   it): the EXTAS wordmark in the header. .hdr .logo painted its letters with
+   the identical moving gradient, so the mark read "EXTA_" with one letter
+   washed out at every pass — visible in every screenshot of every page.
+   Same correction: solid letters, a light band over them, three passes.
+   --------------------------------------------------------------------- */
+.hdr .logo, .ftr .logo{
+  /* the old rule set color:transparent!important so the gradient could show
+     through the letters; the letters need their ink back */
+  color:var(--ink)!important;
+  background-image:none!important;
+  -webkit-background-clip:border-box!important;background-clip:border-box!important;
+  -webkit-text-fill-color:currentColor!important;
+  animation:none!important;
+  position:relative;
+}
+.hdr .logo::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(100deg,
+    rgba(255,255,255,0) 0 36%, rgba(255,252,245,.18) 44%,
+    rgba(255,255,255,.34) 50%, rgba(255,252,245,.18) 56%, rgba(255,255,255,0) 64% 100%);
+  background-size:320% 100%;background-position:170% 0;
+  animation:sweepOver 3.4s ease-in-out 1.2s 3 both;
+}
+@media(prefers-reduced-motion:reduce){.hdr .logo::after{display:none}}
+/* the footer mark sits on the green band: r11-cat.css gives it --f2-ink and
+   loads after this file, so it only needs the text-fill cleared above */
+.ftr .logo{color:inherit!important}
+
+/* ---------------------------------------------------------------------
+   H7. Search and Bag were 2 px apart (44×44 boxes at x 334–378 and 380–424),
+   which reads as one wide control and invites the wrong tap. The header's
+   icon clusters get a real gap. The boxes stay 44×44 — only the space
+   between them changes, so nothing moves except the Search button.
+   --------------------------------------------------------------------- */
+.hdr-in>.row{gap:10px!important}
+@media(min-width:1024px){.hdr-in>.row{gap:6px!important}}
+
+/* ---------------------------------------------------------------------
+   H4. The footer language switch was an 81×40 pill with a lot of air in it.
+   Compact, and smarter: the side you are on is solid, the other side is
+   quiet, so it reads as a switch instead of two words and a stick.
+   --------------------------------------------------------------------- */
+.langpill{
+  border-radius:999px;padding:0 3px;gap:0;font-size:11px;font-weight:700;
+  min-height:30px;height:30px;align-items:center;line-height:1}
+.langpill .lp-a,.langpill .lp-b{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:24px;padding:0 8px;border-radius:999px;letter-spacing:.02em}
+.langpill .lp-s{display:none}                   /* the stick is the gap now */
+/* the half you are on is filled, the other is quiet. applyTheme() puts the
+   language on <html lang>, so the switch follows it with no extra markup. */
+.langpill .lp-a{background:var(--footer-ink);color:var(--footer);font-weight:800}
+.langpill .lp-b{opacity:.68}
+:root[lang="bn"] .langpill .lp-a{background:transparent;color:inherit;font-weight:700;opacity:.68}
+:root[lang="bn"] .langpill .lp-b{background:var(--footer-ink);color:var(--footer);font-weight:800;opacity:1}
+
+/* ---------------------------------------------------------------------
+   H9. The demo gear sat at top:72px / right:10px with z-index 70 — directly
+   on top of the "On sale (4)" badge on every category page, and on the
+   footer's brand line on a short page. It moves to the LEFT edge, level with
+   the bottom bar, where the only thing under it is page background.
+   --------------------------------------------------------------------- */
+/* left/top are plain, not !important, because demoFabPark() in 03-layout.js
+   sets them inline: it reads the live header box and steps the gear right
+   until elementFromPoint finds nothing tappable underneath. */
+.demo-fab{right:auto!important;bottom:auto!important;left:66px;top:9px;
+  width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
+  opacity:.42;box-shadow:none}
+.demo-fab:hover,.demo-fab:focus-visible{opacity:1}
+.demo-fab .demo-fab-t{display:none}
+.demo-fab svg{width:15px;height:15px}
+.demo-panel{bottom:auto!important;right:auto!important;left:10px!important;top:60px;
+  max-height:calc(100vh - 120px);overflow:auto}
+@media(min-width:1024px){
+  .demo-fab{left:auto!important;right:14px!important;top:auto!important;bottom:14px!important}
+  .demo-fab .demo-fab-t{display:inline}
+  .demo-panel{left:auto!important;right:14px!important;top:auto!important;bottom:70px!important}
+}
+
+/* ---------------------------------------------------------------------
+   H10. The announce strip. CHECKED, NOT CHANGED — the clamp that already
+   sizes it off the viewport (r12-home.css, last rule in that file) holds the
+   whole sentence at every width this shop sees. Measured, string width vs
+   the strip, English / Bengali / the festive Eid notice:
+     320px  9.52px type -> 284.0 / 233.9 / 257.1 in a 320px strip
+     360px 10.86px type -> 324.1 / 266.9 / 293.5 in a 360px strip
+     375px 11.36px type -> 339.0 / 279.2 /   —   in a 375px strip
+     440px 12.50px type -> 373.1 / 307.2 / 337.8 in a 440px strip
+   element.scrollWidth never exceeded clientWidth, so the ellipsis never
+   fires. Nothing is added here; a second clamp would only fight the first.
+   --------------------------------------------------------------------- */
+
+/* ===========================================================================
+   R15 · 2.4 WhatsApp in the header — the product page's own icon (pale-green
+   disc, green mark). Hover: it grows and a short line drops down. Press: it
+   grows. Tap/click opens WhatsApp. Hover effects only where a real pointer
+   can hover, so a phone never gets a stuck tooltip.
+   =========================================================================== */
+.hdr-wa{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;text-decoration:none!important;-webkit-tap-highlight-color:transparent}
+.hdr-wa-disc{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;
+  border:1px solid #BFE8CF;background:#F2FBF5;color:#1FA855;
+  transition:transform .18s cubic-bezier(.3,1.4,.5,1), background .18s ease, box-shadow .18s ease}
+.hdr-wa-disc svg{color:#1FA855;width:22px;height:22px}
+.hdr-wa:active .hdr-wa-disc{transform:scale(1.14);background:#E2F6EA}
+.hdr-wa-tip{position:absolute;top:calc(100% + 4px);left:50%;transform:translate(-50%,-4px);
+  background:var(--ink);color:#fff;font-size:12.5px;font-weight:650;line-height:1;white-space:nowrap;
+  padding:8px 11px;border-radius:9px;box-shadow:0 8px 22px rgba(0,0,0,.18);
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;z-index:60}
+.hdr-wa-tip::before{content:"";position:absolute;left:50%;top:-5px;width:10px;height:10px;background:inherit;
+  transform:translateX(-50%) rotate(45deg);border-radius:2px}
+@media(hover:hover){
+  .hdr-wa:hover .hdr-wa-disc,.hdr-wa:focus-visible .hdr-wa-disc{transform:scale(1.14);background:#E2F6EA;box-shadow:0 4px 14px rgba(31,168,85,.22)}
+  .hdr-wa:hover .hdr-wa-tip,.hdr-wa:focus-visible .hdr-wa-tip{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s ease, transform .18s ease, visibility 0s}
+}
+/* three icons on the right: on the narrowest phones each keeps a 40px target
+   and the row gives up its gaps, so the logo is never touched */
+@media(max-width:374px){
+  .hdr .hdr-in:has(.hdr-wa){gap:4px}
+  .hdr .hdr-r:has(.hdr-wa) .iconbtn,.hdr .hdr-r .hdr-wa{min-width:40px;padding-left:0;padding-right:0}
+  /* and the wordmark eases down a touch so it keeps clear air on both sides */
+  .hdr .hdr-in:has(.hdr-wa) .logo{font-size:clamp(20px, 6.3vw, 24px)!important}
+}
+/* R15 · demo only: the gear as a slim tab in the left margin of the product page */
+@media(max-width:1023px){
+  .demo-fab.demo-fab-tab{width:16px!important;min-width:16px!important;height:46px!important;min-height:46px!important;
+    padding:0!important;border-radius:0 10px 10px 0!important;opacity:.7}
+  .demo-fab.demo-fab-tab svg{width:12px;height:12px}
+}
+
+/* ===========================================================================
+   R15 · NOTE 3 — header, bag and WhatsApp
+   =========================================================================== */
+/* 3.4 two pixels less between the icons on the right (gap 2px -> 0) */
+.hdr .hdr-r{gap:0!important}
+/* 3.3 the WhatsApp disc "bleeds": a soft green light spreads out from it and
+   fades, then rests. No flicker, no travelling shine. */
+@keyframes waBleed{
+  0%  {box-shadow:0 0 0 0 rgba(37,211,102,.42)}
+  45% {box-shadow:0 0 0 9px rgba(37,211,102,0)}
+  100%{box-shadow:0 0 0 9px rgba(37,211,102,0)}
+}
+.hdr-wa-disc{animation:waBleed 3.2s ease-out 1s infinite}
+@media(prefers-reduced-motion:reduce){ .hdr-wa-disc{animation:none} }
+/* 3.4 the heart in the phone header (hdrFit() steps it out if the logo would be crowded) */
+.hdr .hdr-wish{position:relative}
+.hdr .hdr-wish.fit-off{display:none!important}
+.hdr-wish-dot{position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--sale);box-shadow:0 0 0 2px var(--surface)}
+/* 3.5 the bag: bigger, firmer, and its count glows while it holds something */
+.hdr .hdr-bag svg{width:25px;height:25px}
+.count-dot{min-width:19px;height:19px;border-radius:10px;font-size:11px;font-weight:800;line-height:1;
+  background:var(--brand);color:#fff;box-shadow:0 0 0 2px var(--surface);padding:0 5px}
+.hdr .hdr-bag .count-dot{top:3px;right:1px}
+@keyframes bagGlow{
+  0%  {box-shadow:0 0 0 2px var(--surface), 0 0 0 2px rgba(31,107,74,.55)}
+  40% {box-shadow:0 0 0 2px var(--surface), 0 0 0 9px rgba(31,107,74,0)}
+  100%{box-shadow:0 0 0 2px var(--surface), 0 0 0 9px rgba(31,107,74,0)}
+}
+@keyframes bagNudge{0%,100%{transform:none}12%{transform:rotate(-9deg)}24%{transform:rotate(7deg)}36%{transform:rotate(-4deg)}48%{transform:none}}
+.hdr .hdr-bag.has .count-dot,.bnav .bn-bag.has .count-dot{animation:bagGlow 2.8s ease-out .6s infinite}
+.hdr .hdr-bag.has svg,.bnav .bn-bag.has svg{transform-origin:50% 20%;animation:bagNudge 5.6s ease-in-out 1.2s infinite}
+.bnav .bn-bag.has{color:var(--brand)}
+@media(prefers-reduced-motion:reduce){
+  .hdr .hdr-bag.has .count-dot,.bnav .bn-bag.has .count-dot,.hdr .hdr-bag.has svg,.bnav .bn-bag.has svg{animation:none}
+}
+/* 3.2 checkout: the header WhatsApp waits until the in-page help scrolls away */
+.ckh .ckh-rr{align-items:center;flex-wrap:nowrap}
+.ckh .hdr-wa-auto{width:0;min-width:0;overflow:hidden;opacity:0;transform:scale(.6);pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease, width .2s ease}
+.ckh .hdr-wa-auto.on{width:44px;min-width:44px;opacity:1;transform:none;pointer-events:auto;overflow:visible}
+/* R15 · three delivery bands: when all three are in doubt they stack as rows */
+.co-zpick.z3{grid-template-columns:1fr!important}
+.co-zpick.z3 .co-zbtn{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left}
+/* R15 · account menu: the "Need help? WhatsApp us" button is see-through —
+   no fill, no slab; the green mark and the words carry it */
+.acc-sidewa.wa-btn,.wa-btn.acc-sidewa{background:transparent!important;box-shadow:none!important;border:1px solid var(--line)!important;color:var(--ink)!important}
+.acc-sidewa.wa-btn svg{color:#1FA855!important}
+.acc-sidewa.wa-btn:hover{background:rgba(31,168,85,.06)!important}
+/* R15 · 3.6 BUG: "View bag" in the combo / set toast did nothing. The toast is
+   pointer-events:none (so it never blocks a tap on the page under it) and its
+   link inherited that. The link itself takes taps again, with a real 44px target. */
+.toast a{pointer-events:auto;display:inline-flex;align-items:center;min-height:44px;margin:-12px -6px -12px 6px;padding:0 6px;
+  color:#fff;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.acc-sidewa.wa-btn *{color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important}
+.acc-sidewa.wa-btn svg,.acc-sidewa.wa-btn svg *{color:#1FA855!important;fill:#1FA855!important;-webkit-text-fill-color:initial!important}
+/* R15 · 6.1 pull to refresh */
+.ptr{position:fixed;left:50%;top:60px;z-index:39;transform:translate(-50%,-44px);opacity:0;pointer-events:none;
+  display:inline-flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border-radius:999px;background:var(--surface);
+  border:1px solid var(--line);box-shadow:0 6px 18px rgba(0,0,0,.12);font-size:13px;font-weight:700;color:var(--ink);
+  transition:opacity .15s ease}
+.ptr .ptr-ic{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;background:var(--brand-tint);color:var(--brand);transition:transform .2s ease}
+.ptr.armed .ptr-ic{transform:rotate(180deg)}
+@keyframes ptrSpin{to{transform:rotate(360deg)}}
+.ptr.busy .ptr-ic{animation:ptrSpin .7s linear infinite}
+@media(min-width:1024px){.ptr{display:none}}
+/* R15 · 12.1 size guide window */
+.sg-cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sg-cat{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;text-align:left}
+.sg-cat svg{color:var(--brand);flex-shrink:0}
+.sg-cat:active{transform:scale(.98)}
+/* R15 · 13.1 full-screen photo viewer */
+.zm{position:fixed;inset:0;z-index:200;background:#0E0F0E;display:flex;flex-direction:column;touch-action:none}
+.zm-top{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px 18px;color:#fff;pointer-events:none}
+.zm-n{font-size:14px;font-weight:700;opacity:.85}
+.zm-x{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.zm-trk{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.zm-trk::-webkit-scrollbar{display:none}
+.zm-trk.zoomed{overflow-x:hidden}
+.zm-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.zm-pan{width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;transform-origin:center center;will-change:transform}
+.zm-pan img{max-width:100%;max-height:100vh;object-fit:contain;user-select:none}
+.zm-draw{width:100%;aspect-ratio:4/5;max-height:100vh;display:flex;align-items:center;justify-content:center}
+.zm-draw svg{width:78%;height:auto}
+.zm-hint{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(255,255,255,.14);color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;transition:opacity .4s ease;pointer-events:none;white-space:nowrap}
+.zm-hint.off{opacity:0}
+.pdp-page .pdp-tile .pimg{cursor:zoom-in}

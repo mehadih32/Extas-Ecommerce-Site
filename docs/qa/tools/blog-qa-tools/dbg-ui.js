@@ -1,0 +1,12 @@
+const L = require('./lib');
+(async () => { const D = L.dev('p320x640'); const T = await L.open(D, {dpr: 2}); await L.prep(T, '#/journal'); await L.wait(T, 900);
+  console.log('home chips', await L.ev(T, () => { const c = document.querySelector('.bf-cats .bf-chiprow'); return {sl: c.scrollLeft, mask: getComputedStyle(c).maskImage || getComputedStyle(c).webkitMaskImage}; }));
+  await L.go(T, '#/journal/topic/season', 700);
+  console.log('season chips', await L.ev(T, () => { const c = document.querySelector('.bf-cats .bf-chiprow'); const on = c.querySelector('.on'); const r = on.getBoundingClientRect(); return {sl: c.scrollLeft, on: [Math.round(r.left), Math.round(r.right)], cw: c.clientWidth}; }));
+  await T.p.screenshot({path: L.SHOTS + '/dbg-p320-season-chips.png', clip: {x: 0, y: 0, width: 320, height: 330}});
+  await L.go(T, '#/journal/how-to-keep-a-polo-shirt-in-shape', 700);
+  await L.ev(T, () => document.querySelector('.bf-prods').scrollIntoView());
+  await L.wait(T, 300);
+  await T.p.screenshot({path: L.SHOTS + '/dbg-p320-prods.png'});
+  console.log(await L.ev(T, () => [...document.querySelectorAll('.bf-pc-act .btn-primary')].slice(0,1).map(b => ({w: b.clientWidth, sw: b.scrollWidth, full: getComputedStyle(b.querySelector('.bf-full')).display, short: getComputedStyle(b.querySelector('.bf-short')).display, text: b.innerText}))));
+  await L.close(T); })();

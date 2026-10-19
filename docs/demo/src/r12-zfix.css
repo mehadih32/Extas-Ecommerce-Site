@@ -1,0 +1,223 @@
+/* =====================================================================
+   r12-zfix.css — R15 wave 1 fixes (Prohori, A360-02). Loaded after the
+   other r12 sheets. Owned by Prohori; nothing here changes a design — it
+   only fixes the QA-R15 bugs listed beside each rule.
+   ===================================================================== */
+
+/* bug 19 · "Skip to content": invisible until a keyboard user tabs to it */
+.skip{position:absolute;left:12px;top:8px;z-index:400;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;
+  background:var(--ink);color:var(--bg)!important;border-radius:10px;font-weight:700;font-size:14px;
+  opacity:0;pointer-events:none;transform:translateY(-140%);transition:transform .15s,opacity .15s}
+.skip:focus,.skip:focus-visible{opacity:1;pointer-events:auto;transform:none;outline:2px solid var(--brand);outline-offset:2px}
+main.page:focus{outline:none}
+/* visually hidden helpers stay out of the tap-target count */
+.sr{opacity:0}
+
+/* bug 17 · tap targets ≥ 32 px. The hit box grows; what is drawn does not
+   (padding paired with the same negative margin, or a transparent border
+   with the background kept inside it). */
+.crumbs a,.crumbs .link,.crumbs button{display:inline-flex;align-items:center;min-height:32px;padding:6px 6px;margin:-6px -6px;min-width:32px;justify-content:center}
+.nav-d a{min-width:32px;text-align:center}
+.langpill{min-height:32px;align-items:center}
+.ftr-s5 .langpill{min-height:32px}
+.pdp-page .pdp-rating,.pdp-rating{padding-top:6px;padding-bottom:6px;margin-top:-6px;margin-bottom:-6px;min-height:32px}
+.pdp-page .pdp-allc{padding-top:1px;padding-bottom:1px;margin-top:-1px;margin-bottom:-1px;min-height:32px}
+.rule-v{display:inline-flex;align-items:center;min-height:32px;min-width:32px;justify-content:center;padding-top:3px;padding-bottom:3px;margin-top:-3px;margin-bottom:-3px}
+.rule-v:not(.hot){padding-left:3px;padding-right:3px;margin-left:-3px;margin-right:-3px}
+.zc-look{padding-top:5px!important;padding-bottom:5px!important;margin-top:-5px!important;margin-bottom:-5px!important;min-height:32px}
+.ord-name,.acc-po-name{display:inline-block;padding-top:6px;padding-bottom:6px;margin-top:-6px;margin-bottom:-6px;min-height:32px}
+.ao-idbtn{padding:6px 0!important;margin:-6px 0!important;min-height:32px}
+.ty-wrap .soft a,.soft.p16 a{display:inline-block;padding:8px 2px;margin:-8px -2px;min-height:32px}
+/* checkboxes: a 32 px box with the same 18 px square drawn in the middle */
+.check input[type=checkbox],.cat-opt input[type=checkbox]{-webkit-appearance:none;appearance:none;width:32px!important;height:32px!important;margin:-7px!important;padding:0;border:0;border-radius:0;flex-shrink:0;cursor:pointer;
+  background:
+    linear-gradient(var(--surface,#fff),var(--surface,#fff)) center/16px 16px no-repeat,
+    linear-gradient(var(--input,#8A847A),var(--input,#8A847A)) center/18px 18px no-repeat;}
+.check input[type=checkbox]:checked,.cat-opt input[type=checkbox]:checked{
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px 14px no-repeat,
+    linear-gradient(var(--brand),var(--brand)) center/18px 18px no-repeat;}
+.check input[type=checkbox]:focus-visible,.cat-opt input[type=checkbox]:focus-visible{outline:2px solid var(--brand);outline-offset:-5px}
+.check input[type=checkbox]:disabled{opacity:.5;cursor:default}
+/* switches: the track stays 44×26, the hit box is 50×32 */
+.switch{border:3px solid transparent!important;background-clip:padding-box!important;box-sizing:content-box;margin:-3px}
+/* segmented buttons (landing inch/cm, admin Active/Draft) */
+.seg button{border-top:3px solid transparent!important;border-bottom:3px solid transparent!important;background-clip:padding-box!important;margin:-3px 0}
+/* admin chips */
+.rl-chip button{width:32px!important;height:32px!important;margin:-5px -5px -5px -3px}
+.rl-add{min-height:32px}
+
+/* bug 22 · the demo-only "Demo controls" tab stays inside a 1280 screen */
+@media(min-width:1024px){
+  /* the label used to spill out of a 34 px box to x = 1302 */
+  .demo-fab{width:auto!important;padding:0 14px!important;box-sizing:border-box;white-space:nowrap;max-width:calc(100vw - 28px)}
+}
+/* product page: the rules box and "All N colours" carry their own heights */
+.pdp-page [data-testid="pdp-rules"] .rule-v,[data-testid="pdp-rules"] .rule-v{min-height:32px!important;padding-top:3px!important;padding-bottom:3px!important;margin-top:-3px!important;margin-bottom:-3px!important}
+.pdp-page .pdp-sw .pdp-allc,.pdp-page .pdp-lblrow .pdp-allc{min-height:32px!important;padding-top:1px!important;padding-bottom:1px!important;margin-top:-1px!important;margin-bottom:-1px!important}
+/* demo-only gear tab in the product page margin: 32 px wide, half of it off-screen */
+.demo-fab.demo-fab-tab{width:32px!important;min-width:32px!important;left:-16px!important;padding-left:16px!important;box-sizing:border-box}
+
+/* bug 17 · Build-your-own-set on phones. Two cards side by side left each
+   size box 23–28 px wide and each colour dot 17–23 px (the finger needs 32+),
+   and "XXL" was cut at 320. Design choice (owner rule: pick one, apply it):
+   on phones each card is one row — the picture on the left (32 %), colour,
+   size and "Add to set" on the right — so every size box is ≥ 32 px wide and
+   nothing is cut, on every phone from 320 px. Tablets and desktop unchanged. */
+@media(max-width:599px){
+  .bs-wrap .grid.g4:has(.bs-card){grid-template-columns:1fr!important;gap:12px!important}
+  .bs-card{display:grid!important;grid-template-columns:28% minmax(0,1fr);align-items:start}
+  .bs-card .bs-look{display:block;min-width:0;width:100%;overflow:hidden}
+  .bs-card .bs-look .pimg{width:100%}
+  .bs-card .bs-cinfo{padding:10px 12px 12px!important;min-width:0}
+  .bs-card .bs-sws{grid-template-columns:repeat(var(--n,3),minmax(0,48px))!important}
+  .bs-card .bs-sws .bs-sw{width:calc(100% - 2px)!important;min-width:32px}
+  .bs-card .bs-sws .bs-sw::after{width:calc(100% + 2px)!important}
+  .bs-card .bs-pills{gap:3px!important}
+}
+@media(max-width:374px){
+  .bs-card{grid-template-columns:22% minmax(0,1fr)}
+  .bs-card .bs-cinfo{padding:10px 8px 12px!important}
+  .bs-card .bs-pills{gap:2px!important}
+}
+/* the phone header wordmark is a link too */
+.hdr .logo{display:inline-flex;align-items:center;min-height:32px}
+/* the landing / slim header puts WhatsApp at the right edge: its tooltip opens
+   leftwards there instead of running 8 px past the screen (sideways scroll at 1280) */
+.hdr-in > .hdr-wa:last-child .hdr-wa-tip{left:auto;right:0;transform:translate(0,-4px)}
+.hdr-in > .hdr-wa:last-child .hdr-wa-tip::before{left:auto;right:14px}
+@media(hover:hover){ .hdr-in > .hdr-wa:last-child:hover .hdr-wa-tip,.hdr-in > .hdr-wa:last-child:focus-visible .hdr-wa-tip{transform:translate(0,0)} }
+/* tablets · Build-your-own-set at 1024–1279 (iPad landscape, iPad Pro portrait):
+   four cards beside the set summary left "XXL" cut — three cards per row there */
+@media(min-width:1024px) and (max-width:1279px){
+  .bs-wrap .grid.g4:has(.bs-card){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+/* tablets · My account at 1024–1279 (iPad landscape): three offer cards beside
+   the side menu were ~210 px wide — "See all" fell onto two lines and the
+   product names were cut. Two cards there; the third steps out (owner rule:
+   what cannot fit hides, it never wraps). */
+@media(min-width:1024px) and (max-width:1279px){
+  .acc-po3{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:20px!important}
+  .acc-po3 .acc-po-one:nth-child(n+3){display:none!important}
+}
+.acc-po-hd .acc-po-eb,.acc-po-hd .acc-po-all{white-space:nowrap}
+/* tablets · order cards in My account at 768–1279: three columns left the
+   parcel journey ~200 px wide and its labels cut ("Confirme", "Steadfas").
+   The journey takes its own full-width row under the order number and total. */
+@media(min-width:768px) and (max-width:1279px){
+  .acc-ocard{grid-template-columns:minmax(0,1fr) auto!important;row-gap:14px!important}
+  .acc-ocard > .acc-ordmid{grid-column:1 / -1;grid-row:2}
+  .acc-ocard > .acc-ocard-r{grid-column:2;grid-row:1}
+  .acc-ordmid{flex-direction:row!important;align-items:center}
+  .acc-ordmid .acc-flow{flex:1 1 auto;min-width:0}
+}
+/* L05 · Saved for later in the bag, on phones: the "Move to bag" button took
+   half the row and cut the product name ("Essential Piqué …"). Under 480 px the
+   button sits on its own line under the name and price, so the name has the
+   whole width. */
+@media(max-width:479px){
+  .zc-saved{display:grid;grid-template-columns:56px minmax(0,1fr);column-gap:12px;row-gap:8px;align-items:center}
+  .zc-saved > .btn{grid-column:2;justify-self:start}
+}
+/* L05 · bag "Add a 2nd polo" colour chips: 48 px on the right were kept free
+   for the floating WhatsApp disc, which is off by default now (R15 3.1) —
+   at 320 px that squeezed "White" to "Whi…". The room comes back whenever
+   the disc is not on the page. */
+@media(max-width:1023px){ body:not(:has(.wa-fab)) .bg-page .bg-duo-cols{margin-right:0} }
+/* bug 10 · header jolt at 360: the heart was drawn, then hidden by hdrFit()
+   once the measurement ran (and again when the web fonts arrived). Below
+   373 px it never fits beside the wordmark, so CSS decides it before the
+   first paint; hdrFit() still guards the wider phones. */
+@media(max-width:372px){ .hdr .hdr-wish{display:none!important} }
+.skip{transition:none}
+/* product title: the heart's -6 px right margin hung 3 px outside the title's
+   clipping box ("Heavyweight Hoodie 320 GSM ♥" read as cut text at 440 px).
+   The box now reaches over the heart's overhang; nothing moves on screen. */
+.pdp-page .pdp-titlerow .pdp-name{padding-right:8px;margin-right:-8px}
+/* L15 · bottom room = the measured height of the pinned bar (+12 px), set by
+   bottomBarPad() in 03-layout.js; the old fixed paddings are the fallback */
+@media(max-width:1023px){ html[style*="--bar-pad"] body .has-bnav:not(#_){padding-bottom:calc(var(--bar-pad) + env(safe-area-inset-bottom,0px))!important} }
+/* H25 · footer link rows are 44 px tall finger targets (the columns still end level) */
+.ftr-s3 .ftr-cols a{min-height:44px;box-sizing:border-box}
+/* L05 · the primary-button sheen was a strip parked at left:115% between
+   passes — outside the button, so every primary button measured as "cut
+   text" once the first pass had run (the device gate failed on Home at random,
+   depending on timing). Same sheen, same 7 s rhythm, now drawn as a moving
+   background inside the button: nothing ever sits outside it. */
+.btn-primary:not(:disabled)::after{left:0;right:0;width:auto;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.20),transparent) no-repeat;
+  background-size:38% 100%;background-position:-80% 0;animation:ctaSheenBg 7s ease-in-out 2s infinite}
+@keyframes ctaSheenBg{0%{background-position:-80% 0}15%{background-position:180% 0}100%{background-position:180% 0}}
+
+/* =====================================================================
+   R15 wave 2 (QA-R15b) — Prohori
+   ===================================================================== */
+/* bug 1 · pull-to-refresh is a touch gesture, shown on any touch screen
+   (iPad landscape / Pro 12.9 too), never with a mouse */
+@media(min-width:1024px) and (pointer:coarse){ .ptr{display:inline-flex!important} }
+
+/* bug 3 (F06) · every typing field is 16 px at every width, store and admin,
+   so iPadOS/iOS never zooms the page on focus */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea,.input{font-size:16px!important}
+
+/* bug 4 · exchange bottom bar: the fixed bar already spans the screen; the
+   -16 px side margins pushed it 16 px past both edges ("Next" cut) */
+.mbar.exc-mbar{margin:16px 0 0!important;left:0!important;right:0!important}
+.mbar.exc-mbar .row > .btn{min-width:0;flex:1 1 0}
+
+/* bug 6 · footer contact row at ≥ 1024: WhatsApp/Hotline sit side by side only
+   when they fit (ftrReachFit decides, as on phones); without social links the
+   row is two columns so the buttons get the room */
+@media(min-width:1024px){
+  .ftr-s4 .ftr-reach:not(.ftr-two){grid-template-columns:minmax(0,1fr)!important}
+  .ftr-s4 .ftr-contact:not(:has(.ftr-soc)){grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)!important}
+}
+.ftr-s4 .ftr-reach .btn{min-width:0;overflow:hidden}
+
+/* bug 8 · tap targets the first wave missed */
+.ca-crumbs a{display:inline-flex;align-items:center;min-height:32px;min-width:32px;justify-content:center;padding:6px 6px;margin:-6px -6px}
+.bg-line a.bg-name,.cbt-hd a.bg-name{display:inline-block;padding-top:7px;padding-bottom:7px;margin-top:-7px;margin-bottom:-7px;min-height:32px}
+.admin-top a{display:inline-flex;align-items:center;min-height:32px;padding:6px 4px;margin:-6px -4px}
+@media(min-width:600px){
+  .bs-card .bs-sws{grid-template-columns:repeat(var(--n,3),minmax(0,48px))!important}
+  .bs-card .bs-sws .bs-sw{width:calc(100% - 2px)!important;max-width:40px;min-width:32px}
+  .bs-card .bs-sws .bs-sw::after{width:calc(100% + 2px)!important}
+  .bs-card .bs-pills .size-pill.bs-pill{min-width:32px!important}
+}
+.pdp-page .pdp-allc{min-width:32px}
+
+/* bug 12 · demo-only tab: on the desktop layout it moves to the bottom-LEFT,
+   so it never sits on the footer language switch (bottom-right) */
+@media(min-width:1024px){
+  .demo-fab{right:auto!important;left:14px!important}
+  .demo-panel{right:auto!important;left:14px!important}
+}
+
+/* bug 13 · #/size-guide page keeps the container's side gutter */
+.sg-page{padding-top:28px;padding-bottom:48px}
+
+/* bug 15 · checkout step labels ≥ 4.5:1 ("Done" read 3.41:1) */
+.ckh-steps{color:#625B52}
+/* admin links and the exchange radios (bug 8, admin + exchange) */
+.zs-link{display:inline-flex;align-items:center;justify-content:center;min-width:32px;min-height:32px;padding-top:4px;padding-bottom:4px;margin-top:-4px;margin-bottom:-4px}
+.zs-li .t > a,.zp-nm,.zb-t{display:inline-block;padding-top:7px;padding-bottom:7px;margin-top:-7px;margin-bottom:-7px;min-height:32px}
+.alp-page a.small.row{min-height:32px;padding:6px 0;margin:-6px 0}
+.alp-url button{min-width:32px;min-height:32px;margin:-4px -4px -4px 0}
+.exc-opt input[type=radio],.exc-opt input[type=checkbox]{width:32px!important;height:32px!important;margin:-7px!important;flex-shrink:0;
+  -webkit-appearance:none;appearance:none;border:0;cursor:pointer;
+  background:radial-gradient(circle at center, var(--surface,#fff) 0 7px, var(--input,#8A847A) 7px 9px, transparent 9px)}
+.exc-opt input[type=radio]:checked,.exc-opt input[type=checkbox]:checked{background:radial-gradient(circle at center, #fff 0 3px, var(--brand) 3px 9px, transparent 9px)}
+.exc-opt input:focus-visible{outline:2px solid var(--brand);outline-offset:-4px}
+/* B05/B06 · colour + size pickers on a single bag item (same select as the sets) */
+.bg-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin-top:6px;max-width:300px}
+.bg-pickc,.bg-picks{display:block;min-width:0}
+.bg-pick .bg-sel{display:block;width:100%!important;min-width:0;min-height:40px;padding:6px 24px 6px 8px;text-overflow:ellipsis}
+.bg-pickc .swatch{display:none}
+/* A09 · wishlist cards carry Add to bag + Remove */
+.acc-wl-item{display:flex;flex-direction:column;min-width:0}
+.acc-wl-acts{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}
+.acc-wl-acts .btn{min-height:40px;flex:1 1 auto;justify-content:center}
+.acc-wl-acts .link{min-height:32px;display:inline-flex;align-items:center;padding:0 4px}
+/* L05 · trio colour chips: wide enough for three names at every width */
+.cb-wrap .cb-pairs.cb-pairs3{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))!important}
+.ca-empty h1.h2{margin:0}

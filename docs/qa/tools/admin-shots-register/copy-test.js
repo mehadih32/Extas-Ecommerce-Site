@@ -1,0 +1,27 @@
+const { chromium } = require('playwright'); const path = require('path');
+(async () => { const b = await chromium.launch(); const pg = await b.newPage({viewport:{width:1280,height:900}}); const errs=[]; pg.on('pageerror', e=>errs.push(e.message));
+  await pg.goto('file://' + path.resolve('pc/dist/EXTAS-demo.html') + '#/'); await pg.waitForTimeout(500);
+  // the owner had already seen everything up to today's 32 items
+  await pg.evaluate(() => { ST.seenIntro = true; ST.zgSeenSeq = 32; ST.zgTgSeq = 32; saveState(); closeModal(); location.hash = '#/admin/orders'; }); await pg.waitForTimeout(400);
+  const badge = await pg.evaluate(() => [...document.querySelectorAll('a[href="#/admin/register"] .zg-sbadge')].map(e=>e.textContent).join(','));
+  const tg = await pg.evaluate(() => ((ST.za||{}).tg||[]).filter(m=>/Register update/.test(m.text)).map(m=>m.text).join('\n---\n'));
+  await pg.evaluate(() => { location.hash = '#/admin/register?tab=new'; }); await pg.waitForTimeout(500);
+  const txt = await pg.evaluate(() => document.querySelector('.zg-body').innerText);
+  const kp = await pg.evaluate(() => document.querySelector('.zg-kpis').innerText.replace(/\n/g,' '));
+  await pg.screenshot({path:'../../admin-shots/register/copy-test-whats-new.png'});
+  await pg.evaluate(() => { location.hash = '#/admin/register/pr/595'; }); await pg.waitForTimeout(400);
+  const card = await pg.evaluate(() => document.querySelector('.zg-panel').innerText);
+  await pg.screenshot({path:'../../admin-shots/register/copy-test-pr-595.png'});
+  await pg.evaluate(() => { location.hash = '#/admin/register'; }); await pg.waitForTimeout(300);
+  const st = await pg.evaluate(() => (document.getElementById('zg-s-S28')||{}).innerText||'');
+  const ok = (c, m) => console.log((c?'  ok   ':'  FAIL ')+m);
+  ok(badge.split(',').every(x=>x==='৩'), 'sidebar + phone-tab counter both show 3 unseen (got "'+badge+'")');
+  ok(/নতুন সেকশন\s*S28 · Test gift wrapping/.test(txt), 'What\'s new: নতুন সেকশন S28');
+  ok(/PR 595 যোগ হলো · যুক্ত: 571, 97, 212/.test(txt), 'What\'s new: "PR 595 যোগ হলো · যুক্ত: 571, 97, 212"');
+  ok(/PR 104-এ নতুন অংশ যোগ হলো[\s\S]*weekly best-pair report/.test(txt), 'What\'s new: "PR 104-এ নতুন অংশ যোগ হলো" + the added sentence');
+  ok(/যে PR-গুলোর সাথে যুক্ত[\s\S]*PR 571[\s\S]*লেখায় নাম আছে[\s\S]*PR 97/.test(card), 'PR 595 card shows যে PR-গুলোর সাথে যুক্ত (571, 97 named)');
+  ok(/নতুন সেকশন/.test(st) && /S28/.test(st), 'stage list shows S28 with নতুন সেকশন');
+  ok(/📚 Register update/.test(tg) && /PR 595 যোগ হলো/.test(tg), 'Telegram preview: '+tg.replace(/\n/g,' / '));
+  ok(!errs.length, 'no JS errors '+errs.join(';'));
+  console.log('  kpis: '+kp);
+  await b.close(); })();

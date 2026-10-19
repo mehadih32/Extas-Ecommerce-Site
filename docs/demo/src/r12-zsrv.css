@@ -1,0 +1,89 @@
+/* r12-zsrv.css — server pages (89v-admin-server.js) · prefix zv- · admin only
+   Builds on r12-zadmin.css (zs- classes). CN-001: PR 423 · 601 · 602 · 603 · 604 · 22/24/88 · 234 · 395/507 */
+.zv-page{overflow-wrap:anywhere}
+.zv-page .zs-hd h1{overflow-wrap:normal}
+.zv-pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;line-height:1.5;vertical-align:1px;background:var(--brand-tint);color:var(--brand-dark,var(--brand))}
+.zv-pill svg{flex-shrink:0}
+.zv-pill.warn{background:var(--warn-bg);color:var(--warn)}
+.zv-pill.bad{background:#FBE9E7;color:var(--sale)}
+/* machine facts */
+.zv-spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin-top:4px}
+@media(min-width:1180px){.zv-spec{grid-template-columns:repeat(3,minmax(0,1fr))}.zv-spec.two{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.zv-spec>div{min-width:0;display:flex;flex-direction:column;gap:1px}
+.zv-spec span{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.03em}
+.zv-spec b{font-size:14px;font-weight:700}
+/* name / value lines */
+.zv-pr{display:flex;justify-content:space-between;align-items:center;gap:6px 12px;padding:8px 0;border-top:1px solid var(--line2);font-size:13.5px;flex-wrap:wrap}
+.zv-pr:first-child{border-top:0}
+.zv-pr>span{color:var(--text2);min-width:0}
+.zv-pr>b{font-weight:600;text-align:right;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+.zv-prof{margin-top:4px}
+/* per-service meters */
+.zv-svch{display:none}
+.zv-svc{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:12px 0;border-top:1px solid var(--line2)}
+.zv-svc:first-of-type{border-top:0}
+.zv-meter{min-width:0}
+.zv-mt{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px}
+.zv-mt span{color:var(--muted);font-weight:600}
+.zv-mt b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.zv-svc .zv-ss{display:flex}
+@media(min-width:900px){
+  .zv-svch{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) 150px;gap:18px;font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:4px 0 6px;border-bottom:1px solid var(--line)}
+  .zv-svc{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) 150px;gap:18px;align-items:center}
+  .zv-svc:first-of-type{border-top:0}
+  .zv-svc .zv-mt span{display:none}
+}
+.zv-page .zs-card>.zv-meter{margin-top:12px}
+/* services up/down */
+.zv-up{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+@media(min-width:560px){.zv-up{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px}}
+.zv-upi{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line2);min-width:0}
+.zv-upi .zs-dot{margin-top:6px}
+.zv-upi.bad .small{color:var(--sale)}
+/* NVMe card when missing */
+.zv-nvme.bad{border-color:#E7B7AF}
+/* CDN bars */
+.zv-cdn{display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:4px}
+.zv-cdn .c{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.zv-cdn .b{display:block;width:100%;max-width:40px;background:var(--brand);border-radius:4px 4px 0 0;min-height:4px}
+.zv-cdn .c:last-child .b{opacity:.65}
+.zv-cdn .v{font-size:11px;color:var(--text2);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.zv-cdn .d{font-size:11px;color:var(--muted);margin-top:6px;white-space:nowrap}
+/* tables that become stacked rows on a phone */
+.zv-t{width:100%;border-collapse:collapse;font-size:13.5px}
+.zv-t th{text-align:left;font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.zv-t td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.zv-t th:first-child,.zv-t td:first-child{padding-left:0}
+.zv-t .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.zv-t tr.bad td.h{color:var(--sale)}
+.zv-t tr:last-child td{border-bottom:0}
+@media(max-width:700px){
+  .zv-t thead{display:none}
+  .zv-t,.zv-t tbody,.zv-t tr{display:block;width:100%}
+  .zv-t tr{padding:10px 0;border-top:1px solid var(--line2)}
+  .zv-t tr:first-child{border-top:0}
+  .zv-t td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:3px 0;text-align:right}
+  .zv-t .n{text-align:right}
+  .zv-t td::before{content:attr(data-l);color:var(--muted);font-size:12px;text-align:left;font-weight:600}
+  .zv-t td.h{display:block;text-align:left;font-weight:700;padding-bottom:5px}
+  .zv-t td.h::before{content:none}
+}
+/* cache: never cached chips */
+.zv-never{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--ink)}
+.zv-sel{width:auto;max-width:100%;flex:0 0 auto}
+/* images */
+.zv-range{width:100%;accent-color:var(--brand);height:28px}
+.zv-est{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.zv-est>div{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line2);font-size:13.5px}
+.zv-est>div:first-child{border-top:0}
+.zv-est span{color:var(--text2);flex:1 1 180px;min-width:0}
+.zv-est b{font-variant-numeric:tabular-nums}
+.zv-ol{margin:8px 0;padding-left:20px;font-size:13.5px;line-height:1.7;color:var(--text2)}
+.zv-num{width:96px}
+/* backup: which destinations a run reached */
+.zv-dst{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.zv-dst span{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:1px 7px;border-radius:9px;background:var(--surface2);color:var(--muted);border:1px solid var(--line2)}
+.zv-dst span.on{background:var(--brand-tint);color:var(--brand-dark,var(--brand));border-color:transparent}
+@media(max-width:420px){.zv-g2{grid-template-columns:minmax(0,1fr)!important}}
+.zv-page .zs-row .zs-thr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.zv-page .tag{white-space:nowrap;flex-shrink:0}

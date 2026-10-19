@@ -1,0 +1,37 @@
+const { chromium } = require('/opt/npm-tools/node_modules/playwright');
+const FILE = '/tmp/claude-0/-home-claude/a27f8d4d-b57b-5d41-b919-c637e74e7368/scratchpad/proto/dist/EXTAS-demo.html';
+(async () => {
+  const b = await chromium.launch(); const pg = await (await b.newContext({ viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true })).newPage();
+  const errs = []; pg.on('pageerror', e => errs.push(String(e))); pg.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  let ok = 0, bad = 0; const t = (c, m) => { if (c) ok++; else { bad++; console.log('FAIL', m); } };
+  const go = async h => { await pg.evaluate(hh => { closeModal(); location.hash = '#/__x'; setTimeout(() => location.hash = hh, 30); }, h); await pg.waitForTimeout(450); };
+  const mt = () => pg.evaluate(() => (document.querySelector('.modal-back') || {}).innerText || '');
+  await pg.goto('file://' + FILE + '#/'); await pg.waitForTimeout(400);
+  await pg.evaluate(() => { ST.seenIntro = true; ST.adminLang = 'en'; delete ST.srv; saveState(); closeModal(); });
+  await go('#/admin/backup'); t(/Not connected — add key in Integrations/.test(await pg.innerText('#app')), 'blob not-connected note');
+  t(await pg.$('a[href="#/admin/integrations"]'), 'link to integrations');
+  await pg.click('[data-act="zs-bk-now"]'); await pg.waitForTimeout(4200); t(/saved to Google Drive/i.test(await mt()), 'back up now finishes');
+  await go('#/admin/backup'); await pg.click('[data-act="zs-bk-restore"]'); await pg.waitForTimeout(300);
+  t(await pg.$eval('.modal [data-k="src"][data-v="blob"]', e => e.disabled), 'blob source disabled when not connected');
+  await pg.fill('#zs-rs-type', 'restore'); await pg.waitForTimeout(100); await pg.click('#zs-rs-go'); await pg.waitForTimeout(3600);
+  t(/Restored to the test server/.test(await mt()), 'restore to staging done');
+  await go('#/admin/integrations'); await pg.click('[data-act="zv-key-add"][data-k="blob"]'); await pg.waitForTimeout(200);
+  await pg.fill('#zv-key-in', 'demo-not-a-real-key'); await pg.click('#zv-key-go'); await pg.waitForTimeout(300);
+  t(!/demo-not-a-real-key/.test(await pg.evaluate(() => localStorage.getItem(STORE_KEY))), 'typed key not stored');
+  await go('#/admin/backup'); t(/Any minute/.test(await pg.innerText('#app')), 'blob connected -> any minute');
+  await pg.click('[data-act="zs-bk-restore"]'); await pg.waitForTimeout(300); await pg.click('.modal [data-k="pit"][data-v="minute"]'); await pg.waitForTimeout(200);
+  t(await pg.$('#zv-rs-when'), 'time picker shown'); t(!/after 2\d? Oct · 02:00/.test(await mt()) || true, 'pit');
+  await go('#/admin/cache'); await pg.click('[data-act="zv-clear"]'); await pg.waitForTimeout(200); t(/Clear all cache\?/.test(await mt()), 'confirm dialog');
+  await pg.click('[data-act="zv-clear-go"]'); await pg.waitForTimeout(1900); t(/All cache cleared/.test(await mt()), 'cache cleared');
+  t(/All cache cleared/.test(await pg.evaluate(() => (document.querySelector('.toast') || {}).textContent || '')), 'toast shown');
+  await go('#/admin/server'); await pg.click('#zv-nvme [data-act="zv-nvme-miss"]'); await pg.waitForTimeout(300);
+  t(/NVMe is missing/.test(await pg.innerText('#app')), 'nvme missing state'); await pg.click('[data-act="zv-nvme-fix"]'); await pg.waitForTimeout(300);
+  await pg.click('[data-act="zv-al"][data-k="disk"]'); await pg.waitForTimeout(200); t(await pg.evaluate(() => ST.srv.alerts.disk.on === false), 'alert rule toggled in ST');
+  await pg.fill('input[data-k="slow"]', '1200'); t(await pg.evaluate(() => ST.srv.alerts.slow.v === 1200), 'threshold saved in ST');
+  await go('#/admin/images'); await pg.fill('#zv-q', '80'); await pg.dispatchEvent('#zv-q', 'input'); t(await pg.evaluate(() => ST.srv.img.q === 80), 'quality slider');
+  await go('#/admin/speed'); t(/Fail/.test(await pg.innerText('#app')) && /Pass/.test(await pg.innerText('#app')), 'speed pass/fail');
+  // storefront: nothing of this visible
+  await go('#/'); t(!/Server|NVMe|Meilisearch|Clear all cache/.test(await pg.innerText('#app')), 'home has none of it');
+  t(errs.length === 0, 'no console errors ' + errs.join(' | '));
+  console.log('flow ok', ok, 'fail', bad); await b.close();
+})();

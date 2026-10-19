@@ -1,0 +1,4 @@
+const L = require('./lib');
+(async () => { const T = await L.open(L.dev('d1280x800')); await L.prep(T, '#/admin/blog?tab=pipe'); await L.wait(T, 800);
+  const r = await L.ev(T, () => { const back = [...document.querySelectorAll('a')].find(a => /Back to the shop/i.test(a.textContent)); const demo = [...document.querySelectorAll('button, a, div')].filter(e => /Demo controls/.test(e.textContent) && e.children.length < 4).pop(); const b = back && back.getBoundingClientRect(), d = demo && demo.getBoundingClientRect(); return {back: b && [b.left, b.top, b.right, b.bottom].map(Math.round), demo: d && [d.left, d.top, d.right, d.bottom].map(Math.round)}; });
+  console.log(JSON.stringify(r)); await T.p.screenshot({path: L.SHOTS + '/d1280x800-admin-demo-controls.png', clip: {x: 0, y: 500, width: 320, height: 300}}); await L.close(T); })();

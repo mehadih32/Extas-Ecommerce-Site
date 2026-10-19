@@ -1,0 +1,396 @@
+/* =====================================================================
+   ROUND 11 — PRODUCT PAGE
+   Everything here is scoped to .pdp-page so the home page and the
+   category grid, which share productImg/garmentSVG, are untouched.
+   ===================================================================== */
+
+.pdp-page{
+  /* THE one number the first screen is built on. Every category draws the
+     same block because the height comes from the viewport, never from the
+     garment drawing. */
+  --pdp-img: min(38vh, 360px);
+  --pdp-gap: 10px;          /* between the stacked blocks of the buy column */
+}
+/* a narrower phone has less height to spend and wraps long titles onto a
+   second line, so the photo gives a little back */
+@media(max-width:400px){ .pdp-page{ --pdp-img: min(35vh, 330px); --pdp-gap: 9px } }
+
+/* ---------------------------------------------------------------
+   1. ONE DETERMINISTIC PHOTO HEIGHT FOR EVERY PRODUCT, EVERY TEMPLATE
+   The garment SVGs have different viewBox proportions and T1/T2/T3 asked
+   for different ratios, which is why the first screen only ever lined up
+   for one product. On a phone the ratio is thrown away: fixed height,
+   object-fit:cover, identical for polos, trousers, panjabi and hoodies.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page .pdp-main .pimg,
+  .pdp-page .pdp-galT2 .pimg{
+    aspect-ratio:auto!important;
+    height:var(--pdp-img)!important;
+    max-height:var(--pdp-img)!important;
+    min-height:var(--pdp-img);
+    width:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  }
+  .pdp-page .pdp-main .pimg>svg.garment,
+  .pdp-page .pdp-galT2 .pimg>svg.garment{
+    width:100%;height:100%;max-height:none;object-fit:cover;
+  }
+  /* T2 is a swipe strip of the same block, not a taller one */
+  .pdp-page .pdp-trk.t2>.pdp-tile{flex:0 0 88%}
+}
+
+/* ---------------------------------------------------------------
+   2. THE FIRST-SCREEN BUDGET (phone)
+   Breadcrumb, photo, thumbnails, title, rating, price, colour, size,
+   measurement line — all of it above 956px with a few px to spare.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page .pdp-top{padding-top:6px}
+  .pdp-page .pdp-crumbs{margin-bottom:0}
+  .pdp-page .pdp-grid{gap:var(--pdp-gap)}
+  .pdp-page .pdp-thumbs{padding:6px 16px 0}
+  .pdp-page .pdp-head{padding-top:2px}
+  .pdp-page .pdp-name{margin:0 0 2px;font-size:25px;line-height:1.14;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pdp-page .pdp-rating{padding:2px 0}
+  .pdp-page .pdp-b>.pdp-sec+.pdp-sec{margin-top:var(--pdp-gap)}
+  .pdp-page .pdp-colsec{padding-bottom:0}
+  .pdp-page .pdp-sw{margin-top:6px;margin-bottom:0;padding:2px 2px}
+  .pdp-page #pdp-sizes{margin-top:9px}            /* 31. Size begins just under the swatches */
+  .pdp-page .pdp-pills{padding-top:8px}
+  /* P6. one pixel of the 28.7px gap under the size boxes buys the
+     measurement line its clearance over the buy bar (PDP_FIT.clear) */
+  .pdp-page .pdp-fitline{margin-top:7px!important}
+  .pdp-page .pdp-fmssec{margin-top:12px}
+  /* the phone buy bar is slim, so the measurement line lands just above it */
+  .pdp-page .pdp-mbar{padding:6px 14px 8px}
+  .pdp-page .pdp-mbar .btn{min-height:48px}
+}
+
+/* ---------------------------------------------------------------
+   24. THE MODEL BADGE — frosted, not a sticker
+   --------------------------------------------------------------- */
+.pdp-page .pdp-chip-img{
+  left:12px;bottom:12px;padding:6px 12px 6px 10px;border-radius:999px;
+  font-size:12px;font-weight:650;letter-spacing:.005em;
+  background:rgba(255,255,255,.42);
+  -webkit-backdrop-filter:blur(14px) saturate(1.5);backdrop-filter:blur(14px) saturate(1.5);
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 8px 24px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.55);
+  color:#1C1A17;
+}
+.pdp-page .pdp-chip-img.tr{right:12px;top:12px;left:auto;bottom:auto}
+.pdp-page .pdp-chip-img svg{opacity:.85}
+/* 39. the urgent one is the only coloured chip on the photo, and it sits at
+   the top where nothing else competes with it and the icon rail never reaches */
+.pdp-page .pdp-chip-img.low{
+  left:auto;right:12px;top:12px;bottom:auto;
+  background:rgba(176,58,46,.90);color:#fff;border-color:rgba(255,255,255,.35);
+  font-weight:750;box-shadow:0 8px 24px rgba(120,30,22,.34);
+}
+.pdp-page .pdp-chip-img.low svg{color:#fff;opacity:1}
+.pdp-page .pdp-chip-img{max-width:calc(100% - 24px)}
+.pdp-page .pdp-chip-img.low{max-width:calc(100% - 100px)}  /* never runs under the −20% badge */
+.pdp-page .pdp-chip-img.low ~ .pdp-chip-img.tr{top:56px}   /* true-colour chip steps down below it */
+@media(max-width:400px){.pdp-page .pdp-chip-img{font-size:11px;padding:5px 10px}}
+
+/* ---------------------------------------------------------------
+   25 + P2. THUMBNAIL STRIP — fills the width exactly for 4, 5 or 6
+   photos, and is now on EVERY template, T2 included.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-thumbs{gap:6px}
+.pdp-page .pdp-thumbs .pdp-thumb{flex:1 1 0!important;width:auto!important;min-width:0;max-height:none}
+@media(max-width:1023px){
+  .pdp-page .pdp-thumbs .pdp-thumb{height:58px}
+  .pdp-page .pdp-thumbs .pdp-thumb .pimg{height:100%;max-height:none;aspect-ratio:auto}
+}
+/* fewer than four photos should not stretch into slabs — they centre instead */
+.pdp-page .pdp-thumbs.n1,.pdp-page .pdp-thumbs.n2,.pdp-page .pdp-thumbs.n3{justify-content:center}
+.pdp-page .pdp-thumbs.n1 .pdp-thumb,
+.pdp-page .pdp-thumbs.n2 .pdp-thumb,
+.pdp-page .pdp-thumbs.n3 .pdp-thumb{flex:0 1 92px!important}
+@media(min-width:1024px){
+  .pdp-page .pdp-galT1:not(.vert) .pdp-thumbs .pdp-thumb{flex:1 1 0!important}
+  .pdp-page .pdp-galT1.vert .pdp-thumbs .pdp-thumb{flex:0 0 auto!important;width:72px!important;height:auto}
+}
+
+/* ---------------------------------------------------------------
+   26 / 36 / 40 / 41. THE RIGHT EDGE, AND THE FLOATING ICON RAIL
+   The 46px gutter that kept the buy column clear of the rail left an
+   empty strip beside every box — exactly what the owner objected to.
+   Resolution: the gutter goes, so every block (offers, Find my size,
+   the 72-hour row, the rules box) ends on the same line as the Returns
+   box; the rail instead gets smaller, moves into the page margin, and
+   turns frosted so the few words it ever passes over stay readable.
+   Only the H1 keeps a right inset, because a title permanently under a
+   floating circle is the one overlap that would look like a mistake.
+   --------------------------------------------------------------- */
+@media(max-width:1023px){
+  .pdp-page .pdp-b .pdp-sec{margin-right:0!important}
+  .pdp-page .pdp-head>.row.between.top{padding-right:46px}
+  .pdp-page .pdp-acts,.pdp-page .shr-bar{top:38%}
+  .pdp-page .pdp-acts{right:4px;gap:7px}
+  .pdp-page .pdp-act{width:40px;height:40px;
+    background:rgba(255,255,255,.72);
+    -webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);
+    border-color:rgba(0,0,0,.06);box-shadow:0 6px 20px rgba(0,0,0,.14)}
+  .pdp-page .pdp-act.wa{background:rgba(242,251,245,.82)}
+  .pdp-page .shr-bar{right:50px}
+}
+/* the rail eases up and down as the page scrolls (JS sets the transform);
+   a transition would fight the rAF loop, so there is none */
+.pdp-page .pdp-acts,.pdp-page .shr-bar{will-change:transform}
+@media(prefers-reduced-motion:reduce){
+  .pdp-page .pdp-acts,.pdp-page .shr-bar{transform:translateY(-50%)!important}
+}
+
+/* ---------------------------------------------------------------
+   27 / 29 / 47. THE PRICE ROW — all four combinations at 440px
+   --------------------------------------------------------------- */
+.pdp-page .pdp-prow{
+  display:flex;align-items:center;gap:0;margin-top:8px;min-height:46px;
+  flex-wrap:nowrap;width:100%;
+}
+.pdp-page .pdp-pmain{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;flex:0 0 auto}
+.pdp-page .price.pdp-pbig{font-size:30px;line-height:1.08;font-weight:800;letter-spacing:-.015em;white-space:nowrap}
+.pdp-page .pdp-psave{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.pdp-page .pdp-psave .strike{font-size:13.5px}
+.pdp-page .tag.pdp-pct{font-size:11px;font-weight:800;padding:2px 7px}
+.pdp-page .pdp-saved{font-size:12px;font-weight:700;color:var(--sale)}
+.pdp-page .pdp-pbar{height:38px;width:5px;margin:0 13px;opacity:.5;align-self:center}
+.pdp-page .pdp-pside{flex:1 1 auto;min-width:0;align-self:center}
+.pdp-page .pdp-fd{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.pdp-page .pdp-pside b{font-size:17.5px;font-weight:800;line-height:1.15}
+/* 29. The truck is drawn across about 53% of its own box, so a 25px icon puts
+   the drawn glyph a hair taller than the cap height of the F — which is what
+   the owner asked to read true. The payment icon keeps the smaller box. */
+.pdp-page .pdp-pside svg{width:21px;height:21px;flex-shrink:0;margin-top:1px}
+.pdp-page .pdp-fd svg{width:25px;height:25px;margin-top:0}
+.pdp-page .pdp-psmall{font-size:13.5px;font-weight:700;white-space:normal;line-height:1.25}
+/* discount + free delivery is the tightest of the four: the two words wrap
+   inside the same row rather than pushing the row to a second line */
+.pdp-page .pdp-prow.disc .pdp-pside b{font-size:16px;white-space:normal}
+.pdp-page .pdp-prow.disc .pdp-pbar{margin:0 10px}
+@media(max-width:400px){
+  .pdp-page .price.pdp-pbig{font-size:27px}
+  .pdp-page .pdp-pside b{font-size:16px}
+  .pdp-page .pdp-prow.disc .pdp-pside b{font-size:14.5px}
+  .pdp-page .pdp-pbar{margin:0 9px}
+  .pdp-page .pdp-psmall{font-size:12.5px}
+}
+
+/* ---------------------------------------------------------------
+   28 / 38. THE LIGHT SWEEP — same idea as the logo and the buy button,
+   but it runs through the letters, and each one has its own switch.
+   --------------------------------------------------------------- */
+@keyframes pdpSheen{0%{background-position:170% 0}26%{background-position:-70% 0}100%{background-position:-70% 0}}
+.pdp-page .sweep{
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent!important;-webkit-text-fill-color:transparent;
+  background-size:300% 100%;background-position:170% 0;
+  animation:pdpSheen 2.6s ease-in-out infinite;
+}
+/* the icon keeps its own colour — only the words carry the light */
+.pdp-page .pdp-fd.sweep svg{-webkit-text-fill-color:initial;color:var(--brand-dark)}
+.pdp-page .pdp-fd.sweep{background-image:linear-gradient(100deg,
+  var(--brand-dark) 0 34%, #9ED3B4 44%, #F2FFF7 50%, #9ED3B4 56%, var(--brand-dark) 66% 100%)}
+.pdp-page .pdp-allc.sweep{background-image:linear-gradient(100deg,
+  var(--brand) 0 34%, #A9D6C0 44%, #F6FFFA 50%, #A9D6C0 56%, var(--brand) 66% 100%);
+  animation-duration:3.1s;text-decoration-color:var(--brand)}
+.pdp-page .pdp-lbl.sweep{background-image:linear-gradient(100deg,
+  var(--ink) 0 34%, #A8A194 44%, #EFEBE3 50%, #A8A194 56%, var(--ink) 66% 100%);
+  animation-duration:3.4s}
+.pdp-page .pdp-stock.sweep>span{
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  background-image:linear-gradient(100deg,#4A443C 0 34%,#BDB6A9 44%,#FBF9F5 50%,#BDB6A9 56%,#4A443C 66% 100%);
+  background-size:300% 100%;background-position:170% 0;animation:pdpSheen 3.2s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){
+  .pdp-page .sweep,.pdp-page .pdp-stock.sweep>span{
+    animation:none!important;background-image:none!important;
+    color:inherit!important;-webkit-text-fill-color:currentColor!important}
+  .pdp-page .pdp-fd.sweep,.pdp-page .pdp-fd.sweep b{color:var(--brand-dark)!important}
+  .pdp-page .pdp-allc.sweep{color:var(--brand)!important}
+  .pdp-page .pdp-lbl.sweep{color:var(--ink)!important}
+}
+
+/* ---------------------------------------------------------------
+   30 / 31 / 32. COLOUR AND SIZE READ AS ONE MATCHED PAIR
+   --------------------------------------------------------------- */
+.pdp-page .pdp-lblrow{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}
+.pdp-page .pdp-lbl{font-size:16px;font-weight:750;letter-spacing:-.005em;line-height:1.25}
+.pdp-page .pdp-lblv{font-weight:500;color:var(--text2)}
+/* P7. a dash, not a dot — on both labels, because Colour and Size are a pair */
+.pdp-page .pdp-lblv::before{content:"\2013\00a0";color:var(--line)}
+/* 30. "All N colours" is a cell of the swatch row, level with the last swatch */
+.pdp-page .pdp-sw{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.pdp-page .pdp-allc{font-size:15px;font-weight:750;min-height:36px;gap:3px;
+  padding:0;margin-left:2px;text-underline-offset:3px;white-space:nowrap}
+.pdp-page .pdp-allc svg{margin-top:1px}
+/* the old rule that pinned the row away from the rail is no longer wanted */
+.pdp-page .pdp-sec .row.between:has(.pdp-allc){padding-right:0}
+
+/* ---------------------------------------------------------------
+   33. THE SIZE ROW FILLS THE WIDTH AND STAYS ON ONE LINE
+   The column count comes from the markup (one per size), so 4, 5, 6, 7
+   or 8 sizes all share the full width without wrapping.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-pills{display:grid!important;gap:8px;width:100%}
+.pdp-page .size-pill{min-width:0!important;width:100%;padding:10px 2px;
+  display:flex;align-items:center;justify-content:center;text-align:center}
+@media(max-width:1023px){
+  .pdp-page .pdp-pills{gap:7px}
+  .pdp-page .size-pill{min-height:50px;font-size:17px}
+  /* seven or eight sizes still fit by trading a little type for the extra cells */
+  .pdp-page .pdp-pills[data-n="6"] .size-pill{font-size:16px}
+  .pdp-page .pdp-pills[data-n="7"] .size-pill{font-size:14.5px}
+  .pdp-page .pdp-pills[data-n="8"] .size-pill{font-size:13px;gap:0}
+  .pdp-page .pdp-pills[data-n="9"] .size-pill{font-size:12px}
+}
+.pdp-page .pdp-pills .size-pill.tagged{padding-top:13px}
+
+/* ---------------------------------------------------------------
+   34. THE SIZE-CHART CONTROL
+   Right edge flush with the right edge of the last size box, which is
+   now the right edge of the content.
+   v1 bare link · v2 soft tinted chip (chosen) · v3 outlined chip
+   --------------------------------------------------------------- */
+.pdp-page .pdp-chartbtn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  font:inherit;margin-right:0;flex-shrink:0}
+.pdp-page .pdp-chartbtn svg{flex-shrink:0}
+/* v1 — bare underlined link */
+.pdp-page .pdp-chartbtn.v1{background:none;border:0;padding:4px 0;min-height:32px;
+  color:var(--brand);font-size:14.5px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.pdp-page .pdp-chartbtn.v1 svg:last-child{display:none}
+/* v2 — soft tinted chip (chosen) */
+.pdp-page .pdp-chartbtn.v2{background:var(--brand-tint);border:1px solid var(--brand-line);
+  color:var(--brand-dark);padding:0 11px 0 10px;min-height:34px;border-radius:999px;
+  font-size:14px;font-weight:750}
+.pdp-page .pdp-chartbtn.v2:hover{background:var(--brand);color:var(--brand-ink)}
+.pdp-page .pdp-chartbtn.v2:hover svg{color:var(--brand-ink)}
+/* v3 — outlined chip in the size-pill family */
+.pdp-page .pdp-chartbtn.v3{background:var(--surface);border:1.5px solid var(--input);
+  color:var(--ink);padding:0 12px;min-height:40px;border-radius:var(--radius);
+  font-size:14px;font-weight:700}
+.pdp-page .pdp-chartbtn.v3 svg:last-child{display:none}
+
+/* ---------------------------------------------------------------
+   35. THE MEASUREMENT LINE — a size up, letter and numbers bold
+   --------------------------------------------------------------- */
+.pdp-page .pdp-fitline{font-size:14px;line-height:1.45;color:#4A443C;align-items:center}
+.pdp-page .pdp-fitline b{color:var(--ink);font-weight:800}
+.pdp-page .pdp-fitline .pdp-fsz{font-size:15.5px;font-weight:900;letter-spacing:.01em}
+
+/* ---------------------------------------------------------------
+   36. FIND MY SIZE — same right edge as everything else, one line, shorter
+   --------------------------------------------------------------- */
+.pdp-page .pdp-fms{padding:11px 14px;gap:12px;width:100%}
+.pdp-page .pdp-fms .ic{width:34px;height:34px}
+.pdp-page .pdp-fms .t{font-size:15px;line-height:1.2}
+/* P8. "Just your height and weight · 20 seconds" was 12px and unreadable.
+   13px at line-height 1.2 is 15.6px — exactly 12px x 1.3, so the line box, and
+   with it the card and the first-screen budget, do not move a pixel. */
+.pdp-page .pdp-fms .s{font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+
+/* ---------------------------------------------------------------
+   37. THE FIND-MY-SIZE SHEET — bigger window, bigger type
+   --------------------------------------------------------------- */
+.modal.pdp-sheet{max-height:96vh}
+.modal.pdp-sheet .modal-bd{padding:22px 22px 26px;font-size:15.5px}
+.modal.pdp-sheet .modal-hd .h3{font-size:21px!important}
+.modal.pdp-sheet .small{font-size:15px;line-height:1.55}
+.modal.pdp-sheet .xs{font-size:13.5px;line-height:1.5}
+.modal.pdp-sheet .label{font-size:14.5px;font-weight:750;margin-bottom:6px}
+.modal.pdp-sheet .pdp-step button{width:52px;height:52px}
+.modal.pdp-sheet .pdp-step output{min-width:78px;font-size:20px}
+.modal.pdp-sheet .pdp-res{padding:22px}
+.modal.pdp-sheet .pdp-res-size{font-size:62px}
+.modal.pdp-sheet .pdp-why li{font-size:15px;line-height:1.55}
+.modal.pdp-sheet .btn{min-height:54px;font-size:16.5px}
+@media(min-width:768px){.modal.pdp-sheet{max-width:640px}}
+
+/* ---------------------------------------------------------------
+   40 / 41 / 42. THE RULES BOX — three columns, and the open text runs
+   the full width line by line instead of a tall narrow strip.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;padding:12px 6px;align-items:start}
+.pdp-page .pdp-rule{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:5px;padding:2px 10px;min-width:0}
+.pdp-page .pdp-rule+.pdp-rule{border-left:1px solid var(--line2)}
+.pdp-page .pdp-rule-h{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--ink)}
+.pdp-page .pdp-rule-s{font-size:11.5px;line-height:1.35;color:var(--text2)}
+.pdp-page .pdp-rule .link{font-size:12.5px;min-height:26px;padding:2px 0}
+.pdp-page .pdp-rule.on .link{color:var(--ink)}
+/* P11. one sentence per row, with a hanging indent, so the right edge is
+   ragged like a list instead of ragged like broken prose */
+.pdp-page .pdp-rule-open{grid-column:1/-1;margin:10px 10px 2px;padding:13px 15px;
+  background:var(--surface2);border:1px solid var(--line2);border-radius:var(--radius);
+  line-height:1.65;text-align:left;color:var(--text2)}
+.pdp-page .pdp-rule-ln{display:block;position:relative;padding-left:14px;
+  text-wrap:pretty;text-wrap:balance}
+.pdp-page .pdp-rule-ln+.pdp-rule-ln{margin-top:3px}
+.pdp-page .pdp-rule-ln::before{content:"";position:absolute;left:1px;top:.72em;
+  width:4px;height:4px;border-radius:50%;background:var(--line);}
+@media(max-width:520px){
+  .pdp-page .pdp-rule-s{display:none}      /* three short columns, nothing clipped */
+  .pdp-page .pdp-rules{padding:12px 2px}
+  .pdp-page .pdp-rule{padding:2px 6px}
+}
+
+/* ---------------------------------------------------------------
+   44 / 45. SLIDERS — reviews, and the two product rows
+   --------------------------------------------------------------- */
+.pdp-page .pdp-slide{display:flex!important;gap:12px;overflow-x:auto;
+  scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  padding-bottom:4px;grid-template-columns:none!important}
+.pdp-page .pdp-slide::-webkit-scrollbar{display:none}
+.pdp-page .pdp-slide>*{scroll-snap-align:start;flex:0 0 86%;min-width:0}
+/* A12. 52% put exactly two cards in the window and 4% of a third, so the row
+   barely read as a slider and each card drew a 265px-tall photograph. 46%
+   shows two and a clear slice of the third — the row announces itself — and
+   takes about 35px off each of the two cross-sell rows. */
+.pdp-page .pdp-prow-s>*,.pdp-page .pdp-rv>*{flex:0 0 46%}
+@media(min-width:768px){
+  .pdp-page .pdp-slide>*{flex-basis:46%}
+  .pdp-page .pdp-prow-s>*,.pdp-page .pdp-rv>*{flex:0 0 30%}
+}
+@media(min-width:1024px){
+  .pdp-page .pdp-slide>*{flex-basis:32%}
+  .pdp-page .pdp-prow-s>*,.pdp-page .pdp-rv>*{flex:0 0 23%}
+  .pdp-page .pdp-rv{display:flex!important;overflow-x:auto}
+}
+.pdp-page .pdp-rowblk+.pdp-rowblk{margin-top:26px}
+
+/* ---------------------------------------------------------------
+   T3 — the fit-first template keeps its order on a desktop, but on a
+   phone the size row leads, so the compulsory rule holds here too.
+   --------------------------------------------------------------- */
+.pdp-page .pdp-t3{display:flex;flex-direction:column}
+.pdp-page .pdp-t3-top{order:1}
+.pdp-page .pdp-t3-sizes{order:2;margin-top:16px;border-top:1px solid var(--line2);padding-top:16px}
+.pdp-page .pdp-t3-rest{order:3}
+@media(max-width:1023px){
+  .pdp-page.pdp-tpl-T3 .pdp-b{display:flex;flex-direction:column}
+  .pdp-page.pdp-tpl-T3 .pdp-b>*{order:8}
+  .pdp-page.pdp-tpl-T3 .pdp-head{order:1}
+  .pdp-page.pdp-tpl-T3 .pdp-colsec{order:2}
+  .pdp-page.pdp-tpl-T3 .pdp-t3sec{order:3}
+  .pdp-page.pdp-tpl-T3 .pdp-stocksec{order:4}
+  .pdp-page.pdp-tpl-T3 .pdp-ctas{order:5}
+  .pdp-page.pdp-tpl-T3 .pdp-trust{order:6}
+  .pdp-page.pdp-tpl-T3 .pdp-nudgesec{order:7}
+  .pdp-page.pdp-tpl-T3 .pdp-wafab{order:9}
+  /* the card loses its frame on a phone — the page is the card */
+  .pdp-page.pdp-tpl-T3 .pdp-t3{border:0;background:none;padding:0}
+  .pdp-page .pdp-t3-sizes{order:0;margin-top:0;border-top:0;padding-top:0}
+  .pdp-page .pdp-t3-top{order:1;margin-top:14px;border-top:1px solid var(--line2);padding-top:14px}
+}
+
+/* ---------------------------------------------------------------
+   32 (T2). The editorial template sets its labels in small caps from a
+   stylesheet injected at runtime, which outranks everything above.
+   Colour and Size are a matched pair on every template.
+   --------------------------------------------------------------- */
+.pdp-page.pdp-tpl-T2 .pdp-lbl{font-size:16px;font-weight:750;letter-spacing:-.005em;
+  text-transform:none;color:var(--ink)}
+.pdp-page.pdp-tpl-T2 .pdp-lblv{font-weight:500;color:var(--text2);text-transform:none;letter-spacing:0}

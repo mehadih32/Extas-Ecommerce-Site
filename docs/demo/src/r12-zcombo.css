@@ -1,0 +1,146 @@
+/* ================= R16 · combo / set fix (r12-zcombo.css) =================
+   Everything here is prefixed zc- (new pieces) or zo- (the phone order of
+   the current set page). Loads after r12-pdp.css. */
+
+/* ---------- bag: honest set rows, notes, stock block ---------- */
+.zc-rsub2{font-size:12px;font-weight:600;color:var(--brand);margin:-3px 0 4px}
+.zc-note{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;line-height:1.4;color:var(--text2);background:var(--surface2);border:1px solid var(--line2);border-radius:8px;padding:7px 9px}
+.zc-note svg{flex-shrink:0;margin-top:2px;color:var(--brand)}
+.zc-note.bad{color:var(--sale);background:var(--surface);border-color:var(--sale);font-weight:600}
+.zc-note.bad svg{color:var(--sale)}
+.zc-stockbox{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;color:var(--sale);border:1px solid var(--sale);border-radius:var(--radius);padding:10px 12px;background:var(--surface)}
+.zc-stockbox svg{flex-shrink:0;margin-top:2px}
+.bg-setlink{color:var(--text2)}
+
+/* ---------- set page: shared ---------- */
+.zc-look{background:none;border:0;padding:0;margin:0;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.zc-lookimg{display:block;flex-shrink:0}
+.zc-lookname{display:block;margin-top:2px;color:var(--ink);text-align:left;position:relative}
+.zc-lookname::after{content:"";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:44px}
+.crumbs .zc-crumb{display:inline;font-size:inherit;font-weight:inherit;line-height:inherit;padding:0;margin:0;min-height:0;border:0;background:none;color:inherit;text-decoration:none;vertical-align:baseline;cursor:pointer}
+.crumbs .zc-crumb:hover{text-decoration:underline}
+.zc-offer{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;line-height:1.45;color:var(--text2);background:var(--brand-tint);border:1px solid var(--brand-line);border-radius:8px;padding:8px 10px}
+.zc-offer svg{flex-shrink:0;margin-top:2px;color:var(--brand)}
+.zc-edit{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;background:var(--warn-bg,#FFF6E5);border:1px solid var(--warn,#B7791F);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px}
+.zc-edit svg{flex-shrink:0;margin-top:2px}
+.cb-wrap .chip.zc-out,.cb-wrap .zc-out{opacity:.38;cursor:not-allowed;text-decoration:line-through;text-decoration-color:rgba(0,0,0,.35)}
+.cb-wrap .zc-lookcard.zc-out{text-decoration:none}
+@keyframes zcflash{0%{box-shadow:0 0 0 0 rgba(200,40,40,.55)}100%{box-shadow:0 0 0 12px rgba(200,40,40,0)}}
+.zc-flash{animation:zcflash .9s ease-out 2}
+.zc-trust{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--text2)}
+.zc-trust span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.zc-trust svg{color:var(--brand)}
+button.cb-finder{width:100%;font:inherit;cursor:pointer}
+
+/* ---------- sticky bar (21): one line, never taller than normal ---------- */
+.zc-mrow{display:flex;align-items:center;gap:8px;white-space:nowrap;margin-bottom:8px;min-width:0}
+.zc-mrow>*{flex-shrink:0}
+.zc-mprice{font-size:19px;line-height:1.1}
+.zc-mcol{margin-left:auto;flex-shrink:1!important;min-width:0;display:inline-flex;align-items:center;gap:6px;overflow:hidden}
+.zc-mcol .cb-dots .cb-dot{width:14px;height:14px}
+.zc-mnames{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+@media(max-width:419px){.zc-mnames{display:none}}
+
+/* ---------- finder sheet ---------- */
+.zc-frow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.zc-fval{display:inline-flex;align-items:center;gap:12px}
+.zc-fval b{min-width:76px;text-align:center;font-size:18px;font-family:var(--font-display)}
+.zc-fstep{width:44px;height:44px;border-radius:50%;border:1px solid var(--input);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.zc-frecs{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.zc-frec{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;align-items:baseline}
+.zc-frec+.zc-frec{border-top:1px solid var(--line2)}
+
+/* ---------- 'current' layout — phone order (finding 14) ----------
+   A: photo, title, price, PICKERS, finder, pairs
+   B: title, price, PICKERS, finder, photo, pairs
+   C: a shorter photo (16:10, no thumbnail rail), then as A  (default)   */
+@media(max-width:1023px){
+  .zc-cur .cb-main{display:flex;flex-direction:column;gap:20px}
+  .zc-cur .zc-info{display:contents}
+  .zc-cur .zo-gal{order:1}.zc-cur .zo-title{order:2}.zc-cur .zo-price{order:3}.zc-cur .zo-pick{order:4}.zc-cur .zo-finder{order:5}.zc-cur .zo-pairs{order:6}
+  .zc-cur .zo-sum{display:none}.zc-cur .zo-ctas{order:8}.zc-cur .zo-rules{order:9}.zc-cur .zo-wa{order:10}
+  .zc-cur .zc-reglist,.zc-cur .zc-auto{display:none}
+  .zc-cur .cb-pricebox{padding:12px 16px}
+  .zc-ord-B .zo-title{order:1}.zc-ord-B .zo-price{order:2}.zc-ord-B .zo-pick{order:3}.zc-ord-B .zo-finder{order:4}.zc-ord-B .zo-gal{order:5}
+  /* r12-bag.css caps the stage at 38vh on phones; C makes it shorter */
+  .cb-wrap.zc-ord-C .cb-stage .pimg{height:min(27vh,230px)!important;max-height:min(27vh,230px)!important}
+  .zc-ord-C .cb-rail{display:none}
+  /* the compact layouts: short photo, item tabs and rail off (the rows show each item) */
+  .cb-wrap.zc-L1 .cb-stage .pimg,.cb-wrap.zc-L3 .cb-stage .pimg{height:min(24vh,200px)!important;max-height:min(24vh,200px)!important}
+  .cb-wrap.zc-L2 .cb-stage .pimg{height:min(27vh,230px)!important;max-height:min(27vh,230px)!important}
+  .zc-L1 .cb-tabs,.zc-L1 .cb-rail,.zc-L2 .cb-rail,.zc-L2 .cb-tabs,.zc-L3 .cb-tabs,.zc-L3 .cb-rail{display:none}
+  .zc-L4 .zo-gal{display:none}
+  .zc-L1 .cb-main,.zc-L2 .cb-main,.zc-L3 .cb-main,.zc-L4 .cb-main{gap:12px}
+}
+.zc-h1{margin-top:4px;font-size:26px;line-height:1.15}
+.zc-pline{display:flex;align-items:baseline;gap:10px;white-space:nowrap;flex-wrap:wrap}
+.zc-pbig{font-size:30px;line-height:1}
+.zc-ptag{font-size:12.5px!important;padding:5px 9px}
+
+/* ---------- L1 · One screen ---------- */
+.zc-rows{display:flex;flex-direction:column;gap:8px}
+.zc-row{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--card-radius);padding:10px}
+.zc-row.err{border-color:var(--sale);box-shadow:0 0 0 1px var(--sale)}
+.zc-rthumb{width:48px;flex-shrink:0;display:block;border-radius:var(--radius);overflow:hidden}
+.zc-rthumb .pimg{border-radius:var(--radius)}
+.zc-rbody{flex:1;min-width:0}
+.zc-rhead{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cb-wrap .zc-rsw{margin-top:4px;gap:12px!important;flex-wrap:nowrap!important}
+.cb-wrap .zc-rsw .swatch{width:32px;height:32px}
+.cb-wrap .zc-rsz{margin-top:8px;gap:6px}
+.cb-wrap .zc-rsz .size-pill{min-width:0;min-height:40px;padding:6px 2px;font-size:14px}
+.zc-row .cb-warn{margin-top:8px}
+
+/* ---------- L2 · Fast steps ---------- */
+.zc-dots{list-style:none;margin:0;padding:0;display:flex;justify-content:space-between;gap:4px}
+.zc-dots li{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);font-weight:600;min-width:0;text-align:center}
+.zc-dot{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--input);background:var(--surface);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);padding:0}
+.zc-dot.ok{background:var(--brand-tint);border-color:var(--brand-line);color:var(--brand)}
+.zc-dot.on{border:2px solid var(--brand);color:var(--brand);background:var(--surface)}
+.zc-l2card{padding:16px;border:1.5px solid var(--brand)}
+
+/* ---------- L3 · Mix & match grid ---------- */
+.zc-g3{padding:14px}
+.zc-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+@media(min-width:1024px){.zc-tiles{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}}
+.zc-tile{position:relative;padding:0;border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);cursor:pointer;text-align:center;font:inherit;color:var(--ink);min-width:0}
+.zc-tile.on{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.zc-tile[disabled]{opacity:.35;cursor:not-allowed}
+.zc-tile .pimg{border-radius:0}
+.zc-tile .pimg-label{display:none}
+.zc-tname{display:block;font-size:10.5px;font-weight:600;padding:4px 2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zc-tbadge{position:absolute;top:4px;right:4px;min-width:22px;height:22px;border-radius:11px;background:var(--brand);color:var(--brand-ink);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.zc-gsize+.zc-gsize{margin-top:14px}
+.cb-wrap .zc-sizes .size-pill{min-width:0;min-height:44px;padding:6px 2px;font-size:15px}
+
+/* ---------- L4 · Ready looks first ---------- */
+.zc-looks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.zc-lookcard{position:relative;padding:0;border:1.5px solid var(--line);border-radius:var(--card-radius);overflow:hidden;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:var(--ink);min-width:0}
+.zc-lookcard.on{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand)}
+.zc-lookcard .pimg{border-radius:0}
+.zc-lookcard .pimg-label{display:none}
+.zc-lookname2{display:block;padding:8px 10px;font-size:12.5px;font-weight:600;line-height:1.3}
+.zc-lookok{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;justify-content:center}
+.zc-ownbtn{display:inline-flex;align-items:center;gap:6px;font-weight:600;min-height:44px}
+
+/* ---------- build-your-own set: picture taps stay on the page ---------- */
+.bs-look{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.bs-cname-t{font-weight:600;color:var(--ink)}
+
+/* ---------- bag: Move to wishlist / Saved for later ---------- */
+.zc-wishbtn{display:inline-flex;align-items:center;gap:5px}
+.zc-savedbox{padding:16px}
+.bg-empty+.zc-savedbox{max-width:620px;margin:0 auto 16px}
+.zc-savedbox .h3{display:inline-flex;align-items:center;gap:6px}
+.zc-savedlist{margin-top:6px}
+.zc-saved{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line2)}
+.zc-saved:last-child{border-bottom:0}
+.zc-savedimg{width:56px;flex-shrink:0}
+.zc-savedimg .pimg{border-radius:var(--radius)}
+.zc-savedimg .pimg-label{display:none}
+.zc-savednm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zc-l2thumb{width:44px}
+.zc-l2thumb .pimg{border-radius:var(--radius)}
+.zc-l2name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zc-l2card{padding:12px 14px}
+@media(max-width:1023px){.cb-wrap.zc-L2 .cb-stage .pimg{height:min(24vh,200px)!important;max-height:min(24vh,200px)!important}}

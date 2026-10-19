@@ -1,0 +1,12 @@
+const L = require('./lib');
+(async () => { const D = L.dev(process.argv[2]); const T = await L.open(D); await L.prep(T, '#/journal'); await L.wait(T, 600);
+  await L.go(T, '#/journal/topic/care', 600);
+  const target = +process.argv[3];
+  await L.ev(T, y => scrollTo(0, y), target); await L.wait(T, 400);
+  console.log('cat', await L.ev(T, () => ({y: scrollY, docH: document.documentElement.scrollHeight})));
+  await L.ev(T, () => { location.hash = '#/journal/how-to-keep-a-polo-shirt-in-shape'; }); await L.wait(T, 800);
+  await L.ev(T, () => scrollTo(0, 5000)); await L.wait(T, 400);
+  await L.ev(T, () => { location.hash = '#/journal/how-to-wash-denim'; }); await L.wait(T, 800);
+  await T.p.goBack(); await L.wait(T, 900); console.log('b1', await L.ev(T, () => ({y: scrollY, h: location.hash})));
+  await T.p.goBack(); await L.wait(T, 900); console.log('b2', await L.ev(T, () => ({y: scrollY, h: location.hash, docH: document.documentElement.scrollHeight, trail: typeof NAV_TRAIL!=='undefined' ? JSON.stringify(NAV_TRAIL).slice(0,400) : ''})));
+  await L.close(T); })();

@@ -1,0 +1,176 @@
+/* ================= round 11 — footer, category page, floating WhatsApp ================= */
+
+/* ---------- 9/10/11/13. Footer colour scheme ----------
+   Four working tones mixed from the theme tokens (never a raw brand colour on
+   its own) so the whole thing re-colours with the festive / ivory / noir
+   themes instead of staying a black slab. */
+.ftr{
+  --f1:color-mix(in srgb, var(--footer) 70%, var(--footer-ink) 30%);  /* promise strip  */
+  --f2:var(--brand-dark);                                             /* brand block    */
+  --f2-ink:var(--brand-ink);
+  --f3:var(--footer);                                                 /* link columns   */
+  --f4:color-mix(in srgb, var(--footer) 80%, var(--gold) 20%);        /* contact block  */
+  --f5:color-mix(in srgb, var(--footer) 92%, #000 8%);                /* legal line     */
+  --f-hair:color-mix(in srgb, var(--footer-ink) 16%, transparent);
+  --f-soft:color-mix(in srgb, var(--footer-ink) 62%, transparent);
+  margin-top:48px;
+}
+.ftr-s{width:100%}
+.ftr-s1{background:var(--f1);color:#fff}
+.ftr-s2{background:var(--f2);color:var(--f2-ink)}
+.ftr-s3{background:var(--f3);color:var(--footer-ink);border-top:1px solid var(--f-hair);border-bottom:1px solid var(--f-hair)}
+.ftr-s4{background:var(--f4);color:var(--footer-ink)}
+.ftr-s5{background:var(--f5);color:var(--footer-ink)}
+
+/* promise strip */
+.ftr-s1 .ftr-promise{border-bottom:0}
+.ftr-s1 .ftr-promise>div{color:#fff}
+.ftr-s1 .ftr-promise>div+div{border-left:1px solid rgba(255,255,255,.18)}
+.ftr-s1 .ftr-promise svg{color:rgba(255,255,255,.82)}
+
+/* brand block */
+.ftr-s2 .ftr-brand{padding:22px 0 20px;border-bottom:0}
+.ftr-s2 .logo{color:var(--f2-ink)!important;font-size:22px}
+.ftr-brand-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+.ftr-brand-sub{color:color-mix(in srgb, var(--f2-ink) 80%, transparent)}
+.ftr-brand-note{color:color-mix(in srgb, var(--f2-ink) 74%, transparent)}
+.ftr-s2 .label{color:var(--f2-ink)}
+.ftr-s2 .ftr-join .input{background:color-mix(in srgb, var(--f2) 72%, #000 28%);
+  border-color:color-mix(in srgb, var(--f2-ink) 26%, transparent);color:var(--f2-ink)}
+.ftr-s2 .ftr-join .input::placeholder{color:color-mix(in srgb, var(--f2-ink) 66%, transparent)}
+.ftr-s2 .ftr-join .btn{background:var(--f2-ink);color:var(--f2)!important;border-color:var(--f2-ink);min-height:46px;font-weight:700}
+@media(min-width:1024px){
+  .ftr-s2 .ftr-brand{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:48px;align-items:center;padding:30px 0}
+  .ftr-brand-top{flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:0}
+}
+
+/* link columns */
+.ftr-s3 .ftr-cols{border-bottom:0;padding:18px 0}
+.ftr-s3 .ftr-cols>div{gap:8px}
+.ftr-s3 .ftr-cols>div+div{border-left:1px solid var(--f-hair)}
+.ftr-s3 .ftr-h{color:var(--f-soft)}
+.ftr-s3 .ftr-ic{background:color-mix(in srgb, var(--footer-ink) 9%, transparent)}
+
+/* contact block */
+.ftr-s4 .ftr-contact{padding:18px 0;border-bottom:0}
+.ftr-s4 .btn{border:1px solid color-mix(in srgb, var(--footer-ink) 28%, transparent);color:#fff!important;background:transparent}
+.ftr-s4 .btn+.btn{margin-top:8px}
+.ftr-s4 .btn svg{color:#B9D3CA}
+.ftr-hours{color:var(--f-soft);margin-top:8px}
+.ftr-s4 .ftr-soc{margin-top:16px}
+.ftr-s4 .ftr-soc a{border-color:color-mix(in srgb, var(--footer-ink) 24%, transparent)}
+@media(min-width:1024px){
+  .ftr-s4 .ftr-contact{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center;padding:22px 0}
+  .ftr-s4 .ftr-soc,.ftr-s4 .ftr-pay{margin-top:0}
+}
+
+/* 14. payment marks — one white tile each, five even columns, no gap at the
+   right edge. The marks are drawn inline; nothing is fetched. */
+.ftr-pay{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%;margin-top:12px}
+.ftr-pay-t{background:#fff;border-radius:8px;height:34px;display:flex;align-items:center;justify-content:center;
+  padding:4px 5px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.ftr-pay-t svg{width:100%;height:100%;display:block}
+@media(max-width:380px){.ftr-pay{gap:4px}.ftr-pay-t{height:30px;padding:3px}}
+
+/* legal line */
+.ftr-legalbar{padding-top:14px;padding-bottom:24px;font-size:11.5px;line-height:1.7;color:var(--f-soft)}
+.ftr-s5 .ftr-legal{color:color-mix(in srgb, var(--footer-ink) 88%, transparent)}
+.ftr-s5 .langpill{background:transparent;color:var(--footer-ink);border-color:var(--f-hair)}
+
+/* ---------- C3. floating WhatsApp button ----------
+   It used to be pinned to the MIDDLE of the right edge (right:12px; top:50%),
+   a 50x50 disc at x 378-428 / y 453-503 — inside a content column that ends
+   at x 424. elementFromPoint under it returned a product-card link on home,
+   the whole "View all" link, the combo cm/in toggle, the bag's colour chips
+   and the account wallet line. It also drifted 15px on every scroll and
+   sprang back, so what it covered kept changing.
+   It now sits low-right, in the strip between the bottom nav and the right
+   margin, where nothing tappable lives; the drift is gone (see 03-layout.js)
+   and the home page does not show it at all. */
+.wa-fab{position:fixed;right:12px;bottom:74px;top:auto;transform:none;z-index:44;
+  width:50px;height:50px;border-radius:50%;background:#25D366;color:#fff!important;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 26px rgba(0,0,0,.24),0 2px 6px rgba(0,0,0,.16);
+  border:2px solid rgba(255,255,255,.9);text-decoration:none!important}
+.wa-fab:hover{background:#1FBD5B}
+.wa-fab svg{width:27px;height:27px}
+/* no bottom nav on a desktop, so it drops to the corner */
+@media(min-width:1024px){.wa-fab{width:56px;height:56px;right:20px;bottom:20px}.wa-fab svg{width:30px;height:30px}}
+@media(prefers-reduced-motion:reduce){.wa-fab{transform:none!important}}
+
+/* ---------- 18. category filter row: three equal boxes ---------- */
+.cat-ptools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:stretch}
+.cat-ptools>*{min-width:0;width:100%}
+.cat-ptools .btn,.cat-ptools select{min-height:46px;height:46px}
+/* Filter reads louder than the sort control beside it */
+.cat-ptools .cat-fbtn{font-size:15px;font-weight:700;gap:7px;padding:0 8px}
+.cat-ptools .cat-fbtn svg{width:19px;height:19px;flex-shrink:0}
+.cat-ptools .cat-sort{font-size:12.5px;font-weight:600;padding:0 24px 0 8px;width:100%;
+  -webkit-appearance:none;appearance:none;text-overflow:ellipsis;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236E675E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 7px center}
+.cat-ptools .cat-salebtn{font-size:13.5px;font-weight:700;gap:6px;padding:0 6px;white-space:nowrap}
+.cat-ptools .cat-salebtn svg{width:17px;height:17px;flex-shrink:0}
+.cat-ptools .cat-salebtn.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)!important}
+.cat-ptools .cat-salebtn[disabled]{opacity:.45}
+.cat-ptools .cat-count{margin-left:2px}
+
+/* ---------- 20. bundle card: the icon sits inline, no dead strip ---------- */
+.cat-banner{display:block;padding:16px 16px 18px}
+.cat-bn-top{display:flex;align-items:center;gap:12px}
+.cat-banner .cat-banner-ico{width:42px;height:42px;margin:0}
+.cat-bn-txt{min-width:0;flex:1}
+.cat-banner .cat-banner-t{font-size:18px;margin-top:2px}
+.cat-bn-sub{font-size:12.5px;line-height:1.45;opacity:.85;margin-top:8px}
+.cat-banner .btn{margin-top:12px;display:flex;width:100%;justify-content:center}
+@media(min-width:1024px){
+  .cat-banner{padding:22px 26px}
+  .cat-bn-row{display:flex;align-items:center;gap:24px}
+  .cat-bn-row .cat-bn-main{flex:1;min-width:0}
+  .cat-banner .cat-banner-ico{width:48px;height:48px}
+  .cat-banner .cat-banner-t{font-size:22px}
+  .cat-banner .btn{margin-top:0;flex-shrink:0;width:auto}
+}
+
+/* ---------- 21. bundle picks — sliding rows ---------- */
+.cat-bn-picks{margin-top:14px;border-top:1px solid color-mix(in srgb, var(--brand-ink) 22%, transparent);padding-top:12px}
+.cat-bn-pickh{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  color:var(--brand-ink);opacity:.72;margin-bottom:8px}
+.cat-sl{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;margin:0 -16px;padding:0 16px}
+.cat-sl::-webkit-scrollbar{display:none}
+.cat-sl+.cat-sl{margin-top:10px}
+.cat-sl-track{display:flex;gap:8px;width:max-content}
+.cat-pick{flex:0 0 108px;width:108px;scroll-snap-align:start;color:var(--brand-ink)!important;
+  text-decoration:none!important;display:block}
+.cat-pick .pimg{border-radius:6px;overflow:hidden}
+.cat-pick .cat-pick-n{font-size:11.5px;line-height:1.3;margin-top:5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cat-pick .cat-pick-p{font-size:11.5px;font-weight:700;opacity:.8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-sl-dots{display:flex;gap:4px;justify-content:center;margin-top:8px}
+.cat-sl-dots i{width:5px;height:5px;border-radius:50%;background:color-mix(in srgb, var(--brand-ink) 35%, transparent)}
+.cat-sl-dots i.on{background:var(--brand-ink);width:14px;border-radius:3px}
+@media(min-width:1024px){
+  .cat-sl{margin:0;padding:0}
+  .cat-pick{flex:0 0 124px;width:124px}
+}
+
+/* ---------- 22. Find my size catches the eye ---------- */
+.cat-fms{display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;
+  line-height:1.3;padding:8px 0 2px;text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:2px;color:var(--brand)}
+:root[data-theme="festive"] .cat-fms{color:var(--gold)}
+.cat-fms svg{flex-shrink:0}
+
+/* the sliding rows bleed to the card edge, so the card must clip them */
+.cat-banner{overflow:hidden}
+
+/* The Shop column lists every category now, so the three columns are no longer
+   the same length. Tightening the rows roughly halves the footer block and
+   makes the difference read as a list, not as a hole. */
+@media(max-width:767px){
+  .ftr-cols a{min-height:30px;gap:8px;font-size:12.5px;line-height:1.25}
+  .ftr-cols>div{gap:4px!important}
+  .ftr-ic{width:21px;height:21px}
+  .ftr-h{margin-bottom:5px}
+}

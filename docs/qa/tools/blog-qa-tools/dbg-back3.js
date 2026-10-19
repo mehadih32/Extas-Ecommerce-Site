@@ -1,0 +1,10 @@
+const L = require('./lib');
+(async () => { const D = L.dev(process.argv[2]); const T = await L.open(D, {init: () => { window.__S = []; addEventListener('scroll', () => __S.push([Math.round(performance.now()), Math.round(scrollY), location.hash.slice(-12)]), {passive: true}); }}); await L.prep(T, '#/journal'); await L.wait(T, 600);
+  await L.tap(T, '.bf-cats a.bf-chip[href="#/journal/topic/care"]'); await L.wait(T, 600);
+  await L.ev(T, () => scrollTo(0, Math.round(innerHeight * 0.9))); await L.wait(T, 400);
+  const idx = await L.ev(T, () => { const a = [...document.querySelectorAll('.bf-grid .bf-card a, .bf-pin a')]; return a.findIndex(e => { const r = e.getBoundingClientRect(); return r.top > 80 && r.top < innerHeight - 120 && r.width > 40; }); });
+  console.log('cat y', await L.ev(T, () => scrollY), 'idx', idx, await L.ev(T, i => { const e = [...document.querySelectorAll('.bf-grid .bf-card a, .bf-pin a')][i]; const r = e.getBoundingClientRect(); return [e.getAttribute('href'), Math.round(r.top), Math.round(r.bottom)]; }, idx));
+  const t0 = await L.ev(T, () => performance.now());
+  await T.p.locator('.bf-grid .bf-card a, .bf-pin a').nth(idx).tap(); await L.wait(T, 800);
+  console.log('scrolls around tap', JSON.stringify(await L.ev(T, t => __S.filter(x => x[0] >= t - 50).slice(0, 12), t0)));
+  await L.close(T); })();

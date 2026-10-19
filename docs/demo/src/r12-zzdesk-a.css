@@ -1,0 +1,324 @@
+/* =====================================================================
+   r12-zzdesk-a.css — DESKTOP BATCH A (Shilpi A360-05 + Sawdagor A360-04)
+   review/DESKTOP-REVIEW.md D-001 … D-026. Loads last (r12-z… sorts after
+   every other sheet), so it wins without !important wars.
+   Every rule below is inside @media (min-width:1024px) and/or
+   (hover:hover) and (pointer:fine) — the phone is not touched — with ONE
+   exception, block 0: D-024 moved the wishlist heart out of the card link,
+   and block 0 re-states its two old rules (styles.css 149 + 321) for the
+   new place so the phone heart lands on the very same pixels.
+   ===================================================================== */
+
+/* ---- 0. D-024 · the card box and its link layer (no paint: phone pixels identical) ---- */
+/* the wrapper is NOT positioned on a phone (a positioned box in the product
+   rows' scrollers changed how Chrome rastered them, ±1 colour value); the
+   card itself carries the link layer */
+.pcard-w{display:flex;flex-direction:column;min-width:0}
+.pcard-w>.pcard{flex:1 1 auto;position:relative}
+.pcard-lnk{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:var(--card-radius)}
+@media(min-width:1024px){ .pcard-w{position:relative} }
+.pcard>.pimg{pointer-events:none}
+.pcard>.pimg .heart{pointer-events:auto}
+
+/* ---- 1. D-003 / D-018 · foundation: one visible keyboard focus ring (desktop: 1024 px and wider) ---- */
+@media (min-width:1024px){
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .hm-hero :focus-visible,.hm-band :focus-visible,.ftr :focus-visible,.announce :focus-visible,.cat-banner :focus-visible{outline-color:#fff}
+  .hm-hrow :focus-visible,.hm-sltrack :focus-visible,.cat-sl :focus-visible,.hm-hscroll :focus-visible{outline-offset:-3px}
+  /* a window or the page itself given focus by code never wears a ring */
+  .modal:focus,.modal:focus-visible,.zm:focus-visible,main:focus,main:focus-visible,[tabindex="-1"]:focus:not(:focus-visible){outline:none}
+}
+
+/* ---- 2. D-010 · wide screens: content up to 1440 px, centred ---- */
+@media(min-width:1024px){ :root{--cmax:1240px} }
+@media(min-width:1536px){
+  :root{--cmax:1504px}
+  .container{max-width:1504px}
+}
+
+/* ---- 3. D-001 / D-002 · desktop nav + mega menu ---- */
+@media(min-width:1024px){
+  .hdr .nav-d{align-self:stretch;min-width:0;gap:clamp(12px, 1.25vw, 24px)}
+  .hdr .nav-d .nav-i{font-size:14px}
+  @media(max-width:1439px){ .hdr .nav-d .nav-i{font-size:13.5px} }
+  .nav-d .nav-i{position:relative;display:inline-flex;align-items:center;gap:2px;height:100%;padding:0;border-bottom-width:0;white-space:nowrap;color:var(--ink)}
+  .nav-d .nav-i::after{content:"";position:absolute;left:0;right:0;bottom:calc(50% - 15px);height:2px;border-radius:2px;background:var(--brand);
+    transform:scaleX(0);transform-origin:left center;transition:transform .16s ease}
+  .nav-d .nav-i.on::after,.nav-d .nav-i.mega-on::after{transform:scaleX(1)}
+  .nav-d .nav-i.on{font-weight:600}
+  .nav-chev{flex-shrink:0;width:9px;height:9px;opacity:.5;transition:transform .16s ease}
+  .nav-i.mega-on .nav-chev{transform:rotate(180deg);opacity:.9}
+  .nav-d .nav-i.nav-folded,.nav-d .nav-i[hidden]{display:none}
+
+  .mega{position:absolute;left:0;right:0;top:100%;display:none;z-index:44;background:var(--surface);
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);box-shadow:0 26px 44px -18px rgba(0,0,0,.22)}
+  .mega.on{display:block;animation:megaIn .16s ease-out}
+  .mega-in{display:grid;grid-template-columns:minmax(0,1fr) 288px;gap:48px;padding-top:28px;padding-bottom:30px;align-items:start}
+  .mega-in.mega-more{grid-template-columns:minmax(0,1fr)}
+  .mega-cols{display:grid;grid-template-columns:repeat(3,minmax(0,236px));gap:36px}
+  .mega-cols.n2{grid-template-columns:repeat(2,minmax(0,260px))}
+  .mega-h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px}
+  .mega-a{display:flex;align-items:baseline;justify-content:space-between;gap:14px;min-height:34px;padding:6px 0;color:var(--ink)!important;font-size:14.5px;line-height:1.3}
+  .mega-a>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mega-n{color:var(--muted);font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .mega-all{font-weight:600}
+  .mega-sub2{padding-left:16px;font-size:13.5px;color:var(--text2)!important}
+  .mega-feat .cat-dtile,.mega-feat .pcard-w{width:100%}
+  .mega-feat .pimg{aspect-ratio:4/3}
+  .mega-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:18px}
+  .mega-tile{display:flex;flex-direction:column;gap:4px;color:var(--ink)!important}
+  .mega-tile .pimg{margin-bottom:6px}
+  .mega-tile-n{font-weight:600;font-size:14.5px}
+}
+@keyframes megaIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){ .mega.on{animation:none} }
+@media (hover:hover) and (pointer:fine) and (min-width:1024px){
+  .nav-d .nav-i:hover{color:var(--brand)}
+  .nav-d .nav-i:hover::after{transform:scaleX(1)}
+  .mega-a:hover>span:first-child{text-decoration:underline;text-underline-offset:3px}
+  .mega-cat:hover .mega-tile-n{text-decoration:underline;text-underline-offset:3px}
+}
+
+/* ---- 4. D-021 · header icon labels on hover (same look as the WhatsApp tip) ---- */
+@media (hover:hover) and (pointer:fine) and (min-width:1024px){
+  .hdr [data-tip]{position:relative}
+  .hdr [data-tip]::before{content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 6px);transform:translate(-50%,-4px);
+    background:var(--ink);color:var(--surface);font-size:12px;font-weight:600;line-height:1;white-space:nowrap;padding:8px 10px;border-radius:8px;
+    opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease, transform .15s ease, visibility 0s .15s;z-index:46;box-shadow:0 6px 16px rgba(0,0,0,.16)}
+  .hdr [data-tip]:hover::before{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .15s ease .25s, transform .15s ease .25s, visibility 0s .25s}
+  .hdr .hdr-r>[data-tip]:last-child::before{left:auto;right:0;transform:translate(0,-4px)}
+  .hdr .hdr-r>[data-tip]:last-child:hover::before{transform:translate(0,0)}
+}
+
+/* ---- 5. D-022 · header motion: three rounds, then still until hover ---- */
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){
+  .hdr .hdr-wa-disc,.hdr .hdr-bag.has .count-dot,.hdr .hdr-bag.has svg,.hdr .logo{animation-iteration-count:3}
+}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference) and (hover:hover) and (pointer:fine){
+  .hdr .hdr-wa:hover .hdr-wa-disc,.hdr .hdr-bag.has:hover .count-dot,.hdr .hdr-bag.has:hover svg,.hdr .logo:hover{animation-iteration-count:infinite}
+}
+
+/* ---- 6. D-014 · search panel under the header ---- */
+@media(min-width:1024px){
+  .dsk-srch{position:absolute;left:0;right:0;top:100%;z-index:45;background:var(--surface);border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);box-shadow:0 26px 44px -18px rgba(0,0,0,.22);padding:22px 0 26px;animation:megaIn .16s ease-out}
+  .dsk-s-form{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:12px}
+  .dsk-s-form>svg{color:var(--muted)}
+  .dsk-s-in{border:0;border-bottom:2px solid var(--ink);background:transparent;font:inherit;font-size:22px;font-weight:500;color:var(--ink);padding:8px 2px;min-width:0;outline:none;border-radius:0}
+  .dsk-s-in:focus-visible{outline:none;border-bottom-color:var(--brand)}
+  .dsk-s-body{grid-column:1 / -1;margin-top:22px}
+  .dsk-s-h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
+  .dsk-s-n{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;background:var(--surface2);color:var(--ink);letter-spacing:0}
+  .dsk-s-cols{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  .dsk-s-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .dsk-s-res{display:grid;grid-template-columns:minmax(0,1fr);gap:36px}
+  .dsk-s-res.two{grid-template-columns:minmax(0,1fr) 340px}
+  .dsk-sgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .dsk-sp{display:flex;flex-direction:column;gap:4px;color:var(--ink)!important}
+  .dsk-sp .pimg{margin-bottom:6px}
+  .dsk-spn{font-size:14px;font-weight:500;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dsk-spp{font-size:14px}
+  .dsk-s-help .hs-list{border:1px solid var(--line);border-radius:var(--card-radius);overflow:hidden}
+  .dsk-s-all{margin-top:18px;width:auto;display:inline-flex}
+  .dsk-s-none{display:flex;gap:10px;align-items:center;color:var(--text2);font-size:15px}
+}
+
+/* ---- 7. D-005 / D-006 / D-004 · home hero ---- */
+@media(min-width:1024px){
+  .hm-hero .hm-hero-in{max-width:none;margin:0;padding-right:0;padding-left:max(32px, calc((100% - var(--cmax)) / 2 + 32px));
+    grid-template-columns:minmax(0, clamp(380px, 31vw, 470px)) minmax(0,1fr);gap:40px}
+  .hm-hero .hm-hero-txt{padding-right:0}
+  .hm-hero-txt::after{width:40px}
+  /* owner 18:38 · the slides dissolve into the panel instead of sliding under a
+     wall: a fade from the panel's own colour (--hero) to clear, on the slider's
+     left edge. Variants (data-fade on .hm-hero, set by 97-desk-a.js /
+     ?herofade=80|140, ?herowash=1): 140 px (chosen), 80 px, 140 px + a soft
+     wash on the panel's right edge. */
+  .hm-hero{--hero-fade:140px;--hero-edge:var(--hero)}
+  .hm-hero[data-fade="80"]{--hero-fade:80px}
+  .hm-hero[data-wash="1"]{--hero-edge:color-mix(in srgb, var(--hero) 90%, var(--hero-ink) 10%)}
+  .hm-hero[data-wash="1"] .hm-hero-txt{background:linear-gradient(90deg, var(--hero) 72%, var(--hero-edge))}
+  .hm-hero[data-wash="1"] .hm-hero-txt::after{background:var(--hero-edge)}
+  .hm-hero .hm-slider::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--hero-fade);z-index:2;pointer-events:none;
+    background:linear-gradient(90deg, var(--hero-edge) 0%, color-mix(in srgb, var(--hero-edge) 55%, transparent) 45%, transparent 100%)}
+  .hm-slider .hm-sl{flex:0 0 clamp(220px, 17vw, 280px)}
+  /* the pin: name on line one, price row on line two — the sale price never drops out */
+  .hm-slider .hm-sl .hm-pin{display:inline-grid;grid-template-columns:auto auto;justify-content:start;align-items:baseline;column-gap:6px;row-gap:3px;
+    height:auto;padding:8px 12px 9px;border-radius:12px;font-size:12.5px;line-height:1.2;left:12px;bottom:12px;max-width:calc(100% - 24px)}
+  .hm-slider .hm-sl .hm-pin .hm-pin-n{grid-column:1 / -1;overflow:hidden;text-overflow:clip}
+  .hm-slider .hm-sl .hm-pin .hm-pin-bar{display:none}
+  .hm-slider .hm-sl .hm-pin .hm-pin-p{font-size:1.04em}
+  .hm-slider .hm-sl .hm-pin .hm-pin-o{display:inline;font-size:.9em;margin-left:0}
+}
+/* Q-014: the arrows stay in the Tab order on a desktop (faded until the mouse
+   or the keyboard is in the slider) instead of display:none */
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .hm-slnav{display:flex;opacity:0;transition:opacity .15s ease}
+  .hm-slider:hover .hm-slnav{opacity:1}
+}
+@media (min-width:1024px){
+  /* TA-2 (T5): keyboard focus only — a mouse click on an arrow focuses it, and
+     :focus-within kept the arrows on screen after the mouse had left */
+  .hm-slider:has(:focus-visible) .hm-slnav{display:flex;opacity:1}
+}
+
+/* ---- 8. D-007 / D-008 / D-009 / D-023 · the home bands ---- */
+@media(min-width:1024px){
+  .hm-hscroll.c4>.hm-dhide{display:none}
+  .hm-band-more{display:flex;justify-content:flex-end;margin-top:26px}
+  .hm-band .hm-band-more .hm-more{color:var(--brand-ink)!important;border-color:var(--brand-ink)}
+  /* owner 18:38 · reviews: one row, 3 cards in view, gliding (SMOOTH: pause on hover, snap after a drag) */
+  #hm-revtrack.hm-hscroll{display:flex;flex-wrap:nowrap;gap:20px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;cursor:grab;scroll-snap-type:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 40px,#000 calc(100% - 40px),transparent)}
+  #hm-revtrack.hm-hscroll::-webkit-scrollbar{display:none}
+  #hm-revtrack.hm-hscroll>*{flex:0 0 calc((100% - 40px) / 3);min-width:0}
+  .hm-revs-more{display:flex;justify-content:center;margin-top:24px}
+  /* glide rows fade at both edges instead of cutting a card mid-letter */
+  .hm-hrow,.cat-sl{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 40px,#000 calc(100% - 40px),transparent);
+    mask-image:linear-gradient(90deg,transparent 0,#000 40px,#000 calc(100% - 40px),transparent)}
+  /* the journal row (a few posts) is a still 4-up grid on a desktop */
+  .hm-hrow.hm-jrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;overflow:visible;-webkit-mask-image:none;mask-image:none;cursor:auto}
+  .hm-hrow.hm-jrow>*{flex:none}
+  .hm-hrow.hm-jrow>:nth-child(n+5){display:none}
+  .hm-jrow .hm-art-t{font-size:19px}
+}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .hm-cat .pimg svg{transition:transform .2s ease}
+  .hm-cat:hover .pimg svg{transform:scale(1.04)}
+  .hm-cat:hover .hm-cat-name{text-decoration:underline;text-underline-offset:3px}
+}
+
+/* ---- 9. D-011 / D-012 / D-026 / D-016 · category and search ---- */
+@media(min-width:1024px){
+  .cat-side.cat-dt{position:sticky;top:88px;align-self:start;max-height:calc(100vh - 104px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  .cat-layout.cat-few{grid-template-columns:minmax(0,1fr)}
+  .cat-dtile{display:flex;flex-direction:column;background:var(--surface);border-radius:var(--card-radius);overflow:hidden;color:var(--ink)!important;min-width:0}
+  .cat-dtile .pimg{border-radius:0}
+  .cat-dtile-i{padding:12px 14px 16px;display:flex;flex-direction:column;gap:3px}
+  .cat-dtile-t{font-weight:600;font-size:14.5px;line-height:1.3}
+  .srch-layout{margin-top:8px}
+}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .cat-dtile{transition:transform .15s}
+  .cat-dtile:hover{transform:translateY(-2px)}
+  .cat-dtile:hover .cat-dtile-t{text-decoration:underline;text-underline-offset:3px}
+}
+
+/* ---- 10. D-013 · product cards: back view + quick add (mouse only) ---- */
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .pcard-w{transition:transform .15s}
+  .pcard-w:hover{transform:translateY(-2px)}
+  .pcard-w .pcard:hover{transform:none}
+  .pcard-alt{position:absolute;inset:0;opacity:0;transition:opacity .2s ease;pointer-events:none}
+  .pcard-alt>.pimg{position:absolute;inset:0;border-radius:0}
+  .pcard-w:hover .pcard-alt{opacity:1}
+  .pcard-qa{position:absolute;left:8px;right:8px;top:calc(var(--qa-bottom, 60%) - 50px);height:42px;z-index:2;display:flex;align-items:center;gap:8px;
+    padding:0 6px 0 12px;border-radius:10px;background:color-mix(in srgb, var(--surface) 94%, transparent);box-shadow:0 6px 18px rgba(0,0,0,.14);
+    opacity:0;transform:translateY(6px);transition:opacity .16s ease, transform .16s ease;pointer-events:none}
+  .pcard-w:hover .pcard-qa{opacity:1;transform:none;pointer-events:auto}
+  /* TA-2 (T6): keyboard focus only — a mouse click on a size left focus on the
+     button and :focus-within kept the panel open after the mouse had left */
+  .pcard-w:has(:focus-visible) .pcard-qa{opacity:1;transform:none;pointer-events:auto}
+  .pcard-qa-l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .pcard-qa-s{display:flex;gap:4px;margin-left:auto;min-width:0;overflow:hidden}
+  .pcard-qa-s button{min-width:32px;height:30px;padding:0 6px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer}
+  .pcard-qa-s button:hover{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+  .pcard-qa.qa-tight{padding:0 6px;gap:4px}
+  .pcard-qa.qa-tight .pcard-qa-l{display:none}
+  .pcard-qa.qa-tight .pcard-qa-s{margin-left:0;flex:1;justify-content:space-between}
+  .pcard-qa.qa-tight .pcard-qa-s button{min-width:28px;padding:0 4px}
+  .pcard-qa-more{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:30px;padding:0 6px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--ink)!important;background:var(--surface2)}
+  .toast .toast-link{color:inherit;text-decoration:underline;font-weight:700;pointer-events:auto}
+}
+
+/* ---- 11. D-017 · help centre ---- */
+@media(min-width:1024px){
+  .pg-d{display:grid;grid-template-columns:220px minmax(0,1fr) 288px;gap:44px;max-width:var(--cmax);margin:0 auto;padding:0 32px;align-items:start;box-sizing:border-box}
+  .pg-d .pg{max-width:none;margin:0;padding:34px 0 16px}
+  .pg-rail{position:sticky;top:96px;padding-top:36px;display:flex;flex-direction:column;gap:2px}
+  .pg-rail-h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:0 12px 8px}
+  .pg-rail-a{display:flex;align-items:center;gap:10px;min-height:42px;padding:8px 12px;border-radius:10px;color:var(--text2)!important;font-weight:500;font-size:14.5px}
+  .pg-rail-a svg{flex-shrink:0;opacity:.8}
+  .pg-rail-a.on{background:var(--brand-tint);color:var(--brand)!important;font-weight:600}
+  .pg-crumbs{margin-bottom:14px}
+  .pg-aside{position:sticky;top:96px;padding-top:88px}
+  .pg-stuck{padding:20px}
+  .pg-stuck .wa-btn{width:100%;justify-content:center;margin-top:12px}
+  .pg-d .pg-hand{display:none}
+}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){ .pg-rail-a:not(.on):hover{background:var(--surface2);color:var(--ink)!important} }
+
+/* ---- 12. D-018 · size guide page ---- */
+@media(min-width:1024px){
+  .sg-d .sg-d-grid{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:32px;align-items:start;margin-top:28px}
+  .sg-d-left{position:sticky;top:96px}
+  .sg-d-finder{padding:22px}
+  .sg-d-finder .h3{display:flex;align-items:center;gap:8px}
+  .sg-d-tables{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .sg-d-tbl{padding:18px}
+  .sg-d-tbl h2{display:flex;align-items:center;gap:8px;margin:0}
+  .sg-d-scroll{overflow-x:auto;margin-top:10px}
+  .sg-d-tbl table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+  .sg-d-tbl th,.sg-d-tbl td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--line2)}
+  .sg-d-tbl thead th{font-size:12px;letter-spacing:.02em;line-height:1.25;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .sg-d-tbl tbody th{font-weight:700;text-align:left}
+}
+
+/* ---- 13. D-019 · 404 ---- */
+@media(min-width:1024px){
+  .nf-d{margin-top:36px;color:var(--ink)}
+  .nf-search{display:flex;gap:10px;max-width:560px;margin:0 auto}
+  .nf-search .input{flex:1}
+  .nf-cats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 44px}
+  .nf-d .sec-hd,.nf-d .grid{text-align:left}
+  .nf-wa{margin-top:28px;display:flex;align-items:center;justify-content:center;gap:12px}
+}
+
+/* ---- 14. D-020 · the desktop footer ---- */
+@media(min-width:1024px){
+  .ftr.ftr-hasd .ftr-s2,.ftr.ftr-hasd .ftr-s3,.ftr.ftr-hasd .ftr-s4{display:none}
+  .ftr-d{background:var(--f3, var(--footer));color:var(--footer-ink);padding:40px 0 34px;border-bottom:1px solid var(--f-hair, rgba(255,255,255,.12))}
+  .ftr-d-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:24px;margin-bottom:28px;border-bottom:1px solid var(--f-hair, rgba(255,255,255,.12))}
+  .ftr-d .logo{color:var(--footer-ink)!important;font-size:26px}
+  .ftr-d .ftr-brand-sub{color:var(--f-soft, rgba(255,255,255,.62));margin-top:4px}
+  .ftr-d-soc{display:flex;gap:8px}
+  .ftr-d-soc a{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border:1px solid var(--f-hair, rgba(255,255,255,.2));border-radius:19px;color:var(--footer-ink)!important;font-size:13px}
+  .ftr-d-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(320px,1.45fr);gap:40px}
+  .ftr-d-col{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .ftr-d-col .ftr-h{color:var(--f-soft, #8A857D);margin-bottom:8px;max-width:none;font-size:12px}
+  .ftr-d-col>a{display:flex;align-items:center;gap:10px;min-height:34px;font-size:14px;color:var(--footer-ink)!important;width:max-content;max-width:100%}
+  .ftr-d-col>a .ftr-ic{background:color-mix(in srgb, var(--footer-ink) 9%, transparent)}
+  .ftr-d-lbl{display:block;font-weight:600;font-size:15px;margin-bottom:8px}
+  .ftr-d-row{display:flex;gap:8px}
+  .ftr-d-row .input{flex:1;min-width:0;background:color-mix(in srgb, var(--footer) 70%, #000 30%);border-color:var(--f-hair, rgba(255,255,255,.2));color:var(--footer-ink)}
+  .ftr-d-row .input::placeholder{color:var(--f-soft, rgba(255,255,255,.6))}
+  .ftr-d-row .ftr-joinbtn{flex:0 0 auto;min-height:46px;background:var(--footer-ink);color:var(--footer)!important;border-color:var(--footer-ink);font-weight:700}
+  .ftr-d-note,.ftr-d-hours{color:var(--f-soft, rgba(255,255,255,.62));margin-top:8px}
+  /* owner 18:38 · contact block: left = social + payment marks, right = WhatsApp over Hotline, equal width */
+  .ftr-d-contact{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:40px;align-items:start;margin-top:30px;padding-top:26px;border-top:1px solid var(--f-hair, rgba(255,255,255,.12))}
+  .ftr-d-cl{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .ftr-d-cl .ftr-pay{max-width:460px;margin-top:0}
+  .ftr-d-reach{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .ftr-d-reach .btn{width:100%;min-height:48px;border:1px solid rgba(255,255,255,.3);color:#fff!important;background:transparent;justify-content:center;white-space:nowrap;box-sizing:border-box}
+  .ftr-d-reach .btn>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ftr-d-reach .ftr-d-hours{margin-top:2px;text-align:center}
+  .ftr-d-reach .ftr-wa svg{color:#25D366}
+  .ftr-d-reach .ftr-hot svg{color:rgba(255,255,255,.88)}
+}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .ftr-d-col>a:hover>span:last-child{text-decoration:underline;text-underline-offset:3px}
+  .ftr-d-reach .btn:hover,.ftr-d-soc a:hover{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.06)}
+}
+
+/* ---- 15. layout-builder gutters (PR 595/596): empty side containers, desktop ≥1280 ---- */
+@media(min-width:1024px){ .lb-gutters{display:none} }
+@media(min-width:1280px){
+  .lb-gutters{display:block;position:absolute;left:0;right:0;height:0;pointer-events:none;z-index:1}
+  .lb-side{position:absolute;top:0;height:var(--lb-h, 0px);width:max(0px, calc((100% - var(--cmax)) / 2));pointer-events:none}
+  #lb-side-l{left:0} #lb-side-r{right:0}
+  .lb-side:not(:empty){pointer-events:auto}
+}
+
+/* ---- 16. demo gear on admin pages (class set only there by demoFabAdmin; shop pages never get it) ---- */
+.demo-fab.demo-fab-adm{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:0!important;border-radius:50%!important;justify-content:center}
+.demo-fab.demo-fab-adm .demo-fab-t{display:none!important}

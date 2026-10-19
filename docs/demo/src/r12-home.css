@@ -1,0 +1,368 @@
+/* ===== Home page + footer, round 12 =====
+   Loaded after styles.css and every r11-*.css, so these rules win on equal
+   specificity. The page also injects #hm-css from 20-home.js AFTER this file,
+   so anything that has to beat that block carries an extra class. */
+
+/* ---------------------------------------------------------------------------
+   1. Hero trust line — the WHOLE promise, on one row, edge to edge.
+   Round 11 made it fit by deleting "all over Bangladesh", which is the part a
+   customer here is actually checking for. The words come back and the type is
+   sized off the viewport instead: everything in the row (icons included) is
+   expressed in em, so the row's width is a straight multiple of the font size
+   and one calc() keeps it inside the column at every phone width.
+   measured content width ≈ 32.1 × font-size; the column is 100vw − 32px.
+   space-between then spends the few leftover pixels on the divider, so the
+   line starts at the left edge and ends at the right one.
+--------------------------------------------------------------------------- */
+.hm-hero .hm-hero-trust{
+  justify-content:space-between;
+  gap:0 8px;
+  font-size:clamp(8.6px, calc(3.05vw - 1px), 13px);
+  letter-spacing:-.004em;
+  line-height:1.2;
+}
+.hm-hero .hm-hero-trust span{gap:.46em}
+.hm-hero .hm-hero-trust svg{width:1.25em;height:1.25em}
+.hm-hero .hm-trust-bar{height:1.1em}
+/* On a desktop the line lives in a grid column, not the viewport, so it is
+   sized off the column's share of the width instead of the whole screen. */
+@media(min-width:1024px){
+  .hm-hero .hm-hero-trust{font-size:min(13px, calc(1.04vw + 1.1px));gap:0 10px;margin-top:24px}
+}
+
+/* ---------------------------------------------------------------------------
+   2/4/5/6. Conveyor rows. SMOOTH clones the track once and drifts it, so the
+   row never ends — which means it must fade at BOTH edges, not just the right.
+   (r11 faded only the right, which was correct for a row that stopped there.)
+--------------------------------------------------------------------------- */
+@media(max-width:1023px){
+  .hm-hrow[data-sm],.hm-hscroll[data-sm]{
+    -webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);
+            mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);
+  }
+  /* a drifting track must not try to snap back to a card mid-glide */
+  .hm-hrow[data-sm],.hm-hscroll[data-sm],.hm-sltrack[data-sm]{scroll-snap-type:none!important}
+  .hm-hrow[data-sm]>*,.hm-hscroll[data-sm]>*,.hm-sltrack[data-sm]>*{scroll-snap-align:none}
+}
+/* the cloned half is decoration; it must never be read out twice */
+.hm-hrow>[aria-hidden="true"],.hm-hscroll>[aria-hidden="true"],.hm-sltrack>[aria-hidden="true"]{pointer-events:auto}
+/* grab cursor on every draggable row, not just the hero */
+.hm-hrow,.hm-hscroll[data-sm]{cursor:grab}
+
+/* ---------------------------------------------------------------------------
+   8. The WhatsApp / hotline / social band took its colour from --gold, which
+   read as mud. It now uses the promise strip's own token, so the footer opens
+   and closes on the same tone and the two dark bands sit between them.
+   --f1 is mixed from --footer and --footer-ink, so this follows every theme,
+   festive included, with no hex of its own.
+--------------------------------------------------------------------------- */
+.ftr{--f4:var(--f1)}
+.ftr-s4{background:var(--f4);color:#fff}
+/* (H6 below collapses --f1 / --f4 / --f5 onto two tones; this rule stays
+   because it is what gives the contact band its white ink.) */
+.ftr-s4 .btn{border:1px solid rgba(255,255,255,.30);color:#fff!important;background:transparent}
+.ftr-s4 .btn:hover{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.06)}
+.ftr-s4 .btn svg{color:rgba(255,255,255,.88)}
+/* 3. the WhatsApp mark keeps WhatsApp's own green so it is recognised at a glance */
+.ftr-s4 .ftr-wa svg{color:#25D366}
+.ftr-s4 .ftr-hours{color:rgba(255,255,255,.70)}
+.ftr-s4 .ftr-soc a{border-color:rgba(255,255,255,.24);color:#fff}
+.ftr-s4 .ftr-soc a svg{color:rgba(255,255,255,.82)}
+.ftr-s4 .ftr-soc a:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.45)}
+/* the two dark bands above need a hairline against the lighter band below */
+.ftr-s3{border-bottom:1px solid rgba(255,255,255,.10)}
+
+/* ---------------------------------------------------------------------------
+   9. Three columns of six, so they end level — and the band is then trimmed,
+   because the empty space under the short columns is what was making the
+   footer long.
+--------------------------------------------------------------------------- */
+.ftr-s3 .ftr-cols{padding:16px 0 14px}
+.ftr-s3 .ftr-cols>div{gap:6px!important}  /* beats r11-cat.css, which forced 4px under 440px */
+.ftr-s4 .ftr-contact{padding:16px 0 18px}
+
+/* ---------------------------------------------------------------------------
+   10. Payment marks: no white slabs. Each tile is glass tinted from its own
+   brand colour, the wordmarks are lifted to a shade that survives a dark band,
+   and the row carries the same 7-second light sweep as the header mark
+   (logoSheen) and the primary buttons (ctaSheen) — same duration, same easing,
+   same 15%-of-the-cycle pass.
+--------------------------------------------------------------------------- */
+.ftr-pay{position:relative;overflow:hidden;gap:7px;margin-top:14px;
+  border-radius:9px;isolation:isolate}
+.ftr-pay-t{
+  background:color-mix(in srgb, var(--pm) 15%, transparent);
+  border:1px solid color-mix(in srgb, var(--pm) 36%, transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+  border-radius:8px;height:36px;padding:5px 7px;
+  display:flex;align-items:center;justify-content:center}
+.ftr-pay-t svg{width:100%;height:100%;display:block}
+.pm-bkash{--pm:#E2136E;color:#FF6FB2}
+.pm-nagad{--pm:#F4601F}
+.pm-visa {--pm:#2A41C8;color:#93A8FF}
+.pm-mc   {--pm:#EB6A1B}
+/* COD is ours, not a brand, so its glass is tinted with the shop's own colour
+   instead of a grey wash that out-shouted the four brand tiles. */
+.pm-cod  {--pm:var(--brand);color:rgba(255,255,255,.94)}
+:root[data-theme="noir"] .pm-cod{--pm:#8A857D}
+/* the sweep: one narrow band of light crossing the whole row */
+.ftr-pay-sheen{position:absolute;top:0;bottom:0;width:38%;left:-45%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
+  animation:ctaSheen 7s ease-in-out 2s infinite;pointer-events:none;z-index:2}
+@media(prefers-reduced-motion:reduce){.ftr-pay-sheen{display:none}}
+@media(max-width:380px){.ftr-pay{gap:5px}.ftr-pay-t{height:32px;padding:4px 5px}}
+
+/* a 46px-high WhatsApp / hotline button is easier to hit than a 42px one */
+.ftr-s4 .ftr-reach .btn{min-height:46px}
+.ftr-s4 .ftr-soc a{min-height:52px}
+
+
+/* The floating WhatsApp button lands on the footer's third link column, so it
+   steps aside while the footer is up (waFabFooter in 03-layout.js). */
+.wa-fab{transition:opacity .18s ease, visibility .18s ease}
+.wa-fab.wa-off{opacity:0;visibility:hidden;pointer-events:none}
+
+/* Touch targets. r11 squeezed the footer links to 30px to fight the footer's
+   length; with three level columns the length is under control, so each link
+   gets a 34px box on a 40px pitch. That is the most a finger can have without
+   giving back the height the owner asked us to cut — 44px per link would put
+   ~90px straight back into the footer. */
+.ftr-s3 .ftr-cols a{min-height:34px}
+.ftr-s5 .langpill{min-height:40px;padding:0 12px}
+/* the legal line had a 24px skirt under it, above a 60px bottom nav */
+.ftr-s5 .ftr-legalbar{padding-top:12px;padding-bottom:16px}
+
+/* Extra find: the announcement strip is nowrap + ellipsis at a fixed 12px, so
+   below 440px it cut "…all over Banglade…" — the same promise the hero trust
+   line just got back. Measured: the sentence is 29.9 × font-size wide, the
+   strip is 100vw − 32px, so one calc keeps the whole thing on screen down to
+   ~320px and the ellipsis stays only as a last resort for a longer notice. */
+.announce{font-size:clamp(9px, calc(3.35vw - 1.2px), 12.5px)}
+
+
+/* =====================================================================
+   H6. THE FOOTER: 940 px in five bands of four colours, on every page.
+   ---------------------------------------------------------------------
+   Measured before: 940 px tall (98% of a 956 px screen) made of
+     s1 promise   92 px  on a grey  mixed from --footer/--footer-ink
+     s2 brand    194 px  on --brand-dark (green)
+     s3 links    294 px  on --footer (near black)
+     s4 contact  292 px  on the same grey as s1
+     s5 legal     68 px  on a darker near-black
+   Four distinct backgrounds, five changes of tone, nearly a full screen.
+
+   Not one line of content is removed. Two things change:
+   1. TWO BANDS. The four tones collapse onto the two the design already
+      owns — the brand green and the footer black. Promise + newsletter sit
+      on the green; links + contact + legal sit on the black. The tones are
+      redefined as variables, so every theme (ivory, noir, festive) follows
+      with no second set of colours to keep in step.
+   2. THE AIR COMES OUT. Padding, row pitch and the two reach buttons are
+      tightened; the reach buttons sit side by side instead of stacked.
+      Every link keeps a 32 px box and the buttons stay at 44 px.
+   ===================================================================== */
+.ftr{
+  --f1:var(--brand-dark);   /* band A — promise strip, now the brand green  */
+  --f4:var(--footer);       /* band B — contact, now the footer black       */
+  --f5:var(--footer);       /* band B — legal line, the same black          */
+}
+/* band A is one green block: no line between the promise strip and the
+   newsletter, and a hairline where the green meets the black */
+.ftr-s1{border-bottom:0}
+.ftr-s2{border-bottom:0}
+.ftr-s3{border-top:1px solid rgba(255,255,255,.14)}
+/* inside band B the three parts are separated by hairlines, not by colour */
+.ftr-s3{border-bottom:1px solid rgba(255,255,255,.10)}
+.ftr-s4{border-bottom:1px solid rgba(255,255,255,.10)}
+
+/* --- the air, band by band --- */
+/* promise strip: 92 -> ~74 */
+.ftr-s1 .ftr-promise>div{padding:11px 4px;gap:5px}
+/* newsletter block: 194 -> ~150 */
+.ftr-s2 .ftr-brand{padding:12px 0 13px}
+.ftr-brand-top{margin-bottom:8px}
+.ftr-s2 .ftr-join .label{margin-bottom:5px;display:block}
+.ftr-s2 .ftr-join .btn{min-height:44px}
+.ftr-s2 .ftr-join .input{min-height:44px}
+.ftr-s2 .ftr-brand-note{margin-top:6px}
+/* link columns: 294 -> ~246. 32 px boxes on a 34 px pitch; the audit's 34 px
+   box is kept for the buttons and the bottom nav, which is where a mis-tap
+   actually costs something. */
+.ftr-s3 .ftr-cols{padding:12px 0 12px}
+.ftr-s3 .ftr-cols>div{gap:2px!important}
+.ftr-s3 .ftr-cols a{min-height:32px}
+.ftr-s3 .ftr-h{margin-bottom:0}
+/* contact: 292 -> ~190. WhatsApp and Hotline share a row. */
+.ftr-s4 .ftr-contact{padding:12px 0 14px}
+.ftr-s4 .ftr-reach{display:grid;gap:8px;
+  /* AUTO-ADJUST: side by side when both buttons fit, stacked when they do not.
+     The old `1fr 1fr` had an implicit min-content floor, so on any phone under
+     413px the two buttons forced the whole page to 413px wide (round 14 root cause). */
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.ftr-s4 .ftr-reach .btn{min-width:0}
+.ftr-s4 .ftr-reach .btn{min-height:44px;margin-top:0;padding:0 8px;font-size:13px;gap:6px}
+.ftr-s4 .ftr-reach .btn+.btn{margin-top:0}
+.ftr-s4 .ftr-reach .ftr-hours{grid-column:1 / -1;margin-top:6px}
+.ftr-s4 .ftr-soc{margin-top:10px}
+/* the four social tiles were 59.5 px tall because the icon and the label each
+   carried their own padding; 44 px is still a comfortable target */
+.ftr-s4 .ftr-soc a{min-height:44px;height:44px;gap:3px;padding:4px 2px;font-size:10.5px}
+.ftr-s4 .ftr-soc a svg{width:15px;height:15px}
+.ftr-pay{margin-top:10px}
+.ftr-pay-t{height:32px}
+/* legal line: 68 -> ~54 */
+.ftr-s5 .ftr-legalbar{padding-top:9px;padding-bottom:11px;font-size:11px;line-height:1.55}
+/* H4. the language switch, compact: the outer pill loses its 12 px side
+   padding, because each half now carries its own. 81x40 -> ~56x30. */
+.ftr-s5 .langpill{padding:0 3px}
+.ftr-s5 .langpill{min-height:30px}
+@media(min-width:1024px){
+  .ftr-s4 .ftr-reach{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ---------------------------------------------------------------------------
+   14.1 "Shop sets" — four background options (HERO_SETS_BTN in 20-home.js).
+   Two classes in every selector so these beat the #hm-css block that 20-home.js
+   injects after this file. "Shop now" for reference: a 16% hero-ink fill and a
+   66% hero-ink edge.
+--------------------------------------------------------------------------- */
+/* v1 Soft glass — the same recipe at half strength: clearly the quieter twin */
+.hm-hero-btns .hm-btn-line.hm-sets-v1{
+  background:color-mix(in srgb, var(--hero-ink) 8%, transparent);
+  border-color:color-mix(in srgb, var(--hero-ink) 46%, transparent)}
+.hm-hero-btns .hm-btn-line.hm-sets-v1:hover{background:color-mix(in srgb, var(--hero-ink) 14%, transparent)}
+/* v2 Deep shade — light on one button, depth on the other: the hero colour
+   pressed 38% darker, with a fine light edge so it still reads as a button */
+.hm-hero-btns .hm-btn-line.hm-sets-v2{
+  background:color-mix(in srgb, var(--hero) 62%, #000);
+  border-color:color-mix(in srgb, var(--hero-ink) 26%, transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb, var(--hero-ink) 10%, transparent)}
+.hm-hero-btns .hm-btn-line.hm-sets-v2:hover{background:color-mix(in srgb, var(--hero) 50%, #000)}
+/* v3 Brand tint — a solid fill of the shop's own brand colour lifted with the
+   hero's mint: greener and warmer than the grey-white glass of "Shop now" */
+.hm-hero-btns .hm-btn-line.hm-sets-v3{
+  background:color-mix(in srgb, var(--hero-sub) 26%, var(--brand));
+  border-color:color-mix(in srgb, var(--hero-sub) 58%, transparent)}
+.hm-hero-btns .hm-btn-line.hm-sets-v3:hover{background:color-mix(in srgb, var(--hero-sub) 40%, var(--brand))}
+/* v4 Frosted — glass lit from above: brighter at the top edge, clear at the
+   bottom, a hairline highlight and a soft lift off the hero */
+.hm-hero-btns .hm-btn-line.hm-sets-v4{
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--hero-ink) 22%, transparent),
+    color-mix(in srgb, var(--hero-ink) 5%, transparent));
+  border-color:color-mix(in srgb, var(--hero-ink) 38%, transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb, var(--hero-ink) 38%, transparent), 0 6px 16px rgba(0,0,0,.16);
+  -webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%)}
+.hm-hero-btns .hm-btn-line.hm-sets-v4:hover{border-color:color-mix(in srgb, var(--hero-ink) 56%, transparent)}
+
+/* ---------------------------------------------------------------------------
+   14.2 The language switch reads its state from its own markup (langPill() in
+   03-layout.js puts `.on` on the active half), not from <html lang>, so it can
+   never show English while the page is Bengali. These rules sit after
+   styles.css H4 and switch its root-attribute rules off.
+--------------------------------------------------------------------------- */
+.langpill .lp-a,.langpill .lp-b,
+:root[lang="bn"] .langpill .lp-a,:root[lang="bn"] .langpill .lp-b{
+  background:transparent;color:inherit;font-weight:700;opacity:.68}
+.langpill .lp-a.on,.langpill .lp-b.on,
+:root[lang="bn"] .langpill .lp-a.on,:root[lang="bn"] .langpill .lp-b.on{
+  background:var(--footer-ink);color:var(--footer);font-weight:800;opacity:1}
+/* the Bengali half is set in the Bengali face so it sits level with "EN" */
+.langpill .lp-b{font-family:'Hind Siliguri',var(--font-body);font-size:1.08em}
+/* in the phone menu the sheet is light, so the filled half is ink on paper */
+.mn-foot .langpill{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.mn-foot .langpill .lp-a.on,.mn-foot .langpill .lp-b.on,
+:root[lang="bn"] .mn-foot .langpill .lp-a.on,:root[lang="bn"] .mn-foot .langpill .lp-b.on{
+  background:var(--ink);color:var(--bg)}
+.mn-foot .langpill{min-height:36px;height:36px;padding:0 3px}
+.mn-foot .langpill .lp-a,.mn-foot .langpill .lp-b{height:28px;padding:0 10px}
+/* Bengali has no capitals, and wide tracking pulls its conjuncts apart */
+:root[lang="bn"] .hm-hero .eyebrow{letter-spacing:.02em}
+
+/* ---------------------------------------------------------------------------
+   R14. Flash sale heading. At 360px the clock kept its size and the heading
+   gave way: "Flash / sale" broke over two lines and so did "Up to 21% / off".
+   Nothing in the heading wraps now. Every part is sized in em off the
+   heading row, and AUTO-FIT (rule in 20-home.js) steps the whole row down
+   together until title, badge, line and clock all fit on any phone. If even
+   the floor is too big, the "Ends in" word goes first (.fit-x).
+--------------------------------------------------------------------------- */
+@media(max-width:767px){
+  .hm-flash-hd{font-size:16px;overflow-x:clip}
+  .hm-flash-hd>div:first-child{min-width:0;overflow-x:clip}
+  .hm-flash-hd .row{flex-wrap:nowrap;gap:.55em!important}
+  .hm-flash-hd .h2{font-size:1.19em;white-space:nowrap}
+  .hm-flash-hd .tag.sale{font-size:.66em;white-space:nowrap;padding:.2em .66em}
+  .hm-flash-hd .hm-sub{font-size:.72em;white-space:nowrap}
+  .hm-flash-hd .hm-cd-wrap{gap:.4em}
+  .hm-flash-hd .hm-cd-wrap .hm-cd-lbl{font-size:.66em;max-width:none}
+  .hm-flash-hd .hm-cd-row{gap:.15em}
+  .hm-flash-hd .hm-cd-row>span:not(.hm-cd-sep){font-size:.875em;min-width:1.95em;padding:.28em .3em}
+  .hm-flash-hd .hm-cd-sep{font-size:.7em}
+  .hm-flash-hd.fit-x .hm-cd-lbl{display:none}
+}
+
+/* ---------------------------------------------------------------------------
+   R14. Footer link columns. `repeat(3,1fr)` has a min-content floor, so a
+   long link could push a column (and the page) wider; the columns are
+   0-floored now. The links take their size from the column block and stay on
+   one line wherever AUTO-FIT can make them fit at 11px or more (all three
+   columns share that one size, so they stay level). On the narrowest phones,
+   where even 11px cannot hold "Exchange & returns" beside its icon, the
+   labels go back to wrapping (.fit-x) — the icons the owner asked for stay.
+--------------------------------------------------------------------------- */
+.ftr-s3 .ftr-cols{grid-template-columns:repeat(3,minmax(0,1fr));font-size:14px}
+@media(max-width:767px){.ftr-s3 .ftr-cols{font-size:12.5px}}
+.ftr-s3 .ftr-cols a{font-size:1em;min-width:0}
+.ftr-s3 .ftr-cols a>span:last-child{white-space:nowrap;min-width:0;overflow:hidden}
+.ftr-s3 .ftr-cols.fit-x a>span:last-child{white-space:normal;overflow:visible}
+
+/* R14. Journal card eyebrow ("BEHIND EXTAS · 3 MIN READ") broke onto a second
+   line in the two-column journal grid at 360px. It stays on one line and
+   steps down (AUTO-FIT); only below 9.5px does it wrap again (.fit-x). */
+.hm-art .eyebrow{white-space:nowrap;overflow:hidden}
+.hm-art .eyebrow.fit-x{white-space:normal;overflow:visible}
+
+/* ===========================================================================
+   R15 · NOTE 1 — footer (owner's review of Version 10)
+   =========================================================================== */
+/* 1.2 The slogan belongs to the wordmark: under it, starting exactly under
+   the E, 11px between the wordmark and the slogan, at every width.
+   The wordmark carries a .2em left pad (letter-spacing balance), so the
+   slogan gets the same pad — measured in the logo's own em, it follows the
+   logo if its size ever changes. */
+.ftr-s2 .ftr-brand-top{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;margin-bottom:12px}
+.ftr-s2 .ftr-brand-top .logo{line-height:1;display:block}
+.ftr-s2 .ftr-brand-top .ftr-brand-sub{line-height:1.15;margin-top:var(--ftr-slogan-gap,4.5px);
+  padding-left:var(--ftr-slogan-x,6px);white-space:nowrap;letter-spacing:.01em}
+@media(min-width:1024px){ .ftr-s2 .ftr-brand-top{margin-bottom:0} }
+
+/* 1.3 Join: a real button, not a stub — same height as the field, about a
+   third of the row, bold, with an arrow. The field gives up the width. */
+.ftr-s2 .ftr-joinrow{flex-wrap:nowrap;align-items:stretch}
+.ftr-s2 .ftr-joinrow .input{flex:1 1 auto;min-width:0;width:auto}
+.ftr-s2 .ftr-join .ftr-joinbtn{flex:0 0 auto;min-width:clamp(112px, 32%, 150px);min-height:46px;
+  padding:0 18px;gap:6px;border-radius:12px;font-size:16px;font-weight:800;letter-spacing:.01em;
+  display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 0 rgba(255,255,255,.18) inset, 0 4px 14px rgba(0,0,0,.22);transition:transform .15s ease, box-shadow .15s ease}
+.ftr-s2 .ftr-join .ftr-joinbtn svg{flex-shrink:0;transition:transform .15s ease}
+.ftr-s2 .ftr-join .ftr-joinbtn:hover svg{transform:translateX(2px)}
+.ftr-s2 .ftr-join .ftr-joinbtn:active{transform:scale(.98)}
+.ftr-s2 .ftr-joinrow .input{min-height:46px}
+
+/* 1.4 WhatsApp / Hotline. Stacked by default; side by side only when the
+   JS (ftrReachFit) has measured that both fit at full size. Either way the
+   buttons share the width evenly and their contents sit in the middle.
+   Text and icons never shrink. */
+.ftr-s4 .ftr-reach{grid-template-columns:minmax(0,1fr)}
+.ftr-s4 .ftr-reach.ftr-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ftr-s4 .ftr-reach .btn{min-height:48px;padding:0 14px;font-size:15.5px;font-weight:700;gap:9px;
+  justify-content:center;white-space:nowrap}
+.ftr-s4 .ftr-reach .btn>svg{flex-shrink:0}
+.ftr-s4 .ftr-reach .btn>span{white-space:nowrap}
+.ftr-s4 .ftr-reach .ftr-wa svg{width:22px;height:22px}
+.ftr-s4 .ftr-reach .ftr-hot svg{width:19px;height:19px}
+@media(min-width:1024px){ .ftr-s4 .ftr-reach{grid-template-columns:repeat(2,minmax(0,1fr))} }
+/* R15 · 3.12 one, two or three hero buttons share the row evenly */
+.hm-hero-btns.n1{grid-template-columns:minmax(0,1fr)!important}
+.hm-hero-btns.n3{grid-template-columns:repeat(3,minmax(0,1fr))!important}

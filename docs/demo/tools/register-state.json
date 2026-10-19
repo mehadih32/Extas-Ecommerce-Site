@@ -1,0 +1,5698 @@
+{
+ "created": "2026-10-19",
+ "docs": {
+  "EXTAS-ECOMMERCE-V1.md": {
+   "hist": [
+    {
+     "d": "2026-10-18",
+     "hash": "ce15193d1656",
+     "size": 299970
+    }
+   ]
+  },
+  "EXTAS-ECOMMERCE-V2.1.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "dae3a60cb62a",
+     "size": 575696
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "00b9abd5b5e5",
+     "size": 603270
+    }
+   ]
+  },
+  "EXTAS-ECOMMERCE-V2.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "080cfa2a72df",
+     "size": 534777
+    }
+   ]
+  },
+  "agents/AGENT-PROTOCOL.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "d054fc390554",
+     "size": 4576
+    }
+   ]
+  },
+  "agents/CURRICULUM.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "fc012a5d4683",
+     "size": 11046
+    }
+   ]
+  },
+  "agents/README.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "306f2398d117",
+     "size": 629
+    }
+   ]
+  },
+  "master/MASTER-REGISTER.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "8bf19648085b",
+     "size": 75346
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "7b76ba149786",
+     "size": 76033
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "b48a59e5b854",
+     "size": 77724
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "2e2b32165264",
+     "size": 79291
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "b934df4cac1d",
+     "size": 81545
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "19a40bfaa02c",
+     "size": 83080
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "5564a18dabe2",
+     "size": 84656
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "4371a10d82b8",
+     "size": 86500
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "459e2846186d",
+     "size": 88107
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "843e5accfcf7",
+     "size": 88971
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "0767fc7e219e",
+     "size": 89593
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "aef3b99fbaa4",
+     "size": 89703
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "702d02c27689",
+     "size": 105454
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "65ad60e96a22",
+     "size": 111097
+    }
+   ]
+  },
+  "qa/BLOG-QA-REPORT.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "be4c0feb500f",
+     "size": 31589
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "d7f274a8df8a",
+     "size": 41988
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "c66591dd831d",
+     "size": 55976
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "dc2553337ecb",
+     "size": 67411
+    }
+   ]
+  },
+  "qa/DESKTOP-QA-REPORT.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "2063609541e3",
+     "size": 26825
+    }
+   ]
+  },
+  "qa/ECOMMERCE-CHECKLIST.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "225492266e50",
+     "size": 65521
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "e2cff5a3a115",
+     "size": 73627
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "6e8c41c35690",
+     "size": 74057
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "4cf521a5166a",
+     "size": 80622
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "0ad07b1c73f4",
+     "size": 82588
+    }
+   ]
+  },
+  "qa/QA-REPORT-R15.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "356454c5a409",
+     "size": 29229
+    }
+   ]
+  },
+  "qa/QA-REPORT-R15b.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "2daa93e885c8",
+     "size": 31791
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "7e269ac6e384",
+     "size": 39121
+    }
+   ]
+  },
+  "review/BLOG-CONTENT-PLAN.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "8151e5ea93a8",
+     "size": 97844
+    }
+   ]
+  },
+  "review/CHANGE-PROCESS.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "6f55dfd0814e",
+     "size": 6819
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "9535aa951d5c",
+     "size": 7083
+    }
+   ]
+  },
+  "review/COMBO-RANKING.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "13c4fcba19a3",
+     "size": 14249
+    }
+   ]
+  },
+  "review/COMBO-RESEARCH.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "0e56f67338e7",
+     "size": 54560
+    }
+   ]
+  },
+  "review/DESKTOP-REVIEW.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "12b97d172264",
+     "size": 66103
+    }
+   ]
+  },
+  "review/GOOGLE-TRAFFIC-PLAN.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "434625466f40",
+     "size": 60661
+    }
+   ]
+  },
+  "review/OWNER-PRECODE-CHECKLIST.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "069fbf74d455",
+     "size": 11116
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "1acdf1217fe4",
+     "size": 11185
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "69af9682a9e8",
+     "size": 14003
+    }
+   ]
+  },
+  "review/ROUND15.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "403e8bb47dfb",
+     "size": 54157
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "aa9bb547425e",
+     "size": 54851
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "9d5b4ebc31bf",
+     "size": 57254
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "acb6c0fa40b9",
+     "size": 58554
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "0bbcc332b29a",
+     "size": 59449
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "87655f52276a",
+     "size": 60225
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "445dc1c0a26b",
+     "size": 61049
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "0cabe3590a35",
+     "size": 64071
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "2f7e05c3503c",
+     "size": 65165
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "fb83455a3e92",
+     "size": 68262
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "4a18f70cf246",
+     "size": 69537
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "8272804a3a5e",
+     "size": 70218
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "d73c2cc8c1c3",
+     "size": 71837
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "33a8b0f8ac31",
+     "size": 73501
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "c3df28f8bc58",
+     "size": 75192
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "ff4153e7f5cd",
+     "size": 77761
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "f93988195a34",
+     "size": 78712
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "7408bac81be1",
+     "size": 79743
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "bedc61e5df81",
+     "size": 80144
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "1b6b39b119ad",
+     "size": 82341
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "cb6da7e18b88",
+     "size": 84910
+    },
+    {
+     "d": "2026-10-19",
+     "hash": "508730288022",
+     "size": 86251
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "f614454c2184",
+     "size": 91804
+    }
+   ]
+  },
+  "review/SERVER-SETUP-SPEC-OWNER.md": {
+   "hist": [
+    {
+     "d": "2026-10-19",
+     "hash": "1b221264e70a",
+     "size": 28226
+    }
+   ]
+  }
+ },
+ "events": [
+  {
+   "aligned": [
+    {
+     "n": 413,
+     "score": 0.208,
+     "why": "stage"
+    },
+    {
+     "n": 414,
+     "score": 0.208,
+     "why": "words"
+    },
+    {
+     "n": 415,
+     "score": 0.208,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 570,
+   "seq": 1,
+   "stage": "S21",
+   "tm": "04:30",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 309,
+     "why": "named"
+    },
+    {
+     "n": 312,
+     "score": 0.183,
+     "why": "named"
+    },
+    {
+     "n": 313,
+     "why": "named"
+    },
+    {
+     "n": 307,
+     "score": 0.195,
+     "why": "stage"
+    },
+    {
+     "n": 138,
+     "score": 0.178,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 580,
+   "seq": 2,
+   "stage": "S15",
+   "tm": "04:45",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 321,
+     "why": "named"
+    },
+    {
+     "n": 322,
+     "why": "named"
+    },
+    {
+     "n": 323,
+     "why": "named"
+    },
+    {
+     "n": 420,
+     "why": "named"
+    },
+    {
+     "n": 334,
+     "score": 0.34,
+     "why": "stage"
+    },
+    {
+     "n": 326,
+     "score": 0.277,
+     "why": "words"
+    },
+    {
+     "n": 327,
+     "score": 0.277,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 577,
+   "seq": 3,
+   "stage": "S15",
+   "tm": "04:52",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 578,
+     "why": "named"
+    },
+    {
+     "n": 334,
+     "score": 0.233,
+     "why": "stage"
+    },
+    {
+     "n": 577,
+     "score": 0.214,
+     "why": "words"
+    },
+    {
+     "n": 320,
+     "score": 0.213,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 583,
+   "seq": 4,
+   "stage": "S15",
+   "tm": "04:55",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 583,
+     "score": 0.223,
+     "why": "stage"
+    },
+    {
+     "n": 310,
+     "score": 0.212,
+     "why": "words"
+    },
+    {
+     "n": 519,
+     "score": 0.176,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 584,
+   "seq": 5,
+   "stage": "S15",
+   "tm": "04:55",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 102,
+     "score": 0.235,
+     "why": "stage"
+    },
+    {
+     "n": 89,
+     "score": 0.181,
+     "why": "words"
+    },
+    {
+     "n": 19,
+     "score": 0.16,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 571,
+   "seq": 6,
+   "stage": "S03",
+   "tm": "05:00",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 581,
+     "score": 0.216,
+     "why": "stage"
+    },
+    {
+     "n": 323,
+     "score": 0.183,
+     "why": "words"
+    },
+    {
+     "n": 330,
+     "score": 0.167,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 585,
+   "seq": 7,
+   "stage": "S15",
+   "tm": "05:09",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 320,
+     "score": 0.418,
+     "why": "stage"
+    },
+    {
+     "n": 334,
+     "score": 0.319,
+     "why": "words"
+    },
+    {
+     "n": 326,
+     "score": 0.275,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 578,
+   "seq": 8,
+   "stage": "S15",
+   "tm": "05:20",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 322,
+     "why": "named"
+    },
+    {
+     "n": 577,
+     "why": "named"
+    },
+    {
+     "n": 334,
+     "score": 0.326,
+     "why": "stage"
+    },
+    {
+     "n": 326,
+     "score": 0.283,
+     "why": "words"
+    },
+    {
+     "n": 327,
+     "score": 0.283,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 579,
+   "seq": 9,
+   "stage": "S15",
+   "tm": "05:20",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 257,
+     "why": "named"
+    },
+    {
+     "n": 258,
+     "why": "named"
+    },
+    {
+     "n": 259,
+     "why": "named"
+    },
+    {
+     "n": 260,
+     "why": "named"
+    },
+    {
+     "n": 261,
+     "why": "named"
+    },
+    {
+     "n": 265,
+     "why": "named"
+    },
+    {
+     "n": 266,
+     "why": "named"
+    },
+    {
+     "n": 267,
+     "why": "named"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 581,
+   "seq": 10,
+   "stage": "S15",
+   "tm": "05:20",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 577,
+     "score": 0.286,
+     "why": "named"
+    },
+    {
+     "n": 334,
+     "score": 0.319,
+     "why": "stage"
+    },
+    {
+     "n": 326,
+     "score": 0.275,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 582,
+   "seq": 11,
+   "stage": "S15",
+   "tm": "05:20",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 90,
+     "score": 0.318,
+     "why": "stage"
+    },
+    {
+     "n": 91,
+     "score": 0.308,
+     "why": "words"
+    },
+    {
+     "n": 92,
+     "score": 0.287,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 572,
+   "seq": 12,
+   "stage": "S03",
+   "tm": "05:50",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 572,
+     "score": 0.471,
+     "why": "stage"
+    },
+    {
+     "n": 90,
+     "score": 0.371,
+     "why": "words"
+    },
+    {
+     "n": 91,
+     "score": 0.352,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 573,
+   "seq": 13,
+   "stage": "S03",
+   "tm": "05:50",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 573,
+     "score": 0.531,
+     "why": "stage"
+    },
+    {
+     "n": 572,
+     "score": 0.454,
+     "why": "words"
+    },
+    {
+     "n": 90,
+     "score": 0.362,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 574,
+   "seq": 14,
+   "stage": "S03",
+   "tm": "05:50",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 94,
+     "score": 0.131,
+     "why": "stage"
+    },
+    {
+     "n": 65,
+     "score": 0.214,
+     "why": "words"
+    },
+    {
+     "n": 133,
+     "score": 0.175,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 575,
+   "seq": 15,
+   "stage": "S03",
+   "tm": "05:50",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 91,
+     "score": 0.477,
+     "why": "stage"
+    },
+    {
+     "n": 92,
+     "score": 0.439,
+     "why": "words"
+    },
+    {
+     "n": 90,
+     "score": 0.266,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 576,
+   "seq": 16,
+   "stage": "S03",
+   "tm": "05:50",
+   "type": "new-pr"
+  },
+  {
+   "added": "Updated 19 Oct (owner 11:39): English at /, Bengali at /bn/ live for every page that passes the translation gate (PR 588); each language its own canonical, no auto-redirect by language; same ASCII slug for both; product URLs category-free. Map: review/GOOGLE-TRAFFIC-PLAN.md §1.4",
+   "d": "2026-10-19",
+   "pr": 220,
+   "seed": true,
+   "seq": 17,
+   "tm": "11:39",
+   "type": "update"
+  },
+  {
+   "added": "Lifecycle (owner, 19 Oct 11:51): nothing is deleted and no combo URL dies (Google rank, shared links); optional start/end dates (none = always on); at the end date the rule ends by itself → pages stay live and indexable showing \"offer ended\" with live alternatives, no add to bag, and move to an Archive tab in admin; sold out stays … · Combo SEO (19 Oct): fixed colour order in the pair slug (reverse order 301s), featured pairs (own set photo + text) indexed, others noindex,follow; ended/paused pairs stay live (200) with alternatives. · Combo deep work (round 15 notes 8–11): Combo deep work (round 15 notes 8–11) — filed as PR 571–576 in S03.",
+   "d": "2026-10-19",
+   "pr": 571,
+   "seed": true,
+   "seq": 18,
+   "tm": "11:51",
+   "type": "update"
+  },
+  {
+   "aligned": [
+    {
+     "n": 587,
+     "why": "named"
+    },
+    {
+     "n": 506,
+     "score": 0.281,
+     "why": "stage"
+    },
+    {
+     "n": 531,
+     "score": 0.205,
+     "why": "words"
+    },
+    {
+     "n": 47,
+     "score": 0.174,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 590,
+   "seq": 19,
+   "stage": "S15",
+   "tm": "12:04",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 310,
+     "score": 0.109,
+     "why": "stage"
+    },
+    {
+     "n": 496,
+     "score": 0.234,
+     "why": "words"
+    },
+    {
+     "n": 413,
+     "score": 0.185,
+     "why": "words"
+    },
+    {
+     "n": 414,
+     "score": 0.185,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 587,
+   "seq": 20,
+   "stage": "S15",
+   "tm": "12:07",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 315,
+     "score": 0.128,
+     "why": "stage"
+    },
+    {
+     "n": 585,
+     "score": 0.106,
+     "why": "words"
+    },
+    {
+     "n": 83,
+     "score": 0.1,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 586,
+   "seq": 21,
+   "stage": "S15",
+   "tm": "12:10",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 326,
+     "score": 0.161,
+     "why": "stage"
+    },
+    {
+     "n": 84,
+     "score": 0.187,
+     "why": "words"
+    },
+    {
+     "n": 331,
+     "score": 0.141,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 588,
+   "seq": 22,
+   "stage": "S15",
+   "tm": "12:10",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 587,
+     "score": 0.119,
+     "why": "stage"
+    },
+    {
+     "n": 83,
+     "score": 0.179,
+     "why": "words"
+    },
+    {
+     "n": 532,
+     "score": 0.129,
+     "why": "words"
+    },
+    {
+     "n": 31,
+     "score": 0.126,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 589,
+   "seq": 23,
+   "stage": "S15",
+   "tm": "12:10",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 588,
+     "why": "named"
+    },
+    {
+     "n": 326,
+     "score": 0.272,
+     "why": "stage"
+    },
+    {
+     "n": 331,
+     "score": 0.231,
+     "why": "words"
+    },
+    {
+     "n": 225,
+     "score": 0.185,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 591,
+   "seq": 24,
+   "stage": "S15",
+   "tm": "12:10",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 591,
+     "score": 0.229,
+     "why": "stage"
+    },
+    {
+     "n": 340,
+     "score": 0.208,
+     "why": "words"
+    },
+    {
+     "n": 241,
+     "score": 0.161,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 592,
+   "seq": 25,
+   "stage": "S15",
+   "tm": "12:20",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 580,
+     "why": "named"
+    },
+    {
+     "n": 591,
+     "score": 0.346,
+     "why": "stage"
+    },
+    {
+     "n": 326,
+     "score": 0.204,
+     "why": "words"
+    },
+    {
+     "n": 331,
+     "score": 0.176,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 593,
+   "seq": 26,
+   "stage": "S15",
+   "tm": "12:22",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 577,
+     "score": 0.152,
+     "why": "stage"
+    },
+    {
+     "n": 509,
+     "score": 0.188,
+     "why": "words"
+    },
+    {
+     "n": 523,
+     "score": 0.16,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 594,
+   "seq": 27,
+   "stage": "S15",
+   "tm": "14:59",
+   "type": "new-pr"
+  },
+  {
+   "added": "Google stopped showing FAQ rich results for all sites on 7 May 2026 — markup optional, no Google rich result promised",
+   "d": "2026-10-19",
+   "pr": 224,
+   "seed": true,
+   "seq": 28,
+   "tm": null,
+   "type": "update"
+  },
+  {
+   "added": "Loads the WordPress 301 map (PR 587) and the combo colour-order 301s",
+   "d": "2026-10-19",
+   "pr": 235,
+   "seed": true,
+   "seq": 29,
+   "tm": null,
+   "type": "update"
+  },
+  {
+   "added": "Plus a check on every deploy: hreflang return links, no cross-language canonical, no # links, Bengali-twin coverage",
+   "d": "2026-10-19",
+   "pr": 237,
+   "seed": true,
+   "seq": 30,
+   "tm": null,
+   "type": "update"
+  },
+  {
+   "added": "Update · 19 Oct: the owner approves the topic list — monthly batch, can add any time — not each post; PR 591) Approval queue: owner approval first, then automatic with a digest",
+   "d": "2026-10-19",
+   "pr": 244,
+   "seed": true,
+   "seq": 31,
+   "tm": null,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct: both languages live; Bengali goes live per page behind the translation gate (PR 588).",
+   "d": "2026-10-19",
+   "pr": 503,
+   "seed": true,
+   "seq": 32,
+   "tm": null,
+   "type": "update"
+  },
+  {
+   "d": "2026-10-19",
+   "like": 572,
+   "pr": 573,
+   "score": 0.512,
+   "seq": 33,
+   "type": "scope-warn"
+  },
+  {
+   "d": "2026-10-19",
+   "like": 573,
+   "pr": 574,
+   "score": 0.601,
+   "seq": 34,
+   "type": "scope-warn"
+  },
+  {
+   "d": "2026-10-19",
+   "like": 91,
+   "pr": 576,
+   "score": 0.474,
+   "seq": 35,
+   "type": "scope-warn"
+  },
+  {
+   "d": "2026-10-19",
+   "like": 320,
+   "pr": 578,
+   "score": 0.437,
+   "seq": 36,
+   "type": "scope-warn"
+  },
+  {
+   "added": "Owner, 19 Oct 18:38: every filter is built from the category's own products — sizes only those that exist, up to the largest present (S…3XL/4XL/5XL supported), colours only those listed in the category with their product counts, fits only those present (no Slim if none). Nothing fixed.",
+   "d": "2026-10-19",
+   "pr": 46,
+   "seq": 37,
+   "type": "update"
+  },
+  {
+   "added": "Per-section tick: no single piece here; optional \"add 1 more → 3 pcs\". Lifecycle (owner, 19 Oct 11:51): nothing is deleted and no combo URL dies (Google rank, shared links); optional start/end dates (none = always on); at the end date the rule ends by itself → pages stay live and indexable showing \"offer ended\" with live alternatives, no add to bag, and move to an Archive tab in admin; sold out stays automatic from stock; manual off = ended; turning on or extending brings the same URLs back.",
+   "d": "2026-10-19",
+   "pr": 571,
+   "seq": 38,
+   "type": "changed"
+  },
+  {
+   "aligned": [
+    {
+     "n": 76,
+     "score": 0.33,
+     "why": "stage"
+    },
+    {
+     "n": 77,
+     "score": 0.33,
+     "why": "words"
+    },
+    {
+     "n": 45,
+     "score": 0.251,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 595,
+   "seq": 39,
+   "stage": "S02",
+   "tm": "18:38",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 57,
+     "score": 0.155,
+     "why": "stage"
+    },
+    {
+     "n": 595,
+     "score": 0.155,
+     "why": "words"
+    },
+    {
+     "n": 49,
+     "score": 0.133,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 596,
+   "seq": 40,
+   "stage": "S02",
+   "tm": "18:38",
+   "type": "new-pr"
+  },
+  {
+   "added": "In demo (19 Oct, Shilpi A360-05 + Sawdagor A360-04): #/admin/layout \"পেজ সাজান\" — page picker (home · all categories · per-category override), drag + ↑/↓ reorder, on/off, edit, duplicate, hide-never-delete, add-section type picker (10 types incl. product row from category/tag/manual, combo row from a combo rule, safe rich text, spacer), whole-day Asia/Dhaka dates, phone/desktop/both, live phone + desktop preview; example \"নতুন অফার\" above the reviews. Built-ins point at today's renderers (HOME_SECTIONS / CAT_SECTIONS); default layout = pixel-identical pages (gate 0 px). Files: 96c-layout-builder.js, r12-zlb.css.",
+   "d": "2026-10-19",
+   "pr": 595,
+   "seq": 41,
+   "type": "update"
+  },
+  {
+   "added": "In demo (19 Oct, Shilpi + Sawdagor): #/admin/side-canvas \"দুই পাশের জায়গা\" — live map of the page at 1280–1920 px with px/inch rulers, draw/drag/resize zones or type top/width/height, zone types banner · house ad (product/combo/category) · popup trigger (view/time/click, once per visit/day/week) · illustrated figure (polo + denim + boots from the garment drawings, entrance animation off for reduced motion) · image/animation; blend colour auto/custom, fade side, strength; sticky or anchored per zone; shows only where gutter ≥ zone width + 16 px, never over content, full-width bands, header or footer; hidden on phone/tablet. Master switch OFF (\"চালু করার আগে মালিকের অনুমোদন লাগবে\"); owner …",
+   "d": "2026-10-19",
+   "pr": 596,
+   "seq": 42,
+   "type": "update"
+  },
+  {
+   "added": "Bengali goes live per page behind the translation gate (PR 588). Admin (owner, 19 Oct 19:53): the backend's menus and labels are in simple English by default, with a switch to Bengali.",
+   "d": "2026-10-19",
+   "pr": 503,
+   "seq": 43,
+   "type": "update"
+  },
+  {
+   "added": "Owner, 19 Oct 19:53: will turn it on; master on/off stays in the backend (off = today's look). Zones target home, all categories or chosen categories, desktop only. Never hide — scale: each zone has a standard reference size and scales up or down to the space each screen gives. Modes: fixed, or fixed with a gentle float of a few cm up/down while scrolling. Full-blend mode: the product sits straight on the page background with no frame, border or card edge. Animated content: a model figure changing poses, products cycling. AI motion templates (with S24/S25): 15–20 ready templates (colour cycle, pose cycle, turn-around, slide-up stack, flip deck, ticker, spotlight, etc.); the owner picks a …",
+   "d": "2026-10-19",
+   "pr": 596,
+   "seq": 44,
+   "type": "update"
+  },
+  {
+   "aligned": [
+    {
+     "n": 595,
+     "why": "named"
+    },
+    {
+     "n": 596,
+     "why": "named"
+    },
+    {
+     "n": 592,
+     "why": "named"
+    },
+    {
+     "n": 510,
+     "score": 0.205,
+     "why": "words"
+    },
+    {
+     "n": 123,
+     "score": 0.158,
+     "why": "words"
+    },
+    {
+     "n": 508,
+     "score": 0.155,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 597,
+   "seq": 45,
+   "stage": "S02",
+   "tm": "19:53",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 595,
+     "score": 0.261,
+     "why": "named"
+    },
+    {
+     "n": 509,
+     "why": "named"
+    },
+    {
+     "n": 76,
+     "score": 0.287,
+     "why": "stage"
+    },
+    {
+     "n": 587,
+     "score": 0.185,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 598,
+   "seq": 46,
+   "stage": "S02",
+   "tm": "21:23",
+   "type": "new-pr"
+  },
+  {
+   "added": "v2 in demo (19 Oct, Shilpi + Sawdagor): zones scale from the 1440 standard (gutter 132 px) — 0.31× at 1280, 0.68× at 1366, 1× at 1440, 0.28× at 1536, 1.6× (cap) at 1920 — text clamps, picture-only below 72 px; modes sticky / float (±40 px, eased, transform only) / anchored; full blend (transparent garment drawings + edge fade, no card or edge); per-zone pages (home, all or chosen categories); 19 motion templates incl. the signature walk-out (default suggestion for top + bottom) with product picker (category, sub-category, every colour of…, manual, combo), speed, order and smart suggestion; \"AI দিয়ে পোজ/ভিডিও বানান\" (simulated) + AI asset library ST.aiAssets with reuse at no token cost …",
+   "d": "2026-10-19",
+   "pr": 596,
+   "seq": 47,
+   "type": "update"
+  },
+  {
+   "added": "In demo (19 Oct, Shilpi + Sawdagor): Snapshots panel on Page layout, Side canvas and Admin → Settings — save as launch default / back to launch default (confirm; test sections, zones, house ads and per-category layouts kept as hidden switched-off copies), named snapshots with restore and rename, restore log with undo last restore; covers ST.layout, ST.sideCanvas, ST.blogAds, ST.blogAdSettings, ST.heroBtns.",
+   "d": "2026-10-19",
+   "pr": 597,
+   "seq": 48,
+   "type": "update"
+  },
+  {
+   "added": "Placement (owner 22:14, marked screenshot review/owner-side-zone-2026-10-19.png): default zone starts at the first content row (≈14% below the header), is ≈80% of the visible window height below the header, leaves ≈6% at the bottom, hugs the content side with a ≈16 px gap; mirrored right; auto-adjusts to every window; percentages are settings (\"centred 75%\" kept as a preset). Per-size placement (owner 22:17): the editor shows ≥10 real desktop/laptop sizes (1280×720 … 2560×1440 plus his own 1797×879 and \"this screen\"); he sets the placement on one size and the rest auto-adjust, can fix a custom placement for any size (badge, reset to auto), sizes in between interpolate, a \"check all sizes\" …",
+   "d": "2026-10-19",
+   "pr": 596,
+   "seq": 49,
+   "type": "update"
+  },
+  {
+   "added": "Owner 22:14: header logo text or uploaded image (auto-fit, phone version) with the slogan under the logo (editable, shared with the footer, on/off); footer columns and links drag-and-drop; social and payment icons chosen from a set or uploaded, added, removed, reordered. Clicking any link to the page you are on (e.g. the logo on home) scrolls to the top.",
+   "d": "2026-10-19",
+   "pr": 598,
+   "seq": 50,
+   "type": "update"
+  },
+  {
+   "aligned": [
+    {
+     "n": 72,
+     "score": 0.194,
+     "why": "stage"
+    },
+    {
+     "n": 206,
+     "score": 0.147,
+     "why": "words"
+    },
+    {
+     "n": 378,
+     "score": 0.147,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 599,
+   "seq": 51,
+   "stage": "S02",
+   "tm": "22:14",
+   "type": "new-pr"
+  },
+  {
+   "added": "Owner 22:27: a Shimmer control (every shimmer on the site: on/off, speed, intensity, master switch, reduced motion); tiered bag offers (Take 2 / 3 / 4 with prices and savings, fully customisable); side-canvas zones on every page with gutters (home, category, login, bag; never checkout).",
+   "d": "2026-10-19",
+   "pr": 598,
+   "seq": 52,
+   "type": "update"
+  },
+  {
+   "aligned": [
+    {
+     "n": 598,
+     "score": 0.212,
+     "why": "named"
+    },
+    {
+     "n": 76,
+     "score": 0.19,
+     "why": "words"
+    },
+    {
+     "n": 193,
+     "score": 0.157,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 600,
+   "seq": 53,
+   "stage": "S02",
+   "tm": "22:27",
+   "type": "new-pr"
+  },
+  {
+   "added": "Updated 19 Oct 22:44 (owner): a NEW VPS, freshly created with Ubuntu (not the old Azure VM). Record the new machine's specs from the owner's configuration screenshot; take a provider snapshot/backup before any change; the old \"Azure package must not change\" rule applies to the old VM only",
+   "d": "2026-10-19",
+   "pr": 1,
+   "seq": 54,
+   "type": "update"
+  },
+  {
+   "added": "Not needed on the new VPS — created with Ubuntu 24.04 LTS; verify version and apply all updates",
+   "d": "2026-10-19",
+   "pr": 2,
+   "seq": 55,
+   "type": "update"
+  },
+  {
+   "added": "Ports 22/80/443 are opened by us (server firewall over SSH; the provider's cloud firewall via its panel with the owner's login or step-by-step guidance) — the owner does not do it",
+   "d": "2026-10-19",
+   "pr": 3,
+   "seq": 56,
+   "type": "update"
+  },
+  {
+   "added": "Status at pause (19 Oct 22:45): in demo — default placement from the owner's marking (top 14.4%, height 79.9%, 17 px to content, width 88% of the gutter; 157×644 at 1797×879), 10-size editor with per-size fix and interpolation, check-all grid, 16 page types detected (checkout/thanks/landing excluded), per-page switches; for the code phase: tests for per-page placement, Bengali placement sheets, full gate re-run.",
+   "d": "2026-10-19",
+   "pr": 596,
+   "seq": 57,
+   "type": "update"
+  },
+  {
+   "added": "Change process (owner 22:54; review/CHANGE-PROCESS.md): register and blueprint live in the repo docs/ from the first code day and feed this section on every deploy; new ideas come in by chat, the \"request a change\" form or Telegram to the chief → scope on an existing PR first, else a new PR → a dated change note (CN-###) → placed on the not-yet-built PR, or in the change queue after the current wave, or as an urgent bug PR → blueprint version V2.1, V2.2…; after go-live the same path plus staging and the gate; layout/text/offer changes are done in the site builder without PRs (version history only).",
+   "d": "2026-10-19",
+   "pr": 594,
+   "seq": 58,
+   "type": "update"
+  },
+  {
+   "added": "Combo in the bag — 5 templates (default B5 compact rows, ranking winner, applied 19 Oct; owner keeps current defaults): B1 grouped card, B2 sizes editable in the bag, B3 \"add 1 more\" inside the card, B4 real item prices + one discount line (order record and invoice), B5 compact line for many sets.",
+   "d": "2026-10-19",
+   "pr": 574,
+   "seq": 59,
+   "type": "update"
+  },
+  {
+   "added": "Agent 360° profiles — each of the fixed agents (seven since PR 581; five blog authors since PR 593) (প্রহরী Prohori, ভান্ডারী Bhandari, সওদাগর Sawdagor, শিল্পী Shilpi, দূত Doot, জ্ঞানী Gyani — renamed by the owner 19 Oct) has an employee-style profile in the AI 360 Control Room: role and owned stages, what it never touches, its plan, skills it has and skills it is learning (linked to the Skill Library, PR 321–323), work log (every task, PR, file), test results (device gate, QA checklist runs), performance (first-time-right rate, bugs found by the owner vs by itself, cost).",
+   "d": "2026-10-19",
+   "pr": 577,
+   "seq": 60,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 22:44 (owner): a NEW machine, freshly created with Ubuntu (not the old Azure VM). Record the new machine's specs from the owner's configuration screenshot; take a provider snapshot/backup before any change; the old \"Azure package must not change\" rule applies to the old VM only. Updated 19 Oct 23:33 (owner server spec): the machine is fixed — a new Azure VM, E8ds_v6 (8 vCPU, 64 GB RAM, 440 GB local NVMe, temporary — PR 601), region Southeast Asia (Singapore), Ubuntu Server 24.04 LTS x64 Gen2 (the plain image, not Ubuntu Pro), Trusted launch, accelerated networking on, NSG inbound 22/80/443 (UFW inside locks it further, PR 3), auto-shutdown off, Azure Backup off (backups are …",
+   "d": "2026-10-19",
+   "pr": 1,
+   "seq": 61,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): the image is Ubuntu Server 24.04 LTS x64 Gen2, not Pro (PR 1)",
+   "d": "2026-10-19",
+   "pr": 2,
+   "seq": 62,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): UFW allows only 80, 443 and 22; optionally 80/443 limited to Cloudflare's IP ranges (a setting). SSH by key only, no root login, fail2ban — port 22 stays key-only with fail2ban because the build agents connect from changing IPs. DB and Redis reachable only inside the server. Unattended security updates. Boot order after any restart: NVMe unit first (PR 601), then the data-disk LVM mounts, then Docker, Postgres, Redis and the app — all by themselves, in that order. Data-disk LVM volumes (Postgres, Docker volumes, Redis persistence, kept logs, config and certificates) with free-space alarms at 80% (PR 9)",
+   "d": "2026-10-19",
+   "pr": 3,
+   "seq": 63,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): Docker Compose stays (not PM2) — each service its own container with RAM/CPU limits from the one config file (PR 604) and auto-restart; volumes on the data disk, scratch on NVMe (PR 601); zero-downtime deploys — rolling/blue-green with health checks and automatic rollback",
+   "d": "2026-10-19",
+   "pr": 4,
+   "seq": 64,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): size confirmed (E8ds_v6), nothing to re-size. 16 GB RAM, 2–3 CPU; shared_buffers 16 GB, effective_cache_size 40 GB, work_mem by workload, max_connections kept low behind PgBouncer; temp_tablespaces on NVMe (PR 601); data on the data disk; slow query log for anything over 100 ms (PR 603); WAL archived to Blob for point-in-time restore (PR 8); a low-priority report pool (PR 603)",
+   "d": "2026-10-19",
+   "pr": 5,
+   "seq": 65,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): Redis 6 GB, 1 CPU, maxmemory with LRU eviction; working cache on NVMe, persistence (AOF/RDB) on the data disk; holds settings, the Dhaka area list, products, categories and the 15 s stock display cache (PR 602). Queues: image/video worker (separate process, 6 GB, 2 CPU) and background jobs (courier sync, e-mail, reports; 4 GB, 1 CPU) — heavy image and video work never runs in the web process",
+   "d": "2026-10-19",
+   "pr": 6,
+   "seq": 66,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): Caddy stays (not Nginx) — automatic SSL renewal on all three domains, 1 GB, 1 CPU; Cloudflare in front in Full (strict) mode with a Cloudflare Origin certificate (PR 362)",
+   "d": "2026-10-19",
+   "pr": 7,
+   "seq": 67,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): Azure Blob is added (supersedes \"Drive only, no Blob\"). Blob: continuous WAL archive for point-in-time restore to any minute; daily full backups; soft delete and versioning or immutability on, so a mistake or ransomware cannot wipe it; images and media in Blob with soft delete and versioning. Google Drive stays mandatory: the daily full encrypted copy, off-site with a different company; the second add-only Drive is a third copy. Zip staging on NVMe → upload → delete. Retention from settings. Restore: one command, defaults to Blob (same region, fast), Drive is the fallback; choose a point in time; staging first, typed confirmation for production (PR …",
+   "d": "2026-10-19",
+   "pr": 8,
+   "seq": 68,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): Telegram alerts (through the AI 360 channel) when a disk passes 80%, a service goes down, a backup fails (Blob or Drive), the site slows down, or the NVMe goes missing; per-service RAM and CPU against its limit; the plain-language admin Server page is PR 423 — pre-launch required",
+   "d": "2026-10-19",
+   "pr": 9,
+   "seq": 69,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): plus the speed targets, measured from Dhaka on a phone over 4G: LCP < 2.5 s, CLS < 0.1, INP < 200 ms, TTFB < 600 ms, category page under 1 MB, admin page under 1 s; measured automatically every month with results in the admin (PR 234, 423) — not done = not finished",
+   "d": "2026-10-19",
+   "pr": 10,
+   "seq": 70,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): the schema carries the required indexes and the pg_trgm extension of PR 603 from day one",
+   "d": "2026-10-19",
+   "pr": 13,
+   "seq": 71,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): includes the storage adapter — local disk / Azure Blob / S3-compatible — so media works with or without Blob and with or without the CDN (PR 604)",
+   "d": "2026-10-19",
+   "pr": 18,
+   "seq": 72,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): on upload the original is archived; five sizes thumb 160 · card 400 · card2x 800 · main 1200 · zoom 2000 px; ratio 4:5 on every size; each in AVIF, WebP and JPEG; quality 75–80, changeable from settings; the dominant colour is stored; processing runs in the background on NVMe (image worker, PR 6) and the files go to Blob through the storage adapter (PR 18) — never kept permanently on the VM disk. Required from launch",
+   "d": "2026-10-19",
+   "pr": 22,
+   "seq": 73,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): served with <picture>/srcset — the right size for each screen (phone 400, larger screens 800; never 2000 on a phone), zoom uses the 2000 size; width and height always set; a dominant-colour placeholder box until the image arrives; first screen eager, the rest lazy",
+   "d": "2026-10-19",
+   "pr": 24,
+   "seq": 74,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): the library sits on the storage adapter (Blob by default; PR 18); originals archived so every size can be regenerated when a size or quality setting changes; images, video, banners, logos, generated PDFs and WhatsApp invoice JPGs all live in Blob behind Cloudflare, with soft delete and versioning (PR 8)",
+   "d": "2026-10-19",
+   "pr": 37,
+   "seq": 75,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): site search stays on Meilisearch (4 GB, PR 604) — better at Bengali and English typos; Postgres pg_trgm is for fraud fuzzy matching only (PR 519, 603). Resolves the owner's \"search index in Postgres\" line",
+   "d": "2026-10-19",
+   "pr": 72,
+   "seq": 76,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): targets — a category image under 40 KB, a product main image under 150 KB, a category page under 1 MB; the speed targets of PR 10 (LCP < 2.5 s, CLS < 0.1, INP < 200 ms, TTFB < 600 ms) measured from Dhaka on a phone over 4G",
+   "d": "2026-10-19",
+   "pr": 88,
+   "seq": 77,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): plus an automatic monthly measurement from Dhaka, on a phone, over 4G, against the PR 10 targets (LCP, CLS, INP, TTFB, category page weight, admin page time); results in the admin Server page (PR 423). Pre-launch required",
+   "d": "2026-10-19",
+   "pr": 234,
+   "seq": 78,
+   "type": "update"
+  },
+  {
+   "added": "Updated 19 Oct 23:33 (owner server spec): name and address are matched fuzzily (spelling a little off) with Postgres pg_trgm trigram indexes from PR 603; site search does not use it (Meilisearch, PR 72)",
+   "d": "2026-10-19",
+   "pr": 519,
+   "seq": 79,
+   "type": "update"
+  },
+  {
+   "aligned": [
+    {
+     "n": 423,
+     "why": "named"
+    },
+    {
+     "n": 9,
+     "score": 0.174,
+     "why": "named"
+    },
+    {
+     "n": 1,
+     "score": 0.169,
+     "why": "words"
+    },
+    {
+     "n": 3,
+     "score": 0.159,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 601,
+   "seq": 80,
+   "stage": "S0A",
+   "tm": "23:33",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 198,
+     "why": "named"
+    },
+    {
+     "n": 423,
+     "why": "named"
+    },
+    {
+     "n": 88,
+     "score": 0.129,
+     "why": "stage"
+    },
+    {
+     "n": 601,
+     "score": 0.18,
+     "why": "words"
+    },
+    {
+     "n": 6,
+     "score": 0.142,
+     "why": "words"
+    },
+    {
+     "n": 234,
+     "score": 0.141,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 602,
+   "seq": 81,
+   "stage": "S02",
+   "tm": "23:33",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 13,
+     "why": "named"
+    },
+    {
+     "n": 519,
+     "why": "named"
+    },
+    {
+     "n": 536,
+     "why": "named"
+    },
+    {
+     "n": 423,
+     "why": "named"
+    },
+    {
+     "n": 72,
+     "why": "named"
+    },
+    {
+     "n": 508,
+     "score": 0.18,
+     "why": "stage"
+    },
+    {
+     "n": 602,
+     "score": 0.206,
+     "why": "words"
+    },
+    {
+     "n": 601,
+     "score": 0.189,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 603,
+   "seq": 82,
+   "stage": "S00",
+   "tm": "23:33",
+   "type": "new-pr"
+  },
+  {
+   "aligned": [
+    {
+     "n": 18,
+     "score": 0.221,
+     "why": "named"
+    },
+    {
+     "n": 423,
+     "why": "named"
+    },
+    {
+     "n": 601,
+     "score": 0.245,
+     "why": "stage"
+    },
+    {
+     "n": 602,
+     "score": 0.202,
+     "why": "words"
+    }
+   ],
+   "d": "2026-10-19",
+   "pr": 604,
+   "seq": 83,
+   "stage": "S0A",
+   "tm": "23:33",
+   "type": "new-pr"
+  },
+  {
+   "added": "Updated 20 Oct 00:45 (owner, CN-002): machine created — E8ds_v6, Ubuntu Server 24.04 LTS Gen2, Trusted launch, NVMe controller, OS 128 GB + data 1 TB Premium SSD LRS (P30), accelerated networking on, auto-shutdown off, boot diagnostics on, ports 22/80/443. Region is _Malaysia West (zone 1)_, not Southeast Asia — owner's choice at creation, kept (cheaper; latency to Dhaka similar; Cloudflare in front). The Blob storage account must be created in the same region (Malaysia West). The mentions in CN-001 read as Malaysia West. Updated 19 Oct 22:44 (owner): a NEW machine, freshly created with Ubuntu (not the old Azure VM). Record the new machine's specs from the owner's configuration screenshot; …",
+   "d": "2026-10-20",
+   "pr": 1,
+   "seq": 84,
+   "type": "update"
+  },
+  {
+   "added": "One smooth slider engine used by every sliding row on the site — continuous glide, drag, pause on touch, reduced-motion safe V2.1 final · 20 Oct: proven in the timing audit TA-2 (qa/TIMING-AUDIT.md, 0 fails; checklist L32/L33) — separate pause flags for mouse (hover), touch (4 s hold) and keyboard (focus), each with a tested resume; resumes within about 100 ms after the mouse leaves, after a mouse drag and after a sideways wheel; a vertical wheel is ignored (the page scrolls); every row drags with the mouse and a click after a drag never opens the card; touch hold unchanged.",
+   "d": "2026-10-20",
+   "pr": 42,
+   "seq": 85,
+   "type": "update"
+  },
+  {
+   "added": "Category page: grid, breadcrumb, category SEO text block, pagination V2.1 final · 20 Oct: in the category banners a price never splits from its \"৳\" across lines on a phone (nowrap).",
+   "d": "2026-10-20",
+   "pr": 45,
+   "seq": 86,
+   "type": "update"
+  },
+  {
+   "added": "Price block: price, discount, saving, free-delivery badge, payment line, all four combinations V2.1 final · 20 Oct: phone rule — a currency sign and its number never split across lines (nowrap), on every price.",
+   "d": "2026-10-20",
+   "pr": 61,
+   "seq": 87,
+   "type": "update"
+  },
+  {
+   "added": "Build your own set — pick any N, the tier price applies automatically V2.1 final · 20 Oct: these tier rules also drive the bag tier box \"Take 2 │ Take 3 │ Take 4\" (PR 109/598) — the same numbers in the box, set builder, bag and checkout. The 4-piece prices seeded in the demo (BAG_TIER_SEED: 4 polos ৳2,700, 4 tees ৳1,750) are suggestions waiting for the owner's yes; real prices are owner data.",
+   "d": "2026-10-20",
+   "pr": 98,
+   "seq": 88,
+   "type": "update"
+  },
+  {
+   "added": "Cart page: lines, images, quantity, remove, save for later V2.1 final · 20 Oct: owner bag review 43.3–43.9 built (Batch B): title \"Your bag — N items\"; bigger Continue shopping with shimmer; shimmer on FREE; \"You save\" in sale red; duplicate-size box fixed (fits, accent left and right); line titles 17 px with colour and size in bold ink; 15 plain English bag labels, editable with Bengali; no combo nick-names on the bag.",
+   "d": "2026-10-20",
+   "pr": 107,
+   "seq": 89,
+   "type": "update"
+  },
+  {
+   "added": "One offer slot under the lines — never between products, never empty V2.1 final · 20 Oct: the offer slot can show the tier box \"Take 2 │ Take 3 │ Take 4\" with gold bars (owner 43.10), built from the Build your own set rules (PR 98); settings on/off, dates, categories/products, up to 4 tiers per rule; desktop only, the phone version is a preview only.",
+   "d": "2026-10-20",
+   "pr": 109,
+   "seq": 90,
+   "type": "update"
+  },
+  {
+   "added": "V2.1 final · 20 Oct: English mode shows 0 Bengali across 206 admin routes; the mixed-label dictionary is fixed; documents in Blueprint & files are shown exactly as written in either mode; combo-rule state labels English by default (Running / Off / Ended / Starts), Bengali in Bengali mode.",
+   "d": "2026-10-20",
+   "pr": 503,
+   "seq": 91,
+   "type": "update"
+  },
+  {
+   "added": "V2.1 final · 20 Oct: the timing items are checklist L32 / L33 (renumbered from L28 / L29); TA-2 530 checks, 0 fail; the audit runner re-runs them on every release.",
+   "d": "2026-10-20",
+   "pr": 570,
+   "seq": 92,
+   "type": "update"
+  },
+  {
+   "added": "V2.1 final · 20 Oct: both owner 22:27 items are built in the demo (Batch B): Shimmer control — Admin › Settings › Shimmer, 14 shimmers each with on/off, speed and strength, plus a master switch; reduce-motion gets no shimmer; the Add to Bag shimmer exists but is off by default (89t-shimmer.js); tiered bag offers — the \"Take 2 │ Take 3 │ Take 4\" box with gold bars from the Build your own set price rules, up to 4 tiers per rule, dates and targeting, desktop only with a phone preview (89u-bag-offers.js). The rest of PR 598 stays paused.",
+   "d": "2026-10-20",
+   "pr": 598,
+   "seq": 93,
+   "type": "update"
+  }
+ ],
+ "prs": {
+  "1": {
+   "firstSeen": "2026-10-18",
+   "hash": "d53e0bd31cd0",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "**Updated 20 Oct 00:45 (owner, CN-002): machine created — E8ds_v6, Ubuntu Server 24.04 LTS Gen2, Trusted launch, NVMe controller, OS 128 GB + data 1 TB Premium SSD LRS (P30), accelerated networking on, auto-shutdown off, boot diagnostics on, ports 22/80/443. Region is _Malaysia West (zone 1)_, not Southeast Asia — owner's choice at creation, kept (cheaper; latency to Dhaka similar; Cloudflare in front). The Blob storage account must be created in the same region (Malaysia West). The ~~Southeast Asia~~ mentions in CN-001 read as Malaysia West.** **Updated 19 Oct 22:44 (owner): a NEW ~~VPS~~ machine, freshly created with Ubuntu (not the old Azure VM).** Record the new machine's specs from the owner's configuration screenshot; take a provider snapshot/backup before any change; the old \"Azure package must not change\" rule applies to the old VM only. **Updated 19 Oct 23:33 (owner server spec): the machine is fixed — a new Azure VM, E8ds_v6** (8 vCPU, 64 GB RAM, 440 GB local NVMe, temporary — PR 601), region **Southeast Asia** (Singapore), **Ubuntu Server 24.04 LTS x64 Gen2** (the plain image, not Ubuntu Pro), Trusted launch, accelerated networking on, NSG inbound 22/80/443 (UFW inside locks it further, PR 3), auto-shutdown off, Azure Backup off (backups are PR 8), boot diagnostics on (needed for the serial console). **Disks:** OS disk **128 GB Premium SSD LRS** + a separate **data disk of 1 TB (1024 GiB) Premium SSD LRS (P30)**, \"delete with VM\" off, **LVM on the data disk** — it holds Postgres data, Docker volumes, Redis persistence, logs that must be kept, config and certificates. ~~2 TB~~ — 1 TB chosen on Claude's advice: a disk can grow later but never shrink. The 8 vCPU / 64 GB sizing is **confirmed** (no re-size pending). **Access:** the owner creates the VM with \"Generate new key pair\" and keeps the .pem himself; on code day 1 we give him a public key, which he adds under the VM's Reset password → Reset SSH public key with a separate username for the build agent; no private key ever goes into chat. **Cost note:** consider a 1-year Reserved Instance after 1–2 stable months (roughly 30–40% saving)."
+  },
+  "10": {
+   "firstSeen": "2026-10-18",
+   "hash": "d95f928f2eec",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "k6 performance baseline, recorded as the number every later change is measured against. **Updated 19 Oct 23:33 (owner server spec):** plus the speed targets, measured from Dhaka on a phone over 4G: LCP < 2.5 s, CLS < 0.1, INP < 200 ms, TTFB < 600 ms, category page under 1 MB, admin page under 1 s; measured automatically every month with results in the admin (PR 234, 423) — not done = not finished"
+  },
+  "100": {
+   "firstSeen": "2026-10-18",
+   "hash": "fbb4fac686c9",
+   "seed": true,
+   "x": "The set builder: slots, pick from a sliding row, swap, remove"
+  },
+  "101": {
+   "firstSeen": "2026-10-18",
+   "hash": "483140770f3d",
+   "seed": true,
+   "x": "Set validation — what is still missing before it can be added"
+  },
+  "102": {
+   "firstSeen": "2026-10-18",
+   "hash": "1a8daf9a200b",
+   "seed": true,
+   "x": "Combos on the product page: the matching set offer"
+  },
+  "103": {
+   "firstSeen": "2026-10-18",
+   "hash": "7cf4ffe5f26e",
+   "seed": true,
+   "x": "\"More sets\" row, and the sets landing page"
+  },
+  "104": {
+   "firstSeen": "2026-10-18",
+   "hash": "0fab9483a08c",
+   "seed": true,
+   "x": "Combo analytics: which sets sell, which pairs get picked"
+  },
+  "105": {
+   "firstSeen": "2026-10-18",
+   "hash": "8c4b4a1c16d9",
+   "seed": true,
+   "x": "Cart model, line items, quantities, persistence across sessions"
+  },
+  "106": {
+   "firstSeen": "2026-10-18",
+   "hash": "a618d7e2d548",
+   "seed": true,
+   "x": "Add-to-bag sheet: name, size, price, bag count, and what shows when delivery is not free"
+  },
+  "107": {
+   "firstSeen": "2026-10-18",
+   "hash": "bd534ae474ff",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "Cart page: lines, images, quantity, remove, save for later **V2.1 final · 20 Oct:** owner bag review 43.3–43.9 built (Batch B): title \"Your bag — N items\"; bigger Continue shopping with shimmer; shimmer on FREE; \"You save\" in sale red; duplicate-size box fixed (fits, accent left and right); line titles 17 px with colour and size in bold ink; 15 plain English bag labels, editable with Bengali; no combo nick-names on the bag."
+  },
+  "108": {
+   "firstSeen": "2026-10-18",
+   "hash": "88c2d9cbee76",
+   "seed": true,
+   "x": "Set lines in the cart, with each piece linking to its own product page"
+  },
+  "109": {
+   "firstSeen": "2026-10-18",
+   "hash": "6c185a35e929",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "**One offer slot** under the lines — never between products, never empty **V2.1 final · 20 Oct:** the offer slot can show the tier box \"Take 2 │ Take 3 │ Take 4\" with gold bars (owner 43.10), built from the Build your own set rules (PR 98); settings on/off, dates, categories/products, up to 4 tiers per rule; desktop only, the phone version is a preview only."
+  },
+  "11": {
+   "firstSeen": "2026-10-18",
+   "hash": "958b47a4ccbb",
+   "seed": true,
+   "x": "Repository, branch rules, commit and PR conventions, `PROGRESS.md` and `BLOCKED.md`"
+  },
+  "110": {
+   "firstSeen": "2026-10-18",
+   "hash": "7c51a6a4f57f",
+   "seed": true,
+   "x": "The two-sizes-of-the-same-product notice, and the keep-or-change flow"
+  },
+  "111": {
+   "firstSeen": "2026-10-18",
+   "hash": "b8ca2231b7f2",
+   "seed": true,
+   "x": "Order summary with product names, sizes and bold amounts"
+  },
+  "112": {
+   "firstSeen": "2026-10-18",
+   "hash": "b50bccaf87f0",
+   "seed": true,
+   "x": "Discount code entry, validation, and the better-offer explanation"
+  },
+  "113": {
+   "firstSeen": "2026-10-18",
+   "hash": "f0d1878bf34a",
+   "seed": true,
+   "x": "Free-delivery progress and what is still needed to reach it"
+  },
+  "114": {
+   "firstSeen": "2026-10-18",
+   "hash": "680507a942dd",
+   "seed": true,
+   "x": "\"Goes well with your bag\" upsell row"
+  },
+  "115": {
+   "firstSeen": "2026-10-18",
+   "hash": "621cd7db44ea",
+   "seed": true,
+   "x": "Checkout page shell, the steps header, and the mobile summary bar"
+  },
+  "116": {
+   "firstSeen": "2026-10-18",
+   "hash": "f15e5534c417",
+   "seed": true,
+   "x": "Name, phone and address capture with inline validation"
+  },
+  "117": {
+   "firstSeen": "2026-10-18",
+   "hash": "dfedd9fd72d4",
+   "seed": true,
+   "x": "**Dhaka address gazetteer** — longest match across 140+ areas and 64 districts"
+  },
+  "118": {
+   "firstSeen": "2026-10-18",
+   "hash": "50664cf30bd8",
+   "seed": true,
+   "x": "Zone detection with the ask-don't-guess question when confidence is low"
+  },
+  "119": {
+   "firstSeen": "2026-10-18",
+   "hash": "c6b579d5b0ec",
+   "seed": true,
+   "x": "Delivery charge from the zone, shown before the customer types"
+  },
+  "12": {
+   "firstSeen": "2026-10-18",
+   "hash": "b2a98f689ff7",
+   "seed": true,
+   "x": "Next.js App Router + TypeScript skeleton, Tailwind and the component base"
+  },
+  "120": {
+   "firstSeen": "2026-10-18",
+   "hash": "c9258d5ed9ce",
+   "seed": true,
+   "x": "Payment method selection: COD, bKash, Nagad, card"
+  },
+  "121": {
+   "firstSeen": "2026-10-18",
+   "hash": "e4c642b01eee",
+   "seed": true,
+   "x": "Quantity change and item removal at checkout, with the many-of-one-size guard"
+  },
+  "122": {
+   "firstSeen": "2026-10-18",
+   "hash": "ef95b77ba141",
+   "seed": true,
+   "x": "Wallet credit applied at checkout"
+  },
+  "123": {
+   "firstSeen": "2026-10-18",
+   "hash": "9232f7260ece",
+   "seed": true,
+   "x": "Marketing opt-in, default on, with a clear way out"
+  },
+  "124": {
+   "firstSeen": "2026-10-18",
+   "hash": "766b125c6632",
+   "seed": true,
+   "x": "Confirm button states — what is missing, and that the next step confirms the order"
+  },
+  "125": {
+   "firstSeen": "2026-10-18",
+   "hash": "f37fc5577e57",
+   "seed": true,
+   "x": "Order placement, idempotency, and the failure path"
+  },
+  "126": {
+   "firstSeen": "2026-10-18",
+   "hash": "9e40a9708aa3",
+   "seed": true,
+   "x": "Thank-you page: order number, copy, track, payment due"
+  },
+  "127": {
+   "firstSeen": "2026-10-18",
+   "hash": "9862f63a3bb5",
+   "seed": true,
+   "x": "\"Add to this parcel\" — a real order line, visible everywhere the order is shown"
+  },
+  "128": {
+   "firstSeen": "2026-10-18",
+   "hash": "17dcaaf1dc90",
+   "seed": true,
+   "x": "Complete-your-look block on the thank-you page"
+  },
+  "129": {
+   "firstSeen": "2026-10-18",
+   "hash": "7f627f504544",
+   "seed": true,
+   "x": "Account auto-creation on first order, with the credentials shown once"
+  },
+  "13": {
+   "firstSeen": "2026-10-18",
+   "hash": "db941cc12638",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "**Full Prisma schema in one pass** — every table the whole plan needs, including `storeId` on everything. **Updated 19 Oct 23:33 (owner server spec):** the schema carries the required indexes and the `pg_trgm` extension of PR 603 from day one"
+  },
+  "130": {
+   "firstSeen": "2026-10-18",
+   "hash": "e0f56815edff",
+   "seed": true,
+   "x": "Customer login, password change, and the SMS code on a new device"
+  },
+  "131": {
+   "firstSeen": "2026-10-18",
+   "hash": "bbcb0f585ef0",
+   "seed": true,
+   "x": "My account: orders, for you, rewards, wallet, wishlist, profile"
+  },
+  "132": {
+   "firstSeen": "2026-10-18",
+   "hash": "9f9e6015a03e",
+   "seed": true,
+   "x": "**Account offer banner** — wallet balance or a standing member offer, never empty"
+  },
+  "133": {
+   "firstSeen": "2026-10-18",
+   "hash": "ad8245e2f3a4",
+   "seed": true,
+   "x": "Profile photo upload, cropped and stored client-side"
+  },
+  "134": {
+   "firstSeen": "2026-10-18",
+   "hash": "9a9f92ae0684",
+   "seed": true,
+   "x": "Order detail page with the full line list and the add-on items"
+  },
+  "135": {
+   "firstSeen": "2026-10-18",
+   "hash": "29b382bcc085",
+   "seed": true,
+   "x": "Order tracking page, the account welcome panel, and the tracking steps"
+  },
+  "136": {
+   "firstSeen": "2026-10-18",
+   "hash": "57df764d1584",
+   "seed": true,
+   "x": "**Invoice generation and download** from an order"
+  },
+  "137": {
+   "firstSeen": "2026-10-18",
+   "hash": "a6600e0bdd07",
+   "seed": true,
+   "x": "Draft capture and autofill — a started checkout is remembered"
+  },
+  "138": {
+   "firstSeen": "2026-10-18",
+   "hash": "e54e884a68b3",
+   "seed": true,
+   "x": "Order model, states, and the event timeline"
+  },
+  "139": {
+   "firstSeen": "2026-10-18",
+   "hash": "d7382a7b9f58",
+   "seed": true,
+   "x": "Append-only audit log on every order change, with who and when"
+  },
+  "14": {
+   "firstSeen": "2026-10-18",
+   "hash": "d4b42f63a675",
+   "seed": true,
+   "x": "Seed data and fixtures: categories, products, colours, sizes, a demo order"
+  },
+  "140": {
+   "firstSeen": "2026-10-18",
+   "hash": "6ad3fd9f7bdd",
+   "seed": true,
+   "x": "Admin order list: filters, search, bulk selection"
+  },
+  "141": {
+   "firstSeen": "2026-10-18",
+   "hash": "e3cb7f7dd189",
+   "seed": true,
+   "x": "Order detail for the admin, with the customer's history beside it"
+  },
+  "142": {
+   "firstSeen": "2026-10-18",
+   "hash": "440ae470d450",
+   "seed": true,
+   "x": "Admin-side order edit, recording the source of every change"
+  },
+  "143": {
+   "firstSeen": "2026-10-18",
+   "hash": "e4917ce87189",
+   "seed": true,
+   "x": "Customer-side order edit until processing starts, capped"
+  },
+  "144": {
+   "firstSeen": "2026-10-18",
+   "hash": "2629c2ee08ff",
+   "seed": true,
+   "x": "Order cancellation, with reason codes"
+  },
+  "145": {
+   "firstSeen": "2026-10-18",
+   "hash": "7708c094a30a",
+   "seed": true,
+   "x": "**Duplicate-order defence** — four layers, from the submit guard to the review queue"
+  },
+  "146": {
+   "firstSeen": "2026-10-18",
+   "hash": "48105a129bef",
+   "seed": true,
+   "x": "Two-size follow-up: the customer ordered S and M, which do they want"
+  },
+  "147": {
+   "firstSeen": "2026-10-18",
+   "hash": "77f04e81f90b",
+   "seed": true,
+   "x": "Notes and internal flags on an order"
+  },
+  "148": {
+   "firstSeen": "2026-10-18",
+   "hash": "f0a29fe72232",
+   "seed": true,
+   "x": "Order status notifications — SMS, WhatsApp, email — with the no-double-send guard"
+  },
+  "149": {
+   "firstSeen": "2026-10-18",
+   "hash": "467e1b750fde",
+   "seed": true,
+   "x": "Notification log with retries"
+  },
+  "15": {
+   "firstSeen": "2026-10-18",
+   "hash": "3196845775ed",
+   "seed": true,
+   "x": "Authentication — customer accounts, admin accounts, sessions, password rules"
+  },
+  "150": {
+   "firstSeen": "2026-10-18",
+   "hash": "ac71fc79d7fe",
+   "seed": true,
+   "x": "Customer dashboard order history and lifecycle"
+  },
+  "151": {
+   "firstSeen": "2026-10-18",
+   "hash": "22f2ffe1067e",
+   "seed": true,
+   "x": "Order export"
+  },
+  "152": {
+   "firstSeen": "2026-10-18",
+   "hash": "0a3858c7efec",
+   "seed": true,
+   "x": "Bulk status change with confirmation"
+  },
+  "153": {
+   "firstSeen": "2026-10-18",
+   "hash": "25487f659e4b",
+   "seed": true,
+   "x": "Hold and release, with the reason visible to support"
+  },
+  "154": {
+   "firstSeen": "2026-10-18",
+   "hash": "8cdfacb72e28",
+   "seed": true,
+   "x": "Order search by phone, name, order number and tracking number"
+  },
+  "155": {
+   "firstSeen": "2026-10-18",
+   "hash": "ba8e151f918f",
+   "seed": true,
+   "x": "Order analytics: by day, by zone, by payment method"
+  },
+  "156": {
+   "firstSeen": "2026-10-18",
+   "hash": "525b6736da48",
+   "seed": true,
+   "x": "**Risk score model** — the signals, their weights and the band thresholds, all set by the owner (answer 1). Not a fraud-check score: order behaviour, delivery history, address and identity all feed it."
+  },
+  "157": {
+   "firstSeen": "2026-10-18",
+   "hash": "285c4eddcbdb",
+   "seed": true,
+   "x": "Phone history: past orders, refusals, returns on this number"
+  },
+  "158": {
+   "firstSeen": "2026-10-18",
+   "hash": "390cf305c31e",
+   "seed": true,
+   "x": "Address and zone checks against the gazetteer"
+  },
+  "159": {
+   "firstSeen": "2026-10-18",
+   "hash": "f49ff36a6af9",
+   "seed": true,
+   "x": "IP, device and GPS signals, with the 180-day deletion rule (answers 4 and 30). The GPS button stays, default on, switchable."
+  },
+  "16": {
+   "firstSeen": "2026-10-18",
+   "hash": "31b274a856ee",
+   "seed": true,
+   "x": "Role and permission model: owner, manager, support, auditor (read-only)"
+  },
+  "160": {
+   "firstSeen": "2026-10-18",
+   "hash": "deccb7b1b299",
+   "seed": true,
+   "x": "Risk panel on the order, showing why the score is what it is"
+  },
+  "161": {
+   "firstSeen": "2026-10-18",
+   "hash": "0c6941183357",
+   "seed": true,
+   "x": "**Actions per risk level** — watch, hold, confirmation call, delivery charge in advance, full advance, COD off. Claude's set is the default; every action editable (answers 2 and 5)."
+  },
+  "162": {
+   "firstSeen": "2026-10-18",
+   "hash": "082026cf2522",
+   "seed": true,
+   "x": "Blocklist with reasons and an undo. **Owner, manager and customer-facing staff** can all blacklist (answer 3)."
+  },
+  "163": {
+   "firstSeen": "2026-10-18",
+   "hash": "b7b6595fa983",
+   "seed": true,
+   "x": "Repeat-refuser handling, reversible by hand — COD off, delivery charge in advance, full advance, or nothing. The owner chooses per case (answer 5)."
+  },
+  "164": {
+   "firstSeen": "2026-10-18",
+   "hash": "6c97e2f8b000",
+   "seed": true,
+   "x": "Fraud report: what was caught, what was wrong, and the cost avoided"
+  },
+  "165": {
+   "firstSeen": "2026-10-18",
+   "hash": "d402a8fd4cf0",
+   "seed": true,
+   "x": "Payment model, states, and the reconciliation fields"
+  },
+  "166": {
+   "firstSeen": "2026-10-18",
+   "hash": "b9d9dbb85707",
+   "seed": true,
+   "x": "Cash on Delivery: amount due, rider collection, settlement"
+  },
+  "167": {
+   "firstSeen": "2026-10-18",
+   "hash": "fc3546b1b895",
+   "seed": true,
+   "x": "bKash integration behind the adapter, with the mock"
+  },
+  "168": {
+   "firstSeen": "2026-10-18",
+   "hash": "db064f536d35",
+   "seed": true,
+   "x": "Nagad integration behind the adapter, with the mock"
+  },
+  "169": {
+   "firstSeen": "2026-10-18",
+   "hash": "6b9df1259cea",
+   "seed": true,
+   "x": "Card gateway integration behind the adapter, with the mock"
+  },
+  "17": {
+   "firstSeen": "2026-10-18",
+   "hash": "4918b1c659ff",
+   "seed": true,
+   "x": "CI — lint, type-check, unit tests, build, and the Lighthouse gate"
+  },
+  "170": {
+   "firstSeen": "2026-10-18",
+   "hash": "5d85089bd560",
+   "seed": true,
+   "x": "Payment callbacks with idempotency keys"
+  },
+  "171": {
+   "firstSeen": "2026-10-18",
+   "hash": "28ea3ea3d289",
+   "seed": true,
+   "x": "Wallet: credit, debit, balance, and the ledger behind it"
+  },
+  "172": {
+   "firstSeen": "2026-10-18",
+   "hash": "517ff05d8e07",
+   "seed": true,
+   "x": "Refund to wallet, and the rules for when a refund is allowed"
+  },
+  "173": {
+   "firstSeen": "2026-10-18",
+   "hash": "3d63f6b0b277",
+   "seed": true,
+   "x": "Partial payment and advance for pre-orders, capped"
+  },
+  "174": {
+   "firstSeen": "2026-10-18",
+   "hash": "0c60d76c3ae9",
+   "seed": true,
+   "x": "Payment reconciliation report against the gateway statements"
+  },
+  "175": {
+   "firstSeen": "2026-10-18",
+   "hash": "036b3ef1b0b6",
+   "seed": true,
+   "x": "Courier adapter framework with the mock"
+  },
+  "176": {
+   "firstSeen": "2026-10-18",
+   "hash": "692ae0f64ad8",
+   "seed": true,
+   "x": "Steadfast integration — booking, consignment ID, status polling"
+  },
+  "177": {
+   "firstSeen": "2026-10-18",
+   "hash": "94b26b5cc258",
+   "seed": true,
+   "x": "Second courier integration"
+  },
+  "178": {
+   "firstSeen": "2026-10-18",
+   "hash": "a9fe85447977",
+   "seed": true,
+   "x": "**Courier selection by zone, weight and real cost** — the couriers price the same parcel differently (Pathao ৳80 to the suburbs against Steadfast ৳105; Steadfast ৳55 inside Dhaka against Pathao ৳60), so the rule picks the cheaper one per destination. **This affects the shop's cost only — never the charge shown to the customer**, which is the fixed figure from PR 550."
+  },
+  "179": {
+   "firstSeen": "2026-10-18",
+   "hash": "6110e56324ca",
+   "seed": true,
+   "x": "**Courier sticker** — the one fulfilment document, custom size, barcode, COD amount, full item list"
+  },
+  "18": {
+   "firstSeen": "2026-10-18",
+   "hash": "404ac052761a",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "The adapter framework: every integration has a mock / sandbox / live mode and a test-connection button. **Updated 19 Oct 23:33 (owner server spec):** includes the **storage adapter** — local disk / Azure Blob / S3-compatible — so media works with or without Blob and with or without the CDN (PR 604)"
+  },
+  "180": {
+   "firstSeen": "2026-10-18",
+   "hash": "4dea8eeb2437",
+   "seed": true,
+   "x": "Sticker print queue, reprint safety, and the handover sheet"
+  },
+  "181": {
+   "firstSeen": "2026-10-18",
+   "hash": "e7228c24059e",
+   "seed": true,
+   "x": "**Daily consolidated picking list PDF**, sorted category → style → size, highest quantity first"
+  },
+  "182": {
+   "firstSeen": "2026-10-18",
+   "hash": "8b5b6c77afd1",
+   "seed": true,
+   "x": "Fulfilment page: pick, pack, hand over, all on one screen"
+  },
+  "183": {
+   "firstSeen": "2026-10-18",
+   "hash": "2a832d5130aa",
+   "seed": true,
+   "x": "Defective or out-of-stock at packing: the resolution card and the hold. **Never auto-cancelled** — the team decides; the rest of the order ships (answers 41, 42)."
+  },
+  "184": {
+   "firstSeen": "2026-10-18",
+   "hash": "806250b59036",
+   "seed": true,
+   "x": "Tracking status sync back to the order and the customer's tracking page"
+  },
+  "185": {
+   "firstSeen": "2026-10-18",
+   "hash": "d52d28eaf5aa",
+   "seed": true,
+   "x": "**Four-tier exchange engine** with the money box for each tier"
+  },
+  "186": {
+   "firstSeen": "2026-10-18",
+   "hash": "c97e660d1879",
+   "seed": true,
+   "x": "Exchange request from the customer's account, within the window"
+  },
+  "187": {
+   "firstSeen": "2026-10-18",
+   "hash": "8f0c8b93c385",
+   "seed": true,
+   "x": "Exchange QC — good or damaged — then restock or write-off"
+  },
+  "188": {
+   "firstSeen": "2026-10-18",
+   "hash": "907edbfa4690",
+   "seed": true,
+   "x": "Exchange variant switcher: same product, different size"
+  },
+  "189": {
+   "firstSeen": "2026-10-18",
+   "hash": "cc1604741a04",
+   "seed": true,
+   "x": "Return handling, with the policy that there are no returns after receipt"
+  },
+  "19": {
+   "firstSeen": "2026-10-18",
+   "hash": "db3c3425291b",
+   "seed": true,
+   "x": "Product, variant, colour and size model, with the ERP's SKU as the key"
+  },
+  "190": {
+   "firstSeen": "2026-10-18",
+   "hash": "35901d6c4b24",
+   "seed": true,
+   "x": "Delivery charge rules for exchanges, and who pays"
+  },
+  "191": {
+   "firstSeen": "2026-10-18",
+   "hash": "31444f5b6d4b",
+   "seed": true,
+   "x": "Refused-parcel handling and the exclusion list it feeds"
+  },
+  "192": {
+   "firstSeen": "2026-10-18",
+   "hash": "96b9754d07b9",
+   "seed": true,
+   "x": "Courier performance report: on-time rate, refusal rate, by zone"
+  },
+  "193": {
+   "firstSeen": "2026-10-18",
+   "hash": "2a41b56998ff",
+   "seed": true,
+   "x": "Holiday mode — cut-off dates, promised delivery windows, the storefront notice"
+  },
+  "194": {
+   "firstSeen": "2026-10-18",
+   "hash": "33180124798b",
+   "seed": true,
+   "x": "**ERP sync adapter** — authentication, retry, and the error surface"
+  },
+  "195": {
+   "firstSeen": "2026-10-18",
+   "hash": "0671d8793972",
+   "seed": true,
+   "x": "Stock pull from the ERP at SKU / colour / size level"
+  },
+  "196": {
+   "firstSeen": "2026-10-18",
+   "hash": "a9b43220f58d",
+   "seed": true,
+   "x": "`companyId` and warehouse mapping per store"
+  },
+  "197": {
+   "firstSeen": "2026-10-18",
+   "hash": "46ed6a3923c3",
+   "seed": true,
+   "x": "**Global reservation across all three stores** on the one shared stock pool"
+  },
+  "198": {
+   "firstSeen": "2026-10-18",
+   "hash": "dc5e88a27c67",
+   "seed": true,
+   "x": "Reservation with row locking, and release on cart abandon"
+  },
+  "199": {
+   "firstSeen": "2026-10-18",
+   "hash": "f99ce431b3f9",
+   "seed": true,
+   "x": "Order push to the ERP as a document, never as journal lines"
+  },
+  "2": {
+   "firstSeen": "2026-10-18",
+   "hash": "f8c3b1982c74",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "~~In-place OS upgrade 20.04 → 24.04~~ **Not needed on the new VPS** — created with Ubuntu 24.04 LTS; verify version and apply all updates. **Updated 19 Oct 23:33 (owner server spec):** the image is Ubuntu Server 24.04 LTS x64 Gen2, not Pro (PR 1)"
+  },
+  "20": {
+   "firstSeen": "2026-10-18",
+   "hash": "8fe08ee38a0e",
+   "seed": true,
+   "x": "Category tree with sub-categories, and the per-category garment type"
+  },
+  "200": {
+   "firstSeen": "2026-10-18",
+   "hash": "5dad3a634a7a",
+   "seed": true,
+   "x": "Idempotency on every ERP push — no duplicate stock movement is possible"
+  },
+  "201": {
+   "firstSeen": "2026-10-18",
+   "hash": "b973bbf5443a",
+   "seed": true,
+   "x": "Inventory locations including the damaged bin"
+  },
+  "202": {
+   "firstSeen": "2026-10-18",
+   "hash": "c9695d0da117",
+   "seed": true,
+   "x": "Low-stock alerts, per variant"
+  },
+  "203": {
+   "firstSeen": "2026-10-18",
+   "hash": "14f5ee2075cb",
+   "seed": true,
+   "x": "Stock audit by barcode, with variance and reason"
+  },
+  "204": {
+   "firstSeen": "2026-10-18",
+   "hash": "d7fbde1d80b3",
+   "seed": true,
+   "x": "Product publishing queue driven by real ERP stock"
+  },
+  "205": {
+   "firstSeen": "2026-10-18",
+   "hash": "a98a9f71a395",
+   "seed": true,
+   "x": "Sync health panel: last run, what failed, what is queued"
+  },
+  "206": {
+   "firstSeen": "2026-10-18",
+   "hash": "ed0ba8905dd8",
+   "seed": true,
+   "x": "Manual re-sync and single-product re-sync"
+  },
+  "207": {
+   "firstSeen": "2026-10-18",
+   "hash": "abfec356ebb1",
+   "seed": true,
+   "x": "Stock movement report, reconciled against the ERP"
+  },
+  "208": {
+   "firstSeen": "2026-10-18",
+   "hash": "3cb4c6818234",
+   "seed": true,
+   "x": "Rules engine: conditions, actions, priority, active window"
+  },
+  "209": {
+   "firstSeen": "2026-10-18",
+   "hash": "e0da97198d7a",
+   "seed": true,
+   "x": "Rule admin with a live preview of what the customer will see"
+  },
+  "21": {
+   "firstSeen": "2026-10-18",
+   "hash": "a098f30862d7",
+   "seed": true,
+   "x": "Product admin — create, edit, publish, unpublish, bulk actions"
+  },
+  "210": {
+   "firstSeen": "2026-10-18",
+   "hash": "ff5ef08fa44d",
+   "seed": true,
+   "x": "Delivery rules — charges, free-delivery threshold, zones"
+  },
+  "211": {
+   "firstSeen": "2026-10-18",
+   "hash": "a9d0a532b27c",
+   "seed": true,
+   "x": "Exchange rules — window, who pays, what qualifies"
+  },
+  "212": {
+   "firstSeen": "2026-10-18",
+   "hash": "c70d81bb810a",
+   "seed": true,
+   "x": "Set and combo tier rules: any 2 for X, any 3 for Y"
+  },
+  "213": {
+   "firstSeen": "2026-10-18",
+   "hash": "b911bd40eabe",
+   "seed": true,
+   "x": "Discount and coupon rules, with the honesty guard on \"was\" prices"
+  },
+  "214": {
+   "firstSeen": "2026-10-18",
+   "hash": "9822bf3458c8",
+   "seed": true,
+   "x": "Festive and seasonal rules, with cut-off dates"
+  },
+  "215": {
+   "firstSeen": "2026-10-18",
+   "hash": "6a45d2e920a5",
+   "seed": true,
+   "x": "**Rule text everywhere reads from the rule**, never from a hard-coded string"
+  },
+  "216": {
+   "firstSeen": "2026-10-18",
+   "hash": "52d9ed0c0c18",
+   "seed": true,
+   "x": "Notices and pop-up builder, with placement and timing"
+  },
+  "217": {
+   "firstSeen": "2026-10-18",
+   "hash": "97b617364c2e",
+   "seed": true,
+   "x": "Rule conflict detection and the resolution order"
+  },
+  "218": {
+   "firstSeen": "2026-10-18",
+   "hash": "652f1551e8a6",
+   "seed": true,
+   "x": "Rule history: what changed, when, and by whom"
+  },
+  "219": {
+   "firstSeen": "2026-10-18",
+   "hash": "9b5b2ede39b8",
+   "seed": true,
+   "x": "Rule simulation: what would this order have cost under the new rule"
+  },
+  "22": {
+   "firstSeen": "2026-10-18",
+   "hash": "e709b5b9fa80",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Image upload with standardisation: size, aspect, background, naming convention. **Updated 19 Oct 23:33 (owner server spec):** on upload the original is archived; **five sizes** thumb 160 · card 400 · card2x 800 · main 1200 · zoom 2000 px; **ratio 4:5** on every size; each in **AVIF, WebP and JPEG**; quality 75–80, changeable from settings; the dominant colour is stored; processing runs in the background on NVMe (image worker, PR 6) and the files go to Blob through the storage adapter (PR 18) — never kept permanently on the VM disk. Required from launch"
+  },
+  "220": {
+   "firstSeen": "2026-10-18",
+   "hash": "b809854fd089",
+   "seed": true,
+   "x": "URL structure and canonical rules. **Updated 19 Oct (owner 11:39): English at `/`, Bengali at `/bn/` live** for every page that passes the translation gate (PR 588); each language its own canonical, no auto-redirect by language; same ASCII slug for both; product URLs category-free. Map: review/GOOGLE-TRAFFIC-PLAN.md §1.4"
+  },
+  "221": {
+   "firstSeen": "2026-10-18",
+   "hash": "4282b3cad5c4",
+   "seed": true,
+   "x": "Title and meta description templates per page type, with AI drafting"
+  },
+  "222": {
+   "firstSeen": "2026-10-18",
+   "hash": "4a41147262b3",
+   "seed": true,
+   "x": "Structured data: Product, Offer, BreadcrumbList, Organization"
+  },
+  "223": {
+   "firstSeen": "2026-10-18",
+   "hash": "ee49a592db5a",
+   "seed": true,
+   "x": "**Review schema emitted only from real review rows** — never a fabricated aggregate rating"
+  },
+  "224": {
+   "firstSeen": "2026-10-18",
+   "hash": "f94f5d28ab56",
+   "seed": true,
+   "x": "FAQ content from the real questions on the page, for customers and AI answers. **Google stopped showing FAQ rich results for all sites on 7 May 2026** — markup optional, no Google rich result promised"
+  },
+  "225": {
+   "firstSeen": "2026-10-18",
+   "hash": "cebc6a21b46c",
+   "seed": true,
+   "x": "**Product page content architecture** — server-rendered accordions that search engines can read"
+  },
+  "226": {
+   "firstSeen": "2026-10-18",
+   "hash": "30aed3d776c7",
+   "seed": true,
+   "x": "Category SEO content block, per category"
+  },
+  "227": {
+   "firstSeen": "2026-10-18",
+   "hash": "a762212b7cd1",
+   "seed": true,
+   "x": "Sub-category SEO content and the **filter-page indexing rules — indexed only where it genuinely earns traffic**, not every combination (answer 7)"
+  },
+  "228": {
+   "firstSeen": "2026-10-18",
+   "hash": "d6f7cbf52948",
+   "seed": true,
+   "x": "Sitemaps, split by type, with automatic regeneration"
+  },
+  "229": {
+   "firstSeen": "2026-10-18",
+   "hash": "88821267d8c5",
+   "seed": true,
+   "x": "`robots.txt`, and the switch for AI crawlers — GPTBot, ClaudeBot, PerplexityBot, Google-Extended. **Default on** so AI assistants can rank the shop (answer 56)."
+  },
+  "23": {
+   "firstSeen": "2026-10-18",
+   "hash": "c7e33e4e5adc",
+   "seed": true,
+   "x": "Watermark on download only, never on the storefront image"
+  },
+  "230": {
+   "firstSeen": "2026-10-18",
+   "hash": "c2988aeb26f7",
+   "seed": true,
+   "x": "**Answer-engine pack** — the content shape that gets quoted by AI assistants"
+  },
+  "231": {
+   "firstSeen": "2026-10-18",
+   "hash": "cd135ddc8041",
+   "seed": true,
+   "x": "Internal linking engine: related products, related categories, related articles"
+  },
+  "232": {
+   "firstSeen": "2026-10-18",
+   "hash": "7ec2f124ff2b",
+   "seed": true,
+   "x": "Image alt text, auto-applied; English live, Bengali held in the dictionary"
+  },
+  "233": {
+   "firstSeen": "2026-10-18",
+   "hash": "8a068cb96b14",
+   "seed": true,
+   "x": "Search Console and Bing Webmaster connection, with the verification flow"
+  },
+  "234": {
+   "firstSeen": "2026-10-18",
+   "hash": "778cb7015d74",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Core Web Vitals monitoring against the real field data. **Updated 19 Oct 23:33 (owner server spec):** plus an automatic **monthly** measurement from Dhaka, on a phone, over 4G, against the PR 10 targets (LCP, CLS, INP, TTFB, category page weight, admin page time); results in the admin Server page (PR 423). Pre-launch required"
+  },
+  "235": {
+   "firstSeen": "2026-10-18",
+   "hash": "e0aa5eb81e60",
+   "seed": true,
+   "x": "Redirect manager, and the 404 report with one-click fixes. Loads the WordPress 301 map (PR 587) and the combo colour-order 301s"
+  },
+  "236": {
+   "firstSeen": "2026-10-18",
+   "hash": "d43fb012ac18",
+   "seed": true,
+   "x": "Hreflang and the language alternates"
+  },
+  "237": {
+   "firstSeen": "2026-10-18",
+   "hash": "c0208a07b7e9",
+   "seed": true,
+   "x": "SEO health dashboard: what is missing, page by page. Plus a check on every deploy: hreflang return links, no cross-language canonical, no `#` links, Bengali-twin coverage"
+  },
+  "238": {
+   "firstSeen": "2026-10-18",
+   "hash": "160272f671b1",
+   "seed": true,
+   "x": "Organic performance report — traffic, position, and which AI assistants are citing the shop"
+  },
+  "239": {
+   "firstSeen": "2026-10-18",
+   "hash": "8dcfd48a2989",
+   "seed": true,
+   "x": "Article model, categories, authors, publish states"
+  },
+  "24": {
+   "firstSeen": "2026-10-18",
+   "hash": "e3f36e3e35b0",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "High-resolution zoom, and the responsive image pipeline. **Updated 19 Oct 23:33 (owner server spec):** served with `<picture>`/srcset — the right size for each screen (phone 400, larger screens 800; never 2000 on a phone), zoom uses the 2000 size; width and height always set; a dominant-colour placeholder box until the image arrives; first screen eager, the rest lazy"
+  },
+  "240": {
+   "firstSeen": "2026-10-18",
+   "hash": "4065789be4b6",
+   "seed": true,
+   "x": "Blog admin with the editor and the preview"
+  },
+  "241": {
+   "firstSeen": "2026-10-18",
+   "hash": "e18d12e0c4ac",
+   "seed": true,
+   "x": "Blog listing and article pages, with the related-product block"
+  },
+  "242": {
+   "firstSeen": "2026-10-18",
+   "hash": "25d464f6747e",
+   "seed": true,
+   "x": "**Topical cluster planner** — which articles to write, and how they link"
+  },
+  "243": {
+   "firstSeen": "2026-10-18",
+   "hash": "006fab6394aa",
+   "seed": true,
+   "x": "AI article drafting from the PR 528 brief, in either language, per post (answer 11)"
+  },
+  "244": {
+   "firstSeen": "2026-10-18",
+   "hash": "01acd709dc3d",
+   "seed": true,
+   "x": "*(19 Oct: the owner approves the topic list — monthly batch, can add any time — not each post; PR 591)* Approval queue: owner approval first, then automatic with a digest"
+  },
+  "245": {
+   "firstSeen": "2026-10-18",
+   "hash": "2ceb23530fad",
+   "seed": true,
+   "x": "Article scheduling and the publish calendar"
+  },
+  "246": {
+   "firstSeen": "2026-10-18",
+   "hash": "d41b7a7ecdf0",
+   "seed": true,
+   "x": "Seasonal landing pages — Eid, winter, Puja — permanent and re-used each year"
+  },
+  "247": {
+   "firstSeen": "2026-10-18",
+   "hash": "dd4e2d97624f",
+   "seed": true,
+   "x": "Help articles as structured content: delivery, exchange, returns, payment"
+  },
+  "248": {
+   "firstSeen": "2026-10-18",
+   "hash": "200c1707f3ab",
+   "seed": true,
+   "x": "**Help articles indexed into search**, with the one-line answer snippet drawn from the live rules"
+  },
+  "249": {
+   "firstSeen": "2026-10-18",
+   "hash": "06a13aa3d6d5",
+   "seed": true,
+   "x": "Article SEO: schema, meta, internal links"
+  },
+  "25": {
+   "firstSeen": "2026-10-18",
+   "hash": "da5441f2f4bb",
+   "seed": true,
+   "x": "**Minimum four photographs enforced at upload** — front, back, detail, on-model"
+  },
+  "250": {
+   "firstSeen": "2026-10-18",
+   "hash": "965e095f0246",
+   "seed": true,
+   "x": "Content performance report: which articles bring traffic and which bring orders"
+  },
+  "251": {
+   "firstSeen": "2026-10-18",
+   "hash": "de81afeb189f",
+   "seed": true,
+   "x": "Comment handling, or the decision to run without comments"
+  },
+  "252": {
+   "firstSeen": "2026-10-18",
+   "hash": "7284df548801",
+   "seed": true,
+   "x": "Content calendar shared with the social studio"
+  },
+  "253": {
+   "firstSeen": "2026-10-18",
+   "hash": "17e71c915d24",
+   "seed": true,
+   "x": "Article-to-product attribution: what an article actually sold"
+  },
+  "254": {
+   "firstSeen": "2026-10-18",
+   "hash": "ce03b469430a",
+   "seed": true,
+   "x": "**Landing page builder** — sections, templates, publish, per campaign"
+  },
+  "255": {
+   "firstSeen": "2026-10-18",
+   "hash": "3777acf049d1",
+   "seed": true,
+   "x": "Landing page templates and the component library"
+  },
+  "256": {
+   "firstSeen": "2026-10-18",
+   "hash": "91040edbd9e4",
+   "seed": true,
+   "x": "Campaign model: audience, offer, creative, window, budget"
+  },
+  "257": {
+   "firstSeen": "2026-10-18",
+   "hash": "b148d9ba6577",
+   "seed": true,
+   "x": "Server-side event tracking — view, add to bag, checkout, purchase"
+  },
+  "258": {
+   "firstSeen": "2026-10-18",
+   "hash": "1924994b44b4",
+   "seed": true,
+   "x": "**Delivered-purchase optimisation** — the event that matters is delivery, not order"
+  },
+  "259": {
+   "firstSeen": "2026-10-18",
+   "hash": "50423f85982a",
+   "seed": true,
+   "x": "Facebook and Instagram ads integration behind the adapter"
+  },
+  "26": {
+   "firstSeen": "2026-10-18",
+   "hash": "f4edcf6b00fd",
+   "seed": true,
+   "x": "Upload-time validation block: missing photos, missing size chart, missing fabric notes"
+  },
+  "260": {
+   "firstSeen": "2026-10-18",
+   "hash": "66958ebe159b",
+   "seed": true,
+   "x": "TikTok ads integration behind the adapter"
+  },
+  "261": {
+   "firstSeen": "2026-10-18",
+   "hash": "0ac8cf16e62f",
+   "seed": true,
+   "x": "Google ads integration behind the adapter"
+  },
+  "262": {
+   "firstSeen": "2026-10-18",
+   "hash": "af3bb45907db",
+   "seed": true,
+   "x": "**Audience Builder** — segments from real order behaviour"
+  },
+  "263": {
+   "firstSeen": "2026-10-18",
+   "hash": "a1d95c47eb18",
+   "seed": true,
+   "x": "Value-based lookalike audiences from delivered revenue"
+  },
+  "264": {
+   "firstSeen": "2026-10-18",
+   "hash": "c9cd1713eec2",
+   "seed": true,
+   "x": "**Refused-parcel exclusion list** pushed to every ad platform"
+  },
+  "265": {
+   "firstSeen": "2026-10-18",
+   "hash": "bf2a230c8bc0",
+   "seed": true,
+   "x": "Ad spend import, per platform, per campaign"
+  },
+  "266": {
+   "firstSeen": "2026-10-18",
+   "hash": "03f000ac920c",
+   "seed": true,
+   "x": "**USD rate as a setting** the owner types, applied consistently to every cost figure (answer 17)"
+  },
+  "267": {
+   "firstSeen": "2026-10-18",
+   "hash": "d6be9898215b",
+   "seed": true,
+   "x": "Cost per order, cost per delivered order, and **alert thresholds the owner sets from the dashboard** (answer 19)"
+  },
+  "268": {
+   "firstSeen": "2026-10-18",
+   "hash": "c658738fc2a8",
+   "seed": true,
+   "x": "Pause and budget change from the dashboard, with a confirm step — extended by PR 531 to full campaign control"
+  },
+  "269": {
+   "firstSeen": "2026-10-18",
+   "hash": "0194b5a0c3c8",
+   "seed": true,
+   "x": "**AI growth agent** — reads performance, proposes changes, waits for approval"
+  },
+  "27": {
+   "firstSeen": "2026-10-18",
+   "hash": "988d40b6f397",
+   "seed": true,
+   "x": "Size chart system — per garment type, per fit, with the measurement fields"
+  },
+  "270": {
+   "firstSeen": "2026-10-18",
+   "hash": "2b11d15fc698",
+   "seed": true,
+   "x": "Ad creative briefs generated from the product and the campaign"
+  },
+  "271": {
+   "firstSeen": "2026-10-18",
+   "hash": "fe61fea8d7f5",
+   "seed": true,
+   "x": "**Coupon engine, fully dynamic** — percentage, fixed taka, free delivery, buy-one-get-one, buy-two-get-five, and offer shapes invented later without new code (answer 20)"
+  },
+  "272": {
+   "firstSeen": "2026-10-18",
+   "hash": "c078d8b3a942",
+   "seed": true,
+   "x": "Coupon distribution, limits, and per-customer caps"
+  },
+  "273": {
+   "firstSeen": "2026-10-18",
+   "hash": "7005d88d4430",
+   "seed": true,
+   "x": "Referral programme"
+  },
+  "274": {
+   "firstSeen": "2026-10-18",
+   "hash": "175d9b90e98c",
+   "seed": true,
+   "x": "**Incomplete-order capture** — the details typed before the order was placed"
+  },
+  "275": {
+   "firstSeen": "2026-10-18",
+   "hash": "1d99104d870f",
+   "seed": true,
+   "x": "Incomplete-order follow-up, capped at two messages"
+  },
+  "276": {
+   "firstSeen": "2026-10-18",
+   "hash": "370f97df448d",
+   "seed": true,
+   "x": "Abandoned-cart recovery with the offer rules"
+  },
+  "277": {
+   "firstSeen": "2026-10-18",
+   "hash": "6b90fe3b47a1",
+   "seed": true,
+   "x": "Campaign blast — SMS, WhatsApp, email — with the audience and the throttle"
+  },
+  "278": {
+   "firstSeen": "2026-10-18",
+   "hash": "9fd4f201eb70",
+   "seed": true,
+   "x": "**YouTube module** — channel, videos, and the attribution back to orders"
+  },
+  "279": {
+   "firstSeen": "2026-10-18",
+   "hash": "7d3754320aa0",
+   "seed": true,
+   "x": "SEO outreach pipeline"
+  },
+  "28": {
+   "firstSeen": "2026-10-18",
+   "hash": "8d8abe7032bc",
+   "seed": true,
+   "x": "Size chart admin: create, copy, assign to categories and to single products"
+  },
+  "280": {
+   "firstSeen": "2026-10-18",
+   "hash": "c873e112bb00",
+   "seed": true,
+   "x": "Seasonal homepage switching, scheduled"
+  },
+  "281": {
+   "firstSeen": "2026-10-18",
+   "hash": "050fd7aa46dc",
+   "seed": true,
+   "x": "Festive cut-off banners and the delivery promise"
+  },
+  "282": {
+   "firstSeen": "2026-10-18",
+   "hash": "2793e03673cb",
+   "seed": true,
+   "x": "Marketing calendar across ads, content and social"
+  },
+  "283": {
+   "firstSeen": "2026-10-18",
+   "hash": "9777a9eeb7b6",
+   "seed": true,
+   "x": "Marketing report: spend, revenue, by channel, by campaign"
+  },
+  "284": {
+   "firstSeen": "2026-10-18",
+   "hash": "80013235b92c",
+   "seed": true,
+   "x": "Customer model, merge rules, and the single view by phone number"
+  },
+  "285": {
+   "firstSeen": "2026-10-18",
+   "hash": "06865f87f7fe",
+   "seed": true,
+   "x": "Customers section: list, filters, search"
+  },
+  "286": {
+   "firstSeen": "2026-10-18",
+   "hash": "b72e030eb1dc",
+   "seed": true,
+   "x": "Customer detail — orders, exchanges, support history, lifetime value"
+  },
+  "287": {
+   "firstSeen": "2026-10-18",
+   "hash": "a74cc7b70e7a",
+   "seed": true,
+   "x": "Segments from real behaviour, saved and reusable"
+  },
+  "288": {
+   "firstSeen": "2026-10-18",
+   "hash": "62b7652ddd9f",
+   "seed": true,
+   "x": "Customer journey view: every touch, in order"
+  },
+  "289": {
+   "firstSeen": "2026-10-18",
+   "hash": "3b7031abdc8d",
+   "seed": true,
+   "x": "**Journey builder** — triggers, waits, conditions, messages"
+  },
+  "29": {
+   "firstSeen": "2026-10-18",
+   "hash": "f9eff8b3fef8",
+   "seed": true,
+   "x": "Product health score — what is missing before this product may go live"
+  },
+  "290": {
+   "firstSeen": "2026-10-18",
+   "hash": "2ed29bd150d4",
+   "seed": true,
+   "x": "Email marketing: templates, sends, and the delivery log"
+  },
+  "291": {
+   "firstSeen": "2026-10-18",
+   "hash": "733535b35d3b",
+   "seed": true,
+   "x": "SMS adapter with masking approval, templates, delivery log"
+  },
+  "292": {
+   "firstSeen": "2026-10-18",
+   "hash": "6c5df71b481e",
+   "seed": true,
+   "x": "WhatsApp Business API adapter, templates, delivery log"
+  },
+  "293": {
+   "firstSeen": "2026-10-18",
+   "hash": "0fe7aa444879",
+   "seed": true,
+   "x": "**AI campaign writer** — the message drafted in the owner's voice"
+  },
+  "294": {
+   "firstSeen": "2026-10-18",
+   "hash": "71ccee53caef",
+   "seed": true,
+   "x": "AI segment and timing suggestions, with the reasoning shown"
+  },
+  "295": {
+   "firstSeen": "2026-10-18",
+   "hash": "6e2b783a8df7",
+   "seed": true,
+   "x": "Review requests after delivery, and the review manager behind them"
+  },
+  "296": {
+   "firstSeen": "2026-10-18",
+   "hash": "a2218610862b",
+   "seed": true,
+   "x": "Rewards and points, with the rules the owner sets"
+  },
+  "297": {
+   "firstSeen": "2026-10-18",
+   "hash": "71024f3cedc1",
+   "seed": true,
+   "x": "Customer tags and internal notes"
+  },
+  "298": {
+   "firstSeen": "2026-10-18",
+   "hash": "412ecb85e98c",
+   "seed": true,
+   "x": "Consent and opt-out handling, honoured across every channel"
+  },
+  "299": {
+   "firstSeen": "2026-10-18",
+   "hash": "6754132a63d7",
+   "seed": true,
+   "x": "Customer export, with the retention rule applied"
+  },
+  "3": {
+   "firstSeen": "2026-10-18",
+   "hash": "13eb2b02dea0",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Base hardening — SSH keys only, no root login, fail2ban, unattended security updates, UFW. **Ports 22/80/443 are opened by us** (server firewall over SSH; the provider's cloud firewall via its panel with the owner's login or step-by-step guidance) — the owner does not do it. **Updated 19 Oct 23:33 (owner server spec):** UFW allows only 80, 443 and 22; optionally 80/443 limited to Cloudflare's IP ranges (a setting). SSH by key only, no root login, fail2ban — ~~22 restricted to the owner's IP~~ port 22 stays key-only with fail2ban because the build agents connect from changing IPs. DB and Redis reachable only inside the server. Unattended security updates. **Boot order after any restart:** NVMe unit first (PR 601), then the data-disk LVM mounts, then Docker, Postgres, Redis and the app — all by themselves, in that order. Data-disk LVM volumes (Postgres, Docker volumes, Redis persistence, kept logs, config and certificates) with free-space alarms at 80% (PR 9)"
+  },
+  "30": {
+   "firstSeen": "2026-10-18",
+   "hash": "db7043337a49",
+   "seed": true,
+   "x": "Colour library with real hex values, the colour name dictionary, and true-colour reference"
+  },
+  "300": {
+   "firstSeen": "2026-10-18",
+   "hash": "96d46b034404",
+   "seed": true,
+   "x": "Win-back campaigns for customers who have stopped ordering"
+  },
+  "301": {
+   "firstSeen": "2026-10-18",
+   "hash": "75bf4de7b44b",
+   "seed": true,
+   "x": "Birthday field capture, ready for the parked birthday module"
+  },
+  "302": {
+   "firstSeen": "2026-10-18",
+   "hash": "7f9a4acadf39",
+   "seed": true,
+   "x": "Customer data retention: **customers are never auto-deleted** (answer 50). Only IP and GPS expire, at 180 days. Manual deletion stays available."
+  },
+  "303": {
+   "firstSeen": "2026-10-18",
+   "hash": "68167f7a4692",
+   "seed": true,
+   "x": "CRM report: new, returning, churned, by segment"
+  },
+  "304": {
+   "firstSeen": "2026-10-18",
+   "hash": "7791b4eaf21c",
+   "seed": true,
+   "x": "AI 360 home screen — what is running, what it cost, what it decided"
+  },
+  "305": {
+   "firstSeen": "2026-10-18",
+   "hash": "75f16a3c3a3e",
+   "seed": true,
+   "x": "**Master switch**, and per-agent keep-on behaviour"
+  },
+  "306": {
+   "firstSeen": "2026-10-18",
+   "hash": "bac2ddd60dc8",
+   "seed": true,
+   "x": "Multi-provider adapter: Anthropic, OpenAI, Google, OpenRouter, all dynamic"
+  },
+  "307": {
+   "firstSeen": "2026-10-18",
+   "hash": "156b64285df8",
+   "seed": true,
+   "x": "Per-agent model selection, with the recommendation note beside each"
+  },
+  "308": {
+   "firstSeen": "2026-10-18",
+   "hash": "697b410c8262",
+   "seed": true,
+   "x": "Per-agent schedule"
+  },
+  "309": {
+   "firstSeen": "2026-10-18",
+   "hash": "d577eb257d3f",
+   "seed": true,
+   "x": "**Per-agent monthly spend cap**, with the 80% warning and the 100% pause"
+  },
+  "31": {
+   "firstSeen": "2026-10-18",
+   "hash": "40ae4321b77c",
+   "seed": true,
+   "x": "Fabric and care content, structured so it can feed the page and the AI answers"
+  },
+  "310": {
+   "firstSeen": "2026-10-18",
+   "hash": "75a7fcb27caa",
+   "seed": true,
+   "x": "**Data-class routing** — which class of data may reach which class of model"
+  },
+  "311": {
+   "firstSeen": "2026-10-18",
+   "hash": "0017696816b1",
+   "seed": true,
+   "x": "The masking layer applied before anything leaves the server"
+  },
+  "312": {
+   "firstSeen": "2026-10-18",
+   "hash": "149e6ae383c8",
+   "seed": true,
+   "x": "**AI Cost Book** — 60–90 job rows, searchable, with the model selector in the row"
+  },
+  "313": {
+   "firstSeen": "2026-10-18",
+   "hash": "4a319c4d88c5",
+   "seed": true,
+   "x": "Estimate versus actual, and the self-correction that follows"
+  },
+  "314": {
+   "firstSeen": "2026-10-18",
+   "hash": "3b5d4835e58a",
+   "seed": true,
+   "x": "What-if slider, and the Economy / Balanced / Premium presets"
+  },
+  "315": {
+   "firstSeen": "2026-10-18",
+   "hash": "c4c9318fe321",
+   "seed": true,
+   "x": "One shared usage ledger behind every figure"
+  },
+  "316": {
+   "firstSeen": "2026-10-18",
+   "hash": "48ca02d368b8",
+   "seed": true,
+   "x": "**Free-form cost calculator**, reachable from Telegram"
+  },
+  "317": {
+   "firstSeen": "2026-10-18",
+   "hash": "b3b044de8b1c",
+   "seed": true,
+   "x": "The single approval queue — everything waiting on the owner, in one place"
+  },
+  "318": {
+   "firstSeen": "2026-10-18",
+   "hash": "7390e97e4b79",
+   "seed": true,
+   "x": "Permission matrix: what each agent may decide alone"
+  },
+  "319": {
+   "firstSeen": "2026-10-18",
+   "hash": "e59f97a3cf96",
+   "seed": true,
+   "x": "**AI diary** — what each agent did, why, and what it changed"
+  },
+  "32": {
+   "firstSeen": "2026-10-18",
+   "hash": "f82208c1adfb",
+   "seed": true,
+   "x": "Collections and tags, including seasonal ones"
+  },
+  "320": {
+   "firstSeen": "2026-10-18",
+   "hash": "ae164328ce8c",
+   "seed": true,
+   "x": "Bug box: the agent reports what it could not do"
+  },
+  "321": {
+   "firstSeen": "2026-10-18",
+   "hash": "55ee9476e1bb",
+   "seed": true,
+   "x": "**Skill library** — import a skill, version it, roll it back"
+  },
+  "322": {
+   "firstSeen": "2026-10-18",
+   "hash": "cbaac32c3784",
+   "seed": true,
+   "x": "Skill sandbox: try a skill on real data without touching production"
+  },
+  "323": {
+   "firstSeen": "2026-10-18",
+   "hash": "8675f975cfa3",
+   "seed": true,
+   "x": "**Continuous skill training** — corrections become training examples"
+  },
+  "324": {
+   "firstSeen": "2026-10-18",
+   "hash": "04f0b6ee822d",
+   "seed": true,
+   "x": "AI-off fallback: every agent has a rule or template path that works without AI"
+  },
+  "325": {
+   "firstSeen": "2026-10-18",
+   "hash": "2fc94975c741",
+   "seed": true,
+   "x": "Support AI agent wiring"
+  },
+  "326": {
+   "firstSeen": "2026-10-18",
+   "hash": "375f7d732811",
+   "seed": true,
+   "x": "Product content AI agent"
+  },
+  "327": {
+   "firstSeen": "2026-10-18",
+   "hash": "de4f750fb329",
+   "seed": true,
+   "x": "SEO and meta AI agent"
+  },
+  "328": {
+   "firstSeen": "2026-10-18",
+   "hash": "8abb4c260e5d",
+   "seed": true,
+   "x": "Size advice AI agent"
+  },
+  "329": {
+   "firstSeen": "2026-10-18",
+   "hash": "7ad6d83ac815",
+   "seed": true,
+   "x": "Fraud review AI agent"
+  },
+  "33": {
+   "firstSeen": "2026-10-18",
+   "hash": "01c201b87a90",
+   "seed": true,
+   "x": "Product import from a link — read a supplier or brand page, draft the product"
+  },
+  "330": {
+   "firstSeen": "2026-10-18",
+   "hash": "523f26eda981",
+   "seed": true,
+   "x": "Growth marketing AI agent"
+  },
+  "331": {
+   "firstSeen": "2026-10-18",
+   "hash": "a2d3d7959c00",
+   "seed": true,
+   "x": "Social content AI agent"
+  },
+  "332": {
+   "firstSeen": "2026-10-18",
+   "hash": "b2036c0ed47a",
+   "seed": true,
+   "x": "Photoshoot studio AI orchestration"
+  },
+  "333": {
+   "firstSeen": "2026-10-18",
+   "hash": "f15c6e4752ec",
+   "seed": true,
+   "x": "Analytics commentary agent — **explains the numbers, never invents one**"
+  },
+  "334": {
+   "firstSeen": "2026-10-18",
+   "hash": "78ef6c4a21bd",
+   "seed": true,
+   "x": "**System Q&A agent** — the owner asks the system how it works"
+  },
+  "335": {
+   "firstSeen": "2026-10-18",
+   "hash": "ef3af93bc78b",
+   "seed": true,
+   "x": "**Competitor Teardown agent** — journey walker"
+  },
+  "336": {
+   "firstSeen": "2026-10-18",
+   "hash": "e8984484d18f",
+   "seed": true,
+   "x": "Competitor comparison and report engine"
+  },
+  "337": {
+   "firstSeen": "2026-10-18",
+   "hash": "5fb497d89763",
+   "seed": true,
+   "x": "Saved competitors, scheduling, and change alerts"
+  },
+  "338": {
+   "firstSeen": "2026-10-18",
+   "hash": "fcaada66211a",
+   "seed": true,
+   "x": "**Site-wide analytics event layer**"
+  },
+  "339": {
+   "firstSeen": "2026-10-18",
+   "hash": "024c2a8e1209",
+   "seed": true,
+   "x": "Per-page funnels built on that layer"
+  },
+  "34": {
+   "firstSeen": "2026-10-18",
+   "hash": "6ce8b71b058e",
+   "seed": true,
+   "x": "Bulk CSV import and export for the catalogue"
+  },
+  "340": {
+   "firstSeen": "2026-10-18",
+   "hash": "6843fc3f33f3",
+   "seed": true,
+   "x": "The report section: what happened, what changed, what to do"
+  },
+  "341": {
+   "firstSeen": "2026-10-18",
+   "hash": "de4af2624796",
+   "seed": true,
+   "x": "Weekly and monthly digests to Telegram and email"
+  },
+  "342": {
+   "firstSeen": "2026-10-18",
+   "hash": "24b509915920",
+   "seed": true,
+   "x": ""
+  },
+  "343": {
+   "firstSeen": "2026-10-18",
+   "hash": "4bf1b3ca857b",
+   "seed": true,
+   "x": ""
+  },
+  "344": {
+   "firstSeen": "2026-10-18",
+   "hash": "c714e02f5d51",
+   "seed": true,
+   "x": ""
+  },
+  "345": {
+   "firstSeen": "2026-10-18",
+   "hash": "0f2928065792",
+   "seed": true,
+   "x": ""
+  },
+  "346": {
+   "firstSeen": "2026-10-18",
+   "hash": "648387175ae2",
+   "seed": true,
+   "x": ""
+  },
+  "347": {
+   "firstSeen": "2026-10-18",
+   "hash": "1844b82f69b1",
+   "seed": true,
+   "x": ""
+  },
+  "348": {
+   "firstSeen": "2026-10-18",
+   "hash": "51bd042e1dba",
+   "seed": true,
+   "x": ""
+  },
+  "349": {
+   "firstSeen": "2026-10-18",
+   "hash": "deac2f97895a",
+   "seed": true,
+   "x": ""
+  },
+  "35": {
+   "firstSeen": "2026-10-18",
+   "hash": "7d08afbd7f38",
+   "seed": true,
+   "x": "Publish queue — nothing reaches the storefront until its checklist passes"
+  },
+  "350": {
+   "firstSeen": "2026-10-18",
+   "hash": "b4cb7191360e",
+   "seed": true,
+   "x": ""
+  },
+  "351": {
+   "firstSeen": "2026-10-18",
+   "hash": "0dc2fa061524",
+   "seed": true,
+   "x": ""
+  },
+  "352": {
+   "firstSeen": "2026-10-18",
+   "hash": "a77039e1bfe2",
+   "seed": true,
+   "x": ""
+  },
+  "353": {
+   "firstSeen": "2026-10-18",
+   "hash": "72a3525a8702",
+   "seed": true,
+   "x": ""
+  },
+  "354": {
+   "firstSeen": "2026-10-18",
+   "hash": "d8fa0770aa54",
+   "seed": true,
+   "x": ""
+  },
+  "355": {
+   "firstSeen": "2026-10-18",
+   "hash": "611d517e68c9",
+   "seed": true,
+   "x": ""
+  },
+  "356": {
+   "firstSeen": "2026-10-18",
+   "hash": "2d414ad79aae",
+   "seed": true,
+   "x": ""
+  },
+  "357": {
+   "firstSeen": "2026-10-18",
+   "hash": "163d5614e344",
+   "seed": true,
+   "x": ""
+  },
+  "358": {
+   "firstSeen": "2026-10-18",
+   "hash": "6e01f200639c",
+   "seed": true,
+   "x": ""
+  },
+  "359": {
+   "firstSeen": "2026-10-18",
+   "hash": "b769147b5d78",
+   "seed": true,
+   "x": ""
+  },
+  "36": {
+   "firstSeen": "2026-10-18",
+   "hash": "4557193d7eba",
+   "seed": true,
+   "x": "Ghost archive: an out-of-stock product keeps its page and collects back-in-stock interest"
+  },
+  "360": {
+   "firstSeen": "2026-10-18",
+   "hash": "daaa256327d5",
+   "seed": true,
+   "x": ""
+  },
+  "361": {
+   "firstSeen": "2026-10-18",
+   "hash": "e3a7ad752668",
+   "seed": true,
+   "x": ""
+  },
+  "362": {
+   "firstSeen": "2026-10-18",
+   "hash": "1db2cac1595d",
+   "seed": true,
+   "x": ""
+  },
+  "363": {
+   "firstSeen": "2026-10-18",
+   "hash": "c54def21b8ef",
+   "seed": true,
+   "x": ""
+  },
+  "364": {
+   "firstSeen": "2026-10-18",
+   "hash": "70fce712c5e7",
+   "seed": true,
+   "x": ""
+  },
+  "365": {
+   "firstSeen": "2026-10-18",
+   "hash": "64b7acf29b4e",
+   "seed": true,
+   "x": ""
+  },
+  "366": {
+   "firstSeen": "2026-10-18",
+   "hash": "b31874a9dbeb",
+   "seed": true,
+   "x": ""
+  },
+  "367": {
+   "firstSeen": "2026-10-18",
+   "hash": "990a47829bea",
+   "seed": true,
+   "x": ""
+  },
+  "368": {
+   "firstSeen": "2026-10-18",
+   "hash": "68eb2e11b705",
+   "seed": true,
+   "x": ""
+  },
+  "369": {
+   "firstSeen": "2026-10-18",
+   "hash": "3e088015d991",
+   "seed": true,
+   "x": ""
+  },
+  "37": {
+   "firstSeen": "2026-10-18",
+   "hash": "e6e1dd50c97f",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Media library with search, reuse, and orphan cleanup. **Updated 19 Oct 23:33 (owner server spec):** the library sits on the storage adapter (Blob by default; PR 18); originals archived so every size can be regenerated when a size or quality setting changes; images, video, banners, logos, generated PDFs and WhatsApp invoice JPGs all live in Blob behind Cloudflare, with soft delete and versioning (PR 8)"
+  },
+  "370": {
+   "firstSeen": "2026-10-18",
+   "hash": "c4e5e35cfab3",
+   "seed": true,
+   "x": ""
+  },
+  "371": {
+   "firstSeen": "2026-10-18",
+   "hash": "bd51ffc6cb1e",
+   "seed": true,
+   "x": ""
+  },
+  "372": {
+   "firstSeen": "2026-10-18",
+   "hash": "24777a2776ff",
+   "seed": true,
+   "x": ""
+  },
+  "373": {
+   "firstSeen": "2026-10-18",
+   "hash": "cae3c6323945",
+   "seed": true,
+   "x": ""
+  },
+  "374": {
+   "firstSeen": "2026-10-18",
+   "hash": "d60ddb58e1f8",
+   "seed": true,
+   "x": ""
+  },
+  "375": {
+   "firstSeen": "2026-10-18",
+   "hash": "6da58d37b801",
+   "seed": true,
+   "x": ""
+  },
+  "376": {
+   "firstSeen": "2026-10-18",
+   "hash": "f87d6593c1cb",
+   "seed": true,
+   "x": ""
+  },
+  "377": {
+   "firstSeen": "2026-10-18",
+   "hash": "0c1fc25de907",
+   "seed": true,
+   "x": ""
+  },
+  "378": {
+   "firstSeen": "2026-10-18",
+   "hash": "1ce3949ffb70",
+   "seed": true,
+   "x": ""
+  },
+  "379": {
+   "firstSeen": "2026-10-18",
+   "hash": "3ca4a8439c9c",
+   "seed": true,
+   "x": ""
+  },
+  "38": {
+   "firstSeen": "2026-10-18",
+   "hash": "df74f3c95690",
+   "seed": true,
+   "x": "\"Was\" price source per category — MRP, price history or combo — with the honesty rule enforced"
+  },
+  "380": {
+   "firstSeen": "2026-10-18",
+   "hash": "91f1c8440274",
+   "seed": true,
+   "x": ""
+  },
+  "381": {
+   "firstSeen": "2026-10-18",
+   "hash": "0b985c368ef9",
+   "seed": true,
+   "x": ""
+  },
+  "382": {
+   "firstSeen": "2026-10-18",
+   "hash": "8dee5821ef26",
+   "seed": true,
+   "x": ""
+  },
+  "383": {
+   "firstSeen": "2026-10-18",
+   "hash": "3c4f17bbba80",
+   "seed": true,
+   "x": ""
+  },
+  "384": {
+   "firstSeen": "2026-10-18",
+   "hash": "0c496a7c57fc",
+   "seed": true,
+   "x": ""
+  },
+  "385": {
+   "firstSeen": "2026-10-18",
+   "hash": "a92fe939dd7d",
+   "seed": true,
+   "x": ""
+  },
+  "386": {
+   "firstSeen": "2026-10-18",
+   "hash": "1e95f6d5ea3d",
+   "seed": true,
+   "x": ""
+  },
+  "387": {
+   "firstSeen": "2026-10-18",
+   "hash": "41bc14628b9c",
+   "seed": true,
+   "x": ""
+  },
+  "388": {
+   "firstSeen": "2026-10-18",
+   "hash": "419a464de564",
+   "seed": true,
+   "x": ""
+  },
+  "389": {
+   "firstSeen": "2026-10-18",
+   "hash": "df72e9d217cc",
+   "seed": true,
+   "x": ""
+  },
+  "39": {
+   "firstSeen": "2026-10-18",
+   "hash": "ca2996c22213",
+   "seed": true,
+   "x": "Product audit report: everything incomplete, with a one-click route to fix it"
+  },
+  "390": {
+   "firstSeen": "2026-10-18",
+   "hash": "838e240c6982",
+   "seed": true,
+   "x": ""
+  },
+  "391": {
+   "firstSeen": "2026-10-18",
+   "hash": "741b4e2796d9",
+   "seed": true,
+   "x": ""
+  },
+  "392": {
+   "firstSeen": "2026-10-18",
+   "hash": "8422cfdff41a",
+   "seed": true,
+   "x": ""
+  },
+  "393": {
+   "firstSeen": "2026-10-18",
+   "hash": "1b4e5472fb05",
+   "seed": true,
+   "x": ""
+  },
+  "394": {
+   "firstSeen": "2026-10-18",
+   "hash": "ebff5554bd0e",
+   "seed": true,
+   "x": ""
+  },
+  "395": {
+   "firstSeen": "2026-10-18",
+   "hash": "b8c2968c0481",
+   "seed": true,
+   "x": ""
+  },
+  "396": {
+   "firstSeen": "2026-10-18",
+   "hash": "54d9deb78343",
+   "seed": true,
+   "x": ""
+  },
+  "397": {
+   "firstSeen": "2026-10-18",
+   "hash": "dde802fbd25a",
+   "seed": true,
+   "x": ""
+  },
+  "398": {
+   "firstSeen": "2026-10-18",
+   "hash": "aaa99cfcf69e",
+   "seed": true,
+   "x": ""
+  },
+  "399": {
+   "firstSeen": "2026-10-18",
+   "hash": "28f0dffaa61c",
+   "seed": true,
+   "x": ""
+  },
+  "4": {
+   "firstSeen": "2026-10-18",
+   "hash": "14e5e1c4925e",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Docker and Docker Compose, with the project's network and volume layout. **Updated 19 Oct 23:33 (owner server spec):** Docker Compose stays (not PM2) — each service its own container with RAM/CPU limits from the one config file (PR 604) and auto-restart; volumes on the data disk, scratch on NVMe (PR 601); **zero-downtime deploys** — rolling/blue-green with health checks and automatic rollback"
+  },
+  "40": {
+   "firstSeen": "2026-10-18",
+   "hash": "279e6fc82fcb",
+   "seed": true,
+   "x": "Store shell — header, footer, bottom navigation, the slim checkout header"
+  },
+  "400": {
+   "firstSeen": "2026-10-18",
+   "hash": "110fc88bb834",
+   "seed": true,
+   "x": ""
+  },
+  "401": {
+   "firstSeen": "2026-10-18",
+   "hash": "d6c3f34b899a",
+   "seed": true,
+   "x": ""
+  },
+  "402": {
+   "firstSeen": "2026-10-18",
+   "hash": "04707d2d8e4d",
+   "seed": true,
+   "x": ""
+  },
+  "403": {
+   "firstSeen": "2026-10-18",
+   "hash": "8a0ec594f789",
+   "seed": true,
+   "x": ""
+  },
+  "404": {
+   "firstSeen": "2026-10-18",
+   "hash": "f8b17677c1fd",
+   "seed": true,
+   "x": ""
+  },
+  "405": {
+   "firstSeen": "2026-10-18",
+   "hash": "61d9c0a955f5",
+   "seed": true,
+   "x": ""
+  },
+  "406": {
+   "firstSeen": "2026-10-18",
+   "hash": "ff90bd70e4da",
+   "seed": true,
+   "x": ""
+  },
+  "407": {
+   "firstSeen": "2026-10-18",
+   "hash": "54656c42248c",
+   "seed": true,
+   "x": ""
+  },
+  "408": {
+   "firstSeen": "2026-10-18",
+   "hash": "ca07b9d15426",
+   "seed": true,
+   "x": ""
+  },
+  "409": {
+   "firstSeen": "2026-10-18",
+   "hash": "84737bcbcd73",
+   "seed": true,
+   "x": ""
+  },
+  "41": {
+   "firstSeen": "2026-10-18",
+   "hash": "1a9b9e1b8494",
+   "seed": true,
+   "x": "Home page: hero, categories, new in, sets band, flash sale, reviews, journal"
+  },
+  "410": {
+   "firstSeen": "2026-10-18",
+   "hash": "1c5f3a119984",
+   "seed": true,
+   "x": ""
+  },
+  "411": {
+   "firstSeen": "2026-10-18",
+   "hash": "4af6268059cb",
+   "seed": true,
+   "x": ""
+  },
+  "412": {
+   "firstSeen": "2026-10-18",
+   "hash": "df21f2a1dd7e",
+   "seed": true,
+   "x": ""
+  },
+  "413": {
+   "firstSeen": "2026-10-18",
+   "hash": "03d28cb88528",
+   "seed": true,
+   "x": ""
+  },
+  "414": {
+   "firstSeen": "2026-10-18",
+   "hash": "aba00aa54d6f",
+   "seed": true,
+   "x": ""
+  },
+  "415": {
+   "firstSeen": "2026-10-18",
+   "hash": "42a82dab96fa",
+   "seed": true,
+   "x": ""
+  },
+  "416": {
+   "firstSeen": "2026-10-18",
+   "hash": "e1bcbe67d3b1",
+   "seed": true,
+   "x": ""
+  },
+  "417": {
+   "firstSeen": "2026-10-18",
+   "hash": "520b269c15f9",
+   "seed": true,
+   "x": ""
+  },
+  "418": {
+   "firstSeen": "2026-10-18",
+   "hash": "42acb5cda103",
+   "seed": true,
+   "x": ""
+  },
+  "419": {
+   "firstSeen": "2026-10-18",
+   "hash": "90a898412afd",
+   "seed": true,
+   "x": ""
+  },
+  "42": {
+   "firstSeen": "2026-10-18",
+   "hash": "b18a56a3795a",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "**One smooth slider engine** used by every sliding row on the site — continuous glide, drag, pause on touch, reduced-motion safe **V2.1 final · 20 Oct:** proven in the timing audit TA-2 (qa/TIMING-AUDIT.md, 0 fails; checklist L32/L33) — separate pause flags for mouse (hover), touch (4 s hold) and keyboard (focus), each with a tested resume; resumes within about 100 ms after the mouse leaves, after a mouse drag and after a sideways wheel; a vertical wheel is ignored (the page scrolls); every row drags with the mouse and a click after a drag never opens the card; touch hold unchanged."
+  },
+  "420": {
+   "firstSeen": "2026-10-18",
+   "hash": "cf08f55d4754",
+   "seed": true,
+   "x": ""
+  },
+  "421": {
+   "firstSeen": "2026-10-18",
+   "hash": "8b24224933f6",
+   "seed": true,
+   "x": ""
+  },
+  "422": {
+   "firstSeen": "2026-10-18",
+   "hash": "15c8688124fb",
+   "seed": true,
+   "x": ""
+  },
+  "423": {
+   "firstSeen": "2026-10-18",
+   "hash": "789a6251d78e",
+   "seed": true,
+   "x": ""
+  },
+  "424": {
+   "firstSeen": "2026-10-18",
+   "hash": "fc51bdb8d87b",
+   "seed": true,
+   "x": ""
+  },
+  "425": {
+   "firstSeen": "2026-10-18",
+   "hash": "6b8a79c17c3e",
+   "seed": true,
+   "x": ""
+  },
+  "426": {
+   "firstSeen": "2026-10-18",
+   "hash": "8b8e9623293c",
+   "seed": true,
+   "x": ""
+  },
+  "427": {
+   "firstSeen": "2026-10-18",
+   "hash": "a55131cb288a",
+   "seed": true,
+   "x": ""
+  },
+  "428": {
+   "firstSeen": "2026-10-18",
+   "hash": "117981d21935",
+   "seed": true,
+   "x": ""
+  },
+  "429": {
+   "firstSeen": "2026-10-18",
+   "hash": "c7fc688bcfcb",
+   "seed": true,
+   "x": ""
+  },
+  "43": {
+   "firstSeen": "2026-10-18",
+   "hash": "6cedf8cc2919",
+   "seed": true,
+   "x": "Hero slider: 12–15 products across all categories, auto-sizing name-and-price pins"
+  },
+  "430": {
+   "firstSeen": "2026-10-18",
+   "hash": "ec4741116a3f",
+   "seed": true,
+   "x": ""
+  },
+  "431": {
+   "firstSeen": "2026-10-18",
+   "hash": "ee4898f99175",
+   "seed": true,
+   "x": ""
+  },
+  "432": {
+   "firstSeen": "2026-10-18",
+   "hash": "66dc2b9209e4",
+   "seed": true,
+   "x": ""
+  },
+  "433": {
+   "firstSeen": "2026-10-18",
+   "hash": "a6b497c8f450",
+   "seed": true,
+   "x": ""
+  },
+  "434": {
+   "firstSeen": "2026-10-18",
+   "hash": "11a57b43d08f",
+   "seed": true,
+   "x": ""
+  },
+  "435": {
+   "firstSeen": "2026-10-18",
+   "hash": "13144f41c7ca",
+   "seed": true,
+   "x": ""
+  },
+  "436": {
+   "firstSeen": "2026-10-18",
+   "hash": "584c40cd8a44",
+   "seed": true,
+   "x": ""
+  },
+  "437": {
+   "firstSeen": "2026-10-18",
+   "hash": "1cccc1db9af7",
+   "seed": true,
+   "x": ""
+  },
+  "438": {
+   "firstSeen": "2026-10-18",
+   "hash": "6e15c0e5fdb4",
+   "seed": true,
+   "x": ""
+  },
+  "439": {
+   "firstSeen": "2026-10-18",
+   "hash": "59eb6d809efa",
+   "seed": true,
+   "x": ""
+  },
+  "44": {
+   "firstSeen": "2026-10-18",
+   "hash": "a94c2ff73911",
+   "seed": true,
+   "x": "Flash sale: two rows sliding in opposite directions, with a countdown that actually ticks"
+  },
+  "440": {
+   "firstSeen": "2026-10-18",
+   "hash": "f439b36de03c",
+   "seed": true,
+   "x": ""
+  },
+  "441": {
+   "firstSeen": "2026-10-18",
+   "hash": "db4d0e254db3",
+   "seed": true,
+   "x": ""
+  },
+  "442": {
+   "firstSeen": "2026-10-18",
+   "hash": "f8e609195724",
+   "seed": true,
+   "x": ""
+  },
+  "443": {
+   "firstSeen": "2026-10-18",
+   "hash": "13a6fb75a8bd",
+   "seed": true,
+   "x": ""
+  },
+  "444": {
+   "firstSeen": "2026-10-18",
+   "hash": "db3a245bcd9c",
+   "seed": true,
+   "x": ""
+  },
+  "445": {
+   "firstSeen": "2026-10-18",
+   "hash": "06bc54b00c76",
+   "seed": true,
+   "x": ""
+  },
+  "446": {
+   "firstSeen": "2026-10-18",
+   "hash": "5cb6e8439306",
+   "seed": true,
+   "x": ""
+  },
+  "447": {
+   "firstSeen": "2026-10-18",
+   "hash": "9691b4b2fbb3",
+   "seed": true,
+   "x": ""
+  },
+  "448": {
+   "firstSeen": "2026-10-18",
+   "hash": "2d7a7094165b",
+   "seed": true,
+   "x": ""
+  },
+  "449": {
+   "firstSeen": "2026-10-18",
+   "hash": "ec0a04835f6a",
+   "seed": true,
+   "x": ""
+  },
+  "45": {
+   "firstSeen": "2026-10-18",
+   "hash": "257abd716675",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "Category page: grid, breadcrumb, category SEO text block, pagination **V2.1 final · 20 Oct:** in the category banners a price never splits from its \"৳\" across lines on a phone (nowrap)."
+  },
+  "450": {
+   "firstSeen": "2026-10-18",
+   "hash": "748833962581",
+   "seed": true,
+   "x": ""
+  },
+  "451": {
+   "firstSeen": "2026-10-18",
+   "hash": "3ff9f58220a5",
+   "seed": true,
+   "x": ""
+  },
+  "452": {
+   "firstSeen": "2026-10-18",
+   "hash": "5da8b676607b",
+   "seed": true,
+   "x": ""
+  },
+  "453": {
+   "firstSeen": "2026-10-18",
+   "hash": "9c2adc5a0007",
+   "seed": true,
+   "x": ""
+  },
+  "454": {
+   "firstSeen": "2026-10-18",
+   "hash": "e49e88bd07b5",
+   "seed": true,
+   "x": ""
+  },
+  "455": {
+   "firstSeen": "2026-10-18",
+   "hash": "a020c0d30214",
+   "seed": true,
+   "x": ""
+  },
+  "456": {
+   "firstSeen": "2026-10-18",
+   "hash": "a37125fb1eaf",
+   "seed": true,
+   "x": ""
+  },
+  "457": {
+   "firstSeen": "2026-10-18",
+   "hash": "5a0862dc975f",
+   "seed": true,
+   "x": ""
+  },
+  "458": {
+   "firstSeen": "2026-10-18",
+   "hash": "d1245478a8a7",
+   "seed": true,
+   "x": ""
+  },
+  "459": {
+   "firstSeen": "2026-10-18",
+   "hash": "bcf81c987322",
+   "seed": true,
+   "x": ""
+  },
+  "46": {
+   "firstSeen": "2026-10-18",
+   "hash": "a1b962bd7baf",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Filter system — colour, size, fit, price band, on-sale, in-stock — with live counts. **Owner, 19 Oct 18:38:** every filter is built from the category's own products — sizes only those that exist, up to the largest present (S…3XL/4XL/5XL supported), colours only those listed in the category with their product counts, fits only those present (no Slim if none). Nothing fixed."
+  },
+  "460": {
+   "firstSeen": "2026-10-18",
+   "hash": "79124179edcd",
+   "seed": true,
+   "x": ""
+  },
+  "461": {
+   "firstSeen": "2026-10-18",
+   "hash": "4624c6d468ad",
+   "seed": true,
+   "x": ""
+  },
+  "462": {
+   "firstSeen": "2026-10-18",
+   "hash": "e3e0e98c5a93",
+   "seed": true,
+   "x": ""
+  },
+  "463": {
+   "firstSeen": "2026-10-18",
+   "hash": "b7c8c76b1958",
+   "seed": true,
+   "x": ""
+  },
+  "464": {
+   "firstSeen": "2026-10-18",
+   "hash": "5a00366d71c6",
+   "seed": true,
+   "x": ""
+  },
+  "465": {
+   "firstSeen": "2026-10-18",
+   "hash": "4cadadfc2143",
+   "seed": true,
+   "x": ""
+  },
+  "466": {
+   "firstSeen": "2026-10-18",
+   "hash": "f52f610dd1d3",
+   "seed": true,
+   "x": ""
+  },
+  "467": {
+   "firstSeen": "2026-10-18",
+   "hash": "fc3cb6a3776a",
+   "seed": true,
+   "x": ""
+  },
+  "468": {
+   "firstSeen": "2026-10-18",
+   "hash": "a01e6a3e68d9",
+   "seed": true,
+   "x": ""
+  },
+  "469": {
+   "firstSeen": "2026-10-18",
+   "hash": "f9e10adc6384",
+   "seed": true,
+   "x": ""
+  },
+  "47": {
+   "firstSeen": "2026-10-18",
+   "hash": "8e1d07a14898",
+   "seed": true,
+   "x": "Sort control built as a real listbox, never a native `select` (a phone draws that at the bottom of the screen)"
+  },
+  "470": {
+   "firstSeen": "2026-10-18",
+   "hash": "0275bb553d42",
+   "seed": true,
+   "x": ""
+  },
+  "471": {
+   "firstSeen": "2026-10-18",
+   "hash": "90a2c63516f2",
+   "seed": true,
+   "x": ""
+  },
+  "472": {
+   "firstSeen": "2026-10-18",
+   "hash": "bbaa989d86a7",
+   "seed": true,
+   "x": ""
+  },
+  "473": {
+   "firstSeen": "2026-10-18",
+   "hash": "cad69bebf353",
+   "seed": true,
+   "x": ""
+  },
+  "474": {
+   "firstSeen": "2026-10-18",
+   "hash": "7b3c7338f045",
+   "seed": true,
+   "x": ""
+  },
+  "475": {
+   "firstSeen": "2026-10-18",
+   "hash": "a01f58e18cf8",
+   "seed": true,
+   "x": ""
+  },
+  "476": {
+   "firstSeen": "2026-10-18",
+   "hash": "72df39029dff",
+   "seed": true,
+   "x": ""
+  },
+  "477": {
+   "firstSeen": "2026-10-18",
+   "hash": "c09b818b6045",
+   "seed": true,
+   "x": ""
+  },
+  "478": {
+   "firstSeen": "2026-10-18",
+   "hash": "deed62297541",
+   "seed": true,
+   "x": ""
+  },
+  "479": {
+   "firstSeen": "2026-10-18",
+   "hash": "55f5a97b3b58",
+   "seed": true,
+   "x": ""
+  },
+  "48": {
+   "firstSeen": "2026-10-18",
+   "hash": "d68b6dac3973",
+   "seed": true,
+   "x": "Sticky filter bar that stays stuck, with the active filters visible while scrolling"
+  },
+  "480": {
+   "firstSeen": "2026-10-18",
+   "hash": "c91ba71b834e",
+   "seed": true,
+   "x": ""
+  },
+  "481": {
+   "firstSeen": "2026-10-18",
+   "hash": "8ccd438be336",
+   "seed": true,
+   "x": ""
+  },
+  "482": {
+   "firstSeen": "2026-10-18",
+   "hash": "902a3207be46",
+   "seed": true,
+   "x": ""
+  },
+  "483": {
+   "firstSeen": "2026-10-18",
+   "hash": "ed58256a71ed",
+   "seed": true,
+   "x": ""
+  },
+  "484": {
+   "firstSeen": "2026-10-18",
+   "hash": "66b549699ad4",
+   "seed": true,
+   "x": ""
+  },
+  "485": {
+   "firstSeen": "2026-10-18",
+   "hash": "99225f693f38",
+   "seed": true,
+   "x": ""
+  },
+  "486": {
+   "firstSeen": "2026-10-18",
+   "hash": "a2a8ed720c4c",
+   "seed": true,
+   "x": ""
+  },
+  "487": {
+   "firstSeen": "2026-10-18",
+   "hash": "60ad558dbc65",
+   "seed": true,
+   "x": ""
+  },
+  "488": {
+   "firstSeen": "2026-10-18",
+   "hash": "88da48cd2380",
+   "seed": true,
+   "x": ""
+  },
+  "489": {
+   "firstSeen": "2026-10-18",
+   "hash": "ea70eb39094d",
+   "seed": true,
+   "x": ""
+  },
+  "49": {
+   "firstSeen": "2026-10-18",
+   "hash": "3ae459252f92",
+   "seed": true,
+   "x": "Product page template T1 — gallery left, buy column right"
+  },
+  "490": {
+   "firstSeen": "2026-10-18",
+   "hash": "4712c448e6a2",
+   "seed": true,
+   "x": ""
+  },
+  "491": {
+   "firstSeen": "2026-10-18",
+   "hash": "01dab8d267ba",
+   "seed": true,
+   "x": "**Settings framework** — a typed registry, held in the database, cached, every value readable and writable from the admin. Nothing a human might change lives in code."
+  },
+  "492": {
+   "firstSeen": "2026-10-18",
+   "hash": "7a24b8d3d66d",
+   "seed": true,
+   "x": "**Two-tier resolver** — installation level → store level, with inheritance. Goes in with the schema on day one; it cannot be retrofitted."
+  },
+  "493": {
+   "firstSeen": "2026-10-18",
+   "hash": "f3537843f337",
+   "seed": true,
+   "x": "**Credential vault** — every key encrypted at rest, entered from the admin, never in the repository or in Git"
+  },
+  "494": {
+   "firstSeen": "2026-10-18",
+   "hash": "cdb6c66876d3",
+   "seed": true,
+   "x": "**Hardcode guard in CI** — the build fails on a hardcoded key, name, number or policy string. One check that polices every other rule here."
+  },
+  "495": {
+   "firstSeen": "2026-10-18",
+   "hash": "e8940e49c944",
+   "seed": true,
+   "x": "**Role builder** — the admin creates roles and permissions. Replaces the fixed owner/manager/support/auditor list in PR 16."
+  },
+  "496": {
+   "firstSeen": "2026-10-18",
+   "hash": "bdfe2c25bc52",
+   "seed": true,
+   "x": "**Settings migration** — when a new setting ships, every existing installation receives it with its default"
+  },
+  "497": {
+   "firstSeen": "2026-10-18",
+   "hash": "fb6e47928b89",
+   "seed": true,
+   "x": "**ERP mode switch** — EXTAS ERP · another ERP · no ERP. Address and keys from settings."
+  },
+  "498": {
+   "firstSeen": "2026-10-18",
+   "hash": "51498ceb5014",
+   "seed": true,
+   "x": "**Generic ERP adapter interface** — one contract with mock, sandbox and live modes, so a second ERP is a new adapter and not a rewrite"
+  },
+  "499": {
+   "firstSeen": "2026-10-18",
+   "hash": "e9e5c6f2726c",
+   "seed": true,
+   "x": "**ERP-absent guard** — every path that depends on the ERP has a defined behaviour when none is connected, proven by tests. This is what keeps the seam open."
+  },
+  "5": {
+   "firstSeen": "2026-10-18",
+   "hash": "3beefd1d0bfb",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum. **Updated 19 Oct 23:33 (owner server spec):** size confirmed (E8ds_v6), nothing to re-size. 16 GB RAM, 2–3 CPU; `shared_buffers` 16 GB, `effective_cache_size` ~~48 GB~~ 40 GB, `work_mem` by workload, `max_connections` kept low behind **PgBouncer**; `temp_tablespaces` on NVMe (PR 601); data on the data disk; slow query log for anything over 100 ms (PR 603); WAL archived to Blob for point-in-time restore (PR 8); a low-priority report pool (PR 603)"
+  },
+  "50": {
+   "firstSeen": "2026-10-18",
+   "hash": "00a2a5f0b9a9",
+   "seed": true,
+   "x": "Product page template T2 — stacked gallery"
+  },
+  "500": {
+   "firstSeen": "2026-10-18",
+   "hash": "f2b6c17a0e39",
+   "seed": true,
+   "x": "**Integrations settings screen** — courier, SMS, payment, AI providers, Facebook, Google, YouTube, WhatsApp, Messenger, Telegram, Drive, email, all in one place with a test button each"
+  },
+  "501": {
+   "firstSeen": "2026-10-18",
+   "hash": "6363660dd0c8",
+   "seed": true,
+   "x": "**Branding & appearance from settings** — name, logo, favicon, colours, fonts, banners, menu, footer, contact details, social links. The approved design is unchanged; only its source moves."
+  },
+  "502": {
+   "firstSeen": "2026-10-18",
+   "hash": "0877d0282420",
+   "seed": true,
+   "x": "**Zone, charge and area admin** — the three charge bands, the COD limits, and every area: add, rename, merge, move an area between bands, edit its alternate spellings. All from the admin. The sub-area band has its own on/off switch (18 Oct)."
+  },
+  "503": {
+   "firstSeen": "2026-10-18",
+   "hash": "a7ab9d6855bd",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "**Language framework** — every visible string from a dictionary, Bengali and English switchable. ~~One language ships live~~ **Updated 19 Oct: both languages live; Bengali goes live per page behind the translation gate (PR 588).** **Admin (owner, 19 Oct 19:53):** the backend's menus and labels are in simple English by default, with a switch to Bengali. **V2.1 final · 20 Oct:** English mode shows 0 Bengali across 206 admin routes; the mixed-label dictionary is fixed; documents in Blueprint & files are shown exactly as written in either mode; combo-rule state labels English by default (Running / Off / Ended / Starts), Bengali in Bengali mode."
+  },
+  "504": {
+   "firstSeen": "2026-10-18",
+   "hash": "280a574e2ce8",
+   "seed": true,
+   "x": ""
+  },
+  "505": {
+   "firstSeen": "2026-10-18",
+   "hash": "d8b96f5cffd5",
+   "seed": true,
+   "x": "**Notification template editor** — every SMS, email and WhatsApp template, the auto-replies, and which event sends which message, all written and changed from the admin"
+  },
+  "506": {
+   "firstSeen": "2026-10-18",
+   "hash": "cb73865e5460",
+   "seed": true,
+   "x": ""
+  },
+  "507": {
+   "firstSeen": "2026-10-18",
+   "hash": "a86729b30f6a",
+   "seed": true,
+   "x": ""
+  },
+  "508": {
+   "firstSeen": "2026-10-18",
+   "hash": "fd3040ccde28",
+   "seed": true,
+   "x": "**General default pack** — policy shapes, charge structures, category structure, SMS and email template text, AI settings, theme, roles, seeded as editable defaults on every installation"
+  },
+  "509": {
+   "firstSeen": "2026-10-18",
+   "hash": "d65828e7a184",
+   "seed": true,
+   "x": "**\"My own data\" register** — the list of values that never ship to a new installation: store name, logo, every API key, phone, address, the Dhaka area list, bank and payment details, social links"
+  },
+  "51": {
+   "firstSeen": "2026-10-18",
+   "hash": "49d9c383bc31",
+   "seed": true,
+   "x": "Product page template T3 — fit-first"
+  },
+  "510": {
+   "firstSeen": "2026-10-18",
+   "hash": "a54a0fd5e8c5",
+   "seed": true,
+   "x": "**\"Reset to default\"** on every setting"
+  },
+  "511": {
+   "firstSeen": "2026-10-18",
+   "hash": "134c9622e26a",
+   "seed": true,
+   "x": ""
+  },
+  "512": {
+   "firstSeen": "2026-10-18",
+   "hash": "c002dc676acc",
+   "seed": true,
+   "x": ""
+  },
+  "513": {
+   "firstSeen": "2026-10-18",
+   "hash": "33866731048b",
+   "seed": true,
+   "x": ""
+  },
+  "514": {
+   "firstSeen": "2026-10-18",
+   "hash": "a702f3961a30",
+   "seed": true,
+   "x": ""
+  },
+  "515": {
+   "firstSeen": "2026-10-18",
+   "hash": "ce32b699fef6",
+   "seed": true,
+   "x": ""
+  },
+  "516": {
+   "firstSeen": "2026-10-18",
+   "hash": "81d61589ce36",
+   "seed": true,
+   "x": ""
+  },
+  "517": {
+   "firstSeen": "2026-10-18",
+   "hash": "cbbbdd72690e",
+   "seed": true,
+   "x": ""
+  },
+  "518": {
+   "firstSeen": "2026-10-18",
+   "hash": "b0ec0976019f",
+   "seed": true,
+   "x": ""
+  },
+  "519": {
+   "firstSeen": "2026-10-18",
+   "hash": "a3d98c442a56",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "**Order Identity Graph** — one identity built from phone, name, address, IP and device, so a customer who changes his phone number is still the same person. Every rule below reads this graph, not a raw phone number. **Updated 19 Oct 23:33 (owner server spec):** name and address are matched fuzzily (spelling a little off) with Postgres **`pg_trgm`** trigram indexes from PR 603; site search does not use it (Meilisearch, PR 72)"
+  },
+  "52": {
+   "firstSeen": "2026-10-18",
+   "hash": "be17a0781729",
+   "seed": true,
+   "x": "Template assignment per product and per category, with a preview"
+  },
+  "520": {
+   "firstSeen": "2026-10-18",
+   "hash": "658659d9b48b",
+   "seed": true,
+   "x": "**Duplicate & re-order rules engine** — scenarios A–E and H–I as separate rules, each with its own window, confidence threshold and action: **cancel · hold · warn · allow. There is no \"block\" action** (18 Oct). Scenario A cancels the second order and PR 546 tells the customer why. The submit-time guard stops most duplicates before they are ever placed, without friction for a known good customer."
+  },
+  "521": {
+   "firstSeen": "2026-10-18",
+   "hash": "73ceef340b14",
+   "seed": true,
+   "x": "**Alert summary card** — one click on an alert shows why it fired, which earlier orders matched, what the rider wrote, and the customer's history, so the approver decides in seconds"
+  },
+  "522": {
+   "firstSeen": "2026-10-18",
+   "hash": "ac86b2b83c96",
+   "seed": true,
+   "x": "**Multi-order bundling** — several separate orders from one identity inside a window become one group and one parcel, with a note, instead of five parcels"
+  },
+  "523": {
+   "firstSeen": "2026-10-18",
+   "hash": "15833ae9376d",
+   "seed": true,
+   "x": "**Block register, and the proposal that fills it** — after N rejections the identity is *proposed* for blocking, never blocked automatically (18 Oct). The register holds why, which identity, the name and address given, and every product ordered with its date. A human blocks; the AI only asks."
+  },
+  "524": {
+   "firstSeen": "2026-10-18",
+   "hash": "ddbf42d05615",
+   "seed": true,
+   "x": "**False-positive protection** — every rule carries a confidence score and a good-customer override, and a weekly report lists everything the engine stopped so a wrong rule is caught within days, not months"
+  },
+  "525": {
+   "firstSeen": "2026-10-18",
+   "hash": "0e7924140687",
+   "seed": true,
+   "x": "**True-delivery reconciliation** — the courier marks a charge-paid return as \"Delivered\". This separates what was actually received from what the courier claims, per order and per customer."
+  },
+  "526": {
+   "firstSeen": "2026-10-18",
+   "hash": "23a0194950f9",
+   "seed": true,
+   "x": "**Return-reason capture** — the rider's note (didn't like it, size didn't fit, not as expected, ordered by mistake) recorded against the customer and fed into PR 521 and PR 533"
+  },
+  "527": {
+   "firstSeen": "2026-10-18",
+   "hash": "f5f303d69bbf",
+   "seed": true,
+   "x": "**Permanent URL policy** — no product, category or page URL is ever deleted or allowed to 404. An out-of-stock product page stays live and keeps its rank: an honest out-of-stock state, notify-on-restock, and suggested alternatives. Restock makes it a normal page again."
+  },
+  "528": {
+   "firstSeen": "2026-10-18",
+   "hash": "06065fd7a686",
+   "seed": true,
+   "x": "**Blog brief form** — word count, keywords, topic and language chosen before a single word is written. No post is generated without one."
+  },
+  "529": {
+   "firstSeen": "2026-10-18",
+   "hash": "619a96789b55",
+   "seed": true,
+   "x": "**Source-link research writer** — give it a link to an article anywhere in the world; it researches the topic and writes an original piece in the chosen language. Images sourced by default, generation optional."
+  },
+  "53": {
+   "firstSeen": "2026-10-18",
+   "hash": "f6f8d67781bf",
+   "seed": true,
+   "x": "**The first-screen budget** — `PDP_FIT` and the measured sizing that guarantees the size row and the measurement line land above the buy bar on any product in any category"
+  },
+  "530": {
+   "firstSeen": "2026-10-18",
+   "hash": "1125bd3a8e01",
+   "seed": true,
+   "x": "**Seasonal page lifecycle** — archived and live are states, never deletion. A seasonal page returns on its own when the occasion comes round."
+  },
+  "531": {
+   "firstSeen": "2026-10-18",
+   "hash": "2740aba15628",
+   "seed": true,
+   "x": "**Full campaign control from the dashboard** — create, run, duplicate, schedule and re-budget a campaign, not only pause it"
+  },
+  "532": {
+   "firstSeen": "2026-10-18",
+   "hash": "d494b81d79a7",
+   "seed": true,
+   "x": "**Deep conversion feed** — server-side events enriched with the courier outcome and the visitor's intent, pushed to every platform, so the shop optimises on delivered revenue and not on clicks"
+  },
+  "533": {
+   "firstSeen": "2026-10-18",
+   "hash": "31e8462f3e32",
+   "seed": true,
+   "x": "**Customer history summary at approval** — one screen: orders, true deliveries, charge-paid returns and their reasons, refusals, exchanges. What the approver reads before saying yes."
+  },
+  "534": {
+   "firstSeen": "2026-10-18",
+   "hash": "ed417ad38176",
+   "seed": true,
+   "x": "**Customer grading** — badges, levels and a verified mark earned from real delivery history, feeding the fraud engine's good-customer override"
+  },
+  "535": {
+   "firstSeen": "2026-10-18",
+   "hash": "7df10469c15d",
+   "seed": true,
+   "x": "**Legacy customer import** — the existing business's order list brought in, de-duplicated, matched against new customers, so the shop opens with real history instead of an empty database"
+  },
+  "536": {
+   "firstSeen": "2026-10-18",
+   "hash": "464bcb89cd2e",
+   "seed": true,
+   "x": ""
+  },
+  "537": {
+   "firstSeen": "2026-10-18",
+   "hash": "d592d640914b",
+   "seed": true,
+   "x": ""
+  },
+  "538": {
+   "firstSeen": "2026-10-18",
+   "hash": "94806bd5f260",
+   "seed": true,
+   "x": ""
+  },
+  "539": {
+   "firstSeen": "2026-10-18",
+   "hash": "e2caa9bb640b",
+   "seed": true,
+   "x": ""
+  },
+  "54": {
+   "firstSeen": "2026-10-18",
+   "hash": "681344890bd4",
+   "seed": true,
+   "x": "Gallery: arrows, thumbnail sync, hand swipe, pinch zoom kept working"
+  },
+  "540": {
+   "firstSeen": "2026-10-18",
+   "hash": "299c2dca72b3",
+   "seed": true,
+   "x": "**Approval digest and permission gate** — the AI reports and then waits: *\"50 orders today; 30 confirmed and moved on; 5 held for a call, for this reason; 10 have another order running, 8 of those are duplicates.\"* Nothing is acted on until the owner says so."
+  },
+  "541": {
+   "firstSeen": "2026-10-18",
+   "hash": "48ae8f100f1e",
+   "seed": true,
+   "x": "**Risk-sectioned order dashboard** — the moment an order lands it is scored, marked and placed in its section with a note, so the owner opens one screen and sees every order already sorted by what it is. Marking is instant; the decision never is."
+  },
+  "542": {
+   "firstSeen": "2026-10-18",
+   "hash": "10ec8644ec09",
+   "seed": true,
+   "x": "**One-click advance-charge request** — from the order itself: SMS, WhatsApp or call, with the payment link and the order's state change, in one click"
+  },
+  "543": {
+   "firstSeen": "2026-10-18",
+   "hash": "1a791c684bf6",
+   "seed": true,
+   "x": "**Decision learning loop** — every approve and decline by the owner and by each employee, with its reason, is taken as training. The engine's judgement improves as volume grows, and it learns which employee rejects what and why. Switchable off."
+  },
+  "544": {
+   "firstSeen": "2026-10-18",
+   "hash": "869074d7f3d9",
+   "seed": true,
+   "x": "**Rule master switches** — every fraud and duplicate rule individually switchable from the backend. All on by default; any one can be turned off the day it costs more than it saves."
+  },
+  "545": {
+   "firstSeen": "2026-10-18",
+   "hash": "d26cd5aa9ed7",
+   "seed": true,
+   "x": "**New-customer verification queue** — an identity with no history anywhere goes to a phone call, never to a decline. No history is not a risk score."
+  },
+  "546": {
+   "firstSeen": "2026-10-18",
+   "hash": "f4f92c0d746b",
+   "seed": true,
+   "x": "**Cancellation notice to the customer** — when a duplicate is cancelled, a detailed WhatsApp or SMS explains why, with the tracking link to the order that is already on its way"
+  },
+  "547": {
+   "firstSeen": "2026-10-18",
+   "hash": "9573f35a7cac",
+   "seed": true,
+   "x": "**Image sourcing for the blog** — the owner's own product photographs first, then free-licence libraries the AI may draw on by itself. **AI generation asks permission every time**, because it costs money. Nothing is ever taken from Google image search."
+  },
+  "548": {
+   "firstSeen": "2026-10-18",
+   "hash": "e01ed5c8da64",
+   "seed": true,
+   "x": "**Market and competitor intelligence** — the owner supplies links to large pages in his market; the system studies what is publicly learnable from them (which products are pushed, which angles, which seasons, which audiences respond) and turns it into ad planning: audience ideas, keyword ideas, creative angles, and where spend is being wasted. Feeds the Facebook and Google planning, never scraping anything private."
+  },
+  "549": {
+   "firstSeen": "2026-10-18",
+   "hash": "a9bc1e45533a",
+   "seed": true,
+   "x": "**National gazetteer** — division → district → upazila/thana → area for the whole of Bangladesh, with Bengali, English and Banglish spellings, postcodes and coordinates where they exist. National, not Dhaka-only: the collisions cannot be resolved without the rest of the country in the table. Dhaka City scanned to 250–300 entries; Gazipur, Savar and Narayanganj scanned in full."
+  },
+  "55": {
+   "firstSeen": "2026-10-18",
+   "hash": "3d493a5d68bf",
+   "seed": true,
+   "x": "Colour swatches, colour name, \"All N colours\" sheet, and true-colour photograph"
+  },
+  "550": {
+   "firstSeen": "2026-10-18",
+   "hash": "64f69b8f2caf",
+   "seed": true,
+   "x": "**Band mapping** — one band per area, simple. **Dhaka City = the official DNCC + DSCC map**, nothing else. Sub-area = the owner's list, which is the only exception to the map. Everywhere else is one flat rate. The charge the customer sees is a figure the owner fixes in the admin — it does not depend on which courier the parcel ends up on. The sub-area band has three settings: its own charge · folded into Dhaka City · folded into the outside-Dhaka flat charge."
+  },
+  "551": {
+   "firstSeen": "2026-10-18",
+   "hash": "e6852d1308a1",
+   "seed": true,
+   "x": "**Ambiguity resolver — reads the whole line, and waits.** Nothing is decided while the cursor is still in the address field: people write the district a few words later (\"Gabtoli Bus Stand, **Dhaka**\"; \"Masterpara, Gabtali, **Bogura**\"). On blur, or a long enough pause, the resolver reads the complete address — a district, parent area or postcode anywhere in it settles the band **silently, with no question**. A postcode settles it (1216 Dhaka, 5820 Bogura); a co-occurring local name narrows it; a returning customer's saved address outranks any guess. **Only a line still ambiguous after that full read asks**, and once the customer confirms, nothing silently changes it."
+  },
+  "552": {
+   "firstSeen": "2026-10-18",
+   "hash": "0790f99b24c9",
+   "seed": true,
+   "x": "**Address autocomplete** — type-ahead over the gazetteer, matching Bengali, English and the Banglish people actually type (Gabtali ↔ Gabtoli, Sreepur ↔ Sripur, Bogra ↔ Bogura). **Each suggestion row shows the parent and the price** — a customer about to pick the wrong Gabtoli sees \"বগুড়া · ১৩০৳\" and stops. Prefix matching only, never fuzzy scoring: fuzzy turns \"Sadar\" into sixty wrong hits."
+  },
+  "553": {
+   "firstSeen": "2026-10-18",
+   "hash": "54591baf712d",
+   "seed": true,
+   "x": "**Charge accuracy guard** — the delivery charge is **never computed from free text**, only from a resolved gazetteer entry. Unresolved means ask, never guess. A test suite runs every known colliding name and fails the build if any of them resolves to the wrong band."
+  },
+  "554": {
+   "firstSeen": "2026-10-18",
+   "hash": "0e1e440f5ad5",
+   "seed": true,
+   "x": "**Courier zone sync** — our gazetteer mapped to each courier's own city/zone/area ids, so a booking never fails on an area the courier does not recognise, and a courier's list changing does not silently break ours"
+  },
+  "555": {
+   "firstSeen": "2026-10-18",
+   "hash": "bb448ad04a2f",
+   "seed": true,
+   "x": "**Phone-first recognition at checkout** — the customer has given a phone number before he has given anything else. It is looked up even with no login, because most people never log in. **A bare phone number prefills the area only** — enough to set the charge, and not sensitive. House, road and full address prefill only after a one-time SMS code or a real login, so a stranger typing numbers cannot harvest customers' addresses."
+  },
+  "556": {
+   "firstSeen": "2026-10-18",
+   "hash": "de9e1a31e691",
+   "seed": true,
+   "x": "**In-transit duplicate notice** — the moment the phone number identifies an order already on its way with the same product, colour and size, a Bengali popup with the product photo, the earlier order number and its tracking link: *it has already reached your area, there is no need to order again.* **Two buttons — cancel it, or \"no, I want another one\"** — because the second one is sometimes a real sale. Every firing is recorded in detail, with the campaign that brought the customer, so a campaign generating duplicates can have its frequency cap cut."
+  },
+  "557": {
+   "firstSeen": "2026-10-18",
+   "hash": "ea77235dc54c",
+   "seed": true,
+   "x": "**Duplicate turned into an exchange** — same product and colour, **different size**, earlier one still in transit: that is a size worry, not forgetfulness. The message offers an exchange on arrival instead of a second parcel — one exchange charge instead of a parcel plus a refusal."
+  },
+  "558": {
+   "firstSeen": "2026-10-18",
+   "hash": "2721a2214029",
+   "seed": true,
+   "x": "**Parameter for Checkout panel** — its own dashboard section, mixed with no earlier parameter. The owner sets what counts as a flag, how many layers there are, and what each layer asks for. **The whole feature has one off switch.**"
+  },
+  "559": {
+   "firstSeen": "2026-10-18",
+   "hash": "40ec6e5404fc",
+   "seed": true,
+   "x": "**Phone-entry risk check** — our database and the courier fraud checks queried **in the background while the customer keeps typing**. Never blocks the form; a slow or failed check **passes the customer**. It catches a pattern, not a slip: 20 orders with 5–8 cancelled is not a flag; five parcels from several couriers all cancelled is. Recency weighted."
+  },
+  "56": {
+   "firstSeen": "2026-10-18",
+   "hash": "10bda3127ef8",
+   "seed": true,
+   "x": "Size pills that fill the width and stay on one line from S to 4XL"
+  },
+  "560": {
+   "firstSeen": "2026-10-18",
+   "hash": "5d92abf64da9",
+   "seed": true,
+   "x": "**Advance-payment checkout mode** — for a flagged customer only, and only once he has filled everything in: COD disappears, bKash, Nagad and card open, with one neutral line — delivery charge in advance, or full advance, by layer. **Built as the same checkout page with the payment section swapped**, not a second page: one page to design, one page to test on mobile, and no chance of the two drifting apart. The customer is never shown a score or a reason."
+  },
+  "561": {
+   "firstSeen": "2026-10-18",
+   "hash": "c59260a1f478",
+   "seed": true,
+   "x": "**Silent address backfill** — a customer who writes only \"Road 12, House 42\" gets the Inside/Outside Dhaka question, **unless his phone number is already known**. Then nothing is shown, nothing is prefilled, what he typed stays as he typed it, and the full address we hold is attached to the order in the backend for packing. A new address always wins over the stored one — he may have moved, or be sending a gift."
+  },
+  "562": {
+   "firstSeen": "2026-10-18",
+   "hash": "6c93bb1ebda6",
+   "seed": true,
+   "x": "**Flag outcome report** — of the customers flagged: how many paid the advance, how many abandoned. **This is the number that tunes the parameter.** If most of them walk away, the threshold is costing more than it saves, and the owner can see that in a week rather than guessing for a year."
+  },
+  "563": {
+   "firstSeen": "2026-10-18",
+   "hash": "8cd774198303",
+   "seed": true,
+   "x": "**No order is ever held over an address** — an unresolved address, with no Inside/Outside choice made either, **still confirms**. It lands in the backend flagged *address unclear, charge not fixed* and goes to a call queue for the AI or an agent. Nothing is left pending over an address."
+  },
+  "564": {
+   "firstSeen": "2026-10-18",
+   "hash": "c11fccd3e18c",
+   "seed": true,
+   "x": "**Charge mismatch log** — when the courier resolves a different real location than the band the customer was charged for, **nothing is changed and nobody is messaged**. The gap is simply recorded, and a monthly figure shows how many such cases there were and what they cost. The difference is ৳50 at most and the cases are rare; a correction system would cost more in refused parcels than it recovers. The owner decides later, from the number."
+  },
+  "565": {
+   "firstSeen": "2026-10-18",
+   "hash": "5889dee11cf1",
+   "seed": true,
+   "x": "**Free delivery is exempt** — where delivery is free, none of the band machinery shows, corrects or messages. Built in, not bolted on."
+  },
+  "566": {
+   "firstSeen": "2026-10-18",
+   "hash": "97ed1a61fa42",
+   "seed": true,
+   "x": "**Support explanation panel** — one click gives the agent a summary of why this customer was asked for an advance, and why the delivery charge rather than the full amount, in words that can be read out on the phone or shared in chat when a customer challenges it"
+  },
+  "567": {
+   "firstSeen": "2026-10-18",
+   "hash": "08c6c33d238d",
+   "seed": true,
+   "x": "**Multi-courier fraud data** — Steadfast's and Pathao's own checks to begin with, and any aggregated source behind the same adapter. A customer's refusal history is spread across couriers and none of them share it, so the adapter merges whatever is connected into one view and draws the maximum from it."
+  },
+  "568": {
+   "firstSeen": "2026-10-18",
+   "hash": "3950b616c4e9",
+   "seed": true,
+   "x": ""
+  },
+  "569": {
+   "firstSeen": "2026-10-18",
+   "hash": "4964fe08d432",
+   "seed": true,
+   "x": "**Geography-led ad guidance** — the shop knows where parcels are actually *delivered and paid for*, district by district. That drives the spend: more where delivery succeeds, less where refusals are high, and a campaign aimed at a district that buys a particular category. The platforms cannot work this out themselves — they see orders, not outcomes."
+  },
+  "57": {
+   "firstSeen": "2026-10-18",
+   "hash": "a6a9302c1cd9",
+   "seed": true,
+   "x": "Size chart popup — fixed, not scrolling with the page, with cm and inches inside it"
+  },
+  "570": {
+   "firstSeen": "2026-10-19",
+   "hash": "c3b8467d16c1",
+   "seed": true,
+   "tm": "04:30",
+   "updated": "2026-10-20",
+   "x": "**Checklist audit runner in the AI section.** The full e-commerce checklist (qa/ECOMMERCE-CHECKLIST.md, 405 points, grouped and prioritised) lives in the backend. One click → 2–3 agents test the chosen groups on desktop and several phones; or a schedule (e.g. weekly) with the report and bug list sent to Telegram. The owner controls when, how many agents and which groups. Fixes only with his permission. **Standard (19 Oct, note 21):** every non-backend point must PASS on 8 phone sizes, 5 tablet sizes (iPad mini, iPad Air, iPad Pro 11, iPad Pro 12.9, Android tab) and desktop, on every page type, before any release; backend-only points are run from the real backend. **V2.1 final · 20 Oct:** the timing items are checklist L32 / L33 (renumbered from L28 / L29); TA-2 530 checks, 0 fail; the audit runner re-runs them on every release."
+  },
+  "571": {
+   "firstSeen": "2026-10-19",
+   "hash": "f4586c321817",
+   "seed": true,
+   "tm": "05:00",
+   "updated": "2026-10-19",
+   "x": "**Auto colour-pair combos (the owner's model).** Bind a category, sub-category or chosen products, pick **2-piece or 3-piece** → every colour pair (or triple) becomes its own combo listing (\"Ralph Lauren Polo — Black + Navy · 2-piece combo\"), evergreen, priced \"2 pcs ৳2,200 → ৳1,800\". Best sellers first, \"has colour\" filter, regenerates when a colour is added, pauses when a colour sells out. Per-section tick: **no single piece here**; optional \"add 1 more → 3 pcs\". **Lifecycle (owner, 19 Oct 11:51):** nothing is deleted and no combo URL dies (Google rank, shared links); optional start/end dates (none = always on); at the end date the rule ends by itself → pages stay live and indexable showing \"offer ended\" with live alternatives, no add to bag, and move to an Archive tab in admin; sold out stays automatic from stock; manual off = ended; turning on or extending brings the same URLs back. **Combo SEO (19 Oct):** fixed colour order in the pair slug (reverse order 301s), featured pairs (own set photo + text) indexed, others noindex,follow; ended/paused pairs stay live (200) with alternatives."
+  },
+  "572": {
+   "firstSeen": "2026-10-19",
+   "hash": "48696355b1ce",
+   "seed": true,
+   "tm": "05:50",
+   "x": "**Combo category page — 5 templates:** L1 pair grid (the promoted page), L2 one card per style, L3 combo hub with winter/summer tabs, L4 one-column ad landing list, L5 \"2 pcs / 3 pcs\" switch first."
+  },
+  "573": {
+   "firstSeen": "2026-10-19",
+   "hash": "0cd5b9baed94",
+   "seed": true,
+   "tm": "05:50",
+   "x": "**Combo product page — 5 templates:** P1 pair page (2 taps to bag), P2 pick-your-colours, P3 top + bottom set, P4 mixed 3-item set, P5 fixed-colour pack. One button wording (\"Add both to bag · ৳1,800\"), \"Size for both\" by default."
+  },
+  "574": {
+   "firstSeen": "2026-10-19",
+   "hash": "760bde224d62",
+   "seed": true,
+   "tm": "05:50",
+   "updated": "2026-10-19",
+   "x": "**Combo in the bag — 5 templates (default B5 compact rows, ranking winner, applied 19 Oct; owner keeps current defaults):** B1 grouped card, B2 sizes editable in the bag, B3 \"add 1 more\" inside the card, B4 real item prices + one discount line (order record and invoice), B5 compact line for many sets."
+  },
+  "575": {
+   "firstSeen": "2026-10-19",
+   "hash": "b6490bc98373",
+   "seed": true,
+   "tm": "05:50",
+   "x": "**Set photo standard:** the set picture is composed automatically from each piece's photo in the chosen colours (side by side / top + bottom / three-up), one photo standard, no text baked in."
+  },
+  "576": {
+   "firstSeen": "2026-10-19",
+   "hash": "b7438eaef516",
+   "seed": true,
+   "tm": "05:50",
+   "x": "**Combo template test matrix and ranking:** set types × 5–6 colours × S–3XL × phone sizes, a 100-point score per template (taps to bag, first-screen completeness, errors possible, clarity of price), so the owner keeps the winner."
+  },
+  "577": {
+   "firstSeen": "2026-10-19",
+   "hash": "b2aef75df05d",
+   "seed": true,
+   "tm": "04:52",
+   "updated": "2026-10-19",
+   "x": "**Agent 360° profiles** — each of the fixed agents (seven since PR 581; five blog authors since PR 593) (প্রহরী Prohori, ভান্ডারী Bhandari, সওদাগর Sawdagor, শিল্পী Shilpi, দূত Doot, জ্ঞানী Gyani — renamed by the owner 19 Oct) has an employee-style profile in the AI 360 Control Room: role and owned stages, what it never touches, its plan, skills it has and skills it is learning (linked to the Skill Library, PR 321–323), work log (every task, PR, file), test results (device gate, QA checklist runs), performance (first-time-right rate, bugs found by the owner vs by itself, cost). The same agents (seven since PR 581) build the code and then run the live dashboard sections — no new agents, no re-teaching. **The owner edits each profile:** photo, name, bio, joining date, rewards, a verified ✓ star, and assignments with due dates. **Memory protocol** (agents/AGENT-PROTOCOL.md): before every task the agent loads its profile, standards, owned skills and recent work log and restates its duties; after every task the runner appends the work log automatically and any new lesson becomes a versioned skill (sandbox-tested, PR 322; approval-gated, PR 420); the library is in the nightly Google Drive backup."
+  },
+  "578": {
+   "firstSeen": "2026-10-19",
+   "hash": "807d0decc7df",
+   "seed": true,
+   "tm": "05:20",
+   "x": "**Agent appraisal reports** — daily, weekly, monthly and yearly reports per agent, written like an employee's: what it did, what it left undone and why, what it learned, its history, KPIs against targets (first-time-right, bugs it found vs the owner found, rework, cost), and a yearly appraisal in the multinational style (goals, ratings, development plan). On demand or on schedule (Telegram / email)."
+  },
+  "579": {
+   "firstSeen": "2026-10-19",
+   "hash": "1e7b6a4076de",
+   "seed": true,
+   "tm": "05:20",
+   "x": "**Agent curriculum and certification** — each agent's field is taught as a degree path (graduate → post-graduate → PhD level) from top-university syllabi and the field's standard texts, distilled into versioned skills in the library, with exams the agent must pass in the sandbox (PR 322) before a level is marked earned; levels and scores show on its profile (PR 577)."
+  },
+  "58": {
+   "firstSeen": "2026-10-18",
+   "hash": "61a525ceaf02",
+   "seed": true,
+   "x": "**Find My Size** — height and weight to a recommended size, with the reasoning shown"
+  },
+  "580": {
+   "firstSeen": "2026-10-19",
+   "hash": "9a965b9ccb30",
+   "seed": true,
+   "tm": "04:45",
+   "x": "**Model auto-suggest with free-model qualification** — for every agent job the system suggests a model with its reason; the owner accepts or changes it. Free models are in the pool and are **qualified**: each job type has a quality test set, every candidate (paid or free) is scored, and the cheapest model that passes the job's quality bar is suggested — cost falls only when quality holds, never by lowering it. Shows quality per candidate, cost per 100 runs, monthly saving, last test date, \"re-test now\". Works with the spend caps (PR 309) and the cost book (PR 312–313)."
+  },
+  "581": {
+   "firstSeen": "2026-10-19",
+   "hash": "b1598c3b8f33",
+   "seed": true,
+   "tm": "05:20",
+   "x": "**তীরন্দাজ Tirondaj — the seventh agent, ads specialist** (Google, Facebook, Instagram, YouTube, TikTok). Runs campaigns end to end inside the owner's guardrails: builds campaigns and audiences, assembles creatives (photos, video cuts, captions) from the studio, launches, tests, scales winners, cuts losers. **Guardrails enforced by code, not by the AI:** target sales, max cost per purchase, daily/monthly budget ceilings, auto-decrease allowed, **any budget increase only after the owner's approval** (with the reason), kill switch, every change logged. Instructions and approvals from the dashboard or Telegram. Works through the official platform APIs (Meta Marketing API, Google Ads API incl. YouTube, TikTok Marketing API) and the server-side purchase/delivery events (PR 257–258); builds on PR 259–261, 265–269, 531."
+  },
+  "582": {
+   "firstSeen": "2026-10-19",
+   "hash": "d98e3a4f73e5",
+   "seed": true,
+   "tm": "05:20",
+   "x": "**Strong agent memory** — every agent gets a long-term memory store inside the system (facts, decisions, owner instructions, past campaigns/tasks and their outcomes, lessons), searchable by meaning, summarised weekly, loaded at the start of every task (PR 577 protocol), never deleted silently, backed up nightly to Google Drive; the owner can view and correct it."
+  },
+  "583": {
+   "firstSeen": "2026-10-19",
+   "hash": "fc5c081860f3",
+   "seed": true,
+   "tm": "04:55",
+   "x": "**Chief agent — জ্ঞানী Gyani as virtual CEO (প্রধান এজেন্ট), chain of command.** The owner charges one agent; Gyani answers to him and charges the other six by their performance. Asked \"why are sales down this month / this week?\", \"why was today's courier entry wrong?\", \"why is this bug on the category page?\", Gyani investigates across every section (orders, ads, stock, delivery, site errors, the agents' work logs), names **which agent's area caused it, with evidence**, assigns the fix to that agent, tracks it to done and reports back. Broad knowledge beyond its own stages (business, finance, operations, marketing, tech) — curriculum adds an executive/general-management track. Second only to the owner. **Free to do:** research, reports, analysis, assigning and reviewing work, warnings to agents (written into their appraisals PR 578). **Only with the owner's approval:** any money movement or refund, any COD amount change on an order, price or discount changes, ad budget increases, blocking anyone, deleting data, anything that cannot be undone. The permission list is a dashboard setting the owner edits; enforced by code. Lives in S15 AI 360 (org chart, open investigations, who-owns-what)."
+  },
+  "584": {
+   "firstSeen": "2026-10-19",
+   "hash": "f925c00de6f6",
+   "seed": true,
+   "tm": "04:55",
+   "x": "**Telegram identity and command routing.** All agents share the owner's one Telegram bot. Every message starts with the sender's identity — photo/emoji, name, Bengali name, **employee code**, role (e.g. \"🏹 Tirondaj তীরন্দাজ · A360-07 · Ads\") — so the owner always knows who sent it. When the owner writes a command naming an agent or its code (\"A360-07 budget report\", \"@Bhandari courier entry check\"), the task is **assigned to that agent automatically**, appears on its profile as an assignment, and the agent replies in the same thread when done. No name → goes to the chief (Gyani), who routes it. Approvals come back as buttons (Approve / Reject / Ask why). Also visible in the dashboard."
+  },
+  "585": {
+   "firstSeen": "2026-10-19",
+   "hash": "66cb93492aaf",
+   "seed": true,
+   "tm": "05:09",
+   "x": "**Continuous learning engine — Tirondaj (ads) and Doot (SEO/marketing) are the two power agents.** They learn without stopping from: official docs (Meta, Google, TikTok, Search Central), the big practitioner blogs on SEO and paid ads, Reddit communities (PPC, Facebook ads, SEO, e-commerce), YouTube tutorials incl. South-Asian e-commerce channels (read through transcripts), LinkedIn and Facebook posts of known specialists (where readable; through a paid tool if needed), case studies. **When stuck:** research all sources → solve → the solution becomes a skill in its basket. **Quality gate (no shortcut learning):** a tip becomes a skill only after it is checked against the official docs or two independent good sources, tested in a sandbox or small live test, and written with its source, date and confidence; tips that fail are recorded as \"doesn't work for us\". **Practice tasks with deadlines** (e.g. get a new page indexed within 3 days, a long-tail keyword into Google's top 10, a test campaign under the CPA cap) graded in their appraisals. **Paid data tools** (e.g. an SEO suite) proposed with cost and reason — the owner approves and pays."
+  },
+  "586": {
+   "firstSeen": "2026-10-19",
+   "hash": "e49a91b71717",
+   "seed": true,
+   "tm": "12:10",
+   "x": "**Hash-to-real-URL forwarder** — a small script maps every old demo `#/…` link to its live URL (location.replace), with a test table, so no shared demo link dies"
+  },
+  "587": {
+   "firstSeen": "2026-10-19",
+   "hash": "94169bb2fcb1",
+   "seed": true,
+   "tm": "12:07",
+   "x": "**WordPress → new site migration (extas.com.bd)** — export the old Search Console data and backlinks, 301 every old sitemap URL (49 today) to its new twin, crawl-check on go-live day, keep redirects ≥ 12 months; Google rank carries over"
+  },
+  "588": {
+   "firstSeen": "2026-10-19",
+   "hash": "23129dd72ae5",
+   "seed": true,
+   "tm": "12:10",
+   "x": "**Bengali translation gate** — per page a \"Bengali ready\" flag (main content translated and approved); only then the `/bn` page publishes, enters the sitemap and gets hreflang; the SEO health report shows Bengali coverage"
+  },
+  "589": {
+   "firstSeen": "2026-10-19",
+   "hash": "356a6f4d6390",
+   "seed": true,
+   "tm": "12:10",
+   "x": "**Merchant Center feed + Bangladesh test** (with Tirondaj) — feed from the catalogue, brand EXTAS, BDT; test Bangladesh as target country after go-live (owner 11:39), result logged; free listings and Shopping ads only if available"
+  },
+  "59": {
+   "firstSeen": "2026-10-18",
+   "hash": "1bc0ea679609",
+   "seed": true,
+   "x": "Find My Size training engine — the chart data, the ease model, and the admin report"
+  },
+  "590": {
+   "firstSeen": "2026-10-19",
+   "hash": "67d9d54391ca",
+   "seed": true,
+   "tm": "12:04",
+   "x": "**Product naming and URL control (owner, 19 Oct 12:04)** — owner decision (12:07, replacing 12:04): **brand names stay** — EXTAS sells those brands' products and articles name the brand; Claude's earlier warning (Merchant Center / Meta trademark policy) is recorded and the owner accepted the risk, noting ads with brand-named links already run without problems. Each product has a real **brand field** (EXTAS only for own-label), used on the page, in structured data and the feed; templates have a {brand} token. Nothing fixed in code: per product the owner sets the **name on the site, the URL slug, the SEO title, the feed/ad title and the brand (default EXTAS)**; shop-wide templates for slugs and titles; Google preview. **Changing a slug never breaks a link:** the old URL 301s to the new one automatically (also used for the WordPress migration, PR 587), so rank and sales carry over. An optional \"other brand name\" warning (setting, off by default); a bulk rename tool with preview; the SEO report compares organic visits and sales before/after a rename."
+  },
+  "591": {
+   "firstSeen": "2026-10-19",
+   "hash": "9e26324a0325",
+   "seed": true,
+   "tm": "12:10",
+   "x": "**Blog content pipeline (owner, 19 Oct 12:10–12:14)** — the blog is the main traffic engine: everyday fashion knowledge (care, washing, styling, fabrics, fit, occasions and seasons) plus our own product posts, **at least 3 and up to 5–6 posts a day**. In the backend: a topic list that Doot builds from real search demand (the owner can add topics and approve the list); Doot writes each post; **a second agent proofreads and fact-checks before it can publish** (writer never approves own post); interlinking rules (article → category/product, product → care guide, cluster links), SEO checklist, own photos, Bengali twin when ready (PR 588); a schedule that spreads posts through the day; a duplicate-topic check; per-post traffic and sales report. Quality is the system's job, not the owner's. | **Scope from BLOG-CONTENT-PLAN.md (19 Oct):** 8 pillars with hub pages, 179-topic bank, 90-day calendar (3/day for 2 weeks, then 5/day only while quality and indexing stay healthy — automatic drop to 3/day otherwise; an empty slot is never filled with a weak post); per-post fact sources and reviewer verdict; editorial-policy page and AI-assistance line; similarity/duplicate thresholds; required internal links + weekly unlinked-post report; care-guide link on every product page, \"Shop the look\" combos on style posts; refresh queue and merge tool with 301s (\"updated\" date only on real edits); care-lab/photo request queue; topic ideas from Search Console, support chats and site search; product blocks swap sold-out items; proofreader on a different model from the writer where possible; English/Bengali readability check; journal-assisted sales defined. **Review chain (with PR 593):** another author proofreads → Gyani checks business facts (delivery, exchange, prices) → Doot final SEO. Byline: \"EXTAS Journal\" with the author agent name and the expert reviewer the owner enters."
+  },
+  "592": {
+   "firstSeen": "2026-10-19",
+   "hash": "9c8de0638bfe",
+   "seed": true,
+   "tm": "12:20",
+   "x": "**Blog as a complete, standard section of the shop, with our own ad placements (owner, 19 Oct 12:20).** Blog features: categories (pillars) and sub-categories, tags, author/reviewer pages, search, archive, featured and related posts, reading time, contents, share, RSS, newsletter sign-up, Bengali twins. **House ads only (no outside ad networks):** slots on the blog home (top banner, between cards), category pages, inside the article (after paragraph N, AdSense-style), sidebar on desktop, end of article, and an optional popup per post. Each ad is our banner, product, combo or category; the owner picks which ads show in which slots, posts and categories, with dates, weights and on/off. Popups have triggers (scroll %, time, leaving) and frequency caps, are easy to close, and by default don't open the moment a phone visitor lands from Google (Google's intrusive-interstitial guidance). Click and sales report per ad and slot."
+  },
+  "593": {
+   "firstSeen": "2026-10-19",
+   "hash": "bc347b41d0b7",
+   "seed": true,
+   "tm": "12:22",
+   "x": "**Blog writing team — five author agents under Doot (A360-06, head of content)**, codes A360-08…12, one per section: care and washing, styling, fabrics and fit, seasons and occasions, brands and products (names editable by the owner). They only write articles and help Doot with blog SEO; authors proofread each other (never their own post), Doot does the final SEO check. Each has a 360° profile, model choice per job (PR 580) and is counted in cost only when it works. **Bylines are honest:** each author page says the articles come from EXTAS's AI writing team, checked by our team; a real staff reviewer line where the owner names one. No invented human personas or fake photos."
+  },
+  "594": {
+   "firstSeen": "2026-10-19",
+   "hash": "eb32a9b618af",
+   "seed": true,
+   "tm": "14:59",
+   "updated": "2026-10-19",
+   "x": "**PR register inside the backend (owner, 19 Oct 14:59)** — an admin section listing every stage and every PR with its full details (what it does, scope added later and when, owner decision, status: built / parked / in demo / in code / live, owning agent, demo page link). Click a PR for the full card; search and filters; history of updates per PR (date, round, note); \"report a problem on this PR\" so the owner can point to an exact PR when something breaks — it opens a task for the owning agent via the chief. Generated from the master register on every build, so new PRs appear automatically; nothing typed twice. **Also holds the latest full blueprint .md (highest version marked latest), the master register and the supporting files** (round notes, plans, research, checklist, QA reports, agent protocol) — read inside the admin with contents and search, downloadable, with version history per file; backed up to Google Drive with everything else; no personal data, no third-party skill copies. **Automatic (15:05):** new stages and new PRs appear by themselves with the date first seen; every new PR shows which earlier PRs it builds on (named numbers, same stage, closest titles) and raises a dated notification; growth of an existing PR's text is recorded as a dated \"updated\" entry showing what was added, not as a new PR; a helper flags new PRs that look like they should have been scope on an older one (for Gyani to merge); unseen-update counter on the page and in the sidebar. **Change process (owner 22:54; review/CHANGE-PROCESS.md):** register and blueprint live in the repo `docs/` from the first code day and feed this section on every deploy; new ideas come in by chat, the \"request a change\" form or Telegram to the chief → scope on an existing PR first, else a new PR → a dated change note (CN-###) → placed on the not-yet-built PR, or in the change queue after the current wave, or as an urgent bug PR → blueprint version V2.1, V2.2…; after go-live the same path plus staging and the gate; layout/text/offer changes are done in the site builder without PRs (version history only)."
+  },
+  "595": {
+   "firstSeen": "2026-10-19",
+   "hash": "95b350b36c5c",
+   "tm": "18:38",
+   "updated": "2026-10-19",
+   "x": "**Page layout builder (home and every category page).** In the backend the owner adds, moves, hides and edits sections on the home page and on each category page: e.g. start a new offer today and put it as a new section above the reviews; drop a box into a category page. Section types: banner, offer strip, product row/grid, combo row, category tiles, reviews, journal, custom HTML-safe block. Each section has its own on/off, dates and device choice (phone/desktop/both). Defaults reproduce today's pages exactly; nothing fixed in code. **In demo (19 Oct, Shilpi A360-05 + Sawdagor A360-04):** `#/admin/layout` \"পেজ সাজান\" — page picker (home · all categories · per-category override), drag + ↑/↓ reorder, on/off, edit, duplicate, hide-never-delete, add-section type picker (10 types incl. product row from category/tag/manual, combo row from a combo rule, safe rich text, spacer), whole-day Asia/Dhaka dates, phone/desktop/both, live phone + desktop preview; example \"নতুন অফার\" above the reviews. Built-ins point at today's renderers (HOME_SECTIONS / CAT_SECTIONS); default layout = pixel-identical pages (gate 0 px). Files: 96c-layout-builder.js, r12-zlb.css."
+  },
+  "596": {
+   "firstSeen": "2026-10-19",
+   "hash": "72a00ad06082",
+   "tm": "18:38",
+   "updated": "2026-10-19",
+   "x": "**Side canvas — the empty left and right gutters on desktop** (from under the header banner down to the footer, on home and category pages). The owner divides each side into free-form zones by size and position (e.g. 100 × 500 px at a set height), and puts in each zone a fixed banner, an ad, a popup trigger, or an image/animation that blends with the page background (e.g. a model stepping out in a polo, denim and boots). Per page, per zone on/off, dates; only appears where the gutter is wide enough; never covers content; off by default — today's look stays until the owner approves. Shown to the owner separately for approval first. **In demo (19 Oct, Shilpi + Sawdagor):** `#/admin/side-canvas` \"দুই পাশের জায়গা\" — live map of the page at 1280–1920 px with px/inch rulers, draw/drag/resize zones or type top/width/height, zone types banner · house ad (product/combo/category) · popup trigger (view/time/click, once per visit/day/week) · illustrated figure (polo + denim + boots from the garment drawings, entrance animation off for reduced motion) · image/animation; blend colour auto/custom, fade side, strength; sticky or anchored per zone; shows only where gutter ≥ zone width + 16 px, never over content, full-width bands, header or footer; hidden on phone/tablet. Master switch OFF (\"চালু করার আগে মালিকের অনুমোদন লাগবে\"); owner approval view `#/preview/side-canvas` at 1440 and 1920 with blend low/saved/high, switch untouched. **Owner, 19 Oct 19:53:** will turn it on; master on/off stays in the backend (off = today's look). Zones target home, all categories or chosen categories, desktop only. **Never hide — scale:** each zone has a standard reference size and scales up or down to the space each screen gives. Modes: fixed, or fixed with a gentle float of a few cm up/down while scrolling. Full-blend mode: the product sits straight on the page background with no frame, border or card edge. Animated content: a model figure changing poses, products cycling. **AI motion templates (with S24/S25):** 15–20 ready templates (colour cycle, pose cycle, turn-around, slide-up stack, flip deck, ticker, spotlight, etc.); the owner picks a template and products (e.g. every colour of the Solid Polo) and the system builds the sequence; in the real build the AI studio renders poses/short clips. **Speed and reuse (19:59):** loads only after the main content, desktop with a mouse only (phones/tablets never download it), transform/opacity animation, paused off-screen or in a hidden tab, per-zone weight budget (image ≤150 KB, video ≤1.5 MB, page ≤3 MB) with publishing blocked over budget, measured: no LCP regression >100 ms, CLS 0. Every AI pose set/video is kept in an asset library and reused for the same template + product + colours — no paying twice. Signature template \"walk-out\": a model in our polo, denim and shoes walks forward out of the page in a 3D view (skill: agents/skills/gyani/studio/WALKOUT-TEMPLATE.md). **v2 in demo (19 Oct, Shilpi + Sawdagor):** zones scale from the 1440 standard (gutter 132 px) — 0.31× at 1280, 0.68× at 1366, 1× at 1440, 0.28× at 1536, 1.6× (cap) at 1920 — text clamps, picture-only below 72 px; modes sticky / float (±40 px, eased, transform only) / anchored; full blend (transparent garment drawings + edge fade, no card or edge); per-zone pages (home, all or chosen categories); 19 motion templates incl. the signature walk-out (default suggestion for top + bottom) with product picker (category, sub-category, every colour of…, manual, combo), speed, order and smart suggestion; \"AI দিয়ে পোজ/ভিডিও বানান\" (simulated) + AI asset library `ST.aiAssets` with reuse at no token cost (also as AI & agents → AI media library); speed first: loads after paint on idle, desktop + mouse only, paused off-screen, weight budgets (image 150 KB, video 1.5 MB + poster, page 3 MB — over budget is blocked); lab at 1440: LCP +28 ms (the canvas is never the LCP element), CLS 0, longest canvas task 19 ms, slow scroll frames 2.3 % vs 1.7 % without. Admin English by default, Bengali via ST.adminLang. **Placement (owner 22:14, marked screenshot review/owner-side-zone-2026-10-19.png):** default zone starts at the first content row (≈14% below the header), is ≈80% of the visible window height below the header, leaves ≈6% at the bottom, hugs the content side with a ≈16 px gap; mirrored right; auto-adjusts to every window; percentages are settings (\"centred 75%\" kept as a preset). **Per-size placement (owner 22:17):** the editor shows ≥10 real desktop/laptop sizes (1280×720 … 2560×1440 plus his own 1797×879 and \"this screen\"); he sets the placement on one size and the rest auto-adjust, can fix a custom placement for any size (badge, reset to auto), sizes in between interpolate, a \"check all sizes\" grid shows pass/warn for each. **Status at pause (19 Oct 22:45):** in demo — default placement from the owner's marking (top 14.4%, height 79.9%, 17 px to content, width 88% of the gutter; 157×644 at 1797×879), 10-size editor with per-size fix and interpolation, check-all grid, 16 page types detected (checkout/thanks/landing excluded), per-page switches; **for the code phase:** tests for per-page placement, Bengali placement sheets, full gate re-run."
+  },
+  "597": {
+   "firstSeen": "2026-10-19",
+   "hash": "afc1f81e4863",
+   "tm": "19:53",
+   "updated": "2026-10-19",
+   "x": "**Launch default — save and restore (owner, 19 Oct 19:53).** The look we launch with is saved as the \"Launch default\": page layouts (PR 595), side canvas (PR 596), house ads and popups (PR 592), home/category sections and banners. One button \"Back to launch default\" returns everything to it at any time — test ads and experiments switch off (kept as hidden copies, never deleted). The owner can also save named snapshots (e.g. \"Eid 2027\") and restore any of them; every restore is logged and can itself be undone. **In demo (19 Oct, Shilpi + Sawdagor):** Snapshots panel on Page layout, Side canvas and Admin → Settings — save as launch default / back to launch default (confirm; test sections, zones, house ads and per-category layouts kept as hidden switched-off copies), named snapshots with restore and rename, restore log with undo last restore; covers ST.layout, ST.sideCanvas, ST.blogAds, ST.blogAdSettings, ST.heroBtns."
+  },
+  "598": {
+   "firstSeen": "2026-10-19",
+   "hash": "02364b67764b",
+   "tm": "21:23",
+   "updated": "2026-10-20",
+   "x": "**Site builder — the whole site dynamic (owner, 19 Oct 21:23: \"like WordPress + Elementor, nothing fixed\").** From the backend, with preview before publish: **menus** (header nav / mega menu / phone menu / bottom bar — add, rename, reorder, hide, custom links, featured tile), **header** (announcement bar, icons on/off and order, logo), **footer** (columns, links, texts, contact block, social and payment marks), **categories and sub-categories** (create, rename, reorder, hide, image, intro, SEO), **product page blocks** (order and visibility of gallery, price row, colours, sizes, offers, buy-together, reviews, FAQ, care link), **content pages** (help, policies, about, careers, payment — rich text editor), **theme** (colours, fonts, spacing tokens with contrast check). Builds on PR 595 (home/category sections), 596 (side canvas) and 597 (launch default / snapshots / undo). Every change: draft → preview on phone/tablet/desktop → publish; per-device visibility; version history and undo. **Guardrails, not a blank canvas:** blocks snap to the responsive grid (no free pixel dragging that breaks phones), contrast and tap-size checks block bad publishes, checkout keeps its tested structure (texts, fields on/off and order editable; payment steps locked). Handover-ready: every default is data, a new owner configures everything here, the owner's own data never ships (PR 509). **Owner 22:14:** header logo text or uploaded image (auto-fit, phone version) with the **slogan under the logo** (editable, shared with the footer, on/off); footer columns and links drag-and-drop; social and payment icons chosen from a set or uploaded, added, removed, reordered. Clicking any link to the page you are on (e.g. the logo on home) scrolls to the top. **Owner 22:27:** a Shimmer control (every shimmer on the site: on/off, speed, intensity, master switch, reduced motion); tiered bag offers (Take 2 / 3 / 4 with prices and savings, fully customisable); side-canvas zones on every page with gutters (home, category, login, bag; never checkout). **V2.1 final · 20 Oct:** both owner 22:27 items are built in the demo (Batch B): **Shimmer control** — Admin › Settings › Shimmer, 14 shimmers each with on/off, speed and strength, plus a master switch; reduce-motion gets no shimmer; the Add to Bag shimmer exists but is off by default (89t-shimmer.js); **tiered bag offers** — the \"Take 2 │ Take 3 │ Take 4\" box with gold bars from the Build your own set price rules, up to 4 tiers per rule, dates and targeting, desktop only with a phone preview (89u-bag-offers.js). The rest of PR 598 stays paused."
+  },
+  "599": {
+   "firstSeen": "2026-10-19",
+   "hash": "eb61a54fff02",
+   "tm": "22:14",
+   "x": "**In-dashboard help and the handover user manual (owner, 19 Oct 22:14: \"no coder needed later; whoever takes over runs the whole site from the manual\").** A \"How to\" panel on every admin page and a \"?\" on every field, in simple English and Bengali; a searchable Site Manual inside the admin covering every area, written for a new owner; a .md copy kept with the blueprint documents. New features: switches, Smart Rules/automations and integrations are set up without code; a truly new function is requested through the PR register (\"request a feature\") and built by the agent team, never by editing code by hand."
+  },
+  "6": {
+   "firstSeen": "2026-10-18",
+   "hash": "c7469f614077",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Redis, and BullMQ queues with their dead-letter handling. **Updated 19 Oct 23:33 (owner server spec):** Redis ~~2 GB~~ 6 GB, 1 CPU, `maxmemory` with LRU eviction; working cache on NVMe, persistence (AOF/RDB) on the data disk; holds settings, the Dhaka area list, products, categories and the 15 s stock display cache (PR 602). Queues: image/video worker (separate process, 6 GB, 2 CPU) and background jobs (courier sync, e-mail, reports; 4 GB, 1 CPU) — heavy image and video work never runs in the web process"
+  },
+  "60": {
+   "firstSeen": "2026-10-18",
+   "hash": "4794f1f63795",
+   "seed": true,
+   "x": "Stock line, low-stock urgency chip, and sold-out-in-this-colour handling"
+  },
+  "600": {
+   "firstSeen": "2026-10-19",
+   "hash": "1af52ce90276",
+   "tm": "22:27",
+   "x": "**On-page edit mode (owner, 19 Oct 22:27–22:33, plan approved 100%).** Logged in as super admin, a thin bar on every storefront page turns on Edit mode (customers never see it): hover a section → outline + Edit; click → side panel with that section's settings (texts, prices, products, offer tiers, shimmer, hide); \"+\" between sections adds one; draft shown in place → Publish → undo. Same engine as the site builder (PR 598), two doors. On phone: a light version (texts and offers only, no drag). **Desktop change → \"Apply to phone too?\"** If yes: previews on the **10 phone screen sizes most used in Bangladesh** (the owner can pick any to check by hand) plus automatic checks (nothing cut, no sideways scroll, tap size, buy button above the fold); it goes to phone only after the checks pass and the owner approves. **AI mode:** when on, an AI reviewer agent tests the change across phones, tablets and desktops (layout, speed, conversion rules, customer impact) and returns a short report — \"safe to publish\" or \"Boss, don't publish: …\" with reasons and screenshots; when AI mode is off it says so and the owner's own check stands. Guardrails as PR 598; checkout payment steps locked."
+  },
+  "601": {
+   "firstSeen": "2026-10-19",
+   "hash": "d5c8c65488b2",
+   "tm": "23:33",
+   "x": "**NVMe temporary-disk boot unit (owner server spec, 19 Oct 23:33).** On the E8ds_v6 the 440 GB local NVMe is **raw**: after a stop, deallocate, maintenance or move it comes up unformatted (Microsoft docs). A systemd unit runs at **every boot, before Redis, Postgres and Docker start**: detect the NVMe → format it ext4 if it is not already → mount at `/mnt/nvme` → create the folder layout (Redis working cache, image-processing intermediates, studio rendering, Postgres `temp_tablespaces`, build and pnpm caches, backup staging, session/queue scratch) → set ownership. Those services wait for the unit to succeed (systemd ordering). It holds temporary items only — **never** the database, code, uploads, final backups or kept logs. **Admin:** an NVMe card (mounted or not, free space, which services use it, PR 423); a Telegram alert if it is missing (PR 9). Pre-launch required."
+  },
+  "602": {
+   "firstSeen": "2026-10-19",
+   "hash": "743d41220bda",
+   "tm": "23:33",
+   "x": "**Four-layer cache plus invalidation (owner server spec, 19 Oct 23:33).** **Browser** (images, CSS, JS, fonts for a long time, hashed file names) → **Cloudflare** (static files long; category and product pages for a few minutes, duration in settings; cart, checkout, account and admin never cached) → **server page cache** (built HTML for minutes, renewed the moment something changes) → **Redis** (settings, the Dhaka area list, products, categories, stock display). **Purge rules:** price change → that product, its category pages and the CDN; stock change → instantly; settings change → every place that setting is used; new product → category pages and the sitemap. **Stock:** the display cache lasts 15 s and every stock change event purges it at once; **add-to-bag and checkout always read live stock with a row lock (PR 198)** — nothing oversells. An admin **\"Clear all cache\"** button; cache hit %% on the Server page (PR 423). All durations are settings. Pre-launch required."
+  },
+  "603": {
+   "firstSeen": "2026-10-19",
+   "hash": "9ba05fc27cd7",
+   "tm": "23:33",
+   "x": "**Database performance pack (owner server spec, 19 Oct 23:33).** Built with the schema (PR 13). **Required indexes:** category page (category + store + in-stock + sort, one index); SKU and variant by colour and size; order by phone (runs on every order for the fraud engine); fuzzy name/address with **`pg_trgm`** (the fraud/duplicate engine, PR 519); customer order history; style hierarchy for profit (Polo → brand polo → solid polo, PR 536); order list filters (date, status, courier, store). **Slow query log** for anything over 100 ms, target under 50 ms for a normal query, and an admin **\"slowest queries\"** page (PR 423). **Reports** (profit, ads, dashboard charts) run on **materialized views** refreshed on a schedule, or on a low-priority report pool, so they never slow the shop. Site search stays on Meilisearch (PR 72). Pre-launch required — nothing deferred."
+  },
+  "604": {
+   "firstSeen": "2026-10-19",
+   "hash": "91f0a65d1ff3",
+   "tm": "23:33",
+   "x": "**Hardware-aware auto profile and run-anywhere (owner server spec, 19 Oct 23:33).** Every RAM/CPU limit lives in **one config file, never in code**. On this box: PostgreSQL 16 GB / 2–3 CPU · Redis 6 GB / 1 CPU · Meilisearch 4 GB · Node/Next.js 16 GB / 4–6 CPU, 6 replicas · image/video worker 6 GB / 2 CPU · background jobs 4 GB / 1 CPU · Caddy 1 GB / 1 CPU · OS and the rest 11 GB, never squeezed = 64 GB. The profile **detects CPU and RAM and computes the limits itself** on any other machine (for example 4 vCPU / 16 GB) — no hand edits. **Run-anywhere:** a storage adapter (local disk / Azure Blob / S3-compatible) on the adapter framework of PR 18, so the shop works **without Blob**; it works **without the CDN** (images served from the server); handover-ready (S26). The admin shows each service's RAM and CPU against its limit (PR 423). Pre-launch required."
+  },
+  "61": {
+   "firstSeen": "2026-10-18",
+   "hash": "60c7c8475167",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "Price block: price, discount, saving, free-delivery badge, payment line, all four combinations **V2.1 final · 20 Oct:** phone rule — a currency sign and its number never split across lines (nowrap), on every price."
+  },
+  "62": {
+   "firstSeen": "2026-10-18",
+   "hash": "b1b75f7470fa",
+   "seed": true,
+   "x": "Trust row — exchange window, free delivery threshold, 100% original — reading live from Smart Rules"
+  },
+  "63": {
+   "firstSeen": "2026-10-18",
+   "hash": "a8af88583b16",
+   "seed": true,
+   "x": "Delivery / Exchange / Returns row, opening full width, one at a time"
+  },
+  "64": {
+   "firstSeen": "2026-10-18",
+   "hash": "be6fd7480749",
+   "seed": true,
+   "x": "Fabric & care, and the product detail accordions"
+  },
+  "65": {
+   "firstSeen": "2026-10-18",
+   "hash": "2cf2cc56ded1",
+   "seed": true,
+   "x": "Product reviews on the page: up to three, photo reviews first, sliding"
+  },
+  "66": {
+   "firstSeen": "2026-10-18",
+   "hash": "443eab3fa15c",
+   "seed": true,
+   "x": "Questions & answers block, with the WhatsApp ask"
+  },
+  "67": {
+   "firstSeen": "2026-10-18",
+   "hash": "8c8a6fd81fc6",
+   "seed": true,
+   "x": "\"Goes well with\" and \"Recently viewed\" rows, auto-sliding, category-driven"
+  },
+  "68": {
+   "firstSeen": "2026-10-18",
+   "hash": "3e40adfc06c7",
+   "seed": true,
+   "x": "The floating action rail — wishlist, share, WhatsApp — drifting with scroll, never over the title"
+  },
+  "69": {
+   "firstSeen": "2026-10-18",
+   "hash": "e522f06ebbd5",
+   "seed": true,
+   "x": "Share row: transparent floating tiles, Facebook, Messenger, WhatsApp, Instagram, copy link"
+  },
+  "7": {
+   "firstSeen": "2026-10-18",
+   "hash": "403db1d55c48",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers. **Updated 19 Oct 23:33 (owner server spec):** Caddy stays (not Nginx) — automatic SSL renewal on all three domains, 1 GB, 1 CPU; **Cloudflare in front in Full (strict) mode** with a Cloudflare Origin certificate (PR 362)"
+  },
+  "70": {
+   "firstSeen": "2026-10-18",
+   "hash": "c33eec946127",
+   "seed": true,
+   "x": "**Site-wide floating WhatsApp button** with its per-page placement switch"
+  },
+  "71": {
+   "firstSeen": "2026-10-18",
+   "hash": "f901fd0c36b0",
+   "seed": true,
+   "x": "Wishlist — add, remove, the wishlist page, and back-in-stock alerts"
+  },
+  "72": {
+   "firstSeen": "2026-10-18",
+   "hash": "53cca6e6a08d",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Search: the panel, the index across products, categories and help articles, prefix and synonym matching, Bengali keywords. **Updated 19 Oct 23:33 (owner server spec):** site search **stays on Meilisearch** (4 GB, PR 604) — better at Bengali and English typos; Postgres `pg_trgm` is for fraud fuzzy matching only (PR 519, 603). Resolves the owner's \"search index in Postgres\" line"
+  },
+  "73": {
+   "firstSeen": "2026-10-18",
+   "hash": "e53256a96f01",
+   "seed": true,
+   "x": "Search results page with filters and sort"
+  },
+  "74": {
+   "firstSeen": "2026-10-18",
+   "hash": "4d988af2e89f",
+   "seed": true,
+   "x": "**Hamburger menu with sub-categories** — accordion in place, counts per row, \"View all\" as the first child"
+  },
+  "75": {
+   "firstSeen": "2026-10-18",
+   "hash": "467997b7f7c9",
+   "seed": true,
+   "x": "Content pages: FAQ, delivery, exchange, privacy, terms, story, contact"
+  },
+  "76": {
+   "firstSeen": "2026-10-18",
+   "hash": "272a7a5a5148",
+   "seed": true,
+   "x": "**Page builder** — sections, drag order, show/hide, per page"
+  },
+  "77": {
+   "firstSeen": "2026-10-18",
+   "hash": "d67af2a2bb70",
+   "seed": true,
+   "x": "Page builder coverage for every storefront page, not only the home page"
+  },
+  "78": {
+   "firstSeen": "2026-10-18",
+   "hash": "c341cf261600",
+   "seed": true,
+   "x": "**Label dictionary** — every visible word editable by the owner, in both languages"
+  },
+  "79": {
+   "firstSeen": "2026-10-18",
+   "hash": "d8b26541e12d",
+   "seed": true,
+   "x": "Front-end editing: open the page, change a label, publish"
+  },
+  "8": {
+   "firstSeen": "2026-10-18",
+   "hash": "390f0eb60314",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Nightly encrypted backup of database, uploads and configuration to **Google Drive**, with one-command restore. **Updated 19 Oct 23:33 (owner server spec): Azure Blob is added** (supersedes \"Drive only, no Blob\"). **Blob:** continuous WAL archive for point-in-time restore to any minute; daily full backups; soft delete and versioning or immutability on, so a mistake or ransomware cannot wipe it; images and media in Blob with soft delete and versioning. **Google Drive stays mandatory:** the daily full encrypted copy, off-site with a different company; the second add-only Drive is a third copy. Zip staging on NVMe → upload → delete. Retention from settings. **Restore:** one command, defaults to Blob (same region, fast), Drive is the fallback; choose a point in time; staging first, typed confirmation for production (PR 396). Monthly automatic restore test (PR 395/507). Blob is billed separately from the VM — roughly US$5–15 a month for backups plus media at launch scale; same-region restore traffic is free. The owner creates the Storage account later with a guide; its key goes into the vault (PR 493)"
+  },
+  "80": {
+   "firstSeen": "2026-10-18",
+   "hash": "7e0b027a65fc",
+   "seed": true,
+   "x": "Field-level show and hide — the eye-toggle system, with its defaults"
+  },
+  "81": {
+   "firstSeen": "2026-10-18",
+   "hash": "1978dd84f7bd",
+   "seed": true,
+   "x": "The eye-toggle dashboard: every switch in one list, searchable"
+  },
+  "82": {
+   "firstSeen": "2026-10-18",
+   "hash": "0fe8f71ad238",
+   "seed": true,
+   "x": "Four themes, with the token system behind them"
+  },
+  "83": {
+   "firstSeen": "2026-10-18",
+   "hash": "83aeb49b44b1",
+   "seed": true,
+   "x": "A/B test module for the storefront"
+  },
+  "84": {
+   "firstSeen": "2026-10-18",
+   "hash": "78ef5f050f3c",
+   "seed": true,
+   "x": "Bengali and English throughout, with the language switch"
+  },
+  "85": {
+   "firstSeen": "2026-10-18",
+   "hash": "591418b86028",
+   "seed": true,
+   "x": "**Mobile hardening** — 16px fields, no accidental zoom, 44px targets, no horizontal overflow, as CI gates"
+  },
+  "86": {
+   "firstSeen": "2026-10-18",
+   "hash": "4cc2d7c4c480",
+   "seed": true,
+   "x": "The light-sweep system and its per-element switches"
+  },
+  "87": {
+   "firstSeen": "2026-10-18",
+   "hash": "3700e837ecad",
+   "seed": true,
+   "x": "Celebration overlay on order placement"
+  },
+  "88": {
+   "firstSeen": "2026-10-18",
+   "hash": "ca3c3b717800",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Storefront performance: image loading, code splitting, the Lighthouse budget. **Updated 19 Oct 23:33 (owner server spec):** targets — a category image under 40 KB, a product main image under 150 KB, a category page under 1 MB; the speed targets of PR 10 (LCP < 2.5 s, CLS < 0.1, INP < 200 ms, TTFB < 600 ms) measured from Dhaka on a phone over 4G"
+  },
+  "89": {
+   "firstSeen": "2026-10-18",
+   "hash": "5b5d85cdd57e",
+   "seed": true,
+   "x": "Combo model: items, set price, savings, active window"
+  },
+  "9": {
+   "firstSeen": "2026-10-18",
+   "hash": "d02bbcc17938",
+   "seed": true,
+   "updated": "2026-10-19",
+   "x": "Monitoring — uptime, queue depth, error rate, disk and memory, alerting to Telegram. **Updated 19 Oct 23:33 (owner server spec):** Telegram alerts (through the AI 360 channel) when a disk passes 80%, a service goes down, a backup fails (Blob or Drive), the site slows down, or the NVMe goes missing; per-service RAM and CPU against its limit; the plain-language admin Server page is PR 423 — pre-launch required"
+  },
+  "90": {
+   "firstSeen": "2026-10-18",
+   "hash": "b711e7a2a6bd",
+   "seed": true,
+   "x": "Combo admin — create, edit, activate, with live preview"
+  },
+  "91": {
+   "firstSeen": "2026-10-18",
+   "hash": "988e6b5c9f5f",
+   "seed": true,
+   "x": "Combo page template C1"
+  },
+  "92": {
+   "firstSeen": "2026-10-18",
+   "hash": "e2a88147aca3",
+   "seed": true,
+   "x": "Combo page template C2 — step by step"
+  },
+  "93": {
+   "firstSeen": "2026-10-18",
+   "hash": "fb2869d978c7",
+   "seed": true,
+   "x": "Combo gallery with the per-item colour switcher"
+  },
+  "94": {
+   "firstSeen": "2026-10-18",
+   "hash": "cfca7ab5eaf8",
+   "seed": true,
+   "x": "Popular pairs — three across, one tap applies both colours"
+  },
+  "95": {
+   "firstSeen": "2026-10-18",
+   "hash": "10b9cde2d7d4",
+   "seed": true,
+   "x": "Per-item size and colour selection with the \"same as item 1\" shortcut"
+  },
+  "96": {
+   "firstSeen": "2026-10-18",
+   "hash": "3ab21794571b",
+   "seed": true,
+   "x": "Set summary, set price, and the saving against buying separately"
+  },
+  "97": {
+   "firstSeen": "2026-10-18",
+   "hash": "dfa1830970f5",
+   "seed": true,
+   "x": "Add set to bag as one line, with the set price locked"
+  },
+  "98": {
+   "firstSeen": "2026-10-18",
+   "hash": "4ce1e37679e7",
+   "seed": true,
+   "updated": "2026-10-20",
+   "x": "**Build your own set** — pick any N, the tier price applies automatically **V2.1 final · 20 Oct:** these tier rules also drive the bag tier box \"Take 2 │ Take 3 │ Take 4\" (PR 109/598) — the same numbers in the box, set builder, bag and checkout. The 4-piece prices seeded in the demo (BAG_TIER_SEED: 4 polos ৳2,700, 4 tees ৳1,750) are suggestions waiting for the owner's yes; real prices are owner data."
+  },
+  "99": {
+   "firstSeen": "2026-10-18",
+   "hash": "585842b3acd3",
+   "seed": true,
+   "x": "Set tier rules from Smart Rules: any 2 for X, any 3 for Y"
+  }
+ },
+ "seq": 93,
+ "stages": {
+  "S00": {
+   "firstSeen": "2026-10-18",
+   "name": "Foundation — repo, CI, schema, auth, settings framework",
+   "seed": true
+  },
+  "S01": {
+   "firstSeen": "2026-10-18",
+   "name": "Catalog, media & images",
+   "seed": true
+  },
+  "S02": {
+   "firstSeen": "2026-10-18",
+   "name": "Storefront",
+   "seed": true
+  },
+  "S03": {
+   "firstSeen": "2026-10-18",
+   "name": "Combo & bundles",
+   "seed": true
+  },
+  "S04": {
+   "firstSeen": "2026-10-18",
+   "name": "Cart, checkout, accounts",
+   "seed": true
+  },
+  "S05": {
+   "firstSeen": "2026-10-18",
+   "name": "Order management",
+   "seed": true
+  },
+  "S06": {
+   "firstSeen": "2026-10-18",
+   "name": "Fraud & location",
+   "seed": true
+  },
+  "S07": {
+   "firstSeen": "2026-10-18",
+   "name": "Payments & wallet",
+   "seed": true
+  },
+  "S08": {
+   "firstSeen": "2026-10-18",
+   "name": "Courier, returns, exchange",
+   "seed": true
+  },
+  "S09": {
+   "firstSeen": "2026-10-18",
+   "name": "Inventory & ERP sync",
+   "seed": true
+  },
+  "S0A": {
+   "firstSeen": "2026-10-18",
+   "name": "Server foundation",
+   "seed": true
+  },
+  "S10": {
+   "firstSeen": "2026-10-18",
+   "name": "Smart Rules",
+   "seed": true
+  },
+  "S11": {
+   "firstSeen": "2026-10-18",
+   "name": "SEO engine",
+   "seed": true
+  },
+  "S12": {
+   "firstSeen": "2026-10-18",
+   "name": "Content & blog",
+   "seed": true
+  },
+  "S13": {
+   "firstSeen": "2026-10-18",
+   "name": "Marketing & ads",
+   "seed": true
+  },
+  "S14": {
+   "firstSeen": "2026-10-18",
+   "name": "CRM & customers",
+   "seed": true
+  },
+  "S15": {
+   "firstSeen": "2026-10-18",
+   "name": "AI 360 Control Room",
+   "seed": true
+  },
+  "S16": {
+   "firstSeen": "2026-10-18",
+   "name": "Finance, costs & reports",
+   "seed": true
+  },
+  "S17": {
+   "firstSeen": "2026-10-18",
+   "name": "Multi-store",
+   "seed": true
+  },
+  "S18": {
+   "firstSeen": "2026-10-18",
+   "name": "Compliance, security, manual",
+   "seed": true
+  },
+  "S19": {
+   "firstSeen": "2026-10-18",
+   "name": "Deploy, backup, go-live",
+   "seed": true
+  },
+  "S20": {
+   "firstSeen": "2026-10-18",
+   "name": "Fulfilment & documents",
+   "seed": true
+  },
+  "S21": {
+   "firstSeen": "2026-10-18",
+   "name": "Site Health & Audit",
+   "seed": true
+  },
+  "S22": {
+   "firstSeen": "2026-10-18",
+   "name": "Support (all-in-one)",
+   "seed": true
+  },
+  "S23": {
+   "firstSeen": "2026-10-18",
+   "name": "Social & content studio",
+   "seed": true
+  },
+  "S24": {
+   "firstSeen": "2026-10-18",
+   "name": "Virtual Photoshoot Studio",
+   "seed": true
+  },
+  "S25": {
+   "firstSeen": "2026-10-18",
+   "name": "Video & Campaign Creative Studio",
+   "seed": true
+  },
+  "S26": {
+   "firstSeen": "2026-10-18",
+   "name": "Installation, documentation & distribution",
+   "seed": true
+  },
+  "S27": {
+   "firstSeen": "2026-10-18",
+   "name": "No-ERP stock module",
+   "seed": true
+  }
+ },
+ "version": 1
+}
