@@ -1469,6 +1469,9 @@ passing; English mode 0 Bengali; phone device gate 0/240.
 
 ## A3. Architecture — the ERP is the master
 
+
+> **CN-005 · 20 Oct 2026 02:25 (owner).** The ERP ↔ shop API is fixed in `docs/ERP-API-CONTRACT.md`. The ERP endpoints are built in the owner's **ERP project** (repo Extas-ERP); this build makes the adapter (S09, PR 497) against the same contract, on a mock until the key is entered.
+
 > **V2 · 18 Oct — the ERP becomes optional (PR 497–499).** ERP mode switch (EXTAS ERP · another ERP · no ERP),
 > a generic adapter contract with mock / sandbox / live, and an ERP-absent guard proven by tests. The no-ERP stock
 > module is parked as S27 (handover pack). ERP push permission was granted on 18 Oct (§59 answer 36); the access

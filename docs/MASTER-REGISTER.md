@@ -607,7 +607,7 @@ the no-ERP stock module yet. That module is parked as **S27**.
 
 | PR | What it does |
 |---:|---|
-| 497 | **ERP mode switch** — EXTAS ERP · another ERP · no ERP. Address and keys from settings. |
+| 497 | **ERP mode switch** — EXTAS ERP · another ERP · no ERP. Address and keys from settings. **Updated 20 Oct 02:25 (owner, CN-005): the ERP-side API is built in the owner's ERP project against `docs/ERP-API-CONTRACT.md`; this adapter is built against the same contract and runs on a mock until the owner enters the ERP address, key and secret.** |
 | 498 | **Generic ERP adapter interface** — one contract with mock, sandbox and live modes, so a second ERP is a new adapter and not a rewrite |
 | 499 | **ERP-absent guard** — every path that depends on the ERP has a defined behaviour when none is connected, proven by tests. This is what keeps the seam open. |
 
