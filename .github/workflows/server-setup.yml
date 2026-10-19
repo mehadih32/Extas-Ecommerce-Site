@@ -61,21 +61,31 @@ jobs:
       # The preview password is generated on the server and never leaves it: no artifact, no log, no chat.
       # The owner reads it on the VM with `extas-preview-login` (docs/owner/PREVIEW-LOGIN.md).
 
+      # A full run updates latest.md; a partial run (input "only") is kept as its own dated file so latest.md
+      # always shows the whole server. Each attempt starts from the newest main, so two runs never conflict.
       - name: Commit the machine report
         if: always()
+        env:
+          ONLY: ${{ inputs.only }}
         run: |
           set -eu
           [ -f /srv/extas/reports/latest.md ] || { echo "no report"; exit 0; }
-          mkdir -p docs/reports/server
-          cp /srv/extas/reports/latest.md docs/reports/server/latest.md
-          cp /srv/extas/reports/latest.md "docs/reports/server/$(date +%Y-%m-%d)-setup.md"
           git config user.name "extas-vm"
           git config user.email "extas-vm@users.noreply.github.com"
-          git add docs/reports/server
-          git diff --cached --quiet && exit 0
-          git commit -q -m "server report: $(date '+%Y-%m-%d %H:%M')"
+          stamp="$(date +%Y-%m-%d-%H%M)"
           for i in 1 2 3 4; do
-            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            git fetch -q origin main && git reset -q --hard origin/main
+            mkdir -p docs/reports/server
+            if [ -z "$ONLY" ]; then
+              cp /srv/extas/reports/latest.md docs/reports/server/latest.md
+              cp /srv/extas/reports/latest.md "docs/reports/server/$stamp-setup.md"
+            else
+              cp /srv/extas/reports/latest.md "docs/reports/server/$stamp-only-$(echo "$ONLY" | tr -c 'a-z0-9\n' '-').md"
+            fi
+            git add docs/reports/server
+            git diff --cached --quiet && exit 0
+            git commit -q -m "server report: $(date '+%Y-%m-%d %H:%M')${ONLY:+ (only $ONLY)}"
+            git push -q origin HEAD:main && exit 0
             sleep $((i * 2))
           done
           exit 1

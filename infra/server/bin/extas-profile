@@ -31,7 +31,7 @@ awk -v cpu="$CPU" -v ram="$NOMINAL_GB" \
   -v pg="$PROFILE_PG_RAM_GB" -v pgc="$PROFILE_PG_CPU" \
   -v rd="$PROFILE_REDIS_RAM_GB" -v rdc="$PROFILE_REDIS_CPU" -v rdq="$PROFILE_REDIS_QUEUE_SHARE_PCT" \
   -v me="$PROFILE_MEILI_RAM_GB" -v mec="$PROFILE_MEILI_CPU" \
-  -v ap="$PROFILE_APP_RAM_GB" -v apc="$PROFILE_APP_CPU" -v apr="$PROFILE_APP_REPLICAS" \
+  -v ap="$PROFILE_APP_RAM_GB" -v apc="$PROFILE_APP_CPU" -v apr="$PROFILE_APP_REPLICAS" -v aph="$PROFILE_APP_HEAP_PCT" \
   -v wk="$PROFILE_WORKER_RAM_GB" -v wkc="$PROFILE_WORKER_CPU" \
   -v jb="$PROFILE_JOBS_RAM_GB" -v jbc="$PROFILE_JOBS_CPU" \
   -v cd="$PROFILE_CADDY_RAM_GB" -v cdc="$PROFILE_CADDY_CPU" \
@@ -60,6 +60,7 @@ BEGIN {
   printf "MEILI_MEM_MB=%d\nMEILI_CPUS=%s\n", me_mb, c(mec)
   per = apc * cpu / rcpu / reps; if (per < 0.25) per = 0.25
   printf "APP_MEM_MB=%d\nAPP_REPLICAS=%d\nAPP_REPLICA_MEM_MB=%d\nAPP_REPLICA_CPUS=%.2f\n", ap_mb, reps, int(ap_mb / reps), per
+  printf "APP_NODE_HEAP_MB=%d\n", int(ap_mb / reps * aph / 100)
   printf "WORKER_MEM_MB=%d\nWORKER_CPUS=%s\n", wk_mb, c(wkc)
   printf "JOBS_MEM_MB=%d\nJOBS_CPUS=%s\n", jb_mb, c(jbc)
   printf "CADDY_MEM_MB=%d\nCADDY_CPUS=%s\n", cd_mb, c(cdc)

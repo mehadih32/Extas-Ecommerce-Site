@@ -1,0 +1,53 @@
+# Deploy to new.extas.com.bd (PR 4, PR 17; START-HERE step 2). Runs ON the VM through the self-hosted runner (CN-003)
+# after CI passed on main. The image is built on the VM (no registry, no secrets leave the server), then
+# infra/deploy/deploy.sh does blue/green: the new version starts next to the old one, is smoke-tested, Caddy switches
+# with a graceful reload, and any failure keeps or gives back the traffic to the old version (automatic rollback).
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: "Go back to the previous version"
+        type: boolean
+        default: false
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 30
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+
+      - name: Build the image on the server
+        if: ${{ !inputs.rollback }}
+        run: |
+          sudo docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$SHA" -t "extas-web:${SHA::12}" .
+
+      - name: Blue/green switch (automatic rollback on failure)
+        run: |
+          if [ "${{ inputs.rollback }}" = true ]; then
+            sudo bash infra/deploy/deploy.sh rollback
+          else
+            sudo bash infra/deploy/deploy.sh "extas-web:${SHA::12}"
+          fi
+
+      - name: What happened
+        if: always()
+        run: sudo cat /srv/extas/state/last-deploy.json 2>/dev/null || true

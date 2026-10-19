@@ -29,3 +29,49 @@ jobs:
           mkdir -p /tmp/sites && printf 'root * /srv/www\nfile_server\n' > /tmp/sites/upstream.caddy && : > /tmp/sites/auth.caddy && : > /tmp/sites/noindex.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+      - name: Deploy script and app compose are valid
+        run: |
+          shellcheck -x -S warning infra/deploy/deploy.sh
+          EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
+          docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          printf 'APP_IMAGE=extas-web:test\nEXTAS_COLOR=blue\nEXTAS_ROOT=/srv/extas\nEXTAS_NVME_MOUNT=/mnt/nvme\nEXTAS_TIMEZONE=Asia/Dhaka\n' > /tmp/app.env
+          sudo touch /srv/extas/config/secrets/app.env /srv/extas/config/secrets/app-connections.env
+          docker compose -f infra/stack/app.yml --env-file /tmp/profile.env --env-file /tmp/app.env config -q
+
+  # PR 17 — the app: lint, type-check, unit tests, build, the Lighthouse budget (lighthouserc.json, Blueprint V2.1
+  # speed targets) and the production image.
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Status data from the register
+        run: pnpm status:gen
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm --filter @extas/web build
+      - name: Lighthouse budget
+        run: |
+          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
+          npx -y @lhci/cli@0.15.1 autorun
+      - name: Keep the Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: .lighthouseci
+          retention-days: 7
+      - name: Production image builds
+        run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .

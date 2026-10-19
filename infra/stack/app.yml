@@ -1,0 +1,34 @@
+# EXTAS app (blue/green). Started by infra/deploy/deploy.sh as compose project extas-app-<color>.
+# Replicas and limits come from the auto profile (PR 604); secrets from the server only.
+services:
+  web:
+    image: ${APP_IMAGE}
+    restart: unless-stopped
+    env_file:
+      - "${EXTAS_ROOT}/config/secrets/app.env"
+      - "${EXTAS_ROOT}/config/secrets/app-connections.env"
+    environment:
+      EXTAS_COLOR: ${EXTAS_COLOR}
+      EXTAS_STATE_DIR: /state
+      EXTAS_TIMEZONE: ${EXTAS_TIMEZONE}
+      NODE_OPTIONS: --max-old-space-size=${APP_NODE_HEAP_MB}
+    deploy:
+      replicas: ${APP_REPLICAS}
+      resources:
+        limits:
+          memory: ${APP_REPLICA_MEM_MB}M
+          cpus: "${APP_REPLICA_CPUS}"
+    volumes:
+      - ${EXTAS_ROOT}/state:/state:ro
+      - ${EXTAS_NVME_MOUNT}/scratch:/nvme
+      - ${EXTAS_ROOT}/data/media:/media
+    networks:
+      extas:
+        aliases: ["app-${EXTAS_COLOR}"]
+    logging:
+      driver: local
+      options: { max-size: "20m", max-file: "5" }
+
+networks:
+  extas:
+    external: true

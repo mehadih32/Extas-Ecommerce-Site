@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+.git
+docs/demo
+docs/owner
+docs/qa
+docs/agents
+docs/history
+docs/reports
+infra
+*.log
