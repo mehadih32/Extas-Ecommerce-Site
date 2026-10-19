@@ -10,6 +10,7 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "guard": "node tools/hardcode-guard.mjs",
+    "check": "pnpm guard && pnpm lint && pnpm typecheck && pnpm test"
   }
 }

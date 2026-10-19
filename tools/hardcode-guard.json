@@ -1,0 +1,26 @@
+{
+  "$comment": "PR 494 — the hardcode guard's rules. Patterns are data, not code: add a rule here, not in the script. A line can opt out with `hardcode-ok: <reason>` in a comment on the same line; the reason is required and shows in review.",
+  "scan": {
+    "roots": ["apps", "packages", "tools"],
+    "extensions": [".ts", ".tsx", ".js", ".mjs", ".cjs", ".json"],
+    "skipDirs": ["node_modules", ".next", "generated", "dist", "coverage", ".lighthouseci", "migrations"],
+    "skipFiles": ["\\.test\\.(ts|tsx|mjs|js)$", "(^|/)test/", "package\\.json$", "tsconfig\\.json$", "hardcode-guard\\.json$", "pnpm-lock\\.yaml$"]
+  },
+  "rules": [
+    { "id": "secret-private-key", "what": "a private key", "pattern": "-----BEGIN [A-Z ]*PRIVATE KEY-----", "everywhere": true },
+    { "id": "secret-aws", "what": "an AWS access key", "pattern": "\\bAKIA[0-9A-Z]{16}\\b", "everywhere": true },
+    { "id": "secret-github", "what": "a GitHub token", "pattern": "\\bgh[pousr]_[A-Za-z0-9]{30,}\\b", "everywhere": true },
+    { "id": "secret-google", "what": "a Google API key", "pattern": "\\bAIza[0-9A-Za-z_-]{35}\\b", "everywhere": true },
+    { "id": "secret-openai-anthropic", "what": "an AI provider key", "pattern": "\\bsk-(ant-|proj-)?[A-Za-z0-9_-]{24,}\\b", "everywhere": true },
+    { "id": "secret-slack-telegram", "what": "a Slack or Telegram bot token", "pattern": "\\bxox[abpr]-[A-Za-z0-9-]{10,}|\\b\\d{8,10}:AA[0-9A-Za-z_-]{30,}\\b", "everywhere": true },
+    { "id": "secret-assignment", "what": "a secret written into code", "pattern": "(password|passwd|secret|api[_-]?key|token|private[_-]?key)[\"']?\\s*[:=]\\s*[\"'][^\"'\\s$]{8,}[\"']", "flags": "i" },
+    { "id": "connection-string", "what": "a connection string with credentials", "pattern": "[a-z]+://[^\\s:@/\"']+:[^\\s@/\"']+@", "flags": "i" },
+    { "id": "owner-domain", "what": "the shop's domain (a setting: EXTAS_STAGING_HOST, store domains)", "pattern": "\\b(new\\.)?extas\\.com\\.bd\\b", "flags": "i" },
+    { "id": "owner-brand", "what": "the store name (a setting, owner data PR 509)", "pattern": "\\bEXTAS\\b" },
+    { "id": "phone-bd", "what": "a Bangladeshi phone number (owner or customer data)", "pattern": "(?<![\\d.])(\\+?880|0)1[3-9]\\d{8}(?!\\d)" },
+    { "id": "email", "what": "an e-mail address (owner data)", "pattern": "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\\.[A-Za-z]{2,}", "allow": "noreply@|@example\\.(com|test)|@users\\.noreply\\.github\\.com" },
+    { "id": "money-literal", "what": "a price or amount in Taka (prices are owner data and settings)", "pattern": "৳\\s*[০-৯0-9]|\\bTk\\.?\\s*\\d", "code": true },
+    { "id": "business-number", "what": "a business number in code (charges, limits, thresholds come from settings)", "pattern": "\\b[A-Za-z_]*(price|fee|charge|discount|cod|delivery|shipping|threshold|limit|maxQty|minOrder|percent|rate)[A-Za-z_]*\\s*[:=]\\s*-?\\d+(\\.\\d+)?\\b", "flags": "i", "code": true },
+    { "id": "jsx-text", "what": "visible text written into a component (it belongs in a messages file)", "pattern": ">\\s*[A-Za-z\\u0980-\\u09FF][^<>{}]*[A-Za-z\\u0980-\\u09FF.!?।]\\s*<", "only": "\\.tsx$" }
+  ]
+}

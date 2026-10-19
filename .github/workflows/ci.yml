@@ -52,6 +52,8 @@ jobs:
         run: |
           corepack enable
           pnpm install --frozen-lockfile
+      - name: Hardcode guard (PR 494)
+        run: node tools/hardcode-guard.mjs
       - name: Status data from the register
         run: pnpm status:gen
       - name: Lint
