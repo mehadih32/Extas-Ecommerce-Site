@@ -51,6 +51,9 @@ MEILI_MASTER_KEY=$meili
 EXTAS_NVME_DIR=/nvme
 EXTAS_MEDIA_DIR=/media
 ENV
+  # Local media storage (PR 18 storage adapter, used when no Blob/S3 is connected): the app runs as the image's
+  # `node` user (uid 1000), so the media volume must be writable by it.
+  install -d -o 1000 -g 1000 -m 0750 "$EXTAS_ROOT/data/media"
 }
 
 write_postgres_conf() {
