@@ -787,6 +787,9 @@ to read code or open GitHub.
 ## A1. How this build runs
 
 
+> **CN-004 · 20 Oct 2026 02:01 (owner).** Agent profiles, skills, curriculum and lessons changed in the site's AI panel (PR 577, 585) are also exported to GitHub at `docs/agents/live/<agent>/` (one-way, dated, retried on failure). No new PR.
+
+
 > **CN-003 · 20 Oct 2026 01:30 (owner + test).** (1) **Server access:** cloud Claude sessions cannot open SSH (port 22) to the VM — tested. So the build reaches the server through a **GitHub Actions self-hosted runner on the VM** (label `extas-vm`), installed once by the owner via Azure *Run command* (`docs/owner/RUNNER-SETUP.md`, `infra/bootstrap/install-runner.sh`); S0A and deploys are workflows; no SSH key is exchanged. This replaces the "owner adds our public key" step of A2.9.2. (2) **Domains:** the old WordPress shop stays live on extas.com.bd until go-live; the build deploys to **new.extas.com.bd** (password + noindex) and A1.5's "every merge deploys to production" means this staging host until the go-live switch (S19, PR 587, 301 for every old URL), which needs the owner's explicit word. (3) **Repo:** the build runs in the private repo `Extas-Ecommerce-Site`; `CLAUDE.md` + `docs/START-HERE.md` are the entry; this blueprint lives at `docs/BLUEPRINT.md`. (4) 4-piece tier prices stay as the demo default (owner 01:27); he edits them in the admin.
 
 These are operating rules for the build agent. They are the owner's standing instruction, settled and

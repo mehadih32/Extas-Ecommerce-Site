@@ -12,7 +12,7 @@
 ## ধাপ ২ — Azure-এ বসান
 1. portal.azure.com → VM **Extas-Ecommerce-Site** খুলুন
 2. বাম মেনু **Operations → Run command** → **RunShellScript**
-3. নিচের পুরো লেখাটা পেস্ট করুন। **শুধু `PASTE_TOKEN_HERE` জায়গায় ধাপ ১-এর টোকেন বসান** (উদ্ধৃতি চিহ্ন " " থাকবে)
+3. নিচের পুরো লেখাটা পেস্ট করুন (`infra/bootstrap/install-runner.sh`; এতে `set -eu` আছে, কারণ Azure Run command সাধারণ sh দিয়ে চালায় — `pipefail` চলে না)। **শুধু `PASTE_TOKEN_HERE` জায়গায় ধাপ ১-এর টোকেন বসান** (উদ্ধৃতি চিহ্ন " " থাকবে)
 4. **Run** চাপুন। ২–৫ মিনিট পর নিচে লেখা আসবে: `DONE: EXTAS runner installed and running`
 
 (স্ক্রিপ্ট: `infra/bootstrap/install-runner.sh` — একই লেখা)

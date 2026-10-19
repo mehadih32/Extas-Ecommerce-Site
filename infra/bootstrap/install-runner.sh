@@ -6,7 +6,7 @@
 # and is never committed anywhere.
 TOKEN="PASTE_TOKEN_HERE"
 REPO_URL="https://github.com/mehadih32/Extas-Ecommerce-Site"
-set -euo pipefail
+set -eu
 if [ "$TOKEN" = "PASTE_TOKEN_HERE" ] || [ -z "$TOKEN" ]; then echo "ERROR: token missing"; exit 1; fi
 id ghrunner >/dev/null 2>&1 || useradd -m -s /bin/bash ghrunner
 echo "ghrunner ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-ghrunner
