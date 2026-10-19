@@ -66,6 +66,18 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Media lives on Azure Blob.
   - Backups go to Azure Blob and Google Drive.
 
+## Run without stopping (owner, 20 Oct 02:33 — CN-006)
+- The owner's computer and browser may be off. Everything runs in the cloud and on the VM runner; nothing waits for him.
+- **Never stop to ask permission** for building, testing, merging your own PRs, deploying to new.extas.com.bd or
+  starting the next stage. Merge yourself once the gates pass.
+- **The wave boundary is no longer a stop** (this replaces Blueprint A1.1 rule 7): write the Bengali wave report,
+  show it in chat, and **carry straight on** to the next wave.
+- Blocked on the owner? Add it to `BLOCKED.md` and move to the next PR. Never sit idle.
+- **Usage limit reached:** stop cleanly, with `PROGRESS.md` holding the exact point. When the limit resets, continue from
+  there by yourself (the project's auto-continue is on).
+- The only real stops are the hard-rule items (money, prices, deleting data, anything irreversible) and the go-live
+  switch of extas.com.bd. None of these happens during the build.
+
 ## How to report
 - **Plans and progress are counted in stages and PRs, never in days or hours** (owner's rule, 20 Oct): "S0A: 7/12 PR · S00: 3/19 PR · total 10/598". 604 PRs in 28 stages (598 active, 6 parked).
 - After each PR: update `PROGRESS.md` (the English line is fine) and the register status.
@@ -73,7 +85,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Write `docs/reports/YYYY-MM-DD-<stage>.md` **in simple Bengali**: what got built, what passed, what is waiting
     for the owner.
   - Show the same short summary in the chat.
-- Wave boundary (A1.1 rule 7): stop and ask in Bengali, "ঢেউ ১ শেষ। ঢেউ ২ শুরু করব?"
+- Wave boundary: report in Bengali and continue. Don't wait (CN-006).
 
 ## Commits
 - Branch per PR: `pr-<number>-<slug>`. Squash-merge into `main` after the gates pass.

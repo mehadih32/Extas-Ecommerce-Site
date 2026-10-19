@@ -12,7 +12,7 @@
 ## Build order
 Blueprint E0 stage table and A1.4. **S0A → S00 → S01 → S02 → S03 → S04 → S05 → S07 → S08 → S09 → S06 → S10 …**
 Wave 1 is the shop that can go live: about 80 PRs.
-- At the wave boundary, stop and ask the owner in Bengali (A1.1 rule 7).
+- At the wave boundary, report in Bengali and **continue without waiting** (CN-006, replaces A1.1 rule 7).
 - S26 and S27 are parked. Don't build them.
 
 ## The first session (session 1): what to do

@@ -787,6 +787,9 @@ to read code or open GitHub.
 ## A1. How this build runs
 
 
+> **CN-006 · 20 Oct 2026 02:33 (owner).** The build never stops for the owner: no stop at the wave boundary (A1.1 rule 7 replaced — report and continue), no permission asks for build/test/merge/deploy to new.extas.com.bd, blocked items go to BLOCKED.md, usage limits resume automatically from PROGRESS.md. Only money/prices/deletion/irreversible items and the go-live domain switch need him.
+
+
 > **CN-004 · 20 Oct 2026 02:01 (owner).** Agent profiles, skills, curriculum and lessons changed in the site's AI panel (PR 577, 585) are also exported to GitHub at `docs/agents/live/<agent>/` (one-way, dated, retried on failure). No new PR.
 
 
