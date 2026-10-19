@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# EXTAS
+apps/web/src/generated/
+next-env.d.ts
+.lighthouseci/
