@@ -20,8 +20,8 @@ The repository already holds the docs. Session 0 (repo setup) was done from the 
 
 1. **Plan, short.** Read Blueprint A1, A2, A2.9 (the server spec), E0, Appendix C (QA gates), and
    `docs/agents/lessons/ALL.md`.
-   - Then show the owner a **short Bengali plan** for days 1–2: what will be built and what he will see on
-     new.extas.com.bd.
+   - Then show the owner a **short Bengali plan by stage and PR, never by days or time** (owner's rule, 20 Oct): which
+     stages come first (S0A → S00 → S01 …), how many PRs each has, and what he will see on new.extas.com.bd after each.
    - Then **start straight away**; he does not need to approve it.
 2. **S0A as code (PR 1–10, 601, 604).** Write the server setup as scripts under `infra/` and workflows under
    `.github/workflows/`, running on `runs-on: [self-hosted, extas-vm]`:

@@ -42,8 +42,8 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
    Then it gets built.
 9. **Quality is ours.** Type checks, tests, the Lighthouse budget, the device gate (0 fails) and the journeys must
    pass before a merge. You create the PR, test it and merge it yourself (A1.1 rule 3).
-10. **2–3 agents in parallel at most**, each on its own git worktree. Days 1–2 run one agent alone on S0A and S00,
-    including the full Prisma schema skeleton. Shared files (Prisma schema, design tokens, routing table) have one
+10. **2–3 agents in parallel at most**, each on its own git worktree. S0A and S00 (including the full Prisma schema skeleton) run with one agent alone
+    before parallel work starts. Shared files (Prisma schema, design tokens, routing table) have one
     owner (A1.4).
 
 ## Infrastructure facts (CN-001, CN-002, CN-003)
@@ -67,6 +67,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Backups go to Azure Blob and Google Drive.
 
 ## How to report
+- **Plans and progress are counted in stages and PRs, never in days or hours** (owner's rule, 20 Oct): "S0A: 7/12 PR · S00: 3/19 PR · total 10/598". 604 PRs in 28 stages (598 active, 6 parked).
 - After each PR: update `PROGRESS.md` (the English line is fine) and the register status.
 - After each stage and wave:
   - Write `docs/reports/YYYY-MM-DD-<stage>.md` **in simple Bengali**: what got built, what passed, what is waiting
