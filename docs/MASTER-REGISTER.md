@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 5/19 · total 17/598**
+**Progress: S0A 12/12 · S00 6/19 · total 18/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -52,6 +52,7 @@ the server.*
 | 17 | S00 | live | 2026-10-20 | CI: lint, type-check, vitest, build, Lighthouse budget (`lighthouserc.json`), image build; green `main` deploys |
 | 13 | S00 | merged | 2026-10-20 | `packages/db`: 333 models across all 28 stages, `storeId` on every store table (exceptions listed and guarded by a test), settings, vault, roles; migration applies to PostgreSQL 17 with no drift (CI `db` job) |
 | 603 | S00 | merged | 2026-10-20 | index pack in the schema (category page, variant by colour/size, order by phone, history, list filters, style hierarchy), `pg_trgm` GIN indexes, 4 report materialized views |
+| 494 | S00 | merged | 2026-10-20 | `tools/hardcode-guard.mjs` + rules in `tools/hardcode-guard.json`, first CI step: secrets, owner data (brand, domain, phones, e-mails), ৳ amounts, business numbers, visible JSX text; opt-out only with a written reason |
 
 ## The stage table
 
