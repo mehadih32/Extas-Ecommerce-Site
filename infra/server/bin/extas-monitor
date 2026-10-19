@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# PR 9 — monitoring from day one (A2.9.13). Runs every minute (extas-monitor.timer).
+# Writes $EXTAS_ROOT/state/health.json (read by the admin Server page, PR 423, and the status page) and sends
+# Telegram alerts when a disk passes the alarm level, a service is down, a backup failed or is too old, the site is
+# slow, or the NVMe is missing. Until the owner adds the Telegram bot in the vault, alerts are written to
+# $EXTAS_ROOT/logs/alerts.log only. An alert repeats at most every MONITOR_REPEAT_MIN minutes, and a "fixed" message
+# follows when it clears.
+set -uo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; STATE="$R/state"; SEC="$R/config/secrets"
+mkdir -p "$STATE/alerts" "$R/logs"
+[ -f "$SEC/telegram.env" ] && . "$SEC/telegram.env"   # TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (from the vault)
+
+send() {
+  local text="$1"
+  echo "$(date -Is) $text" >> "$R/logs/alerts.log"
+  if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+    curl -fsS -m 10 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${text}" >/dev/null 2>&1 || true
+  fi
+}
+
+PROBLEMS=()
+alert() { # alert <key> <bad:0|1> <message in simple Bengali>
+  local key="$1" bad="$2" msg="$3" f="$STATE/alerts/$1" now last
+  now="$(date +%s)"
+  if [ "$bad" = 1 ]; then
+    PROBLEMS+=("$msg")
+    last="$(cat "$f" 2>/dev/null || echo 0)"
+    if [ $((now - last)) -ge $((MONITOR_REPEAT_MIN * 60)) ]; then send "⚠️ EXTAS সার্ভার: $msg"; echo "$now" > "$f"; fi
+  elif [ -f "$f" ]; then
+    send "✅ EXTAS সার্ভার: ঠিক হয়েছে — $key"; rm -f "$f"
+  fi
+}
+
+# Disks (every volume) — alarm at EXTAS_DISK_ALARM_PCT
+DISKS_JSON="["
+while read -r mp pct; do
+  p="${pct%\%}"
+  DISKS_JSON+="{\"mount\":\"$mp\",\"used_pct\":$p},"
+  key="disk$(echo "$mp" | tr '/' '_')"
+  alert "$key" "$([ "$p" -ge "$EXTAS_DISK_ALARM_PCT" ] && echo 1 || echo 0)" "ডিস্ক $mp ${p}% ভরে গেছে"
+done < <(df --output=target,pcent -x tmpfs -x devtmpfs -x overlay -x squashfs -x efivarfs | tail -n +2 | awk '{print $1, $2}')
+DISKS_JSON="${DISKS_JSON%,}]"
+
+# NVMe (PR 601)
+nvme="mounted"
+if [ -f /run/extas/nvme-missing ] || ! mountpoint -q "$EXTAS_NVME_MOUNT"; then nvme="missing"; fi
+alert nvme "$([ "$nvme" = missing ] && echo 1 || echo 0)" "NVMe (দ্রুত অস্থায়ী ডিস্ক) পাওয়া যাচ্ছে না"
+
+# Services
+SVC_JSON="["
+for c in extas-postgres extas-pgbouncer extas-redis-cache extas-redis-queue extas-meilisearch extas-caddy; do
+  st="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$c" 2>/dev/null || echo missing)"
+  SVC_JSON+="{\"name\":\"$c\",\"state\":\"$st\"},"
+  alert "svc_$c" "$([ "$st" = healthy ] || [ "$st" = running ] && echo 0 || echo 1)" "$c বন্ধ ($st)"
+done
+apps="$(docker ps --filter name=extas-app --format '{{.Names}}' | wc -l)"
+SVC_JSON+="{\"name\":\"app replicas\",\"state\":\"$apps running\"}]"
+
+# Per-service RAM/CPU against its limit (for PR 423)
+STATS_JSON="$(docker stats --no-stream --format '{"name":"{{.Name}}","cpu":"{{.CPUPerc}}","mem":"{{.MemUsage}}","mem_pct":"{{.MemPerc}}"}' 2>/dev/null | paste -sd, -)"
+
+# Site speed (Caddy's internal port, bound to 127.0.0.1 only)
+ms="$(curl -s -o /dev/null -m 10 -w '%{time_total}' http://127.0.0.1:8080/ 2>/dev/null | awk '{printf "%d", $1*1000}')"
+[ -n "$ms" ] && [ "$ms" -gt 0 ] || ms=99999
+alert slow "$([ "${ms:-99999}" -gt "$MONITOR_SLOW_MS" ] && echo 1 || echo 0)" "সাইট ধীর (${ms} ms)"
+
+# Backups: the daily local backup must be fresh; a failed Blob/Drive upload alerts (an unconnected one does not)
+bk_age_h=9999
+if [ -f "$STATE/backup-daily-local.json" ]; then
+  bk_age_h=$(( ($(date +%s) - $(stat -c %Y "$STATE/backup-daily-local.json")) / 3600 ))
+  grep -q '"result":"fail"' "$STATE/backup-daily-local.json" && bk_age_h=9999
+fi
+if [ -f "$STATE/stack.started" ] && [ $(( $(date +%s) - $(stat -c %Y "$STATE/stack.started") )) -gt $((MONITOR_BACKUP_MAX_AGE_H * 3600)) ]; then
+  alert backup_local "$([ "$bk_age_h" -gt "$MONITOR_BACKUP_MAX_AGE_H" ] && echo 1 || echo 0)" "ব্যাকআপ ${MONITOR_BACKUP_MAX_AGE_H} ঘণ্টার বেশি পুরনো বা ব্যর্থ"
+fi
+for t in blob drive; do
+  f="$STATE/backup-daily-$t.json"
+  alert "backup_$t" "$(grep -q '"result":"fail"' "$f" 2>/dev/null && echo 1 || echo 0)" "$t ব্যাকআপ ব্যর্থ হয়েছে"
+done
+[ -f "$STATE/restore-test.json" ] && alert restore_test "$(grep -q '"result":"fail"' "$STATE/restore-test.json" && echo 1 || echo 0)" "ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ"
+
+load="$(cut -d' ' -f1 /proc/loadavg)"
+mem_used_pct="$(free | awk '/^Mem:/{printf "%d", ($3/$2)*100}')"
+problems_json="$(printf '%s\n' "${PROBLEMS[@]:-}" | jq -R . | jq -s 'map(select(length>0))')"
+cat > "$STATE/health.json.new" <<JSON
+{"at":"$(date -Is)","load1":$load,"cpus":$(nproc),"mem_used_pct":$mem_used_pct,"nvme":"$nvme",
+ "site_ms":${ms:-null},"disks":$DISKS_JSON,"services":$SVC_JSON,"stats":[${STATS_JSON}],
+ "backup_age_h":$bk_age_h,"problems":$problems_json}
+JSON
+mv "$STATE/health.json.new" "$STATE/health.json"
+cp /run/extas/nvme.json "$STATE/nvme.json" 2>/dev/null || true

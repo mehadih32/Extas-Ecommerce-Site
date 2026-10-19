@@ -1,0 +1,17 @@
+# EXTAS PR 601 — prepare the temporary NVMe at every boot, before Docker (and so Postgres, Redis, the app).
+[Unit]
+Description=EXTAS: format/mount the temporary NVMe and create its folders
+DefaultDependencies=no
+After=local-fs.target systemd-udev-settle.service
+Wants=systemd-udev-settle.service
+Before=docker.service containerd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/extas-nvme-prepare
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=docker.service

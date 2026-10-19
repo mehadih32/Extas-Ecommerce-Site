@@ -1,0 +1,46 @@
+# EXTAS Caddy (PR 7). Automatic HTTPS (Let's Encrypt, with Caddy's internal CA as a fallback so Cloudflare
+# "Full" always reaches us), HTTP/2 + HTTP/3, compression, security headers.
+# The host name is a setting (infra/config/server.conf → EXTAS_STAGING_HOST). The preview password and the
+# upstream (static page → app, blue/green) are files in /srv/extas/config/caddy/sites written by the scripts.
+{
+	admin localhost:2019
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+}
+
+{$EXTAS_STAGING_HOST} {
+	import security_headers
+	encode zstd gzip
+	tls {
+		issuer acme
+		issuer internal
+	}
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+		format json
+	}
+	import /etc/caddy/sites/noindex.caddy
+	import /etc/caddy/sites/auth.caddy
+	import /etc/caddy/sites/upstream.caddy
+}
+
+# Internal only — not published. Health checks, the k6 baseline and deploy smoke tests use it.
+:8080 {
+	respond /caddy-health "ok" 200
+	import /etc/caddy/sites/upstream.caddy
+}

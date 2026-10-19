@@ -1,0 +1,8 @@
+{"blockdevices":[
+ {"name":"/dev/nvme0n1","type":"disk","size":137438953472,"model":"MSFT NVMe Accelerator v1.0","fstype":null,"mountpoints":[null],
+  "children":[{"name":"/dev/nvme0n1p1","type":"part","size":136365211136,"model":null,"fstype":"ext4","mountpoints":["/"]},
+              {"name":"/dev/nvme0n1p15","type":"part","size":111149056,"model":null,"fstype":"vfat","mountpoints":["/boot/efi"]}]},
+ {"name":"/dev/nvme0n2","type":"disk","size":1099511627776,"model":"MSFT NVMe Accelerator v1.0","fstype":null,"mountpoints":[null]},
+ {"name":"/dev/nvme1n1","type":"disk","size":472446402560,"model":"Microsoft NVMe Direct Disk v2","fstype":null,"mountpoints":[null]},
+ {"name":"/dev/sr0","type":"rom","size":1073741824,"model":"Virtual DVD-ROM","fstype":null,"mountpoints":[null]}
+]}

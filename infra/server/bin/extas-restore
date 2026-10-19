@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# PR 8 — one-command restore (A2.9.12), tested.
+#   extas-restore test
+#       Restores the newest base backup + WAL into a throwaway PostgreSQL on the NVMe, checks it, removes it.
+#       Run after every setup and monthly by a timer; the result is shown in the admin and alerted (PR 9, 395, 507).
+#   extas-restore --from local|blob|drive [--at "YYYY-MM-DD HH:MM"] [--target staging|production]
+#       local/blob: base backup + WAL replay to the chosen minute (default: as late as possible).
+#       drive: the daily encrypted dump (no minute choice) — the fallback when Blob is unavailable.
+#       staging (default): leaves a restored copy running as container extas-pg-restore for checking.
+#       production: replaces the live database after typing RESTORE. The old data is kept, never deleted.
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"; LOCAL="$R/backups"
+[ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
+BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"; DRIVE_PATH="${BACKUP_DRIVE_FOLDER:-EXTAS-backups}"
+TS="$(date +%Y%m%d-%H%M%S)"
+WORK="$EXTAS_NVME_MOUNT/scratch/restore-$TS"
+NAME="extas-pg-restore"
+
+FROM=local; AT=""; TARGET=staging; MODE=restore
+case "${1:-}" in test) MODE="test"; shift ;; esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --from) FROM="$2"; shift 2 ;;
+    --at) AT="$2"; shift 2 ;;
+    --target) TARGET="$2"; shift 2 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+
+cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; [ "$MODE" = test ] && rm -rf "$WORK"; }
+result() { printf '{"result":"%s","detail":"%s","from":"%s","at":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" > "$STATE/restore-$MODE.json"; }
+
+mkdir -p "$WORK/pgdata" "$WORK/wal"
+chown -R 999:999 "$WORK"; chmod 700 "$WORK/pgdata"
+
+pick_base() { # newest base backup taken before $AT (or newest overall)
+  local d best=""
+  for d in $(ls -1 "$1" 2>/dev/null | sort); do
+    if [ -z "$AT" ] || [ "$(date -d "${d:0:8} ${d:9:2}:${d:11:2}" +%s)" -le "$(date -d "$AT" +%s)" ]; then best="$d"; fi
+  done
+  echo "$best"
+}
+
+if [ "$FROM" = drive ]; then
+  [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ] || { echo "Google Drive is not connected"; exit 1; }
+  last="$(rclone lsf --dirs-only "drive:$DRIVE_PATH" | sort | tail -1 | tr -d /)"
+  rclone copy -q "drive:$DRIVE_PATH/$last" "$WORK/drive"
+  gpg --batch --yes --pinentry-mode loopback --passphrase-file "$SEC/backup.key" -o "$WORK/extas.dump" -d "$WORK/drive/extas-$last.dump.gpg"
+  BASE=""
+else
+  if [ "$FROM" = blob ]; then
+    [ -n "${RCLONE_CONFIG_BLOB_TYPE:-}" ] || { echo "Azure Blob is not connected"; exit 1; }
+    mkdir -p "$WORK/blob-base"
+    rclone lsf --dirs-only "blob:$BLOB_PATH/base" | tr -d / > "$WORK/list"
+    BASE=""; while read -r d; do
+      if [ -z "$AT" ] || [ "$(date -d "${d:0:8} ${d:9:2}:${d:11:2}" +%s)" -le "$(date -d "$AT" +%s)" ]; then BASE="$d"; fi
+    done < <(sort "$WORK/list")
+    [ -n "$BASE" ] || { echo "no base backup in Blob before ${AT:-now}"; exit 1; }
+    rclone copy -q "blob:$BLOB_PATH/base/$BASE" "$WORK/blob-base/$BASE"
+    rclone copy -q "blob:$BLOB_PATH/wal" "$WORK/wal"
+    BASEDIR="$WORK/blob-base/$BASE"
+  else
+    if [ "$MODE" = test ]; then
+      # Close the current WAL segment so the test sees everything committed up to now, then let the archiver copy it.
+      docker exec extas-postgres psql -qtAX -U extas -d extas -c "SELECT pg_switch_wal()" >/dev/null 2>&1 || true
+      sleep 5
+    fi
+    BASE="$(pick_base "$LOCAL/base")"
+    [ -n "$BASE" ] || { result fail "no local base backup yet"; echo "no local base backup yet"; exit 1; }
+    BASEDIR="$LOCAL/base/$BASE"
+    cp -a "$LOCAL/wal/." "$WORK/wal/" 2>/dev/null || true
+  fi
+  tar -xzf "$BASEDIR/base.tar.gz" -C "$WORK/pgdata"
+  chown -R 999:999 "$WORK"
+  touch "$WORK/pgdata/recovery.signal"
+  {
+    echo "restore_command = 'cp /restore-wal/%f %p'"
+    [ -n "$AT" ] && echo "recovery_target_time = '$AT $EXTAS_TIMEZONE'"
+    echo "recovery_target_action = 'promote'"
+    echo "archive_mode = off"
+  } >> "$WORK/pgdata/postgresql.auto.conf"
+fi
+
+trap cleanup EXIT
+if [ -n "$BASE" ]; then
+  docker run -d --name "$NAME" --network extas -u 999:999 \
+    -e PGDATA=/var/lib/postgresql/data/pgdata \
+    -v "$WORK/pgdata:/var/lib/postgresql/data/pgdata" -v "$WORK/wal:/restore-wal:ro" \
+    "$IMG_POSTGRES" postgres -c shared_buffers=256MB -c temp_tablespaces='' -c archive_mode=off \
+    -c logging_collector=off -c shared_preload_libraries=pg_stat_statements >/dev/null
+else
+  docker run -d --name "$NAME" --network extas -e POSTGRES_USER=extas -e POSTGRES_DB=extas \
+    -e POSTGRES_HOST_AUTH_METHOD=trust -v "$WORK/pgdata:/var/lib/postgresql/data" "$IMG_POSTGRES" >/dev/null
+fi
+for _ in $(seq 1 180); do
+  if docker exec "$NAME" psql -qtAX -U extas -d extas -c "SELECT NOT pg_is_in_recovery()" 2>/dev/null | grep -q t; then break; fi
+  sleep 2
+done
+if [ -z "$BASE" ]; then
+  docker cp "$WORK/extas.dump" "$NAME:/tmp/extas.dump"
+  docker exec "$NAME" pg_restore -U extas -d extas --no-owner /tmp/extas.dump
+fi
+
+tables="$(docker exec "$NAME" psql -qtAX -U extas -d extas -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')" 2>/dev/null || echo x)"
+live="$(docker exec extas-postgres psql -qtAX -U extas -d extas -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')" 2>/dev/null || echo x)"
+if [ "$tables" = x ]; then result fail "restored database did not come up"; echo "FAIL: restored database did not come up"; exit 1; fi
+detail="base ${BASE:-drive dump}, $tables tables restored (live has $live)"
+
+if [ "$MODE" = test ]; then
+  if [ "$tables" = "$live" ]; then result ok "$detail"; echo "OK: $detail"; else result fail "$detail"; echo "FAIL: $detail"; exit 1; fi
+  exit 0
+fi
+
+if [ "$TARGET" = staging ]; then
+  trap - EXIT
+  result ok "$detail — running as $NAME for checking"
+  echo "OK: $detail. The restored copy runs as container $NAME (network extas). Remove it with: docker rm -f $NAME"
+  exit 0
+fi
+
+# production
+echo "This replaces the LIVE database with: $detail."
+read -r -p "Type RESTORE to continue: " ok
+[ "$ok" = "RESTORE" ] || { echo "cancelled"; exit 1; }
+docker stop "$NAME" >/dev/null
+for c in $(docker ps --format '{{.Names}}' | grep -E '^extas-app|^extas-worker|^extas-jobs' || true); do docker stop "$c" >/dev/null; done
+docker stop -t 60 extas-postgres >/dev/null
+mv "$R/data/postgres/pgdata" "$R/data/postgres/pgdata.before-restore-$TS"
+rsync -a "$WORK/pgdata/" "$R/data/postgres/pgdata/"
+sed -i '/^restore_command\|^recovery_target\|^archive_mode = off/d' "$R/data/postgres/pgdata/postgresql.auto.conf"
+docker start extas-postgres >/dev/null
+echo "Done. The previous data is kept at $R/data/postgres/pgdata.before-restore-$TS. Start the app with deploy.yml (or docker start)."
+result ok "production restored: $detail"
