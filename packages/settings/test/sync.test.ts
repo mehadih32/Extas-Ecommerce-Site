@@ -9,6 +9,7 @@ import {
   messages,
   prismaBackend,
   registry,
+  registryVersion,
   SettingsResolver,
   storeTarget,
   syncSettings,
@@ -46,6 +47,8 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
   let db: TestDatabase;
   let storeId: number;
   const keys = Object.keys(registry).sort();
+  // The registry's own version; the derived registries below are one, two and three versions ahead of it.
+  const V = registryVersion(registry);
 
   const counts = async () => ({
     definitions: await db.prisma.settingDefinition.count(),
@@ -67,7 +70,7 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
 
   it('first run: every key gets its definition with its default, recorded once', async () => {
     const r = await syncSettings(db.prisma, { registry, messages, appVersion: 'sha-one' });
-    expect(r).toMatchObject({ status: 'applied', registryVersion: 1, installationVersionBefore: 0, recorded: true });
+    expect(r).toMatchObject({ status: 'applied', registryVersion: V, installationVersionBefore: 0, recorded: true });
     expect(r.added).toEqual(keys);
     expect(r.ownerData.added).toEqual(['store.name']);
 
@@ -89,8 +92,8 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
 
     const added = await db.prisma.settingChange.findMany({ where: { action: 'MIGRATION_ADDED' } });
     expect(added.map((c) => c.key).sort()).toEqual(keys);
-    expect(await db.prisma.settingsMigration.findUniqueOrThrow({ where: { version: 1 } })).toMatchObject({ addedKeys: keys });
-    expect(await db.prisma.installation.findFirstOrThrow()).toMatchObject({ settingsVersion: 1, appVersion: 'sha-one' });
+    expect(await db.prisma.settingsMigration.findUniqueOrThrow({ where: { version: V } })).toMatchObject({ addedKeys: keys });
+    expect(await db.prisma.installation.findFirstOrThrow()).toMatchObject({ settingsVersion: V, appVersion: 'sha-one' });
     // No value rows: the resolver answers from the definition default.
     expect(await counts()).toMatchObject({ installationValues: 0, storeValues: 0 });
   });
@@ -120,10 +123,10 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
     await resolver.set('store.locale', 'en-GB', storeTarget(storeId));
     const v2: RegistryShape = {
       ...registry,
-      'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: 2 },
+      'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: V + 1 },
     };
     const r = await syncSettings(db.prisma, { registry: v2, messages });
-    expect(r).toMatchObject({ status: 'applied', changed: ['store.locale'], added: [], recorded: true, installationVersionBefore: 1 });
+    expect(r).toMatchObject({ status: 'applied', changed: ['store.locale'], added: [], recorded: true, installationVersionBefore: V });
     expect(await db.prisma.settingDefinition.findUniqueOrThrow({ where: { key: 'store.locale' } })).toMatchObject({
       defaultValue: 'en-IN',
       sortOrder: 25,
@@ -135,7 +138,7 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
     });
     const after = new SettingsResolver(prismaBackend(db.prisma), v2);
     expect(await after.get('store.locale', { storeId })).toMatchObject({ value: 'en-GB', source: 'store' });
-    expect(await db.prisma.installation.findFirstOrThrow()).toMatchObject({ settingsVersion: 2 });
+    expect(await db.prisma.installation.findFirstOrThrow()).toMatchObject({ settingsVersion: V + 1 });
     // And again: nothing.
     expect(await syncSettings(db.prisma, { registry: v2, messages })).toMatchObject({ status: 'unchanged' });
   });
@@ -144,7 +147,7 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
     const resolver = new SettingsResolver(prismaBackend(db.prisma), registry, { checkIntervalMs: 0 });
     await resolver.set('store.currency', 'USD', INSTALLATION);
     const { 'store.currency': _gone, ...rest } = registry;
-    const v3: RegistryShape = { ...rest, 'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: 3 } };
+    const v3: RegistryShape = { ...rest, 'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: V + 2 } };
     const r = await syncSettings(db.prisma, { registry: v3, messages });
     expect(r).toMatchObject({ status: 'applied', retired: ['store.currency'], changed: [], recorded: true });
     const def = await db.prisma.settingDefinition.findUniqueOrThrow({ where: { key: 'store.currency' } });
@@ -152,7 +155,7 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
     expect(await db.prisma.installationSettingValue.findUniqueOrThrow({ where: { key: 'store.currency' } })).toMatchObject({ value: 'USD' });
     expect(await syncSettings(db.prisma, { registry: v3, messages })).toMatchObject({ status: 'unchanged', retired: [] });
 
-    const v4: RegistryShape = { ...v3, 'store.currency': { ...registry['store.currency'], version: 4 } };
+    const v4: RegistryShape = { ...v3, 'store.currency': { ...registry['store.currency'], version: V + 3 } };
     const back = await syncSettings(db.prisma, { registry: v4, messages });
     expect(back).toMatchObject({ status: 'applied', restored: ['store.currency'], recorded: true });
     expect((await db.prisma.settingDefinition.findUniqueOrThrow({ where: { key: 'store.currency' } })).deprecatedAt).toBeNull();
@@ -162,7 +165,7 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
   it('older code (a rollback) never touches an installation that is ahead', async () => {
     const before = await counts();
     const r = await syncSettings(db.prisma, { registry, messages });
-    expect(r).toMatchObject({ status: 'skipped-installation-ahead', registryVersion: 1, installationVersionBefore: 4 });
+    expect(r).toMatchObject({ status: 'skipped-installation-ahead', registryVersion: V, installationVersionBefore: V + 3 });
     expect(r.warnings).toHaveLength(1);
     expect(await counts()).toEqual(before);
     expect((await db.prisma.settingDefinition.findUniqueOrThrow({ where: { key: 'store.locale' } })).defaultValue).toBe('en-IN');
@@ -171,8 +174,8 @@ describe.skipIf(!HAS_DB)('settings sync on PostgreSQL', () => {
   it('warns when definitions change without a version bump (and still applies them)', async () => {
     const v4: RegistryShape = {
       ...registry,
-      'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: 3 },
-      'store.currency': { ...registry['store.currency'], sortOrder: 41, version: 4 },
+      'store.locale': { ...registry['store.locale'], default: 'en-IN', sortOrder: 25, version: V + 2 },
+      'store.currency': { ...registry['store.currency'], sortOrder: 41, version: V + 3 },
     };
     const r = await syncSettings(db.prisma, { registry: v4, messages });
     expect(r).toMatchObject({ status: 'applied', changed: ['store.currency'], recorded: false });

@@ -1,0 +1,40 @@
+{
+  "roles": {
+    "owner": {
+      "name": "Owner",
+      "description": "Can do everything, including every permission added later. Cannot be removed from the last owner."
+    }
+  },
+  "permissionGroups": {
+    "settings": "Settings and keys",
+    "staff": "Staff and roles",
+    "security": "Security and history"
+  },
+  "permissions": {
+    "settings": {
+      "read": "See the settings",
+      "write": "Change the settings"
+    },
+    "vault": {
+      "read": "See which keys are connected (never the key itself)",
+      "write": "Add, replace or switch off keys"
+    },
+    "roles": {
+      "read": "See the roles and what each may do",
+      "manage": "Create and change roles"
+    },
+    "staff": {
+      "read": "See the staff list",
+      "manage": "Add staff, give or take roles, pause an account"
+    },
+    "audit": {
+      "read": "See the change history (who, when, from where)"
+    },
+    "security": {
+      "read": "See logins and security alerts"
+    }
+  },
+  "totp": {
+    "issuerFallback": "Shop admin"
+  }
+}

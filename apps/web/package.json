@@ -11,8 +11,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@extas/auth": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/settings": "workspace:*",
+    "@extas/vault": "workspace:*",
     "next": "16.4.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",

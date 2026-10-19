@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 12/19 · total 24/598**
+**Progress: S0A 12/12 · S00 15/19 · total 27/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -59,6 +59,9 @@ the server.*
 | 496 | S00 | merged | 2026-10-20 | settings changes are validated, versioned and logged (who, when, old → new); an old value is never deleted |
 | 510 | S00 | merged | 2026-10-20 | reset to default: a setting goes back to the level above it (store → installation → declared default), logged like any change. Read-only `/api/admin/settings` lists keys, effective values and their source (never owner data or vault entries); the admin login guarding it comes with PR 15/16 |
 | 18 | S00 | merged | 2026-10-20 | `packages/adapters`: every integration is one adapter with mock / sandbox / live, chosen per store or installation from its connection row; the Test button records each run; a connection leaves mock only after a passing test (audited); keys come from the vault, cached briefly, never shown in a message. Storage adapter: local disk (the default, on the media volume), Azure Blob, S3-compatible — tested against Azurite and an S3 server in CI |
+| 15 | S00 | merged | 2026-10-20 | `packages/auth`: staff login (e-mail + password, scrypt hash, wrong-try pause, login alerts), customer password login per store; opaque session tokens stored hashed in httpOnly `__Host-` cookies, idle and total time limits, device list, "log out everywhere"; 2FA by authenticator app (seed in the vault, owner setting, default off); every rule a `security.*` setting; first owner set up on the server (`auth create-owner`), no owner data in the repo. SMS code on a new device comes with PR 130 |
+| 16 | S00 | merged | 2026-10-20 | permission check on every admin action on the server (`guardAdmin` + the auth functions themselves), per store or for every store; `/api/admin/settings` now needs `settings.read`; changes to staff and roles written to the append-only audit log (who, when, from where) |
+| 495 | S00 | merged | 2026-10-20 | role builder: permission catalogue in code, roles as data; seeded owner role always holds every permission and cannot be archived or stripped; nobody grants more than they hold; the last owner cannot be paused or removed; roles archived, never deleted; admin API under `/api/admin/roles`, `/staff`, `/permissions` (screens come with the admin shell) |
 
 ## The stage table
 

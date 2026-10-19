@@ -1,7 +1,8 @@
 {
   "groups": {
     "store": "Store",
-    "system": "System"
+    "system": "System",
+    "security": "Security and logins"
   },
   "store": {
     "name": {
@@ -29,5 +30,59 @@
   },
   "ownerData": {
     "settingReason": "The owner's own data: kept out of every export to a new installation."
+  },
+  "security": {
+    "staffPasswordMinLength": {
+      "label": "Staff password: shortest length",
+      "help": "How many characters a staff password needs at least. Long is better than complicated."
+    },
+    "customerPasswordMinLength": {
+      "label": "Customer password: shortest length",
+      "help": "How many characters a customer password needs at least. The first password is the customer's mobile number, so keep this at 11 or less."
+    },
+    "passwordMaxLength": {
+      "label": "Password: longest length",
+      "help": "The longest password anyone may set. It only stops very long text from slowing the server."
+    },
+    "blockCommonPasswords": {
+      "label": "Refuse common staff passwords",
+      "help": "Staff cannot use a well-known password such as 12345678, or their own e-mail address."
+    },
+    "staffSessionIdleMinutes": {
+      "label": "Staff: log out after this many idle minutes",
+      "help": "A staff login ends when nothing is done for this long."
+    },
+    "staffSessionMaxHours": {
+      "label": "Staff: log out after this many hours in total",
+      "help": "A staff login ends after this long even when it is in use, and asks for the password again."
+    },
+    "customerSessionDays": {
+      "label": "Customer: stay logged in for this many days",
+      "help": "How long a customer stays logged in on one phone or computer."
+    },
+    "loginMaxAttempts": {
+      "label": "Wrong passwords before a pause",
+      "help": "After this many wrong tries in a row, the login waits before it accepts another try."
+    },
+    "loginLockoutMinutes": {
+      "label": "Pause after too many wrong passwords (minutes)",
+      "help": "How long the login waits after too many wrong tries."
+    },
+    "staffTwoFactorRequired": {
+      "label": "Staff must use 2-step login",
+      "help": "When on, every staff member must set up an authenticator app code before using the admin. Off by default: you decide."
+    },
+    "twoFactorChallengeMinutes": {
+      "label": "Time to type the 2-step code (minutes)",
+      "help": "After the password is right, the code from the app must be typed within this time."
+    },
+    "totpDriftSteps": {
+      "label": "2-step code: allowed clock difference",
+      "help": "How many 30-second steps a phone clock may be early or late. 1 is normal."
+    },
+    "staffLoginAlerts": {
+      "label": "Alert on every staff login",
+      "help": "Records every staff login and every login from a new device, so you are told about it."
+    }
   }
 }

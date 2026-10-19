@@ -18,6 +18,9 @@ type Db = Pick<PrismaClient, 'vaultKey' | 'installationSecret' | 'storeSecret' |
 
 export class VaultError extends Error {}
 
+/** A value sealed by `sealValue`, as it is stored in its own row's Bytes columns. */
+export type SealedValue = { ciphertext: Uint8Array<ArrayBuffer>; iv: Uint8Array<ArrayBuffer>; authTag: Uint8Array<ArrayBuffer>; keyVersion: number };
+
 export function assertName(name: string) {
   if (!NAME.test(name)) throw new VaultError(`secret name must look like "provider.field", got "${name}"`);
 }
@@ -124,6 +127,24 @@ export function createVault(db: Db, masterKey: string | undefined = process.env.
       if (storeId == null) await db.installationSecret.update({ where: { name }, data: { revokedAt: at, updatedById: who.actorId ?? null } });
       else await db.storeSecret.update({ where: { storeId_name: { storeId, name } }, data: { revokedAt: at, updatedById: who.actorId ?? null } });
       await log(name, storeId, 'REVOKE', who);
+    },
+
+    /**
+     * PR 15 — encrypts a value that lives in another table's columns (a staff member's TOTP seed) with the active data
+     * key. `aad` binds it to its row, so a ciphertext copied onto another row does not open. Data-key rotation leaves
+     * these values on their key version; retired keys are never deleted, so they stay readable.
+     */
+    async sealValue(aad: string, plaintext: Buffer, who: Who): Promise<SealedValue> {
+      const { version, key } = await activeKey(who.actorId);
+      const s = seal(key, plaintext, aad);
+      return { ciphertext: bytes(s.ciphertext), iv: bytes(s.iv), authTag: bytes(s.authTag), keyVersion: version };
+    },
+
+    /** Opens a value sealed by `sealValue`. Throws when the row, the key or any byte is wrong. Not logged per read. */
+    async openValue(aad: string, sealed: SealedValue): Promise<Buffer> {
+      return open(await dataKey(sealed.keyVersion), {
+        ciphertext: Buffer.from(sealed.ciphertext), iv: Buffer.from(sealed.iv), authTag: Buffer.from(sealed.authTag),
+      }, aad);
     },
 
     /** What is set, for the Keys & connections page — names and dates only, never a value. */
