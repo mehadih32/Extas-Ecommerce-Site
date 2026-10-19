@@ -74,6 +74,7 @@ jobs:
         with:
           name: lighthouse
           path: .lighthouseci
+          include-hidden-files: true
           retention-days: 7
       - name: Production image builds
         run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
@@ -108,3 +109,7 @@ jobs:
         run: |
           cd packages/db
           node scripts/prisma.mjs migrate diff --from-url "$DATABASE_DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+      - name: Vault against PostgreSQL (PR 493)
+        env:
+          EXTAS_TEST_DATABASE_URL: ${{ env.DATABASE_DIRECT_URL }}
+        run: pnpm --filter @extas/vault test
