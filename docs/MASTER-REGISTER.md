@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 11/19 · total 23/598**
+**Progress: S0A 12/12 · S00 12/19 · total 24/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -58,6 +58,7 @@ the server.*
 | 492 | S00 | merged | 2026-10-20 | two-tier resolver: store value → installation value → declared default, cached in memory and refreshed when any setting changes (works through PgBouncer); the status page reads its language and time zone through it |
 | 496 | S00 | merged | 2026-10-20 | settings changes are validated, versioned and logged (who, when, old → new); an old value is never deleted |
 | 510 | S00 | merged | 2026-10-20 | reset to default: a setting goes back to the level above it (store → installation → declared default), logged like any change. Read-only `/api/admin/settings` lists keys, effective values and their source (never owner data or vault entries); the admin login guarding it comes with PR 15/16 |
+| 18 | S00 | merged | 2026-10-20 | `packages/adapters`: every integration is one adapter with mock / sandbox / live, chosen per store or installation from its connection row; the Test button records each run; a connection leaves mock only after a passing test (audited); keys come from the vault, cached briefly, never shown in a message. Storage adapter: local disk (the default, on the media volume), Azure Blob, S3-compatible — tested against Azurite and an S3 server in CI |
 
 ## The stage table
 

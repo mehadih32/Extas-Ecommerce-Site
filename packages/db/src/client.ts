@@ -10,6 +10,7 @@
 import { PrismaClient } from '@prisma/client';
 
 export { Prisma, PrismaClient } from '@prisma/client';
+export type { AdapterMode, IntegrationKind, StorageProvider } from '@prisma/client';
 
 const holder = globalThis as unknown as { __extasPrisma?: PrismaClient };
 

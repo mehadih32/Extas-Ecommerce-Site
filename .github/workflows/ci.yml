@@ -122,6 +122,28 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/settings test
+      # PR 18 — the adapter framework on PostgreSQL, and the storage contract against Azurite (Azure Blob) and an
+      # S3-compatible test server (rclone serve s3). Azurite's account key is its public, documented development key.
+      - name: Adapters and storage (PR 18)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+          AZURITE_BLOB_URL: http://127.0.0.1:10000/devstoreaccount1
+          AZURITE_ACCOUNT: devstoreaccount1
+          AZURITE_ACCOUNT_KEY: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
+          S3_TEST_ENDPOINT: http://127.0.0.1:8333
+          S3_TEST_ACCESS_KEY: ci-only-access
+          S3_TEST_SECRET_KEY: ci-only-secret
+        run: |
+          docker run -d -p 127.0.0.1:10000:10000 mcr.microsoft.com/azure-storage/azurite:3.37.0 \
+            azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+          mkdir -p /tmp/s3data/extas-test
+          docker run -d -p 127.0.0.1:8333:8333 -v /tmp/s3data:/data rclone/rclone:1.71.1 \
+            serve s3 /data --addr :8333 --auth-key "$S3_TEST_ACCESS_KEY,$S3_TEST_SECRET_KEY"
+          for _ in $(seq 1 30); do
+            curl -s -o /dev/null http://127.0.0.1:10000/ && curl -s -o /dev/null http://127.0.0.1:8333/ && break
+            sleep 1
+          done
+          pnpm --filter @extas/adapters test
       - name: Settings sync, twice (the second run must change nothing)
         run: |
           pnpm --filter @extas/settings sync | tee /tmp/sync-1.txt
