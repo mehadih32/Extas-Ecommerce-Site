@@ -43,6 +43,10 @@ jobs:
   # speed targets) and the production image.
   web:
     runs-on: ubuntu-24.04
+    env:
+      # The Prisma client of the full schema (333 models) costs every type-check about 2.5–3 GB of heap; Node's default
+      # limit on the runner is about 2 GB.
+      NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -95,6 +99,7 @@ jobs:
         ports: ["5432:5432"]
         options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
     env:
+      NODE_OPTIONS: --max-old-space-size=4096
       DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
       DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
     steps:

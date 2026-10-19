@@ -26,7 +26,8 @@ FROM deps AS build
 COPY . .
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA
-RUN pnpm status:gen && pnpm --filter @extas/web build
+# The build type-checks against the full Prisma client (about 3 GB of heap), above Node's default limit.
+RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm status:gen && NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter @extas/web build
 
 # Runs once per deploy, before the new colour starts (infra/deploy/deploy.sh): `prisma migrate deploy` straight to
 # PostgreSQL (DATABASE_DIRECT_URL), then the settings migration (PR 496), then the auth sync (PR 16/495: permission
