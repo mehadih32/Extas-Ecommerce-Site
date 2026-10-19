@@ -34,12 +34,16 @@ REDIS_QUEUE_MAX_MB=$((REDIS_QUEUE_MEM_MB * 80 / 100))
 MEILI_MASTER_KEY=$meili
 MEILI_INDEX_MEM_MB=$((MEILI_MEM_MB * 60 / 100))
 ENV
-  # What the app containers read (deploy.yml). Connection strings point at PgBouncer; migrations use the direct URL.
+  # The database for the app and the deploy's migrate step (PR 13, 491–496), in app.env: the app goes through
+  # PgBouncer (transaction pool, `pgbouncer=true` turns off Prisma's prepared statements); `prisma migrate deploy` and
+  # the settings sync go straight to PostgreSQL. Derived from the generated password, so rewritten when it changes.
+  env_set "$s/app.env" DATABASE_URL "postgresql://extas:$pg_pw@extas-pgbouncer:6432/extas?pgbouncer=true"
+  env_set "$s/app.env" DATABASE_DIRECT_URL "postgresql://extas:$pg_pw@extas-postgres:5432/extas"
+  # Everything else the app containers read (deploy.yml). DATABASE_URL and the direct URL moved to app.env (above),
+  # where the migrate step reads them too.
   local app_extra="$s/app-connections.env"
   write_file "$app_extra" 0600 >/dev/null <<ENV
-DATABASE_URL=postgresql://extas:$pg_pw@extas-pgbouncer:6432/extas?pgbouncer=true
 REPORT_DATABASE_URL=postgresql://extas:$pg_pw@extas-pgbouncer:6432/extas_report?pgbouncer=true
-DIRECT_DATABASE_URL=postgresql://extas:$pg_pw@extas-postgres:5432/extas
 REDIS_CACHE_URL=redis://:$redis_pw@extas-redis-cache:6379/0
 REDIS_QUEUE_URL=redis://:$redis_pw@extas-redis-queue:6379/0
 MEILI_URL=http://extas-meilisearch:7700

@@ -1,0 +1,33 @@
+{
+  "groups": {
+    "store": "Store",
+    "system": "System"
+  },
+  "store": {
+    "name": {
+      "label": "Store name",
+      "help": "The name customers see. Your own data: it never goes to another installation."
+    },
+    "locale": {
+      "label": "Language and number format",
+      "help": "A language tag such as bn-BD or en-GB. Dates and numbers are written in this language."
+    },
+    "timeZone": {
+      "label": "Time zone",
+      "help": "Where the shop's day starts and ends, for example Asia/Dhaka."
+    },
+    "currency": {
+      "label": "Currency",
+      "help": "Three-letter currency code, for example BDT."
+    }
+  },
+  "system": {
+    "stagingHost": {
+      "label": "Preview site address",
+      "help": "Shown for information only. The server configuration decides the real address."
+    }
+  },
+  "ownerData": {
+    "settingReason": "The owner's own data: kept out of every export to a new installation."
+  }
+}

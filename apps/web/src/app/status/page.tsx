@@ -3,6 +3,8 @@ import dict from '../../../messages/status.bn.json';
 import { t } from '@/lib/i18n';
 import { dateTime, num } from '@/lib/format';
 import { buildStatus, runtimeState, type Backup } from '@/lib/status';
+import { displaySettings } from '@/lib/settings';
+import type { DisplayOptions } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: t(dict, 'title'), robots: { index: false, follow: false } };
@@ -16,16 +18,17 @@ function Bar({ done, total }: { done: number; total: number }) {
   );
 }
 
-function backupLabel(b: Backup | null): { text: string; tone: string } {
+function backupLabel(b: Backup | null, d: DisplayOptions): { text: string; tone: string } {
   if (!b?.result) return { text: t(dict, 'backupNone'), tone: 'text-ink-soft' };
-  if (b.result === 'ok') return { text: `${t(dict, 'backupOk')} · ${dateTime(b.at) ?? ''}`, tone: 'text-ok' };
+  if (b.result === 'ok') return { text: `${t(dict, 'backupOk')} · ${dateTime(b.at, d) ?? ''}`, tone: 'text-ok' };
   if (b.result === 'off') return { text: t(dict, 'backupOff'), tone: 'text-warn' };
   return { text: t(dict, 'backupFail'), tone: 'text-bad' };
 }
 
 export default async function StatusPage() {
   const s = buildStatus;
-  const { deploy, health, backups } = await runtimeState();
+  // Locale and time zone through the settings resolver (PR 492) when the database answers, else the environment.
+  const [{ deploy, health, backups }, d] = await Promise.all([runtimeState(), displaySettings()]);
   const problems = health?.problems ?? [];
   const sha = (deploy?.sha ?? s.commit).slice(0, 7);
 
@@ -36,13 +39,13 @@ export default async function StatusPage() {
 
       <section className="mt-6 rounded-xl border border-line bg-surface p-4">
         <p className="text-lg font-semibold">
-          {t(dict, 'total', { done: num(s.totals.done), active: num(s.totals.active) })}
+          {t(dict, 'total', { done: num(s.totals.done, d), active: num(s.totals.active, d) })}
         </p>
         <div className="mt-3">
           <Bar done={s.totals.done} total={s.totals.active} />
         </div>
         <p className="mt-3 text-sm text-ink-soft">
-          {t(dict, 'lastDeploy')}: {dateTime(deploy?.at ?? s.generatedAt) ?? t(dict, 'never')}
+          {t(dict, 'lastDeploy')}: {dateTime(deploy?.at ?? s.generatedAt, d) ?? t(dict, 'never')}
           {sha ? ` · ${t(dict, 'commit')} ${sha}` : ''}
         </p>
       </section>
@@ -79,7 +82,7 @@ export default async function StatusPage() {
           )}
           {health?.at ? (
             <p className="mt-2 text-sm text-ink-soft">
-              {t(dict, 'serverChecked')}: {dateTime(health.at)}
+              {t(dict, 'serverChecked')}: {dateTime(health.at, d)}
             </p>
           ) : null}
         </div>
@@ -93,7 +96,7 @@ export default async function StatusPage() {
                 ['backupDrive', backups.drive],
               ] as const
             ).map(([k, b]) => {
-              const l = backupLabel(b);
+              const l = backupLabel(b, d);
               return (
                 <div key={k} className="flex flex-wrap justify-between gap-x-2">
                   <dt>{t(dict, k)}</dt>
@@ -115,7 +118,7 @@ export default async function StatusPage() {
                   <span className="text-sm text-ink-soft">{st.id}</span> {t(dict, `stages.${st.id}`)}
                 </span>
                 <span className="shrink-0 text-sm tabular-nums">
-                  {st.parked ? t(dict, 'parked') : t(dict, 'stageDone', { done: num(st.done), total: num(st.total) })}
+                  {st.parked ? t(dict, 'parked') : t(dict, 'stageDone', { done: num(st.done, d), total: num(st.total, d) })}
                 </span>
               </div>
               {st.parked ? null : (
