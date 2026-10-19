@@ -1,0 +1,145 @@
+# EXTAS server stack (PR 4–7). Started by infra/server/steps/09-stack.sh with:
+#   docker compose -p extas -f compose.yml --env-file ${EXTAS_ROOT}/config/profile.env --env-file ${EXTAS_ROOT}/config/stack.env up -d
+# Every limit comes from the auto profile (PR 604); every secret from ${EXTAS_ROOT}/config/secrets (generated on the
+# server, never in Git). Nothing here is published to the internet except Caddy's 80/443.
+name: extas
+
+x-common: &common
+  restart: unless-stopped
+  networks: [extas]
+  logging:
+    driver: local
+    options: { max-size: "20m", max-file: "5" }
+
+services:
+  postgres:
+    <<: *common
+    image: ${IMG_POSTGRES}
+    container_name: extas-postgres
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    env_file: ["${EXTAS_ROOT}/config/secrets/postgres.env"]
+    environment:
+      POSTGRES_USER: extas
+      POSTGRES_DB: extas
+      PGDATA: /var/lib/postgresql/data/pgdata
+    mem_limit: ${PG_LIMIT_MB}m
+    cpus: ${PG_CPUS}
+    shm_size: 1g
+    stop_grace_period: 60s
+    volumes:
+      - ${EXTAS_ROOT}/data/postgres:/var/lib/postgresql/data
+      - ${EXTAS_ROOT}/config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ${EXTAS_NVME_MOUNT}/pgtemp:/nvme/pgtemp
+      - ${EXTAS_ROOT}/backups/wal:/wal-archive
+      - ${EXTAS_ROOT}/logs/postgres:/var/log/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U extas -d extas"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  pgbouncer:
+    <<: *common
+    build: ./pgbouncer
+    image: extas/pgbouncer:local
+    container_name: extas-pgbouncer
+    mem_limit: 256m
+    cpus: 0.5
+    volumes:
+      - ${EXTAS_ROOT}/config/pgbouncer:/etc/pgbouncer:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 6432"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Two Redis instances: an LRU cache (working set on NVMe, may evict) and the BullMQ queue store, which must
+  # never evict a job (persistence on the data disk). Both share the 6 GB of A2.9.5.
+  redis-cache:
+    <<: *common
+    image: ${IMG_REDIS}
+    container_name: extas-redis-cache
+    command: >-
+      redis-server --requirepass ${REDIS_PASSWORD} --maxmemory ${REDIS_CACHE_MAX_MB}mb
+      --maxmemory-policy allkeys-lru --save "" --appendonly no
+    mem_limit: ${REDIS_CACHE_MEM_MB}m
+    cpus: ${REDIS_CPUS}
+    volumes:
+      - ${EXTAS_NVME_MOUNT}/redis-cache:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+  redis-queue:
+    <<: *common
+    image: ${IMG_REDIS}
+    container_name: extas-redis-queue
+    command: >-
+      redis-server --requirepass ${REDIS_PASSWORD} --maxmemory ${REDIS_QUEUE_MAX_MB}mb
+      --maxmemory-policy noeviction --appendonly yes --appendfsync everysec --save 900 1
+    mem_limit: ${REDIS_QUEUE_MEM_MB}m
+    cpus: ${REDIS_CPUS}
+    volumes:
+      - ${EXTAS_ROOT}/data/redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+  meilisearch:
+    <<: *common
+    image: ${IMG_MEILI}
+    container_name: extas-meilisearch
+    environment:
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_MAX_INDEXING_MEMORY: ${MEILI_INDEX_MEM_MB}Mb
+    mem_limit: ${MEILI_MEM_MB}m
+    cpus: ${MEILI_CPUS}
+    volumes:
+      - ${EXTAS_ROOT}/data/search:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health | grep -q available"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+  caddy:
+    <<: *common
+    image: ${IMG_CADDY}
+    container_name: extas-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+      - "127.0.0.1:8080:8080"   # internal health/bench port, never public
+    environment:
+      EXTAS_STAGING_HOST: ${EXTAS_STAGING_HOST}
+    mem_limit: ${CADDY_MEM_MB}m
+    cpus: ${CADDY_CPUS}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${EXTAS_ROOT}/config/caddy/sites:/etc/caddy/sites:ro
+      - ${EXTAS_ROOT}/config/caddy/data:/data
+      - ${EXTAS_ROOT}/config/caddy/config:/config
+      - ${EXTAS_ROOT}/www:/srv/www:ro
+      - ${EXTAS_ROOT}/logs/caddy:/var/log/caddy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/caddy-health | grep -q ok"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+networks:
+  extas:
+    external: true

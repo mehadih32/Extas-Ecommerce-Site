@@ -25,6 +25,29 @@ ever appended to the end of the document instead of being filed.
 
 ---
 
+## Build status
+
+*Updated after every PR (CLAUDE.md "How to report"). Counted in stages and PRs. The status page on new.extas.com.bd
+reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
+the server.*
+
+**Progress: S0A 12/12 · S00 0/19 · total 12/598**
+
+| PR | Stage | State | Date | Note |
+|---|---|---|---|---|
+| 1 | S0A | merged | 2026-10-20 | specs recorded from the VM by every setup run (`docs/reports/server/latest.md`) |
+| 2 | S0A | merged | 2026-10-20 | Ubuntu 24.04 verified, full upgrade each run |
+| 3 | S0A | merged | 2026-10-20 | SSH key-only, fail2ban, unattended upgrades, UFW 22/80/443; data-disk LVM (8 volumes + 16 GB swap) |
+| 4 | S0A | merged | 2026-10-20 | Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime app deploy comes with `deploy.yml` (S00) |
+| 5 | S0A | merged | 2026-10-20 | PostgreSQL 17 tuned from the profile, PgBouncer, temp on NVMe, WAL archive, slow log 100 ms |
+| 6 | S0A | merged | 2026-10-20 | Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk) |
+| 7 | S0A | merged | 2026-10-20 | Caddy auto HTTPS + HTTP/3, password + noindex; Cloudflare Origin cert waits for the Cloudflare key (PR 493/500) |
+| 8 | S0A | merged | 2026-10-20 | daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys |
+| 9 | S0A | merged | 2026-10-20 | monitor every minute → `health.json`; Telegram once the bot key is in the vault, log until then |
+| 10 | S0A | merged | 2026-10-20 | k6 baseline recorded on the server; `docs/SERVER.md` in Bengali |
+| 601 | S0A | merged | 2026-10-20 | NVMe boot unit before Docker; Direct Disk only; OS-disk fallback + alert |
+| 604 | S0A | merged | 2026-10-20 | auto profile in `infra/config/server.conf`; exact A2.9.5 table on 8 vCPU / 64 GB, scales elsewhere |
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |

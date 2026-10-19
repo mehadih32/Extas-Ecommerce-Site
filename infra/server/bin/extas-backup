@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# PR 8 — backups (A2.9.12). Run by systemd timers:
+#   extas-backup daily   — base backup (for point-in-time restore) + logical dump + config, staged on NVMe,
+#                          kept on the data disk, uploaded to Azure Blob and (encrypted) to Google Drive
+#   extas-backup wal     — push archived WAL segments to Blob (every minute)
+#   extas-backup prune   — retention from the config (later from the admin, PR 507)
+# Blob and Drive are "not connected" until the owner enters their keys in the admin vault (PR 493); the backup then
+# still runs locally and the status says so. Nothing here ever prints a secret.
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"
+SEC="$R/config/secrets"
+STATE="$R/state"
+LOCAL="$R/backups"
+STAGE="$EXTAS_NVME_MOUNT/backup-staging"
+NOW="$(date +%Y%m%d-%H%M)"
+mkdir -p "$LOCAL/base" "$LOCAL/dump" "$LOCAL/config" "$STATE"
+
+# Remotes come from env written by the app's vault sync (PR 493/507): RCLONE_CONFIG_BLOB_* / RCLONE_CONFIG_DRIVE_*.
+[ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
+blob_on()  { [ -n "${RCLONE_CONFIG_BLOB_TYPE:-}" ]; }
+drive_on() { [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ]; }
+BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"
+DRIVE_PATH="${BACKUP_DRIVE_FOLDER:-EXTAS-backups}"
+
+# The Drive copy is encrypted with a key generated on this server. The owner keeps a copy of it in the vault.
+key_file() {
+  if [ ! -s "$SEC/backup.key" ]; then head -c 48 /dev/urandom | base64 > "$SEC/backup.key"; chmod 600 "$SEC/backup.key"; fi
+  echo "$SEC/backup.key"
+}
+
+status() { # status <kind> <target> <ok|fail|off> <detail>
+  local f="$STATE/backup-$1-$2.json"
+  printf '{"kind":"%s","target":"%s","result":"%s","detail":"%s","at":"%s"}\n' "$1" "$2" "$3" "$4" "$(date -Is)" > "$f"
+}
+
+daily() {
+  local work="$STAGE/$NOW" rc=0
+  rm -rf "$work"; mkdir -p "$work"; chown 999:999 "$work"
+  # 1. Physical base backup (tar, compressed) — the starting point for WAL replay to any minute.
+  docker exec -u postgres extas-postgres bash -c "rm -rf /nvme/pgtemp/.bb-$NOW && mkdir -p /nvme/pgtemp/.bb-$NOW && \
+    pg_basebackup -U extas -D /nvme/pgtemp/.bb-$NOW -Ft -z -X none -c fast" \
+    && mv "$EXTAS_NVME_MOUNT/pgtemp/.bb-$NOW" "$work/base" || rc=1
+  # 2. Logical dump — portable, restorable on any PostgreSQL 17+.
+  docker exec extas-postgres pg_dump -U extas -d extas -Fc -Z 6 > "$work/extas.dump" || rc=1
+  # 3. Config (secrets included, so the Drive copy is encrypted; the local copy stays on the 700 config disk).
+  tar -C "$R" -czf "$work/config.tgz" config || rc=1
+  if [ $rc -ne 0 ]; then status daily local fail "backup step failed"; rm -rf "$work"; exit 1; fi
+
+  mkdir -p "$LOCAL/base/$NOW"
+  mv "$work/base"/* "$LOCAL/base/$NOW"/
+  mv "$work/extas.dump" "$LOCAL/dump/extas-$NOW.dump"
+  mv "$work/config.tgz" "$LOCAL/config/config-$NOW.tgz"
+  chmod 600 "$LOCAL/config/config-$NOW.tgz"
+  status daily local ok "$(du -sh "$LOCAL/base/$NOW" | cut -f1) base + dump"
+
+  if blob_on; then
+    if rclone copy -q "$LOCAL/base/$NOW" "blob:$BLOB_PATH/base/$NOW" && rclone copy -q "$LOCAL/dump/extas-$NOW.dump" "blob:$BLOB_PATH/dump/"; then
+      status daily blob ok "$NOW"
+    else status daily blob fail "upload failed"; rc=1; fi
+  else status daily blob off "not connected — add the key in Keys & connections"; fi
+
+  if drive_on; then
+    gpg --batch --yes --pinentry-mode loopback --passphrase-file "$(key_file)" --symmetric --cipher-algo AES256 \
+      -o "$work/extas-$NOW.dump.gpg" "$LOCAL/dump/extas-$NOW.dump"
+    gpg --batch --yes --pinentry-mode loopback --passphrase-file "$(key_file)" --symmetric --cipher-algo AES256 \
+      -o "$work/config-$NOW.tgz.gpg" "$LOCAL/config/config-$NOW.tgz"
+    if rclone copy -q "$work" "drive:$DRIVE_PATH/$NOW" --include '*.gpg'; then status daily drive ok "$NOW"
+    else status daily drive fail "upload failed"; rc=1; fi
+  else status daily drive off "not connected — add the key in Keys & connections"; fi
+  rm -rf "$work"
+  exit $rc
+}
+
+wal() {
+  blob_on || { status wal blob off "not connected"; exit 0; }
+  # Upload each archived segment once; the local copy stays until prune (local point-in-time restore too).
+  if rclone copy -q --ignore-existing "$LOCAL/wal" "blob:$BLOB_PATH/wal/" --min-age 5s 2>/dev/null; then
+    status wal blob ok "pushed"
+  else status wal blob fail "push failed"; exit 1; fi
+}
+
+prune() {
+  find "$LOCAL/dump" -name '*.dump' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
+  find "$LOCAL/config" -name '*.tgz' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
+  find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -exec rm -rf {} +
+  # WAL older than the oldest kept base backup is no longer needed locally.
+  local oldest
+  oldest="$(find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -printf '%T@\n' | sort -n | head -1 | cut -d. -f1)"
+  [ -n "$oldest" ] && find "$LOCAL/wal" -type f ! -newermt "@$oldest" -delete
+  blob_on && rclone delete -q --min-age "${BACKUP_KEEP_BLOB_DAYS}d" "blob:$BLOB_PATH" || true
+  drive_on && rclone delete -q --min-age "${BACKUP_KEEP_DRIVE_DAYS}d" "drive:$DRIVE_PATH" || true
+  status prune local ok "kept ${BACKUP_KEEP_LOCAL_DAYS} days locally"
+}
+
+case "${1:-}" in
+  daily) daily ;;
+  wal) wal ;;
+  prune) prune ;;
+  *) echo "usage: extas-backup daily|wal|prune" >&2; exit 2 ;;
+esac

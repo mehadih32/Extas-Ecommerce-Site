@@ -1,0 +1,31 @@
+# CI on GitHub-hosted runners (PR 17). Heavy jobs move to extas-vm once the app exists.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  infra:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck
+        run: shellcheck -x -S warning -e SC2034 infra/server/setup.sh infra/server/lib.sh infra/server/steps/*.sh infra/server/bin/* infra/tests/run.sh infra/bootstrap/install-runner.sh
+      - name: Infra unit tests (disk detection, NVMe detection, auto profile)
+        run: infra/tests/run.sh
+      - name: Compose file is valid
+        run: |
+          infra/server/bin/extas-profile --cpu 8 --mem-kb 65842000 > /tmp/profile.env
+          printf 'EXTAS_ROOT=/srv/extas\nEXTAS_NVME_MOUNT=/mnt/nvme\nEXTAS_STAGING_HOST=example.test\nIMG_POSTGRES=postgres:17\nIMG_REDIS=redis:7.4-alpine\nIMG_MEILI=getmeili/meilisearch:v1.15\nIMG_CADDY=caddy:2.10-alpine\nREDIS_PASSWORD=x\nREDIS_CACHE_MAX_MB=1\nREDIS_QUEUE_MAX_MB=1\nMEILI_MASTER_KEY=x\nMEILI_INDEX_MEM_MB=1\n' > /tmp/stack.env
+          sudo mkdir -p /srv/extas/config/secrets && sudo touch /srv/extas/config/secrets/postgres.env
+          docker compose -f infra/stack/compose.yml --env-file /tmp/profile.env --env-file /tmp/stack.env config -q
+      - name: Caddyfile is valid
+        run: |
+          mkdir -p /tmp/sites && printf 'root * /srv/www\nfile_server\n' > /tmp/sites/upstream.caddy && : > /tmp/sites/auth.caddy && : > /tmp/sites/noindex.caddy
+          docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile

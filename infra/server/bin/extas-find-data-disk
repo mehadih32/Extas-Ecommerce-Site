@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# PR 1/3 — find the 1 TB data disk, safely. Prints its path, or nothing.
+# A disk qualifies only if it is: a whole disk, not the disk holding /, not the temporary NVMe ("Direct Disk"),
+# at least MIN_GB, with no partitions and no filesystem/LVM signature. If the volume group already exists, its disk
+# is printed instead (re-runs are no-ops). LSBLK_JSON can be set to a file for tests.
+set -euo pipefail
+MIN_GB="${MIN_GB:-500}"
+VG="${EXTAS_VG:-extas}"
+if [ -z "${LSBLK_JSON:-}" ] && command -v pvs >/dev/null 2>&1; then
+  pv="$(pvs --noheadings -o pv_name,vg_name 2>/dev/null | awk -v vg="$VG" '$2==vg{print $1; exit}')"
+  if [ -n "$pv" ]; then echo "$pv"; exit 0; fi
+fi
+if [ -n "${LSBLK_JSON:-}" ]; then json="$(cat "$LSBLK_JSON")"; else json="$(lsblk -J -b -p -o NAME,TYPE,SIZE,MODEL,FSTYPE,MOUNTPOINTS)"; fi
+ROOT_SRC="${ROOT_SRC:-$(findmnt -no SOURCE / 2>/dev/null || true)}"
+jq -r --arg root "$ROOT_SRC" --argjson min "$((MIN_GB * 1024 * 1024 * 1024))" '
+  def holds_root: [.. | objects | select(.name? == $root or ((.mountpoints? // []) | index("/")))] | length > 0;
+  .blockdevices[]
+  | select(.type == "disk")
+  | select((.model // "") | test("Direct Disk") | not)
+  | select(holds_root | not)
+  | select(.size >= $min)
+  | select((.children // []) | length == 0)
+  | select((.fstype // "") == "")
+  | .name' <<<"$json"

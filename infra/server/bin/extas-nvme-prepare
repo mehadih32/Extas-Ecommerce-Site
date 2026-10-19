@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# PR 601 — NVMe temporary-disk boot unit (A2.9.4).
+# Runs at EVERY boot from extas-nvme.service, before Docker (and so before Postgres, Redis and the app).
+# On Azure v6 sizes the local NVMe ("Microsoft NVMe Direct Disk") comes up raw after a stop, deallocate,
+# maintenance or move. This script: detect → format ext4 if not already ours → mount → folder layout → ownership.
+# It only ever formats a disk whose model says it is the temporary Direct Disk. The OS disk and the 1 TB data disk
+# (model "MSFT NVMe Accelerator") are never touched.
+# If no temporary disk is found the folders are made on the OS disk instead, so the shop keeps running,
+# and /run/extas/nvme-missing is written for the monitor to alert on (PR 9).
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+[ -f "$CONF" ] && . "$CONF"
+MOUNT="${EXTAS_NVME_MOUNT:-/mnt/nvme}"
+ROOT="${EXTAS_ROOT:-/srv/extas}"
+LABEL="extas-nvme"
+SYS_BLOCK="${SYS_BLOCK:-/sys/block}"   # overridable for tests
+
+# Prints the temporary NVMe devices (/dev/nvmeXnY), one per line.
+find_temp_nvme() {
+  local d model
+  for d in "$SYS_BLOCK"/nvme*n*; do
+    [ -e "$d" ] || continue
+    case "$(basename "$d")" in *p[0-9]*) continue ;; esac   # partitions
+    model="$(cat "$d/device/model" 2>/dev/null || true)"
+    case "$model" in
+      *"NVMe Direct Disk"*) echo "/dev/$(basename "$d")" ;;
+    esac
+  done
+}
+
+if [ "${1:-}" = "--list" ]; then find_temp_nvme; exit 0; fi
+mkdir -p /run/extas
+
+DEV="$(find_temp_nvme | head -1 || true)"
+STATUS="mounted"
+if [ -z "$DEV" ]; then
+  STATUS="missing"
+  echo "no temporary NVMe found — using $MOUNT on the OS disk" > /run/extas/nvme-missing
+  mkdir -p "$MOUNT"
+elif mountpoint -q "$MOUNT"; then
+  rm -f /run/extas/nvme-missing
+else
+  rm -f /run/extas/nvme-missing
+  # Never format a device that is mounted anywhere (belt and braces).
+  if lsblk -no MOUNTPOINT "$DEV" | grep -q .; then
+    echo "refusing: $DEV is mounted elsewhere" >&2; exit 1
+  fi
+  CUR_LABEL="$(blkid -s LABEL -o value "$DEV" 2>/dev/null || true)"
+  CUR_TYPE="$(blkid -s TYPE -o value "$DEV" 2>/dev/null || true)"
+  if [ "$CUR_TYPE" != "ext4" ] || [ "$CUR_LABEL" != "$LABEL" ]; then
+    mkfs.ext4 -F -q -L "$LABEL" -m 0 -E lazy_itable_init=1,lazy_journal_init=1 "$DEV"
+    STATUS="formatted"
+  fi
+  mkdir -p "$MOUNT"
+  mount -o noatime,nodiscard "$DEV" "$MOUNT"
+fi
+
+# Folder layout (A2.9.3). uid 999 = postgres and redis in the official images; 1000 = node in the app image.
+mk() { mkdir -p "$MOUNT/$1"; chown "$2" "$MOUNT/$1"; chmod "$3" "$MOUNT/$1"; }
+mk redis-cache     999:999   0750
+mk pgtemp          999:999   0700
+mk imagework       1000:1000 0750
+mk studio          1000:1000 0750
+mk scratch         1000:1000 0750
+mk build-cache     ghrunner:ghrunner 0750 2>/dev/null || mk build-cache root:root 0755
+mk pnpm-store      ghrunner:ghrunner 0750 2>/dev/null || mk pnpm-store root:root 0755
+mk backup-staging  root:root 0700
+
+# Postgres temp tablespace: the version directory (PG_<ver>_<catversion>) lives inside the tablespace folder and
+# vanishes with the disk. Its name is recorded on the OS disk when the tablespace is created (extas-stack), so this
+# unit never has to wait for the data disk, and the folder is recreated here.
+if [ -f /etc/extas/pgtemp.subdir ]; then
+  SUB="$(cat /etc/extas/pgtemp.subdir)"
+  case "$SUB" in PG_*) mk "pgtemp/$SUB" 999:999 0700 ;; esac
+fi
+
+FREE_GB="$(df -BG --output=avail "$MOUNT" | tail -1 | tr -dc '0-9')"
+printf '{"status":"%s","device":"%s","mount":"%s","free_gb":%s,"at":"%s"}\n' \
+  "$STATUS" "${DEV:-none}" "$MOUNT" "${FREE_GB:-0}" "$(date -Is)" > /run/extas/nvme.json
+echo "nvme: $STATUS ${DEV:-none} → $MOUNT (${FREE_GB:-0} GB free)"

@@ -1,0 +1,105 @@
+# S0A — server setup as code (PR 1–10, 601, 604). Runs ON the VM through the self-hosted runner (CN-003).
+# Idempotent: every push that changes the server code re-runs it safely. The machine report (no secrets) is
+# committed back to docs/reports/server/ so later sessions can read the server's state without SSH.
+name: server-setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Run only these steps (comma list, e.g. stack,monitor). Empty = all."
+        required: false
+        default: ""
+      data_disk:
+        description: "Data disk device, only if auto-detect reports it is unsure (e.g. /dev/nvme0n2)"
+        required: false
+        default: ""
+      k6_force:
+        description: "Re-measure the k6 baseline"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - "infra/server/**"
+      - "infra/stack/**"
+      - "infra/config/**"
+      - ".github/workflows/server-setup.yml"
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Server setup (idempotent)
+        id: setup
+        continue-on-error: true
+        env:
+          ONLY: ${{ inputs.only }}
+          DATA_DISK: ${{ inputs.data_disk }}
+          K6_FORCE: ${{ inputs.k6_force && 'yes' || 'no' }}
+        run: |
+          args=()
+          [ -n "$ONLY" ] && args=(--only "$ONLY")
+          sudo env EXTAS_DATA_DISK="$DATA_DISK" K6_FORCE="$K6_FORCE" DELIVERY_DIR="$RUNNER_TEMP/deliver" \
+            GITHUB_SHA="$GITHUB_SHA" bash infra/server/setup.sh "${args[@]}"
+
+      - name: Check for the one-time owner delivery
+        id: deliver
+        run: |
+          if sudo test -f "$RUNNER_TEMP/deliver/staging-login.txt"; then
+            sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/deliver"
+            echo "has=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The preview password is generated on the server and never committed. It reaches the owner once through
+      # this private, 1-day artifact; the build agent reads it and tells him in chat (START-HERE step 5).
+      - name: Upload preview login (private, 1 day)
+        if: steps.deliver.outputs.has == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-login
+          path: ${{ runner.temp }}/deliver/staging-login.txt
+          retention-days: 1
+
+      - name: Mark delivered and remove the local copy
+        if: steps.deliver.outputs.has == 'true'
+        run: |
+          sudo touch /srv/extas/state/staging-password.delivered
+          shred -u "$RUNNER_TEMP/deliver/staging-login.txt"
+
+      - name: Commit the machine report
+        if: always()
+        run: |
+          set -eu
+          [ -f /srv/extas/reports/latest.md ] || { echo "no report"; exit 0; }
+          mkdir -p docs/reports/server
+          cp /srv/extas/reports/latest.md docs/reports/server/latest.md
+          cp /srv/extas/reports/latest.md "docs/reports/server/$(date +%Y-%m-%d)-setup.md"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          git add docs/reports/server
+          git diff --cached --quiet && exit 0
+          git commit -q -m "server report: $(date '+%Y-%m-%d %H:%M')"
+          for i in 1 2 3 4; do
+            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail if setup needs attention
+        if: steps.setup.outcome != 'success'
+        run: |
+          echo "::error::Server setup needs attention — see docs/reports/server/latest.md"
+          exit 1

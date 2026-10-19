@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# PR 604 — hardware-aware auto profile.
+# Detects CPU and RAM and computes every RAM/CPU limit from the reference split in infra/config/server.conf.
+# On the reference box (8 vCPU / 64 GB) the output is exactly the A2.9.5 table; on any other box it scales.
+# Usage: extas-profile [--cpu N] [--mem-kb N]   (overrides for tests and the admin's smaller-server preview)
+# Prints shell-sourceable KEY=VALUE lines (MiB for memory, decimal CPUs for docker `cpus`).
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../../config/server.conf
+. "${EXTAS_CONFIG_FILE:-$HERE/../../config/server.conf}"
+
+CPU="$(nproc)"
+MEM_KB="$(awk '/^MemTotal:/{print $2}' /proc/meminfo)"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --cpu) CPU="$2"; shift 2 ;;
+    --mem-kb) MEM_KB="$2"; shift 2 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+
+# The kernel reports a little less than the VM's nominal RAM (firmware and kernel reservations).
+# Snap to the nominal size the provider sells, so 64 GB means 64 GB in the table.
+NOMINAL_GB="$(awk -v kb="$MEM_KB" 'BEGIN{
+  g = kb/1024/1024; n = split("1 2 4 8 12 16 24 32 48 64 96 128 192 256 384 512 768 1024", s, " ");
+  for (i=1;i<=n;i++) if (g <= s[i] && g >= s[i]*0.90) { print s[i]; exit }
+  printf "%d", g }')"
+
+awk -v cpu="$CPU" -v ram="$NOMINAL_GB" \
+  -v rcpu="$PROFILE_REF_CPU" -v rram="$PROFILE_REF_RAM_GB" \
+  -v pg="$PROFILE_PG_RAM_GB" -v pgc="$PROFILE_PG_CPU" \
+  -v rd="$PROFILE_REDIS_RAM_GB" -v rdc="$PROFILE_REDIS_CPU" -v rdq="$PROFILE_REDIS_QUEUE_SHARE_PCT" \
+  -v me="$PROFILE_MEILI_RAM_GB" -v mec="$PROFILE_MEILI_CPU" \
+  -v ap="$PROFILE_APP_RAM_GB" -v apc="$PROFILE_APP_CPU" -v apr="$PROFILE_APP_REPLICAS" \
+  -v wk="$PROFILE_WORKER_RAM_GB" -v wkc="$PROFILE_WORKER_CPU" \
+  -v jb="$PROFILE_JOBS_RAM_GB" -v jbc="$PROFILE_JOBS_CPU" \
+  -v cd="$PROFILE_CADDY_RAM_GB" -v cdc="$PROFILE_CADDY_CPU" \
+  -v os="$PROFILE_OS_RAM_GB" -v ecs="$PROFILE_PG_EFFECTIVE_CACHE_GB" -v head="$PROFILE_PG_LIMIT_HEADROOM_PCT" \
+  -v maxc="$PROFILE_PG_MAX_CONNECTIONS" -v pool="$PROFILE_PGBOUNCER_POOL" \
+  -v wm="$PROFILE_PG_WORK_MEM_MB" -v rwm="$PROFILE_PG_REPORT_WORK_MEM_MB" -v slow="$PROFILE_PG_SLOW_MS" '
+function m(gb, floor_mb,   v) { v = int(gb * 1024 * ram / rram); return (v < floor_mb) ? floor_mb : v }
+function c(n,   v) { v = n * cpu / rcpu; if (v < 0.25) v = 0.25; if (v > cpu) v = cpu; return sprintf("%.2f", v) }
+BEGIN {
+  pg_mb = m(pg, 512); rd_mb = m(rd, 512); me_mb = m(me, 512); ap_mb = m(ap, 1024)
+  wk_mb = m(wk, 512); jb_mb = m(jb, 384); cd_mb = m(cd, 128); os_mb = m(os, 1536)
+  reps = int(apr * cpu / rcpu); if (reps < 1) reps = 1
+  rq_mb = int(rd_mb * rdq / 100); rc_mb = rd_mb - rq_mb
+  # PostgreSQL: shared_buffers is the table value; the container gets headroom above it.
+  sb_mb = pg_mb; pg_lim = int(pg_mb * (100 + head) / 100)
+  ecs_mb = m(ecs, 1024)
+  par = int(pgc * cpu / rcpu); if (par < 1) par = 1
+  mwm = int(pg_mb / 8); if (mwm > 2048) mwm = 2048; if (mwm < 64) mwm = 64
+  printf "PROFILE_DETECTED_CPU=%d\nPROFILE_DETECTED_RAM_GB=%d\n", cpu, ram
+  printf "PROFILE_IS_REFERENCE=%s\n", (cpu == rcpu && ram == rram) ? "yes" : "no"
+  printf "PG_MEM_MB=%d\nPG_LIMIT_MB=%d\nPG_CPUS=%s\n", pg_mb, pg_lim, c(pgc)
+  printf "PG_SHARED_BUFFERS_MB=%d\nPG_EFFECTIVE_CACHE_MB=%d\nPG_MAINT_WORK_MEM_MB=%d\n", sb_mb, ecs_mb, mwm
+  printf "PG_WORK_MEM_MB=%d\nPG_REPORT_WORK_MEM_MB=%d\nPG_MAX_CONNECTIONS=%d\nPG_SLOW_MS=%d\n", wm, rwm, maxc, slow
+  printf "PG_MAX_PARALLEL=%d\nPGBOUNCER_POOL=%d\n", par, pool
+  printf "REDIS_MEM_MB=%d\nREDIS_CACHE_MEM_MB=%d\nREDIS_QUEUE_MEM_MB=%d\nREDIS_CPUS=%s\n", rd_mb, rc_mb, rq_mb, c(rdc)
+  printf "MEILI_MEM_MB=%d\nMEILI_CPUS=%s\n", me_mb, c(mec)
+  per = apc * cpu / rcpu / reps; if (per < 0.25) per = 0.25
+  printf "APP_MEM_MB=%d\nAPP_REPLICAS=%d\nAPP_REPLICA_MEM_MB=%d\nAPP_REPLICA_CPUS=%.2f\n", ap_mb, reps, int(ap_mb / reps), per
+  printf "WORKER_MEM_MB=%d\nWORKER_CPUS=%s\n", wk_mb, c(wkc)
+  printf "JOBS_MEM_MB=%d\nJOBS_CPUS=%s\n", jb_mb, c(jbc)
+  printf "CADDY_MEM_MB=%d\nCADDY_CPUS=%s\n", cd_mb, c(cdc)
+  printf "OS_RESERVE_MB=%d\n", os_mb
+  printf "PROFILE_TOTAL_MB=%d\n", pg_mb + rd_mb + me_mb + ap_mb + wk_mb + jb_mb + cd_mb + os_mb
+}'
