@@ -1,6 +1,6 @@
-# Server report — 2026-10-20 02:40 +06
+# Server report — 2026-10-20 02:47 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `c96b2584d64f9a1196bebd49f6185a71f5f4b1a3`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `3a8d19821579362cc955a176678ca65a8f793d0d`. Overall: **PASS**.
 
 ## Machine
 
@@ -16,15 +16,24 @@ Run by `infra/server/setup.sh` (S0A) from commit `c96b2584d64f9a1196bebd49f6185a
 ### Disks
 
 ```
-NAME          SIZE TYPE FSTYPE MOUNTPOINTS MODEL
-sr0           630K rom                     Virtual DVD-ROM
-nvme0n1         1T disk                    MSFT NVMe Accelerator v1.0
-nvme0n2       128G disk                    MSFT NVMe Accelerator v1.0
-├─nvme0n2p1   127G part ext4   /
-├─nvme0n2p14    4M part
-├─nvme0n2p15  106M part vfat   /boot/efi
-└─nvme0n2p16  913M part ext4   /boot
-nvme1n1       440G disk                    Microsoft NVMe Direct Disk v2
+NAME              SIZE TYPE FSTYPE      MOUNTPOINTS              MODEL
+sr0               630K rom                                       Virtual DVD-ROM
+nvme0n1             1T disk LVM2_member                          MSFT NVMe Accelerator v1.0
+├─extas-base       10G lvm  ext4        /srv/extas
+├─extas-postgres  250G lvm  ext4        /srv/extas/data/postgres
+├─extas-redis      20G lvm  ext4        /srv/extas/data/redis
+├─extas-search     30G lvm  ext4        /srv/extas/data/search
+├─extas-media     100G lvm  ext4        /srv/extas/data/media
+├─extas-backup    150G lvm  ext4        /srv/extas/backups
+├─extas-logs       30G lvm  ext4        /srv/extas/logs
+├─extas-docker    200G lvm  ext4        /var/lib/docker
+└─extas-swap       16G lvm  swap        [SWAP]
+nvme0n2           128G disk                                      MSFT NVMe Accelerator v1.0
+├─nvme0n2p1       127G part ext4        /
+├─nvme0n2p14        4M part
+├─nvme0n2p15      106M part vfat        /boot/efi
+└─nvme0n2p16      913M part ext4        /boot
+nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe Direct Disk v2
 ```
 
 ## Steps
@@ -34,7 +43,7 @@ nvme1n1       440G disk                    Microsoft NVMe Direct Disk v2
 | PR 1 · specs recorded | OK | Standard_E8ds_v6, 8 vCPU, 62.8 GiB, MalaysiaWest |
 | PR 2 · OS updates | OK | Ubuntu 24.04 up to date |
 | PR 3 · hardening | OK | SSH key-only, root login off, fail2ban on, security updates on (reboot 04:30), UFW 22/80/443, Asia/Dhaka, host extas-vm |
-| PR 601 · NVMe | OK | /dev/nvme1n1 formatted at /mnt/nvme, 433 GB free; unit runs at every boot before Docker |
+| PR 601 · NVMe | OK | /dev/nvme1n1 mounted at /mnt/nvme, 433 GB free; unit runs at every boot before Docker |
 | PR 3 · data disk | OK | /dev/nvme0n1 → VG extas: 8 volumes + 16 GB swap mounted, 217.97g free for growth |
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
@@ -48,8 +57,8 @@ nvme1n1       440G disk                    Microsoft NVMe Direct Disk v2
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · restore test | OK | base 20261020-0240, 2 tables restored (live has 2) |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
-| PR 10 · k6 baseline | OK | 50 users × 30s: p95 7.21 ms, 15044 req/s, failed 0% |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: সাইট ধীর (99999 ms) |
+| PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
 
 ## Auto profile (PR 604)
