@@ -48,4 +48,22 @@ echo "Microsoft NVMe Direct Disk v2" > "$T/nvme1n1/device/model"
 check "temp NVMe is the Direct Disk only" "$(SYS_BLOCK=$T EXTAS_CONFIG_FILE=/nonexistent $B/extas-nvme-prepare --list)" "/dev/nvme1n1"
 rm -rf "$T"
 
+# env_set (PR 491–496: the database URLs in app.env): replaces in place, keeps other lines, adds a missing key,
+# prints nothing, keeps mode 600 and leaves the file alone when nothing changes
+# shellcheck source=../server/lib.sh
+EXTAS_CONFIG_FILE=../config/server.conf . ../server/lib.sh
+T="$(mktemp -d)"; E="$T/app.env"
+printf 'SESSION_SECRET=keep\nDATABASE_URL=old\n' > "$E"; chmod 644 "$E"
+out="$(env_set "$E" DATABASE_URL 'postgresql://u:p@h:6432/d?pgbouncer=true&x=\1')"
+env_set "$E" DATABASE_DIRECT_URL 'postgresql://u:p@h:5432/d'
+check "env_set replaces in place" "$(sed -n 2p "$E")" 'DATABASE_URL=postgresql://u:p@h:6432/d?pgbouncer=true&x=\1'
+check "env_set keeps other lines" "$(sed -n 1p "$E")" "SESSION_SECRET=keep"
+check "env_set adds a missing key" "$(sed -n 3p "$E")" "DATABASE_DIRECT_URL=postgresql://u:p@h:5432/d"
+check "env_set prints nothing" "$out" ""
+check "env_set file is 600" "$(stat -c %a "$E")" "600"
+inode="$(stat -c %i "$E")"
+env_set "$E" DATABASE_DIRECT_URL 'postgresql://u:p@h:5432/d'
+check "env_set leaves an unchanged file alone" "$(stat -c %i "$E"):$(wc -l < "$E")" "$inode:3"
+rm -rf "$T"
+
 exit $fail

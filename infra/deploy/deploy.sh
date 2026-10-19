@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # PR 4 / PR 17 — zero-downtime app deploy with automatic rollback (A2.9, START-HERE step 2).
 # Runs on the VM through .github/workflows/deploy.yml (self-hosted runner extas-vm, CN-003).
-#   sudo infra/deploy/deploy.sh <image>     start <image> in the idle colour, smoke-test it, switch Caddy, stop the old
-#   sudo infra/deploy/deploy.sh rollback    bring the previous image back the same way
+#   sudo infra/deploy/deploy.sh <image> <migrate-image>
+#                                           migrate the database with <migrate-image>, then start <image> in the idle
+#                                           colour, smoke-test it, switch Caddy, stop the old
+#   sudo infra/deploy/deploy.sh rollback    bring the previous image back the same way (the database stays as it is)
+# Database first (PR 13, 496): before the new colour starts, the migrate image runs `prisma migrate deploy` straight to
+# PostgreSQL and then the settings sync, on the extas network. If either fails, nothing else happens: the live colour
+# keeps the traffic. Migrations only add (expand first, contract in a later release), so the old colour keeps working
+# on the migrated database while the new one starts, and a rollback needs no down-migration.
 # Blue/green: the live colour (blue|green) is in $EXTAS_ROOT/state/app.color. The new colour starts next to the old
 # one, must pass its health check and the smoke test, then Caddy switches its upstream with a graceful reload (open
 # requests finish). If anything fails before or right after the switch, the old colour keeps or takes back the
@@ -22,8 +28,8 @@ die() { log "FAIL: $*"; exit 1; }
 record() { # record <result> <detail>  (the newest entry is last-deploy.json; history stays in state/deploys/)
   local f; f="$STATE/deploys/$(date +%Y%m%d-%H%M%S).json"
   jq -n --arg result "$1" --arg detail "$2" --arg image "${IMAGE:-}" --arg sha "${GIT_SHA:-}" \
-    --arg color "${NEW:-}" --arg previous "${PREV_IMAGE:-}" --arg at "$(date -Is)" \
-    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,at:$at}' > "$f"
+    --arg color "${NEW:-}" --arg previous "${PREV_IMAGE:-}" --arg migrate "${MIGRATE_IMAGE:-}" --arg at "$(date -Is)" \
+    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at}' > "$f"
   cp "$f" "$STATE/last-deploy.json"
   [ "$1" = ok ] && cp "$f" "$STATE/last-good-deploy.json"
   return 0
@@ -50,6 +56,20 @@ reverse_proxy {
 	fail_duration 10s
 }
 CONF
+}
+
+migrate_db() { # migrate_db <image>: schema migrations, then the settings sync — never prints a secret
+  local img="$1" envf rc=0
+  # Only the two connection strings go into the one-shot container (not the session or vault keys), through a
+  # root-only file in the secrets folder that is removed straight after.
+  envf="$(mktemp "$SEC/.migrate.XXXXXX")"
+  grep -E '^(DATABASE_URL|DATABASE_DIRECT_URL)=' "$SEC/app.env" > "$envf" || true
+  if ! grep -q '^DATABASE_DIRECT_URL=' "$envf"; then
+    rm -f "$envf"; log "DATABASE_DIRECT_URL is not in app.env — run server-setup (stack) first"; return 1
+  fi
+  docker run --rm --name "extas-migrate-$$" --network extas --env-file "$envf" "$img" || rc=$?
+  rm -f "$envf"
+  return "$rc"
 }
 
 caddy_reload() { docker exec extas-caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null; }
@@ -84,7 +104,8 @@ if [ "${1:-}" = rollback ]; then
   [ -n "$IMAGE" ] || die "no previous image to roll back to"
   log "rollback to $IMAGE"
 else
-  IMAGE="${1:?usage: deploy.sh <image> | rollback}"
+  IMAGE="${1:?usage: deploy.sh <image> <migrate-image> | rollback}"
+  MIGRATE_IMAGE="${2:?usage: deploy.sh <image> <migrate-image> | rollback}"
 fi
 mkdir -p "$STATE/deploys"
 docker image inspect "$IMAGE" >/dev/null 2>&1 || die "image $IMAGE is not on this server"
@@ -97,6 +118,19 @@ log "live: $CUR · new: $NEW · image: $IMAGE"
 [ -f "$SEC/app.env" ] || die "app.env missing — run server-setup (stack) first"
 grep -q '^APP_NODE_HEAP_MB=' "$R/config/profile.env" || die "profile.env is older than this app — run server-setup (profile) first"
 [ -f "$SEC/app-connections.env" ] || install -m 0600 /dev/null "$SEC/app-connections.env"
+
+# ---- 0. the database: schema migrations, then the settings migration (PR 496) --------------------------------
+if [ -n "${MIGRATE_IMAGE:-}" ]; then
+  docker image inspect "$MIGRATE_IMAGE" >/dev/null 2>&1 || die "migrate image $MIGRATE_IMAGE is not on this server"
+  log "migrating the database with $MIGRATE_IMAGE"
+  if ! migrate_db "$MIGRATE_IMAGE"; then
+    record fail "database migration failed; live version unchanged"
+    die "database migration failed (live version unchanged)"
+  fi
+  log "database migrated and settings in sync"
+else
+  log "rollback: the database stays as it is (migrations only go forward)"
+fi
 
 # ---- 1. start the new colour next to the old one --------------------------------------------------------------
 app "$NEW" down --remove-orphans >/dev/null 2>&1 || true
@@ -135,5 +169,7 @@ fi
 record ok "$NEW live"
 # Keep the newest images (current + rollback targets); older ones only take disk space.
 docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-web | sort -k2 -r | awk 'NR>5{print $1}' \
+  | xargs -r docker rmi >/dev/null 2>&1 || true
+docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-migrate | sort -k2 -r | awk 'NR>3{print $1}' \
   | xargs -r docker rmi >/dev/null 2>&1 || true
 log "done: $IMAGE on $NEW"

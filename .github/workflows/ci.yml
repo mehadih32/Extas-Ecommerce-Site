@@ -78,8 +78,11 @@ jobs:
           retention-days: 7
       - name: Production image builds
         run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
+      - name: Migrate image builds (deploy step 0 — schema migrations + settings sync)
+        run: docker build -f apps/web/Dockerfile --target migrate --build-arg GIT_SHA="$GITHUB_SHA" -t extas-migrate:ci .
 
-  # PR 13 / 603 — the schema's migrations apply to a real PostgreSQL 17 with pg_trgm (throwaway CI database).
+  # PR 13 / 603 — the schema's migrations apply to a real PostgreSQL 17 with pg_trgm (throwaway CI database); then the
+  # settings framework's database tests (PR 491–496, 510).
   db:
     runs-on: ubuntu-24.04
     services:
@@ -113,3 +116,15 @@ jobs:
         env:
           EXTAS_TEST_DATABASE_URL: ${{ env.DATABASE_DIRECT_URL }}
         run: pnpm --filter @extas/vault test
+      # PR 491, 492, 496, 510 — resolver precedence, validation, reset to default and the settings migration, on a real
+      # PostgreSQL (each test file creates and drops its own throwaway database).
+      - name: Settings tests on PostgreSQL
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/settings test
+      - name: Settings sync, twice (the second run must change nothing)
+        run: |
+          pnpm --filter @extas/settings sync | tee /tmp/sync-1.txt
+          pnpm --filter @extas/settings sync | tee /tmp/sync-2.txt
+          grep -q 'settings sync: applied' /tmp/sync-1.txt
+          grep -q 'settings sync: unchanged' /tmp/sync-2.txt

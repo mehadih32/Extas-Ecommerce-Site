@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 7/19 · total 19/598**
+**Progress: S0A 12/12 · S00 11/19 · total 23/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -54,6 +54,10 @@ the server.*
 | 603 | S00 | merged | 2026-10-20 | index pack in the schema (category page, variant by colour/size, order by phone, history, list filters, style hierarchy), `pg_trgm` GIN indexes, 4 report materialized views |
 | 494 | S00 | merged | 2026-10-20 | `tools/hardcode-guard.mjs` + rules in `tools/hardcode-guard.json`, first CI step: secrets, owner data (brand, domain, phones, e-mails), ৳ amounts, business numbers, visible JSX text; opt-out only with a written reason |
 | 493 | S00 | merged | 2026-10-20 | `packages/vault`: envelope encryption (server master key → HKDF → wrapped data keys → AES-256-GCM per secret, bound to its name and store), every read logged, revoke without delete, data-key and master-key rotation; tested on PostgreSQL in CI. The Keys & connections page comes with PR 500 |
+| 491 | S00 | merged | 2026-10-20 | `packages/settings`: every setting is declared once (key, type, default, validation, who may change it, Bengali/English label); `pnpm --filter @extas/settings sync` writes the declarations to the database, idempotent behind a lock; deploy runs schema migrations + sync before the new colour starts |
+| 492 | S00 | merged | 2026-10-20 | two-tier resolver: store value → installation value → declared default, cached in memory and refreshed when any setting changes (works through PgBouncer); the status page reads its language and time zone through it |
+| 496 | S00 | merged | 2026-10-20 | settings changes are validated, versioned and logged (who, when, old → new); an old value is never deleted |
+| 510 | S00 | merged | 2026-10-20 | reset to default: a setting goes back to the level above it (store → installation → declared default), logged like any change; `/api/admin/settings` (admin role) lists, sets and resets |
 
 ## The stage table
 

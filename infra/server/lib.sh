@@ -48,6 +48,24 @@ gen_secret() {
 # secret_get <file> <KEY>
 secret_get() { grep "^${2}=" "$1" 2>/dev/null | head -1 | cut -d= -f2-; }
 
+# env_set <file> <KEY> <value> — sets KEY=value in a 600 env file: replaces the existing line (or adds one), keeps every
+# other line, rewrites only when something differs. For values derived from secrets (connection strings): the value
+# reaches awk through its environment, never through a command line (ps) or the output.
+env_set() {
+  local file="$1" key="$2" tmp
+  mkdir -p "$(dirname "$file")"
+  touch "$file"; chmod 600 "$file"
+  tmp="$(mktemp)"
+  ENV_SET_VALUE="$3" awk -v k="$key" '
+    BEGIN { v = ENVIRON["ENV_SET_VALUE"]; done = 0 }
+    index($0, k "=") == 1 { if (!done) { print k "=" v; done = 1 }; next }
+    { print }
+    END { if (!done) print k "=" v }' "$file" > "$tmp"
+  if cmp -s "$tmp" "$file"; then rm -f "$tmp"; return 0; fi
+  install -m 0600 "$tmp" "$file"
+  rm -f "$tmp"
+}
+
 apt_install() {
   local missing=() p
   for p in "$@"; do dpkg -s "$p" >/dev/null 2>&1 || missing+=("$p"); done

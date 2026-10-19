@@ -47,3 +47,8 @@
 `.github/workflows/server-setup.yml` on the runner `extas-vm`. Helpers installed on the VM: `extas-nvme-prepare`,
 `extas-profile`, `extas-backup daily|wal|prune`, `extas-restore test | --from local|blob|drive --at "…" --target staging|production`,
 `extas-monitor` (state in `/srv/extas/state/health.json`). Secrets live only in `/srv/extas/config/secrets` (mode 600).
+Deploy (`.github/workflows/deploy.yml` → `infra/deploy/deploy.sh <app-image> <migrate-image>`): the migrate image
+(`apps/web/Dockerfile --target migrate`) first runs `prisma migrate deploy` and the settings sync (PR 496) on the
+`extas` network with `DATABASE_DIRECT_URL`; only then does the new colour start. A failed migration stops the deploy
+with the live colour untouched. The app reads `DATABASE_URL` (PgBouncer, transaction pool) and `DATABASE_DIRECT_URL`
+from `secrets/app.env`, written by `steps/09-stack.sh` from the generated Postgres password.
