@@ -29,20 +29,21 @@ documents to it ([how](#how-it-is-built)).
 
 | Date | Problem | Visitors hit | Status |
 |---|---|---|---|
-| — | No problems recorded yet. The list fills itself automatically once the shop's checkout is live on new.extas.com.bd. | — | — |
+| 20 Oct | Admin: right after signing in, the page said "This page couldn't load". Cause: a fresh installation had no mother store, and every admin page works on it | The owner (first sign-in) | **Fixed** in #19 (PR 508: the migrate step makes the mother store; PR 4: CI signs in end to end before every deploy) |
+| — | Customer problems fill this list automatically once the shop's checkout is live on new.extas.com.bd. | — | — |
 
 ## Status dashboard
 
-> **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01) আর স্টক-ERP (S09) — এই চারটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02) শুরু হয়েছে। মোট ৫৯৮টা PR-এর মধ্যে ৭০টা মার্জ হয়েছে।
+> **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
+> এখন দোকানের সামনের অংশ (S02) আর কম্বো (S03) তৈরি হচ্ছে। মোট ৫৯৮টা PR-এর মধ্যে ৮২টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · S02 0/58 (wave 2 started) · total **70/598** active PRs |
-| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · S02 0/58 · S03 0/22 (wave 2) · total **82/598** active PRs |
+| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md); none stops the build ([table below](#what-waits-on-the-owner)) |
-| Next | S02 storefront (home, category, product page) with the four-layer cache, S03 combos, S10 Smart Rules |
+| Next | S02 storefront (home, category, product page) with the four-layer cache, S03 combos |
 | Last update | 20 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
@@ -67,7 +68,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
-| [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 0 / 12 | Not started |
+| [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 0 / 22 | Not started |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
@@ -78,14 +79,14 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md) | 0 / 13 | Not started |
 | [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587) | 0 / 15 | Not started |
 | [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 0 / 9 | Not started |
-| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | Not started |
+| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | In progress (PR 594 readme-guard) |
 | [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 0 / 13 | Not started |
 | [S23](docs/stages/S23.md) | [Social & content studio](docs/stages/S23.md) | [5](docs/stages/README.md#wave-5) | [437–443](docs/stages/S23.md) | 0 / 7 | Not started |
 | [S24](docs/stages/S24.md) | [Virtual Photoshoot Studio](docs/stages/S24.md) | [7](docs/stages/README.md#wave-7) | [444–480](docs/stages/S24.md), [539](docs/stages/S24.md#pr-539) | 0 / 38 | Not started |
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **604 PRs** | **70 / 598 active** | 6 parked |
+| | **Total** | | **604 PRs** | **82 / 598 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -612,9 +613,40 @@ Planned — see register PRs 40–88, 501, 503, 595–600, 602: [S02](docs/MASTE
 
 Planned — see register PRs 89–104, 571–576: [S03](docs/MASTER-REGISTER.md#s03--combo--bundles--pr-89104).
 
-### S10 · Smart Rules — Not started
+### S10 · Smart Rules — Done (12/12)
 
-Planned — see register PRs 208–219: [S10](docs/MASTER-REGISTER.md#s10--smart-rules--pr-208219).
+> **বাংলায়:** দোকানের সব নিয়ম (ডেলিভারি, এক্সচেঞ্জ, সেট-কম্বো, ছাড়, কুপন, উৎসবের শেষ সময়, নোটিশ-পপআপ) এক জায়গায়।
+> একবার বদলালে পণ্যের পাতা, ব্যাগ, চেকআউট আর মেসেজে লেখা নিজে থেকে বদলায়। টাকার নিয়ম মালিকের অনুমতি ছাড়া চালু হয় না।
+
+PR 208–219. Register: [S10](docs/MASTER-REGISTER.md#s10--smart-rules--pr-208219). Package: `@extas/rules`.
+
+- **Engine (PR 208).** One rule = kind (delivery · exchange · setTier · discount · festive · payment · policy ·
+  fulfilment), typed params, scope, conditions, priority and an active window; drafts, versions and archive, never
+  deleted. A broken rule never runs on a guess.
+- **Rule admin with live preview (PR 209).** "Customers see" line changes as you type; preview of every place the text
+  changes, before and after, and what changes in money. Money changes need the owner's OK (`rules.approve`).
+- **Delivery, exchange, set tiers (PR 210, 211, 212).** Charges per band and a free-delivery threshold (empty and off
+  until the owner sets them); exchange window (default text "Exchange within 72 hours for size or fault", 72 hours is a
+  setting); any 2 for X, any 3 for Y, best price worked out in the bag (`quoteCart`).
+- **Discounts and coupons (PR 213).** Coupons start off and need the owner's OK. The "was" price follows CN-009: the
+  real MRP, combos = sum of separate prices, never invented (`discountWasFor`, switch off).
+- **Festive cut-offs (PR 214)** stop by themselves when the date passes.
+- **Rule text everywhere (PR 215).** `ruleTextsFor`, `RuleText`, `NoticeBar`, `RulePopup` for S02 to place.
+- **Notices and pop-ups (PR 216).** Bar, in-page note, pop-up; never on arrival, capped per visitor, pause and resume
+  tested; all start off.
+- **Conflicts, history, simulation (PR 217, 218, 219).** Old text found elsewhere (e.g. "7 days" in an FAQ) with "fix
+  everywhere"; who changed what and when, restore; what past orders would have cost under a draft.
+
+| Screen | What it does |
+|---|---|
+| `/admin/rules` | rule list, editor with the live line, preview, approval, history and restore, simulation, coupons |
+| `/admin/rules/notices` | notices and pop-ups: placement, timing, frequency cap |
+
+API: one catch-all `/api/admin/rules/[[...path]]`. Permissions: `rules.read/write/publish/approve`. Settings:
+`rules.*` (registry v13, 16 keys). Schema migration `0003_smart_rules`. Tests in `packages/rules/test` (59, 18 on
+PostgreSQL) and the web rules API (10 + 3 on PostgreSQL). Screenshots:
+[`docs/qa/screenshots/pr-209/`](docs/qa/screenshots/pr-209). Report: [S10](docs/reports/2026-10-20-S10.md). Left for
+S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `discountWasFor`.
 
 ### S04 · Cart, checkout, accounts — Not started
 
@@ -672,9 +704,10 @@ Planned — see register PRs 304–341, 506, 577–585: [S15](docs/MASTER-REGIST
 
 Planned — see register PRs 342–355, 504, 536–537, 568: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
-### S21 · Site Health & Audit — Not started
+### S21 · Site Health & Audit — In progress (0/14)
 
-Planned — see register PRs 413–424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin;
+Started: `readme-guard` in CI (scope on PR 594, CN-011) fails a pull request whose README PR log, stage counts or
+feature states disagree with the register. Planned — see register PRs 413–424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin;
 423 = the Server page): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 ### S24 · Virtual Photoshoot Studio — Not started
@@ -719,6 +752,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #19 | PR [208–219](docs/stages/S10.md), [594](docs/stages/S21.md#pr-594), [509](docs/stages/S00.md#pr-509), [508](docs/stages/S00.md#pr-508), [4](docs/stages/S0A.md#pr-4), [17](docs/stages/S00.md#pr-17) | 20 Oct | Admin sign-in fixed: a fresh installation gets its mother store in the migrate step (PR [508](docs/stages/S00.md#pr-508)), and CI signs in end to end on the production images before every deploy (PR [4](docs/stages/S0A.md#pr-4)); S10 Smart Rules complete (engine, rule admin with live preview, delivery/exchange/set/discount/festive rules, coupons, notices and pop-ups, conflicts, history, simulation); `readme-guard` CI check; store-settings falls back to the newest migrate image; `ci.yml` parses again (PR [17](docs/stages/S00.md#pr-17)), so CI and deploys run |
 | #18 | PR [509](docs/stages/S00.md#pr-509), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [4](docs/stages/S0A.md#pr-4) + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
 | direct | CN-011: README as the A-to-Z front page; docs on the server and in backups | 20 Oct | This page rewritten as the full front page, `docs/README.md` index, CN-011 in blueprint and register, CLAUDE.md rules |
 | direct `f3822d0` | CN-009: owner answers (Note 52) | 12:22 | Watermark text, photos never deleted, honest "was" price, defaults; owner data is never a blocker |

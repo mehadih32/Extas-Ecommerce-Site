@@ -22,7 +22,7 @@
 | [1](#pr-1) | New VPS (Ubuntu 24.04 LTS): record specs from the owner's screenshot; provider snapshot before any change (updated 19 Oct 22:44) | Live · 2026-10-20 | সার্ভারের সব তথ্য (CPU, RAM, ডিস্ক) প্রতিবার সেটআপের সময় রেকর্ড হয়। |
 | [2](#pr-2) | OS: no in-place upgrade on the new VPS — verify Ubuntu 24.04 LTS and apply all updates (updated 19 Oct 22:44) | Live · 2026-10-20 | সার্ভারে Ubuntu 24.04 আছে কিনা দেখা হয়, প্রতিবার সব আপডেট বসে। |
 | [3](#pr-3) | Base hardening — SSH keys only, no root login, fail2ban, unattended updates, UFW; ports 22/80/443 opened by us | Live · 2026-10-20 | সার্ভার তালাবন্ধ: শুধু চাবি দিয়ে ঢোকা, ফায়ারওয়াল, ভুল চেষ্টায় ব্লক; ডেটা ডিস্ক ভাগ করা। |
-| [4](#pr-4) | Docker and Docker Compose, with the project's network and volume layout | Live · 2026-10-20 | Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। |
+| [4](#pr-4) | Docker and Docker Compose, with the project's network and volume layout | Live · 2026-10-20 | Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে। |
 | [5](#pr-5) | PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum | Live · 2026-10-20 | ডাটাবেস (PostgreSQL 17) সার্ভারের মাপে টিউন করা; ধীর কোয়েরি লগ হয়। |
 | [6](#pr-6) | Redis, and BullMQ queues with their dead-letter handling | Live · 2026-10-20 | Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। |
 | [7](#pr-7) | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers | Live · 2026-10-20 | HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। |
@@ -108,12 +108,13 @@
 
 **Docker and Docker Compose, with the project's network and volume layout**
 
-**বাংলায়:** Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে।
+**বাংলায়:** Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে।
 
 **Details**
 
 - **Status:** Live · 2026-10-20
   - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas
+  - GitHub pull request #19, 20 Oct
   - GitHub pull request #18, 20 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Docker and Docker Compose, with the project's network and volume layout.
@@ -123,6 +124,7 @@
   - **19 Oct 23:33** · [Scope added to existing PRs (owner server spec, CN-001; review/SERVER-SETUP-SPEC-OWNER.md; new PR 601–604)](../MASTER-REGISTER.md#how-this-reached-604): **The filing** — the owner approved every point of the analysis at 23:33 and said: where two decisions conflict, take the best one. Four new PRs (601 NVMe boot unit and 604 hardware-aware profile in S0A, 603 database performance pack in S00, 602 four-layer cache in S02); the rest is dated scope on the PR lines below (PR 1, 3–10, 13, 18, 22, 24, 37, 72, 88, 234, 519). **Every server item is required before go-live** — the owner's "later" list (monitoring page, monthly speed measurement, report pre-computation) is not deferred; items that need the app schema are built with their stage and marked *pre-launch required*. **Build order inside S0A:** 1 record specs (PR 1) → 2 hardening and UFW (PR 3) → 3 NVMe boot unit (PR 601) → 4 data-disk LVM (PR 1/3) → 5 Docker (PR 4) → 6 hardware-aware profile (PR 604) → 7 Postgres, PgBouncer and Redis tuning (PR 5, 6) → 8 Caddy, Cloudflare and Origin …
   - **20 Oct** · [CN-011 (owner: one README a developer can read in five years)](../MASTER-REGISTER.md#build-status): (2) **Docs on the server:** every deploy copies the repo's `docs/` (with `README.md`, `BLUEPRINT.md`, `MASTER-REGISTER.md`) to the server, one way (repo → server), so the admin's "PR register" and "Blueprint & files" tabs (PR 594) always show the latest. — (2) lands on PR 4/17 (`deploy.yml`, `infra/deploy/deploy.sh`) and PR 594
   - **20 Oct** · [CN-016 (owner: nothing reaches the owner broken)](../MASTER-REGISTER.md#build-status): The owner found that after logging in, the admin on new.extas.com.bd showed "This page couldn't load". New gate: **after every deploy and every night**, a smoke test runs on the runner with Playwright against new.extas.com.bd. It signs in with a check account whose password lives only on the server, then visits every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, shows … — No new PR numbers: this lands on PR 4/17 (deploy) and Appendix C.
+  - **20 Oct 14:15** · [Scope added to existing PRs (owner, urgent admin sign-in bug; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-604): **PR 4 (deploy)** — an end-to-end check "log in → the admin loads" (`tools/admin-login-e2e.sh` + `.mjs`) runs in CI on the production images against a fresh installation (the migrate image's own command, the first owner with a generated password, a real browser opening every admin menu page); deploy.yml runs only after CI passed, so every deploy has passed it.
 - **What was built** (from the Build status row):
   - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`
 - **Owning agent:** Prohori
