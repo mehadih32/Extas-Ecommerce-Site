@@ -67,6 +67,12 @@ export const PERMISSIONS = {
   'combos.write': { group: 'combos' },
   'combos.publish': { group: 'combos' },
   'combos.prices': { group: 'combos' },
+  // S06 · PR 550 — the delivery bands and the sub-area list (owner data): see them; set a band's charge, hours and COD
+  // limit, switch it on (only with its charge) or off and choose the sub-area mode (charges are the owner's figures,
+  // CLAUDE.md rule 6); put places on the sub-area list or take them off (archived, never deleted).
+  'delivery.read': { group: 'delivery' },
+  'delivery.charges': { group: 'delivery' },
+  'delivery.areas': { group: 'delivery' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

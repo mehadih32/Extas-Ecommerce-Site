@@ -25,6 +25,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@extas/delivery':
+        specifier: workspace:*
+        version: link:../../packages/delivery
       '@extas/inventory':
         specifier: workspace:*
         version: link:../../packages/inventory

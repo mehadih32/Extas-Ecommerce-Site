@@ -23,6 +23,8 @@ docs file (CN-011).
 
 | Path | What it is |
 |---|---|
+| [`admin-guide/README.md`](admin-guide/README.md) | Bengali guide per admin section (CN-014), the index |
+| [`admin-guide/delivery.md`](admin-guide/delivery.md) | Delivery areas and charges (`/admin/delivery`, S06) |
 | [`agents/README.md`](agents/README.md) | The seven agents with Bengali names and profile files |
 | [`agents/AGENT-PROTOCOL.md`](agents/AGENT-PROTOCOL.md) | How agents keep their skills and duties (PR 577, 321–323) |
 | [`agents/APPRAISAL-TEMPLATE.md`](agents/APPRAISAL-TEMPLATE.md) | Template for agent reports and appraisals (PR 578) |

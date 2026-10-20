@@ -11,6 +11,8 @@
 @import './rules/rules.css';
 /* S03 · PR 90–104 — Combos & customer sets, same file for the same reason. */
 @import './combos/combos.css';
+/* S06 · PR 550, 551 — the delivery page (bands, sub-area list, address check), same file for the same reason. */
+@import './delivery/delivery.css';
 
 .ad {
   /* colours (demo "classic" theme + admin shell) */
