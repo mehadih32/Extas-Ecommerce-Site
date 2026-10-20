@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 19/22 · total 50/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 19/22 · S09 7/17 · total 57/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
