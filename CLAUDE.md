@@ -103,6 +103,13 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Show the same short summary in the chat.
 - Wave boundary: report in Bengali and continue. Don't wait (CN-006).
 
+## Nothing reaches the owner broken (owner, 20 Oct 14:24 — CN-016)
+- **Done means it works on new.extas.com.bd in a real browser,** not only that the tests pass on the branch.
+- **After every deploy** the runner runs a smoke test with Playwright against new.extas.com.bd. It signs in with a dedicated check account whose password exists only on the server, then opens every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, has no error screen and no console error, and returns no failed request. Screenshots go to `docs/reports/smoke/latest/`.
+- **If any page fails,** the deploy rolls back to the last good version by itself, and fixing it comes before any new PR.
+- The same smoke test runs every night. Its result sits on the status page and in README.
+- The owner should never be the one who finds a broken page. If he finds one, add a smoke check for it in the same fix PR.
+
 ## Admin section guide (owner, 20 Oct 14:10 — CN-014)
 - `docs/admin-guide/` has one Bengali file per admin section, plus `README.md` as the index. Each file covers: what the section is for, every menu and tab, what can be done, every switch and number with its default, and what happens next. Every PR that adds or changes an admin screen updates its guide in the same PR. Each admin section links to its guide.
 - New optional features: off by default, an on/off switch, every number editable, placed in the section where they belong.
