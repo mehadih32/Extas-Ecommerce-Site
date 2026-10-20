@@ -247,6 +247,62 @@
       ]
     },
     {
+      "id": "set-tier",
+      "kind": "setTier",
+      "nameEn": "Build your own set",
+      "nameBn": "নিজের মতো সেট",
+      "text": {
+        "short": {
+          "en": "Any 2 for {tier2} · Any 3 for {tier3}",
+          "bn": "যেকোনো ২টা {tier2} · যেকোনো ৩টা {tier3}"
+        },
+        "full": {
+          "en": "Build your own set from these products: any 2 for {tier2}, any 3 for {tier3}.\nSet prices are not combined with other offers.",
+          "bn": "এই পণ্যগুলো থেকে নিজের মতো সেট বানান: যেকোনো ২টা {tier2}, যেকোনো ৩টা {tier3}।\nসেটের দামের সাথে অন্য অফার মেলে না।"
+        },
+        "badge": {
+          "en": "Set price",
+          "bn": "সেটের দাম"
+        }
+      },
+      "params": [
+        {
+          "key": "tier2",
+          "type": "money",
+          "value": null,
+          "labelEn": "Price for any 2",
+          "labelBn": "যেকোনো ২টার দাম"
+        },
+        {
+          "key": "tier3",
+          "type": "money",
+          "value": null,
+          "labelEn": "Price for any 3",
+          "labelBn": "যেকোনো ৩টার দাম"
+        }
+      ],
+      "actions": [
+        {
+          "type": "setTier",
+          "tiers": [
+            {
+              "quantity": 2,
+              "param": "tier2"
+            },
+            {
+              "quantity": 3,
+              "param": "tier3"
+            }
+          ]
+        }
+      ],
+      "placements": [
+        "product",
+        "build-set",
+        "bag"
+      ]
+    },
+    {
       "id": "cod",
       "kind": "payment",
       "nameEn": "Cash on delivery",
