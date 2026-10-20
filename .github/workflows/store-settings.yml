@@ -1,0 +1,54 @@
+# The owner's own values into the live store (CN-009, PR 509 owner data): watermark text, the "was" price source and
+# similar answers the owner gives in chat go straight into the database on the VM, never into Git. Runs ON the VM
+# through the self-hosted runner (CN-003) with the migrate image of the version that is live, which carries
+# packages/settings/src/cli.ts. Each value is validated against the registry and logged in SettingChange with the
+# reason; settings that need the owner's written OK refuse unless owner_approved is ticked. The log names keys only.
+name: store-settings
+
+on:
+  workflow_dispatch:
+    inputs:
+      values_json:
+        description: 'Values as JSON, e.g. {"media.watermark.text":"…"}'
+        required: true
+      reason:
+        description: "Why (kept in the change log), e.g. CN-009 owner answer"
+        required: true
+      owner_approved:
+        description: "The owner gave his written OK for these values"
+        type: boolean
+        default: false
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  set:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 10
+    steps:
+      - name: Write the values into the live store
+        env:
+          VALUES_JSON: ${{ inputs.values_json }}
+          REASON: ${{ inputs.reason }}
+          OWNER_APPROVED: ${{ inputs.owner_approved && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          . /etc/extas/server.conf
+          SEC="$EXTAS_ROOT/config/secrets"
+          MIGRATE="$(sudo jq -r '.migrate // empty' "$EXTAS_ROOT/state/last-good-deploy.json")"
+          [ -n "$MIGRATE" ] || { echo "no live migrate image yet — deploy first"; exit 1; }
+          envf="$(sudo mktemp "$SEC/.settings.XXXXXX")"
+          vals="$(sudo mktemp "$SEC/.values.XXXXXX")"
+          trap 'sudo rm -f "$envf" "$vals"' EXIT
+          sudo sh -c "grep -E '^DATABASE_DIRECT_URL=' '$SEC/app.env' > '$envf'"
+          jq -n --argjson values "$VALUES_JSON" --arg reason "$REASON" --argjson ok "$OWNER_APPROVED" \
+            '{reason:$reason, ownerApproved:$ok, values:$values}' | sudo tee "$vals" >/dev/null
+          sudo chmod 0644 "$vals"
+          sudo docker run --rm --name "extas-settings-$$" --network extas --env-file "$envf" \
+            -v "$vals:/tmp/values.json:ro" "$MIGRATE" \
+            sh -c 'cd /repo/packages/settings && exec ./node_modules/.bin/tsx src/cli.ts set --file /tmp/values.json'
