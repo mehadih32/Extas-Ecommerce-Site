@@ -1,16 +1,16 @@
 // S06 · PR 551 — the address read end to end on a real PostgreSQL (a throwaway database with the SAMPLE gazetteer;
 // skipped without TEST_DATABASE_ADMIN_URL): the admin's "Try an address" (login and `delivery.read`) and the checkout's
 // public route (POST only, same site, size-capped). A band that is off answers with no charge; an ambiguous line asks;
-// a picked band is kept.
+// a picked band is kept. PR 552 — the public autocomplete: each row with its district and its band's charge.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { forgetGazetteer, importGazetteer } from '@extas/delivery';
 import { sampleGazetteerRows } from '@extas/delivery/sample';
-import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { publicResolveHandler, tryAddressHandler } from './delivery-api';
+import { publicResolveHandler, publicSuggestHandler, tryAddressHandler } from './delivery-api';
 
 const HOST = 'shop.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -45,6 +45,7 @@ describe.skipIf(!HAS_TEST_DB)('the address read on PostgreSQL', () => {
     t = await createTestDatabase('delivery_resolve');
     [A] = await seedSampleStores(t.prisma);
     await syncAuth(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
     await importGazetteer(t.prisma, sampleGazetteerRows(), { source: 'sample' });
     forgetGazetteer();
     for (const [i, key] of ['dhaka-city', 'dhaka-sub-area', 'outside-dhaka'].entries()) {
@@ -106,5 +107,23 @@ describe.skipIf(!HAS_TEST_DB)('the address read on PostgreSQL', () => {
     const r = await read(await publicResolveHandler(call('POST', '/api/delivery/resolve', { body: { line: 'House 12, Road 3, 1216' } }), deps));
     expect(r.body.read.status).toBe('resolved');
     expect(Object.keys(r.body.read).sort()).toEqual(['area', 'band', 'clues', 'placeSure', 'status', 'via']);
+  });
+
+  it('suggests places as the customer types, each with its district and charge (PR 552)', async () => {
+    expect((await publicSuggestHandler(call('POST', '/api/delivery/suggest?q=gab', { body: {} }), deps)).status).toBe(405);
+    expect((await publicSuggestHandler(call('GET', '/api/delivery/suggest?q=gab'), null)).status).toBe(503);
+    expect((await publicSuggestHandler(call('GET', '/api/delivery/suggest?q=gab&storeId=x'), deps)).status).toBe(400);
+    const r = await read(await publicSuggestHandler(call('GET', '/api/delivery/suggest?q=gabtali'), deps));
+    expect(r.status).toBe(200);
+    expect(r.body.enabled).toBe(true);
+    const rows = r.body.rows as { place: { parentEn: string }; band: { key: string; priced: boolean; chargeMinor: number | null } | null }[];
+    expect(rows.find((x) => x.place.parentEn === 'Dhaka')?.band).toMatchObject({ key: 'dhaka-city', priced: true, chargeMinor: 6000 });
+    expect(rows.find((x) => x.place.parentEn === 'Bogura')?.band).toMatchObject({ key: 'outside-dhaka', priced: false, chargeMinor: null });
+    expect((await read(await publicSuggestHandler(call('GET', '/api/delivery/suggest?q=g'), deps))).body).toEqual({ ok: true, enabled: true, rows: [] });
+    const max = await deps.resolver.value('delivery.resolver.maxChars', { storeId: A });
+    expect((await read(await publicSuggestHandler(call('GET', `/api/delivery/suggest?q=${'a'.repeat(max + 1)}`), deps))).body.error).toBe('INVALID_INPUT');
+    await deps.resolver.set('delivery.suggest.enabled', false, storeTarget(A));
+    expect((await read(await publicSuggestHandler(call('GET', '/api/delivery/suggest?q=gabtali'), deps))).body).toEqual({ ok: true, enabled: false, rows: [] });
+    await deps.resolver.set('delivery.suggest.enabled', true, storeTarget(A));
   });
 });
