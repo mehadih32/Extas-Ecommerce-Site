@@ -757,3 +757,25 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - new.extas.com.bd home shows the store: what is built, "শিগগির আসছে" where a page is not built yet. Progress page only at /status.
 - S02 (home, category, product page) starts now beside the rest; max 3 agents at once; every page goes live as soon as it is merged. Design = V12.1 demo exactly.
 - Open his admin account (e-mail given in chat, never in Git); Bengali step-by-step for reading the password.
+
+## Note 54 — 20 Oct 13:37 · Owner review of V12.1 (footer, bag, checkout, payment, hero, logos) — CN-012
+(Note 53 / CN-010 is used by the project's PR #18; CN-011 = docs/README rules.)
+**Phone rule for all items below:** text changes go to the phone too. A design change goes to the phone only after the full device gate proves 0 side-effects on every phone width; anything that doesn't fit the phone stays desktop-only. The owner must not have to re-review the phone.
+1. **Footer menu icons:** every footer section link (Help, Policies, etc.) gets a small line icon. (Asked before, missed.)
+2. **Footer social icons:** the social section above the payment icons shows real social icons (Facebook, Instagram, YouTube, TikTok, WhatsApp…; list from settings). (Asked before, missed.)
+3. **Bag panel "Free delivery on this order":** must not look like a button. Highlight without a box: icon + coloured text, light accent.
+4. **Bag panel recommendations fill the space:** show as many items as fit while keeping ≥10–12 px below the Keep shopping / View bag buttons. Only when the next item would not fit, show "+N more · View bag". Never leave empty space and then collapse. Both styles (default/old and style B) stay selectable in the backend. Check the phone; change it only if it needs it.
+5. **Bag page offer cards:** the "Pick your polo" card colour/style looks cheap → refine. The left offer-list card must be the same height as the 3 product cards on the right.
+6. **Checkout heading "Where should we deliver?"** → simple words (e.g. "Delivery details"). Every checkout text and the field order are editable from the backend.
+7. **Checkout labels** "Full name & phone number" and "Full address" are too small → bigger labels, fix the top padding, remove the wasted space under the boxes.
+8. **Full address placeholder:** no sample address. One clear Bengali line telling the customer to write the detailed address with thana and district, e.g. "বাসা/রোড নম্বর, এলাকা, থানা ও জেলা লিখুন — রাইডার যেন সহজে খুঁজে পায়".
+9. **Phone error:** show only after the cursor leaves the field with a wrong number (never while typing "01…"). It must not push the address field down. A small, smart inline hint replaces the big warning box below.
+10. **"Try it on in front of the rider"** moves into the right side of the "Delivery anywhere in Bangladesh" row, with a subtle shimmer/flit, to save vertical space.
+11. **Bottom terms line:** remove "confirmation/tracking link by SMS… not return or refund". Keep "Items can be exchanged for size" as a link that opens the exchange/return policy.
+12. **"Need help? Message us on WhatsApp":** add a space after "?" and give it a gentle flit (subtle; off under reduced motion).
+13. **Payment:** Cash on delivery open by default; Mobile and Card stay closed until clicked. Make them beautiful, with proper logos: bKash/Nagad/Rocket, Visa, Mastercard, Amex, bank, and the "online payment" (gateway) option that existed before — bring it back.
+14. **Product page price highlight:** revert to the previous style (owner: "my mistake"). Keep the rest of that section's changes.
+15. **Logos:** the generated text logos look cheap → make refined, professional text logos (several options, all selectable). Header/menu defaults stay; options remain selectable.
+16. **Menu:** good. Confirm the rule: when the 7th menu item doesn't fit, it goes into the "More" dropdown.
+17. **Hero campaigns (CN-012):** backend "Hero & campaigns". Set up a campaign (Winter, Puja, Eid, Summer, Hot deals, any offer) with dates; pick from **8–10 ready hero templates** in several colours; link a collection so the hero's products swap with the campaign; optionally design a new hero inside the backend (simple editor: text, colours, image, button) and save it as a template. Simple to use, not complex.
+18. **Working style:** fewer rounds, fewer tokens, finished properly the first time; use own judgement for "smart" details.
