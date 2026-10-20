@@ -87,17 +87,17 @@ in the backend later (CN-009).
 
 | # | What | State |
 |---|---|---|
-| 4 | Read the new preview password on the server (Azure → Run command → `extas-preview-login`) | Open — one look is enough |
-| 12 | ERP address, API key and webhook secret on Keys & connections, and which ERP warehouse is the shared one | Open — the practice ERP runs meanwhile and never changes real stock |
+| 4 | Read the new preview password on the server (Azure → Run command → `extas-preview-login`) | Done (CN-009): the owner has read it |
+| 12 | ERP address, API key and webhook secret on Keys & connections, and which ERP warehouse is the shared one | Owner data, not a question: he types it in Keys & connections; the practice ERP runs meanwhile |
 | 13 | Which locations count as sellable online stock (main warehouse only, or showrooms too) | Open — default: main warehouse only |
 | 14 | Should stock-count differences ever be sent to the ERP as a correction by themselves? | Open — default: report only, nothing sent |
 | 15 | Block, warn or ignore when publishing a product with no ERP stock | Open — default: check off |
-| 16 | Who receives low-stock alerts, and from how many pieces | Open — default: 2 pieces, shown in the admin, no message sent |
-| 5 | The admin login e-mail | Answered (CN-009): owner data, set on the server only, never committed |
+| 16 | Who receives low-stock alerts, and from how many pieces | Owner data, not a question: set in the backend; default 2 pieces, shown in the admin, no message sent |
+| 5 | The admin login e-mail | Answered (CN-009/CN-010): the owner account is opened on the server by `owner-account.yml`; he reads the first password with `extas-owner-login` ([steps in Bengali](docs/owner/OWNER-LOGIN.md)); never committed |
 | 6 | Delivery charges, free-delivery limit, COD, exchange limit, AI budget | Answered (CN-009): owner data, entered later in the backend |
-| 7 | Watermark text on downloaded photos | Answered (CN-009): www.extas.com.bd |
+| 7 | Watermark text on downloaded photos | Answered (CN-009): www.extas.com.bd, set in the live store by `store-settings.yml` (not in Git) |
 | 8 | May unused photos ever be deleted? | Answered (CN-009): never — archive only |
-| 10 | Where the struck-through "was" price comes from | Answered (CN-009): the real MRP where it exists; combos = sum of separate prices; never invented |
+| 10 | Where the struck-through "was" price comes from | Answered (CN-009): the real MRP where it exists; combos = sum of separate prices; never invented; store value set by `store-settings.yml` |
 | 1, 2, 3 | Runner on the server · Cloudflare `new` record · 4-piece prices | Done (20 Oct) |
 
 ---
@@ -352,7 +352,8 @@ PR's full scope is its row in the register's **Build status** table.
 PR 1–10, 601, 604. Everything is described under [The server](#the-server). Highlights: idempotent setup as code,
 NVMe boot unit (601), hardware-aware auto profile (604), tuned PostgreSQL + PgBouncer, split Redis, Caddy with the
 preview password (PR 7; the password is generated on the server, rotatable, never in chat — CN-007), backups with a
-tested restore (8), monitoring every minute (9), k6 baseline (10). Tests: shellcheck and
+tested restore (8), monitoring every minute (9), k6 baseline (10). Deploys (PR 4) now commit their result back to
+[`docs/reports/server/deploy-latest.md`](docs/reports/server/) with a history line (`[skip ci]`, no loop). Tests: shellcheck and
 [`infra/tests/run.sh`](infra/tests/run.sh) in CI. Register: [S0A](docs/MASTER-REGISTER.md#s0a--server-foundation--pr-110) ·
 report: [`docs/reports/2026-10-20-S0A.md`](docs/reports/2026-10-20-S0A.md).
 
@@ -408,6 +409,8 @@ app (seed in the vault). Every admin action is permission-checked on the server.
 catalogue is code ([`packages/auth/src/catalogue.ts`](packages/auth/src/catalogue.ts)), roles are data; the owner
 role always holds every permission; nobody grants more than they hold; the last owner cannot be paused or removed;
 roles are archived, never deleted; every staff/role change goes to the append-only audit log.
+The first owner account is opened on the server by [`owner-account.yml`](.github/workflows/owner-account.yml)
+(e-mail masked, first password made on the VM, read with `/usr/local/sbin/extas-owner-login`; a second run refuses).
 
 | Route | Purpose |
 |---|---|
@@ -428,6 +431,9 @@ The general default pack (`packages/seed/data/default-pack.json`): garment types
 bands switched off with no charge, 14 SMS / WhatsApp / e-mail templates in Bengali + English; applied add-only on
 every deploy. The sample catalogue (`sample`): the demo's 17 products, 227 variants, size charts, collections, tags
 and one demo order in a "Sample" store; a second run changes nothing.
+The owner's own values reach the live store only from the server: [`store-settings.yml`](.github/workflows/store-settings.yml)
+runs `settings cli.ts set` with the live migrate image (validated, logged with the reason, owner-OK flag for money
+settings; the log names keys only).
 
 **Admin frame and Keys & connections (PR 500).**
 
@@ -703,6 +709,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #18 | PR 509, 17, 15, 4 + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
 | direct | CN-011: README as the A-to-Z front page; docs on the server and in backups | 20 Oct | This page rewritten as the full front page, `docs/README.md` index, CN-011 in blueprint and register, CLAUDE.md rules |
 | direct `f3822d0` | CN-009: owner answers (Note 52) | 12:22 | Watermark text, photos never deleted, honest "was" price, defaults; owner data is never a blocker |
 | direct `303b342` | CN-008: demo V12.1 | 12:13 | Demo V12.1 (owner desktop review, 44 items), QA and admin audit reports, owner notes, agent skills; README as live status page |
@@ -757,7 +764,7 @@ the register.
 | CN-007 | 20 Oct | The preview password never goes through chat, logs or artifacts; the owner reads it on the VM; rotatable | [A1](docs/BLUEPRINT.md#a1-how-this-build-runs) |
 | CN-008 | 20 Oct | Owner desktop review of V12 (44 items, invoices, admin screens) built into demo V12.1, the new UI truth | [A1](docs/BLUEPRINT.md#a1-how-this-build-runs) · [register](docs/MASTER-REGISTER.md#build-status) |
 | CN-009 | 20 Oct 12:22 | Owner answers (Note 52): watermark text, photos never deleted, honest "was" price, defaults; owner data is never a blocker | [A1](docs/BLUEPRINT.md#a1-how-this-build-runs) · [register](docs/MASTER-REGISTER.md#build-status) |
-| CN-010 | 20 Oct 12:47 | Reserved for owner Note 53 (the store on the home page, S02 now, the owner account), filed by open GitHub PR #18 — not on `main` yet | — |
+| CN-010 | 20 Oct 12:47 | Owner Note 53: the home page shows the store (built parts, "শিগগির আসছে" elsewhere; progress only at `/status`), S02 now beside the rest, the owner's admin account opened on the server | [A1](docs/BLUEPRINT.md#a1-how-this-build-runs) · [register](docs/MASTER-REGISTER.md) |
 | CN-011 | 20 Oct | README is the live, detailed front page; every deploy copies `docs/` to the server for the admin's register tabs; every backup carries a dated docs bundle; an organisation standard every PR keeps | [A1](docs/BLUEPRINT.md#a1-how-this-build-runs) · [register](docs/MASTER-REGISTER.md#build-status) |
 
 ---

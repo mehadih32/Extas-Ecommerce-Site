@@ -212,6 +212,11 @@ the server.*
 - **PR 45 / 61 (phone price rule)** — a currency sign and its number never split across lines (nowrap); fixed in the category banners.
 - **Server admin pages in the demo (CN-001; sample numbers, labelled)** — `#/admin/server` → PR 423 / 601 / 603 / 604; `#/admin/cache` → PR 602; `#/admin/images` → PR 22 / 24 / 88; `#/admin/speed` → PR 234; `#/admin/integrations` ("Keys & connections") → PR 493 / 500; `#/admin/backup` now shows Blob + Drive → PR 8 / 395 / 507. Checks: 120 route/modal checks 0 fails + 19 flows.
 
+**Scope added to existing PRs, 20 Oct 13:03 (owner, CN-011; no new PR numbers):**
+- **PR 594 (PR register and Blueprint & files tabs)** — they read the server copy of the docs: every deploy copies `README.md` and the whole `docs/` folder to the server, one way (repo → server), stamped with the commit hash (`deploy.yml`, `infra/deploy/deploy.sh`); the tabs always show the version that is live.
+- **PR 8 (nightly backup and restore)** — every backup carries a dated docs bundle (`README.md`, `docs/BLUEPRINT.md`, `docs/MASTER-REGISTER.md` and all of `docs/`, with the commit hash), so a restore brings back that version's documentation; the restore test checks the bundle comes back and its commit matches.
+- **PR 395 / 507 (Google Drive backup, backup settings and restore drills)** — the same docs bundle goes into the Azure Blob and the Google Drive copies; the monthly restore drill checks it.
+
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
 invoice and PDF templates S14 → S20 · celebration overlay S19 → S02 · user manual S20 → S18 ·
 Find My Size engine S23 → S02. Each is now in the stage that actually describes it.
