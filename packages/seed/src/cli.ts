@@ -2,6 +2,7 @@
 //   tsx src/cli.ts check                       PR 509 owner-data check (CI; no database)
 //   tsx src/cli.ts pack --store <slug>         PR 508 apply the general default pack to one store
 //   tsx src/cli.ts pack --all-stores           … to every store
+//   tsx src/cli.ts mother-store                PR 508 a fresh installation's mother store (a draft, no name)
 //   tsx src/cli.ts sample [--beside-live-store] PR 14 the sample catalogue (dev, CI and the preview only)
 //   tsx src/cli.ts export --out <file>         PR 509 installation export, without the owner's own data
 //   tsx src/cli.ts import --in <file> [--map <ref>=<storeId> …]
@@ -13,6 +14,7 @@ import { PrismaClient } from '@extas/db/client';
 import { ownerDataRegister, registry } from '@extas/settings';
 import { guardDetectors } from './detectors';
 import { exportInstallation, importInstallation, OwnerDataLeak } from './export';
+import { ensureMotherStore, MotherStoreRefused } from './mother-store';
 import { checkOwnerData, describeFindings } from './owner-data-check';
 import { applyPack, applyPackToAllStores, defaultPack, type PackReport } from './pack';
 import { sampleCatalogue, SampleSeedRefused, seedSample } from './sample';
@@ -56,7 +58,7 @@ async function withDb(run: (prisma: PrismaClient) => Promise<number>): Promise<n
   try {
     return await run(prisma);
   } catch (error) {
-    if (error instanceof SampleSeedRefused || error instanceof OwnerDataLeak) {
+    if (error instanceof SampleSeedRefused || error instanceof OwnerDataLeak || error instanceof MotherStoreRefused) {
       console.error(`seed: ${error.message}`);
       return 1;
     }
@@ -92,6 +94,12 @@ async function main(argv: string[]): Promise<number> {
           return 1;
         }
         console.log(packLine(await applyPack(prisma, defaultPack, { storeId: store.id })));
+        return 0;
+      });
+    case 'mother-store':
+      return withDb(async (prisma) => {
+        const r = await ensureMotherStore(prisma);
+        console.log(`mother store: ${r.created ? 'made' : 'unchanged'} (store ${r.storeId})`);
         return 0;
       });
     case 'sample':
@@ -139,7 +147,7 @@ async function main(argv: string[]): Promise<number> {
         return 0;
       });
     default:
-      console.error('usage: cli.ts check | pack | sample | export | import');
+      console.error('usage: cli.ts check | pack | mother-store | sample | export | import');
       return 2;
   }
 }

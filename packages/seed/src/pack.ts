@@ -89,6 +89,11 @@ export const packSchema = z
     categories: z.array(category),
     deliveryBands: z.array(deliveryBand),
     notificationTemplates: z.array(notificationTemplate),
+    /**
+     * The address of the mother store a fresh installation starts with (mother-store.ts); never its name (PR 509).
+     * Installation-level, so a store's exported structure (PR 509) has none.
+     */
+    motherStore: z.object({ slug }).strict().optional(),
   })
   .strict()
   .superRefine((p, ctx) => {
