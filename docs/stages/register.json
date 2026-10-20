@@ -2005,8 +2005,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas",
+    "note": "Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`",
     "github": [
+     "#20, 20 Oct",
      "#19, 20 Oct",
      "#18, 20 Oct",
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
@@ -2017,10 +2018,15 @@
     "settings": [],
     "code": [
      "infra/deploy/deploy.sh",
-     "deploy.yml"
+     "deploy.yml",
+     "infra/deploy/smoke.sh",
+     "smoke.yml",
+     "docs/reports/smoke/latest/"
     ],
     "names": [],
-    "tests": []
+    "tests": [
+     "20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop"
+    ]
    },
    "updates": [
     {
@@ -2064,7 +2070,7 @@
     601
    ],
    "blueprint": [],
-   "bn": "Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে \"লগইন → অ্যাডমিন খোলে\" পরীক্ষা চলে।",
+   "bn": "Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে \"লগইন → অ্যাডমিন খোলে\" পরীক্ষা চলে। প্রতি ডিপ্লয়ের পর আর প্রতি রাতে সব পাতা ফোন ও কম্পিউটারে খুলে দেখা হয়; সমস্যা পেলে সাইট নিজে আগের ভালো ভার্সনে ফেরে।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S0A.md#pr-4"
@@ -2282,8 +2288,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive \"not connected\" until keys",
+    "note": "daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive \"not connected\" until keys. 20 Oct: product photos (full every `BACKUP_MEDIA_FULL_EVERY_DAYS`, diffs between, checksums) and a dated docs bundle with the commit hash in every backup; the restore test checks one sample photo and the docs bundle (CN-011)",
     "github": [
+     "#20, 20 Oct",
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
     ]
    },
@@ -2291,9 +2298,12 @@
     "routes": [],
     "settings": [],
     "code": [],
-    "names": [],
+    "names": [
+     "BACKUP_MEDIA_FULL_EVERY_DAYS"
+    ],
     "tests": [
-     "daily base + dump + config, WAL every minute, one-command restore, restore test"
+     "daily base + dump + config, WAL every minute, one-command restore, restore test",
+     "the restore test checks one sample photo and the docs bundle (CN-011)"
     ]
    },
    "updates": [
@@ -2345,7 +2355,7 @@
      "anchor": "a2912-backup--azure-blob--google-drive-owners-answer-pr-8-395-396-507"
     }
    ],
-   "bn": "প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর।",
+   "bn": "প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর। ব্যাকআপে পণ্যের ছবি আর সব ডকুমেন্টও যায়।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S0A.md#pr-8"
@@ -2932,6 +2942,7 @@
     "date": "2026-10-20",
     "note": "CI: lint, type-check, vitest, build, Lighthouse budget (`lighthouserc.json`), image build; green `main` deploys",
     "github": [
+     "#20, 20 Oct",
      "#19, 20 Oct",
      "#18, 20 Oct",
      "#6 (commit `5667515`), 20 Oct 04:12 (Dhaka)",
@@ -6311,7 +6322,9 @@
     "built": false,
     "date": "",
     "note": "",
-    "github": []
+    "github": [
+     "#20, 20 Oct"
+    ]
    },
    "builtFacts": null,
    "updates": [],
@@ -22346,6 +22359,7 @@
     "date": "",
     "note": "",
     "github": [
+     "#20, 20 Oct",
      "#19, 20 Oct"
     ]
    },

@@ -43,6 +43,7 @@ documents to it ([how](#how-it-is-built)).
 | Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · S02 0/58 · S03 0/22 (wave 2) · total **82/598** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
+| Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md); none stops the build ([table below](#what-waits-on-the-owner)) |
 | Next | S02 storefront (home, category, product page) with the four-layer cache, S03 combos |
 | Last update | 20 Oct 2026 |
@@ -186,10 +187,22 @@ No SSH key is exchanged.
 |---|---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | GitHub-hosted | every pull request and every push to `main` | **infra:** shellcheck + infra unit tests · **web:** manifest and font checks, hardcode guard, owner-data check, lint, type-check, unit tests, build, Lighthouse budget, both Docker images · **db:** migrations on PostgreSQL 17 with a drift check, every package's database tests, settings / auth / sample sync run twice (second run must change nothing), installation export / import |
 | [`deploy.yml`](.github/workflows/deploy.yml) | `extas-vm` | after `ci` passes on `main` (or by hand, with a "rollback" switch) | builds the app and migrate images on the VM, then [`infra/deploy/deploy.sh`](infra/deploy/deploy.sh): migrate the database (schema, settings sync, auth sync, default pack), start the new colour beside the old, smoke-test it, switch Caddy gracefully, keep the old colour on any failure; writes `state/last-deploy.json` |
+| [`smoke.yml`](.github/workflows/smoke.yml) | `extas-vm` | every night at 03:30 Dhaka, and by hand | the smoke test (below) on the live version; commits the report to [`docs/reports/smoke/latest/`](docs/reports/smoke/latest/README.md) |
 | [`server-setup.yml`](.github/workflows/server-setup.yml) | `extas-vm` | by hand, or when `infra/server`, `infra/stack` or `infra/config` change | runs [`infra/server/setup.sh`](infra/server/setup.sh) (idempotent), commits the machine report to [`docs/reports/server/`](docs/reports/server/latest.md); inputs: only some steps, data-disk override, k6 re-measure, rotate the preview password |
 
 Migrations only add (expand first, contract later), so the old colour keeps working while the new one starts and a
 rollback needs no down-migration.
+
+**Smoke test (CN-016).** After every deploy and every night, [`infra/deploy/smoke.sh`](infra/deploy/smoke.sh) opens
+every built storefront page signed out and every admin page signed in, on a phone (390×844) and a desktop (1366×900)
+screen, through Cloudflare like a visitor ([`tools/smoke.mjs`](tools/smoke.mjs), page list in
+[`docs/qa/smoke.json`](docs/qa/smoke.json)). It signs in with a read-only check account (`smoke-check` role, read
+permissions only) whose password and two-step seed are made fresh on the server each run and never leave it. A page
+fails on a 5xx, the error screen, a console or page error, or a failed request. After a deploy, a failure puts the
+previous version back by itself and the run goes red; the fix comes before any new PR. The report and one picture per
+page and screen go to [`docs/reports/smoke/latest/`](docs/reports/smoke/latest/README.md); the result is on `/status`
+and in the deploy report. Settings: `SMOKE_*` in [`infra/config/server.conf`](infra/config/server.conf). CI runs the
+same journey on the production images before every merge (sign-in end to end, PR 4).
 
 ### Staging now, go-live later
 
@@ -280,12 +293,15 @@ OS disk 128 GB; a separate **1 TB data disk** in LVM; a **440 GB local NVMe** th
 - **`extas-backup`** (PR 8) — `daily` at 02:30: base backup for point-in-time restore + logical dump + config,
   staged on NVMe, kept on the data disk, uploaded to Azure Blob and, encrypted, to Google Drive. `wal` every minute
   pushes WAL to Blob. `prune` keeps the retention. Blob and Drive say "not connected" until their keys are in the
-  vault; local backups run regardless. *Known gap:* photos on the local media volume are not yet in the daily
-  backup (noted in PROGRESS for S19).
+  vault; local backups run regardless. Product photos go in too (a full archive every
+  `BACKUP_MEDIA_FULL_EVERY_DAYS`, only changes in between, a checksum list; `BACKUP_MEDIA="no"` switches it off), and
+  a dated docs bundle (README, blueprint, register, all of docs/, with the commit hash; CN-011).
 - **`extas-restore`** (PR 8) — `test` restores the newest base backup + WAL into a throwaway PostgreSQL on the NVMe
   and checks it (run after every setup; monthly by timer later, PR 395/507). `--from local|blob|drive
   [--at "YYYY-MM-DD HH:MM"] [--target staging|production]` — production needs the typed word RESTORE and keeps the old
-  data. Last test: 336 tables restored, matching live.
+  data. The test also restores one sample photo (checksum) and unpacks the newest docs bundle (commit must match).
+  `media --from local|blob|drive [--into live]` brings all photos back; into live it only adds missing ones. Last
+  test: 336 tables restored, matching live.
 - **`extas-monitor`** (PR 9) — every minute: disks (alert at 80%), services, NVMe, backups, speed → writes
   `state/health.json` (read by the status page now, by the admin Server page later). Sends to Telegram once the bot
   key is in Keys & connections; until then to the log.
@@ -611,7 +627,8 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
 
 > **বাংলায়:** দোকানের সামনের অংশ — হোম, ক্যাটাগরি, পণ্যের পাতা, পেজ বিল্ডার, দ্রুত লোড হওয়ার ক্যাশ। কাজ শুরু হয়েছে, এখনো কিছু মার্জ হয়নি।
 
-Planned — see register PRs 40–88, 501, 503, 595–600, 602: [S02](docs/MASTER-REGISTER.md#s02--storefront--pr-4088).
+Started: the device gate (PR 85) runs in CI on every pull request: 15 phones, 10 tablets and 6 desktop sizes, no
+sideways scroll and every tap target at least 44×44 (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Planned — see register PRs 40–88, 501, 503, 595–600, 602: [S02](docs/MASTER-REGISTER.md#s02--storefront--pr-4088).
 
 ### S03 · Combo & bundles — Not started
 
@@ -711,7 +728,9 @@ Planned — see register PRs 342–355, 504, 536–537, 568: [Blueprint Appendix
 ### S21 · Site Health & Audit — In progress (0/14)
 
 Started: `readme-guard` in CI (scope on PR 594, CN-011) fails a pull request whose README PR log, stage counts or
-feature states disagree with the register. Planned — see register PRs 413–424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin;
+feature states disagree with the register. Every deploy copies README.md and docs/ to `$EXTAS_ROOT/docs/<commit>/`
+(`infra/deploy/docs-sync.sh`, `current` link, newest `DOCS_KEEP_VERSIONS` kept), mounted read-only in the app as
+`/docs/current` for the admin tabs still to be built. Planned — see register PRs 413–424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin;
 423 = the Server page): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 ### S24 · Virtual Photoshoot Studio — Not started
@@ -756,6 +775,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #20 | PR [4](docs/stages/S0A.md#pr-4), [85](docs/stages/S02.md#pr-85), [8](docs/stages/S0A.md#pr-8), [594](docs/stages/S21.md#pr-594), [17](docs/stages/S00.md#pr-17) | 20 Oct | CI parses every workflow file (PR [17](docs/stages/S00.md#pr-17)); Smoke test on new.extas.com.bd after every deploy and every night (every built page signed out and as a read-only check account, phone and desktop; a failure rolls the deploy back; pictures in `docs/reports/smoke/latest/`, CN-016); device gate (15 phones, 10 tablets, 6 desktops) in CI, 0/341 fails, admin tap targets 44×44; product photos and a dated docs bundle in every nightly backup, checked by the restore test; docs copied to the server on every deploy with the commit hash (CN-011) |
 | #19 | PR [208–219](docs/stages/S10.md), [594](docs/stages/S21.md#pr-594), [509](docs/stages/S00.md#pr-509), [508](docs/stages/S00.md#pr-508), [4](docs/stages/S0A.md#pr-4), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [7](docs/stages/S0A.md#pr-7) | 20 Oct | Admin sign-in fixed: a fresh installation gets its mother store in the migrate step (PR [508](docs/stages/S00.md#pr-508)), and CI signs in end to end on the production images before every deploy (PR [4](docs/stages/S0A.md#pr-4)); S10 Smart Rules complete (engine, rule admin with live preview, delivery/exchange/set/discount/festive rules, coupons, notices and pop-ups, conflicts, history, simulation); `readme-guard` CI check; store-settings falls back to the newest migrate image; `ci.yml` parses again (PR [17](docs/stages/S00.md#pr-17)), so CI and deploys run; the owner's way back in when he cannot sign in: `owner-reset.yml` gives his account a new first password on the server (PR [15](docs/stages/S00.md#pr-15)) |
 | #18 | PR [509](docs/stages/S00.md#pr-509), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [4](docs/stages/S0A.md#pr-4) + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
 | direct | CN-011: README as the A-to-Z front page; docs on the server and in backups | 20 Oct | This page rewritten as the full front page, `docs/README.md` index, CN-011 in blueprint and register, CLAUDE.md rules |

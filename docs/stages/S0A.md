@@ -22,11 +22,11 @@
 | [1](#pr-1) | New VPS (Ubuntu 24.04 LTS): record specs from the owner's screenshot; provider snapshot before any change (updated 19 Oct 22:44) | Live · 2026-10-20 | সার্ভারের সব তথ্য (CPU, RAM, ডিস্ক) প্রতিবার সেটআপের সময় রেকর্ড হয়। |
 | [2](#pr-2) | OS: no in-place upgrade on the new VPS — verify Ubuntu 24.04 LTS and apply all updates (updated 19 Oct 22:44) | Live · 2026-10-20 | সার্ভারে Ubuntu 24.04 আছে কিনা দেখা হয়, প্রতিবার সব আপডেট বসে। |
 | [3](#pr-3) | Base hardening — SSH keys only, no root login, fail2ban, unattended updates, UFW; ports 22/80/443 opened by us | Live · 2026-10-20 | সার্ভার তালাবন্ধ: শুধু চাবি দিয়ে ঢোকা, ফায়ারওয়াল, ভুল চেষ্টায় ব্লক; ডেটা ডিস্ক ভাগ করা। |
-| [4](#pr-4) | Docker and Docker Compose, with the project's network and volume layout | Live · 2026-10-20 | Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে। |
+| [4](#pr-4) | Docker and Docker Compose, with the project's network and volume layout | Live · 2026-10-20 | Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে। প্রতি ডিপ্লয়ের পর আর প্রতি রাতে সব পাতা ফোন ও কম্পিউটারে খুলে দেখা হয়; সমস্যা পেলে সাইট নিজে আগের ভালো ভার্সনে ফেরে। |
 | [5](#pr-5) | PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum | Live · 2026-10-20 | ডাটাবেস (PostgreSQL 17) সার্ভারের মাপে টিউন করা; ধীর কোয়েরি লগ হয়। |
 | [6](#pr-6) | Redis, and BullMQ queues with their dead-letter handling | Live · 2026-10-20 | Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। |
 | [7](#pr-7) | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers | Live · 2026-10-20 | HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। সাইট-দেখার পাসওয়ার্ড একবার দিলেই ব্রাউজার মনে রাখে, বারবার চায় না। |
-| [8](#pr-8) | Nightly encrypted backup of database, uploads and configuration to Google Drive, with one-command restore | Live · 2026-10-20 | প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর। |
+| [8](#pr-8) | Nightly encrypted backup of database, uploads and configuration to Google Drive, with one-command restore | Live · 2026-10-20 | প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর। ব্যাকআপে পণ্যের ছবি আর সব ডকুমেন্টও যায়। |
 | [9](#pr-9) | Monitoring — uptime, queue depth, error rate, disk and memory, alerting to Telegram | Live · 2026-10-20 | প্রতি মিনিটে সার্ভার চেক হয়; Telegram চাবি দিলে সমস্যার খবর সেখানে যাবে। |
 | [10](#pr-10) | k6 performance baseline, recorded as the number every later change is measured against | Live · 2026-10-20 | সার্ভারের গতির প্রথম মাপ রেকর্ড করা; বাংলায় সার্ভারের গাইড। |
 | [601](#pr-601) | NVMe temporary-disk boot unit — format and mount at every boot, folder layout, systemd ordering before services, admin NVMe card and … | Live · 2026-10-20 | সার্ভার চালু হলেই দ্রুত NVMe ডিস্ক নিজে থেকে তৈরি হয়, অন্য সবকিছুর আগে। |
@@ -108,12 +108,13 @@
 
 **Docker and Docker Compose, with the project's network and volume layout**
 
-**বাংলায়:** Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে।
+**বাংলায়:** Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে। প্রতি ডিপ্লয়ের পর আর প্রতি রাতে সব পাতা ফোন ও কম্পিউটারে খুলে দেখা হয়; সমস্যা পেলে সাইট নিজে আগের ভালো ভার্সনে ফেরে।
 
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas
+  - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`
+  - GitHub pull request #20, 20 Oct
   - GitHub pull request #19, 20 Oct
   - GitHub pull request #18, 20 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
@@ -126,7 +127,8 @@
   - **20 Oct** · [CN-016 (owner: nothing reaches the owner broken)](../MASTER-REGISTER.md#build-status): The owner found that after logging in, the admin on new.extas.com.bd showed "This page couldn't load". New gate: **after every deploy and every night**, a smoke test runs on the runner with Playwright against new.extas.com.bd. It signs in with a check account whose password lives only on the server, then visits every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, shows … — No new PR numbers: this lands on PR 4/17 (deploy) and Appendix C.
   - **20 Oct 14:15** · [Scope added to existing PRs (owner, urgent admin sign-in bug; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-604): **PR 4 (deploy)** — an end-to-end check "log in → the admin loads" (`tools/admin-login-e2e.sh` + `.mjs`) runs in CI on the production images against a fresh installation (the migrate image's own command, the first owner with a generated password, a real browser opening every admin menu page); deploy.yml runs only after CI passed, so every deploy has passed it.
 - **What was built** (from the Build status row):
-  - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`
+  - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`, `infra/deploy/smoke.sh`, `smoke.yml`, `docs/reports/smoke/latest/`
+  - Tests: 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop
 - **Owning agent:** Prohori
 - **Mentions:** [PR 604](#pr-604), [PR 601](#pr-601)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
@@ -208,12 +210,13 @@
 
 **Nightly encrypted backup of database, uploads and configuration to Google Drive, with one-command restore**
 
-**বাংলায়:** প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর।
+**বাংলায়:** প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর। ব্যাকআপে পণ্যের ছবি আর সব ডকুমেন্টও যায়।
 
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys
+  - Build status row: daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys. 20 Oct: product photos (full every `BACKUP_MEDIA_FULL_EVERY_DAYS`, diffs between, checksums) and a dated docs bundle with the commit hash in every backup; the restore test checks one sample photo and the docs bundle (CN-011)
+  - GitHub pull request #20, 20 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Nightly encrypted backup of database, uploads and configuration to **Google Drive**, with one-command restore.
 - **Filed under:** [S0A · Server foundation — PR 1–10](../MASTER-REGISTER.md#s0a--server-foundation--pr-110)
@@ -224,7 +227,9 @@
   - **20 Oct** · [Scope added to existing PRs (V2.1 final · 20 Oct — pre-code demo work finished; blueprint V2.1 final; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-604): **Server admin pages in the demo (CN-001; sample numbers, labelled)** — `#/admin/server` → PR 423 / 601 / 603 / 604; `#/admin/cache` → PR 602; `#/admin/images` → PR 22 / 24 / 88; `#/admin/speed` → PR 234; `#/admin/integrations` ("Keys & connections") → PR 493 / 500; `#/admin/backup` now shows Blob + Drive → PR 8 / 395 / 507. Checks: 120 route/modal checks 0 fails + 19 flows.
   - **20 Oct 13:03** · [Scope added to existing PRs (owner, CN-011; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-604): **PR 8 (nightly backup and restore)** — every backup carries a dated docs bundle (`README.md`, `docs/BLUEPRINT.md`, `docs/MASTER-REGISTER.md` and all of `docs/`, with the commit hash), so a restore brings back that version's documentation; the restore test checks the bundle comes back and its commit matches.
 - **What was built** (from the Build status row):
+  - Names in the code: `BACKUP_MEDIA_FULL_EVERY_DAYS`
   - Tests: daily base + dump + config, WAL every minute, one-command restore, restore test
+  - Tests: the restore test checks one sample photo and the docs bundle (CN-011)
 - **Owning agent:** Prohori
 - **Mentions:** [PR 396](S19.md#pr-396), [PR 395](S19.md#pr-395), [PR 507](S19.md#pr-507), [PR 493](S00.md#pr-493)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [Blueprint: A2.9.12 Backup — Azure Blob + Google Drive (owner's answer; PR 8, 395, 396, 507)](../BLUEPRINT.md#a2912-backup--azure-blob--google-drive-owners-answer-pr-8-395-396-507) · Demo: screen `#/admin/backup` in [the demo](../demo/EXTAS-demo-V12.1.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
