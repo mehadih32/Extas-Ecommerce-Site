@@ -15,6 +15,7 @@ import { inventorySettings } from './registry-inventory';
 import { catalogueToolsSettings } from './registry-catalogue-tools';
 import { rulesSettings } from './registry-rules';
 import { combosSettings } from './registry-combos';
+import { deliverySettings } from './registry-delivery';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1112,6 +1113,8 @@ export const registry = {
   ...rulesSettings,
   // ---- S03 · PR 89–104, 571, 575 · combos and sets: pack price rounding, the generator, seasons, default templates, the bag, the set photo, the report (registry-combos.ts, version 14). ----
   ...combosSettings,
+  // ---- S06 · PR 549–553, 555 · the delivery-zone engine (registry-delivery.ts, version 15). ----
+  ...deliverySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

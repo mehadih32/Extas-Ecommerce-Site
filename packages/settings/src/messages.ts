@@ -3,11 +3,13 @@
 // settings (PR 22–25, 37) in messages/media.<lang>.json, the publish checklist settings (PR 21, 26, 29, 35) in
 // messages/publish.<lang>.json and the size chart, collection, CSV and "was" price settings (PR 27, 28, 32, 34, 38) in
 // messages/merch.<lang>.json, the link import, ghost archive and audit settings (PR 33, 36, 39) in
-// messages/catalogue-tools.<lang>.json and the ERP and stock location settings (S09) in messages/inventory.<lang>.json,
-// merged in here, and the Smart Rules and notice settings (S10) in messages/rules.<lang>.json and the combo settings
-// (S03) in messages/combos.<lang>.json.
+// messages/catalogue-tools.<lang>.json, the ERP and stock location settings (S09) in messages/inventory.<lang>.json,
+// the Smart Rules and notice settings (S10) in messages/rules.<lang>.json, the combo settings (S03) in
+// messages/combos.<lang>.json and the delivery-zone engine (S06, PR 549–555) in messages/delivery.<lang>.json, merged in here.
 import toolsBn from '../messages/catalogue-tools.bn.json';
 import toolsEn from '../messages/catalogue-tools.en.json';
+import deliveryBn from '../messages/delivery.bn.json';
+import deliveryEn from '../messages/delivery.en.json';
 import inventoryBn from '../messages/inventory.bn.json';
 import inventoryEn from '../messages/inventory.en.json';
 import mediaBn from '../messages/media.bn.json';
@@ -42,8 +44,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
