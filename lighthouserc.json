@@ -16,7 +16,8 @@
         "http://127.0.0.1:3000/admin/stock/counts",
         "http://127.0.0.1:3000/admin/stock/movements",
         "http://127.0.0.1:3000/admin/rules",
-        "http://127.0.0.1:3000/admin/rules/notices"
+        "http://127.0.0.1:3000/admin/rules/notices",
+        "http://127.0.0.1:3000/admin/combos"
       ],
       "numberOfRuns": 3,
       "settings": {

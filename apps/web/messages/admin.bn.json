@@ -13,6 +13,7 @@
       "catalogue": "ক্যাটালগ",
       "inventory": "স্টক",
       "rules": "নিয়ম",
+      "combos": "কম্বো",
       "system": "সিস্টেম"
     },
     "groupTabs": "{group}-এর পাতা"
@@ -35,7 +36,8 @@
     "stockCounts": "স্টক গোনা",
     "stockMovements": "স্টক চলাচল",
     "rules": "স্মার্ট নিয়ম",
-    "notices": "নোটিশ ও পপ-আপ"
+    "notices": "নোটিশ ও পপ-আপ",
+    "combos": "কম্বো ও কাস্টমারের সেট"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",
