@@ -1,0 +1,80 @@
+/* What the app needs on top of the ported demo rules (shop.css), each for a reason the demo does not have:
+ * - the language switch is a link here (C12.1: a plain link to the twin page), the demo's was a button; a link
+ *   would otherwise take the link colour and an underline.
+ * - the shop wrapper fills the screen, so a short page still wears the theme down to the bottom.
+ * - the interim home row (until PR 41 builds the home page) is a sliding row of category chips on the one slider
+ *   engine (PR 42): one line that scrolls sideways, no scroll bar, like the demo's rows.
+ * - the browser's own defaults come back inside the shop. The demo is written on them (a paragraph's 1em margins, a
+ *   list's indent, a button's own padding and text size), while the app-wide Tailwind reset (layer base) zeroes them
+ *   for the admin and progress pages. `revert` steps back to the browser's value wherever no shop rule sets the
+ *   property, and with zero specificity every ported rule still wins. Only what that reset changes is reverted
+ *   (~~`all: revert` on every element~~: it recomputed some 400 properties per element and cost the phone a quarter
+ *   of a second of style work in the Lighthouse run). */
+:where(.shop) :where(*), :where(.shop) :where(*)::before, :where(.shop) :where(*)::after { margin: revert; padding: revert; border: revert; }
+:where(.shop) :where(h1, h2, h3, h4, h5, h6) { font-size: revert; font-weight: revert; }
+:where(.shop) :where(ol, ul, menu) { list-style: revert; }
+:where(.shop) :where(img, video, canvas, audio, iframe, embed, object) { display: revert; vertical-align: revert; }
+:where(.shop) :where(img, video) { max-width: revert; height: revert; }
+:where(.shop) :where(button, input, select, optgroup, textarea) { font: revert; font-feature-settings: revert; font-variation-settings: revert; letter-spacing: revert; color: revert; border-radius: revert; background-color: revert; opacity: revert; appearance: revert; }
+:where(.shop) :where(a) { color: revert; text-decoration: revert; }
+:where(.shop) :where(small) { font-size: revert; }
+:where(.shop) :where(summary) { display: revert; }
+:where(.shop) :where(textarea) { resize: revert; }
+:where(.shop) :where(table) { text-indent: revert; border-color: revert; border-collapse: revert; }
+:where(.shop) :where(input, textarea)::placeholder { opacity: revert; color: revert; }
+.shop { min-height: 100dvh; }
+.shop a.langpill { color: inherit; text-decoration: none; text-align: center; }
+/* PR 85 · the reference desktop footer (H13) is drawn for a mouse; a touch screen of desktop width (a 1024 px tablet)
+ * gets finger-sized rows there (the phone gate's 44 px), the look otherwise unchanged. `html .shop.shop` outweighs the ported
+ * rules, some of which carry the demo's `body` weight (shop.css). */
+/* Touch is detected three ways, not by pointer:coarse alone (lessons, R15). */
+@media (min-width: 1024px) and (pointer: coarse), (min-width: 1024px) and (any-pointer: coarse), (min-width: 1024px) and (hover: none) {
+  html .shop.shop .fdr-col a,
+  html .shop.shop .fdr-hot,
+  html .shop.shop .fdr-soc > a,
+  html .shop.shop .fdr-hours a { min-height: 44px; min-width: 44px; }
+  html .shop.shop .fdr-soc > a,
+  html .shop.shop .fdr-hours a { display: inline-flex; align-items: center; }
+}
+/* PR 85 · tap targets of at least 44 × 44 (Appendix C2, the device gate) without changing what the demo draws: an
+ * invisible tap layer (a transparent ::before) widens the area that takes the tap, so the logo, the language pill
+ * and the "see all" link keep their drawn size. Each layer is centred on its element and only grows it. */
+html .shop .hdr a.logo::before,
+html .shop .ckh-l a.logo::before,
+html .shop a.langpill::before,
+html .shop a.hm-more::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+html .shop a.langpill,
+html .shop a.hm-more { position: relative; }
+/* V12.2 · the phone footer's social tiles are drawn 32 px tall (like the payment marks under them) and the 404 page's
+ * category chips 36 px: the same invisible layer makes each a 44 px tap. The rows' gaps (7 px; 8 px) keep the layers
+ * of neighbours apart. */
+html .shop .ftr-soc2 a.fs2,
+html .shop .nf-cats a.chip { position: relative; }
+html .shop .ftr-soc2 a.fs2::before,
+html .shop .nf-cats a.chip::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+/* The desktop row on a touch screen (a tablet in landscape): short category words are narrower than a finger. The
+ * layer is as tall as the row and at least 44 wide; the row's own gap (13 px or more) keeps neighbours apart. */
+@media (min-width: 1024px) {
+  html .shop .hdr .nav-d .nav-i::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: max(100%, 44px); transform: translateX(-50%); }
+}
+/* Under 375 px the demo draws the three header icons 40 wide, side by side, to leave the logo room. Their tap layers
+ * reach into the free space at either end (6 px) and the middle one sits on top, 2 px into each neighbour, so each
+ * takes a 44 px wide tap while the icons stay where the demo puts them. */
+@media (max-width: 374px) {
+  html .shop .hdr .hdr-r:has(.hdr-wa) > .hdr-wa::before,
+  html .shop .hdr .hdr-r:has(.hdr-wa) > .iconbtn::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+  html .shop .hdr .hdr-r:has(.hdr-wa) > .hdr-wa::before { left: -6px; }
+  html .shop .hdr .hdr-r:has(.hdr-wa) > .iconbtn:not(.hdr-bag)::before { left: -2px; right: -2px; z-index: 1; }
+  html .shop .hdr .hdr-r:has(.hdr-wa) > .hdr-bag::before { right: -6px; }
+}
+/* CN-012 (owner Note 54, item 1) · a small line icon before each link of the reference desktop footer, switched by
+ * `shell.footer.deskIcons` (off = the V12.1 words-only look). Desktop only; the phone footer is untouched.
+ * ~~width 15 px, margin-right 9 px, opacity .72 (drawn before V12.2)~~ — V12.2 draws it: the demo's own rules are now
+ * ported at the end of shop.css. */
+.shop .shop-sec { padding: 20px 0 28px; }
+@media (min-width: 1024px) { .shop .shop-sec { padding: 36px 0 48px; } }
+.shop .shop-row { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; }
+.shop .shop-row::-webkit-scrollbar { display: none; }
+.shop .shop-row > * { flex: 0 0 auto; }
+.shop .shop-row .chip { min-height: 44px; padding: 0 16px; font-size: 14px; color: var(--ink); }
+.shop .shop-row .chip .chip-n { color: var(--muted); font-size: 12px; }

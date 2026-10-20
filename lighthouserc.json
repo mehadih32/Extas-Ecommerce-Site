@@ -18,7 +18,12 @@
         "http://127.0.0.1:3000/admin/rules",
         "http://127.0.0.1:3000/admin/rules/notices",
         "http://127.0.0.1:3000/admin/combos",
-        "http://127.0.0.1:3000/admin/delivery"
+        "http://127.0.0.1:3000/admin/delivery",
+        "http://127.0.0.1:3000/",
+        "http://127.0.0.1:3000/bn",
+        "http://127.0.0.1:3000/checkout",
+        "http://127.0.0.1:3000/bn/checkout",
+        "http://127.0.0.1:3000/collections/new-in"
       ],
       "numberOfRuns": 3,
       "settings": {
