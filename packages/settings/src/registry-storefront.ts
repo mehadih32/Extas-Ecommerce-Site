@@ -60,8 +60,11 @@ export const shopLabelSchema = z.union([
 ]);
 export type ShopLabel = z.output<typeof shopLabelSchema>;
 
-/** Conditions a line needs before it may be shown (honesty: never promise what the owner has not switched on). */
-export const SHOP_REQUIREMENTS = ['cod', 'freeDelivery', 'exchange', 'whatsapp', 'hotline'] as const;
+/** Conditions a line needs before it may be shown (honesty: never promise what the owner has not switched on).
+ *  `signupList`: the marketing sign-up list keeps the number with its consent (PR 123 / 298); until then the footer's
+ *  "Get new drops first" would thank a customer and keep nothing (CN-017 lesson: every promise in customer copy is
+ *  tested end to end, or the copy goes). */
+export const SHOP_REQUIREMENTS = ['cod', 'freeDelivery', 'exchange', 'whatsapp', 'hotline', 'signupList'] as const;
 const requiresSchema = z.array(z.enum(SHOP_REQUIREMENTS)).max(SHOP_REQUIREMENTS.length);
 
 const uniqueIds = <T extends { id: string }>(list: T[]) => new Set(list.map((x) => x.id)).size === list.length;
@@ -230,6 +233,8 @@ const footerLinkSchema = z
 
 export const PAY_MARKS = ['bkash', 'nagad', 'visa', 'mc', 'cod', 'rocket', 'amex', 'ssl', 'upay', 'bank'] as const;
 export const SOCIAL_NETWORKS = ['facebook', 'instagram', 'youtube', 'tiktok'] as const;
+/** V12.2 (Note 54 #2, Note 58 A/C): the footer's social marks also carry WhatsApp (its address is `contact.whatsapp`). */
+export const FOOTER_SOCIAL = [...SOCIAL_NETWORKS, 'whatsapp'] as const;
 
 /** H13 (CN-008) · 'ref' the owner's reference layout · 'classic' the earlier desktop footer. */
 export const FOOTER_DESK_STYLES = ['ref', 'classic'] as const;
@@ -248,7 +253,7 @@ export const footerSchema = z
           .refine(uniqueIds, UNIQUE),
       })
       .strict(),
-    join: z.object({ on: z.boolean() }).strict(),
+    join: z.object({ on: z.boolean(), requires: requiresSchema.optional() }).strict(),
     columns: z
       .array(
         z
@@ -258,8 +263,9 @@ export const footerSchema = z
       .max(5)
       .refine(uniqueIds, UNIQUE),
     contact: z.object({ whatsapp: z.boolean(), hotline: z.boolean(), hours: z.boolean() }).strict(),
-    /** Which networks show and in what order; the addresses are the owner's (`social.*`, PR 509). */
-    social: z.array(z.object({ id: z.enum(SOCIAL_NETWORKS), on: z.boolean() }).strict()).max(SOCIAL_NETWORKS.length).refine(uniqueIds, UNIQUE),
+    /** Which networks show and in what order; the addresses are the owner's (`social.*`, PR 509). One without its address
+     * yet is shown, not linked (V12.2). */
+    social: z.array(z.object({ id: z.enum(FOOTER_SOCIAL), on: z.boolean() }).strict()).max(FOOTER_SOCIAL.length).refine(uniqueIds, UNIQUE),
     pay: z
       .array(z.object({ id: z.enum(PAY_MARKS), requires: requiresSchema.optional(), on: z.boolean() }).strict())
       .max(PAY_MARKS.length)
@@ -359,7 +365,8 @@ const DEFAULT_FOOTER: z.output<typeof footerSchema> = {
       { id: 'original', icon: 'shield', text: k('footer.promise.original'), on: true },
     ],
   },
-  join: { on: true },
+  // ~~join: { on: true }~~ CN-017 (SIM lesson): shown once the sign-up list keeps the number (PR 123 / 298)
+  join: { on: true, requires: ['signupList'] },
   columns: [
     {
       id: 'shop',
@@ -412,6 +419,7 @@ const DEFAULT_FOOTER: z.output<typeof footerSchema> = {
     { id: 'instagram', on: true },
     { id: 'youtube', on: true },
     { id: 'tiktok', on: true },
+    { id: 'whatsapp', on: true },
   ],
   pay: [
     { id: 'bkash', on: true },

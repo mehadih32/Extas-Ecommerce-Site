@@ -107,4 +107,13 @@ describe('storefront settings (v16)', () => {
     expect(links.filter((l) => l.dev === 'phone').map((l) => l.id).sort()).toEqual(['careers', 'payment', 'tshirts']);
     expect(links.find((l) => l.id === 'combos')).toMatchObject({ dev: 'desk', on: false });
   });
+
+  it('V12.2 (Note 54 #2, Note 58): the footer\'s social marks are the four networks and WhatsApp, each once', () => {
+    const footer = storefrontSettings['shell.footer'].default;
+    expect(footer.social.map((x) => x.id)).toEqual(['facebook', 'instagram', 'youtube', 'tiktok', 'whatsapp']);
+    expect(footer.deskIcons).toBe(true);
+    const twice = { ...footer, social: [...footer.social, { id: 'whatsapp', on: false }] };
+    expect(footerSchema.safeParse(twice).success).toBe(false);
+    expect(footerSchema.safeParse({ ...footer, social: [{ id: 'myspace', on: true }] }).success).toBe(false);
+  });
 });
