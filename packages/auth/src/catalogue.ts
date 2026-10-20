@@ -45,6 +45,12 @@ export const PERMISSIONS = {
   'inventory.read': { group: 'inventory' },
   'inventory.locations': { group: 'inventory' },
   'inventory.erp': { group: 'inventory' },
+  // S09 · PR 205, 206, 207 — run a stock re-sync now (all, or one product), send waiting or failed ERP documents again,
+  // check all stock against the ERP. Nothing here types a stock number in: the ERP stays the master.
+  'inventory.sync': { group: 'inventory' },
+  // S09 · PR 203 — count a location by barcode and give a reason for each difference. Counting never changes stock:
+  // the counted differences are corrected in the ERP.
+  'inventory.audit': { group: 'inventory' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

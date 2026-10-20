@@ -1,7 +1,7 @@
 {
   "groups": {
     "erp": "ERP connection",
-    "inventory": "Stock locations"
+    "inventory": "Stock"
   },
   "erp": {
     "defaultMode": {
@@ -63,6 +63,28 @@
         "label": "Live stock check at checkout (seconds)",
         "help": "The last check before an order asks the ERP once and waits this long. No answer: the shop uses its own copy of the stock, so checkout never waits."
       }
+    },
+    "push": {
+      "maxAttempts": {
+        "label": "Tries for each document sent to the ERP",
+        "help": "An order or other document that the ERP does not take is tried again up to this many times, with longer pauses; then it waits for someone to look at it."
+      },
+      "backoffBaseSeconds": {
+        "label": "First pause before sending again (seconds)",
+        "help": "Each further pause is twice as long, up to the longest pause below."
+      },
+      "backoffMaxSeconds": {
+        "label": "Longest pause before sending again (seconds)",
+        "help": "The pause between tries never grows past this."
+      },
+      "batchSize": {
+        "label": "Documents sent to the ERP in one round",
+        "help": "At most this many documents are sent in one round; the rest follow in the next."
+      },
+      "relaySeconds": {
+        "label": "Send waiting documents every (seconds)",
+        "help": "How often the shop sends orders and other documents that are waiting for the ERP."
+      }
     }
   },
   "inventory": {
@@ -84,6 +106,116 @@
       "stockLocationCode": {
         "label": "Location that receives the ERP's stock",
         "help": "In each warehouse linked to an ERP warehouse, the ERP's stock numbers go into the location with this code."
+      }
+    },
+    "reservation": {
+      "holdMinutes": {
+        "label": "Checkout hold for a guest (minutes)",
+        "help": "When a guest starts checkout, the pieces in the bag are held for everyone else on all stores for this long. Each step of checkout starts the time again."
+      },
+      "holdMinutesSignedIn": {
+        "label": "Checkout hold for a signed-in customer (minutes)",
+        "help": "The same hold for a customer who is signed in."
+      },
+      "abandonMinutes": {
+        "label": "Let go of an idle bag after (minutes)",
+        "help": "When nothing happens in a bag for this long, its held pieces go back on sale, even before the hold time is over."
+      },
+      "convertedHoldHours": {
+        "label": "An order's hold lasts at most (hours)",
+        "help": "After an order is placed its pieces stay held until the ERP's stock shows the order. If the ERP never shows it, the hold ends after this many hours."
+      },
+      "maxUnitsPerLine": {
+        "label": "Most pieces of one variant held for one bag",
+        "help": "A bag cannot hold more pieces than this of one colour and size."
+      },
+      "lockRetries": {
+        "label": "Tries again when two checkouts meet",
+        "help": "When two checkouts reach for the same piece at the same moment, the second one waits and tries again up to this many times."
+      },
+      "sweepSeconds": {
+        "label": "Check for ended holds every (seconds)",
+        "help": "How often the shop looks for holds whose time is over and puts those pieces back on sale."
+      },
+      "batchSize": {
+        "label": "Holds handled in one round",
+        "help": "At most this many ended holds are put back in one round; the rest follow in the next."
+      }
+    },
+    "lowStock": {
+      "enabled": {
+        "label": "Low-stock alerts",
+        "help": "Note when a colour and size is almost out, once for all stores together. The message itself is sent by the notification settings."
+      },
+      "defaultThreshold": {
+        "label": "Almost out at this many pieces or fewer",
+        "help": "A colour and size with this many sellable pieces or fewer gets a low-stock alert. 0 means only when it is sold out."
+      },
+      "skuThresholds": {
+        "label": "Own limit for single variants (by SKU)",
+        "help": "A different \"almost out\" number for some SKUs, e.g. a fast seller. SKUs not listed use the number above."
+      },
+      "sweepMinutes": {
+        "label": "Check every variant for low stock every (minutes)",
+        "help": "Besides after every stock update, the shop checks all variants this often."
+      }
+    },
+    "audit": {
+      "reasons": {
+        "label": "Reasons for a counting difference",
+        "help": "When a counted number differs from the ERP's, one of these reasons is chosen. Each has a short key and its text in English and Bengali."
+      },
+      "requireReason": {
+        "label": "A difference needs a reason",
+        "help": "A stock count can only be finished when every line that differs has a reason."
+      },
+      "maxLines": {
+        "label": "Most lines in one stock count",
+        "help": "A stock count of one location holds at most this many colour-and-size lines."
+      },
+      "maxQuantityPerScan": {
+        "label": "Most pieces in one scan",
+        "help": "One scan can add at most this many pieces (a box scanned with its count)."
+      }
+    },
+    "publish": {
+      "recheckAfterPull": {
+        "label": "Recheck products when their ERP stock changes",
+        "help": "When the ERP's stock for a product changes, its publish checklist runs again, so the \"ready to publish\" queue follows the real stock."
+      },
+      "discoverMaxPages": {
+        "label": "Pages read when looking for new ERP styles",
+        "help": "Looking for ERP styles the shop does not have yet reads at most this many pages from the ERP."
+      }
+    },
+    "report": {
+      "maxRows": {
+        "label": "Most rows in the stock movement report",
+        "help": "The movement report and the check against the ERP show at most this many rows; narrow the dates or the SKU for more."
+      },
+      "defaultDays": {
+        "label": "Days the movement report opens on",
+        "help": "The stock movement report first shows this many days up to today; any other dates can be chosen on the page."
+      }
+    },
+    "reconcile": {
+      "everyHours": {
+        "label": "Check all stock against the ERP every (hours)",
+        "help": "The shop compares every stock number with the ERP this often and lists what does not match. Nothing is changed by the check."
+      }
+    },
+    "admin": {
+      "recentRuns": {
+        "label": "Recent sync runs shown",
+        "help": "How many of the latest sync runs the stock page lists."
+      },
+      "listSize": {
+        "label": "Rows per list on the stock page",
+        "help": "How many low-stock items and waiting documents the stock page shows at a time."
+      },
+      "lateAfterMinutes": {
+        "label": "Stock counts as late after (minutes)",
+        "help": "The stock page warns when the last good stock pull from the ERP is older than this."
       }
     }
   }

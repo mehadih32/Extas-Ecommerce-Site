@@ -67,6 +67,9 @@ const otherApi: ErpApi = {
   async stockForSku(sku) {
     return otherRows.filter((r) => r.sku === sku);
   },
+  async push(doc) {
+    return { erpId: `OTHER-${doc.type}`, status: 201, body: null, replayed: false };
+  },
 };
 const otherErp = defineAdapter<ErpApi, Record<string, never>>({
   kind: 'ERP',

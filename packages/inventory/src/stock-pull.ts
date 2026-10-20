@@ -21,6 +21,9 @@ import { nowOf, setting, TX, type Db, type InventoryDeps } from './context';
 import { behaviourOf, resolveErp, type ErpLink } from './guard';
 import { sellableKinds } from './locations';
 import { checkCompany } from './mapping';
+import { evaluateLowStock } from './low-stock';
+import { recheckProductsForStock } from './publish-queue';
+import { lockPools, refreshPools, releaseHandedOver } from './reservations';
 import { recomputeVariantStock, sellableUnits } from './stock';
 import { InventoryError } from './errors';
 import { callErp, ErpCallFailed, errorCode, errorText, finishRun, readState, retryPolicy, saveState, startRun } from './sync';
@@ -50,6 +53,10 @@ export interface StockPullResult {
   movements: number;
   variantsChanged: number;
   productsRefreshed: number;
+  /** PR 202: low-stock alerts raised or changed after this pull. */
+  lowStock: number;
+  /** PR 204: products whose publish checklist ran again because their ERP stock changed. */
+  productsRechecked: number;
   /** False when the page cap stopped the pull; the next pull carries on. */
   complete: boolean;
   error: { code: string; text: string } | null;
@@ -72,6 +79,8 @@ const blank = (): StockPullResult => ({
   movements: 0,
   variantsChanged: 0,
   productsRefreshed: 0,
+  lowStock: 0,
+  productsRechecked: 0,
   complete: true,
   error: null,
 });
@@ -111,12 +120,19 @@ export async function erpStockLocations(db: Db, stockCode: string): Promise<Map<
   return out;
 }
 
-type PageCounts = Pick<StockPullResult, 'applied' | 'unchanged' | 'stale' | 'unknownSku' | 'retiredSku' | 'unmappedWarehouse' | 'movements' | 'variantsChanged' | 'productsRefreshed'> & { maxSeen: Date | null };
+type PageCounts = Pick<StockPullResult, 'applied' | 'unchanged' | 'stale' | 'unknownSku' | 'retiredSku' | 'unmappedWarehouse' | 'movements' | 'variantsChanged' | 'productsRefreshed'> & {
+  maxSeen: Date | null;
+  /** Variants whose numbers changed (PR 202 low stock, PR 204 publish recheck read them after the pull). */
+  touched: string[];
+};
 
-async function applyPage(deps: InventoryDeps, storeId: number, runId: string, rows: ErpStockRow[], locations: Map<string, ErpLocation>, kinds: Set<LocationKindName>): Promise<PageCounts> {
+export async function applyPage(deps: InventoryDeps, storeId: number, runId: string, rows: ErpStockRow[], locations: Map<string, ErpLocation>, kinds: Set<LocationKindName>): Promise<PageCounts> {
   return deps.db.$transaction(async (tx) => {
-    const c: PageCounts = { applied: 0, unchanged: 0, stale: 0, unknownSku: 0, retiredSku: 0, unmappedWarehouse: 0, movements: 0, variantsChanged: 0, productsRefreshed: 0, maxSeen: null };
+    const c: PageCounts = { applied: 0, unchanged: 0, stale: 0, unknownSku: 0, retiredSku: 0, unmappedWarehouse: 0, movements: 0, variantsChanged: 0, productsRefreshed: 0, maxSeen: null, touched: [] };
     const skus = [...new Set(rows.map((r) => r.sku))];
+    // PR 198: the page's pools are locked first, in the same order every hold locks them, so a checkout and the pull
+    // never interleave on a row (and never deadlock each other).
+    await lockPools(tx, skus);
     const variants = await tx.productVariant.findMany({ where: { storeId, sku: { in: skus } }, select: { id: true, sku: true, archivedAt: true } });
     const bySku = new Map(variants.map((v) => [v.sku, v]));
     const locationIds = [...new Set([...locations.values()].map((l) => l.locationId))];
@@ -124,6 +140,7 @@ async function applyPage(deps: InventoryDeps, storeId: number, runId: string, ro
     const byKey = new Map(levels.map((l) => [`${l.variantId}:${l.locationId}`, l]));
     const moves: { variantId: string; locationId: string; delta: number; reason: string; referenceType: string; referenceId: string; idempotencyKey: string; erpRef: string }[] = [];
     const touched = new Set<string>();
+    const applied: { variantId: string; locationId: string; erpUpdatedAt: Date }[] = [];
 
     for (const r of rows) {
       if (!c.maxSeen || r.updatedAt > c.maxSeen) c.maxSeen = r.updatedAt;
@@ -155,6 +172,7 @@ async function applyPage(deps: InventoryDeps, storeId: number, runId: string, ro
       const data = { onHand: r.onHand, reserved: r.reserved, available: r.available, erpUpdatedAt: r.updatedAt };
       const saved = cur ? await tx.stockLevel.update({ where: { id: cur.id }, data }) : await tx.stockLevel.create({ data: { variantId: v.id, locationId: loc.locationId, ...data } });
       byKey.set(key, saved);
+      applied.push({ variantId: v.id, locationId: loc.locationId, erpUpdatedAt: r.updatedAt });
       if (sameNumbers) {
         c.unchanged++;
         continue;
@@ -177,9 +195,16 @@ async function applyPage(deps: InventoryDeps, storeId: number, runId: string, ro
       }
     }
     if (moves.length) c.movements = (await tx.stockMovement.createMany({ data: moves, skipDuplicates: true })).count;
+    // PR 197/198: order holds the ERP now counts itself let go; new rows take their pool's holds (cartReserved).
+    if (applied.length) {
+      const now = nowOf(deps);
+      await releaseHandedOver(tx, applied, now);
+      await refreshPools(tx, await lockPools(tx, skus), now, kinds);
+    }
     const re = await recomputeVariantStock(tx, storeId, [...touched], kinds);
     c.variantsChanged = re.variantsChanged;
     c.productsRefreshed = re.productsRefreshed;
+    c.touched = [...touched];
     return c;
   }, TX);
 }
@@ -189,6 +214,18 @@ async function applyPage(deps: InventoryDeps, storeId: number, runId: string, ro
 function skippedSummary(r: StockPullResult): string | null {
   const parts = ([['UNKNOWN_SKU', r.unknownSku], ['UNMAPPED_WAREHOUSE', r.unmappedWarehouse], ['REJECTED_ROW', r.rejected]] as const).filter(([, n]) => n > 0);
   return parts.length ? parts.map(([k, n]) => `${k} ×${n}`).join(' · ') : null;
+}
+
+/**
+ * What follows a change of the mirror (the pull, a single-product re-sync): low-stock alerts for the SKUs that changed
+ * (PR 202) and the publish checklist of their products (PR 204). A failure here never undoes the stock change.
+ */
+export async function afterStockChange(deps: InventoryDeps, storeId: number, variantIds: string[]): Promise<{ lowStock: number; productsRechecked: number }> {
+  if (!variantIds.length) return { lowStock: 0, productsRechecked: 0 };
+  const skus = (await deps.db.productVariant.findMany({ where: { id: { in: variantIds } }, select: { sku: true } })).map((v) => v.sku);
+  const low = await evaluateLowStock(deps, { skus });
+  const productsRechecked = await recheckProductsForStock(deps, storeId, variantIds);
+  return { lowStock: low.raised + low.updated + low.resolved, productsRechecked };
 }
 
 export async function pullStock(deps: InventoryDeps, job: StockPullJob): Promise<StockPullResult> {
@@ -232,6 +269,7 @@ async function run(deps: InventoryDeps, job: StockPullJob, link: Extract<ErpLink
     const sinceDate = job.full ? null : resume ? (resume.since ? new Date(resume.since) : null) : state?.updatedSince ? new Date(state.updatedSince.getTime() - overlapS * 1000) : null;
     let cursor: string | null = resume?.cursor ?? null;
     let maxSeen: Date | null = job.full ? null : (state?.updatedSince ?? null);
+    const touched = new Set<string>();
 
     for (;;) {
       const page = (await callErp(deps, policy, (o) => link.api.stock({ updatedSince: sinceDate, cursor, limit: pageSize, warehouseId: link.setup.erpWarehouseId }, o))).value;
@@ -241,6 +279,7 @@ async function run(deps: InventoryDeps, job: StockPullJob, link: Extract<ErpLink
       const c = await applyPage(deps, storeId, runId, page.items, locations, kinds);
       for (const k of ['applied', 'unchanged', 'stale', 'unknownSku', 'retiredSku', 'unmappedWarehouse', 'movements', 'variantsChanged', 'productsRefreshed'] as const) result[k] += c[k];
       if (c.maxSeen && (!maxSeen || c.maxSeen > maxSeen)) maxSeen = c.maxSeen;
+      for (const id of c.touched) touched.add(id);
       cursor = page.nextCursor;
       await saveState(deps.db, storeId, 'stock', { cursor: cursor ? encodeResume({ since: sinceDate ? sinceDate.toISOString() : null, cursor }) : null });
       if (!cursor) break;
@@ -250,6 +289,9 @@ async function run(deps: InventoryDeps, job: StockPullJob, link: Extract<ErpLink
       }
     }
 
+    const follow = await afterStockChange(deps, storeId, [...touched]);
+    result.lowStock = follow.lowStock;
+    result.productsRechecked = follow.productsRechecked;
     const at = nowOf(deps);
     await saveState(deps.db, storeId, 'stock', { ...(result.complete ? { cursor: null, updatedSince: maxSeen } : {}), lastSuccessAt: at, lastError: null });
     await finishRun(deps.db, runId, { ok: true, itemsOk: result.applied + result.unchanged + result.stale + result.retiredSku, itemsFailed: result.unknownSku + result.unmappedWarehouse + result.rejected, error: skippedSummary(result) }, at);

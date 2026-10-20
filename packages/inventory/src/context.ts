@@ -31,6 +31,11 @@ export interface InventoryDeps {
   sleep?: (ms: number) => Promise<void>;
   /** 0 ≤ n < 1, for the backoff spread (tests pass a fixed one). */
   random?: () => number;
+  /**
+   * Test seams only (never set by the app): `afterPoolLock` runs while a hold has the pool rows locked, so a test can
+   * hold the lock open and prove a second checkout waits for it (PR 198).
+   */
+  hooks?: { afterPoolLock?: () => Promise<void> };
 }
 
 export interface Who {
@@ -39,7 +44,7 @@ export interface Who {
   ctx?: RequestContext;
 }
 
-export type InventoryPermission = 'inventory.read' | 'inventory.locations' | 'inventory.erp';
+export type InventoryPermission = 'inventory.read' | 'inventory.locations' | 'inventory.erp' | 'inventory.sync' | 'inventory.audit';
 
 export const nowOf = (deps: InventoryDeps) => deps.now?.() ?? new Date();
 

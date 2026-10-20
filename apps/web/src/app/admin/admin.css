@@ -5,6 +5,8 @@
 
 /* PR 28 — the size chart screen's styles ride in the same file (one stylesheet for the admin, no extra request). */
 @import './size-charts/size-charts.css';
+/* S09 · PR 202–207 — the stock pages (stock and ERP sync, stock counts, movements), same file for the same reason. */
+@import './stock/stock.css';
 
 .ad {
   /* colours (demo "classic" theme + admin shell) */

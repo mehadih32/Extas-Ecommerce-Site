@@ -24,6 +24,8 @@ export const CHECK_FIX: Record<PublishCheckKey, { page: 'product'; section: stri
   seo: { page: 'product', section: 'sec-naming' },
   description: { page: 'product', section: 'sec-basics' },
   stock: { page: 'product', section: 'sec-variants' },
+  // PR 204 — stock in a place the shop sells from comes from the ERP; the grid shows it per SKU
+  sellableStock: { page: 'product', section: 'sec-variants' },
 };
 
 /** The one-click route to fix a check of a product. */

@@ -1104,7 +1104,7 @@ export const registry = {
     sortOrder: 190,
     version: 5,
   }),
-  // ---- S09 · PR 194, 195, 196, 201, 497–499 · ERP sync and stock locations (registry-inventory.ts, version 10). ----
+  // ---- S09 · PR 194–207, 497–499 · ERP sync, stock locations, holds, pushes, alerts, audits (registry-inventory.ts, versions 10–11). ----
   ...inventorySettings,
 } satisfies RegistryShape;
 

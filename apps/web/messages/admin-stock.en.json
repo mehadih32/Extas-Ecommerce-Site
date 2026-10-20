@@ -1,0 +1,300 @@
+{
+  "stock": {
+    "metaTitle": "Stock and ERP sync",
+    "eyebrow": "Stock",
+    "title": "Stock and ERP sync",
+    "intro": "Stock comes from the ERP. Here you see when it last came in, what failed and what is still waiting to go to the ERP.",
+    "sep": " · ",
+    "more": "{n} more",
+    "noSync": "Re-sync and the ERP check need the \"run stock sync\" permission.",
+    "time": {
+      "never": "Never yet",
+      "justNow": "Just now",
+      "minutesAgo": "{n} min ago"
+    },
+    "level": {
+      "ok": {
+        "title": "All in order",
+        "text": "Stock is coming in from the ERP on time and nothing is stuck."
+      },
+      "practice": {
+        "title": "Practice ERP",
+        "text": "The ERP keys are not in yet, so the shop practises against a pretend ERP. Real stock is not touched."
+      },
+      "late": {
+        "title": "Stock is late",
+        "text": "No stock update for more than {minutes} minutes. The shop keeps selling from its last copy."
+      },
+      "failing": {
+        "title": "Something failed",
+        "text": "The last stock update or a document to the ERP failed. See the list below."
+      },
+      "down": {
+        "title": "The ERP cannot be reached",
+        "text": "The ERP connection does not work, or documents gave up after every try. Nothing is lost: they wait here."
+      },
+      "off": {
+        "title": "No ERP",
+        "text": "This store runs without an ERP, so there is nothing to sync."
+      }
+    },
+    "kpi": {
+      "lastStock": "Last stock update",
+      "every": "Checked every {n} min",
+      "waiting": "Waiting for the ERP",
+      "waitingSub": "Orders and changes",
+      "failed": "Did not go",
+      "failedSub": "Can be sent again",
+      "held": "Held pieces",
+      "heldSub": "{carts} bags in checkout · {orders} in orders",
+      "low": "Low stock",
+      "lowSub": "All three stores together",
+      "counts": "Open stock counts",
+      "countsSub": "Not finished yet"
+    },
+    "erp": {
+      "title": "ERP connection",
+      "sub": "The ERP is the master of stock. The shop only reads it.",
+      "mode": "Where stock comes from",
+      "modes": {
+        "EXTAS_ERP": "Our ERP",
+        "OTHER_ERP": "Another ERP",
+        "NONE": "No ERP"
+      },
+      "connection": "Connection",
+      "states": {
+        "none": "Not used",
+        "mock": "Practice ERP (keys not in yet)",
+        "unavailable": "Not working — check the keys",
+        "connected": "Connected"
+      },
+      "keys": "Keys & connections",
+      "lastStock": "Last good stock update",
+      "resuming": "The last update stopped half way; the next one carries on from there."
+    },
+    "resync": {
+      "all": "Re-sync all stock now",
+      "one": "Re-sync this SKU",
+      "running": "Working…",
+      "skuLabel": "SKU of one product to re-sync",
+      "skuPlaceholder": "SKU, e.g. from the label",
+      "done": "Stock updated: {n} changed, {same} the same.",
+      "failed": "The ERP did not answer ({code}). The shop keeps its last copy.",
+      "notInErp": "The ERP has no stock for {sku}.",
+      "skipped": {
+        "ERP_ON_PRACTICE": "Practice ERP: nothing to re-sync until the real keys are in.",
+        "ERP_NONE": "This store runs without an ERP."
+      }
+    },
+    "reconcile": {
+      "button": "Check all stock against the ERP",
+      "running": "Checking…",
+      "allMatch": "Everything matches the ERP ({ok} rows).",
+      "found": "{n} differences found ({ok} rows match). Nothing was changed: re-sync fixes them.",
+      "kind": {
+        "MISSING_IN_SHOP": "{n} only in the ERP",
+        "MISSING_IN_ERP": "{n} only in the shop",
+        "ON_HAND_DIFFERS": "{n} with a different count",
+        "RESERVED_DIFFERS": "{n} with a different \"booked\" number"
+      },
+      "line": "ERP {erp} · shop {shop}",
+      "partial": "The check stopped at the page limit; run it again for the rest.",
+      "unknown": "{n} ERP rows are for styles the shop does not have yet.",
+      "failed": "The check could not finish ({code}). Nothing was changed.",
+      "skipped": {
+        "ERP_ON_PRACTICE": "Practice ERP: there is nothing real to check yet.",
+        "ERP_NONE": "This store runs without an ERP."
+      }
+    },
+    "docs": {
+      "title": "Documents to the ERP",
+      "sub": "Confirmed orders and their changes go to the ERP as documents. Each is sent once, even if it is tried again.",
+      "counts": {
+        "pending": "waiting",
+        "failed": "refused",
+        "dead": "gave up",
+        "skipped": "no ERP",
+        "sent": "sent"
+      },
+      "status": {
+        "PENDING": "Waiting",
+        "SENT": "Sent",
+        "FAILED": "Refused",
+        "DEAD": "Gave up",
+        "SKIPPED_NO_ERP": "No ERP"
+      },
+      "type": {
+        "order_create": "Order {order}",
+        "order_status": "Order {order}: status change"
+      },
+      "tries": "{n} tries",
+      "empty": "Nothing is waiting or stuck.",
+      "retry": "Send again ({n})",
+      "queued": "{n} documents will be sent again."
+    },
+    "low": {
+      "title": "Low stock",
+      "sub": "Counted once for all stores together, after what is held in checkout.",
+      "threshold": "alert at {n}",
+      "empty": "Nothing is running low."
+    },
+    "queue": {
+      "title": "Waiting to go live, with real stock",
+      "sub": "Products not on the shop yet, with the pieces the ERP has. The checklist runs again by itself when their stock changes.",
+      "ready": "Ready to publish",
+      "inStock": "Has stock — finish the checklist",
+      "noStock": "No stock to sell yet",
+      "empty": "Nothing is waiting.",
+      "findStyles": "Find new styles in the ERP",
+      "looking": "Looking…",
+      "practice": "These are practice styles from the pretend ERP.",
+      "skus": "{n} SKUs",
+      "stylesNone": "This store runs without an ERP.",
+      "stylesNoneNew": "The shop already has every style the ERP sells.",
+      "truncated": "Only the first pages were read; there may be more."
+    },
+    "runs": {
+      "title": "Recent runs",
+      "sub": "Each stock update, re-sync, check and sending round, newest first.",
+      "kind": {
+        "stock_pull": "Stock update",
+        "stock_resyncProduct": "One product re-synced",
+        "stock_reconcile": "Check against the ERP",
+        "documents_push": "Documents sent"
+      },
+      "status": {
+        "QUEUED": "Queued",
+        "RUNNING": "Running",
+        "SUCCEEDED": "Done",
+        "FAILED": "Failed",
+        "CANCELLED": "Stopped"
+      },
+      "items": "{ok} fine · {bad} not",
+      "empty": "Nothing has run yet."
+    },
+    "erpCodes": {
+      "AUTH": "The ERP refused the key. Check it on Keys & connections.",
+      "FORBIDDEN": "The ERP does not allow this key to do that.",
+      "NOT_FOUND": "The ERP does not know it.",
+      "CONFLICT": "The ERP refused: not enough stock there.",
+      "RATE_LIMITED": "The ERP asked to slow down; it is tried again later.",
+      "INVALID_REQUEST": "The ERP refused the document as wrong.",
+      "SERVER": "The ERP had an error; it is tried again later.",
+      "TIMEOUT": "The ERP took too long to answer.",
+      "NETWORK": "The ERP could not be reached.",
+      "BAD_RESPONSE": "The ERP answered in a way the shop does not understand.",
+      "NOT_CONFIGURED": "The ERP address or key is missing.",
+      "COMPANY_MISMATCH": "The key belongs to another ERP company. Nothing was synced.",
+      "ERP_UNAVAILABLE": "The ERP connection does not work."
+    },
+    "errors": {
+      "ERP_NOT_CONNECTED": "This store runs without an ERP.",
+      "ERP_UNAVAILABLE": "The ERP connection does not work. Check Keys & connections.",
+      "AUDIT_OPEN": "This place is being counted already. Open that count instead.",
+      "REASON_REQUIRED": "Every line that differs needs a reason first.",
+      "CONFLICT": "This count is closed or not ready for that step.",
+      "PARENT_ARCHIVED": "This place is archived.",
+      "NOT_FOUND": "Not found. Check the SKU.",
+      "INVALID_INPUT": "Something is not filled in right: {fields}",
+      "FORBIDDEN": "You do not have the permission for this."
+    },
+    "counts": {
+      "metaTitle": "Stock counts",
+      "title": "Stock counts",
+      "intro": "Count a shelf or a room with the barcode scanner. The count only reports: the stock stays as the ERP says, and the differences go to the ERP team with their reasons.",
+      "newTitle": "Start a count",
+      "newSub": "One place at a time; one open count per place.",
+      "location": "Place to count",
+      "start": "Start counting",
+      "noLocations": "No places yet. Add a warehouse first.",
+      "noPermission": "Counting needs the \"stock count\" permission.",
+      "listTitle": "Counts",
+      "lines": "{n} lines",
+      "open": "Open the count",
+      "empty": "No counts yet.",
+      "unknownPlace": "A place that is no longer listed",
+      "status": {
+        "COUNTING": "Counting",
+        "REVIEW": "Comparing",
+        "COMPLETED": "Finished",
+        "CANCELLED": "Stopped"
+      }
+    },
+    "count": {
+      "metaTitle": "Stock count",
+      "eyebrow": "Stock count",
+      "back": "All counts",
+      "started": "Started {date}",
+      "closed": {
+        "COMPLETED": "finished {date}",
+        "CANCELLED": "stopped {date}"
+      },
+      "head": {
+        "COUNTING": "Scan the pieces",
+        "REVIEW": "Compare and give reasons",
+        "COMPLETED": "Finished",
+        "CANCELLED": "Stopped"
+      },
+      "sub": {
+        "COUNTING": "Scan each piece, or type the SKU and the number. When the place is done, compare with the ERP.",
+        "REVIEW": "The ERP numbers are fixed now. A forgotten shelf can still be scanned. Each difference needs a reason.",
+        "COMPLETED": "The result is kept. The stock stays as the ERP says.",
+        "CANCELLED": "This count was stopped without a result. It is kept here."
+      },
+      "code": "Barcode or SKU",
+      "codePlaceholder": "Scan or type",
+      "qty": "Pieces",
+      "qtyBad": "Pieces must be a whole number from 1 to {max}.",
+      "add": "Add",
+      "added": "{code}: {n} counted",
+      "unknown": "{code} is not known; it is kept as its own line ({n}).",
+      "totals": {
+        "lines": "lines",
+        "counted": "counted",
+        "expected": "ERP says",
+        "differing": "differ",
+        "unknown": "not known"
+      },
+      "review": "Done — compare with the ERP",
+      "complete": "Finish the count",
+      "cancel": "Stop this count",
+      "cancelConfirm": "Stop this count without a result? It stays in the list.",
+      "needReasons": "{n} lines still need a reason.",
+      "linesTitle": "What was counted",
+      "noLines": "Nothing scanned yet.",
+      "unknownItem": "Not known",
+      "counted": "counted",
+      "expected": "ERP",
+      "variance": "difference",
+      "plus": "+{n}",
+      "reason": "Reason",
+      "pickReason": "Pick a reason…",
+      "showAll": "Show all {n} lines",
+      "onlyDiff": "Only the {n} that differ",
+      "noDiff": "Every line matches the ERP."
+    },
+    "moves": {
+      "metaTitle": "Stock movements",
+      "title": "Stock movements",
+      "intro": "What came in and went out, per SKU and place, from the changes the ERP sent. A line is marked when its changes do not add up to the stock now.",
+      "from": "From",
+      "to": "To",
+      "sku": "SKU",
+      "optional": "(optional)",
+      "show": "Show",
+      "badRange": "The start date must be before the end date.",
+      "in": "In",
+      "out": "Out",
+      "net": "Net",
+      "opening": "At start",
+      "closing": "At end",
+      "mismatched": "Do not add up",
+      "rowsTitle": "{n} lines",
+      "rowsSub": "Sorted by SKU.",
+      "changes": "{n} changes",
+      "gap": "The changes do not add up to the stock now ({now}). Re-sync this SKU.",
+      "empty": "No movements in these days.",
+      "truncated": "Only the first lines are shown; pick fewer days or one SKU."
+    }
+  }
+}

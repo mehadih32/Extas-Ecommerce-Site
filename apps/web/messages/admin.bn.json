@@ -11,7 +11,8 @@
     "logout": "লগআউট",
     "groups": {
       "catalogue": "ক্যাটালগ",
-      "system": "সিস্টেম"
+      "system": "সিস্টেম",
+      "inventory": "স্টক"
     },
     "groupTabs": "{group}-এর পাতা"
   },
@@ -28,7 +29,10 @@
     "sizeCharts": "সাইজ চার্ট",
     "productImport": "লিংক থেকে আনা",
     "productAudit": "প্রোডাক্ট অডিট",
-    "backInStock": "স্টকে ফিরলে"
+    "backInStock": "স্টকে ফিরলে",
+    "stock": "স্টক ও ERP",
+    "stockCounts": "স্টক গোনা",
+    "stockMovements": "স্টক চলাচল"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

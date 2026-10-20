@@ -224,3 +224,84 @@ describe('the ERP adapter (PR 497, 498)', () => {
     }
   });
 });
+
+describe('documents to the ERP (PR 199, 200: SalesOrder as a document, Idempotency-Key on every write)', () => {
+  const order = (ext: string, qty = 1) => ({
+    type: 'order.create' as const,
+    body: {
+      channel: 'WEBSITE' as const,
+      status: 'CONFIRMED' as const,
+      externalOrderId: ext,
+      customerName: 'Sample Customer',
+      customerPhone: '01700000000',
+      shippingAddress: 'Sample road 1',
+      items: [{ sku: 'DOC-SKU', quantity: qty, unitPrice: '100.00', discount: '0.00' }],
+      shippingFee: '0.00',
+      codAmount: '100.00',
+      paymentMethod: 'COD',
+      note: null,
+    },
+  });
+
+  it('a push without a key is refused before anything is sent', async () => {
+    const w = new MockErpWorld();
+    expect(await codeOf(client(w).push(order('S-1'), { idempotencyKey: '' }))).toBe('INVALID_REQUEST');
+    expect(w.calls).toHaveLength(0);
+  });
+
+  it('a SalesOrder reserves its stock in the ERP once; the same key again replays the first answer', async () => {
+    const w = new MockErpWorld();
+    w.setStock('DOC-SKU', 'SAMPLE-WH-1', { onHand: 3, updatedAt: at(0) });
+    const api = client(w);
+    expect(await api.push(order('S-1', 2), { idempotencyKey: 'order:1:create' })).toMatchObject({ erpId: 'SAMPLE-SO-1', status: 201, replayed: false });
+    expect(await api.push(order('S-1', 2), { idempotencyKey: 'order:1:create' })).toMatchObject({ erpId: 'SAMPLE-SO-1', status: 201, replayed: true });
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 3, reserved: 2 });
+    expect(w.orders()).toHaveLength(1);
+    expect(w.calls.at(-1)).toMatchObject({ method: 'POST', path: '/orders', status: 201 });
+  });
+
+  it('the same key with another body is refused; a new key for the same order is a duplicate', async () => {
+    const w = new MockErpWorld();
+    w.setStock('DOC-SKU', 'SAMPLE-WH-1', { onHand: 5, updatedAt: at(0) });
+    const api = client(w);
+    await api.push(order('S-1', 1), { idempotencyKey: 'k1' });
+    const mismatch = await errOf(api.push(order('S-1', 2), { idempotencyKey: 'k1' }));
+    expect([mismatch.code, mismatch.status, mismatch.erpCode]).toEqual(['INVALID_REQUEST', 422, 'IDEMPOTENCY_MISMATCH']);
+    const dup = await errOf(api.push(order('S-1', 1), { idempotencyKey: 'k2' }));
+    expect([dup.code, dup.erpCode, dup.retryable]).toEqual(['CONFLICT', 'DUPLICATE_EXTERNAL_ORDER', false]);
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 5, reserved: 1 });
+  });
+
+  it('short stock is a 409 naming the SKU, and nothing is reserved', async () => {
+    const w = new MockErpWorld();
+    w.setStock('DOC-SKU', 'SAMPLE-WH-1', { onHand: 1, updatedAt: at(0) });
+    const err = await errOf(client(w).push(order('S-9', 2), { idempotencyKey: 'k9' }));
+    expect([err.code, err.erpCode]).toEqual(['CONFLICT', 'STOCK_SHORT']);
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 1, reserved: 0 });
+  });
+
+  it('a lost answer (dropped or timed out) is safe to send again with the same key: applied once', async () => {
+    const w = new MockErpWorld();
+    w.setStock('DOC-SKU', 'SAMPLE-WH-1', { onHand: 4, updatedAt: at(0) });
+    const api = client(w);
+    w.failNext({ path: '/orders', lose: 'network' });
+    expect(await codeOf(api.push(order('S-2'), { idempotencyKey: 'k2' }))).toBe('NETWORK');
+    w.failNext({ path: '/orders', lose: 'timeout', delayMs: 200 });
+    expect(await codeOf(api.push(order('S-2'), { idempotencyKey: 'k2', timeoutMs: 20 }))).toBe('TIMEOUT');
+    expect(await api.push(order('S-2'), { idempotencyKey: 'k2' })).toMatchObject({ erpId: 'SAMPLE-SO-1', replayed: true });
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 4, reserved: 1 });
+  });
+
+  it('status changes: cancelled lets the reservation go, delivered takes the stock out', async () => {
+    const w = new MockErpWorld();
+    w.setStock('DOC-SKU', 'SAMPLE-WH-1', { onHand: 4, updatedAt: at(0) });
+    const api = client(w);
+    await api.push(order('S-3', 2), { idempotencyKey: 'c3' });
+    await api.push(order('S-4', 1), { idempotencyKey: 'c4' });
+    expect(await api.push({ type: 'order.status', externalOrderId: 'S-3', body: { status: 'CANCELLED' } }, { idempotencyKey: 's3' })).toMatchObject({ status: 200, replayed: false });
+    await api.push({ type: 'order.status', externalOrderId: 'S-4', body: { status: 'DELIVERED' } }, { idempotencyKey: 's4' });
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 3, reserved: 0 });
+    expect(w.calls.at(-1)).toMatchObject({ method: 'PATCH', path: '/orders/S-4' });
+    expect(await codeOf(api.push({ type: 'order.status', externalOrderId: 'NOPE', body: { status: 'PACKED' } }, { idempotencyKey: 's5' }))).toBe('NOT_FOUND');
+  });
+});
