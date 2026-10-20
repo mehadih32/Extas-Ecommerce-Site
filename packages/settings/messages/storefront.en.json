@@ -1,0 +1,101 @@
+{
+  "groups": {
+    "shell": "Shop header, menus and footer",
+    "language": "Languages",
+    "slider": "Sliding rows"
+  },
+  "theme": {
+    "schedule": {
+      "label": "Theme by date",
+      "help": "Wear another theme between two days (for example the festive theme for Eid). Outside these days the shop wears the theme above."
+    },
+    "previewParam": {
+      "label": "Try a theme with a link",
+      "help": "When on, adding ?theme=noir (or classic, ivory, festive) to a shop address shows that theme to you only. Customers keep seeing the real one."
+    },
+    "colours": {
+      "label": "Your own colours",
+      "help": "Change single colours of the theme. A colour that makes text hard to read is refused and the theme's own colours stay."
+    },
+    "fonts": {
+      "label": "Fonts",
+      "help": "The letters for body text and for headings. Only fonts the shop carries itself can be chosen, so pages stay fast."
+    }
+  },
+  "brand": {
+    "logoPhone": {
+      "label": "Logo for phones",
+      "help": "A smaller or simpler logo for the phone header. Empty: the main logo is used."
+    },
+    "favicon": {
+      "label": "Small icon in the browser tab",
+      "help": "A square picture, at least 512 by 512 pixels."
+    },
+    "sloganShort": {
+      "label": "Short slogan",
+      "help": "Shown under the name on small phones when the full slogan does not fit. In English and Bengali."
+    },
+    "logoSize": {
+      "label": "Logo size",
+      "help": "How tall the logo is drawn in the desktop header, the phone header and the footer, in pixels."
+    },
+    "logoStyle": {
+      "label": "Logo style",
+      "help": "How the shop's name is drawn in the desktop header and the desktop footer: 0 keeps it as it was, 1 to 10 are the other styles. The phone keeps its logo. An uploaded logo picture always wins."
+    }
+  },
+  "contact": {
+    "hours": {
+      "label": "Opening hours",
+      "help": "When customers can reach you, for example Sat–Thu 10am–8pm. Shown beside WhatsApp and the hotline. In English and Bengali."
+    }
+  },
+  "shell": {
+    "announce": {
+      "label": "Announcement bar",
+      "help": "The thin line at the very top. Each message can have a start and end day. A message that promises free delivery or Cash on Delivery only shows once those are switched on."
+    },
+    "header": {
+      "label": "Header icons",
+      "help": "Which buttons sit in the header and in what order, and whether the slogan shows under the name."
+    },
+    "menu": {
+      "label": "Menus and bottom bar",
+      "help": "The links in the phone menu, the help links under them and the 3 to 5 buttons of the phone's bottom bar. Categories join on their own."
+    },
+    "desktopNav": {
+      "label": "Desktop menu row",
+      "help": "How the desktop menu row is arranged (main categories + More, every category, one Shop menu, or roomy with the rest under More), how many categories stay in the row, whether the menu opens as a small list or a wide panel, and which links it shows. Phones are not affected."
+    },
+    "footer": {
+      "label": "Footer",
+      "help": "The desktop footer's design (the reference layout or the earlier one), the promise line, the columns of links with their shorter desktop words and an optional small icon beside each, the contact buttons, social links and payment marks. A promise or mark for Cash on Delivery only shows once it is switched on."
+    }
+  },
+  "language": {
+    "bengali": {
+      "enabled": {
+        "label": "Bengali shop",
+        "help": "The shop in Bengali under /bn, with the language switch in the header and menu."
+      },
+      "readyPages": {
+        "label": "Bengali pages that are ready",
+        "help": "Bengali pages are hidden from Google until they are marked ready here, so a half-translated page is never found."
+      },
+      "digits": {
+        "label": "Bengali digits",
+        "help": "On the Bengali shop, numbers and prices are written in Bengali digits (১২৩)."
+      }
+    },
+    "labels": {
+      "label": "Your own words",
+      "help": "Change any word or sentence of the shop, in English and Bengali. Empty: the shop's own words are used."
+    }
+  },
+  "slider": {
+    "engine": {
+      "label": "How rows slide",
+      "help": "Rows of products move slowly on their own. They stop under the mouse, while a finger holds them and while the keyboard is in them, and start again afterwards."
+    }
+  }
+}
