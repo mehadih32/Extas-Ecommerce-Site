@@ -53,6 +53,20 @@
       "categories": [
         "polos"
       ]
+    },
+    {
+      "template": "festive",
+      "key": "sample-festive",
+      "nameEn": "Sample · Festival cut-off",
+      "status": "DRAFT",
+      "values": {
+        "cutoffDhakaCity": "2026-12-20T18:00:00+06:00",
+        "cutoffOutsideDhaka": "2026-12-18T18:00:00+06:00"
+      },
+      "window": {
+        "startsAt": "2026-12-01T00:00:00+06:00",
+        "endsAt": "2026-12-21T00:00:00+06:00"
+      }
     }
   ],
   "notices": []

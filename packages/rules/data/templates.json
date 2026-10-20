@@ -19,74 +19,23 @@
         }
       },
       "params": [
-        {
-          "key": "windowHours",
-          "type": "hours",
-          "value": null,
-          "fromSetting": "policy.exchange.windowHours",
-          "labelEn": "Exchange window (hours)",
-          "labelBn": "বদলের সময় (ঘণ্টা)"
-        },
-        {
-          "key": "perItem",
-          "type": "int",
-          "value": null,
-          "fromSetting": "policy.exchange.perItem",
-          "labelEn": "Exchanges per item",
-          "labelBn": "একটা পণ্য কতবার বদলানো যাবে"
-        },
-        {
-          "key": "chargeDhakaCity",
-          "type": "money",
-          "value": null,
-          "labelEn": "Exchange charge inside Dhaka",
-          "labelBn": "ঢাকার ভেতরে বদলের চার্জ"
-        },
-        {
-          "key": "chargeDhakaSubArea",
-          "type": "money",
-          "value": null,
-          "labelEn": "Exchange charge in the Dhaka sub-area",
-          "labelBn": "ঢাকার আশপাশে বদলের চার্জ"
-        },
-        {
-          "key": "chargeOutsideDhaka",
-          "type": "money",
-          "value": null,
-          "labelEn": "Exchange charge outside Dhaka",
-          "labelBn": "ঢাকার বাইরে বদলের চার্জ"
-        }
+        { "key": "windowHours", "type": "hours", "value": null, "fromSetting": "policy.exchange.windowHours", "labelEn": "Exchange window (hours)", "labelBn": "বদলের সময় (ঘণ্টা)" },
+        { "key": "perItem", "type": "int", "value": null, "fromSetting": "policy.exchange.perItem", "labelEn": "Exchanges per item", "labelBn": "একটা পণ্য কতবার বদলানো যাবে" },
+        { "key": "chargeDhakaCity", "type": "money", "value": null, "labelEn": "Exchange charge inside Dhaka", "labelBn": "ঢাকার ভেতরে বদলের চার্জ" },
+        { "key": "chargeDhakaSubArea", "type": "money", "value": null, "labelEn": "Exchange charge in the Dhaka sub-area", "labelBn": "ঢাকার আশপাশে বদলের চার্জ" },
+        { "key": "chargeOutsideDhaka", "type": "money", "value": null, "labelEn": "Exchange charge outside Dhaka", "labelBn": "ঢাকার বাইরে বদলের চার্জ" }
       ],
       "actions": [
         {
           "type": "exchangePolicy",
           "windowParam": "windowHours",
           "perItemParam": "perItem",
-          "chargeByBand": {
-            "dhaka-city": "chargeDhakaCity",
-            "dhaka-sub-area": "chargeDhakaSubArea",
-            "outside-dhaka": "chargeOutsideDhaka"
-          },
-          "reasons": [
-            "size",
-            "defect",
-            "damage",
-            "wrong"
-          ],
+          "chargeByBand": { "dhaka-city": "chargeDhakaCity", "dhaka-sub-area": "chargeDhakaSubArea", "outside-dhaka": "chargeOutsideDhaka" },
+          "reasons": ["size", "defect", "damage", "wrong"],
           "freeWhenOurMistake": true
         }
       ],
-      "placements": [
-        "product",
-        "bag",
-        "checkout",
-        "thank-you",
-        "account",
-        "messages",
-        "assistant",
-        "faq",
-        "footer"
-      ]
+      "placements": ["product", "bag", "checkout", "thank-you", "account", "messages", "assistant", "faq", "footer"]
     },
     {
       "id": "no-return",
@@ -106,13 +55,7 @@
       },
       "params": [],
       "actions": [],
-      "placements": [
-        "product",
-        "checkout",
-        "account",
-        "assistant",
-        "faq"
-      ]
+      "placements": ["product", "checkout", "account", "assistant", "faq"]
     },
     {
       "id": "exchange-order",
@@ -132,10 +75,7 @@
       },
       "params": [],
       "actions": [],
-      "placements": [
-        "account",
-        "assistant"
-      ]
+      "placements": ["account", "assistant"]
     },
     {
       "id": "delivery",
@@ -162,57 +102,16 @@
         }
       },
       "params": [
-        {
-          "key": "chargeDhakaCity",
-          "type": "money",
-          "value": null,
-          "labelEn": "Inside Dhaka City",
-          "labelBn": "ঢাকা সিটির ভেতরে"
-        },
-        {
-          "key": "chargeDhakaSubArea",
-          "type": "money",
-          "value": null,
-          "labelEn": "Dhaka sub-area",
-          "labelBn": "ঢাকার আশপাশে"
-        },
-        {
-          "key": "chargeOutsideDhaka",
-          "type": "money",
-          "value": null,
-          "labelEn": "Outside Dhaka",
-          "labelBn": "ঢাকার বাইরে"
-        },
-        {
-          "key": "freeOver",
-          "type": "money",
-          "value": null,
-          "fromSetting": "delivery.freeOverMinor",
-          "labelEn": "Free delivery over",
-          "labelBn": "যত টাকার বেশিতে ডেলিভারি ফ্রি"
-        }
+        { "key": "chargeDhakaCity", "type": "money", "value": null, "labelEn": "Inside Dhaka City", "labelBn": "ঢাকা সিটির ভেতরে" },
+        { "key": "chargeDhakaSubArea", "type": "money", "value": null, "labelEn": "Dhaka sub-area", "labelBn": "ঢাকার আশপাশে" },
+        { "key": "chargeOutsideDhaka", "type": "money", "value": null, "labelEn": "Outside Dhaka", "labelBn": "ঢাকার বাইরে" },
+        { "key": "freeOver", "type": "money", "value": null, "fromSetting": "delivery.freeOverMinor", "labelEn": "Free delivery over", "labelBn": "যত টাকার বেশিতে ডেলিভারি ফ্রি" }
       ],
       "actions": [
-        {
-          "type": "deliveryCharge",
-          "byBand": {
-            "dhaka-city": "chargeDhakaCity",
-            "dhaka-sub-area": "chargeDhakaSubArea",
-            "outside-dhaka": "chargeOutsideDhaka"
-          }
-        },
-        {
-          "type": "freeDeliveryOver",
-          "param": "freeOver"
-        }
+        { "type": "deliveryCharge", "byBand": { "dhaka-city": "chargeDhakaCity", "dhaka-sub-area": "chargeDhakaSubArea", "outside-dhaka": "chargeOutsideDhaka" } },
+        { "type": "freeDeliveryOver", "param": "freeOver" }
       ],
-      "placements": [
-        "product",
-        "bag",
-        "checkout",
-        "faq",
-        "assistant"
-      ]
+      "placements": ["product", "bag", "checkout", "faq", "assistant"]
     },
     {
       "id": "order-edit",
@@ -230,21 +129,9 @@
           "bn": "লগইন → আমার অর্ডার → অর্ডার বদলান। প্রসেসিং শুরু হওয়া পর্যন্ত ঠিকানা, ফোন বা সাইজ সর্বোচ্চ {maxEdits} বার বদলাতে পারবেন।"
         }
       },
-      "params": [
-        {
-          "key": "maxEdits",
-          "type": "int",
-          "value": null,
-          "fromSetting": "policy.orderEdit.maxEdits",
-          "labelEn": "Edits allowed per order",
-          "labelBn": "একটা অর্ডার কতবার বদলানো যাবে"
-        }
-      ],
+      "params": [{ "key": "maxEdits", "type": "int", "value": null, "fromSetting": "policy.orderEdit.maxEdits", "labelEn": "Edits allowed per order", "labelBn": "একটা অর্ডার কতবার বদলানো যাবে" }],
       "actions": [],
-      "placements": [
-        "thank-you",
-        "account"
-      ]
+      "placements": ["thank-you", "account"]
     },
     {
       "id": "set-tier",
@@ -252,55 +139,19 @@
       "nameEn": "Build your own set",
       "nameBn": "নিজের মতো সেট",
       "text": {
-        "short": {
-          "en": "Any 2 for {tier2} · Any 3 for {tier3}",
-          "bn": "যেকোনো ২টা {tier2} · যেকোনো ৩টা {tier3}"
-        },
+        "short": { "en": "Any 2 for {tier2} · Any 3 for {tier3}", "bn": "যেকোনো ২টা {tier2} · যেকোনো ৩টা {tier3}" },
         "full": {
           "en": "Build your own set from these products: any 2 for {tier2}, any 3 for {tier3}.\nSet prices are not combined with other offers.",
           "bn": "এই পণ্যগুলো থেকে নিজের মতো সেট বানান: যেকোনো ২টা {tier2}, যেকোনো ৩টা {tier3}।\nসেটের দামের সাথে অন্য অফার মেলে না।"
         },
-        "badge": {
-          "en": "Set price",
-          "bn": "সেটের দাম"
-        }
+        "badge": { "en": "Set price", "bn": "সেটের দাম" }
       },
       "params": [
-        {
-          "key": "tier2",
-          "type": "money",
-          "value": null,
-          "labelEn": "Price for any 2",
-          "labelBn": "যেকোনো ২টার দাম"
-        },
-        {
-          "key": "tier3",
-          "type": "money",
-          "value": null,
-          "labelEn": "Price for any 3",
-          "labelBn": "যেকোনো ৩টার দাম"
-        }
+        { "key": "tier2", "type": "money", "value": null, "labelEn": "Price for any 2", "labelBn": "যেকোনো ২টার দাম" },
+        { "key": "tier3", "type": "money", "value": null, "labelEn": "Price for any 3", "labelBn": "যেকোনো ৩টার দাম" }
       ],
-      "actions": [
-        {
-          "type": "setTier",
-          "tiers": [
-            {
-              "quantity": 2,
-              "param": "tier2"
-            },
-            {
-              "quantity": 3,
-              "param": "tier3"
-            }
-          ]
-        }
-      ],
-      "placements": [
-        "product",
-        "build-set",
-        "bag"
-      ]
+      "actions": [{ "type": "setTier", "tiers": [{ "quantity": 2, "param": "tier2" }, { "quantity": 3, "param": "tier3" }] }],
+      "placements": ["product", "build-set", "bag"]
     },
     {
       "id": "discount",
@@ -308,43 +159,16 @@
       "nameEn": "Discount",
       "nameBn": "ছাড়",
       "text": {
-        "short": {
-          "en": "{percentOff} off these products until {endsAt}",
-          "bn": "{endsAt} পর্যন্ত এই পণ্যগুলোতে {percentOff} ছাড়"
-        },
+        "short": { "en": "{percentOff} off these products until {endsAt}", "bn": "{endsAt} পর্যন্ত এই পণ্যগুলোতে {percentOff} ছাড়" },
         "full": {
           "en": "{percentOff} off the price of these products until {endsAt}.\nNot combined with other offers.",
           "bn": "{endsAt} পর্যন্ত এই পণ্যগুলোর দামে {percentOff} ছাড়।\nঅন্য অফারের সাথে মেলে না।"
         },
-        "badge": {
-          "en": "{percentOff} off",
-          "bn": "{percentOff} ছাড়"
-        }
+        "badge": { "en": "{percentOff} off", "bn": "{percentOff} ছাড়" }
       },
-      "params": [
-        {
-          "key": "percentOff",
-          "type": "percent",
-          "value": null,
-          "labelEn": "Discount (%)",
-          "labelBn": "ছাড় (%)"
-        }
-      ],
-      "actions": [
-        {
-          "type": "discount",
-          "mode": "percent",
-          "param": "percentOff",
-          "target": "lines",
-          "requiresCoupon": false,
-          "showWas": true
-        }
-      ],
-      "placements": [
-        "product",
-        "bag",
-        "checkout"
-      ]
+      "params": [{ "key": "percentOff", "type": "percent", "value": null, "labelEn": "Discount (%)", "labelBn": "ছাড় (%)" }],
+      "actions": [{ "type": "discount", "mode": "percent", "param": "percentOff", "target": "lines", "requiresCoupon": false, "showWas": true }],
+      "placements": ["product", "bag", "checkout"]
     },
     {
       "id": "coupon",
@@ -352,45 +176,41 @@
       "nameEn": "Coupon",
       "nameBn": "কুপন",
       "text": {
-        "short": {
-          "en": "{amountOff} off with a coupon on orders over {minOrder}",
-          "bn": "{minOrder}-এর বেশি অর্ডারে কুপনে {amountOff} ছাড়"
-        },
+        "short": { "en": "{amountOff} off with a coupon on orders over {minOrder}", "bn": "{minOrder}-এর বেশি অর্ডারে কুপনে {amountOff} ছাড়" },
         "full": {
           "en": "Type the coupon code at checkout: {amountOff} off orders over {minOrder}.\nOne coupon per order.",
           "bn": "চেকআউটে কুপন কোড লিখুন: {minOrder}-এর বেশি অর্ডারে {amountOff} ছাড়।\nএক অর্ডারে একটা কুপন।"
         }
       },
       "params": [
-        {
-          "key": "amountOff",
-          "type": "money",
-          "value": null,
-          "labelEn": "Amount off",
-          "labelBn": "কত টাকা ছাড়"
+        { "key": "amountOff", "type": "money", "value": null, "labelEn": "Amount off", "labelBn": "কত টাকা ছাড়" },
+        { "key": "minOrder", "type": "money", "value": null, "labelEn": "Smallest order", "labelBn": "সবচেয়ে ছোট অর্ডার" }
+      ],
+      "actions": [{ "type": "discount", "mode": "amount", "param": "amountOff", "target": "order", "minSubtotalParam": "minOrder", "requiresCoupon": true, "showWas": false }],
+      "placements": ["checkout"]
+    },
+    {
+      "id": "festive",
+      "kind": "festive",
+      "nameEn": "Festival delivery cut-off",
+      "nameBn": "উৎসবের আগে ডেলিভারির শেষ সময়",
+      "text": {
+        "short": {
+          "en": "Order by {cutoffDhakaCity} for delivery before the festival (inside Dhaka)",
+          "bn": "উৎসবের আগে পেতে {cutoffDhakaCity}-এর মধ্যে অর্ডার করুন (ঢাকার ভেতরে)"
         },
-        {
-          "key": "minOrder",
-          "type": "money",
-          "value": null,
-          "labelEn": "Smallest order",
-          "labelBn": "সবচেয়ে ছোট অর্ডার"
-        }
+        "full": {
+          "en": "Inside Dhaka: order by {cutoffDhakaCity}. Outside Dhaka: order by {cutoffOutsideDhaka}. Orders after that arrive after the festival.",
+          "bn": "ঢাকার ভেতরে: {cutoffDhakaCity}-এর মধ্যে অর্ডার করুন। ঢাকার বাইরে: {cutoffOutsideDhaka}-এর মধ্যে। এর পরের অর্ডার উৎসবের পরে পৌঁছাবে।"
+        },
+        "after": { "en": "Orders placed now arrive after the festival.", "bn": "এখন অর্ডার করলে উৎসবের পরে পৌঁছাবে।" }
+      },
+      "params": [
+        { "key": "cutoffDhakaCity", "type": "datetime", "value": null, "labelEn": "Last order time inside Dhaka", "labelBn": "ঢাকার ভেতরে অর্ডারের শেষ সময়" },
+        { "key": "cutoffOutsideDhaka", "type": "datetime", "value": null, "labelEn": "Last order time outside Dhaka", "labelBn": "ঢাকার বাইরে অর্ডারের শেষ সময়" }
       ],
-      "actions": [
-        {
-          "type": "discount",
-          "mode": "amount",
-          "param": "amountOff",
-          "target": "order",
-          "minSubtotalParam": "minOrder",
-          "requiresCoupon": true,
-          "showWas": false
-        }
-      ],
-      "placements": [
-        "checkout"
-      ]
+      "actions": [{ "type": "cutoff", "byBand": { "dhaka-city": "cutoffDhakaCity", "dhaka-sub-area": "cutoffDhakaCity", "outside-dhaka": "cutoffOutsideDhaka" } }],
+      "placements": ["announcement", "product", "checkout"]
     },
     {
       "id": "cod",
@@ -398,43 +218,18 @@
       "nameEn": "Cash on delivery",
       "nameBn": "ক্যাশ অন ডেলিভারি",
       "text": {
-        "short": {
-          "en": "Cash on delivery on orders up to {codMax}",
-          "bn": "{codMax} পর্যন্ত অর্ডারে ক্যাশ অন ডেলিভারি"
-        },
+        "short": { "en": "Cash on delivery on orders up to {codMax}", "bn": "{codMax} পর্যন্ত অর্ডারে ক্যাশ অন ডেলিভারি" },
         "full": {
           "en": "Pay the rider in cash when the parcel arrives, on orders up to {codMax}.",
           "bn": "পার্সেল এলে রাইডারকে নগদে দাম দিন — {codMax} পর্যন্ত অর্ডারে।"
         }
       },
       "params": [
-        {
-          "key": "codAllowed",
-          "type": "bool",
-          "value": null,
-          "fromSetting": "payment.cod.enabled",
-          "labelEn": "Cash on delivery on",
-          "labelBn": "ক্যাশ অন ডেলিভারি চালু"
-        },
-        {
-          "key": "codMax",
-          "type": "money",
-          "value": null,
-          "labelEn": "Largest cash-on-delivery order",
-          "labelBn": "ক্যাশ অন ডেলিভারিতে সবচেয়ে বড় অর্ডার"
-        }
+        { "key": "codAllowed", "type": "bool", "value": null, "fromSetting": "payment.cod.enabled", "labelEn": "Cash on delivery on", "labelBn": "ক্যাশ অন ডেলিভারি চালু" },
+        { "key": "codMax", "type": "money", "value": null, "labelEn": "Largest cash-on-delivery order", "labelBn": "ক্যাশ অন ডেলিভারিতে সবচেয়ে বড় অর্ডার" }
       ],
-      "actions": [
-        {
-          "type": "cod",
-          "allowedParam": "codAllowed",
-          "maxOrderParam": "codMax"
-        }
-      ],
-      "placements": [
-        "checkout",
-        "faq"
-      ]
+      "actions": [{ "type": "cod", "allowedParam": "codAllowed", "maxOrderParam": "codMax" }],
+      "placements": ["checkout", "faq"]
     },
     {
       "id": "held-order",
@@ -448,27 +243,9 @@
         }
       },
       "params": [
-        {
-          "key": "holdHours",
-          "type": "hours",
-          "value": null,
-          "labelEn": "Hold an order for (hours)",
-          "labelBn": "অর্ডার কত ঘণ্টা আটকে রাখা যাবে"
-        },
-        {
-          "key": "partialShipping",
-          "type": "bool",
-          "value": null,
-          "labelEn": "The rest of the order may ship",
-          "labelBn": "বাকি পণ্য আগে পাঠানো যাবে"
-        },
-        {
-          "key": "duplicateLookbackDays",
-          "type": "int",
-          "value": null,
-          "labelEn": "Look for a duplicate order this many days back",
-          "labelBn": "কত দিন পেছনে একই অর্ডার খুঁজবে"
-        }
+        { "key": "holdHours", "type": "hours", "value": null, "labelEn": "Hold an order for (hours)", "labelBn": "অর্ডার কত ঘণ্টা আটকে রাখা যাবে" },
+        { "key": "partialShipping", "type": "bool", "value": null, "labelEn": "The rest of the order may ship", "labelBn": "বাকি পণ্য আগে পাঠানো যাবে" },
+        { "key": "duplicateLookbackDays", "type": "int", "value": null, "labelEn": "Look for a duplicate order this many days back", "labelBn": "কত দিন পেছনে একই অর্ডার খুঁজবে" }
       ],
       "actions": [],
       "placements": []
