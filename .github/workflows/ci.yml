@@ -63,6 +63,9 @@ jobs:
             grep -qF "COPY $f " apps/web/Dockerfile || { echo "apps/web/Dockerfile does not copy $f"; missing=1; }
           done
           exit $missing
+      - name: Fonts are self-hosted (the image build must not download fonts)
+        run: |
+          if grep -rn "next/font/google" apps/web/src; then echo "use the self-hosted fonts in apps/web/src/fonts"; exit 1; fi
       - name: Hardcode guard (PR 494)
         run: node tools/hardcode-guard.mjs
       # PR 509 — no default, default-pack value or sample value is the owner's own data; the register matches the schema
