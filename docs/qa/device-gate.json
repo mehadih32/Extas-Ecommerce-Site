@@ -1,0 +1,10 @@
+{
+  "$comment": "PR 85 — the app's device gate (tools/device-gate.mjs), Blueprint Appendix C1/C2 and D1.4. Sizes: phones in devices.json, tablets in device-matrix.js (TABLETS), desktop in devices-desktop.json. URLs: lighthouserc.json (ci.collect.url). The rules below are the locked mobile-hardening minimums; 0 fails is the pass mark.",
+  "tapMinPx": 44,
+  "inlineLinkMinPx": 32,
+  "inputMinFontPx": 16,
+  "tapGroups": ["phone", "tablet"],
+  "inputFontGroups": ["phone", "tablet"],
+  "settleMs": 400,
+  "concurrency": 8
+}

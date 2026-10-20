@@ -223,7 +223,10 @@ async function afterSizePick(p, devW) {
   }, devW);
 }
 
-(async () => {
+/* Code phase (PR 85): the app's device gate (tools/device-gate.mjs) reuses these checks and device lists on the real
+   pages. Required as a module it only exports them; run as a script it is the demo gate exactly as before. */
+module.exports = { pageChecks, pdpChecks, afterSizePick, PHONES, TABLETS };
+if (require.main === module) (async () => {
   const browser = await chromium.launch();
   const report = [];
   const routes = ROUTESET === 'pdp' ? PDP_SLUGS.map(s => '#/p/' + s) : [...PAGES, ...PDP_SLUGS.map(s => '#/p/' + s)];
