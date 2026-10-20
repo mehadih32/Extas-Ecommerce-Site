@@ -73,6 +73,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - **The wave boundary is no longer a stop** (this replaces Blueprint A1.1 rule 7): write the Bengali wave report,
   show it in chat, and **carry straight on** to the next wave.
 - Blocked on the owner? Add it to `BLOCKED.md` and move to the next PR. Never sit idle.
+- **Resume without the owner and without waste:** on every new or resumed session read `PROGRESS.md` and continue the exact next step. Read only the register rows and blueprint sections that step needs, not whole files. Never ask the owner to restart or re-explain anything.
 - **Usage limit reached:** stop cleanly, with `PROGRESS.md` holding the exact point. When the limit resets, continue from
   there by yourself (the project's auto-continue is on).
 - The only real stops are the hard-rule items (money, prices, deleting data, anything irreversible) and the go-live
@@ -101,6 +102,10 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
     for the owner.
   - Show the same short summary in the chat.
 - Wave boundary: report in Bengali and continue. Don't wait (CN-006).
+
+## Admin section guide (owner, 20 Oct 14:10 — CN-014)
+- `docs/admin-guide/` has one Bengali file per admin section, plus `README.md` as the index. Each file covers: what the section is for, every menu and tab, what can be done, every switch and number with its default, and what happens next. Every PR that adds or changes an admin screen updates its guide in the same PR. Each admin section links to its guide.
+- New optional features: off by default, an on/off switch, every number editable, placed in the section where they belong.
 
 ## Think beyond the ask (owner, 20 Oct 13:52 — CN-013)
 - Goal for every PR: the customer journey is **easy, smart and profitable**, better than an ordinary shop, and still right 2–3 years from now.

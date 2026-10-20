@@ -785,3 +785,8 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - Journey scope: from "I need a polo" to 3 days after delivery: discovery, browsing, checkout, confirmation, packing, courier, the door (try-on, negotiating with the delivery man, refusal, partial acceptance), COD settlement, exchange/return, complaints, angry customers, product faults, auto-handling and handover to a human, repeat purchase. Research real Bangladesh practice first.
 - **Open boundary (standing):** every finding gets the fix + prevention + a review of the core decision behind that step + ideas that make it easier, smarter and more profitable. Agents do not stop at what the owner listed; they add what is missing. Ideas touching money, prices, COD or blocking go to the owner as proposals (hard rule 6).
 - Goal set for every agent, always: the journey is **easy, smart and profitable**, better than an ordinary e-commerce site, and the decisions still pay off 2–3 years from now.
+
+## Note 56 — 20 Oct 14:10 · Add the 8 best ideas as optional settings; Bengali guide per admin section; auto-resume (CN-014)
+- All 24 ideas stay listed. The 8 best (ideas 5, 10, 13, 8, 17, 15, 19, 22) are added. Each one is optional and dynamic: an on/off switch, every number editable, kept in its own admin category, not complicated.
+- One Bengali file per admin section/menu: what the section is for, how many menus it has, what can be done. It is kept as part of the blueprint and visible in the admin.
+- The owner's weekly limit is almost used up. When the limit resets, both this planning chat and the code project continue from the exact stopping point without any input from the owner and without wasting tokens.
