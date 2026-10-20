@@ -126,4 +126,34 @@ check "owner: a bad e-mail is never echoed" "$(grep -c 'not an e-mail' <<<"$out"
 check "owner: reader without an account says so" "$(EXTAS_CONFIG_FILE="$T/server.conf" "$B/extas-owner-login" >/dev/null 2>&1; echo $?)" "1"
 rm -rf "$T"
 
+# Deploy report (PR 4): commit, Dhaka time, result, migration, health check, the failing step in plain English — and
+# nothing that looks like a connection string or an e-mail, and never an older run's result.
+T="$(mktemp -d)"; D=../deploy/deploy-report.sh
+printf 'EXTAS_ROOT=%s\nEXTAS_TIMEZONE=Asia/Dhaka\nEXTAS_STAGING_HOST=example.test\n' "$T" > "$T/conf"
+echo '{"result":"fail","detail":"database migration failed; live version unchanged postgresql://u:pw@h/d owner@example.test","sha":"aaaabbbbccccdddd","migration":"failed","run":"42","color":"green"}' > "$T/dep.json"
+echo '{"url":"u","code":200,"ok":true,"commit":"999988887777aaaa","color":"blue"}' > "$T/h.json"
+rep() { env EXTAS_CONFIG_FILE="$T/conf" DEPLOY_JSON="$T/dep.json" HEALTH_JSON="$T/h.json" SHA=aaaabbbbccccdddd \
+  CHECKOUT=success BUILD=success NOW=1760947200 "$@" bash "$D" "$T/out"; }
+rep RUN_ID=42 DEPLOY=failure
+L="$(cat "$T/out/deploy-latest.md")"
+check "report: commit" "$(grep -c '| Commit | `aaaabbbbcccc` |' <<<"$L")" "1"
+check "report: Dhaka time" "$(grep -c '| Time (Asia/Dhaka) | 2025-10-20 14:00 |' <<<"$L")" "1"
+check "report: failed" "$(grep -c '| Result | \*\*FAILED\*\* |' <<<"$L")" "1"
+check "report: migration result" "$(grep -c '| Database migration | failed |' <<<"$L")" "1"
+check "report: the failing step in words" "$(grep -c 'What failed | The deploy stopped: database migration failed' <<<"$L")" "1"
+check "report: health of the live site" "$(grep -c 'Health check on example.test | OK — HTTP 200' <<<"$L")" "1"
+check "report: no connection string, no e-mail" "$(grep -cE 'pw@|owner@example' "$T/out/deploy-latest.md" "$T/out/deploy-history.line" | awk -F: '{s+=$2} END {print s}')" "0"
+check "report: history line" "$(cut -d'|' -f3,5,6 "$T/out/deploy-history.line" | tr -s ' ')" ' `aaaabbbbcccc` | FAILED | failed '
+rep RUN_ID=43 DEPLOY=failure
+check "report: an older run's record is never used" "$(grep -c 'stopped before it could record why' "$T/out/deploy-latest.md"):$(grep -c 'migration | not reached' "$T/out/deploy-latest.md")" "1:1"
+echo '{"result":"ok","detail":"green live","sha":"999988887777aaaa","migration":"ok","run":"44","color":"green"}' > "$T/dep.json"
+rep RUN_ID=44 DEPLOY=success
+check "report: success with a matching health check" "$(grep -c '\*\*OK\*\*' "$T/out/deploy-latest.md"):$(grep -c 'What failed' "$T/out/deploy-latest.md")" "1:0"
+echo '{"url":"u","code":522,"ok":false,"commit":"","color":""}' > "$T/h.json"
+rep RUN_ID=44 DEPLOY=success
+check "report: live but the public check failed" "$(grep -c 'DEPLOYED, HEALTH CHECK FAILED' "$T/out/deploy-latest.md"):$(grep -c 'Cloudflare error' "$T/out/deploy-latest.md")" "1:2"
+rep RUN_ID=44 BUILD=failure DEPLOY=skipped
+check "report: build failure in words" "$(grep -c 'Building the new version on the server failed' "$T/out/deploy-latest.md")" "1"
+rm -rf "$T"
+
 exit $fail

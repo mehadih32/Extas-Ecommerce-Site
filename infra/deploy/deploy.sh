@@ -5,6 +5,9 @@
 #                                           migrate the database with <migrate-image>, then start <image> in the idle
 #                                           colour, smoke-test it, switch Caddy, stop the old
 #   sudo infra/deploy/deploy.sh rollback    bring the previous image back the same way (the database stays as it is)
+#   sudo infra/deploy/deploy.sh public-health
+#                                           one JSON line: does https://<staging host>/api/health answer through Cloudflare
+#                                           (with the preview login, read on the server and never printed)?
 # Database first (PR 13, 496): before the new colour starts, the migrate image runs `prisma migrate deploy` straight to
 # PostgreSQL and then the settings sync, on the extas network. If either fails, nothing else happens: the live colour
 # keeps the traffic. Migrations only add (expand first, contract in a later release), so the old colour keeps working
@@ -23,16 +26,45 @@ R="$EXTAS_ROOT"; STATE="$R/state"; SEC="$R/config/secrets"; SITES="$R/config/cad
 APP_PORT="${APP_PORT:-3000}"
 
 log() { echo "[deploy $(date +%H:%M:%S)] $*"; }
-die() { log "FAIL: $*"; exit 1; }
+die() { log "FAIL: $*"; LAST_ERR="$*"; exit 1; }
+MIGRATION="not reached"; RECORDED=0; LAST_ERR=""
 
 record() { # record <result> <detail>  (the newest entry is last-deploy.json; history stays in state/deploys/)
   local f; f="$STATE/deploys/$(date +%Y%m%d-%H%M%S).json"
+  # `migration` and `run` (the workflow run, EXTAS_DEPLOY_RUN_ID) feed the deploy report deploy.yml commits back.
   jq -n --arg result "$1" --arg detail "$2" --arg image "${IMAGE:-}" --arg sha "${GIT_SHA:-}" \
     --arg color "${NEW:-}" --arg previous "${PREV_IMAGE:-}" --arg migrate "${MIGRATE_IMAGE:-}" --arg at "$(date -Is)" \
-    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at}' > "$f"
+    --arg migration "$MIGRATION" --arg run "${EXTAS_DEPLOY_RUN_ID:-}" \
+    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run}' > "$f"
   cp "$f" "$STATE/last-deploy.json"
   [ "$1" = ok ] && cp "$f" "$STATE/last-good-deploy.json"
+  RECORDED=1
   return 0
+}
+
+# A run that stops before it records its result (an image missing, a setup file missing) still leaves one, so the
+# deploy report never shows an older run's result as this one's.
+on_exit() {
+  local rc=$?
+  if [ "$rc" -ne 0 ] && [ "$RECORDED" = 0 ] && [ -d "$STATE/deploys" ]; then
+    record fail "stopped before the switch: ${LAST_ERR:-see the run log}; live version unchanged" || true
+  fi
+  return "$rc"
+}
+
+public_health() { # one JSON line; the preview login reaches curl through a file descriptor, never argv or output
+  local pw code body url="https://$EXTAS_STAGING_HOST/api/health" i
+  pw="$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" 2>/dev/null | cut -d= -f2- || true)"
+  body="$(mktemp)"
+  for i in 1 2 3 4 5 6; do
+    code="$(curl -sS -m 15 -o "$body" -w '%{http_code}' -K <(printf 'user = "%s:%s"\n' "$EXTAS_STAGING_USER" "$pw") \
+      -H 'cache-control: no-cache' "$url" 2>/dev/null || true)"
+    [ "$code" = 200 ] && grep -q '"ok":true' "$body" && break
+    [ "$i" = 6 ] || sleep 5
+  done
+  jq -cn --arg url "$url" --arg code "${code:-000}" --slurpfile b <(jq -c . "$body" 2>/dev/null || echo '{}') \
+    '{url:$url,code:($code|tonumber? // 0),ok:(($b[0].ok // false)==true),commit:($b[0].commit // ""),color:($b[0].color // "")}'
+  rm -f "$body"
 }
 
 app() { # app <color> <compose args...>
@@ -95,6 +127,8 @@ verify_live() { # through Caddy's internal port: every answer must come from the
 
 # CI prints the upstream block to validate it with Caddy: deploy.sh upstream <color>
 if [ "${1:-}" = upstream ]; then upstream_for "${2:?colour}"; exit 0; fi
+if [ "${1:-}" = public-health ]; then public_health; exit 0; fi
+trap on_exit EXIT
 
 # ---- what to deploy -------------------------------------------------------------------------------------------
 CUR="$(cat "$STATE/app.color" 2>/dev/null || echo none)"
@@ -124,11 +158,14 @@ if [ -n "${MIGRATE_IMAGE:-}" ]; then
   docker image inspect "$MIGRATE_IMAGE" >/dev/null 2>&1 || die "migrate image $MIGRATE_IMAGE is not on this server"
   log "migrating the database with $MIGRATE_IMAGE"
   if ! migrate_db "$MIGRATE_IMAGE"; then
+    MIGRATION="failed"
     record fail "database migration failed; live version unchanged"
     die "database migration failed (live version unchanged)"
   fi
+  MIGRATION="ok"
   log "database migrated and settings in sync"
 else
+  MIGRATION="skipped (rollback: the database stays as it is)"
   log "rollback: the database stays as it is (migrations only go forward)"
 fi
 
