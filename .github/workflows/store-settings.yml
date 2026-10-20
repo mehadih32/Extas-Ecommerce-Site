@@ -41,7 +41,12 @@ jobs:
           . /etc/extas/server.conf
           SEC="$EXTAS_ROOT/config/secrets"
           MIGRATE="$(sudo jq -r '.migrate // empty' "$EXTAS_ROOT/state/last-good-deploy.json")"
-          [ -n "$MIGRATE" ] || { echo "no live migrate image yet — deploy first"; exit 1; }
+          # A docs-only deploy records a tag whose image was never built; fall back to the newest migrate image.
+          if [ -z "$MIGRATE" ] || ! sudo docker image inspect "$MIGRATE" >/dev/null 2>&1; then
+            MIGRATE="$(sudo docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate | head -n 1 || true)"
+          fi
+          [ -n "$MIGRATE" ] || { echo "no migrate image yet — deploy first"; exit 1; }
+          echo "using $MIGRATE"
           envf="$(sudo mktemp "$SEC/.settings.XXXXXX")"
           vals="$(sudo mktemp "$SEC/.values.XXXXXX")"
           trap 'sudo rm -f "$envf" "$vals"' EXIT
