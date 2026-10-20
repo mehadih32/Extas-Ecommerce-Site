@@ -1,4 +1,4 @@
-// S03 · PR 90, 571 — the combo screens without a database: both languages carry the same keys and none overlaps another
+// S03 · PR 90, 571, 99 — the combo screens without a database: both languages carry the same keys and none overlaps another
 // admin file, every key the screens ask for is a line of words, every refusal, state, type and blocking reason has its
 // words, and the pure helpers (money typed in, the price box's words, the form and its input).
 import { readFileSync } from 'node:fs';
@@ -39,7 +39,7 @@ describe('combo admin messages', () => {
   });
 
   it('every fixed key the screens ask for is a line of words', () => {
-    for (const file of ['CombosScreen.tsx', 'FixedTab.tsx', 'ComboEditor.tsx', 'RulesTab.tsx', 'RuleWizard.tsx']) {
+    for (const file of ['CombosScreen.tsx', 'FixedTab.tsx', 'ComboEditor.tsx', 'RulesTab.tsx', 'RuleWizard.tsx', 'SetTiers.tsx']) {
       const src = readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');
       const asked = [...src.matchAll(/\btt\('([A-Za-z0-9.]+)'/g)].map((m) => `combos.${m[1]}`);
       expect(asked.length, file).toBeGreaterThan(0);

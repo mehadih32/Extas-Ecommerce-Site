@@ -137,5 +137,10 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     const tpl = await api('POST', ['templates'], { list: 'L2' });
     expect(tpl.body).toMatchObject({ templates: { list: 'L2' } });
     expect((await api('POST', ['templates'], { list: 'NOPE' })).status).toBe(400);
+
+    // PR 99 — the set tiers come from Smart Rules (none in the sample store yet): read only here
+    expect((await api('GET', ['tiers'])).body).toMatchObject({ ok: true, tiers: [] });
+    expect((await api('POST', ['tiers'], {})).status).toBe(405);
+    expect((await api('GET', ['tiers', 'x'])).status).toBe(404);
   });
 });

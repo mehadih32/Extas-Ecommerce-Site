@@ -10,6 +10,8 @@ import { createAutoRule, getAutoRule, listAutoRules, previewAutoRule, setAutoRul
 import { createCombo, getCombo, listCombos, setComboActive, setComboFlags, setComboPrice, updateCombo } from './combos-service';
 import type { CombosDeps, SettingsReader, Who } from './context';
 import { seedSampleCombos } from './sample';
+import { listSetTiers, liveSetTiers } from './set-tiers';
+import { contentColumns, ruleContentSchema } from '@extas/rules';
 
 export async function code(p: Promise<unknown>): Promise<string> {
   try {
@@ -247,6 +249,57 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       const list = await listAutoRules(deps(), as('reader'));
       expect(list.map((x) => x.key)).toEqual(expect.arrayContaining(['test-polos', 'test-polos-3']));
       expect(await t.prisma.auditLog.count({ where: { entityType: 'ComboAutoRule', entityId: ids.rule! } })).toBeGreaterThanOrEqual(8);
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 99 · set tiers read from Smart Rules', () => {
+    it('the admin sees every set tier rule (a tier without a price is not offered); the shop only the live, priced ones', async () => {
+      const polos = await t.prisma.category.findFirstOrThrow({ where: { storeId: S, slug: 'polos' }, select: { id: true, nameEn: true } });
+      const content = ruleContentSchema.parse({
+        key: 'test-any-polos',
+        kind: 'setTier',
+        nameEn: 'Test any polos',
+        text: {},
+        params: [
+          { key: 'tier2', type: 'money', value: 200000, labelEn: 'Any 2' },
+          { key: 'tier3', type: 'money', value: null, labelEn: 'Any 3' },
+        ],
+        scope: { include: [{ type: 'category', id: polos.id }], exclude: [{ type: 'product', id: ids['long-sleeve-polo']! }] },
+        conditions: { all: [] },
+        actions: [{ type: 'setTier', tiers: [{ quantity: 2, param: 'tier2' }, { quantity: 3, param: 'tier3' }] }],
+        placements: [],
+        priority: 0,
+        stackable: false,
+        status: 'ACTIVE',
+        startsAt: null,
+        endsAt: null,
+      });
+      const row = await t.prisma.smartRule.create({ data: { storeId: S, ...contentColumns(content) }, select: { id: true } });
+
+      const [v] = await listSetTiers(deps(), as('reader'));
+      expect(v).toMatchObject({ ruleId: row.id, key: 'test-any-polos', state: 'live', allPriced: false, include: [{ type: 'category', nameEn: polos.nameEn }], exclude: [{ type: 'product', nameEn: expect.any(String) }] });
+      expect(v!.tiers).toEqual([
+        { quantity: 2, priceMinor: 200000, eachMinor: 100000 },
+        { quantity: 3, priceMinor: null, eachMinor: null },
+      ]);
+      const polosInStore = await t.prisma.product.count({ where: { storeId: S, status: 'PUBLISHED', categoryId: polos.id } });
+      expect(v!.products).toBe(polosInStore - 1);
+
+      expect(await liveSetTiers(deps(), { storeId: S, productId: ids['essential-pique-polo']! })).toEqual([expect.objectContaining({ key: 'test-any-polos', tiers: [{ quantity: 2, priceMinor: 200000 }] })]);
+      expect(await liveSetTiers(deps(), { storeId: S, productId: ids['long-sleeve-polo']! })).toEqual([]);
+      expect(await liveSetTiers(deps(), { storeId: S, productId: ids['oxford-cotton-shirt']! })).toEqual([]);
+      expect(await liveSetTiers(deps(), { storeId: B })).toEqual([]);
+
+      await t.prisma.smartRule.update({ where: { id: row.id }, data: { status: 'PAUSED' } });
+      expect((await listSetTiers(deps(), as('reader')))[0]!.state).toBe('off');
+      expect(await liveSetTiers(deps(), { storeId: S })).toEqual([]);
+      await t.prisma.smartRule.update({ where: { id: row.id }, data: { status: 'ACTIVE', startsAt: new Date(clock.getTime() + 86_400_000) } });
+      expect((await listSetTiers(deps(), as('reader')))[0]!.state).toBe('soon');
+      expect(await liveSetTiers(deps(), { storeId: S })).toEqual([]);
+      await t.prisma.smartRule.update({ where: { id: row.id }, data: { archivedAt: clock } });
+      expect(await listSetTiers(deps(), as('reader'))).toEqual([]);
+      expect(await code(listSetTiers(deps(), as('reader', B)))).not.toBe('ok');
     });
   });
 });
