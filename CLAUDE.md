@@ -79,7 +79,20 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   switch of extas.com.bd. None of these happens during the build.
 
 ## How to report
-- **Keep `README.md` as the live front page** (owner, 20 Oct): after every merged PR, update its status table (stage counts done/total, what is live on new.extas.com.bd, last deploy, what waits for the owner) in simple English with a Bengali summary line. The owner reads it on GitHub.
+- **Keep `README.md` as the live, detailed front page** (owner, 20 Oct; CN-011): after every merged PR, update
+  (1) the **status dashboard** (the "Stages" row = the register's Progress line, the 28-stage table, what is live on
+  new.extas.com.bd, last deploy, what waits for the owner), (2) the **PR log** row, and (3) the **feature section of
+  that area** (screens, routes, settings, permissions, tests; unbuilt areas stay one "Planned" line). Simple English
+  with a Bengali summary line per section. The owner reads it on GitHub. A new or moved docs file also gets its line
+  in `docs/README.md`.
+- **Docs on the server and in backups (CN-011):** every deploy copies `docs/` (with `README.md`, `BLUEPRINT.md`,
+  `MASTER-REGISTER.md`) to the server, one way repo → server, for the admin's "PR register" and "Blueprint & files"
+  tabs (PR 594; the copy step goes in `deploy.yml` / `infra/deploy/deploy.sh`). Every backup (PR 8 / 395 / 507, Blob
+  and Drive) carries a dated docs bundle with the commit hash (`infra/server/bin/extas-backup`). Not built yet: build
+  it with those PRs.
+- **Organisation standard (CN-011), every PR:** lint and format checks pass, tests beside the code, clear names, a
+  header comment on each package's `src/index.ts`, `docs/` kept current, blueprint and register changed only
+  through CN notes.
 - **Owner data is not a blocker** (owner, 20 Oct 12:11): delivery charges, free-delivery limit, courier rates, photos, prices, area lists and similar values are entered by the owner in the backend later. Ship empty/off defaults and never list them in `BLOCKED.md` as questions.
 - **Plans and progress are counted in stages and PRs, never in days or hours** (owner's rule, 20 Oct): "S0A: 7/12 PR · S00: 3/19 PR · total 10/598". 604 PRs in 28 stages (598 active, 6 parked).
 - After each PR: update `PROGRESS.md` (the English line is fine) and the register status.
