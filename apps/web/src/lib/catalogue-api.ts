@@ -35,12 +35,19 @@
 //   POST        /api/admin/catalogue/products/bulk            {action, productIds} — publish, unpublish, recheck, archive, restore
 //   GET         /api/admin/catalogue/publish-queue            the "Ready to publish" queue (?filter=all|ready|waiting|live, page)
 //
+// PR 33, 36, 39 (catalogue-tools-api.ts):
+//   GET/POST    /api/admin/catalogue/link-import              import from a link: the screen · preview · draft
+//   GET         /api/admin/catalogue/back-in-stock            waiting requests per product
+//   GET/POST    /api/admin/catalogue/back-in-stock/requests   the requests with contacts · mark told / archive / restore
+//   GET         /api/admin/catalogue/audit                    the product audit report
+//   POST        /api/back-in-stock                            public "tell me when it is back"
+//
 // The shop-wide templates are settings (`naming.*`): the settings page and its API (PR 491) save them.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 
-export type Perm = 'catalogue.read' | 'catalogue.write' | 'catalogue.publish';
+export type Perm = 'catalogue.read' | 'catalogue.write' | 'catalogue.publish' | 'catalogue.import' | 'catalogue.interest';
 interface Ctx {
   deps: cat.CatalogueDeps;
   who: cat.Who;

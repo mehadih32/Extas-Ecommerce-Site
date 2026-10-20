@@ -52,7 +52,7 @@ async function syncQueue(tx: Db, who: Who, p: { id: string; status: string; arch
  * Checks the product, stores its health (score + what is missing), moves a draft to READY_TO_PUBLISH or back, and keeps
  * its queue item in step. Needs `catalogue.read` (it stores derived data only; a status move is logged).
  */
-export async function checkProduct(deps: CatalogueDeps, who: Who, productId: string, opts: { reason?: QueueReason } = {}): Promise<Readiness> {
+export async function checkProduct(deps: CatalogueDeps, who: Who, productId: string, opts: { reason?: QueueReason; /** Store the check's time even when nothing changed (the audit report, PR 39). */ stamp?: boolean } = {}): Promise<Readiness> {
   const r = await productReadiness(deps, who, productId);
   const now = deps.now?.() ?? new Date();
   const stored = storedOf(r);
@@ -62,7 +62,7 @@ export async function checkProduct(deps: CatalogueDeps, who: Who, productId: str
     if (p.status === 'DRAFT' && r.ready) next = 'READY_TO_PUBLISH';
     if (p.status === 'READY_TO_PUBLISH' && !r.ready) next = 'DRAFT';
     const healthChanged = p.healthScore !== r.score || !sameHealth(readStoredHealth(p.healthIssues), stored);
-    if (healthChanged || next !== p.status) {
+    if (healthChanged || next !== p.status || opts.stamp) {
       await tx.product.update({ where: { id: p.id }, data: { healthScore: r.score, healthIssues: stored as unknown as Prisma.InputJsonValue, status: next } });
     }
     if (next !== p.status) await logChange(tx, who, next === 'READY_TO_PUBLISH' ? 'product.ready' : 'product.notReady', 'Product', p.id, { status: p.status }, { status: next, blocking: r.blocking });

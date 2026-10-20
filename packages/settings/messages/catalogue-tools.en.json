@@ -1,0 +1,68 @@
+{
+  "catalogue": {
+    "linkImport": {
+      "enabled": {
+        "label": "Import a product from a link",
+        "help": "Paste a supplier's or brand's product page and get a draft product to finish. It never goes on the shop by itself."
+      },
+      "allowedHosts": {
+        "label": "Sites a link may come from",
+        "help": "Only pages on these sites can be read (one host per line, such as shop.example.com). Empty = any public site."
+      },
+      "maxPageKb": {
+        "label": "Largest page to read (KB)",
+        "help": "A bigger page is refused, so a wrong link cannot slow the server down."
+      },
+      "timeoutSeconds": {
+        "label": "Time to wait for a page (seconds)",
+        "help": "After this the reading stops and you can try again."
+      },
+      "maxRedirects": {
+        "label": "Forwarding steps to follow",
+        "help": "How many times a link may forward to another address before the reading stops."
+      },
+      "maxImages": {
+        "label": "Photos to list from a page",
+        "help": "The photo links found on the page, shown for you to look at. Photos are not copied: upload your own."
+      },
+      "useAi": {
+        "label": "Let AI tidy the draft",
+        "help": "When AI is switched on and connected, it tidies the name and description. Without AI the draft is made by plain rules."
+      }
+    },
+    "ghost": {
+      "interest": {
+        "enabled": {
+          "label": "\"Tell me when it is back\" on sold-out pages",
+          "help": "A sold-out or hidden product keeps its page; customers can leave a phone number or e-mail to hear when it is back."
+        },
+        "channels": {
+          "label": "How customers can ask to be told",
+          "help": "Phone, e-mail or both."
+        },
+        "callingCode": {
+          "label": "Country calling code for phone numbers",
+          "help": "A number typed without + gets this code (01… becomes +880 1…)."
+        },
+        "maxPerContactPerDay": {
+          "label": "Requests per phone or e-mail per day",
+          "help": "More than this from one phone number or e-mail in a day is refused, so the list stays clean."
+        }
+      },
+      "alternatives": {
+        "label": "Similar products shown on a sold-out page",
+        "help": "In-stock products from the same category shown under a sold-out product. 0 = none."
+      }
+    },
+    "audit": {
+      "staleDays": {
+        "label": "Check products again after (days)",
+        "help": "The audit report checks a product again when its last check is older than this."
+      },
+      "recheckMax": {
+        "label": "Products checked again per opening",
+        "help": "At most this many products are checked again each time the report opens, so it stays quick. The rest follow next time."
+      }
+    }
+  }
+}

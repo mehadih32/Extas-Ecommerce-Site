@@ -8,7 +8,10 @@
         "http://127.0.0.1:3000/admin/login",
         "http://127.0.0.1:3000/admin/products",
         "http://127.0.0.1:3000/admin/products/queue",
-        "http://127.0.0.1:3000/admin/size-charts"
+        "http://127.0.0.1:3000/admin/size-charts",
+        "http://127.0.0.1:3000/admin/products/import",
+        "http://127.0.0.1:3000/admin/products/audit",
+        "http://127.0.0.1:3000/admin/products/back-in-stock"
       ],
       "numberOfRuns": 3,
       "settings": {

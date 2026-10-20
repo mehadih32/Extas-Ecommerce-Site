@@ -34,3 +34,8 @@ export * from './collections';
 export * from './csv';
 export * from './catalogue-csv';
 export * from './was-price';
+// PR 33 import from a link · PR 36 the ghost archive and back-in-stock interest · PR 39 the product audit report.
+export * from './page-facts';
+export * from './link-import';
+export * from './ghost';
+export * from './audit';

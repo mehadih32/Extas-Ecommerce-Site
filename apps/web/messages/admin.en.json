@@ -25,7 +25,10 @@
     "products": "Products",
     "publishQueue": "Ready to publish",
     "integrations": "Keys & connections",
-    "sizeCharts": "Size charts"
+    "sizeCharts": "Size charts",
+    "productImport": "Import from a link",
+    "productAudit": "Product audit",
+    "backInStock": "Back in stock"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -149,6 +152,14 @@
     "localDisk": {
       "name": "Server disk",
       "desc": "When no other storage is on, photos and media stay on the server's own disk"
+    },
+    "pageReader": {
+      "name": "Product page reader",
+      "desc": "Reads a supplier's or brand's product page for \"Import from a link\". No key: give a page to test with.",
+      "fields": {
+        "testUrl": "A product page to test with (https://…)",
+        "userAgent": "Name sent to the sites read — optional"
+      }
     }
   },
   "errors": {

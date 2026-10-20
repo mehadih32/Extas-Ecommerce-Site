@@ -194,3 +194,36 @@
 .pa-qh { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .pa-qchecks { margin: 6px 0; }
 .pa-qacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 6px; }
+
+/* ---------- PR 33, 36, 39 — the catalogue tools (no demo screen of their own: the queue's cards, the list's rows and
+   bulk bar, the edit page's two columns) ---------- */
+/* audit: one "Fix" per missing thing, at the right of its line */
+.pa-fixrow { align-items: center; }
+.pa-fixrow .ad-dot { margin: 0; flex-shrink: 0; }
+.pa-fixtext { flex: 1 1 auto; min-width: 0; }
+.pa-fix { flex-shrink: 0; }
+.pa-warn-t { color: var(--ad-warn); }
+.ad-chip .ad-dot { margin: 0; }
+/* import: the link field and its button side by side; stacked on a phone */
+.pa-imp-row { display: flex; gap: 10px; align-items: center; }
+.pa-imp-row .ad-input { flex: 1 1 auto; min-width: 0; padding-top: 9px; padding-bottom: 9px; }
+@media (max-width: 599px) { .pa-imp-row { flex-direction: column; align-items: stretch; } }
+.pa-imp .ad-err { margin-top: 10px; }
+.pa-imp-cols { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+.pa-imp-cols .pa-col.on { cursor: pointer; }
+.pa-imp-cols .pa-col:focus-within { outline: 2px solid var(--ad-brand); outline-offset: 2px; }
+.pa-imp-url { overflow-wrap: anywhere; margin: 4px 0 10px; }
+.pa-facts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin: 0; font-size: var(--ad-fs-small); }
+.pa-facts dt { font-weight: 700; margin-top: 8px; }
+.pa-facts dd { margin: 0; color: var(--ad-text2); overflow-wrap: anywhere; }
+/* the latest reads and the back-in-stock list: one row each */
+.pa-jobs { list-style: none; margin: 8px 0 0; padding: 0; }
+.pa-job { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--ad-line2); }
+.pa-job:first-child { border-top: 0; }
+.pa-job.on { background: var(--ad-brand-tint); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.pa-job > .pa-main { flex: 1 1 260px; }
+.pa-job-st { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pa-pick-row { display: flex; gap: 12px; align-items: center; flex: 1 1 auto; min-width: 0; min-height: var(--ad-tap); cursor: pointer; }
+.pa-pick-row input { width: 18px; height: 18px; accent-color: var(--ad-brand); margin: 0; flex-shrink: 0; }
+.pa-back-in { display: flex; gap: 6px; align-items: center; margin: 4px 0 0; font-size: var(--ad-fs-small); font-weight: 700; color: var(--ad-brand-dark); }
+.pa-back-in svg { color: var(--ad-brand); }

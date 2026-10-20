@@ -46,8 +46,9 @@
       "write": "Change products, colours, sizes, categories, fabrics, brands, names and links",
       "prices": "Set sale and compare-at prices of variants",
       "publish": "Put products on the shop and take them off (only when the publish checklist passes)",
-      "import": "Bring in products from a CSV file (preview first; nothing is removed)",
-      "export": "Download the catalogue as a CSV file (never cost prices)"
+      "import": "Bring in products from a CSV file or a supplier's link (preview first; a link only makes a draft; nothing is removed)",
+      "export": "Download the catalogue as a CSV file (never cost prices)",
+      "interest": "See who asked to be told when a product is back in stock (their phone or e-mail), and mark them as told"
     },
     "inventory": {
       "read": "See stock per colour and size, warehouses, locations and the ERP connection",

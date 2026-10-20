@@ -50,7 +50,7 @@ export interface OwnerDataRegister {
 const item = (target: string, reason: OwnerDataReason): OwnerDataItem => ({ target, reason });
 
 export const ownerDataRegister: OwnerDataRegister = {
-  version: 1,
+  version: 2,
   settingPrefixes: [
     item('contact.', 'contact'),
     item('legal.', 'legal'),
@@ -88,6 +88,8 @@ export const ownerDataRegister: OwnerDataRegister = {
     item('Customer', 'records'),
     item('CustomerAddress', 'records'),
     item('Order', 'records'),
+    // PR 36 — who asked to be told when a product is back in stock: a customer's phone number or e-mail.
+    item('BackInStockRequest', 'records'),
   ],
   columns: [item('Store.name', 'brand'), item('Store.erpCompanyId', 'connections')],
   media: [item('/', 'media')],
