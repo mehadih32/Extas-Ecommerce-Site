@@ -40,7 +40,7 @@ documents to it ([how](#how-it-is-built)).
 |---|---|
 | Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · S02 0/58 (wave 2 started) · total **70/598** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys) |
-| Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR 197–207 (#17) |
+| Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md); none stops the build ([table below](#what-waits-on-the-owner)) |
 | Next | S02 storefront (home, category, product page) with the four-layer cache, S03 combos, S10 Smart Rules |
 | Last update | 20 Oct 2026 |
@@ -56,36 +56,38 @@ owner's word (handover pack). Waves are the build order from Blueprint
 
 | Stage | Name | Wave | PR numbers | Done / total | State |
 |---|---|:-:|---|:-:|---|
-| S0A | Server foundation | 0 | 1–10, 601, 604 | 12 / 12 | **Done** (all live on the server) |
-| S00 | Foundation — repo, CI, schema, auth, settings framework | 1 | 11–18, 491–496, 500, 508–510, 603 | 19 / 19 | **Done** |
-| S01 | Catalog, media & images | 1 | 19–39, 590 | 22 / 22 | **Done** |
-| S02 | Storefront | 2 | 40–88, 501, 503, 595–600, 602 | 0 / 58 | In progress |
-| S03 | Combo & bundles | 2 | 89–104, 571–576 | 0 / 22 | Not started |
-| S04 | Cart, checkout, accounts | 3 | 105–137, 558, 560, 561, 563, 565, 566 | 0 / 39 | Not started |
-| S05 | Order management | 3 | 138–155, 541, 546 | 0 / 20 | Not started |
-| S06 | Fraud & location | 4 | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | 0 / 33 | Not started |
-| S07 | Payments & wallet | 3 | 165–174 | 0 / 10 | Not started |
-| S08 | Courier, returns, exchange | 3 | 175–193, 525–526, 564 | 0 / 22 | Not started |
-| S09 | Inventory & ERP sync | 1 | 194–207, 497–499 | 17 / 17 | **Done** |
-| S10 | Smart Rules | 2 | 208–219 | 0 / 12 | Not started |
-| S11 | SEO engine | 5 | 220–238, 527, 586, 588 | 0 / 22 | Not started |
-| S12 | Content & blog | 5 | 239–253, 528–530, 547, 591–593 | 0 / 22 | Not started |
-| S13 | Marketing & ads | 5 | 254–283, 531–532, 548, 569, 589 | 0 / 35 | Not started |
-| S14 | CRM & customers | 4 | 284–303, 505, 533–535 | 0 / 24 | Not started |
-| S15 | AI 360 Control Room | 6 | 304–341, 506, 577–585 | 0 / 48 | Not started |
-| S16 | Finance, costs & reports | 6 | 342–355, 504, 536–537, 568 | 0 / 18 | Not started |
-| S17 | Multi-store | 8 | 356–377, 511–512 | 0 / 24 | Not started |
-| S18 | Compliance, security, manual | 8 | 378–390 | 0 / 13 | Not started |
-| S19 | Deploy, backup, go-live | 8 | 391–403, 507, 587 | 0 / 15 | Not started |
-| S20 | Fulfilment & documents | 4 | 404–412 | 0 / 9 | Not started |
-| S21 | Site Health & Audit | 6 | 413–424, 570, 594 | 0 / 14 | Not started |
-| S22 | Support (all-in-one) | 4 | 425–436, 538 | 0 / 13 | Not started |
-| S23 | Social & content studio | 5 | 437–443 | 0 / 7 | Not started |
-| S24 | Virtual Photoshoot Studio | 7 | 444–480, 539 | 0 / 38 | Not started |
-| S25 | Video & Campaign Creative Studio | 7 | 481–490 | 0 / 10 | Not started |
-| S26 | Installation, documentation & distribution | — | 513–518 | — / 6 | **Parked** (handover pack) |
-| S27 | No-ERP stock module | — | not numbered yet | — | **Parked** (handover pack) |
+| [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
+| [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
+| [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
+| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 0 / 58 | In progress |
+| [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 0 / 22 | Not started |
+| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566) | 0 / 39 | Not started |
+| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 0 / 20 | Not started |
+| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 0 / 33 | Not started |
+| [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
+| [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
+| [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
+| [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 0 / 12 | Not started |
+| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 0 / 22 | Not started |
+| [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
+| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
+| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 0 / 24 | Not started |
+| [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
+| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568) | 0 / 18 | Not started |
+| [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
+| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md) | 0 / 13 | Not started |
+| [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587) | 0 / 15 | Not started |
+| [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 0 / 9 | Not started |
+| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | Not started |
+| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 0 / 13 | Not started |
+| [S23](docs/stages/S23.md) | [Social & content studio](docs/stages/S23.md) | [5](docs/stages/README.md#wave-5) | [437–443](docs/stages/S23.md) | 0 / 7 | Not started |
+| [S24](docs/stages/S24.md) | [Virtual Photoshoot Studio](docs/stages/S24.md) | [7](docs/stages/README.md#wave-7) | [444–480](docs/stages/S24.md), [539](docs/stages/S24.md#pr-539) | 0 / 38 | Not started |
+| [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
+| [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
+| [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
 | | **Total** | | **604 PRs** | **70 / 598 active** | 6 parked |
+
+> যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
 ### What waits on the owner
 
@@ -717,32 +719,32 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #18 | PR 509, 17, 15, 4 + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
+| #18 | PR [509](docs/stages/S00.md#pr-509), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [4](docs/stages/S0A.md#pr-4) + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
 | direct | CN-011: README as the A-to-Z front page; docs on the server and in backups | 20 Oct | This page rewritten as the full front page, `docs/README.md` index, CN-011 in blueprint and register, CLAUDE.md rules |
 | direct `f3822d0` | CN-009: owner answers (Note 52) | 12:22 | Watermark text, photos never deleted, honest "was" price, defaults; owner data is never a blocker |
 | direct `303b342` | CN-008: demo V12.1 | 12:13 | Demo V12.1 (owner desktop review, 44 items), QA and admin audit reports, owner notes, agent skills; README as live status page |
-| #17 `1c8a4d6` | PR 197–200, 202–207 | 11:17 | S09 complete: cart holds, ERP order documents, low stock, stock counts, sync health page, re-sync, movement report |
-| #16 `a8face8` | PR 33, 36, 39 (+ 27/32 and 22 follow-ups) | 10:08 | Import from a link, ghost archive and back-in-stock, product audit; links archived never deleted; storage-mock photo fix |
-| #15 `4563976` | PR 497, 498, 499, 194, 195, 196, 201 | 09:15 | ERP adapter and practice ERP, ERP mode and guard, sync layer, stock pull, company/warehouse mapping, locations |
-| #14 `26d2b1f` | PR 21, 26–29, 32, 34, 35, 38 | 08:22 | Product admin screens, publish checklist and health score, publish queue, size charts, collections and tags, CSV, "was" price |
-| #13 `54b7d95` | PR 500 (fix) | 07:24 | Self-hosted fonts, so the image build never downloads fonts |
-| #12 `28ea164` | PR 19, 20, 22–25, 30, 31, 37, 590 | 06:54 | Catalogue domain and API, image pipeline, watermark, responsive images, photo minimum, media library, naming and links |
-| #11 `4407ddf` | PR 500 | 06:10 | Admin sign-in and frame, Keys & connections page; S0A and S00 reports |
-| #10 `b5fe56d` | PR 509, 508, 14 | 05:20 | Owner-data register and check, general default pack, sample catalogue |
-| #9 `fa6b77e` | PR 15, 16, 495 | 05:09 | Staff and customer sign-in, permission checks on every admin action, role builder, audit log |
-| server report `5c0656e` | server report 04:34 | 04:34 | Machine report after PR 18's setup run |
-| #8 `1861652` | PR 18 | 04:34 | Adapter framework (mock / sandbox / live) and the storage adapter |
+| #17 `1c8a4d6` | PR [197–200](docs/stages/S09.md), [202–207](docs/stages/S09.md) | 11:17 | S09 complete: cart holds, ERP order documents, low stock, stock counts, sync health page, re-sync, movement report |
+| #16 `a8face8` | PR [33](docs/stages/S01.md#pr-33), [36](docs/stages/S01.md#pr-36), [39](docs/stages/S01.md#pr-39) (+ [27](docs/stages/S01.md#pr-27)/[32](docs/stages/S01.md#pr-32) and [22](docs/stages/S01.md#pr-22) follow-ups) | 10:08 | Import from a link, ghost archive and back-in-stock, product audit; links archived never deleted; storage-mock photo fix |
+| #15 `4563976` | PR [497](docs/stages/S09.md#pr-497), [498](docs/stages/S09.md#pr-498), [499](docs/stages/S09.md#pr-499), [194](docs/stages/S09.md#pr-194), [195](docs/stages/S09.md#pr-195), [196](docs/stages/S09.md#pr-196), [201](docs/stages/S09.md#pr-201) | 09:15 | ERP adapter and practice ERP, ERP mode and guard, sync layer, stock pull, company/warehouse mapping, locations |
+| #14 `26d2b1f` | PR [21](docs/stages/S01.md#pr-21), [26–29](docs/stages/S01.md), [32](docs/stages/S01.md#pr-32), [34](docs/stages/S01.md#pr-34), [35](docs/stages/S01.md#pr-35), [38](docs/stages/S01.md#pr-38) | 08:22 | Product admin screens, publish checklist and health score, publish queue, size charts, collections and tags, CSV, "was" price |
+| #13 `54b7d95` | PR [500](docs/stages/S00.md#pr-500) (fix) | 07:24 | Self-hosted fonts, so the image build never downloads fonts |
+| #12 `28ea164` | PR [19](docs/stages/S01.md#pr-19), [20](docs/stages/S01.md#pr-20), [22–25](docs/stages/S01.md), [30](docs/stages/S01.md#pr-30), [31](docs/stages/S01.md#pr-31), [37](docs/stages/S01.md#pr-37), [590](docs/stages/S01.md#pr-590) | 06:54 | Catalogue domain and API, image pipeline, watermark, responsive images, photo minimum, media library, naming and links |
+| #11 `4407ddf` | PR [500](docs/stages/S00.md#pr-500) | 06:10 | Admin sign-in and frame, Keys & connections page; S0A and S00 reports |
+| #10 `b5fe56d` | PR [509](docs/stages/S00.md#pr-509), [508](docs/stages/S00.md#pr-508), [14](docs/stages/S00.md#pr-14) | 05:20 | Owner-data register and check, general default pack, sample catalogue |
+| #9 `fa6b77e` | PR [15](docs/stages/S00.md#pr-15), [16](docs/stages/S00.md#pr-16), [495](docs/stages/S00.md#pr-495) | 05:09 | Staff and customer sign-in, permission checks on every admin action, role builder, audit log |
+| server report `5c0656e` | server report 04:34 | 04:34 | Machine report after PR [18](docs/stages/S00.md#pr-18)'s setup run |
+| #8 `1861652` | PR [18](docs/stages/S00.md#pr-18) | 04:34 | Adapter framework (mock / sandbox / live) and the storage adapter |
 | server report `72f88b1` | server report 04:21 | 04:21 | Machine report |
-| #7 `aaa5f76` | PR 491, 492, 496, 510 | 04:20 | Settings framework, resolver, settings migration on deploy, reset to default |
-| #6 `5667515` | PR 493 (+ PR 17 fix) | 04:12 | Credential vault; Lighthouse gate on real throttled paint |
-| #5 `9959d1b` | PR 494 | 03:44 | Hardcode guard as the first CI step |
-| #4 `3122834` | PR 13, 603 | 03:39 | Full Prisma schema with `storeId`, index pack, CI `db` job |
+| #7 `aaa5f76` | PR [491](docs/stages/S00.md#pr-491), [492](docs/stages/S00.md#pr-492), [496](docs/stages/S00.md#pr-496), [510](docs/stages/S00.md#pr-510) | 04:20 | Settings framework, resolver, settings migration on deploy, reset to default |
+| #6 `5667515` | PR [493](docs/stages/S00.md#pr-493) (+ PR [17](docs/stages/S00.md#pr-17) fix) | 04:12 | Credential vault; Lighthouse gate on real throttled paint |
+| #5 `9959d1b` | PR [494](docs/stages/S00.md#pr-494) | 03:44 | Hardcode guard as the first CI step |
+| #4 `3122834` | PR [13](docs/stages/S00.md#pr-13), [603](docs/stages/S00.md#pr-603) | 03:39 | Full Prisma schema with `storeId`, index pack, CI `db` job |
 | server report `50daeb7` | server report 03:00 | 03:00 | Machine report |
-| #3 `d2ed429` | PR 11, 12, 17 | 02:59 | App skeleton, CI gates, zero-downtime deploy, Bengali status page; first deploy live at 03:03 |
+| #3 `d2ed429` | PR [11](docs/stages/S00.md#pr-11), [12](docs/stages/S00.md#pr-12), [17](docs/stages/S00.md#pr-17) | 02:59 | App skeleton, CI gates, zero-downtime deploy, Bengali status page; first deploy live at 03:03 |
 | server report `5bddc39` | server report 02:47 | 02:47 | Machine report |
-| #2 `3a8d198` | PR 7 (CN-007) | 02:46 | Preview password stays on the server, rotatable |
+| #2 `3a8d198` | PR [7](docs/stages/S0A.md#pr-7) (CN-007) | 02:46 | Preview password stays on the server, rotatable |
 | server report `d5f2220` | server report 02:40 | 02:40 | First machine report |
-| #1 `c96b258` | PR 1–10, 601, 604 | 02:38 | S0A: server setup as code, workflows on the runner |
+| #1 `c96b258` | PR [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 02:38 | S0A: server setup as code, workflows on the runner |
 | direct `ae1e461` | CN-006 | 02:34 | Run without stopping: no wave-boundary stop, no permission asks, auto-resume |
 | direct `4c2be88` | Owner rule | 02:29 | Plans and reports by stage/PR, never by days |
 | direct `59865ae` | CN-005 | 02:22 | ERP ↔ shop API contract (`docs/ERP-API-CONTRACT.md`) |

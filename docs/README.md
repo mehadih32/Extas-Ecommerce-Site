@@ -110,6 +110,19 @@ docs file (CN-011).
 | `qa/tools/owner-answers/`, `owner-fix-B-tests/`, `owner-fix-C/`, `owner-fix-E/`, `owner-fix-QA-tools3/` | Tests and before-copies from the owner fix rounds |
 | `qa/tools/v2/` | Scripts that built and verified blueprint V2 / V2.1 |
 
+## `stages/` — stage and PR pages (generated)
+
+| Path | What it is |
+|---|---|
+| [`stages/README.md`](stages/README.md) | Index of the waves and the 28 stages, each with a Bengali line and its done / total count |
+| `stages/S<id>.md` (for example [`stages/S01.md`](stages/S01.md)) | One page per stage (S0A, S00–S27): a Bengali summary, the PR table, then one section per PR (`#pr-<n>`) with a Bengali line and the English details (scope, dated updates and CN notes, status, what was built, links) |
+| [`stages/register.json`](stages/register.json) | The same data, structured, for the admin "PR register" tab (PR 594) |
+| [`stages/bn.json`](stages/bn.json) | The hand-written Bengali text (stage and wave summaries, one line per built PR); the only file here edited by hand |
+
+Made by `tools/docs/gen-stage-pages.mjs` (`pnpm docs:stages`) from `MASTER-REGISTER.md`, `BLUEPRINT.md` (Appendix A,
+E3) and `stages/bn.json`; it also links the stage names, waves and PR numbers in the root `README.md`. CI fails when
+the pages are out of date.
+
 ## `reports/` — what got built, in Bengali
 
 | Path | What it is |

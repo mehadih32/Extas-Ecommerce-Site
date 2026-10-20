@@ -94,6 +94,10 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - **Organisation standard (CN-011), every PR:** lint and format checks pass, tests beside the code, clear names, a
   header comment on each package's `src/index.ts`, `docs/` kept current, blueprint and register changed only
   through CN notes.
+- **Stage and PR pages** (owner, 20 Oct): after every merged PR, add its Bengali one-liner to `docs/stages/bn.json`
+  (plain চলতি Bengali, Western digits, from its register row) and run `pnpm docs:stages`; commit `docs/stages/` and
+  `README.md` with it. The generator also links the README's stage names, waves and PR numbers; CI fails when they are
+  out of date. CN-011's README rule covers the rest.
 - **Owner data is not a blocker** (owner, 20 Oct 12:11): delivery charges, free-delivery limit, courier rates, photos, prices, area lists and similar values are entered by the owner in the backend later. Ship empty/off defaults and never list them in `BLOCKED.md` as questions.
 - **Plans and progress are counted in stages and PRs, never in days or hours** (owner's rule, 20 Oct): "S0A: 7/12 PR · S00: 3/19 PR · total 10/598". 604 PRs in 28 stages (598 active, 6 parked).
 - After each PR: update `PROGRESS.md` (the English line is fine) and the register status.
