@@ -17,6 +17,10 @@
       "maxPairsPerRule": {
         "label": "Most combos one rule may make",
         "help": "A safety limit: a rule that would make more stops here and says so on its card."
+      },
+      "salesDays": {
+        "label": "Best sellers count the sales of the last (days)",
+        "help": "The \"best sellers first\" order of the generated combos counts orders from this many days back."
       }
     },
     "newColourDays": {

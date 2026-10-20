@@ -16,6 +16,8 @@ export type Tx = Prisma.TransactionClient;
 /** Reads effective settings for a store (the app passes its SettingsResolver). */
 export interface SettingsReader {
   value<K extends Key>(key: K, opts?: { storeId?: number }): Promise<Value<K>>;
+  /** Saves a store's value (the app's SettingsResolver; only the shop's default combo templates are written here). */
+  set?(key: Key, value: never, target: { level: 'store'; storeId: number }, opts: { actorId: string | null; reason: string }): Promise<unknown>;
 }
 
 export interface CombosDeps {

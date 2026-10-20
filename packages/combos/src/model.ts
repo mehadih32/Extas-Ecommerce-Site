@@ -249,3 +249,76 @@ export function readiness(c: { setPriceMinor: number | null; items: readonly { p
   });
   return out;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// PR 571 · an auto colour-pair rule (the owner's model)
+// ---------------------------------------------------------------------------------------------------------------
+
+export const RULE_PAIRINGS = ['STYLE', 'ACROSS', 'ANY'] as const;
+export const RULE_SORTS = ['BESTSELLERS', 'COLOUR'] as const;
+export const PRICE_MODES = ['FIXED', 'PERCENT'] as const;
+/** A rule makes pairs or triples (demo: "2-piece" or "3-piece"). */
+export const RULE_PIECES = [2, 3] as const;
+
+/** How a pack is priced: a fixed amount a pack, or a share off the regular total (the limit is a setting). */
+export const packPriceSchema = z
+  .object({
+    priceMode: z.enum(PRICE_MODES).default('PERCENT'),
+    priceMinor: money.nullish().transform((v) => v ?? null),
+    percentOff: z.int().min(1).max(99).nullish().transform((v) => v ?? null),
+  })
+  .strict();
+export type PackPrice = z.output<typeof packPriceSchema>;
+
+/** A rule's combo hub page on the shop (the storefront route, S03 PR 572–573), from its fixed key. */
+export const rulePath = (key: string) => `/combos/${key}`;
+
+/** The rule's fields (no cross-field checks: `pick` and `partial` work on it). */
+export const autoRuleShape = z
+  .object({
+    /** The rule's link `/combos/<key>`: fixed once made. */
+    key: comboSlugSchema,
+    nameEn: text(120).min(1),
+    nameBn: optText(120),
+    /** The style name on the cards; empty = from the products. */
+    titleEn: optText(80),
+    titleBn: optText(80),
+    categoryIds: z.array(z.uuid()).max(50).default([]),
+    productIds: z.array(z.uuid()).max(200).default([]),
+    pieces: z.union([z.literal(2), z.literal(3)]).default(2),
+    pairing: z.enum(RULE_PAIRINGS).default('STYLE'),
+    sameColour: z.boolean().default(false),
+    excludeColourIds: z.array(z.uuid()).max(300).default([]),
+    priceMode: z.enum(PRICE_MODES).default('PERCENT'),
+    priceMinor: money.nullish().transform((v) => v ?? null),
+    percentOff: z.int().min(1).max(99).nullish().transform((v) => v ?? null),
+    sortMode: z.enum(RULE_SORTS).default('BESTSELLERS'),
+    pinnedKeys: z.array(z.string().min(1).max(600)).max(50).default([]),
+    season: z.string().trim().max(40).nullish().transform((v) => v || null),
+    listTemplateKey: templateOf(LIST_TEMPLATES),
+    pageTemplateKey: templateOf(PAGE_TEMPLATES),
+    bagTemplateKey: templateOf(BAG_TEMPLATES),
+    noSinglePiece: z.boolean().default(true),
+    startsOn: ymdSchema.nullish().transform((v) => v ?? null),
+    endsOn: ymdSchema.nullish().transform((v) => v ?? null),
+    /** "Add 1 more → 3 pcs" (2-piece rules): the 3-piece rule's price and name; null = not offered. */
+    upsell: packPriceSchema
+      .extend({ nameEn: text(120).min(1), nameBn: optText(120) })
+      .nullish()
+      .transform((v) => v ?? null),
+  })
+  .strict();
+
+export const autoRuleInputSchema = autoRuleShape
+  .refine((v) => v.categoryIds.length + v.productIds.length > 0, { message: 'choose at least one category or product', path: ['categoryIds'] })
+  .refine((v) => !v.startsOn || !v.endsOn || v.endsOn >= v.startsOn, { message: 'the end is before the start', path: ['endsOn'] })
+  .refine((v) => !v.upsell || v.pieces === 2, { message: '"add 1 more" is for 2-piece rules', path: ['upsell'] });
+export type AutoRuleInput = z.input<typeof autoRuleInputSchema>;
+export type AutoRuleData = z.output<typeof autoRuleInputSchema>;
+
+/** The price rule of a pack price. */
+export const packRule = (p: { priceMode: 'FIXED' | 'PERCENT'; priceMinor: number | null; percentOff: number | null }): PriceRule =>
+  p.priceMode === 'FIXED' ? { mode: 'FIXED', setMinor: p.priceMinor } : { mode: 'PERCENT', percentOff: p.percentOff };
+
+/** A pack price is set (FIXED with an amount, PERCENT with a share). */
+export const packPriced = (p: { priceMode: 'FIXED' | 'PERCENT'; priceMinor: number | null; percentOff: number | null }) => (p.priceMode === 'FIXED' ? p.priceMinor !== null : p.percentOff !== null);

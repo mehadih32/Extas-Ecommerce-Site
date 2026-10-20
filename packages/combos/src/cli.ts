@@ -21,7 +21,7 @@ async function main(argv: string[]): Promise<number> {
   const settings = { value: async <K extends Key>(key: K): Promise<Value<K>> => registry[key].default as Value<K> };
   try {
     const r = await seedSampleCombos({ db, settings });
-    console.log(`combos sample → store ${r.storeId}: ${r.combos} combo(s) created`);
+    console.log(`combos sample → store ${r.storeId}: ${r.combos} combo(s), ${r.rules} rule(s) created`);
     return 0;
   } catch (e) {
     if (e instanceof SampleCombosRefused || e instanceof CombosError) {

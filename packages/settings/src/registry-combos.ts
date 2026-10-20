@@ -64,6 +64,18 @@ export const combosSettings = {
     sortOrder: 30,
     version: V,
   }),
+  'combos.generate.salesDays': setting({
+    schema: z.int().min(1).max(730),
+    default: 90,
+    scope: 'store',
+    valueType: 'INT',
+    group: 'combos',
+    labelKey: 'combos.generate.salesDays.label',
+    helpKey: 'combos.generate.salesDays.help',
+    isOwnerData: false,
+    sortOrder: 35,
+    version: V,
+  }),
   'combos.newColourDays': setting({
     schema: z.int().min(0).max(365),
     default: 14,
@@ -118,7 +130,8 @@ export const combosSettings = {
   }),
   'combos.template.bag': setting({
     schema: comboBagTemplateSchema,
-    default: 'current',
+    // The demo's R15 ranking winner (43-combo-tpl.js cbt_tpl); 'current' stays selectable.
+    default: 'B5',
     scope: 'store',
     valueType: 'ENUM',
     group: 'combos',

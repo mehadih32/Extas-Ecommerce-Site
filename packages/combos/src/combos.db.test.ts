@@ -6,6 +6,7 @@ import { createRole, SYSTEM, syncAuth, type Actor, type PermissionKey } from '@e
 import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/testing';
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
+import { createAutoRule, getAutoRule, listAutoRules, previewAutoRule, setAutoRuleActive, setAutoRuleDates, setAutoRuleOptions, setAutoRuleUpsell, setShopTemplates, updateAutoRule } from './auto-rules';
 import { createCombo, getCombo, listCombos, setComboActive, setComboFlags, setComboPrice, updateCombo } from './combos-service';
 import type { CombosDeps, SettingsReader, Who } from './context';
 import { seedSampleCombos } from './sample';
@@ -27,9 +28,15 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
   let B = 0;
   let clock = T0;
   const overrides = new Map<string, unknown>();
+  const written: unknown[] = [];
   const settings: SettingsReader = {
     async value<K extends Key>(key: K): Promise<Value<K>> {
       return (overrides.has(key) ? overrides.get(key) : registry[key].default) as Value<K>;
+    },
+    async set(key, value, target) {
+      registry[key].schema.parse(value);
+      written.push([key, value, target]);
+      overrides.set(key, value);
     },
   };
   const deps = (): CombosDeps => ({ db: t.prisma, settings, now: () => clock });
@@ -139,12 +146,107 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
 
     it('the sample combos go only to the sample store, once', async () => {
       const first = await seedSampleCombos(deps());
-      expect(first).toEqual({ storeId: S, combos: 3 });
+      expect(first).toEqual({ storeId: S, combos: 3, rules: 2 });
       expect((await seedSampleCombos(deps())).combos).toBe(0);
       const list = await listCombos(deps(), as('reader'));
       const set = list.find((c) => c.slug === 'sample-polo-chino-set')!;
       expect(set).toMatchObject({ state: 'live', autoApply: true });
       expect(set.pricing.offer).toBe(true);
+    });
+  });
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 571 · auto colour-pair rules', () => {
+    const rule = (over: Record<string, unknown> = {}) => ({
+      key: 'test-polos',
+      nameEn: 'Test polo pairs',
+      productIds: [ids['essential-pique-polo']!],
+      pieces: 2 as const,
+      priceMode: 'PERCENT' as const,
+      percentOff: null as number | null,
+      ...over,
+    });
+    const pairRows = (ruleId: string) => t.prisma.combo.findMany({ where: { autoRuleId: ruleId }, select: { id: true, pieceKey: true, status: true, slug: true, sortRank: true } });
+
+    it('the preview counts what a rule would make, by pieces and by pairing; nothing is written', async () => {
+      const p = await previewAutoRule(deps(), as('reader'), { productIds: [ids['essential-pique-polo']!, ids['contrast-collar-polo']!], percentOff: 10 });
+      expect(p.counts.made).toBe(10 + 3);
+      expect(p.byPieces).toEqual({ '2': 13, '3': 10 + 1 });
+      expect(p.byPairing.ACROSS).toBe(5 * 3);
+      expect(p.colours.length).toBeGreaterThanOrEqual(5);
+      expect(p.pairs[0]!.pricing.reason).toBe('OFFER');
+      expect(await t.prisma.comboAutoRule.count({ where: { key: 'preview' } })).toBe(0);
+    });
+
+    it('a new rule is a draft with one combo row per pair; a price needs the owner; the share has the store’s limit', async () => {
+      expect(await code(createAutoRule(deps(), as('reader'), rule()))).toBe('FORBIDDEN');
+      expect(await code(createAutoRule(deps(), as('writer'), rule({ percentOff: 10 })))).toBe('OWNER_OK_REQUIRED');
+      expect(await code(createAutoRule(deps(), as('owner'), rule({ percentOff: 95 })))).toBe('INVALID_INPUT');
+      const r = await createAutoRule(deps(), as('writer'), rule());
+      ids.rule = r.id;
+      expect(r).toMatchObject({ state: 'draft', path: '/combos/test-polos', blocking: ['NO_SET_PRICE'] });
+      expect(r.counts.made).toBe(10);
+      const rows = await pairRows(r.id);
+      expect(rows).toHaveLength(10);
+      expect(rows.every((x) => x.status === 'DRAFT' && x.slug.startsWith('test-polos~'))).toBe(true);
+      expect(await code(createAutoRule(deps(), as('writer'), rule()))).toBe('SLUG_TAKEN');
+    });
+
+    it('a colour left out ends its pairs (never deleted); put back, the same rows come back; the link is fixed', async () => {
+      const r = await getAutoRule(deps(), as('reader'), ids.rule!);
+      const red = ids['essential-pique-polo/red']!;
+      expect(await code(updateAutoRule(deps(), as('writer'), ids.rule!, rule({ key: 'other-key' }), r.version))).toBe('KEY_FIXED');
+      const out = await updateAutoRule(deps(), as('writer'), ids.rule!, rule({ excludeColourIds: [red] }), r.version);
+      expect(out.counts.made).toBe(6);
+      const rows = await pairRows(ids.rule!);
+      expect(rows).toHaveLength(10);
+      const ended = rows.filter((x) => x.status === 'ENDED');
+      expect(ended).toHaveLength(4);
+      const back = await updateAutoRule(deps(), as('writer'), ids.rule!, rule(), out.version);
+      expect(back.counts.made).toBe(10);
+      const again = await pairRows(ids.rule!);
+      expect(again.map((x) => x.id).sort()).toEqual(rows.map((x) => x.id).sort());
+      expect(again.some((x) => x.status === 'ENDED')).toBe(false);
+    });
+
+    it('on needs a price and combos.publish; its pairs follow it on and off; the end date ends it, on again clears it', async () => {
+      expect(await code(setAutoRuleActive(deps(), as('publisher'), ids.rule!, true))).toBe('NOT_READY');
+      const r = await getAutoRule(deps(), as('reader'), ids.rule!);
+      expect(await code(setAutoRuleActive(deps(), as('writer'), ids.rule!, true))).toBe('FORBIDDEN');
+      const priced = await updateAutoRule(deps(), as('owner'), ids.rule!, rule({ percentOff: 10 }), r.version);
+      expect(priced.top!.pricing).toMatchObject({ regularMinor: 170000, payMinor: 153000, reason: 'OFFER' });
+      const on = await setAutoRuleActive(deps(), as('publisher'), ids.rule!, true);
+      expect(on.state).toBe('live');
+      expect((await pairRows(ids.rule!)).every((x) => x.status === 'RUNNING')).toBe(true);
+      const off = await setAutoRuleActive(deps(), as('publisher'), ids.rule!, false);
+      expect(off.state).toBe('off');
+      expect((await pairRows(ids.rule!)).every((x) => x.status === 'PAUSED')).toBe(true);
+      await setAutoRuleActive(deps(), as('publisher'), ids.rule!, true);
+      const dated = await setAutoRuleDates(deps(), as('publisher'), ids.rule!, null, '2026-10-21');
+      expect(dated.endsOn).toBe('2026-10-21');
+      clock = new Date('2026-10-22T06:00:00Z');
+      expect((await getAutoRule(deps(), as('reader'), ids.rule!)).state).toBe('ended');
+      const revived = await setAutoRuleActive(deps(), as('publisher'), ids.rule!, true);
+      expect(revived).toMatchObject({ state: 'live', endsOn: null });
+      clock = T0;
+    });
+
+    it('"add 1 more": a 3-piece companion (draft, no price until the owner sets one); options and shop templates', async () => {
+      expect(await code(setAutoRuleUpsell(deps(), as('writer'), ids.rule!, true))).toBe('INVALID_INPUT');
+      const up = await setAutoRuleUpsell(deps(), as('writer'), ids.rule!, true, { nameEn: 'Test polo threes' });
+      expect(up.addOneMore).toBe(true);
+      expect(up.upsell).toMatchObject({ key: 'test-polos-3', state: 'draft', priced: false });
+      const three = await getAutoRule(deps(), as('reader'), up.upsell!.id);
+      expect(three).toMatchObject({ pieces: 3, upsellOf: { id: ids.rule } });
+      expect(three.counts.made).toBe(10);
+      const o = await setAutoRuleOptions(deps(), as('writer'), ids.rule!, { noSinglePiece: false, listTemplateKey: 'L2' });
+      expect(o).toMatchObject({ noSinglePiece: false, listTemplateKey: 'L2', pageTemplateKey: null });
+      const tpl = await setShopTemplates(deps(), as('writer'), { list: 'L3' });
+      expect(tpl.list).toBe('L3');
+      expect(await code(setShopTemplates(deps(), as('writer'), { list: 'L9' }))).toBe('INVALID_INPUT');
+      overrides.delete('combos.template.list');
+      const list = await listAutoRules(deps(), as('reader'));
+      expect(list.map((x) => x.key)).toEqual(expect.arrayContaining(['test-polos', 'test-polos-3']));
+      expect(await t.prisma.auditLog.count({ where: { entityType: 'ComboAutoRule', entityId: ids.rule! } })).toBeGreaterThanOrEqual(8);
     });
   });
 });

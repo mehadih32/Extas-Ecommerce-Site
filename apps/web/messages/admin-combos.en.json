@@ -121,6 +121,237 @@
       "sameOff": "{name} — only different colours get the combo price",
       "saved": "{name} saved",
       "created": "{name} saved as a draft — switch it on when it is ready"
+    },
+    "tabs": {
+      "label": "Combo sections",
+      "auto": "Auto colour-pair combos",
+      "new": "+ Make a combo",
+      "edit": "Edit combo rule",
+      "archive": "Archive",
+      "fixed": "Fixed combos & customer sets"
+    },
+    "how": {
+      "s1t": "Upload a product",
+      "s1s": "Products → New product, “Use in combos” ticked",
+      "s2t": "Pick a category or style, 2 or 3 pieces",
+      "s2s": "+ Make a combo — 8 short steps",
+      "s3t": "The pairs make themselves — promote the link",
+      "s3s": "copy the page link for your ad"
+    },
+    "defaults": {
+      "title": "Shop default templates",
+      "sub": "Used when a rule does not choose its own",
+      "list": "Combo category page",
+      "page": "Combo product page",
+      "bag": "Combo in the bag",
+      "saved": "Shop default saved: {name}"
+    },
+    "rules": {
+      "title": "Combo rules",
+      "count": "{n} of {total} on · each rule makes its own combo page",
+      "make": "Make a combo",
+      "empty": "No combo rules yet. Make one: pick a category, say 2 or 3 pieces, and every colour pair becomes a combo."
+    },
+    "rule": {
+      "pieces": "{n}-piece",
+      "onOff": "{name} on or off",
+      "noPairs": "No pairs yet",
+      "made": "{made} combos made · {stock} with stock",
+      "hidden": "{n} hidden (sold out)",
+      "truncated": "Only the first {n} are made (the limit for one rule).",
+      "priceRulePercent": "Price rule: {n}% off",
+      "priceRuleFixed": "Price rule: {price} a pack",
+      "noPrice": "No price yet — the owner sets it.",
+      "noSingle": "No single pieces in this section",
+      "noSingleHint": "sold only as sets, not one by one",
+      "upsell": "“Add 1 more → 3 pcs”",
+      "upsellUses": "uses {name}",
+      "upsellOff": "{name} (not on yet)",
+      "upsellNeeds": "needs a 3-piece rule — turn on to make one",
+      "upsellNoPrice": "{name} still needs a price",
+      "pageTpl": "Page",
+      "pairTpl": "Pair page",
+      "copy": "Copy link",
+      "copied": "Page link copied — paste it in your ad",
+      "revive": "Turn on again",
+      "edit": "Edit",
+      "upsellOfLabel": "the “add 1 more” of {name}",
+      "piecesLead": "{n} pcs",
+      "arrow": "→"
+    },
+    "archive": {
+      "note": "Ended and switched-off combos live here — nothing is deleted. Their pages still open and say “this offer has ended”, with live combos beside them, so search ranking and shared links are kept. “Turn on again” brings a rule back on the same link.",
+      "empty": "Nothing in the archive. Ended or switched-off combo rules come here by themselves."
+    },
+    "pairing": {
+      "STYLE": {
+        "name": "Same style",
+        "hint": "e.g. Black + Navy of the same polo"
+      },
+      "ACROSS": {
+        "name": "One from each style",
+        "hint": "e.g. a hoodie + a jogger"
+      },
+      "ANY": {
+        "name": "Any mix",
+        "hint": "every piece with every other"
+      }
+    },
+    "listTpl": {
+      "default": "Shop default",
+      "L1": "L1 · Pair grid",
+      "L2": "L2 · Style cards",
+      "L3": "L3 · Hub",
+      "L4": "L4 · Big list",
+      "L5": "L5 · 2 or 3 first"
+    },
+    "pageTpl": {
+      "default": "Shop default",
+      "auto": "Auto (P1, or P2 when many)",
+      "P1": "P1 · Pair page",
+      "P2": "P2 · Pick colours",
+      "P3": "P3 · Top + bottom set",
+      "P4": "P4 · Mixed set",
+      "P5": "P5 · Fixed pack"
+    },
+    "bagTpl": {
+      "default": "Shop default",
+      "current": "Current look",
+      "B1": "B1 · Grouped card",
+      "B2": "B2 · Size in the bag",
+      "B3": "B3 · Add 1 more",
+      "B4": "B4 · Price split",
+      "B5": "B5 · Compact row"
+    },
+    "season": {
+      "none": "None"
+    },
+    "sizes": {
+      "soldOut": "Sold out",
+      "all": "{from}–{to}",
+      "range": "{from}–{to}",
+      "some": "{labels} left"
+    },
+    "wizard": {
+      "steps": {
+        "1": "What",
+        "2": "2 or 3",
+        "3": "Pairing",
+        "4": "Price",
+        "5": "No singles",
+        "6": "Add 1 more",
+        "7": "Preview",
+        "8": "Promote"
+      },
+      "stepsLabel": "Steps",
+      "stepOf": "Step {n} of {total}",
+      "editing": "You are changing {name}. “Save changes” changes the shop at once.",
+      "live": "{n} combos will be made",
+      "liveSub": "{stock} with stock · {products} products",
+      "back": "Back",
+      "next": "Next",
+      "saveOn": "Save & turn on",
+      "saveDraft": "Save as draft",
+      "errWhat": "Choose at least one category or product first.",
+      "errPairing": "This pairing makes no combos — pick another or add colours.",
+      "errPrice": "Enter a price.",
+      "s1": {
+        "help": "Which products make the combos? A whole category, a style (sub-category) or products you pick — whichever is easier. A new product or a new colour in that category joins by itself later.",
+        "byCat": "Category",
+        "byProd": "Pick products",
+        "search": "Search products",
+        "products": "{n} products",
+        "colours": "{n} colours",
+        "chosen": "Chosen:",
+        "nothing": "nothing yet",
+        "notTicked": "not ticked for combos",
+        "count": "{products} products · {colours} colours in all",
+        "noCats": "No categories with products yet."
+      },
+      "s2": {
+        "help": "How many pieces in each combo? Even with 2 pieces you can switch on “add 1 more → 3 pcs” later (step 6).",
+        "option": "{n}-piece combo",
+        "together2": "2 together",
+        "together3": "3 together",
+        "count": "{n} combos"
+      },
+      "s3": {
+        "help": "How do the pieces pair? Usually “same style” — Black + Navy of the same polo. For a set like a hoodie + a jogger choose “one from each style”.",
+        "needs": "needs {n} different styles",
+        "colours": "Colours in combos",
+        "coloursHelp": "Tap a colour you do not want in combos",
+        "same": "Two of the same colour also make a pair"
+      },
+      "s4": {
+        "help": "How is the combo priced? A fixed amount a pack, or a share off the regular price.",
+        "fixed": "Fixed amount a pack",
+        "percent": "% off regular",
+        "label": "Combo price",
+        "percentLabel": "Share off the regular price (%)",
+        "example": "{pieces} pcs regular {regular} → combo {pay} · {each} each",
+        "save": "Save {saving}",
+        "warn": "This price is the same as or above the regular price ({regular}) — customers pay the regular price and no saving shows.",
+        "rounding": "A % price is rounded down to {step}. A combo is never priced above its regular total."
+      },
+      "s5": {
+        "help": "Can this combo page also sell one piece at a time? Your rule: a 2-piece combo sells as 2 — not one. Ticked, no single piece shows on this page.",
+        "tick": "No single pieces in this section",
+        "tickHint": "no one-by-one sales in this section"
+      },
+      "s6": {
+        "help": "While a customer takes 2 pieces, they are told “take 1 more — 3 pieces for even less”. A 3-piece rule is made for it by itself.",
+        "three": "This is a 3-piece combo — “add 1 more” is only for 2-piece combos. Press Next.",
+        "tick": "Offer “add 1 more → 3 pcs”",
+        "tickHint": "1 more makes 3 pieces, a bigger saving",
+        "price": "3-piece price",
+        "example": "2 pcs {pay2} → 3 pcs {pay3} ({each} each, {n} combos)",
+        "upsellName": "{name} — 3 pieces"
+      },
+      "s7": {
+        "help": "These combos go on the shop — each pair's picture is made by itself. A sold-out pair hides; a new colour brings new pairs.",
+        "empty": "No combos — go back to step 1 or 3.",
+        "soldOut": "Sold out — hidden",
+        "more": "The first {n} of {total} are shown.",
+        "new": "New colour"
+      },
+      "s8": {
+        "help": "Give it a name and choose the page designs. Once saved the combo page is ready — copy the link below for your Facebook or Google ad.",
+        "title": "Style name on cards",
+        "titlePh": "e.g. Solid Polo",
+        "name": "Rule name (for you)",
+        "namePh": "e.g. Solid Polo combos",
+        "nameBn": "Rule name in Bengali",
+        "key": "Link",
+        "keyFixed": "The link stays the same once saved, so a shared link keeps working.",
+        "season": "Season tab on the combo hub",
+        "dates": "Dates",
+        "listTpl": "Combo page template",
+        "pageTpl": "Pair page template",
+        "promote": "Link to promote",
+        "promoteHelp": "Copy it after saving. The page shows only the {n} combos — no single pieces.",
+        "promoteSingles": "Copy it after saving. The page shows the {n} combos, with single pieces below (you turned that on)."
+      },
+      "done": {
+        "live": "{name} is live",
+        "draft": "{name} is saved as a draft",
+        "count": "{n} combos are on the shop now. Copy the link for your ad.",
+        "draftHelp": "Switch it on from its card once it has a price.",
+        "all": "All combo rules"
+      }
+    },
+    "toastRule": {
+      "on": "{name} is on — live on the shop",
+      "onSoon": "{name} is on — it starts on its start date",
+      "off": "{name} is off — moved to Archive; its pages stay open and say the offer has ended",
+      "back": "{name} is back on the shop — same links as before",
+      "dates": "{name} — dates saved",
+      "saved": "{name} saved",
+      "created": "{name} saved",
+      "noSingleOn": "No single pieces on the {name} page",
+      "noSingleOff": "Single pieces listed under the {name} combos",
+      "upsellOn": "“Add 1 more → 3 pcs” on",
+      "upsellOff": "“Add 1 more” off",
+      "tpl": "Template saved"
     }
   }
 }
