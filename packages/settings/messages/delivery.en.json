@@ -55,6 +55,20 @@
         "label": "Largest public delivery request (bytes)",
         "help": "The checkout's address and phone look-ups are refused when they are bigger than this."
       }
+    },
+    "suggest": {
+      "enabled": {
+        "label": "Address suggestions",
+        "help": "While the customer types the area, show matching places with their district and delivery charge."
+      },
+      "minChars": {
+        "label": "Letters before suggesting",
+        "help": "How many letters the customer types before suggestions appear."
+      },
+      "limit": {
+        "label": "Suggestions shown",
+        "help": "The most places shown at once while the customer types."
+      }
     }
   }
 }

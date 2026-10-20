@@ -13,6 +13,8 @@
 //   POST   /api/admin/delivery/resolve             {line, savedAreaId?, confirmed?} "Try an address": what checkout does
 //   POST   /api/delivery/resolve                   the same read for the checkout (public: same-site, size-capped, reads
 //                                                  only the gazetteer and the bands — never a customer)
+//   GET    /api/delivery/suggest?q=               the address autocomplete (PR 552): places starting with what was
+//                                                  typed, each with its district and its band's charge (public)
 //
 // The charges, hours and the list are owner data (PR 509): the default pack ships the bands off with no charge.
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -139,6 +141,20 @@ export async function publicResolveHandler(request: Request, deps: AdminDeps | n
   if (door instanceof Response) return door;
   try {
     return json({ ok: true, read: await del.resolveLine(door.deps, door.storeId, door.input) });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+/** GET /api/delivery/suggest?q= — the address autocomplete (PR 552): public, read-only, the query capped by the setting. */
+export async function publicSuggestHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (method(request) !== 'GET') return fail(405, 'method-not-allowed');
+  if (!deps) return fail(503, 'database-not-configured');
+  const url = new URL(request.url);
+  const storeId = storeIdOf(url);
+  if (storeId === null) return fail(400, 'invalid-store-id');
+  try {
+    return json({ ok: true, ...(await del.suggestPlaces(deliveryDeps(deps), storeId, { q: url.searchParams.get('q') ?? '' })) });
   } catch (e) {
     return errorResponse(e);
   }
