@@ -1,0 +1,45 @@
+{
+  "$comment": "SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509): made-up combos for the sample store, so the combo screens can be built and tested on real rows. The prices are made-up sample values, never the owner's: his combos and set prices are typed in on /admin/combos (the demo's 4-piece prices are demo defaults, BLOCKED 3). Products are named by their sample slug; colours by their sample key.",
+  "version": 1,
+  "marker": "sample-combos-v1",
+  "combos": [
+    {
+      "slug": "sample-polo-chino-set",
+      "nameEn": "Sample polo + chino set",
+      "nameBn": "নমুনা পোলো + চিনো সেট",
+      "descriptionEn": "A polo and a chino, any colours.",
+      "type": "TOP_BOTTOM",
+      "items": [
+        { "product": "essential-pique-polo", "labelEn": "Polo", "labelBn": "পোলো" },
+        { "product": "slim-chino-trousers", "labelEn": "Chino", "labelBn": "চিনো" }
+      ],
+      "sampleSetPriceMinor": 205000,
+      "autoApply": true,
+      "on": true
+    },
+    {
+      "slug": "sample-crew-tee-trio",
+      "nameEn": "Sample crew tee trio",
+      "nameBn": "নমুনা ক্রু টি — ৩টা",
+      "descriptionEn": "Three crew tees, pick each colour.",
+      "type": "FIXED_COLOUR_PACK",
+      "items": [{ "product": "everyday-crew-tee", "quantity": 3 }],
+      "sampleSetPriceMinor": 149000,
+      "autoApply": false,
+      "sameColour": true,
+      "on": true
+    },
+    {
+      "slug": "sample-shirt-belt",
+      "nameEn": "Sample shirt + belt",
+      "type": "MIXED_SET",
+      "items": [
+        { "product": "oxford-cotton-shirt", "colours": ["white", "sky"] },
+        { "product": "leather-look-belt" }
+      ],
+      "sampleSetPriceMinor": 179000,
+      "autoApply": false,
+      "on": false
+    }
+  ]
+}

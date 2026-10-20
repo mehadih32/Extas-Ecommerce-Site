@@ -288,6 +288,10 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/rules test
+      - name: Combo tests on PostgreSQL (S03 · PR 89–104, 571, 575)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/combos test
       - name: Admin API tests on PostgreSQL (incl. the product admin routes, PR 21, 26, 29, 35)
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas

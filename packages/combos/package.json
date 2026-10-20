@@ -1,0 +1,42 @@
+{
+  "name": "@extas/combos",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Combos and sets (S03 core, PR 89–104, 571, 575): the combo model with its pieces, set price, saving and active window (PR 89), the combo admin services (PR 90), auto colour-pair combos from a rule (PR 571, the owner's model), set tiers read from Smart Rules (PR 99), set validation (PR 101), the set summary with price and saving (PR 96), adding a set to the bag as one locked-price set (PR 97), the set photo composed from the piece photos (PR 575) and combo analytics (PR 104).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts",
+    "./sample": "./src/sample.ts"
+  },
+  "scripts": {
+    "sample": "tsx src/cli.ts sample",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/adapters": "workspace:*",
+    "@extas/auth": "workspace:*",
+    "@extas/catalogue": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/inventory": "workspace:*",
+    "@extas/media": "workspace:*",
+    "@extas/rules": "workspace:*",
+    "@extas/seed": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

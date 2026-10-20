@@ -52,7 +52,7 @@ export interface OwnerDataRegister {
 const item = (target: string, reason: OwnerDataReason): OwnerDataItem => ({ target, reason });
 
 export const ownerDataRegister: OwnerDataRegister = {
-  version: 3,
+  version: 4,
   settingPrefixes: [
     item('contact.', 'contact'),
     item('legal.', 'legal'),
@@ -101,6 +101,12 @@ export const ownerDataRegister: OwnerDataRegister = {
     item('Notice', 'rules'),
     item('Coupon', 'rules'),
     item('CouponRedemption', 'records'),
+    // S03 · PR 89–104, 571 — the owner's combos and auto colour-pair rules (his set and pack prices) and how they sell.
+    item('Combo', 'rules'),
+    item('ComboItem', 'rules'),
+    item('ComboAutoRule', 'rules'),
+    item('PopularPair', 'records'),
+    item('ComboDailyStat', 'records'),
   ],
   columns: [item('Store.name', 'brand'), item('Store.erpCompanyId', 'connections')],
   media: [item('/', 'media')],

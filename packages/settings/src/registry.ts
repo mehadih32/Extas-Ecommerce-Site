@@ -14,6 +14,7 @@ import { merchSettings } from './registry-merch';
 import { inventorySettings } from './registry-inventory';
 import { catalogueToolsSettings } from './registry-catalogue-tools';
 import { rulesSettings } from './registry-rules';
+import { combosSettings } from './registry-combos';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1109,6 +1110,8 @@ export const registry = {
   ...inventorySettings,
   // ---- S10 · PR 208–219 · Smart Rules: text limits, places, simulation, coupons, notices (registry-rules.ts, version 13). ----
   ...rulesSettings,
+  // ---- S03 · PR 89–104, 571, 575 · combos and sets: pack price rounding, the generator, seasons, default templates, the bag, the set photo, the report (registry-combos.ts, version 14). ----
+  ...combosSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
