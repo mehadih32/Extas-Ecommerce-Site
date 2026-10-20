@@ -1,0 +1,29 @@
+{
+  "$comment": "S03 · PR 101, 96, 97 — the words of a set on the shop: what is still missing (one line per problem code, the button says it and the page scrolls there), and the one button wording (Blueprint D8.1). {item} is the piece's name (\"item 2 (Pique Polo)\"), {colour} and {size} the pick.",
+  "problem": {
+    "NOT_ON_SALE": "This set is not on sale now.",
+    "PICK_COLOUR": "Pick a colour for {item}.",
+    "PICK_SIZE": "Pick a size for {item}.",
+    "COLOUR_NOT_IN_SET": "That colour is not part of this set — pick another for {item}.",
+    "SIZE_NOT_IN_SET": "That size is not part of this set — pick another for {item}.",
+    "NO_SUCH_PIECE": "{item} is not made in {colour} · {size}. Pick another size or colour.",
+    "SOLD_OUT": "Size {size} is sold out in {colour}. Pick another size or colour for {item}.",
+    "NOT_ENOUGH": "Only {stock} left in {colour} · {size} — the set would need {need}. Choose another colour or size for {item}.",
+    "NOT_ENOUGH_BAG": "Only {stock} left in {colour} · {size} and {inBag} already in your bag. Choose another colour or size for {item}.",
+    "SAME_COLOUR": "Pick a different colour for {item} — this set is different colours.",
+    "NO_PRICE": "{item} cannot be sold right now."
+  },
+  "item": "item {n} ({name})",
+  "cta": {
+    "two": "Add both to bag · {price}",
+    "many": "Add all {n} to bag · {price}",
+    "update": "Update set in bag"
+  },
+  "price": {
+    "line": "{n} pcs {regular} → {pay}",
+    "save": "Save {saving}",
+    "cod": "Pay {pay} when it arrives"
+  },
+  "ended": "This offer has ended.",
+  "endedInBag": "This set offer has ended — your bag keeps the price you got."
+}

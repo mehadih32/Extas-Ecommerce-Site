@@ -11,6 +11,8 @@ import { createCombo, getCombo, listCombos, setComboActive, setComboFlags, setCo
 import type { CombosDeps, SettingsReader, Who } from './context';
 import { seedSampleCombos } from './sample';
 import { listSetTiers, liveSetTiers } from './set-tiers';
+import { checkComboSet } from './set-check';
+import { productFacts } from './facts';
 import { contentColumns, ruleContentSchema } from '@extas/rules';
 
 export async function code(p: Promise<unknown>): Promise<string> {
@@ -300,6 +302,40 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       await t.prisma.smartRule.update({ where: { id: row.id }, data: { archivedAt: clock } });
       expect(await listSetTiers(deps(), as('reader'))).toEqual([]);
       expect(await code(listSetTiers(deps(), as('reader', B)))).not.toBe('ok');
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 101 · set validation on the server', () => {
+    it('says what is missing, counts the bag (no oversell), leaves out the set being changed, and refuses one not on sale', async () => {
+      const combo = await t.prisma.combo.findFirstOrThrow({ where: { storeId: S, slug: 'sample-polo-chino-set' }, select: { id: true } });
+      await t.prisma.combo.update({ where: { id: combo.id }, data: { status: 'RUNNING' } });
+      expect(await code(checkComboSet(deps(), { storeId: S, slug: 'no-such-set', choices: [] }))).toBe('NOT_FOUND');
+      expect(await code(checkComboSet(deps(), { storeId: S, choices: [] }))).toBe('INVALID_INPUT');
+
+      const none = await checkComboSet(deps(), { storeId: S, slug: 'sample-polo-chino-set', choices: [] });
+      expect(none).toMatchObject({ ok: false, first: { code: 'PICK_COLOUR', slot: 0 }, total: 2, done: 0 });
+
+      const facts = await productFacts(deps(), S, [ids['essential-pique-polo']!, ids['slim-chino-trousers']!]);
+      const inStock = (slug: string) => facts.get(ids[slug]!)!.variants.find((x) => x.sellable > 0 && x.priceMinor !== null)!;
+      const polo = inStock('essential-pique-polo');
+      const chino = inStock('slim-chino-trousers');
+      const choices = [
+        { colourId: polo.colourId, sizeId: polo.sizeId },
+        { colourId: chino.colourId, sizeId: chino.sizeId },
+      ];
+      const ok = await checkComboSet(deps(), { storeId: S, comboId: combo.id, choices });
+      expect(ok).toMatchObject({ ok: true, done: 2, variants: [polo.id, chino.id] });
+
+      const cart = await t.prisma.cart.create({ data: { storeId: S, visitorId: 'test-visitor-101' }, select: { id: true } });
+      await t.prisma.cartItem.create({ data: { storeId: S, cartId: cart.id, variantId: chino.id, quantity: chino.sellable, unitPriceMinor: chino.priceMinor!, comboGroupKey: 'test-group' } });
+      const full = await checkComboSet(deps(), { storeId: S, comboId: combo.id, choices, cartId: cart.id });
+      expect(full.first).toEqual({ code: 'NOT_ENOUGH', slot: 1, stock: chino.sellable, need: 1, inBag: chino.sellable });
+      expect((await checkComboSet(deps(), { storeId: S, comboId: combo.id, choices, cartId: cart.id, editGroupKey: 'test-group' })).ok).toBe(true);
+
+      const off = await checkComboSet(deps(), { storeId: S, slug: 'sample-shirt-belt', choices: [] });
+      expect(off.first).toEqual({ code: 'NOT_ON_SALE', slot: null });
+      expect((await checkComboSet(deps(), { storeId: B, slug: 'sample-polo-chino-set', choices: [] }).catch((e) => e.code))).toBe('NOT_FOUND');
     });
   });
 });

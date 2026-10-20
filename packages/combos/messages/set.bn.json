@@ -1,0 +1,29 @@
+{
+  "$comment": "S03 · PR 101, 96, 97 — the words of a set on the shop: what is still missing (one line per problem code, the button says it and the page scrolls there), and the one button wording (Blueprint D8.1). {item} is the piece's name (\"item 2 (Pique Polo)\"), {colour} and {size} the pick.",
+  "problem": {
+    "NOT_ON_SALE": "এই সেট এখন বিক্রি হচ্ছে না।",
+    "PICK_COLOUR": "{item}-এর রং বেছে নিন।",
+    "PICK_SIZE": "{item}-এর সাইজ বেছে নিন।",
+    "COLOUR_NOT_IN_SET": "এই রং এই সেটে নেই — {item}-এর জন্য অন্য রং বেছে নিন।",
+    "SIZE_NOT_IN_SET": "এই সাইজ এই সেটে নেই — {item}-এর জন্য অন্য সাইজ বেছে নিন।",
+    "NO_SUCH_PIECE": "{item} {colour} · {size}-এ নেই। অন্য সাইজ বা রং বেছে নিন।",
+    "SOLD_OUT": "{colour}-এ {size} সাইজ শেষ। {item}-এর জন্য অন্য সাইজ বা রং বেছে নিন।",
+    "NOT_ENOUGH": "{colour} · {size} মাত্র {stock}টা আছে — সেটে লাগবে {need}টা। {item}-এর জন্য অন্য রং বা সাইজ বেছে নিন।",
+    "NOT_ENOUGH_BAG": "{colour} · {size} মাত্র {stock}টা আছে, আর {inBag}টা আগেই ব্যাগে। {item}-এর জন্য অন্য রং বা সাইজ বেছে নিন।",
+    "SAME_COLOUR": "{item}-এর জন্য আলাদা রং বেছে নিন — এই সেটে রং আলাদা হয়।",
+    "NO_PRICE": "{item} এখন বিক্রি করা যাচ্ছে না।"
+  },
+  "item": "{n} নম্বর পিস ({name})",
+  "cta": {
+    "two": "দুইটাই ব্যাগে নিন · {price}",
+    "many": "{n}টাই ব্যাগে নিন · {price}",
+    "update": "ব্যাগের সেট বদলান"
+  },
+  "price": {
+    "line": "{n} পিস {regular} → {pay}",
+    "save": "বাঁচে {saving}",
+    "cod": "হাতে পেয়ে {pay} দিন"
+  },
+  "ended": "এই অফার শেষ হয়ে গেছে।",
+  "endedInBag": "এই সেটের অফার শেষ — আপনার ব্যাগে আগের দামই থাকবে।"
+}
