@@ -38,11 +38,11 @@ the server.*
 | 1 | S0A | live | 2026-10-20 | specs recorded from the VM by every setup run (`docs/reports/server/latest.md`) |
 | 2 | S0A | live | 2026-10-20 | Ubuntu 24.04 verified, full upgrade each run |
 | 3 | S0A | live | 2026-10-20 | SSH key-only, fail2ban, unattended upgrades, UFW 22/80/443; data-disk LVM (8 volumes + 16 GB swap) |
-| 4 | S0A | live | 2026-10-20 | Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas |
+| 4 | S0A | live | 2026-10-20 | Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/` |
 | 5 | S0A | live | 2026-10-20 | PostgreSQL 17 tuned from the profile, PgBouncer, temp on NVMe, WAL archive, slow log 100 ms |
 | 6 | S0A | live | 2026-10-20 | Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk) |
 | 7 | S0A | live | 2026-10-20 | Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box |
-| 8 | S0A | live | 2026-10-20 | daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys |
+| 8 | S0A | live | 2026-10-20 | daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys. 20 Oct: product photos (full every `BACKUP_MEDIA_FULL_EVERY_DAYS`, diffs between, checksums) and a dated docs bundle with the commit hash in every backup; the restore test checks one sample photo and the docs bundle (CN-011) |
 | 9 | S0A | live | 2026-10-20 | monitor every minute → `health.json`; Telegram once the bot key is in the vault, log until then |
 | 10 | S0A | live | 2026-10-20 | k6 baseline recorded on the server; `docs/SERVER.md` in Bengali |
 | 601 | S0A | live | 2026-10-20 | NVMe boot unit before Docker; Direct Disk only; OS-disk fallback + alert |

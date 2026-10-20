@@ -102,6 +102,7 @@ docs file (CN-011).
 | [`qa/QA-REPORT-R15.md`](qa/QA-REPORT-R15.md) · [`QA-REPORT-R15b.md`](qa/QA-REPORT-R15b.md) | Demo QA round R15 and its independent rerun |
 | [`qa/device-matrix.js`](qa/device-matrix.js) · [`devices.json`](qa/devices.json) | The device gate: phones, tablets and desktops to test on |
 | `qa/screenshots/pr-<n>/` | Real-app screenshots per PR, phone 390 and desktop 1366, with a README of Bengali captions (PR 21, 28, 39, 205, 209, 500) |
+| [`qa/smoke.json`](qa/smoke.json) | The smoke test's page list, screens and known requests to ignore (CN-016; admin pages come from the admin menu) |
 | `qa/tools/timing-audit-tools/` | Timing audit suites (sliders, drag, hover, overlays …) |
 | `qa/tools/blog-qa-tools/` | Blog QA checks, journeys and captures |
 | `qa/tools/desktop-fix-bag-tools/` | Bag and desktop fix checks, pixel diff |
@@ -133,6 +134,7 @@ the pages are out of date.
 | [`reports/2026-10-20-S10.md`](reports/2026-10-20-S10.md) | S10 stage report: Smart Rules (12/12) |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
+| [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |
 
 ## Where the docs also live (CN-011)
 
