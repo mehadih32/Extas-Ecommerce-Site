@@ -2,7 +2,8 @@
 # PR 8 — one-command restore (A2.9.12), tested.
 #   extas-restore test
 #       Restores the newest base backup + WAL into a throwaway PostgreSQL on the NVMe, checks it, removes it; restores
-#       one sample product photo from the newest photo archives and compares its checksum.
+#       one sample product photo from the newest photo archives and compares its checksum; unpacks the newest docs
+#       bundle and checks that README.md, the blueprint and the register came back and that its COMMIT matches.
 #       Run after every setup and monthly by a timer; the result is shown in the admin and alerted (PR 9, 395, 507).
 #   extas-restore media [--from local|blob|drive] [--into live]
 #       The product photos from the newest full photo archive and the newest diff on it, every checksum checked.
@@ -25,6 +26,7 @@ WORK="$EXTAS_NVME_MOUNT/scratch/restore-$TS"
 NAME="extas-pg-restore"
 
 MEDIA="$R/data/media"   # the product photos on the local disk (see extas-backup)
+DOCS="$R/docs/current"  # the server's copy of the repository's docs (PR 594, CN-011)
 
 FROM=local; AT=""; TARGET=staging; MODE=restore; INTO=""
 case "${1:-}" in test) MODE="test"; shift ;; media) MODE="media"; shift ;; esac
@@ -96,6 +98,29 @@ media_extract() { # media_extract <dir with the archives> <target>
     | awk '{ p = substr($0, 67); if (!(p in seen)) { seen[p] = 1; print } }' > "$t.sha256"
   (cd "$t" && sha256sum --quiet --strict --ignore-missing -c "$t.sha256") || return 1
   (cd "$t" && awk '{ print substr($0, 67) }' "$t.sha256" | while IFS= read -r p; do [ -f "$p" ] && echo .; done | wc -l)
+}
+
+# ---- the docs bundle (CN-011) -------------------------------------------------------------------------------------
+# docs_check <dir with the bundles> <work dir>: the newest docs-<stamp>.tar.gz unpacks, README.md, docs/BLUEPRINT.md
+# and docs/MASTER-REGISTER.md are in it, and the commit in its COMMIT is the one recorded at backup time
+# (docs-<stamp>.commit). Sets DOCS_DETAIL; non-zero on failure.
+DOCS_DETAIL=""
+docs_check() {
+  local d="$1" w="$2/docs" f last="" want got
+  for f in "$d"/docs-*.tar.gz; do [ -e "$f" ] && last="$(basename "$f" .tar.gz)"; done
+  if [ -z "$last" ]; then
+    if [ -f "$DOCS/COMMIT" ]; then DOCS_DETAIL="docs: no docs bundle, although the server has the docs"; return 1; fi
+    DOCS_DETAIL="docs: none on the server yet"; return 0
+  fi
+  mkdir -p "$w"
+  tar -C "$w" -xzf "$d/$last.tar.gz" 2>/dev/null || { DOCS_DETAIL="docs: $last.tar.gz does not unpack"; return 1; }
+  for f in README.md docs/BLUEPRINT.md docs/MASTER-REGISTER.md COMMIT; do
+    [ -s "$w/$f" ] || { DOCS_DETAIL="docs: $f did not come back from $last.tar.gz"; return 1; }
+  done
+  want="$(cat "$d/$last.commit" 2>/dev/null || true)"
+  got="$(sed -n 's/^commit=//p' "$w/COMMIT")"
+  if [ -z "$want" ] || [ "$got" != "$want" ]; then DOCS_DETAIL="docs: the COMMIT in $last.tar.gz does not match the backup's record"; return 1; fi
+  DOCS_DETAIL="docs: $last.tar.gz back with README, blueprint and register, COMMIT ${got:0:12} matches"
 }
 
 media_restore() {
@@ -230,7 +255,9 @@ if [ "$MODE" = test ]; then
   [ "$tables" = "$live" ] || ok=no
   # The product photos: one sample back from the newest photo archives, checksum compared (PR 8).
   media_sample "$LOCAL/media" "$WORK" || ok=no
-  detail="$detail; $MEDIA_DETAIL"
+  # The docs bundle: back, complete, and its COMMIT matches (CN-011).
+  docs_check "$LOCAL/docs" "$WORK" || ok=no
+  detail="$detail; $MEDIA_DETAIL; $DOCS_DETAIL"
   if [ "$ok" = yes ]; then result ok "$detail"; echo "OK: $detail"; else result fail "$detail"; echo "FAIL: $detail"; exit 1; fi
   exit 0
 fi

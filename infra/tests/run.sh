@@ -302,7 +302,13 @@ chmod +x "$T/bin/"*
 BENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_NVME="$T/nvme" FAKE_PG="$T/pg" FAKE_REMOTE="$T/remote")
 stamp() { date -d "$1" +%Y%m%d-%H%M; }
 A="$(stamp '2 days ago')"; Bs="$(stamp '1 day ago')"; C="$(stamp '10 minutes ago')"
-M="$BR/data/media"; L="$BR/backups/media"
+M="$BR/data/media"; L="$BR/backups/media"; LD="$BR/backups/docs"
+# The docs on the server as deploy.yml leaves them (docs-sync.sh, PR 594), for the docs bundle (CN-011)
+DSHA=dddddddddddd4444444444444444444444444444
+mkdir -p "$T/repo/docs/qa"
+echo readme > "$T/repo/README.md"; echo blueprint > "$T/repo/docs/BLUEPRINT.md"; echo register > "$T/repo/docs/MASTER-REGISTER.md"
+echo checklist > "$T/repo/docs/qa/CHECKLIST.md"
+env EXTAS_CONFIG_FILE="$T/server.conf" bash ../deploy/docs-sync.sh "$DSHA" "$T/repo" >/dev/null
 echo "photo one" > "$M/p/ab/one.avif"; echo "photo two" > "$M/p/two.webp"; echo "photo three" > "$M/three.jpg"
 rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$A" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
 check "backup: daily runs" "$rc:$(jq -r .result "$BR/state/backup-daily-local.json")" "0:ok"
@@ -316,6 +322,12 @@ gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$BR/config/secre
 check "backup: the Drive copy opens with the database's key" "$(cmp -s "$T/drive.tar" "$L/media-$A-full.tar" && echo same)" "same"
 check "backup: no photo name in the clear on Drive" "$(grep -rlc 'one.avif' "$T/remote/drive" | wc -l)" "0"
 check "backup: staging on NVMe cleared" "$(ls "$T/nvme/backup-staging")" ""
+check "backup: a dated docs bundle with its commit" "$(ls "$LD" | tr '\n' ' '):$(cat "$LD/docs-$A.commit")" "docs-$A.commit docs-$A.tar.gz :$DSHA"
+check "backup: the bundle holds README, blueprint, register, all docs and COMMIT" "$(tar -tzf "$LD/docs-$A.tar.gz" | grep -cxE '\./(README\.md|docs/BLUEPRINT\.md|docs/MASTER-REGISTER\.md|docs/qa/CHECKLIST\.md|COMMIT)')" "5"
+check "backup: status names the docs" "$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'docs of dddddddddddd')" "1"
+check "backup: docs bundle in Blob" "$(ls "$T/remote/blob/extas-backups/docs" | tr '\n' ' ')" "docs-$A.commit docs-$A.tar.gz "
+gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$BR/config/secrets/backup.key" -o "$T/docs.tgz" -d "$T/remote/drive/EXTAS-backups/$A/docs-$A.tar.gz.gpg" 2>/dev/null
+check "backup: docs bundle on Drive, encrypted with the same key" "$(cmp -s "$T/docs.tgz" "$LD/docs-$A.tar.gz" && echo same):$(find "$T/remote/drive/EXTAS-backups/$A" -name 'docs-*.gpg' | wc -l)" "same:2"
 echo "photo four" > "$M/p/four.avif"
 "${BENV[@]}" EXTAS_BACKUP_STAMP="$Bs" "$B/extas-backup" daily >/dev/null 2>&1
 check "backup: next day only what is new" "$([ -f "$L/media-$Bs-diff-$A.tar" ] && echo diff):$(cut -c67- "$L/media-$Bs.sha256")" "diff:./p/four.avif"
@@ -333,6 +345,15 @@ sed -i 's/^./0/' "$L/media-$C.sha256"
 rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
 check "restore test: a photo that comes back different fails it" "$rc:$(jq -r .result "$BR/state/restore-test.json"):$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'different checksum')" "1:fail:1"
 cp "$T/keep.sha256" "$L/media-$C.sha256"
+check "restore test: the docs bundle came back with its COMMIT" "$("${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1; jq -r .detail "$BR/state/restore-test.json" | grep -c "docs: docs-$C.tar.gz back with README, blueprint and register, COMMIT dddddddddddd matches")" "1"
+cp "$LD/docs-$C.commit" "$T/keep.commit"; echo eeeeeeeeeeee5555555555555555555555555555 > "$LD/docs-$C.commit"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: a docs bundle whose COMMIT does not match fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'does not match')" "1:1"
+cp "$T/keep.commit" "$LD/docs-$C.commit"
+tar -C "$T" -czf "$T/broken.tgz" repo/README.md; cp "$LD/docs-$C.tar.gz" "$T/keep.tgz"; cp "$T/broken.tgz" "$LD/docs-$C.tar.gz"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: an incomplete docs bundle fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'did not come back')" "1:1"
+cp "$T/keep.tgz" "$LD/docs-$C.tar.gz"
 # Every photo back, from each copy: deleted photos stay deleted, every checksum is checked, the live folder untouched
 for from in local blob drive; do
   rm -rf "$T/nvme/scratch"
@@ -369,6 +390,19 @@ rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '5 minutes ago')" "$B/extas-backu
 check "backup: photos switched off" "$rc:$(ls "$L" | wc -l):$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'switched off')" "0:0:1"
 rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
 check "restore test: no photos to check is not a failure" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'none on the local disk yet')" "0:1"
+# Docs: before the first deploy there are none (not a failure); a server copy without any bundle fails the test
+rm -rf "${BR:?}/docs" "${LD:?}"/*
+rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '4 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: no docs on the server yet is not a failure" "$rc:$(ls "$LD" | wc -l):$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'docs: none on the server yet')" "0:0:1"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: no docs yet is not a failure" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'docs: none on the server yet')" "0:1"
+env EXTAS_CONFIG_FILE="$T/server.conf" bash ../deploy/docs-sync.sh "$DSHA" "$T/repo" >/dev/null
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: docs on the server but no bundle fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'no docs bundle')" "1:1"
+rm "$T/repo/docs/MASTER-REGISTER.md"
+env EXTAS_CONFIG_FILE="$T/server.conf" bash ../deploy/docs-sync.sh eeeeeeeeeeee5555555555555555555555555555 "$T/repo" >/dev/null
+rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '3 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: a docs copy without the register fails the backup" "$rc:$(jq -r .result "$BR/state/backup-daily-local.json"):$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'MASTER-REGISTER.md is missing')" "1:fail:1"
 sed -i 's/^BACKUP_MEDIA=.*/BACKUP_MEDIA="yes"/' "$T/server.conf"
 rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
 check "restore test: photos on disk but no archive fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'no photo archive')" "1:1"
