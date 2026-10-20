@@ -10,6 +10,7 @@ export * from './prisma-backend';
 export * from './sync';
 export * from './admin';
 export * from './owner-data';
+export * from './owner-values';
 export * from './schemas';
 export * from './registry-media';
 export * from './registry-publish';
