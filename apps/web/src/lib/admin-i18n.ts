@@ -3,7 +3,8 @@
 // Every visible admin string comes from messages/admin.<lang>.json.
 // The product screens (PR 21, 26, 29, 35) keep their own files (admin-products.<lang>.json), and the catalogue tools
 // (PR 33 import from a link, 36 back in stock, 39 product audit) theirs (admin-tools.<lang>.json), and the stock pages
-// (S09 · PR 202–207) theirs (admin-stock.<lang>.json, everything under `stock.*`), merged in here.
+// (S09 · PR 202–207) theirs (admin-stock.<lang>.json, everything under `stock.*`), and Smart Rules with its notices
+// (S10 · PR 208–219) theirs (admin-rules.<lang>.json, everything under `rules.*`), merged in here.
 import bn from '../../messages/admin.bn.json';
 import en from '../../messages/admin.en.json';
 import productsBn from '../../messages/admin-products.bn.json';
@@ -12,6 +13,8 @@ import toolsBn from '../../messages/admin-tools.bn.json';
 import toolsEn from '../../messages/admin-tools.en.json';
 import stockBn from '../../messages/admin-stock.bn.json';
 import stockEn from '../../messages/admin-stock.en.json';
+import rulesBn from '../../messages/admin-rules.bn.json';
+import rulesEn from '../../messages/admin-rules.en.json';
 import type { Dict } from './i18n';
 
 export type AdminLang = 'bn' | 'en';
@@ -29,8 +32,8 @@ export function mergeDicts(a: Dict, b: Dict): Dict {
 }
 
 export const adminDicts: Record<AdminLang, Dict> = {
-  bn: mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn),
-  en: mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn),
+  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn),
+  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn),
 };
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);
