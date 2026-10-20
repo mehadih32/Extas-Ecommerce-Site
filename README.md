@@ -23,6 +23,14 @@ documents to it ([how](#how-it-is-built)).
 
 ---
 
+
+## Running problems (CN-015)
+> বাংলায়: কাস্টমারের সাইট ব্যবহারের সময় যে সমস্যাগুলো ধরা পড়ে, সেগুলো নিজে থেকেই এখানে উঠবে, পাশে লেখা থাকবে ঠিক হয়েছে কিনা।
+
+| Date | Problem | Visitors hit | Status |
+|---|---|---|---|
+| — | No problems recorded yet. The list fills itself automatically once the shop's checkout is live on new.extas.com.bd. | — | — |
+
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01) আর স্টক-ERP (S09) — এই চারটা ধাপ পুরো শেষ।

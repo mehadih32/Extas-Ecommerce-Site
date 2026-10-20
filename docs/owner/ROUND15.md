@@ -790,3 +790,8 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - All 24 ideas stay listed. The 8 best (ideas 5, 10, 13, 8, 17, 15, 19, 22) are added. Each one is optional and dynamic: an on/off switch, every number editable, kept in its own admin category, not complicated.
 - One Bengali file per admin section/menu: what the section is for, how many menus it has, what can be done. It is kept as part of the blueprint and visible in the admin.
 - The owner's weekly limit is almost used up. When the limit resets, both this planning chat and the code project continue from the exact stopping point without any input from the owner and without wasting tokens.
+
+## Note 57 — 20 Oct 14:12 · Auto-detected customer problems, in the admin and at the top of README (CN-015); new demo link; admin login error
+- Customers won't report bugs, so problems are detected automatically from their behaviour: any device, any network, any step from landing to checkout, dashboard or tracking. Each record carries its details, the problems are analysed in the backend, and each one gets a summary and a status (fixed / fixing / could not fix / needs owner permission / waiting for the owner's check before deploy). The owner sees them by date (today, yesterday). Problems are fixed automatically when no admin permission is needed, and a note is kept. Shown in the admin and at the top of README under "Running problems". This shows the owner what the bugs are and why sales drop.
+- When the Note 54 corrections are done, the demo is published as a **new version with a new link**, so the owner can compare it with the old one.
+- After logging in to the admin on new.extas.com.bd, the page shows "This page couldn't load". Fix it.
