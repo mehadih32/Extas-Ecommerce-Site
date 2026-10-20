@@ -6,7 +6,7 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { z } from 'zod';
 import { AdapterError, defineAdapter } from '../define';
-import { memoryStorage } from './memory';
+import { sharedMemoryStorage } from './memory';
 import { assertKey, probe, type Storage } from './types';
 
 export function localDiskStorage(root: string): Storage {
@@ -87,7 +87,7 @@ export const localDisk = defineAdapter<Storage, z.infer<typeof localDiskConfig>>
     return localDiskStorage(ctx.config.root);
   },
   async mock() {
-    return memoryStorage('LOCAL_DISK');
+    return sharedMemoryStorage('LOCAL_DISK');
   },
   async test(api) {
     return { ok: true, message: await probe(api) };
