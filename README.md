@@ -805,6 +805,11 @@ the register.
 > **বাংলায় সংক্ষেপে:** ৫ বছর পরে নতুন কেউ এলে যেন সব বোঝে — কোড লেখার নিয়ম, নতুন সেটিং যোগ করার নিয়ম, নতুন কাজ রেজিস্টারে
 > তোলার নিয়ম, আর হস্তান্তরের নিয়ম।
 
+**README must stay current (readme-guard, CN-011).** CI's `readme-guard` job ([`tools/readme-guard.mjs`](tools/readme-guard.mjs))
+fails any pull request into `main` whose title names a PR with no row in the PR log below, whose stage counts differ
+from the register's Build status, or that touches a stage still marked "Not started" under Features. Update the
+dashboard, the PR log and the feature section in the same pull request; nothing merges while any check is red.
+
 ### Read in this order
 
 1. [`CLAUDE.md`](CLAUDE.md) — the owner's hard rules. 2. [`docs/START-HERE.md`](docs/START-HERE.md) — how a session

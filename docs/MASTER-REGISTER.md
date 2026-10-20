@@ -238,6 +238,7 @@ the server.*
 - **PR 594 (PR register and Blueprint & files tabs)** — they read the server copy of the docs: every deploy copies `README.md` and the whole `docs/` folder to the server, one way (repo → server), stamped with the commit hash (`deploy.yml`, `infra/deploy/deploy.sh`); the tabs always show the version that is live.
 - **PR 8 (nightly backup and restore)** — every backup carries a dated docs bundle (`README.md`, `docs/BLUEPRINT.md`, `docs/MASTER-REGISTER.md` and all of `docs/`, with the commit hash), so a restore brings back that version's documentation; the restore test checks the bundle comes back and its commit matches.
 - **PR 395 / 507 (Google Drive backup, backup settings and restore drills)** — the same docs bundle goes into the Azure Blob and the Google Drive copies; the monthly restore drill checks it.
+- **PR 594 (PR register) — readme-guard, 20 Oct 13:21 (owner, CN-011 enforcement)** — CI job `readme-guard` (`tools/readme-guard.mjs`, in `ci.yml`) runs on every pull request into main and fails it when a PR number in the title has no row in README's "PR log", when README's done/total per stage or overall differs from the register's Build status and stage table, or when a stage the PR touches still shows "Not started" in README's features; a required check like the tests.
 
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
 invoice and PDF templates S14 → S20 · celebration overlay S19 → S02 · user manual S20 → S18 ·
