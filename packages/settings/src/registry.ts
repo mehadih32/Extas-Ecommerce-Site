@@ -13,6 +13,7 @@ import { publishSettings } from './registry-publish';
 import { merchSettings } from './registry-merch';
 import { inventorySettings } from './registry-inventory';
 import { catalogueToolsSettings } from './registry-catalogue-tools';
+import { rulesSettings } from './registry-rules';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1106,6 +1107,8 @@ export const registry = {
   }),
   // ---- S09 · PR 194–207, 497–499 · ERP sync, stock locations, holds, pushes, alerts, audits (registry-inventory.ts, versions 10–11). ----
   ...inventorySettings,
+  // ---- S10 · PR 208–219 · Smart Rules: text limits, places, simulation, coupons, notices (registry-rules.ts, version 13). ----
+  ...rulesSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

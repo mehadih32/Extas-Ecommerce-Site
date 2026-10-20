@@ -203,6 +203,13 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/inventory test
+      # S10 · PR 208–219 — Smart Rules: drafts and versions, the owner's OK for money, archive instead of delete,
+      # conflicts and "Fix everywhere", the simulation over orders, notices and the pop-up rules, coupons with their
+      # limits, what the storefront reads, the end-date job and the sample rules. Throwaway databases.
+      - name: Smart Rules tests on PostgreSQL (S10 · PR 208–219)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/rules test
       - name: Admin API tests on PostgreSQL (incl. the product admin routes, PR 21, 26, 29, 35)
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
@@ -233,6 +240,13 @@ jobs:
           pnpm --filter @extas/seed sample | tee /tmp/sample-2.txt
           grep -q 'sample seed: applied' /tmp/sample-1.txt
           grep -q 'sample seed: unchanged' /tmp/sample-2.txt
+      # S10 — the sample Smart Rules and notices for the sample store, twice (the second run must create nothing).
+      - name: Sample rules, twice (the second run must change nothing)
+        run: |
+          pnpm --filter @extas/rules sample | tee /tmp/rules-1.txt
+          pnpm --filter @extas/rules sample | tee /tmp/rules-2.txt
+          grep -q 'rule(s)' /tmp/rules-1.txt
+          grep -q ': 0 rule(s), 0 notice(s) created' /tmp/rules-2.txt
       - name: Installation export leaves the owner's data out, and imports back (PR 509)
         run: |
           pnpm --filter @extas/seed export:installation --out /tmp/installation-export.json

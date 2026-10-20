@@ -96,6 +96,14 @@ describe('later migrations', () => {
       expect(sql).toContain(`ALTER TABLE "${t}" ADD COLUMN     "archivedAt" TIMESTAMPTZ(3);`);
     }
   });
+
+  it('PR 208–219: the Smart Rules columns only add (0003_smart_rules)', () => {
+    const sql = sqlOf('0003_smart_rules');
+    for (const t of ['SmartRule', 'SmartRuleConflict', 'Notice']) expect(sql).toContain(`ALTER TABLE "${t}" ADD COLUMN`);
+    // Every new NOT NULL column has a default, so existing rows stay valid.
+    for (const line of sql.split('\n').filter((l) => /NOT NULL/.test(l))) expect(line).toMatch(/DEFAULT/);
+    expect(sql).not.toMatch(/\bALTER COLUMN\b|\bRENAME\b/i);
+  });
 });
 
 // All migrations applied in order to a throwaway database must give exactly the schema. Needs TEST_DATABASE_ADMIN_URL

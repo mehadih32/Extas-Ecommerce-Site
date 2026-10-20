@@ -1,0 +1,101 @@
+{
+  "groups": {
+    "rules": "Smart Rules",
+    "notices": "Notices and pop-ups"
+  },
+  "rules": {
+    "text": {
+      "shortMaxChars": {
+        "label": "Longest short version (characters)",
+        "help": "The short version sits next to Add to Bag, in the bag and at checkout, on one line. Counted with the numbers filled in."
+      },
+      "fullMaxChars": {
+        "label": "Longest full rule (characters)",
+        "help": "What customers read under \"Details\"."
+      }
+    },
+    "placements": {
+      "label": "Places a rule can be shown",
+      "help": "The list behind \"Shown on\" in each rule. Each place reads the rule's own text, so changing a number changes every place at once."
+    },
+    "conflicts": {
+      "checkOnPublish": {
+        "label": "Look for clashes when a rule is published",
+        "help": "Finds two rules that want the same thing for the same products at the same time, and texts that still say an old number."
+      }
+    },
+    "history": {
+      "pageSize": {
+        "label": "Changes shown per page in a rule's history",
+        "help": "Every published change is kept with who made it and when; nothing is ever removed."
+      }
+    },
+    "simulation": {
+      "defaultDays": {
+        "label": "Simulation looks back (days)",
+        "help": "\"What would these orders have cost under the new rule?\" uses the orders of this many days."
+      },
+      "maxOrders": {
+        "label": "Most orders in one simulation",
+        "help": "Keeps a simulation quick. The newest orders are used first."
+      }
+    },
+    "public": {
+      "cacheSeconds": {
+        "label": "Shop reuses the live rules for (seconds)",
+        "help": "How long the shop may keep the rules it read before reading them again. A published change is seen by every customer within this time."
+      }
+    },
+    "discount": {
+      "maxPercentOff": {
+        "label": "Largest discount a rule may give (%)",
+        "help": "A safety limit against a typing mistake. A rule above it cannot be saved."
+      },
+      "showWasPrice": {
+        "label": "Offers may show a struck \"was\" price",
+        "help": "Off until you switch it on. A struck price is never made up: a single item shows its real MRP where it has one; a set or combo shows the sum of its pieces' separate prices. An item with no MRP shows the price it really sold at before the offer, and only when the offer has a real end date."
+      },
+      "wasLookbackDays": {
+        "label": "\"Was\" price looks back (days)",
+        "help": "When an item has no MRP, the struck price is its lowest real price in this many days before the offer started, so a price raised just before a sale never shows as a saving."
+      }
+    },
+    "coupons": {
+      "codePattern": {
+        "label": "Shape of a coupon code",
+        "help": "Capital letters, digits and dashes by default. Codes are always read in capitals."
+      }
+    }
+  },
+  "notices": {
+    "bar": {
+      "maxShown": {
+        "label": "Notices in the announcement bar at once",
+        "help": "When more are on, the one with the highest priority shows."
+      }
+    },
+    "popup": {
+      "minDelaySeconds": {
+        "label": "A timed pop-up waits at least (seconds)",
+        "help": "There is never a pop-up the moment someone arrives."
+      },
+      "minScrollPercent": {
+        "label": "A scroll pop-up waits for at least (% of the page)",
+        "help": "The customer has to read this far down before the pop-up may open."
+      },
+      "maxPerVisit": {
+        "label": "Pop-ups per visit",
+        "help": "The most pop-ups one customer sees in one visit, whatever each pop-up's own limit says."
+      },
+      "searchHosts": {
+        "label": "Search engines",
+        "help": "A phone visitor arriving from one of these never sees a pop-up on the first screen (Google's guidance)."
+      }
+    }
+  },
+  "ownerData": {
+    "reasons": {
+      "rules": "Your Smart Rules (charges, set prices, discounts, policies), their history, your notices and coupons: never exported."
+    }
+  }
+}

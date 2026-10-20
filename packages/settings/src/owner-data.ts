@@ -29,7 +29,9 @@ export type OwnerDataReason =
   | 'people'
   | 'brand'
   | 'records'
-  | 'media';
+  | 'media'
+  /** S10 — the owner's business rules: charges, tier prices, discounts, coupons, policies and notices. */
+  | 'rules';
 
 export interface OwnerDataItem {
   /** Setting key prefix (ends with a dot), Prisma model name, `Model.column`, or media folder (`/` = all media). */
@@ -50,7 +52,7 @@ export interface OwnerDataRegister {
 const item = (target: string, reason: OwnerDataReason): OwnerDataItem => ({ target, reason });
 
 export const ownerDataRegister: OwnerDataRegister = {
-  version: 2,
+  version: 3,
   settingPrefixes: [
     item('contact.', 'contact'),
     item('legal.', 'legal'),
@@ -90,6 +92,15 @@ export const ownerDataRegister: OwnerDataRegister = {
     item('Order', 'records'),
     // PR 36 — who asked to be told when a product is back in stock: a customer's phone number or e-mail.
     item('BackInStockRequest', 'records'),
+    // S10 · PR 208–219 — the owner's Smart Rules (his charges, tier prices, discounts and policies), their history,
+    // clashes and simulations (built from his orders), his notices and coupons; a coupon's uses are order records.
+    item('SmartRule', 'rules'),
+    item('SmartRuleVersion', 'rules'),
+    item('SmartRuleConflict', 'rules'),
+    item('SmartRuleSimulation', 'rules'),
+    item('Notice', 'rules'),
+    item('Coupon', 'rules'),
+    item('CouponRedemption', 'records'),
   ],
   columns: [item('Store.name', 'brand'), item('Store.erpCompanyId', 'connections')],
   media: [item('/', 'media')],

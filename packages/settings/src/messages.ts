@@ -4,7 +4,7 @@
 // messages/publish.<lang>.json and the size chart, collection, CSV and "was" price settings (PR 27, 28, 32, 34, 38) in
 // messages/merch.<lang>.json, the link import, ghost archive and audit settings (PR 33, 36, 39) in
 // messages/catalogue-tools.<lang>.json and the ERP and stock location settings (S09) in messages/inventory.<lang>.json,
-// merged in here.
+// merged in here, and the Smart Rules and notice settings (S10) in messages/rules.<lang>.json.
 import toolsBn from '../messages/catalogue-tools.bn.json';
 import toolsEn from '../messages/catalogue-tools.en.json';
 import inventoryBn from '../messages/inventory.bn.json';
@@ -15,6 +15,8 @@ import merchBn from '../messages/merch.bn.json';
 import merchEn from '../messages/merch.en.json';
 import publishBn from '../messages/publish.bn.json';
 import publishEn from '../messages/publish.en.json';
+import rulesBn from '../messages/rules.bn.json';
+import rulesEn from '../messages/rules.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -37,8 +39,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
