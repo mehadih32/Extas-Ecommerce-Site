@@ -103,5 +103,10 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - Wave boundary: report in Bengali and continue. Don't wait (CN-006).
 
 ## Commits
-- Branch per PR: `pr-<number>-<slug>`. Squash-merge into `main` after the gates pass.
-- Commit message: `PR <number>: <what it does>`.
+- Branch per PR: `pr-<number>-<slug>`. ~~Squash-merge into `main` after the gates pass.~~
+- **One register PR = one commit** (owner's audit, 20 Oct): a GitHub PR may carry several register PRs, but each one
+  is exactly one commit, and the PR is **rebase-merged** so main keeps one commit per register PR. CI checks it
+  (`tools/check-commits.mjs`).
+- Commit message: `PR <number>: <what it does>` (one number). Owner change notes: `CN-###: …`. README, PROGRESS,
+  BLOCKED and report-only commits: `Status: …`.
+- **README.md is updated in every PR** (status table: stage counts, what is live, last deploy, what waits for the owner).

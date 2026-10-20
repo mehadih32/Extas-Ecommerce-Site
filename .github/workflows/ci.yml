@@ -225,3 +225,14 @@ jobs:
         run: |
           pnpm --filter @extas/seed export:installation --out /tmp/installation-export.json
           pnpm --filter @extas/seed import:installation --in /tmp/installation-export.json
+
+  # One register PR = one commit (owner's audit, 20 Oct): every commit of a pull request names exactly one PR.
+  commits:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: One register PR per commit
+        run: node tools/check-commits.mjs "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
