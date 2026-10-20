@@ -3,71 +3,67 @@
   "version": 1,
   "marker": "Sample",
   "rules": [
-    {
-      "template": "exchange",
-      "status": "ACTIVE",
-      "values": {
-        "windowHours": 72,
-        "perItem": 1,
-        "chargeDhakaCity": 8000,
-        "chargeDhakaSubArea": 10000,
-        "chargeOutsideDhaka": 12000
-      }
-    },
-    {
-      "template": "no-return",
-      "status": "ACTIVE",
-      "values": {}
-    },
-    {
-      "template": "exchange-order",
-      "status": "ACTIVE",
-      "values": {}
-    },
-    {
-      "template": "order-edit",
-      "status": "ACTIVE",
-      "values": {
-        "maxEdits": 2
-      }
-    },
+    { "template": "exchange", "status": "ACTIVE", "values": { "windowHours": 72, "perItem": 1, "chargeDhakaCity": 8000, "chargeDhakaSubArea": 10000, "chargeOutsideDhaka": 12000 } },
+    { "template": "no-return", "status": "ACTIVE", "values": {} },
+    { "template": "exchange-order", "status": "ACTIVE", "values": {} },
+    { "template": "order-edit", "status": "ACTIVE", "values": { "maxEdits": 2 } },
     {
       "template": "delivery",
       "status": "DRAFT",
-      "values": {
-        "chargeDhakaCity": 8000,
-        "chargeDhakaSubArea": 10000,
-        "chargeOutsideDhaka": 12000,
-        "freeOver": 150000
-      }
+      "values": { "chargeDhakaCity": 8000, "chargeDhakaSubArea": 10000, "chargeOutsideDhaka": 12000, "freeOver": 150000 }
     },
     {
       "template": "set-tier",
       "key": "any-polos",
       "nameEn": "Sample · Any polos",
       "status": "DRAFT",
-      "values": {
-        "tier2": 150000,
-        "tier3": 210000
-      },
-      "categories": [
-        "polos"
-      ]
+      "values": { "tier2": 150000, "tier3": 210000 },
+      "categories": ["polos"]
     },
     {
       "template": "festive",
       "key": "sample-festive",
       "nameEn": "Sample · Festival cut-off",
       "status": "DRAFT",
-      "values": {
-        "cutoffDhakaCity": "2026-12-20T18:00:00+06:00",
-        "cutoffOutsideDhaka": "2026-12-18T18:00:00+06:00"
-      },
-      "window": {
-        "startsAt": "2026-12-01T00:00:00+06:00",
-        "endsAt": "2026-12-21T00:00:00+06:00"
-      }
+      "values": { "cutoffDhakaCity": "2026-12-20T18:00:00+06:00", "cutoffOutsideDhaka": "2026-12-18T18:00:00+06:00" },
+      "window": { "startsAt": "2026-12-01T00:00:00+06:00", "endsAt": "2026-12-21T00:00:00+06:00" }
     }
   ],
-  "notices": []
+  "notices": [
+    {
+      "key": "sample-exchange-bar",
+      "kind": "bar",
+      "nameEn": "Sample · Exchange bar",
+      "contentEn": "Exchange within {exchange.windowHours} hours for size or fault",
+      "contentBn": "{exchange.windowHours} ঘণ্টার মধ্যে সাইজ বা ত্রুটির জন্য এক্সচেঞ্জ",
+      "placement": { "pages": ["announcement"], "position": "top" },
+      "rule": "exchange",
+      "enabled": true
+    },
+    {
+      "key": "sample-faq-exchange",
+      "kind": "inline",
+      "nameEn": "Sample · FAQ exchange answer",
+      "contentEn": "You can exchange for another size within 7 days of delivery.",
+      "contentBn": "ডেলিভারির পর ৭ দিন পর্যন্ত অন্য সাইজ নিতে পারবেন।",
+      "placement": { "pages": ["faq"] },
+      "rule": "exchange",
+      "enabled": false
+    },
+    {
+      "key": "sample-size-help",
+      "kind": "popup",
+      "nameEn": "Sample · Size help pop-up",
+      "titleEn": "Not sure of your size?",
+      "titleBn": "সাইজ নিয়ে দ্বিধা?",
+      "contentEn": "Exchange for another size within {exchange.windowHours} hours of delivery.",
+      "contentBn": "ডেলিভারির {exchange.windowHours} ঘণ্টার মধ্যে অন্য সাইজ নিতে পারবেন।",
+      "cta": { "labelEn": "Size guide", "labelBn": "সাইজ গাইড", "href": "/size-guide" },
+      "placement": { "pages": ["product"] },
+      "timing": { "trigger": "scroll", "scrollPercent": 50 },
+      "frequencyCap": { "per": "week", "times": 1 },
+      "rule": "exchange",
+      "enabled": false
+    }
+  ]
 }

@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 8/12 · total 78/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 9/12 · total 79/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -113,6 +113,7 @@ the server.*
 | 213 | S10 | merged | 2026-10-20 | discounts and coupons with the honest "was" price (CN-009): one item shows its real MRP (`compareAtMinor`) only when it is higher; with no MRP, the lowest real price in `rules.discount.wasLookbackDays` and only for an offer with an end date; a set shows the sum of its pieces' separate prices; never invented (`discountWasPrice`, `setWasPrice`, `discountWasFor`, `quoteCart.setWas`); the switch `rules.discount.showWasPrice` ships off; `rules.discount.maxPercentOff` cap; coupons (`rules.coupons.codePattern`) start off, switching one on needs `rules.approve`, archived not deleted; `/api/admin/rules/coupons`, `/coupons/:id` |
 | 214 | S10 | merged | 2026-10-20 | festive / seasonal rules with cut-off dates in the store's time zone: the active window decides, the cut-off line ("order by … for delivery before Eid") comes from the rule, expired rules end by the `rules.endExpired` job (kept, not deleted) |
 | 215 | S10 | merged | 2026-10-20 | rule text everywhere reads from the rule: `{token}` text filled from the rule's params (hand-written numbers flagged `HAND_WRITTEN_NUMBER`), `ruleTextsFor` / `ruleTextFor` per placement (`rules.placements`: product, bag, checkout, account, messages, assistant, faq, footer, announcement), cached `rules.public.cacheSeconds`; plain storefront pieces `RuleText`, `NoticeBar`, `RulePopup` in `apps/web/src/components/rules/` and safe server helpers in `apps/web/src/lib/rules-public.ts` for S02 to place and style |
+| 216 | S10 | merged | 2026-10-20 | notices and pop-ups `/admin/rules/notices`: bar, in-page note, pop-up; text can quote a rule (`{exchange.windowHours}`) with a live preview; placement, position, priority, window, button; pop-ups never on arrival (`notices.popup.minDelaySeconds`, `minScrollPercent`), capped (`maxPerVisit`), none on a search visitor's first screen (`searchHosts`), bars capped `notices.bar.maxShown`; every notice starts off; the pop-up's visible-time timer pauses when the tab is hidden and resumes after; `/api/admin/rules/notices`, `/notices/:id` |
 
 > **CN-008 · 20 Oct 2026 (owner desktop review of V12, 03:54–04:23).** 44 items (home H1–H14, category C1–C6, product P1–P8, drawer B1–B3, bag G1–G3, checkout K1–K11 incl. the BD phone normaliser and Polo Duo different-colour rule), 7 invoice templates, 12 new admin screens, admin audit fixes. Built into demo **V12.1** (`docs/demo/EXTAS-demo-V12.1.html`), which is now the UI truth. Every new look is a backend option with the old one kept. Details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md` (44/44 pass), `docs/qa/ADMIN-AUDIT.md`, lesson for `phoneNormalizeBD` in `docs/agents/lessons/ALL.md`. No new PR numbers: scope lands on the existing S02/S03/S04/S05/S08/S14/S16/S20/S22 PRs.
 
