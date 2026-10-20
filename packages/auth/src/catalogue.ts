@@ -59,6 +59,14 @@ export const PERMISSIONS = {
   'rules.write': { group: 'rules' },
   'rules.publish': { group: 'rules' },
   'rules.approve': { group: 'rules' },
+  // S03 · PR 89–104, 571, 575 — combos and sets: see the combos, their pages and the combo report; make and change combos
+  // and auto colour-pair rules (names, pieces, pairing, templates); switch a combo or rule on or off, archive it or
+  // bring it back; and set or change a set price (a price is the owner's decision, CLAUDE.md rule 6: only the owner
+  // role has `combos.prices` until he hands it to someone in the role builder).
+  'combos.read': { group: 'combos' },
+  'combos.write': { group: 'combos' },
+  'combos.publish': { group: 'combos' },
+  'combos.prices': { group: 'combos' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

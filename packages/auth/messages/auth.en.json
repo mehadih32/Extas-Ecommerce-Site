@@ -16,7 +16,8 @@
     "media": "Images and media",
     "catalogue": "Catalogue",
     "inventory": "Stock and ERP",
-    "rules": "Smart Rules"
+    "rules": "Smart Rules",
+    "combos": "Combos and sets"
   },
   "permissions": {
     "settings": {
@@ -67,6 +68,12 @@
       "write": "Write rules, notices and coupons and save them as drafts (nothing reaches customers yet)",
       "publish": "Publish a rule, pause or end it, and switch a notice on or off",
       "approve": "Give the owner's OK for a rule that changes money: delivery charges, set prices, discounts, coupons, COD"
+    },
+    "combos": {
+      "read": "See the combos, the auto colour-pair rules, their pages and the combo report",
+      "write": "Make and change combos and combo rules: pieces, pairing, colours, names, templates (prices need their own permission)",
+      "publish": "Switch a combo or a combo rule on or off, archive it or bring it back, make set photos",
+      "prices": "Set or change a set price or a pack price (the owner's decision)"
     }
   },
   "totp": {

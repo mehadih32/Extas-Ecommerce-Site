@@ -1,0 +1,93 @@
+{
+  "groups": {
+    "combos": "Combos and sets"
+  },
+  "combos": {
+    "price": {
+      "roundingStepMinor": {
+        "label": "Round \"% off\" pack prices to (in paisa)",
+        "help": "A pack priced as a share off the regular total is rounded to this step. 1000 = to the nearest 10 taka."
+      },
+      "rounding": {
+        "label": "Which way to round",
+        "help": "Down: the customer never pays more than the share promises. Nearest or up are also possible."
+      }
+    },
+    "generate": {
+      "maxPairsPerRule": {
+        "label": "Most combos one rule may make",
+        "help": "A safety limit: a rule that would make more stops here and says so on its card."
+      }
+    },
+    "newColourDays": {
+      "label": "\"New colour\" tag shows for (days)",
+      "help": "A combo with a colour added in the last days carries the tag on its card."
+    },
+    "seasons": {
+      "label": "Season tabs on the combo hub",
+      "help": "The seasons a combo rule can be listed under."
+    },
+    "template": {
+      "list": {
+        "label": "Combo category page (shop default)",
+        "help": "The design of a combo rule's page when the rule does not choose its own."
+      },
+      "page": {
+        "label": "Combo product page (shop default)",
+        "help": "The design of one combo's page when the rule does not choose its own."
+      },
+      "bag": {
+        "label": "Combo in the bag (shop default)",
+        "help": "How a set shows in the bag."
+      }
+    },
+    "admin": {
+      "previewCount": {
+        "label": "Combos shown in the preview step",
+        "help": "The \"Make a combo\" preview shows this many first, then \"Show all\"."
+      }
+    },
+    "bag": {
+      "repeatGuardMs": {
+        "label": "Double-tap guard (milliseconds)",
+        "help": "The same set added again within this time counts once: one tap is one set."
+      },
+      "followPriceChanges": {
+        "label": "Sets in bags move to a new combo price",
+        "help": "When you change a combo price, sets already in bags take the new price and the bag says so. A combo that has ended keeps the price it was added at."
+      }
+    },
+    "photo": {
+      "background": {
+        "label": "Set photo background",
+        "help": "The one house background behind every set photo made from the piece photos."
+      },
+      "widthPx": {
+        "label": "Set photo width (pixels)",
+        "help": "The size the set photo is made at; the image service makes the smaller sizes."
+      },
+      "heightPx": {
+        "label": "Set photo height (pixels)",
+        "help": "With the width, the shape of the set photo."
+      },
+      "format": {
+        "label": "Set photo file type",
+        "help": "WebP is smaller; JPEG works everywhere."
+      },
+      "quality": {
+        "label": "Set photo quality",
+        "help": "Higher is sharper and larger."
+      }
+    },
+    "report": {
+      "defaultDays": {
+        "label": "Combo report looks back (days)",
+        "help": "The window the combo report opens with."
+      },
+      "topCount": {
+        "label": "Best combos listed in the report",
+        "help": "How many best-selling combos and colour pairs the report lists."
+      }
+    }
+  }
+}

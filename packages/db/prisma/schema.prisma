@@ -389,6 +389,7 @@ model Store {
   campaignOverlays        CampaignOverlay[]
   creativeBriefs          CreativeBrief[]
   creativeExports         CreativeExport[]
+  comboDailyStats         ComboDailyStat[]
 }
 
 enum StoreStatus {
@@ -1240,6 +1241,8 @@ model Product {
   sortRank         Int             @default(0)
   /// "Some images show the garment digitally placed on a model" disclosure (C7.15).
   hasAiImagery     Boolean         @default(false)
+  /// S03 · PR 571 — the "Use in combos" tick at upload: an auto combo rule takes the product in only when it is on.
+  inCombos         Boolean         @default(true)
   publishedAt      DateTime?       @db.Timestamptz(3)
   unpublishedAt    DateTime?       @db.Timestamptz(3)
   archivedAt       DateTime?       @db.Timestamptz(3)
@@ -2223,11 +2226,27 @@ model Combo {
   archivedAt      DateTime?      @db.Timestamptz(3)
   createdAt       DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
+  /// S03 · PR 89, 90 — the short line under the name on the admin card and the combo page.
+  descriptionEn   String?
+  descriptionBn   String?
+  /// PR 90 — when the bag holds every piece of this running fixed combo, the set price applies by itself (PR 97).
+  autoApply       Boolean        @default(false)
+  /// K11 — a one-product combo (a colour pair): may two of the same colour take the combo price?
+  sameColour      Boolean        @default(false)
+  /// PR 571 — a generated pair: its pieces as `productId.colourId` joined in the product's colour order (with
+  /// `autoRuleId`, one row per pair for ever, so its link never dies).
+  pieceKey        String?
+  /// Optimistic lock for the admin editor, and who made and last changed it.
+  version         Int            @default(1)
+  createdById     String?        @db.Uuid
+  updatedById     String?        @db.Uuid
 
   items        ComboItem[]
   popularPairs PopularPair[]
+  dailyStats   ComboDailyStat[]
 
   @@unique([storeId, slug])
+  @@unique([autoRuleId, pieceKey])
   @@index([storeId, status, sortRank])
 }
 
@@ -2250,49 +2269,110 @@ enum ComboStatus {
 
 /// @stage S03 · PR 89, 95 — one slot of a combo, with its allowed colours and sizes.
 model ComboItem {
-  id               String   @id @default(uuid(7)) @db.Uuid
+  id               String    @id @default(uuid(7)) @db.Uuid
   storeId          Int
-  store            Store    @relation(fields: [storeId], references: [id])
-  comboId          String   @db.Uuid
-  combo            Combo    @relation(fields: [comboId], references: [id])
+  store            Store     @relation(fields: [storeId], references: [id])
+  comboId          String    @db.Uuid
+  combo            Combo     @relation(fields: [comboId], references: [id])
   position         Int
-  productId        String?  @db.Uuid
-  categoryId       String?  @db.Uuid
-  fixedVariantId   String?  @db.Uuid
-  allowedColourIds String[] @db.Uuid
-  allowedSizeIds   String[] @db.Uuid
-  quantity         Int      @default(1)
-  createdAt        DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+  productId        String?   @db.Uuid
+  categoryId       String?   @db.Uuid
+  fixedVariantId   String?   @db.Uuid
+  allowedColourIds String[]  @db.Uuid
+  allowedSizeIds   String[]  @db.Uuid
+  quantity         Int       @default(1)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+  /// S03 · PR 89 — a slot taken out of a fixed combo is archived, never deleted (CLAUDE.md rule 3).
+  archivedAt       DateTime? @db.Timestamptz(3)
+  /// The slot's own label on the combo page ("Top", "Bottom"); empty = the product's name.
+  labelEn          String?
+  labelBn          String?
 
   @@index([comboId, position])
 }
 
 /// @stage S03 · PR 571 — the auto colour-pair rule: bind a category or products, 2- or 3-piece, every pair becomes a combo.
 model ComboAutoRule {
-  id             String      @id @default(uuid(7)) @db.Uuid
-  storeId        Int
-  store          Store       @relation(fields: [storeId], references: [id])
-  name           String
-  sourceType     String
-  sourceIds      String[]    @db.Uuid
-  pieces         Int
-  priceMinor     Int?
-  compareAtMinor Int?
-  noSinglePiece  Boolean     @default(false)
-  addOneMore     Boolean     @default(false)
-  status         ComboStatus @default(DRAFT)
-  startsAt       DateTime?   @db.Timestamptz(3)
-  endsAt         DateTime?   @db.Timestamptz(3)
-  archivedAt     DateTime?   @db.Timestamptz(3)
-  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime    @updatedAt @db.Timestamptz(3)
+  id               String         @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store          @relation(fields: [storeId], references: [id])
+  name             String
+  sourceType       String
+  sourceIds        String[]       @db.Uuid
+  pieces           Int
+  priceMinor       Int?
+  compareAtMinor   Int?
+  noSinglePiece    Boolean        @default(false)
+  addOneMore       Boolean        @default(false)
+  status           ComboStatus    @default(DRAFT)
+  startsAt         DateTime?      @db.Timestamptz(3)
+  endsAt           DateTime?      @db.Timestamptz(3)
+  archivedAt       DateTime?      @db.Timestamptz(3)
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+  // ---- S03 · PR 571 (the owner's model): `sourceIds` holds the bound categories, `productIds` the hand-picked
+  // products; `priceMinor` is the fixed price of a pack (FIXED) and `percentOff` the share off the regular total
+  // (PERCENT). `compareAtMinor` is never written: the struck price is always the sum of the pieces' own prices
+  // (CN-009), worked out when it is shown.
+  /// The rule's link (`/combos/<key>`); fixed once made, so a shared link keeps working.
+  key              String
+  nameBn           String?
+  /// The style name on the cards ("Solid Polo"); empty = from the products.
+  titleEn          String?
+  titleBn          String?
+  productIds       String[]       @db.Uuid
+  pairing          ComboPairing   @default(STYLE)
+  /// K11 — two pieces of the same colour may form a pair.
+  sameColour       Boolean        @default(false)
+  excludeColourIds String[]       @db.Uuid
+  priceMode        ComboPriceMode @default(FIXED)
+  percentOff       Int?
+  sortMode         ComboSortMode  @default(BESTSELLERS)
+  /// Pairs the owner pinned to the top (their `pieceKey`).
+  pinnedKeys       String[]
+  /// Season tab on the combo hub, a key of the `combos.seasons` setting.
+  season           String?
+  listTemplateKey  String?
+  pageTemplateKey  String?
+  bagTemplateKey   String?
+  /// "Add 1 more → 3 pcs": the 3-piece rule a 2-piece pair grows into.
+  upsellRuleId     String?        @db.Uuid
+  lastGeneratedAt  DateTime?      @db.Timestamptz(3)
+  version          Int            @default(1)
+  createdById      String?        @db.Uuid
+  updatedById      String?        @db.Uuid
 
   combos Combo[]
+
+  @@unique([storeId, key])
+  @@index([storeId, status])
+}
+
+/// @stage S03 · PR 571 — how an auto rule pairs its pieces: colours of the same style, one piece from each of different
+/// styles, or any piece with any other.
+enum ComboPairing {
+  STYLE
+  ACROSS
+  ANY
+}
+
+/// @stage S03 · PR 571 — a pack price as a fixed amount or as a share off the regular total.
+enum ComboPriceMode {
+  FIXED
+  PERCENT
+}
+
+/// @stage S03 · PR 571 — the order of the generated pairs: best sellers first, or the owner's colour order.
+enum ComboSortMode {
+  BESTSELLERS
+  COLOUR
 }
 
 /// @stage S03 · PR 98, 99, 109, 212 — a "build your own set" tier rule (any 2 for X, any 3 for Y); also drives the bag
 /// tier box. The prices are owner data entered in the admin.
+/// Superseded by the Smart Rules `setTier` action (S10 · PR 212; S03 · PR 99 reads the set tiers from there): kept, not
+/// written, so nothing is deleted.
 model SetTierRule {
   id         String      @id @default(uuid(7)) @db.Uuid
   storeId    Int
@@ -2337,6 +2417,31 @@ model PopularPair {
   pickCount Int      @default(0)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  /// S03 · PR 104 — the picked colours as one sorted key, so a pick counts on the same row.
+  colourKey String?
+
+  @@unique([comboId, colourKey])
+}
+
+/// @stage S03 · PR 104 — one combo's day: page views, sets added to bags and colour picks, counted as they happen.
+/// Orders, sets sold, revenue and the customers' saving are read from the order lines (OrderItem.comboId) when the
+/// report is made.
+model ComboDailyStat {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  comboId   String   @db.Uuid
+  combo     Combo    @relation(fields: [comboId], references: [id])
+  /// The day in the store's time zone.
+  day       DateTime @db.Date
+  views     Int      @default(0)
+  adds      Int      @default(0)
+  picks     Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([comboId, day])
+  @@index([storeId, day])
 }
 
 /// @stage S03 · PR 576 — the 100-point score of a combo template in the test matrix.
