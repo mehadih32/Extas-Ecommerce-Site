@@ -14,6 +14,7 @@ export * from './staff-admin';
 export * from './customer-auth';
 export * from './owner';
 export * from './owner-reset';
+export * from './check-account';
 export * from './sync';
 export { authMessages, authLabel } from './messages';
 export type * from './db-types';

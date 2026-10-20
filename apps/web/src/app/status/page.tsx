@@ -28,7 +28,7 @@ function backupLabel(b: Backup | null, d: DisplayOptions): { text: string; tone:
 export default async function StatusPage() {
   const s = buildStatus;
   // Locale and time zone through the settings resolver (PR 492) when the database answers, else the environment.
-  const [{ deploy, health, backups }, d] = await Promise.all([runtimeState(), displaySettings()]);
+  const [{ deploy, health, backups, smoke }, d] = await Promise.all([runtimeState(), displaySettings()]);
   const problems = health?.problems ?? [];
   const sha = (deploy?.sha ?? s.commit).slice(0, 7);
 
@@ -85,6 +85,15 @@ export default async function StatusPage() {
               {t(dict, 'serverChecked')}: {dateTime(health.at, d)}
             </p>
           ) : null}
+          <h3 className="mt-4 text-sm font-semibold">{t(dict, 'smokeTitle')}</h3>
+          <p className={`mt-1 text-sm ${!smoke ? 'text-ink-soft' : smoke.ok ? 'text-ok' : 'text-bad'}`}>
+            {!smoke
+              ? t(dict, 'smokeNone')
+              : smoke.ok
+                ? t(dict, 'smokeOk')
+                : t(dict, 'smokeFail', { failed: num(Math.max(smoke.failed ?? 0, 1), d) })}
+            {smoke?.at ? ` · ${smoke.at.replace(/\s*\(.*\)$/, '')}` : ''}
+          </p>
         </div>
         <div className="rounded-xl border border-line bg-surface p-4">
           <h2 className="font-semibold">{t(dict, 'backupTitle')}</h2>

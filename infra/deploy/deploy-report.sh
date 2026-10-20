@@ -11,7 +11,9 @@
 # Inputs (environment): SHA, RUN_URL, ROLLBACK (true|false), CHECKOUT, BUILD, DEPLOY, HEALTH_STEP (step outcomes:
 # success|failure|skipped|cancelled), RUN_ID, DEPLOY_JSON (default $EXTAS_ROOT/state/last-deploy.json),
 # HEALTH_JSON (file with deploy.sh public-health's line), NOW (epoch seconds, for tests); DOCS (the docs-sync step's
-# outcome, PR 594) with DOCS_JSON (default $EXTAS_ROOT/state/docs-latest.json, used only when it is this commit's).
+# outcome, PR 594) with DOCS_JSON (default $EXTAS_ROOT/state/docs-latest.json, used only when it is this commit's);
+# SMOKE and SMOKE_ROLLBACK (the smoke test's and its rollback's outcomes, CN-016) with SMOKE_JSON (default
+# $EXTAS_ROOT/state/smoke.json, smoke.sh's result).
 set -euo pipefail
 OUT="${1:?usage: deploy-report.sh <out-dir>}"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
@@ -77,6 +79,25 @@ case "${DOCS:-}" in
   failure) docs="FAILED — the server keeps the previous copy${dsha:+ (\`${dsha:0:12}\`)}" ;;
 esac
 
+# CN-016: the smoke test (every built page, signed out and as the admin, phone and desktop). A failure rolled back.
+smoke=""; smoke_short="—"
+SMOKE_JSON="${SMOKE_JSON:-${EXTAS_ROOT:-/srv/extas}/state/smoke.json}"
+case "${SMOKE:-}" in
+  success)
+    smoke="OK — $(jq -r '.pages // 0' "$SMOKE_JSON" 2>/dev/null || echo 0) page views, signed out and as the admin, phone and desktop (pictures: \`docs/reports/smoke/latest/\`)"
+    smoke_short="OK" ;;
+  failure)
+    p="$(clean "$(jq -r '(.problems // []) | .[:3] | join("; ")' "$SMOKE_JSON" 2>/dev/null || true)")"
+    smoke="FAILED — ${p:-see the run log}"; smoke_short="FAILED"
+    if [ "${SMOKE_ROLLBACK:-}" = success ]; then
+      result="FAILED, ROLLED BACK"
+      failed="The new version went live, but the smoke test found a problem (${p:-see the run log}), so the previous version was put back automatically. The fix comes before any new work."
+    else
+      result="FAILED, ROLLBACK FAILED"
+      failed="The smoke test found a problem (${p:-see the run log}) and putting the previous version back failed too (see the run log)."
+    fi ;;
+esac
+
 health="not checked"; health_short="not checked"
 if [ -n "${HEALTH_JSON:-}" ] && [ -s "$HEALTH_JSON" ] && jq -e . "$HEALTH_JSON" >/dev/null 2>&1; then
   code="$(jq -r '.code' "$HEALTH_JSON")"; ok="$(jq -r '.ok' "$HEALTH_JSON")"
@@ -111,6 +132,7 @@ fi
   echo "| Result | **$result** |"
   echo "| Database migration | $migration |"
   echo "| Health check on $HOST | $health |"
+  [ -n "$smoke" ] && echo "| Smoke test (every page) | $smoke |"
   [ -n "$docs" ] && echo "| Docs on the server | $docs |"
   [ -n "$failed" ] && echo "| What failed | $failed |"
   [ -n "$REC" ] && [ -n "$(field .color)" ] && [ "$result" = OK ] && echo "| Live colour | $(clean "$(field .color)") |"
@@ -118,6 +140,8 @@ fi
   true
 } > "$OUT/deploy-latest.md"
 
+# The history keeps its seven columns (older lines have no smoke test): the smoke result rides in the health column.
+[ "$smoke_short" = "—" ] || health_short="$health_short, smoke $smoke_short"
 printf '| %s | `%s` | %s | %s | %s | %s | %s |\n' "$when" "$short" "$kind" "$result" "$migration" "$health_short" \
   "${failed:-—}" > "$OUT/deploy-history.line"
 # The history file's head, for the first deploy that creates it.

@@ -2,7 +2,7 @@
 # PR 4 (owner, 20 Oct) — "log in → the admin loads" on the production images, as a fresh installation gets them:
 # an empty PostgreSQL, the migrate image's own command (schema, settings, auth, mother store, default pack — exactly
 # what every deploy runs first), the first owner made the way owner-account.yml does it (create-owner with a generated
-# first password), then the app image, and a real browser signs in (tools/admin-login-e2e.mjs). Runs in CI after the
+# first password), then the app image, and a real browser signs in (tools/smoke.mjs, E2E mode). Runs in CI after the
 # images are built, so every deploy (deploy.yml waits for CI) has passed it.
 #   tools/admin-login-e2e.sh <web-image> <migrate-image>
 # Needs Docker and the `playwright` package on NODE_PATH. Throwaway passwords and keys only; nothing is printed.
@@ -53,7 +53,7 @@ for _ in $(seq 1 90); do curl -fs -o /dev/null "http://localhost:$PORT/api/healt
 curl -fs -o /dev/null "http://localhost:$PORT/api/health" || { docker logs --tail 50 "$NET-app"; exit 1; }
 
 rc=0
-BASE="http://localhost:$PORT" E2E_EMAIL="$EMAIL" E2E_PASSWORD_FILE="$WORK/out/first-password" node "$HERE/admin-login-e2e.mjs" || rc=$?
+BASE="http://localhost:$PORT" E2E_EMAIL="$EMAIL" E2E_PASSWORD_FILE="$WORK/out/first-password" node "$HERE/smoke.mjs" || rc=$?
 if [ "$rc" -ne 0 ]; then
   echo "e2e: the app's log (last 60 lines)"
   docker logs --tail 60 "$NET-app" 2>&1 | grep -viE 'password|secret|postgresql://' || true

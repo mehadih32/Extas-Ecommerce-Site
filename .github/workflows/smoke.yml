@@ -1,0 +1,63 @@
+# CN-016 (PR 4/17) — the nightly smoke test against the preview host, ON the VM through the self-hosted runner (CN-003).
+# The same test deploy.yml runs after every deploy (infra/deploy/smoke.sh, tools/smoke.mjs): every built storefront
+# page signed out and every admin page as the read-only check account (its password and two-step seed are made fresh
+# on the server each run and never leave it), on a phone and a desktop screen, through Cloudflare. It fails on an error
+# screen, a console error or a failed request. Nothing is rolled back here (nothing changed since the deploy); a red
+# run is fixed before any new PR. The report and the pictures are committed to docs/reports/smoke/latest/ with
+# [skip ci] (ci.yml ignores docs/reports/smoke/), and the status page shows the result (state/smoke.json).
+name: smoke
+
+on:
+  schedule:
+    - cron: "30 21 * * *"   # 03:30 in Dhaka, after the 02:30 backup
+  workflow_dispatch:
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Smoke test (every page, signed out and as the admin)
+        id: smoke
+        continue-on-error: true
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "nightly" "$live"
+
+      - name: Commit the smoke report
+        if: always()
+        env:
+          RESULT: ${{ steps.smoke.outcome }}
+        run: |
+          set -eu
+          smoke="$RUNNER_TEMP/smoke"
+          [ -f "$smoke/README.md" ] || { echo "no report was written (see the step above)"; exit 0; }
+          sudo chown -R "$(id -u):$(id -g)" "$smoke"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$smoke" docs/reports/smoke/latest
+            git add -A docs/reports/smoke/latest
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "smoke report: nightly ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when the smoke test failed
+        if: steps.smoke.outcome == 'failure'
+        run: |
+          echo "The nightly smoke test found a problem. See docs/reports/smoke/latest/README.md."
+          exit 1
