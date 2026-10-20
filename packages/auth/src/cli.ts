@@ -5,6 +5,10 @@
 //   tsx src/cli.ts create-owner --email <e-mail> --name <name> --generate-to <file>
 //       a random first password is written to <file> (mode 0600, the file must not exist) and must be changed at the
 //       first login
+//   tsx src/cli.ts reset-owner --write-to <file>
+//       the owner can no longer sign in: a new random first password for the one active owner (changed at the next
+//       sign-in), his sessions ended, a wrong-try wait lifted; <file> (mode 0600, must not exist) gets OWNER_EMAIL and
+//       OWNER_FIRST_PASSWORD; prints why recent sign-ins failed (counts only)
 // It never prints a connection string, a password or a hash.
 import { randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
@@ -12,6 +16,7 @@ import { PrismaClient } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { AuthError } from './errors';
 import { createFirstOwner } from './owner';
+import { describeFindings, resetOwnerPassword } from './owner-reset';
 import { securityPolicy } from './policy';
 import { describeAuthSync, syncAuth } from './sync';
 
@@ -30,8 +35,8 @@ const oneLine = (e: unknown) => String(e instanceof Error ? e.message : e).split
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  if (command !== 'sync' && command !== 'create-owner') {
-    console.error('usage: cli.ts sync | create-owner --email <e-mail> --name <name> [--generate-to <file>]');
+  if (command !== 'sync' && command !== 'create-owner' && command !== 'reset-owner') {
+    console.error('usage: cli.ts sync | create-owner --email <e-mail> --name <name> [--generate-to <file>] | reset-owner --write-to <file>');
     return 2;
   }
   const url = process.env.DATABASE_DIRECT_URL || process.env.DATABASE_URL;
@@ -43,6 +48,21 @@ async function main(argv: string[]): Promise<number> {
   try {
     if (command === 'sync') {
       for (const line of describeAuthSync(await syncAuth(prisma))) console.log(line);
+      return 0;
+    }
+    if (command === 'reset-owner') {
+      const writeTo = arg(rest, '--write-to');
+      if (!writeTo) {
+        console.error('auth reset-owner: --write-to is required');
+        return 2;
+      }
+      await syncAuth(prisma);
+      const policy = await securityPolicy(new SettingsResolver(prismaBackend(prisma), registry));
+      writeFileSync(writeTo, '', { mode: 0o600, flag: 'wx' }); // the file must be writable before anything changes
+      const r = await resetOwnerPassword(prisma, policy);
+      writeFileSync(writeTo, `OWNER_EMAIL=${r.email}\nOWNER_FIRST_PASSWORD=${r.password}\n`, { mode: 0o600 });
+      for (const line of describeFindings(r.findings)) console.log(`auth reset-owner: ${line}`);
+      console.log(`auth reset-owner: owner account ${r.staffUserId} has a new first password (in the file given; change it at the next sign-in)`);
       return 0;
     }
     const email = arg(rest, '--email');

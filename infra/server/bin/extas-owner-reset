@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# PR 15 — the owner's way back in when the admin will not let him sign in (owner, 20 Oct 15:26). Run on the VM by
+# .github/workflows/owner-reset.yml (self-hosted runner extas-vm, CN-003):
+#   sudo extas-owner-reset
+# - `auth reset-owner` runs in the live migrate image on the extas network against the production database (like
+#   extas-owner-create): the one active owner account gets a new random first password that must be changed at the
+#   next sign-in, its sessions end and a wrong-try wait is lifted. Two-step login and roles stay as they are.
+# - The new password goes with the account's e-mail into config/secrets/owner-login.env (0600), so the owner reads
+#   both himself with /usr/local/sbin/extas-owner-login (Azure portal → Run command; docs/owner/OWNER-LOGIN.md).
+# - Writes state/owner-reset.json and state/owner-reset.md: the result and why recent sign-ins failed (counts only,
+#   never the e-mail or the password).
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
+LOGIN="$SEC/owner-login.env"
+IMG_USER="${OWNER_IMAGE_UID:-1000}"   # the migrate image runs as `node` (uid 1000)
+mkdir -p "$STATE"; install -d -m 0700 "$SEC"
+
+ENVF=""; OUTD=""; email=""
+cleanup() { rm -f "$ENVF"; [ -n "$OUTD" ] && rm -rf "$OUTD"; return 0; }
+trap cleanup EXIT
+
+finish() { # finish <ok|fail> <detail> <exit code> [<findings>]: the status (no e-mail, no password), then exit
+  local detail findings="${4:-}"
+  detail="$(printf '%s' "$2" | tr '\n\r' '  ' | cut -c1-240)"
+  if [ -n "$email" ]; then detail="${detail//"$email"/(e-mail hidden)}"; findings="${findings//"$email"/(e-mail hidden)}"; fi
+  jq -n --arg result "$1" --arg detail "$detail" --arg findings "$findings" --arg at "$(date -Is)" \
+    '{result:$result,detail:$detail,findings:($findings|split("\n")|map(select(length>0))),at:$at}' > "$STATE/owner-reset.json"
+  {
+    echo "# Owner sign-in reset — the last run"
+    echo
+    echo "Written by \`infra/server/bin/extas-owner-reset\` (\`owner-reset.yml\`, PR 15). The e-mail and the password are"
+    echo "never in this report; the owner reads them on the server (\`docs/owner/OWNER-LOGIN.md\`)."
+    echo
+    echo "| | |"
+    echo "|---|---|"
+    echo "| Time ($EXTAS_TIMEZONE) | $(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M') |"
+    echo "| Result | **$1** |"
+    echo "| Detail | ${detail//|//} |"
+    if [ -n "$findings" ]; then
+      echo
+      echo "What the sign-in record showed before the reset:"
+      echo
+      printf '%s\n' "$findings" | sed 's/^/- /'
+    fi
+  } > "$STATE/owner-reset.md"
+  if [ -n "$email" ] && grep -qiF -- "$email" "$STATE/owner-reset.md" "$STATE/owner-reset.json"; then
+    printf '# Owner sign-in reset — the last run\n\nResult: **%s**\n' "$1" > "$STATE/owner-reset.md"
+    jq -n --arg result "$1" --arg at "$(date -Is)" '{result:$result,detail:"",findings:[],at:$at}' > "$STATE/owner-reset.json"
+  fi
+  echo "owner-reset: $1 — $detail"
+  exit "$3"
+}
+
+img="$(jq -r '.migrate // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
+if [ -z "$img" ] || ! docker image inspect "$img" >/dev/null 2>&1; then
+  img="$(docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate 2>/dev/null | head -n 1 || true)"
+fi
+[ -n "$img" ] && docker image inspect "$img" >/dev/null 2>&1 \
+  || finish fail "no migrate image on the server yet: the app must be deployed first; nothing changed" 1
+
+ENVF="$(mktemp "$SEC/.reset-db.XXXXXX")"; chmod 600 "$ENVF"
+grep -E '^DATABASE_DIRECT_URL=' "$SEC/app.env" > "$ENVF" 2>/dev/null || true
+grep -q '^DATABASE_DIRECT_URL=' "$ENVF" || finish fail "DATABASE_DIRECT_URL is not in app.env: run server-setup (stack) first; nothing changed" 1
+OUTD="$(mktemp -d "$SEC/.reset-out.XXXXXX")"
+chown "$IMG_USER:$IMG_USER" "$OUTD" 2>/dev/null || true
+chmod 700 "$OUTD"
+
+rc=0
+out="$(docker run --rm --name "extas-owner-reset-$$" --network extas --env-file "$ENVF" -v "$OUTD:/out" "$img" \
+  sh -c 'cd /repo/packages/auth && exec ./node_modules/.bin/tsx src/cli.ts reset-owner --write-to /out/owner.env' 2>&1)" || rc=$?
+rm -f "$ENVF"
+findings="$(printf '%s\n' "$out" | sed -n 's/^auth reset-owner: \(.*: .*\)$/\1/p' | grep -v 'has a new first password' || true)"
+last="$(printf '%s\n' "$out" | grep -v '^[[:space:]]*$' | tail -n 1)"
+
+if [ "$rc" -eq 0 ] && grep -q '^OWNER_FIRST_PASSWORD=.' "$OUTD/owner.env" 2>/dev/null; then
+  email="$(grep '^OWNER_EMAIL=' "$OUTD/owner.env" | cut -d= -f2-)"
+  pw="$(grep '^OWNER_FIRST_PASSWORD=' "$OUTD/owner.env" | cut -d= -f2-)"
+  tmp="$(mktemp "$SEC/.owner-login.XXXXXX")"; chmod 600 "$tmp"
+  printf 'OWNER_EMAIL=%s\nOWNER_FIRST_PASSWORD=%s\nOWNER_CREATED_AT=%s\n' "$email" "$pw" "$(date -Is)" > "$tmp"
+  mv "$tmp" "$LOGIN"; chmod 600 "$LOGIN"
+  finish ok "the owner account has a new first password; the owner reads it with extas-owner-login and chooses his own at the next sign-in" 0 "$findings"
+fi
+finish fail "reset-owner did not finish: $last; the sign-in is unchanged" 1 "$findings"

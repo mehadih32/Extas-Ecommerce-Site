@@ -1,0 +1,62 @@
+# PR 15 — the owner's way back in when the admin will not let him sign in (owner, 20 Oct 15:26). Run by hand
+# (workflow_dispatch) ON the VM through the self-hosted runner (CN-003). infra/server/bin/extas-owner-reset gives the one
+# active owner account a new first password (changed at the next sign-in), ends its sessions and lifts a wrong-try
+# wait; the owner reads the e-mail and the password himself with /usr/local/sbin/extas-owner-login from Azure portal →
+# Run command (docs/owner/OWNER-LOGIN.md). Nothing secret is in this file, the log or the report: the report says
+# only the result and why recent sign-ins failed (counts), and is committed with [skip ci].
+name: owner-reset
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  reset:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the login reader
+        run: sudo install -m 0700 infra/server/bin/extas-owner-login /usr/local/sbin/extas-owner-login
+
+      - name: New first password for the owner account
+        id: reset
+        continue-on-error: true
+        run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/server/bin/extas-owner-reset
+
+      - name: Commit the report
+        if: always()
+        run: |
+          set -eu
+          sudo test -f /srv/extas/state/owner-reset.md || { echo "no report"; exit 0; }
+          out="$RUNNER_TEMP/owner-reset.md"
+          sudo cat /srv/extas/state/owner-reset.md > "$out"
+          cat "$out"
+          result="$(sudo jq -r '.result // "unknown"' /srv/extas/state/owner-reset.json 2>/dev/null || echo unknown)"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            mkdir -p docs/reports/server
+            cp "$out" docs/reports/server/owner-reset.md
+            git add docs/reports/server/owner-reset.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "owner reset report: $result [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail if the reset did not happen
+        if: steps.reset.outcome != 'success'
+        run: |
+          echo "::error::The owner's sign-in was not reset — see docs/reports/server/owner-reset.md"
+          exit 1
