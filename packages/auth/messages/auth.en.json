@@ -8,7 +8,8 @@
   "permissionGroups": {
     "settings": "Settings and keys",
     "staff": "Staff and roles",
-    "security": "Security and history"
+    "security": "Security and history",
+    "media": "Images and media"
   },
   "permissions": {
     "settings": {
@@ -32,6 +33,11 @@
     },
     "security": {
       "read": "See logins and security alerts"
+    },
+    "media": {
+      "read": "See the media library",
+      "upload": "Upload photos, describe them, place them on products",
+      "manage": "Archive and restore files, clean up unused ones, remake every size"
     }
   },
   "totp": {

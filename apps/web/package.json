@@ -14,11 +14,13 @@
     "@extas/adapters": "workspace:*",
     "@extas/auth": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/media": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/vault": "workspace:*",
     "next": "16.4.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "sharp": "0.35.5",
     "zod": "4.6.7"
   },
   "devDependencies": {

@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · total 31/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 5/22 · total 36/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -66,6 +66,11 @@ the server.*
 | 508 | S00 | merged | 2026-10-20 | general default pack (`packages/seed/data/default-pack.json`): garment types, 7 categories (hidden), 3 delivery bands (off, no charge), 14 SMS/WhatsApp/e-mail templates (Bengali + English, 2 SMS + 1 WhatsApp on, later steps off); policy, AI and theme settings in the registry; money and COD left empty for the owner; add-only, re-run changes nothing |
 | 14 | S00 | merged | 2026-10-20 | sample catalogue (`pnpm --filter @extas/seed sample`): the demo's 17 products, 17 colours, 10 sizes, 227 variants with stock, 7 size charts, collections, tags and one demo order, all in a "Sample" store with `storeId`; sample names, +88010 phone, example.com e-mail, demo sample prices; second run changes nothing (CI) |
 | 500 | S00 | merged | 2026-10-20 | Keys & connections page `/admin/integrations` + admin sign-in (`/admin/login`, 2FA step) and frame, Bengali/English; connection list is data (`packages/adapters/src/catalogue.ts`, rows without an adapter shown "not connected"); save → vault → test → leaves mock only on a pass; remove = vault revoke, nothing deleted; every step audited, a saved key is never shown again |
+| 22 | S01 | merged | 2026-10-20 | `@extas/media` image pipeline (sharp): the original archived byte for byte; 5 sizes thumb 160 · card 400 · card2x 800 · main 1200 · zoom 2000 at 4:5 (contain on the background colour, never enlarged), each AVIF + WebP + JPEG; quality 78 (75–80), sizes, ratio, formats and limits in settings (`media.*`, registry v6); dominant colour stored; names `media/s<store>/o/…` and `…/r/<asset>/<slug>-<size>.<hash>.<ext>`; upload checks (type, bytes, min width) with stable codes; job functions `media.render` / `media.regenerate` ready for the BullMQ image worker (PR 6) — until then inline after the answer (`media.processing.mode`) |
+| 23 | S01 | merged | 2026-10-20 | watermark only on the download copy (`/api/media/<id>/download`, attachment, no-store, noindex), made once from the main JPEG and kept; storefront files stay clean; text = `media.watermark.text` (owner data) else the store name; position, opacity, size in settings; Latin + Bengali fonts in the image |
+| 24 | S01 | merged | 2026-10-20 | `<ResponsiveImage>` (`apps/web/src/components/media/`) + `pictureSources`: `<picture>` AVIF → WebP → JPEG, phone 400/800 and larger screens 800/1200 (`media.image.slots`), zoom 2000 only on a larger screen, width/height always set, dominant-colour box, `priority` = eager + high, the rest lazy; files served at `/media/<key>` (long cache) or from `media.publicBaseUrl`; originals never served. Zoom viewer UI comes with the PDP (S02) |
+| 25 | S01 | merged | 2026-10-20 | photo minimum: at least 4 photos with FRONT, BACK, DETAIL, ON_MODEL (`media.photos.*`, optional front per colour); `photoSetStatus` / `requirePhotoSet` (code PHOTOS_MISSING) for the publish checks (PR 26, 35); product photos API `/api/admin/media/products/<id>` (attach, detach = archived link) |
+| 37 | S01 | merged | 2026-10-20 | media library on the storage adapter: search (words, kind, folder, tag, used/unused, archived), reuse by checksum, edit alt/folder/tags, "where used" over 39 media fields + settings; orphan cleanup = list after `media.orphans.graceDays` + an explicit, logged admin archive with a reason; archive refused while in use; restorable; nothing is removed from storage (permanent delete not built — BLOCKED 8); regenerate all sizes after a settings change; permissions media.read / upload / manage; admin API under `/api/admin/media` (screens come with the admin shell) |
 
 ## The stage table
 

@@ -18,6 +18,7 @@ COPY packages/vault/package.json packages/vault/
 COPY packages/auth/package.json packages/auth/
 COPY packages/seed/package.json packages/seed/
 COPY packages/adapters/package.json packages/adapters/
+COPY packages/media/package.json packages/media/
 # @extas/db generates the Prisma client on install, so its schema and CLI wrapper come in with the manifests.
 COPY packages/db/package.json packages/db/
 COPY packages/db/scripts packages/db/scripts
@@ -45,7 +46,10 @@ WORKDIR /repo/packages/settings
 CMD ["sh", "-c", "cd /repo/packages/db && node scripts/prisma.mjs migrate deploy && cd /repo/packages/settings && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/auth && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/seed && exec ./node_modules/.bin/tsx src/cli.ts pack --all-stores"]
 
 FROM node:22-bookworm-slim AS run
-RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends openssl ca-certificates >/dev/null \
+# sharp (PR 22) brings its own libvips (@img/sharp-linux-x64, traced into the standalone output); the watermark on the
+# download copy (PR 23) draws text, which needs fonts the slim image lacks: Latin (DejaVu) and Bengali (Lohit).
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends openssl ca-certificates \
+    fontconfig fonts-dejavu-core fonts-lohit-beng-bengali >/dev/null \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0

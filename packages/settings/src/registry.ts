@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import { setting, type RegistryShape, type SettingKey, type SettingValue } from './define';
 import { messages, pair } from './messages';
+import { mediaSettings } from './registry-media';
 import {
   bankAccountsSchema,
   hoursSchema,
@@ -719,6 +720,9 @@ export const registry = {
     sortOrder: 20,
     version: 3,
   }),
+
+  // ---- PR 22, 23, 24, 25, 37 · images and the media library (registry-media.ts, version 6). ----
+  ...mediaSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

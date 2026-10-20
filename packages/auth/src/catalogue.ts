@@ -19,6 +19,10 @@ export const PERMISSIONS = {
   'staff.manage': { group: 'staff' },
   'audit.read': { group: 'security' },
   'security.read': { group: 'security' },
+  // PR 22, 25, 37 — the media library: see it; upload, describe and place photos; archive, restore and clean up.
+  'media.read': { group: 'media' },
+  'media.upload': { group: 'media' },
+  'media.manage': { group: 'media' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
