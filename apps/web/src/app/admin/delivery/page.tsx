@@ -1,5 +1,6 @@
 // S06 · PR 550 — delivery areas and charges: the three bands (demo 92-admin-couriers.js "Three delivery bands" card and
-// the Settings › Delivery rows: charge, hours, the sub-area mode) and the owner's sub-area list. Seeing needs
+// the Settings › Delivery rows: charge, hours, the sub-area mode) and the owner's sub-area list. PR 551 — "Try an
+// address": the line read the way checkout reads it (the demo checkout's delivery block). Seeing needs
 // `delivery.read`; changing a band needs `delivery.charges`, the list `delivery.areas`; the API checks both again on
 // every call. The charges, hours and the list are owner data: the shop ships them empty and off.
 import type { Metadata } from 'next';
@@ -10,6 +11,7 @@ import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { DeliveryBands } from '@/components/admin/delivery/DeliveryBands';
 import { nameOf } from '@/components/admin/delivery/model';
 import { SubAreaList } from '@/components/admin/delivery/SubAreaList';
+import { TryAddress } from '@/components/admin/delivery/TryAddress';
 import { Icon } from '@/components/admin/Icon';
 import { moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -46,12 +48,14 @@ export default async function DeliveryPage() {
   const d = deliveryDeps(access.deps);
   const who: del.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const can = (p: del.DeliveryPermission) => access.guard.permissions?.has(p) ?? false;
-  const [bands, areas, source, currency] = await Promise.all([
+  const [bands, areas, source, currency, timings] = await Promise.all([
     del.listBands(d, who),
     del.listSubAreas(d, who, { includeArchived: true }),
     del.lastImportSource(access.deps.db),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }),
+    del.settleTimings(d, MOTHER_STORE_ID),
   ]);
+  const money = moneyOf(currency, view.locale);
   const dict = view.dict;
   const bandNames = Object.fromEntries(bands.map((b) => [b.id, nameOf(view.lang, b)]));
 
@@ -69,8 +73,9 @@ export default async function DeliveryPage() {
         </div>
       ) : null}
       <div className="dl-grid">
-        <DeliveryBands dict={dict} lang={view.lang} locale={view.locale} money={moneyOf(currency, view.locale)} bands={bands} canEdit={can('delivery.charges')} />
+        <DeliveryBands dict={dict} lang={view.lang} locale={view.locale} money={money} bands={bands} canEdit={can('delivery.charges')} />
         <SubAreaList dict={dict} lang={view.lang} areas={areas} bandNames={bandNames} canEdit={can('delivery.areas')} />
+        <TryAddress dict={dict} lang={view.lang} locale={view.locale} money={money} settleMs={timings.settleMs} minWords={timings.minWords} />
       </div>
     </AdminFrame>
   );

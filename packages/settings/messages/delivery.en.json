@@ -27,6 +27,34 @@
         "label": "Re-check the area list every (seconds)",
         "help": "The shop keeps the national area list in memory and looks for a newer list this often. A new list is only loaded when it has really changed."
       }
+    },
+    "resolver": {
+      "settleMs": {
+        "label": "Wait after typing stops (milliseconds)",
+        "help": "At checkout the address is read only once the customer stops typing for this long (or leaves the field). Nothing is decided while he is still writing."
+      },
+      "minWords": {
+        "label": "Words before a pause counts",
+        "help": "A pause reads the address only once it has at least this many words; leaving the field always reads it."
+      },
+      "minKeyChars": {
+        "label": "Shortest place name looked up (letters)",
+        "help": "Shorter words in an address are never taken for a place name."
+      },
+      "numberLabels": {
+        "label": "Words before a house or road number",
+        "help": "A 4-digit number right after one of these words (House, Road, Sector…) is a number in the address, not a postcode."
+      },
+      "maxChars": {
+        "label": "Longest address line read (characters)",
+        "help": "A longer line is refused, so nobody can send the shop huge texts to read."
+      }
+    },
+    "public": {
+      "maxBodyBytes": {
+        "label": "Largest public delivery request (bytes)",
+        "help": "The checkout's address and phone look-ups are refused when they are bigger than this."
+      }
     }
   }
 }

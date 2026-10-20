@@ -1,18 +1,35 @@
 // S06 · PR 550 — the delivery page's pure part: a band as text (an off band shows "not set", never a figure), the
-// sub-area band's "charged as", a place's line, refusals in the screen's words, and the band form's one PATCH.
+// sub-area band's "charged as", a place's line, refusals in the screen's words, and the band form's one PATCH. PR 551 — the
+// "Try an address" lines: a place with its district, an off band shows no figure, and the question names the places.
 import { describe, expect, it } from 'vitest';
-import type { BandView } from '@extas/delivery';
+import type { BandOut, BandView, PlaceView, ResolveView } from '@extas/delivery';
 import type { Dict } from '@/lib/i18n';
 import bn from '../../../../messages/admin-delivery.bn.json';
 import en from '../../../../messages/admin-delivery.en.json';
 import { moneyOf } from '../products/model';
-import { bandForm, bandPatch, chargedAsText, chargeText, hoursText, placeLine, refusalText } from './model';
+import { askLine, bandForm, bandPatch, chargedAsText, chargeText, hoursText, optionLine, outCharge, placeLabel, placeLine, refusalText } from './model';
 
 const d = { delivery: en } as unknown as Dict;
 const money = moneyOf('BDT', 'en-BD');
 
 function band(over: Partial<BandView> = {}): BandView {
-  return { id: 'b1', key: 'dhaka-city', nameEn: 'Inside Dhaka City', nameBn: null, role: 'city', chargeMinor: 0, codLimitMinor: null, hoursMin: 24, hoursMax: 48, mode: null, enabled: false, sortOrder: 10, chargedAs: { id: 'b1', key: 'dhaka-city', role: 'city', enabled: false }, listed: 0, ...over };
+  return {
+    id: 'b1',
+    key: 'dhaka-city',
+    nameEn: 'Inside Dhaka City',
+    nameBn: null,
+    role: 'city',
+    chargeMinor: 0,
+    codLimitMinor: null,
+    hoursMin: 24,
+    hoursMax: 48,
+    mode: null,
+    enabled: false,
+    sortOrder: 10,
+    chargedAs: { id: 'b1', key: 'dhaka-city', role: 'city', enabled: false },
+    listed: 0,
+    ...over,
+  };
 }
 
 function keys(o: unknown, at = ''): string[] {
@@ -50,7 +67,7 @@ describe('the delivery page as text', () => {
     expect(placeLine(d, 'en', { level: 'DIVISION', parentEn: null, parentBn: null })).toBe('Division');
   });
 
-  it('turns refusals into the screen\'s words, never the server\'s', () => {
+  it("turns refusals into the screen's words, never the server's", () => {
     expect(refusalText(d, 'CHARGE_REQUIRED')).toBe(en.errors.CHARGE_REQUIRED);
     expect(refusalText(d, 'INVALID_INPUT', ['hoursMin: too small'])).toBe('Please check: the fastest time.');
     expect(refusalText(d, 'SOMETHING_NEW')).toBe(en.errors['server-error']);
@@ -85,5 +102,45 @@ describe('the band form', () => {
     const sub = band({ role: 'subArea', mode: 'own' });
     expect(bandPatch(sub, { ...bandForm(sub, money), mode: 'outside' }, money).patch).toEqual({ mode: 'outside' });
     expect(bandPatch(band(), { ...bandForm(band(), money), mode: 'outside' }, money).patch).toEqual({});
+  });
+});
+
+describe('"Try an address" as text', () => {
+  const out = (over: Partial<BandOut> = {}): BandOut => ({
+    id: 'b1',
+    key: 'dhaka-city',
+    nameEn: 'Inside Dhaka City',
+    nameBn: 'ঢাকা সিটির ভেতরে',
+    role: 'city',
+    priced: false,
+    chargeMinor: null,
+    hoursMin: 24,
+    hoursMax: 48,
+    ...over,
+  });
+  const place = (over: Partial<PlaceView> = {}): PlaceView => ({ id: 'p1', code: null, level: 'AREA', nameEn: 'Gabtoli', nameBn: 'গাবতলী', parentEn: 'Dhaka', parentBn: 'ঢাকা', cityCorporation: 'DNCC', ...over });
+  const ask = (reason: 'two-places' | 'wide-place' | 'no-place' | 'changed', options: { band: BandOut; places: PlaceView[] }[]): Extract<ResolveView, { status: 'ask' }> => ({ status: 'ask', reason, options, clues: [] });
+
+  it('names a place with its district, in the chosen language', () => {
+    expect(placeLabel('en', place())).toBe('Gabtoli (Dhaka)');
+    expect(placeLabel('bn', place())).toBe('গাবতলী (ঢাকা)');
+    expect(placeLabel('bn', place({ nameBn: null, parentBn: null }))).toBe('Gabtoli (Dhaka)');
+    expect(placeLabel('en', place({ parentEn: null }))).toBe('Gabtoli');
+  });
+
+  it('never shows a figure for a band that is off', () => {
+    expect(outCharge(d, out(), money)).toBe(en.try.notSet);
+    expect(outCharge(d, out({ priced: false, chargeMinor: 8000 }), money)).toBe(en.try.notSet);
+    expect(outCharge(d, out({ priced: true, chargeMinor: 8000 }), money)).toMatch(/80/);
+    expect(optionLine(d, out({ priced: true, chargeMinor: 8000 }), money, 'en')).toMatch(/80.* · 24–48 hours$/);
+  });
+
+  it('asks with the two places named, like the demo checkout', () => {
+    const city = { band: out(), places: [place()] };
+    const outside = { band: out({ id: 'b3', key: 'outside-dhaka', nameEn: 'Outside Dhaka', role: 'outside' }), places: [place({ id: 'p2', nameEn: 'Gabtali', nameBn: 'গাবতলী', parentEn: 'Bogura', parentBn: 'বগুড়া' })] };
+    expect(askLine(d, 'en', ask('two-places', [city, outside]))).toBe('We can see Gabtoli (Dhaka) and Gabtali (Bogura) in it — which one is right?');
+    expect(askLine(d, 'en', ask('wide-place', [city, outside]))).toMatch(/^Gabtoli \(Dhaka\) holds more than one band/);
+    expect(askLine(d, 'en', ask('no-place', [city, outside]))).toBe(en.try.none);
+    expect(askLine(d, 'en', ask('changed', [city, outside]))).toBe('The address now reads as Gabtali (Bogura), but Inside Dhaka City was chosen. Which one is right?');
   });
 });
