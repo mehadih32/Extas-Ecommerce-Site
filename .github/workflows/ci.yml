@@ -19,6 +19,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # A broken workflow file runs nothing at all (and a broken deploy.yml deploys nothing): parse every one of them.
+      - name: Workflow files parse
+        run: |
+          python3 -c 'import yaml' 2>/dev/null || python3 -m pip install -q --user pyyaml
+          for f in .github/workflows/*.yml; do python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$f" || { echo "::error file=$f::not valid YAML"; exit 1; }; done
       - name: ShellCheck
         run: shellcheck -x -S warning -e SC2034 infra/server/setup.sh infra/server/lib.sh infra/server/steps/*.sh infra/server/bin/* infra/tests/run.sh infra/bootstrap/install-runner.sh
       - name: Infra unit tests (disk detection, NVMe detection, auto profile)
