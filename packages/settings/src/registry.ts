@@ -129,6 +129,32 @@ export const registry = {
     sortOrder: 10,
     version: 1,
   }),
+  // PR 500 — Keys & connections: how long the Test button waits for a provider, and how long an adapter keeps a
+  // decrypted key in memory before reading the vault again (each read is logged, PR 493).
+  'system.integrationTestTimeoutSeconds': setting({
+    schema: z.number().int().min(3).max(120),
+    default: 20,
+    scope: 'installation',
+    valueType: 'INT',
+    group: 'system',
+    labelKey: 'system.integrationTestTimeoutSeconds.label',
+    helpKey: 'system.integrationTestTimeoutSeconds.help',
+    isOwnerData: false,
+    sortOrder: 20,
+    version: 4,
+  }),
+  'system.integrationKeyCacheSeconds': setting({
+    schema: z.number().int().min(0).max(3600),
+    default: 60,
+    scope: 'installation',
+    valueType: 'INT',
+    group: 'system',
+    labelKey: 'system.integrationKeyCacheSeconds.label',
+    helpKey: 'system.integrationKeyCacheSeconds.help',
+    isOwnerData: false,
+    sortOrder: 30,
+    version: 4,
+  }),
   // PR 15, 16, 495 — sign-in, sessions, lockout and 2FA (Blueprint B6.5; group `security`). Staff settings are
   // installation-wide (staff span stores); the customer ones may differ per store. 2FA is present and off until the
   // owner switches it on (§59 answer 31).

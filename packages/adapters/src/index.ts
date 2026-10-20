@@ -5,6 +5,7 @@ import { storageAdapters } from './storage';
 
 export * from './define';
 export * from './connections';
+export * from './catalogue';
 export * from './storage';
 
 export const allAdapters = [...storageAdapters] as const;

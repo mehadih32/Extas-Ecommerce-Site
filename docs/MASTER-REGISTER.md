@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 18/19 · total 30/598**
+**Progress: S0A 12/12 · S00 19/19 · total 31/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -65,6 +65,7 @@ the server.*
 | 509 | S00 | merged | 2026-10-20 | "My own data" register as data (`packages/settings/src/owner-data.ts`): owner settings (store name, logo, slogan, contact, legal, social, bank/wallet, every money setting and owner decision — no default), 5 key prefixes, 23 tables (vault, Dhaka area list, accounts, people, customers, orders), 2 columns, all media; mirrored into OwnerDataEntry on every settings sync. CI owner-data check (`pnpm --filter @extas/seed owner-data:check`) + installation export/import that leaves all of it out and refuses on any owner value |
 | 508 | S00 | merged | 2026-10-20 | general default pack (`packages/seed/data/default-pack.json`): garment types, 7 categories (hidden), 3 delivery bands (off, no charge), 14 SMS/WhatsApp/e-mail templates (Bengali + English, 2 SMS + 1 WhatsApp on, later steps off); policy, AI and theme settings in the registry; money and COD left empty for the owner; add-only, re-run changes nothing |
 | 14 | S00 | merged | 2026-10-20 | sample catalogue (`pnpm --filter @extas/seed sample`): the demo's 17 products, 17 colours, 10 sizes, 227 variants with stock, 7 size charts, collections, tags and one demo order, all in a "Sample" store with `storeId`; sample names, +88010 phone, example.com e-mail, demo sample prices; second run changes nothing (CI) |
+| 500 | S00 | merged | 2026-10-20 | Keys & connections page `/admin/integrations` + admin sign-in (`/admin/login`, 2FA step) and frame, Bengali/English; connection list is data (`packages/adapters/src/catalogue.ts`, rows without an adapter shown "not connected"); save → vault → test → leaves mock only on a pass; remove = vault revoke, nothing deleted; every step audited, a saved key is never shown again |
 
 ## The stage table
 

@@ -10,6 +10,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@extas/adapters':
+        specifier: workspace:*
+        version: link:../../packages/adapters
       '@extas/auth':
         specifier: workspace:*
         version: link:../../packages/auth

@@ -13,11 +13,10 @@ import {
   type Actor,
   type PermissionKey,
   type RequestContext,
-  type SeedVault,
   type StaffAuth,
   type StaffAuthDeps,
 } from '@extas/auth';
-import { createVault } from '@extas/vault';
+import { createVault, type Vault } from '@extas/vault';
 import { settingsResolver, settingsTimeoutMs, withTimeout, type AppResolver } from './settings';
 
 /** Cookie names. `__Host-` makes the browser insist on Secure, Path=/ and no Domain (the cookie stays on this host). */
@@ -27,11 +26,12 @@ export const CHALLENGE_COOKIE = '__Host-admin_2fa';
 export interface AdminDeps {
   db: PrismaClient;
   resolver: AppResolver;
-  vault: SeedVault | null;
+  /** The credential vault (PR 493): 2FA seeds here, the Keys & connections page (PR 500). Null without a master key. */
+  vault: Vault | null;
   now?: () => Date;
 }
 
-const holder = globalThis as unknown as { __adminVault?: SeedVault | null };
+const holder = globalThis as unknown as { __adminVault?: Vault | null };
 
 /** The app's dependencies, or null when the server gave it no database (CI, `next build`). */
 export function adminDeps(): AdminDeps | null {

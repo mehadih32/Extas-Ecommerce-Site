@@ -1,0 +1,157 @@
+{
+  "frame": {
+    "admin": "Admin",
+    "shop": "Shop →",
+    "backToShop": "Back to the shop",
+    "system": "System",
+    "skip": "Skip to content",
+    "nav": "Admin pages",
+    "systemTabs": "System pages",
+    "lang": "Admin language · অ্যাডমিনের ভাষা",
+    "logout": "Log out"
+  },
+  "lang": {
+    "en": "English",
+    "enShort": "EN",
+    "bn": "বাংলা",
+    "bnShort": "বাং"
+  },
+  "nav": {
+    "integrations": "Keys & connections"
+  },
+  "login": {
+    "metaTitle": "Admin sign-in",
+    "title": "Admin sign-in",
+    "sub": "Enter your e-mail and password to open the shop's back end.",
+    "email": "E-mail",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "busy": "One moment…",
+    "codeTitle": "Two-step code",
+    "codeSub": "Type the code your authenticator app shows right now.",
+    "code": "Code",
+    "verify": "Verify",
+    "back": "Go back",
+    "pwTitle": "Choose your own password",
+    "pwSub": "Before your first visit, replace the password the owner gave you with your own. A long sentence works best.",
+    "current": "Current password",
+    "newPassword": "New password",
+    "repeat": "New password again",
+    "mismatch": "The two passwords do not match.",
+    "savePw": "Save and continue",
+    "twoFactorSetup": "The owner has switched on two-step sign-in. The page to set it up for this account comes in a later step — please tell the owner.",
+    "noDb": "This server has no database connected yet, so nobody can sign in."
+  },
+  "page": {
+    "noAccess": "You do not have permission to see this page. Ask the owner to give it to you.",
+    "noDb": "This server has no database connected yet."
+  },
+  "integrations": {
+    "metaTitle": "Keys & connections",
+    "eyebrow": "Admin · System",
+    "title": "Keys & connections",
+    "intro": "Every key the shop needs lives here, encrypted — never in the code. A new owner or a new server only needs new keys here.",
+    "cardTitle": "Connections",
+    "cardSub": "A saved key is never shown again.",
+    "notConnected": "Not connected",
+    "later": "coming in a later step",
+    "saved": "Saved in the vault · ••••",
+    "builtIn": "No key needed",
+    "inUse": "In use now",
+    "standby": "Another storage is on; this one waits",
+    "mode": {
+      "MOCK": "Mock mode — nothing reaches the real service",
+      "SANDBOX": "Test mode (sandbox)",
+      "LIVE": "Live"
+    },
+    "lastTestOk": "Last test passed · {time}",
+    "lastTestFail": "Last test failed · {time}",
+    "add": "Add key",
+    "remove": "Remove",
+    "test": "Test",
+    "busy": "Wait…",
+    "removeConfirm": "Remove the key for {name}? The key is switched off (not deleted) and this connection goes back to mock mode.",
+    "note": "Keys are kept encrypted in the vault. Removing a key switches it off; nothing is deleted. Until a key is in and its test passes, the connection runs on a mock — the shop never waits.",
+    "vaultMissing": "The vault's master key is not set on the server, so no key can be saved yet.",
+    "modal": {
+      "title": "Connect {name}",
+      "paste": "Paste the key",
+      "lock": "Kept encrypted in the vault, never shown again. A new key replaces the old one.",
+      "optional": "(optional)",
+      "cancel": "Cancel",
+      "save": "Save and test",
+      "saving": "Saving and testing…",
+      "close": "Close"
+    },
+    "toast": {
+      "connected": "{name} connected — test passed",
+      "savedFailed": "Key saved, but the test did not pass — the connection stays on mock",
+      "testOk": "Test passed",
+      "testFail": "Test failed",
+      "removed": "Removed from the vault"
+    }
+  },
+  "connections": {
+    "azureBlob": {
+      "name": "Azure Blob storage",
+      "desc": "Photos, media and backups (fast restore to any minute)",
+      "fields": {
+        "accountName": "Storage account name",
+        "container": "Container name",
+        "endpoint": "Address — only for a test server",
+        "accountKey": "Account key (access key)"
+      }
+    },
+    "googleDrive": {
+      "name": "Google Drive",
+      "desc": "Daily encrypted backup copy"
+    },
+    "googleDriveAddOnly": {
+      "name": "Second Google Drive (add-only)",
+      "desc": "A third backup copy that cannot be deleted"
+    },
+    "cloudflare": {
+      "name": "Cloudflare",
+      "desc": "CDN, cache clearing, protection"
+    },
+    "telegram": {
+      "name": "Telegram (AI 360 channel)",
+      "desc": "Server and backup alerts"
+    },
+    "s3": {
+      "name": "S3-compatible storage",
+      "desc": "AWS S3, Cloudflare R2, Backblaze B2 — a place for photos and media instead of Azure",
+      "fields": {
+        "bucket": "Bucket name",
+        "region": "Region",
+        "endpoint": "Address — for services other than AWS",
+        "accessKeyId": "Access key ID",
+        "secretAccessKey": "Secret access key"
+      }
+    },
+    "localDisk": {
+      "name": "Server disk",
+      "desc": "When no other storage is on, photos and media stay on the server's own disk"
+    }
+  },
+  "errors": {
+    "INVALID_INPUT": "Some fields are not right: {fields}",
+    "UNAUTHENTICATED": "Your sign-in has ended — please sign in again.",
+    "FORBIDDEN": "You do not have permission for this.",
+    "PASSWORD_CHANGE_REQUIRED": "Choose your own password first.",
+    "TWO_FACTOR_SETUP_REQUIRED": "Set up two-step sign-in first.",
+    "NOT_CONNECTED": "This connection has no key yet.",
+    "NOT_AVAILABLE": "This connection is not built yet.",
+    "NOT_FOUND": "This connection was not found.",
+    "VAULT_NOT_CONFIGURED": "The vault's master key is not set on the server.",
+    "WRONG_CODE": "That code is not right; please check it.",
+    "WRONG_PASSWORD": "The current password is not right.",
+    "WEAK_PASSWORD": "That password will not do — use a longer sentence of your own.",
+    "invalid-credentials": "The e-mail or password is not right.",
+    "locked": "Too many wrong tries. Try again after {time}.",
+    "cross-site-request": "A request from another site was refused.",
+    "database-not-configured": "This server has no database connected yet.",
+    "server-error": "Something went wrong on the server; please try again shortly.",
+    "network": "Could not reach the server — check the connection and try again."
+  }
+}

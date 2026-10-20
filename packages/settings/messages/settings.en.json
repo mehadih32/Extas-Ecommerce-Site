@@ -35,6 +35,14 @@
     "stagingHost": {
       "label": "Preview site address",
       "help": "Shown for information only. The server configuration decides the real address."
+    },
+    "integrationTestTimeoutSeconds": {
+      "label": "Test button wait (seconds)",
+      "help": "How long the Test button on Keys & connections waits for a provider before it reports a failure."
+    },
+    "integrationKeyCacheSeconds": {
+      "label": "Key memory time (seconds)",
+      "help": "How long a connection keeps a key in memory before reading the vault again. Every vault read is logged."
     }
   },
   "ownerData": {

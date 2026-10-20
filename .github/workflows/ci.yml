@@ -56,6 +56,13 @@ jobs:
         run: |
           corepack enable
           pnpm install --frozen-lockfile
+      - name: Image copies every workspace manifest
+        run: |
+          missing=0
+          for f in packages/*/package.json; do
+            grep -qF "COPY $f " apps/web/Dockerfile || { echo "apps/web/Dockerfile does not copy $f"; missing=1; }
+          done
+          exit $missing
       - name: Hardcode guard (PR 494)
         run: node tools/hardcode-guard.mjs
       # PR 509 — no default, default-pack value or sample value is the owner's own data; the register matches the schema
