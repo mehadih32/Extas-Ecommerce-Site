@@ -3,17 +3,17 @@
 // form the strip of tabs at the top of each System page (demo ZV_TABS: server, cache, images, speed, backup, keys).
 // `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages; the
 // `inventory` pages (S09) do the same on the stock pages, and the `rules` pages (S10) on Smart Rules and notices.
-export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list' | 'bolt' | 'notice';
+export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list' | 'bolt' | 'notice' | 'layers';
 
 export interface AdminPage {
   key: string;
   href: string;
   icon: AdminIcon;
-  group: 'main' | 'catalogue' | 'inventory' | 'rules' | 'system';
+  group: 'main' | 'catalogue' | 'combos' | 'inventory' | 'rules' | 'system';
 }
 
 /** The sidebar's headed groups, in order (labels: `frame.groups.<group>`). */
-export const ADMIN_GROUPS = ['catalogue', 'inventory', 'rules', 'system'] as const;
+export const ADMIN_GROUPS = ['catalogue', 'combos', 'inventory', 'rules', 'system'] as const;
 
 export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
@@ -32,6 +32,8 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   // S10 · PR 208–219 — Smart Rules (demo #/admin/rules) and the notices and pop-ups that quote them (PR 216)
   { key: 'rules', href: '/admin/rules', icon: 'bolt', group: 'rules' },
   { key: 'notices', href: '/admin/rules/notices', icon: 'notice', group: 'rules' },
+  // S03 · PR 90, 571 — combos and customer sets (demo #/admin/combos), in their own section (the owner's biggest seller)
+  { key: 'combos', href: '/admin/combos', icon: 'layers', group: 'combos' },
 ];
 
 export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';

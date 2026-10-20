@@ -16,3 +16,4 @@ export * from './errors';
 export * from './context';
 export * from './facts';
 export * from './combos-service';
+export * from './options';

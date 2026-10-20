@@ -19,6 +19,9 @@ importers:
       '@extas/catalogue':
         specifier: workspace:*
         version: link:../../packages/catalogue
+      '@extas/combos':
+        specifier: workspace:*
+        version: link:../../packages/combos
       '@extas/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -53,6 +56,9 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
     devDependencies:
+      '@extas/seed':
+        specifier: workspace:*
+        version: link:../../packages/seed
       '@tailwindcss/postcss':
         specifier: 4.3.3
         version: 4.3.3

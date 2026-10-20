@@ -13,6 +13,7 @@
       "catalogue": "Catalogue",
       "inventory": "Stock",
       "rules": "Rules",
+      "combos": "Combos",
       "system": "System"
     },
     "groupTabs": "{group} pages"
@@ -35,7 +36,8 @@
     "stockCounts": "Stock counts",
     "stockMovements": "Stock movements",
     "rules": "Smart Rules",
-    "notices": "Notices & pop-ups"
+    "notices": "Notices & pop-ups",
+    "combos": "Combos & customer sets"
   },
   "login": {
     "metaTitle": "Admin sign-in",

@@ -9,6 +9,8 @@
 @import './stock/stock.css';
 /* S10 · PR 209, 216, 217 — Smart Rules and Notices & pop-ups, same file for the same reason. */
 @import './rules/rules.css';
+/* S03 · PR 90–104 — Combos & customer sets, same file for the same reason. */
+@import './combos/combos.css';
 
 .ad {
   /* colours (demo "classic" theme + admin shell) */

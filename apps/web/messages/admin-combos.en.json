@@ -1,0 +1,126 @@
+{
+  "errors": {
+    "SLUG_TAKEN": "That link is already used by another combo. Change the link.",
+    "STALE": "Someone else changed this combo meanwhile. Close it and open it again.",
+    "OWNER_OK_REQUIRED": "A set price is the owner's decision. Ask the owner (or someone he gave the price permission to).",
+    "NOT_READY": "It cannot go on sale yet: {fields}.",
+    "KEY_FIXED": "The link of a combo rule cannot change once it is made: the shared link must keep working.",
+    "SET_INVALID": "This set cannot go in the bag as picked: {fields}.",
+    "CART_NOT_OPEN": "The bag is no longer open.",
+    "NO_PIECE_PHOTO": "A piece has no photo in its colour yet, so the set photo cannot be made (pieces {fields}).",
+    "NO_STORAGE": "Photo storage is not connected yet.",
+    "invalid-store-id": "That store does not exist.",
+    "not-found": "That page of the admin does not exist.",
+    "method-not-allowed": "That action is not possible here."
+  },
+  "combos": {
+    "metaTitle": "Combos · Admin",
+    "eyebrow": "Admin · Offers",
+    "title": "Combos",
+    "subtitle": "Combos — colour pairs make themselves",
+    "intro": "Upload a product, pick a category or style here and say 2 pieces or 3 — every colour pair becomes its own combo on the shop. What you change here changes on the shop at once.",
+    "close": "Close",
+    "cancel": "Cancel",
+    "optional": "(optional)",
+    "edit": "Edit",
+    "setPrice": "Set price",
+    "setPriceOf": "Set price of {name}",
+    "active": "Active",
+    "activeOf": "{name} active",
+    "autoApply": "Auto-apply when the bag matches",
+    "autoApplyOf": "Auto-apply {name} when the bag matches",
+    "sameColour": "Two of the same colour still get the combo price",
+    "sameColourOf": "Two of the same colour still get the combo price — {name}",
+    "comboPath": "/combo/{slug}",
+    "artAlt": "Picture of the set {name}",
+    "tag": {
+      "auto": "Auto",
+      "manual": "Manual"
+    },
+    "state": {
+      "live": "On sale",
+      "soon": "Starts later",
+      "ended": "Ended",
+      "off": "Off",
+      "draft": "Draft"
+    },
+    "price": {
+      "enter": "Enter a set price.",
+      "pieceNoPrice": "A piece has no price yet, so the set cannot be sold.",
+      "noPrice": "no price",
+      "notLower": "Not lower than the regular {regular}. Customers will pay the regular {regular} and no set saving is shown. Enter a price below {regular} to make it an offer.",
+      "saves": "Regular {regular} · customer saves {saving} ({percent}%)",
+      "bagsFollow": "sets already in bags move to this price"
+    },
+    "blocking": {
+      "NO_PIECES": "It needs at least two pieces.",
+      "NO_PRODUCT": "Every piece needs a product.",
+      "NO_SET_PRICE": "It needs a set price.",
+      "PIECE_NO_PRICE": "Piece {n} has no price yet.",
+      "NO_PAIRS": "The rule makes no combos yet."
+    },
+    "types": {
+      "FIXED_SET": "Fixed set",
+      "TOP_BOTTOM": "Top + bottom",
+      "MIXED_SET": "Mixed set",
+      "FIXED_COLOUR_PACK": "Colour pack",
+      "COLOUR_PAIR": "Colour pair"
+    },
+    "fixed": {
+      "title": "Fixed combos & customer sets",
+      "intro": "Fixed combos you put together, and the groups customers may mix themselves. Prices here are what the bag and checkout use.",
+      "activeCount": "{n} of {total} combos active",
+      "new": "New fixed combo",
+      "empty": "No fixed combos yet.",
+      "autoTitle": "Auto-apply:",
+      "autoText": "when the bag has every item of an active combo, the set price is applied by itself — even if the customer added the items one by one."
+    },
+    "editor": {
+      "newTitle": "New fixed combo",
+      "editTitle": "Change the combo",
+      "nameEn": "Name",
+      "nameBn": "Name in Bengali",
+      "slug": "Link",
+      "slugHelp": "Small letters, digits and dashes. Shared links keep working: change it only before you share it.",
+      "type": "Kind of combo",
+      "description": "One line under the name",
+      "pieces": "Pieces",
+      "pieceProduct": "Product of piece {n}",
+      "pickProduct": "Choose a product",
+      "notPublished": "not on the shop yet",
+      "quantity": "How many of piece {n}",
+      "less": "One less",
+      "more": "One more",
+      "removePiece": "Take piece {n} out",
+      "colours": "Colours the customer may pick",
+      "coloursAny": "Any colour (tap colours to allow only those):",
+      "coloursSome": "Only these colours:",
+      "addPiece": "Add a piece",
+      "pricePlaceholder": "e.g. 2050",
+      "priceOwner": "Only the owner (or someone he allowed) can set a price.",
+      "priceBad": "The set price is not a number.",
+      "preview": "Live preview",
+      "previewEmpty": "Give it a name and pick its pieces to see the price.",
+      "saveChanges": "Save changes",
+      "saveNew": "Save as draft"
+    },
+    "dates": {
+      "starts": "Starts",
+      "ends": "Ends",
+      "endsHelp": "After the end date it stops by itself and moves to the archive; its page stays open.",
+      "alwaysHelp": "Without dates it runs all the time."
+    },
+    "toast": {
+      "priceSaved": "Set price saved — the bag and checkout use it",
+      "on": "{name} is on sale",
+      "onNotLive": "{name} is on — it sells from its start date",
+      "off": "{name} is off — moved to the archive; its page says the offer has ended",
+      "autoOn": "{name} applies by itself when the bag matches",
+      "autoOff": "{name} no longer applies by itself",
+      "sameOn": "{name} — two of the same colour now get the combo price",
+      "sameOff": "{name} — only different colours get the combo price",
+      "saved": "{name} saved",
+      "created": "{name} saved as a draft — switch it on when it is ready"
+    }
+  }
+}
