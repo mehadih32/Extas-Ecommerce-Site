@@ -1,0 +1,179 @@
+{
+  "brand": {
+    "fallback": "Our shop"
+  },
+  "meta": {
+    "title": "{store}",
+    "page": "{page} · {store}"
+  },
+  "skip": "Skip to content",
+  "nav": {
+    "main": "Main",
+    "newIn": "New in",
+    "more": "More",
+    "combos": "Combos",
+    "sets": "Sets",
+    "buildYourOwnSet": "Build your own set",
+    "setsAndCombos": "Sets & combos",
+    "journal": "Journal",
+    "allNewIn": "All new in",
+    "allStyles": "All styles",
+    "styles": "{n} styles",
+    "style": "1 style",
+    "megaShop": "Shop {name}",
+    "megaAll": "All {name}",
+    "shop": "Shop"
+  },
+  "header": {
+    "menu": "Menu",
+    "search": "Search",
+    "wishlist": "Wishlist",
+    "wishlistSaved": "Wishlist, {n} saved",
+    "account": "Account",
+    "myAccount": "My account",
+    "login": "Log in",
+    "bag": "Bag",
+    "bagItems": "Bag, {n} items",
+    "waTip": "Need any help",
+    "waLabel": "{tip} on WhatsApp",
+    "waMessage": "Hi {store}, I have a question"
+  },
+  "announce": {
+    "freeDeliveryCod": "Free delivery over {freeOver} · Cash on Delivery all over Bangladesh"
+  },
+  "menu": {
+    "title": "Menu",
+    "close": "Close",
+    "helpTitle": "Help",
+    "whatsapp": "Message us on WhatsApp",
+    "hotline": "Hotline {number}"
+  },
+  "quick": {
+    "search": "Search",
+    "bag": "Bag",
+    "wish": "Wishlist",
+    "account": "Account"
+  },
+  "help": {
+    "track": "Track my order",
+    "delivery": "Delivery",
+    "exchange": "Exchange & returns",
+    "questions": "Questions & answers",
+    "contactUs": "Contact us",
+    "sizeGuide": "Size guide",
+    "payment": "Ways to pay",
+    "faq": "FAQ",
+    "story": "Our story",
+    "contact": "Contact",
+    "careers": "Careers",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "trackShort": "Track order",
+    "exchangeShort": "Exchange"
+  },
+  "bottom": {
+    "label": "Bottom",
+    "home": "Home",
+    "shop": "Shop",
+    "sets": "Sets",
+    "bag": "Bag",
+    "account": "Account"
+  },
+  "footer": {
+    "promise": {
+      "exchange": "Size exchange| in {windowHours} hours",
+      "cod": "Cash on| Delivery",
+      "secure": "Secure| payment",
+      "original": "100%| original"
+    },
+    "col": {
+      "shop": "Shop",
+      "help": "Help",
+      "about": "{store}"
+    },
+    "join": {
+      "title": "Join",
+      "label": "Get new drops first",
+      "placeholder": "Your phone number",
+      "button": "Join",
+      "note": "Offers and new arrivals by SMS and WhatsApp. Stop anytime.",
+      "thanks": "Thanks — you will get new drops first",
+      "empty": "Enter your mobile number, like 01XXXXXXXXX.",
+      "short": "Enter an 11-digit mobile number, like 01XXXXXXXXX.",
+      "prefix": "Mobile numbers start with 013 to 019. Enter an 11-digit mobile number, like 01XXXXXXXXX.",
+      "thanksTo": "Thanks — new drops will come to {number}"
+    },
+    "whatsapp": "Text us on WhatsApp",
+    "waMessage": "Hi {store}",
+    "hotline": "Hotline",
+    "social": "{store} on {network}",
+    "pay": "Payment methods we accept",
+    "copyright": "© {year} {store}",
+    "dbid": "DBID: {id}",
+    "tradeLicence": "Trade licence: {id}",
+    "whatsappDesk": "Message us on WhatsApp",
+    "socialOff": "Address not added yet"
+  },
+  "pay": {
+    "bkash": "bKash",
+    "nagad": "Nagad",
+    "visa": "Visa",
+    "mc": "Mastercard",
+    "cod": "Cash on Delivery",
+    "rocket": "Rocket",
+    "amex": "American Express",
+    "ssl": "SSLCommerz",
+    "upay": "Upay",
+    "bank": "Internet banking"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "youtube": "YouTube",
+    "tiktok": "TikTok"
+  },
+  "lang": {
+    "toBn": "Language: English. বাংলায় দেখুন",
+    "toEn": "ভাষা: বাংলা। Switch to English",
+    "en": "EN",
+    "bn": "বাং",
+    "sep": "|"
+  },
+  "checkout": {
+    "backToBag": "Back to bag",
+    "home": "Home",
+    "stepBag": "Bag",
+    "stepDelivery": "Delivery & payment",
+    "stepDone": "Done",
+    "secure": "Secure",
+    "emptyTitle": "Your bag is empty",
+    "emptyText": "Add something to your bag first, then come back to check out.",
+    "startShopping": "Start shopping",
+    "goToBag": "Go to bag",
+    "title": "Checkout"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "We could not find this page. It may have moved.",
+    "home": "Go to home",
+    "searchLabel": "Search products",
+    "searchPlaceholder": "Search polos, panjabi, hoodies…",
+    "search": "Search",
+    "waLine": "Looking for something specific?",
+    "waButton": "Ask us on WhatsApp",
+    "waMessage": "Hi {store}, I could not find a page on your site"
+  },
+  "soon": {
+    "title": "Coming soon",
+    "text": "We are building this page. It opens here very soon.",
+    "home": "Go to home"
+  },
+  "home": {
+    "shopByCategory": "Shop by category",
+    "shopAll": "Shop all"
+  },
+  "fab": {
+    "label": "Message {store} on WhatsApp",
+    "message": "Hi {store}, I have a question about an item on your site"
+  }
+}
