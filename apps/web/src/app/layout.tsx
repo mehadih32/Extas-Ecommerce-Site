@@ -9,6 +9,8 @@ import { isShopLang, LANG_HEADER } from '@/lib/shop/lang';
 export const metadata: Metadata = {
   title: t(dict, 'title'),
   robots: { index: false, follow: false },
+  // CN-016: the tab icon always answers (app/favicon.ico/route.ts: the owner's icon or a neutral one).
+  icons: { icon: '/favicon.ico' },
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
