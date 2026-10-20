@@ -16,6 +16,7 @@ import { catalogueToolsSettings } from './registry-catalogue-tools';
 import { rulesSettings } from './registry-rules';
 import { combosSettings } from './registry-combos';
 import { deliverySettings } from './registry-delivery';
+import { storefrontSettings } from './registry-storefront';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1115,6 +1116,8 @@ export const registry = {
   ...combosSettings,
   // ---- S06 · PR 549–553, 555 · the delivery-zone engine (registry-delivery.ts, version 15). ----
   ...deliverySettings,
+  // ---- S02 · PR 82, 501, 503, 84, 40, 42 · storefront: themes, brand, shell, language, slider (registry-storefront.ts, version 16). ----
+  ...storefrontSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
