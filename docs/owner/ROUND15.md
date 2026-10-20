@@ -752,3 +752,8 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - Combo defaults, desktop CTA, side canvas: keep as built. Blog: no "tested by us" claims until a care-lab person exists; byline "EXTAS Journal" until expert names arrive; blog starts on go-live day (posts ready before); old short notes listed under the guides, noindex.
 - Invoice: default design 3, all 7 selectable in the backend. Logo: all 11 styles kept, he picks in the backend. Header menu: default "main categories + More", other options kept. Drawer: default style B (whole bag), A kept. Bag "You may also like": pick one default, keep the others as options.
 - Owner data (delivery charges, free-delivery limit, COD, exchange limit, AI budget) are entered by him in the backend later — never blockers (rule added to CLAUDE.md).
+
+## Note 53 — 20 Oct 12:47 · Store on the home page, S02 now, owner account (CN-010)
+- new.extas.com.bd home shows the store: what is built, "শিগগির আসছে" where a page is not built yet. Progress page only at /status.
+- S02 (home, category, product page) starts now beside the rest; max 3 agents at once; every page goes live as soon as it is merged. Design = V12.1 demo exactly.
+- Open his admin account (e-mail given in chat, never in Git); Bengali step-by-step for reading the password.
