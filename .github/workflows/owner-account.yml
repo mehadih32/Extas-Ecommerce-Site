@@ -1,0 +1,91 @@
+# PR 15 — the admin's first owner account (CN-009; the owner's answer to BLOCKED 5). Run by hand (workflow_dispatch) ON
+# the VM through the self-hosted runner (CN-003). The login e-mail is owner data: it is masked in the log at once, read
+# only from the event file (never written into a step script, which the log prints), handed to the server in a
+# root-only file and never written to Git, a log, an artifact or the report. The first password is generated on the
+# server into a root-only file; the owner reads both with /usr/local/sbin/extas-owner-login from Azure portal → Run
+# command (docs/owner/OWNER-LOGIN.md) and changes the password at the first login.
+# Safe to run again: with an owner already made (on this server or in the database) it refuses and changes nothing.
+name: owner-account
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner_email:
+        description: "The owner's login e-mail (never shown in the log or kept in Git)"
+        required: true
+        type: string
+      owner_name:
+        description: "Name shown in the admin"
+        required: false
+        default: "Owner"
+        type: string
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  owner:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 15
+    steps:
+      # First, before anything else can print: mask the e-mail, then keep it in a 0600 file for the next step only.
+      # The inputs expression for the e-mail is never used anywhere in this file: the runner prints each step's script.
+      - name: Mask the e-mail
+        run: |
+          set -eu
+          email="$(jq -r '.inputs.owner_email // ""' "$GITHUB_EVENT_PATH" | head -n 1)"
+          [ -n "$email" ] && echo "::add-mask::$email"
+          umask 077
+          printf '%s\n' "$email" > "$RUNNER_TEMP/owner-email"
+          jq -r '.inputs.owner_name // "Owner"' "$GITHUB_EVENT_PATH" | head -n 1 > "$RUNNER_TEMP/owner-name"
+
+      - uses: actions/checkout@v4
+
+      # The reader the owner runs from Azure portal → Run command (server setup installs it too, step stack).
+      - name: Install the login reader
+        run: sudo install -m 0700 infra/server/bin/extas-owner-login /usr/local/sbin/extas-owner-login
+
+      # create-owner --generate-to in the live migrate image, on the extas network, against the production database.
+      # Exit 3 = refused safely (an owner exists already); nothing changed.
+      - name: Create the first owner account
+        id: create
+        continue-on-error: true
+        run: sudo bash infra/server/bin/extas-owner-create --email-file "$RUNNER_TEMP/owner-email" --name-file "$RUNNER_TEMP/owner-name"
+
+      - name: Remove the inputs
+        if: always()
+        run: sudo rm -f "$RUNNER_TEMP/owner-email" "$RUNNER_TEMP/owner-name"
+
+      # The report holds the result only (no e-mail, no password); [skip ci] so the commit starts nothing.
+      - name: Commit the report
+        if: always()
+        run: |
+          set -eu
+          sudo test -f /srv/extas/state/owner-account.md || { echo "no report"; exit 0; }
+          out="$RUNNER_TEMP/owner-account.md"
+          sudo cat /srv/extas/state/owner-account.md > "$out"
+          result="$(sudo jq -r '.result // "unknown"' /srv/extas/state/owner-account.json 2>/dev/null || echo unknown)"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            mkdir -p docs/reports/server
+            cp "$out" docs/reports/server/owner-account.md
+            git add docs/reports/server/owner-account.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "owner account report: $result [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail if the account was not made
+        if: steps.create.outcome != 'success'
+        run: |
+          echo "::error::No owner account was made — see docs/reports/server/owner-account.md (refused = an owner exists already)"
+          exit 1

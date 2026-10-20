@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# PR 15 — the first owner account of the admin (CN-009: the login e-mail is owner data, set on the server only; owner's
+# answer to BLOCKED 5). Run on the VM by .github/workflows/owner-account.yml (self-hosted runner extas-vm, CN-003):
+#   sudo extas-owner-create --email-file <file> [--name-file <file>]
+# - The e-mail comes in a file (read, then removed), never on a command line, in a log or in Git.
+# - `auth create-owner --generate-to` runs in the live migrate image (the image of the last good deploy,
+#   state/last-good-deploy.json `.migrate`) on the extas network against the production database, the same way
+#   deploy.sh runs the auth sync: a root-only env file holding only DATABASE_DIRECT_URL, `docker run --rm`.
+# - The first password is generated inside that run into a root-only folder, then kept with the e-mail in
+#   config/secrets/owner-login.env (0600). The owner reads it himself: Azure portal → Run command →
+#   /usr/local/sbin/extas-owner-login (docs/owner/OWNER-LOGIN.md). He must change it at the first login.
+# - Safe to run twice: when this server already made the first owner, or the database already has an active owner,
+#   it refuses and changes nothing (exit 3).
+# Writes state/owner-account.json and state/owner-account.md (result only, never the e-mail or the password).
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
+LOGIN="$SEC/owner-login.env"
+IMG_USER="${OWNER_IMAGE_UID:-1000}"   # the migrate image runs as `node` (uid 1000)
+
+EMAIL_FILE=""; NAME_FILE=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --email-file) EMAIL_FILE="$2"; shift 2 ;;
+    --name-file) NAME_FILE="$2"; shift 2 ;;
+    *) echo "usage: extas-owner-create --email-file <file> [--name-file <file>]" >&2; exit 2 ;;
+  esac
+done
+[ -n "$EMAIL_FILE" ] || { echo "usage: extas-owner-create --email-file <file> [--name-file <file>]" >&2; exit 2; }
+mkdir -p "$STATE"; install -d -m 0700 "$SEC"
+
+email=""; name=""
+[ -f "$EMAIL_FILE" ] && email="$(head -n 1 "$EMAIL_FILE" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+rm -f "$EMAIL_FILE"
+if [ -n "$NAME_FILE" ] && [ -f "$NAME_FILE" ]; then
+  name="$(head -n 1 "$NAME_FILE" | tr -cd '[:print:]' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | cut -c1-80)"
+  rm -f "$NAME_FILE"
+fi
+[ -n "$name" ] || name="Owner"
+
+ENVF=""; OWNF=""; OUTD=""
+cleanup() { rm -f "$ENVF" "$OWNF"; [ -n "$OUTD" ] && rm -rf "$OUTD"; return 0; }
+trap cleanup EXIT
+
+hide() { # hide <text>: the text with the e-mail taken out, one line
+  local t="$1"
+  [ -n "$email" ] && t="${t//"$email"/(e-mail hidden)}"
+  printf '%s' "$t" | tr '\n\r' '  ' | cut -c1-240
+}
+
+finish() { # finish <ok|refused|fail> <detail> <exit code>: the status (no e-mail, no password), then exit
+  local detail; detail="$(hide "$2")"
+  jq -n --arg result "$1" --arg detail "$detail" --arg at "$(date -Is)" '{result:$result,detail:$detail,at:$at}' \
+    > "$STATE/owner-account.json"
+  {
+    echo "# Owner account — the last run"
+    echo
+    echo "Written by \`infra/server/bin/extas-owner-create\` (\`owner-account.yml\`, PR 15). The e-mail and the password"
+    echo "are never in this report; the owner reads them on the server (\`docs/owner/OWNER-LOGIN.md\`)."
+    echo
+    echo "| | |"
+    echo "|---|---|"
+    echo "| Time ($EXTAS_TIMEZONE) | $(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M') |"
+    echo "| Result | **$1** |"
+    echo "| Detail | ${detail//|//} |"
+  } > "$STATE/owner-account.md"
+  # Belt and braces: the report must never hold the e-mail.
+  if [ -n "$email" ] && grep -qiF -- "$email" "$STATE/owner-account.md" "$STATE/owner-account.json"; then
+    printf '# Owner account — the last run\n\nResult: **%s**\n' "$1" > "$STATE/owner-account.md"
+    jq -n --arg result "$1" --arg at "$(date -Is)" '{result:$result,detail:"",at:$at}' > "$STATE/owner-account.json"
+  fi
+  echo "owner-account: $1 — $detail"
+  exit "$3"
+}
+
+# 1. The input.
+if ! [[ "$email" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || [ "${#email}" -gt 254 ]; then
+  email=""
+  finish fail "the e-mail address is missing or not valid (one address, like name@domain.com); nothing changed" 1
+fi
+
+# 2. Already done? This server keeps the first login once made; the database check is create-owner's own.
+if [ -s "$LOGIN" ]; then
+  finish refused "the first owner account was made on this server already; the owner reads its login with extas-owner-login. Nothing changed; more owners are added in the admin" 3
+fi
+
+# 3. The live migrate image (holds the auth command line), else the newest one on the server.
+img="$(jq -r '.migrate // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
+if [ -z "$img" ] || ! docker image inspect "$img" >/dev/null 2>&1; then
+  img="$(docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate 2>/dev/null | head -n 1 || true)"
+fi
+[ -n "$img" ] && docker image inspect "$img" >/dev/null 2>&1 \
+  || finish fail "no migrate image on the server yet: the app must be deployed once first (deploy.yml); nothing changed" 1
+
+# 4. Root-only inputs for the one-shot container: the database URL alone, and the owner's e-mail and name.
+ENVF="$(mktemp "$SEC/.owner-db.XXXXXX")"; chmod 600 "$ENVF"
+grep -E '^DATABASE_DIRECT_URL=' "$SEC/app.env" > "$ENVF" 2>/dev/null || true
+grep -q '^DATABASE_DIRECT_URL=' "$ENVF" || finish fail "DATABASE_DIRECT_URL is not in app.env: run server-setup (stack) first; nothing changed" 1
+OWNF="$(mktemp "$SEC/.owner-in.XXXXXX")"; chmod 600 "$OWNF"
+printf 'OWNER_EMAIL=%s\nOWNER_NAME=%s\n' "$email" "$name" > "$OWNF"
+OUTD="$(mktemp -d "$SEC/.owner-out.XXXXXX")"
+chown "$IMG_USER:$IMG_USER" "$OUTD" 2>/dev/null || true
+chmod 700 "$OUTD"
+
+# 5. create-owner: the first password is generated inside the run, into the root-only folder (mode 0600).
+rc=0
+out="$(docker run --rm --name "extas-owner-$$" --network extas --env-file "$ENVF" --env-file "$OWNF" \
+  -v "$OUTD:/out" "$img" sh -c 'cd /repo/packages/auth && exec ./node_modules/.bin/tsx src/cli.ts create-owner --email "$OWNER_EMAIL" --name "$OWNER_NAME" --generate-to /out/first-password' 2>&1)" || rc=$?
+rm -f "$ENVF" "$OWNF"
+last="$(printf '%s\n' "$out" | grep -v '^[[:space:]]*$' | tail -n 1)"
+
+if [ "$rc" -eq 0 ] && [ -s "$OUTD/first-password" ]; then
+  pw="$(head -n 1 "$OUTD/first-password")"
+  tmp="$(mktemp "$SEC/.owner-login.XXXXXX")"; chmod 600 "$tmp"
+  printf 'OWNER_EMAIL=%s\nOWNER_FIRST_PASSWORD=%s\nOWNER_CREATED_AT=%s\n' "$email" "$pw" "$(date -Is)" > "$tmp"
+  mv "$tmp" "$LOGIN"; chmod 600 "$LOGIN"
+  finish ok "the first owner account was made; the owner reads its e-mail and first password with extas-owner-login and changes the password at the first login" 0
+fi
+if printf '%s' "$out" | grep -q 'an owner exists already'; then
+  finish refused "the database has an active owner already; nothing changed (more owners are added in the admin)" 3
+fi
+finish fail "create-owner did not finish: $last; nothing kept" 1
