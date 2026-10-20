@@ -51,6 +51,14 @@ export const PERMISSIONS = {
   // S09 · PR 203 — count a location by barcode and give a reason for each difference. Counting never changes stock:
   // the counted differences are corrected in the ERP.
   'inventory.audit': { group: 'inventory' },
+  // S10 · PR 208–219 — Smart Rules: see the rules, their history, clashes and simulations; write and save drafts of
+  // rules, notices and coupons; publish a rule or switch a notice on; and give the owner's OK for a rule that moves
+  // money (a charge, a price, a discount, COD — CLAUDE.md rule 6). Only the owner role has `rules.approve` until the
+  // owner hands it to someone in the role builder.
+  'rules.read': { group: 'rules' },
+  'rules.write': { group: 'rules' },
+  'rules.publish': { group: 'rules' },
+  'rules.approve': { group: 'rules' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -11,7 +11,8 @@
     "security": "Security and history",
     "media": "Images and media",
     "catalogue": "Catalogue",
-    "inventory": "Stock and ERP"
+    "inventory": "Stock and ERP",
+    "rules": "Smart Rules"
   },
   "permissions": {
     "settings": {
@@ -56,6 +57,12 @@
       "erp": "Choose where a store's stock and orders come from (our ERP, another ERP, none) and its ERP company and warehouse",
       "sync": "Bring stock from the ERP again now (all or one product), resend waiting ERP documents, check stock against the ERP",
       "audit": "Count a location by barcode and give a reason for each difference (stock itself is corrected in the ERP)"
+    },
+    "rules": {
+      "read": "See the Smart Rules, their history, clashes and simulations, the notices and the coupons",
+      "write": "Write rules, notices and coupons and save them as drafts (nothing reaches customers yet)",
+      "publish": "Publish a rule, pause or end it, and switch a notice on or off",
+      "approve": "Give the owner's OK for a rule that changes money: delivery charges, set prices, discounts, coupons, COD"
     }
   },
   "totp": {

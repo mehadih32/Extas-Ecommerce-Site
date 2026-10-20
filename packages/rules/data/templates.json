@@ -1,0 +1,168 @@
+{
+  "$comment": "S10 · PR 208–216 — starting points for a new Smart Rule, one per common rule. Words and structure only: every number a rule needs is a param whose value is empty (null) until the owner types it in, or is read from the store's own setting at the moment the rule is made (fromSetting). Nothing here is the owner's data or a price. A template marked starter is offered as one of the store's first rules (all as drafts: nothing reaches customers until it is published, and a rule that moves money needs the owner's OK). Delivery-band keys are the default pack's (PR 508).",
+  "version": 1,
+  "templates": [
+    {
+      "id": "no-return",
+      "starter": true,
+      "kind": "policy",
+      "nameEn": "No returns after delivery",
+      "nameBn": "ডেলিভারির পর ফেরত নেই",
+      "text": {
+        "short": {
+          "en": "Once delivered, items can be exchanged for size — not returned or refunded",
+          "bn": "ডেলিভারির পর সাইজ বদলানো যায় — ফেরত বা টাকা ফেরত হয় না"
+        },
+        "full": {
+          "en": "After you receive an order, returns and refunds are not available.\nYou can still exchange for a different size (see the exchange rule), or get a free replacement if the item is faulty.\nAt the door, you may refuse the parcel; a return delivery charge applies unless the mistake is ours.",
+          "bn": "অর্ডার হাতে পাওয়ার পর ফেরত বা টাকা ফেরত হয় না।\nতবে অন্য সাইজ নিতে পারবেন (বদলের নিয়ম দেখুন), আর পণ্যে ত্রুটি থাকলে বিনা খরচে বদলে পাবেন।\nদরজায় পার্সেল না নিতে পারেন; ভুল আমাদের না হলে ফেরতের ডেলিভারি চার্জ লাগবে।"
+        }
+      },
+      "params": [],
+      "actions": [],
+      "placements": [
+        "product",
+        "checkout",
+        "account",
+        "assistant",
+        "faq"
+      ]
+    },
+    {
+      "id": "exchange-order",
+      "starter": true,
+      "kind": "policy",
+      "nameEn": "Exchange options order",
+      "nameBn": "বদলের বিকল্পের ক্রম",
+      "text": {
+        "short": {
+          "en": "Same item first → same style other colours → same category → other categories",
+          "bn": "প্রথমে একই পণ্য → একই স্টাইলের অন্য রং → একই ক্যাটাগরি → অন্য ক্যাটাগরি"
+        },
+        "full": {
+          "en": "When you ask for a new size we check stock in this order, and you choose from the first group that has stock:\n1. The same item in the same colour.\n2. The same item in another colour.\n3. Another product in the same category (same measurements).\n4. Only if nothing above is in stock: products from other categories.\nThese are the only options available for an exchange.",
+          "bn": "নতুন সাইজ চাইলে আমরা এই ক্রমে স্টক দেখি, আর যে দলে প্রথম স্টক পাওয়া যায় সেখান থেকে আপনি বেছে নেন:\n১. একই পণ্য, একই রং।\n২. একই পণ্য, অন্য রং।\n৩. একই ক্যাটাগরির অন্য পণ্য (একই মাপ)।\n৪. ওপরের কোনোটাতে স্টক না থাকলে তবেই অন্য ক্যাটাগরির পণ্য।\nবদলের জন্য শুধু এই বিকল্পগুলোই আছে।"
+        }
+      },
+      "params": [],
+      "actions": [],
+      "placements": [
+        "account",
+        "assistant"
+      ]
+    },
+    {
+      "id": "order-edit",
+      "starter": true,
+      "kind": "policy",
+      "nameEn": "Order edits",
+      "nameBn": "অর্ডার বদল",
+      "text": {
+        "short": {
+          "en": "Edit your order up to {maxEdits} times before we start processing it",
+          "bn": "প্রসেসিং শুরুর আগে অর্ডার সর্বোচ্চ {maxEdits} বার বদলাতে পারবেন"
+        },
+        "full": {
+          "en": "Log in → My orders → Edit order. You can change address, phone or sizes until the order goes into processing, up to {maxEdits} times.",
+          "bn": "লগইন → আমার অর্ডার → অর্ডার বদলান। প্রসেসিং শুরু হওয়া পর্যন্ত ঠিকানা, ফোন বা সাইজ সর্বোচ্চ {maxEdits} বার বদলাতে পারবেন।"
+        }
+      },
+      "params": [
+        {
+          "key": "maxEdits",
+          "type": "int",
+          "value": null,
+          "fromSetting": "policy.orderEdit.maxEdits",
+          "labelEn": "Edits allowed per order",
+          "labelBn": "একটা অর্ডার কতবার বদলানো যাবে"
+        }
+      ],
+      "actions": [],
+      "placements": [
+        "thank-you",
+        "account"
+      ]
+    },
+    {
+      "id": "cod",
+      "kind": "payment",
+      "nameEn": "Cash on delivery",
+      "nameBn": "ক্যাশ অন ডেলিভারি",
+      "text": {
+        "short": {
+          "en": "Cash on delivery on orders up to {codMax}",
+          "bn": "{codMax} পর্যন্ত অর্ডারে ক্যাশ অন ডেলিভারি"
+        },
+        "full": {
+          "en": "Pay the rider in cash when the parcel arrives, on orders up to {codMax}.",
+          "bn": "পার্সেল এলে রাইডারকে নগদে দাম দিন — {codMax} পর্যন্ত অর্ডারে।"
+        }
+      },
+      "params": [
+        {
+          "key": "codAllowed",
+          "type": "bool",
+          "value": null,
+          "fromSetting": "payment.cod.enabled",
+          "labelEn": "Cash on delivery on",
+          "labelBn": "ক্যাশ অন ডেলিভারি চালু"
+        },
+        {
+          "key": "codMax",
+          "type": "money",
+          "value": null,
+          "labelEn": "Largest cash-on-delivery order",
+          "labelBn": "ক্যাশ অন ডেলিভারিতে সবচেয়ে বড় অর্ডার"
+        }
+      ],
+      "actions": [
+        {
+          "type": "cod",
+          "allowedParam": "codAllowed",
+          "maxOrderParam": "codMax"
+        }
+      ],
+      "placements": [
+        "checkout",
+        "faq"
+      ]
+    },
+    {
+      "id": "held-order",
+      "kind": "fulfilment",
+      "nameEn": "Held orders",
+      "nameBn": "আটকে থাকা অর্ডার",
+      "text": {
+        "short": {
+          "en": "A held order waits {holdHours} hours before the team must arrange stock or offer another product",
+          "bn": "আটকে থাকা অর্ডার {holdHours} ঘণ্টা অপেক্ষা করে; তারপর টিম স্টক জোগাড় করবে বা অন্য পণ্য দেবে"
+        }
+      },
+      "params": [
+        {
+          "key": "holdHours",
+          "type": "hours",
+          "value": null,
+          "labelEn": "Hold an order for (hours)",
+          "labelBn": "অর্ডার কত ঘণ্টা আটকে রাখা যাবে"
+        },
+        {
+          "key": "partialShipping",
+          "type": "bool",
+          "value": null,
+          "labelEn": "The rest of the order may ship",
+          "labelBn": "বাকি পণ্য আগে পাঠানো যাবে"
+        },
+        {
+          "key": "duplicateLookbackDays",
+          "type": "int",
+          "value": null,
+          "labelEn": "Look for a duplicate order this many days back",
+          "labelBn": "কত দিন পেছনে একই অর্ডার খুঁজবে"
+        }
+      ],
+      "actions": [],
+      "placements": []
+    }
+  ]
+}

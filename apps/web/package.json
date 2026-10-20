@@ -17,6 +17,7 @@
     "@extas/db": "workspace:*",
     "@extas/inventory": "workspace:*",
     "@extas/media": "workspace:*",
+    "@extas/rules": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/vault": "workspace:*",
     "next": "16.4.2",

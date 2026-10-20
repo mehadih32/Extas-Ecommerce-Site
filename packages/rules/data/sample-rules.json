@@ -1,0 +1,25 @@
+{
+  "$comment": "S10 · SAMPLE DATA ONLY — Smart Rules and notices for the made-up sample store of the sample catalogue (PR 14), so the Smart Rules screens of the approved demo (docs/demo/src/81-admin-rules.js, 01-data.js DB.rules) can be built and tested against real rows. The values are the demo's sample figures (money in poisha), never the owner's charges, prices or discounts (PR 509, CLAUDE.md rules 4 and 6). Applied only by `pnpm --filter @extas/rules sample`, only to the store the sample seed made; it refuses any other store. The sample exchange rule is switched on by the seed so the storefront pieces have a live rule to read — its history says it was the sample seed in a made-up shop, not an owner decision; the other rules that move money stay drafts, so the owner's-OK step is what the screens show. One notice deliberately writes \"7 days\" by hand so the conflict banner (PR 217) has something to show.",
+  "version": 1,
+  "marker": "Sample",
+  "rules": [
+    {
+      "template": "no-return",
+      "status": "ACTIVE",
+      "values": {}
+    },
+    {
+      "template": "exchange-order",
+      "status": "ACTIVE",
+      "values": {}
+    },
+    {
+      "template": "order-edit",
+      "status": "ACTIVE",
+      "values": {
+        "maxEdits": 2
+      }
+    }
+  ],
+  "notices": []
+}

@@ -17,5 +17,6 @@ export * from './registry-publish';
 export * from './registry-merch';
 export * from './registry-inventory';
 export * from './registry-catalogue-tools';
+export * from './registry-rules';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

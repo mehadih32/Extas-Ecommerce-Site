@@ -4044,23 +4044,45 @@ model LocalStockIntake {
 /// @stage S10 · PR 208, 210–214 — a rule: delivery, exchange, set tier, discount, festive, fulfilment exception, payment
 /// campaign. Conditions and actions are data; the engine interprets them.
 model SmartRule {
-  id         String          @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store           @relation(fields: [storeId], references: [id])
-  key        String
-  kind       String
-  nameEn     String
-  nameBn     String?
-  conditions Json
-  actions    Json
-  priority   Int             @default(0)
-  status     SmartRuleStatus @default(DRAFT)
-  version    Int             @default(1)
-  startsAt   DateTime?       @db.Timestamptz(3)
-  endsAt     DateTime?       @db.Timestamptz(3)
-  archivedAt DateTime?       @db.Timestamptz(3)
-  createdAt  DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime        @updatedAt @db.Timestamptz(3)
+  id           String          @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store           @relation(fields: [storeId], references: [id])
+  key          String
+  kind         String
+  nameEn       String
+  nameBn       String?
+  conditions   Json
+  actions      Json
+  priority     Int             @default(0)
+  status       SmartRuleStatus @default(DRAFT)
+  version      Int             @default(1)
+  startsAt     DateTime?       @db.Timestamptz(3)
+  endsAt       DateTime?       @db.Timestamptz(3)
+  archivedAt   DateTime?       @db.Timestamptz(3)
+  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
+  /// PR 215 — every text a customer reads, by slot (short, full, …) and language: {slot: {en, bn}}. Tokens like
+  /// {windowHours} are filled from the rule's own values, so no number is ever written into a text twice.
+  text         Json?
+  /// PR 209 — the values the text and the actions use ("Settings" in the editor): [{key, type, value, labelEn, labelBn}].
+  params       Json?
+  /// PR 209 — "Applies to" and "Except": {include: [...], exclude: [...]} (all · category · collection · product).
+  scope        Json?
+  /// PR 209, 215 — where the rule's text is shown (keys of the `rules.placements` dictionary).
+  placements   String[]        @default([])
+  /// PR 217 — may combine with other offers on the same line (default: does not).
+  stackable    Boolean         @default(false)
+  /// PR 210–213 — the rule moves money (a charge, a price, a discount, COD): switching it on needs the owner's OK
+  /// (CLAUDE.md rule 6), recorded below.
+  needsOwnerOk Boolean         @default(false)
+  approvedById String?         @db.Uuid
+  approvedAt   DateTime?       @db.Timestamptz(3)
+  /// PR 209, 219 — changes saved but not live yet: the whole candidate rule, previewed and simulated before publish.
+  draft        Json?
+  draftById    String?         @db.Uuid
+  draftAt      DateTime?       @db.Timestamptz(3)
+  createdById  String?         @db.Uuid
+  updatedById  String?         @db.Uuid
 
   versions SmartRuleVersion[]
 
@@ -4094,16 +4116,27 @@ model SmartRuleVersion {
 
 /// @stage S10 · PR 217 — a detected conflict between two rules and how it was resolved.
 model SmartRuleConflict {
-  id         String    @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store     @relation(fields: [storeId], references: [id])
-  ruleAId    String    @db.Uuid
-  ruleBId    String    @db.Uuid
-  kind       String
-  resolution String?
-  resolvedAt DateTime? @db.Timestamptz(3)
-  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  id           String    @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store     @relation(fields: [storeId], references: [id])
+  ruleAId      String    @db.Uuid
+  ruleBId      String    @db.Uuid
+  kind         String
+  resolution   String?
+  resolvedAt   DateTime? @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+  /// What the other side is: another rule, a notice, or a setting (then ruleBId repeats ruleAId; the key is in detail).
+  otherType    String    @default("rule")
+  /// The same pair with the same kind is the same conflict: a re-check updates it instead of adding another row.
+  fingerprint  String?
+  detail       Json?
+  /// The rule the resolution order lets win (PR 217).
+  winnerRuleId String?   @db.Uuid
+  resolvedById String?   @db.Uuid
+
+  @@unique([storeId, fingerprint])
+  @@index([storeId, resolvedAt])
 }
 
 /// @stage S10 · PR 219 — a simulation: what an order would have cost under a rule.
@@ -4137,6 +4170,22 @@ model Notice {
   archivedAt   DateTime? @db.Timestamptz(3)
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 216 — a stable key and the admin's name for the notice; the customer sees only the title and content.
+  key          String?
+  nameEn       String?
+  nameBn       String?
+  titleEn      String?
+  titleBn      String?
+  /// The button: {labelEn, labelBn, href} (a path inside the shop).
+  cta          Json?
+  priority     Int       @default(0)
+  /// Bumped on every change; each change is in the audit log with before and after (nothing is overwritten unseen).
+  version      Int       @default(1)
+  createdById  String?   @db.Uuid
+  updatedById  String?   @db.Uuid
+
+  @@unique([storeId, key])
+  @@index([storeId, enabled])
 }
 
 // =====================================================================================================================
