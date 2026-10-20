@@ -1,0 +1,53 @@
+// PR 503 — every word the shop shows comes from the shop dictionary (messages/shop.<lang>.json), never from code. The
+// owner can change any of them, in both languages, through the setting `language.labels` (his words win over ours).
+// Text in a dictionary may hold {name} slots, filled at the moment it is shown.
+import bn from '../../../messages/shop.bn.json';
+import en from '../../../messages/shop.en.json';
+import type { ShopLabel } from '@extas/settings';
+import type { Dict } from '../i18n';
+import type { ShopLang } from './lang';
+
+export const SHOP_DICTS: Record<ShopLang, Dict> = { en, bn };
+
+export type LabelOverrides = Record<string, { en?: string; bn?: string }>;
+export type Vars = Record<string, string | number>;
+
+function lookup(dict: Dict, key: string): string | undefined {
+  let node: string | Dict | undefined = dict;
+  for (const part of key.split('.')) node = typeof node === 'object' ? node[part] : undefined;
+  return typeof node === 'string' ? node : undefined;
+}
+
+export function fill(text: string, vars: Vars): string {
+  return text.replace(/\{(\w+)\}/g, (m, v: string) => (v in vars ? String(vars[v]) : m));
+}
+
+/** Every dotted key of a dictionary (tests keep both languages equal). */
+export function keysOf(dict: Dict, at = ''): string[] {
+  return Object.entries(dict).flatMap(([k, v]) => (typeof v === 'string' ? [`${at}${k}`] : keysOf(v, `${at}${k}.`)));
+}
+
+export interface ShopT {
+  lang: ShopLang;
+  /** The words at a key, with {slots} filled. A missing key shows the key itself, so a gap is visible, never blank. */
+  (key: string, vars?: Vars): string;
+  /** Words from a setting: a dictionary key, or the owner's own {en, bn}. */
+  label(l: ShopLabel | undefined, vars?: Vars, fallbackKey?: string): string;
+  /** Whether the dictionary (or the owner) has words at a key. */
+  has(key: string): boolean;
+}
+
+export function shopT(lang: ShopLang, overrides: LabelOverrides | null = null): ShopT {
+  const dict = SHOP_DICTS[lang];
+  const own = (key: string) => overrides?.[key]?.[lang];
+  const raw = (key: string) => own(key) ?? lookup(dict, key) ?? (lang === 'bn' ? lookup(SHOP_DICTS.en, key) : undefined);
+  const t = ((key: string, vars: Vars = {}) => fill(raw(key) ?? key, vars)) as ShopT;
+  t.lang = lang;
+  t.has = (key) => raw(key) !== undefined;
+  t.label = (l, vars = {}, fallbackKey) => {
+    if (!l) return fallbackKey ? t(fallbackKey, vars) : '';
+    if ('key' in l) return t(l.key, vars);
+    return fill(l[lang] || l.en, vars);
+  };
+  return t;
+}

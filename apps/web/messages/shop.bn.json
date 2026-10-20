@@ -1,0 +1,179 @@
+{
+  "brand": {
+    "fallback": "আমাদের দোকান"
+  },
+  "meta": {
+    "title": "{store}",
+    "page": "{page} · {store}"
+  },
+  "skip": "মূল অংশে যান",
+  "nav": {
+    "main": "মূল মেনু",
+    "newIn": "নতুন এসেছে",
+    "more": "আরও",
+    "combos": "কম্বো",
+    "sets": "সেট",
+    "buildYourOwnSet": "নিজের সেট বানান",
+    "setsAndCombos": "সেট ও কম্বো",
+    "journal": "জার্নাল",
+    "allNewIn": "সব নতুন",
+    "allStyles": "সব স্টাইল",
+    "styles": "{n}টি স্টাইল",
+    "style": "১টি স্টাইল",
+    "megaShop": "{name} দেখুন",
+    "megaAll": "সব {name}",
+    "shop": "শপ"
+  },
+  "header": {
+    "menu": "মেনু",
+    "search": "সার্চ",
+    "wishlist": "উইশলিস্ট",
+    "wishlistSaved": "উইশলিস্ট, {n}টি রাখা",
+    "account": "অ্যাকাউন্ট",
+    "myAccount": "আমার অ্যাকাউন্ট",
+    "login": "লগ ইন",
+    "bag": "ব্যাগ",
+    "bagItems": "ব্যাগ, {n}টি পণ্য",
+    "waTip": "কোনো সাহায্য লাগবে?",
+    "waLabel": "WhatsApp-এ {tip}",
+    "waMessage": "হ্যালো {store}, আমার একটা প্রশ্ন আছে"
+  },
+  "announce": {
+    "freeDeliveryCod": "{freeOver}-এর উপরে ফ্রি ডেলিভারি · সারা দেশে ক্যাশ অন ডেলিভারি"
+  },
+  "menu": {
+    "title": "মেনু",
+    "close": "বন্ধ করুন",
+    "helpTitle": "সাহায্য",
+    "whatsapp": "WhatsApp-এ মেসেজ দিন",
+    "hotline": "হটলাইন {number}"
+  },
+  "quick": {
+    "search": "সার্চ",
+    "bag": "ব্যাগ",
+    "wish": "উইশলিস্ট",
+    "account": "অ্যাকাউন্ট"
+  },
+  "help": {
+    "track": "অর্ডার ট্র্যাক",
+    "delivery": "ডেলিভারি",
+    "exchange": "এক্সচেঞ্জ ও রিটার্ন",
+    "questions": "প্রশ্ন ও উত্তর",
+    "contactUs": "যোগাযোগ করুন",
+    "sizeGuide": "সাইজ গাইড",
+    "payment": "পেমেন্টের উপায়",
+    "faq": "প্রশ্ন-উত্তর",
+    "story": "আমাদের গল্প",
+    "contact": "যোগাযোগ",
+    "careers": "চাকরি",
+    "privacy": "প্রাইভেসি",
+    "terms": "শর্তাবলি",
+    "trackShort": "অর্ডার ট্র্যাক",
+    "exchangeShort": "এক্সচেঞ্জ"
+  },
+  "bottom": {
+    "label": "নিচের মেনু",
+    "home": "হোম",
+    "shop": "শপ",
+    "sets": "সেট",
+    "bag": "ব্যাগ",
+    "account": "অ্যাকাউন্ট"
+  },
+  "footer": {
+    "promise": {
+      "exchange": "সাইজ এক্সচেঞ্জ| {windowHours} ঘণ্টায়",
+      "cod": "ক্যাশ অন| ডেলিভারি",
+      "secure": "নিরাপদ| পেমেন্ট",
+      "original": "১০০%| অরিজিনাল"
+    },
+    "col": {
+      "shop": "শপ",
+      "help": "সাহায্য",
+      "about": "{store}"
+    },
+    "join": {
+      "title": "যোগ দিন",
+      "label": "নতুন কালেকশন সবার আগে",
+      "placeholder": "আপনার মোবাইল নম্বর",
+      "button": "যোগ দিন",
+      "note": "অফার আর নতুন পণ্যের খবর SMS আর WhatsApp-এ। যখন খুশি বন্ধ করুন।",
+      "thanks": "ধন্যবাদ — নতুন কালেকশন সবার আগে পাবেন",
+      "empty": "আপনার মোবাইল নম্বর লিখুন, যেমন 01XXXXXXXXX।",
+      "short": "১১ সংখ্যার মোবাইল নম্বর লিখুন, যেমন 01XXXXXXXXX।",
+      "prefix": "মোবাইল নম্বর ০১৩ থেকে ০১৯ দিয়ে শুরু হয়। ১১ সংখ্যার মোবাইল নম্বর লিখুন, যেমন 01XXXXXXXXX।",
+      "thanksTo": "ধন্যবাদ — নতুন কালেকশনের খবর যাবে {number} নম্বরে"
+    },
+    "whatsapp": "WhatsApp-এ মেসেজ দিন",
+    "waMessage": "হ্যালো {store}",
+    "hotline": "হটলাইন",
+    "social": "{network}-এ {store}",
+    "pay": "যেভাবে টাকা দেওয়া যায়",
+    "copyright": "© {year} {store}",
+    "dbid": "DBID: {id}",
+    "tradeLicence": "ট্রেড লাইসেন্স: {id}",
+    "whatsappDesk": "হোয়াটসঅ্যাপে মেসেজ দিন",
+    "socialOff": "ঠিকানা এখনো যোগ হয়নি"
+  },
+  "pay": {
+    "bkash": "বিকাশ",
+    "nagad": "নগদ",
+    "visa": "ভিসা",
+    "mc": "মাস্টারকার্ড",
+    "cod": "ক্যাশ অন ডেলিভারি",
+    "rocket": "রকেট",
+    "amex": "আমেরিকান এক্সপ্রেস",
+    "ssl": "এসএসএলকমার্জ",
+    "upay": "উপায়",
+    "bank": "ইন্টারনেট ব্যাংকিং"
+  },
+  "social": {
+    "facebook": "ফেসবুক",
+    "instagram": "ইনস্টাগ্রাম",
+    "youtube": "ইউটিউব",
+    "tiktok": "টিকটক"
+  },
+  "lang": {
+    "toBn": "Language: English. বাংলায় দেখুন",
+    "toEn": "ভাষা: বাংলা। Switch to English",
+    "en": "EN",
+    "bn": "বাং",
+    "sep": "|"
+  },
+  "checkout": {
+    "backToBag": "ব্যাগে ফিরুন",
+    "home": "হোম",
+    "stepBag": "ব্যাগ",
+    "stepDelivery": "ডেলিভারি ও পেমেন্ট",
+    "stepDone": "শেষ",
+    "secure": "নিরাপদ",
+    "emptyTitle": "আপনার ব্যাগ খালি",
+    "emptyText": "আগে ব্যাগে কিছু রাখুন, তারপর চেকআউটে আসুন।",
+    "startShopping": "কেনাকাটা শুরু করুন",
+    "goToBag": "ব্যাগে যান",
+    "title": "চেকআউট"
+  },
+  "notFound": {
+    "title": "পেজ পাওয়া যায়নি",
+    "text": "এই পেজটা খুঁজে পাইনি। হয়তো সরে গেছে।",
+    "home": "হোমে যান",
+    "searchLabel": "পণ্য খুঁজুন",
+    "searchPlaceholder": "পোলো, পাঞ্জাবি, হুডি খুঁজুন…",
+    "search": "সার্চ",
+    "waLine": "নির্দিষ্ট কিছু খুঁজছেন?",
+    "waButton": "WhatsApp-এ জিজ্ঞেস করুন",
+    "waMessage": "হ্যালো {store}, আপনার সাইটে একটা পেজ খুঁজে পাইনি"
+  },
+  "soon": {
+    "title": "শিগগির আসছে",
+    "text": "এই পেজটা তৈরি হচ্ছে। খুব শিগগির এখানেই খুলবে।",
+    "home": "হোমে যান"
+  },
+  "home": {
+    "shopByCategory": "ক্যাটাগরি",
+    "shopAll": "সব দেখুন"
+  },
+  "fab": {
+    "label": "WhatsApp-এ {store}-কে মেসেজ দিন",
+    "message": "হ্যালো {store}, আপনার সাইটের একটা পণ্য নিয়ে প্রশ্ন আছে"
+  }
+}
