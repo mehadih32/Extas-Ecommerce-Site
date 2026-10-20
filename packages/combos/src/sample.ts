@@ -8,6 +8,7 @@ import { SAMPLE_PACK_KEY } from '@extas/seed';
 import { z } from 'zod';
 import sampleJson from '../data/sample-combos.json';
 import { TX, type CombosDeps, type Who } from './context';
+import { syncRule } from './auto-rules';
 import { CombosError } from './errors';
 import { FIXED_COMBO_TYPES, pieceCountOf } from './model';
 
@@ -32,6 +33,25 @@ const sampleSchema = z
         })
         .strict(),
     ),
+    rules: z
+      .array(
+        z
+          .object({
+            key: z.string().startsWith('sample-'),
+            nameEn: z.string().startsWith('Sample '),
+            nameBn: z.string().optional(),
+            titleEn: z.string().optional(),
+            products: z.array(z.string()).min(1),
+            pieces: z.union([z.literal(2), z.literal(3)]),
+            pairing: z.enum(['STYLE', 'ACROSS', 'ANY']),
+            priceMode: z.enum(['FIXED', 'PERCENT']),
+            samplePercentOff: z.int().min(1).optional(),
+            samplePriceMinor: z.int().min(1).optional(),
+            on: z.boolean(),
+          })
+          .strict(),
+      )
+      .default([]),
   })
   .strict();
 
@@ -42,6 +62,7 @@ export class SampleCombosRefused extends Error {}
 export interface SampleCombosReport {
   storeId: number;
   combos: number;
+  rules: number;
 }
 
 /** The store the sample catalogue seed made, or a refusal. */
@@ -92,5 +113,41 @@ export async function seedSampleCombos(deps: CombosDeps): Promise<SampleCombosRe
     }, TX);
     made++;
   }
-  return { storeId, combos: made };
+  let rules = 0;
+  for (const r of sampleCombos.rules) {
+    if (await deps.db.comboAutoRule.findFirst({ where: { storeId, key: r.key }, select: { id: true } })) continue;
+    const ps = await deps.db.product.findMany({ where: { storeId, slug: { in: r.products } }, select: { id: true, slug: true } });
+    const ids = r.products.map((slug) => {
+      const p = ps.find((x) => x.slug === slug);
+      if (!p) throw new CombosError('NOT_FOUND', 'a sample rule names a product the sample store does not have', [slug]);
+      return p.id;
+    });
+    const id = await deps.db.$transaction(async (tx) => {
+      const row = await tx.comboAutoRule.create({
+        data: {
+          storeId,
+          key: r.key,
+          name: r.nameEn,
+          nameBn: r.nameBn ?? null,
+          titleEn: r.titleEn ?? null,
+          sourceType: 'products',
+          sourceIds: [],
+          productIds: ids,
+          pieces: r.pieces,
+          pairing: r.pairing,
+          priceMode: r.priceMode,
+          priceMinor: r.priceMode === 'FIXED' ? (r.samplePriceMinor ?? null) : null,
+          percentOff: r.priceMode === 'PERCENT' ? (r.samplePercentOff ?? null) : null,
+          noSinglePiece: true,
+          status: r.on ? 'RUNNING' : 'PAUSED',
+        },
+        select: { id: true },
+      });
+      await audit(tx, who.actor, { storeId, action: 'combo.rule.sample', entityType: 'ComboAutoRule', entityId: row.id, after: { key: r.key } }, who.ctx);
+      return row.id;
+    }, TX);
+    await syncRule(deps, storeId, id);
+    rules++;
+  }
+  return { storeId, combos: made, rules };
 }

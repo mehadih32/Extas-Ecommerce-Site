@@ -1,5 +1,5 @@
 {
-  "$comment": "SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509): made-up combos for the sample store, so the combo screens can be built and tested on real rows. The prices are made-up sample values, never the owner's: his combos and set prices are typed in on /admin/combos (the demo's 4-piece prices are demo defaults, BLOCKED 3). Products are named by their sample slug; colours by their sample key.",
+  "$comment": "SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509): made-up combos for the sample store, so the combo screens can be built and tested on real rows. The prices are made-up sample values, never the owner's: his combos and set prices are typed in on /admin/combos (the demo's 4-piece prices are demo defaults, BLOCKED 3). Rules (auto colour pairs, PR 571) make their pairs when seeded. Products are named by their sample slug; colours by their sample key.",
   "version": 1,
   "marker": "sample-combos-v1",
   "combos": [
@@ -10,8 +10,16 @@
       "descriptionEn": "A polo and a chino, any colours.",
       "type": "TOP_BOTTOM",
       "items": [
-        { "product": "essential-pique-polo", "labelEn": "Polo", "labelBn": "পোলো" },
-        { "product": "slim-chino-trousers", "labelEn": "Chino", "labelBn": "চিনো" }
+        {
+          "product": "essential-pique-polo",
+          "labelEn": "Polo",
+          "labelBn": "পোলো"
+        },
+        {
+          "product": "slim-chino-trousers",
+          "labelEn": "Chino",
+          "labelBn": "চিনো"
+        }
       ],
       "sampleSetPriceMinor": 205000,
       "autoApply": true,
@@ -23,7 +31,12 @@
       "nameBn": "নমুনা ক্রু টি — ৩টা",
       "descriptionEn": "Three crew tees, pick each colour.",
       "type": "FIXED_COLOUR_PACK",
-      "items": [{ "product": "everyday-crew-tee", "quantity": 3 }],
+      "items": [
+        {
+          "product": "everyday-crew-tee",
+          "quantity": 3
+        }
+      ],
       "sampleSetPriceMinor": 149000,
       "autoApply": false,
       "sameColour": true,
@@ -34,11 +47,50 @@
       "nameEn": "Sample shirt + belt",
       "type": "MIXED_SET",
       "items": [
-        { "product": "oxford-cotton-shirt", "colours": ["white", "sky"] },
-        { "product": "leather-look-belt" }
+        {
+          "product": "oxford-cotton-shirt",
+          "colours": [
+            "white",
+            "sky"
+          ]
+        },
+        {
+          "product": "leather-look-belt"
+        }
       ],
       "sampleSetPriceMinor": 179000,
       "autoApply": false,
+      "on": false
+    }
+  ],
+  "rules": [
+    {
+      "key": "sample-polo-pairs",
+      "nameEn": "Sample polo pairs",
+      "nameBn": "নমুনা পোলোর জোড়া",
+      "titleEn": "Sample polo",
+      "products": [
+        "essential-pique-polo",
+        "contrast-collar-polo"
+      ],
+      "pieces": 2,
+      "pairing": "STYLE",
+      "priceMode": "PERCENT",
+      "samplePercentOff": 10,
+      "on": true
+    },
+    {
+      "key": "sample-shirt-tee",
+      "nameEn": "Sample shirt + tee sets",
+      "titleEn": "Shirt + tee",
+      "products": [
+        "oxford-cotton-shirt",
+        "everyday-crew-tee"
+      ],
+      "pieces": 2,
+      "pairing": "ACROSS",
+      "priceMode": "FIXED",
+      "samplePriceMinor": 180000,
       "on": false
     }
   ]

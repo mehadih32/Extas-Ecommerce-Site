@@ -74,6 +74,13 @@ const PATHS = {
     </>
   ),
   right: <path d="M9 6l6 6-6 6" />,
+  // S03 · PR 571 — copy a combo page's link (demo 02-core.js ICONS.link).
+  link: (
+    <>
+      <path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1" />
+      <path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1" />
+    </>
+  ),
   // S09 · PR 205–207 — the stock pages: re-sync (two arrows round), a barcode (stock count), a list of movements.
   sync: <path d="M20 11a8 8 0 00-14.3-4.6L4 8M4 4v4h4M4 13a8 8 0 0014.3 4.6L20 16M20 20v-4h-4" />,
   barcode: <path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12" />,

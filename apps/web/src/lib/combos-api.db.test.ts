@@ -1,11 +1,13 @@
-// S03 · PR 90 — the combo admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
-// skipped without TEST_DATABASE_ADMIN_URL): login and same-site checks, a new fixed combo as a draft, the live
-// preview, changing it, the card's price box, switches, switching on and off, and the path table's refusals.
+// S03 · PR 90, 571 — the combo admin API end to end on a real PostgreSQL (a throwaway database with the sample
+// catalogue; skipped without TEST_DATABASE_ADMIN_URL): login and same-site checks, a new fixed combo as a draft, the
+// live preview, changing it, the card's price box, switches, switching on and off, and the path table's refusals; then
+// an auto colour-pair rule: the wizard's live count, a draft, switching it on, dates, options, "add 1 more", its
+// pairs, and the shop's default templates.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/testing';
 import { seedSample } from '@extas/seed';
-import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { combosRoute } from './combos-api';
@@ -36,6 +38,7 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     t = await createTestDatabase('combos_api');
     await seedSample(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
     await syncAuth(t.prisma);
     await createFirstOwner(t.prisma, defaultSecurityPolicy(), { email: 'owner@example.com', displayName: 'Sample owner', password: OWNER_PW, passwordChosenByOwner: true });
     deps = { db: t.prisma, resolver: new SettingsResolver(prismaBackend(t.prisma), registry), vault: null };
@@ -91,5 +94,48 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     expect(list.body.combos.map((c: { slug: string }) => c.slug)).toContain(combo.slug);
     expect((await api('GET', [id])).body.combo.id).toBe(id);
     expect(await t.prisma.auditLog.count({ where: { entityId: id } })).toBeGreaterThan(3);
+  });
+
+  it('PR 571 — an auto rule: live count, a draft, on, dates, options, add 1 more, its pairs, the shop templates', async () => {
+    const rule = { key: 'api-polo-2', nameEn: 'API polo pairs', productIds: [ids['essential-pique-polo'], ids['contrast-collar-polo']], pieces: 2, pairing: 'STYLE', priceMode: 'PERCENT', percentOff: 10 };
+    const pv = await api('POST', ['rules', 'preview'], { rule });
+    expect(pv.status).toBe(200);
+    expect(pv.body.preview.counts.made).toBeGreaterThan(0);
+    expect(await t.prisma.comboAutoRule.count({ where: { key: rule.key } })).toBe(0);
+    expect((await api('GET', ['rules', 'preview'])).status).toBe(405);
+
+    const made = await api('POST', ['rules'], { rule });
+    expect(made.status).toBe(201);
+    const r = made.body.rule;
+    expect(r.state).toBe('draft');
+    expect(r.counts.made).toBe(pv.body.preview.counts.made);
+    expect((await api('POST', ['rules'], { rule })).body.error).toBe('SLUG_TAKEN');
+    expect((await api('PUT', ['rules', r.id], { rule: { ...rule, key: 'api-other' }, version: r.version })).body.error).toBe('KEY_FIXED');
+
+    expect((await api('POST', ['rules', r.id, 'active'], {})).body.error).toBe('INVALID_INPUT');
+    const on = await api('POST', ['rules', r.id, 'active'], { on: true });
+    expect(on.body.rule.state).toBe('live');
+    const dated = await api('POST', ['rules', r.id, 'dates'], { startsOn: '2099-01-01', endsOn: null });
+    expect(dated.body.rule.state).toBe('soon');
+    expect((await api('POST', ['rules', r.id, 'dates'], { startsOn: null, endsOn: null })).body.rule.state).toBe('live');
+    expect((await api('POST', ['rules', r.id, 'options'], { noSinglePiece: false })).body.rule.noSinglePiece).toBe(false);
+    const up = await api('POST', ['rules', r.id, 'upsell'], { on: true, nameEn: 'API polo pairs + 1' });
+    expect(up.body.rule.addOneMore).toBe(true);
+    expect(up.body.rule.upsell.key).toBe('api-polo-2-3');
+
+    const pairs = await api('GET', ['rules', r.id, 'pairs']);
+    expect(pairs.body.pairs).toHaveLength(r.counts.made);
+    expect((await api('GET', ['rules', r.id])).body.rule.id).toBe(r.id);
+    expect((await api('GET', ['rules'])).body.rules.map((x: { key: string }) => x.key)).toEqual(expect.arrayContaining(['api-polo-2', 'api-polo-2-3']));
+    expect((await api('GET', ['rules', 'not-a-uuid'])).status).toBe(404);
+
+    const off = await api('POST', ['rules', r.id, 'active'], { on: false });
+    expect(off.body.rule.state).toBe('off');
+    expect(await t.prisma.combo.count({ where: { autoRuleId: r.id } })).toBe(r.counts.made);
+
+    expect((await api('GET', ['templates'])).body.templates).toMatchObject({ list: expect.any(String), page: expect.any(String), bag: expect.any(String) });
+    const tpl = await api('POST', ['templates'], { list: 'L2' });
+    expect(tpl.body).toMatchObject({ templates: { list: 'L2' } });
+    expect((await api('POST', ['templates'], { list: 'NOPE' })).status).toBe(400);
   });
 });
