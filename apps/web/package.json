@@ -15,6 +15,7 @@
     "@extas/auth": "workspace:*",
     "@extas/catalogue": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/inventory": "workspace:*",
     "@extas/media": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/vault": "workspace:*",
