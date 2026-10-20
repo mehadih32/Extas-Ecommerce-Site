@@ -1,0 +1,33 @@
+{
+  "name": "@extas/inventory",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Inventory and ERP sync (S09): the ERP mode switch (PR 497), the ERP-absent guard (PR 499), the sync layer with retry, backoff and the error surface (PR 194), the stock pull per SKU / colour / size (PR 195), company and warehouse mapping per store (PR 196) and stock locations with the damaged bin (PR 201), on the generic ERP adapter (PR 498, @extas/adapters).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/adapters": "workspace:*",
+    "@extas/auth": "workspace:*",
+    "@extas/catalogue": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

@@ -63,6 +63,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // PR 497, 498 (CN-005) — the shop's own ERP: its address, API key and webhook secret. Runs on the practice ERP
+  // (MOCK) until these are entered and the Test button (`/health`) passes. One ERP connection is on at a time.
+  {
+    id: 'extasErp',
+    kind: 'ERP',
+    provider: 'extasErp',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }, { field: 'webhookSecret' }],
+    config: [{ field: 'baseUrl' }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
   {
     id: 'localDisk',
     kind: 'STORAGE',

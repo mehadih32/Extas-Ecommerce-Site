@@ -11,6 +11,7 @@ import { messages, pair, type MessageTree } from './messages';
 import { mediaSettings } from './registry-media';
 import { publishSettings } from './registry-publish';
 import { merchSettings } from './registry-merch';
+import { inventorySettings } from './registry-inventory';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1100,6 +1101,8 @@ export const registry = {
     sortOrder: 190,
     version: 5,
   }),
+  // ---- S09 · PR 194, 195, 196, 201, 497–499 · ERP sync and stock locations (registry-inventory.ts, version 10). ----
+  ...inventorySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

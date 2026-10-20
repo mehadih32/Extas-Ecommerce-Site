@@ -10,7 +10,8 @@
     "staff": "Staff and roles",
     "security": "Security and history",
     "media": "Images and media",
-    "catalogue": "Catalogue"
+    "catalogue": "Catalogue",
+    "inventory": "Stock and ERP"
   },
   "permissions": {
     "settings": {
@@ -47,6 +48,11 @@
       "publish": "Put products on the shop and take them off (only when the publish checklist passes)",
       "import": "Bring in products from a CSV file (preview first; nothing is removed)",
       "export": "Download the catalogue as a CSV file (never cost prices)"
+    },
+    "inventory": {
+      "read": "See stock per colour and size, warehouses, locations and the ERP connection",
+      "locations": "Add, rename and archive warehouses and locations (incl. the damaged bin), link them to ERP warehouses",
+      "erp": "Choose where a store's stock and orders come from (our ERP, another ERP, none) and its ERP company and warehouse"
     }
   },
   "totp": {

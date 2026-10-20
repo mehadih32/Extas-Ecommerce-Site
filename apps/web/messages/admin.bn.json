@@ -137,6 +137,15 @@
         "secretAccessKey": "Secret access key"
       }
     },
+    "extasErp": {
+      "name": "আমাদের ERP",
+      "desc": "স্টক আর ভ্যারিয়েন্ট ERP থেকে আসে, অর্ডার ERP-তে যায়। ঠিকানা আর চাবি না দেওয়া পর্যন্ত অনুশীলন মোডে চলে",
+      "fields": {
+        "baseUrl": "ERP-এর ঠিকানা (https://…)",
+        "apiKey": "API চাবি (ERP-এর E-commerce পাতা থেকে)",
+        "webhookSecret": "Webhook গোপন কোড (একই পাতা থেকে)"
+      }
+    },
     "localDisk": {
       "name": "সার্ভারের ডিস্ক",
       "desc": "অন্য কোনো স্টোরেজ চালু না থাকলে ছবি ও মিডিয়া সার্ভারের নিজের ডিস্কে থাকে"

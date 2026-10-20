@@ -184,6 +184,13 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/catalogue test
+      # S09 · PR 497, 498, 499, 194, 195, 196, 201 — inventory and ERP sync on the practice ERP (no key, no network):
+      # the mode switch, the ERP-absent guard, retries and the error surface, the stock pull per SKU, company and
+      # warehouse mapping, and locations with the damaged bin. Throwaway databases.
+      - name: Inventory tests on PostgreSQL (S09 · PR 497, 498, 499, 194, 195, 196, 201)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/inventory test
       - name: Admin API tests on PostgreSQL (incl. the product admin routes, PR 21, 26, 29, 35)
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas

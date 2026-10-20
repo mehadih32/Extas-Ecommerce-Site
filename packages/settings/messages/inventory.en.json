@@ -1,0 +1,90 @@
+{
+  "groups": {
+    "erp": "ERP connection",
+    "inventory": "Stock locations"
+  },
+  "erp": {
+    "defaultMode": {
+      "label": "Where stock and orders come from",
+      "help": "Our ERP, another ERP, or no ERP. A store that has its own choice on the stock page keeps it. With an ERP but no keys yet, the shop practises against a pretend ERP and its stock stays as it is."
+    },
+    "sync": {
+      "requestTimeoutSeconds": {
+        "label": "Wait for the ERP (seconds)",
+        "help": "How long one call to the ERP may take before it counts as failed."
+      },
+      "maxAttempts": {
+        "label": "Tries per ERP call",
+        "help": "When the ERP is busy or does not answer, try again up to this many times in total. A wrong key is never tried again."
+      },
+      "backoffBaseMs": {
+        "label": "First pause before trying again (milliseconds)",
+        "help": "Each further pause is twice as long, up to the longest pause below."
+      },
+      "backoffMaxMs": {
+        "label": "Longest pause before trying again (milliseconds)",
+        "help": "Also the most the shop waits when the ERP asks it to come back later."
+      },
+      "backoffJitter": {
+        "label": "Spread the pauses a little",
+        "help": "Waits a random part of each pause, so many tries do not all hit the ERP at the same moment."
+      },
+      "pageSize": {
+        "label": "Rows per page from the ERP",
+        "help": "How many stock rows the shop asks for in one call."
+      },
+      "maxPagesPerRun": {
+        "label": "Most pages in one stock pull",
+        "help": "A safety stop. The next pull carries on where this one stopped."
+      },
+      "stockPollMinutes": {
+        "label": "Check the ERP's stock every (minutes)",
+        "help": "The shop asks for stock that changed since the last check, so a missed message from the ERP never leaves stock wrong."
+      },
+      "updatedSinceOverlapSeconds": {
+        "label": "Read back a little further (seconds)",
+        "help": "Each check also reads this much before the last one, in case the two clocks differ. Rows read twice change nothing."
+      }
+    },
+    "webhook": {
+      "maxAgeSeconds": {
+        "label": "Oldest message accepted from the ERP (seconds)",
+        "help": "A signed message older than this is refused, so an old one cannot be sent again."
+      }
+    },
+    "mock": {
+      "stockEnabled": {
+        "label": "Use the pretend ERP's stock",
+        "help": "Only for tests and demos. Off: while there are no ERP keys, the shop's stock is never touched."
+      }
+    },
+    "liveCheck": {
+      "timeoutSeconds": {
+        "label": "Live stock check at checkout (seconds)",
+        "help": "The last check before an order asks the ERP once and waits this long. No answer: the shop uses its own copy of the stock, so checkout never waits."
+      }
+    }
+  },
+  "inventory": {
+    "locations": {
+      "defaults": {
+        "label": "Locations every new warehouse gets",
+        "help": "Code, kind and name of each. The damaged bin is one of them."
+      },
+      "requireDamagedBin": {
+        "label": "Every warehouse keeps a damaged bin",
+        "help": "The last damaged bin of a warehouse cannot be archived. Damaged stock is never sold."
+      }
+    },
+    "sellableLocationKinds": {
+      "label": "Sell from these kinds of location",
+      "help": "Stock in these locations counts as available on the shop. The damaged bin never counts."
+    },
+    "erp": {
+      "stockLocationCode": {
+        "label": "Location that receives the ERP's stock",
+        "help": "In each warehouse linked to an ERP warehouse, the ERP's stock numbers go into the location with this code."
+      }
+    }
+  }
+}

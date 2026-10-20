@@ -36,6 +36,12 @@ export const PERMISSIONS = {
   // take the catalogue out as a file.
   'catalogue.import': { group: 'catalogue' },
   'catalogue.export': { group: 'catalogue' },
+  // S09 · PR 195, 196, 201, 497 — stock and the ERP: see stock, locations and the ERP status; add, rename and archive
+  // warehouses and locations (the damaged bin among them) and link them to ERP warehouses; switch a store's ERP mode
+  // and set its ERP company and warehouse. Stock numbers themselves come from the ERP and are never typed in.
+  'inventory.read': { group: 'inventory' },
+  'inventory.locations': { group: 'inventory' },
+  'inventory.erp': { group: 'inventory' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
