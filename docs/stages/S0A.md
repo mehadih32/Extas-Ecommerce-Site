@@ -25,7 +25,7 @@
 | [4](#pr-4) | Docker and Docker Compose, with the project's network and volume layout | Live · 2026-10-20 | Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে। |
 | [5](#pr-5) | PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum | Live · 2026-10-20 | ডাটাবেস (PostgreSQL 17) সার্ভারের মাপে টিউন করা; ধীর কোয়েরি লগ হয়। |
 | [6](#pr-6) | Redis, and BullMQ queues with their dead-letter handling | Live · 2026-10-20 | Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। |
-| [7](#pr-7) | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers | Live · 2026-10-20 | HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। |
+| [7](#pr-7) | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers | Live · 2026-10-20 | HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। সাইট-দেখার পাসওয়ার্ড একবার দিলেই ব্রাউজার মনে রাখে, বারবার চায় না। |
 | [8](#pr-8) | Nightly encrypted backup of database, uploads and configuration to Google Drive, with one-command restore | Live · 2026-10-20 | প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর। |
 | [9](#pr-9) | Monitoring — uptime, queue depth, error rate, disk and memory, alerting to Telegram | Live · 2026-10-20 | প্রতি মিনিটে সার্ভার চেক হয়; Telegram চাবি দিলে সমস্যার খবর সেখানে যাবে। |
 | [10](#pr-10) | k6 performance baseline, recorded as the number every later change is measured against | Live · 2026-10-20 | সার্ভারের গতির প্রথম মাপ রেকর্ড করা; বাংলায় সার্ভারের গাইড। |
@@ -181,12 +181,13 @@
 
 **Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers**
 
-**বাংলায়:** HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়।
+**বাংলায়:** HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। সাইট-দেখার পাসওয়ার্ড একবার দিলেই ব্রাউজার মনে রাখে, বারবার চায় না।
 
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500)
+  - Build status row: Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box
+  - GitHub pull request #19, 20 Oct
   - GitHub pull request #2 (commit `3a8d198`), 20 Oct 02:46 (Dhaka)
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers.
@@ -195,6 +196,8 @@
   - **19 Oct 23:33** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 19 Oct 23:33 (owner server spec):** Caddy stays (not Nginx) — automatic SSL renewal on all three domains, 1 GB, 1 CPU; **Cloudflare in front in Full (strict) mode** with a Cloudflare Origin certificate (PR 362)
   - **19 Oct 23:33** · [Scope added to existing PRs (owner server spec, CN-001; review/SERVER-SETUP-SPEC-OWNER.md; new PR 601–604)](../MASTER-REGISTER.md#how-this-reached-604): **The filing** — the owner approved every point of the analysis at 23:33 and said: where two decisions conflict, take the best one. Four new PRs (601 NVMe boot unit and 604 hardware-aware profile in S0A, 603 database performance pack in S00, 602 four-layer cache in S02); the rest is dated scope on the PR lines below (PR 1, 3–10, 13, 18, 22, 24, 37, 72, 88, 234, 519). **Every server item is required before go-live** — the owner's "later" list (monitoring page, monthly speed measurement, report pre-computation) is not deferred; items that need the app schema are built with their stage and marked *pre-launch required*. **Build order inside S0A:** 1 record specs (PR 1) → 2 hardening and UFW (PR 3) → 3 NVMe boot unit (PR 601) → 4 data-disk LVM (PR 1/3) → 5 Docker (PR 4) → 6 hardware-aware profile (PR 604) → 7 Postgres, PgBouncer and Redis tuning (PR 5, 6) → 8 Caddy, Cloudflare and Origin …
   - **20 Oct** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 20 Oct 2026 (CN-007): the preview password is never sent through chat, logs or artifacts; the owner reads it on the VM (`extas-preview-login`, `docs/owner/PREVIEW-LOGIN.md`), and `server-setup` can rotate it.**
+- **What was built** (from the Build status row):
+  - Names in the code: `EXTAS_PREVIEW_COOKIE_DAYS`
 - **Owning agent:** Prohori
 - **Mentions:** [PR 362](S17.md#pr-362), [PR 493](S00.md#pr-493), [PR 500](S00.md#pr-500)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [Blueprint: A2.9.8 CDN — Cloudflare (owner spec §4; PR 362, 7)](../BLUEPRINT.md#a298-cdn--cloudflare-owner-spec-4-pr-362-7) · [Blueprint: A2.9.14 Security (owner spec §10; PR 3, 7)](../BLUEPRINT.md#a2914-security-owner-spec-10-pr-3-7) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)

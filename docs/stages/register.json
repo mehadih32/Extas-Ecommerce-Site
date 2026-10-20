@@ -2201,8 +2201,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500)",
+    "note": "Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box",
     "github": [
+     "#19, 20 Oct",
      "#2 (commit `3a8d198`), 20 Oct 02:46 (Dhaka)",
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
     ]
@@ -2211,7 +2212,9 @@
     "routes": [],
     "settings": [],
     "code": [],
-    "names": [],
+    "names": [
+     "EXTAS_PREVIEW_COOKIE_DAYS"
+    ],
     "tests": []
    },
    "updates": [
@@ -2252,7 +2255,7 @@
      "anchor": "a2914-security-owner-spec-10-pr-3-7"
     }
    ],
-   "bn": "HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়।",
+   "bn": "HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। সাইট-দেখার পাসওয়ার্ড একবার দিলেই ব্রাউজার মনে রাখে, বারবার চায় না।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S0A.md#pr-7"
@@ -2826,8 +2829,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "`packages/auth`: staff login (e-mail + password, scrypt hash, wrong-try pause, login alerts), customer password login per store; opaque session tokens stored hashed in httpOnly `__Host-` cookies, idle and total time limits, device list, \"log out everywhere\"; 2FA by authenticator app (seed in the vault, owner setting, default off); every rule a `security.*` setting; first owner set up on the server (`auth create-owner`), no owner data in the repo. SMS code on a new device comes with PR 130",
+    "note": "`packages/auth`: staff login (e-mail + password, scrypt hash, wrong-try pause, login alerts), customer password login per store; opaque session tokens stored hashed in httpOnly `__Host-` cookies, idle and total time limits, device list, \"log out everywhere\"; 2FA by authenticator app (seed in the vault, owner setting, default off); every rule a `security.*` setting; first owner set up on the server (`auth create-owner`), no owner data in the repo. SMS code on a new device comes with PR 130. 20 Oct (owner 15:26): `auth reset-owner` + `owner-reset.yml`, a new first password from the server when the owner cannot sign in",
     "github": [
+     "#19, 20 Oct",
      "#18, 20 Oct",
      "#9 (commit `fa6b77e`), 20 Oct 05:09 (Dhaka)"
     ]
@@ -2838,11 +2842,13 @@
      "security.*"
     ],
     "code": [
-     "packages/auth"
+     "packages/auth",
+     "owner-reset.yml"
     ],
     "names": [
      "__Host-",
-     "auth create-owner"
+     "auth create-owner",
+     "auth reset-owner"
     ],
     "tests": []
    },
@@ -2859,7 +2865,7 @@
     130
    ],
    "blueprint": [],
-   "bn": "স্টাফ আর কাস্টমার লগইন, নিরাপদ সেশন, চাইলে 2-ধাপের লগইন।",
+   "bn": "স্টাফ আর কাস্টমার লগইন, নিরাপদ সেশন, চাইলে 2-ধাপের লগইন। ঢুকতে না পারলে সার্ভার থেকে নতুন প্রথম পাসওয়ার্ড বানানো যায়।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S00.md#pr-15"

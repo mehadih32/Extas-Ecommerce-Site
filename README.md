@@ -30,6 +30,7 @@ documents to it ([how](#how-it-is-built)).
 | Date | Problem | Visitors hit | Status |
 |---|---|---|---|
 | 20 Oct | Admin: right after signing in, the page said "This page couldn't load". Cause: a fresh installation had no mother store, and every admin page works on it | The owner (first sign-in) | **Fixed** in #19 (PR 508: the migrate step makes the mother store; PR 4: CI signs in end to end before every deploy) |
+| 20 Oct | Admin: the owner could not sign in with his own password, and the browser's "Sign in" box kept coming up. Cause: the sign-in request went out without the preview login, so the preview gate asked again and the form said "not right" | The owner | **Fixed** in #19 (PR 7: the preview login is asked once, then a cookie; PR 15: a new first password from the server when he cannot sign in, `owner-reset.yml`) |
 | — | Customer problems fill this list automatically once the shop's checkout is live on new.extas.com.bd. | — | — |
 
 ## Status dashboard
@@ -421,7 +422,10 @@ catalogue is code ([`packages/auth/src/catalogue.ts`](packages/auth/src/catalogu
 role always holds every permission; nobody grants more than they hold; the last owner cannot be paused or removed;
 roles are archived, never deleted; every staff/role change goes to the append-only audit log.
 The first owner account is opened on the server by [`owner-account.yml`](.github/workflows/owner-account.yml)
-(e-mail masked, first password made on the VM, read with `/usr/local/sbin/extas-owner-login`; a second run refuses).
+(e-mail masked, first password made on the VM, read with `/usr/local/sbin/extas-owner-login`; a second run refuses). When the owner cannot
+sign in, [`owner-reset.yml`](.github/workflows/owner-reset.yml) gives his account a new first password the same way
+(`infra/server/bin/extas-owner-reset`: sessions ended, a wrong-try wait lifted, two-step login kept) and its report
+says why the sign-ins failed (counts only).
 
 | Route | Purpose |
 |---|---|
@@ -752,7 +756,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #19 | PR [208–219](docs/stages/S10.md), [594](docs/stages/S21.md#pr-594), [509](docs/stages/S00.md#pr-509), [508](docs/stages/S00.md#pr-508), [4](docs/stages/S0A.md#pr-4), [17](docs/stages/S00.md#pr-17) | 20 Oct | Admin sign-in fixed: a fresh installation gets its mother store in the migrate step (PR [508](docs/stages/S00.md#pr-508)), and CI signs in end to end on the production images before every deploy (PR [4](docs/stages/S0A.md#pr-4)); S10 Smart Rules complete (engine, rule admin with live preview, delivery/exchange/set/discount/festive rules, coupons, notices and pop-ups, conflicts, history, simulation); `readme-guard` CI check; store-settings falls back to the newest migrate image; `ci.yml` parses again (PR [17](docs/stages/S00.md#pr-17)), so CI and deploys run |
+| #19 | PR [208–219](docs/stages/S10.md), [594](docs/stages/S21.md#pr-594), [509](docs/stages/S00.md#pr-509), [508](docs/stages/S00.md#pr-508), [4](docs/stages/S0A.md#pr-4), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [7](docs/stages/S0A.md#pr-7) | 20 Oct | Admin sign-in fixed: a fresh installation gets its mother store in the migrate step (PR [508](docs/stages/S00.md#pr-508)), and CI signs in end to end on the production images before every deploy (PR [4](docs/stages/S0A.md#pr-4)); S10 Smart Rules complete (engine, rule admin with live preview, delivery/exchange/set/discount/festive rules, coupons, notices and pop-ups, conflicts, history, simulation); `readme-guard` CI check; store-settings falls back to the newest migrate image; `ci.yml` parses again (PR [17](docs/stages/S00.md#pr-17)), so CI and deploys run; the owner's way back in when he cannot sign in: `owner-reset.yml` gives his account a new first password on the server (PR [15](docs/stages/S00.md#pr-15)) |
 | #18 | PR [509](docs/stages/S00.md#pr-509), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [4](docs/stages/S0A.md#pr-4) + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
 | direct | CN-011: README as the A-to-Z front page; docs on the server and in backups | 20 Oct | This page rewritten as the full front page, `docs/README.md` index, CN-011 in blueprint and register, CLAUDE.md rules |
 | direct `f3822d0` | CN-009: owner answers (Note 52) | 12:22 | Watermark text, photos never deleted, honest "was" price, defaults; owner data is never a blocker |
