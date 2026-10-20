@@ -14,6 +14,7 @@ write_stack_env() {
   # Rotation (workflow input rotate_staging_password): drop the old preview password so a new one is generated.
   if [ "${ROTATE_STAGING:-no}" = yes ] && [ -f "$s/staging.env" ]; then sed -i '/^STAGING_PASSWORD=/d' "$s/staging.env"; fi
   gen_secret "$s/staging.env" STAGING_PASSWORD 20
+  gen_secret "$s/staging.env" PREVIEW_COOKIE_SALT 32   # the preview gate's cookie token is made from it (PR 7)
   # shellcheck disable=SC1091
   . "$EXTAS_ROOT/config/profile.env"
   local pg_pw redis_pw meili
@@ -140,7 +141,7 @@ CONF
 }
 
 write_caddy_sites() {
-  local d="$EXTAS_ROOT/config/caddy/sites" pw hash
+  local d="$EXTAS_ROOT/config/caddy/sites" pw hash salt
   install -d -m 0755 "$d" "$EXTAS_ROOT/config/caddy/data" "$EXTAS_ROOT/config/caddy/config" "$EXTAS_ROOT/logs/caddy"
   if [ "$EXTAS_NOINDEX" = "yes" ]; then
     write_file "$d/noindex.caddy" 0644 >/dev/null <<'CONF'
@@ -153,12 +154,16 @@ CONF
     : | write_file "$d/noindex.caddy" 0644 >/dev/null
   fi
   pw="$(secret_get "$EXTAS_SECRETS_DIR/staging.env" STAGING_PASSWORD)"
-  # Re-hash whenever the user or the password changed (a short fingerprint is kept, never the password).
-  local tag; tag="# for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12)"
+  salt="$(secret_get "$EXTAS_SECRETS_DIR/staging.env" PREVIEW_COOKIE_SALT)"
+  # The preview login, then a cookie so the browser is not asked again (auth-block.sh). Re-written whenever the user,
+  # the password or the cookie days changed (a short fingerprint is kept, never the password).
+  local tag token days="${EXTAS_PREVIEW_COOKIE_DAYS:-30}"
+  tag="# preview gate v2 for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12) days $days"
   if [ ! -s "$d/auth.caddy" ] || ! grep -qxF "$tag" "$d/auth.caddy"; then
     hash="$(docker run --rm --quiet "$IMG_CADDY" caddy hash-password --plaintext "$pw")"
-    printf '%s\nbasic_auth {\n\t%s %s\n}\n' "$tag" "$EXTAS_STAGING_USER" "$hash" \
-      | write_file "$d/auth.caddy" 0644 >/dev/null
+    token="$(printf 'extas-preview-cookie:%s:%s' "$salt" "$pw" | sha256sum | cut -c1-64)"
+    bash "$STACK_DIR_REPO/caddy/auth-block.sh" "$tag" "$EXTAS_STAGING_USER" "$hash" "$token" "$days" \
+      | write_file "$d/auth.caddy" 0600 >/dev/null
   fi
   # The upstream belongs to deploy.yml once the app exists; until then the static page.
   if [ ! -f "$d/upstream.caddy" ]; then

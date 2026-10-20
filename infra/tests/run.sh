@@ -162,6 +162,17 @@ rc=0; FAKE_NO_OWNER=1 "${ORS[@]}" >/dev/null 2>&1 || rc=$?
 check "owner reset: a failed reset keeps the old login file" "$rc:$(jq -r .result "$T/root/state/owner-reset.json"):$(sha256sum "$T/root/config/secrets/owner-login.env")" "1:fail:$before"
 rm -rf "$T"
 
+# Preview gate (PR 7, owner 20 Oct 15:36): the login once, then a cookie; the cookie is set only after the login
+# passed (inside the route, after basic_auth), and only a hex token is accepted.
+AB=../stack/caddy/auth-block.sh
+tok="$(printf x | sha256sum | cut -c1-64)"
+blk="$(bash "$AB" "# fp" extas 'HASH' "$tok" 30)"
+want="@preview_needed not header_regexp Cookie (?:^|;\\s*)extas_preview=$tok(?:;|\$)"
+check "gate: cookie match and route" "$(grep -cxF "$want" <<<"$blk"):$(grep -c '^route @preview_needed {$' <<<"$blk")" "1:1"
+check "gate: the cookie comes after the login" "$(awk '/basic_auth/{a=NR} /Set-Cookie/{c=NR} END{print (a<c)}' <<<"$blk")" "1"
+check "gate: 30 days, Secure and HttpOnly" "$(grep -c 'Max-Age=2592000; Secure; HttpOnly; SameSite=Lax' <<<"$blk")" "1"
+check "gate: a token that is not hex is refused" "$(bash "$AB" "# fp" extas H 'x;y' 30 >/dev/null 2>&1; echo $?)" "2"
+
 # Deploy report (PR 4): commit, Dhaka time, result, migration, health check, the failing step in plain English — and
 # nothing that looks like a connection string or an e-mail, and never an older run's result.
 T="$(mktemp -d)"; D=../deploy/deploy-report.sh
