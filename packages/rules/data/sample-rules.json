@@ -40,6 +40,19 @@
         "chargeOutsideDhaka": 12000,
         "freeOver": 150000
       }
+    },
+    {
+      "template": "set-tier",
+      "key": "any-polos",
+      "nameEn": "Sample · Any polos",
+      "status": "DRAFT",
+      "values": {
+        "tier2": 150000,
+        "tier3": 210000
+      },
+      "categories": [
+        "polos"
+      ]
     }
   ],
   "notices": []
