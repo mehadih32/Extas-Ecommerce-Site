@@ -130,6 +130,7 @@ the pages are out of date.
 | [`reports/2026-10-20-S0A.md`](reports/2026-10-20-S0A.md) | S0A stage report: the server (12/12) |
 | [`reports/2026-10-20-S00.md`](reports/2026-10-20-S00.md) | S00 stage report: the foundation (19/19) |
 | [`reports/2026-10-20-S01.md`](reports/2026-10-20-S01.md) | S01 stage report: products, photos and catalogue (22/22) |
+| [`reports/2026-10-20-S10.md`](reports/2026-10-20-S10.md) | S10 stage report: Smart Rules (12/12) |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
 

@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 11/12 · total 81/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 12/12 · total 82/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -116,6 +116,7 @@ the server.*
 | 216 | S10 | merged | 2026-10-20 | notices and pop-ups `/admin/rules/notices`: bar, in-page note, pop-up; text can quote a rule (`{exchange.windowHours}`) with a live preview; placement, position, priority, window, button; pop-ups never on arrival (`notices.popup.minDelaySeconds`, `minScrollPercent`), capped (`maxPerVisit`), none on a search visitor's first screen (`searchHosts`), bars capped `notices.bar.maxShown`; every notice starts off; the pop-up's visible-time timer pauses when the tab is hidden and resumes after; `/api/admin/rules/notices`, `/notices/:id` |
 | 217 | S10 | merged | 2026-10-20 | conflict detection: same slot, stacking, a text that drifted from its rule (FAQ says 7 days, rule says 72 hours) and a setting that disagrees; checked on publish (`rules.conflicts.checkOnPublish`) and by the job; the banner offers "fix everywhere" (rewrites the drifted text from the rule), keep the order, or acknowledge; resolution order = priority, then newer; `/api/admin/rules/conflicts`, `/conflicts/:id` |
 | 218 | S10 | merged | 2026-10-20 | rule history: every publish is a version with who, when, the change note and a word-by-word change list (money changes marked); paged by `rules.history.pageSize`; restoring an old version makes it a draft (publish to use it); `/api/admin/rules/:id/history` |
+| 219 | S10 | merged | 2026-10-20 | rule simulation: "what would past orders have cost under this draft" over `rules.simulation.defaultDays`, at most `rules.simulation.maxOrders` orders, with the count changed, the money difference and orders that cannot be priced (no area, charge not set yet); results kept; `/api/admin/rules/:id/simulate`. Tests: rules 41 pure + 18 PostgreSQL, web 10 screen-model + 3 API on PostgreSQL |
 
 > **CN-008 · 20 Oct 2026 (owner desktop review of V12, 03:54–04:23).** 44 items (home H1–H14, category C1–C6, product P1–P8, drawer B1–B3, bag G1–G3, checkout K1–K11 incl. the BD phone normaliser and Polo Duo different-colour rule), 7 invoice templates, 12 new admin screens, admin audit fixes. Built into demo **V12.1** (`docs/demo/EXTAS-demo-V12.1.html`), which is now the UI truth. Every new look is a backend option with the old one kept. Details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md` (44/44 pass), `docs/qa/ADMIN-AUDIT.md`, lesson for `phoneNormalizeBD` in `docs/agents/lessons/ALL.md`. No new PR numbers: scope lands on the existing S02/S03/S04/S05/S08/S14/S16/S20/S22 PRs.
 
