@@ -8,7 +8,12 @@
     "nav": "অ্যাডমিনের পাতা",
     "systemTabs": "সিস্টেমের পাতা",
     "lang": "অ্যাডমিনের ভাষা · Admin language",
-    "logout": "লগআউট"
+    "logout": "লগআউট",
+    "groups": {
+      "catalogue": "ক্যাটালগ",
+      "system": "সিস্টেম"
+    },
+    "groupTabs": "{group}-এর পাতা"
   },
   "lang": {
     "en": "English",
@@ -17,6 +22,8 @@
     "bnShort": "বাং"
   },
   "nav": {
+    "products": "প্রোডাক্ট",
+    "publishQueue": "চালুর অপেক্ষায়",
     "integrations": "চাবি ও সংযোগ"
   },
   "login": {

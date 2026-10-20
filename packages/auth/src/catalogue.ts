@@ -29,6 +29,9 @@ export const PERMISSIONS = {
   'catalogue.write': { group: 'catalogue' },
   // Prices are the owner's decision (CLAUDE.md rule 6): setting a variant's sale or compare-at price is its own key.
   'catalogue.prices': { group: 'catalogue' },
+  // PR 21, 35 — put a product on the shop or take it off (one by one or in bulk). Publishing always runs the publish
+  // checklist first (PR 26, 29, 35); there is no way around it.
+  'catalogue.publish': { group: 'catalogue' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

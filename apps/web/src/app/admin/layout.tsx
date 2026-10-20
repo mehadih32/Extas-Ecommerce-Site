@@ -3,6 +3,8 @@
 // The fonts are self-hosted (src/fonts), so building never depends on a font download.
 import '../../fonts/admin.css';
 import './admin.css';
+// PR 21, 35: the product pages' styles, in the same stylesheet as the frame's (one render-blocking file, not two).
+import './products/products.css';
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <div>{children}</div>;

@@ -1,0 +1,44 @@
+{
+  "catalogue": {
+    "publish": {
+      "checks": {
+        "label": "Publish checklist",
+        "help": "What a product needs before it may go on the shop. \"block\" stops publishing until it is done, \"warn\" only reminds, \"off\" does not check. Checks: category, variants with an SKU, a price on every variant, the photo set, a size chart, a fabric, SEO title and description, a description, stock."
+      }
+    },
+    "health": {
+      "weights": {
+        "label": "Health score: how much each check counts",
+        "help": "The health score is the share of these points a product has. A check that is off does not count."
+      },
+      "bands": {
+        "label": "Health score colours",
+        "help": "At or above \"good\" the score shows green; at or above \"fair\" it shows amber; below it shows red."
+      }
+    },
+    "bulk": {
+      "maxProducts": {
+        "label": "Most products in one bulk action",
+        "help": "Publish, take off, recheck or archive at most this many products in one go."
+      }
+    },
+    "admin": {
+      "pageSize": {
+        "label": "Products per page in the admin",
+        "help": "How many products the product list and the publish queue show at a time."
+      },
+      "lowStockPieces": {
+        "label": "\"Almost out\" means this many pieces or fewer",
+        "help": "A size with at least one and at most this many pieces counts as almost out on the product list."
+      },
+      "issuesShown": {
+        "label": "Missing items shown on each product row",
+        "help": "How many of a product's missing items the list shows as small tags (the product page shows all of them)."
+      }
+    },
+    "skuSuggestion": {
+      "label": "Suggested SKU for a new variant",
+      "help": "Only a suggestion — the ERP's SKU is the real one. {style} is the ERP style code, {colour} and {size} the colour's and size's ERP code (or their key)."
+    }
+  }
+}

@@ -33,7 +33,9 @@ export type CatalogueErrorCode =
   /** The bulk change differs from the preview the person saw (someone changed a product meanwhile). */
   | 'PREVIEW_CHANGED'
   /** More changes than `naming.bulkMaxChanges` in one go. */
-  | 'TOO_MANY_CHANGES';
+  | 'TOO_MANY_CHANGES'
+  /** The publish checklist has blocking items left (PR 26, 35): details name the failing checks. */
+  | 'CHECKLIST_FAILED';
 
 export class CatalogueError extends Error {
   readonly code: CatalogueErrorCode;
@@ -60,6 +62,7 @@ export class CatalogueError extends Error {
       case 'COLOUR_IN_USE':
       case 'NAME_TAKEN':
       case 'PREVIEW_CHANGED':
+      case 'CHECKLIST_FAILED':
         return 409;
       default:
         return 400;

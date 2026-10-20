@@ -38,8 +38,11 @@ export type PageAccess =
   | { kind: 'forbidden' }
   | { kind: 'unavailable' };
 
-/** Runs guardAdmin for the page's own request (its cookie, address and browser); null = only a valid session. */
-export async function pageAccess(permission: PermissionKey | null, deps: AdminDeps | null = adminDeps()): Promise<PageAccess> {
+/**
+ * Runs guardAdmin for the page's own request (its cookie, address and browser); null = only a valid session.
+ * `storeId` checks the permission in that store (the catalogue pages, PR 21), like the store's own API routes do.
+ */
+export async function pageAccess(permission: PermissionKey | null, deps: AdminDeps | null = adminDeps(), storeId?: number): Promise<PageAccess> {
   if (!deps) return { kind: 'unavailable' };
   const h = await headers();
   const forward: Record<string, string> = {};
@@ -48,7 +51,7 @@ export async function pageAccess(permission: PermissionKey | null, deps: AdminDe
     if (v) forward[name] = v;
   }
   // A GET carries no state change, so the same-site check passes; the session and permission checks are the API's own.
-  const g = await guardAdmin(new Request('https://admin.invalid/admin', { headers: forward }), deps, permission ? { permission } : {});
+  const g = await guardAdmin(new Request('https://admin.invalid/admin', { headers: forward }), deps, permission ? { permission, ...(storeId ? { storeId } : {}) } : {});
   if (!(g instanceof Response)) return { kind: 'ok', guard: g, deps };
   const code = ((await g.json().catch(() => ({}))) as { error?: string }).error;
   if (g.status === 401) return { kind: 'login' };

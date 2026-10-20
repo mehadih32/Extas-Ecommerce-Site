@@ -5,7 +5,9 @@
       "startServerReadyPattern": "Ready|started server|Local:",
       "url": [
         "http://127.0.0.1:3000/status",
-        "http://127.0.0.1:3000/admin/login"
+        "http://127.0.0.1:3000/admin/login",
+        "http://127.0.0.1:3000/admin/products",
+        "http://127.0.0.1:3000/admin/products/queue"
       ],
       "numberOfRuns": 3,
       "settings": {
