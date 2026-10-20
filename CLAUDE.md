@@ -108,6 +108,8 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - **After every deploy** the runner runs a smoke test with Playwright against new.extas.com.bd. It signs in with a dedicated check account whose password exists only on the server, then opens every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, has no error screen and no console error, and returns no failed request. Screenshots go to `docs/reports/smoke/latest/`.
 - **If any page fails,** the deploy rolls back to the last good version by itself, and fixing it comes before any new PR.
 - The same smoke test runs every night. Its result sits on the status page and in README.
+- **Right the first time:** before calling anything done, check it yourself on staging in a real browser, at phone and desktop widths, as a customer and as admin. One build plus one check, never many rounds of rework. Rework burns the owner's money.
+- **Scope added to an already merged PR** (a dated "Updated …" line or a CN note) becomes a follow-up PR. List each one under "Follow-ups" in `PROGRESS.md` and build them early, before new stages, so nothing filed is forgotten.
 - The owner should never be the one who finds a broken page. If he finds one, add a smoke check for it in the same fix PR.
 
 ## Admin section guide (owner, 20 Oct 14:10 — CN-014)
