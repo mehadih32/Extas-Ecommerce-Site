@@ -24,7 +24,8 @@
   "nav": {
     "products": "প্রোডাক্ট",
     "publishQueue": "চালুর অপেক্ষায়",
-    "integrations": "চাবি ও সংযোগ"
+    "integrations": "চাবি ও সংযোগ",
+    "sizeCharts": "সাইজ চার্ট"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

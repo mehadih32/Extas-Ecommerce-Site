@@ -10,6 +10,7 @@ import { setting, type RegistryShape, type SettingKey, type SettingValue } from 
 import { messages, pair, type MessageTree } from './messages';
 import { mediaSettings } from './registry-media';
 import { publishSettings } from './registry-publish';
+import { merchSettings } from './registry-merch';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -862,6 +863,8 @@ export const registry = {
     sortOrder: 90,
     version: 5,
   }),
+  // ---- PR 27, 28, 32, 34, 38 · size charts, collections and tags, CSV, "was" price (registry-merch.ts, version 7). ----
+  ...merchSettings,
 
   // ---- S01 · PR 590 · naming and links (owner 19 Oct 12:04–12:07; demo Settings › Naming & links). Brand names stay;
   // the own-label brand is the store's own-label Brand row. Templates fill every name, link and title the owner leaves

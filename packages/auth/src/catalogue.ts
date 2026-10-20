@@ -32,6 +32,10 @@ export const PERMISSIONS = {
   // PR 21, 35 — put a product on the shop or take it off (one by one or in bulk). Publishing always runs the publish
   // checklist first (PR 26, 29, 35); there is no way around it.
   'catalogue.publish': { group: 'catalogue' },
+  // PR 34 — the catalogue CSV: bring in a file (preview, then apply; prices inside it still need catalogue.prices) and
+  // take the catalogue out as a file.
+  'catalogue.import': { group: 'catalogue' },
+  'catalogue.export': { group: 'catalogue' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -7,7 +7,7 @@ export interface Answer {
   data: Record<string, unknown> & { ok?: boolean; error?: string; details?: string[] };
 }
 
-export async function call(method: 'GET' | 'POST', url: string, body?: unknown): Promise<Answer> {
+export async function call(method: 'GET' | 'POST' | 'PATCH' | 'PUT', url: string, body?: unknown): Promise<Answer> {
   try {
     const res = await fetch(url, {
       method,

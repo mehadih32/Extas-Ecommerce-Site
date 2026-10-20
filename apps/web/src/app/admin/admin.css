@@ -3,6 +3,9 @@
    Every design value sits in the token block below, once. The shared design-token file belongs to the design owner
    (Shilpi, S02); when it lands these tokens move there and this block only maps them. */
 
+/* PR 28 — the size chart screen's styles ride in the same file (one stylesheet for the admin, no extra request). */
+@import './size-charts/size-charts.css';
+
 .ad {
   /* colours (demo "classic" theme + admin shell) */
   --ad-bg: #f2f1ee;

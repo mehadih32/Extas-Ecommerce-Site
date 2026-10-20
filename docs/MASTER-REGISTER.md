@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 10/22 · total 41/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 19/22 · total 50/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -80,6 +80,11 @@ the server.*
 | 26 | S01 | merged | 2026-10-20 | upload-time validation block: photos (PR 25 minimum, front per colour), size chart, fabric notes, prices, SKUs and the rest are checks in `catalogue.publish.checks` (on/off, owner-editable); each failing check is named in Bengali and English on the edit page, the list and the queue; `/products/:id/readiness` |
 | 29 | S01 | merged | 2026-10-20 | product health score 0–100 from the checks (weights `catalogue.health.weights`, bands `catalogue.health.bands`), shown on the list, the edit page ("ready to go live?") and the queue; kept on the product and refreshed by recheck |
 | 35 | S01 | merged | 2026-10-20 | publish queue (`/admin/products/queue`, `/api/admin/catalogue/publish-queue`): nothing goes live until every switched-on check passes — publish refuses with `CHECKLIST_FAILED` and the missing checks, on its own and in bulk; new permission `catalogue.publish`; waiting / ready filters with a Fix link per product |
+| 27 | S01 | merged | 2026-10-20 | size charts per garment type and fit (`catalogue.fits`, `catalogue.sizeCharts.*`): measurements stored in inches, shown in cm too, ease, how-to-measure drawing per garment type; a chart is the default for a category + fit, a product can carry its own; resolve order product → category (up the tree) + fit → `fallbackFit`; coverage check against the product's ERP sizes; archived, never deleted (refused while in use); `/api/admin/catalogue/size-charts/*` |
+| 28 | S01 | merged | 2026-10-20 | size chart admin `/admin/size-charts` (demo `82-admin-sizecharts`, phone 390 and desktop 1366 compared, `docs/qa/screenshots/pr-28/`): list, measurement table with "show cm", paste from Excel, add row (suggested from the neighbours), coverage warning, save / discard, copy for another fit, category defaults, products with their own chart ("back to auto"), "when you add a product" panel, archive / bring back; admin menu entry; Lighthouse page added. Photo spec-sheet reading (AI) comes with the AI stage |
+| 32 | S01 | merged | 2026-10-20 | collections (manual or rule-based, seasonal with start/end and states upcoming / live / ended from `catalogue.collections.seasons`, link under `catalogue.collections.pathPrefix`, changed link forwards 301) and tags (bilingual, `catalogue.tags.maxPerProduct`); archived, never deleted; `/api/admin/catalogue/collections/*`, `/tags/*`, `/products/<id>/tags`. Removing a link drops the join row only, with the full row in the audit log (join tables have no archivedAt) |
+| 34 | S01 | merged | 2026-10-20 | CSV export and import (`catalogue.csv.*`, permissions `catalogue.export` / `catalogue.import`): export has no cost, ERP or owner data and is logged as a job; import = preview with row-level errors and a hash, then apply of the same file; never deletes or archives; prices change only with `catalogue.prices` (PriceHistory kept); an exported file reads back unchanged; `/api/admin/catalogue/csv/export`, `/csv/import` (screen comes with PR 21) |
+| 38 | S01 | merged | 2026-10-20 | "was" price source per category (none / MRP / price history / combo sum), honesty rule: shown only from a real, recorded price inside `catalogue.wasPrice.historyDays`, never invented, own-label MRP only with `mrpOwnLabel`; default `catalogue.wasPrice.defaultSource` empty = no "was" price anywhere until the owner decides (BLOCKED 10); changing a source needs `catalogue.prices`; `/api/admin/catalogue/was-price`, `/was-price/resolve`. Display on the storefront comes with S02 |
 
 ## The stage table
 

@@ -2,7 +2,7 @@
 // entry when it builds its screen. Labels are keys into messages/admin.<lang>.json (`nav.<key>`). `system` pages also
 // form the strip of tabs at the top of each System page (demo ZV_TABS: server, cache, images, speed, backup, keys).
 // `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages.
-export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check';
+export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler';
 
 export interface AdminPage {
   key: string;
@@ -18,6 +18,8 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
   { key: 'publishQueue', href: '/admin/products/queue', icon: 'check', group: 'catalogue' },
   { key: 'integrations', href: '/admin/integrations', icon: 'lock', group: 'system' },
+  // PR 28 — size charts (demo #/admin/size-charts)
+  { key: 'sizeCharts', href: '/admin/size-charts', icon: 'ruler', group: 'catalogue' },
 ];
 
 export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';

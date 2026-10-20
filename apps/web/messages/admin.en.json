@@ -24,7 +24,8 @@
   "nav": {
     "products": "Products",
     "publishQueue": "Ready to publish",
-    "integrations": "Keys & connections"
+    "integrations": "Keys & connections",
+    "sizeCharts": "Size charts"
   },
   "login": {
     "metaTitle": "Admin sign-in",

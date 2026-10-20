@@ -54,6 +54,26 @@ const PATHS = {
     </>
   ),
   swap: <path d="M4 9h13l-3-3M20 15H7l3 3" />,
+  ruler: (
+    <>
+      <path d="M3 17l14-14 4 4L7 21H3z" />
+      <path d="M7 13l2 2M10 10l2 2M13 7l2 2" />
+    </>
+  ),
+  doc: (
+    <>
+      <path d="M6 3h9l4 4v14H6z" />
+      <path d="M14 3v5h5M9 13h7M9 17h5" />
+    </>
+  ),
+  trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  layers: (
+    <>
+      <rect x="3" y="7" width="10" height="13" rx="1" />
+      <path d="M8 7V4h12v13h-7" />
+    </>
+  ),
+  right: <path d="M9 6l6 6-6 6" />,
 } as const;
 
 export type IconName = keyof typeof PATHS;
