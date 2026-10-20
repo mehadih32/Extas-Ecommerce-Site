@@ -93,7 +93,8 @@
     "badCharge": "Type the charge as a number, for example 80.",
     "badHours": "Hours are whole numbers, the fastest not above the slowest.",
     "server-error": "Something went wrong. Please try again.",
-    "network": "No connection. Please try again."
+    "network": "No connection. Please try again.",
+    "TOO_LARGE": "That is too long."
   },
   "fields": {
     "chargeMinor": "the charge",
@@ -104,5 +105,27 @@
     "enabled": "on / off",
     "areaId": "the place",
     "bandId": "the band"
+  },
+  "try": {
+    "title": "Try an address",
+    "sub": "Type an address as a customer would. It is read the way checkout reads it: only when you stop typing or leave the box.",
+    "label": "Address",
+    "placeholder": "Gabtoli Bus Stand, Dhaka",
+    "waiting": "Waiting for the whole address…",
+    "ask": "Where is this address?",
+    "both": "We can see {a} and {b} in it — which one is right?",
+    "changed": "The address now reads as {place}, but {band} was chosen. Which one is right?",
+    "wide": "{place} holds more than one band — which part?",
+    "none": "No place found in it yet — the customer picks the band.",
+    "readFrom": "Read from: {place}",
+    "via": {
+      "line": "the address",
+      "saved": "the saved address",
+      "choice": "the customer's choice"
+    },
+    "placeUnsure": "Two places of this name are both charged like this.",
+    "change": "Change",
+    "notSet": "charge not set",
+    "option": "{charge} · {hours}"
   }
 }

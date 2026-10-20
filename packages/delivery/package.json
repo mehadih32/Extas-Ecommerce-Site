@@ -8,7 +8,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./sample": "./src/sample.ts"
+    "./sample": "./src/sample.ts",
+    "./settle": "./src/settle.ts"
   },
   "scripts": {
     "gazetteer:import": "tsx src/cli.ts import",

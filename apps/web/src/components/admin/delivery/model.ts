@@ -1,7 +1,7 @@
 // S06 · PR 550 — the delivery page's pure part (no React, no database), shared by the server page and its components
 // and tested on its own (model.test.ts): a band's charge, hours and "charged as" line as text, a place's line, a
 // refusal as text, and the band edit form turned into the one change the API takes.
-import type { BandView, PlaceView } from '@extas/delivery';
+import type { BandOut, BandView, PlaceView, ResolveView } from '@extas/delivery';
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, toMajor, toMinor, type Money } from '../products/model';
 
@@ -86,4 +86,37 @@ export function bandPatch(b: BandView, f: BandForm, m: Money): { patch: Record<s
   if (hMax !== b.hoursMax) patch.hoursMax = hMax;
   if (b.role === 'subArea' && f.mode !== (b.mode ?? 'own')) patch.mode = f.mode;
   return { patch, error: null };
+}
+
+// ------------------------------------------------------------------------------------------------ "Try an address" (PR 551)
+
+type Ask = Extract<ResolveView, { status: 'ask' }>;
+
+/** "Gabtali (Bogura)" — a place with what tells it apart. */
+export function placeLabel(lang: Lang, p: Pick<PlaceView, 'nameEn' | 'nameBn' | 'parentEn' | 'parentBn'>): string {
+  const parent = lang === 'bn' ? (p.parentBn ?? p.parentEn) : p.parentEn;
+  return parent ? `${nameOf(lang, p)} (${parent})` : nameOf(lang, p);
+}
+
+/** A band's charge as the customer sees it, or "charge not set" while the band is off. */
+export function outCharge(d: Dict, b: Pick<BandOut, 'priced' | 'chargeMinor'>, m: Money): string {
+  return b.priced && b.chargeMinor != null ? formatMoney(b.chargeMinor, m) : t(d, 'delivery.try.notSet');
+}
+
+/** One choice's second line: "80 ৳ · 24–48 hours". */
+export function optionLine(d: Dict, b: BandOut, m: Money, locale: string): string {
+  return t(d, 'delivery.try.option', { charge: outCharge(d, b, m), hours: hoursText(d, b, locale) });
+}
+
+/** The sentence under "Where is this address?" — naming the places, like the demo's checkout. */
+export function askLine(d: Dict, lang: Lang, read: Ask): string {
+  const places = [...new Map(read.options.flatMap((o) => o.places).map((p) => [p.id, p])).values()];
+  if (read.reason === 'changed') {
+    const [kept, now] = read.options;
+    const place = now?.places[0] ? placeLabel(lang, now.places[0]) : now ? nameOf(lang, now.band) : '';
+    return t(d, 'delivery.try.changed', { place, band: kept ? nameOf(lang, kept.band) : '' });
+  }
+  if (read.reason === 'two-places' && places.length >= 2) return t(d, 'delivery.try.both', { a: placeLabel(lang, places[0]!), b: placeLabel(lang, places[1]!) });
+  if (read.reason === 'wide-place' && places[0]) return t(d, 'delivery.try.wide', { place: placeLabel(lang, places[0]) });
+  return t(d, 'delivery.try.none');
 }
