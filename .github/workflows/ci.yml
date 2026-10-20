@@ -35,7 +35,7 @@ jobs:
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh tools/admin-login-e2e.sh
           EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
@@ -110,6 +110,16 @@ jobs:
         run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
       - name: Migrate image builds (deploy step 0 — schema migrations + settings sync)
         run: docker build -f apps/web/Dockerfile --target migrate --build-arg GIT_SHA="$GITHUB_SHA" -t extas-migrate:ci .
+      # PR 4 (owner, 20 Oct): log in → the admin loads, on these two images and a fresh installation (the migrate
+      # image's own command, the first owner with a generated password, a real browser). deploy.yml only runs after
+      # CI passed, so no deploy goes out without it. Playwright stays outside the workspace (no lockfile change).
+      - name: Sign-in end to end (log in → the admin loads)
+        env:
+          NODE_PATH: ${{ runner.temp }}/e2e/node_modules
+        run: |
+          npm install --prefix "$RUNNER_TEMP/e2e" --no-save --no-audit --no-fund playwright@1.63.0
+          "$RUNNER_TEMP/e2e/node_modules/.bin/playwright" install --with-deps chromium
+          bash tools/admin-login-e2e.sh extas-web:ci extas-migrate:ci
 
   # PR 13 / 603 — the schema's migrations apply to a real PostgreSQL 17 with pg_trgm (throwaway CI database); then the
   # settings framework's database tests (PR 491–496, 510) and the seed package's (PR 14, 508, 509).
