@@ -10,7 +10,8 @@
 #   deploy-report.sh <out-dir>     writes <out-dir>/deploy-latest.md and <out-dir>/deploy-history.line
 # Inputs (environment): SHA, RUN_URL, ROLLBACK (true|false), CHECKOUT, BUILD, DEPLOY, HEALTH_STEP (step outcomes:
 # success|failure|skipped|cancelled), RUN_ID, DEPLOY_JSON (default $EXTAS_ROOT/state/last-deploy.json),
-# HEALTH_JSON (file with deploy.sh public-health's line), NOW (epoch seconds, for tests).
+# HEALTH_JSON (file with deploy.sh public-health's line), NOW (epoch seconds, for tests); DOCS (the docs-sync step's
+# outcome, PR 594) with DOCS_JSON (default $EXTAS_ROOT/state/docs-latest.json, used only when it is this commit's).
 set -euo pipefail
 OUT="${1:?usage: deploy-report.sh <out-dir>}"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
@@ -65,6 +66,17 @@ if [ -z "$migration" ]; then
   else migration="not reached"; fi
 fi
 
+# PR 594 (CN-011): README.md + docs/ on the server for the admin's register tabs and the backups
+docs=""
+DOCS_JSON="${DOCS_JSON:-${EXTAS_ROOT:-/srv/extas}/state/docs-latest.json}"
+dsha="$(jq -r '.sha // ""' "$DOCS_JSON" 2>/dev/null || true)"
+case "${DOCS:-}" in
+  success)
+    if [ -n "$dsha" ] && [ "${dsha:0:12}" = "$short" ]; then docs="\`$short\` — README.md + docs/ ($(jq -r '.files' "$DOCS_JSON") files)"
+    else docs="copied, but its record is missing"; fi ;;
+  failure) docs="FAILED — the server keeps the previous copy${dsha:+ (\`${dsha:0:12}\`)}" ;;
+esac
+
 health="not checked"; health_short="not checked"
 if [ -n "${HEALTH_JSON:-}" ] && [ -s "$HEALTH_JSON" ] && jq -e . "$HEALTH_JSON" >/dev/null 2>&1; then
   code="$(jq -r '.code' "$HEALTH_JSON")"; ok="$(jq -r '.ok' "$HEALTH_JSON")"
@@ -99,6 +111,7 @@ fi
   echo "| Result | **$result** |"
   echo "| Database migration | $migration |"
   echo "| Health check on $HOST | $health |"
+  [ -n "$docs" ] && echo "| Docs on the server | $docs |"
   [ -n "$failed" ] && echo "| What failed | $failed |"
   [ -n "$REC" ] && [ -n "$(field .color)" ] && [ "$result" = OK ] && echo "| Live colour | $(clean "$(field .color)") |"
   [ -n "${RUN_URL:-}" ] && echo "| Run log | ${RUN_URL} |"

@@ -3,8 +3,9 @@
 # infra/deploy/deploy.sh migrates the database (schema, then settings, PR 496) and does blue/green: the new version
 # starts next to the old one, is smoke-tested, Caddy switches with a graceful reload, and any failure keeps or gives
 # back the traffic to the old version (automatic rollback).
+# Before the build, README.md and docs/ are copied to the server, one way, stamped with the commit (PR 594, CN-011).
 # After every deploy, success or failure, a short report (commit, time in EXTAS_TIMEZONE, result, migration, the public
-# health check on the preview host, the failing step in plain English) is committed to
+# health check on the preview host, the docs copy, the failing step in plain English) is committed to
 # docs/reports/server/deploy-latest.md and one line is appended to deploy-history.md. No loop: that commit carries
 # [skip ci], ci.yml ignores pushes that only touch docs/reports/server/, and a push made with the workflow's own token
 # starts no workflow anyway; no ci run means no deploy. No secret, password, connection string or e-mail is in it.
@@ -41,6 +42,15 @@ jobs:
         id: checkout
         with:
           ref: ${{ env.SHA }}
+
+      # PR 594 (CN-011): README.md and the whole docs/ folder onto the server, one way (repo → server), stamped with the
+      # commit: $EXTAS_ROOT/docs/<sha12>/ with a COMMIT file, `current` pointing at it, the newest DOCS_KEEP_VERSIONS
+      # kept. The admin's register and Blueprint tabs read it (app.yml mounts it read-only), the backups bundle it.
+      # This checkout's server.conf (DOCS_KEEP_VERSIONS can be newer than the installed copy). Never stops a deploy.
+      - name: Copy the docs to the server
+        id: docs
+        continue-on-error: true
+        run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/docs-sync.sh "$SHA" "$PWD"
 
       # Two images from one Dockerfile: the app, and the one-shot migrate image (prisma migrate deploy + settings sync).
       - name: Build the images on the server
@@ -84,6 +94,7 @@ jobs:
           CHECKOUT: ${{ steps.checkout.outcome }}
           BUILD: ${{ steps.build.outcome }}
           DEPLOY: ${{ steps.deploy.outcome }}
+          DOCS: ${{ steps.docs.outcome }}
           ROLLBACK: ${{ inputs.rollback && 'true' || 'false' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -95,7 +106,7 @@ jobs:
             git checkout -q FETCH_HEAD -- infra/deploy/deploy-report.sh
           fi
           sudo env SHA="$SHA" RUN_ID="$GITHUB_RUN_ID" RUN_URL="$RUN_URL" ROLLBACK="$ROLLBACK" CHECKOUT="$CHECKOUT" \
-            BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
+            BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" DOCS="${DOCS:-}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
             bash infra/deploy/deploy-report.sh "$out"
           sudo chown -R "$(id -u):$(id -g)" "$out"
           cat "$out/deploy-latest.md"
