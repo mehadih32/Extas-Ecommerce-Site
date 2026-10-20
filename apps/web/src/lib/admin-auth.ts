@@ -18,6 +18,7 @@ import {
 } from '@extas/auth';
 import { isCatalogueError } from '@extas/catalogue';
 import { isCombosError } from '@extas/combos';
+import { isDeliveryError } from '@extas/delivery';
 import { isInventoryError } from '@extas/inventory';
 import { isRulesError } from '@extas/rules';
 import { createVault, type Vault } from '@extas/vault';
@@ -71,6 +72,7 @@ export function errorResponse(e: unknown): Response {
   if (isInventoryError(e)) return fail(e.status, e.code, e.details);
   if (isRulesError(e)) return fail(e.status, e.code, e.details);
   if (isCombosError(e)) return fail(e.status, e.code, e.details);
+  if (isDeliveryError(e)) return fail(e.status, e.code, e.details);
   console.warn(`admin api: ${(e instanceof Error ? e.message : String(e)).split('\n').filter(Boolean).slice(-1)[0] ?? 'unknown error'}`);
   return fail(500, 'server-error');
 }

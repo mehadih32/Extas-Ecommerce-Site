@@ -14,7 +14,8 @@
       "inventory": "Stock",
       "rules": "Rules",
       "combos": "Combos",
-      "system": "System"
+      "system": "System",
+      "delivery": "Delivery"
     },
     "groupTabs": "{group} pages"
   },
@@ -37,7 +38,8 @@
     "stockMovements": "Stock movements",
     "rules": "Smart Rules",
     "notices": "Notices & pop-ups",
-    "combos": "Combos & customer sets"
+    "combos": "Combos & customer sets",
+    "delivery": "Delivery areas & charges"
   },
   "login": {
     "metaTitle": "Admin sign-in",

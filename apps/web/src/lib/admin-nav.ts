@@ -2,18 +2,19 @@
 // entry when it builds its screen. Labels are keys into messages/admin.<lang>.json (`nav.<key>`). `system` pages also
 // form the strip of tabs at the top of each System page (demo ZV_TABS: server, cache, images, speed, backup, keys).
 // `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages; the
-// `inventory` pages (S09) do the same on the stock pages, and the `rules` pages (S10) on Smart Rules and notices.
-export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list' | 'bolt' | 'notice' | 'layers';
+// `inventory` pages (S09) do the same on the stock pages, the `rules` pages (S10) on Smart Rules and notices, and the
+// `delivery` pages (S06) on the delivery pages.
+export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list' | 'bolt' | 'notice' | 'layers' | 'truck';
 
 export interface AdminPage {
   key: string;
   href: string;
   icon: AdminIcon;
-  group: 'main' | 'catalogue' | 'combos' | 'inventory' | 'rules' | 'system';
+  group: 'main' | 'catalogue' | 'combos' | 'inventory' | 'rules' | 'delivery' | 'system';
 }
 
 /** The sidebar's headed groups, in order (labels: `frame.groups.<group>`). */
-export const ADMIN_GROUPS = ['catalogue', 'combos', 'inventory', 'rules', 'system'] as const;
+export const ADMIN_GROUPS = ['catalogue', 'combos', 'inventory', 'rules', 'delivery', 'system'] as const;
 
 export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
@@ -34,6 +35,9 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'notices', href: '/admin/rules/notices', icon: 'notice', group: 'rules' },
   // S03 · PR 90, 571 — combos and customer sets (demo #/admin/combos), in their own section (the owner's biggest seller)
   { key: 'combos', href: '/admin/combos', icon: 'layers', group: 'combos' },
+  // S06 · PR 550, 551 — the delivery bands, the sub-area list and the address check (demo: the Couriers page's
+  // "Three delivery bands" card and Settings › Delivery)
+  { key: 'delivery', href: '/admin/delivery', icon: 'truck', group: 'delivery' },
 ];
 
 export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';

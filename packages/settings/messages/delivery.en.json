@@ -1,5 +1,27 @@
 {
   "delivery": {
+    "bands": {
+      "cityKey": {
+        "label": "The Dhaka City band",
+        "help": "Which delivery band is inside the city. Every area of the official city-corporation map below is in it."
+      },
+      "subAreaKey": {
+        "label": "The sub-area band",
+        "help": "Which delivery band holds your own sub-area list (for example Gazipur, Savar, Narayanganj)."
+      },
+      "outsideKey": {
+        "label": "The outside band",
+        "help": "Which delivery band is everywhere else in the country: one flat charge."
+      },
+      "cityCorporations": {
+        "label": "City corporations inside the city band",
+        "help": "The city is the official map of these city corporations, nothing else. Dhaka: DNCC and DSCC."
+      },
+      "searchLimit": {
+        "label": "Places shown in the admin search",
+        "help": "How many places the admin's place search shows at most (adding a place to the sub-area list)."
+      }
+    },
     "gazetteer": {
       "cacheSeconds": {
         "label": "Re-check the area list every (seconds)",

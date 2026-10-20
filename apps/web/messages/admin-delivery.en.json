@@ -1,0 +1,108 @@
+{
+  "metaTitle": "Delivery areas and charges · Admin",
+  "eyebrow": "Admin · Delivery",
+  "title": "Delivery areas and charges",
+  "intro": "One band per area, simple. Dhaka City is the official city-corporation map; your sub-area list is the only exception to it; everywhere else is one flat charge. The address decides the band by itself — the courier never changes what the customer pays.",
+  "sample": "This shop is still on the sample area list (public place names only). The full national list is loaded later; your bands and your sub-area list stay as they are.",
+  "sep": " · ",
+  "bands": {
+    "title": "Three delivery bands",
+    "sub": "What the customer pays — the address decides the band by itself",
+    "notSet": "Not set yet",
+    "on": "On",
+    "off": "Off",
+    "offNote": "Off: checkout asks the customer and shows no charge from this band until you switch it on.",
+    "hours": "{min}–{max} hours",
+    "hoursOne": "{n} hours",
+    "noHours": "No delivery time set",
+    "chargedAs": {
+      "city": "charged as Dhaka City",
+      "outside": "charged as outside Dhaka"
+    },
+    "listed": "{n} places on your list",
+    "change": "Change",
+    "none": "This shop has no delivery bands yet. They come with the shop's first set-up.",
+    "note": "Which courier carries the parcel only changes the shop's own cost, never what the customer pays.",
+    "roles": {
+      "city": "Dhaka City",
+      "subArea": "Dhaka sub-area",
+      "outside": "Outside Dhaka",
+      "other": "Other band"
+    }
+  },
+  "edit": {
+    "title": "{name}",
+    "desc": "These are your own figures. A band is switched on only together with its charge, so a customer never sees a charge nobody typed.",
+    "charge": "Delivery charge ({currency})",
+    "chargeHelp": "What the customer pays for this band. 0 means free delivery.",
+    "hoursMin": "Fastest (hours)",
+    "hoursMax": "Slowest (hours)",
+    "hoursHelp": "Shown as the delivery promise at checkout, for example 24–48 hours.",
+    "enabled": "Switched on — customers in this band are charged this",
+    "mode": "The sub-area is charged as",
+    "modes": {
+      "own": "Its own charge",
+      "city": "Same as Dhaka City",
+      "outside": "Same as outside Dhaka"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "saved": "{name} saved"
+  },
+  "list": {
+    "title": "Your sub-area list",
+    "sub": "A place here — and everything inside it — is in the sub-area band. Only places from the area list can be added.",
+    "search": "Find a place",
+    "placeholder": "Gazipur, Savar, Tongi…",
+    "find": "Find",
+    "results": "Places found",
+    "none": "No place starts with that.",
+    "empty": "Nothing on your list yet. Every place outside the Dhaka City map is charged as outside Dhaka.",
+    "add": "Add",
+    "added": "{name} is now in the sub-area band",
+    "remove": "Take off",
+    "removed": "{name} taken off the list",
+    "putBack": "Put back",
+    "showOff": "Show places taken off",
+    "offTag": "Taken off",
+    "onList": "On your list",
+    "now": "Now: {band}",
+    "via": {
+      "owner-list": "on your list",
+      "city-map": "city map",
+      "outside": "flat band"
+    },
+    "spans": "holds more than one band",
+    "missing": "No longer in the area list",
+    "levels": {
+      "DIVISION": "Division",
+      "DISTRICT": "District",
+      "UPAZILA": "Upazila",
+      "THANA": "Thana",
+      "AREA": "Area"
+    }
+  },
+  "errors": {
+    "CHARGE_REQUIRED": "Type the charge before switching the band on.",
+    "MODE_NOT_ALLOWED": "Only the sub-area band has this choice.",
+    "INVALID_INPUT": "Please check: {fields}.",
+    "NOT_FOUND": "That is no longer there. Reload the page.",
+    "FORBIDDEN": "You may not change this. Ask the owner for the permission.",
+    "UNAUTHENTICATED": "You were signed out. Sign in again.",
+    "badCharge": "Type the charge as a number, for example 80.",
+    "badHours": "Hours are whole numbers, the fastest not above the slowest.",
+    "server-error": "Something went wrong. Please try again.",
+    "network": "No connection. Please try again."
+  },
+  "fields": {
+    "chargeMinor": "the charge",
+    "hoursMin": "the fastest time",
+    "hoursMax": "the slowest time",
+    "codLimitMinor": "the COD limit",
+    "mode": "the sub-area choice",
+    "enabled": "on / off",
+    "areaId": "the place",
+    "bandId": "the band"
+  }
+}

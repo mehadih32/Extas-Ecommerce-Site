@@ -100,6 +100,14 @@ const PATHS = {
       <path d="M12 7v5l3 2" />
     </>
   ),
+  // S06 · PR 550 — the delivery pages (the demo's truck, 02-core.js).
+  truck: (
+    <>
+      <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" />
+      <circle cx="7" cy="18" r="1.8" />
+      <circle cx="17" cy="18" r="1.8" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof PATHS;
