@@ -195,7 +195,7 @@ async function storeMap(db: Db, storeId: number, opts: { products: boolean }): P
   const [sizes, charts, assignments, categories, products] = await Promise.all([
     db.size.findMany({ where: { storeId }, select: { key: true, label: true, sortOrder: true, id: true } }),
     db.sizeChart.findMany({ where: { storeId }, include: chartInclude, orderBy: [{ name: 'asc' }, { id: 'asc' }] }),
-    db.sizeChartAssignment.findMany({ where: { storeId }, select: { id: true, sizeChartId: true, categoryId: true, productId: true, createdAt: true }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] }),
+    db.sizeChartAssignment.findMany({ where: { storeId, archivedAt: null }, select: { id: true, sizeChartId: true, categoryId: true, productId: true, createdAt: true }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] }),
     db.category.findMany({ where: { storeId }, select: { id: true, parentId: true, slug: true, nameEn: true, nameBn: true, archivedAt: true } }),
     opts.products
       ? db.product.findMany({
@@ -475,7 +475,7 @@ export async function updateSizeChart(deps: CatalogueDeps, who: Who, id: string,
     const rows = d.rows ? await checkChart(tx, who.storeId, s, g?.fields ?? [], fields, d.rows) : readRows(cur.rows);
     if (d.name !== undefined && d.name.toLowerCase() !== cur.name.toLowerCase()) await assertNameFree(tx, who.storeId, d.name, cur.id);
     if (archived === false && cur.archivedAt) await assertNameFree(tx, who.storeId, d.name ?? cur.name, cur.id);
-    const assigned = await tx.sizeChartAssignment.findMany({ where: { storeId: who.storeId, sizeChartId: cur.id } });
+    const assigned = await tx.sizeChartAssignment.findMany({ where: { storeId: who.storeId, sizeChartId: cur.id, archivedAt: null } });
     if (archived === true && !cur.archivedAt && assigned.length) {
       throw new CatalogueError('CHART_IN_USE', 'categories or products still use this chart; give them another first', [
         `categories: ${assigned.filter((a) => a.categoryId).length}`,
@@ -485,7 +485,7 @@ export async function updateSizeChart(deps: CatalogueDeps, who: Who, id: string,
     if (d.fitKey && d.fitKey !== cur.fitKey) {
       // A category keeps one default per fit: the new fit must not already have a default where this chart is one.
       for (const a of assigned.filter((x) => x.categoryId)) {
-        const twin = await tx.sizeChartAssignment.findFirst({ where: { storeId: who.storeId, categoryId: a.categoryId, sizeChartId: { not: cur.id }, sizeChart: { fitKey: d.fitKey, archivedAt: null } }, select: { id: true } });
+        const twin = await tx.sizeChartAssignment.findFirst({ where: { storeId: who.storeId, categoryId: a.categoryId, archivedAt: null, sizeChartId: { not: cur.id }, sizeChart: { fitKey: d.fitKey, archivedAt: null } }, select: { id: true } });
         if (twin) throw new CatalogueError('CONFLICT', 'a category that uses this chart already has a default for that fit', [`categoryId: ${a.categoryId}`]);
       }
     }
@@ -569,15 +569,21 @@ async function assignIn(tx: Tx, who: Who, sizeChartId: string, target: { categor
   const gt = await effectiveGarmentTypeOf(tx, who.storeId, categoryForType);
   if (gt && gt.id !== chart.garmentTypeId) throw new CatalogueError('GARMENT_TYPE_MISMATCH', "the chart is for another garment type than the category's", [`garmentType: ${gt.key}`]);
 
-  // One own chart per product; one default per fit per category. An existing row is pointed at the new chart.
-  const existing = target.productId
-    ? await tx.sizeChartAssignment.findFirst({ where: { storeId: who.storeId, productId: target.productId }, orderBy: { createdAt: 'asc' } })
-    : await tx.sizeChartAssignment.findFirst({ where: { storeId: who.storeId, categoryId: target.categoryId, sizeChart: { fitKey: chart.fitKey } }, orderBy: { createdAt: 'asc' } });
+  // One own chart per product; one default per fit per category. A live row is pointed at the new chart; with none, a
+  // link archived by "back to auto" is brought back (nothing is deleted, hard rule 3); only then is a row made.
+  const same = target.productId
+    ? { storeId: who.storeId, productId: target.productId }
+    : { storeId: who.storeId, categoryId: target.categoryId, productId: null, sizeChart: { fitKey: chart.fitKey } };
+  const existing = await tx.sizeChartAssignment.findFirst({ where: { ...same, archivedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
   if (existing?.sizeChartId === chart.id) return { assignmentId: existing.id, sizeChartId: chart.id, categoryId: existing.categoryId, productId: existing.productId, replacedChartId: null };
+  const archived = existing ? null : await tx.sizeChartAssignment.findFirst({ where: { ...same, archivedAt: { not: null } }, orderBy: [{ archivedAt: 'desc' }, { id: 'asc' }] });
   const row = existing
     ? await tx.sizeChartAssignment.update({ where: { id: existing.id }, data: { sizeChartId: chart.id } })
-    : await tx.sizeChartAssignment.create({ data: { storeId: who.storeId, sizeChartId: chart.id, categoryId: target.categoryId ?? null, productId: target.productId ?? null } });
-  await logChange(tx, who, 'sizeChart.assign', 'SizeChartAssignment', row.id, existing ? { sizeChartId: existing.sizeChartId } : null, { sizeChartId: chart.id, categoryId: row.categoryId, productId: row.productId });
+    : archived
+      ? await tx.sizeChartAssignment.update({ where: { id: archived.id }, data: { sizeChartId: chart.id, archivedAt: null } })
+      : await tx.sizeChartAssignment.create({ data: { storeId: who.storeId, sizeChartId: chart.id, categoryId: target.categoryId ?? null, productId: target.productId ?? null } });
+  const before = existing ? { sizeChartId: existing.sizeChartId } : archived ? { sizeChartId: archived.sizeChartId, archivedAt: archived.archivedAt } : null;
+  await logChange(tx, who, archived ? 'sizeChart.reassign' : 'sizeChart.assign', 'SizeChartAssignment', row.id, before, { sizeChartId: chart.id, categoryId: row.categoryId, productId: row.productId, archivedAt: null });
   return { assignmentId: row.id, sizeChartId: chart.id, categoryId: row.categoryId, productId: row.productId, replacedChartId: existing?.sizeChartId ?? null };
 }
 
@@ -589,19 +595,21 @@ export async function assignSizeChart(deps: CatalogueDeps, who: Who, input: Size
 }
 
 /**
- * "Back to auto" for a product, or a category no longer defaulting to a chart. Only the link goes: the chart, the
- * category and the product stay, and the audit log keeps the link (who, when, which chart), so it can be set again.
+ * "Back to auto" for a product, or a category no longer defaulting to a chart. The link is archived, never deleted
+ * (hard rule 3): the chart, the category and the product stay, every read ignores the archived link, and setting a
+ * chart again brings the same row back. The audit log keeps who, when and which chart.
  */
 export async function unassignSizeChart(deps: CatalogueDeps, who: Who, input: SizeChartUnassignInput): Promise<{ removed: number }> {
   await allow(deps, who, 'catalogue.write');
   const d = parse(sizeChartUnassignInput, input, 'size chart assignment');
+  const now = deps.now?.() ?? new Date();
   return deps.db.$transaction(async (tx) => {
     const rows = await tx.sizeChartAssignment.findMany({
-      where: d.productId ? { storeId: who.storeId, productId: d.productId } : { storeId: who.storeId, categoryId: d.categoryId, sizeChartId: d.sizeChartId },
+      where: d.productId ? { storeId: who.storeId, productId: d.productId, archivedAt: null } : { storeId: who.storeId, categoryId: d.categoryId, productId: null, sizeChartId: d.sizeChartId, archivedAt: null },
     });
     for (const r of rows) {
-      await tx.sizeChartAssignment.delete({ where: { id: r.id } });
-      await logChange(tx, who, 'sizeChart.unassign', 'SizeChartAssignment', r.id, { sizeChartId: r.sizeChartId, categoryId: r.categoryId, productId: r.productId, createdAt: r.createdAt }, null);
+      await tx.sizeChartAssignment.update({ where: { id: r.id }, data: { archivedAt: now } });
+      await logChange(tx, who, 'sizeChart.unassign', 'SizeChartAssignment', r.id, { sizeChartId: r.sizeChartId, categoryId: r.categoryId, productId: r.productId, archivedAt: null }, { archivedAt: now.toISOString() });
     }
     return { removed: rows.length };
   }, TX);

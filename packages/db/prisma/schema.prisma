@@ -1513,7 +1513,8 @@ model SizeChart {
   assignments SizeChartAssignment[]
 }
 
-/// @stage S01 · PR 28 — a size chart assigned to a category or a single product.
+/// @stage S01 · PR 27, 28 — a size chart assigned to a category or a single product. "Back to auto" archives the link
+/// (archivedAt); setting a chart again brings the same row back. Reads ignore archived links (hard rule 3).
 model SizeChartAssignment {
   id          String    @id @default(uuid(7)) @db.Uuid
   storeId     Int
@@ -1522,6 +1523,7 @@ model SizeChartAssignment {
   sizeChart   SizeChart @relation(fields: [sizeChartId], references: [id])
   categoryId  String?   @db.Uuid
   productId   String?   @db.Uuid
+  archivedAt  DateTime? @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
 
@@ -1574,7 +1576,8 @@ enum CollectionKind {
   RULE
 }
 
-/// @stage S01 · PR 32 — a product in a collection.
+/// @stage S01 · PR 32 — a product in a collection. Taking it out archives the link (archivedAt); putting it back
+/// brings the same row back (one row per collection and product). Reads ignore archived links (hard rule 3).
 model CollectionProduct {
   id           String     @id @default(uuid(7)) @db.Uuid
   storeId      Int
@@ -1583,6 +1586,7 @@ model CollectionProduct {
   collection   Collection @relation(fields: [collectionId], references: [id])
   productId    String     @db.Uuid
   position     Int        @default(0)
+  archivedAt   DateTime?  @db.Timestamptz(3)
   createdAt    DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime   @updatedAt @db.Timestamptz(3)
 
@@ -1605,16 +1609,18 @@ model Tag {
   @@unique([storeId, slug])
 }
 
-/// @stage S01 · PR 32 — a tag on a product.
+/// @stage S01 · PR 32 — a tag on a product. Taking the tag off archives the link (archivedAt); tagging again brings
+/// the same row back (one row per tag and product). Reads ignore archived links (hard rule 3).
 model ProductTag {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  storeId   Int
-  store     Store    @relation(fields: [storeId], references: [id])
-  tagId     String   @db.Uuid
-  tag       Tag      @relation(fields: [tagId], references: [id])
-  productId String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  id         String    @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store     @relation(fields: [storeId], references: [id])
+  tagId      String    @db.Uuid
+  tag        Tag       @relation(fields: [tagId], references: [id])
+  productId  String    @db.Uuid
+  archivedAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
 
   @@unique([tagId, productId])
   @@index([productId])
