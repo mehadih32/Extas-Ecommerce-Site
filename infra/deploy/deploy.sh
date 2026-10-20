@@ -152,6 +152,8 @@ log "live: $CUR · new: $NEW · image: $IMAGE"
 [ -f "$SEC/app.env" ] || die "app.env missing — run server-setup (stack) first"
 grep -q '^APP_NODE_HEAP_MB=' "$R/config/profile.env" || die "profile.env is older than this app — run server-setup (profile) first"
 [ -f "$SEC/app-connections.env" ] || install -m 0600 /dev/null "$SEC/app-connections.env"
+# The docs folder app.yml mounts read-only (PR 594, CN-011); deploy.yml fills it with docs-sync.sh before this runs.
+[ -d "$R/docs" ] || install -d -m 0755 "$R/docs"
 
 # ---- 0. the database: schema migrations, then the settings migration (PR 496) --------------------------------
 if [ -n "${MIGRATE_IMAGE:-}" ]; then

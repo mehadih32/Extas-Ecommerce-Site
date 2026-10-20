@@ -201,6 +201,46 @@ rep RUN_ID=44 DEPLOY=success
 check "report: live but the public check failed" "$(grep -c 'DEPLOYED, HEALTH CHECK FAILED' "$T/out/deploy-latest.md"):$(grep -c 'Cloudflare error' "$T/out/deploy-latest.md")" "1:2"
 rep RUN_ID=44 BUILD=failure DEPLOY=skipped
 check "report: build failure in words" "$(grep -c 'Building the new version on the server failed' "$T/out/deploy-latest.md")" "1"
+echo '{"result":"ok","sha":"999988887777aaaa","files":12}' > "$T/docs.json"
+rep RUN_ID=44 DEPLOY=success DOCS=success DOCS_JSON="$T/docs.json"
+check "report: the docs copy on the server" "$(grep -c '| Docs on the server | `999988887777` — README.md + docs/ (12 files) |' "$T/out/deploy-latest.md")" "1"
+rep RUN_ID=44 DEPLOY=success DOCS=failure DOCS_JSON="$T/docs.json"
+check "report: a failed docs copy says what is still there" "$(grep -c 'Docs on the server | FAILED — the server keeps the previous copy' "$T/out/deploy-latest.md")" "1"
+rep RUN_ID=44 DEPLOY=success
+check "report: no docs line when the step did not run" "$(grep -c 'Docs on the server' "$T/out/deploy-latest.md")" "0"
+rm -rf "$T"
+
+# Docs on the server (PR 594, CN-011): docs-sync.sh copies README.md + docs/ of a checkout to $EXTAS_ROOT/docs/<sha12>/
+# with a COMMIT file, points `current` at it in one step, links unchanged files to the previous copy, keeps the newest
+# DOCS_KEEP_VERSIONS (never the current one), copies nothing back and refuses anything that is not a commit hash.
+T="$(mktemp -d)"; DS=../deploy/docs-sync.sh; DD="$T/root/docs"
+mkdir -p "$T/repo/docs/sub" "$T/root"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nDOCS_KEEP_VERSIONS=2\n' "$T/root"; } > "$T/conf"
+echo readme > "$T/repo/README.md"; echo bp1 > "$T/repo/docs/BLUEPRINT.md"; echo reg > "$T/repo/docs/MASTER-REGISTER.md"
+echo x > "$T/repo/docs/sub/x.md"
+ds() { env EXTAS_CONFIG_FILE="$T/conf" bash "$DS" "$1" "$T/repo"; }
+s1=aaaaaaaaaaaa1111111111111111111111111111; s2=bbbbbbbbbbbb2222222222222222222222222222; s3=cccccccccccc3333333333333333333333333333
+out="$(ds $s1)"
+check "docs: copied under the commit, current points at it" "$([ -L "$DD/current" ] && readlink "$DD/current"):$(cat "$DD/current/README.md"):$(cat "$DD/current/docs/sub/x.md")" "aaaaaaaaaaaa:readme:x"
+check "docs: COMMIT holds the hash and the Dhaka time" "$(grep -c "^commit=$s1$" "$DD/current/COMMIT"):$(grep -c '^timezone=Asia/Dhaka$' "$DD/current/COMMIT"):$(grep -cE '^copied=[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$' "$DD/current/COMMIT")" "1:1:1"
+check "docs: readable by the app" "$(stat -c %a "$DD/current/docs/BLUEPRINT.md"):$(stat -c %a "$DD/aaaaaaaaaaaa/docs/sub")" "644:755"
+check "docs: state record" "$(jq -r '.sha + " " + (.files|tostring)' "$T/root/state/docs-latest.json")" "$s1 5"
+check "docs: one line out" "$(wc -l <<<"$out"):$(grep -c 'aaaaaaaaaaaa on the server' <<<"$out")" "1:1"
+echo bp2 > "$T/repo/docs/BLUEPRINT.md"; rm "$T/repo/docs/sub/x.md"
+ds $s2 >/dev/null
+check "docs: the next commit becomes current" "$(readlink "$DD/current"):$(cat "$DD/current/docs/BLUEPRINT.md"):$([ -e "$DD/current/docs/sub/x.md" ] && echo still || echo gone)" "bbbbbbbbbbbb:bp2:gone"
+check "docs: the earlier copy is untouched" "$(cat "$DD/aaaaaaaaaaaa/docs/BLUEPRINT.md"):$(cat "$DD/aaaaaaaaaaaa/docs/sub/x.md")" "bp1:x"
+check "docs: an unchanged file costs nothing (hard link)" "$(stat -c %i "$DD/aaaaaaaaaaaa/docs/MASTER-REGISTER.md")" "$(stat -c %i "$DD/bbbbbbbbbbbb/docs/MASTER-REGISTER.md")"
+ds $s3 >/dev/null
+check "docs: the newest DOCS_KEEP_VERSIONS copies are kept" "$(find "$DD" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort | tr '\n' ' ')" "bbbbbbbbbbbb cccccccccccc current "
+inode="$(stat -c %i "$DD/bbbbbbbbbbbb/COMMIT")"
+ds $s2 >/dev/null
+check "docs: going back to a kept commit points current at it without copying again" "$(readlink "$DD/current"):$(stat -c %i "$DD/bbbbbbbbbbbb/COMMIT")" "bbbbbbbbbbbb:$inode"
+ds $s1 >/dev/null
+check "docs: a commit deployed again after it was pruned is copied again; the oldest copy goes" "$(find "$DD" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort | tr '\n' ' ')" "aaaaaaaaaaaa bbbbbbbbbbbb current "
+check "docs: nothing copied back into the checkout" "$(find "$T/repo" -type f | wc -l):$(cat "$T/repo/docs/BLUEPRINT.md")" "3:bp2"
+rc=0; ds 'x; rm -rf /' >/dev/null 2>&1 || rc=$?
+check "docs: anything but a commit hash is refused" "$rc:$(readlink "$DD/current")" "2:aaaaaaaaaaaa"
 rm -rf "$T"
 
 # Backups (PR 8): extas-backup daily, prune and extas-restore test / media with stand-ins for docker, rclone, chown and

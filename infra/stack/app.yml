@@ -11,6 +11,8 @@ services:
       EXTAS_COLOR: ${EXTAS_COLOR}
       EXTAS_STATE_DIR: /state
       EXTAS_TIMEZONE: ${EXTAS_TIMEZONE}
+      # PR 594 (CN-011): README.md + docs/ of the deployed commit, copied by infra/deploy/docs-sync.sh (read-only)
+      EXTAS_DOCS_DIR: /docs/current
       NODE_OPTIONS: --max-old-space-size=${APP_NODE_HEAP_MB}
     deploy:
       replicas: ${APP_REPLICAS}
@@ -22,6 +24,7 @@ services:
       - ${EXTAS_ROOT}/state:/state:ro
       - ${EXTAS_NVME_MOUNT}/scratch:/nvme
       - ${EXTAS_ROOT}/data/media:/media
+      - ${EXTAS_ROOT}/docs:/docs:ro
     networks:
       extas:
         aliases: ["app-${EXTAS_COLOR}"]
