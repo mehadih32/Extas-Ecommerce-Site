@@ -102,6 +102,11 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Show the same short summary in the chat.
 - Wave boundary: report in Bengali and continue. Don't wait (CN-006).
 
+## Think beyond the ask (owner, 20 Oct 13:52 — CN-013)
+- Goal for every PR: the customer journey is **easy, smart and profitable**, better than an ordinary shop, and still right 2–3 years from now.
+- Every finding gets: the fix, prevention (test/guard/setting), a review of the core decision, and growth ideas. Don't stop at the owner's list; add what is missing. Money, prices, COD or blocking ideas go to the owner as proposals.
+- The real-life journey simulation (`docs/qa/SIMULATION-PLAN.md`) is a go-live gate: it runs again on new.extas.com.bd before real orders.
+
 ## Commits
 - Branch per PR: `pr-<number>-<slug>`. ~~Squash-merge into `main` after the gates pass.~~
 - **One register PR = one commit** (owner's audit, 20 Oct): a GitHub PR may carry several register PRs, but each one

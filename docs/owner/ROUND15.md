@@ -779,3 +779,9 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 16. **Menu:** good. Confirm the rule: when the 7th menu item doesn't fit, it goes into the "More" dropdown.
 17. **Hero campaigns (CN-012):** backend "Hero & campaigns". Set up a campaign (Winter, Puja, Eid, Summer, Hot deals, any offer) with dates; pick from **8–10 ready hero templates** in several colours; link a collection so the hero's products swap with the campaign; optionally design a new hero inside the backend (simple editor: text, colours, image, button) and save it as a template. Simple to use, not complex.
 18. **Working style:** fewer rounds, fewer tokens, finished properly the first time; use own judgement for "smart" details.
+
+## Note 55 — 20 Oct 13:52 · Think beyond the ask; the real-life journey simulation is a go-live gate (CN-013)
+- The 50-order real-life simulation is **required before real orders start**. Its report (problems found and how each was solved) is kept for the owner.
+- Journey scope: from "I need a polo" to 3 days after delivery: discovery, browsing, checkout, confirmation, packing, courier, the door (try-on, negotiating with the delivery man, refusal, partial acceptance), COD settlement, exchange/return, complaints, angry customers, product faults, auto-handling and handover to a human, repeat purchase. Research real Bangladesh practice first.
+- **Open boundary (standing):** every finding gets the fix + prevention + a review of the core decision behind that step + ideas that make it easier, smarter and more profitable. Agents do not stop at what the owner listed; they add what is missing. Ideas touching money, prices, COD or blocking go to the owner as proposals (hard rule 6).
+- Goal set for every agent, always: the journey is **easy, smart and profitable**, better than an ordinary e-commerce site, and the decisions still pay off 2–3 years from now.
