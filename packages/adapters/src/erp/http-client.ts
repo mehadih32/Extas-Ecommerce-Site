@@ -9,8 +9,21 @@
 //   attempts and backoff from settings), so one call here is exactly one request.
 // - Answers are checked against the contract row by row: a broken row is reported back (`rejected`), it never stops
 //   the good rows of the same page.
+// - Documents (PR 199, 200): `push` sends one business document (POST /orders, PATCH /orders/{id}) with its
+//   Idempotency-Key header; a repeat with the same key gets the ERP's first answer and changes nothing there.
 import { z } from 'zod';
-import { ErpError, erpCodeForStatus, type ErpApi, type ErpCallOptions, type ErpHealth, type ErpPage, type ErpStockRow, type ErpVariantRow } from './contract';
+import {
+  ErpError,
+  erpCodeForStatus,
+  type ErpApi,
+  type ErpCallOptions,
+  type ErpDocument,
+  type ErpHealth,
+  type ErpPage,
+  type ErpPushResult,
+  type ErpStockRow,
+  type ErpVariantRow,
+} from './contract';
 
 /** The contract's base path on the ERP. Part of the API contract, like a route. */
 export const ERP_API_BASE_PATH = '/api/v1/ecommerce';
@@ -123,13 +136,41 @@ async function failure(res: Response): Promise<ErpError> {
   return new ErpError(erpCodeForStatus(res.status), message, { status: res.status, erpCode, details, retryAfterMs: retryAfterMs(res.headers.get('retry-after')) });
 }
 
+/** The contract's method and path for each document kind (PR 199). */
+export function documentRoute(doc: ErpDocument): { method: 'POST' | 'PATCH'; path: string; body: unknown } {
+  switch (doc.type) {
+    case 'order.create':
+      return { method: 'POST', path: '/orders', body: doc.body };
+    case 'order.status':
+      return { method: 'PATCH', path: `/orders/${encodeURIComponent(doc.externalOrderId)}`, body: doc.body };
+  }
+}
+
+/** The header an ERP sets when it answers a repeated Idempotency-Key from its record (common practice). */
+export const IDEMPOTENT_REPLAY_HEADER = 'idempotent-replayed';
+
+function erpIdOf(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return null;
+  const o = body as Record<string, unknown>;
+  for (const k of ['erpOrderId', 'erpId', 'id']) {
+    const v = o[k];
+    if ((typeof v === 'string' && v) || typeof v === 'number') return String(v).slice(0, MAX_TEXT);
+  }
+  return null;
+}
+
 export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly baseUrl: string } {
   const base = opts.baseUrl.replace(/\/+$/, '') + ERP_API_BASE_PATH;
 
   async function get(path: string, query: Record<string, string | null | undefined>, o: ErpCallOptions = {}): Promise<unknown> {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(query)) if (v !== null && v !== undefined && v !== '') qs.set(k, v);
-    const url = `${base}${path}${qs.size ? `?${qs.toString()}` : ''}`;
+    return (await call('GET', `${path}${qs.size ? `?${qs.toString()}` : ''}`, undefined, o)).body;
+  }
+
+  /** One request. A document carries its Idempotency-Key; the key itself is never put into a message. */
+  async function call(method: string, pathAndQuery: string, payload: unknown, o: ErpCallOptions & { idempotencyKey?: string } = {}): Promise<{ status: number; body: unknown; replayed: boolean }> {
+    const url = `${base}${pathAndQuery}`;
     const ctrl = new AbortController();
     let timedOut = false;
     const timer = o.timeoutMs
@@ -139,12 +180,17 @@ export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly b
         }, o.timeoutMs)
       : undefined;
     let res: Response;
+    const headers: Record<string, string> = { authorization: `Bearer ${opts.apiKey}`, accept: 'application/json' };
+    if (payload !== undefined) headers['content-type'] = 'application/json';
+    if (o.idempotencyKey) headers['idempotency-key'] = o.idempotencyKey;
     try {
       const f = opts.fetch ?? (globalThis.fetch as FetchLike);
-      res = await f(url, { method: 'GET', headers: { authorization: `Bearer ${opts.apiKey}`, accept: 'application/json' }, signal: ctrl.signal });
+      res = await f(url, { method, headers, signal: ctrl.signal, ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}) });
       if (!res.ok) throw await failure(res);
+      const replayed = res.headers.get(IDEMPOTENT_REPLAY_HEADER) === 'true';
+      if (res.status === 204) return { status: res.status, body: null, replayed };
       try {
-        return await res.json();
+        return { status: res.status, body: await res.json(), replayed };
       } catch {
         throw new ErpError('BAD_RESPONSE', 'the ERP answer is not JSON', { status: res.status });
       }
@@ -194,6 +240,13 @@ export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly b
       const r = rows(list, erpStockRowSchema);
       if (r.rejected.length) throw new ErpError('BAD_RESPONSE', `the stock answer for one SKU has ${r.rejected.length} broken row(s)`, { details: r.rejected.map((x) => x.reason) });
       return r.items;
+    },
+
+    async push(doc, o): Promise<ErpPushResult> {
+      if (!o?.idempotencyKey) throw new ErpError('INVALID_REQUEST', 'every document needs an Idempotency-Key');
+      const route = documentRoute(doc);
+      const r = await call(route.method, route.path, route.body, o);
+      return { erpId: erpIdOf(r.body), status: r.status, body: r.body, replayed: r.replayed };
     },
   };
 }

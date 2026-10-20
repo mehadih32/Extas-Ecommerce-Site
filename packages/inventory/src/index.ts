@@ -4,7 +4,14 @@
 // - PR 194 the sync layer (sync.ts): retry with backoff from settings, the error surface on ErpSyncRun / ErpSyncState;
 // - PR 195 the stock pull per SKU / colour / size (stock-pull.ts) and the stock views (stock.ts);
 // - PR 196 company and warehouse mapping per store (mapping.ts);
+// - PR 197, 198 one global hold on the shared pool with row locking (reservations.ts);
+// - PR 199, 200 business documents to the ERP through an idempotent outbox (erp-push.ts);
 // - PR 201 warehouses and locations with the damaged bin (locations.ts);
+// - PR 202 low-stock alerts on the shared number (low-stock.ts);
+// - PR 203 the stock count by barcode (stock-audit.ts);
+// - PR 204 the publishing queue driven by ERP stock (publish-queue.ts);
+// - PR 205 the sync health panel (sync-health.ts); PR 206 manual re-sync (resync.ts);
+// - PR 207 the stock movement report and the reconciliation with the ERP (movements.ts);
 // - background jobs for the BullMQ worker (jobs.ts).
 // Every service takes the database, a settings reader and the connection layer, checks the permission itself and
 // writes the audit log in the same transaction. The admin API is apps/web/src/app/api/admin/inventory.
@@ -17,4 +24,12 @@ export * from './locations';
 export * from './stock';
 export * from './mapping';
 export * from './stock-pull';
+export * from './reservations';
+export * from './erp-push';
+export * from './low-stock';
+export * from './stock-audit';
+export * from './publish-queue';
+export * from './sync-health';
+export * from './resync';
+export * from './movements';
 export * from './jobs';

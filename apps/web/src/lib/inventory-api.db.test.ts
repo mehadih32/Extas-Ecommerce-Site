@@ -1,13 +1,35 @@
-// S09 · PR 497, 499, 196, 201, 195 — the inventory admin API end to end on a real PostgreSQL (a throwaway database;
-// skipped without TEST_DATABASE_ADMIN_URL): login and same-site checks, the ERP panel on the practice ERP (no vault, no
-// key: nothing real is touched), the mode switch, warehouses with the damaged bin, and the stock view.
+// S09 · PR 497, 499, 196, 201, 195, 202–207 — the inventory admin API end to end on a real PostgreSQL (a throwaway
+// database; skipped without TEST_DATABASE_ADMIN_URL): login and same-site checks, the ERP panel on the practice ERP (no
+// vault, no key: nothing real is touched), the mode switch, warehouses with the damaged bin, the stock view, and the stock
+// page's routes: health panel, re-sync, documents, low stock, stock counts, publish queue, movements and the ERP check.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { erpHandler, erpVerifyHandler, erpWarehousesHandler, locationHandler, stockHandler, warehouseHandler, warehouseLocationsHandler, warehousesHandler } from './inventory-api';
+import {
+  auditHandler,
+  auditLineHandler,
+  auditsHandler,
+  erpHandler,
+  erpStylesHandler,
+  erpVerifyHandler,
+  erpWarehousesHandler,
+  healthHandler,
+  locationHandler,
+  lowStockHandler,
+  movementsHandler,
+  publishQueueHandler,
+  pushesHandler,
+  pushesRetryHandler,
+  reconcileHandler,
+  resyncHandler,
+  stockHandler,
+  warehouseHandler,
+  warehouseLocationsHandler,
+  warehousesHandler,
+} from './inventory-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -97,5 +119,63 @@ describe.skipIf(!HAS_TEST_DB)('inventory admin API on PostgreSQL', () => {
     expect([unknown.status, unknown.body.error]).toEqual([404, 'NOT_FOUND']);
     const logged = await t.prisma.auditLog.findMany({ where: { action: { in: ['erp.mode', 'warehouse.create', 'location.create'] } }, select: { action: true } });
     expect(new Set(logged.map((l) => l.action))).toEqual(new Set(['erp.mode', 'warehouse.create', 'location.create']));
+  });
+
+  it('the stock page: health on the practice ERP, re-sync waits for real keys, documents, low stock, counts, movements', async () => {
+    const h = await read(await healthHandler(call('GET', '/api/admin/inventory/health', { cookie: owner }), deps));
+    expect(h.status).toBe(200);
+    expect(h.body.health).toMatchObject({ level: 'practice', link: { state: 'mock' }, pushes: { pending: 0, dead: 0 }, holds: { active: { holds: 0 } } });
+    expect((await healthHandler(call('POST', '/api/admin/inventory/health', { cookie: owner }), deps)).status).toBe(405);
+
+    const all = await read(await resyncHandler(call('POST', '/api/admin/inventory/resync', { cookie: owner, body: {} }), deps));
+    expect([all.status, all.body.stock.status, all.body.stock.reason]).toEqual([200, 'skipped', 'ERP_ON_PRACTICE']);
+    const one = await read(await resyncHandler(call('POST', '/api/admin/inventory/resync', { cookie: owner, body: { sku: 'NOT-A-SKU' } }), deps));
+    expect([one.status, one.body.error]).toEqual([404, 'NOT_FOUND']);
+    const both = await read(await resyncHandler(call('POST', '/api/admin/inventory/resync', { cookie: owner, body: { sku: 'X', productId: 'y' } }), deps));
+    expect([both.status, both.body.error]).toEqual([400, 'INVALID_INPUT']);
+
+    const pushes = await read(await pushesHandler(call('GET', '/api/admin/inventory/pushes?status=FAILED,DEAD', { cookie: owner }), deps));
+    expect([pushes.status, pushes.body.items]).toEqual([200, []]);
+    expect((await pushesHandler(call('GET', '/api/admin/inventory/pushes?status=LOST', { cookie: owner }), deps)).status).toBe(400);
+    const retry = await read(await pushesRetryHandler(call('POST', '/api/admin/inventory/pushes/retry', { cookie: owner, body: { all: true } }), deps));
+    expect([retry.status, retry.body.queued]).toEqual([200, 0]);
+    const low = await read(await lowStockHandler(call('GET', '/api/admin/inventory/low-stock', { cookie: owner }), deps));
+    expect([low.status, low.body.total]).toEqual([200, 0]);
+    const queue = await read(await publishQueueHandler(call('GET', '/api/admin/inventory/publish-queue', { cookie: owner }), deps));
+    expect(queue.status).toBe(200);
+    const styles = await read(await erpStylesHandler(call('GET', '/api/admin/inventory/erp/styles', { cookie: owner }), deps));
+    expect([styles.status, styles.body.styles.state]).toEqual([200, 'practice']);
+
+    const w = (await read(await warehousesHandler(call('GET', '/api/admin/inventory/warehouses', { cookie: owner }), deps))).body.warehouses[0];
+    const main = w.locations.find((l: { code: string }) => l.code === 'main');
+    const started = await read(await auditsHandler(call('POST', '/api/admin/inventory/audits', { cookie: owner, body: { locationId: main.id } }), deps));
+    expect(started.status).toBe(201);
+    const id = started.body.audit.id as string;
+    const again = await read(await auditsHandler(call('POST', '/api/admin/inventory/audits', { cookie: owner, body: { locationId: main.id } }), deps));
+    expect([again.status, again.body.error]).toEqual([409, 'AUDIT_OPEN']);
+    const scan = await read(await auditHandler(call('POST', `/api/admin/inventory/audits/${id}`, { cookie: owner, body: { action: 'scan', code: 'SAMPLE-UNKNOWN', quantity: 2 } }), deps, id));
+    expect([scan.status, scan.body.known, scan.body.counted]).toEqual([200, false, 2]);
+    expect((await auditHandler(call('POST', `/api/admin/inventory/audits/${id}`, { cookie: owner, body: { action: 'delete' } }), deps, id)).status).toBe(400);
+    const reviewed = await read(await auditHandler(call('POST', `/api/admin/inventory/audits/${id}`, { cookie: owner, body: { action: 'review' } }), deps, id));
+    expect(reviewed.body.audit.status).toBe('REVIEW');
+    const needs = await read(await auditHandler(call('POST', `/api/admin/inventory/audits/${id}`, { cookie: owner, body: { action: 'complete' } }), deps, id));
+    expect([needs.status, needs.body.error]).toEqual([409, 'REASON_REQUIRED']);
+    const lineId = reviewed.body.audit.lines[0].id as string;
+    const reasoned = await read(await auditLineHandler(call('PATCH', `/api/admin/inventory/audit-lines/${lineId}`, { cookie: owner, body: { reason: 'wrong-label' } }), deps, lineId));
+    expect(reasoned.body.audit.totals.withoutReason).toBe(0);
+    const done = await read(await auditHandler(call('POST', `/api/admin/inventory/audits/${id}`, { cookie: owner, body: { action: 'complete' } }), deps, id));
+    expect(done.body.audit.status).toBe('COMPLETED');
+    const list = await read(await auditsHandler(call('GET', '/api/admin/inventory/audits', { cookie: owner }), deps));
+    expect(list.body.audits.map((a: { id: string }) => a.id)).toEqual([id]);
+    expect((await auditLineHandler(call('PATCH', '/api/admin/inventory/audit-lines/x', { cookie: owner, body: { reason: null } }), deps, 'x')).status).toBe(400);
+
+    const range = 'from=2026-01-01T00:00:00Z&to=2027-01-01T00:00:00Z';
+    const report = await read(await movementsHandler(call('GET', `/api/admin/inventory/movements?${range}`, { cookie: owner }), deps));
+    expect([report.status, report.body.report.totals.movements]).toEqual([200, 0]);
+    expect((await movementsHandler(call('GET', '/api/admin/inventory/movements', { cookie: owner }), deps)).status).toBe(400);
+    const check = await read(await reconcileHandler(call('POST', '/api/admin/inventory/reconcile', { cookie: owner }), deps));
+    expect([check.status, check.body.reconcile.status, check.body.reconcile.reason]).toEqual([200, 'skipped', 'ERP_ON_PRACTICE']);
+    const logged = await t.prisma.auditLog.count({ where: { action: { in: ['erp.resync', 'erp.push.retry', 'stock.audit.start', 'stock.audit.complete'] } } });
+    expect(logged).toBeGreaterThanOrEqual(3);
   });
 });

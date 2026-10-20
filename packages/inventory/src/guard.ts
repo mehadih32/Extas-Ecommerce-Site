@@ -85,13 +85,22 @@ export const ERP_DEPENDENT_PATHS = {
   'company.verify': { none: 'refuse', mock: 'practice', unavailable: 'refuse', connected: 'run' },
   /** PR 196 — the ERP warehouses to link local warehouses to. */
   'warehouses.discover': { none: 'skip', mock: 'practice', unavailable: 'refuse', connected: 'run' },
+  /** PR 206 — "re-sync now" (all stock) and "re-sync this product" from the admin. */
+  'stock.resync': { none: 'refuse', mock: 'skip', unavailable: 'refuse', connected: 'run' },
+  /** PR 207 — the full check of every stock number against the ERP (changes nothing). */
+  'stock.reconcile': { none: 'skip', mock: 'skip', unavailable: 'fail', connected: 'run' },
+  /** PR 204 — ERP styles the shop does not have yet, for the publishing queue. */
+  'variants.discover': { none: 'skip', mock: 'practice', unavailable: 'refuse', connected: 'run' },
 } as const satisfies Record<string, Record<ErpLinkState, string>>;
 
 export type ErpDependentPath = keyof typeof ERP_DEPENDENT_PATHS;
 
+/** Paths that read the ERP's stock: on the practice ERP they run once its stock is switched on (`erp.mock.stockEnabled`). */
+const STOCK_PATHS: ReadonlySet<ErpDependentPath> = new Set(['stock.pull', 'stock.liveCheck', 'stock.resync', 'stock.reconcile']);
+
 /** The behaviour of a path for a link (`mock` with the practice stock switched on behaves like `connected`). */
 export function behaviourOf(path: ErpDependentPath, link: ErpLink): string {
-  if (link.state === 'mock' && link.stockEnabled && (path === 'stock.pull' || path === 'stock.liveCheck')) return 'run';
+  if (link.state === 'mock' && link.stockEnabled && STOCK_PATHS.has(path)) return 'run';
   return ERP_DEPENDENT_PATHS[path][link.state];
 }
 

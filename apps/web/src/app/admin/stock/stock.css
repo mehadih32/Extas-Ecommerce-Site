@@ -1,0 +1,107 @@
+/* S09 · PR 202–207 — the stock pages: stock and ERP sync (the health panel), stock counts and movements. There is no
+   demo screen for them, so they are drawn only with the admin's own blocks and tokens (admin.css: cards, rows, chips,
+   counters; products.css: pa-kpis, pa-hd, pa-empty) — phone first, one column; two columns from 1100 px. Nothing wraps
+   to a second line where it would push the row: names cut with "…", numbers keep their own line under the name. */
+
+.ad-dot.bad { background: var(--ad-sale); }
+
+/* ---------- the verdict at the top ---------- */
+.st-verdict { align-items: center; }
+.st-verdict .ad-dot { margin: 0 2px 0 4px; }
+.st-verdict b { display: block; }
+.st-verdict.lv-down, .st-verdict.lv-failing { background: var(--ad-warn-bg); border-color: var(--ad-warn-line); }
+.st-verdict.lv-ok { background: var(--ad-brand-tint); border-color: var(--ad-brand-tint); }
+/* the "last stock" counter holds a time, not a number: a smaller size so it stays on one line */
+.st-kpi-t { font-size: 17px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- cards ---------- */
+.st-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) {
+  .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .st-wide { grid-column: 1 / -1; }
+}
+.st-card { display: flex; flex-direction: column; gap: 4px; }
+.st-card-hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.st-card-hd h2 { min-width: 0; }
+.st-card-acts { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--ad-line2); }
+.st-row-acts { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 479px) { .st-row-acts > .ad-btn { flex: 1 1 100%; } }
+.st-block { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-err { white-space: normal; }
+
+/* re-sync: the button, then "one SKU" as a field with its button beside it */
+.st-acts { display: flex; flex-direction: column; gap: 10px; }
+.st-acts > .ad-btn { align-self: flex-start; }
+@media (max-width: 479px) { .st-acts > .ad-btn { align-self: stretch; } }
+.st-one { display: flex; gap: 8px; min-width: 0; }
+.st-one .ad-input { flex: 1 1 auto; min-width: 0; padding-top: 9px; padding-bottom: 9px; }
+.st-one .ad-btn { flex: 0 0 auto; }
+.st-check { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.st-check > .ad-btn { align-self: flex-start; }
+@media (max-width: 479px) { .st-check > .ad-btn { align-self: stretch; } }
+.st-check-res { display: flex; flex-direction: column; gap: 4px; }
+.st-check-res p { margin: 0; }
+
+/* ---------- counts in a row (documents, count totals) ---------- */
+.st-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.st-count { display: inline-flex; align-items: baseline; gap: 4px; padding: 4px 10px; border-radius: var(--ad-pill); background: var(--ad-line2); font-size: var(--ad-fs-mini); color: var(--ad-text2); white-space: nowrap; }
+.st-count b { font-size: var(--ad-fs-small); color: var(--ad-ink); }
+.st-count.c-failed, .st-count.c-dead { background: var(--ad-warn-bg); }
+.st-count.c-sent { background: var(--ad-brand-tint); }
+
+/* ---------- list rows ---------- */
+.st-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.st-li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ad-line2); min-width: 0; font-size: var(--ad-fs-small); }
+.st-li:first-child { border-top: 0; }
+.st-li-main { flex: 1 1 auto; min-width: 0; }
+.st-li-main > b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad a.st-name { display: block; min-height: 24px; padding: 2px 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ad-ink); }
+.ad a.st-name:hover { text-decoration: underline; }
+.st-sku { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--ad-fs-mini); background: var(--ad-line2); border-radius: var(--ad-side-radius); padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
+.st-doc, .st-li:has(.st-st) { align-items: flex-start; }
+.st-doc .st-st, .st-li .st-st { margin-top: 2px; }
+
+/* a number at the start of a row (pieces left) */
+.st-n { flex: 0 0 auto; min-width: 40px; height: 32px; padding: 0 8px; border-radius: var(--ad-radius); display: inline-flex; align-items: center; justify-content: center; font-family: var(--ad-font-display); font-weight: 800; background: var(--ad-warn-bg); color: var(--ad-warn); }
+.st-n.zero { background: var(--ad-line2); color: var(--ad-sale); }
+
+/* a state chip (documents, runs, counts) */
+.st-st { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-size: var(--ad-fs-mini); font-weight: 700; padding: 3px 9px; border-radius: var(--ad-pill); background: var(--ad-line2); color: var(--ad-text2); white-space: nowrap; }
+.st-st::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ad-dot-off); }
+.st-st.s-SENT, .st-st.s-SUCCEEDED, .st-st.s-COMPLETED { background: var(--ad-brand-tint); color: var(--ad-brand-dark); }
+.st-st.s-SENT::before, .st-st.s-SUCCEEDED::before, .st-st.s-COMPLETED::before { background: var(--ad-brand); }
+.st-st.s-PENDING::before, .st-st.s-RUNNING::before, .st-st.s-QUEUED::before, .st-st.s-COUNTING::before, .st-st.s-REVIEW::before { background: var(--ad-warn); }
+.st-st.s-FAILED, .st-st.s-DEAD { background: var(--ad-warn-bg); color: var(--ad-sale); }
+.st-st.s-FAILED::before, .st-st.s-DEAD::before { background: var(--ad-sale); }
+
+/* ---------- counted numbers (stock count, movements): under the name on a phone, beside it from 760 px ---------- */
+.st-aline, .st-mrow { flex-wrap: wrap; }
+.st-nums { display: flex; gap: 6px; flex: 1 1 100%; }
+@media (min-width: 760px) { .st-nums { flex: 0 0 auto; } }
+.st-num { display: flex; flex-direction: column; align-items: flex-end; min-width: 64px; padding: 4px 8px; border-radius: var(--ad-radius); background: var(--ad-surface2); border: 1px solid var(--ad-line2); }
+@media (max-width: 759px) { .st-num { flex: 1 1 0; min-width: 0; } }
+.st-num .ad-mini { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.st-num b { font-family: var(--ad-font-display); font-size: 16px; line-height: 1.2; }
+.st-num.over b { color: var(--ad-brand); }
+.st-num.short b { color: var(--ad-sale); }
+.st-reason { flex: 1 1 100%; }
+@media (min-width: 760px) { .st-reason { flex: 0 0 220px; } }
+.st-reason .ad-input { padding-top: 9px; padding-bottom: 9px; font-size: var(--ad-fs-small); }
+
+/* ---------- forms: start a count, the scan field, the movement range ---------- */
+.st-start-row { display: flex; gap: 8px; min-width: 0; }
+.st-start-row .ad-input { flex: 1 1 auto; min-width: 0; padding-top: 9px; padding-bottom: 9px; }
+@media (max-width: 479px) { .st-start-row { flex-direction: column; } }
+.st-scan { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: end; margin: 6px 0 4px; }
+.st-scan-btn { grid-column: 1 / -1; }
+@media (min-width: 600px) { .st-scan { grid-template-columns: minmax(0, 1fr) 96px auto; } .st-scan-btn { grid-column: auto; } }
+.st-scan .ad-input { padding-top: 9px; padding-bottom: 9px; }
+.st-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; margin-bottom: 16px; }
+.st-fld { min-width: 0; }
+.st-fld .ad-input { padding-top: 9px; padding-bottom: 9px; min-width: 0; }
+.st-fld-sku, .st-fld-btn { grid-column: 1 / -1; }
+@media (min-width: 760px) {
+  .st-filter { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
+  .st-fld-sku, .st-fld-btn { grid-column: auto; }
+}
+@media (min-width: 760px) { .st-kpis-moves { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

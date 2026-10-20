@@ -3,18 +3,34 @@
 //
 // - `inventory.erp.pullStock` {storeId, full?} — the stock pull (PR 195).
 // - `inventory.locations.ensureDefaults` — default locations and the damaged bin on every warehouse (PR 201).
+// - `inventory.reservations.release` — the abandon timer: expired and abandoned holds let go (PR 197/198).
+// - `inventory.erp.pushDocuments` {storeId?} — the document relay to the ERP (PR 199/200).
+// - `inventory.lowStock.evaluate` — low-stock alerts over every SKU (PR 202).
+// - `inventory.erp.reconcile` {storeId} — the full check of the mirror against the ERP (PR 207).
 // - `stockPollPlan` tells the scheduler how often to pull and for which stores: every store whose ERP mode is not
-//   "no ERP", every `erp.sync.stockPollMinutes` (contract: poll `updatedSince` every few minutes).
+//   "no ERP", every `erp.sync.stockPollMinutes` (contract: poll `updatedSince` every few minutes). `inventorySchedule`
+//   is the whole timetable, every interval from settings.
+import { SYSTEM } from '@extas/auth';
 import type { InventoryDeps } from './context';
 import { storesWithErp } from './erp-mode';
+import { relayErpPushes, type RelayResult } from './erp-push';
 import { ensureDefaultLocations } from './locations';
+import { evaluateLowStock, type LowStockRun } from './low-stock';
+import { reconcileWithErp, type ReconcileResult } from './movements';
+import { sweepReservations, type SweepResult } from './reservations';
 import { pullStock, type StockPullResult } from './stock-pull';
 
 export const INVENTORY_QUEUE = 'inventory';
 
-export type InventoryJob = { name: 'inventory.erp.pullStock'; storeId: number; full?: boolean } | { name: 'inventory.locations.ensureDefaults' };
+export type InventoryJob =
+  | { name: 'inventory.erp.pullStock'; storeId: number; full?: boolean }
+  | { name: 'inventory.locations.ensureDefaults' }
+  | { name: 'inventory.reservations.release' }
+  | { name: 'inventory.erp.pushDocuments'; storeId?: number }
+  | { name: 'inventory.lowStock.evaluate' }
+  | { name: 'inventory.erp.reconcile'; storeId: number };
 
-export type InventoryJobResult = StockPullResult | { created: number; restored: number };
+export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | LowStockRun | ReconcileResult;
 
 export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): Promise<InventoryJobResult> {
   switch (job.name) {
@@ -22,6 +38,14 @@ export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): P
       return pullStock(deps, { storeId: job.storeId, full: job.full });
     case 'inventory.locations.ensureDefaults':
       return ensureDefaultLocations(deps);
+    case 'inventory.reservations.release':
+      return sweepReservations(deps);
+    case 'inventory.erp.pushDocuments':
+      return relayErpPushes(deps, { storeId: job.storeId });
+    case 'inventory.lowStock.evaluate':
+      return evaluateLowStock(deps);
+    case 'inventory.erp.reconcile':
+      return reconcileWithErp(deps, { actor: SYSTEM, storeId: job.storeId, ctx: { source: 'job' } });
   }
 }
 
@@ -29,4 +53,23 @@ export async function stockPollPlan(deps: InventoryDeps): Promise<{ everyMs: num
   const minutes = await deps.settings.value('erp.sync.stockPollMinutes');
   const stores = await storesWithErp(deps);
   return { everyMs: minutes * 60_000, jobs: stores.map((s) => ({ name: 'inventory.erp.pullStock', storeId: s.storeId })) };
+}
+
+/** The whole timetable for the scheduler: each entry runs its jobs every `everyMs`. */
+export async function inventorySchedule(deps: InventoryDeps): Promise<{ everyMs: number; jobs: InventoryJob[] }[]> {
+  const [pull, sweepS, relayS, lowMin, reconcileH, stores] = await Promise.all([
+    stockPollPlan(deps),
+    deps.settings.value('inventory.reservation.sweepSeconds'),
+    deps.settings.value('erp.push.relaySeconds'),
+    deps.settings.value('inventory.lowStock.sweepMinutes'),
+    deps.settings.value('inventory.reconcile.everyHours'),
+    storesWithErp(deps),
+  ]);
+  return [
+    pull,
+    { everyMs: sweepS * 1000, jobs: [{ name: 'inventory.reservations.release' }] },
+    { everyMs: relayS * 1000, jobs: [{ name: 'inventory.erp.pushDocuments' }] },
+    { everyMs: lowMin * 60_000, jobs: [{ name: 'inventory.lowStock.evaluate' }] },
+    { everyMs: reconcileH * 3_600_000, jobs: stores.map((s) => ({ name: 'inventory.erp.reconcile', storeId: s.storeId })) },
+  ];
 }

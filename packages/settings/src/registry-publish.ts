@@ -6,18 +6,31 @@ import { z } from 'zod';
 import { setting } from './define';
 import { tokensOf } from './schemas';
 
-/** The checks a product goes through before it may go live (the order is the order on screen). */
-export const PUBLISH_CHECK_KEYS = ['category', 'variants', 'price', 'photos', 'sizeChart', 'fabric', 'seo', 'description', 'stock'] as const;
+/**
+ * The checks a product goes through before it may go live (the order is the order on screen).
+ * `sellableStock` (PR 204, registry v11): stock in a location the shop sells from, read from the ERP's stock mirror.
+ */
+export const PUBLISH_CHECK_KEYS = ['category', 'variants', 'price', 'photos', 'sizeChart', 'fabric', 'seo', 'description', 'stock', 'sellableStock'] as const;
 export type PublishCheckKey = (typeof PUBLISH_CHECK_KEYS)[number];
 
 /** block = the product cannot be published until it passes; warn = shown as a reminder only; off = not checked. */
 export const publishCheckLevelSchema = z.enum(['block', 'warn', 'off']);
 export type PublishCheckLevel = z.output<typeof publishCheckLevelSchema>;
 
-const perCheck = <T extends z.ZodType>(value: T) => z.object(Object.fromEntries(PUBLISH_CHECK_KEYS.map((k) => [k, value])) as Record<PublishCheckKey, T>).strict();
+/**
+ * Checks added after a store may already have saved its own checklist: a saved value without them still reads, with
+ * the check off and its default weight (nothing changes for that store until someone switches the check on).
+ */
+const ADDED_LATER: Partial<Record<PublishCheckKey, { level: PublishCheckLevel; weight: number }>> = { sellableStock: { level: 'off', weight: 5 } };
 
-export const publishChecksSchema = perCheck(publishCheckLevelSchema);
-export const healthWeightsSchema = perCheck(z.int().min(0).max(100)).refine((w) => Object.values(w).some((v) => v > 0), { message: 'at least one check must count' });
+const perCheck = <T extends z.ZodType>(value: T, later: (k: PublishCheckKey) => z.ZodType | null) =>
+  z.object(Object.fromEntries(PUBLISH_CHECK_KEYS.map((k) => [k, later(k) ?? value])) as Record<PublishCheckKey, T>).strict();
+
+export const publishChecksSchema = perCheck(publishCheckLevelSchema, (k) => (ADDED_LATER[k] ? publishCheckLevelSchema.default(ADDED_LATER[k].level) : null));
+export const healthWeightsSchema = perCheck(z.int().min(0).max(100), (k) => (ADDED_LATER[k] ? z.int().min(0).max(100).default(ADDED_LATER[k].weight) : null)).refine(
+  (w) => Object.values(w).some((v) => v > 0),
+  { message: 'at least one check must count' },
+);
 export const healthBandsSchema = z
   .object({ good: z.int().min(0).max(100), fair: z.int().min(0).max(100) })
   .strict()
@@ -34,7 +47,8 @@ export const skuSuggestionSchema = z
 export const publishSettings = {
   'catalogue.publish.checks': setting({
     schema: publishChecksSchema,
-    default: { category: 'block', variants: 'block', price: 'block', photos: 'block', sizeChart: 'block', fabric: 'block', seo: 'block', description: 'warn', stock: 'warn' },
+    // v11 (PR 204): `sellableStock` added, off until the owner switches it on (the `stock` check already reminds).
+    default: { category: 'block', variants: 'block', price: 'block', photos: 'block', sizeChart: 'block', fabric: 'block', seo: 'block', description: 'warn', stock: 'warn', sellableStock: 'off' },
     scope: 'store',
     valueType: 'JSON',
     group: 'catalogue',
@@ -42,11 +56,11 @@ export const publishSettings = {
     helpKey: 'catalogue.publish.checks.help',
     isOwnerData: false,
     sortOrder: 200,
-    version: 8,
+    version: 11,
   }),
   'catalogue.health.weights': setting({
     schema: healthWeightsSchema,
-    default: { category: 10, variants: 10, price: 15, photos: 20, sizeChart: 15, fabric: 10, seo: 10, description: 5, stock: 5 }, // hardcode-ok: registry default
+    default: { category: 10, variants: 10, price: 15, photos: 20, sizeChart: 15, fabric: 10, seo: 10, description: 5, stock: 5, sellableStock: 5 }, // hardcode-ok: registry default
     scope: 'store',
     valueType: 'JSON',
     group: 'catalogue',
@@ -54,7 +68,7 @@ export const publishSettings = {
     helpKey: 'catalogue.health.weights.help',
     isOwnerData: false,
     sortOrder: 210,
-    version: 8,
+    version: 11,
   }),
   'catalogue.health.bands': setting({
     schema: healthBandsSchema,

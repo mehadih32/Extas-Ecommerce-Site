@@ -53,7 +53,9 @@
     "inventory": {
       "read": "See stock per colour and size, warehouses, locations and the ERP connection",
       "locations": "Add, rename and archive warehouses and locations (incl. the damaged bin), link them to ERP warehouses",
-      "erp": "Choose where a store's stock and orders come from (our ERP, another ERP, none) and its ERP company and warehouse"
+      "erp": "Choose where a store's stock and orders come from (our ERP, another ERP, none) and its ERP company and warehouse",
+      "sync": "Bring stock from the ERP again now (all or one product), resend waiting ERP documents, check stock against the ERP",
+      "audit": "Count a location by barcode and give a reason for each difference (stock itself is corrected in the ERP)"
     }
   },
   "totp": {

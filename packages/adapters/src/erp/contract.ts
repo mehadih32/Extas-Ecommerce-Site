@@ -4,7 +4,7 @@
 //
 // The shape follows the ERP ↔ shop API contract (docs/ERP-API-CONTRACT.md, CN-005): the ERP is the master for
 // variants and stock; the company is decided by the key on the ERP side, never sent by the shop; stock comes per SKU
-// per ERP warehouse. Order and document pushes (PR 199, 200) extend this interface when they are built.
+// per ERP warehouse. Business documents (PR 199, 200) go out through `push`, each with its Idempotency-Key.
 import { AdapterError } from '../define';
 
 /** Who the key belongs to, from the ERP's `/health`. */
@@ -68,6 +68,63 @@ export interface ErpCallOptions {
   timeoutMs?: number;
 }
 
+// ---- PR 199, 200 · business documents the shop sends (A3.5 rule 1: documents, never journal lines) ----------------
+
+/** The channel and first status of every order the shop sends (contract: `POST /orders`). Contract values, like routes. */
+export const ERP_ORDER_CHANNEL = 'WEBSITE';
+export const ERP_ORDER_CONFIRMED = 'CONFIRMED';
+/** Status changes the contract accepts on `PATCH /orders/{externalOrderId}`. */
+export const ERP_ORDER_STATUSES = ['PROCESSING', 'PACKED', 'CANCELLED', 'DELIVERED', 'RETURNED'] as const;
+export type ErpOrderStatus = (typeof ERP_ORDER_STATUSES)[number];
+
+/** One order line, by the ERP's SKU. Amounts are decimal text in the store's currency unit (no rounding on the way). */
+export interface ErpOrderLine {
+  sku: string;
+  quantity: number;
+  unitPrice: string;
+  discount: string;
+}
+
+/** A SalesOrder as the contract's `POST /orders` takes it. The ERP's own logic reserves the stock and posts the books. */
+export interface ErpSalesOrder {
+  channel: typeof ERP_ORDER_CHANNEL;
+  status: typeof ERP_ORDER_CONFIRMED;
+  externalOrderId: string;
+  customerName: string;
+  customerPhone: string;
+  shippingAddress: string;
+  items: ErpOrderLine[];
+  shippingFee: string;
+  codAmount: string;
+  paymentMethod: string;
+  note: string | null;
+}
+
+/**
+ * Every document the shop can send. Each later stage adds its own kind here (payment S07, shipment S08, return S08,
+ * ad spend S13) with its contract path in the HTTP client. There is deliberately no kind for journal lines.
+ */
+export type ErpDocument =
+  | { type: 'order.create'; body: ErpSalesOrder }
+  | { type: 'order.status'; externalOrderId: string; body: { status: ErpOrderStatus } };
+
+export type ErpDocumentType = ErpDocument['type'];
+
+/** Sending a document: the Idempotency-Key is required (contract); the same key always means the same document. */
+export interface ErpPushOptions extends ErpCallOptions {
+  idempotencyKey: string;
+}
+
+export interface ErpPushResult {
+  /** The ERP's id for what it made (`erpOrderId` for an order), when it says. */
+  erpId: string | null;
+  status: number;
+  /** The ERP's answer, kept on the ErpPush row (never carries a key). */
+  body: unknown;
+  /** The ERP answered from its idempotency record: it had this document already and changed nothing. */
+  replayed: boolean;
+}
+
 /** What every ERP adapter offers the shop. */
 export interface ErpApi {
   /** The adapter's provider key (`extasErp`, …). */
@@ -77,6 +134,11 @@ export interface ErpApi {
   stock(q: ErpStockQuery, o?: ErpCallOptions): Promise<ErpPage<ErpStockRow>>;
   /** Live stock of one SKU in every warehouse (the checkout's final check). */
   stockForSku(sku: string, o?: ErpCallOptions): Promise<ErpStockRow[]>;
+  /**
+   * Sends one business document (PR 199). One call is one request: trying again is the outbox relay's job, always with
+   * the same Idempotency-Key, so a document the ERP already has is never applied twice (PR 200).
+   */
+  push(doc: ErpDocument, o: ErpPushOptions): Promise<ErpPushResult>;
 }
 
 /**

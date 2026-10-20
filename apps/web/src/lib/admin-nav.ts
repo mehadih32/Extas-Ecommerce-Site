@@ -1,18 +1,19 @@
 // PR 500 — the admin's pages as data. Only pages that exist are listed (no dead links): each later PR adds its own
 // entry when it builds its screen. Labels are keys into messages/admin.<lang>.json (`nav.<key>`). `system` pages also
 // form the strip of tabs at the top of each System page (demo ZV_TABS: server, cache, images, speed, backup, keys).
-// `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages.
-export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye';
+// `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages; the
+// `inventory` pages (S09) do the same on the stock pages.
+export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list';
 
 export interface AdminPage {
   key: string;
   href: string;
   icon: AdminIcon;
-  group: 'main' | 'catalogue' | 'system';
+  group: 'main' | 'catalogue' | 'inventory' | 'system';
 }
 
 /** The sidebar's headed groups, in order (labels: `frame.groups.<group>`). */
-export const ADMIN_GROUPS = ['catalogue', 'system'] as const;
+export const ADMIN_GROUPS = ['catalogue', 'inventory', 'system'] as const;
 
 export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
@@ -24,6 +25,10 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'productImport', href: '/admin/products/import', icon: 'plus', group: 'catalogue' },
   { key: 'productAudit', href: '/admin/products/audit', icon: 'doc', group: 'catalogue' },
   { key: 'backInStock', href: '/admin/products/back-in-stock', icon: 'eye', group: 'catalogue' },
+  // S09 · PR 202–207 — stock and the ERP sync (health panel, re-sync, documents, low stock), stock counts, movements
+  { key: 'stock', href: '/admin/stock', icon: 'sync', group: 'inventory' },
+  { key: 'stockCounts', href: '/admin/stock/counts', icon: 'barcode', group: 'inventory' },
+  { key: 'stockMovements', href: '/admin/stock/movements', icon: 'list', group: 'inventory' },
 ];
 
 export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';

@@ -88,7 +88,9 @@ export function errorCode(e: unknown): string {
   return 'INTERNAL';
 }
 
-export type SyncKind = 'stock.pull';
+/** Run kinds: the pull (PR 195), one product's re-sync (PR 206), the full check (PR 207), the document relay (PR 199). */
+export type SyncKind = 'stock.pull' | 'stock.resyncProduct' | 'stock.reconcile' | 'documents.push';
+export const SYNC_KINDS: readonly SyncKind[] = ['stock.pull', 'stock.resyncProduct', 'stock.reconcile', 'documents.push'];
 export type SyncResource = 'stock';
 
 export async function startRun(db: Db, storeId: number, kind: SyncKind, at: Date): Promise<string> {

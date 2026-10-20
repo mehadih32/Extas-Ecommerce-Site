@@ -74,6 +74,10 @@ const PATHS = {
     </>
   ),
   right: <path d="M9 6l6 6-6 6" />,
+  // S09 · PR 205–207 — the stock pages: re-sync (two arrows round), a barcode (stock count), a list of movements.
+  sync: <path d="M20 11a8 8 0 00-14.3-4.6L4 8M4 4v4h4M4 13a8 8 0 0014.3 4.6L20 16M20 20v-4h-4" />,
+  barcode: <path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12" />,
+  list: <path d="M8 6h12M8 12h12M8 18h12M4 6h.5M4 12h.5M4 18h.5" />,
 } as const;
 
 export type IconName = keyof typeof PATHS;

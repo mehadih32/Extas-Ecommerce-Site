@@ -353,6 +353,12 @@
       "short": "No stock",
       "ok": "In stock",
       "none": "No stock yet (it comes from the ERP)."
+    },
+    "sellableStock": {
+      "label": "Stock where the shop sells from",
+      "short": "None to sell",
+      "ok": "Stock to sell",
+      "none": "The ERP shows no piece in a place the shop sells from."
     }
   },
   "queue": {

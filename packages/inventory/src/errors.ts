@@ -21,7 +21,15 @@ export type InventoryErrorCode =
   /** The key belongs to another ERP company than the one this store is mapped to (PR 196): nothing is synced. */
   | 'COMPANY_MISMATCH'
   /** The ERP call failed after its tries (PR 194); details carry the ERP error code. */
-  | 'ERP_ERROR';
+  | 'ERP_ERROR'
+  /** Not enough free pieces in the shared pool for a hold (PR 197/198); details name each short SKU and what is free. */
+  | 'OUT_OF_STOCK'
+  /** The same idempotency key came with a different document (PR 200): a changed document needs its own key. */
+  | 'IDEMPOTENCY_MISMATCH'
+  /** A stock count line differs and has no reason yet (PR 203); details name the lines. */
+  | 'REASON_REQUIRED'
+  /** The location already has a stock count going on (PR 203). */
+  | 'AUDIT_OPEN';
 
 export class InventoryError extends Error {
   readonly code: InventoryErrorCode;
@@ -46,6 +54,10 @@ export class InventoryError extends Error {
       case 'DAMAGED_BIN_REQUIRED':
       case 'ERP_NOT_CONNECTED':
       case 'COMPANY_MISMATCH':
+      case 'OUT_OF_STOCK':
+      case 'IDEMPOTENCY_MISMATCH':
+      case 'REASON_REQUIRED':
+      case 'AUDIT_OPEN':
         return 409;
       case 'ERP_UNAVAILABLE':
       case 'ERP_ERROR':

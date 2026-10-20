@@ -11,7 +11,10 @@
         "http://127.0.0.1:3000/admin/size-charts",
         "http://127.0.0.1:3000/admin/products/import",
         "http://127.0.0.1:3000/admin/products/audit",
-        "http://127.0.0.1:3000/admin/products/back-in-stock"
+        "http://127.0.0.1:3000/admin/products/back-in-stock",
+        "http://127.0.0.1:3000/admin/stock",
+        "http://127.0.0.1:3000/admin/stock/counts",
+        "http://127.0.0.1:3000/admin/stock/movements"
       ],
       "numberOfRuns": 3,
       "settings": {

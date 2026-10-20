@@ -3,7 +3,7 @@
     "publish": {
       "checks": {
         "label": "Publish checklist",
-        "help": "What a product needs before it may go on the shop. \"block\" stops publishing until it is done, \"warn\" only reminds, \"off\" does not check. Checks: category, variants with an SKU, a price on every variant, the photo set, a size chart, a fabric, SEO title and description, a description, stock."
+        "help": "What a product needs before it may go on the shop. \"block\" stops publishing until it is done, \"warn\" only reminds, \"off\" does not check. Checks: category, variants with an SKU, a price on every variant, the photo set, a size chart, a fabric, SEO title and description, a description, stock, and stock in a place the shop sells from (from the ERP; off at first)."
       }
     },
     "health": {

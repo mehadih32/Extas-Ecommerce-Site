@@ -6,13 +6,16 @@
 //   variants per SKU with style, colour and size;
 // - cursor paging and `updatedSince` filtering, in a stable order;
 // - errors in the contract's shape (`{ error: { code, message, details } }`), a wrong key is a 401;
-// - failures can be switched on (a status, a network failure, a slow answer, a broken body) for the next N calls, so
-//   tests prove retries, timeouts and the error surface.
+// - failures can be switched on (a status, a network failure, a slow answer, a broken body, or a lost answer after the
+//   work was done) for the next N calls, so tests prove retries, timeouts and the error surface;
+// - orders (PR 199, 200): `POST /orders` needs an Idempotency-Key, reserves stock with the ERP's own logic (or answers
+//   409 with the short SKUs), `PATCH /orders/{externalOrderId}` changes the status (CANCELLED gives the reservation
+//   back); the same key with the same body returns the first answer and changes nothing.
 //
 // It starts with sample companies and warehouses and **no stock**: nothing it says can reach a real shop's stock
 // unless someone puts stock into it (the tests, or a developer). Keys are random per process, never written down.
-import { randomBytes } from 'node:crypto';
-import { ERP_API_BASE_PATH, type FetchLike } from './http-client';
+import { createHash, randomBytes } from 'node:crypto';
+import { ERP_API_BASE_PATH, IDEMPOTENT_REPLAY_HEADER, type FetchLike } from './http-client';
 
 export interface MockWarehouse {
   id: string;
@@ -48,6 +51,9 @@ export interface MockVariant {
 interface Company extends MockCompanySpec {
   stock: Map<string, Map<string, StockCell>>;
   variants: Map<string, Required<MockVariant>>;
+  orders: Map<string, MockOrder>;
+  /** Idempotency-Key → the first answer (contract: "a repeat returns the first result"). */
+  idempotency: Map<string, IdempotencyRecord>;
 }
 
 /** A failure for the next `times` calls whose path contains `path` (all calls when omitted). */
@@ -66,6 +72,28 @@ export interface MockFailure {
   delayMs?: number;
   /** Answer 200 with this raw text (a broken body). */
   rawBody?: string;
+  /**
+   * Do the work, then lose the answer (PR 200): the ERP has applied the document but the shop never hears back —
+   * `network` drops the connection, `timeout` waits `delayMs` after the work so the client's timeout fires.
+   */
+  lose?: 'network' | 'timeout';
+}
+
+/** An order the practice ERP holds (contract: `POST /orders` makes a SalesOrder and reserves its stock). */
+export interface MockOrder {
+  erpOrderId: string;
+  externalOrderId: string;
+  status: string;
+  items: { sku: string; quantity: number; warehouseId: string }[];
+  body: unknown;
+}
+
+interface IdempotencyRecord {
+  method: string;
+  path: string;
+  bodyHash: string;
+  status: number;
+  answer: unknown;
 }
 
 export interface MockCall {
@@ -137,7 +165,7 @@ export class MockErpWorld {
     this.companies.clear();
     this.keys.clear();
     for (const c of companies) {
-      this.companies.set(c.id, { ...c, warehouses: c.warehouses.map((w) => ({ ...w })), stock: new Map(), variants: new Map() });
+      this.companies.set(c.id, { ...c, warehouses: c.warehouses.map((w) => ({ ...w })), stock: new Map(), variants: new Map(), orders: new Map(), idempotency: new Map() });
       this.keys.set(randomBytes(18).toString('base64url'), c.id);
     }
   }
@@ -209,6 +237,17 @@ export class MockErpWorld {
     });
   }
 
+  /** The orders a company holds (PR 199 tests). */
+  orders(companyId?: string): MockOrder[] {
+    return [...this.company(companyId).orders.values()];
+  }
+
+  /** One SKU's stock cell in a warehouse, or null. */
+  stockOf(sku: string, warehouseId: string, companyId?: string): { onHand: number; reserved: number } | null {
+    const cell = this.company(companyId).stock.get(sku)?.get(warehouseId);
+    return cell ? { onHand: cell.onHand, reserved: cell.reserved } : null;
+  }
+
   /** Switches a failure on for the next `times` matching calls (default 1). */
   failNext(f: MockFailure): void {
     this.failures.push({ times: 1, ...f });
@@ -240,7 +279,7 @@ export class MockErpWorld {
     const log = (status: number) => this.calls.push({ method, path, query, companyId, status });
 
     const f = this.takeFailure(path);
-    if (f?.delayMs) await wait(f.delayMs, init.signal);
+    if (f?.delayMs && !f.lose) await wait(f.delayMs, init.signal);
     if (f?.network) {
       log(0);
       throw new TypeError('fetch failed: connection reset by the practice ERP');
@@ -262,15 +301,84 @@ export class MockErpWorld {
       log(401);
       return problem(401, 'UNAUTHORIZED', 'the API key is not valid');
     }
-    if (method !== 'GET') {
-      log(405);
-      return problem(405, 'METHOD_NOT_ALLOWED', 'the practice ERP only answers reads so far');
-    }
     const c = this.company(companyId);
-    const res = this.route(c, path, query);
+    let res: Response;
+    if (method === 'GET') res = this.route(c, path, query);
+    else if (method === 'POST' || method === 'PATCH') res = this.write(c, method, path, init.body, new Headers(init.headers).get('idempotency-key'));
+    else res = problem(405, 'METHOD_NOT_ALLOWED', 'the practice ERP does not answer this method');
     log(res.status);
+    if (f?.lose === 'network') throw new TypeError('fetch failed: the practice ERP dropped the answer');
+    if (f?.lose === 'timeout') await wait(f.delayMs ?? 0, init.signal);
     return res;
   };
+
+  /** A write (PR 199, 200): Idempotency-Key required; a repeat with the same key and body returns the first answer. */
+  private write(c: Company, method: string, path: string, raw: RequestInit['body'], key: string | null): Response {
+    if (!key) return problem(400, 'IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key is required on every write');
+    let body: unknown;
+    try {
+      body = JSON.parse(typeof raw === 'string' ? raw : '');
+    } catch {
+      return problem(400, 'INVALID_JSON', 'the body is not JSON');
+    }
+    const bodyHash = createHash('sha256').update(JSON.stringify(body)).digest('hex');
+    const prev = c.idempotency.get(key);
+    if (prev) {
+      if (prev.method !== method || prev.path !== path || prev.bodyHash !== bodyHash) return problem(422, 'IDEMPOTENCY_MISMATCH', 'this Idempotency-Key was used for another request');
+      return json(prev.status, prev.answer, { [IDEMPOTENT_REPLAY_HEADER]: 'true' });
+    }
+    const out = this.applyWrite(c, method, path, body);
+    if (out.status < 500) c.idempotency.set(key, { method, path, bodyHash, status: out.status, answer: out.answer });
+    return json(out.status, out.answer);
+  }
+
+  private applyWrite(c: Company, method: string, path: string, body: unknown): { status: number; answer: unknown } {
+    const err = (status: number, code: string, message: string, details: unknown = null) => ({ status, answer: { error: { code, message, details } } });
+    const b = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
+    if (method === 'POST' && path === '/orders') {
+      const ext = typeof b.externalOrderId === 'string' ? b.externalOrderId : '';
+      const items = Array.isArray(b.items) ? (b.items as { sku?: unknown; quantity?: unknown }[]) : [];
+      if (!ext || !items.length || items.some((i) => typeof i.sku !== 'string' || !Number.isInteger(i.quantity) || (i.quantity as number) < 1)) {
+        return err(400, 'INVALID_ORDER', 'an order needs externalOrderId and items with sku and quantity');
+      }
+      const known = c.orders.get(ext);
+      if (known) return err(409, 'DUPLICATE_EXTERNAL_ORDER', 'this externalOrderId is already an order', [known.erpOrderId]);
+      // The ERP's own reservation: from the first warehouse with enough available, else 409 with the short SKUs.
+      const picks: { sku: string; quantity: number; warehouseId: string }[] = [];
+      const short: string[] = [];
+      for (const i of items) {
+        const sku = i.sku as string;
+        const qty = i.quantity as number;
+        const wh = c.warehouses.find((w) => {
+          const cell = c.stock.get(sku)?.get(w.id);
+          return cell && cell.onHand - cell.reserved >= qty;
+        });
+        if (wh) picks.push({ sku, quantity: qty, warehouseId: wh.id });
+        else short.push(sku);
+      }
+      if (short.length) return err(409, 'STOCK_SHORT', 'not enough stock', short);
+      for (const p of picks) this.adjustStock(p.sku, p.warehouseId, { reserved: p.quantity }, c.id);
+      const order: MockOrder = { erpOrderId: `SAMPLE-SO-${c.orders.size + 1}`, externalOrderId: ext, status: 'CONFIRMED', items: picks, body };
+      c.orders.set(ext, order);
+      return { status: 201, answer: { erpOrderId: order.erpOrderId, externalOrderId: ext, status: order.status } };
+    }
+    const m = /^\/orders\/(.+)$/.exec(path);
+    if (method === 'PATCH' && m) {
+      const order = c.orders.get(decodeURIComponent(m[1]!));
+      if (!order) return err(404, 'ORDER_NOT_FOUND', 'no such order');
+      const status = typeof b.status === 'string' ? b.status : '';
+      if (!['PROCESSING', 'PACKED', 'CANCELLED', 'DELIVERED', 'RETURNED'].includes(status)) return err(400, 'INVALID_STATUS', 'not a status the contract knows');
+      const was = order.status;
+      const open = was !== 'CANCELLED' && was !== 'DELIVERED' && was !== 'RETURNED';
+      for (const p of order.items) {
+        if (status === 'CANCELLED' && open) this.adjustStock(p.sku, p.warehouseId, { reserved: -p.quantity }, c.id);
+        if (status === 'DELIVERED' && open) this.adjustStock(p.sku, p.warehouseId, { onHand: -p.quantity, reserved: -p.quantity }, c.id);
+      }
+      order.status = status;
+      return { status: 200, answer: { erpOrderId: order.erpOrderId, externalOrderId: order.externalOrderId, status } };
+    }
+    return err(404, 'NOT_FOUND', 'the practice ERP does not take this document yet');
+  }
 
   private route(c: Company, path: string, query: Record<string, string>): Response {
     if (path === '/health') {

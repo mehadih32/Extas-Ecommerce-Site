@@ -117,6 +117,24 @@ async function needsSizeChart(db: Db, storeId: number, categoryId: string | null
   return !row || !Array.isArray(row.measurementFields) || row.measurementFields.length > 0;
 }
 
+/**
+ * PR 204 — the `sellableStock` check: the ERP's stock mirror (StockLevel, filled by @extas/inventory's stock pull) holds
+ * at least one piece of a live variant in a live location of a kind the shop sells from (`inventory.sellableLocationKinds`),
+ * after the shop's own checkout holds. Read straight from the mirror, never from the product summary.
+ */
+export async function hasSellableStock(deps: CatalogueDeps, who: Who, productId: string): Promise<boolean> {
+  const kinds = await setting(deps, who, 'inventory.sellableLocationKinds');
+  const levels = await deps.db.stockLevel.findMany({
+    where: {
+      available: { gt: 0 },
+      variant: { storeId: who.storeId, productId, archivedAt: null, active: true },
+      location: { kind: { in: kinds }, archivedAt: null, warehouse: { archivedAt: null } },
+    },
+    select: { available: true, cartReserved: true },
+  });
+  return levels.some((l) => l.available - l.cartReserved > 0);
+}
+
 const capped = (list: string[]) => (list.length > LIST_MAX ? [...list.slice(0, LIST_MAX), `more:${list.length - LIST_MAX}`] : list);
 
 /** Runs every check that is switched on. Needs `catalogue.read`. Changes nothing. */
@@ -169,6 +187,8 @@ export async function productReadiness(deps: CatalogueDeps, who: Who, productId:
         return (p.descriptionEn ?? '').trim() || (p.descriptionBn ?? '').trim() ? [] : ['none'];
       case 'stock':
         return p.inStock ? [] : ['none'];
+      case 'sellableStock':
+        return (await hasSellableStock(deps, who, productId)) ? [] : ['none'];
     }
   };
 

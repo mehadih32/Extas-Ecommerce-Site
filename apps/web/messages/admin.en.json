@@ -11,7 +11,8 @@
     "logout": "Log out",
     "groups": {
       "catalogue": "Catalogue",
-      "system": "System"
+      "system": "System",
+      "inventory": "Stock"
     },
     "groupTabs": "{group} pages"
   },
@@ -28,7 +29,10 @@
     "sizeCharts": "Size charts",
     "productImport": "Import from a link",
     "productAudit": "Product audit",
-    "backInStock": "Back in stock"
+    "backInStock": "Back in stock",
+    "stock": "Stock & ERP",
+    "stockCounts": "Stock counts",
+    "stockMovements": "Stock movements"
   },
   "login": {
     "metaTitle": "Admin sign-in",
