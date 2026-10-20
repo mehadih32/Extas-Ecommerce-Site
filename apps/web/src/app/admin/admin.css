@@ -7,6 +7,8 @@
 @import './size-charts/size-charts.css';
 /* S09 · PR 202–207 — the stock pages (stock and ERP sync, stock counts, movements), same file for the same reason. */
 @import './stock/stock.css';
+/* S10 · PR 209, 216, 217 — Smart Rules and Notices & pop-ups, same file for the same reason. */
+@import './rules/rules.css';
 
 .ad {
   /* colours (demo "classic" theme + admin shell) */

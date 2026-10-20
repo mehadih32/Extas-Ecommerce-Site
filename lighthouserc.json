@@ -14,7 +14,9 @@
         "http://127.0.0.1:3000/admin/products/back-in-stock",
         "http://127.0.0.1:3000/admin/stock",
         "http://127.0.0.1:3000/admin/stock/counts",
-        "http://127.0.0.1:3000/admin/stock/movements"
+        "http://127.0.0.1:3000/admin/stock/movements",
+        "http://127.0.0.1:3000/admin/rules",
+        "http://127.0.0.1:3000/admin/rules/notices"
       ],
       "numberOfRuns": 3,
       "settings": {

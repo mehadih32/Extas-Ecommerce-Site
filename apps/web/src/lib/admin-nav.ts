@@ -2,18 +2,18 @@
 // entry when it builds its screen. Labels are keys into messages/admin.<lang>.json (`nav.<key>`). `system` pages also
 // form the strip of tabs at the top of each System page (demo ZV_TABS: server, cache, images, speed, backup, keys).
 // `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages; the
-// `inventory` pages (S09) do the same on the stock pages.
-export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list';
+// `inventory` pages (S09) do the same on the stock pages, and the `rules` pages (S10) on Smart Rules and notices.
+export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler' | 'plus' | 'doc' | 'eye' | 'sync' | 'barcode' | 'list' | 'bolt' | 'notice';
 
 export interface AdminPage {
   key: string;
   href: string;
   icon: AdminIcon;
-  group: 'main' | 'catalogue' | 'inventory' | 'system';
+  group: 'main' | 'catalogue' | 'inventory' | 'rules' | 'system';
 }
 
 /** The sidebar's headed groups, in order (labels: `frame.groups.<group>`). */
-export const ADMIN_GROUPS = ['catalogue', 'inventory', 'system'] as const;
+export const ADMIN_GROUPS = ['catalogue', 'inventory', 'rules', 'system'] as const;
 
 export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
@@ -29,6 +29,9 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'stock', href: '/admin/stock', icon: 'sync', group: 'inventory' },
   { key: 'stockCounts', href: '/admin/stock/counts', icon: 'barcode', group: 'inventory' },
   { key: 'stockMovements', href: '/admin/stock/movements', icon: 'list', group: 'inventory' },
+  // S10 · PR 208–219 — Smart Rules (demo #/admin/rules) and the notices and pop-ups that quote them (PR 216)
+  { key: 'rules', href: '/admin/rules', icon: 'bolt', group: 'rules' },
+  { key: 'notices', href: '/admin/rules/notices', icon: 'notice', group: 'rules' },
 ];
 
 export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';
