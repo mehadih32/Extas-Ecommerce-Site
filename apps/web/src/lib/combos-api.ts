@@ -26,6 +26,8 @@
 //   POST  /api/admin/combos/rules/:id/upsell       {on, nameEn?, nameBn?} "add 1 more → 3 pcs"
 //   GET   /api/admin/combos/templates              the shop's default templates
 //   POST  /api/admin/combos/templates              {list?, page?, bag?}
+//   PR 99 · set tiers (read from Smart Rules; changed there)
+//   GET   /api/admin/combos/tiers                  "What customers can combine"
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -74,6 +76,11 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
   if (a === 'templates') {
     if (m === 'GET') return handle(request, deps, 'combos.read', async (x) => ({ templates: await cb.shopTemplates(x.deps, x.who.storeId) }));
     if (m === 'POST') return handle(request, deps, 'combos.write', async (x) => ({ templates: await cb.setShopTemplates(x.deps, x.who, (await body(request)) as Partial<cb.ShopTemplates>) }));
+    return notAllowed();
+  }
+  if (a === 'tiers') {
+    if (path.length > 1) return notFound();
+    if (m === 'GET') return handle(request, deps, 'combos.read', async (x) => ({ tiers: await cb.listSetTiers(x.deps, x.who) }));
     return notAllowed();
   }
   if (path.length > 2) return notFound();

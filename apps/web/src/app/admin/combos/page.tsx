@@ -9,10 +9,11 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
 import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
 import { CombosScreen } from '@/components/admin/combos/CombosScreen';
-import { combosTab } from '@/components/admin/combos/model';
+import { combosTab, money } from '@/components/admin/combos/model';
+import { SetTiers } from '@/components/admin/combos/SetTiers';
 import { adminDeps } from '@/lib/admin-auth';
 import { combosAccess, setPhotoUrls, storeCurrency } from '@/lib/admin-combos';
-import { ADMIN_LOGIN } from '@/lib/admin-nav';
+import { ADMIN_LOGIN, ADMIN_PAGES } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { t } from '@/lib/i18n';
 
@@ -40,7 +41,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
   if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
 
   const a = combosAccess(access);
-  const [combos, options, currency, rules, templates, seasons, roundingStepMinor] = await Promise.all([
+  const [combos, options, currency, rules, templates, seasons, roundingStepMinor, setTiers] = await Promise.all([
     cb.listCombos(a.deps, a.who),
     cb.comboOptions(a.deps, a.who),
     storeCurrency(a),
@@ -48,6 +49,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
     cb.shopTemplates(a.deps, a.storeId),
     a.deps.settings.value('combos.seasons', { storeId: a.storeId }) as Promise<{ key: string; en: string; bn?: string | null }[]>,
     a.deps.settings.value('combos.price.roundingStepMinor', { storeId: a.storeId }) as Promise<number>,
+    tab === 'fixed' ? cb.listSetTiers(a.deps, a.who) : Promise.resolve([]),
   ]);
   const photos = await setPhotoUrls(a, combos);
   const editRule = ruleId ? (rules.find((r) => r.id === ruleId && !r.upsellOf) ?? null) : null;
@@ -73,6 +75,18 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
         products={options.products}
         photos={photos}
         perms={a.perms}
+        tiers={
+          tab === 'fixed' ? (
+            <SetTiers
+              dict={view.dict}
+              lang={view.lang}
+              fmt={(m) => money(m, view.locale, currency)}
+              num={(n) => n.toLocaleString(view.locale)}
+              tiers={setTiers}
+              rulesHref={ADMIN_PAGES.find((p) => p.key === 'rules')!.href}
+            />
+          ) : null
+        }
         tabs={
           <div className="cb-gtabs">
             <SystemTabs view={view} current={KEY} group="combos" />

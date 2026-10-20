@@ -19,3 +19,4 @@ export * from './combos-service';
 export * from './options';
 export * from './generate';
 export * from './auto-rules';
+export * from './set-tiers';

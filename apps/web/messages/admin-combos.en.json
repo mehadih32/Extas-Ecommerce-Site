@@ -352,6 +352,22 @@
       "upsellOn": "“Add 1 more → 3 pcs” on",
       "upsellOff": "“Add 1 more” off",
       "tpl": "Template saved"
+    },
+    "tiers": {
+      "title": "What customers can combine",
+      "intro": "Customers can only build sets from these groups — nothing else gets a set price. They come from Smart Rules (“Build your own set”).",
+      "open": "Open Smart Rules",
+      "all": "Every product",
+      "missing": "(no longer in the shop)",
+      "except": "not {name}",
+      "products": "{n} products",
+      "items": "{n} items",
+      "notOffered": "Not offered",
+      "each": "{price} each",
+      "liveNote": "Customers see this on product pages, in Build a set and in the bag.",
+      "offNote": "Off — customers cannot build this set.",
+      "changeNote": "Prices and on/off are changed in Smart Rules; a price needs the owner’s OK there.",
+      "empty": "No customer sets yet. In Smart Rules, start one from the “Build your own set” template."
     }
   }
 }

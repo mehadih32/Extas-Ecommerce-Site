@@ -2,3 +2,4 @@
 // the storefront's pickers). The model and price rule, the pair generator, set validation, the bag's set lines and
 // the set photo's layout.
 export * from './model';
+export * from './tiers';

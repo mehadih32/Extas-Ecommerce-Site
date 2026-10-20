@@ -291,3 +291,16 @@
 .cb-done .ad-intro { margin-left: auto; margin-right: auto; }
 .cb-done-ok { width: var(--cb-done-dot); height: var(--cb-done-dot); border-radius: 50%; background: var(--ad-brand-tint); color: var(--ad-brand); display: flex; align-items: center; justify-content: center; }
 .cb-done-acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+/* ======================================================================================================================
+   PR 99 — "What customers can combine": the set tiers from Smart Rules (demo acb_ruleCard, .acb-tiers)
+   ==================================================================================================================== */
+.cb-tiers-sec { display: grid; gap: 12px; margin-top: 24px; min-width: 0; }
+.ad-card.cb-tier-card { display: flex; flex-direction: column; gap: 12px; border-color: var(--cb-card-line); }
+.cb-tier-card.off { background: var(--ad-surface2); }
+.cb-ex-chip { text-decoration: line-through; color: var(--ad-muted); }
+.cb-tier-boxes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cb-tier-box { border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); padding: 10px 12px; display: grid; gap: 2px; min-width: 0; background: var(--ad-surface); }
+.cb-tier-box b { font-family: var(--ad-font-display); font-size: 18px; overflow-wrap: anywhere; }
+.cb-tier-box.none b { font-family: inherit; font-size: var(--ad-fs-small); color: var(--ad-muted); font-weight: 600; }
+.cb-warn { color: var(--ad-warn); font-weight: 600; }
