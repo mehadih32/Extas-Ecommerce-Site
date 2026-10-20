@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# PR 15 — shows the owner his admin login: the e-mail and the first password made by extas-owner-create
+# (owner-account.yml). He runs it himself in Azure portal → VM → Run command → RunShellScript, so neither ever travels
+# through chat, Git, GitHub or a log (CN-007, CN-009). Steps: docs/owner/OWNER-LOGIN.md.
+set -eu
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+f="$EXTAS_ROOT/config/secrets/owner-login.env"
+if [ ! -s "$f" ]; then
+  echo "অ্যাডমিনের মালিক-অ্যাকাউন্ট এখনো খোলা হয়নি। একটু পরে আবার চেষ্টা করুন।"
+  exit 1
+fi
+email="$(grep '^OWNER_EMAIL=' "$f" | cut -d= -f2-)"
+pw="$(grep '^OWNER_FIRST_PASSWORD=' "$f" | cut -d= -f2-)"
+echo "অ্যাডমিনের ঠিকানা: https://$EXTAS_STAGING_HOST/admin/login"
+echo "ই-মেইল: $email"
+echo "প্রথম পাসওয়ার্ড: $pw"
+echo "প্রথমবার ঢোকার পরই পাসওয়ার্ডটা বদলে নিজের একটা পাসওয়ার্ড দিন।"

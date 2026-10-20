@@ -223,4 +223,6 @@ step_stack() {
   # The preview password is never sent anywhere (not in chat, not in Git, not as an artifact). The owner reads it
   # on the VM himself: Azure portal → Run command → /usr/local/sbin/extas-preview-login (docs/owner/PREVIEW-LOGIN.md).
   install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-preview-login" /usr/local/sbin/extas-preview-login
+  # PR 15 / CN-009 — the same for the admin's first owner login (made by owner-account.yml, which also installs it).
+  install -m 0700 "$EXTAS_REPO_DIR/infra/server/bin/extas-owner-login" /usr/local/sbin/extas-owner-login
 }

@@ -66,4 +66,64 @@ env_set "$E" DATABASE_DIRECT_URL 'postgresql://u:p@h:5432/d'
 check "env_set leaves an unchanged file alone" "$(stat -c %i "$E"):$(wc -l < "$E")" "$inode:3"
 rm -rf "$T"
 
+# First owner account (PR 15, CN-009): extas-owner-create with a stand-in `docker` (no server, no database). The
+# e-mail never reaches the output or the report, the first password lands in a 0600 file the reader shows, a second
+# run refuses and changes nothing, a database that already has an owner is refused, and a bad e-mail stops early.
+T="$(mktemp -d)"
+mkdir -p "$T/root/config/secrets" "$T/root/state" "$T/bin"
+printf 'EXTAS_ROOT=%s\nEXTAS_TIMEZONE=Asia/Dhaka\nEXTAS_STAGING_HOST=example.test\n' "$T/root" > "$T/server.conf"
+printf 'SESSION_SECRET=s\nDATABASE_URL=postgresql://u:p@pgb:6432/d\nDATABASE_DIRECT_URL=postgresql://u:p@pg:5432/d\n' > "$T/root/config/secrets/app.env"
+echo '{"migrate":"extas-migrate:abc"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for docker: `image inspect` / `images` answer; `run` checks its inputs like the container would
+case "$1" in
+  image) exit 0 ;;
+  images) echo "extas-migrate:abc"; exit 0 ;;
+  run)
+    shift; envs=(); out=""
+    while [ $# -gt 0 ]; do
+      case "$1" in --env-file) envs+=("$2"); shift 2 ;; -v) out="${2%%:*}"; shift 2 ;; --name|--network) shift 2 ;; --rm) shift ;; *) break ;; esac
+    done
+    db="$(cat "${envs[0]}")"; own="$(cat "${envs[1]}")"
+    [ "$db" = "DATABASE_DIRECT_URL=postgresql://u:p@pg:5432/d" ] || { echo "db env file holds more than the direct URL"; exit 9; }
+    grep -q '^OWNER_EMAIL=owner@example.test$' <<<"$own" || { echo "no e-mail in the owner env file"; exit 9; }
+    echo "$*" >> "$FAKE_LOG"
+    if [ -n "${FAKE_OWNER_EXISTS:-}" ]; then echo "auth create-owner: FAILED — an owner exists already: add more owners in the admin"; exit 1; fi
+    (umask 077; echo "First-Pass-123" > "$out/first-password")
+    echo "auth create-owner: owner account st_1 created (first password in the file given; change it at the first login)"
+    ;;
+esac
+FAKE
+chmod +x "$T/bin/docker"
+OC=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_LOG="$T/docker.log" OWNER_IMAGE_UID="$(id -u)" "$B/extas-owner-create")
+echo "owner@example.test" > "$T/email"; echo "Mr Owner" > "$T/name"
+rc=0; out="$("${OC[@]}" --email-file "$T/email" --name-file "$T/name" 2>&1)" || rc=$?
+check "owner: first run creates" "$rc:$(jq -r .result "$T/root/state/owner-account.json")" "0:ok"
+check "owner: e-mail file removed" "$([ -e "$T/email" ] && echo left || echo gone)" "gone"
+check "owner: e-mail never in the output" "$(grep -c 'owner@example.test' <<<"$out" || true)" "0"
+check "owner: e-mail never in the report" "$(cat "$T/root/state/owner-account.md" "$T/root/state/owner-account.json" | grep -c 'owner@example.test' || true)" "0"
+check "owner: login file is 600" "$(stat -c %a "$T/root/config/secrets/owner-login.env")" "600"
+check "owner: no temp files left" "$(find "$T/root/config/secrets" -name '.owner*' | wc -l)" "0"
+check "owner: name reaches create-owner" "$(grep -c -- '--name' "$T/docker.log")" "1"
+rd="$(EXTAS_CONFIG_FILE="$T/server.conf" "$B/extas-owner-login")"
+check "owner: reader shows the e-mail" "$(grep -c 'owner@example.test' <<<"$rd")" "1"
+check "owner: reader shows the first password" "$(grep -c 'First-Pass-123' <<<"$rd")" "1"
+before="$(sha256sum "$T/root/config/secrets/owner-login.env")"
+echo "other@example.test" > "$T/email"
+rc=0; "${OC[@]}" --email-file "$T/email" >/dev/null 2>&1 || rc=$?
+check "owner: second run refuses" "$rc:$(jq -r .result "$T/root/state/owner-account.json")" "3:refused"
+check "owner: second run changes nothing" "$(sha256sum "$T/root/config/secrets/owner-login.env"):$(wc -l < "$T/docker.log")" "$before:1"
+rm -f "$T/root/config/secrets/owner-login.env"
+echo "owner@example.test" > "$T/email"
+rc=0; FAKE_OWNER_EXISTS=1 "${OC[@]}" --email-file "$T/email" >/dev/null 2>&1 || rc=$?
+check "owner: an owner in the database is refused" "$rc:$(jq -r .result "$T/root/state/owner-account.json")" "3:refused"
+check "owner: refused run keeps no password" "$([ -e "$T/root/config/secrets/owner-login.env" ] && echo kept || echo none):$(find "$T/root/config/secrets" -name '.owner*' | wc -l)" "none:0"
+echo "not an e-mail" > "$T/email"
+rc=0; out="$("${OC[@]}" --email-file "$T/email" 2>&1)" || rc=$?
+check "owner: a bad e-mail stops before the database" "$rc:$(wc -l < "$T/docker.log")" "1:2"
+check "owner: a bad e-mail is never echoed" "$(grep -c 'not an e-mail' <<<"$out" || true)" "0"
+check "owner: reader without an account says so" "$(EXTAS_CONFIG_FILE="$T/server.conf" "$B/extas-owner-login" >/dev/null 2>&1; echo $?)" "1"
+rm -rf "$T"
+
 exit $fail
