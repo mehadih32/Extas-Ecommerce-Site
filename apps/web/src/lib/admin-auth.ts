@@ -16,6 +16,7 @@ import {
   type StaffAuth,
   type StaffAuthDeps,
 } from '@extas/auth';
+import { isCatalogueError } from '@extas/catalogue';
 import { createVault, type Vault } from '@extas/vault';
 import { settingsResolver, settingsTimeoutMs, withTimeout, type AppResolver } from './settings';
 
@@ -63,6 +64,7 @@ export function fail(status: number, error: string, details?: string[]): Respons
 
 export function errorResponse(e: unknown): Response {
   if (e instanceof AuthError) return fail(httpStatus(e.code), e.code, e.details);
+  if (isCatalogueError(e)) return fail(e.status, e.code, e.details);
   console.warn(`admin api: ${(e instanceof Error ? e.message : String(e)).split('\n').filter(Boolean).slice(-1)[0] ?? 'unknown error'}`);
   return fail(500, 'server-error');
 }

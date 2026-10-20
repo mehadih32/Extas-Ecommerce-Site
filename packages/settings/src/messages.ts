@@ -1,5 +1,8 @@
 // Labels and help texts of the settings, kept as {en, bn} pairs (Blueprint A7 / D11: admin in simple English with a
-// Bengali switch). The registry only names a key; the text lives in messages/settings.<lang>.json.
+// Bengali switch). The registry only names a key; the text lives in messages/settings.<lang>.json, and the media
+// settings (PR 22–25, 37) in messages/media.<lang>.json, merged in here.
+import mediaBn from '../messages/media.bn.json';
+import mediaEn from '../messages/media.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -9,7 +12,19 @@ export interface SettingsMessages {
   bn: MessageTree;
 }
 
-export const messages: SettingsMessages = { en, bn };
+/** Deep merge of message trees; a key defined twice is a mistake and throws. */
+export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageTree {
+  const out: MessageTree = { ...a };
+  for (const [k, v] of Object.entries(b)) {
+    const prev = out[k];
+    if (prev === undefined) out[k] = v;
+    else if (typeof prev === 'object' && typeof v === 'object') out[k] = mergeMessages(prev, v, `${at}${k}.`);
+    else throw new Error(`settings message "${at}${k}" is defined twice`);
+  }
+  return out;
+}
+
+export const messages: SettingsMessages = { en: mergeMessages(en, mediaEn), bn: mergeMessages(bn, mediaBn) };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

@@ -1,0 +1,127 @@
+{
+  "groups": {
+    "media": "Images and media"
+  },
+  "media": {
+    "image": {
+      "presets": {
+        "label": "Image sizes",
+        "help": "Every uploaded photo is made in these widths. The height follows the shape below. A change makes every size again from the kept originals."
+      },
+      "aspectRatio": {
+        "label": "Shape (width : height)",
+        "help": "Every size keeps the same shape, so the grid never looks uneven. 4 : 5 is the standard."
+      },
+      "formats": {
+        "label": "File formats",
+        "help": "Each size is made in these formats. The browser takes the best one it can read. JPEG always stays for old browsers."
+      },
+      "quality": {
+        "label": "Quality",
+        "help": "75–80: the eye sees no difference, but files are less than half the size. Default 78."
+      },
+      "avifEffort": {
+        "label": "AVIF effort",
+        "help": "How hard the server works to make AVIF files small (0–9). Higher is smaller but slower."
+      },
+      "fit": {
+        "label": "When a photo has another shape",
+        "help": "Contain: the whole photo is kept and the rest of the frame is filled with the background colour. Cover: the photo is cut to the shape."
+      },
+      "background": {
+        "label": "Background colour",
+        "help": "Fills the frame around a photo of another shape, and behind see-through parts."
+      },
+      "slots": {
+        "label": "Sizes per place on the page",
+        "help": "Which sizes a phone and a larger screen may get in each place. A phone never gets the zoom size on the page."
+      },
+      "phoneMaxWidth": {
+        "label": "Phone screen up to (px)",
+        "help": "Screens up to this width count as a phone for choosing image sizes."
+      }
+    },
+    "upload": {
+      "maxBytes": {
+        "label": "Largest upload (bytes)",
+        "help": "A bigger file is refused at upload."
+      },
+      "minWidth": {
+        "label": "Smallest photo width (px)",
+        "help": "A photo narrower than this is refused, so the main product image is never blown up."
+      },
+      "acceptedTypes": {
+        "label": "Accepted picture types",
+        "help": "Which kinds of picture files may be uploaded."
+      }
+    },
+    "processing": {
+      "mode": {
+        "label": "Where photos are processed",
+        "help": "Inline: right after the upload on this server. Queue: by the background image worker once it runs."
+      }
+    },
+    "publicBaseUrl": {
+      "label": "Photo address (CDN)",
+      "help": "Where the shop's photos are served from, for example the CDN in front of Blob storage. Empty = this site. Your own data."
+    },
+    "serve": {
+      "maxAgeSeconds": {
+        "label": "How long browsers keep a photo (seconds)",
+        "help": "Photo file names change when a photo changes, so a long time is safe."
+      }
+    },
+    "photos": {
+      "minimum": {
+        "label": "Photos needed per product",
+        "help": "A product cannot go live with fewer photos than this."
+      },
+      "requiredRoles": {
+        "label": "Photos that must be there",
+        "help": "The kinds of photo every product needs, for example front, back, detail and on-model."
+      },
+      "frontPerColour": {
+        "label": "Front photo for every colour",
+        "help": "When on, every colour of a product needs its own front photo."
+      }
+    },
+    "watermark": {
+      "enabled": {
+        "label": "Watermark on download",
+        "help": "A downloaded or saved photo gets the watermark. Photos on the shop never have one."
+      },
+      "text": {
+        "label": "Watermark text",
+        "help": "Empty = the store name. Your own data: it never goes to another installation."
+      },
+      "position": {
+        "label": "Watermark place",
+        "help": "A corner, the centre, or repeated across the photo."
+      },
+      "opacity": {
+        "label": "Watermark strength",
+        "help": "0.05 is barely visible, 1 is solid."
+      },
+      "scale": {
+        "label": "Watermark size",
+        "help": "Text height as a share of the photo width, in hundredths."
+      },
+      "preset": {
+        "label": "Download size",
+        "help": "Which size a download is made from, for example main."
+      }
+    },
+    "orphans": {
+      "graceDays": {
+        "label": "Unused photo waits (days)",
+        "help": "A file used nowhere is listed as unused only after this many days. Clean-up moves it to the archive; it can always be brought back."
+      }
+    },
+    "library": {
+      "pageSize": {
+        "label": "Files per page in the media library",
+        "help": "How many files one page of the library shows."
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "naming": {
+    "coloursMore": "+{n}",
+    "listSeparator": ", "
+  },
+  "facts": {
+    "fibreShare": "{share}% {fibre}",
+    "gsm": "{gsm} GSM"
+  }
+}
