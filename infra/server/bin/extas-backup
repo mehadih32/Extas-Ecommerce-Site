@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # PR 8 — backups (A2.9.12). Run by systemd timers:
-#   extas-backup daily   — base backup (for point-in-time restore) + logical dump + config, staged on NVMe,
-#                          kept on the data disk, uploaded to Azure Blob and (encrypted) to Google Drive
+#   extas-backup daily   — base backup (for point-in-time restore) + logical dump + config + the product photos on
+#                          the local disk, staged on NVMe, kept on the data disk, uploaded to Azure Blob and
+#                          (encrypted) to Google Drive
 #   extas-backup wal     — push archived WAL segments to Blob (every minute)
 #   extas-backup prune   — retention from the config (later from the admin, PR 507)
 # Blob and Drive are "not connected" until the owner enters their keys in the admin vault (PR 493); the backup then
@@ -15,8 +16,12 @@ SEC="$R/config/secrets"
 STATE="$R/state"
 LOCAL="$R/backups"
 STAGE="$EXTAS_NVME_MOUNT/backup-staging"
-NOW="$(date +%Y%m%d-%H%M)"
-mkdir -p "$LOCAL/base" "$LOCAL/dump" "$LOCAL/config" "$STATE"
+NOW="${EXTAS_BACKUP_STAMP:-$(date +%Y%m%d-%H%M)}"
+# Product photos on the local disk: the PR 18 storage adapter's local-disk mode. app.yml mounts this folder into the
+# app as /media (EXTAS_MEDIA_DIR=/media in app-connections.env, written by 09-stack.sh). Media normally lives on
+# Azure Blob; until the owner connects it, the photos are only here.
+MEDIA="$R/data/media"
+mkdir -p "$LOCAL/base" "$LOCAL/dump" "$LOCAL/config" "$LOCAL/media" "$STATE"
 
 # Remotes come from env written by the app's vault sync (PR 493/507): RCLONE_CONFIG_BLOB_* / RCLONE_CONFIG_DRIVE_*.
 [ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
@@ -30,10 +35,68 @@ key_file() {
   if [ ! -s "$SEC/backup.key" ]; then head -c 48 /dev/urandom | base64 > "$SEC/backup.key"; chmod 600 "$SEC/backup.key"; fi
   echo "$SEC/backup.key"
 }
+encrypt() { # encrypt <in> <out>: the Drive copy, with the same key for every file
+  gpg --batch --yes --pinentry-mode loopback --passphrase-file "$(key_file)" --symmetric --cipher-algo AES256 -o "$2" "$1"
+}
 
 status() { # status <kind> <target> <ok|fail|off> <detail>
   local f="$STATE/backup-$1-$2.json"
   printf '{"kind":"%s","target":"%s","result":"%s","detail":"%s","at":"%s"}\n' "$1" "$2" "$3" "$4" "$(date -Is)" > "$f"
+}
+
+# ---- product photos (PR 8: "database, uploads and configuration") ------------------------------------------------
+# One tar a day, without compression (the photos are AVIF/WebP/JPEG already), staged on NVMe like the database:
+#   media-<stamp>-full.tar          every photo: at least every BACKUP_MEDIA_FULL_EVERY_DAYS days, and never less often
+#                                   than the shortest BACKUP_KEEP_* (so the newest full archive is never pruned)
+#   media-<stamp>-diff-<full>.tar   only what changed since that full archive (GNU tar listed-incremental, level 1)
+#   media-<stamp>.sha256            the checksum of every photo in that day's archive, read back from the archive
+# A restore takes the newest full archive and the newest diff on it (extas-restore media). The full archive's snapshot
+# file (.snar) stays on the data disk only: it is what the next diff is measured against.
+stamp_s() { date -d "${1:0:8} ${1:9:2}:${1:11:2}" +%s; }
+media_full_days() {
+  local d="$BACKUP_MEDIA_FULL_EVERY_DAYS" k
+  for k in "$BACKUP_KEEP_LOCAL_DAYS" "$BACKUP_KEEP_BLOB_DAYS" "$BACKUP_KEEP_DRIVE_DAYS"; do [ "$k" -lt "$d" ] && d="$k"; done
+  [ "$d" -ge 1 ] || d=1
+  echo "$d"
+}
+newest_full() { # the stamp of the newest full photo archive on the data disk that has its snapshot file
+  local f s best=""
+  for f in "$LOCAL/media"/media-*-full.tar; do
+    [ -e "$f" ] || continue
+    s="${f##*/media-}"; s="${s%-full.tar}"
+    [ -f "$LOCAL/media/media-$s-full.snar" ] && best="$s"
+  done
+  echo "$best"
+}
+
+# media_backup <work dir>: the day's photo archive onto the data disk. Sets MEDIA_NAME (empty when the photos are
+# switched off or there is no photo folder) and MEDIA_NOTE; returns non-zero when it failed.
+MEDIA_NAME=""; MEDIA_NOTE=""
+media_backup() {
+  local work="$1" full name rc=0 n
+  if [ "${BACKUP_MEDIA:-yes}" != yes ]; then MEDIA_NOTE="photos switched off (BACKUP_MEDIA)"; return 0; fi
+  if [ ! -d "$MEDIA" ]; then MEDIA_NOTE="no local photo folder"; return 0; fi
+  full="$(newest_full)"
+  if [ -n "$full" ] && [ $(( $(date +%s) - $(stamp_s "$full") )) -lt $(( $(media_full_days) * 86400 - 3600 )) ]; then
+    name="media-$NOW-diff-$full"
+    cp "$LOCAL/media/media-$full-full.snar" "$work/$name.snar"
+  else
+    full=""; name="media-$NOW-full"
+  fi
+  # tar: 0 = done, 1 = a photo changed while it was read (an upload at that moment) — the archive is still good
+  tar -C "$MEDIA" --listed-incremental="$work/$name.snar" --no-check-device -cf "$work/$name.tar" . || rc=$?
+  if [ "$rc" -gt 1 ]; then MEDIA_NOTE="photo archive failed"; return 1; fi
+  # The checksums come from the archive, not from the folder: they are exactly what a restore must give back.
+  # shellcheck disable=SC2016  # $TAR_FILENAME is expanded by the shell tar starts, once per photo
+  tar -xf "$work/$name.tar" --to-command='printf "%s  %s\n" "$(sha256sum | cut -d" " -f1)" "$TAR_FILENAME"' \
+    > "$work/media-$NOW.sha256" || { MEDIA_NOTE="photo archive did not read back"; return 1; }
+  mv "$work/$name.tar" "$LOCAL/media/$name.tar"
+  mv "$work/media-$NOW.sha256" "$LOCAL/media/media-$NOW.sha256"
+  if [ -z "$full" ]; then mv "$work/$name.snar" "$LOCAL/media/$name.snar"; else rm -f "$work/$name.snar"; fi
+  chmod 600 "$LOCAL/media/$name.tar" "$LOCAL/media/media-$NOW.sha256"
+  n="$(wc -l < "$LOCAL/media/media-$NOW.sha256")"
+  if [ -z "$full" ]; then MEDIA_NOTE="photos: all $n in a full archive"; else MEDIA_NOTE="photos: $n new or changed since the full archive of $full"; fi
+  MEDIA_NAME="$name"
 }
 
 daily() {
@@ -54,19 +117,28 @@ daily() {
   mv "$work/extas.dump" "$LOCAL/dump/extas-$NOW.dump"
   mv "$work/config.tgz" "$LOCAL/config/config-$NOW.tgz"
   chmod 600 "$LOCAL/config/config-$NOW.tgz"
-  status daily local ok "$(du -sh "$LOCAL/base/$NOW" | cut -f1) base + dump"
+  # 4. The product photos on the local disk. If they fail, the day's backup fails (the database part above is kept).
+  if ! media_backup "$work"; then
+    status daily local fail "database backed up, but the $MEDIA_NOTE"; rm -rf "$work"; exit 1
+  fi
+  status daily local ok "$(du -sh "$LOCAL/base/$NOW" | cut -f1) base + dump; $MEDIA_NOTE"
 
   if blob_on; then
-    if rclone copy -q "$LOCAL/base/$NOW" "blob:$BLOB_PATH/base/$NOW" && rclone copy -q "$LOCAL/dump/extas-$NOW.dump" "blob:$BLOB_PATH/dump/"; then
+    if rclone copy -q "$LOCAL/base/$NOW" "blob:$BLOB_PATH/base/$NOW" && rclone copy -q "$LOCAL/dump/extas-$NOW.dump" "blob:$BLOB_PATH/dump/" \
+      && { [ -z "$MEDIA_NAME" ] || { rclone copy -q "$LOCAL/media/$MEDIA_NAME.tar" "blob:$BLOB_PATH/media/" \
+        && rclone copy -q "$LOCAL/media/media-$NOW.sha256" "blob:$BLOB_PATH/media/"; }; }; then
       status daily blob ok "$NOW"
     else status daily blob fail "upload failed"; rc=1; fi
   else status daily blob off "not connected — add the key in Keys & connections"; fi
 
   if drive_on; then
-    gpg --batch --yes --pinentry-mode loopback --passphrase-file "$(key_file)" --symmetric --cipher-algo AES256 \
-      -o "$work/extas-$NOW.dump.gpg" "$LOCAL/dump/extas-$NOW.dump"
-    gpg --batch --yes --pinentry-mode loopback --passphrase-file "$(key_file)" --symmetric --cipher-algo AES256 \
-      -o "$work/config-$NOW.tgz.gpg" "$LOCAL/config/config-$NOW.tgz"
+    encrypt "$LOCAL/dump/extas-$NOW.dump" "$work/extas-$NOW.dump.gpg"
+    encrypt "$LOCAL/config/config-$NOW.tgz" "$work/config-$NOW.tgz.gpg"
+    # The photos with the same key, into the same dated folder as the database.
+    if [ -n "$MEDIA_NAME" ]; then
+      encrypt "$LOCAL/media/$MEDIA_NAME.tar" "$work/$MEDIA_NAME.tar.gpg"
+      encrypt "$LOCAL/media/media-$NOW.sha256" "$work/media-$NOW.sha256.gpg"
+    fi
     if rclone copy -q "$work" "drive:$DRIVE_PATH/$NOW" --include '*.gpg'; then status daily drive ok "$NOW"
     else status daily drive fail "upload failed"; rc=1; fi
   else status daily drive off "not connected — add the key in Keys & connections"; fi
@@ -86,10 +158,31 @@ prune() {
   find "$LOCAL/dump" -name '*.dump' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
   find "$LOCAL/config" -name '*.tgz' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
   find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -exec rm -rf {} +
+  # Photo archives: the same days as the database. The newest set (the newest full archive with its snapshot file and
+  # the newest diff on it) always stays, even when it is older than that (a full archive is made at least as often as
+  # the shortest retention, so this only matters when the backups stopped). A diff whose full archive is gone is
+  # removed too: it cannot be restored on its own.
+  local full diff="" f s
+  full="$(newest_full)"
+  if [ -n "$full" ]; then
+    for f in "$LOCAL/media"/media-*-diff-"$full".tar; do [ -e "$f" ] && diff="$(basename "$f" | cut -c7-19)"; done
+  fi
+  for f in "$LOCAL/media"/media-*.tar "$LOCAL/media"/media-*.snar "$LOCAL/media"/media-*.sha256; do
+    [ -e "$f" ] || continue
+    s="$(basename "$f" | cut -c7-19)"
+    { [ "$s" = "$full" ] || [ "$s" = "$diff" ]; } && continue
+    [ -n "$(find "$f" -mtime +"$BACKUP_KEEP_LOCAL_DAYS")" ] && rm -f "$f"
+  done
+  for f in "$LOCAL/media"/media-*-diff-*.tar; do
+    [ -e "$f" ] || continue
+    s="${f##*-diff-}"; s="${s%.tar}"
+    [ -e "$LOCAL/media/media-$s-full.tar" ] || rm -f "$f" "$LOCAL/media/media-$(basename "$f" | cut -c7-19).sha256"
+  done
   # WAL older than the oldest kept base backup is no longer needed locally.
   local oldest
   oldest="$(find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -printf '%T@\n' | sort -n | head -1 | cut -d. -f1)"
   [ -n "$oldest" ] && find "$LOCAL/wal" -type f ! -newermt "@$oldest" -delete
+  # Remote copies (database, config and photo archives alike) by their age.
   blob_on && rclone delete -q --min-age "${BACKUP_KEEP_BLOB_DAYS}d" "blob:$BLOB_PATH" || true
   drive_on && rclone delete -q --min-age "${BACKUP_KEEP_DRIVE_DAYS}d" "drive:$DRIVE_PATH" || true
   status prune local ok "kept ${BACKUP_KEEP_LOCAL_DAYS} days locally"

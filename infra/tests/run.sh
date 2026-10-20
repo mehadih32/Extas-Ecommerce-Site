@@ -203,4 +203,135 @@ rep RUN_ID=44 BUILD=failure DEPLOY=skipped
 check "report: build failure in words" "$(grep -c 'Building the new version on the server failed' "$T/out/deploy-latest.md")" "1"
 rm -rf "$T"
 
+# Backups (PR 8): extas-backup daily, prune and extas-restore test / media with stand-ins for docker, rclone, chown and
+# sleep (no server, no database; real tar and gpg). The product photos on the local disk are in every daily backup —
+# a full archive, then diffs since it — on the data disk, in Blob and encrypted on Drive; the restore test brings one
+# sample photo back and compares its checksum; extas-restore media gives every photo back from each of the three.
+T="$(mktemp -d)"; BR="$T/root"
+mkdir -p "$BR/config/secrets" "$BR/state" "$BR/backups/wal" "$BR/data/media/p/ab" "$T/nvme" "$T/bin" "$T/remote" "$T/pg"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_NVME_MOUNT=%s\n' "$BR" "$T/nvme"; } > "$T/server.conf"
+printf 'RCLONE_CONFIG_BLOB_TYPE=test\nRCLONE_CONFIG_DRIVE_TYPE=test\n' > "$BR/config/secrets/backup.env"
+echo 17 > "$T/pg/PG_VERSION"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for docker: the base backup is a real tar of a fake data folder; the database answers like a healthy one
+case "$1" in
+  exec)
+    case "$*" in
+      *pg_basebackup*) d="$(grep -o '\.bb-[0-9-]*' <<<"$*" | head -1)"; mkdir -p "$FAKE_NVME/pgtemp/$d"
+        tar -czf "$FAKE_NVME/pgtemp/$d/base.tar.gz" -C "$FAKE_PG" . ;;
+      *pg_dump*) echo "dump of the database" ;;
+      *pg_is_in_recovery*) echo t ;;
+      *information_schema.tables*) echo 42 ;;
+    esac ;;
+  run) echo fake-container ;;
+esac
+exit 0
+FAKE
+cat > "$T/bin/rclone" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for rclone: blob:<path> and drive:<path> are folders under $FAKE_REMOTE; copy / lsf / delete with --include
+set -euo pipefail
+p() { case "$1" in blob:*|drive:*) echo "$FAKE_REMOTE/${1%%:*}/${1#*:}" ;; *) echo "$1" ;; esac; }
+cmd="$1"; shift; args=(); inc=(); dirs=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -q|--ignore-existing) shift ;;
+    --min-age) shift 2 ;;
+    --include) inc+=("$2"); shift 2 ;;
+    --dirs-only) dirs=1; shift ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+want() { local b; b="$(basename "$1")"; [ ${#inc[@]} -eq 0 ] && return 0; for i in "${inc[@]}"; do [[ $b == $i ]] && return 0; done; return 1; }
+echo "$cmd ${args[*]}" >> "$FAKE_REMOTE/log"
+case "$cmd" in
+  copy)
+    s="$(p "${args[0]}")"; d="$(p "${args[1]}")"; mkdir -p "$d"
+    if [ -f "$s" ]; then cp -p "$s" "$d/"; exit 0; fi
+    [ -d "$s" ] || exit 0
+    (cd "$s" && find . -type f) | while read -r f; do want "$f" || continue; mkdir -p "$d/$(dirname "$f")"; cp -p "$s/$f" "$d/$f"; done ;;
+  lsf)
+    s="$(p "${args[0]}")"; [ -d "$s" ] || exit 0
+    if [ -n "$dirs" ]; then find "$s" -mindepth 1 -maxdepth 1 -type d -printf '%f/\n' | sort
+    else find "$s" -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | sort | while read -r f; do if want "$f"; then echo "$f"; fi; done; fi ;;
+esac
+FAKE
+printf '#!/bin/sh\nexit 0\n' > "$T/bin/chown"; printf '#!/bin/sh\nexit 0\n' > "$T/bin/sleep"
+chmod +x "$T/bin/"*
+BENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_NVME="$T/nvme" FAKE_PG="$T/pg" FAKE_REMOTE="$T/remote")
+stamp() { date -d "$1" +%Y%m%d-%H%M; }
+A="$(stamp '2 days ago')"; Bs="$(stamp '1 day ago')"; C="$(stamp '10 minutes ago')"
+M="$BR/data/media"; L="$BR/backups/media"
+echo "photo one" > "$M/p/ab/one.avif"; echo "photo two" > "$M/p/two.webp"; echo "photo three" > "$M/three.jpg"
+rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$A" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: daily runs" "$rc:$(jq -r .result "$BR/state/backup-daily-local.json")" "0:ok"
+check "backup: first photo archive is full" "$(ls "$L" | tr '\n' ' ')" "media-$A-full.snar media-$A-full.tar media-$A.sha256 "
+check "backup: every photo has its checksum" "$(wc -l < "$L/media-$A.sha256")" "3"
+check "backup: the checksums are the photos'" "$(cd "$M" && sha256sum --quiet -c "$L/media-$A.sha256" && echo ok)" "ok"
+check "backup: status names the photos" "$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'photos: all 3 in a full archive')" "1"
+check "backup: photos in Blob" "$(ls "$T/remote/blob/extas-backups/media" | tr '\n' ' ')" "media-$A-full.tar media-$A.sha256 "
+check "backup: photos on Drive, encrypted, with the database" "$(find "$T/remote/drive/EXTAS-backups/$A" -name 'media-*.gpg' | wc -l):$(find "$T/remote/drive/EXTAS-backups/$A" -name 'extas-*.dump.gpg' | wc -l)" "2:1"
+gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$BR/config/secrets/backup.key" -o "$T/drive.tar" -d "$T/remote/drive/EXTAS-backups/$A/media-$A-full.tar.gpg" 2>/dev/null
+check "backup: the Drive copy opens with the database's key" "$(cmp -s "$T/drive.tar" "$L/media-$A-full.tar" && echo same)" "same"
+check "backup: no photo name in the clear on Drive" "$(grep -rlc 'one.avif' "$T/remote/drive" | wc -l)" "0"
+check "backup: staging on NVMe cleared" "$(ls "$T/nvme/backup-staging")" ""
+echo "photo four" > "$M/p/four.avif"
+"${BENV[@]}" EXTAS_BACKUP_STAMP="$Bs" "$B/extas-backup" daily >/dev/null 2>&1
+check "backup: next day only what is new" "$([ -f "$L/media-$Bs-diff-$A.tar" ] && echo diff):$(cut -c67- "$L/media-$Bs.sha256")" "diff:./p/four.avif"
+check "backup: a diff has no snapshot of its own" "$(find "$L" -name '*.snar' | wc -l)" "1"
+rm "$M/p/two.webp"; echo "photo five" > "$M/five.jpg"
+"${BENV[@]}" EXTAS_BACKUP_STAMP="$C" "$B/extas-backup" daily >/dev/null 2>&1
+check "backup: a diff carries everything since the full one" "$(cut -c67- "$L/media-$C.sha256" | sort | tr '\n' ' ')" "./five.jpg ./p/four.avif "
+# The restore test: database as before, plus one sample photo checked against its checksum
+rc=0; out="$("${BENV[@]}" bash "$B/extas-restore" test 2>&1)" || rc=$?
+check "restore test: passes" "$rc:$(jq -r .result "$BR/state/restore-test.json")" "0:ok"
+check "restore test: a sample photo came back with its checksum" "$(jq -r .detail "$BR/state/restore-test.json" | grep -c "restored from media-$C-diff-$A.tar, checksum matches")" "1"
+check "restore test: its work folder is removed" "$(ls "$T/nvme/scratch" 2>/dev/null | wc -l)" "0"
+cp "$L/media-$C.sha256" "$T/keep.sha256"
+sed -i 's/^./0/' "$L/media-$C.sha256"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: a photo that comes back different fails it" "$rc:$(jq -r .result "$BR/state/restore-test.json"):$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'different checksum')" "1:fail:1"
+cp "$T/keep.sha256" "$L/media-$C.sha256"
+# Every photo back, from each copy: deleted photos stay deleted, every checksum is checked, the live folder untouched
+for from in local blob drive; do
+  rm -rf "$T/nvme/scratch"
+  rc=0; out="$("${BENV[@]}" bash "$B/extas-restore" media --from "$from" 2>&1)" || rc=$?
+  got="$(find "$T/nvme/scratch" -path '*/media/*' -type f -printf '%P\n' 2>/dev/null | sed 's#^[^/]*/media/##' | sort | tr '\n' ' ')"
+  [ "$rc" = 0 ] || echo "$out" | tail -5
+  check "restore media from $from: every photo, checksums match" "$rc:$(grep -c '^OK: 4 photos restored' <<<"$out")" "0:1"
+  check "restore media from $from: the same photos as the live folder" "$got" "five.jpg p/ab/one.avif p/four.avif three.jpg "
+done
+check "restore media: the live folder is untouched" "$(find "$M" -type f | wc -l)" "4"
+rm "$M/three.jpg"
+rc=0; out="$(echo RESTORE | "${BENV[@]}" bash "$B/extas-restore" media --from local --into live 2>&1)" || rc=$?
+check "restore media --into live: a missing photo is copied back" "$rc:$(cat "$M/three.jpg" 2>/dev/null)" "0:photo three"
+echo "changed on purpose" > "$M/five.jpg"
+echo RESTORE | "${BENV[@]}" bash "$B/extas-restore" media --from local --into live >/dev/null 2>&1
+check "restore media --into live: never overwrites a photo" "$(cat "$M/five.jpg")" "changed on purpose"
+echo "photo five" > "$M/five.jpg"
+# Retention: by BACKUP_KEEP_LOCAL_DAYS; the newest set always stays; a diff without its full archive goes
+Z="$(stamp '20 days ago')"; Zd="$(stamp '19 days ago')"
+for f in "media-$Z-full.tar" "media-$Z-full.snar" "media-$Z.sha256" "media-$Zd-diff-$Z.tar" "media-$Zd.sha256" "media-$Zd-diff-19990101-0000.tar"; do
+  : > "$L/$f"; touch -d '20 days ago' "$L/$f"
+done
+touch -d '9 days ago' "$L/media-$A-full.tar" "$L/media-$A-full.snar" "$L/media-$A.sha256" "$L/media-$Bs-diff-$A.tar" "$L/media-$Bs.sha256" "$L/media-$C-diff-$A.tar" "$L/media-$C.sha256"
+"${BENV[@]}" "$B/extas-backup" prune >/dev/null 2>&1
+check "prune: old photo archives go, the newest set stays" "$(ls "$L" | tr '\n' ' ')" "media-$A-full.snar media-$A-full.tar media-$A.sha256 media-$C-diff-$A.tar media-$C.sha256 "
+# The cadence: a full archive at least as often as the shortest retention
+sed -i 's/^BACKUP_KEEP_LOCAL_DAYS=.*/BACKUP_KEEP_LOCAL_DAYS=1/' "$T/server.conf"
+"${BENV[@]}" "$B/extas-backup" daily >/dev/null 2>&1
+check "backup: a full archive again when the shortest retention says so" "$(find "$L" -name '*-full.tar' | wc -l)" "2"
+# Switched off: no photo archive, the backup and the restore test still pass and say so
+sed -i 's/^BACKUP_MEDIA=.*/BACKUP_MEDIA="no"/' "$T/server.conf"
+rm -rf "${L:?}"/*
+rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '5 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: photos switched off" "$rc:$(ls "$L" | wc -l):$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'switched off')" "0:0:1"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: no photos to check is not a failure" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'none on the local disk yet')" "0:1"
+sed -i 's/^BACKUP_MEDIA=.*/BACKUP_MEDIA="yes"/' "$T/server.conf"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore test: photos on disk but no archive fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'no photo archive')" "1:1"
+rm -rf "$T"
+
 exit $fail
