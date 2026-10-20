@@ -242,7 +242,7 @@ PAGES['admin-analytics'] = { layout:'admin', title:'Analytics', render:function(
   var kpis = '<div class="an-kpis">'+k('Product views', an_n(by.product_view))+k('Add to bag', an_n(by.add_to_bag))+k('Checkouts', an_n(by.checkout_start))+
     k('Purchases', an_n(by.purchase))+k('Sales', fmt(sales))+k('WhatsApp clicks', an_n(by.whatsapp_click))+'</div>';
   return '<div class="an-page">'+head+kpis+'<div class="an-g">'+
-    an_funnel(E, by)+an_totals(E, by)+an_wa(E)+an_search(E)+an_bag(E, by)+an_offers(E)+an_taps(E, by)+an_auth(E, by)+an_latest(E)+
+    an_funnel(E, by)+an_totals(E, by)+an_wa(E)+an_search(E)+an_bag(E, by)+an_offers(E)+(typeof atbC_anCard==='function' ? atbC_anCard(E) : '')+an_taps(E, by)+an_auth(E, by)+an_latest(E)+
   '</div></div>';
 }};
 

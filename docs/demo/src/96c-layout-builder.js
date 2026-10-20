@@ -1329,10 +1329,14 @@ function lb_mtStart(root){
       /* TA-2 (T14): the slider rule here too — the mouse on the zone holds it;
          when the mouse leaves, a turn that came due meanwhile happens at once
          and the normal rhythm restarts from there. */
-      var step = function(){
+      /* QA V12b (SC-02b): the leave handler turns the zone in the same event
+         (left === true skips the :hover test, which can still read true while
+         the leave is being dispatched) instead of a setTimeout(0) that a busy
+         page could push past the 150 ms budget. */
+      var step = function(left){
         if(!el.isConnected){ clearInterval(rec.id); return; }
         if(document.hidden || el.closest('.lb-paused')) return;
-        if(hz.matches(':hover')){ owed = true; return; }
+        if(left !== true && hz.matches(':hover')){ owed = true; return; }
         owed = false;
         var t1 = performance.now();
         var prev = cur; cur = (cur + 1) % n;
@@ -1348,7 +1352,7 @@ function lb_mtStart(root){
       hz.addEventListener('pointerleave', function(ev){
         if(ev.pointerType !== 'mouse' || !owed) return;
         clearInterval(rec.id); rec.id = setInterval(step, spd);
-        setTimeout(step, 0);
+        step(true);
       });
       LB_MT.push(rec);
     }

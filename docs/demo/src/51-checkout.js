@@ -155,7 +155,7 @@ var CO_BN = {
   'your name':'আপনার নাম', 'your phone number':'আপনার মোবাইল নম্বর', 'your address':'আপনার ঠিকানা', 'above':'ওপরে লিখুন',
   'Your bag is empty':'আপনার ব্যাগ খালি', 'Start shopping':'কেনাকাটা শুরু করুন', 'Go to bag':'ব্যাগে যান',
   'Add something to your bag first, then come back to check out.':'আগে ব্যাগে কিছু রাখুন, তারপর চেকআউটে আসুন।',
-  'looks right':'ঠিক আছে', 'Wallet':'ওয়ালেট', 'items':'টি পণ্য'
+  'looks right':'ঠিক আছে', 'We\'ll call':'এই নম্বরে কল করব', 'Wallet':'ওয়ালেট', 'items':'টি পণ্য'
 };
 function cot(en){ return (ST.lang==='bn' && CO_BN[en]) ? CO_BN[en] : en; }
 /* the delivery lines come from the owner's settings (English wording); in
@@ -190,8 +190,11 @@ var CO_ASK = {
   'co-phone'  : {bn:'এখানে আপনার মোবাইল নম্বরটি লিখে অর্ডারটি নিশ্চিত করুন', en:'Write your mobile number here to confirm the order'},
   'co-address': {bn:'এখানে আপনার ঠিকানাটি লিখে অর্ডারটি নিশ্চিত করুন',      en:'Write your address here to confirm the order'}
 };
+/* K10: a number that is there but wrong gets its own line */
+CO_ASK['co-phone-bad'] = {bn:'এখানে 11 সংখ্যার সঠিক মোবাইল নম্বর লিখুন, যেমন 01712345678', en:'Enter an 11-digit mobile number, like 01712345678'};
 function co_askHTML(field){
   var a = CO_ASK[field]; if(!a) return '';
+  if(field==='co-phone' && UI['checkout'] && checkPhone(UI['checkout'].phone).state==='warn') a = CO_ASK['co-phone-bad'];
   return '<div class="co-askmsg" role="alert" data-testid="co-ask-'+field+'">'+ico('info',15)+
     '<span><b lang="bn">'+esc(a.bn)+'</b><span>'+esc(a.en)+'</span></span></div>';
 }
@@ -325,7 +328,12 @@ function co_calc(u){
    the next step at all. */
 function co_ready(u){
   if(String(u.name||'').trim().length<2) return {ok:false, what:'your name', msg:'Add your name to confirm your order', field:'co-name'};
-  if(checkPhone(u.phone).state==='empty') return {ok:false, what:'your phone number', msg:'Add your phone number to confirm your order', field:'co-phone'};
+  /* K10 (owner, 20 Oct): any digits used to pass — even one. Only a real
+     Bangladeshi mobile number (01[3-9] + 8 digits; +880 / 880, spaces,
+     dashes and Bengali digits are read the same way) confirms the order. */
+  var ph0 = checkPhone(u.phone);
+  if(ph0.state==='empty') return {ok:false, what:'your phone number', msg:'Add your phone number to confirm your order', field:'co-phone'};
+  if(ph0.state!=='ok') return {ok:false, what:'an 11-digit mobile number', msg:ph0.msg, field:'co-phone', bad:true};
   if(String(u.address||'').trim().length<8) return {ok:false, what:'your address', msg:'Add your address to confirm your order', field:'co-address'};
   return {ok:true};
 }
@@ -346,8 +354,14 @@ function co_waBtn(label, text, cls, rich){
 
 /* ---------- pieces ---------- */
 function co_hd(n, title, off){ return '<div class="co-hd"><span class="co-num">'+n+'</span><h2 class="h2">'+esc(title)+'</h2></div>'; }
+/* K10: the "wrong number" line shows after the field is left (blur) or after
+   a Confirm press — not on the first digit typed. Once shown it follows the
+   typing, so it goes away the moment the number is right. */
+function co_phoneShow(){ var u = UI['checkout']; return !!(u && (u.phoneChecked || u.tried)); }
 function co_phoneHint(ph){
-  if(ph.state==='ok') return '<span class="brandc row" style="gap:6px;align-items:flex-start">'+ico('check',15)+'<span>'+esc(ph.nice)+' '+esc(cot('looks right'))+'</span></span>';
+  if(ph.state==='warn' && (!co_phoneShow() || UI['checkout'].ask==='co-phone')) return '';   /* the boxed line says it then */
+  /* K10: the cleaned number is said back ("We'll call 01712-345678"); what was typed stays in the box */
+  if(ph.state==='ok') return '<span class="brandc row" style="gap:6px;align-items:flex-start">'+ico('check',15)+'<span>'+esc(cot('We\'ll call'))+' <b data-testid="co-phone-clean">'+esc(ph.nice)+'</b></span></span>';
   if(ph.state==='warn') return '<span class="row" style="gap:6px;align-items:flex-start;color:var(--warn)">'+ico('info',15)+'<span>'+esc(ph.msg)+'</span></span>';
   return '';
 }
@@ -408,9 +422,16 @@ function co_pay(c, u){
      letters or more and a space — not after eight letters.
      And until it opens it is not an empty box: it names what can be paid
      with, so the customer knows what is coming. */
-  if(!c.oneWord) return '<section class="card co-sec co-soon" data-testid="co-pay">'+co_hd(3,COLBL('payment'))+
+  /* K9 (owner, 20 Oct) — ROOT CAUSE of "sometimes one line, sometimes boxes":
+     rule 39 drew this block as one row of name tags until the ADDRESS had a
+     finished word, and the address itself comes back from this tab's saved
+     draft (bug 14) or a logged-in account. So the same page showed the tags
+     (nothing to choose) on a fresh visit and the boxes after any earlier
+     visit or a refresh. On a desktop the boxes now always show and every
+     method can be chosen before the address; the phone keeps rule 39. */
+  var soon = !c.oneWord ? '<section class="card co-sec co-soon" data-testid="co-pay">'+co_hd(3,COLBL('payment'))+
     '<div class="co-soonrow">'+['Cash on Delivery','bKash','Nagad','Visa','Mastercard'].map(function(x){ return '<span class="co-badge">'+esc(x)+'</span>'; }).join('')+'</div>'+
-    '<p class="co-fdays">'+ico('lock',14)+'<span>'+esc(cot('Opens as you write your address. Cash on Delivery is ready by default.'))+'</span></p></section>';
+    '<p class="co-fdays">'+ico('lock',14)+'<span>'+esc(cot('Opens as you write your address. Cash on Delivery is ready by default.'))+'</span></p></section>' : '';
   var due = fmt(c.grand);
   var badge = function(x){ return '<span class="co-badge">'+x+'</span>'; };
   var opt = function(v, title, sub, icon, body){
@@ -423,14 +444,14 @@ function co_pay(c, u){
   /* 40. The whole block has to fit one phone screen. The three choices are
      one compact row each; only the chosen one opens, and it opens into a
      single short line instead of a paragraph. */
-  return '<section class="card co-sec co-paysec" data-testid="co-pay">'+co_hd(3,COLBL('payment'))+'<div class="stack s8 mt12">'+
+  return (soon ? '<div class="hide-d">'+soon+'</div><div class="hide-m">' : '')+'<section class="card co-sec co-paysec" data-testid="'+(soon ? 'co-pay-desk' : 'co-pay')+'">'+co_hd(3,COLBL('payment'))+'<div class="stack s8 mt12">'+
     opt('cod', esc(cot('Cash on Delivery')), esc(cot('Pay when it reaches you')), 'cash',
       '<div class="small" data-testid="co-cod-note"><b>'+esc(cot('Total due'))+' '+due+'</b> — '+esc(cot('pay the rider at your door.'))+'</div>')+
     opt('mb', esc(cot('Mobile Banking')), badge('bKash')+badge('Nagad'), 'wallet',
       chooser('co-mb', u.mb, [['bkash','bKash'],['nagad','Nagad']])+'<div class="xs muted mt8">Approve '+due+' in the '+(u.mb==='nagad'?'Nagad':'bKash')+' app. (Demo)</div>')+
     opt('card', esc(cot('Card & Bank')), badge('Visa')+badge('Mastercard')+badge('Amex')+badge('Bank'), 'lock',
       chooser('co-card', u.cardType, [['visa','Visa'],['mastercard','Mastercard'],['amex','Amex'],['bank','Internet banking']])+'<div class="xs muted mt8">Secure payment of '+due+' on the next step. (Demo)</div>')+
-  '</div></section>';
+  '</div></section>'+(soon ? '</div>' : '');
 }
 function co_offers(c, u){
   var acc = c.acc; if(!acc) return '';
@@ -508,7 +529,7 @@ function co_summary(c){
   /* 33. The regular price, struck through, beside the total — so the saving
      is visible at the one moment the customer is deciding. */
   var struck = save>0 ? '<span class="co-was"><span class="strike">'+fmt(c.regular)+'</span><span class="co-saved">'+esc(cot('You save'))+' '+fmt(save)+'</span></span>' : '';
-  return '<div class="h3" style="margin-bottom:6px">'+esc(cot('Order summary'))+' · '+(ST.lang==='bn' ? tot.count+' '+cot('items') : plural(tot.count,'item'))+'</div><div>'+items+'</div><div class="co-rows">'+rows+'</div>'+
+  return '<div class="h3" style="margin-bottom:6px">'+esc(cot('Order summary'))+' · <span class="co-cnt" data-testid="co-count">'+(ST.lang==='bn' ? tot.count+' '+cot('items') : plural(tot.count,'item'))+'</span></div><div>'+items+'</div><div class="co-rows">'+rows+'</div>'+
     '<div class="co-tot"><span>'+esc(cot('Total'))+'</span><span class="co-totv"><span class="price" data-testid="co-total">'+fmt(c.grand)+'</span>'+(c.delivery===null && !c.free?' <span class="xs muted">'+esc(cot('+ delivery'))+'</span>':'')+'</span></div>'+
     struck;
 }
@@ -572,27 +593,30 @@ function co_render(){
     picker+
     '<div class="stack s16 mt16">'+
       fld('co-name','<label class="label" for="co-name">'+esc(COLBL('name'))+'</label><input id="co-name" class="input" data-input="co-name" enterkeyhint="next" autocomplete="name"'+(COLBL('namePh')?' placeholder="'+esc(COLBL('namePh'))+'"':'')+' value="'+esc(u.name)+'">')+
-      fld('co-phone','<label class="label" for="co-phone">'+esc(COLBL('phone'))+'</label><input id="co-phone" class="input'+(ph.state==='ok'?' ok':(ph.state==='warn'?' warn':''))+'" type="tel" inputmode="tel" enterkeyhint="next" data-input="co-phone" autocomplete="tel" placeholder="'+esc(COLBL('phonePh'))+'" value="'+esc(u.phone)+'" aria-describedby="co-phone-hint">'+
+      fld('co-phone','<label class="label" for="co-phone">'+esc(COLBL('phone'))+'</label><input id="co-phone" class="input'+(ph.state==='ok'?' ok':(ph.state==='warn' && co_phoneShow()?' warn':''))+'" type="tel" inputmode="tel" enterkeyhint="next" data-input="co-phone" autocomplete="tel" placeholder="'+esc(COLBL('phonePh'))+'" value="'+esc(u.phone)+'" aria-describedby="co-phone-hint">'+
         '<div id="co-phone-hint" class="co-hint" aria-live="polite">'+co_phoneHint(ph)+'</div>')+
       fld('co-address','<label class="label" for="co-address">'+esc(COLBL('address'))+'</label><textarea id="co-address" class="input co-addr" rows="2" data-input="co-address" autocomplete="street-address" placeholder="'+esc(COLBL('addressPh'))+'">'+esc(u.address)+'</textarea>')+
     '</div></section>';
   /* C12. The one control that was loose on the page now lives in a card like
      everything else. */
+  /* K6 (owner, desktop): the delivery note is always open, in bigger text — the
+     phone keeps its "+ Add a delivery note" button (the open box is hide-m) */
   var note = '<div class="card co-sec co-notecard">'+(u.noteOpen
     ? '<label class="label" for="co-note">'+esc(COLBL('note'))+'</label><input id="co-note" class="input" data-input="co-note" value="'+esc(u.note)+'" placeholder="e.g. Leave it with the guard if I\'m out">'
-    : '<button type="button" class="co-noteadd" data-act="co-note">'+ico('plus',16)+'<span>'+esc(COLBL('noteAdd'))+'</span></button>')+'</div>';
+    : '<button type="button" class="co-noteadd hide-d" data-act="co-note">'+ico('plus',16)+'<span>'+esc(COLBL('noteAdd'))+'</span></button>'+
+      '<div class="hide-m co-note-d"><label class="label" for="co-note-d">'+esc(COLBL('note'))+'</label><input id="co-note-d" class="input" data-input="co-note" value="'+esc(u.note)+'" placeholder="e.g. Leave it with the guard if I\'m out"></div>')+'</div>';
   /* R15 wave 2 (E03): stock that ran short while the item sat in the bag is
      said at the top of checkout, before Confirm — with the way back to fix it */
   var sIssues = typeof bagStockIssues==='function' ? bagStockIssues() : [];
   var stockNote = sIssues.length ? '<div class="zc-note bad co-stocknote" role="alert" data-testid="co-stock-issue">'+ico('info',14)+'<span>'+esc(sIssues[0].msg)+' <a class="link" href="#/bag">Fix it in your bag</a></span></div>' : '';
-  var msgs = '<section class="card co-sec stack s12">'+
+  var msgs = '<section class="card co-sec stack s12 co-msgs">'+
     '<div class="row xs top" style="gap:8px"><span class="brandc">'+ico('chat',15)+'</span><span>'+esc(cot('Order confirmation and tracking link by SMS.'))+'</span></div>'+
     consentTicksHTML(u.optSms, u.optWa, 'co-consent', 'co-consent')+
     '<p class="xs muted" style="margin:0">'+esc(cot('By placing this order you agree to our Terms.'))+' '+esc(ruleText('no-return','short'))+'.</p></section>';
   var trust = '<div class="row wrap xs muted mt12" style="justify-content:center;gap:6px 14px"><span class="row" style="gap:5px">'+ico('cash',14)+esc(cot('Cash on Delivery'))+'</span><span class="row" style="gap:5px">'+ico('swap',14)+esc(cot('Size exchange in'))+' '+esc(SET('exchange','windowHours'))+' '+esc(cot('hours'))+'</span><span class="row" style="gap:5px">'+ico('lock',14)+esc(cot('Secure payment'))+'</span></div>';
   return '<form data-submit="co-place" id="co-form" novalidate>'+
     (SHOW('checkout','helpStripDesktop') ? help : '<div class="co-help-m">'+help+'</div>')+msum+
-    '<div class="container co-wrap"><div class="split-side">'+
+    '<div class="container co-wrap co-lay-'+(typeof coC_layout==='function' ? coC_layout() : 'classic')+'"><div class="split-side">'+
       '<div class="stack s16" style="min-width:0">'+
         '<h1 class="h1 co-donly">'+esc(cot('Checkout'))+'</h1>'+stockNote+(typeof bagEndedNoteHTML==='function' ? bagEndedNoteHTML('co-ended') : '')+
         address+
@@ -625,6 +649,7 @@ function co_deskAlign(){
   var hdr = document.querySelector('.hdr'), top = 16;
   if(hdr && /sticky|fixed/.test(getComputedStyle(hdr).position)) top += Math.round(hdr.getBoundingClientRect().height);
   if(fl){ fl.style.top = top+'px'; fl.style.maxHeight = 'calc(100vh - '+(top+16)+'px)'; }
+  if(typeof coC_fitFloat==='function') coC_fitFloat();   /* K4: never clip the card or the help box */
 }
 window.addEventListener('resize', function(){ if(document.querySelector('.co-wrap .co-side')) co_deskAlign(); });
 ACT['co-sum-more'] = function(){ var u = co_state(); u.sumMore = !u.sumMore; co_patch(); co_deskAlign(); };
@@ -686,9 +711,21 @@ INPUT['co-phone'] = function(el){
   var u = co_state(); u.phone = el.value; var ph = checkPhone(el.value);
   co_clearAsk(u,'co-phone');
   var hint = document.getElementById('co-phone-hint'); if(hint) hint.innerHTML = co_phoneHint(ph);
-  el.classList.toggle('ok', ph.state==='ok'); el.classList.toggle('warn', ph.state==='warn');
+  el.classList.toggle('ok', ph.state==='ok'); el.classList.toggle('warn', ph.state==='warn' && co_phoneShow());
   co_patch();
 };
+/* K10: checked when the customer leaves the field (and again on Confirm).
+   What was typed is never cleared or rewritten. */
+document.addEventListener('focusout', function(ev){
+  var el = ev.target; if(!el || el.id!=='co-phone' || !UI['checkout']) return;
+  var u = co_state(); if(!String(el.value||'').trim()) return;
+  u.phoneChecked = true;
+  var ph = checkPhone(el.value), hint = document.getElementById('co-phone-hint');
+  if(hint) hint.innerHTML = co_phoneHint(ph);
+  el.classList.toggle('ok', ph.state==='ok'); el.classList.toggle('warn', ph.state==='warn');
+  if(ph.state==='warn'){ el.setAttribute('aria-invalid','true'); el.setAttribute('aria-describedby','co-phone-hint'); }
+  else el.removeAttribute('aria-invalid');
+}, true);
 ACT['co-zone'] = function(el){ var v = el.getAttribute('data-v'); var u = co_state();
   u.zonePick = (v==='ask') ? null : v; render(); };
 /* 35. Typing never decides anything. The line is only read when it holds two
@@ -780,7 +817,7 @@ SUBMIT['co-place'] = function(f, ev){
       if(w && w.scrollIntoView) try{ w.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ w.scrollIntoView(); }
       var el2 = document.getElementById(r.field);
       if(el2) setTimeout(function(){ try{ el2.focus({preventScroll:true}); }catch(e){ el2.focus(); } }, 240);
-      toast((CO_ASK[r.field] && CO_ASK[r.field].bn) || r.msg);
+      toast((r.bad && CO_ASK['co-phone-bad'].bn) || (CO_ASK[r.field] && CO_ASK[r.field].bn) || r.msg);
       return;
     }
     co_markInvalid(u); toast(r.msg); var fe = document.getElementById(r.field); if(fe) fe.focus(); return;

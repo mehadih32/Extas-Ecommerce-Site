@@ -15,7 +15,7 @@ Every session in this repository reads this file first, then `docs/START-HERE.md
 |---|---|
 | `docs/BLUEPRINT.md` | The full specification (V2.1 final, 20 Oct 2026). **Read it from here; it is never re-uploaded.** |
 | `docs/MASTER-REGISTER.md` | All 604 PRs in 28 stages (598 active, 6 parked). **Nothing gets built unless it is in here.** |
-| `docs/demo/EXTAS-demo-V12.html` | The approved clickable demo. **It is the UI truth.** The source is in `docs/demo/src/`. |
+| `docs/demo/EXTAS-demo-V12.1.html` | The approved clickable demo, **V12.1** (20 Oct: the owner's desktop review, CN-008). **It is the UI truth.** V12 is kept as history. The source is in `docs/demo/src/`. Before/after details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md`, `docs/qa/ADMIN-AUDIT.md`. |
 | `docs/qa/ECOMMERCE-CHECKLIST.md` | The QA checklist. The gates are in Blueprint Appendix C. |
 | `docs/owner/` | The owner's decisions, review notes, server spec and guides. |
 | `docs/agents/` | The seven agent profiles, protocol, skills and lessons (`lessons/ALL.md`). Read the lessons. |
@@ -79,6 +79,8 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   switch of extas.com.bd. None of these happens during the build.
 
 ## How to report
+- **Keep `README.md` as the live front page** (owner, 20 Oct): after every merged PR, update its status table (stage counts done/total, what is live on new.extas.com.bd, last deploy, what waits for the owner) in simple English with a Bengali summary line. The owner reads it on GitHub.
+- **Owner data is not a blocker** (owner, 20 Oct 12:11): delivery charges, free-delivery limit, courier rates, photos, prices, area lists and similar values are entered by the owner in the backend later. Ship empty/off defaults and never list them in `BLOCKED.md` as questions.
 - **Plans and progress are counted in stages and PRs, never in days or hours** (owner's rule, 20 Oct): "S0A: 7/12 PR · S00: 3/19 PR · total 10/598". 604 PRs in 28 stages (598 active, 6 parked).
 - After each PR: update `PROGRESS.md` (the English line is fine) and the register status.
 - After each stage and wave:

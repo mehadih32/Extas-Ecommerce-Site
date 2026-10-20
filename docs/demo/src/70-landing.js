@@ -336,7 +336,8 @@ function lp_sumHTML(p, u, c){
 function lp_phoneHint(raw){
   var r = checkPhone(raw);
   if(r.state==='ok') return '<span class="brandc bold row" style="gap:5px">'+ico('check',14)+r.nice+'</span>';
-  if(r.state==='warn') return '<span style="color:var(--warn)">'+esc(r.msg)+'</span> <span class="muted">You can still order — we will check it with you.</span>';
+  /* K10 (owner, 20 Oct): a wrong number no longer goes through — the line says how to write it */
+  if(r.state==='warn') return '<span style="color:var(--warn)">'+esc(r.msg)+'</span>';
   return '<span class="muted">We send your order updates to this number.</span>';
 }
 function lp_form(lp, p, u, packs){
@@ -350,7 +351,7 @@ function lp_form(lp, p, u, packs){
   var swatches = function(sel, act, extra){ return '<div class="row wrap" style="gap:10px">'+p.colors.map(function(cl){ var out = totalStock(p.id, cl)===0; return '<button type="button" class="swatch'+(cl===sel?' on':'')+'" style="background:'+COL(cl).hex+(out?';opacity:.35':'')+'" data-act="'+act+'" data-slug="'+slug+'" data-c="'+cl+'"'+(extra||'')+' aria-label="'+esc(COL(cl).name)+(cl===sel?' (selected)':'')+'" title="'+esc(COL(cl).name)+'"'+(out?' disabled':'')+'></button>'; }).join('')+'</div>'; };
   var colorH;
   if(pk.n===1) colorH = '<div class="lp-fld"><div class="label">Colour: <span class="muted" style="font-weight:500">'+esc(COL(u.color).name)+'</span></div>'+swatches(u.color, 'lp-color')+'</div>';
-  else { colorH = '<div class="lp-fld"><div class="label">Colours <span class="muted" style="font-weight:500">· same or different</span></div><div class="stack s8">';
+  else { colorH = '<div class="lp-fld"><div class="label">Colours <span class="muted" style="font-weight:500">· '+(lp_needsMix(pk) ? 'different colours' : 'same or different')+'</span></div><div class="stack s8">';
     for(var i=0;i<pk.n;i++) colorH += '<div class="row" style="gap:12px"><span class="xs bold" style="width:58px">'+esc(single)+' '+(i+1)+'</span>'+swatches(u.picks[i], 'lp-pick', ' data-i="'+i+'"')+'<span class="xs muted hide-m">'+esc(COL(u.picks[i]).name)+'</span></div>';
     colorH += '</div></div>'; }
   var ms = mySizeFor(p);
@@ -450,9 +451,13 @@ function lp_patch(x){
 }
 CHANGE['lp-consent'] = function(el){ var x = lp_ctx(el); if(!x) return; if(el.getAttribute('data-k')==='wa') x.u.optWa = el.checked; else x.u.optSms = el.checked; };
 ACT['lp-view'] = function(el){ var x = lp_ctx(el); if(!x) return; x.u.view = el.getAttribute('data-v'); rerender(); };
-ACT['lp-color'] = function(el){ var x = lp_ctx(el); if(!x) return; var c = el.getAttribute('data-c'); x.u.color = c; if(lp_pack(x.p,x.u).n>1) x.u.picks[0] = c; if(x.u.view==='set' && lp_pack(x.p,x.u).n===1) x.u.view = 'front'; rerender(); };
-ACT['lp-pick'] = function(el){ var x = lp_ctx(el); if(!x) return; var i = +el.getAttribute('data-i'); x.u.picks[i] = el.getAttribute('data-c'); if(i===0) x.u.color = x.u.picks[0]; rerender(); };
-ACT['lp-pack'] = function(el){ var x = lp_ctx(el); if(!x) return; x.u.pack = el.getAttribute('data-v'); var n = lp_pack(x.p,x.u).n; if(n>1){ x.u.picks[0] = x.u.color; x.u.view = 'set'; } else if(x.u.view==='set') x.u.view = 'front'; rerender(); };
+ACT['lp-color'] = function(el){ var x = lp_ctx(el); if(!x) return; var c = el.getAttribute('data-c'); x.u.color = c; if(lp_pack(x.p,x.u).n>1){ var old0 = x.u.picks[0]; x.u.picks[0] = c; lp_mixFix(x, 0, old0); } if(x.u.view==='set' && lp_pack(x.p,x.u).n===1) x.u.view = 'front'; rerender(); };
+/* K11: a colour-pair combo (Polo Duo — any 2 different colours) never ends up
+   with the same colour twice — the slot that clashes takes the old colour */
+function lp_needsMix(pk){ return !!(pk && pk.source==='combo' && typeof COMBO==='function' && typeof comboNeedsMix==='function' && comboNeedsMix(COMBO(pk.refId))); }
+function lp_mixFix(x, i, old){ var pk = lp_pack(x.p, x.u); if(!lp_needsMix(pk)) return; for(var k=0;k<pk.n;k++){ if(k!==i && x.u.picks[k]===x.u.picks[i]) x.u.picks[k] = old && old!==x.u.picks[i] ? old : (x.p.colors.filter(function(c){ return x.u.picks.slice(0, pk.n).indexOf(c)<0; })[0] || x.u.picks[k]); } }
+ACT['lp-pick'] = function(el){ var x = lp_ctx(el); if(!x) return; var i = +el.getAttribute('data-i'), old = x.u.picks[i]; x.u.picks[i] = el.getAttribute('data-c'); lp_mixFix(x, i, old); if(i===0) x.u.color = x.u.picks[0]; rerender(); };
+ACT['lp-pack'] = function(el){ var x = lp_ctx(el); if(!x) return; x.u.pack = el.getAttribute('data-v'); var n = lp_pack(x.p,x.u).n; if(n>1){ var old0 = x.u.picks[0]; x.u.picks[0] = x.u.color; lp_mixFix(x, 0, old0); x.u.view = 'set'; } else if(x.u.view==='set') x.u.view = 'front'; rerender(); };
 ACT['lp-size'] = function(el){ var x = lp_ctx(el); if(!x) return; x.u.size = el.getAttribute('data-s'); var e = document.getElementById('lp-err'); if(e) e.style.display = 'none'; rerender(); };
 ACT['lp-qty'] = function(el){ var x = lp_ctx(el); if(!x) return; var max = x.u.size ? Math.max(1, Math.min(5, stockOf(x.p.id, x.u.color, x.u.size))) : 5; var q = x.u.qty + (+el.getAttribute('data-d')); if(q>max){ toast('Only '+max+' available in this size'); q = max; } x.u.qty = Math.max(1, q); rerender(); };
 ACT['lp-pay'] = function(el){ var x = lp_ctx(el); if(!x) return; x.u.pay = el.getAttribute('data-v'); rerender(); };
@@ -499,6 +504,7 @@ SUBMIT['lp-order'] = function(f){
   if(!u.size){ err = 'Please choose your size'; }
   else if(!String(u.name).trim()){ err = 'Please write your name'; focus = 'lp-name'; }
   else if(!checkPhone(u.phone).digits){ err = 'Please write your mobile number'; focus = 'lp-phone'; }
+  else if(checkPhone(u.phone).state!=='ok'){ err = checkPhone(u.phone).msg; focus = 'lp-phone'; }   /* K10 */
   else if(String(u.address).trim().length < 6){ err = 'Please write your full address'; focus = 'lp-addr'; }
   if(err){ var e = document.getElementById('lp-err'); if(e){ e.textContent = err; e.style.display = 'block'; } toast(err); if(focus){ var fe = document.getElementById(focus); if(fe) fe.focus(); } return; }
   var c = lp_calc(x.p, u);

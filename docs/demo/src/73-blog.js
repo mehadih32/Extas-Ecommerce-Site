@@ -1685,7 +1685,7 @@ function bfCareFor(p){
     });
     var bn = BF.ul==='bn';
     if(best){ var v = (bn && best.bn) ? bfV(best, 'bn') : bfV(best, 'en');
-      return {href:(bn && best.bn) ? '#/bn/journal/'+best.slug : '#/journal/'+best.slug, title:v.title, lang:v.lang, label:bfL('careHow')}; }
+      return {href:(bn && best.bn) ? '#/bn/journal/'+best.slug : '#/journal/'+best.slug, title:v.title, lang:v.lang, label:bfL('careHow'), mins:v.mins, dek:v.dek}; }   /* mins/dek: owner review 20 Oct P2 (desktop care card) */
     if(bfPillar('care')) return {href:bn ? '#/bn/journal/topic/care' : '#/journal/topic/care', title:bfPName('care'), lang:BF.ul, label:bfL('careAll')};
     return null;
   } finally { BF.route = keepR; BF.ul = keepU; BF.cache = keepC; }

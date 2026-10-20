@@ -284,6 +284,8 @@ SUBMIT['login-form'] = function(f){
   var mark = function(phBad, pwBad){ [['lg-phone', phBad], ['lg-pw', pwBad]].forEach(function(x){ var el = document.getElementById(x[0]) || f.querySelector(x[0]==='lg-pw' ? '[name=password]' : '[name=phone]'); if(!el) return;
     if(x[1]){ el.setAttribute('aria-invalid','true'); el.setAttribute('aria-describedby','lg-err'); } else { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); } }); };
   if(!String(ph).trim() || !pw){ mark(!String(ph).trim(), !pw); err.innerHTML = acc_err('Please enter your mobile number and password.'); return; }
+  /* K10: the same phone rule as checkout — a wrong number is named as such (what was typed stays) */
+  var phc = checkPhone(ph); if(phc.state!=='ok'){ mark(true, false); err.innerHTML = acc_err(phc.msg); return; }
   if(login(ph, pw)){ var a = currentAccount(); toast('Welcome back, '+acc_first(a.name)); go(f.getAttribute('data-next') || '#/account'); }
   else { mark(true, true); err.innerHTML = acc_err('That number and password don\'t match. Check them, or tap "Forgot password".'); }
 };

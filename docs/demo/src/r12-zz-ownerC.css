@@ -1,0 +1,133 @@
+/* =====================================================================
+   r12-zz-ownerC.css — owner's desktop review of V12 (R15 Note 51), part C
+   Added-to-bag drawer (B1–B3) · bag page offers (G1–G3) · checkout (K1–K8)
+   Sawdagor সওদাগর · Shilpi শিল্পী · 20 Oct 2026.
+   THE PHONE IS SIGNED OFF: every rule sits inside @media (min-width:1024px).
+   Anchored on #app (store pages) / body (the drawer) to win over the
+   modules' runtime <style> by weight, as r12-zzdesk-b.css does.
+   ===================================================================== */
+@media (min-width:1024px){
+
+/* ---------------- B1–B3 · Added-to-bag drawer ---------------- */
+body .modal.atb-d .atbc{gap:14px}
+body .modal.atb-d .atbc-card{background:var(--surface2);border:1px solid var(--line2);border-radius:var(--radius);padding:14px 16px}
+/* B2: "Bag · 5 items  ৳6,850" — ink, bold, the count in its own chip */
+body .modal.atb-d .atbc-sum{display:flex;align-items:center;justify-content:space-between;gap:12px}
+body .modal.atb-d .atbc-bag{font-size:16px;font-weight:800;color:var(--ink);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+body .modal.atb-d .atbc-cnt{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:13.5px;font-weight:700}
+body .modal.atb-d .atbc-tot{font-size:22px;font-weight:800;color:var(--ink)}
+body .modal.atb-d .atbc-save{display:flex;justify-content:space-between;margin-top:8px;font-size:13.5px;font-weight:700;color:var(--brand)}
+:root[data-theme="festive"] body .modal.atb-d .atbc-save{color:var(--gold)}
+/* B2: the free-delivery line, loud, with the pickup (truck) icon, right above Checkout */
+body .modal.atb-d .atbc-free{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius);
+  background:var(--brand-tint);border:1.5px solid var(--brand);color:var(--brand);font-size:15px;font-weight:800;line-height:1.25}
+body .modal.atb-d .atbc-free svg{flex-shrink:0}
+:root[data-theme="festive"] body .modal.atb-d .atbc-free{color:var(--ink);border-color:var(--gold)}
+body .modal.atb-d .atbc-reas{margin-top:0;justify-content:center;font-size:13.5px}
+body .modal.atb-d .atbc .pdp-bagbtns{margin-top:-4px}
+/* B3 · style B: the whole bag, newest on top */
+body .modal.atb-d .atbc-list{margin-top:10px;display:flex;flex-direction:column;gap:2px}
+body .modal.atb-d .atbc-li{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 8px;margin:0 -8px;border-radius:8px}
+body .modal.atb-d .atbc-li.new{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--brand-line)}
+body .modal.atb-d .atbc-lth{border-radius:7px;overflow:hidden}
+body .modal.atb-d .atbc-lth .pimg{border-radius:7px}
+body .modal.atb-d .atbc-lth .pimg-label{display:none}
+body .modal.atb-d .atbc-ln{font-size:14px;font-weight:700;color:var(--ink);line-height:1.3;overflow-wrap:anywhere}
+body .modal.atb-d .atbc-ls{font-size:12.5px;color:var(--text2);font-weight:600;margin-top:1px}
+body .modal.atb-d .atbc-new{display:inline-block;vertical-align:1px;margin-right:6px;padding:1px 7px;border-radius:999px;background:var(--brand);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase}
+body .modal.atb-d .atbc-lp{display:flex;flex-direction:column;align-items:flex-end;font-size:14px;font-weight:700;white-space:nowrap}
+body .modal.atb-d .atbc-lp .strike{font-size:11.5px;font-weight:500}
+body .modal.atb-d .atbc-more{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:14px;font-weight:800;color:var(--brand);text-decoration:none}
+body .modal.atb-d .atbc-more:hover{text-decoration:underline}
+body .modal.atb-d .atbc-b .atbc-save{border-top:1px solid var(--line2);padding-top:8px}
+/* B1: products to the bottom of the drawer */
+body .modal.atb-d .atbc-x{padding-top:14px}
+body .modal.atb-d .atbc-x .atb-xh{font-size:15px;font-weight:800}
+body .modal.atb-d .atbc-x{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
+body .modal.atb-d .atbc-x .atb-xh{grid-column:1/-1;margin-bottom:4px}
+body .modal.atb-d .atbc-x .atb-xi{grid-template-columns:52px minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;row-gap:2px;align-content:center;padding:6px 0}
+body .modal.atb-d .atbc-x .atb-xi>:first-child{grid-row:1/3}
+body .modal.atb-d .atbc-x .atb-xn{align-self:end;font-size:13px}
+body .modal.atb-d .atbc-x .atb-xp{align-self:start;font-size:14px;font-weight:700}
+body .modal.atb-d .price{white-space:nowrap}
+
+/* ---------------- G1 · "Add one more and save": one tidy row ---------------- */
+#app .bg-page .bg-offer[data-testid="duo-offer"]{padding:10px 14px!important}
+#app .bg-page .bg-offer[data-testid="duo-offer"]>.row{align-items:center}
+#app .bg-page .bg-offer[data-testid="duo-offer"] .grow{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);column-gap:16px;align-items:center}
+#app .bg-page .bg-offer[data-testid="duo-offer"] .h3{grid-column:1;font-size:15px;white-space:nowrap}
+#app .bg-page .bg-offer[data-testid="duo-offer"] .bg-duoline{grid-column:1;margin-top:1px;white-space:nowrap}
+#app .bg-page .bg-offer[data-testid="duo-offer"] .bg-duo-cols{grid-column:2;grid-row:1/3;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin:0}
+#app .bg-page .bg-offer[data-testid="duo-offer"] .bg-duo-cols .chip.bg-duoc{flex:0 0 auto;flex-direction:row;min-height:38px;padding:5px 12px;gap:7px;font-size:13.5px}
+
+/* ---------------- G2 · the tier box: compact, short names ---------------- */
+#app .ups-st-current .bg-tiers{padding:10px 16px;margin:0 0 12px;border-width:1px}
+#app .ups-st-current .bg-tiers-h{margin-bottom:4px}
+#app .ups-st-current .bg-tiers-t{font-size:15.5px}
+#app .ups-st-current .bg-tiers-go{font-size:14px}
+#app .ups-st-current .bg-tier{font-size:15px;padding:4px 4px}
+#app .ups-st-current .bg-tbar{margin:2px 14px}
+
+/* ---------------- G3 · option "cards" ---------------- */
+#app .ups-st-cards .bgc-tiers{margin:0 0 14px}
+#app .bgc-th1{font-weight:800;font-size:16px;color:var(--ink);margin-bottom:8px}
+#app .bgc-trow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#app .bgc-tc{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1.5px solid var(--brand-line);border-radius:var(--card-radius);background:var(--surface);color:var(--ink);text-decoration:none}
+#app .bgc-tc:hover{border-color:var(--brand);background:var(--brand-tint)}
+#app .bgc-tn{font-size:14px;font-weight:700}
+#app .bgc-tp{font-size:21px;font-weight:800}
+#app .bgc-ts{font-size:13px;font-weight:800;color:var(--sale)}
+#app .bgc-th{margin-top:4px;font-size:12px;color:var(--text2);font-weight:600}
+#app .bgc-tgo{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--card-radius);background:var(--brand);color:#fff;font-weight:800;font-size:15px;text-decoration:none}
+#app .bgc-tgo:hover{filter:brightness(1.08)}
+/* ---------------- G3 · option "side" ---------------- */
+#app .ups-st-side:not(.ups-notier) .container{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr);column-gap:12px;align-items:start}
+#app .ups-st-side:not(.ups-notier) .container>*{grid-column:1/-1}
+#app .ups-st-side:not(.ups-notier) .container>.bgc-ladder{grid-column:1;margin-top:12px}
+#app .ups-st-side:not(.ups-notier) .container>.ups-row{grid-column:2;--n:3!important;grid-template-columns:repeat(3,minmax(0,1fr))}
+#app .ups-st-side:not(.ups-notier) .ups-row>:nth-child(n+4){display:none}
+#app .bgc-ladder{border:1.5px solid var(--brand);background:var(--brand-tint);border-radius:var(--card-radius);padding:14px 16px}
+#app .bgc-lr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;padding:8px 0;border-top:1px solid var(--brand-line);font-size:14.5px}
+#app .bgc-lr .price{font-weight:800;text-align:right}
+#app .bgc-lr .bgc-ts{grid-column:1/-1}
+#app .bgc-lgo{margin-top:10px}
+
+/* ---------------- K1 · checkout widths (new default; "classic" = before) ---------------- */
+#app .co-wrap.co-lay-wide .split-side{grid-template-columns:minmax(0,1fr) 440px;gap:42px}
+/* K2 + K5: room under the order-message card, and inside it */
+#app .co-wrap{padding-bottom:88px}
+#app .co-wrap .co-msgs{padding-bottom:30px}
+/* K7: SMS and WhatsApp ticks side by side on one line */
+#app .co-wrap .co-msgs{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:32px;row-gap:12px;align-items:center}
+#app .co-wrap .co-msgs>:not(.ct-tick){grid-column:1/-1}
+#app .co-wrap .co-msgs>.ct-tick{white-space:nowrap}
+/* K7: fit more of the form in one 1366×768 screen */
+#app .co-wrap{padding-top:22px}
+#app .co-wrap .split-side>.stack.s16{gap:14px}
+#app .co-wrap .co-donly{margin:0 0 2px;font-size:30px}
+#app .co-wrap .co-sec{padding:20px 22px}
+#app .co-wrap .co-sec .mt16{margin-top:12px}
+/* K6: the delivery note, always open, bigger */
+#app .co-wrap .co-notecard .label{font-size:15px;font-weight:700;margin-bottom:6px;display:block}
+#app .co-wrap .co-notecard .input{font-size:16px}
+/* K8: the cotton upsell, bigger */
+#app .co-wrap .co-ups{padding:18px 22px;gap:18px!important;align-items:center}
+#app .co-wrap .co-ups .co-th{width:84px}
+#app .co-wrap .co-ups .small.bold{font-size:17px;line-height:1.3}
+#app .co-wrap .co-ups .small.bold .price{font-size:17px;font-weight:800;margin-left:8px!important}
+#app .co-wrap .co-ups .xs.muted{font-size:14px;margin-top:3px}
+#app .co-wrap .co-ups .btn{min-height:48px;padding:10px 22px;font-size:16px}
+/* K3: the item count and "+N more items" stand out */
+#app .co-wrap .co-side .co-cnt{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:14px;font-weight:700;vertical-align:1px}
+#app .co-wrap .co-xbtn{margin:6px 0 6px 68px;min-height:38px;padding:6px 14px;border-radius:999px;background:var(--brand-tint);border:1.5px solid var(--brand-line);
+  color:var(--brand);font-size:15px;font-weight:800;text-decoration:none}
+#app .co-wrap .co-xbtn:hover{border-color:var(--brand)}
+:root[data-theme="festive"] #app .co-wrap .co-xbtn{color:var(--ink);border-color:var(--gold)}
+/* K4: the WhatsApp help box — its own box under the card, room, a coloured border */
+#app .co-wrap .co-float{gap:22px;padding-bottom:2px}
+#app .co-wrap .co-sidehelp{padding:16px 18px;gap:12px;border:1.5px solid #1FA855;background:#F1FBF4;border-radius:var(--card-radius);font-size:15px;color:var(--ink)}
+#app .co-wrap .co-sidehelp:hover{background:#E4F7EA;border-color:#178A45}
+/* K4: with 5–6 items the box is taller than the window — it then rides with
+   the page instead of floating, so nothing is cut off (89w coC_fitFloat) */
+#app .co-wrap .co-float.co-tall{position:relative;top:auto!important;max-height:none!important;overflow:visible}
+}

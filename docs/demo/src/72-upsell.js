@@ -78,8 +78,10 @@ function upsellBlock(where){
     : (W ? bag_w('bag.w.sameCat') : 'From the same category as your bag.');
   /* item 9 (desktop): the "take more, pay less" tiers in a clear box; the
      phone keeps its one-line offer (the box is drawn hide-m) */
-  var tiers = (where==='bag' && typeof bag_tierBox==='function') ? bag_tierBox('hide-m') : '';
-  return '<section class="ups"><div class="container">'+
+  var tiers = (where==='bag' && typeof bag_tierBox==='function') ? (typeof bagC_tierBox==='function' ? bagC_tierBox('hide-m') : bag_tierBox('hide-m')) : '';
+  /* G3 (desktop): the owner's choice of look for this block (89w-owner-c.js) */
+  var st = (where==='bag' && typeof bagC_upsStyle==='function') ? bagC_upsStyle() : 'current';
+  return '<section class="ups'+(where==='bag' ? ' ups-st-'+st+(tiers ? '' : ' ups-notier') : '')+'"><div class="container">'+
     '<div class="ups-hd"><h2>'+esc(title)+'</h2><a class="link" href="#/c/new">See all</a></div>'+
     '<p class="ups-sub">'+esc(sub)+'</p>'+
     tiers+(SHOW('upsell','setLine') ? ups_setLine(tiers ? 'hide-d' : '') : '')+

@@ -369,7 +369,12 @@ function cb_checkItem(c, u, i){
   if(n && n.over) return {ok:false, i:i, msg:cb_clashMsg(c, u, i, n)};
   return {ok:true, i:i};
 }
-function cb_checkAll(c, u){ for(var i=0;i<c.items.length;i++){ var r = cb_checkItem(c, u, i); if(!r.ok) return r; } return {ok:true}; }
+function cb_checkAll(c, u){ for(var i=0;i<c.items.length;i++){ var r = cb_checkItem(c, u, i); if(!r.ok) return r; }
+  /* K11: a one-product combo ("any 2 colours") is a colour pair — the same
+     colour twice is not this offer (owner rule, R15 notes 10 + 25) */
+  if(typeof comboNeedsMix==='function' && comboNeedsMix(c)){ var seen = {};
+    for(var k=0;k<c.items.length;k++){ var col = u.colors[k]; if(seen[col]) return {ok:false, i:k, msg:'Pick a different colour for item '+(k+1)+' — '+c.name+' is '+c.items.length+' different colours.'}; seen[col] = 1; } }
+  return {ok:true}; }
 function cb_firstUndone(u, n){ for(var i=0;i<n;i++) if(!u.done[i]) return i; return n; }
 function cb_nextAfter(u, i, n){ for(var j=i+1;j<n;j++) if(!u.done[j]) return j; for(var k=0;k<i;k++) if(!u.done[k]) return k; return n; }
 

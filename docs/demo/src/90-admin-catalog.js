@@ -315,6 +315,9 @@ function zp_secBasics(d){
       zp_field('Fabric', zp_inp(d,'fabric','text','100% cotton piqué · 220 GSM'), 'কাপড়')+
     '</div>'+
     zp_field('Description', '<textarea class="input zs-in zp-ta" rows="3" data-input="zp-f" data-k="desc" aria-label="Description">'+esc(d.desc||'')+'</textarea>', 'বর্ণনা')+
+    /* C6 (owner review 20 Oct): a YouTube link shows as a video in the product's photos */
+    zp_field('Product video (YouTube link, optional)', '<input class="input zs-in" type="url" value="'+esc(d.video && typeof d.video==='object' ? (d.video.url||'') : (d.video||''))+'" placeholder="https://www.youtube.com/watch?v=…" data-input="zp-f" data-k="video" aria-label="Product video link" data-testid="zp-video">'+
+      '<div class="zs-mini za-bn mt4">YouTube ভিডিওর লিংক দিন — প্রোডাক্ট পেজে ছবির সাথে ভিডিও দেখাবে। ভিডিও শুধু "Play" চাপলে লোড হয়, তাই পেজ ধীর হয় না।</div>', 'প্রোডাক্টের ভিডিও')+
   '</section>';
 }
 function zp_secColours(d){

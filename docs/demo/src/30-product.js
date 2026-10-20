@@ -291,6 +291,7 @@ function pdp_thumbs(p, u, views, ratio){
     return '<button type="button" class="pdp-thumb'+(on?' on':'')+'" data-act="pdp-view" data-v="'+v+'" aria-label="'+pdp_thumbLabel(v)+'" aria-pressed="'+on+'">'+
       productImg(p, u.color, {view:v, ratio:ratio, label:false, inner:v==='flat'?'<span class="pdp-thumb-sun">'+ico('sun',13)+'</span>':''})+'</button>';
   }).join('');
+  if(typeof ownb_videoThumb==='function') html += ownb_videoThumb(p, u, ratio);   /* C6 */
   /* 25. flex:1 cells, so 4, 5 or 6 photos fill the strip exactly — no dead end. */
   return '<div class="pdp-thumbs n'+views.length+'" role="group" aria-label="Product photos">'+html+'</div>';
 }
@@ -304,6 +305,8 @@ function pdp_track(p, u, views, opts){
     return '<div class="pdp-tile" data-v="'+v+'"'+(v==='flat'?' id="pdp-flat"':'')+dkb_zoomKey(v===u.view || (i===0 && views.indexOf(u.view)<0))+'>'+
       productImg(p, u.color, {view:v, ratio:opts.ratio||'ratio-45', inner:pdp_imgOverlays(p, ov, i!==0, i===0?low:'')})+'</div>';
   }).join('');
+  /* C6 (owner review 20 Oct): a product with a video link gets one more tile — a poster; the player loads on play */
+  if(typeof ownb_videoTile==='function') tiles += ownb_videoTile(p, u, opts.ratio||'ratio-45');
   return '<div class="pdp-trk'+(opts.cls?' '+opts.cls:'')+'" id="pdp-trk" role="group" aria-label="Product photos">'+tiles+'</div>';
 }
 /* A4. 44px, a solid face and a real edge: the old 40px disc at 72% white on a
@@ -872,7 +875,7 @@ function pdp_details(p, u){
     info:function(){ return pdp_rulesRow(p); },
     desc:function(){ return '<div class="pdp-box">'+pdp_acc(u,'fabric','Fabric & care',fabric)+pdp_acc(u,'fit','Size & fit',fit)+pdp_acc(u,'desc','Description',desc)+'</div>'; },
     /* Blog QA U3 / PR 591 (Shilpi): "How to care for this" → the matching care guide (73-blog.js) */
-    care:function(){ return typeof bfCareLink==='function' ? bfCareLink(p) : ''; }
+    care:function(){ return (typeof bfCareLink==='function' ? bfCareLink(p) : '') + (typeof ownb_careCard==='function' ? ownb_careCard(p) : ''); }   /* P2 (owner review 20 Oct): an article card on the computer */
   };
   /* PR 598: the owner's order and device switches for the details column */
   return '<div class="stack s16">'+pdp_order('details', PDP_ZONES.details).filter(pdp_blockOn).map(function(id){ return piece[id](); }).join('')+'</div>';
@@ -1102,14 +1105,17 @@ function pdp_qaSection(p){
       '<div class="pdp-qa-a small text2">'+esc(x[1])+'</div></details>';
   }).join('') + (all ? '' : '<button type="button" class="pdp-qa-all" data-act="pdp-qa-all" data-testid="qa-all" aria-expanded="false">'+
       '<span>'+esc(t('See all questions'))+'</span><span class="pdp-qa-n">'+(list.length-SHOWN_QA)+' more</span>'+ico('down',16)+'</button>');
+  /* P4 (owner review 20 Oct): on the computer the fixed example becomes a small size helper (89x-owner-b.js) */
+  var qh = typeof ownb_qaHelper==='function' ? ownb_qaHelper(p) : '';
   return '<section class="section" id="pdp-qa"><div class="container"><div class="sec-hd"><h2 class="h2">Questions & answers</h2></div>'+
-    '<div class="split"><div class="pdp-box p20"><div class="row top" style="gap:12px"><span class="tag dark">Q</span><div class="small bold">'+esc(q)+'</div></div>'+
+    '<div class="split'+(qh ? ' ob-qa' : '')+'">'+qh+'<div class="pdp-box p20'+(qh ? ' hide-d' : '')+'"><div class="row top" style="gap:12px"><span class="tag dark">Q</span><div class="small bold">'+esc(q)+'</div></div>'+
       '<div class="row top mt12" style="gap:12px"><span class="tag">A</span><div><div class="small text2">'+esc(a)+'</div><div class="xs muted mt8">Answered by the EXTAS team · 2 days ago</div></div></div>'+
       '<div class="pdp-qa-wa dkb-qawa hide-m"><p class="xs muted" style="margin:0 0 10px">Not answered here? We reply 10 am – 10 pm.</p>'+waButton('Ask on WhatsApp', 'Hi EXTAS, I have a question about '+p.name+' ('+pdp_sku(p)+')')+'</div></div>'+
     '<div class="pdp-box p20 pdp-qa-more" data-testid="pdp-qa-more"><div class="h3">Common questions about this '+esc(pdp_noun(p))+'</div>'+more+
       '<div class="pdp-qa-wa hide-d"><p class="xs muted" style="margin:0 0 10px">Not answered here? We reply 10 am – 10 pm.</p>'+
       waButton('Ask on WhatsApp', 'Hi EXTAS, I have a question about '+p.name+' ('+pdp_sku(p)+')')+'</div></div></div></div></section>';
 }
+function ownb_pairLead(){ return (typeof OPTL==='function' && OPTL('pdp.pairTitle')) || 'Wear it with'; }   /* P5: was "Goes well with" */
 function pdp_pairs(p){
   var grp = (CAT(p.cat)||{}).group;
   var order = grp==='bottom' ? ['polos','shirts','tshirts','hoodies','panjabi','extras'] : grp==='top' ? ['trousers','polos','shirts','tshirts','hoodies','extras','panjabi'] : ['polos','trousers','tshirts','shirts'];
@@ -1162,7 +1168,7 @@ function pdp_deskRows(p, rows){
   var changed = out.length !== rows.length;
   out.forEach(function(r){
     var names = r.cids.map(function(cid){ var c = CAT(cid); return c ? t(c.name) : cid; });
-    var lead = r.first===0 ? 'Goes well with · ' : 'You may also like · ';
+    var lead = r.first===0 ? ownb_pairLead()+' · ' : 'You may also like · ';
     if(r.cids.length>1) r.title = lead+names.join(' & ');
     if(r.items.length < N){
       var extra = pdp_pairs(p).concat(DB.products.filter(function(x){ return !x.hidden; }))
@@ -1179,8 +1185,14 @@ function pdp_pairsSection(p){
   cats.forEach(function(cid, i){
     var c = CAT(cid) || {name:cid};
     var items = productsIn(cid).filter(function(x){ return x.id!==p.id; }).slice(0,6);
-    if(items.length) rows.push({cid:cid, items:items, title:(i===0 ? 'Goes well with · '+t(c.name) : 'You may also like · '+t(c.name))});
+    if(items.length) rows.push({cid:cid, items:items, title:(i===0 ? ownb_pairLead()+' · '+t(c.name) : 'You may also like · '+t(c.name))});
   });
+  /* P5 (owner review 20 Oct): the computer gets ONE slider; the phone keeps its rows */
+  if(typeof ownb_rowsOne==='function' && ownb_rowsOne() && rows.length){
+    rows.forEach(function(r, i){ out += pdp_row(r.title, '<a class="link" href="#/c/'+r.cid+'">See all</a>', r.items, 'pairs-row-'+(i+1), 'hide-d'); });
+    out += ownb_pairsDesk(p, rows);
+    return '<section class="section" id="pdp-pairs" data-testid="pdp-pairs"><div class="container">'+out+'</div></section>';
+  }
   var desk = pdp_deskRows(p, rows);
   rows.forEach(function(r, i){
     out += pdp_row(r.title, '<a class="link" href="#/c/'+r.cid+'">See all</a>', r.items, 'pairs-row-'+(i+1), desk ? 'hide-d' : '');
@@ -1191,8 +1203,10 @@ function pdp_pairsSection(p){
 }
 function pdp_recentSection(p){
   var ids = (ST.recent||[]).filter(function(id){ return id!==p.id && P(id); }).slice(0,6);
-  if(!ids.length) return '';
-  return '<section class="section'+(ids.length < DKB_ROW_COLS ? ' dkb-few' : '')+'"><div class="container"><div class="sec-hd"><h2 class="h2">Recently viewed</h2></div>'+
+  /* P5 (owner review 20 Oct): on the computer a fixed grid of 4 that changes every few seconds and is never empty */
+  var dg = typeof ownb_recentDesk==='function' ? ownb_recentDesk(p) : '';
+  if(!ids.length) return dg;
+  return dg+'<section class="section'+(ids.length < DKB_ROW_COLS ? ' dkb-few' : '')+(dg ? ' hide-d' : '')+'"><div class="container"><div class="sec-hd"><h2 class="h2">Recently viewed</h2></div>'+
     '<div class="pdp-rv pdp-slide" id="sl-recent" data-speed="22" data-testid="recent-slider">'+ids.map(function(id){ return productCard(P(id)); }).join('')+'</div></div></section>';
 }
 
@@ -1277,13 +1291,16 @@ function pdp_bagModalHTML(){
     var unpaired = units - autoN*duo.items.length;
     if(autoN+setN>0) duoH += '<div class="tint p16 small row" style="gap:10px">'+ico('check',18)+'<span><b>'+esc(duo.name)+' applied</b> — you pay '+fmt(duo.price)+' for '+duo.items.length+' '+noun+'s.</span></div>';
     if(unpaired>0){
-      var cols = p.colors.filter(function(x){ return stockOf(p.id, x, a.size)>0; }).sort(function(x, y){ return (x===a.color) - (y===a.color); });
+      /* K11: a colour-pair combo never offers the colour just added (same colour = regular price) */
+      var cols = p.colors.filter(function(x){ return stockOf(p.id, x, a.size)>0 && !(x===a.color && typeof comboNeedsMix==='function' && comboNeedsMix(duo)); }).sort(function(x, y){ return (x===a.color) - (y===a.color); });
       if(cols.length) duoH += '<div class="tint p16'+(duoH?' mt8':'')+'" data-testid="duo-upsell"><div class="row top" style="gap:10px">'+ico('layers',20)+'<div><div class="bold small">Add one more '+noun+', pay '+fmt(duo.price)+' for both</div><div class="xs text2">'+esc(duo.name)+' · same size '+esc(a.size)+' · '+(dkb_desk() ? 'pick a colour' : 'tap a colour')+'</div></div></div>'+
         '<div class="row wrap mt12" style="gap:8px">'+cols.map(function(x){ return '<button type="button" class="chip" data-act="pdp-duo-add" data-c="'+x+'"><span class="swatch sm" style="background:'+COL(x).hex+'"></span>'+esc(COL(x).name)+'</button>'; }).join('')+'</div></div>';
     }
   }
   var br = bracketPairs().filter(function(b){ return b.product===p.id && b.color===a.color; })[0];
   var brH = br ? '<div class="soft p16 small row top" style="gap:10px" data-testid="bracket-note">'+ico('info',18)+'<div>You have '+esc(br.sizes[0])+' and '+esc(br.sizes[1])+' of the same item — not sure? <button type="button" class="link" data-act="pdp-open-finder">Use Find my size</button></div></div>' : '';
+  /* owner review B1–B3 (desktop): one drawer builder, styles A/B (89w-owner-c.js) */
+  if(dkb_desk() && typeof atbC_drawer==='function') return atbC_drawer({testid:'bag-modal', top:rows, extra:duoH+brH, added:atbC_pdpAdded(p, a), rel:pdp_pairs(p)});
   var pct = tot.free ? Math.min(100, Math.round(tot.total/tot.free*100)) : 100;
   var sum = '<div class="row between small"><span class="text2">Bag · '+plural(tot.count,'item')+'</span><span class="price">'+fmt(tot.total)+'</span></div>'+
     (tot.discount>0 ? '<div class="row between xs brandc bold mt8"><span>Set savings</span><span>'+fmt(-tot.discount)+'</span></div>' : '')+
@@ -1682,6 +1699,7 @@ PAGES.product = {
     /* put the strip back where the customer left it, with no animation */
     if(!pdp_viewTo(pdp_state(p, query).view, false)) pdp_syncThumbs();
     pdp_budget(); pdp_initSliders(); dkb_after();
+    if(typeof ownb_pdpAfter==='function') try{ ownb_pdpAfter(p); }catch(e){ console.error(e); }   /* owner review 20 Oct (P1, P5, P8) */
     /* a second pass once the web fonts and the SVGs have settled */
     setTimeout(function(){ if(document.querySelector('.pdp-page')){ pdp_budget(); dkb_fit(); var t = pdp_trkEl(); if(t) pdp_trkMark(pdp_trkIdx(t)); else pdp_syncThumbs(); } }, 180);
     if(query && query.finder==='1' && !pdp_isOne(p)){
@@ -1950,7 +1968,8 @@ function dkb_barHTML(p, u){
       '<div class="dkb-th" aria-hidden="true">'+productImg(p, u.color, {ratio:'ratio-11', label:false})+'</div>'+
       '<div class="dkb-id"><div class="dkb-nm">'+esc(p.name)+'</div>'+
         '<div class="dkb-ch"><span class="dkb-chip"><i style="background:'+cc.hex+'"></i>'+esc(cc.name)+'</span>'+size+'</div></div>'+
-      '<div class="dkb-pr"><span class="price">'+fmt(p.price)+'</span>'+(p.compareAt ? '<span class="strike">'+fmt(p.compareAt)+'</span>' : '')+'</div>'+
+      (typeof ownb_barMid==='function' ? ownb_barMid(p) : '')+   /* P6 (owner review 20 Oct) */
+      '<div class="dkb-pr"><span class="price">'+fmt(p.price)+'</span>'+(p.compareAt ? '<span class="strike">'+fmt(p.compareAt)+'</span>' : '')+(typeof ownb_barSave==='function' ? ownb_barSave(p) : '')+'</div>'+
       '<div class="dkb-btns pdp-ctas '+PDP_CTA_STYLE+'"><button type="button" class="btn btn-addbag" data-act="pdp-add" data-testid="dkb-add">'+ico('bag',18)+esc(t('Add to Bag'))+'</button>'+
         '<button type="button" class="btn btn-primary" data-act="pdp-order" data-testid="dkb-order">'+esc(t('Order Now'))+'</button></div>'+
     '</div></div>';

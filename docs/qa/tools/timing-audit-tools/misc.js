@@ -185,10 +185,20 @@ async function sideCanvas(){
     const zc = () => ev(page, () => { const e = document.querySelector('#lb-sc .lb-z[data-zid="z-offer"] .lb-mt[data-n]') || document.querySelector('#lb-sc .lb-mt[data-n]'); return e ? (e.getAttribute('data-cur') || '0') : null; });
     const h0 = await zc(); await wait(page, 2700); const h1 = await zc();
     /* SC-02b (added TA-2, T14): the resume half — the mouse leaves → the held zone turns within ~100 ms (a turn came due while held) */
+    /* QA V12b: the time is now read INSIDE the page (pointerleave → data-cur change, performance.now()),
+       so Playwright's round trips and a busy machine no longer count; the wall-clock figure stays as a note. */
+    await ev(page, () => {
+      const e = document.querySelector('#lb-sc .lb-z[data-zid="z-offer"] .lb-mt[data-n]') || document.querySelector('#lb-sc .lb-mt[data-n]');
+      const hz = e.closest('.lb-z') || e; window.__sc = { leave: 0, turn: 0 };
+      hz.addEventListener('pointerleave', () => { if(!window.__sc.leave) window.__sc.leave = performance.now(); }, { capture: true, once: true });
+      new MutationObserver((m, o) => { if(!window.__sc.turn){ window.__sc.turn = performance.now(); o.disconnect(); } }).observe(e, { attributes: true, attributeFilter: ['data-cur'] });
+    });
     const zb = await zc(), tl = Date.now();
     await page.mouse.move(900, 500);
     let rms = -1; for(let i = 0; i < 80; i++){ if((await zc()) !== zb){ rms = Date.now() - tl; break; } await wait(page, 20); }
-    L.rec({ ...base, id: 'SC-02b', what: 'mouse leaves the held side offer → it turns again at once (≤ 150 ms incl. measuring)', measured: rms < 0 ? 'no turn within 1.6 s' : rms + ' ms after leave', pass: rms >= 0 && rms <= 150 });
+    const sc = await ev(page, () => window.__sc);
+    const inPage = sc && sc.leave && sc.turn ? Math.round(sc.turn - sc.leave) : -1;
+    L.rec({ ...base, id: 'SC-02b', what: 'mouse leaves the held side offer → it turns again at once (≤ 150 ms, timed inside the page)', measured: inPage < 0 ? (rms < 0 ? 'no turn within 1.6 s' : 'turn not timed in page (wall ' + rms + ' ms)') : inPage + ' ms after leave (wall clock incl. measuring ' + rms + ' ms)', pass: inPage >= 0 && inPage <= 150 });
     L.rec({ ...base, id: 'SC-02', what: 'mouse resting on a rotating side offer → it holds still (same rule as the sliders)', measured: h0 === h1 ? 'held' : `kept rotating under the mouse (${h0} → ${h1})`, pass: h0 === h1, note: 'consistency with the owner\'s hover rule' });
   }
   /* anchored zone scrolled off-screen → paused; back → resumes */
@@ -395,7 +405,14 @@ async function rotations(){
   await page.context().close();
   /* intro popup on a first visit */
   const p2 = await L.newPage('phone');
+  /* QA V12b r3: the welcome popup is a demo helper now (owner 21:33 rule) — a normal visitor never gets it,
+     a reviewer gets it with ?demo=1. First the visitor case, then the reviewer case with the old timing. */
   await p2.goto('file://' + L.BUILD + '#/');
+  await p2.evaluate(() => { localStorage.clear(); });
+  await p2.reload(); await p2.waitForTimeout(900);
+  const vis = await p2.evaluate(() => !!document.querySelector('.modal-back'));
+  L.rec({ dev: 'phone', lang: 'en', page: 'home (first visit)', id: 'IN-00', what: 'a normal visitor (no ?demo=1) never gets the demo welcome popup', measured: vis ? 'popup opened' : 'no popup', pass: !vis });
+  await p2.goto('file://' + L.BUILD + '?demo=1#/');
   await p2.evaluate(() => { localStorage.clear(); });
   await p2.reload();
   const t0 = Date.now(); let ms = -1;

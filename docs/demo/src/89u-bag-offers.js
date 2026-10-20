@@ -21,7 +21,7 @@
     'bag.w.addOne':['"Add one more" offer — heading', '"আরেকটা নিন" অফার — শিরোনাম'], 'bag.w.addOneSub':['"Add one more" offer — line ({price}, {size})', '"আরেকটা নিন" অফার — লাইন'],
     'bag.w.setTitle':['Ready-made set offer — heading ({n}, {save})', 'রেডি সেট অফার — শিরোনাম'], 'bag.w.setSub':['Ready-made set offer — line ({what}, {price}, {n})', 'রেডি সেট অফার — লাইন'],
     'bag.w.setAuto':['Ready-made set — "price drops by itself" ({k})', 'রেডি সেট — "দাম নিজে কমবে"'], 'bag.w.setGo':['Ready-made set — button', 'রেডি সেট — বাটন'],
-    'bag.w.tiersTitle':['Tier box — heading ({cat})', 'ধাপের বক্স — শিরোনাম'], 'bag.w.tier':['Tier box — one tier ({n})', 'ধাপের বক্স — এক ধাপ'],
+    'bag.w.tiersTitle':['Tier box — heading ({cat})', 'ধাপের বক্স — শিরোনাম'], 'bag.w.tier':['Tier box — one tier ({n}, {cat})', 'ধাপের বক্স — এক ধাপ ({n}, {cat})'],
     'bag.w.tierSave':['Tier box — saving ({save})', 'ধাপের বক্স — সাশ্রয়'], 'bag.w.tiersGo':['Tier box — link ({cat})', 'ধাপের বক্স — লিংক']
   };
   Object.keys(BAG_WORDS).forEach(function(k){

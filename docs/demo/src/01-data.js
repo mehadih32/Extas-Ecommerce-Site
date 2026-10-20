@@ -152,7 +152,7 @@ DB.sizeCharts = {
 };
 
 DB.combos = [
-  {id:'polo-duo', name:'Polo Duo', blurb:'Any 2 colours of our Essential Piqué Polo', items:['essential-pique-polo','essential-pique-polo'], price:1500, autoApply:true, active:true, template:'C1'},
+  {id:'polo-duo', name:'Polo Duo', blurb:'Any 2 different colours of our Essential Piqué Polo', items:['essential-pique-polo','essential-pique-polo'], price:1500, autoApply:true, sameColour:false, active:true, template:'C1'},
   {id:'office-trio', name:'Office Trio', blurb:'Oxford shirt + slim chino + knit polo', items:['oxford-cotton-shirt','slim-chino-trousers','textured-knit-polo'], price:3100, autoApply:true, active:true, template:'C1'}  /* R16 (15): C1 for every combo; C2 stays as a switch in Admin */,
   {id:'polo-chino', name:'Polo + Chino', blurb:'Essential polo with slim chinos', items:['essential-pique-polo','slim-chino-trousers'], price:2050, autoApply:false, active:true, template:'C1'}
 ];

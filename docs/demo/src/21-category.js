@@ -446,14 +446,14 @@ function cat_modalHTML(id){
 }
 
 /* ---------- category page ---------- */
-var CAT_SEO = {
-  polos:['EXTAS polos are made in Bangladesh from breathable cotton piqué and soft knit fabrics that stay comfortable in our humid weather.','Choose a regular fit for everyday wear or a slim fit for a sharper office look — every product page has a size chart in inches and a Find my size tool.','Pair a polo with our slim chinos for work, or with denim and sneakers for weekends and adda with friends.'],
-  tshirts:['Our men’s T-shirts are knitted from 100% cotton, from light everyday crews to heavyweight tees that hold their shape wash after wash.','White, black, navy and earthy colours make it easy to build a full week of outfits — the colour note on each page tells you how the shade looks in daylight.','Not sure about your size? Enter your height and weight in Find my size and we suggest the right one in seconds.'],
-  shirts:['EXTAS shirts come in classic cotton Oxford for the office and breathable linen blends for hot Dhaka days.','Each shirt lists chest, length, shoulder and sleeve in inches, so you can compare with a shirt you already own.','Wear them tucked into slim chinos for meetings, or open over a tee on weekends.'],
-  panjabi:['Our cotton panjabis are made for Eid, Puja, weddings and every family occasion, with soft fabric that breathes in the heat.','The classic fit falls to the knee with a neat mandarin collar, and the size chart shows chest and length in inches.','Order early before festivals — couriers get busy all over Bangladesh in the last week.'],
-  trousers:['EXTAS chinos and twill trousers are cut from cotton twill, many with a touch of stretch for all-day comfort.','Sizes follow your waist in inches, and every product shows hip, thigh, length and leg opening so you know the fit before you order.','Wear them to the office with an Oxford shirt, or dress down with a polo or tee.'],
-  hoodies:['Our heavyweight hoodies use thick brushed cotton fleece, made for Bangladeshi winters from Dhaka to Sylhet and Rangpur.','A double-layer hood and kangaroo pocket keep you warm without feeling bulky.','Check chest and length in the size chart, or use Find my size for a quick suggestion.'],
-  'new':['New arrivals land at EXTAS every week — polos, T-shirts, shirts, panjabi, chinos and winter hoodies, all made for Bangladeshi weather.','Every style shows real measurements in inches and a true-colour daylight photo, so you know exactly what you are getting.','Order online with Cash on Delivery anywhere in Bangladesh, or pay with bKash, Nagad or card.']
+var CAT_SEO = {   /* C2 (owner review 20 Oct): easy English — short sentences, everyday words */
+  polos:['EXTAS polos are made in Bangladesh from soft cotton piqué and knit fabrics that stay cool in our hot, humid weather.','Pick regular fit for every day or slim fit for a smarter office look. Every product page has a size chart in inches and a Find my size tool.','Wear a polo with our slim chinos for work, or with jeans and sneakers for the weekend.'],
+  tshirts:['Our men’s T-shirts are 100% cotton — from light everyday tees to heavy tees that keep their shape wash after wash.','White, black, navy and earthy colours make it easy to dress for the whole week. The colour note on each page tells you how the colour looks in daylight.','Not sure about your size? Enter your height and weight in Find my size and we suggest one in seconds.'],
+  shirts:['EXTAS shirts come in cotton Oxford for the office and cool linen blends for hot Dhaka days.','Each shirt shows chest, length, shoulder and sleeve in inches, so you can check it against a shirt you already own.','Tuck one into slim chinos for a meeting, or wear it open over a tee at the weekend.'],
+  panjabi:['Our cotton panjabis are made for Eid, Puja, weddings and family days, in soft fabric that stays cool in the heat.','The classic fit comes to the knee with a neat band collar. The size chart shows chest and length in inches.','Order early before a festival — couriers all over Bangladesh get busy in the last week.'],
+  trousers:['EXTAS chinos, jeans and twill trousers are made from strong cotton, many with a little stretch so they stay comfortable all day.','Sizes follow your waist in inches. Every product also shows hip, thigh, length and leg opening, so you know the fit before you order.','Wear them to the office with an Oxford shirt, or with a polo or tee on a day off.'],
+  hoodies:['Our hoodies use thick, soft cotton fleece, made for Bangladeshi winters from Dhaka to Sylhet and Rangpur.','A double hood and a front pocket keep you warm without feeling bulky.','Check chest and length in the size chart, or use Find my size for a quick answer.'],
+  'new':['New styles come to EXTAS every week — polos, T-shirts, shirts, panjabi, chinos and winter hoodies, all made for Bangladeshi weather.','Every style shows real measurements in inches and a true-colour daylight photo, so you know what you are getting.','Order online with Cash on Delivery anywhere in Bangladesh, or pay with bKash, Nagad or card.']
 };
 function cat_seoTitle(id){ if(id==='new') return 'New arrivals for men in Bangladesh'; var c = CAT(id); return (c?c.name:'Menswear')+' for men in Bangladesh'; }
 /* =====================================================================
@@ -495,46 +495,47 @@ function cat_fabrics(id){
 function cat_fabricLine(id){
   var f = cat_fabrics(id);
   if(!f.length) return '';
-  if(f.length === 1) return 'one fabrication: ' + f[0];
+  if(f.length === 1) return 'one fabric: ' + f[0];
   var n = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][f.length] || f.length;
-  return n + ' fabrications: ' + f.slice(0, -1).join(', ') + ' and ' + f[f.length - 1];
+  return n + ' fabrics: ' + f.slice(0, -1).join(', ') + ' and ' + f[f.length - 1];
 }
 /* the two questions that are about the garment, per category */
+/* C2 (owner review 20 Oct): the answers rewritten in easy English — short sentences, everyday words, same facts */
 var CAT_QA = {
   polos: function(id){ return [
-    {q:'What is your polo quality like?', a:'<p>Our everyday polo is <b>100% combed cotton piqué at 220 GSM</b> — combed means the short fibres are taken out before spinning, so the surface stays smooth and does not pill after a few washes. The collar is ribbed and knitted to shape, not cut from fabric, which is why it stays flat instead of curling at the points.</p><p>Heavier pieces go up to <b>260 GSM</b>. All of them are side-vented and cut for Dhaka heat rather than for a European winter.</p>'},
-    {q:'Which fabrics do your polos come in?', a:'<p>This category carries '+esc(cat_fabricLine(id))+'.</p><p><b>Piqué</b> is the classic waffle-textured polo cloth — crisp, airy, best for daily wear. <b>Textured knit</b> is softer and dressier, good with chinos. <b>Rib</b> holds its shape and reads smarter. <b>Jersey</b> is the stretchiest and the most casual. Every product page prints the exact fabric and GSM.</p>'},
-    {q:'Regular fit or slim fit?', a:'<p>Regular fit is a straight body with a little room through the chest and waist — the safe choice, and what most of our customers buy. Slim fit takes about an inch and a half out of the body and the sleeve.</p><p>Both fit true to size. If you are between sizes or carry weight at the waist, take regular. The size chart on each page gives chest, length, shoulder and sleeve in inches so you can lay it over a polo you already own.</p>'}
+    {q:'What is your polo quality like?', a:'<p>Our everyday polo is <b>100% combed cotton piqué, 220 GSM</b>. Combed cotton has the short, rough fibres taken out, so the polo stays smooth and does not get little balls after washing. The collar is knitted to shape, so it stays flat and does not curl.</p><p>Heavier polos go up to <b>260 GSM</b>. All of them have side slits and are made for Dhaka heat.</p>'},
+    {q:'Which fabrics do your polos come in?', a:'<p>Polos here come in '+esc(cat_fabricLine(id))+'.</p><p><b>Piqué</b> is the classic polo cloth with a small waffle texture — light, airy, good for every day. <b>Textured knit</b> is softer and looks smarter with chinos. <b>Rib</b> keeps its shape. <b>Jersey</b> stretches the most and is the most casual. Every product page shows the exact fabric and GSM.</p>'},
+    {q:'Regular fit or slim fit?', a:'<p>Regular fit is straight, with a little room in the chest and waist. It is the safe choice, and most of our customers buy it. Slim fit is closer to the body and the arms.</p><p>Both fit true to size. If you are between two sizes, or a little heavier at the waist, take regular. The size chart on each page shows chest, length, shoulder and sleeve in inches, so you can check it against a polo you own.</p>'}
   ]; },
   tshirts: function(id){ return [
-    {q:'How heavy is the cotton?', a:'<p>Three weights, and the page tells you which one you are buying. <b>180 GSM single jersey</b> is the light everyday crew. <b>240 GSM</b> is the heavy tee — it hangs straight instead of clinging and it does not go see-through. <b>Slub jersey</b> sits in between with a slightly uneven, textured surface.</p><p>All three are 100% cotton. Nothing here is a polyester blend.</p>'},
-    {q:'Will the black and navy fade?', a:'<p>Not quickly, but how you wash them decides it. Cold water, inside out, dried in the shade — that is the whole trick. Hot water and direct Dhaka sun are what turn black into grey in six months.</p><p>Expect a small amount of shrinkage in the first wash; the sizes are cut with that allowed for.</p>'},
-    {q:'Regular or relaxed?', a:'<p>Regular is a normal straight tee. Relaxed is wider through the body and a little shorter in the sleeve — it is the one to pick if you wear your tees loose or layer them under a shirt.</p><p>Chest and length are printed in inches on every page, and Find my size suggests one from your height and weight.</p>'}
+    {q:'How thick is the cotton?', a:'<p>There are three weights, and every page tells you which one it is. <b>180 GSM</b> is the light everyday tee. <b>240 GSM and up</b> is the heavy tee — it hangs straight, does not stick to the body and is not see-through. <b>Slub</b> is in between, with a slightly uneven texture.</p><p>All of them are 100% cotton. None is a polyester blend.</p>'},
+    {q:'Will the black and navy fade?', a:'<p>Not quickly, but washing matters. Wash cold, inside out, and dry in the shade. Hot water and strong sun are what turn black into grey.</p><p>A tee may shrink a little in the first wash. Our sizes already allow for that.</p>'},
+    {q:'Regular or relaxed fit?', a:'<p>Regular is a normal straight tee. Relaxed is wider in the body — pick it if you like your tees loose or wear them under an open shirt.</p><p>Chest and length are shown in inches on every page, and Find my size suggests a size from your height and weight.</p>'}
   ]; },
   shirts: function(id){ return [
-    {q:'Which shirt fabric should I buy?', a:'<p>This category carries '+esc(cat_fabricLine(id))+'.</p><p><b>100% cotton Oxford</b> is the office shirt — a slightly basket-like weave that holds a press and survives daily wear. <b>Linen-cotton, 55/45</b>, is for the hot months: it breathes far better, and it creases, which is part of how linen is supposed to look.</p><p>Every page prints the exact composition, so you are never guessing.</p>'},
-    {q:'Do they need ironing?', a:'<p>The Oxford presses easily and keeps a crease all day. The linen blend will crease as you wear it — that is the fabric, not a fault, and it is the reason it is cooler than the Oxford in April.</p><p>Wash cold and iron on medium; hang the linen straight off the line and most of it drops out on its own.</p>'},
-    {q:'How do I check the fit before I order?', a:'<p>Every shirt page lists <b>chest, length, shoulder and sleeve in inches</b>. Lay a shirt you already wear flat, measure it the same way, and compare — that is more reliable than any label.</p><p>If you would rather not measure, Find my size takes your height and weight and suggests one in about ten seconds.</p>'}
+    {q:'Which shirt fabric should I buy?', a:'<p>Shirts here come in '+esc(cat_fabricLine(id))+'.</p><p><b>Cotton Oxford</b> is the office shirt — strong, easy to iron and good for daily wear. <b>Linen-cotton</b> is for the hot months: it is much cooler, and it creases a little, which is normal for linen.</p><p>Every page shows the exact fabric, so you never have to guess.</p>'},
+    {q:'Do they need ironing?', a:'<p>Oxford irons easily and stays neat all day. The linen blend creases as you wear it — that is the fabric, not a fault, and it is why it feels cooler in April.</p><p>Wash cold and iron on medium. Hang the linen shirt straight after washing and most creases drop out.</p>'},
+    {q:'How do I check the fit before I order?', a:'<p>Every shirt page shows <b>chest, length, shoulder and sleeve in inches</b>. Lay a shirt you already wear flat, measure it the same way and compare.</p><p>If you do not want to measure, Find my size takes your height and weight and suggests a size in about ten seconds.</p>'}
   ]; },
   panjabi: function(id){ return [
-    {q:'What is the fabric, and is it comfortable in the heat?', a:'<p>Our classic panjabi is <b>fine cotton voile with a self-stripe</b> — a light, open cotton weave made for exactly this. It moves air, which matters when you are in it from the Eid jamaat through a full day of visits.</p><p>The self-stripe is woven in, not printed, so it does not wash out.</p>'},
-    {q:'How long should a panjabi be?', a:'<p>Classic length falls to about the knee or a touch below, and the sleeve should end at the wrist bone. Both are printed in inches on the product page along with the chest.</p><p>If you want it shorter for a casual day, take the length one size down and keep the chest at your usual size — the tailor can shorten but cannot add.</p>'},
-    {q:'Will it arrive before Eid?', a:'<p>Order early. Couriers all over Bangladesh slow down in the last week before Eid and the Eid edit sells out in the popular sizes first.</p><p>'+esc(ruleText('delivery','short'))+' Cash on Delivery is available everywhere.</p>'}
+    {q:'What is the fabric, and is it comfortable in the heat?', a:'<p>Our classic panjabi is <b>fine cotton voile with a woven stripe</b> — a light, airy cotton. It stays cool from the Eid prayer through a full day of visits.</p><p>The stripe is woven into the cloth, not printed, so it does not wash out.</p>'},
+    {q:'How long should a panjabi be?', a:'<p>The classic length is at the knee or a little below, and the sleeve ends at the wrist. Both are shown in inches on the product page, with the chest.</p><p>Want it shorter for a casual day? Keep your usual chest size and ask a tailor to shorten it — a tailor can shorten, but cannot add length.</p>'},
+    {q:'Will it arrive before Eid?', a:'<p>Order early. Couriers all over Bangladesh slow down in the last week before Eid, and popular sizes sell out first.</p><p>'+esc(ruleText('delivery','short'))+' Cash on Delivery works everywhere.</p>'}
   ]; },
   trousers: function(id){ return [
-    {q:'What is the difference between the chino and the twill?', a:'<p>The slim chino is <b>cotton twill with 2% stretch</b> — it holds a crease, sits close through the thigh and is the one for the office. The relaxed trouser is <b>brushed cotton twill</b>, softer on the hand, wider through the leg, better for a long hot day.</p><p>Both are cotton-led; the stretch in the chino is there for sitting all day, not for a sporty look.</p>'},
-    {q:'How do I pick my waist size?', a:'<p>Sizes are your waist in inches — 30, 32, 34, 36. Measure a pair of trousers you already wear across the waistband and double it, rather than measuring your body over a shirt.</p><p>Every page also prints <b>hip, thigh, inseam and leg opening</b>, so you can see the whole shape before you order, not just the waist.</p>'},
-    {q:'Will they shrink or need hemming?', a:'<p>Cotton twill settles a little in the first cold wash; the inseam is cut with that allowed for. Wash cold and iron medium and the length stays where it is.</p><p>Inseam is listed per size, so you can decide on hemming before the parcel arrives.</p>'}
+    {q:'What is the difference between a chino and a twill trouser?', a:'<p>The slim chino is <b>cotton twill with 2% stretch</b>. It stays neat, sits close on the leg and is the one for the office. The relaxed trouser is <b>soft brushed cotton twill</b>, wider in the leg and better for a long hot day.</p><p>The little stretch in the chino is there so you can sit comfortably all day.</p>'},
+    {q:'How do I pick my waist size?', a:'<p>Sizes are your waist in inches — 30, 32, 34, 36. Lay a pair of trousers you already wear flat, measure across the waistband and double it.</p><p>Every page also shows <b>hip, thigh, inside leg and leg opening</b>, so you can see the whole shape before you order.</p>'},
+    {q:'Will they shrink or need shortening?', a:'<p>Cotton twill shrinks a very little in the first cold wash; the length already allows for it. Wash cold and iron on medium.</p><p>The inside leg length is shown for every size, so you can plan any shortening before the parcel comes.</p>'}
   ]; },
   hoodies: function(id){ return [
-    {q:'How warm is a 320 GSM hoodie?', a:'<p>Warm enough for a Bangladeshi winter and not more. <b>320 GSM brushed cotton fleece (80% cotton, 20% polyester)</b> is thick, and the inside is brushed so it holds air against you. The hood is double-layered and there is a kangaroo pocket.</p><p>From December to February in Dhaka, Sylhet or Rangpur this is one layer over a tee and that is the whole outfit.</p>'},
-    {q:'Does it fit over a shirt or a polo?', a:'<p>Yes — it is cut regular, with room through the chest for one layer underneath. It is not an oversized street fit.</p><p>If you plan to wear it over a collared shirt most days, take your usual size; the chest and length in inches are on the product page.</p>'},
-    {q:'How should I wash it so it keeps its shape?', a:'<p>Cold water, inside out, and no tumble dryer. The brushing on the inside is what makes it warm, and a hot wash flattens it.</p><p>Dry it flat or on a wide hanger — hanging a wet heavyweight hoodie by the shoulders is what stretches the neck out.</p>'}
+    {q:'How warm is a 320 GSM hoodie?', a:'<p>Warm enough for a Bangladeshi winter. <b>320 GSM cotton fleece (80% cotton, 20% polyester)</b> is thick, and the soft brushed inside keeps the warmth in. The hood is double and there is a front pocket.</p><p>From December to February, one hoodie over a tee is all you need.</p>'},
+    {q:'Does it fit over a shirt or a polo?', a:'<p>Yes. It is a regular fit with room in the chest for one layer underneath. It is not an oversized fit.</p><p>If you will wear it over a collared shirt most days, take your usual size. Chest and length in inches are on the product page.</p>'},
+    {q:'How should I wash it so it keeps its shape?', a:'<p>Wash it cold and inside out, and do not use a dryer. Hot water flattens the soft inside that keeps you warm.</p><p>Dry it flat or on a wide hanger — hanging a wet hoodie by the shoulders stretches the neck.</p>'}
   ]; },
   'new': function(id){ return [
-    {q:'What is new this week?', a:'<p>New arrivals land every week across polos, T-shirts, shirts, panjabi, chinos and winter hoodies. The newest styles carry a <b>NEW</b> tag on the card, and the Winter 2026 pieces carry their own.</p><p>Everything here is menswear made in Bangladesh and cut for this weather, not imported sizing.</p>'},
-    {q:'Are the colours true to the photos?', a:'<p>Every product page has a daylight colour note that tells you how the shade actually reads outside — "navy that looks near-black indoors", and so on. Screens differ; the note does not.</p><p>If you are still unsure, message us on WhatsApp and we will send a photo of the real piece.</p>'},
-    {q:'How do I find my size across so many styles?', a:'<p>Save it once. Find my size takes your height and weight and suggests a size, and we then show "your size in stock" on every product in the shop.</p><p>Each page still prints the full chart in inches (cm if you prefer), because the final choice is yours.</p>'}
+    {q:'What is new this week?', a:'<p>New styles come every week across polos, T-shirts, shirts, panjabi, chinos and winter hoodies. The newest ones have a <b>NEW</b> tag on the card.</p><p>Everything here is menswear made in Bangladesh, for this weather.</p>'},
+    {q:'Are the colours true to the photos?', a:'<p>Every product page has a daylight colour note that tells you how the colour looks outside — for example "navy that looks almost black indoors". Screens differ; the note does not.</p><p>Still not sure? Message us on WhatsApp and we will send a photo of the real piece.</p>'},
+    {q:'How do I find my size across so many styles?', a:'<p>Save it once. Find my size takes your height and weight and suggests a size. After that we show "your size in stock" on every product.</p><p>Each page still shows the full chart in inches (or cm), because the final choice is yours.</p>'}
   ]; }
 };
 function cat_faqs(id){
@@ -581,13 +582,17 @@ function cat_bundlePicksHTML(r){
 /* 20. The icon sits inline with the heading instead of on a line of its own,
    so there is no empty strip to the right of it. */
 function cat_banner(id){
-  var r = cat_rule(id); if(!r || (id!=='polos' && id!=='tshirts')) return '';
-  return '<div class="cat-banner" data-testid="cat-set-banner">'+
+  /* C3 (owner review 20 Oct): the box used to be typed in for Polos and
+     T-shirts only. Now every category with a running "any N" set gets it;
+     which ones is the owner's setting (cat.setBoxCats, 89x-owner-b.js). */
+  var r = cat_rule(id); if(!r || (typeof ownb_catSetBox==='function' ? !ownb_catSetBox(id) : (id!=='polos' && id!=='tshirts'))) return '';
+  var std = typeof ownb_tierChips==='function' ? ownb_tierChips(r) : '';
+  return '<div class="cat-banner'+(std ? ' cat-bn-std' : '')+'" data-testid="cat-set-banner">'+
     '<div class="cat-bn-row"><div class="cat-bn-main">'+
       '<div class="cat-bn-top"><span class="cat-banner-ico">'+ico('layers',22)+'</span>'+
       '<div class="cat-bn-txt"><div class="eyebrow">Build your own set</div>'+
-      '<div class="cat-banner-t">'+cat_nw(esc(cat_tierText(r)))+'</div></div></div>'+
-      '<div class="cat-bn-sub">Mix any '+esc(cat_name(id).toLowerCase())+' — styles and colours. Set price shows before you order.</div>'+
+      '<div class="cat-banner-t'+(std ? ' hide-d' : '')+'">'+cat_nw(esc(cat_tierText(r)))+'</div>'+std+'</div></div>'+
+      '<div class="cat-bn-sub">'+esc(typeof ownb_setMix==='function' ? ownb_setMix(r, id) : 'Mix any '+cat_name(id).toLowerCase())+' — styles and colours. Set price shows before you order.</div>'+
     '</div>'+
     '<a class="btn" href="#/set/'+r.id+'">Start building'+ico('right',16)+'</a></div>'+
     cat_bundlePicksHTML(r)+
@@ -915,7 +920,8 @@ PAGES.category = {
     var seo = CAT_SEO[id] || CAT_SEO['new'];
     var info = '<section class="cat-info"><div><h2 class="h2">'+esc(cat_seoTitle(id))+'</h2>'+
       '<div class="cat-seo-txt'+(u.seo?'':' clamp')+'" id="cat-seo-txt"><p>'+seo.map(esc).join(' ')+'</p></div>'+
-      '<button type="button" class="link" data-act="cat-seo" data-cat="'+esc(id)+'" aria-expanded="'+u.seo+'" aria-controls="cat-seo-txt">'+(u.seo?'Read less':'Read more')+'</button></div>'+
+      '<button type="button" class="link" data-act="cat-seo" data-cat="'+esc(id)+'" aria-expanded="'+u.seo+'" aria-controls="cat-seo-txt">'+(u.seo?'Read less':'Read more')+'</button>'+
+      (typeof ownb_catInfoSlot==='function' ? ownb_catInfoSlot(id) : '')+'</div>'+   /* C1 (owner review 20 Oct): the empty side gets the owner's card, desktop only */
       '<div><h2 class="h2">Questions</h2><div class="cat-faq">'+cat_faqs(id).map(function(f, i){ var open = u.faq===i;
         return '<div class="cat-faq-item"><button type="button" class="cat-faq-q" data-act="cat-faq" data-cat="'+esc(id)+'" data-i="'+i+'" aria-expanded="'+open+'" aria-controls="cat-faq-'+i+'">'+esc(f.q)+ico(open?'minus':'plus',18)+'</button>'+
           (open?'<div class="cat-faq-a" id="cat-faq-'+i+'">'+f.a+'</div>':'')+'</div>'; }).join('')+'</div></div></section>';

@@ -99,10 +99,11 @@ var BAG_WORDS = {
   'bag.w.setSub'    : ['{what} · {price} for all {n}', '{what} · {n}টা মিলে {price}'],
   'bag.w.setAuto'   : ['Add {k} more and the lower price is used by itself.', 'আরও {k}টা যোগ করলে কম দাম নিজে থেকেই বসবে।'],
   'bag.w.setGo'     : ['See the set', 'সেটটা দেখুন'],
-  'bag.w.tiersTitle': ['Any {cat}: the more you take, the less you pay', 'যেকোনো {cat}: যত বেশি নেবেন, তত কম দাম'],
-  'bag.w.tier'      : ['Take {n}', '{n}টা নিন'],
+  /* G2 (owner, 20 Oct): short, specific names — "2 polos · ৳1,500 · save ৳200" */
+  'bag.w.tiersTitle': ['Buy more {cat}, pay less', 'বেশি {cat} নিলে কম দাম'],
+  'bag.w.tier'      : ['{n} {cat}', '{n}টা {cat}'],
   'bag.w.tierSave'  : ['save {save}', 'সাশ্রয় {save}'],
-  'bag.w.tiersGo'   : ['Choose your {cat}', '{cat} বেছে নিন']
+  'bag.w.tiersGo'   : ['Pick your {cat}', '{cat} বেছে নিন']
 };
 if(typeof SHOP_OPT_DEF!=='undefined') Object.keys(BAG_WORDS).forEach(function(k){
   if(SHOP_OPT_DEF[k]===undefined) SHOP_OPT_DEF[k] = BAG_WORDS[k][0];
@@ -147,7 +148,7 @@ function bag_tierBox(cls){
   var catName = (o.cat ? t(o.cat.name) : 'items').toLowerCase();
   var cells = o.tiers.map(function(x){
     var save = o.base.price * x.n - x.price, lab = o.labels[o.rule.id+':'+x.n];
-    return '<span class="bg-tier"><b>'+esc(lab || bag_w('bag.w.tier', {n:x.n}))+'</b><span class="bg-tdot"> · </span><b class="bg-tier-p">'+fmt(x.price)+'</b>'+
+    return '<span class="bg-tier"><b>'+esc(lab || bag_w('bag.w.tier', {n:x.n, cat:catName}))+'</b><span class="bg-tdot"> · </span><b class="bg-tier-p">'+fmt(x.price)+'</b>'+
       (save>0 ? '<span class="bg-tdot"> · </span><span class="bg-tier-s">'+esc(bag_w('bag.w.tierSave', {save:fmt(save)}))+'</span>' : '')+'</span>';
   }).join('<span class="bg-tbar" aria-hidden="true"></span>');
   return '<div class="bg-tiers'+(cls ? ' '+cls : '')+'" data-testid="bag-tiers" data-rule="'+esc(o.rule.id)+'">'+
@@ -506,6 +507,8 @@ function bag_setShort(l){
   var L = l.source==='auto' && typeof ca_listing==='function' ? ca_listing(l.refId) : null;
   return L ? L.styleName+(L.same ? ' combo' : '')+' ('+L.n+' pcs)' : bagSetName(l.name);
 }
+function bag_srShort(name){ var w = String(name).split(' ').filter(function(x){ return !/\d/.test(x) && !/^gsm$/i.test(x); }); return w.length ? w.join(' ') : name; }
+fitRule('.bg-sr-item>span:first-child', {min:12.5, collapse:true});
 function bag_summary(tot, off, grand, issues){
   var u = ui('bag', {codeOpen:false, codeMsg:''}), fdel = bag_freeDel(tot.total), freeDel = fdel.free;
   var h = '<div class="h2" style="margin-bottom:12px">Order summary</div>';
@@ -521,7 +524,15 @@ function bag_summary(tot, off, grand, issues){
     if(l.kind==='set'){ nm = bag_setShort(l); if(x.regular>x.price) sub = fmt(x.regular)+' separately · you save '+fmt(x.regular-x.price); else if(x.offerWins) sub = 'Member offer used instead of the set price'; }
     else { var pp = P(l.product); if(!pp) return;
       nm = pp.name + ' · ' + l.size + (l.qty>1 ? ' × '+l.qty : ''); }
-    h += '<div class="bg-sr bg-sr-item"><span>'+esc(nm)+'</span><span class="b">'+fmt(amt)+'</span></div>'+(sub ? '<div class="zc-rsub2" data-testid="bag-set-sub">'+esc(sub)+'</div>' : '');
+    /* QA V12b: on a 320–360 phone a long name ("Heavyweight Hoodie 320 GSM · L")
+       was cut with "…". Auto-fit (rule: step down, never cut) first shrinks
+       the line a little, then swaps to the short name without the numbers
+       ("Heavyweight Hoodie · L"). The split markup is only drawn when the
+       short name differs, so every other row is exactly as before. */
+    var nmHTML = esc(nm);
+    if(l.kind!=='set'){ var shortNm = bag_srShort(pp.name);
+      if(shortNm !== pp.name) nmHTML = '<bdi class="bg-nmf">'+esc(pp.name)+'</bdi><bdi class="bg-nms">'+esc(shortNm)+'</bdi>'+esc(nm.slice(pp.name.length)); }
+    h += '<div class="bg-sr bg-sr-item"><span>'+nmHTML+'</span><span class="b">'+fmt(amt)+'</span></div>'+(sub ? '<div class="zc-rsub2" data-testid="bag-set-sub">'+esc(sub)+'</div>' : '');
   });
   h += '<div class="bg-sr bg-sr-sub"><span>Subtotal ('+tot.count+')</span><span class="b" data-testid="bag-subtotal">'+fmt(tot.rowsSubtotal)+'</span></div>';
   /* 29. The set price is the best thing that happened in this bag, and it was
@@ -915,6 +926,10 @@ function bag_drawerHTML(id){
     pic = productImg(p, l.color, {ratio:'ratio-11', label:false}); name = p.name; sub = COL(l.color).name+' · Size '+l.size;
     if(typeof pdp_pairs==='function') rel = pdp_pairs(p);
   }
+  /* owner review B1–B3 (desktop): one drawer builder, styles A/B (89w-owner-c.js) */
+  if(typeof atbC_drawer==='function' && typeof ownc_desk==='function' && ownc_desk())
+    return atbC_drawer({testid:'bag-drawer', top:'<div class="row atb-line" style="gap:12px"><div class="atb-lth">'+pic+'</div><div class="grow" style="min-width:0"><div class="small bold">'+esc(name)+'</div><div class="xs text2">'+esc(sub)+'</div></div>'+
+      '<div style="text-align:right"><div class="price small">'+fmt(row.price)+'</div>'+(row.regular>row.price ? '<div class="strike xs">'+fmt(row.regular)+'</div>' : '')+'</div></div>', added:[id], rel:rel});
   var f = bag_freeDel(tot.total), hrs = SET('exchange','windowHours');
   var del = f.free ? '<div class="xs brandc bold row mt8" style="gap:6px">'+ico('truck',14)+esc(bag_freeOrderLine(f))+'</div>'
                    : '<div class="atb-reassure"><span>'+ico('cash',15)+'Cash on Delivery</span><span>'+ico('swap',15)+esc(hrs+'-hour size exchange')+'</span></div>';

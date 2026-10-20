@@ -315,15 +315,15 @@ function logout(){ ST.user = null; saveState(); }
 /* ---------- phone & address ---------- */
 /* R15 wave 1 (bug 8): Bengali digits ০–৯ count as 0–9 everywhere a phone is read */
 function bnDigits(s){ return String(s==null?'':s).replace(/[০-৯]/g, function(c){ return String(c.charCodeAt(0) - 0x09E6); }); }
-function normPhone(raw){ var d = bnDigits(raw).replace(/\D/g,''); if(d.indexOf('880')===0) d = d.slice(2); else if(d.indexOf('88')===0 && d.length===13) d = d.slice(2); if(d.length===10 && d[0]==='1') d = '0'+d; return d; }
+/* K10 (owner, 20 Oct): ONE rule for every phone box — 07-phone.js phoneNormalizeBD()
+   (Bengali/mixed digits, +880 / 880 / 00880, a doubled 00, a missing 0, then
+   01[3-9] + 8 digits). These two keep their old names for every caller. */
+function normPhone(raw){ return phoneNormalizeBD(raw).digits; }
 function checkPhone(raw){
-  var d = normPhone(raw);
-  if(!d) return {state:'empty', digits:''};
-  if(/^01[3-9]\d{8}$/.test(d)) return {state:'ok', digits:d, nice:d.slice(0,5)+'-'+d.slice(5)};
-  if(d.indexOf('01')===0 && !/^01[3-9]/.test(d)) return {state:'warn', digits:d, msg:'Bangladeshi mobile numbers start with 013 to 019. Please check the 3rd digit.'};
-  if(d.length<11) return {state:'warn', digits:d, msg:'Looks like '+(11-d.length===1?'one digit is':(11-d.length)+' digits are')+' missing — mobile numbers have 11 digits (01XXX-XXXXXX).'};
-  if(d.length>11) return {state:'warn', digits:d, msg:'One digit too many? Mobile numbers have 11 digits (01XXX-XXXXXX).'};
-  return {state:'warn', digits:d, msg:'Please check the number.'};
+  var r = phoneNormalizeBD(raw);
+  if(r.empty) return {state:'empty', digits:''};
+  if(r.ok) return {state:'ok', digits:r.digits, nice:r.nice, e164:r.e164};
+  return {state:'warn', digits:r.digits, msg:r.msg};
 }
 var DHAKA_CITY = ['dhaka','mirpur','mirpur 1','mirpur 2','mirpur 6','mirpur 10','mirpur 11','mirpur 12','mirpur 13','mirpur 14','pallabi','kazipara','shewrapara','kafrul','ibrahimpur','dhanmondi','hazaribagh','new market','azimpur','lalbagh','chawkbazar','bakshibazar','kamrangirchar','uttara','uttara 3','uttara 4','uttara 7','uttara 10','uttara 11','uttara 12','uttara 13','sector 3','sector 4','sector 7','sector 10','sector 11','sector 13','azampur','jasimuddin','rajlakshmi','abdullahpur','dakshinkhan','uttarkhan','turag','khilkhet','nikunja','nikunja 1','nikunja 2','kuril','kuril bishwa road','bishwa road','joar sahara','baridhara','baridhara diplomatic','gulshan','gulshan 1','gulshan 2','banani','banani dohs','mohakhali','mohakhali dohs','niketan','tejgaon','nakhalpara','farmgate','kawran bazar','karwan bazar','panthapath','green road','shukrabad','kalabagan','sobhanbagh','jigatola','rayer bazar','mohammadpur','adabor','shyamoli','kallyanpur','gabtoli','darussalam','tajmahal road','ring road','bashundhara','bashundhara r/a','badda','north badda','south badda','middle badda','merul','merul badda','rampura','banasree','aftabnagar','khilgaon','taltola','goran','basabo','mugda','malibagh','shantinagar','paltan','purana paltan','motijheel','arambagh','fakirapool','segunbagicha','kakrail','bijoynagar','eskaton','moghbazar','siddheswari','ramna','shahbagh','elephant road','bangla motor','bangla bazar','sutrapur','wari','gandaria','tikatuli','jatrabari','shanir akhra','donia','demra','matuail','sarulia','shyampur','kadamtali','postogola','dholaikhal','islampur','nawabpur','gulistan','sadarghat','agargaon','sher-e-bangla','shyamoli ring','cantonment','manikdi','matikata','balughat','ecb chattar','kachukhet','vatara','satarkul','nurerchala','shahjadpur','notun bazar','jamuna future park','progoti sarani','malibag chowdhury para'];
 var OUTSIDE = ['savar','ashulia','hemayetpur','gazipur','tongi','board bazar','chandra','kaliakoir','sreepur','narayanganj','fatullah','siddhirganj','rupganj','araihazar','sonargaon','keraniganj','zinzira','hasnabad','dohar','nawabganj','munshiganj','manikganj','narsingdi','chattogram','chittagong','sylhet','rajshahi','khulna','barishal','barisal','rangpur','mymensingh','cumilla','comilla','bogura','bogra','feni','noakhali','jashore','jessore','cox','dinajpur','pabna','tangail','faridpur','kushtia','jhenaidah','magura','satkhira','bagerhat','patuakhali','bhola','pirojpur','jamalpur','sherpur','netrokona','kishoreganj','brahmanbaria','chandpur','lakshmipur','rangamati','bandarban','khagrachhari','sirajganj','natore','naogaon','joypurhat','chapainawabganj','nilphamari','panchagarh','thakurgaon','lalmonirhat','kurigram','gaibandha','habiganj','moulvibazar','sunamganj','gopalganj','madaripur','shariatpur','rajbari','meherpur','chuadanga','narail','jhalokathi','barguna'];
@@ -807,10 +807,14 @@ function bagSetQty(id, q){ ST.bag.forEach(function(l){ if(l.id===id){ var mx = b
    (5) A set is never charged above the regular total of its items. If the
        owner sets ৳1,800 on a ৳1,700 pair, the shopper pays ৳1,700 and no
        "set price" is claimed. */
+/* K11: a fixed combo made of ONE product needs different colours unless the
+   owner ticks sameColour (default off — R15 note 10 colour pairs, 01y rule) */
+function comboNeedsMix(c){ return !!(c && c.items && c.items.length>1 && c.sameColour!==true && c.items.every(function(x){ return (x.product||x)===(c.items[0].product||c.items[0]); })); }
+function comboColoursOk(c, items){ if(!comboNeedsMix(c)) return true; var seen = {}; return (items||[]).every(function(it){ if(seen[it.color]) return false; seen[it.color] = 1; return true; }); }
 function bagSetPrice(l){
   var reg = (l.items||[]).reduce(function(s, it){ var p = P(it.product); return s + (p ? p.price : 0); }, 0);
   var cur = Number(l.price)||reg;
-  if(l.source==='combo' && l.refId && typeof COMBO==='function'){ var c = COMBO(l.refId); if(c && c.active && Number(c.price)>0) cur = Number(c.price); }
+  if(l.source==='combo' && l.refId && typeof COMBO==='function'){ var c = COMBO(l.refId); if(c && c.active && Number(c.price)>0) cur = comboColoursOk(c, l.items) ? Number(c.price) : reg; }
   else if(l.source==='custom' && l.refId && typeof bs_price==='function'){
     var r = setRules().filter(function(x){ return x.id===l.refId; })[0];
     if(r && r.active){ var bp = bs_price(r, l.items); if(bp && bp.price>0) cur = bp.price; }
@@ -824,7 +828,7 @@ function bagSetName(name){ name = String(name||''); return /\bset$/i.test(name.t
 function bagTotals(){
   var lines = [], subtotal = 0, discount = 0, setDiscounts = [], units = [], groups = [];
   ST.bag.forEach(function(l){
-    if(l.kind==='item'){ var p = P(l.product); var reg = p.price*l.qty; subtotal += reg; lines.push({line:l, regular:reg, price:reg}); for(var i=0;i<l.qty;i++) units.push({product:l.product, price:p.price}); }
+    if(l.kind==='item'){ var p = P(l.product); var reg = p.price*l.qty; subtotal += reg; lines.push({line:l, regular:reg, price:reg}); for(var i=0;i<l.qty;i++) units.push({product:l.product, color:l.color, price:p.price}); }
     else {
       var q = l.qty||1, sp = bagSetPrice(l), regS = sp.regular*q, priceS = sp.price*q, save = regS - priceS;
       subtotal += regS; discount += save;
@@ -836,9 +840,23 @@ function bagTotals(){
   // auto-apply fixed combos the owner marked "auto-apply when bag matches"
   var pool = units.slice(), autoApplied = [];
   combos().filter(function(c){ return c.active && c.autoApply; }).forEach(function(c){
+    /* K11 (owner rule, R15 notes 10 + 25, 01y sameColour:false): a combo of
+       one product ("Polo Duo — any 2 colours") is a COLOUR PAIR — Navy + Navy
+       is a plain 2-pack at the regular price. Each piece must be a colour not
+       already taken for this pack; the colour with most pieces left goes first,
+       so the bag always gets the largest number of pairs. A combo the owner
+       marks sameColour:true accepts any colours. */
+    var mix = comboNeedsMix(c);
     while(true){
-      var take = [], tmp = pool.slice(), ok = true;
-      c.items.forEach(function(pid){ var ix = -1; for(var i=0;i<tmp.length;i++){ if(tmp[i].product===pid){ ix=i; break; } } if(ix<0) ok=false; else { take.push(tmp[ix]); tmp.splice(ix,1); } });
+      var take = [], tmp = pool.slice(), ok = true, used = {};
+      c.items.forEach(function(pid){
+        var ix = -1, best = -1, cnt = {};
+        if(mix) tmp.forEach(function(u){ if(u.product===pid) cnt[u.color] = (cnt[u.color]||0) + 1; });
+        for(var i=0;i<tmp.length;i++){ if(tmp[i].product!==pid) continue;
+          if(!mix){ ix = i; break; }
+          if(used[tmp[i].color]) continue;
+          if(cnt[tmp[i].color] > best){ best = cnt[tmp[i].color]; ix = i; } }
+        if(ix<0) ok=false; else { used[tmp[ix].color] = 1; take.push(tmp[ix]); tmp.splice(ix,1); } });
       if(!ok) break;
       var reg = take.reduce(function(s,u){return s+u.price;},0); if(reg<=c.price) break;
       pool = tmp; discount += reg - c.price;
@@ -893,7 +911,7 @@ function placeOrder(form){
   if(ph.state!=='ok') flags.push('Phone check');
   bracketPairs().forEach(function(b){ flags.push(ST.bracketAck[b.key]==='other' ? '2 sizes — for someone else' : '2 sizes — check'); });
   var extra = form.extraDiscount||0;
-  var order = {id:id, phone:phone, name:form.name, address:form.address, zone:z.zone, flags:flags, lines:lines, setDiscounts:tot.setDiscounts,
+  var order = {id:id, phone:phone, phoneE164:ph.e164 || '', phoneTyped:String(form.phone==null?'':form.phone), name:form.name, address:form.address, zone:z.zone, flags:flags, lines:lines, setDiscounts:tot.setDiscounts,
     subtotal:tot.subtotal, discount:tot.discount+extra, delivery:delivery, total:tot.total-extra+delivery, payment:form.payment||'cod', wallet:form.wallet||null,
     status:'confirmed', createdAt:now, deliveredAt:null, edits:0, courier:z.zone==='in'?'Steadfast':'Pathao', tracking:(z.zone==='in'?'SF-':'PT-')+Math.floor(100000+Math.random()*899999),
     timeline:[{s:'confirmed',at:now}], reviewed:{}, exchanges:[], offersOptIn:!!form.offers, note:form.note||'', source:form.source||'website', addOns:[]};

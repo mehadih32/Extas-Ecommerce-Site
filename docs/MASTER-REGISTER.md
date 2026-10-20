@@ -106,6 +106,8 @@ the server.*
 | 206 | S09 | merged | 2026-10-20 | manual re-sync: "sync all stock now" and one product (by SKU or product), both `inventory.sync`, recorded as runs (`stock.resync`, `stock.resyncProduct`); skipped with a reason on the practice ERP or with no ERP; `/api/admin/inventory/resync` |
 | 207 | S09 | merged | 2026-10-20 | stock movement report `/admin/stock/movements` (range from `inventory.report.defaultDays`, 30, in the store's time zone; optional SKU): per SKU and location opening, in, out, closing, and a mark where the ledger does not add up to the stock now; reconcile with the ERP (`reconcileWithErp`, kinds MISSING_IN_SHOP · MISSING_IN_ERP · ON_HAND_DIFFERS · RESERVED_DIFFERS) recorded as a run with its summary; `/api/admin/inventory/movements`, `/reconcile`. Registry v11 adds `inventory.report.defaultDays`; no schema change, no new migration |
 
+> **CN-008 · 20 Oct 2026 (owner desktop review of V12, 03:54–04:23).** 44 items (home H1–H14, category C1–C6, product P1–P8, drawer B1–B3, bag G1–G3, checkout K1–K11 incl. the BD phone normaliser and Polo Duo different-colour rule), 7 invoice templates, 12 new admin screens, admin audit fixes. Built into demo **V12.1** (`docs/demo/EXTAS-demo-V12.1.html`), which is now the UI truth. Every new look is a backend option with the old one kept. Details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md` (44/44 pass), `docs/qa/ADMIN-AUDIT.md`, lesson for `phoneNormalizeBD` in `docs/agents/lessons/ALL.md`. No new PR numbers: scope lands on the existing S02/S03/S04/S05/S08/S14/S16/S20/S22 PRs.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |

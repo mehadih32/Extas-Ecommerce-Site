@@ -1,3 +1,5 @@
+/* Phone audit V12b: Bengali for the set-offer counter (phone tile + desktop hmDiyFit) */
+try{ if(typeof T!=='undefined' && T.bn){ if(!T.bn['more set offers']) T.bn['more set offers'] = 'আরও সেট অফার'; if(!T.bn['more set offer']) T.bn['more set offer'] = 'আরও সেট অফার'; } }catch(e){}
 /* ================= EXTAS demo — home page (20-home.js) ================= */
 (function(){
   var css = [
@@ -111,6 +113,43 @@
   var s = document.createElement('style'); s.id = 'hm-css'; s.textContent = css; document.head.appendChild(s);
 })();
 
+/* =====================================================================
+   OWNER FIX A (Note 51, 20 Oct) · THE HOME PAGE TEXTS AND SWITCHES ARE
+   SETTINGS. Site builder › Home edits them (96d-site-builder.js, area
+   'home'); with nothing published every text below is exactly today's, so
+   the phone page is unchanged. `desk` = a desktop-only wording; `bn` = the
+   Bengali text shown when the shopper picks বাং (empty = the English one).
+   ===================================================================== */
+function homeDefault(){
+  return {
+    /* H1 · how far (px) the hero's coloured board reaches past the text column on a desktop (0 = as before) */
+    hero:{shift:112,
+      /* H2 · the two lines under the hero buttons ({windowHours} = the exchange hours from Smart Rules) */
+      trust:[{id:'t1', icon:'cash', text:'Cash on Delivery all over Bangladesh', desk:'', bn:'', on:true},
+             {id:'t2', icon:'swap', text:'{windowHours}-hour size exchange', desk:'{windowHours}-hour easy exchange for size or fault', bn:'', on:true}]},
+    /* H7 / H10 · the sets band */
+    sets:{eyebrow:'Sets & combos', title:'Buy together, save more', sub:'Ready-made sets at one price, or pick any styles yourself. Every set price is shown up front.',
+      diyTitle:'Build your own set', diyText:'Mix colours and styles — the set price shows before you order.', diyBtn:'Start building', more:'See all combos',
+      deskLayout:'tall', tierHi:true},
+    /* H8 · the size-finder strip (its category tiles come from the categories that have a size chart: sg_cats()) */
+    finder:{title:'Find your size once — height + weight, 10 seconds', text:'We remember it and show “your size in stock” on every product. Inches by default, cm if you like.',
+      btn:'Find my size', btnSaved:'Update my size'},
+    /* H9 · glide rows fade at both edges (off = the earlier plain box edges) */
+    rowFade:true,
+    /* H12 · the journal block on a desktop: this many newest posts, fixed (no slider) */
+    journal:{deskCount:4}
+  };
+}
+function homeData(){ return (typeof sbData==='function') ? sbData('home', homeDefault()) : homeDefault(); }
+function homePart(k){ var d = homeData(), def = homeDefault()[k], o = d[k]; if(!o || typeof o !== 'object' || Array.isArray(o)) return def; var r = {}; for(var a in def) r[a] = def[a]; for(var b in o) if(o[b] !== undefined) r[b] = o[b]; return r; }
+/* one home text: Bengali when the shop is in Bengali and one is set, else the desktop wording on a desktop, else the text */
+function homeTxt(part, key){
+  var o = homePart(part), bn = o[key+'Bn'];
+  if(ST.lang==='bn' && bn) return bn;
+  return String(o[key] == null ? homeDefault()[part][key] : o[key]);
+}
+function homeFill(s){ var v = {windowHours:SET('exchange','windowHours'), freeOver:SET('delivery','freeOver')}; return String(s).replace(/\{(\w+)\}/g, function(m, k){ return v.hasOwnProperty(k) && v[k] != null ? String(v[k]) : m; }); }
+
 /* ---------- helpers ---------- */
 function hm_secHd(title, href, label, sub){
   return '<div class="sec-hd"><div><h2 class="h2">'+esc(title)+'</h2>'+(sub?'<p class="small muted hm-sub">'+sub+'</p>':'')+'</div>'+
@@ -190,7 +229,7 @@ function hm_drag(tr){ SMOOTH.drag(tr); }
 function hm_glide(){
   SMOOTH.stopAll();                        /* every render replaces the DOM */
   ['hm-sltrack','hm-settrack','hm-flash1','hm-flash2','hm-revtrack','hm-jtrack'].forEach(function(id){
-    var tr = document.getElementById(id); if(!tr) return;
+    var tr = document.getElementById(id); if(!tr || tr.classList.contains('hm-jfixed')) return;
     hm_subpixel(tr);                       /* before SMOOTH.start, which sets scrollLeft */
     hm_drag(tr);
   });
@@ -200,7 +239,9 @@ function hm_glide(){
   SMOOTH.start('hm-flash1',   {dir:-1, speed:24});
   SMOOTH.start('hm-flash2',   {dir: 1, speed:24});
   SMOOTH.start('hm-revtrack', {dir:-1, speed:19});  /* 5. reviews drift on their own */
-  SMOOTH.start('hm-jtrack',   {dir:-1, speed:20});  /* 6. journal, same glide */
+  /* 6. journal, same glide — H12: not on a desktop, where the four newest posts stand still */
+  var jt = document.getElementById('hm-jtrack');
+  if(!(jt && jt.classList.contains('hm-jfixed'))) SMOOTH.start('hm-jtrack',   {dir:-1, speed:20});
 }
 /* Arrow buttons on the hero: data-tr names the track, data-d the direction.
    One card per tap, eased by hand — a native smooth scroll would be cancelled
@@ -320,21 +361,32 @@ function hm_heroBtns(){
     return '<a class="btn '+(cls[b.style]||cls.line)+'" href="'+esc(b.href||'#/')+'" data-testid="'+esc(b.id||('hero-btn-'+i))+'">'+esc(lab)+'</a>';
   }).join('')+'</div>';
 }
+/* H2 · the promise lines under the buttons, from Site builder › Home (phone text = as before) */
+function hm_heroTrust(){
+  var desk = typeof deskOn==='function' && deskOn();
+  var list = (homePart('hero').trust || []).filter(function(x){ return x && x.on !== false && (x.text || x.desk || x.bn); });
+  if(!list.length) return '';
+  return '<div class="hm-hero-trust'+(desk ? ' hm-trust-d n'+list.length : '')+'">'+list.map(function(x){
+    var s = (ST.lang==='bn' && x.bn) ? x.bn : ((desk && x.desk) ? x.desk : (x.text || x.desk || ''));
+    return '<span>'+ico(x.icon || 'check',15)+esc(homeFill(s))+'</span>';
+  }).join('<i class="hm-trust-bar" aria-hidden="true"></i>')+'</div>';
+}
 function hm_hero(){
   var media = hm_heroSlider();
-  return '<section class="hm-hero" aria-label="New collection"><div class="container hm-hero-in">'+
+  /* H1 · desktop only: the coloured board reaches further right (the text keeps its place) */
+  var sh = (typeof deskOn==='function' && deskOn()) ? Math.max(0, Math.min(240, +homePart('hero').shift || 0)) : 0;
+  return '<section class="hm-hero" aria-label="New collection"'+(sh ? ' style="--hero-shift:'+sh+'px"' : '')+'><div class="container hm-hero-in">'+
     '<div class="hm-hero-txt">'+
       '<div class="eyebrow">'+esc(t('New collection'))+'</div>'+
       '<h1 class="display hm-hero-title">'+esc(t('Winter 2026'))+'</h1>'+
-      '<p class="hm-hero-sub">'+esc(t('heroSub'))+'</p>'+
+      /* H1 · desktop: one sentence per line, so the two lines read as two thoughts (phone text unchanged) */
+      '<p class="hm-hero-sub">'+(sh ? String(t('heroSub')).split(/(?<=[.!?।])\s+/).map(function(s){ return '<span class="hm-sub-s">'+esc(s)+'</span>'; }).join(' ') : esc(t('heroSub')))+'</p>'+
       hm_heroBtns()+
       /* 1. One line, bar-separated, the FULL promise — "all over Bangladesh" is
          the part a Bangladeshi customer is actually checking for. The type is
          sized off the viewport in r12-home.css so the whole sentence reaches
          both edges of the column at 440px without ever wrapping. */
-      '<div class="hm-hero-trust"><span>'+ico('cash',15)+'Cash on Delivery all over Bangladesh</span>'+
-        '<i class="hm-trust-bar" aria-hidden="true"></i>'+
-        '<span>'+ico('swap',15)+esc(SET('exchange','windowHours'))+'-hour size exchange</span></div>'+
+      hm_heroTrust()+
     '</div>'+
     '<div class="hm-hero-media">'+media+'</div>'+
   '</div></section>';
@@ -373,6 +425,16 @@ function hm_sets(){
      Build = 2 rows). The rest carry hm-dhide, which only the desktop CSS
      reads; the phone row keeps every set. "See all combos" leads on. */
   var keep = Math.max(3, 4*Math.floor((list.length+1)/4)-1);
+  /* H7 (owner 20 Oct) · desktop: 3 sets on top, 3 below, and the Build card as
+     one tall tile on the right spanning both rows. 'grid' = the old 4-up rows. */
+  var S = homePart('sets'), desk = typeof deskOn==='function' && deskOn(), tall = desk && S.deskLayout !== 'grid';
+  if(tall) keep = Math.min(6, list.length);
+  var tierHTML = function(r){
+    /* H10 · desktop: each set price in the sale colour, bold (phone text unchanged) */
+    /* Phone audit V12b: same words on the phone, but each "Any 2 for ৳1,500" stays on one line (a price never splits after the ৳) */
+    if(!(desk && S.tierHi !== false)) return Object.keys(r.tiers).sort(function(a,b){return a-b;}).map(function(k){ return '<span class="hm-tier-m">'+esc('Any '+k+' for '+fmt(r.tiers[k]))+'</span>'; }).join(' · ');
+    return Object.keys(r.tiers).sort(function(a,b){return a-b;}).map(function(k){ return '<span class="hm-tier">'+esc(k+' for')+' <b class="hm-tier-p">'+esc(fmt(r.tiers[k]))+'</b></span>'; }).join(' ');
+  };
   var cards = list.map(function(c, ci){
     var items = hm_comboItems(c), reg = hm_comboRegular(c), save = reg - c.price;
     return '<a class="hm-set'+(ci>=keep?' hm-dhide':'')+'" href="#/combo/'+c.id+'" data-testid="home-combo-'+c.id+'">'+setImg(items, {ratio:'ratio-11'})+
@@ -381,15 +443,20 @@ function hm_sets(){
       '<div class="row mt8" style="gap:8px;align-items:baseline;margin-top:auto;padding-top:8px">'+priceHTML(c.price, save>0?reg:0, 18)+'</div></div></a>';
   }).join('');
   var diy = '<a class="hm-set hm-set-diy" href="#/set" data-testid="home-build-set"><div>'+ico('layers',30)+
-    '<div class="h2 mt16" style="color:inherit">Build your own set</div><div class="small mt8" style="opacity:.85">Mix colours and styles — the set price shows before you order.</div></div>'+
-    '<div>'+rules.map(function(r){ return '<div class="rl"><b>'+esc(r.name)+'</b><br>'+esc(hm_tierText(r))+'</div>'; }).join('')+'</div>'+
-    '<span class="btn hm-btn-onbrand btn-block">Start building'+ico('right',16)+'</span></a>';
+    '<div class="h2 mt16" style="color:inherit">'+esc(homeTxt('sets','diyTitle'))+'</div><div class="small mt8" style="opacity:.85">'+esc(homeTxt('sets','diyText'))+'</div></div>'+
+    '<div'+(tall ? ' class="hm-diy-rules"' : '')+'>'+rules.map(function(r){ return '<div class="rl"><b>'+esc(r.name)+'</b><br>'+tierHTML(r)+'</div>'; }).join('')+
+      /* Phone audit V12b: on phone/tablet the tile is never taller than the set cards beside it; offers that do not
+         fit are hidden from the end and counted here (hmDiyFitPhone, below) — no card is stretched with empty space */
+      (!tall ? '<div class="hm-diy-more hm-diy-more-m" hidden></div>' : '')+
+      /* H7 · the tall tile is as high as the two rows of sets; offers that do not fit are counted here (hmDiyFit, 97a-owner-a.js) */
+      (tall ? '<div class="hm-diy-more" hidden></div>' : '')+'</div>'+
+    '<span class="btn hm-btn-onbrand btn-block">'+esc(homeTxt('sets','diyBtn'))+ico('right',16)+'</span></a>';
   return '<section class="hm-band" aria-label="Sets and combos"><div class="container">'+
-    '<div class="hm-band-hd"><div><div class="eyebrow">Sets & combos</div><h2 class="display hm-band-title">Buy together, save more</h2></div>'+
-    '<p class="hm-band-sub">Ready-made sets at one price, or pick any styles yourself. Every set price is shown up front.</p></div>'+
+    '<div class="hm-band-hd"><div><div class="eyebrow">'+esc(homeTxt('sets','eyebrow'))+'</div><h2 class="display hm-band-title">'+esc(homeTxt('sets','title'))+'</h2></div>'+
+    '<p class="hm-band-sub">'+esc(homeTxt('sets','sub'))+'</p></div>'+
     /* the sets row is a slider too, so it glides like the rest (hm_glide) */
-    '<div class="hm-hscroll c4" id="hm-settrack">'+cards+diy+'</div>'+
-    ((typeof DESK_NAV!=='undefined' && DESK_NAV.combos) ? '<div class="hm-band-more hide-m"><a class="hm-more" href="#/combos">See all combos'+ico('right',14)+'</a></div>' : '')+
+    '<div class="hm-hscroll c4'+(tall ? ' hm-sets-tall' : '')+'" id="hm-settrack">'+cards+diy+'</div>'+
+    ((typeof DESK_NAV!=='undefined' && DESK_NAV.combos) ? '<div class="hm-band-more hide-m"><a class="hm-more" href="#/combos">'+esc(homeTxt('sets','more'))+ico('right',14)+'</a></div>' : '')+
     '</div></section>';
 }
 function hm_finder(){
@@ -397,9 +464,10 @@ function hm_finder(){
   var saved = ms ? '<div class="small brandc bold mt8">Saved: Top '+esc(ms.top||'\u2014')+' \u00b7 Waist '+esc(ms.bottom||'\u2014')+' \u2014 we use it as a hint, you always choose.</div>' : '';
   /* the ruler sits inline in front of "Find", so line two runs the full width */
   return '<section class="section"><div class="container"><a class="hm-finder" href="#/size-guide" data-act="size-guide" data-testid="home-finder">'+
-    '<div class="grow hm-finder-body"><div class="h2 hm-finder-t"><span class="hm-finder-ico">'+ico('ruler',17)+'</span>Find your size once \u2014 height + weight, 10 seconds</div>'+
-    '<div class="small text2 mt8">We remember it and show \u201cyour size in stock\u201d on every product. Inches by default, cm if you like.</div>'+saved+'</div>'+
-    '<span class="btn btn-primary">'+(ms?'Update my size':'Find my size')+ico('right',16)+'</span></a></div></section>';
+    /* H8 \u00b7 the words are the owner's (Site builder \u203a Home); the window it opens lists every category with a size chart (sg_cats) */
+    '<div class="grow hm-finder-body"><div class="h2 hm-finder-t"><span class="hm-finder-ico">'+ico('ruler',17)+'</span>'+esc(homeTxt('finder','title'))+'</div>'+
+    '<div class="small text2 mt8">'+esc(homeTxt('finder','text'))+'</div>'+saved+'</div>'+
+    '<span class="btn btn-primary">'+esc(homeTxt('finder', ms ? 'btnSaved' : 'btn'))+ico('right',16)+'</span></a></div></section>';
 }
 /* H3. ONLY REAL MARKDOWNS GO IN THE FLASH SALE.
    A flash sale is a discount by definition, so every card in these two rows
@@ -449,10 +517,11 @@ function hm_look(){
   var reg = hm_comboRegular(c);
   var rows = items.map(function(it){ var p = P(it.product);
     return '<a class="hm-look-row" href="#/p/'+p.id+'?color='+it.color+'">'+productImg(p, it.color, {ratio:'ratio-11', label:false, cls:'hm-look-thumb'})+
-      '<div class="grow"><div class="small bold">'+esc(p.name)+'</div><div class="xs muted">'+esc(COL(it.color).name)+' · '+esc(p.fit)+'</div></div><span class="price small">'+fmt(p.price)+'</span></a>'; }).join('');
+      /* H11 (owner 20 Oct, phone too): bolder names, bigger prices, a bigger "Together", the old price in red, "You save" highlighted — r12-zz-ownerA.css */
+      '<div class="grow"><div class="small bold hm-look-n">'+esc(p.name)+'</div><div class="xs muted">'+esc(COL(it.color).name)+' · '+esc(p.fit)+'</div></div><span class="price small hm-look-p">'+fmt(p.price)+'</span></a>'; }).join('');
   var foot = c.active
-    ? '<div class="row between mt16" style="align-items:baseline"><span class="small text2">Together</span><span class="row" style="gap:8px;align-items:baseline">'+priceHTML(c.price, reg>c.price?reg:0, 22)+'</span></div>'+
-      (reg>c.price?'<div class="xs brandc bold" style="text-align:right">You save '+fmt(reg-c.price)+'</div>':'')+
+    ? '<div class="row between mt16 hm-look-tot" style="align-items:baseline"><span class="small text2 hm-look-tg">Together</span><span class="row" style="gap:8px;align-items:baseline">'+priceHTML(c.price, reg>c.price?reg:0, 22)+'</span></div>'+
+      (reg>c.price?'<div class="hm-look-savew"><span class="xs brandc bold hm-look-save">You save '+fmt(reg-c.price)+'</span></div>':'')+
       '<a class="btn btn-primary btn-block mt16" href="#/combo/'+c.id+'">Shop the look'+ico('right',16)+'</a>'
     : '<div class="row between mt16"><span class="small text2">Total</span><span class="price">'+fmt(reg)+'</span></div>';
   return '<section class="section"><div class="container">'+hm_secHd('Shop the look', null, null, 'Put together by our team')+
@@ -494,16 +563,29 @@ function hm_journalBySlug(slug){
 function hm_journalCard(a){
   var p = P(a.p); if(!p) return '';
   var col = (p.colors.indexOf(a.c) >= 0) ? a.c : p.colors[0];
-  return '<a class="hm-art" href="#/journal/'+hm_journalSlug(a)+'">'+productImg(p, col, {ratio:'ratio-wide', labelText:'[ journal photo ]'})+
+  return '<a class="hm-art" href="#/'+(a.lang==='bn' ? 'bn/' : '')+'journal/'+hm_journalSlug(a)+'"'+(a.lang==='bn' ? ' lang="bn"' : '')+'>'+productImg(p, col, {ratio:'ratio-wide', labelText:'[ journal photo ]'})+
     '<div class="eyebrow mt16">'+esc(a.e)+'</div><div class="hm-art-t">'+esc(a.t)+'</div><p class="small text2" style="margin:0 0 10px">'+esc(a.x)+'</p>'+
     '<span class="hm-more">Read article'+ico('right',14)+'</span></a>';
 }
 function hm_journal(){
-  /* the newest ten, newest first */
-  var arts = (DB.journal || []).slice(-10).reverse();
+  /* the newest ten, newest first. H12 (owner 20 Oct) · desktop: the newest four
+     only, fixed — no slider, no arrows. DB.journal is the blog's published list
+     (94-admin-blog.js zb_apply, newest last), so a new post takes the first
+     place, the others move one step and the oldest of the four drops out. */
+  var desk = typeof deskOn==='function' && deskOn(), n = Math.max(1, Math.min(8, +homePart('journal').deskCount || 4));
+  /* QA V12b: a Bengali twin (same slug, lang 'bn') is the same article — the
+     block showed both cards side by side, and the Bengali card opened the
+     English page. One card per slug, in the shopper's language. */
+  var want = (typeof ST!=='undefined' && ST && ST.lang==='bn') ? 'bn' : 'en', bySlug = {}, uniq = [];
+  (DB.journal || []).slice().reverse().forEach(function(a){
+    var k = hm_journalSlug(a), i = bySlug[k];
+    if(i == null){ bySlug[k] = uniq.length; uniq.push(a); }
+    else if((a.lang==='bn' ? 'bn' : 'en')===want && (uniq[i].lang==='bn' ? 'bn' : 'en')!==want) uniq[i] = a;
+  });
+  var arts = uniq.slice(0, desk ? n : 10);
   var cards = arts.map(hm_journalCard).join('');
   return '<section class="section"><div class="container">'+hm_secHd('From the journal', '#/journal', 'View all', 'Fit tips and style notes')+
-    '<div class="hm-hrow hm-jrow" id="hm-jtrack">'+cards+'</div></div></section>';
+    '<div class="hm-hrow hm-jrow'+(desk ? ' hm-jfixed' : '')+'" id="hm-jtrack"'+(desk ? ' style="--hm-jn:'+n+'"' : '')+'>'+cards+'</div></div></section>';
 }
 
 /* The journal index and the article page. The demo has the headline, the
@@ -582,3 +664,23 @@ PAGES.home = {
 fitRule('.hm-flash-hd', {min:12, box:true, collapse:true});
 fitRule('.ftr-s3 .ftr-cols', {min:11, collapse:true});
 fitRule('.hm-art .eyebrow', {min:9.5, group:'hmart', collapse:true});
+
+/* Phone audit V12b (R1): AUTO ADJUST for the phone/tablet sets row. The Build-your-own tile shows every offer
+   that fits within the height of the tallest set card; the rest are counted ("+ 5 more set offers").
+   At least two offers always show (the approved V12 tile listed three). Runs after every render, on resize and when the fonts arrive (97a-owner-a.js hooks). */
+function hmDiyFitPhone(){
+  var row = document.getElementById('hm-settrack'); if(!row || row.classList.contains('hm-sets-tall')) return;
+  var ds = [].slice.call(row.querySelectorAll('.hm-set-diy')); if(!ds.length) return;
+  ds.forEach(function(d){ [].forEach.call(d.querySelectorAll('.rl'), function(r){ r.hidden = false; }); var m = d.querySelector('.hm-diy-more-m'); if(m) m.hidden = true; d.style.display = 'none'; });
+  var H = 0; [].forEach.call(row.children, function(c){ if(!c.classList.contains('hm-set-diy')) H = Math.max(H, c.getBoundingClientRect().height); });
+  ds.forEach(function(d){ d.style.display = ''; });
+  if(!H) return;
+  /* the clones of the sliding row show exactly what the first tile shows */
+  var setHid = function(d, hid){ var rls = [].slice.call(d.querySelectorAll('.rl')), more = d.querySelector('.hm-diy-more-m');
+    rls.forEach(function(r, i){ r.hidden = i >= rls.length - hid; });
+    if(more){ more.hidden = !hid; more.textContent = hid ? '+ '+hid+' '+(hid === 1 ? t('more set offer') : t('more set offers')) : ''; } };
+  ds.forEach(function(d){ if(d !== ds[0]) d.style.display = 'none'; });
+  var first = ds[0], n = first.querySelectorAll('.rl').length, hid = 0;
+  while(n - hid > 2 && first.getBoundingClientRect().height > H + 0.5){ hid++; setHid(first, hid); }   /* at least 2 offers stay (V12 showed 3) */
+  ds.forEach(function(d){ d.style.display = ''; if(d !== first) setHid(d, hid); });
+}

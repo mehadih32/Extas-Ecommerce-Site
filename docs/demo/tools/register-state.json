@@ -21,6 +21,11 @@
      "d": "2026-10-20",
      "hash": "00b9abd5b5e5",
      "size": 603270
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "9193a5ba5175",
+     "size": 605273
     }
    ]
   },
@@ -131,6 +136,11 @@
      "d": "2026-10-20",
      "hash": "65ad60e96a22",
      "size": 111097
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "1ca060bc0508",
+     "size": 112146
     }
    ]
   },
@@ -216,6 +226,15 @@
      "d": "2026-10-19",
      "hash": "7e269ac6e384",
      "size": 39121
+    }
+   ]
+  },
+  "qa/QA-REPORT-V12B.md": {
+   "hist": [
+    {
+     "d": "2026-10-20",
+     "hash": "e16de473d430",
+     "size": 13613
     }
    ]
   },
@@ -413,6 +432,46 @@
      "d": "2026-10-20",
      "hash": "f614454c2184",
      "size": 91804
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "1aef0fc53531",
+     "size": 96709
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "78242a67cb91",
+     "size": 96850
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "47a4d9ba5d6e",
+     "size": 97103
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "869b13aeb4e3",
+     "size": 97784
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "881347161915",
+     "size": 101094
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "64e4f5a9478a",
+     "size": 101516
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "a245b9a02938",
+     "size": 101693
+    },
+    {
+     "d": "2026-10-20",
+     "hash": "b63c20b01b22",
+     "size": 101940
     }
    ]
   },
@@ -1857,15 +1916,43 @@
    "pr": 598,
    "seq": 93,
    "type": "update"
+  },
+  {
+   "added": "Updated 20 Oct 01:30 (CN-003): access via a GitHub Actions self-hosted runner on the VM (cloud sessions cannot SSH); build deploys to new.extas.com.bd until go-live. Updated 20 Oct 00:45 (owner, CN-002): machine created — E8ds_v6, Ubuntu Server 24.04 LTS Gen2, Trusted launch, NVMe controller, OS 128 GB + data 1 TB Premium SSD LRS (P30), accelerated networking on, auto-shutdown off, boot diagnostics on, ports 22/80/443.",
+   "d": "2026-10-20",
+   "pr": 1,
+   "seq": 94,
+   "type": "update"
+  },
+  {
+   "added": "Updated 20 Oct 02:25 (owner, CN-005): the ERP-side API is built in the owner's ERP project against docs/ERP-API-CONTRACT.md; this adapter is built against the same contract and runs on a mock until the owner enters the ERP address, key and secret.",
+   "d": "2026-10-20",
+   "pr": 497,
+   "seq": 95,
+   "type": "update"
+  },
+  {
+   "added": "Updated 20 Oct 02:01 (owner, CN-004): every change made in the site's AI panel to an agent profile, skill, curriculum or lesson is also written to GitHub — the backend commits a copy to docs/agents/live/<agent>/ in the repo (with date, who changed it, and what) through the deploy runner/GitHub API, so the repo always holds the current agents and skills next to the build-time ones; one-way export, the database stays the live source; failures retry and show on the Server page.",
+   "d": "2026-10-20",
+   "pr": 577,
+   "seq": 96,
+   "type": "update"
+  },
+  {
+   "added": "Updated 20 Oct 02:01 (CN-004): skills the learning engine adds or updates are exported to docs/agents/live/ the same way (PR 577).",
+   "d": "2026-10-20",
+   "pr": 585,
+   "seq": 97,
+   "type": "update"
   }
  ],
  "prs": {
   "1": {
    "firstSeen": "2026-10-18",
-   "hash": "d53e0bd31cd0",
+   "hash": "de124341653f",
    "seed": true,
    "updated": "2026-10-20",
-   "x": "**Updated 20 Oct 00:45 (owner, CN-002): machine created — E8ds_v6, Ubuntu Server 24.04 LTS Gen2, Trusted launch, NVMe controller, OS 128 GB + data 1 TB Premium SSD LRS (P30), accelerated networking on, auto-shutdown off, boot diagnostics on, ports 22/80/443. Region is _Malaysia West (zone 1)_, not Southeast Asia — owner's choice at creation, kept (cheaper; latency to Dhaka similar; Cloudflare in front). The Blob storage account must be created in the same region (Malaysia West). The ~~Southeast Asia~~ mentions in CN-001 read as Malaysia West.** **Updated 19 Oct 22:44 (owner): a NEW ~~VPS~~ machine, freshly created with Ubuntu (not the old Azure VM).** Record the new machine's specs from the owner's configuration screenshot; take a provider snapshot/backup before any change; the old \"Azure package must not change\" rule applies to the old VM only. **Updated 19 Oct 23:33 (owner server spec): the machine is fixed — a new Azure VM, E8ds_v6** (8 vCPU, 64 GB RAM, 440 GB local NVMe, temporary — PR 601), region **Southeast Asia** (Singapore), **Ubuntu Server 24.04 LTS x64 Gen2** (the plain image, not Ubuntu Pro), Trusted launch, accelerated networking on, NSG inbound 22/80/443 (UFW inside locks it further, PR 3), auto-shutdown off, Azure Backup off (backups are PR 8), boot diagnostics on (needed for the serial console). **Disks:** OS disk **128 GB Premium SSD LRS** + a separate **data disk of 1 TB (1024 GiB) Premium SSD LRS (P30)**, \"delete with VM\" off, **LVM on the data disk** — it holds Postgres data, Docker volumes, Redis persistence, logs that must be kept, config and certificates. ~~2 TB~~ — 1 TB chosen on Claude's advice: a disk can grow later but never shrink. The 8 vCPU / 64 GB sizing is **confirmed** (no re-size pending). **Access:** the owner creates the VM with \"Generate new key pair\" and keeps the .pem himself; on code day 1 we give him a public key, which he adds under the VM's Reset password → Reset SSH public key with a separate username for the build agent; no private key ever goes into chat. **Cost note:** consider a 1-year Reserved Instance after 1–2 stable months (roughly 30–40% saving)."
+   "x": "**Updated 20 Oct 01:30 (CN-003): access via a GitHub Actions self-hosted runner on the VM (cloud sessions cannot SSH); build deploys to new.extas.com.bd until go-live.** **Updated 20 Oct 00:45 (owner, CN-002): machine created — E8ds_v6, Ubuntu Server 24.04 LTS Gen2, Trusted launch, NVMe controller, OS 128 GB + data 1 TB Premium SSD LRS (P30), accelerated networking on, auto-shutdown off, boot diagnostics on, ports 22/80/443. Region is _Malaysia West (zone 1)_, not Southeast Asia — owner's choice at creation, kept (cheaper; latency to Dhaka similar; Cloudflare in front). The Blob storage account must be created in the same region (Malaysia West). The ~~Southeast Asia~~ mentions in CN-001 read as Malaysia West.** **Updated 19 Oct 22:44 (owner): a NEW ~~VPS~~ machine, freshly created with Ubuntu (not the old Azure VM).** Record the new machine's specs from the owner's configuration screenshot; take a provider snapshot/backup before any change; the old \"Azure package must not change\" rule applies to the old VM only. **Updated 19 Oct 23:33 (owner server spec): the machine is fixed — a new Azure VM, E8ds_v6** (8 vCPU, 64 GB RAM, 440 GB local NVMe, temporary — PR 601), region **Southeast Asia** (Singapore), **Ubuntu Server 24.04 LTS x64 Gen2** (the plain image, not Ubuntu Pro), Trusted launch, accelerated networking on, NSG inbound 22/80/443 (UFW inside locks it further, PR 3), auto-shutdown off, Azure Backup off (backups are PR 8), boot diagnostics on (needed for the serial console). **Disks:** OS disk **128 GB Premium SSD LRS** + a separate **data disk of 1 TB (1024 GiB) Premium SSD LRS (P30)**, \"delete with VM\" off, **LVM on the data disk** — it holds Postgres data, Docker volumes, Redis persistence, logs that must be kept, config and certificates. ~~2 TB~~ — 1 TB chosen on Claude's advice: a disk can grow later but never shrink. The 8 vCPU / 64 GB sizing is **confirmed** (no re-size pending). **Access:** the owner creates the VM with \"Generate new key pair\" and keeps the .pem himself; on code day 1 we give him a public key, which he adds under the VM's Reset password → Reset SSH public key with a separate username for the build agent; no private key ever goes into chat. **Cost note:** consider a 1-year Reserved Instance after 1–2 stable months (roughly 30–40% saving)."
   },
   "10": {
    "firstSeen": "2026-10-18",
@@ -4524,9 +4611,10 @@
   },
   "497": {
    "firstSeen": "2026-10-18",
-   "hash": "fb6e47928b89",
+   "hash": "25b58fb0ac02",
    "seed": true,
-   "x": "**ERP mode switch** — EXTAS ERP · another ERP · no ERP. Address and keys from settings."
+   "updated": "2026-10-20",
+   "x": "**ERP mode switch** — EXTAS ERP · another ERP · no ERP. Address and keys from settings. **Updated 20 Oct 02:25 (owner, CN-005): the ERP-side API is built in the owner's ERP project against `docs/ERP-API-CONTRACT.md`; this adapter is built against the same contract and runs on a mock until the owner enters the ERP address, key and secret.**"
   },
   "498": {
    "firstSeen": "2026-10-18",
@@ -5071,11 +5159,11 @@
   },
   "577": {
    "firstSeen": "2026-10-19",
-   "hash": "b2aef75df05d",
+   "hash": "4abfc71dbdce",
    "seed": true,
    "tm": "04:52",
-   "updated": "2026-10-19",
-   "x": "**Agent 360° profiles** — each of the fixed agents (seven since PR 581; five blog authors since PR 593) (প্রহরী Prohori, ভান্ডারী Bhandari, সওদাগর Sawdagor, শিল্পী Shilpi, দূত Doot, জ্ঞানী Gyani — renamed by the owner 19 Oct) has an employee-style profile in the AI 360 Control Room: role and owned stages, what it never touches, its plan, skills it has and skills it is learning (linked to the Skill Library, PR 321–323), work log (every task, PR, file), test results (device gate, QA checklist runs), performance (first-time-right rate, bugs found by the owner vs by itself, cost). The same agents (seven since PR 581) build the code and then run the live dashboard sections — no new agents, no re-teaching. **The owner edits each profile:** photo, name, bio, joining date, rewards, a verified ✓ star, and assignments with due dates. **Memory protocol** (agents/AGENT-PROTOCOL.md): before every task the agent loads its profile, standards, owned skills and recent work log and restates its duties; after every task the runner appends the work log automatically and any new lesson becomes a versioned skill (sandbox-tested, PR 322; approval-gated, PR 420); the library is in the nightly Google Drive backup."
+   "updated": "2026-10-20",
+   "x": "**Agent 360° profiles** — each of the fixed agents (seven since PR 581; five blog authors since PR 593) (প্রহরী Prohori, ভান্ডারী Bhandari, সওদাগর Sawdagor, শিল্পী Shilpi, দূত Doot, জ্ঞানী Gyani — renamed by the owner 19 Oct) has an employee-style profile in the AI 360 Control Room: role and owned stages, what it never touches, its plan, skills it has and skills it is learning (linked to the Skill Library, PR 321–323), work log (every task, PR, file), test results (device gate, QA checklist runs), performance (first-time-right rate, bugs found by the owner vs by itself, cost). The same agents (seven since PR 581) build the code and then run the live dashboard sections — no new agents, no re-teaching. **The owner edits each profile:** photo, name, bio, joining date, rewards, a verified ✓ star, and assignments with due dates. **Memory protocol** (agents/AGENT-PROTOCOL.md): before every task the agent loads its profile, standards, owned skills and recent work log and restates its duties; after every task the runner appends the work log automatically and any new lesson becomes a versioned skill (sandbox-tested, PR 322; approval-gated, PR 420); the library is in the nightly Google Drive backup. **Updated 20 Oct 02:01 (owner, CN-004): every change made in the site's AI panel to an agent profile, skill, curriculum or lesson is also written to GitHub** — the backend commits a copy to `docs/agents/live/<agent>/` in the repo (with date, who changed it, and what) through the deploy runner/GitHub API, so the repo always holds the current agents and skills next to the build-time ones; one-way export, the database stays the live source; failures retry and show on the Server page."
   },
   "578": {
    "firstSeen": "2026-10-19",
@@ -5134,10 +5222,11 @@
   },
   "585": {
    "firstSeen": "2026-10-19",
-   "hash": "66cb93492aaf",
+   "hash": "35a0fbaa9adb",
    "seed": true,
    "tm": "05:09",
-   "x": "**Continuous learning engine — Tirondaj (ads) and Doot (SEO/marketing) are the two power agents.** They learn without stopping from: official docs (Meta, Google, TikTok, Search Central), the big practitioner blogs on SEO and paid ads, Reddit communities (PPC, Facebook ads, SEO, e-commerce), YouTube tutorials incl. South-Asian e-commerce channels (read through transcripts), LinkedIn and Facebook posts of known specialists (where readable; through a paid tool if needed), case studies. **When stuck:** research all sources → solve → the solution becomes a skill in its basket. **Quality gate (no shortcut learning):** a tip becomes a skill only after it is checked against the official docs or two independent good sources, tested in a sandbox or small live test, and written with its source, date and confidence; tips that fail are recorded as \"doesn't work for us\". **Practice tasks with deadlines** (e.g. get a new page indexed within 3 days, a long-tail keyword into Google's top 10, a test campaign under the CPA cap) graded in their appraisals. **Paid data tools** (e.g. an SEO suite) proposed with cost and reason — the owner approves and pays."
+   "updated": "2026-10-20",
+   "x": "**Continuous learning engine — Tirondaj (ads) and Doot (SEO/marketing) are the two power agents.** They learn without stopping from: official docs (Meta, Google, TikTok, Search Central), the big practitioner blogs on SEO and paid ads, Reddit communities (PPC, Facebook ads, SEO, e-commerce), YouTube tutorials incl. South-Asian e-commerce channels (read through transcripts), LinkedIn and Facebook posts of known specialists (where readable; through a paid tool if needed), case studies. **When stuck:** research all sources → solve → the solution becomes a skill in its basket. **Quality gate (no shortcut learning):** a tip becomes a skill only after it is checked against the official docs or two independent good sources, tested in a sandbox or small live test, and written with its source, date and confidence; tips that fail are recorded as \"doesn't work for us\". **Practice tasks with deadlines** (e.g. get a new page indexed within 3 days, a long-tail keyword into Google's top 10, a test campaign under the CPA cap) graded in their appraisals. **Paid data tools** (e.g. an SEO suite) proposed with cost and reason — the owner approves and pays. **Updated 20 Oct 02:01 (CN-004): skills the learning engine adds or updates are exported to `docs/agents/live/` the same way (PR 577).**"
   },
   "586": {
    "firstSeen": "2026-10-19",
@@ -5546,7 +5635,7 @@
    "x": "Set tier rules from Smart Rules: any 2 for X, any 3 for Y"
   }
  },
- "seq": 93,
+ "seq": 97,
  "stages": {
   "S00": {
    "firstSeen": "2026-10-18",

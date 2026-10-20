@@ -690,3 +690,51 @@ Combo is the biggest-selling section and carries the most offers. **Deep researc
 - Owner: this chat = planning/commands; actual code runs in his Claude project on repo `mehadih32/Extas-Ecommerce-Site`. 4-piece prices stay as demo default. Staging on new.extas.com.bd (owner agreed after explanation), WordPress stays on extas.com.bd until go-live.
 - Tested: cloud session cannot reach VM port 22 → **CN-003**: self-hosted GitHub runner on the VM (owner installs once via Azure Run command).
 - Done: Session 0 — repo holds docs/ (BLUEPRINT V2.1 final, register 604, owner docs, QA tools, agents, demo V12 + src), CLAUDE.md, docs/START-HERE.md, PROGRESS.md, BLOCKED.md, .claude/agents (stage-builder, qa-gate, infra-prohori), infra/bootstrap/install-runner.sh, docs/owner/RUNNER-SETUP.md.
+
+## Note 51 — 20 Oct 03:54 · Owner desktop review of V12 (home, category, product, bag drawer, bag page, checkout)
+Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G = bag page, K = checkout). Rule: phone must not change except where noted; every new style is an extra backend option, current stays default.
+- H1 hero: text stays where it starts; the coloured board behind/after the text moves 110–115 px right, same proportion; text under "Winter 2026" may be optimised.
+- H2 hero: proper gap between "Shop all" and "Shop sets"; "Cash on delivery all over Bangladesh" and "72-hour exchange" sit neatly under the two buttons; 72-hour line a little longer.
+- H3 Journal out of the desktop header; a highlighted Journal/Blog link in the footer.
+- H4 header has too many menus → propose a smarter arrangement (options).
+- H5 EXTAS wordmark 1–2 sizes bigger with shape → 8–10 text-logo options for the owner to pick.
+- H6 mega menu covers the whole screen → compact dropdown under the item; sub-category hover opens its own flyout; study 2–3 international references.
+- H7 combo section: 3 top + 3 bottom with "Build your own set" as a tall tile spanning both rows; all text editable in backend.
+- H8 Find your size texts editable; size-finder categories come from data (more categories → more tiles).
+- H9 backend switch to turn the row shadow/fade off and return to the earlier box style.
+- H10 Build-your-own-set prices highlighted.
+- H11 Shop the look: bolder item names, bigger item prices, "Together" bigger, struck price red, "You save" highlighted (phone too, allowed).
+- H12 home Journal block: 4 fixed posts, no arrows/slider; a new post takes its place in order (newest first).
+- H13 desktop footer is broken: alignment, social icons missing (restore), COD logo nicer; layout to follow the owner's reference image (coming).
+- C1 category FAQ ("Polo for men in Bangladesh"): fill the empty side creatively. C2 easy English everywhere. C3 explain why Panjabi/Shirt/Trouser/Hoodie pages differ from Polo/T-shirt (unify if wrong). C4 bundle box on category looks odd → standardise. C5 more demo products in thin categories (2–3 rows), sets incl. tracksuit and hoodie sets.
+- P1 desktop gallery 75–80 px shorter, whole image inside the first screen, no big empty top/bottom. P2 "How to care for this" as an article card with read time. P3 review cards equal height. P4 Q&A left panel's fixed "I am 5'8 70 kg" example confuses → smart, grows with the right column, adds value. P5 bottom: one slider ("Goes well with…" in better words) + one fixed grid of 4 that swaps every 30–40 s; recently-viewed never empty (fill with related). P6 sticky add-to-bag bar: fill the empty middle usefully. P7 CRITICAL zoom: full image must be reachable (pan to every edge / fit view). P8 thumbnails: matching background, clearly more images.
+- B1 drawer "Goes well with it" better words, fill the space with more products. B2 free-delivery lines stronger. B3 drawer shows only the item just added → new Style B showing all bag items, newest on top (current = default; backend switch; compare in reports).
+- G1 "Add one more and save" full-width colour band → compact. G2 the tier/plan area too big → compact, specific names. G3 "You may also like" + "Take 4 / Choose your plan" confusing → rework; new style only as an option after the owner sees the plan.
+- K1 form column −70 px, summary card +60 px, gap +10 px (both layouts as backend options). K2 confirmation box needs a gap above the bar. K3 "+2 more items" and total item count highlighted. K4 WhatsApp help box: roomier, coloured border, outside the checkout card (test 5–6 items). K5 order message card more bottom space. K6 delivery note always open, bigger text. K7 SMS and WhatsApp ticks side by side. K8 cotton upsell bigger. K9 payment options sometimes one line, sometimes boxes → flaky bug; boxes are right; must allow choosing bKash etc.
+- Owner asked: fix now with agents, then QA agents on checkout and bag page, then desktop review agents; add our own findings.
+- 03:57 owner sent the footer reference image (owner-fix/A/footer-reference.png): take its LAYOUT for the desktop footer, content from ours.
+- 04:05 K10 (owner): checkout accepts a wrong phone number (even 1 digit) → strict BD mobile validation (01[3-9]XXXXXXXX, +880 normalised, Bengali digits) on checkout and all phone inputs incl. footer Join; sent to the bag/checkout and footer agents.
+- 04:10 K10 rule (owner): never block a real number for how it was typed — normalise first (Bengali/mixed digits, strip symbols/spaces, drop 00880/880/88, doubled 00 → one 0, add missing 0), then check 01[3-9]XXXXXXXX; show the cleaned number back; one shared helper everywhere; must also go into the real build (S04).
+- 04:13 owner: fix every bug, said or unsaid; check phone too; full backend audit (design, completeness vs a standard e-commerce backend, bugs, unclear text, ERP stock/accounts/report consistency, invoice design). → 4th agent started on admin audit (qa/ADMIN-AUDIT.md); phone-wide audit to run after the three desktop agents finish (avoid clashing edits).
+- 04:16 owner: (a) 5–7 invoice designs he asked for earlier — never delivered → added to the backend agent (setting 'Invoice template', sheet). (b) Full simulation: ~20 real-like orders across all categories/combos/sets, mixed basket sizes, one customer several orders, through to delivery; backend reconciles; real daily P&L incl. COGS, courier, gateway, ads, employee and other costs; frontend vs backend mismatches fixed → qa/SIMULATION-REPORT.md (for the morning).
+- 04:18 owner — SIMULATION SPEC (PENDING: run after the 3 storefront agents finish, on the fixed build):
+  - minimum 30 orders, like a real 50-order day; every category, combos, auto-pair combos, build-your-own sets, sets, sale; basket sizes 1 / 2–3 / 4–5; one customer places several orders; Dhaka / sub-urban / outside; COD + online.
+  - real-life problems: fraud and duplicate patterns (changed phone same address, re-order in transit, several same-day orders that should ship together), wrong/odd phone formats, a fake order, a cancel, a size exchange, a defect exchange, a return request (policy: no returns after delivery, only exchange for size/defect — handled per policy), courier failed delivery, partial issues.
+  - each simulated customer gets an account: re-orders from the account, exchange request, return request, opens support, downloads invoices; an invoice is generated for every order; a few sent on WhatsApp (mock).
+  - a separate OPS agent works the backend like staff: review fraud flags, confirm/decline with reasons, book courier, deliver, handle exchanges/returns/support; every decision logged with the reason.
+  - final report: orders, statuses, reasons, revenue, COGS, courier, gateway, ads, employee + other expenses, gross/net P&L, by style/category/combo; independent recalculation vs admin reports, mismatches fixed and re-run; Bengali summary; screenshots → qa/SIMULATION-REPORT.md.
+- 04:23 owner — SIMULATION SPEC additions (still PENDING until the storefront fixes land; nothing skipped):
+  - **50 orders**, not 30.
+  - Every step logs problems + the fix: placing orders, PDF/invoice, invoice print with 5–6 items, courier sticker size with 6 different items, courier booking, support, receiving returns, return stock matching, P&L.
+  - Customer-side UX notes and "this option would help"; employee-side notes from backend staff.
+  - Judgement from 6 angles: technical, customer, employee, CEO, owner, supplier.
+  - Communication: email, SMS, WhatsApp to the customer (mock); support inbox receives every channel.
+  - YouTube video embeds on some products — test them.
+  - Use the owner's named agents (Prohori, Bhandari, Sawdagor, Shilpi, Doot, Gyani, Tirondaj) as the working team.
+  - Everything learned becomes a skill (docs/agents/skills/<agent>/, synced to the repo and to the site's AI panel skills), including neighbouring cases.
+  - Bring anything that can be started now forward; skip nothing.
+- 04:23 code project status (repo): S0A 12/12 live; S00 merged so far: 11, 12, 13, 17, 491, 492, 493, 494, 496, 510, 603 (+ first deploy live at 03:03); next 495, 500, 508, 509 → 14, 15, 16, 18. One agent alone by rule until S00 ends, then 2–3 in parallel. The project used CN-007 for the preview-password rotation → the owner's desktop review becomes CN-008 when filed.
+- 05:xx category/product agent done (fixB.html). Noticed in its sheets: a 'Demo controls' pill shows bottom-left on the storefront — check it is hidden for normal visitors (demo helpers rule) in the final QA pass.
+- admin gap screens built (fixE.html, 49/49 test incl. P&L hand-sum match). Leftover for final QA: 4 Bengali leaks in English mode from 85-admin-combos.js and 89w-owner-c.js; Demo controls pill visibility.
+- home/header/footer agent done (fixA.html). Final QA leftover: on desktop the 'Demo controls' pill overlaps the footer copyright line (bottom-left) — move/hide for visitors.
+- container restart killed the desktop QA reviewer and the phone audit; desktop QA relaunched alone (one browser, no background jobs); phone audit queued to run right after it — sequential to avoid another restart. Then the 50-order simulation.

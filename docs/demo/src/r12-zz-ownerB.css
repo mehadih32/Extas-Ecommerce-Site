@@ -1,0 +1,171 @@
+/* =====================================================================
+   r12-zz-ownerB.css — owner's desktop review, 20 Oct (Note 51)
+   Category pages (C1–C6) and the product page (P1–P8).
+   Rules in the big @media (min-width:1024px) block cannot reach a phone.
+   The ONE block outside it is the product video tile (C6), which only
+   exists on products that have a video link (demo data).
+   Page modules inject their CSS after the r12 files, so rules here are
+   anchored on #app / body / html for weight. Options live in
+   89x-owner-b.js (Admin › Settings › "Category page …" / "Product page …").
+   ===================================================================== */
+
+/* ---------- C6 · product video tile (phone and computer) ---------- */
+.pdp-vbtn{display:block;width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;position:relative;color:inherit;font:inherit;text-align:inherit}
+.pdp-vposter{position:relative}
+.pdp-vposter>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pdp-vplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:72px;height:72px;border-radius:50%;
+  background:rgba(20,20,18,.74);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.25);
+  transition:transform .15s ease,background .15s ease}
+.pdp-vplay svg{margin-left:4px;fill:currentColor}
+.pdp-vbtn:hover .pdp-vplay,.pdp-vbtn:focus-visible .pdp-vplay{transform:translate(-50%,-50%) scale(1.06);background:var(--brand)}
+.pdp-vlbl{position:absolute;left:12px;bottom:12px;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;
+  background:rgba(20,20,18,.72);color:#fff;font-size:12.5px;font-weight:700;line-height:1}
+.pdp-vlbl svg{fill:currentColor}
+.pdp-vbox{position:relative;background:#000}
+.pdp-vbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.pdp-vthumb .pdp-vplay{width:30px;height:30px;box-shadow:none}
+.pdp-vthumb .pdp-vplay svg{margin-left:2px}
+
+@media (min-width:1024px){
+
+/* ---------- C1 · the card beside the category questions ---------- */
+#app .cat-info .ob-slot{margin-top:28px;border:1px solid var(--line);border-radius:var(--card-radius);background:var(--surface);overflow:hidden}
+#app .ob-slot-size{display:flex;align-items:center;gap:16px;padding:20px 22px}
+#app .ob-slot-ic{width:46px;height:46px;flex-shrink:0;border-radius:50%;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center}
+#app .ob-slot-txt{flex:1;min-width:0}
+#app .ob-slot-h{font-family:var(--font-display);font-weight:700;font-size:16px;line-height:1.3;color:var(--ink)}
+#app .ob-slot-txt p{margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--text2)}
+#app .ob-slot-btn{flex-shrink:0;white-space:nowrap;gap:6px}
+#app .ob-slot-why{padding:18px 22px 20px;background:var(--brand-tint)}
+#app .ob-slot-size+.ob-slot-why{border-top:1px solid var(--line)}
+#app .ob-slot-why ul{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+#app .ob-slot-why li{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;line-height:1.35;color:var(--ink)}
+#app .ob-slot-why li>span{width:30px;height:30px;flex-shrink:0;border-radius:50%;background:var(--surface);color:var(--brand);display:flex;align-items:center;justify-content:center}
+#app .ob-slot-combo{display:flex;align-items:center;gap:16px;padding:14px 18px 14px 14px;color:var(--ink);text-decoration:none}
+#app .ob-slot-combo .pimg{width:96px;flex-shrink:0;border-radius:10px}
+#app .ob-slot-combo .pimg-label{display:none}
+#app .ob-slot-cb{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#app .ob-slot-combo:hover{background:var(--brand-tint)}
+
+/* ---------- C4 · one standard look for the category set box ---------- */
+#app .cat-banner.cat-bn-std{padding:22px 24px 20px;margin:8px 0}
+#app .cat-bn-std .cat-bn-row{gap:24px;align-items:center}
+#app .cat-bn-std .cat-bn-top{align-items:center;gap:14px}
+#app .cat-bn-std .cat-banner-ico{width:46px;height:46px}
+#app .cat-bn-std .eyebrow{font-size:11.5px;letter-spacing:.12em;font-weight:700;opacity:.8}
+#app .cat-bn-tiers{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+#app .cat-bn-tier{display:inline-flex;align-items:baseline;gap:5px;padding:7px 14px;border-radius:999px;font-size:15px;line-height:1.2;white-space:nowrap;
+  background:color-mix(in srgb, var(--brand-ink) 12%, transparent);border:1px solid color-mix(in srgb, var(--brand-ink) 26%, transparent)}
+#app .cat-bn-tier b{font-weight:600;opacity:.9}
+#app .cat-bn-tier .cat-nw{font-family:var(--font-display);font-weight:800;font-size:16px}
+#app .cat-bn-std .cat-bn-sub{font-size:13.5px;line-height:1.5;margin-top:12px;opacity:.88}
+#app .cat-bn-std>.cat-bn-row .btn{min-height:46px;padding:0 22px;font-size:15px;font-weight:700}
+#app .cat-bn-std .cat-bn-picks{margin-top:18px;padding-top:14px}
+#app .cat-bn-std .cat-bn-pickh{font-size:11.5px;letter-spacing:.12em;margin-bottom:10px}
+#app .cat-bn-std .cat-pick{flex:0 0 140px;width:140px;margin:0 12px 0 0}
+#app .cat-bn-std .cat-pick .pimg{border-radius:8px}
+#app .cat-bn-std .cat-pick .cat-pick-n{font-size:13px;font-weight:600;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#app .cat-bn-std .cat-pick .cat-pick-p{font-size:12.5px;margin-top:2px}
+#app .cat-bn-std .cat-sl{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 calc(100% - 24px),transparent)}
+
+/* ---------- P1 · a shorter main photo: the whole picture in the first screen ---------- */
+html.ob-gal #app .pdp-page .pdp-galT1 .pdp-main{container-type:inline-size}
+html.ob-gal #app .pdp-page .pdp-galT1 .pdp-main .pimg{aspect-ratio:auto;height:max(380px, min(calc(125cqw - var(--ob-gtrim, 78px)), calc(100vh - 170px)))}
+html.ob-gal #app .pdp-page .pdp-galT1 .pdp-main .pimg>svg.garment{max-height:90%}
+html.ob-gal #app .pdp-page .pdp-galT1 .pdp-main .pimg>img{width:100%;height:100%;object-fit:contain}
+
+/* ---------- P8 · thumbnails: the photo's own background, clear hover and active, "+N" ---------- */
+#app .pdp-page .pdp-galT1 .pdp-thumb{border:0;background:transparent;border-radius:10px;box-shadow:0 0 0 1px var(--line);
+  transition:opacity .15s ease,box-shadow .15s ease,transform .15s ease}
+#app .pdp-page .pdp-galT1 .pdp-thumb .pimg{border-radius:10px}
+#app .pdp-page .pdp-galT1 .pdp-thumb:hover{box-shadow:0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent);transform:translateY(-1px)}
+#app .pdp-page .pdp-galT1 .pdp-thumb.on{transform:none;box-shadow:0 0 0 2px var(--brand),0 4px 10px rgba(20,20,18,.10)}
+#app .pdp-page .pdp-galT1 .pdp-thumb:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+#app .pdp-page .pdp-galT1 .pdp-thumb.ob-hid{display:none!important}
+#app .pdp-page .pdp-galT1 .pdp-thumb.ob-more::after{content:attr(data-more);position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;
+  border-radius:10px;background:rgba(20,20,18,.55);color:#fff;font-family:var(--font-display);font-weight:800;font-size:19px}
+#app .pdp-page .pdp-galT1 .pdp-thumb.ob-more.on::after{background:rgba(20,20,18,.35)}
+/* the photo on screen is one of the hidden ones: the "+N" tile shows as the active one */
+#app .pdp-page .pdp-galT1 .pdp-thumbs:has(.ob-hid.on) .pdp-thumb.ob-more{box-shadow:0 0 0 2px var(--brand),0 4px 10px rgba(20,20,18,.10)}
+@media (prefers-reduced-motion:reduce){#app .pdp-page .pdp-galT1 .pdp-thumb{transition:none}}
+
+/* C6 · on the two-column gallery (T2) the video runs the full width, 16:9, under the photos */
+#app .pdp-page .pdp-galT2>.pdp-vtile{grid-column:1/-1}
+#app .pdp-page .pdp-galT2>.pdp-vtile .pimg{aspect-ratio:16/9}
+
+/* small fix: "any 2 colours for ৳1,500" lost its spaces between the parts */
+#app .pdp-page .pdp-nudge .pdp-nw{white-space:pre}
+
+/* ---------- P2 · "How to care for this" as an article card ---------- */
+#app .pdp-page .pdp-d .bf-care:has(+ .ob-care){display:none}
+#app .pdp-page .ob-care{display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--card-radius);
+  background:var(--surface);color:var(--ink);text-decoration:none;transition:border-color .15s ease,box-shadow .15s ease}
+#app .pdp-page .ob-care:hover{border-color:var(--brand);box-shadow:0 6px 16px rgba(20,20,18,.06)}
+#app .pdp-page .ob-care-i{width:50px;height:50px;flex-shrink:0;border-radius:12px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center}
+#app .pdp-page .ob-care-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#app .pdp-page .ob-care-l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--text2)}
+#app .pdp-page .ob-care-t{font-size:15px;font-weight:700;line-height:1.3;color:var(--ink);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#app .pdp-page .ob-care-m{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text2)}
+#app .pdp-page .ob-care-go{flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:999px;background:var(--brand-tint);
+  color:var(--brand);font-size:14px;font-weight:700}
+
+/* ---------- P3 · review cards the same height ---------- */
+html.ob-req #app .pdp-page .pdp-revlist{align-items:stretch}
+html.ob-req #app .pdp-page .pdp-revlist>article{display:flex;flex-direction:column;height:auto}
+
+/* ---------- P4 · Q&A left box: a quick size check that grows with the right column ---------- */
+#app .pdp-page .split.ob-qa{align-items:stretch}
+#app .pdp-page .ob-qh{display:flex;flex-direction:column;gap:16px}
+#app .pdp-page .ob-qh-hd{display:flex;align-items:flex-start;gap:12px}
+#app .pdp-page .ob-qh-ic{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center}
+#app .pdp-page .ob-qh-hd .h3{margin:0 0 2px}
+#app .pdp-page .ob-qh-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr);gap:12px;align-items:end}
+#app .pdp-page .ob-qh-f{display:flex;flex-direction:column;gap:6px;min-width:0}
+#app .pdp-page .ob-qh-f select{height:46px;padding-top:0;padding-bottom:0;line-height:44px}
+#app .pdp-page .ob-qh-res{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;background:var(--brand-tint);min-height:68px}
+#app .pdp-page .ob-qh-size{display:flex;flex-direction:column;align-items:center;min-width:52px;line-height:1.1}
+#app .pdp-page .ob-qh-size b{font-family:var(--font-display);font-weight:800;font-size:28px;line-height:1.05;color:var(--brand)}
+#app .pdp-page .ob-qh-why{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+#app .pdp-page .ob-qh-why .xs{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#app .pdp-page .ob-qh-note{display:flex;align-items:center;gap:6px;margin-top:-4px}
+#app .pdp-page .ob-qh-note svg{color:var(--brand)}
+#app .pdp-page .ob-qh-wa{margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+
+/* ---------- P5 · one slider + a grid of 4 that changes every few seconds ---------- */
+#app .pdp-page .ob-rv-grid{transition:opacity .22s ease}
+#app .pdp-page .ob-rv-grid.ob-fade{opacity:0}
+#app .pdp-page .ob-rv-dots{display:inline-flex;gap:6px;align-items:center}
+#app .pdp-page .ob-rv-dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:width .2s ease,background .2s ease}
+#app .pdp-page .ob-rv-dots i.on{width:20px;border-radius:4px;background:var(--brand)}
+@media (prefers-reduced-motion:reduce){#app .pdp-page .ob-rv-grid{transition:none}}
+
+/* ---------- P6 · sticky buy bar: rating, delivery and saving in the middle ---------- */
+#app .pdp-page .dkb-bar .dkb-id{flex:0 0 auto;max-width:380px}
+#app .pdp-page .dkb-bar .dkb-nm{text-overflow:ellipsis}
+/* the chips that do not fit wrap onto a hidden second line, so one drops out whole (last first) — never cut */
+#app .pdp-page .ob-bm{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;align-items:center;align-content:flex-start;justify-content:center;gap:12px 10px;height:30px;overflow:hidden}
+#app .pdp-page .ob-bm-i{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;line-height:18px;height:30px;box-sizing:border-box;color:var(--ink);padding:6px 12px;border-radius:999px;background:var(--brand-tint)}
+#app .pdp-page .ob-bm-i svg{color:var(--brand);flex-shrink:0}
+#app .pdp-page .ob-bm-r svg{color:var(--gold, #C79A3A)}
+#app .pdp-page .ob-bm-save{font-size:12.5px;font-weight:800;color:var(--sale);margin-left:2px}
+#app .pdp-page .ob-bm-i{flex-shrink:0}
+@media (max-width:1279px){#app .pdp-page .ob-bm-c{display:none}}
+@media (max-width:1180px){#app .pdp-page .ob-bm{display:none}}
+@media (max-width:1150px){#app .pdp-page .ob-bm-d .text2{display:none}}
+
+/* ---------- P7 · desktop photo viewer: whole picture first, every edge reachable ---------- */
+body .zm.zm-dk .zm-trk{position:absolute;top:64px;bottom:104px;left:0;right:0;flex:none}
+body .zm.zm-dk .zm-slide{overflow:hidden}
+body .zm.zm-dk .zm-pan{flex:none;width:auto;max-height:none;display:block}
+body .zm.zm-dk .zm-pan img{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;display:block}
+body .zm.zm-dk .zm-draw{width:100%;height:100%;aspect-ratio:auto;max-height:none;border-radius:6px}
+body .zm.zm-dk .zm-draw svg{width:78%;height:90%}
+body .zm.zm-dk .zm-top{height:64px;padding:0 14px 0 22px}
+body .zm.zm-dk .zm-tools{pointer-events:auto;display:flex;gap:6px;margin-left:auto;margin-right:12px}
+body .zm.zm-dk .zm-tb{height:44px;min-width:44px;padding:0 12px;border-radius:22px;border:0;background:rgba(255,255,255,.14);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+body .zm.zm-dk .zm-tb:hover{background:rgba(255,255,255,.26)}
+body .zm.zm-dk .zm-tb:focus-visible,body .zm.zm-dk .zm-x:focus-visible{outline:2px solid #fff;outline-offset:2px}
+body .zm.zm-dk .zm-hint{bottom:112px}
+
+}

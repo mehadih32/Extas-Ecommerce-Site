@@ -109,6 +109,8 @@ function acb_comboCard(c){
       '<div style="margin-top:auto">'+
         '<div class="acb-row"><span class="small bold">Active</span>'+acb_switch(c.active, 'acb-active', c.id, c.name+' active')+'</div>'+
         '<div class="acb-row"><span class="small">Auto-apply when the bag matches</span>'+acb_switch(c.autoApply, 'acb-auto', c.id, 'Auto-apply '+c.name+' when the bag matches')+'</div>'+
+        /* K11: one-product combos are colour pairs; the owner may let the same colour count */
+        ((c.items||[]).length>1 && (c.items||[]).every(function(x){ return x===c.items[0]; }) ? '<div class="acb-row"><span class="small">একই রঙ দুইটা নিলেও কম্বো দাম</span>'+acb_switch(c.sameColour===true, 'acb-samecol', c.id, 'একই রঙ দুইটা নিলেও কম্বো দাম — '+c.name)+'</div>' : '')+
         '<div class="acb-row" style="padding-bottom:0"><a class="link row" style="gap:4px;text-decoration:none" href="#/combo/'+c.id+'">'+ico('eye',15)+'See the combo page</a><span class="xs muted">/combo/'+esc(c.id)+'</span></div>'+
       '</div>'+
     '</div>'+
@@ -144,6 +146,7 @@ INPUT['acb-price'] = function(el){
   var t = document.getElementById('acb-save-'+id); if(t) t.innerHTML = acb_saveText(shown);
 };
 ACT['acb-active'] = function(el){ var id = el.getAttribute('data-id'), c = COMBO(id); acb_setCombo(id, {active:!c.active}); rerender(); toast(c.name+(c.active?' turned off':' is active')); };
+ACT['acb-samecol'] = function(el){ var id = el.getAttribute('data-id'), c = COMBO(id); acb_setCombo(id, {sameColour:c.sameColour!==true}); rerender(); toast(c.name+(c.sameColour!==true ? ' — একই রঙ দুইটা নিলেও এখন কম্বো দাম' : ' — শুধু আলাদা রঙ নিলে কম্বো দাম')); };
 ACT['acb-auto'] = function(el){ var id = el.getAttribute('data-id'), c = COMBO(id); acb_setCombo(id, {autoApply:!c.autoApply}); rerender(); toast(!c.autoApply ? c.name+' applies by itself when the bag matches' : c.name+' no longer applies by itself'); };
 INPUT['acb-tier'] = function(el){
   var id = el.getAttribute('data-id'), k = el.getAttribute('data-n'), r = acb_rule(id); if(!r) return;

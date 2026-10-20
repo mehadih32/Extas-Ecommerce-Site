@@ -37,9 +37,17 @@ function menuDefault(){
   items.push({id:'combos', kind:'combos', label:'Combos', href:'#/combos', on:true, desk:true, phone:false});
   items.push({id:'sets', kind:'sets', label:'Sets', phoneLabel:'Build your own set', href:'#/set', on:true, desk:true, phone:true});
   items.push({id:'setsPhone', kind:'setsPhone', label:'Sets & combos', href:'#/combo/polo-duo', on:true, desk:false, phone:true});
-  items.push({id:'journal', kind:'journal', label:'Journal', href:'#/journal', icon:'doc', on:true, desk:true, phone:true});
+  /* H3 (owner 20 Oct): Journal leaves the desktop row (it is highlighted in the footer's EXTAS column); the phone menu keeps it */
+  items.push({id:'journal', kind:'journal', label:'Journal', href:'#/journal', icon:'doc', on:true, desk:false, phone:true});
   return {
     items:items,
+    /* H4 · how the desktop row is arranged (Site builder › Menus):
+         'all'      every live category in the row (default, as before)
+         'catsMore' New in + the first `deskMain` categories, the rest under More
+         'shop'     one "Shop" dropdown with every category, then New in · Combos · Sets · Sale
+         'priority' priority-plus: the row keeps roomy gaps and folds the lowest items into More
+       H6 · megaStyle: 'drop' compact dropdown under the item + side flyouts (default) · 'panel' the old full-width panel */
+    deskLayout:'all', deskMain:4, saleLabel:'Sale', shopLabel:'Shop', megaStyle:'drop',
     quick:[{id:'search', on:true}, {id:'bag', on:true}, {id:'wish', on:true}, {id:'account', on:true}],
     help:[{id:'h1', label:'Track my order', href:'#/account', icon:'truck', on:true}, {id:'h2', label:'Delivery', href:'#/page/delivery', icon:'truck', on:true},
       {id:'h3', label:'Exchange & returns', href:'#/page/exchange', icon:'swap', on:true}, {id:'h4', label:'Questions & answers', href:'#/page/faq', icon:'info', on:true},
@@ -86,16 +94,39 @@ function deskNavItems(){
     else if(x.kind==='journal'){ if(DESK_NAV.journal && vis(x)) items.push({id:'journal', label:x.label || 'Journal', bn:x.bn, href:x.href || '#/journal', sec:'/journal', mega:own ? 'cat' : ''}); }
     else if(x.kind==='link' && vis(x) && x.href){ var h = String(x.href); items.push({id:x.id, label:x.label || '', bn:x.bn, href:h, sec:/^#\//.test(h) ? h.slice(1).split('?')[0] : '', mega:own ? 'cat' : '', fold:true}); }
   });
+  return deskNavArrange(items);
+}
+/* H4 (owner 20 Oct: "too many menus") · the same items, arranged the way the
+   owner picks in Site builder › Menus › "Desktop menu arrangement". 'all' is
+   the row as it was; nothing is removed from the menu tree, only placed. */
+function deskNavArrange(items){
+  var M = menuData(), L = M.deskLayout || 'all';
+  if(L === 'catsMore'){
+    var n = Math.max(1, Math.min(12, +M.deskMain || 4)), k = 0;
+    items.forEach(function(x){ if(x.cat){ k++; if(k > n) x.fixFold = true; } });
+  } else if(L === 'shop'){
+    var cats = items.filter(function(x){ return x.cat; }), rest = items.filter(function(x){ return !x.cat && x.id !== 'more'; });
+    var shop = {id:'shop', label:M.shopLabel || 'Shop', bn:M.shopBn, href:'#/c/new?all=1', sec:'', mega:cats.length ? 'shop' : '', shopCats:cats.map(function(x){ return x.cat; })};
+    var out = [shop], newi = rest.filter(function(x){ return x.id === 'new'; })[0];
+    if(newi){ newi.mega = ''; out.push(newi); }
+    rest.forEach(function(x){ if(x !== newi) out.push(x); });
+    if(M.saleLabel !== '' && DB.products.some(function(p){ return p.compareAt > p.price; })) out.push({id:'sale', label:M.saleLabel || 'Sale', bn:M.saleBn, href:'#/c/new', act:'desk-sale', sec:''});
+    items = out;
+  }
+  items.layout = L;
   return items;
 }
 function deskNavHTML(sec){
   var chev = '<svg class="nav-chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
-  return deskNavItems().map(function(x){
+  var list = deskNavItems(), fixed = list.some(function(x){ return x.fixFold; });
+  return list.map(function(x){
     var here = x.sec ? sec===x.sec : (x.more||[]).some(function(id){ return sec==='/c/'+id; });
+    if(x.id==='shop') here = (x.shopCats||[]).some(function(id){ return sec==='/c/'+id; });
+    if(x.id==='more' && !here) here = fixed && list.some(function(y){ return y.fixFold && sec===y.sec; });
     var mega = DESK_NAV.mega && x.mega;
     var label = (ST.lang==='bn' && x.bn) ? x.bn : t(x.label);
-    if(x.id==='more' && !(x.more||[]).length) return '<a class="nav-i nav-more" href="#/c/new?all=1" data-nav="more" data-mega="more" aria-haspopup="true" aria-expanded="false" hidden>'+esc(t(x.label || 'More'))+chev+'</a>';
-    return '<a class="nav-i'+(here?' on':'')+(x.id==='more'?' nav-more':'')+'" href="'+esc(x.href)+'" data-nav="'+esc(x.id)+'"'+(x.fold?' data-fold="1"':'')+
+    if(x.id==='more' && !(x.more||[]).length && !fixed) return '<a class="nav-i nav-more" href="#/c/new?all=1" data-nav="more" data-mega="more" aria-haspopup="true" aria-expanded="false" hidden>'+esc(t(x.label || 'More'))+chev+'</a>';
+    return '<a class="nav-i'+(here?' on':'')+(x.id==='more'?' nav-more':'')+(x.fixFold?' nav-folded':'')+'" href="'+esc(x.href)+'" data-nav="'+esc(x.id)+'"'+(x.fold?' data-fold="1"':'')+(x.fixFold?' data-fixfold="1"':'')+(x.act?' data-act="'+esc(x.act)+'"':'')+
       (mega?' data-mega="'+x.mega+'" aria-haspopup="true" aria-expanded="false" aria-controls="mega-panel"':'')+(here?' aria-current="page"':'')+'>'+
       esc(label)+(mega?chev:'')+'</a>';
   }).join('');
@@ -168,6 +199,11 @@ function sbLbl(x, dflt, raw){
 function sbLogo(where){
   var h = hdrData().logo || {};
   var src = (where==='phone' && h.imgPhone) ? h.imgPhone : h.img;
+  /* H5 (owner 20 Oct) · "Logo style" 1–10: a shaped text wordmark on the desktop
+     header and the desktop footer ('footer-d'); 0 = the wordmark as it was. The
+     phone header and the phone footer never change. An uploaded picture wins. */
+  if(!src && (where==='desk' || where==='footer-d') && +h.style > 0 && typeof logoStyled==='function') return logoStyled(h.text || 'EXTAS', +h.style);
+  if(where==='footer-d') where = 'footer';
   if(!src) return esc(h.text || 'EXTAS');
   var ht = where==='phone' ? (+h.hPhone || 28) : (where==='footer' ? (+h.hFooter || 32) : (+h.hDesk || 36));
   return '<img class="sb-logo-img" src="'+esc(src)+'" alt="'+esc(h.alt || h.text || '')+'" style="--sb-lh:'+Math.max(16, Math.min(ht, where==='phone' ? 44 : 60))+'px">';
@@ -197,7 +233,7 @@ function hdrDefault(){
   return {
     announce:{on:true, rotate:5, bg:'', fg:'', msgs:[{id:'a1', text:T.en.announce, bn:T.bn.announce, href:'', start:'', end:'', on:true}]},
     icons:[{id:'whatsapp', on:true}, {id:'search', on:true}, {id:'wish', on:true}, {id:'account', on:true}, {id:'bag', on:true}],
-    logo:{text:'EXTAS', img:'', imgPhone:'', alt:'', hDesk:36, hPhone:28, hFooter:32},
+    logo:{text:'EXTAS', img:'', imgPhone:'', alt:'', hDesk:36, hPhone:28, hFooter:32, style:0},   /* style: H5 text-logo style 0–10 (0 = as it was) */
     /* one slogan for header and footer; headerText / the footer's own field override it per place */
     slogan:{text:'Menswear · Made in Bangladesh', bn:'', short:'Made in Bangladesh', shortBn:'', on:true,    /* owner 22:14: slogan under the logo, ON by default (Site builder › Header to switch off) */
       header:true, phone:true, desk:true, headerText:'', headerBn:''}
@@ -264,7 +300,7 @@ function storeHeader(cur){
       '<a class="logo hide-m'+(sD?' sb-hasslog':'')+'" href="#/">'+sbLogo('desk')+sD+'</a>'+
     '</div>'+
     '<a class="logo hide-d'+(sP?' sb-hasslog':'')+'" href="#/">'+sbLogo('phone')+sP+'</a>'+
-    '<nav class="nav-d" aria-label="Main">'+nav+'</nav>'+
+    '<nav class="nav-d" aria-label="Main"'+(DESK_NAV.fromData ? ' data-layout="'+esc(menuData().deskLayout || 'all')+'"' : '')+'>'+nav+'</nav>'+
     '<div class="row hdr-r" style="gap:2px">'+icons+
     '</div>'+
   '</div></header>';
@@ -417,21 +453,28 @@ var FOOTER_DESK = { on:true, combosLink:true };
 /* PR 598 · the footer's data. Defaults = the footer as it was. */
 function ftrDefault(){
   var shop = FOOTER_SHOP.map(function(x, i){ return typeof x === 'string' ? {id:'s'+i, cat:x, on:true} : {id:'s'+i, href:x[0], label:x[1], icon:x[2], on:true}; });
-  shop.push({id:'combos', href:'#/combos', label:'Combos', icon:'tag', dev:'desk', on:true});
-  var L = function(id, href, label, icon, act){ var o = {id:id, href:href, label:label, icon:icon, on:true}; if(act) o.act = act; return o; };
+  /* H13 (owner's reference footer, 20 Oct): the desktop columns are SHOP New in · Polos · Shirts · Panjabi · Sets,
+     HELP Track order · Size guide · Delivery · Exchange · FAQ, EXTAS Our story · Journal (highlighted) · Contact ·
+     Privacy · Terms. The phone footer keeps every link it had: the extra ones are "Phone only" (dev), the short
+     desktop names are `dlabel`, `dpos` places a link on the desktop, `hl` highlights it. Desktop-only Combos is off. */
+  shop.forEach(function(x){ if(x.cat === 'tshirts') x.dev = 'phone'; });
+  shop.push({id:'combos', href:'#/combos', label:'Combos', icon:'tag', dev:'desk', on:false});
+  var L = function(id, href, label, icon, act, more){ var o = {id:id, href:href, label:label, icon:icon, on:true}; if(act) o.act = act; if(more) for(var k in more) o[k] = more[k]; return o; };
   return {
+    /* H13 · desktop footer design: 'ref' = the owner's reference layout (default) · 'classic' = the earlier desktop footer */
+    deskStyle:'ref',
     promise:{on:true, items:[{id:'p1', icon:'swap', text:'Size exchange| in {windowHours} hours', on:true}, {id:'p2', icon:'cash', text:'Cash on| Delivery', on:true},
       {id:'p3', icon:'lock', text:'Secure| payment', on:true}, {id:'p4', icon:'shield', text:'100%| original', on:true}]},
     slogan:'', sloganBn:'',          /* empty = the shared slogan (Site builder › Header) */
     join:{on:true, label:'Get new drops first', ph:'Your phone number', btn:'Join', note:'Offers and new arrivals by SMS and WhatsApp. Stop anytime.', title:'Join'},
     cols:[
       {id:'shop', label:'Shop', on:true, links:shop},
-      {id:'help', label:'Help', on:true, links:[L('h1','#/account/orders','Track my order','truck'), L('h2','#/size-guide','Size guide','ruler','size-guide'), L('h3','#/page/delivery','Delivery','box'),
-        L('h4','#/page/exchange','Exchange & returns','swap'), L('h5','#/page/payment','Ways to pay','cash'), L('h6','#/page/faq','FAQ','info')]},
-      {id:'extas', label:'EXTAS', on:true, links:[L('e1','#/page/story','Our story','doc'), L('e2','#/page/contact','Contact','phone'), L('e3','#/page/careers','Careers','user'),
-        L('e4','#/journal','Journal','doc'), L('e5','#/page/privacy','Privacy','lock'), L('e6','#/page/terms','Terms','doc')]}
+      {id:'help', label:'Help', on:true, links:[L('h1','#/account/orders','Track my order','truck', null, {dlabel:'Track order'}), L('h2','#/size-guide','Size guide','ruler','size-guide'), L('h3','#/page/delivery','Delivery','box'),
+        L('h4','#/page/exchange','Exchange & returns','swap', null, {dlabel:'Exchange'}), L('h5','#/page/payment','Ways to pay','cash', null, {dev:'phone'}), L('h6','#/page/faq','FAQ','info')]},
+      {id:'extas', label:'EXTAS', on:true, links:[L('e1','#/page/story','Our story','doc'), L('e2','#/page/contact','Contact','phone'), L('e3','#/page/careers','Careers','user', null, {dev:'phone'}),
+        L('e4','#/journal','Journal','doc', null, {dpos:0.5, hl:true}), L('e5','#/page/privacy','Privacy','lock'), L('e6','#/page/terms','Terms','doc')]}
     ],
-    contact:{wa:true, waLabel:'Text us on WhatsApp', hot:true, hotLabel:'Hotline', hours:true},
+    contact:{wa:true, waLabel:'Text us on WhatsApp', waDesk:'Message us on WhatsApp', hot:true, hotLabel:'Hotline', hours:true},
     /* ordered lists; an empty address uses the shop setting (Facebook … TikTok) or the shop's WhatsApp */
     social:[{id:'facebook', on:true, url:''}, {id:'instagram', on:true, url:''}, {id:'youtube', on:true, url:''}, {id:'tiktok', on:true, url:''}],
     pay:[{id:'bkash', on:true}, {id:'nagad', on:true}, {id:'visa', on:true}, {id:'mc', on:true}, {id:'cod', on:true}],
@@ -477,8 +520,80 @@ function ftrShopLinks(){ var c = (ftrData().cols||[]).filter(function(x){ return
 function ftrHelpLinks(){ var c = (ftrData().cols||[]).filter(function(x){ return x.id==='help'; })[0]; return c ? ftrColLinks(c, false) : ''; }
 function ftrExtasLinks(){ var c = (ftrData().cols||[]).filter(function(x){ return x.id==='extas'; })[0]; return c ? ftrColLinks(c, false) : ''; }
 function ftrHoursLine(){ return esc(SITE('hours')||'')+(SITE('supportEmail') ? ' · <a href="mailto:'+esc(SITE('supportEmail'))+'">'+esc(SITE('supportEmail'))+'</a>' : ''); }
+/* =====================================================================
+   H13 (owner 20 Oct, footer-reference.png) · THE DESKTOP FOOTER FOLLOWS THE
+   OWNER'S REFERENCE LAYOUT; every word, link, network and mark still comes
+   from Site builder › Footer and Settings. One even grid:
+     brand + slogan / "Get new drops first" + phone + Join / consent / rule
+     · SHOP · HELP · EXTAS (dividers between)
+     · WhatsApp (outlined) / hours + e-mail / Hotline / social text links with
+       icons and dividers / white payment badges / rule.
+   The promise strip above becomes four equal cells on the same dark band.
+   'classic' (Site builder › Footer › "Desktop footer design") = the earlier one.
+   ===================================================================== */
+function ftrDeskLinks(col){
+  var ls = (col.links||[]).map(function(l, i){ return {l:l, k:(l && l.dpos != null && !isNaN(+l.dpos)) ? +l.dpos : i}; });
+  ls.sort(function(a, b){ return a.k - b.k; });
+  return ls.map(function(o){
+    var l = o.l; if(!l || l.on === false || l.removed) return '';
+    if(l.dev === 'phone') return '';
+    if(l.id === 'combos' && !(FOOTER_DESK.combosLink && DESK_NAV.combos)) return '';
+    var lab = (ST.lang==='bn' && l.bn) ? l.bn : t(l.dlabel || l.label || '');
+    if(l.cat){ var c = CAT(l.cat); if(!c || c.unlisted) return ''; if(!(ST.lang==='bn' && l.bn) && !l.dlabel && !l.label) lab = t(c.name); return '<a href="#/c/'+c.id+'"'+(l.hl ? ' class="fdr-hl"' : '')+'>'+esc(lab)+'</a>'; }
+    if(!l.href) return '';
+    return '<a href="'+esc(l.href)+'"'+(l.act ? ' data-act="'+esc(l.act)+'"' : '')+(l.hl ? ' class="fdr-hl"' : '')+'>'+esc(lab)+'</a>';
+  }).join('');
+}
+/* social: every network the owner switched on; with no address yet it shows as a plain name (never a link to nowhere) */
+function ftrDeskSocial(){
+  var s = SITE('social') || {};
+  return (ftrData().social || []).map(function(x){
+    if(!x || x.on === false || x.removed) return '';
+    var L = SOC_LIB[x.id]; if(!L && !x.img) return '';
+    var url = String(x.url || s[x.id] || (x.id==='whatsapp' ? waLink('Hi EXTAS') : '')), name = x.label || (L ? L.label : 'Link');
+    var ic = x.img ? '<img class="sb-socimg" src="'+esc(x.img)+'" alt="" width="15" height="15">' : L.icon();
+    return /^https?:\/\//.test(url)
+      ? '<a href="'+esc(url)+'" target="_blank" rel="noopener" aria-label="'+esc(sbBrand())+' on '+esc(name)+'">'+ic+'<span>'+esc(name)+'</span></a>'
+      : '<span class="fdr-soc-off" title="'+esc(t('Address not added yet'))+'">'+ic+'<span>'+esc(name)+'</span></span>';
+  }).join('');
+}
+/* payment marks as white badges */
+function ftrDeskPay(){
+  var list = (ftrData().pay || []).filter(function(x){ return x && x.on !== false && !x.removed && (PAY_LIB[x.id] || x.img); });
+  return list.map(function(x){
+    if(x.img) return '<span class="fdr-pm pm-own"><img src="'+esc(x.img)+'" alt="'+esc(x.label || '')+'"></span>';
+    var L = PAY_LIB[x.id];
+    /* a tighter frame than the 64 × 22 tile, so five badges sit in one row */
+    return '<span class="fdr-pm pm-'+x.id+'" title="'+esc(L.label)+'"><svg viewBox="'+(x.id==='cod' ? '2 0 60 22' : x.id==='ssl' ? '0 0 64 22' : '7 0 50 22')+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(L.label)+'">'+L.svg.replace(/extas-ngd/g, 'extas-ngd-r')+'</svg></span>';
+  }).join('');
+}
+function ftrDeskRef(F){
+  var J = F.join || {}, K = F.contact || {}, cols = ftrCols(true);
+  var colHTML = cols.map(function(c){ var ls = ftrDeskLinks(c); return '<nav class="fdr-col" aria-label="'+esc(ftrColTitle(c, true))+'"><span class="ftr-h">'+esc(ftrColTitle(c, true))+'</span>'+ls+'</nav>'; }).join('');
+  var soc = ftrDeskSocial(), pay = ftrDeskPay();
+  var waLab = (ST.lang==='bn' && K.waBn) ? K.waBn : t(K.waDesk || K.waLabel || 'Message us on WhatsApp');
+  return '<div class="ftr-s ftr-d ftr-dref hide-m" data-testid="ftr-desk"><div class="container"><div class="fdr-grid" style="--fdr-n:'+cols.length+'">'+
+    '<div class="fdr-left">'+
+      '<div class="fdr-brand"><span class="logo">'+sbLogo('footer-d')+'</span><span class="fdr-slog">'+esc(sbSlogan('footer'))+'</span></div>'+
+      (J.on === false ? '' : '<form data-submit="join" class="fdr-join" novalidate><label class="fdr-lbl" for="join-d">'+esc(sbLbl({label:J.label, bn:J.labelBn}, '', true))+'</label>'+
+        '<div class="fdr-row"><input id="join-d" class="input" type="tel" inputmode="tel" autocomplete="tel" data-change="join-ph" placeholder="'+esc(J.ph||'')+'" aria-label="'+esc(J.ph||'')+'" aria-describedby="join-d-msg">'+
+        '<button class="btn fdr-joinbtn">'+esc(sbLbl({label:J.btn, bn:J.btnBn}, '', true))+'</button></div>'+
+        '<div class="fdr-msg" id="join-d-msg" role="status" aria-live="polite"></div>'+
+        '<div class="fdr-note">'+esc(sbLbl({label:J.note, bn:J.noteBn}, '', true))+'</div></form>')+
+    '</div>'+
+    colHTML+
+    '<div class="fdr-right">'+
+      (K.wa === false ? '' : '<a class="fdr-wa" href="'+waLink('Hi EXTAS')+'" target="_blank" rel="noopener">'+waGlyph(18)+'<span>'+esc(waLab)+'</span></a>')+
+      (K.hours === false ? '' : '<div class="fdr-hours">'+ftrHoursLine()+'</div>')+
+      (K.hot === false ? '' : '<a class="fdr-hot" href="'+telLink()+'">'+ico('phone',15)+'<span>'+esc(sbLbl({label:K.hotLabel, bn:K.hotBn}))+' <b>'+esc(hotlineNumber())+'</b></span></a>')+
+      (soc ? '<div class="fdr-soc">'+soc+'</div>' : '')+
+      (pay ? '<div class="fdr-pay" aria-label="'+esc(t('Payment methods we accept'))+'">'+pay+'</div>' : '')+
+    '</div>'+
+  '</div></div></div>';
+}
 function ftrDesk(){
   if(!FOOTER_DESK.on) return '';
+  if(ftrData().deskStyle !== 'classic') return ftrDeskRef(ftrData());
   var F = ftrData(), J = F.join || {}, K = F.contact || {}, cols = ftrCols(true);
   var soc = ftrSocial().length ? '<div class="ftr-d-soc">'+ftrSocial().map(function(x){
       return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener" aria-label="'+esc(sbBrand())+' on '+esc(x.label)+'">'+x.html+'<span>'+esc(x.label)+'</span></a>'; }).join('')+'</div>' : '';
@@ -489,7 +604,7 @@ function ftrDesk(){
       cols.map(function(c){ return '<div class="ftr-d-col"><span class="ftr-h">'+esc(ftrColTitle(c, true))+'</span>'+ftrColLinks(c, true)+'</div>'; }).join('')+
       (J.on === false ? '' : '<div class="ftr-d-col ftr-d-join"><span class="ftr-h">'+esc(t(J.title || 'Join'))+'</span>'+
         '<form data-submit="join" class="ftr-d-form"><label class="ftr-d-lbl" for="join-d">'+esc(J.label||'')+'</label>'+
-        '<div class="ftr-d-row"><input id="join-d" class="input" type="tel" inputmode="numeric" autocomplete="tel" pattern="[0-9+\\- ]*" placeholder="'+esc(J.ph||'')+'" aria-label="'+esc(J.ph||'')+'"><button class="btn ftr-joinbtn">'+esc(J.btn||'')+ico('right',17)+'</button></div>'+
+        '<div class="ftr-d-row"><input id="join-d" class="input" type="tel" inputmode="tel" autocomplete="tel" data-change="join-ph" placeholder="'+esc(J.ph||'')+'" aria-label="'+esc(J.ph||'')+'"><button class="btn ftr-joinbtn">'+esc(J.btn||'')+ico('right',17)+'</button></div>'+
         '<div class="xs ftr-d-note">'+esc(J.note||'')+'</div></form>'+
       '</div>')+
     '</div>'+
@@ -513,7 +628,7 @@ function storeFooter(){
   var F = ftrData(), J = F.join || {}, K = F.contact || {}, cols = ftrCols(false);
   var pr = (F.promise && F.promise.on !== false) ? (F.promise.items||[]).filter(function(x){ return x && x.on !== false; }) : [];
   var soc = ftrSocial();
-  return '<footer class="ftr'+(FOOTER_DESK.on?' ftr-hasd':'')+'">'+
+  return '<footer class="ftr'+(FOOTER_DESK.on?' ftr-hasd':'')+(FOOTER_DESK.on && F.deskStyle !== 'classic' ? ' ftr-hasref' : '')+'">'+
     /* 9. promise strip — its own tone */
     (pr.length ? '<div class="ftr-s ftr-s1"><div class="container" style="padding:0"><div class="ftr-promise"'+(pr.length !== 4 ? ' style="--sb-pr:'+pr.length+'" data-n="'+pr.length+'"' : '')+'>'+
       pr.map(function(x){ return '<div>'+ico(x.icon || 'check',20)+'<span>'+ftrFill(sbLbl({label:x.text, bn:x.bn}, '', true))+'</span></div>'; }).join('')+
@@ -521,10 +636,11 @@ function storeFooter(){
     /* 10. brand block — second tone, down to the border above the columns */
     '<div class="ftr-s ftr-s2"><div class="container"><div class="ftr-brand">'+
       '<div class="ftr-brand-top"><div class="logo">'+sbLogo('footer')+'</div><div class="xs ftr-brand-sub">'+esc(sbSlogan('footer'))+'</div></div>'+
-      (J.on === false ? '' : '<form data-submit="join" class="ftr-join"><label class="label" for="join">'+esc(J.label||'')+'</label>'+
+      (J.on === false ? '' : '<form data-submit="join" class="ftr-join" novalidate><label class="label" for="join">'+esc(J.label||'')+'</label>'+
       /* H8. A phone field must raise the number pad, not the letter keyboard.
          type=tel also lets the browser offer the saved number. */
-      '<div class="row ftr-joinrow" style="gap:8px"><input id="join" class="input" type="tel" inputmode="numeric" autocomplete="tel" pattern="[0-9+\\- ]*" placeholder="'+esc(J.ph||'')+'" aria-label="'+esc(J.ph||'')+'"><button class="btn ftr-joinbtn">'+esc(J.btn||'')+ico('right',17)+'</button></div>'+
+      /* H14: no pattern — a Bengali-digit or +880 number must never be refused by the browser; SUBMIT['join'] cleans it */
+      '<div class="row ftr-joinrow" style="gap:8px"><input id="join" class="input" type="tel" inputmode="numeric" autocomplete="tel" data-change="join-ph" placeholder="'+esc(J.ph||'')+'" aria-label="'+esc(J.ph||'')+'"><button class="btn ftr-joinbtn">'+esc(J.btn||'')+ico('right',17)+'</button></div>'+
       '<div class="xs mt8 ftr-brand-note">'+esc(J.note||'')+'</div></form>')+
     '</div></div></div>'+
     /* 11. link columns stay on the base footer colour — 4. every link carries
@@ -1003,7 +1119,25 @@ function adminShell(body, cur){
       '<main class="admin-main" id="main" tabindex="-1"><div class="admin-tabs hide-d mb16">'+mtabs+'</div>'+body+'</main></div>'+
   '</div>';
 }
+/* QA V12b (owner 19 Oct 21:33 + lessons): the demo gear, its panel and the
+   welcome box are reviewer helpers. A normal visitor never sees them. They
+   switch on only when the address carries ?demo=1 (before or after the #),
+   and stay on in that browser until ?demo=0 or "Hide demo controls". */
+var DEMO_TOOLS_KEY = 'extas-demo-tools';
+function demoToolsOn(){
+  var q = '';
+  try{ q = String(location.search || '').replace(/^\?/, '') + '&' + (String(location.hash || '').split('?')[1] || ''); }catch(e){}
+  var m = /(?:^|&)demo=([01])(?:&|$)/.exec(q);
+  if(m){ try{ localStorage.setItem(DEMO_TOOLS_KEY, m[1]); }catch(e){} return m[1] === '1'; }
+  try{ return localStorage.getItem(DEMO_TOOLS_KEY) === '1'; }catch(e){ return false; }
+}
+ACT['demo-hide'] = function(){ try{ localStorage.setItem(DEMO_TOOLS_KEY, '0'); }catch(e){} UI.demoOpen = false;
+  /* QA V12b r3: drop ?demo=1 from the address too — otherwise the next redraw reads it and switches the tools straight back on */
+  try{ var u = String(location.search || '').replace(/^\?/, '').split('&').filter(function(x){ return x && !/^demo=/.test(x); }).join('&'),
+    hp = String(location.hash || '').split('?'), hq = (hp[1] || '').split('&').filter(function(x){ return x && !/^demo=/.test(x); }).join('&');
+    history.replaceState(null, '', location.pathname + (u ? '?' + u : '') + hp[0] + (hq ? '?' + hq : '')); }catch(e){} rerender(); toast('Demo controls hidden — open the demo with ?demo=1 to bring them back'); };
 function demoPanel(){
+  if(!demoToolsOn()) return '';
   if(!UI.demoOpen) return '<button class="demo-fab" data-act="demo-toggle" aria-label="Open demo controls">'+ico('settings',16)+'<span class="demo-fab-t">Demo controls</span></button>';
   var seg = function(act, val, opts){ return '<div class="seg">'+opts.map(function(o){ return '<button data-act="'+act+'" data-v="'+o[0]+'" class="'+(val===o[0]?'on':'')+'">'+o[1]+'</button>'; }).join('')+'</div>'; };
   var link = function(h,l){ return '<a href="'+h+'" style="display:block;padding:6px 0;color:#1F4E46;font-weight:600">'+l+'</a>'; };
@@ -1023,6 +1157,7 @@ function demoPanel(){
     link('#/admin/products','Products')+link('#/admin/customers','Customers & CRM')+link('#/admin/couriers','Couriers')+link('#/admin/ads','Ads & tracking')+link('#/admin/blog','Blog & SEO')+
     link('#/admin/settings','Settings')+link('#/admin/backup','Backup')+link('#/admin/audit','Site audit')+link('#/admin/health','Server health')+link('#/admin/agents','AI agents')+
     '<button class="btn btn-sm btn-ghost mt12" data-act="demo-reset" style="width:100%">Reset all demo data</button>'+
+    '<button class="btn btn-sm btn-ghost mt8" data-act="demo-hide" style="width:100%">Hide demo controls (see the shop as a visitor)</button>'+
   '</div>';
 }
 ACT['demo-toggle'] = function(){ UI.demoOpen = !UI.demoOpen; rerender(); };
@@ -1031,7 +1166,30 @@ ACT['demo-pdp'] = function(el){ ST.pdpTemplate = el.getAttribute('data-v'); save
 ACT['demo-combo'] = function(el){ ST.comboTemplate = el.getAttribute('data-v'); saveState(); rerender(); };
 ACT['demo-festive'] = function(){ ST.festive = !ST.festive; saveState(); rerender(); };
 ACT['demo-reset'] = function(){ if(confirm('Reset all demo data (orders, bag, rules, settings)?')) resetState(); };
-SUBMIT['join'] = function(f){ toast('Thanks — you will get new drops first'); f.reset(); };
+/* H14 / K10 (owner 20 Oct) · "Get new drops first": the number is cleaned by the
+   ONE shared helper (phoneNormalizeBD, 07-phone.js) — never refused for how it
+   was typed (Bengali digits, +880, spaces, dashes…); the cleaned number is shown
+   back, and only an impossible number gets one plain line. */
+function joinMsg(f, text, bad){
+  var m = f.querySelector('.fdr-msg'), inp = f.querySelector('input[type="tel"]');
+  if(inp){ if(bad) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid'); }
+  if(m){ m.textContent = text || ''; m.classList.toggle('bad', !!bad); return true; }
+  return false;
+}
+SUBMIT['join'] = function(f){
+  var inp = f.querySelector('input[type="tel"]'), r = (typeof phoneNormalizeBD==='function') ? phoneNormalizeBD(inp ? inp.value : '') : {ok:true, digits:''};
+  if(r.empty){ if(!joinMsg(f, t('Enter your mobile number, like 01712345678.'), true)) toast(t('Enter your mobile number, like 01712345678.')); if(inp) inp.focus(); return; }
+  if(!r.ok){ if(inp) inp.value = r.digits; if(!joinMsg(f, r.msg, true)) toast(r.msg); if(inp) inp.focus(); return; }
+  joinMsg(f, '', false);
+  toast('Thanks — new drops will come to '+r.nice); f.reset();
+};
+/* on leaving the field: the cleaned number is written back, so the shopper sees what we will use */
+CHANGE['join-ph'] = function(el){
+  if(typeof phoneNormalizeBD!=='function') return;
+  var r = phoneNormalizeBD(el.value), f = el.form; if(r.empty){ if(f) joinMsg(f, '', false); return; }
+  el.value = r.digits;
+  if(f) joinMsg(f, r.ok ? '' : r.msg, !r.ok);
+};
 
 function layout(body, kind, cur){
   var demo = demoPanel();

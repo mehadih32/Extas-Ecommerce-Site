@@ -1,0 +1,55 @@
+/* ---------------------------------------------------------------------
+   QA V12b (independent review, 20 Oct) — fixes found on the combined build.
+   (a) Demo gear on desktop: it sat bottom-left and covered the footer's
+   copyright line once the page was scrolled to the end. The demo gear is
+   shown only with ?demo=1 (03-layout.js demoToolsOn). On a desktop it is now
+   a slim tab on the left edge at mid-height — the page gutter, where nothing
+   is drawn — and the panel opens beside it. Admin pages keep their own
+   placement (demoFabAdmin adds .demo-fab-adm and places it inline).
+   --------------------------------------------------------------------- */
+@media(min-width:1024px){
+  body .demo-fab:not(.demo-fab-adm){left:0!important;right:auto!important;top:50%!important;bottom:auto!important;
+    transform:translateY(-50%);width:20px!important;min-width:20px!important;height:52px!important;min-height:52px!important;
+    padding:0!important;border-radius:0 10px 10px 0!important;justify-content:center;opacity:.5;box-shadow:none}
+  body .demo-fab:not(.demo-fab-adm) .demo-fab-t{display:none!important}
+  body .demo-fab:not(.demo-fab-adm) svg{width:13px;height:13px}
+  body .demo-fab:not(.demo-fab-adm):hover,body .demo-fab:not(.demo-fab-adm):focus-visible{opacity:1}
+  body .demo-fab:not(.demo-fab-adm) + .demo-panel{left:28px!important;right:auto!important;top:50%!important;bottom:auto!important;
+    transform:translateY(-50%);max-height:calc(100vh - 40px);overflow:auto}
+}
+
+/* QA V12b: the order summary's long product name steps down to its short name
+   (fit-x from auto-fit) instead of being cut with "…" on a narrow phone. */
+.bg-sr-item .bg-nms{display:none}
+.bg-sr-item>span.fit-x .bg-nmf{display:none}
+.bg-sr-item>span.fit-x .bg-nms{display:inline}
+
+/* QA V12b: on the product photo the "Model 5'9" · 68 kg · wears M" chip sat on top
+   of the grey "[ demo image · front ]" placeholder label (both bottom-left), so the
+   two texts overlapped. When the model chip is there, the placeholder label moves
+   to the bottom-right corner. Real photos have no placeholder label. */
+.pdp-page .pimg:has(> .pdp-chip-img.glass:not(.tr)) > .pimg-label,
+.pdp-page :has(> .pdp-chip-img.glass:not(.tr)) > .pimg-label{left:auto;right:12px;text-align:right}
+
+/* QA V12b r3: the desktop footer slogan was cut with "…" ("Menswear · Made in Banglade…")
+   at 1366. Rule: never cut, never wrap the line. The brand row may wrap, so the whole
+   one-line slogan drops under the wordmark when the column is narrow (the column is
+   ≥ 250 px; the slogan needs ~180 px). */
+@media(min-width:1024px){
+  body .fdr-brand{flex-wrap:wrap;row-gap:4px}
+  body .fdr-slog{overflow:visible;text-overflow:clip;white-space:nowrap;min-width:0}
+}
+
+/* QA V12b r3: the category set box ("Pick any of these") cut long names with "…"
+   ("Heavyweight Hoodi…"). Desktop only: the name wraps to its own lines (two-line
+   room kept so the prices stay level), and the price · colour line wraps too. */
+@media(min-width:1024px){
+  #app .cat-bn-std .cat-pick .cat-pick-n{white-space:normal;overflow:visible;text-overflow:clip;display:block;-webkit-line-clamp:unset;min-height:2.6em}
+  #app .cat-bn-std .cat-pick .cat-pick-p{white-space:normal;overflow:visible;text-overflow:clip}
+}
+
+/* QA V12b r3: Q&A size helper (desktop) — "chest 42" · Loose fit? XL" was cut with "…" at
+   1024 px (device gate, iPad mini landscape). The two pieces now sit side by side when
+   there is room, and the second drops under the first when there is not; neither is
+   ever cut (no joining dot, so a wrapped line never starts with "·"). */
+#app .pdp-page .ob-qh-why .ob-qh-m{display:flex;flex-wrap:wrap;column-gap:10px;row-gap:2px;white-space:nowrap;overflow:visible;text-overflow:clip}

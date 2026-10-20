@@ -787,6 +787,9 @@ to read code or open GitHub.
 ## A1. How this build runs
 
 
+> **CN-008 · 20 Oct 2026 (owner desktop review of V12, 03:54–04:23).** 44 items (home H1–H14, category C1–C6, product P1–P8, drawer B1–B3, bag G1–G3, checkout K1–K11 incl. the BD phone normaliser and Polo Duo different-colour rule), 7 invoice templates, 12 new admin screens, admin audit fixes. Built into demo **V12.1** (`docs/demo/EXTAS-demo-V12.1.html`), which is now the UI truth. Every new look is a backend option with the old one kept. Details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md` (44/44 pass), `docs/qa/ADMIN-AUDIT.md`, lesson for `phoneNormalizeBD` in `docs/agents/lessons/ALL.md`. No new PR numbers: scope lands on the existing S02/S03/S04/S05/S08/S14/S16/S20/S22 PRs.
+
+
 > **CN-007 · 20 Oct 2026 (project rule: no passwords in chat).** The preview password for new.extas.com.bd is never sent to the owner through chat, a workflow artifact or a log. It stays in the server vault file; the owner reads it on the VM himself (Azure portal → Run command → `extas-preview-login`, `docs/owner/PREVIEW-LOGIN.md`). It can be rotated with the `server-setup` input `rotate_staging_password`. Update on PR 7; no new PR. The first password, which had been shown in chat, was rotated.
 
 

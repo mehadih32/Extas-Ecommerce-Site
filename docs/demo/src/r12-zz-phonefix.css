@@ -1,0 +1,14 @@
+/* ==== Phone + tablet audit V12b (20 Oct). Phone/tablet only unless a block says otherwise. ==== */
+
+/* R1 · home Sets row: the Build-your-own tile shows the first offers (setting sets.phoneDiyMax) and counts the rest,
+   styled like one more offer line, so the tile never stretches the set cards */
+@media(max-width:1023.98px){
+  .hm-set-diy .hm-diy-more-m{font-size:13.5px;font-weight:600;opacity:.92;padding:9px 0 0;border-top:1px solid color-mix(in srgb, var(--brand-ink) 22%, transparent)}
+}
+/* P1 · a set price never splits between ৳ and the number (home Build-your-own tile) */
+.hm-tier-m{white-space:nowrap}
+/* P1 · prices never split between ৳ and the number: one-amount price elements stay whole,
+   and a price inside running text that did split is wrapped in bdi.pnw by 99z-phonefix.js */
+.price,.strike,.pnw{white-space:nowrap}
+/* C1 · colour names in the combo sticky bar step out when they do not fit (99z-phonefix.js fitFix) */
+.zc-mnames.pf-hide{display:none}

@@ -169,7 +169,7 @@ function pg_contact(){
         '<div class="h3">Send us a message</div>'+
         '<form data-submit="contact" class="stack s12">'+
           '<div><label class="label" for="ct-name">Your name</label><input id="ct-name" class="input" autocomplete="name"></div>'+
-          '<div><label class="label" for="ct-phone">Phone</label><input id="ct-phone" class="input" type="tel" inputmode="tel" placeholder="01XXX-XXXXXX" autocomplete="tel"></div>'+
+          '<div><label class="label" for="ct-phone">Phone</label><input id="ct-phone" class="input" type="tel" inputmode="tel" placeholder="01XXX-XXXXXX" autocomplete="tel" data-change="ct-phone" aria-describedby="ct-phone-msg"><div id="ct-phone-msg" class="xs" aria-live="polite"></div></div>'+
           '<div><label class="label" for="ct-order">Order number (if you have one)</label><input id="ct-order" class="input" placeholder="EX-1043"></div>'+
           '<div><label class="label" for="ct-msg">How can we help?</label><textarea id="ct-msg" class="input" rows="4"></textarea></div>'+
           '<button class="btn btn-primary btn-block" type="submit">Send message</button>'+
@@ -226,7 +226,28 @@ function pg_render(){
   return pg_desk(out+'</div>', slug, d.title);
 }
 ACT['pg-q'] = function(el){ var i = el.getAttribute('data-i'); UI['faq:'+i] = !UI['faq:'+i]; rerender(); };
-SUBMIT['contact'] = function(){ toast('Thanks — we will get back to you shortly.'); };
+/* QA V12b · K10 (owner 20 Oct, "all phone inputs"): the contact form sent any
+   number (or none) and an empty message. It now uses the ONE shared helper:
+   the number is cleaned and said back; only an impossible number is refused. */
+function ct_phoneMsg(text, bad){
+  var inp = document.getElementById('ct-phone'), m = document.getElementById('ct-phone-msg');
+  if(inp){ if(bad) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid'); }
+  if(m){ m.textContent = text || ''; m.style.color = bad ? 'var(--sale)' : ''; }
+}
+CHANGE['ct-phone'] = function(el){
+  if(typeof phoneNormalizeBD!=='function') return;
+  var r = phoneNormalizeBD(el.value); if(r.empty){ ct_phoneMsg('', false); return; }
+  el.value = r.digits; ct_phoneMsg(r.ok ? 'We\'ll call '+r.nice : r.msg, !r.ok);
+};
+SUBMIT['contact'] = function(f){
+  var inp = document.getElementById('ct-phone'), msg = document.getElementById('ct-msg');
+  var r = (typeof phoneNormalizeBD==='function') ? phoneNormalizeBD(inp ? inp.value : '') : {ok:true, nice:''};
+  if(r.empty){ ct_phoneMsg(t('Enter your mobile number, like 01712345678.'), true); if(inp) inp.focus(); return; }
+  if(!r.ok){ if(inp) inp.value = r.digits; ct_phoneMsg(r.msg, true); if(inp) inp.focus(); return; }
+  if(msg && !msg.value.trim()){ toast('Please write your message first.'); msg.focus(); return; }
+  ct_phoneMsg('', false);
+  toast('Thanks — we will get back to you shortly on '+r.nice+'.'); if(f && f.reset) f.reset();
+};
 /* R15 wave 1 (nothing hardcoded). Charges, days, the free-delivery amount and
    the exchange window are read from the owner's settings (Smart Rules ›
    Delivery / Exchange) every time a page is drawn — PG holds the wording

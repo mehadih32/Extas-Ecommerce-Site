@@ -58,14 +58,17 @@ function deskGutters(){
 function deskNavFit(){
   var nav = document.querySelector('.hdr .nav-d'); if(!nav || !nav.getClientRects().length) return;
   var inn = nav.parentElement, logo = inn.querySelector('.logo.hide-m'), right = inn.querySelector('.hdr-r'), more = nav.querySelector('.nav-more');
-  var items = [].slice.call(nav.querySelectorAll('.nav-i[data-fold]'));
+  /* H4: items the owner's arrangement keeps under More (data-fixfold) stay folded */
+  var items = [].slice.call(nav.querySelectorAll('.nav-i[data-fold]:not([data-fixfold])'));
   items.forEach(function(i){ i.classList.remove('nav-folded'); });
-  var base = typeof deskNavCats==='function' ? deskNavCats().more.length : 0;
+  var base = (typeof deskNavCats==='function' ? deskNavCats().more.length : 0) + nav.querySelectorAll('.nav-i[data-fixfold]').length;
   if(more) more.hidden = !base;
+  /* H4 'priority' (priority-plus): the row keeps clear air beside the logo and the icons */
+  var air = nav.getAttribute('data-layout') === 'priority' ? 44 : 14;
   var over = function(){
     var n = nav.getBoundingClientRect(), r = right ? right.getBoundingClientRect() : null, l = logo ? logo.getBoundingClientRect() : null, ib = inn.getBoundingClientRect();
     var pr = parseFloat(getComputedStyle(inn).paddingRight) || 0;
-    return (r && n.right > r.left - 14) || (l && n.left < l.right + 14) || (r && r.right > ib.right - pr + 1) || nav.scrollWidth > nav.clientWidth + 1;
+    return (r && n.right > r.left - air) || (l && n.left < l.right + air) || (r && r.right > ib.right - pr + 1) || nav.scrollWidth > nav.clientWidth + 1;
   };
   for(var k = items.length - 1; k >= 0 && over(); k--){ items[k].classList.add('nav-folded'); if(more) more.hidden = false; }
 }
@@ -121,14 +124,204 @@ function megaCombosHTML(){
     megaLink('#/combos', t('All combos'), '', 'mega-all')+'</div>');
   return '<div class="mega-cols n'+cols.length+'">'+cols.join('')+'</div>'+megaFeatured('new');
 }
-function megaMoreHTML(){
+function megaMoreIds(){
   var nav = document.querySelector('.hdr .nav-d');
   var folded = nav ? [].slice.call(nav.querySelectorAll('.nav-i.nav-folded')).map(function(a){ return a.getAttribute('data-nav'); }) : [];
-  var ids = folded.concat(deskNavCats().more.map(function(c){ return c.id; }));
+  return folded.concat(deskNavCats().more.map(function(c){ return c.id; }));
+}
+/* H4 'shop' arrangement: the categories behind the one "Shop" item */
+function megaShopIds(item){ var x = (deskNavItems()||[]).filter(function(y){ return y.id==='shop'; })[0]; return x ? (x.shopCats||[]) : []; }
+function megaMoreHTML(list){
+  var ids = list || megaMoreIds();
   var tiles = ids.map(function(id){ var c = CAT(id); if(!c) return ''; var ps = productsIn(id), p = ps[0];
     return '<a class="mega-tile" href="#/c/'+id+'">'+(p ? productImg(p, p.colors[0], {label:false, ratio:'ratio-11'}) : '')+'<span class="mega-tile-n">'+esc(t(c.name))+'</span><span class="mega-n">'+plural(ps.length, 'style')+'</span></a>'; }).join('');
   return '<div class="mega-tiles">'+tiles+'</div>';
 }
+/* =====================================================================
+   H6 (owner 20 Oct: "the mega menu covers the whole screen") · THE COMPACT
+   DROPDOWN. Default style 'drop' (Site builder › Menus › "Desktop menu
+   style"; 'panel' = the old full-width panel, ?mega=panel previews it).
+   A small list opens right under the hovered item with its sub-categories;
+   resting on a sub-category that has its own children opens them in a
+   flyout to the side. References studied: Amazon's category flyout and its
+   "menu aim" (the pointer may cross other rows on its way into an open
+   flyout without switching it — Ben Kamens / Smashing Magazine "safe
+   triangles"), and Baymard's drop-down menu benchmark (Marks & Spencer).
+   Timing stays the panel's: open 150 ms after the mouse settles, close
+   250 ms after it leaves item + list, switch at once between items, Esc
+   closes and puts focus back on the item, keyboard ←/→ in and out of a
+   flyout, ↑/↓ inside a list.
+   ===================================================================== */
+function megaStyle(){
+  var q = (typeof CUR!=='undefined' && CUR.query && CUR.query.mega) || '';
+  if(q === 'panel' || q === 'drop') return q;
+  var m = (typeof menuData==='function') ? menuData() : {};
+  return m.megaStyle === 'panel' ? 'panel' : 'drop';
+}
+var MD_CHEV = '<svg class="md-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+function mdRow(href, label, n, o){
+  o = o || {};
+  return '<a class="mega-a md-row'+(o.cls ? ' '+o.cls : '')+'" href="'+esc(href)+'"'+(o.fly != null ? ' data-fly="'+o.fly+'" aria-haspopup="true" aria-expanded="false"' : '')+(o.attrs || '')+'>'+
+    '<span>'+esc(label)+'</span>'+(n !== '' && n != null ? '<span class="mega-n">'+n+'</span>' : '')+(o.fly != null ? MD_CHEV : '')+'</a>';
+}
+function mdSubs(parent){ return (DB.subcats||[]).filter(function(s){ return s.parent===parent && !s.unlisted; }); }
+function mdCount(ps, sid){ return ps.filter(function(p){ return typeof ca_inPath==='function' && ca_inPath(p, sid); }).length; }
+/* one category as a list: All · its sub-categories (a sub-category with children opens a flyout) · fits */
+function mdCatList(id, flies, opts){
+  opts = opts || {};
+  var c = CAT(id); if(!c) return '';
+  var x = typeof menuItem==='function' ? menuItem(id) : null, name = (x && ((ST.lang==='bn' && x.bn) || x.label)) || t(c.name);
+  var ps = productsIn(id), out = '', replace = x && x.colsMode === 'replace' && (x.cols||[]).length;
+  out += mdRow('#/c/'+id, t('All')+' '+name, ps.length, {cls:'mega-all'});
+  if(!replace){
+    mdSubs(id).forEach(function(s){
+      var kids = mdSubs(s.id), k = null;
+      if(kids.length && flies){
+        k = flies.length;
+        flies.push(mdRow('#/c/'+id+'?sub='+encodeURIComponent(s.id), t('All')+' '+s.name, mdCount(ps, s.id), {cls:'mega-all'})+
+          kids.map(function(kd){ return mdRow('#/c/'+id+'?sub='+encodeURIComponent(kd.id), kd.name, mdCount(ps, kd.id) || ''); }).join(''));
+      }
+      out += mdRow('#/c/'+id+'?sub='+encodeURIComponent(s.id), s.name, mdCount(ps, s.id) || '', {fly:k});
+      if(kids.length && !flies) kids.forEach(function(kd){ out += mdRow('#/c/'+id+'?sub='+encodeURIComponent(kd.id), kd.name, mdCount(ps, kd.id) || '', {cls:'mega-sub2'}); });
+    });
+    var fits = []; ps.forEach(function(p){ if(p.fit && fits.indexOf(p.fit)<0) fits.push(p.fit); });
+    if(fits.length > 1 && opts.fits !== false) out += '<div class="md-sep" role="separator"></div><div class="md-h">'+esc(t('Shop by fit'))+'</div>'+fits.map(function(f){
+      return mdRow('#/c/'+id, f, ps.filter(function(p){ return p.fit===f; }).length, {attrs:' data-act="desk-fit" data-cat="'+esc(id)+'" data-v="'+esc(f)+'"'}); }).join('');
+  }
+  /* the owner's own columns (Site builder › Menus › Columns) follow as small groups */
+  if(x && (x.cols||[]).length) (x.cols||[]).forEach(function(col){
+    var ls = (col.links||[]).filter(function(l){ return l && l.href && l.on !== false && !l.removed; }); if(!ls.length) return;
+    out += '<div class="md-sep" role="separator"></div>'+(col.label ? '<div class="md-h">'+esc(sbLbl(col, '', true))+'</div>' : '')+ls.map(function(l){ return mdRow(l.href, sbLbl(l, '', true), ''); }).join('');
+  });
+  return out;
+}
+function megaDropHTML(kind, item, flies){
+  var id = item.getAttribute('data-nav');
+  if(kind === 'cat'){
+    var c = CAT(id);
+    if(c) return mdCatList(id, flies);
+    var x = typeof menuItem==='function' ? menuItem(id) : null, own = '';     /* Sets / Journal / an own link with the owner's columns */
+    if(x) (x.cols||[]).forEach(function(col){ var ls = (col.links||[]).filter(function(l){ return l && l.href && l.on !== false && !l.removed; }); if(!ls.length) return;
+      own += (own ? '<div class="md-sep" role="separator"></div>' : '')+(col.label ? '<div class="md-h">'+esc(sbLbl(col, '', true))+'</div>' : '')+ls.map(function(l){ return mdRow(l.href, sbLbl(l, '', true), ''); }).join(''); });
+    return mdRow(item.getAttribute('href') || '#/', item.textContent.trim(), '', {cls:'mega-all'})+own;
+  }
+  if(kind === 'new'){
+    var list = typeof cat_base==='function' ? cat_base('new') : DB.products.slice();
+    var isNew = function(p){ return p.tag==='New' || p.tag==='Winter 2026'; };
+    return mdRow('#/c/new', t('All new in'), list.length, {cls:'mega-all'})+deskNavCats().live.map(function(c){
+      var n = list.filter(function(p){ return p.cat===c.id && isNew(p); }).length; return n ? mdRow('#/c/'+c.id, t(c.name), n) : ''; }).join('');
+  }
+  if(kind === 'combos'){
+    var out = '', rules = typeof ca_activeRules==='function' ? ca_activeRules().filter(function(r){ try{ return ca_generate(r).visible.length; }catch(e){ return false; } }) : [];
+    var add = function(label, href, rows){ if(!rows) { out += mdRow(href, label, ''); return; } var k = flies.length; flies.push(rows); out += mdRow(href, label, '', {fly:k}); };
+    if(rules.length) add(t('Colour-pair combos'), '#/combos', rules.map(function(r){ return mdRow('#/combos/'+r.id, r.name, r.pieces+' pcs'); }).join(''));
+    var sets = combos().filter(function(c){ return c.active; });
+    if(sets.length) add(t('Ready-made sets'), '#/combos', sets.slice(0, 10).map(function(c){ return mdRow('#/combo/'+c.id, c.name, fmt(c.price)); }).join(''));
+    var sr = setRules().filter(function(r){ return r.active; });
+    add(t('Build your own set'), '#/set', mdRow('#/set', t('Build your own set'), '', {cls:'mega-all'})+sr.map(function(r){ return mdRow('#/set/'+r.id, r.name, ''); }).join(''));
+    return out+'<div class="md-sep" role="separator"></div>'+mdRow('#/combos', t('All combos'), '', {cls:'mega-all'});
+  }
+  /* more / shop: every category of the list, each opening its own list in a flyout */
+  var ids = kind === 'shop' ? megaShopIds(item) : megaMoreIds();
+  return ids.map(function(cid){
+    var c = CAT(cid); if(!c) return '';
+    /* a flyout only when it has something to choose (sub-categories or more than one fit) */
+    var fits = {}; productsIn(cid).forEach(function(p){ if(p.fit) fits[p.fit] = 1; });
+    var k = null; if(mdSubs(cid).length || Object.keys(fits).length > 1){ k = flies.length; flies.push(mdCatList(cid, null, {fits:true})); }
+    return mdRow('#/c/'+cid, t(c.name), plural(productsIn(cid).length, 'style'), {fly:k});
+  }).join('')+(kind === 'shop' ? '<div class="md-sep" role="separator"></div>'+mdRow('#/c/new?all=1', t('All styles'), '', {cls:'mega-all'}) : '');
+}
+function megaDropOpen(item, kind, p){
+  var flies = [];
+  p.innerHTML = '<div class="md-list" role="menu" aria-label="'+esc(item.textContent.trim())+'">'+megaDropHTML(kind, item, flies)+'</div><div class="md-fly" hidden></div>';
+  p.classList.add('mega-drop');
+  MEGA.flies = flies; MEGA.fly = null; MEGA.flyT = 0;
+  /* under the item, kept inside the screen */
+  var hdr = p.parentElement, hr = hdr.getBoundingClientRect(), ir = item.getBoundingClientRect();
+  p.style.left = '0px';
+  var w = p.offsetWidth || 260, left = ir.left - hr.left - 14;
+  left = Math.max(12, Math.min(left, hr.width - w - 12));
+  p.style.left = Math.round(left)+'px';
+}
+/* the flyout beside a row */
+function mdFlyOpen(row){
+  var p = document.getElementById('mega-panel'); if(!p || !row) return;
+  var k = +row.getAttribute('data-fly'), fly = p.querySelector('.md-fly'); if(!fly || !MEGA.flies || MEGA.flies[k] == null) return;
+  if(MEGA.fly === row) return;
+  if(MEGA.fly) MEGA.fly.setAttribute('aria-expanded', 'false'), MEGA.fly.classList.remove('md-on');
+  fly.innerHTML = MEGA.flies[k]; fly.hidden = false;
+  fly.setAttribute('role', 'menu'); fly.setAttribute('aria-label', row.textContent.trim());
+  var list = p.querySelector('.md-list');
+  /* beside the row; on the left when there is no room on the right */
+  fly.classList.remove('md-left');
+  var top = row.offsetTop - 8; fly.style.top = Math.max(0, top)+'px';
+  var pr = p.getBoundingClientRect();
+  if(pr.right + fly.offsetWidth > window.innerWidth - 8) fly.classList.add('md-left');
+  /* keep it on screen vertically */
+  var fr = fly.getBoundingClientRect(), over = fr.bottom - (window.innerHeight - 8);
+  if(over > 0) fly.style.top = Math.max(0, top - over)+'px';
+  row.setAttribute('aria-expanded', 'true'); row.classList.add('md-on');
+  MEGA.fly = row;
+  void list;
+}
+function mdFlyClose(){
+  var p = document.getElementById('mega-panel'), fly = p && p.querySelector('.md-fly');
+  if(fly){ fly.hidden = true; fly.innerHTML = ''; }
+  if(MEGA.fly){ MEGA.fly.setAttribute('aria-expanded', 'false'); MEGA.fly.classList.remove('md-on'); }
+  MEGA.fly = null;
+}
+/* menu aim: is the pointer travelling from where it was toward the open flyout? */
+var MD_AIM = {x:0, y:0, px:0, py:0};
+function mdAiming(){
+  var p = document.getElementById('mega-panel'), fly = p && p.querySelector('.md-fly');
+  if(!fly || fly.hidden) return false;
+  var r = fly.getBoundingClientRect(), left = fly.classList.contains('md-left');
+  var ex = left ? r.right : r.left, a = {x:MD_AIM.px, y:MD_AIM.py}, b = {x:MD_AIM.x, y:MD_AIM.y};
+  if(left ? b.x >= a.x : b.x <= a.x) return false;
+  var slope = function(p1, p2){ return (p2.y - p1.y) / ((p2.x - p1.x) || 0.0001); };
+  var up = {x:ex, y:r.top - 20}, dn = {x:ex, y:r.bottom + 20};
+  var s1 = slope(b, up), s2 = slope(b, dn), p1 = slope(a, up), p2 = slope(a, dn);
+  return left ? (s1 > p1 && s2 < p2) : (s1 < p1 && s2 > p2);
+}
+(function(){
+  document.addEventListener('pointermove', function(ev){
+    if(ev.pointerType !== 'mouse' || !MEGA.open) return;
+    MD_AIM.px = MD_AIM.x; MD_AIM.py = MD_AIM.y; MD_AIM.x = ev.clientX; MD_AIM.y = ev.clientY;
+  }, {passive:true});
+  var decide = function(row){
+    clearTimeout(MEGA.flyT);
+    var go = function(){ if(!document.getElementById('mega-panel')) return; if(row && row.hasAttribute('data-fly')) mdFlyOpen(row); else mdFlyClose(); };
+    if(MEGA.fly && mdAiming()){ MEGA.flyT = setTimeout(function(){ decide(row); }, 220); return; }   /* on the way into the flyout: wait, then look again */
+    if(!MEGA.fly && row && row.hasAttribute('data-fly')){ MEGA.flyT = setTimeout(go, 90); return; }  /* a little intent before the first flyout */
+    go();
+  };
+  document.addEventListener('pointerover', function(ev){
+    if(ev.pointerType !== 'mouse' || !MEGA.open || !DESK_MQ.matches) return;
+    var t0 = ev.target; if(!t0.closest) return;
+    if(t0.closest('.md-fly')){ clearTimeout(MEGA.flyT); return; }
+    var row = t0.closest('#mega-panel .md-list .md-row'); if(!row) return;
+    if(row === MEGA.fly){ clearTimeout(MEGA.flyT); return; }
+    decide(row);
+  });
+  /* keyboard: → opens a flyout and enters it, ← goes back to its row */
+  document.addEventListener('keydown', function(ev){
+    if(!MEGA.open || !DESK_MQ.matches) return;
+    var a = document.activeElement; if(!a || !a.closest) return;
+    if(ev.key === 'ArrowRight' && a.matches('#mega-panel .md-list .md-row[data-fly]')){
+      ev.preventDefault(); ev.stopImmediatePropagation(); mdFlyOpen(a);
+      var f = document.querySelector('#mega-panel .md-fly a'); if(f) f.focus(); return;
+    }
+    if(ev.key === 'ArrowLeft' && a.closest('#mega-panel .md-fly')){
+      ev.preventDefault(); ev.stopImmediatePropagation(); var row = MEGA.fly; mdFlyClose(); if(row) row.focus(); return;
+    }
+    if((ev.key === 'ArrowDown' || ev.key === 'ArrowUp') && a.closest('#mega-panel .md-list') && MEGA.fly && !a.matches('.md-row[data-fly]')) mdFlyClose();
+  }, true);
+  /* keyboard focus on a row with children shows its flyout (a mouse does this by hovering) */
+  document.addEventListener('focusin', function(ev){
+    if(!MEGA.open) return; var a = ev.target;
+    if(a.matches && a.matches('#mega-panel .md-list .md-row')){ if(a.hasAttribute('data-fly')) mdFlyOpen(a); else if(MEGA.fly) mdFlyClose(); }
+  });
+})();
 function megaPanel(){
   var hdr = document.querySelector('.hdr'); if(!hdr) return null;
   var p = document.getElementById('mega-panel');
@@ -141,8 +334,12 @@ function megaOpen(item, how){
   if(MEGA.open === item) return;
   if(typeof dsk_srchClose==='function') dsk_srchClose(false);
   var kind = item.getAttribute('data-mega'), p = megaPanel(); if(!p) return;
-  var html = kind==='cat' ? megaCatHTML(item.getAttribute('data-nav')) : kind==='combos' ? megaCombosHTML() : kind==='new' ? megaNewHTML() : megaMoreHTML();
-  p.innerHTML = '<div class="container mega-in mega-'+kind+'">'+html+'</div>';
+  if(megaStyle() === 'drop') megaDropOpen(item, kind, p);
+  else {
+    p.classList.remove('mega-drop'); p.style.left = ''; MEGA.fly = null;
+    var html = kind==='cat' ? megaCatHTML(item.getAttribute('data-nav')) : kind==='combos' ? megaCombosHTML() : kind==='new' ? megaNewHTML() : kind==='shop' ? megaMoreHTML(megaShopIds(item)) : megaMoreHTML();
+    p.innerHTML = '<div class="container mega-in mega-'+(kind==='shop' ? 'more' : kind)+'">'+html+'</div>';
+  }
   p.setAttribute('aria-label', item.textContent.trim());
   if(MEGA.open) MEGA.open.setAttribute('aria-expanded', 'false');
   item.setAttribute('aria-expanded', 'true');
@@ -155,12 +352,18 @@ function megaClose(now, focusBack){
   var go = function(){
     var it = MEGA.open, p = document.getElementById('mega-panel');
     if(p){ p.classList.remove('on'); p.innerHTML = ''; }
+    clearTimeout(MEGA.flyT); MEGA.fly = null;
     if(it){ it.setAttribute('aria-expanded', 'false'); it.classList.remove('mega-on'); if(focusBack) try{ it.focus({preventScroll:true}); }catch(e){} }
     MEGA.open = null;
   };
   if(now) go(); else MEGA.t = setTimeout(go, DESK_A.megaLeave);
 }
-function megaFocusables(){ var p = document.getElementById('mega-panel'); return p ? [].slice.call(p.querySelectorAll('a[href],button')) : []; }
+function megaFocusables(){
+  var p = document.getElementById('mega-panel'); if(!p) return [];
+  /* H6 dropdown: ↑/↓ stay inside the list the focus is in (the main list or the open flyout) */
+  if(p.classList.contains('mega-drop')){ var a = document.activeElement, box = (a && a.closest && a.closest('#mega-panel .md-fly')) || p.querySelector('.md-list'); return box ? [].slice.call(box.querySelectorAll('a[href],button')) : []; }
+  return [].slice.call(p.querySelectorAll('a[href],button'));
+}
 (function(){
   var inZone = function(el){ return el && el.closest && (el.closest('.hdr .nav-d .nav-i[data-mega]') || el.closest('#mega-panel')); };
   /* hover intent: open 150 ms after the mouse settles on an item, close 250 ms after it leaves item + panel */
@@ -225,6 +428,8 @@ function megaFocusables(){ var p = document.getElementById('mega-panel'); return
 })();
 ACT['desk-fit'] = function(el){ var id = el.getAttribute('data-cat'); var u = cat_ui(id); u.fits = [el.getAttribute('data-v')]; megaClose(true); go('#/c/'+id); };
 ACT['desk-toprated'] = function(){ var u = cat_ui('new'); u.sort = 'top'; go('#/c/new'); };
+/* H4 'shop' arrangement: "Sale" opens every style with the "On sale" filter on */
+ACT['desk-sale'] = function(){ megaClose(true); var u = cat_ui('new'); u.sale = true; go('#/c/new'); };
 
 /* ---------- 4. D-013 · product cards: back view on hover + quick add ---------- */
 function deskCard(w){
