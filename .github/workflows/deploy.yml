@@ -3,6 +3,11 @@
 # infra/deploy/deploy.sh migrates the database (schema, then settings, PR 496) and does blue/green: the new version
 # starts next to the old one, is smoke-tested, Caddy switches with a graceful reload, and any failure keeps or gives
 # back the traffic to the old version (automatic rollback).
+# After every deploy, success or failure, a short report (commit, time in EXTAS_TIMEZONE, result, migration, the public
+# health check on the preview host, the failing step in plain English) is committed to
+# docs/reports/server/deploy-latest.md and one line is appended to deploy-history.md. No loop: that commit carries
+# [skip ci], ci.yml ignores pushes that only touch docs/reports/server/, and a push made with the workflow's own token
+# starts no workflow anyway; no ci run means no deploy. No secret, password, connection string or e-mail is in it.
 name: deploy
 
 on:
@@ -22,7 +27,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   deploy:
@@ -33,25 +38,81 @@ jobs:
       SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           ref: ${{ env.SHA }}
 
       # Two images from one Dockerfile: the app, and the one-shot migrate image (prisma migrate deploy + settings sync).
       - name: Build the images on the server
+        id: build
         if: ${{ !inputs.rollback }}
         run: |
           sudo docker build -f apps/web/Dockerfile --target migrate --build-arg GIT_SHA="$SHA" -t "extas-migrate:${SHA::12}" .
           sudo docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$SHA" -t "extas-web:${SHA::12}" .
 
       # The database is migrated first; a failed migration stops here with the live version untouched.
+      # EXTAS_DEPLOY_RUN_ID tags deploy.sh's record with this run, so the report never shows an older run's result.
       - name: Migrate the database, then blue/green switch (automatic rollback on failure)
+        id: deploy
         run: |
           if [ "${{ inputs.rollback }}" = true ]; then
-            sudo bash infra/deploy/deploy.sh rollback
+            sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh rollback
           else
-            sudo bash infra/deploy/deploy.sh "extas-web:${SHA::12}" "extas-migrate:${SHA::12}"
+            sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh "extas-web:${SHA::12}" "extas-migrate:${SHA::12}"
           fi
+
+      # Through Cloudflare, like a visitor: https://<staging host>/api/health with the preview login (read on the
+      # server, never printed; only the HTTP code, ok, commit and colour come out). Also after a failed deploy, to show
+      # whether the old version still answers.
+      - name: Health check on the preview host
+        id: health
+        if: always() && steps.checkout.outcome == 'success'
+        continue-on-error: true
+        run: |
+          sudo bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/health.json"
+          jq -e '.ok and .code == 200' "$RUNNER_TEMP/health.json" >/dev/null
 
       - name: What happened
         if: always()
         run: sudo cat /srv/extas/state/last-deploy.json 2>/dev/null || true
+
+      # Written from this run's own record first, then the workspace moves to the newest main for the commit. Each
+      # attempt starts from the newest main, so it never conflicts with another report.
+      - name: Commit the deploy report
+        if: always()
+        env:
+          CHECKOUT: ${{ steps.checkout.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          DEPLOY: ${{ steps.deploy.outcome }}
+          ROLLBACK: ${{ inputs.rollback && 'true' || 'false' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/deploy-report"
+          sudo rm -rf "$out"
+          if [ ! -f infra/deploy/deploy-report.sh ]; then
+            git fetch -q origin main
+            git checkout -q FETCH_HEAD -- infra/deploy/deploy-report.sh
+          fi
+          sudo env SHA="$SHA" RUN_ID="$GITHUB_RUN_ID" RUN_URL="$RUN_URL" ROLLBACK="$ROLLBACK" CHECKOUT="$CHECKOUT" \
+            BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
+            bash infra/deploy/deploy-report.sh "$out"
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          cat "$out/deploy-latest.md"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          h=docs/reports/server/deploy-history.md
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            mkdir -p docs/reports/server
+            cp "$out/deploy-latest.md" docs/reports/server/deploy-latest.md
+            [ -f "$h" ] || cp "$out/deploy-history.head" "$h"
+            cat "$out/deploy-history.line" >> "$h"
+            git add docs/reports/server/deploy-latest.md "$h"
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "deploy report: $(cat "$out/summary") [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
