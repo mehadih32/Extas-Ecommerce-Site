@@ -1,0 +1,9 @@
+{
+  "$comment": "CN-016 — what the smoke test opens after every deploy and every night (tools/smoke.mjs). storefront: every built storefront page, opened signed out like a customer; each PR that builds a storefront page adds it here. The admin pages are found from the admin menu after sign-in. ignoreRequests: request paths whose failure is known and owned by a register PR, each with the PR that removes it; keep this list short.",
+  "storefront": ["/", "/status"],
+  "ignoreRequests": [{ "path": "/favicon.ico", "until": "PR 501 (brand icon)" }],
+  "viewports": [
+    { "name": "phone", "width": 390, "height": 844, "mobile": true },
+    { "name": "desktop", "width": 1366, "height": 900, "mobile": false }
+  ]
+}

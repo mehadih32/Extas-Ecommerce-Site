@@ -7,8 +7,11 @@
 # After every deploy, success or failure, a short report (commit, time in EXTAS_TIMEZONE, result, migration, the public
 # health check on the preview host, the docs copy, the failing step in plain English) is committed to
 # docs/reports/server/deploy-latest.md and one line is appended to deploy-history.md. No loop: that commit carries
-# [skip ci], ci.yml ignores pushes that only touch docs/reports/server/, and a push made with the workflow's own token
+# [skip ci], ci.yml ignores pushes that only touch docs/reports/, and a push made with the workflow's own token
 # starts no workflow anyway; no ci run means no deploy. No secret, password, connection string or e-mail is in it.
+# CN-016: after the switch, the smoke test opens every built page signed out and as the read-only check account, on a
+# phone and a desktop screen, through Cloudflare (infra/deploy/smoke.sh). A failure puts the previous version back
+# automatically and fails this run; its report and pictures are committed to docs/reports/smoke/latest/.
 name: deploy
 
 on:
@@ -82,6 +85,22 @@ jobs:
           sudo bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/health.json"
           jq -e '.ok and .code == 200' "$RUNNER_TEMP/health.json" >/dev/null
 
+      # CN-016: every built page as a customer and as the admin, phone and desktop. Any error screen, console error or
+      # failed request fails it; then the previous version comes back (next step) and the run fails at the end.
+      - name: Smoke test (every page, signed out and as the admin)
+        id: smoke
+        if: steps.deploy.outcome == 'success' && !inputs.rollback
+        continue-on-error: true
+        run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" SMOKE_ROLLS_BACK=1 bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "after deploy" "$SHA"
+
+      # The deploy's own record is kept for the report first (the rollback writes its own).
+      - name: Put the previous version back (the smoke test failed)
+        id: smoke_rollback
+        if: steps.smoke.outcome == 'failure'
+        run: |
+          sudo cp /srv/extas/state/last-deploy.json "$RUNNER_TEMP/deploy-record.json" 2>/dev/null || true
+          sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh rollback
+
       - name: What happened
         if: always()
         run: sudo cat /srv/extas/state/last-deploy.json 2>/dev/null || true
@@ -95,6 +114,8 @@ jobs:
           BUILD: ${{ steps.build.outcome }}
           DEPLOY: ${{ steps.deploy.outcome }}
           DOCS: ${{ steps.docs.outcome }}
+          SMOKE: ${{ steps.smoke.outcome }}
+          SMOKE_ROLLBACK: ${{ steps.smoke_rollback.outcome }}
           ROLLBACK: ${{ inputs.rollback && 'true' || 'false' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -105,9 +126,12 @@ jobs:
             git fetch -q origin main
             git checkout -q FETCH_HEAD -- infra/deploy/deploy-report.sh
           fi
+          rec=(); [ -f "$RUNNER_TEMP/deploy-record.json" ] && rec=(DEPLOY_JSON="$RUNNER_TEMP/deploy-record.json")
           sudo env SHA="$SHA" RUN_ID="$GITHUB_RUN_ID" RUN_URL="$RUN_URL" ROLLBACK="$ROLLBACK" CHECKOUT="$CHECKOUT" \
             BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" DOCS="${DOCS:-}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
+            SMOKE="${SMOKE:-}" SMOKE_ROLLBACK="${SMOKE_ROLLBACK:-}" "${rec[@]}" \
             bash infra/deploy/deploy-report.sh "$out"
+          smoke="$RUNNER_TEMP/smoke"; [ -f "$smoke/README.md" ] && sudo chown -R "$(id -u):$(id -g)" "$smoke"
           sudo chown -R "$(id -u):$(id -g)" "$out"
           cat "$out/deploy-latest.md"
           git config user.name "extas-vm"
@@ -121,9 +145,20 @@ jobs:
             [ -f "$h" ] || cp "$out/deploy-history.head" "$h"
             cat "$out/deploy-history.line" >> "$h"
             git add docs/reports/server/deploy-latest.md "$h"
+            if [ -f "$smoke/README.md" ]; then
+              rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$smoke" docs/reports/smoke/latest
+              git add -A docs/reports/smoke/latest
+            fi
             if git diff --cached --quiet; then exit 0; fi
             git commit -q -m "deploy report: $(cat "$out/summary") [skip ci]"
             if git push -q origin HEAD:main; then exit 0; fi
             sleep $((i * 2))
           done
+          exit 1
+
+      # The fix comes before any new work (CN-016): a run whose smoke test failed is red even after the rollback.
+      - name: Fail when the smoke test failed
+        if: steps.smoke.outcome == 'failure'
+        run: |
+          echo "The smoke test failed after the deploy; the previous version was put back. See docs/reports/smoke/latest/README.md."
           exit 1

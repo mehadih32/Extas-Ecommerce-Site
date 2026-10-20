@@ -3,6 +3,10 @@
     "owner": {
       "name": "Owner",
       "description": "Can do everything, including every permission added later. Cannot be removed from the last owner."
+    },
+    "check": {
+      "name": "Smoke check (automatic)",
+      "description": "Read-only account the server signs in with after every deploy and every night to check that each page opens (CN-016). It can see but never change anything. Its password and two-step code live only on the server and change on every run."
     }
   },
   "permissionGroups": {

@@ -14,6 +14,7 @@
     "sync": "tsx src/cli.ts sync",
     "create-owner": "tsx src/cli.ts create-owner",
     "reset-owner": "tsx src/cli.ts reset-owner",
+    "check-account": "tsx src/cli.ts check-account",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

@@ -137,7 +137,8 @@ export async function loginStaff(deps: StaffAuthDeps, input: { email: string; pa
   return openSession(deps, staff, ctx);
 }
 
-const seedAad = (staffUserId: string) => `staff-totp:${staffUserId}`;
+/** The additional data that binds a sealed two-step seed to its account. */
+export const seedAad = (staffUserId: string) => `staff-totp:${staffUserId}`;
 
 async function readSeed(deps: StaffAuthDeps, staff: StaffUser): Promise<Buffer> {
   if (!deps.vault) throw new AuthError('VAULT_NOT_CONFIGURED', 'two-step login needs the vault master key on the server');

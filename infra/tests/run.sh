@@ -208,6 +208,65 @@ rep RUN_ID=44 DEPLOY=success DOCS=failure DOCS_JSON="$T/docs.json"
 check "report: a failed docs copy says what is still there" "$(grep -c 'Docs on the server | FAILED — the server keeps the previous copy' "$T/out/deploy-latest.md")" "1"
 rep RUN_ID=44 DEPLOY=success
 check "report: no docs line when the step did not run" "$(grep -c 'Docs on the server' "$T/out/deploy-latest.md")" "0"
+echo '{"ok":true,"pages":26,"problems":[]}' > "$T/smoke.json"
+rep RUN_ID=44 DEPLOY=success SMOKE=success SMOKE_JSON="$T/smoke.json"
+check "report: a passed smoke test" "$(grep -c '| Smoke test (every page) | OK — 26 page views' "$T/out/deploy-latest.md"):$(grep -c 'smoke OK' "$T/out/deploy-history.line")" "1:1"
+echo '{"ok":false,"pages":26,"problems":["/admin (phone): shows the error screen","x (desktop): owner@example.test"]}' > "$T/smoke.json"
+rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=success SMOKE_JSON="$T/smoke.json"
+check "report: a failed smoke test rolled back, in words" "$(grep -c 'FAILED, ROLLED BACK' "$T/out/deploy-latest.md"):$(grep -c 'previous version was put back' "$T/out/deploy-latest.md"):$(grep -c 'owner@example' "$T/out/deploy-latest.md")" "1:1:0"
+rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json"
+check "report: a failed rollback says so" "$(grep -c 'FAILED, ROLLBACK FAILED' "$T/out/deploy-latest.md")" "1"
+check "report: the history keeps seven columns" "$(tr -cd '|' < "$T/out/deploy-history.line" | wc -c)" "8"
+rep RUN_ID=44 DEPLOY=success
+check "report: no smoke line when it did not run" "$(grep -c 'Smoke test' "$T/out/deploy-latest.md")" "0"
+rm -rf "$T"
+
+# Smoke test (CN-016): smoke.sh makes the check account in the live migrate image, hands its sign-in to the browser
+# container in a root-only file that is gone afterwards, writes state/smoke.json for the status page and passes the
+# browser's exit code on. Docker is a stand-in that plays both containers.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
+printf 'STAGING_PASSWORD=stagepw\n' > "$T/root/config/secrets/staging.env"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+case "$1" in
+  image) [ "$3" != "extas-migrate:gone" ]; exit ;;
+  images) echo "extas-migrate:newest"; exit 0 ;;
+  build) exit 0 ;;
+esac
+out=""; envf=""; prev=""
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/out) out="${a%:/out}" ;; esac
+  [ "$prev" = --env-file ] && envf="$a"
+  prev="$a"
+done
+if grep -q check-account <<<"$*"; then
+  grep -q '^VAULT_MASTER_KEY=vk$' "$envf" && ! grep -q OTHER "$envf" || exit 9
+  printf 'SMOKE_EMAIL=c@check.invalid\nSMOKE_PASSWORD=pw1\nSMOKE_TOTP_SECRET=SEED\n' > "$out/check.env"; exit 0
+fi
+cp "$envf" "$FAKE_SEEN"
+printf '{"at":"x","sha":"s","ok":%s,"pages":4,"failed":%s,"problems":%s}\n' "$FAKE_OK" "$FAKE_FAILED" "$FAKE_PROBLEMS" > "$out/result.json"
+echo "# r" > "$out/README.md"
+[ "$FAKE_OK" = true ]
+STUB
+chmod +x "$T/bin/docker"
+sm() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" SMOKE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" FAKE_SEEN="$T/seen.env" \
+  "$@" bash ../deploy/smoke.sh "$T/out" "after deploy" 0123456789abcdef0123; }
+rc=0; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null || rc=$?
+check "smoke: a passing run exits 0 and records it" "$rc:$(jq -c '{ok,pages,kind}' "$T/root/state/smoke.json")" '0:{"ok":true,"pages":4,"kind":"after deploy"}'
+check "smoke: the browser gets the check account and the preview login" "$(grep -c '^SMOKE_PASSWORD=pw1$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_PASSWORD=stagepw$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_USER=extas$' "$T/seen.env")" "1:1:1"
+check "smoke: the browser never gets the database or the vault key" "$(grep -cE 'DATABASE|VAULT' "$T/seen.env")" "0"
+check "smoke: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.smoke*' | wc -l)" "0"
+check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-migrate:aaa sh -c' "$T/docker.log")" "1"
+check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
+rc=0; sm FAKE_OK=false FAKE_FAILED=1 FAKE_PROBLEMS='["/admin (phone): shows the error screen"]' >/dev/null || rc=$?
+check "smoke: a failing run fails and says what" "$rc:$(jq -r '.problems[0]' "$T/root/state/smoke.json")" "1:/admin (phone): shows the error screen"
+echo '{"migrate":"extas-migrate:gone"}' > "$T/root/state/last-good-deploy.json"; : > "$T/docker.log"
+sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
+check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c' "$T/docker.log")" "1"
 rm -rf "$T"
 
 # Docs on the server (PR 594, CN-011): docs-sync.sh copies README.md + docs/ of a checkout to $EXTAS_ROOT/docs/<sha12>/

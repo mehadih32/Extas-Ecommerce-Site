@@ -9,10 +9,15 @@
 //       the owner can no longer sign in: a new random first password for the one active owner (changed at the next
 //       sign-in), his sessions ended, a wrong-try wait lifted; <file> (mode 0600, must not exist) gets OWNER_EMAIL and
 //       OWNER_FIRST_PASSWORD; prints why recent sign-ins failed (counts only)
+//   tsx src/cli.ts check-account --email <e-mail> --name <name> --write-to <file>
+//       CN-016: the smoke test's read-only account with a fresh password and two-step seed, written to <file>
+//       (mode 0600, replaced) as SMOKE_EMAIL / SMOKE_PASSWORD / SMOKE_TOTP_SECRET lines; needs VAULT_MASTER_KEY
 // It never prints a connection string, a password or a hash.
 import { randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { PrismaClient } from '@extas/db/client';
+import { createVault } from '@extas/vault';
+import { ensureCheckAccount } from './check-account';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { AuthError } from './errors';
 import { createFirstOwner } from './owner';
@@ -35,8 +40,8 @@ const oneLine = (e: unknown) => String(e instanceof Error ? e.message : e).split
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  if (command !== 'sync' && command !== 'create-owner' && command !== 'reset-owner') {
-    console.error('usage: cli.ts sync | create-owner --email <e-mail> --name <name> [--generate-to <file>] | reset-owner --write-to <file>');
+  if (command !== 'sync' && command !== 'create-owner' && command !== 'reset-owner' && command !== 'check-account') {
+    console.error('usage: cli.ts sync | create-owner --email <e-mail> --name <name> [--generate-to <file>] | reset-owner --write-to <file> | check-account --email <e-mail> --name <name> --write-to <file>');
     return 2;
   }
   const url = process.env.DATABASE_DIRECT_URL || process.env.DATABASE_URL;
@@ -65,6 +70,7 @@ async function main(argv: string[]): Promise<number> {
       console.log(`auth reset-owner: owner account ${r.staffUserId} has a new first password (in the file given; change it at the next sign-in)`);
       return 0;
     }
+    if (command === 'check-account') return await checkAccount(prisma, rest);
     const email = arg(rest, '--email');
     const name = arg(rest, '--name');
     const generateTo = arg(rest, '--generate-to');
@@ -86,6 +92,26 @@ async function main(argv: string[]): Promise<number> {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+async function checkAccount(prisma: PrismaClient, rest: string[]): Promise<number> {
+  const email = arg(rest, '--email');
+  const name = arg(rest, '--name');
+  const writeTo = arg(rest, '--write-to');
+  if (!email || !name || !writeTo) {
+    console.error('auth check-account: --email, --name and --write-to are required');
+    return 2;
+  }
+  const key = process.env.VAULT_MASTER_KEY;
+  if (!key || key.length < 32) {
+    console.error('auth check-account: VAULT_MASTER_KEY is not set (the two-step seed is sealed by the vault)');
+    return 1;
+  }
+  await syncAuth(prisma);
+  const r = await ensureCheckAccount(prisma, createVault(prisma, key), { email, displayName: name });
+  writeFileSync(writeTo, `SMOKE_EMAIL=${email}\nSMOKE_PASSWORD=${r.password}\nSMOKE_TOTP_SECRET=${r.totpSecret}\n`, { mode: 0o600 });
+  console.log(`auth check-account: ${r.created ? 'made' : 'renewed'} (password and two-step seed in the file given)`);
+  return 0;
 }
 
 process.exitCode = await main(process.argv.slice(2));

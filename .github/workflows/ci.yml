@@ -9,6 +9,7 @@ on:
     # (no loop). Their commits also carry [skip ci].
     paths-ignore:
       - "docs/reports/server/**"
+      - "docs/reports/smoke/**"
 
 permissions:
   contents: read
@@ -38,7 +39,7 @@ jobs:
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh tools/admin-login-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh tools/admin-login-e2e.sh
           EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
