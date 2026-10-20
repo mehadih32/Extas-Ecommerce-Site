@@ -11,11 +11,13 @@ import {
   AdapterError,
   assertKey,
   azureBlobStorage,
+  createConnections,
   localDisk,
   localDiskStorage,
   memoryStorage,
   probe,
   s3Storage,
+  storageAdapters,
   storageFallback,
   type Storage,
 } from '../src';
@@ -129,6 +131,44 @@ describe('local disk specifics', () => {
   it('is the fallback on the media volume, and only when the media dir is known', () => {
     expect(storageFallback({ EXTAS_MEDIA_DIR: '/media' })).toEqual({ provider: localDisk.provider, mode: 'LIVE', config: { root: '/media' } });
     expect(storageFallback({})).toBeUndefined();
+  });
+});
+
+// PR 22 follow-up — with no Blob, S3 or media volume (a laptop, CI, a preview without EXTAS_MEDIA_DIR) the storage
+// runs on its mock. The media service writes a new file through "where files go now" and reads it back through the
+// provider it was written to; both, and every later lookup, must reach the same objects, or a photo's sizes can never
+// be made (the original reads back as missing) and the admin shows only the colour box.
+describe('the storage mock is one store per provider for the whole process', () => {
+  const noRows = {
+    integration: { findMany: async () => [], findUniqueOrThrow: async () => ({}), update: async () => ({}) },
+    integrationTestRun: { create: async () => ({}) },
+    auditLog: { create: async () => ({}) },
+    $transaction: async () => [],
+  } as unknown as Parameters<typeof createConnections>[0]['db'];
+  const connect = (now: () => number) =>
+    createConnections({ db: noRows, vault: { get: async () => null }, adapters: storageAdapters, secretCacheMs: 1000, testTimeoutMs: 1000, now });
+
+  it('the same objects through "where files go now", by provider, after the cache expires, and from a new connection layer', async () => {
+    let t = 0;
+    const c = connect(() => t);
+    const key = `media/s1/o/mock-${Date.now().toString(36)}.jpg`;
+    const now = await c.use<Storage>('STORAGE', { storeId: 1 });
+    expect(now.mode).toBe('MOCK');
+    await now.api.put(key, enc('original'), 'image/jpeg');
+    const byProvider = await c.use<Storage>('STORAGE', { storeId: 1, provider: 'localDisk' });
+    expect(dec((await byProvider.api.get(key))!.body)).toBe('original');
+    t += 5000; // the resolved connection is looked up again
+    expect(await (await c.use<Storage>('STORAGE', { storeId: 1 })).api.head(key)).toMatchObject({ bytes: 8 });
+    // another part of the app (a route, a page, the image job) builds its own connection layer
+    expect(await (await connect(() => 0).use<Storage>('STORAGE', { storeId: 1, provider: 'localDisk' })).api.head(key)).toMatchObject({ bytes: 8 });
+  });
+
+  it('keeps providers apart, and a plain memoryStorage() is still a fresh, private store (tests)', async () => {
+    const c = connect(() => 0);
+    const key = `media/s1/o/apart-${Date.now().toString(36)}.jpg`;
+    await (await c.use<Storage>('STORAGE', { storeId: 1, provider: 'localDisk' })).api.put(key, enc('x'), 'image/jpeg');
+    expect(await (await c.use<Storage>('STORAGE', { storeId: 1, provider: 's3' })).api.head(key)).toBeNull();
+    expect(await memoryStorage().head(key)).toBeNull();
   });
 });
 

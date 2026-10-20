@@ -60,7 +60,8 @@ describe.skipIf(!HAS_DB)('connections with PostgreSQL', () => {
 
     const m = await connections().use<Storage>('STORAGE');
     expect([m.provider, m.mode]).toEqual(['localDisk', 'MOCK']);
-    const o = await connections().use<{ key: string }>('OTHER');
+    // OTHER has more than one adapter (the page reader, PR 33): with nothing connected, the named one's mock.
+    const o = await connections().use<{ key: string }>('OTHER', { provider: 'echo' });
     expect(o.api.key).toBe('mock');
   });
 

@@ -4,7 +4,7 @@
 import { BlobServiceClient, RestError, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
-import { memoryStorage } from './memory';
+import { sharedMemoryStorage } from './memory';
 import { assertKey, probe, type Storage } from './types';
 
 export const azureBlobConfig = z.object({
@@ -67,7 +67,7 @@ export const azureBlob = defineAdapter<Storage, Config>({
     return azureBlobStorage(ctx.config, await requireSecret(ctx, 'accountKey'));
   },
   async mock() {
-    return memoryStorage('AZURE_BLOB');
+    return sharedMemoryStorage('AZURE_BLOB');
   },
   async test(api) {
     return { ok: true, message: await probe(api) };

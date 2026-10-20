@@ -8,7 +8,7 @@
 // - The photo check is the media package's own photo minimum (`requirePhotoSet` / `photoSetStatus`, PR 25): one rule,
 //   enforced the same way everywhere (B7.2 #9).
 // - The size chart check reads the existing SizeChart / SizeChartAssignment rows (the size chart system itself is
-//   PR 27/28): a chart assigned to the product, else to its category or the nearest ancestor. A garment type without
+//   PR 27/28; archived links do not count): a chart assigned to the product, else to its category or the nearest ancestor. A garment type without
 //   measurement fields (accessories) needs no chart.
 // - checkProduct() stores the result on the product (healthScore, healthIssues) and keeps the publish queue in step
 //   (publish.ts). It is derived data: computing it again never loses anything.
@@ -97,11 +97,11 @@ export function readStoredHealth(v: Prisma.JsonValue | null | undefined): Stored
 /** The size chart that applies to a product: its own assignment, else its category's or the nearest ancestor's. */
 export async function sizeChartOf(db: Db, storeId: number, productId: string, categoryId: string | null): Promise<SizeChartRef | null> {
   const pick = { orderBy: { createdAt: 'desc' }, select: { sizeChart: { select: { id: true, name: true } } } } as const;
-  const own = await db.sizeChartAssignment.findFirst({ where: { storeId, productId, sizeChart: { archivedAt: null, storeId } }, ...pick });
+  const own = await db.sizeChartAssignment.findFirst({ where: { storeId, productId, archivedAt: null, sizeChart: { archivedAt: null, storeId } }, ...pick });
   if (own) return { ...own.sizeChart, via: 'product' };
   let id = categoryId;
   for (let guard = 0; id && guard < 64; guard++) {
-    const a = await db.sizeChartAssignment.findFirst({ where: { storeId, categoryId: id, productId: null, sizeChart: { archivedAt: null, storeId } }, ...pick });
+    const a = await db.sizeChartAssignment.findFirst({ where: { storeId, categoryId: id, productId: null, archivedAt: null, sizeChart: { archivedAt: null, storeId } }, ...pick });
     if (a) return { ...a.sizeChart, via: 'category' };
     const c: { parentId: string | null } | null = await db.category.findFirst({ where: { id, storeId }, select: { parentId: true } });
     id = c?.parentId ?? null;

@@ -2,8 +2,11 @@
 // Bengali switch). The registry only names a key; the text lives in messages/settings.<lang>.json, and the media
 // settings (PR 22–25, 37) in messages/media.<lang>.json, the publish checklist settings (PR 21, 26, 29, 35) in
 // messages/publish.<lang>.json and the size chart, collection, CSV and "was" price settings (PR 27, 28, 32, 34, 38) in
-// messages/merch.<lang>.json and the ERP and stock location settings (S09) in messages/inventory.<lang>.json, merged in
-// here.
+// messages/merch.<lang>.json, the link import, ghost archive and audit settings (PR 33, 36, 39) in
+// messages/catalogue-tools.<lang>.json and the ERP and stock location settings (S09) in messages/inventory.<lang>.json,
+// merged in here.
+import toolsBn from '../messages/catalogue-tools.bn.json';
+import toolsEn from '../messages/catalogue-tools.en.json';
 import inventoryBn from '../messages/inventory.bn.json';
 import inventoryEn from '../messages/inventory.en.json';
 import mediaBn from '../messages/media.bn.json';
@@ -34,8 +37,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), inventoryEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), inventoryBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */

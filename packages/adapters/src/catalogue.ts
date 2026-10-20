@@ -86,6 +86,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     targetMode: 'LIVE',
     builtIn: true,
   },
+  // PR 33 — reads a supplier's or brand's product page for "import from a link". No key: the owner names a page for
+  // the Test button; until it passes, the import runs on the mock's sample page.
+  {
+    id: 'pageReader',
+    kind: 'OTHER',
+    provider: 'pageReader',
+    adapter: true,
+    secrets: [],
+    config: [{ field: 'testUrl' }, { field: 'userAgent', optional: true }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

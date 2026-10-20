@@ -224,9 +224,21 @@ describe.skipIf(!HAS_TEST_DB)('size charts, collections, tags, CSV and the "was"
       expect((await getSizeChart(deps(), sys(), own.id)).products.map((p) => [p.nameEn, p.via])).toEqual([['Odd polo', 'product']]);
       expect(await unassignSizeChart(deps(), sys(), { productId: ids['odd-polo']! })).toEqual({ removed: 1 });
       expect((await resolveSizeChart(deps(), sys(), { productId: ids['odd-polo']! })).choice).toMatchObject({ chartId: regular, matched: 'fit' });
-      // the link is gone but the audit log keeps it whole
+      // the link is archived, never deleted (hard rule 3); the audit log keeps it whole
       const log = await t.prisma.auditLog.findFirst({ where: { action: 'sizeChart.unassign', storeId: A }, orderBy: { createdAt: 'desc' } });
       expect(log?.before).toMatchObject({ sizeChartId: own.id, productId: ids['odd-polo'] });
+      const kept = await t.prisma.sizeChartAssignment.findMany({ where: { productId: ids['odd-polo'] } });
+      expect(kept).toHaveLength(1);
+      expect(kept[0]!.archivedAt).not.toBeNull();
+      expect((await getSizeChart(deps(), sys(), own.id)).products).toEqual([]);
+      // making it custom again brings the same row back; "back to auto" archives it again
+      const again = await assignSizeChart(deps(), sys(), { sizeChartId: own.id, productId: ids['odd-polo']! });
+      expect(again.assignmentId).toBe(kept[0]!.id);
+      expect((await resolveSizeChart(deps(), sys(), { productId: ids['odd-polo']! })).choice).toMatchObject({ chartId: own.id, via: 'product' });
+      expect(await t.prisma.auditLog.count({ where: { action: 'sizeChart.reassign', entityId: kept[0]!.id } })).toBe(1);
+      expect(await unassignSizeChart(deps(), sys(), { productId: ids['odd-polo']! })).toEqual({ removed: 1 });
+      expect(await unassignSizeChart(deps(), sys(), { productId: ids['odd-polo']! })).toEqual({ removed: 0 });
+      expect(await t.prisma.sizeChartAssignment.count({ where: { productId: ids['odd-polo'] } })).toBe(1);
     });
 
     it('names the sizes a product sells that its chart lacks, with a suggestion from the neighbours', async () => {
@@ -276,8 +288,19 @@ describe.skipIf(!HAS_TEST_DB)('size charts, collections, tags, CSV and the "was"
       expect(await code(createTag(deps(), sys(), { slug: 'linen', name: 'Linen again' }))).not.toBe('ok');
       expect(await setProductTags(deps(), sys(), ids['slim-polo']!, { tagIds: [linen.id, summer.id] })).toHaveLength(2);
       expect((await setProductTags(deps(), sys(), ids['slim-polo']!, { tagIds: [linen.id] })).map((x) => x.slug)).toEqual(['linen']);
+      // taking a tag off archives the link (hard rule 3); tagging again brings the same row back
+      const offLink = await t.prisma.productTag.findUniqueOrThrow({ where: { tagId_productId: { tagId: summer.id, productId: ids['slim-polo']! } } });
+      expect(offLink.archivedAt).not.toBeNull();
+      expect((await listTags(deps(), sys())).find((x) => x.id === summer.id)?.products).toBe(0);
+      expect((await setProductTags(deps(), sys(), ids['slim-polo']!, { tagIds: [linen.id, summer.id] })).map((x) => x.slug)).toEqual(['linen', 'summer']);
+      const backLink = await t.prisma.productTag.findUniqueOrThrow({ where: { tagId_productId: { tagId: summer.id, productId: ids['slim-polo']! } } });
+      expect(backLink).toMatchObject({ id: offLink.id, archivedAt: null });
+      await setProductTags(deps(), sys(), ids['slim-polo']!, { tagIds: [linen.id] });
       expect(await tagProducts(deps(), sys(), summer.id, { action: 'add', productIds: [ids['plain-polo']!, ids['odd-polo']!] })).toEqual({ changed: 2 });
       expect(await tagProducts(deps(), sys(), summer.id, { action: 'remove', productIds: [ids['odd-polo']!] })).toEqual({ changed: 1 });
+      expect(await tagProducts(deps(), sys(), summer.id, { action: 'remove', productIds: [ids['odd-polo']!] })).toEqual({ changed: 0 });
+      expect(await t.prisma.productTag.count({ where: { tagId: summer.id } })).toBe(3);
+      expect(await t.prisma.productTag.count({ where: { tagId: summer.id, archivedAt: null } })).toBe(1);
       expect((await productTags(deps(), sys(), ids['plain-polo']!)).map((x) => x.slug)).toEqual(['summer']);
       overrides.set('catalogue.tags.maxPerProduct', 1);
       expect(await code(setProductTags(deps(), sys(), ids['plain-polo']!, { tagIds: [linen.id, summer.id] }))).toBe('INVALID_INPUT');
@@ -312,6 +335,15 @@ describe.skipIf(!HAS_TEST_DB)('size charts, collections, tags, CSV and the "was"
       expect(await t.prisma.product.count({ where: { id: ids['plain-polo'] } })).toBe(1);
       const log = await t.prisma.auditLog.findFirst({ where: { action: 'collection.products', entityId: c.id }, orderBy: { createdAt: 'desc' } });
       expect(log?.after).toMatchObject({ removed: [ids['plain-polo']] });
+      // the link is archived, never deleted; putting the product back brings the same row back
+      const out = await t.prisma.collectionProduct.findUniqueOrThrow({ where: { collectionId_productId: { collectionId: c.id, productId: ids['plain-polo']! } } });
+      expect(out.archivedAt).not.toBeNull();
+      expect(one.products).toBe(1);
+      const back = await setCollectionProducts(deps(), sys(), c.id, { productIds: [ids['plain-polo']!, ids['slim-polo']!] });
+      expect(back.items.map((i) => i.slug)).toEqual(['plain-polo', 'slim-polo']);
+      expect(await t.prisma.collectionProduct.findUniqueOrThrow({ where: { id: out.id } })).toMatchObject({ archivedAt: null, position: 0 });
+      await setCollectionProducts(deps(), sys(), c.id, { productIds: [ids['slim-polo']!] });
+      expect(await t.prisma.collectionProduct.count({ where: { collectionId: c.id } })).toBe(2);
       // a new link keeps the old one working (301)
       const moved = await updateCollection(deps(), sys(), c.id, { slug: 'eid-2026' });
       expect(moved.path).toBe('/collections/eid-2026');

@@ -5,7 +5,7 @@ import { localDisk } from './local-disk';
 import { s3 } from './s3';
 
 export * from './types';
-export { memoryStorage } from './memory';
+export { memoryStorage, sharedMemoryStorage } from './memory';
 export { localDisk, localDiskStorage, localDiskConfig } from './local-disk';
 export { azureBlob, azureBlobStorage, azureBlobConfig } from './azure-blob';
 export { s3, s3Storage, s3Config } from './s3';

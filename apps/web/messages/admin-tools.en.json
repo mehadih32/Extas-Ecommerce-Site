@@ -1,0 +1,177 @@
+{
+  "products": {
+    "errors": {
+      "LINK_IMPORT_OFF": "Import from a link is switched off for this store.",
+      "HOST_NOT_ALLOWED": "This link cannot be read: only plain https links from the allowed sites. {fields}",
+      "PAGE_UNREADABLE": "The page could not be read.",
+      "TOO_MANY_REQUESTS": "Too many requests for today.",
+      "INTEREST_OFF": "This is switched off."
+    }
+  },
+  "linkImport": {
+    "metaTitle": "Import from a link · Admin",
+    "title": "Import from a link",
+    "intro": "Paste a supplier's or brand's product page. You see what the page says, change what you like, and get a draft to finish. Nothing goes on the shop from here.",
+    "off": "Import from a link is switched off for this store (Settings › Catalogue).",
+    "mock": "The page reader is not switched on yet, so this shows a sample page made from the link — not the real page.",
+    "mockLink": "Switch it on in Keys & connections",
+    "urlLabel": "Product page link",
+    "urlPlaceholder": "https://",
+    "read": "Read the page",
+    "reading": "Reading…",
+    "found": "What the page says",
+    "facts": {
+      "name": "Name",
+      "brand": "Brand",
+      "colours": "Colours",
+      "sizes": "Sizes",
+      "material": "Fabric",
+      "sku": "Supplier's code",
+      "price": "Price on the page",
+      "photos": "Photos",
+      "none": "—"
+    },
+    "priceNote": "Shown only. A price is never copied: you set prices yourself.",
+    "skuNote": "Shown only. The ERP code stays the product's key.",
+    "sizesNote": "Shown only. Sizes and SKUs come from the ERP.",
+    "sizeKnown": "in your sizes",
+    "photosNote": "{n} photo links on the page. Photos are not copied: upload your own.",
+    "draftTitle": "The draft",
+    "draftIntro": "Check and change anything, then make the draft. It starts as a draft and is never put on the shop from here.",
+    "fields": {
+      "nameEn": "Name (English)",
+      "descriptionEn": "Description (English)",
+      "brand": "Brand",
+      "category": "Category",
+      "fabric": "Fabric",
+      "colours": "Colours",
+      "none": "— none —"
+    },
+    "matched": "found from “{from}”",
+    "unmatched": "Not in your lists yet: {list}",
+    "method": {
+      "rules": "Made by plain rules.",
+      "ai": "Tidied by AI."
+    },
+    "notes": {
+      "ai-off": "AI is switched off, so plain rules made this draft.",
+      "ai-not-connected": "AI is on but not connected yet, so plain rules made this draft.",
+      "ai-not-used": "AI is not used for imports (setting), so plain rules made this draft.",
+      "ai-failed": "AI did not answer, so plain rules made this draft."
+    },
+    "earlier": "This link was read before ({n}).",
+    "earlierDraft": "Open the draft made then",
+    "make": "Make the draft",
+    "making": "Making…",
+    "made": "Draft made.",
+    "open": "Open the draft",
+    "again": "Read another link",
+    "noWrite": "Making a draft needs the right to change products.",
+    "history": "Latest reads",
+    "historyEmpty": "No link has been read yet.",
+    "stage": {
+      "preview": "Read",
+      "drafted": "Draft made",
+      "failed": "Could not read"
+    },
+    "mode": {
+      "MOCK": "sample page",
+      "LIVE": "real page",
+      "SANDBOX": "test"
+    },
+    "reasons": {
+      "BAD_URL": "That is not a plain web address.",
+      "BLOCKED_ADDRESS": "This address is never read (it points inside a private network).",
+      "TOO_BIG": "The page is larger than allowed.",
+      "TIMEOUT": "The site did not answer in time. Try again.",
+      "TOO_MANY_REDIRECTS": "The link forwards too many times.",
+      "NOT_HTML": "The link is not a web page (a photo or a file?).",
+      "HTTP_ERROR": "The site answered with an error.",
+      "NETWORK": "The site could not be reached.",
+      "NO_PRODUCT": "No product was found on the page."
+    }
+  },
+  "audit": {
+    "metaTitle": "Product audit · Admin",
+    "title": "Product audit",
+    "intro": "Every product that is not complete, with what it still misses. Each “Fix” opens the place to fix it.",
+    "recheck": "Check all again",
+    "kpi": {
+      "products": "Products",
+      "productsSub": "not archived",
+      "incomplete": "Incomplete",
+      "incompleteSub": "miss something",
+      "blocked": "Cannot go live",
+      "blockedSub": "{n} on the shop half done",
+      "score": "Average health",
+      "scoreSub": "out of 100"
+    },
+    "waiting": "{n} more products will be checked the next time this page opens.",
+    "carryOn": "Carry on checking",
+    "rechecked": "{n} products checked just now.",
+    "checksLabel": "Missing",
+    "allChecks": "Everything {n}",
+    "statusLabel": "Status",
+    "status": {
+      "all": "All {n}",
+      "draft": "Drafts {n}",
+      "ready": "Ready {n}",
+      "live": "On the shop {n}",
+      "off": "Taken off {n}"
+    },
+    "liveBlocked": "On the shop, half done",
+    "fix": "Fix",
+    "fixSizeChart": "Size charts",
+    "checkedAt": "checked {date}",
+    "empty": "Every product is complete.",
+    "emptyFilter": "Nothing here with this filter."
+  },
+  "interest": {
+    "metaTitle": "Back in stock · Admin",
+    "title": "Back in stock",
+    "intro": "A sold-out or hidden product keeps its page, and customers can ask to be told when it is back. This is who is waiting, per product.",
+    "kpi": {
+      "waiting": "Waiting",
+      "waitingSub": "requests",
+      "products": "Products",
+      "productsSub": "with requests",
+      "told": "Told",
+      "toldSub": "marked as told",
+      "archived": "Off the list",
+      "archivedSub": "kept, not deleted"
+    },
+    "state": {
+      "live": "On the shop",
+      "soldOut": "Sold out",
+      "unpublished": "Taken off",
+      "archived": "Archived",
+      "none": "Not on the shop"
+    },
+    "back": "Back in stock — tell them",
+    "waitingN": "{n} waiting",
+    "since": "first asked {date}",
+    "see": "See who asked",
+    "noContacts": "Seeing phone numbers and e-mails needs the back-in-stock list permission.",
+    "sendNote": "Messages are sent by hand for now. Mark each person as told; automatic messages come with the message templates.",
+    "listTitle": "Who asked · {name}",
+    "allProducts": "All products",
+    "states": {
+      "label": "Show",
+      "waiting": "Waiting",
+      "told": "Told",
+      "archived": "Off the list"
+    },
+    "anySize": "Any size",
+    "asked": "asked {date}",
+    "toldAt": "told {date}",
+    "select": "Select {contact}",
+    "selectAll": "Select all",
+    "selected": "{n} selected",
+    "markTold": "Mark as told",
+    "archive": "Take off the list",
+    "restore": "Put back on the list",
+    "done": "{n} changed.",
+    "empty": "Nobody is waiting for a product.",
+    "listEmpty": "Nobody here."
+  }
+}

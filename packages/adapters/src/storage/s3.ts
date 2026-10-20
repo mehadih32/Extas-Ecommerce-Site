@@ -4,7 +4,7 @@
 import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client, S3ServiceException } from '@aws-sdk/client-s3';
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
-import { memoryStorage } from './memory';
+import { sharedMemoryStorage } from './memory';
 import { assertKey, probe, type Storage } from './types';
 
 export const s3Config = z.object({
@@ -71,7 +71,7 @@ export const s3 = defineAdapter<Storage, Config>({
     return s3Storage(ctx.config, await requireSecret(ctx, 'accessKeyId'), await requireSecret(ctx, 'secretAccessKey'));
   },
   async mock() {
-    return memoryStorage('S3_COMPATIBLE');
+    return sharedMemoryStorage('S3_COMPATIBLE');
   },
   async test(api) {
     return { ok: true, message: await probe(api) };

@@ -120,8 +120,8 @@ export async function exportCatalogueCsv(deps: CatalogueDeps, who: Who, query: C
   });
   const ids = products.map((p) => p.id);
   const [tags, links] = await Promise.all([
-    deps.db.productTag.findMany({ where: { storeId: who.storeId, productId: { in: ids } }, select: { productId: true, tag: { select: { slug: true } } } }),
-    deps.db.collectionProduct.findMany({ where: { storeId: who.storeId, productId: { in: ids } }, select: { productId: true, collection: { select: { slug: true } } } }),
+    deps.db.productTag.findMany({ where: { storeId: who.storeId, productId: { in: ids }, archivedAt: null }, select: { productId: true, tag: { select: { slug: true } } } }),
+    deps.db.collectionProduct.findMany({ where: { storeId: who.storeId, productId: { in: ids }, archivedAt: null }, select: { productId: true, collection: { select: { slug: true } } } }),
   ]);
   const list = (pairs: { productId: string; slug: string }[], id: string) =>
     pairs
@@ -313,14 +313,14 @@ async function plan(deps: CatalogueDeps, who: Who, text: string): Promise<Planne
     deps.db.colour.findMany({ where: { storeId, key: { in: one('colour') } }, select: { id: true, key: true, archivedAt: true } }),
     deps.db.size.findMany({ where: { storeId, key: { in: one('size') } }, select: { id: true, key: true, archivedAt: true } }),
     deps.db.tag.findMany({ where: { storeId, slug: { in: many('tags') } }, select: { id: true, slug: true, archivedAt: true } }),
-    deps.db.collection.findMany({ where: { storeId, slug: { in: many('collections') } }, select: { id: true, slug: true, kind: true, archivedAt: true, _count: { select: { products: true } } } }),
+    deps.db.collection.findMany({ where: { storeId, slug: { in: many('collections') } }, select: { id: true, slug: true, kind: true, archivedAt: true, _count: { select: { products: { where: { archivedAt: null } } } } } }),
     can(deps.db, who.actor, 'catalogue.prices', { storeId }),
     namingSettings(deps, who),
   ]);
   const productIds = products.map((p) => p.id);
   const [tagLinks, colLinks] = await Promise.all([
-    deps.db.productTag.findMany({ where: { storeId, productId: { in: productIds } }, select: { productId: true, tagId: true } }),
-    deps.db.collectionProduct.findMany({ where: { storeId, productId: { in: productIds } }, select: { productId: true, collectionId: true } }),
+    deps.db.productTag.findMany({ where: { storeId, productId: { in: productIds }, archivedAt: null }, select: { productId: true, tagId: true } }),
+    deps.db.collectionProduct.findMany({ where: { storeId, productId: { in: productIds }, archivedAt: null }, select: { productId: true, collectionId: true } }),
   ]);
 
   // --- the simulated catalogue, updated row by row as the plan goes ---

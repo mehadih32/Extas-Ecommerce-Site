@@ -90,7 +90,10 @@ function readRules(json: Prisma.JsonValue | null): StoredRules {
   return { season: typeof o.season === 'string' ? o.season : null, rule: rule.success ? rule.data : null };
 }
 
-type CollectionRow = Prisma.CollectionGetPayload<{ include: { _count: { select: { products: true } } } }>;
+/** Live links only: a product taken out of a collection, or a tag taken off, keeps its archived row (hard rule 3). */
+const LIVE = { archivedAt: null } as const;
+const collectionInclude = { _count: { select: { products: { where: LIVE } } } } as const;
+type CollectionRow = Prisma.CollectionGetPayload<{ include: typeof collectionInclude }>;
 
 async function collectionSettings(deps: CatalogueDeps, who: Who) {
   const [prefix, seasons, maxProducts] = await Promise.all([setting(deps, who, 'catalogue.collections.pathPrefix'), setting(deps, who, 'catalogue.collections.seasons'), setting(deps, who, 'catalogue.collections.maxProducts')]);
@@ -139,7 +142,7 @@ async function withDescendants(db: Db, storeId: number, ids: string[]): Promise<
 
 async function ruleWhere(db: Db, storeId: number, rule: CollectionRule): Promise<Prisma.ProductWhereInput> {
   const or: Prisma.ProductWhereInput[] = [];
-  if (rule.tags?.length) or.push({ id: { in: (await db.productTag.findMany({ where: { storeId, tag: { slug: { in: rule.tags }, archivedAt: null } }, select: { productId: true } })).map((t) => t.productId) } });
+  if (rule.tags?.length) or.push({ id: { in: (await db.productTag.findMany({ where: { storeId, archivedAt: null, tag: { slug: { in: rule.tags }, archivedAt: null } }, select: { productId: true } })).map((t) => t.productId) } });
   if (rule.categoryIds?.length) or.push({ categoryId: { in: await withDescendants(db, storeId, rule.categoryIds) } });
   return { storeId, archivedAt: null, OR: or, ...(rule.inStockOnly ? { inStock: true } : {}) };
 }
@@ -150,7 +153,7 @@ export async function listCollections(deps: CatalogueDeps, who: Who, opts: { inc
   const now = deps.now?.() ?? new Date();
   const rows = await deps.db.collection.findMany({
     where: { storeId: who.storeId, ...(opts.includeArchived ? {} : { archivedAt: null }) },
-    include: { _count: { select: { products: true } } },
+    include: collectionInclude,
     orderBy: [{ nameEn: 'asc' }, { id: 'asc' }],
   });
   const out: CollectionView[] = [];
@@ -178,7 +181,7 @@ export interface CollectionDetail extends CollectionView {
 export async function getCollection(deps: CatalogueDeps, who: Who, id: string): Promise<CollectionDetail> {
   await allow(deps, who, 'catalogue.read');
   const { prefix, seasons, maxProducts } = await collectionSettings(deps, who);
-  const c = found(await deps.db.collection.findFirst({ where: { id, storeId: who.storeId }, include: { _count: { select: { products: true } } } }), 'collection');
+  const c = found(await deps.db.collection.findFirst({ where: { id, storeId: who.storeId }, include: collectionInclude }), 'collection');
   const pick = { id: true, slug: true, nameEn: true, nameBn: true, status: true, inStock: true, archivedAt: true } as const;
   let items: CollectionProductView[];
   const rule = c.kind === 'RULE' ? readRules(c.rules).rule : null;
@@ -186,7 +189,7 @@ export async function getCollection(deps: CatalogueDeps, who: Who, id: string): 
     const ps = await deps.db.product.findMany({ where: await ruleWhere(deps.db, who.storeId, rule), select: pick, orderBy: [{ sortRank: 'desc' }, { nameEn: 'asc' }], take: maxProducts });
     items = ps.map((p, i) => ({ id: p.id, slug: p.slug, nameEn: p.nameEn, nameBn: p.nameBn, status: p.status, inStock: p.inStock, position: i }));
   } else {
-    const links = await deps.db.collectionProduct.findMany({ where: { storeId: who.storeId, collectionId: c.id }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] });
+    const links = await deps.db.collectionProduct.findMany({ where: { storeId: who.storeId, collectionId: c.id, ...LIVE }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] });
     const ps = await deps.db.product.findMany({ where: { storeId: who.storeId, id: { in: links.map((l) => l.productId) } }, select: pick });
     const by = new Map(ps.map((p) => [p.id, p]));
     items = links.flatMap((l) => {
@@ -293,11 +296,15 @@ export const collectionProductsInput = z
   .strict();
 export type CollectionProductsInput = z.input<typeof collectionProductsInput>;
 
-/** The products of a manual or seasonal collection, in the order given. One left out is taken out (only the link). */
+/**
+ * The products of a manual or seasonal collection, in the order given. One left out is taken out: its link is archived,
+ * never deleted (hard rule 3), and putting the product back brings the same row back.
+ */
 export async function setCollectionProducts(deps: CatalogueDeps, who: Who, id: string, input: CollectionProductsInput): Promise<CollectionDetail> {
   await allow(deps, who, 'catalogue.write');
   const d = parse(collectionProductsInput, input, 'collection products');
   const { maxProducts } = await collectionSettings(deps, who);
+  const now = deps.now?.() ?? new Date();
   if (d.productIds.length > maxProducts) throw new CatalogueError('INVALID_INPUT', 'too many products in one collection', [`productIds: ${d.productIds.length} > ${maxProducts}`]);
   await deps.db.$transaction(async (tx) => {
     const c = found(await tx.collection.findFirst({ where: { id, storeId: who.storeId } }), 'collection');
@@ -309,14 +316,16 @@ export async function setCollectionProducts(deps: CatalogueDeps, who: Who, id: s
     const archivedP = ps.filter((p) => p.archivedAt).map((p) => p.id);
     if (archivedP.length) throw new CatalogueError('PARENT_ARCHIVED', 'the product is archived', archivedP.map((m) => `productId: ${m}`));
     const links = await tx.collectionProduct.findMany({ where: { collectionId: c.id } });
-    const before = links.sort((a, b) => a.position - b.position).map((l) => l.productId);
-    const removed = links.filter((l) => !d.productIds.includes(l.productId));
+    const live = links.filter((l) => !l.archivedAt);
+    const before = live.sort((a, b) => a.position - b.position).map((l) => l.productId);
+    const removed = live.filter((l) => !d.productIds.includes(l.productId));
     for (const [i, productId] of d.productIds.entries()) {
       const cur = links.find((l) => l.productId === productId);
       if (!cur) await tx.collectionProduct.create({ data: { storeId: who.storeId, collectionId: c.id, productId, position: i } });
+      else if (cur.archivedAt) await tx.collectionProduct.update({ where: { id: cur.id }, data: { position: i, archivedAt: null } });
       else if (cur.position !== i) await tx.collectionProduct.update({ where: { id: cur.id }, data: { position: i } });
     }
-    for (const r of removed) await tx.collectionProduct.delete({ where: { id: r.id } });
+    for (const r of removed) await tx.collectionProduct.update({ where: { id: r.id }, data: { archivedAt: now } });
     if (JSON.stringify(before) !== JSON.stringify(d.productIds)) {
       await logChange(tx, who, 'collection.products', 'Collection', c.id, { productIds: before }, { productIds: d.productIds, removed: removed.map((r) => r.productId) });
     }
@@ -324,15 +333,23 @@ export async function setCollectionProducts(deps: CatalogueDeps, who: Who, id: s
   return getCollection(deps, who, id);
 }
 
-/** Adds products at the end of manual or seasonal collections (the CSV import and bulk actions; never removes). */
+/**
+ * Adds products at the end of manual or seasonal collections (the CSV import and bulk actions; never removes). A
+ * product taken out earlier gets its archived link back.
+ */
 export async function addToCollection(tx: Tx, who: Who, collectionId: string, productIds: string[], maxProducts: number): Promise<number> {
-  const links = await tx.collectionProduct.findMany({ where: { collectionId }, select: { productId: true, position: true } });
-  const have = new Set(links.map((l) => l.productId));
+  const links = await tx.collectionProduct.findMany({ where: { collectionId }, select: { id: true, productId: true, position: true, archivedAt: true } });
+  const live = links.filter((l) => !l.archivedAt);
+  const have = new Set(live.map((l) => l.productId));
   const add = [...new Set(productIds)].filter((p) => !have.has(p));
   if (!add.length) return 0;
-  if (links.length + add.length > maxProducts) throw new CatalogueError('INVALID_INPUT', 'too many products in one collection', [`collection: ${links.length + add.length} > ${maxProducts}`]);
-  let pos = links.reduce((m, l) => Math.max(m, l.position), -1);
-  for (const productId of add) await tx.collectionProduct.create({ data: { storeId: who.storeId, collectionId, productId, position: ++pos } });
+  if (live.length + add.length > maxProducts) throw new CatalogueError('INVALID_INPUT', 'too many products in one collection', [`collection: ${live.length + add.length} > ${maxProducts}`]);
+  let pos = live.reduce((m, l) => Math.max(m, l.position), -1);
+  for (const productId of add) {
+    const old = links.find((l) => l.productId === productId);
+    if (old) await tx.collectionProduct.update({ where: { id: old.id }, data: { position: ++pos, archivedAt: null } });
+    else await tx.collectionProduct.create({ data: { storeId: who.storeId, collectionId, productId, position: ++pos } });
+  }
   await logChange(tx, who, 'collection.add', 'Collection', collectionId, null, { productIds: add });
   return add.length;
 }
@@ -354,9 +371,20 @@ export interface TagView {
   archived: boolean;
 }
 
-type TagRow = Prisma.TagGetPayload<{ include: { _count: { select: { products: true } } } }>;
+const tagInclude = { _count: { select: { products: { where: LIVE } } } } as const;
+type TagRow = Prisma.TagGetPayload<{ include: typeof tagInclude }>;
 const tagView = (t: TagRow): TagView => ({ id: t.id, slug: t.slug, name: t.name, products: t._count.products, archived: t.archivedAt != null });
-const tagInclude = { _count: { select: { products: true } } } as const;
+
+/** Tags a product with each tag: its archived link back when it had one, else a new link (never a second row). */
+async function linkTags(tx: Tx, who: Who, productId: string, tagIds: string[]): Promise<void> {
+  if (!tagIds.length) return;
+  const old = await tx.productTag.findMany({ where: { productId, tagId: { in: tagIds }, archivedAt: { not: null } }, select: { id: true, tagId: true } });
+  for (const tagId of tagIds) {
+    const o = old.find((x) => x.tagId === tagId);
+    if (o) await tx.productTag.update({ where: { id: o.id }, data: { archivedAt: null } });
+    else await tx.productTag.create({ data: { storeId: who.storeId, tagId, productId } });
+  }
+}
 
 export async function listTags(deps: CatalogueDeps, who: Who, opts: { includeArchived?: boolean } = {}): Promise<TagView[]> {
   await allow(deps, who, 'catalogue.read');
@@ -404,20 +432,21 @@ async function liveTags(tx: Tx, storeId: number, ids: string[]) {
   if (archived.length) throw new CatalogueError('PARENT_ARCHIVED', 'the tag is archived', archived.map((m) => `tagId: ${m}`));
 }
 
-/** A product's tags, all at once. A tag left out comes off (only the link). */
+/** A product's tags, all at once. A tag left out comes off: its link is archived, never deleted (hard rule 3). */
 export async function setProductTags(deps: CatalogueDeps, who: Who, productId: string, input: ProductTagsInput): Promise<TagView[]> {
   await allow(deps, who, 'catalogue.write');
   const d = parse(productTagsInput, input, 'product tags');
   const max = await setting(deps, who, 'catalogue.tags.maxPerProduct');
   if (d.tagIds.length > max) throw new CatalogueError('INVALID_INPUT', 'too many tags on one product', [`tagIds: ${d.tagIds.length} > ${max}`]);
+  const now = deps.now?.() ?? new Date();
   await deps.db.$transaction(async (tx) => {
     const p = found(await tx.product.findFirst({ where: { id: productId, storeId: who.storeId }, select: { id: true } }), 'product');
-    const links = await tx.productTag.findMany({ where: { storeId: who.storeId, productId: p.id } });
+    const links = await tx.productTag.findMany({ where: { storeId: who.storeId, productId: p.id, ...LIVE } });
     const add = d.tagIds.filter((t) => !links.some((l) => l.tagId === t));
     await liveTags(tx, who.storeId, add);
     const removed = links.filter((l) => !d.tagIds.includes(l.tagId));
-    for (const tagId of add) await tx.productTag.create({ data: { storeId: who.storeId, tagId, productId: p.id } });
-    for (const r of removed) await tx.productTag.delete({ where: { id: r.id } });
+    await linkTags(tx, who, p.id, add);
+    for (const r of removed) await tx.productTag.update({ where: { id: r.id }, data: { archivedAt: now } });
     if (add.length || removed.length) await logChange(tx, who, 'product.tags', 'Product', p.id, { tagIds: links.map((l) => l.tagId) }, { tagIds: d.tagIds, added: add, removed: removed.map((r) => r.tagId) });
   }, TX);
   return productTags(deps, who, productId);
@@ -426,31 +455,32 @@ export async function setProductTags(deps: CatalogueDeps, who: Who, productId: s
 export async function productTags(deps: CatalogueDeps, who: Who, productId: string): Promise<TagView[]> {
   await allow(deps, who, 'catalogue.read');
   found(await deps.db.product.findFirst({ where: { id: productId, storeId: who.storeId }, select: { id: true } }), 'product');
-  const rows = await deps.db.tag.findMany({ where: { storeId: who.storeId, products: { some: { productId } } }, include: tagInclude, orderBy: [{ name: 'asc' }] });
+  const rows = await deps.db.tag.findMany({ where: { storeId: who.storeId, products: { some: { productId, ...LIVE } } }, include: tagInclude, orderBy: [{ name: 'asc' }] });
   return rows.map(tagView);
 }
 
 export const tagProductsInput = z.object({ action: z.enum(['add', 'remove']), productIds: z.array(z.uuid()).min(1).max(1000) }).strict();
 export type TagProductsInput = z.input<typeof tagProductsInput>;
 
-/** Puts one tag on many products, or takes it off them (bulk). */
+/** Puts one tag on many products, or takes it off them (bulk; taking off archives the links). */
 export async function tagProducts(deps: CatalogueDeps, who: Who, tagId: string, input: TagProductsInput): Promise<{ changed: number }> {
   await allow(deps, who, 'catalogue.write');
   const d = parse(tagProductsInput, input, 'tag products');
   const max = await setting(deps, who, 'catalogue.tags.maxPerProduct');
+  const now = deps.now?.() ?? new Date();
   return deps.db.$transaction(async (tx) => {
     const tag = found(await tx.tag.findFirst({ where: { id: tagId, storeId: who.storeId } }), 'tag');
     const ids = [...new Set(d.productIds)];
     const ps = await tx.product.findMany({ where: { storeId: who.storeId, id: { in: ids } }, select: { id: true } });
     const missing = ids.filter((i) => !ps.some((p) => p.id === i));
     if (missing.length) throw new CatalogueError('NOT_FOUND', 'no such product', missing.map((m) => `productId: ${m}`));
-    const links = await tx.productTag.findMany({ where: { tagId: tag.id, productId: { in: ids } } });
+    const links = await tx.productTag.findMany({ where: { tagId: tag.id, productId: { in: ids }, ...LIVE } });
     let n = 0;
     if (d.action === 'add') {
       if (tag.archivedAt) throw new CatalogueError('PARENT_ARCHIVED', 'the tag is archived', ['tagId']);
       n = await addTags(tx, who, ids.filter((i) => !links.some((l) => l.productId === i)).map((productId) => ({ productId, tagIds: [tag.id] })), max);
     } else {
-      for (const l of links) await tx.productTag.delete({ where: { id: l.id } });
+      for (const l of links) await tx.productTag.update({ where: { id: l.id }, data: { archivedAt: now } });
       n = links.length;
       if (n) await logChange(tx, who, 'tag.products.remove', 'Tag', tag.id, { productIds: links.map((l) => l.productId) }, null);
     }
@@ -462,11 +492,11 @@ export async function tagProducts(deps: CatalogueDeps, who: Who, tagId: string, 
 export async function addTags(tx: Tx, who: Who, items: { productId: string; tagIds: string[] }[], maxPerProduct: number): Promise<number> {
   let n = 0;
   for (const it of items) {
-    const have = await tx.productTag.findMany({ where: { storeId: who.storeId, productId: it.productId }, select: { tagId: true } });
+    const have = await tx.productTag.findMany({ where: { storeId: who.storeId, productId: it.productId, ...LIVE }, select: { tagId: true } });
     const add = [...new Set(it.tagIds)].filter((t) => !have.some((h) => h.tagId === t));
     if (!add.length) continue;
     if (have.length + add.length > maxPerProduct) throw new CatalogueError('INVALID_INPUT', 'too many tags on one product', [`productId: ${it.productId}`]);
-    for (const tagId of add) await tx.productTag.create({ data: { storeId: who.storeId, tagId, productId: it.productId } });
+    await linkTags(tx, who, it.productId, add);
     await logChange(tx, who, 'product.tags.add', 'Product', it.productId, null, { added: add });
     n += add.length;
   }

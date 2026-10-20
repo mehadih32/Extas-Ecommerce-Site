@@ -1,11 +1,14 @@
 // PR 500 — the admin's language (Bengali first, English beside it; demo 98a-admin-lang.js). The person's choice is a
 // cookie set by the EN | বাং switch; without one, the store's language setting (`store.locale`, PR 492) decides.
 // Every visible admin string comes from messages/admin.<lang>.json.
-// The product screens (PR 21, 26, 29, 35) keep their own files (admin-products.<lang>.json), merged in here.
+// The product screens (PR 21, 26, 29, 35) keep their own files (admin-products.<lang>.json), and the catalogue tools
+// (PR 33 import from a link, 36 back in stock, 39 product audit) theirs (admin-tools.<lang>.json), merged in here.
 import bn from '../../messages/admin.bn.json';
 import en from '../../messages/admin.en.json';
 import productsBn from '../../messages/admin-products.bn.json';
 import productsEn from '../../messages/admin-products.en.json';
+import toolsBn from '../../messages/admin-tools.bn.json';
+import toolsEn from '../../messages/admin-tools.en.json';
 import type { Dict } from './i18n';
 
 export type AdminLang = 'bn' | 'en';
@@ -22,7 +25,7 @@ export function mergeDicts(a: Dict, b: Dict): Dict {
   return out;
 }
 
-export const adminDicts: Record<AdminLang, Dict> = { bn: mergeDicts(bn, productsBn), en: mergeDicts(en, productsEn) };
+export const adminDicts: Record<AdminLang, Dict> = { bn: mergeDicts(mergeDicts(bn, productsBn), toolsBn), en: mergeDicts(mergeDicts(en, productsEn), toolsEn) };
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);
 

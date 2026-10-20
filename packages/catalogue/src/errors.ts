@@ -43,7 +43,19 @@ export type CatalogueErrorCode =
   /** The CSV file cannot be read: no header, a missing key column, too big, too many rows (PR 34). */
   | 'CSV_INVALID'
   /** Setting a price needs the `catalogue.prices` permission (CLAUDE.md rule 6). */
-  | 'PRICES_NOT_ALLOWED';
+  | 'PRICES_NOT_ALLOWED'
+  /** Import from a link is switched off in this store (`catalogue.linkImport.enabled`, PR 33). */
+  | 'LINK_IMPORT_OFF'
+  /** The link's site is not in `catalogue.linkImport.allowedHosts`, or it is not a plain http(s) address (PR 33). */
+  | 'HOST_NOT_ALLOWED'
+  /** The page could not be read: details carry the reader's reason (TIMEOUT, TOO_BIG, NOT_HTML, BLOCKED_ADDRESS …). */
+  | 'PAGE_UNREADABLE'
+  /** "Tell me when it is back" is switched off, or the channel is not offered (PR 36). */
+  | 'INTEREST_OFF'
+  /** The product can be bought now: there is nothing to wait for (PR 36). */
+  | 'NOT_OUT_OF_STOCK'
+  /** Too many requests from one phone or e-mail today (`catalogue.ghost.interest.maxPerContactPerDay`). */
+  | 'TOO_MANY_REQUESTS';
 
 export class CatalogueError extends Error {
   readonly code: CatalogueErrorCode;
@@ -72,9 +84,17 @@ export class CatalogueError extends Error {
       case 'PREVIEW_CHANGED':
       case 'CHECKLIST_FAILED':
       case 'CHART_IN_USE':
+      case 'NOT_OUT_OF_STOCK':
         return 409;
       case 'PRICES_NOT_ALLOWED':
+      case 'LINK_IMPORT_OFF':
+      case 'INTEREST_OFF':
         return 403;
+      case 'PAGE_UNREADABLE':
+        // Not 502: the proxy in front would show its own error page instead of the answer.
+        return 422;
+      case 'TOO_MANY_REQUESTS':
+        return 429;
       default:
         return 400;
     }
