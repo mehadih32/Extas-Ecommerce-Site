@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { AdminView } from '@/lib/admin-page';
-import { ADMIN_PAGES } from '@/lib/admin-nav';
+import { ADMIN_GROUPS, ADMIN_PAGES } from '@/lib/admin-nav';
 import { t } from '@/lib/i18n';
 import { Icon } from './Icon';
 import { LangSwitch, type LangLabels } from './LangSwitch';
@@ -32,7 +32,6 @@ export function AdminFrame({ view, current, children }: { view: AdminView; curre
   const d = view.dict;
   const labels = langLabels(view);
   const main = ADMIN_PAGES.filter((p) => p.group === 'main');
-  const system = ADMIN_PAGES.filter((p) => p.group === 'system');
   const link = (p: (typeof ADMIN_PAGES)[number]) => (
     <Link key={p.key} href={p.href} aria-current={p.key === current ? 'page' : undefined}>
       <Icon name={p.icon} />
@@ -49,8 +48,10 @@ export function AdminFrame({ view, current, children }: { view: AdminView; curre
           <Brand view={view} logo="side" />
           <LangSwitch current={view.lang} labels={labels} where="side" />
           {main.map(link)}
-          {system.length ? <div className="ad-side-grp">{t(d, 'frame.system')}</div> : null}
-          {system.map(link)}
+          {ADMIN_GROUPS.map((g) => {
+            const pages = ADMIN_PAGES.filter((p) => p.group === g);
+            return pages.length ? [<div key={`grp-${g}`} className="ad-side-grp">{t(d, `frame.groups.${g}`)}</div>, ...pages.map(link)] : null;
+          })}
           <div className="ad-side-foot">
             <Link href="/">
               <Icon name="back" />
@@ -88,10 +89,10 @@ export function AdminFrame({ view, current, children }: { view: AdminView; curre
 }
 
 /** The strip of System pages at the top of each one (demo ZV_TABS); only pages that exist. */
-export function SystemTabs({ view, current }: { view: AdminView; current: string }) {
+export function SystemTabs({ view, current, group = 'system' }: { view: AdminView; current: string; group?: (typeof ADMIN_GROUPS)[number] }) {
   return (
-    <nav className="ad-tabs" aria-label={t(view.dict, 'frame.systemTabs')}>
-      {ADMIN_PAGES.filter((p) => p.group === 'system').map((p) => (
+    <nav className="ad-tabs" aria-label={t(view.dict, group === 'system' ? 'frame.systemTabs' : 'frame.groupTabs', { group: t(view.dict, `frame.groups.${group}`) })}>
+      {ADMIN_PAGES.filter((p) => p.group === group).map((p) => (
         <Link key={p.key} className="ad-chip" href={p.href} aria-current={p.key === current ? 'page' : undefined}>
           {t(view.dict, `nav.${p.key}`)}
         </Link>

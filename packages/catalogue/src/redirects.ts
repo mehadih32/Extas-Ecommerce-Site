@@ -7,7 +7,7 @@ import { CatalogueError } from './errors';
 import { normalizePath } from './text';
 import { logChange, type Tx, type Who } from './context';
 
-export type RedirectSource = 'product-slug' | 'category-slug';
+export type RedirectSource = 'product-slug' | 'category-slug' | 'collection-slug';
 
 export interface MovedLink {
   from: string;

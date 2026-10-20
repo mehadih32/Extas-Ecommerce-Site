@@ -27,12 +27,20 @@
 //   GET         /api/admin/catalogue/naming/renames           rename history (?productId)
 //   GET         /api/admin/catalogue/naming/renames/:id       before/after report of one rename
 //
+//
+// PR 21, 26, 29, 35 (catalogue-publish-api.ts):
+//   GET         /api/admin/catalogue/products/:id/readiness    the publish checklist and health score (checked now)
+//   POST        /api/admin/catalogue/products/:id/publish      {action: 'publish'|'unpublish'} — publish only when it passes
+//   POST        /api/admin/catalogue/products/:id/form         the edit form's save, in order (product-form.ts)
+//   POST        /api/admin/catalogue/products/bulk            {action, productIds} — publish, unpublish, recheck, archive, restore
+//   GET         /api/admin/catalogue/publish-queue            the "Ready to publish" queue (?filter=all|ready|waiting|live, page)
+//
 // The shop-wide templates are settings (`naming.*`): the settings page and its API (PR 491) save them.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 
-type Perm = 'catalogue.read' | 'catalogue.write';
+export type Perm = 'catalogue.read' | 'catalogue.write' | 'catalogue.publish';
 interface Ctx {
   deps: cat.CatalogueDeps;
   who: cat.Who;
@@ -53,7 +61,7 @@ const int = (url: URL, k: string) => {
   return v === null || v === '' ? undefined : Number(v);
 };
 
-async function handle(request: Request, deps: AdminDeps | null, permission: Perm, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
+export async function handle(request: Request, deps: AdminDeps | null, permission: Perm, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');

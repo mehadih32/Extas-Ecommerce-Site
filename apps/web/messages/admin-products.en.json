@@ -1,0 +1,385 @@
+{
+  "products": {
+    "metaTitle": "Products · Admin",
+    "eyebrow": "Admin · Catalogue",
+    "title": "Products",
+    "intro": "Add a new product or change an old one. A product goes on the shop only when its checklist is complete.",
+    "newProduct": "New product",
+    "back": "All products",
+    "empty": "No product matches this search.",
+    "emptyAll": "No products yet — add the first one.",
+    "kpi": {
+      "products": "Products",
+      "productsSub": "{n} categories",
+      "live": "On the shop",
+      "liveSub": "{n} ready to go",
+      "lowStock": "Sizes almost out",
+      "lowStockSub": "1–{n} pieces left",
+      "needPhotos": "Need photos",
+      "needPhotosSub": "fewer than {n}, or a kind missing"
+    },
+    "search": {
+      "label": "Search products",
+      "placeholder": "Search name, SKU, category or colour",
+      "submit": "Search"
+    },
+    "filters": {
+      "label": "Show products",
+      "all": "All",
+      "live": "On the shop",
+      "ready": "Ready",
+      "draft": "Draft",
+      "off": "Taken off",
+      "archived": "Archived"
+    },
+    "cats": {
+      "label": "Categories",
+      "all": "All {n}"
+    },
+    "status": {
+      "PUBLISHED": "On the shop",
+      "READY_TO_PUBLISH": "Ready to publish",
+      "DRAFT": "Draft",
+      "UNPUBLISHED": "Taken off",
+      "ARCHIVED": "Archived"
+    },
+    "row": {
+      "colours": "{n} colours",
+      "colour1": "1 colour",
+      "sizeRange": "{from}–{to}",
+      "metaSep": " · ",
+      "pathSep": " › ",
+      "noVariants": "No sizes yet",
+      "noPrice": "No price",
+      "stock": "{n} in stock",
+      "notChecked": "Not checked yet",
+      "score": "Health {n}",
+      "edit": "Edit",
+      "select": "Select {name}",
+      "selectShort": "Select"
+    },
+    "pager": {
+      "label": "Pages",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "bulk": {
+      "label": "Change the selected products",
+      "selected": "{n} selected",
+      "selectAll": "Select all on this page",
+      "clear": "Clear",
+      "publish": "Publish",
+      "unpublish": "Take off",
+      "recheck": "Check again",
+      "archive": "Archive",
+      "restore": "Restore",
+      "confirmArchive": "Archive {n} products? They leave the list. Nothing is deleted and you can restore them.",
+      "confirmUnpublish": "Take {n} products off the shop?",
+      "allDone": "Done for all {done}.",
+      "someDone": "{done} done, {failed} not done — see the list above.",
+      "refused": "Not done:",
+      "dash": " — ",
+      "tooMany": "At most {max} products in one go."
+    },
+    "edit": {
+      "metaTitle": "Edit product · Admin",
+      "intro": "Change what you need and press \"Save changes\". The shop changes only for a product that is on it."
+    },
+    "new": {
+      "metaTitle": "New product · Admin",
+      "title": "New product",
+      "intro": "Start with the name, category and fabric. Colours, sizes, prices and photos come next, on the product's own page.",
+      "sub": "The product starts as a draft: it is not on the shop yet.",
+      "needName": "Type the product's name.",
+      "create": "Create product",
+      "creating": "Creating…",
+      "created": "Created — now add colours, sizes and photos.",
+      "note": "Nothing goes on the shop from here.",
+      "readyNote": "After you create it, this card shows what is still missing before it can go on the shop."
+    },
+    "sections": {
+      "basics": "Basics",
+      "basicsSub": "Name, category, fabric and description",
+      "naming": "Link & Google",
+      "namingSub": "Leave a field empty to use the shop's template. A changed link forwards the old one by itself.",
+      "colours": "Colours",
+      "coloursSub": "{n} on this product, in the order the shop shows them",
+      "sizes": "Sizes",
+      "sizesSub": "Pick the sizes; each colour gets a box per size below. Taking a size off retires its SKUs — kept, never deleted.",
+      "variants": "SKUs, prices and stock",
+      "variantsSub": "One box per colour and size",
+      "photos": "Photos",
+      "publish": "On the shop",
+      "ready": "Ready to go live?"
+    },
+    "fields": {
+      "nameEn": "Name on the site (English)",
+      "nameBn": "Name on the site (Bengali)",
+      "nameHelp": "Customers read this name on cards, the product page and the bag.",
+      "optional": "(optional)",
+      "category": "Category",
+      "fabric": "Fabric",
+      "choose": "— choose —",
+      "style": "Style code (ERP)",
+      "styleHelp": "The ERP's code for this style; suggested SKUs start with it.",
+      "sizeChart": "Size chart",
+      "sizeChartOwn": "{name} (this product's own)",
+      "sizeChartCat": "{name} (from its category)",
+      "sizeChartNone": "None yet — set it on the size charts page.",
+      "descriptionEn": "Description (English)",
+      "descriptionBn": "Description (Bengali)",
+      "careEn": "Care (English)",
+      "careBn": "Care (Bengali)",
+      "slug": "Link",
+      "slugHelp": "Small letters, numbers and hyphens.",
+      "useTemplateSlug": "Use the template link: {slug}",
+      "seoTitleEn": "Google title (English)",
+      "seoTitleBn": "Google title (Bengali)",
+      "metaDescriptionEn": "Google description (English)",
+      "metaDescriptionBn": "Google description (Bengali)",
+      "feedTitle": "Feed / ad title (Google, Facebook)",
+      "templateHint": "Empty = the shop's template (shown in grey).",
+      "chars": "{n} / {max}",
+      "preview": "Google preview"
+    },
+    "colours": {
+      "none": "No colours yet.",
+      "add": "Add a colour",
+      "remove": "Take {name} off this product",
+      "newName": "New colour name, e.g. Teal",
+      "newHex": "Colour of the swatch",
+      "newAdd": "Add",
+      "needName": "Type the new colour's name.",
+      "added": "{name} added to the colour library and this product.",
+      "similar": "{name} added — it looks close to {other}; check it is not the same colour."
+    },
+    "variants": {
+      "fill": "Fill suggested SKUs",
+      "filled": "{n} SKUs filled in — check them against the ERP.",
+      "nothingToFill": "Every new box already has a SKU.",
+      "needStyle": "Type the style code first; the suggestion starts with it.",
+      "samePrice": "Same price for every size",
+      "apply": "Apply",
+      "pricesLocked": "Only people allowed to set prices can change them.",
+      "sku": "SKU from the ERP",
+      "skuFor": "SKU for {colour}, size {size}",
+      "price": "Price",
+      "compareAt": "Old price",
+      "stock": "{n} pcs",
+      "pieces": "{n} pcs",
+      "new": "New",
+      "noSizes": "Pick sizes above.",
+      "none": "Add a colour and pick sizes to make SKUs.",
+      "other": "Other SKUs",
+      "note": "Stock comes from the ERP; it is shown here, not typed. A box without a SKU is not made. Prices are typed in whole units."
+    },
+    "photos": {
+      "count": "{count} of at least {minimum} photos",
+      "frontOf": "Front · {colour}",
+      "kinds": {
+        "FRONT": "Front",
+        "BACK": "Back",
+        "DETAIL": "Detail",
+        "ON_MODEL": "On model",
+        "FLAT_LAY": "Flat lay",
+        "FABRIC": "Fabric close-up",
+        "TRUE_COLOUR": "True colour",
+        "SET": "Set",
+        "VIDEO": "Video",
+        "OTHER": "Other"
+      },
+      "upload": "Upload",
+      "replace": "Replace",
+      "uploading": "Uploading…",
+      "remove": "Take off",
+      "confirmOff": "Take this photo off the product? It stays in the media library.",
+      "uploaded": "Photo added.",
+      "removed": "Photo taken off; it stays in the library.",
+      "processing": "Processing…",
+      "other": "More photos",
+      "addMore": "Add a photo",
+      "kind": "Kind of photo",
+      "noRead": "You cannot see the media library; ask the owner.",
+      "noUpload": "You can see the photos but not add them."
+    },
+    "publish": {
+      "publish": "Put on the shop",
+      "unpublish": "Take off the shop",
+      "archive": "Archive",
+      "restore": "Restore",
+      "confirmOff": "Take this product off the shop? Its page and everything else stay.",
+      "confirmArchive": "Archive this product? Nothing is deleted and you can restore it.",
+      "published": "It is on the shop now.",
+      "unpublished": "Taken off the shop.",
+      "archived": "Archived — nothing deleted.",
+      "restored": "Restored.",
+      "readyNote": "The checklist is complete: it can go on the shop.",
+      "blockedNote": "It can go on the shop when every \"must\" item below is done.",
+      "liveNote": "Customers can see and buy it.",
+      "liveFailing": "It is on the shop but something is missing now — see below.",
+      "archivedNote": "Archived: not on the shop and not in the list.",
+      "saveFirst": "Save your changes first.",
+      "noPermission": "You cannot put products on the shop; ask the owner."
+    },
+    "ready": {
+      "score": "Health score",
+      "band": {
+        "good": "All in place",
+        "fair": "A few things left",
+        "poor": "Much is missing"
+      },
+      "must": "Must",
+      "reminder": "Reminder",
+      "note": "Reminders do not stop publishing; \"must\" items do.",
+      "allGood": "Everything is in place."
+    },
+    "save": {
+      "note": "Changes are saved only when you press Save.",
+      "dirty": "You have changes that are not saved.",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "nothing": "Nothing to save.",
+      "check": "Please check: {list}",
+      "bad": {
+        "price": "price of {sku}",
+        "compareAt": "old price of {sku}"
+      },
+      "partial": "Saved: {saved}. Stopped at: {step}.",
+      "stopped": "Nothing was saved (stopped at: {step}).",
+      "steps": {
+        "product": "details",
+        "naming": "names and links",
+        "retire": "sizes taken off",
+        "variants": "prices",
+        "colours": "colours",
+        "create": "new SKUs"
+      }
+    },
+    "errors": {
+      "CHECKLIST_FAILED": "Not ready yet — still missing: {fields}.",
+      "CONFLICT": "This cannot be done in its current state.",
+      "NOT_FOUND": "It was not found; it may have been changed meanwhile.",
+      "SKU_TAKEN": "This SKU is already used by another product: {fields}",
+      "SKU_RETIRED": "This SKU belonged to a retired garment and is never reused: {fields}",
+      "SKU_FORMAT": "This SKU does not match the shop's SKU pattern: {fields}",
+      "VARIANT_EXISTS": "There is already a SKU for this colour and size.",
+      "SLUG_TAKEN": "This link is used elsewhere; choose another.",
+      "SLUG_RESERVED": "This link is reserved; choose another.",
+      "COLOUR_IN_USE": "This colour still has SKUs on sale; take its sizes off first.",
+      "NAME_TAKEN": "That colour name is already in the library.",
+      "UNKNOWN_KEY": "A value is not in its list: {fields}",
+      "PARENT_ARCHIVED": "The category or fabric is archived.",
+      "TOO_MANY_CHANGES": "Too many products in one go.",
+      "NOT_AN_IMAGE": "This file is not a photo.",
+      "TYPE_NOT_ALLOWED": "This kind of file is not allowed.",
+      "TOO_LARGE": "The photo is too large.",
+      "TOO_SMALL": "The photo is too small for the shop.",
+      "ARCHIVED": "This file is archived; restore it first."
+    }
+  },
+  "checks": {
+    "sep": ", ",
+    "more": "+{n} more",
+    "category": {
+      "label": "Category",
+      "short": "No category",
+      "ok": "Category set",
+      "none": "Choose a category.",
+      "archived": "Its category is archived."
+    },
+    "variants": {
+      "label": "Colours & sizes",
+      "short": "No sizes",
+      "ok": "Colours and sizes set",
+      "none": "Add a colour and a size with its SKU."
+    },
+    "price": {
+      "label": "Price",
+      "short": "No price",
+      "ok": "Every size has a price",
+      "none": "No sizes to price yet.",
+      "sku": "Price missing for {list}."
+    },
+    "photos": {
+      "label": "Photos",
+      "short": "Photos missing",
+      "ok": "Photos complete",
+      "none": "Add photos.",
+      "missing": "{count} of {minimum} photos; missing: {list}.",
+      "few": "{count} of {minimum} photos."
+    },
+    "sizeChart": {
+      "label": "Size chart",
+      "short": "No size chart",
+      "ok": "Size chart attached",
+      "none": "No size chart for this product or its category."
+    },
+    "fabric": {
+      "label": "Fabric",
+      "short": "No fabric",
+      "ok": "Fabric set",
+      "none": "Choose the fabric.",
+      "archived": "Its fabric is archived."
+    },
+    "seo": {
+      "label": "Google title & description",
+      "short": "SEO missing",
+      "ok": "Google title and description set",
+      "none": "Fill in the Google title and description.",
+      "missing": "Fill in: {list}.",
+      "over": "{field} is too long",
+      "fields": {
+        "seoTitle": {
+          "en": "Google title (English)",
+          "bn": "Google title (Bengali)"
+        },
+        "metaDescription": {
+          "en": "Google description (English)",
+          "bn": "Google description (Bengali)"
+        }
+      }
+    },
+    "description": {
+      "label": "Description",
+      "short": "No description",
+      "ok": "Description written",
+      "none": "Add a description."
+    },
+    "stock": {
+      "label": "Stock",
+      "short": "No stock",
+      "ok": "In stock",
+      "none": "No stock yet (it comes from the ERP)."
+    }
+  },
+  "queue": {
+    "metaTitle": "Ready to publish · Admin",
+    "title": "Ready to publish",
+    "intro": "Every product that is not on the shop waits here until its checklist is complete. Publish the ready ones; open the others to finish them.",
+    "filters": {
+      "label": "Show",
+      "all": "All {n}",
+      "ready": "Ready {n}",
+      "waiting": "Still missing {n}",
+      "live": "On the shop, needs a fix {n}"
+    },
+    "reason": {
+      "new": "New",
+      "unpublished": "Taken off",
+      "live-failing": "On the shop · needs a fix"
+    },
+    "ready": "Ready",
+    "waiting": "Not ready",
+    "since": "waiting since {date}",
+    "passed": "{n} of {of} checks done",
+    "publish": "Publish",
+    "published": "{name} is on the shop now.",
+    "fix": "Open to fix",
+    "recheck": "Check all again",
+    "rechecked": "{n} products checked again.",
+    "empty": "Nothing is waiting here."
+  }
+}

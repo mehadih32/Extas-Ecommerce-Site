@@ -1,16 +1,26 @@
 // PR 500 — the admin's pages as data. Only pages that exist are listed (no dead links): each later PR adds its own
 // entry when it builds its screen. Labels are keys into messages/admin.<lang>.json (`nav.<key>`). `system` pages also
 // form the strip of tabs at the top of each System page (demo ZV_TABS: server, cache, images, speed, backup, keys).
-export type AdminIcon = 'lock' | 'back' | 'logout';
+// `catalogue` pages (PR 21, 35) sit under their own heading and form the strip of tabs on the product pages.
+export type AdminIcon = 'lock' | 'back' | 'logout' | 'box' | 'check' | 'ruler';
 
 export interface AdminPage {
   key: string;
   href: string;
   icon: AdminIcon;
-  group: 'main' | 'system';
+  group: 'main' | 'catalogue' | 'system';
 }
 
-export const ADMIN_PAGES: readonly AdminPage[] = [{ key: 'integrations', href: '/admin/integrations', icon: 'lock', group: 'system' }];
+/** The sidebar's headed groups, in order (labels: `frame.groups.<group>`). */
+export const ADMIN_GROUPS = ['catalogue', 'system'] as const;
+
+export const ADMIN_PAGES: readonly AdminPage[] = [
+  { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
+  { key: 'publishQueue', href: '/admin/products/queue', icon: 'check', group: 'catalogue' },
+  { key: 'integrations', href: '/admin/integrations', icon: 'lock', group: 'system' },
+  // PR 28 — size charts (demo #/admin/size-charts)
+  { key: 'sizeCharts', href: '/admin/size-charts', icon: 'ruler', group: 'catalogue' },
+];
 
 export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';
 export const ADMIN_LOGIN = '/admin/login';

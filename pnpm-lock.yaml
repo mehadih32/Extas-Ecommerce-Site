@@ -157,6 +157,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../db
+      '@extas/media':
+        specifier: workspace:*
+        version: link:../media
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings

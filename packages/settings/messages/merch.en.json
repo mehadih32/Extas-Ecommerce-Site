@@ -1,0 +1,136 @@
+{
+  "catalogue": {
+    "fits": {
+      "label": "Fits",
+      "help": "The fits a product can have (regular, slim …). Each size chart is for one garment type and one fit."
+    },
+    "sizeCharts": {
+      "fallbackFit": {
+        "label": "Fit used when a product has none",
+        "help": "A product without a fit, or with a fit that has no chart in its category, gets the chart of this fit."
+      },
+      "diagrams": {
+        "label": "How-to-measure drawings",
+        "help": "The drawings a size chart can show under it (tops, bottoms …)."
+      },
+      "diagramFor": {
+        "label": "Drawing per garment type",
+        "help": "Which drawing a new chart of a garment type starts with. A type not listed starts with the first drawing."
+      },
+      "howToMeasure": {
+        "label": "How to measure",
+        "help": "One line per measurement. Customers only see the lines of the measurements their product's chart has."
+      },
+      "defaultEaseInch": {
+        "label": "Starting room for Find my size (inches)",
+        "help": "How much room a new chart's garment has over the body. Each chart can change it."
+      },
+      "valueStepInch": {
+        "label": "Measurement step (inches)",
+        "help": "The step of the measurement boxes, and the rounding of a suggested new row."
+      },
+      "maxValueInch": {
+        "label": "Largest measurement (inches)",
+        "help": "A box above this is a typing mistake and is refused."
+      },
+      "maxRows": {
+        "label": "Most sizes in one chart",
+        "help": "How many size rows one chart may have."
+      },
+      "cmDecimals": {
+        "label": "Decimals in cm",
+        "help": "How cm is rounded when it is worked out from inches (0 = whole cm)."
+      }
+    },
+    "collections": {
+      "seasons": {
+        "label": "Seasons",
+        "help": "The seasons a seasonal collection can belong to (Eid, winter …). A seasonal page is permanent and comes back every year."
+      },
+      "pathPrefix": {
+        "label": "Collection page address",
+        "help": "Collection pages live under this part of the address, e.g. /collections/winter."
+      },
+      "maxProducts": {
+        "label": "Most products in one collection",
+        "help": "How many products one collection may hold."
+      }
+    },
+    "tags": {
+      "maxPerProduct": {
+        "label": "Most tags on one product",
+        "help": "How many tags one product may carry."
+      }
+    },
+    "csv": {
+      "columns": {
+        "label": "CSV columns",
+        "help": "The columns an export writes, in this order. Product and SKU always stay. Cost prices are never exported."
+      },
+      "maxRows": {
+        "label": "Most rows in one import",
+        "help": "A file with more rows is refused; split it into parts."
+      },
+      "maxBytes": {
+        "label": "Largest import file (bytes)",
+        "help": "A bigger file is refused."
+      },
+      "delimiter": {
+        "label": "Column separator",
+        "help": "What separates the columns: a comma, a semicolon or a tab."
+      },
+      "listSeparator": {
+        "label": "Separator inside a cell",
+        "help": "What separates several tags or collections in one cell."
+      },
+      "maxRowReports": {
+        "label": "Rows reported in a preview",
+        "help": "How many row results a preview lists; the totals always count every row."
+      }
+    },
+    "wasPrice": {
+      "defaultSource": {
+        "label": "Where a struck-through price comes from",
+        "help": "Empty or None = no struck-through price anywhere. Brand MRP, the real price history or the combo sum. Each category and product can choose its own. This is the owner's decision."
+      },
+      "historyDays": {
+        "label": "Price history days",
+        "help": "With price history, the struck-through price is the lowest real price of this many days before the current one."
+      },
+      "mrpOwnLabel": {
+        "label": "Allow MRP on own-label products",
+        "help": "Off: an MRP is only shown for genuine branded goods, never for the shop's own label."
+      }
+    }
+  },
+  "defaults": {
+    "catalogue": {
+      "fits": {
+        "regular": "Regular fit",
+        "slim": "Slim fit",
+        "relaxed": "Relaxed fit",
+        "classic": "Classic fit"
+      },
+      "sizeChartDiagrams": {
+        "top": "Tops",
+        "bottom": "Bottoms"
+      },
+      "howToMeasure": {
+        "chest": "Chest — across under the arms, then double it",
+        "length": "Length — from the top of the shoulder to the hem",
+        "shoulder": "Shoulder — seam to seam across the back",
+        "sleeve": "Sleeve — shoulder seam to the cuff",
+        "waist": "Waist — across the waistband, then double it",
+        "hip": "Hip — widest part, then double it",
+        "thigh": "Thigh — across the leg just under the crotch",
+        "legOpening": "Leg opening — across the hem"
+      },
+      "seasons": {
+        "eid": "Eid",
+        "winter": "Winter",
+        "puja": "Puja",
+        "new-in": "New in"
+      }
+    }
+  }
+}

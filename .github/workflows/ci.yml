@@ -178,12 +178,13 @@ jobs:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/media test
       # S01 · PR 19, 20, 30, 31, 590 — the catalogue: SKU key rules, category tree and garment types, colour library,
-      # fabrics, store isolation, audit rows, and naming with 301s without chains. Throwaway databases.
-      - name: Catalogue tests on PostgreSQL (PR 19, 20, 30, 31, 590)
+      # fabrics, store isolation, audit rows, and naming with 301s without chains; PR 21, 26, 29, 35 — the publish
+      # checklist, health score, publish gate and queue, bulk actions and the edit form save. Throwaway databases.
+      - name: Catalogue tests on PostgreSQL (PR 19, 20, 21, 26, 29, 30, 31, 35, 590)
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/catalogue test
-      - name: Admin API tests on PostgreSQL
+      - name: Admin API tests on PostgreSQL (incl. the product admin routes, PR 21, 26, 29, 35)
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: |

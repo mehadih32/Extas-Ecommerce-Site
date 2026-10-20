@@ -33,7 +33,17 @@ export type CatalogueErrorCode =
   /** The bulk change differs from the preview the person saw (someone changed a product meanwhile). */
   | 'PREVIEW_CHANGED'
   /** More changes than `naming.bulkMaxChanges` in one go. */
-  | 'TOO_MANY_CHANGES';
+  | 'TOO_MANY_CHANGES'
+  /** The publish checklist has blocking items left (PR 26, 35): details name the failing checks. */
+  | 'CHECKLIST_FAILED'
+  /** A size chart still set as a category's default or a product's own chart cannot be archived (PR 28). */
+  | 'CHART_IN_USE'
+  /** The chart's garment type is not the category's or product's (PR 27). */
+  | 'GARMENT_TYPE_MISMATCH'
+  /** The CSV file cannot be read: no header, a missing key column, too big, too many rows (PR 34). */
+  | 'CSV_INVALID'
+  /** Setting a price needs the `catalogue.prices` permission (CLAUDE.md rule 6). */
+  | 'PRICES_NOT_ALLOWED';
 
 export class CatalogueError extends Error {
   readonly code: CatalogueErrorCode;
@@ -60,7 +70,11 @@ export class CatalogueError extends Error {
       case 'COLOUR_IN_USE':
       case 'NAME_TAKEN':
       case 'PREVIEW_CHANGED':
+      case 'CHECKLIST_FAILED':
+      case 'CHART_IN_USE':
         return 409;
+      case 'PRICES_NOT_ALLOWED':
+        return 403;
       default:
         return 400;
     }

@@ -1,15 +1,28 @@
 // PR 500 — the admin's language (Bengali first, English beside it; demo 98a-admin-lang.js). The person's choice is a
 // cookie set by the EN | বাং switch; without one, the store's language setting (`store.locale`, PR 492) decides.
 // Every visible admin string comes from messages/admin.<lang>.json.
+// The product screens (PR 21, 26, 29, 35) keep their own files (admin-products.<lang>.json), merged in here.
 import bn from '../../messages/admin.bn.json';
 import en from '../../messages/admin.en.json';
+import productsBn from '../../messages/admin-products.bn.json';
+import productsEn from '../../messages/admin-products.en.json';
 import type { Dict } from './i18n';
 
 export type AdminLang = 'bn' | 'en';
 export const ADMIN_LANGS: readonly AdminLang[] = ['bn', 'en'];
 export { ADMIN_LANG_COOKIE } from './admin-nav';
 
-export const adminDicts: Record<AdminLang, Dict> = { bn, en };
+/** Deep merge of message trees; a key in both is an error in the files (the test checks there is none). */
+export function mergeDicts(a: Dict, b: Dict): Dict {
+  const out: Dict = { ...a };
+  for (const [k, v] of Object.entries(b)) {
+    const was = out[k];
+    out[k] = typeof was === 'object' && typeof v === 'object' ? mergeDicts(was, v) : v;
+  }
+  return out;
+}
+
+export const adminDicts: Record<AdminLang, Dict> = { bn: mergeDicts(bn, productsBn), en: mergeDicts(en, productsEn) };
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);
 

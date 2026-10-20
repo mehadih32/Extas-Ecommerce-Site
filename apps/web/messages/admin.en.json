@@ -8,7 +8,12 @@
     "nav": "Admin pages",
     "systemTabs": "System pages",
     "lang": "Admin language · অ্যাডমিনের ভাষা",
-    "logout": "Log out"
+    "logout": "Log out",
+    "groups": {
+      "catalogue": "Catalogue",
+      "system": "System"
+    },
+    "groupTabs": "{group} pages"
   },
   "lang": {
     "en": "English",
@@ -17,7 +22,10 @@
     "bnShort": "বাং"
   },
   "nav": {
-    "integrations": "Keys & connections"
+    "products": "Products",
+    "publishQueue": "Ready to publish",
+    "integrations": "Keys & connections",
+    "sizeCharts": "Size charts"
   },
   "login": {
     "metaTitle": "Admin sign-in",

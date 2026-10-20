@@ -9,6 +9,8 @@ import { z } from 'zod';
 import { setting, type RegistryShape, type SettingKey, type SettingValue } from './define';
 import { messages, pair, type MessageTree } from './messages';
 import { mediaSettings } from './registry-media';
+import { publishSettings } from './registry-publish';
+import { merchSettings } from './registry-merch';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -743,6 +745,8 @@ export const registry = {
 
   // ---- PR 22, 23, 24, 25, 37 · images and the media library (registry-media.ts, version 6). ----
   ...mediaSettings,
+  // ---- PR 21, 26, 29, 35 · the publish checklist, health score, bulk and list sizes (registry-publish.ts, version 8). ----
+  ...publishSettings,
   // ---- S01 · catalogue (PR 19, 20, 30, 31; Bhandari). The SKU is the ERP's key (A3.2): the pattern only guards against
   // typing mistakes and can be changed to the ERP's own format. Dictionaries start from messages/ and are the owner's to
   // edit; colours, sizes, categories and fabrics themselves are rows. ----
@@ -859,6 +863,8 @@ export const registry = {
     sortOrder: 90,
     version: 5,
   }),
+  // ---- PR 27, 28, 32, 34, 38 · size charts, collections and tags, CSV, "was" price (registry-merch.ts, version 7). ----
+  ...merchSettings,
 
   // ---- S01 · PR 590 · naming and links (owner 19 Oct 12:04–12:07; demo Settings › Naming & links). Brand names stay;
   // the own-label brand is the store's own-label Brand row. Templates fill every name, link and title the owner leaves

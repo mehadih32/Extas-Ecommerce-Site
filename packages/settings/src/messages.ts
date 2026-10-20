@@ -1,8 +1,14 @@
 // Labels and help texts of the settings, kept as {en, bn} pairs (Blueprint A7 / D11: admin in simple English with a
 // Bengali switch). The registry only names a key; the text lives in messages/settings.<lang>.json, and the media
-// settings (PR 22–25, 37) in messages/media.<lang>.json, merged in here.
+// settings (PR 22–25, 37) in messages/media.<lang>.json, the publish checklist settings (PR 21, 26, 29, 35) in
+// messages/publish.<lang>.json and the size chart, collection, CSV and "was" price settings (PR 27, 28, 32, 34, 38) in
+// messages/merch.<lang>.json, merged in here.
 import mediaBn from '../messages/media.bn.json';
 import mediaEn from '../messages/media.en.json';
+import merchBn from '../messages/merch.bn.json';
+import merchEn from '../messages/merch.en.json';
+import publishBn from '../messages/publish.bn.json';
+import publishEn from '../messages/publish.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -24,7 +30,10 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
   return out;
 }
 
-export const messages: SettingsMessages = { en: mergeMessages(en, mediaEn), bn: mergeMessages(bn, mediaBn) };
+export const messages: SettingsMessages = {
+  en: mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn),
+};
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
