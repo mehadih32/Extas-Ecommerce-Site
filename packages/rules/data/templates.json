@@ -52,6 +52,83 @@
       ]
     },
     {
+      "id": "delivery",
+      "starter": true,
+      "kind": "delivery",
+      "nameEn": "Delivery charge",
+      "nameBn": "ডেলিভারি চার্জ",
+      "text": {
+        "short": {
+          "en": "Inside Dhaka {chargeDhakaCity} · Outside Dhaka {chargeOutsideDhaka} · Free over {freeOver}",
+          "bn": "ঢাকার ভেতরে {chargeDhakaCity} · ঢাকার বাইরে {chargeOutsideDhaka} · {freeOver}-এর বেশিতে ফ্রি"
+        },
+        "full": {
+          "en": "Inside Dhaka City: {chargeDhakaCity}.\nDhaka sub-area: {chargeDhakaSubArea}.\nOutside Dhaka City: {chargeOutsideDhaka}.\nFree delivery on orders over {freeOver}.\nIf you refuse the parcel at the door, a return delivery charge applies. No charge if the mistake is ours.",
+          "bn": "ঢাকা সিটির ভেতরে: {chargeDhakaCity}।\nঢাকার আশপাশে: {chargeDhakaSubArea}।\nঢাকা সিটির বাইরে: {chargeOutsideDhaka}।\n{freeOver}-এর বেশি অর্ডারে ডেলিভারি ফ্রি।\nদরজায় পার্সেল না নিলে ফেরতের ডেলিভারি চার্জ লাগবে। ভুল আমাদের হলে কোনো চার্জ নেই।"
+        },
+        "progress": {
+          "en": "Add {remaining} more for free delivery",
+          "bn": "আর {remaining}-এর কিনলে ডেলিভারি ফ্রি"
+        },
+        "unlocked": {
+          "en": "You've got free delivery",
+          "bn": "আপনার ডেলিভারি ফ্রি"
+        }
+      },
+      "params": [
+        {
+          "key": "chargeDhakaCity",
+          "type": "money",
+          "value": null,
+          "labelEn": "Inside Dhaka City",
+          "labelBn": "ঢাকা সিটির ভেতরে"
+        },
+        {
+          "key": "chargeDhakaSubArea",
+          "type": "money",
+          "value": null,
+          "labelEn": "Dhaka sub-area",
+          "labelBn": "ঢাকার আশপাশে"
+        },
+        {
+          "key": "chargeOutsideDhaka",
+          "type": "money",
+          "value": null,
+          "labelEn": "Outside Dhaka",
+          "labelBn": "ঢাকার বাইরে"
+        },
+        {
+          "key": "freeOver",
+          "type": "money",
+          "value": null,
+          "fromSetting": "delivery.freeOverMinor",
+          "labelEn": "Free delivery over",
+          "labelBn": "যত টাকার বেশিতে ডেলিভারি ফ্রি"
+        }
+      ],
+      "actions": [
+        {
+          "type": "deliveryCharge",
+          "byBand": {
+            "dhaka-city": "chargeDhakaCity",
+            "dhaka-sub-area": "chargeDhakaSubArea",
+            "outside-dhaka": "chargeOutsideDhaka"
+          }
+        },
+        {
+          "type": "freeDeliveryOver",
+          "param": "freeOver"
+        }
+      ],
+      "placements": [
+        "product",
+        "bag",
+        "checkout",
+        "faq",
+        "assistant"
+      ]
+    },
+    {
       "id": "order-edit",
       "starter": true,
       "kind": "policy",

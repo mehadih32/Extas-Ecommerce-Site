@@ -19,6 +19,16 @@
       "values": {
         "maxEdits": 2
       }
+    },
+    {
+      "template": "delivery",
+      "status": "DRAFT",
+      "values": {
+        "chargeDhakaCity": 8000,
+        "chargeDhakaSubArea": 10000,
+        "chargeOutsideDhaka": 12000,
+        "freeOver": 150000
+      }
     }
   ],
   "notices": []
