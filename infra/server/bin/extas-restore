@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # PR 8 — one-command restore (A2.9.12), tested.
 #   extas-restore test
-#       Restores the newest base backup + WAL into a throwaway PostgreSQL on the NVMe, checks it, removes it.
+#       Restores the newest base backup + WAL into a throwaway PostgreSQL on the NVMe, checks it, removes it; restores
+#       one sample product photo from the newest photo archives and compares its checksum.
 #       Run after every setup and monthly by a timer; the result is shown in the admin and alerted (PR 9, 395, 507).
+#   extas-restore media [--from local|blob|drive] [--into live]
+#       The product photos from the newest full photo archive and the newest diff on it, every checksum checked.
+#       Default: into a folder on the NVMe for checking (the path is printed). --into live copies the photos that are
+#       missing back into the photo folder after typing RESTORE; it never overwrites or deletes a photo.
 #   extas-restore --from local|blob|drive [--at "YYYY-MM-DD HH:MM"] [--target staging|production]
 #       local/blob: base backup + WAL replay to the chosen minute (default: as late as possible).
 #       drive: the daily encrypted dump (no minute choice) — the fallback when Blob is unavailable.
@@ -19,19 +24,130 @@ TS="$(date +%Y%m%d-%H%M%S)"
 WORK="$EXTAS_NVME_MOUNT/scratch/restore-$TS"
 NAME="extas-pg-restore"
 
-FROM=local; AT=""; TARGET=staging; MODE=restore
-case "${1:-}" in test) MODE="test"; shift ;; esac
+MEDIA="$R/data/media"   # the product photos on the local disk (see extas-backup)
+
+FROM=local; AT=""; TARGET=staging; MODE=restore; INTO=""
+case "${1:-}" in test) MODE="test"; shift ;; media) MODE="media"; shift ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --from) FROM="$2"; shift 2 ;;
     --at) AT="$2"; shift 2 ;;
     --target) TARGET="$2"; shift 2 ;;
+    --into) INTO="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
 
-cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; [ "$MODE" = test ] && rm -rf "$WORK"; }
+cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; [ "$MODE" = test ] && rm -rf "$WORK"; return 0; }
 result() { printf '{"result":"%s","detail":"%s","from":"%s","at":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" > "$STATE/restore-$MODE.json"; }
+
+# ---- product photos (PR 8) ----------------------------------------------------------------------------------------
+# media_set <dir>: the newest full photo archive in <dir> and the newest diff made on it → MEDIA_FULL, MEDIA_DIFF
+# (names without .tar; the stamps sort by time).
+MEDIA_FULL=""; MEDIA_DIFF=""
+media_set() {
+  local f s
+  MEDIA_FULL=""; MEDIA_DIFF=""
+  for f in "$1"/media-*-full.tar; do [ -e "$f" ] && MEDIA_FULL="$(basename "$f" .tar)"; done
+  [ -n "$MEDIA_FULL" ] || return 1
+  s="${MEDIA_FULL#media-}"; s="${s%-full}"
+  for f in "$1"/media-*-diff-"$s".tar; do [ -e "$f" ] && MEDIA_DIFF="$(basename "$f" .tar)"; done
+  return 0
+}
+manifest_of() { echo "media-$(cut -c7-19 <<<"$1").sha256"; }   # media-<stamp>-… → media-<stamp>.sha256
+
+# media_sample <dir with the archives> <work dir>: every archive of the set reads to the end; one photo, picked at
+# random from the newest archive that has any, is restored and its checksum compared with the one recorded at backup
+# time. Sets MEDIA_DETAIL; non-zero on failure.
+MEDIA_DETAIL=""
+media_sample() {
+  local d="$1" w="$2" a line="" src="" sum path got
+  if ! media_set "$d"; then
+    if [ "${BACKUP_MEDIA:-yes}" = yes ] && [ -n "$(find "$MEDIA" -type f -print -quit 2>/dev/null)" ]; then
+      MEDIA_DETAIL="photos: no photo archive, although the photo folder has photos"; return 1
+    fi
+    MEDIA_DETAIL="photos: none on the local disk yet"; return 0
+  fi
+  for a in $MEDIA_FULL $MEDIA_DIFF; do
+    tar -tf "$d/$a.tar" >/dev/null 2>&1 || { MEDIA_DETAIL="photos: $a.tar does not read"; return 1; }
+    [ -f "$d/$(manifest_of "$a")" ] || { MEDIA_DETAIL="photos: the checksum list of $a is missing"; return 1; }
+  done
+  for a in $MEDIA_DIFF $MEDIA_FULL; do
+    line="$(shuf -n 1 "$d/$(manifest_of "$a")" 2>/dev/null || true)"
+    [ -n "$line" ] && { src="$a"; break; }
+  done
+  [ -n "$line" ] || { MEDIA_DETAIL="photos: the archive holds no photo yet"; return 0; }
+  sum="${line%%  *}"; path="${line#*  }"
+  mkdir -p "$w/media"
+  tar -C "$w/media" -xf "$d/$src.tar" "$path" 2>/dev/null || { MEDIA_DETAIL="photos: ${path##*/} did not come back from $src.tar"; return 1; }
+  got="$(sha256sum "$w/media/$path" | cut -d' ' -f1)"
+  [ "$got" = "$sum" ] || { MEDIA_DETAIL="photos: ${path##*/} came back from $src.tar with a different checksum"; return 1; }
+  MEDIA_DETAIL="photos: sample ${path##*/} restored from $src.tar, checksum matches"
+}
+
+# Every photo of the newest set into <target>: full archive, then the diff on it (which also applies the photos taken
+# away since), then every checksum that can be checked. Prints how many photos were checked.
+media_extract() { # media_extract <dir with the archives> <target>
+  local d="$1" t="$2" a
+  mkdir -p "$t"
+  for a in $MEDIA_FULL $MEDIA_DIFF; do tar -C "$t" --listed-incremental=/dev/null -xf "$d/$a.tar"; done
+  # newest checksum per photo: the diff's list wins over the full archive's
+  { [ -n "$MEDIA_DIFF" ] && cat "$d/$(manifest_of "$MEDIA_DIFF")"; cat "$d/$(manifest_of "$MEDIA_FULL")"; } \
+    | awk '{ p = substr($0, 67); if (!(p in seen)) { seen[p] = 1; print } }' > "$t.sha256"
+  (cd "$t" && sha256sum --quiet --strict --ignore-missing -c "$t.sha256") || return 1
+  (cd "$t" && awk '{ print substr($0, 67) }' "$t.sha256" | while IFS= read -r p; do [ -f "$p" ] && echo .; done | wc -l)
+}
+
+media_restore() {
+  local src="$WORK/archives" t n last s dir f
+  mkdir -p "$src"
+  case "$FROM" in
+    local) src="$LOCAL/media" ;;
+    blob)
+      [ -n "${RCLONE_CONFIG_BLOB_TYPE:-}" ] || { echo "Azure Blob is not connected"; exit 1; }
+      last="$(rclone lsf "blob:$BLOB_PATH/media" --include 'media-*-full.tar' | sort | tail -1)"
+      [ -n "$last" ] || { echo "no photo archive in Blob"; exit 1; }
+      s="${last#media-}"; s="${s%-full.tar}"
+      rclone copy -q "blob:$BLOB_PATH/media" "$src" --include "media-$s*" --include "media-*-diff-$s.tar"
+      for f in "$src"/media-*-diff-"$s".tar; do
+        [ -e "$f" ] && rclone copy -q "blob:$BLOB_PATH/media" "$src" --include "$(manifest_of "$(basename "$f")")"
+      done ;;
+    drive)
+      [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ] || { echo "Google Drive is not connected"; exit 1; }
+      # The newest day that has a photo archive; a diff names the day of its full archive.
+      for dir in $(rclone lsf --dirs-only "drive:$DRIVE_PATH" | tr -d / | sort -r); do
+        last="$(rclone lsf "drive:$DRIVE_PATH/$dir" --include 'media-*.tar.gpg' | head -1)"
+        [ -n "$last" ] && break
+      done
+      [ -n "${last:-}" ] || { echo "no photo archive on Google Drive"; exit 1; }
+      rclone copy -q "drive:$DRIVE_PATH/$dir" "$WORK/drive" --include 'media-*'
+      case "$last" in *-diff-*) s="${last##*-diff-}"; s="${s%.tar.gpg}"; rclone copy -q "drive:$DRIVE_PATH/$s" "$WORK/drive" --include 'media-*' ;; esac
+      for f in "$WORK/drive"/*.gpg; do
+        gpg --batch --yes --pinentry-mode loopback --passphrase-file "$SEC/backup.key" -o "$src/$(basename "$f" .gpg)" -d "$f"
+      done ;;
+    *) echo "--from local, blob or drive" >&2; exit 2 ;;
+  esac
+  media_set "$src" || { echo "no photo archive to restore from ($FROM)"; exit 1; }
+  t="$WORK/media"
+  if ! n="$(media_extract "$src" "$t")"; then echo "FAIL: a restored photo has a different checksum"; exit 1; fi
+  echo "OK: $n photos restored from $MEDIA_FULL${MEDIA_DIFF:+ + $MEDIA_DIFF} ($FROM), every checksum matches."
+  if [ "$INTO" != live ]; then
+    echo "They are in $t for checking. Nothing in the live photo folder was changed."
+    exit 0
+  fi
+  read -r -p "Copy the photos that are missing into the live photo folder? Type RESTORE: " ok
+  [ "$ok" = "RESTORE" ] || { echo "cancelled"; exit 1; }
+  # Photo names carry their checksum, so a photo that is there is the same photo: only the missing ones are copied.
+  rsync -a --ignore-existing --chown=1000:1000 "$t/" "$MEDIA/"
+  echo "Done: missing photos copied into $MEDIA (nothing overwritten, nothing deleted). The restored set stays in $t."
+}
+
+if [ "$MODE" = media ]; then
+  mkdir -p "$WORK"
+  trap 'rm -rf "$WORK/archives" "$WORK/drive"' EXIT   # the restored photos stay for checking
+  media_restore
+  exit 0
+fi
 
 mkdir -p "$WORK/pgdata" "$WORK/wal"
 chown -R 999:999 "$WORK"; chmod 700 "$WORK/pgdata"
@@ -110,7 +226,12 @@ if [ "$tables" = x ]; then result fail "restored database did not come up"; echo
 detail="base ${BASE:-drive dump}, $tables tables restored (live has $live)"
 
 if [ "$MODE" = test ]; then
-  if [ "$tables" = "$live" ]; then result ok "$detail"; echo "OK: $detail"; else result fail "$detail"; echo "FAIL: $detail"; exit 1; fi
+  ok=yes
+  [ "$tables" = "$live" ] || ok=no
+  # The product photos: one sample back from the newest photo archives, checksum compared (PR 8).
+  media_sample "$LOCAL/media" "$WORK" || ok=no
+  detail="$detail; $MEDIA_DETAIL"
+  if [ "$ok" = yes ]; then result ok "$detail"; echo "OK: $detail"; else result fail "$detail"; echo "FAIL: $detail"; exit 1; fi
   exit 0
 fi
 
