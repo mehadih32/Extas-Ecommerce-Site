@@ -3,3 +3,5 @@
 // the set photo's layout.
 export * from './model';
 export * from './tiers';
+export * from './validate';
+export * from './set-words';
