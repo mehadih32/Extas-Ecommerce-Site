@@ -59,6 +59,7 @@
   --ad-side-w: 240px;
   --ad-top-h: 60px;
   --ad-tap: 44px;
+  --ad-chip-reach: 4px; /* (--ad-tap − the chip's 36 px) / 2: the room a chip row keeps for the chip's tap area */
   --ad-modal-w: 560px;
   --ad-login-w: 420px;
   --ad-text-w: 720px;
@@ -104,14 +105,18 @@
 .ad-top { background: var(--ad-brand-dark); color: var(--ad-brand-ink); padding: 12px var(--ad-gutter); min-height: var(--ad-top-h); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 @media (min-width: 1024px) { .ad-top { display: none; } }
 .ad-top-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.ad-top-shop { display: inline-flex; align-items: center; min-height: 32px; padding: 6px 4px; margin: -6px -4px; font-size: 13px; color: var(--ad-brand-ink); white-space: nowrap; }
+/* PR 85: 44 tall (was 32), so the whole tap area counts; the larger negative margin keeps the bar's height and the
+   link's place exactly as before (the link has no background, so nothing visible changes) */
+.ad-top-shop { display: inline-flex; align-items: center; min-height: var(--ad-tap); padding: 6px 4px; margin: -12px -4px; font-size: 13px; color: var(--ad-brand-ink); white-space: nowrap; }
 
 .ad-col { min-width: 0; }
 .ad-main { padding: 20px var(--ad-gutter) 90px; min-width: 0; }
 @media (min-width: 1024px) { .ad-main { padding: 28px 36px 60px; } }
 
 /* the admin pages as chips on phone/tablet (the sidebar's job on desktop) */
-.ad-mnav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+/* PR 85: the scroller keeps --ad-chip-reach of room above the chips for their tap area (.ad-chip::after; a scroller
+   clips what sticks out of it); the negative top margin leaves the chips where they were */
+.ad-mnav { display: flex; gap: 6px; overflow-x: auto; padding: var(--ad-chip-reach) 0 4px; margin: calc(-1 * var(--ad-chip-reach)) 0 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
 .ad-mnav::-webkit-scrollbar { display: none; }
 @media (min-width: 1024px) { .ad-mnav { display: none; } }
 
@@ -137,6 +142,27 @@
 /* ---------- building blocks ---------- */
 .ad-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--ad-radius); border: 1px solid var(--ad-input); background: var(--ad-surface); font-size: var(--ad-fs-small); font-weight: 500; white-space: nowrap; color: var(--ad-ink); flex-shrink: 0; min-height: 36px; }
 .ad-chip[aria-current='page'] { background: var(--ad-brand); border-color: var(--ad-brand); color: var(--ad-brand-ink); }
+
+/* ---------- PR 85 — every tap target at least 44 × 44 on phones and tablets (Blueprint #11, Appendix C2) ----------
+   The look stays the demo's (V12.1): a chip is still drawn 36 tall and a language button 32 (30 in the sidebar).
+   What grows is the area that takes the tap: an invisible layer, centred on the control, at least --ad-tap tall.
+   It never reaches a neighbour: chips sit side by side (the layer only grows up and down, into the room the chip
+   rows keep for it), and the two language buttons are each at least --ad-tap wide on a touch screen. */
+.ad-chip, .ad-lang button { position: relative; }
+.ad-chip::after, .ad-lang button::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: min(0px, calc(50% - var(--ad-tap) / 2));
+  bottom: min(0px, calc(50% - var(--ad-tap) / 2));
+}
+/* Phone and tablet widths, and any touch screen (an iPad on its side gets the desktop sidebar). Not only
+   pointer:coarse (lessons: a full-page screenshot can switch it off); a desktop with a mouse is unchanged. */
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .ad .ad-lang button { min-width: var(--ad-tap); }
+  .ad-side a, .ad-side .ad-side-btn { min-height: var(--ad-tap); }
+}
 
 .ad-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 20px; border-radius: var(--ad-btn-radius); font-size: var(--ad-fs-body); font-weight: 600; cursor: pointer; border: 1.5px solid transparent; white-space: nowrap; transition: background 0.15s, border-color 0.15s; line-height: 1.6; }
 .ad-btn-primary { background: var(--ad-brand); color: var(--ad-brand-ink); border-color: var(--ad-brand); }
@@ -164,7 +190,8 @@
 @media (min-width: 1024px) { .ad-h1 { font-size: var(--ad-fs-h1-desk); } }
 .ad-intro { max-width: var(--ad-text-w); margin: 8px 0 0; color: var(--ad-text2); line-height: 1.6; }
 
-.ad-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+/* PR 85: room for the chips' tap area as in .ad-mnav (the top padding was 2px; the margin makes up the difference) */
+.ad-tabs { display: flex; gap: 6px; overflow-x: auto; padding: var(--ad-chip-reach) 0 6px; margin: calc(2px - var(--ad-chip-reach)) 0 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
 .ad-tabs::-webkit-scrollbar { display: none; }
 
 .ad-card { background: var(--ad-surface); border: 1px solid var(--ad-line); border-radius: var(--ad-radius); padding: 16px; min-width: 0; }

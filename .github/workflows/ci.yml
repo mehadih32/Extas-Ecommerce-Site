@@ -109,6 +109,18 @@ jobs:
           path: .lighthouseci
           include-hidden-files: true
           retention-days: 7
+      # PR 85 — the device gate (next job) reuses this build: the standalone server with its static files, packed as
+      # one tar (pnpm's standalone output has symlinks, which an artifact upload would lose).
+      - name: Pack the build for the device gate
+        run: |
+          cp -r apps/web/public apps/web/.next/standalone/apps/web/ 2>/dev/null || true
+          tar -czf /tmp/web-standalone.tgz -C apps/web/.next standalone
+      - name: Keep the build for the device gate
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-standalone
+          path: /tmp/web-standalone.tgz
+          retention-days: 1
       - name: Production image builds
         run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
       - name: Migrate image builds (deploy step 0 — schema migrations + settings sync)
@@ -123,6 +135,53 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/e2e" --no-save --no-audit --no-fund playwright@1.63.0
           "$RUNNER_TEMP/e2e/node_modules/.bin/playwright" install --with-deps chromium
           bash tools/admin-login-e2e.sh extas-web:ci extas-migrate:ci
+
+  # PR 85 — the device gate (Blueprint Appendix C1/C2, D1.4): every lighthouserc URL on the 15 phones, 10 tablet sizes
+  # and 6 desktop widths, with the demo gate's layout checks (docs/qa/device-matrix.js) plus tap targets (44 × 44),
+  # 16 px form fields on touch screens and nothing cut off at either edge. 0 fails or the job fails. One Chromium,
+  # several pages at once; the report (Markdown, JSON, screenshots of failures) is kept as an artifact.
+  device-gate:
+    needs: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_VERSION: 1.63.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The web build from the web job
+        uses: actions/download-artifact@v4
+        with:
+          name: web-standalone
+          path: /tmp
+      - name: Unpack it
+        run: mkdir -p apps/web/.next && tar -xzf /tmp/web-standalone.tgz -C apps/web/.next
+      # Playwright stays outside the workspace (no lockfile change); the gate finds it through NODE_PATH.
+      - name: Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/qa" --no-save --no-audit --no-fund "playwright@$PLAYWRIGHT_VERSION"
+          "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Start the app (standalone server)
+        run: |
+          PORT=3000 HOSTNAME=127.0.0.1 nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
+          for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
+          cat /tmp/web-server.log; exit 1
+      - name: Device gate (0 fails)
+        env:
+          NODE_PATH: ${{ runner.temp }}/qa/node_modules
+        run: node tools/device-gate.mjs --base=http://127.0.0.1:3000 --out=device-gate-report
+      - name: Device gate summary
+        if: always()
+        run: cat device-gate-report/device-gate.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - name: Keep the device gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: device-gate
+          path: device-gate-report
+          retention-days: 7
 
   # PR 13 / 603 — the schema's migrations apply to a real PostgreSQL 17 with pg_trgm (throwaway CI database); then the
   # settings framework's database tests (PR 491–496, 510) and the seed package's (PR 14, 508, 509).
