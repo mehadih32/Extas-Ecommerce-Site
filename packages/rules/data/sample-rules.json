@@ -4,6 +4,17 @@
   "marker": "Sample",
   "rules": [
     {
+      "template": "exchange",
+      "status": "ACTIVE",
+      "values": {
+        "windowHours": 72,
+        "perItem": 1,
+        "chargeDhakaCity": 8000,
+        "chargeDhakaSubArea": 10000,
+        "chargeOutsideDhaka": 12000
+      }
+    },
+    {
       "template": "no-return",
       "status": "ACTIVE",
       "values": {}

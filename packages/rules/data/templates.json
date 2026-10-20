@@ -3,6 +3,92 @@
   "version": 1,
   "templates": [
     {
+      "id": "exchange",
+      "starter": true,
+      "kind": "exchange",
+      "nameEn": "Exchange for size or fault",
+      "nameBn": "সাইজ বা ত্রুটির জন্য এক্সচেঞ্জ",
+      "text": {
+        "short": {
+          "en": "Exchange within {windowHours} hours for size or fault",
+          "bn": "{windowHours} ঘণ্টার মধ্যে সাইজ বা ত্রুটির জন্য এক্সচেঞ্জ"
+        },
+        "full": {
+          "en": "You can exchange for a different SIZE within {windowHours} hours after delivery, from My account → Orders.\nItems must be unworn and unwashed, with tags on.\nColour changes or \"didn't like it\" are not exchangeable.\nIf the item is faulty, damaged or we sent the wrong item, we replace it free of charge.\nExchange delivery charge: {chargeDhakaCity} inside Dhaka, {chargeOutsideDhaka} outside. No charge if the mistake is ours.\nIf the new item costs more, pay the difference on delivery. If it costs less, the difference goes to your wallet.",
+          "bn": "ডেলিভারির পর {windowHours} ঘণ্টার মধ্যে আমার অ্যাকাউন্ট → অর্ডার থেকে অন্য সাইজ নিতে পারবেন।\nপণ্যটা পরা বা ধোয়া যাবে না, ট্যাগ লাগানো থাকতে হবে।\nরং বদল বা \"পছন্দ হয়নি\" — এগুলোতে বদল হয় না।\nপণ্যে ত্রুটি থাকলে, নষ্ট হলে বা আমরা ভুল পণ্য পাঠালে বিনা খরচে বদলে দেব।\nবদলের ডেলিভারি চার্জ: ঢাকার ভেতরে {chargeDhakaCity}, ঢাকার বাইরে {chargeOutsideDhaka}। ভুল আমাদের হলে কোনো চার্জ নেই।\nনতুন পণ্যের দাম বেশি হলে বাকিটা ডেলিভারির সময় দেবেন। কম হলে বাকি টাকা আপনার ওয়ালেটে যাবে।"
+        }
+      },
+      "params": [
+        {
+          "key": "windowHours",
+          "type": "hours",
+          "value": null,
+          "fromSetting": "policy.exchange.windowHours",
+          "labelEn": "Exchange window (hours)",
+          "labelBn": "বদলের সময় (ঘণ্টা)"
+        },
+        {
+          "key": "perItem",
+          "type": "int",
+          "value": null,
+          "fromSetting": "policy.exchange.perItem",
+          "labelEn": "Exchanges per item",
+          "labelBn": "একটা পণ্য কতবার বদলানো যাবে"
+        },
+        {
+          "key": "chargeDhakaCity",
+          "type": "money",
+          "value": null,
+          "labelEn": "Exchange charge inside Dhaka",
+          "labelBn": "ঢাকার ভেতরে বদলের চার্জ"
+        },
+        {
+          "key": "chargeDhakaSubArea",
+          "type": "money",
+          "value": null,
+          "labelEn": "Exchange charge in the Dhaka sub-area",
+          "labelBn": "ঢাকার আশপাশে বদলের চার্জ"
+        },
+        {
+          "key": "chargeOutsideDhaka",
+          "type": "money",
+          "value": null,
+          "labelEn": "Exchange charge outside Dhaka",
+          "labelBn": "ঢাকার বাইরে বদলের চার্জ"
+        }
+      ],
+      "actions": [
+        {
+          "type": "exchangePolicy",
+          "windowParam": "windowHours",
+          "perItemParam": "perItem",
+          "chargeByBand": {
+            "dhaka-city": "chargeDhakaCity",
+            "dhaka-sub-area": "chargeDhakaSubArea",
+            "outside-dhaka": "chargeOutsideDhaka"
+          },
+          "reasons": [
+            "size",
+            "defect",
+            "damage",
+            "wrong"
+          ],
+          "freeWhenOurMistake": true
+        }
+      ],
+      "placements": [
+        "product",
+        "bag",
+        "checkout",
+        "thank-you",
+        "account",
+        "messages",
+        "assistant",
+        "faq",
+        "footer"
+      ]
+    },
+    {
       "id": "no-return",
       "starter": true,
       "kind": "policy",
