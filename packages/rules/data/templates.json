@@ -303,6 +303,96 @@
       ]
     },
     {
+      "id": "discount",
+      "kind": "discount",
+      "nameEn": "Discount",
+      "nameBn": "ছাড়",
+      "text": {
+        "short": {
+          "en": "{percentOff} off these products until {endsAt}",
+          "bn": "{endsAt} পর্যন্ত এই পণ্যগুলোতে {percentOff} ছাড়"
+        },
+        "full": {
+          "en": "{percentOff} off the price of these products until {endsAt}.\nNot combined with other offers.",
+          "bn": "{endsAt} পর্যন্ত এই পণ্যগুলোর দামে {percentOff} ছাড়।\nঅন্য অফারের সাথে মেলে না।"
+        },
+        "badge": {
+          "en": "{percentOff} off",
+          "bn": "{percentOff} ছাড়"
+        }
+      },
+      "params": [
+        {
+          "key": "percentOff",
+          "type": "percent",
+          "value": null,
+          "labelEn": "Discount (%)",
+          "labelBn": "ছাড় (%)"
+        }
+      ],
+      "actions": [
+        {
+          "type": "discount",
+          "mode": "percent",
+          "param": "percentOff",
+          "target": "lines",
+          "requiresCoupon": false,
+          "showWas": true
+        }
+      ],
+      "placements": [
+        "product",
+        "bag",
+        "checkout"
+      ]
+    },
+    {
+      "id": "coupon",
+      "kind": "discount",
+      "nameEn": "Coupon",
+      "nameBn": "কুপন",
+      "text": {
+        "short": {
+          "en": "{amountOff} off with a coupon on orders over {minOrder}",
+          "bn": "{minOrder}-এর বেশি অর্ডারে কুপনে {amountOff} ছাড়"
+        },
+        "full": {
+          "en": "Type the coupon code at checkout: {amountOff} off orders over {minOrder}.\nOne coupon per order.",
+          "bn": "চেকআউটে কুপন কোড লিখুন: {minOrder}-এর বেশি অর্ডারে {amountOff} ছাড়।\nএক অর্ডারে একটা কুপন।"
+        }
+      },
+      "params": [
+        {
+          "key": "amountOff",
+          "type": "money",
+          "value": null,
+          "labelEn": "Amount off",
+          "labelBn": "কত টাকা ছাড়"
+        },
+        {
+          "key": "minOrder",
+          "type": "money",
+          "value": null,
+          "labelEn": "Smallest order",
+          "labelBn": "সবচেয়ে ছোট অর্ডার"
+        }
+      ],
+      "actions": [
+        {
+          "type": "discount",
+          "mode": "amount",
+          "param": "amountOff",
+          "target": "order",
+          "minSubtotalParam": "minOrder",
+          "requiresCoupon": true,
+          "showWas": false
+        }
+      ],
+      "placements": [
+        "checkout"
+      ]
+    },
+    {
       "id": "cod",
       "kind": "payment",
       "nameEn": "Cash on delivery",
