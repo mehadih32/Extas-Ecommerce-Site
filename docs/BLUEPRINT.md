@@ -787,6 +787,9 @@ to read code or open GitHub.
 ## A1. How this build runs
 
 
+> **CN-009 · 20 Oct 2026 12:22 (owner answers, Note 52).** Watermark = www.extas.com.bd · unused photos never deleted (archive) · was-price = real MRP where it exists, combos = sum of separate prices, never invented · order e-mail counting, the WhatsApp slot and the "100% original" line are backend settings the owner sets · title brand "EXTAS" · returns row "Exchange within 72 hours for size or fault" · VAT after launch · blog: no "tested by us" until a care-lab person exists, byline "EXTAS Journal" until expert names, starts on go-live day · defaults: invoice design 3 (all 7 selectable), all 11 logo styles selectable, header "main categories + More", drawer style B (A kept), one bag "You may also like" default with the rest as options · owner data (delivery charges, free-delivery limit, COD, exchange limit, AI budget) are entered later in the backend, never blockers. The admin login e-mail is owner data: set on the server only, never committed.
+
+
 > **CN-008 · 20 Oct 2026 (owner desktop review of V12, 03:54–04:23).** 44 items (home H1–H14, category C1–C6, product P1–P8, drawer B1–B3, bag G1–G3, checkout K1–K11 incl. the BD phone normaliser and Polo Duo different-colour rule), 7 invoice templates, 12 new admin screens, admin audit fixes. Built into demo **V12.1** (`docs/demo/EXTAS-demo-V12.1.html`), which is now the UI truth. Every new look is a backend option with the old one kept. Details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md` (44/44 pass), `docs/qa/ADMIN-AUDIT.md`, lesson for `phoneNormalizeBD` in `docs/agents/lessons/ALL.md`. No new PR numbers: scope lands on the existing S02/S03/S04/S05/S08/S14/S16/S20/S22 PRs.
 
 

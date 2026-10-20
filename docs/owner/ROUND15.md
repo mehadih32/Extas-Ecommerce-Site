@@ -738,3 +738,17 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - admin gap screens built (fixE.html, 49/49 test incl. P&L hand-sum match). Leftover for final QA: 4 Bengali leaks in English mode from 85-admin-combos.js and 89w-owner-c.js; Demo controls pill visibility.
 - home/header/footer agent done (fixA.html). Final QA leftover: on desktop the 'Demo controls' pill overlaps the footer copyright line (bottom-left) — move/hide for visitors.
 - container restart killed the desktop QA reviewer and the phone audit; desktop QA relaunched alone (one browser, no background jobs); phone audit queued to run right after it — sequential to avoid another restart. Then the 50-order simulation.
+
+## Note 52 — 20 Oct 12:22 · Owner answers to the open questions (CN-009)
+- Admin login e-mail: given in chat (owner data — never committed to Git; set on the server only).
+- Preview password: he already has it.
+- Watermark text: his website address www.extas.com.bd.
+- Unused photos: never deleted, archive only.
+- "Was" price: real MRP on single items where it exists; combos show the sum of the separate prices; never invented.
+- Order e-mail counting (B.4 #1), the one WhatsApp slot (#2), "100% original" line (#6): all become backend settings he sets himself — ship as settings, he decides there.
+- Title brand: "EXTAS" only.
+- Returns row wording: "Exchange within 72 hours for size or fault".
+- VAT/invoice format: after launch.
+- Combo defaults, desktop CTA, side canvas: keep as built. Blog: no "tested by us" claims until a care-lab person exists; byline "EXTAS Journal" until expert names arrive; blog starts on go-live day (posts ready before); old short notes listed under the guides, noindex.
+- Invoice: default design 3, all 7 selectable in the backend. Logo: all 11 styles kept, he picks in the backend. Header menu: default "main categories + More", other options kept. Drawer: default style B (whole bag), A kept. Bag "You may also like": pick one default, keep the others as options.
+- Owner data (delivery charges, free-delivery limit, COD, exchange limit, AI budget) are entered by him in the backend later — never blockers (rule added to CLAUDE.md).
