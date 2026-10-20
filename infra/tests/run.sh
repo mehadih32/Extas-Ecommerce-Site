@@ -124,6 +124,42 @@ rc=0; out="$("${OC[@]}" --email-file "$T/email" 2>&1)" || rc=$?
 check "owner: a bad e-mail stops before the database" "$rc:$(wc -l < "$T/docker.log")" "1:2"
 check "owner: a bad e-mail is never echoed" "$(grep -c 'not an e-mail' <<<"$out" || true)" "0"
 check "owner: reader without an account says so" "$(EXTAS_CONFIG_FILE="$T/server.conf" "$B/extas-owner-login" >/dev/null 2>&1; echo $?)" "1"
+
+# Owner reset (PR 15, owner 20 Oct 15:26): a new first password for the owner, readable with extas-owner-login, the
+# report says why sign-ins failed and never holds the e-mail or the password.
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+case "$1" in
+  image) exit 0 ;;
+  images) echo "extas-migrate:abc"; exit 0 ;;
+  run)
+    shift; envs=(); out=""
+    while [ $# -gt 0 ]; do
+      case "$1" in --env-file) envs+=("$2"); shift 2 ;; -v) out="${2%%:*}"; shift 2 ;; --name|--network) shift 2 ;; --rm) shift ;; *) break ;; esac
+    done
+    [ "$(cat "${envs[0]}")" = "DATABASE_DIRECT_URL=postgresql://u:p@pg:5432/d" ] || { echo "db env file holds more than the direct URL"; exit 9; }
+    echo "$*" >> "$FAKE_LOG"
+    if [ -n "${FAKE_NO_OWNER:-}" ]; then echo "auth reset-owner: FAILED — no active owner account: make it with create-owner first"; exit 1; fi
+    printf 'OWNER_EMAIL=owner@example.test\nOWNER_FIRST_PASSWORD=Reset-Pass-456\n' > "$out/owner.env"
+    echo "auth reset-owner: own password set before: yes"
+    echo "auth reset-owner: waiting after wrong tries when reset: yes"
+    echo "auth reset-owner: owner sign-in tries in the last 24 h: locked 2, ok 1, password 5"
+    echo "auth reset-owner: owner account st_1 has a new first password (in the file given; change it at the next sign-in)"
+    ;;
+esac
+FAKE
+ORS=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_LOG="$T/docker.log" OWNER_IMAGE_UID="$(id -u)" "$B/extas-owner-reset")
+rc=0; out="$("${ORS[@]}" 2>&1)" || rc=$?
+check "owner reset: done" "$rc:$(jq -r .result "$T/root/state/owner-reset.json")" "0:ok"
+check "owner reset: runs reset-owner" "$(grep -c 'reset-owner --write-to' "$T/docker.log")" "1"
+rd="$(EXTAS_CONFIG_FILE="$T/server.conf" "$B/extas-owner-login")"
+check "owner reset: the reader shows the new password" "$(grep -c 'Reset-Pass-456' <<<"$rd"):$(grep -c 'owner@example.test' <<<"$rd")" "1:1"
+check "owner reset: the report says why" "$(grep -c 'waiting after wrong tries when reset: yes' "$T/root/state/owner-reset.md")" "1"
+check "owner reset: no e-mail or password in the output or report" "$(cat "$T/root/state/owner-reset.md" "$T/root/state/owner-reset.json" <<<"$out" | grep -cE 'owner@example|Reset-Pass' || true):$(grep -cE 'owner@example|Reset-Pass' <<<"$out" || true)" "0:0"
+check "owner reset: login file 600, no temp files" "$(stat -c %a "$T/root/config/secrets/owner-login.env"):$(find "$T/root/config/secrets" -name '.reset*' -o -name '.owner-login*' | wc -l)" "600:0"
+before="$(sha256sum "$T/root/config/secrets/owner-login.env")"
+rc=0; FAKE_NO_OWNER=1 "${ORS[@]}" >/dev/null 2>&1 || rc=$?
+check "owner reset: a failed reset keeps the old login file" "$rc:$(jq -r .result "$T/root/state/owner-reset.json"):$(sha256sum "$T/root/config/secrets/owner-login.env")" "1:fail:$before"
 rm -rf "$T"
 
 # Deploy report (PR 4): commit, Dhaka time, result, migration, health check, the failing step in plain English — and

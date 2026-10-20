@@ -26,6 +26,12 @@
 - প্রথম পাসওয়ার্ডটা শুধু একবার ঢোকার জন্য। ঢোকার পরই অ্যাডমিন আপনাকে নতুন পাসওয়ার্ড দিতে বলবে।
 - নিজের একটা শক্ত পাসওয়ার্ড দিন, যেটা শুধু আপনি জানেন। এরপর পুরনো প্রথম পাসওয়ার্ড আর কাজ করবে না।
 
+## ঢুকতে না পারলে (পাসওয়ার্ড ভুলে গেলে বা বারবার ভুল হলে)
+- আমাকে চ্যাটে শুধু বলুন "অ্যাডমিনে ঢুকতে পারছি না"। আমি সার্ভারে আপনার অ্যাকাউন্টের জন্য নতুন একটা প্রথম পাসওয়ার্ড বানিয়ে দেব।
+- তারপর উপরের ৫ নম্বর ধাপের একই লাইনটা (`/usr/local/sbin/extas-owner-login`) আবার চালান। নতুন প্রথম পাসওয়ার্ডটা দেখাবে।
+- সেটা দিয়ে ঢুকুন, আর ঢুকেই নিজের নতুন পাসওয়ার্ড দিন। পুরনো পাসওয়ার্ড তখন আর কাজ করবে না।
+- ই-মেইলের ঘরে সবসময় পুরো ঠিকানা লিখবেন (যেমন নাম@gmail.com)। শুধু "admin" লিখলে হবে না।
+
 ## জানার কথা
 - পাসওয়ার্ডটা কাউকে মেসেজে পাঠাবেন না।
 - `Output`-এ যদি লেখা আসে "মালিক-অ্যাকাউন্ট এখনো খোলা হয়নি", তাহলে আমাকে বলুন। আবার চালানো নিরাপদ: একবার অ্যাকাউন্ট
@@ -34,7 +40,10 @@
 - এই অ্যাকাউন্ট শুধু নতুন সাইটের (new.extas.com.bd) জন্য। পুরনো দোকান extas.com.bd-এর সাথে এর কোনো সম্পর্ক নেই।
 
 ---
-*For agents:* run `.github/workflows/owner-account.yml` (workflow_dispatch, input `owner_email`, optional `owner_name`).
+*For agents:* when the owner cannot sign in, run `.github/workflows/owner-reset.yml` (workflow_dispatch, no input):
+`extas-owner-reset` gives the one owner account a new first password into the same `owner-login.env`, ends its
+sessions and lifts a wrong-try wait; its report `docs/reports/server/owner-reset.md` says why sign-ins failed (counts
+only). The first account: run `.github/workflows/owner-account.yml` (workflow_dispatch, input `owner_email`, optional `owner_name`).
 The e-mail and the first password live only in `/srv/extas/config/secrets/owner-login.env` (0600) on the VM; the
 workflow's report is `docs/reports/server/owner-account.md` (result only). Never put the e-mail or the password in a
 workflow input expression, a log, an artifact, a commit, a report or chat. A second run refuses (exit 3) and changes
