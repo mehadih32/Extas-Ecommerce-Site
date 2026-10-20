@@ -78,6 +78,9 @@ jobs:
         run: pnpm --filter @extas/seed owner-data:check
       - name: Status data from the register
         run: pnpm status:gen
+      # README's "Stages" row must agree with the register's "**Progress: …**" line on every PR and merge.
+      - name: README status matches the register
+        run: node tools/readme-status.mjs
       - name: Lint
         run: pnpm lint
       - name: Type-check
