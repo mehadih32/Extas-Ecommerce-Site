@@ -37,16 +37,16 @@ RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm status:gen && NODE_OPTIONS=--max
 
 # Runs once per deploy, before the new colour starts (infra/deploy/deploy.sh): `prisma migrate deploy` straight to
 # PostgreSQL (DATABASE_DIRECT_URL), then the settings migration (PR 496), then the auth sync (PR 16/495: permission
-# catalogue + owner role), then the general default pack on every store (PR 508; adds only what is missing). Needs
-# no app build. The same image holds the owner set-up command (packages/auth, cli.ts
-# create-owner).
+# catalogue + owner role), then the mother store of a fresh installation and the general default pack on every store
+# (PR 508; both add only what is missing). Needs no app build. The same image holds the owner set-up command
+# (packages/auth, cli.ts create-owner).
 FROM deps AS migrate
 COPY packages/ packages/
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA NODE_ENV=production PRISMA_HIDE_UPDATE_MESSAGE=1
 USER node
 WORKDIR /repo/packages/settings
-CMD ["sh", "-c", "cd /repo/packages/db && node scripts/prisma.mjs migrate deploy && cd /repo/packages/settings && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/auth && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/seed && exec ./node_modules/.bin/tsx src/cli.ts pack --all-stores"]
+CMD ["sh", "-c", "cd /repo/packages/db && node scripts/prisma.mjs migrate deploy && cd /repo/packages/settings && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/auth && ./node_modules/.bin/tsx src/cli.ts sync && cd /repo/packages/seed && ./node_modules/.bin/tsx src/cli.ts mother-store && exec ./node_modules/.bin/tsx src/cli.ts pack --all-stores"]
 
 FROM node:22-bookworm-slim AS run
 # sharp (PR 22) brings its own libvips (@img/sharp-linux-x64, traced into the standalone output); the watermark on the

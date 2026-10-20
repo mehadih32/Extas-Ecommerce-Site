@@ -12,6 +12,7 @@
   "scripts": {
     "owner-data:check": "tsx src/cli.ts check",
     "pack:apply": "tsx src/cli.ts pack",
+    "mother-store": "tsx src/cli.ts mother-store",
     "sample": "tsx src/cli.ts sample",
     "export:installation": "tsx src/cli.ts export",
     "import:installation": "tsx src/cli.ts import",

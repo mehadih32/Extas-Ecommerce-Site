@@ -2,6 +2,7 @@
   "$comment": "PR 508 — the general default pack: neutral, editable defaults seeded into every store of every installation. Structure only: no money (every band ships off, without a charge; prices, discounts, COD and charges are the owner's decisions, CLAUDE.md rule 6), no owner data (PR 509), no media. Applying it only adds what is missing; it never overwrites a row the owner edited. The policy shapes, AI settings and theme are settings in packages/settings/src/registry.ts (seeded by the settings migration, reset with PR 510). Roles are seeded by the role builder (PR 15, 16, 495).",
   "key": "general",
   "version": 1,
+  "motherStore": { "slug": "main" },
   "garmentTypes": [
     {
       "key": "polo",
