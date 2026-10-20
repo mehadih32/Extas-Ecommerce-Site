@@ -77,8 +77,14 @@ describe('0001_init migration', () => {
 describe('later migrations', () => {
   it('are numbered folders after 0001_init, each with a migration.sql that says why', () => {
     expect(folders[0]).toBe('0001_init');
-    for (const [i, f] of later.entries()) {
-      expect(f).toMatch(new RegExp(`^${String(i + 2).padStart(4, '0')}_[a-z0-9_]+$`));
+    // Numbers only go up and are never used twice. Agents building in parallel reserve their numbers up front, so a
+    // branch can hold 0005 before 0003 and 0004 have landed (S06, PR 549); main ends up with every number in order.
+    let previous = 1;
+    for (const f of later) {
+      expect(f).toMatch(/^\d{4}_[a-z0-9_]+$/);
+      const n = Number(f.slice(0, 4));
+      expect(n).toBeGreaterThan(previous);
+      previous = n;
       expect(sqlOf(f)).toMatch(/^-- PR \d+/);
     }
   });
@@ -103,6 +109,12 @@ describe('later migrations', () => {
     // Every new NOT NULL column has a default, so existing rows stay valid.
     for (const line of sql.split('\n').filter((l) => /NOT NULL/.test(l))) expect(line).toMatch(/DEFAULT/);
     expect(sql).not.toMatch(/\bALTER COLUMN\b|\bRENAME\b/i);
+  });
+
+  it('PR 549, 550: one gazetteer row per place code, and a sub-area taken off the list is archived (0005_delivery_zones)', () => {
+    const sql = sqlOf('0005_delivery_zones');
+    expect(sql).toContain('ALTER TABLE "AreaBand" ADD COLUMN     "archivedAt" TIMESTAMPTZ(3);');
+    expect(sql).toContain('CREATE UNIQUE INDEX "GeoArea_code_key" ON "GeoArea"("code");');
   });
 });
 

@@ -1,0 +1,10 @@
+{
+  "delivery": {
+    "gazetteer": {
+      "cacheSeconds": {
+        "label": "Re-check the area list every (seconds)",
+        "help": "The shop keeps the national area list in memory and looks for a newer list this often. A new list is only loaded when it has really changed."
+      }
+    }
+  }
+}

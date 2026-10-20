@@ -2984,7 +2984,8 @@ model GeoArea {
   parent          GeoArea?  @relation("GeoTree", fields: [parentId], references: [id])
   children        GeoArea[] @relation("GeoTree")
   ancestorIds     String[]  @db.Uuid
-  code            String?
+  /// The importer's stable key (PR 549), e.g. `bd.rajshahi.bogura.gabtali`: one row per code, so a re-import updates.
+  code            String?   @unique
   nameEn          String
   nameBn          String?
   /// Alternate spellings (Gabtali ↔ Gabtoli, Bogra ↔ Bogura); prefix matching only (PR 552).
@@ -3046,15 +3047,17 @@ model DeliveryBand {
 
 /// @stage S06 · PR 550 — one band per area per store (the owner's sub-area list is the only exception to the map).
 model AreaBand {
-  id        String       @id @default(uuid(7)) @db.Uuid
-  storeId   Int
-  store     Store        @relation(fields: [storeId], references: [id])
-  areaId    String       @db.Uuid
-  area      GeoArea      @relation(fields: [areaId], references: [id])
-  bandId    String       @db.Uuid
-  band      DeliveryBand @relation(fields: [bandId], references: [id])
-  createdAt DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime     @updatedAt @db.Timestamptz(3)
+  id         String       @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store        @relation(fields: [storeId], references: [id])
+  areaId     String       @db.Uuid
+  area       GeoArea      @relation(fields: [areaId], references: [id])
+  bandId     String       @db.Uuid
+  band       DeliveryBand @relation(fields: [bandId], references: [id])
+  /// Taken off the owner's list: the row stays (hard rule 3); adding the area again brings the same row back.
+  archivedAt DateTime?    @db.Timestamptz(3)
+  createdAt  DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime     @updatedAt @db.Timestamptz(3)
 
   @@unique([storeId, areaId])
 }
