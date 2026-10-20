@@ -9,7 +9,8 @@
     "settings": "Settings and keys",
     "staff": "Staff and roles",
     "security": "Security and history",
-    "media": "Images and media"
+    "media": "Images and media",
+    "catalogue": "Catalogue"
   },
   "permissions": {
     "settings": {
@@ -38,6 +39,11 @@
       "read": "See the media library",
       "upload": "Upload photos, describe them, place them on products",
       "manage": "Archive and restore files, clean up unused ones, remake every size"
+    },
+    "catalogue": {
+      "read": "See products, colours, sizes, categories, fabrics and brands",
+      "write": "Change products, colours, sizes, categories, fabrics, brands, names and links",
+      "prices": "Set sale and compare-at prices of variants"
     }
   },
   "totp": {

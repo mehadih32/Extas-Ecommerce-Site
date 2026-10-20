@@ -59,3 +59,57 @@ export const walletNumbersSchema = z
     }),
   )
   .max(10);
+
+// ---- S01 · catalogue (PR 19, 20, 30, 31, 590) ----
+
+/** A dictionary key: lower-case words joined by hyphens, e.g. `machine-wash-cold`. */
+export const dictionaryKeySchema = z
+  .string()
+  .max(60)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'not a dictionary key' });
+
+/**
+ * An owner-editable dictionary (colour families, fibres, weaves, care instructions, fabric features): each entry has a
+ * stable key and its text in both admin languages. Keys are unique.
+ */
+export const dictionarySchema = z
+  .array(z.object({ key: dictionaryKeySchema, en: z.string().trim().min(1).max(120), bn: z.string().trim().min(1).max(120) }).strict())
+  .max(500)
+  .refine((list) => new Set(list.map((e) => e.key)).size === list.length, { message: 'every key must be unique' });
+
+export type Dictionary = z.output<typeof dictionarySchema>;
+
+/** The `{tokens}` a product link or title template may use (PR 590; the demo's Naming & links tokens). */
+export const namingTokens = ['brand', 'name', 'style', 'type', 'cat', 'colour', 'colours', 'price', 'fit', 'shop'] as const;
+
+/** A one-language template that may only use the listed `{tokens}` (the link and feed-title templates). */
+export const templateStringSchema = (tokens: readonly string[], max = 300) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(max)
+    .refine((v) => tokensOf(v).every((t) => tokens.includes(t)), { message: `only these {tokens} may be used: ${tokens.join(', ')}` });
+
+/** A regular expression the runtime can compile (the SKU pattern, PR 19). */
+export const regexSourceSchema = z
+  .string()
+  .min(1)
+  .max(300)
+  .refine(
+    (v) => {
+      try {
+        new RegExp(v);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: 'not a valid pattern' },
+  );
+
+/** A URL path prefix such as `/p` (lower case, no trailing slash). */
+export const pathPrefixSchema = z
+  .string()
+  .max(40)
+  .regex(/^(\/[a-z0-9]+(?:-[a-z0-9]+)*)+$/, { message: 'not a path prefix like /p' });

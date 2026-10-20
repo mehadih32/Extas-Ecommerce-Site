@@ -23,6 +23,12 @@ export const PERMISSIONS = {
   'media.read': { group: 'media' },
   'media.upload': { group: 'media' },
   'media.manage': { group: 'media' },
+  // S01 · PR 19, 20, 30, 31, 590 — the catalogue: products, variants, colours, sizes, categories, garment types,
+  // fabrics, brands, names and links. Publishing and bulk actions (PR 21) add their own keys.
+  'catalogue.read': { group: 'catalogue' },
+  'catalogue.write': { group: 'catalogue' },
+  // Prices are the owner's decision (CLAUDE.md rule 6): setting a variant's sale or compare-at price is its own key.
+  'catalogue.prices': { group: 'catalogue' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

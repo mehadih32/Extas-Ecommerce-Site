@@ -11,7 +11,9 @@
     "policy": "Policies",
     "delivery": "Delivery",
     "ai": "AI",
-    "theme": "Theme"
+    "theme": "Theme",
+    "catalogue": "Catalogue",
+    "naming": "Naming & links"
   },
   "store": {
     "name": {
@@ -276,6 +278,200 @@
       "orderEdit": {
         "summary": "You can edit your order up to {maxEdits} times before we start processing it."
       }
+    },
+    "catalogue": {
+      "colourFamilies": {
+        "black": "Black",
+        "white": "White",
+        "grey": "Grey",
+        "blue": "Blue",
+        "green": "Green",
+        "red": "Red",
+        "pink": "Pink",
+        "purple": "Purple",
+        "yellow": "Yellow",
+        "orange": "Orange",
+        "brown": "Brown",
+        "beige": "Beige",
+        "multi": "Multicolour"
+      },
+      "fibres": {
+        "cotton": "Cotton",
+        "organic-cotton": "Organic cotton",
+        "linen": "Linen",
+        "polyester": "Polyester",
+        "viscose": "Viscose",
+        "modal": "Modal",
+        "lyocell": "Lyocell",
+        "elastane": "Elastane (spandex)",
+        "nylon": "Nylon",
+        "wool": "Wool",
+        "silk": "Silk",
+        "acrylic": "Acrylic",
+        "polyurethane": "Polyurethane (PU)",
+        "leather": "Leather"
+      },
+      "fabricConstructions": {
+        "pique": "Piqué",
+        "single-jersey": "Single jersey",
+        "slub-jersey": "Slub jersey",
+        "rib": "Rib knit",
+        "interlock": "Interlock",
+        "waffle": "Waffle knit",
+        "fleece": "Fleece",
+        "french-terry": "French terry",
+        "oxford": "Oxford weave",
+        "poplin": "Poplin",
+        "twill": "Twill",
+        "denim": "Denim",
+        "voile": "Voile"
+      },
+      "careInstructions": {
+        "machine-wash-cold": "Machine wash cold",
+        "hand-wash": "Hand wash",
+        "gentle-cycle": "Gentle cycle",
+        "wash-inside-out": "Wash inside out",
+        "no-bleach": "Do not bleach",
+        "dry-in-shade": "Dry in shade",
+        "line-dry": "Line dry",
+        "dry-flat": "Dry flat",
+        "no-tumble-dry": "Do not tumble dry",
+        "iron-low": "Iron on low heat",
+        "iron-medium": "Iron on medium heat",
+        "no-iron-on-print": "Do not iron on the print",
+        "dry-clean": "Dry clean only",
+        "wipe-clean": "Wipe clean"
+      },
+      "fabricFeatures": {
+        "stretch": "Stretch",
+        "breathable": "Breathable",
+        "moisture-wicking": "Moisture-wicking",
+        "wrinkle-resistant": "Wrinkle-resistant",
+        "pre-shrunk": "Pre-shrunk",
+        "colourfast": "Colourfast",
+        "lightweight": "Lightweight",
+        "heavyweight": "Heavyweight"
+      }
+    },
+    "naming": {
+      "seoTitleTemplate": "{name} — {price} | {shop}",
+      "metaDescriptionTemplate": "{name} in {colours}. {fit}. {shop}."
+    }
+  },
+  "catalogue": {
+    "skuPattern": {
+      "label": "SKU pattern",
+      "help": "The ERP owns the SKU and it is the key of every variant. This pattern only catches typing mistakes; change it to the ERP's own format if it differs."
+    },
+    "categoryMaxDepth": {
+      "label": "Category levels",
+      "help": "How many levels the category tree may have (category › sub-category › …)."
+    },
+    "reservedSlugs": {
+      "label": "Words a category link may not use",
+      "help": "These are the first part of other pages' links (product pages, combos, help …), so a category can never take them."
+    },
+    "colourFamilies": {
+      "label": "Colour families",
+      "help": "The colour groups used by filters and the Google and Facebook feeds (for example, Navy belongs to Blue)."
+    },
+    "colourSimilarDistance": {
+      "label": "Warn when a new colour looks almost the same",
+      "help": "A new colour whose shade is this close to an existing one gets a note, so the same colour is not added twice. 0 turns the note off."
+    },
+    "fibres": {
+      "label": "Fibres",
+      "help": "The fibre list for fabric content (cotton, polyester …). The fabric form only offers these."
+    },
+    "fabricConstructions": {
+      "label": "Weaves and knits",
+      "help": "How a fabric is made (piqué, jersey, oxford …), shown on the product page and used by the AI answers."
+    },
+    "careInstructions": {
+      "label": "Care instructions",
+      "help": "The care lines a fabric can carry (wash cold, dry in shade …), in both languages."
+    },
+    "fabricFeatures": {
+      "label": "Fabric features",
+      "help": "Features a fabric can be marked with (stretch, breathable …). Mark only what is true for the fabric."
+    }
+  },
+  "naming": {
+    "slugTemplate": {
+      "label": "Link template",
+      "help": "Fills the link of a new product when you leave it empty, for example {brand}-{style}. Changing it never changes an existing link."
+    },
+    "seoTitleTemplate": {
+      "label": "SEO title template",
+      "help": "The blue title on Google for every product whose own SEO title is empty."
+    },
+    "metaDescriptionTemplate": {
+      "label": "Meta description template",
+      "help": "The short text under the title on Google for every product whose own text is empty."
+    },
+    "feedTitleTemplate": {
+      "label": "Feed / ad title template",
+      "help": "The product name Google Shopping and Facebook/Instagram ads get when a product has no feed title of its own."
+    },
+    "coloursInTemplate": {
+      "label": "Colours named in {colours}",
+      "help": "How many colours the {colours} token lists before it adds “+ more”."
+    },
+    "seoTitleMaxChars": {
+      "label": "SEO title length",
+      "help": "Google shows about this many characters; a longer title gets a note (it is never cut)."
+    },
+    "metaDescriptionMaxChars": {
+      "label": "Meta description length",
+      "help": "Google shows about this many characters; a longer text gets a note."
+    },
+    "feedTitleMaxChars": {
+      "label": "Feed title length",
+      "help": "The longest feed title Google and Facebook accept; keep the start clear, Facebook cuts it early."
+    },
+    "slugMaxLength": {
+      "label": "Link length",
+      "help": "The longest product link (letters after /p/)."
+    },
+    "slugFallback": {
+      "label": "Link when the name has no English letters",
+      "help": "Used as the start of the link when the name gives no English letters to make one from."
+    },
+    "slugAmpersand": {
+      "label": "Word for “&” in links",
+      "help": "A “&” in a name becomes this word in the link."
+    },
+    "productPathPrefix": {
+      "label": "Product link start",
+      "help": "Every product link starts with this, for example /p/solid-polo."
+    },
+    "redirectStatusCode": {
+      "label": "Old link forwarding code",
+      "help": "301 tells Google the page moved for good, so rank and sales carry over to the new link."
+    },
+    "showBrandLine": {
+      "label": "Show the brand above the product name",
+      "help": "On product cards and the product page; hidden when the name already says it."
+    },
+    "showOwnLabelBrand": {
+      "label": "Also show it for own-label items",
+      "help": "Show the shop's own brand above the name too."
+    },
+    "otherBrandWarning": {
+      "label": "Note when another brand's name is in a name, link or title",
+      "help": "Only a note, never a block. Off by default (owner, 19 Oct)."
+    },
+    "otherBrandNames": {
+      "label": "Brand names the note looks for",
+      "help": "The product's own brand never counts."
+    },
+    "renameReportDays": {
+      "label": "Days compared before and after a rename",
+      "help": "The rename report compares this many days before and after a new name or link."
+    },
+    "bulkMaxChanges": {
+      "label": "Most changes in one bulk rename",
+      "help": "A bigger change has to be split, so a mistake never renames the whole shop at once."
     }
   }
 }

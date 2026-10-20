@@ -13,6 +13,7 @@
   "dependencies": {
     "@extas/adapters": "workspace:*",
     "@extas/auth": "workspace:*",
+    "@extas/catalogue": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/media": "workspace:*",
     "@extas/settings": "workspace:*",
