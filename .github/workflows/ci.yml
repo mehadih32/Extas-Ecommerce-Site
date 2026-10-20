@@ -262,3 +262,16 @@ jobs:
           fetch-depth: 0
       - name: One register PR per commit
         run: node tools/check-commits.mjs "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+
+  # readme-guard (owner, 20 Oct, CN-011; PR 594): README.md must be current in every pull request into main — a PR log
+  # row for every PR in the title, stage counts equal to the register's statuses, no touched stage "Not started".
+  readme-guard:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-24.04
+    steps:
+      # Its tests (tools/readme-guard.test.mjs) run with the web tests, like the other tools/ tests.
+      - uses: actions/checkout@v4
+      - name: README is up to date for this PR
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: node tools/readme-guard.mjs
