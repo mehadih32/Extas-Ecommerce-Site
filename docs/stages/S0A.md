@@ -113,7 +113,8 @@
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`
+  - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`. 23 Oct: the nightly run checks out the live commit's checks (`last-good-deploy.json`), so a check merged before its deploy can't fail the live version
+  - GitHub pull request #23, 23 Oct
   - GitHub pull request #20, 20 Oct
   - GitHub pull request #19, 20 Oct
   - GitHub pull request #18, 20 Oct
@@ -128,7 +129,7 @@
   - **20 Oct 14:15** · [Scope added to existing PRs (owner, urgent admin sign-in bug; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-606): **PR 4 (deploy)** — an end-to-end check "log in → the admin loads" (`tools/admin-login-e2e.sh` + `.mjs`) runs in CI on the production images against a fresh installation (the migrate image's own command, the first owner with a generated password, a real browser opening every admin menu page); deploy.yml runs only after CI passed, so every deploy has passed it.
   - **23 Oct** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`.
 - **What was built** (from the Build status row):
-  - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`, `infra/deploy/smoke.sh`, `smoke.yml`, `docs/reports/smoke/latest/`
+  - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`, `infra/deploy/smoke.sh`, `smoke.yml`, `docs/reports/smoke/latest/`, `last-good-deploy.json`
   - Tests: 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop
 - **Owning agent:** Prohori
 - **Mentions:** [PR 604](#pr-604), [PR 601](#pr-601)
