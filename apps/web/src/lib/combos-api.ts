@@ -13,6 +13,7 @@
 //   POST  /api/admin/combos/:id/price       {setPriceMinor, version?} the card's price box (combos.prices)
 //   POST  /api/admin/combos/:id/flags       {autoApply?, sameColour?}
 //   POST  /api/admin/combos/:id/active      {on} switch on, or off to the archive (combos.publish)
+//   POST  /api/admin/combos/:id/photo       PR 575 · make the set photo from the piece photos
 //   PR 571 · auto colour-pair rules
 //   GET   /api/admin/combos/rules                  the rules (with counts and their first pair)
 //   POST  /api/admin/combos/rules                  {rule} a new rule (a draft; its pairs are made)
@@ -30,7 +31,9 @@
 //   GET   /api/admin/combos/tiers                  "What customers can combine"
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
+import { imageSources } from '@extas/media';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
+import { mediaDeps } from './media';
 
 export type CombosPerm = cb.CombosPermission;
 
@@ -47,7 +50,39 @@ function storeIdOf(url: URL): number | null {
   return Number.isInteger(n) && n >= 1 ? n : null;
 }
 
-export const combosDeps = (deps: AdminDeps): cb.CombosDeps => ({ db: deps.db, settings: deps.resolver, now: deps.now });
+/**
+ * The combo services' dependencies. The storage adapter is the media library's (PR 18; the mock until Blob is
+ * connected), looked up only when a set photo is made. No `defer`: the admin waits for the photo's sizes, so the card
+ * shows the new photo at once.
+ */
+export const combosDeps = (deps: AdminDeps): cb.CombosDeps => ({
+  db: deps.db,
+  settings: deps.resolver,
+  now: deps.now,
+  storage: async (storeId, provider) => {
+    const m = mediaDeps();
+    if (!m) throw new cb.CombosError('NO_STORAGE', 'no media storage on this server');
+    return m.storage(storeId, provider);
+  },
+});
+
+/** The card's set photo width the admin asks for (a rendition at least this wide, else the widest). */
+const CARD_PHOTO_WIDTH = 640;
+
+/** Each set photo's address for a card (rendered ones only; one still being made shows the drawn pieces). */
+export async function cardPhotoUrls(deps: cb.CombosDeps, storeId: number, combos: readonly { id: string; setPhotoAssetId: string | null }[]): Promise<Record<string, string>> {
+  const ids = combos.flatMap((c) => (c.setPhotoAssetId ? [c.setPhotoAssetId] : []));
+  if (!ids.length) return {};
+  const src = await imageSources({ db: deps.db, settings: deps.settings as never }, storeId, ids);
+  const out: Record<string, string> = {};
+  for (const c of combos) {
+    const s = c.setPhotoAssetId ? src.get(c.setPhotoAssetId) : undefined;
+    if (!s?.variants.length) continue;
+    const sorted = [...s.variants].sort((x, y) => x.width - y.width);
+    out[c.id] = (sorted.find((v) => v.width >= CARD_PHOTO_WIDTH) ?? sorted[sorted.length - 1]!).url;
+  }
+  return out;
+}
 
 export async function handle(request: Request, deps: AdminDeps | null, permission: CombosPerm, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
   const url = new URL(request.url);
@@ -121,6 +156,13 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
       const bd = await body(request);
       if (typeof bd.on !== 'boolean') return fail(400, 'INVALID_INPUT', ['on']);
       return { combo: await cb.setComboActive(x.deps, x.who, a, bd.on) };
+    });
+  if (b === 'photo')
+    return handle(request, deps, 'combos.write', async (x) => {
+      const photo = await cb.makeSetPhoto(x.deps, x.who, a);
+      const combo = await cb.getCombo(x.deps, x.who, a);
+      const urls = await cardPhotoUrls(x.deps, x.who.storeId, [combo]);
+      return { photo, combo, photoUrl: urls[a] ?? null };
     });
   return notFound();
 }

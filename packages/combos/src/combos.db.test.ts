@@ -13,6 +13,9 @@ import { seedSampleCombos } from './sample';
 import { listSetTiers, liveSetTiers } from './set-tiers';
 import { checkComboSet } from './set-check';
 import { priceSet, setSummary } from './summary';
+import { makeSetPhoto } from './set-photo';
+import { memoryStorage } from '@extas/adapters';
+import sharp from 'sharp';
 import { addSetToBag, bagSets, changeSetInBag, refreshBagSets, removeSetFromBag, saveSetForLater } from './bag';
 import { productFacts } from './facts';
 import { contentColumns, ruleContentSchema } from '@extas/rules';
@@ -514,6 +517,53 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]!.savedForLater).toBe(true);
       expect(await removeSetFromBag(deps(), { storeId: S, cartId: id, groupKey: r.groupKey })).toEqual({ removed: 2 });
       expect(await bagSets(deps(), { storeId: S, cartId: id })).toEqual([]);
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 575 · the set photo from the piece photos', () => {
+    it('made from each piece\'s photo in its colour, stored with its sizes and set on the combo; a missing photo stops it', async () => {
+      const storage = memoryStorage('LOCAL_DISK');
+      const withStorage = (): CombosDeps => ({ ...deps(), storage: async () => storage });
+      const sum = await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' });
+      const combo = await t.prisma.combo.findFirstOrThrow({ where: { storeId: S, slug: 'sample-polo-chino-set' }, select: { id: true, version: true } });
+      const photo = async (productId: string, colourId: string | null, hex: string, role: 'FRONT' | 'BACK') => {
+        const body = new Uint8Array(await sharp({ create: { width: 800, height: 900, channels: 3, background: hex } }).png().toBuffer());
+        const key = `media/s${S}/o/2026/10/test-${productId.slice(0, 8)}-${role.toLowerCase()}-${hex.slice(1)}.png`;
+        await storage.put(key, body, 'image/png');
+        const a = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: key, mimeType: 'image/png', bytes: BigInt(body.byteLength), checksumSha256: hex.slice(1).padEnd(64, '0'), width: 800, height: 900 } });
+        await t.prisma.productMedia.create({ data: { storeId: S, productId, assetId: a.id, colourId, role } });
+        return a.id;
+      };
+      const [polo, chino] = sum.pieces;
+      expect(await code(makeSetPhoto(deps(), as('writer'), combo.id))).toBe('NO_STORAGE');
+      expect(await code(makeSetPhoto(withStorage(), as('reader'), combo.id))).toBe('FORBIDDEN');
+      await photo(polo!.productId, polo!.defaultColourId, '#aa2222', 'BACK');
+      const front = await photo(polo!.productId, polo!.defaultColourId, '#cc3333', 'FRONT');
+      // Another colour of the chino is not this set's colour: the chino has no photo yet.
+      const otherColour = chino!.colours.find((c) => c.id !== chino!.defaultColourId);
+      if (otherColour) await photo(chino!.productId, otherColour.id, '#3333cc', 'FRONT');
+      const missing = await makeSetPhoto(withStorage(), as('writer'), combo.id).catch((e) => e);
+      expect(missing).toMatchObject({ code: 'NO_PIECE_PHOTO', details: ['2'] });
+      const chinoFront = await photo(chino!.productId, chino!.defaultColourId, '#2222aa', 'FRONT');
+
+      const r = await makeSetPhoto(withStorage(), as('writer'), combo.id);
+      expect(r).toMatchObject({ comboId: combo.id, layout: 'top-bottom', width: 1200, height: 900, processing: 'done' });
+      expect(r.pieces.map((p) => p.assetId)).toEqual([front, chinoFront]);
+      const after = await t.prisma.combo.findUniqueOrThrow({ where: { id: combo.id }, select: { setPhotoAssetId: true, version: true } });
+      expect(after).toEqual({ setPhotoAssetId: r.assetId, version: combo.version + 1 });
+      const asset = await t.prisma.mediaAsset.findUniqueOrThrow({ where: { id: r.assetId }, select: { kind: true, mimeType: true, storageKey: true } });
+      expect(asset).toMatchObject({ kind: 'IMAGE', mimeType: 'image/webp' });
+      expect(asset.storageKey).toContain('set-sample-polo-chino-set');
+      const file = await storage.get(asset.storageKey);
+      expect(await sharp(file!.body).metadata()).toMatchObject({ format: 'webp', width: 1200, height: 900 });
+      expect(await t.prisma.mediaRendition.count({ where: { assetId: r.assetId } })).toBeGreaterThan(0);
+      expect(await t.prisma.auditLog.count({ where: { entityId: combo.id, action: 'combo.photo' } })).toBe(1);
+      // Made again: a new file, the old one kept in the library (nothing is deleted).
+      const again = await makeSetPhoto(withStorage(), as('writer'), combo.id);
+      expect(again.assetId).not.toBe(r.assetId);
+      expect(await t.prisma.mediaAsset.findUnique({ where: { id: r.assetId }, select: { archivedAt: true } })).toEqual({ archivedAt: null });
+      expect((await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' })).photoAssetId).toBe(again.assetId);
     });
   });
 });

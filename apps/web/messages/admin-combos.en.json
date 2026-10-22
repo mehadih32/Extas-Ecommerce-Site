@@ -120,7 +120,8 @@
       "sameOn": "{name} — two of the same colour now get the combo price",
       "sameOff": "{name} — only different colours get the combo price",
       "saved": "{name} saved",
-      "created": "{name} saved as a draft — switch it on when it is ready"
+      "created": "{name} saved as a draft — switch it on when it is ready",
+      "photoMade": "{name} — set photo made from the piece photos"
     },
     "tabs": {
       "label": "Combo sections",
@@ -368,6 +369,11 @@
       "offNote": "Off — customers cannot build this set.",
       "changeNote": "Prices and on/off are changed in Smart Rules; a price needs the owner’s OK there.",
       "empty": "No customer sets yet. In Smart Rules, start one from the “Build your own set” template."
+    },
+    "photo": {
+      "make": "Make set photo",
+      "again": "Make photo again",
+      "making": "Making…"
     }
   }
 }

@@ -23,3 +23,4 @@ export * from './set-tiers';
 export * from './set-check';
 export * from './summary';
 export * from './bag';
+export * from './set-photo';
