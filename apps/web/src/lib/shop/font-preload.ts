@@ -30,6 +30,9 @@ const FACES = {
   },
 } satisfies Record<FontFamilyKey, Record<number, URL>>;
 
+/** The taka sign alone (PR 41), in the face a price is drawn with (bold text takes the 600 face). */
+const TAKA_600 = new URL('../../fonts/hind-siliguri/hind-siliguri-taka-600-normal.woff2', import.meta.url);
+
 /** Which self-hosted family a token's stack names (its first family). */
 export function familyOf(stack: string): FontFamilyKey | null {
   const hit = (Object.keys(FONT_FAMILIES) as FontFamilyKey[]).find((k) => FONT_FAMILIES[k] === stack);
@@ -59,7 +62,8 @@ export function shopFontPreloads(tokens: ThemeTokens, lang: ShopLang): string[] 
   const body = familyOf(tokens['font-body']) ?? 'instrument-sans';
   const display = familyOf(tokens['font-display']) ?? 'archivo';
   const weight = Number.parseInt(tokens['display-weight'], 10) || 700;
-  const urls = [face(body, 400), face(body, 600), face('archivo', 800), face(display, weight)];
+  // PR 41: the taka sign of every price (2.5 KB, the price weight's face; fonts/shop.css)
+  const urls = [face(body, 400), face(body, 600), face('archivo', 800), face(display, weight), TAKA_600];
   void lang;
   return [...new Set(urls.map(path))];
 }

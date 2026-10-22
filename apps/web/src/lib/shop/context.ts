@@ -52,6 +52,12 @@ const KEYS = [
   'language.bengali.digits',
   'language.labels',
   'slider.engine',
+  'home.sections',
+  'home.hero',
+  'home.categories',
+  'home.newIn',
+  'home.reviews',
+  'home.rowFade',
 ] as const satisfies readonly Key[];
 
 type ShopKey = (typeof KEYS)[number];
@@ -148,6 +154,10 @@ export interface ShopContext {
   bnDigits: boolean;
   /** A number in the page's digits. */
   num: (n: number) => string;
+  /** An amount of money (minor units) the way the demo writes every price: `৳ 1,500`. */
+  money: (minor: number) => string;
+  /** The store the page serves. */
+  storeId: number;
 }
 
 export const shopContext = cache(async (): Promise<ShopContext> => {
@@ -161,6 +171,7 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   const today = todayIn(s['store.timeZone'], now);
   const bnDigits = s['language.bengali.digits'];
   const num = (n: number) => (lang === 'bn' && bnDigits ? toBnDigits(String(n)) : String(n));
+  const money = (minor: number) => formatMoney(minor, s['store.currency'], lang, bnDigits);
   const storeName = s['store.name']?.trim() || rowName || t('brand.fallback');
   const freeOverMinor = s['delivery.freeOverMinor'];
   const flags: Flags = {
@@ -186,5 +197,5 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
     preview: h.get(THEME_HEADER),
     previewAllowed: s['theme.previewParam'],
   });
-  return { lang, path, t, s, live, storeName, theme, today, year: Number(today.slice(0, 4)), flags, vars, cats, bnDigits, num };
+  return { lang, path, t, s, live, storeName, theme, today, year: Number(today.slice(0, 4)), flags, vars, cats, bnDigits, num, money, storeId };
 });

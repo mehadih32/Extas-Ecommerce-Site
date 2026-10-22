@@ -3,6 +3,9 @@ import {
   announceSchema,
   desktopNavSchema,
   footerSchema,
+  HOME_SECTIONS,
+  homeHeroSchema,
+  homeSectionsSchema,
   logoStyleSchema,
   menuSchema,
   shopPathSchema,
@@ -115,5 +118,23 @@ describe('storefront settings (v16)', () => {
     const twice = { ...footer, social: [...footer.social, { id: 'whatsapp', on: false }] };
     expect(footerSchema.safeParse(twice).success).toBe(false);
     expect(footerSchema.safeParse({ ...footer, social: [{ id: 'myspace', on: true }] }).success).toBe(false);
+  });
+
+  it('PR 41: the home page sections are the demo\'s ten, each once; the hero keeps one to three buttons', () => {
+    const sections = storefrontSettings['home.sections'].default;
+    expect(sections.map((x) => x.id)).toEqual([...HOME_SECTIONS]);
+    expect(homeSectionsSchema.safeParse([...sections, sections[0]]).success).toBe(false);
+    const hero = storefrontSettings['home.hero'].default;
+    const four = { ...hero, buttons: [0, 1, 2, 3].map((i) => ({ ...hero.buttons[0]!, id: `b${i}` })) };
+    expect(homeHeroSchema.safeParse(four).success).toBe(false);
+    expect(homeHeroSchema.safeParse({ ...hero, shift: 241 }).success).toBe(false);
+    expect(homeHeroSchema.safeParse({ ...hero, buttons: [{ ...hero.buttons[0]!, href: 'https://evil.example' }] }).success).toBe(false);
+  });
+
+  it('PR 41: the hero\'s promise lines wait for the owner (COD, exchange)', () => {
+    const hero = storefrontSettings['home.hero'].default;
+    expect(hero.trust.find((x) => x.id === 'cod')?.requires).toEqual(['cod']);
+    expect(hero.trust.find((x) => x.id === 'exchange')?.requires).toEqual(['exchange']);
+    expect(hero.setsLook).toBe('v3');
   });
 });

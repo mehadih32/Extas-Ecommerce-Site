@@ -71,10 +71,37 @@ html .shop .nf-cats a.chip::before { content: ""; position: absolute; left: 50%;
  * `shell.footer.deskIcons` (off = the V12.1 words-only look). Desktop only; the phone footer is untouched.
  * ~~width 15 px, margin-right 9 px, opacity .72 (drawn before V12.2)~~ — V12.2 draws it: the demo's own rules are now
  * ported at the end of shop.css. */
-.shop .shop-sec { padding: 20px 0 28px; }
-@media (min-width: 1024px) { .shop .shop-sec { padding: 36px 0 48px; } }
-.shop .shop-row { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; }
-.shop .shop-row::-webkit-scrollbar { display: none; }
-.shop .shop-row > * { flex: 0 0 auto; }
-.shop .shop-row .chip { min-height: 44px; padding: 0 16px; font-size: 14px; color: var(--ink); }
-.shop .shop-row .chip .chip-n { color: var(--muted); font-size: 12px; }
+/* ~~The interim home row (PR 40 to PR 41): the live categories as chips in one sliding row.~~ Replaced by the home
+ * page of PR 41; kept here, switched off, as the record of what showed before:
+ * .shop .shop-sec { padding: 20px 0 28px; }
+ * @media (min-width: 1024px) { .shop .shop-sec { padding: 36px 0 48px; } }
+ * .shop .shop-row { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; }
+ * .shop .shop-row::-webkit-scrollbar { display: none; }
+ * .shop .shop-row > * { flex: 0 0 auto; }
+ * .shop .shop-row .chip { min-height: 44px; padding: 0 16px; font-size: 14px; color: var(--ink); }
+ * .shop .shop-row .chip .chip-n { color: var(--muted); font-size: 12px; } */
+
+/* PR 41 · the home page. The owner's photo fills the picture box the way the demo draws it (02-core.js productImg:
+ * absolute, the whole box, cropped to fill); until it arrives the box keeps its tint, so nothing moves. */
+.shop .pimg.has-photo picture { position: absolute; inset: 0; display: block; }
+.shop .pimg.has-photo img, .shop .pimg.has-photo [data-media-pending] { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* The "Shop sets" button's other looks (demo r12-home.css 14.1; `home.hero.setsLook`, v3 is the owner's pick and is in
+ * shop.css): v1 soft glass, v2 deep shade, v4 frosted. "current" is the plain outline. */
+.shop .hm-hero-btns .hm-btn-line.hm-sets-v1 { background: color-mix(in srgb, var(--hero-ink) 8%, transparent); border-color: color-mix(in srgb, var(--hero-ink) 46%, transparent); }
+.shop .hm-hero-btns .hm-btn-line.hm-sets-v1:hover { background: color-mix(in srgb, var(--hero-ink) 14%, transparent); }
+.shop .hm-hero-btns .hm-btn-line.hm-sets-v2 { background: color-mix(in srgb, var(--hero) 62%, #000); border-color: color-mix(in srgb, var(--hero-ink) 26%, transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hero-ink) 10%, transparent); }
+.shop .hm-hero-btns .hm-btn-line.hm-sets-v2:hover { background: color-mix(in srgb, var(--hero) 50%, #000); }
+.shop .hm-hero-btns .hm-btn-line.hm-sets-v4 { background: linear-gradient(180deg, color-mix(in srgb, var(--hero-ink) 22%, transparent), color-mix(in srgb, var(--hero-ink) 5%, transparent)); border-color: color-mix(in srgb, var(--hero-ink) 38%, transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hero-ink) 38%, transparent), 0 6px 16px rgba(0, 0, 0, 0.16); -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%); }
+.shop .hm-hero-btns .hm-btn-line.hm-sets-v4:hover { border-color: color-mix(in srgb, var(--hero-ink) 56%, transparent); }
+/* H9 · `home.rowFade` off: the sliding rows keep plain straight edges (demo r12-zz-ownerA.css). */
+.shop .hm-nofade .hm-hrow, .shop .hm-nofade .hm-hscroll[data-sm], .shop .hm-nofade #hm-revtrack.hm-hscroll { -webkit-mask-image: none !important; mask-image: none !important; }
+/* PR 41 · narrow phones (device gate, TEXT-CUT-OFF): the demo cuts the fit words short when a card has four colours
+ * and "+N" (and "BESTSELLER" on a 320 px phone). The fit then drops to its own line, still on the right, and the badge
+ * tightens; a card whose line fits looks exactly as the demo draws it. */
+@media (max-width: 399px) {
+  .shop .pcard .pinfo > .row.between { flex-wrap: wrap; row-gap: 2px; }
+  .shop .pcard .pinfo > .row.between > .tiny { margin-left: auto; overflow: visible; }
+}
+@media (max-width: 359px) {
+  .shop .pcard .badge-img { font-size: 9px; letter-spacing: 0.02em; padding: 0.4em 0.55em; }
+}

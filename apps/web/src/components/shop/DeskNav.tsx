@@ -132,7 +132,11 @@ export function DeskNav({
       const intoIcons = r ? n.right - (r.left - air) : -1;
       const intoLogo = l ? l.right + air - n.left : -1;
       const iconsOut = r ? r.right - (ib.right - pr + 1) : -1;
-      const overflow = el.scrollWidth - (el.clientWidth + 1);
+      // ~~el.scrollWidth - (el.clientWidth + 1)~~ — the scroll width also counts the invisible 44 px tap layers of
+      // PR 85 (a short last word like "Sets" reaches 6 px past the row), which folded every category away. The items'
+      // own boxes are what the shopper sees.
+      const lastRight = Math.max(n.left, ...Array.from(el.querySelectorAll<HTMLElement>('.nav-i')).filter((a) => a.offsetParent && !a.hidden).map((a) => a.getBoundingClientRect().right));
+      const overflow = lastRight - (n.right + 1);
       return Math.max(intoIcons, intoLogo, iconsOut, overflow) > 0;
     };
     const out = new Set<string>();

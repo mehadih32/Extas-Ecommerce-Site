@@ -314,6 +314,90 @@ export const sliderEngineSchema = z
   .strict()
   .refine((e) => e.snapMinMs <= e.snapMaxMs, { message: 'the shortest snap is longer than the longest' });
 
+// ---- PR 41 · the home page ----
+
+/** The home page's sections in the demo's order (20-home.js HOME_SECTIONS); the page layout builder (PR 595) edits it. */
+export const HOME_SECTIONS = [
+  'hero', 'festive', 'categories', 'new-in', 'sets', 'size-finder', 'flash-sale', 'shop-the-look', 'reviews', 'journal',
+] as const;
+export type HomeSectionId = (typeof HOME_SECTIONS)[number];
+
+export const homeSectionsSchema = z
+  .array(z.object({ id: z.enum(HOME_SECTIONS), on: z.boolean() }).strict())
+  .max(HOME_SECTIONS.length)
+  .refine(uniqueIds, UNIQUE);
+
+/** A hero button's look: the translucent fill, the "sets" look (`setsLook`) or an outline. */
+export const HERO_BUTTON_STYLES = ['fill', 'sets', 'line'] as const;
+/** The "sets" button's background: v3 = the brand tint the owner picked (Note 1.1); the earlier looks stay selectable. */
+export const HERO_SETS_LOOKS = ['current', 'v1', 'v2', 'v3', 'v4'] as const;
+
+export const homeHeroSchema = z
+  .object({
+    eyebrow: shopLabelSchema,
+    title: shopLabelSchema,
+    /** The line under the title; on a desktop each sentence takes its own line (H1). */
+    sub: shopLabelSchema,
+    /** H1 · desktop only: how far (px) the hero's coloured board reaches past the text column (0 = flush). */
+    shift: z.int().min(0).max(240),
+    setsLook: z.enum(HERO_SETS_LOOKS),
+    /** One to three buttons share the row evenly (Note 3.12). */
+    buttons: z
+      .array(
+        z
+          .object({ id: listIdSchema, on: z.boolean(), label: shopLabelSchema, href: shopPathSchema, style: z.enum(HERO_BUTTON_STYLES) })
+          .strict(),
+      )
+      .max(3)
+      .refine(uniqueIds, UNIQUE),
+    /** H2 · the promise lines under the buttons, one line with a bar between them; `desk` = a desktop-only wording. */
+    trust: z
+      .array(
+        z
+          .object({
+            id: listIdSchema,
+            on: z.boolean(),
+            icon: shopIconSchema,
+            text: shopLabelSchema,
+            desk: shopLabelSchema.optional(),
+            requires: requiresSchema.optional(),
+          })
+          .strict(),
+      )
+      .max(3)
+      .refine(uniqueIds, UNIQUE),
+  })
+  .strict();
+
+export const homeCategoriesSchema = z
+  .object({
+    /** The most tiles shown (the demo shows every visible category that has a product). */
+    max: z.int().min(1).max(24),
+    href: shopPathSchema,
+  })
+  .strict();
+
+export const homeNewInSchema = z
+  .object({
+    count: z.int().min(2).max(24),
+    /** `newest` = by publish date, `rank` = the owner's own order of the products. */
+    order: z.enum(['newest', 'rank']),
+    href: shopPathSchema,
+  })
+  .strict();
+
+export const homeReviewsSchema = z
+  .object({
+    /** Up to ten approved reviews slide in the row (D3.3, §56.1). */
+    count: z.int().min(1).max(10),
+    /** Only reviews with at least this many stars. */
+    minRating: z.int().min(1).max(5),
+    /** The average and the count beside the heading (shown only when there are reviews). */
+    summary: z.boolean(),
+    href: shopPathSchema,
+  })
+  .strict();
+
 // ---- the default shapes (the V12 demo's) ----
 
 const k = (key: string) => ({ key });
@@ -735,8 +819,104 @@ export const storefrontSettings = {
     sortOrder: 10,
     version: V,
   }),
+  // ---- PR 41 · the home page ----
+  'home.sections': setting({
+    schema: homeSectionsSchema,
+    default: HOME_SECTIONS.map((id) => ({ id, on: true })),
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.sections.label',
+    helpKey: 'home.sections.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 10,
+    version: V,
+  }),
+  'home.hero': setting({
+    schema: homeHeroSchema,
+    default: {
+      eyebrow: k('home.hero.eyebrow'),
+      title: k('home.hero.title'),
+      sub: k('home.hero.sub'),
+      shift: 112,
+      setsLook: 'v3',
+      buttons: [
+        { id: 'shop', on: true, label: k('home.hero.shopNow'), href: '/collections/hoodies', style: 'fill' },
+        { id: 'sets', on: true, label: k('home.hero.shopSets'), href: '/combos', style: 'sets' },
+      ],
+      trust: [
+        { id: 'cod', on: true, icon: 'cash', text: k('home.hero.trust.cod'), requires: ['cod'] },
+        { id: 'exchange', on: true, icon: 'swap', text: k('home.hero.trust.exchange'), desk: k('home.hero.trust.exchangeDesk'), requires: ['exchange'] },
+      ],
+    },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.hero.label',
+    helpKey: 'home.hero.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 20,
+    version: V,
+  }),
+  'home.categories': setting({
+    schema: homeCategoriesSchema,
+    default: { max: 12, href: '/collections/new-in' },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.categories.label',
+    helpKey: 'home.categories.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 30,
+    version: V,
+  }),
+  'home.newIn': setting({
+    schema: homeNewInSchema,
+    default: { count: 8, order: 'newest', href: '/collections/new-in' },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.newIn.label',
+    helpKey: 'home.newIn.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 40,
+    version: V,
+  }),
+  'home.reviews': setting({
+    schema: homeReviewsSchema,
+    default: { count: 10, minRating: 1, summary: true, href: '/collections/new-in' },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.reviews.label',
+    helpKey: 'home.reviews.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 50,
+    version: V,
+  }),
+  /** H9 · the sliding rows fade at both edges (off = the earlier plain box edges). */
+  'home.rowFade': setting({
+    schema: z.boolean(),
+    default: true,
+    scope: 'store',
+    valueType: 'BOOLEAN',
+    group: 'home',
+    labelKey: 'home.rowFade.label',
+    helpKey: 'home.rowFade.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 60,
+    version: V,
+  }),
 };
 
+export type HomeHero = z.output<typeof homeHeroSchema>;
+export type HomeSections = z.output<typeof homeSectionsSchema>;
 export type SliderEngine = z.output<typeof sliderEngineSchema>;
 export type ShellMenu = z.output<typeof menuSchema>;
 export type ShellFooter = z.output<typeof footerSchema>;
