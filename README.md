@@ -470,7 +470,7 @@ settings; the log names keys only).
 
 | Screen | What it does |
 |---|---|
-| `/admin/login` | sign in, the 2FA step and the first-password step; English / বাংলা switch |
+| `/admin/login` | sign in, the 2FA step and the first-password step; English / বাংলা switch; an e-mail without "@" gets "write the full e-mail address" and is not sent (owner, 20 Oct; smoke-checked) |
 | admin frame | sidebar grouped Catalogue / Inventory / System from [`apps/web/src/lib/admin-nav.ts`](apps/web/src/lib/admin-nav.ts) (only pages that exist); `/admin` opens the first page |
 | `/admin/integrations` — **Keys & connections** | every declared connection with its state; save a key → it goes into the vault → it is tested → the connection leaves mock only on a pass; remove = revoke, nothing deleted; every step audited; a saved key is never shown again. The connection list is data ([`packages/adapters/src/catalogue.ts`](packages/adapters/src/catalogue.ts)); "Our ERP" and the page reader are on it |
 

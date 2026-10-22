@@ -254,4 +254,6 @@
 .ad-login-card form { display: flex; flex-direction: column; gap: 16px; }
 .ad-login-card .ad-h1 { font-size: var(--ad-fs-h1); }
 .ad-err { color: var(--ad-sale); font-size: var(--ad-fs-small); margin: 0; }
+/* PR 500: a hint under one field (the sign-in's "write the full e-mail address") */
+.ad-err.ad-field-hint { margin-top: 7px; }
 .ad-linkbtn { background: none; border: 0; color: var(--ad-brand); font-weight: 600; cursor: pointer; padding: 10px 0; min-height: var(--ad-tap); font-size: var(--ad-fs-small); align-self: flex-start; }

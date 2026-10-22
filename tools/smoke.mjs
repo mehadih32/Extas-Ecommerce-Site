@@ -126,8 +126,26 @@ async function watched(page, base, ignore, fn) {
   return found;
 }
 
+/**
+ * PR 500 (owner, 20 Oct 15:20): an e-mail without an "@" (the owner typed "admin") gets the "write the full e-mail
+ * address" hint under the field once the field is left. Returns the problem, if any; the real address is typed after.
+ */
+async function emailHintProblems(page) {
+  await page.fill("#ad-email", "admin");
+  await page.focus("#ad-password");
+  const shown = await page
+    .waitForSelector("#ad-email-hint", { timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
+  return shown
+    ? []
+    : ['an e-mail without "@" got no "write the full e-mail address" hint'];
+}
+
+/** Signs in through the form; returns the sign-in page's own problems (the e-mail hint). */
 async function signIn(page, base, creds) {
   await page.goto(`${base}/admin/login`);
+  const problems = await emailHintProblems(page);
   await page.fill("#ad-email", creds.email);
   await page.fill("#ad-password", creds.password);
   await page.click("button[type=submit]");
@@ -143,7 +161,7 @@ async function signIn(page, base, creds) {
         })
         .then(() => "in"),
     ]).catch(() => "stuck");
-    if (step === "in") return;
+    if (step === "in") return problems;
     if (step === "code") {
       if (!creds.totpSecret)
         throw new Error(
@@ -174,6 +192,7 @@ async function signIn(page, base, creds) {
   await page.waitForURL((u) => !u.pathname.startsWith("/admin/login"), {
     timeout: 20_000,
   });
+  return problems;
 }
 
 /** Opens one path on one screen; returns its row for the report. */
@@ -293,11 +312,14 @@ export async function runSmoke(opts) {
       );
       const page = await admin.newPage();
       if (!signedIn) {
-        const signInProblems = await watched(page, opts.base, ignore, () =>
-          signIn(page, opts.base, opts.creds),
-        );
+        let formProblems = [];
+        const signInProblems = await watched(page, opts.base, ignore, async () => {
+          formProblems = await signIn(page, opts.base, opts.creds);
+        });
         problems.push(
-          ...signInProblems.map((p) => `sign-in (${vp.name}): ${p}`),
+          ...[...formProblems, ...signInProblems].map(
+            (p) => `sign-in (${vp.name}): ${p}`,
+          ),
         );
         signedIn = await admin.storageState();
         const landing = new URL(page.url()).pathname;
