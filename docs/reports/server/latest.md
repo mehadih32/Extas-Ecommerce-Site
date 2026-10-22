@@ -1,6 +1,6 @@
-# Server report — 2026-10-23 01:33 +06
+# Server report — 2026-10-23 02:20 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `227bfb5c1e8e7c26d53fe0d4ff2c2e1c51545e6d`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `f98888004487e57dbd681ccb9d79ea059e23ea9a`. Overall: **PASS**.
 
 ## Machine
 
@@ -56,7 +56,7 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 8 · backup (data disk) | OK | 5.3M base + dump; daily at 02:30, WAL every minute |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261022-0231, 336 tables restored (live has 336) |
+| PR 8 · restore test | OK | base 20261022-0231, 336 tables restored (live has 336); photos: none on the local disk yet; docs: none on the server yet |
 | PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
