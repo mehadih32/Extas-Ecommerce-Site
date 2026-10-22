@@ -195,6 +195,11 @@
       "stars": "{n} out of 5",
       "verified": "Verified buyer",
       "topRated": "Shop our top-rated styles"
+    },
+    "slides": {
+      "prev": "Previous picture",
+      "next": "Next picture",
+      "label": "{name}, {colour}, {price}"
     }
   },
   "fab": {

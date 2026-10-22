@@ -108,6 +108,10 @@
       "label": "Home hero",
       "help": "The big panel at the top: the small line, the title, the line under it, up to three buttons and the promise lines. A promise line only shows when its rule is on (Cash on Delivery, size exchange). On a desktop the coloured panel can reach further right (0 to 240 px)."
     },
+    "heroSlides": {
+      "label": "Hero pictures",
+      "help": "The pictures sliding beside the hero text: how many (12 to 15 reads well), the most from one category so every category gets a turn, or a collection that fills them instead while its dates run (a campaign). Only products in stock, if you like. How fast they glide, how long one arrow tap takes, and on a desktop how wide they fade into the text (80 or 140 px) with an optional soft wash. Phones can show the arrows too (off = the approved phone look). A picture is the product's photo of that colour, or its drawing until the photo is uploaded."
+    },
     "categories": {
       "label": "Category tiles",
       "help": "The \"Shop by category\" tiles: the most tiles shown and where \"Shop all\" goes. Each tile shows the first product of the category and how many styles it has."

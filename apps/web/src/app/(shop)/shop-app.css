@@ -105,3 +105,40 @@ html .shop .nf-cats a.chip::before { content: ""; position: absolute; left: 50%;
 @media (max-width: 359px) {
   .shop .pcard .badge-img { font-size: 9px; letter-spacing: 0.02em; padding: 0.4em 0.55em; }
 }
+
+/* PR 43 · the hero's pictures. The pin's collapse step (demo r11-home.css 3): when even the floor cannot hold the name
+ * and the price, the name stays alone. */
+.shop .hm-slider .hm-sl .hm-pin.fit-x .hm-pin-bar,
+.shop .hm-slider .hm-sl .hm-pin.fit-x .hm-pin-p,
+.shop .hm-slider .hm-sl .hm-pin.fit-x .hm-pin-o { display: none; }
+/* On a desktop the pin is two lines and the price row must never drop out (D-006): the collapse step lets a very long
+ * name wrap onto a second line instead (device gate, 1280 px: "Heavyweight Hoodie 320 GSM" on a 220 px picture). */
+@media (min-width: 1024px) {
+  .shop .hm-slider .hm-sl .hm-pin.fit-x .hm-pin-n { white-space: normal; overflow: visible; }
+  .shop .hm-slider .hm-sl .hm-pin.fit-x .hm-pin-p { display: inline; }
+  .shop .hm-slider .hm-sl .hm-pin.fit-x .hm-pin-o { display: inline; }
+}
+/* V12.2 (demo r12-zzz-qa.css, desktop taste item 1): on a desktop the pin is a solid card, so the one passing over the
+ * green-to-photo fade reads as cleanly as the others. ~~95 % white with a blur~~ */
+@media (min-width: 1024px) {
+  html .shop .hm-hero .hm-slider .hm-sl .hm-pin { background: var(--surface, #fff); -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 4; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14); }
+}
+/* The owner's photo fills the picture, cropped to fill, under the pin; the tint holds the place until it arrives. */
+.shop .hm-sl.has-photo picture { position: absolute; inset: 0; display: block; }
+.shop .hm-sl.has-photo img, .shop .hm-sl.has-photo [data-media-pending] { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* The desktop fade's other looks (demo r12-zzdesk-a.css 7, `home.heroSlides.fade` / `.wash`): 80 px, and the soft
+ * wash on the text panel's right edge. 140 px without the wash is the owner's pick and is in shop.css. */
+@media (min-width: 1024px) {
+  .shop .hm-hero[data-fade="80"] { --hero-fade: 80px; }
+  .shop .hm-hero[data-wash="1"] { --hero-edge: color-mix(in srgb, var(--hero) 90%, var(--hero-ink) 10%); }
+  .shop .hm-hero[data-wash="1"] .hm-hero-txt { background: linear-gradient(90deg, var(--hero) 72%, var(--hero-edge)); }
+  .shop .hm-hero[data-wash="1"] .hm-hero-txt::after { background: var(--hero-edge); }
+}
+/* `home.heroSlides.phoneArrows` (§58.11): a phone or tablet shows the two arrows too, so it can step the pictures
+ * without a drag. Off by default: the approved demo's phone has none. */
+@media (max-width: 1023px) {
+  .shop .hm-slider[data-arrows="1"] .hm-slnav { display: flex; }
+  .shop .hm-slider[data-arrows="1"] .hm-slnav.prev { left: 6px; }
+  .shop .hm-slider[data-arrows="1"] .hm-slnav.next { right: 6px; }
+  .shop .hm-slider[data-arrows="1"] .hm-slnav::before { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
+}

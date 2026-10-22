@@ -7,6 +7,8 @@ export interface FitRule {
   sel: string;
   /** The smallest font size, px. */
   min: number;
+  /** The floor on a desktop (≥ 1024 px) when it differs (D1.4: never under 11 px there). */
+  minDesk?: number;
   /** Count the box itself running out of room (a row whose children refuse to shrink). */
   box?: boolean;
   /** One collapse step (.fit-x) when the floor is not enough. */
@@ -58,6 +60,19 @@ interface Item {
   lo: number;
   hi: number;
   stuck: boolean;
+  floor: number;
+}
+
+/**
+ * PR 43 · the hero pictures' pins (demo 20-home.js fitRule): the whole name and the price on the picture at any phone
+ * width — the name steps down, never under 9 px (11 px on a desktop, D-006); only when even that cannot hold both does
+ * the pin keep the name alone (.fit-x).
+ */
+export const HERO_PIN_FIT: FitRule = { sel: '.hm-slider .hm-sl .hm-pin', min: 9, minDesk: 11, collapse: true };
+
+/** A rule's floor for this screen. */
+export function fitFloor(rule: FitRule, desktop: boolean): number {
+  return desktop && rule.minDesk != null ? rule.minDesk : rule.min;
 }
 
 function search(list: Item[]): void {
@@ -65,23 +80,33 @@ function search(list: Item[]): void {
     it.fs = v;
     it.el.style.fontSize = `${v.toFixed(2)}px`;
   };
-  let todo = list.filter((it) => {
-    const ok = fitRatio(it.el, it.rule.box) >= 1;
-    if (ok) it.el.style.fontSize = '';
-    return !ok;
+  // Every pass reads all boxes first and only then writes, so one pass costs one layout of the page, not one per box
+  // (PR 43: the home page's pins made the old read-write-read order a long task while the page loaded).
+  const measure = (items: Item[]) => items.map((it) => fitRatio(it.el, it.rule.box));
+  const r0 = measure(list);
+  let todo = list.filter((_, i) => r0[i]! < 1);
+  if (!todo.length) return;
+  // A line of text scales with its type, so the measured share is a close first guess: most boxes fit at once.
+  const ratio = new Map(list.map((it, i) => [it, r0[i]!]));
+  todo.forEach((it) => {
+    it.lo = Math.min(it.floor, it.max);
+    it.hi = it.max;
+    set(it, Math.max(it.lo, Math.min(it.max, it.max * ratio.get(it)! * 0.99)));
+  });
+  const atGuess = measure(todo);
+  todo = todo.filter((it, i) => {
+    if (atGuess[i]! >= 1) return false;
+    it.hi = it.fs;
+    return true;
   });
   if (!todo.length) return;
-  todo.forEach((it) => {
-    it.lo = Math.min(it.rule.min, it.max);
-    it.hi = it.max;
-    set(it, it.lo);
+  todo.forEach((it) => set(it, it.lo));
+  const atFloor = measure(todo);
+  todo = todo.filter((it, i) => {
+    if (atFloor[i]! < 1) it.stuck = true;
+    return atFloor[i]! >= 1;
   });
-  todo = todo.filter((it) => {
-    const ok = fitRatio(it.el, it.rule.box) >= 1;
-    if (!ok) it.stuck = true;
-    return ok;
-  });
-  for (let n = 0; n < 7 && todo.length; n++) {
+  for (let n = 0; n < 5 && todo.length; n++) {
     todo.forEach((it) => set(it, (it.lo + it.hi) / 2));
     const fits = todo.map((it) => fitRatio(it.el, it.rule.box) >= 1);
     todo.forEach((it, i) => {
@@ -94,12 +119,17 @@ function search(list: Item[]): void {
 
 export function fitAll(root: ParentNode, rules: readonly FitRule[]): void {
   const items: Item[] = [];
+  const desktop = typeof matchMedia === 'function' && matchMedia('(min-width:1024px)').matches;
+  const copies: Array<{ el: HTMLElement; rule: FitRule }> = [];
   for (const rule of rules) {
+    const floor = fitFloor(rule, desktop);
     root.querySelectorAll<HTMLElement>(rule.sel).forEach((el) => {
+      // a sliding row's copy (PR 42 clones) takes its card's result instead of being measured again
+      if (el.closest('[data-clone]')) return void copies.push({ el, rule });
       if (!el.getClientRects().length) return;
       el.style.fontSize = '';
       el.classList.remove('fit-x');
-      items.push({ el, rule, max: 0, fs: 0, lo: 0, hi: 0, stuck: false });
+      items.push({ el, rule, max: 0, fs: 0, lo: 0, hi: 0, stuck: false, floor });
     });
   }
   if (!items.length) return;
@@ -109,12 +139,24 @@ export function fitAll(root: ParentNode, rules: readonly FitRule[]): void {
   });
   search(items);
   const again = items.filter((it) => it.stuck && it.rule.collapse);
-  if (!again.length) return;
   again.forEach((it) => {
     it.stuck = false;
     it.el.classList.add('fit-x');
     it.el.style.fontSize = '';
     it.fs = it.max = Number.parseFloat(getComputedStyle(it.el).fontSize) || it.max;
   });
-  search(again);
+  if (again.length) search(again);
+  copyToClones(items, copies);
+}
+
+/** A copy shows the same words as its card, so it takes the card's fitted size and collapse step. */
+function copyToClones(items: readonly Item[], copies: ReadonlyArray<{ el: HTMLElement; rule: FitRule }>): void {
+  if (!copies.length) return;
+  const done = new Map<string, Item>();
+  for (const it of items) done.set(`${it.rule.sel}\u0000${it.el.textContent ?? ''}`, it);
+  for (const c of copies) {
+    const it = done.get(`${c.rule.sel}\u0000${c.el.textContent ?? ''}`);
+    c.el.style.fontSize = it ? it.el.style.fontSize : '';
+    c.el.classList.toggle('fit-x', !!it && it.el.classList.contains('fit-x'));
+  }
 }

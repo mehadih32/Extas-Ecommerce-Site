@@ -398,6 +398,35 @@ export const homeReviewsSchema = z
   })
   .strict();
 
+/** PR 43 · the hero's sliding pictures. The two fade widths the owner compared (owner 18:38; 140 chosen). */
+export const HERO_FADE_WIDTHS = [80, 140] as const;
+
+export const homeHeroSlidesSchema = z
+  .object({
+    /** How many slides (§57.1: 12–15 products across all categories). */
+    count: z.int().min(1).max(24),
+    /** The most slides one category gives (§57.1: two or three each), so every category gets its turn. */
+    perCategory: z.int().min(1).max(6),
+    /**
+     * A collection's link name: its products, in its own order, fill the hero instead (a campaign swaps the hero's
+     * products, CN-012). Outside the collection's dates, or when it is empty, the categories fill it again.
+     */
+    collection: categorySlugSchema.nullable(),
+    /** Only products that can be bought now. */
+    inStockOnly: z.boolean(),
+    /** The glide, pixels per second (the demo's 20). */
+    speed: z.int().min(4).max(120),
+    /** One arrow tap moves one picture, over this many milliseconds (the demo's 380). */
+    stepMs: z.int().min(0).max(2000),
+    /** Desktop: how wide the pictures fade into the text panel, px. */
+    fade: z.literal(HERO_FADE_WIDTHS),
+    /** Desktop: a soft wash on the text panel's right edge. */
+    wash: z.boolean(),
+    /** Phones show the two arrows too (§58.11: a phone could only drag). Off = the approved demo's phone look. */
+    phoneArrows: z.boolean(),
+  })
+  .strict();
+
 // ---- the default shapes (the V12 demo's) ----
 
 const k = (key: string) => ({ key });
@@ -899,6 +928,20 @@ export const storefrontSettings = {
     sortOrder: 50,
     version: V,
   }),
+  /** PR 43 · the hero's sliding pictures: which products, how they move, the desktop fade. */
+  'home.heroSlides': setting({
+    schema: homeHeroSlidesSchema,
+    default: { count: 14, perCategory: 2, collection: null, inStockOnly: true, speed: 20, stepMs: 380, fade: 140, wash: false, phoneArrows: false },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.heroSlides.label',
+    helpKey: 'home.heroSlides.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 25,
+    version: V,
+  }),
   /** H9 · the sliding rows fade at both edges (off = the earlier plain box edges). */
   'home.rowFade': setting({
     schema: z.boolean(),
@@ -917,6 +960,7 @@ export const storefrontSettings = {
 
 export type HomeHero = z.output<typeof homeHeroSchema>;
 export type HomeSections = z.output<typeof homeSectionsSchema>;
+export type HomeHeroSlides = z.output<typeof homeHeroSlidesSchema>;
 export type SliderEngine = z.output<typeof sliderEngineSchema>;
 export type ShellMenu = z.output<typeof menuSchema>;
 export type ShellFooter = z.output<typeof footerSchema>;

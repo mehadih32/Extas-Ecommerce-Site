@@ -22,6 +22,9 @@ export const ROUTES = {
   category: (slug: string) => `/collections/${slug}`,
 } as const;
 
+/** The product page's query word that opens it on one colour (demo `#/p/<id>?color=<key>`; the product page, PR 49). */
+export const COLOUR_QUERY = 'color';
+
 /**
  * The shop pages still to come, by the register PR that builds each (Blueprint E0 stage table). `deep`: the address
  * and everything under it. The product page's address starts with the owner's prefix (`naming.productPathPrefix`).

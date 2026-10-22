@@ -1,5 +1,5 @@
-// PR 41 / 45 / 49 — what the shop's pages read from the catalogue: published products as cards (name, price, colours,
-// the photo or the drawing, the badge), the category tiles. Read-only and public: no permission, nothing a customer
+// PR 41 / 43 / 45 / 49 — what the shop's pages read from the catalogue: published products as cards (name, price,
+// colours, the photo or the drawing, the badge), the category tiles, the hero's pictures. Read-only and public: no permission, nothing a customer
 // may not see. Every price is the shop's own variant price; a struck "was" price only ever comes from the honesty rule
 // of PR 38 (`wasPriceFor`): with no source chosen by the owner, there is none anywhere. Without a database (CI,
 // `next build`) or when it is slow, the lists are empty and the page still draws.
@@ -220,5 +220,72 @@ export function categoryLeads(storeId: number, slugs: readonly string[]): Promis
     const cards = await toCards(storeId, await rowsOf({ where: { id: { in: [...new Set(lead.values())] } } }));
     const byId = new Map(cards.map((c) => [c.id, c]));
     return Object.fromEntries([...lead].flatMap(([slug, id]) => (byId.has(id) ? [[slug, byId.get(id)!]] : [])));
+  });
+}
+
+/**
+ * PR 43 · the hero's products, one list per category slug (in the order given): each category's first products in the
+ * owner's order (pinned first), its sub-categories included, at most `perCategory` each. A product listed in two
+ * categories counts for the first.
+ */
+export function heroCategoryCards(storeId: number, slugs: readonly string[], perCategory: number, inStockOnly: boolean): Promise<ShopCard[][]> {
+  return guarded('hero pictures', [], async () => {
+    if (!slugs.length) return [];
+    const listings = await getPrisma().categoryProduct.findMany({
+      where: {
+        storeId,
+        isVisible: true,
+        product: { ...live, ...(inStockOnly ? { inStock: true } : {}) },
+        category: { archivedAt: null, OR: [{ slug: { in: [...slugs] } }, { parent: { slug: { in: [...slugs] } } }] },
+      },
+      orderBy: [{ pinned: 'desc' }, { sortRank: 'desc' }, { productId: 'asc' }],
+      select: { productId: true, category: { select: { slug: true, parent: { select: { slug: true } } } } },
+      take: 4000,
+    });
+    const taken = new Set<string>();
+    const picks = new Map<string, string[]>(slugs.map((s) => [s, []]));
+    for (const l of listings) {
+      const top = slugs.includes(l.category.slug) ? l.category.slug : (l.category.parent?.slug ?? '');
+      const list = picks.get(top);
+      if (!list || list.length >= perCategory || taken.has(l.productId)) continue;
+      list.push(l.productId);
+      taken.add(l.productId);
+    }
+    const cards = await toCards(storeId, await rowsOf({ where: { id: { in: [...taken] } } }));
+    const byId = new Map(cards.map((c) => [c.id, c]));
+    return slugs.map((s) => (picks.get(s) ?? []).flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])));
+  });
+}
+
+/**
+ * PR 43 · a collection's products in its own order, for the hero (a campaign, CN-012): null when the collection does
+ * not exist, is archived or is outside its dates — the categories fill the hero then.
+ */
+export function heroCollectionCards(storeId: number, slug: string, count: number, inStockOnly: boolean, now = new Date()): Promise<ShopCard[] | null> {
+  return guarded('hero collection', null, async () => {
+    const prisma = getPrisma();
+    const col = await prisma.collection.findFirst({
+      where: {
+        storeId,
+        slug,
+        archivedAt: null,
+        AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gt: now } }] }],
+      },
+      select: { id: true },
+    });
+    if (!col) return null;
+    const links = await prisma.collectionProduct.findMany({
+      where: { storeId, collectionId: col.id, archivedAt: null },
+      orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+      select: { productId: true },
+      take: 200,
+    });
+    const order = links.map((l) => l.productId);
+    const rows = await rowsOf({
+      where: { id: { in: order }, storeId, ...live, ...(inStockOnly ? { inStock: true } : {}), category: { isVisible: true, archivedAt: null } },
+    });
+    const cards = await toCards(storeId, rows);
+    const byId = new Map(cards.map((c) => [c.id, c]));
+    return order.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])).slice(0, count);
   });
 }

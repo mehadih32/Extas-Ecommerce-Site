@@ -5,6 +5,7 @@ import {
   footerSchema,
   HOME_SECTIONS,
   homeHeroSchema,
+  homeHeroSlidesSchema,
   homeSectionsSchema,
   logoStyleSchema,
   menuSchema,
@@ -136,5 +137,14 @@ describe('storefront settings (v16)', () => {
     expect(hero.trust.find((x) => x.id === 'cod')?.requires).toEqual(['cod']);
     expect(hero.trust.find((x) => x.id === 'exchange')?.requires).toEqual(['exchange']);
     expect(hero.setsLook).toBe('v3');
+  });
+
+  it('PR 43: the hero pictures default to the demo (14, two per category, 20 px/s, 380 ms, 140 px fade), phone arrows off', () => {
+    const sl = storefrontSettings['home.heroSlides'].default;
+    expect(sl).toMatchObject({ count: 14, perCategory: 2, collection: null, speed: 20, stepMs: 380, fade: 140, wash: false, phoneArrows: false });
+    expect(homeHeroSlidesSchema.safeParse({ ...sl, fade: 100 }).success).toBe(false);
+    expect(homeHeroSlidesSchema.safeParse({ ...sl, count: 0 }).success).toBe(false);
+    expect(homeHeroSlidesSchema.safeParse({ ...sl, collection: 'Winter Sale' }).success).toBe(false);
+    expect(homeHeroSlidesSchema.safeParse({ ...sl, collection: 'winter-2026', fade: 80 }).success).toBe(true);
   });
 });

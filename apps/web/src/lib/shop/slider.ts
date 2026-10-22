@@ -11,7 +11,8 @@
 // so a mouse drag or a sideways wheel never leaves a row frozen after the mouse has gone. A vertical wheel is the
 // page's, not the row's. Every row drags with the mouse (a click after a drag never opens the card), and after a hand
 // drag the row glides to the nearest card — a clear swipe always goes on to the next one. Reduced motion: no drift,
-// the drag still works. All numbers are the setting `slider.engine` (PR 42).
+// the drag still works. All numbers are the setting `slider.engine` (PR 42). PR 43 adds the arrows beside a row
+// (`stepRow`, one card per tap) and the controls' share of the pauses (`bindRowControls`).
 //
 // The state machine below is plain TypeScript (unit-tested with a fake clock); `bindSmoothRow` wires it to a real row.
 import type { SliderEngine } from '@extas/settings';
@@ -191,6 +192,169 @@ export function wrapPosition(x: number, half: number, max: number): number {
   if (v >= half) v -= half;
   if (v < 0) v += half;
   return v;
+}
+
+/**
+ * PR 43 · where one arrow tap goes (demo 20-home.js ACT['hm-slide']): `dist` further on. A looped row (half > 0) goes
+ * round through its copies; a row that only scrolls stops at its ends, and a tap past an end comes round to the other
+ * end. `at(k)` is the position k (0–1) of the way there, eased.
+ */
+export function arrowGlide(from: number, dist: number, half: number, max: number): { to: number; at: (k: number) => number } {
+  if (half > 0) {
+    const raw = from + dist;
+    return { to: wrapPosition(raw, half, max), at: (k) => wrapPosition(from + dist * easeOut(k), half, max) };
+  }
+  let to = Math.max(0, Math.min(max, from + dist));
+  if (dist > 0 && from >= max - 1) to = 0;
+  if (dist < 0 && from <= 1) to = max;
+  return { to, at: (k) => from + (to - from) * easeOut(k) };
+}
+
+/** The distance from one card to the next, gap included (demo hm_step). */
+export function cardDistance(el: HTMLElement): number {
+  const a = el.firstElementChild as HTMLElement | null;
+  if (!a) return el.clientWidth;
+  const b = a.nextElementSibling as HTMLElement | null;
+  return b ? b.offsetLeft - a.offsetLeft : a.offsetWidth;
+}
+
+type SmoothEl = HTMLElement & { __smooth?: SliderState };
+
+/**
+ * One arrow tap: the row glides `dir` cards over `ms` (eased by hand: a native smooth scroll would be cancelled by the
+ * drift writing the same position). The drift rests while it glides and goes on from where it ends; a touch tap also
+ * starts the touch hold. Reduced motion or `ms` 0: it jumps. Returns a cancel function.
+ */
+export function stepRow(el: HTMLElement, dir: 1 | -1, ms: number, hand: Hand = 'mouse'): () => void {
+  const st = (el as SmoothEl).__smooth;
+  const half = st && el.dataset.sm ? st.half : 0;
+  const max = el.scrollWidth - el.clientWidth;
+  const from = st && half > 0 ? st.x : el.scrollLeft;
+  const glide = arrowGlide(from, cardDistance(el) * dir, half, max);
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const end = () => {
+    el.scrollLeft = glide.to;
+    if (st) {
+      st.x = glide.to;
+      st.snapping = false;
+      if (hand && hand !== 'mouse') {
+        st.ptr = hand;
+        st.hold();
+      }
+    }
+  };
+  el.style.scrollBehavior = 'auto';
+  if (reduced || ms <= 0) {
+    if (st) st.snapToken++;
+    end();
+    return () => undefined;
+  }
+  const tok = st ? ++st.snapToken : 0;
+  if (st) st.snapping = true;
+  let t0 = 0;
+  let raf = 0;
+  let live = true;
+  const frame = (now: number) => {
+    if (!live || (st && st.snapToken !== tok)) return;
+    if (!t0) t0 = now;
+    const k = Math.min(1, (now - t0) / ms);
+    if (k >= 1) return end();
+    const v = glide.at(k);
+    el.scrollLeft = v;
+    if (st) st.x = v;
+    raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+  return () => {
+    live = false;
+    cancelAnimationFrame(raf);
+    if (st && st.snapToken === tok) st.snapping = false;
+  };
+}
+
+/**
+ * PR 43 · a row with controls beside it (the hero's arrows sit next to the track, not in it), demo 97-desk-a.js
+ * deskHeroKeys: the mouse on an arrow is still "on the row" (the hover pause); keyboard focus anywhere in the box is
+ * the keyboard pause, with the same grace when it leaves; focus a press caused is not. On a desktop only the pictures
+ * fully in view are in the Tab order (the arrows reach the rest). Returns cleanup.
+ */
+export function bindRowControls(box: HTMLElement, el: HTMLElement, desktopQuery: string): () => void {
+  const off: Array<() => void> = [];
+  const on = (t: EventTarget, type: string, fn: (ev: never) => void, o?: AddEventListenerOptions) => {
+    t.addEventListener(type, fn as EventListener, o);
+    off.push(() => t.removeEventListener(type, fn as EventListener, o));
+  };
+  const st = () => (el as SmoothEl).__smooth;
+  let pressed = false;
+  on(
+    box,
+    'pointerdown',
+    () => {
+      pressed = true;
+      setTimeout(() => (pressed = false), 0);
+      const s = st();
+      if (s) s.focus = false;
+    },
+    { capture: true },
+  );
+  on(box, 'pointermove', (ev: PointerEvent) => {
+    if (ev.pointerType === 'mouse') st()?.mouseUsed();
+  });
+  for (const b of Array.from(box.children).filter((n) => n !== el)) {
+    on(b, 'pointerenter', (ev: PointerEvent) => st()?.pointerEnter(ev.pointerType));
+    on(b, 'pointerleave', (ev: PointerEvent) => {
+      if (el.contains(ev.relatedTarget as Node | null)) return;
+      st()?.pointerLeave(ev.pointerType, el.scrollLeft);
+    });
+  }
+  on(box, 'focusin', () => st()?.focusIn(pressed));
+  const desk = typeof matchMedia === 'function' ? matchMedia(desktopQuery) : null;
+  let raf = 0;
+  const tabs = () => {
+    raf = 0;
+    const r = box.getBoundingClientRect();
+    const kids = Array.from(el.children) as HTMLElement[];
+    const own = kids.filter((a) => !a.dataset.clone);
+    if (!own.length) return;
+    const seen = (a: HTMLElement) => {
+      const b = a.getBoundingClientRect();
+      return b.left >= r.left - 1 && b.right <= r.right + 1;
+    };
+    // near the end of a lap the copies are what shows: a copy in view stands for its card
+    const inView = new Set<number>();
+    kids.forEach((a, i) => {
+      if (seen(a)) inView.add(i % own.length);
+    });
+    own.forEach((a, i) => {
+      if (a === document.activeElement) return;
+      const ok = !desk?.matches || inView.has(i);
+      if (a.tabIndex !== (ok ? 0 : -1)) a.tabIndex = ok ? 0 : -1;
+    });
+  };
+  on(box, 'focusout', (ev: FocusEvent) => {
+    if (box.contains(ev.relatedTarget as Node | null)) return;
+    st()?.focusOut();
+    tabs();
+  });
+  // the drift scrolls every frame: the Tab order is brought up to date a few times a second, and only on a desktop
+  let later: ReturnType<typeof setTimeout> | undefined;
+  const soon = () => {
+    if (later || raf) return;
+    later = setTimeout(() => {
+      later = undefined;
+      raf = requestAnimationFrame(tabs);
+    }, 200);
+  };
+  on(el, 'scroll', () => {
+    if (desk?.matches) soon();
+  }, { passive: true });
+  on(window, 'resize', soon);
+  tabs();
+  return () => {
+    cancelAnimationFrame(raf);
+    clearTimeout(later);
+    off.forEach((f) => f());
+  };
 }
 
 /** A row drifts only when the setting is on and the person has not asked for less motion. */
@@ -445,13 +609,25 @@ export function bindSmoothRow(el: HTMLElement, cfg: SliderEngine, opts: RowOptio
   });
 
   // ---- the drift ----
+  // PR 43: a row out of sight does not move (no paint, no layout read while the page loads or scrolls past it); it
+  // goes on from where it was when it comes back.
+  let inView = true;
+  const io =
+    typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver((es) => {
+          for (const e of es) inView = e.isIntersecting;
+        })
+      : null;
+  io?.observe(el);
   let raf = 0;
   let last = 0;
   const frame = (now: number) => {
     const dt = last ? now - last : 16;
     last = now;
-    const x = st.step(dt, el.scrollLeft);
-    if (x !== null) el.scrollLeft = Math.round(x);
+    if (inView) {
+      const x = st.step(dt, el.scrollLeft);
+      if (x !== null) el.scrollLeft = Math.round(x);
+    }
     raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
@@ -459,6 +635,7 @@ export function bindSmoothRow(el: HTMLElement, cfg: SliderEngine, opts: RowOptio
 
   return () => {
     cancelAnimationFrame(raf);
+    io?.disconnect();
     clearTimeout(settleT);
     clearTimeout(resizeT);
     off.forEach((f) => f());

@@ -9,8 +9,9 @@
 //   · the checkout header's WhatsApp shows once the page's own help button has scrolled away (3.2)
 //   · the page's bottom room is the height of the bar pinned to the bottom, measured (L15: --bar-pad)
 //   · the footer columns step their type down instead of cutting a word (L05)
+//   · the hero pictures' pins keep the whole name and the price (PR 43, HERO_PIN_FIT)
 import { useEffect } from 'react';
-import { fitAll, type FitRule } from '@/lib/shop/fit';
+import { HERO_PIN_FIT, fitAll, type FitRule } from '@/lib/shop/fit';
 import { series, type Cancel } from '@/lib/shop/later';
 
 const FOOTER_FIT: FitRule[] = [{ sel: '.ftr-s3 .ftr-cols', min: 11, collapse: true }];
@@ -178,6 +179,11 @@ export function ShellEffects() {
       const root = shopRoot();
       if (root) fitAll(root, FOOTER_FIT);
     });
+    // the hero's pins are fitted by HeroSlider before it makes its copies; a refit (a new width, the fonts) does them here
+    const pins = safe(() => {
+      const root = shopRoot();
+      if (root) fitAll(root, [HERO_PIN_FIT]);
+    });
     let stop: Cancel = series([header, floating, footer, bars]);
     let raf = 0;
     let full = false;
@@ -191,7 +197,7 @@ export function ShellEffects() {
         floating();
         if (!f) return;
         stop();
-        stop = series([header, footer, bars]);
+        stop = series([header, pins, footer, bars]);
       });
     };
     const onScroll = () => tick(false);
@@ -199,7 +205,18 @@ export function ShellEffects() {
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
-    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => tick(true)) : null;
+    // the fits follow the page's width; a page growing taller as its pictures arrive needs no refit (PR 43: it gave
+    // the home page long tasks while it loaded)
+    let width = document.documentElement.clientWidth;
+    const ro =
+      typeof ResizeObserver === 'function'
+        ? new ResizeObserver(() => {
+            const w = document.documentElement.clientWidth;
+            if (w === width) return;
+            width = w;
+            tick(true);
+          })
+        : null;
     ro?.observe(document.documentElement);
     const fonts = document.fonts;
     const onFonts = () => tick(true);
