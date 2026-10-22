@@ -809,3 +809,11 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - All answers are filed in CN-018. Standing rule: build the system as backend settings and never ask for numbers.
 - The demo admin is too crowded ("my head spun"). The live admin must be simple and grouped by section. Design `docs/ADMIN-ARCHITECTURE.md` and show the owner one picture of it first.
 - Q3 (delivery-day and Day-1 messages) and Q9 (self-confirm WhatsApp counted as the one WhatsApp) were not understood. They were explained again in chat.
+
+## Note 60 — 23 Oct 04:29 · Messages control centre; modern simple admin with mock-ups first; manual; gap report; 20 more orders (CN-019)
+- Q3: the delivery-day message is built as an option. The Day-1 follow-up is built and on, controlled later from Messages. Q9 is not fixed now; it becomes a system in Messages.
+- Messages section: control how many messages per order, when, where and which; the order journey from received through delivery to 1–2 follow-ups; promotions, campaigns and their counts. SMS, WhatsApp and e-mail are each set systematically.
+- Main focus now: the backend. Every category is smooth, accurate and user-friendly; modern design (graphs, analytics); every option usable without confusion. A detailed user manual per section. High-res images of every section first, then the demo if it is cheap.
+- Report anything discussed and dropped during the 2–3 day limit gap.
+- 15–20 more simulated orders from missed angles: full prepaid, bad customers under the rules, 40+ and 50+ buyers, low-literacy rural buyers. Fix the normal ones; hold the owner questions.
+- Keep token use low; the priority is getting the e-commerce site live fast.

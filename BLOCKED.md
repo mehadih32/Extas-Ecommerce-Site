@@ -20,6 +20,6 @@
 
 ## From the 50-order simulation (CN-017/018, 23 Oct)
 ~~Questions 1, 2, 4–8~~: answered by the owner on 23 Oct 04:20. Everything becomes a backend setting (CN-018).
-Still open:
+~~Still open (3 and 9)~~: answered 23 Oct 04:29. Both become systems in the Messages control centre (CN-019).
 - 3. ডেলিভারির দিন সকালের মেসেজ ("আজ পার্সেল আসছে, ঠিক ৳X রাখুন") আর ডেলিভারির পরদিনের মেসেজ ("সাইজ ঠিক হয়েছে?") শুরু থেকেই চালু থাকবে, নাকি আপনি পরে চালু করবেন?
 - 9. অর্ডার কনফার্মের জন্য পাঠানো WhatsApp ("1 চাপুন কনফার্ম") কি আপনার "প্রতি অর্ডারে একটাই WhatsApp" নিয়মের সেই একটা হিসেবে ধরা হবে?

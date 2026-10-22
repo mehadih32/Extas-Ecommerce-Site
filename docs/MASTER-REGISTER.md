@@ -154,6 +154,23 @@ the server.*
 > **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report §5, and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
 
 > **CN-018 · 23 Oct 2026 (owner's answers to the CN-017 questions; a simple admin; "build the system, don't ask for numbers").**
+
+> **CN-019 · 23 Oct 2026 (owner: one Messages control centre; a modern, simple admin with a detailed manual).**
+>
+> **(1) Messages control centre (admin → Messages).**
+> - **Order journey.** A timeline from order received through confirmation, packed, booked, out for delivery, delivered, and the follow-ups after delivery. For each step the owner chooses whether to send, the channel (SMS, WhatsApp, e-mail or none), the template, and the delay or send time. A cap sets the maximum number of messages per order, per channel and in total.
+> - **Optional messages.** The delivery-day morning message ("arrives today, keep ৳X ready") is built and switchable. The Day-1 care message ("did the size fit?") and the Day-3 review request are built and on by default; they send once a provider is connected (mock until then).
+> - **Self-confirm WhatsApp (idea 5).** A step the owner can place in the journey. Whether it counts as the order's one WhatsApp is a setting (Q9), not fixed now.
+> - **Promotions.** Campaigns with an audience, channel, schedule and frequency cap, plus quiet hours. A preview shows how many people will receive it and the cost.
+> - **Every message is logged:** what was sent, when, by which channel, the cost, and its delivery state.
+>
+> No new PR numbers: this lands on PR 148, 289, 292, 295, 300, 505 and 545, built as one section.
+>
+> **(2) Modern, simple admin.** Every section uses modern UI (cards, clean tables with saved filters, clear charts, empty states, inline help) and stays simple to use: one main task per screen, rare options under "More options", one search, role-based views. Charts and analytics are modern and readable. This covers the blog, product add, stock, returns, couriers and every other section. `docs/ADMIN-ARCHITECTURE.md` plus high-resolution mock-ups of every section are approved by the owner before the admin build continues.
+>
+> **(3) User manual.** A detailed Bengali manual for each section, step by step with screenshots, in `docs/admin-guide/` (CN-014), written as each section is built.
+>
+> **(4) Extra simulation.** About 20 more orders from angles the first 50 missed: fully prepaid, risk rules applied (an advance asked for and paid or refused), older buyers (40+ and 50+), a low-literacy rural buyer, and others. The results are appended to the simulation report.
 >
 > **Standing rule.** Every policy number or choice — amounts, percentages, limits, whether a perk is given at all — is a **backend setting with sensible options, off by default**. The owner decides it later, case by case. Never ask the owner for a figure; ask only whether a system should exist at all.
 >
