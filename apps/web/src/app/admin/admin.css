@@ -168,6 +168,56 @@
   .ad-side a, .ad-side .ad-side-btn { min-height: var(--ad-tap); }
 }
 
+/* ---------- PR 85 follow-up 5 — the controls that only show when there is data ----------
+   The device gate now signs in on the sample catalogue (tools/device-gate.mjs, docs/qa/device-gate.json `signedIn`),
+   so the product page's colour chips, their remove buttons and the photo-kind picker, the size-chart list and table,
+   the stock rows, the rule editor and the list names are measured too. Same principle as above: the drawn size stays
+   the demo's, an invisible layer centred on the control takes the tap.
+   1. Up and down only (rows of chips and links keep room between them for it): */
+button.pa-col, .ad a.pa-nm, .ad a.st-name, .pa-search, .sc-link, .sc-check, .rl-add, .rl-check { position: relative; }
+button.pa-col::after, .ad a.pa-nm::after, .ad a.st-name::after, .pa-search::after, .sc-link::after, .sc-check::after, .rl-add::after, .rl-check::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: min(0px, calc(50% - var(--ad-tap) / 2));
+  bottom: min(0px, calc(50% - var(--ad-tap) / 2));
+}
+/* the search field's label: the layer lies under the field, so a tap on the field itself still places the caret */
+.pa-search { z-index: 0; }
+.pa-search::after { z-index: -1; }
+/* "new chart" sits on the list's heading line: its layer grows up, into the room above the heading, not into the list */
+.sc-listhd .sc-link::after { top: calc(var(--ad-tap) * -1 + 100% + 4px); bottom: -4px; }
+/* 2. Small round buttons (remove a colour, a default, a size row, a rule target): 44 × 44 both ways. The switch draws
+   its knob with ::after, so its layer is ::before. */
+.pa-x, .sc-x, .sc-rm, .rl-chip button { position: relative; }
+.pa-x::after, .sc-x::after, .sc-rm::after, .rl-chip button::after, .rl-switch::before {
+  content: '';
+  position: absolute;
+  inset: min(0px, calc(50% - var(--ad-tap) / 2));
+}
+/* 3. A field's label is part of its tap area (a tap on it focuses the field): the label's gap under it is padding, not
+   margin, so label and field touch and together are at least 44 tall. It looks exactly as before. */
+label.ad-label { margin-bottom: 0; padding-bottom: 7px; }
+.rl-langrow label.ad-label { padding-bottom: 0; }
+/* the price and cost labels over each SKU's fields: the same, 2 px of padding instead of the column's gap */
+.ad .pa-pp { gap: 0; }
+.ad .pa-pp .pa-pl { padding-bottom: 2px; }
+/* 4. On touch screens: fields and pickers without a label above them are 44 tall, every field's text at least 16 px
+   (no zoom on focus), and the segmented buttons (they clip, so no layer) 44 tall. */
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .ad .ad-input.sc-in, .ad .pa-kind, .ad .pa-newcol .ad-input, .ad .pa-same .ad-input, .ad .pa-imp-row .ad-input { min-height: var(--ad-tap); }
+  /* the size row's remove button is the table's last cell: a layer would be cut by the table's scroller */
+  .ad .sc-rm { width: var(--ad-tap); height: var(--ad-tap); }
+  .ad .ad-chip { min-width: var(--ad-tap); justify-content: center; }
+  .ad .rl-seg button { min-width: var(--ad-tap); }
+  .ad .pa-kind, .ad .pa-sk .ad-input, .ad .cb-tpl select, .ad .st-reason .ad-input, .ad .ad-input.sc-mono { font-size: 16px; }
+  .ad .rl-seg button { min-height: var(--ad-tap); }
+  .ad .pa-cols { row-gap: 8px; }
+  /* inline text links: taller hit area, same line box (vertical padding on an inline box does not move the text) */
+  .ad .ad-note a, .ad .ad-intro a, .ad .ad-sub a { padding: 8px 0; }
+}
+
 .ad-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 20px; border-radius: var(--ad-btn-radius); font-size: var(--ad-fs-body); font-weight: 600; cursor: pointer; border: 1.5px solid transparent; white-space: nowrap; transition: background 0.15s, border-color 0.15s; line-height: 1.6; }
 .ad-btn-primary { background: var(--ad-brand); color: var(--ad-brand-ink); border-color: var(--ad-brand); }
 .ad-btn-primary:hover:not(:disabled) { background: var(--ad-brand-dark); border-color: var(--ad-brand-dark); }

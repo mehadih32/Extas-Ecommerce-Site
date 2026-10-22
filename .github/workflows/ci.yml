@@ -146,17 +146,48 @@ jobs:
   # and 6 desktop widths, with the demo gate's layout checks (docs/qa/device-matrix.js) plus tap targets (44 × 44),
   # 16 px form fields on touch screens and nothing cut off at either edge. 0 fails or the job fails. One Chromium,
   # several pages at once; the report (Markdown, JSON, screenshots of failures) is kept as an artifact.
+  # Follow-up 5: signed in, on a throwaway database holding the sample catalogue (sample data only, never the owner's),
+  # so the admin controls that only show with data (colour chips, their remove buttons, the photo-kind picker, the
+  # size-chart list, the stock rows) are measured as well (docs/qa/device-gate.json `signedIn`).
   device-gate:
     needs: web
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
     env:
       PLAYWRIGHT_VERSION: 1.63.0
+      NODE_OPTIONS: --max-old-space-size=4096
+      DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+      DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+      # What a deploy's migrate step runs, then the sample data (the sample store becomes the mother store on this empty
+      # database) and a throwaway owner with a generated first password; the gate changes it at its first sign-in.
+      - name: Sample database and the gate's owner
+        run: |
+          pnpm --filter @extas/db migrate:deploy
+          pnpm --filter @extas/settings sync
+          pnpm --filter @extas/auth sync
+          pnpm --filter @extas/delivery gazetteer:import --deploy
+          pnpm --filter @extas/seed sample
+          pnpm --filter @extas/rules sample
+          pnpm --filter @extas/combos sample
+          pnpm --filter @extas/auth create-owner --email gate@example.test --name "Device gate" --generate-to "$RUNNER_TEMP/gate-password"
       - name: The web build from the web job
         uses: actions/download-artifact@v4
         with:
@@ -169,15 +200,19 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/qa" --no-save --no-audit --no-fund "playwright@$PLAYWRIGHT_VERSION"
           "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
-      - name: Start the app (standalone server)
+      - name: Start the app (standalone server, on the sample database; throwaway keys)
         run: |
-          PORT=3000 HOSTNAME=127.0.0.1 nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
+          rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+          SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=127.0.0.1 \
+            nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
           for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
           cat /tmp/web-server.log; exit 1
-      - name: Device gate (0 fails)
+      - name: Device gate, signed in on the sample data (0 fails)
         env:
           NODE_PATH: ${{ runner.temp }}/qa/node_modules
-        run: node tools/device-gate.mjs --base=http://127.0.0.1:3000 --out=device-gate-report
+        run: |
+          node tools/device-gate.mjs --base=http://127.0.0.1:3000 --out=device-gate-report \
+            --email=gate@example.test --password-file="$RUNNER_TEMP/gate-password"
       - name: Device gate summary
         if: always()
         run: cat device-gate-report/device-gate.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true

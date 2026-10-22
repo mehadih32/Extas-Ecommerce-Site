@@ -186,7 +186,7 @@
 .cb-tpl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .cb-tpl select { padding: 9px 8px; font-size: var(--ad-fs-small); min-height: var(--ad-tap); }
 .cb-link { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid var(--ad-line2); min-width: 0; }
-.cb-link code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; background: var(--ad-surface2); border: 1px solid var(--ad-line2); border-radius: var(--cb-small-radius); padding: 6px 8px; }
+.cb-link code { flex: 1; min-width: 0; overflow-wrap: anywhere;font-size: 12.5px; background: var(--ad-surface2); border: 1px solid var(--ad-line2); border-radius: var(--cb-small-radius); padding: 6px 8px; }
 .cb-link .ad-btn { flex-shrink: 0; }
 .cb-link-big { border: 0; justify-content: center; max-width: var(--cb-bigs-max); margin: 8px auto 14px; width: 100%; }
 

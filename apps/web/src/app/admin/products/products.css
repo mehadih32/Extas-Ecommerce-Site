@@ -49,11 +49,12 @@
 .pa-th picture, .pa-th img, .pa-th [data-media-pending] { width: 100%; height: 100%; display: block; object-fit: cover; aspect-ratio: auto !important; }
 .pa-th-none { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--ad-muted); }
 .pa-main { min-width: 0; }
-.pa-nm { font-weight: 700; font-size: 14px; line-height: 24px; color: var(--ad-ink); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* follow-up 5 of PR 85: a long name wraps; a name cut with "…" hides which product it is (the device gate fails it) */
+.pa-nm { font-weight: 700; font-size: 14px; line-height: 24px; color: var(--ad-ink); display: block; overflow-wrap: anywhere; }
 .pa-nm:hover { text-decoration: underline; }
 .pa-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pa-meta { display: flex; align-items: center; gap: 8px; font-size: var(--ad-fs-mini); color: var(--ad-text2); margin-top: 4px; min-width: 0; white-space: nowrap; overflow: hidden; }
-.pa-meta > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.pa-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--ad-fs-mini); color: var(--ad-text2); margin-top: 4px; min-width: 0; }
+.pa-meta > span:last-child { overflow-wrap: anywhere; min-width: 0; }
 .pa-dots { display: inline-flex; flex-shrink: 0; }
 .pa-dots i { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--ad-surface), inset 0 0 0 1px rgba(0, 0, 0, 0.15); margin-left: -3px; }
 .pa-dots i:first-child { margin-left: 0; }
@@ -112,7 +113,7 @@
 
 .pa-google { border: 1px solid var(--ad-line2); background: var(--ad-surface2); border-radius: var(--ad-radius); padding: 12px; margin-top: 4px; min-width: 0; }
 .pa-g-url { font-size: var(--ad-fs-mini); color: var(--ad-text2); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pa-g-title { color: var(--ad-brand-dark); font-size: 16px; font-weight: 600; line-height: 1.35; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pa-g-title { color: var(--ad-brand-dark); font-size: 16px; font-weight: 600; line-height: 1.35; margin-top: 2px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pa-g-desc { font-size: var(--ad-fs-small); color: var(--ad-text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* colours (zp-col: 36 px chips with a 20 px swatch) */
@@ -146,7 +147,7 @@
 .pa-sk { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); padding: 8px; min-width: 0; background: var(--ad-surface2); }
 .pa-sk.new { border-style: dashed; background: var(--ad-surface); }
 .pa-skh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: var(--ad-fs-small); }
-.pa-sku { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pa-sku { overflow-wrap: anywhere; min-width: 0; }
 .pa-sk .ad-input { padding: 8px; font-size: 15px; }
 .pa-prices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .pa-pp { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
