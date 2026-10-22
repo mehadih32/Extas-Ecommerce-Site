@@ -795,3 +795,12 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - Customers won't report bugs, so problems are detected automatically from their behaviour: any device, any network, any step from landing to checkout, dashboard or tracking. Each record carries its details, the problems are analysed in the backend, and each one gets a summary and a status (fixed / fixing / could not fix / needs owner permission / waiting for the owner's check before deploy). The owner sees them by date (today, yesterday). Problems are fixed automatically when no admin permission is needed, and a note is kept. Shown in the admin and at the top of README under "Running problems". This shows the owner what the bugs are and why sales drop.
 - When the Note 54 corrections are done, the demo is published as a **new version with a new link**, so the owner can compare it with the old one.
 - After logging in to the admin on new.extas.com.bd, the page shows "This page couldn't load". Fix it.
+
+## Note 58 — 23 Oct 01:35 · Owner review of V12.2 (footer, header slogan, set price styles); public link
+- Phone footer: social icons missing. Show them as a full-width row like the payment logos (must).
+- Desktop footer: the Hotline gets the same box as "Message us on WhatsApp", placed under it. The social icon row sits right above the payment icons and spans the same width (must).
+- Desktop **footer**: the slogan must sit under the footer logo, not beside it. The header stays unchanged. The Hotline is its own separate box, styled exactly like the WhatsApp box, placed below it.
+- "Build your own set" price highlight looks cheap. Offer 3 tasteful styles plus "None" in admin; the owner ticks one and the rest stay optional. The owner approves after seeing them.
+- The V12.2 artifact (7.5 MB) is too large to share publicly. A slim public build (docs data left out, under 2 MB) gets its own link.
+- Independent QA of V12.2 (`qa/QA-V122-INDEPENDENT.md`): 4 fails and 7 polish items, fixed in the same pass.
+- The owner is frustrated by repeated correction rounds: everything must pass an independent visual check before he sees it.

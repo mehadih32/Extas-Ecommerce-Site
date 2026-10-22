@@ -12,3 +12,14 @@
 .price,.strike,.pnw{white-space:nowrap}
 /* C1 · colour names in the combo sticky bar step out when they do not fit (99z-phonefix.js fitFix) */
 .zc-mnames.pf-hide{display:none}
+/* B4 · bag / checkout order summary on phones and tablets: a long product name ("Heavyweight Hoodie 320 GSM · L")
+   wraps to a second line in full — no "…", no smaller letters, no shortened name; the price stays on the first line.
+   Short names stay one line exactly as before (desktop keeps its own auto-fit). */
+@media(max-width:1023.98px){
+  .bg-sr-item{align-items:flex-start}
+  #app .bg-sr-item>span:first-child{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:break-word;font-size:inherit}
+  .bg-page .bg-sr-item>span:first-child{font-size:15px!important}
+  #app .bg-sr-item>span .bg-nmf{display:inline!important}
+  #app .bg-sr-item>span .bg-nms{display:none!important}
+  .bg-sr-item>span.b,.bg-sr-item>span:last-child{white-space:nowrap;flex-shrink:0}
+}

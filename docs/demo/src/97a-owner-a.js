@@ -42,28 +42,31 @@ function hmDiyFit(){
    ===================================================================== */
 var LOGO_STYLES = [
   ['Current wordmark', 'এখনকার লোগো'],
-  ['Wide and bold, with a bar', 'চওড়া আর মোটা, নিচে দাগ'],
-  ['In a box', 'বক্সের ভেতরে'],
-  ['Solid block', 'ভরাট ব্লক'],
-  ['Classic serif', 'ক্লাসিক সেরিফ'],
-  ['Heavy and light', 'মোটা আর হালকা'],
-  ['Between two lines', 'দুই দাগের মাঝে'],
-  ['Sport slant', 'স্পোর্ট বাঁকা'],
-  ['Round badge and name', 'গোল ব্যাজ আর নাম'],
-  ['Coloured middle letter', 'মাঝের অক্ষর রঙিন'],
-  ['Outline letters', 'শুধু রেখার অক্ষর']
+  ['Wide and light', 'চওড়া আর হালকা'],
+  ['Classic serif capitals', 'ক্লাসিক সেরিফ, বড় হাতের'],
+  ['Serif name in italic', 'সেরিফ নাম, বাঁকা'],
+  ['Ring monogram and name', 'গোল রেখায় অক্ষর আর নাম'],
+  ['Hairline frame', 'চিকন ফ্রেমের ভেতরে'],
+  ['Fine rules either side', 'দুই পাশে চিকন দাগ'],
+  ['Bold and tight', 'মোটা আর কাছাকাছি'],
+  ['Lower case with a full stop', 'ছোট হাতের, শেষে বিন্দু'],
+  ['Fine line under the middle letter', 'মাঝের অক্ষরের নিচে চিকন দাগ'],
+  ['Double-rule label', 'দুই জোড়া দাগের লেবেল']
 ];
+/* Note 54 #15 (owner: the first ten looked cheap) — the same eleven slots, each now a refined mark */
 function logoStyled(text, n){
   n = Math.max(1, Math.min(10, n|0)); text = String(text || '');
-  var chars = Array.from(text), half = Math.ceil(chars.length / 2), mid = Math.floor((chars.length - 1) / 2);
+  var chars = Array.from(text), mid = Math.floor((chars.length - 1) / 2);
   var xi = chars.findIndex(function(c){ return /x/i.test(c); }); if(xi < 0) xi = mid;
-  var inner;
-  if(n === 5) inner = '<b>'+esc(chars.slice(0, Math.min(2, half)).join(''))+'</b><i>'+esc(chars.slice(Math.min(2, half)).join(''))+'</i>';
-  else if(n === 8) inner = '<span class="lgs-badge" aria-hidden="true">'+esc(chars[0] || '')+'</span><span class="lgs-word">'+esc(text)+'</span>';
-  else if(n === 9) inner = esc(chars.slice(0, xi).join(''))+'<em>'+esc(chars[xi] || '')+'</em>'+esc(chars.slice(xi + 1).join(''));
+  var inner, split = false;
+  if(n === 3){ inner = esc(text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()); split = true; }
+  else if(n === 4){ inner = '<span class="lgs-ring" aria-hidden="true">'+esc(chars[0] || '')+'</span><span class="lgs-word">'+esc(text)+'</span>'; split = true; }
+  else if(n === 6){ inner = '<i class="lgs-rule" aria-hidden="true"></i><span>'+esc(text)+'</span><i class="lgs-rule" aria-hidden="true"></i>'; split = true; }
+  else if(n === 8){ inner = esc(text)+'<em aria-hidden="true">.</em>'; split = true; }
+  else if(n === 9){ inner = esc(chars.slice(0, xi).join(''))+'<u>'+esc(chars[xi] || '')+'</u>'+esc(chars.slice(xi + 1).join('')); split = true; }
   else inner = esc(text);
   /* the whole word stays readable to a screen reader even when it is split into parts */
-  return '<span class="lgs lgs-'+n+'"'+((n === 5 || n === 8 || n === 9) ? ' aria-label="'+esc(text)+'" role="img"' : '')+'>'+inner+'</span>';
+  return '<span class="lgs lgs-'+n+'"'+(split ? ' aria-label="'+esc(text)+'" role="img"' : '')+'>'+inner+'</span>';
 }
 
 /* =====================================================================
@@ -133,7 +136,7 @@ function sbLogoStyleCard(){
   }).join('');
   return sbCard(['Logo style','লোগোর ধরন'],
     '<div class="sb-grid2">'+sbSel('header/logo/style', ['Logo style','লোগোর ধরন'], LOGO_STYLES.map(function(n, i){ return [String(i), [i+' · '+n[0], i+' · '+n[1]]]; }), ['Desktop header and desktop footer. The phone keeps its logo. An uploaded logo picture always wins.','ডেস্কটপ হেডার আর ডেস্কটপ ফুটারে। ফোনের লোগো বদলায় না। লোগোর ছবি আপলোড করা থাকলে সেটাই দেখাবে।'])+'</div>'+
-    '<div class="sb-lgs-grid">'+strip+'</div>', {icon:'star', lead:['Eleven ways to draw your logo text. Pick a number, preview, then Publish.','আপনার লোগোর লেখা আঁকার এগারোটা ধরন। নম্বর বাছুন, প্রিভিউ দেখুন, তারপর প্রকাশ করুন।']});
+    '<div class="sb-lgs-grid">'+strip+'</div>', {icon:'star', lead:['Eleven refined ways to draw your logo text (0 = the current wordmark, the default). Pick a number, preview, then Publish.','আপনার লোগোর লেখা আঁকার এগারোটা ধরন। নম্বর বাছুন, প্রিভিউ দেখুন, তারপর প্রকাশ করুন।']});
 }
 function sbFooterDeskCard(){
   var d = sbCur('footer'), cols = sbL('footer/cols');

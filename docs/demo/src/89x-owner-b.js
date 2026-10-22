@@ -54,6 +54,7 @@
     'pdp.recentFillTitle': 'More like this',
     'pdp.recentFillTitleBn': 'এরকম আরও',
     'pdp.barInfo'     : true,           /* P6 */
+    'pdp.barSave'     : false,          /* Note 54 #14 · the red saving beside the bar price (off = as before Note 51) */
     'pdp.zoomSteps'   : '1.8,2.6,3.6',  /* P7 */
     'pdp.video'       : true            /* C6 · product videos in the gallery */
   };
@@ -337,7 +338,8 @@ function ownb_barMid(p){
   return '<div class="ob-bm" data-testid="dkb-mid">'+out.join('')+'</div>';
 }
 function ownb_barSave(p){
-  if(!ownb_on('pdp.barInfo') || !(p.compareAt > p.price)) return '';
+  /* Note 54 #14 (owner: "my mistake"): the red "Save ৳X" beside the bar price is off again by default; the rest of the bar stays */
+  if(!ownb_on('pdp.barInfo') || OPT('pdp.barSave') !== true || !(p.compareAt > p.price)) return '';
   return '<span class="ob-bm-save">'+esc(t('Save'))+' '+fmt(p.compareAt - p.price)+'</span>';
 }
 
@@ -418,7 +420,8 @@ try{ ownb_galPrep(); }catch(e){}
     row('pdp.recentSwapSec', 'ownbpdp', 'Grid of 4 changes every … seconds (0 = never; stops while the mouse or keyboard is on it)', 'চারটার গ্রিড কত সেকেন্ড পর পর বদলাবে (০ = বদলাবে না; মাউস বা কিবোর্ড থাকলে থামে)', 'num', 'Product page, desktop', PP),
     row('pdp.recentTitle', 'ownbpdp', 'Grid title — recently viewed', 'গ্রিডের শিরোনাম — সম্প্রতি দেখা', 'text', 'Product page, desktop', PP),
     row('pdp.recentFillTitle', 'ownbpdp', 'Grid title — when nothing was viewed yet', 'গ্রিডের শিরোনাম — আগে কিছু দেখা না থাকলে', 'text', 'Product page, desktop', PP),
-    row('pdp.barInfo', 'ownbpdp', 'Sticky buy bar shows rating, delivery and saving', 'উপরের স্টিকি বারে রেটিং, ডেলিভারি আর সেভিং দেখাবে', 'sw', 'Product page, desktop, after scrolling', PP),
+    row('pdp.barInfo', 'ownbpdp', 'Sticky buy bar shows rating and delivery', 'উপরের স্টিকি বারে রেটিং আর ডেলিভারি দেখাবে', 'sw', 'Product page, desktop, after scrolling', PP),
+    row('pdp.barSave', 'ownbpdp', 'Sticky buy bar: red "Save ৳X" beside the price (off = as before)', 'স্টিকি বারে দামের পাশে লাল "Save ৳X" (বন্ধ = আগের মতো)', 'sw', 'Product page, desktop', PP),
     row('pdp.zoomSteps', 'ownbpdp', 'Photo viewer zoom steps (e.g. 1.8, 2.6, 3.6)', 'ছবি বড় করার ধাপ (যেমন 1.8, 2.6, 3.6)', 'text', 'Product photo viewer, desktop', PP),
     row('pdp.video', 'ownbpdp', 'Show product videos (YouTube link in the product)', 'প্রোডাক্টের ভিডিও দেখাবে (প্রোডাক্টে YouTube লিংক থাকলে)', 'sw', 'Product page gallery, phone and desktop', '#/p/textured-knit-polo')
   ];

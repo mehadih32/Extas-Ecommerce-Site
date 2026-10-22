@@ -432,7 +432,11 @@ function hm_sets(){
   var tierHTML = function(r){
     /* H10 · desktop: each set price in the sale colour, bold (phone text unchanged) */
     /* Phone audit V12b: same words on the phone, but each "Any 2 for ৳1,500" stays on one line (a price never splits after the ৳) */
-    if(!(desk && S.tierHi !== false)) return Object.keys(r.tiers).sort(function(a,b){return a-b;}).map(function(k){ return '<span class="hm-tier-m">'+esc('Any '+k+' for '+fmt(r.tiers[k]))+'</span>'; }).join(' · ');
+    /* Note 54 E (owner): the desktop price look is his pick (Admin › Settings › "Build your own set — price style");
+       'none' = the original plain line, the default until he approves a style */
+    var ps = typeof setPriceStyle==='function' ? setPriceStyle() : (S.tierHi !== false ? 'chip' : 'none');
+    if(desk && ps !== 'none' && ps !== 'chip' && typeof setPriceTiers==='function') return setPriceTiers(r, ps);
+    if(!(desk && ps === 'chip')) return Object.keys(r.tiers).sort(function(a,b){return a-b;}).map(function(k){ return '<span class="hm-tier-m">'+esc('Any '+k+' for '+fmt(r.tiers[k]))+'</span>'; }).join(' · ');
     return Object.keys(r.tiers).sort(function(a,b){return a-b;}).map(function(k){ return '<span class="hm-tier">'+esc(k+' for')+' <b class="hm-tier-p">'+esc(fmt(r.tiers[k]))+'</b></span>'; }).join(' ');
   };
   var cards = list.map(function(c, ci){

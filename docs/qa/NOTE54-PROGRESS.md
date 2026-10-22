@@ -1,0 +1,44 @@
+# Note 54 progress (v12n)
+- start 2026-10-20: src == v12m checked
+- baseline phone shots v12m at 6 widths -> owner-fix/N54/base
+- #6-#13 checkout: 51-checkout.js (labels/heading, Bengali address hint, inline phone chip, field order, trial chip, terms link, help text+flit, payment 4 methods w/ marks) + 98c-n54.js settings + r12-zzzz-n54.css — shots OK (after/co-*)
+- #3 #4 drawer: 89w-owner-c.js (B default, auto lines, fill rows, +N more) + css — shots 700/800/900/1080 OK
+- #5 bag offers: side default, ladder equal height, cards tile refined — shot OK
+- #1 #2 footer icons + real social marks: 98c-n54.js — pending visual check
+- #14 pdp bar save off (89x pdp.barSave=false + row); CN-009: inv design 3 (96e), header catsMore (03), drawer B, bag side
+- NEW from coordinator: item 19 (CN-014, 8 optional admin features) + item 20 (Bengali section help panels + admin-guide/*.md) — do after #1-#18, before gates
+- #15 logos refined (r12-zz-ownerA.css block, 97a LOGO_STYLES/logoStyled); default 0 unchanged
+- #17 hero campaigns: 98d-hero.js + r12-zzzz-hero.css (10 templates + custom editor, admin #/admin/hero, demo switcher in 03-layout demoPanel); desktop+phone shots OK (after/hero)
+- item 19: 98e-cn014.js (8 features, cards in their sections via FT_PLACE, storefront effects) ; item 20: 98f-admin-guide.js (41 guides, help link in admin top bar); CSS in r12-zzzz-n54.css; n54-test.js written
+- n54-test 235/0; admin-guide md written to owner-fix/N54/admin-guide (41 + README)
+- GATE device-matrix phones 0/240
+- GATE device-matrix tablets 0/240
+- GATE phone pixel diff 6 widths x67: only checkout (intended text: heading, address hint, SMS line + terms line) differs; other diffs = baseline flake (v12m vs v12m rerun shows same regions)
+- GATE K10 310/0
+- GATE K11+totals 65/0
+- GATE K9 2109/0
+- GATE qa.js 369/0 (drawer B expectation updated to Note 54 #4; payment boxes 3->4 in k9/qa copies at owner-fix/N54/tools/ktools)
+- GATE zoom 59/0
+- GATE totals ALL OK; fixE 49/0
+- RESUME 23 Oct: header More 1024-1920 already in n54-test (pass); timing sliders 321/0 hover 98/0 overlays 43/0 misc 45/0
+- GATE timing extra 3/0, drag 21/0 (all 6 suites 0 fail)
+- GATE touch flows 360/393/430 (tool fixed: A2 photo selector, A3 bag-modal, B1 Bengali digits) — see N54/touch-out
+- DONE: touch 93/0; 15 sheets in owner-fix/N54/sheets; v12n copied to proto/dist/v121-snapshot.html and scratchpad/v122/EXTAS-demo-V12.2.html
+## Round 2 (QA-V122-INDEPENDENT fixes) — started 23 Oct
+- R2 fixes applied: pay tiles column (no cut), gift row, Eid once, packing pill+line, phone social row, ladder fill+align (234=234), catsMore by real width (1366/1920 show Trousers+Hoodies), logo 9 clear of tagline, hero captions wrap, admin thumbs fixed ratio, drawer compact strip (size fix pending). NEW owner A-E received.
+- R2 owner A-D done (phone social row = pay row width/height; hotline box; social over pay same edges; footer slogan under logo); E set price styles (none default, underline, pill, strike, earlier chip) + admin radio card; drawer strip fills 700/800/900
+- R2 public build: tools/build-public.py via PUBLIC=1 tools/build.sh — readable minified 4.06 MB; PACK=1 gzip-packed 1.41 MB; smoke 63 pages x 2 widths, 0 JS errors both (side-canvas flag = false positive, same in full build)
+- R2 GATE n54-test 235/0
+- R2 GATE device-matrix phones 0/240
+- R2 GATE device-matrix tablets 0/240
+- R2 GATE K9 2109/0
+- R2 GATE qa.js 369/0
+- R2 GATE phone pixel diff vs round-1 build (6 widths x67): +42px footer social row on every page (intended, owner A), checkout terms dot spacing; rest = known flake zones (hero pin, pdp gallery, bag line)
+- R2 DONE: sheets 16/16b/17/17b/18 + refreshed 01-15; full -> v122/EXTAS-demo-V12.2.html + v121-snapshot; public 4.06MB readable / 1.41MB packed, smoke 0 JS errors
+## Round 3 (recheck fails D, E, packing box) started
+- R3 fixes: D logo ink = slogan ink (1366/1920); E 4 choices, Western digits, equal cards, underline one line (spFit), was = sum of cheapest singles, save threshold setting home.setSaveMin=100; packing choices as wrapping radios; sheets redone (16, 16b, 19 + digits)
+- R3 GATE n54 235/0
+- R3 GATE DM phones 0/240
+- R3 GATE DM tablets 0/240
+- R3 GATE K9 2109/0
+- R3 GATE qa.js 369/0; builds copied (full v122 + snapshot, public readable rebuilt + smoke)

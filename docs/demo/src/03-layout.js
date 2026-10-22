@@ -47,7 +47,7 @@ function menuDefault(){
          'shop'     one "Shop" dropdown with every category, then New in · Combos · Sets · Sale
          'priority' priority-plus: the row keeps roomy gaps and folds the lowest items into More
        H6 · megaStyle: 'drop' compact dropdown under the item + side flyouts (default) · 'panel' the old full-width panel */
-    deskLayout:'all', deskMain:4, saleLabel:'Sale', shopLabel:'Shop', megaStyle:'drop',
+    deskLayout:'catsMore', deskMain:4,   /* CN-009 (Note 52): main categories + More is the default */ saleLabel:'Sale', shopLabel:'Shop', megaStyle:'drop',
     quick:[{id:'search', on:true}, {id:'bag', on:true}, {id:'wish', on:true}, {id:'account', on:true}],
     help:[{id:'h1', label:'Track my order', href:'#/account', icon:'truck', on:true}, {id:'h2', label:'Delivery', href:'#/page/delivery', icon:'truck', on:true},
       {id:'h3', label:'Exchange & returns', href:'#/page/exchange', icon:'swap', on:true}, {id:'h4', label:'Questions & answers', href:'#/page/faq', icon:'info', on:true},
@@ -557,6 +557,7 @@ function ftrDeskSocial(){
       : '<span class="fdr-soc-off" title="'+esc(t('Address not added yet'))+'">'+ic+'<span>'+esc(name)+'</span></span>';
   }).join('');
 }
+function ftrCols2(soc, pay){ var a = (String(soc).match(/class="fdr-si/g) || []).length, b = (String(pay).match(/class="fdr-pm/g) || []).length; return Math.max(a, b, 1); }
 /* payment marks as white badges */
 function ftrDeskPay(){
   var list = (ftrData().pay || []).filter(function(x){ return x && x.on !== false && !x.removed && (PAY_LIB[x.id] || x.img); });
@@ -584,10 +585,12 @@ function ftrDeskRef(F){
     colHTML+
     '<div class="fdr-right">'+
       (K.wa === false ? '' : '<a class="fdr-wa" href="'+waLink('Hi EXTAS')+'" target="_blank" rel="noopener">'+waGlyph(18)+'<span>'+esc(waLab)+'</span></a>')+
+      /* Note 54 B (owner): the Hotline is its own box, the same as the WhatsApp box, right under it */
+      (K.hot === false ? '' : '<a class="fdr-hot" href="'+telLink()+'">'+ico('phone',17)+'<span>'+esc(sbLbl({label:K.hotLabel, bn:K.hotBn}))+' <b>'+esc(hotlineNumber())+'</b></span></a>')+
       (K.hours === false ? '' : '<div class="fdr-hours">'+ftrHoursLine()+'</div>')+
-      (K.hot === false ? '' : '<a class="fdr-hot" href="'+telLink()+'">'+ico('phone',15)+'<span>'+esc(sbLbl({label:K.hotLabel, bn:K.hotBn}))+' <b>'+esc(hotlineNumber())+'</b></span></a>')+
-      (soc ? '<div class="fdr-soc">'+soc+'</div>' : '')+
-      (pay ? '<div class="fdr-pay" aria-label="'+esc(t('Payment methods we accept'))+'">'+pay+'</div>' : '')+
+      /* Note 54 C: both rows share one column count, so the social marks line up over the payment marks */
+      (soc ? '<div class="fdr-soc" style="--n:'+ftrCols2(soc, pay)+'">'+soc+'</div>' : '')+
+      (pay ? '<div class="fdr-pay" style="--n:'+ftrCols2(soc, pay)+'" aria-label="'+esc(t('Payment methods we accept'))+'">'+pay+'</div>' : '')+
     '</div>'+
   '</div></div></div>';
 }
@@ -662,9 +665,10 @@ function storeFooter(){
          (SITE('social')); one with no address is not shown, and with none set
          the whole row is left out — no link ever lands on Home. PR 598: each
          network also has the owner's on/off switch in Site builder › Footer. */
-      (soc.length ? '<div class="ftr-soc">'+soc.map(function(x){
+      /* Note 54 #2 (round 2): the phone footer shows the same round social marks as the desktop footer */
+      (typeof ftrPhoneSoc==='function' ? ftrPhoneSoc() : (soc.length ? '<div class="ftr-soc">'+soc.map(function(x){
         return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener" aria-label="'+esc(sbBrand())+' on '+esc(x.label)+'">'+x.html+'<span>'+esc(x.label)+'</span></a>';
-      }).join('')+'</div>' : '')+
+      }).join('')+'</div>' : ''))+
       ftrPayMarks()+
     '</div></div></div>'+
     ftrDesk()+
@@ -1145,6 +1149,7 @@ function demoPanel(){
   '<div class="demo-panel" role="dialog" aria-label="Demo controls">'+
     '<div style="font-weight:800;font-size:15px;margin-bottom:4px">Demo controls</div><div style="color:#6E675E;font-size:12px;margin-bottom:12px">Only in this demo — customers never see this.</div>'+
     '<div style="font-weight:600;margin-bottom:6px">Theme (whole site)</div>'+seg('demo-theme', ST.theme, [['classic','Classic'],['noir','Noir'],['ivory','Ivory'],['festive','Festive']])+
+    (typeof hcDemoSeg==='function' ? hcDemoSeg(seg) : '')+   /* Note 54 #17: preview each hero campaign */
     '<div style="font-weight:600;margin:12px 0 6px">Product page template</div>'+seg('demo-pdp', ST.pdpTemplate, [['auto','Per product'],['T1','T1'],['T2','T2'],['T3','T3']])+
     '<div style="font-weight:600;margin:12px 0 6px">Combo page template</div>'+seg('demo-combo', ST.comboTemplate, [['auto','Per combo'],['C1','C1 Stacked'],['C2','C2 Steps']])+
     '<div class="row between" style="margin:12px 0 4px"><span style="font-weight:600">Eid cutoff banner</span><button class="switch'+(ST.festive?' on':'')+'" data-act="demo-festive" aria-label="Eid cutoff banner"></button></div>'+

@@ -1,0 +1,289 @@
+/* =====================================================================
+   r12-zzzz-n54.css — owner's review of V12.1 (ROUND15 Note 54), 20 Oct.
+   Desktop rules sit inside @media (min-width:1024px). The few rules that
+   reach the phone are marked PHONE and only change what Note 54 asked for
+   (the phone-number chip, the payment marks) — the phone gate proves it.
+   Animations move with transform only (no layout shift), run a few times,
+   and are off under prefers-reduced-motion.
+   ===================================================================== */
+
+/* ---------- PHONE + desktop · #9 the phone-number hint lives inside the box ---------- */
+.co-inwrap{position:relative}
+.co-inwrap .co-hint.co-hint-in{position:absolute;right:8px;top:50%;transform:translateY(-50%);margin:0;min-height:0;pointer-events:none;display:flex;align-items:center;max-width:calc(100% - 96px)}
+.co-inwrap .co-hint.co-hint-in:empty{display:none}
+.co-chip{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px 0 7px;border-radius:999px;font-size:12px;font-weight:700;line-height:1;white-space:nowrap;max-width:100%;overflow:hidden}
+.co-chip svg{flex-shrink:0}
+.co-chip-t{overflow:hidden;text-overflow:ellipsis}
+.co-chip.warn{background:#FFF1DC;color:#8A5300;box-shadow:inset 0 0 0 1px #F0CF98}
+.co-chip.ok{background:var(--brand-tint);color:var(--brand)}
+:root[data-theme="festive"] .co-chip.ok{color:var(--ink)}
+@media (max-width:479px){.co-chip-w{display:none}}
+
+/* ---------- PHONE + desktop · #13 payment marks ---------- */
+.pmk{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:22px;min-width:38px;padding:0 6px;border-radius:4px;
+  font:800 10.5px/1 Archivo,Arial,sans-serif;letter-spacing:.03em;border:1px solid var(--line);background:#fff;color:#222;white-space:nowrap;flex-shrink:0;box-sizing:border-box}
+.pmk b{font-weight:800}
+.pmk-bkash{background:#E2136E;border-color:#E2136E;color:#fff}
+.pmk-nagad{background:linear-gradient(90deg,#F7941D,#EC1C24);border-color:transparent;color:#fff}
+.pmk-rocket{background:#8C3494;border-color:#8C3494;color:#fff}
+.pmk-upay{background:#FFD200;border-color:#FFD200;color:#0B3E8A}
+.pmk-visa{color:#1A1F71}
+.pmk-visa b{font-style:italic;font-weight:900;font-size:12px;letter-spacing:.06em}
+.pmk-amex{background:#2E77BC;border-color:#2E77BC;color:#fff;letter-spacing:.06em}
+.pmk-mastercard{padding:0 4px}
+.pmk-bank{color:#24435F;gap:3px}
+.pmk-bank b{font-size:9.5px;letter-spacing:.08em}
+.pmk-ssl{color:#1B3C8F;gap:0}
+.pmk-ssl i{font-style:normal;font-weight:700;font-size:8px;letter-spacing:.04em;margin-left:2px;color:#2A62C9}
+.pmk-cod{color:var(--ink);background:var(--surface);gap:5px}
+.pmk-cod b{font-size:10.5px}
+.co-pmks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.co-po-mk{display:inline-flex;flex-shrink:0;align-items:center}
+.co-po-mk:empty{display:none}
+.co-po-tx{min-width:0}
+.co-pmt{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.co-pmtb{display:flex;align-items:center;gap:8px;min-height:46px;padding:8px 10px;border:1.5px solid var(--input);border-radius:var(--radius);background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;text-align:left;min-width:0}
+.co-pmtb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.co-pmtb:hover{border-color:var(--brand)}
+.co-pmtb.on{border-color:var(--brand);background:var(--brand-tint);box-shadow:inset 0 0 0 1px var(--brand)}
+.co-po:not(.on) .co-po-hd:hover{background:var(--surface2)}
+.co-po.on .co-po-hd .h3{color:var(--ink)}
+
+/* ---------- shimmer used by #10 and #12 (transform only, a few runs) ---------- */
+.co-flit{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+.co-flit::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;transform:translateX(-140%);
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);animation:n54Flit 6.5s ease-in-out 1.4s 4}
+@keyframes n54Flit{0%{transform:translateX(-140%)}22%{transform:translateX(330%)}100%{transform:translateX(330%)}}
+@media (prefers-reduced-motion:reduce){.co-flit::after{animation:none;display:none}}
+
+@media (min-width:1024px){
+/* ---------- #1 + #2 · desktop footer ---------- */
+body .ftr-dref .fdr-col a{gap:9px}
+body .ftr-dref .fdr-col .fdr-ic{display:inline-flex;align-items:center;justify-content:center;width:16px;flex-shrink:0;color:#C9C4BB;opacity:.85}
+body .ftr-dref .fdr-col .fdr-ic svg{width:15px;height:15px}
+body .ftr-dref .fdr-col a>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+body .ftr-dref .fdr-col a:hover .fdr-ic{color:#fff;opacity:1}
+body .ftr-dref .fdr-col a.fdr-hl:has(.fdr-ic)::before{display:none}
+body .ftr-dref .fdr-col a.fdr-hl .fdr-ic{color:var(--sale, #E07A6E);opacity:1}
+body .ftr-dref .fdr-soc{gap:10px;margin-top:18px}
+body .ftr-dref .fdr-soc>*+*{border-left:0}
+body .ftr-dref .fdr-soc>.fdr-si{width:36px;height:36px;padding:0;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#fff!important;transition:background .2s,border-color .2s}
+body .ftr-dref .fdr-soc>.fdr-si svg,body .ftr-dref .fdr-soc>.fdr-si img{width:17px;height:17px;opacity:1}
+body .ftr-dref .fdr-soc>a.fdr-si:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.45);text-decoration:none}
+body .ftr-dref .fdr-soc>.fdr-soc-off{opacity:.78}
+
+/* ---------- #3 · drawer: free delivery reads as good news, not a button ---------- */
+body .modal.atb-d .atbc-free{background:none;border:0;border-radius:0;padding:2px 2px 0;justify-content:center;gap:9px;color:var(--brand);font-size:15.5px;font-weight:800;letter-spacing:.005em}
+body .modal.atb-d .atbc-free span{background:linear-gradient(transparent 60%, color-mix(in srgb, var(--brand) 17%, transparent) 60%);padding:0 3px;border-radius:2px}
+body .modal.atb-d .atbc-free svg{color:var(--brand)}
+:root[data-theme="festive"] body .modal.atb-d .atbc-free{color:var(--ink);border:0}
+:root[data-theme="festive"] body .modal.atb-d .atbc-free span{background:linear-gradient(transparent 60%, color-mix(in srgb, var(--gold) 30%, transparent) 60%)}
+/* #4 · products under the buttons: a clear 12 px+ gap, whole rows only */
+body .modal.atb-d .atbc>.atbc-x{padding-top:14px;margin-top:2px}
+body .modal.atb-d .atbc-more[hidden]{display:none}
+
+/* ---------- #5 · bag page offers ---------- */
+/* side by side: the offer list is exactly as tall as the three product cards */
+#app .ups-st-side:not(.ups-notier) .container{align-items:stretch}
+#app .ups-st-side:not(.ups-notier) .container>.bgc-ladder{align-self:stretch;margin-top:12px;display:flex;flex-direction:column;
+  background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--brand);border-radius:var(--card-radius);padding:18px 18px 16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+#app .ups-st-side:not(.ups-notier) .container>.ups-row{align-self:stretch}
+#app .bgc-ladder .bgc-th1{font-size:17px;line-height:1.25;letter-spacing:-.005em;margin-bottom:10px}
+#app .bgc-ladder .bgc-lr{border-top:1px solid var(--line2);padding:11px 0;font-size:15px;row-gap:3px}
+#app .bgc-ladder .bgc-lr b{font-weight:700;color:var(--ink)}
+#app .bgc-ladder .bgc-lr .price{font-size:16px}
+#app .bgc-ladder .bgc-lr .bgc-ts{justify-self:start;font-size:12px;font-weight:700;color:var(--brand);background:var(--brand-tint);padding:2px 8px;border-radius:999px}
+#app .bgc-ladder .bgc-lgo{margin-top:auto;min-height:48px;font-weight:700}
+#app .bgc-ladder .bgc-lr:last-of-type{margin-bottom:14px}
+/* offer cards: the "Pick your …" card is quiet and classy, not a green slab */
+#app .bgc-tgo{flex-direction:column;gap:10px;background:var(--surface);color:var(--ink);border:1.5px solid var(--ink);font-size:15.5px;font-weight:700;letter-spacing:.005em;transition:background .2s,color .2s}
+#app .bgc-tgo svg{width:34px;height:34px;padding:9px;border-radius:50%;background:var(--ink);color:var(--bg);box-sizing:border-box;transition:transform .2s}
+#app .bgc-tgo:hover{filter:none;background:var(--ink);color:var(--bg)}
+#app .bgc-tgo:hover svg{background:var(--bg);color:var(--ink);transform:translateX(3px)}
+#app .bgc-tc{border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+#app .bgc-tc:hover{border-color:var(--brand-line)}
+
+/* ---------- #6–#12 · checkout (desktop) ---------- */
+#app .co-wrap .co-sec .label{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:7px;display:block;letter-spacing:.003em}
+#app .co-wrap .co-sec:has([data-field="co-name"]){padding-top:22px;padding-bottom:22px}
+#app .co-wrap .co-sec:has([data-field="co-name"]) .stack.s16{margin-top:16px;row-gap:14px}
+#app .co-wrap .co-sec .co-hint:not(.co-hint-in):empty{display:none}
+#app .co-wrap .co-promrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;flex-wrap:wrap}
+#app .co-wrap .co-promrow .co-fdays{margin:0;min-width:0}
+#app .co-trialchip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;border-radius:999px;background:var(--brand-tint);color:var(--brand);
+  font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;box-shadow:inset 0 0 0 1px var(--brand-line)}
+#app .co-trialchip svg{flex-shrink:0}
+:root[data-theme="festive"] #app .co-trialchip{color:var(--ink)}
+#app .co-wrap .co-sidehelp{position:relative;overflow:hidden}
+#app .co-wrap .co-sidehelp .co-sh-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#app .co-wrap .co-sidehelp .co-sh-q{margin-right:.3em}
+#app .co-wrap .co-terms{grid-column:1/-1}
+#app .co-wrap .co-terms a{color:var(--text2);font-weight:600}
+#app .co-wrap .co-terms a:hover{color:var(--ink)}
+#app .co-wrap .co-msgs{padding-bottom:22px}
+#app .co-wrap .co-po-hd{min-height:58px;padding:10px 14px}
+#app .co-wrap .co-po-bd{padding:2px 14px 14px 44px}
+}
+
+/* ---------- item 19 · CN-014 optional features (admin cards + storefront lines) ---------- */
+.ft-place{margin:14px 0 16px}
+.ft-det{border:1px dashed var(--line);border-radius:12px;background:var(--surface);padding:0}
+.ft-det>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:11px 14px;cursor:pointer;font-weight:700;font-size:14px;list-style:none}
+.ft-det>summary::-webkit-details-marker{display:none}
+.ft-det>summary .ft-sum{font-weight:500;font-size:12.5px;color:var(--text2)}
+.ft-det[open]>summary{border-bottom:1px dashed var(--line)}
+.ft-det .ft-card{margin:12px;box-shadow:none}
+.ft-card.ft-off{background:var(--surface2)}
+.ft-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.ft-tl{min-width:0}
+.ft-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin-bottom:4px}
+.ft-bn{font-weight:500;font-size:13px;color:var(--text2)}
+.ft-sw0{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ft-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 16px;margin-top:12px}
+.ft-f{min-width:0}
+.ft-f.ft-wide{grid-column:1/-1}
+.ft-f.ft-sw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--line2);border-radius:var(--radius);font-size:13.5px}
+.ft-prev{margin-top:12px}
+.ft-wa{background:#E7F7EC;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:8px;max-width:520px}
+.ft-wa p{margin:4px 0 0}
+.ft-wa .ft-r{color:#0F6E37;font-weight:600}
+.ft-line{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:12px 0;border-radius:var(--radius);background:var(--brand-tint);color:var(--ink);font-size:13.5px;line-height:1.45}
+.ft-line svg{flex-shrink:0;color:var(--brand);margin-top:1px}
+.ft-kpis{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px;margin-bottom:10px}
+.ft-rto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ft-tbl{font-size:12.5px}
+.ft-tbl td,.ft-tbl th{padding:5px 8px}
+.ft-tbl .r{text-align:right;white-space:nowrap}
+.ft-eid{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius);background:#FFF6E3;color:#5C4210;font-size:14px;font-weight:600;line-height:1.4;box-shadow:inset 0 0 0 1px #F0D9A4}
+.ft-eid svg{flex-shrink:0}
+.ft-eidwrap{margin-top:14px}
+.ft-eidbag{margin-bottom:-4px}
+.ft-gift .ft-gbody{display:grid;gap:12px;margin-top:12px}
+.ft-g2{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:640px){.ft-g2{grid-template-columns:1fr 1fr}}
+.ft-ginv{border:1px dashed #bbb;border-radius:8px;padding:10px 14px;margin:0 0 12px;font-family:Archivo,Arial,sans-serif}
+.ft-ginv p{margin:4px 0 0;font-style:italic}
+.ft-stk{font-weight:700}
+
+/* ---------- item 20 · "এই সেকশনে কী করা যায়" ---------- */
+.ag-top{display:inline-flex;align-items:center;gap:14px}
+.ag-link{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;font:600 13px 'Hind Siliguri',sans-serif;cursor:pointer}
+.ag-link:hover{background:rgba(255,255,255,.18)}
+.ag-inline{display:flex;justify-content:flex-end;margin:0 0 6px;position:relative;z-index:2}
+@media(min-width:1024px){.ag-inline{float:right;margin:0 0 0 12px}}
+.ag-inline .ag-link{color:var(--brand);border-color:var(--brand-line);background:var(--brand-tint)}
+.ag-inline .ag-link:hover{background:var(--surface)}
+.ag-panel{font-family:'Hind Siliguri',sans-serif;font-size:15px;line-height:1.6}
+.ag-panel section+section{margin-top:12px}
+.ag-panel h3{font-size:15.5px;margin:0 0 4px;color:var(--brand)}
+.ag-panel ul{margin:0;padding-left:20px}
+.ag-panel li+li{margin-top:3px}
+.ag-foot{margin:14px 0 0;font-size:12.5px;color:var(--text2)}
+
+.co-tsep{margin:0 .3em}
+
+/* ================= Round 2 (independent QA of V12.2) ================= */
+/* #13 payment marks match the footer badges: brand colour on white; card / wallet choices never cut */
+.pmk-bkash{background:#fff;border-color:#F3C2D8;color:#E2136E}
+.pmk-nagad{background:#fff;border-color:#F8CDB0;color:#EC5B24}
+.pmk-rocket{background:#fff;border-color:#DCC0E0;color:#8C3494}
+.pmk-amex{background:#fff;border-color:#BBD3EC;color:#2E77BC}
+.pmk-upay{background:#fff;border-color:#F2DE85;color:#0B3E8A}
+.co-pmtb{flex-direction:column;align-items:flex-start;gap:6px;min-height:58px}
+.co-pmtb span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;overflow-wrap:anywhere}
+/* #19 gift box: one row "☐ 🎁 Send it as a gift", the tick inline with its line */
+.ft-gift .ft-gcheck{display:flex;align-items:center;gap:10px;margin:0;cursor:pointer}
+.ft-gift .ft-gcheck input{flex-shrink:0;margin:0}
+.ft-gl{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-width:0}
+.ft-gl svg{color:var(--brand);flex-shrink:0}
+.ft-gl b{font-size:15px}
+.ft-gsub{font-size:12.5px;color:var(--text2)}
+.ft-gift.on .ft-gsub{display:none}
+.ft-gnote{display:flex;align-items:center;gap:6px;margin:0}
+.ft-gnote svg{color:var(--brand);flex-shrink:0}
+/* #19 Eid banner: the words once, then one chip per band */
+.ft-eid{flex-wrap:wrap}
+.ft-eidt{font-weight:700}
+.ft-eidb{display:inline-flex;flex-wrap:wrap;gap:6px}
+.ft-eidb>span{display:inline-flex;gap:4px;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px #F0D9A4;font-weight:500;white-space:nowrap}
+/* #19 packing proof pill */
+.ft-pp{cursor:pointer;border:0;font:inherit}
+.ft-pp.need{background:#FFF1DC;color:#8A5300}
+/* #2 phone footer: round social marks, centred */
+/* Note 54 A (owner): a full-width row, sized and spaced exactly like the payment-logo row under it */
+.ftr-soc2{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:7px;margin-top:10px}
+.ftr-soc2 .fs2{display:flex;align-items:center;justify-content:center;height:32px;border-radius:8px;padding:5px 7px;color:var(--pmc,#fff);
+  background:color-mix(in srgb, var(--pm,#fff) 15%, transparent);border:1px solid color-mix(in srgb, var(--pm,#fff) 36%, transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+.ftr-soc2 .fs2 svg{width:18px;height:18px}
+.fs2-facebook{--pm:#1877F2;--pmc:#8DB8FF}.fs2-instagram{--pm:#E4405F;--pmc:#FF9DB0}.fs2-youtube{--pm:#FF0000;--pmc:#FF8A8A}.fs2-tiktok{--pm:#25F4EE;--pmc:#9AF7F3}.fs2-whatsapp{--pm:#25D366;--pmc:#7CE6A4}
+.fs2-x,.fs2-linkedin,.fs2-pinterest,.fs2-messenger{--pm:#ffffff;--pmc:#fff}
+@media(max-width:380px){.ftr-soc2{gap:5px}.ftr-soc2 .fs2{padding:4px 5px}}
+@media (min-width:1024px){
+  /* Note 54 C (owner): the social row sits right above the payment row, same left and right edges, evenly spread — one block */
+  body .ftr-dref .fdr-soc{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:7px;margin-top:16px}
+  body .ftr-dref .fdr-soc>.fdr-si{width:auto;height:30px;border-radius:4px}
+  body .ftr-dref .fdr-pay{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:7px;margin-top:7px}
+  body .ftr-dref .fdr-pay>.fdr-pm{width:auto}
+  /* Note 54 B (owner): the Hotline is its own box, exactly like the WhatsApp box, right under it */
+  body .ftr-dref .fdr-hot{min-height:48px;padding:0 14px;margin-top:10px;border:1px solid rgba(255,255,255,.34);border-radius:4px;font-size:15px;font-weight:700;color:#fff!important;white-space:nowrap;gap:10px}
+  body .ftr-dref .fdr-hot:hover{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.05)}
+  body .ftr-dref .fdr-hot:hover span{text-decoration:none}
+  body .ftr-dref .fdr-hot svg{opacity:1;color:#fff}
+  /* Note 54 D (owner): in the desktop footer the slogan sits directly UNDER the logo */
+  body .ftr-dref .fdr-brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+  body .ftr-dref .fdr-brand .fdr-slog{margin:0}
+  /* #4 compact strip */
+  body .modal.atb-d .atbc-xs{margin-top:-4px}
+  /* Note 54 #4: the panel keeps a 12 px foot (the fill rule guarantees >= 12 px under the last thing) */
+  body .modal.atb-d > div:last-child{padding-bottom:12px}
+  body .modal.atb-d .atbc-xsh{font-size:13px;font-weight:800;margin:0 0 3px;line-height:1.15}
+  body .modal.atb-d .atbc-xsi .atb-xp{line-height:1.1}
+  body .modal.atb-d .atbc-xsr{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  body .modal.atb-d .atbc-xsi{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--ink);min-width:0}
+  body .modal.atb-d .atbc-xsi .pimg{width:38px;border-radius:6px}
+  body .modal.atb-d .atbc-xsi .atb-xn{display:none}
+  body .modal.atb-d .atbc-xsi .atb-xp{font-size:12.5px;font-weight:700}
+  /* #5 the offer card lines up with the product cards and has no hole in the middle */
+  #app .ups-st-side:not(.ups-notier) .container>.bgc-ladder{margin-top:14px}
+  #app .bgc-lprog{display:flex;flex-direction:column;gap:6px;margin:12px 0 8px}
+  #app .bgc-lpb{display:block;height:6px;border-radius:999px;background:var(--line2);overflow:hidden}
+  #app .bgc-lpb i{display:block;height:100%;background:var(--brand);border-radius:inherit}
+  #app .bgc-ltip{display:flex;gap:7px;align-items:flex-start;margin:4px 0 14px;font-size:13px;color:var(--text2);line-height:1.45}
+  #app .bgc-ltip svg{flex-shrink:0;color:var(--brand);margin-top:2px}
+}
+
+/* Note 54 E · "Build your own set" price styles (desktop home tile + the admin previews) */
+.sp{display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap;margin:5px 14px 0 0;font-size:14px}
+.sp b{font-weight:800;color:#fff;font-size:15px}
+.sp-u b{padding-bottom:1px;border-bottom:1.5px solid color-mix(in srgb, var(--hero-sub, #9FD3BF) 85%, transparent)}
+.sp-p b{padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.sp-p i{font-style:normal;font-size:12px;font-weight:600;color:var(--hero-sub, #A9D8C4)}
+.sp-s s{color:rgba(255,255,255,.55);font-size:12.5px;text-decoration-thickness:1px}
+.sp-s b{font-size:16.5px;color:var(--hero-sub, #A9D8C4)}
+.sp-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:12px;margin-top:12px}
+@media(max-width:560px){.sp-list{grid-template-columns:1fr;grid-auto-rows:auto}}
+.sp-min{max-width:260px;margin-top:10px}
+.sp-opt{display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer}
+.sp-opt.on{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb, var(--brand) 22%, transparent)}
+.sp-h{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.35}
+.sp-h input{margin-top:3px;flex-shrink:0}
+.sp-h .tag{margin-left:auto;flex-shrink:0}
+.sp-card .sp-prev.hm-set-diy{flex:1 1 auto;display:block!important;height:auto!important;min-height:0!important;padding:12px 14px!important;border-radius:10px;background:var(--brand)!important;color:#fff!important;font-size:13.5px;line-height:1.5;pointer-events:none;box-shadow:none}
+.sp-card .sp-prev .rl,.sp-card .sp-prev .rl b{color:#fff}
+.sp-prev .rl+.rl{margin-top:8px}
+.sp-prev .hm-tier{display:inline-block;margin:4px 10px 0 0}
+.sp-prev .hm-tier-p{display:inline-block;color:var(--sale);background:var(--surface);font-weight:800;padding:0 6px;border-radius:6px}
+.sp-card .sp-prev .hm-tier-p{color:var(--sale)!important}
+
+/* round 3: the underline style is one line (spFit steps the type down a little if the tile is narrow) */
+.sp-row{display:flex;flex-wrap:nowrap;align-items:baseline;gap:9px;white-space:nowrap;font-size:14px;max-width:100%;overflow:hidden;margin-top:5px}
+.sp-row .sp{margin:0;font-size:1em}
+.sp-row .sp b{font-size:1.07em}
+/* round 3 · D: in the desktop footer the logo's left edge = the slogan's left edge */
+@media (min-width:1024px){ body .ftr-dref .fdr-brand .logo{padding-left:0!important;margin-left:-1px} }
+/* round 3 · packing proof settings: the choice text wraps, never cut */
+.ft-rad{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-top:2px}
+.ft-ro{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius);background:var(--surface);font-size:13.5px;line-height:1.4;cursor:pointer}
+.ft-ro input{margin-top:2px;flex-shrink:0}
+.ft-ro span{min-width:0;overflow-wrap:anywhere}
+.ft-ro.on{border-color:var(--brand);background:var(--brand-tint)}

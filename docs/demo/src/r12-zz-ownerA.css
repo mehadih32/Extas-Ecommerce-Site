@@ -75,39 +75,38 @@ body .hm-look .hm-look-save{display:inline-flex;align-items:center;font-size:13.
   body .hdr .logo.hide-m{font-size:29px!important}
   body .hdr .logo.hide-m.sb-hasslog .sb-slog{font-size:11px}
 }
-/* the ten styles (only drawn where logoStyled() is used: desktop header, desktop footer, Site builder preview) */
-.lgs{display:inline-flex;align-items:center;line-height:1;white-space:nowrap;color:inherit;font-family:'Archivo',sans-serif;position:relative}
-/* 1 · wide and bold, a short brand bar under it */
-.lgs-1{font-weight:800;letter-spacing:.3em;padding-bottom:6px}
-.lgs-1::after{content:"";position:absolute;left:0;bottom:0;width:38%;height:3px;border-radius:2px;background:var(--brand)}
-/* 2 · in a box */
-.lgs-2{font-weight:800;letter-spacing:.24em;padding:5px 6px 5px 12px;border:2px solid currentColor;border-radius:3px;font-size:.86em}
-/* 3 · solid block */
-.lgs-3{font-weight:800;letter-spacing:.24em;padding:7px 8px 7px 14px;background:var(--ink);color:var(--surface)!important;-webkit-text-fill-color:var(--surface);border-radius:3px;font-size:.84em}
-.ftr .lgs-3{background:var(--footer-ink, #fff);color:var(--footer, #111)!important;-webkit-text-fill-color:var(--footer, #111)}
-/* 4 · classic serif */
-.lgs-4{font-family:'Cormorant Garamond',serif;font-weight:700;letter-spacing:.16em;font-size:1.22em}
-/* 5 · heavy and light */
-.lgs-5{letter-spacing:.2em}
-.lgs-5 b{font-weight:800} .lgs-5 i{font-style:normal;font-weight:500;opacity:.92}
-/* 6 · between two lines */
-.lgs-6{font-weight:700;letter-spacing:.34em;padding:5px 0 5px .34em;border-top:1.5px solid currentColor;border-bottom:1.5px solid currentColor;font-size:.88em}
-/* 7 · sport slant */
-.lgs-7{font-weight:800;letter-spacing:.08em;transform:skewX(-11deg);padding-left:12px}
-.lgs-7::before{content:"";position:absolute;left:0;top:12%;bottom:12%;width:4px;background:var(--brand);transform:skewX(0)}
-/* 8 · round badge and name */
-.lgs-8{gap:10px}
-.lgs-8 .lgs-badge{display:inline-flex;align-items:center;justify-content:center;width:1.32em;height:1.32em;border-radius:50%;background:var(--brand);color:var(--brand-ink, #fff);-webkit-text-fill-color:var(--brand-ink, #fff);font-weight:800;font-size:.9em;letter-spacing:0}
-.lgs-8 .lgs-word{font-weight:800;letter-spacing:.2em}
-.ftr .lgs-8 .lgs-badge{background:var(--footer-ink, #fff);color:var(--footer, #111);-webkit-text-fill-color:var(--footer, #111)}
-/* 9 · coloured middle letter */
-.lgs-9{font-weight:800;letter-spacing:.2em}
-.lgs-9 em{font-style:normal;color:var(--brand);-webkit-text-fill-color:var(--brand);font-size:1.18em;line-height:.8}
-.ftr .lgs-9 em{color:var(--f-soft, #9CC6B4);-webkit-text-fill-color:var(--f-soft, #9CC6B4)}
-/* 10 · outline letters */
-.lgs-10{font-weight:800;letter-spacing:.22em;color:transparent!important;-webkit-text-fill-color:transparent!important;-webkit-text-stroke:1.3px var(--ink)}
-.ftr .lgs-10{-webkit-text-stroke-color:var(--footer-ink, #fff)}
-
+/* Note 54 #15 · ten REFINED text logos (only drawn where logoStyled() is used: desktop header,
+   desktop footer, Site builder preview). Quiet type, real spacing, hairlines — no slabs, no clip-art. */
+.lgs{display:inline-flex;align-items:center;line-height:1;white-space:nowrap;color:inherit;font-family:'Archivo',sans-serif;position:relative;font-weight:600}
+/* 1 · wide and light */
+.lgs-1{font-weight:500;letter-spacing:.52em;margin-right:-.52em;font-size:.86em}
+/* 2 · classic serif capitals */
+.lgs-2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;letter-spacing:.16em;font-size:1.24em}
+/* 3 · serif name in italic */
+.lgs-3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-style:italic;letter-spacing:.01em;font-size:1.5em}
+/* 4 · ring monogram and name */
+.lgs-4{gap:.5em}
+.lgs-4 .lgs-ring{display:inline-flex;align-items:center;justify-content:center;width:1.5em;height:1.5em;border-radius:50%;border:1px solid currentColor;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:600;font-size:1.02em;letter-spacing:0;padding-bottom:.06em;box-sizing:border-box}
+.lgs-4 .lgs-word{font-weight:600;letter-spacing:.34em;font-size:.8em}
+/* 5 · hairline frame */
+.lgs-5{font-weight:600;letter-spacing:.4em;font-size:.68em;padding:.62em .5em .62em .9em;border:1px solid currentColor}
+/* 6 · fine rules either side, serif */
+.lgs-6{gap:.45em;font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;letter-spacing:.16em;font-size:1.04em}
+.lgs-6>span{margin-right:-.16em}
+.lgs-6 .lgs-rule{display:block;width:.7em;height:1px;background:currentColor;opacity:.8}
+/* 7 · bold and tight */
+.lgs-7{font-weight:800;letter-spacing:.06em;font-size:1.06em}
+/* 8 · lower case with a full stop */
+.lgs-8{font-weight:800;letter-spacing:-.02em;font-size:1.18em;text-transform:lowercase}
+.lgs-8 em{font-style:normal;color:var(--brand);-webkit-text-fill-color:var(--brand)}
+.ftr .lgs-8 em{color:var(--f-soft, #9CC6B4);-webkit-text-fill-color:var(--f-soft, #9CC6B4)}
+/* 9 · spaced, a fine line under the middle letter */
+.lgs-9{font-weight:700;letter-spacing:.3em;margin-right:-.3em;padding-bottom:.34em}
+.lgs-9 u{text-decoration:none;position:relative}
+.lgs-9 u::after{content:"";position:absolute;left:0;right:.3em;bottom:-.24em;height:1.5px;background:var(--brand)}
+.ftr .lgs-9 u::after{background:var(--f-soft, #9CC6B4)}
+/* 10 · double-rule label, serif */
+.lgs-10{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;letter-spacing:.24em;font-size:1.02em;padding:.34em 0 .3em .24em;border-top:3px double currentColor;border-bottom:3px double currentColor}
 
 /* ---- H4 · desktop row arrangements ---- */
 @media(min-width:1024px){

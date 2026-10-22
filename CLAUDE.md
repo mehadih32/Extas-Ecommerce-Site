@@ -15,7 +15,7 @@ Every session in this repository reads this file first, then `docs/START-HERE.md
 |---|---|
 | `docs/BLUEPRINT.md` | The full specification (V2.1 final, 20 Oct 2026). **Read it from here; it is never re-uploaded.** |
 | `docs/MASTER-REGISTER.md` | All 604 PRs in 28 stages (598 active, 6 parked). **Nothing gets built unless it is in here.** |
-| `docs/demo/EXTAS-demo-V12.1.html` | The approved clickable demo, **V12.1** (20 Oct: the owner's desktop review, CN-008). **It is the UI truth.** V12 is kept as history. The source is in `docs/demo/src/`. Before/after details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md`, `docs/qa/ADMIN-AUDIT.md`. |
+| `docs/demo/EXTAS-demo-V12.2.html` | The approved clickable demo, **V12.2** (23 Oct: owner Notes 54–58, CN-012/014; V12.1 and V12 kept as history). **It is the UI truth.** Section guides for the admin are in `docs/admin-guide/`. The source is in `docs/demo/src/`. Before/after details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md`, `docs/qa/ADMIN-AUDIT.md`. |
 | `docs/qa/ECOMMERCE-CHECKLIST.md` | The QA checklist. The gates are in Blueprint Appendix C. |
 | `docs/owner/` | The owner's decisions, review notes, server spec and guides. |
 | `docs/agents/` | The seven agent profiles, protocol, skills and lessons (`lessons/ALL.md`). Read the lessons. |

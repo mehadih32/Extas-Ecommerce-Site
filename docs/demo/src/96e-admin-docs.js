@@ -40,7 +40,7 @@ var ZX_DESIGNS = [
   {n:7, en:'Modern cards', bn:'মডার্ন কার্ড'}
 ];
 var ZX_STICKER_SIZES = [['100x150','100 × 150 mm (4 × 6 in)'],['100x100','100 × 100 mm'],['75x100','75 × 100 mm'],['a6','A6 · 105 × 148 mm']];
-var ZX_DEF = {design:1, waFormat:'jpg', sticker:'100x150'};
+var ZX_DEF = {design:3, waFormat:'jpg', sticker:'100x150'};   /* CN-009 (Note 52): design 3 is the default; all 7 stay selectable */
 function zx_cfg(){ if(!ST.docs) ST.docs = {}; var d = ST.docs; Object.keys(ZX_DEF).forEach(function(k){ if(d[k]==null) d[k] = ZX_DEF[k]; }); return d; }
 function zx_design(){ var n = +zx_cfg().design; return n>=1 && n<=ZX_DESIGNS.length ? n : 1; }
 function zx_dname(n){ var d = ZX_DESIGNS[n-1]; return d ? d.en : ''; }

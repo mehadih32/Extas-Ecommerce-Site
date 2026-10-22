@@ -59,12 +59,16 @@ function deskNavFit(){
   var nav = document.querySelector('.hdr .nav-d'); if(!nav || !nav.getClientRects().length) return;
   var inn = nav.parentElement, logo = inn.querySelector('.logo.hide-m'), right = inn.querySelector('.hdr-r'), more = nav.querySelector('.nav-more');
   /* H4: items the owner's arrangement keeps under More (data-fixfold) stay folded */
-  var items = [].slice.call(nav.querySelectorAll('.nav-i[data-fold]:not([data-fixfold])'));
+  /* Note 54 #16 (round 2): in "main categories + More" the first N always stay; the rest come back into
+     the row while there is real room (with clear air), and fold into More again when there is not */
+  var cm = nav.getAttribute('data-layout') === 'catsMore';
+  var items = [].slice.call(nav.querySelectorAll(cm ? '.nav-i[data-fold]' : '.nav-i[data-fold]:not([data-fixfold])'));
   items.forEach(function(i){ i.classList.remove('nav-folded'); });
-  var base = (typeof deskNavCats==='function' ? deskNavCats().more.length : 0) + nav.querySelectorAll('.nav-i[data-fixfold]').length;
+  if(cm){ var keep = nav.querySelectorAll('.nav-i[data-fold]:not([data-fixfold])').length; items = items.slice(keep); }
+  var base = (typeof deskNavCats==='function' ? deskNavCats().more.length : 0) + (cm ? 0 : nav.querySelectorAll('.nav-i[data-fixfold]').length);
   if(more) more.hidden = !base;
   /* H4 'priority' (priority-plus): the row keeps clear air beside the logo and the icons */
-  var air = nav.getAttribute('data-layout') === 'priority' ? 44 : 14;
+  var air = nav.getAttribute('data-layout') === 'priority' ? 44 : (cm ? 28 : 14);
   var over = function(){
     var n = nav.getBoundingClientRect(), r = right ? right.getBoundingClientRect() : null, l = logo ? logo.getBoundingClientRect() : null, ib = inn.getBoundingClientRect();
     var pr = parseFloat(getComputedStyle(inn).paddingRight) || 0;

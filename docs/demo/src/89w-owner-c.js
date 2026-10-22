@@ -18,8 +18,8 @@
    ===================================================================== */
 if(typeof SHOP_OPT_DEF!=='undefined'){
   var OWNC_DEF = {
-    'atb.style'        : 'A',
-    'atb.bMax'         : '4',
+    'atb.style'        : 'B',      /* CN-009 (Note 52): the whole-bag drawer is the default; A stays one click away */
+    'atb.bMax'         : 'auto',   /* Note 54 #4: as many bag lines as fit (a number = at most that many) */
     'atb.crossTitle'   : 'Complete the look',
     'atb.crossTitleBn' : 'সাথে মানাবে',
     'atb.justAdded'    : 'Just added',
@@ -27,7 +27,7 @@ if(typeof SHOP_OPT_DEF!=='undefined'){
     'atb.bagHead'      : 'Bag',
     'atb.bagHeadBn'    : 'ব্যাগ',
     'co.layout'        : 'wide',
-    'bag.upsellStyle'  : 'current'
+    'bag.upsellStyle'  : 'side'    /* CN-009: ONE "You may also like" by default (offer list + 3 products); the others stay selectable */
   };
   Object.keys(OWNC_DEF).forEach(function(k){ if(SHOP_OPT_DEF[k]===undefined) SHOP_OPT_DEF[k] = OWNC_DEF[k]; });
 }
@@ -48,9 +48,9 @@ setTimeout(function(){
   };
   [
     row('atb.style', 'ownc', 'Added-to-bag drawer style (desktop)', '"ব্যাগে যোগ হয়েছে" ডানের প্যানেলের স্টাইল (ডেস্কটপ)', 'sel', 'Product page · combo and set pages, after Add to bag', '#/p/heavyweight-hoodie',
-      {opts:[['A', 'A — only the item just added (as now)'], ['B', 'B — every item in the bag, newest on top']]}),
+      {opts:[['B', 'B — every item in the bag, newest on top (default)'], ['A', 'A — only the item just added']]}),
     row('atb.bMax', 'ownc', 'Style B: bag lines shown before "+N more"', 'স্টাইল B: "+N more" এর আগে কয়টা পণ্য দেখাবে', 'sel', 'Added-to-bag drawer, style B', '#/p/heavyweight-hoodie',
-      {opts:[['3','3'], ['4','4'], ['5','5'], ['6','6']]}),
+      {opts:[['auto','As many as fit the screen (default)'], ['3','At most 3'], ['4','At most 4'], ['5','At most 5'], ['6','At most 6'], ['8','At most 8']]}),
     row('atb.crossTitle', 'ownc', 'Heading over the products in the drawer (English)', 'প্যানেলের নিচের পণ্যগুলোর শিরোনাম — ইংরেজি', 'text', 'Added-to-bag drawer', '#/p/heavyweight-hoodie'),
     row('atb.crossTitleBn', 'ownc', 'Same heading (Bengali)', 'একই শিরোনাম — বাংলা', 'text', 'Added-to-bag drawer in বাং', '#/p/heavyweight-hoodie'),
     row('atb.justAdded', 'ownc', 'Style B: tag on the item just added (English)', 'স্টাইল B: এইমাত্র যোগ হওয়া পণ্যের ট্যাগ — ইংরেজি', 'text', 'Added-to-bag drawer, style B', '#/p/heavyweight-hoodie'),
@@ -60,7 +60,7 @@ setTimeout(function(){
     row('co.layout', 'ownc', 'Checkout widths (desktop)', 'চেকআউটের মাপ (ডেস্কটপ)', 'sel', 'Checkout', '#/checkout',
       {opts:[['wide', 'New — form 70 px narrower, order summary 60 px wider'], ['classic', 'Before — the earlier widths']]}),
     row('bag.upsellStyle', 'ownc', 'Bag page: offers and "You may also like" (desktop)', 'ব্যাগ পেজ: অফার আর "You may also like" অংশ (ডেস্কটপ)', 'sel', 'Bag page, under the bag', '#/bag',
-      {opts:[['current', 'As now — offer box over 4 products'], ['cards', 'Offer cards — one card per offer, then 4 products'], ['side', 'Side by side — offer list on the left, 3 products on the right']]})
+      {opts:[['side', 'Side by side — offer list on the left, 3 products on the right (default)'], ['cards', 'Offer cards — one card per offer, then 4 products'], ['current', 'Offer box over 4 products (earlier)']]})
   ].forEach(function(r){ if(!zs_S(r.id)) ZS_SETTINGS.push(r); });
   if(!ZS_GROUPS.some(function(g){ return g[0]==='ownc'; })){
     var at = -1; ZS_GROUPS.forEach(function(g, i){ if(g[0]==='install') at = i; });
@@ -95,6 +95,7 @@ function atbC_lineHTML(x, isNew){
     '<div class="atbc-lt"><div class="atbc-ln">'+(isNew ? '<span class="atbc-new">'+esc(OPTL('atb.justAdded'))+'</span>' : '')+esc(name)+'</div><div class="atbc-ls">'+esc(sub)+'</div></div>'+
     '<div class="atbc-lp"><span class="price">'+fmt(x.price)+'</span>'+(x.regular>x.price ? '<span class="strike">'+fmt(x.regular)+'</span>' : '')+'</div></div>';
 }
+function atbC_moreTxt(n){ return esc('+'+n+' '+(ST.lang==='bn' ? 'টি আরও' : (n===1 ? 'more item' : 'more items'))+' · '+(ST.lang==='bn' ? 'ব্যাগে দেখুন' : 'View bag')); }
 /* "Bag · 5 items  ৳6,850" — strong, the count and the total clear (B2) */
 function atbC_head(tot){
   var n = ST.lang==='bn' ? tot.count+'টি পণ্য' : plural(tot.count, 'item');
@@ -118,7 +119,7 @@ function atbC_btns(){
 function atbC_cross(list){
   var inBag = {}; (ST.bag||[]).forEach(function(l){ if(l.kind==='item') inBag[l.product] = 1; else (l.items||[]).forEach(function(it){ inBag[it.product] = 1; }); });
   var seen = {}, picks = (list||[]).concat(typeof ups_picks==='function' ? ups_picks(16) : []).filter(function(x){
-    if(!x || x.hidden || inBag[x.id] || seen[x.id]) return false; seen[x.id] = 1; return true; }).slice(0, 12);
+    if(!x || x.hidden || inBag[x.id] || seen[x.id]) return false; seen[x.id] = 1; return true; }).slice(0, 24);   /* Note 54 #4: enough to fill a tall screen; atbC_fit trims */
   if(!picks.length) return '';
   return '<div class="atb-x atbc-x" data-testid="atb-cross"><div class="atb-xh">'+esc(OPTL('atb.crossTitle'))+'</div>'+picks.map(function(x){
     return '<a class="atb-xi" href="#/p/'+esc(x.id)+'">'+productImg(x, x.colors[0], {ratio:'ratio-11', label:false})+
@@ -131,10 +132,12 @@ function atbC_drawer(o){
     var isNew = function(x){ return added.indexOf(x.line.id)>=0; };
     var rows = tot.lines.slice().reverse();
     rows.sort(function(a, b){ return isNew(b) - isNew(a); });           /* just added first, then newest → oldest */
-    var max = Math.max(1, parseInt(OPT('atb.bMax'), 10) || 4), more = rows.length - max;
+    /* Note 54 #4: every line that fits is listed (atbC_fit hides the ones that
+       don't); "+N more · View bag" shows only when the next line would not fit */
+    var cap = String(OPT('atb.bMax')), max = /^\d+$/.test(cap) ? Math.max(1, parseInt(cap, 10)) : 99, more = Math.max(0, rows.length - max);
     body = '<div class="atbc-card atbc-b">'+atbC_head(tot)+
       '<div class="atbc-list">'+rows.slice(0, max).map(function(x){ return atbC_lineHTML(x, isNew(x)); }).join('')+'</div>'+
-      (more>0 ? '<a class="atbc-more" href="#/bag" data-testid="atbc-more">+'+more+' '+esc(more===1 ? 'more item' : 'more items')+' · '+esc(ST.lang==='bn' ? 'ব্যাগে দেখুন' : 'View bag')+ico('right',14)+'</a>' : '')+
+      '<a class="atbc-more" href="#/bag" data-testid="atbc-more" data-extra="'+more+'"'+(more>0 ? '' : ' hidden')+'><span class="atbc-mt">'+atbC_moreTxt(more)+'</span>'+ico('right',14)+'</a>'+
       atbC_savings(tot)+'</div>'+(o.extra || '');
   } else {
     body = (o.top || '')+(o.extra || '')+'<div class="atbc-card">'+atbC_head(tot)+atbC_savings(tot)+'</div>';
@@ -147,17 +150,56 @@ function atbC_pdpAdded(p, a){
   var cols = [a.color].concat(a.extras || []);
   return (ST.bag||[]).filter(function(l){ return l.kind==='item' && l.product===p.id && l.size===a.size && cols.indexOf(l.color)>=0; }).map(function(l){ return l.id; });
 }
-/* B1: fill the height — every product that fits whole, two to a row (an even
-   number, so no row is half empty). Style A always keeps at least one row;
-   Style B gives the room to the bag list and drops the block if no row fits. */
+/* Note 54 #4 (owner): the drawer is filled, never left half empty and never
+   cut. Measured on every open and every resize:
+     1. Style B lists bag lines while the buttons still end >= 12 px above
+        the drawer's bottom; the next line that would not fit becomes
+        "+N more · View bag".
+     2. The products under the buttons ("Complete the look") take the rest:
+        whole rows of two, as many as fit with >= 12 px below the last row.
+        No room for one row = no block (and no empty heading). */
+var ATBC_GAP = 12;
 function atbC_fit(){
   var m = document.querySelector('.modal.atb-d'); if(!m) return;
-  var bd = m.lastElementChild, box = m.querySelector('.atbc-x'), its = m.querySelectorAll('.atbc-x .atb-xi'); if(!bd || !box || !its.length) return;
-  var B = !!m.querySelector('.atbc-B'), min = B ? 0 : 2, i, vis = its.length;
-  box.style.display = ''; for(i=0;i<its.length;i++) its[i].style.display = '';
-  for(i=its.length-1; i>=min && bd.scrollHeight > bd.clientHeight + 1; i--){ its[i].style.display = 'none'; vis = i; }
-  if(vis % 2 && vis > 1){ its[vis-1].style.display = 'none'; vis--; }
-  if(!vis) box.style.display = 'none';
+  var bd = m.lastElementChild; if(!bd) return;
+  var box = m.querySelector('.atbc-x'), its = box ? [].slice.call(box.querySelectorAll('.atb-xi')) : [];
+  var lines = [].slice.call(m.querySelectorAll('.atbc-B .atbc-list .atbc-li')), more = m.querySelector('.atbc-B .atbc-more'), btns = m.querySelector('.atbc .pdp-bagbtns');
+  var show = function(el, on){ if(el) el.style.display = on ? '' : 'none'; };
+  lines.forEach(function(l){ show(l, true); }); its.forEach(function(i){ show(i, true); });
+  [].forEach.call(m.querySelectorAll('.atbc-xs'), function(x){ x.remove(); });
+  var bottom = function(){ return bd.getBoundingClientRect().top + bd.clientHeight; };
+  var fitsTo = function(el){ return !el || (bd.scrollHeight <= bd.clientHeight + 1 && el.getBoundingClientRect().bottom + ATBC_GAP <= bottom() + 0.5); };
+  var st = bd.scrollTop; bd.scrollTop = 0;
+  /* 1 · the bag lines (the products are out of the way while we measure) */
+  show(box, false);
+  var extra = more ? (+more.getAttribute('data-extra') || 0) : 0, hid = 0;
+  for(var i = lines.length - 1; i > 0 && !fitsTo(btns); i--){
+    show(lines[i], false); hid++;
+    if(more){ more.hidden = false; more.querySelector('.atbc-mt').innerHTML = atbC_moreTxt(extra + hid); }
+  }
+  if(more && !hid){ more.hidden = !(extra > 0); if(extra > 0) more.querySelector('.atbc-mt').innerHTML = atbC_moreTxt(extra); }
+  /* 2 · the products fill what is left, in whole rows of two */
+  if(box && its.length){
+    show(box, true);
+    var vis = its.length;
+    var last = function(){ return its[vis - 1]; };
+    while(vis > 0 && !fitsTo(last())){ vis--; show(its[vis], false); }
+    if(vis % 2 && vis > 1){ vis--; show(its[vis], false); }
+    if(vis < 2){ vis = 0; its.forEach(function(i){ show(i, false); }); show(box, false); }
+    /* 3 · Note 54 #4 (round 2): room left under the last row but not enough for a whole row →
+       one compact strip of small pictures and prices takes it, so the space is never left blank */
+    var hid = its.filter(function(i){ return i.style.display === 'none'; });
+    if(hid.length){
+      var strip = document.createElement('div'); strip.className = 'atbc-xs'; strip.setAttribute('data-testid', 'atb-strip');
+      if(!vis) strip.innerHTML = '<div class="atbc-xsh">'+esc(OPTL('atb.crossTitle'))+'</div>';
+      var row = document.createElement('div'); row.className = 'atbc-xsr'; strip.appendChild(row);
+      hid.slice(0, 5).forEach(function(i){ var c = i.cloneNode(true); c.style.display = ''; c.className = 'atbc-xsi'; c.setAttribute('aria-label', (c.querySelector('.atb-xn') || {}).textContent || ''); row.appendChild(c); });
+      box.parentNode.insertBefore(strip, box.nextSibling);
+      while(row.children.length > 2 && strip.getBoundingClientRect().width && strip.querySelector('.atbc-xsi:last-child').getBoundingClientRect().right > strip.getBoundingClientRect().right + 1) row.removeChild(row.lastChild);
+      if(!fitsTo(strip)) strip.remove();
+    }
+  }
+  bd.scrollTop = st;
 }
 /* B3: which style each visit saw, for the reports (Admin › Analytics) */
 var ATBC_SEEN = null;
@@ -214,7 +256,14 @@ function bagC_tierLadder(cls){
     var save = o.base.price * x.n - x.price, lab = o.labels[o.rule.id+':'+x.n] || bag_w('bag.w.tier', {n:x.n, cat:catName});
     return '<div class="bgc-lr"><b>'+esc(lab)+'</b><span class="price">'+fmt(x.price)+'</span>'+(save>0 ? '<span class="bgc-ts">'+esc(bag_w('bag.w.tierSave', {save:fmt(save)}))+'</span>' : '<span></span>')+'</div>';
   }).join('');
-  return '<div class="bgc-ladder '+(cls||'')+'" data-testid="bag-tiers" data-rule="'+esc(o.rule.id)+'"><div class="bgc-th1">'+esc(bag_w('bag.w.tiersTitle', {cat:catName}))+'</div>'+rows+
+  /* Note 54 #5 (round 2): what the bag already has, and the easy rule, fill the card's middle */
+  var have = ST.bag.reduce(function(s, l){ if(l.kind!=='item') return s; var p = P(l.product); return s + (p && (o.rule.mode==='sku' ? (o.rule.skus||[]).indexOf(p.id)>=0 : (o.rule.categories||[]).indexOf(p.cat)>=0) ? l.qty : 0); }, 0);
+  var next = o.tiers.filter(function(x){ return x.n > have; })[0];
+  var bn = ST.lang==='bn';
+  var prog = '<div class="bgc-lprog"><span class="bgc-lpb"><i style="width:'+Math.min(100, Math.round(have / Math.max(1, o.tiers[o.tiers.length-1].n) * 100))+'%"></i></span>'+
+    '<span class="small">'+esc(bn ? 'আপনার ব্যাগে '+have+'টা' : 'In your bag: '+have)+(next ? ' · <b>'+esc(bn ? 'আর '+(next.n-have)+'টা নিলে '+fmt(next.price) : (next.n-have)+' more → '+next.n+' for '+fmt(next.price))+'</b>' : '')+'</span></div>';
+  var tip = '<p class="bgc-ltip">'+ico('swap',14)+'<span>'+esc(bn ? 'যেকোনো রং আর সাইজ মেশাতে পারবেন — সেটের দাম নিজেই বসে যায়।' : 'Mix any colours and sizes — the set price comes off by itself.')+'</span></p>';
+  return '<div class="bgc-ladder '+(cls||'')+'" data-testid="bag-tiers" data-rule="'+esc(o.rule.id)+'"><div class="bgc-th1">'+esc(bag_w('bag.w.tiersTitle', {cat:catName}))+'</div>'+rows+prog+tip+
     '<a class="btn btn-secondary btn-block bgc-lgo" href="#/set/'+esc(o.rule.id)+'">'+esc(bag_w('bag.w.tiersGo', {cat:catName}))+ico('right',16)+'</a></div>';
 }
 function bagC_tierBox(cls){

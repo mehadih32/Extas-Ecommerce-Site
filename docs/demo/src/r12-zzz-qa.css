@@ -53,3 +53,8 @@
    there is room, and the second drops under the first when there is not; neither is
    ever cut (no joining dot, so a wrapped line never starts with "·"). */
 #app .pdp-page .ob-qh-why .ob-qh-m{display:flex;flex-wrap:wrap;column-gap:10px;row-gap:2px;white-space:nowrap;overflow:visible;text-overflow:clip}
+/* Phone audit V12b, desktop taste item 1: the hero's product chips get a solid card colour, so the chip that
+   passes over the green-to-photo fade reads as cleanly as the others (it was 60% see-through with a blur) */
+@media(min-width:1024px){
+  body .hm-hero .hm-slider .hm-sl .hm-pin{background:var(--surface,#fff);-webkit-backdrop-filter:none;backdrop-filter:none;z-index:4;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+}
