@@ -1842,6 +1842,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-021",
+   "date": "23 Oct",
+   "title": "owner answers to proposals P8, P11, P12, P14, P16",
+   "text": "",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [

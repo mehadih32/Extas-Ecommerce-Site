@@ -261,6 +261,17 @@ the server.*
 >
 > No new PR numbers: (2) on PR 605; (3) on the checkout PRs + Support; (4) on the checkout address PR + adapters (PR 18); (5) on the order-status PRs.
 
+> **CN-021 · 23 Oct 2026 (owner answers to proposals P8, P11, P12, P14, P16).**
+> - **(P8) No late exchange, paid or free.** The exchange window is a setting, counted from the moment the courier marks the parcel delivered. The default is 72 hours.
+> - **(P11) Bulk/corporate (PR 606):** minimum quantity, logo price, advance and all other rules are backend settings.
+> - **(P12) Proposal only:** the system may suggest "turn COD off for this number?", and a person always decides. The customer profile and the order page show the full history per phone number:
+>   - orders and deliveries;
+>   - refusals, and returns where only the delivery charge was paid;
+>   - cancellations;
+>   - no response to the rider or the confirmation call.
+> - **(P14)** The "offers by SMS" tick at checkout is **pre-ticked** (owner's choice). Every promotional SMS carries an easy opt-out.
+> - **(P16) No separate "instant COD" feature.** The courier's dashboard records the payout however it was taken. COD reconciliation matches the courier's settlement records parcel by parcel, and each payout carries a "received as" label (bank, bKash or cash at the courier office), so Accounts posts it to the right account.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |

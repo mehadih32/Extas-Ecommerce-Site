@@ -824,3 +824,6 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - Voice address: a mic icon in the address field. Bengali speech becomes text automatically; the backend marks the order "voice-entered"; staff call only if the text is unclear.
 - (4) Cancel: the customer can cancel themselves until the order is confirmed. After confirmation, a cancel request until courier booking, approved by staff. The cut-off stage is a setting.
 - 23 Oct 05:28 owner confirmed: (1) normal checkout unchanged — OK. (2) Gift = advance payment always, from Bangladesh or abroad, no login needed; the owner controls gift on/off, advance on/off and the advance type and amount from the backend. (3) The call-me rule is OK.
+
+## Note 62 — 23 Oct 05:33 · Answers to P8/P11/P12/P14/P16 (CN-021)
+- There is no exchange after the window; the window is a setting counted from the courier's "delivered" mark (72 h for now). Bulk orders are fully dynamic. COD-off is a proposal only, with the full per-number history visible. The SMS-offers tick is pre-ticked. Instant COD is not a separate feature: the courier dashboard already shows the payout; just label how it was received.
