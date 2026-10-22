@@ -58,4 +58,19 @@ if [ "$rc" -ne 0 ]; then
   echo "e2e: the app's log (last 60 lines)"
   docker logs --tail 60 "$NET-app" 2>&1 | grep -viE 'password|secret|postgresql://' || true
 fi
+
+# PR 508 (owner, 23 Oct): the session journey (tools/admin-session-e2e.mjs): sign in, refresh, the sign-in page while
+# signed in, log out, the admin closed again. The walk above changed the first password, so the owner first gets a new
+# first password the way owner-reset.yml gives one (auth reset-owner), which the journey then replaces.
+if [ "$rc" -eq 0 ]; then
+  echo "e2e: the session journey (sign in → refresh → sign-in page while signed in → log out)"
+  docker run --rm --network "$NET" --env-file "$WORK/app.env" -v "$WORK/out:/out" "$MIGRATE" \
+    sh -c "cd /repo/packages/auth && ./node_modules/.bin/tsx src/cli.ts reset-owner --write-to /out/owner.env >/dev/null && chmod 0644 /out/owner.env"
+  sed -n 's/^OWNER_FIRST_PASSWORD=//p' "$WORK/out/owner.env" > "$WORK/out/reset-password"
+  BASE="http://localhost:$PORT" E2E_EMAIL="$EMAIL" E2E_PASSWORD_FILE="$WORK/out/reset-password" node "$HERE/admin-session-e2e.mjs" || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo "e2e: the app's log (last 60 lines)"
+    docker logs --tail 60 "$NET-app" 2>&1 | grep -viE 'password|secret|postgresql://' || true
+  fi
+fi
 exit "$rc"
