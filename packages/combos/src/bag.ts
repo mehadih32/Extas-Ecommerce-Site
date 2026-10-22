@@ -19,6 +19,7 @@ import { CombosError } from './errors';
 import { checkSet } from './validate';
 import { bagUse, comboForSale, type ComboForSale } from './set-check';
 import { picksPrice, wasAllowed } from './summary';
+import { recordSetAdded } from './analytics';
 import type { SetPrice } from './summary-model';
 
 /** Where a bag line came from (PR 338 events). */
@@ -128,6 +129,9 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
       });
     }
     await tx.cart.update({ where: { id: d.cartId }, data: { lastActivityAt: at } });
+    // PR 104 — one set added, and its colour pair counted (the same write: a refused add counts nothing).
+    const colourOf = new Map(c.variants.map((v) => [v.id, v.colourId]));
+    await recordSetAdded(deps, tx, { storeId: d.storeId, comboId: c.view.id, colourIds: picks.variants.map((v) => colourOf.get(v) ?? null), at });
     const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: groupKey }, select: lineSelect, orderBy: { createdAt: 'asc' } });
     return { added: true, groupKey, comboId: c.view.id, lines, setPriceMinor: picks.payMinor, price: picks.price };
   }, TX);

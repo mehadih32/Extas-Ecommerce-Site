@@ -309,3 +309,26 @@
 .cb-row-last { flex-wrap: wrap; }
 .cb-acts { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .cb-acts .ad-btn { min-height: var(--ad-tap); }
+
+/* ---------- PR 104 · the combo report ---------- */
+.cb-report { display: grid; gap: 14px; }
+.cb-report-days { display: grid; gap: 4px; min-width: 0; }
+.cb-report-days-row { display: flex; gap: 8px; }
+.cb-report-days-row .ad-input { width: 110px; min-height: var(--ad-tap); }
+.cb-report-days-row .ad-btn { min-height: var(--ad-tap); }
+.cb-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cb-kpi { border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); padding: 10px 12px; display: grid; gap: 2px; min-width: 0; background: var(--ad-surface); }
+.cb-kpi b { font-family: var(--ad-font-display); font-size: 20px; overflow-wrap: anywhere; }
+.cb-report-cols { display: grid; gap: 12px; }
+.cb-report-card { padding: 14px; display: grid; gap: 8px; min-width: 0; }
+.cb-report-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.cb-report-list li { display: grid; gap: 2px; padding: 8px 0; border-top: 1px solid var(--ad-line2); min-width: 0; }
+.cb-report-list li:first-child { border-top: 0; }
+.cb-report-name { overflow-wrap: anywhere; }
+.cb-report-pair { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cb-dots { display: inline-flex; flex-shrink: 0; }
+.cb-dots i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.2); margin-right: -4px; }
+@media (min-width: 1024px) {
+  .cb-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .cb-report-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}

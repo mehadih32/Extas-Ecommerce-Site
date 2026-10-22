@@ -157,6 +157,6 @@ export const oneProductForm = (f: ComboForm) => {
 export const nameIn = (lang: Lang, en: string | null | undefined, bn: string | null | undefined): string => (lang === 'bn' && bn ? bn : (en ?? ''));
 
 /** PR 571 — the combos page's inner tabs, in the demo's order (auto colour-pair combos is the default). */
-export const COMBOS_TABS = ['auto', 'new', 'archive', 'fixed'] as const;
+export const COMBOS_TABS = ['auto', 'new', 'archive', 'fixed', 'report'] as const;
 export type CombosTab = (typeof COMBOS_TABS)[number];
 export const combosTab = (v: string | undefined): CombosTab => ((COMBOS_TABS as readonly string[]).includes(v ?? '') ? (v as CombosTab) : 'auto');
