@@ -147,5 +147,12 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     expect((await api('GET', ['tiers'])).body).toMatchObject({ ok: true, tiers: [] });
     expect((await api('POST', ['tiers'], {})).status).toBe(405);
     expect((await api('GET', ['tiers', 'x'])).status).toBe(404);
+
+    // PR 104 — the combo report (nothing sold in the sample store yet)
+    const rep = await api('GET', ['report']);
+    expect(rep.body).toMatchObject({ ok: true, report: { totals: { setsSold: 0 }, top: expect.any(Array), pairs: expect.any(Array) } });
+    expect(rep.body.report.series).toHaveLength(rep.body.report.days);
+    expect((await api('POST', ['report'], {})).status).toBe(405);
+    expect((await api('GET', ['report', 'x'])).status).toBe(404);
   });
 });

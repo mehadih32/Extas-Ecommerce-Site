@@ -24,3 +24,4 @@ export * from './set-check';
 export * from './summary';
 export * from './bag';
 export * from './set-photo';
+export * from './analytics';

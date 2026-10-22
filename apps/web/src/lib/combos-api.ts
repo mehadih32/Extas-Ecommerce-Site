@@ -29,6 +29,8 @@
 //   POST  /api/admin/combos/templates              {list?, page?, bag?}
 //   PR 99 · set tiers (read from Smart Rules; changed there)
 //   GET   /api/admin/combos/tiers                  "What customers can combine"
+//   PR 104 · combo analytics
+//   GET   /api/admin/combos/report?days=           which sets sell, which pairs get picked
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
 import { imageSources } from '@extas/media';
@@ -112,6 +114,14 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
     if (m === 'GET') return handle(request, deps, 'combos.read', async (x) => ({ templates: await cb.shopTemplates(x.deps, x.who.storeId) }));
     if (m === 'POST') return handle(request, deps, 'combos.write', async (x) => ({ templates: await cb.setShopTemplates(x.deps, x.who, (await body(request)) as Partial<cb.ShopTemplates>) }));
     return notAllowed();
+  }
+  if (a === 'report') {
+    if (path.length > 1) return notFound();
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'combos.read', async (x) => {
+      const raw = x.url.searchParams.get('days');
+      return { report: await cb.comboReport(x.deps, x.who, raw === null ? {} : { days: Number(raw) }) };
+    });
   }
   if (a === 'tiers') {
     if (path.length > 1) return notFound();

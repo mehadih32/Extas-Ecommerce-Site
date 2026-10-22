@@ -14,6 +14,7 @@ import { listSetTiers, liveSetTiers } from './set-tiers';
 import { checkComboSet } from './set-check';
 import { priceSet, setSummary } from './summary';
 import { makeSetPhoto } from './set-photo';
+import { colourKeyOf, comboReport, recordColourPick, recordComboView } from './analytics';
 import { memoryStorage } from '@extas/adapters';
 import sharp from 'sharp';
 import { addSetToBag, bagSets, changeSetInBag, refreshBagSets, removeSetFromBag, saveSetForLater } from './bag';
@@ -564,6 +565,71 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       expect(again.assetId).not.toBe(r.assetId);
       expect(await t.prisma.mediaAsset.findUnique({ where: { id: r.assetId }, select: { archivedAt: true } })).toEqual({ archivedAt: null });
       expect((await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' })).photoAssetId).toBe(again.assetId);
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 104 · combo analytics', () => {
+    it('counts views, colour picks and adds by day; sets sold, sales and the saving come from real orders only', async () => {
+      const SLUG = 'sample-polo-chino-set';
+      const combo = await t.prisma.combo.findFirstOrThrow({ where: { storeId: S, slug: SLUG }, select: { id: true } });
+      const sum = await setSummary(deps(), { storeId: S, slug: SLUG });
+      const choices = sum.pieces.map((p) => ({ colourId: p.defaultColourId, sizeId: p.openSizes[p.defaultColourId!]![0]! }));
+      const before = await comboReport(deps(), as('reader'));
+      const rowOf = (r: Awaited<ReturnType<typeof comboReport>>) => r.top.find((x) => x.comboId === combo.id);
+      const pairOf = (r: Awaited<ReturnType<typeof comboReport>>) => r.pairs.find((x) => x.comboId === combo.id && x.colours.map((c) => c.id).sort().join() === choices.map((c) => c.colourId).sort().join());
+
+      await recordComboView(deps(), { storeId: S, comboId: combo.id });
+      await recordComboView(deps(), { storeId: S, comboId: combo.id });
+      await recordColourPick(deps(), { storeId: S, comboId: combo.id, colourIds: choices.map((c) => c.colourId) });
+      await recordComboView(deps(), { storeId: B, comboId: combo.id }); // another store's id: ignored
+      const cartId = (await t.prisma.cart.create({ data: { storeId: S, visitorId: 'test-visitor-104' }, select: { id: true } })).id;
+      const added = await addSetToBag(deps(), { storeId: S, cartId, slug: SLUG, choices });
+      await addSetToBag(deps(), { storeId: S, cartId, slug: SLUG, choices }); // the same add again: not counted twice
+      await addSetToBag(deps(), { storeId: S, cartId, slug: SLUG, choices: [] }).catch(() => null); // refused: not counted
+
+      // One real order with the set (two pieces, one set discount), one cancelled order that never counts.
+      const order = async (status: 'PLACED' | 'CANCELLED', n: string) => {
+        const o = await t.prisma.order.create({ data: { storeId: S, number: `T104-${n}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: 205000, totalMinor: 205000, idempotencyKey: `t104-${n}`, status, placedAt: clock } });
+        for (const l of added.lines) {
+          const disc = l === added.lines[0] ? added.lines.reduce((s2, x) => s2 + x.unitPriceMinor, 0) - 205000 : 0;
+          await t.prisma.orderItem.create({ data: { storeId: S, orderId: o.id, variantId: l.variantId, sku: `T104-${l.id.slice(0, 6)}`, productName: 'Test piece', quantity: 1, unitPriceMinor: l.unitPriceMinor, discountMinor: disc, lineTotalMinor: l.unitPriceMinor - disc, comboId: combo.id, comboGroupKey: added.groupKey } });
+        }
+      };
+      await order('PLACED', '1');
+      await order('CANCELLED', '2');
+
+      const after = await comboReport(deps(), as('reader'));
+      const a = rowOf(after)!;
+      const b = rowOf(before);
+      expect(a.views - (b?.views ?? 0)).toBe(2);
+      expect(a.picks - (b?.picks ?? 0)).toBe(1);
+      expect(a.adds - (b?.adds ?? 0)).toBe(1);
+      expect(a.setsSold - (b?.setsSold ?? 0)).toBe(1);
+      expect(a.orders - (b?.orders ?? 0)).toBe(1);
+      const regular = added.lines.reduce((s2, x) => s2 + x.unitPriceMinor, 0);
+      expect(a.salesMinor - (b?.salesMinor ?? 0)).toBe(205000);
+      expect(a.savedMinor - (b?.savedMinor ?? 0)).toBe(regular - 205000);
+      expect(after.top[0]!.comboId).toBe(combo.id);
+      expect((pairOf(after)?.picks ?? 0) - (pairOf(before)?.picks ?? 0)).toBe(1);
+      expect(after.series).toHaveLength(after.days);
+      expect(after.series.at(-1)).toMatchObject({ day: after.to });
+      expect(after.series.at(-1)!.setsSold).toBeGreaterThanOrEqual(1);
+      expect(after.totals.setsSold).toBeGreaterThanOrEqual(1);
+
+      // The window: a short one from the setting's own limits; outside them is refused.
+      expect((await comboReport(deps(), as('reader'), { days: 1 })).series).toHaveLength(1);
+      expect(await code(comboReport(deps(), as('reader'), { days: 0 }))).toBe('INVALID_INPUT');
+      expect(await code(comboReport(deps(), as('reader', B)))).toBe('FORBIDDEN');
+      // A month later the order is outside the default window.
+      clock = new Date(T0.getTime() + 400 * 86_400_000);
+      expect(rowOf(await comboReport(deps(), as('reader')))?.setsSold ?? 0).toBe(0);
+      clock = T0;
+    });
+
+    it('a colour key is the colours sorted, so the same pair in any order is one row', () => {
+      expect(colourKeyOf(['b', 'a'])).toBe(colourKeyOf(['a', 'b']));
+      expect(colourKeyOf([null, null])).toBeNull();
     });
   });
 });

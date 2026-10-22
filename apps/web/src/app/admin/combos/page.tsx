@@ -1,13 +1,15 @@
-// S03 · PR 90 (with 571, 99) — Combos & customer sets (demo #/admin/combos), in its own admin section: the auto
+// S03 · PR 90 (with 571, 99, 104) — Combos & customer sets (demo #/admin/combos), in its own admin section: the auto
 // colour-pair rules (?tab= auto, the default), "+ Make a combo" (?tab=new, &rule= to change one), the Archive, and the
 // fixed combos with their price box and switches, the editor with its live preview, and what customers can combine
-// (the set tiers from Smart Rules). Reading needs `combos.read`; changing `combos.write`; switching on or off
+// (the set tiers from Smart Rules), and the combo report (?tab=report&days=). Reading needs `combos.read`; changing `combos.write`; switching on or off
 // `combos.publish`; a set price `combos.prices` (the owner's decision). The API checks each again on every call.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
 import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { registry } from '@extas/settings';
+import { ComboReportView } from '@/components/admin/combos/ComboReportView';
 import { CombosScreen } from '@/components/admin/combos/CombosScreen';
 import { combosTab, money } from '@/components/admin/combos/model';
 import { SetTiers } from '@/components/admin/combos/SetTiers';
@@ -29,6 +31,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+/** The report's days box: the setting's own limits; a number outside them opens the default window. */
+const DAYS = registry['combos.report.defaultDays'].schema as unknown as { minValue: number; maxValue: number; safeParse(v: unknown): { success: boolean } };
+const daysOf = (v: string | undefined) => {
+  const n = v === undefined ? Number.NaN : Number(v);
+  return DAYS.safeParse(n).success ? n : undefined;
+};
 
 export default async function CombosPage({ searchParams }: { searchParams: Search }) {
   const deps = adminDeps();
@@ -51,6 +59,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
     a.deps.settings.value('combos.price.roundingStepMinor', { storeId: a.storeId }) as Promise<number>,
     tab === 'fixed' ? cb.listSetTiers(a.deps, a.who) : Promise.resolve([]),
   ]);
+  const report = tab === 'report' ? await cb.comboReport(a.deps, a.who, { days: daysOf(one(sp.days)) }) : null;
   const photos = await setPhotoUrls(a, combos);
   const editRule = ruleId ? (rules.find((r) => r.id === ruleId && !r.upsellOf) ?? null) : null;
   const upsellRule = editRule?.upsell ? (rules.find((r) => r.id === editRule.upsell!.id) ?? null) : null;
@@ -84,6 +93,20 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
               num={(n) => n.toLocaleString(view.locale)}
               tiers={setTiers}
               rulesHref={ADMIN_PAGES.find((p) => p.key === 'rules')!.href}
+            />
+          ) : null
+        }
+        report={
+          report ? (
+            <ComboReportView
+              dict={view.dict}
+              lang={view.lang}
+              fmt={(m) => money(m, view.locale, currency)}
+              num={(n) => n.toLocaleString(view.locale)}
+              report={report}
+              minDays={DAYS.minValue}
+              maxDays={DAYS.maxValue}
+              here={HERE}
             />
           ) : null
         }

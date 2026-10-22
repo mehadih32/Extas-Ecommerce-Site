@@ -1,6 +1,6 @@
 'use client';
-// S03 · PR 90 (with 571, 99) — the combos page (demo #/admin/combos, 85-admin-combos.js): the head in Bengali, the
-// inner tabs (auto colour-pair combos first, then "+ Make a combo", the Archive and the fixed combos), and the tab's
+// S03 · PR 90 (with 571, 99, 104) — the combos page (demo #/admin/combos, 85-admin-combos.js): the head in Bengali, the
+// inner tabs (auto colour-pair combos first, then "+ Make a combo", the Archive, the fixed combos and the report), and the tab's
 // body. Changes go to the server at once (a switch, a price box) or through the editor sheet and the wizard; the list
 // is the server's answer, so what the page shows is what the shop and the bag use.
 import Link from 'next/link';
@@ -39,6 +39,8 @@ export interface CombosScreenProps {
   here: string;
   /** PR 99 — "What customers can combine" (drawn by the server from Smart Rules). */
   tiers?: ReactNode;
+  /** PR 104 — the combo report (drawn by the server). */
+  report?: ReactNode;
   /** The Combos pages' tabs (desktop), drawn under the head. */
   tabs?: ReactNode;
 }
@@ -105,6 +107,7 @@ export function CombosScreen(props: CombosScreenProps) {
         }}
       />
     );
+  else if (tab === 'report') body = props.report ?? null;
   else if (tab === 'fixed')
     body = <FixedTab dict={d} lang={lang} fmt={fmt} symbol={symbol} combos={combos} hexes={hexes} photos={props.photos} perms={props.perms} onChange={upsert} onEdit={(c) => setEditing({ combo: c })} say={say} tiers={props.tiers} />;
   else
