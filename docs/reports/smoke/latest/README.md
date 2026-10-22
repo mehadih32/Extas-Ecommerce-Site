@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 03:56 (Asia/Dhaka)
+# Smoke test · 2026-10-23 04:11 (Asia/Dhaka)
 
-> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (36টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `f98888004487` · nightly · result **FAIL** (32 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `62ba42ce232e` · after deploy · result **PASS** (36 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -10,6 +10,8 @@ Site: https://new.extas.com.bd · commit `f98888004487` · nightly · result **F
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
 | `/admin` | phone | 200 | `/admin/products` | ok | [picture](admin-phone.jpg) |
+| `/admin/combos` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-phone.jpg) |
+| `/admin/delivery` | phone | 200 | `/admin/delivery` | ok | [picture](admin-delivery-phone.jpg) |
 | `/admin/integrations` | phone | 200 | `/admin/integrations` | ok | [picture](admin-integrations-phone.jpg) |
 | `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | phone | 200 | `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | ok | [picture](admin-products-01a16549-1be0-7de3-96d0-c4bf0cad5327-phone.jpg) |
 | `/admin/products/audit` | phone | 200 | `/admin/products/audit` | ok | [picture](admin-products-audit-phone.jpg) |
@@ -25,6 +27,8 @@ Site: https://new.extas.com.bd · commit `f98888004487` · nightly · result **F
 | `/` | desktop | 200 | `/status` | ok | [picture](home-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin/products` | ok | [picture](admin-desktop.jpg) |
+| `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
+| `/admin/delivery` | desktop | 200 | `/admin/delivery` | ok | [picture](admin-delivery-desktop.jpg) |
 | `/admin/integrations` | desktop | 200 | `/admin/integrations` | ok | [picture](admin-integrations-desktop.jpg) |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | [picture](admin-products-desktop.jpg) |
 | `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | desktop | 200 | `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | ok | [picture](admin-products-01a16549-1be0-7de3-96d0-c4bf0cad5327-desktop.jpg) |
@@ -38,7 +42,3 @@ Site: https://new.extas.com.bd · commit `f98888004487` · nightly · result **F
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | [picture](admin-stock-desktop.jpg) |
 | `/admin/stock/counts` | desktop | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-desktop.jpg) |
 | `/admin/stock/movements` | desktop | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-desktop.jpg) |
-
-Other problems:
-
-- sign-in (phone): an e-mail without "@" got no "write the full e-mail address" hint
