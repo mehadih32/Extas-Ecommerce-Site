@@ -18,7 +18,7 @@
     "format:check": "node scripts/prisma.mjs format --check",
     "migrate:diff": "node scripts/prisma.mjs migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script",
     "migrate:deploy": "node scripts/prisma.mjs migrate deploy",
-    "lint": "node scripts/prisma.mjs validate && node scripts/prisma.mjs format --check",
+    "lint": "node scripts/prisma.mjs validate && node scripts/prisma.mjs format --check && eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -26,9 +26,12 @@
     "@prisma/client": "6.19.3"
   },
   "devDependencies": {
+    "@eslint/js": "9.39.5",
     "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
     "prisma": "6.19.3",
     "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
     "vitest": "3.2.7"
   }
 }
