@@ -45,3 +45,9 @@ export function priceWords(lang: SetLang, p: SetPrice, money: (minor: number) =>
     button: addWords(lang, p.pieces, pay, num),
   };
 }
+
+/** The note on a set in the bag (PR 97, D8.3): an ended offer keeps its price; a live one followed a new price. */
+export function bagNoteWords(lang: SetLang, note: 'ENDED_KEEPS_PRICE' | 'PRICE_CHANGED' | null, pay: string): string | null {
+  const w = SET_WORDS[lang];
+  return note === 'ENDED_KEEPS_PRICE' ? w.endedInBag : note === 'PRICE_CHANGED' ? fillWords(w.priceChanged, { pay }) : null;
+}

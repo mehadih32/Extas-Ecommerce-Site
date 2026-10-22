@@ -25,5 +25,6 @@
     "cod": "Pay {pay} when it arrives"
   },
   "ended": "This offer has ended.",
-  "endedInBag": "This set offer has ended — your bag keeps the price you got."
+  "endedInBag": "This set offer has ended — your bag keeps the price you got.",
+  "priceChanged": "The set price is now {pay}."
 }
