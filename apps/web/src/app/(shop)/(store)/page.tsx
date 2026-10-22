@@ -1,7 +1,8 @@
 // PR 41 — the home page (demo 20-home.js HOME_SECTIONS): the sections the owner switched on, in his order
 // (`home.sections`; the page layout builder, PR 595, edits the same list). Each section draws itself only when it has
 // something true to show, so a new shop never shows an empty block or a made-up number:
-// - hero (`home.hero`): words, buttons and promise lines; its sliding pictures are PR 43;
+// - hero (`home.hero`): words, buttons and promise lines; ~~its sliding pictures are PR 43~~ its sliding pictures
+//   (`home.heroSlides`, PR 43): the categories in turns, or a live campaign collection;
 // - categories (`home.categories`) and new in (`home.newIn`): from the catalogue;
 // - reviews (`home.reviews`): approved reviews only;
 // - festive (Smart Rules' festive window), sets and shop the look (combos, S03), size finder (Find My Size, PR 58),
@@ -13,16 +14,28 @@ import { Fragment, type ReactNode } from 'react';
 import type { HomeSectionId } from '@extas/settings';
 import { HomeCategories } from '@/components/shop/home/HomeCategories';
 import { HomeHero } from '@/components/shop/home/HomeHero';
+import { HomeHeroSlides } from '@/components/shop/home/HomeHeroSlides';
 import { HomeNewIn } from '@/components/shop/home/HomeNewIn';
 import { HomeReviews } from '@/components/shop/home/HomeReviews';
-import { categoryLeads, newestCards } from '@/lib/shop/catalogue';
-import { shopContext } from '@/lib/shop/context';
-import { homeSectionsOn } from '@/lib/shop/home-model';
+import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from '@/lib/shop/catalogue';
+import { shopContext, type ShopContext } from '@/lib/shop/context';
+import { heroSlidePicks, homeSectionsOn, type HeroPick } from '@/lib/shop/home-model';
 import { shopMetadata } from '@/lib/shop/meta';
 import { homeReviews } from '@/lib/shop/reviews';
 
 export async function generateMetadata(): Promise<Metadata> {
   return shopMetadata(await shopContext(), 'home', null);
+}
+
+/** The hero's pictures: a live campaign collection's products when one is set, else the categories in turns. */
+async function heroPicks(c: ShopContext): Promise<HeroPick[]> {
+  const set = c.s['home.heroSlides'];
+  if (set.collection) {
+    const own = await heroCollectionCards(c.storeId, set.collection, set.count, set.inStockOnly);
+    if (own?.length) return heroSlidePicks([own], set.count, set.count);
+  }
+  const slugs = c.cats.filter((k) => k.count > 0).map((k) => k.slug);
+  return heroSlidePicks(await heroCategoryCards(c.storeId, slugs, set.perCategory, set.inStockOnly), set.count, set.perCategory);
 }
 
 export default async function Home() {
@@ -31,13 +44,14 @@ export default async function Home() {
   const want = (id: HomeSectionId) => on.includes(id);
   const newIn = c.s['home.newIn'];
   const rev = c.s['home.reviews'];
-  const [leads, cards, reviews] = await Promise.all([
+  const [slides, leads, cards, reviews] = await Promise.all([
+    want('hero') ? heroPicks(c) : Promise.resolve([]),
     want('categories') ? categoryLeads(c.storeId, c.cats.map((k) => k.slug)) : Promise.resolve({}),
     want('new-in') ? newestCards(c.storeId, newIn.count, newIn.order) : Promise.resolve([]),
     want('reviews') ? homeReviews(c.storeId, rev.count, rev.minRating) : Promise.resolve({ reviews: [], average: 0, total: 0 }),
   ]);
   const draw: Partial<Record<HomeSectionId, () => ReactNode>> = {
-    hero: () => <HomeHero c={c} />,
+    hero: () => <HomeHero c={c} media={slides.length ? <HomeHeroSlides c={c} picks={slides} /> : undefined} />,
     categories: () => <HomeCategories c={c} leads={leads} />,
     'new-in': () => <HomeNewIn c={c} cards={cards} />,
     reviews: () => <HomeReviews c={c} row={reviews} />,

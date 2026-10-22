@@ -2,7 +2,8 @@
 // sentence per line on a desktop, H1), one to three buttons sharing the row (Note 3.12) and the promise lines under
 // them — one line with a bar between them on a phone, the desktop's own wording in two columns (H2). A promise line
 // shows only when its rule is on. Every word, link and look is the setting `home.hero`. `media` is the sliding
-// picture panel beside the text (PR 43); without it the panel is the text alone.
+// picture panel beside the text (PR 43, `home.heroSlides`: on a desktop the pictures fade into the text over 140 or
+// 80 px, with an optional soft wash on the panel's edge); without it the panel is the text alone.
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import type { ShopContext } from '@/lib/shop/context';
 import { heroButtons, heroTrust, sentences, type HeroTrust } from '@/lib/shop/home-model';
@@ -32,8 +33,15 @@ export function HomeHero({ c, media }: { c: ShopContext; media?: ReactNode }) {
   const buttons = heroButtons(hero, c.t, c.vars);
   const trust = heroTrust(hero, c.flags, c.t, c.vars);
   const style = hero.shift ? ({ '--hero-shift': `${hero.shift}px` } as CSSProperties) : undefined;
+  const slides = c.s['home.heroSlides'];
   return (
-    <section className="hm-hero" aria-label={eyebrow || title} style={style}>
+    <section
+      className="hm-hero"
+      aria-label={eyebrow || title}
+      style={style}
+      data-fade={media ? String(slides.fade) : undefined}
+      data-wash={media && slides.wash ? '1' : undefined}
+    >
       <div className="container hm-hero-in">
         <div className="hm-hero-txt">
           {eyebrow ? <div className="eyebrow">{eyebrow}</div> : null}

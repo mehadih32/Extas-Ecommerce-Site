@@ -2,11 +2,12 @@
 // TEST_DATABASE_ADMIN_URL): "New in" cards (only live products of visible categories, the cheapest live price, no struck
 // price unless the owner chose a source, the first tag as the badge, the colours in order), the category tiles' lead
 // product (pinned first, sub-categories count) and the reviews row (approved only; the average counts every approved
-// review, whatever the row's star filter).
+// review, whatever the row's star filter). PR 43: the hero's products per category (pinned first, sub-categories count,
+// in stock only when asked) and a campaign collection (its own order, only inside its dates).
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { disconnectPrisma } from '@extas/db/client';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { categoryLeads, newestCards } from './catalogue';
+import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from './catalogue';
 import { homeReviews } from './reviews';
 
 describe.skipIf(!HAS_TEST_DB)('the home page catalogue reads on PostgreSQL', () => {
@@ -67,6 +68,29 @@ describe.skipIf(!HAS_TEST_DB)('the home page catalogue reads on PostgreSQL', () 
     await review(4, 'PENDING', ids['old-polo']!);
     await review(5, 'APPROVED', ids['draft-polo']!);
   }, 120_000);
+
+  it("PR 43: the hero takes each category's pinned product first; in stock only leaves out what cannot be bought", async () => {
+    expect((await heroCategoryCards(store, ['polos', 'hidden'], 2, false)).map((g) => g.map((c) => c.slug))).toEqual([['new-polo', 'old-polo'], []]);
+    expect((await heroCategoryCards(store, ['polos'], 1, false))[0]!.map((c) => c.slug)).toEqual(['new-polo']);
+    await t.prisma.product.update({ where: { id: ids['old-polo']! }, data: { inStock: true } });
+    expect((await heroCategoryCards(store, ['polos'], 2, true))[0]!.map((c) => c.slug)).toEqual(['old-polo']);
+    expect(await heroCategoryCards(store, [], 2, false)).toEqual([]);
+  });
+
+  it('PR 43: a campaign collection fills the hero in its own order, only inside its dates', async () => {
+    const db = t.prisma;
+    const col = await db.collection.create({
+      data: { storeId: store, slug: 'winter', nameEn: 'Winter', kind: 'SEASONAL', startsAt: new Date(Date.UTC(2026, 9, 1)), endsAt: new Date(Date.UTC(2026, 11, 1)) },
+    });
+    await db.collectionProduct.create({ data: { storeId: store, collectionId: col.id, productId: ids['old-polo']!, position: 2 } });
+    await db.collectionProduct.create({ data: { storeId: store, collectionId: col.id, productId: ids['new-polo']!, position: 1 } });
+    await db.collectionProduct.create({ data: { storeId: store, collectionId: col.id, productId: ids['draft-polo']!, position: 0 } });
+    const inside = new Date(Date.UTC(2026, 9, 20));
+    expect((await heroCollectionCards(store, 'winter', 14, false, inside))!.map((c) => c.slug)).toEqual(['new-polo', 'old-polo']);
+    expect((await heroCollectionCards(store, 'winter', 1, false, inside))!.map((c) => c.slug)).toEqual(['new-polo']);
+    expect(await heroCollectionCards(store, 'winter', 14, false, new Date(Date.UTC(2026, 11, 2)))).toBeNull();
+    expect(await heroCollectionCards(store, 'no-such', 14, false, inside)).toBeNull();
+  });
 
   afterAll(async () => {
     await disconnectPrisma();

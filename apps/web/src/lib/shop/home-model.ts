@@ -1,5 +1,6 @@
-// PR 41 — the home page as data, ready to draw: which sections show and in what order, the hero's words, buttons and
-// promise lines, and what a product card prints (badge, swatches, the struck price). Plain functions over the settings
+// PR 41 / 43 — the home page as data, ready to draw: which sections show and in what order, the hero's words, buttons
+// and promise lines, which products the hero's pictures show (PR 43), and what a product card prints (badge, swatches,
+// the struck price). Plain functions over the settings
 // (`home.*`) and the catalogue, so the rules are unit-tested and the components only draw. The rules are the approved
 // demo's (docs/demo/src/20-home.js hm_hero, hm_heroBtns, hm_heroTrust, HOME_SECTIONS; 02-core.js productCard).
 import type { HomeHero, HomeSections, HomeSectionId, ShopIcon } from '@extas/settings';
@@ -7,6 +8,7 @@ import type { ShopT, Vars } from './dict';
 import { hrefIn } from './lang';
 import { requirementsMet, type Flags } from './shell-model';
 import type { ShopCard, ShopColour } from './catalogue';
+import { COLOUR_QUERY } from './routes';
 
 /** The sections switched on, in the owner's order (an id the list does not name stays off). */
 export function homeSectionsOn(list: HomeSections): HomeSectionId[] {
@@ -82,6 +84,65 @@ export function cardSwatches(colours: readonly ShopColour[], max = 4): { shown: 
 /** A product's own address: the owner's prefix (`naming.productPathPrefix`) and the product's slug. */
 export function productPath(prefix: string, slug: string): string {
   return `${prefix.replace(/\/+$/, '') || ''}/${encodeURIComponent(slug)}`;
+}
+
+/** The product's address opened on one colour (the hero's pictures). */
+export function productColourPath(prefix: string, slug: string, colourKey: string | null | undefined): string {
+  const base = productPath(prefix, slug);
+  return colourKey ? `${base}?${COLOUR_QUERY}=${encodeURIComponent(colourKey)}` : base;
+}
+
+// ---- the hero's pictures (PR 43) ----
+
+export interface HeroPick {
+  card: ShopCard;
+  colour: ShopColour | null;
+}
+
+/**
+ * One category's pictures in the order they are offered: every product in its first colour, then every product in its
+ * second colour, and so on — so two pictures from one category are two products when it has two (the demo's list:
+ * a panjabi in white and, later, in maroon). A product without a price has no pin, so it gives none.
+ */
+export function slideCandidates(cards: readonly ShopCard[]): HeroPick[] {
+  const priced = cards.filter((c) => c.priceMinor != null);
+  const most = Math.max(1, ...priced.map((c) => c.colours.length));
+  const out: HeroPick[] = [];
+  for (let i = 0; i < most; i++) {
+    for (const card of priced) {
+      if (i === 0 || card.colours[i]) out.push({ card, colour: card.colours[i] ?? null });
+    }
+  }
+  return out;
+}
+
+/**
+ * The hero's pictures (§57.1): taken in turns, one from each category per round, so every category shows before any
+ * shows twice; at most `perCategory` from one, `count` in all. A collection (a campaign) is one group with no per-group
+ * limit. The same product in the same colour never shows twice.
+ */
+export function heroSlidePicks(groups: readonly (readonly ShopCard[])[], count: number, perCategory: number): HeroPick[] {
+  const queues = groups.map((g) => ({ list: slideCandidates(g), at: 0, used: 0 }));
+  const seen = new Set<string>();
+  const out: HeroPick[] = [];
+  for (let progress = true; progress && out.length < count; ) {
+    progress = false;
+    for (const q of queues) {
+      if (out.length >= count) break;
+      if (q.used >= perCategory) continue;
+      while (q.at < q.list.length) {
+        const pick = q.list[q.at++]!;
+        const id = `${pick.card.id}:${pick.colour?.key ?? ''}`;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        out.push(pick);
+        q.used++;
+        progress = true;
+        break;
+      }
+    }
+  }
+  return out;
 }
 
 // ---- reviews ----

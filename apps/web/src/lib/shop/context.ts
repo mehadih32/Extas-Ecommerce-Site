@@ -54,6 +54,7 @@ const KEYS = [
   'slider.engine',
   'home.sections',
   'home.hero',
+  'home.heroSlides',
   'home.categories',
   'home.newIn',
   'home.reviews',
