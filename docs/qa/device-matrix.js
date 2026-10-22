@@ -61,9 +61,11 @@ function pageChecks(devW) {
     if (r.right > devW + 1 && r.width < devW * 3) wide.push([label(e), Math.round(r.right)]); }
   if (wide.length) out.issues.push({ k: 'STICKS-OUT-RIGHT', d: wide.slice(0, 5).map(x => x[0] + '→' + x[1]).join(', ') + (wide.length > 5 ? ` (+${wide.length - 5})` : '') });
 
-  // 3. Text that is cut off (overflow hidden + content wider than box) on a non-scroller.
+  // 3. Text that is cut off (overflow hidden + content wider than box) on a non-scroller. A 1–2 px box is text kept
+  //    for screen readers only (visually hidden on purpose), not cut-off text (PR 85 follow-up 5).
   const cut = [];
   for (const e of all) { if (!vis(e) || !e.childNodes.length) continue;
+    const box = e.getBoundingClientRect(); if (box.width <= 2 || box.height <= 2) continue;
     const hasText = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1); if (!hasText) continue;
     const s = getComputedStyle(e); if (!/(hidden|clip)/.test(s.overflowX) && s.textOverflow !== 'ellipsis') continue;
     if (e.scrollWidth > e.clientWidth + 1) cut.push(label(e) + ':"' + e.textContent.trim().slice(0, 18) + '"'); }

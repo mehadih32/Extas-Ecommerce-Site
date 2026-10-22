@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { deviceList, markdownReport, urlList } from './device-gate.mjs';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { deviceList, markdownReport, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -21,6 +24,34 @@ describe('device gate', () => {
   it('takes the lighthouserc URLs onto the base, once each', () => {
     const rc = { ci: { collect: { url: ['http://127.0.0.1:3000/status', 'http://127.0.0.1:3000/admin/login?x=1', 'http://127.0.0.1:3000/status'] } } };
     expect(urlList('http://localhost:4000', rc)).toEqual(['http://localhost:4000/status', 'http://localhost:4000/admin/login?x=1']);
+  });
+
+  it('plans the signed-in run: lighthouserc paths, extra urls and discovered pages, each with its data-only controls', () => {
+    const rc = ['http://127.0.0.1:3000/admin/login', 'http://127.0.0.1:3000/admin/products', 'http://127.0.0.1:3000/admin/stock'];
+    const signedIn = {
+      signedOutPaths: ['/admin/login'],
+      urls: ['/admin/products/new', '/admin/products'],
+      expect: { '/admin/stock': ['a.st-name'] },
+    };
+    const plan = signedInPlan('http://h:1', signedIn, rc, [{ path: '/admin/products/p1', expect: ['.pa-x', '.pa-kind'] }]);
+    expect(plan.map((p) => new URL(p.url).pathname)).toEqual(['/admin/login', '/admin/products', '/admin/stock', '/admin/products/new', '/admin/products/p1']);
+    expect(plan.find((p) => p.url.endsWith('/admin/login')).signedOut).toBe(true);
+    expect(plan.filter((p) => p.signedOut)).toHaveLength(1);
+    expect(plan.find((p) => p.url.endsWith('/admin/stock')).expect).toEqual(['a.st-name']);
+    expect(plan.find((p) => p.url.endsWith('/admin/products/p1')).expect).toEqual(['.pa-x', '.pa-kind']);
+  });
+
+  it('the shipped signed-in config checks the controls of follow-up 5 on seeded pages', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const expected = [...Object.values(rules.signedIn.expect).flat(), ...rules.signedIn.discover.flatMap((d) => d.expect)];
+    for (const sel of ['.pa-x', '.pa-col', '.pa-kind', '.sc-item', 'a.st-name']) expect(expected).toContain(sel);
+    expect(rules.signedIn.discover.every((d) => d.required)).toBe(true);
+    expect(rules.signedIn.signedOutPaths).toContain('/admin/login');
+  });
+
+  it('picks distinct same-site links from a page, the first N', () => {
+    expect(pickLinks(['/admin/products/a?x=1', '/admin/products/a', '//evil.test/x', 'https://x.test/y', '/admin/products/b', '/admin/products/c'], 2)).toEqual(['/admin/products/a', '/admin/products/b']);
+    expect(pickLinks([], 3)).toEqual([]);
   });
 
   it('reports PASS at 0 fails and lists every failure otherwise', () => {

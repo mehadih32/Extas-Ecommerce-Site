@@ -8,8 +8,12 @@
 //     the area that really takes the tap (elementFromPoint), so invisible padding counts;
 //   - INPUT-FONT-UNDER-16 (touch sizes): every form field at least 16 px (no iPhone zoom on focus).
 // The rules are data in docs/qa/device-gate.json. Pass = 0 fails. One Chromium, several pages in parallel.
+// Signed in (--email + --password-file, follow-up 5): the admin pages are opened with a session on a database seeded
+// with the sample catalogue, so controls that only show with data are measured too (device-gate.json `signedIn`);
+// SIGNED-OUT and CONTROL-MISSING fail a page that lost its session or rendered without its data.
 //   node tools/device-gate.mjs [--base=http://127.0.0.1:3000] [--group=phones|tablets|desktop|all]
 //                              [--out=device-gate-report] [--concurrency=8] [--urls=/a,/b (instead of lighthouserc)]
+//                              [--email=… --password-file=… (or DEVICE_GATE_EMAIL / DEVICE_GATE_PASSWORD_FILE)]
 // Needs the `playwright` package (CI installs it outside the workspace and sets NODE_PATH) and a running app.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -119,12 +123,82 @@ function appChecks(o) {
   return issues;
 }
 
-async function checkOne(browser, device, url, rules, matrix) {
+/**
+ * Follow-up 5 of PR 85 — the signed-in, seeded run. Admin controls that only show when there is data (a product's
+ * colour chips and their remove buttons, the photo-kind picker, the size-chart list, the stock rows) are checked only
+ * when the gate is signed in on a database holding the sample catalogue (packages/seed, sample data only). This plans
+ * that run from device-gate.json's `signedIn` block: every lighthouserc path plus `urls`, plus the pages `discover`
+ * found (e.g. the first sample products from the product list). Paths in `signedOutPaths` (the sign-in page) are
+ * still opened signed out. `expect` names the data-only controls each page must show, so a page that rendered empty
+ * fails (CONTROL-MISSING) instead of passing with nothing to measure.
+ */
+export function signedInPlan(base, signedIn, lighthouseUrls, discovered = []) {
+  const plan = new Map();
+  const add = (path, expect = []) => {
+    const url = new URL(path, base).toString();
+    const had = plan.get(url);
+    plan.set(url, {
+      url,
+      signedOut: (signedIn.signedOutPaths ?? []).includes(new URL(url).pathname),
+      expect: [...new Set([...(had?.expect ?? []), ...(signedIn.expect?.[new URL(url).pathname] ?? []), ...expect])],
+    });
+  };
+  for (const u of lighthouseUrls) add(new URL(u).pathname + new URL(u).search);
+  for (const p of signedIn.urls ?? []) add(p);
+  for (const d of discovered) add(d.path, d.expect);
+  return [...plan.values()];
+}
+
+/** The links a `discover` entry picks on its page: distinct same-site paths, the first `take` of them. */
+export function pickLinks(hrefs, take) {
+  const out = [];
+  for (const h of hrefs) {
+    const path = (h || '').split(/[?#]/)[0];
+    if (path.startsWith('/') && !path.startsWith('//') && !out.includes(path)) out.push(path);
+    if (out.length >= take) break;
+  }
+  return out;
+}
+
+/** Signs in once through the admin form (tools/smoke.mjs signIn) and returns the session as a storage state. */
+async function signInOnce(browser, base, creds) {
+  const { signIn } = await import('./smoke.mjs');
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+  try {
+    await signIn(await ctx.newPage(), base, creds);
+    return await ctx.storageState();
+  } finally {
+    await ctx.close();
+  }
+}
+
+/** Opens each `discover` page signed in and collects the links it names; a required entry that finds none fails. */
+async function discoverPages(browser, base, state, entries) {
+  const found = [];
+  const problems = [];
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, storageState: state });
+  try {
+    const page = await ctx.newPage();
+    for (const e of entries ?? []) {
+      await page.goto(new URL(e.from, base).toString(), { waitUntil: 'load', timeout: 30_000 });
+      const hrefs = await page.$$eval(e.selector, (as) => as.map((a) => a.getAttribute('href') ?? ''));
+      const paths = pickLinks(hrefs, e.take ?? 1);
+      if (!paths.length && e.required) problems.push(`${e.from}: no "${e.selector}" link (is the sample data seeded?)`);
+      for (const p of paths) found.push({ path: p, expect: e.expect ?? [] });
+    }
+  } finally {
+    await ctx.close();
+  }
+  return { found, problems };
+}
+
+async function checkOne(browser, device, url, rules, matrix, opts = {}) {
   const ctx = await browser.newContext({
     viewport: { width: device.w, height: device.h },
     deviceScaleFactor: device.dpr || 1,
     isMobile: device.touch,
     hasTouch: device.touch,
+    ...(opts.state ? { storageState: opts.state } : {}),
   });
   const page = await ctx.newPage();
   const errors = [];
@@ -135,7 +209,11 @@ async function checkOne(browser, device, url, rules, matrix) {
     const res = await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
     finalUrl = page.url();
     if (!res || res.status() >= 400) issues.push({ k: 'PAGE-STATUS', d: `HTTP ${res ? res.status() : 'no answer'}` });
+    if (opts.state && new URL(finalUrl).pathname.startsWith('/admin/login')) issues.push({ k: 'SIGNED-OUT', d: 'sent to the sign-in page with a session' });
     await page.waitForTimeout(rules.settleMs);
+    for (const sel of opts.expect ?? []) {
+      if (!(await page.$(sel))) issues.push({ k: 'CONTROL-MISSING', d: `${sel} not on the page (seeded data missing?)` });
+    }
     // Layout first, taps last: the tap probe scrolls the page.
     issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);
     issues.push(...(await page.evaluate(appChecks, {
@@ -196,23 +274,40 @@ async function main() {
   const matrix = require(join(root, 'docs/qa/device-matrix.js'));
   const devices = deviceList(arg('group', 'all'), matrix);
   const only = arg('urls', '');
-  const urls = only ? only.split(',').map((p) => new URL(p, base).toString()) : urlList(base);
+  let urls = only ? only.split(',').map((p) => new URL(p, base).toString()) : urlList(base);
+  // Signed in (follow-up 5): an account on a database seeded with the sample catalogue. The password is read from a
+  // file and never printed (CI makes a throwaway owner on a throwaway database).
+  const email = arg('email', process.env.DEVICE_GATE_EMAIL || '');
+  const passwordFile = arg('password-file', process.env.DEVICE_GATE_PASSWORD_FILE || '');
   mkdirSync(join(out, 'shots'), { recursive: true });
   rules.shotDir = join(out, 'shots');
 
   const { chromium } = require('playwright');
   const browser = await chromium.launch();
-  const jobs = devices.flatMap((d) => urls.map((u) => [d, u]));
-  const results = [];
   const started = Date.now();
+  let plan = urls.map((url) => ({ url, signedOut: true, expect: [] }));
+  let state = null;
+  const setup = [];
+  if (email) {
+    if (!passwordFile) throw new Error('--email needs --password-file (or DEVICE_GATE_PASSWORD_FILE)');
+    state = await signInOnce(browser, base, { email, password: readFileSync(passwordFile, 'utf8').trim() });
+    const d = only ? { found: [], problems: [] } : await discoverPages(browser, base, state, rules.signedIn?.discover);
+    setup.push(...d.problems);
+    plan = signedInPlan(base, only ? { signedOutPaths: rules.signedIn?.signedOutPaths } : rules.signedIn ?? {}, urls, d.found);
+    urls = plan.map((p) => p.url);
+  }
+  const jobs = devices.flatMap((d) => plan.map((p) => [d, p]));
+  const results = [];
   let next = 0;
   await Promise.all(Array.from({ length: Math.max(1, concurrency) }, async () => {
     while (next < jobs.length) {
-      const [d, u] = jobs[next++];
-      results.push(await checkOne(browser, d, u, rules, matrix));
+      const [d, p] = jobs[next++];
+      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect }));
     }
   }));
   await browser.close();
+  // A required page that discovery could not find fails the run (one row, so the report shows it).
+  for (const problem of setup) results.push({ device: 'setup', group: 'setup', w: 0, h: 0, url: '/', finalUrl: '/', issues: [{ k: 'DISCOVER', d: problem }], shot: null });
   const order = (r) => devices.findIndex((d) => d.name === r.device) * 1000 + urls.findIndex((u) => new URL(u).pathname === r.url);
   results.sort((a, b) => order(a) - order(b));
 

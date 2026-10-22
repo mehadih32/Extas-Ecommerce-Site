@@ -143,7 +143,7 @@ async function emailHintProblems(page) {
 }
 
 /** Signs in through the form; returns the sign-in page's own problems (the e-mail hint). */
-async function signIn(page, base, creds) {
+export async function signIn(page, base, creds) {
   await page.goto(`${base}/admin/login`);
   const problems = await emailHintProblems(page);
   await page.fill("#ad-email", creds.email);

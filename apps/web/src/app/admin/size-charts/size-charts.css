@@ -76,7 +76,8 @@
 .sc-namew { flex: 1 1 220px; min-width: 0; }
 .sc-namew .ad-input { max-width: 360px; }
 .sc-sec { margin-top: 22px; }
-.sc-tblw { overflow-x: auto; border: 1px solid var(--ad-line); border-radius: 6px; margin-top: 10px; }
+/* follow-up 5 of PR 85: position: relative keeps the table's screen-reader text (absolute) inside this scroller */
+.sc-tblw { position: relative; overflow-x: auto;border: 1px solid var(--ad-line); border-radius: 6px; margin-top: 10px; }
 .sc-soft { background: var(--ad-surface2); }
 .sc-tbl { border-collapse: collapse; width: 100%; font-size: var(--ad-fs-small); }
 .sc-tbl th { background: var(--ad-surface2); font-size: 11.5px; font-weight: 600; color: var(--ad-text2); padding: 9px 6px; text-align: center; border-bottom: 1px solid var(--ad-line); white-space: nowrap; }
