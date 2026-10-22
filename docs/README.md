@@ -9,6 +9,7 @@ docs file (CN-011).
 
 ## Top level
 
+| [`ADMIN-ARCHITECTURE.md`](ADMIN-ARCHITECTURE.md) | The admin layout: 13 sections, 81 tabs, feature map (CN-018/019); mock-ups in `owner/admin-arch/` |
 | File | What it is |
 |---|---|
 | [`BLUEPRINT.md`](BLUEPRINT.md) | The full build specification, V2.1 final, with every change note (CN-###) as a dated block; read it from here |

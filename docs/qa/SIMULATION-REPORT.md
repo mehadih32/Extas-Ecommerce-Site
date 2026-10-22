@@ -274,7 +274,7 @@ Ranked Urgent → Important → Can wait; severity follows plan §5. "Register" 
 - Core-decision review: keep gift mode optional; when it is on, receiver ≠ payer is the whole point.
 - Growth idea: gift wrap or a message card at Eid; "send to Abba" landing pages.
 - Six angles: Technical — fields saved, not used · Customer — the gift never arrives · Employee — calls to sort out who and where · CEO — failed Eid gifts become public complaints · Owner — a feature he asked for does not work · Supplier — wrong-zone booking, resend charges.
-- Register: CN-014 h (gift PR, next free in S04 = **PR 605**, filed 23 Oct) + dated scope on PR 179 and PR 176
+- Register: CN-014 h (gift PR, next free in S04) + dated scope on PR 179 and PR 176
 - Status: open
 
 ### SIM-F-022 · A wrong-item exchange restocks the item that was ordered, not the one that came back
@@ -492,7 +492,7 @@ Ranked Urgent → Important → Can wait; severity follows plan §5. "Register" 
 - Core-decision review: the owner already runs buying-house orders; the lane fits his business.
 - Growth idea: Eid staff gifts and office uniforms (idea 21).
 - Six angles: Technical — not built · Customer — leaves · Employee — handles it in chat · CEO — high-value orders · Owner — prices are his (P11) · Supplier — factory capacity for logo work.
-- Register: next free PR (~~605~~ **606**, 23 Oct: 605 went to gift mode, CN-014 h) + CN-017 (proposed); idea 21
+- Register: next free PR (605) + CN-017 (proposed); idea 21
 - Status: proposal for the owner (P11)
 
 ### SIM-F-024 · No "create order from chat"; the channel is lost; no "send my bag on WhatsApp"
@@ -846,3 +846,374 @@ Each must pass on staging before real orders; a failure there is Urgent for go-l
 - A public code typed in the bag works for guests; a member-only code says so in words; referral codes are read on first orders. (SIM-44, 50 / SIM-F-009, 2026-10-23)
 - An account created from a guest order never gets a guessable password (such as the phone number); the first login is by SMS code. (all orders / SIM-F-039, 2026-10-23)
 - In a journey simulation, schedule every event on one simulated clock (an event queue by time), not order by order: running each order's whole life before the next one stretched 18 plan days to 110 calendar days and moved the Eid window. (simulation method, 2026-10-23)
+
+---
+
+# Part 2 — 20 more orders (23 Oct)
+
+*Run 23 Oct 2026 · CN-019 (4) · same demo (`EXTAS-demo-V12.2.html`), same driver, one headless Chromium closed between the 2 batches · the shop's data continues from the end of part 1 (no reset), so earlier refusals, accounts and coupons are real history · nothing was fixed in the demo · checkpoint log `SIM-PROGRESS-2.md` · scripts `scratchpad/sim/orders4.js`, `run2.js`, `recon2.js`; results `results/51–70.json`, `recon2.json`.*
+
+## P2.1 Summary
+
+**What ran.** 20 orders from the angles part 1 missed, judged against the owner's CN-018 answers and the CN-019 Messages control centre: 4 fully prepaid (bKash, card, internet banking, Nagad), 4 risky customers under the rules (hard level paid, hard level refused, soft level paid, a false positive), 4 older buyers (50+ in বাংলা at 150% text, a son ordering for his father, a daughter's prepaid gift to her mother, a 40+ buyer who sends voice notes and wants a call), 2 low-literacy rural buyers (a Kurigram union address on a borrowed phone, a Sunamganj haor village), and 6 other angles (an expat paying by card, a corporate order after a quote, a repeat buyer expecting a wallet refund, a coupon audience mismatch, a flexible set kept in part, a parcel 6 days late with a rider overcharge). Before the real run the 20 scripts were dry-run once on a copy of the data.
+
+**Result in one line: part 2 confirms "not ready for real orders" and adds 2 Urgent money problems.** Prepaid parcels are handled well at the door (every prepaid sticker says "PAID — collect nothing ৳0" and the courier COD is 0), the our-mistake exchange is free and the own-size exchange charge is right, Bengali union and upazila addresses are zoned by district, and 150% text at 390 px has no overflow. But money that customers pay outside the COD path (an advance, a prepaid order that is cancelled or returned) has no record, so the shop would collect it twice or never refund it. Most CN-018/CN-019 features are not in the demo yet; each is recorded below as a required acceptance test of the real build's PR, not as a demo bug.
+
+| | Count |
+|---|---:|
+| Orders run | 20 → 19 order records (EX-1094 … EX-1112) + 1 corporate enquiry with no order |
+| Delivered / RTO / cancelled before dispatch / enquiry | 15 / 2 / 2 / 1 |
+| Payment mix | COD 13 · card 3 (1 internet banking) · bKash 2 · Nagad 1 |
+| Checkpoints scored | 76 pass · 41 fail · 8 gap |
+| **New findings** | **18: Urgent 2 · Important 14 · Can wait 2** (SIM-F-040 … SIM-F-057) |
+| Part-1 findings seen again | 14 (table P2.5) |
+| Money owed to customers that the system shows nowhere | **৳11,020** (P2.6) |
+| Running total, both parts | 70 orders · 57 findings (Urgent 12 · Important 39 · Can wait 6) |
+
+**Top 5 new problems**
+1. **An advance paid by bKash cannot be recorded, so the rider collects it again** (F-040): a hard-level buyer paid ৳5,550 in full and the sticker still said "COLLECT CASH ৳5,550"; a soft-level buyer paid the ৳120 delivery charge and was asked for it again.
+2. **Prepaid money has no refund path** (F-041): a cancelled bank payment (৳1,650) and a returned card order (৳3,700) are "refunded to the wallet by the owner" in the dialog text only; the wallet stays ৳0, nothing is logged and the customer is not told. He came back and paid again.
+3. **The risk rules have no hard/soft level and no advance state** (F-043): every flag says "ask for the delivery charge", an unpaid risky order held stock for 26 hours, and there is no "advance not paid" reason or notice.
+4. **Ordering for someone else only works as a "gift"** (F-045): the son's order for his father hid the prices but the rider still collected ৳3,200 from the father, and the courier had the son's number.
+5. **Phone-first and Bengali-only buyers are not served** (F-046, F-047): no call-to-order button or call-back request, voice notes cannot be played, sizes are Latin letters only, and 21 English words remain on the বাংলা checkout.
+
+## P2.2 Per-order table
+
+| # | Day | Persona | Items (as bought) | Pay | Order | Outcome | CP pass/fail/gap | Findings |
+|---|---|---|---|---|---|---|---|---|
+| 51 | P2-D1 | Prepaid · bKash | Textured knit polo M (navy sold out → charcoal) | bKash | EX-1094 | Delivered | 4/2/1 | F-042, F-053, F-001, F-020 |
+| 52 | P2-D1 | Prepaid · card | Oxford shirt L + chino 32 | Card | EX-1095 | Delivered → own-size exchange L→XL, ৳120 cash to the rider | 5/1/2 | F-042, F-052, F-001 |
+| 53 | P2-D2 | Prepaid · internet banking | Heavyweight hoodie L | Bank | EX-1096 | Cancelled on request; ৳1,650 refund never recorded | 1/2/0 | F-041, F-055, F-056, F-013 |
+| 54 | P2-D2 | Prepaid · Nagad | Contrast polo M | Nagad | EX-1097 | Delivered → our-mistake (wrong size) free exchange | 6/2/0 | F-052, F-022, F-001 |
+| 55 | P2-D3 | Risk · hard, pays full advance | Panjabi ×3 (৳5,550) | COD + ৳5,550 bKash outside | EX-1098 | Delivered; rider collected ৳5,550 again | 4/1/1 | F-040, F-043 |
+| 56 | P2-D3 | Risk · hard, refuses advance | Hoodie ×2 (৳3,300) | COD | EX-1099 | Held 26 h → refused → declined | 1/2/1 | F-043, F-013 |
+| 57 | P2-D4 | Risk · soft, pays delivery charge | Pocket tee L + crew tee L | COD + ৳120 bKash | EX-1100 | Delivered; ৳120 collected twice | 4/2/0 | F-040, F-001 |
+| 58 | P2-D4 | Risk · false positive | Long-sleeve polo L | COD | EX-1101 | Override with a note → delivered | 6/2/0 | F-044 |
+| 59 | P2-D5 | Older 50+ · বাংলা · 150% text | Panjabi XL (bag kept 2 days) | COD | EX-1102 | Delivered | 6/2/0 | F-046, F-047, F-057 |
+| 60 | P2-D5 | Son orders for his father | Panjabi XL + twill 36 | COD (father pays) | EX-1103 | Delivered | 3/2/0 | F-045 |
+| 61 | P2-D6 | Daughter's gift to her mother | Linen shirt L | bKash | EX-1104 | Delivered; sticker names the payer | 3/2/0 | F-007, F-001 |
+| 62 | P2-D6 | Older 40+ · voice note, wants a call | Oxford shirt ×2 XL | COD | EX-1105 | Delivered (agent keyed the order) | 6/2/1 | F-046, F-055, F-024 |
+| 63 | P2-D7 | Rural · Kurigram union · borrowed phone | Crew tee ×2 L | COD | EX-1106 | Delivered on day 4 | 3/2/2 | F-047, F-048 |
+| 64 | P2-D7 | Rural · Sunamganj haor | Heavy tee XL | COD | EX-1107 | Failed attempt (not recordable) → delivered | 4/2/0 | F-047, F-017 |
+| 65 | P2-D8 | Expat in Dubai, card | Panjabi ×2 (৳3,700) | Card | EX-1108 | RTO (brother away); ৳3,700 refund never recorded | 3/3/0 | F-049, F-041, F-001 |
+| 66 | P2-D8 | Corporate, after a quote | 30 logo polos at the quoted price | Bank transfer | — | Enquiry only; bag stops at 3 | 0/2/0 | F-023 (PR 606), F-055 |
+| 67 | P2-D9 | Repeat buyer expects the refund | Heavyweight hoodie L | COD | EX-1109 | Delivered; wallet ৳0, paid again | 6/1/0 | F-041 |
+| 68 | P2-D9 | Coupon audience mismatch | Zip polo L + WELCOME100 | COD | EX-1110 | Delivered; welcome code to a 3-time buyer, refused for a guest | 5/3/0 | F-050, F-009 |
+| 69 | P2-D10 | Flexible set, keep one piece | Hoodie-jogger set XL | COD | EX-1111 | Whole set refused → RTO | 2/3/0 | F-051, F-005 |
+| 70 | P2-D10 | Late 6 days + rider asks ৳30 more | Twill 32, Bandarban | COD | EX-1112 | Delivered late | 4/3/0 | F-054, F-018, F-055 |
+
+"P2-Dk" is day k of part 2 on the same forward-only clock (simulated day 114+k). Each order's life was run before the next, as in part 1.
+
+| Checkpoint | Pass | Fail | Gap |
+|---|---:|---:|---:|
+| CP02 Discovery / channel | 0 | 1 | 0 |
+| CP03 Landing / large text | 1 | 0 | 0 |
+| CP05 Product page | 0 | 2 | 0 |
+| CP06 Bag, offers, totals | 15 | 3 | 2 |
+| CP07 Checkout | 0 | 2 | 2 |
+| CP08 Messages | 10 | 8 | 0 |
+| CP09 Confirm call & risk | 2 | 4 | 2 |
+| CP10 Packing / sticker | 14 | 4 | 0 |
+| CP11 Courier handover | 15 | 2 | 0 |
+| CP12 Tracking | 8 | 3 | 1 |
+| CP13 Door | 9 | 2 | 0 |
+| CP14 Money after the door (COD, refunds) | 0 | 3 | 0 |
+| CP15 Day 1–3 after | 0 | 5 | 1 |
+| CP16 Exchange logistics | 2 | 0 | 0 |
+| CP17 Repeat | 0 | 2 | 0 |
+| **All** | **76** | **41** | **8** |
+
+## P2.3 New findings
+
+Register numbers: the next free PR is **607** and the next change note **CN-020** (proposals, confirmed when filed). PR 605 (gift mode) and PR 606 (bulk / corporate lane) were filed after part 1. "Dated scope" means an "Updated 23 Oct" line on that PR. Where the demo lacks a CN-018/CN-019 feature, the finding is a required acceptance test of the real PR, not a demo fix.
+
+### P2.3.1 Urgent (2)
+
+### SIM-F-040 · An advance paid outside the checkout cannot be recorded, so the rider collects it again
+- Order / checkpoint: SIM-55 (hard level, full advance ৳5,550 by bKash), SIM-57 (soft level, ৳120 delivery charge by bKash) · CP09, CP10, CP08
+- What happened: the review card offered only "Approve / Call / Decline". The payment went into the call note ("paid ৳5,550 by bKash, TrxID 9XK2"). The order screen has no "record payment received". After approval the order stayed COD with paid ৳0: the sticker said "COLLECT CASH ৳5,550", the courier COD was ৳5,550 and the SMS said "Pay ৳5,550 on delivery". In order 57 the sticker asked ৳1,270 instead of ৳1,150. The COD statement then shows ৳5,670 collected that the customers had already paid.
+- Severity: Urgent (a customer pays twice; the money figures are wrong)
+- Fix: an advance is taken through the PR 542 payment link or the PR 560 advance checkout, and lands on the order as a payment (amount, method, TrxID, time). A manual "record advance received" exists only for the Accounts role, with proof and the owner's rule (hard rule 6 for anything that changes COD). The sticker, booking COD, SMS `{due}` and invoice all read total − paid. Owner agent: sawdagor + gyani.
+- Prevention: tests "full advance → COD 0 everywhere" and "delivery-charge advance → COD = total − charge"; the F-001 guard (every amount in a message = invoice due) covers the SMS.
+- Core-decision review: keep "flag, never block" and the two levels (CN-018 #2); the advance must be a payment, never a note.
+- Growth idea: once advances are payments, the flag-outcome report (PR 562) can show "paid the advance → delivered" rates to tune the rules.
+- Six angles: Technical — the review has no payment object · Customer — asked to pay again at the door, may refuse · Employee — must remember which COD to cut · CEO — refunds and disputes · Owner — a COD change without his rule · Supplier — the courier remits money we must hand back.
+- Register: PR 542, PR 560, PR 173, PR 166, PR 161 (dated scope on PR 542 and PR 166)
+- Status: open (partly a demo gap: no advance request exists yet)
+
+### SIM-F-041 · Prepaid money has no refund path: cancelled and returned prepaid orders are never refunded or tracked
+- Order / checkpoint: SIM-53 (internet banking ৳1,650, cancelled before dispatch), SIM-65 (card ৳3,700, RTO), SIM-67 (the order-53 customer returns) · CP14, CP17
+- What happened: the cancel dialog says "the online payment is refunded to the customer's wallet by the owner". After cancelling, paid stays ৳1,650, the wallet stays ৳0, no refund record or task exists, and the customer gets no message. The card order that came back (RTO) shows paid ৳3,700 and status returned, again with no refund line. The customer could not cancel himself (no button) and wrote on WhatsApp; the AI answered "not returned or refunded" (F-055). Five days later he logged in, found ৳0 and no refund line, and paid ৳1,650 COD for a new hoodie. No account in the shop has a wallet balance above 0 after 70 orders, because nothing can credit one.
+- Severity: Urgent (money owed to customers is invisible; ৳5,350 in this run)
+- Fix: a refund record with states (owed → approved by the owner, hard rule 6 → paid → told to the customer), the method (original payment or wallet) and the amount rule for an RTO of a prepaid parcel (who bears the two delivery legs: a setting, CN-018). It is created automatically on cancel or RTO of any paid order and listed in Money › Refunds. The customer sees "Refund ৳X — waiting / paid" on the order. Owner agent: sawdagor + gyani.
+- Prevention: tests "cancel a paid order → refund owed appears", "RTO of a paid order → refund owed", "wallet refund → balance and ledger line"; the reconciliation sums paid on cancelled/returned orders and must find each one in Refunds.
+- Core-decision review: keep "no returns after receipt" for change of mind; it does not cover money for goods that never reached the customer.
+- Growth idea: a wallet refund that he can use at once keeps the customer (order 67 bought again the same week).
+- Six angles: Technical — no refund object · Customer — "where is my money?" · Employee — spreadsheet refunds · CEO — chargebacks and complaints · Owner — every refund needs his OK, so he needs the list · Supplier — the gateway's refund calls and fees.
+- Register: PR 172, PR 171, PR 144, PR 189, PR 166 (dated scope on PR 172 and PR 144)
+- Status: open
+
+### P2.3.2 Important (14)
+
+### SIM-F-042 · The prepaid reward does not exist yet, and its fallback is the common case
+- Order / checkpoint: SIM-51, 52, 53, 54, 61, 65 · CP06
+- What happened: none of the 6 prepaid orders showed or received a reward (CN-018 #1). 4 of the 6 were over the ৳1,500 free-delivery limit, so a "free delivery" reward would have been worth nothing to them; the fallback to a fixed amount or percentage is the normal path, not the edge case.
+- Severity: Important (an RTO lever the owner approved; demo gap)
+- Fix: build the reward on PR 120/213 as specified: type (free delivery / fixed / %), fallback when delivery is already free, shown next to the payment option ("Pay now with bKash: ৳X off") and on the bag, stored on the order, counted in the P&L. Owner agent: sawdagor.
+- Prevention: test matrix: each reward type × delivery free or not × each prepaid method; the reward is removed if the customer switches back to COD.
+- Core-decision review: keep it a setting, off by default (CN-018).
+- Growth idea: part 1 had 0 RTO on 8 prepaid orders; part 2 had 1 RTO on 6 (expat, receiver away). The reward is the cheapest way to move COD buyers to prepaid.
+- Six angles: Technical — not built · Customer — no reason to prepay · Employee — none · CEO — RTO stays high · Owner — the amount is his setting · Supplier — gateway fees per method.
+- Register: PR 120, PR 213 (CN-018 #1)
+- Status: demo gap → acceptance test
+
+### SIM-F-043 · Risk rules: no hard or soft level, no advance state, no timer, no "advance not paid" reason
+- Order / checkpoint: SIM-55, 56, 57 · CP07, CP09, CP08
+- What happened: every flagged order showed one signal "Refused before — ask for the delivery charge by bKash first", whether it was a ৳5,550 repeat refuser or a ৳1,270 tee order. Checkout offered COD to all of them. Order 56 waited 26 hours for an advance with no state ("waiting for advance"), no payment link, no reminder and no release: 2 hoodies stayed held. The decline reasons are Duplicate / Customer asked to cancel / Fake / Could not reach — no "Advance not paid". The customer got no notice.
+- Severity: Important (demo gap for the risk matrix; the money part is F-040)
+- Fix: CN-018 #2 as specified on PR 161/560/542: owner-built rules with weights, Hard = full advance, Soft = delivery-charge advance, partial amount option; the advance request with link; an order state "Waiting for advance" with a timer from settings (remind, then hand to a person, never auto-cancel); decline reason "Advance not paid"; the PR 546 notice. Owner agent: gyani.
+- Prevention: tests per level; flag-outcome report rows for "asked / paid / refused".
+- Core-decision review: keep "never auto-block"; a timer that only hands over to a person respects it.
+- Growth idea: a soft-level buyer who paid the advance was delivered (57) — commitment works; the report will show it.
+- Six angles: Technical — one fixed suggestion · Customer — honest buyers can still order by paying · Employee — chasing by hand · CEO — fewer fake parcels · Owner — rules are his · Supplier — fewer return fees.
+- Register: PR 156, PR 161, PR 560, PR 542, PR 562, PR 144 (CN-018 #2)
+- Status: demo gap → acceptance test
+
+### SIM-F-044 · A refusal we caused counts against the customer for ever
+- Order / checkpoint: SIM-58 (his earlier parcel EX-1081 arrived after Eid, our fault) · CP09, CP15
+- What happened: the new order was flagged "Refused before … ask for the delivery charge". Staff overrode it with Approve → "Checked — nothing wrong" + a note; that worked and was logged. But the approve reasons have no "False positive / our fault", the earlier refusal carries no reason that excludes it, and his next order would be flagged again ("sameday, refused").
+- Severity: Important (good customers asked for advances; the risk data is polluted)
+- Fix: refusal reasons from settings with an "our fault" group (late after the promise, wrong item, damaged) that never feeds the risk score; an override reason "False positive"; a "clear this signal" action with a reason, logged, for staff with the review permission. Owner agent: gyani.
+- Prevention: test "a refusal marked our fault does not flag the next order"; the PR 562 report counts overrides per rule.
+- Core-decision review: keep the human override; add the reason so it teaches the rules.
+- Growth idea: false-positive rate per rule tells the owner which weight to lower.
+- Six angles: Technical — the signal ignores the reason · Customer — feels accused · Employee — overrides every time · CEO — lost repeat buyers · Owner — fairness · Supplier — courier return reasons feed it.
+- Register: PR 526, PR 156, PR 163, PR 562 (dated scope on PR 526)
+- Status: open
+
+### SIM-F-045 · Ordering for someone else (the receiver pays) only works as a "gift", which hides the price from the person paying
+- Order / checkpoint: SIM-60 (son in Dhaka, father in Sylhet pays COD), SIM-61 (prepaid gift to a mother) · CP10, CP12
+- What happened: the only "someone else" option is "Send it as a gift". The son used it: the invoice became "A gift for Abdul Jalil" with no prices, while the sticker said "COLLECT CASH ৳3,200" and carried the son's phone. The father, who pays, has no price list and gets no SMS or tracking link. In order 61 the sticker named the payer, not the mother (F-007 still open).
+- Severity: Important
+- Fix: on PR 605 add a "Deliver to someone else" block separate from gift: receiver name, phone, address band, and "who pays at the door: me (prepaid) / the receiver (COD)". Receiver-pays parcels show prices and get the receiver an SMS with the amount; gift parcels must be prepaid or hide prices only when nothing is due. Owner agent: sawdagor + bhandari.
+- Prevention: tests "receiver pays → receiver's phone on sticker and booking, receiver SMS with the due amount"; "gift with COD → blocked or prices shown".
+- Core-decision review: gift mode stays as approved; "for a parent" is a different, very common case.
+- Growth idea: "Send to Abba/Ammu" is an Eid campaign hook (part 1 idea 22).
+- Six angles: Technical — one mode for two cases · Customer — the father is surprised by a bill · Employee — calls to explain · CEO — refusals at the door · Owner — whether the option exists is his (question in the Bengali summary) · Supplier — the courier calls the wrong person.
+- Register: PR 605 (dated scope), PR 179, PR 148
+- Status: open
+
+### SIM-F-046 · Phone-first buyers (40+ and 50+) have no call-to-order, no call-back request and no voice-note support
+- Order / checkpoint: SIM-59, 62 · CP05, CP09, CP15, CP02
+- What happened: at 150% text in বাংলা the product page has no "call to order" button; the only tel: link is the footer hotline. A 45-year-old sent a voice note: the inbox shows no player and no transcript, and the AI drafted "I don't have the answer" to an empty text. He then asked "call me, I can't type": there is no call-back request or call list. The agent keyed his order in the shop checkout, so it is tagged "website" (F-024).
+- Severity: Important
+- Fix: a "Call to order / call me back" button (number and hours from settings) that creates a call-back task with the bag attached; voice notes played in the inbox with a transcript (provider on mock until a key exists); order-from-chat with the channel tag "phone" or "whatsapp" (PR 430). Owner agent: doot.
+- Prevention: tests "voice message → playable + transcript", "call-back request → task in the queue → order tagged phone".
+- Core-decision review: keep the web checkout as the main path; phone is the fallback for buyers who will not type.
+- Growth idea: older buyers order panjabis for Eid in volume; a call-back turns them into sales.
+- Six angles: Technical — no audio, no task type · Customer — gives up · Employee — re-keys orders · CEO — lost older buyers · Owner — whether a call-back system exists is his call (question) · Supplier — telephony/IVR cost.
+- Register: PR 430, PR 425–436 (S22 inbox), PR 84; new PR 607 proposed for the call-back queue (CN-020)
+- Status: open + question for the owner
+
+### SIM-F-047 · Low-literacy and Bengali-only buyers: Latin sizes, English left on the বাংলা checkout, English SMS
+- Order / checkpoint: SIM-59, 63, 64 · CP05, CP07, CP08
+- What happened: sizes are S/M/L/XL only, with no Bengali words (ছোট / মাঝারি / বড়) or a picture of the fit on the size row. With বাংলা on, the checkout at 390 px still shows 21 English words ("Add more", "the bag and delivery free", "Cash Delivery", "Send gift receiver", product names). Prices stay in Western digits. The placed SMS to a buyer who typed his name and address in Bengali is in English. There is no voice input for the address. Good: Bengali digits in the phone number were cleaned, and the Bengali union/upazila addresses were zoned correctly by district.
+- Severity: Important
+- Fix: Bengali size words and a "my usual size" helper on the size row; translate the remaining checkout keys (label dictionary PR 78); SMS and WhatsApp templates in Bengali chosen by the customer's language (PR 505); an optional Bengali-digit display setting; a voice-to-text button on the address field (browser speech where available). Owner agent: doot.
+- Prevention: the language gate (English word count on বাংলা pages = 0 for UI keys); template test per language.
+- Core-decision review: simple English stays the default; the বাংলা switch must be complete (F-025).
+- Growth idea: village buyers are a large, under-served COD market; a Bengali journey is the entry ticket.
+- Six angles: Technical — partial dictionary · Customer — cannot read the amount · Employee — explains by phone · CEO — reach · Owner — none · Supplier — SMS cost of Unicode (longer messages).
+- Register: PR 84, PR 78, PR 505, PR 61–75 (size row) (dated scope on PR 84)
+- Status: open (extends F-025)
+
+### SIM-F-048 · Village addresses and shared phones: no contact person or call time, Bengali-only sticker, one promise for every far district
+- Order / checkpoint: SIM-63 (Kurigram, neighbour's phone), SIM-64 (Sunamganj, shared phone off), SIM-70 (Bandarban) · CP09, CP11, CP12
+- What happened: the buyer used a neighbour's phone, so the neighbour's name became the customer name; there is no "whose phone / best time to call" field. The sticker prints the Bengali address exactly as typed, with no English transliteration and no union/upazila fields for the courier's zone id. Kurigram took 4 days and Bandarban 6, while the checkout promised "48–72 hours" for every outside-Dhaka district.
+- Severity: Important
+- Fix: optional "contact person / call time" on the checkout (stored on the order, printed on the sticker); structured village fields (union, upazila) that feed the courier zone id (PR 554); a transliterated line under a Bengali address on the sticker; delivery promise per district or courier zone from settings (PR 135/193). Owner agent: sawdagor + bhandari.
+- Prevention: tests with a Bengali village address and a borrowed phone; promise per band.
+- Core-decision review: keep "a district settles the band"; the courier still needs the village detail.
+- Growth idea: save the rider's directions on the customer for the next order (part 1 F-030 idea).
+- Six angles: Technical — free-text only · Customer — late, unreachable · Employee — rider calls · CEO — RTO in far districts · Owner — none · Supplier — hub sorting.
+- Register: PR 549, PR 554, PR 563, PR 179, PR 135 (dated scope on PR 179 and PR 135)
+- Status: open
+
+### SIM-F-049 · No path for a buyer abroad who pays for family in Bangladesh
+- Order / checkpoint: SIM-65 · CP07, CP14
+- What happened: the expat's UAE number was refused ("Enter an 11-digit mobile number"); there is no e-mail field, so the payer abroad gets no confirmation, no tracking and no word when the parcel came back. He used his brother's number; the brother was away twice and the paid parcel returned (F-041).
+- Severity: Important (growth; remittance families buy for Eid)
+- Fix: "I'm ordering from abroad" on the checkout: payer phone (international) or e-mail for receipts, the receiver's BD phone for the courier; prepaid only for this path. Owner agent: sawdagor.
+- Prevention: test "international payer + BD receiver → payer gets e-mail receipts, receiver gets the courier SMS".
+- Core-decision review: phone validation stays strict for the receiver.
+- Growth idea: diaspora Eid gifting; card payments carry no COD risk.
+- Six angles: Technical — one phone field · Customer — cannot even enter his own number · Employee — none · CEO — a prepaid segment lost · Owner — whether this path exists is his call (question) · Supplier — card gateway international acceptance.
+- Register: new PR 608 proposed (CN-020); links PR 605 (receiver block), PR 120
+- Status: question for the owner
+
+### SIM-F-050 · Coupons have no audience and no first-order rule
+- Order / checkpoint: SIM-68 · CP06, CP09, CP17
+- What happened: the coupon form has Code, Name, Type, Amount, Minimum, Total uses, Per customer, Status, Starts, Ends — no "Who can use it" (CN-018 #9) and no "first order only". The owner's WELCOME100 was refused for a first-time guest ("Member codes work after you log in") and accepted for a 3-time repeat buyer (৳100 off).
+- Severity: Important (campaign money goes to the wrong people)
+- Fix: CN-018 #9 on PR 271: guests / logged-in / both, plus "first order only" checked by phone at checkout; the bag explains a refusal in words. Owner agent: sawdagor.
+- Prevention: coupon matrix guest/member × audience × first-order.
+- Core-decision review: keep coupons owner-controlled; audience is part of the coupon, not a global rule.
+- Growth idea: a welcome code that really works for new guests is the cheapest first-order lever.
+- Six angles: Technical — login gate before lookup · Customer — "code doesn't work" · Employee — manual discounts · CEO — wasted discount · Owner — the audience is his setting · Supplier — none.
+- Register: PR 271, PR 213 (CN-018 #9); re-confirms F-009
+- Status: demo gap → acceptance test
+
+### SIM-F-051 · Sets: no Fixed / Flexible setting, and the rider is not told the rule
+- Order / checkpoint: SIM-69 · CP06, CP11, CP13
+- What happened: Combos & sets has no "Fixed set (no single piece can be kept or returned) / Flexible" switch, no split-price rule and no rule for the delivery charge when the kept part falls under the free limit (CN-018 #4). The sticker says nothing about the set rule. The customer wanted to keep the hoodie and return the jogger; with no partial outcome (F-005) the whole ৳2,490 set came back.
+- Severity: Important (the partial-delivery state itself is Urgent F-005)
+- Fix: CN-018 #4 on PR 89/97/212; the set rule printed on the sticker and in the booking note ("Fixed set — no split" or "Flexible — single piece ৳X"); the partial outcome uses the split price. Owner agent: sawdagor + bhandari.
+- Prevention: tests fixed vs flexible at the door.
+- Core-decision review: fixed sets never split (owner); flexible needs the rider to know.
+- Growth idea: a kept hoodie is a ৳1,650 sale instead of an RTO.
+- Six angles: Technical — no set type · Customer — cannot keep what fits · Employee — rider calls the shop · CEO — lost partial sales · Owner — the split price is his setting · Supplier — Paperfly/Steadfast partial charges.
+- Register: PR 89, PR 97, PR 212, PR 179 (CN-018 #4); with F-005
+- Status: demo gap → acceptance test
+
+### SIM-F-052 · Exchanges: no staff waiver, the our-mistake claim has no note, and the charge on a prepaid order is cash only and unannounced
+- Order / checkpoint: SIM-52 (card, own-size L→XL), SIM-54 (Nagad, wrong size sent) · CP15, CP16, CP08
+- What happened: the charges were right (৳120 outside Dhaka for the own choice; ৳0 for our mistake) and the photo is required for a problem claim. But there is no staff "Waive the charge" with a reason (CN-018 #5); the claim has no note box ("you sent L, I ordered M"); "wrong size sent" shares one bucket with faulty and damaged, so packing errors cannot be counted; the card buyer can only pay the ৳120 in cash to the rider, and no message tells him the amount after approval. The returned L was booked back as the ordered M (F-022).
+- Severity: Important
+- Fix: CN-018 #5 on PR 185–190: waiver with a logged reason; note + photo on the claim; reasons split (wrong size sent / wrong item / faulty / damaged); pay the charge online for prepaid orders or cash to the rider; one exchange message with the amount. Owner agent: bhandari.
+- Prevention: tests per reason; the claim cannot be sent without a photo and a note.
+- Core-decision review: "free if our mistake" stays; staff waivers are logged for the owner.
+- Growth idea: wrong-size-sent count per packer (part 1 F-022 idea).
+- Six angles: Technical — fixed rules · Customer — surprise cash at the door · Employee — cannot waive · CEO — packing quality unseen · Owner — waivers visible · Supplier — none.
+- Register: PR 185, PR 186, PR 187, PR 190, PR 148 (CN-018 #5)
+- Status: partly a demo gap → acceptance test
+
+### SIM-F-053 · The Messages control centre (CN-019) is not there yet; missing message steps found in this run
+- Order / checkpoint: SIM-51 and all 19 orders · CP08
+- What happened: Admin › Messages log is a log plus a fixed send rule ("max 2 SMS, max 1 WhatsApp"). There is no order-journey timeline, no per-step channel, template or delay, no editable caps, no promotions with quiet hours. Steps this run needed and that do not exist: cancel/decline notice (53, 56), refund notice (53, 65), exchange approved with the amount (52, 54), advance request (55–57), receiver message (60, 61), failed-attempt notice (64), late apology (70). 19 placed SMS, 17 confirmed SMS and 17 processing WhatsApp were sent; 0 blocked; 0 in Bengali.
+- Severity: Important (demo gap; the CN-019 build)
+- Fix: CN-019 (1) on PR 148/505/289/292/295/300/545 as one section, with these steps in the journey and the `{due}` variable (F-001). Owner agent: doot.
+- Prevention: the template matrix (COD / prepaid / part-paid / refund / receiver) per language.
+- Core-decision review: the owner's cap stays, now editable per channel; service notices (cancel, refund) should sit outside the marketing cap (part 1 P13).
+- Growth idea: the delivery-day message (built, switchable) attacks "phone off" RTO.
+- Six angles: Technical — fixed rule · Customer — silence after cancel/refund · Employee — "where is my money" chats · CEO — trust · Owner — one place to control every message · Supplier — SMS/WhatsApp cost visible per step.
+- Register: PR 148, PR 505, PR 289, PR 292, PR 295, PR 300, PR 545 (CN-019 (1))
+- Status: demo gap → acceptance test
+
+### SIM-F-054 · Rider overcharge refund and late-delivery apology credit have no workflow, and no wallet credit tool exists
+- Order / checkpoint: SIM-70 · CP12, CP14, CP15
+- What happened: the parcel was 6 days late; tracking still said "With courier" (F-018). The customer reported that the rider asked ৳30 extra for the hill road. Customers has no wallet column or credit action; Support has no rider-issue form, refund button or credit action. So neither the exact ৳30 refund (CN-018 #7) nor an apology credit (CN-018 #8) can be given or recorded, and the courier claim cannot be raised.
+- Severity: Important
+- Fix: Support › Rider issues (proof, amount, staff approval, exact refund to wallet or original method, auto courier claim) on PR 192; the apology credit as a setting (amount or %, wallet or next order, per order or by rule) on PR 171/296; a wallet credit/debit tool with a reason and ledger line (Accounts role; the owner's OK per hard rule 6). Owner agent: gyani + bhandari.
+- Prevention: tests "overcharge ৳30 → refund ৳30 → claim ৳30"; "late past promise → credit per rule".
+- Core-decision review: refunds stay owner-approved; the exact amount rule avoids round-number goodwill.
+- Growth idea: a quick apology credit stops the public post (part 1 orders 11 and 28).
+- Six angles: Technical — no wallet tool · Customer — feels cheated twice · Employee — promises it cannot keep · CEO — brand risk · Owner — whether to give credit is his setting · Supplier — overcharge recovered from the courier.
+- Register: PR 192, PR 171, PR 172, PR 296 (CN-018 #7, #8)
+- Status: demo gap → acceptance test
+
+### SIM-F-055 · The AI draft is wrong on the new intents, once harmfully
+- Order / checkpoint: SIM-53, 62, 66, 70 · CP15
+- What happened: "cancel the order, I paid by bank, I want it back" → "Once delivered, items can be exchanged for size — not returned or refunded" (wrong: it was not delivered, and a refund is owed). A voice note and an agreed corporate quote → "I don't have the answer to this one yet" with "Hi New". "6 days late, and the rider wants ৳30 more" → "Delivery usually takes up to 48–72 hours". 0 of 4 drafts were right; a person checks before sending, so nothing left the shop.
+- Severity: Important (extends F-012)
+- Fix: add intents "cancel + refund (prepaid)", "voice message" (transcribe first), "quote / bulk" (hand to the owner, PR 606), "late past promise" and "rider overcharge" (open a rider issue); never quote the no-return policy for an undelivered order. Owner agent: gyani.
+- Prevention: add these 5 chats to the F-012 draft test set.
+- Core-decision review: keep "AI drafts, a person sends".
+- Growth idea: a correct refund answer is a retention moment.
+- Six angles: Technical — keyword rules · Customer — wrong policy quoted · Employee — rewrites · CEO — trust · Owner — refund wording is policy · Supplier — none.
+- Register: PR 425–436, PR 538 (dated scope with F-012)
+- Status: open
+
+### P2.3.3 Can wait (2)
+
+### SIM-F-056 · A customer cannot cancel an unpacked order himself
+- Order / checkpoint: SIM-53 · CP15
+- What happened: My orders has "Edit order" but no "Cancel"; the customer had to write on WhatsApp and wait for staff.
+- Severity: Can wait
+- Fix: "Cancel this order" until packing or booking (the same lock as F-004), with a reason list; prepaid cancels create the refund record (F-041). Six angles: Customer — control; Employee — fewer chats; CEO — fewer RTOs of parcels the buyer no longer wants.
+- Register: PR 143, PR 144 · Status: open + question for the owner (whether customers may cancel themselves)
+
+### SIM-F-057 · A slow decider's bag waits with no consented reminder
+- Order / checkpoint: SIM-59 · CP06
+- What happened: the 50+ buyer left his bag for 2 days; it was still there (good), but no consented "still thinking? call us" message exists.
+- Severity: Can wait
+- Fix: PR 275 follow-up, consent only, at most the owner's cap, with the call-back button (F-046). Six angles: CEO — recovered sales; Customer — reminded once.
+- Register: PR 274, PR 275 · Status: open
+
+## P2.4 What worked (keep)
+
+- Every prepaid sticker reads "PAID — collect nothing ৳0" and the courier COD is 0 (5 of 5 parcels).
+- The own-size exchange charge was right (৳120 outside Dhaka) and the our-mistake exchange was free, with a required photo.
+- Bengali union/upazila addresses (Kurigram, Sunamganj) and a Bandarban village were zoned by district; Bengali digits in the phone were cleaned.
+- 150% text at 390 px: no overflow on the product page or the thank-you page; size pills 50 px high.
+- The bag survived 2 days and a reload.
+- The review queue never blocked anyone; a staff override with a note worked and was logged.
+- Totals agreed on checkout, order and invoice in all 19 orders, including the WELCOME100 discount.
+
+## P2.5 Part-1 findings seen again
+
+| Finding | Seen in part 2 |
+|---|---|
+| F-001 prepaid told to pay on delivery | 5 of 5 prepaid confirmations (51, 52, 54, 61, 65) + the soft-advance order 57 |
+| F-005 no partial delivery | 69 (flexible set) |
+| F-007 gift receiver unused | 61 (sticker names the payer), 60 |
+| F-009 guests cannot use codes | 68 |
+| F-012 AI drafts | 53, 62, 66, 70 → F-055 |
+| F-013 no cancel notice | 53, 56 |
+| F-017 courier exception states | 64 (failed attempt) |
+| F-018 late parcel not flagged | 70 (6 days, "With courier") |
+| F-020 prepaid sent to the call queue | 51 ("To confirm") |
+| F-022 returned SKU assumed | 54 (L back booked as M) |
+| F-023 bulk lane | 66 (now PR 606) |
+| F-024 channel lost on agent orders | 62 |
+| F-025 half-English বাংলা | 59, 63 → F-047 |
+| F-026 abandoned-cart follow-up | 59 → F-057 |
+
+## P2.6 Reconciliation delta (part 2 only)
+
+| Check | Result |
+|---|---|
+| Orders | 19 records: delivered 15 · cancelled 2 · RTO 2 · + 1 enquiry with no order |
+| Delivered revenue | ৳28,350 (prepaid ৳6,530 on 4 orders · COD ৳21,820 on 11) |
+| COD collected that the customer had already paid | **৳5,670** (55: ৳5,550 · 57: ৳120) — F-040 |
+| Prepaid money on cancelled/returned orders, no refund record | **৳5,350** (53: ৳1,650 · 65: ৳3,700) — F-041 |
+| Money owed to customers and shown nowhere | **৳11,020** (+ ৳30 rider overcharge, 70) |
+| Exchange charges | ৳120 collected as COD (52) |
+| Courier charges | ৳1,555 on 17 parcels (return fees and the 2 RTO return legs not counted by the demo, F-027) |
+| Stock | 23 SKUs touched; 23 / 23 match the system's own formula; real variances it cannot see: 54 (one L back, booked as M), 69 (a sale lost, not a stock error) |
+| ERP documents | 53, 0 duplicate keys |
+| Wallets with a balance | 0 accounts (nothing in the system can credit a wallet) |
+| Messages | 19 placed SMS · 17 confirmed SMS · 17 processing WhatsApp · 0 blocked · 6 with a wrong amount · 0 cancel, refund, exchange, receiver or Bengali messages |
+| Review queue | 4 flagged, all "refused before": 55 approved (advance not recordable) · 56 declined (advance refused) · 57 approved (soft advance) · 58 approved (false positive) · 0 blocked |
+| Support | 5 conversations (4 AI drafts): 0 right, 1 harmful (53), 2 "don't know" (62, 66), 1 misleading (70) |
+
+The P&L was not re-run for part 2: its sample costs are unchanged, and the new money effects are the ৳11,020 above, which the P&L cannot see at all.
+
+## P2.7 Six-angle notes, by angle of this part
+
+| Angle of the run | Technical | Customer | Employee | CEO | Owner | Supplier |
+|---|---|---|---|---|---|---|
+| **Fully prepaid** | Payment state reaches the sticker but not the messages, the refund or the review queue | Told to pay again; refunds vanish | Manual refunds, reassurance calls | Prepaid is the RTO cure, but only if refunds and the reward work | Every refund needs his OK, so he needs the refund list | Gateway refunds and fees per method |
+| **Risky under rules** | No levels, no advance object, no timer | Honest flagged buyers can pay and get the parcel | Chasing advances in call notes | Advances commit buyers (57 delivered) | Rules and weights are his settings; never auto-block held | Fewer return fees; courier fraud data (PR 559/567) |
+| **Older 40+/50+** | No call-back task, no audio | Want to call, not type; large text works | Re-key phone orders | Eid panjabi buyers are often older | Whether a call-back system exists is his call | Telephony cost |
+| **Low-literacy rural** | Partial dictionary; free-text village address | Cannot read sizes or the SMS amount | Rider and agent calls | A big COD market | None | Hub sorting, zone ids, far-district times |
+| **Others (expat, corporate, coupons, sets, late)** | One phone field; no B2B order; no coupon audience; no set type; no wallet tool | Each meets a dead end the shop could solve | Manual workarounds | Diaspora and corporate orders are high value | Most are already his CN-018 settings | Courier claims for overcharge and lateness |
+
+## P2.8 Staging acceptance list — additions (run on new.extas.com.bd before real orders)
+
+13. A full and a delivery-charge advance are recorded as payments; the sticker, courier COD, SMS and invoice show total − paid (F-040).
+14. Cancelling or returning a paid order creates a refund record that the owner approves and the customer sees; a wallet refund shows in the balance and ledger (F-041).
+15. Prepaid reward: each type, and the fallback when delivery is already free (F-042).
+16. Risk Hard → full advance, Soft → delivery-charge advance, "Waiting for advance" with its timer, "Advance not paid" reason and notice (F-043).
+17. A refusal marked "our fault" never flags the next order (F-044).
+18. Receiver-pays order: receiver on the sticker and booking, receiver SMS with the amount (F-045).
+19. Call-back request and voice notes in the inbox; phone orders tagged "phone" (F-046).
+20. বাংলা checkout with 0 English UI words; Bengali SMS for a Bengali buyer (F-047).
+21. Coupon "Who can use it" and "first order only" (F-050); set Fixed/Flexible at the door (F-051); exchange waiver with a reason (F-052); rider overcharge refund and apology credit (F-054).
+
+## P2.9 Lessons (for `docs/agents/lessons/ALL.md`)
+
+- Money paid outside the checkout (an advance, a bank transfer) is a payment record on the order, never a note; every amount due is total − paid. (SIM-55, 57 / SIM-F-040, 2026-10-23)
+- Every cancel or return of a paid order creates a refund record with an owner approval and a customer-visible status; a dialog sentence is not a refund. (SIM-53, 65, 67 / SIM-F-041, 2026-10-23)
+- A risk signal records why the past event happened; refusals we caused never count against the customer. (SIM-58 / SIM-F-044, 2026-10-23)
+- "For someone else" and "gift" are two cases: test who pays, who gets the messages and whose phone the courier has. (SIM-60 / SIM-F-045, 2026-10-23)
+- Copy the user profile with an absolute path without "..": Chromium silently dropped localStorage for a `--user-data-dir` containing "..", and the shop started from seed data. Guard every run with a "state loaded" check. (simulation method, 2026-10-23)
