@@ -13,7 +13,7 @@ jobs:
       - name: Diagnose
         shell: bash
         run: |
-          set -u
+          set +e +o pipefail; set -u
           san() { sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/<email>/g; s/([0-9a-f]{1,4}:){3,7}[0-9a-f]{1,4}/<ip6>/g'; }
           S=/srv/extas/config/secrets
           H=new.extas.com.bd
@@ -23,10 +23,11 @@ jobs:
           OE="$(sudo grep '^OWNER_EMAIL=' $S/owner-login.env 2>/dev/null | cut -d= -f2-)"; [ -n "$OE" ] && echo "::add-mask::$OE"
           NC=$(mktemp); printf 'user = "%s:%s"\n' "$U" "$PW" > "$NC"; chmod 600 "$NC"
           hdr() { sed -E 's/^(set-cookie: [^=]+=)[^;]*/\1<v>/I' | grep -iE '^(HTTP|location|set-cookie|cf-cache|cache-control|www-auth|x-robots)' | san; }
+          echo "== owner-login.env present: $(sudo test -s $S/owner-login.env && echo yes || echo no)"
           echo "== no auth"; for p in /admin/login /admin/products; do echo "-- $p"; curl -sSI "https://$H$p" | hdr; done
           echo "== basic auth"; for p in /admin/login /admin/products /admin /api/admin/auth/me; do echo "-- $p"; curl -sSI -K "$NC" "https://$H$p" | hdr; done
           echo "== login page body markers (basic auth)"; curl -sS -K "$NC" "https://$H/admin/login" | grep -oE 'ad-login|couldn.t load|NEXT_REDIRECT|name="email"|type="password"' | sort | uniq -c
-          echo "== preview cookie flow"; J=$(mktemp); curl -sS -o /dev/null -K "$NC" -c "$J" "https://$H/" ; echo "cookies after first: $(awk '!/^#/ && NF{print $6}' "$J" | tr '\n' ' ')"
+          echo "== preview cookie flow"; J=$(mktemp); curl -sS -o /dev/null -K "$NC" -c "$J" "https://$H/" ; echo "cookies after first: $(awk 'NF>=7{print $6}' "$J" | tr '\n' ' ')"
           curl -sSI -b "$J" "https://$H/admin/login" | hdr
           rm -f "$NC" "$J"
           echo "== containers"; sudo docker ps --format '{{.Names}} {{.Image}} {{.Status}}' | san
