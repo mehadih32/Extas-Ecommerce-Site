@@ -2,7 +2,8 @@
   "groups": {
     "shell": "Shop header, menus and footer",
     "language": "Languages",
-    "slider": "Sliding rows"
+    "slider": "Sliding rows",
+    "home": "Home page"
   },
   "theme": {
     "schedule": {
@@ -96,6 +97,32 @@
     "engine": {
       "label": "How rows slide",
       "help": "Rows of products move slowly on their own. They stop under the mouse, while a finger holds them and while the keyboard is in them, and start again afterwards."
+    }
+  },
+  "home": {
+    "sections": {
+      "label": "Home page sections",
+      "help": "Which parts the home page shows and in what order: the hero, categories, new in, sets, size finder, flash sale, shop the look, reviews and the journal. A part with nothing to show yet stays hidden on its own."
+    },
+    "hero": {
+      "label": "Home hero",
+      "help": "The big panel at the top: the small line, the title, the line under it, up to three buttons and the promise lines. A promise line only shows when its rule is on (Cash on Delivery, size exchange). On a desktop the coloured panel can reach further right (0 to 240 px)."
+    },
+    "categories": {
+      "label": "Category tiles",
+      "help": "The \"Shop by category\" tiles: the most tiles shown and where \"Shop all\" goes. Each tile shows the first product of the category and how many styles it has."
+    },
+    "newIn": {
+      "label": "New in",
+      "help": "How many products the \"New in\" row shows, newest first or in your own order, and where \"View all\" goes."
+    },
+    "reviews": {
+      "label": "Customer reviews row",
+      "help": "How many approved reviews slide on the home page (up to 10), the fewest stars a review needs, and whether the average shows beside the heading. With no approved review the row stays hidden."
+    },
+    "rowFade": {
+      "label": "Soft edges on sliding rows",
+      "help": "Sliding rows fade out at both edges. Off = plain straight edges."
     }
   }
 }

@@ -171,10 +171,43 @@
   },
   "home": {
     "shopByCategory": "Shop by category",
-    "shopAll": "Shop all"
+    "shopAll": "Shop all",
+    "hero": {
+      "eyebrow": "New collection",
+      "title": "Winter 2026",
+      "sub": "Hoodies, sweatshirts and jackets. 39 new styles, built for Bangladeshi winters.",
+      "shopNow": "Shop now",
+      "shopSets": "Shop sets",
+      "trust": {
+        "cod": "Cash on Delivery all over Bangladesh",
+        "exchange": "{windowHours}-hour size exchange",
+        "exchangeDesk": "{windowHours}-hour easy exchange for size or fault"
+      }
+    },
+    "newIn": "New in",
+    "newInSub": "Fresh styles this week",
+    "viewAll": "View all",
+    "reviews": {
+      "title": "What customers say",
+      "sub": "In their own words, after delivery",
+      "count": "{n} reviews",
+      "one": "1 review",
+      "stars": "{n} out of 5",
+      "verified": "Verified buyer",
+      "topRated": "Shop our top-rated styles"
+    }
   },
   "fab": {
     "label": "Message {store} on WhatsApp",
     "message": "Hi {store}, I have a question about an item on your site"
+  },
+  "card": {
+    "save": "Save to wishlist",
+    "unsave": "Remove from wishlist",
+    "saved": "Saved to wishlist",
+    "removed": "Removed from wishlist",
+    "moreColours": "+{n}",
+    "off": "−{n}%",
+    "label": "{name}, {price}"
   }
 }
