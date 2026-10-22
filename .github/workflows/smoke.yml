@@ -24,13 +24,26 @@ jobs:
     runs-on: [self-hosted, extas-vm]
     timeout-minutes: 30
     steps:
+      # The checks come from the version that is live, not from the newest main: a check merged before its deploy
+      # finished would otherwise test a page that does not have it yet and report a false failure.
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          # Only a full commit hash is checked out; anything else falls back to this run's own commit.
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
 
       - name: Smoke test (every page, signed out and as the admin)
         id: smoke
         continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
         run: |
-          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          live="$LIVE"
           sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "nightly" "$live"
 
       - name: Commit the smoke report
