@@ -43,6 +43,10 @@
       "bag": {
         "label": "Combo in the bag (shop default)",
         "help": "How a set shows in the bag."
+      },
+      "longListPairs": {
+        "label": "Pick-your-colours page from (pairs)",
+        "help": "When the combo product page is on “Auto”, a rule that makes more pairs than this uses the pick-your-colours page (P2) instead of the pair page (P1)."
       }
     },
     "admin": {
