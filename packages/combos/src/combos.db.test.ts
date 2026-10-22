@@ -13,6 +13,7 @@ import { seedSampleCombos } from './sample';
 import { listSetTiers, liveSetTiers } from './set-tiers';
 import { checkComboSet } from './set-check';
 import { priceSet, setSummary } from './summary';
+import { addSetToBag, bagSets, changeSetInBag, refreshBagSets, removeSetFromBag, saveSetForLater } from './bag';
 import { productFacts } from './facts';
 import { contentColumns, ruleContentSchema } from '@extas/rules';
 
@@ -392,6 +393,127 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       overrides.set('combos.template.longListPairs', 2);
       expect((await setSummary(deps(), { storeId: S, slug: pair.slug })).pageTemplate).toBe(pairs.length > 2 ? 'P2' : 'P1');
       overrides.delete('combos.template.longListPairs');
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 97 · a set in the bag, its price locked', () => {
+    const SLUG = 'sample-polo-chino-set';
+    let picks: { colourId: string | null; sizeId: string }[] = [];
+    let other: { colourId: string | null; sizeId: string }[] = [];
+    const cart = async (visitorId: string) => (await t.prisma.cart.create({ data: { storeId: S, visitorId }, select: { id: true } })).id;
+    const lines = (cartId: string) => t.prisma.cartItem.findMany({ where: { cartId }, select: { variantId: true, unitPriceMinor: true, setPriceMinor: true, comboGroupKey: true, source: true } });
+
+    beforeAll(async () => {
+      const sum = await setSummary(deps(), { storeId: S, slug: SLUG });
+      picks = sum.pieces.map((p) => ({ colourId: p.defaultColourId, sizeId: p.openSizes[p.defaultColourId!]![0]! }));
+      // The same set in another colour or size of the first piece (for "change in the bag").
+      const p0 = sum.pieces[0]!;
+      const open = Object.entries(p0.openSizes)
+        .flatMap(([colourId, sizes]) => sizes.map((sizeId) => ({ colourId, sizeId })))
+        .find((x) => x.colourId !== picks[0]!.colourId || x.sizeId !== picks[0]!.sizeId)!;
+      other = [open, picks[1]!];
+    });
+
+    it('goes in as one set: one line per piece at its own price, the set price locked on every line', async () => {
+      const id = await cart('test-visitor-97a');
+      const r = await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0001-aaaa' });
+      expect(r).toMatchObject({ added: true, groupKey: 'set-tap-0001-aaaa', setPriceMinor: 205000 });
+      const rows = await lines(id);
+      expect(rows).toHaveLength(2);
+      const variants = await t.prisma.productVariant.findMany({ where: { id: { in: rows.map((x) => x.variantId) } }, select: { id: true, priceMinor: true } });
+      for (const row of rows) {
+        expect(row).toMatchObject({ setPriceMinor: 205000, comboGroupKey: 'set-tap-0001-aaaa', source: 'combo' });
+        expect(row.unitPriceMinor).toBe(variants.find((v) => v.id === row.variantId)!.priceMinor);
+      }
+      const [set] = await bagSets(deps(), { storeId: S, cartId: id });
+      expect(set).toMatchObject({ slug: SLUG, lockedMinor: 205000, payMinor: 205000, note: null, savedForLater: false });
+      expect(set!.savingMinor).toBe(set!.regularMinor - 205000);
+    });
+
+    it('double add: the same tap, a quick second tap and two taps at once each make one set; later it is a new one', async () => {
+      const id = await cart('test-visitor-97b');
+      const first = await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0002-aaaa' });
+      expect((await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0002-aaaa' })).added).toBe(false);
+      const quick = await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0002-bbbb' });
+      expect(quick).toMatchObject({ added: false, groupKey: first.groupKey });
+      const both = await Promise.all([addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks }), addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks })]);
+      expect(both.every((x) => !x.added)).toBe(true);
+      expect(await lines(id)).toHaveLength(2);
+      clock = new Date(T0.getTime() + registry['combos.bag.repeatGuardMs'].default + 1);
+      expect((await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks })).added).toBe(true);
+      expect(await lines(id)).toHaveLength(4);
+      clock = T0;
+    });
+
+    it('two taps at once on an empty bag still make one set (the cart is locked while adding)', async () => {
+      const id = await cart('test-visitor-97c');
+      const r = await Promise.all([
+        addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0003-aaaa' }),
+        addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0003-bbbb' }),
+      ]);
+      expect(r.filter((x) => x.added)).toHaveLength(1);
+      expect(await lines(id)).toHaveLength(2);
+    });
+
+    it('oversell: what the bag already holds counts; a closed bag and a wrong set are refused with every reason', async () => {
+      const id = await cart('test-visitor-97d');
+      const facts = await productFacts(deps(), S, [ids['slim-chino-trousers']!]);
+      const chino = facts.get(ids['slim-chino-trousers']!)!.variants.find((v) => v.colourId === picks[1]!.colourId && v.sizeId === picks[1]!.sizeId)!;
+      await t.prisma.cartItem.create({ data: { storeId: S, cartId: id, variantId: chino.id, quantity: chino.sellable, unitPriceMinor: chino.priceMinor! } });
+      const e = await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks }).catch((x) => x);
+      expect(e).toMatchObject({ code: 'SET_INVALID', details: ['NOT_ENOUGH@1'] });
+      expect(await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: [picks[0]!] }).catch((x) => x.details)).toEqual(['PICK_COLOUR@1']);
+      await t.prisma.cart.update({ where: { id }, data: { status: 'CONVERTED' } });
+      expect(await code(addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks }))).toBe('CART_NOT_OPEN');
+      expect(await code(addSetToBag(deps(), { storeId: B, cartId: id, slug: SLUG, choices: picks }))).toBe('CART_NOT_OPEN');
+    });
+
+    it('stale price: a new combo price reaches live sets in the bag (when following), an ended set keeps its price', async () => {
+      const combo = await t.prisma.combo.findFirstOrThrow({ where: { storeId: S, slug: SLUG }, select: { id: true } });
+      const id = await cart('test-visitor-97e');
+      await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks });
+      await t.prisma.combo.update({ where: { id: combo.id }, data: { setPriceMinor: 199000 } });
+      overrides.set('combos.bag.followPriceChanges', false);
+      expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]).toMatchObject({ payMinor: 205000, note: null });
+      expect((await refreshBagSets(deps(), { storeId: S, cartId: id })).changed).toEqual([]);
+      overrides.delete('combos.bag.followPriceChanges');
+      expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]).toMatchObject({ lockedMinor: 205000, payMinor: 199000, note: 'PRICE_CHANGED' });
+      expect((await refreshBagSets(deps(), { storeId: S, cartId: id })).changed).toHaveLength(1);
+      expect((await lines(id)).every((l) => l.setPriceMinor === 199000)).toBe(true);
+      expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]).toMatchObject({ lockedMinor: 199000, note: null });
+      // The offer ends while the set is in the bag: it keeps the price, with the note; no new set goes in.
+      await t.prisma.combo.update({ where: { id: combo.id }, data: { status: 'ENDED', setPriceMinor: 150000 } });
+      expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]).toMatchObject({ payMinor: 199000, note: 'ENDED_KEEPS_PRICE', state: 'ended' });
+      expect((await refreshBagSets(deps(), { storeId: S, cartId: id })).changed).toEqual([]);
+      clock = new Date(T0.getTime() + registry['combos.bag.repeatGuardMs'].default + 1);
+      expect(await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks, addKey: 'tap-0005-aaaa' }).catch((x) => x.details)).toEqual(['NOT_ON_SALE']);
+      clock = T0;
+      await t.prisma.combo.update({ where: { id: combo.id }, data: { status: 'RUNNING', setPriceMinor: 205000 } });
+    });
+
+    it('a set price above the regular total charges the regular total, never more', async () => {
+      const combo = await t.prisma.combo.findFirstOrThrow({ where: { storeId: S, slug: SLUG }, select: { id: true } });
+      await t.prisma.combo.update({ where: { id: combo.id }, data: { setPriceMinor: 99_000_000 } });
+      const id = await cart('test-visitor-97f');
+      const r = await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks });
+      const regular = r.lines.reduce((sum, l) => sum + l.unitPriceMinor, 0);
+      expect(r).toMatchObject({ setPriceMinor: regular, price: { offer: false, reason: 'NOT_LOWER', savingMinor: 0 } });
+      await t.prisma.combo.update({ where: { id: combo.id }, data: { setPriceMinor: 205000 } });
+    });
+
+    it('change sizes in the bag (re-checked, re-priced, same set), save for later, and take the whole set out', async () => {
+      const id = await cart('test-visitor-97g');
+      const r = await addSetToBag(deps(), { storeId: S, cartId: id, slug: SLUG, choices: picks });
+      const changed = await changeSetInBag(deps(), { storeId: S, cartId: id, groupKey: r.groupKey, choices: other });
+      expect(changed.groupKey).toBe(r.groupKey);
+      expect(changed.lines.map((l) => l.id).sort()).toEqual(r.lines.map((l) => l.id).sort());
+      expect(changed.lines.map((l) => l.variantId)).not.toEqual(r.lines.map((l) => l.variantId));
+      expect(await code(changeSetInBag(deps(), { storeId: S, cartId: id, groupKey: 'set-nope', choices: other }))).toBe('NOT_FOUND');
+      expect(await saveSetForLater(deps(), { storeId: S, cartId: id, groupKey: r.groupKey, saved: true })).toEqual({ moved: 2 });
+      expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]!.savedForLater).toBe(true);
+      expect(await removeSetFromBag(deps(), { storeId: S, cartId: id, groupKey: r.groupKey })).toEqual({ removed: 2 });
+      expect(await bagSets(deps(), { storeId: S, cartId: id })).toEqual([]);
     });
   });
 });

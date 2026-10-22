@@ -2,7 +2,7 @@
 // price with its saving and the struck "was" price, which is never invented (CN-009). Made-up test prices.
 import { describe, expect, it } from 'vitest';
 import { setPricing } from './model';
-import { priceWords } from './set-words';
+import { bagNoteWords, priceWords } from './set-words';
 import { bagTemplateFor, listTemplateFor, pageTemplateFor, setPrice } from './summary-model';
 
 const R = { stepMinor: 1000, direction: 'down' as const };
@@ -76,5 +76,14 @@ describe('PR 96 · the price words come from the same price', () => {
     expect(priceWords('en', flat, money)).toMatchObject({ line: null, save: null, button: 'Add both to bag · BDT 2,200' });
     const none = setPrice(setPricing({ mode: 'FIXED', setMinor: null }, [{ priceMinor: 1, quantity: 1 }], R), 1, { allowed: true, live: true });
     expect(priceWords('en', none, money)).toEqual({ line: null, save: null, cod: null, button: null });
+  });
+});
+
+describe('PR 97 · the bag notes', () => {
+  it('an ended set keeps its price; a live one says its new price; none otherwise', () => {
+    expect(bagNoteWords('en', 'ENDED_KEEPS_PRICE', 'BDT 1,900')).toContain('keeps the price');
+    expect(bagNoteWords('en', 'PRICE_CHANGED', 'BDT 1,800')).toBe('The set price is now BDT 1,800.');
+    expect(bagNoteWords('bn', 'PRICE_CHANGED', '৳১,৮০০')).toContain('৳১,৮০০');
+    expect(bagNoteWords('en', null, 'x')).toBeNull();
   });
 });

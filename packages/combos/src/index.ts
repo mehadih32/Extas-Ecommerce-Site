@@ -22,3 +22,4 @@ export * from './auto-rules';
 export * from './set-tiers';
 export * from './set-check';
 export * from './summary';
+export * from './bag';
