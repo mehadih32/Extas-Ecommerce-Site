@@ -98,6 +98,8 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   (plain চলতি Bengali, Western digits, from its register row) and run `pnpm docs:stages`; commit `docs/stages/` and
   `README.md` with it. The generator also links the README's stage names, waves and PR numbers; CI fails when they are
   out of date. CN-011's README rule covers the rest.
+- **Build the system, never ask for a number** (owner, 23 Oct, CN-018): every amount, percentage, limit or yes/no perk is a backend setting with options, off by default. Ask the owner only whether a system should exist.
+- **Simple admin** (CN-018): follow `docs/ADMIN-ARCHITECTURE.md`, with about 10 sections, settings inside their section, rare options under "More options" and one search box. Never build a wall of switches.
 - **Owner data is not a blocker** (owner, 20 Oct 12:11): delivery charges, free-delivery limit, courier rates, photos, prices, area lists and similar values are entered by the owner in the backend later. Ship empty/off defaults and never list them in `BLOCKED.md` as questions.
 - **Plans and progress are counted in stages and PRs, never in days or hours** (owner's rule, 20 Oct): "S0A: 7/12 PR · S00: 3/19 PR · total 10/598". 604 PRs in 28 stages (598 active, 6 parked).
 - After each PR: update `PROGRESS.md` (the English line is fine) and the register status.

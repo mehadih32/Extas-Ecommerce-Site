@@ -152,6 +152,58 @@ the server.*
 > **CN-016 · 20 Oct 2026 (owner: nothing reaches the owner broken).** The owner found that after logging in, the admin on new.extas.com.bd showed "This page couldn't load". New gate: **after every deploy and every night**, a smoke test runs on the runner with Playwright against new.extas.com.bd. It signs in with a check account whose password lives only on the server, then visits every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, shows no error screen and no console error, and has no failed request. If any page fails, the deploy rolls back by itself and the fix comes before any new PR. Screenshots go to `docs/reports/smoke/latest/`, and the result is shown on the status page and in README. Every bug the owner finds gets a smoke check in the same fix PR. No new PR numbers: this lands on PR 4/17 (deploy) and Appendix C.
 
 > **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report §5, and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
+
+> **CN-018 · 23 Oct 2026 (owner's answers to the CN-017 questions; a simple admin; "build the system, don't ask for numbers").**
+>
+> **Standing rule.** Every policy number or choice — amounts, percentages, limits, whether a perk is given at all — is a **backend setting with sensible options, off by default**. The owner decides it later, case by case. Never ask the owner for a figure; ask only whether a system should exist at all.
+>
+> **Answers:**
+>
+> **(1) Prepaid reward** — any non-COD payment: bKash, Nagad, card, bank, online.
+> - The reward type is a setting: free delivery, a fixed amount off, or a percentage off.
+> - If the order already has free delivery, the reward falls back to the amount or percentage option, never "free delivery" again.
+> - Section: Checkout & payments → Prepaid reward.
+>
+> **(2) Risky customers** — section: Orders → Risk rules.
+> - The owner builds the risk matrix: rules and weights such as past RTO, courier success ratio, a new phone number, area, order value, and repeated cancels.
+> - Two levels, each with an editable rule set:
+>   - **Hard:** ask for full advance payment.
+>   - **Soft:** ask for the delivery charge in advance.
+> - A partial-advance amount option is also available.
+> - Never auto-block (hard rule).
+>
+> **(3) Delivery-day and Day-1 messages:** explained to the owner again; they stay off until he decides.
+>
+> **(4) Sets:** each set has a setting, "Fixed set (no single piece can be kept or returned)" or "Flexible".
+> - For flexible sets: the split-price rule and whether a delivery charge applies when the kept part falls under the free-delivery limit.
+> - Section: Products → Sets. (This was discussed before. Fixed sets never split.)
+>
+> **(5) Size exchange charge:**
+> - The customer pays the second delivery charge when it is their own size choice.
+> - The customer does not pay when EXTAS made a mistake (wrong size or item sent). The customer claims it with a note and a photo from their order history in the account dashboard, and staff approve the claim.
+> - Staff can **waive** the charge on any exchange, with a reason that is logged.
+> - The rules are written in the Terms / Exchange policy, which is editable text.
+> - Section: Exchanges.
+>
+> **(6) Eid pre-order with an advance:** the system exists. The cut-off dates, the advance type (fixed or percentage) and the amount are all settings. Section: Campaigns.
+>
+> **(7) Rider overcharge:** a complaint is logged with proof. Staff approve it and refund the **exact extra amount** to the customer (wallet or original method), with a note. The amount is recovered from the courier claim. Section: Support → Rider issues.
+>
+> **(8) Late-delivery apology:** an optional apology credit — percentage or amount, to the wallet or the next order — per order or by rule. Whether to give it at all is a setting. Section: Support.
+>
+> **(9) Coupons:** each coupon has a setting "Who can use it": guests, logged-in customers, or both. The Eid coupon can be either.
+>
+> **(10) Self-confirm WhatsApp:** explained to the owner again; the decision is pending.
+>
+> **Simple admin (owner: the demo's admin is far too crowded, so the live admin must not be).** Before more admin screens are built, the project writes `docs/ADMIN-ARCHITECTURE.md`. It must cover:
+> - At most about 10 top-level sections in plain words: Dashboard · Orders · Products · Customers · Marketing · Delivery · Money · Support · Reports · Settings.
+> - Each setting lives inside the section it belongs to, grouped on tabs. Rarely used options are folded under "More options".
+> - One search box finds any page or setting.
+> - Staff see only their own sections (roles).
+> - Every section has its Bengali guide (CN-014).
+> - No page is a wall of switches.
+>
+> One picture of the new admin layout goes to the owner before the build continues. The demo's admin is used for **what** to include, not **how** to lay it out.
 > - an SMS to a prepaid customer that says "pay ৳X on delivery";
 > - courier "Book all" booking cancelled orders;
 > - the delivery charge shown at checkout differing from the one stored;

@@ -804,3 +804,8 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - The V12.2 artifact (7.5 MB) is too large to share publicly. A slim public build (docs data left out, under 2 MB) gets its own link.
 - Independent QA of V12.2 (`qa/QA-V122-INDEPENDENT.md`): 4 fails and 7 polish items, fixed in the same pass.
 - The owner is frustrated by repeated correction rounds: everything must pass an independent visual check before he sees it.
+
+## Note 59 — 23 Oct 04:20 · Owner answers to the simulation questions (CN-018)
+- All answers are filed in CN-018. Standing rule: build the system as backend settings and never ask for numbers.
+- The demo admin is too crowded ("my head spun"). The live admin must be simple and grouped by section. Design `docs/ADMIN-ARCHITECTURE.md` and show the owner one picture of it first.
+- Q3 (delivery-day and Day-1 messages) and Q9 (self-confirm WhatsApp counted as the one WhatsApp) were not understood. They were explained again in chat.
