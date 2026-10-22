@@ -9,3 +9,4 @@ export * from './conflicts';
 export * from './history';
 export * from './was-price';
 export * from './notices-model';
+export * from './eid';

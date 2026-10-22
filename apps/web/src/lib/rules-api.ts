@@ -27,6 +27,10 @@
 //   GET   /api/admin/rules/notices/:id          one notice · PUT {notice, version?} change · POST {enabled} | {archived}
 //   GET   /api/admin/rules/coupons              coupons (?ruleId=) · POST a new one (off) (PR 213)
 //   POST  /api/admin/rules/coupons/:id          {enabled} (the owner's OK) | {archived}
+//   GET   /api/admin/rules/eid                  Eid order-by dates: settings, checks, bands, districts (PR 214 follow-up)
+//   PUT   /api/admin/rules/eid                  {eidDate?, bandDates?, districtDates?, cutoffTime?, …texts} save
+//   POST  /api/admin/rules/eid/status           {enabled} switch on (every check passed) or off
+//   POST  /api/admin/rules/eid/preorder         {preorderEnabled?, preorderAdvanceMinor?} (the owner's OK, rules.approve)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -35,6 +39,8 @@ export type RulesPerm = 'rules.read' | 'rules.write' | 'rules.publish' | 'rules.
 
 interface Ctx {
   deps: rl.RulesDeps;
+  /** The same, with the settings' write side (Eid order-by dates save settings). */
+  eidDeps: rl.EidDeps;
   who: rl.Who;
   url: URL;
 }
@@ -54,7 +60,7 @@ async function handle(request: Request, deps: AdminDeps | null, permission: Rule
   const g = await guardAdmin(request, deps, { permission, storeId });
   if (g instanceof Response) return g;
   try {
-    const out = await fn({ deps: rulesDeps(deps!), who: { actor: g.actor, storeId, ctx: g.ctx }, url });
+    const out = await fn({ deps: rulesDeps(deps!), eidDeps: { ...rulesDeps(deps!), settings: deps!.resolver }, who: { actor: g.actor, storeId, ctx: g.ctx }, url });
     return out instanceof Response ? out : json({ ok: true, ...out }, { status });
   } catch (e) {
     return errorResponse(e);
@@ -85,6 +91,19 @@ export async function rulesRoute(request: Request, deps: AdminDeps | null, path:
   if (a === 'templates' && !b) return m === 'GET' ? handle(request, deps, 'rules.read', async (x) => ({ templates: await rl.listTemplates(x.deps, x.who) })) : notAllowed();
   if (a === 'starters' && !b) return m === 'POST' ? handle(request, deps, 'rules.write', async (x) => asRecord(await rl.addStarterRules(x.deps, x.who))) : notAllowed();
   if (a === 'check' && !b) return m === 'POST' ? handle(request, deps, 'rules.read', async (x) => asRecord(await rl.checkCandidate(x.deps, x.who, (await body(request)).content))) : notAllowed();
+
+  // ---- Eid order-by dates (PR 214 follow-up) ----
+  if (a === 'eid') {
+    if (!b) {
+      if (m === 'GET') return handle(request, deps, 'rules.read', async (x) => ({ eid: await rl.getEidScreen(x.deps, x.who) }));
+      if (m === 'PUT') return handle(request, deps, 'rules.write', async (x) => ({ eid: await rl.saveEidDates(x.eidDeps, x.who, await body(request)) }));
+      return notAllowed();
+    }
+    if (c) return notFound();
+    if (b === 'status') return m === 'POST' ? handle(request, deps, 'rules.publish', async (x) => ({ eid: await rl.setEidEnabled(x.eidDeps, x.who, await body(request)) })) : notAllowed();
+    if (b === 'preorder') return m === 'POST' ? handle(request, deps, 'rules.read', async (x) => ({ eid: await rl.setEidPreorder(x.eidDeps, x.who, await body(request)) })) : notAllowed();
+    return notFound();
+  }
 
   // ---- conflicts ----
   if (a === 'conflicts') {

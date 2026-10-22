@@ -1,10 +1,11 @@
 // S10 · PR 208–219 — the Smart Rules admin API end to end on a real PostgreSQL (a throwaway database; skipped without
 // TEST_DATABASE_ADMIN_URL): login and same-site checks, the starter rules as drafts, a new rule, saving a draft,
-// the preview, publishing, history, the conflict list, a notice that starts off, a coupon, and the path table's refusals.
+// the preview, publishing, history, the conflict list, a notice that starts off, a coupon, the path table's refusals,
+// and Eid order-by dates (PR 214 follow-up: off and empty, the checks before switching on, pre-order with the owner's OK).
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { rulesRoute } from './rules-api';
@@ -34,6 +35,7 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules admin API on PostgreSQL', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     t = await createTestDatabase('rules_api');
     await seedSampleStores(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
     await syncAuth(t.prisma);
     await createFirstOwner(t.prisma, defaultSecurityPolicy(), { email: 'owner@example.com', displayName: 'Sample owner', password: OWNER_PW, passwordChosenByOwner: true });
     deps = { db: t.prisma, resolver: new SettingsResolver(prismaBackend(t.prisma), registry), vault: null };
@@ -92,5 +94,23 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules admin API on PostgreSQL', () => {
     expect(pop.body.notice.issues).toContain('ARRIVAL_POPUP');
     expect((await api('POST', ['notices', pop.body.notice.id], { enabled: true })).body.error).toBe('NOTICE_INVALID');
     expect((await api('GET', ['coupons'])).body.coupons).toEqual([]);
+  });
+
+  it('Eid order-by dates: off and empty, cannot go on without dates, then on; pre-order only with an advance', async () => {
+    const g = await api('GET', ['eid']);
+    expect(g.status).toBe(200);
+    expect(g.body.eid.config).toMatchObject({ enabled: false, eidDate: null, bandDates: null, preorderEnabled: null, preorderAdvanceMinor: null });
+    expect(g.body.eid.perms).toEqual({ write: true, publish: true, approve: true });
+    expect((await api('POST', ['eid', 'status'], { enabled: true })).body.error).toBe('EID_INVALID');
+    expect((await api('POST', ['eid', 'status'], { enabled: true })).status).toBe(409);
+    await t.prisma.deliveryBand.create({ data: { storeId: 1, key: 'sample-band', nameEn: 'Sample band', chargeMinor: 0 } });
+    const saved = await api('PUT', ['eid'], { eidDate: '2027-03-10', bandDates: [{ band: 'sample-band', orderBy: '2027-03-06' }] });
+    expect([saved.status, saved.body.eid.issues]).toEqual([200, []]);
+    expect((await api('PUT', ['eid'], { bandDates: [{ band: 'no-such-band', orderBy: '2027-03-06' }] })).body.error).toBe('INVALID_INPUT');
+    expect((await api('POST', ['eid', 'status'], { enabled: true })).body.eid.config.enabled).toBe(true);
+    expect((await api('POST', ['eid', 'preorder'], { preorderEnabled: true })).body.error).toBe('EID_INVALID');
+    expect((await api('GET', ['eid', 'nope'])).status).toBe(404);
+    expect((await api('DELETE', ['eid'])).status).toBe(405);
+    expect((await api('GET', ['eid'], undefined, '')).status).toBe(401);
   });
 });

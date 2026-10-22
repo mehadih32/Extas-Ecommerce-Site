@@ -17,6 +17,7 @@ import { rulesSettings } from './registry-rules';
 import { combosSettings } from './registry-combos';
 import { deliverySettings } from './registry-delivery';
 import { storefrontSettings } from './registry-storefront';
+import { eidSettings } from './registry-eid';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1118,6 +1119,8 @@ export const registry = {
   ...deliverySettings,
   // ---- S02 · PR 82, 501, 503, 84, 40, 42 · storefront: themes, brand, shell, language, slider (registry-storefront.ts, version 16). ----
   ...storefrontSettings,
+  // ---- S10 · PR 214 follow-up (CN-014 g) · Eid order-by dates per band and district, pre-order (registry-eid.ts, version 16). ----
+  ...eidSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

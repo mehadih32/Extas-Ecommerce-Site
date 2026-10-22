@@ -65,6 +65,66 @@
         "label": "Shape of a coupon code",
         "help": "Capital letters, digits and dashes by default. Codes are always read in capitals."
       }
+    },
+    "eid": {
+      "enabled": {
+        "label": "Eid order-by dates on the shop",
+        "help": "Off by default. On: the shop says the last day to order for delivery before Eid, per delivery band and district. It can only be switched on once the Eid day and at least one date are set."
+      },
+      "eidDate": {
+        "label": "Eid day",
+        "help": "The day of Eid. After it the banner and every Eid line stop by themselves. Empty until you set it."
+      },
+      "bandDates": {
+        "label": "Last day to order, per delivery band",
+        "help": "One date per band (Dhaka city, near Dhaka, outside Dhaka …). Orders until this day get delivery before Eid."
+      },
+      "districtDates": {
+        "label": "Own date for a district",
+        "help": "A district that needs a different day than its band (a far district, a river crossing). Its date wins over the band's."
+      },
+      "cutoffTime": {
+        "label": "Last minute of the day that still counts",
+        "help": "24-hour time, e.g. 23:59. An order after it counts as the next day."
+      },
+      "showDaysBefore": {
+        "label": "Show the banner from (days before)",
+        "help": "The banner appears this many days before a band's last day."
+      },
+      "bannerText": {
+        "label": "Banner words",
+        "help": "One line per band. {date} is the last day, {band} the band's name. {date} must be in it."
+      },
+      "lateText": {
+        "label": "Words after a place's last day",
+        "help": "Shown at checkout and on the thank-you page instead of the normal delivery time. {eid} is the Eid day."
+      },
+      "preorder": {
+        "enabled": {
+          "label": "Pre-order after the last day",
+          "help": "Takes an advance, so it needs the owner's OK. Off until he decides (and sets the advance)."
+        },
+        "advanceMinor": {
+          "label": "Pre-order advance",
+          "help": "Money the customer pays now; the rest is due on delivery. Empty until the owner sets it; without it there is no pre-order."
+        },
+        "advanceType": {
+          "label": "Pre-order advance: fixed or percentage",
+          "help": "Fixed: the same amount on every order. Percentage: a share of the order's total. The amount itself is set below."
+        },
+        "advancePercent": {
+          "label": "Pre-order advance (percentage of the order)",
+          "help": "Used when the advance is a percentage. Empty until the owner sets it; without it there is no pre-order."
+        },
+        "text": {
+          "label": "Pre-order words at checkout",
+          "help": "{advance} is paid now, {due} on delivery (the total minus the advance). Both must be in it."
+        },
+        "bannerText": {
+          "label": "Pre-order words on the banner",
+          "help": "Shown once every band's date has passed. {advance} must be in it."
+        }
+      }
     }
   },
   "notices": {
@@ -96,6 +156,14 @@
   "ownerData": {
     "reasons": {
       "rules": "Your Smart Rules (charges, set prices, discounts, policies), their history, your notices and coupons: never exported."
+    }
+  },
+  "defaults": {
+    "eid": {
+      "bannerText": "Order by {date} for delivery before Eid — {band}",
+      "lateText": "Ordered now, this may arrive after Eid ({eid}).",
+      "preorderText": "Pre-order: pay {advance} now and {due} on delivery after Eid.",
+      "preorderBannerText": "Eid order dates have passed — pre-order with {advance} advance."
     }
   }
 }
