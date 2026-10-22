@@ -46,6 +46,7 @@
     "title": "Admin sign-in",
     "sub": "Enter your e-mail and password to open the shop's back end.",
     "email": "E-mail",
+    "emailHint": "Write the full e-mail address, with the @ in it.",
     "passwordLabel": "Password",
     "submit": "Sign in",
     "busy": "One moment…",

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import { call, errorText, type Answer } from './api';
+import { EmailField, emailMissingAt } from './EmailField';
 
 type Step = 'login' | 'code' | 'password' | 'twofactor';
 interface Task {
@@ -16,6 +17,7 @@ export function LoginForm({ dict, next, initialStep, locale, timeZone, disabled 
   const router = useRouter();
   const [step, setStep] = useState<Step>(initialStep);
   const [email, setEmail] = useState('');
+  const [emailLeft, setEmailLeft] = useState(false);
   const [password, setPassword] = useState('');
   const [current, setCurrent] = useState<string | null>(null);
   const [code, setCode] = useState('');
@@ -67,6 +69,13 @@ export function LoginForm({ dict, next, initialStep, locale, timeZone, disabled 
   };
 
   const onLogin = run(async () => {
+    // An e-mail without an "@" (the owner typed "admin") never goes to the server: it could only fail, and a failed
+    // try counts towards the wrong-try pause. The hint under the field says what to write instead.
+    if (emailMissingAt(email)) {
+      setEmailLeft(true);
+      document.getElementById('ad-email')?.focus();
+      return;
+    }
     const used = password;
     setPassword('');
     await answer(await call('POST', '/api/admin/auth/login', { email: email.trim(), password: used }), used);
@@ -155,10 +164,7 @@ export function LoginForm({ dict, next, initialStep, locale, timeZone, disabled 
         <h1 className="ad-h1">{t(dict, 'login.title')}</h1>
         <p className="ad-intro">{disabled ? t(dict, 'login.noDb') : t(dict, 'login.sub')}</p>
       </div>
-      <div>
-        <label className="ad-label" htmlFor="ad-email">{t(dict, 'login.email')}</label>
-        <input id="ad-email" className="ad-input" type="email" autoComplete="username" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={disabled} />
-      </div>
+      <EmailField dict={dict} value={email} hint={emailLeft} disabled={disabled} onChange={setEmail} onBlur={() => setEmailLeft(true)} />
       <div>
         <label className="ad-label" htmlFor="ad-password">{t(dict, 'login.passwordLabel')}</label>
         <input id="ad-password" className="ad-input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={disabled} />

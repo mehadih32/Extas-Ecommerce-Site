@@ -3329,7 +3329,7 @@
    "title": "Integrations settings screen — courier, SMS, payment, AI providers, Facebook, Google, YouTube, WhatsApp, Messenger, Telegram, Drive, …",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Integrations settings screen** — courier, SMS, payment, AI providers, Facebook, Google, YouTube, WhatsApp, Messenger, Telegram, Drive, email, all in one place with a test button each",
+   "scope": "**Integrations settings screen** — courier, SMS, payment, AI providers, Facebook, Google, YouTube, WhatsApp, Messenger, Telegram, Drive, email, all in one place with a test button each.",
    "scopeRewritten": false,
    "filedUnder": "S00 additions — the settings framework (approved 18 Oct)",
    "registerAnchor": "s00-additions--the-settings-framework-approved-18-oct",
@@ -3345,7 +3345,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "Keys & connections page `/admin/integrations` + admin sign-in (`/admin/login`, 2FA step) and frame, Bengali/English; connection list is data (`packages/adapters/src/catalogue.ts`, rows without an adapter shown \"not connected\"); save → vault → test → leaves mock only on a pass; remove = vault revoke, nothing deleted; every step audited, a saved key is never shown again",
+    "note": "Keys & connections page `/admin/integrations` + admin sign-in (`/admin/login`, 2FA step) and frame, Bengali/English; connection list is data (`packages/adapters/src/catalogue.ts`, rows without an adapter shown \"not connected\"); save → vault → test → leaves mock only on a pass; remove = vault revoke, nothing deleted; every step audited, a saved key is never shown again ; 22 Oct follow-up: an e-mail without \"@\" gets the \"write the full e-mail address\" hint and is not sent (unit test, smoke check)",
     "github": [
      "#13 (commit `54b7d95`), 20 Oct 07:24 (Dhaka)",
      "#11 (commit `4407ddf`), 20 Oct 06:10 (Dhaka)"
@@ -3362,7 +3362,8 @@
     ],
     "names": [],
     "tests": [
-     "save → vault → test → leaves mock only on a pass"
+     "save → vault → test → leaves mock only on a pass",
+     "22 Oct follow-up: an e-mail without \"@\" gets the \"write the full e-mail address\" hint and is not sent (unit test, smoke check)"
     ]
    },
    "updates": [
@@ -3372,6 +3373,13 @@
      "source": "Scope added to existing PRs (V2.1 final · 20 Oct — pre-code demo work finished; blueprint V2.1 final; no new PR numbers)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-604",
      "text": "**Server admin pages in the demo (CN-001; sample numbers, labelled)** — `#/admin/server` → PR 423 / 601 / 603 / 604; `#/admin/cache` → PR 602; `#/admin/images` → PR 22 / 24 / 88; `#/admin/speed` → PR 234; `#/admin/integrations` (\"Keys & connections\") → PR 493 / 500; `#/admin/backup` now shows Blob + Drive → PR 8 / 395 / 507. Checks: 120 route/modal checks 0 fails + 19 flows."
+    },
+    {
+     "date": "20 Oct 15:20",
+     "sortKey": 29720,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s00-additions--the-settings-framework-approved-18-oct",
+     "text": "**Updated 20 Oct 15:20 (owner):** the admin sign-in says \"write the full e-mail address\" when the e-mail field has no \"@\" (the owner typed \"admin\"), in the admin's language, with a smoke check"
     }
    ],
    "mentions": [],
