@@ -94,6 +94,11 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     expect(list.body.combos.map((c: { slug: string }) => c.slug)).toContain(combo.slug);
     expect((await api('GET', [id])).body.combo.id).toBe(id);
     expect(await t.prisma.auditLog.count({ where: { entityId: id } })).toBeGreaterThan(3);
+    // PR 575 — the set photo needs every piece's photo in its colour (the sample products have none yet)
+    const ph = await api('POST', [id, 'photo'], {});
+    expect(ph.status).toBe(409);
+    expect(ph.body).toMatchObject({ ok: false, error: 'NO_PIECE_PHOTO', details: ['1', '2'] });
+    expect((await api('GET', [id, 'photo'])).status).toBe(405);
   });
 
   it('PR 571 — an auto rule: live count, a draft, on, dates, options, add 1 more, its pairs, the shop templates', async () => {

@@ -1,7 +1,7 @@
 'use client';
-// S03 · PR 90, 99 — "Fixed combos & customer sets" (demo acb_fixedHTML): the fixed combo cards (set photo, name, the
+// S03 · PR 90, 99, 575 — "Fixed combos & customer sets" (demo acb_fixedHTML): the fixed combo cards (set photo, name, the
 // pieces, the price box with its words, the Active / Auto-apply / same-colour switches, the combo's link), the
-// auto-apply note, and "What customers can combine": the set tiers, read from Smart Rules (PR 99) — changed there,
+// "Make set photo" (PR 575: composed from the piece photos), the auto-apply note, and "What customers can combine": the set tiers, read from Smart Rules (PR 99) — changed there,
 // never here, so the price in words and the price charged stay one decision.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ComboView } from '@extas/combos';
@@ -82,6 +82,8 @@ function ComboCard(p: FixedTabProps & { combo: ComboView }) {
   const [price, setPrice] = useState(toMajorText(c.setPriceMinor));
   const [shown, setShown] = useState(c);
   const [err, setErr] = useState('');
+  const [photo, setPhoto] = useState<string | null>(p.photos[c.id] ?? null);
+  const [making, setMaking] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   if (shown !== c) {
     setShown(c);
@@ -100,6 +102,19 @@ function ComboCard(p: FixedTabProps & { combo: ComboView }) {
     p.onChange(v);
     done?.(v);
   };
+  const makePhoto = async () => {
+    setErr('');
+    setMaking(true);
+    const a = await call('POST', `${COMBOS_API}/${c.id}/photo`, {});
+    setMaking(false);
+    if (!a.data.ok) {
+      setErr(errorText(d, a));
+      return;
+    }
+    setPhoto((a.data.photoUrl as string | null) ?? null);
+    p.onChange(a.data.combo as ComboView);
+    p.say(tt('toast.photoMade', { name: nameIn(lang, c.nameEn, c.nameBn) }));
+  };
   const onPrice = (v: string) => {
     setPrice(v);
     clearTimeout(timer.current);
@@ -116,7 +131,7 @@ function ComboCard(p: FixedTabProps & { combo: ComboView }) {
   const name = nameIn(lang, c.nameEn, c.nameBn);
   return (
     <article className={`ad-card cb-card${live ? '' : ' off'}`} data-testid={`cb-combo-${c.slug}`}>
-      <SetArt photoUrl={p.photos[c.id]} pieces={art} alt={tt('artAlt', { name })} />
+      <SetArt photoUrl={photo} pieces={art} alt={tt('artAlt', { name })} />
       <div className="cb-card-bd">
         <div className="cb-card-hd">
           <h3 className="cb-h3">{name}</h3>
@@ -156,10 +171,16 @@ function ComboCard(p: FixedTabProps & { combo: ComboView }) {
           ) : null}
           <div className="cb-row cb-row-last">
             {p.perms.write ? (
-              <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => p.onEdit(c)}>
-                <Icon name="edit" size={15} />
-                {tt('edit')}
-              </button>
+              <span className="cb-acts">
+                <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => p.onEdit(c)}>
+                  <Icon name="edit" size={15} />
+                  {tt('edit')}
+                </button>
+                <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => void makePhoto()} disabled={making} aria-busy={making} data-testid={`cb-photo-${c.slug}`}>
+                  <Icon name="camera" size={15} />
+                  {tt(making ? 'photo.making' : photo ? 'photo.again' : 'photo.make')}
+                </button>
+              </span>
             ) : (
               <span />
             )}

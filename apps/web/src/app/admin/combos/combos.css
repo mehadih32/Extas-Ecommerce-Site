@@ -304,3 +304,8 @@
 .cb-tier-box b { font-family: var(--ad-font-display); font-size: 18px; overflow-wrap: anywhere; }
 .cb-tier-box.none b { font-family: inherit; font-size: var(--ad-fs-small); color: var(--ad-muted); font-weight: 600; }
 .cb-warn { color: var(--ad-warn); font-weight: 600; }
+
+/* ---------- PR 575 · "Make set photo" beside "Edit": the two buttons wrap above the link on a phone ---------- */
+.cb-row-last { flex-wrap: wrap; }
+.cb-acts { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.cb-acts .ad-btn { min-height: var(--ad-tap); }

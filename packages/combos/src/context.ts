@@ -5,7 +5,7 @@
 // and no actor: they only read what is on sale, and the bag writes only into the customer's own open bag.
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { audit, can, requirePermission, type Actor, type RequestContext } from '@extas/auth';
-import type { StorageFor } from '@extas/media';
+import type { MediaDeps, StorageFor } from '@extas/media';
 import type { Key, Value } from '@extas/settings';
 import type { z } from 'zod';
 import { CombosError } from './errors';
@@ -25,6 +25,9 @@ export interface CombosDeps {
   settings: SettingsReader;
   /** The storage adapter (the media package's), needed only to make set photos. */
   storage?: StorageFor;
+  /** PR 575 — how the set photo's sizes are made: after the answer (Next.js `after`) or by the image worker. */
+  defer?: MediaDeps['defer'];
+  enqueue?: MediaDeps['enqueue'];
   /** Clock, for tests. */
   now?: () => Date;
 }
