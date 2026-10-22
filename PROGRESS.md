@@ -62,3 +62,4 @@ that PR's number, before the next new stage. Struck through when merged.
 | 16 | 195, 197, 203 | CN-017 SIM-F-006 | Negative ERP balance is shown (never 0) and raises the packing resolution card; booking blocked | open |
 | 17 | 212, 89, 97, 213, 214 | CN-017 SIM-F-005, F-019; CN-018 (1), (4), (6) | Fixed / Flexible set with the split-price rule; prepaid reward rule type; Eid pre-order advance type and amount; checkout honours the Eid cut-off — all settings, off by default | open |
 | 18 | 15 | CN-017 SIM-F-039 | A guest-order account gets no password; first login by SMS code (with PR 130); staging acceptance test | open |
+| 19 | 508, 4 | GitHub #21 (closed 23 Oct, superseded by #19/#20) | Admin session end to end in CI: sign in, refresh, open the sign-in page while signed in, log out (the e2e from #21, rebuilt on main) | open |
