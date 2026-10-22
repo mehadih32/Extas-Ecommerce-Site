@@ -84,7 +84,8 @@ jobs:
       # Stage and PR pages (docs/stages) and the README's stage/PR links are generated from the register: they must be
       # current on every PR and merge.
       - name: Stage pages match the register
-        run: node tools/docs/gen-stage-pages.mjs --check || { echo "::error::docs/stages or the README links are out of date: run pnpm docs:stages and commit the result"; exit 1; }
+        run: |
+          node tools/docs/gen-stage-pages.mjs --check || { echo "::error::docs/stages or the README links are out of date: run pnpm docs:stages and commit the result"; exit 1; }
       - name: Lint
         run: pnpm lint
       - name: Type-check
