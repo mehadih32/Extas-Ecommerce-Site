@@ -1,6 +1,6 @@
-# Server report — 2026-10-20 04:34 +06
+# Server report — 2026-10-23 01:33 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `1861652aecf82572fdec9d44a1b5caec67a5b957`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `227bfb5c1e8e7c26d53fe0d4ff2c2e1c51545e6d`. Overall: **PASS**.
 
 ## Machine
 
@@ -47,16 +47,16 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 3 · data disk | OK | /dev/nvme0n1 → VG extas: 8 volumes + 16 GB swap mounted, 217.97g free for growth |
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
-| PR 4 · Docker | OK | Docker version 29.9.1, compose 5.6.0; logs rotated; starts after NVMe + data disk |
+| PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; starts after NVMe + data disk |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 5 · PostgreSQL | OK | v17.11 (Debian 17.11-1.pgdg13+2), shared_buffers 16GB, temp on NVMe, WAL archive on, slow log > 100 ms, PgBouncer (transaction pool) |
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
 | PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | OK | 4.1M base + dump; daily at 02:30, WAL every minute |
+| PR 8 · backup (data disk) | OK | 5.3M base + dump; daily at 02:30, WAL every minute |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261020-0240, 336 tables restored (live has 336) |
+| PR 8 · restore test | OK | base 20261022-0231, 336 tables restored (live has 336) |
 | PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
