@@ -40,7 +40,7 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · S02 0/58 · S03 0/22 (wave 2) · total **82/598** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · S02 0/58 · **S03 9/22** · **S06 6/33** (wave 2) · total **97/598** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -63,10 +63,10 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 0 / 58 | In progress |
-| [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 0 / 22 | Not started |
+| [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 9 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566) | 0 / 39 | Not started |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 0 / 20 | Not started |
-| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 0 / 33 | Not started |
+| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 6 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **604 PRs** | **82 / 598 active** | 6 parked |
+| | **Total** | | **604 PRs** | **97 / 598 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -630,9 +630,19 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
 Started: the device gate (PR 85) runs in CI on every pull request: 15 phones, 10 tablets and 6 desktop sizes, no
 sideways scroll and every tap target at least 44×44 (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Planned — see register PRs 40–88, 501, 503, 595–600, 602: [S02](docs/MASTER-REGISTER.md#s02--storefront--pr-4088).
 
-### S03 · Combo & bundles — Not started
+### S03 · Combo & bundles — In progress
 
-Planned — see register PRs 89–104, 571–576: [S03](docs/MASTER-REGISTER.md#s03--combo--bundles--pr-89104).
+> **বাংলায় সংক্ষেপে:** অ্যাডমিনে "কম্বো" পেজে নির্দিষ্ট কম্বো বানানো, রঙের জোড়ার রুল দিলে নিজে থেকে কম্বো, সেটের দাম আর কত বাঁচে, পিসের ছবি দিয়ে সেটের ছবি, আর কম্বো রিপোর্ট। সেটের দাম আপনি নিজে বসাবেন। দোকানের কম্বো পাতা পরে আসবে (S02/S03-এর বাকি PR)।
+
+**Combo core (PR 89, 90, 571, 99, 101, 96, 97, 575, 104, `@extas/combos`, migration `0004_combos`).**
+- **Model (89):** pieces, set price, saving against buying separately, active window.
+- **Admin `/admin/combos` (90, 571):** fixed combos with a price box and switches and a live editor; auto colour-pair rules with an 8-step wizard, a rules tab and archive (nothing deleted).
+- **Set tiers (99):** "any 2 for X, any 3 for Y" read from Smart Rules (S10 PR 212).
+- **Validation, summary, bag (101, 96, 97):** what is still missing before adding; set summary and price (a struck price only from a real "was" price); `addSetToBag` adds one set with its price locked, guarded against double adds, overselling, stale and above-regular prices.
+- **Set photo (575):** composed from the piece photos with sharp; "Make set photo" in the admin.
+- **Report (104):** `?tab=report` — which sets sell, which colour pairs get picked.
+- **Permissions:** `combos.read`, `combos.write`, `combos.publish`, `combos.prices` (owner only, CLAUDE.md rule 6). Guide: [docs/admin-guide/combos.md](docs/admin-guide/combos.md).
+- **Settings:** registry v14, `registry-combos.ts`. Still planned: 91–95, 98, 100, 102, 103, 572–574, 576 (storefront combo pages and the rest).
 
 ### S10 · Smart Rules — Done (12/12)
 
@@ -685,9 +695,20 @@ Planned — see register PRs 165–174: [S07](docs/MASTER-REGISTER.md#s07--payme
 
 Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGISTER.md#s08--courier-returns-exchange--pr-175193).
 
-### S06 · Fraud & location — Not started
+### S06 · Fraud & location — In progress
 
-Planned — see register PRs 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567: [S06](docs/MASTER-REGISTER.md#s06--fraud--location--pr-156164).
+> **বাংলায় সংক্ষেপে:** ঠিকানা থেকে দোকান নিজে ডেলিভারি এলাকা আর চার্জ বের করে, আন্দাজে কখনো না; না বুঝলে কাস্টমারকে জিজ্ঞেস করে। অ্যাডমিনে "ডেলিভারি" পেজে তিনটা ব্যান্ড, আপনার সাব-এরিয়ার তালিকা, আর একটা ঠিকানা দিয়ে পরীক্ষা। চার্জ আপনি নিজে বসাবেন; শুরুতে সব বন্ধ।
+
+**Delivery-zone engine (PR 549–553, 555, `@extas/delivery`).**
+- **Gazetteer (549):** division → district → upazila/thana → area with Bengali, English and Banglish names; importer and a shared index. A public **sample** list ships; the national list comes later.
+- **Bands (550):** Dhaka City = the DNCC + DSCC map; the owner's sub-area list; one flat outside band. Bands ship **off with no charge** (owner data).
+- **Resolver (551) and guard (553):** the whole line decides, after a pause or leaving the field; still ambiguous → "Where is this address?". A charge only ever comes from a resolved place; the collision suite fails the build.
+- **Autocomplete (552):** `GET /api/delivery/suggest`, each row with its district and charge.
+- **Phone-first (555):** `POST /api/delivery/phone-area` fills the area only, limited per IP; the full address needs a login or an SMS code.
+- **Admin:** `/admin/delivery` — three bands (charge, hours, on/off), the sub-area list (add, remove, put back), Try an address. Permissions `delivery.read`, `delivery.charges`, `delivery.areas`. Guide: [docs/admin-guide/delivery.md](docs/admin-guide/delivery.md).
+- **Settings:** registry v15, group `delivery` (suggestions, phone-first limits, resolver waits) — every number editable.
+- **Tests:** gazetteer, bands, resolver, suggest, phone helper, collision suite; device gate 0 fails.
+- Still planned in S06: fraud and duplicate-order engine (156–164, 519–524, 540, 542–545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
 
 ### S14 · CRM & customers — Not started
 
@@ -775,6 +796,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #21 | PR [89](docs/stages/S03.md#pr-89), [90](docs/stages/S03.md#pr-90), [571](docs/stages/S03.md#pr-571), [99](docs/stages/S03.md#pr-99), [101](docs/stages/S03.md#pr-101), [96](docs/stages/S03.md#pr-96), [97](docs/stages/S03.md#pr-97), [575](docs/stages/S03.md#pr-575), [104](docs/stages/S03.md#pr-104), [549–553](docs/stages/S06.md), [555](docs/stages/S06.md#pr-555) | 22 Oct | S03 combo core: combo model, admin `/admin/combos` (fixed combos, auto colour-pair rules, set photo, report), set tiers from Smart Rules, set validation, summary and add-to-bag with a locked price; S06 delivery-zone engine: gazetteer (sample list), bands (Dhaka City map, sub-area list, outside), whole-line resolver with "Where is this address?", charge only from a resolved place (collision suite), autocomplete, phone-first area fill; admin `/admin/delivery` with its Bengali guide |
 | #20 | PR [4](docs/stages/S0A.md#pr-4), [85](docs/stages/S02.md#pr-85), [8](docs/stages/S0A.md#pr-8), [594](docs/stages/S21.md#pr-594), [17](docs/stages/S00.md#pr-17) | 20 Oct | CI parses every workflow file (PR [17](docs/stages/S00.md#pr-17)); Smoke test on new.extas.com.bd after every deploy and every night (every built page signed out and as a read-only check account, phone and desktop; a failure rolls the deploy back; pictures in `docs/reports/smoke/latest/`, CN-016); device gate (15 phones, 10 tablets, 6 desktops) in CI, 0/341 fails, admin tap targets 44×44; product photos and a dated docs bundle in every nightly backup, checked by the restore test; docs copied to the server on every deploy with the commit hash (CN-011) |
 | #19 | PR [208–219](docs/stages/S10.md), [594](docs/stages/S21.md#pr-594), [509](docs/stages/S00.md#pr-509), [508](docs/stages/S00.md#pr-508), [4](docs/stages/S0A.md#pr-4), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [7](docs/stages/S0A.md#pr-7) | 20 Oct | Admin sign-in fixed: a fresh installation gets its mother store in the migrate step (PR [508](docs/stages/S00.md#pr-508)), and CI signs in end to end on the production images before every deploy (PR [4](docs/stages/S0A.md#pr-4)); S10 Smart Rules complete (engine, rule admin with live preview, delivery/exchange/set/discount/festive rules, coupons, notices and pop-ups, conflicts, history, simulation); `readme-guard` CI check; store-settings falls back to the newest migrate image; `ci.yml` parses again (PR [17](docs/stages/S00.md#pr-17)), so CI and deploys run; the owner's way back in when he cannot sign in: `owner-reset.yml` gives his account a new first password on the server (PR [15](docs/stages/S00.md#pr-15)) |
 | #18 | PR [509](docs/stages/S00.md#pr-509), [17](docs/stages/S00.md#pr-17), [15](docs/stages/S00.md#pr-15), [4](docs/stages/S0A.md#pr-4) + CN-010 | 20 Oct | Owner values go into the live store from the server (`store-settings.yml`), the owner-account workflow and Bengali password steps, deploy result committed back, CI checks one register PR per commit and README against the register; BLOCKED answers struck through |
