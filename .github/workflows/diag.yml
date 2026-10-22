@@ -1,4 +1,7 @@
-# Throwaway diagnosis (admin sign-in). Read-only: no data is changed. Prints no secret, cookie, IP or e-mail.
+# Throwaway (admin sign-in, 23 Oct): verify the live staging sign-in with a real browser and give the owner account a
+# new password. The password is made on the runner, masked, set through the app's own reset + sign-in page, and leaves
+# the runner only encrypted to a public key (the private key never left the session that reads it). No secret, cookie,
+# IP or e-mail is printed.
 name: diag-admin-login
 on:
   push:
@@ -6,42 +9,90 @@ on:
 permissions:
   contents: read
 jobs:
-  diag:
+  verify:
     runs-on: [self-hosted, extas-vm]
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
-      - name: Diagnose
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix-admin-login
+      - name: Live version and mother store
         shell: bash
         run: |
-          set +e +o pipefail; set -u
-          san() { sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/<email>/g; s/([0-9a-f]{1,4}:){3,7}[0-9a-f]{1,4}/<ip6>/g'; }
+          set -euo pipefail
+          echo "live: $(sudo jq -r '.image + " " + .result' /srv/extas/state/last-good-deploy.json)"
+          n=$(sudo docker exec extas-postgres psql -U extas -d extas -Atc 'select count(*) from "Store"')
+          echo "stores: $n"
+          [ "$n" -ge 1 ] || { echo "::error::no mother store yet"; exit 1; }
+      - name: Reset, sign in on staging, set the new password, sign in again
+        id: run
+        shell: bash
+        run: |
+          set -euo pipefail
           S=/srv/extas/config/secrets
-          H=new.extas.com.bd
-          PW="$(sudo grep '^STAGING_PASSWORD=' $S/staging.env | cut -d= -f2-)"
-          echo "::add-mask::$PW"
-          U="$( . /etc/extas/server.conf 2>/dev/null; echo "${EXTAS_STAGING_USER:-extas}")"
-          OE="$(sudo grep '^OWNER_EMAIL=' $S/owner-login.env 2>/dev/null | cut -d= -f2-)"; [ -n "$OE" ] && echo "::add-mask::$OE"
-          NC=$(mktemp); printf 'user = "%s:%s"\n' "$U" "$PW" > "$NC"; chmod 600 "$NC"
-          hdr() { sed -E 's/^(set-cookie: [^=]+=)[^;]*/\1<v>/I' | grep -iE '^(HTTP|location|set-cookie|cf-cache|cache-control|www-auth|x-robots)' | san; }
-          echo "== owner-login.env present: $(sudo test -s $S/owner-login.env && echo yes || echo no)"
-          echo "== no auth"; for p in /admin/login /admin/products; do echo "-- $p"; curl -sSI "https://$H$p" | hdr; done
-          echo "== basic auth"; for p in /admin/login /admin/products /admin /api/admin/auth/me; do echo "-- $p"; curl -sSI -K "$NC" "https://$H$p" | hdr; done
-          echo "== login page body markers (basic auth)"; curl -sS -K "$NC" "https://$H/admin/login" | grep -oE 'ad-login|couldn.t load|NEXT_REDIRECT|name="email"|type="password"' | sort | uniq -c
-          echo "== preview cookie flow"; J=$(mktemp); curl -sS -o /dev/null -K "$NC" -c "$J" "https://$H/" ; echo "cookies after first: $(awk 'NF>=7{print $6}' "$J" | tr '\n' ' ')"
-          curl -sSI -b "$J" "https://$H/admin/login" | hdr
-          rm -f "$NC" "$J"
-          echo "== containers"; sudo docker ps --format '{{.Names}} {{.Image}} {{.Status}}' | san
-          echo "== last good deploy"; sudo cat /srv/extas/state/last-good-deploy.json 2>/dev/null | san; echo
-          ls -la /srv/extas/state 2>/dev/null | awk '{print $6,$7,$8,$9}'
-          echo "== caddy auth snippet"; sudo sh -c 'grep -l extas_preview /srv/extas/stack/caddy/*.caddy /srv/extas/stack/caddy/* 2>/dev/null' ; sudo docker exec extas-caddy sh -c 'grep -c extas_preview /etc/caddy/* 2>/dev/null' || true
-          echo "== database"
-          q() { sudo docker exec -i extas-postgres psql -U extas -d extas -At -F ' | ' -c "$1" 2>&1 | san; }
-          q 'select id, slug, "createdAt" from "Store" order by id'
-          q 'select status, ("passwordSetAt" is null) as must_change, "twoFactorEnabled", "lastLoginAt", "createdAt", "updatedAt" from "StaffUser"'
-          q 'select count(*) filter (where "revokedAt" is null and "expiresAt" > now()) as live, count(*) as total, max("lastSeenAt") from "StaffSession"'
-          q 'select success, reason, "createdAt" from "StaffLoginEvent" order by "createdAt" desc limit 25'
-          q 'select r.key, a."storeId", a."archivedAt" from "StaffRoleAssignment" a join "Role" r on r.id=a."roleId"'
-          q '\d "StaffRoleAssignment"'
-          echo "== app logs (admin/auth/store/error, last 72h)"
-          for c in $(sudo docker ps --format '{{.Names}}' | grep -E 'app' ); do echo "-- $c"; sudo docker logs --since 72h "$c" 2>&1 | grep -iE 'admin|auth|store|error|warn|redirect' | tail -25 | san; done
-          echo "== deploy logs"; sudo ls -t /srv/extas/logs 2>/dev/null | head; sudo sh -c 'ls -t /srv/extas/logs/deploy* 2>/dev/null | head -1 | xargs -r tail -40' | san
+          W="$(mktemp -d)"; chmod 700 "$W"
+          SHOTS="$RUNNER_TEMP/shots"; mkdir -p "$SHOTS"; OUT="$RUNNER_TEMP/out"; mkdir -p "$OUT"
+          cleanup() { rm -rf "$W"; }
+          trap cleanup EXIT
+          PV="$(sudo sed -n 's/^STAGING_PASSWORD=//p' $S/staging.env)"; echo "::add-mask::$PV"
+          PU="$( . infra/config/server.conf; echo "$EXTAS_STAGING_USER")"
+          H="$( . infra/config/server.conf; echo "$EXTAS_STAGING_HOST")"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/server/bin/extas-owner-reset >/dev/null 2>&1 || { echo "::error::owner reset failed"; sudo cat /srv/extas/state/owner-reset.md; exit 1; }
+          sudo sed -n 's/^\(Result\|| Result\|| Detail\).*/&/p' /srv/extas/state/owner-reset.md
+          EM="$(sudo sed -n 's/^OWNER_EMAIL=//p' $S/owner-login.env)"; echo "::add-mask::$EM"
+          FP="$(sudo sed -n 's/^OWNER_FIRST_PASSWORD=//p' $S/owner-login.env)"; echo "::add-mask::$FP"
+          p="$(openssl rand 900 | LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' | cut -c1-20)"
+          [ "${#p}" -eq 20 ] || { echo "::error::password generation"; exit 1; }
+          NP="${p:0:5}-${p:5:5}-${p:10:5}-${p:15:5}"; echo "::add-mask::$NP"
+          printf '%s' "$FP" > "$W/first"; printf '%s' "$NP" > "$W/new"
+          { echo "BASE=https://$H"; echo "E2E_EMAIL=$EM"; echo "SMOKE_HTTP_USER=$PU"; echo "SMOKE_HTTP_PASSWORD=$PV"; } > "$W/env"
+          IMG=mcr.microsoft.com/playwright:v1.63.0-noble
+          sudo docker pull -q "$IMG" >/dev/null
+          pw() { sudo docker run --rm --env-file "$W/env" "$@" -v "$W:/s:ro" -v "$PWD/tools:/t:ro" "$IMG" \
+            sh -c 'npm install -g --silent --no-audit --no-fund playwright@1.63.0 >/dev/null 2>&1; NODE_PATH=/usr/local/lib/node_modules:/usr/lib/node_modules node /t/admin-session-e2e.mjs'; }
+          rc1=0; echo "== journey 1: first password → new password"
+          pw -e E2E_PASSWORD_FILE=/s/first -e E2E_NEW_PASSWORD_FILE=/s/new -e E2E_SHOTS=/shots -v "$SHOTS:/shots" || rc1=$?
+          rc2=0; echo "== journey 2: the new password signs in"
+          pw -e E2E_PASSWORD_FILE=/s/new || rc2=$?
+          if [ "$rc2" -eq 0 ]; then
+            FINAL="$NP"; status="ok"
+            t="$(sudo mktemp "$S/.owner-login.XXXXXX")"; sudo chmod 600 "$t"
+            printf 'OWNER_EMAIL=%s\nOWNER_FIRST_PASSWORD=%s\nOWNER_CREATED_AT=%s\n' "$EM" "$NP" "$(date -Is)" | sudo tee "$t" >/dev/null
+            sudo mv "$t" $S/owner-login.env; sudo chmod 600 $S/owner-login.env
+          else
+            FINAL="$FP"; status="new-password-failed-first-password-given"
+          fi
+          cat > "$W/pub.pem" <<'PUBKEY'
+            -----BEGIN PUBLIC KEY-----
+            MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAvPSYKWoyg/xP8mvfBCH/
+            okd+nFW5Ld/wGP8NNDWkn5glu9n4Dyd1E7PtLQFfBBleGslgr1HoruMidRLw3QQV
+            7HVBdrLE/FEY1LZ+WN471LAG2xZ/FnbGaLC4TsX8MikYOdnEbw2IIVHQIomeaA+Y
+            ObZYgXq+vwxAw8subTr/ziclL05zssDsUVqu8udVuDUcPZJDg1sZ6AptX0BAuRE/
+            7kSPShkZ3GrsLU3sX1StfSGHiWJv6IQ5KzgwyPaaeXFHV4aIhd1utTCRxxTfEK9e
+            cq/r8cW4kfgRYTa215BpGHMxRpb7nYVS+OZIcHIz6wloK/M0C4LDx9WVF3DS+z1w
+            3sAw4X5YzQOKBKpGgH1bMyLBFDqtk4CQ1vcYET2U9RsqBtHm3fDsx0F4GH4yfwL7
+            oT4WPISDZirwTGL/jXSiRglpndA9qHuyqdq+VpeUDgxfPdjZcGnGELP+zlB1sK28
+            JMWDNFUY8nZEepQSWBQHg8xcyWyQKMLacNMA6cXh3ky9AgMBAAE=
+            -----END PUBLIC KEY-----
+          PUBKEY
+          sed -i 's/^ *//' "$W/pub.pem"
+          printf 'https://%s/admin/login\n%s\n%s\n%s\n' "$H" "$FINAL" "$EM" "$status" \
+            | openssl pkeyutl -encrypt -pubin -inkey "$W/pub.pem" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -out "$OUT/owner-login.bin"
+          sudo chown -R "$(id -u):$(id -g)" "$SHOTS"
+          ls -l "$OUT" "$SHOTS" | awk '{print $5, $9}'
+          echo "journey1=$rc1 journey2=$rc2 status=$status"
+          [ "$rc1" -eq 0 ] && [ "$rc2" -eq 0 ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owner-login
+          path: ${{ runner.temp }}/out/owner-login.bin
+          retention-days: 1
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots
+          path: ${{ runner.temp }}/shots
+          retention-days: 1
+          if-no-files-found: ignore
