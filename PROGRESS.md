@@ -39,7 +39,7 @@
 
 ## Follow-ups
 
-Scope that CN-011 to CN-016 added to PRs already merged (CN-016 rule 3). Each is built as its own follow-up commit on
+Scope that CN-011 to CN-019 added to PRs already merged (CN-016 rule 3). Each is built as its own follow-up commit on
 that PR's number, before the next new stage. Struck through when merged.
 
 | # | PR | From | What is still to build | State |
@@ -56,3 +56,9 @@ that PR's number, before the next new stage. Struck through when merged.
 | 10 | 413–424 (423), 570 | CN-015 | Customer problems found automatically, shown in admin Site health and README "Running problems" | starts with checkout (S04) |
 | 11 | 500 | owner, 20 Oct 15:20 | ~~The sign-in page says "write the full e-mail address" when the e-mail field has no "@" (the owner typed "admin"), in the admin's language; a smoke check for it~~ `EmailField` (`login.emailHint` in both message files; shown once the field is left or on send, and such an e-mail is never sent, so it costs no wrong try), unit test, smoke check in `tools/smoke.mjs` | done (22 Oct, PR 500 follow-up commit) |
 | 12 | 15 | owner, 20 Oct 15:20 | `extas-owner-reset` on the server (Azure Run command): a new one-time first password for the owner account when he forgets his own, read with `extas-owner-login`; audited | done in #19 (PR 15: `owner-reset.yml`) |
+| 13 | 491 | CN-012 (2) | Register the checkout texts and field order, bag-panel style, recommendation fill rule, payment options and logo choice as settings (text reaches the phone; design only after the device gate) | open |
+| 14 | 494, 215 | CN-017 SIM-F-033, F-031 | Hardcode guard gets the simulation's hard-coded customer texts as test cases; rule texts promise only what the system does | open |
+| 15 | 549–553, 555 | CN-017 SIM-F-003, F-015, F-030, F-037 | Acceptance tests: shown = stored = collected delivery charge; identity check beyond the phone; landmark-only address to the queue; staff phone fix with a log | open (most land with S04/S05 callers) |
+| 16 | 195, 197, 203 | CN-017 SIM-F-006 | Negative ERP balance is shown (never 0) and raises the packing resolution card; booking blocked | open |
+| 17 | 212, 89, 97, 213, 214 | CN-017 SIM-F-005, F-019; CN-018 (1), (4), (6) | Fixed / Flexible set with the split-price rule; prepaid reward rule type; Eid pre-order advance type and amount; checkout honours the Eid cut-off — all settings, off by default | open |
+| 18 | 15 | CN-017 SIM-F-039 | A guest-order account gets no password; first login by SMS code (with PR 130); staging acceptance test | open |

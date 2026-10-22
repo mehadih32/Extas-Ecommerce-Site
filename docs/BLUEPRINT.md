@@ -15,7 +15,7 @@ without a tag. Part E is rewritten for 600 PRs; V1's Part E is kept at its end a
 
 **V2.1 (19 Oct 2026, 23:33).** This file is V2 with change note **CN-001** applied — the owner's server specification (`review/SERVER-SETUP-SPEC-OWNER.md`), approved point by point (ROUND15 Note 48). `EXTAS-ECOMMERCE-V2.md` is kept unchanged beside it as history. V2.1 changes sit in **V2.1 blocks** (quoted paragraphs starting "V2.1 · 19 Oct 23:33"), in-place tags **[Replaced 19 Oct 23:33 …]** with the old text struck through, and the new section **A2.9** (the full server specification). Nothing from V2 is dropped.
 
-**Source of truth for scope:** `master/MASTER-REGISTER.md` (604 PRs, 28 stages; 600 at V2). Where this file and the
+**Source of truth for scope:** `master/MASTER-REGISTER.md` (~~604~~ **606 PRs** since 23 Oct 2026, 28 stages; 600 at V2, 604 at V2.1). Where this file and the
 register disagree, the register wins and this file is wrong. Owner notes: `review/ROUND15.md` (Notes ~~1–48~~ **1–49**, V2.1 final · 20 Oct).
 **Working reference:** the demo, `scratchpad/proto/src/` (built to `dist/r16.html`); demo files are cited by
 name where they define behaviour.
@@ -177,7 +177,7 @@ name where they define behaviour.
 - F2. Questions raised while writing this specification
 - F4. Status of every V1 question (V2, 19 Oct)
 
-**Appendix A · Every PR, 1–604**
+**Appendix A · Every PR, 1–606**
 
 
 **Appendix B · Open owner decisions and owner data still needed**
@@ -211,7 +211,7 @@ name where they define behaviour.
 | **C** | AI 360, costs, agents, organic growth, social, studio, video | Locked | **Locked, updated.** Seven fixed agents and chain of command (C10), blog engine (C11), Google traffic plan (C12), naming and URL control (C13) |
 | **D** | UI/UX | In review | **Reviewed through round 15, phone and desktop; ready for the code phase** (owner, Note 44.1). New D8 combos, D9 desktop, D10 site-building tools, D11 admin language, D12 performance budgets. **Paused items: PR 596 (extensions), 598, 599, 600**. **V2.1 final · 20 Oct:** owner bag review 43.3–43.10 built (D3.11; Shimmer control and tier box, D10.4), timing rules from TA-2 (D1.2 R18), phone price rule (R19), admin language 0 Bengali in English mode on 206 routes (D11) |
 | **F** | Decisions still open (V1 list) | Reference | **Reference.** Each V1 question now carries its status; the live open list is Appendix B |
-| **App. A** | Every PR 1–604 (1–600 at V2): title, stage, status, owner, demo file | — | New |
+| **App. A** | Every PR 1–606 (1–600 at V2, 1–604 at V2.1; 605–606 added 23 Oct 2026): title, stage, status, owner, demo file | — | New |
 | **App. B** | Open owner decisions and owner data still needed | — | New. **V2.1 final · 20 Oct:** B.4 #13 (4-piece tier prices) |
 | **App. C** | QA gate definition and test inventory | — | New |
 
@@ -798,26 +798,21 @@ to read code or open GitHub.
 
 > **CN-016 · 20 Oct 2026 (owner: nothing reaches the owner broken).** The owner found that after logging in, the admin on new.extas.com.bd showed "This page couldn't load". New gate: **after every deploy and every night**, a smoke test runs on the runner with Playwright against new.extas.com.bd. It signs in with a check account whose password lives only on the server, then visits every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, shows no error screen and no console error, and has no failed request. If any page fails, the deploy rolls back by itself and the fix comes before any new PR. Screenshots go to `docs/reports/smoke/latest/`, and the result is shown on the status page and in README. Every bug the owner finds gets a smoke check in the same fix PR. No new PR numbers: this lands on PR 4/17 (deploy) and Appendix C.
 
-> **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report §5, and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
+> **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report ~~§5~~ §4 (the "Register:" line of each finding), and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
+> - an SMS to a prepaid customer that says "pay ৳X on delivery";
+> - courier "Book all" booking cancelled orders;
+> - the delivery charge shown at checkout differing from the one stored;
+> - edits made after booking never reaching the parcel (lock the order, or re-book it);
+> - no states for partial delivery, a return with the charge paid, or a failed delivery, with their money and stock postings;
+> - negative stock shown as 0;
+> - a gift parcel going to the payer's address;
+> - a wrongly returned item restocked under the wrong SKU;
+> - hardcoded text;
+> - the account password for an account created from an order being the phone number.
+>
+> The owner's decisions are in report §8 (9 questions: prepaid incentive, a COD advance for risky orders, default switches, the split price for a set, the swap charge, Eid pre-orders, rider-overcharge refunds, guest coupons, WhatsApp self-confirm). They are copied to `BLOCKED.md` as Bengali questions (→ answered in CN-018; questions 3 and 9 decided in CN-019). The real-site rerun (CN-013) uses the same 50-order script.
 
 > **CN-018 · 23 Oct 2026 (owner's answers to the CN-017 questions; a simple admin; "build the system, don't ask for numbers").**
-
-> **CN-019 · 23 Oct 2026 (owner: one Messages control centre; a modern, simple admin with a detailed manual).**
->
-> **(1) Messages control centre (admin → Messages).**
-> - **Order journey.** A timeline from order received through confirmation, packed, booked, out for delivery, delivered, and the follow-ups after delivery. For each step the owner chooses whether to send, the channel (SMS, WhatsApp, e-mail or none), the template, and the delay or send time. A cap sets the maximum number of messages per order, per channel and in total.
-> - **Optional messages.** The delivery-day morning message ("arrives today, keep ৳X ready") is built and switchable. The Day-1 care message ("did the size fit?") and the Day-3 review request are built and on by default; they send once a provider is connected (mock until then).
-> - **Self-confirm WhatsApp (idea 5).** A step the owner can place in the journey. Whether it counts as the order's one WhatsApp is a setting (Q9), not fixed now.
-> - **Promotions.** Campaigns with an audience, channel, schedule and frequency cap, plus quiet hours. A preview shows how many people will receive it and the cost.
-> - **Every message is logged:** what was sent, when, by which channel, the cost, and its delivery state.
->
-> No new PR numbers: this lands on PR 148, 289, 292, 295, 300, 505 and 545, built as one section.
->
-> **(2) Modern, simple admin.** Every section uses modern UI (cards, clean tables with saved filters, clear charts, empty states, inline help) and stays simple to use: one main task per screen, rare options under "More options", one search, role-based views. Charts and analytics are modern and readable. This covers the blog, product add, stock, returns, couriers and every other section. `docs/ADMIN-ARCHITECTURE.md` plus high-resolution mock-ups of every section are approved by the owner before the admin build continues.
->
-> **(3) User manual.** A detailed Bengali manual for each section, step by step with screenshots, in `docs/admin-guide/` (CN-014), written as each section is built.
->
-> **(4) Extra simulation.** About 20 more orders from angles the first 50 missed: fully prepaid, risk rules applied (an advance asked for and paid or refused), older buyers (40+ and 50+), a low-literacy rural buyer, and others. The results are appended to the simulation report.
 >
 > **Standing rule.** Every policy number or choice — amounts, percentages, limits, whether a perk is given at all — is a **backend setting with sensible options, off by default**. The owner decides it later, case by case. Never ask the owner for a figure; ask only whether a system should exist at all.
 >
@@ -836,7 +831,7 @@ to read code or open GitHub.
 > - A partial-advance amount option is also available.
 > - Never auto-block (hard rule).
 >
-> **(3) Delivery-day and Day-1 messages:** explained to the owner again; they stay off until he decides.
+> **(3) Delivery-day and Day-1 messages:** ~~explained to the owner again; they stay off until he decides.~~ → decided in CN-019: the delivery-day message is built as an option (switchable); the Day-1 care message and the Day-3 review request are on by default (mock until a provider is connected).
 >
 > **(4) Sets:** each set has a setting, "Fixed set (no single piece can be kept or returned)" or "Flexible".
 > - For flexible sets: the split-price rule and whether a delivery charge applies when the kept part falls under the free-delivery limit.
@@ -857,7 +852,7 @@ to read code or open GitHub.
 >
 > **(9) Coupons:** each coupon has a setting "Who can use it": guests, logged-in customers, or both. The Eid coupon can be either.
 >
-> **(10) Self-confirm WhatsApp:** explained to the owner again; the decision is pending.
+> **(10) Self-confirm WhatsApp:** ~~explained to the owner again; the decision is pending.~~ → decided in CN-019: a step the owner can place in the Messages journey; whether it counts as the order's one WhatsApp is a setting.
 >
 > **Simple admin (owner: the demo's admin is far too crowded, so the live admin must not be).** Before more admin screens are built, the project writes `docs/ADMIN-ARCHITECTURE.md`. It must cover:
 > - At most about 10 top-level sections in plain words: Dashboard · Orders · Products · Customers · Marketing · Delivery · Money · Support · Reports · Settings.
@@ -868,18 +863,23 @@ to read code or open GitHub.
 > - No page is a wall of switches.
 >
 > One picture of the new admin layout goes to the owner before the build continues. The demo's admin is used for **what** to include, not **how** to lay it out.
-> - an SMS to a prepaid customer that says "pay ৳X on delivery";
-> - courier "Book all" booking cancelled orders;
-> - the delivery charge shown at checkout differing from the one stored;
-> - edits made after booking never reaching the parcel (lock the order, or re-book it);
-> - no states for partial delivery, a return with the charge paid, or a failed delivery, with their money and stock postings;
-> - negative stock shown as 0;
-> - a gift parcel going to the payer's address;
-> - a wrongly returned item restocked under the wrong SKU;
-> - hardcoded text;
-> - the account password for an account created from an order being the phone number.
+
+> **CN-019 · 23 Oct 2026 (owner: one Messages control centre; a modern, simple admin with a detailed manual).**
 >
-> The owner's decisions are in report §8 (9 questions: prepaid incentive, a COD advance for risky orders, default switches, the split price for a set, the swap charge, Eid pre-orders, rider-overcharge refunds, guest coupons, WhatsApp self-confirm). They are copied to `BLOCKED.md` as Bengali questions. The real-site rerun (CN-013) uses the same 50-order script.
+> **(1) Messages control centre (admin → Messages).**
+> - **Order journey.** A timeline from order received through confirmation, packed, booked, out for delivery, delivered, and the follow-ups after delivery. For each step the owner chooses whether to send, the channel (SMS, WhatsApp, e-mail or none), the template, and the delay or send time. A cap sets the maximum number of messages per order, per channel and in total.
+> - **Optional messages.** The delivery-day morning message ("arrives today, keep ৳X ready") is built and switchable. The Day-1 care message ("did the size fit?") and the Day-3 review request are built and on by default; they send once a provider is connected (mock until then).
+> - **Self-confirm WhatsApp (idea 5).** A step the owner can place in the journey. Whether it counts as the order's one WhatsApp is a setting (Q9), not fixed now.
+> - **Promotions.** Campaigns with an audience, channel, schedule and frequency cap, plus quiet hours. A preview shows how many people will receive it and the cost.
+> - **Every message is logged:** what was sent, when, by which channel, the cost, and its delivery state.
+>
+> No new PR numbers: this lands on PR 148, 289, 292, 295, 300, 505 and 545, built as one section.
+>
+> **(2) Modern, simple admin.** Every section uses modern UI (cards, clean tables with saved filters, clear charts, empty states, inline help) and stays simple to use: one main task per screen, rare options under "More options", one search, role-based views. Charts and analytics are modern and readable. This covers the blog, product add, stock, returns, couriers and every other section. `docs/ADMIN-ARCHITECTURE.md` plus high-resolution mock-ups of every section are approved by the owner before the admin build continues.
+>
+> **(3) User manual.** A detailed Bengali manual for each section, step by step with screenshots, in `docs/admin-guide/` (CN-014), written as each section is built.
+>
+> **(4) Extra simulation.** About 20 more orders from angles the first 50 missed: fully prepaid, risk rules applied (an advance asked for and paid or refused), older buyers (40+ and 50+), a low-literacy rural buyer, and others. The results are appended to the simulation report.
 
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
@@ -2005,6 +2005,8 @@ The point: two months after launch the owner says "move this menu", and the blue
 > retail section. The V1 table below is history.
 >
 > **V2.1 · 19 Oct 23:33:** **604 PRs, 28 stages**; 598 active, 6 parked (PR 601–604 added by CN-001).
+>
+> **23 Oct 2026 (CN-014 h, CN-017):** **606 PRs, 28 stages**; 600 active, 6 parked (PR 605 gift mode and PR 606 bulk / corporate lane, both in S04).
 
 
 | Item | Value |
@@ -2052,11 +2054,13 @@ Demo: `#/admin/settings` (`89-admin-system.js`, `89s-shop-settings.js`).
 > 473 PRs) is kept verbatim at the end of this part as **E-H** for the audit trail.
 >
 > **V2.1 · 19 Oct 23:33 (CN-001):** 604 PRs — PR 601 and 604 in S0A, 603 in S00, 602 in S02. E0–E3 are updated in place; Appendix A lists all 604.
+>
+> **23 Oct 2026 (CN-014 h, CN-017):** 606 PRs — PR 605 (gift mode) and PR 606 (bulk / corporate lane), both in S04. E0–E3 and Appendix A are updated in place.
 
 This is the spine of the build. Every PR belongs to exactly one stage, and the stage decides build order.
 **PR numbers 1–490 run in build order; from 491 a number is an identity, not a position** — a new PR takes the
 next free number but is built inside its stage (PR 491 is built at S00 time). The register is the source of truth
-(`master/MASTER-REGISTER.md`); Appendix A lists all ~~600~~ 604 (V2.1).
+(`master/MASTER-REGISTER.md`); Appendix A lists all ~~600~~ ~~604 (V2.1)~~ 606 (23 Oct 2026).
 
 ## E0. The stage table (from the register, 19 Oct)
 
@@ -2067,7 +2071,7 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | S01 | Catalog, media & images | 22 | 19–39, 590 | 19 | locked | Bhandari |
 | S02 | Storefront | 58 | 40–88, 501, 503, 595–600, 602 | 35 | locked; UI in review | Sawdagor (design: Shilpi) |
 | S03 | Combo & bundles | 22 | 89–104, 571–576 | 16 | locked; UI in review | Sawdagor |
-| S04 | Cart, checkout, accounts | 39 | 105–137, 558, 560, 561, 563, 565, 566 | 33 | locked; UI in review | Sawdagor |
+| S04 | Cart, checkout, accounts | 41 | 105–137, 558, 560, 561, 563, 565, 566, 605, 606 | 33 | locked; UI in review; **605–606 filed 23 Oct** | Sawdagor |
 | S05 | Order management | 20 | 138–155, 541, 546 | 18 | locked | Sawdagor |
 | S06 | Fraud & location | 33 | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | 9 | **answered 18 Oct** | Gyani |
 | S07 | Payments & wallet | 10 | 165–174 | 10 | locked | Sawdagor |
@@ -2091,7 +2095,7 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | 10 | locked | Gyani |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | — | **parked** — handover pack | — (parked) |
 | S27 | No-ERP stock module | parked | — | — | **parked** — handover pack; numbered when approved | — (parked) |
-| | **Total** | **604** | | **473** | 598 active · 6 parked | |
+| | **Total** | **606** | | **473** | 600 active · 6 parked | |
 
 Shilpi (A360-05) owns the design layer of every customer-facing surface and reviews what Sawdagor builds;
 Tirondaj (A360-07) owns the paid-ads PRs inside S13 (256–270, 278, 283, 531, 581); the five author agents
@@ -2099,13 +2103,13 @@ Tirondaj (A360-07) owns the paid-ads PRs inside S13 (256–270, 278, 283, 531, 5
 
 **Why the counts moved since V1 (473 → 600):** the 12 mis-filed PRs were re-filed into the stages that describe
 them (S08 → S02 page builder and label dictionary; S10 → S11 category SEO; S14 → S20 invoice templates; S19 → S02
-celebration overlay; S20 → S18 user manual; S23 → S02 Find My Size), and 127 PRs were added. The trail is E1. **V2.1:** four more (601–604, the owner's server spec) → **604**.
+celebration overlay; S20 → S18 user manual; S23 → S02 Find My Size), and 127 PRs were added. The trail is E1. **V2.1:** four more (601–604, the owner's server spec) → **604**. **23 Oct 2026:** two more (605 gift mode, 606 bulk / corporate lane, both S04) → **606**.
 
 ## E1. How the count was arrived at (V2 trail)
 
 The V1 trail to 473 / 483 is in E-H below. From the re-tally the register records every step:
 
-*(The register's own table; its heading still reads "How this reached 582" but it runs to 600.)* *(V2.1: the heading now reads "How this reached 604".)*
+*(The register's own table; its heading still reads "How this reached 582" but it runs to 600.)* *(V2.1: the heading now reads "How this reached 604".)* *(23 Oct 2026: "How this reached 606".)*
 
 | Step | Change | Total |
 |---|---|---:|
@@ -2140,11 +2144,12 @@ The V1 trail to 473 / 483 is in E-H below. From the re-tally the register record
 | Site builder — every part of the site editable like WordPress/Elementor, with guardrails (owner, 19 Oct 21:23) | +1 | 598 |
 | In-dashboard help and the handover user manual — no coder needed (owner, 19 Oct 22:14) | +1 | 599 |
 | On-page edit mode with phone review and the AI checker (owner, 19 Oct 22:27–22:33) | +1 | 600 |
-| Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | **604** |
+| Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | 604 |
+| Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | **606** |
 
 ## E2. Checks on the numbers
 
-- **Both routes agree.** The stage column sums to **604** (V2.1; 600 at V2); the ranges expand to 604 distinct numbers, 1–604, with
+- **Both routes agree.** The stage column sums to ~~**604** (V2.1; 600 at V2)~~ **606** (23 Oct 2026; 604 at V2.1, 600 at V2); the ranges expand to 606 distinct numbers, 1–606, with
   no gap and no duplicate (verification script, Appendix C, C9).
 - **V1's three warnings:** (1) the 12 mis-filed PRs are re-filed (above); (2) the S0A/S19 double count stays fixed;
   (3) the old "263 authoritative" section stays superseded.
@@ -2163,7 +2168,7 @@ their stages. 2–3 agents build at once (A1.4 V2).
 | 0 | S0A | 1–10 (PR 1–3 updated for the new VPS; **V2.1:** PR 1–10 carry the owner's server spec), **601 NVMe boot unit, 604 hardware-aware profile** — order in A2.9.16 | Server first; no application code before its checks pass |
 | 1 | S00, S01, S09 | 491–496, 500, 508–510 (settings framework, **with the schema on day one**); **603 database performance pack with the schema (V2.1)**; 590 naming and URLs; image pipeline PR 22, 24, 37 (V2.1 scope); 497–499 ERP-optional seam | Schema, settings, catalogue and the ERP link |
 | 2 | S02, S03, S10 | **602 four-layer cache (V2.1)**; 501, 503 (branding, language, admin English); 595 layout builder, 597 launch default, 596 side canvas (desktop only), 598 → 599 → 600 (paused, finished here in this order); 571–576 combos | The storefront, its builder and the rules that drive it |
-| 3 | S04, S05, S07, S08 | 558, 560, 561, 563, 565, 566 checkout parameter and address rules; 541, 546 order dashboard and cancellation notice; 525, 526, 564 courier reconciliation | The money path, end to end |
+| 3 | S04, S05, S07, S08 | 558, 560, 561, 563, 565, 566 checkout parameter and address rules; 605 gift mode and 606 bulk / corporate lane (23 Oct 2026); 541, 546 order dashboard and cancellation notice; 525, 526, 564 courier reconciliation | The money path, end to end |
 | 4 | S06, S14, S20, S22 | 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 fraud and delivery-zone engines; 505, 533–535 CRM; 538 support | Everything around an order once it exists |
 | 5 | S11, S12, S13, S23 | 527, 586, 588 SEO; 528–530, 547, 591–593 blog; 531, 532, 548, 569, 589 marketing | Being found and being marketed |
 | 6 | S15, S16, S21 | 506, 577–585 AI 360 and agents; 504, 536, 537, 568 finance; 570 audit runner, 594 PR register | The control room and the numbers it governs |
@@ -6597,11 +6602,13 @@ F3 rows: buy-button colours → #61; floating WhatsApp → #62; sub-menu → #63
 
 ---
 
-# Appendix A · Every PR, 1–604
+# Appendix A · Every PR, 1–606
 
 Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register data the demo builds from it (`proto/src/04-register-data.js`, written by `tools/make-register.py` after Note 45: status, owning agent, demo file). **Status:** *Filed* = specified in the register, built in the code phase · *In demo* = a working reference exists in the demo (the register generator's reading of demo source headers; "route hint" = matched by route only) · *Parked* = S26 handover pack · *paused* = finished in the code phase (status table at the top). **165 titles are marked *(derived)*:** the register lists those PRs by range only; their titles come from V1's own item lists in order (positional, to be confirmed when the register is itemised), from agent files that name them, or from the stage's section of this specification.
 
 **V2.1 (19 Oct 23:33, CN-001):** rows 601–604 are added; rows whose scope the owner's server spec changed carry "· updated 19 Oct 23:33 (CN-001)" in the title.
+
+**23 Oct 2026:** rows 605 (gift mode, CN-014 h) and 606 (bulk / corporate lane, CN-017 SIM-F-023) are added. The dated scope from CN-012 … CN-019 is on the register rows ("Updated 23 Oct 2026 (CN-0xx)").
 
 | PR | Title | Stage | Status | Owner | Demo reference |
 |---:|---|---|---|---|---|
@@ -7209,6 +7216,8 @@ Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register da
 | 602 | Four-layer cache plus invalidation — browser, Cloudflare, server page cache, Redis; purge rules; 15 s stock display with live checks at bag and checkout; Clear all cache (owner server spec, 19 Oct 23:33) | S02 | Filed | Sawdagor, Prohori | V2.1 final · 20 Oct: demo `#/admin/cache` (sample data) |
 | 603 | Database performance pack — required indexes, pg_trgm, slow query log, slowest-queries page, report materialized views and low-priority pool (owner server spec, 19 Oct 23:33) | S00 | Filed | Prohori | V2.1 final · 20 Oct: slowest queries in demo `#/admin/server` (sample data) |
 | 604 | Hardware-aware auto profile and run-anywhere — limits from detected CPU and RAM, storage adapter (local / Blob / S3), CDN optional (owner server spec, 19 Oct 23:33) | S0A | Filed | Prohori | V2.1 final · 20 Oct: auto profile card in demo `#/admin/server` (sample data) |
+| 605 | Gift mode — receiver name and phone, hide prices on the invoice, a gift note, a "deliver on or after" date; off by default (CN-014 h, 23 Oct 2026) | S04 | Filed | Sawdagor |  |
+| 606 | Bulk / corporate lane — enquiry from the cart, quote and order flow; minimum quantity, logo price and advance as settings, off by default (CN-017 SIM-F-023, P11; 23 Oct 2026) | S04 | Filed | Sawdagor |  |
 
 ---
 

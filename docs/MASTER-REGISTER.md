@@ -1,10 +1,10 @@
 # EXTAS — Master Register
 
-**604 PRs · 28 stages · as of 20 October 2026**
+**606 PRs · 28 stages · as of 23 October 2026**
 
-**598 are active. 6 are parked** — S26, the handover pack, together with S27. See *The parking lot*.
+**600 are active. 6 are parked** — S26, the handover pack, together with S27. See *The parking lot*.
 
-*Active* means filed and specified for the build, not coded: no PR has been coded yet. (Until 19 Oct 23:33 this line read "594 are built now", where "built" meant filed and specified.) The four newest, **PR 601–604**, come from the owner's server specification approved 19 Oct 23:33 (change note **CN-001**, blueprint V2.1) — filed, not built. **V2.1 final · 20 Oct:** the pre-code demo work is finished and folded into blueprint V2.1 (its last update before code) — **no new PR numbers**; dated scope "V2.1 final · 20 Oct" on PR 42, 45, 61, 98, 107, 109, 503, 570, 598 and in the 20 Oct scope block below.
+*Active* means filed and specified for the build, not coded: no PR has been coded yet. (Until 19 Oct 23:33 this line read "594 are built now", where "built" meant filed and specified.) The four newest, **PR 601–604**, come from the owner's server specification approved 19 Oct 23:33 (change note **CN-001**, blueprint V2.1) — filed, not built. **V2.1 final · 20 Oct:** the pre-code demo work is finished and folded into blueprint V2.1 (its last update before code) — **no new PR numbers**; dated scope "V2.1 final · 20 Oct" on PR 42, 45, 61, 98, 107, 109, 503, 570, 598 and in the 20 Oct scope block below. **23 Oct 2026:** two more, **PR 605** (gift mode, CN-014 h) and **PR 606** (bulk / corporate lane, CN-017 SIM-F-023), both in S04 — filed, not built; CN-012 … CN-019 are filed as dated "Updated 23 Oct 2026" lines on the PR rows they name.
 
 This is the one table everything hangs off. Every approved requirement has a stage, a PR number and a
 line here. When something new is agreed, it is filed into this table first — into an existing PR if it
@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 12/12 · S03 9/22 · S06 6/33 · total 97/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 12/12 · S03 9/22 · S06 6/33 · total 97/600**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -151,26 +151,21 @@ the server.*
 
 > **CN-016 · 20 Oct 2026 (owner: nothing reaches the owner broken).** The owner found that after logging in, the admin on new.extas.com.bd showed "This page couldn't load". New gate: **after every deploy and every night**, a smoke test runs on the runner with Playwright against new.extas.com.bd. It signs in with a check account whose password lives only on the server, then visits every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, shows no error screen and no console error, and has no failed request. If any page fails, the deploy rolls back by itself and the fix comes before any new PR. Screenshots go to `docs/reports/smoke/latest/`, and the result is shown on the status page and in README. Every bug the owner finds gets a smoke check in the same fix PR. No new PR numbers: this lands on PR 4/17 (deploy) and Appendix C.
 
-> **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report §5, and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
+> **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report ~~§5~~ §4 (the "Register:" line of each finding), and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
+> - an SMS to a prepaid customer that says "pay ৳X on delivery";
+> - courier "Book all" booking cancelled orders;
+> - the delivery charge shown at checkout differing from the one stored;
+> - edits made after booking never reaching the parcel (lock the order, or re-book it);
+> - no states for partial delivery, a return with the charge paid, or a failed delivery, with their money and stock postings;
+> - negative stock shown as 0;
+> - a gift parcel going to the payer's address;
+> - a wrongly returned item restocked under the wrong SKU;
+> - hardcoded text;
+> - the account password for an account created from an order being the phone number.
+>
+> The owner's decisions are in report §8 (9 questions: prepaid incentive, a COD advance for risky orders, default switches, the split price for a set, the swap charge, Eid pre-orders, rider-overcharge refunds, guest coupons, WhatsApp self-confirm). They are copied to `BLOCKED.md` as Bengali questions (→ answered in CN-018; questions 3 and 9 decided in CN-019). The real-site rerun (CN-013) uses the same 50-order script.
 
 > **CN-018 · 23 Oct 2026 (owner's answers to the CN-017 questions; a simple admin; "build the system, don't ask for numbers").**
-
-> **CN-019 · 23 Oct 2026 (owner: one Messages control centre; a modern, simple admin with a detailed manual).**
->
-> **(1) Messages control centre (admin → Messages).**
-> - **Order journey.** A timeline from order received through confirmation, packed, booked, out for delivery, delivered, and the follow-ups after delivery. For each step the owner chooses whether to send, the channel (SMS, WhatsApp, e-mail or none), the template, and the delay or send time. A cap sets the maximum number of messages per order, per channel and in total.
-> - **Optional messages.** The delivery-day morning message ("arrives today, keep ৳X ready") is built and switchable. The Day-1 care message ("did the size fit?") and the Day-3 review request are built and on by default; they send once a provider is connected (mock until then).
-> - **Self-confirm WhatsApp (idea 5).** A step the owner can place in the journey. Whether it counts as the order's one WhatsApp is a setting (Q9), not fixed now.
-> - **Promotions.** Campaigns with an audience, channel, schedule and frequency cap, plus quiet hours. A preview shows how many people will receive it and the cost.
-> - **Every message is logged:** what was sent, when, by which channel, the cost, and its delivery state.
->
-> No new PR numbers: this lands on PR 148, 289, 292, 295, 300, 505 and 545, built as one section.
->
-> **(2) Modern, simple admin.** Every section uses modern UI (cards, clean tables with saved filters, clear charts, empty states, inline help) and stays simple to use: one main task per screen, rare options under "More options", one search, role-based views. Charts and analytics are modern and readable. This covers the blog, product add, stock, returns, couriers and every other section. `docs/ADMIN-ARCHITECTURE.md` plus high-resolution mock-ups of every section are approved by the owner before the admin build continues.
->
-> **(3) User manual.** A detailed Bengali manual for each section, step by step with screenshots, in `docs/admin-guide/` (CN-014), written as each section is built.
->
-> **(4) Extra simulation.** About 20 more orders from angles the first 50 missed: fully prepaid, risk rules applied (an advance asked for and paid or refused), older buyers (40+ and 50+), a low-literacy rural buyer, and others. The results are appended to the simulation report.
 >
 > **Standing rule.** Every policy number or choice — amounts, percentages, limits, whether a perk is given at all — is a **backend setting with sensible options, off by default**. The owner decides it later, case by case. Never ask the owner for a figure; ask only whether a system should exist at all.
 >
@@ -189,7 +184,7 @@ the server.*
 > - A partial-advance amount option is also available.
 > - Never auto-block (hard rule).
 >
-> **(3) Delivery-day and Day-1 messages:** explained to the owner again; they stay off until he decides.
+> **(3) Delivery-day and Day-1 messages:** ~~explained to the owner again; they stay off until he decides.~~ → decided in CN-019: the delivery-day message is built as an option (switchable); the Day-1 care message and the Day-3 review request are on by default (mock until a provider is connected).
 >
 > **(4) Sets:** each set has a setting, "Fixed set (no single piece can be kept or returned)" or "Flexible".
 > - For flexible sets: the split-price rule and whether a delivery charge applies when the kept part falls under the free-delivery limit.
@@ -210,7 +205,7 @@ the server.*
 >
 > **(9) Coupons:** each coupon has a setting "Who can use it": guests, logged-in customers, or both. The Eid coupon can be either.
 >
-> **(10) Self-confirm WhatsApp:** explained to the owner again; the decision is pending.
+> **(10) Self-confirm WhatsApp:** ~~explained to the owner again; the decision is pending.~~ → decided in CN-019: a step the owner can place in the Messages journey; whether it counts as the order's one WhatsApp is a setting.
 >
 > **Simple admin (owner: the demo's admin is far too crowded, so the live admin must not be).** Before more admin screens are built, the project writes `docs/ADMIN-ARCHITECTURE.md`. It must cover:
 > - At most about 10 top-level sections in plain words: Dashboard · Orders · Products · Customers · Marketing · Delivery · Money · Support · Reports · Settings.
@@ -221,18 +216,23 @@ the server.*
 > - No page is a wall of switches.
 >
 > One picture of the new admin layout goes to the owner before the build continues. The demo's admin is used for **what** to include, not **how** to lay it out.
-> - an SMS to a prepaid customer that says "pay ৳X on delivery";
-> - courier "Book all" booking cancelled orders;
-> - the delivery charge shown at checkout differing from the one stored;
-> - edits made after booking never reaching the parcel (lock the order, or re-book it);
-> - no states for partial delivery, a return with the charge paid, or a failed delivery, with their money and stock postings;
-> - negative stock shown as 0;
-> - a gift parcel going to the payer's address;
-> - a wrongly returned item restocked under the wrong SKU;
-> - hardcoded text;
-> - the account password for an account created from an order being the phone number.
+
+> **CN-019 · 23 Oct 2026 (owner: one Messages control centre; a modern, simple admin with a detailed manual).**
 >
-> The owner's decisions are in report §8 (9 questions: prepaid incentive, a COD advance for risky orders, default switches, the split price for a set, the swap charge, Eid pre-orders, rider-overcharge refunds, guest coupons, WhatsApp self-confirm). They are copied to `BLOCKED.md` as Bengali questions. The real-site rerun (CN-013) uses the same 50-order script.
+> **(1) Messages control centre (admin → Messages).**
+> - **Order journey.** A timeline from order received through confirmation, packed, booked, out for delivery, delivered, and the follow-ups after delivery. For each step the owner chooses whether to send, the channel (SMS, WhatsApp, e-mail or none), the template, and the delay or send time. A cap sets the maximum number of messages per order, per channel and in total.
+> - **Optional messages.** The delivery-day morning message ("arrives today, keep ৳X ready") is built and switchable. The Day-1 care message ("did the size fit?") and the Day-3 review request are built and on by default; they send once a provider is connected (mock until then).
+> - **Self-confirm WhatsApp (idea 5).** A step the owner can place in the journey. Whether it counts as the order's one WhatsApp is a setting (Q9), not fixed now.
+> - **Promotions.** Campaigns with an audience, channel, schedule and frequency cap, plus quiet hours. A preview shows how many people will receive it and the cost.
+> - **Every message is logged:** what was sent, when, by which channel, the cost, and its delivery state.
+>
+> No new PR numbers: this lands on PR 148, 289, 292, 295, 300, 505 and 545, built as one section.
+>
+> **(2) Modern, simple admin.** Every section uses modern UI (cards, clean tables with saved filters, clear charts, empty states, inline help) and stays simple to use: one main task per screen, rare options under "More options", one search, role-based views. Charts and analytics are modern and readable. This covers the blog, product add, stock, returns, couriers and every other section. `docs/ADMIN-ARCHITECTURE.md` plus high-resolution mock-ups of every section are approved by the owner before the admin build continues.
+>
+> **(3) User manual.** A detailed Bengali manual for each section, step by step with screenshots, in `docs/admin-guide/` (CN-014), written as each section is built.
+>
+> **(4) Extra simulation.** About 20 more orders from angles the first 50 missed: fully prepaid, risk rules applied (an advance asked for and paid or refused), older buyers (40+ and 50+), a low-literacy rural buyer, and others. The results are appended to the simulation report.
 
 ## The stage table
 
@@ -243,7 +243,7 @@ the server.*
 | S01 | Catalog, media & images | 22 | 19–39, 590 | locked |
 | S02 | Storefront | 58 | 40–88, 501, 503, 595–600, 602 | locked; UI in review |
 | S03 | Combo & bundles | 22 | 89–104, 571–576 | locked; UI in review |
-| S04 | Cart, checkout, accounts | 39 | 105–137, 558, 560, 561, 563, 565, 566 | locked; UI in review |
+| S04 | Cart, checkout, accounts | 41 | 105–137, 558, 560, 561, 563, 565, 566, 605, 606 | locked; UI in review; **605–606 filed 23 Oct** |
 | S05 | Order management | 20 | 138–155, 541, 546 | locked |
 | S06 | Fraud & location | 33 | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | **answered 18 Oct** |
 | S07 | Payments & wallet | 10 | 165–174 | locked |
@@ -267,9 +267,9 @@ the server.*
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack |
 | S27 | No-ERP stock module | parked | — | **parked** — handover pack; numbered when approved |
-| | **Total** | **604** | | 598 active · 6 parked |
+| | **Total** | **606** | | 600 active · 6 parked |
 
-### How this reached 604
+### How this reached 606
 
 | Step | Change | Total |
 |---|---|---:|
@@ -304,7 +304,8 @@ the server.*
 | Site builder — every part of the site editable like WordPress/Elementor, with guardrails (owner, 19 Oct 21:23) | +1 | 598 |
 | In-dashboard help and the handover user manual — no coder needed (owner, 19 Oct 22:14) | +1 | 599 |
 | On-page edit mode with phone review and the AI checker (owner, 19 Oct 22:27–22:33) | +1 | 600 |
-| Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | **604** |
+| Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | 604 |
+| Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | **606** |
 
 **Owner answers, 19 Oct 11:39 (scope on existing PRs, no new numbers):** marketing consent = SMS tick on by default, **WhatsApp marketing tick separate and unticked** (PR 148/505); trial at delivery allowed — customer may try in front of the rider (setting, on; S08); Bengali pages get their own /bn/ URLs with hreflang for Google traffic (S11); barcodes internal/courier, no GS1 (S01); same size added twice → "already in bag" by default, **quantity +1 as a settings option** (S04); sliders keep auto-drift but snap after a manual drag (S02); admin shows customer phone numbers in full, every profile open and number copy is logged (S14; the address rule PR 561 is unchanged); Google Shopping BD → Merchant Center test after go-live; VAT/invoice details after launch with the accountant.
 
@@ -342,6 +343,14 @@ the server.*
 - **PR 395 / 507 (Google Drive backup, backup settings and restore drills)** — the same docs bundle goes into the Azure Blob and the Google Drive copies; the monthly restore drill checks it.
 - **PR 594 (PR register) — readme-guard, 20 Oct 13:21 (owner, CN-011 enforcement)** — CI job `readme-guard` (`tools/readme-guard.mjs`, in `ci.yml`) runs on every pull request into main and fails it when a PR number in the title has no row in README's "PR log", when README's done/total per stage or overall differs from the register's Build status and stage table, or when a stage the PR touches still shows "Not started" in README's features; a required check like the tests.
 
+**Scope added to existing PRs, 23 Oct 2026 (CN-012 … CN-019 filed on the PR rows; new PR 605–606):**
+- **The filing** — CN-012 … CN-019 are written as dated "Updated 23 Oct 2026 (CN-0xx)" lines on every PR row they name; PRs listed by range only get their line here. Two new numbers, both in S04 (Cart, checkout, accounts): **605 gift mode** (CN-014 h, "the next free PR in S04") and **606 bulk / corporate lane** (CN-017 SIM-F-023; the simulation report proposed it as "605", renumbered to 606 because CN-014 had already given 605 to gift mode). S04 is the stage that holds the checkout, and Blueprint B8.5 item 4 puts the bulk / corporate enquiry in the cart. Totals: 604 → **606 PRs**, 598 → **600 active**, S04 39 → 41.
+- **PR 425–436 (S22 support, draft engine)** — Updated 23 Oct 2026 (CN-017): SIM-F-012 (the AI draft answers the wrong question in 6 of 10 chats) is a required acceptance test of the draft engine; see `docs/qa/SIMULATION-REPORT.md` §4.
+- **PR 430 (S22, create order from chat)** — Updated 23 Oct 2026 (CN-017): SIM-F-024 (no "create order from chat", the channel is lost, no "send my bag on WhatsApp") is a required acceptance test.
+- **PR 431 (S22, rider issues)** — Updated 23 Oct 2026 (CN-018 (7)): rider overcharge — a complaint logged with proof; staff approve and refund the exact extra amount (wallet or original method) with a note; the amount is recovered from the courier claim. Section: Support → Rider issues.
+- **PR 423 (S21, site health page)** — Updated 23 Oct 2026 (CN-015): Site health → Customer problems — privacy-safe probe records grouped into problems (Urgent / Important / Can wait), statuses, a date view and a detail page; open problems also listed at the top of README.
+- **PR 538 (S22)** — Updated 23 Oct 2026 (CN-017): SIM-F-012 (AI draft answers the wrong question) is a required acceptance test.
+
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
 invoice and PDF templates S14 → S20 · celebration overlay S19 → S02 · user manual S20 → S18 ·
 Find My Size engine S23 → S02. Each is now in the stage that actually describes it.
@@ -374,7 +383,7 @@ built handover-ready from day one.
 | 1 | **Updated 20 Oct 01:30 (CN-003): access via a GitHub Actions self-hosted runner on the VM (cloud sessions cannot SSH); build deploys to new.extas.com.bd until go-live.** **Updated 20 Oct 00:45 (owner, CN-002): machine created — E8ds_v6, Ubuntu Server 24.04 LTS Gen2, Trusted launch, NVMe controller, OS 128 GB + data 1 TB Premium SSD LRS (P30), accelerated networking on, auto-shutdown off, boot diagnostics on, ports 22/80/443. Region is _Malaysia West (zone 1)_, not Southeast Asia — owner's choice at creation, kept (cheaper; latency to Dhaka similar; Cloudflare in front). The Blob storage account must be created in the same region (Malaysia West). The ~~Southeast Asia~~ mentions in CN-001 read as Malaysia West.** **Updated 19 Oct 22:44 (owner): a NEW ~~VPS~~ machine, freshly created with Ubuntu (not the old Azure VM).** Record the new machine's specs from the owner's configuration screenshot; take a provider snapshot/backup before any change; the old "Azure package must not change" rule applies to the old VM only. **Updated 19 Oct 23:33 (owner server spec): the machine is fixed — a new Azure VM, E8ds_v6** (8 vCPU, 64 GB RAM, 440 GB local NVMe, temporary — PR 601), region **Southeast Asia** (Singapore), **Ubuntu Server 24.04 LTS x64 Gen2** (the plain image, not Ubuntu Pro), Trusted launch, accelerated networking on, NSG inbound 22/80/443 (UFW inside locks it further, PR 3), auto-shutdown off, Azure Backup off (backups are PR 8), boot diagnostics on (needed for the serial console). **Disks:** OS disk **128 GB Premium SSD LRS** + a separate **data disk of 1 TB (1024 GiB) Premium SSD LRS (P30)**, "delete with VM" off, **LVM on the data disk** — it holds Postgres data, Docker volumes, Redis persistence, logs that must be kept, config and certificates. ~~2 TB~~ — 1 TB chosen on Claude's advice: a disk can grow later but never shrink. The 8 vCPU / 64 GB sizing is **confirmed** (no re-size pending). **Access:** the owner creates the VM with "Generate new key pair" and keeps the .pem himself; on code day 1 we give him a public key, which he adds under the VM's Reset password → Reset SSH public key with a separate username for the build agent; no private key ever goes into chat. **Cost note:** consider a 1-year Reserved Instance after 1–2 stable months (roughly 30–40% saving). |
 | 2 | ~~In-place OS upgrade 20.04 → 24.04~~ **Not needed on the new VPS** — created with Ubuntu 24.04 LTS; verify version and apply all updates. **Updated 19 Oct 23:33 (owner server spec):** the image is Ubuntu Server 24.04 LTS x64 Gen2, not Pro (PR 1) |
 | 3 | Base hardening — SSH keys only, no root login, fail2ban, unattended security updates, UFW. **Ports 22/80/443 are opened by us** (server firewall over SSH; the provider's cloud firewall via its panel with the owner's login or step-by-step guidance) — the owner does not do it. **Updated 19 Oct 23:33 (owner server spec):** UFW allows only 80, 443 and 22; optionally 80/443 limited to Cloudflare's IP ranges (a setting). SSH by key only, no root login, fail2ban — ~~22 restricted to the owner's IP~~ port 22 stays key-only with fail2ban because the build agents connect from changing IPs. DB and Redis reachable only inside the server. Unattended security updates. **Boot order after any restart:** NVMe unit first (PR 601), then the data-disk LVM mounts, then Docker, Postgres, Redis and the app — all by themselves, in that order. Data-disk LVM volumes (Postgres, Docker volumes, Redis persistence, kept logs, config and certificates) with free-space alarms at 80% (PR 9) |
-| 4 | Docker and Docker Compose, with the project's network and volume layout. **Updated 19 Oct 23:33 (owner server spec):** Docker Compose stays (not PM2) — each service its own container with RAM/CPU limits from the one config file (PR 604) and auto-restart; volumes on the data disk, scratch on NVMe (PR 601); **zero-downtime deploys** — rolling/blue-green with health checks and automatic rollback |
+| 4 | Docker and Docker Compose, with the project's network and volume layout. **Updated 19 Oct 23:33 (owner server spec):** Docker Compose stays (not PM2) — each service its own container with RAM/CPU limits from the one config file (PR 604) and auto-restart; volumes on the data disk, scratch on NVMe (PR 601); **zero-downtime deploys** — rolling/blue-green with health checks and automatic rollback **Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`. |
 | 5 | PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum. **Updated 19 Oct 23:33 (owner server spec):** size confirmed (E8ds_v6), nothing to re-size. 16 GB RAM, 2–3 CPU; `shared_buffers` 16 GB, `effective_cache_size` ~~48 GB~~ 40 GB, `work_mem` by workload, `max_connections` kept low behind **PgBouncer**; `temp_tablespaces` on NVMe (PR 601); data on the data disk; slow query log for anything over 100 ms (PR 603); WAL archived to Blob for point-in-time restore (PR 8); a low-priority report pool (PR 603) |
 | 6 | Redis, and BullMQ queues with their dead-letter handling. **Updated 19 Oct 23:33 (owner server spec):** Redis ~~2 GB~~ 6 GB, 1 CPU, `maxmemory` with LRU eviction; working cache on NVMe, persistence (AOF/RDB) on the data disk; holds settings, the Dhaka area list, products, categories and the 15 s stock display cache (PR 602). Queues: image/video worker (separate process, 6 GB, 2 CPU) and background jobs (courier sync, e-mail, reports; 4 GB, 1 CPU) — heavy image and video work never runs in the web process |
 | 7 | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers. **Updated 19 Oct 23:33 (owner server spec):** Caddy stays (not Nginx) — automatic SSL renewal on all three domains, 1 GB, 1 CPU; **Cloudflare in front in Full (strict) mode** with a Cloudflare Origin certificate (PR 362) **Updated 20 Oct 2026 (CN-007): the preview password is never sent through chat, logs or artifacts; the owner reads it on the VM (`extas-preview-login`, `docs/owner/PREVIEW-LOGIN.md`), and `server-setup` can rotate it.** |
@@ -393,23 +402,23 @@ built handover-ready from day one.
 
 | PR | What it does |
 |---:|---|
-| 11 | Repository, branch rules, commit and PR conventions, `PROGRESS.md` and `BLOCKED.md` |
+| 11 | Repository, branch rules, commit and PR conventions, `PROGRESS.md` and `BLOCKED.md` **Updated 23 Oct 2026 (CN-014):** every PR that adds or changes an admin screen updates its Bengali section guide in `docs/admin-guide/` in the same PR. |
 | 12 | Next.js App Router + TypeScript skeleton, Tailwind and the component base |
 | 13 | **Full Prisma schema in one pass** — every table the whole plan needs, including `storeId` on everything. **Updated 19 Oct 23:33 (owner server spec):** the schema carries the required indexes and the `pg_trgm` extension of PR 603 from day one |
 | 14 | Seed data and fixtures: categories, products, colours, sizes, a demo order |
-| 15 | Authentication — customer accounts, admin accounts, sessions, password rules |
+| 15 | Authentication — customer accounts, admin accounts, sessions, password rules **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-039 (a guest-order account has the phone number as its password) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 16 | Role and permission model: owner, manager, support, auditor (read-only) |
-| 17 | CI — lint, type-check, unit tests, build, and the Lighthouse gate |
+| 17 | CI — lint, type-check, unit tests, build, and the Lighthouse gate **Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`. |
 | 18 | The adapter framework: every integration has a mock / sandbox / live mode and a test-connection button. **Updated 19 Oct 23:33 (owner server spec):** includes the **storage adapter** — local disk / Azure Blob / S3-compatible — so media works with or without Blob and with or without the CDN (PR 604) |
 
 ### S00 additions — the settings framework (approved 18 Oct)
 
 | PR | What it does |
 |---:|---|
-| 491 | **Settings framework** — a typed registry, held in the database, cached, every value readable and writable from the admin. Nothing a human might change lives in code. |
+| 491 | **Settings framework** — a typed registry, held in the database, cached, every value readable and writable from the admin. Nothing a human might change lives in code. **Updated 23 Oct 2026 (CN-012):** checkout texts, field order, bag-panel style, payment options and the logo choice are registered settings; a text change reaches the phone, a design change only after the device gate and phone pixel diff show 0 side effects. |
 | 492 | **Two-tier resolver** — installation level → store level, with inheritance. Goes in with the schema on day one; it cannot be retrofitted. |
 | 493 | **Credential vault** — every key encrypted at rest, entered from the admin, never in the repository or in Git |
-| 494 | **Hardcode guard in CI** — the build fails on a hardcoded key, name, number or policy string. One check that polices every other rule here. |
+| 494 | **Hardcode guard in CI** — the build fails on a hardcoded key, name, number or policy string. One check that polices every other rule here. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-033 (hard-coded customer texts) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 495 | **Role builder** — the admin creates roles and permissions. Replaces the fixed owner/manager/support/auditor list in PR 16. |
 | 496 | **Settings migration** — when a new setting ships, every existing installation receives it with its default |
 | 500 | **Integrations settings screen** — courier, SMS, payment, AI providers, Facebook, Google, YouTube, WhatsApp, Messenger, Telegram, Drive, email, all in one place with a test button each. **Updated 20 Oct 15:20 (owner):** the admin sign-in says "write the full e-mail address" when the e-mail field has no "@" (the owner typed "admin"), in the admin's language, with a smoke check |
@@ -455,9 +464,9 @@ built handover-ready from day one.
 | PR | What it does |
 |---:|---|
 | 40 | Store shell — header, footer, bottom navigation, the slim checkout header |
-| 41 | Home page: hero, categories, new in, sets band, flash sale, reviews, journal |
+| 41 | Home page: hero, categories, new in, sets band, flash sale, reviews, journal **Updated 23 Oct 2026 (CN-012):** hero & campaigns — campaigns with dates, 8–10 ready hero templates, a linked collection that swaps the hero products, a hero designer saved as a template, the scheduled switch by date with the launch default as fallback. |
 | 42 | **One smooth slider engine** used by every sliding row on the site — continuous glide, drag, pause on touch, reduced-motion safe **V2.1 final · 20 Oct:** proven in the timing audit TA-2 (qa/TIMING-AUDIT.md, 0 fails; checklist L32/L33) — separate pause flags for mouse (hover), touch (4 s hold) and keyboard (focus), each with a tested resume; resumes within about 100 ms after the mouse leaves, after a mouse drag and after a sideways wheel; a vertical wheel is ignored (the page scrolls); every row drags with the mouse and a click after a drag never opens the card; touch hold unchanged. |
-| 43 | Hero slider: 12–15 products across all categories, auto-sizing name-and-price pins |
+| 43 | Hero slider: 12–15 products across all categories, auto-sizing name-and-price pins **Updated 23 Oct 2026 (CN-012):** hero & campaigns — campaigns with dates, 8–10 ready hero templates, a linked collection that swaps the hero products, a hero designer saved as a template, the scheduled switch by date with the launch default as fallback. |
 | 44 | Flash sale: two rows sliding in opposite directions, with a countdown that actually ticks |
 | 45 | Category page: grid, breadcrumb, category SEO text block, pagination **V2.1 final · 20 Oct:** in the category banners a price never splits from its "৳" across lines on a phone (nowrap). |
 | 46 | Filter system — colour, size, fit, price band, on-sale, in-stock — with live counts. **Owner, 19 Oct 18:38:** every filter is built from the category's own products — sizes only those that exist, up to the largest present (S…3XL/4XL/5XL supported), colours only those listed in the category with their product counts, fits only those present (no Slim if none). Nothing fixed. |
@@ -472,21 +481,21 @@ built handover-ready from day one.
 | 55 | Colour swatches, colour name, "All N colours" sheet, and true-colour photograph |
 | 56 | Size pills that fill the width and stay on one line from S to 4XL |
 | 57 | Size chart popup — fixed, not scrolling with the page, with cm and inches inside it |
-| 58 | **Find My Size** — height and weight to a recommended size, with the reasoning shown |
+| 58 | **Find My Size** — height and weight to a recommended size, with the reasoning shown **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-012 (the AI draft answers the wrong question) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 59 | Find My Size training engine — the chart data, the ease model, and the admin report |
 | 60 | Stock line, low-stock urgency chip, and sold-out-in-this-colour handling |
 | 61 | Price block: price, discount, saving, free-delivery badge, payment line, all four combinations **V2.1 final · 20 Oct:** phone rule — a currency sign and its number never split across lines (nowrap), on every price. |
 | 62 | Trust row — exchange window, free delivery threshold, 100% original — reading live from Smart Rules |
 | 63 | Delivery / Exchange / Returns row, opening full width, one at a time |
 | 64 | Fabric & care, and the product detail accordions |
-| 65 | Product reviews on the page: up to three, photo reviews first, sliding |
+| 65 | Product reviews on the page: up to three, photo reviews first, sliding **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-008 (reviews never reach moderation, photo reward unpaid) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 66 | Questions & answers block, with the WhatsApp ask |
 | 67 | "Goes well with" and "Recently viewed" rows, auto-sliding, category-driven |
 | 68 | The floating action rail — wishlist, share, WhatsApp — drifting with scroll, never over the title |
 | 69 | Share row: transparent floating tiles, Facebook, Messenger, WhatsApp, Instagram, copy link |
 | 70 | **Site-wide floating WhatsApp button** with its per-page placement switch |
 | 71 | Wishlist — add, remove, the wishlist page, and back-in-stock alerts |
-| 72 | Search: the panel, the index across products, categories and help articles, prefix and synonym matching, Bengali keywords. **Updated 19 Oct 23:33 (owner server spec):** site search **stays on Meilisearch** (4 GB, PR 604) — better at Bengali and English typos; Postgres `pg_trgm` is for fraud fuzzy matching only (PR 519, 603). Resolves the owner's "search index in Postgres" line |
+| 72 | Search: the panel, the index across products, categories and help articles, prefix and synonym matching, Bengali keywords. **Updated 19 Oct 23:33 (owner server spec):** site search **stays on Meilisearch** (4 GB, PR 604) — better at Bengali and English typos; Postgres `pg_trgm` is for fraud fuzzy matching only (PR 519, 603). Resolves the owner's "search index in Postgres" line **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-035 (a size sold out in every colour disappears) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 73 | Search results page with filters and sort |
 | 74 | **Hamburger menu with sub-categories** — accordion in place, counts per row, "View all" as the first child |
 | 75 | Content pages: FAQ, delivery, exchange, privacy, terms, story, contact |
@@ -498,7 +507,7 @@ built handover-ready from day one.
 | 81 | The eye-toggle dashboard: every switch in one list, searchable |
 | 82 | Four themes, with the token system behind them |
 | 83 | A/B test module for the storefront |
-| 84 | Bengali and English throughout, with the language switch |
+| 84 | Bengali and English throughout, with the language switch **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-025 (the Bengali journey is half English) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 85 | **Mobile hardening** — 16px fields, no accidental zoom, 44px targets, no horizontal overflow, as CI gates |
 | 86 | The light-sweep system and its per-element switches |
 | 87 | Celebration overlay on order placement |
@@ -515,7 +524,7 @@ built handover-ready from day one.
 
 | PR | What it does |
 |---:|---|
-| 89 | Combo model: items, set price, savings, active window |
+| 89 | Combo model: items, set price, savings, active window **Updated 23 Oct 2026 (CN-018):** each set is "Fixed set (no single piece can be kept or returned)" or "Flexible"; a flexible set has the split-price rule and whether a delivery charge applies when the kept part is under the free-delivery limit; Products → Sets. |
 | 90 | Combo admin — create, edit, activate, with live preview |
 | 91 | Combo page template C1 |
 | 92 | Combo page template C2 — step by step |
@@ -523,7 +532,7 @@ built handover-ready from day one.
 | 94 | Popular pairs — three across, one tap applies both colours |
 | 95 | Per-item size and colour selection with the "same as item 1" shortcut |
 | 96 | Set summary, set price, and the saving against buying separately |
-| 97 | Add set to bag as one line, with the set price locked |
+| 97 | Add set to bag as one line, with the set price locked **Updated 23 Oct 2026 (CN-018):** each set is "Fixed set (no single piece can be kept or returned)" or "Flexible"; a flexible set has the split-price rule and whether a delivery charge applies when the kept part is under the free-delivery limit; Products → Sets. |
 | 98 | **Build your own set** — pick any N, the tier price applies automatically **V2.1 final · 20 Oct:** these tier rules also drive the bag tier box "Take 2 │ Take 3 │ Take 4" (PR 109/598) — the same numbers in the box, set builder, bag and checkout. The 4-piece prices seeded in the demo (BAG_TIER_SEED: 4 polos ৳2,700, 4 tees ৳1,750) are suggestions waiting for the owner's yes; real prices are owner data. |
 | 99 | Set tier rules from Smart Rules: any 2 for X, any 3 for Y |
 | 100 | The set builder: slots, pick from a sliding row, swap, remove |
@@ -536,7 +545,7 @@ built handover-ready from day one.
 
 | PR | What it does |
 |---:|---|
-| 570 | **Checklist audit runner in the AI section.** The full e-commerce checklist (qa/ECOMMERCE-CHECKLIST.md, 405 points, grouped and prioritised) lives in the backend. One click → 2–3 agents test the chosen groups on desktop and several phones; or a schedule (e.g. weekly) with the report and bug list sent to Telegram. The owner controls when, how many agents and which groups. Fixes only with his permission. **Standard (19 Oct, note 21):** every non-backend point must PASS on 8 phone sizes, 5 tablet sizes (iPad mini, iPad Air, iPad Pro 11, iPad Pro 12.9, Android tab) and desktop, on every page type, before any release; backend-only points are run from the real backend. **V2.1 final · 20 Oct:** the timing items are checklist L32 / L33 (renumbered from L28 / L29); TA-2 530 checks, 0 fail; the audit runner re-runs them on every release. |
+| 570 | **Checklist audit runner in the AI section.** The full e-commerce checklist (qa/ECOMMERCE-CHECKLIST.md, 405 points, grouped and prioritised) lives in the backend. One click → 2–3 agents test the chosen groups on desktop and several phones; or a schedule (e.g. weekly) with the report and bug list sent to Telegram. The owner controls when, how many agents and which groups. Fixes only with his permission. **Standard (19 Oct, note 21):** every non-backend point must PASS on 8 phone sizes, 5 tablet sizes (iPad mini, iPad Air, iPad Pro 11, iPad Pro 12.9, Android tab) and desktop, on every page type, before any release; backend-only points are run from the real backend. **V2.1 final · 20 Oct:** the timing items are checklist L32 / L33 (renumbered from L28 / L29); TA-2 530 checks, 0 fail; the audit runner re-runs them on every release. **Updated 23 Oct 2026 (CN-015):** the audit runner groups and judges customer problems and auto-fixes the ones that touch no hard-rule item through a normal PR. |
 
 ### S01 addition — product naming and links (owner, 19 Oct 12:04–12:07)
 
@@ -569,13 +578,13 @@ built handover-ready from day one.
 
 | PR | What it does |
 |---:|---|
-| 587 | **WordPress → new site migration (extas.com.bd)** — export the old Search Console data and backlinks, 301 every old sitemap URL (49 today) to its new twin, crawl-check on go-live day, keep redirects ≥ 12 months; Google rank carries over |
+| 587 | **WordPress → new site migration (extas.com.bd)** — export the old Search Console data and backlinks, 301 every old sitemap URL (49 today) to its new twin, crawl-check on go-live day, keep redirects ≥ 12 months; Google rank carries over **Updated 23 Oct 2026 (CN-013):** the 50-order real-life journey simulation is a go-live gate: it runs again on new.extas.com.bd before real orders, and every problem it finds is fixed and listed in its report. |
 
 ### S21 addition — PR register in the backend (owner, 19 Oct 14:59–15:05)
 
 | PR | What it does |
 |---:|---|
-| 594 | **PR register inside the backend (owner, 19 Oct 14:59)** — an admin section listing every stage and every PR with its full details (what it does, scope added later and when, owner decision, status: built / parked / in demo / in code / live, owning agent, demo page link). Click a PR for the full card; search and filters; history of updates per PR (date, round, note); "report a problem on this PR" so the owner can point to an exact PR when something breaks — it opens a task for the owning agent via the chief. Generated from the master register on every build, so new PRs appear automatically; nothing typed twice. **Also holds the latest full blueprint .md (highest version marked latest), the master register and the supporting files** (round notes, plans, research, checklist, QA reports, agent protocol) — read inside the admin with contents and search, downloadable, with version history per file; backed up to Google Drive with everything else; no personal data, no third-party skill copies. **Automatic (15:05):** new stages and new PRs appear by themselves with the date first seen; every new PR shows which earlier PRs it builds on (named numbers, same stage, closest titles) and raises a dated notification; growth of an existing PR's text is recorded as a dated "updated" entry showing what was added, not as a new PR; a helper flags new PRs that look like they should have been scope on an older one (for Gyani to merge); unseen-update counter on the page and in the sidebar. **Change process (owner 22:54; review/CHANGE-PROCESS.md):** register and blueprint live in the repo `docs/` from the first code day and feed this section on every deploy; new ideas come in by chat, the "request a change" form or Telegram to the chief → scope on an existing PR first, else a new PR → a dated change note (CN-###) → placed on the not-yet-built PR, or in the change queue after the current wave, or as an urgent bug PR → blueprint version V2.1, V2.2…; after go-live the same path plus staging and the gate; layout/text/offer changes are done in the site builder without PRs (version history only). |
+| 594 | **PR register inside the backend (owner, 19 Oct 14:59)** — an admin section listing every stage and every PR with its full details (what it does, scope added later and when, owner decision, status: built / parked / in demo / in code / live, owning agent, demo page link). Click a PR for the full card; search and filters; history of updates per PR (date, round, note); "report a problem on this PR" so the owner can point to an exact PR when something breaks — it opens a task for the owning agent via the chief. Generated from the master register on every build, so new PRs appear automatically; nothing typed twice. **Also holds the latest full blueprint .md (highest version marked latest), the master register and the supporting files** (round notes, plans, research, checklist, QA reports, agent protocol) — read inside the admin with contents and search, downloadable, with version history per file; backed up to Google Drive with everything else; no personal data, no third-party skill copies. **Automatic (15:05):** new stages and new PRs appear by themselves with the date first seen; every new PR shows which earlier PRs it builds on (named numbers, same stage, closest titles) and raises a dated notification; growth of an existing PR's text is recorded as a dated "updated" entry showing what was added, not as a new PR; a helper flags new PRs that look like they should have been scope on an older one (for Gyani to merge); unseen-update counter on the page and in the sidebar. **Change process (owner 22:54; review/CHANGE-PROCESS.md):** register and blueprint live in the repo `docs/` from the first code day and feed this section on every deploy; new ideas come in by chat, the "request a change" form or Telegram to the chief → scope on an existing PR first, else a new PR → a dated change note (CN-###) → placed on the not-yet-built PR, or in the change queue after the current wave, or as an urgent bug PR → blueprint version V2.1, V2.2…; after go-live the same path plus staging and the gate; layout/text/offer changes are done in the site builder without PRs (version history only). **Updated 23 Oct 2026 (CN-014):** each admin section links its Bengali guide ("এই সেকশনে কী করা যায়"); the guides are shown in "Blueprint & files". **Updated 23 Oct 2026 (CN-015):** the "Running problems" list (README and `docs/problems/<id>.md`) is refreshed by a scheduled workflow, anonymised before it reaches GitHub. |
 
 ### S02 additions — owner's desktop review (19 Oct 18:38)
 
@@ -583,7 +592,7 @@ built handover-ready from day one.
 |---:|---|
 | 595 | **Page layout builder (home and every category page).** In the backend the owner adds, moves, hides and edits sections on the home page and on each category page: e.g. start a new offer today and put it as a new section above the reviews; drop a box into a category page. Section types: banner, offer strip, product row/grid, combo row, category tiles, reviews, journal, custom HTML-safe block. Each section has its own on/off, dates and device choice (phone/desktop/both). Defaults reproduce today's pages exactly; nothing fixed in code. **In demo (19 Oct, Shilpi A360-05 + Sawdagor A360-04):** `#/admin/layout` "পেজ সাজান" — page picker (home · all categories · per-category override), drag + ↑/↓ reorder, on/off, edit, duplicate, hide-never-delete, add-section type picker (10 types incl. product row from category/tag/manual, combo row from a combo rule, safe rich text, spacer), whole-day Asia/Dhaka dates, phone/desktop/both, live phone + desktop preview; example "নতুন অফার" above the reviews. Built-ins point at today's renderers (HOME_SECTIONS / CAT_SECTIONS); default layout = pixel-identical pages (gate 0 px). Files: 96c-layout-builder.js, r12-zlb.css. |
 | 596 | **Side canvas — the empty left and right gutters on desktop** (from under the header banner down to the footer, on home and category pages). The owner divides each side into free-form zones by size and position (e.g. 100 × 500 px at a set height), and puts in each zone a fixed banner, an ad, a popup trigger, or an image/animation that blends with the page background (e.g. a model stepping out in a polo, denim and boots). Per page, per zone on/off, dates; only appears where the gutter is wide enough; never covers content; off by default — today's look stays until the owner approves. Shown to the owner separately for approval first. **In demo (19 Oct, Shilpi + Sawdagor):** `#/admin/side-canvas` "দুই পাশের জায়গা" — live map of the page at 1280–1920 px with px/inch rulers, draw/drag/resize zones or type top/width/height, zone types banner · house ad (product/combo/category) · popup trigger (view/time/click, once per visit/day/week) · illustrated figure (polo + denim + boots from the garment drawings, entrance animation off for reduced motion) · image/animation; blend colour auto/custom, fade side, strength; sticky or anchored per zone; shows only where gutter ≥ zone width + 16 px, never over content, full-width bands, header or footer; hidden on phone/tablet. Master switch OFF ("চালু করার আগে মালিকের অনুমোদন লাগবে"); owner approval view `#/preview/side-canvas` at 1440 and 1920 with blend low/saved/high, switch untouched. **Owner, 19 Oct 19:53:** will turn it on; master on/off stays in the backend (off = today's look). Zones target home, all categories or chosen categories, desktop only. **Never hide — scale:** each zone has a standard reference size and scales up or down to the space each screen gives. Modes: fixed, or fixed with a gentle float of a few cm up/down while scrolling. Full-blend mode: the product sits straight on the page background with no frame, border or card edge. Animated content: a model figure changing poses, products cycling. **AI motion templates (with S24/S25):** 15–20 ready templates (colour cycle, pose cycle, turn-around, slide-up stack, flip deck, ticker, spotlight, etc.); the owner picks a template and products (e.g. every colour of the Solid Polo) and the system builds the sequence; in the real build the AI studio renders poses/short clips. **Speed and reuse (19:59):** loads only after the main content, desktop with a mouse only (phones/tablets never download it), transform/opacity animation, paused off-screen or in a hidden tab, per-zone weight budget (image ≤150 KB, video ≤1.5 MB, page ≤3 MB) with publishing blocked over budget, measured: no LCP regression >100 ms, CLS 0. Every AI pose set/video is kept in an asset library and reused for the same template + product + colours — no paying twice. Signature template "walk-out": a model in our polo, denim and shoes walks forward out of the page in a 3D view (skill: agents/skills/gyani/studio/WALKOUT-TEMPLATE.md). **v2 in demo (19 Oct, Shilpi + Sawdagor):** zones scale from the 1440 standard (gutter 132 px) — 0.31× at 1280, 0.68× at 1366, 1× at 1440, 0.28× at 1536, 1.6× (cap) at 1920 — text clamps, picture-only below 72 px; modes sticky / float (±40 px, eased, transform only) / anchored; full blend (transparent garment drawings + edge fade, no card or edge); per-zone pages (home, all or chosen categories); 19 motion templates incl. the signature walk-out (default suggestion for top + bottom) with product picker (category, sub-category, every colour of…, manual, combo), speed, order and smart suggestion; "AI দিয়ে পোজ/ভিডিও বানান" (simulated) + AI asset library `ST.aiAssets` with reuse at no token cost (also as AI & agents → AI media library); speed first: loads after paint on idle, desktop + mouse only, paused off-screen, weight budgets (image 150 KB, video 1.5 MB + poster, page 3 MB — over budget is blocked); lab at 1440: LCP +28 ms (the canvas is never the LCP element), CLS 0, longest canvas task 19 ms, slow scroll frames 2.3 % vs 1.7 % without. Admin English by default, Bengali via ST.adminLang. **Placement (owner 22:14, marked screenshot review/owner-side-zone-2026-10-19.png):** default zone starts at the first content row (≈14% below the header), is ≈80% of the visible window height below the header, leaves ≈6% at the bottom, hugs the content side with a ≈16 px gap; mirrored right; auto-adjusts to every window; percentages are settings ("centred 75%" kept as a preset). **Per-size placement (owner 22:17):** the editor shows ≥10 real desktop/laptop sizes (1280×720 … 2560×1440 plus his own 1797×879 and "this screen"); he sets the placement on one size and the rest auto-adjust, can fix a custom placement for any size (badge, reset to auto), sizes in between interpolate, a "check all sizes" grid shows pass/warn for each. **Status at pause (19 Oct 22:45):** in demo — default placement from the owner's marking (top 14.4%, height 79.9%, 17 px to content, width 88% of the gutter; 157×644 at 1797×879), 10-size editor with per-size fix and interpolation, check-all grid, 16 page types detected (checkout/thanks/landing excluded), per-page switches; **for the code phase:** tests for per-page placement, Bengali placement sheets, full gate re-run. |
-| 597 | **Launch default — save and restore (owner, 19 Oct 19:53).** The look we launch with is saved as the "Launch default": page layouts (PR 595), side canvas (PR 596), house ads and popups (PR 592), home/category sections and banners. One button "Back to launch default" returns everything to it at any time — test ads and experiments switch off (kept as hidden copies, never deleted). The owner can also save named snapshots (e.g. "Eid 2027") and restore any of them; every restore is logged and can itself be undone. **In demo (19 Oct, Shilpi + Sawdagor):** Snapshots panel on Page layout, Side canvas and Admin → Settings — save as launch default / back to launch default (confirm; test sections, zones, house ads and per-category layouts kept as hidden switched-off copies), named snapshots with restore and rename, restore log with undo last restore; covers ST.layout, ST.sideCanvas, ST.blogAds, ST.blogAdSettings, ST.heroBtns. |
+| 597 | **Launch default — save and restore (owner, 19 Oct 19:53).** The look we launch with is saved as the "Launch default": page layouts (PR 595), side canvas (PR 596), house ads and popups (PR 592), home/category sections and banners. One button "Back to launch default" returns everything to it at any time — test ads and experiments switch off (kept as hidden copies, never deleted). The owner can also save named snapshots (e.g. "Eid 2027") and restore any of them; every restore is logged and can itself be undone. **In demo (19 Oct, Shilpi + Sawdagor):** Snapshots panel on Page layout, Side canvas and Admin → Settings — save as launch default / back to launch default (confirm; test sections, zones, house ads and per-category layouts kept as hidden switched-off copies), named snapshots with restore and rename, restore log with undo last restore; covers ST.layout, ST.sideCanvas, ST.blogAds, ST.blogAdSettings, ST.heroBtns. **Updated 23 Oct 2026 (CN-012):** campaign heroes and saved hero templates are part of the launch-default snapshot. |
 | 598 | **Site builder — the whole site dynamic (owner, 19 Oct 21:23: "like WordPress + Elementor, nothing fixed").** From the backend, with preview before publish: **menus** (header nav / mega menu / phone menu / bottom bar — add, rename, reorder, hide, custom links, featured tile), **header** (announcement bar, icons on/off and order, logo), **footer** (columns, links, texts, contact block, social and payment marks), **categories and sub-categories** (create, rename, reorder, hide, image, intro, SEO), **product page blocks** (order and visibility of gallery, price row, colours, sizes, offers, buy-together, reviews, FAQ, care link), **content pages** (help, policies, about, careers, payment — rich text editor), **theme** (colours, fonts, spacing tokens with contrast check). Builds on PR 595 (home/category sections), 596 (side canvas) and 597 (launch default / snapshots / undo). Every change: draft → preview on phone/tablet/desktop → publish; per-device visibility; version history and undo. **Guardrails, not a blank canvas:** blocks snap to the responsive grid (no free pixel dragging that breaks phones), contrast and tap-size checks block bad publishes, checkout keeps its tested structure (texts, fields on/off and order editable; payment steps locked). Handover-ready: every default is data, a new owner configures everything here, the owner's own data never ships (PR 509). **Owner 22:14:** header logo text or uploaded image (auto-fit, phone version) with the **slogan under the logo** (editable, shared with the footer, on/off); footer columns and links drag-and-drop; social and payment icons chosen from a set or uploaded, added, removed, reordered. Clicking any link to the page you are on (e.g. the logo on home) scrolls to the top. **Owner 22:27:** a Shimmer control (every shimmer on the site: on/off, speed, intensity, master switch, reduced motion); tiered bag offers (Take 2 / 3 / 4 with prices and savings, fully customisable); side-canvas zones on every page with gutters (home, category, login, bag; never checkout). **V2.1 final · 20 Oct:** both owner 22:27 items are built in the demo (Batch B): **Shimmer control** — Admin › Settings › Shimmer, 14 shimmers each with on/off, speed and strength, plus a master switch; reduce-motion gets no shimmer; the Add to Bag shimmer exists but is off by default (89t-shimmer.js); **tiered bag offers** — the "Take 2 │ Take 3 │ Take 4" box with gold bars from the Build your own set price rules, up to 4 tiers per rule, dates and targeting, desktop only with a phone preview (89u-bag-offers.js). The rest of PR 598 stays paused. |
 | 599 | **In-dashboard help and the handover user manual (owner, 19 Oct 22:14: "no coder needed later; whoever takes over runs the whole site from the manual").** A "How to" panel on every admin page and a "?" on every field, in simple English and Bengali; a searchable Site Manual inside the admin covering every area, written for a new owner; a .md copy kept with the blueprint documents. New features: switches, Smart Rules/automations and integrations are set up without code; a truly new function is requested through the PR register ("request a feature") and built by the agent team, never by editing code by hand. |
 | 600 | **On-page edit mode (owner, 19 Oct 22:27–22:33, plan approved 100%).** Logged in as super admin, a thin bar on every storefront page turns on Edit mode (customers never see it): hover a section → outline + Edit; click → side panel with that section's settings (texts, prices, products, offer tiers, shimmer, hide); "+" between sections adds one; draft shown in place → Publish → undo. Same engine as the site builder (PR 598), two doors. On phone: a light version (texts and offers only, no drag). **Desktop change → "Apply to phone too?"** If yes: previews on the **10 phone screen sizes most used in Bangladesh** (the owner can pick any to check by hand) plus automatic checks (nothing cut, no sideways scroll, tap size, buy button above the fold); it goes to phone only after the checks pass and the owner approves. **AI mode:** when on, an AI reviewer agent tests the change across phones, tablets and desktops (layout, speed, conversion rules, customer impact) and returns a short report — "safe to publish" or "Boss, don't publish: …" with reasons and screenshots; when AI mode is off it says so and the owner's own check stands. Guardrails as PR 598; checkout payment steps locked. |
@@ -611,35 +620,35 @@ built handover-ready from day one.
 |---:|---|
 | 105 | Cart model, line items, quantities, persistence across sessions |
 | 106 | Add-to-bag sheet: name, size, price, bag count, and what shows when delivery is not free |
-| 107 | Cart page: lines, images, quantity, remove, save for later **V2.1 final · 20 Oct:** owner bag review 43.3–43.9 built (Batch B): title "Your bag — N items"; bigger Continue shopping with shimmer; shimmer on FREE; "You save" in sale red; duplicate-size box fixed (fits, accent left and right); line titles 17 px with colour and size in bold ink; 15 plain English bag labels, editable with Bengali; no combo nick-names on the bag. |
+| 107 | Cart page: lines, images, quantity, remove, save for later **V2.1 final · 20 Oct:** owner bag review 43.3–43.9 built (Batch B): title "Your bag — N items"; bigger Continue shopping with shimmer; shimmer on FREE; "You save" in sale red; duplicate-size box fixed (fits, accent left and right); line titles 17 px with colour and size in bold ink; 15 plain English bag labels, editable with Bengali; no combo nick-names on the bag. **Updated 23 Oct 2026 (CN-012):** the bag-panel style (default and B) and the recommendation fill rule (as many as fit, ≥12 px under the buttons, then "+N more") are settings. |
 | 108 | Set lines in the cart, with each piece linking to its own product page |
-| 109 | **One offer slot** under the lines — never between products, never empty **V2.1 final · 20 Oct:** the offer slot can show the tier box "Take 2 │ Take 3 │ Take 4" with gold bars (owner 43.10), built from the Build your own set rules (PR 98); settings on/off, dates, categories/products, up to 4 tiers per rule; desktop only, the phone version is a preview only. |
-| 110 | The two-sizes-of-the-same-product notice, and the keep-or-change flow |
+| 109 | **One offer slot** under the lines — never between products, never empty **V2.1 final · 20 Oct:** the offer slot can show the tier box "Take 2 │ Take 3 │ Take 4" with gold bars (owner 43.10), built from the Build your own set rules (PR 98); settings on/off, dates, categories/products, up to 4 tiers per rule; desktop only, the phone version is a preview only. **Updated 23 Oct 2026 (CN-012):** the bag-panel style (default and B) and the recommendation fill rule (as many as fit, ≥12 px under the buttons, then "+N more") are settings. |
+| 110 | The two-sizes-of-the-same-product notice, and the keep-or-change flow **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-036 (the "2 sizes" flag fires for a family) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 111 | Order summary with product names, sizes and bold amounts |
-| 112 | Discount code entry, validation, and the better-offer explanation |
+| 112 | Discount code entry, validation, and the better-offer explanation **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-009 (guests cannot use a public coupon or referral code) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 113 | Free-delivery progress and what is still needed to reach it |
 | 114 | "Goes well with your bag" upsell row |
-| 115 | Checkout page shell, the steps header, and the mobile summary bar |
-| 116 | Name, phone and address capture with inline validation |
+| 115 | Checkout page shell, the steps header, and the mobile summary bar **Updated 23 Oct 2026 (CN-012):** checkout texts and field order are settings (heading "Delivery details", labels, the Bengali address hint, the exchange-for-size link, the try-on line). |
+| 116 | Name, phone and address capture with inline validation **Updated 23 Oct 2026 (CN-012):** checkout texts and field order are settings (heading "Delivery details", labels, the Bengali address hint, the exchange-for-size link, the try-on line). |
 | 117 | **Dhaka address gazetteer** — longest match across 140+ areas and 64 districts |
 | 118 | Zone detection with the ask-don't-guess question when confidence is low |
 | 119 | Delivery charge from the zone, shown before the customer types |
-| 120 | Payment method selection: COD, bKash, Nagad, card |
+| 120 | Payment method selection: COD, bKash, Nagad, card **Updated 23 Oct 2026 (CN-012):** payment options are settings (COD open; Mobile / Card / Online payment open on click). **Updated 23 Oct 2026 (CN-018):** prepaid reward for any non-COD payment; the reward type is a setting (free delivery, fixed amount or percentage), falling back to amount or percentage when delivery is already free; Checkout & payments → Prepaid reward. |
 | 121 | Quantity change and item removal at checkout, with the many-of-one-size guard |
 | 122 | Wallet credit applied at checkout |
 | 123 | Marketing opt-in, default on, with a clear way out |
 | 124 | Confirm button states — what is missing, and that the next step confirms the order |
-| 125 | Order placement, idempotency, and the failure path |
+| 125 | Order placement, idempotency, and the failure path **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-003 (the shown delivery charge is not the stored one); SIM-F-026 (abandoned checkouts and failed payments not captured) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 126 | Thank-you page: order number, copy, track, payment due |
-| 127 | "Add to this parcel" — a real order line, visible everywhere the order is shown |
+| 127 | "Add to this parcel" — a real order line, visible everywhere the order is shown **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-004 (edits after booking never reach the parcel) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 128 | Complete-your-look block on the thank-you page |
 | 129 | Account auto-creation on first order, with the credentials shown once |
-| 130 | Customer login, password change, and the SMS code on a new device |
+| 130 | Customer login, password change, and the SMS code on a new device **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-039 (a guest-order account has the phone number as its password) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 131 | My account: orders, for you, rewards, wallet, wishlist, profile |
 | 132 | **Account offer banner** — wallet balance or a standing member offer, never empty |
 | 133 | Profile photo upload, cropped and stored client-side |
 | 134 | Order detail page with the full line list and the add-on items |
-| 135 | Order tracking page, the account welcome panel, and the tracking steps |
+| 135 | Order tracking page, the account welcome panel, and the tracking steps **Updated 23 Oct 2026 (CN-014):** exact-amount line (idea 10) on the sticker, the SMS and the tracking page, with its text and report link; off by default. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-018 (a late parcel is not flagged) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 136 | **Invoice generation and download** from an order |
 | 137 | Draft capture and autofill — a started checkout is remembered |
 
@@ -651,13 +660,13 @@ built handover-ready from day one.
 | 139 | Append-only audit log on every order change, with who and when |
 | 140 | Admin order list: filters, search, bulk selection |
 | 141 | Order detail for the admin, with the customer's history beside it |
-| 142 | Admin-side order edit, recording the source of every change |
-| 143 | Customer-side order edit until processing starts, capped |
+| 142 | Admin-side order edit, recording the source of every change **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-037 (staff cannot correct a phone number with a log); SIM-F-038 (reason lists miss real-life reasons) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 143 | Customer-side order edit until processing starts, capped **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-004 (edits after booking never reach the parcel) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 144 | Order cancellation, with reason codes |
 | 145 | **Duplicate-order defence** — four layers, from the submit guard to the review queue |
-| 146 | Two-size follow-up: the customer ordered S and M, which do they want |
+| 146 | Two-size follow-up: the customer ordered S and M, which do they want **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-036 (the "2 sizes" flag fires for a family) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 147 | Notes and internal flags on an order |
-| 148 | Order status notifications — SMS, WhatsApp, email — with the no-double-send guard |
+| 148 | Order status notifications — SMS, WhatsApp, email — with the no-double-send guard **Updated 23 Oct 2026 (CN-014):** WhatsApp self-confirm (idea 5), off by default: the reply 1/2/3 texts, the hours before the call queue, which orders it applies to; Orders → Confirmation. **Updated 23 Oct 2026 (CN-014):** exact-amount line (idea 10) on the sticker, the SMS and the tracking page, with its text and report link; off by default. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-001 (paid customers told to pay again on delivery); SIM-F-011 (self-confirm promises a WhatsApp that is never sent); SIM-F-031 (customer copy promises more than the system does) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
 | 149 | Notification log with retries |
 | 150 | Customer dashboard order history and lifecycle |
 | 151 | Order export |
@@ -676,10 +685,10 @@ built handover-ready from day one.
 | 158 | Address and zone checks against the gazetteer |
 | 159 | IP, device and GPS signals, with the 180-day deletion rule (answers 4 and 30). The GPS button stays, default on, switchable. |
 | 160 | Risk panel on the order, showing why the score is what it is |
-| 161 | **Actions per risk level** — watch, hold, confirmation call, delivery charge in advance, full advance, COD off. Claude's set is the default; every action editable (answers 2 and 5). |
+| 161 | **Actions per risk level** — watch, hold, confirmation call, delivery charge in advance, full advance, COD off. Claude's set is the default; every action editable (answers 2 and 5). **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-014 (an order held in fraud review can still be booked) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** risk rules the owner builds (past RTO, courier success ratio, new phone, area, order value, repeated cancels, with weights); Hard = full advance, Soft = delivery charge in advance, a partial-advance option; never auto-block; Orders → Risk rules. |
 | 162 | Blocklist with reasons and an undo. **Owner, manager and customer-facing staff** can all blacklist (answer 3). |
 | 163 | Repeat-refuser handling, reversible by hand — COD off, delivery charge in advance, full advance, or nothing. The owner chooses per case (answer 5). |
-| 164 | Fraud report: what was caught, what was wrong, and the cost avoided |
+| 164 | Fraud report: what was caught, what was wrong, and the cost avoided **Updated 23 Oct 2026 (CN-014):** RTO cost book (idea 8): cost per RTO (courier charge, packaging, staff) by district, campaign, product, courier and reason; Reports. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-027 (RTO cost understated, the cost book shows sample rows) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 
 ### S06 addition (approved 18 Oct)
 
@@ -691,8 +700,8 @@ built handover-ready from day one.
 
 | PR | What it does |
 |---:|---|
-| 541 | **Risk-sectioned order dashboard** — the moment an order lands it is scored, marked and placed in its section with a note, so the owner opens one screen and sees every order already sorted by what it is. Marking is instant; the decision never is. |
-| 546 | **Cancellation notice to the customer** — when a duplicate is cancelled, a detailed WhatsApp or SMS explains why, with the tracking link to the order that is already on its way |
+| 541 | **Risk-sectioned order dashboard** — the moment an order lands it is scored, marked and placed in its section with a note, so the owner opens one screen and sees every order already sorted by what it is. Marking is instant; the decision never is. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-014 (an order held in fraud review can still be booked); SIM-F-015 (the identity check sees only the phone number); SIM-F-020 (prepaid orders go to the confirmation-call queue) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 546 | **Cancellation notice to the customer** — when a duplicate is cancelled, a detailed WhatsApp or SMS explains why, with the tracking link to the order that is already on its way **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-013 (no notice when an order is cancelled or declined) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 
 ### S06 additions — the duplicate-order & fraud engine (answers 1–5, 44, 18 Oct)
 
@@ -713,11 +722,18 @@ The owner's largest single input. Scenarios A–M are recorded in `PENDING_CHANG
 | PR | What it does |
 |---:|---|
 | 558 | **Parameter for Checkout panel** — its own dashboard section, mixed with no earlier parameter. The owner sets what counts as a flag, how many layers there are, and what each layer asks for. **The whole feature has one off switch.** |
-| 560 | **Advance-payment checkout mode** — for a flagged customer only, and only once he has filled everything in: COD disappears, bKash, Nagad and card open, with one neutral line — delivery charge in advance, or full advance, by layer. **Built as the same checkout page with the payment section swapped**, not a second page: one page to design, one page to test on mobile, and no chance of the two drifting apart. The customer is never shown a score or a reason. |
-| 563 | **No order is ever held over an address** — an unresolved address, with no Inside/Outside choice made either, **still confirms**. It lands in the backend flagged *address unclear, charge not fixed* and goes to a call queue for the AI or an agent. Nothing is left pending over an address. |
+| 560 | **Advance-payment checkout mode** — for a flagged customer only, and only once he has filled everything in: COD disappears, bKash, Nagad and card open, with one neutral line — delivery charge in advance, or full advance, by layer. **Built as the same checkout page with the payment section swapped**, not a second page: one page to design, one page to test on mobile, and no chance of the two drifting apart. The customer is never shown a score or a reason. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-016 (no advance-payment checkout mode or one-click advance request) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** risk rules the owner builds (past RTO, courier success ratio, new phone, area, order value, repeated cancels, with weights); Hard = full advance, Soft = delivery charge in advance, a partial-advance option; never auto-block; Orders → Risk rules. |
+| 563 | **No order is ever held over an address** — an unresolved address, with no Inside/Outside choice made either, **still confirms**. It lands in the backend flagged *address unclear, charge not fixed* and goes to a call queue for the AI or an agent. Nothing is left pending over an address. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-003 (the shown delivery charge is not the stored one); SIM-F-030 (a landmark-only village address is not queued) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 565 | **Free delivery is exempt** — where delivery is free, none of the band machinery shows, corrects or messages. Built in, not bolted on. |
 | 566 | **Support explanation panel** — one click gives the agent a summary of why this customer was asked for an advance, and why the delivery charge rather than the full amount, in words that can be read out on the phone or shared in chat when a customer challenges it |
 | 561 | **Silent address backfill** — a customer who writes only "Road 12, House 42" gets the Inside/Outside Dhaka question, **unless his phone number is already known**. Then nothing is shown, nothing is prefilled, what he typed stays as he typed it, and the full address we hold is attached to the order in the backend for packing. A new address always wins over the stored one — he may have moved, or be sending a gift. |
+
+### S04 additions — gift mode and the bulk / corporate lane (23 Oct 2026; CN-014, CN-017)
+
+| PR | What it does |
+|---:|---|
+| 605 | **Gift mode** (CN-014 h, simulation idea 22) — receiver name and phone, hide prices on the invoice, a gift note, and a "deliver on or after" date. **Off by default**, its own switch, every number and text editable. Section: Checkout settings. The receiver, the receiver's address band and the date reach the sticker and the courier booking (CN-017 SIM-F-007: a gift parcel must never go to the payer's address). **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-007 (gift receiver and date never used) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 606 | **Bulk / corporate lane** (CN-017 SIM-F-023, simulation idea 21, proposal P11) — a bulk / corporate order enquiry from the cart and the menu (Blueprint B8.5 item 4), a quote and order flow for large or logo orders. Minimum quantity, logo price, advance type and amount are **backend settings, off by default** (CN-018 standing rule); the owner decides each later. Section: Orders. Renumbered from the report's "605" because gift mode holds 605. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-023 (no bulk / corporate lane) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 
 ### S06 additions — the approval loop (review round, 18 Oct)
 
@@ -727,10 +743,10 @@ A customer is blocked only after a human has reviewed it.
 | PR | What it does |
 |---:|---|
 | 540 | **Approval digest and permission gate** — the AI reports and then waits: *"50 orders today; 30 confirmed and moved on; 5 held for a call, for this reason; 10 have another order running, 8 of those are duplicates."* Nothing is acted on until the owner says so. |
-| 542 | **One-click advance-charge request** — from the order itself: SMS, WhatsApp or call, with the payment link and the order's state change, in one click |
+| 542 | **One-click advance-charge request** — from the order itself: SMS, WhatsApp or call, with the payment link and the order's state change, in one click **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-016 (no advance-payment checkout mode or one-click advance request) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** risk rules the owner builds (past RTO, courier success ratio, new phone, area, order value, repeated cancels, with weights); Hard = full advance, Soft = delivery charge in advance, a partial-advance option; never auto-block; Orders → Risk rules. |
 | 543 | **Decision learning loop** — every approve and decline by the owner and by each employee, with its reason, is taken as training. The engine's judgement improves as volume grows, and it learns which employee rejects what and why. Switchable off. |
 | 544 | **Rule master switches** — every fraud and duplicate rule individually switchable from the backend. All on by default; any one can be turned off the day it costs more than it saves. |
-| 545 | **New-customer verification queue** — an identity with no history anywhere goes to a phone call, never to a decline. No history is not a risk score. |
+| 545 | **New-customer verification queue** — an identity with no history anywhere goes to a phone call, never to a decline. No history is not a risk score. **Updated 23 Oct 2026 (CN-014):** WhatsApp self-confirm (idea 5), off by default: the reply 1/2/3 texts, the hours before the call queue, which orders it applies to; Orders → Confirmation. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-011 (self-confirm promises a WhatsApp that is never sent); SIM-F-020 (prepaid orders go to the confirmation-call queue) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
 
 ### S06 additions — the delivery-zone engine (§60, 18 Oct)
 
@@ -740,80 +756,80 @@ loses the order outright, so this engine is held to a higher bar than anything e
 
 | PR | What it does |
 |---:|---|
-| 549 | **National gazetteer** — division → district → upazila/thana → area for the whole of Bangladesh, with Bengali, English and Banglish spellings, postcodes and coordinates where they exist. National, not Dhaka-only: the collisions cannot be resolved without the rest of the country in the table. Dhaka City scanned to 250–300 entries; Gazipur, Savar and Narayanganj scanned in full. |
-| 550 | **Band mapping** — one band per area, simple. **Dhaka City = the official DNCC + DSCC map**, nothing else. Sub-area = the owner's list, which is the only exception to the map. Everywhere else is one flat rate. The charge the customer sees is a figure the owner fixes in the admin — it does not depend on which courier the parcel ends up on. The sub-area band has three settings: its own charge · folded into Dhaka City · folded into the outside-Dhaka flat charge. |
-| 551 | **Ambiguity resolver — reads the whole line, and waits.** Nothing is decided while the cursor is still in the address field: people write the district a few words later ("Gabtoli Bus Stand, **Dhaka**"; "Masterpara, Gabtali, **Bogura**"). On blur, or a long enough pause, the resolver reads the complete address — a district, parent area or postcode anywhere in it settles the band **silently, with no question**. A postcode settles it (1216 Dhaka, 5820 Bogura); a co-occurring local name narrows it; a returning customer's saved address outranks any guess. **Only a line still ambiguous after that full read asks**, and once the customer confirms, nothing silently changes it. |
-| 552 | **Address autocomplete** — type-ahead over the gazetteer, matching Bengali, English and the Banglish people actually type (Gabtali ↔ Gabtoli, Sreepur ↔ Sripur, Bogra ↔ Bogura). **Each suggestion row shows the parent and the price** — a customer about to pick the wrong Gabtoli sees "বগুড়া · ১৩০৳" and stops. Prefix matching only, never fuzzy scoring: fuzzy turns "Sadar" into sixty wrong hits. |
-| 553 | **Charge accuracy guard** — the delivery charge is **never computed from free text**, only from a resolved gazetteer entry. Unresolved means ask, never guess. A test suite runs every known colliding name and fails the build if any of them resolves to the wrong band. |
-| 555 | **Phone-first recognition at checkout** — the customer has given a phone number before he has given anything else. It is looked up even with no login, because most people never log in. **A bare phone number prefills the area only** — enough to set the charge, and not sensitive. House, road and full address prefill only after a one-time SMS code or a real login, so a stranger typing numbers cannot harvest customers' addresses. |
-| 556 | **In-transit duplicate notice** — the moment the phone number identifies an order already on its way with the same product, colour and size, a Bengali popup with the product photo, the earlier order number and its tracking link: *it has already reached your area, there is no need to order again.* **Two buttons — cancel it, or "no, I want another one"** — because the second one is sometimes a real sale. Every firing is recorded in detail, with the campaign that brought the customer, so a campaign generating duplicates can have its frequency cap cut. |
+| 549 | **National gazetteer** — division → district → upazila/thana → area for the whole of Bangladesh, with Bengali, English and Banglish spellings, postcodes and coordinates where they exist. National, not Dhaka-only: the collisions cannot be resolved without the rest of the country in the table. Dhaka City scanned to 250–300 entries; Gazipur, Savar and Narayanganj scanned in full. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-003 (the shown delivery charge is not the stored one); SIM-F-030 (a landmark-only village address is not queued) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 550 | **Band mapping** — one band per area, simple. **Dhaka City = the official DNCC + DSCC map**, nothing else. Sub-area = the owner's list, which is the only exception to the map. Everywhere else is one flat rate. The charge the customer sees is a figure the owner fixes in the admin — it does not depend on which courier the parcel ends up on. The sub-area band has three settings: its own charge · folded into Dhaka City · folded into the outside-Dhaka flat charge. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 551 | **Ambiguity resolver — reads the whole line, and waits.** Nothing is decided while the cursor is still in the address field: people write the district a few words later ("Gabtoli Bus Stand, **Dhaka**"; "Masterpara, Gabtali, **Bogura**"). On blur, or a long enough pause, the resolver reads the complete address — a district, parent area or postcode anywhere in it settles the band **silently, with no question**. A postcode settles it (1216 Dhaka, 5820 Bogura); a co-occurring local name narrows it; a returning customer's saved address outranks any guess. **Only a line still ambiguous after that full read asks**, and once the customer confirms, nothing silently changes it. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 552 | **Address autocomplete** — type-ahead over the gazetteer, matching Bengali, English and the Banglish people actually type (Gabtali ↔ Gabtoli, Sreepur ↔ Sripur, Bogra ↔ Bogura). **Each suggestion row shows the parent and the price** — a customer about to pick the wrong Gabtoli sees "বগুড়া · ১৩০৳" and stops. Prefix matching only, never fuzzy scoring: fuzzy turns "Sadar" into sixty wrong hits. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 553 | **Charge accuracy guard** — the delivery charge is **never computed from free text**, only from a resolved gazetteer entry. Unresolved means ask, never guess. A test suite runs every known colliding name and fails the build if any of them resolves to the wrong band. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 555 | **Phone-first recognition at checkout** — the customer has given a phone number before he has given anything else. It is looked up even with no login, because most people never log in. **A bare phone number prefills the area only** — enough to set the charge, and not sensitive. House, road and full address prefill only after a one-time SMS code or a real login, so a stranger typing numbers cannot harvest customers' addresses. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-015 (the identity check sees only the phone number); SIM-F-037 (staff cannot correct a phone number with a log) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 556 | **In-transit duplicate notice** — the moment the phone number identifies an order already on its way with the same product, colour and size, a Bengali popup with the product photo, the earlier order number and its tracking link: *it has already reached your area, there is no need to order again.* **Two buttons — cancel it, or "no, I want another one"** — because the second one is sometimes a real sale. Every firing is recorded in detail, with the campaign that brought the customer, so a campaign generating duplicates can have its frequency cap cut. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-015 (the identity check sees only the phone number) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 557 | **Duplicate turned into an exchange** — same product and colour, **different size**, earlier one still in transit: that is a size worry, not forgetfulness. The message offers an exchange on arrival instead of a second parcel — one exchange charge instead of a parcel plus a refusal. |
-| 559 | **Phone-entry risk check** — our database and the courier fraud checks queried **in the background while the customer keeps typing**. Never blocks the form; a slow or failed check **passes the customer**. It catches a pattern, not a slip: 20 orders with 5–8 cancelled is not a flag; five parcels from several couriers all cancelled is. Recency weighted. |
-| 567 | **Multi-courier fraud data** — Steadfast's and Pathao's own checks to begin with, and any aggregated source behind the same adapter. A customer's refusal history is spread across couriers and none of them share it, so the adapter merges whatever is connected into one view and draws the maximum from it. |
-| 562 | **Flag outcome report** — of the customers flagged: how many paid the advance, how many abandoned. **This is the number that tunes the parameter.** If most of them walk away, the threshold is costing more than it saves, and the owner can see that in a week rather than guessing for a year. |
-| 554 | **Courier zone sync** — our gazetteer mapped to each courier's own city/zone/area ids, so a booking never fails on an area the courier does not recognise, and a courier's list changing does not silently break ours |
+| 559 | **Phone-entry risk check** — our database and the courier fraud checks queried **in the background while the customer keeps typing**. Never blocks the form; a slow or failed check **passes the customer**. It catches a pattern, not a slip: 20 orders with 5–8 cancelled is not a flag; five parcels from several couriers all cancelled is. Recency weighted. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-015 (the identity check sees only the phone number) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** risk rules the owner builds (past RTO, courier success ratio, new phone, area, order value, repeated cancels, with weights); Hard = full advance, Soft = delivery charge in advance, a partial-advance option; never auto-block; Orders → Risk rules. |
+| 567 | **Multi-courier fraud data** — Steadfast's and Pathao's own checks to begin with, and any aggregated source behind the same adapter. A customer's refusal history is spread across couriers and none of them share it, so the adapter merges whatever is connected into one view and draws the maximum from it. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-015 (the identity check sees only the phone number) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** risk rules the owner builds (past RTO, courier success ratio, new phone, area, order value, repeated cancels, with weights); Hard = full advance, Soft = delivery charge in advance, a partial-advance option; never auto-block; Orders → Risk rules. |
+| 562 | **Flag outcome report** — of the customers flagged: how many paid the advance, how many abandoned. **This is the number that tunes the parameter.** If most of them walk away, the threshold is costing more than it saves, and the owner can see that in a week rather than guessing for a year. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-016 (no advance-payment checkout mode or one-click advance request) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** risk rules the owner builds (past RTO, courier success ratio, new phone, area, order value, repeated cancels, with weights); Hard = full advance, Soft = delivery charge in advance, a partial-advance option; never auto-block; Orders → Risk rules. |
+| 554 | **Courier zone sync** — our gazetteer mapped to each courier's own city/zone/area ids, so a booking never fails on an area the courier does not recognise, and a courier's list changing does not silently break ours **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-017 (no courier exception states) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 
 ## S07 · Payments & wallet — PR 165–174
 
 | PR | What it does |
 |---:|---|
-| 165 | Payment model, states, and the reconciliation fields |
-| 166 | Cash on Delivery: amount due, rider collection, settlement |
+| 165 | Payment model, states, and the reconciliation fields **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-028 (COD statement mismatches carry no reason) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 166 | Cash on Delivery: amount due, rider collection, settlement **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-001 (paid customers told to pay again on delivery); SIM-F-005 (no partial-delivery or charge-paid-return states); SIM-F-028 (COD statement mismatches carry no reason) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 167 | bKash integration behind the adapter, with the mock |
 | 168 | Nagad integration behind the adapter, with the mock |
 | 169 | Card gateway integration behind the adapter, with the mock |
-| 170 | Payment callbacks with idempotency keys |
-| 171 | Wallet: credit, debit, balance, and the ledger behind it |
+| 170 | Payment callbacks with idempotency keys **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-026 (abandoned checkouts and failed payments not captured) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 171 | Wallet: credit, debit, balance, and the ledger behind it **Updated 23 Oct 2026 (CN-018):** optional late-delivery apology credit (percentage or amount, to the wallet or the next order, per order or by rule); whether to give it at all is a setting. |
 | 172 | Refund to wallet, and the rules for when a refund is allowed |
 | 173 | Partial payment and advance for pre-orders, capped |
-| 174 | Payment reconciliation report against the gateway statements |
+| 174 | Payment reconciliation report against the gateway statements **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-028 (COD statement mismatches carry no reason) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 
 ## S08 · Courier, returns, exchange — PR 175–193
 
 | PR | What it does |
 |---:|---|
-| 175 | Courier adapter framework with the mock |
-| 176 | Steadfast integration — booking, consignment ID, status polling |
-| 177 | Second courier integration |
-| 178 | **Courier selection by zone, weight and real cost** — the couriers price the same parcel differently (Pathao ৳80 to the suburbs against Steadfast ৳105; Steadfast ৳55 inside Dhaka against Pathao ৳60), so the rule picks the cheaper one per destination. **This affects the shop's cost only — never the charge shown to the customer**, which is the fixed figure from PR 550. |
-| 179 | **Courier sticker** — the one fulfilment document, custom size, barcode, COD amount, full item list |
+| 175 | Courier adapter framework with the mock **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-017 (no courier exception states); SIM-F-027 (RTO cost understated, the cost book shows sample rows) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 176 | Steadfast integration — booking, consignment ID, status polling **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-002 ("Book all" books cancelled orders); SIM-F-004 (edits after booking never reach the parcel); SIM-F-007 (gift receiver and date never used); SIM-F-014 (an order held in fraud review can still be booked); SIM-F-017 (no courier exception states); SIM-F-029 (parcel weight does not change the courier cost) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 177 | Second courier integration **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-017 (no courier exception states) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 178 | **Courier selection by zone, weight and real cost** — the couriers price the same parcel differently (Pathao ৳80 to the suburbs against Steadfast ৳105; Steadfast ৳55 inside Dhaka against Pathao ৳60), so the rule picks the cheaper one per destination. **This affects the shop's cost only — never the charge shown to the customer**, which is the fixed figure from PR 550. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-029 (parcel weight does not change the courier cost) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 179 | **Courier sticker** — the one fulfilment document, custom size, barcode, COD amount, full item list **Updated 23 Oct 2026 (CN-014):** exact-amount line (idea 10) on the sticker, the SMS and the tracking page, with its text and report link; off by default. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-004 (edits after booking never reach the parcel); SIM-F-007 (gift receiver and date never used) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 180 | Sticker print queue, reprint safety, and the handover sheet |
 | 181 | **Daily consolidated picking list PDF**, sorted category → style → size, highest quantity first |
-| 182 | Fulfilment page: pick, pack, hand over, all on one screen |
-| 183 | Defective or out-of-stock at packing: the resolution card and the hold. **Never auto-cancelled** — the team decides; the rest of the order ships (answers 41, 42). |
-| 184 | Tracking status sync back to the order and the customer's tracking page |
-| 185 | **Four-tier exchange engine** with the money box for each tier |
-| 186 | Exchange request from the customer's account, within the window |
-| 187 | Exchange QC — good or damaged — then restock or write-off |
-| 188 | Exchange variant switcher: same product, different size |
-| 189 | Return handling, with the policy that there are no returns after receipt |
-| 190 | Delivery charge rules for exchanges, and who pays |
+| 182 | Fulfilment page: pick, pack, hand over, all on one screen **Updated 23 Oct 2026 (CN-014):** packing proof photo (idea 13): required or optional, and the days to keep it; off by default; Fulfilment. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-002 ("Book all" books cancelled orders); SIM-F-010 ("packing photo required" does not stop packing) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 183 | Defective or out-of-stock at packing: the resolution card and the hold. **Never auto-cancelled** — the team decides; the rest of the order ships (answers 41, 42). **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-006 (oversold stock hidden, the parcel goes out short) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 184 | Tracking status sync back to the order and the customer's tracking page **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-005 (no partial-delivery or charge-paid-return states); SIM-F-017 (no courier exception states); SIM-F-018 (a late parcel is not flagged) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 185 | **Four-tier exchange engine** with the money box for each tier **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-022 (a wrong-item exchange restocks the wrong SKU) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** size exchange charge: the customer pays the second delivery charge for their own size choice, not for an EXTAS mistake (claimed with a note and photo from the account, approved by staff); staff may waive with a logged reason; rules in the editable Exchange policy. |
+| 186 | Exchange request from the customer's account, within the window **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-021 (a size re-ship after a try-on is an unlinked new order) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** size exchange charge: the customer pays the second delivery charge for their own size choice, not for an EXTAS mistake (claimed with a note and photo from the account, approved by staff); staff may waive with a logged reason; rules in the editable Exchange policy. |
+| 187 | Exchange QC — good or damaged — then restock or write-off **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-022 (a wrong-item exchange restocks the wrong SKU) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** size exchange charge: the customer pays the second delivery charge for their own size choice, not for an EXTAS mistake (claimed with a note and photo from the account, approved by staff); staff may waive with a logged reason; rules in the editable Exchange policy. |
+| 188 | Exchange variant switcher: same product, different size **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-022 (a wrong-item exchange restocks the wrong SKU) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** size exchange charge: the customer pays the second delivery charge for their own size choice, not for an EXTAS mistake (claimed with a note and photo from the account, approved by staff); staff may waive with a logged reason; rules in the editable Exchange policy. |
+| 189 | Return handling, with the policy that there are no returns after receipt **Updated 23 Oct 2026 (CN-018):** size exchange charge: the customer pays the second delivery charge for their own size choice, not for an EXTAS mistake (claimed with a note and photo from the account, approved by staff); staff may waive with a logged reason; rules in the editable Exchange policy. |
+| 190 | Delivery charge rules for exchanges, and who pays **Updated 23 Oct 2026 (CN-014):** one-trip size swap (idea 17): the swap charge and the eligible areas; off by default; Exchanges. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-021 (a size re-ship after a try-on is an unlinked new order) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** size exchange charge: the customer pays the second delivery charge for their own size choice, not for an EXTAS mistake (claimed with a note and photo from the account, approved by staff); staff may waive with a logged reason; rules in the editable Exchange policy. |
 | 191 | Refused-parcel handling and the exclusion list it feeds |
-| 192 | Courier performance report: on-time rate, refusal rate, by zone |
-| 193 | Holiday mode — cut-off dates, promised delivery windows, the storefront notice |
+| 192 | Courier performance report: on-time rate, refusal rate, by zone **Updated 23 Oct 2026 (CN-014):** RTO cost book (idea 8): cost per RTO (courier charge, packaging, staff) by district, campaign, product, courier and reason; Reports. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-017 (no courier exception states); SIM-F-018 (a late parcel is not flagged); SIM-F-027 (RTO cost understated, the cost book shows sample rows) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** rider overcharge: a complaint logged with proof; staff refund the exact extra amount (wallet or original method) and recover it from the courier claim; Support → Rider issues (with PR 431). |
+| 193 | Holiday mode — cut-off dates, promised delivery windows, the storefront notice **Updated 23 Oct 2026 (CN-014):** Eid order-by dates per district (idea 19): the dates, the bands, the banner text, and pre-order with an advance; off by default; Campaigns. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-019 (the checkout ignores the outside-Dhaka Eid cut-off) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** Eid pre-order with an advance: cut-off dates, advance type (fixed or percentage) and amount are settings; Campaigns. |
 
 ### S08 additions (answer 44-J and 44-K, 18 Oct)
 
 | PR | What it does |
 |---:|---|
-| 525 | **True-delivery reconciliation** — the courier marks a charge-paid return as "Delivered". This separates what was actually received from what the courier claims, per order and per customer. |
-| 564 | **Charge mismatch log** — when the courier resolves a different real location than the band the customer was charged for, **nothing is changed and nobody is messaged**. The gap is simply recorded, and a monthly figure shows how many such cases there were and what they cost. The difference is ৳50 at most and the cases are rare; a correction system would cost more in refused parcels than it recovers. The owner decides later, from the number. |
-| 526 | **Return-reason capture** — the rider's note (didn't like it, size didn't fit, not as expected, ordered by mistake) recorded against the customer and fed into PR 521 and PR 533 |
+| 525 | **True-delivery reconciliation** — the courier marks a charge-paid return as "Delivered". This separates what was actually received from what the courier claims, per order and per customer. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-005 (no partial-delivery or charge-paid-return states); SIM-F-028 (COD statement mismatches carry no reason) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 564 | **Charge mismatch log** — when the courier resolves a different real location than the band the customer was charged for, **nothing is changed and nobody is messaged**. The gap is simply recorded, and a monthly figure shows how many such cases there were and what they cost. The difference is ৳50 at most and the cases are rare; a correction system would cost more in refused parcels than it recovers. The owner decides later, from the number. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 526 | **Return-reason capture** — the rider's note (didn't like it, size didn't fit, not as expected, ordered by mistake) recorded against the customer and fed into PR 521 and PR 533 **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-005 (no partial-delivery or charge-paid-return states); SIM-F-021 (a size re-ship after a try-on is an unlinked new order); SIM-F-038 (reason lists miss real-life reasons) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 
 ## S09 · Inventory & ERP sync — PR 194–207
 
 | PR | What it does |
 |---:|---|
 | 194 | **ERP sync adapter** — authentication, retry, and the error surface |
-| 195 | Stock pull from the ERP at SKU / colour / size level |
+| 195 | Stock pull from the ERP at SKU / colour / size level **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-006 (oversold stock hidden, the parcel goes out short) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 196 | `companyId` and warehouse mapping per store |
-| 197 | **Global reservation across all three stores** on the one shared stock pool |
+| 197 | **Global reservation across all three stores** on the one shared stock pool **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-006 (oversold stock hidden, the parcel goes out short) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 198 | Reservation with row locking, and release on cart abandon |
 | 199 | Order push to the ERP as a document, never as journal lines |
 | 200 | Idempotency on every ERP push — no duplicate stock movement is possible |
 | 201 | Inventory locations including the damaged bin |
 | 202 | Low-stock alerts, per variant |
-| 203 | Stock audit by barcode, with variance and reason |
+| 203 | Stock audit by barcode, with variance and reason **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-006 (oversold stock hidden, the parcel goes out short) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 204 | Product publishing queue driven by real ERP stock |
 | 205 | Sync health panel: last run, what failed, what is queued |
 | 206 | Manual re-sync and single-product re-sync |
@@ -838,10 +854,10 @@ the no-ERP stock module yet. That module is parked as **S27**.
 | 209 | Rule admin with a live preview of what the customer will see |
 | 210 | Delivery rules — charges, free-delivery threshold, zones |
 | 211 | Exchange rules — window, who pays, what qualifies |
-| 212 | Set and combo tier rules: any 2 for X, any 3 for Y |
-| 213 | Discount and coupon rules, with the honesty guard on "was" prices |
-| 214 | Festive and seasonal rules, with cut-off dates |
-| 215 | **Rule text everywhere reads from the rule**, never from a hard-coded string |
+| 212 | Set and combo tier rules: any 2 for X, any 3 for Y **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-005 (no partial-delivery or charge-paid-return states) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** each set is "Fixed set (no single piece can be kept or returned)" or "Flexible"; a flexible set has the split-price rule and whether a delivery charge applies when the kept part is under the free-delivery limit; Products → Sets. |
+| 213 | Discount and coupon rules, with the honesty guard on "was" prices **Updated 23 Oct 2026 (CN-018):** prepaid reward for any non-COD payment; the reward type is a setting (free delivery, fixed amount or percentage), falling back to amount or percentage when delivery is already free; Checkout & payments → Prepaid reward. |
+| 214 | Festive and seasonal rules, with cut-off dates **Updated 23 Oct 2026 (CN-014):** Eid order-by dates per district (idea 19): the dates, the bands, the banner text, and pre-order with an advance; off by default; Campaigns. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-019 (the checkout ignores the outside-Dhaka Eid cut-off) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** Eid pre-order with an advance: cut-off dates, advance type (fixed or percentage) and amount are settings; Campaigns. |
+| 215 | **Rule text everywhere reads from the rule**, never from a hard-coded string **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-033 (hard-coded customer texts); SIM-F-031 (customer copy promises more than the system does) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 216 | Notices and pop-up builder, with placement and timing |
 | 217 | Rule conflict detection and the resolution order |
 | 218 | Rule history: what changed, when, and by whom |
@@ -912,7 +928,7 @@ the no-ERP stock module yet. That module is parked as **S27**.
 
 | PR | What it does |
 |---:|---|
-| 254 | **Landing page builder** — sections, templates, publish, per campaign |
+| 254 | **Landing page builder** — sections, templates, publish, per campaign **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-034 (the try-on line is missing on the ad landing page) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 255 | Landing page templates and the component library |
 | 256 | Campaign model: audience, offer, creative, window, budget |
 | 257 | Server-side event tracking — view, add to bag, checkout, purchase |
@@ -925,15 +941,15 @@ the no-ERP stock module yet. That module is parked as **S27**.
 | 264 | **Refused-parcel exclusion list** pushed to every ad platform |
 | 265 | Ad spend import, per platform, per campaign |
 | 266 | **USD rate as a setting** the owner types, applied consistently to every cost figure (answer 17) |
-| 267 | Cost per order, cost per delivered order, and **alert thresholds the owner sets from the dashboard** (answer 19) |
+| 267 | Cost per order, cost per delivered order, and **alert thresholds the owner sets from the dashboard** (answer 19) **Updated 23 Oct 2026 (CN-014):** RTO cost book (idea 8): cost per RTO (courier charge, packaging, staff) by district, campaign, product, courier and reason; Reports. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-027 (RTO cost understated, the cost book shows sample rows) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 268 | Pause and budget change from the dashboard, with a confirm step — extended by PR 531 to full campaign control |
 | 269 | **AI growth agent** — reads performance, proposes changes, waits for approval |
 | 270 | Ad creative briefs generated from the product and the campaign |
-| 271 | **Coupon engine, fully dynamic** — percentage, fixed taka, free delivery, buy-one-get-one, buy-two-get-five, and offer shapes invented later without new code (answer 20) |
-| 272 | Coupon distribution, limits, and per-customer caps |
-| 273 | Referral programme |
-| 274 | **Incomplete-order capture** — the details typed before the order was placed |
-| 275 | Incomplete-order follow-up, capped at two messages |
+| 271 | **Coupon engine, fully dynamic** — percentage, fixed taka, free delivery, buy-one-get-one, buy-two-get-five, and offer shapes invented later without new code (answer 20) **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-009 (guests cannot use a public coupon or referral code) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** each coupon has "Who can use it": guests, logged-in customers, or both. |
+| 272 | Coupon distribution, limits, and per-customer caps **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-009 (guests cannot use a public coupon or referral code) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 273 | Referral programme **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-009 (guests cannot use a public coupon or referral code) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 274 | **Incomplete-order capture** — the details typed before the order was placed **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-026 (abandoned checkouts and failed payments not captured) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+| 275 | Incomplete-order follow-up, capped at two messages **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-026 (abandoned checkouts and failed payments not captured) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 276 | Abandoned-cart recovery with the offer rules |
 | 277 | Campaign blast — SMS, WhatsApp, email — with the audience and the throttle |
 | 278 | **YouTube module** — channel, videos, and the attribution back to orders |
@@ -972,18 +988,18 @@ the no-ERP stock module yet. That module is parked as **S27**.
 | 286 | Customer detail — orders, exchanges, support history, lifetime value |
 | 287 | Segments from real behaviour, saved and reusable |
 | 288 | Customer journey view: every touch, in order |
-| 289 | **Journey builder** — triggers, waits, conditions, messages |
+| 289 | **Journey builder** — triggers, waits, conditions, messages **Updated 23 Oct 2026 (CN-014):** Day-1 WhatsApp care (idea 15): the send hour, the text and the Day-3 review request; Messages. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-032 (no product-life reminder or points, tier stuck at "New") is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
 | 290 | Email marketing: templates, sends, and the delivery log |
 | 291 | SMS adapter with masking approval, templates, delivery log |
-| 292 | WhatsApp Business API adapter, templates, delivery log |
+| 292 | WhatsApp Business API adapter, templates, delivery log **Updated 23 Oct 2026 (CN-014):** WhatsApp self-confirm (idea 5), off by default: the reply 1/2/3 texts, the hours before the call queue, which orders it applies to; Orders → Confirmation. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-011 (self-confirm promises a WhatsApp that is never sent) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
 | 293 | **AI campaign writer** — the message drafted in the owner's voice |
 | 294 | AI segment and timing suggestions, with the reasoning shown |
-| 295 | Review requests after delivery, and the review manager behind them |
-| 296 | Rewards and points, with the rules the owner sets |
+| 295 | Review requests after delivery, and the review manager behind them **Updated 23 Oct 2026 (CN-014):** Day-1 WhatsApp care (idea 15): the send hour, the text and the Day-3 review request; Messages. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-008 (reviews never reach moderation, photo reward unpaid) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
+| 296 | Rewards and points, with the rules the owner sets **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-008 (reviews never reach moderation, photo reward unpaid); SIM-F-032 (no product-life reminder or points, tier stuck at "New") are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-018):** optional late-delivery apology credit (percentage or amount, to the wallet or the next order, per order or by rule); whether to give it at all is a setting. |
 | 297 | Customer tags and internal notes |
 | 298 | Consent and opt-out handling, honoured across every channel |
 | 299 | Customer export, with the retention rule applied |
-| 300 | Win-back campaigns for customers who have stopped ordering |
+| 300 | Win-back campaigns for customers who have stopped ordering **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-032 (no product-life reminder or points, tier stuck at "New") is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
 | 301 | Birthday field capture, ready for the parked birthday module |
 | 302 | Customer data retention: **customers are never auto-deleted** (answer 50). Only IP and GPS expire, at 180 days. Manual deletion stays available. |
 | 303 | CRM report: new, returning, churned, by segment |
@@ -992,7 +1008,7 @@ the no-ERP stock module yet. That module is parked as **S27**.
 
 | PR | What it does |
 |---:|---|
-| 505 | **Notification template editor** — every SMS, email and WhatsApp template, the auto-replies, and which event sends which message, all written and changed from the admin |
+| 505 | **Notification template editor** — every SMS, email and WhatsApp template, the auto-replies, and which event sends which message, all written and changed from the admin **Updated 23 Oct 2026 (CN-014):** Day-1 WhatsApp care (idea 15): the send hour, the text and the Day-3 review request; Messages. **Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-001 (paid customers told to pay again on delivery); SIM-F-025 (the Bengali journey is half English); SIM-F-031 (customer copy promises more than the system does) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. **Updated 23 Oct 2026 (CN-019):** built as one Messages control centre: the order-journey timeline (per step: send or not, channel, template, delay) with caps per order, per channel and in total; the delivery-day message optional; Day-1 care and the Day-3 review on by default; the self-confirm step placeable, "counts as the one WhatsApp" a setting; promotions with audience, frequency cap and quiet hours; every message logged with cost and delivery state. |
 
 ### S14 additions (answers 25, 44-K, 44-L, 44-M, 18 Oct)
 

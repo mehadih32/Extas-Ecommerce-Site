@@ -274,7 +274,7 @@ Ranked Urgent → Important → Can wait; severity follows plan §5. "Register" 
 - Core-decision review: keep gift mode optional; when it is on, receiver ≠ payer is the whole point.
 - Growth idea: gift wrap or a message card at Eid; "send to Abba" landing pages.
 - Six angles: Technical — fields saved, not used · Customer — the gift never arrives · Employee — calls to sort out who and where · CEO — failed Eid gifts become public complaints · Owner — a feature he asked for does not work · Supplier — wrong-zone booking, resend charges.
-- Register: CN-014 h (gift PR, next free in S04) + dated scope on PR 179 and PR 176
+- Register: CN-014 h (gift PR, next free in S04 = **PR 605**, filed 23 Oct) + dated scope on PR 179 and PR 176
 - Status: open
 
 ### SIM-F-022 · A wrong-item exchange restocks the item that was ordered, not the one that came back
@@ -492,7 +492,7 @@ Ranked Urgent → Important → Can wait; severity follows plan §5. "Register" 
 - Core-decision review: the owner already runs buying-house orders; the lane fits his business.
 - Growth idea: Eid staff gifts and office uniforms (idea 21).
 - Six angles: Technical — not built · Customer — leaves · Employee — handles it in chat · CEO — high-value orders · Owner — prices are his (P11) · Supplier — factory capacity for logo work.
-- Register: next free PR (605) + CN-017 (proposed); idea 21
+- Register: next free PR (~~605~~ **606**, 23 Oct: 605 went to gift mode, CN-014 h) + CN-017 (proposed); idea 21
 - Status: proposal for the owner (P11)
 
 ### SIM-F-024 · No "create order from chat"; the channel is lost; no "send my bag on WhatsApp"

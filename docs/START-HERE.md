@@ -5,7 +5,7 @@
 2. If `PROGRESS.md` shows work in progress, **continue from the exact stopping point** (A1.1 rule 5). Don't restart.
 3. Otherwise take the next PR in build order (below). Read its row in `docs/MASTER-REGISTER.md`, including every dated
    "Updated …" scope, and its section in `docs/BLUEPRINT.md`. For any UI, open the matching screen in
-   `docs/demo/EXTAS-demo-V12.html`.
+   `docs/demo/EXTAS-demo-V12.2.html` (the UI truth; V12.1 and V12 are kept as history).
 4. Build it, test it, pass the gates, merge, deploy, then update `PROGRESS.md` and the register status.
 5. Never sit idle waiting for the owner. Blocked items go into `BLOCKED.md` and you move on.
 

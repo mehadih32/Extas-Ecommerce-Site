@@ -1,7 +1,7 @@
 # docs/ — index
 
 > **বাংলায় সংক্ষেপে:** `docs` ফোল্ডারে কোন কাগজ কী কাজের, এক লাইনে। সবচেয়ে দরকারি তিনটা: `BLUEPRINT.md` (পুরো
-> নির্দেশনা), `MASTER-REGISTER.md` (সব PR আর কোনটা কতদূর), আর ডেমো `demo/EXTAS-demo-V12.1.html` (দোকান দেখতে কেমন হবে)।
+> নির্দেশনা), `MASTER-REGISTER.md` (সব PR আর কোনটা কতদূর), আর ডেমো `demo/EXTAS-demo-V12.2.html` (দোকান দেখতে কেমন হবে)।
 
 Every file and folder in `docs/`, one line each. Large tool and skill folders are listed by folder. The repository's
 front page is [`../README.md`](../README.md). This index is updated in the same PR that adds, moves or removes a
@@ -12,7 +12,7 @@ docs file (CN-011).
 | File | What it is |
 |---|---|
 | [`BLUEPRINT.md`](BLUEPRINT.md) | The full build specification, V2.1 final, with every change note (CN-###) as a dated block; read it from here |
-| [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 604 PRs in 28 stages: the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
+| [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 606 PRs in 28 stages (600 active, 6 parked): the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
 | [`START-HERE.md`](START-HERE.md) | How every build session runs: reading order, build order, the gates, speed targets, the go-live gate |
 | [`CONVENTIONS.md`](CONVENTIONS.md) | Branches, PR titles, commits, what to update after every PR, code mechanics (PR 11) |
 | [`ERP-API-CONTRACT.md`](ERP-API-CONTRACT.md) | The ERP ↔ shop API: security, endpoints under `/api/v1/ecommerce`, webhooks, rules (CN-005) |
@@ -54,8 +54,10 @@ docs file (CN-011).
 
 | Path | What it is |
 |---|---|
-| [`demo/EXTAS-demo-V12.1.html`](demo/EXTAS-demo-V12.1.html) | **The UI truth** (CN-008): one HTML file, download and open in a browser |
-| [`demo/EXTAS-demo-V12.html`](demo/EXTAS-demo-V12.html) | The previous version, kept as history |
+| [`demo/EXTAS-demo-V12.2.html`](demo/EXTAS-demo-V12.2.html) | **The UI truth** (23 Oct: owner Notes 54–58, CN-012/014): one HTML file, download and open in a browser |
+| [`demo/EXTAS-demo-V12.1.html`](demo/EXTAS-demo-V12.1.html) | V12.1 (CN-008), kept as history |
+| [`demo/EXTAS-demo-V12.html`](demo/EXTAS-demo-V12.html) | V12, kept as history |
+| Public share build (no file here) | A slim build of V12.2 (the docs data left out, under 2 MB; owner Note 58), published as a claude.ai artifact that the owner shares himself. The full V12.2 file above stays the UI truth; the link is the owner's and is not written in the repo |
 | `demo/src/` | The demo's source, one JS file per screen or engine (data, core, layout, home, category, product, combo, bag, checkout, account, blog, every admin screen, server pages, register, docs, site builder) |
 | `demo/tools/build.sh` | Builds the single demo HTML from `src/` |
 | `demo/tools/*-test.js`, `journey.js`, `smoke.js` | Demo test suites, journeys and smoke checks |
