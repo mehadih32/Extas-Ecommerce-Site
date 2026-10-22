@@ -232,7 +232,7 @@
   - Tests: the restore test checks one sample photo and the docs bundle (CN-011)
 - **Owning agent:** Prohori
 - **Mentions:** [PR 396](S19.md#pr-396), [PR 395](S19.md#pr-395), [PR 507](S19.md#pr-507), [PR 493](S00.md#pr-493)
-- **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [Blueprint: A2.9.12 Backup — Azure Blob + Google Drive (owner's answer; PR 8, 395, 396, 507)](../BLUEPRINT.md#a2912-backup--azure-blob--google-drive-owners-answer-pr-8-395-396-507) · Demo: screen `#/admin/backup` in [the demo](../demo/EXTAS-demo-V12.1.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
+- **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [Blueprint: A2.9.12 Backup — Azure Blob + Google Drive (owner's answer; PR 8, 395, 396, 507)](../BLUEPRINT.md#a2912-backup--azure-blob--google-drive-owners-answer-pr-8-395-396-507) · Demo: screen `#/admin/backup` in [the demo](../demo/EXTAS-demo-V12.2.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
 
 ---
 
@@ -302,7 +302,7 @@
   - **20 Oct** · [Scope added to existing PRs (V2.1 final · 20 Oct — pre-code demo work finished; blueprint V2.1 final; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-604): **Server admin pages in the demo (CN-001; sample numbers, labelled)** — `#/admin/server` → PR 423 / 601 / 603 / 604; `#/admin/cache` → PR 602; `#/admin/images` → PR 22 / 24 / 88; `#/admin/speed` → PR 234; `#/admin/integrations` ("Keys & connections") → PR 493 / 500; `#/admin/backup` now shows Blob + Drive → PR 8 / 395 / 507. Checks: 120 route/modal checks 0 fails + 19 flows.
 - **Owning agent:** Prohori
 - **Mentions:** [PR 423](S21.md#pr-423), [PR 9](#pr-9)
-- **Links:** [Register section](../MASTER-REGISTER.md#s0a-additions--the-owners-server-specification-owner-19-oct-2333-reviewserver-setup-spec-ownermd-cn-001) · [Blueprint: A2.9.4 The NVMe is raw on v6 — the boot unit (PR 601)](../BLUEPRINT.md#a294-the-nvme-is-raw-on-v6--the-boot-unit-pr-601) · Demo: screen `#/admin/server` in [the demo](../demo/EXTAS-demo-V12.1.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
+- **Links:** [Register section](../MASTER-REGISTER.md#s0a-additions--the-owners-server-specification-owner-19-oct-2333-reviewserver-setup-spec-ownermd-cn-001) · [Blueprint: A2.9.4 The NVMe is raw on v6 — the boot unit (PR 601)](../BLUEPRINT.md#a294-the-nvme-is-raw-on-v6--the-boot-unit-pr-601) · Demo: screen `#/admin/server` in [the demo](../demo/EXTAS-demo-V12.2.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
 
 ---
 
@@ -326,4 +326,4 @@
   - Code and files: `infra/config/server.conf`
 - **Owning agent:** Prohori
 - **Mentions:** [PR 18](S00.md#pr-18), [PR 423](S21.md#pr-423)
-- **Links:** [Register section](../MASTER-REGISTER.md#s0a-additions--the-owners-server-specification-owner-19-oct-2333-reviewserver-setup-spec-ownermd-cn-001) · [Blueprint: A2.9.5 RAM and CPU split (PR 604) — one config file, never in code](../BLUEPRINT.md#a295-ram-and-cpu-split-pr-604--one-config-file-never-in-code) · [Blueprint: A2.9.15 Handover — runs anywhere (owner spec §11; PR 18, 604)](../BLUEPRINT.md#a2915-handover--runs-anywhere-owner-spec-11-pr-18-604) · Demo: screen `#/admin/server` in [the demo](../demo/EXTAS-demo-V12.1.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
+- **Links:** [Register section](../MASTER-REGISTER.md#s0a-additions--the-owners-server-specification-owner-19-oct-2333-reviewserver-setup-spec-ownermd-cn-001) · [Blueprint: A2.9.5 RAM and CPU split (PR 604) — one config file, never in code](../BLUEPRINT.md#a295-ram-and-cpu-split-pr-604--one-config-file-never-in-code) · [Blueprint: A2.9.15 Handover — runs anywhere (owner spec §11; PR 18, 604)](../BLUEPRINT.md#a2915-handover--runs-anywhere-owner-spec-11-pr-18-604) · Demo: screen `#/admin/server` in [the demo](../demo/EXTAS-demo-V12.2.html) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)

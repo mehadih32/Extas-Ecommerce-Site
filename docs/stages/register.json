@@ -3347,6 +3347,7 @@
     "date": "2026-10-20",
     "note": "Keys & connections page `/admin/integrations` + admin sign-in (`/admin/login`, 2FA step) and frame, Bengali/English; connection list is data (`packages/adapters/src/catalogue.ts`, rows without an adapter shown \"not connected\"); save → vault → test → leaves mock only on a pass; remove = vault revoke, nothing deleted; every step audited, a saved key is never shown again ; 22 Oct follow-up: an e-mail without \"@\" gets the \"write the full e-mail address\" hint and is not sent (unit test, smoke check)",
     "github": [
+     "#22, 22 Oct",
      "#13 (commit `54b7d95`), 20 Oct 07:24 (Dhaka)",
      "#11 (commit `4407ddf`), 20 Oct 06:10 (Dhaka)"
     ]
@@ -7012,7 +7013,7 @@
     "date": "2026-10-22",
     "note": "combo model `@extas/combos` (migration `0004_combos`, settings registry v14 `registry-combos.ts`): pieces with allowed colours and sizes, set price, saving against the separate prices (one `setPricing` for every screen and the bag; a set price at or above the regular total charges the regular total), active window, states, archive (never deleted); sample combos and rules in the sample store only",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7065,7 +7066,7 @@
     "date": "2026-10-22",
     "note": "combo admin `/admin/combos` \"Fixed combos\": cards with the set photo, price box (`combos.prices`, owner), its words, Active / Auto-apply / same-colour switches; editor sheet with live preview; permissions `combos.read/write/publish/prices`; one catch-all API `/api/admin/combos`",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7333,7 +7334,7 @@
     "date": "2026-10-22",
     "note": "set summary server functions: `setSummary` (pieces, colours in owner order with stock, open sizes, first colours, page template P1/P2/P3 by D8.4 with `combos.template.longListPairs`, bag look, one set price, \"was\" only through `setWasPrice` and `rules.discount.showWasPrice`), `priceSet` for the exact picks; `priceWords`",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7388,7 +7389,7 @@
     "date": "2026-10-22",
     "note": "add a set to the bag (`bag.ts`, S04 calls it): one line per piece at its own price, one group key, the set price locked on every line; double add closed (add key, `combos.bag.repeatGuardMs`, cart row lock), oversell re-checked in the write, server-side price; change / save for later / remove the whole set; `bagSets` + `refreshBagSets` follow a new combo price (`combos.bag.followPriceChanges`), an ended set keeps its price with a note",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7500,7 +7501,7 @@
     "date": "2026-10-22",
     "note": "set tiers read from Smart Rules (`setTier`, S10 PR 212): \"What customers can combine\" cards under the fixed combos, prices and switch changed only in Smart Rules (owner OK); `tierQuote` for the set builder and bag box",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7591,7 +7592,7 @@
     "date": "2026-10-22",
     "note": "set validation (`validate.ts`, browser and server): what is still missing in page order, allowed colour/size, sold out, the bag counted (no oversell), K11 different colours, \"size for both\"; `checkComboSet` on the server",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7715,7 +7716,7 @@
     "date": "2026-10-22",
     "note": "combo analytics: views, colour picks and adds counted per day (ComboDailyStat) and per colour pair (PopularPair) with SQL upserts; report tab `/admin/combos?tab=report` (`combos.report.defaultDays/topCount`): sets sold, orders, sales and what customers saved from real orders only, best combos, most-picked pairs; `GET /api/admin/combos/report`",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -7767,7 +7768,7 @@
     "date": "2026-10-22",
     "note": "auto colour-pair combos: a rule binds categories or products, 2- or 3-piece, pairing style / across / any, fixed or % price, dates, templates; every pair becomes a combo with its own link; rules tab, 8-step wizard with live count, Archive tab; \"add 1 more\" 3-piece companion",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -8001,7 +8002,7 @@
     "date": "2026-10-22",
     "note": "set photo composed with sharp from each piece's photo in its colour: side by side, top + bottom, three-up, grid; `combos.photo.*` size, background, format, quality; stored through the media library (mock storage until Blob), sizes made, set on the combo; \"Make set photo\" on the combo card, `POST /api/admin/combos/:id/photo`",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -10716,7 +10717,7 @@
     "date": "2026-10-22",
     "note": "national gazetteer `@extas/delivery`: file format (division → district → upazila/thana → area, Bengali/English/Banglish names, postcodes), importer and one shared index; ships a **public sample list** only (the national list comes later); migration `0005_delivery_zones`",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -10762,7 +10763,7 @@
     "date": "2026-10-22",
     "note": "band mapping: Dhaka City = the DNCC + DSCC map (setting `delivery.bands.cityCorporations`), the owner's sub-area list (AreaBand rows, empty), one flat outside band; admin `/admin/delivery` (three bands, sub-area list, Try an address); permissions `delivery.read`, `delivery.charges`, `delivery.areas`; bands ship off with no charge",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -10819,7 +10820,7 @@
     "date": "2026-10-22",
     "note": "ambiguity resolver: reads the whole line after `delivery.resolver.settleMs` (900 ms) or blur, asks \"Where is this address?\" only when still ambiguous; admin Try-an-address; resolve APIs",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -10871,7 +10872,7 @@
     "date": "2026-10-22",
     "note": "address autocomplete `GET /api/delivery/suggest`: prefix type-ahead over the gazetteer, each row with its district and its band's charge (`delivery.suggest.*`)",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -10917,7 +10918,7 @@
     "date": "2026-10-22",
     "note": "charge accuracy guard: a charge only from a resolved place, never from text; the collision suite (`collisions.json`) fails the build",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
@@ -10990,7 +10991,7 @@
     "date": "2026-10-22",
     "note": "phone-first recognition `POST /api/delivery/phone-area`: one BD phone helper; a bare number prefills the area only, per-IP limit (`delivery.phoneFirst.rateLimit` 10 / 600 s); the full address needs a session or an SMS code",
     "github": [
-     "#21, 22 Oct"
+     "#22, 22 Oct"
     ]
    },
    "builtFacts": {
