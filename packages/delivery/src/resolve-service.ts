@@ -56,13 +56,17 @@ export async function settleTimings(deps: DeliveryDeps, storeId: number): Promis
 
 const id = z.string().trim().min(1).max(64);
 
-/** Reads one finished line for a store: the band, or the question to ask. */
-export async function resolveLine(deps: DeliveryDeps, storeId: number, input: unknown): Promise<ResolveView> {
-  await assertStore(deps, storeId);
-  const opts = await resolverOptions(deps, storeId);
+export interface LineInput {
+  line: string;
+  savedAreaId?: string | null;
+  confirmed?: { bandId: string; areaId?: string | null } | null;
+}
+
+/** A finished address as the APIs send it: the line (capped by delivery.resolver.maxChars), a saved place, a choice. */
+export function parseLineInput(input: unknown, maxChars: number): LineInput {
   const schema = z
     .object({
-      line: z.string().max(opts.maxChars),
+      line: z.string().max(maxChars),
       savedAreaId: id.nullable().optional(),
       confirmed: z.object({ bandId: id, areaId: id.nullable().optional() }).strict().nullable().optional(),
     })
@@ -74,8 +78,16 @@ export async function resolveLine(deps: DeliveryDeps, storeId: number, input: un
       'the address is not valid',
       r.error.issues.map((i) => `${i.path.join('.') || '(input)'}: ${i.message}`),
     );
+  return r.data;
+}
+
+/** Reads one finished line for a store: the band, or the question to ask. */
+export async function resolveLine(deps: DeliveryDeps, storeId: number, input: unknown): Promise<ResolveView> {
+  await assertStore(deps, storeId);
+  const opts = await resolverOptions(deps, storeId);
+  const data = parseLineInput(input, opts.maxChars);
   const map = await loadBandMap(deps, storeId);
-  return viewOf(map, resolveAddress(map, r.data.line, opts, { savedAreaId: r.data.savedAreaId, confirmed: r.data.confirmed }));
+  return viewOf(map, resolveAddress(map, data.line, opts, { savedAreaId: data.savedAreaId, confirmed: data.confirmed }));
 }
 
 /** The admin's "Try an address" box: the same read, as the owner (needs `delivery.read`). */
