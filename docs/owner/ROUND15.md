@@ -817,3 +817,10 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - Report anything discussed and dropped during the 2–3 day limit gap.
 - 15–20 more simulated orders from missed angles: full prepaid, bad customers under the rules, 40+ and 50+ buyers, low-literacy rural buyers. Fix the normal ones; hold the owner questions.
 - Keep token use low; the priority is getting the e-commerce site live fast.
+
+## Note 61 — 23 Oct 05:18 · Simulation part-2 answers: send to someone else, abroad, call-me, voice address, cancel (CN-020)
+- (1/2) The normal checkout stays as it is: the name and phone are the receiver's. Send-to-someone-else and abroad must not clutter checkout or invite abuse; the planning chat proposes a safer design (pending owner OK).
+- (3) "Call me" is not a permanent button for everyone. It appears only when the customer struggles at checkout (repeated errors, long idle). The trigger has a standard default and can be changed in the backend (must).
+- Voice address: a mic icon in the address field. Bengali speech becomes text automatically; the backend marks the order "voice-entered"; staff call only if the text is unclear.
+- (4) Cancel: the customer can cancel themselves until the order is confirmed. After confirmation, a cancel request until courier booking, approved by staff. The cut-off stage is a setting.
+- 23 Oct 05:28 owner confirmed: (1) normal checkout unchanged — OK. (2) Gift = advance payment always, from Bangladesh or abroad, no login needed; the owner controls gift on/off, advance on/off and the advance type and amount from the backend. (3) The call-me rule is OK.

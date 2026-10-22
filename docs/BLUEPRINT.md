@@ -881,6 +881,33 @@ to read code or open GitHub.
 >
 > **(4) Extra simulation.** About 20 more orders from angles the first 50 missed: fully prepaid, risk rules applied (an advance asked for and paid or refused), older buyers (40+ and 50+), a low-literacy rural buyer, and others. The results are appended to the simulation report.
 
+> **CN-020 · 23 Oct 2026 (owner answers to simulation part 2: gifts, abroad, call-me, voice address, cancel).**
+>
+> (1) **Normal checkout unchanged.** One name and phone, the receiver's. Orders from abroad come in the receiver's name, as today. No second contact block in checkout.
+>
+> (2) **Gift (PR 605): "🎁 Send as a gift"** is a small link on the product page and in the bag. It is never a field in normal checkout.
+> - A gift order means **advance payment**: bKash, card, international card or bank, from Bangladesh or abroad. **No login is required.**
+> - The sender's contact may be a foreign phone or an e-mail, used only for updates and never as a trust signal. The receiver's Bangladeshi phone and address are required.
+> - Prices are hidden on the receiver's invoice. There is a gift note and a "deliver on or after" date.
+> - Backend settings (Checkout & payments → Gifts):
+>   - gift on or off;
+>   - advance required on or off;
+>   - advance type: full, fixed amount or percentage, plus the amount.
+>
+> (3) **"Call me" appears only when someone struggles at checkout.** By default it shows after 3 failed tries on one field, or 90 seconds idle without progress; both thresholds are settings. A tap creates a call-back in Support. There is no permanent button.
+>
+> (4) **Voice address.** A mic icon in the address field turns Bengali speech into text.
+> - The order is marked "voice-entered" and keeps the recording.
+> - A low-confidence transcript is flagged "voice — please call", so staff call only for unclear ones.
+> - Chrome on Android does the conversion on the phone. Other browsers send the recording to a speech-to-text adapter (mock until its key arrives); until then staff listen to it.
+>
+> (5) **Cancel.**
+> - The customer cancels in one tap until the order is confirmed.
+> - After confirmation, the customer can send a cancel request until courier booking; staff approve it.
+> - The cut-off stage is a setting, defaulting to "confirmed".
+>
+> No new PR numbers: (2) on PR 605; (3) on the checkout PRs + Support; (4) on the checkout address PR + adapters (PR 18); (5) on the order-status PRs.
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 
