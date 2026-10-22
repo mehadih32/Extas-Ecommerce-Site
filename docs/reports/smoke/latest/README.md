@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 02:49 (Asia/Dhaka)
+# Smoke test · 2026-10-23 03:56 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (32টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `f98888004487` · after deploy · result **PASS** (32 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `f98888004487` · nightly · result **FAIL** (32 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -38,3 +38,7 @@ Site: https://new.extas.com.bd · commit `f98888004487` · after deploy · resul
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | [picture](admin-stock-desktop.jpg) |
 | `/admin/stock/counts` | desktop | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-desktop.jpg) |
 | `/admin/stock/movements` | desktop | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-desktop.jpg) |
+
+Other problems:
+
+- sign-in (phone): an e-mail without "@" got no "write the full e-mail address" hint

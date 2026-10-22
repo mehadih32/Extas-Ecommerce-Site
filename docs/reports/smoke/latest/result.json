@@ -1,11 +1,13 @@
 {
-  "at": "2026-10-23 02:49 (Asia/Dhaka)",
+  "at": "2026-10-23 03:56 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
   "sha": "f98888004487",
-  "kind": "after deploy",
-  "rolledBack": true,
-  "ok": true,
+  "kind": "nightly",
+  "rolledBack": false,
+  "ok": false,
   "pages": 32,
   "failed": 0,
-  "problems": []
+  "problems": [
+    "sign-in (phone): an e-mail without \"@\" got no \"write the full e-mail address\" hint"
+  ]
 }
