@@ -124,6 +124,13 @@ Made by `tools/docs/gen-stage-pages.mjs` (`pnpm docs:stages`) from `MASTER-REGIS
 E3) and `stages/bn.json`; it also links the stage names, waves and PR numbers in the root `README.md`. CI fails when
 the pages are out of date.
 
+## `admin-guide/` — one Bengali guide per admin section (CN-014)
+
+| File | What it is |
+|---|---|
+| [`admin-guide/README.md`](admin-guide/README.md) | Index of the admin section guides |
+| [`admin-guide/combos.md`](admin-guide/combos.md) | Combos & customer sets (`/admin/combos`): the tabs, every setting with its default, what happens after each action |
+
 ## `reports/` — what got built, in Bengali
 
 | Path | What it is |
