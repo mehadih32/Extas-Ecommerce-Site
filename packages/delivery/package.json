@@ -16,7 +16,8 @@
     "gazetteer:sample": "node scripts/make-sample-gazetteer.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "collisions": "vitest run test/accuracy.pure.test.ts"
   },
   "dependencies": {
     "@extas/auth": "workspace:*",

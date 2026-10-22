@@ -10,6 +10,7 @@
 //   ambiguous asks, a saved address outranks a guess, a confirmed choice never changes silently (resolver.ts); when the
 //   line is finished — blur or a pause that always resumes (settle.ts); the service the APIs call (resolve-service.ts).
 // - PR 552 address autocomplete: prefix type-ahead, each row with its district and its band's charge (suggest.ts).
+// - PR 553 the charge accuracy guard: a charge only from a ResolvedArea the resolver minted, never from text (quote.ts).
 export * from './text';
 export * from './gazetteer';
 export * from './csv';
@@ -24,3 +25,4 @@ export * from './resolver';
 export * from './settle';
 export * from './resolve-service';
 export * from './suggest';
+export * from './quote';
