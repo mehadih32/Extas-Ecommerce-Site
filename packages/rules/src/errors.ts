@@ -29,7 +29,9 @@ export type RulesErrorCode =
   /** The coupon cannot be used now (details: OFF, NOT_STARTED, ENDED, USED_UP, PER_CUSTOMER, RULE_NOT_LIVE, UNKNOWN). */
   | 'COUPON_NOT_USABLE'
   /** The conflict cannot be fixed automatically (not a text drift, or the text no longer has the stale number). */
-  | 'CANNOT_FIX';
+  | 'CANNOT_FIX'
+  /** Eid order-by dates cannot be on as they are: details name every reason (no Eid day, no date, a date after Eid …). */
+  | 'EID_INVALID';
 
 export class RulesError extends Error {
   readonly code: RulesErrorCode;
@@ -60,6 +62,7 @@ export class RulesError extends Error {
       case 'NOTICE_INVALID':
       case 'COUPON_NOT_USABLE':
       case 'CANNOT_FIX':
+      case 'EID_INVALID':
         return 409;
       default:
         return 400;

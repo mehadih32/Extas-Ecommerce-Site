@@ -8,6 +8,8 @@
 // - PR 216 notices and the pop-up builder (notices-model.ts, notices-service.ts);
 // - PR 217 conflict detection and the resolution order (conflicts.ts, conflicts-service.ts);
 // - PR 218 rule history (history.ts); PR 219 rule simulation (simulate-service.ts);
+// - PR 214 follow-up (CN-014 g): Eid order-by dates per band and district, the "may arrive after Eid" line and
+//   pre-order with an advance (eid.ts the engine, eid-service.ts the settings, the admin screen and the storefront read);
 // - background jobs (jobs.ts); the sample rules for the sample store are `@extas/rules/sample` (sample.ts), kept out of
 //   the app's bundle.
 // Every service takes the database and a settings reader, checks the permission itself and writes the audit log in
@@ -26,5 +28,6 @@ export * from './conflicts-service';
 export * from './simulate-service';
 export * from './notices-service';
 export * from './coupons-service';
+export * from './eid-service';
 export * from './public';
 export * from './jobs';
