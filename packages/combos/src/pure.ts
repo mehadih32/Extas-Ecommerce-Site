@@ -5,3 +5,4 @@ export * from './model';
 export * from './tiers';
 export * from './validate';
 export * from './set-words';
+export * from './summary-model';

@@ -12,6 +12,7 @@ import type { CombosDeps, SettingsReader, Who } from './context';
 import { seedSampleCombos } from './sample';
 import { listSetTiers, liveSetTiers } from './set-tiers';
 import { checkComboSet } from './set-check';
+import { priceSet, setSummary } from './summary';
 import { productFacts } from './facts';
 import { contentColumns, ruleContentSchema } from '@extas/rules';
 
@@ -336,6 +337,61 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       const off = await checkComboSet(deps(), { storeId: S, slug: 'sample-shirt-belt', choices: [] });
       expect(off.first).toEqual({ code: 'NOT_ON_SALE', slot: null });
       expect((await checkComboSet(deps(), { storeId: B, slug: 'sample-polo-chino-set', choices: [] }).catch((e) => e.code))).toBe('NOT_FOUND');
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------
+  describe('PR 96 · the set summary on the server', () => {
+    it('a top + bottom set: its pieces in order with colours, sizes and stock, the P3 page, and one set price', async () => {
+      const sum = await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' });
+      expect(sum).toMatchObject({ slug: 'sample-polo-chino-set', type: 'TOP_BOTTOM', state: 'live', onSale: true, pieceCount: 2, needsMix: false, pageTemplate: 'P3', bagTemplate: 'B5', listTemplate: 'L1' });
+      expect(sum.pieces.map((p) => p.productId)).toEqual([ids['essential-pique-polo'], ids['slim-chino-trousers']]);
+      for (const p of sum.pieces) {
+        expect(p.colours.length).toBeGreaterThan(0);
+        expect(p.colours.find((c) => c.id === p.defaultColourId)?.open).toBe(true);
+        expect(p.openSizes[p.defaultColourId!]!.length).toBeGreaterThan(0);
+        for (const open of Object.values(p.openSizes)) for (const id of open) expect(p.sizes.map((x) => x.id)).toContain(id);
+      }
+      expect(sum.price).toMatchObject({ payMinor: 205000, offer: true, pieces: 2, eachMinor: 102500 });
+      expect(sum.price.savingMinor).toBe(sum.price.regularMinor! - 205000);
+      // No struck price until the owner switches them on; then it is the separate prices' sum, never more.
+      expect(sum.price).toMatchObject({ wasMinor: null, wasReason: 'NOT_CHOSEN' });
+      overrides.set('rules.discount.showWasPrice', true);
+      expect((await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' })).price).toMatchObject({ wasMinor: sum.price.regularMinor, wasReason: 'SHOWN' });
+      overrides.delete('rules.discount.showWasPrice');
+      expect(await code(setSummary(deps(), { storeId: B, slug: 'sample-polo-chino-set' }))).toBe('NOT_FOUND');
+    });
+
+    it('the picks are priced at their own variants\' prices; nothing until every piece is picked', async () => {
+      const sum = await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' });
+      const half = await priceSet(deps(), { storeId: S, slug: 'sample-polo-chino-set', choices: [{ colourId: sum.pieces[0]!.defaultColourId }] });
+      expect(half.price).toBeNull();
+      expect(half.check.first?.code).toBe('PICK_SIZE');
+      const choices = sum.pieces.map((p) => ({ colourId: p.defaultColourId, sizeId: p.openSizes[p.defaultColourId!]![0]! }));
+      const full = await priceSet(deps(), { storeId: S, slug: 'sample-polo-chino-set', choices });
+      expect(full.check.ok).toBe(true);
+      expect(full.price).toMatchObject({ payMinor: 205000, offer: true });
+      const variants = await t.prisma.productVariant.findMany({ where: { id: { in: full.check.variants as string[] } }, select: { priceMinor: true } });
+      expect(full.price!.regularMinor).toBe(variants.reduce((s, v) => s + v.priceMinor!, 0));
+    });
+
+    it('an auto pair is priced by its rule (% off), P1 for a short list and P2 past the long-list setting', async () => {
+      const rule = await t.prisma.comboAutoRule.findFirstOrThrow({ where: { storeId: S, key: 'sample-polo-pairs' }, select: { id: true, percentOff: true } });
+      const pairs = await t.prisma.combo.findMany({ where: { storeId: S, autoRuleId: rule.id, status: { not: 'ENDED' }, archivedAt: null }, select: { slug: true, items: { select: { productId: true } } } });
+      const pair = pairs.find((p) => new Set(p.items.map((i) => i.productId)).size === 1)!;
+      expect(pair).toBeDefined();
+      await t.prisma.combo.updateMany({ where: { storeId: S, slug: pair.slug }, data: { status: 'RUNNING' } });
+      const sum = await setSummary(deps(), { storeId: S, slug: pair.slug });
+      expect(sum.pageTemplate).toBe(pairs.length > 28 ? 'P2' : 'P1');
+      expect(sum.pieces.every((p) => p.colours.length === 1 && p.defaultColourId === p.colours[0]!.id)).toBe(true);
+      const step = registry['combos.price.roundingStepMinor'].default;
+      if (sum.price.regularMinor !== null && sum.price.payMinor !== null) {
+        expect(sum.price.payMinor % step).toBe(0);
+        expect(sum.price.payMinor).toBeLessThanOrEqual(Math.round((sum.price.regularMinor * (100 - rule.percentOff!)) / 100));
+      }
+      overrides.set('combos.template.longListPairs', 2);
+      expect((await setSummary(deps(), { storeId: S, slug: pair.slug })).pageTemplate).toBe(pairs.length > 2 ? 'P2' : 'P1');
+      overrides.delete('combos.template.longListPairs');
     });
   });
 });

@@ -141,6 +141,19 @@ export const combosSettings = {
     sortOrder: 80,
     version: V,
   }),
+  // ---- PR 96 · the "auto" combo product page: P2 (pick your colours) once a rule makes more pairs than this ----
+  'combos.template.longListPairs': setting({
+    schema: z.int().min(2).max(1000),
+    default: 28,
+    scope: 'store',
+    valueType: 'INT',
+    group: 'combos',
+    labelKey: 'combos.template.longListPairs.label',
+    helpKey: 'combos.template.longListPairs.help',
+    isOwnerData: false,
+    sortOrder: 85,
+    version: V,
+  }),
   // ---- PR 90 · the admin ----
   'combos.admin.previewCount': setting({
     schema: z.int().min(4).max(200),

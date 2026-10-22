@@ -3,6 +3,7 @@
 // are one decision: the button's price is always the set price the check and the bag use, passed in already formatted.
 import bn from '../messages/set.bn.json';
 import en from '../messages/set.en.json';
+import type { SetPrice } from './summary-model';
 import type { SetProblem } from './validate';
 
 export type SetLang = 'en' | 'bn';
@@ -27,4 +28,20 @@ export function problemWords(lang: SetLang, p: SetProblem, names: { item: string
 export function addWords(lang: SetLang, pieces: number, price: string, num: (n: number) => string = String): string {
   const c = SET_WORDS[lang].cta;
   return pieces === 2 ? fillWords(c.two, { price }) : fillWords(c.many, { n: num(pieces), price });
+}
+
+/**
+ * The price lines from the one set price (PR 96): "2 pcs ৳2,200 → ৳1,900" and "Save ৳300" (null when there is no
+ * real saving), and the button's price. `money` formats minor units in the customer's language.
+ */
+export function priceWords(lang: SetLang, p: SetPrice, money: (minor: number) => string, num: (n: number) => string = String): { line: string | null; save: string | null; cod: string | null; button: string | null } {
+  const w = SET_WORDS[lang].price;
+  if (p.payMinor === null) return { line: null, save: null, cod: null, button: null };
+  const pay = money(p.payMinor);
+  return {
+    line: p.offer && p.regularMinor !== null ? fillWords(w.line, { n: num(p.pieces), regular: money(p.regularMinor), pay }) : null,
+    save: p.offer ? fillWords(w.save, { saving: money(p.savingMinor) }) : null,
+    cod: fillWords(w.cod, { pay }),
+    button: addWords(lang, p.pieces, pay, num),
+  };
 }

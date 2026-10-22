@@ -5,6 +5,7 @@
 import { z } from 'zod';
 import { checkStoreId, liveStore, nowOf, parse, setting, type CombosDeps, type Db } from './context';
 import { comboSelect, roundingOf, toComboView, type ComboRow, type ComboView } from './combos-service';
+import { packRule, type PriceRule, type RoundingRule } from './model';
 import { CombosError } from './errors';
 import { productFacts, type ProductFact } from './facts';
 import { checkSet, expandSlots, type SetCheck, type SetSlot, type VariantStock } from './validate';
@@ -33,6 +34,11 @@ export interface ComboForSale {
   variants: VariantStock[];
   /** On sale now: live, priced, every piece's product published. */
   onSale: boolean;
+  /** How the set is priced (an auto pair: its rule's pack price) and rounded — for the picks' own prices. */
+  priceRule: PriceRule;
+  rounding: RoundingRule;
+  /** An auto pair's rule (its templates and how many pairs it makes). */
+  rule: { id: string; key: string; listTemplateKey: string | null; pageTemplateKey: string | null; bagTemplateKey: string | null; pairs: number } | null;
 }
 
 /** The combo with its pieces' facts (any state: an ended combo's page still opens and says so). */
@@ -42,13 +48,23 @@ export async function comboForSale(deps: CombosDeps, storeId: number, ref: { com
   const row = await db.combo.findFirst({ where: { storeId, archivedAt: null, ...(ref.comboId ? { id: ref.comboId } : { slug: ref.slug }) }, select: comboSelect });
   if (!row) throw new CombosError('NOT_FOUND', 'no such combo in this store', [ref.comboId ? 'comboId' : 'slug']);
   const ids = row.items.flatMap((i) => (i.productId ? [i.productId] : []));
-  const [facts, rounding, timeZone] = await Promise.all([productFacts({ db, settings: deps.settings }, storeId, ids), roundingOf(deps, storeId), setting(deps, storeId, 'store.timeZone')]);
-  const view = toComboView(row, facts, { now: nowOf(deps), timeZone, rounding });
+  const [facts, rounding, timeZone, auto] = await Promise.all([
+    productFacts({ db, settings: deps.settings }, storeId, ids),
+    roundingOf(deps, storeId),
+    setting(deps, storeId, 'store.timeZone'),
+    row.autoRuleId
+      ? db.comboAutoRule.findFirst({ where: { id: row.autoRuleId, storeId }, select: { id: true, key: true, priceMode: true, priceMinor: true, percentOff: true, listTemplateKey: true, pageTemplateKey: true, bagTemplateKey: true } })
+      : Promise.resolve(null),
+  ]);
+  const priceRule: PriceRule = auto ? packRule(auto) : { mode: 'FIXED', setMinor: row.setPriceMinor };
+  const view = toComboView(row, facts, { now: nowOf(deps), timeZone, rounding, priceRule });
+  const pairs = auto ? await db.combo.count({ where: { storeId, autoRuleId: auto.id, archivedAt: null, status: { not: 'ENDED' } } }) : 0;
   const slots = expandSlots(view.items);
   const variants = [...facts.values()].flatMap((p) => p.variants.map((v) => ({ id: v.id, productId: p.id, colourId: v.colourId, sizeId: v.sizeId, sellable: v.sellable, priceMinor: v.priceMinor })));
   const published = ids.every((id) => facts.get(id)?.published);
   const onSale = view.state === 'live' && view.blocking.length === 0 && view.pricing.payMinor !== null && published && slots.length > 1;
-  return { row, view, facts, slots, variants, onSale };
+  const rule = auto ? { id: auto.id, key: auto.key, listTemplateKey: auto.listTemplateKey, pageTemplateKey: auto.pageTemplateKey, bagTemplateKey: auto.bagTemplateKey, pairs } : null;
+  return { row, view, facts, slots, variants, onSale, priceRule, rounding, rule };
 }
 
 /** Pieces of each variant in the customer's open bag (saved-for-later lines and the set being changed left out). */
