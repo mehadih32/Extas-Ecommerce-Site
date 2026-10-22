@@ -11,6 +11,8 @@
 //   line is finished — blur or a pause that always resumes (settle.ts); the service the APIs call (resolve-service.ts).
 // - PR 552 address autocomplete: prefix type-ahead, each row with its district and its band's charge (suggest.ts).
 // - PR 553 the charge accuracy guard: a charge only from a ResolvedArea the resolver minted, never from text (quote.ts).
+// - PR 555 phone-first recognition: the one BD phone normaliser (phone.ts); a bare number prefills the area only, the
+//   full address only with a login or a confirmed code (phone-area.ts).
 export * from './text';
 export * from './gazetteer';
 export * from './csv';
@@ -26,3 +28,5 @@ export * from './settle';
 export * from './resolve-service';
 export * from './suggest';
 export * from './quote';
+export * from './phone';
+export * from './phone-area';

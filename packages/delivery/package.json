@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./sample": "./src/sample.ts",
-    "./settle": "./src/settle.ts"
+    "./settle": "./src/settle.ts",
+    "./phone": "./src/phone.ts"
   },
   "scripts": {
     "gazetteer:import": "tsx src/cli.ts import",

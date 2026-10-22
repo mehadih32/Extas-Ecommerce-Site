@@ -1,22 +1,23 @@
 // S06 · PR 551 — the address read end to end on a real PostgreSQL (a throwaway database with the SAMPLE gazetteer;
 // skipped without TEST_DATABASE_ADMIN_URL): the admin's "Try an address" (login and `delivery.read`) and the checkout's
 // public route (POST only, same site, size-capped). A band that is off answers with no charge; an ambiguous line asks;
-// a picked band is kept. PR 552 — the public autocomplete: each row with its district and its band's charge.
+// a picked band is kept. PR 552 — the public autocomplete: each row with its district and its band's charge. PR 555 —
+// the public phone look-up: the saved area only (never the address), same site, size-capped, limited per IP.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { forgetGazetteer, importGazetteer } from '@extas/delivery';
 import { sampleGazetteerRows } from '@extas/delivery/sample';
-import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
+import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { publicResolveHandler, publicSuggestHandler, tryAddressHandler } from './delivery-api';
+import { publicPhoneAreaHandler, publicResolveHandler, publicSuggestHandler, tryAddressHandler } from './delivery-api';
 
 const HOST = 'shop.example.test';
 const OWNER_PW = 'a long sentence for the tests';
 
-function call(method: string, path: string, opts: { body?: unknown; raw?: string; cookie?: string; origin?: string | null } = {}) {
-  const headers: Record<string, string> = { host: HOST, 'user-agent': 'SampleBrowser/1.0', 'x-forwarded-for': '192.0.2.42' };
+function call(method: string, path: string, opts: { body?: unknown; raw?: string; cookie?: string; origin?: string | null; ip?: string } = {}) {
+  const headers: Record<string, string> = { host: HOST, 'user-agent': 'SampleBrowser/1.0', 'x-forwarded-for': opts.ip ?? '192.0.2.42' };
   if (opts.origin !== null && method !== 'GET') headers.origin = opts.origin ?? `https://${HOST}`;
   if (opts.cookie) headers.cookie = opts.cookie;
   const payload = opts.raw ?? (opts.body === undefined ? undefined : JSON.stringify(opts.body));
@@ -125,5 +126,25 @@ describe.skipIf(!HAS_TEST_DB)('the address read on PostgreSQL', () => {
     await deps.resolver.set('delivery.suggest.enabled', false, storeTarget(A));
     expect((await read(await publicSuggestHandler(call('GET', '/api/delivery/suggest?q=gabtali'), deps))).body).toEqual({ ok: true, enabled: false, rows: [] });
     await deps.resolver.set('delivery.suggest.enabled', true, storeTarget(A));
+  });
+
+  it('phone-first: a bare number gives the saved area only, never the address (PR 555)', async () => {
+    const c = await t.prisma.customer.create({ data: { storeId: A, phone: '+8801712345678', name: 'Sample Customer' } });
+    const gabtoli = await t.prisma.geoArea.findUniqueOrThrow({ where: { code: 'bd.dhaka.dhaka.gabtoli' }, select: { id: true } });
+    await t.prisma.customerAddress.create({ data: { storeId: A, customerId: c.id, name: 'Sample Customer', phone: '+8801712345678', addressLine: 'House 9, Road 4', areaId: gabtoli.id, isDefault: true } });
+    const ip = '203.0.113.7';
+    expect((await publicPhoneAreaHandler(call('GET', '/api/delivery/phone-area'), deps)).status).toBe(405);
+    expect((await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { origin: 'https://evil.example.test', body: { phone: '01712345678' }, ip }), deps)).status).toBe(403);
+    expect((await read(await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { raw: JSON.stringify({ phone: 'x'.repeat(5000) }), ip }), deps))).body.error).toBe('TOO_LARGE');
+    expect((await read(await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { body: { phone: '0121' }, ip }), deps))).body.error).toBe('INVALID_INPUT');
+    const r = await read(await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { body: { phone: '+88 01712-345678' }, ip }), deps));
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ ok: true, enabled: true, nice: '01712-345678', savedAreaId: gabtoli.id, area: { code: 'bd.dhaka.dhaka.gabtoli' }, band: { key: 'dhaka-city', chargeMinor: 6000 } });
+    expect(JSON.stringify(r.body)).not.toMatch(/House 9|Road 4|Sample Customer/);
+
+    await deps.resolver.set('delivery.phoneFirst.rateLimit', 2, INSTALLATION);
+    await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { body: { phone: '01712345678' }, ip }), deps);
+    expect((await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { body: { phone: '01812345678' }, ip }), deps)).status).toBe(429);
+    expect((await publicPhoneAreaHandler(call('POST', '/api/delivery/phone-area', { body: { phone: '01712345678' }, ip: '203.0.113.8' }), deps)).status).toBe(200);
   });
 });

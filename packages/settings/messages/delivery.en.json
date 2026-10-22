@@ -69,6 +69,24 @@
         "label": "Suggestions shown",
         "help": "The most places shown at once while the customer types."
       }
+    },
+    "phoneFirst": {
+      "enabled": {
+        "label": "Recognise the phone number",
+        "help": "When a returning customer types his phone number at checkout, his saved area (and so the delivery charge) is filled in. Only the area: the house and road need a login or an SMS code."
+      },
+      "rateLimit": {
+        "label": "Phone look-ups per visitor",
+        "help": "How many phone numbers one visitor (one internet address) can look up in the time below. More are refused, so nobody can try numbers one after another."
+      },
+      "rateWindowSeconds": {
+        "label": "Look-up limit time",
+        "help": "The time the phone look-up limit counts over."
+      },
+      "otpProofSeconds": {
+        "label": "SMS code stays valid",
+        "help": "How long after the customer confirms an SMS code his full saved address can be shown."
+      }
     }
   }
 }

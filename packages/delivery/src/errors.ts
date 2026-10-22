@@ -10,7 +10,9 @@ export type DeliveryErrorCode =
   /** PR 553: a charge was asked for from something that is not a resolved gazetteer place or the customer's choice. */
   | 'UNRESOLVED'
   /** Too many phone look-ups from one place in a short time (PR 555). */
-  | 'RATE_LIMITED';
+  | 'RATE_LIMITED'
+  /** PR 555: the full saved address needs a login or a confirmed one-time code; a bare number opens the area only. */
+  | 'PROOF_REQUIRED';
 
 export class DeliveryError extends Error {
   readonly code: DeliveryErrorCode;
@@ -34,6 +36,8 @@ export class DeliveryError extends Error {
         return 409;
       case 'RATE_LIMITED':
         return 429;
+      case 'PROOF_REQUIRED':
+        return 403;
       default:
         return 400;
     }

@@ -15,11 +15,13 @@
 //                                                  only the gazetteer and the bands — never a customer)
 //   GET    /api/delivery/suggest?q=               the address autocomplete (PR 552): places starting with what was
 //                                                  typed, each with its district and its band's charge (public)
+//   POST   /api/delivery/phone-area               {phone} phone-first recognition (PR 555): the saved AREA only, never
+//                                                  the house or road; same site, size-capped, a per-IP limit
 //
 // The charges, hours and the list are owner data (PR 509): the default pack ships the bands off with no charge.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as del from '@extas/delivery';
-import { body, errorResponse, fail, guardAdmin, isUuid, json, sameOrigin, type AdminDeps } from './admin-auth';
+import { body, errorResponse, fail, guardAdmin, isUuid, json, requestContext, sameOrigin, type AdminDeps } from './admin-auth';
 
 export type DeliveryPerm = del.DeliveryPermission;
 
@@ -155,6 +157,17 @@ export async function publicSuggestHandler(request: Request, deps: AdminDeps | n
   if (storeId === null) return fail(400, 'invalid-store-id');
   try {
     return json({ ok: true, ...(await del.suggestPlaces(deliveryDeps(deps), storeId, { q: url.searchParams.get('q') ?? '' })) });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+/** POST /api/delivery/phone-area {phone} — phone-first recognition (PR 555): the area of the saved address, never the address. */
+export async function publicPhoneAreaHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const door = await publicDoor(request, deps);
+  if (door instanceof Response) return door;
+  try {
+    return json({ ok: true, ...(await del.phoneArea(door.deps, door.storeId, door.input, { ip: requestContext(request).ip })) });
   } catch (e) {
     return errorResponse(e);
   }
