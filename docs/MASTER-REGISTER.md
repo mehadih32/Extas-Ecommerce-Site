@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 12/12 · S03 9/22 · total 91/598**
+**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 12/12 · S03 9/22 · S06 6/33 · total 97/598**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -126,6 +126,12 @@ the server.*
 | 97 | S03 | merged | 2026-10-22 | add a set to the bag (`bag.ts`, S04 calls it): one line per piece at its own price, one group key, the set price locked on every line; double add closed (add key, `combos.bag.repeatGuardMs`, cart row lock), oversell re-checked in the write, server-side price; change / save for later / remove the whole set; `bagSets` + `refreshBagSets` follow a new combo price (`combos.bag.followPriceChanges`), an ended set keeps its price with a note |
 | 575 | S03 | merged | 2026-10-22 | set photo composed with sharp from each piece's photo in its colour: side by side, top + bottom, three-up, grid; `combos.photo.*` size, background, format, quality; stored through the media library (mock storage until Blob), sizes made, set on the combo; "Make set photo" on the combo card, `POST /api/admin/combos/:id/photo` |
 | 104 | S03 | merged | 2026-10-22 | combo analytics: views, colour picks and adds counted per day (ComboDailyStat) and per colour pair (PopularPair) with SQL upserts; report tab `/admin/combos?tab=report` (`combos.report.defaultDays/topCount`): sets sold, orders, sales and what customers saved from real orders only, best combos, most-picked pairs; `GET /api/admin/combos/report` |
+| 549 | S06 | merged | 2026-10-22 | national gazetteer `@extas/delivery`: file format (division → district → upazila/thana → area, Bengali/English/Banglish names, postcodes), importer and one shared index; ships a **public sample list** only (the national list comes later); migration `0005_delivery_zones` |
+| 550 | S06 | merged | 2026-10-22 | band mapping: Dhaka City = the DNCC + DSCC map (setting `delivery.bands.cityCorporations`), the owner's sub-area list (AreaBand rows, empty), one flat outside band; admin `/admin/delivery` (three bands, sub-area list, Try an address); permissions `delivery.read`, `delivery.charges`, `delivery.areas`; bands ship off with no charge |
+| 551 | S06 | merged | 2026-10-22 | ambiguity resolver: reads the whole line after `delivery.resolver.settleMs` (900 ms) or blur, asks "Where is this address?" only when still ambiguous; admin Try-an-address; resolve APIs |
+| 552 | S06 | merged | 2026-10-22 | address autocomplete `GET /api/delivery/suggest`: prefix type-ahead over the gazetteer, each row with its district and its band's charge (`delivery.suggest.*`) |
+| 553 | S06 | merged | 2026-10-22 | charge accuracy guard: a charge only from a resolved place, never from text; the collision suite (`collisions.json`) fails the build |
+| 555 | S06 | merged | 2026-10-22 | phone-first recognition `POST /api/delivery/phone-area`: one BD phone helper; a bare number prefills the area only, per-IP limit (`delivery.phoneFirst.rateLimit` 10 / 600 s); the full address needs a session or an SMS code |
 
 > **CN-008 · 20 Oct 2026 (owner desktop review of V12, 03:54–04:23).** 44 items (home H1–H14, category C1–C6, product P1–P8, drawer B1–B3, bag G1–G3, checkout K1–K11 incl. the BD phone normaliser and Polo Duo different-colour rule), 7 invoice templates, 12 new admin screens, admin audit fixes. Built into demo **V12.1** (`docs/demo/EXTAS-demo-V12.1.html`), which is now the UI truth. Every new look is a backend option with the old one kept. Details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md` (44/44 pass), `docs/qa/ADMIN-AUDIT.md`, lesson for `phoneNormalizeBD` in `docs/agents/lessons/ALL.md`. No new PR numbers: scope lands on the existing S02/S03/S04/S05/S08/S14/S16/S20/S22 PRs.
 
