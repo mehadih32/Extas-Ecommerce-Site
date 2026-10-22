@@ -798,6 +798,20 @@ to read code or open GitHub.
 
 > **CN-016 · 20 Oct 2026 (owner: nothing reaches the owner broken).** The owner found that after logging in, the admin on new.extas.com.bd showed "This page couldn't load". New gate: **after every deploy and every night**, a smoke test runs on the runner with Playwright against new.extas.com.bd. It signs in with a check account whose password lives only on the server, then visits every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, shows no error screen and no console error, and has no failed request. If any page fails, the deploy rolls back by itself and the fix comes before any new PR. Screenshots go to `docs/reports/smoke/latest/`, and the result is shown on the status page and in README. Every bug the owner finds gets a smoke check in the same fix PR. No new PR numbers: this lands on PR 4/17 (deploy) and Appendix C.
 
+> **CN-017 · 23 Oct 2026 (the 50-order simulation on demo V12.2; report `docs/qa/SIMULATION-REPORT.md`, Bengali summary `docs/qa/SIMULATION-SUMMARY-BN.md`).** Verdict: **not ready for real orders.** There are 39 findings: 10 Urgent, 25 Important and 4 Can wait. Each one is mapped to its register PR in report §5, and every finding becomes a **required acceptance test of the PR that builds that flow in the real app**. They are built right the first time; none are repeated in the demo. The Urgent ten include:
+> - an SMS to a prepaid customer that says "pay ৳X on delivery";
+> - courier "Book all" booking cancelled orders;
+> - the delivery charge shown at checkout differing from the one stored;
+> - edits made after booking never reaching the parcel (lock the order, or re-book it);
+> - no states for partial delivery, a return with the charge paid, or a failed delivery, with their money and stock postings;
+> - negative stock shown as 0;
+> - a gift parcel going to the payer's address;
+> - a wrongly returned item restocked under the wrong SKU;
+> - hardcoded text;
+> - the account password for an account created from an order being the phone number.
+>
+> The owner's decisions are in report §8 (9 questions: prepaid incentive, a COD advance for risky orders, default switches, the split price for a set, the swap charge, Eid pre-orders, rider-overcharge refunds, guest coupons, WhatsApp self-confirm). They are copied to `BLOCKED.md` as Bengali questions. The real-site rerun (CN-013) uses the same 50-order script.
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 
