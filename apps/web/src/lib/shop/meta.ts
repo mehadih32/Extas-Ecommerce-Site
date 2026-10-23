@@ -12,7 +12,8 @@ export function bengaliReady(pageKey: string, ready: readonly string[]): boolean
   return ready.includes(pageKey);
 }
 
-async function origin(): Promise<URL | undefined> {
+/** The origin the request came in on (the domain is a setting of the server, never code); also the JSON-LD's. */
+export async function shopOrigin(): Promise<URL | undefined> {
   const h = await headers();
   const host = h.get('x-forwarded-host') ?? h.get('host');
   if (!host || !/^[a-z0-9.-]+(:\d+)?$/i.test(host)) return undefined;
@@ -23,7 +24,7 @@ async function origin(): Promise<URL | undefined> {
 export async function shopMetadata(c: ShopContext, pageKey: string, title: string | null): Promise<Metadata> {
   const ready = bengaliReady(pageKey, c.s['language.bengali.readyPages']);
   const bnOn = c.s['language.bengali.enabled'];
-  const base = await origin();
+  const base = await shopOrigin();
   const m: Metadata = {
     title: title ? c.t('meta.page', { page: title, store: c.storeName }) : c.t('meta.title', c.vars),
     ...(base ? { metadataBase: base } : {}),

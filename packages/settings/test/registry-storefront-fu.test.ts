@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
-import { cardDeskSchema, storefrontFuSettings } from '../src/registry-storefront-fu';
+import { cardDeskSchema, storefrontFuSettings, structuredDataSchema } from '../src/registry-storefront-fu';
 
 const OWNER_DATA: readonly string[] = [];
 
@@ -25,5 +25,10 @@ describe('storefront follow-up settings (v25)', () => {
   it('follow-up 21: the card`s back view and Quick add are on, as in the demo (DESK_A), and nothing else is accepted', () => {
     expect(storefrontFuSettings['card.desk'].default).toEqual({ altView: true, quickAdd: true });
     expect(cardDeskSchema.safeParse({ altView: true, quickAdd: true, touch: true }).success).toBe(false);
+  });
+
+  it('follow-ups 35, 61: the structured data is on (it says only what the page shows) and has no rating switch', () => {
+    expect(storefrontFuSettings['seo.structuredData'].default).toEqual({ breadcrumbs: true, itemList: true, product: true });
+    expect(structuredDataSchema.safeParse({ breadcrumbs: true, itemList: true, product: true, rating: true }).success).toBe(false);
   });
 });

@@ -17,16 +17,19 @@ import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatFaq, CatSeoText } from '@/components/shop/category/CatInfo';
 import { CatListing, type ListingRow } from '@/components/shop/category/CatListing';
-import { categoryData } from '@/lib/shop/catalogue';
+import { JsonLd } from '@/components/shop/JsonLd';
+import { categoryData, productName, type ShopCard } from '@/lib/shop/catalogue';
 import { isRefined, paragraphs, parseState, placeSoldOut, queryOf, type CatState, type SearchParams } from '@/lib/shop/category-model';
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
+import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
-import { shopMetadata } from '@/lib/shop/meta';
+import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
+import { breadcrumbLd, itemListLd, type LdCrumb } from '@/lib/shop/structured-data';
 import './category.css';
 
-const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo'] as const;
+const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -105,11 +108,30 @@ export default async function CategoryPage(props: Props) {
     </div>
   );
 
+  // ---- follow-up 35 · the same trail and the grid's products for search engines (sent even with the trail hidden) ----
+  const sd = set['seo.structuredData'];
+  const here = await shopOrigin();
+  const crumbs: LdCrumb[] = [
+    { name: t('cat.home'), href: hrefIn(c.lang, ROUTES.home) },
+    ...(parent ? [{ name: categoryName(parent, c.lang), href: hrefIn(c.lang, ROUTES.category(parent.slug)) }] : []),
+    { name, href: basePath },
+  ];
+  const ldOf = (cards: readonly ShopCard[]) =>
+    here ? (
+      <JsonLd
+        data={[
+          sd.breadcrumbs ? breadcrumbLd(here, crumbs) : null,
+          sd.itemList ? itemListLd(here, name, cards.map((k) => ({ name: productName(k, c.lang), href: hrefIn(c.lang, productPath(c.s['naming.productPathPrefix'], k.slug)) }))) : null,
+        ]}
+      />
+    ) : null;
+
   if (data.unavailable || empty) {
     const seeNew = data.unavailable ? null : slug !== NEW_IN ? hrefIn(c.lang, ROUTES.newIn) : null;
     return (
       <div className="container">
         {hd}
+        {ldOf([])}
         <div className="grid g4">
           <div className="cat-empty" data-testid="cat-empty">
             <div className="h2">{t(data.unavailable ? 'cat.unavailable' : 'cat.noneYet')}</div>
@@ -167,6 +189,7 @@ export default async function CategoryPage(props: Props) {
         hrefFor={(st: CatState) => `${basePath}${queryOf(st, defaultSort)}`}
         version={(st: CatState) => queryOf(st, defaultSort)}
         waName={name}
+        after={(shown) => ldOf(shown)}
       />
       {info}
       {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}

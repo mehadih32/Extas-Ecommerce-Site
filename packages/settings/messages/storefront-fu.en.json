@@ -4,5 +4,11 @@
       "label": "Product cards on a computer: back view and Quick add",
       "help": "Only on a computer with a mouse (never on a phone or a touch screen). Back view: with the mouse on a card, its back photo (or the drawing's back) shows. Quick add: the sizes in stock in the card's colour show over the picture; one click puts that size in the bag, as the product page's Add to bag does. A size out of stock is not shown."
     }
+  },
+  "seo": {
+    "structuredData": {
+      "label": "Data for search engines (structured data)",
+      "help": "What Google reads beside the page, always from what the page itself shows: the breadcrumb trail (sent even when the visible trail is off), the list of products on a category page, and on a product page the product, its price and whether it is in stock. A star rating is never sent until real reviews exist."
+    }
   }
 }
