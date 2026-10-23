@@ -36,6 +36,7 @@ describe.skipIf(!HAS_DB)('sample seed on PostgreSQL', () => {
       Customer: 1,
       Order: 1,
       OrderItem: sampleCatalogue.order.items.length,
+      ProductQuestion: sampleCatalogue.questions?.length ?? 0,
     });
     expect(r.pack.created.Category).toBe(defaultPack.categories.length);
 

@@ -6,7 +6,8 @@
 // plain surface with the editorial title, each on its own switch (`pdp.templates.t2`). PR 58: "Find my size" under the
 // sizes and its popup, only where the product's own chart can answer (`pdp.finder`); a phone that answered before opens
 // with its size chosen and tagged. PR 51: template T3 (Fit-first) puts the sizes, the finder and the measurements in
-// one card (PdpT3Card, `pdp.templates.t3`). A product taken off sale keeps its page,
+// one card (PdpT3Card, `pdp.templates.t3`). PR 66: "Questions & answers" under the details, the shop's own answers
+// only, with the WhatsApp ask (PdpQa, `pdp.qa`). A product taken off sale keeps its page,
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
 // one state (PdpRoot); the rest is drawn here. PR 102: the sets this product is in, one line each above the buttons
 // ("Polo Duo: any 2 colours for ৳1,800 · Save ৳200", `combos.pdpOffer`), each linking to its combo page.
@@ -56,6 +57,7 @@ import { FinderCard, FinderPopup } from './PdpFinder';
 import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
+import { PdpQa } from './PdpQa';
 import { PdpRail } from './PdpRail';
 import { PdpShare } from './PdpShare';
 import { PdpRecentMark } from './PdpRecentMark';
@@ -84,6 +86,7 @@ const KEYS = [
   'pdp.details',
   'pdp.buy',
   'pdp.sweep',
+  'pdp.qa',
   'pdp.fit',
   'pdp.rows',
   'pdp.icons',
@@ -509,6 +512,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             </div>
           </div>
         </div>
+        <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />
         <PdpRows
           c={c}
           set={rows}

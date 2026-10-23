@@ -1,5 +1,5 @@
 // PR 14 — the sample catalogue: a sample store with the approved demo's categories, colours, sizes, products, variants,
-// stock, size charts and one demo order, so every demo screen can be built and tested against real rows.
+// stock, size charts, one demo order and a few answered questions (PR 66), so every demo screen can be built and tested against real rows.
 //
 // SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509). The store, brand, customer and order are made up and carry the sample
 // marker; the prices are the demo's sample figures, never the owner's; the phone is in the unallocated +88010 range and
@@ -114,6 +114,10 @@ const sampleSchema = z
         items: z.array(z.object({ product: slug, colour: slug, size: slug, quantity: z.int().min(1) }).strict()).min(1),
       })
       .strict(),
+    /** PR 66: answered, approved sample questions for the product page's "Questions & answers"; each says "Sample". */
+    questions: z
+      .array(z.object({ product: slug, question: text(300), answer: text(1000), answeredAt: z.iso.datetime() }).strict())
+      .optional(),
   })
   .strict()
   .superRefine((s, ctx) => {
@@ -151,6 +155,7 @@ const sampleSchema = z
         if (r.values.length !== ch.columns.length) bad(`size chart ${ch.key}: one value per column`);
       }
     }
+    for (const q of s.questions ?? []) if (!products.has(q.product)) bad(`question: unknown product ${q.product}`);
     for (const i of s.order.items) {
       const p = products.get(i.product);
       if (!p) bad(`order: unknown product ${i.product}`);
@@ -198,6 +203,7 @@ export const SAMPLE_TABLES = [
   'Order',
   'OrderItem',
   'OrderEvent',
+  'ProductQuestion',
 ] as const;
 export type SampleTable = (typeof SAMPLE_TABLES)[number];
 
@@ -414,6 +420,7 @@ async function seedSampleTx(
   // --- products, colours, variants, stock and listings ---
   const variants = new Map<string, { id: string; sku: string; productId: string; priceMinor: number; compareAtMinor: number | null; productName: string; colourName: string; sizeLabel: string }>();
   const publishedAt = new Date(s.publishedAt);
+  const productIds = new Map<string, string>();
   for (const p of s.products) {
     const category = need(categories, p.category, 'category');
     const anyStock = p.colours.some((c) => p.stock[c]!.some((q) => q > 0));
@@ -443,6 +450,7 @@ async function seedSampleTx(
       made('Product');
     }
     const productId = product.id;
+    productIds.set(p.slug, productId);
 
     for (const [ci, c] of p.colours.entries()) {
       const colour = need(colourIds, c, 'colour');
@@ -523,6 +531,17 @@ async function seedSampleTx(
         await tx.sizeChartAssignment.create({ data: { storeId, sizeChartId, productId } });
         made('SizeChartAssignment');
       }
+    }
+  }
+
+  // --- PR 66 · the sample questions, answered and approved (natural key: the product and the question) ---
+  for (const q of s.questions ?? []) {
+    const productId = productIds.get(q.product);
+    if (!productId) throw new SampleSeedRefused(`question: unknown product ${q.product}`);
+    const has = await tx.productQuestion.findFirst({ where: { storeId, productId, question: q.question }, select: { id: true } });
+    if (!has) {
+      await tx.productQuestion.create({ data: { storeId, productId, question: q.question, answer: q.answer, answeredAt: new Date(q.answeredAt), status: 'APPROVED' } });
+      made('ProductQuestion');
     }
   }
 

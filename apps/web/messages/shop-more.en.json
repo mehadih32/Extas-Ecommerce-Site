@@ -95,5 +95,21 @@
       "contact": "Contact",
       "legal": "Who we are"
     }
+  },
+  "qa": {
+    "title": "Questions & answers",
+    "q": "Q",
+    "a": "A",
+    "by": "Answered by the {store} team",
+    "byDated": "Answered by the {store} team · {date}",
+    "more": "Common questions",
+    "all": "See all questions",
+    "allN": "{n} more",
+    "askLead": "Not answered here? Ask us on WhatsApp.",
+    "askHours": "Not answered here? Ask us on WhatsApp — {hours}.",
+    "askEmpty": "Have a question about this item? Ask us on WhatsApp.",
+    "askEmptyHours": "Have a question about this item? Ask us on WhatsApp — {hours}.",
+    "ask": "Ask on WhatsApp",
+    "waMessage": "Hi {store}, I have a question about {name}"
   }
 }
