@@ -58,4 +58,41 @@ describe.skipIf(!HAS_TEST_DB)('the checkout on PostgreSQL (S04)', () => {
       expect(none.delivery).toEqual({ state: 'none' });
     });
   });
+  describe('PR 118 · ask, never guess', () => {
+    it('a line in two bands asks "where is this?"; his answer is kept and the quote says it was his choice', async () => {
+      const { cartId } = await f.bag('ask', [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }]);
+      const asked = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', address: { line: 'Gabtoli' } });
+      expect(asked.delivery.state).toBe('ask');
+      if (asked.delivery.state !== 'ask') return;
+      expect(asked.delivery.reason).toBe('two-places');
+      expect(new Set(asked.delivery.options.map((o) => o.band.key))).toEqual(new Set(['dhaka-city', 'outside-dhaka']));
+      const bogura = asked.delivery.options.find((o) => o.band.key === 'outside-dhaka')!;
+      expect(bogura.places).toHaveLength(1);
+      const picked = await checkoutQuote(f.deps(), {
+        storeId: f.S,
+        cartId,
+        lang: 'en',
+        address: { line: 'Gabtoli', confirmed: { bandId: bogura.band.id, areaId: bogura.places[0]!.id } },
+      });
+      expect(picked.delivery).toMatchObject({ state: 'found', via: 'choice', band: { key: 'outside-dhaka' }, place: { id: bogura.places[0]!.id } });
+      // the order keeps the same read: the place he picked is the one charged
+      expect(picked.address.status === 'resolved' && picked.address.line.area.areaId).toBe(bogura.places[0]!.id);
+    });
+
+    it('a sure read that disagrees with his earlier answer asks again ("changed"), never a silent switch', async () => {
+      const { cartId } = await f.bag('changed', [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }]);
+      const outside = (await f.t.prisma.deliveryBand.findFirstOrThrow({ where: { storeId: f.S, key: 'outside-dhaka' } })).id;
+      const q = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', address: { line: 'Road 5, Dhanmondi, Dhaka 1209', confirmed: { bandId: outside } } });
+      expect(q.delivery.state === 'ask' && q.delivery.reason).toBe('changed');
+      if (q.delivery.state !== 'ask') return;
+      expect(q.delivery.options.map((o) => o.band.key)).toEqual(['outside-dhaka', 'dhaka-city']);
+      // choosing what the line says settles it from the line
+      const city = q.delivery.options[1]!.band.id;
+      const again = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', address: { line: 'Road 5, Dhanmondi, Dhaka 1209', confirmed: { bandId: city } } });
+      expect(again.delivery).toMatchObject({ state: 'found', via: 'line', band: { key: 'dhaka-city' } });
+      // a band that is not this store's is never trusted: the line is asked about as if nothing was chosen
+      const stranger = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', address: { line: 'Gabtoli', confirmed: { bandId: 'not-a-band' } } });
+      expect(stranger.delivery.state).toBe('ask');
+    });
+  });
 });

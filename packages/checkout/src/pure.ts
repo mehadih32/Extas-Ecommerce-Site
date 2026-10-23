@@ -4,6 +4,7 @@
 import { phoneNormalizeBD, type PhoneBD } from '@extas/delivery/phone';
 export type { CheckoutView, DeliveryView, Totals } from './quote';
 export type { PlaceName } from './address';
+export type { BandOut } from '@extas/delivery';
 export { phoneNormalizeBD, type PhoneBD };
 
 /** The three fields of "Delivery details", in the shop's own order. */

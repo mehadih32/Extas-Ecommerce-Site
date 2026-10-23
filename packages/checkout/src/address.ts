@@ -49,10 +49,12 @@ export async function readAddress(deps: CheckoutDeps, storeId: number, input: Ad
 
 /** A place as the page names it: "Mirpur 12 · Dhaka" (its own name and the district that tells it apart). */
 export interface PlaceName {
+  /** The gazetteer place (what the customer's choice names when he picks it). */
+  id: string;
   nameEn: string;
   nameBn: string | null;
   parentEn: string | null;
   parentBn: string | null;
 }
 
-export const placeName = (p: PlaceView | null): PlaceName | null => (p ? { nameEn: p.nameEn, nameBn: p.nameBn, parentEn: p.parentEn, parentBn: p.parentBn } : null);
+export const placeName = (p: PlaceView | null): PlaceName | null => (p ? { id: p.id, nameEn: p.nameEn, nameBn: p.nameBn, parentEn: p.parentEn, parentBn: p.parentBn } : null);

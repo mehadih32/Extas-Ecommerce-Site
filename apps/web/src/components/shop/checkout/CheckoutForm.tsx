@@ -13,7 +13,8 @@ import { Icon, WaGlyph } from '../Icon';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
 import { nextOnEnter, saveDraft, useDraft } from './draft';
-import { fetchQuote, latest, useSettle } from './quote-client';
+import { confirmedOf } from '@/lib/shop/checkout-model';
+import { fetchQuote, latest, useSettle, type Choices } from './quote-client';
 
 const EMPTY_FORM: DetailsForm = { name: '', phone: '', address: '' };
 
@@ -43,35 +44,67 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const stored = useDraft();
   const [view, setView] = useState<CheckoutView>(first);
   const [reading, setReading] = useState(false);
+  /** The line the delivery step shows the answer for; while the box says something else, it says "Reading …". */
+  const [readLine, setReadLine] = useState<string | null>(null);
   const seq = useRef(latest());
-  const lineRead = useRef<string | null>(null);
+  /** What the page last asked the server about: the finished line and the band he chose (PR 118). */
+  const asked = useRef<Choices>({ line: null, confirmed: null });
   /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
-  const requote = async (line: string | null) => {
+  const requote = async (patch: Partial<Choices>) => {
+    const c = { ...asked.current, ...patch };
+    asked.current = c;
     const k = seq.current.next();
-    lineRead.current = line;
+    setReadLine(c.line);
     setReading(true);
-    const next = await fetchQuote({ lang: money.lang, address: line ? { line } : null });
+    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed } : null });
     if (!seq.current.isLatest(k)) return;
     setReading(false);
     if (next) setView(next);
   };
-  const settle = useSettle({ ...timing, onSettle: (line) => void requote(line) });
+  const settle = useSettle({ ...timing, onSettle: (line) => void requote({ line }) });
   const [edited, setEdited] = useState<DetailsForm | null>(null);
   // Typed details survive a reload or a pull-to-refresh: kept in this tab only (sessionStorage), never sent from here.
   const form: DetailsForm = edited ?? stored?.form ?? EMPTY_FORM;
+  const keep = (next: DetailsForm) => saveDraft({ form: next, confirmed: asked.current.confirmed });
   const [phoneChecked, setPhoneChecked] = useState(false);
   const change = (f: Field, v: string) => {
     const next = { ...form, [f]: v };
     setEdited(next);
-    saveDraft({ form: next });
-    if (f === 'address') settle.input(v);
+    if (f === 'address') {
+      // A new address takes back the band he picked for the old one (demo: zonePick = null on every keystroke).
+      asked.current = { ...asked.current, confirmed: null };
+      settle.input(v);
+    }
+    keep(next);
   };
-  // An address that comes back from this tab's draft is already finished: it is read once, at once.
+  // An address that comes back from this tab's draft is already finished: it is read once, at once (with his band).
   const draftLine = stored?.form.address.trim() ?? '';
   useEffect(() => {
-    if (draftLine && lineRead.current === null) void requote(draftLine);
+    if (!draftLine || asked.current.line !== null) return;
+    void requote({ line: draftLine, confirmed: confirmedOf(stored?.confirmed) });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the draft arrives
   }, [draftLine]);
+  /** PR 118: he answered "Where is this address?". */
+  const pick = (bandId: string, areaId: string | null) => {
+    const d = view.delivery;
+    // "We read somewhere else now": keeping his old band means the line itself is wrong — he fixes the line.
+    if (d.state === 'ask' && d.reason === 'changed' && bandId === asked.current.confirmed?.bandId) {
+      document.getElementById('co-address')?.focus();
+      return;
+    }
+    const confirmed = { bandId, areaId };
+    void requote({ line: form.address.trim(), confirmed });
+    saveDraft({ confirmed });
+  };
+  /** PR 118: "change" takes back his own answer (ask again); a read from the line sends him back to the address. */
+  const changeBand = () => {
+    if (view.delivery.state === 'found' && view.delivery.via === 'choice') {
+      void requote({ confirmed: null });
+      saveDraft({ confirmed: null });
+      return;
+    }
+    document.getElementById('co-address')?.focus();
+  };
   const hasAddress = form.address.trim().length >= limits.addressMin;
   const check = checkForm(form, limits, fields);
   const w = (k: string, vars: Record<string, string | number> = {}) => fill(words[k] ?? k, vars);
@@ -217,7 +250,17 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                 <span className="co-num">{n(2)}</span>
                 <h2 className="h2">{w('delivery')}</h2>
               </div>
-              <DeliveryStep delivery={view.delivery} reading={reading} hasAddress={hasAddress} lang={money.lang} w={w} />
+              <DeliveryStep
+                delivery={view.delivery}
+                reading={reading || form.address.trim() !== readLine}
+                hasAddress={hasAddress}
+                lang={money.lang}
+                w={w}
+                m={m}
+                n={n}
+                onPick={(band, areaId) => pick(band.id, areaId)}
+                onChange={changeBand}
+              />
             </section>
             <section className="card co-sec co-paysec" data-testid="co-pay">
               <div className="co-hd">
