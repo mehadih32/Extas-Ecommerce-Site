@@ -275,7 +275,13 @@
       "use": "Use my wallet",
       "onOrder": "{amount} on this order",
       "row": "Wallet"
-    }
+    },
+    "consent": {
+      "sms": "Send me offers by SMS. Stop anytime.",
+      "wa": "Also send me offers on WhatsApp."
+    },
+    "exch": "Items can be exchanged for size",
+    "terms": "Terms"
   },
   "notFound": {
     "title": "Page not found",

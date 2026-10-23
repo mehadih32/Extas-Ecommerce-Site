@@ -162,6 +162,35 @@ export const checkoutSettings = {
     sortOrder: 67,
   }),
 
+  // ---- PR 123 · marketing opt-in: one tick per channel, stored separately (B5.7), with the way out in its words ----
+  'checkout.consent.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.consent.enabled.label',
+    helpKey: 'checkout.consent.enabled.help',
+    sortOrder: 68,
+  }),
+  'checkout.consent.sms.default': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.consent.sms.default.label',
+    helpKey: 'checkout.consent.sms.default.help',
+    sortOrder: 69,
+  }),
+  'checkout.consent.whatsapp.default': setting({
+    ...base,
+    schema: z.boolean(),
+    default: false,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.consent.whatsapp.default.label',
+    helpKey: 'checkout.consent.whatsapp.default.help',
+    sortOrder: 69,
+  }),
+
   // ---- PR 120 · the prepaid reward (CN-018 (1)): nothing set (off), and no amount, until the owner decides. Any payment but Cash on
   // Delivery earns it; when delivery is already free a free-delivery reward falls back to the amount or the percentage.
   'checkout.prepaidReward.enabled': setting({

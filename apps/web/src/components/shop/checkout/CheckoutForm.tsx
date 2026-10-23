@@ -7,15 +7,16 @@
 // and the page shows the checkout the server priced for it. PR 118: the band he picks when asked. PR 119: the delivery
 // charge in the summary and the total — the server's figure, or "free", or "+ delivery" while it is not known.
 // PR 120: the payment step; the choice is kept in the tab's draft and priced by the server (the prepaid reward).
-// PR 122: "Your offers" with the wallet; the total and Confirm show what is left to pay.
+// PR 122: "Your offers" with the wallet; the total and Confirm show what is left to pay. PR 123: the marketing ticks.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits, type PaymentChoice } from '@extas/checkout/pure';
+import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
 import { confirmedOf, payChoiceOf, payOpens } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
+import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
 import { PaymentStep } from './PaymentStep';
 import { nextOnEnter, saveDraft, useDraft } from './draft';
@@ -43,9 +44,13 @@ export interface CheckoutFormProps {
   settle: { settleMs: number; minWords: number };
   /** The longest address the resolver reads (`delivery.resolver.maxChars`). */
   addressMax: number;
+  /** PR 123: the marketing ticks' starting state, or null when the owner switched them off. */
+  consent: ConsentInput | null;
+  /** The exchange policy and the terms. */
+  links: { exchange: string; terms: string };
 }
 
-export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax }: CheckoutFormProps) {
+export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links }: CheckoutFormProps) {
   const stored = useDraft();
   const [view, setView] = useState<CheckoutView>(first);
   const [reading, setReading] = useState(false);
@@ -125,6 +130,12 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     }
     document.getElementById('co-address')?.focus();
   };
+  // PR 123: the ticks as he left them in this tab, else their starting state.
+  const [consentEdited, setConsent] = useState<ConsentInput | null>(null);
+  const keptConsent = stored?.consent as Partial<ConsentInput> | undefined;
+  const consent: ConsentInput | null = consentStart
+    ? (consentEdited ?? (keptConsent && typeof keptConsent.sms === 'boolean' && typeof keptConsent.whatsapp === 'boolean' ? { sms: keptConsent.sms, whatsapp: keptConsent.whatsapp } : consentStart))
+    : null;
   const hasAddress = form.address.trim().length >= limits.addressMin;
   const check = checkForm(form, limits, fields);
   const w = (k: string, vars: Record<string, string | number> = {}) => fill(words[k] ?? k, vars);
@@ -308,6 +319,15 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                 void requote({ wallet: on });
                 saveDraft({ wallet: on });
               }}
+            />
+            <ConsentCard
+              consent={consent}
+              onChange={(c) => {
+                setConsent(c);
+                saveDraft({ consent: c });
+              }}
+              w={w}
+              links={links}
             />
           </div>
           <aside className="co-side">

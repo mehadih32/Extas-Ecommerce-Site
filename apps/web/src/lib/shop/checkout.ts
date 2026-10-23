@@ -37,6 +37,9 @@ const KEYS = [
   'checkout.manyOfOne.enabled',
   'checkout.manyOfOne.min',
   'bag.undoMs',
+  'checkout.consent.enabled',
+  'checkout.consent.sms.default',
+  'checkout.consent.whatsapp.default',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

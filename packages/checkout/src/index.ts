@@ -9,3 +9,4 @@ export * from './address';
 export * from './pure';
 export * from './quote';
 export * from './payment';
+export * from './consent';

@@ -4,6 +4,7 @@
 import { phoneNormalizeBD, type PhoneBD } from '@extas/delivery/phone';
 export type { CheckoutView, DeliveryCharge, DeliveryView, FreeReason, Totals, WalletView } from './quote';
 export type { CardType, CodOff, PaymentChoice, PaymentInput, PaymentView, RewardOffer, Wallet } from './payment';
+export type { ConsentAnswer, ConsentInput } from './consent';
 
 /** PR 120 — the payment step's methods, in the page's order. */
 export const PAY_METHODS = ['cod', 'mobile', 'card', 'online'] as const;
