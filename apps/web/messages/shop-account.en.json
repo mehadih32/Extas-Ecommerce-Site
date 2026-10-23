@@ -217,6 +217,20 @@
       "walletHere": "Your credit, ready for the next order",
       "shop": "Shop now",
       "code": "Code"
+    },
+    "photo": {
+      "title": "Your photo",
+      "note": "Kept only on this device, never uploaded. JPG or PNG, up to {mb} MB: we make it small before saving.",
+      "upload": "Upload a photo",
+      "change": "Change photo",
+      "remove": "Remove",
+      "saved": "Photo saved",
+      "removed": "Photo removed",
+      "alt": "Your profile photo",
+      "errBig": "That photo is over {mb} MB. Please pick a smaller one.",
+      "errType": "That is not a photo. Please pick a JPG or PNG.",
+      "errRead": "That photo would not open. Try another one.",
+      "errSave": "This browser could not keep the photo."
     }
   }
 }

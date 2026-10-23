@@ -69,6 +69,17 @@ export const accountOfferBannerSchema = z
   })
   .strict();
 
+/** PR 133 — the profile photo: kept only in the customer's own browser, shrunk to a small square before it is saved. */
+export const accountPhotoSchema = z
+  .object({
+    enabled: z.boolean(),
+    /** The largest file he may pick. */
+    maxMb: z.int().min(1).max(25),
+    /** The side of the square it is shrunk to. */
+    sizePx: z.int().min(64).max(512),
+  })
+  .strict();
+
 /** PR 130 — how customers may sign in besides the SMS code. */
 export const accountLoginSchema = z
   .object({
@@ -174,5 +185,16 @@ export const accountSettings = {
     labelKey: 'account.offerBanner.label',
     helpKey: 'account.offerBanner.help',
     sortOrder: 90,
+  }),
+
+  // ---- PR 133 · the profile photo (on this device only) ----
+  'account.photo': setting({
+    ...base,
+    schema: accountPhotoSchema,
+    default: { enabled: false, maxMb: 8, sizePx: 256 },
+    valueType: 'JSON',
+    labelKey: 'account.photo.label',
+    helpKey: 'account.photo.help',
+    sortOrder: 100,
   }),
 };

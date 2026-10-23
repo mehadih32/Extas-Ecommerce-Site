@@ -13,6 +13,8 @@ import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { hrefIn, twinHref } from '@/lib/shop/lang';
 import { AccountShell, LoginPrompt } from './AccountShell';
 import { ForYouTab, OrdersTab, RewardsTab, WalletTab } from './AccountTabs';
+import { initialsOf } from '@extas/accounts/pure';
+import { PhotoCard } from './AccountPhoto';
 import { OfferBanner, OfferCards } from './OfferBanner';
 import { DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 
@@ -61,6 +63,7 @@ export async function AccountSection({ tab }: { tab: Exclude<AccountTab, 'wishli
       const langs = c.s['language.bengali.enabled'] ? { en: c.t('lang.en'), bn: c.t('lang.bn'), other: twinHref(c.lang, c.path) } : null;
       body = (
         <div className="stack s16" data-testid="acc-profile">
+          {page.photo.enabled ? <PhotoCard words={accountWords(c, ['photo.'])} customerId={page.summary.customerId} initials={initialsOf(page.summary.name)} maxMb={page.photo.maxMb} sizePx={page.photo.sizePx} /> : null}
           <div className="acc-g2">
             <section className="card p20" aria-labelledby="pf-d">
               <h2 className="h3" id="pf-d">
