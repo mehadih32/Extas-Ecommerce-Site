@@ -340,7 +340,7 @@ describe.skipIf(!HAS_TEST_DB)('inventory and ERP sync on PostgreSQL (S09)', () =
     expect(grid.colours.map((c) => c.nameEn)).toEqual(['Navy', 'Black']);
     expect(grid.sizes.map((s) => s.label)).toEqual(['M', 'L']);
     expect(grid.cells.map((c) => [c.sku, c.sellable])).toEqual([['POLO-NAVY-M', 4], ['POLO-NAVY-L', 0], ['POLO-BLACK-M', 3], ['POLO-BLACK-L', 0]]);
-    expect(grid.totals).toEqual({ sellable: 7, damaged: 1 });
+    expect(grid.totals).toEqual({ sellable: 7, damaged: 1, short: 0 });
   });
 
   it('PR 195/200: reading the same rows again never moves stock twice; a sale in the ERP moves it once', async () => {

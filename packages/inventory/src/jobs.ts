@@ -5,7 +5,8 @@
 // - `inventory.locations.ensureDefaults` — default locations and the damaged bin on every warehouse (PR 201).
 // - `inventory.reservations.release` — the abandon timer: expired and abandoned holds let go (PR 197/198).
 // - `inventory.erp.pushDocuments` {storeId?} — the document relay to the ERP (PR 199/200).
-// - `inventory.lowStock.evaluate` — low-stock alerts over every SKU (PR 202).
+// - `inventory.lowStock.evaluate` — low-stock alerts over every SKU (PR 202), then the shortage cards for every SKU
+//   below zero (follow-up 16, shortage.ts).
 // - `inventory.erp.reconcile` {storeId} — the full check of the mirror against the ERP (PR 207).
 // - `stockPollPlan` tells the scheduler how often to pull and for which stores: every store whose ERP mode is not
 //   "no ERP", every `erp.sync.stockPollMinutes` (contract: poll `updatedSince` every few minutes). `inventorySchedule`
@@ -16,6 +17,7 @@ import { storesWithErp } from './erp-mode';
 import { relayErpPushes, type RelayResult } from './erp-push';
 import { ensureDefaultLocations } from './locations';
 import { evaluateLowStock, type LowStockRun } from './low-stock';
+import { evaluateShortages, type ShortageRun } from './shortage';
 import { reconcileWithErp, type ReconcileResult } from './movements';
 import { sweepReservations, type SweepResult } from './reservations';
 import { pullStock, type StockPullResult } from './stock-pull';
@@ -30,7 +32,7 @@ export type InventoryJob =
   | { name: 'inventory.lowStock.evaluate' }
   | { name: 'inventory.erp.reconcile'; storeId: number };
 
-export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | LowStockRun | ReconcileResult;
+export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | (LowStockRun & { shortage: ShortageRun }) | ReconcileResult;
 
 export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): Promise<InventoryJobResult> {
   switch (job.name) {
@@ -42,8 +44,10 @@ export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): P
       return sweepReservations(deps);
     case 'inventory.erp.pushDocuments':
       return relayErpPushes(deps, { storeId: job.storeId });
-    case 'inventory.lowStock.evaluate':
-      return evaluateLowStock(deps);
+    case 'inventory.lowStock.evaluate': {
+      const low = await evaluateLowStock(deps);
+      return { ...low, shortage: await evaluateShortages(deps) };
+    }
     case 'inventory.erp.reconcile':
       return reconcileWithErp(deps, { actor: SYSTEM, storeId: job.storeId, ctx: { source: 'job' } });
   }

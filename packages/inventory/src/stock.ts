@@ -26,6 +26,14 @@ export function sellableUnits(levels: LevelLike[], kinds: Set<LocationKindName>)
   return levels.filter((l) => live(l) && kinds.has(l.location.kind)).reduce((s, l) => s + Math.max(0, l.available - l.cartReserved), 0);
 }
 
+/**
+ * Follow-up 16 (SIM-F-006): the balance — Σ (available − cart holds) over live sellable locations, never clipped. Below
+ * zero, more is promised than exists: the admin sees −1, never 0, and the open orders holding it get a shortage card.
+ */
+export function balanceUnits(levels: LevelLike[], kinds: Set<LocationKindName>): number {
+  return levels.filter((l) => live(l) && kinds.has(l.location.kind)).reduce((s, l) => s + l.available - l.cartReserved, 0);
+}
+
 /** Pieces in live damaged bins (never sold). */
 export function damagedUnits(levels: LevelLike[]): number {
   return levels.filter((l) => live(l) && l.location.kind === 'DAMAGED').reduce((s, l) => s + Math.max(0, l.onHand), 0);
@@ -75,6 +83,8 @@ export interface VariantStock {
   size: { id: string; key: string; label: string } | null;
   inStock: boolean;
   sellable: number;
+  /** Follow-up 16: the unclipped balance; below zero = short (shown as it is, never as 0). */
+  balance: number;
   damaged: number;
   locations: LocationStock[];
 }
@@ -102,6 +112,7 @@ function viewOf(v: VariantRow, kinds: Set<LocationKindName>): VariantStock {
     size: v.size ? { id: v.size.id, key: v.size.key, label: v.size.label } : null,
     inStock: v.inStock,
     sellable: sellableUnits(v.stockLevels, kinds),
+    balance: balanceUnits(v.stockLevels, kinds),
     damaged: damagedUnits(v.stockLevels),
     locations: v.stockLevels.map((l) => ({
       locationId: l.location.id,
@@ -131,8 +142,8 @@ export interface StockGrid {
   productId: string;
   colours: { id: string; key: string; nameEn: string }[];
   sizes: { id: string; key: string; label: string }[];
-  cells: { colourId: string | null; sizeId: string | null; variantId: string; sku: string; sellable: number; damaged: number; inStock: boolean }[];
-  totals: { sellable: number; damaged: number };
+  cells: { colourId: string | null; sizeId: string | null; variantId: string; sku: string; sellable: number; balance: number; damaged: number; inStock: boolean }[];
+  totals: { sellable: number; damaged: number; short: number };
 }
 
 /** A product's stock as a colour × size grid (live variants only). */
@@ -148,13 +159,13 @@ export async function stockGrid(deps: InventoryDeps, who: Who, productId: string
   }
   const cells = rows.map((v) => {
     const s = viewOf(v, kinds);
-    return { colourId: v.colour?.id ?? null, sizeId: v.size?.id ?? null, variantId: v.id, sku: v.sku, sellable: s.sellable, damaged: s.damaged, inStock: v.inStock };
+    return { colourId: v.colour?.id ?? null, sizeId: v.size?.id ?? null, variantId: v.id, sku: v.sku, sellable: s.sellable, balance: s.balance, damaged: s.damaged, inStock: v.inStock };
   });
   return {
     productId,
     colours: [...colours.values()],
     sizes: [...sizes.values()].sort((a, b) => a.sortOrder - b.sortOrder).map(({ sortOrder: _s, ...z }) => z),
     cells,
-    totals: { sellable: cells.reduce((s, c) => s + c.sellable, 0), damaged: cells.reduce((s, c) => s + c.damaged, 0) },
+    totals: { sellable: cells.reduce((s, c) => s + c.sellable, 0), damaged: cells.reduce((s, c) => s + c.damaged, 0), short: cells.reduce((s, c) => s + Math.max(0, -c.balance), 0) },
   };
 }

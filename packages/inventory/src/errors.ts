@@ -29,7 +29,9 @@ export type InventoryErrorCode =
   /** A stock count line differs and has no reason yet (PR 203); details name the lines. */
   | 'REASON_REQUIRED'
   /** The location already has a stock count going on (PR 203). */
-  | 'AUDIT_OPEN';
+  | 'AUDIT_OPEN'
+  /** The order has an open packing card (a shortage, follow-up 16): a person decides it before booking. */
+  | 'SHORTAGE_OPEN';
 
 export class InventoryError extends Error {
   readonly code: InventoryErrorCode;
@@ -58,6 +60,7 @@ export class InventoryError extends Error {
       case 'IDEMPOTENCY_MISMATCH':
       case 'REASON_REQUIRED':
       case 'AUDIT_OPEN':
+      case 'SHORTAGE_OPEN':
         return 409;
       case 'ERP_UNAVAILABLE':
       case 'ERP_ERROR':

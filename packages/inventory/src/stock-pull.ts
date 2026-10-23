@@ -22,6 +22,7 @@ import { behaviourOf, resolveErp, type ErpLink } from './guard';
 import { sellableKinds } from './locations';
 import { checkCompany } from './mapping';
 import { evaluateLowStock } from './low-stock';
+import { evaluateShortages } from './shortage';
 import { recheckProductsForStock } from './publish-queue';
 import { lockPools, refreshPools, releaseHandedOver } from './reservations';
 import { recomputeVariantStock, sellableUnits } from './stock';
@@ -223,15 +224,17 @@ function skippedSummary(r: StockPullResult): string | null {
 }
 
 /**
- * What follows a change of the mirror (the pull, a single-product re-sync): low-stock alerts for the SKUs that changed
- * (PR 202) and the publish checklist of their products (PR 204). A failure here never undoes the stock change.
+ * What follows a change of the mirror (the pull, a single-product re-sync, an ERP webhook): low-stock alerts for the
+ * SKUs that changed (PR 202), the shortage cards for any of them now below zero (follow-up 16) and the publish
+ * checklist of their products (PR 204). A failure here never undoes the stock change.
  */
-export async function afterStockChange(deps: InventoryDeps, storeId: number, variantIds: string[]): Promise<{ lowStock: number; productsRechecked: number }> {
-  if (!variantIds.length) return { lowStock: 0, productsRechecked: 0 };
+export async function afterStockChange(deps: InventoryDeps, storeId: number, variantIds: string[]): Promise<{ lowStock: number; shortageCards: number; productsRechecked: number }> {
+  if (!variantIds.length) return { lowStock: 0, shortageCards: 0, productsRechecked: 0 };
   const skus = (await deps.db.productVariant.findMany({ where: { id: { in: variantIds } }, select: { sku: true } })).map((v) => v.sku);
   const low = await evaluateLowStock(deps, { skus });
+  const shortage = await evaluateShortages(deps, { skus });
   const productsRechecked = await recheckProductsForStock(deps, storeId, variantIds);
-  return { lowStock: low.raised + low.updated + low.resolved, productsRechecked };
+  return { lowStock: low.raised + low.updated + low.resolved, shortageCards: shortage.raised, productsRechecked };
 }
 
 export async function pullStock(deps: InventoryDeps, job: StockPullJob): Promise<StockPullResult> {
