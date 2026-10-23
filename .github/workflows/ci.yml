@@ -175,7 +175,9 @@ jobs:
     runs-on: ubuntu-24.04
     # The seeded Lighthouse list and the gate's pages grow with every storefront batch (PR 75 added the help pages and
     # the wishlist: Lighthouse alone took 15 minutes, the Playwright install 9), so 30 minutes cut the gate off mid-run.
-    timeout-minutes: 60
+    # PR 136 (#34): with the invoice paths the setup and the seeded Lighthouse took 50 minutes and 60 cut the gate off
+    # after 10; 90 until follow-up 187 moves the seeded Lighthouse to its own job beside the gate.
+    timeout-minutes: 90
     services:
       postgres:
         image: postgres:17

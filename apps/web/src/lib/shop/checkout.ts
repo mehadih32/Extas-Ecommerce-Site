@@ -128,6 +128,28 @@ export async function accountReceipt(c: Pick<ShopContext, 'storeId'>, number: st
   }
 }
 
+/**
+ * PR 136 — the order an invoice is made from: the customer's own (as the order page reads it), else, for a staff member
+ * signed in to the admin with `orders.invoice`, any placed order of the store (the shop's own copy to print or send).
+ * The staff check runs only when the customer's read found nothing, so a customer's invoice costs no admin lookup.
+ */
+export async function invoiceReceipt(c: Pick<ShopContext, 'storeId'>, number: string): Promise<{ receipt: Receipt | null; signedIn: boolean }> {
+  const own = await accountReceipt(c, number);
+  if (own.receipt) return own;
+  const deps = checkoutDeps();
+  if (!deps) return own;
+  try {
+    const { pageAccess } = await import('../admin-page');
+    const access = await pageAccess('orders.invoice', undefined, c.storeId);
+    if (access.kind !== 'ok') return own;
+    const receipt = await withTimeout(orderReceipt(deps, { storeId: c.storeId, visitorId: null, number, staff: true }), settingsTimeoutMs() * 4);
+    return { receipt, signedIn: own.signedIn };
+  } catch (e) {
+    console.warn(`shop: the staff invoice is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return own;
+  }
+}
+
 /** PR 137 (Blueprint C6.5) — the signed-in customer's own details for his checkout's boxes (null: signed out, switched off, slow). */
 export async function currentPrefill(c: Pick<ShopContext, 'storeId'>): Promise<CheckoutPrefill | null> {
   const deps = accountDeps();

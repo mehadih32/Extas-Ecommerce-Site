@@ -3,13 +3,15 @@
 // and times (the steps only show them; moving an order is S05's, CN-022), the wallet's own ledger.
 // Left out until the systems that make them true: the demo's "15% personal offer" and member prices (a made-up
 // discount), the saved-size card (the size finder's saved size), referral and photo-review rewards, the "best sellers"
-// rows (sales figures), the invoice button (PR 136) and the exchange-window tag (S06).
+// rows (sales figures), ~~the invoice button (PR 136)~~ and the exchange-window tag (S06).
+// PR 136: the invoice icon beside the order number opens that order's invoice (demo R16 acc-oinv), while the owner keeps
+// invoices on (`account.invoice`).
 import type { ReactNode } from 'react';
 import type { OrderCard, WalletView } from '@extas/accounts';
 import { TRACK_STEPS } from '@extas/accounts/pure';
 import type { ShopIcon } from '@extas/settings';
 import { cardsByIds, type ShopCard } from '@/lib/shop/catalogue';
-import type { ShopContext } from '@/lib/shop/context';
+import { readPageSettings, type ShopContext } from '@/lib/shop/context';
 import { dateText } from '@/lib/shop/account-view';
 import { plural } from '@/lib/shop/bag-model';
 import { hrefIn } from '@/lib/shop/lang';
@@ -71,7 +73,7 @@ export function TrackFlow({ c, o }: { c: ShopContext; o: OrderCard }) {
   );
 }
 
-function OrderCardView({ c, o, cards }: { c: ShopContext; o: OrderCard; cards: Map<string, ShopCard> }) {
+function OrderCardView({ c, o, cards, invoice }: { c: ShopContext; o: OrderCard; cards: Map<string, ShopCard>; invoice: boolean }) {
   const t = c.t;
   const href = hrefIn(c.lang, ROUTES.order(o.number));
   return (
@@ -81,6 +83,11 @@ function OrderCardView({ c, o, cards }: { c: ShopContext; o: OrderCard; cards: M
           <a className="h3 acc-onum-a" href={href} aria-label={t('account.orders.open', { number: o.number })}>
             #{o.number}
           </a>
+          {invoice ? (
+            <a className="acc-oinv" href={hrefIn(c.lang, ROUTES.invoice(o.number))} aria-label={t('account.invoice.icon', { number: o.number })} title={t('account.invoice.crumb')} data-testid="acc-oinv">
+              <Icon name="doc" size={18} />
+            </a>
+          ) : null}
         </div>
         <div className="xs muted" style={{ marginTop: 2 }}>
           {t('account.orders.placed', { date: dateText(c, o.placedAt) })} · {plural(t, 'account.orders.items', o.items, c.num)}
@@ -122,7 +129,11 @@ function OrderCardView({ c, o, cards }: { c: ShopContext; o: OrderCard; cards: M
 export async function OrdersTab({ c, orders }: { c: ShopContext; orders: OrderCard[] }) {
   const t = c.t;
   const ids = [...new Set(orders.flatMap((o) => o.lines.flatMap((l) => (l.productId ? [l.productId] : []))))];
-  const cards = ids.length ? await cardsByIds(c.storeId, ids) : new Map<string, ShopCard>();
+  const [cards, more] = await Promise.all([
+    ids.length ? cardsByIds(c.storeId, ids) : Promise.resolve(new Map<string, ShopCard>()),
+    readPageSettings(['account.invoice'] as const, c.storeId),
+  ]);
+  const invoice = more['account.invoice'].enabled;
   return (
     <section aria-labelledby="ao-h" data-testid="acc-orders">
       <div className="sec-hd">
@@ -134,7 +145,7 @@ export async function OrdersTab({ c, orders }: { c: ShopContext; orders: OrderCa
       {orders.length ? (
         <div className="stack s12">
           {orders.map((o) => (
-            <OrderCardView key={o.number} c={c} o={o} cards={cards} />
+            <OrderCardView key={o.number} c={c} o={o} cards={cards} invoice={invoice} />
           ))}
         </div>
       ) : (

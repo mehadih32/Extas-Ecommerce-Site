@@ -10,6 +10,8 @@
 // customer whose order it is (any of his devices) — with the order's stored state and times, the add-on mark of each
 // line and the name it goes to.
 // PR 135: the tracking page adds the courier and its tracking code of the order's booked shipment (as stored).
+// PR 136: the invoice adds each line's stored unit price, its stored saving and its SKU — read, never worked out again;
+// and a staff member the caller has checked (the `orders.read` permission) reads any placed order of the store.
 import type { OrderAccountKind } from '@extas/accounts';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { CheckoutDeps } from './context';
@@ -29,6 +31,12 @@ export interface ReceiptLine {
   setKey: string | null;
   /** PR 134: added as an add-on (the bag's or the checkout's "add this too"). */
   isAddOn: boolean;
+  /** PR 136: one piece's price on the order, as stored. */
+  unitMinor: number;
+  /** PR 136: what the line saves on its pieces' own price (a set's share of its saving), as stored. */
+  lineDiscountMinor: number;
+  /** PR 136: the stock code the line was sold as. */
+  sku: string;
 }
 
 /** PR 134: when the order reached each stored state (null: not yet). Shown, never moved here (S05, CN-022). */
@@ -87,9 +95,13 @@ const ACCOUNT_KINDS: readonly OrderAccountKind[] = ['created', 'existing', 'sign
 
 /**
  * The visitor's own order, as the thank-you page shows it; null for anyone else's, or no such order. PR 134: also the
- * signed-in customer's own order (`customerId`), from any device.
+ * signed-in customer's own order (`customerId`), from any device. PR 136: `staff` — the caller has checked that a staff
+ * member with `orders.read` asks (the invoice for the shop's own use): any placed order of this store.
  */
-export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeId: number; visitorId: string | null; number: string; customerId?: string | null }): Promise<Receipt | null> {
+export async function orderReceipt(
+  deps: Pick<CheckoutDeps, 'db'>,
+  req: { storeId: number; visitorId: string | null; number: string; customerId?: string | null; staff?: boolean },
+): Promise<Receipt | null> {
   const o = await deps.db.order.findUnique({
     where: { storeId_number: { storeId: req.storeId, number: req.number } },
     include: {
@@ -103,7 +115,8 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
   const placedHere = !!req.visitorId && o?.visitorId === req.visitorId;
   // his account's order: a placed one (a started checkout's draft is not an order yet), not archived
   const his = !!req.customerId && o?.customerId === req.customerId && o.status !== 'DRAFT' && !o.archivedAt;
-  if (!o || !(placedHere || his)) return null;
+  const staff = req.staff === true && o?.status !== 'DRAFT';
+  if (!o || !(placedHere || his || staff)) return null;
   const variants = await deps.db.productVariant.findMany({
     where: { storeId: req.storeId, id: { in: o.items.map((i) => i.variantId).filter((x): x is string => !!x) } },
     select: { id: true, product: { select: { nameBn: true } }, colour: { select: { key: true, hex: true, nameEn: true, nameBn: true } } },
@@ -122,6 +135,9 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
       amountMinor: i.lineTotalMinor,
       setKey: i.comboGroupKey,
       isAddOn: i.isAddOn,
+      unitMinor: i.unitPriceMinor,
+      lineDiscountMinor: i.discountMinor,
+      sku: i.sku,
     };
   });
   const due = Math.max(0, o.totalMinor - o.walletAppliedMinor - o.paidMinor);

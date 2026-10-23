@@ -30,7 +30,9 @@
         "http://127.0.0.1:3000/combo/sample-polo-chino-set",
         "http://127.0.0.1:3000/bn/combo/sample-polo-chino-set",
         "http://127.0.0.1:3000/combos",
-        "http://127.0.0.1:3000/bn/combos"
+        "http://127.0.0.1:3000/bn/combos",
+        "http://127.0.0.1:3000/account/orders/0/invoice",
+        "http://127.0.0.1:3000/bn/account/orders/0/invoice"
       ],
       "numberOfRuns": 3,
       "settings": {
