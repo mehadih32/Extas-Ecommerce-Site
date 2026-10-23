@@ -6,6 +6,9 @@
 //
 // PR 129: the account the order belongs to (made with this order, already there, or the signed-in customer's), for the
 // "Your account is ready" card: the number to sign in with — never a password (SIM-F-039).
+// PR 134: the order page of My account reads the same receipt — for the browser that placed it, or for the signed-in
+// customer whose order it is (any of his devices) — with the order's stored state and times, the add-on mark of each
+// line and the name it goes to.
 import type { OrderAccountKind } from '@extas/accounts';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { CheckoutDeps } from './context';
@@ -23,6 +26,18 @@ export interface ReceiptLine {
   amountMinor: number;
   /** The set it belongs to, if any. */
   setKey: string | null;
+  /** PR 134: added as an add-on (the bag's or the checkout's "add this too"). */
+  isAddOn: boolean;
+}
+
+/** PR 134: when the order reached each stored state (null: not yet). Shown, never moved here (S05, CN-022). */
+export interface ReceiptTimes {
+  confirmedAt: string | null;
+  packedAt: string | null;
+  handedOverAt: string | null;
+  deliveredAt: string | null;
+  cancelledAt: string | null;
+  returnedAt: string | null;
 }
 
 export type ReceiptPay =
@@ -58,12 +73,20 @@ export interface Receipt {
   pay: ReceiptPay;
   /** PR 129: how the order found its account (null: no account, the owner switched the automatic one off). */
   account: OrderAccountKind | null;
+  /** PR 134: the whole name it goes to. */
+  name: string | null;
+  /** PR 134: the order's stored state (Prisma OrderStatus) and its times. */
+  status: string;
+  times: ReceiptTimes;
 }
 
 const ACCOUNT_KINDS: readonly OrderAccountKind[] = ['created', 'existing', 'signedIn'];
 
-/** The visitor's own order, as the thank-you page shows it; null for anyone else's, or no such order. */
-export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeId: number; visitorId: string; number: string }): Promise<Receipt | null> {
+/**
+ * The visitor's own order, as the thank-you page shows it; null for anyone else's, or no such order. PR 134: also the
+ * signed-in customer's own order (`customerId`), from any device.
+ */
+export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeId: number; visitorId: string | null; number: string; customerId?: string | null }): Promise<Receipt | null> {
   const o = await deps.db.order.findUnique({
     where: { storeId_number: { storeId: req.storeId, number: req.number } },
     include: {
@@ -73,7 +96,10 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
       events: { where: { type: ORDER_EVENTS.placed }, orderBy: { createdAt: 'asc' }, take: 1, select: { data: true } },
     },
   });
-  if (!o || o.visitorId !== req.visitorId) return null;
+  const placedHere = !!req.visitorId && o?.visitorId === req.visitorId;
+  // his account's order: a placed one (a started checkout's draft is not an order yet), not archived
+  const his = !!req.customerId && o?.customerId === req.customerId && o.status !== 'DRAFT' && !o.archivedAt;
+  if (!o || !(placedHere || his)) return null;
   const variants = await deps.db.productVariant.findMany({
     where: { storeId: req.storeId, id: { in: o.items.map((i) => i.variantId).filter((x): x is string => !!x) } },
     select: { id: true, product: { select: { nameBn: true } }, colour: { select: { key: true, hex: true, nameEn: true, nameBn: true } } },
@@ -91,6 +117,7 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
       quantity: i.quantity,
       amountMinor: i.lineTotalMinor,
       setKey: i.comboGroupKey,
+      isAddOn: i.isAddOn,
     };
   });
   const due = Math.max(0, o.totalMinor - o.walletAppliedMinor - o.paidMinor);
@@ -108,6 +135,16 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
   const kind = ACCOUNT_KINDS.find((k) => k === placed?.account) ?? null;
   return {
     account: o.customerId ? kind : null,
+    name: o.customerName,
+    status: o.status,
+    times: {
+      confirmedAt: o.confirmedAt?.toISOString() ?? null,
+      packedAt: o.packedAt?.toISOString() ?? null,
+      handedOverAt: o.handedOverAt?.toISOString() ?? null,
+      deliveredAt: o.deliveredAt?.toISOString() ?? null,
+      cancelledAt: o.cancelledAt?.toISOString() ?? null,
+      returnedAt: o.returnedAt?.toISOString() ?? null,
+    },
     number: o.number,
     firstName: (o.customerName ?? '').trim().split(/\s+/)[0] ?? '',
     phone: phone.ok ? phone.nice : o.phone,

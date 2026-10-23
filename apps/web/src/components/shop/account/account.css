@@ -197,3 +197,21 @@
 .shop .acc-ph .acc-err { margin-top: 10px; }
 .shop .acc-ph-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .shop .acc-ph-input:focus-visible + * { outline: 2px solid var(--brand); }
+
+/* ---- PR 134 · one order's page (demo 60-account.js PAGES.order, ord_*) ---- */
+.shop .ord-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.shop .ord-hd { padding: 18px 16px; }
+@media (min-width: 1024px) { .shop .ord-hd { padding: 24px 26px; } }
+.shop .ord-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line2); }
+.shop .ord-meta .wide { grid-column: 1 / -1; }
+@media (min-width: 1024px) { .shop .ord-meta { grid-template-columns: 150px 170px minmax(0, 1fr); } .shop .ord-meta .wide { grid-column: auto; } .shop .ord-meta .wide:only-child { grid-column: 1 / -1; } }
+.shop .ord-line { display: flex; gap: 14px; padding: 16px; border-top: 1px solid var(--line2); }
+@media (min-width: 1024px) { .shop .ord-line { padding: 18px 20px; gap: 18px; } }
+.shop .ord-thumb { width: 76px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; }
+@media (min-width: 1024px) { .shop .ord-thumb { width: 92px; } }
+.shop .ord-name { color: var(--ink); font-weight: 600; font-size: 14.5px; line-height: 1.35; }
+.shop .ord-sum-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 14px; }
+.shop .ord-sum-row.total { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; font-weight: 700; font-size: 16px; }
+.shop .ord-pay { padding: 12px 14px; }
+.shop .brandc { color: var(--brand); }
+.shop .ord-page .acc-start { min-height: 44px; }

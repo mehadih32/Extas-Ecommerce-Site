@@ -308,6 +308,11 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(c).toMatchObject({ name: FORM.name, firstSource: 'WEBSITE', orderCount: 1, credential: null, sessions: [] });
       expect(o.events[0]!.data).toMatchObject({ account: 'created' });
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number })).toMatchObject({ account: 'created', phone: '01700-000129' });
+      // PR 134: his account reads the order from any device, with its stored state; nobody else's account does
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: null, customerId: c.id, number: r.number })).toMatchObject({ number: r.number, status: 'PLACED', name: FORM.name, times: { confirmedAt: null, deliveredAt: null } });
+      const other = await f.t.prisma.customer.create({ data: { storeId: f.S, phone: '+8801700000134', name: 'Someone Else' } });
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', customerId: other.id, number: r.number })).toBeNull();
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: null, customerId: null, number: r.number })).toBeNull();
     });
 
     it('SIM-F-039 security test: the phone number as the password does not open the account', async () => {
