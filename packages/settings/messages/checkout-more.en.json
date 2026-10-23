@@ -4,6 +4,10 @@
       "check": {
         "label": "Address detail check",
         "help": "An address with none of these words (house, road, para, village …) is still taken as an order — it is never held — but it gets the \"address check\" flag and a call task, so the confirmation call asks for directions. Add or remove words in English, Banglish and Bengali. Switch it off and no address is flagged this way."
+      },
+      "backfill": {
+        "label": "Silent address backfill",
+        "help": "When a customer writes an address with no area in it (\"Road 12, House 42\") and his phone number is already known, he is not asked Inside or Outside Dhaka: the charge comes from the address we hold, nothing is shown or filled in on his page, what he typed stays as he typed it, and the full address we hold is attached to the order for packing. An address that names its own area always wins. \"From orders\": use his delivered orders (or any order not cancelled or returned) when he has no saved address. Off: he is asked as usual."
       }
     }
   }

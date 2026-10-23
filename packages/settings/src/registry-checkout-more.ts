@@ -1,9 +1,11 @@
-// S04 · the rest of the customer-side checkout — PR 563 (no order is ever held over an address). Registry version 34
+// S04 · the rest of the customer-side checkout — PR 563 (no order is ever held over an address), PR 561 (the silent
+// address backfill). Registry version 34
 // (33 is the admin shell's). Labels: messages/checkout-more.<lang>.json. No admin screen yet (CN-019, CN-022): the keys
 // live in their sections (Checkout, Orders) and are set through the settings store until the new admin shell has them.
 //
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone. A check only adds a flag and a call
-// task for the team; the order is always taken (PR 563).
+// task for the team; the order is always taken (PR 563). The backfill only attaches an address the shop already holds,
+// for packing; it is never shown or prefilled (PR 561).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -78,6 +80,21 @@ export const ADDRESS_DETAIL_WORDS = [
   'গ্রাম',
 ] as const;
 
+/**
+ * PR 561 — the silent address backfill. A line that names no place ("Road 12, House 42") is asked Inside/Outside Dhaka
+ * — unless his phone number is already known: then nothing is asked, shown or prefilled, the band comes from the
+ * address the shop holds, what he typed stays as he typed it, and that full held address is attached to the order in
+ * the backend for packing. A line that settles a place itself always wins (he may have moved, or be sending a gift).
+ * `orders`: where else a held address may come from when he has no saved address — none, his delivered orders only,
+ * or any order of his not cancelled or returned. The look-ups count against the phone-first limit per IP.
+ */
+export const addressBackfillSchema = z
+  .object({
+    enabled: z.boolean(),
+    orders: z.enum(['off', 'delivered', 'placed']),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, version: V } as const;
 
 export const checkoutMoreSettings = {
@@ -90,6 +107,16 @@ export const checkoutMoreSettings = {
     helpKey: 'checkout.address.check.help',
     sortOrder: 960,
   }),
+  'checkout.address.backfill': setting({
+    ...json,
+    group: 'checkout',
+    schema: addressBackfillSchema,
+    default: { enabled: false, orders: 'delivered' },
+    labelKey: 'checkout.address.backfill.label',
+    helpKey: 'checkout.address.backfill.help',
+    sortOrder: 961,
+  }),
 };
 
 export type AddressCheckSettings = z.output<typeof addressCheckSchema>;
+export type AddressBackfillSettings = z.output<typeof addressBackfillSchema>;

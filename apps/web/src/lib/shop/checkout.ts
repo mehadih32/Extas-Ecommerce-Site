@@ -54,6 +54,7 @@ const KEYS = [
   'checkout.capture.waitMs',
   'account.thanksCard.enabled',
   'checkout.autofill',
+  'checkout.address.backfill',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

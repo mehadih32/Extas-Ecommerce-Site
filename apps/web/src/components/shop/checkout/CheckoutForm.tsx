@@ -19,6 +19,8 @@
 // from his account or this browser is not sent for the follow-up until he changes something.
 // PR 565: while delivery is free none of the band machinery shows — the delivery step says only "Free home delivery",
 // the address suggestions carry no charge, and an unsettled band is never asked.
+// PR 561: with the owner's silent backfill on, the phone number goes with each address read; a number that becomes
+// whole (or changes) while the band is asked, or was settled from it, reads the line again. Nothing is prefilled.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
@@ -78,6 +80,8 @@ export interface CheckoutFormProps {
   prefill?: DetailsForm | null;
   /** PR 137: how many days this browser remembers his last order's details; null: never (`checkout.autofill.browserDays`). */
   remember?: { days: number } | null;
+  /** PR 561: the owner's silent address backfill is on (`checkout.address.backfill`): send the phone with the address. */
+  backfill?: boolean;
 }
 
 export function CheckoutForm({
@@ -99,6 +103,7 @@ export function CheckoutForm({
   suggest,
   prefill = null,
   remember = null,
+  backfill = false,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -113,6 +118,8 @@ export function CheckoutForm({
   const seq = useRef(latest());
   /** What the page last asked the server about: the finished line and the band he chose (PR 118). */
   const asked = useRef<Choices>({ line: null, confirmed: null, pay: null, wallet: false });
+  /** PR 561: the phone number as typed now (read when a quote is asked for). */
+  const phoneNow = useRef('');
   /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
   const requote = async (patch: Partial<Choices>) => {
     const c = { ...asked.current, ...patch };
@@ -120,7 +127,8 @@ export function CheckoutForm({
     const k = seq.current.next();
     setReadLine(c.line);
     setReading(true);
-    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed } : null, payment: c.pay, useWallet: c.wallet });
+    const phone = backfill && phoneNormalizeBD(phoneNow.current).ok ? phoneNow.current : null;
+    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed, ...(phone ? { phone } : {}) } : null, payment: c.pay, useWallet: c.wallet });
     if (!seq.current.isLatest(k)) return;
     setReading(false);
     if (next) setView(next);
@@ -196,6 +204,23 @@ export function CheckoutForm({
   const note = noteCfg ? (noteEdited ?? (typeof stored?.note === 'string' ? stored.note : '')) : '';
   // SIM-F-026: with the owner's switch on, what he typed is kept for the team a moment after he stops (a real phone only).
   const phoneOk = phoneNormalizeBD(form.phone).ok;
+  useEffect(() => {
+    phoneNow.current = form.phone;
+  }, [form.phone]);
+  // PR 561: a whole number (or another one) while the band is asked, or was settled from the old number: read again
+  const typedPhone = phoneNormalizeBD(form.phone);
+  const backfillKey = backfill && typedPhone.ok ? typedPhone.e164 : null;
+  const seenBackfill = useRef<string | null>(null);
+  useEffect(() => {
+    if (seenBackfill.current === backfillKey) return;
+    const before = seenBackfill.current;
+    seenBackfill.current = backfillKey;
+    const d = view.delivery;
+    const silent = d.state === 'ask' || (d.state === 'found' && d.via === 'saved');
+    if (!asked.current.line || asked.current.confirmed || !silent || (before === null && backfillKey === null)) return;
+    void requote({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the whole number changes
+  }, [backfillKey]);
   const capturePay = stored?.pay ? view.pay.chosen : null;
   const touched = edited !== null || filled(stored?.form) !== null;
   const captureKey = capture && phoneOk && touched ? JSON.stringify([form, note, capturePay]) : null;

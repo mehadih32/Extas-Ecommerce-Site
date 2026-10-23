@@ -12,6 +12,8 @@
 // total) for any other method.
 // PR 122 — the signed-in customer's wallet: his balance, and with "Use my wallet" ticked as much of it as the order
 // needs comes off what he still pays (`dueMinor`); placement (PR 125) debits exactly that, in the same transaction.
+// PR 561 — the silent backfill (address.ts): with the phone number the page sends, a line naming no place takes its
+// band from the address the shop holds; the page sees the band and charge only.
 import { createHash } from 'node:crypto';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
 import { bandOut, loadBandMap, type AskReason, type BandMap, type BandOut } from '@extas/delivery';
@@ -31,6 +33,8 @@ export interface CheckoutRequest {
   payment?: PaymentInput | null;
   /** PR 122: "Use my wallet" is ticked (a signed-in customer with a balance only). */
   useWallet?: boolean;
+  /** PR 561: the caller's IP, for the backfill's per-IP look-up limit. */
+  ip?: string | null;
 }
 
 /** PR 122 — the wallet on this order: the balance, whether he uses it, and how much comes off. */
@@ -51,7 +55,8 @@ export type DeliveryView =
 
 /** The page's delivery step from the address read. */
 export function deliveryViewOf(a: AddressRead): DeliveryView {
-  if (a.status === 'resolved') return { state: 'found', band: a.read.band, place: placeName(a.read.area), via: a.read.via, placeSure: a.read.placeSure };
+  // PR 561: a band settled from the address the shop holds shows the band only — never that address's place
+  if (a.status === 'resolved') return { state: 'found', band: a.read.band, place: a.read.via === 'saved' ? null : placeName(a.read.area), via: a.read.via, placeSure: a.read.placeSure };
   if (a.status === 'ask') return { state: 'ask', reason: a.read.reason, options: a.read.options.map((o) => ({ band: o.band, places: o.places.map((p) => placeName(p)!) })) };
   return { state: 'none' };
 }
@@ -194,7 +199,7 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
   checkStoreId(input.storeId);
   const asked = input.payment ? parse(paymentInputSchema, input.payment, 'payment') : null;
   const [address, map, ps, balance] = await Promise.all([
-    readAddress(deps, input.storeId, input.address),
+    readAddress(deps, input.storeId, input.address, { ip: input.ip ?? null }),
     loadBandMap(deliveryDeps(deps), input.storeId),
     paySettings(deps, input.storeId),
     walletBalance(deps, input.storeId, input.customerId ?? null),

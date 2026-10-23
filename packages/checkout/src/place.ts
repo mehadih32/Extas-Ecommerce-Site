@@ -9,6 +9,8 @@
 // and the same call task, so the confirmation call asks for directions. One call task per order, the weightiest reason.
 // PR 565: where delivery is free none of the band machinery applies — no Inside/Outside flag or call over the band,
 // the order marked `bandExempt` so no later band correction or band message touches it (@extas/delivery bandExempt).
+// PR 561: the phone number goes with the address read (the silent backfill); what he typed is stored as he typed it,
+// and the full address the shop holds goes in `backfilledAddress`, for packing (the ERP push already prefers it).
 //
 // One press = one order: the page makes an order key once and sends it with every retry (a slow network, a double
 // tap). The key is claimed inside the order's own transaction, so a lost answer or a second press finds the order
@@ -250,9 +252,10 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     cartId,
     lang: d.lang,
     customerId,
-    address: { line: d.form.address, confirmed: d.confirmed ?? null },
+    address: { line: d.form.address, confirmed: d.confirmed ?? null, phone: check.phone.e164 },
     payment: d.payment ?? null,
     useWallet: d.useWallet === true,
+    ip: req.ip ?? null,
   });
   if (!q.bag.items.length && !q.bag.sets.length) throw new CheckoutError('EMPTY', 'the bag has nothing to order');
   if (q.bag.blocked.length) throw new CheckoutError('OUT_OF_STOCK', 'a line cannot be ordered now', q.bag.blocked.map((b) => `${b.lineId}:${b.free}`));
@@ -322,6 +325,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           phone: check.phone.e164,
           customerName: d.form.name.trim(),
           shippingAddressText: d.form.address.trim(),
+          backfilledAddress: resolved?.backfill?.line ?? null,
           areaId: charged?.area.areaId ?? null,
           deliveryBandId: charged?.quote.band.id ?? null,
           addressResolution: {
@@ -330,6 +334,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(q.address.status === 'ask' ? { reason: q.address.read.reason } : {}),
             charge: q.charge,
             ...(free ? { bandExempt: true } : {}),
+            ...(resolved?.backfill ? { backfill: resolved.backfill.from } : {}),
             detail: !noDetail,
             fingerprint: q.fingerprint,
           },

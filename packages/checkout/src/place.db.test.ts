@@ -9,7 +9,7 @@ import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { findBag } from '@extas/cart';
 import { captureDraft, payAction, payView, placeOrder, type PlaceInput } from './place';
-import { checkoutQuote, type CheckoutRequest } from './quote';
+import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
 import { orderReceipt } from './receipt';
 import { setUpCheckout, type CheckoutFixture } from './testing';
 
@@ -170,6 +170,44 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
         expect(await f.t.prisma.callTask.count({ where: { orderId: off.id } })).toBe(0);
       } finally {
         f.overrides.delete('checkout.address.check');
+      }
+    });
+
+    it('PR 561: a known number and a line with no place — nothing asked, shown or prefilled; the held address goes with the order', async () => {
+      const phone = '01700000561';
+      const c = await f.t.prisma.customer.create({ data: { storeId: f.S, phone: '+8801700000561', name: 'Sample Customer' } });
+      const uttara = (await f.t.prisma.geoArea.findUniqueOrThrow({ where: { code: 'bd.dhaka.dhaka.uttara' }, select: { id: true } })).id;
+      await f.t.prisma.customerAddress.create({ data: { storeId: f.S, customerId: c.id, name: 'Sample Customer', phone: '+8801700000561', addressLine: 'House 42, Road 12, Sector 7, Uttara', areaId: uttara, isDefault: true } });
+      const typed = async (name: string, line: string, who = phone) => {
+        const bag = await f.bag(name, [{ variantId: shirt().id }]);
+        const q = await checkoutQuote(f.deps(), { storeId: f.S, cartId: bag.cartId, lang: 'en', address: { line, phone: who }, ip: '192.0.2.61' });
+        const place = () =>
+          placeOrder(f.deps(), { storeId: f.S, visitorId: bag.visitorId, customerId: null, ip: '192.0.2.61', input: { idempotencyKey: randomUUID(), lang: 'en', form: { ...FORM, phone: who, address: line }, fingerprint: q.fingerprint } });
+        return { q, place };
+      };
+      // the owner's switch off (the default): he is asked, as before
+      expect((await typed('bf-off', 'Road 12, House 42')).q.delivery.state).toBe('ask');
+      set({ 'checkout.address.backfill': { enabled: true, orders: 'delivered' } });
+      try {
+        const s = await typed('bf-on', 'Road 12, House 42');
+        expect(s.q.delivery).toMatchObject({ state: 'found', via: 'saved', place: null, band: { key: 'dhaka-city' } });
+        expect(s.q.charge).toEqual({ state: 'charge', chargeMinor: 8_000 });
+        expect(JSON.stringify(viewOf(s.q))).not.toMatch(/Sector 7|Uttara|উত্তরা/);
+        const o = await orderOf((await s.place()).orderId);
+        expect(o).toMatchObject({ shippingAddressText: 'Road 12, House 42', backfilledAddress: 'House 42, Road 12, Sector 7, Uttara', deliveryBandId: city, deliveryChargeMinor: 8_000, chargeFixed: true, addressUnclear: false, flags: [] });
+        expect(o.addressResolution).toMatchObject({ status: 'resolved', via: 'saved', backfill: 'saved' });
+        expect(await f.t.prisma.callTask.count({ where: { orderId: o.id } })).toBe(0);
+        // a new address always wins over the stored one: he may have moved, or be sending a gift
+        const moved = await typed('bf-moved', 'House 3, Road 1, Kurigram');
+        expect(moved.q.delivery).toMatchObject({ state: 'found', via: 'line', band: { key: 'outside-dhaka' } });
+        const m = await orderOf((await moved.place()).orderId);
+        expect(m).toMatchObject({ backfilledAddress: null, deliveryBandId: outside, deliveryChargeMinor: 13_000 });
+        // an unknown number is asked as usual, and an unclear order is placed as PR 563 says
+        const stranger = await typed('bf-stranger', 'Road 12, House 42', '01700000562');
+        expect(stranger.q.delivery.state).toBe('ask');
+        expect((await orderOf((await stranger.place()).orderId)).flags).toEqual(['ADDRESS_UNCLEAR']);
+      } finally {
+        f.overrides.delete('checkout.address.backfill');
       }
     });
 
