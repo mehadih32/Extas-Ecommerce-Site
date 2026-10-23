@@ -1,5 +1,5 @@
 // S02 · the storefront, third batch — PR 53 (the first-screen budget), 67 (rows), 68 (rail), 69 (share), 70 (the floating
-// WhatsApp button), 71 (the wishlist). Registry version 21 (the checkout took 20). Labels:
+// WhatsApp button), 71 (the wishlist). Registry version 23 (the checkout took 20, the worker 22). Labels:
 // messages/shop-more.<lang>.json. The later PRs of the batch (67–71, 74, 75) add their keys here at the same version.
 //
 // The defaults reproduce the approved V12.2 demo (docs/demo/src/30-product.js PDP_FIT, Blueprint D2). CN-018: every
@@ -7,9 +7,9 @@
 import { z } from 'zod';
 import { setting } from './define';
 import { dictionaryKeySchema, localizedTextSchema } from './schemas';
-import { categorySlugSchema } from './registry-storefront';
+import { categorySlugSchema, listIdSchema } from './registry-storefront';
 
-const V = 21;
+const V = 23;
 
 // ---- PR 53 · the first-screen budget (Blueprint D2, demo PDP_FIT) ----
 
@@ -184,6 +184,72 @@ export const shellMenuSubsSchema = z
   })
   .strict();
 
+// ---- PR 75 · the help pages (Blueprint D3.17, C12 `/help/<slug>`; demo 71-pages.js, desktop help centre D-017) ----
+
+export const HELP_PAGES = ['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'] as const;
+export type HelpSlug = (typeof HELP_PAGES)[number];
+const helpSlugSchema = z.enum(HELP_PAGES);
+/** A Smart Rule's key (packages/rules: lower-case words and dashes). */
+const ruleKeySchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,59}$/);
+const helpPageSchema = z
+  .object({
+    on: z.boolean(),
+    rules: z
+      .array(ruleKeySchema)
+      .max(12)
+      .refine((l) => new Set(l).size === l.length, { message: 'every rule once' }),
+    details: z.enum(['none', 'contact', 'legal']),
+  })
+  .strict();
+
+/**
+ * The help pages: which are shown, which live Smart Rules each one reads (their texts, in this order — the rules are
+ * the owner's policy, so a page never words a charge or a window itself), and which of the store's details follow the
+ * page ('contact': e-mail and hotline; 'legal': registered name, address, trade licence, DBID). The FAQ also reads
+ * every live rule the owner placed on "FAQ". A page with nothing to say shows "Coming soon". On a computer the pages
+ * sit in a help centre: the topics on the left, "Still stuck?" with WhatsApp and the hotline on the right (D-017).
+ */
+export const pagesHelpSchema = z
+  .object({
+    pages: z
+      .object({ faq: helpPageSchema, delivery: helpPageSchema, exchange: helpPageSchema, privacy: helpPageSchema, terms: helpPageSchema, story: helpPageSchema, contact: helpPageSchema })
+      .strict(),
+    /** The computer's help centre (the topic list and the "Still stuck?" card); off: the phone's single column. */
+    desk: z.boolean(),
+    /** The topics the help centre lists, in order (a page with nothing to say is left out). */
+    topics: z
+      .array(helpSlugSchema)
+      .max(HELP_PAGES.length)
+      .refine((l) => new Set(l).size === l.length, { message: 'every page once' }),
+    /** "Still need a hand?" with the WhatsApp button under each page (only when the WhatsApp number is filled in). */
+    hand: z.boolean(),
+  })
+  .strict();
+
+const pageWordsSchema = z
+  .object({
+    title: localizedTextSchema(80).nullable(),
+    lede: localizedTextSchema(400).nullable(),
+    /** The page's own words: paragraphs split by an empty line, "## " starts a heading, "- " a list line. */
+    body: localizedTextSchema(20000).nullable(),
+  })
+  .strict();
+
+/**
+ * The owner's own words on the help pages (owner data: they never ship to a new installation). Empty (null) by default: the
+ * shop never writes a privacy notice, terms or a story for him (CN-017) — those pages say "Coming soon" until he does.
+ */
+export const pagesTextSchema = z
+  .object({
+    pages: z.partialRecord(helpSlugSchema, pageWordsSchema),
+    /** His own questions and answers, shown on the FAQ before the rules' answers. */
+    faq: z
+      .array(z.object({ id: listIdSchema, on: z.boolean(), q: localizedTextSchema(200), a: localizedTextSchema(3000) }).strict())
+      .max(80)
+      .refine((l) => new Set(l.map((x) => x.id)).size === l.length, { message: 'every question once' }),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const shopMoreSettings = {
@@ -271,6 +337,38 @@ export const shopMoreSettings = {
     helpKey: 'wish.list.help',
     sortOrder: 180,
   }),
+  'pages.help': setting({
+    ...json,
+    group: 'pages',
+    schema: pagesHelpSchema,
+    default: {
+      pages: {
+        faq: { on: true, rules: [], details: 'none' },
+        delivery: { on: true, rules: ['delivery', 'cod', 'festive'], details: 'none' },
+        exchange: { on: true, rules: ['exchange', 'no-return', 'exchange-order'], details: 'none' },
+        privacy: { on: true, rules: [], details: 'contact' },
+        terms: { on: true, rules: [], details: 'legal' },
+        story: { on: true, rules: [], details: 'none' },
+        contact: { on: true, rules: [], details: 'none' },
+      },
+      desk: true,
+      topics: ['delivery', 'exchange', 'faq', 'contact'],
+      hand: true,
+    },
+    labelKey: 'pages.help.label',
+    helpKey: 'pages.help.help',
+    sortOrder: 190,
+  }),
+  'pages.text': setting({
+    ...json,
+    group: 'pages',
+    schema: pagesTextSchema.nullable(),
+    default: null,
+    isOwnerData: true,
+    labelKey: 'pages.text.label',
+    helpKey: 'pages.text.help',
+    sortOrder: 200,
+  }),
   'shell.menuSubs': setting({
     ...json,
     group: 'shell',
@@ -290,3 +388,5 @@ export type PdpShareSettings = z.output<typeof pdpShareSchema>;
 export type ShellFabSettings = z.output<typeof shellFabSchema>;
 export type WishListSettings = z.output<typeof wishListSchema>;
 export type ShellMenuSubsSettings = z.output<typeof shellMenuSubsSchema>;
+export type PagesHelpSettings = z.output<typeof pagesHelpSchema>;
+export type PagesTextSettings = z.output<typeof pagesTextSchema> | null;

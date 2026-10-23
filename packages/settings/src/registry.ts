@@ -1137,7 +1137,7 @@ export const registry = {
   ...checkoutSettings,
   // ---- PR 6 · the background worker: heartbeat, scheduler leader, retries (registry-jobs.ts, version 22). ----
   ...jobsSettings,
-  // ---- S02 · PR 53, 67–71, 74, 75 · first screen, rows, rail, share, WhatsApp button, wishlist, menu, content pages (registry-shop-more.ts, version 21). ----
+  // ---- S02 · PR 53, 67–71, 74, 75 · first screen, rows, rail, share, WhatsApp button, wishlist, menu, content pages (registry-shop-more.ts, version 23). ----
   ...shopMoreSettings,
 } satisfies RegistryShape;
 

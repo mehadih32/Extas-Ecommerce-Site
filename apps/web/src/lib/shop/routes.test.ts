@@ -5,8 +5,8 @@ import { comingSoon, ROUTES } from './routes';
 describe('coming-soon pages (CN-010)', () => {
   it('every page a later PR builds is coming, and every link the shell carries lands somewhere', () => {
     // ~~ROUTES.bag~~ PR 107 built the bag
-    // ~~ROUTES.wishlist~~ PR 71 built the wishlist
-    for (const p of [ROUTES.account, ROUTES.login, ROUTES.orders, ROUTES.search, ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('faq')])
+    // ~~ROUTES.wishlist~~ PR 71 built the wishlist; ~~ROUTES.help('faq')~~ PR 75 built the help pages (Ways to pay is still to come)
+    for (const p of [ROUTES.account, ROUTES.login, ROUTES.orders, ROUTES.search, ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
       expect(comingSoon(p, '/p'), p).not.toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();

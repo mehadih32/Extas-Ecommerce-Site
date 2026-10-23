@@ -27,6 +27,8 @@
         "http://127.0.0.1:3000/bag",
         "http://127.0.0.1:3000/bn/bag",
         "http://127.0.0.1:3000/account/wishlist",
+        "http://127.0.0.1:3000/help/faq",
+        "http://127.0.0.1:3000/bn/help/exchange",
         "http://127.0.0.1:3000/collections/new-in",
         "http://127.0.0.1:3000/bn/collections/new-in"
       ],
