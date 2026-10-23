@@ -4,12 +4,12 @@ Written by `deploy.yml` after every deploy (`infra/deploy/deploy-report.sh`). Hi
 
 | | |
 |---|---|
-| Commit | `6c8d06da2901` |
-| Time (Asia/Dhaka) | 2026-10-23 17:35 |
+| Commit | `143d67b0c545` |
+| Time (Asia/Dhaka) | 2026-10-23 20:27 |
 | Result | **OK** |
 | Database migration | ok |
-| Health check on new.extas.com.bd | OK — HTTP 200 from https://new.extas.com.bd/api/health, version 6c8d06da2901, colour blue |
+| Health check on new.extas.com.bd | OK — HTTP 200 from https://new.extas.com.bd/api/health, version 143d67b0c545, colour green |
 | Smoke test (every page) | OK — 62 page views, signed out and as the admin, phone and desktop (pictures: `docs/reports/smoke/latest/`) |
-| Docs on the server | `6c8d06da2901` — README.md + docs/ (1889 files) |
-| Live colour | blue |
-| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/39946489256 |
+| Docs on the server | `143d67b0c545` — README.md + docs/ (1896 files) |
+| Live colour | green |
+| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/39969125212 |
