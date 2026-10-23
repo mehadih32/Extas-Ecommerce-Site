@@ -1,0 +1,355 @@
+// PR 145 — the duplicate-order defence, four layers (Blueprint B1.12, F2 question 44; the demo's "Possible duplicate"):
+//
+//   1. the submit guard: one press = one order (the checkout's idempotency key and the bag turning CONVERTED, PR 125);
+//   2. the same-customer check the moment an order lands (`screenOrder`, called by the shop after placing): another open
+//      order of the same customer or phone in the last `lookbackDays` days, and how alike the lines are — the same SKU or
+//      the same product and colour is high, the same product in another colour medium, the same category low;
+//   3. the review queue: a match at or above `reviewFrom` waits as an open review (a FraudAlert of section "duplicate")
+//      and holds the confirm until a person decides; below it the order only shows a note on its timeline;
+//   4. the decision: not a duplicate (approve), cancel it as a duplicate, hold it, ask the customer (a call task), or
+//      put both orders in one parcel (merge).
+//
+// Nothing here blocks a customer or cancels an order by itself (CLAUDE.md rule 6); the optional auto-hold (off by
+// default) only parks a high match with the reason "possible duplicate" for a person. A merge never changes a price or a
+// charge: both orders keep their money; whether a second delivery charge is given back is the owner's call (BLOCKED.md).
+import { z } from 'zod';
+import type { Prisma } from '@extas/db/client';
+import { allow, nowOf, parse, setting, TX, type Db, type OrdersDeps, type Tx, type Who } from './context';
+import { OTHER_KEY, cancelWith, holdWith } from './commands';
+import { OrdersError } from './errors';
+import { OPEN_STATES, overlapOf, severityRank, type LineFacts, type OrderState, type Severity } from './pure';
+import { auditRow, eventRow, factsOf, lockOrder, staffBy, systemBy, type By, type CommandResult } from './service';
+
+/** The FraudAlert section of a duplicate review (the risk engine of S06 writes its own sections). */
+export const DUPLICATE_SECTION = 'duplicate';
+/** The hold reason key the auto-hold and the "hold" decision use when the owner's list has it. */
+export const DUPLICATE_HOLD_KEY = 'possible-duplicate';
+/** Why the team calls (CallTask.reason) when the decision is "ask the customer". */
+export const DUPLICATE_CALL_REASON = 'DUPLICATE_CHECK';
+
+export interface DuplicateMatch {
+  orderId: string;
+  number: string;
+  status: OrderState;
+  placedAt: Date;
+  severity: Severity;
+  productIds: string[];
+}
+
+export interface ScreenResult {
+  /** The strongest match, or null (no other open order of this customer is alike). */
+  severity: Severity | null;
+  matches: DuplicateMatch[];
+  /** The open review it waits in, when the match is at or above `reviewFrom`. */
+  alertId: string | null;
+  held: boolean;
+}
+
+/** The lines of some orders as the comparison needs them: the variant, the product, its colour and its category. */
+async function lineFacts(db: Db, storeId: number, orderIds: string[]): Promise<Map<string, LineFacts[]>> {
+  const items = await db.orderItem.findMany({ where: { storeId, orderId: { in: orderIds }, status: 'ACTIVE' }, select: { orderId: true, variantId: true, productId: true } });
+  const variantIds = [...new Set(items.map((i) => i.variantId).filter((x): x is string => !!x))];
+  const variants = new Map((await db.productVariant.findMany({ where: { storeId, id: { in: variantIds } }, select: { id: true, colourId: true, productId: true } })).map((v) => [v.id, v]));
+  const productIds = [...new Set(items.map((i) => i.productId ?? (i.variantId ? variants.get(i.variantId)?.productId : null)).filter((x): x is string => !!x))];
+  const categories = new Map((await db.product.findMany({ where: { storeId, id: { in: productIds } }, select: { id: true, categoryId: true } })).map((p) => [p.id, p.categoryId]));
+  const out = new Map<string, LineFacts[]>();
+  for (const i of items) {
+    const v = i.variantId ? variants.get(i.variantId) : undefined;
+    const productId = i.productId ?? v?.productId ?? null;
+    const category = productId ? categories.get(productId) : null;
+    const l: LineFacts = { variantId: i.variantId, productId, colourId: v?.colourId ?? null, categoryIds: category ? [category] : [] };
+    out.set(i.orderId, [...(out.get(i.orderId) ?? []), l]);
+  }
+  return out;
+}
+
+/** The other open orders of the same customer (or the same phone) in the look-back, and how alike each one is. */
+export async function duplicateMatches(deps: OrdersDeps, storeId: number, orderId: string): Promise<DuplicateMatch[]> {
+  const cfg = await setting(deps, storeId, 'orders.duplicates');
+  const o = await deps.db.order.findFirst({ where: { id: orderId, storeId }, select: { id: true, customerId: true, phone: true, placedAt: true } });
+  if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
+  const who: Prisma.OrderWhereInput[] = [];
+  if (o.customerId) who.push({ customerId: o.customerId });
+  if (o.phone) who.push({ phone: o.phone });
+  if (!who.length) return [];
+  const since = new Date(o.placedAt.getTime() - cfg.lookbackDays * 86_400_000);
+  const others = await deps.db.order.findMany({
+    where: { storeId, id: { not: o.id }, OR: who, placedAt: { gte: since }, status: { in: [...OPEN_STATES] } },
+    orderBy: { placedAt: 'desc' },
+    take: 20,
+    select: { id: true, number: true, status: true, placedAt: true },
+  });
+  if (!others.length) return [];
+  const facts = await lineFacts(deps.db, storeId, [o.id, ...others.map((x) => x.id)]);
+  const mine = facts.get(o.id) ?? [];
+  const out: DuplicateMatch[] = [];
+  for (const x of others) {
+    const m = overlapOf(mine, facts.get(x.id) ?? []);
+    if (m) out.push({ orderId: x.id, number: x.number, status: x.status as OrderState, placedAt: x.placedAt, severity: m.severity, productIds: m.productIds });
+  }
+  return out.sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+}
+
+/**
+ * Layer 2 — runs once when an order lands (the shop calls it after placing; a second call finds the first result and
+ * does nothing more). Never throws for the customer's sake: the caller logs a failure and the order stays placed.
+ */
+export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orderId: string }): Promise<ScreenResult> {
+  const cfg = await setting(deps, ref.storeId, 'orders.duplicates');
+  const none: ScreenResult = { severity: null, matches: [], alertId: null, held: false };
+  if (!cfg.enabled) return none;
+  const seen = await deps.db.orderEvent.findFirst({ where: { storeId: ref.storeId, orderId: ref.orderId, type: 'order.duplicateCheck' }, select: { id: true } });
+  if (seen) return none;
+  const matches = await duplicateMatches(deps, ref.storeId, ref.orderId);
+  const by = systemBy('duplicate-check');
+  const top = matches[0]?.severity ?? null;
+  const review = top !== null && severityRank(top) >= severityRank(cfg.reviewFrom);
+  const now = nowOf(deps);
+  const alertId = await deps.db.$transaction(async (tx) => {
+    const o = await lockOrder(tx, ref.storeId, ref.orderId);
+    // a second call at the same moment waited for the lock: the first one's result stands
+    if (await tx.orderEvent.count({ where: { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck' } })) return undefined;
+    const summary = { section: DUPLICATE_SECTION, matches: matches.map((m) => ({ orderId: m.orderId, number: m.number, severity: m.severity, productIds: m.productIds })) };
+    let id: string | null = null;
+    if (review) {
+      const a = await tx.fraudAlert.create({
+        data: { storeId: o.storeId, orderId: o.id, matchedOrderIds: matches.map((m) => m.orderId), severity: top, proposedAction: cfg.autoHold && top === 'high' ? 'HOLD' : 'WARN', summary, createdAt: now },
+        select: { id: true },
+      });
+      id = a.id;
+    }
+    await eventRow(tx, by, { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck', reasonCode: top, data: { ...summary, review, alertId: id } });
+    if (id) await auditRow(tx, by, { storeId: o.storeId, action: 'order.duplicate.review', entityType: 'FraudAlert', entityId: id, before: null, after: { orderId: o.id, severity: top } });
+    return id;
+  }, TX);
+  if (alertId === undefined) return none;
+  let held = false;
+  if (alertId && cfg.autoHold && top === 'high') {
+    const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
+    if (reasons.some((r) => r.key === DUPLICATE_HOLD_KEY)) {
+      try {
+        await holdWith(deps, ref, by, DUPLICATE_HOLD_KEY, undefined);
+        held = true;
+      } catch (e) {
+        // already moved on (a person was quicker): the open review still holds the confirm
+        if (!(e instanceof OrdersError)) throw e;
+      }
+    }
+  }
+  return { severity: top, matches, alertId, held };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Layer 3 — the review queue (admin API)
+// ---------------------------------------------------------------------------------------------------------------------
+
+export interface ReviewRow {
+  alertId: string;
+  status: string;
+  severity: string | null;
+  proposedAction: string;
+  createdAt: Date;
+  decidedAt: Date | null;
+  decisionReason: string | null;
+  order: { id: string; number: string; status: string; customerName: string | null; phone: string | null; totalMinor: number; placedAt: Date; version: number };
+  matches: { orderId: string; number: string; status: string; severity: string; placedAt: Date | null; totalMinor: number | null }[];
+}
+
+export const reviewQuery = z.object({ status: z.enum(['open', 'decided', 'all']).default('open'), cursor: z.uuid().optional(), limit: z.coerce.number().int().min(1).max(100).optional() }).strict();
+
+/** The duplicate reviews, oldest open first (so nobody waits longest). */
+export async function reviewQueue(deps: OrdersDeps, who: Who, query: unknown = {}): Promise<{ rows: ReviewRow[]; next: string | null }> {
+  await allow(deps, who, 'orders.risk.read');
+  const q = parse(reviewQuery, query, 'query');
+  const take = q.limit ?? (await setting(deps, who.storeId, 'orders.list.pageSize'));
+  const where: Prisma.FraudAlertWhereInput = {
+    storeId: who.storeId,
+    summary: { path: ['section'], equals: DUPLICATE_SECTION },
+    ...(q.status === 'open' ? { status: 'OPEN' } : q.status === 'decided' ? { status: { not: 'OPEN' } } : {}),
+  };
+  const alerts = await deps.db.fraudAlert.findMany({ where, orderBy: [{ createdAt: q.status === 'open' ? 'asc' : 'desc' }, { id: 'asc' }], take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}) });
+  const page = alerts.slice(0, take);
+  const ids = [...new Set(page.flatMap((a) => [a.orderId, ...a.matchedOrderIds]))];
+  const orders = new Map(
+    (await deps.db.order.findMany({ where: { storeId: who.storeId, id: { in: ids } }, select: { id: true, number: true, status: true, customerName: true, phone: true, totalMinor: true, placedAt: true, version: true } })).map((o) => [o.id, o]),
+  );
+  const rows: ReviewRow[] = page.map((a) => {
+    const o = orders.get(a.orderId)!;
+    const listed = ((a.summary as { matches?: { orderId: string; severity: string }[] } | null)?.matches ?? []).map((m) => [m.orderId, m.severity] as const);
+    const sev = new Map(listed);
+    return {
+      alertId: a.id,
+      status: a.status,
+      severity: a.severity,
+      proposedAction: a.proposedAction,
+      createdAt: a.createdAt,
+      decidedAt: a.decidedAt,
+      decisionReason: a.decisionReason,
+      order: o,
+      matches: a.matchedOrderIds.map((id) => {
+        const m = orders.get(id);
+        return { orderId: id, number: m?.number ?? '', status: m?.status ?? '', severity: sev.get(id) ?? '', placedAt: m?.placedAt ?? null, totalMinor: m?.totalMinor ?? null };
+      }),
+    };
+  });
+  return { rows, next: alerts.length > take ? page[page.length - 1]!.id : null };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Layer 4 — the decision
+// ---------------------------------------------------------------------------------------------------------------------
+
+export const DECISIONS = ['approve', 'decline', 'hold', 'ask', 'merge'] as const;
+export type Decision = (typeof DECISIONS)[number];
+
+export const decideInput = z
+  .object({
+    decision: z.enum(DECISIONS),
+    note: z.string().trim().max(2_000).optional(),
+    /** "hold": the hold reason (default "possible duplicate"); "other" needs the note. */
+    holdReasonKey: z.string().trim().min(1).max(60).optional(),
+    /** "merge": the matched order the new one joins in one parcel (default: the strongest match). */
+    mergeWith: z.uuid().optional(),
+  })
+  .strict();
+
+export interface DecideResult {
+  alertId: string;
+  decision: Decision;
+  alertStatus: string;
+  order: CommandResult | null;
+  callTaskId: string | null;
+  groupId: string | null;
+}
+
+/** The decision log row (FraudDecision is append-only, PR 543), the alert's answer and the order's timeline row. */
+async function decided(tx: Tx, by: By, a: { id: string; storeId: number; orderId: string }, decision: Decision, note: string | undefined, status: 'APPROVED' | 'DECLINED' | 'OPEN', now: Date): Promise<void> {
+  if (status !== 'OPEN') await tx.fraudAlert.update({ where: { id: a.id }, data: { status, decidedById: by.actorId, decisionReason: decision, decidedAt: now } });
+  await tx.fraudDecision.create({ data: { storeId: a.storeId, alertId: a.id, orderId: a.orderId, decision: `duplicate.${decision}`, reason: note ?? null, actorType: by.actorType, actorId: by.actorId } });
+  await auditRow(tx, by, { storeId: a.storeId, action: `order.duplicate.${decision}`, entityType: 'FraudAlert', entityId: a.id, before: { status: 'OPEN' }, after: { status, note: note ?? null } });
+}
+
+/** One review's decision. Every path writes the decision log, the audit row and the order's timeline row. */
+export async function decideReview(deps: OrdersDeps, who: Who, alertId: string, input: unknown): Promise<DecideResult> {
+  await allow(deps, who, 'orders.risk.decide');
+  const d = parse(decideInput, input, 'decision');
+  if (!z.uuid().safeParse(alertId).success) throw new OrdersError('NOT_FOUND', 'no such review', ['alertId']);
+  const a = await deps.db.fraudAlert.findFirst({ where: { id: alertId, storeId: who.storeId, summary: { path: ['section'], equals: DUPLICATE_SECTION } } });
+  if (!a) throw new OrdersError('NOT_FOUND', 'no such review', ['alertId']);
+  if (a.status !== 'OPEN') throw new OrdersError('ILLEGAL_TRANSITION', 'this review is already decided', ['alertId'], { status: a.status });
+  const by = staffBy(who.actor, who.ctx);
+  const now = nowOf(deps);
+  const ref = { storeId: who.storeId, orderId: a.orderId };
+  const result = (over: Partial<DecideResult>): DecideResult => ({ alertId: a.id, decision: d.decision, alertStatus: 'OPEN', order: null, callTaskId: null, groupId: null, ...over });
+  /** Takes the review under the order's lock, or refuses when someone decided it in between. */
+  const takeOpen = async (tx: Tx) => {
+    const n = await tx.fraudAlert.count({ where: { id: a.id, status: 'OPEN' } });
+    if (!n) throw new OrdersError('ILLEGAL_TRANSITION', 'this review is already decided', ['alertId']);
+  };
+
+  switch (d.decision) {
+    case 'approve': {
+      await deps.db.$transaction(async (tx) => {
+        await lockOrder(tx, ref.storeId, ref.orderId);
+        await takeOpen(tx);
+        await decided(tx, by, a, 'approve', d.note, 'APPROVED', now);
+        await eventRow(tx, by, { ...ref, type: 'order.duplicate.approved', message: d.note ?? null, data: { alertId: a.id } });
+      }, TX);
+      return result({ alertStatus: 'APPROVED' });
+    }
+    case 'decline': {
+      await allow(deps, who, 'orders.cancel');
+      const order = await cancelWith(deps, ref, by, 'DUPLICATE_ORDER', d.note, {
+        picked: false,
+        extra: { alertId: a.id },
+        also: async (tx, _o, at) => {
+          await takeOpen(tx);
+          await decided(tx, by, a, 'decline', d.note, 'DECLINED', at);
+        },
+      });
+      return result({ alertStatus: 'DECLINED', order });
+    }
+    case 'hold': {
+      await allow(deps, who, 'orders.hold');
+      const key = d.holdReasonKey ?? DUPLICATE_HOLD_KEY;
+      if (key === OTHER_KEY && !d.note) throw new OrdersError('REASON_REQUIRED', 'this reason needs a note', ['note']);
+      const order = await holdWith(deps, ref, by, key, d.note, {
+        also: async (tx, _o, at) => {
+          await takeOpen(tx);
+          await decided(tx, by, a, 'hold', d.note, 'OPEN', at);
+          return { alertId: a.id };
+        },
+      });
+      return result({ order });
+    }
+    case 'ask': {
+      const taskId = await deps.db.$transaction(async (tx) => {
+        const o = await lockOrder(tx, ref.storeId, ref.orderId);
+        await takeOpen(tx);
+        const open = await tx.callTask.findFirst({ where: { storeId: o.storeId, orderId: o.id, reason: DUPLICATE_CALL_REASON, status: { in: ['OPEN', 'IN_PROGRESS'] } }, select: { id: true } });
+        const t = open ?? (await tx.callTask.create({ data: { storeId: o.storeId, orderId: o.id, customerId: o.customerId, reason: DUPLICATE_CALL_REASON, notes: d.note ?? null }, select: { id: true } }));
+        await decided(tx, by, a, 'ask', d.note, 'OPEN', now);
+        await eventRow(tx, by, { ...ref, type: 'order.duplicate.ask', message: d.note ?? null, data: { alertId: a.id, callTaskId: t.id } });
+        return t.id;
+      }, TX);
+      return result({ callTaskId: taskId });
+    }
+    case 'merge': {
+      const other = d.mergeWith ?? a.matchedOrderIds[0];
+      if (!other || !a.matchedOrderIds.includes(other)) throw new OrdersError('NOT_MERGEABLE', 'merge with one of the matched orders', ['mergeWith']);
+      const m = await mergeOrders(deps, who, { orderIds: [a.orderId, other], note: d.note }, { alertId: a.id, by, now });
+      return result({ alertStatus: 'APPROVED', groupId: m.groupId });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// One parcel for two orders of one customer (merge). Prices, charges and payments stay as they are.
+// ---------------------------------------------------------------------------------------------------------------------
+
+export const mergeInput = z.object({ orderIds: z.array(z.uuid()).length(2), note: z.string().trim().max(2_000).optional() }).strict();
+
+/** Where an order may still join a parcel: open, not handed to a courier. */
+const MERGEABLE: readonly OrderState[] = ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'];
+
+export interface MergeResult {
+  groupId: string;
+  orders: { orderId: string; number: string; version: number }[];
+}
+
+/** Puts two open orders of one customer in one parcel (OrderGroup). Each order keeps its lines, prices and charges. */
+export async function mergeOrders(deps: OrdersDeps, who: Who, input: unknown, review?: { alertId: string; by: By; now: Date }): Promise<MergeResult> {
+  await allow(deps, who, 'orders.merge');
+  const d = parse(mergeInput, input, 'merge');
+  const ids = [...new Set(d.orderIds)].sort();
+  if (ids.length !== 2) throw new OrdersError('NOT_MERGEABLE', 'two different orders', ['orderIds']);
+  const by = review?.by ?? staffBy(who.actor, who.ctx);
+  return deps.db.$transaction(async (tx) => {
+    // both rows locked in one fixed order, so two merges never wait on each other
+    const [a, b] = [await lockOrder(tx, who.storeId, ids[0]!), await lockOrder(tx, who.storeId, ids[1]!)];
+    const same = (a.customerId && a.customerId === b.customerId) || (a.phone && a.phone === b.phone);
+    if (!same) throw new OrdersError('NOT_MERGEABLE', 'the orders are of different customers', ['orderIds']);
+    for (const o of [a, b]) {
+      const f = await factsOf(tx, o);
+      if (!MERGEABLE.includes(o.status as OrderState) || f.shipment || o.cancelPending) throw new OrdersError('NOT_MERGEABLE', `order ${o.number} is booked or finished`, ['orderIds'], { orderId: o.id, status: o.status });
+    }
+    if (review) {
+      const n = await tx.fraudAlert.count({ where: { id: review.alertId, status: 'OPEN' } });
+      if (!n) throw new OrdersError('ILLEGAL_TRANSITION', 'this review is already decided', ['alertId']);
+    }
+    const groupId = a.orderGroupId ?? b.orderGroupId ?? (await tx.orderGroup.create({ data: { storeId: who.storeId, reason: 'MERGE', note: d.note ?? null, createdById: who.actor.staffUserId }, select: { id: true } })).id;
+    const out: MergeResult['orders'] = [];
+    for (const o of [a, b]) {
+      const after = await tx.order.update({ where: { id: o.id }, data: { orderGroupId: groupId, version: { increment: 1 } }, select: { version: true } });
+      const partner = o.id === a.id ? b : a;
+      await eventRow(tx, by, { storeId: o.storeId, orderId: o.id, type: 'order.merged', message: d.note ?? null, data: { groupId, with: { orderId: partner.id, number: partner.number }, alertId: review?.alertId ?? null } });
+      await auditRow(tx, by, { storeId: o.storeId, action: 'order.merge', entityType: 'Order', entityId: o.id, before: { orderGroupId: o.orderGroupId, version: o.version }, after: { orderGroupId: groupId, version: after.version } });
+      out.push({ orderId: o.id, number: o.number, version: after.version });
+    }
+    if (review) {
+      const alert = await tx.fraudAlert.findUniqueOrThrow({ where: { id: review.alertId }, select: { id: true, storeId: true, orderId: true } });
+      await decided(tx, by, alert, 'merge', d.note, 'APPROVED', review.now);
+    }
+    return { groupId, orders: out };
+  }, TX);
+}
