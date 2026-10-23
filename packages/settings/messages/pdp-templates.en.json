@@ -1,0 +1,8 @@
+{
+  "pdp": {
+    "templates": {
+      "label": "Product page template",
+      "help": "Which layout a product page uses. T1 Classic: photos with thumbnails beside the buy column. A product's own template (chosen when it is uploaded) wins, then its category's (the nearest one up the tree), then the shop's default. With the preview on, an address ending in ?template=T2 shows that template, for checking before you switch; search engines are sent to the plain address."
+    }
+  }
+}

@@ -16,6 +16,7 @@ import { chartTable, pickChart, type FieldMeta } from './pdp-chart';
 import { pageFacts } from './pdp-details';
 import type { MediaRow } from './pdp-gallery';
 import type { PdpChart } from './product-model';
+import type { TemplateCategory } from './pdp-template';
 import type { ShopLang } from './lang';
 
 export interface ProductColourData {
@@ -69,6 +70,9 @@ export interface ProductData {
   chart: Record<ShopLang, PdpChart | null>;
   /** The live rule texts of the product page, per language (read when the page asks). */
   ruleTexts: (lang: ShopLang) => Promise<Awaited<ReturnType<typeof placeTexts>>>;
+  /** PR 52: the template chosen for this product at upload, and its categories nearest first (for theirs). */
+  templateKey: string | null;
+  categoryChain: TemplateCategory[];
 }
 
 const productSelect = {
@@ -84,6 +88,7 @@ const productSelect = {
   wasPriceSource: true,
   freeDelivery: true,
   pdpBlocks: true,
+  templateKey: true,
   careEn: true,
   careBn: true,
   descriptionEn: true,
@@ -233,6 +238,14 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
     id = rules.cats.get(id)?.parentId ?? null;
   }
   const garmentType = p.category?.garmentType ?? null;
+  // PR 52: each category of the chain with the template stored on it, nearest first
+  const chainRows = chain.length
+    ? await prisma.category.findMany({ where: { storeId, id: { in: chain }, archivedAt: null }, select: { id: true, slug: true, templateKey: true } })
+    : [];
+  const categoryChain: TemplateCategory[] = chain.flatMap((id) => {
+    const c = chainRows.find((x) => x.id === id);
+    return c ? [{ slug: c.slug, templateKey: c.templateKey }] : [];
+  });
   let chart: Record<ShopLang, PdpChart | null> = { en: null, bn: null };
   if (sizes.length > 1) {
     const assigned = await prisma.sizeChartAssignment.findMany({
@@ -290,5 +303,7 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
     media,
     chart,
     ruleTexts: (lang) => placeTexts({ storeId, placement: 'product', locale: lang, productId: p.id }),
+    templateKey: p.templateKey,
+    categoryChain,
   };
 }
