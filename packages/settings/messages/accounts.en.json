@@ -28,6 +28,20 @@
     "login": {
       "label": "Sign-in with a password",
       "help": "Password: a customer who has set his own password in My account may sign in with it (accounts made with an order have none; they sign in by SMS code). New-device code: a password sign-in on a phone or computer not seen before also asks for the SMS code. Device days: how long a device stays known after a code sign-in."
+    },
+    "tabs": {
+      "label": "My account sections",
+      "help": "Which sections My account shows, in this order: orders, for you (offers), rewards, wallet, wishlist, profile. My orders always shows. On a phone they are the row of chips, on a computer the side menu."
+    },
+    "addresses": {
+      "max": {
+        "label": "Saved delivery addresses",
+        "help": "How many delivery addresses a customer may keep in his profile (home, office …). The first is the default."
+      }
+    },
+    "lists": {
+      "label": "Lists in My account",
+      "help": "How many orders My orders lists, how many wallet entries the wallet shows, and how many new products the \"New in\" row on For you shows (0 hides the row)."
     }
   }
 }

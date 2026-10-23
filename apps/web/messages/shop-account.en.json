@@ -68,7 +68,145 @@
       "wait": "Too many tries. Please try again in {minutes} min.",
       "waitSeconds": "Please wait {seconds}s before asking again.",
       "sms": "We couldn't send the SMS just now. Please try again in a minute.",
-      "offline": "Something went wrong. Check your connection and try again."
+      "offline": "Something went wrong. Check your connection and try again.",
+      "nameShort": "Please write your name.",
+      "addressShort": "Please write each address in full: house, road and area.",
+      "full": "You can keep up to {max} addresses.",
+      "pwCurrent": "Please type your current password.",
+      "pwWrongCurrent": "Your current password isn't right.",
+      "pwRules": "The new password needs at least {min} characters.",
+      "pwPhone": "Please don't use your mobile number as the password.",
+      "signedOut": "You have been logged out. Please log in again."
+    },
+    "title": "My account",
+    "tabs": {
+      "orders": "My orders",
+      "foryou": "For you",
+      "rewards": "Rewards",
+      "wallet": "Wallet",
+      "wishlist": "Wishlist",
+      "profile": "Profile"
+    },
+    "menu": "Account menu",
+    "sections": "Account sections",
+    "summary": "Account summary",
+    "hi": "Hi, {name}",
+    "hiNoName": "Hi there",
+    "stat": {
+      "orders": "Orders",
+      "wallet": "Wallet",
+      "saved": "Saved"
+    },
+    "help": "Need help? WhatsApp us",
+    "helpMsg": "Hi {store}, I need help with my account.",
+    "backHome": "Back to home",
+    "keepShopping": "Keep shopping",
+    "logout": "Log out",
+    "prompt": {
+      "title": "Log in to your account",
+      "text": "See your orders, where each one is now, and your wallet.",
+      "button": "Log in"
+    },
+    "orders": {
+      "title": "My orders",
+      "count": {
+        "one": "{n} order",
+        "other": "{n} orders"
+      },
+      "emptyTitle": "No orders yet",
+      "emptyText": "Your orders will show up here.",
+      "start": "Start shopping",
+      "placed": "Placed {date}",
+      "items": {
+        "one": "{n} item",
+        "other": "{n} items"
+      },
+      "total": "Total",
+      "track": "Track",
+      "open": "Open order {number}",
+      "trackName": "Track order {number}",
+      "more": "+{n}"
+    },
+    "status": {
+      "DRAFT": "Not placed",
+      "PLACED": "Placed",
+      "CONFIRMED": "Confirmed",
+      "ON_HOLD": "On hold",
+      "PROCESSING": "Being prepared",
+      "PACKED": "Packed",
+      "HANDED_OVER": "With the courier",
+      "IN_TRANSIT": "On the way",
+      "DELIVERED": "Delivered",
+      "PARTIALLY_DELIVERED": "Partly delivered",
+      "RETURNED": "Returned",
+      "CANCELLED": "Cancelled"
+    },
+    "step": {
+      "placed": "Placed",
+      "confirmed": "Confirmed",
+      "packed": "Packed",
+      "courier": "Courier",
+      "delivered": "Delivered"
+    },
+    "foryou": {
+      "offersTitle": "Offers for you",
+      "none": "No personal offers right now.",
+      "newIn": "New in",
+      "seeAll": "See all"
+    },
+    "rewards": {
+      "title": "Rewards",
+      "none": "No rewards are running right now.",
+      "noneNote": "Your orders, wallet and wishlist are all here in My account."
+    },
+    "wallet": {
+      "balance": "Wallet balance",
+      "ready": "Ready to use at checkout",
+      "none": "No credit in your wallet yet.",
+      "tx": "Transactions",
+      "entries": {
+        "one": "{n} entry",
+        "other": "{n} entries"
+      },
+      "noTx": "No wallet activity yet.",
+      "credit": "Credit added",
+      "debit": "Used",
+      "order": "Used on order {number}",
+      "orderCredit": "Credit from order {number}"
+    },
+    "wish": {
+      "note": "Saved to your account, on every device."
+    },
+    "profile": {
+      "details": "Your details",
+      "name": "Name",
+      "phone": "Mobile number",
+      "phoneNote": "Your number is your login. To change it, contact us.",
+      "address": "Delivery address",
+      "addressN": "Delivery address {n}",
+      "addressDefault": "Delivery address {n} · default",
+      "addressPh": "House, road, area, district",
+      "addAddress": "Add another address",
+      "remove": "Remove",
+      "save": "Save details",
+      "saved": "Details saved",
+      "setTitle": "Set a password",
+      "setNote": "Optional. You can always log in with an SMS code instead.",
+      "changeTitle": "Change password",
+      "current": "Current password",
+      "new": "New password",
+      "pwSave": "Save password",
+      "pwSaved": "Password saved",
+      "prefs": "Preferences",
+      "language": "Language",
+      "languageNote": "Menus and buttons switch to Bangla.",
+      "sms": "Offers by SMS",
+      "smsNote": "New styles and offers. Stop anytime.",
+      "wa": "Offers on WhatsApp",
+      "waNote": "Only if you turn it on. Stop anytime.",
+      "on": "On",
+      "off": "Off",
+      "consentSaved": "Saved"
     }
   }
 }

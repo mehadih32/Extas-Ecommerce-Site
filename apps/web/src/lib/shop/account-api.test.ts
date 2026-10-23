@@ -30,6 +30,15 @@ describe('PR 130 · the account API door', () => {
     expect(r.status).toBe(404);
   });
 
+  it('PR 131: Profile, the consent and the password answer only a signed-in customer', async () => {
+    const deps = { accounts: {} as never, storeId: 1, storeName: async () => '' };
+    for (const action of ['profile', 'consent', 'password']) {
+      const r = await accountHandler(req({ body: JSON.stringify({ name: 'Rahim', addresses: [], sms: true }) }), deps, action);
+      expect(r.status, action).toBe(401);
+      expect(((await r.json()) as { error: string }).error).toBe('SIGNED_OUT');
+    }
+  });
+
   it('after signing in he goes back to a page of this shop, never elsewhere or to the login page', () => {
     expect(safeNext('/checkout', 'en')).toBe('/checkout');
     expect(safeNext('/bn/account/orders', 'bn')).toBe('/bn/account/orders');

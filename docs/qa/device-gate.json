@@ -34,6 +34,18 @@
       "expect": ["[data-testid=\"wish-item\"]", "[data-testid=\"wl-add\"]", "[data-testid=\"wl-remove\"]"]
     },
     {
+      "$comment": "PR 131 — My account signed in as the sample customer (POST /api/account/try: test servers with the mock SMS sender only; the unallocated +88010 number and one sample order of the sample catalogue, never the owner's data): the header with its figures, the order card with the parcel's journey, the way home.",
+      "paths": ["/account", "/bn/account"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-ocard\"]", "[data-testid=\"acc-flow\"]", "[data-testid=\"acc-home\"]"]
+    },
+    {
+      "$comment": "PR 131 — the other sections of My account, signed in the same way: For you, Rewards, Wallet, Profile (its forms) and the Wishlist inside the frame.",
+      "paths": ["/account/foryou", "/account/rewards", "/account/wallet", "/bn/account/wallet", "/account/profile", "/bn/account/profile", "/account/wishlist"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-home\"]"]
+    },
+    {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",
       "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",

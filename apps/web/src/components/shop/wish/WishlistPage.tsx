@@ -5,6 +5,7 @@
 // when that is switched on (`pdp.size.notifyBack`). An empty list says how to fill it; on a computer it also shows the
 // newest products to start from (`wish.list.emptyPicks`; the demo's "best sellers" wait for the sales numbers — a
 // title that says "best" must be true, CN-017). Server-drawn; WishActions does the clicks.
+// PR 131: signed in, the list is drawn inside My account's frame, saved to the account on every device (follow-up 71).
 import './wish.css';
 import type { NotifyWords } from '../NotifyForm';
 import { NotifyForm } from '../NotifyForm';
@@ -27,34 +28,45 @@ export function WishlistPage({
   details,
   picks,
   notifyBack,
+  inAccount = false,
 }: {
   c: ShopContext;
   cards: ShopCard[];
   details: Map<string, WishDetail>;
   picks: ShopCard[];
   notifyBack: boolean;
+  /** PR 131: drawn inside My account's frame (signed in): no crumbs of its own, the account's note. */
+  inAccount?: boolean;
 }) {
   const t = c.t;
   const words: WishWords = { toBag: t('wish.toBag'), removed: t('wish.removed'), error: t('wish.error'), stock: t('wish.stock') };
   const notifyWords = Object.fromEntries(NOTIFY_KEYS.map((k) => [k, t(`pdp.notify.${k}`)])) as NotifyWords;
   const prefix = c.s['naming.productPathPrefix'];
   return (
-    <div className="container wl-page" data-wish-root="" data-testid="wish-page">
-      <nav className="crumbs wl-crumbs" aria-label={t('wish.crumbs')}>
-        <a href={hrefIn(c.lang, ROUTES.home)}>{t('wish.home')}</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{t('wish.title')}</span>
-      </nav>
+    <div className={inAccount ? 'wl-page wl-in' : 'container wl-page'} data-wish-root="" data-testid="wish-page">
+      {inAccount ? null : (
+        <nav className="crumbs wl-crumbs" aria-label={t('wish.crumbs')}>
+          <a href={hrefIn(c.lang, ROUTES.home)}>{t('wish.home')}</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{t('wish.title')}</span>
+        </nav>
+      )}
       <div className="row between wrap wl-head">
-        <h1 className="h1">{t('wish.title')}</h1>
+        {inAccount ? <h2 className="h2">{t('wish.title')}</h2> : <h1 className="h1">{t('wish.title')}</h1>}
         <span className="small muted" data-testid="wish-count">
           {plural(t, 'wish.count', cards.length, c.num)}
         </span>
       </div>
       <div className="wl-note small">
         <Icon name="heart" size={18} />
-        <span className="hide-d">{t('wish.notePhone')}</span>
-        <span className="hide-m">{t('wish.noteDesk')}</span>
+        {inAccount ? (
+          <span>{t('account.wish.note')}</span>
+        ) : (
+          <>
+            <span className="hide-d">{t('wish.notePhone')}</span>
+            <span className="hide-m">{t('wish.noteDesk')}</span>
+          </>
+        )}
       </div>
       {cards.length ? (
         <div className="grid g4 wl-grid">

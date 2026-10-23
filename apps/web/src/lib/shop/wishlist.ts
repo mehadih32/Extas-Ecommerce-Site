@@ -68,6 +68,12 @@ export async function wishRows(d: Pick<WishDeps, 'db' | 'storeId'>, visitorId: s
  * Puts products on the list: published ones only, each once (a product already there takes the colour and size it is
  * given now), never past `wish.list.max` — what does not fit is refused (`full`), nothing is dropped.
  */
+/** PR 131 — how many products the list holds (My account's side menu and header). */
+export async function wishCount(d: Pick<WishDeps, 'db' | 'storeId'>, visitorId: string, customerId: string | null = null): Promise<number> {
+  const rows = await d.db.wishlistItem.findMany({ where: listOf(d, visitorId, customerId), select: { productId: true }, distinct: ['productId'] });
+  return rows.length;
+}
+
 export async function addWishes(d: WishDeps, visitorId: string, items: WishInput[], customerId: string | null = null): Promise<{ added: string[]; full: boolean }> {
   if (!items.length) return { added: [], full: false };
   const { max } = await d.settings.value('wish.list', { storeId: d.storeId });

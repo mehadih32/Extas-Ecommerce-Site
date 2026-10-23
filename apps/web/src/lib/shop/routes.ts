@@ -17,6 +17,8 @@ export const ROUTES = {
   login: '/account/login',
   wishlist: '/account/wishlist',
   orders: '/account/orders',
+  /** PR 134: one order's own page in My account. */
+  order: (number: string) => `/account/orders/${encodeURIComponent(number)}`,
   search: '/search',
   newIn: '/collections/new-in',
   combos: '/combos',
@@ -37,7 +39,8 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
   // ~~{ key: 'collections', path: '/collections', deep: true }, // category pages, PR 45~~ built: app/(shop)/(store)/collections/[slug]
   // ~~{ key: 'search', path: '/search', deep: false },~~ — built: PR 72 / 73 (the search window and the results page)
   // ~~{ key: 'bag', path: '/bag', deep: false }~~ — built: PR 107 (the bag page)
-  { key: 'account', path: '/account', deep: true },
+  // ~~{ key: 'account', path: '/account', deep: true },~~ — built: PR 131 (My account and its sections)
+  { key: 'account', path: '/account/orders', deep: true }, // one order's own page, PR 134
   { key: 'combos', path: '/combos', deep: true },
   { key: 'journal', path: '/journal', deep: true },
   { key: 'help', path: '/help', deep: true },
@@ -45,8 +48,9 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
 
 /** Pages already built inside an address that is still coming (they have their own route). */
 export const BUILT_INSIDE: readonly string[] = [
-  ROUTES.wishlist, // PR 71 — the rest of /account waits for the customer accounts
+  ROUTES.wishlist, // PR 71 — ~~the rest of /account waits for the customer accounts~~ (PR 131 built them)
   ROUTES.login, // PR 130 — the login page (app/(shop)/(store)/account/login)
+  ROUTES.orders, // PR 131 — My orders (app/(shop)/(store)/account/orders); each order's page comes with PR 134
   // PR 75 — the help pages (app/(shop)/(store)/help/[slug]); "Ways to pay", "Careers" and the size guide are still to come.
   // A built help page with nothing true to say yet still says "Coming soon" itself.
   ...['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'].map(ROUTES.help),

@@ -21,7 +21,10 @@
         "http://127.0.0.1:3000/search?q=polo",
         "http://127.0.0.1:3000/bn/search?q=polo",
         "http://127.0.0.1:3000/account/login",
-        "http://127.0.0.1:3000/bn/account/login"
+        "http://127.0.0.1:3000/bn/account/login",
+        "http://127.0.0.1:3000/account",
+        "http://127.0.0.1:3000/bn/account",
+        "http://127.0.0.1:3000/account/profile"
       ],
       "numberOfRuns": 3,
       "settings": {

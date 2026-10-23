@@ -33,7 +33,8 @@
         "http://127.0.0.1:3000/bn/collections/new-in",
         "http://127.0.0.1:3000/search?q=polo",
         "http://127.0.0.1:3000/bn/search",
-        "http://127.0.0.1:3000/account/login"
+        "http://127.0.0.1:3000/account/login",
+        "http://127.0.0.1:3000/account"
       ],
       "numberOfRuns": 3,
       "settings": {

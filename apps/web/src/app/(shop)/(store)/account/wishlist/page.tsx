@@ -1,9 +1,13 @@
 // PR 71 — the wishlist, at /account/wishlist and /bn/account/wishlist (the store shell around it; noindex: a list is
-// nobody's search result). The rest of /account stays "coming soon" until the customer accounts are built.
+// nobody's search result). ~~The rest of /account stays "coming soon" until the customer accounts are built.~~
+// PR 131: signed in, the list sits inside My account's frame (its Wishlist section); signed out it stays the page of
+// this browser's hearts, no login wall (demo R16).
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import { AccountShell } from '@/components/shop/account/AccountShell';
 import { WishlistPage } from '@/components/shop/wish/WishlistPage';
 import { signedIn } from '@/lib/shop/account';
+import { accountPage } from '@/lib/shop/account-view';
 import { cartDeps } from '@/lib/shop/bag';
 import { BAG_COOKIE } from '@/lib/shop/bag-model';
 import { liveCardsByIds, newestCards } from '@/lib/shop/catalogue';
@@ -22,7 +26,8 @@ export default async function Wishlist() {
   const c = await shopContext();
   const s = await readPageSettings(['wish.list', 'pdp.size'] as const, c.storeId);
   const visitor = visitorOf((await cookies()).get(BAG_COOKIE)?.value);
-  const me = await signedIn();
+  const page = await accountPage(c);
+  const me = page?.me ?? (await signedIn());
   const deps = cartDeps();
   let rows: Awaited<ReturnType<typeof wishRows>> = [];
   let details = new Map<string, WishDetail>();
@@ -42,5 +47,11 @@ export default async function Wishlist() {
     rows.map((r) => r.productId),
   );
   const picks = !cards.length && s['wish.list'].emptyPicks > 0 ? await newestCards(c.storeId, s['wish.list'].emptyPicks, 'newest') : [];
+  if (page && page.tabs.includes('wishlist'))
+    return (
+      <AccountShell c={c} page={page} tab="wishlist">
+        <WishlistPage c={c} cards={cards} details={details} picks={picks} notifyBack={s['pdp.size'].notifyBack} inAccount />
+      </AccountShell>
+    );
   return <WishlistPage c={c} cards={cards} details={details} picks={picks} notifyBack={s['pdp.size'].notifyBack} />;
 }
