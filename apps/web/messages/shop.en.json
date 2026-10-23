@@ -281,7 +281,29 @@
       "wa": "Also send me offers on WhatsApp."
     },
     "exch": "Items can be exchanged for size",
-    "terms": "Terms"
+    "terms": "Terms",
+    "askBn": {
+      "name": "এখানে আপনার নামটি লিখে অর্ডারটি নিশ্চিত করুন",
+      "phone": "এখানে আপনার মোবাইল নম্বরটি লিখে অর্ডারটি নিশ্চিত করুন",
+      "phoneBad": "এখানে 11 সংখ্যার সঠিক মোবাইল নম্বর লিখুন, যেমন 01XXXXXXXXX",
+      "address": "এখানে আপনার ঠিকানাটি লিখে অর্ডারটি নিশ্চিত করুন"
+    },
+    "ask": {
+      "name": "Write your name here to confirm the order",
+      "phone": "Write your mobile number here to confirm the order",
+      "phoneBad": "Enter an 11-digit mobile number, like 01XXXXXXXXX",
+      "address": "Write your address here to confirm the order"
+    },
+    "need": {
+      "add": "Add {what} above",
+      "then": "then this button confirms your order",
+      "pay": "Choose how you pay to confirm the order"
+    },
+    "what": {
+      "name": "your name",
+      "phone": "your mobile number",
+      "address": "your full address"
+    }
   },
   "notFound": {
     "title": "Page not found",

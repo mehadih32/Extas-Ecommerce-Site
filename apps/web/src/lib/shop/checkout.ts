@@ -40,6 +40,7 @@ const KEYS = [
   'checkout.consent.enabled',
   'checkout.consent.sms.default',
   'checkout.consent.whatsapp.default',
+  'checkout.confirm.style',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

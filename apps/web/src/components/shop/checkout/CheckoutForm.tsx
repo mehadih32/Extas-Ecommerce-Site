@@ -8,12 +8,14 @@
 // charge in the summary and the total — the server's figure, or "free", or "+ delivery" while it is not known.
 // PR 120: the payment step; the choice is kept in the tab's draft and priced by the server (the prepaid reward).
 // PR 122: "Your offers" with the wallet; the total and Confirm show what is left to pay. PR 123: the marketing ticks.
+// PR 124: Confirm's states — it asks inside the unfinished field (or waits switched off, the owner's other style).
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
-import { confirmedOf, payChoiceOf, payOpens } from '@/lib/shop/checkout-model';
+import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
+import { showToast } from '../toast';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
 import { ConsentCard } from './ConsentCard';
@@ -48,9 +50,13 @@ export interface CheckoutFormProps {
   consent: ConsentInput | null;
   /** The exchange policy and the terms. */
   links: { exchange: string; terms: string };
+  /** PR 124: an unfinished form — 'ask' (the button asks inside the field) or 'disable' (`checkout.confirm.style`). */
+  confirmStyle: 'ask' | 'disable';
+  /** PR 125: places the order once everything is in. */
+  onPlace?: () => void;
 }
 
-export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links }: CheckoutFormProps) {
+export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links, confirmStyle, onPlace }: CheckoutFormProps) {
   const stored = useDraft();
   const [view, setView] = useState<CheckoutView>(first);
   const [reading, setReading] = useState(false);
@@ -142,6 +148,59 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const m = (minor: number) => formatMoney(minor, money.currency, money.lang, money.bnDigits);
   const n = (x: number) => formatNumber(x, money.lang, money.bnDigits);
   const [sumOpen, setSumOpen] = useState(false);
+  // PR 124 (demo #42): a refused Confirm points at the first unfinished field — lit up, scrolled to, focused, and a
+  // Bengali line inside its own box says what to write; the marks go as each field is fixed.
+  const [tried, setTried] = useState(false);
+  const [ask, setAsk] = useState<Field | null>(null);
+  const asking = stillAsked(ask, check);
+  const invalid: Partial<Record<Field, string>> = tried && !check.ok ? Object.fromEntries(Object.keys(check.all).map((f) => [f, '1'])) : {};
+  const askLine = (f: Field) => {
+    const k = askKey(f, check);
+    return (
+      <div className="co-askmsg" role="alert" id={`co-err-${f}`} data-testid={`co-ask-co-${f}`}>
+        <Icon name="info" size={15} />
+        <span>
+          <b lang="bn">{w(`askBn.${k}`)}</b>
+          {money.lang === 'bn' ? null : <span>{w(`ask.${k}`)}</span>}
+        </span>
+      </div>
+    );
+  };
+  const wrapField = (f: Field, inner: ReactNode) => (
+    <div className={`co-f${asking === f ? ' ask' : ''}`} data-field={`co-${f}`}>
+      {inner}
+      {asking === f ? (
+        askLine(f)
+      ) : invalid[f] ? (
+        <span className="sr" id={`co-err-${f}`}>
+          {w(`ask.${askKey(f, check)}`)}
+        </span>
+      ) : null}
+    </div>
+  );
+  const covered = view.totals.known && view.totals.walletMinor > 0 && view.totals.dueMinor === 0;
+  const submit = (ev: React.FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    const by = (ev.nativeEvent as SubmitEvent).submitter;
+    if (by && !by.classList.contains('co-confirm')) return;
+    const formEl = ev.currentTarget;
+    if (!check.ok) {
+      setTried(true);
+      setPhoneChecked(true);
+      setAsk(check.field);
+      const box = formEl.querySelector(`[data-field="co-${check.field}"]`);
+      box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = document.getElementById(`co-${check.field}`);
+      setTimeout(() => input?.focus({ preventScroll: true }), 240); // hardcode-ok: the demo's wait for the scroll to start before focus
+      showToast(formEl, w(`askBn.${askKey(check.field, check)}`));
+      return;
+    }
+    if (!view.pay.chosen && !covered) {
+      showToast(formEl, w('need.pay'));
+      return;
+    }
+    onPlace?.();
+  };
   const t = view.totals;
   const saved = t.youSaveMinor;
   const amount = m(t.dueMinor) + (t.known ? '' : ` ${w('sum.plusDelivery')}`);
@@ -209,16 +268,29 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     </>
   );
 
+  // 'disable' (demo 42(a)): the button waits switched off and says what is missing; 'ask' never switches it off.
+  const off = confirmStyle === 'disable' && !check.ok;
   const confirm = (
-    <button type="submit" className="btn btn-primary btn-block co-confirm" data-testid="co-confirm">
-      <Icon name="lock" size={18} />
-      {w('confirm')}
-      <span className="co-amt">· {amount}</span>
+    <button type="submit" className={`btn btn-primary btn-block co-confirm${off ? ' co-need-on' : ''}`} disabled={off} data-testid="co-confirm">
+      {off && !check.ok ? (
+        <span className="co-need">
+          <b>{w('need.add', { what: w(`what.${check.field}`) })}</b>
+          <span>
+            <Icon name="lock" size={13} /> {w('need.then')} · {amount}
+          </span>
+        </span>
+      ) : (
+        <>
+          <Icon name="lock" size={18} />
+          {w('confirm')}
+          <span className="co-amt">· {amount}</span>
+        </>
+      )}
     </button>
   );
 
   return (
-    <form id="co-form" noValidate data-testid="co-form" onSubmit={(e) => e.preventDefault()} onKeyDown={nextOnEnter} data-ready={check.ok ? '1' : '0'}>
+    <form id="co-form" noValidate data-testid="co-form" onSubmit={submit} onKeyDown={nextOnEnter} data-ready={check.ok ? '1' : '0'}>
       {wa ? (
         <div className="co-help">
           <div className="container row between" style={{ gap: 12 }}>
@@ -287,6 +359,8 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                   addressMax={addressMax}
                   w={w}
                   n={n}
+                  wrap={wrapField}
+                  invalid={invalid}
                 />
               </div>
             </section>
@@ -310,7 +384,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                 onChange={changeBand}
               />
             </section>
-            <PaymentStep pay={view.pay} due={amount} open={payOpens(form.address)} covered={t.known && t.walletMinor > 0 && t.dueMinor === 0} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
+            <PaymentStep pay={view.pay} due={amount} open={payOpens(form.address)} covered={covered} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
             <OffersCard
               wallet={view.wallet}
               w={w}

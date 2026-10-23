@@ -25,6 +25,8 @@ const NOT_A_CLAIM: Record<string, string> = {
   'checkout.form.phoneCount': 'the mobile number format (11 digits)',
   'checkout.form.phonePrefix': 'the mobile number format (013 to 019)',
   'checkout.form.phoneLength': 'the mobile number format (11 digits, 01XXXXXXXXX)',
+  'checkout.ask.phoneBad': 'the mobile number format (11 digits, 01XXXXXXXXX)',
+  'checkout.askBn.phoneBad': 'the mobile number format (11 digits, 01XXXXXXXXX)',
   'bag.ups.origTitle': "the same standing promise on the bag's why-card (PR 114); off by default, switch bag.upsell.originalLine",
   'pdp.trust.original': 'the same standing promise in the product page promise row (PR 62); off by default, pdp.trust items (CN-009)',
   'pdp.notify.empty': 'the mobile number format (01XXXXXXXXX), the same words as footer.join (PR 56 back-in-stock box)',
