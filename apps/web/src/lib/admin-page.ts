@@ -1,9 +1,11 @@
 // PR 500 — what an admin page needs before it draws: the language, the store name for the header, and the same guard
 // the admin API uses (guardAdmin with a permission), so a page never shows more than its API would answer.
-import { cookies, headers } from 'next/headers';
+import { cache } from 'react';
+import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
-import { adminDeps, guardAdmin, type AdminDeps, type Guarded } from './admin-auth';
+import { adminDeps, type AdminDeps, type Guarded } from './admin-auth';
+import { deniedMemo, permissionsIn, shellSession } from './admin-shell/session';
 import { ADMIN_LANG_COOKIE, adminDicts, adminLocale, pickAdminLang, type AdminLang } from './admin-i18n';
 import type { Dict } from './i18n';
 import { displaySettings, settingsTimeoutMs, withTimeout } from './settings';
@@ -17,7 +19,14 @@ export interface AdminView {
   storeName: string | null;
 }
 
+/** PR 12: once per request (the shell and the page both draw with it). */
 export async function adminView(deps: AdminDeps | null = adminDeps()): Promise<AdminView> {
+  return deps ? viewOnce() : computeView(null);
+}
+
+const viewOnce = cache(() => computeView(adminDeps()));
+
+async function computeView(deps: AdminDeps | null): Promise<AdminView> {
   const [jar, display] = await Promise.all([cookies(), displaySettings({ resolver: deps?.resolver ?? null })]);
   const lang = pickAdminLang(jar.get(ADMIN_LANG_COOKIE)?.value, display.locale);
   let storeName: string | null = null;
@@ -39,23 +48,24 @@ export type PageAccess =
   | { kind: 'unavailable' };
 
 /**
- * Runs guardAdmin for the page's own request (its cookie, address and browser); null = only a valid session.
- * `storeId` checks the permission in that store (the catalogue pages, PR 21), like the store's own API routes do.
+ * The same checks as guardAdmin for the page's own request (its cookie, address and browser); null = only a valid
+ * session. `storeId` checks the permission in that store (the catalogue pages, PR 21), like the store's own API routes
+ * do; without it the key must come from an all-store role. PR 12: the session and the keys are read once per request
+ * (lib/admin-shell/session.ts) and shared with the shell; a refused key is remembered so the "no access" state names it.
  */
 export async function pageAccess(permission: PermissionKey | null, deps: AdminDeps | null = adminDeps(), storeId?: number): Promise<PageAccess> {
   if (!deps) return { kind: 'unavailable' };
-  const h = await headers();
-  const forward: Record<string, string> = {};
-  for (const name of ['cookie', 'user-agent', 'x-forwarded-for', 'cf-connecting-ip', 'x-real-ip']) {
-    const v = h.get(name);
-    if (v) forward[name] = v;
+  const s = await shellSession();
+  if (s.kind !== 'ok') return s;
+  if (!permission) return { kind: 'ok', guard: s.guard, deps: s.deps };
+  try {
+    const held = await permissionsIn(s.guard.actor.staffUserId as string, storeId ?? null);
+    if (!held.has(permission)) {
+      deniedMemo().permission = permission;
+      return { kind: 'forbidden' };
+    }
+    return { kind: 'ok', guard: { ...s.guard, permissions: held }, deps: s.deps };
+  } catch {
+    return { kind: 'unavailable' };
   }
-  // A GET carries no state change, so the same-site check passes; the session and permission checks are the API's own.
-  const g = await guardAdmin(new Request('https://admin.invalid/admin', { headers: forward }), deps, permission ? { permission, ...(storeId ? { storeId } : {}) } : {});
-  if (!(g instanceof Response)) return { kind: 'ok', guard: g, deps };
-  const code = ((await g.json().catch(() => ({}))) as { error?: string }).error;
-  if (g.status === 401) return { kind: 'login' };
-  if (code === 'PASSWORD_CHANGE_REQUIRED' || code === 'TWO_FACTOR_SETUP_REQUIRED') return { kind: 'password' };
-  if (g.status === 403) return { kind: 'forbidden' };
-  return { kind: 'unavailable' };
 }

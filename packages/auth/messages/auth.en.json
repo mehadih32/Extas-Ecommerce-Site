@@ -13,6 +13,7 @@
     "settings": "Settings and keys",
     "staff": "Staff and roles",
     "security": "Security and history",
+    "admin": "Admin home and guides",
     "media": "Images and media",
     "catalogue": "Catalogue",
     "inventory": "Stock and ERP",
@@ -44,6 +45,12 @@
     },
     "security": {
       "read": "See logins and security alerts"
+    },
+    "dashboard": {
+      "read": "Open the Dashboard and its waiting work"
+    },
+    "help": {
+      "read": "Open the admin guides and the manual"
     },
     "media": {
       "read": "See the media library",

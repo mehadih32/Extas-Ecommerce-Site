@@ -32,6 +32,7 @@ export * from './registry-storefront-fu';
 export * from './registry-pdp-templates';
 export * from './registry-accounts';
 export * from './registry-motion';
+export * from './registry-admin-shell';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export * from './registry-orders';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

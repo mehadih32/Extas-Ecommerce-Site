@@ -178,11 +178,18 @@ async function run() {
     console.log(`ok   ${step} → ${here(page)}`);
 
     step = "5 log out";
-    // The frame draws the log-out button twice (sidebar and top bar, one per screen size); press the visible one. Its
-    // label is the admin's own (messages/admin.<lang>.json `frame.logout`), whichever language the admin shows.
-    const button = page.getByRole("button", { name: logoutName(logoutLabels()) }).filter({ visible: true });
-    if (!(await button.count())) throw new Error("no visible log-out button on the admin page");
-    await button.first().click({ timeout: 20_000 });
+    // The new shell (PR 12, demo V12.3) keeps "Sign out" in the account menu: open the visible account button (the
+    // sidebar's on a computer, the top bar's avatar on a phone), then press the menu's sign-out item. A page still on
+    // the old frame draws its own log-out button (messages/admin.<lang>.json `frame.logout`), pressed the same way.
+    const me = page.locator("[data-testid=a2-me], [data-testid=a2-avatar]").filter({ visible: true });
+    if (await me.count()) {
+      await me.first().click({ timeout: 20_000 });
+      await page.locator("[data-testid=a2-signout]").filter({ visible: true }).first().click({ timeout: 20_000 });
+    } else {
+      const button = page.getByRole("button", { name: logoutName(logoutLabels()) }).filter({ visible: true });
+      if (!(await button.count())) throw new Error("no visible account menu or log-out button on the admin page");
+      await button.first().click({ timeout: 20_000 });
+    }
     await page.waitForURL((u) => onLogin(u.href), { timeout: 30_000 });
     await page.waitForSelector("#ad-email", { timeout: 20_000 });
     await settle(page);

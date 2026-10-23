@@ -1,0 +1,15 @@
+{
+  "groups": {
+    "admin": "Admin home and menu"
+  },
+  "admin": {
+    "shell": {
+      "label": "Menu badges and search",
+      "help": "How many seconds the waiting-work numbers on the menu are kept before they are counted again, how many results search shows per group, and from how many letters it looks for products, orders and customers."
+    },
+    "dashboard": {
+      "label": "Dashboard greeting",
+      "help": "The hours the greeting on the Dashboard changes to afternoon and evening."
+    }
+  }
+}

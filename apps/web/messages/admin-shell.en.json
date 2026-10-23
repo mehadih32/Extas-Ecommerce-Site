@@ -1,0 +1,246 @@
+{
+  "shell": {
+    "admin": "Admin",
+    "sec": {
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "products": "Products",
+      "customers": "Customers",
+      "delivery": "Delivery",
+      "messages": "Messages",
+      "support": "Support",
+      "marketing": "Marketing",
+      "website": "Website",
+      "money": "Money",
+      "reports": "Reports",
+      "ai": "AI Center",
+      "settings": "Settings",
+      "help": "Help & Build"
+    },
+    "groups": {
+      "daily": "Daily work",
+      "grow": "Grow",
+      "business": "Business"
+    },
+    "tab": {
+      "products": {
+        "all": "All products",
+        "queue": "Launch queue",
+        "combos": "Combos & sets",
+        "stock": "Stock",
+        "charts": "Size charts",
+        "import": "Import from link",
+        "audit": "Product audit"
+      },
+      "delivery": {
+        "zones": "Zones & charges"
+      },
+      "marketing": {
+        "rules": "Smart Rules"
+      },
+      "reports": {
+        "health": "Site health"
+      },
+      "settings": {
+        "keys": "Keys & connections"
+      },
+      "help": {
+        "manual": "Help & manual"
+      }
+    },
+    "purpose": {
+      "dashboard": "The morning screen: the money of the day and the work waiting for you.",
+      "orders": "Every order from the moment it is placed until it is delivered or returned.",
+      "products": "The catalogue the shop sells; stock is read from the ERP.",
+      "customers": "Everyone who bought or asked, their orders, notes and consent.",
+      "delivery": "Couriers, parcels, zones and delivery charges.",
+      "messages": "Every message the shop sends: the order journey, campaigns, templates and the log.",
+      "support": "Answer every customer on every channel; money complaints with proof.",
+      "marketing": "Ads, offers, coupons, rules and landing pages; budget raises need the owner.",
+      "website": "Menus, pages, blog and how the shop looks.",
+      "money": "Profit and loss, COD, payments, refunds and the month-end close.",
+      "reports": "Sales, delivery, product and customer reports from the same definitions, and the site's health.",
+      "ai": "What the AI may do, its approvals and its costs. AI is off until the owner turns it on.",
+      "settings": "Store-wide things only; everything else sits in its own section.",
+      "help": "The Bengali guide for every section, and the build progress."
+    },
+    "plan": {
+      "dashboard": "Delivered-sales trend · Orders by stage · Top products · Delivery success by courier · Customize cards",
+      "orders": "All orders · To confirm · Risk review · Packing & print · Returns & exchanges · More: Risk rules, Create order, Bulk & corporate, Order settings",
+      "products": "Reviews · Collections · More: Bulk CSV, Naming & links, Media library, Colour library, Catalogue setup",
+      "customers": "All customers · Segments · Loyalty & wallet · To review · More: Import legacy customers, Consent & data",
+      "delivery": "Overview · Ready to book · In transit · Returned & refused · Couriers · More: Charge mismatch log, Delivery settings",
+      "messages": "Order journey · Campaigns · Templates · Message log · Channels & limits",
+      "support": "Inbox · Rider issues · Claims & credits · Saved replies · Support settings",
+      "marketing": "Campaigns & ads · Coupons & offers · Landing pages · Creative studio · More: Market intel, YouTube",
+      "website": "Site builder · Page layouts · Blog · SEO · Words · More: Eye toggles, Launch default, Effects",
+      "money": "Profit & loss · COD reconciliation · Payments & refunds · Expenses & salaries · Month-end close · Costs & fees",
+      "reports": "Overview · Sales · Products · Customers · Delivery · More: Marketing, Experiments, Scheduled reports, Funnels",
+      "ai": "Control room · Approvals · Agents · Skills · Audit · Costs · More: Models, Routing, Diary, Media, Memory",
+      "settings": "Settings home · Store details · Checkout & payments · Policies & texts · Team & roles · More: ERP connection, Stores, System",
+      "help": "What's new · Build progress · Reported problems · Blueprint & files · More: Smoke runs"
+    },
+    "syn": {
+      "dashboard": "home overview today money sales kpi",
+      "orders": "order invoice cod confirm",
+      "products": "catalogue product item shirt polo launch publish",
+      "customers": "customer buyer people",
+      "delivery": "courier parcel zone area charge shipping",
+      "messages": "sms whatsapp email message template campaign",
+      "support": "chat inbox complaint help desk",
+      "marketing": "ads coupon offer rule notice popup campaign",
+      "website": "site page menu blog seo theme",
+      "money": "finance profit cod refund payment",
+      "reports": "report analytics health server worker jobs",
+      "ai": "ai agent automation",
+      "settings": "setting keys connections integrations vault api",
+      "help": "guide manual help how"
+    },
+    "nav": {
+      "aria": "Admin sections",
+      "quick": "Quick menu",
+      "open": "Open the menu",
+      "close": "Close the menu",
+      "home": "Home",
+      "search": "Search",
+      "more": "More",
+      "skip": "Skip to content",
+      "waiting": "{n} waiting"
+    },
+    "top": {
+      "search": "Search pages, settings, orders, products, customers…",
+      "searchShort": "Search…",
+      "searchAria": "Search pages, settings, orders, products, customers",
+      "kbd": "Ctrl K",
+      "bell": "Notifications",
+      "bellUnread": "Notifications, {n} unread",
+      "account": "Account",
+      "store": "Store"
+    },
+    "me": {
+      "menu": "Account menu",
+      "staff": "Staff",
+      "shop": "Open the shop",
+      "signOut": "Sign out"
+    },
+    "tabs": {
+      "more": "More",
+      "aria": "{section} pages",
+      "sub": "{tab} pages"
+    },
+    "guide": {
+      "button": "এই সেকশনে কী করা যায়",
+      "title": "{section} — guide",
+      "loading": "Loading the guide…",
+      "error": "The guide could not be opened. Try again.",
+      "close": "Close"
+    },
+    "palette": {
+      "aria": "Search",
+      "placeholder": "Type a page, setting, order no., phone, product…",
+      "esc": "Esc",
+      "move": "move",
+      "open": "open",
+      "hint": "> actions · # order · ? help · Bengali words work",
+      "none": "No match. Try an order number, a phone, or a word like “stock”.",
+      "error": "Search could not run. Try again.",
+      "section": "Section",
+      "guide": "{section} — guide (Bengali)",
+      "groups": {
+        "jump": "Jump to",
+        "pages": "Pages",
+        "settings": "Settings",
+        "products": "Products",
+        "orders": "Orders",
+        "customers": "Customers",
+        "actions": "Actions",
+        "help": "Help"
+      },
+      "orders": "Orders: {n}",
+      "invoice": "Opens the invoice"
+    },
+    "actions": {
+      "newProduct": "Add product",
+      "newCombo": "Make a combo",
+      "newCount": "Start a stock count"
+    },
+    "ntf": {
+      "title": "Notifications",
+      "empty": "All caught up",
+      "emptyNote": "Nothing has happened yet that needs telling.",
+      "note": "Notifications are things that happened once. Live work waiting for you is on the Dashboard under “Needs you now”.",
+      "close": "Close"
+    },
+    "state": {
+      "notfound": {
+        "title": "Page not found",
+        "body": "The link may be old. Search finds every page and setting.",
+        "search": "Search",
+        "back": "Back to Dashboard"
+      },
+      "error": {
+        "title": "This page could not load",
+        "body": "Nothing was changed. Try again; if it keeps happening, send the error id to the team.",
+        "retry": "Retry",
+        "back": "Back to Dashboard",
+        "id": "Error id"
+      },
+      "denied": {
+        "title": "You don’t have access to this page",
+        "body": "It needs the permission “{perm}”. Ask the owner to add it to your role.",
+        "bodyPlain": "Ask the owner to add the permission this page needs to your role.",
+        "back": "Back to my start page"
+      },
+      "empty": {
+        "title": "Nothing here yet"
+      },
+      "unavailable": {
+        "title": "This server has no database connected yet",
+        "body": "The admin opens once the database is connected."
+      },
+      "placeholder": {
+        "title": "{section} moves here next",
+        "body": "This section is being built in the new design, one page at a time. Nothing here is a sample.",
+        "planned": "Pages planned:",
+        "ready": "Ready now:"
+      }
+    }
+  },
+  "dash": {
+    "metaTitle": "Dashboard · Admin",
+    "greet": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "named": "{greet}, {name}"
+    },
+    "needs": {
+      "title": "Needs you now",
+      "some": "Lists with work: {n} · tap one to open it",
+      "none": "Nothing waiting. Well done.",
+      "clear": "All clear"
+    },
+    "queue": {
+      "launch": "Products waiting to launch",
+      "lowStock": "Low-stock sizes",
+      "countsReview": "Stock counts to review",
+      "erpFailed": "ERP documents that failed",
+      "jobsDead": "Background jobs that stopped",
+      "sub": "{n} waiting · oldest {age}"
+    },
+    "age": {
+      "now": "just now",
+      "m": "{n} min",
+      "h": "{n} h",
+      "d": "{n} d"
+    }
+  },
+  "help": {
+    "metaTitle": "Help & manual · Admin",
+    "title": "Help & manual",
+    "sub": "Every section's guide, in Bengali. The same guides open from each page.",
+    "built": "Ready",
+    "planned": "Planned",
+    "open": "Open the section"
+  }
+}

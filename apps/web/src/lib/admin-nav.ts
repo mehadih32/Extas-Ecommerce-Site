@@ -39,10 +39,11 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'combos', href: '/admin/combos', icon: 'layers', group: 'combos' },
   // S06 · PR 550, 551 — the delivery bands, the sub-area list and the address check (demo: the Couriers page's
   // "Three delivery bands" card and Settings › Delivery)
-  { key: 'delivery', href: '/admin/delivery', icon: 'truck', group: 'delivery' },
+  { key: 'delivery', href: '/admin/delivery/zones', icon: 'truck', group: 'delivery' },
 ];
 
-export const ADMIN_HOME = ADMIN_PAGES[0]?.href ?? '/admin/login';
+/** PR 12: the admin's front door is the Dashboard (DSH-01). */
+export const ADMIN_HOME = '/admin';
 export const ADMIN_LOGIN = '/admin/login';
 /** The EN | বাং switch's choice (not a secret; read by the server to pick the messages file). */
 export const ADMIN_LANG_COOKIE = 'admin_lang';

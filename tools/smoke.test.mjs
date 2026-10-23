@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
+import { adminLinks, adminPaths, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -70,6 +70,11 @@ it('opens each admin menu page once, never the sign-in page, the API or outside 
     '/admin/products',
     '/admin/stock',
   ]);
+});
+
+it('PR 12: signed in, the Dashboard, the menu links and the listed admin pages, each once', () => {
+  expect(adminPaths(['/admin/products', '/admin/stock'], ['/admin/stock', '/admin/help', '/admin'])).toEqual(['/admin', '/admin/products', '/admin/stock', '/admin/help']);
+  expect(adminPaths([])).toEqual(['/admin']);
 });
 
 it('a failed request counts unless it is on the known list; other sites count too', () => {
