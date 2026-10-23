@@ -29,6 +29,7 @@ import { storefrontFuSettings } from './registry-storefront-fu';
 import { pdpTemplateSettings } from './registry-pdp-templates';
 import { accountSettings } from './registry-accounts';
 import { comboPageSettings } from './registry-combo-pages';
+import { motionSettings } from './registry-motion';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1136,7 +1137,7 @@ export const registry = {
   ...categorySettings,
   // ---- S04 · PR 105–114 · the bag: keeping it, adding twice, the added-to-bag panel, tiers, two sizes, codes, free delivery, the upsell row (registry-bag.ts, version 18). ----
   ...bagSettings,
-  // ---- S02 · PR 49, 54–57, 60–64 · the product page: gallery, colours, sizes, size chart, stock, price, trust, rules, details, buy bars (registry-product.ts, version 19). ----
+  // ---- S02 · PR 49, 54–57, 60–64 · the product page: gallery, colours, sizes, size chart, stock, price, trust, rules, details, buy bars (registry-product.ts, version 19; PR 66's questions block, version 31). ----
   ...productSettings,
   // ---- S04 · PR 115–126 · the checkout: the field order, the try-on line, the form, payment, the wallet, consent, the confirm button, placement, the thank-you page (registry-checkout.ts, version 20). ----
   ...checkoutSettings,
@@ -1155,6 +1156,8 @@ export const registry = {
   ...accountSettings,
   // ---- S03 · PR 91–95, 102, 103 · the combo storefront: the combo page's layout and parts, popular pairs, More sets, the sets landing page, the product page's set offer (registry-combo-pages.ts, version 30). ----
   ...comboPageSettings,
+  // ---- S02 · PR 87 · the house motion: the celebration overlay (registry-motion.ts, version 31). ----
+  ...motionSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

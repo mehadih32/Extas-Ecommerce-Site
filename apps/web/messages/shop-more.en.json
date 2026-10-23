@@ -111,5 +111,8 @@
     "askEmptyHours": "Have a question about this item? Ask us on WhatsApp — {hours}.",
     "ask": "Ask on WhatsApp",
     "waMessage": "Hi {store}, I have a question about {name}"
+  },
+  "celebrate": {
+    "text": "Thank you!"
   }
 }
