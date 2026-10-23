@@ -149,6 +149,28 @@ export function signedInPlan(base, signedIn, lighthouseUrls, discovered = []) {
   return [...plan.values()];
 }
 
+/**
+ * PR 107 — pages that only show their controls with something in them (the bag): device-gate.json `filled`. Each
+ * path is opened as a customer (signed out) after a POST to `fill` in the same browser (the test server's sample-bag
+ * fill, EXTAS_SHOP_TEST_PAGES=1), and must show `expect`. `?gate=filled` keeps them apart from the empty pages that
+ * lighthouserc lists.
+ */
+export function filledPlan(base, filled) {
+  if (!filled?.fill) return [];
+  const fill = new URL(filled.fill, base).toString();
+  return (filled.paths ?? []).map((p) => {
+    const u = new URL(p, base);
+    u.searchParams.set('gate', 'filled');
+    return { url: u.toString(), signedOut: true, expect: [...(filled.expect ?? [])], fill };
+  });
+}
+
+/** The path and query a result is reported under. */
+const shown = (url) => {
+  const u = new URL(url);
+  return u.pathname + u.search;
+};
+
 /** The links a `discover` entry picks on its page: distinct same-site paths, the first `take` of them. */
 export function pickLinks(hrefs, take) {
   const out = [];
@@ -206,6 +228,10 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
   const issues = [];
   let finalUrl = url;
   try {
+    if (opts.fill) {
+      const r = await ctx.request.post(opts.fill, { headers: { origin: new URL(url).origin }, failOnStatusCode: false });
+      if (!r.ok()) issues.push({ k: 'FILL', d: `${new URL(opts.fill).pathname} answered HTTP ${r.status()} (is EXTAS_SHOP_TEST_PAGES=1 set?)` });
+    }
     const res = await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
     finalUrl = page.url();
     if (!res || res.status() >= 400) issues.push({ k: 'PAGE-STATUS', d: `HTTP ${res ? res.status() : 'no answer'}` });
@@ -229,12 +255,12 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
   if (errors.length) issues.push({ k: 'JS-ERROR', d: errors[0] });
   let shot = null;
   if (issues.length && rules.shotDir) {
-    shot = `${device.group}-${device.w}x${device.h}-${new URL(url).pathname.replace(/[^a-z0-9]+/gi, '_')}.png`;
+    shot = `${device.group}-${device.w}x${device.h}-${shown(url).replace(/[^a-z0-9]+/gi, '_')}.png`;
     await page.evaluate(() => scrollTo(0, 0)).catch(() => {});
     await page.screenshot({ path: join(rules.shotDir, shot) }).catch(() => { shot = null; });
   }
   await ctx.close();
-  return { device: device.name, group: device.group, w: device.w, h: device.h, url: new URL(url).pathname, finalUrl: new URL(finalUrl).pathname, issues, shot };
+  return { device: device.name, group: device.group, w: device.w, h: device.h, url: shown(url), finalUrl: new URL(finalUrl).pathname, issues, shot };
 }
 
 /** A short Markdown report of a run. */
@@ -294,21 +320,22 @@ async function main() {
     const d = only ? { found: [], problems: [] } : await discoverPages(browser, base, state, rules.signedIn?.discover);
     setup.push(...d.problems);
     plan = signedInPlan(base, only ? { signedOutPaths: rules.signedIn?.signedOutPaths } : rules.signedIn ?? {}, urls, d.found);
-    urls = plan.map((p) => p.url);
   }
+  if (!only) plan.push(...filledPlan(base, rules.filled));
+  urls = plan.map((p) => p.url);
   const jobs = devices.flatMap((d) => plan.map((p) => [d, p]));
   const results = [];
   let next = 0;
   await Promise.all(Array.from({ length: Math.max(1, concurrency) }, async () => {
     while (next < jobs.length) {
       const [d, p] = jobs[next++];
-      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect }));
+      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect, fill: p.fill }));
     }
   }));
   await browser.close();
   // A required page that discovery could not find fails the run (one row, so the report shows it).
   for (const problem of setup) results.push({ device: 'setup', group: 'setup', w: 0, h: 0, url: '/', finalUrl: '/', issues: [{ k: 'DISCOVER', d: problem }], shot: null });
-  const order = (r) => devices.findIndex((d) => d.name === r.device) * 1000 + urls.findIndex((u) => new URL(u).pathname === r.url);
+  const order = (r) => devices.findIndex((d) => d.name === r.device) * 1000 + urls.findIndex((u) => shown(u) === r.url);
   results.sort((a, b) => order(a) - order(b));
 
   const md = markdownReport(results, { base, seconds: (Date.now() - started) / 1000 });

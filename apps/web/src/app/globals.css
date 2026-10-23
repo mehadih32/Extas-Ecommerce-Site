@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* PR 107: the bag's own class names come from the demo (bg-*), not Tailwind; its folder is not scanned for utilities. */
+@source not "../components/shop/bag";
 
 /* Design tokens (the storefront's full token set arrives with S02; Shilpi owns them). */
 :root {
