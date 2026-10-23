@@ -1,6 +1,6 @@
 {
   "$comment": "CN-016 — what the smoke test opens after every deploy and every night (tools/smoke.mjs). storefront: every built storefront page, opened signed out like a customer; each PR that builds a storefront page adds it here. The admin pages are found from the admin menu after sign-in. ignoreRequests: request paths whose failure is known and owned by a register PR, each with the PR that removes it; keep this list short. ~~/favicon.ico until PR 501~~: it always answers now (the owner's brand.favicon, else a neutral bag icon). discover (PR 49): pages found on a built page, opened like the listed ones: the first product pages New in links to (the products are the owner's, so none is named here; a shop with no product yet opens none).",
-  "storefront": ["/", "/bn", "/checkout", "/bn/checkout", "/collections/new-in", "/bn/collections/new-in", "/bag", "/bn/bag", "/help/faq", "/status"],
+  "storefront": ["/", "/bn", "/checkout", "/bn/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/checkout/pay/0", "/collections/new-in", "/bn/collections/new-in", "/bag", "/bn/bag", "/help/faq", "/status"],
   "discover": [
     { "from": "/collections/new-in", "selector": "a.pcard-lnk", "take": 2 },
     { "from": "/bn/collections/new-in", "selector": "a.pcard-lnk", "take": 1 }

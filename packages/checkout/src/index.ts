@@ -7,6 +7,7 @@
 // - PR 120 the payment choice and the prepaid reward (payment.ts); PR 123 the marketing ticks (consent.ts).
 // - PR 125 placing the order, idempotent, with the stock hold, the mock payment's failure path and the unfinished
 //   checkout kept for follow-up (place.ts).
+// - PR 126 the thank-you page's receipt, for the browser that placed the order only (receipt.ts).
 export * from './context';
 export * from './address';
 export * from './pure';
@@ -14,3 +15,4 @@ export * from './quote';
 export * from './payment';
 export * from './consent';
 export * from './place';
+export * from './receipt';

@@ -1,7 +1,7 @@
 // PR 115–126 — the checkout on the server side of the shop: the engines' dependencies, the checkout's settings, the
 // visitor's quote read from the bag cookie, and the words the checkout's client part shows. Without a database (CI,
 // `next build`) or when it is slow, the page draws the empty bag with the registry defaults — never a guess.
-import { checkoutQuote, emptyQuote, payView, type CheckoutDeps, type CheckoutQuote, type PayView } from '@extas/checkout';
+import { checkoutQuote, emptyQuote, orderReceipt, payView, type CheckoutDeps, type CheckoutQuote, type PayView, type Receipt } from '@extas/checkout';
 import { findBag } from '@extas/cart';
 import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
@@ -97,6 +97,19 @@ export async function currentPayment(c: Pick<ShopContext, 'storeId'>, number: st
     return await withTimeout(payView(deps, { storeId: c.storeId, visitorId: visitor, number }), settingsTimeoutMs() * 4);
   } catch (e) {
     console.warn(`shop: the payment is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return null;
+  }
+}
+
+/** PR 126 — the visitor's own order for the thank-you page (null: not his order, no such order, no database). */
+export async function currentReceipt(c: Pick<ShopContext, 'storeId'>, number: string): Promise<Receipt | null> {
+  const deps = checkoutDeps();
+  const visitor = await visitorId();
+  if (!deps || !visitor) return null;
+  try {
+    return await withTimeout(orderReceipt(deps, { storeId: c.storeId, visitorId: visitor, number }), settingsTimeoutMs() * 4);
+  } catch (e) {
+    console.warn(`shop: the order is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return null;
   }
 }
