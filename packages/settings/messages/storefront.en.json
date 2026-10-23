@@ -218,5 +218,11 @@
       "label": "Questions & answers on the product page",
       "help": "The questions your team has answered and approved for a product, under its page: the latest one open with its answer, the rest folded, a few at first and \"See all questions\" for the rest. Under them, \"Not answered here?\" with the WhatsApp button, while the shop has a WhatsApp number. A product with no answered question shows only the WhatsApp ask, or nothing without a number. No question is ever made up."
     }
+  },
+  "thanks": {
+    "celebrate": {
+      "label": "Celebration on the thank-you page",
+      "help": "For an occasion: balloons rising (or light streaking up) with your words in the middle, over the thank-you page right after an order. Off. It never blocks anything — the page works behind it, any tap skips it at once, it runs at most 2.5 seconds, once per customer for each occasion's name (or once per order), only between the first and last day you set. It does not run on a slow connection, a low-end phone or with data saving on; for a customer who asked for less motion it shows only the words, without moving. Add ?celebrate=preview to a thank-you page to see it before switching it on."
+    }
   }
 }

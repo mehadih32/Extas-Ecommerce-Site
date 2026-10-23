@@ -111,5 +111,8 @@
     "askEmptyHours": "এই পণ্য নিয়ে প্রশ্ন আছে? WhatsApp-এ জিজ্ঞেস করুন — {hours}।",
     "ask": "WhatsApp-এ জিজ্ঞেস করুন",
     "waMessage": "হ্যালো {store}, {name} নিয়ে একটা প্রশ্ন আছে"
+  },
+  "celebrate": {
+    "text": "ধন্যবাদ!"
   }
 }
