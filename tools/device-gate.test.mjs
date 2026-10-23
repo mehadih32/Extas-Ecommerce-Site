@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, markdownReport, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, markdownReport, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -47,6 +47,17 @@ describe('device gate', () => {
     for (const sel of ['.pa-x', '.pa-col', '.pa-kind', '.sc-item', 'a.st-name']) expect(expected).toContain(sel);
     expect(rules.signedIn.discover.every((d) => d.required)).toBe(true);
     expect(rules.signedIn.signedOutPaths).toContain('/admin/login');
+  });
+
+  it('PR 107 · plans the filled bag: opened signed out after the fill, apart from the empty bag, its lines expected', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const plan = filledPlan('http://h:1', rules.filled);
+    expect(plan.map((p) => p.url)).toEqual(['http://h:1/bag?gate=filled', 'http://h:1/bn/bag?gate=filled']);
+    expect(plan.every((p) => p.signedOut && p.fill === 'http://h:1/api/bag/try')).toBe(true);
+    expect(plan[0].expect).toContain('.bg-line');
+    expect(filledPlan('http://h:1', undefined)).toEqual([]);
+    const rc = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../lighthouserc.json'), 'utf8')).ci.collect.url.map((u) => new URL(u).pathname);
+    for (const p of ['/bag', '/bn/bag']) expect(rc).toContain(p);
   });
 
   it('picks distinct same-site links from a page, the first N', () => {
