@@ -424,17 +424,30 @@ async function readCategory(
     ids = rows.map((r) => r.id);
   } else return undefined;
   if (!ids.length) return EMPTY_CATEGORY(head);
+  return { head, ...(await listingOf(storeId, ids, { where: {}, ratings: newIn.ratings })) };
+}
 
-  const found = await getPrisma().product.findMany({ where: { id: { in: ids } }, select: listSelect });
+/** A list of products as a page draws it, without a head (PR 45 category page, PR 73 search results). */
+export type Listing = Omit<CategoryData, 'head' | 'unavailable'>;
+
+/**
+ * PR 45 / 73 — products by id, in the order given, as cards (without photos) and filter items, with the sizes they
+ * carry and the photos for the cards drawn. `where` narrows which of them may show (PR 73: only live, sellable ones).
+ */
+async function listingOf(storeId: number, wanted: readonly string[], opts: { where: Prisma.ProductWhereInput; ratings: boolean }): Promise<Listing> {
+  const prisma = getPrisma();
+  const found = await prisma.product.findMany({ where: { ...opts.where, id: { in: [...wanted] } }, select: listSelect });
   const byId = new Map(found.map((r) => [r.id, r]));
-  const rows: ListRow[] = ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+  const rows: ListRow[] = wanted.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+  const ids = rows.map((r) => r.id);
+  if (!rows.length) return { cards: [], items: [], sizes: new Map(), withPhotos: async (c) => [...c] };
   const [cards, tags, ratings] = await Promise.all([
     toCards(storeId, rows, false),
     prisma.productTag.findMany({
       where: { storeId, archivedAt: null, productId: { in: ids }, tag: { archivedAt: null } },
       select: { productId: true, tag: { select: { slug: true } } },
     }),
-    newIn.ratings
+    opts.ratings
       ? prisma.review.groupBy({
           by: ['productId'],
           where: { storeId, status: 'APPROVED', archivedAt: null, publishedAt: { not: null }, productId: { in: ids } },
@@ -466,7 +479,6 @@ async function readCategory(
   });
   const rowOf = new Map(rows.map((r) => [r.id, r]));
   return {
-    head,
     cards,
     items,
     sizes,
@@ -476,6 +488,69 @@ async function readCategory(
       return list.map((c) => ({ ...c, photos: photos.get(c.id) ?? c.photos }));
     },
   };
+}
+
+// ---- PR 72 / 73 · search ----
+
+/**
+ * PR 73 — the products a search found, in the engine's order, as the results page draws them: only those a customer
+ * may buy now — published, not archived, in a shown category, with an active variant that has a price — whatever the
+ * search index still holds. `unavailable`: the catalogue could not be read just now (the page says so).
+ */
+export async function searchListing(storeId: number, ids: readonly string[], ratings: boolean): Promise<Listing & { unavailable?: boolean }> {
+  const none: Listing = { cards: [], items: [], sizes: new Map(), withPhotos: async (c) => [...c] };
+  if (!process.env.DATABASE_URL || !ids.length) return none;
+  try {
+    return await withTimeout(
+      listingOf(storeId, ids, {
+        where: { storeId, ...live, category: { isVisible: true, archivedAt: null }, variants: { some: { archivedAt: null, active: true, priceMinor: { not: null } } } },
+        ratings,
+      }),
+      settingsTimeoutMs() * 3,
+    );
+  } catch (e) {
+    console.warn(`shop: search results unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return { ...none, unavailable: true };
+  }
+}
+
+/**
+ * PR 72 — of the products a search found, those the results page would show (the same rule as searchListing; with
+ * `inStockOnly`, the owner hides sold-out styles), in the order given: the panel's "See all N results" counts these.
+ */
+export function sellableIds(storeId: number, ids: readonly string[], inStockOnly: boolean): Promise<string[]> {
+  return guarded('search products', [] as string[], async () => {
+    if (!ids.length) return [];
+    const rows = await getPrisma().product.findMany({
+      where: {
+        storeId,
+        id: { in: [...ids] },
+        ...live,
+        ...(inStockOnly ? { inStock: true } : {}),
+        category: { isVisible: true, archivedAt: null },
+        variants: { some: { archivedAt: null, active: true, priceMinor: { not: null } } },
+      },
+      select: { id: true },
+    });
+    const ok = new Set(rows.map((r) => r.id));
+    return ids.filter((id) => ok.has(id));
+  });
+}
+
+/** PR 72 — shown categories by id, in the order given (the categories a search found). */
+export function categoriesByIds(storeId: number, ids: readonly string[]): Promise<CategoryHead[]> {
+  return guarded('search categories', [] as CategoryHead[], async () => {
+    if (!ids.length) return [];
+    const rows = await getPrisma().category.findMany({
+      where: { storeId, id: { in: [...ids] }, isVisible: true, archivedAt: null },
+      select: { id: true, slug: true, nameEn: true, nameBn: true, introEn: true, introBn: true },
+    });
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    return ids.flatMap((id) => {
+      const r = byId.get(id);
+      return r ? [{ slug: r.slug, nameEn: r.nameEn, nameBn: r.nameBn, introEn: r.introEn, introBn: r.introBn, parent: null }] : [];
+    });
+  });
 }
 
 // ---- PR 107 / 114 · the bag ----

@@ -1,0 +1,31 @@
+{
+  "groups": {
+    "search": "Search"
+  },
+  "search": {
+    "engine": {
+      "label": "Search engine",
+      "help": "'Automatic' uses the fast search server (Meilisearch) when the server has it and its list is up to date, and the shop's own database otherwise — the shopper gets the same answers either way. 'Database only' never uses the search server. The other numbers: how long the search server may take before the database answers instead, how often the shop re-reads its word list (a new product is found after at most this many seconds), the most products one search shows, the index name, and how the background worker sends products to the search server."
+    },
+    "match": {
+      "label": "How words are matched",
+      "help": "A word this long or longer may have one slipped letter (\"pollo\" finds polo); a longer word may have two. With 'start of a word' on, the first letters find the whole word (\"pol\" finds polo)."
+    },
+    "words": {
+      "label": "Search words: phrases, other words, general words",
+      "help": "Phrases are read as one word (\"polo shirt\" → polo). Other words find more: each word also finds the words listed with it, in any script (গেঞ্জি → t-shirt). General words only describe (\"shirt\", \"for men\", \"দাম\"): when a search finds nothing with them, it searches again without them."
+    },
+    "help": {
+      "label": "Help pages in search",
+      "help": "Searching \"delivery\", \"return policy\" or \"এক্সচেঞ্জ\" shows the help page that answers it, with its first line, above the products. Each help page has its own words (English, Banglish, Bengali and common misspellings); weak words like \"policy\" still find pages, but a more exact word wins."
+    },
+    "panel": {
+      "label": "Search window",
+      "help": "Tapping search opens a window with live suggestions while the shopper types: help answers, categories and products with their photo and price, then \"See all results\". On a computer it drops down under the header. Popular searches are your own words (empty: the categories are offered instead)."
+    },
+    "results": {
+      "label": "Search results page",
+      "help": "The results page has the category page's filters and sort. On top: help answers and matching categories. When nothing is found it says so honestly, offers the nearest known word, shows what part of the words finds, the newest styles, the categories and a WhatsApp button."
+    }
+  }
+}

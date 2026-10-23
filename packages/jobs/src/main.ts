@@ -4,6 +4,7 @@
 //   DATABASE_URL       the database (through PgBouncer), like the web app
 //   REDIS_QUEUE_URL    the Redis queue store (no eviction, AOF on the data disk; PR 6 server setup)
 //   VAULT_MASTER_KEY   opens the vault, so the ERP connection gets its keys (none = the practice ERP)
+//   MEILI_URL, MEILI_MASTER_KEY   the server's Meilisearch (PR 72; none = no search index job, the shop searches PostgreSQL)
 //   GIT_SHA, EXTAS_COLOR   shown on the Server page
 //   EXTAS_WORKER_HEALTH_FILE   where the heartbeat file for the container's health check goes (optional)
 // SIGTERM / SIGINT stop it cleanly: running jobs finish, the leader lock is let go, the heartbeat row says "stopped".
@@ -11,7 +12,9 @@ import { allAdapters, createConnections } from '@extas/adapters';
 import { getPrisma } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
+import { meiliFromEnv } from '@extas/search';
 import { errorLine, type JobDeps } from './context';
+import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
 
@@ -25,15 +28,15 @@ async function main(): Promise<void> {
   const vault = key && key.length >= 32 ? createVault(db, key) : { get: async () => null };
   const [testS, cacheS] = await Promise.all([settings.value('system.integrationTestTimeoutSeconds'), settings.value('system.integrationKeyCacheSeconds')]);
   const connections = createConnections({ db, vault, adapters: allAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
-  const deps: JobDeps = { db, settings, inventory: { db, settings, connections } };
+  const deps: JobDeps = { db, settings, inventory: { db, settings, connections }, search: { meili: meiliFromEnv() } };
   const worker = await startWorker({
     deps,
     redisUrl,
     version: process.env.GIT_SHA?.slice(0, 12) || null,
     color: process.env.EXTAS_COLOR || null,
     healthFile: process.env.EXTAS_WORKER_HEALTH_FILE || null,
-    // PR 196: verified ERP webhooks waiting to be applied
-    planners: [webhookPlanner],
+    // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue
+    planners: [webhookPlanner, searchPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

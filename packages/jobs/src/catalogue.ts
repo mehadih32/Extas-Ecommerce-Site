@@ -6,10 +6,12 @@
 //
 // The inventory jobs (S09) were shaped for this worker from the start (`@extas/inventory` jobs.ts): the stock pull,
 // the cart-hold expiry, the ERP document relay (the outbox), the low-stock check, the reconcile with the ERP and the
-// default locations. PR 196 adds the ERP webhook job (one stored event applied). A later stage adds its job here with
-// its key, queue and function.
+// default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
+// (search.ts). A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
+import { indexStore } from '@extas/search';
+import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
 export type JobOutcome = { ok: true; stats: Record<string, unknown> } | { ok: false; error: string; stats: Record<string, unknown> };
@@ -100,7 +102,29 @@ const webhookJob: JobDefinition<{ eventId: string }> = {
   },
 };
 
-const definitions: JobDefinition<never>[] = [...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>), webhookJob as unknown as JobDefinition<never>];
+/**
+ * PR 72 — one store's search index brought to its catalogue's version (packages/search indexer.ts; planned by
+ * search.ts `searchPlanner` only for a store whose index is behind). A version already indexed is "unchanged".
+ */
+const searchIndexJob: JobDefinition<{ storeId: number; version?: string }> = {
+  key: SEARCH_INDEX_JOB,
+  queue: SEARCH_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown; version?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${SEARCH_INDEX_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number, ...(typeof p.version === 'string' ? { version: p.version } : {}) };
+  },
+  storeOf: (p) => p.storeId,
+  // the job indexes whatever the catalogue holds when it runs (a newer version than planned is fine: it is current)
+  run: async (deps, p) => outcomeOf(await indexStore(searchDeps(deps), p.storeId)),
+};
+
+// PR 72: the search index (search.ts), planned by its own planner when a store's index is behind its catalogue
+const definitions: JobDefinition<never>[] = [
+  ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
+  webhookJob as unknown as JobDefinition<never>,
+  searchIndexJob as unknown as JobDefinition<never>,
+];
 
 /** Every job by key. */
 export const JOBS: ReadonlyMap<string, JobDefinition<unknown>> = new Map(definitions.map((d) => [d.key, d as unknown as JobDefinition<unknown>]));

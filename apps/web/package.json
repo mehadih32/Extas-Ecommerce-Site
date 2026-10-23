@@ -23,6 +23,7 @@
     "@extas/jobs": "workspace:*",
     "@extas/media": "workspace:*",
     "@extas/rules": "workspace:*",
+    "@extas/search": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/vault": "workspace:*",
     "next": "16.4.2",

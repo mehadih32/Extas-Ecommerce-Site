@@ -1,0 +1,91 @@
+/* PR 72 / 73 — search (demo r12-zsearch.css: the live suggestions and the "Help & policies" block; r12-zzdesk-a.css §6:
+   D-014's panel under the header; 21-category.js: the results page's box and its honest empty state; r12-cat.css:115:
+   chips a thumb can hit). Only the shop's own tokens, so every theme follows. */
+
+/* the demo's 24px step (styles.css .mt24), which the shop's base sheet does not carry */
+.shop .mt24 { margin-top: 24px; }
+
+/* ---- the window's box and chips ---- */
+.shop .srch-modal .modal-bd { padding: 18px 20px 22px; }
+@media (max-width: 767px) { .shop .srch-modal .modal-bd { flex: 1 1 auto; min-height: 0px; overflow: auto; overscroll-behavior: contain; } }
+.shop .srch-row { gap: 8px; }
+.shop .srch-row .input { flex: 1 1 0%; min-width: 0px; }
+.shop .srch-chips, .shop .hs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.shop .hs-chips { padding: 4px 14px 10px; }
+.shop .srch-chips .chip, .shop .srch-empty .chip, .shop .srch-cats .chip { min-height: 44px; padding: 0px 14px; text-decoration: none; }
+.shop .hs-chips .chip { text-decoration: none; }
+.shop form.hs-on > .srch-chips { display: none; }
+
+/* ---- the live suggestions ---- */
+.shop .hs-sugg { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.shop .hs-sugg[hidden] { display: none; }
+.shop .srch-form + .hs-sugg { max-width: 640px; margin-top: 10px; }
+.shop .hs-gh { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 11px 14px 4px; }
+.shop .hs-for { text-transform: none; letter-spacing: 0px; font-weight: 500; }
+.shop .hs-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 56px; color: var(--ink); text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.shop .hs-item:hover, .shop .hs-item:focus-visible { background: var(--surface2); }
+.shop .hs-list .hs-item + .hs-item { border-top: 1px solid var(--line2); }
+.shop .hs-ic { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-tint); color: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+:root[data-theme="festive"] .shop .hs-ic { color: var(--gold); }
+.shop .hs-tx { flex: 1 1 0%; min-width: 0px; display: flex; flex-direction: column; gap: 2px; }
+.shop .hs-tx b { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.shop .hs-ans { font-size: 12.5px; color: var(--text2); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.shop .hs-ans .price { font-size: 13px; }
+.shop .hs-go { color: var(--muted); flex-shrink: 0; display: flex; }
+.shop .hs-thumb { flex-shrink: 0; width: 40px; }
+.shop .hs-thumb .pimg { width: 40px; height: 50px; border-radius: 8px; }
+.shop .hs-thumb .pimg svg.garment { width: 78%; }
+.shop .hs-all { display: flex; gap: 8px; align-items: center; width: 100%; border: 0px; border-top: 1px solid var(--line); background: var(--surface2); padding: 12px 14px; min-height: 46px; font: inherit; font-weight: 600; font-size: 13.5px; color: var(--brand); cursor: pointer; text-align: left; }
+.shop .hs-all span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop .hs-fail { padding: 12px 14px; margin: 0px; }
+
+/* ---- the results page ---- */
+.shop .srch-form { display: flex; gap: 8px; max-width: 640px; margin-top: 16px; }
+.shop .srch-form .input { flex: 1 1 0%; min-width: 0px; }
+.shop .srch-form .hide-m { display: inline !important; }
+@media (max-width: 767px) { .shop .srch-form .hide-m { display: none !important; } }
+.shop .hs-block .sec-hd { margin-bottom: 12px; }
+.shop .hs-cards { display: grid; gap: 10px; }
+@media (min-width: 768px) { .shop .hs-cards { grid-template-columns: repeat(2, minmax(0px, 1fr)); } }
+.shop .hs-card { border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--surface); padding: 14px 16px; align-items: flex-start; min-height: 0px; }
+.shop .hs-card .hs-ic { margin-top: 1px; }
+.shop .hs-card .hs-tx b { font-size: 15px; }
+.shop .hs-card .hs-ans { font-size: 13.5px; -webkit-line-clamp: 3; }
+.shop .hs-card .hs-go { align-self: center; }
+.shop .srch-cats { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.shop .srch-cats-h { margin-right: 4px; }
+.shop .srch-note { margin-top: 12px; }
+.shop .srch-layout { margin-top: 8px; }
+.shop .srch-empty { background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); padding: 36px 20px; text-align: center; }
+@media (min-width: 1024px) { .shop .srch-empty { padding: 56px 32px; } }
+.shop .srch-empty-ico { width: 60px; height: 60px; border-radius: 50%; background: var(--brand-tint); color: var(--brand); display: inline-flex; align-items: center; justify-content: center; }
+:root[data-theme="festive"] .shop .srch-empty-ico { color: var(--gold); }
+.shop .srch-empty .srch-chips { justify-content: center; }
+.shop .srch-dym a { font-weight: 600; }
+
+/* ---- D-014 · the computer's panel under the header ---- */
+@media (min-width: 1024px) {
+  .shop .dsk-srch { position: absolute; left: 0px; right: 0px; top: 100%; z-index: 45; background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); box-shadow: rgba(0, 0, 0, 0.22) 0px 26px 44px -18px; padding: 22px 0px 26px; animation: 0.16s ease-out 0s 1 normal none running megaIn; }
+  .shop .dsk-s-form { display: grid; grid-template-columns: auto minmax(0px, 1fr) auto; align-items: center; column-gap: 12px; }
+  .shop .dsk-s-form > svg { color: var(--muted); }
+  .shop .dsk-s-in { border: 0px; border-bottom: 2px solid var(--ink); background: transparent; font: inherit; font-size: 22px !important; font-weight: 500; color: var(--ink); padding: 8px 2px; min-width: 0px; outline: none; border-radius: 0px; }
+  .shop .dsk-s-in:focus-visible { outline: none; border-bottom-color: var(--brand); }
+  .shop .dsk-s-body { grid-column: 1 / -1; margin-top: 22px; }
+  .shop .dsk-s-h { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 10px; }
+  .shop .dsk-s-n { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 9px; background: var(--surface2); color: var(--ink); letter-spacing: 0px; }
+  .shop .dsk-s-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .shop .dsk-s-cols.one { grid-template-columns: 1fr; }
+  .shop .dsk-s-cols .hs-chips, .shop .dsk-s-help .hs-chips { padding: 0px; }
+  .shop .dsk-s-res { display: grid; grid-template-columns: minmax(0px, 1fr); gap: 36px; }
+  .shop .dsk-s-res.two { grid-template-columns: minmax(0px, 1fr) 340px; }
+  .shop .dsk-sgrid { display: grid; grid-template-columns: repeat(4, minmax(0px, 1fr)); gap: 16px; }
+  .shop .dsk-sp { display: flex; flex-direction: column; gap: 4px; color: var(--ink) !important; text-decoration: none; }
+  .shop .dsk-sp .pimg { margin-bottom: 6px; }
+  .shop .dsk-spn { font-size: 14px; font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .shop .dsk-spp { font-size: 14px; }
+  .shop .dsk-s-help .hs-list { border: 1px solid var(--line); border-radius: var(--card-radius); overflow: hidden; }
+  .shop .dsk-s-all { margin-top: 18px; width: auto; display: inline-flex; border: 0px; border-radius: var(--radius); }
+  .shop .dsk-s-none { display: flex; gap: 10px; align-items: center; color: var(--text2); font-size: 15px; }
+  .shop .dsk-s-none a { color: var(--brand); font-weight: 600; }
+}
+@media (max-width: 1023px) { .shop .dsk-srch { display: none; } }

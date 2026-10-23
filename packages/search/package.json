@@ -1,0 +1,32 @@
+{
+  "name": "@extas/search",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Storefront search (S02 · PR 72, 73): one engine behind a small adapter — Meilisearch when the server has it and its index is current, the shop's own PostgreSQL catalogue otherwise — with prefix, typo and synonym matching, phrases, general words and Bengali keywords from settings; the help-page matcher; the catalogue's search documents and their version; the indexer the background worker runs (idempotent: one version is indexed once).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./match": "./src/match.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/db": "workspace:*",
+    "@extas/settings": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@extas/auth": "workspace:*",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}
