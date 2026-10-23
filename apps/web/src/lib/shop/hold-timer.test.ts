@@ -1,6 +1,6 @@
 // PR 107 — every pause has a tested resume (CLAUDE.md hard rule 7, checklist L33.22/L33.23): the Undo message's clock.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { holdTimer } from './hold-timer';
+import { holdOn, holdTimer } from './hold-timer';
 
 describe('PR 107 · the Undo message holds while it is being used, and goes on by itself after', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -80,5 +80,59 @@ describe('PR 107 · the Undo message holds while it is being used, and goes on b
     vi.advanceTimersByTime(60_000);
     expect(done).not.toHaveBeenCalled();
     expect(t.left()).toBe(0);
+  });
+});
+
+describe('PR 91 · the "added to your bag · View bag" message: mouse, touch and keyboard each have their own hold', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  const inside = { id: 'link' };
+  const message = () => {
+    const target = new EventTarget();
+    const el = Object.assign(target, { contains: (n: unknown) => n === inside || n === el });
+    const fire = (type: string, extra: Record<string, unknown>) => el.dispatchEvent(Object.assign(new Event(type), extra));
+    return { el, fire };
+  };
+
+  it('a resting mouse holds it; moving inside it keeps the hold; leaving it resumes', () => {
+    const done = vi.fn();
+    const { el, fire } = message();
+    const t = holdTimer({ ms: 4500, onDone: done });
+    holdOn(el, t);
+    fire('pointerover', { pointerType: 'mouse' });
+    vi.advanceTimersByTime(30_000);
+    fire('pointerout', { pointerType: 'mouse', relatedTarget: inside });
+    vi.advanceTimersByTime(30_000);
+    expect(done).not.toHaveBeenCalled();
+    fire('pointerout', { pointerType: 'mouse', relatedTarget: null });
+    vi.advanceTimersByTime(4500);
+    expect(done).toHaveBeenCalledOnce();
+  });
+
+  it('a finger never holds it (a tap is an answer, not a rest)', () => {
+    const done = vi.fn();
+    const { el, fire } = message();
+    const t = holdTimer({ ms: 4500, onDone: done });
+    holdOn(el, t);
+    fire('pointerover', { pointerType: 'touch' });
+    vi.advanceTimersByTime(4500);
+    expect(done).toHaveBeenCalledOnce();
+  });
+
+  it('keyboard focus holds it on its own flag; the clock runs again only when mouse and keyboard have both let go', () => {
+    const done = vi.fn();
+    const { el, fire } = message();
+    const t = holdTimer({ ms: 4500, onDone: done });
+    holdOn(el, t);
+    fire('focusin', {});
+    fire('pointerover', { pointerType: 'mouse' });
+    fire('pointerout', { pointerType: 'mouse', relatedTarget: null });
+    vi.advanceTimersByTime(30_000);
+    expect(t.held()).toBe(true);
+    fire('focusout', { relatedTarget: null });
+    expect(t.held()).toBe(false);
+    vi.advanceTimersByTime(4500);
+    expect(done).toHaveBeenCalledOnce();
   });
 });

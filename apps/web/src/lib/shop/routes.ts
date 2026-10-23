@@ -21,7 +21,10 @@ export const ROUTES = {
   order: (number: string) => `/account/orders/${encodeURIComponent(number)}`,
   search: '/search',
   newIn: '/collections/new-in',
+  /** PR 103: the sets landing page; a rule's own list (`/combos/<rule>`, PR 572) and the set builder (PR 98) are still to come. */
   combos: '/combos',
+  /** PR 91: one combo's page (a fixed set or a generated pair), at the link the admin shows (`/combo/{slug}`). */
+  combo: (slug: string) => `/combo/${encodeURIComponent(slug)}`,
   buildSet: '/combos/build-your-own',
   journal: '/journal',
   help: (slug: string) => `/help/${slug}`,
@@ -53,6 +56,7 @@ export const BUILT_INSIDE: readonly string[] = [
   ROUTES.orders, // PR 131 — My orders (app/(shop)/(store)/account/orders); ~~each order's page comes with PR 134~~ (built)
   // PR 75 — the help pages (app/(shop)/(store)/help/[slug]); "Ways to pay", "Careers" and the size guide are still to come.
   // A built help page with nothing true to say yet still says "Coming soon" itself.
+  ROUTES.combos, // PR 103 — the sets landing page (app/(shop)/(store)/combos); each rule's own list (PR 572) and the set builder (PR 98) are still to come
   ...['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'].map(ROUTES.help),
 ];
 

@@ -67,3 +67,26 @@ export function holdTimer(o: HoldTimerOptions): HoldTimer {
     held: () => holds.size > 0,
   };
 }
+
+/** What `holdOn` listens on: an element, or a stand-in in a test. */
+export interface HoldTarget {
+  addEventListener(type: string, fn: (ev: Event) => void): void;
+  contains(node: unknown): boolean;
+}
+
+/**
+ * PR 91 · wires a message's own holds (checklist L33.23): a mouse resting on it (never a finger) and keyboard focus
+ * inside it each hold the clock with their own flag; leaving it (the mouse out of the whole message, the focus out of
+ * it) releases that flag, and the clock runs again once both are released.
+ */
+export function holdOn(el: HoldTarget, timer: HoldTimer): void {
+  const touch = (ev: Event) => (ev as Event & { pointerType?: string }).pointerType === 'touch';
+  const away = (ev: Event) => !el.contains((ev as Event & { relatedTarget?: unknown }).relatedTarget ?? null);
+  el.addEventListener('pointerover', (ev) => void (!touch(ev) && timer.hold('mouse')));
+  el.addEventListener('pointerout', (ev) => void (!touch(ev) && away(ev) && timer.release('mouse')));
+  el.addEventListener('focusin', (ev) => {
+    const t = ev.target as { matches?: (s: string) => boolean } | null;
+    if (!t?.matches || t.matches(':focus-visible')) timer.hold('key');
+  });
+  el.addEventListener('focusout', (ev) => void (away(ev) && timer.release('key')));
+}

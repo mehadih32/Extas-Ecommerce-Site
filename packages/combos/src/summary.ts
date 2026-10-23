@@ -80,7 +80,7 @@ const openIn = (slot: SetSlot, colourId: string, variants: readonly VariantStock
   variants.some((v) => v.productId === slot.productId && v.colourId === colourId && v.sellable > 0 && (v.sizeId === null || !slot.sizeIds.length || slot.sizeIds.includes(v.sizeId)));
 
 /** Each slot's first colour: the first open allowed one, a colour pair's next slot on a colour not used yet. */
-function firstColours(c: ComboForSale, needsMix: boolean): (string | null)[] {
+export function firstColours(c: Pick<ComboForSale, 'slots' | 'facts' | 'variants'>, needsMix: boolean): (string | null)[] {
   const used: string[] = [];
   return c.slots.map((s) => {
     const fact = c.facts.get(s.productId);
@@ -102,12 +102,29 @@ export async function wasAllowed(deps: CombosDeps, storeId: number): Promise<boo
 export async function setSummary(deps: CombosDeps, input: SetRefInput, db: Db = deps.db): Promise<SetSummary> {
   const d = parse(refSchema, input, 'set');
   const c = await comboForSale(deps, d.storeId, { comboId: d.comboId, slug: d.slug }, db);
+  return summaryOf(deps, d.storeId, c);
+}
+
+/** The set price from each slot's first colour (each colour can price differently: `priceSet` has the exact one). */
+export function firstPrice(c: Pick<ComboForSale, 'slots' | 'facts' | 'variants' | 'priceRule' | 'rounding' | 'onSale'>, first: readonly (string | null)[], allowed: boolean | null): SetPrice {
+  // A fixed set price does not move; a "% off" pair can.
+  const pieces = c.slots.map((s) => {
+    const fact = c.facts.get(s.productId);
+    const fixed = s.fixedVariantId ? c.variants.find((x) => x.id === s.fixedVariantId) : undefined;
+    return { priceMinor: fixed ? fixed.priceMinor : fact ? colourPrice(fact, first[s.index] ?? null) : null, quantity: 1 };
+  });
+  const pricing = setPricing(c.priceRule, pieces, c.rounding);
+  return setPrice(pricing, c.slots.length, { allowed, live: c.onSale, separateMinor: comboWasFor(pricing.payMinor, pieces).sumMinor ?? pricing.regularMinor });
+}
+
+/** The summary of a combo already read (`comboForSale`): a page that needs more than the summary reads the combo once. */
+export async function summaryOf(deps: CombosDeps, storeId: number, c: ComboForSale): Promise<SetSummary> {
   const [shopPage, shopBag, shopList, longListPairs, allowed] = await Promise.all([
-    setting(deps, d.storeId, 'combos.template.page'),
-    setting(deps, d.storeId, 'combos.template.bag'),
-    setting(deps, d.storeId, 'combos.template.list'),
-    setting(deps, d.storeId, 'combos.template.longListPairs'),
-    wasAllowed(deps, d.storeId),
+    setting(deps, storeId, 'combos.template.page'),
+    setting(deps, storeId, 'combos.template.bag'),
+    setting(deps, storeId, 'combos.template.list'),
+    setting(deps, storeId, 'combos.template.longListPairs'),
+    wasAllowed(deps, storeId),
   ]);
   const v = c.view;
   const needsMix = v.oneProduct && !v.sameColour;
@@ -136,13 +153,6 @@ export async function setSummary(deps: CombosDeps, input: SetRefInput, db: Db = 
       openSizes: Object.fromEntries(colours.map((x) => [x.id, openSizes(s, x.id, c.variants)])),
     };
   });
-  // The set price from the first colours' own prices (a fixed set price does not move; a "% off" pair can).
-  const firstPieces = c.slots.map((s) => {
-    const fact = c.facts.get(s.productId);
-    const fixed = s.fixedVariantId ? c.variants.find((x) => x.id === s.fixedVariantId) : undefined;
-    return { priceMinor: fixed ? fixed.priceMinor : fact ? colourPrice(fact, first[s.index] ?? null) : null, quantity: 1 };
-  });
-  const pricing = setPricing(c.priceRule, firstPieces, c.rounding);
   const productIds = new Set(c.slots.map((s) => s.productId));
   return {
     comboId: v.id,
@@ -162,7 +172,7 @@ export async function setSummary(deps: CombosDeps, input: SetRefInput, db: Db = 
     listTemplate: listTemplateFor({ combo: v.listTemplateKey, rule: c.rule?.listTemplateKey ?? null, shop: shopList }),
     photoAssetId: v.setPhotoAssetId,
     pieces,
-    price: setPrice(pricing, c.slots.length, { allowed, live: c.onSale, separateMinor: comboWasFor(pricing.payMinor, firstPieces).sumMinor ?? pricing.regularMinor }),
+    price: firstPrice(c, first, allowed),
     sharedSizes: sharedSizes(
       c.slots,
       first.map((colourId) => ({ colourId }) satisfies SlotChoice),

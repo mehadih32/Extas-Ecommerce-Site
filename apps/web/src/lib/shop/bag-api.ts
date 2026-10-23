@@ -2,6 +2,8 @@
 // same-site only and small; the answer carries the new piece count and refreshes both cookies (the visitor id for
 // `bag.keepDays`, the badge number). Prices are never taken from the browser: the page reads them again from the
 // engines after every change. Refusals are the engine's stable codes (OUT_OF_STOCK, TOO_MANY …) for the shop's words.
+// PR 91: a whole set goes in (and is changed) through `/api/bag/sets`; a combo page's counts and prices through
+// `/api/shop/combo`.
 import { randomBytes } from 'node:crypto';
 import {
   addItem,
@@ -19,7 +21,7 @@ import {
   visitorIdSchema,
   type CartDeps,
 } from '@extas/cart';
-import { addSetToBag, productFacts, setSummary } from '@extas/combos';
+import { addSetToBag, changeSetInBag, priceCell, priceSet, productFacts, recordColourPick, recordComboView, setSummary, type SlotChoice } from '@extas/combos';
 import { body, errorResponse, fail, isUuid, json, readCookie, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 
@@ -158,6 +160,67 @@ export async function codeHandler(request: Request, deps: BagApiDeps | null): Pr
     const bag = await bagOf(request, deps, false);
     if (!bag) return noBag();
     return answer(deps, bag, await setBagCode(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, code: code as string | null }));
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/**
+ * POST /api/bag/sets — PR 91: puts a set in the bag (one locked-price set, `addSetToBag`; makes the bag on the first
+ * add; the page's `addKey` makes a resent tap the same add). PATCH — PR 95: changes the colours or sizes of a set already
+ * in the bag (`changeSetInBag`, re-checked and re-priced). The set price is the engine's, never the browser's.
+ */
+export async function setHandler(request: Request, deps: BagApiDeps | null): Promise<Response> {
+  const stop = await guard(request, deps, ['POST', 'PATCH']);
+  if (stop || !deps) return stop ?? noBag();
+  try {
+    const b = await body(request);
+    const choices = b.choices as SlotChoice[];
+    if (request.method.toUpperCase() === 'PATCH') {
+      const bag = await bagOf(request, deps, false);
+      if (!bag) return noBag();
+      const r = await changeSetInBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, groupKey: b.groupKey as string, choices });
+      return answer(deps, bag, { groupKey: r.groupKey, lineId: r.lines[0]?.id ?? null, setPriceMinor: r.setPriceMinor });
+    }
+    const bag = (await bagOf(request, deps, true))!;
+    const r = await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: b.slug as string, choices, addKey: (b.addKey as string | undefined) || undefined });
+    return answer(deps, bag, { added: r.added, groupKey: r.groupKey, lineId: r.lines[0]?.id ?? null, setPriceMinor: r.setPriceMinor }, r.added ? 201 : 200);
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/**
+ * POST /api/shop/combo — PR 91–95: what a combo page tells the shop. `view` (the page was opened) and `pick` (a full
+ * set of colours was picked) count for the combo report (PR 104); `price` prices the exact picks with the one price
+ * rule when the page carries no price table (too many price mixes). Nothing here changes a bag.
+ */
+export async function comboEventHandler(request: Request, deps: BagApiDeps | null): Promise<Response> {
+  const stop = await guard(request, deps, ['POST']);
+  if (stop || !deps) return stop ?? noBag();
+  try {
+    const b = await body(request);
+    const ref = { storeId: deps.storeId, comboId: b.comboId as string };
+    if (b.event === 'view') {
+      await recordComboView(deps.cart, ref);
+      return json({ ok: true });
+    }
+    if (b.event === 'pick') {
+      await recordColourPick(deps.cart, { ...ref, colourIds: b.colourIds as (string | null)[] });
+      return json({ ok: true });
+    }
+    if (b.event === 'price') {
+      const bag = await bagOf(request, deps, false);
+      const r = await priceSet(deps.cart, {
+        storeId: deps.storeId,
+        comboId: ref.comboId,
+        choices: b.choices as SlotChoice[],
+        ...(bag ? { cartId: bag.cartId } : {}),
+        ...(typeof b.editGroupKey === 'string' ? { editGroupKey: b.editGroupKey } : {}),
+      });
+      return json({ ok: true, price: r.price ? priceCell(r.price) : null });
+    }
+    return fail(400, 'INVALID_INPUT', ['event']);
   } catch (e) {
     return refusal(e);
   }

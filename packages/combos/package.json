@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./pure": "./src/pure.ts",
-    "./sample": "./src/sample.ts"
+    "./sample": "./src/sample.ts",
+    "./page-model": "./src/page-model.ts"
   },
   "scripts": {
     "sample": "tsx src/cli.ts sample",

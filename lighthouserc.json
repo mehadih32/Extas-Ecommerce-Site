@@ -35,7 +35,8 @@
         "http://127.0.0.1:3000/bn/search",
         "http://127.0.0.1:3000/account/login",
         "http://127.0.0.1:3000/account",
-        "http://127.0.0.1:3000/account/orders/0"
+        "http://127.0.0.1:3000/account/orders/0",
+        "http://127.0.0.1:3000/combos"
       ],
       "numberOfRuns": 3,
       "settings": {

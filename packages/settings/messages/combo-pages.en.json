@@ -1,0 +1,30 @@
+{
+  "combos": {
+    "page": {
+      "layout": {
+        "label": "Combo page: how pieces are picked",
+        "help": "C1: one card per piece, every colour and size on one screen (the shop's default). C2: step by step — piece 1, then piece 2, with a Next button, then a review. The price, the button and the bag are the same in both."
+      },
+      "popularPairs": {
+        "label": "Popular pairs",
+        "help": "On a set of one product (\"any 2 colours\"), a row of ready colour pairs: one tap sets every colour. Three to a row, so 1, 2, 3 or 6 show (\"max\" is the most). \"learn\": the pairs customers really put in their bags come first, once a pair has \"minPicks\" picks; the rest follow your colour order. A pair that is not made in the size already picked is greyed. A generated colour pair shows its sister pairs as links instead."
+      },
+      "parts": {
+        "label": "Combo page: what shows beside the pickers",
+        "help": "summary: the \"Set summary\" box on a computer. whatsapp: \"Ask about this set on WhatsApp\" (only when the shop has a WhatsApp number). rules: the Size exchange · Delivery · Cash on Delivery card (each line only when that rule is on). exchangeLine: the line \"Exchange one item or the whole set — the set price stays\" — a promise only you can make, so it is off until you switch it on. itemPrices: the regular price of each piece in the price box (a computer)."
+      },
+      "moreSets": {
+        "label": "\"More sets\" under a combo page",
+        "help": "The other sets on sale now, as cards under the combo page: one card per ready-made set and one per auto rule and product (its colour pairs are that card's colours). \"max\" is how many cards."
+      }
+    },
+    "landing": {
+      "label": "Sets landing page (/combos)",
+      "help": "The page with every set on sale: 2-piece packs, 3-piece packs and top + bottom sets, one row each. seasonTabs: the season tabs (from \"Season tabs\") when the rules use more than one season. perRail: the most cards in one row. Off: the page says \"Coming soon\"."
+    },
+    "pdpOffer": {
+      "label": "Matching set on the product page",
+      "help": "On a product that is in a set on sale, a line above the buttons: \"Polo + Chino: a polo and a chino for ৳X · Save ৳Y\", linking to the set. \"max\" is how many sets it names."
+    }
+  }
+}

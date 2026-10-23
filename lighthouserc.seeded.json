@@ -1,5 +1,5 @@
 {
-  "$comment": "Follow-up 23 (PR 82): the storefront Lighthouse budget again on the sample data (CI device-gate job: the sample catalogue, rules and combos on a throwaway database; never the owner's data). lighthouserc.json runs without a database, where the pages carry no products; with products the fonts and the fits cost more, so the same budget is checked here. The server is already running; first visits only (no Bengali-font cookie). PR 49: the product page (a polo with five colours) in both languages. PR 50/51: the T2 and T3 templates (the sample polos that carry them); PR 88: T3 in Bengali too (follow-up 156). PR 73: the search results for polo (the category page's filters and cards).",
+  "$comment": "Follow-up 23 (PR 82): the storefront Lighthouse budget again on the sample data (CI device-gate job: the sample catalogue, rules and combos on a throwaway database; never the owner's data). lighthouserc.json runs without a database, where the pages carry no products; with products the fonts and the fits cost more, so the same budget is checked here. The server is already running; first visits only (no Bengali-font cookie). PR 49: the product page (a polo with five colours) in both languages. PR 50/51: the T2 and T3 templates (the sample polos that carry them); PR 88: T3 in Bengali too (follow-up 156). PR 73: the search results for polo (the category page's filters and cards). PR 91–103: the combo page (a polo + chino set) in both languages and the sets landing page.",
   "ci": {
     "collect": {
       "url": [
@@ -26,7 +26,11 @@
         "http://127.0.0.1:3000/bn/account",
         "http://127.0.0.1:3000/account/profile",
         "http://127.0.0.1:3000/account/orders/0",
-        "http://127.0.0.1:3000/bn/account/orders/0"
+        "http://127.0.0.1:3000/bn/account/orders/0",
+        "http://127.0.0.1:3000/combo/sample-polo-chino-set",
+        "http://127.0.0.1:3000/bn/combo/sample-polo-chino-set",
+        "http://127.0.0.1:3000/combos",
+        "http://127.0.0.1:3000/bn/combos"
       ],
       "numberOfRuns": 3,
       "settings": {
