@@ -1,6 +1,6 @@
 // S04 — the checkout's small pure helpers (no React, no browser): how the delivery step names a band and a place, and
 // how a band's hours and the customer's kept choice are read. Tested in checkout-model.test.ts.
-import { PAY_METHODS, type BandOut, type PaymentChoice, type PlaceName } from '@extas/checkout/pure';
+import { PAY_METHODS, type BandOut, type Field, type FormCheck, type PaymentChoice, type PlaceName } from '@extas/checkout/pure';
 import type { ShopLang } from './lang';
 
 /** A name in the page's language (the Bengali one when it exists). */
@@ -56,4 +56,15 @@ export function payChoiceOf(v: unknown): PaymentChoice | null {
   const o = v as Record<string, unknown>;
   const method = (PAY_METHODS as readonly unknown[]).includes(o.method) ? (o.method as PaymentChoice['method']) : null;
   return method ? { method, option: typeof o.option === 'string' && o.option ? o.option : null } : null;
+}
+
+/** PR 124 — the line a refused Confirm shows inside a field (`ask.<key>`): a phone that is there but wrong has its own. */
+export function askKey(field: Field, check: FormCheck): 'name' | 'phone' | 'phoneBad' | 'address' {
+  if (field === 'phone' && !check.ok && check.all.phone === 'phone') return 'phoneBad';
+  return field;
+}
+
+/** PR 124 — the field still asked about: the one Confirm pointed at, while it still has a problem. */
+export function stillAsked(ask: Field | null, check: FormCheck): Field | null {
+  return ask && !check.ok && check.all[ask] ? ask : null;
 }

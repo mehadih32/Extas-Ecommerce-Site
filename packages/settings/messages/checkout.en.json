@@ -116,6 +116,12 @@
           "help": "Off by default: WhatsApp offers only for those who tick it."
         }
       }
+    },
+    "confirm": {
+      "style": {
+        "label": "Confirm button before the form is finished",
+        "help": "\"ask\" (yours): the button always works; pressing it lights up the missing field and says in Bengali, inside that box, what to write. \"disable\": the button waits switched off and says what is missing above it."
+      }
     }
   }
 }

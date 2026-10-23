@@ -21,6 +21,8 @@ export const CARD_TYPES = ['visa', 'mastercard', 'amex', 'bank'] as const;
 /** PR 120 (CN-018 (1)) — what paying before delivery earns: free delivery, an amount off, or a percentage off. */
 export const PREPAID_REWARD_TYPES = ['freeDelivery', 'amount', 'percent'] as const;
 export const PREPAID_REWARD_FALLBACKS = ['amount', 'percent'] as const;
+/** PR 124 (demo #42) — an unfinished form: the button asks inside the field (the owner's way), or it waits switched off. */
+export const CONFIRM_STYLES = ['ask', 'disable'] as const;
 
 const listOf = <T extends readonly [string, ...string[]]>(values: T) =>
   z
@@ -188,6 +190,17 @@ export const checkoutSettings = {
     valueType: 'BOOLEAN',
     labelKey: 'checkout.consent.whatsapp.default.label',
     helpKey: 'checkout.consent.whatsapp.default.help',
+    sortOrder: 69,
+  }),
+
+  // ---- PR 124 · the Confirm button while the form is not finished (demo #42: 'ask' is the owner's version) ----
+  'checkout.confirm.style': setting({
+    ...base,
+    schema: z.enum(CONFIRM_STYLES),
+    default: 'ask',
+    valueType: 'ENUM',
+    labelKey: 'checkout.confirm.style.label',
+    helpKey: 'checkout.confirm.style.help',
     sortOrder: 69,
   }),
 

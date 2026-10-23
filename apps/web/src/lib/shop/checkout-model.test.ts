@@ -65,3 +65,23 @@ describe('a kept payment choice (PR 120)', () => {
     expect(payChoiceOf(null)).toBeNull();
   });
 });
+
+describe('a refused Confirm (PR 124)', () => {
+  it('points at the field with its own line, and lets go once the field is fixed', async () => {
+    const { askKey, stillAsked } = await import('./checkout-model');
+    const { checkForm } = await import('@extas/checkout/pure');
+    const limits = { nameMin: 2, addressMin: 8 };
+    const empty = checkForm({ name: '', phone: '', address: '' }, limits);
+    expect(empty.ok).toBe(false);
+    if (empty.ok) return;
+    expect(empty.field).toBe('name');
+    expect(askKey('name', empty)).toBe('name');
+    expect(askKey('phone', empty)).toBe('phone');
+    const bad = checkForm({ name: 'Rahim', phone: '0171', address: 'House 4, Road 2' }, limits);
+    expect(askKey('phone', bad)).toBe('phoneBad');
+    expect(stillAsked('phone', bad)).toBe('phone');
+    const fixed = checkForm({ name: 'Rahim', phone: '01712345678', address: 'House 4, Road 2' }, limits);
+    expect(stillAsked('phone', fixed)).toBeNull();
+    expect(stillAsked(null, bad)).toBeNull();
+  });
+});
