@@ -2812,21 +2812,42 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "pnpm workspace, Next.js 16 App Router + TypeScript strict + Tailwind 4; Bengali status page at `/status`",
+    "note": "pnpm workspace, Next.js 16 App Router + TypeScript strict + Tailwind 4; Bengali status page at `/status`.",
     "github": [
+     "#35, 24 Oct",
      "#3 (commit `d2ed429`), 20 Oct 02:59 (Dhaka)"
     ]
    },
    "builtFacts": {
     "routes": [
-     "/status"
+     "/status",
+     "/api/admin/shell/badges",
+     "/api/admin/search",
+     "/admin/delivery",
+     "/admin/delivery/zones",
+     "/admin/help"
     ],
-    "settings": [],
-    "code": [],
+    "settings": [
+     "dashboard.read",
+     "help.read",
+     "admin.shell",
+     "admin.dashboard"
+    ],
+    "code": [
+     "#/admin"
+    ],
     "names": [],
     "tests": []
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "23 Oct",
+     "sortKey": 33120,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 23 Oct 2026 (CN-022):** the new 14-section admin shell (docs/BACKEND-ARCHITECTURE.md §5.0–5.2, demo V12.3 `#/admin`): sidebar in four groups, icon rail on a tablet, drawer and bottom bar on a phone, top bar, section tabs with \"More ▾\", entries by permission (AI Center owners only), waiting-work badges (`/api/admin/shell/badges`), the Ctrl K / \"/\" palette (`/api/admin/search`), notifications drawer, the section guide panel (SH-05), account menu (SH-06), 403/404/error states in the shell (SH-07), every built page re-homed with its URL (only `/admin/delivery` → `/admin/delivery/zones`, 308), honest placeholders for the unbuilt sections, `/admin/help`, and the Dashboard (DSH-01) with \"Needs you now\"; permissions `dashboard.read`, `help.read`; settings v33 `admin.shell`, `admin.dashboard`"
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "অ্যাপের কাঠামো (Next.js) তৈরি; /status-এ বাংলা প্রোগ্রেস পাতা।",
@@ -3417,8 +3438,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "role builder: permission catalogue in code, roles as data; seeded owner role always holds every permission and cannot be archived or stripped; nobody grants more than they hold; the last owner cannot be paused or removed; roles archived, never deleted; admin API under `/api/admin/roles`, `/staff`, `/permissions` (screens come with the admin shell)",
+    "note": "role builder: permission catalogue in code, roles as data; seeded owner role always holds every permission and cannot be archived or stripped; nobody grants more than they hold; the last owner cannot be paused or removed; roles archived, never deleted; admin API under `/api/admin/roles`, `/staff`, `/permissions` (screens come with the admin shell). 23 Oct (PR 12 shell): role start pages as a setting, `admin.startPages` (empty: everyone starts on the Dashboard); the menu's Dashboard always opens it",
     "github": [
+     "#35, 24 Oct",
      "#9 (commit `fa6b77e`), 20 Oct 05:09 (Dhaka)"
     ]
    },
@@ -3428,14 +3450,17 @@
      "/staff",
      "/permissions"
     ],
-    "settings": [],
+    "settings": [
+     "admin.startPages"
+    ],
     "code": [],
     "names": [],
     "tests": []
    },
    "updates": [],
    "mentions": [
-    16
+    16,
+    12
    ],
    "blueprint": [],
    "bn": "অ্যাডমিন নিজে রোল আর পারমিশন বানাতে পারে; মালিকের রোল কেউ কমাতে পারে না।",
@@ -4317,8 +4342,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "size chart admin `/admin/size-charts` (demo `82-admin-sizecharts`, phone 390 and desktop 1366 compared, `docs/qa/screenshots/pr-28/`): list, measurement table with \"show cm\", paste from Excel, add row (suggested from the neighbours), coverage warning, save / discard, copy for another fit, category defaults, products with their own chart (\"back to auto\"), \"when you add a product\" panel, archive / bring back; admin menu entry; Lighthouse page added. Photo spec-sheet reading (AI) comes with the AI stage",
+    "note": "size chart admin `/admin/size-charts` (demo `82-admin-sizecharts`, phone 390 and desktop 1366 compared, `docs/qa/screenshots/pr-28/`): list, measurement table with \"show cm\", paste from Excel, add row (suggested from the neighbours), coverage warning, save / discard, copy for another fit, category defaults, products with their own chart (\"back to auto\"), \"when you add a product\" panel, archive / bring back; admin menu entry; Lighthouse page added. Photo spec-sheet reading (AI) comes with the AI stage. 23 Oct (follow-up 117): the `.sc-link` tap layer is at least 44 px wide too; the page sits in Products › Size charts of the new admin shell",
     "github": [
+     "#35, 24 Oct",
      "#14 (commit `26d2b1f`), 20 Oct 08:22 (Dhaka)"
     ]
    },
@@ -4331,7 +4357,8 @@
      "docs/qa/screenshots/pr-28/"
     ],
     "names": [
-     "82-admin-sizecharts"
+     "82-admin-sizecharts",
+     ".sc-link"
     ],
     "tests": []
    },
@@ -11108,7 +11135,7 @@
     "date": "2026-10-23",
     "note": "the order state machine as one order service (`@extas/orders`, CN-022): every status change is a command through `execute()` — row lock, version check (STALE), the machine's plan (illegal → ILLEGAL_TRANSITION with the commands open now), an OrderEvent and an AuditLog row in one transaction, idempotency keys (§7.7); new state AWAITING_ADVANCE, flags cancelPending / customerWantsChange; courier, payment and return statuses stay their own records (hooks for S06–S08); the order list with views and counts and one order's data; `/api/admin/orders/...`; migration `0018_order_core` (additive); 10 `orders.*` permissions; settings group `orders` (registry v32); a guard test that nothing else writes Order.status",
     "github": [
-     "#34, 23 Oct"
+     "#35, 23 Oct"
     ]
    },
    "builtFacts": {
@@ -11361,7 +11388,7 @@
     "date": "2026-10-23",
     "note": "cancellation with fixed reason codes and the owner's words (`orders.cancel.reasons`): held stock released, open payments closed, a paid order's cancel records refund REQUESTS only (SIM-F-041); cancel after booking with the courier's answer as its own step (D5, SIM-F-004); the customer's own cancel (CN-020 (5), SIM-F-056): one tap until the cut-off (`orders.cancel.customer`, default until confirmed), then a request the team answers, until booking; `POST /api/account/cancel` (no shop button yet)",
     "github": [
-     "#34, 23 Oct"
+     "#35, 23 Oct"
     ]
    },
    "builtFacts": {
@@ -11408,7 +11435,7 @@
     "date": "2026-10-23",
     "note": "the duplicate-order defence: the submit guard (checkout key, bag converted), the check when the order lands (same customer or phone, `orders.duplicates` look-back 5 days, high / medium / low by B1.12), the review queue (FraudAlert section `duplicate`) that holds the confirm, the decisions approve / decline / hold / ask / one parcel (money untouched), each with FraudDecision, audit and timeline rows; auto-hold off",
     "github": [
-     "#34, 23 Oct"
+     "#35, 23 Oct"
     ]
    },
    "builtFacts": {
@@ -11491,7 +11518,7 @@
     "date": "2026-10-23",
     "note": "notes on an order (internal by default, archived never deleted, `orders.notes.maxChars`) and internal flags from `orders.flags.list` set through the order service",
     "github": [
-     "#34, 23 Oct"
+     "#35, 23 Oct"
     ]
    },
    "builtFacts": {
@@ -11731,7 +11758,7 @@
     "date": "2026-10-23",
     "note": "hold with a reason key (`orders.hold.reasons`, \"other\" needs a note) visible to support, release back to where it was held from; a long hold (`orders.hold.reviewHours`, 0 = off) or an overdue advance (`orders.advance.waitHours`, SIM-F-043) only hands the order to a person, never cancels",
     "github": [
-     "#34, 23 Oct"
+     "#35, 23 Oct"
     ]
    },
    "builtFacts": {
@@ -11799,18 +11826,22 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "one KPI definition (CN-022, owner 23 Oct): `@extas/metrics` — Sales = DELIVERED orders on the delivered day, Ordered value = every placed order (not DRAFT) on the placed day, archived in neither, shop days in `store.timeZone`; `kpi`, `kpiByDay`, `kpiByZone`, `kpiByPaymentMethod`, `lines`/`linesBoth`; the combo report (PR 104) and the rename before/after report (PR 590) moved onto it, \"Ordered value\" and \"Sales (delivered)\" side by side; guard test fails on any ad-hoc money sum or `mv_` read outside the package; smoke `figures` check on `/admin/combos?tab=report`; dashboard tiles and the order-analytics screen are follow-ups 90–91. 23 Oct (follow-ups 92, 93): migration `0012_kpi_report_views` — `mv_kpi_daily` and `mv_kpi_lines_monthly` count exactly like the package (both bases, shop days in `store.timeZone`), refreshed by `extas_refresh_kpi_views()` (the app role may run it), read only through `@extas/metrics` (`kpiByDayFromView`, `linesByMonthFromView`, live answer when the zone differs); the four PR 603 `mv_` views are kept and marked superseded; index `idx_order_sales_delivered` on Order (storeId, status, deliveredAt)",
+    "note": "one KPI definition (CN-022, owner 23 Oct): `@extas/metrics` — Sales = DELIVERED orders on the delivered day, Ordered value = every placed order (not DRAFT) on the placed day, archived in neither, shop days in `store.timeZone`; `kpi`, `kpiByDay`, `kpiByZone`, `kpiByPaymentMethod`, `lines`/`linesBoth`; the combo report (PR 104) and the rename before/after report (PR 590) moved onto it, \"Ordered value\" and \"Sales (delivered)\" side by side; guard test fails on any ad-hoc money sum or `mv_` read outside the package; smoke `figures` check on `/admin/combos?tab=report`; dashboard tiles and the order-analytics screen are follow-ups 90–91. 23 Oct (follow-ups 92, 93): migration `0012_kpi_report_views` — `mv_kpi_daily` and `mv_kpi_lines_monthly` count exactly like the package (both bases, shop days in `store.timeZone`), refreshed by `extas_refresh_kpi_views()` (the app role may run it), read only through `@extas/metrics` (`kpiByDayFromView`, `linesByMonthFromView`, live answer when the zone differs); the four PR 603 `mv_` views are kept and marked superseded; index `idx_order_sales_delivered` on Order (storeId, status, deliveredAt). 23 Oct (follow-up 90, PR 12 shell): the Dashboard's two money tiles, Delivered sales (provisional) and Ordered value (final), today / 7 / 30 days through `kpi` / `kpiByDay`, permission `metrics.read`, `admin.dashboard.ranges` / `sparkDays`, smoke `figures` on `/admin?home=1`",
     "github": [
+     "#35, 24 Oct",
      "#31, 23 Oct",
      "#29, 23 Oct"
     ]
    },
    "builtFacts": {
     "routes": [
-     "/admin/combos?tab=report"
+     "/admin/combos?tab=report",
+     "/admin?home=1"
     ],
     "settings": [
-     "store.timeZone"
+     "store.timeZone",
+     "metrics.read",
+     "admin.dashboard.ranges"
     ],
     "code": [
      "@extas/metrics"
@@ -11830,7 +11861,8 @@
      "extas_refresh_kpi_views()",
      "kpiByDayFromView",
      "linesByMonthFromView",
-     "idx_order_sales_delivered"
+     "idx_order_sales_delivered",
+     "sparkDays"
     ],
     "tests": [
      "guard test fails on any ad-hoc money sum or `mv_` read outside the package"
@@ -11848,7 +11880,8 @@
    "mentions": [
     104,
     590,
-    603
+    603,
+    12
    ],
    "blueprint": [],
    "bn": "\"বিক্রি\" একটাই হিসাব: শুধু ডেলিভারি হওয়া অর্ডার, ডেলিভারির দিনে গোনা; সব দেওয়া অর্ডারের মূল্য আলাদা করে পাশে; সব রিপোর্ট একই হিসাব থেকে।",
