@@ -38,6 +38,11 @@ const sampleSchema = z
       .strict(),
     publishedAt: z.iso.datetime(),
     visibleCategories: z.array(slug),
+    /** Follow-up 75: sample sub-categories (made only by this seed, visible), so the phone menu's accordion (PR 74)
+     * and a category's children are drawn and measured on the sample data. A parent comes from the default pack. */
+    subCategories: z
+      .array(z.object({ slug, parent: slug, nameEn: text(80), nameBn: text(80).optional(), sortOrder: z.int().min(0) }).strict())
+      .default([]),
     colours: z
       .array(
         z
@@ -117,6 +122,11 @@ const sampleSchema = z
     const collections = new Set(s.collections.map((c) => c.slug));
     const tags = new Set(s.tags.map((c) => c.slug));
     const products = new Map(s.products.map((p) => [p.slug, p]));
+    const subs = new Set(s.subCategories.map((c) => c.slug));
+    for (const c of s.subCategories) {
+      if (subs.has(c.parent)) bad(`sub-category ${c.slug}: its parent must be a default-pack category`);
+      if (s.visibleCategories.includes(c.slug)) bad(`sub-category ${c.slug}: sub-categories are shown by themselves`);
+    }
     const codes = new Set<string>();
     for (const p of s.products) {
       if (codes.has(p.code)) bad(`product code ${p.code} is used twice`);
@@ -165,6 +175,7 @@ export const sampleSku = (code: string, colour: string, size: string) => `SAMPLE
 export const SAMPLE_TABLES = [
   'Store',
   'Brand',
+  'Category',
   'Colour',
   'Size',
   'Collection',
@@ -270,6 +281,16 @@ async function seedSampleTx(
     where: { storeId, slug: { in: s.visibleCategories }, isVisible: false },
     data: { isVisible: true },
   });
+  // follow-up 75: the sample sub-categories, under their default-pack parents, visible, with the parent's garment type
+  for (const c of s.subCategories) {
+    if (await tx.category.findUnique({ where: { storeId_slug: { storeId, slug: c.slug } }, select: { id: true } })) continue;
+    const parent = await tx.category.findUnique({ where: { storeId_slug: { storeId, slug: c.parent } }, select: { id: true, garmentTypeId: true } });
+    if (!parent) throw new Error(`sample: sub-category "${c.slug}": parent "${c.parent}" is missing (is it in the default pack?)`);
+    await tx.category.create({
+      data: { storeId, slug: c.slug, nameEn: c.nameEn, nameBn: c.nameBn ?? null, parentId: parent.id, garmentTypeId: parent.garmentTypeId, sortOrder: c.sortOrder, isVisible: true },
+    });
+    made('Category');
+  }
   const categories = new Map(
     (await tx.category.findMany({ where: { storeId }, select: { id: true, slug: true, garmentTypeId: true } })).map((c) => [c.slug, c]),
   );

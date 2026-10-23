@@ -87,8 +87,11 @@ function appChecks(o) {
   // Tap targets: the area that really takes the tap, probed from the centre outwards with elementFromPoint.
   if (o.taps) {
     const small = [];
+    const modal = [...document.querySelectorAll('[aria-modal="true"]')].filter(vis).pop() ?? null;
     const targets = [...document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button], [role=link], [role=tab], [role=switch], [role=checkbox]')]
-      .filter((e) => vis(e) && !e.disabled && e.getAttribute('aria-hidden') !== 'true' && getComputedStyle(e).pointerEvents !== 'none' && !e.closest('[inert]'));
+      .filter((e) => vis(e) && !e.disabled && e.getAttribute('aria-hidden') !== 'true' && getComputedStyle(e).pointerEvents !== 'none' && !e.closest('[inert]'))
+      // an open aria-modal dialog (the phone menu's sheet, a size chart): only its own controls can be tapped
+      .filter((e) => !modal || modal.contains(e));
     const inlineLink = (e) => {
       if (e.tagName !== 'A' || !/^inline(-block)?$/.test(getComputedStyle(e).display)) return false;
       return [...(e.parentElement?.childNodes ?? [])].some((n) => n !== e && n.nodeType === 3 && n.textContent.trim().length > 0);
@@ -216,6 +219,24 @@ export function filledPlan(base, filled) {
   });
 }
 
+/**
+ * Follow-up 75 — pages measured with something opened on them (the phone menu with a category's sub-categories open,
+ * PR 74): device-gate.json `opened`. Each path is opened as a customer, `clicks` are pressed in order (each must be
+ * there: a missing one fails as CONTROL-MISSING), and the page is measured as it then stands; `groups` limits the sizes
+ * (the phone menu is not on a desktop) and `maxWidth` the widths (a landscape tablet has the desktop header).
+ * `?gate=opened` keeps them apart from the pages as they open.
+ */
+export function openedPlan(base, opened) {
+  return [opened ?? []].flat().flatMap((o) => {
+    if (!o?.clicks?.length) return [];
+    return (o.paths ?? []).map((p) => {
+      const u = new URL(p, base);
+      u.searchParams.set('gate', 'opened');
+      return { url: u.toString(), signedOut: true, expect: [...(o.expect ?? [])], clicks: [...o.clicks], ...(o.groups ? { groups: [...o.groups] } : {}), ...(o.maxWidth ? { maxWidth: o.maxWidth } : {}) };
+    });
+  });
+}
+
 /** The path and query a result is reported under. */
 const shown = (url) => {
   const u = new URL(url);
@@ -288,6 +309,16 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     if (!res || res.status() >= 400) issues.push({ k: 'PAGE-STATUS', d: `HTTP ${res ? res.status() : 'no answer'}` });
     if (opts.state && new URL(finalUrl).pathname.startsWith('/admin/login')) issues.push({ k: 'SIGNED-OUT', d: 'sent to the sign-in page with a session' });
     await page.waitForTimeout(rules.settleMs);
+    // follow-up 75: open what the plan names (the phone menu, a category's sub-categories) before measuring
+    for (const sel of opts.clicks ?? []) {
+      const el = page.locator(sel).first();
+      if (!(await el.count())) {
+        issues.push({ k: 'CONTROL-MISSING', d: `${sel} not on the page to open (seeded data missing?)` });
+        break;
+      }
+      await el.click();
+      await page.waitForTimeout(rules.settleMs);
+    }
     for (const sel of opts.expect ?? []) {
       if (!(await page.$(sel))) issues.push({ k: 'CONTROL-MISSING', d: `${sel} not on the page (seeded data missing?)` });
     }
@@ -388,15 +419,15 @@ async function main() {
     setup.push(...d.problems);
     plan = signedInPlan(base, only ? { signedOutPaths: rules.signedIn?.signedOutPaths } : rules.signedIn ?? {}, urls, d.found);
   }
-  if (!only) plan.push(...filledPlan(base, rules.filled));
+  if (!only) plan.push(...filledPlan(base, rules.filled), ...openedPlan(base, rules.opened));
   urls = plan.map((p) => p.url);
-  const jobs = devices.flatMap((d) => plan.map((p) => [d, p]));
+  const jobs = devices.flatMap((d) => plan.filter((p) => (!p.groups || p.groups.includes(d.group)) && (!p.maxWidth || d.w <= p.maxWidth)).map((p) => [d, p]));
   const results = [];
   let next = 0;
   await Promise.all(Array.from({ length: Math.max(1, concurrency) }, async () => {
     while (next < jobs.length) {
       const [d, p] = jobs[next++];
-      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect, fill: p.fill }));
+      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect, fill: p.fill, clicks: p.clicks }));
     }
   }));
   await browser.close();

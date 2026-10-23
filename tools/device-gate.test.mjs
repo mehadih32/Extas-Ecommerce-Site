@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, markdownReport, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, markdownReport, openedPlan, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -71,6 +71,19 @@ describe('device gate', () => {
     expect(filledPlan('http://h:1', rules.filled[0]).map((p) => p.url)).toEqual(['http://h:1/bag?gate=filled', 'http://h:1/bn/bag?gate=filled']);
     const rc = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../lighthouserc.json'), 'utf8')).ci.collect.url.map((u) => new URL(u).pathname);
     for (const p of ['/bag', '/bn/bag']) expect(rc).toContain(p);
+  });
+
+  it('follow-up 75 · plans the phone menu opened with its sub-categories, on phones and tablets only', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const plan = openedPlan('http://h:1', rules.opened);
+    expect(plan.map((p) => p.url)).toEqual(['http://h:1/?gate=opened', 'http://h:1/bn?gate=opened']);
+    expect(plan.every((p) => p.signedOut && p.clicks[0] === 'button[data-act="open-menu"]' && p.clicks.includes('[data-testid="mn-acc"]'))).toBe(true);
+    expect(plan[0].groups).toEqual(['phone', 'tablet']);
+    expect(plan[0].maxWidth).toBe(1023);
+    expect(plan[0].expect).toContain('[data-testid="mn-sub"]');
+    expect(openedPlan('http://h:1', undefined)).toEqual([]);
+    expect(openedPlan('http://h:1', [{ paths: ['/'] }])).toEqual([]);
+    expect(openedPlan('http://h:1', { paths: ['/x'], clicks: ['b'] })).toEqual([{ url: 'http://h:1/x?gate=opened', signedOut: true, expect: [], clicks: ['b'] }]);
   });
 
   it('PR 53 · checks the first screen of every product page: the sizes above the bar on phones, the buy buttons on desktops', () => {

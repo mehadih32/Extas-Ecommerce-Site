@@ -291,7 +291,8 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
         { quantity: 2, priceMinor: 200000, eachMinor: 100000 },
         { quantity: 3, priceMinor: null, eachMinor: null },
       ]);
-      const polosInStore = await t.prisma.product.count({ where: { storeId: S, status: 'PUBLISHED', categoryId: polos.id } });
+      // a category's scope covers its sub-categories too (the sample's "Knit polos", follow-up 75)
+      const polosInStore = await t.prisma.product.count({ where: { storeId: S, status: 'PUBLISHED', OR: [{ categoryId: polos.id }, { category: { parentId: polos.id } }] } });
       expect(v!.products).toBe(polosInStore - 1);
 
       expect(await liveSetTiers(deps(), { storeId: S, productId: ids['essential-pique-polo']! })).toEqual([expect.objectContaining({ key: 'test-any-polos', tiers: [{ quantity: 2, priceMinor: 200000 }] })]);
