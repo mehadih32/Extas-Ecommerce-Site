@@ -35,7 +35,7 @@ export const COLOUR_QUERY = 'color';
  */
 export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boolean }> = [
   // ~~{ key: 'collections', path: '/collections', deep: true }, // category pages, PR 45~~ built: app/(shop)/(store)/collections/[slug]
-  { key: 'search', path: '/search', deep: false },
+  // ~~{ key: 'search', path: '/search', deep: false },~~ — built: PR 72 / 73 (the search window and the results page)
   // ~~{ key: 'bag', path: '/bag', deep: false }~~ — built: PR 107 (the bag page)
   { key: 'account', path: '/account', deep: true },
   { key: 'combos', path: '/combos', deep: true },
