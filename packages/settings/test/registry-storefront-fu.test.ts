@@ -40,4 +40,8 @@ describe('storefront follow-up settings (v25)', () => {
     expect(pdpSizeWordsSchema.safeParse({ show: 'bn', words: { m: { en: '', bn: 'অনেক লম্বা একটা শব্দ যা ধরবে না' } } }).success).toBe(false);
     expect(pdpUsualSizeSchema.safeParse({ on: true, preselect: false, days: 0 }).success).toBe(false);
   });
+
+  it('follow-up 58: the note is said back, the next steps are off as in the demo', () => {
+    expect(storefrontFuSettings['thanks.page'].default).toEqual({ noteBack: true, nextSteps: false });
+  });
 });

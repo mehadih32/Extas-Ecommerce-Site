@@ -442,3 +442,14 @@
 .shop .co-sug-n { font-weight: 650; min-width: 0px; overflow-wrap: anywhere; }
 .shop .co-sug-p { color: var(--text2); font-size: 13.5px; min-width: 0px; overflow-wrap: anywhere; }
 .shop .co-sug-c { margin-left: auto; padding-left: 8px; font-weight: 650; font-size: 14px; white-space: nowrap; color: var(--ink); }
+/* PR 126 · follow-up 58 (demo styles.css .tl-*, 52-thanks.js): "What happens next", the note said back */
+.shop .tl { list-style: none; margin: 0px; padding: 0px; }
+.shop .tl-step { display: flex; gap: 12px; }
+.shop .tl-rail { display: flex; flex-direction: column; align-items: center; }
+.shop .tl-dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid rgb(185, 179, 170); background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+.shop .tl-dot.done { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.shop .tl-dot.now { border: 2px solid var(--brand); color: var(--brand); }
+.shop .tl-line { width: 2px; flex: 1 1 0%; background: var(--line); min-height: 22px; margin: 2px auto; }
+.shop .tl-line.done { background: var(--brand-line); }
+.shop .ty-note-t { margin-bottom: 0px; white-space: pre-line; overflow-wrap: anywhere; color: var(--ink); }
+.shop .ty-pay .ty-trial { margin-top: 6px; }

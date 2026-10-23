@@ -3,10 +3,13 @@
 // what is still to pay (Cash on Delivery due at the door, paid, "Pay now" while a prepaid payment waits, "Try again"
 // after a failed one), the order's lines and money as stored, the WhatsApp button and "Keep shopping".
 // Left out until their PRs (the copy says only what the shop really does): the SMS line (no SMS is sent yet), "Track
-// your order" (PR 135), the account card (PR 129), "Complete your look" (PR 128) and the next-steps timeline.
+// your order" (PR 135), the account card (PR 129), "Complete your look" (PR 128) ~~and the next-steps timeline~~.
+// Follow-up 58 (`thanks.page`): the delivery note he wrote, said back (on); the trial-at-the-door line while that
+// service is on (`checkout.tryOn.enabled`); and "What happens next" (off, as in the demo: `thanks.nextSteps`).
 import '../bag/bag.css';
 import './checkout.css';
 import type { Receipt } from '@extas/checkout';
+import type { ThanksPageSettings } from '@extas/settings';
 import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords } from '@/lib/shop/checkout';
 import type { ShopContext } from '@/lib/shop/context';
@@ -15,6 +18,7 @@ import { hoursOf, named } from '@/lib/shop/checkout-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
+import { nextSteps, placedText } from '@/lib/shop/thanks-model';
 import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { CopyNumber, RetryPayment } from './ThanksActions';
@@ -33,7 +37,7 @@ export function ThanksNotFound({ c }: { c: ShopContext }) {
   );
 }
 
-export async function ThanksPage({ c, r, waOn }: { c: ShopContext; r: Receipt; waOn: boolean }) {
+export async function ThanksPage({ c, r, waOn, more, tryOn }: { c: ShopContext; r: Receipt; waOn: boolean; more: ThanksPageSettings; tryOn: boolean }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
   const m = c.money;
@@ -46,6 +50,53 @@ export async function ThanksPage({ c, r, waOn }: { c: ShopContext; r: Receipt; w
   const promise = r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
   const cards = await cardsByIds(c.storeId, r.lines.map((l) => l.productId).filter((x): x is string => !!x));
   const wa = waOn ? waHref(c.s['contact.whatsapp'], w('ty.waMsg', { number: r.number })) : null;
+  // follow-up 58 · the trial at the door (the shop's own switch), the note said back, what happens next
+  const trial = tryOn ? (
+    <p className="trial-ln ty-trial" data-testid="ty-trial">
+      <Icon name="check" size={14} />
+      <span>{c.t('pdp.rules.trial')}</span>
+    </p>
+  ) : null;
+  const note =
+    more.noteBack && r.note ? (
+      <section className="card p20 ty-note" data-testid="ty-note">
+        <div className="xs muted">{c.t('tyMore.note')}</div>
+        <p className="small mt8 ty-note-t">{r.note}</p>
+      </section>
+    ) : null;
+  const steps = more.nextSteps
+    ? nextSteps(
+        { placed: c.t('tyMore.placed'), confirm: c.t('tyMore.confirm'), courier: c.t('tyMore.courier'), delivered: c.t('tyMore.delivered') },
+        placedText(r.placedAt, c.s['store.timeZone'], c.lang, c.bnDigits),
+        promise,
+      )
+    : [];
+  const timeline = steps.length ? (
+    <section className="card p20" data-testid="ty-timeline">
+      <h2 className="h3" style={{ marginBottom: 14 }}>
+        {c.t('tyMore.next')}
+      </h2>
+      <ol className="tl">
+        {steps.map((s, i) => {
+          const last = i === steps.length - 1;
+          return (
+            <li key={s.key} className="tl-step" aria-current={s.state === 'now' ? 'step' : undefined}>
+              <div className="tl-rail">
+                <div className={`tl-dot${s.state === 'done' ? ' done' : s.state === 'now' ? ' now' : ''}`} aria-hidden="true">
+                  {s.state === 'done' ? <Icon name="check" size={13} /> : n(i + 1)}
+                </div>
+                {last ? null : <div className={`tl-line${s.state === 'done' ? ' done' : ''}`} />}
+              </div>
+              <div style={{ paddingBottom: last ? 0 : 16 }}>
+                <div className="h3">{s.title}</div>
+                {s.note ? <div className="small muted">{s.note}</div> : null}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  ) : null;
 
   const payBox =
     pay.kind === 'cod' ? (
@@ -59,6 +110,7 @@ export async function ThanksPage({ c, r, waOn }: { c: ShopContext; r: Receipt; w
             {w('ty.codNote')}
             {r.chargeFixed ? null : ` ${w('ty.codCall')}`}
           </div>
+          {trial}
         </div>
       </div>
     ) : pay.kind === 'paid' ? (
@@ -188,7 +240,9 @@ export async function ThanksPage({ c, r, waOn }: { c: ShopContext; r: Receipt; w
         <div className="ty-cols">
           <div className="ty-col">
             <div style={{ order: 1 }}>{payBox}</div>
+            {timeline ? <div style={{ order: 5 }}>{timeline}</div> : null}
             <div style={{ order: 6 }}>{items}</div>
+            {note ? <div style={{ order: 7 }}>{note}</div> : null}
             <div style={{ order: 10 }}>
               <div className="ty-endbtns">
                 <a className="btn btn-ghost btn-block ty-keep" href={hrefIn(c.lang, ROUTES.home)} data-testid="ty-keep">

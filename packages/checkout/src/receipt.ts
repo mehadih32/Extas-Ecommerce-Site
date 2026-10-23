@@ -38,6 +38,8 @@ export interface Receipt {
   /** The phone as said back to him (01712-345678). */
   phone: string | null;
   address: string | null;
+  /** The delivery note he wrote at checkout (PR 125), said back on the thank-you page (follow-up 58). */
+  note: string | null;
   placedAt: string;
   /** The band the order is charged as, with its promise in hours (null: the address is being checked). */
   band: { nameEn: string; nameBn: string | null; hoursMin: number | null; hoursMax: number | null } | null;
@@ -98,6 +100,7 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
     firstName: (o.customerName ?? '').trim().split(/\s+/)[0] ?? '',
     phone: phone.ok ? phone.nice : o.phone,
     address: o.shippingAddressText,
+    note: o.note?.trim() || null,
     placedAt: o.placedAt.toISOString(),
     band: o.deliveryBand,
     addressUnclear: o.addressUnclear,

@@ -189,6 +189,8 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       const r = await s.place({ note: '  Leave it with the guard  ', consent: { sms: true, whatsapp: false } });
       const o = await orderOf(r.orderId);
       expect(o).toMatchObject({ note: 'Leave it with the guard', smsMarketingConsent: true, whatsappMarketingConsent: false, walletAppliedMinor: 1_000, codAmountMinor: s.q.totals.dueMinor, customerId: customer.id });
+      // follow-up 58: the thank-you page says the note back
+      expect((await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number }))?.note).toBe('Leave it with the guard');
       expect(await f.t.prisma.walletAccount.findUniqueOrThrow({ where: { id: w.id } })).toMatchObject({ balanceMinor: 0 });
       expect(await f.t.prisma.walletEntry.findMany({ where: { walletId: w.id } })).toMatchObject([{ direction: 'DEBIT', amountMinor: 1_000, balanceAfterMinor: 0, orderId: o.id }]);
       expect((await f.t.prisma.consentRecord.findMany({ where: { orderId: o.id }, orderBy: { channel: 'asc' } })).map((c) => [c.channel, c.granted])).toEqual([

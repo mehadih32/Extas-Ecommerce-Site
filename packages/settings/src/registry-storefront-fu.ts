@@ -73,6 +73,20 @@ export const pdpUsualSizeSchema = z
   })
   .strict();
 
+// ---- PR 126 · follow-up 58 (demo 52-thanks.js ty_timeline, `thanks.nextSteps`) ----
+
+/**
+ * The thank-you page's extra parts: the delivery note he wrote said back (on), and "What happens next" — placed, we
+ * confirm and pack, handed to the courier, delivered (with the band's hours) — off, as in the demo. The trial-at-the-
+ * door line follows the shop's own switch (`checkout.tryOn.enabled`).
+ */
+export const thanksPageSchema = z
+  .object({
+    noteBack: z.boolean(),
+    nextSteps: z.boolean(),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const storefrontFuSettings = {
@@ -104,6 +118,15 @@ export const storefrontFuSettings = {
     helpKey: 'pdp.usualSize.help',
     sortOrder: 920,
   }),
+  'thanks.page': setting({
+    ...json,
+    group: 'checkout',
+    schema: thanksPageSchema,
+    default: { noteBack: true, nextSteps: false },
+    labelKey: 'thanks.page.label',
+    helpKey: 'thanks.page.help',
+    sortOrder: 930,
+  }),
   'seo.structuredData': setting({
     ...json,
     group: 'naming',
@@ -119,3 +142,4 @@ export type CardDeskSettings = z.output<typeof cardDeskSchema>;
 export type StructuredDataSettings = z.output<typeof structuredDataSchema>;
 export type PdpSizeWordsSettings = z.output<typeof pdpSizeWordsSchema>;
 export type PdpUsualSizeSettings = z.output<typeof pdpUsualSizeSchema>;
+export type ThanksPageSettings = z.output<typeof thanksPageSchema>;

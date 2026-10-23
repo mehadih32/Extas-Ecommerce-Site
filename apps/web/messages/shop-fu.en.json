@@ -15,5 +15,13 @@
   "addrSuggest": {
     "label": "Places that match",
     "count": "{n} places found. Use the up and down arrows to choose one, Enter to pick it."
+  },
+  "tyMore": {
+    "note": "Your note for the delivery",
+    "next": "What happens next",
+    "placed": "Order placed",
+    "confirm": "We confirm and pack it",
+    "courier": "Handed to the courier",
+    "delivered": "Delivered"
   }
 }

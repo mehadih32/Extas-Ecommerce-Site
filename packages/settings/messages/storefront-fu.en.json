@@ -20,5 +20,11 @@
       "label": "\"Your size\" on the size row",
       "help": "The size a shopper last put in the bag on this phone or computer (tops and bottoms apart) gets a \"Your size\" tag on the next product page. When it is sold out in the colour shown, the colours that have it are named. \"Choose it for them\" also picks it when it is in stock. Remembered for the number of days set. Kept only in the shopper's own browser."
     }
+  },
+  "thanks": {
+    "page": {
+      "label": "Thank-you page: the note said back, and \"What happens next\"",
+      "help": "After an order: the delivery note the customer wrote is shown back to him, so he sees it was kept (on). \"What happens next\" lists the steps — order placed, we confirm and pack it, handed to the courier, delivered with the delivery time of his area (off, as in the approved design). The \"try it on in front of the rider\" line shows only while that service is switched on in the checkout settings."
+    }
   }
 }
