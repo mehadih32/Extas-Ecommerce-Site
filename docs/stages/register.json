@@ -1854,6 +1854,15 @@
   },
   {
    "id": "CN-022",
+   "date": "23 Oct 19:22",
+   "title": "the owner approves the backend and admin architecture after the third-party review",
+   "text": "`docs/BACKEND-ARCHITECTURE.md` is now the controlling design for the admin (14 sections, page tree, layouts, permissions) and for the backend (data ownership, the separate order/courier/payment/return state lists, ERP syncs, KPI registry, jobs, audit, recovery). The review decision log is `docs/owner/ARCH-REVIEW-DECISION-LOG.md`. The CN-018/019 gate \"no more admin screens until approved\" is lifted.",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
+  },
+  {
+   "id": "CN-022",
    "date": "23 Oct",
    "title": "",
    "text": "Existing scope, no new design, no new PR numbers.",

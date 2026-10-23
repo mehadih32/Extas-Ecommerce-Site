@@ -319,6 +319,27 @@ the server.*
 > - **(P14)** The "offers by SMS" tick at checkout is **pre-ticked** (owner's choice). Every promotional SMS carries an easy opt-out.
 > - **(P16) No separate "instant COD" feature.** The courier's dashboard records the payout however it was taken. COD reconciliation matches the courier's settlement records parcel by parcel, and each payout carries a "received as" label (bank, bKash or cash at the courier office), so Accounts posts it to the right account.
 
+> **CN-022 · 23 Oct 2026, 19:22 (the owner approves the backend and admin architecture after the third-party review).** `docs/BACKEND-ARCHITECTURE.md` is now the controlling design for the admin (14 sections, page tree, layouts, permissions) and for the backend (data ownership, the separate order/courier/payment/return state lists, ERP syncs, KPI registry, jobs, audit, recovery). The review decision log is `docs/owner/ARCH-REVIEW-DECISION-LOG.md`. The CN-018/019 gate "no more admin screens until approved" is lifted.
+>
+> **Owner answers, all set to the recommended defaults:**
+> - **Q1:** AI agents, full ads control and the studio are in the current plan, but they are **not a go-live gate**; they follow right after launch.
+> - **Q2:** Sale, coupon and combo prices stay in the shop. The base price and the cost come from the ERP.
+> - **Q3:** Losses on unsellable returns go in the month-end push to the ERP.
+> - **Q4:** Product cost is snapshotted when the order is placed.
+> - **Q5:** A refund after a month is closed is posted in the next open month.
+> - **Q6:** Exchange courier legs are a separate cost line.
+> - **Q7:** Goodwill or apology credit is a cost on the day it is given.
+> - **Q8:** The prepaid reward counts as a discount.
+> - **D6:** An order goes to the ERP only once it is confirmed.
+> - **D7:** A partial delivery counts as a success and is also shown separately.
+> - **D8:** The admin keeps 14 sidebar entries.
+> - **D9:** On an erasure request, personal details are anonymised and money and stock records are kept.
+> - **D10:** The advance layers sit in Orders → Risk rules.
+> - **D11:** Refund approval is owner only by default; it can be delegated to Manager.
+> - **D12:** Only the owner and Accounts record money received outside checkout.
+>
+> **Implementation sequence.** The existing build order is kept. The document's Phase 0 prerequisites are built first, in parallel with the current stage: the worker and job runner, the webhook receiver, the KPI registry and the append-only audit log. The order core then follows §5–§8 of the document.
+
 > **CN-022 · 23 Oct 2026 (owner, Note 63): three foundation items next, beside S02.** Existing scope, no new design, no new PR numbers.
 > - **(1) PR 6, the worker process.** A separate BullMQ worker with one scheduler leader, a `JobRun` row per run (status, retries, next attempt, failure reason) and a heartbeat. The existing jobs run through it: stock pull, cart-hold expiry, ERP outbox and reconcile. A retry never repeats a side effect. Failed jobs show on the Server page.
 > - **(2) PR 196, the ERP webhook.** A receiver for the ERP's `stock.changed` and `variant.changed` events: HMAC check, a timestamp window, dedupe by event id, and out-of-order safety by `updatedAt`. Polling stays as the fallback. The shop keeps the practice ERP until the owner connects the real one.
