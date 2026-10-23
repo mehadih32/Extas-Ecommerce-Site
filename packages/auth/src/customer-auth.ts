@@ -1,7 +1,10 @@
 // PR 15 — customer accounts: password, login, sessions. Customers belong to one store; so do their sessions.
-// The account is created with the first order and its first password is the mobile number (Blueprint D3.13/D3.15,
-// PR 129); the customer may change it. The one-time SMS code on a new device, the forgot-password flow and the login
-// screens come with PR 130 (they need the SMS adapter); this file is what they build on.
+// ~~The account is created with the first order and its first password is the mobile number (Blueprint D3.13/D3.15,
+// PR 129); the customer may change it.~~ Follow-up 18 (CN-017, SIM-F-039): an account made with an order has no
+// password at all — anyone who knew a number could have opened that customer's orders and address. The first sign-in
+// is a one-time SMS code to the number (PR 130, @extas/accounts), which then starts a session here
+// (`startCustomerSession`); a password is something the customer may set afterwards in My account. The login screens,
+// the codes and the code on a new device live in @extas/accounts (PR 130); this file is what they build on.
 //
 // Wrong tries are SecurityEvent rows (`customer.login.failed`, keyed by store + phone; `customer.login.ok` resets) and the same lockout settings as
 // staff apply. Sessions last `customerSessionDays` (a store setting) from the login.
@@ -30,8 +33,8 @@ const LOCKED = 'customer.login.locked';
 const clock = (deps: CustomerAuthDeps) => (deps.now ? deps.now() : new Date());
 
 /**
- * Sets a customer's password. `mustChange` marks a password someone else chose (the first one is the mobile number).
- * When the customer changes it themselves, every other session ends.
+ * Sets a customer's password. `mustChange` marks a password someone else chose (staff, never the mobile number:
+ * SIM-F-039). When the customer sets it themselves, every other session ends.
  */
 export async function setCustomerPassword(
   deps: CustomerAuthDeps,
@@ -87,8 +90,16 @@ async function event(deps: CustomerAuthDeps, storeId: number, kind: string, deta
   await deps.db.securityEvent.create({ data: { storeId, kind, severity: 'info', details: details as object, createdAt: clock(deps) } });
 }
 
-/** Login with the phone number as stored on the customer (normalised by the caller) and the password. */
-export async function loginCustomer(deps: CustomerAuthDeps, input: { storeId: number; phone: string; password: string }, ctx: RequestContext = {}): Promise<CustomerLoginResult> {
+export type CustomerPasswordResult =
+  | { kind: 'ok'; customerId: string; mustChangePassword: boolean }
+  | { kind: 'locked'; retryAt: Date }
+  | { kind: 'invalid' };
+
+/**
+ * Checks the phone number (as stored on the customer, normalised by the caller) and the password, with the wrong-try
+ * pause; starts no session. An account without a password (every account made with an order, SIM-F-039) never passes.
+ */
+export async function checkCustomerPassword(deps: CustomerAuthDeps, input: { storeId: number; phone: string; password: string }, ctx: RequestContext = {}): Promise<CustomerPasswordResult> {
   const { db, policy } = deps;
   const phone = (input.phone ?? '').trim();
   const password = input.password ?? '';
@@ -115,15 +126,47 @@ export async function loginCustomer(deps: CustomerAuthDeps, input: { storeId: nu
   if (needsRehash(customer.credential.passwordHash)) {
     await db.customerCredential.update({ where: { id: customer.credential.id }, data: { passwordHash: await hashPassword(password) } });
   }
+  await event(deps, input.storeId, OK, { phone, ip, customerId: customer.id });
+  return { kind: 'ok', customerId: customer.id, mustChangePassword: customer.credential.mustChange };
+}
+
+/**
+ * A new session for a customer whose identity is proven (the password, or a one-time SMS code, PR 130). The token goes
+ * in the customer's cookie; only its hash is stored.
+ */
+export async function startCustomerSession(
+  deps: CustomerAuthDeps,
+  input: { storeId: number; customerId: string; deviceLabel?: string | null },
+  ctx: RequestContext = {},
+): Promise<{ token: string; expiresAt: Date; sessionId: string }> {
+  const now = clock(deps);
+  const customer = await deps.db.customer.findFirst({ where: { id: input.customerId, storeId: input.storeId, archivedAt: null, erasedAt: null }, select: { id: true } });
+  if (!customer) throw new AuthError('NOT_FOUND', 'no such customer in this store');
   const token = newToken();
-  const expiresAt = new Date(now.getTime() + policy.customerSessionDays * DAY);
-  await db.$transaction(async (tx) => {
-    await tx.customerSession.create({
-      data: { storeId: input.storeId, customerId: customer.id, tokenHash: hashToken(token), expiresAt, lastSeenAt: now, createdAt: now, userAgent: clip(ctx.userAgent), ip },
-    });
-    await tx.securityEvent.create({ data: { storeId: input.storeId, kind: OK, severity: 'info', details: { phone, ip, customerId: customer.id }, createdAt: now } });
+  const expiresAt = new Date(now.getTime() + deps.policy.customerSessionDays * DAY);
+  const row = await deps.db.customerSession.create({
+    data: {
+      storeId: input.storeId,
+      customerId: customer.id,
+      tokenHash: hashToken(token),
+      expiresAt,
+      lastSeenAt: now,
+      createdAt: now,
+      userAgent: clip(ctx.userAgent),
+      ip: clip(ctx.ip, 64),
+      deviceLabel: clip(input.deviceLabel ?? null, 120),
+    },
+    select: { id: true },
   });
-  return { kind: 'session', token, expiresAt, customerId: customer.id, mustChangePassword: customer.credential.mustChange };
+  return { token, expiresAt, sessionId: row.id };
+}
+
+/** Login with the phone number as stored on the customer (normalised by the caller) and the password. */
+export async function loginCustomer(deps: CustomerAuthDeps, input: { storeId: number; phone: string; password: string }, ctx: RequestContext = {}): Promise<CustomerLoginResult> {
+  const r = await checkCustomerPassword(deps, input, ctx);
+  if (r.kind !== 'ok') return r;
+  const s = await startCustomerSession(deps, { storeId: input.storeId, customerId: r.customerId }, ctx);
+  return { kind: 'session', token: s.token, expiresAt: s.expiresAt, customerId: r.customerId, mustChangePassword: r.mustChangePassword };
 }
 
 export interface CustomerAuth {

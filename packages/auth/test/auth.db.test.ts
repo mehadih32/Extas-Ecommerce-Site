@@ -22,6 +22,7 @@ import {
   listStaff,
   listStaffSessions,
   loginCustomer,
+  startCustomerSession,
   loginStaff,
   logoutEverywhere,
   logoutStaff,
@@ -303,7 +304,8 @@ describe.skipIf(!HAS_TEST_DB)('auth on PostgreSQL (PR 15, 16, 495)', () => {
   it('customers: password, login, lockout, sessions bound to their store, change of password', async () => {
     const cust = await t.prisma.customer.create({ data: { storeId: stores[0], phone: '+8800000000001', name: 'Sample customer' } });
     const d = { db: t.prisma, policy, now: () => clock };
-    // The first password is the mobile number, chosen for the customer.
+    // ~~The first password is the mobile number, chosen for the customer.~~ A password someone else chose (staff); never
+    // the mobile number for an account made with an order (follow-up 18, SIM-F-039: that account has no password).
     await setCustomerPassword(d, { storeId: stores[0], customerId: cust.id, password: '0000000001', mustChange: true });
     const r = await loginCustomer(d, { storeId: stores[0], phone: '+8800000000001', password: '0000000001' }, CTX);
     if (r.kind !== 'session') throw new Error(r.kind);
@@ -328,5 +330,17 @@ describe.skipIf(!HAS_TEST_DB)('auth on PostgreSQL (PR 15, 16, 495)', () => {
 
     advance((policy.customerSessionDays + 1) * 24 * 3_600_000);
     expect(await authenticateCustomer(d, r.token, stores[0])).toBeNull();
+  });
+
+  it('follow-up 18 · SIM-F-039: an account with no password never signs in by password; a proven one gets a session', async () => {
+    const cust = await t.prisma.customer.create({ data: { storeId: stores[0], phone: '+8800000000018', name: 'Order customer' } });
+    const d = { db: t.prisma, policy, now: () => clock };
+    for (const password of ['+8800000000018', '8800000000018', '00000000018', '0000000018', ''])
+      expect((await loginCustomer(d, { storeId: stores[0], phone: '+8800000000018', password }, CTX)).kind).toBe('invalid');
+    expect(await t.prisma.customerSession.count({ where: { customerId: cust.id } })).toBe(0);
+    const s = await startCustomerSession(d, { storeId: stores[0], customerId: cust.id, deviceLabel: 'code' }, CTX);
+    expect((await authenticateCustomer(d, s.token, stores[0]))?.customer.id).toBe(cust.id);
+    expect(await authenticateCustomer(d, s.token, stores[1])).toBeNull();
+    await expect(startCustomerSession(d, { storeId: stores[1], customerId: cust.id }, CTX)).rejects.toThrow();
   });
 });

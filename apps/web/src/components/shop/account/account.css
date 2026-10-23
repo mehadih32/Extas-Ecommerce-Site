@@ -1,0 +1,34 @@
+/* S04 · PR 130–135 — the customer account pages (demo 60-account.js and r12-acct.css, V12.2), scoped to the shop. */
+
+/* ---- PR 130 · log in ---- */
+.shop .acc-login { padding-top: 16px; padding-bottom: 8px; }
+.shop .acc-login-grid { display: grid; gap: 16px; margin-top: 14px; }
+@media (min-width: 1024px) {
+  .shop .acc-login-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; max-width: 1040px; margin: 30px auto 0; }
+  .shop .acc-login-grid .acc-login-card { border-radius: var(--card-radius) 0 0 var(--card-radius); }
+  .shop .acc-login-side { border-radius: 0 var(--card-radius) var(--card-radius) 0; }
+}
+.shop .acc-login-card { padding: 24px 18px; }
+@media (min-width: 768px) { .shop .acc-login-card { padding: 40px 44px; } }
+.shop .acc-in { max-width: 560px; }
+.shop .acc-login-side { background: var(--brand-dark); color: var(--brand-ink); border-radius: var(--card-radius); padding: 26px 22px; display: flex; flex-direction: column; justify-content: center; gap: 20px; position: relative; overflow: hidden; }
+.shop .acc-login-side::after { content: ''; position: absolute; right: -90px; bottom: -90px; width: 260px; height: 260px; border-radius: 50%; border: 1px solid currentColor; opacity: 0.12; }
+@media (min-width: 1024px) { .shop .acc-login-side { padding: 44px 48px; } }
+.shop .acc-login-side .display { font-size: 27px; color: inherit; }
+.shop .acc-ben { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.shop .acc-ben li { display: flex; gap: 14px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
+.shop .acc-ben .i { width: 36px; height: 36px; border-radius: 50%; border: 1px solid currentColor; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.9; }
+.shop .acc-ben b { display: block; font-size: 14.5px; }
+.shop .acc-ben .s { opacity: 0.8; font-size: 13px; }
+.shop .acc-form { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+.shop .acc-pw { position: relative; }
+.shop .acc-pw .input { padding-right: 72px; }
+.shop .acc-pw-t { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; font-weight: 600; font-size: 13px; color: var(--brand); cursor: pointer; padding: 10px 12px; min-height: 44px; }
+.shop .acc-code { letter-spacing: 0.3em; font-size: 20px; font-weight: 700; text-align: center; }
+.shop .acc-err { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius); background: rgb(253, 240, 238); border: 1px solid rgb(240, 200, 192); color: rgb(150, 40, 25); font-size: 13.5px; line-height: 1.4; }
+.shop .acc-note { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text2); line-height: 1.45; }
+.shop .acc-note svg { flex-shrink: 0; margin-top: 2px; }
+.shop .acc-links { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.shop .acc-links .link { min-height: 44px; display: inline-flex; align-items: center; text-align: left; }
+.shop .acc-sent { font-size: 14px; color: var(--text2); margin: 6px 0 0; }
+.shop .acc-sent b { color: var(--ink); white-space: nowrap; }

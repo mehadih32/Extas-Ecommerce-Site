@@ -19,7 +19,9 @@
         "http://127.0.0.1:3000/help/faq",
         "http://127.0.0.1:3000/bn/help/exchange",
         "http://127.0.0.1:3000/search?q=polo",
-        "http://127.0.0.1:3000/bn/search?q=polo"
+        "http://127.0.0.1:3000/bn/search?q=polo",
+        "http://127.0.0.1:3000/account/login",
+        "http://127.0.0.1:3000/bn/account/login"
       ],
       "numberOfRuns": 3,
       "settings": {

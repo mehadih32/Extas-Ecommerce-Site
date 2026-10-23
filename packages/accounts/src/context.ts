@@ -1,5 +1,6 @@
 // What every account service gets: the database, the settings (the two-tier resolver, PR 492) and a clock for tests.
 // Customers are their own identity: their sessions never touch the staff tables (PR 15).
+import type { SmsSender } from '@extas/adapters';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import type { Key, Value } from '@extas/settings';
 import type { z } from 'zod';
@@ -12,16 +13,36 @@ export interface SettingsReader {
   value<K extends Key>(key: K, opts?: { storeId?: number }): Promise<Value<K>>;
 }
 
+/** PR 130 — the SMS sender the store uses right now (the mock until the gateway's key arrives) and its mode. */
+export interface SmsConnection {
+  sender: SmsSender;
+  mode: 'MOCK' | 'SANDBOX' | 'LIVE';
+}
+
 export interface AccountsDeps {
   db: PrismaClient;
   settings: SettingsReader;
   now?: () => Date;
+  /** PR 130 — the store's SMS connection (the app passes the connection layer's SMS adapter). */
+  sms?: (storeId: number) => Promise<SmsConnection>;
 }
 
 export type AccountErrorCode =
   | 'INVALID_INPUT'
   /** No such customer, order or address for this person in this store. */
-  | 'NOT_FOUND';
+  | 'NOT_FOUND'
+  /** PR 130 — too many codes or tries for now; `data.retryAfterSeconds` says when to try again. */
+  | 'RATE_LIMITED'
+  /** PR 130 — the code is wrong, used or too old (`data.left`: tries left on this code). */
+  | 'WRONG_CODE'
+  /** PR 130 — the number and password do not match. */
+  | 'WRONG_PASSWORD'
+  /** PR 130 — the SMS could not be sent. */
+  | 'SMS_FAILED'
+  /** PR 130 — this way of signing in is switched off, or the account has no password. */
+  | 'NOT_ALLOWED'
+  /** PR 131 — the list is full (saved addresses). */
+  | 'FULL';
 
 /** One error type for every refusal of the account services. The `code` is stable; the shop turns it into words. */
 export class AccountError extends Error {
@@ -41,6 +62,15 @@ export class AccountError extends Error {
     switch (this.code) {
       case 'NOT_FOUND':
         return 404;
+      case 'RATE_LIMITED':
+        return 429;
+      case 'WRONG_CODE':
+      case 'WRONG_PASSWORD':
+        return 401;
+      case 'SMS_FAILED':
+        return 502;
+      case 'NOT_ALLOWED':
+        return 403;
       case 'INVALID_INPUT':
         return 400;
       default:

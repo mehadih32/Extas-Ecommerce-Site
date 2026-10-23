@@ -13,5 +13,7 @@ export * from './storage';
 // PR 194, 497, 498 — the ERP adapters (the generic contract, the shop's own ERP, the practice ERP behind MOCK).
 export * from './erp';
 export * from './page-reader';
+// PR 130 — the SMS sender: the mock until the gateway's key arrives (not in `allAdapters` until then; see sms/index.ts).
+export * from './sms';
 
 export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters] as const;
