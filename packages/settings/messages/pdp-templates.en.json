@@ -2,7 +2,7 @@
   "pdp": {
     "templates": {
       "label": "Product page template",
-      "help": "Which layout a product page uses. T1 Classic: photos with thumbnails beside the buy column. T2 Editorial: on a phone the photos peek one into the next with no arrows; on a computer every photo is stacked two across beside a narrower buy column, on a plain white page with a larger title. A product's own template (chosen when it is uploaded) wins, then its category's (the nearest one up the tree), then the shop's default. With the preview on, an address ending in ?template=T2 shows that template, for checking before you switch; search engines are sent to the plain address."
+      "help": "Which layout a product page uses. T1 Classic: photos with thumbnails beside the buy column. T2 Editorial: on a phone the photos peek one into the next with no arrows; on a computer every photo is stacked two across beside a narrower buy column, on a plain white page with a larger title. T3 Fit-first: the sizes, Find My Size and the chosen size's measurements in one card, with the photo's thumbnails underneath. A product's own template (chosen when it is uploaded) wins, then its category's (the nearest one up the tree), then the shop's default. With the preview on, an address ending in ?template=T2 shows that template, for checking before you switch; search engines are sent to the plain address."
     },
     "finder": {
       "label": "Find My Size",

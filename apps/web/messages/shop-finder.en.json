@@ -66,6 +66,19 @@
     "chartOpt": "Not sure?",
     "chartOptSub": "Find my size",
     "tag": "Your size",
-    "tagAria": "{label}, your size"
+    "tagAria": "{label}, your size",
+    "t3": {
+      "title": "Find my size",
+      "sub": "Just your height and weight — we match you to the {chart} chart.",
+      "cancel": "Cancel",
+      "yours": "Your size: **{size}**",
+      "from": "From {height} · {weight}",
+      "change": "Change",
+      "why": "Why {size}?",
+      "next": "Between sizes or like it roomy? Take **{size}**.",
+      "measures": "Measurements",
+      "measuresOf": "Measurements · {size}",
+      "choose": "Choose a size to see its measurements."
+    }
   }
 }

@@ -5,7 +5,8 @@
 // to repeat), "Show my size", then the size from this product's own chart with the reasons in plain words (the measure
 // it needs, the room this fit gives, the length for the height), "Between sizes? Take XL", whether it is in stock in
 // this colour (else the colours that have it), and "Select size L". `?finder=1` opens it (the bag's "Help me pick my
-// size"). Each answer is kept, with no name or phone, for the size reports (PR 59) while `pdp.finder.record` is on.
+// size"; on T3 it brings the card's own finder into view). Each answer is kept, with no name or phone, for the size
+// reports (PR 59) while `pdp.finder.record` is on.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Recommendation } from '@extas/catalogue/size-finder';
 import type { PdpFinderSettings } from '@extas/settings';
@@ -267,6 +268,13 @@ export function FinderPopup() {
       q.delete(FINDER_QUERY);
       const rest = q.toString();
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${rest ? `?${rest}` : ''}${window.location.hash}`);
+      // T3 has the finder in its card: bring the card into view and flash it instead (demo 30-product.js query.finder)
+      const inline = document.querySelector('.pdp-t3-top');
+      if (inline) {
+        inline.scrollIntoView({ block: 'center' });
+        inline.classList.add('pdp-hl');
+        return;
+      }
       openFinder(null);
     } catch {
       /* the address stays as it is */

@@ -1,9 +1,9 @@
-// S02 · the product page templates and Find My Size — PR 50 (T2, the stacked gallery), PR 52 (which template a page
-// uses: the product's own choice at upload, else its category's, else the shop's default) and PR 58 (Find My Size:
-// height and weight to a size from the owner's size chart, with the reasoning shown). Registry version 28. Labels:
-// messages/pdp-templates.<lang>.json.
+// S02 · the product page templates and Find My Size — PR 50 (T2, the stacked gallery), PR 51 (T3, fit-first: the
+// sizes, the finder and the measurements in one card), PR 52 (which template a page uses: the product's own choice at
+// upload, else its category's, else the shop's default) and PR 58 (Find My Size: height and weight to a size from the
+// owner's size chart, with the reasoning shown). Registry version 28. Labels: messages/pdp-templates.<lang>.json.
 //
-// The defaults reproduce the approved V12.2 demo (docs/demo/src/30-product.js pdp_galleryT2, pdp_finderHTML,
+// The defaults reproduce the approved V12.2 demo (docs/demo/src/30-product.js pdp_galleryT2, pdp_t3Card, pdp_finderHTML,
 // pdp_reasons; 02-core.js pdpTemplateFor, recommendSize; Blueprint D3.7 / D3.8 / D4.2). CN-018: every number is a
 // setting with limits; the finder's arithmetic (the body estimate per measure, the tolerance, the length check) is the
 // owner's to tune, and its ease is each size chart's own (S01, `catalogue.sizeCharts.defaultEaseInch` when a chart has
@@ -47,6 +47,19 @@ export const pdpTemplatesSchema = z
         editorialTitle: z.boolean(),
         /** The page on the plain surface colour instead of the shop's background. */
         surface: z.boolean(),
+      })
+      .strict(),
+    /** T3 · fit-first (PR 51): the sizes, the finder and the measurements in one card. */
+    t3: z
+      .object({
+        /** The finder's height and weight steppers inside the card (else only the sizes and measurements). */
+        inlineFinder: z.boolean(),
+        /** The chosen size's measurements as tiles under the finder. */
+        measures: z.boolean(),
+        /** The reasons open straight after "Show my size" (else behind "Why L?"). */
+        whyOpen: z.boolean(),
+        /** Computer: the thumbnails under the photo (demo) or down its side. */
+        deskThumbs: z.enum(['below', 'side']),
       })
       .strict(),
   })
@@ -128,6 +141,7 @@ export const pdpTemplateSettings = {
       perProduct: true,
       preview: true,
       t2: { peekPct: 88, deskColumns: 2, deskBuyPx: 410, thumbs: true, editorialTitle: true, surface: true }, // hardcode-ok: the demo's T2 strip (88 %) and its 410 px buy column
+      t3: { inlineFinder: true, measures: true, whyOpen: true, deskThumbs: 'below' },
     },
     labelKey: 'pdp.templates.label',
     helpKey: 'pdp.templates.help',
