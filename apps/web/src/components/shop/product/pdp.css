@@ -817,3 +817,34 @@
 .shop .pdp-page .pdp-pills .size-pill.tagged { padding-top: 13px; }
 .shop .pdp-ystag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: var(--gold-bg); color: var(--gold); font-size: 9.5px; font-weight: 800; letter-spacing: 0.04em; line-height: 1; padding: 3px 7px; border-radius: 10px; white-space: nowrap; border: 1px solid var(--surface); }
 .shop .pdp-ysout { color: var(--warn); }
+
+/* PR 51 — template T3, Fit-first (demo 30-product.js PDP_CSS ".pdp-t3", ".pdp-ys", ".pdp-meas", ".pdp-hl"; r11-pdp.css
+   "T3"; r12-zzdesk-b.css D-053). One card: the sizes, then the finder or "Your size: L", then the chosen size's
+   measurements. Phone: the card has no frame and the sizes lead, with a hairline above the finder; it sits after the
+   colours like the sizes of every template. Computer: the card opens up so the sizes join the other choices (order 3)
+   and the finder and the measurements follow the buttons and the promise row (order 7) as one framed box. */
+.shop .pdp-page .pdp-t3 { display: flex; flex-direction: column; padding: 18px; }
+.shop .pdp-page .pdp-t3-top { order: 1; }
+.shop .pdp-page .pdp-t3-sizes { order: 2; margin-top: 16px; border-top: 1px solid var(--line2); padding-top: 16px; }
+.shop .pdp-page .pdp-t3-rest { order: 3; }
+.shop .pdp-ys { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.15; }
+.shop .pdp-ys b { font-weight: inherit; }
+.shop .pdp-meas { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 8px; margin-top: 10px; }
+.shop .pdp-meas > div { background: var(--surface2); border: 1px solid var(--line2); border-radius: var(--radius); padding: 9px 10px; }
+.shop .pdp-meas b { display: block; font-family: var(--font-display); font-size: 17px; }
+.shop .pdp-t3-top .pdp-why { margin-top: 12px; }
+.shop .pdp-hl { animation: pdpflash 1.6s ease; }
+@keyframes pdpflash { 0%, 60% { box-shadow: 0 0 0 3px var(--brand); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (max-width: 1023px) {
+  .shop .pdp-page.pdp-tpl-T3 .pdp-t3 { border: 0px; background: none; padding: 0px; }
+  .shop .pdp-page .pdp-t3-sizes { order: 0; margin-top: 0px; border-top: 0px; padding-top: 0px; }
+  .shop .pdp-page .pdp-t3-top { order: 1; margin-top: 14px; border-top: 1px solid var(--line2); padding-top: 14px; }
+}
+@media (min-width: 1024px) {
+  .shop .pdp-page.pdp-tpl-T3 .pdp-t3sec, .shop .pdp-page.pdp-tpl-T3 .pdp-t3 { display: contents; }
+  .shop .pdp-page.pdp-tpl-T3 .pdp-t3-sizes { margin-top: 14px; border-top: 0px; padding-top: 0px; }
+  .shop .pdp-page.pdp-tpl-T3 .pdp-t3-top { order: 7; margin-top: 18px; padding: 18px 18px 0px; background: var(--surface); border: 1px solid var(--line); border-bottom: 0px; border-radius: var(--card-radius) var(--card-radius) 0px 0px; }
+  .shop .pdp-page.pdp-tpl-T3 .pdp-t3-rest { order: 7; padding: 0px 18px 18px; background: var(--surface); border: 1px solid var(--line); border-top: 0px; border-radius: 0px 0px var(--card-radius) var(--card-radius); }
+  /* without the finder (switched off, or no chart it can read) the measurements are a box of their own */
+  .shop .pdp-page.pdp-tpl-T3 .pdp-t3-rest.solo { margin-top: 18px; padding-top: 2px; border-top: 1px solid var(--line); border-radius: var(--card-radius); }
+}

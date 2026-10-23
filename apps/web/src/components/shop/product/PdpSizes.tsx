@@ -8,7 +8,7 @@
 // last put in the bag (`pdp.usualSize`), with the colours that have it when the one shown is sold out in it.
 // PR 58: the size Find My Size gave this shopper wears the same "Your size" tag (demo pdp_pills .pdp-ystag) and comes
 // first; only one size is ever tagged. When it is sold out in this colour a line says so and names the colours that have
-// it (demo pdp_mySizeOut).
+// it (demo pdp_mySizeOut). PR 51: inside the T3 card the sizes drop the section frame (`cls`, demo .pdp-t3-sizes).
 import { Fragment, useState } from 'react';
 import type { PdpSizeSettings } from '@extas/settings';
 import { Icon } from '../Icon';
@@ -21,7 +21,7 @@ import { PdpNotify } from './PdpNotify';
 import { wakeBar } from './PdpColour';
 import { usePdp } from './PdpRoot';
 
-export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string | null; fitPos: number | null; fitWord: string }) {
+export function PdpSizes({ oneSizeNote, fitPos, fitWord, cls = 'pdp-sec' }: { oneSizeNote: string | null; fitPos: number | null; fitWord: string; cls?: string }) {
   const pdp = usePdp();
   const { m, set, choice, err, unit, w, num, pickSize, pickColour, setUnit, usualSize, yours } = pdp;
   // SIM-F-035: a crossed-out size asks "tell me when it is back" (off by default, `pdp.size.notifyBack`)
@@ -33,7 +33,7 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
   if (isOneSize(m)) {
     const label = m.sizes[0]?.label || w('oneSize');
     return (
-      <div className="pdp-sec" id="pdp-sizes">
+      <div className={cls} id="pdp-sizes">
         <div className="pdp-lblrow">
           <span className="pdp-lbl">
             {w('size')} <span className="pdp-lblv">{label}</span>
@@ -74,7 +74,7 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
   };
 
   return (
-    <div className="pdp-sec" id="pdp-sizes">
+    <div className={cls} id="pdp-sizes">
       <div className="pdp-lblrow" data-fitrow="">
         <span className={`pdp-lbl pdp-fitt${sweep(set.sweep.sizeLabel)}`}>
           {w('size')}{' '}

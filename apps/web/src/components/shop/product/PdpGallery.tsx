@@ -7,6 +7,8 @@
 // PR 50 — template T2, the stacked gallery (demo pdp_galleryT2): on a phone the same strip with the next photo peeking
 // in (`pdp.templates.t2.peekPct`), taller 3:4 photos, no arrows, the thumbnails under it; on a computer every photo
 // stacked in `deskColumns` columns beside the buy column, no thumbnails. One swipe engine for every template (demo P1).
+// PR 51 — template T3 keeps T1's gallery with the thumbnails under the photo on a computer (demo pdp_galleryT1 without
+// `vertical`), or down its side (`pdp.templates.t3.deskThumbs`).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PdpTemplate, PdpTemplatesSettings } from '@extas/settings';
 import { Icon } from '../Icon';
@@ -27,11 +29,13 @@ export function PdpGallery({
   lang,
   template = 'T1',
   t2,
+  t3,
 }: {
   badge: GalleryBadge | null;
   lang: 'en' | 'bn';
   template?: PdpTemplate;
   t2?: PdpTemplatesSettings['t2'];
+  t3?: PdpTemplatesSettings['t3'];
 }) {
   const stacked = template === 'T2';
   const { m, set, choice, w, num } = usePdp();
@@ -79,7 +83,7 @@ export function PdpGallery({
   const mainRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState<number | null>(null);
-  const side = !stacked && set.gallery.thumbsDesktop === 'side';
+  const side = !stacked && set.gallery.thumbsDesktop === 'side' && (template !== 'T3' || t3?.deskThumbs === 'side');
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
     const measure = () => {

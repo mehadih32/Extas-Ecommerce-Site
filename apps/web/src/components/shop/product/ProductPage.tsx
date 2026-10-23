@@ -5,7 +5,8 @@
 // have scrolled away. PR 50: template T2 (Editorial) stacks the photos (PdpGallery) beside a narrower buy column, on the
 // plain surface with the editorial title, each on its own switch (`pdp.templates.t2`). PR 58: "Find my size" under the
 // sizes and its popup, only where the product's own chart can answer (`pdp.finder`); a phone that answered before opens
-// with its size chosen and tagged. A product taken off sale keeps its page,
+// with its size chosen and tagged. PR 51: template T3 (Fit-first) puts the sizes, the finder and the measurements in
+// one card (PdpT3Card, `pdp.templates.t3`). A product taken off sale keeps its page,
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
 // one state (PdpRoot); the rest is drawn here.
 import type { Metadata } from 'next';
@@ -33,7 +34,7 @@ import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
 import { trustFacts, trustItems } from '@/lib/shop/pdp-trust';
 import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
 import { productData } from '@/lib/shop/product';
-import { colourPath, nameParts, NO_COLOUR, openingColour, productRoute, stockOf, type PdpModel } from '@/lib/shop/product-model';
+import { colourPath, isOneSize, nameParts, NO_COLOUR, openingColour, productRoute, stockOf, type PdpModel } from '@/lib/shop/product-model';
 import { toModel } from '@/lib/shop/product-view';
 import { COLOUR_QUERY, ROUTES } from '@/lib/shop/routes';
 import { categoryName } from '@/lib/shop/shell-model';
@@ -59,6 +60,7 @@ import { PdpRoot, type PdpEnv } from './PdpRoot';
 import { PdpRows } from './PdpRows';
 import { PdpRules } from './PdpRules';
 import { PdpSizes } from './PdpSizes';
+import { PdpT3Card } from './PdpT3Card';
 import { PdpStock } from './PdpStock';
 import { PdpTrust } from './PdpTrust';
 import './pdp.css';
@@ -134,11 +136,13 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
 
 /** Every word of the page (`pdp.*` as they are, Find My Size's as `finder.*`, with the owner's own), {slots} left open
  * for the client parts to fill. */
-function pageWords(c: ShopContext): Record<string, string> {
+/** The words the page's client parts need: every `pdp.*`, Find My Size's only where it is offered, and the T3 card's
+ * only on T3, so a page carries no words it cannot show. */
+function pageWords(c: ShopContext, finderOn: boolean, t3: boolean): Record<string, string> {
   const pdp = SHOP_DICTS.en.pdp;
   const finder = SHOP_DICTS.en.finder;
   const keys = pdp && typeof pdp === 'object' ? keysOf(pdp) : [];
-  const fk = finder && typeof finder === 'object' ? keysOf(finder, 'finder.') : [];
+  const fk = finder && typeof finder === 'object' ? keysOf(finder, 'finder.').filter((k) => (k.startsWith('finder.t3.') ? t3 : finderOn)) : [];
   return Object.fromEntries([...keys.map((k) => [k, c.t(`pdp.${k}`)]), ...fk.map((k) => [k, c.t(k)])]);
 }
 
@@ -171,6 +175,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   // ---- PR 52 · which template: the product's own, its category's, the shop's default (or the admin's preview) ----
   const tpl = templateFor(set['pdp.templates'], data, data.categoryChain, one(search[TEMPLATE_QUERY])).template;
   const t2 = set['pdp.templates'].t2;
+  const t3 = set['pdp.templates'].t3;
+  const sizeProps = { oneSizeNote: data.fitNote, fitPos: set['pdp.size'].fitBar ? fitPosOf(data.fit, data.fitNote) : null, fitWord: data.fit ?? '' };
   const tplClass = tpl === 'T2' ? `${t2.surface ? ' pdp-t2surf' : ''}${t2.editorialTitle ? ' pdp-t2ed' : ''}` : '';
 
   // ---- PR 61 · price row ----
@@ -337,7 +343,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         ? { preselect: set['pdp.usualSize'].preselect, days: set['pdp.usualSize'].days, group: sizeGroupOf(data.garment, set['catalogue.sizeCharts.diagramFor']) }
         : null,
     },
-    words: { ...pageWords(c), ...usualWords(c) },
+    words: { ...pageWords(c, finder !== null, tpl === 'T3'), ...usualWords(c) },
     bnDigits: lang === 'bn' && c.bnDigits,
     productHref,
     shipsToday: beforeCutoff(clockIn(c.s['store.timeZone']), cutoff),
@@ -417,7 +423,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             style={tpl === 'T2' ? ({ '--pdp-t2buy': `${t2.deskBuyPx}px` } as React.CSSProperties) : undefined}
           >
             <div className="pdp-g">
-              <PdpGallery badge={badge} lang={lang} template={tpl} t2={t2} />
+              <PdpGallery badge={badge} lang={lang} template={tpl} t2={t2} t3={t3} />
             </div>
             <div className="pdp-b sticky-d" id="pdp-buy">
               <div className="pdp-sec pdp-head">
@@ -458,8 +464,17 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                 <PdpPrice set={pr} freeDelivery={data.freeDelivery} payWords={pay} />
               </div>
               <PdpColour lang={lang} />
-              <PdpSizes oneSizeNote={data.fitNote} fitPos={set['pdp.size'].fitBar ? fitPosOf(data.fit, data.fitNote) : null} fitWord={data.fit ?? ''} />
-              <FinderCard />
+              {tpl === 'T3' && !isOneSize(m) ? (
+                <>
+                  <PdpT3Card t3={t3} sizes={sizeProps} />
+                  {t3.inlineFinder ? null : <FinderCard />}
+                </>
+              ) : (
+                <>
+                  <PdpSizes {...sizeProps} />
+                  <FinderCard />
+                </>
+              )}
               <PdpStock cutoffWords={cutWords} />
               <PdpBuy links={links} />
               <PdpTrust items={trust} />
