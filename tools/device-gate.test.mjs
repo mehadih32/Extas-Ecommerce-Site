@@ -52,15 +52,18 @@ describe('device gate', () => {
   it('PR 107 · plans the filled bag: opened signed out after the fill, apart from the empty bag, its lines expected', () => {
     const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
     const plan = filledPlan('http://h:1', rules.filled);
-    // PR 71: the wishlist is filled too
-    expect(plan.map((p) => p.url)).toEqual([
+    // PR 71: the wishlist is filled too; follow-up 59: pages drawn with the sample contact (the header's WhatsApp)
+    expect(plan.slice(0, 4).map((p) => p.url)).toEqual([
       'http://h:1/bag?gate=filled',
       'http://h:1/bn/bag?gate=filled',
       'http://h:1/account/wishlist?gate=filled',
       'http://h:1/bn/account/wishlist?gate=filled',
     ]);
+    const contact = plan.filter((p) => p.fill === 'http://h:1/api/shop/try-contact');
+    expect(contact.map((p) => new URL(p.url).pathname)).toEqual(expect.arrayContaining(['/', '/p/essential-pique-polo', '/checkout/thanks/0']));
+    expect(contact.every((p) => p.expect.includes('[data-testid="hdr-wa"]'))).toBe(true);
     expect(plan.slice(0, 2).every((p) => p.signedOut && p.fill === 'http://h:1/api/bag/try')).toBe(true);
-    expect(plan.slice(2).every((p) => p.signedOut && p.fill === 'http://h:1/api/wishlist/try')).toBe(true);
+    expect(plan.slice(2, 4).every((p) => p.signedOut && p.fill === 'http://h:1/api/wishlist/try')).toBe(true);
     expect(plan[0].expect).toContain('.bg-line');
     expect(plan[2].expect).toContain('[data-testid="wish-item"]');
     expect(filledPlan('http://h:1', undefined)).toEqual([]);

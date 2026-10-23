@@ -2,7 +2,9 @@
 // PR 40 — the shell's measured fits (demo 03-layout.js layoutNow, R15): nothing is a fixed pixel guess, each is
 // measured on the real words and re-checked on resize, scroll, a change of size and the web fonts arriving, at most
 // once per frame (never a forever timer), and after the first paint, a part per task (lib/shop/later: the TBT budget).
-//   · the phone header keeps the wordmark clear: the heart steps out first when the icons come within 10 px (3.4)
+//   · the phone header keeps the wordmark clear: the heart steps out first when the icons come within 10 px (3.4);
+//     then the wordmark, on one line, steps its type down to the room left and at last tightens its spacing
+//     (follow-up 59: a two-word store name wrapped, and pushed the header past a 375 px screen with WhatsApp on)
 //   · the phone slogan gets the free room beside the wordmark: full → short → hidden, easing down to 8 px (owner 22:14)
 //   · WhatsApp + Hotline in the footer stand side by side only when both fit at full size (1.4)
 //   · the floating WhatsApp disc steps aside over the footer and rides 12 px above any bar pinned to the bottom (C3)
@@ -22,18 +24,68 @@ function shopRoot(): HTMLElement | null {
   return document.querySelector<HTMLElement>('.shop');
 }
 
+/** Px kept clear on each side of the phone wordmark (3.4). */
+const LOGO_CLEAR = 10;
+/** The checkout header's WhatsApp disc opens in this long (shop.css .ckh .hdr-wa-auto), ms. */
+const CKH_WA_MS = 250;
+/** The phone wordmark's smallest type, px, before and after its spacing tightens (follow-up 59). */
+const LOGO_MIN = [15, 12] as const;
+
+/**
+ * Follow-up 59 · a wordmark on one line between `before` and `after`: `stepOut` (the phone's heart, 3.4) leaves first,
+ * then the type steps down to the room left, and at last the spacing tightens (.fit-x). Its own words are measured
+ * (its box may be narrower: it shrinks, the words do not wrap); a slogan inside it is apart.
+ */
+function fitWordmark(logo: HTMLElement, before: Element | null, after: Element | null, stepOut: Element | null) {
+  stepOut?.classList.remove('fit-off');
+  logo.style.removeProperty('font-size');
+  logo.classList.remove('fit-x');
+  if (!after || !logo.getClientRects().length) return;
+  const name = Array.from(logo.childNodes).find((n) => n.nodeType === 3 && n.textContent?.trim());
+  if (!name) return;
+  const range = document.createRange();
+  range.selectNodeContents(name);
+  const room = () => after.getBoundingClientRect().left - (before ? before.getBoundingClientRect().right : logo.getBoundingClientRect().left) - 2 * LOGO_CLEAR;
+  const fits = () => range.getBoundingClientRect().width + (Number.parseFloat(getComputedStyle(logo).paddingLeft) || 0) <= room() + 0.5;
+  if (fits()) return;
+  if (stepOut) {
+    stepOut.classList.add('fit-off');
+    if (fits()) return;
+  }
+  for (const [i, min] of LOGO_MIN.entries()) {
+    if (i) logo.classList.add('fit-x');
+    logo.style.removeProperty('font-size');
+    const max = Number.parseFloat(getComputedStyle(logo).fontSize) || min;
+    for (let f = max; f >= min - 0.001; f -= 0.5) {
+      // the wordmark's size is an !important rule (shop.css), so the step is too
+      logo.style.setProperty('font-size', `${f}px`, 'important');
+      if (fits()) return;
+    }
+  }
+}
+
+/** The first shown element after `el` among its siblings. */
+function nextShown(el: Element | null): Element | null {
+  for (let n = el?.nextElementSibling ?? null; n; n = n.nextElementSibling) if (n.getClientRects().length) return n;
+  return null;
+}
+
 function hdrFit() {
   const w = document.querySelector('.hdr .hdr-wish');
-  if (!w) return;
-  if (window.matchMedia(DESK).matches) {
-    w.classList.remove('fit-off');
+  const logo = document.querySelector<HTMLElement>('.hdr:not(.ckh) .logo.hide-d');
+  if (window.matchMedia(DESK).matches || !logo) {
+    w?.classList.remove('fit-off');
+    if (logo) fitWordmark(logo, null, null, null);
     return;
   }
-  const logo = document.querySelector('.hdr .logo.hide-d');
-  const right = document.querySelector('.hdr .hdr-r');
-  if (!logo || !right || !logo.getClientRects().length) return;
-  w.classList.remove('fit-off');
-  if (right.getBoundingClientRect().left - logo.getBoundingClientRect().right < 10) w.classList.add('fit-off');
+  const before = logo.parentElement?.firstElementChild;
+  fitWordmark(logo, before && before !== logo ? before : null, document.querySelector('.hdr .hdr-r'), w);
+}
+
+/** Follow-up 59 · the checkout's slim header: the wordmark beside the back button, clear of the steps or the right side. */
+function ckhLogoFit() {
+  const logo = document.querySelector<HTMLElement>('.ckh .ckh-l .logo');
+  if (logo) fitWordmark(logo, logo.previousElementSibling, nextShown(logo.parentElement), null);
 }
 
 function hdrSlogFit() {
@@ -127,7 +179,10 @@ function ckhWaTick() {
   const hb = hdr ? hdr.getBoundingClientRect().bottom : 60;
   const help = document.querySelector('main .co-help a, main a.co-wa, main .co-help');
   const show = !help || help.getBoundingClientRect().bottom < hb + 2;
+  const was = a.classList.contains('on');
   a.classList.toggle('on', show);
+  // follow-up 59: the disc takes room from the wordmark (or gives it back) once its 0.2 s opening has run
+  if (was !== show) window.setTimeout(ckhLogoFit, CKH_WA_MS);
 }
 
 // Follow-up 23: the room goes straight onto the page wrapper's own padding, and only when it changes. ~~A --bar-pad
@@ -167,6 +222,7 @@ export function ShellEffects() {
     // came near failed the device gate: it measures the whole page 400 ms after load.)
     const header = safe(() => {
       hdrFit();
+      ckhLogoFit();
       hdrSlogFit();
     });
     const floating = safe(() => {
