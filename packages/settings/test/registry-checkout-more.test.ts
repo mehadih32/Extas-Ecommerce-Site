@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings } from '../src/registry-checkout-more';
+import { addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings } from '../src/registry-checkout-more';
 
 describe('checkout-more settings (v34)', () => {
   it('every key is in the registry at version 34, never owner data, labelled in English and Bengali, its default valid', () => {
@@ -26,5 +26,11 @@ describe('checkout-more settings (v34)', () => {
     expect(d.words.some((w) => /[ঀ-৿]/.test(w))).toBe(true);
     expect(addressCheckSchema.safeParse({ ...d, hold: true }).success).toBe(false);
     expect(addressCheckSchema.safeParse({ ...d, words: [''] }).success).toBe(false);
+  });
+
+  it('PR 561: the silent backfill is off until the owner turns it on; its order source is one of three', () => {
+    expect(checkoutMoreSettings['checkout.address.backfill'].default).toEqual({ enabled: false, orders: 'delivered' });
+    expect(addressBackfillSchema.safeParse({ enabled: true, orders: 'placed' }).success).toBe(true);
+    expect(addressBackfillSchema.safeParse({ enabled: true, orders: 'all' }).success).toBe(false);
   });
 });

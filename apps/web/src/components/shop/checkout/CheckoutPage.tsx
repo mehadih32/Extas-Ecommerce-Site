@@ -78,6 +78,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null }: { c: ShopCon
         suggest={s['delivery.suggest.enabled'] ? { minChars: s['delivery.suggest.minChars'], storeId: c.storeId, words: { label: c.t('addrSuggest.label'), count: c.t('addrSuggest.count') } } : null}
         prefill={prefill}
         remember={s['checkout.autofill'].browserDays > 0 ? { days: s['checkout.autofill'].browserDays } : null}
+        backfill={s['checkout.address.backfill'].enabled}
       />
       {actions}
     </div>

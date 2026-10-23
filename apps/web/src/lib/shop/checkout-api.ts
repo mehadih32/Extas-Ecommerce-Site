@@ -59,7 +59,7 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
   try {
     const b = await body(request);
     const [{ cartId }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
-    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true });
+    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true, ip: requestContext(request).ip ?? null });
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);

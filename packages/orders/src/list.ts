@@ -3,6 +3,7 @@
 // review, …), a search by order number, phone or name, and for one order everything its screen shows: lines, money
 // (amount due, the payment pill), the shipment, payments and refund requests as their own records (§6.5.0), notes, the
 // open reviews, the timeline and the commands open now. The admin pages come later (S05 UI); the shapes are here.
+// PR 561: one order also carries the full address the shop held and attached for packing (`backfilledAddress`).
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, parse, setting, type OrdersDeps, type Who } from './context';
@@ -190,7 +191,9 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
       phone: true,
       email: true,
       shippingAddressText: true,
+      backfilledAddress: true,
       addressUnclear: true,
+      chargeFixed: true,
       subtotalMinor: true,
       discountMinor: true,
       deliveryChargeMinor: true,

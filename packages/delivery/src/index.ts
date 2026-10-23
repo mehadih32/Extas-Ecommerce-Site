@@ -15,9 +15,11 @@
 //   full address only with a login or a confirmed code (phone-area.ts).
 // - PR 563 (S04) the address-detail check: does the line say where the house is (detail.ts)? Only a flag and a call.
 // - PR 565 (S04) free delivery is exempt from the band machinery: no band shown, corrected or messaged (exempt.ts).
+// - PR 561 (S04) the address the shop holds for a phone number, for the silent backfill (held.ts). Never shown.
 export * from './text';
 export * from './detail';
 export * from './exempt';
+export * from './held';
 export * from './gazetteer';
 export * from './csv';
 export * from './import';
