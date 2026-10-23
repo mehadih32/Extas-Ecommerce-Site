@@ -99,6 +99,8 @@ export const pdpIconsSchema = z
     wish: z.enum(['title', 'rail', 'off']),
     /** "Ask about this item on WhatsApp" in the column (only with the store's WhatsApp number). */
     whatsapp: z.boolean(),
+    /** PR 69: "Share this product" in the column, opening the share row. */
+    share: z.boolean(),
     /** The drift: at most this many px from its place, following this share of the scroll, easing back after a pause. */
     driftMaxPx: z.int().min(0).max(120),
     follow: z.number().min(0).max(1),
@@ -107,6 +109,22 @@ export const pdpIconsSchema = z
     /** Px under the title's line the column may climb to, and px it keeps above the buy bar. */
     ceilGapPx: z.int().min(0).max(40),
     barGapPx: z.int().min(0).max(60),
+  })
+  .strict();
+
+// ---- PR 69 · the share row (demo 30-product.js pdp_shareRow, styles.css 7+8) ----
+
+export const SHARE_TILE_IDS = ['facebook', 'messenger', 'whatsapp', 'instagram', 'copy'] as const;
+
+/** The floating share tiles beside the rail: which networks, in which order, and when the row tidies itself away. */
+export const pdpShareSchema = z
+  .object({
+    tiles: z
+      .array(z.object({ id: z.enum(SHARE_TILE_IDS), on: z.boolean() }).strict())
+      .min(1)
+      .max(SHARE_TILE_IDS.length)
+      .refine((l) => new Set(l.map((x) => x.id)).size === l.length, { message: 'every tile once' }),
+    closeMs: z.int().min(2000).max(60000),
   })
   .strict();
 
@@ -158,13 +176,23 @@ export const shopMoreSettings = {
     ...json,
     group: 'productPage',
     schema: pdpIconsSchema,
-    default: { panel: false, wish: 'title', whatsapp: false, driftMaxPx: 38, follow: 0.5, ease: 0.14, settleMs: 170, ceilGapPx: 2, barGapPx: 10 }, // hardcode-ok: the demo's PDP_DRIFT_MAX and rail loop
+    default: { panel: false, wish: 'title', whatsapp: false, share: false, driftMaxPx: 38, follow: 0.5, ease: 0.14, settleMs: 170, ceilGapPx: 2, barGapPx: 10 }, // hardcode-ok: the demo's PDP_DRIFT_MAX and rail loop
     labelKey: 'pdp.icons.label',
     helpKey: 'pdp.icons.help',
     sortOrder: 150,
+  }),
+  'pdp.share': setting({
+    ...json,
+    group: 'productPage',
+    schema: pdpShareSchema,
+    default: { tiles: SHARE_TILE_IDS.map((id) => ({ id, on: true })), closeMs: 8000 },
+    labelKey: 'pdp.share.label',
+    helpKey: 'pdp.share.help',
+    sortOrder: 160,
   }),
 };
 
 export type PdpFitSettings = z.output<typeof pdpFitSchema>;
 export type PdpRowsSettings = z.output<typeof pdpRowsSchema>;
 export type PdpIconsSettings = z.output<typeof pdpIconsSchema>;
+export type PdpShareSettings = z.output<typeof pdpShareSchema>;

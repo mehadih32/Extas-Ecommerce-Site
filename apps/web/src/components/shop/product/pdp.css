@@ -742,3 +742,13 @@
   .shop .pdp-page:has(.pdp-acts) .pdp-acc-h { padding-right: 36px; }
 }
 @media (prefers-reduced-motion: reduce) { .shop .pdp-page .pdp-acts { transform: translateY(-50%) !important; } }
+
+/* PR 69 — the share row (demo styles.css 7+8): no panel, floating tiles beside the rail on its centre line, the page
+   visible between them. */
+.shop .pdp-page .shr-bar { position: absolute; top: 50%; right: calc(100% + 8px); transform: translateY(-50%); display: flex; flex-direction: column; gap: 9px; align-items: flex-end; background: transparent; padding: 0px; z-index: 70; }
+.shop .pdp-page .shr-b { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: var(--surface); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); border: 1px solid rgba(0, 0, 0, 0.06); padding: 0px; cursor: pointer; color: var(--ink); }
+.shop .pdp-page .shr-b.facebook { background: #e8f0fe; border-color: #d2e3fc; color: #1877f2; }
+.shop .pdp-page .shr-b.messenger { background: #e8f0fe; border-color: #d2e3fc; color: #0a7cff; }
+.shop .pdp-page .shr-b.whatsapp { background: #e6f7ec; border-color: #c7ebd6; color: #1fa855; }
+.shop .pdp-page .shr-b.instagram { background: #fce9f1; border-color: #f6d3e3; color: #c13584; }
+@media (hover: hover) { .shop .pdp-page .shr-b:hover { filter: brightness(0.97); } }
