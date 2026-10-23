@@ -6,7 +6,8 @@
 // messages/catalogue-tools.<lang>.json, the ERP and stock location settings (S09) in messages/inventory.<lang>.json,
 // the Smart Rules and notice settings (S10) in messages/rules.<lang>.json, the combo settings (S03) in
 // messages/combos.<lang>.json, the delivery-zone engine (S06, PR 549–555) in messages/delivery.<lang>.json and the
-// storefront settings (S02, PR 82, 501, 503, 84, 40, 42) in messages/storefront.<lang>.json, merged in here.
+// storefront settings (S02, PR 82, 501, 503, 84, 40, 42) in messages/storefront.<lang>.json, the bag (S04, PR 105–114) in
+// messages/bag.<lang>.json and the checkout (S04, PR 115–126) in messages/checkout.<lang>.json, merged in here.
 import toolsBn from '../messages/catalogue-tools.bn.json';
 import toolsEn from '../messages/catalogue-tools.en.json';
 import deliveryBn from '../messages/delivery.bn.json';
@@ -25,6 +26,8 @@ import combosBn from '../messages/combos.bn.json';
 import combosEn from '../messages/combos.en.json';
 import bagBn from '../messages/bag.bn.json';
 import bagEn from '../messages/bag.en.json';
+import checkoutBn from '../messages/checkout.bn.json';
+import checkoutEn from '../messages/checkout.en.json';
 import storefrontBn from '../messages/storefront.bn.json';
 import storefrontEn from '../messages/storefront.en.json';
 import bn from '../messages/settings.bn.json';
@@ -49,8 +52,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */

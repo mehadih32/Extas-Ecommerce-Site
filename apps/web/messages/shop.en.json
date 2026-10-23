@@ -151,7 +151,43 @@
     "emptyText": "Add something to your bag first, then come back to check out.",
     "startShopping": "Start shopping",
     "goToBag": "Go to bag",
-    "title": "Checkout"
+    "title": "Checkout",
+    "heading": "Delivery details",
+    "delivery": "Delivery",
+    "payment": "Payment",
+    "confirm": "Confirm Order",
+    "help": {
+      "long": "Need help with your order?",
+      "short": "Need help?",
+      "wa": "WhatsApp",
+      "us": "us",
+      "message": "Hi {store}, I need help with my order",
+      "q": "Need help?",
+      "a": "Message us on WhatsApp"
+    },
+    "sum": {
+      "show": "Show order summary",
+      "hide": "Hide order summary",
+      "close": "Hide summary",
+      "title": "Order summary",
+      "one": "{n} item",
+      "many": "{n} items",
+      "subtotal": "Subtotal",
+      "delivery": "Delivery",
+      "after": "After your address",
+      "total": "Total",
+      "plusDelivery": "+ delivery",
+      "youSave": "You save {amount}",
+      "free": "FREE",
+      "offer": "Offer",
+      "each": "{price} each",
+      "setSub": "{regular} separately · you save {saving}"
+    },
+    "trust": {
+      "cod": "Cash on Delivery",
+      "exchange": "Size exchange in {windowHours} hours",
+      "secure": "Secure payment"
+    }
   },
   "notFound": {
     "title": "Page not found",

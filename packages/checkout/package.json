@@ -1,0 +1,38 @@
+{
+  "name": "@extas/checkout",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The checkout (S04, PR 115–126): the page's quote — the bag, the delivery charge from the resolved place, the payment choice with the prepaid reward, the wallet and the totals the customer sees (PR 115–122); the form's checks and the confirm button's state (PR 116, 123, 124); order placement with its idempotency key, the stock hold, the incomplete-checkout capture and the payment failure path (PR 125); and the thank-you page's receipt (PR 126). The order stores exactly what the page showed (SIM-F-003).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/auth": "workspace:*",
+    "@extas/cart": "workspace:*",
+    "@extas/combos": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/delivery": "workspace:*",
+    "@extas/inventory": "workspace:*",
+    "@extas/rules": "workspace:*",
+    "@extas/seed": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

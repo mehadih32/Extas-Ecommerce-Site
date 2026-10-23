@@ -24,6 +24,7 @@ COPY packages/inventory/package.json packages/inventory/
 COPY packages/rules/package.json packages/rules/
 COPY packages/combos/package.json packages/combos/
 COPY packages/cart/package.json packages/cart/
+COPY packages/checkout/package.json packages/checkout/
 COPY packages/delivery/package.json packages/delivery/
 # @extas/db generates the Prisma client on install, so its schema and CLI wrapper come in with the manifests.
 COPY packages/db/package.json packages/db/

@@ -15,6 +15,7 @@
     "@extas/auth": "workspace:*",
     "@extas/cart": "workspace:*",
     "@extas/catalogue": "workspace:*",
+    "@extas/checkout": "workspace:*",
     "@extas/combos": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",

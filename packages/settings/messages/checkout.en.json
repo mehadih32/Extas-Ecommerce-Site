@@ -1,0 +1,23 @@
+{
+  "groups": {
+    "checkout": "Checkout"
+  },
+  "checkout": {
+    "fieldOrder": {
+      "label": "Order of the delivery fields",
+      "help": "Name, phone and address in the order the customer fills them in. A field left out is added at the end."
+    },
+    "tryOn": {
+      "enabled": {
+        "label": "Show \"Try it on in front of the rider\"",
+        "help": "A line under the delivery promise. Switch it on only when your riders really wait while the customer tries the item."
+      }
+    },
+    "help": {
+      "enabled": {
+        "label": "Show \"Need help? WhatsApp us\" on the checkout",
+        "help": "A line at the top of the checkout and a box under the summary on a computer. It shows only when the shop's WhatsApp number is set."
+      }
+    }
+  }
+}
