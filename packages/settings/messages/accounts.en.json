@@ -14,6 +14,20 @@
         "label": "\"Your account is ready\" on the thank-you page",
         "help": "Shows the customer the number he signs in with and that the sign-in code comes by SMS, with a button to My account. Never a password."
       }
+    },
+    "code": {
+      "limits": {
+        "label": "Sign-in code: length, time and limits",
+        "help": "How many digits the one-time SMS code has, how many minutes it works, how many wrong tries it allows, how long before a new code may be asked for, and how many codes one number and one internet address may ask for in an hour. The limits stop someone guessing codes or filling a customer's phone with SMS."
+      },
+      "text": {
+        "label": "The sign-in code SMS",
+        "help": "The words of the SMS with the code, in English and Bengali (sent in the language the customer uses). {code} is the code, {store} the shop's name, {minutes} how long it works. Keep it short: a Bengali SMS costs more per part."
+      }
+    },
+    "login": {
+      "label": "Sign-in with a password",
+      "help": "Password: a customer who has set his own password in My account may sign in with it (accounts made with an order have none; they sign in by SMS code). New-device code: a password sign-in on a phone or computer not seen before also asks for the SMS code. Device days: how long a device stays known after a code sign-in."
     }
   }
 }

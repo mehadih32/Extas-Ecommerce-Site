@@ -16,7 +16,11 @@ export const CHECKOUT_BODY_MAX = 8_192;
 export interface CheckoutApiDeps {
   checkout: CheckoutDeps;
   storeId: number;
+  /** PR 130 — the signed-in customer of the request (his wallet, his order), or null for a guest. */
+  customerOf?: (request: Request) => Promise<string | null>;
 }
+
+const customerOf = (request: Request, d: CheckoutApiDeps) => (d.customerOf ? d.customerOf(request) : Promise.resolve(null));
 
 /** The door of every checkout route: the method, a database, the same site, a small body. */
 export function guard(request: Request, deps: CheckoutApiDeps | null, methods: readonly string[]): Response | null {
@@ -53,8 +57,8 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
   if (stop || !deps) return stop!;
   try {
     const b = await body(request);
-    const { cartId } = await bagOfRequest(request, deps);
-    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true });
+    const [{ cartId }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
+    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true });
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);
@@ -75,9 +79,9 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
   if (stop || !deps) return stop!;
   try {
     const b = await body(request);
-    const { visitor } = await bagOfRequest(request, deps);
+    const [{ visitor }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
     if (!visitor) return fail(409, 'EMPTY');
-    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId: null, ip: requestContext(request).ip ?? null, input: b });
+    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip: requestContext(request).ip ?? null, input: b });
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });
     const headers = new Headers();
@@ -112,7 +116,8 @@ export async function draftHandler(request: Request, deps: CheckoutApiDeps | nul
     const b = await body(request);
     const { visitor } = await bagOfRequest(request, deps);
     if (!visitor) return json({ ok: true, kept: false });
-    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, input: b })) });
+    const customerId = await customerOf(request, deps);
+    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, input: b })) });
   } catch (e) {
     return refusal(e);
   }

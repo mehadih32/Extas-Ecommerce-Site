@@ -36,7 +36,9 @@ const NOT_A_CLAIM: Record<string, string> = {
   'finder.cardSub0': "how long Find My Size takes (two steppers and a button, PR 58, the demo's card words); never goes stale",
   'finder.cardSub1': 'the same, shorter (the card steps down to fit one line)',
   'finder.cardSub2': 'the same, shortest',
-  'pdp.stock.ships':"\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
+  'account.login.phonePh': 'the mobile number format (01XXXXXXXXX), the login page (PR 130)',
+  'account.err.phoneBad': 'the mobile number format (11 digits, 01XXXXXXXXX), the login page (PR 130)',
+  'pdp.stock.ships': "\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
 };
 
 const DIGIT = /[0-9০-৯]/;

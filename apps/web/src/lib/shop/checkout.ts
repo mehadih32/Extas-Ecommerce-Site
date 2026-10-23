@@ -6,6 +6,7 @@ import { findBag } from '@extas/cart';
 import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
+import { accountDeps, customerOfRequest, signedIn } from './account';
 import { visitorId } from './bag';
 import type { CheckoutApiDeps } from './checkout-api';
 import { shopStoreId, type ShopContext } from './context';
@@ -21,7 +22,10 @@ export function checkoutDeps(): CheckoutDeps | null {
 /** The checkout API's dependencies: the engines and the store the shop serves. */
 export function checkoutApiDeps(): CheckoutApiDeps | null {
   const checkout = checkoutDeps();
-  return checkout ? { checkout, storeId: shopStoreId() } : null;
+  if (!checkout) return null;
+  const storeId = shopStoreId();
+  const accounts = accountDeps();
+  return { checkout, storeId, customerOf: async (request) => (await customerOfRequest(request, accounts, storeId))?.customer.id ?? null };
 }
 
 const KEYS = [
@@ -73,10 +77,11 @@ export async function currentCheckout(c: Pick<ShopContext, 'storeId' | 'lang'>):
   const visitor = await visitorId();
   if (!deps || !visitor) return emptyQuote();
   try {
+    const me = await signedIn();
     return await withTimeout(
       (async () => {
         const cartId = await findBag(deps, { storeId: c.storeId, visitorId: visitor });
-        return checkoutQuote(deps, { storeId: c.storeId, cartId, lang: c.lang });
+        return checkoutQuote(deps, { storeId: c.storeId, cartId, lang: c.lang, customerId: me?.customer.id ?? null });
       })(),
       settingsTimeoutMs() * 4,
     );

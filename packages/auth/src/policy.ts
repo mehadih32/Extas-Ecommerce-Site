@@ -43,7 +43,7 @@ export function defaultSecurityPolicy(overrides: Partial<SecurityPolicy> = {}): 
 }
 
 /** The effective security settings, for one store (customer rules may differ per store) or installation-wide. */
-export async function securityPolicy(resolver: SettingsResolver<Registry>, opts: { storeId?: number } = {}): Promise<SecurityPolicy> {
+export async function securityPolicy(resolver: Pick<SettingsResolver<Registry>, 'value'>, opts: { storeId?: number } = {}): Promise<SecurityPolicy> {
   const entries = await Promise.all(
     Object.entries(KEYS).map(async ([field, key]) => [field, await resolver.value(key, opts)] as const),
   );
