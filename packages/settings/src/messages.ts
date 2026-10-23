@@ -14,7 +14,7 @@
 // (S02, PR 50–52, 58) in messages/pdp-templates.<lang>.json and the customer accounts (S04, PR 129–137) in
 // messages/accounts.<lang>.json and the combo storefront (S03, PR 91–95, 102, 103) in messages/combo-pages.<lang>.json,
 // and the order core (S05, PR 138, 144, 145, 147, 153) in messages/orders.<lang>.json,
-// and the admin shell (PR 12; registry v33) in messages/admin-shell.<lang>.json, merged in here.
+// and the admin shell (PR 12, 495; registry v33) in messages/admin-shell.<lang>.json, merged in here.
 import adminShellBn from '../messages/admin-shell.bn.json';
 import adminShellEn from '../messages/admin-shell.en.json';
 import toolsBn from '../messages/catalogue-tools.bn.json';

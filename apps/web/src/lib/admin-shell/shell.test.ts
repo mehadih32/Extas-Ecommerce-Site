@@ -1,4 +1,4 @@
-// PR 12, PR 6 (follow-up 84), PR 155 (follow-up 90) — the admin shell without a database: its words in both
+// PR 12, PR 6 (follow-up 84), PR 155 (follow-up 90), PR 495 — the admin shell without a database: its words in both
 // languages, the 14 sections and who sees them, where an address belongs, the guide files and their parser, the
 // waiting-work rows and badges, the search query, and the Dashboard's helpers.
 import { existsSync } from 'node:fs';
@@ -9,7 +9,7 @@ import bn from '../../../messages/admin-shell.bn.json';
 import en from '../../../messages/admin-shell.en.json';
 import { ADMIN_PAGES } from '../admin-nav';
 import { t, type Dict } from '../i18n';
-import { ageOf, hourIn, partOfDay, rangeOf, trend } from './dashboard';
+import { ageOf, hourIn, partOfDay, rangeOf, startHref, startSection, trend } from './dashboard';
 import { guideDir, parseInline, parseMarkdown, readGuide, type Block } from './guide';
 import { initialsOf } from './model';
 import { badgesFrom, QUEUES, visibleQueues, type QueueCount } from './queues';
@@ -156,6 +156,19 @@ describe('search query and the Dashboard helpers', () => {
     expect(parseQuery('#১২৩')).toMatchObject({ mode: '#', digits: '123' });
     expect(parseQuery('> new')).toMatchObject({ mode: '>', q: 'new' });
     expect(parseQuery('x'.repeat(200)).q).toHaveLength(80);
+  });
+
+  it('start page: the first role that has one, only when the person may open it', () => {
+    const roles = [
+      { key: 'packer', nameEn: 'Packer', nameBn: 'প্যাকার' },
+      { key: 'catalogue', nameEn: 'Catalogue', nameBn: 'ক্যাটালগ' },
+    ];
+    expect(startSection({}, roles)).toBeNull();
+    expect(startSection({ catalogue: 'products' }, roles)).toBe('products');
+    expect(startHref('products', viewer(['catalogue.read']))).toBe('/admin/products');
+    expect(startHref('products', viewer([]))).toBeNull();
+    expect(startHref('dashboard', OWNER)).toBeNull();
+    expect(startHref(null, OWNER)).toBeNull();
   });
 
   it('date choice, greeting, trend and age', () => {

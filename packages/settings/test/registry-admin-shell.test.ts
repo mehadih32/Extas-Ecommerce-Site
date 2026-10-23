@@ -1,8 +1,8 @@
-// PR 12, 155 — the admin shell's settings (v33): every key at version 33, never owner data, never sent to the shop;
-// badges cached briefly, the Dashboard's three date choices.
+// PR 12, 495 — the admin shell's settings (v33): every key at version 33, never owner data, never sent to the shop;
+// role start pages empty (everyone starts on the Dashboard), badges cached briefly, the Dashboard's three date choices.
 import { describe, expect, it } from 'vitest';
 import { registry } from '../src/registry';
-import { ADMIN_SECTIONS, adminDashboardSchema, adminShellSchema, adminShellSettings } from '../src/registry-admin-shell';
+import { ADMIN_SECTIONS, adminDashboardSchema, adminShellSchema, adminShellSettings, adminStartPagesSchema } from '../src/registry-admin-shell';
 
 describe('admin shell settings (v33)', () => {
   it('every key is in the registry at version 33, private, never owner data', () => {
@@ -15,8 +15,12 @@ describe('admin shell settings (v33)', () => {
     }
   });
 
-  it('PR 12: the 14 sections', () => {
+  it('PR 495: start pages are empty by default and take only real roles and the 14 sections', () => {
+    expect(adminShellSettings['admin.startPages'].default).toEqual({});
     expect(ADMIN_SECTIONS).toHaveLength(14);
+    expect(adminStartPagesSchema.safeParse({ 'order-desk': 'orders', packer: 'products' }).success).toBe(true);
+    expect(adminStartPagesSchema.safeParse({ 'order-desk': 'nowhere' }).success).toBe(false);
+    expect(adminStartPagesSchema.safeParse({ 'Order Desk': 'orders' }).success).toBe(false);
   });
 
   it('PR 12: badge cache, search limits and the Dashboard choices stay in their ranges', () => {

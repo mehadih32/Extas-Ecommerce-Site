@@ -1,16 +1,35 @@
-// PR 12, PR 155 (follow-up 90) — what the Dashboard (DSH-01, docs/BACKEND-ARCHITECTURE.md §5.2) needs that is not
-// drawing: the date choice, the greeting's part of the day, the money pair through
+// PR 12, PR 155 (follow-up 90), PR 495 — what the Dashboard (DSH-01, docs/BACKEND-ARCHITECTURE.md §5.2) needs that is
+// not drawing: the role's start page (§19.5), the date choice, the greeting's part of the day, the money pair through
 // @extas/metrics (Sales, M1 = the goods value of delivered orders on the delivered day, no delivery charge; Ordered
 // value = the total of every placed order on the placed day; never added up anywhere else) with the period before it
 // for the ▲/▼, and how old a waiting item is.
 import type { PrismaClient } from '@extas/db/client';
 import { dayStart, kpi, kpiByDay, lastDays, type Kpi } from '@extas/metrics';
+import type { AdminSectionId } from '@extas/settings';
+import type { ShellRole } from './session';
+import { sectionById, sectionHome, sectionVisible, type ShellViewer } from './sections';
 
 export interface DashboardSettings {
   ranges: number[];
   afternoonHour: number;
   eveningHour: number;
   sparkDays: number;
+}
+
+/** The first of the person's roles that has a start page (`admin.startPages`), or null (the Dashboard). */
+export function startSection(startPages: Record<string, AdminSectionId>, roles: readonly ShellRole[]): AdminSectionId | null {
+  for (const r of roles) {
+    const s = startPages[r.key];
+    if (s) return s;
+  }
+  return null;
+}
+
+/** Where /admin sends this person: their role's start section when they may open it; null = stay on the Dashboard. */
+export function startHref(start: AdminSectionId | null, v: ShellViewer): string | null {
+  if (!start || start === 'dashboard') return null;
+  const s = sectionById(start);
+  return s && sectionVisible(s, v) ? sectionHome(s, v) : null;
 }
 
 /** The date choice from `?range=`: one of the setting's choices, else the first. */

@@ -42,7 +42,7 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'delivery', href: '/admin/delivery/zones', icon: 'truck', group: 'delivery' },
 ];
 
-/** PR 12: the admin's front door is the Dashboard (DSH-01). */
+/** PR 12: the admin's front door is the Dashboard (DSH-01), which sends a role to its start page (`admin.startPages`). */
 export const ADMIN_HOME = '/admin';
 export const ADMIN_LOGIN = '/admin/login';
 /** The EN | বাং switch's choice (not a secret; read by the server to pick the messages file). */

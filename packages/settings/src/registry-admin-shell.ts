@@ -1,9 +1,11 @@
-// PR 12 (CN-018, CN-022) — the new admin shell (docs/BACKEND-ARCHITECTURE.md §5.1, §5.2; demo V12.3
+// PR 12 (CN-018, CN-022) and PR 495 — the new admin shell (docs/BACKEND-ARCHITECTURE.md §5.1, §5.2, §19.5; demo V12.3
 // #/admin). Registry version 33. Labels: messages/admin-shell.<lang>.json (`admin.*`).
 //
+// - `admin.startPages`: the page each role opens on after sign-in (§19.5, R3). Empty = every role starts on the
+//   Dashboard. A role whose start section it cannot open also lands on the Dashboard.
 // - `admin.shell`: how fresh the sidebar badges are (seconds of cache) and the search palette's limits.
 // - `admin.dashboard`: the Dashboard's date choices (days) and the hours the greeting changes.
-// Nothing here changes money or any order: it is how the admin looks.
+// Nothing here changes money or any order: it is how the admin looks and where it opens.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -27,6 +29,13 @@ export const ADMIN_SECTIONS = [
   'help',
 ] as const;
 export type AdminSectionId = (typeof ADMIN_SECTIONS)[number];
+
+/** A role's key as the role builder makes it (packages/auth roles.ts). */
+const roleKeySchema = z.string().regex(/^[a-z][a-z0-9-]{1,39}$/);
+
+export const adminStartPagesSchema = z.record(roleKeySchema, z.enum(ADMIN_SECTIONS)).refine((v) => Object.keys(v).length <= 100, {
+  message: 'at most 100 roles',
+});
 
 export const adminShellSchema = z
   .object({
@@ -56,6 +65,14 @@ export const adminDashboardSchema = z
 const json = { scope: 'store', valueType: 'JSON', group: 'admin', isOwnerData: false, isPublic: false, version: V } as const;
 
 export const adminShellSettings = {
+  'admin.startPages': setting({
+    ...json,
+    schema: adminStartPagesSchema,
+    default: {},
+    labelKey: 'admin.startPages.label',
+    helpKey: 'admin.startPages.help',
+    sortOrder: 10,
+  }),
   'admin.shell': setting({
     ...json,
     schema: adminShellSchema,
