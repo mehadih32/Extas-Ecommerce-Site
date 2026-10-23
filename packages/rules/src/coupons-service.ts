@@ -1,6 +1,7 @@
 // PR 213 — coupons. A coupon is a code that unlocks one discount rule that asks for a coupon (`requiresCoupon`): the
 // amount, the smallest order and the cap are the rule's values, so they are versioned, previewed and simulated with
-// it. The coupon itself holds only the code, its window and its limits (uses in all, uses per customer).
+// it. The coupon itself holds only the code, its window, its limits (uses in all, uses per customer) and who may use it
+// (`audience`: everybody, guests only or signed-in members only; S04 PR 112, CN-018 answer 9, SIM-F-009).
 // A coupon is made off. Switching it on or off changes what customers pay: that needs the owner's OK (`rules.approve`,
 // CLAUDE.md rule 6). Redeeming is part of placing an order (S04 calls `redeemCoupon` inside its transaction): the use
 // count can never pass the limit, even with two orders at the same moment, and one order redeems a coupon once.
@@ -13,6 +14,12 @@ import { toRule } from './rows';
 
 type CouponRow = Prisma.CouponGetPayload<object>;
 
+/** Who may use a coupon: everybody (the default, so a public code works for guests), guests only, or members only. */
+export const COUPON_AUDIENCES = ['ALL', 'GUESTS', 'MEMBERS'] as const;
+export type CouponAudience = (typeof COUPON_AUDIENCES)[number];
+/** A stored audience, read safely: anything unknown is treated as open to everybody. */
+export const couponAudienceOf = (v: string | null | undefined): CouponAudience => ((COUPON_AUDIENCES as readonly string[]).includes(v ?? '') ? (v as CouponAudience) : 'ALL');
+
 export interface CouponView {
   id: string;
   code: string;
@@ -20,6 +27,7 @@ export interface CouponView {
   enabled: boolean;
   usageLimit: number | null;
   perCustomerLimit: number | null;
+  audience: CouponAudience;
   usedCount: number;
   startsAt: string | null;
   endsAt: string | null;
@@ -34,6 +42,7 @@ const view = (c: CouponRow): CouponView => ({
   enabled: c.enabled,
   usageLimit: c.usageLimit,
   perCustomerLimit: c.perCustomerLimit,
+  audience: couponAudienceOf(c.audience),
   usedCount: c.usedCount,
   startsAt: c.startsAt?.toISOString() ?? null,
   endsAt: c.endsAt?.toISOString() ?? null,
@@ -55,6 +64,7 @@ const createSchema = z
     ruleId: z.uuid(),
     usageLimit: z.int().min(1).max(10_000_000).nullable().optional(),
     perCustomerLimit: z.int().min(1).max(1000).nullable().optional(),
+    audience: z.enum(COUPON_AUDIENCES).optional(),
     startsAt: z.iso.datetime({ offset: true }).nullable().optional(),
     endsAt: z.iso.datetime({ offset: true }).nullable().optional(),
   })
@@ -82,6 +92,7 @@ export async function createCoupon(deps: RulesDeps, who: Who, input: unknown): P
         ruleId: rule.id,
         usageLimit: b.usageLimit ?? null,
         perCustomerLimit: b.perCustomerLimit ?? null,
+        audience: b.audience ?? 'ALL',
         startsAt: b.startsAt ? new Date(b.startsAt) : null,
         endsAt: b.endsAt ? new Date(b.endsAt) : null,
         enabled: false,
@@ -128,7 +139,7 @@ export async function archiveCoupon(deps: RulesDeps, who: Who, id: string, input
   return view(row);
 }
 
-export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'RULE_NOT_LIVE';
+export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'RULE_NOT_LIVE';
 
 export interface CouponCheck {
   ok: boolean;
@@ -149,6 +160,10 @@ export async function checkCoupon(db: Db, input: { storeId: number; code: string
   if (c.startsAt && c.startsAt > input.now) return no('NOT_STARTED', c);
   if (c.endsAt && c.endsAt <= input.now) return no('ENDED', c);
   if (c.usageLimit !== null && c.usedCount >= c.usageLimit) return no('USED_UP', c);
+  // Who may use it (SIM-F-009): a members-only code asks a guest to sign in, in words; a guests-only code says so too.
+  const audience = couponAudienceOf(c.audience);
+  if (audience === 'MEMBERS' && !input.customerId) return no('MEMBERS_ONLY', c);
+  if (audience === 'GUESTS' && input.customerId) return no('GUESTS_ONLY', c);
   if (c.perCustomerLimit !== null && (input.phone || input.customerId)) {
     const used = await db.couponRedemption.count({ where: { couponId: c.id, OR: [...(input.phone ? [{ phone: input.phone }] : []), ...(input.customerId ? [{ customerId: input.customerId }] : [])] } });
     if (used >= c.perCustomerLimit) return no('PER_CUSTOMER', c);

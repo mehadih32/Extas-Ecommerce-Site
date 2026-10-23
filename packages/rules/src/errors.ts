@@ -26,7 +26,7 @@ export type RulesErrorCode =
   | 'COUPON_CODE_INVALID'
   /** The coupon's rule is not a discount rule that asks for a coupon. */
   | 'COUPON_RULE_INVALID'
-  /** The coupon cannot be used now (details: OFF, NOT_STARTED, ENDED, USED_UP, PER_CUSTOMER, RULE_NOT_LIVE, UNKNOWN). */
+  /** The coupon cannot be used now (details: OFF, NOT_STARTED, ENDED, USED_UP, PER_CUSTOMER, MEMBERS_ONLY, GUESTS_ONLY, RULE_NOT_LIVE, UNKNOWN). */
   | 'COUPON_NOT_USABLE'
   /** The conflict cannot be fixed automatically (not a text drift, or the text no longer has the stale number). */
   | 'CANNOT_FIX'
