@@ -9,6 +9,9 @@ import { useState, type ReactNode } from 'react';
 import { showToast } from '../toast';
 import { rememberOpener } from './opener';
 
+/** Sent on the window after a piece went into the bag: `detail.variantId`. */
+export const BAG_ADDED_EVENT = 'extas:bag-added';
+
 export interface AddWords {
   label: string;
   added: string;
@@ -59,6 +62,8 @@ export function AddToBag({
         showToast(el, d.error === 'OUT_OF_STOCK' ? words.stock : d.error === 'TOO_MANY' ? words.tooMany : d.error === 'NOT_FOR_SALE' ? words.notForSale : words.error);
         return;
       }
+      // follow-up 62: the product page keeps the size as the shopper's usual one (lib/shop/usual-size)
+      window.dispatchEvent(new CustomEvent(BAG_ADDED_EVENT, { detail: { variantId } }));
       if (d.added === false && d.reason === 'REPEAT') return;
       if (d.added === false) showToast(el, words.already);
       if (behaviour === 'page') return void window.location.assign(bagHref);

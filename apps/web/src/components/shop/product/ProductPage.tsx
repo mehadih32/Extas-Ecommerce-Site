@@ -18,6 +18,7 @@ import { hrefIn } from '@/lib/shop/lang';
 import { telHref, waHref } from '@/lib/shop/links';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { isBottom } from '@/lib/shop/pdp-chart';
+import { sizeGroupOf, sizeWordsFor } from '@/lib/shop/usual-size';
 import { canonicalFor } from '@/lib/shop/pdp-colour';
 import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
 import { payWords } from '@/lib/shop/pdp-price';
@@ -58,6 +59,8 @@ import './pdp.css';
 
 const KEYS = [
   'seo.structuredData',
+  'pdp.sizeWords',
+  'pdp.usualSize',
   'pdp.page',
   'pdp.gallery',
   'pdp.colour',
@@ -124,6 +127,11 @@ function pageWords(c: ShopContext): Record<string, string> {
   const pdp = SHOP_DICTS.en.pdp;
   const keys = pdp && typeof pdp === 'object' ? keysOf(pdp) : [];
   return Object.fromEntries(keys.map((k) => [k, c.t(`pdp.${k}`)]));
+}
+
+/** Follow-up 62 · "Your size" words (shop dictionary `usualSize.*`), read by the size row as `usual.*`. */
+function usualWords(c: ShopContext): Record<string, string> {
+  return Object.fromEntries((['tag', 'aria', 'out', 'inStock'] as const).map((k) => [`usual.${k}`, c.t(`usualSize.${k}`)]));
 }
 
 /** Where the fit sits on "Runs small · True to size · Runs large" (demo pdp_fitPos), from the fit words. */
@@ -298,8 +306,12 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
       sweep: set['pdp.sweep'],
       fit: set['pdp.fit'],
       colourPaths: set['pdp.page'].colourPaths,
+      sizeWords: sizeWordsFor(set['pdp.sizeWords'], lang),
+      usual: set['pdp.usualSize'].on
+        ? { preselect: set['pdp.usualSize'].preselect, days: set['pdp.usualSize'].days, group: sizeGroupOf(data.garment, set['catalogue.sizeCharts.diagramFor']) }
+        : null,
     },
-    words: pageWords(c),
+    words: { ...pageWords(c), ...usualWords(c) },
     bnDigits: lang === 'bn' && c.bnDigits,
     productHref,
     shipsToday: beforeCutoff(clockIn(c.s['store.timeZone']), cutoff),

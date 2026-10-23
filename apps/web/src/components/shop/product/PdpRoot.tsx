@@ -4,11 +4,14 @@
 // (photos, price, sizes, stock, buttons, the bars) reads it from here, so they can never disagree. A colour change
 // rewrites the address to that colour's own page (D3.7) without a reload; the server drew the page for the colour in
 // the address, so a shared link opens exactly what was shared.
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { PdpBuySettings, PdpChartSettings, PdpColourSettings, PdpFitSettings, PdpGallerySettings, PdpSizeSettings, PdpStockSettings, PdpSweepSettings } from '@extas/settings';
 import { colourHref } from '@/lib/shop/pdp-colour';
 import { COLOUR_QUERY } from '@/lib/shop/routes';
-import { digitsOf, fillWords, keepSize, type PdpChoice, type PdpModel } from '@/lib/shop/product-model';
+import { digitsOf, fillWords, keepSize, stockOf, type PdpChoice, type PdpModel } from '@/lib/shop/product-model';
+import { keepUsual, loadUsual, readUsual, saveUsual, type SizeGroup } from '@/lib/shop/usual-size';
+import { afterPaint } from '@/lib/shop/later';
+import { BAG_ADDED_EVENT } from '../bag/AddToBag';
 
 /** The settings the client parts read (the rest are used on the server only). */
 export interface PdpClientSettings {
@@ -21,6 +24,10 @@ export interface PdpClientSettings {
   sweep: PdpSweepSettings;
   fit: PdpFitSettings;
   colourPaths: boolean;
+  /** Follow-up 62 · the owner's word under each size box on this page, by size key (empty: none). */
+  sizeWords: Record<string, string>;
+  /** Follow-up 62 · "Your size" (`pdp.usualSize`), with the product's group; null = off. */
+  usual: { preselect: boolean; days: number; group: SizeGroup } | null;
 }
 
 export interface PdpEnv {
@@ -52,6 +59,8 @@ interface Pdp extends PdpEnv {
   /** Add to Bag / Order Now with no size: mark the sizes and bring them into view (demo pdp_needSize, A8). */
   needSize: () => void;
   setUnit: (u: 'inch' | 'cm') => void;
+  /** Follow-up 62 · the size this browser last put in the bag for this kind of garment (null: none, or off). */
+  usualSize: string | null;
 }
 
 const Ctx = createContext<Pdp | null>(null);
@@ -67,6 +76,31 @@ export function PdpRoot({ env, initial, children }: { env: PdpEnv; initial: PdpC
   const [err, setErr] = useState(false);
   const [unit, setUnit] = useState<'inch' | 'cm'>(env.set.chart.unit);
   const { m, words, bnDigits, productHref, set } = env;
+  const [usualSize, setUsualSize] = useState<string | null>(null);
+
+  // follow-up 62 · read after the first paint (never on the server: it lives in this browser), chosen when asked
+  const usual = set.usual;
+  useEffect(() => {
+    if (!usual) return;
+    const sizes = m.sizes.map((x) => x.key);
+    const stop = afterPaint(() => {
+      const size = readUsual(loadUsual(), usual.group, usual.days, Date.now(), sizes);
+      setUsualSize(size);
+      if (size && usual.preselect && sizes.length > 1) setChoice((c) => (c.size === null && stockOf(m, c.colour, size) > 0 ? { ...c, size } : c));
+    });
+    const onAdded = (e: Event) => {
+      const id = (e as CustomEvent<{ variantId?: string }>).detail?.variantId;
+      const v = m.variants.find((x) => x.id === id);
+      if (!v?.size || m.sizes.length < 2) return;
+      saveUsual(keepUsual(loadUsual(), usual.group, v.size, Date.now()));
+      setUsualSize(v.size);
+    };
+    window.addEventListener(BAG_ADDED_EVENT, onAdded);
+    return () => {
+      stop();
+      window.removeEventListener(BAG_ADDED_EVENT, onAdded);
+    };
+  }, [m, usual]);
 
   const pickColour = useCallback(
     (key: string) => {
@@ -104,8 +138,9 @@ export function PdpRoot({ env, initial, children }: { env: PdpEnv; initial: PdpC
       pickSize,
       needSize,
       setUnit,
+      usualSize,
     }),
-    [env, choice, err, unit, words, bnDigits, pickColour, pickSize, needSize],
+    [env, choice, err, unit, words, bnDigits, pickColour, pickSize, needSize, usualSize],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
