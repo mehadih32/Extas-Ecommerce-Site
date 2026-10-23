@@ -26,5 +26,38 @@
       "whatsapp": "WhatsApp",
       "instagram": "Instagram"
     }
+  },
+  "wish": {
+    "title": "Wishlist",
+    "home": "Home",
+    "crumbs": "Breadcrumb",
+    "count": {
+      "one": "{n} item",
+      "other": "{n} items"
+    },
+    "notePhone": "Saved on this phone only.",
+    "noteDesk": "Saved on this computer only.",
+    "add": "Add to bag",
+    "addName": "Add {name} to your bag",
+    "choose": "Choose a size",
+    "chooseName": "Choose a size of {name}",
+    "remove": "Remove",
+    "removeName": "Remove {name} from wishlist",
+    "soldOut": "Sold out",
+    "sizeOf": "{colour} · {size}",
+    "emptyTitle": "Your wishlist is empty",
+    "emptyPhone": "Tap the heart on any product to save it here.",
+    "emptyDesk": "Click ♡ on any product to save it here.",
+    "browse": "Browse new in",
+    "picks": "New in",
+    "seeAll": "See all",
+    "toBag": "{name} moved to your bag",
+    "removed": "Removed from wishlist",
+    "error": "That did not go through. Please try again.",
+    "full": "Your wishlist is full. Remove something to save this one.",
+    "stock": "That size has just sold out. Choose another size.",
+    "bagMove": "Move to wishlist",
+    "bagMoveName": "Move {name} to your wishlist",
+    "bagMoved": "Moved to your wishlist"
   }
 }

@@ -23,6 +23,9 @@ export interface BagWords {
   notForSale: string;
   codeEmpty: string;
   codeRemoved: string;
+  /** PR 71 (follow-up 43): "Moved to your wishlist", and the list is full. */
+  wished?: string;
+  wishFull?: string;
 }
 
 const API = '/api/bag';
@@ -137,7 +140,23 @@ export function BagActions({ words, undoMs, bagHref, stamp }: { words: BagWords;
           toast(el.dataset.set ? words.setRemoved : fill(words.removed, { name: el.dataset.name ?? '' }), () => restore(ids.slice(0, 1)));
         });
       else if (act === 'save') void run({ url: line(id), method: 'PATCH', body: { saved: true } }, () => toast(words.saved, () => void run({ url: line(id), method: 'PATCH', body: { saved: false } })));
-      else if (act === 'move') void run({ url: line(id), method: 'PATCH', body: { saved: false } }, () => toast(words.moved));
+      else if (act === 'wish') {
+        // PR 71: the line leaves the bag (archived, Undo brings it back) and the product goes on the wishlist with the
+        // colour and size it had; Undo also takes it off the list when this move put it there
+        const pid = el.dataset.pid ?? '';
+        void (async () => {
+          const w = await send({ url: '/api/wishlist', method: 'POST', body: { items: [{ productId: pid, variantId: el.dataset.variant || null }] } }).catch(() => null);
+          const ids = w?.ok && Array.isArray(w.data.ids) ? (w.data.ids as string[]) : [];
+          if (!ids.includes(pid)) return toast(w?.data.full ? (words.wishFull ?? words.error) : words.error);
+          const added = Array.isArray(w?.data.added) && (w.data.added as string[]).includes(pid);
+          await run({ url: line(id), method: 'DELETE' }, () =>
+            toast(words.wished ?? words.saved, () => {
+              restore([id]);
+              if (added) void send({ url: '/api/wishlist', method: 'DELETE', body: { productId: pid } });
+            }),
+          );
+        })();
+      } else if (act === 'move') void run({ url: line(id), method: 'PATCH', body: { saved: false } }, () => toast(words.moved));
       else if (act === 'sizes') void run({ url: `${API}/sizes`, method: 'PUT', body: { key: el.dataset.key, answer: el.dataset.v || null } });
       else if (act === 'keep-one') {
         const ids = (el.dataset.remove ?? '').split(',').filter(Boolean);

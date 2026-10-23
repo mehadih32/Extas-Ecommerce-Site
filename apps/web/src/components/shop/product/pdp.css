@@ -687,13 +687,7 @@
   #app.shop .pdp-page .pdp-galT1 .pdp-thumbs:has(.ob-hid.on) .pdp-thumb.ob-more { box-shadow: 0 0 0 2px var(--brand), 0 4px 10px rgba(20, 20, 18, 0.1); }
 }
 /* SIM-F-035 · "tell me when it is back" under the sizes (off by default, pdp.size.notifyBack) */
-.shop .pdp-notify { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
-.shop .pdp-notify-l { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
-.shop .pdp-notify-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.shop .pdp-notify-row .input { flex: 1 1 160px; min-width: 0; min-height: 44px; }
-.shop .pdp-notify-row .btn { min-height: 44px; }
-.shop .pdp-notify-msg { margin-top: 6px; color: var(--muted); min-height: 1em; }
-.shop .pdp-notify-msg.bad { color: var(--sale); }
+/* PR 71: the form's own rules moved to components/shop/notify.css (NotifyForm, shared with the wishlist page) */
 .shop .pdp-sec .pdp-notify { margin-top: 12px; }
 .shop .size-pill.out:not([disabled]) { cursor: pointer; }
 /* PR 49 · the computer's slim buy bar (39) slides out from under the sticky header (40); the footer (PR 45: 39, one

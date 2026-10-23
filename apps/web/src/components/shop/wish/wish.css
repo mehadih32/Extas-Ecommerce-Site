@@ -1,0 +1,26 @@
+/* PR 71 — the wishlist page (demo 60-account.js acc_guestWishlist; r12-zfix.css .acc-wl-*; r12-acct.css .acc-page) */
+.shop .wl-page { padding-top: 16px; padding-bottom: 40px; }
+.shop .wl-crumbs { font-size: 12.5px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.shop .wl-crumbs a { color: var(--muted); display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.shop .wl-crumbs [aria-current] { color: var(--ink); }
+.shop .wl-head { gap: 12px; margin-top: 8px; align-items: baseline; }
+.shop .wl-note { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 16px; border-radius: var(--radius, 12px); background: var(--brand-tint); color: var(--ink); }
+.shop .wl-grid { margin-top: 16px; }
+.shop .wl-item { display: flex; flex-direction: column; min-width: 0; }
+.shop .wl-size { margin-top: 6px; }
+.shop .wl-acts { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.shop .wl-acts .btn { min-height: 44px; flex: 1 1 auto; justify-content: center; font-size: 15.5px; font-weight: 700; }
+.shop .wl-acts .link { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+.shop .wl-out { flex: 1 1 auto; min-height: 44px; display: inline-flex; align-items: center; color: var(--muted); font-weight: 600; }
+.shop .wl-item .pdp-notify { margin-top: 8px; }
+.shop .wl-empty { margin-top: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.shop .wl-empty > svg { color: var(--muted); }
+.shop .wl-empty .h3 { color: var(--ink); margin: 2px 0 0; }
+.shop .wl-empty p { margin: 0 0 6px; }
+.shop .wl-picks { margin-top: 24px; }
+.shop .wl-all { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+/* the bag's secondary button and text link (bag.css), for this page alone */
+.shop .wl-page .btn-secondary { background: var(--surface); border-color: var(--brand); color: var(--brand) !important; }
+.shop .wl-page .btn-secondary:hover { background: var(--brand-tint); }
+.shop .wl-page .btn-sm { min-height: 44px; padding: 7px 12px; }
+.shop .wl-page .link { background: none; border: none; padding: 4px 0; color: var(--brand); font-weight: 600; text-decoration: underline; cursor: pointer; font-size: 13px; }

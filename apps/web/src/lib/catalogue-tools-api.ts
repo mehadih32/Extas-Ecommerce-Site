@@ -16,6 +16,7 @@ import { createConnections, pageReaderAdapters, type PageReader } from '@extas/a
 import * as cat from '@extas/catalogue';
 import { body, errorResponse, fail, isUuid, json, sameOrigin, type AdminDeps } from './admin-auth';
 import { handle, storeIdOf } from './catalogue-api';
+import { sellableReader } from './shop/sellable';
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const method = (r: Request) => r.method.toUpperCase();
@@ -105,7 +106,9 @@ export async function publicBackInStockHandler(request: Request, deps: AdminDeps
   try {
     const b = await body(request);
     const input = { productId: b.productId, variantId: b.variantId ?? undefined, phone: b.phone || undefined, email: b.email || undefined } as cat.InterestInput;
-    const r = await cat.registerInterest({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, input);
+    // PR 71 (follow-up 63): the request is judged on the sellable stock the page shows, not on the in-stock flag alone
+    const sellable = sellableReader(deps.db, deps.resolver, storeId);
+    const r = await cat.registerInterest({ db: deps.db, settings: deps.resolver, now: deps.now, sellable }, storeId, input);
     return json({ ok: true, created: r.created }, { status: r.created ? 201 : 200 });
   } catch (e) {
     return errorResponse(e);

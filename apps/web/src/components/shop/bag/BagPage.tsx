@@ -39,6 +39,9 @@ export function bagWords(c: ShopContext): BagWords {
     notForSale: t('bag.toast.notForSale'),
     codeEmpty: t('bag.code.empty'),
     codeRemoved: t('bag.code.removed'),
+    // PR 71 (follow-up 43): "Move to wishlist"
+    wished: t('wish.bagMoved'),
+    wishFull: t('wish.full'),
   };
 }
 
@@ -96,7 +99,7 @@ export async function BagPage({ c, view, s }: { c: ShopContext; view: BagView; s
               ))}
               {view.items.map((i) => (
                 <Fragment key={i.lineId}>
-                  <ItemLine c={c} item={i} card={cards.get(i.productId)} blocked={blocked.get(i.lineId)} lowStockAt={s['bag.lowStockAt']} />
+                  <ItemLine c={c} item={i} card={cards.get(i.productId)} blocked={blocked.get(i.lineId)} lowStockAt={s['bag.lowStockAt']} toWish={s['wish.list'].fromBag} />
                   {(groupsAfter.get(i.lineId) ?? []).map((g) => (
                     <SizesCard key={g.key} c={c} group={g} items={view.items} policyLine={view.policyLine} />
                   ))}

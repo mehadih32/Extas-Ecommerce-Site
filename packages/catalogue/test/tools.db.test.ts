@@ -353,6 +353,31 @@ describe.skipIf(!HAS_TEST_DB)('catalogue tools on PostgreSQL (PR 33, 36, 39)', (
       const after = await backInStockSummary(plain(), as(editor));
       expect(after.items[0]).toMatchObject({ productId: wanted.productId, backInStock: true, state: 'live' });
     });
+
+    it('PR 71 (follow-up 63): with the sellable stock passed in, a size flagged in stock but with nothing left to sell takes the request', async () => {
+      const p = await liveProduct('Pique Polo Sellable', [
+        { sizeId: sizeM, inStock: true },
+        { sizeId: sizeL, inStock: true },
+      ]);
+      const [m, l] = p.variants;
+      const asked: string[][] = [];
+      const units = new Map([
+        [m!.id, 0],
+        [l!.id, 3],
+      ]);
+      const withStock = (): CatalogueDeps => ({ ...plain(), sellable: async (ids) => (asked.push(ids), units) });
+      // the bags hold the last M: the page shows it crossed out, so "tell me" is taken
+      expect((await registerInterest(withStock(), A, { productId: p.id, variantId: m!.id, phone: '01611000000' })).created).toBe(true);
+      expect(asked[0]).toEqual([m!.id]);
+      // L can be bought, and so can the product as a whole
+      expect(await code(registerInterest(withStock(), A, { productId: p.id, variantId: l!.id, phone: '01611000000' }))).toBe('NOT_OUT_OF_STOCK');
+      expect(await code(registerInterest(withStock(), A, { productId: p.id, phone: '01611000000' }))).toBe('NOT_OUT_OF_STOCK');
+      // nothing left in any size: the product-wide request is taken
+      units.set(l!.id, 0);
+      expect((await registerInterest(withStock(), A, { productId: p.id, phone: '01611000000' })).created).toBe(true);
+      // without the stock, the flag alone decides (as before)
+      expect(await code(registerInterest(plain(), A, { productId: p.id, variantId: m!.id, phone: '01611000001' }))).toBe('NOT_OUT_OF_STOCK');
+    });
   });
 
   // ---------------------------------------------------------------------------------------------------------

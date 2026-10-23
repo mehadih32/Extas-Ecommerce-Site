@@ -146,6 +146,14 @@ export interface InterestResult {
 }
 
 /** "Tell me when it is back" (public). The answer never repeats the contact. */
+/** Whether any of these sizes can be bought now: flagged in stock and, when the app tells it, with sellable pieces. */
+async function canBuyNow(deps: CatalogueDeps, variants: readonly { id: string; inStock: boolean }[]): Promise<boolean> {
+  const open = variants.filter((v) => v.inStock);
+  if (!open.length || !deps.sellable) return open.length > 0;
+  const units = await deps.sellable(open.map((v) => v.id));
+  return open.some((v) => (units.get(v.id) ?? 0) > 0);
+}
+
 export async function registerInterest(deps: CatalogueDeps, storeId: number, input: InterestInput): Promise<InterestResult> {
   const d = parse(interestInput, input, 'request');
   const [on, channels, callingCode, perDay] = await Promise.all([
@@ -169,7 +177,10 @@ export async function registerInterest(deps: CatalogueDeps, storeId: number, inp
   if (!p || !s) throw new CatalogueError('NOT_FOUND', 'no such product');
   const variant = d.variantId ? p.variants.find((v) => v.id === d.variantId) : null;
   if (d.variantId && !variant) throw new CatalogueError('NOT_FOUND', 'no such size', ['variantId']);
-  if (s.state === 'live' && (!variant || variant.inStock)) throw new CatalogueError('NOT_OUT_OF_STOCK', 'this can be bought now');
+  // PR 71 (follow-up 63): a live product takes a request for a size the page shows as sold out — the sellable stock when
+  // the app passes it (the flag can still say "in stock" while the bags hold the last pieces), else the flag.
+  // ~~if (s.state === 'live' && (!variant || variant.inStock)) throw NOT_OUT_OF_STOCK~~
+  if (s.state === 'live' && (await canBuyNow(deps, variant ? [variant] : p.variants))) throw new CatalogueError('NOT_OUT_OF_STOCK', 'this can be bought now');
 
   const now = deps.now?.() ?? new Date();
   const contact: Prisma.BackInStockRequestWhereInput = phone ? { phone } : { email };

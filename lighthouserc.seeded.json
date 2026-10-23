@@ -10,7 +10,9 @@
         "http://127.0.0.1:3000/collections/polos",
         "http://127.0.0.1:3000/bn/collections/polos",
         "http://127.0.0.1:3000/p/essential-pique-polo",
-        "http://127.0.0.1:3000/bn/p/essential-pique-polo"
+        "http://127.0.0.1:3000/bn/p/essential-pique-polo",
+        "http://127.0.0.1:3000/account/wishlist",
+        "http://127.0.0.1:3000/bn/account/wishlist"
       ],
       "numberOfRuns": 3,
       "settings": {

@@ -1,4 +1,5 @@
-// S02 · the storefront, third batch — PR 53 (the first-screen budget). Registry version 21 (the checkout took 20). Labels:
+// S02 · the storefront, third batch — PR 53 (the first-screen budget), 67 (rows), 68 (rail), 69 (share), 70 (the floating
+// WhatsApp button), 71 (the wishlist). Registry version 21 (the checkout took 20). Labels:
 // messages/shop-more.<lang>.json. The later PRs of the batch (67–71, 74, 75) add their keys here at the same version.
 //
 // The defaults reproduce the approved V12.2 demo (docs/demo/src/30-product.js PDP_FIT, Blueprint D2). CN-018: every
@@ -148,6 +149,25 @@ export const shellFabSchema = z
   })
   .strict();
 
+// ---- PR 71 · the wishlist (demo 60-account.js acc_guestWishlist / acc_wishGrid, 50-bag.js R16 "Move to wishlist") ----
+
+/**
+ * The wishlist: the hearts a visitor taps, kept for this browser on the server (the bag's visitor id), so the list
+ * page is drawn at once and survives a cleared browser store. How long it is, what an empty list shows on a computer,
+ * and what the bag's heart button does.
+ */
+export const wishListSchema = z
+  .object({
+    /** The most products one list keeps; a heart past it is refused with a message (nothing is dropped). */
+    max: z.int().min(10).max(500),
+    /** A computer's empty list shows this many of the newest products to start from (demo D-050); 0 = none. */
+    emptyPicks: z.int().min(0).max(12),
+    /** The bag's line button: on = "Move to wishlist" (the item leaves the bag for the list, with Undo; demo R16),
+     * off = "Save for later" keeps it in the bag (PR 107). A set always stays whole in the bag's saved list. */
+    fromBag: z.boolean(),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const shopMoreSettings = {
@@ -226,6 +246,15 @@ export const shopMoreSettings = {
     helpKey: 'shell.fab.help',
     sortOrder: 170,
   }),
+  'wish.list': setting({
+    ...json,
+    group: 'wishlist',
+    schema: wishListSchema,
+    default: { max: 100, emptyPicks: 4, fromBag: true },
+    labelKey: 'wish.list.label',
+    helpKey: 'wish.list.help',
+    sortOrder: 180,
+  }),
 };
 
 export type PdpFitSettings = z.output<typeof pdpFitSchema>;
@@ -233,3 +262,4 @@ export type PdpRowsSettings = z.output<typeof pdpRowsSchema>;
 export type PdpIconsSettings = z.output<typeof pdpIconsSchema>;
 export type PdpShareSettings = z.output<typeof pdpShareSchema>;
 export type ShellFabSettings = z.output<typeof shellFabSchema>;
+export type WishListSettings = z.output<typeof wishListSchema>;

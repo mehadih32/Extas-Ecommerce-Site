@@ -22,6 +22,12 @@ export interface CatalogueDeps {
   settings: SettingsReader;
   /** Clock, for tests. */
   now?: () => Date;
+  /**
+   * PR 71 (follow-up 63): the pieces that can be sold now of each variant (the inventory's sellable stock: live
+   * locations of the sellable kinds, less the bags' holds). The catalogue may not import the inventory, so the app
+   * passes it in; without it the catalogue reads the variant's `inStock` flag only.
+   */
+  sellable?: (variantIds: string[]) => Promise<Map<string, number>>;
 }
 
 /** Who acts, in which store, and from where (for the audit log). */

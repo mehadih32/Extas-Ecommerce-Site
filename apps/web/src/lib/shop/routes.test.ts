@@ -5,7 +5,8 @@ import { comingSoon, ROUTES } from './routes';
 describe('coming-soon pages (CN-010)', () => {
   it('every page a later PR builds is coming, and every link the shell carries lands somewhere', () => {
     // ~~ROUTES.bag~~ PR 107 built the bag
-    for (const p of [ROUTES.account, ROUTES.login, ROUTES.wishlist, ROUTES.orders, ROUTES.search, ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('faq')])
+    // ~~ROUTES.wishlist~~ PR 71 built the wishlist
+    for (const p of [ROUTES.account, ROUTES.login, ROUTES.orders, ROUTES.search, ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('faq')])
       expect(comingSoon(p, '/p'), p).not.toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();
@@ -26,5 +27,12 @@ describe('coming-soon pages (CN-010)', () => {
   it('a page that is built is not "coming soon" any more (PR 107: the bag)', () => {
     expect(comingSoon(ROUTES.bag, '/p')).toBeNull();
     expect(comingSoon(`${ROUTES.bag}/`, '/p')).toBeNull();
+  });
+
+  it('PR 71: the wishlist is built inside the coming account pages', () => {
+    expect(comingSoon(ROUTES.wishlist, '/p')).toBeNull();
+    expect(comingSoon(`${ROUTES.wishlist}/`, '/p')).toBeNull();
+    expect(comingSoon(ROUTES.orders, '/p')).toBe('account');
+    expect(comingSoon(ROUTES.account, '/p')).toBe('account');
   });
 });

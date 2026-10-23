@@ -1,0 +1,8 @@
+/* SIM-F-035 — "tell me when it is back" (NotifyForm: the product page and, PR 71, the wishlist page) */
+.shop .pdp-notify { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.shop .pdp-notify-l { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.shop .pdp-notify-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.shop .pdp-notify-row .input { flex: 1 1 160px; min-width: 0; min-height: 44px; }
+.shop .pdp-notify-row .btn { min-height: 44px; }
+.shop .pdp-notify-msg { margin-top: 6px; color: var(--muted); min-height: 1em; }
+.shop .pdp-notify-msg.bad { color: var(--sale); }

@@ -37,6 +37,8 @@ const KEYS = [
   'bag.upsell.style',
   'bag.upsell.reasons',
   'bag.upsell.originalLine',
+  // PR 71 (follow-up 43): what the line's heart button does — "Move to wishlist" or "Save for later"
+  'wish.list',
 ] as const satisfies readonly Key[];
 
 type BagKey = (typeof KEYS)[number];

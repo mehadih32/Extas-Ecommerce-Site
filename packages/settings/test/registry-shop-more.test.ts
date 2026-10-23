@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
-import { pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shopMoreSettings } from '../src/registry-shop-more';
+import { pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shopMoreSettings, wishListSchema } from '../src/registry-shop-more';
 
 describe('third storefront batch settings (v21)', () => {
   it('every key is in the registry at version 21, public, never owner data, with both labels', () => {
@@ -54,5 +54,13 @@ describe('third storefront batch settings (v21)', () => {
     expect(f.pages.bag).toBe(false);
     expect(f).toMatchObject({ side: 'right', place: 'low' });
     expect(shopMoreSettings['shell.fab'].group).toBe('shell');
+  });
+
+  it('PR 71: the wishlist keeps up to 100, shows 4 newest on an empty computer page, and the bag moves to it (demo R16)', () => {
+    const w = shopMoreSettings['wish.list'].default;
+    expect(w).toEqual({ max: 100, emptyPicks: 4, fromBag: true });
+    expect(wishListSchema.safeParse({ ...w, max: 5 }).success).toBe(false);
+    expect(wishListSchema.safeParse({ ...w, emptyPicks: 0 }).success).toBe(true);
+    expect(wishListSchema.safeParse({ ...w, extra: 1 }).success).toBe(false);
   });
 });

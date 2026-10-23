@@ -248,7 +248,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
 
   // ---- PR 68 · the heart's place and the floating rail ----
   const icons = set['pdp.icons'];
-  const heartWords = { save: t('card.save'), unsave: t('card.unsave'), saved: t('card.saved'), removed: t('card.removed') };
+  const heartWords = { save: t('card.save'), unsave: t('card.unsave'), saved: t('card.saved'), removed: t('card.removed'), full: t('wish.full'), error: t('wish.error') };
   const railWa = icons.panel && icons.whatsapp ? waHref(c.s['contact.whatsapp'], t('rail.waMessage', { ...c.vars, name: m.name })) : null;
 
   // ---- PR 67 · the rows at the foot of the page ----

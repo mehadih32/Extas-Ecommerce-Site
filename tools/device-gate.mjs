@@ -197,18 +197,22 @@ export function signedInPlan(base, signedIn, lighthouseUrls, discovered = []) {
 }
 
 /**
- * PR 107 — pages that only show their controls with something in them (the bag): device-gate.json `filled`. Each
+ * PR 107 — pages that only show their controls with something in them (the bag; PR 71 the wishlist): device-gate.json
+ * `filled`, one fill or a list of them. Each
  * path is opened as a customer (signed out) after a POST to `fill` in the same browser (the test server's sample-bag
  * fill, EXTAS_SHOP_TEST_PAGES=1), and must show `expect`. `?gate=filled` keeps them apart from the empty pages that
  * lighthouserc lists.
  */
 export function filledPlan(base, filled) {
-  if (!filled?.fill) return [];
-  const fill = new URL(filled.fill, base).toString();
-  return (filled.paths ?? []).map((p) => {
-    const u = new URL(p, base);
-    u.searchParams.set('gate', 'filled');
-    return { url: u.toString(), signedOut: true, expect: [...(filled.expect ?? [])], fill };
+  // PR 71: `filled` may list several fills (the bag, the wishlist); one object is still read as before
+  return [filled ?? []].flat().flatMap((f) => {
+    if (!f?.fill) return [];
+    const fill = new URL(f.fill, base).toString();
+    return (f.paths ?? []).map((p) => {
+      const u = new URL(p, base);
+      u.searchParams.set('gate', 'filled');
+      return { url: u.toString(), signedOut: true, expect: [...(f.expect ?? [])], fill };
+    });
   });
 }
 
