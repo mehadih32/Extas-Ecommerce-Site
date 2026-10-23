@@ -7,6 +7,9 @@
 // - PR 131 My account: the header's figures, the order cards and the wallet (dashboard.ts), Profile with its addresses
 //   and the marketing consent (profile.ts), the tracking steps read from the stored order (pure.ts, also "./pure").
 // - PR 132 the offer banner: the real wallet balance and the owner's offers whose coupon really works (offers.ts).
+// - PR 135 the late flag past the band's promise in hours (SIM-F-018) and the amount the rider may take (pure.ts); the
+//   order cards carry the late flag (dashboard.ts).
+// - PR 137 a signed-in customer's checkout starts with his own name, number and address (profile.ts checkoutPrefill).
 export * from './context';
 export * from './identity';
 export * from './codes';

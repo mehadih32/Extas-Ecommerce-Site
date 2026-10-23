@@ -1,8 +1,10 @@
 // PR 115 — the checkout page (demo 51-checkout.js, V12.2): with an empty bag the empty-bag card; otherwise the client
 // form (CheckoutForm) around the server-drawn summary lines. The bag's stylesheet comes too: the checkout uses its
 // shared rules (stack, split-side, qty, the sticky bar).
+// PR 137: a signed-in customer's own details start the boxes (`prefill`); this browser's memory when the owner allows it.
 import '../bag/bag.css';
 import './checkout.css';
+import type { CheckoutPrefill } from '@extas/accounts';
 import { fieldOrder, viewOf, type CheckoutQuote } from '@extas/checkout';
 import { cardsByIds } from '@/lib/shop/catalogue';
 import { checkoutWords, type CheckoutSettings } from '@/lib/shop/checkout';
@@ -39,7 +41,7 @@ export function EmptyCheckout({ c }: { c: ShopContext }) {
   );
 }
 
-export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: CheckoutQuote; s: CheckoutSettings }) {
+export async function CheckoutPage({ c, quote, s, prefill = null }: { c: ShopContext; quote: CheckoutQuote; s: CheckoutSettings; prefill?: CheckoutPrefill | null }) {
   const view = quote.bag;
   const bagHref = hrefIn(c.lang, ROUTES.bag);
   // PR 121: the lines' quantity and Remove go through the bag's own script (its API, Undo and redraw); it stays mounted
@@ -74,6 +76,8 @@ export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: Che
         capture={s['checkout.capture.enabled'] ? { waitMs: s['checkout.capture.waitMs'] } : null}
         bagHref={bagHref}
         suggest={s['delivery.suggest.enabled'] ? { minChars: s['delivery.suggest.minChars'], storeId: c.storeId, words: { label: c.t('addrSuggest.label'), count: c.t('addrSuggest.count') } } : null}
+        prefill={prefill}
+        remember={s['checkout.autofill'].browserDays > 0 ? { days: s['checkout.autofill'].browserDays } : null}
       />
       {actions}
     </div>

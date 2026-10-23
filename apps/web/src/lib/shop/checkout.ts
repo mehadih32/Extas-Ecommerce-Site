@@ -3,6 +3,7 @@
 // `next build`) or when it is slow, the page draws the empty bag with the registry defaults — never a guess.
 import { checkoutQuote, emptyQuote, orderReceipt, payView, type CheckoutDeps, type CheckoutQuote, type PayView, type Receipt } from '@extas/checkout';
 import { findBag } from '@extas/cart';
+import { checkoutPrefill, type CheckoutPrefill } from '@extas/accounts';
 import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
@@ -52,6 +53,7 @@ const KEYS = [
   'checkout.capture.enabled',
   'checkout.capture.waitMs',
   'account.thanksCard.enabled',
+  'checkout.autofill',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
@@ -123,6 +125,20 @@ export async function accountReceipt(c: Pick<ShopContext, 'storeId'>, number: st
   } catch (e) {
     console.warn(`shop: the order is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return { receipt: null, signedIn: !!me };
+  }
+}
+
+/** PR 137 (Blueprint C6.5) — the signed-in customer's own details for his checkout's boxes (null: signed out, switched off, slow). */
+export async function currentPrefill(c: Pick<ShopContext, 'storeId'>): Promise<CheckoutPrefill | null> {
+  const deps = accountDeps();
+  if (!deps) return null;
+  try {
+    const me = await signedIn();
+    if (!me) return null;
+    return await withTimeout(checkoutPrefill(deps, { storeId: c.storeId, customerId: me.customer.id }), settingsTimeoutMs() * 4);
+  } catch (e) {
+    console.warn(`shop: the checkout's details are unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return null;
   }
 }
 
