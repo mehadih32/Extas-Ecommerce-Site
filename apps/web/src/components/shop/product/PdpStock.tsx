@@ -6,6 +6,7 @@
 import { Icon } from '../Icon';
 import { stockLine } from '@/lib/shop/pdp-stock';
 import { usePdp } from './PdpRoot';
+import { sweepClass } from '@/lib/shop/sweep-class';
 
 export function PdpStock({ cutoffWords }: { cutoffWords: string | null }) {
   const { m, set, choice, w, num, shipsToday } = usePdp();
@@ -17,7 +18,7 @@ export function PdpStock({ cutoffWords }: { cutoffWords: string | null }) {
   const icon = say.kind === 'low' || say.kind === 'lowSize' ? 'clock' : say.warn ? 'info' : 'truck';
   return (
     <div className="pdp-sec pdp-stocksec">
-      <div className={`pdp-stock${say.warn ? ' low' : ''}${!say.warn && set.sweep.stock ? ' sweep' : ''}`} data-testid="stock-line" data-kind={say.kind} role="status">
+      <div className={`pdp-stock${say.warn ? ' low' : ''}${sweepClass(!say.warn && set.sweep.stock)}`} data-testid="stock-line" data-kind={say.kind} role="status">
         <Icon name={icon} size={15} />
         <span>{text}</span>
       </div>

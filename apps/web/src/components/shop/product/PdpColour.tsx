@@ -11,6 +11,7 @@ import { allColoursAt } from '@/lib/shop/pdp-colour';
 import { stockOf } from '@/lib/shop/product-model';
 import { PdpModal } from './PdpModal';
 import { usePdp } from './PdpRoot';
+import { sweepClass } from '@/lib/shop/sweep-class';
 import { ShotPicture } from './ShotPicture';
 
 /** The phone's buy bar glows for a moment after a pick (demo `woke`). */
@@ -32,7 +33,6 @@ export function PdpColour({ lang }: { lang: 'en' | 'bn' }) {
   if (!n) return null;
   const cur = m.colours.find((c) => c.key === choice.colour) ?? m.colours[0]!;
   const at = allColoursAt(n, set.colour);
-  const sweep = (on: boolean) => (on ? ' sweep' : '');
 
   const pick = (key: string, el: HTMLElement) => {
     if (key === choice.colour) return;
@@ -45,7 +45,7 @@ export function PdpColour({ lang }: { lang: 'en' | 'bn' }) {
     <button
       ref={opener}
       type="button"
-      className={`link pdp-allc pdp-fx${sweep(set.sweep.allColours)}`}
+      className={`link pdp-allc pdp-fx${sweepClass(set.sweep.allColours)}`}
       data-fx-max="2"
       data-l="0"
       aria-label={w('seeAll', { n: num(n) })}
@@ -67,7 +67,7 @@ export function PdpColour({ lang }: { lang: 'en' | 'bn' }) {
   return (
     <div className={`pdp-sec pdp-colsec${at === 'up' ? ' allc-up' : ' allc-sw'}`}>
       <div className="pdp-lblrow" data-fitrow="">
-        <span className={`pdp-lbl pdp-fitt${sweep(set.sweep.colourLabel)}`}>
+        <span className={`pdp-lbl pdp-fitt${sweepClass(set.sweep.colourLabel)}`}>
           {w('colour')} <span className="pdp-lblv">{cur.name}</span>
         </span>
         {at === 'up' ? all : null}
