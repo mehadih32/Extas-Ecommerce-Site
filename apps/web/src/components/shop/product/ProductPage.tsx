@@ -6,6 +6,7 @@
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
 // one state (PdpRoot); the rest is drawn here.
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { bagSettings, currentBag } from '@/lib/shop/bag';
@@ -20,6 +21,7 @@ import { isBottom } from '@/lib/shop/pdp-chart';
 import { canonicalFor } from '@/lib/shop/pdp-colour';
 import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
 import { payWords } from '@/lib/shop/pdp-price';
+import { readRecent, RECENT_COOKIE } from '@/lib/shop/pdp-rows';
 import { ruleCells } from '@/lib/shop/pdp-rules';
 import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
 import { trustFacts, trustItems } from '@/lib/shop/pdp-trust';
@@ -40,7 +42,9 @@ import { PdpEffects } from './PdpEffects';
 import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
+import { PdpRecentMark } from './PdpRecentMark';
 import { PdpRoot, type PdpEnv } from './PdpRoot';
+import { PdpRows } from './PdpRows';
 import { PdpRules } from './PdpRules';
 import { PdpSizes } from './PdpSizes';
 import { PdpStock } from './PdpStock';
@@ -61,6 +65,7 @@ const KEYS = [
   'pdp.buy',
   'pdp.sweep',
   'pdp.fit',
+  'pdp.rows',
   'catalogue.sizeCharts.diagramFor',
   'policy.exchange.summary',
   'policy.returns.summary',
@@ -237,6 +242,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
       ),
   }));
 
+  // ---- PR 67 · the rows at the foot of the page ----
+  const rows = set['pdp.rows'];
+  const recentIds = rows.recent ? readRecent((await cookies()).get(RECENT_COOKIE)?.value, rows.recentKeep) : [];
+
   // ---- PR 49 · buttons and links; the bag is S04's (follow-up 38) ----
   const buy = set['pdp.buy'];
   const bagSet = await bagSettings(c.storeId);
@@ -365,6 +374,14 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             </div>
           </div>
         </div>
+        <PdpRows
+          c={c}
+          set={rows}
+          product={{ id: m.productId, categorySlug: data.category?.slug ?? null, garment: data.garment }}
+          diagramFor={set['catalogue.sizeCharts.diagramFor']}
+          recentIds={recentIds}
+        />
+        {rows.recent ? <PdpRecentMark id={m.productId} keep={rows.recentKeep} days={rows.recentDays} /> : null}
         <PdpPhoneBar links={links} />
         <PdpDeskBar links={links} lang={lang} />
         {view && added && bagCards ? (

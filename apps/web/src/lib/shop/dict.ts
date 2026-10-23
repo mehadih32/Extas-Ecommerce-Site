@@ -1,13 +1,22 @@
 // PR 503 — every word the shop shows comes from the shop dictionary (messages/shop.<lang>.json), never from code. The
 // owner can change any of them, in both languages, through the setting `language.labels` (his words win over ours).
 // Text in a dictionary may hold {name} slots, filled at the moment it is shown.
+// The third storefront batch (S02, PR 53, 67–71, 74, 75) keeps its words in messages/shop-more.<lang>.json, merged in
+// here under their own top-level keys (a key in both files is a mistake and throws).
 import bn from '../../../messages/shop.bn.json';
 import en from '../../../messages/shop.en.json';
+import moreBn from '../../../messages/shop-more.bn.json';
+import moreEn from '../../../messages/shop-more.en.json';
 import type { ShopLabel } from '@extas/settings';
 import type { Dict } from '../i18n';
 import type { ShopLang } from './lang';
 
-export const SHOP_DICTS: Record<ShopLang, Dict> = { en, bn };
+function withMore(base: Dict, more: Dict): Dict {
+  for (const k of Object.keys(more)) if (k in base) throw new Error(`shop words "${k}" are defined twice`);
+  return { ...base, ...more };
+}
+
+export const SHOP_DICTS: Record<ShopLang, Dict> = { en: withMore(en, moreEn), bn: withMore(bn, moreBn) };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;
 export type Vars = Record<string, string | number>;

@@ -3,6 +3,10 @@
     "fit": {
       "label": "First screen of the product page (phone)",
       "help": "On a phone the first screen of every product page reaches down to the sizes and the measurement line, just above the buy buttons. The photo's height is what gives way: it is never shorter than its floor nor taller than its ceiling (each the smaller of a pixel number and a share of the screen). The air above the buy bar is in pixels. While the photo stays at least the 'deep' share of the screen, a deeper block may end the first screen. On a very short phone the gaps between the blocks may give a few pixels too."
+    },
+    "rows": {
+      "label": "Rows under the product: \"Wear it with\" and \"Recently viewed\"",
+      "help": "Sliding rows at the foot of every product page. \"Wear it with\" shows other categories' products: tops for a bottom garment, bottoms for a top, in the order of the lists (a category with its own list uses that one first; a missing or empty category is skipped). Then \"You may also like\" rows of the next categories. On a computer the rows can be one slider together. \"Recently viewed\" shows the products this phone opened before (only their numbers are kept on the phone); on a computer it can be a grid of 4 that is never empty and changes every few seconds — a hand on it, a finger or the keyboard pauses it."
     }
   }
 }

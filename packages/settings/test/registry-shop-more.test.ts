@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
-import { pdpFitSchema, shopMoreSettings } from '../src/registry-shop-more';
+import { pdpFitSchema, pdpRowsSchema, shopMoreSettings } from '../src/registry-shop-more';
 
 describe('third storefront batch settings (v21)', () => {
   it('every key is in the registry at version 21, public, never owner data, with both labels', () => {
@@ -26,5 +26,16 @@ describe('third storefront batch settings (v21)', () => {
     expect(pdpFitSchema.safeParse({ ...f, photoMinPx: 600, photoMaxPx: 400 }).success).toBe(false);
     expect(pdpFitSchema.safeParse({ ...f, clearPx: 30 }).success).toBe(false);
     expect(pdpFitSchema.safeParse({ ...f, extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 67: the rows match the demo (two phone rows of 6, one desktop slider, a never-empty grid every 35 s)', () => {
+    const r = shopMoreSettings['pdp.rows'].default;
+    expect(r).toMatchObject({ pairs: true, pairRows: 2, perRow: 6, deskStyle: 'one', recent: true, recentMax: 6, deskGrid: true, swapSec: 35, pairTitle: null });
+    expect(r.order.top[0]).toBe('trousers');
+    expect(r.order.bottom[0]).toBe('polos');
+    expect(pdpRowsSchema.safeParse({ ...r, recentMax: 12, recentKeep: 6 }).success).toBe(false);
+    expect(pdpRowsSchema.safeParse({ ...r, order: { ...r.order, top: ['Not A Slug'] } }).success).toBe(false);
+    expect(pdpRowsSchema.safeParse({ ...r, groupOf: { tee: 'middle' } }).success).toBe(false);
+    expect(pdpRowsSchema.safeParse({ ...r, pairTitle: { en: 'Pair it with', bn: 'এর সাথে মানায়' } }).success).toBe(true);
   });
 });
