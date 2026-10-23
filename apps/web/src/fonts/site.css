@@ -1,12 +1,15 @@
 /* Self-hosted web fonts (OFL-1.1, from @fontsource 5.3.0; licences next to the files). Built into the app, so a
- * build never downloads fonts. display: optional — text never waits for or re-paints with a web font (CLS 0). */
+ * build never downloads fonts. display: optional — text never waits for or re-paints with a web font (CLS 0).
+ * Follow-up 23 (PR 82): the Bengali files are cut to the Bengali block (danda, the letters, the joiners, the dotted
+ * circle) without hinting, which phones ignore: 38 KB instead of 71 KB each. ~~Vedic marks U+0951-0952, U+1CD0-1CF7,
+ * U+A8F1 and the rupee sign~~ are not in them. */
 @font-face {
   font-family: 'Hind Siliguri';
   font-style: normal;
   font-display: optional;
   font-weight: 400;
   src: url('./hind-siliguri/hind-siliguri-bengali-400-normal.woff2') format('woff2');
-  unicode-range: U+0951-0952,U+0964-0965,U+0980-09FE,U+1CD0,U+1CD2,U+1CD5-1CD6,U+1CD8,U+1CE1,U+1CEA,U+1CED,U+1CF2,U+1CF5-1CF7,U+200C-200D,U+20B9,U+25CC,U+A8F1;
+  unicode-range: U+0964-0965,U+0980-09FE,U+200C-200D,U+25CC;
 }
 @font-face {
   font-family: 'Hind Siliguri';
@@ -22,7 +25,7 @@
   font-display: optional;
   font-weight: 600;
   src: url('./hind-siliguri/hind-siliguri-bengali-600-normal.woff2') format('woff2');
-  unicode-range: U+0951-0952,U+0964-0965,U+0980-09FE,U+1CD0,U+1CD2,U+1CD5-1CD6,U+1CD8,U+1CE1,U+1CEA,U+1CED,U+1CF2,U+1CF5-1CF7,U+200C-200D,U+20B9,U+25CC,U+A8F1;
+  unicode-range: U+0964-0965,U+0980-09FE,U+200C-200D,U+25CC;
 }
 @font-face {
   font-family: 'Hind Siliguri';

@@ -230,6 +230,18 @@ jobs:
             nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
           for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
           cat /tmp/web-server.log; exit 1
+      # Follow-up 23 (PR 82): the storefront's Lighthouse budget on the sample data too (the web job's run has no
+      # database, so its pages carry no products). Before the gate, which signs in and changes the owner's password.
+      - name: Lighthouse budget on the sample data
+        run: npx -y @lhci/cli@0.15.1 autorun --config=lighthouserc.seeded.json
+      - name: Keep the sample-data Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-seeded
+          path: .lighthouseci-seeded
+          include-hidden-files: true
+          retention-days: 7
       - name: Device gate, signed in on the sample data (0 fails)
         env:
           NODE_PATH: ${{ runner.temp }}/qa/node_modules

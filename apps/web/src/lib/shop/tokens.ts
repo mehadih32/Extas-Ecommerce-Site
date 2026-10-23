@@ -53,11 +53,13 @@ export type TypeToken = (typeof TYPE_TOKENS)[number];
 export type Token = ColourToken | ShapeToken | TypeToken;
 export type ThemeTokens = Record<Token, string>;
 
-/** The self-hosted families a theme or the owner may choose (apps/web/src/fonts). The stack after each is the fallback. */
+/** The self-hosted families a theme or the owner may choose (apps/web/src/fonts). The stack after each is the fallback.
+ * Follow-up 23: the Bengali fallback is the shop's own `Hind Siliguri Shop` family (~~`Hind Siliguri`~~, which the
+ * admin keeps), whose Bengali letters are declared only once their files are cached (lib/shop/font-preload.ts). */
 export const FONT_FAMILIES = {
-  'instrument-sans': "'Instrument Sans','Hind Siliguri',system-ui,-apple-system,'Segoe UI',sans-serif",
-  archivo: "'Archivo','Hind Siliguri',system-ui,sans-serif",
-  'hind-siliguri': "'Hind Siliguri',system-ui,sans-serif",
+  'instrument-sans': "'Instrument Sans','Hind Siliguri Shop',system-ui,-apple-system,'Segoe UI',sans-serif",
+  archivo: "'Archivo','Hind Siliguri Shop',system-ui,sans-serif",
+  'hind-siliguri': "'Hind Siliguri Shop',system-ui,sans-serif",
   'cormorant-garamond': "'Cormorant Garamond','Archivo',serif",
 } as const;
 export type FontFamilyKey = keyof typeof FONT_FAMILIES;
