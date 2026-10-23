@@ -35,6 +35,8 @@ export interface AccountPage {
   tabs: AccountTab[];
   wishCount: number;
   visitorId: string | null;
+  /** PR 133: the profile photo (kept in this browser only). */
+  photo: { enabled: boolean; maxMb: number; sizePx: number };
 }
 
 /** The signed-in customer's page data, or null (signed out, or the account could not be read). */
@@ -46,11 +48,11 @@ export async function accountPage(c: ShopContext): Promise<AccountPage | null> {
   try {
     const [summary, s, wish] = await Promise.all([
       accountSummary(deps, { storeId: c.storeId, customerId: me.customer.id }),
-      readPageSettings(['account.tabs'] as const, c.storeId),
+      readPageSettings(['account.tabs', 'account.photo'] as const, c.storeId),
       wishCount({ db: deps.db, storeId: c.storeId }, visitorId ?? '', me.customer.id),
     ]);
     if (!summary) return null;
-    return { me, summary, tabs: s['account.tabs'], wishCount: wish, visitorId };
+    return { me, summary, tabs: s['account.tabs'], wishCount: wish, visitorId, photo: s['account.photo'] };
   } catch (e) {
     console.warn(`shop: My account unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return null;

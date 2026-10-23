@@ -3,6 +3,7 @@
 // their counts, "Log out", and the WhatsApp help under it); the header card ("Hi, Rahim", the number, and the figures:
 // orders, wallet, saved); on a phone the sections as a row of chips; the section itself; then the way home ("Back to
 // home", "Keep shopping", "Log out"). Only the sections the owner shows (`account.tabs`), in his order.
+// PR 133: the round pictures show his photo when this browser keeps one (AccountPhoto).
 // The demo's tier tag ("VIP", "New customer") and the "Offers" figure wait for the systems that make them true.
 import '../bag/bag.css';
 import './account.css';
@@ -16,18 +17,10 @@ import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
 import { Icon, WaGlyph } from '../Icon';
+import { Avatar } from './AccountPhoto';
 import { LogoutButton } from './LogoutButton';
 
 const TAB_ICON: Record<AccountTab, ShopIcon> = { orders: 'box', foryou: 'spark', rewards: 'gift', wallet: 'wallet', wishlist: 'heart', profile: 'user' };
-
-export function Avatar({ name, small = false }: { name: string | null; small?: boolean }) {
-  const ini = initialsOf(name);
-  return (
-    <span className={`acc-avatar${small ? ' sm' : ''}`} data-acc-avatar="">
-      {ini ? ini : <Icon name="user" size={small ? 18 : 22} />}
-    </span>
-  );
-}
 
 export function AccountCrumbs({ c, trail }: { c: ShopContext; trail: [string, string | null][] }) {
   return (
@@ -83,7 +76,7 @@ export function AccountShell({ c, page, tab, children }: { c: ShopContext; page:
         <aside className="acc-side" aria-label={t('account.menu')}>
           <div className="acc-side-card">
             <div className="acc-side-top">
-              <Avatar name={s.name} small />
+              <Avatar initials={initialsOf(s.name)} customerId={s.customerId} photoOn={page.photo.enabled} small />
               <div style={{ minWidth: 0 }}>
                 <div className="bold acc-ellipsis">{s.name || s.phone}</div>
                 {s.name ? <div className="xs muted">{s.phone}</div> : null}
@@ -115,7 +108,7 @@ export function AccountShell({ c, page, tab, children }: { c: ShopContext; page:
         <div className="stack s16 acc-main">
           <section className="card acc-hd" aria-label={t('account.summary')}>
             <div className="acc-hd-id">
-              <Avatar name={s.name} />
+              <Avatar initials={initialsOf(s.name)} customerId={s.customerId} photoOn={page.photo.enabled} />
               <div style={{ minWidth: 0 }}>
                 <h1 className="h1 acc-hi">{name}</h1>
                 <div className="small text2" style={{ marginTop: 4 }}>

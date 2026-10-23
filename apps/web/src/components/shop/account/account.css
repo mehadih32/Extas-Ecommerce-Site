@@ -182,3 +182,18 @@
 .shop .acc-ocode { display: inline-flex; gap: 8px; align-items: baseline; border: 1px dashed var(--brand-line); padding: 6px 10px; border-radius: var(--radius); background: var(--surface2); }
 .shop .acc-ocode b { letter-spacing: 0.1em; font-family: var(--font-display); }
 .shop .acc-ofr-t { font-size: 16px; }
+
+/* ---- PR 133 · the profile photo (demo r12-acct.css note 52) ---- */
+.shop .acc-avatar.has-photo { padding: 0; background: var(--line2); }
+.shop .acc-ph-row { display: flex; align-items: flex-start; gap: 16px; }
+.shop .acc-ph-pic { position: relative; flex-shrink: 0; width: 86px; height: 86px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 0 3px var(--surface), 0 0 0 4.5px var(--line); }
+.shop .acc-ph-pic img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+.shop .acc-ph-ini { font-family: var(--font-display); font-size: 30px; font-weight: 800; letter-spacing: 0.03em; }
+.shop .acc-ph-cam { position: absolute; right: -2px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface); }
+.shop .acc-ph-note { margin: 4px 0 0; line-height: 1.45; }
+.shop .acc-ph-btns { gap: 8px; margin-top: 11px; }
+.shop .acc-ph-btns .btn-sm { min-height: 44px; }
+.shop .acc-ph-pick { cursor: pointer; }
+.shop .acc-ph .acc-err { margin-top: 10px; }
+.shop .acc-ph-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.shop .acc-ph-input:focus-visible + * { outline: 2px solid var(--brand); }

@@ -46,6 +46,10 @@
     "offerBanner": {
       "label": "Offer banner in My account",
       "help": "Off by default. When on, the top of My orders shows the customer's real wallet balance (only when there is credit) and your member offers, each with your own title and note in both languages. An offer with a coupon code shows only while that coupon works for this customer (switched on, inside its dates, not for guests only, not used up). With nothing to show, there is no banner."
+    },
+    "photo": {
+      "label": "Profile photo",
+      "help": "Off by default. When on, Profile lets a customer pick a photo for his account picture. It is cropped square and shrunk on his own phone and kept only in that browser: nothing is uploaded or stored by the shop. The largest file he may pick, and the size it is shrunk to."
     }
   }
 }
