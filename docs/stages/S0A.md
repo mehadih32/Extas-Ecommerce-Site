@@ -169,6 +169,7 @@
 
 - **Status:** Live · 2026-10-20
   - Build status row: Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat
+  - GitHub pull request #29, 23 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Redis, and BullMQ queues with their dead-letter handling.
 - **Filed under:** [S0A · Server foundation — PR 1–10](../MASTER-REGISTER.md#s0a--server-foundation--pr-110)
