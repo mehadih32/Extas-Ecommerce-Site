@@ -8,3 +8,4 @@ export * from './context';
 export * from './address';
 export * from './pure';
 export * from './quote';
+export * from './payment';

@@ -1,10 +1,12 @@
 // PR 84 — the language gate (CN-017, SIM-F-025 "the বাংলা journey is half English"): with বাংলা on, no English word
 // is left in the shop's own words. The names people write in Latin letters stay (WhatsApp, SMS, the DBID number and the
-// 01XXXXXXXXX pattern), and the language switch says its way out in the other language on purpose.
+// 01XXXXXXXXX pattern), and the language switch says its way out in the other language on purpose. PR 120: the card and
+// gateway brands keep their own Latin names, and the payment marks (checkout.mk.*) are the brands' printed logos.
 import { describe, expect, it } from 'vitest';
 import { SHOP_DICTS, keysOf, shopT } from './dict';
 
-const KEEP = new Set(['WhatsApp', 'SMS', 'DBID', 'XXXXXXXXX']);
+const KEEP = new Set(['WhatsApp', 'SMS', 'DBID', 'XXXXXXXXX', 'Visa', 'Mastercard', 'Amex', 'SSLCommerz']);
+const MARKS = 'checkout.mk.';
 const SWITCH = new Set(['lang.toBn', 'lang.toEn', 'lang.en']);
 
 /** The Latin words left in a Bengali entry, slots ({store}) taken out. */
@@ -16,7 +18,7 @@ describe('PR 84 · the Bengali shop is Bengali (SIM-F-025)', () => {
   it('no English word is left in the Bengali dictionary, apart from the names people write in Latin letters', () => {
     const t = shopT('bn');
     const left = keysOf(SHOP_DICTS.bn)
-      .filter((k) => !SWITCH.has(k))
+      .filter((k) => !SWITCH.has(k) && !k.startsWith(MARKS))
       .flatMap((k) => englishLeft(t(k)).map((w) => `${k}: ${w}`));
     expect(left).toEqual([]);
   });

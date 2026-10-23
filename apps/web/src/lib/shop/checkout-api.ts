@@ -43,14 +43,17 @@ export function refusal(e: unknown): Response {
 
 export const langOf = (v: unknown): ShopLang => (isShopLang(v) ? v : 'en');
 
-/** POST /api/checkout/quote — the checkout priced again for what the customer chose so far (the address read, …). */
+/**
+ * POST /api/checkout/quote — the checkout priced again for what the customer chose so far (the address read, the band
+ * he picked, the payment method). The engines validate every part; a bad one is INVALID_INPUT.
+ */
 export async function quoteHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
   const stop = guard(request, deps, ['POST']);
   if (stop || !deps) return stop!;
   try {
     const b = await body(request);
     const { cartId } = await bagOfRequest(request, deps);
-    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, lang: langOf(b.lang), address: (b.address ?? null) as never });
+    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never });
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);

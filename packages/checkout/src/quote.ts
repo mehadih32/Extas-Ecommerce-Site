@@ -7,11 +7,15 @@
 // PR 119 — the delivery charge: the owner's figure for the band the address was read as (S06, never a figure from the
 // text), unless the rules engine makes delivery free (a campaign, the threshold, free-delivery products) — then the
 // page shows one thing, "free", and no figure at all. Before an address the step shows the store's rates.
+// PR 120 — the payment choice (payment.ts): the methods open on this order, Cash on Delivery only where the owner, the
+// Smart Rules and the band's COD limit allow it, and the prepaid reward (free delivery, or an amount taken off the
+// total) for any other method.
 import { createHash } from 'node:crypto';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
 import { bandOut, loadBandMap, type AskReason, type BandMap, type BandOut } from '@extas/delivery';
 import { deliveryDeps, placeName, readAddress, type AddressInput, type AddressRead, type PlaceName } from './address';
-import { checkStoreId, type CheckoutDeps } from './context';
+import { checkStoreId, parse, type CheckoutDeps } from './context';
+import { choosePayment, isPrepaid, paymentInputSchema, paySettings, rewardOf, rulesPaymentMethod, type PaymentInput, type PaymentView } from './payment';
 
 export interface CheckoutRequest {
   storeId: number;
@@ -21,6 +25,8 @@ export interface CheckoutRequest {
   customerId?: string | null;
   /** PR 117: the finished address line (and the band the customer chose when asked); null before he wrote one. */
   address?: AddressInput | null;
+  /** PR 120: the payment method he picked (null: the first open one). */
+  payment?: PaymentInput | null;
 }
 
 /** The delivery step as the page draws it (PR 117–119). */
@@ -42,7 +48,7 @@ export function deliveryViewOf(a: AddressRead): DeliveryView {
 /** PR 119 — what delivery costs on this order. */
 export type DeliveryCharge =
   /** The rules make it free: the page says so and shows no figure (demo #36). */
-  | { state: 'free'; reason: FreeReason; freeOverMinor: number | null }
+  | { state: 'free'; reason: FreeReason | 'PREPAID'; freeOverMinor: number | null }
   /** The owner's figure for the band the address was read as. */
   | { state: 'charge'; chargeMinor: number }
   /** The band has no charge yet (switched off): the order is taken and the charge is confirmed on the call. */
@@ -75,7 +81,9 @@ export interface Totals {
   totalMinor: number;
   /** False while the delivery charge is not known: the total does not include it yet. */
   known: boolean;
-  /** Everything the offers and sets take off. */
+  /** PR 120: the prepaid reward taken off the total (an amount or a percentage; free delivery shows as free delivery). */
+  rewardMinor: number;
+  /** Everything the offers, sets and the prepaid reward take off. */
   youSaveMinor: number;
   /** The price before every discount (struck beside the total when something is saved). */
   regularMinor: number;
@@ -94,8 +102,8 @@ export interface CheckoutQuote {
   freeGapMinor: number | null;
   /** The address read the order keeps (the ResolvedArea the charge comes from); `none` before an address. */
   address: AddressRead;
-  /** The charged band's own COD limit (S06), for the payment step (PR 120); null = none. */
-  bandCodLimitMinor: number | null;
+  /** PR 120: the payment step — the open methods, the choice and what paying now earns. */
+  pay: PaymentView;
   /** A hash of every amount on the page: placement refuses an order whose money changed since the page showed it. */
   fingerprint: string;
 }
@@ -114,12 +122,13 @@ export interface CheckoutView {
   charge: DeliveryCharge;
   rates: BandOut[];
   freeGapMinor: number | null;
+  pay: PaymentView;
   fingerprint: string;
 }
 
 /** The checkout of no bag (no cookie, no database): the page shows the empty-bag card. */
 export const emptyQuote = (): CheckoutQuote => {
-  const totals: Totals = { itemsMinor: ZERO, deliveryMinor: null, totalMinor: ZERO, known: false, youSaveMinor: ZERO, regularMinor: ZERO };
+  const totals: Totals = { itemsMinor: ZERO, deliveryMinor: null, totalMinor: ZERO, known: false, rewardMinor: ZERO, youSaveMinor: ZERO, regularMinor: ZERO };
   return {
     cartId: null,
     bag: emptyBag(),
@@ -129,7 +138,7 @@ export const emptyQuote = (): CheckoutQuote => {
     rates: [],
     freeGapMinor: null,
     address: { status: 'none' },
-    bandCodLimitMinor: null,
+    pay: { cod: false, codOff: 'OFF', mobile: [], card: [], online: false, chosen: null, reward: null },
     fingerprint: fingerprintOf({ totals }),
   };
 };
@@ -148,6 +157,7 @@ export function viewOf(q: CheckoutQuote): CheckoutView {
     charge: q.charge,
     rates: q.rates,
     freeGapMinor: q.freeGapMinor,
+    pay: q.pay,
     fingerprint: q.fingerprint,
   };
 }
@@ -160,27 +170,52 @@ export function fingerprintOf(parts: unknown): string {
 /** The checkout's quote for a bag. */
 export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest): Promise<CheckoutQuote> {
   checkStoreId(input.storeId);
-  const [address, map] = await Promise.all([readAddress(deps, input.storeId, input.address), loadBandMap(deliveryDeps(deps), input.storeId)]);
+  const asked = input.payment ? parse(paymentInputSchema, input.payment, 'payment') : null;
+  const [address, map, ps] = await Promise.all([readAddress(deps, input.storeId, input.address), loadBandMap(deliveryDeps(deps), input.storeId), paySettings(deps, input.storeId)]);
   // the band the customer pays as (a sub-area folded into the city is the city): rules on `delivery.band` see it
   const charged = address.status === 'resolved' ? address.line.quote.band : null;
-  const bag = input.cartId
-    ? await bagView(deps, { storeId: input.storeId, cartId: input.cartId, lang: input.lang, customerId: input.customerId ?? null, bandKey: charged?.key ?? null })
-    : emptyBag();
+  const bandCodLimit = charged ? (map.bandById(charged.id)?.codLimitMinor ?? null) : null;
+  const priceBag = (method: string | null) =>
+    input.cartId
+      ? bagView(deps, { storeId: input.storeId, cartId: input.cartId, lang: input.lang, customerId: input.customerId ?? null, bandKey: charged?.key ?? null, paymentMethod: method })
+      : Promise.resolve(emptyBag());
+
+  // The choice, first as asked (Cash on Delivery while the owner's switch allows it), then checked against the rules
+  // and the band's COD limit on the priced bag; a choice that moved prices the bag again for the rules on payment.
+  let choice = choosePayment(asked, ps, ps.cod);
+  let bag = await priceBag(rulesPaymentMethod(choice));
+  const before = deliveryChargeOf(address, bag.free);
+  const codTotal = bag.summary.totalMinor + (before.state === 'charge' ? before.chargeMinor : ZERO);
+  const codOff: PaymentView['codOff'] = !ps.cod ? 'OFF' : bag.cod.allowed === false ? 'RULE' : bandCodLimit !== null && codTotal > bandCodLimit ? 'BAND_LIMIT' : null;
+  if (codOff) {
+    const moved = choosePayment(asked, ps, false);
+    if (rulesPaymentMethod(moved) !== rulesPaymentMethod(choice)) bag = await priceBag(rulesPaymentMethod(moved));
+    choice = moved;
+  }
+
   const delivery = deliveryViewOf(address);
-  const charge = deliveryChargeOf(address, bag.free);
   const s = bag.summary;
   const itemsMinor = s.totalMinor;
+  let charge = deliveryChargeOf(address, bag.free);
+  const reward = rewardOf(ps.reward, { itemsMinor, deliveryFree: charge.state === 'free', chargeMinor: charge.state === 'charge' ? charge.chargeMinor : null });
+  let rewardMinor = ZERO;
+  if (reward && isPrepaid(choice)) {
+    if (reward.kind === 'freeDelivery') charge = { state: 'free', reason: 'PREPAID', freeOverMinor: null };
+    else rewardMinor = reward.amountMinor;
+  }
   const deliveryMinor = charge.state === 'free' ? ZERO : charge.state === 'charge' ? charge.chargeMinor : null;
-  const totalMinor = itemsMinor + (deliveryMinor ?? ZERO);
-  const totals: Totals = {
-    itemsMinor,
-    deliveryMinor,
-    totalMinor,
-    known: deliveryMinor !== null,
-    youSaveMinor: s.youSaveMinor,
-    regularMinor: totalMinor + s.youSaveMinor,
-  };
-  const fingerprint = fingerprintOf({ rows: s.rows.map((r) => [r.lineId, r.quantity, r.amountMinor]), offers: s.offers.map((o) => [o.ruleKey, o.amountMinor]), totals, charge });
+  const totalMinor = itemsMinor + (deliveryMinor ?? ZERO) - rewardMinor;
+  const prepaidFree = charge.state === 'free' && charge.reason === 'PREPAID' && reward?.kind === 'freeDelivery' ? (reward.amountMinor ?? ZERO) : ZERO;
+  const youSaveMinor = s.youSaveMinor + rewardMinor + prepaidFree;
+  const totals: Totals = { itemsMinor, deliveryMinor, totalMinor, known: deliveryMinor !== null, rewardMinor, youSaveMinor, regularMinor: totalMinor + youSaveMinor };
+  const pay: PaymentView = { cod: codOff === null, codOff, mobile: ps.mobile, card: ps.card, online: ps.online, chosen: choice, reward };
+  const fingerprint = fingerprintOf({
+    rows: s.rows.map((r) => [r.lineId, r.quantity, r.amountMinor]),
+    offers: s.offers.map((o) => [o.ruleKey, o.amountMinor]),
+    totals,
+    charge,
+    pay: [choice?.method ?? null, reward?.kind ?? null],
+  });
   return {
     cartId: bag.cartId,
     bag,
@@ -190,7 +225,7 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     rates: ratesOf(map),
     freeGapMinor: bag.free.free ? null : bag.free.remainingMinor,
     address,
-    bandCodLimitMinor: charged ? (map.bandById(charged.id)?.codLimitMinor ?? null) : null,
+    pay,
     fingerprint,
   };
 }

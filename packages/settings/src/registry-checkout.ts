@@ -15,7 +15,23 @@ const V = 20;
 /** A field of "Delivery details". */
 export const checkoutFieldSchema = z.enum(['name', 'phone', 'address']);
 
+/** PR 120 — the mobile wallets and the card types the payment step can list (each has its mark in the shop). */
+export const MOBILE_WALLETS = ['bkash', 'nagad', 'rocket', 'upay'] as const;
+export const CARD_TYPES = ['visa', 'mastercard', 'amex', 'bank'] as const;
+/** PR 120 (CN-018 (1)) — what paying before delivery earns: free delivery, an amount off, or a percentage off. */
+export const PREPAID_REWARD_TYPES = ['freeDelivery', 'amount', 'percent'] as const;
+export const PREPAID_REWARD_FALLBACKS = ['amount', 'percent'] as const;
+
+const listOf = <T extends readonly [string, ...string[]]>(values: T) =>
+  z
+    .array(z.enum(values))
+    .min(1)
+    .max(values.length)
+    .refine((a) => new Set(a).size === a.length, { message: 'each one once' });
+
 const base = { scope: 'store', isOwnerData: false, group: 'checkout', version: V } as const;
+/** The owner's own decisions (money): no value until he sets one, and each change needs his OK (CLAUDE.md rule 6). */
+const owner = { ...base, isOwnerData: true, requiresOwnerOk: true } as const;
 
 export const checkoutSettings = {
   // ---- PR 115 · the page ----
@@ -65,5 +81,110 @@ export const checkoutSettings = {
     labelKey: 'checkout.form.addressMin.label',
     helpKey: 'checkout.form.addressMin.help',
     sortOrder: 50,
+  }),
+
+  // ---- PR 120 · payment methods (CN-012: Cash on Delivery opens by itself; mobile, card and online open on a tap).
+  // Whether Cash on Delivery is offered at all is the owner's `payment.cod.enabled` and the Smart Rules' COD rule. ----
+  'checkout.pay.mobile.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.pay.mobile.enabled.label',
+    helpKey: 'checkout.pay.mobile.enabled.help',
+    sortOrder: 60,
+  }),
+  'checkout.pay.mobile.list': setting({
+    ...base,
+    schema: listOf(MOBILE_WALLETS),
+    default: ['bkash', 'nagad', 'rocket'],
+    valueType: 'JSON',
+    labelKey: 'checkout.pay.mobile.list.label',
+    helpKey: 'checkout.pay.mobile.list.help',
+    sortOrder: 61,
+  }),
+  'checkout.pay.card.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.pay.card.enabled.label',
+    helpKey: 'checkout.pay.card.enabled.help',
+    sortOrder: 62,
+  }),
+  'checkout.pay.card.list': setting({
+    ...base,
+    schema: listOf(CARD_TYPES),
+    default: ['visa', 'mastercard', 'amex', 'bank'],
+    valueType: 'JSON',
+    labelKey: 'checkout.pay.card.list.label',
+    helpKey: 'checkout.pay.card.list.help',
+    sortOrder: 63,
+  }),
+  'checkout.pay.online.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.pay.online.enabled.label',
+    helpKey: 'checkout.pay.online.enabled.help',
+    sortOrder: 64,
+  }),
+
+  // ---- PR 120 · the prepaid reward (CN-018 (1)): nothing set (off), and no amount, until the owner decides. Any payment but Cash on
+  // Delivery earns it; when delivery is already free a free-delivery reward falls back to the amount or the percentage.
+  'checkout.prepaidReward.enabled': setting({
+    ...owner,
+    schema: z.boolean().nullable(),
+    default: null,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.prepaidReward.enabled.label',
+    helpKey: 'checkout.prepaidReward.enabled.help',
+    sortOrder: 70,
+  }),
+  'checkout.prepaidReward.type': setting({
+    ...owner,
+    schema: z.enum(PREPAID_REWARD_TYPES).nullable(),
+    default: null,
+    valueType: 'ENUM',
+    labelKey: 'checkout.prepaidReward.type.label',
+    helpKey: 'checkout.prepaidReward.type.help',
+    sortOrder: 71,
+  }),
+  'checkout.prepaidReward.fallback': setting({
+    ...owner,
+    schema: z.enum(PREPAID_REWARD_FALLBACKS).nullable(),
+    default: null,
+    valueType: 'ENUM',
+    labelKey: 'checkout.prepaidReward.fallback.label',
+    helpKey: 'checkout.prepaidReward.fallback.help',
+    sortOrder: 72,
+  }),
+  'checkout.prepaidReward.amountMinor': setting({
+    ...owner,
+    schema: z.int().min(1).max(100_000_000).nullable(),
+    default: null,
+    valueType: 'MONEY_MINOR',
+    labelKey: 'checkout.prepaidReward.amountMinor.label',
+    helpKey: 'checkout.prepaidReward.amountMinor.help',
+    sortOrder: 73,
+  }),
+  'checkout.prepaidReward.percent': setting({
+    ...owner,
+    schema: z.int().min(1).max(90).nullable(),
+    default: null,
+    valueType: 'INT',
+    labelKey: 'checkout.prepaidReward.percent.label',
+    helpKey: 'checkout.prepaidReward.percent.help',
+    sortOrder: 74,
+  }),
+  'checkout.prepaidReward.maxMinor': setting({
+    ...owner,
+    schema: z.int().min(1).max(100_000_000).nullable(),
+    default: null,
+    valueType: 'MONEY_MINOR',
+    labelKey: 'checkout.prepaidReward.maxMinor.label',
+    helpKey: 'checkout.prepaidReward.maxMinor.help',
+    sortOrder: 75,
   }),
 };
