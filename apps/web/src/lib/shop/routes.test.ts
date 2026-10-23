@@ -7,11 +7,12 @@ describe('coming-soon pages (CN-010)', () => {
     // ~~ROUTES.bag~~ PR 107 built the bag
     // ~~ROUTES.wishlist~~ PR 71 built the wishlist; ~~ROUTES.help('faq')~~ PR 75 built the help pages (Ways to pay is still to come)
     // ~~ROUTES.search~~ PR 73 built the results page
-    for (const p of [ROUTES.account, ROUTES.login, ROUTES.orders, ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
+    // ~~ROUTES.account, ROUTES.login, ROUTES.orders~~ PR 130 / 131 built the login and My account
+    for (const p of [ROUTES.order('T-1001'), ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
       expect(comingSoon(p, '/p'), p).not.toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();
-    expect(comingSoon('/account/orders/', '/p')).toBe('account');
+    expect(comingSoon('/account/orders/T-1001/', '/p')).toBe('account');
   });
 
   it('the product page is built (PR 49): its addresses are no longer "coming soon"', () => {
@@ -37,7 +38,12 @@ describe('coming-soon pages (CN-010)', () => {
   it('PR 71: the wishlist is built inside the coming account pages', () => {
     expect(comingSoon(ROUTES.wishlist, '/p')).toBeNull();
     expect(comingSoon(`${ROUTES.wishlist}/`, '/p')).toBeNull();
-    expect(comingSoon(ROUTES.orders, '/p')).toBe('account');
-    expect(comingSoon(ROUTES.account, '/p')).toBe('account');
+    // ~~expect(comingSoon(ROUTES.orders, '/p')).toBe('account');~~
+    // ~~expect(comingSoon(ROUTES.account, '/p')).toBe('account');~~ PR 131 built My account
+  });
+
+  it('PR 131: My account and its sections are built; only the page of one order is still coming (PR 134)', () => {
+    for (const p of [ROUTES.account, ROUTES.orders, `${ROUTES.orders}/`, ROUTES.login, '/account/profile', '/account/wallet', '/account/anything']) expect(comingSoon(p, '/p'), p).toBeNull();
+    expect(comingSoon(ROUTES.order('T-1001'), '/p')).toBe('account');
   });
 });

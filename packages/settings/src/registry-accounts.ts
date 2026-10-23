@@ -23,6 +23,26 @@ export const accountCodeLimitsSchema = z
   })
   .strict();
 
+/** PR 131 — the sections of My account (demo 60-account.js ACC_TABS, the owner's order of §58.9). */
+export const ACCOUNT_TABS = ['orders', 'foryou', 'rewards', 'wallet', 'wishlist', 'profile'] as const;
+export type AccountTab = (typeof ACCOUNT_TABS)[number];
+
+/** PR 131 — which sections show, in this order; My orders always does. */
+export const accountTabsSchema = z
+  .array(z.enum(ACCOUNT_TABS))
+  .min(1)
+  .refine((v) => new Set(v).size === v.length, { message: 'each section once' })
+  .refine((v) => v.includes('orders'), { message: 'My orders always shows' });
+
+/** PR 131 — how long the lists in My account are (0 = the For you "New in" row is off). */
+export const accountListsSchema = z
+  .object({
+    orders: z.int().min(1).max(100),
+    walletEntries: z.int().min(1).max(100),
+    newIn: z.int().min(0).max(24),
+  })
+  .strict();
+
 /** PR 130 — how customers may sign in besides the SMS code. */
 export const accountLoginSchema = z
   .object({
@@ -88,5 +108,34 @@ export const accountSettings = {
     labelKey: 'account.login.label',
     helpKey: 'account.login.help',
     sortOrder: 50,
+  }),
+
+  // ---- PR 131 · My account ----
+  'account.tabs': setting({
+    ...base,
+    schema: accountTabsSchema,
+    default: [...ACCOUNT_TABS],
+    valueType: 'JSON',
+    labelKey: 'account.tabs.label',
+    helpKey: 'account.tabs.help',
+    sortOrder: 60,
+  }),
+  'account.addresses.max': setting({
+    ...base,
+    schema: z.int().min(1).max(10),
+    default: 3,
+    valueType: 'INT',
+    labelKey: 'account.addresses.max.label',
+    helpKey: 'account.addresses.max.help',
+    sortOrder: 70,
+  }),
+  'account.lists': setting({
+    ...base,
+    schema: accountListsSchema,
+    default: { orders: 20, walletEntries: 20, newIn: 8 },
+    valueType: 'JSON',
+    labelKey: 'account.lists.label',
+    helpKey: 'account.lists.help',
+    sortOrder: 80,
   }),
 };

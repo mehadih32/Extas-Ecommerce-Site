@@ -8,11 +8,10 @@ import type { CustomerAuth } from '@extas/auth';
 import type { ShopIcon } from '@extas/settings';
 import type { ShopContext } from '@/lib/shop/context';
 import { SHOP_DICTS, keysOf } from '@/lib/shop/dict';
-import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
-import { ROUTES } from '@/lib/shop/routes';
 import { phoneNormalizeBD } from '@/lib/phone-bd';
 import { Icon } from '../Icon';
+import { AccountCrumbs } from './AccountShell';
 import { LoginForm, type LoginWords } from './LoginForm';
 import { LogoutButton } from './LogoutButton';
 
@@ -25,23 +24,13 @@ export function loginWords(c: ShopContext): LoginWords {
   );
 }
 
-export function AccountCrumbs({ c, here }: { c: ShopContext; here: string }) {
-  return (
-    <nav className="crumbs" aria-label={c.t('account.crumbs')}>
-      <a href={hrefIn(c.lang, ROUTES.home)}>{c.t('account.home')}</a>
-      <span aria-hidden="true">/</span>
-      <span aria-current="page">{here}</span>
-    </nav>
-  );
-}
-
 export function LoginPage({ c, me, next, passwordOn, autoCreate }: { c: ShopContext; me: CustomerAuth | null; next: string; passwordOn: boolean; autoCreate: boolean }) {
   const t = c.t;
   if (me) {
     const p = phoneNormalizeBD(me.customer.phone ?? '');
     return (
       <div className="container acc-login" data-testid="login-page" data-signed-in="">
-        <AccountCrumbs c={c} here={t('account.login.title')} />
+        <AccountCrumbs c={c} trail={[[t('account.login.title'), null]]} />
         <section className="card acc-login-card acc-in mt16">
           <div className="row" style={{ gap: 14 }}>
             <span className="ty-ic">
@@ -70,7 +59,7 @@ export function LoginPage({ c, me, next, passwordOn, autoCreate }: { c: ShopCont
   ];
   return (
     <div className="container acc-login" data-testid="login-page">
-      <AccountCrumbs c={c} here={t('account.login.title')} />
+      <AccountCrumbs c={c} trail={[[t('account.login.title'), null]]} />
       <div className="acc-login-grid">
         <section className="card acc-login-card" aria-labelledby="lg-h">
           <div className="eyebrow">{t('account.eyebrow')}</div>

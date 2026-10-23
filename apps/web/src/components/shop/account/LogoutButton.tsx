@@ -1,8 +1,9 @@
 'use client';
 // PR 130 — "Log out": ends this browser's session (POST /api/account/logout) and goes home.
 import { useState } from 'react';
+import { Icon } from '../Icon';
 
-export function LogoutButton({ label, lang, className = 'btn btn-ghost' }: { label: string; lang: 'en' | 'bn'; className?: string }) {
+export function LogoutButton({ label, lang, className = 'btn btn-ghost', icon = false }: { label: string; lang: 'en' | 'bn'; className?: string; icon?: boolean }) {
   const [busy, setBusy] = useState(false);
   return (
     <button
@@ -22,6 +23,7 @@ export function LogoutButton({ label, lang, className = 'btn btn-ghost' }: { lab
         }
       }}
     >
+      {icon ? <Icon name="back" size={17} /> : null}
       {label}
     </button>
   );

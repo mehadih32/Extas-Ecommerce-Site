@@ -6,22 +6,26 @@
 //                                {phone, password, next?}   → {next} | {step: 'code', …}             a new device: the code too
 //   POST /api/account/logout                                → {next}
 //   POST /api/account/password   {current?, next}           → {}                                     Profile: set or change it
+//   POST /api/account/profile    {name, addresses: [{id?, line}]} → {profile}                         PR 131: Profile's details
+//   POST /api/account/consent    {sms?, whatsapp?}          → {consent}                              PR 131: offers by SMS / WhatsApp
 //   POST /api/account/test-code  {phone}                    → {code}   test servers only (EXTAS_SHOP_TEST_PAGES=1, mock SMS)
+//   POST /api/account/try                                   → {next}   test servers only: signed in as the sample account
 //
 // The session cookie is `__Host-extas_c`, the device cookie `__Host-extas_dev` (lib/shop/account.ts). Follow-up 71: a
 // sign-in brings this browser's wishlist hearts into the account (lib/shop/wishlist.ts mergeWishes).
-import { askForCode, isAccountError, normalPhone, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
+import { askForCode, isAccountError, normalPhone, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
 import type { RequestContext } from '@extas/auth';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE } from './bag-model';
 import { mergeWishes, visitorOf } from './wishlist';
+import { tryOpen, trySignIn } from './account-try';
 import { accountCookie, CUSTOMER_COOKIE, clearAccountCookie, customerOfRequest, DEVICE_COOKIE, newDeviceToken } from './account';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 
-/** The largest request body the account API takes. */
-export const ACCOUNT_BODY_MAX = 4_096;
+/** The largest request body the account API takes (Profile: a few addresses in Bengali, three bytes a letter). */
+export const ACCOUNT_BODY_MAX = 16_384;
 
 export interface AccountApiDeps {
   accounts: AccountsDeps;
@@ -110,6 +114,18 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         await setOwnPassword(a, auth, { current: text(b.current, 512) || null, next: text(b.next, 512) }, ctxOf(request));
         return json({ ok: true });
       }
+      case 'profile': {
+        const auth = await customerOfRequest(request, a, deps.storeId);
+        if (!auth) return fail(401, 'SIGNED_OUT');
+        const profile = await saveProfile(a, { storeId: deps.storeId, customerId: auth.customer.id, profile: { name: b.name, addresses: b.addresses } }, ctxOf(request));
+        return json({ ok: true, profile });
+      }
+      case 'consent': {
+        const auth = await customerOfRequest(request, a, deps.storeId);
+        if (!auth) return fail(401, 'SIGNED_OUT');
+        const consent = await saveConsent(a, { storeId: deps.storeId, customerId: auth.customer.id, consent: { sms: b.sms, whatsapp: b.whatsapp } }, ctxOf(request));
+        return json({ ok: true, consent });
+      }
       case 'test-code': {
         // CI only: the newest code the mock "sent" to a number. Never on staging or production, never a real SMS.
         if (process.env.EXTAS_SHOP_TEST_PAGES !== '1') return fail(404, 'not-found');
@@ -117,6 +133,13 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         if (!sms || sms.mode !== 'MOCK') return fail(404, 'not-found');
         const m = mockSmsOutbox.lastTo(normalPhone(text(b.phone, 40)).e164);
         return json({ ok: true, code: m?.text.match(/\d{4,8}/)?.[0] ?? null });
+      }
+      case 'try': {
+        // CI only (PR 131): the device gate and the journeys measure My account signed in, as the sample customer.
+        if (!(await tryOpen(a, deps.storeId))) return fail(404, 'not-found');
+        const device = readCookie(request, DEVICE_COOKIE) ?? newDeviceToken();
+        const s = await trySignIn(a, { storeId: deps.storeId }, ctxOf(request));
+        return json({ ok: true, next: hrefIn(lang, ROUTES.account) }, { headers: await signedInHeaders(deps, s.token, s.expiresAt, device) });
       }
       default:
         return fail(404, 'not-found');

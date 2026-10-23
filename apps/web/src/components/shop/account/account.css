@@ -1,5 +1,10 @@
 /* S04 · PR 130–135 — the customer account pages (demo 60-account.js and r12-acct.css, V12.2), scoped to the shop. */
 
+/* the crumbs (as the category page draws them; this file is loaded alone on the account pages) */
+.shop .acc-login .crumbs, .shop .acc-page .crumbs { font-size: 12.5px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+/* each crumb is a whole 44 px target (a short Bengali word too), its extra height taken back by the margins */
+.shop .acc-login .crumbs a, .shop .acc-page .crumbs a { color: var(--muted); display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; margin: -10px 0; }
+
 /* ---- PR 130 · log in ---- */
 .shop .acc-login { padding-top: 16px; padding-bottom: 8px; }
 .shop .acc-login-grid { display: grid; gap: 16px; margin-top: 14px; }
@@ -32,3 +37,121 @@
 .shop .acc-links .link { min-height: 44px; display: inline-flex; align-items: center; text-align: left; }
 .shop .acc-sent { font-size: 14px; color: var(--text2); margin: 6px 0 0; }
 .shop .acc-sent b { color: var(--ink); white-space: nowrap; }
+
+/* ---- PR 131 · My account: the frame (demo 60-account.js acc_side, acc_header, acc_chips, acc_homeRow; r12-acct.css) ---- */
+.shop .acc-page { padding-top: 16px; padding-bottom: 8px; }
+@media (min-width: 1024px) { .shop .acc-page { padding-top: 26px; } }
+.shop .acc-page .stack.s12 { gap: 12px; }
+.shop .acc-page .stack.s24 { gap: 24px; }
+.shop .acc-layout { display: grid; gap: 16px; margin-top: 12px; }
+@media (min-width: 1024px) { .shop .acc-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 18px; } }
+.shop .acc-main { min-width: 0; }
+.shop .acc-side { display: none; }
+@media (min-width: 1024px) { .shop .acc-side { display: block; position: sticky; top: 96px; } }
+.shop .acc-side-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); overflow: hidden; }
+.shop .acc-side-top { padding: 16px; border-bottom: 1px solid var(--line2); display: flex; gap: 12px; align-items: center; }
+.shop .acc-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shop .acc-nav { display: flex; flex-direction: column; padding: 6px 0; }
+.shop .acc-nav a { display: flex; align-items: center; gap: 12px; padding: 11px 16px; min-height: 46px; color: var(--ink); font-size: 14.5px; font-weight: 500; border-left: 3px solid transparent; }
+.shop .acc-nav a:hover { background: var(--surface2); }
+.shop .acc-nav a.on { border-left-color: var(--brand); background: var(--brand-tint); font-weight: 600; }
+.shop .acc-nav .acc-n { margin-left: auto; font-size: 12px; color: var(--muted); font-weight: 600; }
+.shop .acc-side-foot { border-top: 1px solid var(--line2); padding: 6px 16px; }
+.shop .acc-logout { background: none; border: none; padding: 10px 0; min-height: 44px; display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: 14px; cursor: pointer; font-weight: 500; width: 100%; }
+.shop .acc-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-display); font-size: 16px; flex-shrink: 0; letter-spacing: 0.03em; overflow: hidden; }
+.shop .acc-avatar.sm { width: 38px; height: 38px; font-size: 13.5px; }
+.shop .acc-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shop .acc-hd { display: grid; }
+.shop .acc-hd-id { padding: 18px; display: flex; gap: 14px; align-items: center; min-width: 0; }
+.shop .acc-hi { font-size: 24px; overflow-wrap: anywhere; }
+@media (min-width: 1024px) { .shop .acc-hi { font-size: 30px; } }
+.shop .acc-stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-top: 1px solid var(--line2); }
+.shop .acc-stat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 12px 6px; min-height: 44px; color: var(--ink) !important; text-decoration: none; }
+.shop .acc-stat + .acc-stat { border-left: 1px solid var(--line2); }
+.shop .acc-stat:hover { background: var(--surface2); }
+.shop .acc-stat .v { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; white-space: nowrap; }
+.shop .acc-stat .k { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+@media (min-width: 768px) { .shop .acc-hd { grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; } .shop .acc-stats { border-top: 0; border-left: 1px solid var(--line2); } .shop .acc-stat { padding: 16px 28px; } }
+.shop .acc-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 4px; scroll-padding-left: 16px; scroll-padding-right: 16px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent); }
+.shop .acc-chips::-webkit-scrollbar { display: none; }
+.shop .acc-chips .chip { min-height: 44px; padding: 9px 15px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.shop .acc-chips .chip:last-child { margin-right: 18px; }
+.shop .acc-home { display: grid; gap: 10px; margin-top: 4px; }
+@media (min-width: 620px) { .shop .acc-home { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.shop .acc-home .btn { min-height: 50px; font-size: 15px; font-weight: 700; }
+.shop .acc-prompt { max-width: 520px; margin: 0 auto; padding: 34px 22px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.shop .acc-prompt p { margin: 0 0 10px; }
+.shop .acc-prompt .acc-prompt-new { margin: 14px 0 0; }
+.shop .acc-prompt-i { width: 56px; height: 56px; border-radius: 50%; background: var(--brand-tint); color: var(--brand); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.shop .acc-sidewa { min-height: 46px; }
+
+/* ---- PR 131 · the order cards and the parcel's journey (demo R13 note 44) ---- */
+.shop .acc-ocard { padding: 16px; display: grid; gap: 14px; }
+@media (min-width: 768px) { .shop .acc-ocard { grid-template-columns: 210px minmax(0, 1fr) auto; align-items: center; padding: 18px 20px; gap: 20px; } }
+.shop .acc-onum-a { color: var(--ink) !important; display: inline-flex; align-items: center; min-height: 44px; margin: -6px 0; }
+.shop .acc-thumbs { display: flex; gap: 8px; min-width: 0; }
+.shop .acc-thumb { width: 52px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; }
+.shop .acc-more { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 12px; font-weight: 700; color: var(--muted); border-radius: var(--radius); }
+.shop .acc-ocard-r { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.shop .acc-ocard-r .btn-sm { min-height: 44px; }
+.shop .acc-ototal { font-size: 17px; }
+@media (min-width: 768px) { .shop .acc-ocard-r { justify-content: flex-end; text-align: right; } }
+.shop .acc-ordmid { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.shop .acc-flow { display: flex; align-items: flex-start; justify-content: space-between; gap: 2px; position: relative; text-decoration: none !important; color: inherit; background: var(--surface2); border: 1px solid var(--line2); border-radius: var(--radius); padding: 11px 10px 9px; }
+.shop .acc-flow:hover { border-color: var(--brand-line); background: var(--brand-tint); }
+.shop .acc-fstep { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1 1 0; min-width: 0; }
+.shop .acc-fdot { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--line); color: var(--muted); position: relative; z-index: 2; }
+.shop .acc-fstep.done .acc-fdot { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.shop .acc-fstep.now .acc-fdot { box-shadow: 0 0 0 4px var(--brand-tint); }
+.shop .acc-flbl { font-size: 10.5px; font-weight: 700; color: var(--muted); text-align: center; line-height: 1.2; max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop .acc-fstep.done .acc-flbl { color: var(--ink); }
+.shop .acc-fstep.now .acc-flbl { color: var(--brand); }
+.shop .acc-fline { position: absolute; top: 19px; left: calc(50% + 22px); right: calc(-50% + 22px); height: 2px; background: var(--line); z-index: 1; }
+.shop .acc-fline.on { background: var(--brand); }
+.shop .acc-page .tag.warn { background: var(--warn-bg); color: var(--warn); }
+
+/* the address boxes are textareas: the shop font, not the browser monospace (checkout.css is not loaded here) */
+.shop .acc-page textarea.input { font-family: inherit; line-height: 1.5; resize: vertical; }
+
+/* ---- PR 131 · For you, Rewards, Wallet ---- */
+.shop .acc-g2 { display: grid; gap: 12px; }
+@media (min-width: 768px) { .shop .acc-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; } }
+.shop .acc-oico { width: 40px; height: 40px; border-radius: 50%; background: var(--brand-tint); color: var(--brand); display: flex; align-items: center; justify-content: center; }
+.shop .acc-slrow { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 4px; scroll-snap-type: x proximity; }
+.shop .acc-slrow::-webkit-scrollbar { display: none; }
+@media (min-width: 1024px) { .shop .acc-slrow { margin: 0; padding: 0 0 4px; } }
+.shop .acc-pcell { width: 158px; flex-shrink: 0; scroll-snap-align: start; }
+/* the demo's narrow card: the fit goes under the colours rather than being cut off */
+.shop .acc-pcell .pcard .pinfo > .row.between { flex-wrap: wrap; row-gap: 4px; }
+.shop .acc-pcell .pcard .pinfo > .row.between > .tiny { overflow: visible; }
+@media (min-width: 768px) { .shop .acc-pcell { width: 200px; } }
+.shop .acc-wal { overflow: hidden; }
+.shop .acc-wal-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 22px 20px; }
+.shop .acc-bal { font-size: 40px; margin: 6px 0 2px; }
+.shop .acc-wal-i { width: 52px; height: 52px; border-radius: 50%; background: var(--brand-tint); color: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.shop .ord-cardhd { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; }
+@media (min-width: 1024px) { .shop .ord-cardhd { padding: 16px 20px; } }
+.shop .acc-tx { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; border-top: 1px solid var(--line2); }
+@media (min-width: 1024px) { .shop .acc-tx { padding: 14px 20px; } }
+.shop .acc-tx .amt { font-family: var(--font-display); font-weight: 700; white-space: nowrap; }
+.shop .acc-tx .amt.pos { color: var(--brand); }
+
+/* ---- PR 131 · Profile ---- */
+.shop .acc-ro { background: var(--surface2); color: var(--text2); }
+.shop .acc-start { align-self: flex-start; }
+.shop .acc-addrs { display: grid; gap: 12px; }
+.shop .acc-addr-rm { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
+.shop .acc-page .sec-hd .link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
+.shop .acc-addr-add { display: inline-flex; align-items: center; gap: 8px; justify-self: start; min-height: 46px; padding: 0; background: none; border: 0; cursor: pointer; color: var(--brand); font-size: 14.5px; font-weight: 700; }
+.shop .acc-addr-add svg { flex-shrink: 0; border: 1.5px solid var(--brand); border-radius: 50%; padding: 3px; width: 26px; height: 26px; }
+.shop .acc-nrow { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line2); }
+.shop .acc-prefs .acc-nrow:first-of-type { border-top: 0; }
+.shop .acc-page .seg { display: inline-flex; border: 1px solid var(--input); border-radius: 22px; padding: 2px; background: var(--surface); flex-shrink: 0; }
+.shop .acc-page .seg > * { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 48px; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text2); text-decoration: none; }
+.shop .acc-page .seg .on { background: var(--brand); color: var(--brand-ink); }
+.shop .acc-page .switch { position: relative; width: 44px; height: 26px; border-radius: 13px; border: none; cursor: pointer; background: rgb(207, 202, 194); flex-shrink: 0; padding: 0; }
+.shop .acc-page .switch::before { content: ''; position: absolute; inset: -9px -3px; }
+.shop .acc-page .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgb(255, 255, 255); transition: left 0.15s; }
+.shop .acc-page .switch.on { background: var(--brand); }
+.shop .acc-page .switch.on::after { left: 21px; }
+.shop .wl-page.wl-in { padding: 0; }
