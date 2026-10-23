@@ -28,6 +28,7 @@ describe('PR 57 · the table', () => {
   const convert = (v: number, unit: 'inch' | 'cm') => (unit === 'inch' ? { inch: v, cm: Math.round(v * 2.54) } : { inch: Math.round((v / 2.54) * 4) / 4, cm: v });
   const chart = {
     name: 'Polo',
+    easeInch: 4,
     fields: ['chest', 'waist', 'sleeve'],
     rows: [
       { size: 'L', values: [42, 0, 0] },
@@ -52,7 +53,7 @@ describe('PR 57 · the table', () => {
   });
 
   it("an unknown field keeps its key as its label", () => {
-    const t = chartTable({ name: 'x', fields: ['hip'], rows: [{ size: 'M', values: [38] }] }, meta, ['M'], convert)!;
+    const t = chartTable({ name: 'x', fields: ['hip'], rows: [{ size: 'M', values: [38] }], easeInch: 1 }, meta, ['M'], convert)!;
     expect(t.fields[0]).toEqual({ key: 'hip', label: 'hip', howTo: null });
   });
 

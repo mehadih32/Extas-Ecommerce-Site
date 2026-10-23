@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registryVersion } from '../src/define';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { pdpTemplateSettings, pdpTemplatesSchema } from '../src/registry-pdp-templates';
+import { pdpFinderSchema, pdpTemplateSettings, pdpTemplatesSchema } from '../src/registry-pdp-templates';
 
 describe('product page template settings (v28)', () => {
   it('every key is in the registry at version 28, public, never owner data, labelled in English and Bengali', () => {
@@ -46,5 +46,29 @@ describe('product page template settings (v28)', () => {
     expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, deskColumns: 4 } }).success).toBe(false);
     expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, deskBuyPx: 300 } }).success).toBe(false);
     expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, deskColumns: 1.5 } }).success).toBe(false);
+  });
+
+  it('Find My Size (PR 58): on with its card, the demo arithmetic, and the ranges hold together', () => {
+    const f = pdpTemplateSettings['pdp.finder'].default;
+    expect(f.on).toBe(true);
+    expect(f.card).toBe(true);
+    expect([f.startHeightIn, f.startWeightKg, f.heightMinIn, f.heightMaxIn, f.weightMinKg, f.weightMaxKg]).toEqual([67, 66, 54, 84, 35, 150]);
+    expect(f.body.map((b) => [b.field, b.kind])).toEqual([
+      ['chest', 'top'],
+      ['waist', 'bottom'],
+    ]);
+    expect(f.toleranceInch).toBe(0.5);
+    expect(f.length.byGarment.panjabi).toBe(0.6);
+    expect([f.holdMs, f.repeatMs]).toEqual([450, 90]);
+    const valid = (patch: Record<string, unknown>) => pdpFinderSchema.safeParse({ ...f, ...patch }).success;
+    expect(valid({ heightMinIn: 84 })).toBe(false);
+    expect(valid({ startHeightIn: 90 })).toBe(false);
+    expect(valid({ weightMaxKg: 30 })).toBe(false);
+    expect(valid({ body: [] })).toBe(false);
+    expect(valid({ body: [f.body[0], f.body[0]] })).toBe(false);
+    expect(valid({ body: [{ ...f.body[0]!, field: 'Chest Size' }] })).toBe(false);
+    expect(valid({ holdMs: 100 })).toBe(false);
+    expect(valid({ rememberDays: 0 })).toBe(false);
+    expect(valid({ length: { ...f.length, byGarment: { 'Polo Shirt': 0.4 } } })).toBe(false);
   });
 });

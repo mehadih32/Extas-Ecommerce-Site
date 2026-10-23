@@ -33,7 +33,10 @@ const NOT_A_CLAIM: Record<string, string> = {
   'pdp.notify.empty': 'the mobile number format (01XXXXXXXXX), the same words as footer.join (PR 56 back-in-stock box)',
   'pdp.notify.short': 'the mobile number format (11 digits), the same words as footer.join',
   'pdp.notify.prefix': 'the mobile number format (013 to 019, 11 digits), the same words as footer.join',
-  'pdp.stock.ships': "\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
+  'finder.cardSub0': "how long Find My Size takes (two steppers and a button, PR 58, the demo's card words); never goes stale",
+  'finder.cardSub1': 'the same, shorter (the card steps down to fit one line)',
+  'finder.cardSub2': 'the same, shortest',
+  'pdp.stock.ships':"\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
 };
 
 const DIGIT = /[0-9০-৯]/;

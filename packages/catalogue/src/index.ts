@@ -30,6 +30,8 @@ export * from './product-form';
 // PR 27, 28 size charts · PR 32 collections and tags · PR 34 the catalogue CSV · PR 38 the "was" price.
 export * from './size-chart-math';
 export * from './size-charts';
+// PR 58 Find My Size, rule-based (browser-safe: `@extas/catalogue/size-finder`).
+export * from './size-finder';
 export * from './collections';
 export * from './csv';
 export * from './catalogue-csv';
