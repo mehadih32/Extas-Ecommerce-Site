@@ -16,6 +16,8 @@ export interface DetailsProps {
   phoneChecked: boolean;
   onPhoneBlur: () => void;
   onAddressBlur?: () => void;
+  /** The longest address the gazetteer reads (PR 117). */
+  addressMax: number;
   w: (key: string, vars?: Record<string, string | number>) => string;
   n: (x: number) => string;
   /** Wraps a field (PR 124 puts the "write it here" box inside it). */
@@ -26,7 +28,7 @@ export interface DetailsProps {
 
 const PHONE_DIGITS = 11;
 
-export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlur, onAddressBlur, w, n, wrap, invalid = {} }: DetailsProps) {
+export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlur, onAddressBlur, addressMax, w, n, wrap, invalid = {} }: DetailsProps) {
   const ph = phoneNormalizeBD(form.phone);
   const showWarn = !ph.ok && !ph.empty && phoneChecked;
   const chipRef = useRef<HTMLSpanElement>(null);
@@ -129,7 +131,7 @@ export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlu
           autoComplete="street-address"
           placeholder={w('form.addressPh')}
           value={form.address}
-          maxLength={500}
+          maxLength={addressMax}
           aria-invalid={invalid.address ? true : undefined}
           aria-describedby={described('address')}
           onChange={(e) => onChange('address', e.target.value)}

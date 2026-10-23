@@ -3,13 +3,17 @@
 // phone's "Show order summary" bar that opens the summary over the page (a tap outside closes it), the three steps
 // (Delivery details, Delivery, Payment), the computer's side summary with Confirm, and the phone's sticky Confirm bar.
 // Every word comes from the shop dictionary (`words`, resolved on the server); every amount from the server's quote.
-import { useState, type ReactNode } from 'react';
+// PR 117: the finished address line is read by the server's gazetteer (a pause or leaving the box, never mid-typing)
+// and the page shows the checkout the server priced for it.
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits } from '@extas/checkout/pure';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
+import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
 import { nextOnEnter, saveDraft, useDraft } from './draft';
+import { fetchQuote, latest, useSettle } from './quote-client';
 
 const EMPTY_FORM: DetailsForm = { name: '', phone: '', address: '' };
 
@@ -29,10 +33,29 @@ export interface CheckoutFormProps {
   wa: string | null;
   fields: Field[];
   limits: FormLimits;
+  /** When the address counts as finished (`delivery.resolver.settleMs`, `delivery.resolver.minWords`). */
+  settle: { settleMs: number; minWords: number };
+  /** The longest address the resolver reads (`delivery.resolver.maxChars`). */
+  addressMax: number;
 }
 
-export function CheckoutForm({ view, words, money, lines, wa, fields, limits }: CheckoutFormProps) {
+export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax }: CheckoutFormProps) {
   const stored = useDraft();
+  const [view, setView] = useState<CheckoutView>(first);
+  const [reading, setReading] = useState(false);
+  const seq = useRef(latest());
+  const lineRead = useRef<string | null>(null);
+  /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
+  const requote = async (line: string | null) => {
+    const k = seq.current.next();
+    lineRead.current = line;
+    setReading(true);
+    const next = await fetchQuote({ lang: money.lang, address: line ? { line } : null });
+    if (!seq.current.isLatest(k)) return;
+    setReading(false);
+    if (next) setView(next);
+  };
+  const settle = useSettle({ ...timing, onSettle: (line) => void requote(line) });
   const [edited, setEdited] = useState<DetailsForm | null>(null);
   // Typed details survive a reload or a pull-to-refresh: kept in this tab only (sessionStorage), never sent from here.
   const form: DetailsForm = edited ?? stored?.form ?? EMPTY_FORM;
@@ -41,7 +64,15 @@ export function CheckoutForm({ view, words, money, lines, wa, fields, limits }: 
     const next = { ...form, [f]: v };
     setEdited(next);
     saveDraft({ form: next });
+    if (f === 'address') settle.input(v);
   };
+  // An address that comes back from this tab's draft is already finished: it is read once, at once.
+  const draftLine = stored?.form.address.trim() ?? '';
+  useEffect(() => {
+    if (draftLine && lineRead.current === null) void requote(draftLine);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the draft arrives
+  }, [draftLine]);
+  const hasAddress = form.address.trim().length >= limits.addressMin;
   const check = checkForm(form, limits, fields);
   const w = (k: string, vars: Record<string, string | number> = {}) => fill(words[k] ?? k, vars);
   const m = (minor: number) => formatMoney(minor, money.currency, money.lang, money.bnDigits);
@@ -168,7 +199,17 @@ export function CheckoutForm({ view, words, money, lines, wa, fields, limits }: 
                 <h2 className="h2">{w('heading')}</h2>
               </div>
               <div className="stack s16 mt16">
-                <DetailsFields fields={fields} form={form} onChange={change} phoneChecked={phoneChecked} onPhoneBlur={() => setPhoneChecked(true)} w={w} n={n} />
+                <DetailsFields
+                  fields={fields}
+                  form={form}
+                  onChange={change}
+                  phoneChecked={phoneChecked}
+                  onPhoneBlur={() => setPhoneChecked(true)}
+                  onAddressBlur={() => settle.blur()}
+                  addressMax={addressMax}
+                  w={w}
+                  n={n}
+                />
               </div>
             </section>
             <section className="card co-sec" data-testid="co-delivery">
@@ -176,6 +217,7 @@ export function CheckoutForm({ view, words, money, lines, wa, fields, limits }: 
                 <span className="co-num">{n(2)}</span>
                 <h2 className="h2">{w('delivery')}</h2>
               </div>
+              <DeliveryStep delivery={view.delivery} reading={reading} hasAddress={hasAddress} lang={money.lang} w={w} />
             </section>
             <section className="card co-sec co-paysec" data-testid="co-pay">
               <div className="co-hd">
