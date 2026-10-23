@@ -36,11 +36,11 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৭৪টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৭৮টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 38/58** · **S03 16/22** · **S06 6/33** (wave 2) · **S04 30/41** · **S05 2/20** (wave 3) · total **174/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 41/58** · **S03 16/22** · **S06 6/33** (wave 2) · **S04 31/41** · **S05 2/20** (wave 3) · total **178/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -62,9 +62,9 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
-| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 38 / 58 | In progress |
+| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 41 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 16 / 22 | In progress |
-| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 30 / 41 | In progress |
+| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 31 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 2 / 20 | In progress |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 6 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **174 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **178 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -666,11 +666,11 @@ Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inve
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
 piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
 
-### S02 · Storefront — In progress (38/58)
+### S02 · Storefront — In progress (41/58)
 
 > **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি; তিনটা টেমপ্লেট T1, T2, T3; "আমার সাইজ খুঁজুন" — উচ্চতা আর ওজন দিলে প্রোডাক্টের নিজের চার্ট থেকে সাইজ, কারণসহ), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি, সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) আর সার্চ (হেডারের খোঁজার জানালা, লিখতে লিখতে পরামর্শ, ফলাফলের পাতা ফিল্টার আর সাজানো সহ, বাংলা শব্দেও) তৈরি — ডেমো V12.2-এর মতো। পাতাগুলো এখন আরও তাড়াতাড়ি হাতে সাড়া দেয় (পণ্যের পাতায় আটকে থাকার সময় 263 থেকে 24 ms), দেখতে একদম আগের মতো।
 
-**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75, 72, 73, 52, 50, 58, 51, 88), matched to demo V12.2 (CN-012).**
+**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75, 72, 73, 52, 50, 58, 51, 88, 66, 87, 86), matched to demo V12.2 (CN-012).**
 - **Screens / routes:** `/` and `/bn` (home), `/collections/<slug>` and `/bn/collections/<slug>` (category pages; `new-in` = the newest styles of every category), `/p/<product>` and `/p/<product>/<colour>` with `/bn/…` (product pages; the prefix is the setting `naming.productPathPrefix`), `/account/wishlist` (wishlist), `/help/faq`, `/help/delivery`, `/help/exchange`, `/help/privacy`, `/help/terms`, `/help/story`, `/help/contact` (help pages), `/search?q=` and `/bn/search?q=` (search results; `GET /search/suggest` answers the header panel), `/checkout` (empty checkout with the slim header), the shop 404; every
   storefront route not built yet shows "Coming soon" in the shell (CN-010). `/status` is the progress page.
 - **Shell (40):** announcement bar, header, phone menu, bottom bar, footer (phone bands with the social row incl.
@@ -745,6 +745,17 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   same. The register's weights (a category page under 1 MB, a category image under 40 KB, a product image under 150 KB)
   are checked on the seeded runs in CI (`docs/qa/page-weight.json`, `tools/page-weight.mjs`); with the real photos on the
   preview and from Dhaka over 4G later (follow-ups 160, 161).
+- **Questions, celebration, sweeps (66, 87, 86):** "Questions & answers" under the product page shows only the
+  questions the shop answered and approved (`ProductQuestion`, APPROVED, answered, not archived; never one made up): the
+  newest open in its own box with who answered and when, the others folded, 3 at first and "See all questions · N more",
+  then "Not answered here?" with the WhatsApp button and the hours; with no answered question only the WhatsApp ask, and
+  without a WhatsApp number no block (`pdp.qa`, on; drawn on the server with the browser's own `<details>`, no script).
+  The thank-you page's celebration (`thanks.celebrate`, off): balloons or light streaks with the owner's words for an
+  occasion's days, at most 2.5 s, any tap skips it, never blocking the page, never on a slow or low-end phone, the still
+  words for reduced motion, `?celebrate=preview` to see it first. The light sweeps: one place knows every sweep of the
+  shop, a master switch and one switch per sweep (`shop.sweep`; Add to Bag off as designed), written as one small
+  stylesheet only when the owner changes something; the checkout and Order Now buttons keep theirs when "all other green
+  buttons" is off; reduced motion always wins. Screenshots: [`docs/qa/screenshots/pr-136/`](docs/qa/screenshots/pr-136).
 - **Follow-ups (23 Oct; 41, 40, 45, 56, 74, 222):** on a computer a card shows its back view and Quick add with the
   size buttons on mouse hover or keyboard focus (`card.desk`, on; `GET /api/shop/card/<id>`; the bag's own added panel,
   also on the home and category pages), and the home page's cards fit like the category page's; the phone slogan steps
@@ -755,6 +766,9 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   a sample sub-category so the gate measures the menu accordion.
 - **Settings:** `theme.*`, `brand.*`, `shell.*`, `language.*`, `slider.engine`, `home.*` (registry v16; `home.hero` v17), `category.*` (registry v17), `pdp.*` (registry v19: page, gallery, colour, size, chart, stock, price, trust, rules, details, buy, sweep; no admin screen yet, CN-019); registry v23: `pdp.fit`, `pdp.rows`, `pdp.icons`, `pdp.share`, `shell.fab`, `shell.menuSubs`, `wish.list`, `pages.help`, `pages.text` (owner data); registry v28: `pdp.templates` (default T1, per category, T2 and T3 options), `pdp.finder` (the body estimate, tolerance, length check, stepper range, keep and record switches); registry v24: `search.engine`, `search.match`, `search.words`, `search.help`,
   `search.panel`, `search.results`. No schema change, no new permission.
+- **Settings (66, 86, 87):** `pdp.qa` in `registry-product.ts` and `shop.sweep`, `thanks.celebrate` in
+  `packages/settings/src/registry-motion.ts` (registry v31), labels in `packages/settings/messages/storefront.*.json`; the
+  words in `apps/web/messages/shop-more.*.json` (`qa.*`, `celebrate.*`). No schema change, no admin screen (CN-019).
 - **Settings (follow-ups):** `card.desk`, `seo.structuredData`, `pdp.sizeWords`, `pdp.usualSize`, `thanks.page` in
   `packages/settings/src/registry-storefront-fu.ts` (registry v25), labels in `packages/settings/messages/storefront-fu.*.json`.
 - **Tests and gates:** unit tests beside the code (`apps/web/src/lib/shop/*.test.ts`, `packages/settings/test`),
@@ -838,7 +852,7 @@ PostgreSQL) and the web rules API (10 + 3 on PostgreSQL). Screenshots:
 [`docs/qa/screenshots/pr-209/`](docs/qa/screenshots/pr-209). Report: [S10](docs/reports/2026-10-20-S10.md). Left for
 S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `discountWasFor`.
 
-### S04 · Cart, checkout, accounts — In progress (30/41)
+### S04 · Cart, checkout, accounts — In progress (31/41)
 
 > **বাংলায়:** ব্যাগ তৈরি — পণ্য রাখা, রং-সাইজ-সংখ্যা বদলানো, পরে কেনার জন্য রাখা, সরানো আর ফিরিয়ে আনা, সেট, অফারের ঘর, দুই সাইজের প্রশ্ন, অর্ডারের হিসাব, কোড, ফ্রি ডেলিভারির অগ্রগতি আর "আপনার পছন্দ হতে পারে"; "ব্যাগে রাখা হয়েছে" শিট। চেকআউটও তৈরি — নাম-ফোন-ঠিকানা, ঠিকানা থেকে এলাকা আর চার্জ (না বুঝলে জিজ্ঞেস করে), পেমেন্টের উপায়, ওয়ালেট, অফারের টিক, কনফার্ম বোতাম, একবার চাপলে একটাই অর্ডার, আর ধন্যবাদ পাতা। কার্ড/মোবাইল পেমেন্ট এখন টেস্ট পাতায়, কোনো টাকা নড়ে না। ডেমো V12.2-এর মতো, বাংলা আর ইংরেজি দুটোতেই।
 
@@ -876,7 +890,26 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 - **Settings:** `account.*` and `checkout.autofill` in `packages/settings/src/registry-accounts.ts` (registry v29), labels in `packages/settings/messages/accounts.*.json`; the words in `apps/web/messages/shop-account.*.json`. No admin screen (CN-019); no new permission.
 - **Tests and gates:** `packages/accounts` (PostgreSQL: codes and limits, login, SIM-F-039, the dashboard, the late card, offers, the checkout prefill; pure: steps, SIM-F-018, the rider amount), the receipt in `packages/checkout`, `apps/web/src/lib/shop/account-api.test.ts`, `draft.test.ts`; the device gate opens every account page signed in (the sample account fill `/api/account/try`); the account pages are in the Lighthouse budget and the smoke test (signed out).
 
-Next: "Add to this parcel" (127 …), the invoice (136), the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
+**Built (PR 136): the invoice of an order (with follow-up 147).** No migration.
+- **Screens / routes:** `/account/orders/<number>/invoice` and `/bn/…` (noindex): the printable invoice, with "Download
+  invoice" (`…/invoice/file`, one self-contained HTML file that opens and prints anywhere) and "Print or save as PDF"
+  (the browser's own print). "Get invoice" on the order page, an invoice icon on each My orders card, a button on the
+  thank-you page.
+- **What it shows:** everything as stored on the order — each line's unit price, its discount, the wallet, the delivery
+  charge (or "charged on the call" / free), the total and what is still due (COD due / paid / failed); never
+  recomputed. The shop's name, slogan, WhatsApp or phone, address and e-mail, and the registered name, trade licence,
+  DBID and BIN only when the owner has filled them (`legal.bin` new, owner data, empty); the bill-to, address and the
+  courier and tracking code once booked; the exchange summary while exchange is on.
+- **Who sees it:** the customer whose order it is, the browser that placed it, or staff with the new `orders.invoice`
+  permission; anyone else gets the order page's log-in prompt.
+- **Settings:** `account.invoice` (registry v31; on; number `INV-{digits}`, each block on a switch, SKU off, the owner's
+  note and footer empty, download on) and `legal.bin` in `packages/settings/src/registry-accounts.ts`. No admin screen
+  (CN-019): the staff's button on the S05 order screen is follow-up 180.
+- **Tests and gates:** `apps/web/src/lib/shop/invoice.test.ts`, the receipt's stored line figures and the staff read in
+  `packages/checkout` (`place.db.test.ts`); device gate 2642 checks with 0 new fails (the invoice page filled and
+  signed in, English and Bengali; the 25 known `/admin/size-charts` tap-target fails aside); both invoice paths in the Lighthouse budget, the seeded budget and the smoke test.
+
+Next: "Add to this parcel" (127 …), the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
 ### S05 · Order management — In progress (2/20)
 
@@ -1012,8 +1045,9 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #36 | PR [91](docs/stages/S03.md#pr-91), [92](docs/stages/S03.md#pr-92), [93](docs/stages/S03.md#pr-93), [94](docs/stages/S03.md#pr-94), [95](docs/stages/S03.md#pr-95), [102](docs/stages/S03.md#pr-102), [103](docs/stages/S03.md#pr-103) | 23 Oct | Combo storefront (S03, demo V12.2, settings v30, no admin screen, no migration). Every combo has its own page `/combo/<link>` (+ `/bn/`) in template C1 (all on one page) or C2 (step by step), with the set picture and a tab per piece, popular colour pairs, each piece's own colour and size with "Same size as item 1", the rules card and the set price and saving from `@extas/combos` only; one tap adds the set to the bag (a toast on the phone, the added panel on a computer) and "Change" in the bag edits it in place. An ended combo keeps its page with "Buy them separately". The product page offers the running sets that hold it, every combo page ends with "More sets", and `/combos` lists all sets by piece count with season tabs. |
-| #35 | PR [129](docs/stages/S04.md#pr-129), [130](docs/stages/S04.md#pr-130), [71](docs/stages/S02.md#pr-71), [131](docs/stages/S04.md#pr-131), [132](docs/stages/S04.md#pr-132), [133](docs/stages/S04.md#pr-133), [134](docs/stages/S04.md#pr-134), [135](docs/stages/S04.md#pr-135), [137](docs/stages/S04.md#pr-137) | 23 Oct | Customer accounts (S04, demo V12.2, settings v29, no admin screen, no migration). The first order makes the account with no password (SIM-F-039), and the thank-you page says which number to log in with; login by one-time SMS code (mock sender until the owner adds the key) with an optional own password; the browser's wishlist joins the account; My account with orders, For you, Rewards, Wallet, Wishlist and Profile; the offer banner and profile photo (both off); the order page with tracking, the courier and the late flag past the promise (SIM-F-018); the checkout fills itself for a signed-in customer. Order states, refunds and returns still wait for the owner (CN-022). |
+| #34 | PR [136](docs/stages/S04.md#pr-136), [66](docs/stages/S02.md#pr-66), [87](docs/stages/S02.md#pr-87), [86](docs/stages/S02.md#pr-86) | 23 Oct | Invoice, product questions and the shop's motion (S04/S02, settings v31, no admin screen, no migration). Every order has its invoice in English and Bengali at `/account/orders/<n>/invoice`, drawn from the order as stored, printable and downloadable, for the order's customer, the browser that placed it or staff with `orders.invoice`; the shop's legal details show once the owner fills them. The product page shows the shop's own approved answers with "See all questions" and the WhatsApp ask. The order-placed celebration (off until the owner switches it on, never on a slow phone, any tap ends it) and one switch board for every light sweep. |
+| #34 | PR [91](docs/stages/S03.md#pr-91), [92](docs/stages/S03.md#pr-92), [93](docs/stages/S03.md#pr-93), [94](docs/stages/S03.md#pr-94), [95](docs/stages/S03.md#pr-95), [102](docs/stages/S03.md#pr-102), [103](docs/stages/S03.md#pr-103) | 23 Oct | Combo storefront (S03, demo V12.2, settings v30, no admin screen, no migration). Every combo has its own page `/combo/<link>` (+ `/bn/`) in template C1 (all on one page) or C2 (step by step), with the set picture and a tab per piece, popular colour pairs, each piece's own colour and size with "Same size as item 1", the rules card and the set price and saving from `@extas/combos` only; one tap adds the set to the bag (a toast on the phone, the added panel on a computer) and "Change" in the bag edits it in place. An ended combo keeps its page with "Buy them separately". The product page offers the running sets that hold it, every combo page ends with "More sets", and `/combos` lists all sets by piece count with season tabs. |
+| #34 | PR [129](docs/stages/S04.md#pr-129), [130](docs/stages/S04.md#pr-130), [71](docs/stages/S02.md#pr-71), [131](docs/stages/S04.md#pr-131), [132](docs/stages/S04.md#pr-132), [133](docs/stages/S04.md#pr-133), [134](docs/stages/S04.md#pr-134), [135](docs/stages/S04.md#pr-135), [137](docs/stages/S04.md#pr-137) | 23 Oct | Customer accounts (S04, demo V12.2, settings v29, no admin screen, no migration). The first order makes the account with no password (SIM-F-039), and the thank-you page says which number to log in with; login by one-time SMS code (mock sender until the owner adds the key) with an optional own password; the browser's wishlist joins the account; My account with orders, For you, Rewards, Wallet, Wishlist and Profile; the offer banner and profile photo (both off); the order page with tracking, the courier and the late flag past the promise (SIM-F-018); the checkout fills itself for a signed-in customer. Order states, refunds and returns still wait for the owner (CN-022). |
 | #34 | PR [52](docs/stages/S02.md#pr-52), [50](docs/stages/S02.md#pr-50), [58](docs/stages/S02.md#pr-58), [51](docs/stages/S02.md#pr-51), [88](docs/stages/S02.md#pr-88) | 23 Oct | Product page templates and Find My Size (S02, demo V12.2, settings v28, no admin screen, no migration). A product page uses the product's own template, else its category's, else the shop default T1, with a `?template=` preview that search engines skip; T2 Editorial (photos peek on a phone, two across on a computer, a larger title) and T3 Fit-first (sizes, the finder and the measurements in one card). Find My Size gives a size from height and weight on the product's own chart and ease, with the reasons in both languages; no chart, no finder; the answer is kept on the phone and recorded without a name for PR [59](docs/stages/S02.md#pr-59); it shares the one "Your size" tag with the last-bag size (follow-up 62) and comes first. SIM-F-012 acceptance test. Storefront speed (PR [88](docs/stages/S02.md#pr-88)): the product page's blocking time drops from about 250 ms to 24–110 ms (V8 compile hints, popups loaded on demand, one shared wishlist reader) and CI checks the page and image weight targets. |
 | #33 | PR [74](docs/stages/S02.md#pr-74), [41](docs/stages/S02.md#pr-41), [40](docs/stages/S02.md#pr-40), [45](docs/stages/S02.md#pr-45), [222](docs/stages/S11.md#pr-222), [56](docs/stages/S02.md#pr-56), [117](docs/stages/S04.md#pr-117), [126](docs/stages/S04.md#pr-126) | 23 Oct | Storefront follow-ups (settings v25, no admin screen). On a computer, cards show their back view and Quick add on hover or keyboard focus, with the bag's added panel on the home and category pages; the home page's cards fit like the category page's; a long phone slogan steps to its short form instead of being cut; BreadcrumbList / ItemList JSON-LD on category pages and Product / Offer / BreadcrumbList JSON-LD on product pages from their own price and stock (no rating; PR [222](docs/stages/S11.md#pr-222) partly built, Organization still to come); the owner's words under each size box and "Your size" (both off until set); address suggestions under the checkout's address box; the thank-you page says the delivery note back and can show "What happens next"; a sample sub-category so CI measures the phone menu's accordion. |
 | #32 | PR [72](docs/stages/S02.md#pr-72), [73](docs/stages/S02.md#pr-73) | 23 Oct | Storefront search (S02, demo V12.2, settings v24, no admin screen). The header search opens the demo's window on the phone and a panel under the header on the computer, with live suggestions from one index across products, categories and help pages (prefix and typo matching, synonyms and Bengali words from settings; only live, sellable products; a help page still "Coming soon" is never offered). Meilisearch answers when the server has it, PostgreSQL otherwise, indexed by the background worker. `/search?q=` (+ `/bn/`) shows help cards, categories, then the category page's own listing with filters and "Best match" sort; an empty search suggests words, categories and WhatsApp. |
