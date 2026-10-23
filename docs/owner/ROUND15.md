@@ -827,3 +827,6 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 
 ## Note 62 — 23 Oct 05:33 · Answers to P8/P11/P12/P14/P16 (CN-021)
 - There is no exchange after the window; the window is a setting counted from the courier's "delivered" mark (72 h for now). Bulk orders are fully dynamic. COD-off is a proposal only, with the full per-number history visible. The SMS-offers tick is pre-ticked. Instant COD is not a separate feature: the courier dashboard already shows the payout; just label how it was received.
+
+## Note 63 — 23 Oct 07:13 · Three foundation items next (CN-022)
+- Finish the worker (PR 6), the ERP webhook (PR 196, practice ERP kept until the owner connects the real one), and one KPI definition ("Sales" = delivered orders only; ordered value separate) with an append-only audit log (PR 155, 139). Tests and smoke checks for each. Order state machine, refunds and returns wait for the architecture approval.
