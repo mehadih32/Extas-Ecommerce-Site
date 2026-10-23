@@ -132,6 +132,7 @@ describe('PR 49 · the client model', () => {
     state: 'live',
     reason: null,
     freeDelivery: false,
+    brandName: null,
     tag: null,
     fit: null,
     fitNote: null,
