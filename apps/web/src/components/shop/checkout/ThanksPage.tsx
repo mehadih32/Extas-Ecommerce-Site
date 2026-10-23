@@ -9,6 +9,7 @@
 // PR 135: "Track your order" opens the order's own page in My account with its welcome panel (`?from=thanks`).
 // PR 129: the account card — "Your account is ready" (or "This order is in your account") with the number he logs in
 // with and that the code comes by SMS to it. Never a password (SIM-F-039); "You're logged in" when he ordered signed in.
+// PR 136: "Invoice · print or download" under the order's money opens its invoice (demo inv-btn), while invoices are on.
 import '../bag/bag.css';
 import './checkout.css';
 import type { Receipt } from '@extas/checkout';
@@ -93,6 +94,7 @@ export async function ThanksPage({
   more,
   tryOn,
   accountCard = true,
+  invoice = false,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -100,6 +102,8 @@ export async function ThanksPage({
   more: ThanksPageSettings;
   tryOn: boolean;
   accountCard?: boolean;
+  /** PR 136: the owner keeps invoices on (`account.invoice`). */
+  invoice?: boolean;
 }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -267,6 +271,12 @@ export async function ThanksPage({
           {m(r.totalMinor)}
         </span>
       </div>
+      {invoice ? (
+        <a className="btn btn-secondary btn-block mt12 inv-btn" href={hrefIn(c.lang, ROUTES.invoice(r.number))} data-testid="ty-invoice">
+          <Icon name="doc" size={16} />
+          {c.t('account.invoice.thanks')}
+        </a>
+      ) : null}
     </section>
   );
 

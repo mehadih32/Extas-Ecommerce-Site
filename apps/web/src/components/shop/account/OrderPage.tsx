@@ -3,11 +3,13 @@
 // quantity (an add-on and a set's piece marked as such), and on the side the money as stored — subtotal, offers, wallet,
 // delivery, total — with how it is paid, and help on WhatsApp with the order number. Read for the signed-in customer
 // whose order it is, or for the browser that placed it; anyone else is asked to log in (no word on whose order it is).
-// Left out until their PRs: the invoice (PR 136), reviews, size exchange and order edits (S06/S05), the demo-only
+// Left out until their PRs: ~~the invoice (PR 136)~~, reviews, size exchange and order edits (S06/S05), the demo-only
 // controls. ~~The tracking steps and the welcome panel come with PR 135.~~
 // PR 135: the tracking steps with their times and the band's promise, the late flag past that promise (SIM-F-018), the
 // courier and its tracking code once booked, the welcome panel when he comes from the thank-you page (his account and
 // how he logs in: a code by SMS, never a password), and the exact amount for the rider (CN-014 idea 10, off by default).
+// PR 136 (follow-up 147): under the items, the invoice row — "Invoice INV-…", every item ready to print or keep, and
+// "Get invoice", which opens the order's invoice page (demo ord-invrow).
 import '../bag/bag.css';
 import './account.css';
 import type { ReactNode } from 'react';
@@ -59,7 +61,22 @@ export function OrderPrompt({ c, number, signedIn }: { c: ShopContext; number: s
   );
 }
 
-export async function OrderPage({ c, r, waOn, opts, fromThanks = false }: { c: ShopContext; r: Receipt; waOn: boolean; opts: TrackOptions; fromThanks?: boolean }) {
+export async function OrderPage({
+  c,
+  r,
+  waOn,
+  opts,
+  fromThanks = false,
+  invoiceNo = null,
+}: {
+  c: ShopContext;
+  r: Receipt;
+  waOn: boolean;
+  opts: TrackOptions;
+  fromThanks?: boolean;
+  /** PR 136: the order's invoice number, or null while the owner has invoices off. */
+  invoiceNo?: string | null;
+}) {
   const t = c.t;
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -223,6 +240,18 @@ export async function OrderPage({ c, r, waOn, opts, fromThanks = false }: { c: S
                 </div>
               );
             })}
+            {invoiceNo ? (
+              <div className="ord-invrow" data-testid="order-invoice">
+                <div>
+                  <b className="small">{t('account.invoice.rowTitle', { invoice: invoiceNo })}</b>
+                  <div className="xs muted">{t('account.invoice.rowText', { items: plural(t, 'account.orders.items', units, c.num) })}</div>
+                </div>
+                <a className="btn btn-secondary shrink0" href={hrefIn(c.lang, ROUTES.invoice(r.number))} data-testid="order-invoice-get">
+                  <Icon name="doc" size={16} />
+                  {t('account.invoice.get')}
+                </a>
+              </div>
+            ) : null}
           </section>
           <a className="btn btn-ghost acc-start" href={hrefIn(c.lang, ROUTES.orders)}>
             <Icon name="back" size={16} />

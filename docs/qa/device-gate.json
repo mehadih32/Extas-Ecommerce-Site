@@ -37,7 +37,7 @@
       "$comment": "PR 131 — My account signed in as the sample customer (POST /api/account/try: test servers with the mock SMS sender only; the unallocated +88010 number and one sample order of the sample catalogue, never the owner's data): the header with its figures, the order card with the parcel's journey, the way home.",
       "paths": ["/account", "/bn/account"],
       "fill": "/api/account/try",
-      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-ocard\"]", "[data-testid=\"acc-flow\"]", "[data-testid=\"acc-home\"]"]
+      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-ocard\"]", "[data-testid=\"acc-flow\"]", "[data-testid=\"acc-home\"]", "[data-testid=\"acc-oinv\"]"]
     },
     {
       "$comment": "PR 131 — the other sections of My account, signed in the same way: For you, Rewards, Wallet, Profile (its forms) and the Wishlist inside the frame.",
@@ -49,7 +49,13 @@
       "$comment": "PR 134 — the sample account's own order page (TRY-131, made by the same fill): its lines, the money and how it is paid; PR 135 its tracking steps.",
       "paths": ["/account/orders/TRY-131", "/bn/account/orders/TRY-131"],
       "fill": "/api/account/try",
-      "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-line\"]", "[data-testid=\"order-summary\"]", "[data-testid=\"order-track\"]"]
+      "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-line\"]", "[data-testid=\"order-summary\"]", "[data-testid=\"order-track\"]", "[data-testid=\"order-invoice-get\"]"]
+    },
+    {
+      "$comment": "PR 136 — the sample order's invoice (TRY-131, same fill): the sheet drawn from the stored order, Download and Print / Save as PDF pinned under it; the order page's \"Get invoice\" row and the invoice icon in My orders lead here.",
+      "paths": ["/account/orders/TRY-131/invoice", "/bn/account/orders/TRY-131/invoice"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"invoice-page\"]", "[data-testid=\"invoice-sheet\"]", "[data-testid=\"invoice-download\"]", "[data-testid=\"invoice-print\"]"]
     },
     {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",

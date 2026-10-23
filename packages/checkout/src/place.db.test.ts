@@ -272,6 +272,12 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(rc!.lines).toMatchObject([{ nameEn: s.q.bag.items[0]!.nameEn, quantity: 1, amountMinor: s.q.bag.items[0]!.lineMinor, colour: { key: 'sky' }, size: 'M' }]);
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', number: r.number })).toBeNull();
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: 'NO-SUCH' })).toBeNull();
+      // PR 136: the invoice's line facts are the stored ones (unit price, saving, SKU), never worked out again
+      const item = await f.t.prisma.orderItem.findFirstOrThrow({ where: { orderId: r.orderId } });
+      expect(rc!.lines[0]).toMatchObject({ unitMinor: item.unitPriceMinor, lineDiscountMinor: item.discountMinor, sku: item.sku, amountMinor: item.lineTotalMinor });
+      // PR 136: a staff member the caller has checked reads any placed order of the store; an unknown number is still none
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: null, staff: true, number: r.number })).toMatchObject({ number: r.number, totalMinor: rc!.totalMinor });
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: null, staff: true, number: 'NO-SUCH' })).toBeNull();
     });
 
     it('a prepaid order: due with "Pay now", failed with "Try again", then paid (marked as the test payment)', async () => {

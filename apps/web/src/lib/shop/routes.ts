@@ -19,6 +19,9 @@ export const ROUTES = {
   orders: '/account/orders',
   /** PR 134: one order's own page in My account. */
   order: (number: string) => `/account/orders/${encodeURIComponent(number)}`,
+  /** PR 136: an order's invoice, and the same invoice as one file to keep. */
+  invoice: (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice`,
+  invoiceFile: (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice/file`,
   search: '/search',
   newIn: '/collections/new-in',
   /** PR 103: the sets landing page; a rule's own list (`/combos/<rule>`, PR 572) and the set builder (PR 98) are still to come. */

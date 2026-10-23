@@ -2,10 +2,11 @@
 // is left in the shop's own words. The names people write in Latin letters stay (WhatsApp, SMS, the DBID number and the
 // 01XXXXXXXXX pattern), and the language switch says its way out in the other language on purpose. PR 120: the card and
 // gateway brands keep their own Latin names, and the payment marks (checkout.mk.*) are the brands' printed logos.
+// PR 136: the invoice's BIN (the VAT registration number) is written in Latin letters, like the DBID.
 import { describe, expect, it } from 'vitest';
 import { SHOP_DICTS, keysOf, shopT } from './dict';
 
-const KEEP = new Set(['WhatsApp', 'SMS', 'DBID', 'XXXXXXXXX', 'Visa', 'Mastercard', 'Amex', 'SSLCommerz']);
+const KEEP = new Set(['WhatsApp', 'SMS', 'DBID', 'BIN', 'XXXXXXXXX', 'Visa', 'Mastercard', 'Amex', 'SSLCommerz']);
 const MARKS = 'checkout.mk.';
 const SWITCH = new Set(['lang.toBn', 'lang.toEn', 'lang.en']);
 

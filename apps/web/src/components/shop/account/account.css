@@ -249,3 +249,32 @@
 .shop .ord-cred b { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
 .shop .ord-exact { display: flex; gap: 10px; align-items: flex-start; border: 1px dashed var(--brand-line); border-radius: var(--radius); padding: 10px 12px; }
 .shop .ord-exact .brandc { display: inline-flex; flex-shrink: 0; margin-top: 1px; }
+
+/* ---- PR 136 · the invoice: the icon in My orders, the row on the order page, the invoice page (demo r12-zinv.css) ---- */
+.shop .acc-onum { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.shop .acc-onum-a { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shop .acc-oinv { width: 44px; height: 44px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; margin: -6px 0; border: 1px solid var(--line); background: var(--surface); color: var(--brand); border-radius: 50%; }
+@media (hover: hover) and (pointer: fine) { .shop .acc-oinv:hover { border-color: var(--brand-line); background: var(--brand-tint); } }
+.shop .acc-oinv:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.shop .ord-invrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-top: 1px solid var(--line2); background: var(--surface2); }
+.shop .ord-invrow .btn { min-height: 44px; }
+@media (min-width: 1024px) { .shop .ord-invrow { padding: 16px 20px; } }
+.shop .inv-page { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
+.shop .inv-lead { margin: 4px 0 0; }
+.shop .inv-doc { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.shop .inv-acts { position: sticky; bottom: 0; z-index: 2; background: var(--bg); padding: 12px 0 calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line2); }
+/* on a phone the sheet's buttons take the bottom bar's place, as the demo's invoice sheet covers it */
+@media (max-width: 1023px) { .shop .has-bnav:has(.inv-page) .bnav { display: none; } }
+.shop .inv-btns { display: grid; gap: 10px; }
+.shop .inv-btns .btn { min-height: 48px; }
+@media (min-width: 560px) { .shop .inv-btns:not(.one) { grid-template-columns: 1fr 1fr; } }
+.shop .inv-hint { margin: 8px 0 0; }
+.shop .inv-note { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 10px; font-size: 13px; line-height: 1.4; background: var(--warn-bg); color: var(--warn); border-radius: var(--radius); padding: 9px 11px; }
+.shop .inv-note svg { flex-shrink: 0; margin-top: 1px; }
+.shop .inv-page .acc-start { min-height: 44px; }
+@media print {
+  html, body, .shop { background: #fff !important; }
+  #app.shop:has(.inv-page) > :not(.has-bnav), #app.shop:has(.inv-page) .has-bnav > :not(main), .shop .inv-page .inv-chrome { display: none !important; }
+  .shop .inv-page { padding: 0; max-width: none; }
+  .shop .inv-doc { border: 0; border-radius: 0; }
+}

@@ -7,9 +7,11 @@
 // or a made-up offer: the offer banner lists only the owner's own offers and the customer's real wallet balance.
 import { z } from 'zod';
 import { setting } from './define';
-import { localizedTextSchema, templateTextSchema } from './schemas';
+import { localizedTextSchema, templateStringSchema, templateTextSchema } from './schemas';
 
 const V = 29;
+/** PR 136 — the invoice's keys: registry version 31 (the parallel combo pages took 30). */
+const V31 = 31;
 
 /** PR 130 — the one-time sign-in code: its length, how long it works, wrong tries, and how often one may be asked for. */
 export const accountCodeLimitsSchema = z
@@ -119,6 +121,33 @@ export const checkoutAutofillSchema = z
     browserDays: z.int().min(0).max(365),
   })
   .strict();
+
+/** PR 136 — the parts of the invoice the owner may leave out (demo 52-thanks.js INVOICE_TPL.show). */
+export const INVOICE_BLOCKS = ['shopDetails', 'customer', 'address', 'courier', 'variant', 'sku', 'marks', 'payment', 'returnNote', 'footer'] as const;
+export type InvoiceBlock = (typeof INVOICE_BLOCKS)[number];
+
+/**
+ * PR 136 (Blueprint B2.1; demo 52-thanks.js §53) — the customer's invoice, made from the order as it is stored: on by
+ * default, as in the demo (SHOW('account','invoices')). Every word is in the shop dictionary (`account.invoice.*`);
+ * the shop's own details are the owner's settings (`store.name`, `contact.*`, `legal.*`), empty until he fills them in.
+ * The full template editor is PR 407/409.
+ */
+export const accountInvoiceSchema = z
+  .object({
+    enabled: z.boolean(),
+    /** The invoice number from the order's: {number} is the order number, {digits} only its digits. */
+    number: templateStringSchema(['number', 'digits'], 40).refine((v) => /\{(number|digits)\}/.test(v), { message: 'needs {number} or {digits}' }),
+    blocks: z.object(Object.fromEntries(INVOICE_BLOCKS.map((b) => [b, z.boolean()])) as Record<InvoiceBlock, z.ZodBoolean>).strict(),
+    /** The owner's own lines in a box above the footer (none by default). */
+    note: localizedTextSchema(400).nullable(),
+    /** The owner's own footer line; none = the dictionary's "Computer-generated invoice, no signature needed." */
+    footer: localizedTextSchema(300).nullable(),
+    /** "Download invoice": the invoice as one file, for a phone that cannot print. */
+    download: z.boolean(),
+  })
+  .strict();
+
+export type AccountInvoiceSettings = z.output<typeof accountInvoiceSchema>;
 
 const base = { scope: 'store', isOwnerData: false, group: 'accounts', version: V } as const;
 
@@ -262,5 +291,36 @@ export const accountSettings = {
     labelKey: 'checkout.autofill.label',
     helpKey: 'checkout.autofill.help',
     sortOrder: 140,
+  }),
+  // ---- PR 136 · the invoice of an order (account order page, My orders, thank-you page) ----
+  'account.invoice': setting({
+    ...base,
+    version: V31,
+    schema: accountInvoiceSchema,
+    default: {
+      enabled: true,
+      number: 'INV-{digits}',
+      blocks: { shopDetails: true, customer: true, address: true, courier: true, variant: true, sku: false, marks: true, payment: true, returnNote: true, footer: true },
+      note: null,
+      footer: null,
+      download: true,
+    },
+    valueType: 'JSON',
+    labelKey: 'account.invoice.label',
+    helpKey: 'account.invoice.help',
+    sortOrder: 150,
+  }),
+  /** PR 136 — the shop's VAT registration number (BIN) on the invoice. Owner data (prefix `legal.`): no default. */
+  'legal.bin': setting({
+    schema: z.string().trim().min(1).max(60).nullable(),
+    default: null,
+    scope: 'store',
+    valueType: 'STRING',
+    group: 'legal',
+    labelKey: 'legal.bin.label',
+    helpKey: 'legal.bin.help',
+    isOwnerData: true,
+    sortOrder: 40,
+    version: V31,
   }),
 };

@@ -64,12 +64,22 @@
         "label": "Exact amount for the rider",
         "help": "Off by default. When on, the order page says exactly how much to pay the rider at the door (Cash on Delivery), or that a paid order needs nothing, so nobody is asked for more. With \"report\" on, a WhatsApp link lets him tell you when he was asked for more."
       }
+    },
+    "invoice": {
+      "label": "The invoice of an order",
+      "help": "On: every order has its invoice — \"Get invoice\" on the order page, the invoice icon beside each order in My orders and the button on the thank-you page — made from the order exactly as it is stored (its lines, its money and how it is paid; nothing is worked out again). It prints, or saves as a PDF, from the phone's or computer's own print, and \"Download invoice\" saves it as one file. Number: the invoice number made from the order number ({number} the whole order number, {digits} only its digits). Parts: leave out the shop's details, the customer, the address, the courier, the colour and size, the stock code, the add-on and set marks, the payment line, the exchange line or the footer. Note: your own words in a box above the footer (empty: none). Footer: your own footer line (empty: \"Computer-generated invoice, no signature needed.\"). The shop's name, address, phone, e-mail, trade licence, DBID and BIN come from your shop details; an empty one is simply left out."
     }
   },
   "checkout": {
     "autofill": {
       "label": "Checkout fills itself",
       "help": "With \"account\" on (the default), a signed-in customer's checkout starts with his name, mobile number and default address (or the address of his last order); he can change any of it. \"Days in this browser\" lets the browser remember the details of his last order for the next checkout, also for guests; 0 (the default) keeps nothing. Only on that device, never sent anywhere. The browser's own autofill always works."
+    }
+  },
+  "legal": {
+    "bin": {
+      "label": "VAT registration number (BIN)",
+      "help": "Your Business Identification Number for VAT, printed on the invoice. Empty: the invoice shows none."
     }
   }
 }

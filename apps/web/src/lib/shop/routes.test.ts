@@ -55,5 +55,9 @@ describe('coming-soon pages (CN-010)', () => {
     for (const p of [ROUTES.account, ROUTES.orders, `${ROUTES.orders}/`, ROUTES.login, '/account/profile', '/account/wallet', '/account/anything']) expect(comingSoon(p, '/p'), p).toBeNull();
     // ~~expect(comingSoon(ROUTES.order('T-1001'), '/p')).toBe('account');~~ PR 134 built it
     expect(comingSoon(ROUTES.order('T-1001'), '/p')).toBeNull();
+    // PR 136: its invoice, and the invoice as a file
+    expect(ROUTES.invoice('EX-1001')).toBe('/account/orders/EX-1001/invoice');
+    expect(ROUTES.invoiceFile('EX 1/2')).toBe('/account/orders/EX%201%2F2/invoice/file');
+    for (const p of [ROUTES.invoice('T-1001'), ROUTES.invoiceFile('T-1001')]) expect(comingSoon(p, '/p'), p).toBeNull();
   });
 });

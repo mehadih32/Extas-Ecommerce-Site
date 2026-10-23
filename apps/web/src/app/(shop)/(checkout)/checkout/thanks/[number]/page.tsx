@@ -17,9 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Thanks({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
   const c = await shopContext();
-  const [r, s, more] = await Promise.all([currentReceipt(c, decodeURIComponent(number)), checkoutSettings(c.storeId), readPageSettings(['thanks.page'], c.storeId)]);
+  const [r, s, more] = await Promise.all([currentReceipt(c, decodeURIComponent(number)), checkoutSettings(c.storeId), readPageSettings(['thanks.page', 'account.invoice'], c.storeId)]);
   return r ? (
-    <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} />
+    <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} />
   ) : (
     <ThanksNotFound c={c} />
   );

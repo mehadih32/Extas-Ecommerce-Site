@@ -19,7 +19,8 @@
     "rules": "Smart Rules",
     "combos": "Combos and sets",
     "delivery": "Delivery areas and charges",
-    "system": "Server and background jobs"
+    "system": "Server and background jobs",
+    "orders": "Orders"
   },
   "permissions": {
     "settings": {
@@ -84,6 +85,9 @@
     },
     "system": {
       "read": "See the Server page: is the background worker alive, and which jobs failed"
+    },
+    "orders": {
+      "invoice": "Open and print the invoice of any order (it shows the customer's name, phone and address)"
     }
   },
   "totp": {
