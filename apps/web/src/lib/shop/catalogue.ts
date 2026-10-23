@@ -477,3 +477,38 @@ async function readCategory(
     },
   };
 }
+
+// ---- PR 107 / 114 · the bag ----
+
+/** PR 107 · products by id as cards (the bag's pictures: the photo of each colour or the drawing), archived ones too. */
+export function cardsByIds(storeId: number, ids: readonly string[]): Promise<Map<string, ShopCard>> {
+  return guarded('bag pictures', new Map<string, ShopCard>(), async () => {
+    if (!ids.length) return new Map<string, ShopCard>();
+    const cards = await toCards(storeId, await rowsOf({ where: { storeId, id: { in: [...new Set(ids)] } } }));
+    return new Map(cards.map((c) => [c.id, c]));
+  });
+}
+
+/**
+ * PR 114 · "You may also like" under the bag (and the panel's "Complete the look", PR 106): published, in-stock products
+ * from the same categories as the bag's items (the first item's category first), never one already in the bag. `from`
+ * says where they came from, so the line under the row's title is true: `same` = the same categories; `new` = none
+ * there, so the newest products fill it; `none` = nothing to show (the row is not drawn).
+ */
+export function bagPickCards(storeId: number, inBag: readonly string[], count: number): Promise<{ cards: ShopCard[]; from: 'same' | 'new' | 'none' }> {
+  const none = { cards: [] as ShopCard[], from: 'none' as const };
+  return guarded('bag picks', none, async () => {
+    if (count <= 0 || !inBag.length) return none;
+    const prisma = getPrisma();
+    const own = await prisma.product.findMany({ where: { storeId, id: { in: [...inBag] } }, select: { id: true, categoryId: true } });
+    const cats = [...new Set(inBag.map((id) => own.find((p) => p.id === id)?.categoryId).filter((x): x is string => !!x))];
+    const base = { storeId, ...live, inStock: true, id: { notIn: [...inBag] }, category: { isVisible: true, archivedAt: null } };
+    if (cats.length) {
+      const rows = await rowsOf({ where: { ...base, categoryId: { in: cats } }, orderBy: [{ sortRank: 'desc' }, { nameEn: 'asc' }], take: count * 3 });
+      rows.sort((a, b) => cats.indexOf(a.categoryId ?? '') - cats.indexOf(b.categoryId ?? ''));
+      if (rows.length) return { cards: await toCards(storeId, rows.slice(0, count)), from: 'same' as const };
+    }
+    const rows = await rowsOf({ where: base, orderBy: [{ publishedAt: 'desc' }, { sortRank: 'desc' }, { nameEn: 'asc' }], take: count });
+    return rows.length ? { cards: await toCards(storeId, rows), from: 'new' as const } : none;
+  });
+}
