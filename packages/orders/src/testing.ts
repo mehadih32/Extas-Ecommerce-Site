@@ -19,7 +19,7 @@ export interface OrdersFixture extends CheckoutFixture {
   reader: Who;
   staffId: string;
   /** Places an order through the checkout (cash on delivery unless a prepaid method is given) and returns it. */
-  place: (name: string, opts?: { lines?: { variantId: string; quantity?: number }[]; phone?: string; customerId?: string; payment?: PlaceInput['payment']; pay?: boolean }) => Promise<{ orderId: string; number: string; visitorId: string }>;
+  place: (name: string, opts?: { lines?: { variantId: string; quantity?: number }[]; phone?: string; address?: string; customerId?: string; payment?: PlaceInput['payment']; pay?: boolean }) => Promise<{ orderId: string; number: string; visitorId: string }>;
   /** The variants the tests order (stock 100 each). */
   v: { skyM: string; skyL: string; whiteM: string; linenM: string; teeM: string };
 }
@@ -59,7 +59,7 @@ export async function setUpOrders(label: string): Promise<OrdersFixture> {
     async place(name, opts = {}) {
       const lines = opts.lines ?? [{ variantId: v.skyM }];
       const bag = await f.bag(name, lines);
-      const form = { ...TEST_FORM, phone: opts.phone ?? TEST_FORM.phone };
+      const form = { ...TEST_FORM, phone: opts.phone ?? TEST_FORM.phone, address: opts.address ?? TEST_FORM.address };
       const q = await checkoutQuote(f.deps(), { storeId: f.S, cartId: bag.cartId, lang: 'en', customerId: opts.customerId ?? null, address: { line: form.address, confirmed: null }, payment: opts.payment ?? null });
       const input: PlaceInput = { idempotencyKey: randomUUID(), lang: 'en', form, confirmed: null, payment: opts.payment ?? null, fingerprint: q.fingerprint };
       const placed = await placeOrder(f.deps(), { storeId: f.S, visitorId: bag.visitorId, customerId: opts.customerId ?? null, ip: '192.0.2.138', input });

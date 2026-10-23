@@ -32,6 +32,7 @@ import { comboPageSettings } from './registry-combo-pages';
 import { motionSettings } from './registry-motion';
 import { ordersSettings } from './registry-orders';
 import { adminShellSettings } from './registry-admin-shell';
+import { checkoutMoreSettings } from './registry-checkout-more';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1164,6 +1165,8 @@ export const registry = {
   ...ordersSettings,
   // ---- PR 12, 495 · the admin shell: role start pages, menu badges and search, the Dashboard (registry-admin-shell.ts, version 33). ----
   ...adminShellSettings,
+  // ---- S04 · PR 127, 128, 561, 563, 565, 605 · the rest of the customer-side checkout: the address check, the silent backfill, free delivery's exemption, add to this parcel, complete your look, gift mode (registry-checkout-more.ts, version 34). ----
+  ...checkoutMoreSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

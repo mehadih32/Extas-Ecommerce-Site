@@ -13,7 +13,9 @@
 // - PR 553 the charge accuracy guard: a charge only from a ResolvedArea the resolver minted, never from text (quote.ts).
 // - PR 555 phone-first recognition: the one BD phone normaliser (phone.ts); a bare number prefills the area only, the
 //   full address only with a login or a confirmed code (phone-area.ts).
+// - PR 563 (S04) the address-detail check: does the line say where the house is (detail.ts)? Only a flag and a call.
 export * from './text';
+export * from './detail';
 export * from './gazetteer';
 export * from './csv';
 export * from './import';
