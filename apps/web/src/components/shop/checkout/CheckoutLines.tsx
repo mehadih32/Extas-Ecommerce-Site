@@ -1,13 +1,20 @@
 // PR 115 — the order summary's lines (demo 51-checkout.js co_summary): each item with its picture (the quantity on a
 // small badge), name, colour · size and its price; each set as one line with its pieces. Server-drawn from the bag;
 // the same lines show in the phone's summary panel and in the computer's side summary.
+// PR 121 — each item's quantity can be changed and the item taken out right here (demo #41), through the bag's own API
+// and its Undo (BagActions); three or more of one size says plainly that sizes can be mixed, with the way to the bag.
 import type { BagView } from '@extas/cart';
 import { colourName, type ShopCard } from '@/lib/shop/catalogue';
+import { hrefIn } from '@/lib/shop/lang';
+import { ROUTES } from '@/lib/shop/routes';
+import { Icon } from '../Icon';
 import type { ShopContext } from '@/lib/shop/context';
 import { nameOf, Thumb } from '../bag/BagLines';
 
-export function CheckoutLines({ c, view, cards }: { c: ShopContext; view: BagView; cards: Map<string, ShopCard> }) {
+/** `manyMin`: from how many of one size the "mix the sizes" note shows (null: off, `checkout.manyOfOne.*`). */
+export function CheckoutLines({ c, view, cards, manyMin }: { c: ShopContext; view: BagView; cards: Map<string, ShopCard>; manyMin: number | null }) {
   const t = c.t;
+  const bagHref = hrefIn(c.lang, ROUTES.bag);
   return (
     <div data-testid="co-lines">
       {view.items.map((i) => {
@@ -24,6 +31,33 @@ export function CheckoutLines({ c, view, cards }: { c: ShopContext; view: BagVie
               <div className="xs muted">
                 {[colour, i.size?.label, i.quantity > 1 ? t('checkout.sum.each', { price: c.money(i.unitPriceMinor) }) : null].filter(Boolean).join(' · ')}
               </div>
+              <div className="co-qrow">
+                <span className="qty qty-xs" role="group" aria-label={t('bag.line.qty')}>
+                  <button type="button" data-bag-act="qty" data-id={i.lineId} data-q={i.quantity - 1} aria-label={t('bag.line.less')} disabled={i.quantity <= 1} data-testid="co-qty-less">
+                    <Icon name="minus" size={14} />
+                  </button>
+                  <span aria-live="polite" data-testid="co-qty">
+                    {c.num(i.quantity)}
+                  </span>
+                  <button type="button" data-bag-act="qty" data-id={i.lineId} data-q={i.quantity + 1} aria-label={t('bag.line.more')} disabled={i.quantity >= i.maxQuantity} data-testid="co-qty-more">
+                    <Icon name="plus" size={14} />
+                  </button>
+                </span>
+                <button type="button" className="link xs" data-bag-act="remove" data-id={i.lineId} data-name={name} aria-label={t('bag.line.removeName', { name })} data-testid="co-remove">
+                  {t('bag.line.remove')}
+                </button>
+              </div>
+              {manyMin !== null && i.quantity >= manyMin ? (
+                <div className="co-many" data-testid="co-many">
+                  <Icon name="info" size={13} />
+                  <span>
+                    {t('checkout.many', { n: c.num(i.quantity) })}{' '}
+                    <a className="link" href={bagHref}>
+                      {t('checkout.manyLink')}
+                    </a>
+                  </span>
+                </div>
+              ) : null}
             </div>
             <div className="small price">{c.money(i.lineMinor)}</div>
           </div>

@@ -266,7 +266,9 @@
       "amex": "AMEX",
       "bank": "BANK",
       "ssl": "SSL COMMERZ"
-    }
+    },
+    "many": "{n} of the same size. Buying for others?",
+    "manyLink": "Mix the sizes in your bag"
   },
   "notFound": {
     "title": "Page not found",

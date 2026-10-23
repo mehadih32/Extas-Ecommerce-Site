@@ -65,6 +65,15 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     if (next) setView(next);
   };
   const settle = useSettle({ ...timing, onSettle: (line) => void requote({ line }) });
+  // PR 121: a quantity changed or an item went (the bag's script redraws the page): price the new bag with his choices.
+  const bagStamp = first.fingerprint;
+  const seenStamp = useRef(bagStamp);
+  useEffect(() => {
+    if (seenStamp.current === bagStamp) return;
+    seenStamp.current = bagStamp;
+    void requote({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the server drew a different bag
+  }, [bagStamp]);
   const [edited, setEdited] = useState<DetailsForm | null>(null);
   // Typed details survive a reload or a pull-to-refresh: kept in this tab only (sessionStorage), never sent from here.
   const form: DetailsForm = edited ?? stored?.form ?? EMPTY_FORM;

@@ -131,6 +131,26 @@ export const checkoutSettings = {
     sortOrder: 64,
   }),
 
+  // ---- PR 121 · the quantity at checkout: three or more of one size says sizes can be mixed (demo #41) ----
+  'checkout.manyOfOne.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.manyOfOne.enabled.label',
+    helpKey: 'checkout.manyOfOne.enabled.help',
+    sortOrder: 65,
+  }),
+  'checkout.manyOfOne.min': setting({
+    ...base,
+    schema: z.int().min(2).max(20),
+    default: 3,
+    valueType: 'INT',
+    labelKey: 'checkout.manyOfOne.min.label',
+    helpKey: 'checkout.manyOfOne.min.help',
+    sortOrder: 66,
+  }),
+
   // ---- PR 120 · the prepaid reward (CN-018 (1)): nothing set (off), and no amount, until the owner decides. Any payment but Cash on
   // Delivery earns it; when delivery is already free a free-delivery reward falls back to the amount or the percentage.
   'checkout.prepaidReward.enabled': setting({

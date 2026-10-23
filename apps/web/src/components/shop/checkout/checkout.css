@@ -418,3 +418,7 @@
 /* PR 119 — the delivery promise row under the free box (demo r12-zzzz-n54.css) */
 .shop .co-wrap .co-promrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
 .shop .co-wrap .co-promrow .co-fdays { margin: 0; min-width: 0; }
+/* PR 121 — the quantity buttons and Remove keep the demo's size but take a 44 px touch area (invisible, no overlap) */
+.shop .qty-xs button { position: relative; }
+.shop .qty-xs button::after { content: ""; position: absolute; inset: -7px; }
+.shop .co-qrow .link { padding: 12px 4px; margin: -12px -4px; }

@@ -82,6 +82,16 @@
         "label": "Largest percentage reward",
         "help": "The most a percentage reward can take off one order. Empty means no cap."
       }
+    },
+    "manyOfOne": {
+      "enabled": {
+        "label": "Say \"sizes can be mixed\" when someone takes many of one size",
+        "help": "At checkout, a line with many pieces of the same size gets a short note with a link back to the bag to mix the sizes."
+      },
+      "min": {
+        "label": "How many of one size before the note shows",
+        "help": "The note shows from this many pieces of the same item and size."
+      }
     }
   }
 }
