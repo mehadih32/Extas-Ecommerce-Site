@@ -1,0 +1,159 @@
+{
+  "orders": {
+    "metaTitle": "অর্ডার",
+    "list": {
+      "sub": "প্রতিটা অর্ডার — আসা থেকে শেষ পর্যন্ত। চারটা আলাদা অবস্থা: অর্ডার, কুরিয়ার, পেমেন্ট, ফেরত।",
+      "confirmSub": "যে নতুন অর্ডারে ফোন করে কনফার্ম করতে হবে, কাস্টমারের বাতিলের অনুরোধ, আর অগ্রিমের অপেক্ষার অর্ডার।",
+      "search": "অর্ডার নম্বর, ফোন, নাম, ট্র্যাকিং",
+      "searchGo": "খুঁজুন",
+      "filtersAria": "খোঁজা আর ফিল্টার",
+      "viewsAria": "সেভ করা ভিউ",
+      "status": "অবস্থা",
+      "payment": "পেমেন্ট",
+      "source": "চ্যানেল",
+      "any": "{name}: সব",
+      "clear": "ফিল্টার মুছুন",
+      "shown": "দেখাচ্ছে {n}টা",
+      "next": "পরের পাতা",
+      "first": "প্রথম পাতায় ফিরুন",
+      "pc": "{n} পিস",
+      "pcs": "{n} পিস",
+      "firstMore": "{name} +{n}",
+      "open": "অর্ডার {n} খুলুন",
+      "cols": {
+        "order": "অর্ডার",
+        "items": "পণ্য",
+        "total": "মোট",
+        "status": "অবস্থা",
+        "courier": "কুরিয়ার",
+        "flags": "ফ্ল্যাগ"
+      },
+      "empty": {
+        "title": "কিছু মেলেনি",
+        "body": "অন্য ভিউ দেখুন বা সার্চ মুছে দিন।",
+        "none": "এখানে এখনো কোনো অর্ডার নেই",
+        "noneBody": "দোকানে অর্ডার এলে এখানে দেখাবে, নতুনটা উপরে।",
+        "view": "এই ভিউতে কিছু নেই",
+        "viewBody": "কোনো অর্ডারে এটা লাগলে এখানে দেখাবে।"
+      },
+      "none": "—",
+      "select": "অর্ডার {n} বাছুন",
+      "selectAll": "দেখানো সব বাছুন"
+    },
+    "kpi": {
+      "today": "আজকের অর্ডার",
+      "todayNote": "অর্ডারের টাকা {v}",
+      "toConfirm": "কনফার্ম বাকি",
+      "toConfirmOld": "সবচেয়ে পুরনো {age}",
+      "toConfirmNone": "সব শেষ",
+      "advance": "অগ্রিম বাকি",
+      "advanceNote": "নিজে থেকে কখনো বাতিল হয় না",
+      "cancelPending": "কুরিয়ারের বাতিল বাকি",
+      "cancelPendingNote": "কুরিয়ারকে ফোন করে উত্তর লিখুন"
+    },
+    "view": {
+      "all": "সব",
+      "open": "চলমান",
+      "new": "নতুন",
+      "toConfirm": "কনফার্ম বাকি",
+      "awaitingAdvance": "অগ্রিম বাকি",
+      "onHold": "হোল্ডে",
+      "cancelRequests": "বাতিলের অনুরোধ",
+      "cancelPending": "কুরিয়ারের বাতিল বাকি",
+      "inReview": "ডুপ্লিকেট যাচাই",
+      "finished": "শেষ হয়েছে"
+    },
+    "st": {
+      "DRAFT": "খসড়া",
+      "PLACED": "নতুন · কনফার্ম বাকি",
+      "AWAITING_ADVANCE": "অগ্রিমের অপেক্ষা",
+      "CONFIRMED": "কনফার্ম",
+      "ON_HOLD": "হোল্ডে",
+      "PROCESSING": "পিকিং",
+      "PACKED": "প্যাক হয়েছে",
+      "HANDED_OVER": "কুরিয়ারে দেওয়া",
+      "IN_TRANSIT": "পথে",
+      "DELIVERED": "ডেলিভারি হয়েছে",
+      "PARTIALLY_DELIVERED": "আংশিক ডেলিভারি",
+      "RETURNED": "ফেরত",
+      "CANCELLED": "বাতিল"
+    },
+    "ship": {
+      "NONE": "বুক হয়নি",
+      "BOOKING": "বুক হচ্ছে",
+      "BOOKING_FAILED": "বুকিং হয়নি",
+      "IN_REVIEW": "কুরিয়ার দেখছে",
+      "PENDING_PICKUP": "বুক · পিকআপ বাকি",
+      "PICKED_UP": "কুরিয়ার নিয়েছে",
+      "IN_TRANSIT": "পথে",
+      "OUT_FOR_DELIVERY": "ডেলিভারিতে বের হয়েছে",
+      "DELIVERED": "পৌঁছেছে",
+      "PARTIALLY_DELIVERED": "আংশিক",
+      "RETURNING": "ফেরত আসছে",
+      "RETURNED": "দোকানে ফেরত",
+      "CANCEL_REQUESTED": "বাতিলের অনুরোধ",
+      "CANCELLED": "বাতিল"
+    },
+    "pay": {
+      "UNPAID": "টাকা আসেনি",
+      "PARTLY_PAID": "আংশিক পেমেন্ট",
+      "PAID": "পেমেন্ট হয়েছে",
+      "OWED_BACK": "ফেরত দিতে হবে",
+      "COD_TO_COLLECT": "COD বাকি",
+      "COD_COLLECTED": "COD নেওয়া হয়েছে"
+    },
+    "ret": {
+      "REFUND_APPROVED": "রিফান্ড অনুমোদিত · বাকি",
+      "REFUND_REQUESTED": "রিফান্ডের অনুরোধ",
+      "RETURN_EXPECTED": "ফেরত আসছে",
+      "RETURN_RECEIVED": "ফেরত এসেছে",
+      "REFUND_DONE": "রিফান্ড হয়েছে"
+    },
+    "chip": {
+      "cancelPending": "কুরিয়ারের বাতিল বাকি",
+      "courier": "কুরিয়ারের অবস্থা",
+      "payment": "পেমেন্টের অবস্থা",
+      "return": "ফেরত / রিফান্ডের অবস্থা"
+    },
+    "method": {
+      "COD": "COD",
+      "BKASH": "বিকাশ",
+      "NAGAD": "নগদ",
+      "CARD": "কার্ড",
+      "CASH": "ক্যাশ",
+      "WALLET": "ওয়ালেট",
+      "BANK_TRANSFER": "ব্যাংক ট্রান্সফার",
+      "ROCKET": "রকেট",
+      "UPAY": "উপায়",
+      "ONLINE": "অনলাইন"
+    },
+    "source": {
+      "WEBSITE": "ওয়েবসাইট",
+      "LANDING_PAGE": "বিজ্ঞাপন পেজ",
+      "MESSENGER": "মেসেঞ্জার",
+      "WHATSAPP": "হোয়াটসঅ্যাপ",
+      "LIVE_CHAT": "লাইভ চ্যাট",
+      "PHONE": "ফোনে অর্ডার",
+      "TELEGRAM": "টেলিগ্রাম",
+      "ADMIN": "অ্যাডমিনে বানানো",
+      "SHOWROOM": "শোরুম",
+      "IMPORT": "ইমপোর্ট"
+    },
+    "flag": {
+      "cancelRequest": "বাতিলের অনুরোধ",
+      "inReview": "ডুপ্লিকেট যাচাই",
+      "hold": "হোল্ড: {reason}",
+      "wantsChange": "বদল চায়",
+      "merged": "এক পার্সেল"
+    },
+    "page": {
+      "all": "সব অর্ডার",
+      "confirm": "কনফার্ম বাকি"
+    },
+    "bulk": {
+      "aria": "একসাথে কাজ",
+      "selected": "{n}টা বাছা",
+      "clear": "মুছুন"
+    }
+  }
+}
