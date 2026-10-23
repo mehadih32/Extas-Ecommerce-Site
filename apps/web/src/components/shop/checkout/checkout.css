@@ -3,6 +3,8 @@
  * by rendering the demo and keeping, in cascade order, every rule whose classes all appear on those two pages. Each
  * selector is scoped under .shop. Loaded only by the checkout and thank-you pages (with bag.css, whose shared rules —
  * stack, split-side, qty, mbar — they use too). Do not hand-edit values: a design change is a demo change first. */
+.shop textarea { font-family: inherit; font-size: 16px; color: var(--ink); touch-action: manipulation; }
+.shop textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
 .shop.shop[data-theme="festive"] .btn-secondary { border-color: var(--gold); color: var(--gold) !important; }
 .shop .link { background: none; border: none; padding: 4px 0px; color: var(--brand); font-weight: 600; text-decoration: underline; cursor: pointer; font-size: 13px; }
 .shop.shop[data-theme="festive"] .link { color: var(--gold); }

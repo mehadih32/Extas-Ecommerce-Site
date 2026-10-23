@@ -18,6 +18,16 @@
         "label": "Show \"Need help? WhatsApp us\" on the checkout",
         "help": "A line at the top of the checkout and a box under the summary on a computer. It shows only when the shop's WhatsApp number is set."
       }
+    },
+    "form": {
+      "nameMin": {
+        "label": "Shortest name the order takes (letters)",
+        "help": "A name shorter than this asks the customer to write it in full."
+      },
+      "addressMin": {
+        "label": "Shortest address the order takes (letters)",
+        "help": "An address shorter than this asks the customer for more, so the rider can find the house."
+      }
     }
   }
 }

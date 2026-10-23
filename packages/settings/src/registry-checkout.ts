@@ -46,4 +46,24 @@ export const checkoutSettings = {
     helpKey: 'checkout.help.enabled.help',
     sortOrder: 30,
   }),
+
+  // ---- PR 116 · name, phone and address: the shortest name and address the order takes (letters, not bytes) ----
+  'checkout.form.nameMin': setting({
+    ...base,
+    schema: z.int().min(1).max(20),
+    default: 2,
+    valueType: 'INT',
+    labelKey: 'checkout.form.nameMin.label',
+    helpKey: 'checkout.form.nameMin.help',
+    sortOrder: 40,
+  }),
+  'checkout.form.addressMin': setting({
+    ...base,
+    schema: z.int().min(4).max(60),
+    default: 8,
+    valueType: 'INT',
+    labelKey: 'checkout.form.addressMin.label',
+    helpKey: 'checkout.form.addressMin.help',
+    sortOrder: 50,
+  }),
 };
