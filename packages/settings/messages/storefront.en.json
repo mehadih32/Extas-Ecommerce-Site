@@ -4,7 +4,8 @@
     "language": "Languages",
     "slider": "Sliding rows",
     "home": "Home page",
-    "categoryPage": "Category pages"
+    "categoryPage": "Category pages",
+    "productPage": "Product page"
   },
   "theme": {
     "schedule": {
@@ -162,6 +163,56 @@
     "faqOwn": {
       "label": "Each category's own questions",
       "help": "Per category, your own questions and answers about its clothes (fabric, fit, care). They come before the shop-wide ones."
+    }
+  },
+  "pdp": {
+    "page": {
+      "label": "Product page layout",
+      "help": "The breadcrumb (Home / category / product) above the page on a computer (the phone never shows it); whether each colour has its own address (/p/product/colour) that opens the page on that colour; and where a colour's address points search engines: the main product (one strong page) or the colour page itself, for the whole shop and per category."
+    },
+    "gallery": {
+      "label": "Product photos",
+      "help": "The ‹ › buttons over the main photo, the thumbnail strip (on a computer down the side or under the photo), the full-screen photo on a tap, double tap or pinch, which drawing views show while a colour has no photo yet, and the tag or discount badge on the first photo. The full-screen viewer zooms up to your largest zoom on a phone, and in your click steps on a computer. On a computer the main photo is a little shorter than 4:5 (your px, 0 = the full photo) so the whole picture fits the first screen, and at most your number of thumbnails show beside it, the last one saying \"+N\"."
+    },
+    "colour": {
+      "label": "Colours on the product page",
+      "help": "From how many colours \"All N colours\" moves up to the \"Colour – Navy\" line (fewer: right after the last swatch), whether \"All N colours\" and its sheet with every colour's photo show, the colour's own note under the swatches, and \"See true-colour photo\" when the colour has one."
+    },
+    "size": {
+      "label": "Sizes on the product page",
+      "help": "The measurement line under the sizes, the inches / cm switch on the page (cm is always inside the size chart), the \"Runs small · True to size · Runs large\" bar, and whether a size sold out in every colour is shown crossed out or left out. \"Tell me when it is back\" on a crossed-out size and on a product that is off sale: the shopper leaves a mobile number and it joins the back-in-stock list (off until the back-in-stock message is sent)."
+    },
+    "chart": {
+      "label": "Size chart popup",
+      "help": "The \"Size chart\" button and its popup (only on products that have a chart), the unit it opens in, \"How to measure\" under the table, and the \"Ask on WhatsApp\" card (needs the shop's WhatsApp number)."
+    },
+    "stock": {
+      "label": "Stock line",
+      "help": "The stock line above the buttons, from how many pieces \"Only N left\" shows (0 = never), the same line on the first photo, and your dispatch time for \"ships today if you order before …\" (empty: not said)."
+    },
+    "price": {
+      "label": "Price on the product page",
+      "help": "Whether a discounted product shows the struck price, the percentage and the saving after the bar, and the payment line after the bar when the product has no free delivery: on or off, and your own words for it (empty: the payment methods that are switched on)."
+    },
+    "trust": {
+      "label": "Promise row",
+      "help": "The row under the buttons: the exchange window, free delivery over your limit and \"100% original\", in your order. Each shows only while its fact is true (exchange switched on, a free-delivery limit set); \"100% original\" is off until you switch it on."
+    },
+    "rules": {
+      "label": "Delivery · Exchange · Returns",
+      "help": "The three cells under the buttons, in your order; each takes its words from your live Smart Rules for the product page (exchange and returns fall back to your policy texts). One opens at a time, its full text across the box. \"Try it on in front of the rider\" under them is off until you switch it on."
+    },
+    "details": {
+      "label": "Product details",
+      "help": "Fabric & care, Size & fit and Description, in your order: each closed, open, or open to its first line with \"Read more\"."
+    },
+    "buy": {
+      "label": "Buy buttons",
+      "help": "\"Order Now\" beside \"Add to Bag\", the phone's buy bar at the bottom of the screen (the bottom menu hides on this page), the computer's bar that slides in once the buttons have scrolled away, and \"Call to order\" with your phone number and hours (needs the shop's phone number)."
+    },
+    "sweep": {
+      "label": "Light sweeps on the product page",
+      "help": "The soft light that runs across the free-delivery line, the stock line, \"All N colours\", the Colour and Size labels and the size boxes, each on its own switch. It never runs for a visitor who has asked for less motion."
     }
   }
 }

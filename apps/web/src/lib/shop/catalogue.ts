@@ -84,7 +84,7 @@ function fitOf(blocks: unknown): string | null {
   return typeof f === 'string' && f.trim() ? f.trim() : null;
 }
 
-interface PriceRules {
+export interface PriceRules {
   store: WasPriceSource | null;
   historyDays: number;
   mrpOwnLabel: boolean;
@@ -92,7 +92,7 @@ interface PriceRules {
   cats: Map<string, { source: WasPriceSource | null; parentId: string | null }>;
 }
 
-async function priceRules(storeId: number): Promise<PriceRules> {
+export async function priceRules(storeId: number): Promise<PriceRules> {
   const r = settingsResolver();
   const at = { storeId };
   const [store, historyDays, mrpOwnLabel] = r
@@ -102,7 +102,7 @@ async function priceRules(storeId: number): Promise<PriceRules> {
   return { store: store ?? null, historyDays, mrpOwnLabel, cats: new Map(rows.map((c) => [c.id, { source: c.wasPriceSource, parentId: c.parentId }])) };
 }
 
-function sourceOf(rules: PriceRules, product: { wasPriceSource: WasPriceSource | null; categoryId: string | null }): WasPriceSource | null {
+export function sourceOf(rules: PriceRules, product: { wasPriceSource: WasPriceSource | null; categoryId: string | null }): WasPriceSource | null {
   if (product.wasPriceSource) return product.wasPriceSource;
   for (let id = product.categoryId, guard = 0; id && guard < 64; guard++) {
     const c = rules.cats.get(id);

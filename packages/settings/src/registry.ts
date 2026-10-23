@@ -20,6 +20,7 @@ import { storefrontSettings } from './registry-storefront';
 import { eidSettings } from './registry-eid';
 import { categorySettings } from './registry-category';
 import { bagSettings } from './registry-bag';
+import { productSettings } from './registry-product';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1127,6 +1128,8 @@ export const registry = {
   ...categorySettings,
   // ---- S04 · PR 105–114 · the bag: keeping it, adding twice, the added-to-bag panel, tiers, two sizes, codes, free delivery, the upsell row (registry-bag.ts, version 18). ----
   ...bagSettings,
+  // ---- S02 · PR 49, 54–57, 60–64 · the product page: gallery, colours, sizes, size chart, stock, price, trust, rules, details, buy bars (registry-product.ts, version 19). ----
+  ...productSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

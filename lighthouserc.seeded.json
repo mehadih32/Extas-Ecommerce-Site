@@ -1,5 +1,5 @@
 {
-  "$comment": "Follow-up 23 (PR 82): the storefront Lighthouse budget again on the sample data (CI device-gate job: the sample catalogue, rules and combos on a throwaway database; never the owner's data). lighthouserc.json runs without a database, where the pages carry no products; with products the fonts and the fits cost more, so the same budget is checked here. The server is already running; first visits only (no Bengali-font cookie).",
+  "$comment": "Follow-up 23 (PR 82): the storefront Lighthouse budget again on the sample data (CI device-gate job: the sample catalogue, rules and combos on a throwaway database; never the owner's data). lighthouserc.json runs without a database, where the pages carry no products; with products the fonts and the fits cost more, so the same budget is checked here. The server is already running; first visits only (no Bengali-font cookie). PR 49: the product page (a polo with five colours) in both languages.",
   "ci": {
     "collect": {
       "url": [
@@ -8,7 +8,9 @@
         "http://127.0.0.1:3000/collections/new-in",
         "http://127.0.0.1:3000/bn/collections/new-in",
         "http://127.0.0.1:3000/collections/polos",
-        "http://127.0.0.1:3000/bn/collections/polos"
+        "http://127.0.0.1:3000/bn/collections/polos",
+        "http://127.0.0.1:3000/p/essential-pique-polo",
+        "http://127.0.0.1:3000/bn/p/essential-pique-polo"
       ],
       "numberOfRuns": 3,
       "settings": {

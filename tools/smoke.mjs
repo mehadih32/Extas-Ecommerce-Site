@@ -44,6 +44,22 @@ export function adminLinks(hrefs) {
   return [...seen].sort();
 }
 
+/**
+ * PR 49 — pages found on a built page (smoke.json `discover`): the first `take` distinct links of this site, without
+ * query strings. The product pages are the owner's own products, so the smoke test finds them from New in rather than
+ * naming one; a shop with no product yet has none to open.
+ */
+export function discovered(hrefs, take) {
+  const seen = [];
+  for (const h of hrefs) {
+    const path = (h ?? "").split(/[?#]/)[0];
+    if (!path.startsWith("/") || path.startsWith("//") || seen.includes(path)) continue;
+    seen.push(path);
+    if (seen.length >= take) break;
+  }
+  return seen;
+}
+
 /** A failed request counts unless its path is on the known list (each entry names the PR that removes it). */
 export function requestCounts(url, base, ignore) {
   let u;
@@ -286,6 +302,17 @@ export async function runSmoke(opts) {
       const gp = await guest.newPage();
       for (const path of config.storefront)
         rows.push(await visit(gp, opts.base, ignore, path, vp.name, opts.out));
+      // PR 49: the pages a built page links to (the product pages New in shows).
+      for (const d of config.discover ?? []) {
+        const from = await visit(gp, opts.base, ignore, d.from, vp.name, null);
+        const hrefs = from.ok
+          ? await gp
+              .$$eval(d.selector, (els) => els.map((e) => e.getAttribute("href") ?? ""))
+              .catch(() => [])
+          : [];
+        for (const path of discovered(hrefs, d.take))
+          rows.push(await visit(gp, opts.base, ignore, path, vp.name, opts.out));
+      }
       // Signed out, an admin page sends you to the sign-in page (never an error).
       const out = await visit(
         gp,

@@ -6,6 +6,7 @@
 import { picksThatFit } from '@extas/cart/pure';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
+import { hideToast } from '../toast';
 import { focusOpener } from './opener';
 
 export function AddedDialog({ closeHref, fill, picks, gapPx, children }: { closeHref: string; fill: 'fit' | 'fixed' | 'off'; picks: number; gapPx: number; children: ReactNode }) {
@@ -19,6 +20,7 @@ export function AddedDialog({ closeHref, fill, picks, gapPx, children }: { close
     const y = window.scrollY;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    hideToast(root);
     dialog.focus({ preventScroll: true });
     let closed = false;
     const close = () => {

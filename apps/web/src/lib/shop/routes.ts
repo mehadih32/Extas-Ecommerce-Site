@@ -43,8 +43,8 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
 export function comingSoon(path: string, productPrefix: string): string | null {
   const p = path.replace(/\/+$/, '') || '/';
   const under = (base: string) => p === base || p.startsWith(`${base}/`);
-  const prefix = productPrefix.replace(/\/+$/, '');
-  if (prefix && p.startsWith(`${prefix}/`) && p.length > prefix.length + 1) return 'product'; // the product page, PR 49
+  // ~~the product page under the owner's prefix: 'product'~~ built: PR 49 (the catch-all route draws it, lib/shop/product-model productRoute)
+  void productPrefix;
   for (const r of COMING_SOON) if (r.deep ? under(r.path) : p === r.path) return r.key;
   return null;
 }
