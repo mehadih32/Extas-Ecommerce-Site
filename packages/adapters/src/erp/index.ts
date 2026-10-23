@@ -8,5 +8,6 @@ export * from './http-client';
 export * from './mock-erp';
 export * from './signature';
 export * from './extas-erp';
+export * from './webhook';
 
 export const erpAdapters = [extasErp] as const;

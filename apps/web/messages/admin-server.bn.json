@@ -55,7 +55,8 @@
       "inventory_reservations_release": "মেয়াদ শেষ কার্ট-হোল্ড ছাড়া",
       "inventory_erp_pushDocuments": "ERP-তে কাগজ পাঠানো",
       "inventory_lowStock_evaluate": "কম স্টকের চেক",
-      "inventory_erp_reconcile": "ERP-র সাথে স্টক মেলানো"
+      "inventory_erp_reconcile": "ERP-র সাথে স্টক মেলানো",
+      "erp_webhook_process": "ERP থেকে আসা স্টকের খবর"
     },
     "workers": {
       "title": "ওয়ার্কার",

@@ -10,12 +10,15 @@
 //   work was done) for the next N calls, so tests prove retries, timeouts and the error surface;
 // - orders (PR 199, 200): `POST /orders` needs an Idempotency-Key, reserves stock with the ERP's own logic (or answers
 //   409 with the short SKUs), `PATCH /orders/{externalOrderId}` changes the status (CANCELLED gives the reservation
-//   back); the same key with the same body returns the first answer and changes nothing.
+//   back); the same key with the same body returns the first answer and changes nothing;
+// - webhooks (PR 196): it can send signed `stock.changed` / `variant.changed` events of its own state, with the
+//   webhook secret a test or a developer gives it (never one of its own).
 //
 // It starts with sample companies and warehouses and **no stock**: nothing it says can reach a real shop's stock
 // unless someone puts stock into it (the tests, or a developer). Keys are random per process, never written down.
 import { createHash, randomBytes } from 'node:crypto';
 import { ERP_API_BASE_PATH, IDEMPOTENT_REPLAY_HEADER, type FetchLike } from './http-client';
+import { signedErpWebhook } from './webhook';
 
 export interface MockWarehouse {
   id: string;
@@ -246,6 +249,28 @@ export class MockErpWorld {
   stockOf(sku: string, warehouseId: string, companyId?: string): { onHand: number; reserved: number } | null {
     const cell = this.company(companyId).stock.get(sku)?.get(warehouseId);
     return cell ? { onHand: cell.onHand, reserved: cell.reserved } : null;
+  }
+
+  /**
+   * PR 196 — a signed `stock.changed` webhook for one SKU in one warehouse, as the ERP sends it after a change: the
+   * cell as it is now, signed with `secret` (the webhook secret the shop has in its vault) at the practice ERP's clock.
+   */
+  stockChangedWebhook(secret: string, sku: string, warehouseId: string, opts: { id?: string; companyId?: string } = {}): { id: string; body: string; headers: Record<string, string> } {
+    const row = this.stockRows(this.company(opts.companyId), warehouseId).find((r) => r.sku === sku);
+    if (!row) throw new Error(`the practice ERP has no stock for ${sku} in ${warehouseId}`);
+    return this.webhook(secret, 'stock.changed', { ...row, updatedAt: row.updatedAt.toISOString() }, opts.id);
+  }
+
+  /** PR 196 — a signed `variant.changed` webhook for one variant, as it is now. */
+  variantChangedWebhook(secret: string, sku: string, opts: { id?: string; companyId?: string } = {}): { id: string; body: string; headers: Record<string, string> } {
+    const v = this.company(opts.companyId).variants.get(sku);
+    if (!v) throw new Error(`the practice ERP has no variant ${sku}`);
+    return this.webhook(secret, 'variant.changed', { ...v, updatedAt: v.updatedAt.toISOString() }, opts.id);
+  }
+
+  private webhook(secret: string, type: string, data: unknown, id = `evt_${randomBytes(8).toString('hex')}`) {
+    const now = this.now();
+    return { id, ...signedErpWebhook(secret, { id, type, occurredAt: now.toISOString(), data }, now) };
   }
 
   /** Switches a failure on for the next `times` matching calls (default 1). */

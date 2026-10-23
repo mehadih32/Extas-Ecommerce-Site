@@ -11,6 +11,7 @@ import {
   canonical,
   compareStock,
   damagedUnits,
+  decimalToMinor,
   ERP_DEPENDENT_PATHS,
   ErpCallFailed,
   errorCode,
@@ -106,12 +107,13 @@ describe('S09 settings', () => {
     expect(defaultLocationsSchema.safeParse([{ code: 'main', kind: 'WAREHOUSE', name: 'a' }, { code: 'main', kind: 'DAMAGED', name: 'b' }]).success).toBe(false);
     expect(defaultLocationsSchema.safeParse([{ code: 'Main Stock', kind: 'WAREHOUSE', name: 'a' }]).success).toBe(false);
   });
-  it('every S09 key is at registry version 10 or (PR 197–207) 11, and its default passes its own schema', () => {
+  it('every S09 key is at registry version 10, (PR 197–207) 11 or (PR 196 webhooks) 22, and its default passes its own schema', () => {
     for (const [key, s] of Object.entries(inventorySettings)) {
-      expect([10, 11]).toContain(s.version);
+      expect([10, 11, 22], key).toContain(s.version);
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
     }
     expect(inventorySettings['inventory.reservation.holdMinutes'].version).toBe(11);
+    expect(Object.entries(inventorySettings).filter(([, s]) => s.version === 22).map(([k]) => k).sort()).toEqual(['erp.webhook.batchSize', 'erp.webhook.dedupeHours', 'erp.webhook.enabled', 'erp.webhook.maxBodyKb']);
   });
 });
 
@@ -271,5 +273,17 @@ describe('PR 204, 206, 207 · the new ERP-dependent paths', () => {
     expect([behaviourOf('stock.resync', links.none), behaviourOf('stock.resync', links.unavailable), behaviourOf('stock.resync', links.mock), behaviourOf('stock.resync', links.mockStock)]).toEqual(['refuse', 'refuse', 'skip', 'run']);
     expect([behaviourOf('stock.reconcile', links.none), behaviourOf('stock.reconcile', links.unavailable), behaviourOf('stock.reconcile', links.mock)]).toEqual(['skip', 'fail', 'skip']);
     expect([behaviourOf('variants.discover', links.none), behaviourOf('variants.discover', links.mock)]).toEqual(['skip', 'practice']);
+  });
+});
+
+describe('PR 196 · ERP webhooks', () => {
+  it('turns an ERP decimal into minor units, rounding half up at the last digit of the currency', () => {
+    expect(['1250.50', '1250.5', '1250', '610.125', '610.124', '0.005', '-3.335', ' 7.1 '].map((t) => decimalToMinor(t, 2))).toEqual([125050, 125050, 125000, 61013, 61012, 1, -334, 710]);
+    expect([decimalToMinor('12.5', 0), decimalToMinor('12.4', 0), decimalToMinor('1.2345', 3)]).toEqual([13, 12, 1235]);
+    expect([decimalToMinor(null, 2), decimalToMinor('', 2), decimalToMinor('1e3', 2), decimalToMinor('1.2.3', 2)]).toEqual([null, null, null, null]);
+  });
+
+  it('a webhook is applied only with a real ERP, or on the practice ERP with its stock switched on', () => {
+    expect(['none', 'unavailable', 'mock', 'mockStock', 'connected'].map((k) => behaviourOf('webhook.apply', links[k as keyof typeof links]))).toEqual(['skip', 'skip', 'skip', 'run', 'run']);
   });
 });

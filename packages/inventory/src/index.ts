@@ -12,6 +12,7 @@
 // - PR 204 the publishing queue driven by ERP stock (publish-queue.ts);
 // - PR 205 the sync health panel (sync-health.ts); PR 206 manual re-sync (resync.ts);
 // - PR 207 the stock movement report and the reconciliation with the ERP (movements.ts);
+// - PR 196 the ERP → shop webhooks: verified, stored once, applied by the worker (webhook.ts);
 // - background jobs for the BullMQ worker (jobs.ts).
 // Every service takes the database, a settings reader and the connection layer, checks the permission itself and
 // writes the audit log in the same transaction. The admin API is apps/web/src/app/api/admin/inventory.
@@ -33,3 +34,4 @@ export * from './sync-health';
 export * from './resync';
 export * from './movements';
 export * from './jobs';
+export * from './webhook';

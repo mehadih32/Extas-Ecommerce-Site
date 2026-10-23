@@ -50,6 +50,22 @@
       "maxAgeSeconds": {
         "label": "Oldest message accepted from the ERP (seconds)",
         "help": "A signed message older than this is refused, so an old one cannot be sent again."
+      },
+      "enabled": {
+        "label": "Take stock news from the ERP right away",
+        "help": "On: the ERP tells the shop about every stock or product change at once (signed messages). Off: the shop only asks the ERP every few minutes."
+      },
+      "dedupeHours": {
+        "label": "Same ERP message within (hours)",
+        "help": "A message the ERP sends again within this time is recognised and used once."
+      },
+      "maxBodyKb": {
+        "label": "Largest ERP message (KB)",
+        "help": "A bigger message is refused before it is read."
+      },
+      "batchSize": {
+        "label": "ERP messages handled per round",
+        "help": "How many waiting ERP messages the background worker takes at a time."
       }
     },
     "mock": {
