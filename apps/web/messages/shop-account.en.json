@@ -207,6 +207,16 @@
       "on": "On",
       "off": "Off",
       "consentSaved": "Saved"
+    },
+    "ob": {
+      "aria": "Your offers and wallet",
+      "eyebrow": "Members only",
+      "seeAll": "See all",
+      "wallet": "Wallet balance",
+      "walletReady": "Ready to use at checkout",
+      "walletHere": "Your credit, ready for the next order",
+      "shop": "Shop now",
+      "code": "Code"
     }
   }
 }

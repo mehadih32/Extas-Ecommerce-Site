@@ -42,6 +42,10 @@
     "lists": {
       "label": "Lists in My account",
       "help": "How many orders My orders lists, how many wallet entries the wallet shows, and how many new products the \"New in\" row on For you shows (0 hides the row)."
+    },
+    "offerBanner": {
+      "label": "Offer banner in My account",
+      "help": "Off by default. When on, the top of My orders shows the customer's real wallet balance (only when there is credit) and your member offers, each with your own title and note in both languages. An offer with a coupon code shows only while that coupon works for this customer (switched on, inside its dates, not for guests only, not used up). With nothing to show, there is no banner."
     }
   }
 }

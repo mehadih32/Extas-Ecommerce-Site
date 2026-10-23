@@ -1,9 +1,10 @@
 // PR 131 — one section of My account, read and drawn on the server: signed out (or the session ran out) it is the login
 // prompt that comes back here; a section the owner hides (`account.tabs`) is "page not found"; otherwise the frame
 // (AccountShell) around the section's own body. The pages under app/(shop)/(store)/account call it.
+// PR 132: the offer banner on top of My orders; For you lists the same offers as cards.
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { orderCards, profileView, walletView } from '@extas/accounts';
+import { liveOffers, offerBanner, orderCards, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
 import { accountDeps } from '@/lib/shop/account';
 import { accountPage, accountWords } from '@/lib/shop/account-view';
@@ -12,6 +13,7 @@ import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { hrefIn, twinHref } from '@/lib/shop/lang';
 import { AccountShell, LoginPrompt } from './AccountShell';
 import { ForYouTab, OrdersTab, RewardsTab, WalletTab } from './AccountTabs';
+import { OfferBanner, OfferCards } from './OfferBanner';
 import { DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 
 export async function AccountSection({ tab }: { tab: Exclude<AccountTab, 'wishlist'> }) {
@@ -24,15 +26,28 @@ export async function AccountSection({ tab }: { tab: Exclude<AccountTab, 'wishli
   }
   if (!page.tabs.includes(tab)) notFound();
   const who = { storeId: c.storeId, customerId: page.me.customer.id };
-  const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled'] as const, c.storeId);
+  const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled', 'account.offerBanner'] as const, c.storeId);
   let body: ReactNode;
   switch (tab) {
-    case 'orders':
-      body = <OrdersTab c={c} orders={await orderCards(deps, who)} />;
+    case 'orders': {
+      // PR 132: the banner sits on top of My orders only (For you lists the offers, Wallet has its own balance)
+      const [banner, orders] = await Promise.all([offerBanner(deps, who), orderCards(deps, who)]);
+      body = (
+        <>
+          <OfferBanner c={c} banner={banner} walletUsable={s['checkout.wallet.enabled']} showAll={page.tabs.includes('foryou')} />
+          <OrdersTab c={c} orders={orders} />
+        </>
+      );
       break;
-    case 'foryou':
-      body = <ForYouTab c={c} newIn={s['account.lists'].newIn > 0 ? await newestCards(c.storeId, s['account.lists'].newIn, 'newest') : []} />;
+    }
+    case 'foryou': {
+      const [offers, newIn] = await Promise.all([
+        s['account.offerBanner'].enabled ? liveOffers(deps, who) : Promise.resolve([]),
+        s['account.lists'].newIn > 0 ? newestCards(c.storeId, s['account.lists'].newIn, 'newest') : Promise.resolve([]),
+      ]);
+      body = <ForYouTab c={c} newIn={newIn} offers={offers.length ? <OfferCards c={c} offers={offers} /> : null} />;
       break;
+    }
     case 'rewards':
       body = <RewardsTab c={c} />;
       break;
