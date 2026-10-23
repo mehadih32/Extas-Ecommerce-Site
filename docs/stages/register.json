@@ -4944,6 +4944,7 @@
     "date": "2026-10-22",
     "note": "store shell from demo V12.1 + V12.2 (CN-008, CN-012): announcement bar, header with icons in the owner's order, phone menu, bottom bar, footer (phone bands with the V12.2 social row incl. WhatsApp; desktop: owner's reference layout `deskStyle` ref with link icons `deskIcons`, WhatsApp and Hotline boxes, social tiles; classic kept), slim checkout header and empty checkout `/checkout`, shop 404; desktop row arrangements (`shell.desktopNav.layout`: catsMore default with 4 main categories, all, shop, priority) and menus (`megaStyle`: drop with flyouts default, panel kept); Journal off the desktop row, highlighted in the footer (H3); the Join form on the one BD phone cleaner `apps/web/src/lib/phone-bd.ts` (H14/K10) waits for the sign-up list (`requires: signupList`, PR 123 / 298; CN-017: it kept nothing); the shell's measured fits run after the first paint, a part per task (TBT); `/` is the store, `/status` the progress page, every storefront route not built yet shows \"Coming soon\" in the shell (CN-010, `COMING_SOON` in the routing table); screenshots `docs/qa/screenshots/pr-40/` ·",
     "github": [
+     "#33, 23 Oct",
      "#30, 23 Oct",
      "#23, 23 Oct"
     ]
@@ -4966,7 +4967,8 @@
      "deskIcons",
      "megaStyle",
      "requires: signupList",
-     "COMING_SOON"
+     "COMING_SOON",
+     "data-l"
     ],
     "tests": []
    },
@@ -4983,7 +4985,7 @@
      "sortKey": 33120,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**23 Oct (follow-up 59):** the phone wordmark stays on one line and the header one screen wide with the WhatsApp disc on (the heart steps out, then the type steps down); a device-gate case with the sample contact"
+     "text": "**23 Oct (follow-up 59):** the phone wordmark stays on one line and the header one screen wide with the WhatsApp disc on (the heart steps out, then the type steps down); a device-gate case with the sample contact. 23 Oct (follow-up 24): the phone slogan steps to its short form, then out (the demo's three `data-l` rules), never cut mid-word; the phone footer's slogan wraps under the name instead of pushing the page sideways"
     }
    ],
    "mentions": [
@@ -5013,8 +5015,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "home page `/` and `/bn` from demo V12.1 (`20-home.js`): sections in the owner's order (`home.sections`, the ten of `HOME_SECTIONS`; PR 595 edits the same list), hero text panel (`home.hero`: words, 1–3 buttons with the demo's looks incl. the v3 sets tint, promise lines only when COD / exchange are on, desktop shift), category tiles (`home.categories`), \"New in\" cards (`home.newIn`), reviews row (`home.reviews`, approved only, average over all approved), soft row edges (`home.rowFade`); product card (photo or garment drawing, badge, heart saved in the browser, struck price only by the PR 38 rule); sections with no true content yet draw nothing; the taka sign in a 2.5 KB swap face; fix: the desktop row folded every category into More (PR 85 tap layers). Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL; screenshots `docs/qa/screenshots/pr-41/` 23 Oct (CN-017): the hero's default words carry no count, season or year (~~\"Winter 2026 · 39 new styles\"~~ → \"New in · Find your style\"), \"Fresh styles this week\" → \"Our newest styles\", Shop now → New in (`home.hero` v17); `copy-claims.test.ts` keeps the shop dictionary and every setting default free of number and \"this week\" claims",
+    "note": "home page `/` and `/bn` from demo V12.1 (`20-home.js`): sections in the owner's order (`home.sections`, the ten of `HOME_SECTIONS`; PR 595 edits the same list), hero text panel (`home.hero`: words, 1–3 buttons with the demo's looks incl. the v3 sets tint, promise lines only when COD / exchange are on, desktop shift), category tiles (`home.categories`), \"New in\" cards (`home.newIn`), reviews row (`home.reviews`, approved only, average over all approved), soft row edges (`home.rowFade`); product card (photo or garment drawing, badge, heart saved in the browser, struck price only by the PR 38 rule); sections with no true content yet draw nothing; the taka sign in a 2.5 KB swap face; fix: the desktop row folded every category into More (PR 85 tap layers). Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL; screenshots `docs/qa/screenshots/pr-41/` 23 Oct (CN-017): the hero's default words carry no count, season or year (~~\"Winter 2026 · 39 new styles\"~~ → \"New in · Find your style\"), \"Fresh styles this week\" → \"Our newest styles\", Shop now → New in (`home.hero` v17); `copy-claims.test.ts` keeps the shop dictionary and every setting default free of number and \"this week\" claims. 23 Oct (follow-ups 21, 36): desktop cards (mouse at 1024 px and up, or keyboard focus) show the back view and Quick add with the size buttons (`card.desk` {altView, quickAdd}, on; `GET /api/shop/card/<id>`), the bag's own `<AddToBag>` and added panel on the home, category and product pages; the home page's cards use the category page's fits (`CARD_FIT`)",
     "github": [
+     "#33, 23 Oct",
      "#25, 23 Oct",
      "#23, 23 Oct"
     ]
@@ -5030,15 +5033,19 @@
      "home.categories",
      "home.newIn",
      "home.reviews",
-     "home.rowFade"
+     "home.rowFade",
+     "card.desk"
     ],
     "code": [
      "20-home.js",
      "docs/qa/screenshots/pr-41/",
-     "copy-claims.test.ts"
+     "copy-claims.test.ts",
+     "GET /api/shop/card/<id>"
     ],
     "names": [
-     "HOME_SECTIONS"
+     "HOME_SECTIONS",
+     "<AddToBag>",
+     "CARD_FIT"
     ],
     "tests": [
      "Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL",
@@ -5246,8 +5253,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "category page `/collections/[slug]` and `/bn/collections/[slug]` from demo V12.2 (`21-category.js`): crumbs with the parent, H1 and \"N styles · blurb\", the grid (a ticked colour shows that colour), \"Showing X of Y\" with its bar, \"Show more\" (a plain rel=next link, 24 a page) and \"Show all\", the no-match state with Clear filters and Ask on WhatsApp, the SEO block with Read more and the questions (the owner's first, then COD / free delivery / exchange only when their rule is on); `/collections/new-in` = newest styles of every shown category; state in the address (a refined page noindex, canonical clean); catalogue read `categoryData` (pinned first, sub-categories, cap 2000, photos only for the cards drawn); settings registry v17 `registry-category.ts` (`category.page`, `category.newIn`, `category.faq`; owner data `category.seo`, `category.faqOwn` empty — interim until S10 adds category SEO columns), no admin screen (CN-019); the floating WhatsApp disc under the footer, 44 px breadcrumb and touch-desktop controls; device gate 0 fails in 372 storefront checks, New in in Lighthouse and smoke, the seeded polos pages in the signed-in gate. ~~V2.1 nowrap of a banner price~~ waits with the category banners (S03 seam, follow-up 31). Tests: address model, catalogue read on PostgreSQL; screenshots `docs/qa/screenshots/pr-45/`",
+    "note": "category page `/collections/[slug]` and `/bn/collections/[slug]` from demo V12.2 (`21-category.js`): crumbs with the parent, H1 and \"N styles · blurb\", the grid (a ticked colour shows that colour), \"Showing X of Y\" with its bar, \"Show more\" (a plain rel=next link, 24 a page) and \"Show all\", the no-match state with Clear filters and Ask on WhatsApp, the SEO block with Read more and the questions (the owner's first, then COD / free delivery / exchange only when their rule is on); `/collections/new-in` = newest styles of every shown category; state in the address (a refined page noindex, canonical clean); catalogue read `categoryData` (pinned first, sub-categories, cap 2000, photos only for the cards drawn); settings registry v17 `registry-category.ts` (`category.page`, `category.newIn`, `category.faq`; owner data `category.seo`, `category.faqOwn` empty — interim until S10 adds category SEO columns), no admin screen (CN-019); the floating WhatsApp disc under the footer, 44 px breadcrumb and touch-desktop controls; device gate 0 fails in 372 storefront checks, New in in Lighthouse and smoke, the seeded polos pages in the signed-in gate. ~~V2.1 nowrap of a banner price~~ waits with the category banners (S03 seam, follow-up 31). Tests: address model, catalogue read on PostgreSQL; screenshots `docs/qa/screenshots/pr-45/`. 23 Oct (follow-up 35): BreadcrumbList and ItemList JSON-LD from the page's own trail and grid (`seo.structuredData`, on; sent even when the visible trail is off)",
     "github": [
+     "#33, 23 Oct",
      "#25, 23 Oct"
     ]
    },
@@ -5262,7 +5270,8 @@
      "category.newIn",
      "category.faq",
      "category.seo",
-     "category.faqOwn"
+     "category.faqOwn",
+     "seo.structuredData"
     ],
     "code": [
      "21-category.js",
@@ -5788,8 +5797,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "size pills on one row that fill the width from S to 4XL (grid of N equal columns), tap selects and never adds, out in this colour crossed out, sold out in every colour crossed out and never hidden (SIM-F-035 acceptance test; `soldOutEverywhere` cross / hide), the chosen size's measurement line, \"please choose a size\" only after a buy button without a size; \"tell me when it is back\" on a crossed-out size or an off-sale product into the PR 36 back-in-stock list, off until PR 71 sends the alert (`pdp.size.notifyBack`); `pdp.size`",
+    "note": "size pills on one row that fill the width from S to 4XL (grid of N equal columns), tap selects and never adds, out in this colour crossed out, sold out in every colour crossed out and never hidden (SIM-F-035 acceptance test; `soldOutEverywhere` cross / hide), the chosen size's measurement line, \"please choose a size\" only after a buy button without a size; \"tell me when it is back\" on a crossed-out size or an off-sale product into the PR 36 back-in-stock list, off until PR 71 sends the alert (`pdp.size.notifyBack`); `pdp.size`. 23 Oct (follow-up 62, SIM-F-047): the owner's word under each size box (`pdp.sizeWords`, owner data, empty = off; Bengali pages or both) and \"Your size\" on the size this browser last put in the bag, tops and bottoms apart, with the colours that have it when sold out here (`pdp.usualSize`, off; 180 days; optional preselect)",
     "github": [
+     "#33, 23 Oct",
      "#27, 23 Oct"
     ]
    },
@@ -5797,7 +5807,9 @@
     "routes": [],
     "settings": [
      "pdp.size.notifyBack",
-     "pdp.size"
+     "pdp.size",
+     "pdp.sizeWords",
+     "pdp.usualSize"
     ],
     "code": [],
     "names": [
@@ -6643,8 +6655,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the phone menu's sub-categories (`shell.menuSubs`): a category with sub-categories opens them in place, \"View all\" first, a count on each row, one open at a time; or always shown (the demo's list), or off; screenshots `docs/qa/screenshots/pr-53/`",
+    "note": "the phone menu's sub-categories (`shell.menuSubs`): a category with sub-categories opens them in place, \"View all\" first, a count on each row, one open at a time; or always shown (the demo's list), or off; screenshots `docs/qa/screenshots/pr-53/`. 23 Oct (follow-up 75): a sample sub-category (\"Knit polos\" under Polos, sample seed only) so CI draws the accordion; the device gate's `opened` plans measure the phone menu open with it (below 1024 px; only the open sheet's own controls); the admin product list's category path wraps instead of \"…\"",
     "github": [
+     "#33, 23 Oct",
      "#30, 23 Oct"
     ]
    },
@@ -6656,8 +6669,12 @@
     "code": [
      "docs/qa/screenshots/pr-53/"
     ],
-    "names": [],
-    "tests": []
+    "names": [
+     "opened"
+    ],
+    "tests": [
+     "23 Oct (follow-up 75): a sample sub-category (\"Knit polos\" under Polos, sample seed only) so CI draws the accordion"
+    ]
    },
    "updates": [],
    "mentions": [],
@@ -9571,14 +9588,20 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the address read on the server by the S06 gazetteer, longest name first, a district or postcode settling the band (`readAddress`, `POST /api/checkout/quote`), read only after the settle pause or blur, latest answer wins",
+    "note": "the address read on the server by the S06 gazetteer, longest name first, a district or postcode settling the band (`readAddress`, `POST /api/checkout/quote`), read only after the settle pause or blur, latest answer wins. 23 Oct (follow-up 57): the matching places drop down under the address box while he types (`/api/delivery/suggest`, a listbox with arrows, Enter, Escape and tap, read at once on a pick; `delivery.suggest.enabled`, `delivery.suggest.minChars`); a band's charge shows only when the owner priced it",
     "github": [
+     "#33, 23 Oct",
      "#28, 23 Oct"
     ]
    },
    "builtFacts": {
-    "routes": [],
-    "settings": [],
+    "routes": [
+     "/api/delivery/suggest"
+    ],
+    "settings": [
+     "delivery.suggest.enabled",
+     "delivery.suggest.minChars"
+    ],
     "code": [
      "POST /api/checkout/quote"
     ],
@@ -10005,8 +10028,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "thank-you page `/checkout/thanks/<n>` (noindex) from demo V12.2: thank-you with the first name, promise in hours, order number with Copy, COD due / paid / Pay now / Try again, items and totals as stored, WhatsApp with the order number; only the placing browser can read it; Track, SMS line and account card wait for PR 135 / SMS / PR 130",
+    "note": "thank-you page `/checkout/thanks/<n>` (noindex) from demo V12.2: thank-you with the first name, promise in hours, order number with Copy, COD due / paid / Pay now / Try again, items and totals as stored, WhatsApp with the order number; only the placing browser can read it; Track, SMS line and account card wait for PR 135 / SMS / PR 130. 23 Oct (follow-up 58): the delivery note said back (`thanks.page.noteBack`, on), the trial-at-the-door line while `checkout.tryOn.enabled`, and \"What happens next\" (`thanks.page.nextSteps`, off as in the demo)",
     "github": [
+     "#33, 23 Oct",
      "#28, 23 Oct"
     ]
    },
@@ -10014,7 +10038,11 @@
     "routes": [
      "/checkout/thanks/<n>"
     ],
-    "settings": [],
+    "settings": [
+     "thanks.page.noteBack",
+     "checkout.tryOn.enabled",
+     "thanks.page.nextSteps"
+    ],
     "code": [],
     "names": [],
     "tests": []
@@ -15713,11 +15741,23 @@
     "built": false,
     "date": "",
     "note": "",
-    "github": []
+    "github": [
+     "#33, 23 Oct"
+    ]
    },
    "builtFacts": null,
-   "updates": [],
-   "mentions": [],
+   "updates": [
+    {
+     "date": "23 Oct",
+     "sortKey": 33120,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s11--seo-engine--pr-220238",
+     "text": "**Updated 23 Oct 2026 (follow-up 61, partly built, not counted):** Product, Offer (or AggregateOffer) and BreadcrumbList JSON-LD on the product page from its own price and stock, no rating until real reviews (PR 223), `seo.structuredData`; Organization is still to build (follow-up 110), then the row counts as built."
+    }
+   ],
+   "mentions": [
+    223
+   ],
    "blueprint": [
     {
      "section": "C12.4 Brand, feed and structured data (PR 590, 589, 222, 224)",
