@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 22:35 (Asia/Dhaka)
+# Smoke test · 2026-10-24 00:01 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (84টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (94টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `80f90f73ab47` · after deploy · result **PASS** (84 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `78d42706d95d` · after deploy · result **PASS** (94 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -29,6 +29,11 @@ Site: https://new.extas.com.bd · commit `80f90f73ab47` · after deploy · resul
 | `/help/story` | phone | 200 | `/help/story` | ok | [picture](help-story-phone.jpg) |
 | `/help/contact` | phone | 200 | `/help/contact` | ok | [picture](help-contact-phone.jpg) |
 | `/bn/help/contact` | phone | 200 | `/bn/help/contact` | ok | [picture](bn-help-contact-phone.jpg) |
+| `/search` | phone | 200 | `/search` | ok | [picture](search-phone.jpg) |
+| `/bn/search` | phone | 200 | `/bn/search` | ok | [picture](bn-search-phone.jpg) |
+| `/search?q=polo` | phone | 200 | `/search` | ok | [picture](search-q-polo-phone.jpg) |
+| `/bn/search?q=polo` | phone | 200 | `/bn/search` | ok | [picture](bn-search-q-polo-phone.jpg) |
+| `/search?q=exchange` | phone | 200 | `/search` | ok | [picture](search-q-exchange-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
 | `/admin` | phone | 200 | `/admin/products` | ok | [picture](admin-phone.jpg) |
@@ -71,6 +76,11 @@ Site: https://new.extas.com.bd · commit `80f90f73ab47` · after deploy · resul
 | `/help/story` | desktop | 200 | `/help/story` | ok | [picture](help-story-desktop.jpg) |
 | `/help/contact` | desktop | 200 | `/help/contact` | ok | [picture](help-contact-desktop.jpg) |
 | `/bn/help/contact` | desktop | 200 | `/bn/help/contact` | ok | [picture](bn-help-contact-desktop.jpg) |
+| `/search` | desktop | 200 | `/search` | ok | [picture](search-desktop.jpg) |
+| `/bn/search` | desktop | 200 | `/bn/search` | ok | [picture](bn-search-desktop.jpg) |
+| `/search?q=polo` | desktop | 200 | `/search` | ok | [picture](search-q-polo-desktop.jpg) |
+| `/bn/search?q=polo` | desktop | 200 | `/bn/search` | ok | [picture](bn-search-q-polo-desktop.jpg) |
+| `/search?q=exchange` | desktop | 200 | `/search` | ok | [picture](search-q-exchange-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin/products` | ok | [picture](admin-desktop.jpg) |
 | `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
