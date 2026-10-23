@@ -45,4 +45,14 @@ describe('third storefront batch settings (v21)', () => {
     expect(pdpIconsSchema.safeParse({ ...i, wish: 'photo' }).success).toBe(false);
     expect(pdpIconsSchema.safeParse({ ...i, driftMaxPx: 500 }).success).toBe(false);
   });
+
+  it('PR 70: the floating WhatsApp disc is a switch, off (Note 3.1); never the home page, the product page or the bag when on', () => {
+    const f = shopMoreSettings['shell.fab'].default;
+    expect(f.on).toBe(false);
+    expect(f.pages.home).toBe(false);
+    expect(f.pages.product).toBe(false);
+    expect(f.pages.bag).toBe(false);
+    expect(f).toMatchObject({ side: 'right', place: 'low' });
+    expect(shopMoreSettings['shell.fab'].group).toBe('shell');
+  });
 });
