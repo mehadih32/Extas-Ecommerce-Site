@@ -43,6 +43,7 @@ import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
 import { PdpRail } from './PdpRail';
+import { PdpShare } from './PdpShare';
 import { PdpRecentMark } from './PdpRecentMark';
 import { PdpRoot, type PdpEnv } from './PdpRoot';
 import { PdpRows } from './PdpRows';
@@ -68,6 +69,7 @@ const KEYS = [
   'pdp.fit',
   'pdp.rows',
   'pdp.icons',
+  'pdp.share',
   'catalogue.sizeCharts.diagramFor',
   'policy.exchange.summary',
   'policy.returns.summary',
@@ -353,7 +355,23 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                     wa={railWa}
                     waLabel={t('rail.wa')}
                     heart={icons.wish === 'rail' ? heartWords : null}
-                  />
+                  >
+                    {icons.share ? (
+                      <PdpShare
+                        set={set['pdp.share']}
+                        words={{
+                          open: t('share.open'),
+                          group: t('share.group'),
+                          on: t('share.on'),
+                          copy: t('share.copy'),
+                          copied: t('share.copied'),
+                          pasteInsta: t('share.pasteInsta'),
+                          text: t('share.text', { ...c.vars, name: m.name }),
+                          net: { facebook: t('share.net.facebook'), messenger: t('share.net.messenger'), whatsapp: t('share.net.whatsapp'), instagram: t('share.net.instagram') },
+                        }}
+                      />
+                    ) : null}
+                  </PdpRail>
                 ) : null}
                 <PdpPrice set={pr} freeDelivery={data.freeDelivery} payWords={pay} />
               </div>

@@ -11,5 +11,20 @@
   "rail": {
     "wa": "Ask about this item on WhatsApp",
     "waMessage": "Hi {store}, I have a question about {name}"
+  },
+  "share": {
+    "open": "Share this product",
+    "group": "Share this item",
+    "on": "Share on {network}",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "pasteInsta": "Link copied — paste it in Instagram",
+    "text": "{name} — {store}",
+    "net": {
+      "facebook": "Facebook",
+      "messenger": "Messenger",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram"
+    }
   }
 }

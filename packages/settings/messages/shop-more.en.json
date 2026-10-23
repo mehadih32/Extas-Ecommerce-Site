@@ -11,6 +11,10 @@
     "icons": {
       "label": "Floating buttons beside the product (wishlist, WhatsApp)",
       "help": "A column of round buttons at the right of every product page that drifts a little as the page scrolls, never above the title and never onto the buy bar. Off by default: the heart then sits right after the product's name. Choose where the wishlist heart goes (after the title, in the column, or nowhere), and whether the column has \"Ask about this item on WhatsApp\" (shown only when the store's WhatsApp number is filled in). The drift numbers are in pixels and milliseconds."
+    },
+    "share": {
+      "label": "Share row on the product page",
+      "help": "The \"Share this product\" button in the floating column opens a row of floating tiles: Facebook, Messenger (phones only, it opens the app), WhatsApp, Instagram (the phone's own share sheet, or the link copied) and Copy link. Choose which tiles show and their order. The row closes when a tile is used, on a tap anywhere else, on the button again, or by itself after the time set here (milliseconds). The button shows only when the floating column and its Share button are on."
     }
   }
 }
