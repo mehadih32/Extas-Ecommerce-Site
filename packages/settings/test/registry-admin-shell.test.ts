@@ -1,5 +1,5 @@
-// PR 12 — the admin shell's settings (v33): every key at version 33, never owner data, never sent to the shop;
-// badges cached briefly, the greeting's hours in order.
+// PR 12, 155 — the admin shell's settings (v33): every key at version 33, never owner data, never sent to the shop;
+// badges cached briefly, the Dashboard's three date choices.
 import { describe, expect, it } from 'vitest';
 import { registry } from '../src/registry';
 import { ADMIN_SECTIONS, adminDashboardSchema, adminShellSchema, adminShellSettings } from '../src/registry-admin-shell';
@@ -19,11 +19,15 @@ describe('admin shell settings (v33)', () => {
     expect(ADMIN_SECTIONS).toHaveLength(14);
   });
 
-  it('PR 12: badge cache, search limits and the greeting hours stay in their ranges', () => {
+  it('PR 12: badge cache, search limits and the Dashboard choices stay in their ranges', () => {
     const s = adminShellSettings['admin.shell'].default;
     expect(adminShellSchema.safeParse({ ...s, badgeCacheSeconds: 601 }).success).toBe(false);
     expect(adminShellSchema.safeParse({ ...s, extra: 1 }).success).toBe(false);
     const d = adminShellSettings['admin.dashboard'].default;
+    expect(d.ranges[0]).toBe(1);
+    expect(adminDashboardSchema.safeParse({ ...d, ranges: [7, 7] }).success).toBe(false);
     expect(adminDashboardSchema.safeParse({ ...d, afternoonHour: 18 }).success).toBe(false);
+    expect(adminDashboardSchema.safeParse({ ...d, ranges: [] }).success).toBe(false);
+    expect(adminDashboardSchema.safeParse({ ...d, sparkDays: 1 }).success).toBe(false);
   });
 });

@@ -2,7 +2,7 @@
 // #/admin). Registry version 33. Labels: messages/admin-shell.<lang>.json (`admin.*`).
 //
 // - `admin.shell`: how fresh the sidebar badges are (seconds of cache) and the search palette's limits.
-// - `admin.dashboard`: the hours the Dashboard's greeting changes.
+// - `admin.dashboard`: the Dashboard's date choices (days) and the hours the greeting changes.
 // Nothing here changes money or any order: it is how the admin looks.
 import { z } from 'zod';
 import { setting } from './define';
@@ -41,12 +41,17 @@ export const adminShellSchema = z
 
 export const adminDashboardSchema = z
   .object({
+    /** The date choices above the money tiles, in days (1 = today). The first one opens. */
+    ranges: z.array(z.int().min(1).max(366)).min(1).max(5),
     /** "Good afternoon" from this hour, "Good evening" from the next (store time zone, 24-hour clock). */
     afternoonHour: z.int().min(0).max(23),
     eveningHour: z.int().min(0).max(23),
+    /** How many days the small line in each money tile shows (oldest first, ending today). */
+    sparkDays: z.int().min(2).max(90),
   })
   .strict()
-  .refine((v) => v.afternoonHour < v.eveningHour, { message: 'the afternoon starts before the evening' });
+  .refine((v) => v.afternoonHour < v.eveningHour, { message: 'the afternoon starts before the evening' })
+  .refine((v) => new Set(v.ranges).size === v.ranges.length, { message: 'each date choice once' });
 
 const json = { scope: 'store', valueType: 'JSON', group: 'admin', isOwnerData: false, isPublic: false, version: V } as const;
 
@@ -62,7 +67,7 @@ export const adminShellSettings = {
   'admin.dashboard': setting({
     ...json,
     schema: adminDashboardSchema,
-    default: { afternoonHour: 12, eveningHour: 17 },
+    default: { ranges: [1, 7, 30], afternoonHour: 12, eveningHour: 17, sparkDays: 14 },
     labelKey: 'admin.dashboard.label',
     helpKey: 'admin.dashboard.help',
     sortOrder: 30,

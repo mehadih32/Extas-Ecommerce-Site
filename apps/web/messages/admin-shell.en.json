@@ -214,6 +214,31 @@
       "evening": "Good evening",
       "named": "{greet}, {name}"
     },
+    "range": {
+      "aria": "Date range",
+      "today": "Today",
+      "days": "{n} days",
+      "todayWord": "today",
+      "daysWord": "{n} days",
+      "vsYesterday": "vs yesterday",
+      "vsDays": "vs previous {n} days"
+    },
+    "tile": {
+      "sales": "Delivered sales · {range}",
+      "salesNote": "Delivered orders: {n}",
+      "salesTitle": "Delivered orders only, on the day each was delivered (D3).",
+      "ordered": "Ordered value · {range}",
+      "orderedNote": "Orders placed: {n}",
+      "orderedTitle": "Every placed order, cancelled ones too, on the day it was placed. It is never called sales."
+    },
+    "status": {
+      "estimated": "~ estimated",
+      "provisional": "provisional",
+      "reconciled": "reconciled",
+      "final": "final",
+      "title": "Money status: {status}"
+    },
+    "fresh": "Counted at {time} · Sales count delivered orders only; ordered value counts every placed order",
     "needs": {
       "title": "Needs you now",
       "some": "Lists with work: {n} · tap one to open it",
