@@ -17,7 +17,7 @@ export const RULES: { name: string; re: RegExp }[] = [
   { name: 'SQL sum of order money', re: new RegExp(`\\bsum\\(\\s*(?:\\w+\\.)?"?${MONEY}"?`, 'i') },
   { name: 'reduce over order money', re: new RegExp(`\\.reduce\\([^;]*\\.${MONEY}\\b`) },
   { name: 'running total of order money', re: new RegExp(`\\+=\\s*[\\w.!?]*\\.${MONEY}\\b`) },
-  { name: 'read of a report view (mv_…) outside the metrics package', re: /\bmv_(?:sales|style|ad|district)_\w+/ },
+  { name: 'read of a report view (mv_…) outside the metrics package', re: /\bmv_(?:sales|style|ad|district|kpi)_\w+/ },
 ];
 
 /** Files that add up money for a reason other than a sales figure. Each needs its reason. */
@@ -64,6 +64,8 @@ describe('PR 155 guard: every money figure goes through @extas/metrics', () => {
     expect(findings('revenueMinor: items.reduce((s, i) => s + i.lineTotalMinor, 0),')).toHaveLength(1);
     expect(findings('    r.salesMinor += l.lineTotalMinor;')).toHaveLength(1);
     expect(findings('SELECT * FROM "mv_sales_daily"')).toHaveLength(1);
+    expect(findings('SELECT * FROM "mv_kpi_daily"')).toHaveLength(1);
+    expect(findings('FROM mv_kpi_lines_monthly')).toHaveLength(1);
     // Not money of orders: a bag's quantities, a comment.
     expect(findings('_sum: { quantity: true }')).toEqual([]);
     expect(findings('// sums lineTotalMinor in metrics')).toEqual([]);
