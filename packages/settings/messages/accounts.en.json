@@ -50,6 +50,20 @@
     "photo": {
       "label": "Profile photo",
       "help": "Off by default. When on, Profile lets a customer pick a photo for his account picture. It is cropped square and shrunk on his own phone and kept only in that browser: nothing is uploaded or stored by the shop. The largest file he may pick, and the size it is shrunk to."
+    },
+    "track": {
+      "welcome": {
+        "label": "Welcome panel on the order page",
+        "help": "On by default. When a customer taps \"Track your order\" on the thank-you page, his order page first says that this is his account, made with this order, and that he logs in with his mobile number and a code by SMS (never a password). He can close it."
+      },
+      "late": {
+        "label": "Late flag",
+        "help": "On by default. An order that is not delivered by the end of its delivery band's promise in hours (plus these extra hours) is marked \"Late\" on his order page and in My orders, with \"we are chasing the courier\". A band without a promise in hours is never marked late."
+      },
+      "exactAmount": {
+        "label": "Exact amount for the rider",
+        "help": "Off by default. When on, the order page says exactly how much to pay the rider at the door (Cash on Delivery), or that a paid order needs nothing, so nobody is asked for more. With \"report\" on, a WhatsApp link lets him tell you when he was asked for more."
+      }
     }
   }
 }

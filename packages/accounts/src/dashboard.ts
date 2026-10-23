@@ -2,7 +2,7 @@
 // header's figures, the order cards, the wallet. Everything is read for the signed-in customer only, in his store, as
 // it is stored: an order's state and times (never moved here, CN-022), the wallet's balance and its ledger.
 import { checkStoreId, setting, type AccountsDeps } from './context';
-import { firstNameOf, trackOf, type OrderState, type TrackView } from './pure';
+import { firstNameOf, lateOf, trackOf, type OrderState, type TrackView } from './pure';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 
 const ACTIVE_WALLET = 'ACTIVE';
@@ -39,6 +39,8 @@ export interface OrderCard {
   placedAt: string;
   status: OrderState;
   track: TrackView;
+  /** PR 135 (SIM-F-018): past its band's promise in hours and still on its way. */
+  late: boolean;
   /** Pieces on the order (active lines). */
   items: number;
   totalMinor: number;
@@ -110,9 +112,10 @@ export async function accountSummary(deps: AccountsDeps, input: { storeId: numbe
 }
 
 /** His orders, newest first (`account.lists.orders` of them), each as its card. */
-export async function orderCards(deps: AccountsDeps, input: { storeId: number; customerId: string }): Promise<OrderCard[]> {
+export async function orderCards(deps: AccountsDeps, input: { storeId: number; customerId: string; now?: Date }): Promise<OrderCard[]> {
   checkStoreId(input.storeId);
-  const { orders: take } = await setting(deps, input.storeId, 'account.lists');
+  const [{ orders: take }, lateRule] = await Promise.all([setting(deps, input.storeId, 'account.lists'), setting(deps, input.storeId, 'account.track.late')]);
+  const now = input.now ?? new Date();
   const rows = await deps.db.order.findMany({
     where: orderWhere(input.storeId, input.customerId),
     orderBy: { placedAt: 'desc' },
@@ -128,6 +131,7 @@ export async function orderCards(deps: AccountsDeps, input: { storeId: number; c
       cancelledAt: true,
       returnedAt: true,
       totalMinor: true,
+      deliveryBand: { select: { hoursMax: true } },
       items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productId: true, variantId: true, productName: true, colourName: true, quantity: true } },
     },
   });
@@ -138,6 +142,7 @@ export async function orderCards(deps: AccountsDeps, input: { storeId: number; c
     placedAt: o.placedAt.toISOString(),
     status: o.status,
     track: trackOf(o.status, o),
+    late: lateOf({ status: o.status, placedAt: o.placedAt, hoursMax: o.deliveryBand?.hoursMax }, lateRule, now).late,
     items: o.items.reduce((s, i) => s + i.quantity, 0),
     totalMinor: o.totalMinor,
     lines: o.items.slice(0, CARD_LINES).map((i) => ({ productId: i.productId, nameEn: i.productName, quantity: i.quantity, ...lineLook(colours, i) })),

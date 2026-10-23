@@ -9,6 +9,7 @@
 // PR 134: the order page of My account reads the same receipt — for the browser that placed it, or for the signed-in
 // customer whose order it is (any of his devices) — with the order's stored state and times, the add-on mark of each
 // line and the name it goes to.
+// PR 135: the tracking page adds the courier and its tracking code of the order's booked shipment (as stored).
 import type { OrderAccountKind } from '@extas/accounts';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { CheckoutDeps } from './context';
@@ -78,6 +79,8 @@ export interface Receipt {
   /** PR 134: the order's stored state (Prisma OrderStatus) and its times. */
   status: string;
   times: ReceiptTimes;
+  /** PR 135: the courier carrying it and its tracking code, once a shipment is booked (null before). */
+  shipment: { courier: string; tracking: string | null } | null;
 }
 
 const ACCOUNT_KINDS: readonly OrderAccountKind[] = ['created', 'existing', 'signedIn'];
@@ -94,6 +97,7 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
       deliveryBand: { select: { nameEn: true, nameBn: true, hoursMin: true, hoursMax: true } },
       payments: { where: { purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, take: 1 },
       events: { where: { type: ORDER_EVENTS.placed }, orderBy: { createdAt: 'asc' }, take: 1, select: { data: true } },
+      shipments: { where: { isExchangeLeg: false }, orderBy: { createdAt: 'desc' }, take: 1, select: { trackingCode: true, consignmentId: true, courierAccount: { select: { name: true } } } },
     },
   });
   const placedHere = !!req.visitorId && o?.visitorId === req.visitorId;
@@ -145,6 +149,7 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
       cancelledAt: o.cancelledAt?.toISOString() ?? null,
       returnedAt: o.returnedAt?.toISOString() ?? null,
     },
+    shipment: o.shipments[0] ? { courier: o.shipments[0].courierAccount.name, tracking: o.shipments[0].trackingCode ?? o.shipments[0].consignmentId } : null,
     number: o.number,
     firstName: (o.customerName ?? '').trim().split(/\s+/)[0] ?? '',
     phone: phone.ok ? phone.nice : o.phone,

@@ -215,3 +215,37 @@
 .shop .ord-pay { padding: 12px 14px; }
 .shop .brandc { color: var(--brand); }
 .shop .ord-page .acc-start { min-height: 44px; }
+
+/* ---- PR 135 · the tracking steps, the late flag, the welcome panel, the exact amount (demo ord_track, ord-welcome) ---- */
+.shop .tl-dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); flex-shrink: 0; position: relative; z-index: 1; }
+.shop .tl-dot.done { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.shop .tl-dot.now { border: 2px solid var(--brand); color: var(--brand); }
+.shop .ord-track { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; }
+.shop .ord-st { display: flex; gap: 12px; position: relative; padding-bottom: 18px; min-width: 0; }
+.shop .ord-st:last-child { padding-bottom: 0; }
+.shop .ord-st::before { content: ''; position: absolute; left: 11px; top: 28px; bottom: 3px; width: 2px; background: var(--line); }
+.shop .ord-st.ln::before { background: var(--brand); }
+.shop .ord-st:last-child::before { display: none; }
+.shop .ord-st .lbl { font-size: 14px; font-weight: 600; color: var(--ink); }
+.shop .ord-st.todo .lbl { color: var(--muted); font-weight: 500; }
+@media (min-width: 1024px) {
+  .shop .ord-track { flex-direction: row; margin-top: 26px; }
+  .shop .ord-st { flex: 1; flex-direction: column; gap: 10px; padding: 0 12px 0 0; }
+  .shop .ord-st::before { left: 32px; right: 6px; top: 11px; bottom: auto; width: auto; height: 2px; }
+}
+.shop .ord-latec { color: var(--sale); font-weight: 600; }
+.shop .ord-late { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--sale); border-radius: var(--radius); padding: 12px 14px; background: var(--surface); }
+.shop .ord-late-i { color: var(--sale); flex-shrink: 0; display: inline-flex; margin-top: 1px; }
+.shop .ord-late .link, .shop .ord-exact .link { display: inline-flex; align-items: center; min-height: 44px; margin: 0 0 -10px; }
+.shop .ord-welcome { padding: 13px 14px; border: 1.5px solid var(--brand); background: var(--brand-tint); }
+@media (min-width: 1024px) { .shop .ord-welcome { padding: 16px; } }
+.shop .ord-wic { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); color: var(--brand); flex-shrink: 0; }
+@media (min-width: 1024px) { .shop .ord-wic { width: 40px; height: 40px; } }
+.shop .ord-welcome .h3 { font-size: 15px; }
+.shop .ord-wtext { margin: 3px 0 0; line-height: 1.45; }
+.shop .ord-welcome .iconbtn { margin: -8px -8px 0 0; }
+.shop .ord-cred { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; background: var(--surface); border-radius: var(--radius); padding: 10px 12px; margin-top: 10px; }
+.shop .ord-cred > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shop .ord-cred b { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.shop .ord-exact { display: flex; gap: 10px; align-items: flex-start; border: 1px dashed var(--brand-line); border-radius: var(--radius); padding: 10px 12px; }
+.shop .ord-exact .brandc { display: inline-flex; flex-shrink: 0; margin-top: 1px; }

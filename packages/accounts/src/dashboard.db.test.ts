@@ -56,6 +56,20 @@ describe.skipIf(!HAS_TEST_DB)('PR 131 · My account', () => {
     expect(await accountSummary(f.deps(), { storeId: f.B, customerId: me.id })).toBeNull();
   });
 
+  it('PR 135 (SIM-F-018): an order past its band promise in hours is flagged late on its card', async () => {
+    const band = await f.t.prisma.deliveryBand.create({ data: { storeId: f.A, key: 'test-band', nameEn: 'Test band', chargeMinor: 0, hoursMin: 24, hoursMax: 72, enabled: true } });
+    const placedAt = new Date('2026-10-20T06:00:00Z');
+    await f.order({ customerId: me.id, number: 'T-1135', placedAt, status: 'HANDED_OVER', bandId: band.id, times: { confirmedAt: placedAt, packedAt: placedAt, handedOverAt: placedAt } });
+    const four = await orderCards(f.deps(), { storeId: f.A, customerId: me.id, now: new Date('2026-10-24T06:00:00Z') });
+    expect(four.find((c) => c.number === 'T-1135')).toMatchObject({ status: 'HANDED_OVER', late: true });
+    const two = await orderCards(f.deps(), { storeId: f.A, customerId: me.id, now: new Date('2026-10-22T06:00:00Z') });
+    expect(two.find((c) => c.number === 'T-1135')?.late).toBe(false);
+    // a delivered order is never late, nor one whose band promises no hours
+    expect(four.find((c) => c.number === 'T-1001')?.late).toBe(false);
+    expect(four.find((c) => c.number === 'T-1002')?.late).toBe(false);
+    await f.t.prisma.order.updateMany({ where: { number: 'T-1135' }, data: { archivedAt: new Date() } });
+  });
+
   it('the wallet: the balance and the ledger, newest first, with the order number', async () => {
     const w = await f.t.prisma.walletAccount.create({ data: { storeId: f.A, customerId: me.id, balanceMinor: 30_000, status: 'ACTIVE' } });
     const o = await f.t.prisma.order.findFirstOrThrow({ where: { number: 'T-1001' } });
