@@ -80,6 +80,22 @@ export const PERMISSIONS = {
   // print or send it. Not a `.read` key on purpose: the read-only smoke check account never gets customers' details.
   // The order screens of S05 add their own keys.
   'orders.invoice': { group: 'orders' },
+  // S05 · PR 138, 144, 145, 147, 153 — orders (BACKEND-ARCHITECTURE §5.3, §9.10): see orders and their timeline; confirm
+  // a new order; put an order on hold and release it (with a reason); cancel an order before a courier is booked (with
+  // a reason; a paid order's cancel only records a refund request, never a payout); cancel after booking and record the
+  // courier's answer (D5); approve or refuse a customer's cancel request; write notes and internal flags; see and decide
+  // the duplicate-order review queue; put two orders of one customer in one parcel. No key here moves money, changes a
+  // price, a discount or COD, or blocks anyone (CLAUDE.md rule 6). A key is never the start of another key (labels nest).
+  'orders.read': { group: 'orders' },
+  'orders.confirm': { group: 'orders' },
+  'orders.hold': { group: 'orders' },
+  'orders.cancel': { group: 'orders' },
+  'orders.cancelAfterBooking': { group: 'orders' },
+  'orders.cancelRequests': { group: 'orders' },
+  'orders.notes': { group: 'orders' },
+  'orders.risk.read': { group: 'orders' },
+  'orders.risk.decide': { group: 'orders' },
+  'orders.merge': { group: 'orders' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

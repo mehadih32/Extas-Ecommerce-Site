@@ -130,6 +130,7 @@
     "status": {
       "DRAFT": "Not placed",
       "PLACED": "Placed",
+      "AWAITING_ADVANCE": "Waiting for the advance",
       "CONFIRMED": "Confirmed",
       "ON_HOLD": "On hold",
       "PROCESSING": "Being prepared",

@@ -1,0 +1,104 @@
+{
+  "groups": {
+    "orders": "Orders"
+  },
+  "orders": {
+    "cancel": {
+      "reasons": {
+        "label": "Cancel reasons (staff)",
+        "help": "The words for each cancel reason the team picks when it cancels an order. The reasons themselves are fixed, so reports can count them; you can change their words in both languages. \"Other\" always needs a note."
+      },
+      "customer": {
+        "label": "Customer cancel",
+        "help": "cutoff: until when the customer can cancel his order himself with one tap — \"confirmed\" (the default): until you confirm it; \"packed\": until it is packed; \"placed\": never with one tap, only by asking; \"off\": the customer cannot cancel or ask. requests: after the cut-off he can ask to cancel until a courier is booked; the team approves or refuses the request. A paid order's cancel only records a refund request for you; no money moves by itself."
+      },
+      "customerReasons": {
+        "label": "Cancel reasons (customer)",
+        "help": "The reasons the customer can pick when he cancels or asks to cancel. Add, remove or reword them in both languages."
+      }
+    },
+    "hold": {
+      "reasons": {
+        "label": "Hold reasons",
+        "help": "The reasons the team picks when it puts an order on hold. Support sees the reason and the note on the order. A held order keeps its stock and is never cancelled by itself."
+      },
+      "reviewHours": {
+        "label": "Check a held order after (hours)",
+        "help": "When an order has been on hold this many hours, a call task asks a person to look at it again. It is never cancelled by itself. 0 = off."
+      }
+    },
+    "advance": {
+      "waitHours": {
+        "label": "Wait for an advance (hours)",
+        "help": "How long an order waits for its advance payment before a person is asked to call the customer. It is never cancelled by itself. 0 = no deadline."
+      }
+    },
+    "duplicates": {
+      "label": "Duplicate orders",
+      "help": "enabled: every new order is compared with the same phone number's open orders of the last \"lookbackDays\" days. The same item (style and colour) is a high match, the same style in another colour medium, the same category low. From \"reviewFrom\" up, the order waits in the review queue and is confirmed only after a person decides (not a duplicate, cancel it, hold it, put both in one parcel, or ask the customer); below it, the order only shows a note. autoHold: a high match goes on hold by itself (off by default). A real order is never blocked."
+    },
+    "flags": {
+      "list": {
+        "label": "Internal flags",
+        "help": "Flags the team can put on an order, such as \"Call before sending\". The customer never sees them."
+      }
+    },
+    "notes": {
+      "maxChars": {
+        "label": "Longest order note (characters)",
+        "help": "How long one note on an order may be."
+      }
+    },
+    "list": {
+      "pageSize": {
+        "label": "Orders per page",
+        "help": "How many orders the order list loads at a time (at most 100)."
+      }
+    },
+    "commands": {
+      "replayHours": {
+        "label": "Remember a repeated press (hours)",
+        "help": "A button pressed twice (a slow network, a double tap) is done once: the order service keeps each command's answer this many hours and gives it back for the same request."
+      }
+    }
+  },
+  "defaults": {
+    "orders": {
+      "cancelReasons": {
+        "CUSTOMER_BEFORE_CONFIRM": "Customer cancelled before confirming",
+        "CUSTOMER_AFTER_CONFIRM": "Customer asked to cancel after confirming",
+        "CUSTOMER_CHANGE_AFTER_BOOKING": "Customer wants a change after booking",
+        "ADVANCE_NOT_PAID": "Advance not paid",
+        "RISK_DECLINED": "Declined after risk review",
+        "OUT_OF_STOCK": "Out of stock",
+        "DUPLICATE_ORDER": "Duplicate order",
+        "ADDRESS_UNREACHABLE": "Address unreachable",
+        "OTHER": "Other (note required)"
+      },
+      "customerReasons": {
+        "changed-mind": "Changed my mind",
+        "found-cheaper": "Found it cheaper",
+        "by-mistake": "Ordered by mistake",
+        "too-slow": "Delivery takes too long",
+        "other": "Another reason"
+      },
+      "holdReasons": {
+        "customer-wait": "Customer asked to wait",
+        "waiting-stock": "Waiting for stock",
+        "address-unclear": "Address unclear",
+        "payment-check": "Payment check",
+        "defective-item": "Item defective, waiting for a replacement",
+        "no-answer": "No answer on the phone",
+        "possible-duplicate": "Possible duplicate order",
+        "other": "Other"
+      },
+      "flags": {
+        "call-first": "Call before sending",
+        "check-size": "Check the size with the customer",
+        "vip": "Valued customer",
+        "complaint-before": "Had a complaint before",
+        "special-packing": "Special packing"
+      }
+    }
+  }
+}

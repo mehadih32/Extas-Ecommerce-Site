@@ -417,7 +417,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
 
 /** The visitor's own order by its number (anything else is "no such order"). */
 async function ownOrder(db: Db, storeId: number, visitorId: string, number: string) {
-  const o = await db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { id: true, visitorId: true, idempotencyKey: true, flags: true, paidMinor: true, currency: true } });
+  const o = await db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { id: true, visitorId: true, idempotencyKey: true, flags: true, paidMinor: true, currency: true, status: true } });
   if (!o || o.visitorId !== visitorId) throw new CheckoutError('NOT_FOUND', 'no such order for this visitor', ['number']);
   return o;
 }
@@ -443,8 +443,10 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
   const d = parse(payActionSchema, req.input, 'payment');
   const now = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
+    const mine = await ownOrder(tx, storeId, req.visitorId, d.number);
+    await tx.$queryRaw`SELECT 1 FROM "Order" WHERE "id" = ${mine.id}::uuid FOR UPDATE`;
+    // read again under the lock: an order command (S05, @extas/orders) may have changed it in between
     const o = await ownOrder(tx, storeId, req.visitorId, d.number);
-    await tx.$queryRaw`SELECT 1 FROM "Order" WHERE "id" = ${o.id}::uuid FOR UPDATE`;
     const last = await tx.payment.findFirst({ where: { storeId, orderId: o.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
     if (!last) throw new CheckoutError('NOT_FOUND', 'this order has no payment to make', ['number']);
     const event = (type: string, data: Record<string, unknown>) => tx.orderEvent.create({ data: { storeId, orderId: o.id, type, actorType: 'CUSTOMER', source: CHECKOUT_SOURCE, data: { paymentId: last.id, provider: MOCK_PROVIDER, ...data } } });
@@ -455,7 +457,7 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
       if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
       if (!open) throw new CheckoutError('CART_NOT_OPEN', 'this payment is closed; try again makes a new one', ['action']);
       await tx.payment.update({ where: { id: last.id }, data: { status: 'PAID', paidAt: now, providerTrxId: `${MOCK_PROVIDER}-${randomBytes(6).toString('hex')}` } });
-      await tx.order.update({ where: { id: o.id }, data: { paidMinor: o.paidMinor + last.amountMinor, flags: without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed) } });
+      await tx.order.update({ where: { id: o.id }, data: { paidMinor: o.paidMinor + last.amountMinor, flags: without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), version: { increment: 1 } } });
       await event(ORDER_EVENTS.paid, { amountMinor: last.amountMinor });
       return { number: d.number, status: 'PAID', next: 'thanks' };
     }
@@ -463,20 +465,21 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
       if (last.status === 'FAILED') return { number: d.number, status: 'FAILED', next: 'thanks' };
       if (!open) throw new CheckoutError('CART_NOT_OPEN', 'this payment is closed', ['action']);
       await tx.payment.update({ where: { id: last.id }, data: { status: 'FAILED' } });
-      await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentFailed] } });
+      await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentFailed], version: { increment: 1 } } });
       await event(ORDER_EVENTS.failed, { amountMinor: last.amountMinor });
       const task = await tx.callTask.findFirst({ where: { storeId, orderId: o.id, reason: CALL_REASONS.paymentFailed, status: { in: ['OPEN', 'IN_PROGRESS'] } }, select: { id: true } });
       if (!task) await tx.callTask.create({ data: { storeId, orderId: o.id, reason: CALL_REASONS.paymentFailed } });
       return { number: d.number, status: 'FAILED', next: 'thanks' };
     }
-    // retry
+    // retry — never on a cancelled order (its payment was closed by the cancel, PR 144)
+    if (o.status === 'CANCELLED') throw new CheckoutError('CART_NOT_OPEN', 'this order is cancelled', ['number']);
     if (open) return { number: d.number, status: 'INITIATED', next: 'pay' };
     if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
     const tries = await tx.payment.count({ where: { storeId, orderId: o.id, purpose: 'ORDER' } });
     await tx.payment.create({
       data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: 'ORDER', status: 'INITIATED', amountMinor: last.amountMinor, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}` },
     });
-    await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentPending] } });
+    await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentPending], version: { increment: 1 } } });
     await event(ORDER_EVENTS.retry, { tries: tries + 1 });
     return { number: d.number, status: 'INITIATED', next: 'pay' };
   }, TX);

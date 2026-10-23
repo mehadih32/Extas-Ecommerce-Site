@@ -2744,6 +2744,27 @@ model Order {
   archivedAt               DateTime?          @db.Timestamptz(3)
   createdAt                DateTime           @default(now()) @db.Timestamptz(3)
   updatedAt                DateTime           @updatedAt @db.Timestamptz(3)
+  /// PR 138 (§7.1 [ver], §6.6 S10) — optimistic locking: every order command adds one; a command sent with an older
+  /// version is refused with STALE. The status itself is written only by @extas/orders (one order service).
+  version                  Int                @default(0)
+  /// PR 153 — the state the order was held from (release goes back to it) and the hold's reason code
+  /// (`orders.hold.reasons`); `holdReason` keeps the note support reads.
+  holdFromStatus           OrderStatus?
+  holdReasonCode           String?
+  /// PR 144 — the staff's note on a cancel (required for the reason OTHER); the code is `cancelReasonCode`.
+  cancelNote               String?
+  /// PR 144 (CN-020 (5)) — the customer asked to cancel after the one-tap cut-off, until booking; staff decide it.
+  cancelRequestedAt        DateTime?          @db.Timestamptz(3)
+  cancelRequestReason      String?
+  /// PR 144 (§6.5.7, D5) — cancel after booking asked and waiting for the courier's answer; "courier could not cancel".
+  cancelPending            Boolean            @default(false)
+  customerWantsChange      Boolean            @default(false)
+  /// PR 138 (§6.5.1, §6.6 S9; F-043) — AWAITING_ADVANCE: the amount the advance needs and when it is due (null: no
+  /// deadline). Past it a person is asked to call; the order is never cancelled by itself.
+  advanceRequiredMinor     Int?
+  advanceDueAt             DateTime?          @db.Timestamptz(3)
+  /// PR 147 — the staff's internal flags on the order (keys of `orders.flags.list`); never shown to the customer.
+  internalFlags            String[]           @default([])
 
   items     OrderItem[]
   events    OrderEvent[]
@@ -2772,6 +2793,8 @@ model Order {
 enum OrderStatus {
   DRAFT
   PLACED
+  /// PR 138 (§6.5.1, F-043): the risk level or a gift needs an advance first.
+  AWAITING_ADVANCE
   CONFIRMED
   ON_HOLD
   PROCESSING
@@ -2863,6 +2886,8 @@ model OrderEvent {
   actorId    String?
   /// customer dashboard / admin / Telegram / support / system (B1.10).
   source     String
+  /// PR 138 — the reason code of the change (cancel, hold, decision), when it has one; the note is `message`.
+  reasonCode String?
   createdAt  DateTime     @default(now()) @db.Timestamptz(3)
 
   @@index([orderId, createdAt])
@@ -2890,6 +2915,9 @@ model OrderNote {
   archivedAt DateTime? @db.Timestamptz(3)
   createdAt  DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  // PR 147: an order's notes, newest first.
+  @@index([orderId, createdAt])
 }
 
 /// @stage S06 · PR 522; B1.12 — several orders from one identity grouped into one parcel.
@@ -3572,6 +3600,13 @@ model Refund {
   completedAt       DateTime?    @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
+  /// PR 144 (§6.6 S1; F-041) — what made the request (CANCEL, …) and its key: one request per cause, never two. A
+  /// request moves no money; approving and paying it is the owner's (CLAUDE.md rule 6, PR 172).
+  source            String?
+  idempotencyKey    String?
+
+  @@unique([storeId, idempotencyKey])
+  @@index([storeId, orderId])
 }
 
 enum RefundStatus {
@@ -3668,32 +3703,39 @@ model CourierRateCard {
 
 /// @stage S08 · PR 176, 179, 180, 184 — a booked parcel. Reprinting a sticker never creates a second shipment.
 model Shipment {
-  id                String         @id @default(uuid(7)) @db.Uuid
-  storeId           Int
-  store             Store          @relation(fields: [storeId], references: [id])
-  orderId           String         @db.Uuid
-  order             Order          @relation(fields: [orderId], references: [id])
-  courierAccountId  String         @db.Uuid
-  courierAccount    CourierAccount @relation(fields: [courierAccountId], references: [id])
-  consignmentId     String?
-  trackingCode      String?
-  status            ShipmentStatus @default(BOOKING)
-  providerStatus    String?
-  chargeMinor       Int?
-  codAmountMinor    Int            @default(0)
-  codCollectedMinor Int?
-  weightGrams       Int?
-  isExchangeLeg     Boolean        @default(false)
-  exchangeId        String?        @db.Uuid
-  labelPrintCount   Int            @default(0)
-  bookedAt          DateTime?      @db.Timestamptz(3)
-  pickedAt          DateTime?      @db.Timestamptz(3)
-  deliveredAt       DateTime?      @db.Timestamptz(3)
-  returnedAt        DateTime?      @db.Timestamptz(3)
-  idempotencyKey    String
-  erpSyncedAt       DateTime?      @db.Timestamptz(3)
-  createdAt         DateTime       @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime       @updatedAt @db.Timestamptz(3)
+  id                  String         @id @default(uuid(7)) @db.Uuid
+  storeId             Int
+  store               Store          @relation(fields: [storeId], references: [id])
+  orderId             String         @db.Uuid
+  order               Order          @relation(fields: [orderId], references: [id])
+  courierAccountId    String         @db.Uuid
+  courierAccount      CourierAccount @relation(fields: [courierAccountId], references: [id])
+  consignmentId       String?
+  trackingCode        String?
+  status              ShipmentStatus @default(BOOKING)
+  providerStatus      String?
+  chargeMinor         Int?
+  codAmountMinor      Int            @default(0)
+  codCollectedMinor   Int?
+  weightGrams         Int?
+  isExchangeLeg       Boolean        @default(false)
+  exchangeId          String?        @db.Uuid
+  labelPrintCount     Int            @default(0)
+  bookedAt            DateTime?      @db.Timestamptz(3)
+  pickedAt            DateTime?      @db.Timestamptz(3)
+  deliveredAt         DateTime?      @db.Timestamptz(3)
+  returnedAt          DateTime?      @db.Timestamptz(3)
+  idempotencyKey      String
+  erpSyncedAt         DateTime?      @db.Timestamptz(3)
+  createdAt           DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 144 (§6.5.7, §6.6 S18; D5) — cancel after booking: asked (CANCEL_REQUESTED), then the courier's answer as a
+  /// separate step: who recorded it, when, the courier's reference, and the outcome (CONFIRMED or REFUSED).
+  cancelRequestedAt   DateTime?      @db.Timestamptz(3)
+  cancelConfirmedById String?        @db.Uuid
+  cancelConfirmedAt   DateTime?      @db.Timestamptz(3)
+  cancelRef           String?
+  cancelOutcome       String?
 
   events ShipmentEvent[]
 
@@ -3716,6 +3758,8 @@ enum ShipmentStatus {
   RETURNED
   CANCELLED
   BOOKING_FAILED
+  /// PR 144 (§6.5.7, D5): cancel after booking asked; staff phone the courier and record the answer.
+  CANCEL_REQUESTED
 }
 
 /// @stage S08 · PR 184 — a courier status event with its time and the rider's note.

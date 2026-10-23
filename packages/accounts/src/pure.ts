@@ -6,6 +6,7 @@
 export type OrderState =
   | 'DRAFT'
   | 'PLACED'
+  | 'AWAITING_ADVANCE'
   | 'CONFIRMED'
   | 'ON_HOLD'
   | 'PROCESSING'
@@ -25,6 +26,8 @@ export type TrackStep = (typeof TRACK_STEPS)[number];
 const REACHED: Record<OrderState, number> = {
   DRAFT: 0,
   PLACED: 0,
+  // S05 · PR 138: waiting for the advance (F-043) — still at "placed" for the customer
+  AWAITING_ADVANCE: 0,
   ON_HOLD: 0,
   CONFIRMED: 1,
   PROCESSING: 1,
