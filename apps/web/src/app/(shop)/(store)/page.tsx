@@ -17,10 +17,13 @@ import { HomeHero } from '@/components/shop/home/HomeHero';
 import { HomeHeroSlides } from '@/components/shop/home/HomeHeroSlides';
 import { HomeNewIn } from '@/components/shop/home/HomeNewIn';
 import { HomeReviews } from '@/components/shop/home/HomeReviews';
+import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
+import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from '@/lib/shop/catalogue';
 import { shopContext, type ShopContext } from '@/lib/shop/context';
 import { heroSlidePicks, homeSectionsOn, type HeroPick } from '@/lib/shop/home-model';
 import { shopMetadata } from '@/lib/shop/meta';
+import { hrefIn } from '@/lib/shop/lang';
 import { homeReviews } from '@/lib/shop/reviews';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,8 +41,10 @@ async function heroPicks(c: ShopContext): Promise<HeroPick[]> {
   return heroSlidePicks(await heroCategoryCards(c.storeId, slugs, set.perCategory, set.inStockOnly), set.count, set.perCategory);
 }
 
-export default async function Home() {
-  const c = await shopContext();
+type Search = Record<string, string | string[] | undefined>;
+
+export default async function Home(props: { searchParams: Promise<Search> }) {
+  const [c, search] = await Promise.all([shopContext(), props.searchParams]);
   const on = homeSectionsOn(c.s['home.sections']);
   const want = (id: HomeSectionId) => on.includes(id);
   const newIn = c.s['home.newIn'];
@@ -57,6 +62,23 @@ export default async function Home() {
     reviews: () => <HomeReviews c={c} row={reviews} />,
   };
   const body = on.map((id) => <Fragment key={id}>{draw[id]?.()}</Fragment>);
+  // follow-up 21: the cards' back view and Quick add (computer with a mouse), and the added-to-bag panel it opens
+  const desk = (
+    <>
+      {want('new-in') && cards.length ? <CardDeskMount c={c} /> : null}
+      <AddedSlot c={c} added={search.added} closeHref={closeHrefOf(hrefIn(c.lang, '/'), search)} />
+    </>
+  );
   // H9 · the sliding rows fade at both edges unless the owner switched it off
-  return c.s['home.rowFade'] ? <>{body}</> : <div className="hm-nofade" style={{ display: 'contents' }}>{body}</div>;
+  return c.s['home.rowFade'] ? (
+    <>
+      {body}
+      {desk}
+    </>
+  ) : (
+    <div className="hm-nofade" style={{ display: 'contents' }}>
+      {body}
+      {desk}
+    </div>
+  );
 }

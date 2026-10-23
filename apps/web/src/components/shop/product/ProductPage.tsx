@@ -32,6 +32,7 @@ import { toModel } from '@/lib/shop/product-view';
 import { COLOUR_QUERY, ROUTES } from '@/lib/shop/routes';
 import { categoryName } from '@/lib/shop/shell-model';
 import { AddedPanel } from '../bag/AddedPanel';
+import { CardDeskMount } from '../CardDeskMount';
 import '../bag/bag.css';
 import { HeartButton } from '../HeartButton';
 import { Bold } from './Bold';
@@ -425,6 +426,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
           />
         ) : null}
         <PdpEffects />
+        {/* follow-up 21: the rows' cards get the back view and Quick add on a computer with a mouse */}
+        <CardDeskMount c={c} />
       </div>
     </PdpRoot>
   );

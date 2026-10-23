@@ -806,6 +806,25 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w { transition: transform 0.15s; } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w:hover { transform: translateY(-2px); } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w .pcard:hover { transform: none; } }
+/* PR 41 · follow-up 21 (D-013, demo r12-zzdesk-a.css §10): the back view and Quick add on a card, mouse only (CardDesk) */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-alt { position: absolute; inset: 0px; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-alt > .pimg { position: absolute; inset: 0px; border-radius: 0px; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w:hover .pcard-alt { opacity: 1; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa { position: absolute; left: 8px; right: 8px; top: calc(var(--qa-bottom, 60%) - 50px); height: 42px; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 0px 6px 0px 12px; border-radius: 10px; background: color-mix(in srgb, var(--surface) 94%, transparent); box-shadow: rgba(0, 0, 0, 0.14) 0px 6px 18px; opacity: 0; transform: translateY(6px); transition: opacity 0.16s ease, transform 0.16s ease; pointer-events: none; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w:hover .pcard-qa { opacity: 1; transform: none; pointer-events: auto; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w:has(:focus-visible) .pcard-qa { opacity: 1; transform: none; pointer-events: auto; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-w:has(:focus-visible) .pcard-alt { opacity: 1; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-l { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s { display: flex; gap: 4px; margin-left: auto; min-width: 0px; overflow: hidden; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b { min-width: 32px; width: auto; height: 30px; padding: 0px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); cursor: pointer; flex: 0 0 auto; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b:hover { border-color: var(--ink); background: var(--ink); color: var(--surface); } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b:disabled { opacity: 0.5; cursor: progress; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight { padding: 0px 6px; gap: 4px; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight .pcard-qa-l { display: none; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight .pcard-qa-s { margin-left: 0px; flex: 1 1 0%; justify-content: space-between; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight .pcard-qa-s .pcard-qa-b { min-width: 28px; padding: 0px 4px; } }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-more { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 30px; padding: 0px 6px; border-radius: 7px; font-size: 12.5px; font-weight: 700; color: var(--ink) !important; background: var(--surface2); } }
+@media (prefers-reduced-motion: reduce) { .shop .pcard-alt, .shop .pcard-qa { transition: none; } }
 @media (min-width: 1024px) { .shop .nf-d { margin-top: 36px; color: var(--ink); } }
 @media (min-width: 1024px) { .shop .nf-search { display: flex; gap: 10px; max-width: 560px; margin: 0px auto; } }
 @media (min-width: 1024px) { .shop .nf-search .input { flex: 1 1 0%; } }
