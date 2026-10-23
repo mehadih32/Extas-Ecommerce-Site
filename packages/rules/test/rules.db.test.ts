@@ -437,6 +437,32 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     expect(await code(archiveCoupon(deps(), as(publisher), c.id, { archived: true }))).toBe('RULE_ACTIVE');
   });
 
+  it('PR 112 (S04), SIM-F-009: a coupon says who may use it — a public code works for a guest, a members-only one says so', async () => {
+    const rule = await createRule(deps(), as(writer), { templateId: 'coupon', key: 'audience-coupon' });
+    await saveDraft(deps(), as(writer), rule.id, { content: withValues(rule.live!, { amountOff: 5000, minOrder: 10000 }, { status: 'ACTIVE' }) });
+    await publishRule(deps(), as(owner), rule.id);
+    const open = await createCoupon(deps(), as(writer), { code: 'sample-all', ruleId: rule.id });
+    expect(open.audience).toBe('ALL'); // the default: existing and new codes stay open to guests
+    const members = await createCoupon(deps(), as(writer), { code: 'sample-members', ruleId: rule.id, audience: 'MEMBERS' });
+    const guests = await createCoupon(deps(), as(writer), { code: 'sample-guests', ruleId: rule.id, audience: 'GUESTS' });
+    expect(await code(createCoupon(deps(), as(writer), { code: 'sample-bad', ruleId: rule.id, audience: 'VIP' }))).toBe('INVALID_INPUT');
+    for (const c of [open, members, guests]) await setCouponEnabled(deps(), as(owner), c.id, { enabled: true });
+    const member = '00000000-0000-4000-8000-000000000112';
+    const check = (code: string, customerId: string | null) => checkCoupon(t.prisma, { storeId: A, code, customerId, now: clock });
+    expect((await check('SAMPLE-ALL', null)).ok).toBe(true);
+    expect((await check('SAMPLE-ALL', member)).ok).toBe(true);
+    expect(await check('SAMPLE-MEMBERS', null)).toMatchObject({ ok: false, reason: 'MEMBERS_ONLY' });
+    expect((await check('SAMPLE-MEMBERS', member)).ok).toBe(true);
+    expect((await check('SAMPLE-GUESTS', null)).ok).toBe(true);
+    expect(await check('SAMPLE-GUESTS', member)).toMatchObject({ ok: false, reason: 'GUESTS_ONLY' });
+    // The engine prices a guest's bag with the public code and without the members-only one.
+    const guestQuote = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], couponCode: 'sample-all' });
+    expect(guestQuote.discountMinor).toBeGreaterThanOrEqual(5000);
+    const refused = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], couponCode: 'sample-members' });
+    expect(refused.coupon).toMatchObject({ ok: false, reason: 'MEMBERS_ONLY' });
+    for (const c of [open, members, guests]) await setCouponEnabled(deps(), as(owner), c.id, { enabled: false });
+  });
+
   it('PR 213: the struck "was" price shows only when switched on, from the MRP or the real history', async () => {
     const d = await createRule(deps(), as(writer), { templateId: 'discount', key: 'polo-sale' });
     await saveDraft(deps(), as(writer), d.id, { content: withValues(d.live!, { percentOff: 20 }, { status: 'ACTIVE', startsAt: '2026-10-15T00:00:00.000Z', endsAt: '2026-10-31T00:00:00.000Z', scope: { include: [{ type: 'category', id: ids.polos! }], exclude: [] } }) });
