@@ -9,6 +9,7 @@ import { HAS_TEST_DB } from '@extas/auth/testing';
 import { findBag } from '@extas/cart';
 import { captureDraft, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, type CheckoutRequest } from './quote';
+import { orderReceipt } from './receipt';
 import { setUpCheckout, type CheckoutFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -247,6 +248,47 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       } finally {
         f.overrides.delete('checkout.capture.enabled');
       }
+    });
+  });
+
+  describe('PR 126 · the thank-you page\'s receipt', () => {
+    it('Cash on Delivery: the number, the band\'s promise, the lines and what is due at the door — for his browser only', async () => {
+      const s = await shown('ty-cod');
+      const r = await s.place();
+      const rc = await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number });
+      expect(rc).toMatchObject({
+        number: r.number,
+        firstName: 'Test',
+        phone: '01700-000125',
+        band: { nameEn: expect.any(String), hoursMin: 24, hoursMax: 48 },
+        addressUnclear: false,
+        deliveryMinor: 8_000,
+        totalMinor: s.q.totals.totalMinor,
+        pay: { kind: 'cod', dueMinor: s.q.totals.dueMinor },
+      });
+      expect(rc!.lines).toMatchObject([{ nameEn: s.q.bag.items[0]!.nameEn, quantity: 1, amountMinor: s.q.bag.items[0]!.lineMinor, colour: { key: 'sky' }, size: 'M' }]);
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', number: r.number })).toBeNull();
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: 'NO-SUCH' })).toBeNull();
+    });
+
+    it('a prepaid order: due with "Pay now", failed with "Try again", then paid (marked as the test payment)', async () => {
+      const s = await shown('ty-pay', { payment: { method: 'card', option: 'visa' } });
+      const r = await s.place();
+      const who = { storeId: f.S, visitorId: s.visitorId };
+      const pay = async () => (await orderReceipt(f.deps(), { ...who, number: r.number }))!.pay;
+      expect(await pay()).toEqual({ kind: 'due', dueMinor: s.q.totals.dueMinor, method: 'CARD', provider: 'visa' });
+      await payAction(f.deps(), { ...who, input: { number: r.number, action: 'fail' } });
+      expect(await pay()).toMatchObject({ kind: 'failed', dueMinor: s.q.totals.dueMinor });
+      await payAction(f.deps(), { ...who, input: { number: r.number, action: 'retry' } });
+      expect(await pay()).toMatchObject({ kind: 'due' });
+      await payAction(f.deps(), { ...who, input: { number: r.number, action: 'approve' } });
+      expect(await pay()).toEqual({ kind: 'paid', paidMinor: s.q.totals.dueMinor, method: 'CARD', provider: 'visa', mock: true });
+    });
+
+    it('an address being checked has no promise yet and its charge is not fixed', async () => {
+      const s = await shown('ty-unclear', { line: 'House 9, Road 2, Gabtoli' });
+      const r = await s.place();
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number })).toMatchObject({ band: null, addressUnclear: true, chargeFixed: false, deliveryMinor: 0 });
     });
   });
 });
