@@ -34,6 +34,9 @@ export const placeNotices = (input: { storeId: number; placement: string; locale
 /** PR 62 — the live exchange terms for one product (window, covered or not), or null: no live exchange rule. */
 export const productExchangeTerms = (input: { storeId: number; productId: string }) => safe<rl.ExchangeTerms | null>(null, (d) => rl.exchangeTermsFor(d, input));
 
+/** PR 128 — a piece's price as its product page shows it now (the live, coupon-free discount), or null. */
+export const liveDiscountFor = (input: { storeId: number; variantId: string }) => safe<rl.DiscountWas | null>(null, (d) => rl.discountWasFor(d, input));
+
 /** PR 62 — the live free-delivery limit, as the bag's engine sees it for this piece; null: no live rule backs one. */
 export const liveFreeOverMinor = (input: { storeId: number; variantId: string }) =>
   safe<number | null>(null, async (d) => (await rl.quoteCart(d, { storeId: input.storeId, lines: [{ variantId: input.variantId, quantity: 1 }] })).delivery.freeOverMinor);

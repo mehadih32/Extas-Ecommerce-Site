@@ -2,6 +2,7 @@
 // placed the order sees it (the bag cookie's visitor id); anyone else, or an unknown number, gets "Order not found".
 // Never a search result. PR 87: the celebration over it, only while the owner has it on for the occasion's days (or
 // `?celebrate=preview`); otherwise not one byte of it reaches the browser.
+// PR 128: "Complete your look" is read for the order once it is known to be his (`thanks.look`, off by default).
 import type { Metadata } from 'next';
 import { Celebrate } from '@/components/shop/checkout/Celebrate';
 import { ThanksNotFound, ThanksPage } from '@/components/shop/checkout/ThanksPage';
@@ -9,6 +10,7 @@ import { CELEBRATE_QUERY, celebrationFor } from '@/lib/shop/celebrate';
 import { checkoutSettings, currentReceipt } from '@/lib/shop/checkout';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
+import { thanksLook } from '@/lib/shop/thanks-look';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +28,13 @@ export default async function Thanks({ params, searchParams }: { params: Promise
     readPageSettings(['thanks.page', 'account.invoice', 'thanks.celebrate'], c.storeId),
   ]);
   if (!r) return <ThanksNotFound c={c} />;
+  const look = await thanksLook(c.storeId, r);
   const q = (await searchParams)[CELEBRATE_QUERY];
   const cel = more['thanks.celebrate'];
   const plan = celebrationFor(cel, c.today, r.number, typeof q === 'string' ? q : null, cel.text?.[c.lang] || c.t('celebrate.text'));
   return (
     <>
-      <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} />
+      <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} look={look} />
       {plan ? <Celebrate plan={plan} /> : null}
     </>
   );

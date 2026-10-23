@@ -7,7 +7,9 @@
 //   - set tiers read from Smart Rules (PR 99: "any 2 for X, any 3 for Y" lives in one place, the rules);
 //   - set validation (PR 101), the set summary with price and saving (PR 96) and adding a set to the bag as one set
 //     with its price locked (PR 97) — the server functions the storefront and the S04 bag call;
-//   - the set photo composed from the piece photos with sharp (PR 575) and combo analytics (PR 104).
+//   - the set photo composed from the piece photos with sharp (PR 575) and combo analytics (PR 104);
+//   - "Complete your look" on the thank-you page (S04 · PR 128, look.ts): the pieces the running combos pair with an
+//     order's products, ranked by customers' picks, then featured and the owner's order — nothing invented.
 // The price rule is one decision everywhere (model.ts `setPricing`): never above the regular total, and the struck
 // "was" price is only ever the sum of the pieces' own prices (CN-009), behind the owner's switch. Set prices are the
 // owner's data: the repository ships sample combos for the sample store only (CLAUDE.md rule 4).
@@ -26,3 +28,4 @@ export * from './bag';
 export * from './set-photo';
 export * from './analytics';
 export * from './page';
+export * from './look';
