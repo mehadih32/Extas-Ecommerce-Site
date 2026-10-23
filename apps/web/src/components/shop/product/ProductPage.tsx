@@ -8,7 +8,8 @@
 // with its size chosen and tagged. PR 51: template T3 (Fit-first) puts the sizes, the finder and the measurements in
 // one card (PdpT3Card, `pdp.templates.t3`). A product taken off sale keeps its page,
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
-// one state (PdpRoot); the rest is drawn here.
+// one state (PdpRoot); the rest is drawn here. PR 102: the sets this product is in, one line each above the buttons
+// ("Polo Duo: any 2 colours for ৳1,800 · Save ৳200", `combos.pdpOffer`), each linking to its combo page.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -39,7 +40,9 @@ import { toModel } from '@/lib/shop/product-view';
 import { COLOUR_QUERY, ROUTES } from '@/lib/shop/routes';
 import { categoryName } from '@/lib/shop/shell-model';
 import { breadcrumbLd, largestUrl, productLd } from '@/lib/shop/structured-data';
+import { setCardGroups } from '@/lib/shop/combo';
 import { AddedPanel } from '../bag/AddedPanel';
+import { SetOffer } from '../combo/SetCards';
 import { CardDeskMount } from '../CardDeskMount';
 import '../bag/bag.css';
 import { HeartButton } from '../HeartButton';
@@ -91,6 +94,8 @@ const KEYS = [
   'policy.exchange.summary',
   'policy.returns.summary',
   'policy.returns.afterDelivery',
+  // PR 102: the matching set offer above the buttons
+  'combos.pdpOffer',
 ] as const;
 
 export type ProductSearch = Record<string, string | string[] | undefined>;
@@ -352,6 +357,9 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
     finder,
     fitKept,
   };
+  // ---- PR 102 · the sets this product is in, on sale now (one line each, above the buttons) ----
+  const offerSet = set['combos.pdpOffer'];
+  const offer = offerSet.on && m.onSale ? await setCardGroups(c, { productId: data.id }) : null;
   const [head, last] = nameParts(m.name);
   const cat = data.category;
   // the added-to-bag panel (S04 · PR 106) for `?added=<line>`; closing it returns to this same address without it
@@ -476,6 +484,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                 </>
               )}
               <PdpStock cutoffWords={cutWords} />
+              {offer ? <SetOffer c={c} groups={offer.groups.slice(0, offerSet.max)} all={offer} /> : null}
               <PdpBuy links={links} />
               <PdpTrust items={trust} />
               {!m.onSale ? (
