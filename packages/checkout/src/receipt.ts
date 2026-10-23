@@ -3,9 +3,13 @@
 // that failed), its lines and money. Only the browser that placed the order can read it (the bag cookie's visitor id):
 // anyone else gets nothing, as if there were no such order. Names and colours are shown in the page's language (the
 // order keeps the English snapshot; Bengali comes from the product as it is now, when it has one).
+//
+// PR 129: the account the order belongs to (made with this order, already there, or the signed-in customer's), for the
+// "Your account is ready" card: the number to sign in with — never a password (SIM-F-039).
+import type { OrderAccountKind } from '@extas/accounts';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { CheckoutDeps } from './context';
-import { MOCK_PROVIDER, type PaymentMethod } from './place';
+import { MOCK_PROVIDER, ORDER_EVENTS, type PaymentMethod } from './place';
 
 export interface ReceiptLine {
   id: string;
@@ -52,7 +56,11 @@ export interface Receipt {
   walletMinor: number;
   totalMinor: number;
   pay: ReceiptPay;
+  /** PR 129: how the order found its account (null: no account, the owner switched the automatic one off). */
+  account: OrderAccountKind | null;
 }
+
+const ACCOUNT_KINDS: readonly OrderAccountKind[] = ['created', 'existing', 'signedIn'];
 
 /** The visitor's own order, as the thank-you page shows it; null for anyone else's, or no such order. */
 export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeId: number; visitorId: string; number: string }): Promise<Receipt | null> {
@@ -62,6 +70,7 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
       items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } },
       deliveryBand: { select: { nameEn: true, nameBn: true, hoursMin: true, hoursMax: true } },
       payments: { where: { purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, take: 1 },
+      events: { where: { type: ORDER_EVENTS.placed }, orderBy: { createdAt: 'asc' }, take: 1, select: { data: true } },
     },
   });
   if (!o || o.visitorId !== req.visitorId) return null;
@@ -95,7 +104,10 @@ export async function orderReceipt(deps: Pick<CheckoutDeps, 'db'>, req: { storeI
           ? { kind: 'failed', dueMinor: due, method: o.paymentMethod, provider: last.provider }
           : { kind: 'due', dueMinor: due, method: o.paymentMethod, provider: last?.provider ?? null };
   const phone = phoneNormalizeBD(o.phone ?? '');
+  const placed = o.events[0]?.data as { account?: unknown } | null | undefined;
+  const kind = ACCOUNT_KINDS.find((k) => k === placed?.account) ?? null;
   return {
+    account: o.customerId ? kind : null,
     number: o.number,
     firstName: (o.customerName ?? '').trim().split(/\s+/)[0] ?? '',
     phone: phone.ok ? phone.nice : o.phone,

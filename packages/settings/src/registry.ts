@@ -27,6 +27,7 @@ import { shopMoreSettings } from './registry-shop-more';
 import { searchSettings } from './registry-search';
 import { storefrontFuSettings } from './registry-storefront-fu';
 import { pdpTemplateSettings } from './registry-pdp-templates';
+import { accountSettings } from './registry-accounts';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1149,6 +1150,8 @@ export const registry = {
   ...storefrontFuSettings,
   // ---- S02 · PR 50–52, 58 · the product page templates and Find My Size (registry-pdp-templates.ts, version 28). ----
   ...pdpTemplateSettings,
+  // ---- S04 · PR 129–137 · customer accounts: the account from the first order, sign-in codes, My account, the offer banner, the order page, autofill (registry-accounts.ts, version 29). ----
+  ...accountSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

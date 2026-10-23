@@ -1,0 +1,16 @@
+{
+  "account": {
+    "ty": {
+      "readyTitle": "Your account is ready",
+      "inTitle": "This order is in your account",
+      "loginWith": "Log in with",
+      "phone": "Phone number",
+      "code": "Sign-in code",
+      "codeVal": "Comes by SMS to this number",
+      "note": "No password needed. You can set one later in My account.",
+      "signedTitle": "You're logged in",
+      "signedText": "Track this order from My account.",
+      "go": "Go to my account"
+    }
+  }
+}

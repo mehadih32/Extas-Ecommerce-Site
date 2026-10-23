@@ -30,5 +30,6 @@ export * from './registry-shop-more';
 export * from './registry-search';
 export * from './registry-storefront-fu';
 export * from './registry-pdp-templates';
+export * from './registry-accounts';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

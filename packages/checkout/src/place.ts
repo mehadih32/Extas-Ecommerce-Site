@@ -15,7 +15,12 @@
 // (A1.3): a failed payment is kept (FAILED, flagged on the order, a call task), and "Try again" makes a new payment for
 // the same order — still one order. With the owner's switch on, what a customer typed and left is kept as a checkout
 // draft for the team's follow-up (PR 274/275), and marked converted when he orders.
+//
+// PR 129: the order belongs to an account in the same transaction — the signed-in customer, else the customer with the
+// order's phone number, else a new one made now (`account.autoCreate.enabled`), never with a password (SIM-F-039,
+// @extas/accounts identity.ts). The placed event says which (`data.account`), for the thank-you page's account card.
 import { createHash, randomBytes } from 'node:crypto';
+import { linkOrderAccount } from '@extas/accounts';
 import { findBag } from '@extas/cart';
 import type { Prisma } from '@extas/db/client';
 import { convertCart, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
@@ -212,7 +217,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (again) return again;
 
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
-  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs] = await Promise.all([
+  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate] = await Promise.all([
     s('checkout.form.nameMin'),
     s('checkout.form.addressMin'),
     s('checkout.fieldOrder'),
@@ -223,6 +228,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     s('checkout.order.replayHours'),
     s('store.currency'),
     consentSettings(deps, storeId),
+    s('account.autoCreate.enabled'),
   ]);
   const check = checkForm(d.form, { nameMin, addressMin }, fieldOrder(order));
   if (!check.ok) throw new CheckoutError('FORM', 'a field is not finished', [check.field], { field: check.field, problem: check.problem satisfies FieldProblem });
@@ -284,6 +290,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       }
 
       const number = await nextOrderNumber(tx, storeId, prefix, start);
+      // PR 129: the account it belongs to (SIM-F-039: a new one has no password; the browser is not signed in).
+      const account = await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate });
+      const ownerId = account?.customerId ?? null;
       const rows = orderLinesOf(q, lines);
       const variants = await tx.productVariant.findMany({ where: { storeId, id: { in: [...new Set(rows.map((r) => r.variantId))] } }, select: { id: true, sku: true } });
       const sku = new Map(variants.map((v) => [v.id, v.sku]));
@@ -291,7 +300,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         data: {
           storeId,
           number,
-          customerId,
+          customerId: ownerId,
           status: 'PLACED',
           source: 'WEBSITE',
           currency,
@@ -360,10 +369,10 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           actorType: 'CUSTOMER',
           actorId: customerId,
           source: CHECKOUT_SOURCE,
-          data: { payment: choice ? { method: choice.method, option: choice.option } : null, reward: q.pay.reward?.kind ?? null, charge: q.charge.state },
+          data: { payment: choice ? { method: choice.method, option: choice.option } : null, reward: q.pay.reward?.kind ?? null, charge: q.charge.state, account: account?.kind ?? null },
         },
       });
-      await recordConsent(tx, { storeId, orderId: o.id, customerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: CHECKOUT_SOURCE });
+      await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: CHECKOUT_SOURCE });
 
       if (t.walletMinor > 0) {
         if (!customerId) throw new CheckoutError('PRICE_CHANGED', 'the wallet needs a signed-in customer');
@@ -384,7 +393,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         });
       }
       const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : null;
-      if (reason) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId, reason } });
+      if (reason) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId: ownerId, reason } });
       await tx.checkoutDraft.updateMany({ where: { storeId, visitorId, convertedOrderId: null }, data: { convertedOrderId: o.id, cartId, lastStep: 'placed', lastActivityAt: now } });
       await tx.idempotencyKey.update({
         where: { scope_key: { scope, key: d.idempotencyKey } },

@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@extas/accounts": "workspace:*",
     "@extas/adapters": "workspace:*",
     "@extas/auth": "workspace:*",
     "@extas/cart": "workspace:*",
