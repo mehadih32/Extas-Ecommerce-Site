@@ -533,6 +533,8 @@
 .shop .ftr-s2 .ftr-brand-top { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 0px; margin-bottom: 12px; }
 .shop .ftr-s2 .ftr-brand-top .logo { line-height: 1; display: block; }
 .shop .ftr-s2 .ftr-brand-top .ftr-brand-sub { line-height: 1.15; margin-top: var(--ftr-slogan-gap,4.5px); padding-left: var(--ftr-slogan-x,6px); white-space: nowrap; letter-spacing: 0.01em; }
+/* follow-up 24: a slogan longer than the phone's width wraps under the name instead of pushing the page sideways */
+.shop .ftr-s2 .ftr-brand-top .ftr-brand-sub { white-space: normal; overflow-wrap: anywhere; max-width: 100%; box-sizing: border-box; }
 @media (min-width: 1024px) { .shop .ftr-s2 .ftr-brand-top { margin-bottom: 0px; } }
 .shop .ftr-s2 .ftr-joinrow { flex-wrap: nowrap; align-items: stretch; }
 .shop .ftr-s2 .ftr-joinrow .input { flex: 1 1 auto; min-width: 0px; width: auto; }
@@ -573,6 +575,10 @@
 .shop .hdr .logo.sb-hasslog .sb-slog { font-family: var(--font-body); font-weight: 500; letter-spacing: 0.02em; text-transform: none; white-space: nowrap; line-height: 1.15; color: var(--muted) !important; -webkit-text-fill-color: var(--muted) !important; }
 .shop .hdr .logo.sb-hasslog .sb-slog .sb-sf { display: inline-block; }
 .shop .hdr .logo.sb-hasslog .sb-slog .sb-ss { display: none; }
+/* follow-up 24 (demo r12-zsb.css): the phone slogan's steps — 1 the short slogan, 2 none — never a cut word */
+.shop .hdr .logo.sb-hasslog .sb-slog[data-l="1"] .sb-sf { display: none; }
+.shop .hdr .logo.sb-hasslog .sb-slog[data-l="1"] .sb-ss { display: inline-block; }
+.shop .hdr .logo.sb-hasslog .sb-slog[data-l="2"] { display: none; }
 .shop .hdr .logo.hide-d.sb-hasslog { position: relative; transform: translateY(-5px); }
 .shop .hdr .logo.hide-d.sb-hasslog .sb-slog { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 1px; font-size: 9.5px; text-align: center; overflow: hidden; pointer-events: none; }
 @media (min-width: 1024px) { .shop .hdr .logo.hide-m.sb-hasslog { flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1; } }

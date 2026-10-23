@@ -28,4 +28,19 @@ describe('mobile hardening (PR 85)', () => {
     expect(layer).toContain('translate(-50%, -50%)');
     expect(layer).not.toMatch(/background|border|color/);
   });
+
+  it('follow-up 24: the phone slogan steps to its short form, then out, never a cut word (demo r12-zsb.css)', () => {
+    // ShellEffects hdrSlogFit sets data-l 0 (full) → 1 (short) → 2 (none); without these the full slogan stayed and
+    // was cut at the edge, and the short one measured 0 px wide (display: none) and always "fitted"
+    const css = read('./shop.css');
+    expect(css).toMatch(/\.sb-slog\[data-l="1"\] \.sb-sf \{ display: none; \}/);
+    expect(css).toMatch(/\.sb-slog\[data-l="1"\] \.sb-ss \{ display: inline-block; \}/);
+    expect(css).toMatch(/\.sb-slog\[data-l="2"\] \{ display: none; \}/);
+  });
+
+  it('follow-up 24: a long slogan in the phone footer wraps instead of pushing the page sideways', () => {
+    // the demo's one-line slogan (white-space: nowrap) made a 60-letter slogan 418 px wide on a 390 px phone
+    const css = read('./shop.css');
+    expect(css).toMatch(/\.ftr-s2 \.ftr-brand-top \.ftr-brand-sub \{ white-space: normal; overflow-wrap: anywhere; max-width: 100%;/);
+  });
 });
