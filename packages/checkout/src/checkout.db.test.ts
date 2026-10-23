@@ -261,4 +261,29 @@ describe.skipIf(!HAS_TEST_DB)('the checkout on PostgreSQL (S04)', () => {
       expect((await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en' })).bag.items[0]?.quantity).toBe(3);
     });
   });
+  describe('PR 122 · the wallet at checkout', () => {
+    it("a signed-in customer's balance comes off what he still pays only when he ticks it, never more than the order", async () => {
+      const customer = await f.t.prisma.customer.create({ data: { storeId: f.S, phone: '+8801700000122', name: 'Test Wallet' } });
+      await f.t.prisma.walletAccount.create({ data: { storeId: f.S, customerId: customer.id, balanceMinor: 30_000, status: 'ACTIVE' } });
+      const { cartId } = await f.bag('wallet', [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }]);
+      const q = (useWallet: boolean) => checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', customerId: customer.id, useWallet, address: { line: 'Road 5, Dhanmondi, Dhaka 1209' } });
+      const off = await q(false);
+      expect(off.wallet).toEqual({ balanceMinor: 30_000, on: false, usedMinor: 0 });
+      expect(off.totals.dueMinor).toBe(off.totals.totalMinor);
+      const on = await q(true);
+      expect(on.wallet).toEqual({ balanceMinor: 30_000, on: true, usedMinor: 30_000 });
+      expect(on.totals).toMatchObject({ walletMinor: 30_000, dueMinor: on.totals.totalMinor - 30_000, totalMinor: off.totals.totalMinor });
+      expect(on.fingerprint).not.toBe(off.fingerprint);
+      await f.t.prisma.walletAccount.update({ where: { customerId: customer.id }, data: { balanceMinor: 10_000_000 } });
+      const all = await q(true);
+      expect(all.totals).toMatchObject({ walletMinor: all.totals.totalMinor, dueMinor: 0 });
+      // a guest, the wallet switched off, or a frozen wallet: nothing shows
+      expect((await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', useWallet: true })).wallet).toBeNull();
+      f.overrides.set('checkout.wallet.enabled', false);
+      expect((await q(true)).wallet).toBeNull();
+      f.overrides.delete('checkout.wallet.enabled');
+      await f.t.prisma.walletAccount.update({ where: { customerId: customer.id }, data: { status: 'FROZEN' } });
+      expect((await q(true)).wallet).toBeNull();
+    });
+  });
 });

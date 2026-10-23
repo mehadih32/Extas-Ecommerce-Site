@@ -241,7 +241,8 @@
       "soon": "Opens as you write your address. Cash on Delivery is ready by default.",
       "soonNoCod": "Opens as you write your address.",
       "none": "No payment method is open right now. Message us on WhatsApp and we will help you order.",
-      "codNotHere": "Cash on Delivery is not available on this order."
+      "codNotHere": "Cash on Delivery is not available on this order.",
+      "walletCovers": "Your wallet pays for the whole order — nothing more to pay."
     },
     "pm": {
       "cod": "COD",
@@ -268,7 +269,13 @@
       "ssl": "SSL COMMERZ"
     },
     "many": "{n} of the same size. Buying for others?",
-    "manyLink": "Mix the sizes in your bag"
+    "manyLink": "Mix the sizes in your bag",
+    "wallet": {
+      "title": "Your offers",
+      "use": "Use my wallet",
+      "onOrder": "{amount} on this order",
+      "row": "Wallet"
+    }
   },
   "notFound": {
     "title": "Page not found",

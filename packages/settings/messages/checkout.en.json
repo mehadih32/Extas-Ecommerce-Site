@@ -92,6 +92,12 @@
         "label": "How many of one size before the note shows",
         "help": "The note shows from this many pieces of the same item and size."
       }
+    },
+    "wallet": {
+      "enabled": {
+        "label": "Let customers pay from their wallet at checkout",
+        "help": "A signed-in customer with money in his wallet sees \"Use my wallet\" with his balance. Off hides it; the balance stays his."
+      }
     }
   }
 }

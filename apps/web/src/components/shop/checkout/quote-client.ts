@@ -37,6 +37,8 @@ export interface Choices {
   confirmed: Confirmed;
   /** The payment method he picked (PR 120); null: the first open one. */
   pay: PaymentChoice | null;
+  /** "Use my wallet" is ticked (PR 122). */
+  wallet: boolean;
 }
 
 export async function fetchQuote(payload: Record<string, unknown>): Promise<CheckoutView | null> {

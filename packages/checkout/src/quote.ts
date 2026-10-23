@@ -10,11 +10,13 @@
 // PR 120 — the payment choice (payment.ts): the methods open on this order, Cash on Delivery only where the owner, the
 // Smart Rules and the band's COD limit allow it, and the prepaid reward (free delivery, or an amount taken off the
 // total) for any other method.
+// PR 122 — the signed-in customer's wallet: his balance, and with "Use my wallet" ticked as much of it as the order
+// needs comes off what he still pays (`dueMinor`); placement (PR 125) debits exactly that, in the same transaction.
 import { createHash } from 'node:crypto';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
 import { bandOut, loadBandMap, type AskReason, type BandMap, type BandOut } from '@extas/delivery';
 import { deliveryDeps, placeName, readAddress, type AddressInput, type AddressRead, type PlaceName } from './address';
-import { checkStoreId, parse, type CheckoutDeps } from './context';
+import { checkStoreId, parse, setting, type CheckoutDeps } from './context';
 import { choosePayment, isPrepaid, paymentInputSchema, paySettings, rewardOf, rulesPaymentMethod, type PaymentInput, type PaymentView } from './payment';
 
 export interface CheckoutRequest {
@@ -27,6 +29,15 @@ export interface CheckoutRequest {
   address?: AddressInput | null;
   /** PR 120: the payment method he picked (null: the first open one). */
   payment?: PaymentInput | null;
+  /** PR 122: "Use my wallet" is ticked (a signed-in customer with a balance only). */
+  useWallet?: boolean;
+}
+
+/** PR 122 — the wallet on this order: the balance, whether he uses it, and how much comes off. */
+export interface WalletView {
+  balanceMinor: number;
+  on: boolean;
+  usedMinor: number;
 }
 
 /** The delivery step as the page draws it (PR 117–119). */
@@ -83,6 +94,10 @@ export interface Totals {
   known: boolean;
   /** PR 120: the prepaid reward taken off the total (an amount or a percentage; free delivery shows as free delivery). */
   rewardMinor: number;
+  /** PR 122: what the wallet pays of the total. */
+  walletMinor: number;
+  /** What is left to pay: the total less the wallet (on delivery for Cash on Delivery, now for the others). */
+  dueMinor: number;
   /** Everything the offers, sets and the prepaid reward take off. */
   youSaveMinor: number;
   /** The price before every discount (struck beside the total when something is saved). */
@@ -104,11 +119,15 @@ export interface CheckoutQuote {
   address: AddressRead;
   /** PR 120: the payment step — the open methods, the choice and what paying now earns. */
   pay: PaymentView;
+  /** PR 122: the customer's wallet (null: no customer, no balance, or the wallet is off at checkout). */
+  wallet: WalletView | null;
   /** A hash of every amount on the page: placement refuses an order whose money changed since the page showed it. */
   fingerprint: string;
 }
 
 const ZERO = 0;
+/** The wallet status that can pay (S07 PR 171 owns the wallet's states). */
+export const WALLET_ACTIVE = 'ACTIVE';
 
 /** The summary as the page's client part gets it (no database rows, nothing but what is shown). */
 export interface CheckoutView {
@@ -123,12 +142,13 @@ export interface CheckoutView {
   rates: BandOut[];
   freeGapMinor: number | null;
   pay: PaymentView;
+  wallet: WalletView | null;
   fingerprint: string;
 }
 
 /** The checkout of no bag (no cookie, no database): the page shows the empty-bag card. */
 export const emptyQuote = (): CheckoutQuote => {
-  const totals: Totals = { itemsMinor: ZERO, deliveryMinor: null, totalMinor: ZERO, known: false, rewardMinor: ZERO, youSaveMinor: ZERO, regularMinor: ZERO };
+  const totals: Totals = { itemsMinor: ZERO, deliveryMinor: null, totalMinor: ZERO, known: false, rewardMinor: ZERO, walletMinor: ZERO, dueMinor: ZERO, youSaveMinor: ZERO, regularMinor: ZERO };
   return {
     cartId: null,
     bag: emptyBag(),
@@ -139,6 +159,7 @@ export const emptyQuote = (): CheckoutQuote => {
     freeGapMinor: null,
     address: { status: 'none' },
     pay: { cod: false, codOff: 'OFF', mobile: [], card: [], online: false, chosen: null, reward: null },
+    wallet: null,
     fingerprint: fingerprintOf({ totals }),
   };
 };
@@ -158,6 +179,7 @@ export function viewOf(q: CheckoutQuote): CheckoutView {
     rates: q.rates,
     freeGapMinor: q.freeGapMinor,
     pay: q.pay,
+    wallet: q.wallet,
     fingerprint: q.fingerprint,
   };
 }
@@ -171,7 +193,12 @@ export function fingerprintOf(parts: unknown): string {
 export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest): Promise<CheckoutQuote> {
   checkStoreId(input.storeId);
   const asked = input.payment ? parse(paymentInputSchema, input.payment, 'payment') : null;
-  const [address, map, ps] = await Promise.all([readAddress(deps, input.storeId, input.address), loadBandMap(deliveryDeps(deps), input.storeId), paySettings(deps, input.storeId)]);
+  const [address, map, ps, balance] = await Promise.all([
+    readAddress(deps, input.storeId, input.address),
+    loadBandMap(deliveryDeps(deps), input.storeId),
+    paySettings(deps, input.storeId),
+    walletBalance(deps, input.storeId, input.customerId ?? null),
+  ]);
   // the band the customer pays as (a sub-area folded into the city is the city): rules on `delivery.band` see it
   const charged = address.status === 'resolved' ? address.line.quote.band : null;
   const bandCodLimit = charged ? (map.bandById(charged.id)?.codLimitMinor ?? null) : null;
@@ -207,7 +234,19 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
   const totalMinor = itemsMinor + (deliveryMinor ?? ZERO) - rewardMinor;
   const prepaidFree = charge.state === 'free' && charge.reason === 'PREPAID' && reward?.kind === 'freeDelivery' ? (reward.amountMinor ?? ZERO) : ZERO;
   const youSaveMinor = s.youSaveMinor + rewardMinor + prepaidFree;
-  const totals: Totals = { itemsMinor, deliveryMinor, totalMinor, known: deliveryMinor !== null, rewardMinor, youSaveMinor, regularMinor: totalMinor + youSaveMinor };
+  const wallet: WalletView | null = balance > ZERO && itemsMinor > ZERO ? { balanceMinor: balance, on: input.useWallet === true, usedMinor: input.useWallet === true ? Math.min(balance, totalMinor) : ZERO } : null;
+  const walletMinor = wallet?.usedMinor ?? ZERO;
+  const totals: Totals = {
+    itemsMinor,
+    deliveryMinor,
+    totalMinor,
+    known: deliveryMinor !== null,
+    rewardMinor,
+    walletMinor,
+    dueMinor: totalMinor - walletMinor,
+    youSaveMinor,
+    regularMinor: totalMinor + youSaveMinor,
+  };
   const pay: PaymentView = { cod: codOff === null, codOff, mobile: ps.mobile, card: ps.card, online: ps.online, chosen: choice, reward };
   const fingerprint = fingerprintOf({
     rows: s.rows.map((r) => [r.lineId, r.quantity, r.amountMinor]),
@@ -226,6 +265,14 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     freeGapMinor: bag.free.free ? null : bag.free.remainingMinor,
     address,
     pay,
+    wallet,
     fingerprint,
   };
+}
+
+/** The signed-in customer's usable wallet balance in this store (0 without a customer, or with the wallet off). */
+async function walletBalance(deps: CheckoutDeps, storeId: number, customerId: string | null): Promise<number> {
+  if (!customerId || !(await setting(deps, storeId, 'checkout.wallet.enabled'))) return ZERO;
+  const w = await deps.db.walletAccount.findFirst({ where: { storeId, customerId, status: WALLET_ACTIVE }, select: { balanceMinor: true } });
+  return Math.max(ZERO, w?.balanceMinor ?? ZERO);
 }

@@ -21,9 +21,11 @@ export interface PaymentStepProps {
   onChoose: (c: PaymentChoice) => void;
   /** The WhatsApp help link, for "nothing is open". */
   wa: string | null;
+  /** PR 122: the wallet pays the whole order: nothing to choose. */
+  covered?: boolean;
 }
 
-export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa }: PaymentStepProps) {
+export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = false }: PaymentStepProps) {
   const name = (id: string) => w(`pm.${id}`);
   const mark = (id: string) => <PayMark key={id} id={id} name={name(id)} short={w(`mk.${id}`)} />;
   const marks = (list: readonly string[], max: number) => <span className="co-pmks">{list.slice(0, max).map(mark)}</span>;
@@ -120,6 +122,16 @@ export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa }: PaymentSt
     );
   if (pay.online) boxes.push(option('online', w('pay.online'), w('pay.onlineSub'), mark('ssl'), <div className="small">{w('pay.onlineNote', { amount: due })}</div>));
 
+  if (covered)
+    return (
+      <section className="card co-sec co-paysec" data-testid="co-pay">
+        {head(3)}
+        <p className="co-fdays" data-testid="co-pay-wallet">
+          <Icon name="wallet" size={14} />
+          <span>{w('pay.walletCovers')}</span>
+        </p>
+      </section>
+    );
   if (!boxes.length)
     return (
       <section className="card co-sec co-paysec" data-testid="co-pay">
