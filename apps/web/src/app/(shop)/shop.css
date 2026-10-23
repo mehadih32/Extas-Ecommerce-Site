@@ -296,6 +296,17 @@
 @media (max-width: 374px) { .shop .hdr .hdr-in:has(.hdr-wa) { gap: 4px; } }
 @media (max-width: 374px) { .shop .hdr .hdr-r:has(.hdr-wa) .iconbtn, .shop .hdr .hdr-r .hdr-wa { min-width: 40px; padding-left: 0px; padding-right: 0px; } }
 @media (max-width: 374px) { .shop .hdr .hdr-in:has(.hdr-wa) .logo { font-size: clamp(20px, 6.3vw, 24px) !important; } }
+/* Follow-up 59: the phone wordmark stays on one line whatever the store's name (a two-word name wrapped to two lines,
+ * and its longest word pushed the header past the screen with the WhatsApp disc on at 375–384 px). Its box may shrink;
+ * ShellEffects steps the type down to the room left (the heart steps out first, 3.4), then tightens the letter
+ * spacing (.fit-x). The menu button and the icons never shrink. */
+.shop .hdr .logo.hide-d, .shop .ckh .ckh-l .logo { white-space: nowrap; min-width: 0; flex: 0 1 auto; }
+.shop .hdr .logo.hide-d.fit-x, .shop .ckh .ckh-l .logo.fit-x { letter-spacing: 0.06em !important; padding-left: 0.06em; }
+.shop .hdr .hdr-in > .row, .shop .hdr .hdr-in > .hdr-r, .shop .ckh .ckh-rr, .shop .ckh .ckh-l .iconbtn { flex-shrink: 0; }
+.shop .ckh .ckh-l { flex: 0 1 auto; }
+/* 3.4 (demo r12 .hdr .hdr-wish.fit-off): the heart that steps out for the wordmark — the rule was missing, so the
+ * heart never left (follow-up 59) */
+.shop .hdr .hdr-wish.fit-off { display: none !important; }
 .shop .hdr .hdr-r { gap: 0px !important; }
 @keyframes waBleed { 0% { box-shadow: rgba(37, 211, 102, 0.42) 0px 0px 0px 0px; } 45% { box-shadow: rgba(37, 211, 102, 0) 0px 0px 0px 9px; } 100% { box-shadow: rgba(37, 211, 102, 0) 0px 0px 0px 9px; } }
 .shop .hdr-wa-disc { animation: 3.2s ease-out 1s infinite normal none running waBleed; }

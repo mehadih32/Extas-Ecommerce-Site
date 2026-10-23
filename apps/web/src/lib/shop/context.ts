@@ -11,6 +11,7 @@ import { shopT, type ShopT, type Vars } from './dict';
 import { formatMoney, isShopLang, LANG_HEADER, PATH_HEADER, THEME_HEADER, toBnDigits, type ShopLang } from './lang';
 import { SIGNUP_LIST_LIVE, type Flags, type ShopCategory } from './shell-model';
 import { shopTheme, todayIn, type ShopTheme } from './theme';
+import { tryContactNumber } from './try-contact';
 
 const KEYS = [
   'store.name',
@@ -183,7 +184,9 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   const lang: ShopLang = isShopLang(h.get(LANG_HEADER)) ? (h.get(LANG_HEADER) as ShopLang) : 'en';
   const path = h.get(PATH_HEADER) || '/';
   const storeId = shopStoreId();
-  const [{ values: s, live }, { cats, storeName: rowName }] = await Promise.all([readSettings(storeId), readCategories(storeId)]);
+  const [{ values: read, live }, { cats, storeName: rowName }, tryNumber] = await Promise.all([readSettings(storeId), readCategories(storeId), tryContactNumber()]);
+  // follow-up 59: a test server draws with the sample contact when the gate asks (lib/shop/try-contact; never live)
+  const s: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
   const t = shopT(lang, s['language.labels']);
   const now = new Date();
   const today = todayIn(s['store.timeZone'], now);
