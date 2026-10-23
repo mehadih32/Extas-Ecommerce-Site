@@ -7,19 +7,21 @@
 // this colour (else the colours that have it), and "Select size L". `?finder=1` opens it (the bag's "Help me pick my
 // size"; on T3 it brings the card's own finder into view). Each answer is kept, with no name or phone, for the size
 // reports (PR 59) while `pdp.finder.record` is on.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react';
 import type { Recommendation } from '@extas/catalogue/size-finder';
 import type { PdpFinderSettings } from '@extas/settings';
 import { Icon } from '../Icon';
 import { showToast } from '../toast';
 import { holdRepeat, type HoldRepeat } from '@/lib/shop/hold-repeat';
-import { bodyWords, canStep, feetInches, FINDER_QUERY, heightCm, reasonLines, sizeFor, startBody, stepBody, type FitBody } from '@/lib/shop/pdp-finder';
+import { whenIdle } from '@/lib/shop/later';
+import { bodyWords, canStep, feetInches, FINDER_QUERY, heightCm, reasonLines, stepBody, type FitBody } from '@/lib/shop/pdp-finder';
 import { stockOf } from '@/lib/shop/product-model';
-import { Bold } from './Bold';
-import { PdpModal } from './PdpModal';
 import { usePdp } from './PdpRoot';
 
 const API = '/api/size-finder';
+
+const loadSheet = () => import('./PdpFinderSheet');
+const FinderSheet = lazy(() => loadSheet().then((x) => ({ default: x.FinderSheet })));
 
 /** Keeps the answer for the size reports (PR 59); the server works the size out again from its own copy of the chart. */
 export async function recordAnswer(productId: string, b: FitBody): Promise<string | null> {
@@ -250,15 +252,10 @@ export function useTakeSize() {
   );
 }
 
-/** The popup, drawn once per page; the card, the size chart and `?finder=1` open it. */
+/** The popup, drawn once per page; the card, the size chart and `?finder=1` open it. PR 88: its window (PdpFinderSheet)
+ * is its own chunk, fetched once the page is idle (so a tap opens it at once) or on the first open. */
 export function FinderPopup() {
-  const { m, finder, body, finderOpen, openFinder, closeFinder, finderOpener, w, num, unit, setUnit } = usePdp();
-  const { label, reasons } = useAnswerWords();
-  const take = useTakeSize();
-  const [draft, setDraft] = useState<FitBody | null>(null);
-  const [answer, setAnswer] = useState<{ b: FitBody; rec: Recommendation } | null>(null);
-  const rid = useRef<string | null>(null);
-
+  const { m, finder, finderOpen, openFinder } = usePdp();
   // `?finder=1` opens it once, and the address loses the mark (a reload does not open it again)
   useEffect(() => {
     if (!finder) return;
@@ -281,91 +278,13 @@ export function FinderPopup() {
     }
   }, [finder, openFinder]);
 
-  const close = useCallback(() => {
-    closeFinder();
-    setAnswer(null);
-    setDraft(null);
-  }, [closeFinder]);
+  const offered = Boolean(finder && m.chart);
+  useEffect(() => (offered ? whenIdle(() => void loadSheet().catch(() => undefined)) : undefined), [offered]);
 
   if (!finder || !finderOpen || !m.chart) return null;
-  const chart = m.chart;
-  const cur = draft ?? startBody(body, finder);
-  const show = () => {
-    const rec = sizeFor(m, finder, cur);
-    if (!rec) return;
-    setAnswer({ b: cur, rec });
-    rid.current = null;
-    if (finder.record) void recordAnswer(m.productId, cur).then((id) => (rid.current = id));
-  };
-  const select = (size: string, el: Element) => {
-    if (!answer) return;
-    recordChoice(rid.current, size);
-    take(size, answer.b, el);
-    close();
-  };
-
   return (
-    <PdpModal title={w('finder.title')} closeLabel={w('finder.close')} onClose={close} opener={finderOpener} className="pdp-sheet" testId="finder-modal">
-      {answer ? (
-        <>
-          <div className="pdp-res" data-testid="finder-result">
-            <div className="row between top">
-              <div>
-                <div className="eyebrow">{w('finder.eyebrow', { chart: chart.name })}</div>
-                <div className="pdp-res-size mt8" data-testid="finder-size">
-                  {label(answer.rec.size)}
-                </div>
-                <div className="small text2 mt8">{w('finder.for', bodyWords(answer.b, w, num))}</div>
-              </div>
-              <button type="button" className="pdp-unit" aria-label={w(unit === 'cm' ? 'showIn' : 'showCm')} onClick={() => setUnit(unit === 'cm' ? 'inch' : 'cm')}>
-                {w(unit === 'cm' ? 'unitIn' : 'unitCm')}
-              </button>
-            </div>
-            <ul className="pdp-why" data-testid="finder-why">
-              {reasons(answer.rec, answer.b).map((x) => (
-                <li key={x}>
-                  <Icon name="check" size={16} />
-                  <span>
-                    <Bold text={x} />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {answer.rec.next ? (
-            <div className="soft p16 small mt12">
-              {w('finder.between')}{' '}
-              <button type="button" className="link" data-testid="finder-next" onClick={(e) => select(answer.rec.next!, e.currentTarget)}>
-                {w('finder.take', { size: label(answer.rec.next) })}
-              </button>
-            </div>
-          ) : (
-            <div className="soft p16 small mt12">{w('finder.largestNote')}</div>
-          )}
-          <FinderStock size={answer.rec.size} />
-          <div className="row mt16" style={{ gap: 10 }}>
-            <button type="button" className="btn btn-ghost" onClick={() => setAnswer(null)}>
-              {w('finder.change')}
-            </button>
-            <button type="button" className="btn btn-primary grow" data-testid="finder-select" onClick={(e) => select(answer.rec.size, e.currentTarget)}>
-              {w('finder.select', { size: label(answer.rec.size) })}
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="small text2">
-            <Bold text={w('finder.intro', { chart: chart.name })} />
-          </div>
-          <div className="mt16">
-            <FinderSteps value={cur} onChange={setDraft} />
-          </div>
-          <button type="button" className="btn btn-primary btn-block mt24" data-testid="finder-show" onClick={show}>
-            {w('finder.show')}
-          </button>
-          <div className="xs muted center mt12">{w(finder.remember ? 'finder.privacy' : 'finder.privacyNoSave')}</div>
-        </>
-      )}
-    </PdpModal>
+    <Suspense fallback={null}>
+      <FinderSheet />
+    </Suspense>
   );
 }
