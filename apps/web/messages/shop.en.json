@@ -299,5 +299,211 @@
         "a": "Every product page has a size chart in inches. Measure a piece you already own the same way and compare. Find my size can also suggest a size from your height and weight."
       }
     }
+  },
+  "bag": {
+    "title": "Your bag",
+    "count": {
+      "one": "{n} item",
+      "other": "{n} items"
+    },
+    "continue": "Continue shopping",
+    "empty": {
+      "title": "Your bag is empty",
+      "text": "Find something you like.",
+      "textCod": "Find something you like — and pay with Cash on Delivery.",
+      "shop": "Shop new in",
+      "sets": "Sets & combos"
+    },
+    "free": {
+      "title": "Free home delivery",
+      "over": "Your order is over {amount}, so delivery is on us.",
+      "on": "Delivery is free on this order.",
+      "badge": "FREE",
+      "gap": "Add {amount} more for free delivery",
+      "progress": "Free delivery progress"
+    },
+    "line": {
+      "each": "{price} each",
+      "low": "Only {n} left",
+      "repriced": "Price changed from {was} to {now} — you pay the new price.",
+      "colourFor": "Colour for {name}",
+      "sizeFor": "Size for {name}",
+      "size": "Size",
+      "soldOut": "{option} — sold out",
+      "qty": "Quantity",
+      "less": "One less",
+      "more": "One more",
+      "save": "Save for later",
+      "saveShort": "Save",
+      "remove": "Remove",
+      "removeName": "Remove {name}",
+      "saveName": "Save {name} for later",
+      "stock": "Only {n} can be sold now — lower the quantity to continue.",
+      "soldOutNow": "Sold out since it went into your bag — remove it to continue.",
+      "notForSale": "No longer on sale — remove it to continue."
+    },
+    "set": {
+      "pieces": {
+        "one": "Set · {n} piece",
+        "other": "Set · {n} pieces"
+      },
+      "ended": "This set offer has ended — your bag keeps the price you got.",
+      "repriced": "The set price has changed — you pay the new price.",
+      "change": "Change size or colour",
+      "changeShort": "Change",
+      "save": "Save the set for later",
+      "remove": "Remove the set"
+    },
+    "sizes": {
+      "title": "Same {name} in {sizes}",
+      "and": " and ",
+      "ask": "Is one for someone else? Then you're all set. Not sure of your size? We'll help you pick.",
+      "help": "Help me pick my size",
+      "other": "One is for someone else",
+      "doneOther": "Got it — the sizes stay.",
+      "doneKeep": "Keeping the sizes.",
+      "change": "Change",
+      "helpText": "Keep the size that fits you best, and we take the other out of your bag.",
+      "keepOne": "Keep {keep}, remove {other}",
+      "keepOnly": "Keep only {keep}",
+      "keepAll": "Keep both",
+      "keepAllMany": "Keep all"
+    },
+    "slot": {
+      "setTitle": "Buy these {n} together and save {saving}",
+      "setText": "{names} · {price} for all {n}",
+      "setGo": "See the set",
+      "gapTitle": "Add {amount} more and delivery is free",
+      "gapCod": "And pay with Cash on Delivery.",
+      "gapGo": "Add something",
+      "doneTitle": "Free delivery is already on this order",
+      "doneGo": "Checkout"
+    },
+    "tiers": {
+      "items": "items",
+      "title": "Buy more {cat}, pay less",
+      "row": "{n} {cat}",
+      "save": "save {amount}",
+      "inBag": "In your bag: {n}",
+      "next": "{more} more → {q} for {price}",
+      "top": "you have the best price",
+      "tip": "Mix any colours and sizes — the set price comes off by itself.",
+      "go": "Pick your {cat}",
+      "phoneTitle": "Buy {q} and save",
+      "phoneText": "{q} for {price} · you save {saving}"
+    },
+    "saved": {
+      "title": "Saved for later ({n})",
+      "move": "Move to bag",
+      "moveName": "Move {name} to the bag",
+      "note": "Saved in this browser for {days} days."
+    },
+    "summary": {
+      "title": "Order summary",
+      "subtotal": "Subtotal ({n})",
+      "delivery": "Delivery",
+      "setSub": "{regular} separately · you save {saving}",
+      "times": "× {n}",
+      "offer": "Offer",
+      "total": "Total",
+      "youSave": "You save {amount}",
+      "deliveryLater": "Delivery is added at checkout.",
+      "checkout": "Checkout",
+      "fix": "Fix your bag to continue"
+    },
+    "code": {
+      "open": "Have a code?",
+      "label": "Discount code",
+      "placeholder": "Enter code",
+      "apply": "Apply",
+      "empty": "Type a code first.",
+      "added": "Code {code} added",
+      "remove": "Remove",
+      "removed": "Code removed",
+      "needsMore": "Add {amount} more to use {code}.",
+      "betterSet": "{code} is not added: your set price already saves more, and offers are not combined.",
+      "betterOffer": "{code} is not added: another offer in your bag already saves more, and offers are not combined.",
+      "notForItems": "{code} does not cover the items in your bag.",
+      "login": "Log in",
+      "r": {
+        "UNKNOWN": "We could not find the code {code}. Check the spelling.",
+        "OFF": "The code {code} is switched off.",
+        "NOT_STARTED": "The code {code} has not started yet.",
+        "ENDED": "The code {code} has ended.",
+        "USED_UP": "The code {code} has been used up.",
+        "PER_CUSTOMER": "You have already used the code {code}.",
+        "MEMBERS_ONLY": "The code {code} is for members. Log in to use it.",
+        "GUESTS_ONLY": "The code {code} is for new customers only.",
+        "RULE_NOT_LIVE": "The offer behind {code} is not running now.",
+        "REFERRAL": "{code} is an invite code. Invite codes are not taken in the bag yet."
+      }
+    },
+    "trust": {
+      "cod": "Cash on Delivery",
+      "exchange": "Size exchange in {windowHours} hours",
+      "secure": "Secure payment"
+    },
+    "wa": {
+      "title": "Not sure about a size?",
+      "text": "Ask us on WhatsApp before you order.",
+      "button": "Ask on WhatsApp",
+      "message": "Hi {store}, I have a question about my bag"
+    },
+    "mbar": "Total {amount} · Checkout",
+    "toast": {
+      "removed": "{name} removed",
+      "setRemoved": "Set removed",
+      "saved": "Saved for later",
+      "moved": "Moved to your bag",
+      "undo": "Undo",
+      "restored": "Back in your bag",
+      "already": "It is already in your bag",
+      "added": "Added to bag",
+      "viewBag": "View bag",
+      "changed": "Changed: {now}",
+      "kept": "Kept {size}",
+      "error": "That did not work. Please try again.",
+      "stock": "Not enough in stock for that — your bag is unchanged.",
+      "tooMany": "That is the most you can order of one item.",
+      "notForSale": "This item is not on sale any more."
+    },
+    "ups": {
+      "title": "You may also like",
+      "sub": "From the same category as your bag.",
+      "subNew": "New in the shop.",
+      "all": "See all",
+      "codTitle": "Cash on Delivery",
+      "codText": "Pay the rider when it reaches you.",
+      "exTitle": "{windowHours}-hour size swap",
+      "exText": "Wrong size? Exchange it, unworn, with the tags on.",
+      "origTitle": "100% original",
+      "origText": "Genuine stock, and we say plainly which brand each item is."
+    },
+    "panel": {
+      "title": "Added to bag",
+      "close": "Close",
+      "bag": "Bag · {count}",
+      "bagWord": "Bag ·",
+      "justAdded": "Just added",
+      "sizeLine": "{colour} · Size {size}",
+      "more": {
+        "one": "+{n} more item · View bag",
+        "other": "+{n} more items · View bag"
+      },
+      "freeUnlocked": "Free delivery unlocked",
+      "cod": "Pay with Cash on Delivery",
+      "exchange": "Size exchange in {windowHours} hours",
+      "codExchange": "Pay with Cash on Delivery · size exchange in {windowHours} hours",
+      "keep": "Keep shopping",
+      "view": "View bag",
+      "checkout": "Checkout",
+      "cross": "Complete the look",
+      "add": "Add to bag"
+    },
+    "try": {
+      "title": "Try the bag",
+      "text": "A test page with the sample catalogue: add an item and see the added-to-bag panel. The product page shows the same panel.",
+      "fill": "Fill a sample bag"
+    }
   }
 }

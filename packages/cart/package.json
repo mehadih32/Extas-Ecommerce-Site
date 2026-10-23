@@ -1,0 +1,35 @@
+{
+  "name": "@extas/cart",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The bag (S04, PR 105–114): the bag and its lines with quantities, kept across visits (PR 105), what the added-to-bag panel shows (PR 106), the bag's lines, save for later and undo (PR 107), set lines (PR 108), the one offer slot and the tier box (PR 109), the two-sizes card and its answers (PR 110), the order summary (PR 111), the discount code with who may use it and the better-offer words (PR 112), free-delivery progress (PR 113) and the upsell picks (PR 114). Prices come from the rules and combos engines only.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/auth": "workspace:*",
+    "@extas/combos": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/rules": "workspace:*",
+    "@extas/seed": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

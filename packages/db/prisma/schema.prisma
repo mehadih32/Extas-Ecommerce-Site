@@ -2473,6 +2473,8 @@ model Cart {
   visitorId        String
   status           CartStatus @default(ACTIVE)
   couponCode       String?
+  /// PR 110 — the customer's answers to the "same product in two sizes" card, by size group ("other", "keep", "help").
+  sizeAnswers      Json?
   lastActivityAt   DateTime   @default(now()) @db.Timestamptz(3)
   convertedOrderId String?    @db.Uuid
   mergedIntoId     String?    @db.Uuid
@@ -2495,22 +2497,24 @@ enum CartStatus {
 
 /// @stage S04 · PR 105, 108, 97 — a bag line. A set is several lines sharing `comboGroupKey`, with the set price locked.
 model CartItem {
-  id             String   @id @default(uuid(7)) @db.Uuid
+  id             String    @id @default(uuid(7)) @db.Uuid
   storeId        Int
-  store          Store    @relation(fields: [storeId], references: [id])
-  cartId         String   @db.Uuid
-  cart           Cart     @relation(fields: [cartId], references: [id])
-  variantId      String   @db.Uuid
+  store          Store     @relation(fields: [storeId], references: [id])
+  cartId         String    @db.Uuid
+  cart           Cart      @relation(fields: [cartId], references: [id])
+  variantId      String    @db.Uuid
   quantity       Int
   unitPriceMinor Int
-  comboId        String?  @db.Uuid
+  comboId        String?   @db.Uuid
   comboGroupKey  String?
   setPriceMinor  Int?
-  savedForLater  Boolean  @default(false)
+  savedForLater  Boolean   @default(false)
   /// Where the add came from: offer, combo, set, upsell, order-now (PR 338 events).
   source         String?
-  createdAt      DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+  /// PR 105 — taken out of the bag (archived, never deleted: "Undo" brings the same line back).
+  removedAt      DateTime? @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
 
   @@index([cartId])
 }
@@ -5102,6 +5106,8 @@ model Coupon {
   campaignId       String?   @db.Uuid
   ruleId           String?   @db.Uuid
   enabled          Boolean   @default(false)
+  /// PR 112 (CN-018 answer 9, SIM-F-009) — who can use it: ALL (guests and members), GUESTS or MEMBERS (signed in).
+  audience         String    @default("ALL")
   startsAt         DateTime? @db.Timestamptz(3)
   endsAt           DateTime? @db.Timestamptz(3)
   archivedAt       DateTime? @db.Timestamptz(3)

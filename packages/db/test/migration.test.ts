@@ -116,6 +116,14 @@ describe('later migrations', () => {
     expect(sql).toContain('ALTER TABLE "AreaBand" ADD COLUMN     "archivedAt" TIMESTAMPTZ(3);');
     expect(sql).toContain('CREATE UNIQUE INDEX "GeoArea_code_key" ON "GeoArea"("code");');
   });
+
+  it('PR 105, 110, 112: a bag line taken out is archived; size answers on the bag; who may use a coupon (0006_bag)', () => {
+    const sql = sqlOf('0006_bag');
+    expect(sql).toContain('ALTER TABLE "CartItem" ADD COLUMN     "removedAt" TIMESTAMPTZ(3);');
+    expect(sql).toContain('ALTER TABLE "Cart" ADD COLUMN     "sizeAnswers" JSONB;');
+    // Existing coupons keep working for everybody: the new column has a default.
+    expect(sql).toContain(`ALTER TABLE "Coupon" ADD COLUMN     "audience" TEXT NOT NULL DEFAULT 'ALL';`);
+  });
 });
 
 // All migrations applied in order to a throwaway database must give exactly the schema. Needs TEST_DATABASE_ADMIN_URL

@@ -81,7 +81,7 @@ export function menuData(c: ShopContext): MenuData {
   };
 }
 
-export function StoreHeader({ c }: { c: ShopContext }) {
+export function StoreHeader({ c, bagCount = 0 }: { c: ShopContext; bagCount?: number }) {
   const t = c.t;
   const head = c.s['shell.header'];
   const home = hrefIn(c.lang, ROUTES.home);
@@ -114,8 +114,13 @@ export function StoreHeader({ c }: { c: ShopContext }) {
       </a>
     ),
     bag: () => (
-      <a key="bag" className="iconbtn hdr-bag" href={hrefIn(c.lang, ROUTES.bag)} aria-label={t('header.bagItems', { n: c.num(0) })} data-tip={t('header.bag')}>
+      <a key="bag" className={`iconbtn hdr-bag${bagCount ? ' has' : ''}`} href={hrefIn(c.lang, ROUTES.bag)} aria-label={t('header.bagItems', { n: c.num(bagCount) })} data-tip={t('header.bag')}>
         <Icon name="bag" size={25} stroke={1.9} />
+        {bagCount ? (
+          <span className="count-dot" aria-hidden="true" data-testid="hdr-bag-count">
+            {c.num(bagCount)}
+          </span>
+        ) : null}
       </a>
     ),
   };
