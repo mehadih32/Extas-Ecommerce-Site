@@ -128,6 +128,26 @@ export const pdpShareSchema = z
   })
   .strict();
 
+// ---- PR 70 · the site-wide floating WhatsApp button (Blueprint D3.3 / D4.1 `fab.whatsapp`, Note 3.1; demo 02-core.js
+// SHOWN.fab.whatsapp = false) ----
+
+export const FAB_PAGES = ['home', 'category', 'product', 'bag', 'help', 'wishlist', 'account', 'other'] as const;
+
+/**
+ * The round WhatsApp button that floats over every page. Replaced on 19 Oct by the header's WhatsApp icon and kept as a
+ * switch, off (Note 3.1). When on: which kinds of page show it, which side, and where it sits — low, above the phone's
+ * bars (the recommended place, F #62), or in the middle of the side as first asked. It never shows without the store's
+ * WhatsApp number.
+ */
+export const shellFabSchema = z
+  .object({
+    on: z.boolean(),
+    pages: z.object(Object.fromEntries(FAB_PAGES.map((k) => [k, z.boolean()])) as Record<(typeof FAB_PAGES)[number], z.ZodBoolean>).strict(),
+    side: z.enum(['right', 'left']),
+    place: z.enum(['low', 'middle']),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const shopMoreSettings = {
@@ -190,9 +210,26 @@ export const shopMoreSettings = {
     helpKey: 'pdp.share.help',
     sortOrder: 160,
   }),
+  'shell.fab': setting({
+    ...json,
+    group: 'shell',
+    schema: shellFabSchema,
+    // C3 / PR 107 / §49.4: never on the home page or the bag; the demo's FAB_PAGES (03-layout.js) keeps it off the
+    // product page too (the page has its own rail and buy bar); every other kind of page when switched on
+    default: {
+      on: false,
+      pages: { home: false, category: true, product: false, bag: false, help: true, wishlist: true, account: true, other: true },
+      side: 'right',
+      place: 'low',
+    },
+    labelKey: 'shell.fab.label',
+    helpKey: 'shell.fab.help',
+    sortOrder: 170,
+  }),
 };
 
 export type PdpFitSettings = z.output<typeof pdpFitSchema>;
 export type PdpRowsSettings = z.output<typeof pdpRowsSchema>;
 export type PdpIconsSettings = z.output<typeof pdpIconsSchema>;
 export type PdpShareSettings = z.output<typeof pdpShareSchema>;
+export type ShellFabSettings = z.output<typeof shellFabSchema>;

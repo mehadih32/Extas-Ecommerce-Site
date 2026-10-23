@@ -941,6 +941,10 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (prefers-reduced-motion: reduce) { .shop .wa-fab { transform: none !important; } }
 .shop .wa-fab { transition: opacity .18s ease, visibility .18s ease; }
 .shop .wa-fab.wa-off { opacity: 0; visibility: hidden; pointer-events: none; }
+/* PR 70 — the disc's place (shell.fab): the left side, or the middle of the side (as first asked, F #62) */
+.shop .wa-fab.wa-left { right: auto; left: 12px; }
+.shop .wa-fab.wa-mid { top: 50%; bottom: auto; transform: translateY(-50%); }
+@media (min-width: 1024px) { .shop .wa-fab.wa-left { left: 20px; right: auto; } }
 /* ---- V12.2 (CN-012: owner Notes 54 and 58), docs/demo/src/r12-zzzz-n54.css, last in the demo's cascade, scoped the
  * same way: the desktop footer's link icons (#1) and social marks (#2, Note 58 C), the Hotline box under the WhatsApp
  * box (Note 58 B), the slogan under the footer logo (Note 58 D), and the phone footer's social row (Note 58 A). ---- */
@@ -977,3 +981,4 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (min-width: 1024px) { html .shop .ftr-dref .fdr-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; } }
 @media (min-width: 1024px) { html .shop .ftr-dref .fdr-brand .fdr-slog { margin: 0px; } }
 @media (min-width: 1024px) { html .shop .ftr-dref .fdr-brand .logo { padding-left: 0px !important; margin-left: -1px; } }
+@media (prefers-reduced-motion: reduce) { .shop .wa-fab.wa-mid { transform: translateY(-50%) !important; } }

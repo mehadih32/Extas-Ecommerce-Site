@@ -114,6 +114,8 @@ function waFabFooter() {
     if (r.bottom < H - 2 && r.bottom < H * 0.75) return;
     if (r.top < top) top = r.top;
   });
+  // PR 70: a disc in the middle of the side has no bars to clear
+  if (el.classList.contains('wa-mid')) return;
   const lift = Math.round(H - top + 12);
   if (lift > 12 && el.style.bottom !== `${lift}px`) el.style.bottom = `${lift}px`;
 }
