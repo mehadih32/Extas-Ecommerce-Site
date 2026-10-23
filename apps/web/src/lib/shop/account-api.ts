@@ -8,11 +8,14 @@
 //   POST /api/account/password   {current?, next}           → {}                                     Profile: set or change it
 //   POST /api/account/test-code  {phone}                    → {code}   test servers only (EXTAS_SHOP_TEST_PAGES=1, mock SMS)
 //
-// The session cookie is `__Host-extas_c`, the device cookie `__Host-extas_dev` (lib/shop/account.ts).
+// The session cookie is `__Host-extas_c`, the device cookie `__Host-extas_dev` (lib/shop/account.ts). Follow-up 71: a
+// sign-in brings this browser's wishlist hearts into the account (lib/shop/wishlist.ts mergeWishes).
 import { askForCode, isAccountError, normalPhone, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
 import type { RequestContext } from '@extas/auth';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
+import { BAG_COOKIE } from './bag-model';
+import { mergeWishes, visitorOf } from './wishlist';
 import { accountCookie, CUSTOMER_COOKIE, clearAccountCookie, customerOfRequest, DEVICE_COOKIE, newDeviceToken } from './account';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
@@ -47,6 +50,17 @@ function ctxOf(request: Request): RequestContext {
   return { ...requestContext(request), source: 'shop-account' };
 }
 
+/** Follow-up 71 — this browser's hearts join the account at sign-in (a failure never stops the sign-in). */
+async function joinWishlist(request: Request, deps: AccountApiDeps, customerId: string): Promise<void> {
+  const visitor = visitorOf(readCookie(request, BAG_COOKIE));
+  if (!visitor) return;
+  try {
+    await mergeWishes({ db: deps.accounts.db, settings: deps.accounts.settings, storeId: deps.storeId, now: deps.accounts.now }, visitor, customerId);
+  } catch (e) {
+    console.warn(`shop: the wishlist did not join the account (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+  }
+}
+
 /** The session and device cookies after a sign-in (the device cookie lasts as long as a device stays known). */
 async function signedInHeaders(deps: AccountApiDeps, token: string, expiresAt: Date, device: string): Promise<Headers> {
   const { deviceDays } = await deps.accounts.settings.value('account.login', { storeId: deps.storeId });
@@ -77,9 +91,11 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         if (typeof b.password === 'string' && b.password) {
           const r = await signInWithPassword(a, { storeId: deps.storeId, phone: text(b.phone, 40), password: text(b.password, 512), deviceToken: device, lang, storeName: await deps.storeName() }, ctxOf(request));
           if (r.kind === 'code') return json({ ok: true, step: 'code', phone: r.sent.phone, resendSeconds: r.sent.resendSeconds, length: r.sent.length, mock: r.sent.mock });
+          await joinWishlist(request, deps, r.session.customerId);
           return json({ ok: true, next }, { headers: await signedInHeaders(deps, r.session.token, r.session.expiresAt, device) });
         }
         const s = await signInWithCode(a, { storeId: deps.storeId, phone: text(b.phone, 40), code: text(b.code, 16), deviceToken: device }, ctxOf(request));
+        await joinWishlist(request, deps, s.customerId);
         return json({ ok: true, next }, { headers: await signedInHeaders(deps, s.token, s.expiresAt, device) });
       }
       case 'logout': {

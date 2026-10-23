@@ -10,7 +10,7 @@ import { registry, type Key, type Value } from '@extas/settings';
 import { BAG_COOKIE } from './bag-model';
 import { sellableReader } from './sellable';
 import { WISH_COUNT_COOKIE } from './wish-model';
-import { wishDetails, wishlistHandler, wishRows, wishTryHandler, type WishDeps } from './wishlist';
+import { mergeWishes, wishDetails, wishlistHandler, wishRows, wishTryHandler, type WishDeps } from './wishlist';
 
 const ORIGIN = 'https://shop.example.test';
 
@@ -131,6 +131,41 @@ describe.skipIf(!HAS_TEST_DB)('the wishlist API on PostgreSQL (PR 71)', () => {
     const other = live.find((x) => x.id !== p.id && x.variants.length)!;
     await wishlistHandler(req('POST', { cookie, body: { items: [{ productId: p.id, variantId: other.variants[0]!.id }] } }), deps());
     expect(await wishRows(deps(), visitor)).toEqual([expect.objectContaining({ productId: p.id, variantId })]);
+  });
+
+  it('follow-up 71 · at sign-in the browser`s hearts join the account: once each, up to the limit, nothing dropped', async () => {
+    const customer = await t.prisma.customer.create({ data: { storeId: S, phone: '+8801700000071' }, select: { id: true } });
+    const signed = (): WishDeps => ({ ...deps(), customerOf: async () => customer.id });
+    // the account already holds live[5] (saved on another device, no size) and live[6]
+    const other = jar(await wishlistHandler(req('POST', { body: { ids: [live[6]!.id, live[5]!.id] } }), signed()));
+    expect(other).toContain('__Host-extas_bag=');
+    // this browser, signed out: live[4] and live[5] with a size
+    const p5 = live[5]!;
+    const cookie = jar(await wishlistHandler(req('POST', { body: { items: [{ productId: live[4]!.id }, { productId: p5.id, variantId: p5.variants[0]?.id }] } }), deps()));
+    const visitor = decodeURIComponent(/__Host-extas_bag=([^;]+)/.exec(cookie)![1]!);
+    // signed out, this browser sees only its own; the account's other hearts are not here
+    expect(new Set((await read(await wishlistHandler(req('GET', { cookie }), deps()))).body.ids)).toEqual(new Set([live[4]!.id, p5.id]));
+
+    expect(await mergeWishes(deps(), visitor, customer.id)).toEqual({ moved: 1, same: 1, kept: 0 });
+    const mine = await wishRows(deps(), visitor, customer.id);
+    expect(new Set(mine.map((r) => r.productId))).toEqual(new Set([live[4]!.id, live[5]!.id, live[6]!.id]));
+    if (p5.variants[0]) expect(mine.find((r) => r.productId === p5.id)?.variantId).toBe(p5.variants[0].id);
+    // the browser's copy of the shared product is archived, never deleted
+    expect(await t.prisma.wishlistItem.count({ where: { visitorId: visitor, productId: p5.id, archivedAt: { not: null } } })).toBe(1);
+    // signed in, the API answers with the account's list; signed out again, this browser holds nothing of it
+    expect((await read(await wishlistHandler(req('GET', { cookie }), signed()))).body.ids).toHaveLength(3);
+    expect((await read(await wishlistHandler(req('GET', { cookie }), deps()))).body.ids).toEqual([]);
+
+    // a full account: the browser's extra hearts stay on the browser and still show while signed in
+    overrides.set('wish.list', { ...registry['wish.list'].default, max: 3 });
+    try {
+      const more = jar(await wishlistHandler(req('POST', { body: { ids: [live[7]!.id] } }), deps()));
+      const v2 = decodeURIComponent(/__Host-extas_bag=([^;]+)/.exec(more)![1]!);
+      expect(await mergeWishes(deps(), v2, customer.id)).toEqual({ moved: 0, same: 0, kept: 1 });
+      expect(await wishRows(deps(), v2, customer.id)).toHaveLength(4);
+    } finally {
+      overrides.delete('wish.list');
+    }
   });
 
   it('the test servers` sample hearts: three products, one with a size that can be sold; never on the live shop', async () => {

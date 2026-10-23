@@ -3,6 +3,7 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { WishlistPage } from '@/components/shop/wish/WishlistPage';
+import { signedIn } from '@/lib/shop/account';
 import { cartDeps } from '@/lib/shop/bag';
 import { BAG_COOKIE } from '@/lib/shop/bag-model';
 import { liveCardsByIds, newestCards } from '@/lib/shop/catalogue';
@@ -21,13 +22,15 @@ export default async function Wishlist() {
   const c = await shopContext();
   const s = await readPageSettings(['wish.list', 'pdp.size'] as const, c.storeId);
   const visitor = visitorOf((await cookies()).get(BAG_COOKIE)?.value);
+  const me = await signedIn();
   const deps = cartDeps();
   let rows: Awaited<ReturnType<typeof wishRows>> = [];
   let details = new Map<string, WishDetail>();
-  if (visitor && deps) {
+  if ((visitor || me) && deps) {
     const d = { db: deps.db, settings: deps.settings, storeId: c.storeId };
     try {
-      rows = await wishRows(d, visitor);
+      // follow-up 71: signed in, the account's list (every device) with this browser's own hearts
+      rows = await wishRows(d, visitor ?? '', me?.customer.id ?? null);
       details = await wishDetails(d, rows);
     } catch (e) {
       // the page still draws (empty) when the database is slow; the hearts keep their own copy
