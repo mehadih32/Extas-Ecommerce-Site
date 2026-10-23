@@ -35,7 +35,7 @@
     },
     {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",
-      "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0"],
+      "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",
       "expect": ["[data-testid=\"hdr-wa\"]"]
     }

@@ -46,6 +46,9 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
 /** Pages already built inside an address that is still coming (they have their own route). */
 export const BUILT_INSIDE: readonly string[] = [
   ROUTES.wishlist, // PR 71 — the rest of /account waits for the customer accounts
+  // PR 75 — the help pages (app/(shop)/(store)/help/[slug]); "Ways to pay", "Careers" and the size guide are still to come.
+  // A built help page with nothing true to say yet still says "Coming soon" itself.
+  ...['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'].map(ROUTES.help),
 ];
 
 /** Which coming page an address belongs to, or null (then it is not a shop page at all). */

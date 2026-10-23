@@ -1,16 +1,16 @@
-// S02 · the third storefront batch (PR 53, 67–71, 74, 75): every key at version 21, the demo's defaults, the limits,
+// S02 · the third storefront batch (PR 53, 67–71, 74, 75): every key at version 23, the demo's defaults, the limits,
 // and CN-018 (what the demo does not do by default is off).
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
-import { pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shellMenuSubsSchema, shopMoreSettings, wishListSchema } from '../src/registry-shop-more';
+import { HELP_PAGES, pagesHelpSchema, pagesTextSchema, pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shellMenuSubsSchema, shopMoreSettings, wishListSchema } from '../src/registry-shop-more';
 
-describe('third storefront batch settings (v21)', () => {
-  it('every key is in the registry at version 21, public, never owner data, with both labels', () => {
+describe('third storefront batch settings (v23)', () => {
+  it('every key is in the registry at version 23, public, with both labels; only the help pages` own words are owner data', () => {
     for (const [key, spec] of Object.entries(shopMoreSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(21);
-      expect(spec.isOwnerData, key).toBe(false);
+      expect(spec.version, key).toBe(23);
+      expect(spec.isOwnerData, key).toBe(key === 'pages.text');
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
         expect(lookup(messages[lang], spec.labelKey), `${lang} ${key}`).toBeTruthy();
@@ -62,6 +62,21 @@ describe('third storefront batch settings (v21)', () => {
     expect(m.group).toBe('shell');
     expect(shellMenuSubsSchema.safeParse({ ...m.default, style: 'off' }).success).toBe(true);
     expect(shellMenuSubsSchema.safeParse({ ...m.default, style: 'mega' }).success).toBe(false);
+  });
+
+  it('PR 75: every help page on, reading the live rules; the owner`s own words empty (owner data), so no policy is invented', () => {
+    const h = shopMoreSettings['pages.help'].default;
+    expect(Object.keys(h.pages)).toEqual([...HELP_PAGES]);
+    expect(Object.values(h.pages).every((p) => p.on)).toBe(true);
+    expect(h.pages.exchange.rules).toEqual(['exchange', 'no-return', 'exchange-order']);
+    expect(h.pages.privacy.rules).toEqual([]);
+    expect(h.topics).toEqual(['delivery', 'exchange', 'faq', 'contact']);
+    expect(pagesHelpSchema.safeParse({ ...h, topics: ['faq', 'faq'] }).success).toBe(false);
+    expect(pagesHelpSchema.safeParse({ ...h, pages: { ...h.pages, faq: { ...h.pages.faq, rules: ['Bad key'] } } }).success).toBe(false);
+    expect(shopMoreSettings['pages.text'].default).toBeNull();
+    const words = { pages: { story: { title: null, lede: null, body: { en: 'Made here.', bn: 'এখানে তৈরি।' } } }, faq: [{ id: 'q1', on: true, q: { en: 'Q?', bn: 'প্রশ্ন?' }, a: { en: 'A.', bn: 'উত্তর।' } }] };
+    expect(pagesTextSchema.safeParse(words).success).toBe(true);
+    expect(pagesTextSchema.safeParse({ ...words, pages: { careers: words.pages.story } }).success).toBe(false);
   });
 
   it('PR 71: the wishlist keeps up to 100, shows 4 newest on an empty computer page, and the bag moves to it (demo R16)', () => {

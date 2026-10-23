@@ -62,5 +62,38 @@
   },
   "menuSub": {
     "viewAll": "View all"
+  },
+  "helpPage": {
+    "crumbs": "Breadcrumb",
+    "home": "Home",
+    "help": "Help",
+    "topics": "Help topics",
+    "centre": "Help centre",
+    "lede": {
+      "faq": "Answers to the questions customers ask.",
+      "delivery": "What delivery costs and how it works.",
+      "exchange": "Written plainly, so there are no surprises.",
+      "contact": "Orders, sizes, exchanges — ask us anything."
+    },
+    "stuck": "Still stuck?",
+    "stuckText": "Ask us directly.",
+    "stuckHours": "Ask us directly — {hours}.",
+    "hand": "Still need a hand?",
+    "wa": "Message us on WhatsApp",
+    "hotline": "Hotline {number}",
+    "ch": {
+      "whatsapp": "WhatsApp",
+      "whatsappSub": "Message us",
+      "phoneSub": "Hotline",
+      "phoneHours": "Hotline · {hours}",
+      "emailSub": "E-mail",
+      "addressSub": "Our office"
+    },
+    "before": "Before you message",
+    "beforeText": "The delivery and exchange rules have their own pages:",
+    "details": {
+      "contact": "Contact",
+      "legal": "Who we are"
+    }
   }
 }

@@ -1,6 +1,7 @@
 {
   "groups": {
-    "wishlist": "Wishlist"
+    "wishlist": "Wishlist",
+    "pages": "Help pages"
   },
   "pdp": {
     "fit": {
@@ -34,6 +35,16 @@
     "list": {
       "label": "Wishlist",
       "help": "The hearts a shopper taps are kept for his browser (no login needed) and listed on the wishlist page. Max: the most products one list keeps — past it a heart says the list is full, nothing is dropped. Empty-list picks: on a computer, an empty list shows this many of the newest products (0 = none). Move from the bag: on, the heart button on a bag line says \"Move to wishlist\" and moves the item to the list, with Undo; off, it says \"Save for later\" and keeps it in the bag. A combo always stays whole in the bag's saved list."
+    }
+  },
+  "pages": {
+    "help": {
+      "label": "Help pages",
+      "help": "The help pages at /help/…: questions and answers, delivery, exchange and returns, privacy, terms, our story and contact. Switch each one on or off, and choose which live Smart Rules it shows (their texts, in this order: a rule that is not live is left out). The FAQ also shows every live rule placed on \"FAQ\". Store details: under privacy the e-mail and hotline, under terms the registered name, address, trade licence and DBID (each only when filled in). A page with nothing to show says \"Coming soon\". On a computer the pages sit in a help centre with the topics on the left (choose which, in order) and WhatsApp and the hotline on the right. \"Still need a hand?\" adds the WhatsApp button under each page."
+    },
+    "text": {
+      "label": "Words on the help pages",
+      "help": "Your own words on each help page: a title and a short line under it (both optional: the shop has its own), and the page's text. In the text, an empty line starts a new paragraph, a line starting with \"## \" is a heading and lines starting with \"- \" are a list. Privacy, terms and our story show only your words, so they say \"Coming soon\" until you write them. Your own questions and answers go on the FAQ, before the answers from your Smart Rules. In English and Bengali."
     }
   }
 }
