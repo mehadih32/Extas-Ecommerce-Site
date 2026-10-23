@@ -239,6 +239,7 @@ case "$1" in
   image) [ "$3" != "extas-migrate:gone" ]; exit ;;
   images) echo "extas-migrate:newest"; exit 0 ;;
   build) exit 0 ;;
+  exec) cat > /dev/null; echo "${FAKE_GUARDS:-ok: 14 tables append-only}"; exit 0 ;;   # the append-only check (PR 139)
 esac
 out=""; envf=""; prev=""
 for a in "$@"; do
@@ -267,6 +268,10 @@ check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-
 check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
 rc=0; sm FAKE_OK=false FAKE_FAILED=1 FAKE_PROBLEMS='["/admin (phone): shows the error screen"]' >/dev/null || rc=$?
 check "smoke: a failing run fails and says what" "$rc:$(jq -r '.problems[0]' "$T/root/state/smoke.json")" "1:/admin (phone): shows the error screen"
+# PR 139: the database check rides along — recorded in result.json and README; a guard problem fails a passing run
+check "smoke: the append-only check is recorded" "$(jq -r '.database.appendOnly' "$T/out/result.json"):$(grep -c 'Database (PR 139): ok: 14 tables append-only' "$T/out/README.md")" "ok: 14 tables append-only:1"
+rc=0; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' FAKE_GUARDS='problem: guard off or app role may change AuditLog' >/dev/null || rc=$?
+check "smoke: a guard problem fails the run and says which table" "$rc:$(jq -c '{ok,problems}' "$T/root/state/smoke.json")" '1:{"ok":false,"problems":["problem: guard off or app role may change AuditLog"]}'
 echo '{"migrate":"extas-migrate:gone"}' > "$T/root/state/last-good-deploy.json"; : > "$T/docker.log"
 sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
 check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c' "$T/docker.log")" "1"
@@ -468,6 +473,62 @@ check "backup: a docs copy without the register fails the backup" "$rc:$(jq -r .
 sed -i 's/^BACKUP_MEDIA=.*/BACKUP_MEDIA="yes"/' "$T/server.conf"
 rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
 check "restore test: photos on disk but no archive fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'no photo archive')" "1:1"
+rm -rf "$T"
+
+# The app's own database role (PR 139, infra/deploy/app-role.sh) with a stand-in `docker`: nothing switches until the
+# password, PgBouncer's login and migration 0010 are all there; then only the app's two URLs move to extas_app (host,
+# port, database and options kept; the direct URL stays the owner's), the password goes to psql on stdin only (never
+# on a command line or in the output) with statement logging off, a second run changes nothing, and a failed login
+# leaves everything as it was.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/sec"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for `docker exec -i extas-postgres psql …`: logs the arguments and the SQL, answers like the database would
+echo "ARGS $*" >> "$FAKE_LOG"
+sql="$(cat)"; printf 'SQL %s\n' "$sql" >> "$FAKE_LOG"
+case "$sql" in
+  *extas_append_only*) [ -n "${FAKE_GUARDS:-}" ] && echo "$FAKE_GUARDS" || exit 2 ;;
+  *has_table_privilege*) [ "${FAKE_READY:-f}" = t ] && echo t || { echo 'ERROR: role "extas_app" does not exist' >&2; exit 1; } ;;
+  *"ALTER ROLE"*) exit "${FAKE_LOGIN_RC:-0}" ;;
+esac
+exit 0
+FAKE
+chmod +x "$T/bin/docker"
+APW="Abc123def456ghi789jkl012mno345pqr678stu9"
+printf 'SESSION_SECRET=keep\nDATABASE_URL=postgresql://extas:ownerpw@extas-pgbouncer:6432/extas?pgbouncer=true\nDATABASE_DIRECT_URL=postgresql://extas:ownerpw@extas-postgres:5432/extas\n' > "$T/sec/app.env"
+printf 'REPORT_DATABASE_URL=postgresql://extas:ownerpw@extas-pgbouncer:6432/extas_report?pgbouncer=true\nMEILI_URL=http://extas-meilisearch:7700\n' > "$T/sec/app-connections.env"
+chmod 600 "$T/sec/app.env" "$T/sec/app-connections.env"
+printf 'POSTGRES_PASSWORD=ownerpw\n' > "$T/sec/postgres.env"
+printf '"extas" "ownerpw"\n' > "$T/userlist.txt"
+cp "$T/sec/app.env" "$T/app.env.orig"
+role() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" bash -c '. ../deploy/app-role.sh; app_role_use "$1" "$2"' _ "$T/sec" "$T/userlist.txt"; }
+check "app role: no password yet keeps the owner role" "$(role)" "kept the owner role: no APP_DB_PASSWORD yet (server setup makes it)"
+printf 'APP_DB_PASSWORD=%s\n' "$APW" >> "$T/sec/postgres.env"
+check "app role: no PgBouncer login yet keeps the owner role" "$(role)" "kept the owner role: PgBouncer has no extas_app login yet (server setup writes it)"
+printf '"extas_app" "%s"\n' "$APW" >> "$T/userlist.txt"
+check "app role: before migration 0010 keeps the owner role" "$(FAKE_READY=f role)" "kept the owner role: migration 0010_append_only is not in the database"
+check "app role: app.env untouched while waiting" "$(cmp -s "$T/app.env.orig" "$T/sec/app.env" && echo same)" "same"
+check "app role: a failed login keeps the owner role" "$(FAKE_READY=t FAKE_LOGIN_RC=1 role)" "kept the owner role: could not give extas_app its login"
+check "app role: app.env untouched after a failed login" "$(cmp -s "$T/app.env.orig" "$T/sec/app.env" && echo same)" "same"
+: > "$T/docker.log"
+out="$(FAKE_READY=t role)"
+check "app role: switches when everything is in place" "$out" "switched"
+check "app role: the app's URL moves to extas_app, the rest kept" "$(grep '^DATABASE_URL=' "$T/sec/app.env")" "DATABASE_URL=postgresql://extas_app:$APW@extas-pgbouncer:6432/extas?pgbouncer=true"
+check "app role: the direct URL stays the owner's" "$(grep '^DATABASE_DIRECT_URL=' "$T/sec/app.env")" "DATABASE_DIRECT_URL=postgresql://extas:ownerpw@extas-postgres:5432/extas"
+check "app role: the report URL moves too" "$(grep '^REPORT_DATABASE_URL=' "$T/sec/app-connections.env")" "REPORT_DATABASE_URL=postgresql://extas_app:$APW@extas-pgbouncer:6432/extas_report?pgbouncer=true"
+check "app role: other lines kept" "$(sed -n 1p "$T/sec/app.env"):$(sed -n 2p "$T/sec/app-connections.env")" "SESSION_SECRET=keep:MEILI_URL=http://extas-meilisearch:7700"
+check "app role: files stay 600" "$(stat -c %a "$T/sec/app.env"):$(stat -c %a "$T/sec/app-connections.env")" "600:600"
+check "app role: the password never on a command line" "$(grep '^ARGS' "$T/docker.log" | grep -c "$APW" || true)" "0"
+check "app role: the login is given on stdin with statement logging off" "$(grep -c "ALTER ROLE extas_app LOGIN PASSWORD '$APW'" "$T/docker.log"):$(grep -c "SET log_statement = 'none'" "$T/docker.log")" "1:1"
+check "app role: no temp files left" "$(find "$T/sec" -name '.role.*' | wc -l)" "0"
+cp "$T/sec/app.env" "$T/app.env.switched"
+check "app role: a second run changes nothing" "$(FAKE_READY=t role)" "in use"
+check "app role: app.env the same after the second run" "$(cmp -s "$T/app.env.switched" "$T/sec/app.env" && echo same)" "same"
+# The smoke test's database check: the database's own answer, or a problem when it cannot be read
+guards() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" bash -c '. ../deploy/app-role.sh; app_role_guards'; }
+check "app role: guards ok passes through" "$(FAKE_GUARDS='ok: 14 tables append-only' guards)" "ok: 14 tables append-only"
+check "app role: a guard problem passes through" "$(FAKE_GUARDS='problem: guard off or app role may change AuditLog' guards)" "problem: guard off or app role may change AuditLog"
+check "app role: an unreadable database is a problem" "$(guards)" "problem: the append-only check could not read the database"
 rm -rf "$T"
 
 exit $fail

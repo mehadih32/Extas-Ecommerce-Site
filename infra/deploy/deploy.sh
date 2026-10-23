@@ -27,7 +27,7 @@ APP_PORT="${APP_PORT:-3000}"
 
 log() { echo "[deploy $(date +%H:%M:%S)] $*"; }
 die() { log "FAIL: $*"; LAST_ERR="$*"; exit 1; }
-MIGRATION="not reached"; RECORDED=0; LAST_ERR=""
+MIGRATION="not reached"; RECORDED=0; LAST_ERR=""; ROLE_SWITCHED=0
 
 record() { # record <result> <detail>  (the newest entry is last-deploy.json; history stays in state/deploys/)
   local f; f="$STATE/deploys/$(date +%Y%m%d-%H%M%S).json"
@@ -47,6 +47,13 @@ record() { # record <result> <detail>  (the newest entry is last-deploy.json; hi
 # deploy report never shows an older run's result as this one's.
 on_exit() {
   local rc=$?
+  # PR 139: a run that moved the app to its own database role and then failed puts the connection strings back, so
+  # the old colour and a rollback start exactly as before; the next deploy tries the switch again.
+  if [ "$rc" -ne 0 ] && [ "$ROLE_SWITCHED" = 1 ]; then
+    mv -f "$SEC/.app.env.before-role" "$SEC/app.env" 2>/dev/null || true
+    mv -f "$SEC/.app-connections.env.before-role" "$SEC/app-connections.env" 2>/dev/null || true
+    log "the app's database role is back to what it was before this run"
+  fi
   if [ "$rc" -ne 0 ] && [ "$RECORDED" = 0 ] && [ -d "$STATE/deploys" ]; then
     record fail "stopped before the switch: ${LAST_ERR:-see the run log}; live version unchanged" || true
   fi
@@ -96,8 +103,11 @@ migrate_db() { # migrate_db <image>: schema migrations, then the settings sync â
   local img="$1" envf rc=0
   # Only the two connection strings go into the one-shot container (not the session or vault keys), through a
   # root-only file in the secrets folder that is removed straight after.
+  # Both point at the owner role (PR 139): the migrations, the settings and auth sync, the place import and the seed
+  # are the owner's work; the app itself runs as extas_app (app-role.sh), which may not change history.
   envf="$(mktemp "$SEC/.migrate.XXXXXX")"
-  grep -E '^(DATABASE_URL|DATABASE_DIRECT_URL)=' "$SEC/app.env" > "$envf" || true
+  grep -E '^DATABASE_DIRECT_URL=' "$SEC/app.env" > "$envf" || true
+  sed -n 's/^DATABASE_DIRECT_URL=/DATABASE_URL=/p' "$SEC/app.env" >> "$envf" || true
   if ! grep -q '^DATABASE_DIRECT_URL=' "$envf"; then
     rm -f "$envf"; log "DATABASE_DIRECT_URL is not in app.env â€” run server-setup (stack) first"; return 1
   fi
@@ -195,6 +205,16 @@ if [ -n "${MIGRATE_IMAGE:-}" ]; then
   fi
   MIGRATION="ok"
   log "database migrated and settings in sync"
+  # PR 139: the app connects as its own role, which may not change or remove history (app-role.sh). Never fails the
+  # deploy: when something is missing the app keeps the role it has and the reason is logged.
+  # shellcheck source=app-role.sh
+  . "$HERE/app-role.sh"
+  cp -p "$SEC/app.env" "$SEC/.app.env.before-role"
+  cp -p "$SEC/app-connections.env" "$SEC/.app-connections.env.before-role"
+  role="$(app_role_use "$SEC" "$R/config/pgbouncer/userlist.txt" 2>/dev/null)" || role="kept the owner role: check failed"
+  [ "$role" = switched ] && ROLE_SWITCHED=1
+  [ "$ROLE_SWITCHED" = 1 ] || rm -f "$SEC/.app.env.before-role" "$SEC/.app-connections.env.before-role"
+  log "the app's database role: $role"
 else
   MIGRATION="skipped (rollback: the database stays as it is)"
   log "rollback: the database stays as it is (migrations only go forward)"
@@ -235,6 +255,7 @@ if [ "$CUR" = blue ] || [ "$CUR" = green ]; then
   IMAGE_FOR_COLOR="$IMAGE" app "$CUR" down >/dev/null 2>&1 || true
 fi
 record ok "$NEW live"
+rm -f "$SEC/.app.env.before-role" "$SEC/.app-connections.env.before-role"
 # Keep the newest images (current + rollback targets); older ones only take disk space.
 docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-web | sort -k2 -r | awk 'NR>5{print $1}' \
   | xargs -r docker rmi >/dev/null 2>&1 || true

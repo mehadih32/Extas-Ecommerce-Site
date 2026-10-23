@@ -50,7 +50,13 @@ describe.skipIf(!HAS_DB)('connections with PostgreSQL', () => {
   afterAll(async () => t?.drop());
   beforeEach(async () => {
     reads = 0;
-    await t.prisma.$executeRawUnsafe('TRUNCATE "IntegrationTestRun", "Integration", "AuditLog" CASCADE');
+    // AuditLog is append-only at the database (PR 139): the throwaway test database is cleared the way the documented
+    // retention purge would do it — as the table's owner, with its trigger off inside one transaction.
+    await t.prisma.$transaction([
+      t.prisma.$executeRawUnsafe('ALTER TABLE "AuditLog" DISABLE TRIGGER "AuditLog_no_truncate"'),
+      t.prisma.$executeRawUnsafe('TRUNCATE "IntegrationTestRun", "Integration", "AuditLog" CASCADE'),
+      t.prisma.$executeRawUnsafe('ALTER TABLE "AuditLog" ENABLE TRIGGER "AuditLog_no_truncate"'),
+    ]);
   });
 
   it('runs on the fallback or the mock when nothing is connected', async () => {

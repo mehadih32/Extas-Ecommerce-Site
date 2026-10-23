@@ -44,7 +44,7 @@ jobs:
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/app-role.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
           EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
@@ -209,6 +209,11 @@ jobs:
           pnpm --filter @extas/rules sample
           pnpm --filter @extas/combos sample
           pnpm --filter @extas/auth create-owner --email gate@example.test --name "Device gate" --generate-to "$RUNNER_TEMP/gate-password"
+      # PR 139 (CN-022): the app runs as its own role, as on the server (infra/deploy/app-role.sh): migration 0010 made
+      # extas_app without a login; this throwaway database gives it one. Every page the gate opens, and the sign-in
+      # with its audit rows, then runs without UPDATE, DELETE or TRUNCATE on the history tables.
+      - name: The app's own database role (extas_app)
+        run: psql "$DATABASE_DIRECT_URL" -v ON_ERROR_STOP=1 -qc "ALTER ROLE extas_app LOGIN PASSWORD 'ci-only-app'"
       - name: The web build from the web job
         uses: actions/download-artifact@v4
         with:
@@ -227,6 +232,7 @@ jobs:
       - name: Start the app (standalone server, on the sample database; throwaway keys)
         run: |
           rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+          DATABASE_URL=postgresql://extas_app:ci-only-app@127.0.0.1:5432/extas \
           SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=0.0.0.0 EXTAS_SHOP_TEST_PAGES=1 \
             nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
           for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
@@ -303,6 +309,13 @@ jobs:
         run: |
           cd packages/db
           node scripts/prisma.mjs migrate diff --from-url "$DATABASE_DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+      # PR 13, 603, 139 — the migration shape checks, all migrations on a throwaway database without drift, and the
+      # append-only guards (CN-022): as the app's role (extas_app) the audit log and the history tables take INSERT
+      # and SELECT, never UPDATE, DELETE or TRUNCATE; as the owner the trigger refuses them too.
+      - name: Database package on PostgreSQL (PR 13, 603, 139)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/db test
       - name: Vault against PostgreSQL (PR 493)
         env:
           EXTAS_TEST_DATABASE_URL: ${{ env.DATABASE_DIRECT_URL }}
