@@ -4,7 +4,8 @@
 #   sudo infra/deploy/deploy.sh <image> <migrate-image>
 #                                           migrate the database with <migrate-image>, then start <image> in the idle
 #                                           colour, smoke-test it, switch Caddy, stop the old
-#   sudo infra/deploy/deploy.sh rollback    bring the previous image back the same way (the database stays as it is)
+#   sudo infra/deploy/deploy.sh rollback    bring the previous image back the same way, with that version's own
+#                                           worker image (images.sh; the database stays as it is)
 #   sudo infra/deploy/deploy.sh public-health
 #                                           one JSON line: does https://<staging host>/api/health answer through Cloudflare
 #                                           (with the preview login, read on the server and never printed)?
@@ -32,11 +33,14 @@ MIGRATION="not reached"; RECORDED=0; LAST_ERR=""; ROLE_SWITCHED=0
 record() { # record <result> <detail>  (the newest entry is last-deploy.json; history stays in state/deploys/)
   local f; f="$STATE/deploys/$(date +%Y%m%d-%H%M%S).json"
   # `migration` and `run` (the workflow run, EXTAS_DEPLOY_RUN_ID) feed the deploy report deploy.yml commits back.
+  # `worker_image` is the image the worker of this version runs (empty when it runs none), `previous_worker` the
+  # rollback target's (follow-up 82, images.sh): a rollback starts that version's worker too.
   jq -n --arg result "$1" --arg detail "$2" --arg image "${IMAGE:-}" --arg sha "${GIT_SHA:-}" \
     --arg color "${NEW:-}" --arg previous "${PREV_IMAGE:-}" --arg migrate "${MIGRATE_IMAGE:-}" --arg at "$(date -Is)" \
     --arg migration "$MIGRATION" --arg run "${EXTAS_DEPLOY_RUN_ID:-}" \
-    --arg worker "${WORKER_NOTE:-not reached}" \
-    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run,worker:$worker}' > "$f"
+    --arg worker "${WORKER_NOTE:-not reached}" --arg worker_image "${WORKER_ON_IMAGE:-}" \
+    --arg previous_worker "${PREV_WORKER_IMAGE:-}" \
+    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run,worker:$worker,worker_image:$worker_image,previous_worker:$previous_worker}' > "$f"
   cp "$f" "$STATE/last-deploy.json"
   [ "$1" = ok ] && cp "$f" "$STATE/last-good-deploy.json"
   RECORDED=1
@@ -141,14 +145,20 @@ verify_live() { # through Caddy's internal port: every answer must come from the
 if [ "${1:-}" = upstream ]; then upstream_for "${2:?colour}"; exit 0; fi
 if [ "${1:-}" = public-health ]; then public_health; exit 0; fi
 trap on_exit EXIT
+# shellcheck source=images.sh
+. "$HERE/images.sh"
 
 # ---- what to deploy -------------------------------------------------------------------------------------------
 CUR="$(cat "$STATE/app.color" 2>/dev/null || echo none)"
 PREV_IMAGE="$(jq -r '.image // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
+PREV_WORKER_IMAGE=""
+[ -z "$PREV_IMAGE" ] || PREV_WORKER_IMAGE="$(worker_image_of "$PREV_IMAGE" \
+  "$(jq -r '.worker_image // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)")"
+ROLLBACK_WORKER=""
 if [ "${1:-}" = rollback ]; then
-  IMAGE="$(jq -r '.previous // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
-  [ -n "$IMAGE" ] || die "no previous image to roll back to"
-  log "rollback to $IMAGE"
+  read -r IMAGE ROLLBACK_WORKER < <(rollback_target "$STATE/last-good-deploy.json") || true
+  [ -n "${IMAGE:-}" ] || die "no previous image to roll back to"
+  log "rollback to $IMAGE (worker: $ROLLBACK_WORKER)"
 else
   IMAGE="${1:?usage: deploy.sh <image> <migrate-image> | rollback}"
   MIGRATE_IMAGE="${2:?usage: deploy.sh <image> <migrate-image> | rollback}"
@@ -173,7 +183,8 @@ grep -q '^APP_NODE_HEAP_MB=' "$R/config/profile.env" || die "profile.env is olde
 # the worker (a rollback) or a server whose queue store is not set up yet runs without it (0 copies), and the record
 # says so; the Server page then shows the heartbeat as stale.
 profile_get() { sed -n "s/^$1=//p" "$R/config/profile.env" | tail -n 1; }
-WORKER_IMAGE="${MIGRATE_IMAGE:-extas-migrate:${IMAGE##*:}}"
+# A rollback runs the worker image its record names (follow-up 82); the clean-up below never removes it.
+WORKER_IMAGE="${MIGRATE_IMAGE:-${ROLLBACK_WORKER:-$(worker_image_of "$IMAGE")}}"
 WORKER_REPLICAS=0
 JOBS_REPLICAS="$(profile_get JOBS_REPLICAS)"; JOBS_REPLICAS="${JOBS_REPLICAS:-1}"
 JOBS_REPLICA_MEM_MB="$(profile_get JOBS_REPLICA_MEM_MB)"
@@ -191,6 +202,7 @@ else
   WORKER_REPLICAS="$JOBS_REPLICAS"
   WORKER_NOTE="on: $WORKER_REPLICAS copy/copies from $WORKER_IMAGE"
 fi
+WORKER_ON_IMAGE=""; [ "$WORKER_REPLICAS" = 0 ] || WORKER_ON_IMAGE="$WORKER_IMAGE"
 [ "$WORKER_REPLICAS" != 0 ] || WORKER_IMAGE="$IMAGE" # a service of 0 copies still needs an image name
 log "worker: $WORKER_NOTE"
 
@@ -256,9 +268,13 @@ if [ "$CUR" = blue ] || [ "$CUR" = green ]; then
 fi
 record ok "$NEW live"
 rm -f "$SEC/.app.env.before-role" "$SEC/.app-connections.env.before-role"
-# Keep the newest images (current + rollback targets); older ones only take disk space.
-docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-web | sort -k2 -r | awk 'NR>5{print $1}' \
+# Keep the newest images; older ones only take disk space. Never removed, however many failed builds came after
+# them: the live version's and the rollback target's app and worker images (follow-up 82, images.sh).
+needed="$(mktemp)"
+needed_images "$STATE/last-good-deploy.json" "$STATE/last-deploy.json" > "$needed"
+docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-web | images_to_remove 5 "$needed" \
   | xargs -r docker rmi >/dev/null 2>&1 || true
-docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-migrate | sort -k2 -r | awk 'NR>3{print $1}' \
+docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-migrate | images_to_remove 3 "$needed" \
   | xargs -r docker rmi >/dev/null 2>&1 || true
+rm -f "$needed"
 log "done: $IMAGE on $NEW"
