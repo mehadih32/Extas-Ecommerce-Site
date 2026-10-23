@@ -1,6 +1,6 @@
-# Server report — 2026-10-23 02:20 +06
+# Server report — 2026-10-23 16:37 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `f98888004487e57dbd681ccb9d79ea059e23ea9a`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `6c8d06da2901bc3f44a2763e416f1b04853fdc74`. Overall: **PASS**.
 
 ## Machine
 
@@ -49,15 +49,16 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; starts after NVMe + data disk |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
+| PR 139 · app database role | INFO | waits for the next deploy (migration 0010_append_only) |
 | PR 5 · PostgreSQL | OK | v17.11 (Debian 17.11-1.pgdg13+2), shared_buffers 16GB, temp on NVMe, WAL archive on, slow log > 100 ms, PgBouncer (transaction pool) |
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
 | PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | OK | 5.3M base + dump; daily at 02:30, WAL every minute |
+| PR 8 · backup (data disk) | OK | 5.3M base + dump; photos: all 0 in a full archive; docs: none on the server yet (the first deploy copies them); daily at 02:30, WAL every minute |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261022-0231, 336 tables restored (live has 336); photos: none on the local disk yet; docs: none on the server yet |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
+| PR 8 · restore test | FAIL | base 20261023-0230, 337 tables restored (live has 337); photos: the archive holds no photo yet; docs: no docs bundle, although the server has the docs |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
 
