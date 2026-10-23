@@ -21,6 +21,9 @@
     { "id": "email", "what": "an e-mail address (owner data)", "pattern": "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\\.[A-Za-z]{2,}", "allow": "noreply@|@example\\.(com|test)|@users\\.noreply\\.github\\.com" },
     { "id": "money-literal", "what": "a price or amount in Taka (prices are owner data and settings)", "pattern": "৳\\s*[০-৯0-9]|\\bTk\\.?\\s*\\d", "code": true },
     { "id": "business-number", "what": "a business number in code (charges, limits, thresholds come from settings)", "pattern": "\\b[A-Za-z_]*(price|fee|charge|discount|cod|delivery|shipping|threshold|limit|maxQty|minOrder|percent|rate)[A-Za-z_]*\\s*[:=]\\s*-?\\d+(\\.\\d+)?\\b", "flags": "i", "code": true },
+    { "id": "clock-hours", "what": "opening or reply hours written into code (support hours are a setting; SIM-F-033)", "pattern": "\\b\\d{1,2}(:\\d\\d)?\\s?(am|pm)\\s*(–|-|to)\\s*\\d{1,2}(:\\d\\d)?\\s?(am|pm)\\b", "flags": "i", "code": true },
+    { "id": "promise-copy", "what": "a promise to the customer written into code (customer texts come from messages files, the rule texts PR 215 and settings; SIM-F-031, F-033)", "pattern": "\\bwe(?:'ll| will)? (?:reply|confirm|send|deliver|ship|call|refund|guarantee)\\b|\\byour order is confirmed\\b|\\bat every step\\b|\\bconfirmed and packed\\b|\\binclud(?:e|es|ing) VAT\\b", "flags": "i", "code": true },
+    { "id": "fixed-date", "what": "a fixed calendar date in code (festival and campaign dates are settings, empty by default; SIM-F-033)", "pattern": "[\"'`]20\\d\\d-[01]\\d-[0-3]\\d[\"'`]", "code": true },
     { "id": "jsx-text", "what": "visible text written into a component (it belongs in a messages file)", "pattern": ">\\s*[A-Za-z\\u0980-\\u09FF][^<>{}]*[A-Za-z\\u0980-\\u09FF.!?।]\\s*<", "only": "\\.tsx$" }
   ]
 }
