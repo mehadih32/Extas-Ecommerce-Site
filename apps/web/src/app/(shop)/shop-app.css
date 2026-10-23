@@ -148,3 +148,25 @@ html .shop .nf-cats a.chip::before { content: ""; position: absolute; left: 50%;
  * the footer is drawn and takes the tap; the sticky header (40) and the bottom bar (45) stay above both. */
 html .shop .wa-fab { z-index: 38; }
 html .shop .ftr { position: relative; z-index: 39; }
+/* PR 105 — the bag's piece count on the header bag and the phone's bottom bar (demo styles.css 3.5): a brand dot that
+ * glows while the bag holds something; on a computer three rounds, then still until the mouse is on it (D-022). */
+.shop .hdr .hdr-bag, .shop .bnav .bn-bag { position: relative; }
+.shop .count-dot { position: absolute; top: 2px; right: 0; display: flex; align-items: center; justify-content: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px; background: var(--brand); color: var(--brand-ink); font-size: 11px; font-weight: 800; line-height: 1; box-shadow: 0 0 0 2px var(--surface); }
+.shop .hdr .hdr-bag .count-dot { top: 3px; right: 1px; }
+.shop .bnav .bn-bag .count-dot { top: 4px; right: calc(50% - 22px); }
+.shop .bnav .bn-bag.has { color: var(--brand); }
+@keyframes bagGlow {
+  0% { box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent); }
+  40%, 100% { box-shadow: 0 0 0 2px var(--surface), 0 0 0 9px color-mix(in srgb, var(--brand) 0%, transparent); }
+}
+@keyframes bagNudge { 0%, 100% { transform: none; } 12% { transform: rotate(-9deg); } 24% { transform: rotate(7deg); } 36% { transform: rotate(-4deg); } 48% { transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .shop .hdr .hdr-bag.has .count-dot, .shop .bnav .bn-bag.has .count-dot { animation: bagGlow 2.8s ease-out 0.6s infinite; }
+  .shop .hdr .hdr-bag.has svg, .shop .bnav .bn-bag.has svg { transform-origin: 50% 20%; animation: bagNudge 5.6s ease-in-out 1.2s infinite; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .shop .hdr .hdr-bag.has .count-dot, .shop .hdr .hdr-bag.has svg { animation-iteration-count: 3; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .shop .hdr .hdr-bag.has:hover .count-dot, .shop .hdr .hdr-bag.has:hover svg { animation-iteration-count: infinite; }
+}

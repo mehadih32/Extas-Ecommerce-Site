@@ -1,0 +1,137 @@
+{
+  "groups": {
+    "bag": "Bag"
+  },
+  "bag": {
+    "keepDays": {
+      "label": "Keep a bag for (days)",
+      "help": "A customer's bag stays on this phone or computer for this many days after the last change."
+    },
+    "duplicateAdd": {
+      "label": "The same item added again",
+      "help": "Block: the customer is told it is already in the bag. Add one more: the quantity goes up by one."
+    },
+    "repeatGuardMs": {
+      "label": "Ignore a second tap within (milliseconds)",
+      "help": "A double tap on \"Add to bag\" inside this time is the same add. 0 = off."
+    },
+    "addBehaviour": {
+      "label": "After \"Add to bag\"",
+      "help": "Sheet: the added-to-bag panel opens (a sheet on the phone, a drawer on a computer). Toast: a short message. Page: go to the bag."
+    },
+    "panel": {
+      "style": {
+        "label": "Added-to-bag panel look",
+        "help": "Default: the item just added and the bag total. B: every line of the bag, the new one marked \"Just added\"."
+      },
+      "maxLines": {
+        "label": "Bag lines shown in the panel",
+        "help": "0 = as many as fit; the rest show as \"+N more items · View bag\"."
+      },
+      "fill": {
+        "label": "Recommendations in the panel",
+        "help": "Fit: as many as fit below the buttons, then \"+N more\". Fixed: the number below. Off: none."
+      },
+      "picks": {
+        "label": "Most recommendations in the panel",
+        "help": "The largest number of \"Complete the look\" items the panel offers."
+      },
+      "gapPx": {
+        "label": "Space under the buttons (pixels)",
+        "help": "The recommendations start at least this far below the panel's buttons."
+      }
+    },
+    "saved": {
+      "enabled": {
+        "label": "\"Save for later\" in the bag",
+        "help": "A line can be put aside in the bag and moved back with one tap."
+      }
+    },
+    "undoMs": {
+      "label": "\"Undo\" message shows for (milliseconds)",
+      "help": "After Remove or Save for later. It waits while the mouse or keyboard is on it."
+    },
+    "lowStockAt": {
+      "label": "Say \"Only N left\" at (pieces)",
+      "help": "0 = never. With a number, a line with that many pieces or fewer left says so."
+    },
+    "trust": {
+      "securePayment": {
+        "label": "Show \"Secure payment\" under the total",
+        "help": "Switch it on once online payment is live."
+      }
+    },
+    "whatsappHelp": {
+      "label": "\"Questions? Message us on WhatsApp\" in the bag",
+      "help": "Shows only when the store has a WhatsApp number."
+    },
+    "offerSlot": {
+      "enabled": {
+        "label": "The offer slot under the bag's lines",
+        "help": "One place under the lines for a set offer or the free-delivery gap; hidden when there is nothing true to say."
+      }
+    },
+    "tiers": {
+      "enabled": {
+        "label": "\"Buy more, pay less\" tiers in the bag",
+        "help": "The tiers of the live \"Build your own set\" rules for an item in the bag."
+      },
+      "startsOn": {
+        "label": "Tiers show from (day)",
+        "help": "Empty = no start day."
+      },
+      "endsOn": {
+        "label": "Tiers show until (day)",
+        "help": "Empty = no end day. The last day still counts."
+      },
+      "max": {
+        "label": "Most tiers shown",
+        "help": "Up to 4 tiers of one rule."
+      },
+      "phonePreview": {
+        "label": "Show the tiers on the phone too",
+        "help": "The tier box is for computers; on the phone it is a preview for the owner to try."
+      }
+    },
+    "twoSizes": {
+      "enabled": {
+        "label": "\"Same product in two sizes\" card",
+        "help": "Asks once whether one is for someone else, or helps pick the size."
+      }
+    },
+    "code": {
+      "enabled": {
+        "label": "\"Have a code?\" in the bag",
+        "help": "The discount code box. Each code says itself who can use it."
+      }
+    },
+    "freeProgress": {
+      "enabled": {
+        "label": "Free-delivery progress in the bag",
+        "help": "\"Add ৳X more for free delivery\", from the live free-delivery rule only."
+      }
+    },
+    "upsell": {
+      "enabled": {
+        "label": "\"Goes well with your bag\" row",
+        "help": "Products from the same category as the bag first, never one already in it."
+      },
+      "count": {
+        "label": "Products in the row",
+        "help": "How many products the row offers."
+      },
+      "style": {
+        "label": "Row look on a computer",
+        "help": "Side: the tier ladder beside the cards. Current: the plain row."
+      },
+      "reasons": {
+        "label": "Reasons to buy under the row",
+        "help": "Cash on Delivery and the size exchange, each only when it is switched on in the store."
+      },
+      "originalLine": {
+        "label": "Say \"100% original\" under the row",
+        "help": "Switch it on only when every product is genuine stock."
+      }
+    }
+  }
+}

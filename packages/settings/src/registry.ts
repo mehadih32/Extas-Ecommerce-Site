@@ -19,6 +19,7 @@ import { deliverySettings } from './registry-delivery';
 import { storefrontSettings } from './registry-storefront';
 import { eidSettings } from './registry-eid';
 import { categorySettings } from './registry-category';
+import { bagSettings } from './registry-bag';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1124,6 +1125,8 @@ export const registry = {
   ...eidSettings,
   // ---- S02 · PR 45–48 · the category page: grid, filters, sort, sticky bar, SEO text, questions (registry-category.ts, version 17). ----
   ...categorySettings,
+  // ---- S04 · PR 105–114 · the bag: keeping it, adding twice, the added-to-bag panel, tiers, two sizes, codes, free delivery, the upsell row (registry-bag.ts, version 18). ----
+  ...bagSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
