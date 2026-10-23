@@ -432,3 +432,13 @@
 .shop .co-payfail { background: rgba(176, 58, 46, 0.08); color: rgb(150, 45, 35); }
 .shop .co-paytest svg, .shop .co-payfail svg { flex-shrink: 0; margin-top: 2px; }
 .shop .co-payback { display: flex; align-items: center; justify-content: center; min-height: 44px; }
+/* PR 117 / 552 · follow-up 57: the places under the address box while he types (AddressSuggest) */
+.shop .co-sugwrap { position: relative; }
+.shop .co-sug { position: absolute; left: 0px; right: 0px; top: calc(100% + 4px); z-index: 30; margin: 0px; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: rgba(0, 0, 0, 0.12) 0px 8px 24px; max-height: min(320px, 50vh); overflow-y: auto; overscroll-behavior: contain; }
+.shop .co-sug[hidden] { display: none; }
+.shop .co-sug-o { display: flex; align-items: baseline; gap: 6px; min-height: 44px; padding: 10px; border-radius: calc(var(--radius) - 2px); cursor: pointer; font-size: 15px; line-height: 1.3; color: var(--ink); }
+.shop .co-sug-o.on { background: var(--brand-tint); }
+@media (hover: hover) { .shop .co-sug-o:hover { background: var(--brand-tint); } }
+.shop .co-sug-n { font-weight: 650; min-width: 0px; overflow-wrap: anywhere; }
+.shop .co-sug-p { color: var(--text2); font-size: 13.5px; min-width: 0px; overflow-wrap: anywhere; }
+.shop .co-sug-c { margin-left: auto; padding-left: 8px; font-weight: 650; font-size: 14px; white-space: nowrap; color: var(--ink); }

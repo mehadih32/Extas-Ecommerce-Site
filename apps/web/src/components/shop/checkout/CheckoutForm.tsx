@@ -63,9 +63,11 @@ export interface CheckoutFormProps {
   capture: { waitMs: number } | null;
   /** Where the bag is (an item sold out, or the bag is empty). */
   bagHref: string;
+  /** Follow-up 57: the places under the address box (`delivery.suggest.*`), or null when off. */
+  suggest: { minChars: number; storeId: number; words: { label: string; count: string } } | null;
 }
 
-export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links, confirmStyle, note: noteCfg, capture, bagHref }: CheckoutFormProps) {
+export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links, confirmStyle, note: noteCfg, capture, bagHref, suggest }: CheckoutFormProps) {
   const stored = useDraft();
   const [view, setView] = useState<CheckoutView>(first);
   const [reading, setReading] = useState(false);
@@ -431,6 +433,12 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                   onPhoneBlur={() => setPhoneChecked(true)}
                   onAddressBlur={() => settle.blur()}
                   addressMax={addressMax}
+                  suggest={suggest ? { ...suggest, lang: money.lang, money: m, n } : null}
+                  onAddressPick={(line) => {
+                    // a picked place is a finished line: it is read at once, not after the pause
+                    change('address', line);
+                    settle.blur();
+                  }}
                   w={w}
                   n={n}
                   wrap={wrapField}

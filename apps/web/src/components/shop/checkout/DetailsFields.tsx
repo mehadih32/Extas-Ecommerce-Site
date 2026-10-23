@@ -7,6 +7,7 @@
 import { Fragment, useLayoutEffect, useRef } from 'react';
 import { latinDigits, phoneNormalizeBD, type DetailsForm, type Field } from '@extas/checkout/pure';
 import { Icon } from '../Icon';
+import { useAddressSuggest, type SuggestConfig } from './AddressSuggest';
 
 export interface DetailsProps {
   fields: Field[];
@@ -24,15 +25,24 @@ export interface DetailsProps {
   wrap?: (field: Field, inner: React.ReactNode) => React.ReactNode;
   /** The full field state for screen readers (PR 124: aria-invalid after a refused Confirm). */
   invalid?: Partial<Record<Field, string>>;
+  /** Follow-up 57: the places under the address box (null: `delivery.suggest.enabled` is off). */
+  suggest?: SuggestConfig | null;
+  /** Follow-up 57: he picked a place; the new line is read at once. */
+  onAddressPick?: (line: string) => void;
 }
 
 const PHONE_DIGITS = 11;
 
-export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlur, onAddressBlur, addressMax, w, n, wrap, invalid = {} }: DetailsProps) {
+export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlur, onAddressBlur, addressMax, w, n, wrap, invalid = {}, suggest = null, onAddressPick }: DetailsProps) {
   const ph = phoneNormalizeBD(form.phone);
   const showWarn = !ph.ok && !ph.empty && phoneChecked;
   const chipRef = useRef<HTMLSpanElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+  const addrRef = useRef<HTMLTextAreaElement>(null);
+  const sug = useAddressSuggest(suggest, (line, caret) => {
+    onAddressPick?.(line);
+    requestAnimationFrame(() => addrRef.current?.setSelectionRange(caret, caret));
+  });
   // The typed number never runs under the chip: the box keeps room on its right for it.
   useLayoutEffect(() => {
     const el = phoneRef.current;
@@ -123,20 +133,31 @@ export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlu
         <label className="label" htmlFor="co-address">
           {w('form.address')}
         </label>
-        <textarea
-          id="co-address"
-          name="address"
-          className="input co-addr"
-          rows={2}
-          autoComplete="street-address"
-          placeholder={w('form.addressPh')}
-          value={form.address}
-          maxLength={addressMax}
-          aria-invalid={invalid.address ? true : undefined}
-          aria-describedby={described('address')}
-          onChange={(e) => onChange('address', e.target.value)}
-          onBlur={onAddressBlur}
-        />
+        <div className="co-sugwrap">
+          <textarea
+            ref={addrRef}
+            id="co-address"
+            name="address"
+            className="input co-addr"
+            rows={2}
+            autoComplete="street-address"
+            placeholder={w('form.addressPh')}
+            value={form.address}
+            maxLength={addressMax}
+            aria-invalid={invalid.address ? true : undefined}
+            aria-describedby={described('address')}
+            {...sug.boxProps}
+            onChange={(e) => {
+              onChange('address', e.target.value);
+              sug.input(e.target.value, e.target.selectionStart ?? e.target.value.length);
+            }}
+            onBlur={() => {
+              sug.close();
+              onAddressBlur?.();
+            }}
+          />
+          {sug.list(form.address)}
+        </div>
       </>,
     ),
   };
