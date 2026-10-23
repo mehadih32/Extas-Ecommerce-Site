@@ -4,7 +4,7 @@
 import type { Metadata } from 'next';
 import { ThanksNotFound, ThanksPage } from '@/components/shop/checkout/ThanksPage';
 import { checkoutSettings, currentReceipt } from '@/lib/shop/checkout';
-import { shopContext } from '@/lib/shop/context';
+import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +17,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Thanks({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
   const c = await shopContext();
-  const [r, s] = await Promise.all([currentReceipt(c, decodeURIComponent(number)), checkoutSettings(c.storeId)]);
-  return r ? <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} /> : <ThanksNotFound c={c} />;
+  const [r, s, more] = await Promise.all([currentReceipt(c, decodeURIComponent(number)), checkoutSettings(c.storeId), readPageSettings(['thanks.page'], c.storeId)]);
+  return r ? <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} /> : <ThanksNotFound c={c} />;
 }
