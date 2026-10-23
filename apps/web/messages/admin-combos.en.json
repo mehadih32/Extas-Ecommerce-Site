@@ -378,27 +378,29 @@
     },
     "report": {
       "title": "Combo report",
-      "intro": "The last {days} days ({from} to {to}). Sets sold and sales come from real orders only — not cancelled or returned ones.",
+      "intro": "The last {days} days ({from} to {to}). Ordered value counts every placed order on the day it was placed, cancelled ones too. Sales counts delivered orders only, on the day they were delivered.",
       "days": "Days",
       "show": "Show",
       "k": {
         "views": "Combo page views",
         "picks": "Colour picks",
         "adds": "Sets added to bags",
-        "sold": "Sets sold",
-        "sales": "Sales from sets",
+        "sets": "Sets ordered",
+        "ordered": "Ordered value",
+        "sales": "Sales (delivered)",
         "saved": "Customers saved"
       },
       "ofViews": "{n}% of views",
       "ofAdds": "{n}% of adds",
       "orders": "in {n} orders",
-      "topTitle": "Best-selling combos",
-      "line": "{sold} sold · {sales} · {adds} added · {views} views",
+      "topTitle": "Combos ordered most",
+      "line": "{sets} sets · ordered {ordered} · sales {sales} · {adds} added · {views} views",
       "pairsTitle": "Colour pairs picked most",
       "pairsIntro": "How often each colour pair went into a bag. The \"popular pairs\" row on the combo page learns from this.",
       "pairLine": "{combo} · picked {n} times",
       "none": "Nothing yet.",
-      "empty": "No combo activity in these days yet. Views, picks and sales show here as customers use the combo pages."
+      "empty": "No combo activity in these days yet. Views, picks and sales show here as customers use the combo pages.",
+      "salesOrders": "{n} delivered orders"
     }
   }
 }
