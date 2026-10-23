@@ -188,6 +188,9 @@ button.pa-col::after, .ad a.pa-nm::after, .ad a.st-name::after, .pa-search::afte
 /* the search field's label: the layer lies under the field, so a tap on the field itself still places the caret */
 .pa-search { z-index: 0; }
 .pa-search::after { z-index: -1; }
+/* Follow-up 117 (PR 28): a size-chart link with a short label ("আবার অটো" measured 43 px with some fonts) gets a layer at
+   least 44 px wide too, centred, so it never depends on the font's rendering. */
+.sc-link::after { left: min(0px, calc(50% - var(--ad-tap) / 2)); right: min(0px, calc(50% - var(--ad-tap) / 2)); }
 /* "new chart" sits on the list's heading line: its layer grows up, into the room above the heading, not into the list */
 .sc-listhd .sc-link::after { top: calc(var(--ad-tap) * -1 + 100% + 4px); bottom: -4px; }
 /* 2. Small round buttons (remove a colour, a default, a size row, a rule target): 44 × 44 both ways. The switch draws
