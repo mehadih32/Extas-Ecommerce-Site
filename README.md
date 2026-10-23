@@ -651,7 +651,9 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   the smoke test (`docs/qa/smoke.json`). Screenshots: `docs/qa/screenshots/pr-40/`, `pr-41/`, `pr-43/`.
 
 Next: category page (PR 45–48), product page (49 …). The CI device gate itself (PR 85, CI part) runs on every pull
-request: 15 phones, 10 tablets and 6 desktop sizes (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Register:
+request: 15 phones, 10 tablets and 6 desktop sizes (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Since 23 Oct it
+also signs in on the sample data, so admin controls that only show with data are checked at 44 × 44 too (0 fails in
+620 checks). Register:
 [S02](docs/MASTER-REGISTER.md#s02--storefront--pr-4088).
 
 ### S03 · Combo & bundles — In progress
@@ -685,7 +687,13 @@ PR 208–219. Register: [S10](docs/MASTER-REGISTER.md#s10--smart-rules--pr-20821
   setting); any 2 for X, any 3 for Y, best price worked out in the bag (`quoteCart`).
 - **Discounts and coupons (PR 213).** Coupons start off and need the owner's OK. The "was" price follows CN-009: the
   real MRP, combos = sum of separate prices, never invented (`discountWasFor`, switch off).
-- **Festive cut-offs (PR 214)** stop by themselves when the date passes.
+- **Festive cut-offs (PR 214)** stop by themselves when the date passes. **Eid order-by dates (23 Oct, CN-014 g):** a
+  date per delivery band and per district (a district's own date wins), cut-off time in the store's time zone, a banner
+  from `rules.eid.showDaysBefore` days before, and "may arrive after Eid" once a place has closed; pre-order with a fixed
+  or percentage advance, where the amount due on delivery is the total minus the advance. Everything is off and empty
+  (`rules.eid.*`); switching on is refused while anything is missing (`EID_INVALID`), and the pre-order needs the owner's
+  OK (`rules.approve`). Engine, settings and `/api/admin/rules/eid` only: the screen comes under Marketing → Campaigns
+  after the owner approves `docs/ADMIN-ARCHITECTURE.md`; the storefront banner and checkout lines come with S02/S04.
 - **Rule text everywhere (PR 215).** `ruleTextsFor`, `RuleText`, `NoticeBar`, `RulePopup` for S02 to place.
 - **Notices and pop-ups (PR 216).** Bar, in-page note, pop-up; never on arrival, capped per visitor, pause and resume
   tested; all start off.
@@ -822,6 +830,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #24 | PR [11](docs/stages/S00.md#pr-11), [85](docs/stages/S02.md#pr-85), [214](docs/stages/S10.md#pr-214), [508](docs/stages/S00.md#pr-508) | 23 Oct | Follow-ups: every package lints with ESLint and says what it is for at the top of `src/index.ts` (PR [11](docs/stages/S00.md#pr-11)); the device gate signs in on the sample data, so admin controls that only show with data are checked at 44 × 44, 0 fails in 620 checks (PR [85](docs/stages/S02.md#pr-85)); Eid order-by dates per band and district with a pre-order advance, as engine, settings and API, all off and empty, with no admin screen until the admin architecture is approved (PR [214](docs/stages/S10.md#pr-214)).; the admin session end to end runs in CI on every pull request in real Chromium: sign in, refresh, the sign-in page while signed in, log out, and the old session refused afterwards (PR [508](docs/stages/S00.md#pr-508)). |
 | #23 | PR [82](docs/stages/S02.md#pr-82), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [84](docs/stages/S02.md#pr-84), [42](docs/stages/S02.md#pr-42), [40](docs/stages/S02.md#pr-40), [85](docs/stages/S02.md#pr-85), [41](docs/stages/S02.md#pr-41), [43](docs/stages/S02.md#pr-43), [4](docs/stages/S0A.md#pr-4) | 23 Oct | Storefront foundation and home page on new.extas.com.bd (S02 9/58): four themes on one token set, branding and the eleven logo styles from settings, English and Bengali shop (`/bn`, language switch, hreflang), one slider engine with separate touch, mouse and keyboard pauses, the store shell (announcement bar, header, phone menu, bottom bar, footer, checkout header, coming-soon pages, 404), 44 px tap layers, the home page and the hero slider, matched to demo V12.2; storefront pages in the device gate and the Lighthouse budget (TBT under 200 ms); the footer sign-up form stays hidden until the sign-up list exists (CN-017: no promise the shop can't keep). The nightly smoke test now runs the checks of the live version, so a check merged before its deploy can't give a false alarm (PR [4](docs/stages/S0A.md#pr-4)). |
 | #22 | PR [89](docs/stages/S03.md#pr-89), [90](docs/stages/S03.md#pr-90), [571](docs/stages/S03.md#pr-571), [99](docs/stages/S03.md#pr-99), [101](docs/stages/S03.md#pr-101), [96](docs/stages/S03.md#pr-96), [97](docs/stages/S03.md#pr-97), [575](docs/stages/S03.md#pr-575), [104](docs/stages/S03.md#pr-104), [549–553](docs/stages/S06.md), [555](docs/stages/S06.md#pr-555), [500](docs/stages/S00.md#pr-500) | 22 Oct | S03 combo core: combo model, admin `/admin/combos` (fixed combos, auto colour-pair rules, set photo, report), set tiers from Smart Rules, set validation, summary and add-to-bag with a locked price; S06 delivery-zone engine: gazetteer (sample list), bands (Dhaka City map, sub-area list, outside), whole-line resolver with "Where is this address?", charge only from a resolved place (collision suite), autocomplete, phone-first area fill; admin `/admin/delivery` with its Bengali guide; sign-in says "write the full e-mail address" when the e-mail has no "@" (PR [500](docs/stages/S00.md#pr-500), smoke-checked); Bengali guides for every built admin section (CN-014) |
 | #20 | PR [4](docs/stages/S0A.md#pr-4), [85](docs/stages/S02.md#pr-85), [8](docs/stages/S0A.md#pr-8), [594](docs/stages/S21.md#pr-594), [17](docs/stages/S00.md#pr-17) | 20 Oct | CI parses every workflow file (PR [17](docs/stages/S00.md#pr-17)); Smoke test on new.extas.com.bd after every deploy and every night (every built page signed out and as a read-only check account, phone and desktop; a failure rolls the deploy back; pictures in `docs/reports/smoke/latest/`, CN-016); device gate (15 phones, 10 tablets, 6 desktops) in CI, 0/341 fails, admin tap targets 44×44; product photos and a dated docs bundle in every nightly backup, checked by the restore test; docs copied to the server on every deploy with the commit hash (CN-011) |
