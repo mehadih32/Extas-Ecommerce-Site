@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 08:23 (Asia/Dhaka)
+# Smoke test · 2026-10-23 09:34 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (48টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (50টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `51a2fe933095` · after deploy · result **PASS** (48 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `a9a4bc69f7ce` · after deploy · result **PASS** (50 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -11,6 +11,7 @@ Site: https://new.extas.com.bd · commit `51a2fe933095` · after deploy · resul
 | `/checkout` | phone | 200 | `/checkout` | ok | [picture](checkout-phone.jpg) |
 | `/bn/checkout` | phone | 200 | `/bn/checkout` | ok | [picture](bn-checkout-phone.jpg) |
 | `/collections/new-in` | phone | 200 | `/collections/new-in` | ok | [picture](collections-new-in-phone.jpg) |
+| `/bn/collections/new-in` | phone | 200 | `/bn/collections/new-in` | ok | [picture](bn-collections-new-in-phone.jpg) |
 | `/bn/bag` | phone | 200 | `/bn/bag` | ok | [picture](bn-bag-phone.jpg) |
 | `/help/faq` | phone | 200 | `/help/faq` | ok | [picture](help-faq-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
@@ -35,6 +36,7 @@ Site: https://new.extas.com.bd · commit `51a2fe933095` · after deploy · resul
 | `/checkout` | desktop | 200 | `/checkout` | ok | [picture](checkout-desktop.jpg) |
 | `/bn/checkout` | desktop | 200 | `/bn/checkout` | ok | [picture](bn-checkout-desktop.jpg) |
 | `/collections/new-in` | desktop | 200 | `/collections/new-in` | ok | [picture](collections-new-in-desktop.jpg) |
+| `/bn/collections/new-in` | desktop | 200 | `/bn/collections/new-in` | ok | [picture](bn-collections-new-in-desktop.jpg) |
 | `/bn/bag` | desktop | 200 | `/bn/bag` | ok | [picture](bn-bag-desktop.jpg) |
 | `/help/faq` | desktop | 200 | `/help/faq` | ok | [picture](help-faq-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
