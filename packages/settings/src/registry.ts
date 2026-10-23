@@ -28,6 +28,7 @@ import { searchSettings } from './registry-search';
 import { storefrontFuSettings } from './registry-storefront-fu';
 import { pdpTemplateSettings } from './registry-pdp-templates';
 import { accountSettings } from './registry-accounts';
+import { comboPageSettings } from './registry-combo-pages';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1152,6 +1153,8 @@ export const registry = {
   ...pdpTemplateSettings,
   // ---- S04 · PR 129–137 · customer accounts: the account from the first order, sign-in codes, My account, the offer banner, the order page, autofill (registry-accounts.ts, version 29). ----
   ...accountSettings,
+  // ---- S03 · PR 91–95, 102, 103 · the combo storefront: the combo page's layout and parts, popular pairs, More sets, the sets landing page, the product page's set offer (registry-combo-pages.ts, version 30). ----
+  ...comboPageSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

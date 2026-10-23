@@ -21,7 +21,7 @@ export function OfferSlot({ c, slot, cod, upsellShown }: { c: ShopContext; slot:
     const names = (c.lang === 'bn' ? slot.namesBn : slot.names).join(' + ');
     title = t('bag.slot.setTitle', { n: c.num(slot.pieces), saving: c.money(slot.savingMinor) });
     text = t('bag.slot.setText', { names, price: c.money(slot.payMinor), n: c.num(slot.pieces) });
-    go = { href: hrefIn(c.lang, `${ROUTES.combos}/${encodeURIComponent(slot.slug)}`), label: t('bag.slot.setGo') };
+    go = { href: hrefIn(c.lang, ROUTES.combo(slot.slug)), label: t('bag.slot.setGo') };
     icon = 'gift';
   } else if (slot.kind === 'freeGap') {
     title = t('bag.slot.gapTitle', { amount: c.money(slot.remainingMinor) });

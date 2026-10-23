@@ -69,7 +69,7 @@
     }
   ],
   "signedIn": {
-    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer. PR 49-64: the product page with the sample products (a polo with five colours, trousers, a one-size pack; English and Bengali), opened signed out like a customer; `expect` needs the title, the colours or sizes and the Add button. PR 50/51/58: the T2 (Editorial) and T3 (Fit-first) sample polos in both languages: the stacked photos with the Find my size card, and the T3 card with its sizes, finder and measurements. PR 6: the Server page with its worker verdict. PR 72/73: the search results for polo (cards, the size filter, the sort) and for exchange (the help answer), signed out like a customer.",
+    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer. PR 49-64: the product page with the sample products (a polo with five colours, trousers, a one-size pack; English and Bengali), opened signed out like a customer; `expect` needs the title, the colours or sizes and the Add button. PR 50/51/58: the T2 (Editorial) and T3 (Fit-first) sample polos in both languages: the stacked photos with the Find my size card, and the T3 card with its sizes, finder and measurements. PR 6: the Server page with its worker verdict. PR 72/73: the search results for polo (cards, the size filter, the sort) and for exchange (the help answer), signed out like a customer. PR 91–103: the combo pages on the sample combos (a polo + chino set in both languages, a three-tee pack with its popular pairs and \"Same size as item 1\") and the sets landing page, signed out like a customer; the chino page shows its set offer (PR 102).",
     "signedOutPaths": [
       "/admin/login",
       "/collections/polos",
@@ -84,7 +84,12 @@
       "/p/cotton-socks-3",
       "/search?q=polo",
       "/bn/search?q=polo",
-      "/search?q=exchange"
+      "/search?q=exchange",
+      "/combo/sample-polo-chino-set",
+      "/bn/combo/sample-polo-chino-set",
+      "/combo/sample-crew-tee-trio",
+      "/combos",
+      "/bn/combos"
     ],
     "urls": [
       "/admin",
@@ -104,7 +109,12 @@
       "/p/cotton-socks-3",
       "/search?q=polo",
       "/bn/search?q=polo",
-      "/search?q=exchange"
+      "/search?q=exchange",
+      "/combo/sample-polo-chino-set",
+      "/bn/combo/sample-polo-chino-set",
+      "/combo/sample-crew-tee-trio",
+      "/combos",
+      "/bn/combos"
     ],
     "discover": [
       {
@@ -132,11 +142,16 @@
       "/bn/p/textured-knit-polo": [".pdp-name", "[data-template=\"T2\"] .pdp-galT2 .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"fms-card\"]"],
       "/p/contrast-collar-polo": [".pdp-name", "[data-template=\"T3\"] .pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", "[data-testid=\"t3-card\"] .pdp-pills", "[data-testid=\"t3-find\"]", ".pdp-t3-rest"],
       "/bn/p/contrast-collar-polo": [".pdp-name", "[data-template=\"T3\"] .pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", "[data-testid=\"t3-card\"] .pdp-pills", "[data-testid=\"t3-find\"]", ".pdp-t3-rest"],
-      "/p/slim-chino-trousers": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills"],
+      "/p/slim-chino-trousers": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"pdp-set-offer\"]"],
       "/p/cotton-socks-3": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]"],
       "/search?q=polo": ["[data-testid=\"search-grid\"] .pcard", ".cat-sz", ".cat-sortbtn", "[data-testid=\"search-page-form\"]"],
       "/bn/search?q=polo": ["[data-testid=\"search-grid\"] .pcard", ".cat-sz", ".cat-sortbtn"],
-      "/search?q=exchange": ["[data-testid=\"search-help\"] .hs-card"]
+      "/search?q=exchange": ["[data-testid=\"search-help\"] .hs-card"],
+      "/combo/sample-polo-chino-set": ["[data-testid=\"cb-gallery\"]", "[data-testid=\"cb-item\"]", "[data-testid=\"cb-add\"]", "[data-testid=\"cb-pricebox\"]", "[data-testid=\"cb-mbar\"]", "[data-testid=\"cb-more\"]"],
+      "/bn/combo/sample-polo-chino-set": ["[data-testid=\"cb-gallery\"]", "[data-testid=\"cb-item\"]", "[data-testid=\"cb-add\"]", "[data-testid=\"cb-pricebox\"]", "[data-testid=\"cb-mbar\"]"],
+      "/combo/sample-crew-tee-trio": ["[data-testid=\"cb-gallery\"]", "[data-testid=\"cb-item\"]", "[data-testid=\"cb-add\"]", "[data-testid=\"cb-pairs\"]", "[data-testid=\"cb-same\"]"],
+      "/combos": ["[data-testid=\"ca-card\"]"],
+      "/bn/combos": ["[data-testid=\"ca-card\"]"]
     }
   }
 }

@@ -176,7 +176,9 @@ export function ItemLine({
 export function SetLine({ c, set, cards }: { c: ShopContext; set: BagSetView; cards: Map<string, ShopCard> }) {
   const t = c.t;
   const name = nameOf(set, c);
-  const setHref = hrefIn(c.lang, `${ROUTES.combos}/${encodeURIComponent(set.slug)}`);
+  // PR 91: the set's own page; "Change" opens it on these picks (`?from=<set>`, "Update set in bag")
+  const setHref = hrefIn(c.lang, ROUTES.combo(set.slug));
+  const changeHref = `${setHref}?from=${encodeURIComponent(set.groupKey)}`;
   const first = set.pieces[0];
   const struck = set.regularMinor > set.payMinor;
   return (
@@ -226,7 +228,7 @@ export function SetLine({ c, set, cards }: { c: ShopContext; set: BagSetView; ca
         {set.note === 'PRICE_CHANGED' ? <Note testId="bag-set-repriced" text={t('bag.set.repriced')} /> : null}
         {/* One row, never wrapped (demo .cbt-fit): when it does not fit, BagActions switches to the short words. */}
         <div className="bg-acts cbt-fit" data-bag-fit="">
-          <a className="link" href={setHref} data-testid="bag-set-change" aria-label={t('bag.set.change')}>
+          <a className="link" href={changeHref} data-testid="bag-set-change" aria-label={t('bag.set.change')}>
             <span className="cbt-f">{t('bag.set.change')}</span>
             <span className="cbt-s">{t('bag.set.changeShort')}</span>
           </a>

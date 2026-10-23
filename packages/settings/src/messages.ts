@@ -12,7 +12,8 @@
 // messages/shop-more.<lang>.json, storefront search (S02, PR 72, 73) in messages/search.<lang>.json, the storefront
 // follow-ups (registry v25) in messages/storefront-fu.<lang>.json and the product page templates and Find My Size
 // (S02, PR 50–52, 58) in messages/pdp-templates.<lang>.json and the customer accounts (S04, PR 129–137) in
-// messages/accounts.<lang>.json, merged in here.
+// messages/accounts.<lang>.json and the combo storefront (S03, PR 91–95, 102, 103) in messages/combo-pages.<lang>.json,
+// merged in here.
 import toolsBn from '../messages/catalogue-tools.bn.json';
 import toolsEn from '../messages/catalogue-tools.en.json';
 import deliveryBn from '../messages/delivery.bn.json';
@@ -47,6 +48,8 @@ import pdpTemplatesBn from '../messages/pdp-templates.bn.json';
 import pdpTemplatesEn from '../messages/pdp-templates.en.json';
 import accountsBn from '../messages/accounts.bn.json';
 import accountsEn from '../messages/accounts.en.json';
+import comboPagesBn from '../messages/combo-pages.bn.json';
+import comboPagesEn from '../messages/combo-pages.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -69,8 +72,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */

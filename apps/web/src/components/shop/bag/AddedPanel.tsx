@@ -6,6 +6,7 @@
 //
 // How a page mounts it (the product page, PR 49, the same way as the bag's test page): the Add button (AddToBag) adds
 // through the bag's API and opens `?added=<lineId>`; the page then draws <AddedPanel> for that line on the server.
+// PR 91: the combo page opens it the same way for a set (any of its lines), drawn as the one set line.
 import type { BagItem, BagView } from '@extas/cart';
 import { colourName, type ShopCard } from '@/lib/shop/catalogue';
 import type { ShopContext } from '@/lib/shop/context';
@@ -26,11 +27,34 @@ function deliveryWords(c: ShopContext, kind: ReturnType<typeof panelDeliveryLine
   return null;
 }
 
-const subOf = (c: ShopContext, i: BagItem) => [i.colour ? colourName(i.colour, c.lang) : null, i.size?.label].filter(Boolean).join(' · ');
+const subOf = (c: ShopContext, i: Shown) => i.sub ?? [i.colour ? colourName(i.colour, c.lang) : null, i.size?.label].filter(Boolean).join(' · ');
+
+type Shown = Pick<BagItem, 'lineId' | 'productId' | 'colour' | 'size' | 'lineMinor' | 'nameEn' | 'nameBn'> & { isSet?: boolean; sub?: string };
+
+/**
+ * PR 91 · a set just added from its combo page (`?added=<one of its lines>`): shown as one line — its name, the pieces'
+ * colours ("Navy + Khaki") and the set price — with the first piece's picture.
+ */
+function setAsItem(c: ShopContext, view: BagView, lineId: string): Shown | null {
+  const set = view.sets.find((x) => x.lineId === lineId || x.pieces.some((p) => p.lineId === lineId));
+  if (!set) return null;
+  const first = set.pieces[0];
+  return {
+    lineId,
+    productId: first?.productId ?? '',
+    colour: first?.colour ?? null,
+    size: null,
+    lineMinor: set.payMinor,
+    nameEn: set.nameEn,
+    nameBn: set.nameBn,
+    isSet: true,
+    sub: set.pieces.map((p) => (p.colour ? colourName(p.colour, c.lang) : '')).filter(Boolean).join(' + '),
+  };
+}
 
 export function AddedPanel({ c, view, lineId, s, cards, picks, trust, closeHref }: { c: ShopContext; view: BagView; lineId: string; s: BagSettings; cards: Map<string, ShopCard>; picks: ShopCard[]; trust: Reassurance; closeHref: string }) {
   const t = c.t;
-  const added = view.items.find((i) => i.lineId === lineId);
+  const added: Shown | null = view.items.find((i) => i.lineId === lineId) ?? setAsItem(c, view, lineId);
   if (!added) return null;
   const styleB = s['bag.panel.style'] === 'B';
   const count = plural(t, 'bag.count', view.summary.count, c.num);
@@ -40,7 +64,7 @@ export function AddedPanel({ c, view, lineId, s, cards, picks, trust, closeHref 
   const others = view.items.filter((i) => i.lineId !== lineId);
   const max = s['bag.panel.maxLines'];
   const shownOthers = max > 0 ? others.slice(0, Math.max(0, max - 1)) : others;
-  const more = others.length - shownOthers.length + view.sets.length;
+  const more = others.length - shownOthers.length + view.sets.length - (added.isSet ? 1 : 0);
   const bag = hrefIn(c.lang, ROUTES.bag);
   const buttons = (
     <div className="pdp-bagbtns">

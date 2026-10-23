@@ -9,7 +9,8 @@ describe('coming-soon pages (CN-010)', () => {
     // ~~ROUTES.search~~ PR 73 built the results page
     // ~~ROUTES.account, ROUTES.login, ROUTES.orders~~ PR 130 / 131 built the login and My account
     // ~~ROUTES.order('T-1001')~~ PR 134 built the order page
-    for (const p of [ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
+    // ~~ROUTES.combos~~ PR 103 built the sets landing page; a rule's own list and the set builder are still to come
+    for (const p of ['/combos/sample-polo-pairs', ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
       expect(comingSoon(p, '/p'), p).not.toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();
@@ -25,6 +26,13 @@ describe('coming-soon pages (CN-010)', () => {
 
   it('an address the shop will never have is not coming', () => {
     for (const p of ['/nothing-here', '/bagx', '/search/deep', '/collectionsx', '/'] as const) expect(comingSoon(p, '/p'), p).toBeNull();
+  });
+
+  it('PR 91 / 103: the combo page is its own route, and the sets landing page is built inside the coming /combos', () => {
+    expect(ROUTES.combo('sample polo~set')).toBe('/combo/sample%20polo~set');
+    expect(comingSoon(ROUTES.combos, '/p')).toBeNull();
+    expect(comingSoon(`${ROUTES.combos}/`, '/p')).toBeNull();
+    expect(comingSoon(ROUTES.combo('sample-polo-chino-set'), '/p')).toBeNull();
   });
 
   it('the search results page is built (PR 73): /search is no longer "coming soon"', () => {

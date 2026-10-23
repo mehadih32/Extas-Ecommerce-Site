@@ -5,7 +5,8 @@
 // here under their own top-level keys (a key in both files is a mistake and throws). Search (S02, PR 72/73) keeps its
 // words in messages/shop-search.<lang>.json, the storefront follow-ups theirs in messages/shop-fu.<lang>.json, Find My
 // Size (S02, PR 58, 51) in messages/shop-finder.<lang>.json under `finder` and the customer accounts (S04, PR 129–137)
-// in messages/shop-account.<lang>.json (`account.*`), merged the same way.
+// in messages/shop-account.<lang>.json (`account.*`) and the combo storefront (S03, PR 91–95, 102, 103) in
+// messages/shop-combo.<lang>.json (`combo.*`), merged the same way.
 import bn from '../../../messages/shop.bn.json';
 import en from '../../../messages/shop.en.json';
 import moreBn from '../../../messages/shop-more.bn.json';
@@ -18,6 +19,8 @@ import finderBn from '../../../messages/shop-finder.bn.json';
 import finderEn from '../../../messages/shop-finder.en.json';
 import accountBn from '../../../messages/shop-account.bn.json';
 import accountEn from '../../../messages/shop-account.en.json';
+import comboBn from '../../../messages/shop-combo.bn.json';
+import comboEn from '../../../messages/shop-combo.en.json';
 import type { ShopLabel } from '@extas/settings';
 import type { Dict } from '../i18n';
 import type { ShopLang } from './lang';
@@ -28,8 +31,8 @@ function withMore(base: Dict, more: Dict): Dict {
 }
 
 export const SHOP_DICTS: Record<ShopLang, Dict> = {
-  en: withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn),
-  bn: withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn),
+  en: withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn),
+  bn: withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn),
 };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;

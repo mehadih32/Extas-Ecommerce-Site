@@ -1,0 +1,165 @@
+{
+  "combo": {
+    "crumbSets": "Sets",
+    "crumbCombos": "Combos",
+    "setOf": "Set of {n}",
+    "gallery": {
+      "aria": "Items in this set",
+      "seeEach": "See each item",
+      "tab": "Item {n} · {colour}",
+      "set": "Set",
+      "front": "Front",
+      "back": "Back",
+      "detail": "Detail",
+      "flat": "True colour",
+      "flatShort": "Colour",
+      "seeSet": "See the set",
+      "badge": "Item {n} · {colour} · {view}",
+      "save": "Save {pct}%",
+      "showSet": "Show the whole set",
+      "showView": "Show item {n} {view}",
+      "alt": "{colour} {name}"
+    },
+    "price": {
+      "setPrice": "Set price",
+      "forSet": "Price for the set",
+      "separately": "Separately",
+      "youSave": "You save {amount} ({pct}%)",
+      "eachTitle": "Regular price of each item",
+      "eachLine": "Item {n} · {name}",
+      "auto": "Set price also applies automatically when these items are in your bag."
+    },
+    "pick": {
+      "title": "Choose colours & sizes",
+      "titleSteps": "Build it step by step",
+      "units": "Measurement units",
+      "inch": "in",
+      "cm": "cm",
+      "itemOf": "Item {n} of {total}",
+      "own": "{price} on its own",
+      "colour": "Colour:",
+      "size": "Size:",
+      "choose": "choose one",
+      "same": "Same size as item {n}",
+      "sizeAria": "Size for item {n}",
+      "soldOutIn": "Sold out in {colour}",
+      "soldOut": "(sold out)",
+      "measurePick": "Pick a size to see its measurements.",
+      "measureSize": "Size {size}",
+      "measureIn": "{v}\"",
+      "measureCm": "{v} cm",
+      "look": "See item {n} in the big photo",
+      "lookName": "{name} — see it in the big photo",
+      "gone": "Size {size} is sold out in {colour}. Please pick another size.",
+      "goneKept": "Size {size} is sold out in {colour}. Please pick another size — item {items} keeps size {size}.",
+      "goneToo": "Size {size} is sold out in {colour} too. Please pick another size.",
+      "outLinked": "Size {size} is sold out in {colour}. Tap another size for this item, or pick another colour.",
+      "outOwn": "Size {size} is sold out in {colour}. Please pick another size.",
+      "few": "Only {n} left in {colour} · {size}",
+      "and": " and "
+    },
+    "steps": {
+      "aria": "Steps",
+      "step": "Step {n}",
+      "stepOf": "Step {n} of {total} · {label}",
+      "next": "Next: {label}",
+      "review": "Review your set",
+      "edit": "Edit",
+      "editAria": "Edit step {n}",
+      "needsSize": "· needs a new size",
+      "finish": "Finish every step, then add the set to your bag.",
+      "item": "Item {n}"
+    },
+    "summary": {
+      "title": "Set summary",
+      "yours": "Your set",
+      "ready": "Your set is ready",
+      "items": {
+        "one": "{n} item",
+        "other": "{n} items"
+      },
+      "noSize": "Size not picked yet",
+      "line": "{colour} · Size {size}",
+      "lineOut": "{colour} · Size {size} (sold out)",
+      "separately": "Separately",
+      "setPrice": "Set price",
+      "total": "Total",
+      "youSave": "You save"
+    },
+    "pairs": {
+      "title": "Popular pairs",
+      "tapTwo": "Tap to set both colours",
+      "tapMany": "Tap to set all {n} colours",
+      "tapLink": "Tap to see that pair",
+      "notIn": "{names} — not in size {size}",
+      "greyed": "Greyed pairs are not in size {size}. Pick another size to see them."
+    },
+    "cta": {
+      "add": "Add set to Bag",
+      "order": "Order Now",
+      "update": "Update set in bag",
+      "back": "Back to bag",
+      "added": "{name} ({colours}) added to your bag",
+      "view": "View bag",
+      "updated": "{name} updated in your bag",
+      "error": "We could not add the set. Please try again.",
+      "price": "The price could not be checked. Please try again."
+    },
+    "edit": {
+      "banner": "Changing the {name} in your bag.",
+      "how": "Pick new colours or sizes, then tap Update set in bag."
+    },
+    "wa": {
+      "button": "Ask about this set on WhatsApp",
+      "message": "Hi {store}, I have a question about the {name}: {pieces}.",
+      "piece": "{colour} {name} (size {size})",
+      "pieceNoSize": "{colour} {name} (size not picked yet)"
+    },
+    "rules": {
+      "exchange": "Size exchange",
+      "exchangeText": "Size exchange within {windowHours} hours of delivery.",
+      "exchangeSet": "Exchange one item or the whole set — the set price stays.",
+      "delivery": "Delivery",
+      "free": "Free home delivery",
+      "freeOver": "The set is over {amount}, so delivery is on us.",
+      "freeShips": "This set ships free.",
+      "charge": "The delivery charge is shown at checkout.",
+      "cod": "Cash on Delivery",
+      "codText": "Pay when it arrives."
+    },
+    "more": {
+      "title": "More sets",
+      "now": "Sets you can get now"
+    },
+    "off": {
+      "title": "This set isn't available right now",
+      "text": "The {name} offer is taking a break. You can still buy these styles on their own, or pick another set below.",
+      "separately": "Buy them separately",
+      "home": "Back to the shop"
+    },
+    "card": {
+      "save": "Save {amount}",
+      "pcs": "{n} pcs",
+      "for": "for {n}",
+      "pairs": "{n} pairs · pick any",
+      "sets": "{n} sets · pick any",
+      "title": "{name} combo",
+      "more": "+{n}",
+      "alt": "Picture shows {pieces}"
+    },
+    "hub": {
+      "eyebrow": "{counts} pieces · one price",
+      "or": " or ",
+      "title": "Combos",
+      "packs": "{n}-piece packs",
+      "topBottom": "Top + bottom sets",
+      "seasons": "Seasons",
+      "empty": "No sets are on sale right now. Have a look at what is new."
+    },
+    "offer": {
+      "any": "any {n} colours",
+      "line": "{what} for {price}",
+      "save": "Save {amount}"
+    }
+  }
+}
