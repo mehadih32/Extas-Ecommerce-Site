@@ -8,14 +8,16 @@
   "settleMs": 400,
   "concurrency": 8,
   "signedIn": {
-    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page.",
-    "signedOutPaths": ["/admin/login"],
-    "urls": ["/admin", "/admin/integrations", "/admin/products/new"],
+    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer.",
+    "signedOutPaths": ["/admin/login", "/collections/polos", "/bn/collections/polos"],
+    "urls": ["/admin", "/admin/integrations", "/admin/products/new", "/collections/polos", "/bn/collections/polos"],
     "discover": [{ "from": "/admin/products", "selector": "a.pa-nm", "take": 2, "required": true, "expect": [".pa-col", ".pa-x", ".pa-kind"] }],
     "expect": {
       "/admin/products": ["a.pa-nm"],
       "/admin/size-charts": [".sc-item"],
-      "/admin/stock": ["a.st-name"]
+      "/admin/stock": ["a.st-name"],
+      "/collections/polos": [".grid .pcard", ".cat-sz", ".cat-sortbtn"],
+      "/bn/collections/polos": [".grid .pcard", ".cat-sz", ".cat-sortbtn"]
     }
   }
 }

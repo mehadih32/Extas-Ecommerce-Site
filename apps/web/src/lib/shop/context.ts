@@ -87,6 +87,23 @@ async function readSettings(storeId: number): Promise<{ values: ShopSettings; li
   }
 }
 
+/**
+ * Settings one page needs beyond the shell's (PR 45: the category page's `category.*`), read the same way: from the
+ * database when it answers in time, else the registry's defaults.
+ */
+export async function readPageSettings<K extends Key>(keys: readonly K[], storeId: number): Promise<{ [P in K]: Value<P> }> {
+  const defaults = () => Object.fromEntries(keys.map((k) => [k, registry[k].default])) as { [P in K]: Value<P> };
+  const resolver = settingsResolver();
+  if (!resolver) return defaults();
+  try {
+    const vals = await withTimeout(Promise.all(keys.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs());
+    return Object.fromEntries(keys.map((k, i) => [k, vals[i]])) as { [P in K]: Value<P> };
+  } catch (e) {
+    console.warn(`shop: page settings unavailable, drawing with the defaults (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return defaults();
+  }
+}
+
 /** Visible, not archived categories (top level), each with its published products counted and its children. */
 export async function readCategories(storeId: number): Promise<{ cats: ShopCategory[]; storeName: string | null }> {
   if (!process.env.DATABASE_URL) return { cats: [], storeName: null };

@@ -214,5 +214,90 @@
     "moreColours": "+{n}",
     "off": "−{n}%",
     "label": "{name}, {price}"
+  },
+  "cat": {
+    "home": "Home",
+    "breadcrumb": "Breadcrumb",
+    "styles": "{n} styles",
+    "style": "1 style",
+    "newIn": "New in",
+    "newInBlurb": "Our newest styles, all in one place.",
+    "products": "{n} products",
+    "product": "1 product",
+    "filtersOn": "{n} filters on",
+    "filterOn": "1 filter on",
+    "filters": "Filters",
+    "filter": "Filter",
+    "close": "Close",
+    "clearAll": "Clear all",
+    "clearAllN": "Clear all ({n})",
+    "sortBy": "Sort by",
+    "sortValue": "{label}: {value}",
+    "sort": {
+      "rec": "Recommended",
+      "new": "Newest",
+      "low": "Price: low to high",
+      "high": "Price: high to low",
+      "top": "Top rated"
+    },
+    "onSale": "On sale",
+    "inStock": "In stock only",
+    "inStockSub": "Leave out styles that are sold out",
+    "inStockChip": "In stock",
+    "size": "Size",
+    "tops": "Tops",
+    "waist": "Waist (inches)",
+    "sizeNote": "Shows styles in stock in at least one colour.",
+    "sizeLeft": "{n} in stock",
+    "sizeChip": "Size {size}",
+    "colour": "Colour",
+    "moreColours": "+ {n} more colours",
+    "fewerColours": "Show fewer colours",
+    "fit": "Fit",
+    "price": "Price",
+    "under": "Under {a}",
+    "between": "{a}–{b}",
+    "over": "Over {a}",
+    "remove": "Remove filter {name}",
+    "quick": "Quick filters",
+    "show": "Show {n} products",
+    "showOne": "Show 1 product",
+    "showNone": "No products",
+    "emptyTitle": "No styles match these filters",
+    "emptyText": "Try removing a filter — or message us and we will check stock for you.",
+    "clearFilters": "Clear filters",
+    "askWa": "Ask on WhatsApp",
+    "waMessage": "Hi {store}, I am looking for {name}",
+    "noneYet": "No styles here yet",
+    "noneYetText": "New styles are on the way. Have a look at what is new meanwhile.",
+    "noneYetSoon": "New styles are on the way. Please check back soon.",
+    "seeNewIn": "See what is new",
+    "unavailable": "We could not load this page",
+    "unavailableText": "Please try again in a moment.",
+    "showing": "Showing {shown} of {total}",
+    "showAll": "Show all {n}",
+    "showMore": "Show more",
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "questions": "Questions",
+    "seoHeading": "{name} for men in Bangladesh",
+    "faq": {
+      "cod": {
+        "q": "Can I pay when the parcel arrives?",
+        "a": "Yes. Pay with Cash on Delivery when your parcel comes."
+      },
+      "delivery": {
+        "q": "Is delivery free?",
+        "a": "Delivery is free on orders over {freeOver}."
+      },
+      "exchange": {
+        "q": "How do exchanges work?",
+        "a": "If the size is not right, you can exchange it within {windowHours} hours of delivery."
+      },
+      "size": {
+        "q": "How do I choose my size?",
+        "a": "Every product page has a size chart in inches. Measure a piece you already own the same way and compare. Find my size can also suggest a size from your height and weight."
+      }
+    }
   }
 }

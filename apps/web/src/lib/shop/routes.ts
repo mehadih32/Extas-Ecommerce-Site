@@ -30,7 +30,7 @@ export const COLOUR_QUERY = 'color';
  * and everything under it. The product page's address starts with the owner's prefix (`naming.productPathPrefix`).
  */
 export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boolean }> = [
-  { key: 'collections', path: '/collections', deep: true }, // category pages, PR 45
+  // ~~{ key: 'collections', path: '/collections', deep: true }, // category pages, PR 45~~ built: app/(shop)/(store)/collections/[slug]
   { key: 'search', path: '/search', deep: false },
   { key: 'bag', path: '/bag', deep: false },
   { key: 'account', path: '/account', deep: true },

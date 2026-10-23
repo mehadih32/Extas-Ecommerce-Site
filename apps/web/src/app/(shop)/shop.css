@@ -721,6 +721,8 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (min-width: 1024px) { .shop .nav-d .nav-i { position: relative; display: inline-flex; align-items: center; gap: 2px; height: 100%; padding: 0px; border-bottom-width: 0px; white-space: nowrap; color: var(--ink); } }
 @media (min-width: 1024px) { .shop .nav-d .nav-i::after { content: ""; position: absolute; left: 0px; right: 0px; bottom: calc(50% - 15px); height: 2px; border-radius: 2px; background: var(--brand); transform: scaleX(0); transform-origin: left center; transition: transform 0.16s; } }
 @media (min-width: 1024px) { .shop .nav-d .nav-i.mega-on::after { transform: scaleX(1); } }
+@media (min-width: 1024px) { .shop .nav-d .nav-i.on::after { transform: scaleX(1); } }
+@media (min-width: 1024px) { .shop .nav-d .nav-i.on { font-weight: 600; } }
 @media (min-width: 1024px) { .shop .nav-chev { flex-shrink: 0; width: 9px; height: 9px; opacity: 0.5; transition: transform 0.16s; } }
 @media (min-width: 1024px) { .shop .nav-i.mega-on .nav-chev { transform: rotate(180deg); opacity: 0.9; } }
 @media (min-width: 1024px) { .shop .nav-d .nav-i.nav-folded { display: none; } }
