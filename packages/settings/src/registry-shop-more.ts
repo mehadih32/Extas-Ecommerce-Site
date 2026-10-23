@@ -83,6 +83,33 @@ export const pdpRowsSchema = z
   .strict()
   .refine((r) => r.recentMax <= r.recentKeep, { message: 'shows more than it remembers' });
 
+// ---- PR 68 · the floating action rail (demo 30-product.js pdp_headTitle "pdp-acts", PDP_RAIL; 02-core.js
+// SHOWN.pdpIcons) ----
+
+/**
+ * The column of round buttons that floats at the right of the product page and drifts a little with the scroll, never
+ * above the title's line and never onto the buy bar. Off by default, as in the demo (SHOWN.pdpIcons.panel = false):
+ * the heart rides after the title instead.
+ */
+export const pdpIconsSchema = z
+  .object({
+    /** The floating column at all. */
+    panel: z.boolean(),
+    /** The wishlist heart: after the title, in the column, or nowhere. */
+    wish: z.enum(['title', 'rail', 'off']),
+    /** "Ask about this item on WhatsApp" in the column (only with the store's WhatsApp number). */
+    whatsapp: z.boolean(),
+    /** The drift: at most this many px from its place, following this share of the scroll, easing back after a pause. */
+    driftMaxPx: z.int().min(0).max(120),
+    follow: z.number().min(0).max(1),
+    ease: z.number().min(0.02).max(1),
+    settleMs: z.int().min(0).max(2000),
+    /** Px under the title's line the column may climb to, and px it keeps above the buy bar. */
+    ceilGapPx: z.int().min(0).max(40),
+    barGapPx: z.int().min(0).max(60),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const shopMoreSettings = {
@@ -127,7 +154,17 @@ export const shopMoreSettings = {
     helpKey: 'pdp.rows.help',
     sortOrder: 140,
   }),
+  'pdp.icons': setting({
+    ...json,
+    group: 'productPage',
+    schema: pdpIconsSchema,
+    default: { panel: false, wish: 'title', whatsapp: false, driftMaxPx: 38, follow: 0.5, ease: 0.14, settleMs: 170, ceilGapPx: 2, barGapPx: 10 }, // hardcode-ok: the demo's PDP_DRIFT_MAX and rail loop
+    labelKey: 'pdp.icons.label',
+    helpKey: 'pdp.icons.help',
+    sortOrder: 150,
+  }),
 };
 
 export type PdpFitSettings = z.output<typeof pdpFitSchema>;
 export type PdpRowsSettings = z.output<typeof pdpRowsSchema>;
+export type PdpIconsSettings = z.output<typeof pdpIconsSchema>;

@@ -7,5 +7,9 @@
     "recentMix": "Recently viewed and similar styles",
     "recentFill": "More like this",
     "seeAll": "See all"
+  },
+  "rail": {
+    "wa": "Ask about this item on WhatsApp",
+    "waMessage": "Hi {store}, I have a question about {name}"
   }
 }
