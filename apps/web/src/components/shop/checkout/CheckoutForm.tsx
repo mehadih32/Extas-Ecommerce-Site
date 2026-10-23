@@ -21,8 +21,11 @@
 // the address suggestions carry no charge, and an unsettled band is never asked.
 // PR 561: with the owner's silent backfill on, the phone number goes with each address read; a number that becomes
 // whole (or changes) while the band is asked, or was settled from it, reads the line again. Nothing is prefilled.
+// PR 605: a gift checkout (`gift`): the "Sending a gift" card above the details, which become the receiver's; every
+// quote and the order say it is a gift, the gift card is checked as the server checks it, and a refused gift field is
+// pointed at like any other.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { checkForm, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
+import { checkForm, checkGift, GIFT_FIELDS, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type GiftField, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
@@ -30,6 +33,7 @@ import { Icon, WaGlyph } from '../Icon';
 import { showToast } from '../toast';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
+import { GiftCard, type GiftConfig, type GiftForm } from './GiftCard';
 import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
 import { PaymentStep } from './PaymentStep';
@@ -82,7 +86,11 @@ export interface CheckoutFormProps {
   remember?: { days: number } | null;
   /** PR 561: the owner's silent address backfill is on (`checkout.address.backfill`): send the phone with the address. */
   backfill?: boolean;
+  /** PR 605: the checkout is a gift (opened as one, gift mode on); null: an ordinary checkout. */
+  gift?: GiftConfig | null;
 }
+
+const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
 
 export function CheckoutForm({
   view: first,
@@ -104,6 +112,7 @@ export function CheckoutForm({
   prefill = null,
   remember = null,
   backfill = false,
+  gift: giftCfg = null,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -128,7 +137,13 @@ export function CheckoutForm({
     setReadLine(c.line);
     setReading(true);
     const phone = backfill && phoneNormalizeBD(phoneNow.current).ok ? phoneNow.current : null;
-    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed, ...(phone ? { phone } : {}) } : null, payment: c.pay, useWallet: c.wallet });
+    const next = await fetchQuote({
+      lang: money.lang,
+      address: c.line ? { line: c.line, confirmed: c.confirmed, ...(phone ? { phone } : {}) } : null,
+      payment: c.pay,
+      useWallet: c.wallet,
+      ...(giftCfg ? { gift: true } : {}),
+    });
     if (!seq.current.isLatest(k)) return;
     setReading(false);
     if (next) setView(next);
@@ -202,6 +217,22 @@ export function CheckoutForm({
   // PR 125: the delivery note, kept in the tab's draft like the rest.
   const [noteEdited, setNote] = useState<string | null>(null);
   const note = noteCfg ? (noteEdited ?? (typeof stored?.note === 'string' ? stored.note : '')) : '';
+  // PR 605: the gift card, kept in the tab's draft like the rest
+  const [giftEdited, setGift] = useState<GiftForm | null>(null);
+  const keptGift = (stored?.gift ?? null) as Partial<GiftForm> | null;
+  const str = (v: unknown) => (typeof v === 'string' ? v : '');
+  const giftForm: GiftForm = giftEdited ?? {
+    senderName: str(keptGift?.senderName),
+    senderContact: str(keptGift?.senderContact),
+    note: str(keptGift?.note),
+    deliverAfter: str(keptGift?.deliverAfter),
+    hidePrices: typeof keptGift?.hidePrices === 'boolean' ? keptGift.hidePrices : (giftCfg?.hidePricesDefault ?? true),
+  };
+  const giftCheck = giftCfg
+    ? checkGift(giftForm, { nameMin: limits.nameMin, noteMax: giftCfg.noteMax, maxDays: giftCfg.maxDays }, giftCfg.today, giftCfg.hidePricesDefault)
+    : null;
+  const [giftAsk, setGiftAsk] = useState<GiftField | null>(null);
+  const giftAsking = giftAsk && giftCheck && !giftCheck.ok && giftCheck.field === giftAsk ? giftAsk : null;
   // SIM-F-026: with the owner's switch on, what he typed is kept for the team a moment after he stops (a real phone only).
   const phoneOk = phoneNormalizeBD(form.phone).ok;
   useEffect(() => {
@@ -270,10 +301,11 @@ export function CheckoutForm({
   const covered = view.totals.known && view.totals.walletMinor > 0 && view.totals.dueMinor === 0;
   // PR 125: placing the order. The key is made once and kept in the tab until the order is in.
   const [placing, setPlacing] = useState(false);
-  const askField = (formEl: HTMLFormElement, field: Field) => {
+  const askField = (formEl: HTMLFormElement, field: Field | GiftField) => {
     setTried(true);
     setPhoneChecked(true);
-    setAsk(field);
+    if (isGiftField(field)) setGiftAsk(field);
+    else setAsk(field);
     const box = formEl.querySelector(`[data-field="co-${field}"]`);
     box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const input = document.getElementById(`co-${field}`);
@@ -293,6 +325,7 @@ export function CheckoutForm({
       useWallet: asked.current.wallet,
       consent,
       note: note || null,
+      ...(giftCfg ? { gift: { ...giftForm, note: giftForm.note || null, deliverAfter: giftForm.deliverAfter || null } } : {}),
       fingerprint: view.fingerprint,
     });
     const a = r.data;
@@ -308,6 +341,10 @@ export function CheckoutForm({
       if (a.view) setView(a.view);
       else void requote({});
       return showToast(formEl, w('err.changed'));
+    }
+    if (a.error === 'FORM' && isGiftField(a.field)) {
+      askField(formEl, a.field);
+      return showToast(formEl, w(`gift.ask.${a.field}`));
     }
     if (a.error === 'FORM' && a.field) {
       askField(formEl, a.field);
@@ -337,6 +374,11 @@ export function CheckoutForm({
     if (!check.ok) {
       askField(formEl, check.field);
       showToast(formEl, w(`askBn.${askKey(check.field, check)}`));
+      return;
+    }
+    if (giftCheck && !giftCheck.ok) {
+      askField(formEl, giftCheck.field);
+      showToast(formEl, w(`gift.ask.${giftCheck.field}`));
       return;
     }
     if (!view.pay.chosen && !covered) {
@@ -492,11 +534,26 @@ export function CheckoutForm({
         <div className="split-side">
           <div className="stack s16" style={{ minWidth: 0 }}>
             <h1 className="h1 co-donly">{w('title')}</h1>
+            {giftCfg ? (
+              <GiftCard
+                cfg={giftCfg}
+                value={giftForm}
+                asking={giftAsking}
+                advance={view.gift?.advance === 'full' ? w('gift.advanceFull') : view.gift?.advance === 'part' && view.gift.partMinor ? w('gift.advancePart', { amount: m(view.gift.partMinor) }) : null}
+                w={w}
+                onChange={(patch) => {
+                  const next = { ...giftForm, ...patch };
+                  setGift(next);
+                  saveDraft({ gift: next });
+                }}
+              />
+            ) : null}
             <section className="card co-sec" data-testid="co-details">
               <div className="co-hd">
                 <span className="co-num">{n(1)}</span>
-                <h2 className="h2">{w('heading')}</h2>
+                <h2 className="h2">{w(giftCfg ? 'gift.receiver' : 'heading')}</h2>
               </div>
+              {giftCfg ? <p className="small text2 mt8">{w('gift.receiverSub')}</p> : null}
               <div className="stack s16 mt16">
                 <DetailsFields
                   fields={fields}

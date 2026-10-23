@@ -5,6 +5,7 @@
 // sends the choice back and draws the answer. A prepaid reward the owner switched on shows on every prepaid option.
 // On a phone, before one finished word of the address, the step only names what can be paid with (demo rule 39); a
 // computer always shows the boxes.
+// PR 605: a gift paid ahead in full says why Cash on Delivery is not there.
 import type { PaymentChoice, PaymentView, PayMethod } from '@extas/checkout/pure';
 import { Icon } from '../Icon';
 import { PayMark } from './PayMark';
@@ -171,10 +172,10 @@ export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = f
   const full = (
     <section className="card co-sec co-paysec" data-testid={soon ? 'co-pay-desk' : 'co-pay'}>
       {head(3)}
-      {pay.codOff === 'RULE' || pay.codOff === 'BAND_LIMIT' ? (
+      {pay.codOff === 'RULE' || pay.codOff === 'BAND_LIMIT' || pay.codOff === 'GIFT' ? (
         <p className="co-fdays" data-testid="co-cod-not-here">
           <Icon name="info" size={14} />
-          <span>{w('pay.codNotHere')}</span>
+          <span>{w(pay.codOff === 'GIFT' ? 'pay.codGift' : 'pay.codNotHere')}</span>
         </p>
       ) : null}
       <div className="stack s8 mt12">{boxes}</div>

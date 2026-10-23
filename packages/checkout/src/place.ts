@@ -26,6 +26,13 @@
 // PR 129: the order belongs to an account in the same transaction — the signed-in customer, else the customer with the
 // order's phone number, else a new one made now (`account.autoCreate.enabled`), never with a password (SIM-F-039,
 // @extas/accounts identity.ts). The placed event says which (`data.account`), for the thank-you page's account card.
+//
+// PR 605 — a gift (`checkout.gift` on, the page sent `gift`): the name, phone and address are the RECEIVER's and go on
+// the order like any order's (the sticker, the booking and the courier read them, @extas/orders deliveryTarget); the
+// sender's name and contact, the gift note, "deliver on or after" and "hide prices" are stored beside them. A gift makes
+// no account for the receiver: only a signed-in sender's account gets the order. With the whole amount ahead the quote
+// offers no Cash on Delivery; with a part ahead the order is flagged GIFT_ADVANCE, keeps that part in
+// `advanceRequiredMinor` and asks the team to call for it (until S07's part payment).
 import { createHash, randomBytes } from 'node:crypto';
 import { linkOrderAccount } from '@extas/accounts';
 import { findBag } from '@extas/cart';
@@ -36,6 +43,7 @@ import { z } from 'zod';
 import { addressInputSchema } from './address';
 import { consentInputSchema, consentOf, consentSettings, recordConsent } from './consent';
 import { CheckoutError, checkStoreId, nowOf, parse, setting, TX, type CheckoutDeps, type Db, type Tx } from './context';
+import { checkGift, storeToday } from './gift';
 import { paymentInputSchema, isPrepaid, type PaymentChoice } from './payment';
 import { checkForm, fieldOrder, phoneNormalizeBD, type FieldProblem } from './pure';
 import { checkoutQuote, viewOf, WALLET_ACTIVE, type CheckoutQuote } from './quote';
@@ -44,6 +52,17 @@ const TEXT_MAX = 2_000;
 
 /** The method an order and its payment are stored with (the database's own list). */
 export type PaymentMethod = NonNullable<Prisma.OrderUncheckedCreateInput['paymentMethod']>;
+
+/** PR 605: the gift card (checked by gift.ts checkGift, the same rules as the page). */
+export const giftInputSchema = z
+  .object({
+    senderName: z.string().max(TEXT_MAX),
+    senderContact: z.string().max(TEXT_MAX),
+    note: z.string().max(TEXT_MAX).nullable().optional(),
+    deliverAfter: z.string().max(20).nullable().optional(),
+    hidePrices: z.boolean().optional(),
+  })
+  .strict();
 
 /** What the page sends when the customer presses Confirm. */
 export const placeInputSchema = z
@@ -58,6 +77,8 @@ export const placeInputSchema = z
     useWallet: z.boolean().optional(),
     consent: consentInputSchema.nullable().optional(),
     note: z.string().max(TEXT_MAX).nullable().optional(),
+    /** PR 605: the order is a gift (ignored while gift mode is off). */
+    gift: giftInputSchema.nullable().optional(),
     /** The fingerprint of the money the page showed (CheckoutView.fingerprint). */
     fingerprint: z.string().regex(/^[0-9a-f]{64}$/),
   })
@@ -86,9 +107,16 @@ export interface PlaceResult {
 }
 
 /** The order's flags the team's screens read (PR 563 address queue, the payment follow-up). */
-export const ORDER_FLAGS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentPending: 'PAYMENT_PENDING', paymentFailed: 'PAYMENT_FAILED' } as const;
+export const ORDER_FLAGS = {
+  addressUnclear: 'ADDRESS_UNCLEAR',
+  chargeNotSet: 'CHARGE_NOT_SET',
+  addressCheck: 'ADDRESS_CHECK',
+  paymentPending: 'PAYMENT_PENDING',
+  paymentFailed: 'PAYMENT_FAILED',
+  giftAdvance: 'GIFT_ADVANCE',
+} as const;
 /** Why the team calls (CallTask.reason). */
-export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: 'PAYMENT_FAILED' } as const;
+export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: 'PAYMENT_FAILED', giftAdvance: 'GIFT_ADVANCE' } as const;
 /** What the order's events are called. */
 export const ORDER_EVENTS = { placed: 'order.placed', paid: 'payment.paid', failed: 'payment.failed', retry: 'payment.retry' } as const;
 /** Where the order came from (OrderEvent.source, ConsentRecord.source). */
@@ -225,7 +253,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (again) return again;
 
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
-  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck] = await Promise.all([
+  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck, giftCfg, timeZone] = await Promise.all([
     s('checkout.form.nameMin'),
     s('checkout.form.addressMin'),
     s('checkout.fieldOrder'),
@@ -238,11 +266,22 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     consentSettings(deps, storeId),
     s('account.autoCreate.enabled'),
     s('checkout.address.check'),
+    d.gift ? s('checkout.gift') : Promise.resolve(null),
+    d.gift ? s('store.timeZone') : Promise.resolve(null),
   ]);
   const check = checkForm(d.form, { nameMin, addressMin }, fieldOrder(order));
   if (!check.ok) throw new CheckoutError('FORM', 'a field is not finished', [check.field], { field: check.field, problem: check.problem satisfies FieldProblem });
   const note = noteOn ? (d.note ?? '').trim() : '';
   if ([...note].length > noteMax) throw new CheckoutError('INVALID_INPUT', 'the delivery note is too long', ['note']);
+  // PR 605: the gift card, only while the owner has gift mode on (else the order is an ordinary one)
+  const giftOn = d.gift && giftCfg?.enabled ? giftCfg : null;
+  let gift = null;
+  if (giftOn && d.gift) {
+    const today = storeToday(nowOf(deps), timeZone ?? 'UTC');
+    const g = checkGift(d.gift, { nameMin, noteMax: giftOn.noteMaxChars, maxDays: giftOn.deliverAfterMaxDays }, today, giftOn.hidePricesDefault);
+    if (!g.ok) throw new CheckoutError('FORM', 'a gift field is not finished', [g.field], { field: g.field, problem: g.problem, gift: true });
+    gift = g.gift;
+  }
 
   const cartId = await findBag(deps, { storeId, visitorId });
   if (!cartId) throw new CheckoutError('EMPTY', 'there is no bag to order');
@@ -256,6 +295,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     payment: d.payment ?? null,
     useWallet: d.useWallet === true,
     ip: req.ip ?? null,
+    gift: gift !== null,
   });
   if (!q.bag.items.length && !q.bag.sets.length) throw new CheckoutError('EMPTY', 'the bag has nothing to order');
   if (q.bag.blocked.length) throw new CheckoutError('OUT_OF_STOCK', 'a line cannot be ordered now', q.bag.blocked.map((b) => `${b.lineId}:${b.free}`));
@@ -283,6 +323,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (notSet) flags.push(ORDER_FLAGS.chargeNotSet);
   if (noDetail) flags.push(ORDER_FLAGS.addressCheck);
   if (prepaid) flags.push(ORDER_FLAGS.paymentPending);
+  // PR 605: a part of the gift paid ahead — the team calls for it until S07's part payment
+  const giftPart = q.gift?.partMinor ?? null;
+  if (giftPart) flags.push(ORDER_FLAGS.giftAdvance);
   const consent = consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
   const scope = scopeOf(storeId);
@@ -308,7 +351,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
 
       const number = await nextOrderNumber(tx, storeId, prefix, start);
       // PR 129: the account it belongs to (SIM-F-039: a new one has no password; the browser is not signed in).
-      const account = await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate });
+      // PR 605: the phone of a gift is the receiver's — no account is made or found for him; a signed-in sender keeps it
+      const account = await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate: autoCreate && !gift });
       const ownerId = account?.customerId ?? null;
       const rows = orderLinesOf(q, lines);
       const variants = await tx.productVariant.findMany({ where: { storeId, id: { in: [...new Set(rows.map((r) => r.variantId))] } }, select: { id: true, sku: true } });
@@ -356,6 +400,17 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           idempotencyKey: d.idempotencyKey,
           note: note || null,
           flags,
+          ...(gift
+            ? {
+                isGift: true,
+                giftSenderName: gift.senderName,
+                giftSenderContact: gift.senderContact,
+                giftNote: gift.note,
+                giftDeliverAfter: gift.deliverAfter ? new Date(`${gift.deliverAfter}T00:00:00Z`) : null,
+                giftHidePrices: gift.hidePrices,
+                advanceRequiredMinor: giftPart,
+              }
+            : {}),
         },
         select: { id: true },
       });
@@ -390,7 +445,13 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           actorType: 'CUSTOMER',
           actorId: customerId,
           source: CHECKOUT_SOURCE,
-          data: { payment: choice ? { method: choice.method, option: choice.option } : null, reward: q.pay.reward?.kind ?? null, charge: q.charge.state, account: account?.kind ?? null },
+          data: {
+            payment: choice ? { method: choice.method, option: choice.option } : null,
+            reward: q.pay.reward?.kind ?? null,
+            charge: q.charge.state,
+            account: account?.kind ?? null,
+            ...(gift ? { gift: { advance: q.gift?.advance ?? 'none', partMinor: giftPart, deliverAfter: gift.deliverAfter, hidePrices: gift.hidePrices } } : {}),
+          },
         },
       });
       await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: CHECKOUT_SOURCE });
@@ -413,7 +474,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           data: { storeId, orderId: o.id, method, provider: choice!.option ?? choice!.method, purpose: 'ORDER', status: 'INITIATED', amountMinor: t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1` },
         });
       }
-      const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : null;
+      const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : null;
       if (reason) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId: ownerId, reason } });
       await tx.checkoutDraft.updateMany({ where: { storeId, visitorId, convertedOrderId: null }, data: { convertedOrderId: o.id, cartId, lastStep: 'placed', lastActivityAt: now } });
       await tx.idempotencyKey.update({

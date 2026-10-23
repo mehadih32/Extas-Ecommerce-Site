@@ -65,6 +65,7 @@ function receipt(over: Partial<Receipt> = {}): Receipt {
     status: 'PLACED',
     times: { confirmedAt: null, packedAt: null, handedOverAt: null, deliveredAt: null, cancelledAt: null, returnedAt: null },
     shipment: null,
+    gift: null,
     ...over,
   };
 }
@@ -118,6 +119,31 @@ describe('the invoice sheet (Blueprint B2.1, demo inv_sheet)', () => {
     const part = invoiceView(ctx('en'), receipt({ pay: { kind: 'due', dueMinor: 50_000, method: 'BKASH', provider: 'bkash' } }), SET, NO_SHOP, OPTS).payment!;
     expect(part.lines).toEqual([`${formatMoney(50_000, 'BDT', 'en', false)} still to pay.`]);
     expect(invoiceView(ctx('en'), receipt({ pay: { kind: 'failed', dueMinor: 50_000, method: 'BKASH', provider: 'bkash' } }), SET, NO_SHOP, OPTS).payment!.lines[0]).toMatch(/did not go through/);
+  });
+
+  it('PR 605: a gift goes to the receiver, from the sender; with prices hidden no price, saving or total is printed', () => {
+    const gift = { senderName: 'Rafiq', note: 'Happy Eid', deliverAfter: '2026-11-02', hidePrices: true };
+    const paid = receipt({ gift, pay: { kind: 'paid', paidMinor: 280_000, method: 'BKASH', provider: 'bkash', mock: false } });
+    const v = invoiceView(ctx('en'), paid, SET, NO_SHOP, OPTS);
+    expect(v.parties.slice(0, 2)).toEqual([
+      { label: 'Deliver to', strong: 'Rahim Uddin', lines: ['01000-000001'] },
+      { label: 'A gift from', strong: 'Rafiq', lines: ['Happy Eid'] },
+    ]);
+    expect(v.prices).toBe(false);
+    expect(v.totals).toEqual([]);
+    expect(v.payment).toBeNull();
+    expect(v.rows[0]!.subs).toEqual(['Navy · M']);
+    const html = invoiceSheetHtml(v);
+    for (const minor of [150_000, 270_000, 280_000, 30_000]) expect(html).not.toContain(formatMoney(minor, 'BDT', 'en', false));
+    expect(html).toContain('This is a gift: prices are not shown.');
+    expect(invoiceLead(ctx('en'), paid, v.invoiceNo)).not.toContain(formatMoney(280_000, 'BDT', 'en', false));
+    // a part paid ahead leaves the rest to the rider: only that is said
+    const part = invoiceView(ctx('en'), receipt({ gift }), SET, NO_SHOP, OPTS);
+    expect(part.payment).toEqual({ title: 'Payment · Cash on Delivery', lines: [`Pay ${formatMoney(275_000, 'BDT', 'en', false)} in cash when the parcel reaches you.`] });
+    // prices shown when he left the box unticked
+    const shown = invoiceView(ctx('en'), receipt({ gift: { ...gift, hidePrices: false } }), SET, NO_SHOP, OPTS);
+    expect(shown.prices).toBeUndefined();
+    expect(shown.totals.length).toBeGreaterThan(0);
   });
 
   it('a delivery charge still to be confirmed says so, never ৳0', () => {

@@ -2,6 +2,7 @@
 // (with what it saves), the subtotal, every offer the rules engine applied (with its code), delivery only when it is
 // free (a FREE badge), the code box with its honest answer (SIM-F-009), the total in bold, "You save" in sale red,
 // Checkout, and the reassurance row — each line only when its setting or flag backs it (CN-018).
+// PR 605 (CN-020 (2)): a small "Send as a gift" link under Checkout while the owner has gift mode on.
 import type { BagView, CodeState } from '@extas/cart';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
@@ -29,7 +30,7 @@ export function codeMessage(c: ShopContext, code: CodeState): { text: string; ok
   }
 }
 
-export function BagSummary({ c, view, codeOn, trust, blocked }: { c: ShopContext; view: BagView; codeOn: boolean; trust: Reassurance; blocked: boolean }) {
+export function BagSummary({ c, view, codeOn, trust, blocked, gift = false }: { c: ShopContext; view: BagView; codeOn: boolean; trust: Reassurance; blocked: boolean; gift?: boolean }) {
   const t = c.t;
   const s = view.summary;
   const msg = codeMessage(c, view.code);
@@ -164,6 +165,12 @@ export function BagSummary({ c, view, codeOn, trust, blocked }: { c: ShopContext
           <Icon name="right" size={18} />
         </a>
       )}
+      {gift && !blocked ? (
+        <a className="bg-gift" href={`${checkout}?gift=1`} data-testid="bag-gift">
+          <Icon name="gift" size={16} />
+          {t('bag.gift')}
+        </a>
+      ) : null}
       {trust.cod || trust.exchange || trust.secure ? (
         <div className="bg-trust">
           {trust.cod ? (

@@ -8,6 +8,8 @@
 // with its review queue and decisions (PR 145), the order list and one order's page data, and the order timers that
 // only hand an order to a person. PR 563: the call queue every order's call tasks land in (calls.ts). PR 127: "Add to
 // this parcel" — a line added to an order not yet with the courier, by the customer or the team (addon.ts).
+// PR 605: deliveryTarget — who and where a parcel goes to (a gift's receiver, with the sender and the note), the one
+// reading for the sticker and the booking (delivery-target.ts, also in `@extas/orders/pure`).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';

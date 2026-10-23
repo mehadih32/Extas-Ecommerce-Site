@@ -12,6 +12,7 @@ import { visitorId } from './bag';
 import type { CheckoutApiDeps } from './checkout-api';
 import { shopStoreId, type ShopContext } from './context';
 import { SHOP_DICTS, keysOf } from './dict';
+import { giftTrialSettings, tryGiftOn } from './try-gift';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
 export function checkoutDeps(): CheckoutDeps | null {
@@ -55,6 +56,8 @@ const KEYS = [
   'account.thanksCard.enabled',
   'checkout.autofill',
   'checkout.address.backfill',
+  // PR 605: gift mode
+  'checkout.gift',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
@@ -75,16 +78,18 @@ export async function checkoutSettings(storeId: number): Promise<CheckoutSetting
 }
 
 /** The visitor's checkout, read and priced; the empty one when there is no bag or the database does not answer in time. */
-export async function currentCheckout(c: Pick<ShopContext, 'storeId' | 'lang'>): Promise<CheckoutQuote> {
-  const deps = checkoutDeps();
+export async function currentCheckout(c: Pick<ShopContext, 'storeId' | 'lang'>, opts: { gift?: boolean } = {}): Promise<CheckoutQuote> {
+  const plain = checkoutDeps();
   const visitor = await visitorId();
-  if (!deps || !visitor) return emptyQuote();
+  if (!plain || !visitor) return emptyQuote();
+  // PR 605: a test server's gift trial (the cookie of /api/shop/try-gift) prices the gift as if gift mode were on
+  const deps = opts.gift && (await tryGiftOn()) ? { ...plain, settings: giftTrialSettings(plain.settings) } : plain;
   try {
     const me = await signedIn();
     return await withTimeout(
       (async () => {
         const cartId = await findBag(deps, { storeId: c.storeId, visitorId: visitor });
-        return checkoutQuote(deps, { storeId: c.storeId, cartId, lang: c.lang, customerId: me?.customer.id ?? null });
+        return checkoutQuote(deps, { storeId: c.storeId, cartId, lang: c.lang, customerId: me?.customer.id ?? null, gift: opts.gift === true });
       })(),
       settingsTimeoutMs() * 4,
     );

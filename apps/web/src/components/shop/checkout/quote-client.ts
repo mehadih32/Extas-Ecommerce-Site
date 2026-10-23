@@ -4,7 +4,7 @@
 // after a newer question was sent is dropped, so a slow reply can never put an old charge back on the page.
 import { useEffect, useRef, useState } from 'react';
 import { createSettle, type SettleController } from '@extas/delivery/settle';
-import type { CheckoutView, Field, FieldProblem, PaymentChoice } from '@extas/checkout/pure';
+import type { CheckoutView, Field, FieldProblem, GiftField, PaymentChoice } from '@extas/checkout/pure';
 import type { Confirmed } from '@/lib/shop/checkout-model';
 
 export const QUOTE_URL = '/api/checkout/quote';
@@ -21,8 +21,8 @@ export interface PlaceAnswer {
   error?: string;
   /** PRICE_CHANGED: the checkout as it is now. */
   view?: CheckoutView;
-  /** FORM: the field still to finish. */
-  field?: Field;
+  /** FORM: the field still to finish (PR 605: or a gift field). */
+  field?: Field | GiftField;
   problem?: FieldProblem;
 }
 

@@ -11,6 +11,8 @@
 // order is never cancelled in one step (cancel after booking, D5); every refusal says which commands are open now.
 // PR 127: a line is added to (or an added line taken out of) an order only before a courier is booked — new or
 // confirmed, no cancel asked (SIM-F-004: an edit after booking would never reach the parcel, so it is refused).
+// PR 605: who and where a parcel goes to — a gift's receiver — for the sticker and the booking (delivery-target.ts).
+export * from './delivery-target';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
