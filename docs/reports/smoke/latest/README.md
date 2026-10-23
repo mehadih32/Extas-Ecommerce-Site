@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 20:24 (Asia/Dhaka)
+# Smoke test · 2026-10-23 21:10 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (62টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (84টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `143d67b0c545` · after deploy · result **PASS** (62 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `50b33f96b666` · after deploy · result **PASS** (84 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -17,7 +17,18 @@ Site: https://new.extas.com.bd · commit `143d67b0c545` · after deploy · resul
 | `/bn/collections/new-in` | phone | 200 | `/bn/collections/new-in` | ok | [picture](bn-collections-new-in-phone.jpg) |
 | `/bag` | phone | 200 | `/bag` | ok | [picture](bag-phone.jpg) |
 | `/bn/bag` | phone | 200 | `/bn/bag` | ok | [picture](bn-bag-phone.jpg) |
+| `/account/wishlist` | phone | 200 | `/account/wishlist` | ok | [picture](account-wishlist-phone.jpg) |
+| `/bn/account/wishlist` | phone | 200 | `/bn/account/wishlist` | ok | [picture](bn-account-wishlist-phone.jpg) |
 | `/help/faq` | phone | 200 | `/help/faq` | ok | [picture](help-faq-phone.jpg) |
+| `/bn/help/faq` | phone | 200 | `/bn/help/faq` | ok | [picture](bn-help-faq-phone.jpg) |
+| `/help/delivery` | phone | 200 | `/help/delivery` | ok | [picture](help-delivery-phone.jpg) |
+| `/help/exchange` | phone | 200 | `/help/exchange` | ok | [picture](help-exchange-phone.jpg) |
+| `/bn/help/exchange` | phone | 200 | `/bn/help/exchange` | ok | [picture](bn-help-exchange-phone.jpg) |
+| `/help/privacy` | phone | 200 | `/help/privacy` | ok | [picture](help-privacy-phone.jpg) |
+| `/help/terms` | phone | 200 | `/help/terms` | ok | [picture](help-terms-phone.jpg) |
+| `/help/story` | phone | 200 | `/help/story` | ok | [picture](help-story-phone.jpg) |
+| `/help/contact` | phone | 200 | `/help/contact` | ok | [picture](help-contact-phone.jpg) |
+| `/bn/help/contact` | phone | 200 | `/bn/help/contact` | ok | [picture](bn-help-contact-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
 | `/admin` | phone | 200 | `/admin/products` | ok | [picture](admin-phone.jpg) |
@@ -48,7 +59,18 @@ Site: https://new.extas.com.bd · commit `143d67b0c545` · after deploy · resul
 | `/bn/collections/new-in` | desktop | 200 | `/bn/collections/new-in` | ok | [picture](bn-collections-new-in-desktop.jpg) |
 | `/bag` | desktop | 200 | `/bag` | ok | [picture](bag-desktop.jpg) |
 | `/bn/bag` | desktop | 200 | `/bn/bag` | ok | [picture](bn-bag-desktop.jpg) |
+| `/account/wishlist` | desktop | 200 | `/account/wishlist` | ok | [picture](account-wishlist-desktop.jpg) |
+| `/bn/account/wishlist` | desktop | 200 | `/bn/account/wishlist` | ok | [picture](bn-account-wishlist-desktop.jpg) |
 | `/help/faq` | desktop | 200 | `/help/faq` | ok | [picture](help-faq-desktop.jpg) |
+| `/bn/help/faq` | desktop | 200 | `/bn/help/faq` | ok | [picture](bn-help-faq-desktop.jpg) |
+| `/help/delivery` | desktop | 200 | `/help/delivery` | ok | [picture](help-delivery-desktop.jpg) |
+| `/help/exchange` | desktop | 200 | `/help/exchange` | ok | [picture](help-exchange-desktop.jpg) |
+| `/bn/help/exchange` | desktop | 200 | `/bn/help/exchange` | ok | [picture](bn-help-exchange-desktop.jpg) |
+| `/help/privacy` | desktop | 200 | `/help/privacy` | ok | [picture](help-privacy-desktop.jpg) |
+| `/help/terms` | desktop | 200 | `/help/terms` | ok | [picture](help-terms-desktop.jpg) |
+| `/help/story` | desktop | 200 | `/help/story` | ok | [picture](help-story-desktop.jpg) |
+| `/help/contact` | desktop | 200 | `/help/contact` | ok | [picture](help-contact-desktop.jpg) |
+| `/bn/help/contact` | desktop | 200 | `/bn/help/contact` | ok | [picture](bn-help-contact-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin/products` | ok | [picture](admin-desktop.jpg) |
 | `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
