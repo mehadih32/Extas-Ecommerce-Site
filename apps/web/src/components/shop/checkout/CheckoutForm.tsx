@@ -4,16 +4,17 @@
 // (Delivery details, Delivery, Payment), the computer's side summary with Confirm, and the phone's sticky Confirm bar.
 // Every word comes from the shop dictionary (`words`, resolved on the server); every amount from the server's quote.
 // PR 117: the finished address line is read by the server's gazetteer (a pause or leaving the box, never mid-typing)
-// and the page shows the checkout the server priced for it.
+// and the page shows the checkout the server priced for it. PR 118: the band he picks when asked. PR 119: the delivery
+// charge in the summary and the total — the server's figure, or "free", or "+ delivery" while it is not known.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits } from '@extas/checkout/pure';
+import { confirmedOf } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
 import { nextOnEnter, saveDraft, useDraft } from './draft';
-import { confirmedOf } from '@/lib/shop/checkout-model';
 import { fetchQuote, latest, useSettle, type Choices } from './quote-client';
 
 const EMPTY_FORM: DetailsForm = { name: '', phone: '', address: '' };
@@ -140,9 +141,11 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
               {w('sum.free')}
             </span>
           ) : t.deliveryMinor === null ? (
-            <span className="muted">{w('sum.after')}</span>
+            <span className="muted" data-testid="co-sum-delivery-later">
+              {w(view.charge.state === 'not-set' ? 'sum.onCall' : 'sum.after')}
+            </span>
           ) : (
-            <span>{m(t.deliveryMinor)}</span>
+            <span data-testid="co-sum-delivery">{m(t.deliveryMinor)}</span>
           )}
         </div>
       </div>
@@ -252,6 +255,9 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
               </div>
               <DeliveryStep
                 delivery={view.delivery}
+                charge={view.charge}
+                rates={view.rates}
+                freeGapMinor={view.freeGapMinor}
                 reading={reading || form.address.trim() !== readLine}
                 hasAddress={hasAddress}
                 lang={money.lang}

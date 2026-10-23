@@ -30,3 +30,15 @@ describe('checkout model (S04)', () => {
     expect(confirmedOf(null)).toBeNull();
   });
 });
+
+describe('the store-wide delivery promise (PR 119)', () => {
+  it('runs from the quickest priced band to the slowest; off bands promise nothing', async () => {
+    const { anyBandHours } = await import('./checkout-model');
+    const city = { hoursMin: 24, hoursMax: 48, priced: true };
+    const outside = { hoursMin: 48, hoursMax: 72, priced: true };
+    expect(anyBandHours([city, outside])).toEqual({ hoursMin: 24, hoursMax: 72 });
+    expect(anyBandHours([city, { ...outside, priced: false }])).toEqual({ hoursMin: 24, hoursMax: 48 });
+    expect(anyBandHours([{ ...city, priced: false }])).toEqual({ hoursMin: null, hoursMax: null });
+    expect(anyBandHours([{ hoursMin: null, hoursMax: 72, priced: true }])).toEqual({ hoursMin: 72, hoursMax: 72 });
+  });
+});

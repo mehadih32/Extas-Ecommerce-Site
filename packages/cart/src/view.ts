@@ -133,6 +133,8 @@ export interface BagView {
   productIds: string[];
   /** A line cannot go to checkout (sold out since it went in, or not on sale). */
   blocked: { lineId: string; reason: 'STOCK' | 'NOT_FOR_SALE'; free: number }[];
+  /** The rules' word on Cash on Delivery for this bag (S04 checkout): null `allowed` = no rule, the store setting decides. */
+  cod: CartQuote['cod'];
 }
 
 const EMPTY_SUMMARY: BagSummary = { rows: [], count: 0, subtotalMinor: 0, offers: [], freeDelivery: false, totalMinor: 0, youSaveMinor: 0 };
@@ -152,6 +154,7 @@ export const emptyBag = (): BagView => ({
   policyLine: null,
   productIds: [],
   blocked: [],
+  cod: { allowed: null, maxOrderMinor: null, reason: 'NO_RULE', rule: null },
 });
 
 const localeOf = (lang: BagLang) => (lang === 'bn' ? 'bn-BD' : 'en-BD');
@@ -162,7 +165,18 @@ const colourOf = (p: ProductFact | undefined, id: string | null): BagColour | nu
 };
 
 /** The bag, read and priced. `customerId` is the signed-in customer (the code box's members-only check). */
-export async function bagView(deps: CartDeps, input: { storeId: number; cartId: string | null; lang: BagLang; customerId?: string | null }): Promise<BagView> {
+export async function bagView(
+  deps: CartDeps,
+  input: {
+    storeId: number;
+    cartId: string | null;
+    lang: BagLang;
+    customerId?: string | null;
+    /** The checkout (S04) knows more than the bag: the band the address was read as and the payment chosen, for rules on them. */
+    bandKey?: string | null;
+    paymentMethod?: string | null;
+  },
+): Promise<BagView> {
   checkStoreId(input.storeId);
   if (!input.cartId) return emptyBag();
   const cart = await deps.db.cart.findFirst({ where: { id: input.cartId, storeId: input.storeId, status: 'ACTIVE' }, select: { id: true, couponCode: true, sizeAnswers: true } });
@@ -254,6 +268,8 @@ export async function bagView(deps: CartDeps, input: { storeId: number; cartId: 
     lines: [...loose.map((r) => ({ id: r.id, variantId: r.variantId, quantity: r.quantity })), ...setPieces.map((r) => ({ id: r.id, variantId: r.variantId, quantity: r.quantity, comboId: r.comboGroupKey }))],
     couponCode: cart.couponCode,
     customerId: input.customerId ?? null,
+    bandKey: input.bandKey ?? null,
+    paymentMethod: input.paymentMethod ?? null,
     locale: localeOf(input.lang),
     source: 'website',
   });
@@ -364,6 +380,7 @@ export async function bagView(deps: CartDeps, input: { storeId: number; cartId: 
     policyLine: policy?.texts.short ?? null,
     productIds,
     blocked,
+    cod: quote.cod,
   };
 }
 

@@ -415,3 +415,6 @@
   16% { left: 115%; }
   100% { left: 115%; }
 }
+/* PR 119 — the delivery promise row under the free box (demo r12-zzzz-n54.css) */
+.shop .co-wrap .co-promrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.shop .co-wrap .co-promrow .co-fdays { margin: 0; min-width: 0; }

@@ -31,3 +31,11 @@ export function confirmedOf(v: unknown): Confirmed {
   const o = v as Record<string, unknown>;
   return typeof o.bandId === 'string' && o.bandId ? { bandId: o.bandId, areaId: typeof o.areaId === 'string' && o.areaId ? o.areaId : null } : null;
 }
+
+/** PR 119: the store-wide promise before the band is known — the quickest band's start to the slowest band's end. */
+export function anyBandHours(bands: readonly Pick<BandOut, 'hoursMin' | 'hoursMax' | 'priced'>[]): Pick<BandOut, 'hoursMin' | 'hoursMax'> {
+  const priced = bands.filter((b) => b.priced);
+  const lows = priced.map((b) => b.hoursMin ?? b.hoursMax).filter((x): x is number => x !== null);
+  const highs = priced.map((b) => b.hoursMax ?? b.hoursMin).filter((x): x is number => x !== null);
+  return { hoursMin: lows.length ? Math.min(...lows) : null, hoursMax: highs.length ? Math.max(...highs) : null };
+}
