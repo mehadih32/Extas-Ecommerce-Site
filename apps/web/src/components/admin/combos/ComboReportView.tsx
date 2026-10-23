@@ -1,7 +1,9 @@
 // S03 · PR 104 — the combo report (?tab=report): which sets sell and which colour pairs customers pick. The window
 // (days) opens at `combos.report.defaultDays` and can be changed in the small form (a plain GET, no script); the lists
-// show the best `combos.report.topCount`. Sets sold, sales and what customers saved come from real orders only (not
-// cancelled or returned); views, colour picks and adds are counted as they happen. Drawn on the server (no hooks).
+// show the best `combos.report.topCount`. The money is the shop's one KPI definition (PR 155, @extas/metrics): "Ordered
+// value" (every placed order, on the placed day) and "Sales" (delivered orders only, on the delivered day) are two
+// separate tiles, never one for the other; sets ordered and what customers saved come from the ordered sets; views,
+// colour picks and adds are counted as they happen. Drawn on the server (no hooks).
 import type { ComboReport } from '@extas/combos';
 import { t, type Dict } from '@/lib/i18n';
 import { nameIn, type Lang } from './model';
@@ -28,8 +30,9 @@ export function ComboReportView({ dict: d, lang, fmt, num, report: r, minDays, m
     ['views', num(k.views), null],
     ['picks', num(k.picks), null],
     ['adds', num(k.adds), k.views ? tt('report.ofViews', { n: num(share(k.adds, k.views)) }) : null],
-    ['sold', num(k.setsSold), k.adds ? tt('report.ofAdds', { n: num(share(k.setsSold, k.adds)) }) : null],
-    ['sales', fmt(k.salesMinor), k.orders ? tt('report.orders', { n: num(k.orders) }) : null],
+    ['sets', num(k.setsOrdered), k.adds ? tt('report.ofAdds', { n: num(share(k.setsOrdered, k.adds)) }) : null],
+    ['ordered', fmt(k.orderedMinor), k.orders ? tt('report.orders', { n: num(k.orders) }) : null],
+    ['sales', fmt(k.salesMinor), k.salesOrders ? tt('report.salesOrders', { n: num(k.salesOrders) }) : null],
     ['saved', fmt(k.savedMinor), null],
   ];
   const empty = !r.top.length && !r.pairs.length;
@@ -75,7 +78,7 @@ export function ComboReportView({ dict: d, lang, fmt, num, report: r, minDays, m
                 {r.top.map((x) => (
                   <li key={x.comboId} data-testid={`cb-report-${x.slug}`}>
                     <b className="cb-report-name">{nameIn(lang, x.nameEn, x.nameBn)}</b>
-                    <span className="ad-mini">{tt('report.line', { sold: num(x.setsSold), sales: fmt(x.salesMinor), adds: num(x.adds), views: num(x.views) })}</span>
+                    <span className="ad-mini">{tt('report.line', { sets: num(x.setsOrdered), ordered: fmt(x.orderedMinor), sales: fmt(x.salesMinor), adds: num(x.adds), views: num(x.views) })}</span>
                   </li>
                 ))}
               </ol>

@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, checkProblem, discovered, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
+import { adminLinks, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -24,6 +24,23 @@ it('every configured check names its PR and is a page check or a request check',
     if (c.page) expect([c.selector, c.attribute, c.equals].every((v) => typeof v === 'string'), c.what).toBe(true);
     else expect(Number.isInteger(c.status), c.what).toBe(true);
   }
+});
+
+it('PR 155: Sales and Ordered value each show once, with a label and a figure, and never as the same figure', () => {
+  const sel = ['[data-testid=cb-kpi-ordered]', '[data-testid=cb-kpi-sales]'];
+  const ok = [[{ label: 'Ordered value', value: '৳0' }], [{ label: 'Sales (delivered)', value: '৳0' }]];
+  expect(figureProblems('/admin/combos?tab=report', sel, ok)).toEqual([]);
+  expect(figureProblems('/r', sel, [ok[0], []])).toEqual(['/r: [data-testid=cb-kpi-sales] is missing']);
+  expect(figureProblems('/r', sel, [ok[0], [{ label: 'Sales', value: '' }]])).toEqual(['/r: [data-testid=cb-kpi-sales] shows no figure']);
+  expect(figureProblems('/r', sel, [ok[0], [ok[1][0], ok[1][0]]])).toEqual(['/r: [data-testid=cb-kpi-sales] shows 2 times']);
+  expect(figureProblems('/r', sel, [ok[0], [{ label: 'Ordered value', value: '৳5' }]])[0]).toMatch(/must be separate/);
+});
+
+it('PR 155: smoke.json checks the combo report for both figures', () => {
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  const report = config.figures.find((f) => f.pr === 155);
+  expect(report.path).toBe('/admin/combos?tab=report');
+  expect(report.selectors).toEqual(['[data-testid=cb-kpi-ordered]', '[data-testid=cb-kpi-sales]']);
 });
 
 it('PR 49: opens the first product pages a built page links to, each once, never another site', () => {

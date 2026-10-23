@@ -576,7 +576,7 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
 
   // ---------------------------------------------------------------------------------------------------------------
   describe('PR 104 · combo analytics', () => {
-    it('counts views, colour picks and adds by day; sets sold, sales and the saving come from real orders only', async () => {
+    it('counts views, colour picks and adds by day; sets ordered and Ordered value from placed orders, Sales from delivered orders only (PR 155)', async () => {
       const SLUG = 'sample-polo-chino-set';
       const combo = await t.prisma.combo.findFirstOrThrow({ where: { storeId: S, slug: SLUG }, select: { id: true } });
       const sum = await setSummary(deps(), { storeId: S, slug: SLUG });
@@ -594,16 +594,23 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       await addSetToBag(deps(), { storeId: S, cartId, slug: SLUG, choices }); // the same add again: not counted twice
       await addSetToBag(deps(), { storeId: S, cartId, slug: SLUG, choices: [] }).catch(() => null); // refused: not counted
 
-      // One real order with the set (two pieces, one set discount), one cancelled order that never counts.
-      const order = async (status: 'PLACED' | 'CANCELLED', n: string) => {
-        const o = await t.prisma.order.create({ data: { storeId: S, number: `T104-${n}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: 205000, totalMinor: 205000, idempotencyKey: `t104-${n}`, status, placedAt: clock } });
+      // PR 155 (one KPI definition): orders with the set (two pieces, one set discount) in four states. Ordered value
+      // counts every placed order (PLACED, CANCELLED, DELIVERED); Sales only the delivered one; a draft is neither.
+      const order = async (status: 'PLACED' | 'CANCELLED' | 'DELIVERED' | 'DRAFT', n: string) => {
+        const o = await t.prisma.order.create({ data: { storeId: S, number: `T104-${n}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: 205000, totalMinor: 205000, idempotencyKey: `t104-${n}`, status, placedAt: clock, deliveredAt: status === 'DELIVERED' ? clock : null } });
         for (const l of added.lines) {
           const disc = l === added.lines[0] ? added.lines.reduce((s2, x) => s2 + x.unitPriceMinor, 0) - 205000 : 0;
           await t.prisma.orderItem.create({ data: { storeId: S, orderId: o.id, variantId: l.variantId, sku: `T104-${l.id.slice(0, 6)}`, productName: 'Test piece', quantity: 1, unitPriceMinor: l.unitPriceMinor, discountMinor: disc, lineTotalMinor: l.unitPriceMinor - disc, comboId: combo.id, comboGroupKey: added.groupKey } });
         }
       };
       await order('PLACED', '1');
+      // A placed order is never in Sales, only in Ordered value.
+      const placedOnly = rowOf(await comboReport(deps(), as('reader')))!;
+      expect(placedOnly.salesMinor - (rowOf(before)?.salesMinor ?? 0)).toBe(0);
+      expect(placedOnly.orderedMinor - (rowOf(before)?.orderedMinor ?? 0)).toBe(205000);
       await order('CANCELLED', '2');
+      await order('DELIVERED', '3');
+      await order('DRAFT', '4');
 
       const after = await comboReport(deps(), as('reader'));
       const a = rowOf(after)!;
@@ -611,17 +618,21 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       expect(a.views - (b?.views ?? 0)).toBe(2);
       expect(a.picks - (b?.picks ?? 0)).toBe(1);
       expect(a.adds - (b?.adds ?? 0)).toBe(1);
-      expect(a.setsSold - (b?.setsSold ?? 0)).toBe(1);
-      expect(a.orders - (b?.orders ?? 0)).toBe(1);
+      expect(a.setsOrdered - (b?.setsOrdered ?? 0)).toBe(3);
+      expect(a.orders - (b?.orders ?? 0)).toBe(3);
       const regular = added.lines.reduce((s2, x) => s2 + x.unitPriceMinor, 0);
+      expect(a.orderedMinor - (b?.orderedMinor ?? 0)).toBe(3 * 205000);
       expect(a.salesMinor - (b?.salesMinor ?? 0)).toBe(205000);
-      expect(a.savedMinor - (b?.savedMinor ?? 0)).toBe(regular - 205000);
+      expect(a.salesOrders - (b?.salesOrders ?? 0)).toBe(1);
+      expect(a.savedMinor - (b?.savedMinor ?? 0)).toBe(3 * (regular - 205000));
+      expect(after.totals.salesMinor - before.totals.salesMinor).toBe(205000);
+      expect(after.totals.orderedMinor - before.totals.orderedMinor).toBe(3 * 205000);
       expect(after.top[0]!.comboId).toBe(combo.id);
       expect((pairOf(after)?.picks ?? 0) - (pairOf(before)?.picks ?? 0)).toBe(1);
       expect(after.series).toHaveLength(after.days);
       expect(after.series.at(-1)).toMatchObject({ day: after.to });
-      expect(after.series.at(-1)!.setsSold).toBeGreaterThanOrEqual(1);
-      expect(after.totals.setsSold).toBeGreaterThanOrEqual(1);
+      expect(after.series.at(-1)!.setsOrdered).toBeGreaterThanOrEqual(3);
+      expect(after.totals.setsOrdered).toBeGreaterThanOrEqual(3);
 
       // The window: a short one from the setting's own limits; outside them is refused.
       expect((await comboReport(deps(), as('reader'), { days: 1 })).series).toHaveLength(1);
@@ -629,7 +640,7 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       expect(await code(comboReport(deps(), as('reader', B)))).toBe('FORBIDDEN');
       // A month later the order is outside the default window.
       clock = new Date(T0.getTime() + 400 * 86_400_000);
-      expect(rowOf(await comboReport(deps(), as('reader')))?.setsSold ?? 0).toBe(0);
+      expect(rowOf(await comboReport(deps(), as('reader')))?.setsOrdered ?? 0).toBe(0);
       clock = T0;
     });
 

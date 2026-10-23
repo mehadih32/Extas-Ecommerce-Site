@@ -276,7 +276,9 @@ describe.skipIf(!HAS_TEST_DB)('catalogue on PostgreSQL (PR 19, 20, 30, 31, 590)'
     const report = await renameReport(deps(), sys(), renames[0]!.id);
     expect(report.windowDays).toBe(14);
     expect(report.before.visits).toBeNull();
-    expect(report.after.orders).toBe(0);
+    // PR 155: always both figures, by the one KPI definition (Sales = delivered only; Ordered value beside it).
+    expect(report.after.ordered).toEqual({ orders: 0, units: 0, valueMinor: 0 });
+    expect(report.after.sales).toEqual({ orders: 0, units: 0, valueMinor: 0 });
     expect(await t.prisma.auditLog.count({ where: { entityType: 'Product', entityId: p.id, action: 'product.rename' } })).toBe(3);
 
     // the draft preview (nothing saved)

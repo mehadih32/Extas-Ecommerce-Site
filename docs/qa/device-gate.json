@@ -29,6 +29,7 @@
       "/admin/integrations",
       "/admin/products/new",
       "/admin/server",
+      "/admin/combos?tab=report",
       "/collections/polos",
       "/bn/collections/polos",
       "/p/essential-pique-polo",

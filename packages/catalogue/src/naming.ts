@@ -12,6 +12,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
+import { linesBoth, sumLines } from '@extas/metrics';
 import { allow, found, logChange, parse, setting, TX, type CatalogueDeps, type Db, type Tx, type Who } from './context';
 import { effectiveGarmentTypeOf } from './categories';
 import type { Lang } from './dictionaries';
@@ -805,13 +806,23 @@ export async function listRenames(deps: CatalogueDeps, who: Who, opts: { product
   return rows.map((r) => ({ id: r.id, productId: r.productId, oldName: r.oldName, newName: r.newName, oldSlug: r.oldSlug, newSlug: r.newSlug, actorId: r.actorId, at: r.createdAt.toISOString() }));
 }
 
+/** One figure of a window: orders, pieces and their money (order lines of this product only). */
+export interface WindowFigure {
+  orders: number;
+  units: number;
+  valueMinor: number;
+}
+
+/**
+ * The product's numbers in one window, by the shop's one KPI definition (PR 155, @extas/metrics): `sales` = delivered
+ * orders only, on the day each was delivered; `ordered` = every placed order, on the day it was placed. Always both.
+ */
 export interface SalesWindow {
   from: string;
   to: string;
   days: number;
-  orders: number;
-  units: number;
-  revenueMinor: number;
+  ordered: WindowFigure;
+  sales: WindowFigure;
   /** Page visits: null until analytics (S11) records them. */
   visits: number | null;
 }
@@ -827,18 +838,18 @@ export interface RenameReport {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-async function salesIn(db: Db, storeId: number, productId: string, from: Date, to: Date): Promise<SalesWindow> {
-  const items = await db.orderItem.findMany({
-    where: { storeId, productId, status: 'ACTIVE', createdAt: { gte: from, lt: to } },
-    select: { orderId: true, quantity: true, lineTotalMinor: true },
-  });
+async function salesIn(db: Db, storeId: number, productId: string, from: Date, to: Date, timeZone: string): Promise<SalesWindow> {
+  const both = await linesBoth(db, storeId, { from, to }, timeZone, { productId });
+  const fig = (basis: 'ordered' | 'sales'): WindowFigure => {
+    const s = sumLines(both[basis]);
+    return { orders: s.orders, units: s.units, valueMinor: s.valueMinor };
+  };
   return {
     from: from.toISOString(),
     to: to.toISOString(),
     days: Math.max(0, Math.round((to.getTime() - from.getTime()) / DAY_MS)),
-    orders: new Set(items.map((i) => i.orderId)).size,
-    units: items.reduce((s, i) => s + i.quantity, 0),
-    revenueMinor: items.reduce((s, i) => s + i.lineTotalMinor, 0),
+    ordered: fig('ordered'),
+    sales: fig('sales'),
     visits: null,
   };
 }
@@ -847,14 +858,14 @@ async function salesIn(db: Db, storeId: number, productId: string, from: Date, t
 export async function renameReport(deps: CatalogueDeps, who: Who, renameId: string): Promise<RenameReport> {
   await allow(deps, who, 'catalogue.read');
   const r = found(await deps.db.productRename.findFirst({ where: { id: renameId, storeId: who.storeId } }), 'rename');
-  const days = await setting(deps, who, 'naming.renameReportDays');
+  const [days, timeZone] = await Promise.all([setting(deps, who, 'naming.renameReportDays'), setting(deps, who, 'store.timeZone')]);
   const now = deps.now?.() ?? new Date();
   const at = r.createdAt;
   const span = days * DAY_MS;
   const afterEnd = new Date(Math.min(at.getTime() + span, Math.max(now.getTime(), at.getTime())));
   const [before, after] = await Promise.all([
-    salesIn(deps.db, who.storeId, r.productId, new Date(at.getTime() - span), at),
-    salesIn(deps.db, who.storeId, r.productId, at, afterEnd),
+    salesIn(deps.db, who.storeId, r.productId, new Date(at.getTime() - span), at, timeZone),
+    salesIn(deps.db, who.storeId, r.productId, at, afterEnd, timeZone),
   ]);
   return {
     rename: { id: r.id, productId: r.productId, oldName: r.oldName, newName: r.newName, oldSlug: r.oldSlug, newSlug: r.newSlug, actorId: r.actorId, at: at.toISOString() },

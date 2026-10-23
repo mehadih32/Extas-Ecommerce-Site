@@ -227,6 +227,9 @@ importers:
       '@extas/media':
         specifier: workspace:*
         version: link:../media
+      '@extas/metrics':
+        specifier: workspace:*
+        version: link:../metrics
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings
@@ -325,6 +328,9 @@ importers:
       '@extas/media':
         specifier: workspace:*
         version: link:../media
+      '@extas/metrics':
+        specifier: workspace:*
+        version: link:../metrics
       '@extas/rules':
         specifier: workspace:*
         version: link:../rules
@@ -556,6 +562,34 @@ importers:
       tsx:
         specifier: 4.23.15
         version: 4.23.15
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.72.0
+        version: 8.72.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
+  packages/metrics:
+    dependencies:
+      '@extas/db':
+        specifier: workspace:*
+        version: link:../db
+    devDependencies:
+      '@eslint/js':
+        specifier: 9.39.5
+        version: 9.39.5
+      '@extas/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3

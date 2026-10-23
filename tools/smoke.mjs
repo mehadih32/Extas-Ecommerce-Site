@@ -62,6 +62,27 @@ export function discovered(hrefs, take) {
   return seen;
 }
 
+/**
+ * PR 155 (CN-022) — a page that shows the KPI pair (smoke.json `figures`) must show each figure once, in its own
+ * element, with a value: "Sales" and "Ordered value" side by side, never one standing in for the other.
+ * `found[i]` is what the browser found for `selectors[i]`: one { label, value } per matching element.
+ */
+export function figureProblems(path, selectors, found) {
+  const out = [];
+  const labels = [];
+  selectors.forEach((sel, i) => {
+    const hits = found[i] ?? [];
+    if (hits.length === 0) out.push(`${path}: ${sel} is missing`);
+    else if (hits.length > 1) out.push(`${path}: ${sel} shows ${hits.length} times`);
+    else if (!hits[0].value) out.push(`${path}: ${sel} shows no figure`);
+    else if (!hits[0].label) out.push(`${path}: ${sel} has no label`);
+    else labels.push(hits[0].label);
+  });
+  if (new Set(labels).size !== labels.length)
+    out.push(`${path}: the figures carry the same label (${labels.join(" / ")}): Sales and Ordered value must be separate`);
+  return out;
+}
+
 /** A failed request counts unless its path is on the known list (each entry names the PR that removes it). */
 export function requestCounts(url, base, ignore) {
   let u;
@@ -419,6 +440,30 @@ export async function runSmoke(opts) {
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])
         problems.push(...(await runChecks(page, opts.base, config.checks ?? [])));
+      // PR 155: the pages that show Sales and Ordered value load, and show the two as separate figures.
+      for (const f of config.figures ?? []) {
+        const row = await visit(page, opts.base, ignore, f.path, vp.name, opts.out);
+        const found = row.ok
+          ? await Promise.all(
+              f.selectors.map((sel) =>
+                page
+                  .$$eval(
+                    sel,
+                    (els, v) =>
+                      els.map((e) => ({
+                        label: (e.firstElementChild?.textContent ?? "").trim(),
+                        value: (e.querySelector(v)?.textContent ?? "").trim(),
+                      })),
+                    f.value ?? "b",
+                  )
+                  .catch(() => []),
+              ),
+            )
+          : [];
+        if (row.ok) row.problems.push(...figureProblems(f.path, f.selectors, found));
+        row.ok = row.problems.length === 0;
+        rows.push(row);
+      }
       await admin.close();
     }
   } finally {
