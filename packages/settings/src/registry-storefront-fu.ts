@@ -25,6 +25,24 @@ export const cardDeskSchema = z
   })
   .strict();
 
+// ---- PR 45 / 222 · follow-ups 35, 61 (Blueprint C12.1, C12.4; Appendix "category.breadcrumb") ----
+
+/**
+ * The data for search engines (JSON-LD) the shop's pages carry, each from what the page itself shows: the breadcrumb
+ * trail (sent even when the visible trail is off), the category page's list of products, and the product page's
+ * product with its price and stock. Never a rating until real reviews exist (PR 223). On: it says only what is true.
+ */
+export const structuredDataSchema = z
+  .object({
+    /** BreadcrumbList on the category and product pages. */
+    breadcrumbs: z.boolean(),
+    /** ItemList of the products the category page shows. */
+    itemList: z.boolean(),
+    /** Product with its Offer (or AggregateOffer when the sizes or colours cost differently) on the product page. */
+    product: z.boolean(),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const storefrontFuSettings = {
@@ -37,6 +55,16 @@ export const storefrontFuSettings = {
     helpKey: 'card.desk.help',
     sortOrder: 300,
   }),
+  'seo.structuredData': setting({
+    ...json,
+    group: 'naming',
+    schema: structuredDataSchema,
+    default: { breadcrumbs: true, itemList: true, product: true },
+    labelKey: 'seo.structuredData.label',
+    helpKey: 'seo.structuredData.help',
+    sortOrder: 900,
+  }),
 };
 
 export type CardDeskSettings = z.output<typeof cardDeskSchema>;
+export type StructuredDataSettings = z.output<typeof structuredDataSchema>;

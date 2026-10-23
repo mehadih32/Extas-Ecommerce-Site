@@ -4,6 +4,7 @@
 // of cards, "Showing 12 of 30" and "Show more". Everything the shopper chooses is an address (`queryFor`), so the server
 // draws exactly that page. `scope` picks the owner's per-category choices (price cuts, the toolbar): a category's slug,
 // or "search" for the results page.
+import type { ReactNode } from 'react';
 import type { CategoryFilters, CategoryPageSettings, CategorySortSettings, CategoryToolbar } from '@extas/settings';
 import { CatEffects } from '@/components/shop/category/CatEffects';
 import { CatFilters } from '@/components/shop/category/CatFilters';
@@ -62,9 +63,11 @@ interface Props {
   sortWords?: Partial<Record<string, string>>;
   /** The grid's test id (the category page's `cat-grid`; search `search-grid`). */
   gridId?: string;
+  /** Drawn after the listing with the cards the grid shows, in order (the category page's ItemList JSON-LD, PR 45). */
+  after?: (shown: ShopCard[]) => ReactNode;
 }
 
-export async function CatListing({ c, scope, rows, asked, set, sizes, withPhotos, hrefFor, version, waName, sortWords, gridId = 'cat-grid' }: Props) {
+export async function CatListing({ c, scope, rows, asked, set, sizes, withPhotos, hrefFor, version, waName, sortWords, gridId = 'cat-grid', after }: Props) {
   const t = c.t;
   const pg = set.page;
   const fs = set.filters;
@@ -312,6 +315,7 @@ export async function CatListing({ c, scope, rows, asked, set, sizes, withPhotos
         {main}
       </div>
       <CatEffects version={version(state)} />
+      {after?.(shown)}
     </>
   );
 }
