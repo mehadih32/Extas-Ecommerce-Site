@@ -1,4 +1,4 @@
-// PR 12 (CN-018, CN-022), PR 155 (follow-up 90) — DSH-01, the Dashboard at /admin (docs/BACKEND-ARCHITECTURE.md
+// PR 12 (CN-018, CN-022), PR 155 (follow-up 90), PR 495 — DSH-01, the Dashboard at /admin (docs/BACKEND-ARCHITECTURE.md
 // §5.2, demo V12.3 #/admin): the greeting, today's date and the store, the date choice (`admin.dashboard.ranges`), the
 // two money tiles through @extas/metrics — Delivered sales (M1: goods value of delivered orders, by the delivered day;
 // provisional until settlements are matched, PR 155) and Ordered value (every placed order's total, by the placed day,
@@ -6,11 +6,13 @@
 // from the real waiting lists (lib/admin-shell/queues.ts). Nothing is a sample: an empty shop shows zeros and "All
 // clear". Reading needs `dashboard.read`; the money tiles need `metrics.read` too. The other demo cards (Orders by
 // stage, the sales trend, top products, delivery success by courier, Customize) come with their PRs (follow-ups).
+// PR 495: /admin opens on the person's role start page (`admin.startPages`) unless they chose the Dashboard (?home=1).
 // `?state=denied|error|notfound|empty` shows the shell's system states here, for the smoke test and the guide.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import type { AdminSectionId } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { PageHead, ShellState, type StateKind } from '@/components/admin/shell/ShellParts';
@@ -19,7 +21,7 @@ import { Spark } from '@/components/admin/shell/Spark';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
-import { ageOf, hourIn, moneyPair, partOfDay, rangeOf, trend, type DashboardSettings, type MoneyPair } from '@/lib/admin-shell/dashboard';
+import { ageOf, hourIn, moneyPair, partOfDay, rangeOf, startHref, startSection, trend, type DashboardSettings, type MoneyPair } from '@/lib/admin-shell/dashboard';
 import { cachedQueues, visibleQueues, type QueueRow } from '@/lib/admin-shell/queues';
 import { SHELL_SECTIONS, sectionById, sectionHome, sectionVisible, visibleTabs, type ShellViewer } from '@/lib/admin-shell/sections';
 import { shellSession } from '@/lib/admin-shell/session';
@@ -161,6 +163,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
   const session = await shellSession();
   if (session.kind !== 'ok') return <AdminNotice view={view} current="dashboard" text={t(view.dict, 'page.noDb')} />;
   const viewer: ShellViewer = { perms: session.perms, owner: session.owner };
+  const home = one(sp.home) === '1';
 
   if (access.kind === 'forbidden') {
     // No Dashboard for this role: their first section instead (also from "Back to Dashboard" links, ?home=1).
@@ -175,11 +178,16 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
 
   const { db, resolver } = access.deps;
   const scope = { storeId: MOTHER_STORE_ID };
-  const [settings, shell, currency] = await Promise.all([
+  const [startPages, settings, shell, currency] = await Promise.all([
+    resolver.value('admin.startPages', scope) as Promise<Record<string, AdminSectionId>>,
     resolver.value('admin.dashboard', scope) as Promise<DashboardSettings>,
     resolver.value('admin.shell', scope) as Promise<{ badgeCacheSeconds: number }>,
     resolver.value('store.currency', scope) as Promise<string>,
   ]);
+  if (!home) {
+    const to = startHref(startSection(startPages, session.roles), viewer);
+    if (to) redirect(to);
+  }
 
   const dashboard = sectionById('dashboard')!;
   const place = { section: dashboard, tab: null, page: null };

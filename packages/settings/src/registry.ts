@@ -1162,7 +1162,7 @@ export const registry = {
   ...motionSettings,
   // ---- S05 · PR 138, 144, 145, 147, 153 · the order core: cancel reasons and the customer's cancel, hold reasons and the hold check, the advance wait, duplicate orders, internal flags, notes, the order list (registry-orders.ts, version 32). ----
   ...ordersSettings,
-  // ---- PR 12 · the admin shell: menu badges and search, the Dashboard (registry-admin-shell.ts, version 33). ----
+  // ---- PR 12, 495 · the admin shell: role start pages, menu badges and search, the Dashboard (registry-admin-shell.ts, version 33). ----
   ...adminShellSettings,
 } satisfies RegistryShape;
 
