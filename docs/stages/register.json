@@ -2697,8 +2697,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "`docs/CONVENTIONS.md`, PR template; PROGRESS/BLOCKED/register-status routine",
+    "note": "`docs/CONVENTIONS.md`, PR template; PROGRESS/BLOCKED/register-status routine. 23 Oct (CN-011 follow-up): ESLint in every package (vault and db added; db also checks the Prisma schema format), a header comment on every package's `src/index.ts`",
     "github": [
+     "#24, 23 Oct",
      "#3 (commit `d2ed429`), 20 Oct 02:59 (Dhaka)"
     ]
    },
@@ -2706,7 +2707,8 @@
     "routes": [],
     "settings": [],
     "code": [
-     "docs/CONVENTIONS.md"
+     "docs/CONVENTIONS.md",
+     "src/index.ts"
     ],
     "names": [],
     "tests": []
@@ -2736,7 +2738,7 @@
    ],
    "mentions": [],
    "blueprint": [],
-   "bn": "কাজের নিয়ম লেখা: PR কীভাবে হবে, PROGRESS আর BLOCKED কীভাবে আপডেট হবে।",
+   "bn": "কাজের নিয়ম লেখা: PR কীভাবে হবে, PROGRESS আর BLOCKED কীভাবে আপডেট হবে। 23 Oct: সব প্যাকেজে কোড পরীক্ষা (lint), আর প্রতিটা প্যাকেজের শুরুতে লেখা সেটা কিসের জন্য।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S00.md#pr-11"
@@ -3504,20 +3506,26 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "general default pack (`packages/seed/data/default-pack.json`): garment types, 7 categories (hidden), 3 delivery bands (off, no charge), 14 SMS/WhatsApp/e-mail templates (Bengali + English, 2 SMS + 1 WhatsApp on, later steps off); policy, AI and theme settings in the registry; money and COD left empty for the owner; add-only, re-run changes nothing",
+    "note": "general default pack (`packages/seed/data/default-pack.json`): garment types, 7 categories (hidden), 3 delivery bands (off, no charge), 14 SMS/WhatsApp/e-mail templates (Bengali + English, 2 SMS + 1 WhatsApp on, later steps off); policy, AI and theme settings in the registry; money and COD left empty for the owner; add-only, re-run changes nothing. 23 Oct (follow-up 19, from closed GitHub #21): the admin session end to end in CI (`tools/admin-session-e2e.sh`, web job with a postgres service): sign in, refresh, `/admin/login` while signed in, log out, a protected page and the pre-logout cookie both sent back to sign-in; no console error or failed request on the way",
     "github": [
+     "#24, 23 Oct",
      "#19, 20 Oct",
      "#10 (commit `b5fe56d`), 20 Oct 05:20 (Dhaka)"
     ]
    },
    "builtFacts": {
-    "routes": [],
+    "routes": [
+     "/admin/login"
+    ],
     "settings": [],
     "code": [
-     "packages/seed/data/default-pack.json"
+     "packages/seed/data/default-pack.json",
+     "tools/admin-session-e2e.sh"
     ],
     "names": [],
-    "tests": []
+    "tests": [
+     "23 Oct (follow-up 19, from closed GitHub #21): the admin session end to end in CI (`tools/admin-session-e2e.sh`, web job with a postgres service): sign in, refresh, `/admin/login` while signed in, log out, a protected page and the pre-logout cookie both sent back to sign-in"
+    ]
    },
    "updates": [
     {
@@ -3530,7 +3538,7 @@
    ],
    "mentions": [],
    "blueprint": [],
-   "bn": "সাধারণ ডিফল্ট সেট: ক্যাটাগরি, ডেলিভারি ব্যান্ড, মেসেজ টেমপ্লেট; টাকার ঘর খালি থাকে। নতুন সার্ভারে মূল দোকান নিজে তৈরি হয়, তাই প্রথম লগইনেই অ্যাডমিন খোলে।",
+   "bn": "সাধারণ ডিফল্ট সেট: ক্যাটাগরি, ডেলিভারি ব্যান্ড, মেসেজ টেমপ্লেট; টাকার ঘর খালি থাকে। নতুন সার্ভারে মূল দোকান নিজে তৈরি হয়, তাই প্রথম লগইনেই অ্যাডমিন খোলে। 23 Oct: অ্যাডমিন লগইন পুরো যাচাই: লগইন, রিফ্রেশ, লগইন থাকা অবস্থায় লগইন পাতা, লগআউট, প্রতিবার CI-তে আসল ব্রাউজারে।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S00.md#pr-508"
@@ -6602,8 +6610,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them; invisible 44 × 44 tap layers (logo, language pill, \"see all\", desktop row on touch, header icons under 375 px, the V12.2 phone social tiles, the 404 category chips) with the demo's drawn sizes unchanged; finger-sized footer rows on touch screens of desktop width; the floating WhatsApp button's missing styles; zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks",
+    "note": "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them; invisible 44 × 44 tap layers (logo, language pill, \"see all\", desktop row on touch, header icons under 375 px, the V12.2 phone social tiles, the 404 category chips) with the demo's drawn sizes unchanged; finger-sized footer rows on touch screens of desktop width; the floating WhatsApp button's missing styles; zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks. 23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44; 0 fails in 620 checks",
     "github": [
+     "#24, 23 Oct",
      "#23, 23 Oct",
      "#20, 20 Oct"
     ]
@@ -6614,16 +6623,23 @@
     "code": [
      "lighthouserc.json"
     ],
-    "names": [],
+    "names": [
+     ".pa-x",
+     ".pa-col",
+     ".pa-kind",
+     ".sc-item",
+     "a.st-name"
+    ],
     "tests": [
      "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them",
-     "zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks"
+     "zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks",
+     "23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44"
     ]
    },
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "ফোনে সব বোতাম আঙুলে চাপার মতো বড় (44 × 44); দোকানের পাতা ডিভাইস গেট আর Lighthouse-এ।",
+   "bn": "ফোনে সব বোতাম আঙুলে চাপার মতো বড় (44 × 44); দোকানের পাতা ডিভাইস গেট আর Lighthouse-এ। 23 Oct: ডিভাইস পরীক্ষা নমুনা ডেটায় লগইন করে অ্যাডমিনও দেখে; ডেটা থাকলে যে বোতাম আসে সেগুলোও 44×44, 0 ভুল।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S02.md#pr-85"
@@ -14430,19 +14446,30 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "festive / seasonal rules with cut-off dates in the store's time zone: the active window decides, the cut-off line (\"order by … for delivery before Eid\") comes from the rule, expired rules end by the `rules.endExpired` job (kept, not deleted)",
+    "note": "festive / seasonal rules with cut-off dates in the store's time zone: the active window decides, the cut-off line (\"order by … for delivery before Eid\") comes from the rule, expired rules end by the `rules.endExpired` job (kept, not deleted). 23 Oct (CN-014 g, CN-018 (6)): Eid order-by dates per band and district (`rules.eid.*`, `packages/rules/src/eid.ts`), cut-off in the store's time zone, banner days, \"may arrive after Eid\" after close, pre-order with a fixed or percentage advance (amount due = total − advance); all off and empty; switching on refused while anything is missing (`EID_INVALID`), pre-order needs `rules.approve`; `/api/admin/rules/eid`; acceptance tests SIM-F-019, SIM-F-033; the screen waits for the ADMIN-ARCHITECTURE approval, the storefront lines come with S02/S04",
     "github": [
+     "#24, 23 Oct",
      "#19, 20 Oct"
     ]
    },
    "builtFacts": {
-    "routes": [],
-    "settings": [
-     "rules.endExpired"
+    "routes": [
+     "/api/admin/rules/eid"
     ],
-    "code": [],
-    "names": [],
-    "tests": []
+    "settings": [
+     "rules.endExpired",
+     "rules.eid.*",
+     "rules.approve"
+    ],
+    "code": [
+     "packages/rules/src/eid.ts"
+    ],
+    "names": [
+     "EID_INVALID"
+    ],
+    "tests": [
+     "acceptance tests SIM-F-019, SIM-F-033"
+    ]
    },
    "updates": [
     {
@@ -14476,7 +14503,7 @@
    ],
    "mentions": [],
    "blueprint": [],
-   "bn": "উৎসব আর মৌসুমের নিয়ম, শুরু-শেষের তারিখ আর অর্ডারের শেষ সময়সহ।",
+   "bn": "উৎসব আর মৌসুমের নিয়ম, শুরু-শেষের তারিখ আর অর্ডারের শেষ সময়সহ। 23 Oct: এলাকা আর জেলা অনুযায়ী ঈদের অর্ডারের শেষ তারিখ, \"ঈদের পরে পৌঁছাতে পারে\" লেখা, আর অগ্রিম দিয়ে প্রি-অর্ডার; সব বন্ধ আর খালি, অ্যাডমিন পাতা পরে।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S10.md#pr-214"
