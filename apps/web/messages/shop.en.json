@@ -181,7 +181,8 @@
       "free": "FREE",
       "offer": "Offer",
       "each": "{price} each",
-      "setSub": "{regular} separately · you save {saving}"
+      "setSub": "{regular} separately · you save {saving}",
+      "onCall": "On the call"
     },
     "trust": {
       "cod": "Cash on Delivery",
@@ -207,7 +208,17 @@
       "ask": "Where is this address?",
       "both": "We can see {a} and {b} in it — which one is right?",
       "hours": "{hours} hours",
-      "change": "change"
+      "change": "change",
+      "freeTitle": "Free home delivery",
+      "free": {
+        "FREE_OVER": "Your order is over {amount}, so delivery is on us.",
+        "FREE_CAMPAIGN": "Free delivery is running on every order right now.",
+        "FREE_PRODUCTS": "This order ships free, anywhere in Bangladesh."
+      },
+      "promise": "You will get your order within {hours} hours",
+      "promiseAny": "Delivery anywhere in Bangladesh within {hours} hours",
+      "gap": "Add {amount} more to the bag and delivery is free.",
+      "notSet": "We confirm the delivery charge when we call you."
     }
   },
   "notFound": {

@@ -1,13 +1,15 @@
 // The PostgreSQL tests' shared set-up (never imported by app code): a throwaway database with the real migrations, the
 // sample catalogue and store (its default pack brings the three delivery bands, switched off with no charge), the
-// permission catalogue, the SAMPLE gazetteer, a visitor's bag with sample items, and a settings reader on the
+// permission catalogue, the sample Smart Rules (drafts, switched on per test), the SAMPLE gazetteer, a visitor's bag with sample items, and a settings reader on the
 // registry's defaults with per-test overrides. Every value is a made-up test value.
-import { syncAuth } from '@extas/auth';
+import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, type TestDatabase } from '@extas/auth/testing';
 import { addItem, openBag, type CartDeps } from '@extas/cart';
 import { productFacts, type ProductFact } from '@extas/combos';
 import { forgetGazetteer, importGazetteer } from '@extas/delivery';
 import { sampleGazetteerRows } from '@extas/delivery/sample';
+import { bustAll, getRule, publishRule, saveDraft } from '@extas/rules';
+import { seedSampleRules } from '@extas/rules/sample';
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
 import type { CheckoutDeps, SettingsReader } from './context';
@@ -25,6 +27,8 @@ export interface CheckoutFixture {
   bag: (name: string, lines: { variantId: string; quantity?: number }[]) => Promise<{ cartId: string; visitorId: string }>;
   /** Switches a delivery band on with the owner's charge (as in the delivery admin). */
   priceBand: (key: string, chargeMinor: number, hours?: [number, number]) => Promise<string>;
+  /** Switches a sample Smart Rule on (the owner's OK, as in the admin); `off` takes it back. */
+  switchRule: (key: string, on?: boolean) => Promise<void>;
 }
 
 export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
@@ -41,6 +45,11 @@ export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
   };
   const clock = { now: new Date('2026-10-23T06:00:00Z') };
   const deps = () => ({ db: t.prisma, settings, now: () => clock.now });
+  const role = await createRole(t.prisma, SYSTEM, { key: 'test-owner', nameEn: 'owner', nameBn: 'owner', permissions: ['rules.read', 'rules.write', 'rules.publish', 'rules.approve'] });
+  const u = await t.prisma.staffUser.create({ data: { email: 'owner@example.com', displayName: 'owner', passwordHash: 'not-a-login' } });
+  await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
+  const owner: Actor = { staffUserId: u.id };
+  await seedSampleRules(deps());
   const products: Record<string, ProductFact> = {};
   const ids = (await t.prisma.product.findMany({ where: { storeId: S }, select: { id: true } })).map((p) => p.id);
   for (const p of (await productFacts(deps(), S, ids)).values()) products[p.slug] = p;
@@ -70,6 +79,14 @@ export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
     async priceBand(key, chargeMinor, hours = [24, 48]) {
       const b = await t.prisma.deliveryBand.update({ where: { storeId_key: { storeId: S, key } }, data: { enabled: true, chargeMinor, hoursMin: hours[0], hoursMax: hours[1] } });
       return b.id;
+    },
+    async switchRule(key, on = true) {
+      const row = await t.prisma.smartRule.findFirstOrThrow({ where: { storeId: S, key }, select: { id: true } });
+      const who = { actor: owner, storeId: S };
+      const r = await getRule(deps(), who, row.id);
+      await saveDraft(deps(), who, r.id, { content: { ...(r.draft ?? r.live)!, status: on ? 'ACTIVE' : 'PAUSED' } });
+      await publishRule(deps(), who, r.id);
+      bustAll();
     },
   };
 }
