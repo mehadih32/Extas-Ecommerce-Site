@@ -22,6 +22,9 @@ importers:
       '@extas/catalogue':
         specifier: workspace:*
         version: link:../../packages/catalogue
+      '@extas/checkout':
+        specifier: workspace:*
+        version: link:../../packages/checkout
       '@extas/combos':
         specifier: workspace:*
         version: link:../../packages/combos
@@ -221,6 +224,58 @@ importers:
       '@extas/media':
         specifier: workspace:*
         version: link:../media
+      '@extas/settings':
+        specifier: workspace:*
+        version: link:../settings
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@eslint/js':
+        specifier: 9.39.5
+        version: 9.39.5
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.72.0
+        version: 8.72.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
+  packages/checkout:
+    dependencies:
+      '@extas/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@extas/cart':
+        specifier: workspace:*
+        version: link:../cart
+      '@extas/combos':
+        specifier: workspace:*
+        version: link:../combos
+      '@extas/db':
+        specifier: workspace:*
+        version: link:../db
+      '@extas/delivery':
+        specifier: workspace:*
+        version: link:../delivery
+      '@extas/inventory':
+        specifier: workspace:*
+        version: link:../inventory
+      '@extas/rules':
+        specifier: workspace:*
+        version: link:../rules
+      '@extas/seed':
+        specifier: workspace:*
+        version: link:../seed
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings

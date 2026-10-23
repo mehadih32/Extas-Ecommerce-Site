@@ -21,6 +21,7 @@ import { eidSettings } from './registry-eid';
 import { categorySettings } from './registry-category';
 import { bagSettings } from './registry-bag';
 import { productSettings } from './registry-product';
+import { checkoutSettings } from './registry-checkout';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1130,6 +1131,8 @@ export const registry = {
   ...bagSettings,
   // ---- S02 · PR 49, 54–57, 60–64 · the product page: gallery, colours, sizes, size chart, stock, price, trust, rules, details, buy bars (registry-product.ts, version 19). ----
   ...productSettings,
+  // ---- S04 · PR 115–126 · the checkout: the field order, the try-on line, the form, payment, the wallet, consent, the confirm button, placement, the thank-you page (registry-checkout.ts, version 20). ----
+  ...checkoutSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
