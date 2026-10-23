@@ -11,7 +11,7 @@ import { createCombo, getCombo, listCombos, setComboActive, setComboFlags, setCo
 import type { CombosDeps, SettingsReader, Who } from './context';
 import { seedSampleCombos } from './sample';
 import { listSetTiers, liveSetTiers } from './set-tiers';
-import { checkComboSet } from './set-check';
+import { bagUse, checkComboSet } from './set-check';
 import { priceSet, setSummary } from './summary';
 import { makeSetPhoto } from './set-photo';
 import { colourKeyOf, comboReport, recordColourPick, recordComboView } from './analytics';
@@ -518,6 +518,12 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       expect((await bagSets(deps(), { storeId: S, cartId: id }))[0]!.savedForLater).toBe(true);
       expect(await removeSetFromBag(deps(), { storeId: S, cartId: id, groupKey: r.groupKey })).toEqual({ removed: 2 });
       expect(await bagSets(deps(), { storeId: S, cartId: id })).toEqual([]);
+      // Archived, never deleted (S04 PR 105): the lines stay with the time they left, and taking it out again finds nothing.
+      const kept = await t.prisma.cartItem.findMany({ where: { cartId: id, comboGroupKey: r.groupKey }, select: { removedAt: true } });
+      expect(kept).toHaveLength(2);
+      expect(kept.every((l) => l.removedAt instanceof Date)).toBe(true);
+      expect(await code(removeSetFromBag(deps(), { storeId: S, cartId: id, groupKey: r.groupKey }))).toBe('NOT_FOUND');
+      expect(await bagUse(t.prisma, S, id)).toEqual({});
     });
   });
 
