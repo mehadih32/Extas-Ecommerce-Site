@@ -112,7 +112,7 @@ docs file (CN-011).
 | [`qa/BLOG-QA-REPORT.md`](qa/BLOG-QA-REPORT.md) | Blog QA and UX review |
 | [`qa/QA-REPORT-R15.md`](qa/QA-REPORT-R15.md) · [`QA-REPORT-R15b.md`](qa/QA-REPORT-R15b.md) | Demo QA round R15 and its independent rerun |
 | [`qa/device-matrix.js`](qa/device-matrix.js) · [`devices.json`](qa/devices.json) | The device gate: phones, tablets and desktops to test on |
-| `qa/screenshots/pr-<n>/` | Real-app screenshots per PR, phone 390 and desktop 1366, with a README of Bengali captions (PR 21, 28, 39, 40, 41, 43, 49 (the product page, PR 49, 54–57, 60–64), 107 (the bag, PR 105–114), 205, 209, 500; PR 40 also phone 440) |
+| `qa/screenshots/pr-<n>/` | Real-app screenshots per PR, phone 390 and desktop 1366, with a README of Bengali captions (PR 21, 28, 39, 40, 41, 43, 49 (the product page, PR 49, 54–57, 60–64), 107 (the bag, PR 105–114), 115 (the checkout, PR 115–126), 205, 209, 500; PR 40 also phone 440) |
 | [`qa/smoke.json`](qa/smoke.json) | The smoke test's page list, screens and known requests to ignore (CN-016; admin pages come from the admin menu) |
 | `qa/tools/timing-audit-tools/` | Timing audit suites (sliders, drag, hover, overlays …) |
 | `qa/tools/blog-qa-tools/` | Blog QA checks, journeys and captures |
