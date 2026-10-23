@@ -122,6 +122,44 @@
         "label": "Confirm button before the form is finished",
         "help": "\"ask\" (yours): the button always works; pressing it lights up the missing field and says in Bengali, inside that box, what to write. \"disable\": the button waits switched off and says what is missing above it."
       }
+    },
+    "order": {
+      "numberPrefix": {
+        "label": "Order number: letters before it",
+        "help": "Put in front of every order number, e.g. \"EX-\" makes EX-1001. Capital letters, digits and \"-\" only. Empty: the number alone."
+      },
+      "numberStart": {
+        "label": "Order number: first number",
+        "help": "The first order's number. Each new order takes the next one; a number is never used twice."
+      },
+      "replayHours": {
+        "label": "Same order on a second press (hours)",
+        "help": "If Confirm is pressed again with the same page (a slow network, a double tap), the shop shows the order already placed instead of making a second one — for this many hours."
+      }
+    },
+    "note": {
+      "enabled": {
+        "label": "Delivery note",
+        "help": "Shows the \"Delivery note (optional)\" box at checkout. The note is saved on the order for the rider and the packing team."
+      },
+      "maxChars": {
+        "label": "Delivery note: longest",
+        "help": "How many letters the delivery note takes."
+      }
+    },
+    "capture": {
+      "enabled": {
+        "label": "Keep unfinished checkouts",
+        "help": "When on, the name, phone and address a customer typed but did not order are kept for your team's follow-up call or message (only with his consent). Off: nothing is kept until he confirms."
+      },
+      "waitMs": {
+        "label": "Keep unfinished checkouts: wait (ms)",
+        "help": "How long after the customer stops typing the page saves what he typed."
+      },
+      "keepDays": {
+        "label": "Keep unfinished checkouts: days",
+        "help": "How many days an unfinished checkout stays on your team's list."
+      }
     }
   }
 }

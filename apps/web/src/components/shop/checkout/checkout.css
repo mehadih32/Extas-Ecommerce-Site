@@ -183,6 +183,8 @@
 .shop .co-bookadd { display: inline-flex; align-items: center; gap: 5px; min-height: 40px; font-size: 13.5px; }
 .shop .co-notecard .co-noteadd { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 46px; background: none; border: 0px; padding: 0px; cursor: pointer; color: var(--brand); font-size: 14.5px; font-weight: 700; text-align: left; }
 .shop .co-notecard .co-noteadd svg { flex-shrink: 0; }
+/* PR 125 · K6: on a computer the delivery note is always open, in bigger text */
+@media (min-width: 1024px) { .shop .co-wrap .co-notecard .label { font-size: 15px; font-weight: 700; margin-bottom: 6px; display: block; } .shop .co-wrap .co-notecard .input { font-size: 16px; } }
 .shop .co-was { display: flex; align-items: baseline; justify-content: flex-end; gap: 10px; margin-top: 3px; flex-wrap: wrap; }
 .shop .co-was .strike { font-size: 14.5px; color: var(--muted); text-decoration: line-through; }
 .shop .co-saved { font-size: 13px; font-weight: 800; color: var(--brand); }
@@ -422,3 +424,11 @@
 .shop .qty-xs button { position: relative; }
 .shop .qty-xs button::after { content: ""; position: absolute; inset: -7px; }
 .shop .co-qrow .link { padding: 12px 4px; margin: -12px -4px; }
+/* PR 125 · the mock payment page: one card in the middle, the test line plain to see */
+.shop .co-paypage { max-width: 520px; padding-top: 20px; padding-bottom: 32px; }
+.shop .co-payamt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.shop .co-payamt .price { font-size: 26px; }
+.shop .co-paytest, .shop .co-payfail { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; background: rgb(251, 243, 223); color: rgb(110, 82, 18); }
+.shop .co-payfail { background: rgba(176, 58, 46, 0.08); color: rgb(150, 45, 35); }
+.shop .co-paytest svg, .shop .co-payfail svg { flex-shrink: 0; margin-top: 2px; }
+.shop .co-payback { display: flex; align-items: center; justify-content: center; min-height: 44px; }

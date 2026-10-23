@@ -70,6 +70,9 @@ export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: Che
         consent={s['checkout.consent.enabled'] ? { sms: s['checkout.consent.sms.default'], whatsapp: s['checkout.consent.whatsapp.default'] } : null}
         links={{ exchange: hrefIn(c.lang, ROUTES.help('exchange')), terms: hrefIn(c.lang, ROUTES.help('terms')) }}
         confirmStyle={s['checkout.confirm.style']}
+        note={s['checkout.note.enabled'] ? { max: s['checkout.note.maxChars'] } : null}
+        capture={s['checkout.capture.enabled'] ? { waitMs: s['checkout.capture.waitMs'] } : null}
+        bagHref={bagHref}
       />
       {actions}
     </div>

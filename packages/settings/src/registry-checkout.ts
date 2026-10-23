@@ -204,6 +204,81 @@ export const checkoutSettings = {
     sortOrder: 69,
   }),
 
+  // ---- PR 125 · placing the order ----
+  'checkout.order.numberPrefix': setting({
+    ...base,
+    schema: z.string().regex(/^[A-Z0-9-]{0,8}$/, 'capital letters, digits and "-", at most 8'),
+    default: '',
+    valueType: 'STRING',
+    labelKey: 'checkout.order.numberPrefix.label',
+    helpKey: 'checkout.order.numberPrefix.help',
+    sortOrder: 80,
+  }),
+  'checkout.order.numberStart': setting({
+    ...base,
+    schema: z.int().min(1).max(999_999_999),
+    default: 1001,
+    valueType: 'INT',
+    labelKey: 'checkout.order.numberStart.label',
+    helpKey: 'checkout.order.numberStart.help',
+    sortOrder: 81,
+  }),
+  'checkout.order.replayHours': setting({
+    ...base,
+    schema: z.int().min(1).max(720),
+    default: 24,
+    valueType: 'INT',
+    labelKey: 'checkout.order.replayHours.label',
+    helpKey: 'checkout.order.replayHours.help',
+    sortOrder: 82,
+  }),
+  'checkout.note.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.note.enabled.label',
+    helpKey: 'checkout.note.enabled.help',
+    sortOrder: 83,
+  }),
+  'checkout.note.maxChars': setting({
+    ...base,
+    schema: z.int().min(20).max(1_000),
+    default: 200,
+    valueType: 'INT',
+    labelKey: 'checkout.note.maxChars.label',
+    helpKey: 'checkout.note.maxChars.help',
+    sortOrder: 84,
+  }),
+  // SIM-F-026: what a customer typed and left is kept for the staff's follow-up (PR 274/275) — off until the owner wants it.
+  'checkout.capture.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: false,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.capture.enabled.label',
+    helpKey: 'checkout.capture.enabled.help',
+    sortOrder: 85,
+  }),
+  'checkout.capture.waitMs': setting({
+    ...base,
+    schema: z.int().min(300).max(30_000),
+    default: 1_500,
+    valueType: 'INT',
+    labelKey: 'checkout.capture.waitMs.label',
+    helpKey: 'checkout.capture.waitMs.help',
+    sortOrder: 86,
+  }),
+  'checkout.capture.keepDays': setting({
+    ...base,
+    schema: z.int().min(1).max(365),
+    default: 30,
+    valueType: 'INT',
+    labelKey: 'checkout.capture.keepDays.label',
+    helpKey: 'checkout.capture.keepDays.help',
+    sortOrder: 87,
+  }),
+
   // ---- PR 120 · the prepaid reward (CN-018 (1)): nothing set (off), and no amount, until the owner decides. Any payment but Cash on
   // Delivery earns it; when delivery is already free a free-delivery reward falls back to the amount or the percentage.
   'checkout.prepaidReward.enabled': setting({
