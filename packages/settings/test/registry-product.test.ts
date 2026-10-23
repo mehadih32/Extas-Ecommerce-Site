@@ -1,13 +1,16 @@
-// S02 · product page settings (PR 49–64): every key at version 19, the demo's defaults, and the limits.
+// S02 · product page settings (PR 49–64 at version 19; PR 66 at version 31): the demo's defaults, and the limits.
 import { describe, expect, it } from 'vitest';
 import { registry } from '../src/registry';
-import { pdpGallerySchema, pdpRulesSchema, pdpStockSchema, pdpTrustSchema, productSettings } from '../src/registry-product';
+import { pdpGallerySchema, pdpQaSchema, pdpRulesSchema, pdpStockSchema, pdpTrustSchema, productSettings } from '../src/registry-product';
+
+/** Keys added after the first product page batch, with the registry version they came in. */
+const LATER: Readonly<Record<string, number>> = { 'pdp.qa': 31 };
 
 describe('product page settings (v19)', () => {
-  it('every product page key is in the registry at version 19, public, never owner data', () => {
+  it('every product page key is in the registry at version 19 (later ones at theirs), public, never owner data', () => {
     for (const [key, spec] of Object.entries(productSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(19);
+      expect(spec.version, key).toBe(LATER[key] ?? 19);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
     }
@@ -34,5 +37,12 @@ describe('product page settings (v19)', () => {
     expect(pdpTrustSchema.safeParse({ ...t, items: [...t.items, t.items[0]] }).success).toBe(false);
     const r = productSettings['pdp.rules'].default;
     expect(pdpRulesSchema.safeParse({ ...r, cells: [r.cells[0], r.cells[0]] }).success).toBe(false);
+  });
+
+  it('PR 66: the questions block shows no more than it reads, and never fewer than one', () => {
+    const q = productSettings['pdp.qa'].default;
+    expect(pdpQaSchema.safeParse({ ...q, shown: q.max + 1 }).success).toBe(false);
+    expect(pdpQaSchema.safeParse({ ...q, shown: 0 }).success).toBe(false);
+    expect(pdpQaSchema.safeParse({ ...q, max: 51 }).success).toBe(false);
   });
 });

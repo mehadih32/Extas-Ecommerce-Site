@@ -848,3 +848,39 @@
   /* without the finder (switched off, or no chart it can read) the measurements are a box of their own */
   .shop .pdp-page.pdp-tpl-T3 .pdp-t3-rest.solo { margin-top: 18px; padding-top: 2px; border-top: 1px solid var(--line); border-radius: var(--card-radius); }
 }
+
+/* PR 66 — Questions & answers (demo r12-pdp.css P10, A10, 14.14 and the A1 rail rule; r12-zzdesk-b.css; styles.css 19).
+   The open question in its own box, the rest folded in the browser's own <details>; "See all questions" is a <details>
+   of its own whose summary goes once it is open, so the block needs no script. */
+.shop .pdp-page #pdp-qa .split { gap: 14px; }
+.shop .pdp-page #pdp-qa .pdp-box { padding: 16px; }
+.shop .pdp-page #pdp-qa .split.pdp-qa-one { grid-template-columns: minmax(0px, 1fr); }
+@media (min-width: 1024px) { .shop .pdp-page #pdp-qa .split.pdp-qa-one, .shop .pdp-page #pdp-qa .pdp-qa-solo { max-width: 760px; } }
+.shop .pdp-page #pdp-qa .pdp-qa-row { gap: 12px; }
+.shop .pdp-page #pdp-qa .tag { flex-shrink: 0; }
+.shop .pdp-page #pdp-qa .pdp-qa-text { line-height: 1.6; max-width: 62ch; white-space: pre-line; }
+.shop .pdp-page .pdp-qa-more .h3 { margin-bottom: 4px; }
+.shop .pdp-page .pdp-qa-i { border-top: 1px solid var(--line2); }
+.shop .pdp-page .pdp-qa-i summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; list-style: none; cursor: pointer; padding: 10px 0px; min-height: 44px; color: var(--ink); font-weight: 650; font-size: 14px; line-height: 1.35; }
+.shop .pdp-page .pdp-qa-i summary::-webkit-details-marker, .shop .pdp-page .pdp-qa-rest > summary::-webkit-details-marker { display: none; }
+.shop .pdp-page .pdp-qa-i summary svg { flex-shrink: 0; color: var(--muted); transition: transform 0.16s; }
+.shop .pdp-page .pdp-qa-i[open] summary svg { transform: rotate(45deg); }
+.shop .pdp-page .pdp-qa-i .pdp-qa-a { padding: 0px 0px 12px; line-height: 1.6; max-width: 62ch; white-space: pre-line; }
+.shop .pdp-page .pdp-qa-all { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 46px; padding: 11px 0px; margin: 0px; border-top: 1px solid var(--line2); list-style: none; cursor: pointer; font-size: 14px; font-weight: 750; color: var(--brand); text-align: left; }
+.shop .pdp-page .pdp-qa-all .pdp-qa-n { color: var(--text2); font-weight: 600; font-size: 13px; }
+.shop .pdp-page .pdp-qa-all svg { margin-left: auto; flex-shrink: 0; }
+.shop .pdp-page .pdp-qa-rest[open] > summary { display: none; }
+.shop .pdp-page .pdp-qa-wa { border-top: 1px solid var(--line2); padding-top: 14px; margin-top: 4px; }
+.shop .pdp-page .pdp-qa-wa.pdp-qa-wa0 { border-top: 0px; padding-top: 0px; margin-top: 0px; }
+.shop .pdp-page .pdp-qa-wa p { margin: 0px 0px 10px; }
+.shop .pdp-page #pdp-qa .wa-btn { display: flex; width: 100%; justify-content: center; min-height: 52px; font-weight: 700; font-size: 15px; box-shadow: rgba(31, 168, 85, 0.26) 0px 6px 18px; }
+.shop .pdp-page #pdp-qa .wa-btn svg { color: rgb(255, 255, 255); width: 21px; height: 21px; }
+@media (min-width: 1024px) {
+  .shop .pdp-page #pdp-qa .split { align-items: stretch; }
+  .shop .pdp-page #pdp-qa .pdp-qa-top { display: flex; flex-direction: column; }
+  .shop .pdp-page #pdp-qa .pdp-qa-wad { margin-top: auto; padding-top: 18px; }
+}
+@media (max-width: 1023px) {
+  .shop .pdp-page:has(.pdp-acts) .pdp-qa-i summary, .shop .pdp-page:has(.pdp-acts) .pdp-qa-all { padding-right: 34px; }
+}
+@media (prefers-reduced-motion: reduce) { .shop .pdp-page .pdp-qa-i summary svg { transition: none; } }

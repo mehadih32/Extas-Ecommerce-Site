@@ -134,6 +134,7 @@ export function checkOwnerData(input: CheckInput): Finding[] {
   marked('customer.name (Customer)', input.sample.customer.name);
   marked('order.number (Order)', input.sample.order.number);
   marked('order.address (Order)', input.sample.order.address);
+  for (const [i, q] of (input.sample.questions ?? []).entries()) marked(`questions[${i}].question (ProductQuestion)`, q.question);
   if (!SAMPLE_PHONE.test(input.sample.customer.phone)) {
     add('sample-phone', 'sample customer.phone (Customer)', 'a sample phone must be in the unallocated +88010 range');
   }

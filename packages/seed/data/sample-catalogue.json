@@ -1,5 +1,5 @@
 {
-  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer and order are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation.",
+  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer, order and questions are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation.",
   "version": 1,
   "marker": "Sample",
   "store": {
@@ -867,5 +867,43 @@
         "quantity": 1
       }
     ]
-  }
+  },
+  "questions": [
+    {
+      "product": "essential-pique-polo",
+      "question": "Sample question: does this polo shrink after washing?",
+      "answer": "Sample answer: wash it cold and dry it in the shade, as the care label says, and it keeps its size.",
+      "answeredAt": "2026-10-20T06:00:00.000Z"
+    },
+    {
+      "product": "essential-pique-polo",
+      "question": "Sample question: is the collar soft or stiff?",
+      "answer": "Sample answer: the collar is ribbed knit, soft to wear, and keeps its shape after washing.",
+      "answeredAt": "2026-10-18T06:00:00.000Z"
+    },
+    {
+      "product": "essential-pique-polo",
+      "question": "Sample question: is the fabric thick enough for winter?",
+      "answer": "Sample answer: it is a breathable pique made for warm days; for winter, wear it under a jacket.",
+      "answeredAt": "2026-10-15T06:00:00.000Z"
+    },
+    {
+      "product": "essential-pique-polo",
+      "question": "Sample question: does the colour fade?",
+      "answer": "Sample answer: the colour is fixed in the yarn; wash it inside out to keep it bright longer.",
+      "answeredAt": "2026-10-12T06:00:00.000Z"
+    },
+    {
+      "product": "essential-pique-polo",
+      "question": "Sample question: can I iron the logo side?",
+      "answer": "Sample answer: iron it inside out on a low setting.",
+      "answeredAt": "2026-10-10T06:00:00.000Z"
+    },
+    {
+      "product": "textured-knit-polo",
+      "question": "Sample question: is this knit see-through?",
+      "answer": "Sample answer: no, the knit is close and not see-through, even in light colours.",
+      "answeredAt": "2026-10-19T06:00:00.000Z"
+    }
+  ]
 }

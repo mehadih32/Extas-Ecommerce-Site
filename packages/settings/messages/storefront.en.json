@@ -213,6 +213,10 @@
     "sweep": {
       "label": "Light sweeps on the product page",
       "help": "The soft light that runs across the free-delivery line, the stock line, \"All N colours\", the Colour and Size labels and the size boxes, each on its own switch. It never runs for a visitor who has asked for less motion."
+    },
+    "qa": {
+      "label": "Questions & answers on the product page",
+      "help": "The questions your team has answered and approved for a product, under its page: the latest one open with its answer, the rest folded, a few at first and \"See all questions\" for the rest. Under them, \"Not answered here?\" with the WhatsApp button, while the shop has a WhatsApp number. A product with no answered question shows only the WhatsApp ask, or nothing without a number. No question is ever made up."
     }
   }
 }

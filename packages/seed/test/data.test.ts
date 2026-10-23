@@ -153,6 +153,13 @@ describe('owner-data check (PR 509)', () => {
     expect(rules({ sample })).toEqual(expect.arrayContaining(['sample-unmarked', 'sample-phone', 'sample-email', 'sample-phone-bd']));
   });
 
+  it('PR 66: a sample question that does not say "Sample" fails', () => {
+    const sample = clone(sampleCatalogue);
+    expect(rules({ sample })).not.toContain('sample-unmarked');
+    sample.questions![0]!.question = 'Does this polo shrink?';
+    expect(rules({ sample })).toContain('sample-unmarked');
+  });
+
   it('fails when the register names what the schema lacks, or the export could read a register table', () => {
     const register = {
       ...ownerDataRegister,
