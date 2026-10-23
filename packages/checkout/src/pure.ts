@@ -3,6 +3,11 @@
 // the order placement judge a form the same way; tested in pure.test.ts.
 import { phoneNormalizeBD, type PhoneBD } from '@extas/delivery/phone';
 export type { CheckoutView, DeliveryCharge, DeliveryView, FreeReason, Totals } from './quote';
+export type { CardType, CodOff, PaymentChoice, PaymentInput, PaymentView, RewardOffer, Wallet } from './payment';
+
+/** PR 120 — the payment step's methods, in the page's order. */
+export const PAY_METHODS = ['cod', 'mobile', 'card', 'online'] as const;
+export type PayMethod = (typeof PAY_METHODS)[number];
 export type { PlaceName } from './address';
 export type { BandOut } from '@extas/delivery';
 export { phoneNormalizeBD, type PhoneBD };

@@ -1,6 +1,6 @@
 // S04 — the checkout's small pure helpers (no React, no browser): how the delivery step names a band and a place, and
 // how a band's hours and the customer's kept choice are read. Tested in checkout-model.test.ts.
-import type { BandOut, PlaceName } from '@extas/checkout/pure';
+import { PAY_METHODS, type BandOut, type PaymentChoice, type PlaceName } from '@extas/checkout/pure';
 import type { ShopLang } from './lang';
 
 /** A name in the page's language (the Bengali one when it exists). */
@@ -38,4 +38,22 @@ export function anyBandHours(bands: readonly Pick<BandOut, 'hoursMin' | 'hoursMa
   const lows = priced.map((b) => b.hoursMin ?? b.hoursMax).filter((x): x is number => x !== null);
   const highs = priced.map((b) => b.hoursMax ?? b.hoursMin).filter((x): x is number => x !== null);
   return { hoursMin: lows.length ? Math.min(...lows) : null, hoursMax: highs.length ? Math.max(...highs) : null };
+}
+
+/**
+ * PR 120 (demo rule 39): on a phone the payment boxes open after ONE finished word of the address — three letters or
+ * more followed by a space or a comma — or two words; until then the step only names what can be paid with.
+ */
+export function payOpens(address: string): boolean {
+  const s = String(address || '');
+  if (/[A-Za-z0-9ঀ-৿]{3,}[\s,]/.test(s)) return true;
+  return s.split(/[^A-Za-z0-9ঀ-৿]+/).filter((x) => x.length >= 2).length >= 2;
+}
+
+/** A payment choice kept in the tab's draft, checked before it is sent again (the server checks it once more). */
+export function payChoiceOf(v: unknown): PaymentChoice | null {
+  if (!v || typeof v !== 'object') return null;
+  const o = v as Record<string, unknown>;
+  const method = (PAY_METHODS as readonly unknown[]).includes(o.method) ? (o.method as PaymentChoice['method']) : null;
+  return method ? { method, option: typeof o.option === 'string' && o.option ? o.option : null } : null;
 }

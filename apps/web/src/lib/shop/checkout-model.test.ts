@@ -42,3 +42,26 @@ describe('the store-wide delivery promise (PR 119)', () => {
     expect(anyBandHours([{ hoursMin: null, hoursMax: 72, priced: true }])).toEqual({ hoursMin: 72, hoursMax: 72 });
   });
 });
+
+describe('the payment boxes open on a phone (PR 120, demo rule 39)', () => {
+  it('after one finished word or two words, in English or Bengali', async () => {
+    const { payOpens } = await import('./checkout-model');
+    expect(payOpens('')).toBe(false);
+    expect(payOpens('Mirpur')).toBe(false);
+    expect(payOpens('Mirpur ')).toBe(true);
+    expect(payOpens('Mi,')).toBe(false);
+    expect(payOpens('Mir,')).toBe(true);
+    expect(payOpens('মিরপুর ')).toBe(true);
+    expect(payOpens('ab cd')).toBe(true);
+  });
+});
+
+describe('a kept payment choice (PR 120)', () => {
+  it('is checked before it is sent again', async () => {
+    const { payChoiceOf } = await import('./checkout-model');
+    expect(payChoiceOf({ method: 'mobile', option: 'nagad' })).toEqual({ method: 'mobile', option: 'nagad' });
+    expect(payChoiceOf({ method: 'cod' })).toEqual({ method: 'cod', option: null });
+    expect(payChoiceOf({ method: 'cheque' })).toBeNull();
+    expect(payChoiceOf(null)).toBeNull();
+  });
+});

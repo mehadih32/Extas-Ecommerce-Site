@@ -6,14 +6,16 @@
 // PR 117: the finished address line is read by the server's gazetteer (a pause or leaving the box, never mid-typing)
 // and the page shows the checkout the server priced for it. PR 118: the band he picks when asked. PR 119: the delivery
 // charge in the summary and the total — the server's figure, or "free", or "+ delivery" while it is not known.
+// PR 120: the payment step; the choice is kept in the tab's draft and priced by the server (the prepaid reward).
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits } from '@extas/checkout/pure';
-import { confirmedOf } from '@/lib/shop/checkout-model';
+import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits, type PaymentChoice } from '@extas/checkout/pure';
+import { confirmedOf, payChoiceOf, payOpens } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
+import { PaymentStep } from './PaymentStep';
 import { nextOnEnter, saveDraft, useDraft } from './draft';
 import { fetchQuote, latest, useSettle, type Choices } from './quote-client';
 
@@ -49,7 +51,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const [readLine, setReadLine] = useState<string | null>(null);
   const seq = useRef(latest());
   /** What the page last asked the server about: the finished line and the band he chose (PR 118). */
-  const asked = useRef<Choices>({ line: null, confirmed: null });
+  const asked = useRef<Choices>({ line: null, confirmed: null, pay: null });
   /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
   const requote = async (patch: Partial<Choices>) => {
     const c = { ...asked.current, ...patch };
@@ -57,7 +59,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     const k = seq.current.next();
     setReadLine(c.line);
     setReading(true);
-    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed } : null });
+    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed } : null, payment: c.pay });
     if (!seq.current.isLatest(k)) return;
     setReading(false);
     if (next) setView(next);
@@ -80,11 +82,17 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   };
   // An address that comes back from this tab's draft is already finished: it is read once, at once (with his band).
   const draftLine = stored?.form.address.trim() ?? '';
+  const draftPay = payChoiceOf(stored?.pay);
   useEffect(() => {
-    if (!draftLine || asked.current.line !== null) return;
-    void requote({ line: draftLine, confirmed: confirmedOf(stored?.confirmed) });
+    if ((!draftLine && !draftPay) || asked.current.line !== null || asked.current.pay !== null) return;
+    void requote({ line: draftLine || null, confirmed: confirmedOf(stored?.confirmed), pay: draftPay });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the draft arrives
-  }, [draftLine]);
+  }, [draftLine, draftPay?.method, draftPay?.option]);
+  /** PR 120: he picked a payment method (or a wallet or card inside it). */
+  const choosePay = (pay: PaymentChoice) => {
+    void requote({ pay });
+    saveDraft({ pay });
+  };
   /** PR 118: he answered "Where is this address?". */
   const pick = (bandId: string, areaId: string | null) => {
     const d = view.delivery;
@@ -133,6 +141,12 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
             <span>−{m(o.amountMinor)}</span>
           </div>
         ))}
+        {t.rewardMinor > 0 ? (
+          <div className="co-r disc" data-testid="co-reward-row">
+            <span>{w('sum.reward')}</span>
+            <span>−{m(t.rewardMinor)}</span>
+          </div>
+        ) : null}
         <div className="co-r">
           <span>{w('sum.delivery')}</span>
           {t.deliveryMinor === 0 ? (
@@ -268,12 +282,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                 onChange={changeBand}
               />
             </section>
-            <section className="card co-sec co-paysec" data-testid="co-pay">
-              <div className="co-hd">
-                <span className="co-num">{n(3)}</span>
-                <h2 className="h2">{w('payment')}</h2>
-              </div>
-            </section>
+            <PaymentStep pay={view.pay} due={amount} open={payOpens(form.address)} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
           </div>
           <aside className="co-side">
             <div className="co-float">

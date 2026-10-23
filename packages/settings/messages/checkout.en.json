@@ -28,6 +28,60 @@
         "label": "Shortest address the order takes (letters)",
         "help": "An address shorter than this asks the customer for more, so the rider can find the house."
       }
+    },
+    "pay": {
+      "mobile": {
+        "enabled": {
+          "label": "Offer mobile banking",
+          "help": "bKash, Nagad and the other wallets in the list below. Until the wallet's key is entered in Keys & connections, payment runs on the test (mock) page."
+        },
+        "list": {
+          "label": "Mobile wallets shown",
+          "help": "The wallets the customer can pick, in this order."
+        }
+      },
+      "card": {
+        "enabled": {
+          "label": "Offer card and bank payment",
+          "help": "Visa, Mastercard, Amex and internet banking. Until the card gateway's key is entered, payment runs on the test (mock) page."
+        },
+        "list": {
+          "label": "Cards shown",
+          "help": "The card types the customer can pick, in this order."
+        }
+      },
+      "online": {
+        "enabled": {
+          "label": "Offer \"Pay online\" (one secure payment page)",
+          "help": "One option that sends the customer to the payment gateway's own page for cards, mobile banking and net banking."
+        }
+      }
+    },
+    "prepaidReward": {
+      "enabled": {
+        "label": "Give a reward for paying before delivery",
+        "help": "Any payment except Cash on Delivery earns it. Off until you decide. The reward shows next to each payment option and is taken back if the customer switches to Cash on Delivery."
+      },
+      "type": {
+        "label": "What the reward is",
+        "help": "Free delivery, a fixed amount off, or a percentage off the items."
+      },
+      "fallback": {
+        "label": "When delivery is already free, give instead",
+        "help": "A free-delivery reward is worth nothing on an order that already ships free, so the customer gets this one instead."
+      },
+      "amountMinor": {
+        "label": "Amount off (fixed reward)",
+        "help": "Taken off the items. Empty means no amount reward."
+      },
+      "percent": {
+        "label": "Percentage off (percentage reward)",
+        "help": "A percentage of the items' price. Empty means no percentage reward."
+      },
+      "maxMinor": {
+        "label": "Largest percentage reward",
+        "help": "The most a percentage reward can take off one order. Empty means no cap."
+      }
     }
   }
 }

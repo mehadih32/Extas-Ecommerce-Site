@@ -182,7 +182,8 @@
       "offer": "Offer",
       "each": "{price} each",
       "setSub": "{regular} separately · you save {saving}",
-      "onCall": "On the call"
+      "onCall": "On the call",
+      "reward": "Prepaid reward"
     },
     "trust": {
       "cod": "Cash on Delivery",
@@ -213,12 +214,58 @@
       "free": {
         "FREE_OVER": "Your order is over {amount}, so delivery is on us.",
         "FREE_CAMPAIGN": "Free delivery is running on every order right now.",
-        "FREE_PRODUCTS": "This order ships free, anywhere in Bangladesh."
+        "FREE_PRODUCTS": "This order ships free, anywhere in Bangladesh.",
+        "PREPAID": "You pay now, so delivery is on us."
       },
       "promise": "You will get your order within {hours} hours",
       "promiseAny": "Delivery anywhere in Bangladesh within {hours} hours",
       "gap": "Add {amount} more to the bag and delivery is free.",
       "notSet": "We confirm the delivery charge when we call you."
+    },
+    "pay": {
+      "cod": "Cash on Delivery",
+      "codSub": "Pay when it reaches you",
+      "mobile": "Mobile banking",
+      "card": "Card & bank",
+      "online": "Pay online",
+      "onlineSub": "Cards, bKash, Nagad and net banking — one secure page",
+      "totalDue": "Total due {amount}",
+      "codRider": "pay the rider at your door.",
+      "mobileNote": "You approve {amount} in {wallet} on the next step.",
+      "cardNote": "Secure payment of {amount} on the next step.",
+      "onlineNote": "You go to the secure payment page to pay {amount}. Cards, mobile banking and net banking.",
+      "reward": {
+        "freeDelivery": "Free delivery when you pay now",
+        "amount": "{amount} off when you pay now"
+      },
+      "soon": "Opens as you write your address. Cash on Delivery is ready by default.",
+      "soonNoCod": "Opens as you write your address.",
+      "none": "No payment method is open right now. Message us on WhatsApp and we will help you order.",
+      "codNotHere": "Cash on Delivery is not available on this order."
+    },
+    "pm": {
+      "cod": "COD",
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "rocket": "Rocket",
+      "upay": "Upay",
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "Amex",
+      "bank": "Internet banking",
+      "ssl": "SSLCommerz"
+    },
+    "mk": {
+      "cod": "COD",
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "rocket": "Rocket",
+      "upay": "Upay",
+      "visa": "VISA",
+      "mastercard": "Mastercard",
+      "amex": "AMEX",
+      "bank": "BANK",
+      "ssl": "SSL COMMERZ"
     }
   },
   "notFound": {

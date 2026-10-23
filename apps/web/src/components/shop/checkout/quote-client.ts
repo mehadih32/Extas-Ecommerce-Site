@@ -4,7 +4,7 @@
 // after a newer question was sent is dropped, so a slow reply can never put an old charge back on the page.
 import { useEffect, useRef, useState } from 'react';
 import { createSettle, type SettleController } from '@extas/delivery/settle';
-import type { CheckoutView } from '@extas/checkout/pure';
+import type { CheckoutView, PaymentChoice } from '@extas/checkout/pure';
 import type { Confirmed } from '@/lib/shop/checkout-model';
 
 export const QUOTE_URL = '/api/checkout/quote';
@@ -35,6 +35,8 @@ export interface Choices {
   line: string | null;
   /** The band (and place) he picked when he was asked (PR 118). */
   confirmed: Confirmed;
+  /** The payment method he picked (PR 120); null: the first open one. */
+  pay: PaymentChoice | null;
 }
 
 export async function fetchQuote(payload: Record<string, unknown>): Promise<CheckoutView | null> {
