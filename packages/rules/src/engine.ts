@@ -33,6 +33,12 @@ export interface CartFacts {
   lines: LineFact[];
   /** The delivery band of the resolved address (S06); null = not known yet. */
   bandKey: string | null;
+  /**
+   * Follow-up 54 (PR 119): the owner's own charge for that band (DeliveryBand.chargeMinor; null = the band has no charge
+   * yet). When given, it is the delivery charge, exactly the figure the checkout charges, and a `deliveryCharge` rule
+   * no longer sets it (the rules decide only free delivery). Left out (undefined): the older rule figure, unchanged.
+   */
+  bandChargeMinor?: number | null;
   paymentMethod: string | null;
   couponCode: string | null;
   /** Rules a valid coupon unlocks (the coupon service checks the code, its window and its limits). */
@@ -343,7 +349,15 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
   // ---- 4. delivery ----
   const delivery: DeliveryQuote = { bandKey: f.bandKey, baseChargeMinor: null, chargeMinor: null, free: false, reason: 'NO_BAND', freeOverMinor: null, remainingMinor: null, chargeRule: null, freeRule: null };
   const charge = actions('deliveryCharge').find(({ action }) => action.type === 'deliveryCharge' && f.bandKey !== null && (action.byBand[f.bandKey] ?? action.byBand['*']) !== undefined);
-  if (f.bandKey !== null) {
+  // What a `deliveryCharge` rule says for this band (the older source of the figure). The COD limit below keeps
+  // comparing against it, so knowing the band's own figure never changes who may pay cash on delivery (that needs the
+  // owner's OK, CLAUDE.md rule 6; follow-up 121).
+  const ruleChargeMinor = f.bandKey !== null && charge && charge.action.type === 'deliveryCharge' ? valueOf<number>(charge.rule, (charge.action.byBand[f.bandKey] ?? charge.action.byBand['*'])!) : null;
+  if (f.bandKey !== null && f.bandChargeMinor !== undefined) {
+    // PR 119: the owner's band figure, the one the checkout charges.
+    delivery.baseChargeMinor = f.bandChargeMinor;
+    delivery.reason = f.bandChargeMinor === null ? 'NOT_SET' : 'CHARGED';
+  } else if (f.bandKey !== null) {
     if (charge && charge.action.type === 'deliveryCharge') {
       delivery.chargeRule = ref(charge.rule);
       delivery.baseChargeMinor = valueOf<number>(charge.rule, (charge.action.byBand[f.bandKey] ?? charge.action.byBand['*'])!);
@@ -376,6 +390,9 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
 
   const totalKnown = delivery.chargeMinor !== null;
   const totalMinor = itemsMinor + (delivery.chargeMinor ?? NOTHING);
+  // The COD limit's total, exactly as before follow-up 54: the goods plus a `deliveryCharge` rule's figure (unless
+  // delivery is free). With no band figure given this is totalMinor itself.
+  const codTotalMinor = f.bandChargeMinor === undefined ? totalMinor : itemsMinor + (delivery.free ? NOTHING : (ruleChargeMinor ?? NOTHING));
 
   // ---- 5. COD and cut-offs ----
   const cod: CodQuote = { allowed: null, maxOrderMinor: null, reason: 'NO_RULE', rule: null };
@@ -385,7 +402,7 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
     const allowed = valueOf<boolean>(codHit.rule, codHit.action.allowedParam);
     cod.maxOrderMinor = codHit.action.maxOrderParam ? valueOf<number>(codHit.rule, codHit.action.maxOrderParam) : null;
     if (allowed === null) cod.reason = 'NOT_SET';
-    else if (allowed && cod.maxOrderMinor !== null && totalMinor > cod.maxOrderMinor) {
+    else if (allowed && cod.maxOrderMinor !== null && codTotalMinor > cod.maxOrderMinor) {
       cod.allowed = false;
       cod.reason = 'OVER_MAX';
     } else {

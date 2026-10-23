@@ -45,6 +45,16 @@ export async function scopeFacts(db: Db, storeId: number, productIds: readonly s
   return out;
 }
 
+/**
+ * Follow-up 54 (PR 119): the owner's charge for one band, as the checkout reads it (@extas/delivery quote): the figure
+ * when the band is switched on, null when it has no charge yet, undefined when the store has no such band.
+ */
+export async function bandChargeOf(db: Db, storeId: number, key: string | null): Promise<number | null | undefined> {
+  if (key === null) return undefined;
+  const b = await db.deliveryBand.findFirst({ where: { storeId, key, archivedAt: null }, select: { enabled: true, chargeMinor: true } });
+  return b ? (b.enabled ? b.chargeMinor : null) : undefined;
+}
+
 /** The store's delivery band keys (enabled or not: a rule may be prepared before a band is switched on). */
 export async function bandKeys(db: Db, storeId: number): Promise<string[]> {
   const rows = await db.deliveryBand.findMany({ where: { storeId, archivedAt: null }, select: { key: true }, orderBy: [{ sortOrder: 'asc' }, { key: 'asc' }] });
