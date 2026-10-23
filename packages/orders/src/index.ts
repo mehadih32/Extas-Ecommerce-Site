@@ -6,7 +6,8 @@
 // owner's reason list and refund REQUESTS for paid orders (PR 144; no money moves), the customer's own cancel
 // (CN-020 (5)), hold and release with a reason (PR 153), notes and internal flags (PR 147), the duplicate-order defence
 // with its review queue and decisions (PR 145), the order list and one order's page data, and the order timers that
-// only hand an order to a person. PR 563: the call queue every order's call tasks land in (calls.ts).
+// only hand an order to a person. PR 563: the call queue every order's call tasks land in (calls.ts). PR 127: "Add to
+// this parcel" — a line added to an order not yet with the courier, by the customer or the team (addon.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -20,3 +21,4 @@ export * from './duplicates';
 export * from './list';
 export * from './followups';
 export * from './calls';
+export * from './addon';

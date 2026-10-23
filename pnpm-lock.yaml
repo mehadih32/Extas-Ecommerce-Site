@@ -672,6 +672,9 @@ importers:
       '@extas/inventory':
         specifier: workspace:*
         version: link:../inventory
+      '@extas/rules':
+        specifier: workspace:*
+        version: link:../rules
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings

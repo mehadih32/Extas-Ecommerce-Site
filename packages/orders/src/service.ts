@@ -319,8 +319,11 @@ export function inventoryOf(deps: OrdersDeps): InventoryDeps {
   return { db: deps.db, settings: deps.settings, now: deps.now, connections: none };
 }
 
-/** D6 — the confirmed order goes to the ERP (an outbox row, sent by the relay; the practice ERP keeps it waiting). */
-export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder): Promise<string> {
+/**
+ * D6 — the confirmed order goes to the ERP (an outbox row, sent by the relay; the practice ERP keeps it waiting).
+ * PR 127: an order whose lines changed after it was sent goes again as `revision` 1, 2, … (its own idempotency key).
+ */
+export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder, revision?: number): Promise<string> {
   const items = await tx.orderItem.findMany({ where: { storeId: o.storeId, orderId: o.id, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { sku: true, quantity: true, unitPriceMinor: true, discountMinor: true } });
   const r = await enqueueOrderPush(
     inventoryOf(deps),
@@ -336,6 +339,7 @@ export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder): P
       codAmountMinor: o.codAmountMinor,
       paymentMethod: o.paymentMethod ?? 'COD',
       note: o.note,
+      ...(revision ? { revision } : {}),
     },
     { tx },
   );

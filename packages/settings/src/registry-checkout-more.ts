@@ -1,11 +1,12 @@
 // S04 · the rest of the customer-side checkout — PR 563 (no order is ever held over an address), PR 561 (the silent
-// address backfill). Registry version 34
+// address backfill), PR 127 ("Add to this parcel"). Registry version 34
 // (33 is the admin shell's). Labels: messages/checkout-more.<lang>.json. No admin screen yet (CN-019, CN-022): the keys
 // live in their sections (Checkout, Orders) and are set through the settings store until the new admin shell has them.
 //
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone. A check only adds a flag and a call
 // task for the team; the order is always taken (PR 563). The backfill only attaches an address the shop already holds,
-// for packing; it is never shown or prefilled (PR 561).
+// for packing; it is never shown or prefilled (PR 561). An added line is priced as its product page prices it and
+// changes nothing else on the order (PR 127).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -95,6 +96,22 @@ export const addressBackfillSchema = z
   })
   .strict();
 
+/**
+ * PR 127 — "Add to this parcel": the customer adds a piece to his own Cash on Delivery order from the thank-you page
+ * or his order page, as a real order line, until the owner's step (`until`: while the order is new, or also after
+ * the team confirms it, until picking starts) and, when set, `windowMinutes` after placing (0: no time limit). Never
+ * once a courier is booked. At most `maxLines` added lines of `maxUnits` pieces each. Off until the owner turns it on.
+ */
+export const addOnSchema = z
+  .object({
+    enabled: z.boolean(),
+    until: z.enum(['placed', 'confirmed']),
+    windowMinutes: z.int().min(0).max(10_080),
+    maxLines: z.int().min(1).max(20),
+    maxUnits: z.int().min(1).max(20),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, version: V } as const;
 
 export const checkoutMoreSettings = {
@@ -116,7 +133,17 @@ export const checkoutMoreSettings = {
     helpKey: 'checkout.address.backfill.help',
     sortOrder: 961,
   }),
+  'orders.addOn': setting({
+    ...json,
+    group: 'orders',
+    schema: addOnSchema,
+    default: { enabled: false, until: 'confirmed', windowMinutes: 0, maxLines: 3, maxUnits: 1 },
+    labelKey: 'orders.addOn.label',
+    helpKey: 'orders.addOn.help',
+    sortOrder: 962,
+  }),
 };
 
 export type AddressCheckSettings = z.output<typeof addressCheckSchema>;
 export type AddressBackfillSettings = z.output<typeof addressBackfillSchema>;
+export type AddOnSettings = z.output<typeof addOnSchema>;

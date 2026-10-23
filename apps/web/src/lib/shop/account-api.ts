@@ -11,6 +11,10 @@
 //   POST /api/account/cancel     {number, reasonKey, note?} → {outcome: cancelled|requested, status}  S05 · PR 144: his own
 //                                cancel (CN-020 (5)): one tap until the owner's cut-off, then a request until booking
 //   POST /api/account/cancel-state {number}                 → {mode: tap|request|requested|none, reasons}
+//   POST /api/account/parcel     {number}                   → {open, closed, lines, maxLines, maxUnits, dueMinor}
+//                                S04 · PR 127 "Add to this parcel": what his order may take now (`orders.addOn`)
+//   POST /api/account/parcel-add {number, variantId, quantity?, from?} → {status, …the same}  a real order line
+//   POST /api/account/parcel-remove {number, lineId}        → {status, …the same}  a piece he added, taken out again
 //   POST /api/account/test-code  {phone}                    → {code}   test servers only (EXTAS_SHOP_TEST_PAGES=1, mock SMS)
 //   POST /api/account/try                                   → {next}   test servers only: signed in as the sample account
 //
@@ -19,7 +23,7 @@
 import { askForCode, isAccountError, normalPhone, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
 import type { RequestContext } from '@extas/auth';
-import { customerCancel, customerCancelState, isOrdersError, type CustomerRef } from '@extas/orders';
+import { addOnState, customerAddOn, customerCancel, customerCancelState, customerRemoveAddOn, isOrdersError, type CustomerRef } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE } from './bag-model';
 import { mergeWishes, visitorOf } from './wishlist';
@@ -51,7 +55,7 @@ export function safeNext(raw: unknown, lang: ShopLang): string {
 /** A refusal in the account's own codes (with when to try again, or tries left). */
 export function accountRefusal(e: unknown): Response {
   if (isAccountError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ?? {}) }, { status: e.status });
-  if (isOrdersError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}) }, { status: e.status });
+  if (isOrdersError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data && 'closed' in e.data ? { closed: e.data.closed } : {}) }, { status: e.status });
   return errorResponse(e);
 }
 
@@ -132,14 +136,24 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         return json({ ok: true, consent });
       }
       case 'cancel':
-      case 'cancel-state': {
+      case 'cancel-state':
+      case 'parcel':
+      case 'parcel-add':
+      case 'parcel-remove': {
         // the order is his by his account or by this browser (a guest's order); anything else is "no such order"
         const auth = await customerOfRequest(request, a, deps.storeId);
         const who: CustomerRef = { storeId: deps.storeId, customerId: auth?.customer.id ?? null, visitorId: visitorOf(readCookie(request, BAG_COOKIE)) };
         if (!who.customerId && !who.visitorId) return fail(404, 'NOT_FOUND', ['number']);
         const od = { db: a.db, settings: a.settings, now: a.now };
-        if (action === 'cancel-state') return json({ ok: true, ...(await customerCancelState(od, who, text(b.number, 40))) });
+        const number = text(b.number, 40);
+        if (action === 'cancel-state') return json({ ok: true, ...(await customerCancelState(od, who, number)) });
+        if (action === 'parcel') return json({ ok: true, ...(await addOnState(od, who, number)) });
         const { lang: _lang, ...input } = b;
+        if (action === 'parcel-add' || action === 'parcel-remove') {
+          // PR 127: a real order line through the one order service; the answer is the window as it is now
+          const r = action === 'parcel-add' ? await customerAddOn(od, who, input) : await customerRemoveAddOn(od, who, input);
+          return json({ ok: true, status: r.status, ...(await addOnState(od, who, number)) });
+        }
         const r = await customerCancel(od, who, input);
         return json({ ok: true, outcome: r.outcome, status: r.status });
       }

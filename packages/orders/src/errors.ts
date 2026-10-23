@@ -16,7 +16,21 @@ export type OrdersErrorCode =
   /** The customer may not cancel this order himself (the owner's cut-off, or it is not his). */
   | 'CANCEL_NOT_ALLOWED'
   /** Two orders that cannot be put in one parcel (one is booked, finished or of another customer). */
-  | 'NOT_MERGEABLE';
+  | 'NOT_MERGEABLE'
+  /** PR 127: the customer's add-on window is closed (`data.closed` says why). */
+  | 'ADD_ON_CLOSED'
+  /** PR 127: no more lines or pieces may be added (the owner's limits), or this piece is already added. */
+  | 'ADD_ON_LIMIT'
+  /** PR 127: only a line added after placing is taken out this way. */
+  | 'ADD_ON_ONLY'
+  /** PR 127: lines are added to Cash on Delivery orders only (a prepaid order's extra amount needs a payment, S07). */
+  | 'NOT_COD'
+  /** PR 127: the piece is not on sale (unpublished, archived or without a price). */
+  | 'NOT_SELLABLE'
+  /** PR 127: not enough free pieces on the shared pool. */
+  | 'OUT_OF_STOCK'
+  /** PR 127: the delivery band's Cash on Delivery limit would be passed. */
+  | 'COD_LIMIT';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -42,6 +56,13 @@ export class OrdersError extends Error {
       case 'CANCEL_NOT_ALLOWED':
       case 'ADVANCE_SHORT':
       case 'NOT_MERGEABLE':
+      case 'ADD_ON_CLOSED':
+      case 'ADD_ON_LIMIT':
+      case 'ADD_ON_ONLY':
+      case 'NOT_COD':
+      case 'NOT_SELLABLE':
+      case 'OUT_OF_STOCK':
+      case 'COD_LIMIT':
         return 422;
       default:
         return 409;

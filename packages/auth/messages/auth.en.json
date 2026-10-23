@@ -109,7 +109,8 @@
         "read": "See the duplicate-order review queue",
         "decide": "Decide a duplicate-order review: not a duplicate, cancel, hold or ask the customer"
       },
-      "merge": "Put two open orders of one customer in one parcel (prices and charges stay as they are)"
+      "merge": "Put two open orders of one customer in one parcel (prices and charges stay as they are)",
+      "lines": "Add a line to an order not yet with the courier, or take out a line added after placing (priced as its product page; nothing else is priced again)"
     }
   },
   "totp": {

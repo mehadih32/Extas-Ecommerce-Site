@@ -101,6 +101,9 @@ export const PERMISSIONS = {
   'orders.risk.read': { group: 'orders' },
   'orders.risk.decide': { group: 'orders' },
   'orders.merge': { group: 'orders' },
+  // S04 · PR 127 — add a line to an order not yet with the courier, or take out a line added after placing ("Add to
+  // this parcel"): priced as its product page prices it, the order's COD amount grows by exactly that line.
+  'orders.lines': { group: 'orders' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

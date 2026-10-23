@@ -9,6 +9,8 @@
 //
 // Rules: the order never moves backwards (except hold → release, which goes back to where it was held from); a booked
 // order is never cancelled in one step (cancel after booking, D5); every refusal says which commands are open now.
+// PR 127: a line is added to (or an added line taken out of) an order only before a courier is booked — new or
+// confirmed, no cancel asked (SIM-F-004: an edit after booking would never reach the parcel, so it is refused).
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
@@ -49,6 +51,9 @@ export const ORDER_COMMANDS = [
   'refuseCancelRequest',
   // PR 147: the staff's internal flags (any state; the status stays)
   'setFlags',
+  // PR 127: "Add to this parcel" — a line added after placing, and an added line taken out again (the status stays)
+  'addLine',
+  'removeLine',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -90,6 +95,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   requestCancel: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED'],
   refuseCancelRequest: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED'],
   setFlags: ORDER_STATES.filter((s) => s !== 'DRAFT'),
+  addLine: ['PLACED', 'CONFIRMED'],
+  removeLine: ['PLACED', 'CONFIRMED'],
 };
 
 /** What the machine needs to know about an order (read under its row lock). */
@@ -171,6 +178,13 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
       return null;
     case 'refuseCancelRequest':
       return o.cancelRequested ? null : 'NO_CANCEL_REQUEST';
+    case 'addLine':
+    case 'removeLine':
+      // SIM-F-004: the parcel the courier has is the parcel; nothing is added once it is booked
+      if (o.booked) return 'BOOKED';
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      if (o.cancelRequested) return 'CANCEL_REQUESTED';
+      return null;
     case 'recordAdvance':
       return o.advanceRequiredMinor !== null && o.paidMinor < o.advanceRequiredMinor ? 'ADVANCE_SHORT' : null;
     case 'pack':
@@ -323,4 +337,30 @@ export function overlapOf(a: readonly LineFacts[], b: readonly LineFacts[]): { s
       if (best === null || severityRank(s) > severityRank(best)) best = s;
     }
   return best === null ? null : { severity: best, productIds: [...products] };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 127 — the customer's "Add to this parcel" window under the owner's switch (`orders.addOn`).
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** Why the customer may not add a piece now: switched off, not Cash on Delivery, past the owner's step or time, or the machine says no. */
+export type AddOnClosed = 'OFF' | 'NOT_COD' | 'STEP' | 'TIME' | 'BOOKED' | 'CANCEL';
+
+export interface AddOnConfig {
+  enabled: boolean;
+  /** "placed": while the order is new; "confirmed": also after the team confirms it, until picking starts. */
+  until: 'placed' | 'confirmed';
+  /** Minutes after placing (0: no time limit besides the step). */
+  windowMinutes: number;
+}
+
+/** The customer's add-on window for this order now (null: open). The machine's guards come first. */
+export function addOnClosedWhy(cfg: AddOnConfig, o: MachineOrder & { paymentMethod: string | null; placedAt: Date }, now: Date): AddOnClosed | null {
+  if (!cfg.enabled) return 'OFF';
+  if (o.paymentMethod !== 'COD') return 'NOT_COD';
+  const p = plan('addLine', o);
+  if (!p.ok) return p.code === 'BOOKED' ? 'BOOKED' : p.code === 'CANCEL_PENDING' || p.code === 'CANCEL_REQUESTED' ? 'CANCEL' : 'STEP';
+  if (cfg.until === 'placed' && o.status !== 'PLACED') return 'STEP';
+  if (cfg.windowMinutes > 0 && now.getTime() - o.placedAt.getTime() > cfg.windowMinutes * 60_000) return 'TIME';
+  return null;
 }

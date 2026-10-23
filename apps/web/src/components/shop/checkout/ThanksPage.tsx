@@ -11,6 +11,7 @@
 // with and that the code comes by SMS to it. Never a password (SIM-F-039); "You're logged in" when he ordered signed in.
 // PR 136: "Invoice · print or download" under the order's money opens its invoice (demo inv-btn), while invoices are on.
 // PR 565: a free order shows no band name and no "we call about the area" line, only its promise in hours.
+// PR 127: a line added after placing ("Add to this parcel") carries the demo's "Added" tag (ty_items).
 import '../bag/bag.css';
 import './checkout.css';
 import type { Receipt } from '@extas/checkout';
@@ -239,7 +240,18 @@ export async function ThanksPage({
                 <Thumb c={c} card={l.productId ? cards.get(l.productId) : undefined} colourKey={l.colour?.key || undefined} hex={l.colour?.hex ?? ''} alt={name} />
               </div>
               <div className="grow" style={{ minWidth: 0 }}>
-                <div className="small bold">{name}</div>
+                <div className="small bold">
+                  {name}
+                  {l.isAddOn ? (
+                    <>
+                      {' '}
+                      <span className="tag" data-testid="ty-addline">
+                        <Icon name="plus" size={12} />
+                        {w('ty.added')}
+                      </span>
+                    </>
+                  ) : null}
+                </div>
                 <div className="xs muted">{[l.colour ? colourName(l.colour, c.lang) : null, l.size, l.quantity > 1 ? `×${n(l.quantity)}` : null].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="small price">{m(l.amountMinor)}</div>
