@@ -18,7 +18,8 @@
     "inventory": "Stock and ERP",
     "rules": "Smart Rules",
     "combos": "Combos and sets",
-    "delivery": "Delivery areas and charges"
+    "delivery": "Delivery areas and charges",
+    "system": "Server and background jobs"
   },
   "permissions": {
     "settings": {
@@ -80,6 +81,9 @@
       "read": "See the delivery bands, their charges and hours, and the sub-area list",
       "charges": "Set each band's delivery charge, hours and COD limit, switch a band on or off, choose how the sub-area is charged",
       "areas": "Add places to the sub-area list or take them off (nothing is deleted)"
+    },
+    "system": {
+      "read": "See the Server page: is the background worker alive, and which jobs failed"
     }
   },
   "totp": {

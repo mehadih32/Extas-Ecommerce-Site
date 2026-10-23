@@ -37,7 +37,7 @@
 //   StaffUser, StaffSession, StaffLoginEvent, StaffPushSubscription             — staff span stores (A4.3)
 //   Role, Permission, RolePermission                                            — roles are shared (A4.3, PR 495)
 //   AdminIpAllowlistEntry                                                       — admin access (B6.5)
-//   IdempotencyKey, ScheduledJob                                                — system jobs
+//   IdempotencyKey, ScheduledJob, WorkerHeartbeat                               — system jobs and the worker (PR 6)
 //   GeoArea                                                                     — the national gazetteer, shared reference data (PR 549)
 //   Warehouse, InventoryLocation, StockLevel, LowStockAlert, StockAudit, StockAuditLine, LocalStockIntake
 //                                                                               — one shared stock pool for all stores (A4.4)
@@ -1005,26 +1005,40 @@ model ScheduledJob {
   runs JobRun[]
 }
 
-/// @stage S00 · PR 6 — one run of a job, including dead-lettered ones.
+/// @stage S00 · PR 6 — one attempt of a job, including dead-lettered ones (CN-022). The worker writes the row when the
+/// attempt starts (RUNNING) and closes it once: SUCCEEDED, FAILED with the reason and the next attempt, DEAD_LETTERED
+/// after the last try, or SKIPPED when the same idempotency key already succeeded (a retry never repeats a side effect).
+/// Rows are never deleted.
 /// @scope store-optional — per-store runs carry the store.
-/// @append-only
 model JobRun {
-  id         String       @id @default(uuid(7)) @db.Uuid
-  storeId    Int?
-  store      Store?       @relation(fields: [storeId], references: [id])
-  jobKey     String
-  job        ScheduledJob @relation(fields: [jobKey], references: [key])
-  queue      String
-  status     JobRunStatus
-  attempt    Int          @default(1)
-  startedAt  DateTime     @default(now()) @db.Timestamptz(3)
-  finishedAt DateTime?    @db.Timestamptz(3)
-  stats      Json?
-  error      String?
-  createdAt  DateTime     @default(now()) @db.Timestamptz(3)
+  id             String       @id @default(uuid(7)) @db.Uuid
+  storeId        Int?
+  store          Store?       @relation(fields: [storeId], references: [id])
+  jobKey         String
+  job            ScheduledJob @relation(fields: [jobKey], references: [key])
+  queue          String
+  status         JobRunStatus
+  attempt        Int          @default(1)
+  /// The run's identity (job, store, time slot or event): every attempt of one run carries the same key.
+  idempotencyKey String
+  /// The queue's own job id, and the job's small JSON payload.
+  queueJobId     String?
+  payload        Json?
+  maxAttempts    Int          @default(1)
+  /// When a FAILED attempt is tried again; null once it succeeded or was dead-lettered.
+  nextAttemptAt  DateTime?    @db.Timestamptz(3)
+  /// The worker process that ran this attempt (WorkerHeartbeat.workerKey).
+  workerKey      String?
+  startedAt      DateTime     @default(now()) @db.Timestamptz(3)
+  finishedAt     DateTime?    @db.Timestamptz(3)
+  stats          Json?
+  error          String?
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(3)
 
   @@index([jobKey, startedAt])
   @@index([status, startedAt])
+  @@index([idempotencyKey, startedAt])
 }
 
 enum JobRunStatus {
@@ -1033,6 +1047,31 @@ enum JobRunStatus {
   FAILED
   DEAD_LETTERED
   CANCELLED
+  SKIPPED
+}
+
+/// @stage S00 · PR 6 — one background worker process (CN-022): its heartbeat, whether it holds the scheduler lock and
+/// how many jobs it runs. The Server page says "stale" when the newest beat is older than `jobs.heartbeatStaleSeconds`.
+/// A stopped worker keeps its row (stoppedAt), so the page can tell "stopped" from "lost".
+/// @scope installation — the worker serves every store.
+model WorkerHeartbeat {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  /// hostname:pid:random, unique per process start.
+  workerKey  String    @unique
+  hostname   String
+  /// The commit the worker runs (GIT_SHA) and its blue/green colour.
+  version    String?
+  color      String?
+  queues     String[]
+  isLeader   Boolean   @default(false)
+  activeJobs Int       @default(0)
+  startedAt  DateTime  @db.Timestamptz(3)
+  beatAt     DateTime  @db.Timestamptz(3)
+  stoppedAt  DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([beatAt])
 }
 
 /// @stage S00 · PR 6 — transactional outbox: events written with the change, delivered to BullMQ by a relay.

@@ -35,7 +35,8 @@ record() { # record <result> <detail>  (the newest entry is last-deploy.json; hi
   jq -n --arg result "$1" --arg detail "$2" --arg image "${IMAGE:-}" --arg sha "${GIT_SHA:-}" \
     --arg color "${NEW:-}" --arg previous "${PREV_IMAGE:-}" --arg migrate "${MIGRATE_IMAGE:-}" --arg at "$(date -Is)" \
     --arg migration "$MIGRATION" --arg run "${EXTAS_DEPLOY_RUN_ID:-}" \
-    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run}' > "$f"
+    --arg worker "${WORKER_NOTE:-not reached}" \
+    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run,worker:$worker}' > "$f"
   cp "$f" "$STATE/last-deploy.json"
   [ "$1" = ok ] && cp "$f" "$STATE/last-good-deploy.json"
   RECORDED=1
@@ -67,10 +68,11 @@ public_health() { # one JSON line; the preview login reaches curl through a file
   rm -f "$body"
 }
 
-app() { # app <color> <compose args...>
+app() { # app <color> <compose args...>  (the web app and the background worker of one colour)
   local color="$1"; shift
   EXTAS_COLOR="$color" APP_IMAGE="$IMAGE_FOR_COLOR" EXTAS_ROOT="$R" EXTAS_NVME_MOUNT="$EXTAS_NVME_MOUNT" \
-    EXTAS_TIMEZONE="$EXTAS_TIMEZONE" \
+    EXTAS_TIMEZONE="$EXTAS_TIMEZONE" WORKER_IMAGE="${WORKER_IMAGE:-$IMAGE_FOR_COLOR}" WORKER_REPLICAS="${WORKER_REPLICAS:-0}" \
+    JOBS_REPLICA_MEM_MB="$JOBS_REPLICA_MEM_MB" JOBS_NODE_HEAP_MB="$JOBS_NODE_HEAP_MB" \
     docker compose -p "extas-app-$color" -f "$REPO/infra/stack/app.yml" --env-file "$R/config/profile.env" "$@"
 }
 
@@ -154,6 +156,33 @@ grep -q '^APP_NODE_HEAP_MB=' "$R/config/profile.env" || die "profile.env is olde
 [ -f "$SEC/app-connections.env" ] || install -m 0600 /dev/null "$SEC/app-connections.env"
 # The docs folder app.yml mounts read-only (PR 594, CN-011); deploy.yml fills it with docs-sync.sh before this runs.
 [ -d "$R/docs" ] || install -d -m 0755 "$R/docs"
+
+# ---- the background worker (PR 6, CN-022) ------------------------------------------------------------------------
+# It runs in each colour next to the web app, from the same commit's migrate image (extas-migrate:<tag>, which holds
+# the workspace sources), so it starts, is health-checked and rolls back together with the app. A version from before
+# the worker (a rollback) or a server whose queue store is not set up yet runs without it (0 copies), and the record
+# says so; the Server page then shows the heartbeat as stale.
+profile_get() { sed -n "s/^$1=//p" "$R/config/profile.env" | tail -n 1; }
+WORKER_IMAGE="${MIGRATE_IMAGE:-extas-migrate:${IMAGE##*:}}"
+WORKER_REPLICAS=0
+JOBS_REPLICAS="$(profile_get JOBS_REPLICAS)"; JOBS_REPLICAS="${JOBS_REPLICAS:-1}"
+JOBS_REPLICA_MEM_MB="$(profile_get JOBS_REPLICA_MEM_MB)"
+[ -n "$JOBS_REPLICA_MEM_MB" ] || JOBS_REPLICA_MEM_MB=$(( $(profile_get JOBS_MEM_MB) / JOBS_REPLICAS ))
+JOBS_NODE_HEAP_MB="$(profile_get JOBS_NODE_HEAP_MB)"
+# A profile.env from before PR 6 has no worker lines: the same split extas-profile makes, from server.conf.
+[ -n "$JOBS_NODE_HEAP_MB" ] || JOBS_NODE_HEAP_MB=$(( JOBS_REPLICA_MEM_MB * PROFILE_APP_HEAP_PCT / 100 ))
+if ! docker image inspect "$WORKER_IMAGE" >/dev/null 2>&1; then
+  WORKER_NOTE="off: image $WORKER_IMAGE is not on this server"
+elif ! docker run --rm --entrypoint test "$WORKER_IMAGE" -f /repo/packages/jobs/src/main.ts; then
+  WORKER_NOTE="off: this version has no background worker"
+elif ! grep -q '^REDIS_QUEUE_URL=' "$SEC/app-connections.env"; then
+  WORKER_NOTE="off: REDIS_QUEUE_URL is not in app-connections.env (run server-setup stack)"
+else
+  WORKER_REPLICAS="$JOBS_REPLICAS"
+  WORKER_NOTE="on: $WORKER_REPLICAS copy/copies from $WORKER_IMAGE"
+fi
+[ "$WORKER_REPLICAS" != 0 ] || WORKER_IMAGE="$IMAGE" # a service of 0 copies still needs an image name
+log "worker: $WORKER_NOTE"
 
 # ---- 0. the database: schema migrations, then the settings migration (PR 496) --------------------------------
 if [ -n "${MIGRATE_IMAGE:-}" ]; then

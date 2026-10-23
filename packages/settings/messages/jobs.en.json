@@ -1,0 +1,72 @@
+{
+  "jobs": {
+    "scheduler": {
+      "enabled": {
+        "label": "Run the scheduled background jobs",
+        "help": "The worker runs the stock pull, the cart-hold clean-up, the ERP documents and the stock check on their own timetable. Off stops every scheduled job; jobs already queued still finish."
+      },
+      "tickSeconds": {
+        "label": "Look at the timetable every (seconds)",
+        "help": "How often the scheduling worker checks which job is due and which ERP message is waiting."
+      }
+    },
+    "leader": {
+      "lockSeconds": {
+        "label": "Scheduler lock (seconds)",
+        "help": "Only one worker plans the jobs. It renews its lock well before this time runs out; if that worker stops, another one takes over after this many seconds."
+      }
+    },
+    "heartbeat": {
+      "everySeconds": {
+        "label": "Worker says it is alive every (seconds)",
+        "help": "Each worker writes a heartbeat this often; the Server page shows the newest one."
+      },
+      "staleSeconds": {
+        "label": "Call the worker stale after (seconds)",
+        "help": "When the newest heartbeat is older than this, the Server page warns that the worker is not answering."
+      }
+    },
+    "concurrency": {
+      "label": "Jobs at the same time (per worker)",
+      "help": "How many jobs one worker runs at once."
+    },
+    "lockSeconds": {
+      "label": "Job lock (seconds)",
+      "help": "A running job keeps its lock while its worker is alive. If the worker stops in the middle of a job, another worker runs it again after this many seconds; nothing is done twice."
+    },
+    "retry": {
+      "maxAttempts": {
+        "label": "Tries per job",
+        "help": "A failing job is tried this many times in all; after the last try it is listed as failed for good (dead letter) on the Server page."
+      },
+      "backoffBaseSeconds": {
+        "label": "First wait before trying again (seconds)",
+        "help": "The wait doubles after each failed try."
+      },
+      "backoffMaxSeconds": {
+        "label": "Longest wait before trying again (seconds)",
+        "help": "The doubling wait never goes above this."
+      }
+    },
+    "queue": {
+      "keepCompleted": {
+        "label": "Finished jobs kept in the queue",
+        "help": "How many finished jobs the queue store keeps for checking. Every run is also in the job history (JobRun), which is never deleted."
+      },
+      "keepFailed": {
+        "label": "Failed jobs kept in the queue",
+        "help": "How many failed jobs the queue store keeps. Every failure is also in the job history with its reason."
+      }
+    },
+    "serverPage": {
+      "failedHours": {
+        "label": "Failed jobs shown from the last (hours)",
+        "help": "The Server page lists failed jobs from this many hours back. A job that succeeded on a later try is not listed."
+      },
+      "failedLimit": {
+        "label": "Failed jobs shown at most",
+        "help": "The newest failures first."
+      }
+    }
+  }
+}

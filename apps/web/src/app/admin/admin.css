@@ -13,6 +13,8 @@
 @import './combos/combos.css';
 /* S06 · PR 550, 551 — the delivery page (bands, sub-area list, address check), same file for the same reason. */
 @import './delivery/delivery.css';
+/* S0A · PR 6 — the Server page (the background worker), same file for the same reason. */
+@import './server/server.css';
 
 .ad {
   /* colours (demo "classic" theme + admin shell) */

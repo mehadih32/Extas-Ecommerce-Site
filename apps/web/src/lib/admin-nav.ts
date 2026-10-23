@@ -19,6 +19,8 @@ export const ADMIN_GROUPS = ['catalogue', 'combos', 'inventory', 'rules', 'deliv
 export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'products', href: '/admin/products', icon: 'box', group: 'catalogue' },
   { key: 'publishQueue', href: '/admin/products/queue', icon: 'check', group: 'catalogue' },
+  // PR 6 — the Server page (demo #/admin/server): for now the background worker's part (heartbeat, leader, failed jobs)
+  { key: 'server', href: '/admin/server', icon: 'layers', group: 'system' },
   { key: 'integrations', href: '/admin/integrations', icon: 'lock', group: 'system' },
   // PR 28 — size charts (demo #/admin/size-charts)
   { key: 'sizeCharts', href: '/admin/size-charts', icon: 'ruler', group: 'catalogue' },

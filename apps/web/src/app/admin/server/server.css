@@ -1,0 +1,6 @@
+/* PR 6 — the Server page (demo #/admin/server), the background worker's part. Drawn with the stock pages' blocks
+   (stock.css: the verdict, the cards, the status pills, the lists; products.css: the counters); only what they lack is
+   here: a given-up job's pill and the leader's tag beside a worker's name. */
+.st-st.s-DEAD_LETTERED { background: var(--ad-warn-bg); color: var(--ad-sale); }
+.st-st.s-DEAD_LETTERED::before { background: var(--ad-sale); }
+.sv-leader { margin-left: 8px; vertical-align: 1px; }

@@ -7,6 +7,8 @@
 // - in CI on the production images against a fresh installation (tools/admin-login-e2e.sh), signed in as the first
 //   owner with the generated first password (E2E_EMAIL / E2E_PASSWORD_FILE), which it then changes.
 //   BASE=https://… [SMOKE_HTTP_USER=… SMOKE_HTTP_PASSWORD=…] SMOKE_OUT=<dir> node tools/smoke.mjs
+// Then, signed in, the extra checks of docs/qa/smoke.json `checks` (PR 6: the background worker's heartbeat is fresh
+// on the Server page).
 // Writes <SMOKE_OUT>/result.json, README.md and one screenshot per page and screen. Never prints or stores a password.
 // What it opens and the known exceptions are in docs/qa/smoke.json. Needs the `playwright` package (NODE_PATH).
 import { createHmac, randomBytes } from "node:crypto";
@@ -70,6 +72,49 @@ export function requestCounts(url, base, ignore) {
   }
   if (u.origin !== new URL(base).origin) return true;
   return !ignore.some((i) => u.pathname === i.path);
+}
+
+/**
+ * One extra check (docs/qa/smoke.json `checks`), signed in, after the pages: either a page's element must carry a
+ * value (`page` + `selector` + `attribute` + `equals`), or a request must get a given answer (`request` + `status`).
+ * A request check goes through the browser context's own request client (its cookies, never a page), so an answer
+ * the check expects to be a refusal is not counted as a failed request of a page. Returns the problem, or null.
+ */
+export function checkProblem(check, observed) {
+  const name = `check (PR ${check.pr}): ${check.what}`;
+  if (observed.error) return `${name}: ${observed.error}`;
+  if (check.request) {
+    return observed.status === check.status ? null : `${name}: answered ${observed.status}, expected ${check.status}`;
+  }
+  return observed.value === check.equals ? null : `${name}: ${check.selector} ${check.attribute} is "${observed.value ?? "missing"}", expected "${check.equals}"`;
+}
+
+/** Runs the extra checks with the signed-in page; returns their problems. */
+async function runChecks(page, base, checks) {
+  const out = [];
+  for (const check of checks) {
+    let observed;
+    try {
+      if (check.request) {
+        const r = await page.request.fetch(`${base}${check.request.path}`, {
+          method: check.request.method ?? "GET",
+          data: check.request.body,
+          headers: check.request.headers ?? {},
+          failOnStatusCode: false,
+        });
+        observed = { status: r.status() };
+      } else {
+        await page.goto(`${base}${check.page}`, { waitUntil: "load" });
+        const el = await page.waitForSelector(check.selector, { timeout: 15_000 });
+        observed = { value: await el.getAttribute(check.attribute) };
+      }
+    } catch (e) {
+      observed = { error: e instanceof Error ? e.message.split("\n")[0] : String(e) };
+    }
+    const p = checkProblem(check, observed);
+    if (p) out.push(p);
+  }
+  return out;
 }
 
 /** RFC 6238 code (HMAC-SHA1, 6 digits, 30 s), as packages/auth/src/totp.ts checks it. */
@@ -371,6 +416,9 @@ export async function runSmoke(opts) {
           rows.push(
             await visit(page, opts.base, ignore, path, vp.name, opts.out),
           );
+      // The extra checks once (they test the server, not the screen size).
+      if (vp === config.viewports[0])
+        problems.push(...(await runChecks(page, opts.base, config.checks ?? [])));
       await admin.close();
     }
   } finally {

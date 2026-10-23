@@ -5,7 +5,8 @@
 // (PR 33 import from a link, 36 back in stock, 39 product audit) theirs (admin-tools.<lang>.json), and the stock pages
 // (S09 · PR 202–207) theirs (admin-stock.<lang>.json, everything under `stock.*`), and Smart Rules with its notices
 // (S10 · PR 208–219) theirs (admin-rules.<lang>.json, everything under `rules.*`), and the combo pages (S03) theirs
-// (admin-combos.<lang>.json, everything under `combos.*` and their own error codes), merged in here.
+// (admin-combos.<lang>.json, everything under `combos.*` and their own error codes), and the Server page (PR 6) its
+// own (admin-server.<lang>.json, everything under `server.*`), merged in here.
 import bn from '../../messages/admin.bn.json';
 import en from '../../messages/admin.en.json';
 import productsBn from '../../messages/admin-products.bn.json';
@@ -18,6 +19,8 @@ import rulesBn from '../../messages/admin-rules.bn.json';
 import rulesEn from '../../messages/admin-rules.en.json';
 import combosBn from '../../messages/admin-combos.bn.json';
 import combosEn from '../../messages/admin-combos.en.json';
+import serverBn from '../../messages/admin-server.bn.json';
+import serverEn from '../../messages/admin-server.en.json';
 import type { Dict } from './i18n';
 
 export type AdminLang = 'bn' | 'en';
@@ -35,8 +38,8 @@ export function mergeDicts(a: Dict, b: Dict): Dict {
 }
 
 export const adminDicts: Record<AdminLang, Dict> = {
-  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn), combosBn),
-  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn), combosEn),
+  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn), combosBn), serverBn),
+  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn), combosEn), serverEn),
 };
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);

@@ -73,6 +73,9 @@ export const PERMISSIONS = {
   'delivery.read': { group: 'delivery' },
   'delivery.charges': { group: 'delivery' },
   'delivery.areas': { group: 'delivery' },
+  // S0A · PR 6 — the Server page: whether the background worker is alive, which one leads the scheduler, and the jobs
+  // that failed with their reason and next try. Seeing only; nothing here changes anything.
+  'system.read': { group: 'system' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
