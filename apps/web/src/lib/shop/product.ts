@@ -48,6 +48,8 @@ export interface ProductData {
   state: 'live' | 'ghost';
   reason: GhostReason | null;
   freeDelivery: boolean;
+  /** Follow-up 61 · the brand for search engines (C12.4: the real brand field); null = the store's own label. */
+  brandName: string | null;
   /** The first live tag's words ("Bestseller"). */
   tag: string | null;
   fit: string | null;
@@ -86,7 +88,7 @@ const productSelect = {
   careBn: true,
   descriptionEn: true,
   descriptionBn: true,
-  brand: { select: { isOwnLabel: true } },
+  brand: { select: { isOwnLabel: true, name: true, archivedAt: true } },
   fabric: { select: { nameEn: true, nameBn: true, gsm: true, careEn: true, careBn: true, archivedAt: true } },
   category: {
     select: {
@@ -271,6 +273,7 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
     state: page.state,
     reason: page.reason,
     freeDelivery: p.freeDelivery === true,
+    brandName: p.brand && !p.brand.isOwnLabel && !p.brand.archivedAt ? p.brand.name.trim() || null : null,
     tag: tags[0]?.tag.name ?? null,
     fit: facts.fit,
     fitNote: facts.fitNote,

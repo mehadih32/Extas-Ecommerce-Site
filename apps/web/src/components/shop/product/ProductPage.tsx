@@ -16,7 +16,7 @@ import { keysOf, SHOP_DICTS } from '@/lib/shop/dict';
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { telHref, waHref } from '@/lib/shop/links';
-import { shopMetadata } from '@/lib/shop/meta';
+import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { isBottom } from '@/lib/shop/pdp-chart';
 import { canonicalFor } from '@/lib/shop/pdp-colour';
 import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
@@ -27,14 +27,16 @@ import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
 import { trustFacts, trustItems } from '@/lib/shop/pdp-trust';
 import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
 import { productData } from '@/lib/shop/product';
-import { colourPath, nameParts, openingColour, productRoute, type PdpModel } from '@/lib/shop/product-model';
+import { colourPath, nameParts, NO_COLOUR, openingColour, productRoute, type PdpModel } from '@/lib/shop/product-model';
 import { toModel } from '@/lib/shop/product-view';
 import { COLOUR_QUERY, ROUTES } from '@/lib/shop/routes';
 import { categoryName } from '@/lib/shop/shell-model';
+import { breadcrumbLd, largestUrl, productLd } from '@/lib/shop/structured-data';
 import { AddedPanel } from '../bag/AddedPanel';
 import { CardDeskMount } from '../CardDeskMount';
 import '../bag/bag.css';
 import { HeartButton } from '../HeartButton';
+import { JsonLd } from '../JsonLd';
 import { Bold } from './Bold';
 import { PdpBuy, PdpDeskBar, PdpPhoneBar, type BuyLinks } from './PdpBuy';
 import { PdpColour } from './PdpColour';
@@ -55,6 +57,7 @@ import { PdpTrust } from './PdpTrust';
 import './pdp.css';
 
 const KEYS = [
+  'seo.structuredData',
   'pdp.page',
   'pdp.gallery',
   'pdp.colour',
@@ -315,6 +318,41 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   for (const [k, v] of Object.entries(search)) if (k !== 'added' && typeof v === 'string') keep.set(k, v);
   const closeHref = `${p.route.colour ? colourPath(productHref, p.route.colour) : productHref}${keep.size ? `?${keep.toString()}` : ''}`;
 
+  // ---- follow-up 61 · the product for search engines, from what this page shows: its trail, price and stock ----
+  const sd = set['seo.structuredData'];
+  const here = await shopOrigin();
+  const pageHref = p.route.colour ? colourPath(productHref, p.route.colour) : productHref;
+  const ldVariants = p.route.colour ? data.variants.filter((v) => v.colour === p.route.colour) : data.variants;
+  const ld = here ? (
+    <JsonLd
+      data={[
+        sd.breadcrumbs
+          ? breadcrumbLd(here, [
+              { name: t('pdp.home'), href: hrefIn(lang, ROUTES.home) },
+              ...(cat ? [{ name: categoryName(cat, lang), href: hrefIn(lang, ROUTES.category(cat.slug)) }] : []),
+              { name: m.name, href: pageHref },
+            ])
+          : null,
+        sd.product
+          ? productLd(here, {
+              name: m.name,
+              href: pageHref,
+              description,
+              images: (m.shots[colour ?? NO_COLOUR] ?? []).flatMap((x) => {
+                const u = largestUrl(x.photo);
+                return u ? [u] : [];
+              }),
+              brand: data.brandName ?? c.storeName,
+              category: cat ? categoryName(cat, lang) : null,
+              currency: c.s['store.currency'],
+              onSale: data.state === 'live',
+              variants: ldVariants,
+            })
+          : null,
+      ]}
+    />
+  ) : null;
+
   return (
     <PdpRoot env={env} initial={{ colour, size: m.sizes.length === 1 ? m.sizes[0]!.key : null }}>
       <div className="pdp-page pdp-tpl-T1" data-testid="pdp" data-template="T1" data-state={data.state}>
@@ -426,6 +464,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
           />
         ) : null}
         <PdpEffects />
+        {ld}
         {/* follow-up 21: the rows' cards get the back view and Quick add on a computer with a mouse */}
         <CardDeskMount c={c} />
       </div>
