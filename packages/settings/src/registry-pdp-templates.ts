@@ -1,9 +1,10 @@
-// S02 · the product page templates — PR 52 (which template a page uses: the product's own choice at upload, else its
-// category's, else the shop's default). Registry version 28. Labels: messages/pdp-templates.<lang>.json.
+// S02 · the product page templates — PR 50 (T2, the stacked gallery) and PR 52 (which template a page uses: the
+// product's own choice at upload, else its category's, else the shop's default). Registry version 28. Labels:
+// messages/pdp-templates.<lang>.json.
 //
-// The defaults reproduce the approved V12.2 demo (docs/demo/src/30-product.js, 02-core.js pdpTemplateFor; Blueprint
-// D3.7 / D4.2: "T1 Classic / T2 Editorial / T3 Fit-first per category or product, default T1"). CN-018: every choice is
-// a setting.
+// The defaults reproduce the approved V12.2 demo (docs/demo/src/30-product.js pdp_galleryT2, 02-core.js
+// pdpTemplateFor; Blueprint D3.7 / D4.2: "T1 Classic / T2 Editorial / T3 Fit-first per category or product, default
+// T1"). CN-018: every choice is a setting.
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -28,6 +29,23 @@ export const pdpTemplatesSchema = z
     /** `?template=T2` on a product address shows that template (the admin's preview, PR 52); search engines are sent
      * to the plain address and never index it. */
     preview: z.boolean(),
+    /** T2 · the stacked gallery (PR 50). */
+    t2: z
+      .object({
+        /** Phone: each photo's share of the strip's width, so the next one peeks in (demo 88 %). */
+        peekPct: z.int().min(60).max(100),
+        /** Computer: the photos stacked in this many columns beside the buy column. */
+        deskColumns: z.int().min(1).max(3),
+        /** Computer: the buy column's width, px (demo 410). */
+        deskBuyPx: z.int().min(320).max(560),
+        /** Phone: the thumbnail strip under the photos. */
+        thumbs: z.boolean(),
+        /** The editorial title: the display face, a size larger. */
+        editorialTitle: z.boolean(),
+        /** The page on the plain surface colour instead of the shop's background. */
+        surface: z.boolean(),
+      })
+      .strict(),
   })
   .strict();
 
@@ -37,7 +55,13 @@ export const pdpTemplateSettings = {
   'pdp.templates': setting({
     ...json,
     schema: pdpTemplatesSchema,
-    default: { default: 'T1', byCategory: {}, perProduct: true, preview: true },
+    default: {
+      default: 'T1',
+      byCategory: {},
+      perProduct: true,
+      preview: true,
+      t2: { peekPct: 88, deskColumns: 2, deskBuyPx: 410, thumbs: true, editorialTitle: true, surface: true }, // hardcode-ok: the demo's T2 strip (88 %) and its 410 px buy column
+    },
     labelKey: 'pdp.templates.label',
     helpKey: 'pdp.templates.help',
     sortOrder: 130,

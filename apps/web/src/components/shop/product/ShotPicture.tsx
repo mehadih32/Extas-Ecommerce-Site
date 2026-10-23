@@ -26,7 +26,7 @@ export function ShotPicture({
   sizes: string;
   alt: string;
   lang: 'en' | 'bn';
-  ratio?: 'ratio-45' | 'ratio-11' | null;
+  ratio?: 'ratio-45' | 'ratio-34' | 'ratio-11' | null;
   priority?: boolean;
   className?: string;
   style?: CSSProperties;

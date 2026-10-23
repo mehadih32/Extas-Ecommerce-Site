@@ -2,7 +2,8 @@
 // then the buy column (title and heart, price row, colours, sizes, stock line, the buttons, the promise row), then
 // Delivery · Exchange · Returns and the details, with the buy bar held at the bottom of the screen; on a computer the
 // photos on the left, the buy column on the right (sticky), the details under it, and the slim bar once the buttons
-// have scrolled away. Templates T2 and T3 draw as T1 until they are built. A product taken off sale keeps its page,
+// have scrolled away. PR 50: template T2 (Editorial) stacks the photos (PdpGallery) beside a narrower buy column, on the
+// plain surface with the editorial title, each on its own switch (`pdp.templates.t2`). A product taken off sale keeps its page,
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
 // one state (PdpRoot); the rest is drawn here.
 import type { Metadata } from 'next';
@@ -161,6 +162,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
 
   // ---- PR 52 · which template: the product's own, its category's, the shop's default (or the admin's preview) ----
   const tpl = templateFor(set['pdp.templates'], data, data.categoryChain, one(search[TEMPLATE_QUERY])).template;
+  const t2 = set['pdp.templates'].t2;
+  const tplClass = tpl === 'T2' ? `${t2.surface ? ' pdp-t2surf' : ''}${t2.editorialTitle ? ' pdp-t2ed' : ''}` : '';
 
   // ---- PR 61 · price row ----
   const pr = set['pdp.price'];
@@ -374,7 +377,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
 
   return (
     <PdpRoot env={env} initial={{ colour, size: m.sizes.length === 1 ? m.sizes[0]!.key : null }}>
-      <div className={`pdp-page pdp-tpl-${tpl}`} data-testid="pdp" data-template={tpl} data-state={data.state}>
+      <div className={`pdp-page pdp-tpl-${tpl}${tplClass}`} data-testid="pdp" data-template={tpl} data-state={data.state}>
         <div className="container pdp-top">
           {set['pdp.page'].breadcrumb ? (
             <nav className="crumbs pdp-crumbs" aria-label={t('pdp.breadcrumb')}>
@@ -391,9 +394,12 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               </span>
             </nav>
           ) : null}
-          <div className="pdp-grid">
+          <div
+            className={`pdp-grid${tpl === 'T2' ? ' t2' : ''}`}
+            style={tpl === 'T2' ? ({ '--pdp-t2buy': `${t2.deskBuyPx}px` } as React.CSSProperties) : undefined}
+          >
             <div className="pdp-g">
-              <PdpGallery badge={badge} lang={lang} />
+              <PdpGallery badge={badge} lang={lang} template={tpl} t2={t2} />
             </div>
             <div className="pdp-b sticky-d" id="pdp-buy">
               <div className="pdp-sec pdp-head">

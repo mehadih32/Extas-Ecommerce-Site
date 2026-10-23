@@ -4,7 +4,11 @@
 // scroll the same strip and the strip's position is the one truth for which photo is showing (demo P1). The first photo
 // carries the tag or the discount and, on its own switch, the "Only N left" line where the eye lands first (39). A tap,
 // a double tap or a two-finger touch opens the full-screen viewer (PR 54 · 31-zoom.js).
+// PR 50 — template T2, the stacked gallery (demo pdp_galleryT2): on a phone the same strip with the next photo peeking
+// in (`pdp.templates.t2.peekPct`), taller 3:4 photos, no arrows, the thumbnails under it; on a computer every photo
+// stacked in `deskColumns` columns beside the buy column, no thumbnails. One swipe engine for every template (demo P1).
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { PdpTemplate, PdpTemplatesSettings } from '@extas/settings';
 import { Icon } from '../Icon';
 import { nearestTile, stepTo, thumbsShown } from '@/lib/shop/pdp-gallery';
 import { lowStock } from '@/lib/shop/pdp-stock';
@@ -18,7 +22,18 @@ export interface GalleryBadge {
   sale: boolean;
 }
 
-export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 'en' | 'bn' }) {
+export function PdpGallery({
+  badge,
+  lang,
+  template = 'T1',
+  t2,
+}: {
+  badge: GalleryBadge | null;
+  lang: 'en' | 'bn';
+  template?: PdpTemplate;
+  t2?: PdpTemplatesSettings['t2'];
+}) {
+  const stacked = template === 'T2';
   const { m, set, choice, w, num } = usePdp();
   const key = choice.colour ?? NO_COLOUR;
   const shots: PdpShot[] = m.shots[key] ?? m.shots[NO_COLOUR] ?? [];
@@ -64,7 +79,7 @@ export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 
   const mainRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState<number | null>(null);
-  const side = set.gallery.thumbsDesktop === 'side';
+  const side = !stacked && set.gallery.thumbsDesktop === 'side';
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
     const measure = () => {
@@ -93,7 +108,9 @@ export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 
   const n = shots.length;
   // the "+N" tile is a computer-only cut (the phone's strip scrolls); null fit = phone or not measured: all shown
   const cut = fit === null ? { shown: n, more: 0 } : thumbsShown(n, set.gallery.thumbsMax, fit);
-  const trim = set.gallery.desktopTrimPx;
+  const trim = stacked ? 0 : set.gallery.desktopTrimPx;
+  const arrows = !stacked && set.gallery.arrows;
+  const thumbs = set.gallery.thumbs && (!stacked || (t2?.thumbs ?? true));
   const open = (i: number) => (set.gallery.zoom ? setZoomAt(i) : undefined);
   const fromTile = (e: React.SyntheticEvent, i: number) => {
     if ((e.target as HTMLElement).closest('button, a')) return;
@@ -102,11 +119,17 @@ export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 
 
   return (
     <div
-      className={`pdp-gal pdp-galT1${side ? ' vert' : ' pdp-below'}${trim > 0 ? ' trim' : ''}`}
-      style={trim > 0 ? ({ '--pdp-gtrim': `${trim}px` } as React.CSSProperties) : undefined}
+      className={stacked ? 'pdp-gal pdp-galT2w' : `pdp-gal pdp-galT1${side ? ' vert' : ' pdp-below'}${trim > 0 ? ' trim' : ''}`}
+      style={
+        stacked
+          ? ({ '--pdp-peek': `${t2?.peekPct ?? 88}%`, '--pdp-t2cols': String(t2?.deskColumns ?? 2) } as React.CSSProperties)
+          : trim > 0
+            ? ({ '--pdp-gtrim': `${trim}px` } as React.CSSProperties)
+            : undefined
+      }
     >
-      <div className="pdp-main" id="pdp-main" ref={mainRef}>
-        <div className="pdp-trk" id="pdp-trk" ref={trk} role="group" aria-label={w('photos')} onScroll={onScroll}>
+      <div className={`pdp-main${stacked ? ' t2' : ''}`} id="pdp-main" ref={mainRef}>
+        <div className={`pdp-trk${stacked ? ' t2 pdp-galT2' : ''}`} id="pdp-trk" ref={trk} role="group" aria-label={w('photos')} onScroll={onScroll}>
           {shots.map((s, i) => (
             <div
               key={s.id}
@@ -130,9 +153,10 @@ export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 
                 garment={m.garment}
                 hex={hex}
                 slot="main"
-                sizes="(max-width: 1023px) 100vw, 50vw"
+                sizes={stacked ? '(max-width: 1023px) 90vw, 30vw' : '(max-width: 1023px) 100vw, 50vw'}
                 alt={set.gallery.zoom ? '' : altOf(s)}
                 lang={lang}
+                ratio={stacked ? 'ratio-34' : 'ratio-45'}
                 priority={i === 0}
               />
               {i === 0 && badge && set.gallery.badge ? <span className={`badge-img${badge.sale ? ' sale' : ''}`}>{badge.text}</span> : null}
@@ -151,7 +175,7 @@ export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 
             </div>
           ))}
         </div>
-        {set.gallery.arrows && n > 1 ? (
+        {arrows && n > 1 ? (
           <>
             <button
               type="button"
@@ -176,7 +200,7 @@ export function PdpGallery({ badge, lang }: { badge: GalleryBadge | null; lang: 
           </>
         ) : null}
       </div>
-      {set.gallery.thumbs && n > 1 ? (
+      {thumbs && n > 1 ? (
         <div className={`pdp-thumbs n${n}`} role="group" aria-label={w('photos')} ref={thumbsRef}>
           {shots.map((s, i) => {
             const hid = cut.more > 0 && i >= cut.shown;
