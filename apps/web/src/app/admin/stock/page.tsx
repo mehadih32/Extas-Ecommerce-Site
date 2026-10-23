@@ -203,7 +203,7 @@ export default async function StockPage() {
             <ul className="st-list">
               {low.items.map((a) => (
                 <li key={a.alertId} className="st-li">
-                  <span className={a.available === 0 ? 'st-n zero' : 'st-n'}>{num(a.available)}</span>
+                  <span className={a.available <= 0 ? 'st-n zero' : 'st-n'}>{num(a.available)}</span>
                   <span className="st-li-main">
                     <Link className="st-name" href={productHref(a.productId)}>
                       {nameIn(view.lang, { nameEn: a.productName.en, nameBn: a.productName.bn })}

@@ -7,7 +7,8 @@
 // - PR 197, 198 one global hold on the shared pool with row locking (reservations.ts);
 // - PR 199, 200 business documents to the ERP through an idempotent outbox (erp-push.ts);
 // - PR 201 warehouses and locations with the damaged bin (locations.ts);
-// - PR 202 low-stock alerts on the shared number (low-stock.ts);
+// - PR 202 low-stock alerts on the shared number (low-stock.ts); follow-up 16: a balance below zero is shown as it is
+//   and raises shortage cards that block booking until a person decides (shortage.ts);
 // - PR 203 the stock count by barcode (stock-audit.ts);
 // - PR 204 the publishing queue driven by ERP stock (publish-queue.ts);
 // - PR 205 the sync health panel (sync-health.ts); PR 206 manual re-sync (resync.ts);
@@ -28,6 +29,7 @@ export * from './stock-pull';
 export * from './reservations';
 export * from './erp-push';
 export * from './low-stock';
+export * from './shortage';
 export * from './stock-audit';
 export * from './publish-queue';
 export * from './sync-health';

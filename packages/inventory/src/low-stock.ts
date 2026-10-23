@@ -2,7 +2,8 @@
 // suggestions are raised once on the shared number, not three times"; Bhandari B03).
 //
 // - The shared number of an SKU: what can be sold of it over every live location of a sellable kind — the ERP's
-//   available minus the shop's holds, pool by pool, counted once however many stores sell the SKU.
+//   available minus the shop's holds, pool by pool, counted once however many stores sell the SKU. Never clipped at
+//   zero (follow-up 16, SIM-F-006): a short SKU shows −1, never 0.
 // - Threshold: `inventory.lowStock.skuThresholds[sku]`, else `inventory.lowStock.defaultThreshold`. At or below it the
 //   SKU has one open LowStockAlert (on the variant of the lowest store id that sells it); above it the alert is
 //   resolved. A change of the number while low updates the open alert; nothing is ever deleted.
@@ -23,6 +24,22 @@ export function sharedSellable(rows: PoolRow[], kinds: Set<LocationKindName>): M
     if (!p.live || !kinds.has(p.kind)) continue;
     const held = Math.max(...p.rows.map((r) => r.cartReserved));
     out.set(p.sku, (out.get(p.sku) ?? 0) + Math.max(0, p.available - held));
+  }
+  return out;
+}
+
+/**
+ * Follow-up 16 (SIM-F-006): the shared balance per SKU — Σ (available − holds) over every live sellable pool, NEVER
+ * clipped at zero. Below zero means more is promised than exists (an ERP sync took stock away under open orders); that
+ * number is shown as it is (−1, never 0) and raises the shortage cards (shortage.ts). `sharedSellable` stays the
+ * selling number (what a customer may still take), which is never below zero.
+ */
+export function sharedBalance(rows: PoolRow[], kinds: Set<LocationKindName>): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const p of poolsOf(rows).values()) {
+    if (!p.live || !kinds.has(p.kind)) continue;
+    const held = Math.max(...p.rows.map((r) => r.cartReserved));
+    out.set(p.sku, (out.get(p.sku) ?? 0) + p.available - held);
   }
   return out;
 }
@@ -77,7 +94,8 @@ export async function evaluateLowStock(deps: InventoryDeps, opts: { skus?: strin
   const db = deps.db;
   const rows = await poolRows(db, opts.skus ?? null);
   const known = new Set(rows.filter((r) => r.live && kinds.has(r.kind)).map((r) => r.sku));
-  const sellable = sharedSellable(rows, kinds);
+  // Follow-up 16: the balance, never clipped, so a short SKU reads −1 on its alert, not 0.
+  const sellable = sharedBalance(rows, kinds);
   const variants = await db.productVariant.findMany({ where: { sku: { in: [...known] } }, select: { id: true, sku: true, storeId: true, archivedAt: true }, orderBy: [{ storeId: 'asc' }, { id: 'asc' }] });
   const canonical = new Map<string, string>();
   for (const v of variants) if (!v.archivedAt && !canonical.has(v.sku)) canonical.set(v.sku, v.id);
