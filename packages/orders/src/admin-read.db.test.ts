@@ -101,6 +101,18 @@ describe.skipIf(!HAS_TEST_DB)('the admin order screens read on PostgreSQL (S05 U
     expect((await orderHistory(d(), f.staff, randomUUID(), 5)).matchedBy).toBeNull();
   });
 
+  it('PR 154 search: Bengali digits, part of a phone, the tracking number, the name, the number in any case', async () => {
+    const found = async (q: string) => (await listOrders(d(), f.staff, { q, limit: 100 })).rows.map((r) => r.id);
+    const other = (await found('01700000999'))[0]!; // hardcode-ok: the made-up test number placed above
+    expect(await found('০১৭০০০০০৯৯৯')).toEqual([other]);
+    expect(await found('+880 1700-000999')).toEqual([other]);
+    expect(await found('0999')).toEqual([other]);
+    expect(await found('trk-140')).toEqual([plain.orderId]);
+    expect(await found(plain.number.toLowerCase())).toEqual([plain.orderId]);
+    expect((await found('test cust')).length).toBeGreaterThanOrEqual(5);
+    expect(await found('nobody by this name')).toEqual([]);
+  });
+
   it('the names in the timeline and the linked order numbers, in this store only', async () => {
     const staffId = (f.staff.actor as { staffUserId: string }).staffUserId;
     const names = await staffNames(d(), f.staff, [staffId, null, staffId, randomUUID()]);

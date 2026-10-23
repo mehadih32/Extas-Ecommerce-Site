@@ -4,15 +4,16 @@
 //   - Settings: the cards of built pages that hold settings (delivery bands, the sub-area list, keys & connections,
 //     the stock and ERP panels), opening the page at the card;
 //   - Products: name (English or Bengali), SKU or barcode (needs `catalogue.read`);
-//   - Orders: order number or phone in any form (01…, +880…, Bengali digits) — opens the order's invoice page, the order
-//     page that exists today (needs `orders.invoice`; the order screens of S05 take over the link);
-//   - Customers: name or phone (also `orders.invoice`, the key that already shows customers' details) — opens their
-//     latest order;
+//   - Orders: order number, phone in any form (01…, +880…, part of it, Bengali digits), name or the courier's tracking
+//     number (PR 154, the same search as the order list: @extas/orders orderSearchWhere) — opens the admin order page
+//     with `orders.read`, or the invoice with `orders.invoice` only;
+//   - Customers: name or phone (`orders.read` or `orders.invoice`) — opens their latest order the same way;
 //   - Actions (">"): only those the person may do; Help ("?"): the guide of each section they can see.
-// "#" searches order numbers only. Bengali digits count as digits. Store-aware: one store's records only.
+// "#" jumps to an order (number, phone, name or tracking number) from the first character. Bengali digits count as digits. Store-aware: one store's records only.
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { connectionCatalogue } from '@extas/adapters';
 import type { PermissionKey } from '@extas/auth';
+import { orderSearchWhere } from '@extas/orders';
 import deliveryBn from '../../../messages/admin-delivery.bn.json';
 import deliveryEn from '../../../messages/admin-delivery.en.json';
 import { adminDicts, type AdminLang } from '../admin-i18n';
@@ -179,20 +180,28 @@ async function productItems(ctx: SearchContext, q: string): Promise<SearchItem[]
 
 const invoiceHref = (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice`;
 
-async function orderItems(ctx: SearchContext, q: string, digits: string, numbersOnly: boolean): Promise<SearchItem[]> {
+/** Where an order opens from the palette: its admin page with `orders.read`, else its invoice (`orders.invoice`). */
+export const paletteOrderHref = (v: ShellViewer, o: { id: string; number: string }) => (has(v, 'orders.read') ? `/admin/orders/${o.id}` : invoiceHref(o.number));
+
+async function orderItems(ctx: SearchContext, q: string): Promise<SearchItem[]> {
   if (!ctx.db || !q) return [];
   const phone = phoneNormalizeBD(q);
-  const or: Prisma.OrderWhereInput[] = [{ number: { contains: q, mode: 'insensitive' } }];
-  if (!numbersOnly && phone.ok) or.push({ phone: { in: [phone.e164, phone.digits, phone.nice] } }, { customer: { phone: phone.e164 } });
-  if (!numbersOnly && !phone.ok && !digits && q.length >= ctx.limits.minChars) or.push({ customerName: { contains: q, mode: 'insensitive' } });
+  // PR 154: the order list's own search (number, phone digits, name, tracking number), plus the customer account's phone.
+  const or: Prisma.OrderWhereInput[] = [orderSearchWhere(q), ...(phone.ok ? [{ customer: { phone: phone.e164 } }] : [])];
   const rows = await ctx.db.order.findMany({
-    where: { storeId: ctx.storeId, status: { not: 'DRAFT' }, OR: or },
+    where: { storeId: ctx.storeId, status: { not: 'DRAFT' }, archivedAt: null, OR: or },
     orderBy: { placedAt: 'desc' },
     take: ctx.limits.perGroup,
-    select: { number: true, customerName: true, status: true },
+    select: { id: true, number: true, customerName: true, status: true },
   });
   const d = adminDicts[ctx.lang];
-  return rows.map((o) => ({ label: o.customerName ? `${o.number} · ${o.customerName}` : o.number, sub: t(d, 'shell.palette.invoice'), href: invoiceHref(o.number), icon: 'bag' as const }));
+  const admin = has(ctx.viewer, 'orders.read');
+  return rows.map((o) => ({
+    label: o.customerName ? `${o.number} · ${o.customerName}` : o.number,
+    sub: admin ? t(d, `orders.st.${o.status}`) : t(d, 'shell.palette.invoice'),
+    href: paletteOrderHref(ctx.viewer, o),
+    icon: 'bag' as const,
+  }));
 }
 
 async function customerItems(ctx: SearchContext, q: string, digits: string): Promise<SearchItem[]> {
@@ -204,12 +213,12 @@ async function customerItems(ctx: SearchContext, q: string, digits: string): Pro
     where: { storeId: ctx.storeId, archivedAt: null, erasedAt: null, ...where },
     orderBy: { lastOrderAt: { sort: 'desc', nulls: 'last' } },
     take: ctx.limits.perGroup,
-    select: { name: true, orderCount: true, orders: { where: { status: { not: 'DRAFT' } }, orderBy: { placedAt: 'desc' }, take: 1, select: { number: true } } },
+    select: { name: true, orderCount: true, orders: { where: { status: { not: 'DRAFT' } }, orderBy: { placedAt: 'desc' }, take: 1, select: { id: true, number: true } } },
   });
   const d = adminDicts[ctx.lang];
   return rows.flatMap((c) => {
     const last = c.orders[0];
-    return last ? [{ label: c.name || last.number, sub: t(d, 'shell.palette.orders', { n: c.orderCount }), href: invoiceHref(last.number), icon: 'users' as const }] : [];
+    return last ? [{ label: c.name || last.number, sub: t(d, 'shell.palette.orders', { n: c.orderCount }), href: paletteOrderHref(ctx.viewer, last), icon: 'users' as const }] : [];
   });
 }
 
@@ -249,8 +258,8 @@ export async function adminSearch(ctx: SearchContext, raw: string): Promise<Sear
   if (records && ctx.db) {
     const [products, orders, customers] = await Promise.all([
       !mode && has(v, 'catalogue.read') ? productItems(ctx, q) : [],
-      has(v, 'orders.invoice') ? orderItems(ctx, q, digits, mode === '#') : [],
-      !mode && has(v, 'orders.invoice') ? customerItems(ctx, q, digits) : [],
+      has(v, 'orders.read') || has(v, 'orders.invoice') ? orderItems(ctx, q) : [],
+      !mode && (has(v, 'orders.read') || has(v, 'orders.invoice')) ? customerItems(ctx, q, digits) : [],
     ]);
     add('orders', orders);
     add('products', products);

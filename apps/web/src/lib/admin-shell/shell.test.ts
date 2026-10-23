@@ -13,7 +13,7 @@ import { ageOf, hourIn, partOfDay, rangeOf, startHref, startSection, trend } fro
 import { guideDir, parseInline, parseMarkdown, readGuide, type Block } from './guide';
 import { initialsOf } from './model';
 import { badgesFrom, QUEUES, visibleQueues, type QueueCount } from './queues';
-import { parseQuery } from './search';
+import { paletteOrderHref, parseQuery } from './search';
 import { GUIDE_SLUGS, locate, locateKey, placeholderSections, sectionById, sectionHome, sectionVisible, SHELL_SECTIONS, visibleTabs, type ShellViewer } from './sections';
 
 function keys(d: Dict, prefix = ''): string[] {
@@ -156,6 +156,13 @@ describe('search query and the Dashboard helpers', () => {
     expect(parseQuery('#১২৩')).toMatchObject({ mode: '#', digits: '123' });
     expect(parseQuery('> new')).toMatchObject({ mode: '>', q: 'new' });
     expect(parseQuery('x'.repeat(200)).q).toHaveLength(80);
+  });
+
+  it('PR 154: an order opens its admin page with orders.read, else its invoice', () => {
+    const o = { id: 'o-1', number: 'EX-1/2' };
+    expect(paletteOrderHref(viewer(['orders.read']), o)).toBe('/admin/orders/o-1');
+    expect(paletteOrderHref(viewer([], true), o)).toBe('/admin/orders/o-1');
+    expect(paletteOrderHref(viewer(['orders.invoice']), o)).toBe('/account/orders/EX-1%2F2/invoice');
   });
 
   it('start page: the first role that has one, only when the person may open it', () => {
