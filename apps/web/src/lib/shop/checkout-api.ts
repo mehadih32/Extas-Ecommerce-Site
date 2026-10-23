@@ -5,6 +5,7 @@
 import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { CartError } from '@extas/cart';
+import { screenOrder } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -65,6 +66,19 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
   }
 }
 
+/**
+ * S05 · PR 145 — the duplicate check the moment the order lands (layer 2: another open order of the same customer that
+ * looks alike waits in the team's review queue). It never fails the customer's order: a problem is logged and the order
+ * stays placed (the team can still see both orders).
+ */
+async function screenForDuplicates(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await screenOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`duplicate check: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
 /** Where the page goes after the order or a payment answer, in its language. */
 export const nextHref = (lang: ShopLang, next: PlaceNext, number: string): string => hrefIn(lang, next === 'pay' ? ROUTES.checkoutPay(number) : ROUTES.thanks(number));
 
@@ -82,6 +96,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const [{ visitor }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
     if (!visitor) return fail(409, 'EMPTY');
     const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip: requestContext(request).ip ?? null, input: b });
+    if (!r.replay) await screenForDuplicates(deps, r.orderId);
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });
     const headers = new Headers();
