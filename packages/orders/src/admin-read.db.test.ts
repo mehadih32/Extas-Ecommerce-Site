@@ -1,11 +1,11 @@
-// S05 · PR 140 (and 141, 154) on a real PostgreSQL (a throwaway database with the real migrations and the sample store;
+// S05 · PR 140, 141 (and 154) on a real PostgreSQL (a throwaway database with the real migrations and the sample store;
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): what the admin's order screens read
 // beside the order service's own list — the "to confirm" view, the payment and channel filters, each row's courier,
 // pieces and return/refund chip, and the oldest order of a view. Nothing here changes an order. Made-up test values.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { cancelOrder, listExtras, listOrders, returnRefundState, viewOldest } from './index';
+import { cancelOrder, listExtras, listOrders, orderHistory, orderNumbers, returnRefundState, staffNames, viewOldest } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 describe('the return / refund chip (no database)', () => {
@@ -87,9 +87,34 @@ describe.skipIf(!HAS_TEST_DB)('the admin order screens read on PostgreSQL (S05 U
     expect(await viewOldest(d(), f.staff, 'cancelPending')).toBeNull();
   });
 
+  it("one order's customer history: the other orders of the same phone, by what happened to them, newest first", async () => {
+    const other = await f.place('other', { phone: '01700000999' }); // hardcode-ok: a made-up test number
+    const h = await orderHistory(d(), f.staff, plain.orderId, 2);
+    expect(h.matchedBy).toBe('customer'); // the checkout keeps one customer per phone
+    expect(h.counts).toEqual({ orders: 3, open: 2, delivered: 0, returned: 0, cancelled: 1 });
+    expect(h.recent).toHaveLength(2);
+    expect(h.recent.map((r) => r.id)).not.toContain(plain.orderId);
+    expect(h.recent[0]!.placedAt.getTime()).toBeGreaterThanOrEqual(h.recent[1]!.placedAt.getTime());
+    const alone = await orderHistory(d(), f.staff, other.orderId, 5);
+    expect(alone.counts.orders).toBe(0);
+    expect(alone.recent).toEqual([]);
+    expect((await orderHistory(d(), f.staff, randomUUID(), 5)).matchedBy).toBeNull();
+  });
+
+  it('the names in the timeline and the linked order numbers, in this store only', async () => {
+    const staffId = (f.staff.actor as { staffUserId: string }).staffUserId;
+    const names = await staffNames(d(), f.staff, [staffId, null, staffId, randomUUID()]);
+    expect(Object.keys(names)).toEqual([staffId]);
+    expect(await staffNames(d(), f.staff, [null])).toEqual({});
+    const nums = await orderNumbers(d(), f.staff, [plain.orderId, paid.orderId, randomUUID()]);
+    expect(nums.map((r) => r.number).sort()).toEqual([plain.number, paid.number].sort());
+    expect(nums.find((r) => r.id === paid.orderId)!.status).toBe('CANCELLED');
+  });
+
   it('read with the order keys only: someone without orders.read is refused', async () => {
     const nobody = await db().staffUser.create({ data: { email: 'nobody-140@example.com', displayName: 'Nobody', passwordHash: 'not-a-login' } });
     await expect(listExtras(d(), { actor: { staffUserId: nobody.id }, storeId: f.S }, [plain.orderId])).rejects.toMatchObject({ code: 'FORBIDDEN' });
     await expect(viewOldest(d(), { actor: { staffUserId: nobody.id }, storeId: f.S }, 'all')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(orderHistory(d(), { actor: { staffUserId: nobody.id }, storeId: f.S }, plain.orderId, 5)).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });

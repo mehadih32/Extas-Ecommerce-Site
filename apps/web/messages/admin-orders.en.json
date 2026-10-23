@@ -154,6 +154,305 @@
       "aria": "Bulk actions",
       "selected": "{n} selected",
       "clear": "Clear"
+    },
+    "detail": {
+      "metaTitle": "Order",
+      "more": "More actions",
+      "tabs": "Order page parts",
+      "details": "Details",
+      "timeline": "Timeline"
+    },
+    "dlg": {
+      "cancel": "Cancel",
+      "close": "Close",
+      "willHappen": "What will happen",
+      "working": "Working…",
+      "required": "Fill in what is marked first.",
+      "reason": "Reason",
+      "reasonRequired": "Reason (required)",
+      "note": "Note (needed for this reason)",
+      "noteOptional": "Note (optional)",
+      "notePh": "Write a short note — it stays in the timeline and the audit log",
+      "courierPerson": "Who at the courier",
+      "courierRef": "Their reference",
+      "flags": "Flags on this order",
+      "mergeWith": "Join in one parcel with"
+    },
+    "err": {
+      "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
+      "ILLEGAL_TRANSITION": "This is not possible in the order's status now. The page shows what can be done.",
+      "BOOKED": "A courier is booked: use “Cancel after booking”.",
+      "NOT_BOOKED": "No courier is booked: use the ordinary cancel.",
+      "CANCEL_PENDING": "A cancel is waiting for the courier's answer. Record that first.",
+      "NO_CANCEL_PENDING": "No cancel is waiting for the courier.",
+      "CANCEL_REQUESTED": "The customer asked to cancel. Answer that first.",
+      "NO_CANCEL_REQUEST": "There is no cancel request to answer.",
+      "IN_REVIEW": "A duplicate review is open. Decide it first.",
+      "ADVANCE_SHORT": "The advance is not paid in full yet.",
+      "REASON_REQUIRED": "Pick a reason from the list (and write the note “Other” needs).",
+      "INVALID_INPUT": "Something in the form is not right. Check it and try again.",
+      "NOT_FOUND": "This order (or note, or review) was not found.",
+      "NOT_MERGEABLE": "These two orders cannot go in one parcel (one is booked, finished or another customer's).",
+      "IDEMPOTENCY_MISMATCH": "This was sent twice with different details. Close the box and try again.",
+      "FORBIDDEN": "You don't have the permission for this.",
+      "UNAUTHENTICATED": "You are signed out. Sign in again.",
+      "network": "No connection. Nothing was changed — try again.",
+      "other": "It did not work. Nothing was changed — try again."
+    },
+    "cmd": {
+      "confirm": {
+        "label": "Confirm order",
+        "title": "Confirm {n}?",
+        "ok": "Confirm",
+        "done": "{n} confirmed"
+      },
+      "release": {
+        "label": "Release hold",
+        "title": "Release the hold on {n}?",
+        "ok": "Release",
+        "done": "{n} released"
+      },
+      "courierYes": {
+        "label": "Courier cancel confirmed",
+        "title": "The courier cancelled {n}",
+        "ok": "Courier cancel confirmed",
+        "done": "{n} cancelled"
+      },
+      "courierNo": {
+        "label": "Courier could not cancel",
+        "title": "The courier could not cancel {n}",
+        "ok": "Record it",
+        "done": "Recorded — the parcel goes on"
+      },
+      "approveRequest": {
+        "label": "Approve cancel",
+        "title": "Approve the customer's cancel of {n}?",
+        "ok": "Approve cancel",
+        "done": "{n} cancelled",
+        "doneRefund": "Cancelled · {n} refund request(s) for the owner"
+      },
+      "refuseRequest": {
+        "label": "Refuse — keep the order",
+        "title": "Keep {n}?",
+        "ok": "Keep the order",
+        "done": "The order stays"
+      },
+      "hold": {
+        "label": "Hold (reason)",
+        "title": "Hold {n}",
+        "ok": "Hold",
+        "done": "{n} is on hold"
+      },
+      "cancel": {
+        "label": "Cancel (reason)",
+        "title": "Cancel {n}?",
+        "ok": "Cancel the order",
+        "done": "{n} cancelled",
+        "doneRefund": "Cancelled · {n} refund request(s) for the owner"
+      },
+      "cancelAfterBooking": {
+        "label": "Cancel after booking",
+        "title": "Cancel {n} after booking",
+        "ok": "Ask for the cancel",
+        "done": "Cancel asked — now phone the courier"
+      },
+      "flags": {
+        "label": "Flags",
+        "title": "Flags on {n}",
+        "ok": "Save flags",
+        "done": "Flags saved"
+      }
+    },
+    "eff": {
+      "to": "The status becomes “{st}”",
+      "confirmNext": "Next comes picking and packing",
+      "cancelStock": "The held stock goes back",
+      "cancelPay": "A payment still waiting is closed (no money moves)",
+      "refundReq": "A refund request of {amount} goes to the owner — no money moves now",
+      "refusedGoesOn": "The parcel goes on; the order is marked “customer wants a change”",
+      "noRisk": "This never counts against the customer",
+      "refuseKeep": "The order goes on as it was; the request stays in the timeline",
+      "holdStock": "The pieces stay held for this order",
+      "cabParcel": "The parcel is not changed and not booked again",
+      "cabPending": "The order shows “Cancel pending courier” until you record the courier's answer",
+      "cabNext": "Next: phone the courier, then record what they said",
+      "reviewApprove": "The review closes; the order can be confirmed",
+      "reviewAsk": "A call task is made for the team to ask the customer",
+      "merge": "The two orders go out in one parcel; prices, charges and payments stay as they are"
+    },
+    "review": {
+      "title": "Duplicate review",
+      "open": "To decide",
+      "decided": "Decided",
+      "matched": "Looks like",
+      "sev": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "approve": {
+        "label": "Not a duplicate",
+        "title": "{n} is not a duplicate?",
+        "ok": "Not a duplicate",
+        "done": "Review closed"
+      },
+      "hold": {
+        "label": "Hold",
+        "title": "Hold {n} while you check",
+        "ok": "Hold",
+        "done": "{n} is on hold"
+      },
+      "ask": {
+        "label": "Ask the customer",
+        "title": "Ask the customer about {n}",
+        "ok": "Make the call task",
+        "done": "Call task made"
+      },
+      "merge": {
+        "label": "One parcel",
+        "title": "Send {n} in one parcel",
+        "ok": "Join",
+        "done": "Joined in one parcel"
+      },
+      "decline": {
+        "label": "Cancel as duplicate",
+        "title": "Cancel {n} as a duplicate?",
+        "ok": "Cancel as duplicate",
+        "done": "{n} cancelled as a duplicate"
+      }
+    },
+    "tot": {
+      "subtotal": "Items",
+      "discount": "Discount",
+      "delivery": "Delivery",
+      "free": "Free",
+      "wallet": "From the wallet",
+      "total": "Total",
+      "paid": "Paid",
+      "dueCod": "To collect on delivery",
+      "due": "Still to pay"
+    },
+    "hist": {
+      "new": "New customer — no other orders",
+      "line": "{n} other orders · {open} open · {delivered} delivered · {returned} returned · {cancelled} cancelled",
+      "recent": "Other orders"
+    },
+    "cust": {
+      "title": "Customer & address",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "check": "Check",
+      "unclear": "The address is not clear — check it on the call",
+      "note": "Customer's note",
+      "history": "History"
+    },
+    "courier": {
+      "title": "Courier",
+      "name": "Courier",
+      "tracking": "Tracking",
+      "since": "Booked",
+      "cancelOutcome": "Cancel answer",
+      "outcome": {
+        "CONFIRMED": "Cancelled by the courier",
+        "REFUSED": "The courier could not cancel"
+      },
+      "booking": "Booking",
+      "theCourier": "the courier"
+    },
+    "money": {
+      "title": "Payments & refunds",
+      "payment": "Payment {amount} · {method}",
+      "refund": "Refund request {amount}",
+      "pst": {
+        "INITIATED": "started",
+        "PENDING": "waiting",
+        "AUTHORIZED": "authorised",
+        "PAID": "paid",
+        "FAILED": "failed",
+        "CANCELLED": "closed",
+        "REFUNDED": "refunded",
+        "PARTIALLY_REFUNDED": "partly refunded"
+      },
+      "rst": {
+        "REQUESTED": "waiting for the owner",
+        "APPROVED": "approved, not paid yet",
+        "REJECTED": "refused",
+        "COMPLETED": "paid back",
+        "FAILED": "failed"
+      },
+      "codNone": "Cash on delivery — nothing paid yet",
+      "none": "No payments yet",
+      "never": "Refunds are only requested here. The owner approves them in Money; nothing is paid from this page."
+    },
+    "who": {
+      "staff": "Staff",
+      "customer": "Customer",
+      "system": "System"
+    },
+    "ev": {
+      "move": "{from} → {to}",
+      "order_placed": "Order placed",
+      "order_confirm": "Confirmed",
+      "order_hold": "Put on hold",
+      "order_release": "Hold released",
+      "order_cancel": "Cancelled",
+      "order_cancelAfterBooking": "Cancel after booking asked",
+      "order_courierCancelConfirmed": "Courier confirmed the cancel",
+      "order_courierCancelRefused": "Courier could not cancel",
+      "order_requestCancel": "Customer asked to cancel",
+      "order_refuseCancelRequest": "Cancel request refused",
+      "order_setFlags": "Flags changed",
+      "order_addLine": "A piece added to the parcel",
+      "order_removeLine": "An added piece taken out",
+      "order_awaitAdvance": "Waiting for an advance",
+      "order_recordAdvance": "Advance received",
+      "order_startPicking": "Picking started",
+      "order_pack": "Packed",
+      "order_handover": "Handed to the courier",
+      "order_courierPickedUp": "Courier picked it up",
+      "order_delivered": "Delivered",
+      "order_partiallyDelivered": "Partly delivered",
+      "order_returned": "Returned",
+      "order_duplicateCheck": "Duplicate check",
+      "order_duplicate_approved": "Not a duplicate",
+      "order_duplicate_ask": "Customer to be asked",
+      "order_merged": "Joined in one parcel",
+      "order_note": "Note added",
+      "order_note_archived": "Note archived",
+      "order_followUp": "Handed to a person"
+    },
+    "band": {
+      "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
+      "cancelRequest": "The customer asked to cancel: “{why}” · {age}",
+      "hold": "On hold: {reason} · {age}",
+      "cancelled": "Cancelled: {reason}",
+      "locked": "Booked with {courier} · {tracking}: the parcel is locked. To change it, cancel after booking."
+    },
+    "items": {
+      "title": "Items",
+      "size": "size {s}",
+      "sku": "SKU {s}"
+    },
+    "tl": {
+      "title": "Timeline",
+      "sub": "Every step, with who did it",
+      "empty": "Nothing yet"
+    },
+    "notes": {
+      "label": "Note for the team",
+      "placeholder": "Add a note for the team…",
+      "add": "Add",
+      "done": "Note added",
+      "archive": "Archive",
+      "archived": "Note archived"
+    },
+    "confirm": {
+      "sub": "{n} to confirm · oldest waiting {age}",
+      "subNone": "Nothing waits to be confirmed",
+      "full": "Full order",
+      "never": "After Confirm the next order in the queue opens."
     }
   }
 }
