@@ -2232,8 +2232,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat",
+    "note": "Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat. 23 Oct (follow-up 82, merged, deploys with the next code deploy): the deploy record keeps the worker image beside the web image (`worker_image`, `previous_worker`), a rollback starts the previous good version's worker from it, and the image clean-up never removes an image a record still needs (`infra/deploy/images.sh`, tested with a full fake rollback)",
     "github": [
+     "#31, 23 Oct",
      "#29, 23 Oct",
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
     ]
@@ -2248,16 +2249,21 @@
     ],
     "code": [
      "@extas/jobs",
-     "infra/stack/app.yml"
+     "infra/stack/app.yml",
+     "infra/deploy/images.sh"
     ],
     "names": [
      "JobRun",
      "WORKER_LOST",
      "WorkerHeartbeat",
      "0008_worker",
-     "worker"
+     "worker",
+     "worker_image",
+     "previous_worker"
     ],
-    "tests": []
+    "tests": [
+     "23 Oct (follow-up 82, merged, deploys with the next code deploy): the deploy record keeps the worker image beside the web image (`worker_image`, `previous_worker`), a rollback starts the previous good version's worker from it, and the image clean-up never removes an image a record still needs (`infra/deploy/images.sh`, tested with a full fake rollback)"
+    ]
    },
    "updates": [
     {
@@ -2308,8 +2314,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box",
+    "note": "Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box. 23 Oct (follow-up 80, merged, applied by server-setup on merge, gate fingerprint v3): only `POST /api/erp/webhook` passes without the preview login (the message proves itself with its signature, PR 196); every other method and path still asks; infra tests with a live Caddy run when a binary is present; smoke check (anonymous POST answers the app's own 401 JSON, not the login)",
     "github": [
+     "#31, 23 Oct",
      "#19, 20 Oct",
      "#2 (commit `3a8d198`), 20 Oct 02:46 (Dhaka)",
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
@@ -2318,11 +2325,15 @@
    "builtFacts": {
     "routes": [],
     "settings": [],
-    "code": [],
+    "code": [
+     "POST /api/erp/webhook"
+    ],
     "names": [
      "EXTAS_PREVIEW_COOKIE_DAYS"
     ],
-    "tests": []
+    "tests": [
+     "infra tests with a live Caddy run when a binary is present"
+    ]
    },
    "updates": [
     {
@@ -2350,7 +2361,8 @@
    "mentions": [
     362,
     493,
-    500
+    500,
+    196
    ],
    "blueprint": [
     {
@@ -3348,9 +3360,10 @@
    "status": {
     "state": "merged",
     "built": true,
-    "date": "2026-10-20",
-    "note": "`tools/hardcode-guard.mjs` + rules in `tools/hardcode-guard.json`, first CI step: secrets, owner data (brand, domain, phones, e-mails), ৳ amounts, business numbers, visible JSX text; opt-out only with a written reason",
+    "date": "2026-10-23",
+    "note": "`tools/hardcode-guard.mjs` + rules in `tools/hardcode-guard.json`, first CI step: secrets, owner data (brand, domain, phones, e-mails), ৳ amounts, business numbers, visible JSX text; opt-out only with a written reason. 23 Oct (follow-up 14, CN-017 SIM-F-033, F-031): rules `clock-hours`, `promise-copy` and `fixed-date` (code only), and the simulation's hard-coded customer texts kept as test cases",
     "github": [
+     "#31, 23 Oct",
      "#5 (commit `9959d1b`), 20 Oct 03:44 (Dhaka)"
     ]
    },
@@ -3361,9 +3374,14 @@
      "tools/hardcode-guard.mjs",
      "tools/hardcode-guard.json"
     ],
-    "names": [],
+    "names": [
+     "clock-hours",
+     "promise-copy",
+     "fixed-date"
+    ],
     "tests": [
-     "`tools/hardcode-guard.mjs` + rules in `tools/hardcode-guard.json`, first CI step: secrets, owner data (brand, domain, phones, e-mails), ৳ amounts, business numbers, visible JSX text"
+     "`tools/hardcode-guard.mjs` + rules in `tools/hardcode-guard.json`, first CI step: secrets, owner data (brand, domain, phones, e-mails), ৳ amounts, business numbers, visible JSX text",
+     "23 Oct (follow-up 14, CN-017 SIM-F-033, F-031): rules `clock-hours`, `promise-copy` and `fixed-date` (code only), and the simulation's hard-coded customer texts kept as test cases"
     ]
    },
    "updates": [
@@ -9606,8 +9624,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the delivery charge is the owner's figure for the band read (never from text); the rules decide only free delivery (one \"Free home delivery\" box with the reason); a band with no charge shows \"+ delivery\"; the city and outside rates before the address; the charge is in the fingerprint",
+    "note": "the delivery charge is the owner's figure for the band read (never from text); the rules decide only free delivery (one \"Free home delivery\" box with the reason); a band with no charge shows \"+ delivery\"; the city and outside rates before the address; the charge is in the fingerprint. 23 Oct (follow-up 54): the rules engine's delivery figure is the band's own charge too, so the rule admin's preview and simulation say what the checkout charges; the COD limit check is unchanged (follow-up 121)",
     "github": [
+     "#31, 23 Oct",
      "#28, 23 Oct"
     ]
    },
@@ -11294,8 +11313,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "one KPI definition (CN-022, owner 23 Oct): `@extas/metrics` — Sales = DELIVERED orders on the delivered day, Ordered value = every placed order (not DRAFT) on the placed day, archived in neither, shop days in `store.timeZone`; `kpi`, `kpiByDay`, `kpiByZone`, `kpiByPaymentMethod`, `lines`/`linesBoth`; the combo report (PR 104) and the rename before/after report (PR 590) moved onto it, \"Ordered value\" and \"Sales (delivered)\" side by side; guard test fails on any ad-hoc money sum or `mv_` read outside the package; smoke `figures` check on `/admin/combos?tab=report`; dashboard tiles and the order-analytics screen are follow-ups 90–91",
+    "note": "one KPI definition (CN-022, owner 23 Oct): `@extas/metrics` — Sales = DELIVERED orders on the delivered day, Ordered value = every placed order (not DRAFT) on the placed day, archived in neither, shop days in `store.timeZone`; `kpi`, `kpiByDay`, `kpiByZone`, `kpiByPaymentMethod`, `lines`/`linesBoth`; the combo report (PR 104) and the rename before/after report (PR 590) moved onto it, \"Ordered value\" and \"Sales (delivered)\" side by side; guard test fails on any ad-hoc money sum or `mv_` read outside the package; smoke `figures` check on `/admin/combos?tab=report`; dashboard tiles and the order-analytics screen are follow-ups 90–91. 23 Oct (follow-ups 92, 93): migration `0012_kpi_report_views` — `mv_kpi_daily` and `mv_kpi_lines_monthly` count exactly like the package (both bases, shop days in `store.timeZone`), refreshed by `extas_refresh_kpi_views()` (the app role may run it), read only through `@extas/metrics` (`kpiByDayFromView`, `linesByMonthFromView`, live answer when the zone differs); the four PR 603 `mv_` views are kept and marked superseded; index `idx_order_sales_delivered` on Order (storeId, status, deliveredAt)",
     "github": [
+     "#31, 23 Oct",
      "#29, 23 Oct"
     ]
    },
@@ -11317,7 +11337,14 @@
      "lines",
      "linesBoth",
      "mv_",
-     "figures"
+     "figures",
+     "0012_kpi_report_views",
+     "mv_kpi_daily",
+     "mv_kpi_lines_monthly",
+     "extas_refresh_kpi_views()",
+     "kpiByDayFromView",
+     "linesByMonthFromView",
+     "idx_order_sales_delivered"
     ],
     "tests": [
      "guard test fails on any ad-hoc money sum or `mv_` read outside the package"
@@ -11334,7 +11361,8 @@
    ],
    "mentions": [
     104,
-    590
+    590,
+    603
    ],
    "blueprint": [],
    "bn": "\"বিক্রি\" একটাই হিসাব: শুধু ডেলিভারি হওয়া অর্ডার, ডেলিভারির দিনে গোনা; সব দেওয়া অর্ডারের মূল্য আলাদা করে পাশে; সব রিপোর্ট একই হিসাব থেকে।",
@@ -14122,8 +14150,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "stock pull per SKU / colour / size into StockLevel (variant × location): incremental with `updatedSince` minus an overlap, paged, resumable after a failure or the page cap; older rows never overwrite newer; one StockMovement per change with an idempotency key from the ERP's state (re-reading never moves stock twice); unknown / retired SKUs and unlinked warehouses counted, never guessed; `inStock` and the product summary follow; checkout check (`liveStock`, one quick try, else the copy); job functions for the BullMQ worker (`inventory.erp.pullStock`, poll every `erp.sync.stockPollMinutes`); `GET /api/admin/inventory/stock` (one SKU in every location, or a product's colour × size grid)",
+    "note": "stock pull per SKU / colour / size into StockLevel (variant × location): incremental with `updatedSince` minus an overlap, paged, resumable after a failure or the page cap; older rows never overwrite newer; one StockMovement per change with an idempotency key from the ERP's state (re-reading never moves stock twice); unknown / retired SKUs and unlinked warehouses counted, never guessed; `inStock` and the product summary follow; checkout check (`liveStock`, one quick try, else the copy); job functions for the BullMQ worker (`inventory.erp.pullStock`, poll every `erp.sync.stockPollMinutes`); `GET /api/admin/inventory/stock` (one SKU in every location, or a product's colour × size grid). 23 Oct (follow-up 16, CN-017 SIM-F-006, with PR 197 and 203): the shared balance is never clipped (−1 shows as −1 on the stock answer, the grid and the low-stock alert); every open order waiting to be packed with a short SKU gets one shortage card (PackingIssue kind SHORTAGE), booking is refused while it is open (`assertBookable`, SHORTAGE_OPEN), a person decides (`decideShortage`, `inventory.audit`, audited; the order flow carries it out), cards never close by themselves; acceptance test on PostgreSQL",
     "github": [
+     "#31, 23 Oct",
      "#15 (commit `4563976`), 20 Oct 09:15 (Dhaka)"
     ]
    },
@@ -14131,7 +14160,8 @@
     "routes": [],
     "settings": [
      "inventory.erp.pullStock",
-     "erp.sync.stockPollMinutes"
+     "erp.sync.stockPollMinutes",
+     "inventory.audit"
     ],
     "code": [
      "GET /api/admin/inventory/stock"
@@ -14139,9 +14169,13 @@
     "names": [
      "updatedSince",
      "inStock",
-     "liveStock"
+     "liveStock",
+     "assertBookable",
+     "decideShortage"
     ],
-    "tests": []
+    "tests": [
+     "acceptance test on PostgreSQL"
+    ]
    },
    "updates": [
     {
@@ -14152,7 +14186,10 @@
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-006 (oversold stock hidden, the parcel goes out short) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
     }
    ],
-   "mentions": [],
+   "mentions": [
+    197,
+    203
+   ],
    "blueprint": [],
    "bn": "SKU, রং আর সাইজ ধরে ERP থেকে স্টক আনা; একই বদল দুবার গোনা হয় না।",
    "bnAuto": false,
