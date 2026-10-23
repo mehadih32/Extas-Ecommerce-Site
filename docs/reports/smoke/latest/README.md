@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 14:23 (Asia/Dhaka)
+# Smoke test · 2026-10-23 15:42 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (52টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (58টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `e10c303f682e` · after deploy · result **PASS** (52 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `5da5ab61ca9e` · after deploy · result **PASS** (58 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -10,6 +10,9 @@ Site: https://new.extas.com.bd · commit `e10c303f682e` · after deploy · resul
 | `/bn` | phone | 200 | `/bn` | ok | [picture](bn-phone.jpg) |
 | `/checkout` | phone | 200 | `/checkout` | ok | [picture](checkout-phone.jpg) |
 | `/bn/checkout` | phone | 200 | `/bn/checkout` | ok | [picture](bn-checkout-phone.jpg) |
+| `/checkout/thanks/0` | phone | 200 | `/checkout/thanks/0` | ok | [picture](checkout-thanks-0-phone.jpg) |
+| `/bn/checkout/thanks/0` | phone | 200 | `/bn/checkout/thanks/0` | ok | [picture](bn-checkout-thanks-0-phone.jpg) |
+| `/checkout/pay/0` | phone | 200 | `/checkout/pay/0` | ok | [picture](checkout-pay-0-phone.jpg) |
 | `/collections/new-in` | phone | 200 | `/collections/new-in` | ok | [picture](collections-new-in-phone.jpg) |
 | `/bn/collections/new-in` | phone | 200 | `/bn/collections/new-in` | ok | [picture](bn-collections-new-in-phone.jpg) |
 | `/bag` | phone | 200 | `/bag` | ok | [picture](bag-phone.jpg) |
@@ -36,6 +39,9 @@ Site: https://new.extas.com.bd · commit `e10c303f682e` · after deploy · resul
 | `/bn` | desktop | 200 | `/bn` | ok | [picture](bn-desktop.jpg) |
 | `/checkout` | desktop | 200 | `/checkout` | ok | [picture](checkout-desktop.jpg) |
 | `/bn/checkout` | desktop | 200 | `/bn/checkout` | ok | [picture](bn-checkout-desktop.jpg) |
+| `/checkout/thanks/0` | desktop | 200 | `/checkout/thanks/0` | ok | [picture](checkout-thanks-0-desktop.jpg) |
+| `/bn/checkout/thanks/0` | desktop | 200 | `/bn/checkout/thanks/0` | ok | [picture](bn-checkout-thanks-0-desktop.jpg) |
+| `/checkout/pay/0` | desktop | 200 | `/checkout/pay/0` | ok | [picture](checkout-pay-0-desktop.jpg) |
 | `/collections/new-in` | desktop | 200 | `/collections/new-in` | ok | [picture](collections-new-in-desktop.jpg) |
 | `/bn/collections/new-in` | desktop | 200 | `/bn/collections/new-in` | ok | [picture](bn-collections-new-in-desktop.jpg) |
 | `/bag` | desktop | 200 | `/bag` | ok | [picture](bag-desktop.jpg) |
