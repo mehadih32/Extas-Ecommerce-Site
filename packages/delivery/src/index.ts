@@ -14,8 +14,10 @@
 // - PR 555 phone-first recognition: the one BD phone normaliser (phone.ts); a bare number prefills the area only, the
 //   full address only with a login or a confirmed code (phone-area.ts).
 // - PR 563 (S04) the address-detail check: does the line say where the house is (detail.ts)? Only a flag and a call.
+// - PR 565 (S04) free delivery is exempt from the band machinery: no band shown, corrected or messaged (exempt.ts).
 export * from './text';
 export * from './detail';
+export * from './exempt';
 export * from './gazetteer';
 export * from './csv';
 export * from './import';

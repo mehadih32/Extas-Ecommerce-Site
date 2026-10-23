@@ -48,6 +48,7 @@ function receipt(over: Partial<Receipt> = {}): Receipt {
     band: null,
     addressUnclear: false,
     chargeFixed: true,
+    freeDelivery: false,
     lines: [
       // stored figures on purpose that do not multiply out: the sheet must print them, never work them out again
       { id: 'a', productId: null, nameEn: 'Sample Polo', nameBn: 'স্যাম্পল পোলো', colour: { key: 'navy', hex: '#000', nameEn: 'Navy', nameBn: 'নেভি' }, size: 'M', quantity: 2, amountMinor: 270_000, setKey: 'set-1', isAddOn: false, unitMinor: 150_000, lineDiscountMinor: 30_000, sku: 'SAMPLE-P1-NAVY-M' },

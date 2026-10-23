@@ -12,7 +12,9 @@
 // PR 135: the tracking page adds the courier and its tracking code of the order's booked shipment (as stored).
 // PR 136: the invoice adds each line's stored unit price, its stored saving and its SKU — read, never worked out again;
 // and a staff member the caller has checked (the `orders.read` permission) reads any placed order of the store.
+// PR 565: `freeDelivery` — a free order shows no band and no band promise (@extas/delivery bandExempt).
 import type { OrderAccountKind } from '@extas/accounts';
+import { bandExempt } from '@extas/delivery/exempt';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { CheckoutDeps } from './context';
 import { MOCK_PROVIDER, ORDER_EVENTS, type PaymentMethod } from './place';
@@ -73,6 +75,8 @@ export interface Receipt {
   band: { nameEn: string; nameBn: string | null; hoursMin: number | null; hoursMax: number | null } | null;
   addressUnclear: boolean;
   chargeFixed: boolean;
+  /** PR 565: the delivery was free — no band, no band promise, no "we call about the area" (@extas/delivery bandExempt). */
+  freeDelivery: boolean;
   lines: ReceiptLine[];
   subtotalMinor: number;
   discountMinor: number;
@@ -175,6 +179,7 @@ export async function orderReceipt(
     band: o.deliveryBand,
     addressUnclear: o.addressUnclear,
     chargeFixed: o.chargeFixed,
+    freeDelivery: bandExempt(o.addressResolution),
     lines,
     subtotalMinor: o.subtotalMinor,
     discountMinor: o.discountMinor,

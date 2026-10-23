@@ -10,6 +10,7 @@
 // PR 129: the account card — "Your account is ready" (or "This order is in your account") with the number he logs in
 // with and that the code comes by SMS to it. Never a password (SIM-F-039); "You're logged in" when he ordered signed in.
 // PR 136: "Invoice · print or download" under the order's money opens its invoice (demo inv-btn), while invoices are on.
+// PR 565: a free order shows no band name and no "we call about the area" line, only its promise in hours.
 import '../bag/bag.css';
 import './checkout.css';
 import type { Receipt } from '@extas/checkout';
@@ -114,7 +115,8 @@ export async function ThanksPage({
   const pay = r.pay;
   const waiting = pay.kind === 'due' || pay.kind === 'failed';
   const hours = r.band ? hoursOf(r.band, n) : null;
-  const promise = r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
+  // PR 565: a free order never says "we call about the area" and never names a band — only its promise, when it has one
+  const promise = r.freeDelivery ? (hours ? w('del.promise', { hours }) : null) : r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
   const cards = await cardsByIds(c.storeId, r.lines.map((l) => l.productId).filter((x): x is string => !!x));
   const wa = waOn ? waHref(c.s['contact.whatsapp'], w('ty.waMsg', { number: r.number })) : null;
   // follow-up 58 · the trial at the door (the shop's own switch), the note said back, what happens next
@@ -295,7 +297,7 @@ export async function ThanksPage({
             </span>
             <span className="ty-eta-tx">
               <h2 className="ty-eta-t">{promise}</h2>
-              {r.band && !r.addressUnclear ? <span className="ty-eta-z">{named(c.lang, r.band.nameEn, r.band.nameBn)}</span> : null}
+              {r.band && !r.addressUnclear && !r.freeDelivery ? <span className="ty-eta-z">{named(c.lang, r.band.nameEn, r.band.nameBn)}</span> : null}
             </span>
           </div>
         ) : null}

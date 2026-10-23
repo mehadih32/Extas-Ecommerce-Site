@@ -17,6 +17,8 @@
 // details (`prefill`, from his account), then what this browser remembers from his last order when the owner allows
 // it (`remember`); the browser's own autofill is read on the first touch even before he types. A start that only came
 // from his account or this browser is not sent for the follow-up until he changes something.
+// PR 565: while delivery is free none of the band machinery shows — the delivery step says only "Free home delivery",
+// the address suggestions carry no charge, and an unsettled band is never asked.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
@@ -479,7 +481,7 @@ export function CheckoutForm({
                   onPhoneBlur={() => setPhoneChecked(true)}
                   onAddressBlur={() => settle.blur()}
                   addressMax={addressMax}
-                  suggest={suggest ? { ...suggest, lang: money.lang, money: m, n } : null}
+                  suggest={suggest ? { ...suggest, lang: money.lang, money: m, n, free: view.charge.state === 'free' } : null}
                   onAddressPick={(line) => {
                     // a picked place is a finished line: it is read at once, not after the pause
                     change('address', line);

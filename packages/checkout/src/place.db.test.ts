@@ -106,6 +106,28 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       }
     });
 
+    it('PR 565: free delivery is exempt from the band machinery — no band question, flag or call; a line with no place gets directions', async () => {
+      await f.switchRule('delivery');
+      try {
+        const s = await shown('free-ask', { quantity: 20, line: 'House 9, Road 2, Gabtoli' });
+        expect(s.q.charge.state).toBe('free');
+        expect(s.q.delivery.state).toBe('ask');
+        const o = await orderOf((await s.place()).orderId);
+        expect(o).toMatchObject({ status: 'PLACED', addressUnclear: false, chargeFixed: true, deliveryChargeMinor: 0, totalMinor: s.q.totals.totalMinor, flags: [] });
+        expect(o.addressResolution).toMatchObject({ status: 'ask', bandExempt: true, charge: { state: 'free' } });
+        expect(await f.t.prisma.callTask.count({ where: { orderId: o.id } })).toBe(0);
+        const r = await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: o.number });
+        expect(r).toMatchObject({ freeDelivery: true, chargeFixed: true, addressUnclear: false, deliveryMinor: 0 });
+        const lost = await shown('free-lost', { quantity: 20, line: 'Notun Para, Shahid Minar er pashe' });
+        expect(lost.q.delivery).toMatchObject({ state: 'ask', reason: 'no-place' });
+        const l = await orderOf((await lost.place()).orderId);
+        expect(l).toMatchObject({ addressUnclear: false, chargeFixed: true, flags: ['ADDRESS_CHECK'] });
+        expect((await f.t.prisma.callTask.findMany({ where: { orderId: l.id }, select: { reason: true } })).map((t) => t.reason)).toEqual(['ADDRESS_CHECK']);
+      } finally {
+        await f.switchRule('delivery', false);
+      }
+    });
+
     it('an unresolved address still becomes an order: flagged unclear, the charge not fixed, a call task for the team', async () => {
       const s = await shown('unclear', { line: 'House 9, Road 2, Gabtoli' });
       expect(s.q.totals).toMatchObject({ deliveryMinor: null, known: false });

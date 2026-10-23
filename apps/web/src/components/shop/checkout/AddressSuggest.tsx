@@ -8,6 +8,7 @@
 // - A pick writes "place, district" in place of the part being typed and reads the address at once (no waiting for the
 //   pause: he finished it). Nothing is asked below `delivery.suggest.minChars` letters; a slow or failed answer just
 //   shows no rows, and only the newest answer is drawn.
+// - PR 565: while delivery is free for the bag, the rows show the place and its district only — no band charge.
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { applyPick, fetchRows, fragmentOf, lookupsOf, rowView, wantsRows, type Fragment, type SuggestView } from '@/lib/shop/address-suggest';
 
@@ -18,6 +19,8 @@ export interface SuggestConfig {
   words: { label: string; count: string };
   /** The charge as the page writes money. */
   money: (minor: number) => string;
+  /** PR 565: delivery is free for this bag — the rows carry no band charge. */
+  free?: boolean;
   n: (x: number) => string;
 }
 
@@ -61,7 +64,7 @@ export function useAddressSuggest(cfg: SuggestConfig | null, onPick: (line: stri
         const rows = await fetchRows(at.query, cfg.storeId, c.signal);
         if (k !== seq.current) return;
         if (rows.length) {
-          setOpen({ rows: rows.map((r) => rowView(r, cfg.lang)), at });
+          setOpen({ rows: rows.map((r) => rowView(r, cfg.lang, cfg.free)), at });
           setActive(-1);
           return;
         }

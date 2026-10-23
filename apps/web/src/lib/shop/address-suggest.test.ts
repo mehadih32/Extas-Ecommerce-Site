@@ -53,4 +53,9 @@ describe('a row', () => {
     expect(rowView(row({ band: null }), 'en').chargeMinor).toBeNull();
     expect(rowView(row({ band: { priced: false, chargeMinor: 13000 } }), 'en').chargeMinor).toBeNull();
   });
+
+  it('PR 565: while delivery is free no row carries a band charge — the place and its district only', () => {
+    expect(rowView(row(), 'en', true)).toEqual({ id: 'p1', name: 'Gabtoli', parent: 'Bogura', chargeMinor: null, text: 'Gabtoli, Bogura' });
+    expect(rowView(row(), 'en', false).chargeMinor).toBe(13000);
+  });
 });
