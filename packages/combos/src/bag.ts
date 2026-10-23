@@ -102,7 +102,7 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
     await openCart(tx, d.storeId, d.cartId);
     const c = await comboForSale(deps, d.storeId, { comboId: d.comboId, slug: d.slug }, tx);
     const again = async (groupKey: string): Promise<AddedSet | null> => {
-      const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: groupKey }, select: { ...lineSelect, setPriceMinor: true } });
+      const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: groupKey, removedAt: null }, select: { ...lineSelect, setPriceMinor: true } });
       if (!lines.length) return null;
       const price = picksPrice(c, lines.map((l) => l.variantId), await wasAllowed(deps, d.storeId));
       return { added: false, groupKey, comboId: c.view.id, lines: lines.map(({ setPriceMinor: _, ...l }) => l), setPriceMinor: lines[0]!.setPriceMinor ?? 0, price: price! };
@@ -132,7 +132,7 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
     // PR 104 — one set added, and its colour pair counted (the same write: a refused add counts nothing).
     const colourOf = new Map(c.variants.map((v) => [v.id, v.colourId]));
     await recordSetAdded(deps, tx, { storeId: d.storeId, comboId: c.view.id, colourIds: picks.variants.map((v) => colourOf.get(v) ?? null), at });
-    const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: groupKey }, select: lineSelect, orderBy: { createdAt: 'asc' } });
+    const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: groupKey, removedAt: null }, select: lineSelect, orderBy: { createdAt: 'asc' } });
     return { added: true, groupKey, comboId: c.view.id, lines, setPriceMinor: picks.payMinor, price: picks.price };
   }, TX);
 }
@@ -141,7 +141,7 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
 async function recentSame(tx: Db, d: { storeId: number; cartId: string }, comboId: string, guardMs: number, now: Date, variants: readonly string[]): Promise<string | null> {
   if (guardMs <= 0) return null;
   const lines = await tx.cartItem.findMany({
-    where: { storeId: d.storeId, cartId: d.cartId, comboId, savedForLater: false, comboGroupKey: { not: null }, createdAt: { gte: new Date(now.getTime() - guardMs) } },
+    where: { storeId: d.storeId, cartId: d.cartId, comboId, savedForLater: false, removedAt: null, comboGroupKey: { not: null }, createdAt: { gte: new Date(now.getTime() - guardMs) } },
     select: { variantId: true, comboGroupKey: true },
     orderBy: { createdAt: 'desc' },
   });
@@ -157,7 +157,7 @@ export async function changeSetInBag(deps: CombosDeps, input: ChangeSetInput): P
   checkStoreId(d.storeId);
   return deps.db.$transaction(async (tx) => {
     await openCart(tx, d.storeId, d.cartId);
-    const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.groupKey }, select: { id: true, comboId: true }, orderBy: { createdAt: 'asc' } });
+    const lines = await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.groupKey, removedAt: null }, select: { id: true, comboId: true }, orderBy: { createdAt: 'asc' } });
     if (!lines.length || !lines[0]!.comboId) throw new CombosError('NOT_FOUND', 'no such set in this bag', ['groupKey']);
     const c = await comboForSale(deps, d.storeId, { comboId: lines[0]!.comboId }, tx);
     const picks = await checkedPicks(deps, tx, c, d, d.groupKey);
@@ -173,12 +173,15 @@ export async function changeSetInBag(deps: CombosDeps, input: ChangeSetInput): P
   }, TX);
 }
 
-/** Takes a whole set out of the bag (never one piece of it: the set price belongs to all its pieces). */
+/**
+ * Takes a whole set out of the bag (never one piece of it: the set price belongs to all its pieces). Its lines are
+ * archived, never deleted (S04 PR 105, CLAUDE.md hard rule 3), so the bag's "Undo" puts the same set back.
+ */
 export async function removeSetFromBag(deps: CombosDeps, input: z.input<typeof groupSchema>): Promise<{ removed: number }> {
   const d = parse(groupSchema, input, 'set');
   return deps.db.$transaction(async (tx) => {
     await openCart(tx, d.storeId, d.cartId);
-    const { count } = await tx.cartItem.deleteMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.groupKey } });
+    const { count } = await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.groupKey, removedAt: null }, data: { removedAt: nowOf(deps) } });
     if (!count) throw new CombosError('NOT_FOUND', 'no such set in this bag', ['groupKey']);
     return { removed: count };
   }, TX);
@@ -190,7 +193,7 @@ export async function saveSetForLater(deps: CombosDeps, input: z.input<typeof gr
   const d = parse(groupSchema, rest, 'set');
   return deps.db.$transaction(async (tx) => {
     await openCart(tx, d.storeId, d.cartId);
-    const { count } = await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.groupKey }, data: { savedForLater: z.boolean().parse(saved) } });
+    const { count } = await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.groupKey, removedAt: null }, data: { savedForLater: z.boolean().parse(saved) } });
     if (!count) throw new CombosError('NOT_FOUND', 'no such set in this bag', ['groupKey']);
     return { moved: count };
   }, TX);
@@ -225,7 +228,7 @@ export interface BagSet {
 export async function bagSets(deps: CombosDeps, input: z.input<typeof cartSchema>, db: Db = deps.db): Promise<BagSet[]> {
   const d = parse(cartSchema, input, 'bag');
   const lines = await db.cartItem.findMany({
-    where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: { not: null }, comboId: { not: null } },
+    where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: { not: null }, comboId: { not: null }, removedAt: null },
     select: { ...lineSelect, comboId: true, comboGroupKey: true, setPriceMinor: true, savedForLater: true },
     orderBy: { createdAt: 'asc' },
   });

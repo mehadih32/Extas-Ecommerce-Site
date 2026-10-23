@@ -67,12 +67,13 @@ export async function comboForSale(deps: CombosDeps, storeId: number, ref: { com
   return { row, view, facts, slots, variants, onSale, priceRule, rounding, rule };
 }
 
-/** Pieces of each variant in the customer's open bag (saved-for-later lines and the set being changed left out). */
+/** Pieces of each variant in the customer's open bag (saved-for-later lines, lines taken out and the set being changed
+ * left out). */
 export async function bagUse(db: Db, storeId: number, cartId: string | undefined, editGroupKey?: string): Promise<Record<string, number>> {
   if (!cartId) return {};
   const cart = await db.cart.findFirst({ where: { id: cartId, storeId }, select: { status: true } });
   if (!cart || cart.status !== 'ACTIVE') return {};
-  const lines = await db.cartItem.findMany({ where: { storeId, cartId, savedForLater: false }, select: { variantId: true, quantity: true, comboGroupKey: true } });
+  const lines = await db.cartItem.findMany({ where: { storeId, cartId, savedForLater: false, removedAt: null }, select: { variantId: true, quantity: true, comboGroupKey: true } });
   const out: Record<string, number> = {};
   for (const l of lines) if (!editGroupKey || l.comboGroupKey !== editGroupKey) out[l.variantId] = (out[l.variantId] ?? 0) + l.quantity;
   return out;
