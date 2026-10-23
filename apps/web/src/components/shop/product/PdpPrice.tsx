@@ -8,6 +8,7 @@ import { priceSide } from '@/lib/shop/pdp-price';
 import { priceFor } from '@/lib/shop/product-model';
 import type { PdpPriceSettings } from '@extas/settings';
 import { usePdp } from './PdpRoot';
+import { sweepClass } from '@/lib/shop/sweep-class';
 
 export function PdpPrice({ set, freeDelivery, payWords }: { set: PdpPriceSettings; freeDelivery: boolean; payWords: string[] }) {
   const { m, choice, w, set: s } = usePdp();
@@ -16,7 +17,7 @@ export function PdpPrice({ set, freeDelivery, payWords }: { set: PdpPriceSetting
   const discounted = !!p.was && !!p.pct;
   const side = priceSide({ discounted, freeDelivery, payWords }, set);
   const after = discounted && set.discountAfterBar;
-  const sweep = s.sweep.freeDelivery ? ' sweep' : '';
+  const sweep = sweepClass(s.sweep.freeDelivery);
   return (
     <div className={`pdp-prow${discounted ? ' disc' : ''}${after ? ' dafter' : ''}${freeDelivery ? ' freed' : ''}`} data-testid="price-row" data-fitrow="">
       <span className="pdp-pmain">

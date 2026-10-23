@@ -212,7 +212,7 @@
     },
     "sweep": {
       "label": "Light sweeps on the product page",
-      "help": "The soft light that runs across the free-delivery line, the stock line, \"All N colours\", the Colour and Size labels and the size boxes, each on its own switch. It never runs for a visitor who has asked for less motion."
+      "help": "The soft light that runs across the free-delivery line, the stock line, \"All N colours\", the Colour and Size labels and the size boxes, each on its own switch. It never runs for a visitor who has asked for less motion. The one switch for every sweep of the shop (\"Light sweeps across the shop\") stops these too."
     },
     "qa": {
       "label": "Questions & answers on the product page",
@@ -223,6 +223,12 @@
     "celebrate": {
       "label": "Celebration on the thank-you page",
       "help": "For an occasion: balloons rising (or light streaking up) with your words in the middle, over the thank-you page right after an order. Off. It never blocks anything — the page works behind it, any tap skips it at once, it runs at most 2.5 seconds, once per customer for each occasion's name (or once per order), only between the first and last day you set. It does not run on a slow connection, a low-end phone or with data saving on; for a customer who asked for less motion it shows only the words, without moving. Add ?celebrate=preview to a thank-you page to see it before switching it on."
+    }
+  },
+  "shop": {
+    "sweep": {
+      "label": "Light sweeps across the shop",
+      "help": "The slow light that crosses the green buttons, the logo, the announcement strip, the footer's payment row, the bag, the checkout and the account's offer banner, each on its own switch, plus one switch that stops every sweep at once (the product page's own words and size boxes too). All on as designed, except the Add to Bag sweep. The checkout and Order Now buttons keep their sweep when \"all other green buttons\" is off. A customer who asked for less motion never sees any sweep."
     }
   }
 }

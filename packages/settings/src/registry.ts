@@ -1156,7 +1156,7 @@ export const registry = {
   ...accountSettings,
   // ---- S03 · PR 91–95, 102, 103 · the combo storefront: the combo page's layout and parts, popular pairs, More sets, the sets landing page, the product page's set offer (registry-combo-pages.ts, version 30). ----
   ...comboPageSettings,
-  // ---- S02 · PR 87 · the house motion: the celebration overlay (registry-motion.ts, version 31). ----
+  // ---- S02 · PR 86, 87 · the house motion: the light sweeps' switches and the celebration overlay (registry-motion.ts, version 31). ----
   ...motionSettings,
 } satisfies RegistryShape;
 

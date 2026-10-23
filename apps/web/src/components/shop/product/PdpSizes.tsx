@@ -20,6 +20,7 @@ import { PdpChart } from './PdpChart';
 import { PdpNotify } from './PdpNotify';
 import { wakeBar } from './PdpColour';
 import { usePdp } from './PdpRoot';
+import { sweepClass } from '@/lib/shop/sweep-class';
 
 export function PdpSizes({ oneSizeNote, fitPos, fitWord, cls = 'pdp-sec' }: { oneSizeNote: string | null; fitPos: number | null; fitWord: string; cls?: string }) {
   const pdp = usePdp();
@@ -28,7 +29,6 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord, cls = 'pdp-sec' }: { on
   const [notify, setNotify] = useState<string | null>(null);
   if (!m.sizes.length) return null;
   const colour = m.colours.find((c) => c.key === choice.colour)?.name ?? '';
-  const sweep = (on: boolean) => (on ? ' sweep' : '');
 
   if (isOneSize(m)) {
     const label = m.sizes[0]?.label || w('oneSize');
@@ -76,7 +76,7 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord, cls = 'pdp-sec' }: { on
   return (
     <div className={cls} id="pdp-sizes">
       <div className="pdp-lblrow" data-fitrow="">
-        <span className={`pdp-lbl pdp-fitt${sweep(set.sweep.sizeLabel)}`}>
+        <span className={`pdp-lbl pdp-fitt${sweepClass(set.sweep.sizeLabel)}`}>
           {w('size')}{' '}
           {chosen ? (
             <span className="pdp-lblv on">{chosen.label}</span>

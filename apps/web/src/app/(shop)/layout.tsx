@@ -1,5 +1,6 @@
 // S02 — every shop page sits in this wrapper: the theme of the day as CSS variables (PR 82 / 501), the page language
-// (PR 84) and the shop's own stylesheet and fonts. The admin and the progress page never load any of it.
+// (PR 84), the owner's sweep switches (PR 86) and the shop's own stylesheet and fonts. The admin and the progress page
+// never load any of it.
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import '../../fonts/shop.css';
@@ -9,6 +10,7 @@ import { shopContext } from '@/lib/shop/context';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
+import { sweepCss } from '@/lib/shop/sweep';
 
 /** How long the "Bengali fonts are cached" cookie lasts: the files are immutable, so a year (technical, not a policy). */
 const BENGALI_FONT_COOKIE_AGE = 31_536_000; // hardcode-ok: technical cookie lifetime in seconds (one year)
@@ -25,12 +27,15 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
   const bnCached = (await cookies()).get(BENGALI_FONT_COOKIE)?.value === '1';
   // Token values are checked (hex colours, known font stacks), so they are safe inside a style element.
   const css = `.shop{${c.theme.css}}html,body{background:${c.theme.tokens.bg};overscroll-behavior-x:none;overscroll-behavior-y:none}`;
+  // PR 86: the owner's sweep switches, as one small stylesheet of fixed selectors ('' while every sweep is as designed).
+  const sweep = sweepCss(c.s['shop.sweep']);
   return (
     <div id="app" className="shop" data-theme={c.theme.choice.preset} lang={c.lang} data-large-text={c.s['theme.largeText'] ? '1' : undefined}>
       {fonts.map((href) => (
         <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="anonymous" />
       ))}
       <style dangerouslySetInnerHTML={{ __html: css }} />
+      {sweep ? <style data-sweeps="" dangerouslySetInnerHTML={{ __html: sweep }} /> : null}
       {bnCached ? <style dangerouslySetInnerHTML={{ __html: bengaliFontFaces() }} /> : null}
       {!bnCached && c.lang === 'bn' ? (
         <BengaliFontWarm urls={bengaliFontUrls()} cookie={BENGALI_FONT_COOKIE} maxAgeSeconds={BENGALI_FONT_COOKIE_AGE} />

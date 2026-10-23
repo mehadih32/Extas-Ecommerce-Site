@@ -29,6 +29,7 @@ const KEYS = [
   'theme.colours',
   'theme.fonts',
   'theme.largeText',
+  'shop.sweep',
   'contact.phone',
   'contact.whatsapp',
   'contact.email',
