@@ -2,13 +2,16 @@
 // PR 140 — the order list's table (demo V12.3 a2List, 97r ORD-01): one row per order with the four separate status
 // chips, the courier and the flags; a table on a computer, one card per order on a phone (shell.css). A tap on a row
 // opens the order; the order number is its link for the keyboard and screen readers. The tick boxes select orders for
-// the bulk bar (its commands are PR 152); the selection is this page's only (a new page or view starts empty).
+// the bulk bar (PR 152, BulkBar.tsx); the selection is this page's only (a new page or view starts empty).
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type MouseEvent } from 'react';
+import { useCallback, useState, type MouseEvent } from 'react';
+import type { BulkCommand } from '@/lib/admin-orders/bulk';
 import type { Chip, OrderRowView } from '@/lib/admin-orders/list';
+import type { FieldOption } from '@/lib/admin-orders/spec';
 import { t, type Dict } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
+import { BulkBar } from './BulkBar';
 
 export function Chips({ chips, empty }: { chips: readonly Chip[]; empty?: string }) {
   if (!chips.length) return empty ? <span className="a2-faint">{empty}</span> : null;
@@ -27,7 +30,8 @@ export function Chips({ chips, empty }: { chips: readonly Chip[]; empty?: string
 
 /** What the bulk bar may offer this person (null: no tick boxes). */
 export interface BulkSetup {
-  commands: string[];
+  commands: BulkCommand[];
+  holdOptions: FieldOption[];
 }
 
 export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRowView[]; bulk: BulkSetup | null }) {
@@ -48,6 +52,7 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
     router.push(href);
   };
   const chosen = rows.filter((r) => sel.has(r.id));
+  const clear = useCallback(() => setSel(new Set()), []);
   return (
     <>
       <div className="a2-tblw">
@@ -126,14 +131,7 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
           </tbody>
         </table>
       </div>
-      {bulk && chosen.length ? (
-        <div className="a2-bulk" role="region" aria-label={t(d, 'orders.bulk.aria')} data-testid="orders-bulk">
-          <b>{t(d, 'orders.bulk.selected', { n: chosen.length })}</b>
-          <button type="button" className="a2-btn sm ghost a2-bclr" onClick={() => setSel(new Set())}>
-            {t(d, 'orders.bulk.clear')}
-          </button>
-        </div>
-      ) : null}
+      {bulk && chosen.length ? <BulkBar dict={d} rows={chosen} commands={bulk.commands} holdOptions={bulk.holdOptions} onClear={clear} /> : null}
     </>
   );
 }

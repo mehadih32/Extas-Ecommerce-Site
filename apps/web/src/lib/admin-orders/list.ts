@@ -10,6 +10,7 @@ import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/
 import type { AdminView } from '../admin-page';
 import { ageOf } from '../admin-shell/dashboard';
 import type { ShellIconName } from '../admin-shell/icons';
+import type { FieldOption } from './spec';
 import { t } from '../i18n';
 import { phoneNormalizeBD } from '../phone-bd';
 import { LIST_PAGES, ORDER_TONE, orderHref, PAY_TONE, RET_TONE, SHIP_TONE, UNBOOKED_SHIPMENT, type ListPageId, type ListQuery, type Tone } from './model';
@@ -79,6 +80,8 @@ export interface OrderListData {
   rows: OrderRowView[];
   counts: Record<string, number>;
   next: string | null;
+  /** PR 152: the owner's hold reasons, for the bulk Hold. */
+  holdOptions: FieldOption[];
 }
 
 export interface ListLabels {
@@ -161,5 +164,6 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
       },
     };
   });
-  return { query, rows, counts: list.counts, next: list.next };
+  const holdOptions = reasons.hold.map((r) => ({ value: r.key, label: name(r), ...(r.noteRequired ? { noteRequired: true } : {}) }));
+  return { query, rows, counts: list.counts, next: list.next, holdOptions };
 }

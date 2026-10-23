@@ -6,7 +6,7 @@
 // page is read again from the server, so the buttons are always the commands open now.
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react';
 import { newKey, refundRequestsOf, send } from '@/lib/admin-orders/commands';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec, type CommandTexts, type FieldSpec } from '@/lib/admin-orders/spec';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -49,7 +49,7 @@ function useCommands(): Ctx {
   return c;
 }
 
-function Field({ f, value, set, missing, id, label }: { f: FieldSpec; value: string | string[]; set(v: string | string[]): void; missing: boolean; id: string; label: string }) {
+export function Field({ f, value, set, missing, id, label }: { f: FieldSpec; value: string | string[]; set(v: string | string[]): void; missing: boolean; id: string; label: string }) {
   const err = missing ? { 'aria-invalid': true as const } : {};
   if (f.kind === 'checks') {
     const on = new Set(Array.isArray(value) ? value : []);
@@ -97,19 +97,8 @@ function Field({ f, value, set, missing, id, label }: { f: FieldSpec; value: str
   );
 }
 
-/** The [confirm] dialog: what will happen, the fields, Cancel and the command's own button. Esc or the scrim closes it. */
-function Dialog({ spec, onClose }: { spec: CommandSpec; onClose(): void }) {
-  const { texts, say } = useCommands();
-  const router = useRouter();
-  const uid = useId();
-  const box = useRef<HTMLDivElement>(null);
-  const [values, setValues] = useState<Record<string, string | string[]>>(() => Object.fromEntries(spec.fields.map((f) => [f.name, startOf(f)])));
-  const [key, setKey] = useState(newKey);
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
-  const [tried, setTried] = useState(false);
-  const missing = missingOf(spec, values);
-
+/** A dialog's keys: focus its first field (or its OK button), Esc closes it, Tab stays inside it. */
+export function useDialogKeys(box: RefObject<HTMLDivElement | null>, onClose: () => void) {
   useEffect(() => {
     const el = box.current;
     el?.querySelector<HTMLElement>('select, input, textarea, [data-ok]')?.focus();
@@ -131,8 +120,22 @@ function Dialog({ spec, onClose }: { spec: CommandSpec; onClose(): void }) {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [box, onClose]);
+}
 
+/** The [confirm] dialog: what will happen, the fields, Cancel and the command's own button. Esc or the scrim closes it. */
+function Dialog({ spec, onClose }: { spec: CommandSpec; onClose(): void }) {
+  const { texts, say } = useCommands();
+  const router = useRouter();
+  const uid = useId();
+  const box = useRef<HTMLDivElement>(null);
+  const [values, setValues] = useState<Record<string, string | string[]>>(() => Object.fromEntries(spec.fields.map((f) => [f.name, startOf(f)])));
+  const [key, setKey] = useState(newKey);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [tried, setTried] = useState(false);
+  const missing = missingOf(spec, values);
+  useDialogKeys(box, onClose);
   const go = async () => {
     setTried(true);
     if (missing.length || busy) return;

@@ -9,6 +9,7 @@ import * as od from '@extas/orders';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminDeps } from '@/lib/admin-auth';
 import type { AdminView } from '@/lib/admin-page';
+import { BULK_COMMANDS, BULK_PERM } from '@/lib/admin-orders/bulk';
 import { FILTER_STATES, ageText, loadOrderList } from '@/lib/admin-orders/list';
 import { LIST_PAGES, listHref, type ListPageId, type ListQuery } from '@/lib/admin-orders/model';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -124,7 +125,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
   const page: ListPageId = 'all';
   const data = await loadOrderList(readDeps(a.deps), a.who, view, page, query);
   const filtered = !!(query.q || query.status || query.payment || query.source);
-  const canBulk = ['orders.confirm', 'orders.hold'].filter((p) => a.perms.has(p));
+  const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const shown = formatNumber(data.rows.length, view.locale);
   return (
     <div className="a2-z" data-testid="orders-list">
@@ -146,7 +147,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
       />
       {data.rows.length ? (
         <>
-          <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length ? { commands: canBulk } : null} />
+          <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length ? { commands: canBulk, holdOptions: data.holdOptions } : null} />
           <div className="a2-tblf a2-tblf-o" data-testid="orders-foot">
             <span>{t(d, 'orders.list.shown', { n: shown })}</span>
             <span className="a2-gap8">

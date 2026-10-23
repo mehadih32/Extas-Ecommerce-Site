@@ -153,7 +153,53 @@
     "bulk": {
       "aria": "Bulk actions",
       "selected": "{n} selected",
-      "clear": "Clear"
+      "clear": "Clear",
+      "cmd": {
+        "confirm": "Confirm",
+        "hold": "Hold",
+        "release": "Release hold"
+      },
+      "btnCount": "{label} ({n})",
+      "skipLine": "{cmd}: {reasons} will be skipped",
+      "reasonN": "{n} {why}",
+      "title": {
+        "confirm": "Confirm {n} orders?",
+        "hold": "Put {n} orders on hold",
+        "release": "Release the hold on {n} orders?"
+      },
+      "ok": {
+        "confirm": "Confirm {n}",
+        "hold": "Hold {n}",
+        "release": "Release {n}"
+      },
+      "eff": {
+        "each": "Each order is checked again and changed on its own; one that changed meanwhile stays as it is and is listed",
+        "release": "Each order goes back to where it was before the hold",
+        "never": "No money moves; prices, discounts and COD stay as they are"
+      },
+      "skippedHead": "Skipped ({n})",
+      "running": "Working… {done} of {n}",
+      "done": "{n} done",
+      "notDone": "{n} not done",
+      "notDoneHead": "Not done — open the order to check",
+      "why": {
+        "CANCEL_REQUESTED": "customer asked to cancel",
+        "IN_REVIEW": "in duplicate review",
+        "CANCEL_PENDING": "cancel waiting for the courier",
+        "BOOKED": "courier booked",
+        "NOT_BOOKED": "no courier booked",
+        "NO_CANCEL_PENDING": "no cancel waiting",
+        "NO_CANCEL_REQUEST": "no cancel request",
+        "ADVANCE_SHORT": "advance not paid",
+        "ILLEGAL_TRANSITION": "not possible in its status now",
+        "STALE": "changed meanwhile",
+        "REASON_REQUIRED": "reason needed",
+        "FORBIDDEN": "no permission",
+        "UNAUTHENTICATED": "signed out",
+        "NOT_FOUND": "not found",
+        "network": "no connection",
+        "other": "did not work"
+      }
     },
     "detail": {
       "metaTitle": "Order",
