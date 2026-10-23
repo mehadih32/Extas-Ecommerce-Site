@@ -23,6 +23,7 @@ import { bagSettings } from './registry-bag';
 import { productSettings } from './registry-product';
 import { checkoutSettings } from './registry-checkout';
 import { jobsSettings } from './registry-jobs';
+import { shopMoreSettings } from './registry-shop-more';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1136,6 +1137,8 @@ export const registry = {
   ...checkoutSettings,
   // ---- PR 6 · the background worker: heartbeat, scheduler leader, retries (registry-jobs.ts, version 22). ----
   ...jobsSettings,
+  // ---- S02 · PR 53, 67–71, 74, 75 · first screen, rows, rail, share, WhatsApp button, wishlist, menu, content pages (registry-shop-more.ts, version 21). ----
+  ...shopMoreSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

@@ -11,6 +11,8 @@
 // Signed in (--email + --password-file, follow-up 5): the admin pages are opened with a session on a database seeded
 // with the sample catalogue, so controls that only show with data are measured too (device-gate.json `signedIn`);
 // SIGNED-OUT and CONTROL-MISSING fail a page that lost its session or rendered without its data.
+// PR 53: on a product page FIRST-SCREEN (phone: the sizes and the measurement line end above the buy bar, before and
+// after a size is chosen) and BUY-BELOW-FOLD (desktop: the buy buttons above the fold), device-gate.json `firstScreen`.
 //   node tools/device-gate.mjs [--base=http://127.0.0.1:3000] [--group=phones|tablets|desktop|all]
 //                              [--out=device-gate-report] [--concurrency=8] [--urls=/a,/b (instead of lighthouserc)]
 //                              [--email=… --password-file=… (or DEVICE_GATE_EMAIL / DEVICE_GATE_PASSWORD_FILE)]
@@ -121,6 +123,51 @@ function appChecks(o) {
     if (small.length) issues.push({ k: 'TAP-TOO-SMALL', d: list(small) });
   }
   return issues;
+}
+
+/**
+ * PR 53 — the first-screen budget (Blueprint D2, follow-up 60), checked inside the page. On a phone the size row and the
+ * measurement line end above the buy bar's top on the first screen (page coordinates, so a scroll after a tap does not
+ * count); on a desktop the buy buttons are above the fold. `o.blocks` / `o.buy` are selectors; missing ones are skipped
+ * (a one-size product has no size row), but a phone product page without its buy bar fails.
+ */
+function firstScreenChecks(o) {
+  const issues = [];
+  const sy = scrollY;
+  const shown = (e) => !!e && e.getBoundingClientRect().height > 0 && getComputedStyle(e).visibility !== 'hidden';
+  if (o.phone) {
+    const bar = document.querySelector(o.bar);
+    if (!shown(bar)) return [{ k: 'FIRST-SCREEN', d: `no buy bar (${o.bar})${o.when}` }];
+    const top = innerHeight - bar.getBoundingClientRect().height;
+    const low = [];
+    for (const sel of o.blocks) {
+      const e = document.querySelector(sel);
+      if (!shown(e)) continue;
+      const bottom = e.getBoundingClientRect().bottom + sy;
+      if (bottom > top + o.slackPx) low.push(`${sel} ends ${Math.round(bottom - top)} px below the bar's top`);
+    }
+    if (low.length) issues.push({ k: 'FIRST-SCREEN', d: low.join(', ') + o.when });
+  } else {
+    const low = [];
+    for (const sel of o.buy) {
+      const e = document.querySelector(sel);
+      if (!shown(e)) continue;
+      const bottom = e.getBoundingClientRect().bottom + sy;
+      if (bottom > innerHeight + o.slackPx) low.push(`${sel} ends ${Math.round(bottom - innerHeight)} px below the fold`);
+    }
+    if (low.length) issues.push({ k: 'BUY-BELOW-FOLD', d: low.join(', ') + o.when });
+  }
+  return issues;
+}
+
+/** PR 53 — whether the first-screen check runs for this page and size, and how (device-gate.json `firstScreen`). */
+export function firstScreenFor(url, device, rules) {
+  if (!rules?.pathPattern) return null;
+  const path = new URL(url).pathname;
+  if (!new RegExp(rules.pathPattern).test(path)) return null;
+  if ((rules.phoneGroups ?? []).includes(device.group)) return { phone: true, bar: rules.bar, blocks: rules.blocks ?? [], buy: [], slackPx: rules.slackPx ?? 0.5, tap: rules.tap ?? null, ready: rules.ready ?? null };
+  if ((rules.desktopGroups ?? []).includes(device.group)) return { phone: false, bar: rules.bar, blocks: [], buy: rules.buy ?? [], slackPx: rules.slackPx ?? 0.5, tap: null, ready: null };
+  return null;
 }
 
 /**
@@ -239,6 +286,22 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     await page.waitForTimeout(rules.settleMs);
     for (const sel of opts.expect ?? []) {
       if (!(await page.$(sel))) issues.push({ k: 'CONTROL-MISSING', d: `${sel} not on the page (seeded data missing?)` });
+    }
+    // PR 53: the first screen as it opens, then again after a size is chosen (the line under the sizes fills in).
+    const fs = firstScreenFor(url, device, rules.firstScreen);
+    if (fs) {
+      // the budget is planned after hydration: wait for its mark (a page where it never runs fails)
+      const ready = !fs.ready || (await page.waitForSelector(fs.ready, { state: 'attached', timeout: rules.firstScreen.readyMs ?? 10_000 }).then(() => true, () => false));
+      if (!ready) issues.push({ k: 'FIRST-SCREEN', d: `the first-screen budget never ran (${fs.ready})` });
+      else await page.waitForTimeout(rules.settleMs);
+      issues.push(...(await page.evaluate(firstScreenChecks, { ...fs, when: '' })));
+      const pill = fs.tap ? page.locator(fs.tap).first() : null;
+      if (pill && (await pill.count())) {
+        await pill.tap();
+        await page.waitForTimeout(rules.settleMs);
+        issues.push(...(await page.evaluate(firstScreenChecks, { ...fs, when: ' (after choosing a size)' })));
+        await page.evaluate(() => scrollTo(0, 0));
+      }
     }
     // Layout first, taps last: the tap probe scrolls the page.
     issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);

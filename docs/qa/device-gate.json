@@ -7,6 +7,19 @@
   "inputFontGroups": ["phone", "tablet"],
   "settleMs": 400,
   "concurrency": 8,
+  "firstScreen": {
+    "$comment": "PR 53 (Blueprint D2, follow-up 60) — the first-screen budget. On every product page (pathPattern) on a phone, the size row and the measurement line (`blocks`) end above the top of the buy bar (`bar`) on the first screen, as it opens and again after the first size that can be chosen (`tap`) is tapped: FIRST-SCREEN. On a desktop the Add to Bag and Order Now buttons (`buy`) end above the fold: BUY-BELOW-FOLD. `slackPx` is rounding. On a phone the check waits for the budget's mark (`ready`, at most `readyMs`); a page where it never appears fails. Product pages come from signedIn.urls and the `discover` entries that open a category and take its first products, so every garment kind is measured.",
+    "pathPattern": "^(/bn)?/p/[^/]+(/[^/]+)?$",
+    "phoneGroups": ["phone"],
+    "desktopGroups": ["desktop"],
+    "bar": ".pdp-mbar",
+    "blocks": [".pdp-pills", ".pdp-fitline"],
+    "tap": ".pdp-pills .size-pill:not(.out)",
+    "ready": ".pdp-page[data-fit-anchor]",
+    "readyMs": 10000,
+    "buy": ["[data-testid=\"add-to-bag\"]", "[data-testid=\"order-now\"]"],
+    "slackPx": 0.5
+  },
   "filled": {
     "$comment": "PR 107 — the bag with something in it, opened as a customer after the test server's sample-bag fill (POST /api/bag/try; only with EXTAS_SHOP_TEST_PAGES=1, sample data only). `expect` fails the page as CONTROL-MISSING when the bag rendered empty.",
     "paths": ["/bag", "/bn/bag"],
@@ -44,7 +57,11 @@
         "take": 2,
         "required": true,
         "expect": [".pa-col", ".pa-x", ".pa-kind"]
-      }
+      },
+      { "from": "/collections/shirts", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
+      { "from": "/collections/panjabi", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
+      { "from": "/collections/hoodies", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
+      { "from": "/bn/collections/tshirts", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] }
     ],
     "expect": {
       "/admin/products": ["a.pa-nm"],

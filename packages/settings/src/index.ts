@@ -26,5 +26,6 @@ export * from './registry-category';
 export * from './registry-bag';
 export * from './registry-product';
 export * from './registry-checkout';
+export * from './registry-shop-more';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

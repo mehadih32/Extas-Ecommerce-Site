@@ -5,7 +5,7 @@
 // rewrites the address to that colour's own page (D3.7) without a reload; the server drew the page for the colour in
 // the address, so a shared link opens exactly what was shared.
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { PdpBuySettings, PdpChartSettings, PdpColourSettings, PdpGallerySettings, PdpSizeSettings, PdpStockSettings, PdpSweepSettings } from '@extas/settings';
+import type { PdpBuySettings, PdpChartSettings, PdpColourSettings, PdpFitSettings, PdpGallerySettings, PdpSizeSettings, PdpStockSettings, PdpSweepSettings } from '@extas/settings';
 import { colourHref } from '@/lib/shop/pdp-colour';
 import { COLOUR_QUERY } from '@/lib/shop/routes';
 import { digitsOf, fillWords, keepSize, type PdpChoice, type PdpModel } from '@/lib/shop/product-model';
@@ -19,6 +19,7 @@ export interface PdpClientSettings {
   stock: Pick<PdpStockSettings, 'line' | 'lowAt' | 'lowChip' | 'dispatchCutoff'>;
   buy: PdpBuySettings;
   sweep: PdpSweepSettings;
+  fit: PdpFitSettings;
   colourPaths: boolean;
 }
 

@@ -5,12 +5,13 @@
 //   level at a time (full label → short label → icon) until it fits; the measurement line hides its last fields and
 //   the payment line its last pieces, the first one always stays;
 // - on a phone the photo is the slack of the first screen: its height (--pdp-img) is set so the buy column ends just
-//   above the buy bar, between the photo's floor and ceiling.
+//   above the buy bar, between the photo's floor and ceiling (PR 53: the numbers are the `pdp.fit` setting, the
+//   arithmetic is lib/shop/pdp-fit.ts).
 import { useEffect, useRef } from 'react';
+import type { PdpFitSettings } from '@extas/settings';
+import { anchorClears, FIT_ANCHORS, FIT_CENTRED, planPhoto, type AnchorProbe } from '@/lib/shop/pdp-fit';
 import { usePdp } from './PdpRoot';
 
-/** The first-screen budget (demo PDP_FIT): px of air above the bar, the photo's floor and ceiling. Layout constants. */
-const FIT = { clear: 4.75, minPx: 150, minVh: 0.2, maxVh: 0.52, maxPx: 500, deepVh: 0.345, anchors: ['.pdp-fmssec', '.pdp-fitline'] };
 const DESKTOP = 1024;
 
 function rowOver(row: HTMLElement): boolean {
@@ -63,41 +64,36 @@ function fitRows(page: HTMLElement): void {
   });
 }
 
-function fitPass(page: HTMLElement, bar: HTMLElement, vh: number): boolean {
+function fitPass(page: HTMLElement, bar: HTMLElement, vh: number, fit: PdpFitSettings): boolean {
   const shot = page.querySelector<HTMLElement>('.pdp-main .pimg');
-  if (!shot) return true;
-  const sy = window.scrollY || 0;
-  const max = Math.min(FIT.maxVh * vh, FIT.maxPx);
-  const deep = FIT.deepVh * vh;
-  const min = Math.max(90, Math.min(FIT.minPx, FIT.minVh * vh));
-  const h0 = shot.getBoundingClientRect().height;
-  let want: number | null = null;
-  let who = '';
-  for (let i = 0; i < FIT.anchors.length; i++) {
-    const a = page.querySelector<HTMLElement>(FIT.anchors[i]!);
-    if (!a) continue;
-    const clear = FIT.anchors[i] === '.pdp-fitline' ? parseFloat(getComputedStyle(a).marginTop) || FIT.clear : FIT.clear;
-    const target = vh - bar.offsetHeight - clear;
-    const h = h0 + (target - (a.getBoundingClientRect().bottom + sy));
-    if (i === FIT.anchors.length - 1) {
-      want = Math.max(min, Math.min(max, h));
-      who = FIT.anchors[i]!;
-      if (want >= max - 0.5 && h > max + 1) who = '';
-      break;
-    }
-    if (h >= deep && h <= max) {
-      want = h;
-      who = FIT.anchors[i]!;
-      break;
-    }
+  if (!shot) {
+    page.setAttribute('data-fit-anchor', '');
+    return true;
   }
-  if (want === null) return true;
-  page.setAttribute('data-fit-anchor', who);
-  page.style.setProperty('--pdp-img', `${want.toFixed(2)}px`);
-  return Math.abs(want - h0) < 0.4;
+  const sy = window.scrollY || 0;
+  const h0 = shot.getBoundingClientRect().height;
+  const probes: AnchorProbe[] = [];
+  for (const sel of FIT_ANCHORS) {
+    const a = page.querySelector<HTMLElement>(sel);
+    if (a) probes.push({ sel, bottom: a.getBoundingClientRect().bottom + sy, clear: airUnder(a, sel, fit) });
+  }
+  const plan = planPhoto(fit, vh, bar.offsetHeight, h0, probes);
+  if (!plan) {
+    // nothing to bring above the bar (no sizes, no measurement line): the photo keeps its height, the pass is marked done
+    page.setAttribute('data-fit-anchor', '');
+    return true;
+  }
+  page.setAttribute('data-fit-anchor', plan.who);
+  page.style.setProperty('--pdp-img', `${plan.want.toFixed(2)}px`);
+  return Math.abs(plan.want - h0) < 0.4;
 }
 
-function budget(vh: number): void {
+/** The air an anchor wants under it: the measurement line's own top margin (centred in its room), else the setting. */
+function airUnder(a: HTMLElement, sel: string, fit: PdpFitSettings): number {
+  return sel === FIT_CENTRED ? parseFloat(getComputedStyle(a).marginTop) || fit.clearPx : fit.clearPx;
+}
+
+function budget(vh: number, fit: PdpFitSettings): void {
   const page = document.querySelector<HTMLElement>('.pdp-page');
   if (!page) return;
   fitRows(page);
@@ -108,20 +104,21 @@ function budget(vh: number): void {
     return;
   }
   page.classList.remove('pdp-tight');
-  for (let i = 0; i < 4 && !fitPass(page, bar, vh); i++);
+  for (let i = 0; i < 4 && !fitPass(page, bar, vh, fit); i++);
   // last resort for a tall product on a short screen: the column's own gaps give up a few pixels
-  const fit = page.querySelector<HTMLElement>('.pdp-fitline');
-  if (fit && page.getAttribute('data-fit-anchor') === '.pdp-fitline') {
-    const clear = parseFloat(getComputedStyle(fit).marginTop) || FIT.clear;
-    if (fit.getBoundingClientRect().bottom + (window.scrollY || 0) > vh - bar.offsetHeight - clear + 0.6) {
+  const line = page.querySelector<HTMLElement>(FIT_CENTRED);
+  if (fit.tight && line && page.getAttribute('data-fit-anchor') === FIT_CENTRED) {
+    const bottom = line.getBoundingClientRect().bottom + (window.scrollY || 0);
+    if (!anchorClears(bottom, airUnder(line, FIT_CENTRED, fit), vh, bar.offsetHeight)) {
       page.classList.add('pdp-tight');
-      for (let i = 0; i < 4 && !fitPass(page, bar, vh); i++);
+      for (let i = 0; i < 4 && !fitPass(page, bar, vh, fit); i++);
     }
   }
 }
 
 export function PdpEffects() {
-  const { choice, err, unit } = usePdp();
+  const { choice, err, unit, set } = usePdp();
+  const fit = set.fit;
   const first = useRef(true);
 
   useEffect(() => {
@@ -130,7 +127,7 @@ export function PdpEffects() {
     let t: ReturnType<typeof setTimeout> | undefined;
     const soon = () => {
       clearTimeout(t);
-      t = setTimeout(() => budget(vp.h), 60);
+      t = setTimeout(() => budget(vp.h, fit), 60);
     };
     const onResize = () => {
       const w = window.innerWidth;
@@ -140,17 +137,17 @@ export function PdpEffects() {
       soon();
     };
     // the first pass runs in the next frame, not inside hydration's own task (PR 49 · Lighthouse TBT)
-    const raf = requestAnimationFrame(() => budget(vp.h));
+    const raf = requestAnimationFrame(() => budget(vp.h, fit));
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', soon);
-    document.fonts?.ready.then(() => budget(vp.h)).catch(() => undefined);
+    document.fonts?.ready.then(() => budget(vp.h, fit)).catch(() => undefined);
     return () => {
       clearTimeout(t);
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', soon);
     };
-  }, []);
+  }, [fit]);
 
   useEffect(() => {
     // the mount pass is the one above; this one re-plans after each change of choice
@@ -158,8 +155,8 @@ export function PdpEffects() {
       first.current = false;
       return;
     }
-    budget(window.innerHeight);
-  }, [choice, err, unit]);
+    budget(window.innerHeight, fit);
+  }, [choice, err, unit, fit]);
 
   return null;
 }

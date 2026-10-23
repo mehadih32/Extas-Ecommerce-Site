@@ -1,0 +1,8 @@
+{
+  "pdp": {
+    "fit": {
+      "label": "First screen of the product page (phone)",
+      "help": "On a phone the first screen of every product page reaches down to the sizes and the measurement line, just above the buy buttons. The photo's height is what gives way: it is never shorter than its floor nor taller than its ceiling (each the smaller of a pixel number and a share of the screen). The air above the buy bar is in pixels. While the photo stays at least the 'deep' share of the screen, a deeper block may end the first screen. On a very short phone the gaps between the blocks may give a few pixels too."
+    }
+  }
+}

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, markdownReport, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, markdownReport, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -58,6 +58,28 @@ describe('device gate', () => {
     expect(filledPlan('http://h:1', undefined)).toEqual([]);
     const rc = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../lighthouserc.json'), 'utf8')).ci.collect.url.map((u) => new URL(u).pathname);
     for (const p of ['/bag', '/bn/bag']) expect(rc).toContain(p);
+  });
+
+  it('PR 53 · checks the first screen of every product page: the sizes above the bar on phones, the buy buttons on desktops', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const fs = rules.firstScreen;
+    const phone = { group: 'phone' };
+    const desk = { group: 'desktop' };
+    for (const p of ['/p/essential-pique-polo', '/bn/p/essential-pique-polo', '/p/essential-pique-polo/navy']) {
+      expect(firstScreenFor(`http://h:1${p}`, phone, fs)).toMatchObject({ phone: true, blocks: ['.pdp-pills', '.pdp-fitline'], bar: '.pdp-mbar' });
+      expect(firstScreenFor(`http://h:1${p}`, desk, fs)).toMatchObject({ phone: false, tap: null });
+    }
+    expect(firstScreenFor('http://h:1/p/x', phone, fs).tap).toMatch(/size-pill:not\(\.out\)/);
+    expect(firstScreenFor('http://h:1/p/x', desk, fs).buy).toContain('[data-testid="order-now"]');
+    expect(firstScreenFor('http://h:1/p/x', { group: 'tablet' }, fs)).toBeNull();
+    // a phone waits for the budget's mark before measuring; a desktop has no budget to wait for
+    expect(firstScreenFor('http://h:1/p/x', phone, fs).ready).toBe('.pdp-page[data-fit-anchor]');
+    expect(firstScreenFor('http://h:1/p/x', desk, fs).ready).toBeNull();
+    for (const p of ['/', '/bag', '/collections/polos', '/admin/products/p1']) expect(firstScreenFor(`http://h:1${p}`, phone, fs)).toBeNull();
+    expect(firstScreenFor('http://h:1/p/x', phone, undefined)).toBeNull();
+    // every garment kind of the sample shop is measured: categories are opened and their first product taken
+    const from = rules.signedIn.discover.map((d) => d.from);
+    for (const c of ['shirts', 'panjabi', 'hoodies']) expect(from).toContain(`/collections/${c}`);
   });
 
   it('picks distinct same-site links from a page, the first N', () => {
