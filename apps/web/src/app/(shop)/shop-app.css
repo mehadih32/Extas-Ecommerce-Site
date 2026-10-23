@@ -142,3 +142,9 @@ html .shop .nf-cats a.chip::before { content: ""; position: absolute; left: 50%;
   .shop .hm-slider[data-arrows="1"] .hm-slnav.next { right: 6px; }
   .shop .hm-slider[data-arrows="1"] .hm-slnav::before { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
 }
+/* PR 45 · the floating WhatsApp disc fades out over the footer (ShellEffects waFabFooter, as in the demo), but only once
+ * a scroll event has run: a jump to the end (a link, the keyboard End key, a slow phone before the script) left it
+ * over the language pill and the footer links. The footer now sits one layer above the disc, so wherever they meet
+ * the footer is drawn and takes the tap; the sticky header (40) and the bottom bar (45) stay above both. */
+html .shop .wa-fab { z-index: 38; }
+html .shop .ftr { position: relative; z-index: 39; }

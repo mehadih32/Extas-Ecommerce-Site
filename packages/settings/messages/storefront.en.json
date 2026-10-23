@@ -3,7 +3,8 @@
     "shell": "Shop header, menus and footer",
     "language": "Languages",
     "slider": "Sliding rows",
-    "home": "Home page"
+    "home": "Home page",
+    "categoryPage": "Category pages"
   },
   "theme": {
     "schedule": {
@@ -127,6 +128,40 @@
     "rowFade": {
       "label": "Soft edges on sliding rows",
       "help": "Sliding rows fade out at both edges. Off = plain straight edges."
+    }
+  },
+  "category": {
+    "page": {
+      "label": "Category page layout",
+      "help": "The breadcrumb (Home / category) above the title, how many products one page shows before \"Show more\" (4 to 120), where sold-out styles go (kept in your order, moved to the end, or left out), from how few styles a desktop page drops the filter column (0 = never), and the \"Showing 12 of 30\" line with its bar."
+    },
+    "filters": {
+      "label": "Category filters",
+      "help": "Which filter groups show and in what order: in stock only, size, colour, fit and price. Every option is built from the category's own products, with live counts; an option no product matches is dimmed (sizes crossed out) or left out. How many colours show before \"+ more colours\", the line under the sizes, the rounding steps of the price bands (in poisha) and, per category, two hand-set price cut points or none."
+    },
+    "toolbar": {
+      "label": "Phone filter row and quick chips",
+      "help": "The phone's top row (Filter, Sort, On sale: switch each on or off, rename it, change the order) and the quick chips under it: tick the chips you want from the library, in your order. A chip that would match every product or none in a category is left out by itself. \"My size only\" and \"Set price\" join when Find My Size and the sets can tell which products qualify. Each category can switch its own row and chips off or tick its own chips."
+    },
+    "sort": {
+      "label": "Sort choices",
+      "help": "Which sorts the customer can pick and in what order (recommended = your own order, newest, price low to high, price high to low, top rated). The first one is how the page opens. Each can carry your own words."
+    },
+    "newIn": {
+      "label": "\"New in\" page",
+      "help": "The New in page lists the newest published styles of every shown category: by publish date or your own order, and only from the last so many days (0 = every style)."
+    },
+    "faq": {
+      "label": "Category questions",
+      "help": "The shop-wide questions under each category's own: switch each on or off, change its words, change the order. A question that promises something (Cash on Delivery, free delivery, exchange) shows only while that rule is on. Whether the first question starts open."
+    },
+    "seo": {
+      "label": "Category text for Google",
+      "help": "Per category, your own: the title in the browser tab and Google, the line under it in Google, the heading of the text block and the text itself (a blank line starts a new paragraph). A category with no text shows no text block."
+    },
+    "faqOwn": {
+      "label": "Each category's own questions",
+      "help": "Per category, your own questions and answers about its clothes (fabric, fit, care). They come before the shop-wide ones."
     }
   }
 }

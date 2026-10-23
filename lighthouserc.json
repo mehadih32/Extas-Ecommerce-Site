@@ -23,7 +23,8 @@
         "http://127.0.0.1:3000/bn",
         "http://127.0.0.1:3000/checkout",
         "http://127.0.0.1:3000/bn/checkout",
-        "http://127.0.0.1:3000/collections/new-in"
+        "http://127.0.0.1:3000/collections/new-in",
+        "http://127.0.0.1:3000/bn/collections/new-in"
       ],
       "numberOfRuns": 3,
       "settings": {

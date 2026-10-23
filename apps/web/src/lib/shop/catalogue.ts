@@ -7,6 +7,8 @@ import { getPrisma, type Prisma } from '@extas/db/client';
 import { wasPriceFor, type WasPriceSource } from '@extas/catalogue';
 import { imageSources, type ImageSource } from '@extas/media';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
+import type { SizeMeta } from './category-filter';
+import type { CatItem } from './category-model';
 import type { ShopLang } from './lang';
 
 export interface ShopColour {
@@ -111,7 +113,28 @@ function sourceOf(rules: PriceRules, product: { wasPriceSource: WasPriceSource |
   return rules.store;
 }
 
-async function toCards(storeId: number, rows: Row[]): Promise<ShopCard[]> {
+/** The front photo of each colour (and of the product, '*'), per product: one look-up of every asset at once. */
+async function photoMap(storeId: number, rows: readonly Row[]): Promise<Map<string, Record<string, ImageSource>>> {
+  const out = new Map<string, Record<string, ImageSource>>();
+  const assetIds = [...new Set(rows.flatMap((p) => p.media.map((m) => m.assetId)))];
+  const resolver = settingsResolver();
+  const photos = assetIds.length && resolver ? await imageSources({ db: getPrisma(), settings: resolver }, storeId, assetIds) : new Map<string, ImageSource>();
+  for (const p of rows) {
+    const colourKey = new Map(p.colours.map((c) => [c.colour.id, c.colour.key]));
+    const shots: Record<string, ImageSource> = {};
+    for (const m of p.media) {
+      const img = photos.get(m.assetId);
+      if (!img) continue;
+      const key = m.colourId ? colourKey.get(m.colourId) : '*';
+      if (key && !shots[key]) shots[key] = img;
+    }
+    out.set(p.id, shots);
+  }
+  return out;
+}
+
+/** Rows as cards. `withPhotos: false` leaves the photos out (PR 45: a long category reads them for the page shown only). */
+async function toCards(storeId: number, rows: Row[], withPhotos = true): Promise<ShopCard[]> {
   if (!rows.length) return [];
   const prisma = getPrisma();
   const rules = await priceRules(storeId);
@@ -132,9 +155,7 @@ async function toCards(storeId: number, rows: Row[]): Promise<ShopCard[]> {
     orderBy: { createdAt: 'asc' },
     select: { productId: true, tag: { select: { name: true } } },
   });
-  const assetIds = [...new Set(rows.flatMap((p) => p.media.map((m) => m.assetId)))];
-  const resolver = settingsResolver();
-  const photos = assetIds.length && resolver ? await imageSources({ db: prisma, settings: resolver }, storeId, assetIds) : new Map<string, ImageSource>();
+  const photos = withPhotos ? await photoMap(storeId, rows) : new Map<string, Record<string, ImageSource>>();
   return rows.map((p) => {
     const v = cheapest.get(p.id) ?? null;
     const was = v
@@ -149,14 +170,6 @@ async function toCards(storeId: number, rows: Row[]): Promise<ShopCard[]> {
           now,
         }).wasMinor
       : null;
-    const colourKey = new Map(p.colours.map((c) => [c.colour.id, c.colour.key]));
-    const shots: Record<string, ImageSource> = {};
-    for (const m of p.media) {
-      const img = photos.get(m.assetId);
-      if (!img) continue;
-      const key = m.colourId ? colourKey.get(m.colourId) : '*';
-      if (key && !shots[key]) shots[key] = img;
-    }
     return {
       id: p.id,
       slug: p.slug,
@@ -169,7 +182,7 @@ async function toCards(storeId: number, rows: Row[]): Promise<ShopCard[]> {
       wasMinor: was,
       colours: p.colours.map((c) => ({ key: c.colour.key, nameEn: c.colour.nameEn, nameBn: c.colour.nameBn, hex: c.colour.hex })),
       badge: tags.find((t) => t.productId === p.id)?.tag.name ?? null,
-      photos: shots,
+      photos: photos.get(p.id) ?? {},
       inStock: p.inStock,
       sortRank: p.sortRank,
     };
@@ -288,4 +301,179 @@ export function heroCollectionCards(storeId: number, slug: string, count: number
     const byId = new Map(cards.map((c) => [c.id, c]));
     return order.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])).slice(0, count);
   });
+}
+
+// ---- PR 45 · the category page ----
+
+/** The most products one category page reads (a guard; a category this long wants sub-categories). */
+export const CATEGORY_READ_CAP = 2000;
+
+const listSelect = {
+  ...cardSelect,
+  publishedAt: true,
+  variants: {
+    where: { archivedAt: null, active: true },
+    orderBy: { sortOrder: 'asc' },
+    select: {
+      id: true,
+      colourId: true,
+      priceMinor: true,
+      compareAtMinor: true,
+      inStock: true,
+      colour: { select: { key: true } },
+      size: { select: { key: true, label: true, sortOrder: true } },
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+type ListRow = Prisma.ProductGetPayload<{ select: typeof listSelect }>;
+
+export interface CategoryHead {
+  slug: string;
+  nameEn: string;
+  nameBn: string | null;
+  introEn: string | null;
+  introBn: string | null;
+  /** The parent category, for the breadcrumb of a sub-category. */
+  parent: { slug: string; nameEn: string; nameBn: string | null } | null;
+}
+
+export interface CategoryData {
+  /** null = the "New in" page (every shown category's newest styles). */
+  head: CategoryHead | null;
+  /** The category's products as cards (without photos) and as filter items, in the owner's order, one to one. */
+  cards: ShopCard[];
+  items: CatItem[];
+  /** The sizes the shop knows, by key (label and order) — only those the products carry. */
+  sizes: Map<string, SizeMeta>;
+  /** The catalogue could not be read just now (the page says so and stays out of search engines). */
+  unavailable?: boolean;
+  /** The photos for the cards about to be drawn (the page shown, not the whole category). */
+  withPhotos: (cards: readonly ShopCard[]) => Promise<ShopCard[]>;
+}
+
+const EMPTY_CATEGORY = (head: CategoryHead | null): CategoryData => ({ head, cards: [], items: [], sizes: new Map(), withPhotos: async (c) => [...c] });
+
+/**
+ * One category page's products: a shown category (its own and its sub-categories' listings, pinned first, then the
+ * owner's order), or with `newIn` the newest published styles of every shown category. Undefined when there is no
+ * such shown category (the page answers "not found"); without a database the page draws empty.
+ */
+export async function categoryData(
+  storeId: number,
+  slug: string,
+  newIn: { slug: string; order: 'newest' | 'rank'; days: number; ratings: boolean } | { slug?: undefined; ratings: boolean },
+  now = new Date(),
+): Promise<CategoryData | undefined> {
+  if (!process.env.DATABASE_URL) return newIn.slug === slug ? EMPTY_CATEGORY(null) : undefined;
+  try {
+    return await withTimeout(readCategory(storeId, slug, newIn, now), settingsTimeoutMs() * 3);
+  } catch (e) {
+    console.warn(`shop: category page unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return { ...EMPTY_CATEGORY(null), unavailable: true };
+  }
+}
+
+async function readCategory(
+  storeId: number,
+  slug: string,
+  newIn: { slug: string; order: 'newest' | 'rank'; days: number; ratings: boolean } | { slug?: undefined; ratings: boolean },
+  now: Date,
+): Promise<CategoryData | undefined> {
+  const prisma = getPrisma();
+  const cat = await prisma.category.findFirst({
+    where: { storeId, slug, isVisible: true, archivedAt: null },
+    select: {
+      id: true,
+      slug: true,
+      nameEn: true,
+      nameBn: true,
+      introEn: true,
+      introBn: true,
+      parent: { select: { slug: true, nameEn: true, nameBn: true, isVisible: true, archivedAt: true } },
+      children: { where: { isVisible: true, archivedAt: null }, select: { id: true } },
+    },
+  });
+  let ids: string[];
+  let head: CategoryHead | null = null;
+  if (cat) {
+    // a real category of that name wins over the "New in" page
+    head = {
+      slug: cat.slug,
+      nameEn: cat.nameEn,
+      nameBn: cat.nameBn,
+      introEn: cat.introEn,
+      introBn: cat.introBn,
+      parent: cat.parent && cat.parent.isVisible && !cat.parent.archivedAt ? { slug: cat.parent.slug, nameEn: cat.parent.nameEn, nameBn: cat.parent.nameBn } : null,
+    };
+    const listings = await prisma.categoryProduct.findMany({
+      where: { storeId, isVisible: true, categoryId: { in: [cat.id, ...cat.children.map((c) => c.id)] }, product: live },
+      orderBy: [{ pinned: 'desc' }, { sortRank: 'desc' }, { productId: 'asc' }],
+      select: { productId: true },
+      take: CATEGORY_READ_CAP * 2,
+    });
+    ids = [...new Set(listings.map((l) => l.productId))].slice(0, CATEGORY_READ_CAP);
+  } else if (newIn.slug === slug) {
+    const since = newIn.days > 0 ? new Date(now.getTime() - newIn.days * 86_400_000) : null;
+    const rows = await prisma.product.findMany({
+      where: { storeId, ...live, category: { isVisible: true, archivedAt: null }, ...(since ? { publishedAt: { gte: since } } : {}) },
+      orderBy: newIn.order === 'newest' ? [{ publishedAt: 'desc' }, { sortRank: 'desc' }, { nameEn: 'asc' }] : [{ sortRank: 'desc' }, { nameEn: 'asc' }],
+      select: { id: true },
+      take: CATEGORY_READ_CAP,
+    });
+    ids = rows.map((r) => r.id);
+  } else return undefined;
+  if (!ids.length) return EMPTY_CATEGORY(head);
+
+  const found = await getPrisma().product.findMany({ where: { id: { in: ids } }, select: listSelect });
+  const byId = new Map(found.map((r) => [r.id, r]));
+  const rows: ListRow[] = ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+  const [cards, tags, ratings] = await Promise.all([
+    toCards(storeId, rows, false),
+    prisma.productTag.findMany({
+      where: { storeId, archivedAt: null, productId: { in: ids }, tag: { archivedAt: null } },
+      select: { productId: true, tag: { select: { slug: true } } },
+    }),
+    newIn.ratings
+      ? prisma.review.groupBy({
+          by: ['productId'],
+          where: { storeId, status: 'APPROVED', archivedAt: null, publishedAt: { not: null }, productId: { in: ids } },
+          _avg: { rating: true },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+  ]);
+  const tagsOf = new Map<string, string[]>();
+  for (const t of tags) tagsOf.set(t.productId, [...(tagsOf.get(t.productId) ?? []), t.tag.slug]);
+  const rated = new Map(ratings.map((r) => [r.productId, { rating: r._avg.rating ?? 0, reviews: r._count._all }]));
+  const sizes = new Map<string, SizeMeta>();
+  const items: CatItem[] = rows.map((p, i) => {
+    for (const v of p.variants) if (v.size && !sizes.has(v.size.key)) sizes.set(v.size.key, { key: v.size.key, label: v.size.label, order: v.size.sortOrder });
+    const card = cards[i]!;
+    return {
+      id: p.id,
+      price: card.priceMinor,
+      was: card.wasMinor,
+      colours: card.colours.map((c) => c.key),
+      stock: p.variants.flatMap((v) => (v.size ? [{ size: v.size.key, colour: v.colour?.key ?? null, inStock: v.inStock }] : [])),
+      fit: card.fit,
+      inStock: p.inStock,
+      published: p.publishedAt?.getTime() ?? 0,
+      rating: rated.get(p.id)?.rating ?? 0,
+      reviews: rated.get(p.id)?.reviews ?? 0,
+      tags: tagsOf.get(p.id) ?? [],
+    };
+  });
+  const rowOf = new Map(rows.map((r) => [r.id, r]));
+  return {
+    head,
+    cards,
+    items,
+    sizes,
+    withPhotos: async (list) => {
+      const pick = list.flatMap((c) => (rowOf.has(c.id) ? [rowOf.get(c.id)!] : []));
+      const photos = await guarded('category photos', new Map<string, Record<string, ImageSource>>(), () => photoMap(storeId, pick));
+      return list.map((c) => ({ ...c, photos: photos.get(c.id) ?? c.photos }));
+    },
+  };
 }

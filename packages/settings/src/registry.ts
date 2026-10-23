@@ -18,6 +18,7 @@ import { combosSettings } from './registry-combos';
 import { deliverySettings } from './registry-delivery';
 import { storefrontSettings } from './registry-storefront';
 import { eidSettings } from './registry-eid';
+import { categorySettings } from './registry-category';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1121,6 +1122,8 @@ export const registry = {
   ...storefrontSettings,
   // ---- S10 · PR 214 follow-up (CN-014 g) · Eid order-by dates per band and district, pre-order (registry-eid.ts, version 16). ----
   ...eidSettings,
+  // ---- S02 · PR 45–48 · the category page: grid, filters, sort, sticky bar, SEO text, questions (registry-category.ts, version 17). ----
+  ...categorySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

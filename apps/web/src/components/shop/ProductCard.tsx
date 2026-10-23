@@ -2,7 +2,7 @@
 // link is an empty layer over the whole card, drawn first and named for screen readers (demo D-024), so the heart is
 // its own button and never sits inside a link. Picture (photo or drawing) with the badge and the heart, then the name,
 // the price (and the struck price only when the honesty rule of PR 38 allows one), up to four swatches and the fit.
-import { cardBadge, cardSwatches, productPath } from '@/lib/shop/home-model';
+import { cardBadge, cardSwatches, productColourPath, productPath } from '@/lib/shop/home-model';
 import { colourName, photoFor, productName, type ShopCard } from '@/lib/shop/catalogue';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
@@ -12,16 +12,19 @@ import { ProductPicture } from './ProductPicture';
 /** How wide a card is drawn: two across on a phone, four on a desktop (the `sizes` of its photo). */
 export const CARD_SIZES = '(max-width: 767px) 50vw, (max-width: 1239px) 25vw, 300px';
 
-export function ProductCard({ card, c, priority = false }: { card: ShopCard; c: ShopContext; priority?: boolean }) {
+/** `colour`: draw the card in that colour and open the product on it (PR 46: a colour filter is on, demo opts.color). */
+export function ProductCard({ card, c, priority = false, colour: pick }: { card: ShopCard; c: ShopContext; priority?: boolean; colour?: string | null }) {
   const name = productName(card, c.lang);
-  const colour = card.colours[0];
-  const href = hrefIn(c.lang, productPath(c.s['naming.productPathPrefix'], card.slug));
+  const chosen = pick ? card.colours.find((x) => x.key === pick) : undefined;
+  const colour = chosen ?? card.colours[0];
+  const prefix = c.s['naming.productPathPrefix'];
+  const href = hrefIn(c.lang, chosen ? productColourPath(prefix, card.slug, chosen.key) : productPath(prefix, card.slug));
   const price = card.priceMinor != null ? c.money(card.priceMinor) : null;
   const was = price && card.wasMinor != null && card.wasMinor > (card.priceMinor ?? 0) ? c.money(card.wasMinor) : null;
   const badge = cardBadge(card, c.t, c.num);
   const sw = cardSwatches(card.colours);
   return (
-    <div className="pcard-w" data-pid={card.id}>
+    <div className="pcard-w" data-pid={card.id} data-c={colour?.key}>
       <div className="pcard">
         <a className="pcard-lnk" href={href} aria-label={price ? c.t('card.label', { name, price }) : name} />
         <ProductPicture
