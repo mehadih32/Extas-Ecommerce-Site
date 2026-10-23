@@ -1,0 +1,6 @@
+/* PR 102 — the product page's set offer line (demo 30-product.js pdp_nudges), scoped to the shop wrapper. */
+.shop .tint { border-radius: var(--radius); }
+@media (min-width: 1024px) { .shop .pdp-nudgesec { order: 8; } }
+.shop .pdp-nudge { display: flex; align-items: center; gap: 12px; padding: 10px 12px; font-size: 13.5px; line-height: 1.35; color: var(--ink) !important; }
+.shop .pdp-nudge .ic { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--brand); flex-shrink: 0; }
+.shop.shop[data-theme="festive"] .pdp-nudge .ic { color: var(--gold); }
