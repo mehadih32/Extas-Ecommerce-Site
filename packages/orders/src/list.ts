@@ -11,6 +11,7 @@ import { allow, parse, setting, type OrdersDeps, type Who } from './context';
 import { OrdersError } from './errors';
 import { notesOf, type OrderNoteView } from './notes';
 import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
+import { orderSearchWhere } from './search';
 import { factsOf, machineOf, MACHINE_SELECT } from './service';
 
 export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'finished'] as const;
@@ -132,9 +133,7 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
   const q = parse(listQuery, query, 'query');
   const take = q.limit ?? (await setting(deps, who.storeId, 'orders.list.pageSize'));
   const reviews = await openReviewIds(deps, who.storeId);
-  const search: Prisma.OrderWhereInput = q.q
-    ? { OR: [{ number: { contains: q.q, mode: 'insensitive' } }, { phone: { contains: q.q.replace(/[^\d+]/g, '') || q.q } }, { customerName: { contains: q.q, mode: 'insensitive' } }] }
-    : {};
+  const search = orderSearchWhere(q.q); // PR 154: number, phone, name, tracking number
   const status = q.status ? { status: q.status as OrderState } : {};
   const filters: Prisma.OrderWhereInput = { ...(q.payment ? { paymentMethod: q.payment } : {}), ...(q.source ? { source: q.source } : {}) };
   if (q.status && !(OPEN_STATES as readonly string[]).concat([...FINAL_STATES], ['DRAFT']).includes(q.status)) throw new OrdersError('INVALID_INPUT', 'no such status', ['status']);
