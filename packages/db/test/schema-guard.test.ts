@@ -1,9 +1,14 @@
 // PR 13 / 603 structural guard. Fails the build when the schema breaks a standing rule:
 // storeId on every store-scoped table (A4.1), no Float money, nothing deleted, no plaintext secrets, the settings
 // framework and vault shape (PR 491–496, 509), and the PR 603 index pack.
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  APP_DB_ROLE,
+  APPEND_ONLY_LOCKED,
+  APPEND_ONLY_OPEN,
   loadSchema,
+  MIGRATIONS_DIR,
   modelsPerStage,
   parseSchema,
   storeScopeViolations,
@@ -347,5 +352,40 @@ describe('PR 603 index pack', () => {
     const lists = model('Order').blockAttrs.filter((a) => /idx_order_list_/.test(a));
     expect(lists).toHaveLength(3);
     for (const a of lists) expect(a).toMatch(/@@index\(\[storeId,/);
+  });
+});
+
+// PR 139 (CN-022): every `@append-only` model is either locked at the database (no UPDATE/DELETE/TRUNCATE for the app's
+// role, and a trigger that refuses them for everybody) or listed as open with its reason — never forgotten.
+describe('append-only at the database (PR 139)', () => {
+  const migrations = readdirSync(MIGRATIONS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => readFileSync(`${MIGRATIONS_DIR}${d.name}/migration.sql`, 'utf8'))
+    .join('\n');
+  const appendOnly = schema.models.filter((m) => m.appendOnly).map((m) => m.name);
+
+  it('lists every @append-only model exactly once: locked, or open with a reason', () => {
+    const locked = new Set<string>(APPEND_ONLY_LOCKED);
+    const open = new Set(Object.keys(APPEND_ONLY_OPEN));
+    expect(appendOnly.filter((n) => !locked.has(n) && !open.has(n)), 'new @append-only model: lock it or list it open with a reason').toEqual([]);
+    expect([...locked].filter((n) => open.has(n))).toEqual([]);
+    expect([...locked, ...open].filter((n) => !appendOnly.includes(n)), 'listed but not an @append-only model').toEqual([]);
+    for (const [n, why] of Object.entries(APPEND_ONLY_OPEN)) expect(why.length, n).toBeGreaterThan(20);
+  });
+
+  it('locks the audit log', () => {
+    expect(APPEND_ONLY_LOCKED).toContain('AuditLog');
+    expect(APPEND_ONLY_LOCKED).toContain('OrderEvent');
+  });
+
+  it.each([...APPEND_ONLY_LOCKED])('%s has both guards in a migration: the revoke and the triggers', (name) => {
+    expect(migrations).toContain(`REVOKE UPDATE, DELETE, TRUNCATE ON "${name}" FROM ${APP_DB_ROLE};`);
+    expect(migrations).toContain(`CREATE TRIGGER "${name}_append_only" BEFORE UPDATE OR DELETE ON "${name}" FOR EACH ROW EXECUTE FUNCTION extas_append_only();`);
+    expect(migrations).toContain(`CREATE TRIGGER "${name}_no_truncate" BEFORE TRUNCATE ON "${name}" FOR EACH STATEMENT EXECUTE FUNCTION extas_append_only();`);
+  });
+
+  it('gives the app role its grants for every later table too (default privileges)', () => {
+    expect(migrations).toContain(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${APP_DB_ROLE};`);
+    expect(migrations).toMatch(new RegExp(`CREATE ROLE ${APP_DB_ROLE} NOLOGIN`));
   });
 });

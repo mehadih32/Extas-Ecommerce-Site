@@ -12,7 +12,13 @@ describe.skipIf(!url)('vault with PostgreSQL', () => {
   let db: PrismaClient;
   beforeAll(async () => {
     db = new PrismaClient({ datasourceUrl: url });
-    await db.$executeRawUnsafe('TRUNCATE "SecretAccessLog", "InstallationSecret", "StoreSecret", "VaultKey" CASCADE');
+    // SecretAccessLog is append-only at the database (PR 139): the test database is cleared the way the documented
+    // retention purge would do it — as the table's owner, with its trigger off inside one transaction.
+    await db.$transaction([
+      db.$executeRawUnsafe('ALTER TABLE "SecretAccessLog" DISABLE TRIGGER "SecretAccessLog_no_truncate"'),
+      db.$executeRawUnsafe('TRUNCATE "SecretAccessLog", "InstallationSecret", "StoreSecret", "VaultKey" CASCADE'),
+      db.$executeRawUnsafe('ALTER TABLE "SecretAccessLog" ENABLE TRIGGER "SecretAccessLog_no_truncate"'),
+    ]);
   });
   afterAll(async () => db?.$disconnect());
 

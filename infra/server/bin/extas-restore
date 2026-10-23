@@ -242,6 +242,10 @@ for _ in $(seq 1 180); do
 done
 if [ -z "$BASE" ]; then
   docker cp "$WORK/extas.dump" "$NAME:/tmp/extas.dump"
+  # PR 139: the dump grants rights to the app's own role, which lives outside the database; make it first (no login;
+  # server setup and the deploy give it one) so every grant and the append-only guards come back as they were.
+  docker exec "$NAME" psql -qX -v ON_ERROR_STOP=1 -U extas -d extas \
+    -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'extas_app') THEN CREATE ROLE extas_app NOLOGIN; END IF; END \$\$" >/dev/null
   docker exec "$NAME" pg_restore -U extas -d extas --no-owner /tmp/extas.dump
 fi
 

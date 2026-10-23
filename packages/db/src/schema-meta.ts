@@ -178,6 +178,92 @@ export function storeScopeViolations(schema: ParsedSchema): string[] {
   return out;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 139 (CN-022) — which `@append-only` models are locked at the database. A locked model's rows can never be changed
+// or removed: the app's role (extas_app) has no UPDATE, DELETE or TRUNCATE on it, and a trigger refuses them for every
+// role (migration 0010_append_only and later ones). `@append-only` alone only means "no updatedAt"; the models in
+// APPEND_ONLY_OPEN are not locked, each for the reason given. test/schema-guard.test.ts checks that every
+// `@append-only` model is in exactly one of the two lists and that every locked model has both guards in a migration.
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** The database role the app connects as (PgBouncer, DATABASE_URL). Migrations use the owner role. */
+export const APP_DB_ROLE = 'extas_app';
+
+/** Append-only at the database: audit trails and ledgers, where an edit is never legitimate. */
+export const APPEND_ONLY_LOCKED = [
+  'AuditLog',
+  'SecurityEvent',
+  'SettingChange',
+  'SecretAccessLog',
+  'OrderEvent',
+  'StockMovement',
+  'WalletEntry',
+  'RewardEntry',
+  'PriceHistory',
+  'ProductRename',
+  'SmartRuleVersion',
+  'CheckoutFlagEvent',
+  'FraudDecision',
+  'ShipmentEvent',
+] as const;
+
+const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
+const PERSONAL = 'holds personal data (IP, phone, device, behaviour) with a deletion or retention rule still to be built';
+const SAMPLES = 'measurements and samples that are thinned out over time (monitoring, not history)';
+const NOT_BUILT = 'not built yet: decided with its own register PR (lock it there if nothing ever edits its rows)';
+
+/** `@append-only` models that are not locked at the database, each with its reason. */
+export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
+  SettingsMigration: RUN_ROW,
+  DefaultPackApplication: RUN_ROW,
+  IntegrationTestRun: RUN_ROW,
+  ErpSyncRun: RUN_ROW,
+  SitemapBuild: RUN_ROW,
+  AiSandboxRun: RUN_ROW,
+  BackupRun: RUN_ROW,
+  RestoreTest: RUN_ROW,
+  DeployRecord: RUN_ROW,
+  MigrationCrawlCheck: RUN_ROW,
+  StudioPilotRun: RUN_ROW,
+  PrRegisterUpdate: 'the reader marks an update as seen (seenAt)',
+  StaffLoginEvent: PERSONAL,
+  AbAssignment: PERSONAL,
+  SizeRecommendation: PERSONAL,
+  RiskAssessment: PERSONAL,
+  CouponRedemption: PERSONAL,
+  CustomerAccessLog: PERSONAL,
+  ConsentRecord: PERSONAL,
+  CustomerTouchpoint: PERSONAL,
+  AnalyticsEvent: PERSONAL,
+  TelegramMessage: PERSONAL,
+  CachePurgeLog: SAMPLES,
+  SpeedMeasurement: SAMPLES,
+  AiCitation: SAMPLES,
+  ServiceHealthSample: SAMPLES,
+  CacheStatSample: SAMPLES,
+  LayoutRestore: NOT_BUILT,
+  ComboTemplateScore: NOT_BUILT,
+  DuplicateNoticeEvent: NOT_BUILT,
+  ChargeMismatch: NOT_BUILT,
+  LocalStockIntake: NOT_BUILT,
+  SmartRuleSimulation: NOT_BUILT,
+  BlogPostReview: NOT_BUILT,
+  CompetitorReport: NOT_BUILT,
+  GeoAdRecommendation: NOT_BUILT,
+  AiUsageLedger: NOT_BUILT,
+  AiCapEvent: NOT_BUILT,
+  AiDiaryEntry: NOT_BUILT,
+  AiSkillVersion: NOT_BUILT,
+  AiWorkLog: NOT_BUILT,
+  ReportDigest: NOT_BUILT,
+  CostEntry: NOT_BUILT,
+  PrepaidTopUp: NOT_BUILT,
+  SamenessCheck: NOT_BUILT,
+  SupportEscalation: NOT_BUILT,
+  ImageEdit: NOT_BUILT,
+  ColourVerification: NOT_BUILT,
+};
+
 /** Model count per register stage, sorted by stage. */
 export function modelsPerStage(schema: ParsedSchema): Record<string, number> {
   const counts: Record<string, number> = {};

@@ -64,6 +64,22 @@ timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-smoke-$$" --
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" \
   "$IMG" node /w/tools/smoke.mjs || rc=$?
 
+# PR 139 (CN-022): the audit log and the history tables are still append-only (each trigger on; the app's role has no
+# UPDATE, DELETE or TRUNCATE on them), checked as the owner; and which role the live app connects as.
+# shellcheck source=app-role.sh
+. "$HERE/app-role.sh"
+guards="$(app_role_guards)"
+app_role="the owner role (the switch waits for server setup and the next deploy)"
+grep -q '^DATABASE_URL=postgresql://extas_app:' "$SEC/app.env" && app_role="extas_app"
+log "database: $guards; the app connects as $app_role"
+if [ -f "$OUT/result.json" ]; then
+  jq --arg g "$guards" --arg role "$app_role" '.database = {appendOnly: $g, appRole: $role}
+    | if ($g | startswith("problem")) then .ok = false | .problems += [$g] else . end' "$OUT/result.json" > "$OUT/result.json.tmp"
+  mv "$OUT/result.json.tmp" "$OUT/result.json"
+  printf '\nDatabase (PR 139): %s; the app connects as %s.\n' "$guards" "$app_role" >> "$OUT/README.md"
+fi
+case "$guards" in problem:*) [ "$rc" -ne 0 ] || rc=1 ;; esac
+
 if [ -f "$OUT/result.json" ]; then
   jq -c --arg kind "$KIND" '{at, kind: $kind, sha, ok, pages, failed, problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/smoke.json.tmp"
 else

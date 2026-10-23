@@ -20,7 +20,13 @@ describe.skipIf(!HAS_DB)('PostgreSQL', () => {
   backendContract('PostgreSQL', async () => {
     const p = db.prisma;
     // Each test starts from no values and an empty log (throwaway database; definitions stay synced).
-    await p.$executeRawUnsafe('DELETE FROM "SettingChange"');
+    // SettingChange is append-only at the database (PR 139): the throwaway test database is cleared the way the
+    // documented retention purge would do it — as the table's owner, with the trigger off inside one transaction.
+    await p.$transaction([
+      p.$executeRawUnsafe('ALTER TABLE "SettingChange" DISABLE TRIGGER "SettingChange_append_only"'),
+      p.$executeRawUnsafe('DELETE FROM "SettingChange"'),
+      p.$executeRawUnsafe('ALTER TABLE "SettingChange" ENABLE TRIGGER "SettingChange_append_only"'),
+    ]);
     await p.$executeRawUnsafe('DELETE FROM "StoreSettingValue"');
     await p.$executeRawUnsafe('DELETE FROM "InstallationSettingValue"');
     return {

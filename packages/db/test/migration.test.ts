@@ -130,6 +130,20 @@ describe('later migrations', () => {
     for (const v of ['ROCKET', 'UPAY', 'ONLINE']) expect(sql).toContain(`ALTER TYPE "PaymentMethod" ADD VALUE '${v}';`);
     expect(sql).not.toMatch(/\bALTER COLUMN\b|\bRENAME\b/i);
   });
+
+  it('PR 139: the app role and the append-only guards only add; no table or column changes (0010_append_only)', () => {
+    const sql = sqlOf('0010_append_only');
+    expect(sql).toContain('CREATE ROLE extas_app NOLOGIN;');
+    expect(sql).toContain('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO extas_app;');
+    expect(sql).toContain(`REVOKE UPDATE, DELETE, TRUNCATE ON "AuditLog" FROM extas_app;`);
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION extas_append_only()');
+    const code = sql.replace(/--.*$/gm, '');
+    // A role with a password or a login is made by the server, never by a migration (no secret in Git).
+    expect(code).not.toMatch(/\bPASSWORD\b|\bLOGIN\b|\bSUPERUSER\b/i);
+    expect(code).not.toMatch(/\bALTER TABLE\b|\bALTER COLUMN\b|\bRENAME\b/i);
+    // The retention purge is documented, not built.
+    expect(sql).toMatch(/RETENTION \(not built/);
+  });
 });
 
 // All migrations applied in order to a throwaway database must give exactly the schema. Needs TEST_DATABASE_ADMIN_URL
