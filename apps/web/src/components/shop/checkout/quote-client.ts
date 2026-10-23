@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createSettle, type SettleController } from '@extas/delivery/settle';
 import type { CheckoutView } from '@extas/checkout/pure';
+import type { Confirmed } from '@/lib/shop/checkout-model';
 
 export const QUOTE_URL = '/api/checkout/quote';
 
@@ -26,6 +27,14 @@ export function latest() {
     next: () => ++n,
     isLatest: (k: number) => k === n,
   };
+}
+
+/** Everything the page sends the server about the customer's choices (later PRs add payment, wallet …). */
+export interface Choices {
+  /** The finished address line last read. */
+  line: string | null;
+  /** The band (and place) he picked when he was asked (PR 118). */
+  confirmed: Confirmed;
 }
 
 export async function fetchQuote(payload: Record<string, unknown>): Promise<CheckoutView | null> {

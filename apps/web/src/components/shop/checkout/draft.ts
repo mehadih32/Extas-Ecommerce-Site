@@ -46,8 +46,10 @@ export function useDraft(): Draft | null {
   );
 }
 
-export function saveDraft(d: Draft): void {
+/** Keeps what changed, merged over what the tab already keeps (each step saves only its own part). */
+export function saveDraft(patch: Partial<Draft>): void {
   try {
+    const d = { ...(loadDraft() ?? { form: { name: '', phone: '', address: '' } }), ...patch };
     sessionStorage.setItem(KEY, JSON.stringify(d));
   } catch {
     // storage blocked: nothing is kept

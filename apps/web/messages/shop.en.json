@@ -203,7 +203,11 @@
     },
     "del": {
       "write": "Write your address above and your charge appears here.",
-      "reading": "Reading your address — your charge appears here in a moment."
+      "reading": "Reading your address — your charge appears here in a moment.",
+      "ask": "Where is this address?",
+      "both": "We can see {a} and {b} in it — which one is right?",
+      "hours": "{hours} hours",
+      "change": "change"
     }
   },
   "notFound": {
