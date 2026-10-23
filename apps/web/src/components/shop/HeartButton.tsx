@@ -35,7 +35,8 @@ export interface HeartWords {
   removed: string;
 }
 
-export function HeartButton({ id, words }: { id: string; words: HeartWords }) {
+/** `className` / `size`: the product page's heart after the title (PR 49, demo .pdp-wish, 22 px). */
+export function HeartButton({ id, words, className = 'heart', size = 18, testId }: { id: string; words: HeartWords; className?: string; size?: number; testId?: string }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
     const sync = () => setOn(readList().includes(id));
@@ -50,7 +51,8 @@ export function HeartButton({ id, words }: { id: string; words: HeartWords }) {
   return (
     <button
       type="button"
-      className="heart"
+      className={className}
+      data-testid={testId}
       aria-label={on ? words.unsave : words.save}
       aria-pressed={on}
       onClick={(e) => {
@@ -64,11 +66,11 @@ export function HeartButton({ id, words }: { id: string; words: HeartWords }) {
       }}
     >
       {on ? (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--sale)" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="var(--sale)" aria-hidden="true">
           <path d="M12 20s-7-4.6-7-9.5A3.8 3.8 0 0112 7a3.8 3.8 0 017 3.5c0 4.9-7 9.5-7 9.5z" />
         </svg>
       ) : (
-        <Icon name="heart" size={18} />
+        <Icon name="heart" size={size} />
       )}
     </button>
   );

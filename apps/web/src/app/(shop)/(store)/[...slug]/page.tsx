@@ -1,23 +1,31 @@
-// Any shop address no page answers yet. CN-010 (owner): a page a later PR builds (category, product, search, bag,
-// account, help …; the list is the routing table's COMING_SOON) shows "Coming soon" inside the store shell; every other
-// address gets the shop's own "page not found". ~~Every unknown address: notFound().~~ The words are the dictionary's.
+// Any shop address no page of its own answers. PR 49: an address under the owner's product prefix
+// (`naming.productPathPrefix`, `/p/<product>` or `/p/<product>/<colour>`) is the product page; the prefix is a setting,
+// so it cannot be a folder of its own. CN-010 (owner): a page a later PR builds (search, account, help …; the list is
+// the routing table's COMING_SOON) shows "Coming soon" inside the store shell; every other address gets the shop's
+// own "page not found". ~~Every unknown address: notFound().~~ The words are the dictionary's.
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Icon } from '@/components/shop/Icon';
+import { ProductPage, productMetadata, type ProductSearch } from '@/components/shop/product/ProductPage';
 import { shopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { shopMetadata } from '@/lib/shop/meta';
+import { productRoute } from '@/lib/shop/product-model';
 import { comingSoon, ROUTES } from '@/lib/shop/routes';
 
-export async function generateMetadata(): Promise<Metadata> {
+type Props = { searchParams: Promise<ProductSearch> };
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
   const c = await shopContext();
+  if (productRoute(c.path, c.s['naming.productPathPrefix'])) return productMetadata(c, await props.searchParams);
   const key = comingSoon(c.path, c.s['naming.productPathPrefix']);
   if (!key) return {};
   return { ...(await shopMetadata(c, `soon-${key}`, c.t('soon.title'))), robots: { index: false, follow: true } };
 }
 
-export default async function Soon() {
+export default async function Soon(props: Props) {
   const c = await shopContext();
+  if (productRoute(c.path, c.s['naming.productPathPrefix'])) return <ProductPage search={await props.searchParams} />;
   const key = comingSoon(c.path, c.s['naming.productPathPrefix']);
   if (!key) notFound();
   const t = c.t;

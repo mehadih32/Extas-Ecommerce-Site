@@ -1,7 +1,12 @@
 // Tests for tools/smoke.mjs (run with the web tests). The browser journey itself runs in CI and on the runner.
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { adminLinks, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
+import { adminLinks, discovered, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
+
+it('PR 49: opens the first product pages a built page links to, each once, never another site', () => {
+  expect(discovered(['/p/polo?color=navy', '/p/polo', '//evil.test/p/x', 'https://x.test/p/y', '/bn/p/chino#a', '/p/socks'], 2)).toEqual(['/p/polo', '/bn/p/chino']);
+  expect(discovered([], 2)).toEqual([]);
+});
 
 it('a 5xx or the error screen is a problem; a normal page is not', () => {
   expect(pageProblems('/admin/products', 200, 'Products 0 items')).toEqual([]);

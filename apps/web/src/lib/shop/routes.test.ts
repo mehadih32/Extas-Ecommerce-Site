@@ -12,11 +12,11 @@ describe('coming-soon pages (CN-010)', () => {
     expect(comingSoon('/account/orders/', '/p')).toBe('account');
   });
 
-  it("the product page follows the owner's prefix", () => {
-    expect(comingSoon('/p/classic-polo', '/p')).toBe('product');
-    expect(comingSoon('/shop/classic-polo', '/shop')).toBe('product');
+  it('the product page is built (PR 49): its addresses are no longer "coming soon"', () => {
+    // ~~expect(comingSoon('/p/classic-polo', '/p')).toBe('product');~~ the catch-all route draws the product page
+    expect(comingSoon('/p/classic-polo', '/p')).toBeNull();
+    expect(comingSoon('/shop/classic-polo', '/shop')).toBeNull();
     expect(comingSoon('/p', '/p')).toBeNull();
-    expect(comingSoon('/p/classic-polo', '/shop')).toBeNull();
   });
 
   it('an address the shop will never have is not coming', () => {

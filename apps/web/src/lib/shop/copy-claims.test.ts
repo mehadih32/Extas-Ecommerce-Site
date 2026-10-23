@@ -22,6 +22,11 @@ const NOT_A_CLAIM: Record<string, string> = {
   'footer.join.prefix': 'the mobile number format (013 to 019, 11 digits)',
   'footer.promise.original': "the brand's standing promise in the approved demo; a switch in footer.promise",
   'bag.ups.origTitle': "the same standing promise on the bag's why-card (PR 114); off by default, switch bag.upsell.originalLine",
+  'pdp.trust.original': 'the same standing promise in the product page promise row (PR 62); off by default, pdp.trust items (CN-009)',
+  'pdp.notify.empty': 'the mobile number format (01XXXXXXXXX), the same words as footer.join (PR 56 back-in-stock box)',
+  'pdp.notify.short': 'the mobile number format (11 digits), the same words as footer.join',
+  'pdp.notify.prefix': 'the mobile number format (013 to 019, 11 digits), the same words as footer.join',
+  'pdp.stock.ships': "\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
 };
 
 const DIGIT = /[0-9০-৯]/;

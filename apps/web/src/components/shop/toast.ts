@@ -14,3 +14,9 @@ export function showToast(from: Element, text: string): void {
   clearTimeout(timer);
   timer = setTimeout(() => d.remove(), SHOW_MS);
 }
+
+/** Takes the status line away now (PR 49): a popup that opens over it — the added-to-bag panel — must not sit under
+ * an older message ("White selected") that covers its buttons. */
+export function hideToast(from: Element): void {
+  (from.closest('.shop') ?? document.body).querySelector('.toast')?.remove();
+}
