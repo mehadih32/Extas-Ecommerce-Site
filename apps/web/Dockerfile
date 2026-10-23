@@ -25,6 +25,7 @@ COPY packages/rules/package.json packages/rules/
 COPY packages/combos/package.json packages/combos/
 COPY packages/cart/package.json packages/cart/
 COPY packages/checkout/package.json packages/checkout/
+COPY packages/accounts/package.json packages/accounts/
 COPY packages/delivery/package.json packages/delivery/
 COPY packages/jobs/package.json packages/jobs/
 COPY packages/metrics/package.json packages/metrics/

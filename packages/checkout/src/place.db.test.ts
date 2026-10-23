@@ -5,6 +5,7 @@
 // the unfinished checkout kept and a failed payment kept, retried, still one order. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { findBag } from '@extas/cart';
 import { captureDraft, payAction, payView, placeOrder, type PlaceInput } from './place';
@@ -291,6 +292,69 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       const s = await shown('ty-unclear', { line: 'House 9, Road 2, Gabtoli' });
       const r = await s.place();
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number })).toMatchObject({ band: null, addressUnclear: true, chargeFixed: false, deliveryMinor: 0 });
+    });
+  });
+
+  describe('PR 129 · the account made with the first order (SIM-F-039: never a guessable password)', () => {
+    const PHONE = '01700000129';
+    const E164 = '+8801700000129';
+
+    it('a guest order makes the account of its phone number: no password at all, the browser is not signed in', async () => {
+      const s = await shown('acc-new');
+      const r = await s.place({ form: { ...FORM, phone: PHONE } });
+      const o = await orderOf(r.orderId);
+      const c = await f.t.prisma.customer.findUniqueOrThrow({ where: { storeId_phone: { storeId: f.S, phone: E164 } }, include: { credential: true, sessions: true } });
+      expect(o.customerId).toBe(c.id);
+      expect(c).toMatchObject({ name: FORM.name, firstSource: 'WEBSITE', orderCount: 1, credential: null, sessions: [] });
+      expect(o.events[0]!.data).toMatchObject({ account: 'created' });
+      expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number })).toMatchObject({ account: 'created', phone: '01700-000129' });
+    });
+
+    it('SIM-F-039 security test: the phone number as the password does not open the account', async () => {
+      const policy = defaultSecurityPolicy({ customerPasswordMinLength: 6 });
+      const deps = { db: f.t.prisma, policy, now: () => f.clock.now };
+      for (const password of [PHONE, E164, '01700-000129']) {
+        expect(await loginCustomer(deps, { storeId: f.S, phone: E164, password }, { ip: '192.0.2.129' })).toEqual({ kind: 'invalid' });
+      }
+      expect(await f.t.prisma.customerSession.count({ where: { customer: { phone: E164 } } })).toBe(0);
+    });
+
+    it('the next order with the same number joins the same account; two at once still make one', async () => {
+      const a = await shown('acc-again');
+      const b = await shown('acc-twin');
+      const [ra, rb] = await Promise.all([a.place({ form: { ...FORM, phone: `+88 ${PHONE}`, name: 'Another Name' } }), b.place({ form: { ...FORM, phone: PHONE } })]);
+      const rows = await f.t.prisma.customer.findMany({ where: { storeId: f.S, phone: E164 } });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ orderCount: 3, name: FORM.name });
+      for (const r of [ra, rb]) {
+        const o = await orderOf(r.orderId);
+        expect(o.customerId).toBe(rows[0]!.id);
+        expect(o.events[0]!.data).toMatchObject({ account: 'existing' });
+      }
+    });
+
+    it('an order placed while signed in belongs to the signed-in customer, whatever number is typed', async () => {
+      const me = await f.t.prisma.customer.create({ data: { storeId: f.S, phone: '+8801700001290', name: 'Signed In' } });
+      const s = await shown('acc-signed', { customerId: me.id });
+      const r = await s.place({ form: { ...FORM, phone: '01700001291' } });
+      const o = await orderOf(r.orderId);
+      expect(o).toMatchObject({ customerId: me.id, phone: '+8801700001291' });
+      expect(o.events[0]!.data).toMatchObject({ account: 'signedIn' });
+      expect(await f.t.prisma.customer.count({ where: { storeId: f.S, phone: '+8801700001291' } })).toBe(0);
+      expect(await f.t.prisma.customer.findUniqueOrThrow({ where: { id: me.id } })).toMatchObject({ orderCount: 1 });
+    });
+
+    it("with the owner's switch off a guest's order stays without an account", async () => {
+      set({ 'account.autoCreate.enabled': false });
+      try {
+        const s = await shown('acc-off');
+        const r = await s.place({ form: { ...FORM, phone: '01700001292' } });
+        expect((await orderOf(r.orderId)).customerId).toBeNull();
+        expect(await f.t.prisma.customer.count({ where: { storeId: f.S, phone: '+8801700001292' } })).toBe(0);
+        expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number })).toMatchObject({ account: null });
+      } finally {
+        f.overrides.delete('account.autoCreate.enabled');
+      }
     });
   });
 });

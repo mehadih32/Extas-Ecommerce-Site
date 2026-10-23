@@ -1,0 +1,19 @@
+{
+  "groups": {
+    "accounts": "Customer accounts"
+  },
+  "account": {
+    "autoCreate": {
+      "enabled": {
+        "label": "Make an account with the first order",
+        "help": "On: the phone number a customer orders with becomes his account, so his orders, deliveries and size exchanges wait for him in My account. The account never gets a password: he signs in with a one-time SMS code to that number, and may set a password afterwards. Off: a guest's order stays without an account."
+      }
+    },
+    "thanksCard": {
+      "enabled": {
+        "label": "\"Your account is ready\" on the thank-you page",
+        "help": "Shows the customer the number he signs in with and that the sign-in code comes by SMS, with a button to My account. Never a password."
+      }
+    }
+  }
+}

@@ -18,5 +18,9 @@ export default async function Thanks({ params }: { params: Promise<{ number: str
   const { number } = await params;
   const c = await shopContext();
   const [r, s, more] = await Promise.all([currentReceipt(c, decodeURIComponent(number)), checkoutSettings(c.storeId), readPageSettings(['thanks.page'], c.storeId)]);
-  return r ? <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} /> : <ThanksNotFound c={c} />;
+  return r ? (
+    <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} />
+  ) : (
+    <ThanksNotFound c={c} />
+  );
 }

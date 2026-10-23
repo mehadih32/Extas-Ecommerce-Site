@@ -3,9 +3,11 @@
 // what is still to pay (Cash on Delivery due at the door, paid, "Pay now" while a prepaid payment waits, "Try again"
 // after a failed one), the order's lines and money as stored, the WhatsApp button and "Keep shopping".
 // Left out until their PRs (the copy says only what the shop really does): the SMS line (no SMS is sent yet), "Track
-// your order" (PR 135), the account card (PR 129), "Complete your look" (PR 128) ~~and the next-steps timeline~~.
+// your order" (PR 135), "Complete your look" (PR 128) ~~and the next-steps timeline~~.
 // Follow-up 58 (`thanks.page`): the delivery note he wrote, said back (on); the trial-at-the-door line while that
 // service is on (`checkout.tryOn.enabled`); and "What happens next" (off, as in the demo: `thanks.nextSteps`).
+// PR 129: the account card — "Your account is ready" (or "This order is in your account") with the number he logs in
+// with and that the code comes by SMS to it. Never a password (SIM-F-039); "You're logged in" when he ordered signed in.
 import '../bag/bag.css';
 import './checkout.css';
 import type { Receipt } from '@extas/checkout';
@@ -37,7 +39,67 @@ export function ThanksNotFound({ c }: { c: ShopContext }) {
   );
 }
 
-export async function ThanksPage({ c, r, waOn, more, tryOn }: { c: ShopContext; r: Receipt; waOn: boolean; more: ThanksPageSettings; tryOn: boolean }) {
+/** PR 129 — the account the order went to: the number to log in with and the SMS code, never a password. */
+function AccountCard({ c, r }: { c: ShopContext; r: Receipt }) {
+  if (!r.account) return null;
+  const go = (
+    <a className="btn btn-secondary btn-block mt12" href={hrefIn(c.lang, ROUTES.account)} data-testid="ty-account-go">
+      {c.t('account.ty.go')}
+    </a>
+  );
+  const head = (title: string) => (
+    <div className="row" style={{ gap: 10 }}>
+      <span className="ty-ic">
+        <Icon name="user" size={19} />
+      </span>
+      <div className="h3">{title}</div>
+    </div>
+  );
+  if (r.account === 'signedIn')
+    return (
+      <section className="card p20 ty-acc" data-testid="ty-account" data-account="signedIn">
+        {head(c.t('account.ty.signedTitle'))}
+        <p className="small text2 mt8">{c.t('account.ty.signedText')}</p>
+        {go}
+      </section>
+    );
+  return (
+    <section className="card p20 ty-acc" data-testid="ty-account" data-account={r.account}>
+      {head(c.t(r.account === 'created' ? 'account.ty.readyTitle' : 'account.ty.inTitle'))}
+      <div className="ty-cred3 mt12" data-testid="ty-cred">
+        <div className="ty-cred3-hd">{c.t('account.ty.loginWith')}</div>
+        <div className="ty-crow">
+          <span className="k">{c.t('account.ty.phone')}</span>
+          <span className="v">
+            <b data-testid="ty-account-phone">{r.phone}</b>
+          </span>
+        </div>
+        <div className="ty-crow">
+          <span className="k">{c.t('account.ty.code')}</span>
+          <span className="v small text2">{c.t('account.ty.codeVal')}</span>
+        </div>
+      </div>
+      <p className="xs text2 ty-accnote">{c.t('account.ty.note')}</p>
+      {go}
+    </section>
+  );
+}
+
+export async function ThanksPage({
+  c,
+  r,
+  waOn,
+  more,
+  tryOn,
+  accountCard = true,
+}: {
+  c: ShopContext;
+  r: Receipt;
+  waOn: boolean;
+  more: ThanksPageSettings;
+  tryOn: boolean;
+  accountCard?: boolean;
+}) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
   const m = c.money;
@@ -252,6 +314,11 @@ export async function ThanksPage({ c, r, waOn, more, tryOn }: { c: ShopContext; 
             </div>
           </div>
           <div className="ty-col">
+            {accountCard && r.account ? (
+              <div style={{ order: 3 }}>
+                <AccountCard c={c} r={r} />
+              </div>
+            ) : null}
             {wa ? (
               <div style={{ order: 8 }}>
                 <a className="wa-btn wa-real btn-block ty-wa" href={wa} target="_blank" rel="noopener" data-testid="ty-wa">
