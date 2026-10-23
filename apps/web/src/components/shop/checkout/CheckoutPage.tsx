@@ -67,6 +67,8 @@ export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: Che
         limits={{ nameMin: s['checkout.form.nameMin'], addressMin: s['checkout.form.addressMin'] }}
         settle={{ settleMs: s['delivery.resolver.settleMs'], minWords: s['delivery.resolver.minWords'] }}
         addressMax={s['delivery.resolver.maxChars']}
+        consent={s['checkout.consent.enabled'] ? { sms: s['checkout.consent.sms.default'], whatsapp: s['checkout.consent.whatsapp.default'] } : null}
+        links={{ exchange: hrefIn(c.lang, ROUTES.help('exchange')), terms: hrefIn(c.lang, ROUTES.help('terms')) }}
       />
       {actions}
     </div>

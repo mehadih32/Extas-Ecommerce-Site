@@ -98,6 +98,24 @@
         "label": "Let customers pay from their wallet at checkout",
         "help": "A signed-in customer with money in his wallet sees \"Use my wallet\" with his balance. Off hides it; the balance stays his."
       }
+    },
+    "consent": {
+      "enabled": {
+        "label": "Ask for marketing permission at checkout",
+        "help": "Two ticks under the payment: offers by SMS, and offers on WhatsApp. Each answer is stored with the order and the customer, per channel."
+      },
+      "sms": {
+        "default": {
+          "label": "SMS offers tick starts ticked",
+          "help": "The customer can untick it before he confirms; the words say he can stop any time."
+        }
+      },
+      "whatsapp": {
+        "default": {
+          "label": "WhatsApp offers tick starts ticked",
+          "help": "Off by default: WhatsApp offers only for those who tick it."
+        }
+      }
     }
   }
 }

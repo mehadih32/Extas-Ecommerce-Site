@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { removeLine, restoreLine, setQuantity } from '@extas/cart';
 import { readAddress } from './address';
+import { recordConsent } from './consent';
 import { checkoutQuote } from './quote';
 import { setUpCheckout, type CheckoutFixture } from './testing';
 
@@ -284,6 +285,19 @@ describe.skipIf(!HAS_TEST_DB)('the checkout on PostgreSQL (S04)', () => {
       f.overrides.delete('checkout.wallet.enabled');
       await f.t.prisma.walletAccount.update({ where: { customerId: customer.id }, data: { status: 'FROZEN' } });
       expect((await q(true)).wallet).toBeNull();
+    });
+  });
+  describe('PR 123 · marketing opt-in', () => {
+    it('one dated record per channel answered; nothing when nothing was asked', async () => {
+      const orderId = '019a0000-0000-7000-8000-000000000123';
+      const n = await f.t.prisma.$transaction((tx) => recordConsent(tx, { storeId: f.S, orderId, customerId: null, phone: '+8801700000123', ip: null, answer: { sms: true, whatsapp: false }, source: 'checkout' }));
+      expect(n).toBe(2);
+      const rows = await f.t.prisma.consentRecord.findMany({ where: { orderId }, orderBy: { channel: 'asc' } });
+      expect(rows.map((r) => [r.channel, r.granted, r.source])).toEqual([
+        ['SMS', true, 'checkout'],
+        ['WHATSAPP', false, 'checkout'],
+      ]);
+      expect(await f.t.prisma.$transaction((tx) => recordConsent(tx, { storeId: f.S, orderId, customerId: null, phone: null, ip: null, answer: { sms: null, whatsapp: null }, source: 'checkout' }))).toBe(0);
     });
   });
 });
