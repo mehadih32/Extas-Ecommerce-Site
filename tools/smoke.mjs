@@ -47,6 +47,14 @@ export function adminLinks(hrefs) {
 }
 
 /**
+ * PR 12 (CN-022) — the signed-in pages to open: the Dashboard, then the menu's links, then smoke.json `admin` (every
+ * built admin page and placeholder: the new sidebar links only each section's first page), each once, in that order.
+ */
+export function adminPaths(links, listed = []) {
+  return [...new Set(["/admin", ...links, ...listed])];
+}
+
+/**
  * PR 49 — pages found on a built page (smoke.json `discover`): the first `take` distinct links of this site, without
  * query strings. The product pages are the owner's own products, so the smoke test finds them from New in rather than
  * naming one; a shop with no product yet has none to open.
@@ -97,7 +105,8 @@ export function requestCounts(url, base, ignore) {
 
 /**
  * One extra check (docs/qa/smoke.json `checks`), signed in, after the pages: either a page's element must carry a
- * value (`page` + `selector` + `attribute` + `equals`), or a request must get a given answer (`request` + `status`).
+ * value (`page` + `selector` + `attribute` + `equals`, after the key `press` when given), or a request must get a given
+ * answer (`request` + `status`).
  * A request check goes through the browser context's own request client (its cookies, never a page), so an answer
  * the check expects to be a refusal is not counted as a failed request of a page. Returns the problem, or null.
  * Follow-up 80: a request check with `anonymous: true` goes out with no cookie and no preview login at all (like an
@@ -139,6 +148,11 @@ async function runChecks(page, base, checks, bare) {
         }
       } else {
         await page.goto(`${base}${check.page}`, { waitUntil: "load" });
+        // PR 12: `press` is a key pressed once the page has loaded (Control+K opens the command palette).
+        if (check.press) {
+          await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+          await page.keyboard.press(check.press);
+        }
         const el = await page.waitForSelector(check.selector, { timeout: 15_000 });
         observed = { value: await el.getAttribute(check.attribute) };
       }
@@ -445,7 +459,7 @@ export async function runSmoke(opts) {
       const seen = new Set(
         rows.filter((r) => r.screen === vp.name).map((r) => r.path),
       );
-      for (const path of ["/admin", ...links])
+      for (const path of adminPaths(links, config.admin ?? []))
         if (!seen.has(path))
           rows.push(
             await visit(page, opts.base, ignore, path, vp.name, opts.out),

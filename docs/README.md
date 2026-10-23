@@ -26,8 +26,9 @@ docs file (CN-011).
 | Path | What it is |
 |---|---|
 | [`admin-guide/README.md`](admin-guide/README.md) | Bengali guide per admin section (CN-014), the index |
-| [`admin-guide/delivery.md`](admin-guide/delivery.md) | Delivery areas and charges (`/admin/delivery`, S06) |
-| [`admin-guide/login.md`](admin-guide/login.md) | Admin sign-in and the admin frame (`/admin/login`, `/admin`, S00) |
+| [`admin-guide/dashboard.md`](admin-guide/dashboard.md) | The Dashboard: Sales and Ordered value tiles, Needs you now, role start pages (`/admin`, PR 12, 155, 495) |
+| [`admin-guide/delivery.md`](admin-guide/delivery.md) | Delivery areas and charges (`/admin/delivery/zones`, moved from `/admin/delivery` in PR 12; S06) |
+| [`admin-guide/login.md`](admin-guide/login.md) | Admin sign-in and the admin shell: 14 sections, search, notifications, guide panel (`/admin/login`, S00; PR 12) |
 | [`admin-guide/integrations.md`](admin-guide/integrations.md) | Keys & connections (`/admin/integrations`, S00, S09) |
 | [`admin-guide/products.md`](admin-guide/products.md) | Products: list, new, edit, publish queue, import from a link, audit, back in stock (`/admin/products/*`, S01) |
 | [`admin-guide/size-charts.md`](admin-guide/size-charts.md) | Size charts (`/admin/size-charts`, S01) |

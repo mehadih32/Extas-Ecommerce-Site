@@ -61,7 +61,9 @@ done
 docker exec "$NET-worker" test -f /tmp/worker-health.json || { echo "e2e: the worker never beat"; docker logs --tail 50 "$NET-worker" 2>&1 | grep -viE 'password|secret|postgresql://'; exit 1; }
 
 echo "e2e: the app image"
-docker run -d --name "$NET-app" --network "$NET" --env-file "$WORK/app.env" -p "127.0.0.1:$PORT:3000" "$WEB" >/dev/null
+# The deployed docs copy, as on the server (infra/stack/app.yml: EXTAS_DOCS_DIR, read-only): the guide panel reads it.
+docker run -d --name "$NET-app" --network "$NET" --env-file "$WORK/app.env" -p "127.0.0.1:$PORT:3000" \
+  -e EXTAS_DOCS_DIR=/docs/current -v "$HERE/../docs:/docs/current/docs:ro" "$WEB" >/dev/null
 for _ in $(seq 1 90); do curl -fs -o /dev/null "http://localhost:$PORT/api/health" && break; sleep 1; done
 curl -fs -o /dev/null "http://localhost:$PORT/api/health" || { docker logs --tail 50 "$NET-app"; exit 1; }
 
