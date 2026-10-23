@@ -11,5 +11,9 @@
     "aria": "{label}, your size",
     "out": "Your size {size} is sold out in {colour}.",
     "inStock": "In stock in:"
+  },
+  "addrSuggest": {
+    "label": "Places that match",
+    "count": "{n} places found. Use the up and down arrows to choose one, Enter to pick it."
   }
 }

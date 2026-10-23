@@ -73,6 +73,7 @@ export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: Che
         note={s['checkout.note.enabled'] ? { max: s['checkout.note.maxChars'] } : null}
         capture={s['checkout.capture.enabled'] ? { waitMs: s['checkout.capture.waitMs'] } : null}
         bagHref={bagHref}
+        suggest={s['delivery.suggest.enabled'] ? { minChars: s['delivery.suggest.minChars'], storeId: c.storeId, words: { label: c.t('addrSuggest.label'), count: c.t('addrSuggest.count') } } : null}
       />
       {actions}
     </div>

@@ -34,6 +34,8 @@ const KEYS = [
   'delivery.resolver.settleMs',
   'delivery.resolver.minWords',
   'delivery.resolver.maxChars',
+  'delivery.suggest.enabled',
+  'delivery.suggest.minChars',
   'checkout.manyOfOne.enabled',
   'checkout.manyOfOne.min',
   'bag.undoMs',
