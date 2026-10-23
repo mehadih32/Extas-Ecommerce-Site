@@ -36,16 +36,16 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ আর চেকআউট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৪৪টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ আর চেকআউট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৫২টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 23/58** · **S03 9/22** · **S06 6/33** (wave 2) · **S04 22/41** · **S05 2/20** (wave 3) · total **144/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 31/58** · **S03 9/22** · **S06 6/33** (wave 2) · **S04 22/41** · **S05 2/20** (wave 3) · total **152/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 4 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15 and 17); none stops the build ([table below](#what-waits-on-the-owner)) |
-| Next | The CN-022 foundation items are built (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) and go live with the next deploy; S02 continues (the first-screen budget, wishlist, menu, content pages: PR [53](docs/stages/S02.md#pr-53) …); S04 after checkout: "Add to this parcel" (PR [127](docs/stages/S04.md#pr-127) …); the order states, refunds and returns wait for the owner's approval of the architecture draft (CN-022); S03 combos |
+| Next | The CN-022 foundation items are built (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) and go live with the next deploy; S02 continues (templates T2 / T3, Find my size, reviews, search: PR [50](docs/stages/S02.md#pr-50) …); S04 after checkout: "Add to this parcel" (PR [127](docs/stages/S04.md#pr-127) …); the order states, refunds and returns wait for the owner's approval of the architecture draft (CN-022); S03 combos |
 | Last update | 23 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
@@ -62,7 +62,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
-| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 23 / 58 | In progress |
+| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 31 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 9 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 22 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 2 / 20 | In progress |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **144 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **152 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -650,12 +650,12 @@ Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inve
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
 piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
 
-### S02 · Storefront — In progress (23/58)
+### S02 · Storefront — In progress (31/58)
 
-> **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর) আর পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন) তৈরি — ডেমো V12.2-এর মতো।
+> **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি আর সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) তৈরি — ডেমো V12.2-এর মতো।
 
-**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49), matched to demo V12.2 (CN-012).**
-- **Screens / routes:** `/` and `/bn` (home), `/collections/<slug>` and `/bn/collections/<slug>` (category pages; `new-in` = the newest styles of every category), `/p/<product>` and `/p/<product>/<colour>` with `/bn/…` (product pages; the prefix is the setting `naming.productPathPrefix`), `/checkout` (empty checkout with the slim header), the shop 404; every
+**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75), matched to demo V12.2 (CN-012).**
+- **Screens / routes:** `/` and `/bn` (home), `/collections/<slug>` and `/bn/collections/<slug>` (category pages; `new-in` = the newest styles of every category), `/p/<product>` and `/p/<product>/<colour>` with `/bn/…` (product pages; the prefix is the setting `naming.productPathPrefix`), `/account/wishlist` (wishlist), `/help/faq`, `/help/delivery`, `/help/exchange`, `/help/privacy`, `/help/terms`, `/help/story`, `/help/contact` (help pages), `/checkout` (empty checkout with the slim header), the shop 404; every
   storefront route not built yet shows "Coming soon" in the shell (CN-010). `/status` is the progress page.
 - **Shell (40):** announcement bar, header, phone menu, bottom bar, footer (phone bands with the social row incl.
   WhatsApp; desktop: the owner's reference layout with link icons, WhatsApp and Hotline boxes, social tiles); the
@@ -683,15 +683,29 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   limit as the bag; nothing said without a live rule); Fabric & care and the details. "Add to Bag" and the
   added-to-bag panel are the bag's own (S04); "Order Now" goes to checkout. A product taken off sale keeps its page,
   all sold out.
-- **Settings:** `theme.*`, `brand.*`, `shell.*`, `language.*`, `slider.engine`, `home.*` (registry v16; `home.hero` v17), `category.*` (registry v17), `pdp.*` (registry v19: page, gallery, colour, size, chart, stock, price, trust, rules, details, buy, sweep; no admin screen yet, CN-019). No schema
+- **Product page extras (53, 67–70):** the first-screen budget (`pdp.fit`: on a phone the sizes and the
+  measurement line always end above the buy bar; the device gate checks it on every product page); "Wear it with" and
+  "You may also like" rows by category and "Recently viewed" from this browser, each sliding with its own touch /
+  mouse / keyboard pauses; the floating rail (heart, WhatsApp) and the share tiles (Facebook, Messenger, WhatsApp,
+  Instagram, copy link), the rail off by default as in the demo; the site-wide floating WhatsApp button is a switch,
+  off (the header's icon does the job), with a choice per kind of page.
+- **Wishlist (71):** hearts kept for this browser on the server (no login), the wishlist page with Add to bag (the
+  saved size), Choose a size and Remove, the empty list with the newest products on a computer, the bag's "Move to
+  wishlist" with Undo; "Tell me when it is back" waits for a real sender (follow-up 70).
+- **Menu and help pages (74, 75):** the phone menu opens a category's sub-categories in place ("View all" first, a
+  count on each row); help pages from the live Smart Rules' texts, the owner's own words and the store's details —
+  privacy, terms and our story wait for the owner's words and say "Coming soon" until then (CN-017); on a computer a
+  help centre with the topic list and "Still stuck?". The phone header keeps a two-word store name on one line with
+  the WhatsApp disc on (follow-up 59).
+- **Settings:** `theme.*`, `brand.*`, `shell.*`, `language.*`, `slider.engine`, `home.*` (registry v16; `home.hero` v17), `category.*` (registry v17), `pdp.*` (registry v19: page, gallery, colour, size, chart, stock, price, trust, rules, details, buy, sweep; no admin screen yet, CN-019); registry v23: `pdp.fit`, `pdp.rows`, `pdp.icons`, `pdp.share`, `shell.fab`, `shell.menuSubs`, `wish.list`, `pages.help`, `pages.text` (owner data). No schema
   change, no new permission.
 - **Tests and gates:** unit tests beside the code (`apps/web/src/lib/shop/*.test.ts`, `packages/settings/test`),
   device gate 0 fails in 372 storefront checks and 124 product-page checks, storefront pages in the Lighthouse budget
   (TBT under 200 ms; the product page in both languages in the seeded budget, `lighthouserc.seeded.json`) and in the
   smoke test (`docs/qa/smoke.json`; product pages are found from New in, never named). Screenshots:
-  `docs/qa/screenshots/pr-40/`, `pr-41/`, `pr-43/`, `pr-45/` … `pr-48/`, `pr-49/`.
+  `docs/qa/screenshots/pr-40/`, `pr-41/`, `pr-43/`, `pr-45/` … `pr-48/`, `pr-49/`, `pr-53/` (PR 53, 67–71, 74, 75).
 
-Next: templates T2 / T3, the first-screen budget, Find my size, reviews (50 …). The CI device gate itself (PR 85, CI part) runs on every pull
+Next: templates T2 / T3, Find my size, reviews, search (50 …). The CI device gate itself (PR 85, CI part) runs on every pull
 request: 15 phones, 10 tablets and 6 desktop sizes (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Since 23 Oct it
 also signs in on the sample data, so admin controls that only show with data are checked at 44 × 44 too (0 fails in
 620 checks). Register:
@@ -910,6 +924,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #30 | PR [53](docs/stages/S02.md#pr-53), [67](docs/stages/S02.md#pr-67), [68](docs/stages/S02.md#pr-68), [69](docs/stages/S02.md#pr-69), [70](docs/stages/S02.md#pr-70), [71](docs/stages/S02.md#pr-71), [74](docs/stages/S02.md#pr-74), [75](docs/stages/S02.md#pr-75), [40](docs/stages/S02.md#pr-40) | 23 Oct | Storefront batch 3 (S02, demo V12.2, settings v23, no admin screen). The product page's first-screen budget as one setting with a device-gate check; "Wear it with" and "Recently viewed" rows that slide and pause for mouse, touch and keyboard; the floating rail (wishlist heart, WhatsApp) and the share tiles, both off by default; the site-wide WhatsApp button as a switch, off; the wishlist at `/account/wishlist` kept per browser on the server, with "Move to wishlist" in the bag; the phone menu's sub-categories opening in place; help pages at `/help/<slug>` built only from live rules and the owner's words ("Coming soon" until then); the phone header stays one line with WhatsApp on. Device gate 0 fails in 1302 checks. |
 | #29 | PR [6](docs/stages/S0A.md#pr-6), [196](docs/stages/S09.md#pr-196), [155](docs/stages/S05.md#pr-155), [139](docs/stages/S05.md#pr-139) | 23 Oct | The owner's CN-022 foundation items. A background worker (`@extas/jobs`): BullMQ with one scheduler leader, a `JobRun` row per attempt with retries, backoff and a dead letter, a heartbeat, and a retry never repeats a finished run; stock pull, cart-hold expiry, the ERP outbox and reconcile run on it; the Server page (`/admin/server`) shows the worker's state and the failed jobs (PR [6](docs/stages/S0A.md#pr-6)). An ERP webhook receiver (`POST /api/erp/webhook`) for `stock.changed` and `variant.changed`: signature checked with the key in the vault (refuses everything until it is entered), a time window, stored once per event id, an older change than the shop holds is ignored; polling stays as the fallback and the practice ERP stays until the owner connects the real one (PR [196](docs/stages/S09.md#pr-196)). One KPI definition (`@extas/metrics`): "Sales" = delivered orders only, "Ordered value" shown beside it; the combo report now shows both, and a test fails any report that adds up order money on its own (PR [155](docs/stages/S05.md#pr-155)). The audit log and 13 other history tables are append-only at the database: the app runs as its own role, which cannot change or delete those rows, and a trigger refuses it for every role (PR [139](docs/stages/S05.md#pr-139)). |
 | #28 | PR [115](docs/stages/S04.md#pr-115), [116](docs/stages/S04.md#pr-116), [117](docs/stages/S04.md#pr-117), [118](docs/stages/S04.md#pr-118), [119](docs/stages/S04.md#pr-119), [120](docs/stages/S04.md#pr-120), [121](docs/stages/S04.md#pr-121), [122](docs/stages/S04.md#pr-122), [123](docs/stages/S04.md#pr-123), [124](docs/stages/S04.md#pr-124), [125](docs/stages/S04.md#pr-125), [126](docs/stages/S04.md#pr-126) | 23 Oct | The checkout on new.extas.com.bd (S04 22/41): `/checkout` and `/bn/checkout` from demo V12.2 with the steps header and the phone's order-summary bar; name, phone and address with inline checks; the address read by the national gazetteer, and "where is this address?" instead of a guess; the delivery charge from the zone, shown before typing; payment methods with Cash on Delivery only when the owner's switch and the Smart Rules allow it, and mobile banking, card and online on a test payment page until the gateways' keys arrive (no money moves); quantity and remove, wallet, the marketing opt-in, Confirm button states; order placement that is idempotent (one press, one order) and stores exactly the money shown (SIM-F-003), keeps failed payments with a retry (SIM-F-026); the thank-you page. The order is created in its first state only; order states, refunds and returns wait for the owner (CN-022). Every option is a `checkout.*` setting (registry v20), off or empty where optional, no admin screen (CN-019). Also filed: CN-022 (worker, ERP webhook, one "Sales" KPI, append-only audit log). |
 | #27 | PR [82](docs/stages/S02.md#pr-82), [54](docs/stages/S02.md#pr-54), [55](docs/stages/S02.md#pr-55), [56](docs/stages/S02.md#pr-56), [57](docs/stages/S02.md#pr-57), [60](docs/stages/S02.md#pr-60), [61](docs/stages/S02.md#pr-61), [62](docs/stages/S02.md#pr-62), [63](docs/stages/S02.md#pr-63), [64](docs/stages/S02.md#pr-64), [49](docs/stages/S02.md#pr-49) | 23 Oct | The product page on new.extas.com.bd (S02 23/58): template T1 at `/p/<product>` and `/p/<product>/<colour>` (and `/bn/…`), photos with one swipe strip per colour, thumbnails and full-screen zoom; colour swatches with each colour's own address and "All N colours"; size pills S to 4XL where a sold-out size is crossed out, never hidden (SIM-F-035); the size chart popup in inches and cm; the stock line and "Only N left"; the price block with the ৳ never split from its number; the promise row and the Delivery · Exchange · Returns cells read live from Smart Rules; Fabric & care; and the bag's Add button with the added-to-bag panel (follow-up 38). Every option is a `pdp.*` setting (registry v19), off or empty where it is optional, no admin screen (CN-019). Bengali pages with products no longer stall on fonts (PR [82](docs/stages/S02.md#pr-82), follow-up 23), with a seeded Lighthouse check in CI. |
