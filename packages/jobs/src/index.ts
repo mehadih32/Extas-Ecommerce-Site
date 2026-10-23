@@ -8,7 +8,8 @@
 // - leader.ts      the one scheduler leader (a Redis lock with renewal);
 // - heartbeat.ts   each worker's heartbeat row;
 // - status.ts      what the admin Server page shows (heartbeat fresh or stale, the leader, the failed jobs);
-// - webhooks.ts    PR 196: the planner that puts stored ERP webhooks on the queue (worker.ts `planners`).
+// - webhooks.ts    PR 196: the planner that puts stored ERP webhooks on the queue (worker.ts `planners`);
+// - search.ts      PR 72: the search index job and the planner that runs it for a store whose index is behind.
 // This root has no queue client in it, so the web app can read the status. The worker itself (BullMQ, ioredis) is
 // `@extas/jobs/worker` (worker.ts), started by `src/main.ts` as its own process (infra/stack/app.yml `worker`).
 export * from './context';
@@ -20,3 +21,4 @@ export * from './leader';
 export * from './heartbeat';
 export * from './status';
 export * from './webhooks';
+export * from './search';

@@ -2,11 +2,14 @@
 // owner can change any of them, in both languages, through the setting `language.labels` (his words win over ours).
 // Text in a dictionary may hold {name} slots, filled at the moment it is shown.
 // The third storefront batch (S02, PR 53, 67–71, 74, 75) keeps its words in messages/shop-more.<lang>.json, merged in
-// here under their own top-level keys (a key in both files is a mistake and throws).
+// here under their own top-level keys (a key in both files is a mistake and throws). Search (S02, PR 72/73) keeps its
+// words in messages/shop-search.<lang>.json, merged the same way.
 import bn from '../../../messages/shop.bn.json';
 import en from '../../../messages/shop.en.json';
 import moreBn from '../../../messages/shop-more.bn.json';
 import moreEn from '../../../messages/shop-more.en.json';
+import searchBn from '../../../messages/shop-search.bn.json';
+import searchEn from '../../../messages/shop-search.en.json';
 import type { ShopLabel } from '@extas/settings';
 import type { Dict } from '../i18n';
 import type { ShopLang } from './lang';
@@ -16,7 +19,7 @@ function withMore(base: Dict, more: Dict): Dict {
   return { ...base, ...more };
 }
 
-export const SHOP_DICTS: Record<ShopLang, Dict> = { en: withMore(en, moreEn), bn: withMore(bn, moreBn) };
+export const SHOP_DICTS: Record<ShopLang, Dict> = { en: withMore(withMore(en, moreEn), searchEn), bn: withMore(withMore(bn, moreBn), searchBn) };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;
 export type Vars = Record<string, string | number>;

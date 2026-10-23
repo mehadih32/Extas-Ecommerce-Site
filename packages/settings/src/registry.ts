@@ -24,6 +24,7 @@ import { productSettings } from './registry-product';
 import { checkoutSettings } from './registry-checkout';
 import { jobsSettings } from './registry-jobs';
 import { shopMoreSettings } from './registry-shop-more';
+import { searchSettings } from './registry-search';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1139,6 +1140,8 @@ export const registry = {
   ...jobsSettings,
   // ---- S02 · PR 53, 67–71, 74, 75 · first screen, rows, rail, share, WhatsApp button, wishlist, menu, content pages (registry-shop-more.ts, version 23). ----
   ...shopMoreSettings,
+  // ---- S02 · PR 72, 73 · storefront search: the engine, matching, word lists, help pages, the panel, the results page (registry-search.ts, version 24). ----
+  ...searchSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

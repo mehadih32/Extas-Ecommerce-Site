@@ -1,16 +1,19 @@
 // PR 40 — the store shell around every shop page except checkout and landing pages (demo 03-layout.js layout()):
 // the skip link, the header, the page, the footer, the phone's bottom bar and the floating WhatsApp disc (PR 70: a
-// switch, off by default, with a per-page choice and its place — `shell.fab`).
+// switch, off by default, with a per-page choice and its place — `shell.fab`). PR 72: the search window, opened by the
+// header's search icon and the menu's "Search" (`search.panel`).
 import { StoreFooter } from '@/components/shop/StoreFooter';
 import { StoreHeader } from '@/components/shop/StoreHeader';
 import { BottomNav } from '@/components/shop/BottomNav';
 import { ShellEffects } from '@/components/shop/ShellEffects';
+import { SearchPanel } from '@/components/shop/search/SearchPanel';
 import { WaGlyph } from '@/components/shop/Icon';
 import { cookies } from 'next/headers';
 import { badgeCount, COUNT_COOKIE } from '@/lib/shop/bag-model';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { fabClass, fabPage, fabShows } from '@/lib/shop/fab';
 import { waHref } from '@/lib/shop/links';
+import { searchPanelProps } from '@/lib/shop/search-model';
 
 export default async function StoreLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const c = await shopContext();
@@ -18,7 +21,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
   // switches it on, the kinds of page he ticked show it (never the home page, the product page or the bag by default:
   // C3, §49.4, demo FAB_PAGES).
   // ~~C3: off the home page and the bag, every other page has it whenever the number is set~~
-  const more = await readPageSettings(['shell.fab', 'shell.menuSubs'] as const, c.storeId);
+  const more = await readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel'] as const, c.storeId);
   const fabSet = more['shell.fab'];
   const waLink = waHref(c.s['contact.whatsapp'], c.t('fab.message', c.vars));
   const fab = fabShows(fabSet, fabPage(c.path, c.s['naming.productPathPrefix']), waLink) ? waLink : null;
@@ -43,6 +46,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
         </a>
       ) : null}
       <ShellEffects />
+      <SearchPanel {...searchPanelProps(c, more['search.panel'])} />
     </>
   );
 }

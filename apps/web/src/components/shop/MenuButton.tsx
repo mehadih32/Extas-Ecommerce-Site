@@ -155,7 +155,13 @@ export function MenuButton({ label, data, lang }: { label: string; data: MenuDat
                   {quickN ? (
                     <div className="mn-quick" data-n={quickN !== 4 ? quickN : undefined}>
                       {data.quick.map((q) => (
-                        <a key={q.id} className="mn-q" href={q.href}>
+                        <a
+                          key={q.id}
+                          className="mn-q"
+                          href={q.href}
+                          // PR 72: "Search" opens the search window over the page (SearchPanel) as the menu closes
+                          {...(q.id === 'search' ? { 'data-search-open': '', onClick: () => setOpen(false) } : {})}
+                        >
                           <Icon name={q.icon} size={18} />
                           <span>{q.label}</span>
                         </a>

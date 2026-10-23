@@ -15,6 +15,7 @@ const NOT_A_CLAIM: Record<string, string> = {
   'cat.product': 'the one-form of a counted {n} (plural rule)',
   'cat.filterOn': 'the one-form of a counted {n} (plural rule)',
   'cat.showOne': 'the one-form of a counted {n} (plural rule)',
+  'search.helpOne': 'the one-form of a counted {n} (plural rule, PR 73)',
   'home.reviews.one': 'the one-form of a counted {n} (plural rule)',
   'home.reviews.stars': 'the rating scale ("out of 5"), not a count',
   'footer.join.empty': 'the mobile number format (01XXXXXXXXX)',

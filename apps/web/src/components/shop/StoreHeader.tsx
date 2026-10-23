@@ -95,7 +95,16 @@ export function StoreHeader({ c, bagCount = 0, menuSubs }: { c: ShopContext; bag
   const icons: Record<string, () => React.ReactNode> = {
     whatsapp: () => <HeaderWa key="wa" c={c} />,
     search: () => (
-      <a key="search" className="iconbtn" href={hrefIn(c.lang, ROUTES.search)} aria-label={t('header.search')} data-tip={t('header.search')}>
+      <a
+        key="search"
+        className="iconbtn"
+        href={hrefIn(c.lang, ROUTES.search)}
+        aria-label={t('header.search')}
+        data-tip={t('header.search')}
+        data-search-open=""
+        aria-haspopup="dialog"
+        aria-expanded="false"
+      >
         <Icon name="search" size={21} />
       </a>
     ),

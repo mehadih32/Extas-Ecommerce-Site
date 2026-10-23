@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
 import { retryDelayMs, retryPolicyOf } from './backoff';
 import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogue';
+import { searchPlanner, searchRunKey } from './search';
 import { errorLine, MAX_ERROR } from './context';
 import { LeaderLock, type LockStore } from './leader';
 import { dueRuns, runKey, seriesKey, slotOf, type TimetableEntry } from './scheduler';
@@ -49,10 +50,11 @@ describe('PR 6 · timetable slots', () => {
 });
 
 describe('PR 6 · catalogue', () => {
-  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue', () => {
+  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72) on its own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release'].sort(),
+      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index'].sort(),
     );
+    expect(jobDefinition('search.index')!.queue).toBe('search');
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);
     expect(jobDefinition('nope')).toBeNull();
   });
@@ -66,6 +68,15 @@ describe('PR 6 · catalogue', () => {
     expect(pull.storeOf(p)).toBe(4);
     const sweep = jobDefinition('inventory.reservations.release')!;
     expect(sweep.storeOf(sweep.parse(null))).toBeNull();
+  });
+  it('PR 72: the search index job needs a store; its run key is the store and the catalogue version', async () => {
+    const job = jobDefinition('search.index')!;
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 2, version: 'abc-1-2' }))).toBe(2);
+    expect(searchRunKey(2, 'lq3x-1a:2b')).toBe('search.index/2/lq3x-1a2b');
+    // without Meilisearch on the server nothing is planned (the shop searches PostgreSQL)
+    expect(await searchPlanner({ search: { meili: null } } as never, new Date())).toEqual([]);
+    expect(await searchPlanner({} as never, new Date())).toEqual([]);
   });
   it('keeps a small summary and turns a reported failure into a retry', () => {
     const long = 'x'.repeat(300);
