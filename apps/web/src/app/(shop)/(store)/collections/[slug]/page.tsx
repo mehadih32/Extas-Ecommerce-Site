@@ -13,6 +13,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
+import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatFaq, CatSeoText } from '@/components/shop/category/CatInfo';
 import { CatListing, type ListingRow } from '@/components/shop/category/CatListing';
 import { categoryData } from '@/lib/shop/catalogue';
@@ -65,7 +67,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage(props: Props) {
-  const { c, slug, set, state: asked, data, defaultSort } = await page(props);
+  const [{ c, slug, set, state: asked, data, defaultSort }, sp] = await Promise.all([page(props), props.searchParams]);
   if (!data) notFound();
   const t = c.t;
   const pg = set['category.page'];
@@ -167,6 +169,9 @@ export default async function CategoryPage(props: Props) {
         waName={name}
       />
       {info}
+      {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}
+      <CardDeskMount c={c} />
+      <AddedSlot c={c} added={sp.added} closeHref={closeHrefOf(basePath, sp)} />
     </div>
   );
 }

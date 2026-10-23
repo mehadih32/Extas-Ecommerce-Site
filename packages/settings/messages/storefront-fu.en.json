@@ -1,0 +1,8 @@
+{
+  "card": {
+    "desk": {
+      "label": "Product cards on a computer: back view and Quick add",
+      "help": "Only on a computer with a mouse (never on a phone or a touch screen). Back view: with the mouse on a card, its back photo (or the drawing's back) shows. Quick add: the sizes in stock in the card's colour show over the picture; one click puts that size in the bag, as the product page's Add to bag does. A size out of stock is not shown."
+    }
+  }
+}

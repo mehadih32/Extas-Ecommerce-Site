@@ -28,6 +28,7 @@ export function AddToBag({
   className = 'btn btn-primary',
   testId = 'add-to-bag',
   icon,
+  ariaLabel,
 }: {
   variantId: string;
   behaviour: 'sheet' | 'toast' | 'page';
@@ -37,6 +38,8 @@ export function AddToBag({
   className?: string;
   testId?: string;
   icon?: ReactNode;
+  /** Follow-up 21: the card's Quick add shows only the size ("M"); its name says the whole action. */
+  ariaLabel?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -72,7 +75,7 @@ export function AddToBag({
     }
   };
   return (
-    <button type="button" className={className} onClick={onClick} aria-busy={busy || undefined} data-testid={testId} data-variant={variantId}>
+    <button type="button" className={className} onClick={onClick} aria-busy={busy || undefined} data-testid={testId} data-variant={variantId} aria-label={ariaLabel}>
       {icon}
       {words.label}
     </button>

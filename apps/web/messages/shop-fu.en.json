@@ -1,0 +1,9 @@
+{
+  "cardQuick": {
+    "label": "Quick add",
+    "group": "Quick add {name}, choose a size",
+    "add": "Add size {size} to bag",
+    "soldOut": "Sold out in this colour",
+    "more": "{n} more sizes on the product page"
+  }
+}

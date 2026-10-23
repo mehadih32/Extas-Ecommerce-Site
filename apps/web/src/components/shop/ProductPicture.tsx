@@ -5,11 +5,11 @@
 import type { ImageSource } from '@extas/media';
 import type { ReactNode } from 'react';
 import { ResponsiveImage, altFor } from '@/components/media/ResponsiveImage';
-import { drawingBackground, garmentArt } from '@/lib/shop/garment-art';
+import { drawingBackground, garmentArt, type GarmentView } from '@/lib/shop/garment-art';
 import type { ShopLang } from '@/lib/shop/lang';
 
-export function GarmentDrawing({ garment, hex }: { garment: string | null; hex: string }) {
-  const art = garmentArt(garment, hex);
+export function GarmentDrawing({ garment, hex, view = 'front' }: { garment: string | null; hex: string; view?: GarmentView }) {
+  const art = garmentArt(garment, hex, view);
   if (!art) return null;
   return <svg className="garment" viewBox="0 0 200 222" aria-hidden="true" dangerouslySetInnerHTML={{ __html: art }} />;
 }
@@ -23,6 +23,7 @@ export function ProductPicture({
   lang,
   sizes,
   priority = false,
+  view = 'front',
   children,
 }: {
   garment: string | null;
@@ -33,14 +34,16 @@ export function ProductPicture({
   lang: ShopLang;
   sizes: string;
   priority?: boolean;
+  /** Follow-up 21: which side of the drawing (the card's back view on a computer's hover). */
+  view?: GarmentView;
   children?: ReactNode;
 }) {
   return (
-    <div className={`pimg ${ratio}${photo ? ' has-photo' : ''}`} style={{ background: drawingBackground(hex) }}>
+    <div className={`pimg ${ratio}${photo ? ' has-photo' : ''}`} style={{ background: drawingBackground(hex, view) }}>
       {photo ? (
         <ResponsiveImage image={photo} slot="card" sizes={sizes} alt={altFor(photo, lang, alt)} priority={priority} />
       ) : (
-        <GarmentDrawing garment={garment} hex={hex} />
+        <GarmentDrawing garment={garment} hex={hex} view={view} />
       )}
       {children}
     </div>
