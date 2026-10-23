@@ -6,8 +6,7 @@
 // drawn at once (lib/shop/wish-client.ts), and the first heart on a page brings the copy in step, once.
 // ~~The list lives in this browser only until the wishlist page and the account's own list arrive (PR 71).~~
 import { useEffect, useState } from 'react';
-import { readWishes, syncWishes, toggleWish } from '@/lib/shop/wish-client';
-import { WISH_CHANGED } from '@/lib/shop/wish-model';
+import { hasWish, onWishes, readWishes, syncWishes, toggleWish } from '@/lib/shop/wish-client';
 import { Icon } from './Icon';
 import { showToast } from './toast';
 
@@ -26,15 +25,12 @@ export interface HeartWords {
 export function HeartButton({ id, words, className = 'heart', size = 18, testId }: { id: string; words: HeartWords; className?: string; size?: number; testId?: string }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
-    const sync = () => setOn(readWishes().includes(id));
+    // PR 88: every heart on the page reads one shared copy and shares one pair of listeners (lib/shop/wish-client)
+    const sync = () => setOn(hasWish(id));
+    const off = onWishes(sync);
     sync();
     void syncWishes();
-    window.addEventListener(WISH_CHANGED, sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener(WISH_CHANGED, sync);
-      window.removeEventListener('storage', sync);
-    };
+    return off;
   }, [id]);
   return (
     <button

@@ -84,6 +84,8 @@ export function DeskNav({
   const [open, setOpen] = useState<{ id: string; by: 'hover' | 'key' | 'tap' } | null>(null);
   const [fly, setFly] = useState<number | null>(null);
   const [flyPos, setFlyPos] = useState<{ top: number; left: boolean }>({ top: 0, left: false });
+  // PR 88: the header the menu panel is drawn into is found when a menu first opens (after a pointer or a key); found at
+  // mount, its state change re-drew the whole row once more inside hydration's own task.
   const [hdr, setHdr] = useState<HTMLElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const flyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -150,7 +152,6 @@ export function DeskNav({
   }, []);
 
   useLayoutEffect(() => {
-    setHdr(nav.current?.closest<HTMLElement>('.hdr') ?? null);
     fit();
     const on = () => requestAnimationFrame(fit);
     window.addEventListener('resize', on);
@@ -173,6 +174,7 @@ export function DeskNav({
   const openItem = (id: string, by: 'hover' | 'key' | 'tap') => {
     clearTimeout(timer.current);
     if (open?.id !== id) setFly(null);
+    if (!hdr) setHdr(nav.current?.closest<HTMLElement>('.hdr') ?? null);
     setOpen({ id, by });
   };
 

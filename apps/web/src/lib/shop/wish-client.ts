@@ -15,6 +15,41 @@ export function readWishes(): string[] {
   }
 }
 
+// PR 88 · one copy per page for the hearts: a page of cards drew 20–40 hearts, and each read and parsed the stored list
+// and added two window listeners while the page hydrated (~8 ms of a slow phone's main thread on the product page).
+// Now the hearts share one parsed copy and one pair of listeners; a change (this tab or another) drops the copy.
+let shared: ReadonlySet<string> | null = null;
+const hearts = new Set<() => void>();
+
+function dropShared(): void {
+  shared = null;
+  hearts.forEach((f) => f());
+}
+
+/** Whether the product is in this browser's copy (the shared copy while hearts are listening). */
+export function hasWish(id: string): boolean {
+  if (!hearts.size) return readWishes().includes(id);
+  shared ??= new Set(readWishes());
+  return shared.has(id);
+}
+
+/** Calls `fn` whenever the list changes (here or in another tab); returns the unsubscribe. */
+export function onWishes(fn: () => void): () => void {
+  if (!hearts.size) {
+    shared = null;
+    window.addEventListener(WISH_CHANGED, dropShared);
+    window.addEventListener('storage', dropShared);
+  }
+  hearts.add(fn);
+  return () => {
+    hearts.delete(fn);
+    if (hearts.size) return;
+    shared = null;
+    window.removeEventListener(WISH_CHANGED, dropShared);
+    window.removeEventListener('storage', dropShared);
+  };
+}
+
 function writeWishes(list: string[], user: boolean): void {
   try {
     localStorage.setItem(WISH_STORE_KEY, JSON.stringify(list));

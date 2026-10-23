@@ -140,10 +140,22 @@ export function PdpEffects() {
     const raf = requestAnimationFrame(() => budget(vp.h, fit));
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', soon);
-    document.fonts?.ready.then(() => budget(vp.h, fit)).catch(() => undefined);
+    // PR 88: once the fonts have settled the pass runs again, in a frame of its own. Fonts already in at mount (the usual
+    // case: they are preloaded) need no second pass: `fonts.ready` then resolved at once and re-ran the whole pass as a
+    // microtask inside hydration's own task (~30 ms of a slow phone's main thread, the product page's TBT).
+    let late = 0;
+    let stopped = false;
+    if (document.fonts && document.fonts.status !== 'loaded')
+      document.fonts.ready
+        .then(() => {
+          if (!stopped) late = requestAnimationFrame(() => budget(vp.h, fit));
+        })
+        .catch(() => undefined);
     return () => {
+      stopped = true;
       clearTimeout(t);
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(late);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', soon);
     };

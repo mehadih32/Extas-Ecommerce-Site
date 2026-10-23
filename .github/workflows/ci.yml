@@ -251,6 +251,9 @@ jobs:
           path: .lighthouseci-seeded
           include-hidden-files: true
           retention-days: 7
+      # PR 88: the page and image weight targets (docs/qa/page-weight.json) on the same runs, all three of each page.
+      - name: Page and image weight on the sample data
+        run: node tools/page-weight.mjs .lighthouseci
       - name: Device gate, signed in on the sample data (0 fails)
         env:
           NODE_PATH: ${{ runner.temp }}/qa/node_modules

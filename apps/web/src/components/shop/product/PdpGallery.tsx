@@ -9,15 +9,20 @@
 // stacked in `deskColumns` columns beside the buy column, no thumbnails. One swipe engine for every template (demo P1).
 // PR 51 — template T3 keeps T1's gallery with the thumbnails under the photo on a computer (demo pdp_galleryT1 without
 // `vertical`), or down its side (`pdp.templates.t3.deskThumbs`).
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { PdpTemplate, PdpTemplatesSettings } from '@extas/settings';
 import { Icon } from '../Icon';
+import { whenIdle } from '@/lib/shop/later';
 import { nearestTile, stepTo, thumbsShown } from '@/lib/shop/pdp-gallery';
 import { lowStock } from '@/lib/shop/pdp-stock';
 import { NO_COLOUR, type PdpShot } from '@/lib/shop/product-model';
 import { usePdp } from './PdpRoot';
-import { PdpZoom } from './PdpZoom';
 import { ShotPicture } from './ShotPicture';
+
+// PR 88 — the full-screen viewer is its own chunk: fetched once the page is idle (so a tap opens it at once) or on the
+// first open, never in the page's first load.
+const loadZoom = () => import('./PdpZoom');
+const PdpZoom = lazy(() => loadZoom().then((x) => ({ default: x.PdpZoom })));
 
 export interface GalleryBadge {
   text: string;
@@ -50,6 +55,8 @@ export function PdpGallery({
   const setIdx = useCallback((i: number) => setAt({ key, i }), [key]);
   const [zoomAt, setZoomAt] = useState<number | null>(null);
   const raf = useRef(0);
+  const zoomOn = set.gallery.zoom;
+  useEffect(() => (zoomOn ? whenIdle(() => void loadZoom().catch(() => undefined)) : undefined), [zoomOn]);
 
   // a new colour's strip starts at its first photo, with no animation
   useEffect(() => {
@@ -231,18 +238,20 @@ export function PdpGallery({
         </div>
       ) : null}
       {zoomAt !== null ? (
-        <PdpZoom
-          shots={shots}
-          start={zoomAt}
-          garment={m.garment}
-          hex={hex}
-          lang={lang}
-          altOf={altOf}
-          onClose={(at) => {
-            setZoomAt(null);
-            go(at, false);
-          }}
-        />
+        <Suspense fallback={null}>
+          <PdpZoom
+            shots={shots}
+            start={zoomAt}
+            garment={m.garment}
+            hex={hex}
+            lang={lang}
+            altOf={altOf}
+            onClose={(at) => {
+              setZoomAt(null);
+              go(at, false);
+            }}
+          />
+        </Suspense>
       ) : null}
     </div>
   );

@@ -1,0 +1,8 @@
+{
+  "$comment": "PR 88 — the page and image weight targets of the register (PR 88, owner server spec 19 Oct 23:33): a category page under 1 MB, a category image under 40 KB, a product page's main image under 150 KB. tools/page-weight.mjs checks them on every seeded Lighthouse run in CI (the device-gate job), from what the page really downloaded. `match` is a regular expression on the page's path (after the optional /bn); `pageBytes` caps everything the page loads, `imageBytes` each image it loads. The sample data has no photos yet, so in CI only the page totals bite; the image caps bite as soon as a page there carries photos (follow-up 161: the same check on the preview with the owner's real photos).",
+  "budgets": [
+    { "id": "category", "match": "^/collections/", "pageBytes": 1048576, "imageBytes": 40960 },
+    { "id": "search", "match": "^/search", "pageBytes": 1048576, "imageBytes": 40960 },
+    { "id": "product", "match": "^/p/", "imageBytes": 153600 }
+  ]
+}
