@@ -53,6 +53,8 @@ export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: Che
         wa={wa}
         fields={fieldOrder(s['checkout.fieldOrder'])}
         limits={{ nameMin: s['checkout.form.nameMin'], addressMin: s['checkout.form.addressMin'] }}
+        settle={{ settleMs: s['delivery.resolver.settleMs'], minWords: s['delivery.resolver.minWords'] }}
+        addressMax={s['delivery.resolver.maxChars']}
       />
     </div>
   );

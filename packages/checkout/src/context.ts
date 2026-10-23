@@ -2,6 +2,7 @@
 // tests. The checkout needs no staff permission: it is the customer's own bag (found by the random visitor id in his
 // cookie) and his own order, and every service writes only into that one bag and that one order of one store (A4.1).
 import type { Prisma, PrismaClient } from '@extas/db/client';
+import type { Gazetteer } from '@extas/delivery';
 import type { Key, Value } from '@extas/settings';
 import type { z } from 'zod';
 
@@ -18,6 +19,8 @@ export interface CheckoutDeps {
   settings: SettingsReader;
   /** Clock, for tests. */
   now?: () => Date;
+  /** The gazetteer to read addresses with instead of the shared one from the database (tests). */
+  gazetteer?: Gazetteer;
 }
 
 export type CheckoutErrorCode =

@@ -7,7 +7,8 @@ import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { visitorId } from './bag';
-import type { ShopContext } from './context';
+import type { CheckoutApiDeps } from './checkout-api';
+import { shopStoreId, type ShopContext } from './context';
 import { SHOP_DICTS, keysOf } from './dict';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
@@ -17,6 +18,12 @@ export function checkoutDeps(): CheckoutDeps | null {
   return { db: getPrisma(), settings: resolver };
 }
 
+/** The checkout API's dependencies: the engines and the store the shop serves. */
+export function checkoutApiDeps(): CheckoutApiDeps | null {
+  const checkout = checkoutDeps();
+  return checkout ? { checkout, storeId: shopStoreId() } : null;
+}
+
 const KEYS = [
   'checkout.fieldOrder',
   'checkout.tryOn.enabled',
@@ -24,6 +31,9 @@ const KEYS = [
   'checkout.form.nameMin',
   'checkout.form.addressMin',
   'policy.exchange.windowHours',
+  'delivery.resolver.settleMs',
+  'delivery.resolver.minWords',
+  'delivery.resolver.maxChars',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

@@ -200,6 +200,10 @@
       "phoneCheck": "Check the number",
       "phonePrefix": "A mobile number starts with 013 to 019. Check the number.",
       "phoneLength": "Enter an 11-digit mobile number, like 01XXXXXXXXX."
+    },
+    "del": {
+      "write": "Write your address above and your charge appears here.",
+      "reading": "Reading your address — your charge appears here in a moment."
     }
   },
   "notFound": {

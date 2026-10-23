@@ -1,10 +1,13 @@
-// PR 115 — the checkout's quote: everything the page shows about money, in one read. The bag comes from @extas/cart
+// PR 115 — the checkout's quote: everything the page shows about money, in one read. PR 117 adds the address as the
+// gazetteer read it (the place and band found, or the question to ask: `delivery`). The bag comes from @extas/cart
 // (bagView: its lines, sets and the order summary priced by the rules and combos engines). Nothing here invents an
 // amount: rows are added up from what the engines returned. The same function prices the page and the order (PR 125),
 // so the order stores exactly what the customer saw (SIM-F-003); `fingerprint` names that money, so placement can tell
 // when anything changed in between.
 import { createHash } from 'node:crypto';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
+import type { AskReason, BandOut } from '@extas/delivery';
+import { placeName, readAddress, type AddressInput, type AddressRead, type PlaceName } from './address';
 import { checkStoreId, type CheckoutDeps } from './context';
 
 export interface CheckoutRequest {
@@ -13,6 +16,24 @@ export interface CheckoutRequest {
   lang: BagLang;
   /** The signed-in customer (members-only codes); null for a guest. */
   customerId?: string | null;
+  /** PR 117: the finished address line (and the band the customer chose when asked); null before he wrote one. */
+  address?: AddressInput | null;
+}
+
+/** The delivery step as the page draws it (PR 117–119). */
+export type DeliveryView =
+  /** No finished address yet. */
+  | { state: 'none' }
+  /** The gazetteer found the place: its band (and the place itself, when the line named one). */
+  | { state: 'found'; band: BandOut; place: PlaceName | null; via: 'line' | 'saved' | 'choice'; placeSure: boolean }
+  /** Nothing settles it: the customer is asked which band, never guessed for. */
+  | { state: 'ask'; reason: AskReason; options: { band: BandOut; places: PlaceName[] }[] };
+
+/** The page's delivery step from the address read. */
+export function deliveryViewOf(a: AddressRead): DeliveryView {
+  if (a.status === 'resolved') return { state: 'found', band: a.read.band, place: placeName(a.read.area), via: a.read.via, placeSure: a.read.placeSure };
+  if (a.status === 'ask') return { state: 'ask', reason: a.read.reason, options: a.read.options.map((o) => ({ band: o.band, places: o.places.map((p) => placeName(p)!) })) };
+  return { state: 'none' };
 }
 
 export interface Totals {
@@ -34,6 +55,9 @@ export interface CheckoutQuote {
   cartId: string | null;
   bag: BagView;
   totals: Totals;
+  delivery: DeliveryView;
+  /** The address read the order keeps (the ResolvedArea the charge comes from); `none` before an address. */
+  address: AddressRead;
   /** A hash of every amount on the page: placement refuses an order whose money changed since the page showed it. */
   fingerprint: string;
 }
@@ -48,19 +72,20 @@ export interface CheckoutView {
   offers: BagView['summary']['offers'];
   subtotalMinor: number;
   totals: Totals;
+  delivery: DeliveryView;
   fingerprint: string;
 }
 
 /** The checkout of no bag (no cookie, no database): the page shows the empty-bag card. */
 export const emptyQuote = (): CheckoutQuote => {
   const totals: Totals = { itemsMinor: ZERO, deliveryMinor: null, totalMinor: ZERO, known: false, youSaveMinor: ZERO, regularMinor: ZERO };
-  return { cartId: null, bag: emptyBag(), totals, fingerprint: fingerprintOf({ totals }) };
+  return { cartId: null, bag: emptyBag(), totals, delivery: { state: 'none' }, address: { status: 'none' }, fingerprint: fingerprintOf({ totals }) };
 };
 
 /** What the client part of the page needs from a quote. */
 export function viewOf(q: CheckoutQuote): CheckoutView {
   const s = q.bag.summary;
-  return { cartId: q.cartId, count: s.count, rows: s.rows, offers: s.offers, subtotalMinor: s.subtotalMinor, totals: q.totals, fingerprint: q.fingerprint };
+  return { cartId: q.cartId, count: s.count, rows: s.rows, offers: s.offers, subtotalMinor: s.subtotalMinor, totals: q.totals, delivery: q.delivery, fingerprint: q.fingerprint };
 }
 
 /** The fingerprint of the money a quote shows. */
@@ -71,7 +96,11 @@ export function fingerprintOf(parts: unknown): string {
 /** The checkout's quote for a bag. */
 export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest): Promise<CheckoutQuote> {
   checkStoreId(input.storeId);
-  const bag = input.cartId ? await bagView(deps, { storeId: input.storeId, cartId: input.cartId, lang: input.lang, customerId: input.customerId ?? null }) : emptyBag();
+  const [bag, address] = await Promise.all([
+    input.cartId ? bagView(deps, { storeId: input.storeId, cartId: input.cartId, lang: input.lang, customerId: input.customerId ?? null }) : emptyBag(),
+    readAddress(deps, input.storeId, input.address),
+  ]);
+  const delivery = deliveryViewOf(address);
   const s = bag.summary;
   const itemsMinor = s.totalMinor;
   const deliveryMinor = s.freeDelivery ? ZERO : null;
@@ -85,5 +114,5 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     regularMinor: totalMinor + s.youSaveMinor,
   };
   const fingerprint = fingerprintOf({ rows: s.rows.map((r) => [r.lineId, r.quantity, r.amountMinor]), offers: s.offers.map((o) => [o.ruleKey, o.amountMinor]), totals });
-  return { cartId: bag.cartId, bag, totals, fingerprint };
+  return { cartId: bag.cartId, bag, totals, delivery, address, fingerprint };
 }

@@ -2,7 +2,8 @@
 // CN-012) and the form's checks (PR 116). Shared by the server page, the API and the client form, so the browser and
 // the order placement judge a form the same way; tested in pure.test.ts.
 import { phoneNormalizeBD, type PhoneBD } from '@extas/delivery/phone';
-export type { CheckoutView, Totals } from './quote';
+export type { CheckoutView, DeliveryView, Totals } from './quote';
+export type { PlaceName } from './address';
 export { phoneNormalizeBD, type PhoneBD };
 
 /** The three fields of "Delivery details", in the shop's own order. */
