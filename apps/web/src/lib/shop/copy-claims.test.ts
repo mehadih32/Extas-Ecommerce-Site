@@ -21,6 +21,7 @@ const NOT_A_CLAIM: Record<string, string> = {
   'footer.join.short': 'the mobile number format (11 digits)',
   'footer.join.prefix': 'the mobile number format (013 to 019, 11 digits)',
   'footer.promise.original': "the brand's standing promise in the approved demo; a switch in footer.promise",
+  'bag.ups.origTitle': "the same standing promise on the bag's why-card (PR 114); off by default, switch bag.upsell.originalLine",
 };
 
 const DIGIT = /[0-9০-৯]/;
