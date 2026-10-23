@@ -558,4 +558,67 @@ check "app role: a guard problem passes through" "$(FAKE_GUARDS='problem: guard 
 check "app role: an unreadable database is a problem" "$(guards)" "problem: the append-only check could not read the database"
 rm -rf "$T"
 
+# Follow-up 82 (PR 6): a rollback starts the previous good version's worker too. The record names each version's
+# worker image; the clean-up after a deploy keeps the newest few images and never one a record still needs, however
+# many failed builds came after it (infra/deploy/images.sh).
+T="$(mktemp -d)"
+img() { bash -c '. ../deploy/images.sh; "$@"' _ "$@"; }
+check "images: a version's worker image is its record's, else the same commit's migrate image" \
+  "$(img worker_image_of extas-web:aaa extas-migrate:bbb):$(img worker_image_of extas-web:aaa)" "extas-migrate:bbb:extas-migrate:aaa"
+echo '{"image":"extas-web:new","previous":"extas-web:old","worker_image":"extas-migrate:new","previous_worker":"extas-migrate:oldw"}' > "$T/good.json"
+check "images: the rollback target is the previous app and its own worker" "$(img rollback_target "$T/good.json")" "extas-web:old extas-migrate:oldw"
+echo '{"image":"extas-web:new","previous":"extas-web:old"}' > "$T/legacy.json"
+check "images: a record from before names the worker by the commit" "$(img rollback_target "$T/legacy.json")" "extas-web:old extas-migrate:old"
+echo '{"image":"extas-web:new"}' > "$T/first.json"
+check "images: no previous version, no rollback target" "$(img rollback_target "$T/first.json")" ""
+echo '{"image":"extas-web:bad","migrate":"extas-migrate:bad","previous":"extas-web:new"}' > "$T/last.json"
+img needed_images "$T/good.json" "$T/last.json" "$T/missing.json" > "$T/needed"
+check "images: the records' images are all kept" "$(paste -sd' ' "$T/needed")" \
+  "extas-migrate:bad extas-migrate:new extas-migrate:oldw extas-web:bad extas-web:new extas-web:old"
+{ for i in 1 2 3 4 5 6; do echo "extas-migrate:fail$i 2026-10-2$i 10:00:00 +0000 UTC"; done
+  echo "extas-migrate:oldw 2026-10-19 10:00:00 +0000 UTC"; echo "extas-migrate:ancient 2026-10-18 10:00:00 +0000 UTC"; } > "$T/list"
+check "images: six failed builds later the rollback worker is still kept" "$(img images_to_remove 3 "$T/needed" < "$T/list" | paste -sd' ')" \
+  "extas-migrate:fail3 extas-migrate:fail2 extas-migrate:fail1 extas-migrate:ancient"
+: > "$T/none"
+check "images: with no record the newest few are kept" "$(img images_to_remove 7 "$T/none" < "$T/list")" "extas-migrate:ancient"
+# The whole rollback with a stand-in docker and curl: the worker comes back from the previous version's own image.
+mkdir -p "$T/bin" "$T/root/state/deploys" "$T/root/config/secrets" "$T/root/config/caddy/sites"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for docker in deploy.sh: images exist when listed in FAKE_IMAGES; compose logs what each colour runs
+echo "ARGS $*" >> "$FAKE_LOG"
+case "$1" in
+  image) img="${*: -1}"; grep -qxF "$img" <(tr ' ' '\n' <<<"$FAKE_IMAGES") || exit 1
+         [ "${2:-}" != inspect ] || [ "${3:-}" != -f ] || echo "GIT_SHA=${img##*:}" ;;
+  compose) echo "COMPOSE ${*: -4} WORKER_IMAGE=$WORKER_IMAGE WORKER_REPLICAS=$WORKER_REPLICAS APP_IMAGE=$APP_IMAGE" >> "$FAKE_LOG" ;;
+  exec) case "$*" in *wget*) echo '{"ok":true}' ;; esac ;;
+  images) tr ' ' '\n' <<<"$FAKE_IMAGES" | grep "^${*: -1}:" | sed 's/$/ 2026-10-20 10:00:00 +0000 UTC/' ;;
+  rmi) echo "RMI ${*:2}" >> "$FAKE_LOG" ;;
+esac
+exit 0
+FAKE
+printf '#!/usr/bin/env bash\necho %s\n' "'{\"ok\":true,\"color\":\"blue\",\"color\":\"green\"}'" > "$T/bin/curl"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$T/bin/sleep"
+chmod +x "$T/bin/docker" "$T/bin/curl" "$T/bin/sleep"
+printf 'EXTAS_ROOT=%s\nEXTAS_NVME_MOUNT=/nvme\nEXTAS_TIMEZONE=Asia/Dhaka\nPROFILE_APP_HEAP_PCT=75\nEXTAS_STAGING_HOST=example.test\nEXTAS_STAGING_USER=extas\n' "$T/root" > "$T/conf"
+printf 'APP_NODE_HEAP_MB=2048\nJOBS_REPLICAS=1\nJOBS_REPLICA_MEM_MB=4096\nJOBS_NODE_HEAP_MB=3072\n' > "$T/root/config/profile.env"
+printf 'SESSION_SECRET=x\n' > "$T/root/config/secrets/app.env"
+printf 'REDIS_QUEUE_URL=redis://q\n' > "$T/root/config/secrets/app-connections.env"
+echo green > "$T/root/state/app.color"
+cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+dep() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" EXTAS_CONFIG_FILE="$T/conf" DEPLOY_DRAIN_SECONDS=0 bash ../deploy/deploy.sh "$@" >/dev/null 2>&1; }
+rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new extas-migrate:oldw" dep rollback || rc=$?
+check "rollback: runs" "$rc:$(jq -r .result "$T/root/state/last-deploy.json")" "0:ok"
+check "rollback: the previous version's worker starts with the app" \
+  "$(grep '^COMPOSE -d --wait ' "$T/docker.log" | sed 's/^COMPOSE -d --wait --wait-timeout 180 //')" "WORKER_IMAGE=extas-migrate:oldw WORKER_REPLICAS=1 APP_IMAGE=extas-web:old"
+check "rollback: the record names the worker it runs" "$(jq -r '.image, .worker_image, .worker' "$T/root/state/last-deploy.json" | paste -sd'|')" \
+  "extas-web:old|extas-migrate:oldw|on: 1 copy/copies from extas-migrate:oldw"
+check "rollback: the rolled-back-from version is the next rollback target, with its worker" "$(jq -r '.previous, .previous_worker' "$T/root/state/last-deploy.json" | paste -sd'|')" "extas-web:new|extas-migrate:new"
+check "rollback: no image a record needs is removed" "$(grep -c '^RMI' "$T/docker.log" || true)" "0"
+: > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new" dep rollback || rc=$?
+check "rollback: a worker image that is gone runs 0 copies and says why" "$rc:$(jq -r .worker "$T/root/state/last-deploy.json"):$(jq -r .worker_image "$T/root/state/last-deploy.json")" \
+  "0:off: image extas-migrate:oldw is not on this server:"
+rm -rf "$T"
+
 exit $fail
