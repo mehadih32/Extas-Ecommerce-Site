@@ -168,7 +168,8 @@
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat
+  - Build status row: Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat. 23 Oct (follow-up 82, merged, deploys with the next code deploy): the deploy record keeps the worker image beside the web image (`worker_image`, `previous_worker`), a rollback starts the previous good version's worker from it, and the image clean-up never removes an image a record still needs (`infra/deploy/images.sh`, tested with a full fake rollback)
+  - GitHub pull request #31, 23 Oct
   - GitHub pull request #29, 23 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Redis, and BullMQ queues with their dead-letter handling.
@@ -178,10 +179,11 @@
   - **19 Oct 23:33** · [Scope added to existing PRs (owner server spec, CN-001; review/SERVER-SETUP-SPEC-OWNER.md; new PR 601–604)](../MASTER-REGISTER.md#how-this-reached-606): **The filing** — the owner approved every point of the analysis at 23:33 and said: where two decisions conflict, take the best one. Four new PRs (601 NVMe boot unit and 604 hardware-aware profile in S0A, 603 database performance pack in S00, 602 four-layer cache in S02); the rest is dated scope on the PR lines below (PR 1, 3–10, 13, 18, 22, 24, 37, 72, 88, 234, 519). **Every server item is required before go-live** — the owner's "later" list (monitoring page, monthly speed measurement, report pre-computation) is not deferred; items that need the app schema are built with their stage and marked *pre-launch required*. **Build order inside S0A:** 1 record specs (PR 1) → 2 hardening and UFW (PR 3) → 3 NVMe boot unit (PR 601) → 4 data-disk LVM (PR 1/3) → 5 Docker (PR 4) → 6 hardware-aware profile (PR 604) → 7 Postgres, PgBouncer and Redis tuning (PR 5, 6) → 8 Caddy, Cloudflare and Origin …
   - **23 Oct** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 23 Oct 2026 (CN-022):** the worker process: a separate BullMQ worker, one scheduler leader, a `JobRun` row per run (status, retries, next attempt, failure reason), a heartbeat; stock pull, cart-hold expiry, ERP outbox and reconcile run through it; a retry never repeats a side effect; failed jobs show on the Server page.
 - **What was built** (from the Build status row):
-  - Code and files: `@extas/jobs`, `infra/stack/app.yml`
+  - Code and files: `@extas/jobs`, `infra/stack/app.yml`, `infra/deploy/images.sh`
   - Routes: `/admin/server`
   - Settings and named keys: `system.read`, `jobs.*`
-  - Names in the code: `JobRun`, `WORKER_LOST`, `WorkerHeartbeat`, `0008_worker`, `worker`
+  - Names in the code: `JobRun`, `WORKER_LOST`, `WorkerHeartbeat`, `0008_worker`, `worker`, `worker_image`, `previous_worker`
+  - Tests: 23 Oct (follow-up 82, merged, deploys with the next code deploy): the deploy record keeps the worker image beside the web image (`worker_image`, `previous_worker`), a rollback starts the previous good version's worker from it, and the image clean-up never removes an image a record still needs (`infra/deploy/images.sh`, tested with a full fake rollback)
 - **Owning agent:** Prohori
 - **Mentions:** [PR 602](S02.md#pr-602)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
@@ -197,7 +199,8 @@
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box
+  - Build status row: Caddy auto HTTPS + HTTP/3, password + noindex; preview password read on the VM, rotatable (CN-007); Cloudflare Origin cert waits for the Cloudflare key (PR 493/500). 20 Oct (owner 15:36): the preview login is asked once, then an HttpOnly cookie (`EXTAS_PREVIEW_COOKIE_DAYS`, 30) lets every request through; the admin sign-in request had been stopped by a second login box. 23 Oct (follow-up 80, merged, applied by server-setup on merge, gate fingerprint v3): only `POST /api/erp/webhook` passes without the preview login (the message proves itself with its signature, PR 196); every other method and path still asks; infra tests with a live Caddy run when a binary is present; smoke check (anonymous POST answers the app's own 401 JSON, not the login)
+  - GitHub pull request #31, 23 Oct
   - GitHub pull request #19, 20 Oct
   - GitHub pull request #2 (commit `3a8d198`), 20 Oct 02:46 (Dhaka)
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
@@ -208,9 +211,11 @@
   - **19 Oct 23:33** · [Scope added to existing PRs (owner server spec, CN-001; review/SERVER-SETUP-SPEC-OWNER.md; new PR 601–604)](../MASTER-REGISTER.md#how-this-reached-606): **The filing** — the owner approved every point of the analysis at 23:33 and said: where two decisions conflict, take the best one. Four new PRs (601 NVMe boot unit and 604 hardware-aware profile in S0A, 603 database performance pack in S00, 602 four-layer cache in S02); the rest is dated scope on the PR lines below (PR 1, 3–10, 13, 18, 22, 24, 37, 72, 88, 234, 519). **Every server item is required before go-live** — the owner's "later" list (monitoring page, monthly speed measurement, report pre-computation) is not deferred; items that need the app schema are built with their stage and marked *pre-launch required*. **Build order inside S0A:** 1 record specs (PR 1) → 2 hardening and UFW (PR 3) → 3 NVMe boot unit (PR 601) → 4 data-disk LVM (PR 1/3) → 5 Docker (PR 4) → 6 hardware-aware profile (PR 604) → 7 Postgres, PgBouncer and Redis tuning (PR 5, 6) → 8 Caddy, Cloudflare and Origin …
   - **20 Oct** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 20 Oct 2026 (CN-007): the preview password is never sent through chat, logs or artifacts; the owner reads it on the VM (`extas-preview-login`, `docs/owner/PREVIEW-LOGIN.md`), and `server-setup` can rotate it.**
 - **What was built** (from the Build status row):
+  - Code and files: `POST /api/erp/webhook`
   - Names in the code: `EXTAS_PREVIEW_COOKIE_DAYS`
+  - Tests: infra tests with a live Caddy run when a binary is present
 - **Owning agent:** Prohori
-- **Mentions:** [PR 362](S17.md#pr-362), [PR 493](S00.md#pr-493), [PR 500](S00.md#pr-500)
+- **Mentions:** [PR 362](S17.md#pr-362), [PR 493](S00.md#pr-493), [PR 500](S00.md#pr-500), [PR 196](S09.md#pr-196)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [Blueprint: A2.9.8 CDN — Cloudflare (owner spec §4; PR 362, 7)](../BLUEPRINT.md#a298-cdn--cloudflare-owner-spec-4-pr-362-7) · [Blueprint: A2.9.14 Security (owner spec §10; PR 3, 7)](../BLUEPRINT.md#a2914-security-owner-spec-10-pr-3-7) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
 
 ---
