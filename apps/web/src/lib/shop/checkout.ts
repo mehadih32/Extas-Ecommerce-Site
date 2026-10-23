@@ -34,6 +34,9 @@ const KEYS = [
   'delivery.resolver.settleMs',
   'delivery.resolver.minWords',
   'delivery.resolver.maxChars',
+  'checkout.manyOfOne.enabled',
+  'checkout.manyOfOne.min',
+  'bag.undoMs',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

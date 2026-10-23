@@ -3,6 +3,7 @@
 // is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
+import { removeLine, restoreLine, setQuantity } from '@extas/cart';
 import { readAddress } from './address';
 import { checkoutQuote } from './quote';
 import { setUpCheckout, type CheckoutFixture } from './testing';
@@ -238,6 +239,26 @@ describe.skipIf(!HAS_TEST_DB)('the checkout on PostgreSQL (S04)', () => {
         await f.switchRule('delivery', false);
         unset(...REWARD);
       }
+    });
+  });
+  describe('PR 121 · quantity and removal at checkout', () => {
+    it('a quantity changed or an item taken out reprices the checkout; Undo brings it back; the last one leaves an empty checkout', async () => {
+      const v = f.variant('oxford-cotton-shirt', 'sky', 'M');
+      const { cartId } = await f.bag('qty', [{ variantId: v.id }]);
+      const one = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', address: { line: 'Road 5, Dhanmondi, Dhaka 1209' } });
+      const lineId = one.bag.items[0]!.lineId;
+      await setQuantity(f.deps(), { storeId: f.S, cartId, lineId, quantity: 3 });
+      const three = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en', address: { line: 'Road 5, Dhanmondi, Dhaka 1209' } });
+      expect(three.bag.items[0]!.quantity).toBe(3);
+      expect(three.totals.itemsMinor).toBe(3 * one.totals.itemsMinor);
+      expect(three.totals.totalMinor).toBe(three.totals.itemsMinor + (three.totals.deliveryMinor ?? 0));
+      expect(three.fingerprint).not.toBe(one.fingerprint);
+      await removeLine(f.deps(), { storeId: f.S, cartId, lineId });
+      const empty = await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en' });
+      expect(empty.bag.items).toHaveLength(0);
+      expect(empty.totals.itemsMinor).toBe(0);
+      await restoreLine(f.deps(), { storeId: f.S, cartId, lineId });
+      expect((await checkoutQuote(f.deps(), { storeId: f.S, cartId, lang: 'en' })).bag.items[0]?.quantity).toBe(3);
     });
   });
 });
