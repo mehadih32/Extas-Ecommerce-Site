@@ -44,7 +44,7 @@ jobs:
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh tools/admin-login-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
           EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
@@ -56,6 +56,16 @@ jobs:
   # speed targets) and the production image.
   web:
     runs-on: ubuntu-24.04
+    # PR 508 — a throwaway PostgreSQL for the admin session end to end (the last step), on this job's own build.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
     env:
       # The Prisma client of the full schema (333 models) costs every type-check about 2.5–3 GB of heap; Node's default
       # limit on the runner is about 2 GB.
@@ -141,6 +151,16 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/e2e" --no-save --no-audit --no-fund playwright@1.63.0
           "$RUNNER_TEMP/e2e/node_modules/.bin/playwright" install --with-deps chromium
           bash tools/admin-login-e2e.sh extas-web:ci extas-migrate:ci
+      # PR 508 (PROGRESS follow-up 19) — the admin session end to end on this job's build: a fresh installation on a
+      # throwaway database (the migrate image's own command, read from the Dockerfile), a test-only admin with a first
+      # password generated at run time, then a real browser signs in, refreshes, opens the sign-in page while signed in
+      # (it must go to the admin), logs out, and finds the admin closed again, also for the old session cookie. Any
+      # console error or failed request on the way fails it. Reuses the Playwright of the step above.
+      - name: Admin session end to end (sign in, refresh, sign-in page while signed in, log out)
+        env:
+          NODE_PATH: ${{ runner.temp }}/e2e/node_modules
+          E2E_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: bash tools/admin-session-e2e.sh
 
   # PR 85 — the device gate (Blueprint Appendix C1/C2, D1.4): every lighthouserc URL on the 15 phones, 10 tablet sizes
   # and 6 desktop widths, with the demo gate's layout checks (docs/qa/device-matrix.js) plus tap targets (44 × 44),
