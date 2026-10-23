@@ -64,6 +64,18 @@
       "expect": ["[data-testid=\"ty-page\"]", "[data-testid=\"ty-look\"]", "[data-testid=\"ty-look-row\"]", "[data-testid=\"ty-look-add\"]"]
     },
     {
+      "$comment": "PR 605 — the gift checkout (POST /api/shop/try-gift, test servers only: the sample bag, and this browser draws /checkout?gift=1 and the bag as if gift mode were on; nothing written to the settings). The \"Sending a gift\" card's boxes (16 px text), its date box, the hide-prices tick and \"Not a gift?\" keep their 44 px taps; the bag's \"Send as a gift\" link under Checkout too.",
+      "paths": ["/checkout?gift=1", "/bn/checkout?gift=1"],
+      "fill": "/api/shop/try-gift",
+      "expect": ["[data-testid=\"co-page\"]", "[data-testid=\"co-gift\"]", "#co-senderName", "[data-testid=\"co-gift-hide\"]"]
+    },
+    {
+      "$comment": "PR 605 — the bag with \"Send as a gift\" under Checkout (the same gift-trial fill).",
+      "paths": ["/bag", "/bn/bag"],
+      "fill": "/api/shop/try-gift",
+      "expect": ["[data-testid=\"bag-summary\"]", "[data-testid=\"bag-gift\"]"]
+    },
+    {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",
       "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",

@@ -1,9 +1,17 @@
 // Follow-up 58 — "What happens next": placed is done, we confirm and pack is next, the delivered step carries the
 // band's promise; the time is the store's, in the page's digits.
 import { describe, expect, it } from 'vitest';
-import { nextSteps, placedText } from './thanks-model';
+import { dayText, nextSteps, placedText } from './thanks-model';
 
 const words = { placed: 'Order placed', confirm: 'We confirm and pack it', courier: 'Handed to the courier', delivered: 'Delivered' };
+
+describe('PR 605 · a gift\'s day', () => {
+  it('is written as the day it is, whatever the time zone, in the page\'s digits', () => {
+    expect(dayText('2026-11-02', 'en', false)).toBe('2 Nov 2026');
+    expect(dayText('2026-11-02', 'bn', true)).toMatch(/২/);
+    expect(dayText('not a day', 'en', false)).toBe('not a day');
+  });
+});
 
 describe('what happens next', () => {
   it('only the first step is done, the second is the one now', () => {

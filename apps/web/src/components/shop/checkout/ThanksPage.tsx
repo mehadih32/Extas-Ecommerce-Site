@@ -12,6 +12,7 @@
 // PR 136: "Invoice · print or download" under the order's money opens its invoice (demo inv-btn), while invoices are on.
 // PR 565: a free order shows no band name and no "we call about the area" line, only its promise in hours.
 // PR 127: a line added after placing ("Add to this parcel") carries the demo's "Added" tag (ty_items).
+// PR 605: a gift says who it is for, who sends it, its note and its day, and that the receiver's invoice hides prices.
 // PR 128: "Complete your look" in the right column (demo ty_look, block 4) while the owner has it on (`thanks.look`):
 // only pieces the shop's running combos pair with this order, Add while "Add to this parcel" is open for it.
 import '../bag/bag.css';
@@ -27,7 +28,7 @@ import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
-import { nextSteps, placedText } from '@/lib/shop/thanks-model';
+import { dayText, nextSteps, placedText } from '@/lib/shop/thanks-model';
 import type { LookData } from '@/lib/shop/thanks-look';
 import { openColours } from '@/lib/shop/thanks-look-model';
 import { Icon, WaGlyph } from '../Icon';
@@ -135,6 +136,18 @@ export async function ThanksPage({
       <Icon name="check" size={14} />
       <span>{c.t('pdp.rules.trial')}</span>
     </p>
+  ) : null;
+  const giftBox = r.gift ? (
+    <section className="card p20 ty-gift" data-testid="ty-gift">
+      <div className="row" style={{ gap: 8 }}>
+        <Icon name="gift" size={18} />
+        <b>{w('ty.giftTitle', { name: r.name ?? '' })}</b>
+      </div>
+      <div className="small text2 mt8">{w('ty.giftFrom', { sender: r.gift.senderName })}</div>
+      {r.gift.note ? <p className="small mt8 ty-note-t">{r.gift.note}</p> : null}
+      {r.gift.deliverAfter ? <div className="small mt8">{w('ty.giftAfter', { date: dayText(r.gift.deliverAfter, c.lang, c.bnDigits) })}</div> : null}
+      {r.gift.hidePrices ? <div className="xs muted mt8">{w('ty.giftHidden')}</div> : null}
+    </section>
   ) : null;
   const note =
     more.noteBack && r.note ? (
@@ -382,6 +395,7 @@ export async function ThanksPage({
         <div className="ty-cols">
           <div className="ty-col">
             <div style={{ order: 1 }}>{payBox}</div>
+            {giftBox ? <div style={{ order: 2 }}>{giftBox}</div> : null}
             {timeline ? <div style={{ order: 5 }}>{timeline}</div> : null}
             <div style={{ order: 6 }}>{items}</div>
             {note ? <div style={{ order: 7 }}>{note}</div> : null}

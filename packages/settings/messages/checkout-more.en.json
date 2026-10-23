@@ -9,6 +9,10 @@
         "label": "Silent address backfill",
         "help": "When a customer writes an address with no area in it (\"Road 12, House 42\") and his phone number is already known, he is not asked Inside or Outside Dhaka: the charge comes from the address we hold, nothing is shown or filled in on his page, what he typed stays as he typed it, and the full address we hold is attached to the order for packing. An address that names its own area always wins. \"From orders\": use his delivered orders (or any order not cancelled or returned) when he has no saved address. Off: he is asked as usual."
       }
+    },
+    "gift": {
+      "label": "Gift mode",
+      "help": "\"Send as a gift\" in the bag opens the checkout as a gift. The name, phone and address are the receiver's (the sticker and the courier use them); the sender writes his own name and a contact for updates (a phone of any country or an e-mail). A gift note, a \"deliver on or after\" date and \"hide prices on the invoice\" go with it. Advance: when required, \"full\" means the whole gift is paid ahead (Cash on Delivery is not offered); \"fixed amount\" or \"percentage\" take part ahead — until part payment comes, the team gets a call task to collect it. Note length 0 or date days 0 hides that box. Off: no gift link anywhere."
     }
   },
   "orders": {

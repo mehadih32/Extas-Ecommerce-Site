@@ -33,8 +33,8 @@ export interface PaymentChoice {
   option: string | null;
 }
 
-/** Why Cash on Delivery is not offered on this order. */
-export type CodOff = 'OFF' | 'RULE' | 'BAND_LIMIT';
+/** Why Cash on Delivery is not offered on this order (PR 605 GIFT: a gift is paid ahead in full, `checkout.gift`). */
+export type CodOff = 'OFF' | 'RULE' | 'BAND_LIMIT' | 'GIFT';
 
 /** What paying now earns (shown on each prepaid option). */
 export type RewardOffer = { kind: 'freeDelivery'; amountMinor: number | null } | { kind: 'amount' | 'percent'; amountMinor: number };

@@ -3,6 +3,8 @@
 // `contact.*`, `legal.*`) and an empty one is simply left out — never a placeholder, never someone else's; every word
 // is in the shop dictionary (`account.invoice.*`, editable through `language.labels`) or the owner's own note and
 // footer (`account.invoice`). No amount is worked out here: each one is a stored figure, only written as money.
+// PR 605: a gift goes "to" the receiver with "a gift from" the sender (and his note); with its prices hidden the sheet
+// has no prices and no totals — only what the receiver still pays at the door, when anything is left.
 import type { Receipt } from '@extas/checkout';
 import type { AccountInvoiceSettings, ShopLabel } from '@extas/settings';
 import { colourName } from './catalogue';
@@ -50,7 +52,10 @@ export function invoiceView(
 
   // ---- the customer's side ----
   const parties: InvoiceView['parties'] = [];
-  if (b.customer && (r.name || r.phone)) parties.push({ label: t('account.invoice.billTo'), strong: r.name ?? undefined, lines: r.phone ? [r.phone] : [] });
+  const gift = r.gift;
+  const hidden = gift?.hidePrices === true;
+  if (b.customer && (r.name || r.phone)) parties.push({ label: t(gift ? 'account.invoice.giftTo' : 'account.invoice.billTo'), strong: r.name ?? undefined, lines: r.phone ? [r.phone] : [] });
+  if (gift) parties.push({ label: t('account.invoice.giftFrom'), strong: gift.senderName || undefined, lines: gift.note ? [gift.note] : [] });
   if (b.address && r.address) parties.push({ label: t('account.invoice.address'), lines: [r.address] });
   if (b.courier && r.shipment) parties.push({ label: t('account.invoice.courier'), lines: [r.shipment.courier, ...(r.shipment.tracking ? [t('account.invoice.tracking', { code: r.shipment.tracking })] : [])] });
 
@@ -61,7 +66,7 @@ export function invoiceView(
     subs: [
       b.variant ? parts(l.colour ? colourName(l.colour, c.lang) : null, l.size) : '',
       b.sku && l.sku ? t('account.invoice.sku', { sku: l.sku }) : '',
-      l.lineDiscountMinor > 0 ? t('account.invoice.saves', { amount: m(l.lineDiscountMinor) }) : '',
+      !hidden && l.lineDiscountMinor > 0 ? t('account.invoice.saves', { amount: m(l.lineDiscountMinor) }) : '',
     ].filter((x) => x !== ''),
     marks: b.marks ? [...(l.isAddOn ? [t('account.invoice.addOn')] : []), ...(l.setKey ? [t('account.invoice.set')] : [])] : [],
     qty: c.num(l.quantity),
@@ -70,11 +75,13 @@ export function invoiceView(
   }));
 
   // ---- the money, as stored ----
-  const totals: InvoiceTotal[] = [{ label: t('account.invoice.subtotal', { items }), value: m(r.subtotalMinor) }];
-  if (r.discountMinor > 0) totals.push({ label: t('account.invoice.discount'), value: `−${m(r.discountMinor)}`, kind: 'disc' });
-  if (r.walletMinor > 0) totals.push({ label: t('account.invoice.wallet'), value: `−${m(r.walletMinor)}`, kind: 'disc' });
-  totals.push({ label: t('account.invoice.delivery'), value: !r.chargeFixed ? t('account.invoice.onCall') : r.deliveryMinor === 0 ? t('account.invoice.free') : m(r.deliveryMinor) });
-  totals.push({ label: t('account.invoice.total'), value: m(r.totalMinor), kind: 'total' });
+  const totals: InvoiceTotal[] = hidden ? [] : [{ label: t('account.invoice.subtotal', { items }), value: m(r.subtotalMinor) }];
+  if (!hidden && r.discountMinor > 0) totals.push({ label: t('account.invoice.discount'), value: `−${m(r.discountMinor)}`, kind: 'disc' });
+  if (!hidden && r.walletMinor > 0) totals.push({ label: t('account.invoice.wallet'), value: `−${m(r.walletMinor)}`, kind: 'disc' });
+  if (!hidden) {
+    totals.push({ label: t('account.invoice.delivery'), value: !r.chargeFixed ? t('account.invoice.onCall') : r.deliveryMinor === 0 ? t('account.invoice.free') : m(r.deliveryMinor) });
+    totals.push({ label: t('account.invoice.total'), value: m(r.totalMinor), kind: 'total' });
+  }
 
   // ---- how it is paid (the amount still due, never the order total: lessons, SIM-F-001) ----
   const pay = r.pay;
@@ -85,7 +92,12 @@ export function invoiceView(
       : pay.kind === 'paid'
         ? [pay.method === 'WALLET' || pay.paidMinor === 0 ? t('account.invoice.paidWallet') : t('account.invoice.paid', { amount: m(pay.paidMinor) }), ...(pay.mock ? [t('account.invoice.mock')] : [])]
         : [t(pay.kind === 'failed' ? 'account.invoice.failed' : 'account.invoice.due', { amount: m(pay.dueMinor) })];
-  const payment = b.payment ? { title: method ? t('account.invoice.payment', { method }) : t('account.invoice.paymentNoMethod'), lines: payLines } : null;
+  // a hidden-price gift says only what is still paid at the door (a part paid ahead leaves the rest to the rider)
+  const payment = hidden
+    ? pay.kind === 'cod' && pay.dueMinor > 0 && !opts.delivered
+      ? { title: t('account.invoice.payment', { method }), lines: [t('account.invoice.codDue', { amount: m(pay.dueMinor) })] }
+      : null
+    : b.payment ? { title: method ? t('account.invoice.payment', { method }) : t('account.invoice.paymentNoMethod'), lines: payLines } : null;
 
   // ---- the owner's note and the footer: his legal details, the exchange line, his own footer (or the honest default) ----
   const own = (l: { en: string; bn: string } | null) => (l ? (l[c.lang] || l.en).split(/\n+/).map((x) => x.trim()).filter(Boolean) : []);
@@ -117,14 +129,16 @@ export function invoiceView(
     rows,
     totals,
     payment,
-    note: own(set.note),
+    note: hidden ? [t('account.invoice.giftHidden'), ...own(set.note)] : own(set.note),
     footer,
+    ...(hidden ? { prices: false } : {}),
   };
 }
 
 /** "Invoice INV-10042 for order #EX-10042 · 3 items · ৳ 2,400." — the line above the sheet on the page. */
 export function invoiceLead(c: Pick<ShopContext, 't' | 'money' | 'num'>, r: Receipt, invoiceNo: string): string {
   const units = r.lines.reduce((s, l) => s + l.quantity, 0);
+  if (r.gift?.hidePrices) return c.t('account.invoice.leadGift', { invoice: invoiceNo, number: r.number, items: plural(c.t, 'account.orders.items', units, c.num) });
   return c.t('account.invoice.lead', { invoice: invoiceNo, number: r.number, items: plural(c.t, 'account.orders.items', units, c.num), total: c.money(r.totalMinor) });
 }
 

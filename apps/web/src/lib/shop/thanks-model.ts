@@ -22,6 +22,14 @@ export function placedText(iso: string, timeZone: string, lang: 'en' | 'bn', bnD
   }
 }
 
+/** PR 605: a gift's "deliver on or after" day (YYYY-MM-DD, already the store's day) as the page writes it: "2 Nov 2026". */
+export function dayText(day: string, lang: 'en' | 'bn', bnDigits: boolean): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(d.getTime())) return day;
+  const locale = lang === 'bn' ? (bnDigits ? 'bn-BD' : 'bn-BD-u-nu-latn') : 'en-GB';
+  return new Intl.DateTimeFormat(locale, { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+}
+
 export function nextSteps(words: { placed: string; confirm: string; courier: string; delivered: string }, placed: string, promise: string | null): NextStep[] {
   return [
     { key: 'placed', title: words.placed, note: placed || null, state: 'done' },

@@ -2,9 +2,11 @@
 // CN-012) and the form's checks (PR 116). Shared by the server page, the API and the client form, so the browser and
 // the order placement judge a form the same way; tested in pure.test.ts.
 import { phoneNormalizeBD, type PhoneBD } from '@extas/delivery/phone';
-export type { CheckoutView, DeliveryCharge, DeliveryView, FreeReason, Totals, WalletView } from './quote';
+export type { CheckoutView, DeliveryCharge, DeliveryView, FreeReason, GiftView, Totals, WalletView } from './quote';
 export type { CardType, CodOff, PaymentChoice, PaymentInput, PaymentView, RewardOffer, Wallet } from './payment';
 export type { ConsentAnswer, ConsentInput } from './consent';
+// PR 605: gift mode's checks and its advance (gift.ts, no zod: safe in the client bundle)
+export * from './gift';
 
 /** PR 120 — the payment step's methods, in the page's order. */
 export const PAY_METHODS = ['cod', 'mobile', 'card', 'online'] as const;

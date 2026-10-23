@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The order core (S05, CN-022): the order state machine with its commands as the one order service (PR 138), the timeline, cancellation with reason codes and refund requests (PR 144), the duplicate-order defence and its review queue (PR 145), notes and internal flags (PR 147), and hold and release (PR 153). PR 563: the call queue; PR 127: \"Add to this parcel\" (a line added before booking, priced by @extas/rules). No money moves here.",
+  "description": "The order core (S05, CN-022): the order state machine with its commands as the one order service (PR 138), the timeline, cancellation with reason codes and refund requests (PR 144), the duplicate-order defence and its review queue (PR 145), notes and internal flags (PR 147), and hold and release (PR 153). PR 563: the call queue; PR 127: \"Add to this parcel\" (a line added before booking, priced by @extas/rules). No money moves here. PR 605: deliveryTarget — who and where a parcel goes to (a gift's receiver), for the sticker and the booking.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

@@ -2,10 +2,11 @@
 // form (CheckoutForm) around the server-drawn summary lines. The bag's stylesheet comes too: the checkout uses its
 // shared rules (stack, split-side, qty, the sticky bar).
 // PR 137: a signed-in customer's own details start the boxes (`prefill`); this browser's memory when the owner allows it.
+// PR 605: `gift` — the checkout opened as a gift with gift mode on: the gift card's limits and dates (store's time zone).
 import '../bag/bag.css';
 import './checkout.css';
 import type { CheckoutPrefill } from '@extas/accounts';
-import { fieldOrder, viewOf, type CheckoutQuote } from '@extas/checkout';
+import { fieldOrder, giftDateWindow, storeToday, viewOf, type CheckoutQuote } from '@extas/checkout';
 import { cardsByIds } from '@/lib/shop/catalogue';
 import { checkoutWords, type CheckoutSettings } from '@/lib/shop/checkout';
 import type { ShopContext } from '@/lib/shop/context';
@@ -41,7 +42,7 @@ export function EmptyCheckout({ c }: { c: ShopContext }) {
   );
 }
 
-export async function CheckoutPage({ c, quote, s, prefill = null }: { c: ShopContext; quote: CheckoutQuote; s: CheckoutSettings; prefill?: CheckoutPrefill | null }) {
+export async function CheckoutPage({ c, quote, s, prefill = null, gift = false }: { c: ShopContext; quote: CheckoutQuote; s: CheckoutSettings; prefill?: CheckoutPrefill | null; gift?: boolean }) {
   const view = quote.bag;
   const bagHref = hrefIn(c.lang, ROUTES.bag);
   // PR 121: the lines' quantity and Remove go through the bag's own script (its API, Undo and redraw); it stays mounted
@@ -56,6 +57,11 @@ export async function CheckoutPage({ c, quote, s, prefill = null }: { c: ShopCon
     );
   const ids = view.items.map((i) => i.productId).concat(view.sets.flatMap((x) => x.pieces.map((p) => p.productId).filter((id): id is string => !!id)));
   const cards = await cardsByIds(c.storeId, ids);
+  const g = s['checkout.gift'];
+  const today = storeToday(new Date(), c.s['store.timeZone']);
+  const giftCfg = gift
+    ? { noteMax: g.noteMaxChars, maxDays: g.deliverAfterMaxDays, window: giftDateWindow(today, g.deliverAfterMaxDays), hidePricesDefault: g.hidePricesDefault, today, plainHref: hrefIn(c.lang, ROUTES.checkout) }
+    : null;
   const wa = s['checkout.help.enabled'] ? waHref(c.s['contact.whatsapp'], c.t('checkout.help.message', c.vars)) : null;
   return (
     <div className="co-page" data-bag-root="" data-testid="co-page">
@@ -79,6 +85,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null }: { c: ShopCon
         prefill={prefill}
         remember={s['checkout.autofill'].browserDays > 0 ? { days: s['checkout.autofill'].browserDays } : null}
         backfill={s['checkout.address.backfill'].enabled}
+        gift={giftCfg}
       />
       {actions}
     </div>

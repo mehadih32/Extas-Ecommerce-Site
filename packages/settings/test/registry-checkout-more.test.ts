@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { addOnSchema, addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings, thanksLookSchema } from '../src/registry-checkout-more';
+import { addOnSchema, addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings, giftSchema, thanksLookSchema } from '../src/registry-checkout-more';
 
 describe('checkout-more settings (v34)', () => {
   it('every key is in the registry at version 34, never owner data, labelled in English and Bengali, its default valid', () => {
@@ -44,5 +44,14 @@ describe('checkout-more settings (v34)', () => {
     expect(checkoutMoreSettings['thanks.look'].default).toEqual({ enabled: false, max: 3 });
     expect(thanksLookSchema.safeParse({ enabled: true, max: 0 }).success).toBe(false);
     expect(thanksLookSchema.safeParse({ enabled: true, max: 7 }).success).toBe(false);
+  });
+
+  it('PR 605: gift mode is off until the owner turns it on; the advance, the note and the date are his settings', () => {
+    const d = checkoutMoreSettings['checkout.gift'].default;
+    expect(d.enabled).toBe(false);
+    expect(d.advance).toEqual({ required: true, type: 'full', amountMinor: null, percent: null });
+    expect(giftSchema.safeParse({ ...d, advance: { ...d.advance, type: 'half' } }).success).toBe(false);
+    expect(giftSchema.safeParse({ ...d, advance: { ...d.advance, percent: 101 } }).success).toBe(false);
+    expect(giftSchema.safeParse({ ...d, noteMaxChars: 0, deliverAfterMaxDays: 0 }).success).toBe(true);
   });
 });

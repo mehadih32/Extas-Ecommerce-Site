@@ -242,7 +242,8 @@
       "soonNoCod": "Opens as you write your address.",
       "none": "No payment method is open right now. Message us on WhatsApp and we will help you order.",
       "codNotHere": "Cash on Delivery is not available on this order.",
-      "walletCovers": "Your wallet pays for the whole order — nothing more to pay."
+      "walletCovers": "Your wallet pays for the whole order — nothing more to pay.",
+      "codGift": "A gift is paid in advance — Cash on Delivery is not offered."
     },
     "pm": {
       "cod": "COD",
@@ -374,7 +375,35 @@
       "waMsg": "Hi {store}, about my order #{number}",
       "keep": "Keep shopping",
       "notFoundTitle": "Order not found",
-      "notFoundText": "We could not find this order on this phone or computer."
+      "notFoundText": "We could not find this order on this phone or computer.",
+      "giftTitle": "A gift for {name}",
+      "giftFrom": "From {sender}",
+      "giftAfter": "Delivered on or after {date}",
+      "giftHidden": "Prices are hidden on the receiver's invoice."
+    },
+    "gift": {
+      "title": "Sending a gift",
+      "sub": "The parcel goes to the person below. Your own name and contact are only for updates.",
+      "from": "Your name",
+      "fromPh": "The name on the gift",
+      "contact": "Your phone or e-mail",
+      "contactHint": "For updates only: a number from any country, or an e-mail.",
+      "note": "Gift note (optional)",
+      "notePh": "A few words for them",
+      "date": "Deliver on or after (optional)",
+      "dateHint": "Leave it empty to send it as soon as we can.",
+      "hide": "Hide prices on the invoice",
+      "receiver": "Receiver's details",
+      "receiverSub": "Their name, Bangladeshi mobile number and full address.",
+      "advanceFull": "A gift is paid in advance. Cash on Delivery is not offered.",
+      "advancePart": "{amount} of this gift is paid in advance — we call you about it. The rest is paid on delivery.",
+      "notGift": "Not a gift? Order for yourself",
+      "ask": {
+        "senderName": "Write your own name here",
+        "senderContact": "Write your phone (with country code) or e-mail here",
+        "note": "The gift note is too long",
+        "deliverAfter": "Pick a date from the calendar, or leave it empty"
+      }
     }
   },
   "notFound": {
@@ -886,6 +915,7 @@
       "title": "Try the bag",
       "text": "A test page with the sample catalogue: add an item and see the added-to-bag panel. The product page shows the same panel.",
       "fill": "Fill a sample bag"
-    }
+    },
+    "gift": "Send as a gift"
   }
 }

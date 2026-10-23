@@ -10,7 +10,7 @@ import type { Prisma } from '@extas/db/client';
 import { allow, parse, setting, type OrdersDeps, type Who } from './context';
 import { OrdersError } from './errors';
 import { notesOf, type OrderNoteView } from './notes';
-import { allowedCommands, customerCancelMode, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type OrderCommand, type OrderState, type PaymentPill } from './pure';
+import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
 import { factsOf, machineOf, MACHINE_SELECT } from './service';
 
 export const ORDER_VIEWS = ['all', 'open', 'new', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'finished'] as const;
@@ -172,6 +172,8 @@ export interface OrderDetail {
   allowed: OrderCommand[];
   /** What the customer's own page offers now (CN-020 (5)). */
   customerCancel: string;
+  /** PR 605: who and where the parcel goes to (a gift: the receiver, with the sender and the note). */
+  delivery: DeliveryTarget;
 }
 
 /** Everything one order's screen shows. */
@@ -222,6 +224,12 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
       flags: true,
       internalFlags: true,
       orderGroupId: true,
+      isGift: true,
+      giftSenderName: true,
+      giftSenderContact: true,
+      giftNote: true,
+      giftDeliverAfter: true,
+      giftHidePrices: true,
     },
   });
   if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
@@ -250,5 +258,6 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
     timeline: events,
     allowed: allowedCommands(m),
     customerCancel: customerCancelMode(cfg, m),
+    delivery: deliveryTarget(o),
   };
 }

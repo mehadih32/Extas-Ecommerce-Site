@@ -1,5 +1,5 @@
 // S04 · the rest of the customer-side checkout — PR 563 (no order is ever held over an address), PR 561 (the silent
-// address backfill), PR 127 ("Add to this parcel"), PR 128 ("Complete your look"). Registry version 34
+// address backfill), PR 127 ("Add to this parcel"), PR 128 ("Complete your look"), PR 605 (gift mode). Registry version 34
 // (33 is the admin shell's). Labels: messages/checkout-more.<lang>.json. No admin screen yet (CN-019, CN-022): the keys
 // live in their sections (Checkout, Orders) and are set through the settings store until the new admin shell has them.
 //
@@ -119,6 +119,33 @@ export const addOnSchema = z
  */
 export const thanksLookSchema = z.object({ enabled: z.boolean(), max: z.int().min(1).max(6) }).strict();
 
+/**
+ * PR 605 (CN-014 h, CN-020 (2)) — gift mode: "Send as a gift" in the bag opens the checkout as a gift. The order's name,
+ * phone and address are the receiver's; the sender gives his name and a contact (a phone of any country or an e-mail,
+ * only for updates). A gift note of up to `noteMaxChars` (0: none), a "deliver on or after" date up to
+ * `deliverAfterMaxDays` ahead (0: no date), prices hidden on the receiver's invoice (`hidePricesDefault` ticked at the
+ * start; he may untick it). `advance`: with `required` on, a gift is paid ahead — `full` is the whole amount, through the
+ * checkout's own payment step (Cash on Delivery is not offered); `fixed` (`amountMinor`) and `percent` (`percent`) take
+ * part ahead and the rest at the door — until the part payment of S07 arrives, the team is asked to call for that part.
+ * Off until the owner turns it on.
+ */
+export const giftSchema = z
+  .object({
+    enabled: z.boolean(),
+    advance: z
+      .object({
+        required: z.boolean(),
+        type: z.enum(['full', 'fixed', 'percent']),
+        amountMinor: z.int().min(1).nullable(),
+        percent: z.int().min(1).max(100).nullable(),
+      })
+      .strict(),
+    noteMaxChars: z.int().min(0).max(1_000),
+    deliverAfterMaxDays: z.int().min(0).max(365),
+    hidePricesDefault: z.boolean(),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, version: V } as const;
 
 export const checkoutMoreSettings = {
@@ -158,9 +185,19 @@ export const checkoutMoreSettings = {
     helpKey: 'thanks.look.help',
     sortOrder: 963,
   }),
+  'checkout.gift': setting({
+    ...json,
+    group: 'checkout',
+    schema: giftSchema,
+    default: { enabled: false, advance: { required: true, type: 'full', amountMinor: null, percent: null }, noteMaxChars: 200, deliverAfterMaxDays: 30, hidePricesDefault: true },
+    labelKey: 'checkout.gift.label',
+    helpKey: 'checkout.gift.help',
+    sortOrder: 964,
+  }),
 };
 
 export type AddressCheckSettings = z.output<typeof addressCheckSchema>;
 export type AddressBackfillSettings = z.output<typeof addressBackfillSchema>;
 export type AddOnSettings = z.output<typeof addOnSchema>;
 export type ThanksLookSettings = z.output<typeof thanksLookSchema>;
+export type GiftSettings = z.output<typeof giftSchema>;

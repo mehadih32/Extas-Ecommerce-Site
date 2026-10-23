@@ -13,6 +13,8 @@
 // PR 136: the invoice adds each line's stored unit price, its stored saving and its SKU — read, never worked out again;
 // and a staff member the caller has checked (the `orders.read` permission) reads any placed order of the store.
 // PR 565: `freeDelivery` — a free order shows no band and no band promise (@extas/delivery bandExempt).
+// PR 605: `gift` — a gift order thanks the sender by his name; the name, phone and address are the receiver's; the
+// invoice hides the prices when the sender asked for it.
 import type { OrderAccountKind } from '@extas/accounts';
 import { bandExempt } from '@extas/delivery/exempt';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
@@ -93,6 +95,16 @@ export interface Receipt {
   times: ReceiptTimes;
   /** PR 135: the courier carrying it and its tracking code, once a shipment is booked (null before). */
   shipment: { courier: string; tracking: string | null } | null;
+  /** PR 605: a gift (null: an ordinary order) — the sender, the note, "deliver on or after" (YYYY-MM-DD), hidden prices. */
+  gift: ReceiptGift | null;
+}
+
+/** PR 605: a gift order's own part of the receipt. */
+export interface ReceiptGift {
+  senderName: string;
+  note: string | null;
+  deliverAfter: string | null;
+  hidePrices: boolean;
 }
 
 const ACCOUNT_KINDS: readonly OrderAccountKind[] = ['created', 'existing', 'signedIn'];
@@ -157,6 +169,9 @@ export async function orderReceipt(
   const phone = phoneNormalizeBD(o.phone ?? '');
   const placed = o.events[0]?.data as { account?: unknown } | null | undefined;
   const kind = ACCOUNT_KINDS.find((k) => k === placed?.account) ?? null;
+  const gift: ReceiptGift | null = o.isGift
+    ? { senderName: o.giftSenderName ?? '', note: o.giftNote, deliverAfter: o.giftDeliverAfter?.toISOString().slice(0, 10) ?? null, hidePrices: o.giftHidePrices }
+    : null;
   return {
     account: o.customerId ? kind : null,
     name: o.customerName,
@@ -171,7 +186,7 @@ export async function orderReceipt(
     },
     shipment: o.shipments[0] ? { courier: o.shipments[0].courierAccount.name, tracking: o.shipments[0].trackingCode ?? o.shipments[0].consignmentId } : null,
     number: o.number,
-    firstName: (o.customerName ?? '').trim().split(/\s+/)[0] ?? '',
+    firstName: ((gift ? gift.senderName : o.customerName) ?? '').trim().split(/\s+/)[0] ?? '',
     phone: phone.ok ? phone.nice : o.phone,
     address: o.shippingAddressText,
     note: o.note?.trim() || null,
@@ -187,5 +202,6 @@ export async function orderReceipt(
     walletMinor: o.walletAppliedMinor,
     totalMinor: o.totalMinor,
     pay,
+    gift,
   };
 }

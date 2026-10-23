@@ -8,6 +8,8 @@
 // - PR 125 placing the order, idempotent, with the stock hold, the mock payment's failure path and the unfinished
 //   checkout kept for follow-up (place.ts).
 // - PR 126 the thank-you page's receipt, for the browser that placed the order only (receipt.ts).
+// - PR 605 gift mode: the gift card's checks and the advance (gift.ts, via pure.ts), the gift order (place.ts) and its
+//   receipt (receipt.ts).
 export * from './context';
 export * from './address';
 export * from './pure';

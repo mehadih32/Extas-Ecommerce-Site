@@ -4,6 +4,7 @@
 // stored lines and totals) and every word arrives from the shop dictionary or the owner's settings (invoice-view.ts).
 // Black-and-white safe (B2.4): nothing depends on colour to be read; the table's head repeats on every printed page.
 // Pure: no request, no database — the page, the download and the tests all call the same functions.
+// PR 605: a gift whose sender asked to hide the prices (`prices: false`) has no price columns and no money table.
 
 /** One line of the sheet: what was bought, as stored. */
 export interface InvoiceRow {
@@ -52,6 +53,8 @@ export interface InvoiceView {
   /** The owner's own note, in a box above the footer. */
   note: string[];
   footer: string[];
+  /** PR 605: false — a gift with its prices hidden (no unit and amount columns, no totals). Absent: shown. */
+  prices?: boolean;
 }
 
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -125,12 +128,15 @@ export function invoiceSheetHtml(v: InvoiceView): string {
   const parties = v.parties
     .map((p) => `<div><div class="lbl">${esc(p.label)}</div>${p.strong ? `<b>${esc(p.strong)}</b>` : ''}${p.lines.map((l, i) => `<div${p.strong || i ? ' class="sub"' : ''}>${esc(l)}</div>`).join('')}</div>`)
     .join('');
-  const head = `<tr><th class="n" scope="col">${esc(v.cols.no)}</th><th scope="col">${esc(v.cols.item)}</th><th class="n" scope="col">${esc(v.cols.qty)}</th><th class="r" scope="col">${esc(v.cols.unit)}</th><th class="r" scope="col">${esc(v.cols.amount)}</th></tr>`;
+  const priced = v.prices !== false;
+  const money = (unit: string, amount: string, cell: 'th' | 'td') =>
+    priced ? (cell === 'th' ? `<th class="r" scope="col">${esc(unit)}</th><th class="r" scope="col">${esc(amount)}</th>` : `<td class="r">${esc(unit)}</td><td class="r"><b>${esc(amount)}</b></td>`) : '';
+  const head = `<tr><th class="n" scope="col">${esc(v.cols.no)}</th><th scope="col">${esc(v.cols.item)}</th><th class="n" scope="col">${esc(v.cols.qty)}</th>${money(v.cols.unit, v.cols.amount, 'th')}</tr>`;
   const rows = v.rows
     .map(
       (r) =>
         `<tr><td class="n">${esc(r.no)}</td><td><b>${esc(r.name)}</b>${r.marks.map((m) => `<span class="pill">${esc(m)}</span>`).join('')}${r.subs.map((s) => `<div class="sub">${esc(s)}</div>`).join('')}</td>` +
-        `<td class="n">${esc(r.qty)}</td><td class="r">${esc(r.unit)}</td><td class="r"><b>${esc(r.amount)}</b></td></tr>`,
+        `<td class="n">${esc(r.qty)}</td>${money(r.unit, r.amount, 'td')}</tr>`,
     )
     .join('');
   const sum = v.totals.map((t) => `<tr${t.kind === 'total' ? ' class="tot"' : ''}><td>${esc(t.label)}</td><td class="r">${esc(t.value)}</td></tr>`).join('');
@@ -139,7 +145,7 @@ export function invoiceSheetHtml(v: InvoiceView): string {
     `<div class="top">${brand}${tt}</div>` +
     (parties ? `<div class="cols">${parties}</div>` : '') +
     `<table><thead>${head}</thead><tbody>${rows}</tbody></table>` +
-    `<table class="sum"><tbody>${sum}</tbody></table>` +
+    (sum ? `<table class="sum"><tbody>${sum}</tbody></table>` : '') +
     (v.payment ? `<div class="pay"><b>${esc(v.payment.title)}</b>${v.payment.lines.length ? `<br>${lines(v.payment.lines)}` : ''}</div>` : '') +
     (v.note.length ? `<div class="notes">${lines(v.note)}</div>` : '') +
     (v.footer.length ? `<div class="foot">${lines(v.footer)}</div>` : '') +

@@ -2658,7 +2658,7 @@ model CheckoutFlagEvent {
 // optional address and shipment, source SHOWROOM, CASH and split payments.
 // =====================================================================================================================
 
-/// @stage S05 · PR 138, 125, 140, 541, 563; A6.2 — an order. Amounts are snapshots in minor units; IP and GPS expire after
+/// @stage S05 · PR 138, 125, 140, 541, 563, 605; A6.2 — an order. Amounts are snapshots in minor units; IP and GPS expire after
 /// the retention setting (PR 159, 302) via `piiExpiresAt`.
 model Order {
   id                       String             @id @default(uuid(7)) @db.Uuid
@@ -2765,6 +2765,16 @@ model Order {
   advanceDueAt             DateTime?          @db.Timestamptz(3)
   /// PR 147 — the staff's internal flags on the order (keys of `orders.flags.list`); never shown to the customer.
   internalFlags            String[]           @default([])
+  /// PR 605 (CN-014 h, CN-020 (2), SIM-F-007) — a gift: the order's own name, phone and address are the RECEIVER's (the
+  /// sticker, the booking and the courier's calls use them: @extas/orders deliveryTarget); the sender who pays is here,
+  /// his contact (a phone of any country or an e-mail) used only for the order's updates. The gift note goes with the
+  /// parcel; "deliver on or after" is a date in the store's time zone; prices are hidden on the receiver's invoice.
+  isGift                   Boolean            @default(false)
+  giftSenderName           String?
+  giftSenderContact        String?
+  giftNote                 String?
+  giftDeliverAfter         DateTime?          @db.Date
+  giftHidePrices           Boolean            @default(false)
 
   items     OrderItem[]
   events    OrderEvent[]

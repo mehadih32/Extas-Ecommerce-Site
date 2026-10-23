@@ -124,7 +124,7 @@ export async function BagPage({ c, view, s }: { c: ShopContext; view: BagView; s
             {savedOn ? <SavedBox c={c} saved={view.saved} cards={cards} keepDays={s['bag.keepDays']} /> : null}
           </div>
           <aside className="sticky-d">
-            <BagSummary c={c} view={view} codeOn={s['bag.code.enabled']} trust={trust} blocked={isBlocked} />
+            <BagSummary c={c} view={view} codeOn={s['bag.code.enabled']} trust={trust} blocked={isBlocked} gift={s['checkout.gift'].enabled} />
           </aside>
         </div>
       </div>

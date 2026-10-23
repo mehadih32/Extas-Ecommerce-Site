@@ -14,11 +14,14 @@
 // needs comes off what he still pays (`dueMinor`); placement (PR 125) debits exactly that, in the same transaction.
 // PR 561 — the silent backfill (address.ts): with the phone number the page sends, a line naming no place takes its
 // band from the address the shop holds; the page sees the band and charge only.
+// PR 605 — gift mode (`checkout.gift`): a gift checkout whose advance is the whole amount offers no Cash on Delivery
+// (codOff GIFT); one whose advance is a part keeps it for the rest and says how much is taken ahead (`gift`).
 import { createHash } from 'node:crypto';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
 import { bandOut, loadBandMap, type AskReason, type BandMap, type BandOut } from '@extas/delivery';
 import { deliveryDeps, placeName, readAddress, type AddressInput, type AddressRead, type PlaceName } from './address';
 import { checkStoreId, parse, setting, type CheckoutDeps } from './context';
+import { giftAdvanceOf } from './gift';
 import { choosePayment, isPrepaid, paymentInputSchema, paySettings, rewardOf, rulesPaymentMethod, type PaymentInput, type PaymentView } from './payment';
 
 export interface CheckoutRequest {
@@ -35,6 +38,15 @@ export interface CheckoutRequest {
   useWallet?: boolean;
   /** PR 561: the caller's IP, for the backfill's per-IP look-up limit. */
   ip?: string | null;
+  /** PR 605: the checkout is a gift ("Send as a gift"); ignored while the owner has gift mode off. */
+  gift?: boolean;
+}
+
+/** PR 605 — a gift checkout: how it is paid ahead (`checkout.gift.advance`). */
+export interface GiftView {
+  advance: 'none' | 'full' | 'part';
+  /** The part taken ahead (`part` only). */
+  partMinor: number | null;
 }
 
 /** PR 122 — the wallet on this order: the balance, whether he uses it, and how much comes off. */
@@ -126,6 +138,8 @@ export interface CheckoutQuote {
   pay: PaymentView;
   /** PR 122: the customer's wallet (null: no customer, no balance, or the wallet is off at checkout). */
   wallet: WalletView | null;
+  /** PR 605: the gift checkout (null: not a gift, or gift mode is off). */
+  gift: GiftView | null;
   /** A hash of every amount on the page: placement refuses an order whose money changed since the page showed it. */
   fingerprint: string;
 }
@@ -148,6 +162,7 @@ export interface CheckoutView {
   freeGapMinor: number | null;
   pay: PaymentView;
   wallet: WalletView | null;
+  gift: GiftView | null;
   fingerprint: string;
 }
 
@@ -165,6 +180,7 @@ export const emptyQuote = (): CheckoutQuote => {
     address: { status: 'none' },
     pay: { cod: false, codOff: 'OFF', mobile: [], card: [], online: false, chosen: null, reward: null },
     wallet: null,
+    gift: null,
     fingerprint: fingerprintOf({ totals }),
   };
 };
@@ -185,6 +201,7 @@ export function viewOf(q: CheckoutQuote): CheckoutView {
     freeGapMinor: q.freeGapMinor,
     pay: q.pay,
     wallet: q.wallet,
+    gift: q.gift,
     fingerprint: q.fingerprint,
   };
 }
@@ -198,12 +215,14 @@ export function fingerprintOf(parts: unknown): string {
 export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest): Promise<CheckoutQuote> {
   checkStoreId(input.storeId);
   const asked = input.payment ? parse(paymentInputSchema, input.payment, 'payment') : null;
-  const [address, map, ps, balance] = await Promise.all([
+  const [address, map, ps, balance, giftCfg] = await Promise.all([
     readAddress(deps, input.storeId, input.address, { ip: input.ip ?? null }),
     loadBandMap(deliveryDeps(deps), input.storeId),
     paySettings(deps, input.storeId),
     walletBalance(deps, input.storeId, input.customerId ?? null),
+    input.gift === true ? setting(deps, input.storeId, 'checkout.gift') : Promise.resolve(null),
   ]);
+  const giftOn = giftCfg?.enabled ? giftCfg : null;
   // the band the customer pays as (a sub-area folded into the city is the city): rules on `delivery.band` see it
   const charged = address.status === 'resolved' ? address.line.quote.band : null;
   const bandCodLimit = charged ? (map.bandById(charged.id)?.codLimitMinor ?? null) : null;
@@ -218,7 +237,16 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
   let bag = await priceBag(rulesPaymentMethod(choice));
   const before = deliveryChargeOf(address, bag.free);
   const codTotal = bag.summary.totalMinor + (before.state === 'charge' ? before.chargeMinor : ZERO);
-  const codOff: PaymentView['codOff'] = !ps.cod ? 'OFF' : bag.cod.allowed === false ? 'RULE' : bandCodLimit !== null && codTotal > bandCodLimit ? 'BAND_LIMIT' : null;
+  const giftAhead = giftOn ? giftAdvanceOf(giftOn.advance, codTotal) : null;
+  const codOff: PaymentView['codOff'] = !ps.cod
+    ? 'OFF'
+    : giftAhead?.kind === 'full'
+      ? 'GIFT'
+      : bag.cod.allowed === false
+        ? 'RULE'
+        : bandCodLimit !== null && codTotal > bandCodLimit
+          ? 'BAND_LIMIT'
+          : null;
   if (codOff) {
     const moved = choosePayment(asked, ps, false);
     if (rulesPaymentMethod(moved) !== rulesPaymentMethod(choice)) bag = await priceBag(rulesPaymentMethod(moved));
@@ -253,12 +281,16 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     regularMinor: totalMinor + youSaveMinor,
   };
   const pay: PaymentView = { cod: codOff === null, codOff, mobile: ps.mobile, card: ps.card, online: ps.online, chosen: choice, reward };
+  // PR 605: the part paid ahead is worked out on what is left to pay at the door
+  const ahead = giftOn ? giftAdvanceOf(giftOn.advance, totals.dueMinor) : null;
+  const gift: GiftView | null = ahead ? { advance: ahead.kind, partMinor: ahead.kind === 'part' && choice?.method === 'cod' ? ahead.amountMinor : null } : null;
   const fingerprint = fingerprintOf({
     rows: s.rows.map((r) => [r.lineId, r.quantity, r.amountMinor]),
     offers: s.offers.map((o) => [o.ruleKey, o.amountMinor]),
     totals,
     charge,
     pay: [choice?.method ?? null, reward?.kind ?? null],
+    gift: gift ? [gift.advance, gift.partMinor] : null,
   });
   return {
     cartId: bag.cartId,
@@ -271,6 +303,7 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     address,
     pay,
     wallet,
+    gift,
     fingerprint,
   };
 }

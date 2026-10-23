@@ -350,7 +350,11 @@
       "dbid": "DBID {v}",
       "bin": "BIN {v}",
       "footer": "Computer-generated invoice, no signature needed.",
-      "off": "Invoices are not available for this shop."
+      "off": "Invoices are not available for this shop.",
+      "giftTo": "Deliver to",
+      "giftFrom": "A gift from",
+      "giftHidden": "This is a gift: prices are not shown.",
+      "leadGift": "Invoice {invoice} for order #{number} · {items} · a gift, prices hidden."
     }
   }
 }
