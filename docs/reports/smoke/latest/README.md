@@ -1,12 +1,18 @@
-# Smoke test · 2026-10-23 06:05 (Asia/Dhaka)
+# Smoke test · 2026-10-23 06:48 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (36টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (48টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `225d93e6e4b6` · after deploy · result **PASS** (36 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `4c253ad0e1bb` · after deploy · result **PASS** (48 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
-| `/` | phone | 200 | `/status` | ok | [picture](home-phone.jpg) |
+| `/` | phone | 200 | `/` | ok | [picture](home-phone.jpg) |
+| `/bn` | phone | 200 | `/bn` | ok | [picture](bn-phone.jpg) |
+| `/checkout` | phone | 200 | `/checkout` | ok | [picture](checkout-phone.jpg) |
+| `/bn/checkout` | phone | 200 | `/bn/checkout` | ok | [picture](bn-checkout-phone.jpg) |
+| `/collections/new-in` | phone | 200 | `/collections/new-in` | ok | [picture](collections-new-in-phone.jpg) |
+| `/bn/bag` | phone | 200 | `/bn/bag` | ok | [picture](bn-bag-phone.jpg) |
+| `/help/faq` | phone | 200 | `/help/faq` | ok | [picture](help-faq-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
 | `/admin` | phone | 200 | `/admin/products` | ok | [picture](admin-phone.jpg) |
@@ -24,7 +30,13 @@ Site: https://new.extas.com.bd · commit `225d93e6e4b6` · after deploy · resul
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | [picture](admin-stock-phone.jpg) |
 | `/admin/stock/counts` | phone | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-phone.jpg) |
 | `/admin/stock/movements` | phone | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-phone.jpg) |
-| `/` | desktop | 200 | `/status` | ok | [picture](home-desktop.jpg) |
+| `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
+| `/bn` | desktop | 200 | `/bn` | ok | [picture](bn-desktop.jpg) |
+| `/checkout` | desktop | 200 | `/checkout` | ok | [picture](checkout-desktop.jpg) |
+| `/bn/checkout` | desktop | 200 | `/bn/checkout` | ok | [picture](bn-checkout-desktop.jpg) |
+| `/collections/new-in` | desktop | 200 | `/collections/new-in` | ok | [picture](collections-new-in-desktop.jpg) |
+| `/bn/bag` | desktop | 200 | `/bn/bag` | ok | [picture](bn-bag-desktop.jpg) |
+| `/help/faq` | desktop | 200 | `/help/faq` | ok | [picture](help-faq-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin/products` | ok | [picture](admin-desktop.jpg) |
 | `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
