@@ -112,8 +112,10 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     ids.tee = tee.id;
     ids.poloV = (await t.prisma.productVariant.create({ data: { storeId: A, productId: polo.id, sku: 'S-POLO-M', priceMinor: 100000, active: true } })).id;
     ids.teeV = (await t.prisma.productVariant.create({ data: { storeId: A, productId: tee.id, sku: 'S-TEE-M', priceMinor: 60000, active: true } })).id;
+    // The bands' own charges (sample values): the checkout charges these, and so does the engine (follow-up 54).
+    const charges: Record<string, number> = { 'dhaka-city': 8000, 'dhaka-sub-area': 10000, 'outside-dhaka': 12000 };
     for (const [i, key] of ['dhaka-city', 'dhaka-sub-area', 'outside-dhaka'].entries()) {
-      ids[key] = (await t.prisma.deliveryBand.create({ data: { storeId: A, key, nameEn: key, chargeMinor: 0, sortOrder: i } })).id;
+      ids[key] = (await t.prisma.deliveryBand.create({ data: { storeId: A, key, nameEn: key, chargeMinor: charges[key]!, enabled: true, sortOrder: i } })).id;
     }
     // Orders of the last days: two inside Dhaka, one outside.
     const order = async (num: string, band: string, items: [string, string, number, number][], daysAgo: number) =>
@@ -255,10 +257,16 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     ids.delivery = d.id;
     const r = await getRule(deps(), as(reader), d.id);
     await saveDraft(deps(), as(writer), d.id, { content: withValues(r.live!, { chargeDhakaCity: 8000, chargeDhakaSubArea: 10000, chargeOutsideDhaka: 12000, freeOver: 150000 }, { status: 'ACTIVE' }) });
-    // Before it is live, the storefront knows no charge.
+    // Before it is live: the band's own charge (as at the checkout, follow-up 54), and no free-delivery line.
     const before = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], bandKey: 'dhaka-city', locale: 'en-BD' });
-    expect(before.delivery.chargeMinor).toBeNull();
-    expect(before.totalKnown).toBe(false);
+    expect(before.delivery).toMatchObject({ chargeMinor: 8000, reason: 'CHARGED', chargeRule: null, freeOverMinor: null });
+    expect(before.deliveryLine).toBeNull();
+    // A band switched off has no charge: "+ delivery", never the rule's figure in its place.
+    await t.prisma.deliveryBand.update({ where: { id: ids['dhaka-city']! }, data: { enabled: false } });
+    const off = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], bandKey: 'dhaka-city', locale: 'en-BD' });
+    expect(off.delivery).toMatchObject({ chargeMinor: null, reason: 'NOT_SET' });
+    expect(off.totalKnown).toBe(false);
+    await t.prisma.deliveryBand.update({ where: { id: ids['dhaka-city']! }, data: { enabled: true } });
     await publishRule(deps(), as(owner), d.id);
     const q = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }, { variantId: 'not-a-variant', quantity: 1 }], bandKey: 'dhaka-city', locale: 'en-BD' });
     expect(q.subtotalMinor).toBe(100000);
@@ -321,8 +329,10 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     expect(clash.detail.decidedBy).toBe('priority');
     await resolveConflict(deps(), as(publisher), clash.id, { resolution: 'keep-order' });
     expect(await code(resolveConflict(deps(), as(publisher), clash.id, { resolution: 'keep-order' }))).toBe('CONFLICT');
-    // The winner prices the cart.
-    expect((await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.teeV!, quantity: 1 }], bandKey: 'dhaka-city' })).delivery.chargeMinor).toBe(5000);
+    // The winner decides free delivery (its threshold); the charge stays the band's own (follow-up 54, PR 119).
+    const won = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.teeV!, quantity: 1 }], bandKey: 'dhaka-city' });
+    expect(won.delivery).toMatchObject({ chargeMinor: 8000, freeOverMinor: 100000, remainingMinor: 40000 });
+    expect((await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.teeV!, quantity: 2 }], bandKey: 'dhaka-city' })).delivery).toMatchObject({ free: true, chargeMinor: 0, reason: 'FREE_OVER' });
     // Switch it off again (the owner's OK) so the rest of the tests see one delivery rule.
     await setRuleStatus(deps(), as(owner), extra.id, { status: 'PAUSED' });
     await refreshConflicts(deps(), A);
@@ -362,11 +372,12 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     const r = await getRule(deps(), as(reader), ids.delivery!);
     const res = await simulateRule(deps(), as(reader), r.id, { content: withValues(r.live!, { chargeDhakaCity: 6000, freeOver: 300000 }) });
     expect(res.orders).toBe(3);
-    // Inside Dhaka: 1 polo (80 → 60), 2 polos (free → 60); outside: unchanged.
-    expect(res.changed).toBe(2);
+    // Each order is charged its band's own figure, as the checkout charges today (follow-up 54): the rule's charge no
+    // longer moves it; only the threshold does. Inside Dhaka: 1 polo (80, unchanged), 2 polos (free → 80); outside 120.
+    expect(res.changed).toBe(1);
     expect(res.before.deliveryMinor).toBe(8000 + 0 + 12000);
-    expect(res.after.deliveryMinor).toBe(6000 + 6000 + 12000);
-    expect(res.differenceMinor).toBe(4000);
+    expect(res.after.deliveryMinor).toBe(8000 + 8000 + 12000);
+    expect(res.differenceMinor).toBe(8000);
     expect(res.freeDeliveryBefore).toBe(1);
     expect(res.freeDeliveryAfter).toBe(0);
     expect(res.biggest[0]!.number).toBe('S-1002');

@@ -178,6 +178,35 @@ describe('PR 210 · delivery', () => {
     expect(quote([delivery()], cart([line('l1', 1000, 1, { freeDelivery: true })]), ENGINE).delivery.reason).toBe('FREE_PRODUCTS');
   });
 
+  it('follow-up 54 (PR 119): the band\'s own figure is the charge, as at the checkout; the rules decide only free delivery', () => {
+    const d = delivery(); // its deliveryCharge says 8000 for the city band
+    const q = quote([d], cart([line('l1', 100000)], { bandChargeMinor: 9900 }), ENGINE);
+    expect(q.delivery).toMatchObject({ baseChargeMinor: 9900, chargeMinor: 9900, free: false, reason: 'CHARGED', chargeRule: null, remainingMinor: 50000 });
+    expect(q.totalMinor).toBe(109900);
+    expect(q.applied.some((a) => a.effect === 'deliveryCharge')).toBe(false);
+    // Free over the threshold: nothing to pay, and the free delivery is worth the band's figure.
+    const free = quote([d], cart([line('l1', 100000), line('l2', 60000)], { bandChargeMinor: 9900 }), ENGINE);
+    expect(free.delivery).toMatchObject({ chargeMinor: 0, free: true, reason: 'FREE_OVER', baseChargeMinor: 9900 });
+    expect(free.applied.find((a) => a.effect === 'freeDelivery')?.amountMinor).toBe(9900);
+    // A band with no charge yet: "+ delivery", never a rule's figure in its place.
+    expect(quote([d], cart([line('l1', 1000)], { bandChargeMinor: null }), ENGINE).delivery).toMatchObject({ chargeMinor: null, reason: 'NOT_SET' });
+    // With no delivery rule at all the band still charges.
+    expect(quote([], cart([line('l1', 1000)], { bandChargeMinor: 6000 }), ENGINE).delivery).toMatchObject({ chargeMinor: 6000, reason: 'CHARGED' });
+    // No band known: nothing to charge, whatever figure came along.
+    expect(quote([d], cart([line('l1', 1000)], { bandKey: null, bandChargeMinor: 6000 }), ENGINE).delivery.reason).toBe('NO_BAND');
+  });
+
+  it('follow-up 54: knowing the band figure never changes who may pay cash on delivery (COD needs the owner)', () => {
+    const cod = rule({ kind: 'payment', params: [{ key: 'on', type: 'bool', value: true, labelEn: 'on' }, money('max', 104000)], actions: [{ type: 'cod', allowedParam: 'on', maxOrderParam: 'max' }] });
+    for (const rules of [[cod], [cod, delivery()]]) {
+      for (const items of [100000, 103000, 105000]) {
+        const before = quote(rules, cart([line('l1', items)]), ENGINE).cod;
+        const after = quote(rules, cart([line('l1', items)], { bandChargeMinor: 9900 }), ENGINE).cod;
+        expect(after, `${rules.length} rules, ${items}`).toEqual(before);
+      }
+    }
+  });
+
   it('the threshold counts the items after discounts', () => {
     const disc = rule({ kind: 'discount', params: [{ key: 'pct', type: 'percent', value: 20, labelEn: 'p' }], actions: [{ type: 'discount', mode: 'percent', param: 'pct', target: 'lines', requiresCoupon: false, showWas: false }] });
     const q = quote([delivery(), disc], cart([line('l1', 160000)]), ENGINE);

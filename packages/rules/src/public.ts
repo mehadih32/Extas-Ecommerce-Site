@@ -15,7 +15,7 @@ import { cached } from './cache';
 import { nowOf, setting, textContext, type RulesDeps } from './context';
 import { cachedActiveRules, langContext, othersByKey } from './core';
 import { clockFacts, exchangeTerms, liveValue, quote, type ExchangeTerms, type Quote } from './engine';
-import { scopeFacts } from './facts';
+import { bandChargeOf, scopeFacts } from './facts';
 import { inScope, resolutionOrder } from './match';
 import { isLive, TEXT_SLOTS, type Rule, type TextSlot } from './model';
 import { capSchema, ctaSchema, placementSchema, timingSchema } from './notices-model';
@@ -94,11 +94,13 @@ export async function quoteCart(
   input: { storeId: number; lines: CartLineInput[]; bandKey?: string | null; paymentMethod?: string | null; couponCode?: string | null; phone?: string | null; customerId?: string | null; deliveredOrders?: number | null; source?: string | null; locale?: string },
 ): Promise<CartQuote> {
   const now = nowOf(deps);
-  const [rules, maxPercentOff, timeZone, wasAllowed] = await Promise.all([
+  const [rules, maxPercentOff, timeZone, wasAllowed, bandChargeMinor] = await Promise.all([
     cachedActiveRules(deps, input.storeId),
     setting(deps, input.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, input.storeId, 'store.timeZone'),
     setting(deps, input.storeId, 'rules.discount.showWasPrice'),
+    // Follow-up 54: the engine's delivery figure is the band's own, the one the checkout charges.
+    bandChargeOf(deps.db, input.storeId, input.bandKey ?? null),
   ]);
   const variants = await deps.db.productVariant.findMany({
     where: { storeId: input.storeId, id: { in: input.lines.map((l) => l.variantId).filter((id) => UUID.test(id)) }, archivedAt: null, active: true },
@@ -124,6 +126,7 @@ export async function quoteCart(
       now,
       lines,
       bandKey: input.bandKey ?? null,
+      ...(bandChargeMinor !== undefined ? { bandChargeMinor } : {}),
       paymentMethod: input.paymentMethod ?? null,
       couponCode: coupon?.ok ? coupon.code : null,
       couponRuleIds: coupon?.ok && coupon.ruleId ? [coupon.ruleId] : [],

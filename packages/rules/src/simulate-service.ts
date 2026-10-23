@@ -101,7 +101,8 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
     where: { storeId: who.storeId, placedAt: { gte: from, lte: now }, status: { notIn: ['DRAFT', 'CANCELLED'] }, archivedAt: null },
     orderBy: { placedAt: 'desc' },
     take: maxOrders + 1,
-    include: { items: { where: { status: 'ACTIVE' } }, deliveryBand: { select: { key: true } } },
+    // Follow-up 54: the band's own charge, so the simulated delivery figure is the one the checkout charges today.
+    include: { items: { where: { status: 'ACTIVE' } }, deliveryBand: { select: { key: true, enabled: true, chargeMinor: true, archivedAt: true } } },
   });
   const capped = orders.length > maxOrders;
   const list = orders.slice(0, maxOrders);
@@ -131,6 +132,7 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
         return { id: i.id, variantId: i.variantId, unitPriceMinor: i.unitPriceMinor, quantity: i.quantity, productId: i.productId, categoryIds: sf?.categoryIds ?? [], collectionIds: sf?.collectionIds ?? [], freeDelivery: sf?.freeDelivery ?? null, comboId: i.comboId };
       }),
       bandKey: o.deliveryBand?.key ?? null,
+      ...(o.deliveryBand && o.deliveryBand.archivedAt === null ? { bandChargeMinor: o.deliveryBand.enabled ? o.deliveryBand.chargeMinor : null } : {}),
       paymentMethod: o.paymentMethod,
       couponCode: code,
       couponRuleIds: unlocked ? [unlocked] : [],
