@@ -173,9 +173,9 @@
     "shopByCategory": "Shop by category",
     "shopAll": "Shop all",
     "hero": {
-      "eyebrow": "New collection",
-      "title": "Winter 2026",
-      "sub": "Hoodies, sweatshirts and jackets. 39 new styles, built for Bangladeshi winters.",
+      "eyebrow": "New in",
+      "title": "Find your style",
+      "sub": "Everyday clothes, picked with care. Find the size that fits you.",
       "shopNow": "Shop now",
       "shopSets": "Shop sets",
       "trust": {
@@ -185,7 +185,7 @@
       }
     },
     "newIn": "New in",
-    "newInSub": "Fresh styles this week",
+    "newInSub": "Our newest styles",
     "viewAll": "View all",
     "reviews": {
       "title": "What customers say",
