@@ -9,8 +9,12 @@
 // PR 120: the payment step; the choice is kept in the tab's draft and priced by the server (the prepaid reward).
 // PR 122: "Your offers" with the wallet; the total and Confirm show what is left to pay. PR 123: the marketing ticks.
 // PR 124: Confirm's states — it asks inside the unfinished field (or waits switched off, the owner's other style).
+// PR 125: Confirm places the order — with the order key kept in this tab's draft, so a retry after a lost answer or a
+// second press is the same order — and goes on to the payment or the thank-you page; a refusal says why in the page's
+// words (money that moved shows the new checkout first). The delivery note card; with the owner's switch on, what he
+// typed is kept for the team's follow-up a moment after he stops typing (SIM-F-026).
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
+import { checkForm, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
@@ -21,8 +25,9 @@ import { DetailsFields } from './DetailsFields';
 import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
 import { PaymentStep } from './PaymentStep';
-import { nextOnEnter, saveDraft, useDraft } from './draft';
-import { fetchQuote, latest, useSettle, type Choices } from './quote-client';
+import { NoteCard } from './NoteCard';
+import { clearDraft, newOrderKey, nextOnEnter, saveDraft, useDraft } from './draft';
+import { DRAFT_URL, fetchQuote, latest, ORDERS_URL, postJson, useSettle, type Choices, type PlaceAnswer } from './quote-client';
 
 const EMPTY_FORM: DetailsForm = { name: '', phone: '', address: '' };
 
@@ -52,11 +57,15 @@ export interface CheckoutFormProps {
   links: { exchange: string; terms: string };
   /** PR 124: an unfinished form — 'ask' (the button asks inside the field) or 'disable' (`checkout.confirm.style`). */
   confirmStyle: 'ask' | 'disable';
-  /** PR 125: places the order once everything is in. */
-  onPlace?: () => void;
+  /** PR 125: the delivery note card and its longest note, or null when the owner switched it off. */
+  note: { max: number } | null;
+  /** PR 125 (SIM-F-026): keep what he typed for the team's follow-up, this long after he stops typing; null: off. */
+  capture: { waitMs: number } | null;
+  /** Where the bag is (an item sold out, or the bag is empty). */
+  bagHref: string;
 }
 
-export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links, confirmStyle, onPlace }: CheckoutFormProps) {
+export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links, confirmStyle, note: noteCfg, capture, bagHref }: CheckoutFormProps) {
   const stored = useDraft();
   const [view, setView] = useState<CheckoutView>(first);
   const [reading, setReading] = useState(false);
@@ -142,6 +151,20 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const consent: ConsentInput | null = consentStart
     ? (consentEdited ?? (keptConsent && typeof keptConsent.sms === 'boolean' && typeof keptConsent.whatsapp === 'boolean' ? { sms: keptConsent.sms, whatsapp: keptConsent.whatsapp } : consentStart))
     : null;
+  // PR 125: the delivery note, kept in the tab's draft like the rest.
+  const [noteEdited, setNote] = useState<string | null>(null);
+  const note = noteCfg ? (noteEdited ?? (typeof stored?.note === 'string' ? stored.note : '')) : '';
+  // SIM-F-026: with the owner's switch on, what he typed is kept for the team a moment after he stops (a real phone only).
+  const phoneOk = phoneNormalizeBD(form.phone).ok;
+  const capturePay = stored?.pay ? view.pay.chosen : null;
+  const captureKey = capture && phoneOk ? JSON.stringify([form, note, capturePay]) : null;
+  useEffect(() => {
+    if (!capture || !captureKey) return;
+    const step = capturePay ? 'payment' : form.address.trim() ? 'delivery' : 'details';
+    const timer = setTimeout(() => void postJson(DRAFT_URL, { form, payment: capturePay, note: note || null, step }), capture.waitMs);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the key holds everything that is sent
+  }, [captureKey]);
   const hasAddress = form.address.trim().length >= limits.addressMin;
   const check = checkForm(form, limits, fields);
   const w = (k: string, vars: Record<string, string | number> = {}) => fill(words[k] ?? k, vars);
@@ -179,19 +202,65 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     </div>
   );
   const covered = view.totals.known && view.totals.walletMinor > 0 && view.totals.dueMinor === 0;
+  // PR 125: placing the order. The key is made once and kept in the tab until the order is in.
+  const [placing, setPlacing] = useState(false);
+  const askField = (formEl: HTMLFormElement, field: Field) => {
+    setTried(true);
+    setPhoneChecked(true);
+    setAsk(field);
+    const box = formEl.querySelector(`[data-field="co-${field}"]`);
+    box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const input = document.getElementById(`co-${field}`);
+    setTimeout(() => input?.focus({ preventScroll: true }), 240); // hardcode-ok: the demo's wait for the scroll to start before focus
+  };
+  const place = async (formEl: HTMLFormElement) => {
+    if (placing) return;
+    setPlacing(true);
+    const key = typeof stored?.orderKey === 'string' ? stored.orderKey : newOrderKey();
+    saveDraft({ orderKey: key });
+    const r = await postJson<PlaceAnswer>(ORDERS_URL, {
+      idempotencyKey: key,
+      lang: money.lang,
+      form,
+      confirmed: asked.current.confirmed,
+      payment: view.pay.chosen,
+      useWallet: asked.current.wallet,
+      consent,
+      note: note || null,
+      fingerprint: view.fingerprint,
+    });
+    const a = r.data;
+    if (a?.ok && a.next) {
+      clearDraft();
+      window.location.assign(a.next);
+      return; // the button stays "Placing your order…" until the next page opens
+    }
+    setPlacing(false);
+    if (!a) return showToast(formEl, w('err.network'));
+    if (a.error === 'PRICE_CHANGED') {
+      if (a.view) setView(a.view);
+      else void requote({});
+      return showToast(formEl, w('err.changed'));
+    }
+    if (a.error === 'FORM' && a.field) {
+      askField(formEl, a.field);
+      return showToast(formEl, w(`askBn.${a.field === 'phone' && a.problem !== 'empty' ? 'phoneBad' : a.field}`));
+    }
+    if (a.error === 'NO_PAYMENT') return showToast(formEl, w('need.pay'));
+    if (a.error === 'OUT_OF_STOCK' || a.error === 'EMPTY' || a.error === 'CART_NOT_OPEN') {
+      showToast(formEl, w(a.error === 'OUT_OF_STOCK' ? 'err.stock' : 'err.empty'));
+      window.location.assign(bagHref);
+      return;
+    }
+    showToast(formEl, w('err.other'));
+  };
   const submit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
     const by = (ev.nativeEvent as SubmitEvent).submitter;
     if (by && !by.classList.contains('co-confirm')) return;
     const formEl = ev.currentTarget;
     if (!check.ok) {
-      setTried(true);
-      setPhoneChecked(true);
-      setAsk(check.field);
-      const box = formEl.querySelector(`[data-field="co-${check.field}"]`);
-      box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const input = document.getElementById(`co-${check.field}`);
-      setTimeout(() => input?.focus({ preventScroll: true }), 240); // hardcode-ok: the demo's wait for the scroll to start before focus
+      askField(formEl, check.field);
       showToast(formEl, w(`askBn.${askKey(check.field, check)}`));
       return;
     }
@@ -199,7 +268,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
       showToast(formEl, w('need.pay'));
       return;
     }
-    onPlace?.();
+    void place(formEl);
   };
   const t = view.totals;
   const saved = t.youSaveMinor;
@@ -271,8 +340,13 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   // 'disable' (demo 42(a)): the button waits switched off and says what is missing; 'ask' never switches it off.
   const off = confirmStyle === 'disable' && !check.ok;
   const confirm = (
-    <button type="submit" className={`btn btn-primary btn-block co-confirm${off ? ' co-need-on' : ''}`} disabled={off} data-testid="co-confirm">
-      {off && !check.ok ? (
+    <button type="submit" className={`btn btn-primary btn-block co-confirm${off ? ' co-need-on' : ''}`} disabled={off || placing} aria-busy={placing} data-testid="co-confirm">
+      {placing ? (
+        <>
+          <Icon name="lock" size={18} />
+          {w('placing')}
+        </>
+      ) : off && !check.ok ? (
         <span className="co-need">
           <b>{w('need.add', { what: w(`what.${check.field}`) })}</b>
           <span>
@@ -394,6 +468,17 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                 saveDraft({ wallet: on });
               }}
             />
+            {noteCfg ? (
+              <NoteCard
+                note={note}
+                max={noteCfg.max}
+                w={w}
+                onChange={(v) => {
+                  setNote(v);
+                  saveDraft({ note: v });
+                }}
+              />
+            ) : null}
             <ConsentCard
               consent={consent}
               onChange={(c) => {

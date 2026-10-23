@@ -4,10 +4,27 @@
 // after a newer question was sent is dropped, so a slow reply can never put an old charge back on the page.
 import { useEffect, useRef, useState } from 'react';
 import { createSettle, type SettleController } from '@extas/delivery/settle';
-import type { CheckoutView, PaymentChoice } from '@extas/checkout/pure';
+import type { CheckoutView, Field, FieldProblem, PaymentChoice } from '@extas/checkout/pure';
 import type { Confirmed } from '@/lib/shop/checkout-model';
 
 export const QUOTE_URL = '/api/checkout/quote';
+/** PR 125: placing the order, and keeping an unfinished checkout (SIM-F-026). */
+export const ORDERS_URL = '/api/checkout/orders';
+export const DRAFT_URL = '/api/checkout/draft';
+export const PAYMENTS_URL = '/api/checkout/payments';
+
+/** The answer to Confirm: where to go next, or why not (the checkout's codes, with what the page needs to show it). */
+export interface PlaceAnswer {
+  ok: boolean;
+  number?: string;
+  next?: string;
+  error?: string;
+  /** PRICE_CHANGED: the checkout as it is now. */
+  view?: CheckoutView;
+  /** FORM: the field still to finish. */
+  field?: Field;
+  problem?: FieldProblem;
+}
 
 /** Sends the customer's choices and returns the checkout as the server prices it (null when it did not answer). */
 export async function postJson<T>(url: string, payload: unknown): Promise<{ status: number; data: T | null }> {

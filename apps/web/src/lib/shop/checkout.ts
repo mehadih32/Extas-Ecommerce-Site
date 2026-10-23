@@ -1,7 +1,7 @@
 // PR 115–126 — the checkout on the server side of the shop: the engines' dependencies, the checkout's settings, the
 // visitor's quote read from the bag cookie, and the words the checkout's client part shows. Without a database (CI,
 // `next build`) or when it is slow, the page draws the empty bag with the registry defaults — never a guess.
-import { checkoutQuote, emptyQuote, type CheckoutDeps, type CheckoutQuote } from '@extas/checkout';
+import { checkoutQuote, emptyQuote, payView, type CheckoutDeps, type CheckoutQuote, type PayView } from '@extas/checkout';
 import { findBag } from '@extas/cart';
 import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
@@ -41,6 +41,10 @@ const KEYS = [
   'checkout.consent.sms.default',
   'checkout.consent.whatsapp.default',
   'checkout.confirm.style',
+  'checkout.note.enabled',
+  'checkout.note.maxChars',
+  'checkout.capture.enabled',
+  'checkout.capture.waitMs',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
@@ -82,4 +86,17 @@ export async function currentCheckout(c: Pick<ShopContext, 'storeId' | 'lang'>):
 /** Every `checkout.*` word in the page's language (the owner's words win), slots like {store} filled; for the client. */
 export function checkoutWords(c: Pick<ShopContext, 't' | 'vars' | 'lang'>): Record<string, string> {
   return Object.fromEntries(keysOf(SHOP_DICTS[c.lang]).filter((k) => k.startsWith('checkout.')).map((k) => [k.slice('checkout.'.length), c.t(k, c.vars)]));
+}
+
+/** PR 125 — the visitor's own order's payment for the mock payment page (null: not his order, none open, no database). */
+export async function currentPayment(c: Pick<ShopContext, 'storeId'>, number: string): Promise<PayView | null> {
+  const deps = checkoutDeps();
+  const visitor = await visitorId();
+  if (!deps || !visitor) return null;
+  try {
+    return await withTimeout(payView(deps, { storeId: c.storeId, visitorId: visitor, number }), settingsTimeoutMs() * 4);
+  } catch (e) {
+    console.warn(`shop: the payment is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return null;
+  }
 }

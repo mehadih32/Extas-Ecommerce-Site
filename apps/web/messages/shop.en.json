@@ -303,6 +303,31 @@
       "name": "your name",
       "phone": "your mobile number",
       "address": "your full address"
+    },
+    "note": "Delivery note (optional)",
+    "noteAdd": "Add a delivery note (optional)",
+    "notePh": "e.g. Leave it with the guard if I am out",
+    "placing": "Placing your order…",
+    "err": {
+      "changed": "Something in your order changed. Please check the total and press Confirm again.",
+      "stock": "An item in your bag just sold out. Please check your bag.",
+      "empty": "Your bag is empty.",
+      "network": "We could not reach the shop. Press Confirm again — you will not get two orders.",
+      "other": "Something went wrong. Please try again, or message us on WhatsApp."
+    },
+    "mock": {
+      "title": "Pay for your order",
+      "order": "Order #{number}",
+      "amount": "To pay now",
+      "with": "With {method}",
+      "test": "Test payment page: no money is taken. The real payment page comes when the payment service is connected.",
+      "approve": "Pay {amount}",
+      "fail": "Make it fail (test)",
+      "failed": "The payment did not go through. Your order is saved — you can try again.",
+      "retry": "Try again",
+      "back": "Back to my order",
+      "closed": "This payment is not open any more.",
+      "wait": "Please wait…"
     }
   },
   "notFound": {

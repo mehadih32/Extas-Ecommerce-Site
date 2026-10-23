@@ -30,7 +30,17 @@ export type CheckoutErrorCode =
   /** The bag is not open any more (it became an order, or was merged). */
   | 'CART_NOT_OPEN'
   /** The bag has nothing to order. */
-  | 'EMPTY';
+  | 'EMPTY'
+  /** PR 125: a field of "Delivery details" is not finished (`data.field`, `data.problem`). */
+  | 'FORM'
+  /** PR 125: the money changed since the page showed it (`data.view`: the checkout as it is now). */
+  | 'PRICE_CHANGED'
+  /** PR 125: a line cannot be covered by the stock any more (details name each one). */
+  | 'OUT_OF_STOCK'
+  /** PR 125: no payment method is open for this order. */
+  | 'NO_PAYMENT'
+  /** PR 125: the order key belongs to someone else's order. */
+  | 'IDEMPOTENCY';
 
 /** One error type for every refusal of the checkout. The `code` is stable; the shop turns it into words. */
 export class CheckoutError extends Error {
@@ -53,6 +63,7 @@ export class CheckoutError extends Error {
       case 'NOT_FOUND':
         return 404;
       case 'INVALID_INPUT':
+      case 'FORM':
         return 400;
       default:
         return 409;

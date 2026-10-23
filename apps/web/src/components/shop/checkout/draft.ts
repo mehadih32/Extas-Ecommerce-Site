@@ -1,5 +1,6 @@
 // PR 116 — the checkout's typed details survive a reload or a pull-to-refresh (demo bug 14): kept in this tab's
-// sessionStorage only (gone when the tab closes, never sent from here), cleared the moment the order is placed. Storage
+// sessionStorage only (gone when the tab closes; only the owner's follow-up switch, SIM-F-026, sends it), cleared the moment the order is placed. PR 125:
+// the order key lives here too, so a retry after a lost answer is the same order. Storage
 // that is blocked (a private window, a preview) simply keeps nothing: the page works the same without it.
 import { useSyncExternalStore } from 'react';
 import type { DetailsForm } from '@extas/checkout/pure';
@@ -54,6 +55,16 @@ export function saveDraft(patch: Partial<Draft>): void {
   } catch {
     // storage blocked: nothing is kept
   }
+}
+
+/** PR 125 — a new order key (made once per order, kept in the draft until the order is in). */
+export function newOrderKey(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6]! & 0x0f) | 0x40; // hardcode-ok: the UUID version 4 bits (RFC 9562)
+  b[8] = (b[8]! & 0x3f) | 0x80; // hardcode-ok: the UUID variant bits (RFC 9562)
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 export function clearDraft(): void {

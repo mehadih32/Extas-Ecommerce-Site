@@ -124,6 +124,12 @@ describe('later migrations', () => {
     // Existing coupons keep working for everybody: the new column has a default.
     expect(sql).toContain(`ALTER TABLE "Coupon" ADD COLUMN     "audience" TEXT NOT NULL DEFAULT 'ALL';`);
   });
+
+  it('PR 125: an order paid with Rocket, Upay or the "Pay online" page keeps that method; only enum values are added (0007_checkout)', () => {
+    const sql = sqlOf('0007_checkout');
+    for (const v of ['ROCKET', 'UPAY', 'ONLINE']) expect(sql).toContain(`ALTER TYPE "PaymentMethod" ADD VALUE '${v}';`);
+    expect(sql).not.toMatch(/\bALTER COLUMN\b|\bRENAME\b/i);
+  });
 });
 
 // All migrations applied in order to a throwaway database must give exactly the schema. Needs TEST_DATABASE_ADMIN_URL

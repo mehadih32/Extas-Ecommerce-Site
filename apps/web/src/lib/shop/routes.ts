@@ -9,6 +9,10 @@ export const ROUTES = {
   home: '/',
   bag: '/bag',
   checkout: '/checkout',
+  /** PR 125: a prepaid order's payment (the mock until the gateways of S07). */
+  checkoutPay: (number: string) => `/checkout/pay/${encodeURIComponent(number)}`,
+  /** PR 126: the thank-you page of an order. */
+  thanks: (number: string) => `/checkout/thanks/${encodeURIComponent(number)}`,
   account: '/account',
   login: '/account/login',
   wishlist: '/account/wishlist',

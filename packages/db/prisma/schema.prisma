@@ -3377,6 +3377,8 @@ model Payment {
   @@index([provider, providerTrxId])
 }
 
+/// PR 125 (S04): the checkout's methods (PR 120) — Rocket and Upay among the mobile wallets, and the one "Pay online"
+/// page — are added; the exact wallet or card type the customer picked is kept on the Payment (`provider`).
 enum PaymentMethod {
   COD
   BKASH
@@ -3385,6 +3387,9 @@ enum PaymentMethod {
   CASH
   WALLET
   BANK_TRANSFER
+  ROCKET
+  UPAY
+  ONLINE
 }
 
 enum PaymentPurpose {

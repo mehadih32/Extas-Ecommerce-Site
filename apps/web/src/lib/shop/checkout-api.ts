@@ -3,11 +3,12 @@
 // customer chose (the finished address line, the band he picked, the payment method …) and the server prices it again
 // with the engines; the answer is the checkout as the page draws it.
 import { findBag, visitorIdSchema } from '@extas/cart';
-import { checkoutQuote, CheckoutError, viewOf, type CheckoutDeps } from '@extas/checkout';
+import { captureDraft, checkoutQuote, CheckoutError, payAction, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { CartError } from '@extas/cart';
-import { body, errorResponse, fail, json, readCookie, sameOrigin } from '../admin-auth';
-import { BAG_COOKIE } from './bag-model';
-import { isShopLang, type ShopLang } from './lang';
+import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
+import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
+import { hrefIn, isShopLang, type ShopLang } from './lang';
+import { ROUTES } from './routes';
 
 /** The largest request body the checkout takes (the delivery details, a note, the choices). */
 export const CHECKOUT_BODY_MAX = 8_192;
@@ -55,6 +56,63 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
     const { cartId } = await bagOfRequest(request, deps);
     const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true });
     return json({ ok: true, view: viewOf(q) });
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/** Where the page goes after the order or a payment answer, in its language. */
+export const nextHref = (lang: ShopLang, next: PlaceNext, number: string): string => hrefIn(lang, next === 'pay' ? ROUTES.checkoutPay(number) : ROUTES.thanks(number));
+
+/**
+ * POST /api/checkout/orders — PR 125: places the order the customer confirmed. The page sends what he typed and chose,
+ * the order key it made once, and the fingerprint of the money it showed; the server prices it again and stores exactly
+ * that (or refuses: FORM, PRICE_CHANGED with the checkout as it is now, OUT_OF_STOCK, NO_PAYMENT, EMPTY). A second press
+ * with the same key gets the same order back. The bag badge goes to 0; the visitor cookie stays (his thank-you page).
+ */
+export async function placeHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    const b = await body(request);
+    const { visitor } = await bagOfRequest(request, deps);
+    if (!visitor) return fail(409, 'EMPTY');
+    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId: null, ip: requestContext(request).ip ?? null, input: b });
+    const lang = langOf(b.lang);
+    const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });
+    const headers = new Headers();
+    headers.append('set-cookie', bagCookie(COUNT_COOKIE, '0', days));
+    return json({ ok: true, number: r.number, replay: r.replay, next: nextHref(lang, r.next, r.number) }, { status: r.replay ? 200 : 201, headers });
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/** POST /api/checkout/payments — PR 125: the mock payment page's answer (approve, fail, try again); no money moves. */
+export async function paymentHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    const b = await body(request);
+    const { visitor } = await bagOfRequest(request, deps);
+    if (!visitor) return fail(404, 'NOT_FOUND', ['number']);
+    const { lang, ...input } = b;
+    const r = await payAction(deps.checkout, { storeId: deps.storeId, visitorId: visitor, input });
+    return json({ ok: true, status: r.status, next: nextHref(langOf(lang), r.next, r.number) });
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/** POST /api/checkout/draft — SIM-F-026: keeps what he typed for the team's follow-up, when the owner's switch is on. */
+export async function draftHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    const b = await body(request);
+    const { visitor } = await bagOfRequest(request, deps);
+    if (!visitor) return json({ ok: true, kept: false });
+    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, input: b })) });
   } catch (e) {
     return refusal(e);
   }
