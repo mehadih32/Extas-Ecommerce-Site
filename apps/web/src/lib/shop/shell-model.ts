@@ -192,9 +192,35 @@ export interface MenuRow {
   /** The demo draws an icon box with no drawing in it for "New in" (its `sparkle` icon does not exist). */
   emptyIcon?: boolean;
   testid?: string;
+  /** PR 74: the sub-categories this row opens in place ('accordion', "View all" first) or shows under it ('list'). */
+  subs?: { style: 'accordion' | 'list'; rows: MenuRow[] };
+  /** PR 74: the number of products in it, in the store's digits (when counts are on). */
+  count?: string;
 }
 
-export function phoneMenuRows(menu: ShellMenu, cats: readonly ShopCategory[], t: ShopT): MenuRow[] {
+/** PR 74 (`shell.menuSubs`): how the phone menu draws sub-categories, and the store's digits for the counts. */
+export interface MenuSubs {
+  style: 'accordion' | 'list' | 'off';
+  counts: boolean;
+  num: (n: number) => string;
+}
+
+/**
+ * PR 74 · a category's row with its sub-categories (those with products for sale): in an accordion the row opens
+ * them, so "View all" (the category itself) comes first; in a list the row itself is the way to the category.
+ */
+function categoryRow(id: string, c: ShopCategory, label: string, t: ShopT, subs: MenuSubs | undefined): MenuRow {
+  const H = (p: string) => hrefIn(t.lang, p);
+  const row: MenuRow = { id, href: H(categoryHref(c.slug)), label };
+  const kids = c.children.filter((k) => k.count > 0);
+  if (!subs || subs.style === 'off' || !kids.length) return row;
+  const n = (k: number) => (subs.counts ? { count: subs.num(k) } : {});
+  const rows: MenuRow[] = kids.map((k) => ({ id: `${id}-${k.slug}`, href: H(categoryHref(k.slug)), label: categoryName(k, t.lang), ...n(k.count) }));
+  if (subs.style === 'accordion') rows.unshift({ id: `${id}-all`, href: row.href, label: t('menuSub.viewAll', { name: label }), ...n(c.count) });
+  return { ...row, subs: { style: subs.style, rows } };
+}
+
+export function phoneMenuRows(menu: ShellMenu, cats: readonly ShopCategory[], t: ShopT, subs?: MenuSubs): MenuRow[] {
   const H = (p: string) => hrefIn(t.lang, p);
   const rows: MenuRow[] = [];
   const rest = unnamedCategories(menu.items, cats);
@@ -202,10 +228,10 @@ export function phoneMenuRows(menu: ShellMenu, cats: readonly ShopCategory[], t:
     if (!x.on || !x.phone) continue;
     if (x.kind === 'new') rows.push({ id: x.id, href: H(x.href ?? '/collections/new-in'), label: own(t, x.label, 'nav.newIn'), emptyIcon: true });
     else if (x.kind === 'cats') {
-      for (const c of rest) rows.push({ id: `cat-${c.slug}`, href: H(categoryHref(c.slug)), label: categoryName(c, t.lang) });
+      for (const c of rest) rows.push(categoryRow(`cat-${c.slug}`, c, categoryName(c, t.lang), t, subs));
     } else if (x.kind === 'cat') {
       const c = cats.find((k) => k.slug === x.cat);
-      if (c) rows.push({ id: x.id, href: H(categoryHref(c.slug)), label: x.label ? t.label(x.label) : categoryName(c, t.lang) });
+      if (c) rows.push(categoryRow(x.id, c, x.label ? t.label(x.label) : categoryName(c, t.lang), t, subs));
     } else if (x.kind === 'sets') rows.push({ id: x.id, href: H(x.href ?? '/combos/build-your-own'), label: t.label(x.phoneLabel ?? x.label, {}, 'nav.buildYourOwnSet') });
     else if (x.kind === 'setsPhone') rows.push({ id: x.id, href: H(x.href ?? '/combos'), label: own(t, x.label, 'nav.setsAndCombos') });
     else if (x.kind === 'journal') rows.push({ id: x.id, href: H(x.href ?? '/journal'), label: own(t, x.label, 'nav.journal'), icon: x.icon ?? 'doc', testid: 'mn-journal' });

@@ -168,6 +168,22 @@ export const wishListSchema = z
   })
   .strict();
 
+// ---- PR 74 · the phone menu's sub-categories (Blueprint D3.2 "Sub-menus", approved 18 Oct; register 74) ----
+
+/**
+ * How the phone menu shows a category's sub-categories. 'accordion': a tap on the category opens its sub-categories in
+ * place ("View all" first, then each one), and a second tap closes them; 'list': they are always shown, indented
+ * under the category (the demo's drawing); 'off': the category goes straight to its page. Counts: the number of
+ * products beside each. One at a time: opening one category closes the one that was open.
+ */
+export const shellMenuSubsSchema = z
+  .object({
+    style: z.enum(['accordion', 'list', 'off']),
+    counts: z.boolean(),
+    single: z.boolean(),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const shopMoreSettings = {
@@ -255,6 +271,16 @@ export const shopMoreSettings = {
     helpKey: 'wish.list.help',
     sortOrder: 180,
   }),
+  'shell.menuSubs': setting({
+    ...json,
+    group: 'shell',
+    schema: shellMenuSubsSchema,
+    // register 74: an accordion in place, a count on each row, "View all" first
+    default: { style: 'accordion', counts: true, single: true },
+    labelKey: 'shell.menuSubs.label',
+    helpKey: 'shell.menuSubs.help',
+    sortOrder: 175,
+  }),
 };
 
 export type PdpFitSettings = z.output<typeof pdpFitSchema>;
@@ -263,3 +289,4 @@ export type PdpIconsSettings = z.output<typeof pdpIconsSchema>;
 export type PdpShareSettings = z.output<typeof pdpShareSchema>;
 export type ShellFabSettings = z.output<typeof shellFabSchema>;
 export type WishListSettings = z.output<typeof wishListSchema>;
+export type ShellMenuSubsSettings = z.output<typeof shellMenuSubsSchema>;

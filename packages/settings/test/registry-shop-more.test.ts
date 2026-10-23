@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
-import { pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shopMoreSettings, wishListSchema } from '../src/registry-shop-more';
+import { pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shellMenuSubsSchema, shopMoreSettings, wishListSchema } from '../src/registry-shop-more';
 
 describe('third storefront batch settings (v21)', () => {
   it('every key is in the registry at version 21, public, never owner data, with both labels', () => {
@@ -54,6 +54,14 @@ describe('third storefront batch settings (v21)', () => {
     expect(f.pages.bag).toBe(false);
     expect(f).toMatchObject({ side: 'right', place: 'low' });
     expect(shopMoreSettings['shell.fab'].group).toBe('shell');
+  });
+
+  it('PR 74: the phone menu opens sub-categories in place, with counts, one at a time (register 74)', () => {
+    const m = shopMoreSettings['shell.menuSubs'];
+    expect(m.default).toEqual({ style: 'accordion', counts: true, single: true });
+    expect(m.group).toBe('shell');
+    expect(shellMenuSubsSchema.safeParse({ ...m.default, style: 'off' }).success).toBe(true);
+    expect(shellMenuSubsSchema.safeParse({ ...m.default, style: 'mega' }).success).toBe(false);
   });
 
   it('PR 71: the wishlist keeps up to 100, shows 4 newest on an empty computer page, and the bag moves to it (demo R16)', () => {

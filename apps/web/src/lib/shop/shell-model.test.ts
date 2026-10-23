@@ -64,6 +64,37 @@ describe('the desktop row (H3, H4)', () => {
   });
 });
 
+describe('the phone menu`s sub-categories (PR 74)', () => {
+  const num = (n: number) => `#${n}`;
+  const withKids: ShopCategory[] = [{ ...cat('polos', 7), children: [{ slug: 'pique', nameEn: 'Pique', nameBn: 'পিকে', count: 4 }, { slug: 'jersey', nameEn: 'Jersey', nameBn: null, count: 3 }, { slug: 'empty', nameEn: 'Empty', nameBn: null, count: 0 }] }, cat('shirts')];
+  const polos = (rows: ReturnType<typeof phoneMenuRows>) => rows.find((r) => r.href === '/collections/polos');
+
+  it('accordion: "View all" first with the category`s count, then each sub-category with products, in the store`s digits', () => {
+    const p = polos(phoneMenuRows(menu, withKids, t, { style: 'accordion', counts: true, num }));
+    expect(p?.subs?.style).toBe('accordion');
+    expect(p?.subs?.rows.map((r) => [r.label, r.href, r.count])).toEqual([
+      ['View all', '/collections/polos', '#7'],
+      ['Pique', '/collections/pique', '#4'],
+      ['Jersey', '/collections/jersey', '#3'],
+    ]);
+  });
+
+  it('list: the row itself is the way in, so no "View all"; counts can be off; Bengali names and addresses', () => {
+    const p = phoneMenuRows(menu, withKids, shopT('bn'), { style: 'list', counts: false, num }).find((r) => r.subs);
+    expect(p?.href).toBe('/bn/collections/polos');
+    expect(p?.subs?.rows.map((r) => [r.label, r.href, r.count])).toEqual([
+      ['পিকে', '/bn/collections/pique', undefined],
+      ['Jersey', '/bn/collections/jersey', undefined],
+    ]);
+  });
+
+  it('off, no setting, or no sub-category with products: a plain row straight to the category', () => {
+    expect(polos(phoneMenuRows(menu, withKids, t, { style: 'off', counts: true, num }))?.subs).toBeUndefined();
+    expect(polos(phoneMenuRows(menu, withKids, t))?.subs).toBeUndefined();
+    expect(phoneMenuRows(menu, withKids, t, { style: 'accordion', counts: true, num }).find((r) => r.href === '/collections/shirts')?.subs).toBeUndefined();
+  });
+});
+
 describe('the reference desktop footer (H13)', () => {
   const opts = { combos: true };
   it('shows the short desktop words, leaves the phone-only links out and puts Journal second, highlighted', () => {

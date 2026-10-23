@@ -18,7 +18,8 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
   // switches it on, the kinds of page he ticked show it (never the home page, the product page or the bag by default:
   // C3, §49.4, demo FAB_PAGES).
   // ~~C3: off the home page and the bag, every other page has it whenever the number is set~~
-  const fabSet = (await readPageSettings(['shell.fab'] as const, c.storeId))['shell.fab'];
+  const more = await readPageSettings(['shell.fab', 'shell.menuSubs'] as const, c.storeId);
+  const fabSet = more['shell.fab'];
   const waLink = waHref(c.s['contact.whatsapp'], c.t('fab.message', c.vars));
   const fab = fabShows(fabSet, fabPage(c.path, c.s['naming.productPathPrefix']), waLink) ? waLink : null;
   // PR 105: the bag's piece count, from the cookie the bag's API keeps current (a number only; never used for money).
@@ -29,7 +30,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
         {c.t('skip')}
       </a>
       <div className="has-bnav">
-        <StoreHeader c={c} bagCount={bagCount} />
+        <StoreHeader c={c} bagCount={bagCount} menuSubs={more['shell.menuSubs']} />
         <main className="page" id="main" tabIndex={-1}>
           {children}
         </main>
