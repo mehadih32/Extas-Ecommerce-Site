@@ -67,6 +67,8 @@ const sampleSchema = z
           garmentType: slug,
           fitKey: slug,
           columns: z.array(z.string().regex(/^[a-z][a-zA-Z]*$/)).min(1),
+          /** PR 58: the room over the body this chart is cut with (Find My Size); without it, the store's default. */
+          easeInch: z.number().min(0).max(20).optional(),
           rows: z.array(z.object({ size: slug, values: z.array(z.number().positive()) }).strict()).min(1),
           categories: z.array(slug),
         })
@@ -372,7 +374,7 @@ async function seedSampleTx(
           garmentTypeId: need(garments, ch.garmentType, 'garment type'),
           name: ch.name,
           fitKey: ch.fitKey,
-          columns: ch.columns,
+          columns: ch.easeInch === undefined ? ch.columns : { fields: ch.columns, easeInch: ch.easeInch, diagram: null, copiedFromId: null },
           rows: ch.rows.map((r) => ({ size: r.size, values: r.values })),
         },
         select: { id: true },

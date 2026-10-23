@@ -4,9 +4,24 @@
 // (photos, price, sizes, stock, buttons, the bars) reads it from here, so they can never disagree. A colour change
 // rewrites the address to that colour's own page (D3.7) without a reload; the server drew the page for the colour in
 // the address, so a shared link opens exactly what was shared.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { PdpBuySettings, PdpChartSettings, PdpColourSettings, PdpFitSettings, PdpGallerySettings, PdpSizeSettings, PdpStockSettings, PdpSweepSettings } from '@extas/settings';
+// PR 58 — Find My Size lives here too: the height and weight this phone gave (kept in one small cookie while
+// `pdp.finder.remember` is on), the size they give on this product's chart ("Your size"), and the one popup that the
+// card, the size chart and the T3 card open.
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import type { Recommendation } from '@extas/catalogue/size-finder';
+import type {
+  PdpBuySettings,
+  PdpChartSettings,
+  PdpColourSettings,
+  PdpFinderSettings,
+  PdpFitSettings,
+  PdpGallerySettings,
+  PdpSizeSettings,
+  PdpStockSettings,
+  PdpSweepSettings,
+} from '@extas/settings';
 import { colourHref } from '@/lib/shop/pdp-colour';
+import { FIT_COOKIE, fitCookieValue, sizeFor, type FitBody } from '@/lib/shop/pdp-finder';
 import { COLOUR_QUERY } from '@/lib/shop/routes';
 import { digitsOf, fillWords, keepSize, stockOf, type PdpChoice, type PdpModel } from '@/lib/shop/product-model';
 import { keepUsual, loadUsual, readUsual, saveUsual, type SizeGroup } from '@/lib/shop/usual-size';
@@ -45,6 +60,10 @@ export interface PdpEnv {
   chartWa: string | null;
   /** The chart is a bottom garment's (the trousers tip under "How to measure"). */
   chartBottom: boolean;
+  /** PR 58: Find My Size's settings, or null where it is not offered (switched off, or no chart it can read). */
+  finder: PdpFinderSettings | null;
+  /** The height and weight this phone gave before (the cookie), read on the server so the first screen knows them. */
+  fitKept: FitBody | null;
 }
 
 interface Pdp extends PdpEnv {
@@ -61,6 +80,17 @@ interface Pdp extends PdpEnv {
   setUnit: (u: 'inch' | 'cm') => void;
   /** Follow-up 62 · the size this browser last put in the bag for this kind of garment (null: none, or off). */
   usualSize: string | null;
+  /** The height and weight this shopper gave (kept, or given on this page). */
+  body: FitBody | null;
+  /** The size they give on this product (null: no answer yet, or no finder). */
+  yours: Recommendation | null;
+  /** Keeps an answer (and, while `remember` is on, the cookie). */
+  keepBody: (b: FitBody) => void;
+  finderOpen: boolean;
+  /** Opens the Find My Size popup; focus goes back to `from` when it closes. */
+  openFinder: (from: HTMLElement | null) => void;
+  closeFinder: () => void;
+  finderOpener: RefObject<HTMLElement | null>;
 }
 
 const Ctx = createContext<Pdp | null>(null);
@@ -75,7 +105,7 @@ export function PdpRoot({ env, initial, children }: { env: PdpEnv; initial: PdpC
   const [choice, setChoice] = useState<PdpChoice>(initial);
   const [err, setErr] = useState(false);
   const [unit, setUnit] = useState<'inch' | 'cm'>(env.set.chart.unit);
-  const { m, words, bnDigits, productHref, set } = env;
+  const { m, words, bnDigits, productHref, set, finder } = env;
   const [usualSize, setUsualSize] = useState<string | null>(null);
 
   // follow-up 62 · read after the first paint (never on the server: it lives in this browser), chosen when asked
@@ -101,6 +131,28 @@ export function PdpRoot({ env, initial, children }: { env: PdpEnv; initial: PdpC
       window.removeEventListener(BAG_ADDED_EVENT, onAdded);
     };
   }, [m, usual]);
+  const [body, setBody] = useState<FitBody | null>(env.fitKept);
+  const [finderOpen, setFinderOpen] = useState(false);
+  const finderOpener = useRef<HTMLElement | null>(null);
+  const yours = useMemo(() => (finder && body ? sizeFor(m, finder, body) : null), [m, finder, body]);
+  const keepBody = useCallback(
+    (b: FitBody) => {
+      setBody(b);
+      if (!finder?.remember) return;
+      try {
+        const secure = location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `${FIT_COOKIE}=${fitCookieValue(b)}; Path=/; Max-Age=${finder.rememberDays * 86400}; SameSite=Lax${secure}`;
+      } catch {
+        /* a browser that refuses cookies asks again next time */
+      }
+    },
+    [finder],
+  );
+  const openFinder = useCallback((from: HTMLElement | null) => {
+    finderOpener.current = from;
+    setFinderOpen(true);
+  }, []);
+  const closeFinder = useCallback(() => setFinderOpen(false), []);
 
   const pickColour = useCallback(
     (key: string) => {
@@ -139,8 +191,15 @@ export function PdpRoot({ env, initial, children }: { env: PdpEnv; initial: PdpC
       needSize,
       setUnit,
       usualSize,
+      body,
+      yours,
+      keepBody,
+      finderOpen,
+      openFinder,
+      closeFinder,
+      finderOpener,
     }),
-    [env, choice, err, unit, words, bnDigits, pickColour, pickSize, needSize, usualSize],
+    [env, choice, err, unit, words, bnDigits, pickColour, pickSize, needSize, usualSize, body, yours, keepBody, finderOpen, openFinder, closeFinder],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

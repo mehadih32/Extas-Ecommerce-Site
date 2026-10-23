@@ -3,7 +3,9 @@
 // Delivery · Exchange · Returns and the details, with the buy bar held at the bottom of the screen; on a computer the
 // photos on the left, the buy column on the right (sticky), the details under it, and the slim bar once the buttons
 // have scrolled away. PR 50: template T2 (Editorial) stacks the photos (PdpGallery) beside a narrower buy column, on the
-// plain surface with the editorial title, each on its own switch (`pdp.templates.t2`). A product taken off sale keeps its page,
+// plain surface with the editorial title, each on its own switch (`pdp.templates.t2`). PR 58: "Find my size" under the
+// sizes and its popup, only where the product's own chart can answer (`pdp.finder`); a phone that answered before opens
+// with its size chosen and tagged. A product taken off sale keeps its page,
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
 // one state (PdpRoot); the rest is drawn here.
 import type { Metadata } from 'next';
@@ -22,6 +24,7 @@ import { isBottom } from '@/lib/shop/pdp-chart';
 import { sizeGroupOf, sizeWordsFor } from '@/lib/shop/usual-size';
 import { canonicalFor } from '@/lib/shop/pdp-colour';
 import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
+import { finderOffered, FIT_COOKIE, readFit, sizeFor } from '@/lib/shop/pdp-finder';
 import { payWords } from '@/lib/shop/pdp-price';
 import { readRecent, RECENT_COOKIE } from '@/lib/shop/pdp-rows';
 import { ruleCells } from '@/lib/shop/pdp-rules';
@@ -30,7 +33,7 @@ import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
 import { trustFacts, trustItems } from '@/lib/shop/pdp-trust';
 import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
 import { productData } from '@/lib/shop/product';
-import { colourPath, nameParts, NO_COLOUR, openingColour, productRoute, type PdpModel } from '@/lib/shop/product-model';
+import { colourPath, nameParts, NO_COLOUR, openingColour, productRoute, stockOf, type PdpModel } from '@/lib/shop/product-model';
 import { toModel } from '@/lib/shop/product-view';
 import { COLOUR_QUERY, ROUTES } from '@/lib/shop/routes';
 import { categoryName } from '@/lib/shop/shell-model';
@@ -45,6 +48,7 @@ import { PdpBuy, PdpDeskBar, PdpPhoneBar, type BuyLinks } from './PdpBuy';
 import { PdpColour } from './PdpColour';
 import { PdpDetails, type DetailBlockView } from './PdpDetails';
 import { PdpEffects } from './PdpEffects';
+import { FinderCard, FinderPopup } from './PdpFinder';
 import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
@@ -80,6 +84,7 @@ const KEYS = [
   'pdp.icons',
   'pdp.share',
   'pdp.templates',
+  'pdp.finder',
   'catalogue.sizeCharts.diagramFor',
   'policy.exchange.summary',
   'policy.returns.summary',
@@ -127,11 +132,14 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
   return m;
 }
 
-/** Every word of the page (`pdp.*`, with the owner's own), {slots} left open for the client parts to fill. */
+/** Every word of the page (`pdp.*` as they are, Find My Size's as `finder.*`, with the owner's own), {slots} left open
+ * for the client parts to fill. */
 function pageWords(c: ShopContext): Record<string, string> {
   const pdp = SHOP_DICTS.en.pdp;
+  const finder = SHOP_DICTS.en.finder;
   const keys = pdp && typeof pdp === 'object' ? keysOf(pdp) : [];
-  return Object.fromEntries(keys.map((k) => [k, c.t(`pdp.${k}`)]));
+  const fk = finder && typeof finder === 'object' ? keysOf(finder, 'finder.') : [];
+  return Object.fromEntries([...keys.map((k) => [k, c.t(`pdp.${k}`)]), ...fk.map((k) => [k, c.t(k)])]);
 }
 
 /** Follow-up 62 · "Your size" words (shop dictionary `usualSize.*`), read by the size row as `usual.*`. */
@@ -275,7 +283,15 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
 
   // ---- PR 67 · the rows at the foot of the page ----
   const rows = set['pdp.rows'];
-  const recentIds = rows.recent ? readRecent((await cookies()).get(RECENT_COOKIE)?.value, rows.recentKeep) : [];
+  const jar = await cookies();
+  const recentIds = rows.recent ? readRecent(jar.get(RECENT_COOKIE)?.value, rows.recentKeep) : [];
+
+  // ---- PR 58 · Find My Size: offered only where the chart can answer; a kept answer chooses its size when it is in stock ----
+  const fs = set['pdp.finder'];
+  const finder = finderOffered(m, fs) ? fs : null;
+  const fitKept = finder && finder.remember ? readFit(jar.get(FIT_COOKIE)?.value, finder) : null;
+  const keptSize = finder && fitKept ? sizeFor(m, finder, fitKept)?.size : null;
+  const openSize = m.sizes.length === 1 ? m.sizes[0]!.key : keptSize && stockOf(m, colour, keptSize) > 0 ? keptSize : null;
 
   // ---- PR 49 · buttons and links; the bag is S04's (follow-up 38) ----
   const buy = set['pdp.buy'];
@@ -327,6 +343,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
     shipsToday: beforeCutoff(clockIn(c.s['store.timeZone']), cutoff),
     chartWa,
     chartBottom: isBottom(data.garment, set['catalogue.sizeCharts.diagramFor']),
+    finder,
+    fitKept,
   };
   const [head, last] = nameParts(m.name);
   const cat = data.category;
@@ -376,7 +394,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   ) : null;
 
   return (
-    <PdpRoot env={env} initial={{ colour, size: m.sizes.length === 1 ? m.sizes[0]!.key : null }}>
+    <PdpRoot env={env} initial={{ colour, size: openSize }}>
       <div className={`pdp-page pdp-tpl-${tpl}${tplClass}`} data-testid="pdp" data-template={tpl} data-state={data.state}>
         <div className="container pdp-top">
           {set['pdp.page'].breadcrumb ? (
@@ -441,6 +459,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               </div>
               <PdpColour lang={lang} />
               <PdpSizes oneSizeNote={data.fitNote} fitPos={set['pdp.size'].fitBar ? fitPosOf(data.fit, data.fitNote) : null} fitWord={data.fit ?? ''} />
+              <FinderCard />
               <PdpStock cutoffWords={cutWords} />
               <PdpBuy links={links} />
               <PdpTrust items={trust} />
@@ -488,6 +507,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             closeHref={closeHref}
           />
         ) : null}
+        <FinderPopup />
         <PdpEffects />
         {ld}
         {/* follow-up 21: the rows' cards get the back view and Quick add on a computer with a mouse */}

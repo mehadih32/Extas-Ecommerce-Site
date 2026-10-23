@@ -65,6 +65,8 @@ export interface PdpChart {
   fields: PdpChartField[];
   /** One row per size of the product that the chart covers, in the shop's size order. */
   rows: { size: string; inch: (number | null)[]; cm: (number | null)[] }[];
+  /** PR 58: the room this chart's fit gives over the body, inches (the chart's own, else the shop's default). */
+  easeInch: number;
 }
 
 export interface PdpModel {

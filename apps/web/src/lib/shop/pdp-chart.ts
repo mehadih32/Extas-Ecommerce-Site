@@ -33,6 +33,8 @@ export interface ChartInput {
   /** The chart's measurement keys, in its own order. */
   fields: readonly string[];
   rows: readonly { size: string; values: readonly number[] }[];
+  /** The room the fit gives over the body, inches (PR 58, Find My Size). */
+  easeInch: number;
 }
 
 export interface FieldMeta {
@@ -63,6 +65,7 @@ export function chartTable(
   const fields: PdpChartField[] = keep.map(({ k }) => ({ key: k, label: meta.get(k)?.label ?? k, howTo: meta.get(k)?.howTo ?? null }));
   return {
     name: chart.name,
+    easeInch: chart.easeInch,
     fields,
     rows: rows.map((r) => {
       const both = keep.map(({ k, i }) => (has(r.values[i]) ? convert(r.values[i]!, meta.get(k)?.unit ?? 'inch') : null));

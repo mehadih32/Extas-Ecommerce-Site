@@ -247,6 +247,7 @@
       "name": "Polo · Regular fit",
       "garmentType": "polo",
       "fitKey": "regular",
+      "easeInch": 4,
       "columns": ["chest", "length", "shoulder", "sleeve"],
       "rows": [
         {
@@ -277,6 +278,7 @@
       "name": "Polo · Slim fit",
       "garmentType": "polo",
       "fitKey": "slim",
+      "easeInch": 2,
       "columns": ["chest", "length", "shoulder", "sleeve"],
       "rows": [
         {
@@ -307,6 +309,7 @@
       "name": "T-shirt · Regular",
       "garmentType": "tee",
       "fitKey": "regular",
+      "easeInch": 4,
       "columns": ["chest", "length", "shoulder", "sleeve"],
       "rows": [
         {
@@ -337,6 +340,7 @@
       "name": "Shirt · Regular",
       "garmentType": "shirt",
       "fitKey": "regular",
+      "easeInch": 5,
       "columns": ["chest", "length", "shoulder", "sleeve"],
       "rows": [
         {
@@ -367,6 +371,7 @@
       "name": "Panjabi · Classic",
       "garmentType": "panjabi",
       "fitKey": "classic",
+      "easeInch": 5,
       "columns": ["chest", "length", "shoulder", "sleeve"],
       "rows": [
         {
@@ -397,6 +402,7 @@
       "name": "Hoodie · Regular",
       "garmentType": "hoodie",
       "fitKey": "regular",
+      "easeInch": 6,
       "columns": ["chest", "length", "shoulder", "sleeve"],
       "rows": [
         {
@@ -427,6 +433,7 @@
       "name": "Chino · Slim",
       "garmentType": "trouser",
       "fitKey": "slim",
+      "easeInch": 1,
       "columns": ["waist", "hip", "thigh", "length", "legOpening"],
       "rows": [
         {

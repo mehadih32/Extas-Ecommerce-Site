@@ -3,6 +3,7 @@
 // name, inches / cm, one row per size of this product with the stock of the chosen colour (a row out of stock says
 // so), only the measurements the chart has, and a tap on a row chooses that size and closes the popup. Under it: "Ask
 // on WhatsApp" (the owner's number) and "How to measure" (the owner's texts, `catalogue.sizeCharts.howToMeasure`).
+// PR 58: "Not sure? Find my size" comes first in that row where the finder is offered (demo pdp_chartHTML).
 import { useCallback, useRef, useState } from 'react';
 import { Icon, WaGlyph } from '../Icon';
 import { showToast } from '../toast';
@@ -14,7 +15,7 @@ import { usePdp } from './PdpRoot';
 import { Bold } from './Bold';
 
 export function PdpChart() {
-  const { m, set, choice, unit, w, num, setUnit, pickSize, chartWa, chartBottom } = usePdp();
+  const { m, set, choice, unit, w, num, setUnit, pickSize, chartWa, chartBottom, finder, openFinder } = usePdp();
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement | null>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -102,8 +103,26 @@ export function PdpChart() {
               </tbody>
             </table>
           </div>
-          {chartWa && set.chart.askWhatsapp ? (
+          {finder || (chartWa && set.chart.askWhatsapp) ? (
             <div className="pdp-chartft mt12">
+              {finder ? (
+                <button
+                  type="button"
+                  className="chart-opt"
+                  data-testid="chart-finder"
+                  onClick={() => {
+                    setOpen(false);
+                    openFinder(btn.current);
+                  }}
+                >
+                  <Icon name="ruler" size={18} />
+                  <span>
+                    <b>{w('finder.chartOpt')}</b>
+                    <span>{w('finder.chartOptSub')}</span>
+                  </span>
+                </button>
+              ) : null}
+              {chartWa && set.chart.askWhatsapp ? (
               <a className="chart-opt wa" href={chartWa} target="_blank" rel="noopener">
                 <WaGlyph size={18} />
                 <span>
@@ -111,6 +130,7 @@ export function PdpChart() {
                   <span>{w('chart.waText')}</span>
                 </span>
               </a>
+              ) : null}
             </div>
           ) : null}
           {how.length ? (

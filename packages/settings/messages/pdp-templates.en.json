@@ -3,6 +3,10 @@
     "templates": {
       "label": "Product page template",
       "help": "Which layout a product page uses. T1 Classic: photos with thumbnails beside the buy column. T2 Editorial: on a phone the photos peek one into the next with no arrows; on a computer every photo is stacked two across beside a narrower buy column, on a plain white page with a larger title. A product's own template (chosen when it is uploaded) wins, then its category's (the nearest one up the tree), then the shop's default. With the preview on, an address ending in ?template=T2 shows that template, for checking before you switch; search engines are sent to the plain address."
+    },
+    "finder": {
+      "label": "Find My Size",
+      "help": "Height and weight give a size from the product's own size chart, with the reasons shown (the chest or waist it needs, and the length). A product without a chart the finder can read never shows it. The body estimate per measure, the half-inch tolerance and the length check are the shop's rules; the room each fit gives (ease) is each size chart's own. The card sits under the sizes (T3 has the finder inside its size card). The height and weight are kept in a small cookie on the shopper's phone for next time, and each answer is kept with no name or phone number, for the size reports. Holding a + or − button repeats it."
     }
   }
 }

@@ -51,6 +51,7 @@ describe('PR 56 · size boxes', () => {
 describe('PR 56 · the measurement line', () => {
   const chart: PdpChart = {
     name: 'Polo',
+    easeInch: 4,
     fields: [
       { key: 'chest', label: 'chest', howTo: null },
       { key: 'length', label: 'length', howTo: null },

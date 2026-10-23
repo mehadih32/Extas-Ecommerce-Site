@@ -160,12 +160,13 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
   if (!page) return null;
   const r = settingsResolver();
   const at = { storeId };
-  const [kinds, fits, fallbackFit, howTo, cmDecimals, rules, tags] = await Promise.all([
+  const [kinds, fits, fallbackFit, howTo, cmDecimals, defaultEase, rules, tags] = await Promise.all([
     r ? r.value('inventory.sellableLocationKinds', at) : Promise.resolve(['WAREHOUSE' as const]),
     r ? r.value('catalogue.fits', at) : Promise.resolve([]),
     r ? r.value('catalogue.sizeCharts.fallbackFit', at) : Promise.resolve(''),
     r ? r.value('catalogue.sizeCharts.howToMeasure', at) : Promise.resolve({}),
     r ? r.value('catalogue.sizeCharts.cmDecimals', at) : Promise.resolve(0),
+    r ? r.value('catalogue.sizeCharts.defaultEaseInch', at) : Promise.resolve(0),
     priceRules(storeId),
     prisma.productTag.findMany({
       where: { storeId, archivedAt: null, productId: p.id, tag: { archivedAt: null } },
@@ -260,7 +261,7 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
       const fields = fieldsOf(garmentType?.measurementFields);
       const meta = readMeta(pick.chart.columns);
       const order = sizes.map((s) => s.key);
-      const input = { name: pick.chart.name, fields: meta.fields, rows: sortRows(readRows(pick.chart.rows), order) };
+      const input = { name: pick.chart.name, fields: meta.fields, rows: sortRows(readRows(pick.chart.rows), order), easeInch: meta.easeInch ?? defaultEase };
       const convert = (v: number, unit: 'inch' | 'cm') => bothUnits(v, unit, cmDecimals);
       const metaFor = (lang: ShopLang) =>
         new Map<string, FieldMeta>(

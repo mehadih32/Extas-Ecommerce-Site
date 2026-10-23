@@ -6,11 +6,14 @@
 // buy button was pressed without one (A8: one message, beside the boxes). A one-size product says so and is chosen.
 // Follow-up 62 (SIM-F-047): the owner's word under each box (`pdp.sizeWords`), and "Your size" on the size this browser
 // last put in the bag (`pdp.usualSize`), with the colours that have it when the one shown is sold out in it.
+// PR 58: the size Find My Size gave this shopper wears the same "Your size" tag (demo pdp_pills .pdp-ystag) and comes
+// first; only one size is ever tagged. When it is sold out in this colour a line says so and names the colours that have
+// it (demo pdp_mySizeOut).
 import { Fragment, useState } from 'react';
 import type { PdpSizeSettings } from '@extas/settings';
 import { Icon } from '../Icon';
 import { measureParts, measureText, sizePills } from '@/lib/shop/pdp-size';
-import { colourKeyOf, isOneSize, NO_COLOUR } from '@/lib/shop/product-model';
+import { colourKeyOf, isOneSize, NO_COLOUR, stockOf } from '@/lib/shop/product-model';
 import { usualElsewhere } from '@/lib/shop/usual-size';
 import { Bold } from './Bold';
 import { PdpChart } from './PdpChart';
@@ -20,7 +23,7 @@ import { usePdp } from './PdpRoot';
 
 export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string | null; fitPos: number | null; fitWord: string }) {
   const pdp = usePdp();
-  const { m, set, choice, err, unit, w, num, pickSize, pickColour, setUnit, usualSize } = pdp;
+  const { m, set, choice, err, unit, w, num, pickSize, pickColour, setUnit, usualSize, yours } = pdp;
   // SIM-F-035: a crossed-out size asks "tell me when it is back" (off by default, `pdp.size.notifyBack`)
   const [notify, setNotify] = useState<string | null>(null);
   if (!m.sizes.length) return null;
@@ -57,13 +60,17 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
   const fieldWord = (f: string) => (pdp.lang === 'bn' ? f : f.toLowerCase());
   const sizeWords = set.sizeWords;
   const worded = pills.some((p) => sizeWords[p.key]);
-  const usualPill = usualSize ? pills.find((p) => p.key === usualSize) : undefined;
-  const elsewhere = usualPill?.out ? usualElsewhere(m, choice.colour, usualPill.key) : [];
+  // one "Your size": Find My Size's answer first, else the size this browser last put in the bag
+  const fromFinder = yours && m.sizes.some((s) => s.key === yours.size) ? yours.size : null;
+  const tagged = fromFinder ?? (usualSize && pills.some((p) => p.key === usualSize) ? usualSize : null);
+  const tagWord = (k: 'tag' | 'aria' | 'out' | 'inStock') => (fromFinder ? { tag: 'finder.tag', aria: 'finder.tagAria', out: 'finder.savedOut', inStock: 'finder.otherColours' }[k] : `usual.${k}`);
+  const taggedOut = tagged !== null && stockOf(m, choice.colour, tagged) <= 0;
+  const elsewhere = tagged !== null && taggedOut ? usualElsewhere(m, choice.colour, tagged) : [];
   // the box's name says its word and "your size" too (both are drawn aria-hidden)
   const ariaOf = (p: (typeof pills)[number]) => {
     const size = sizeWords[p.key] ? `${p.label} ${sizeWords[p.key]}` : p.label;
     const label = p.gone ? w('sizeGoneAria', { size }) : p.out ? w('sizeOutAria', { size, colour }) : w('sizeAria', { size });
-    return p.key === usualSize ? w('usual.aria', { label }) : label;
+    return p.key === tagged ? w(tagWord('aria'), { label }) : label;
   };
 
   return (
@@ -93,7 +100,7 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
           <button
             key={p.key}
             type="button"
-            className={`size-pill${p.on ? ' on' : ''}${p.out ? ' out' : ''}${p.gone ? ' gone' : ''}${p.key === usualSize ? ' tagged' : ''}`}
+            className={`size-pill${p.on ? ' on' : ''}${p.out ? ' out' : ''}${p.gone ? ' gone' : ''}${p.key === tagged ? ' tagged' : ''}`}
             disabled={p.out && !ask}
             aria-disabled={p.out || undefined}
             role="radio"
@@ -113,21 +120,21 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
                 {sizeWords[p.key]}
               </span>
             ) : null}
-            {p.key === usualSize ? (
+            {p.key === tagged ? (
               <span className="pdp-ystag" aria-hidden="true">
-                {w('usual.tag')}
+                {w(tagWord('tag'))}
               </span>
             ) : null}
           </button>
         ))}
       </div>
-      {usualPill?.out ? (
-        <div className="xs mt8 pdp-ysout" data-testid="pdp-usual-out">
-          {w('usual.out', { size: usualPill.label, colour })}
+      {taggedOut && tagged ? (
+        <div className="xs mt8 pdp-ysout" data-testid="your-size-out">
+          {w(tagWord('out'), { size: m.sizes.find((s) => s.key === tagged)?.label ?? tagged, colour })}
           {elsewhere.length ? (
             <>
               {' '}
-              {w('usual.inStock')}{' '}
+              {w(tagWord('inStock'))}{' '}
               {elsewhere.map((x, i) => (
                 <Fragment key={x.key}>
                   {i ? ', ' : null}
