@@ -155,3 +155,30 @@
 .shop .acc-page .switch.on { background: var(--brand); }
 .shop .acc-page .switch.on::after { left: 21px; }
 .shop .wl-page.wl-in { padding: 0; }
+
+/* ---- PR 132 · the offer banner (demo r12-acct.css note 51): the wallet when there is credit, the owner's offers ---- */
+.shop .acc-ob { position: relative; overflow: hidden; background: linear-gradient(135deg, var(--hero) 0%, var(--brand-dark) 100%); color: var(--hero-ink); border-radius: var(--card-radius); padding: 16px 16px 18px; display: flex; flex-direction: column; }
+.shop .acc-ob::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 32%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.14), transparent); animation: accObSheen 9s ease-in-out 2.4s infinite; pointer-events: none; }
+@keyframes accObSheen { 0% { left: -40%; } 18%, 100% { left: 120%; } }
+@media (prefers-reduced-motion: reduce) { .shop .acc-ob::after { display: none; } }
+.shop .acc-ob-hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.shop .acc-ob-eb { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--hero-sub); }
+.shop .acc-ob-all { display: inline-flex; align-items: center; gap: 3px; min-height: 44px; font-size: 13.5px; font-weight: 700; color: var(--hero-ink); opacity: 0.92; text-decoration: none; }
+.shop .acc-ob-all:hover { opacity: 1; text-decoration: underline; }
+.shop .acc-ob-wal { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 10px; }
+.shop .acc-ob-wal .k { flex: 1 1 100%; font-size: 12.5px; color: var(--hero-sub); }
+.shop .acc-ob-wal .v { font-family: var(--font-display); font-size: 34px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+.shop .acc-ob-wal .s { font-size: 12.5px; color: var(--hero-sub); line-height: 1.35; }
+.shop .acc-ob-list { display: grid; gap: 8px; margin-top: 14px; }
+.shop .acc-ob-row { display: flex; align-items: flex-start; gap: 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: var(--radius); padding: 10px 12px; }
+.shop .acc-ob-row .ic { flex-shrink: 0; color: var(--hero-ink); opacity: 0.9; margin-top: 1px; }
+.shop .acc-ob-row .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.shop .acc-ob-row .tx b { font-size: 14.5px; font-weight: 700; line-height: 1.25; }
+.shop .acc-ob-row .tx span { font-size: 12.5px; color: var(--hero-sub); line-height: 1.4; }
+.shop .acc-ob-code { flex-shrink: 0; align-self: center; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; background: var(--hero-ink); color: var(--hero); border-radius: 3px; padding: 4px 8px; }
+.shop .acc-ob-cta { display: flex; width: 100%; justify-content: center; align-items: center; gap: 7px; margin-top: 14px; min-height: 50px; font-size: 16px; font-weight: 800; background: var(--hero-ink); color: var(--hero) !important; border-color: var(--hero-ink); position: relative; z-index: 1; }
+.shop .acc-ob-cta:hover { opacity: 0.9; }
+@media (min-width: 640px) { .shop .acc-ob { padding: 20px 22px 22px; } .shop .acc-ob-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .shop .acc-ob-cta { width: auto; align-self: flex-start; padding-left: 26px; padding-right: 22px; } }
+.shop .acc-ocode { display: inline-flex; gap: 8px; align-items: baseline; border: 1px dashed var(--brand-line); padding: 6px 10px; border-radius: var(--radius); background: var(--surface2); }
+.shop .acc-ocode b { letter-spacing: 0.1em; font-family: var(--font-display); }
+.shop .acc-ofr-t { font-size: 16px; }

@@ -7,7 +7,7 @@
 // or a made-up offer: the offer banner lists only the owner's own offers and the customer's real wallet balance.
 import { z } from 'zod';
 import { setting } from './define';
-import { templateTextSchema } from './schemas';
+import { localizedTextSchema, templateTextSchema } from './schemas';
 
 const V = 29;
 
@@ -40,6 +40,32 @@ export const accountListsSchema = z
     orders: z.int().min(1).max(100),
     walletEntries: z.int().min(1).max(100),
     newIn: z.int().min(0).max(24),
+  })
+  .strict();
+
+/** PR 132 — one of the owner's member offers on the banner: his own words, and the coupon code when it needs one. */
+export const accountOfferSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9-]{1,40}$/, { message: 'a short id: a-z, 0-9 and -' }),
+    /** Shown only while this coupon really works for the customer (on, in its dates, not for guests only, not used up). */
+    code: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z0-9_-]{1,40}$/)
+      .nullable(),
+    title: localizedTextSchema(80),
+    note: localizedTextSchema(160).nullable(),
+  })
+  .strict();
+
+/** PR 132 — the offer banner on My account: off until the owner turns it on; never empty, never made up. */
+export const accountOfferBannerSchema = z
+  .object({
+    enabled: z.boolean(),
+    offers: z
+      .array(accountOfferSchema)
+      .max(6)
+      .refine((v) => new Set(v.map((o) => o.id)).size === v.length, { message: 'each offer id once' }),
   })
   .strict();
 
@@ -137,5 +163,16 @@ export const accountSettings = {
     labelKey: 'account.lists.label',
     helpKey: 'account.lists.help',
     sortOrder: 80,
+  }),
+
+  // ---- PR 132 · the offer banner (the real wallet balance and the owner's own member offers) ----
+  'account.offerBanner': setting({
+    ...base,
+    schema: accountOfferBannerSchema,
+    default: { enabled: false, offers: [] },
+    valueType: 'JSON',
+    labelKey: 'account.offerBanner.label',
+    helpKey: 'account.offerBanner.help',
+    sortOrder: 90,
   }),
 };
