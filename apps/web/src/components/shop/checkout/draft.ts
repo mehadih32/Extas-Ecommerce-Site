@@ -91,3 +91,62 @@ export function nextOnEnter(ev: React.KeyboardEvent<HTMLFormElement>): void {
   if (i >= 0 && i < list.length - 1) list[i + 1]!.focus();
   else el.blur();
 }
+
+// PR 137 (Blueprint C6.5) — with the owner's `checkout.autofill.browserDays` above 0, this browser remembers the details
+// of his last order (localStorage, on this device only, never sent from here) for the next checkout, until the days run
+// out. At 0 nothing is kept, and what an earlier setting kept is forgotten.
+const REMEMBER_KEY = 'extas.checkout.details';
+const DAY_MS = 86_400_000;
+
+/** What the browser kept, while its days last (null: nothing, expired, empty or not ours). */
+export function readRemembered(raw: string | null, now: number): DetailsForm | null {
+  try {
+    const d = raw ? (JSON.parse(raw) as { form?: Partial<DetailsForm>; until?: unknown }) : null;
+    if (!d || typeof d.until !== 'number' || d.until < now || !d.form) return null;
+    const str = (v: unknown) => (typeof v === 'string' ? v : '');
+    const f = { name: str(d.form.name), phone: str(d.form.phone), address: str(d.form.address) };
+    return f.name || f.phone || f.address ? f : null;
+  } catch {
+    return null;
+  }
+}
+
+let remembered: { raw: string | null; form: DetailsForm | null } | null = null;
+
+/** The details this browser remembers (null while the server draws the page, when off, expired or blocked). */
+export function useRemembered(days: number): DetailsForm | null {
+  return useSyncExternalStore(
+    noSubscribe,
+    () => {
+      if (days <= 0) return null;
+      let raw: string | null = null;
+      try {
+        raw = localStorage.getItem(REMEMBER_KEY);
+      } catch {
+        raw = null;
+      }
+      if (!remembered || remembered.raw !== raw) remembered = { raw, form: readRemembered(raw, Date.now()) };
+      return remembered.form;
+    },
+    () => null,
+  );
+}
+
+/** Keeps the details of the order just placed for `days` days; 0 forgets them. */
+export function rememberDetails(form: DetailsForm, days: number): void {
+  try {
+    if (days <= 0) localStorage.removeItem(REMEMBER_KEY);
+    else localStorage.setItem(REMEMBER_KEY, JSON.stringify({ form, until: Date.now() + days * DAY_MS }));
+  } catch {
+    // storage blocked: nothing is kept
+  }
+}
+
+/** Forgets what an earlier setting kept (the owner turned the browser memory off). */
+export function forgetDetails(): void {
+  try {
+    if (localStorage.getItem(REMEMBER_KEY) !== null) localStorage.removeItem(REMEMBER_KEY);
+  } catch {
+    // storage blocked: nothing was kept
+  }
+}

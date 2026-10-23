@@ -119,3 +119,45 @@ export async function saveConsent(deps: AccountsDeps, input: { storeId: number; 
     return next;
   }, TX);
 }
+
+/** PR 137 — what his checkout starts with (the checkout's own three boxes). */
+export interface CheckoutPrefill {
+  name: string;
+  /** The local number as he types it (01712345678); empty when the stored one is not a mobile number. */
+  phone: string;
+  address: string;
+}
+
+/**
+ * PR 137 (Blueprint C6.5) — a signed-in customer's checkout fills itself: his name, his number and his default address,
+ * else the address of his last order. Null when the owner switched it off (`checkout.autofill.account`), or there is
+ * nothing to fill. Nothing is written; he can change every box.
+ */
+export async function checkoutPrefill(deps: AccountsDeps, input: { storeId: number; customerId: string }): Promise<CheckoutPrefill | null> {
+  checkStoreId(input.storeId);
+  const rule = await setting(deps, input.storeId, 'checkout.autofill');
+  if (!rule.account) return null;
+  const c = await deps.db.customer.findFirst({
+    where: { id: input.customerId, storeId: input.storeId, archivedAt: null, erasedAt: null },
+    select: {
+      name: true,
+      phone: true,
+      addresses: { where: { archivedAt: null }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }], take: 1, select: { addressLine: true } },
+    },
+  });
+  if (!c) return null;
+  const last = c.addresses[0]
+    ? null
+    : await deps.db.order.findFirst({
+        where: { storeId: input.storeId, customerId: input.customerId, archivedAt: null, status: { not: 'DRAFT' }, shippingAddressText: { not: null } },
+        orderBy: { placedAt: 'desc' },
+        select: { shippingAddressText: true },
+      });
+  const p = phoneNormalizeBD(c.phone ?? '');
+  const out: CheckoutPrefill = {
+    name: (c.name ?? '').trim(),
+    phone: p.ok ? p.digits : '',
+    address: (c.addresses[0]?.addressLine ?? last?.shippingAddressText ?? '').trim(),
+  };
+  return out.name || out.phone || out.address ? out : null;
+}

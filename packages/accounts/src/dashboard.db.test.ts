@@ -3,7 +3,7 @@
 // Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { accountSummary, orderCards, profileView, saveConsent, saveProfile, walletView } from './index';
+import { accountSummary, checkoutPrefill, orderCards, profileView, saveConsent, saveProfile, walletView } from './index';
 import { setUpAccounts, type AccountsFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -103,6 +103,19 @@ describe.skipIf(!HAS_TEST_DB)('PR 131 · My account', () => {
     const theirs = await f.t.prisma.customerAddress.create({ data: { storeId: f.A, customerId: other.id, name: 'x', phone: 'x', addressLine: 'Their house, their road' } });
     await saveProfile(f.deps(), { storeId: f.A, customerId: me.id, profile: { name: 'Rahim', addresses: [{ id: theirs.id, line: 'My house, my road, my area' }] } });
     expect((await f.t.prisma.customerAddress.findUniqueOrThrow({ where: { id: theirs.id } })).addressLine).toBe('Their house, their road');
+  });
+
+  it('PR 137: his checkout starts with his name, number and default address (else his last order address), unless switched off', async () => {
+    expect(await checkoutPrefill(f.deps(), { storeId: f.A, customerId: me.id })).toEqual({ name: 'Rahim', phone: '01700000131', address: 'My house, my road, my area' });
+    // without a saved address: the address of his last order
+    const solo = await f.customer('+8801700000137', f.A, 'Karim Mia');
+    await f.t.prisma.order.updateMany({ where: { number: 'T-1002' }, data: { customerId: solo.id, shippingAddressText: 'Flat 3, Road 9, Mirpur' } });
+    expect(await checkoutPrefill(f.deps(), { storeId: f.A, customerId: solo.id })).toEqual({ name: 'Karim Mia', phone: '01700000137', address: 'Flat 3, Road 9, Mirpur' });
+    // another store's view of him has nothing; the owner's switch turns it off
+    expect(await checkoutPrefill(f.deps(), { storeId: f.B, customerId: me.id })).toBeNull();
+    f.overrides.set('checkout.autofill', { account: false, browserDays: 0 });
+    expect(await checkoutPrefill(f.deps(), { storeId: f.A, customerId: me.id })).toBeNull();
+    f.overrides.delete('checkout.autofill');
   });
 
   it('consent: SMS and WhatsApp apart, a row per change with where it came from', async () => {

@@ -110,6 +110,16 @@ export const accountTrackExactSchema = z
   })
   .strict();
 
+/** PR 137 (Blueprint C6.5) — the checkout fills itself: from his account when signed in, from this browser when allowed. */
+export const checkoutAutofillSchema = z
+  .object({
+    /** A signed-in customer's checkout starts with his name, number and default address (or his last order's). */
+    account: z.boolean(),
+    /** Days this browser remembers the details of his last order for the next checkout; 0 = never. */
+    browserDays: z.int().min(0).max(365),
+  })
+  .strict();
+
 const base = { scope: 'store', isOwnerData: false, group: 'accounts', version: V } as const;
 
 export const accountSettings = {
@@ -242,5 +252,15 @@ export const accountSettings = {
     labelKey: 'account.track.exactAmount.label',
     helpKey: 'account.track.exactAmount.help',
     sortOrder: 130,
+  }),
+  // ---- PR 137 · the checkout fills itself (his account; this browser only when the owner allows it) ----
+  'checkout.autofill': setting({
+    ...base,
+    schema: checkoutAutofillSchema,
+    default: { account: true, browserDays: 0 },
+    valueType: 'JSON',
+    labelKey: 'checkout.autofill.label',
+    helpKey: 'checkout.autofill.help',
+    sortOrder: 140,
   }),
 };

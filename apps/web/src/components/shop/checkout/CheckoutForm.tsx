@@ -13,8 +13,12 @@
 // second press is the same order — and goes on to the payment or the thank-you page; a refusal says why in the page's
 // words (money that moved shows the new checkout first). The delivery note card; with the owner's switch on, what he
 // typed is kept for the team's follow-up a moment after he stops typing (SIM-F-026).
+// PR 137 (Blueprint C6.4, C6.5): the boxes start filled — this tab's draft first, then a signed-in customer's own
+// details (`prefill`, from his account), then what this browser remembers from his last order when the owner allows
+// it (`remember`); the browser's own autofill is read on the first touch even before he types. A start that only came
+// from his account or this browser is not sent for the follow-up until he changes something.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { checkForm, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
+import { checkForm, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
 import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
@@ -26,10 +30,13 @@ import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
 import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
-import { clearDraft, newOrderKey, nextOnEnter, saveDraft, useDraft } from './draft';
+import { clearDraft, forgetDetails, newOrderKey, nextOnEnter, rememberDetails, saveDraft, useDraft, useRemembered } from './draft';
 import { DRAFT_URL, fetchQuote, latest, ORDERS_URL, postJson, useSettle, type Choices, type PlaceAnswer } from './quote-client';
 
 const EMPTY_FORM: DetailsForm = { name: '', phone: '', address: '' };
+const FIELDS: readonly Field[] = ['name', 'phone', 'address'];
+/** A form with something in it, else null (a draft that only keeps the payment has empty boxes). */
+const filled = (f: DetailsForm | null | undefined): DetailsForm | null => (f && (f.name || f.phone || f.address) ? f : null);
 
 export interface MoneyFormat {
   currency: string;
@@ -65,10 +72,38 @@ export interface CheckoutFormProps {
   bagHref: string;
   /** Follow-up 57: the places under the address box (`delivery.suggest.*`), or null when off. */
   suggest: { minChars: number; storeId: number; words: { label: string; count: string } } | null;
+  /** PR 137: a signed-in customer's own details to start with (null: signed out, or the owner switched it off). */
+  prefill?: DetailsForm | null;
+  /** PR 137: how many days this browser remembers his last order's details; null: never (`checkout.autofill.browserDays`). */
+  remember?: { days: number } | null;
 }
 
-export function CheckoutForm({ view: first, words, money, lines, wa, fields, limits, settle: timing, addressMax, consent: consentStart, links, confirmStyle, note: noteCfg, capture, bagHref, suggest }: CheckoutFormProps) {
+export function CheckoutForm({
+  view: first,
+  words,
+  money,
+  lines,
+  wa,
+  fields,
+  limits,
+  settle: timing,
+  addressMax,
+  consent: consentStart,
+  links,
+  confirmStyle,
+  note: noteCfg,
+  capture,
+  bagHref,
+  suggest,
+  prefill = null,
+  remember = null,
+}: CheckoutFormProps) {
   const stored = useDraft();
+  const rememberDays = remember?.days ?? 0;
+  const kept = useRemembered(rememberDays);
+  useEffect(() => {
+    if (rememberDays <= 0) forgetDetails();
+  }, [rememberDays]);
   const [view, setView] = useState<CheckoutView>(first);
   const [reading, setReading] = useState(false);
   /** The line the delivery step shows the answer for; while the box says something else, it says "Reading …". */
@@ -100,7 +135,8 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   }, [bagStamp]);
   const [edited, setEdited] = useState<DetailsForm | null>(null);
   // Typed details survive a reload or a pull-to-refresh: kept in this tab only (sessionStorage), never sent from here.
-  const form: DetailsForm = edited ?? stored?.form ?? EMPTY_FORM;
+  const start = filled(stored?.form) ?? filled(prefill) ?? kept;
+  const form: DetailsForm = edited ?? start ?? EMPTY_FORM;
   const keep = (next: DetailsForm) => saveDraft({ form: next, confirmed: asked.current.confirmed });
   const [phoneChecked, setPhoneChecked] = useState(false);
   const change = (f: Field, v: string) => {
@@ -114,7 +150,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     keep(next);
   };
   // An address that comes back from this tab's draft is already finished: it is read once, at once (with his band).
-  const draftLine = stored?.form.address.trim() ?? '';
+  const draftLine = start?.address.trim() ?? '';
   const draftPay = payChoiceOf(stored?.pay);
   useEffect(() => {
     if ((!draftLine && !draftPay) || asked.current.line !== null || asked.current.pay !== null) return;
@@ -159,7 +195,8 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   // SIM-F-026: with the owner's switch on, what he typed is kept for the team a moment after he stops (a real phone only).
   const phoneOk = phoneNormalizeBD(form.phone).ok;
   const capturePay = stored?.pay ? view.pay.chosen : null;
-  const captureKey = capture && phoneOk ? JSON.stringify([form, note, capturePay]) : null;
+  const touched = edited !== null || filled(stored?.form) !== null;
+  const captureKey = capture && phoneOk && touched ? JSON.stringify([form, note, capturePay]) : null;
   useEffect(() => {
     if (!capture || !captureKey) return;
     const step = capturePay ? 'payment' : form.address.trim() ? 'delivery' : 'details';
@@ -233,6 +270,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     });
     const a = r.data;
     if (a?.ok && a.next) {
+      if (rememberDays > 0) rememberDetails(form, rememberDays);
       clearDraft();
       window.location.assign(a.next);
       return; // the button stays "Placing your order…" until the next page opens
@@ -255,6 +293,14 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
       return;
     }
     showToast(formEl, w('err.other'));
+  };
+  // C6.4: a browser that filled the boxes from its own saved details shows them to the page on the first touch; they
+  // are taken as if typed (kept in the draft, priced, and kept for the follow-up when the owner's switch is on).
+  const readAutofill = () => {
+    for (const f of FIELDS) {
+      const el = document.getElementById(`co-${f}`) as HTMLInputElement | HTMLTextAreaElement | null;
+      if (el && el.value && el.value !== form[f]) change(f, f === 'phone' ? latinDigits(el.value) : el.value);
+    }
   };
   const submit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
@@ -366,7 +412,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   );
 
   return (
-    <form id="co-form" noValidate data-testid="co-form" onSubmit={submit} onKeyDown={nextOnEnter} data-ready={check.ok ? '1' : '0'}>
+    <form id="co-form" noValidate data-testid="co-form" onSubmit={submit} onKeyDown={nextOnEnter} onFocusCapture={readAutofill} data-ready={check.ok ? '1' : '0'}>
       {wa ? (
         <div className="co-help">
           <div className="container row between" style={{ gap: 12 }}>
