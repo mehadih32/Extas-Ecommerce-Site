@@ -152,3 +152,4 @@ vite.config.ts.timestamp-*
 apps/web/src/generated/
 next-env.d.ts
 .lighthouseci/
+.lighthouseci-seeded/

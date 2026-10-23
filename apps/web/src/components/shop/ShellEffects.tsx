@@ -7,7 +7,7 @@
 //   · WhatsApp + Hotline in the footer stand side by side only when both fit at full size (1.4)
 //   · the floating WhatsApp disc steps aside over the footer and rides 12 px above any bar pinned to the bottom (C3)
 //   · the checkout header's WhatsApp shows once the page's own help button has scrolled away (3.2)
-//   · the page's bottom room is the height of the bar pinned to the bottom, measured (L15: --bar-pad)
+//   · the page's bottom room is the height of the bar pinned to the bottom, measured (L15: the wrapper's padding)
 //   · the footer columns step their type down instead of cutting a word (L05)
 //   · the hero pictures' pins keep the whole name and the price (PR 43, HERO_PIN_FIT)
 import { useEffect } from 'react';
@@ -128,25 +128,23 @@ function ckhWaTick() {
   a.classList.toggle('on', show);
 }
 
+// Follow-up 23: the room goes straight onto the page wrapper's own padding, and only when it changes. ~~A --bar-pad
+// variable and data-bar-pad on the shop root~~: a variable set on the root restyled every element of the page
+// (~70 ms of a slow phone's main thread on a page with products), for one padding.
 function bottomBarPad() {
-  const root = shopRoot();
-  if (!root) return;
-  if (window.matchMedia(DESK).matches) {
-    root.style.removeProperty('--bar-pad');
-    delete root.dataset.barPad;
-    return;
-  }
+  const wrap = document.querySelector<HTMLElement>('.shop .has-bnav');
+  if (!wrap) return;
   let H = 0;
-  document.querySelectorAll<HTMLElement>(BARS).forEach((b) => {
-    if (visibleFixed(b)) H = Math.max(H, b.offsetHeight);
-  });
-  if (H) {
-    root.style.setProperty('--bar-pad', `${H + 12}px`);
-    root.dataset.barPad = '1';
-  } else {
-    root.style.removeProperty('--bar-pad');
-    delete root.dataset.barPad;
+  if (!window.matchMedia(DESK).matches) {
+    document.querySelectorAll<HTMLElement>(BARS).forEach((b) => {
+      if (visibleFixed(b)) H = Math.max(H, b.offsetHeight);
+    });
   }
+  const want = H ? `calc(${H + 12}px + env(safe-area-inset-bottom, 0px))` : '';
+  if (wrap.dataset.barPad === want) return;
+  if (want) wrap.style.setProperty('padding-bottom', want, 'important');
+  else wrap.style.removeProperty('padding-bottom');
+  wrap.dataset.barPad = want;
 }
 
 function safe(f: () => void): () => void {

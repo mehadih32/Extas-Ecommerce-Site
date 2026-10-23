@@ -1,91 +1,67 @@
 /* The storefront's web fonts (PR 82), self-hosted (OFL-1.1, from @fontsource 5.3.0; licences next to the files): the
- * demo's families and weights — Instrument Sans 400–700 (body), Archivo 500–800 (display), Hind Siliguri 500 (the 400
- * and 600 faces are in site.css, loaded on every page) and Cormorant Garamond 500–700 (the Ivory theme's display face).
+ * demo's families and weights — Instrument Sans 400–700 (body) and Archivo 500–800 (display), one variable file
+ * each, ~~Hind Siliguri 500 (the 400 and 600 faces are in site.css, loaded on every page)~~ the shop's own Hind
+ * Siliguri family (`Hind Siliguri Shop`, below; follow-up 23) and Cormorant Garamond 500–700 (the Ivory theme's
+ * display face).
  * Built into the app, so a build never downloads fonts. A face is only downloaded when text on the page uses it.
  * ~~display: optional — text never waits for or re-paints with a web font (CLS 0).~~ The Latin faces use display:
  * swap, as the demo loads them: with optional, a face that arrives after the first 100 ms (the menu's Archivo 600,
  * opened later) was skipped for the whole visit, so the phone showed the fallback instead of the demo's type. The
  * first screen's Latin faces are preloaded (lib/shop/font-preload.ts), so they are in before the first paint. The
- * Bengali faces (70 KB each) stay optional, like site.css's: preloading them held back the stylesheet and cost the
- * Bengali home 0.8 s of first paint on a slow phone line; until one is cached the phone's own Bengali font shows. */
+ * Bengali faces (~~70 KB~~ 38 KB each) stay optional, like site.css's: preloading them held back the stylesheet and
+ * cost the Bengali home 0.8 s of first paint on a slow phone line; until one is cached the phone's own Bengali font
+ * shows.
+ * Follow-up 23: the Bengali faces are cut to the Bengali block without hinting (phones ignore hinting): 38 KB
+ * instead of 71 KB each, so they are cached sooner and cost the first visit half the data. */
+/* Follow-up 23 (PR 82): ~~one static file per weight — Instrument Sans 400, 500, 600, 700 and Archivo 500, 600, 700,
+ * 800 (eight files, 125 KB)~~. Each weight that arrived after the first paint (the menu's 500, a badge's 700, a
+ * heading's 700) re-laid the whole page out once: about 120 ms of a slow phone's main thread each time, six times on a
+ * Bengali page with products. Now each family is one variable file (@fontsource-variable 5.3.0, same design and
+ * licence; Archivo cut to its 500–800 weights): two files, 62 KB, both preloaded, so every weight is in before the
+ * first paint. The static files stay for the admin (fonts/admin.css). */
 @font-face {
   font-family: 'Instrument Sans';
   font-style: normal;
   font-display: swap;
-  font-weight: 400;
-  src: url('./instrument-sans/instrument-sans-latin-400-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: 'Instrument Sans';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 500;
-  src: url('./instrument-sans/instrument-sans-latin-500-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: 'Instrument Sans';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 600;
-  src: url('./instrument-sans/instrument-sans-latin-600-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: 'Instrument Sans';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 700;
-  src: url('./instrument-sans/instrument-sans-latin-700-normal.woff2') format('woff2');
+  font-weight: 400 700;
+  src: url('./instrument-sans/instrument-sans-latin-wght-normal.woff2') format('woff2');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
   font-family: 'Archivo';
   font-style: normal;
   font-display: swap;
-  font-weight: 500;
-  src: url('./archivo/archivo-latin-500-normal.woff2') format('woff2');
+  font-weight: 500 800;
+  src: url('./archivo/archivo-latin-wght-normal.woff2') format('woff2');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
+/* Follow-up 23: the shop's Bengali family is `Hind Siliguri Shop` (lib/shop/tokens.ts). ~~Its Bengali 500 face was
+ * declared here~~: the Bengali faces (400, 500, 600) are declared by the shop layout only once a cookie says their
+ * files are cached (lib/shop/font-preload.ts, components/shop/BengaliFontWarm.tsx), because a Bengali face landing
+ * after the first paint re-shaped the whole page each time. Here: its Latin letters (a Hind Siliguri theme) and,
+ * below, the taka sign. */
 @font-face {
-  font-family: 'Archivo';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 600;
-  src: url('./archivo/archivo-latin-600-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: 'Archivo';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 700;
-  src: url('./archivo/archivo-latin-700-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: 'Archivo';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 800;
-  src: url('./archivo/archivo-latin-800-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: 'Hind Siliguri';
+  font-family: 'Hind Siliguri Shop';
   font-style: normal;
   font-display: optional;
-  font-weight: 500;
-  src: url('./hind-siliguri/hind-siliguri-bengali-500-normal.woff2') format('woff2');
-  unicode-range: U+0951-0952,U+0964-0965,U+0980-09FE,U+1CD0,U+1CD2,U+1CD5-1CD6,U+1CD8,U+1CE1,U+1CEA,U+1CED,U+1CF2,U+1CF5-1CF7,U+200C-200D,U+20B9,U+25CC,U+A8F1;
+  font-weight: 400;
+  src: url('./hind-siliguri/hind-siliguri-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
-  font-family: 'Hind Siliguri';
+  font-family: 'Hind Siliguri Shop';
   font-style: normal;
   font-display: optional;
   font-weight: 500;
   src: url('./hind-siliguri/hind-siliguri-latin-500-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Hind Siliguri Shop';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 600;
+  src: url('./hind-siliguri/hind-siliguri-latin-600-normal.woff2') format('woff2');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
@@ -117,7 +93,7 @@
  * (2.5 KB each, cut from the same Hind Siliguri files, OFL-1.1) carry that one sign with display: swap; the price
  * weight's face is preloaded (lib/shop/font-preload.ts). Declared last, so the browser takes them for the sign. */
 @font-face {
-  font-family: 'Hind Siliguri';
+  font-family: 'Hind Siliguri Shop';
   font-style: normal;
   font-display: swap;
   font-weight: 400;
@@ -125,7 +101,7 @@
   unicode-range: U+09F3;
 }
 @font-face {
-  font-family: 'Hind Siliguri';
+  font-family: 'Hind Siliguri Shop';
   font-style: normal;
   font-display: swap;
   font-weight: 500;
@@ -133,7 +109,7 @@
   unicode-range: U+09F3;
 }
 @font-face {
-  font-family: 'Hind Siliguri';
+  font-family: 'Hind Siliguri Shop';
   font-style: normal;
   font-display: swap;
   font-weight: 600;

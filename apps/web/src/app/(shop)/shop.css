@@ -489,7 +489,7 @@
 .shop .hm-hero-btns .hm-btn-line.hm-sets-v3:hover { background: color-mix(in srgb, var(--hero-sub) 40%, var(--brand)); }
 .shop .langpill .lp-a, .shop .langpill .lp-b, .shop.shop[lang="bn"] .langpill .lp-a, .shop.shop[lang="bn"] .langpill .lp-b { background: transparent; color: inherit; font-weight: 700; opacity: 0.68; }
 .shop .langpill .lp-a.on, .shop .langpill .lp-b.on, .shop.shop[lang="bn"] .langpill .lp-a.on, .shop.shop[lang="bn"] .langpill .lp-b.on { background: var(--footer-ink); color: var(--footer); font-weight: 800; opacity: 1; }
-.shop .langpill .lp-b { font-family: 'Hind Siliguri',var(--font-body); font-size: 1.08em; }
+.shop .langpill .lp-b { font-family: 'Hind Siliguri Shop',var(--font-body); font-size: 1.08em; }
 .shop .mn-foot .langpill { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .shop .mn-foot .langpill .lp-a.on, .shop .mn-foot .langpill .lp-b.on, .shop.shop[lang="bn"] .mn-foot .langpill .lp-a.on, .shop.shop[lang="bn"] .mn-foot .langpill .lp-b.on { background: var(--ink); color: var(--bg); }
 .shop .mn-foot .langpill { min-height: 36px; height: 36px; padding: 0px 3px; }
@@ -544,7 +544,7 @@
 .shop .hdr .logo { display: inline-flex; align-items: center; min-height: 32px; }
 @media (max-width: 372px) { .shop .hdr .hdr-wish { display: none !important; } }
 .shop .skip { transition: none; }
-@media (max-width: 1023px) { .shop.shop[data-bar-pad] .has-bnav:not(#_) { padding-bottom: calc(var(--bar-pad) + env(safe-area-inset-bottom,0px)) !important; } }
+/* ~~@media (max-width: 1023px) { .shop.shop[data-bar-pad] .has-bnav:not(#_) { padding-bottom: calc(var(--bar-pad) + env(safe-area-inset-bottom,0px)) !important; } }~~ follow-up 23: ShellEffects sets the padding on .has-bnav itself */
 .shop .ftr-s3 .ftr-cols a { min-height: 44px; box-sizing: border-box; }
 .shop input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]), .shop .input { font-size: 16px !important; }
 @media (min-width: 1024px) { .shop .ftr-s4 .ftr-reach:not(.ftr-two) { grid-template-columns: minmax(0px, 1fr) !important; } }
