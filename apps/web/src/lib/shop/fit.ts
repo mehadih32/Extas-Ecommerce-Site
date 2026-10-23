@@ -70,6 +70,19 @@ interface Item {
  */
 export const HERO_PIN_FIT: FitRule = { sel: '.hm-slider .hm-sl .hm-pin', min: 9, minDesk: 11, collapse: true };
 
+/**
+ * PR 48 · the phone's sticky Filter · Sort · On sale row scales as ONE box, so the three keep one type size; when even the floor
+ * is too big (a long label, a 320 px phone) the row drops its two leading icons (.fit-x) and fits again (demo
+ * 21-category.js, AUTO-FIT).
+ */
+export const CAT_TOOLS_FIT: FitRule = { sel: '.cat-ptools.cat-ph', min: 10.5, collapse: true, box: true };
+
+/** The product card's two tight spots (demo 21-category.js): the swatches-and-fit line, and the picture's badge. */
+export const CARD_FIT: readonly FitRule[] = [
+  { sel: '.pcard .pinfo>.row.between', min: 10, collapse: true },
+  { sel: '.pcard .badge-img', min: 8.5, collapse: true },
+];
+
 /** A rule's floor for this screen. */
 export function fitFloor(rule: FitRule, desktop: boolean): number {
   return desktop && rule.minDesk != null ? rule.minDesk : rule.min;
