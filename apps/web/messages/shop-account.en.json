@@ -231,6 +231,38 @@
       "errType": "That is not a photo. Please pick a JPG or PNG.",
       "errRead": "That photo would not open. Try another one.",
       "errSave": "This browser could not keep the photo."
+    },
+    "order": {
+      "pageTitle": "Order {number}",
+      "eyebrow": "Order",
+      "crumb": "Order {number}",
+      "items": "Items",
+      "addOn": "Add-on",
+      "set": "Set price",
+      "qty": "Qty {n}",
+      "deliveringTo": "Delivering to",
+      "summary": "Payment summary",
+      "subtotal": "Subtotal",
+      "discount": "Offers & codes",
+      "wallet": "Wallet",
+      "delivery": "Delivery",
+      "free": "FREE",
+      "onCall": "On the call",
+      "total": "Total",
+      "payment": "Payment",
+      "codDue": "Pay {amount} in cash when it arrives",
+      "codDone": "Paid in cash on delivery",
+      "paid": "Paid",
+      "due": "{amount} still to pay",
+      "payNow": "Pay now",
+      "help": "Need help with this order?",
+      "helpWa": "Message us on WhatsApp",
+      "helpMsg": "Hi {store}, I need help with order {number}.",
+      "promptTitle": "Log in to see your order",
+      "promptText": "Log in with the mobile number you used for this order.",
+      "notYours": "This order is not in your account",
+      "notYoursText": "Log in with the mobile number used for order {number}.",
+      "back": "All my orders"
     }
   }
 }

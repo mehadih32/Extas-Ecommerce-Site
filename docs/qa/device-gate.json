@@ -46,6 +46,12 @@
       "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-home\"]"]
     },
     {
+      "$comment": "PR 134 — the sample account's own order page (TRY-131, made by the same fill): its lines, the money and how it is paid.",
+      "paths": ["/account/orders/TRY-131", "/bn/account/orders/TRY-131"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-line\"]", "[data-testid=\"order-summary\"]"]
+    },
+    {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",
       "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",

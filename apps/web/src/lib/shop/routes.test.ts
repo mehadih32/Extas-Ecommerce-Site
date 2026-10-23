@@ -8,11 +8,12 @@ describe('coming-soon pages (CN-010)', () => {
     // ~~ROUTES.wishlist~~ PR 71 built the wishlist; ~~ROUTES.help('faq')~~ PR 75 built the help pages (Ways to pay is still to come)
     // ~~ROUTES.search~~ PR 73 built the results page
     // ~~ROUTES.account, ROUTES.login, ROUTES.orders~~ PR 130 / 131 built the login and My account
-    for (const p of [ROUTES.order('T-1001'), ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
+    // ~~ROUTES.order('T-1001')~~ PR 134 built the order page
+    for (const p of [ROUTES.combos, ROUTES.buildSet, ROUTES.journal, ROUTES.help('payment')])
       expect(comingSoon(p, '/p'), p).not.toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();
-    expect(comingSoon('/account/orders/T-1001/', '/p')).toBe('account');
+    // ~~expect(comingSoon('/account/orders/T-1001/', '/p')).toBe('account');~~ PR 134
   });
 
   it('the product page is built (PR 49): its addresses are no longer "coming soon"', () => {
@@ -42,8 +43,9 @@ describe('coming-soon pages (CN-010)', () => {
     // ~~expect(comingSoon(ROUTES.account, '/p')).toBe('account');~~ PR 131 built My account
   });
 
-  it('PR 131: My account and its sections are built; only the page of one order is still coming (PR 134)', () => {
+  it('PR 131 / 134: My account, its sections and the page of one order are built', () => {
     for (const p of [ROUTES.account, ROUTES.orders, `${ROUTES.orders}/`, ROUTES.login, '/account/profile', '/account/wallet', '/account/anything']) expect(comingSoon(p, '/p'), p).toBeNull();
-    expect(comingSoon(ROUTES.order('T-1001'), '/p')).toBe('account');
+    // ~~expect(comingSoon(ROUTES.order('T-1001'), '/p')).toBe('account');~~ PR 134 built it
+    expect(comingSoon(ROUTES.order('T-1001'), '/p')).toBeNull();
   });
 });

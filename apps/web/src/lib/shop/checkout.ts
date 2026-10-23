@@ -109,6 +109,23 @@ export async function currentPayment(c: Pick<ShopContext, 'storeId'>, number: st
   }
 }
 
+/**
+ * PR 134 — an order for My account's order page: the signed-in customer's own (any device), or the one this browser
+ * placed. `signedIn` tells the page which "log in" to show when there is none (signed out, or not his).
+ */
+export async function accountReceipt(c: Pick<ShopContext, 'storeId'>, number: string): Promise<{ receipt: Receipt | null; signedIn: boolean }> {
+  const deps = checkoutDeps();
+  const [visitor, me] = await Promise.all([visitorId(), signedIn()]);
+  if (!deps || (!visitor && !me)) return { receipt: null, signedIn: !!me };
+  try {
+    const receipt = await withTimeout(orderReceipt(deps, { storeId: c.storeId, visitorId: visitor, customerId: me?.customer.id ?? null, number }), settingsTimeoutMs() * 4);
+    return { receipt, signedIn: !!me };
+  } catch (e) {
+    console.warn(`shop: the order is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return { receipt: null, signedIn: !!me };
+  }
+}
+
 /** PR 126 — the visitor's own order for the thank-you page (null: not his order, no such order, no database). */
 export async function currentReceipt(c: Pick<ShopContext, 'storeId'>, number: string): Promise<Receipt | null> {
   const deps = checkoutDeps();
