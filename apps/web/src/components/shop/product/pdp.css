@@ -700,3 +700,16 @@
  * layer above the WhatsApp disc) came later in the page and was drawn over it near the end of a short window. On the
  * product page the disc and the footer each step one layer down, keeping disc < footer < slim bar < header. */
 @media (min-width: 1024px) { html .shop:has(.pdp-page) .wa-fab { z-index: 37; } html .shop:has(.pdp-page) .ftr { z-index: 38; } }
+
+/* PR 67 — the rows at the foot of the page (demo r11-pdp.css, r12-zz-ownerB.css P5, r12-zzdesk-b.css) */
+.shop .pdp-page .pdp-rv > * { flex: 0 0 46%; }
+@media (min-width: 768px) { .shop .pdp-page .pdp-rv > * { flex: 0 0 30%; } }
+@media (min-width: 1024px) { .shop .pdp-page .pdp-rv > * { flex: 0 0 calc((100% - 36px) / 4); } }
+.shop .pdp-page .pdp-rowblk.hide-d + .dkb-row { margin-top: 0px; }
+.shop .pdp-page .ob-rv-grid[hidden] { display: none !important; }
+.shop .pdp-page .ob-rv-dots { display: inline-flex; gap: 6px; align-items: center; }
+.shop .pdp-page .ob-rv-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width 0.2s ease, background 0.2s ease; }
+.shop .pdp-page .ob-rv-dots i.on { width: 20px; border-radius: 4px; background: var(--brand); }
+@media (prefers-reduced-motion: reduce) { .shop .pdp-page .ob-rv-dots i { transition: none; } }
+.shop .pdp-page .pdp-rowblk .sec-hd { align-items: center; }
+.shop .pdp-page .pdp-rowblk .sec-hd .link { display: inline-flex; align-items: center; justify-content: flex-end; min-height: 44px; min-width: 44px; flex: none; }

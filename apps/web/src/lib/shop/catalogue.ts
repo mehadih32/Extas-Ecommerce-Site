@@ -490,6 +490,19 @@ export function cardsByIds(storeId: number, ids: readonly string[]): Promise<Map
 }
 
 /**
+ * PR 67 / 71 · products by id as cards, in the order given, only those a customer may see now (published, not archived,
+ * in a visible category): the "Recently viewed" row and the wishlist page.
+ */
+export function liveCardsByIds(storeId: number, ids: readonly string[]): Promise<ShopCard[]> {
+  return guarded('cards by id', [] as ShopCard[], async () => {
+    if (!ids.length) return [];
+    const rows = await rowsOf({ where: { storeId, id: { in: [...new Set(ids)] }, ...live, category: { isVisible: true, archivedAt: null } } });
+    const byId = new Map((await toCards(storeId, rows)).map((c) => [c.id, c]));
+    return ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+  });
+}
+
+/**
  * PR 114 · "You may also like" under the bag (and the panel's "Complete the look", PR 106): published, in-stock products
  * from the same categories as the bag's items (the first item's category first), never one already in the bag. `from`
  * says where they came from, so the line under the row's title is true: `same` = the same categories; `new` = none

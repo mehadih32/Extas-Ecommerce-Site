@@ -1,8 +1,11 @@
 'use client';
 // PR 42 — a sliding row on the one engine (src/lib/shop/slider.ts). Every sliding row on the site is this component:
 // its children are the cards. The engine's numbers are the setting `slider.engine`, handed down by the page.
+// PR 67: `fitCards` — a row of product cards fits the cards' tight spots (CARD_FIT, the badge and the swatch line)
+// after the first paint, before the copies are made, so the copies carry the fitted type too.
 import type { SliderEngine } from '@extas/settings';
 import { useEffect, useRef, type ReactNode } from 'react';
+import { CARD_FIT, fitAll } from '@/lib/shop/fit';
 import { afterPaint, whenNear, type Cancel } from '@/lib/shop/later';
 import { bindSmoothRow } from '@/lib/shop/slider';
 
@@ -12,6 +15,7 @@ export function SmoothRow({
   engine,
   dir = -1,
   speed,
+  fitCards = false,
   children,
 }: {
   id: string;
@@ -19,9 +23,17 @@ export function SmoothRow({
   engine: SliderEngine;
   dir?: -1 | 1;
   speed?: number;
+  fitCards?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // the fit runs after the first paint whether or not the row is near, so no card is ever drawn cut (its copies are
+    // made later, from the fitted cards)
+    const el = ref.current;
+    if (!el || !fitCards) return;
+    return afterPaint(() => fitAll(el, CARD_FIT));
+  }, [fitCards]);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
