@@ -170,11 +170,38 @@ rm -rf "$T"
 AB=../stack/caddy/auth-block.sh
 tok="$(printf x | sha256sum | cut -c1-64)"
 blk="$(bash "$AB" "# fp" extas 'HASH' "$tok" 30)"
-want="@preview_needed not header_regexp Cookie (?:^|;\\s*)extas_preview=$tok(?:;|\$)"
+want="$(printf '\t')not header_regexp Cookie (?:^|;\\s*)extas_preview=$tok(?:;|\$)"
 check "gate: cookie match and route" "$(grep -cxF "$want" <<<"$blk"):$(grep -c '^route @preview_needed {$' <<<"$blk")" "1:1"
 check "gate: the cookie comes after the login" "$(awk '/basic_auth/{a=NR} /Set-Cookie/{c=NR} END{print (a<c)}' <<<"$blk")" "1"
 check "gate: 30 days, Secure and HttpOnly" "$(grep -c 'Max-Age=2592000; Secure; HttpOnly; SameSite=Lax' <<<"$blk")" "1"
 check "gate: a token that is not hex is refused" "$(bash "$AB" "# fp" extas H 'x;y' 30 >/dev/null 2>&1; echo $?)" "2"
+# Follow-up 80 (PR 196): only POST /api/erp/webhook passes without the preview login (it proves itself with its HMAC
+# signature); the exemption is one negated set of exactly that method and that path, beside the cookie test.
+want_ex="$(printf '\tnot {\n\t\tmethod POST\n\t\tpath /api/erp/webhook\n\t}')"
+check "gate: the ERP webhook POST is the one exemption" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "1:1:1"
+check "gate: the exemption block, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
+check "gate: cookie test and exemption in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "2"
+check "gate: the server re-writes an older gate (fingerprint v3)" "$(grep -c '# preview gate v3 for' ../server/steps/09-stack.sh)" "1"
+# With a Caddy binary (CADDY_BIN, or caddy on PATH), the gate runs for real: the webhook POST reaches the app with no
+# login and no cookie, and nothing else does. CI has no Caddy, so this part runs where one is installed.
+CADDY="${CADDY_BIN:-$(command -v caddy || true)}"
+if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
+  T="$(mktemp -d)"; port=18471
+  bash "$AB" "# fp" extas "$("$CADDY" hash-password --plaintext gate-pw)" "$tok" 30 > "$T/auth.caddy"
+  printf '{\n\tadmin off\n}\n:%s {\n\timport %s/auth.caddy\n\trespond "app" 200\n}\n' "$port" "$T" > "$T/Caddyfile"
+  "$CADDY" run --config "$T/Caddyfile" --adapter caddyfile >"$T/log" 2>&1 & cpid=$!
+  for _ in $(seq 50); do curl -s -o /dev/null "localhost:$port" && break; sleep 0.1; done
+  code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+  u="http://localhost:$port"
+  check "gate (caddy): the webhook POST passes with no login" "$(code -X POST "$u/api/erp/webhook" -d '{}'):$(code -X POST "$u/api/erp/webhook?x=1")" "200:200"
+  check "gate (caddy): other methods and paths still ask" "$(code "$u/api/erp/webhook"):$(code -X PUT "$u/api/erp/webhook"):$(code -X POST "$u/api/erp/webhook/x"):$(code -X POST "$u/api/erp/webhooks"):$(code -X POST "$u/admin/login"):$(code "$u/")" "401:401:401:401:401:401"
+  check "gate (caddy): the cookie and the login still work" "$(code -H "Cookie: extas_preview=$tok" "$u/"):$(code -u extas:gate-pw "$u/"):$(code -u extas:wrong "$u/")" "200:200:401"
+  check "gate (caddy): the webhook answer sets no preview cookie" "$(curl -s -D - -o /dev/null -X POST "$u/api/erp/webhook" | grep -ci 'set-cookie' || true)" "0"
+  kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
+  rm -rf "$T"
+else
+  echo "SKIP gate (caddy): no Caddy binary here (set CADDY_BIN to run the live gate checks)"
+fi
 
 # Deploy report (PR 4): commit, Dhaka time, result, migration, health check, the failing step in plain English — and
 # nothing that looks like a connection string or an e-mail, and never an older run's result.
