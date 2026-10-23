@@ -4,6 +4,9 @@
 // with PRICE_CHANGED (and the checkout as it is now) when anything moved; the zone, band and charge come from that one
 // read — never a second reading of the address text. An address nothing settles still becomes an order: flagged
 // "address unclear", the charge not fixed, and a call task for the team (PR 563); a band with no charge yet likewise.
+// PR 563 also never holds an order over an address: it is placed like any other (PLACED, confirmable), and a line that
+// says nowhere where the house is (a landmark only, SIM-F-030: `checkout.address.check`) gets the "address check" flag
+// and the same call task, so the confirmation call asks for directions. One call task per order, the weightiest reason.
 //
 // One press = one order: the page makes an order key once and sends it with every retry (a slow network, a double
 // tap). The key is claimed inside the order's own transaction, so a lost answer or a second press finds the order
@@ -23,6 +26,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { linkOrderAccount } from '@extas/accounts';
 import { findBag } from '@extas/cart';
 import type { Prisma } from '@extas/db/client';
+import { hasAddressDetail } from '@extas/delivery';
 import { convertCart, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
 import { z } from 'zod';
 import { addressInputSchema } from './address';
@@ -78,9 +82,9 @@ export interface PlaceResult {
 }
 
 /** The order's flags the team's screens read (PR 563 address queue, the payment follow-up). */
-export const ORDER_FLAGS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', paymentPending: 'PAYMENT_PENDING', paymentFailed: 'PAYMENT_FAILED' } as const;
+export const ORDER_FLAGS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentPending: 'PAYMENT_PENDING', paymentFailed: 'PAYMENT_FAILED' } as const;
 /** Why the team calls (CallTask.reason). */
-export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', paymentFailed: 'PAYMENT_FAILED' } as const;
+export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: 'PAYMENT_FAILED' } as const;
 /** What the order's events are called. */
 export const ORDER_EVENTS = { placed: 'order.placed', paid: 'payment.paid', failed: 'payment.failed', retry: 'payment.retry' } as const;
 /** Where the order came from (OrderEvent.source, ConsentRecord.source). */
@@ -217,7 +221,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (again) return again;
 
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
-  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate] = await Promise.all([
+  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck] = await Promise.all([
     s('checkout.form.nameMin'),
     s('checkout.form.addressMin'),
     s('checkout.fieldOrder'),
@@ -229,6 +233,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     s('store.currency'),
     consentSettings(deps, storeId),
     s('account.autoCreate.enabled'),
+    s('checkout.address.check'),
   ]);
   const check = checkForm(d.form, { nameMin, addressMin }, fieldOrder(order));
   if (!check.ok) throw new CheckoutError('FORM', 'a field is not finished', [check.field], { field: check.field, problem: check.problem satisfies FieldProblem });
@@ -262,9 +267,12 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   const charged = resolved?.line.status === 'resolved' ? resolved.line : null;
   const unclear = !resolved;
   const notSet = q.charge.state === 'not-set';
+  // SIM-F-030: a landmark-only line ("bazar er pashe, Kurigram") — the band is settled, the house is not
+  const noDetail = detailCheck.enabled && !hasAddressDetail(d.form.address, detailCheck.words);
   const flags: string[] = [];
   if (unclear) flags.push(ORDER_FLAGS.addressUnclear);
   if (notSet) flags.push(ORDER_FLAGS.chargeNotSet);
+  if (noDetail) flags.push(ORDER_FLAGS.addressCheck);
   if (prepaid) flags.push(ORDER_FLAGS.paymentPending);
   const consent = consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
@@ -315,6 +323,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(resolved ? { via: resolved.read.via, placeSure: resolved.read.placeSure, band: resolved.read.band.key, charged: charged?.quote.band.key ?? null, clues: resolved.read.clues } : {}),
             ...(q.address.status === 'ask' ? { reason: q.address.read.reason } : {}),
             charge: q.charge,
+            detail: !noDetail,
             fingerprint: q.fingerprint,
           },
           addressUnclear: unclear,
@@ -392,7 +401,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           data: { storeId, orderId: o.id, method, provider: choice!.option ?? choice!.method, purpose: 'ORDER', status: 'INITIATED', amountMinor: t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1` },
         });
       }
-      const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : null;
+      const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : null;
       if (reason) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId: ownerId, reason } });
       await tx.checkoutDraft.updateMany({ where: { storeId, visitorId, convertedOrderId: null }, data: { convertedOrderId: o.id, cartId, lastStep: 'placed', lastActivityAt: now } });
       await tx.idempotencyKey.update({

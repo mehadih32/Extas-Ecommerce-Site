@@ -12,6 +12,8 @@
 //   GET   /api/admin/orders/reviews?status=open|decided|all   the duplicate review queue (orders.risk.read)
 //   POST  /api/admin/orders/reviews/:alertId                  {decision: approve|decline|hold|ask|merge, note?, holdReasonKey?, mergeWith?}
 //   POST  /api/admin/orders/merge                             {orderIds: [a, b], note?} one parcel (orders.merge)
+//   GET   /api/admin/orders/calls?reason=&status=open|closed|all&cursor=&limit=
+//                                                             PR 563: the call queue (address unclear, address check …)
 //   GET   /api/admin/orders/:id                               one order: lines, money, shipment, payments, refund
 //                                                             requests, reviews, notes, timeline, the commands open now
 //   POST  /api/admin/orders/:id/confirm                       {version?} (orders.confirm)
@@ -104,6 +106,11 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['alertId']));
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.decideReview(x.deps, x.who, b, await body(request)) }));
+  }
+  if (a === 'calls') {
+    if (path.length > 1) return notFound();
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'orders.read', async (x) => ({ ...(await od.callQueue(x.deps, x.who, query(x.url, ['reason', 'status', 'cursor', 'limit']))) }));
   }
   if (a === 'merge') {
     if (path.length > 1) return notFound();

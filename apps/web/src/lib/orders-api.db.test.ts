@@ -73,6 +73,16 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await ordersRoute(call('GET', '/api/admin/orders?storeId=0', { cookie: owner }), deps, [])).status).toBe(400);
   });
 
+  it('PR 563: the call queue — an order placed over an unclear address waits there, never on hold; a reader may look', async () => {
+    const o = await f.place('api-calls', { address: 'Notun Para, Shahid Minar er pashe' });
+    const q = await api('GET', ['calls'], { cookie: reader });
+    expect(q.status).toBe(200);
+    const row = q.body.rows.find((r: { order: { id: string } | null }) => r.order?.id === o.orderId);
+    expect(row).toMatchObject({ reason: 'ADDRESS_UNCLEAR', status: 'OPEN', order: { status: 'PLACED', addressUnclear: true, shippingAddressText: 'Notun Para, Shahid Minar er pashe' } });
+    expect((await api('POST', ['calls'], { body: {} })).status).toBe(405);
+    expect((await api('GET', ['calls', 'x'])).status).toBe(404);
+  });
+
   it('the list, the reasons and one order', async () => {
     const o = await f.place('api-list');
     const list = await api('GET', []);

@@ -114,6 +114,43 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(await f.t.prisma.callTask.count({ where: { orderId: o.id, reason: 'ADDRESS_UNCLEAR', status: 'OPEN' } })).toBe(1);
     });
 
+    it('PR 563: with no Inside/Outside answer either, the order is placed — never held — and the page and the order agree', async () => {
+      const s = await shown('no-answer', { line: 'Notun Para, Shahid Minar er pashe' });
+      expect(s.q.delivery.state).toBe('ask');
+      expect(s.q.charge.state).toBe('unknown');
+      const r = await s.place();
+      expect(r.next).toBe('thanks');
+      const o = await orderOf(r.orderId);
+      expect(o).toMatchObject({ status: 'PLACED', holdReasonCode: null, onHoldSince: null, addressUnclear: true, chargeFixed: false, deliveryChargeMinor: 0, totalMinor: s.q.totals.totalMinor, codAmountMinor: s.q.totals.dueMinor });
+      expect(o.flags).toEqual(['ADDRESS_UNCLEAR']); // "para" is a detail: no second flag
+      expect(await f.t.prisma.callTask.count({ where: { orderId: o.id } })).toBe(1);
+    });
+
+    it('SIM-F-030: a landmark-only village address settles its band silently, is placed, and goes to the call queue once', async () => {
+      const s = await shown('landmark', { line: 'bazar er pashe, Kurigram' });
+      expect(s.q.delivery.state).toBe('found');
+      expect(s.q.charge).toEqual({ state: 'charge', chargeMinor: 13_000 });
+      const o = await orderOf((await s.place()).orderId);
+      expect(o).toMatchObject({ status: 'PLACED', addressUnclear: false, chargeFixed: true, deliveryChargeMinor: 13_000, deliveryBandId: outside, flags: ['ADDRESS_CHECK'] });
+      expect(o.addressResolution).toMatchObject({ status: 'resolved', detail: false });
+      const tasks = await f.t.prisma.callTask.findMany({ where: { orderId: o.id }, select: { reason: true, status: true } });
+      expect(tasks).toEqual([{ reason: 'ADDRESS_CHECK', status: 'OPEN' }]);
+    });
+
+    it("SIM-F-030: an unclear and landmark-only line is one call (the weightiest reason); the owner's switch off flags nothing", async () => {
+      const both = await orderOf((await (await shown('both', { line: 'masjid er samne, Notunbazar' })).place()).orderId);
+      expect(both.flags).toEqual(['ADDRESS_UNCLEAR', 'ADDRESS_CHECK']);
+      expect((await f.t.prisma.callTask.findMany({ where: { orderId: both.id }, select: { reason: true } })).map((t) => t.reason)).toEqual(['ADDRESS_UNCLEAR']);
+      f.overrides.set('checkout.address.check', { enabled: false, words: ['house'] });
+      try {
+        const off = await orderOf((await (await shown('check-off', { line: 'bazar er pashe, Kurigram' })).place()).orderId);
+        expect(off.flags).toEqual([]);
+        expect(await f.t.prisma.callTask.count({ where: { orderId: off.id } })).toBe(0);
+      } finally {
+        f.overrides.delete('checkout.address.check');
+      }
+    });
+
     it('money that moved after the page showed it is refused with the checkout as it is now; nothing is stored', async () => {
       const s = await shown('moved');
       await f.priceBand('dhaka-city', 9_000);

@@ -35,4 +35,5 @@ export * from './registry-motion';
 export * from './registry-admin-shell';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export * from './registry-orders';
+export * from './registry-checkout-more';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
