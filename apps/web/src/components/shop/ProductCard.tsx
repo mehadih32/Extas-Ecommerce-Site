@@ -39,7 +39,7 @@ export function ProductCard({ card, c, priority = false, colour: pick }: { card:
           {badge ? <span className={`badge-img${badge.sale ? ' sale' : ''}`}>{badge.text}</span> : null}
           <HeartButton
             id={card.id}
-            words={{ save: c.t('card.save'), unsave: c.t('card.unsave'), saved: c.t('card.saved'), removed: c.t('card.removed') }}
+            words={{ save: c.t('card.save'), unsave: c.t('card.unsave'), saved: c.t('card.saved'), removed: c.t('card.removed'), full: c.t('wish.full'), error: c.t('wish.error') }}
           />
         </ProductPicture>
         <div className="pinfo">

@@ -43,9 +43,15 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
   { key: 'help', path: '/help', deep: true },
 ];
 
+/** Pages already built inside an address that is still coming (they have their own route). */
+export const BUILT_INSIDE: readonly string[] = [
+  ROUTES.wishlist, // PR 71 — the rest of /account waits for the customer accounts
+];
+
 /** Which coming page an address belongs to, or null (then it is not a shop page at all). */
 export function comingSoon(path: string, productPrefix: string): string | null {
   const p = path.replace(/\/+$/, '') || '/';
+  if (BUILT_INSIDE.includes(p)) return null;
   const under = (base: string) => p === base || p.startsWith(`${base}/`);
   // ~~the product page under the owner's prefix: 'product'~~ built: PR 49 (the catch-all route draws it, lib/shop/product-model productRoute)
   void productPrefix;

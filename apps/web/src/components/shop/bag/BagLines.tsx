@@ -37,7 +37,23 @@ function Note({ text, bad = false, testId }: { text: string; bad?: boolean; test
   );
 }
 
-export function ItemLine({ c, item, card, blocked, lowStockAt }: { c: ShopContext; item: BagItem; card: ShopCard | undefined; blocked: BagView['blocked'][number] | undefined; lowStockAt: number }) {
+/** `toWish` (PR 71, follow-up 43, `wish.list.fromBag`): the heart button moves the item to the wishlist (demo R16 "Move to
+ * wishlist") instead of saving it for later in the bag. */
+export function ItemLine({
+  c,
+  item,
+  card,
+  blocked,
+  lowStockAt,
+  toWish = false,
+}: {
+  c: ShopContext;
+  item: BagItem;
+  card: ShopCard | undefined;
+  blocked: BagView['blocked'][number] | undefined;
+  lowStockAt: number;
+  toWish?: boolean;
+}) {
   const t = c.t;
   const name = nameOf(item, c);
   const href = lineHref(c, item.slug, item.colour?.key);
@@ -125,10 +141,27 @@ export function ItemLine({ c, item, card, blocked, lowStockAt }: { c: ShopContex
             </button>
           </div>
           <div className="bg-acts">
-            <button type="button" className="link zc-wishbtn" data-bag-act="save" data-id={item.lineId} data-name={name} aria-label={t('bag.line.saveName', { name })}>
-              <Icon name="heart" size={15} />
-              {t('bag.line.save')}
-            </button>
+            {toWish ? (
+              <button
+                type="button"
+                className="link zc-wishbtn"
+                data-bag-act="wish"
+                data-id={item.lineId}
+                data-pid={item.productId}
+                data-variant={item.variantId}
+                data-name={name}
+                data-testid="bag-to-wish"
+                aria-label={t('wish.bagMoveName', { name })}
+              >
+                <Icon name="heart" size={15} />
+                {t('wish.bagMove')}
+              </button>
+            ) : (
+              <button type="button" className="link zc-wishbtn" data-bag-act="save" data-id={item.lineId} data-name={name} aria-label={t('bag.line.saveName', { name })}>
+                <Icon name="heart" size={15} />
+                {t('bag.line.save')}
+              </button>
+            )}
             <button type="button" className="link" data-bag-act="remove" data-id={item.lineId} data-name={name} aria-label={t('bag.line.removeName', { name })}>
               {t('bag.line.remove')}
             </button>

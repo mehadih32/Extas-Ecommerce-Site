@@ -1,4 +1,7 @@
 {
+  "groups": {
+    "wishlist": "Wishlist"
+  },
   "pdp": {
     "fit": {
       "label": "First screen of the product page (phone)",
@@ -21,6 +24,12 @@
     "fab": {
       "label": "Floating WhatsApp button on every page",
       "help": "A round WhatsApp button that floats over the shop's pages. Off: the WhatsApp icon in the header does this job (owner's decision of 19 Oct). When on, tick the kinds of page that show it (home, category, product, bag, help pages, wishlist, account, any other), the side, and where it sits: low, just above the phone's bottom bars (recommended), or in the middle of the side. It steps out of the way over the footer, and never shows until the store's WhatsApp number is filled in."
+    }
+  },
+  "wish": {
+    "list": {
+      "label": "Wishlist",
+      "help": "The hearts a shopper taps are kept for his browser (no login needed) and listed on the wishlist page. Max: the most products one list keeps — past it a heart says the list is full, nothing is dropped. Empty-list picks: on a computer, an empty list shows this many of the newest products (0 = none). Move from the bag: on, the heart button on a bag line says \"Move to wishlist\" and moves the item to the list, with Undo; off, it says \"Save for later\" and keeps it in the bag. A combo always stays whole in the bag's saved list."
     }
   }
 }

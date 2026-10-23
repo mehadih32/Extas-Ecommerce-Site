@@ -26,6 +26,7 @@
         "http://127.0.0.1:3000/checkout/thanks/0",
         "http://127.0.0.1:3000/bag",
         "http://127.0.0.1:3000/bn/bag",
+        "http://127.0.0.1:3000/account/wishlist",
         "http://127.0.0.1:3000/collections/new-in",
         "http://127.0.0.1:3000/bn/collections/new-in"
       ],
