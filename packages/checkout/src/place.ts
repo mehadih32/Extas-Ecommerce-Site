@@ -7,6 +7,8 @@
 // PR 563 also never holds an order over an address: it is placed like any other (PLACED, confirmable), and a line that
 // says nowhere where the house is (a landmark only, SIM-F-030: `checkout.address.check`) gets the "address check" flag
 // and the same call task, so the confirmation call asks for directions. One call task per order, the weightiest reason.
+// PR 565: where delivery is free none of the band machinery applies — no Inside/Outside flag or call over the band,
+// the order marked `bandExempt` so no later band correction or band message touches it (@extas/delivery bandExempt).
 //
 // One press = one order: the page makes an order key once and sends it with every retry (a slow network, a double
 // tap). The key is claimed inside the order's own transaction, so a lost answer or a second press finds the order
@@ -265,10 +267,14 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   const method = paymentMethodOf(choice, t.dueMinor);
   const resolved = q.address.status === 'resolved' ? q.address : null;
   const charged = resolved?.line.status === 'resolved' ? resolved.line : null;
-  const unclear = !resolved;
+  // PR 565: free delivery is exempt from the band machinery — a band nobody settled is no question and no flag; only
+  // a line with no place in it at all still gets the directions call (the courier needs to find the house).
+  const free = q.charge.state === 'free';
+  const unclear = !resolved && !free;
   const notSet = q.charge.state === 'not-set';
+  const lost = free && q.address.status === 'ask' && q.address.read.reason === 'no-place';
   // SIM-F-030: a landmark-only line ("bazar er pashe, Kurigram") — the band is settled, the house is not
-  const noDetail = detailCheck.enabled && !hasAddressDetail(d.form.address, detailCheck.words);
+  const noDetail = lost || (detailCheck.enabled && !hasAddressDetail(d.form.address, detailCheck.words));
   const flags: string[] = [];
   if (unclear) flags.push(ORDER_FLAGS.addressUnclear);
   if (notSet) flags.push(ORDER_FLAGS.chargeNotSet);
@@ -323,6 +329,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(resolved ? { via: resolved.read.via, placeSure: resolved.read.placeSure, band: resolved.read.band.key, charged: charged?.quote.band.key ?? null, clues: resolved.read.clues } : {}),
             ...(q.address.status === 'ask' ? { reason: q.address.read.reason } : {}),
             charge: q.charge,
+            ...(free ? { bandExempt: true } : {}),
             detail: !noDetail,
             fingerprint: q.fingerprint,
           },

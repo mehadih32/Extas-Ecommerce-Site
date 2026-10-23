@@ -2,6 +2,7 @@
 // the line being typed (after the last comma or line break) is what is looked up, a row shows the place, its district
 // and its band's charge (only when the place settles one band), and picking a row writes "place, district" in place of
 // that part, so the rest of what he wrote stays as it was. Pure; the fetch is the one call at the end.
+// PR 565: while delivery is free for the bag the rows carry no charge (`rowView(…, free)`).
 
 /** One row as the API sends it (packages/delivery Suggestion, the fields the box uses). */
 export interface SuggestRow {
@@ -65,10 +66,11 @@ export function applyPick(line: string, f: Fragment, text: string): { line: stri
 }
 
 /** A row in the page's language: the place, the district that tells it apart, the charge when it is one band's. */
-export function rowView(r: SuggestRow, lang: 'en' | 'bn'): SuggestView {
+export function rowView(r: SuggestRow, lang: 'en' | 'bn', free = false): SuggestView {
   const name = (lang === 'bn' && r.place.nameBn) || r.place.nameEn;
   const parent = (lang === 'bn' && r.place.parentBn) || r.place.parentEn || null;
-  const chargeMinor = r.band?.priced && typeof r.band.chargeMinor === 'number' ? r.band.chargeMinor : null;
+  // PR 565: while delivery is free for the bag, no row carries a band charge
+  const chargeMinor = !free && r.band?.priced && typeof r.band.chargeMinor === 'number' ? r.band.chargeMinor : null;
   return { id: r.place.id, name, parent, chargeMinor, text: parent ? `${name}, ${parent}` : name };
 }
 
