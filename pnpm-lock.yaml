@@ -46,6 +46,9 @@ importers:
       '@extas/media':
         specifier: workspace:*
         version: link:../../packages/media
+      '@extas/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@extas/orders':
         specifier: workspace:*
         version: link:../../packages/orders

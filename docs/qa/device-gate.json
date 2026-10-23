@@ -75,7 +75,7 @@
     }
   ],
   "signedIn": {
-    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer. PR 49-64: the product page with the sample products (a polo with five colours, trousers, a one-size pack; English and Bengali), opened signed out like a customer; `expect` needs the title, the colours or sizes and the Add button. PR 50/51/58: the T2 (Editorial) and T3 (Fit-first) sample polos in both languages: the stacked photos with the Find my size card, and the T3 card with its sizes, finder and measurements. PR 6: the Server page with its worker verdict. PR 72/73: the search results for polo (cards, the size filter, the sort) and for exchange (the help answer), signed out like a customer. PR 91–103: the combo pages on the sample combos (a polo + chino set in both languages, a three-tee pack with its popular pairs and \"Same size as item 1\") and the sets landing page, signed out like a customer; the chino page shows its set offer (PR 102). PR 12 (CN-022): the new admin shell — the Dashboard with Needs you now, Help & manual with a guide button per section, a section placeholder (Customers) and the shell's not-found state (the same screen as its 404 page, which answers HTTP 404 and is the smoke test's check), at 390 / 768 / 1366 / 1920 like every page; the delivery page moved to /admin/delivery/zones (lighthouserc).",
+    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer. PR 49-64: the product page with the sample products (a polo with five colours, trousers, a one-size pack; English and Bengali), opened signed out like a customer; `expect` needs the title, the colours or sizes and the Add button. PR 50/51/58: the T2 (Editorial) and T3 (Fit-first) sample polos in both languages: the stacked photos with the Find my size card, and the T3 card with its sizes, finder and measurements. PR 6: the Server page with its worker verdict. PR 72/73: the search results for polo (cards, the size filter, the sort) and for exchange (the help answer), signed out like a customer. PR 91–103: the combo pages on the sample combos (a polo + chino set in both languages, a three-tee pack with its popular pairs and \"Same size as item 1\") and the sets landing page, signed out like a customer; the chino page shows its set offer (PR 102). PR 12 (CN-022): the new admin shell — the Dashboard with its two money tiles and Needs you now (today and 30 days), Help & manual with a guide button per section, a section placeholder (Customers) and the shell's not-found state (the same screen as its 404 page, which answers HTTP 404 and is the smoke test's check), at 390 / 768 / 1366 / 1920 like every page; the delivery page moved to /admin/delivery/zones (lighthouserc).",
     "signedOutPaths": [
       "/admin/login",
       "/collections/polos",
@@ -100,6 +100,7 @@
     "urls": [
       "/admin",
       "/admin?home=1",
+      "/admin?home=1&range=30",
       "/admin/help",
       "/admin/customers",
       "/admin?home=1&state=notfound",
@@ -140,7 +141,8 @@
       { "from": "/bn/collections/tshirts", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] }
     ],
     "expect": {
-      "/admin?home=1": ["[data-testid=\"dash-needs\"]", "[data-testid=\"a2-shell\"]"],
+      "/admin?home=1": ["[data-testid=\"dash-kpi-sales\"]", "[data-testid=\"dash-kpi-ordered\"]", "[data-testid=\"dash-needs\"]", "[data-testid=\"a2-shell\"]"],
+      "/admin?home=1&range=30": ["[data-testid=\"dash-kpi-sales\"]", "[data-testid=\"dash-kpi-ordered\"]"],
       "/admin/help": ["[data-testid=\"help-row\"]", "[data-testid=\"a2-guide\"]"],
       "/admin/customers": ["[data-testid=\"a2-placeholder\"]"],
       "/admin?home=1&state=notfound": ["[data-testid=\"a2-state\"]"],

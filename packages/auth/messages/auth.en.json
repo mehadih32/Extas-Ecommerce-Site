@@ -49,6 +49,9 @@
     "dashboard": {
       "read": "Open the Dashboard and its waiting work"
     },
+    "metrics": {
+      "read": "See the money tiles (Sales and Ordered value)"
+    },
     "help": {
       "read": "Open the admin guides and the manual"
     },

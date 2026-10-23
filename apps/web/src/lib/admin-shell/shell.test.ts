@@ -1,4 +1,4 @@
-// PR 12, PR 6 (follow-up 84) — the admin shell without a database: its words in both
+// PR 12, PR 6 (follow-up 84), PR 155 (follow-up 90) — the admin shell without a database: its words in both
 // languages, the 14 sections and who sees them, where an address belongs, the guide files and their parser, the
 // waiting-work rows and badges, the search query, and the Dashboard's helpers.
 import { existsSync } from 'node:fs';
@@ -9,7 +9,7 @@ import bn from '../../../messages/admin-shell.bn.json';
 import en from '../../../messages/admin-shell.en.json';
 import { ADMIN_PAGES } from '../admin-nav';
 import { t, type Dict } from '../i18n';
-import { ageOf, hourIn, partOfDay } from './dashboard';
+import { ageOf, hourIn, partOfDay, rangeOf, trend } from './dashboard';
 import { guideDir, parseInline, parseMarkdown, readGuide, type Block } from './guide';
 import { initialsOf } from './model';
 import { badgesFrom, QUEUES, visibleQueues, type QueueCount } from './queues';
@@ -158,10 +158,15 @@ describe('search query and the Dashboard helpers', () => {
     expect(parseQuery('x'.repeat(200)).q).toHaveLength(80);
   });
 
-  it('greeting and age', () => {
+  it('date choice, greeting, trend and age', () => {
+    expect(rangeOf('7', [1, 7, 30])).toBe(7);
+    expect(rangeOf('9', [1, 7, 30])).toBe(1);
+    expect(rangeOf(undefined, [7, 30])).toBe(7);
     const s = { afternoonHour: 12, eveningHour: 17 };
     expect([partOfDay(9, s), partOfDay(12, s), partOfDay(20, s)]).toEqual(['morning', 'afternoon', 'evening']);
     expect(hourIn(new Date('2026-10-23T00:30:00Z'), 'Asia/Dhaka')).toBe(6);
+    expect(trend(150, 100)).toBeCloseTo(0.5);
+    expect(trend(5, 0)).toBeNull();
     const now = new Date('2026-10-23T12:00:00Z');
     expect(ageOf(null, now)).toBeNull();
     expect(ageOf('2026-10-23T11:59:40Z', now)).toEqual({ unit: 'now' });

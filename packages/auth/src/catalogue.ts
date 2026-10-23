@@ -20,8 +20,9 @@ export const PERMISSIONS = {
   'audit.read': { group: 'security' },
   'security.read': { group: 'security' },
   // PR 12 (CN-022) — the admin shell: open the Dashboard (the "Needs you now" queues of the sections the person can
-  // see) and open the admin guides.
+  // see), see the money tiles (Sales and Ordered value, from @extas/metrics) and open the admin guides.
   'dashboard.read': { group: 'admin' },
+  'metrics.read': { group: 'admin' },
   'help.read': { group: 'admin' },
   // PR 22, 25, 37 — the media library: see it; upload, describe and place photos; archive, restore and clean up.
   'media.read': { group: 'media' },

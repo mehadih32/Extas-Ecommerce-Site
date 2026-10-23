@@ -8,8 +8,8 @@
       "help": "How many seconds the waiting-work numbers on the menu are kept before they are counted again, how many results search shows per group, and from how many letters it looks for products, orders and customers."
     },
     "dashboard": {
-      "label": "Dashboard greeting",
-      "help": "The hours the greeting on the Dashboard changes to afternoon and evening."
+      "label": "Dashboard date choices and greeting",
+      "help": "The date choices above the money tiles in days (1 = today; the first one opens) and the hours the greeting changes to afternoon and evening, and how many days the small line in each money tile shows."
     }
   }
 }
