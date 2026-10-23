@@ -1,0 +1,159 @@
+{
+  "orders": {
+    "metaTitle": "Orders",
+    "list": {
+      "sub": "Every order from placed to done. Four separate statuses: order, courier, payment, return.",
+      "confirmSub": "New orders to call and confirm, the customers' cancel requests, and orders waiting for an advance.",
+      "search": "Search order no., phone, name, tracking",
+      "searchGo": "Search",
+      "filtersAria": "Search and filters",
+      "viewsAria": "Saved views",
+      "status": "Status",
+      "payment": "Payment",
+      "source": "Channel",
+      "any": "{name}: all",
+      "clear": "Clear filters",
+      "shown": "Showing {n}",
+      "next": "Next page",
+      "first": "Back to the first page",
+      "pc": "{n} pc",
+      "pcs": "{n} pcs",
+      "firstMore": "{name} +{n}",
+      "open": "Open order {n}",
+      "cols": {
+        "order": "Order",
+        "items": "Items",
+        "total": "Total",
+        "status": "Status",
+        "courier": "Courier",
+        "flags": "Flags"
+      },
+      "empty": {
+        "title": "Nothing matches",
+        "body": "Try another view or clear the search.",
+        "none": "No orders here yet",
+        "noneBody": "Orders placed on the shop come in here, newest first.",
+        "view": "Nothing in this view",
+        "viewBody": "When an order needs this, it shows here."
+      },
+      "none": "—",
+      "select": "Select order {n}",
+      "selectAll": "Select all shown"
+    },
+    "kpi": {
+      "today": "Orders today",
+      "todayNote": "ordered value {v}",
+      "toConfirm": "To confirm",
+      "toConfirmOld": "oldest {age}",
+      "toConfirmNone": "all done",
+      "advance": "Waiting for advance",
+      "advanceNote": "never cancelled by itself",
+      "cancelPending": "Cancel pending courier",
+      "cancelPendingNote": "phone the courier, record the answer"
+    },
+    "view": {
+      "all": "All",
+      "open": "Open",
+      "new": "New",
+      "toConfirm": "To confirm",
+      "awaitingAdvance": "Waiting for advance",
+      "onHold": "On hold",
+      "cancelRequests": "Cancel requests",
+      "cancelPending": "Cancel pending courier",
+      "inReview": "Duplicate review",
+      "finished": "Finished"
+    },
+    "st": {
+      "DRAFT": "Draft",
+      "PLACED": "New · to confirm",
+      "AWAITING_ADVANCE": "Waiting for advance",
+      "CONFIRMED": "Confirmed",
+      "ON_HOLD": "On hold",
+      "PROCESSING": "Picking",
+      "PACKED": "Packed",
+      "HANDED_OVER": "Handed over",
+      "IN_TRANSIT": "In transit",
+      "DELIVERED": "Delivered",
+      "PARTIALLY_DELIVERED": "Partly delivered",
+      "RETURNED": "Returned",
+      "CANCELLED": "Cancelled"
+    },
+    "ship": {
+      "NONE": "Not booked",
+      "BOOKING": "Booking…",
+      "BOOKING_FAILED": "Booking failed",
+      "IN_REVIEW": "Courier review",
+      "PENDING_PICKUP": "Booked · pickup due",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "In transit",
+      "OUT_FOR_DELIVERY": "Out for delivery",
+      "DELIVERED": "Delivered",
+      "PARTIALLY_DELIVERED": "Partly delivered",
+      "RETURNING": "Coming back",
+      "RETURNED": "Back at shop",
+      "CANCEL_REQUESTED": "Cancel requested",
+      "CANCELLED": "Cancelled"
+    },
+    "pay": {
+      "UNPAID": "Unpaid",
+      "PARTLY_PAID": "Partly paid",
+      "PAID": "Paid",
+      "OWED_BACK": "Owed back",
+      "COD_TO_COLLECT": "COD to collect",
+      "COD_COLLECTED": "COD collected"
+    },
+    "ret": {
+      "REFUND_APPROVED": "Refund approved · unpaid",
+      "REFUND_REQUESTED": "Refund requested",
+      "RETURN_EXPECTED": "Return on the way",
+      "RETURN_RECEIVED": "Return received",
+      "REFUND_DONE": "Refunded"
+    },
+    "chip": {
+      "cancelPending": "Cancel pending courier",
+      "courier": "Courier status",
+      "payment": "Payment status",
+      "return": "Return / refund status"
+    },
+    "method": {
+      "COD": "COD",
+      "BKASH": "bKash",
+      "NAGAD": "Nagad",
+      "CARD": "Card",
+      "CASH": "Cash",
+      "WALLET": "Wallet",
+      "BANK_TRANSFER": "Bank transfer",
+      "ROCKET": "Rocket",
+      "UPAY": "Upay",
+      "ONLINE": "Online"
+    },
+    "source": {
+      "WEBSITE": "Website",
+      "LANDING_PAGE": "Ad page",
+      "MESSENGER": "Messenger",
+      "WHATSAPP": "WhatsApp",
+      "LIVE_CHAT": "Live chat",
+      "PHONE": "Phone order",
+      "TELEGRAM": "Telegram",
+      "ADMIN": "Made in the admin",
+      "SHOWROOM": "Showroom",
+      "IMPORT": "Imported"
+    },
+    "flag": {
+      "cancelRequest": "Cancel request",
+      "inReview": "Duplicate review",
+      "hold": "On hold: {reason}",
+      "wantsChange": "Wants a change",
+      "merged": "One parcel"
+    },
+    "page": {
+      "all": "All orders",
+      "confirm": "To confirm"
+    },
+    "bulk": {
+      "aria": "Bulk actions",
+      "selected": "{n} selected",
+      "clear": "Clear"
+    }
+  }
+}

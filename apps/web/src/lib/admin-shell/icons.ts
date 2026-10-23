@@ -39,6 +39,14 @@ export const SHELL_ICONS = {
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 7.8h.01',
   logout: 'M15 6l-6 6 6 6',
   sync: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
+  // PR 140, 141 — the order screens
+  uturn: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+  phone: 'M5 4h3.5l2 5-2.4 1.5a11 11 0 0 0 5.4 5.4L15 13.5l5 2V19a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z',
+  edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  plus: 'M12 5v14M5 12h14',
+  flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
+  shield: 'M12 3.5l7.5 3v5.5c0 4.3-3.2 7.9-7.5 8.5-4.3-.6-7.5-4.2-7.5-8.5V6.5z',
+  print: 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z',
 } as const;
 
 export type ShellIconName = keyof typeof SHELL_ICONS;

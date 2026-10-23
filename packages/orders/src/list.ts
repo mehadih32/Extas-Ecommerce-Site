@@ -13,16 +13,21 @@ import { notesOf, type OrderNoteView } from './notes';
 import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
 import { factsOf, machineOf, MACHINE_SELECT } from './service';
 
-export const ORDER_VIEWS = ['all', 'open', 'new', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'finished'] as const;
+export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'finished'] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
-/** The filter of each view. */
-function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma.OrderWhereInput {
+/**
+ * The filter of each view. PR 140: `toConfirm` is the work that can be confirmed now — new, no open review and no
+ * cancel request from the customer (those two have their own views); the sidebar badge and "Needs you now" count it.
+ */
+export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma.OrderWhereInput {
   switch (view) {
     case 'open':
       return { status: { in: [...OPEN_STATES] } };
     case 'new':
       return { status: 'PLACED' };
+    case 'toConfirm':
+      return { status: 'PLACED', cancelRequestedAt: null, id: { notIn: openReviewOrderIds } };
     case 'awaitingAdvance':
       return { status: 'AWAITING_ADVANCE' };
     case 'onHold':
@@ -40,11 +45,18 @@ function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma.OrderW
   }
 }
 
+/** Prisma's PaymentMethod and OrderSource, for the list's filters. */
+export const PAYMENT_METHODS = ['COD', 'BKASH', 'NAGAD', 'CARD', 'CASH', 'WALLET', 'BANK_TRANSFER', 'ROCKET', 'UPAY', 'ONLINE'] as const satisfies readonly NonNullable<Prisma.OrderUncheckedCreateInput['paymentMethod']>[];
+export const ORDER_SOURCES = ['WEBSITE', 'LANDING_PAGE', 'MESSENGER', 'WHATSAPP', 'LIVE_CHAT', 'PHONE', 'TELEGRAM', 'ADMIN', 'SHOWROOM', 'IMPORT'] as const satisfies readonly Prisma.OrderUncheckedCreateInput['source'][];
+
 export const listQuery = z
   .object({
     view: z.enum(ORDER_VIEWS).default('all'),
     status: z.string().trim().max(40).optional(),
     q: z.string().trim().max(80).optional(),
+    /** PR 140: the payment method and the channel the order came from (filters of the list). */
+    payment: z.enum(PAYMENT_METHODS).optional(),
+    source: z.enum(ORDER_SOURCES).optional(),
     cursor: z.uuid().optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
   })
@@ -63,6 +75,8 @@ export interface OrderRow {
   dueMinor: number;
   currency: string;
   paymentMethod: string | null;
+  /** PR 140: the channel the order came from (website, ad page, phone …). */
+  source: string;
   payment: PaymentPill;
   holdReasonCode: string | null;
   cancelReasonCode: string | null;
@@ -88,6 +102,7 @@ const ROW_SELECT = {
   paidMinor: true,
   currency: true,
   paymentMethod: true,
+  source: true,
   holdReasonCode: true,
   cancelReasonCode: true,
   cancelRequestedAt: true,
@@ -106,7 +121,7 @@ async function refundedOf(deps: OrdersDeps, storeId: number, orderIds: string[])
   return new Map(rows.map((r) => [r.orderId, r._sum.amountMinor ?? 0]));
 }
 
-async function openReviewIds(deps: OrdersDeps, storeId: number): Promise<string[]> {
+export async function openReviewIds(deps: OrdersDeps, storeId: number): Promise<string[]> {
   const rows = await deps.db.fraudAlert.findMany({ where: { storeId, status: 'OPEN' }, select: { orderId: true }, distinct: ['orderId'] });
   return rows.map((r) => r.orderId);
 }
@@ -121,9 +136,10 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
     ? { OR: [{ number: { contains: q.q, mode: 'insensitive' } }, { phone: { contains: q.q.replace(/[^\d+]/g, '') || q.q } }, { customerName: { contains: q.q, mode: 'insensitive' } }] }
     : {};
   const status = q.status ? { status: q.status as OrderState } : {};
+  const filters: Prisma.OrderWhereInput = { ...(q.payment ? { paymentMethod: q.payment } : {}), ...(q.source ? { source: q.source } : {}) };
   if (q.status && !(OPEN_STATES as readonly string[]).concat([...FINAL_STATES], ['DRAFT']).includes(q.status)) throw new OrdersError('INVALID_INPUT', 'no such status', ['status']);
   const base: Prisma.OrderWhereInput = { storeId: who.storeId, archivedAt: null, status: { not: 'DRAFT' } };
-  const where: Prisma.OrderWhereInput = { AND: [base, viewWhere(q.view, reviews), status, search] };
+  const where: Prisma.OrderWhereInput = { AND: [base, viewWhere(q.view, reviews), status, filters, search] };
   const found = await deps.db.order.findMany({ where, orderBy: [{ placedAt: 'desc' }, { id: 'desc' }], take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}), select: ROW_SELECT });
   const page = found.slice(0, take);
   const refunded = await refundedOf(deps, who.storeId, page.map((o) => o.id));
@@ -141,6 +157,7 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
     dueMinor: dueOf(o),
     currency: o.currency,
     paymentMethod: o.paymentMethod,
+    source: o.source,
     payment: paymentPill({ ...o, status: o.status as OrderState, refundedMinor: refunded.get(o.id) ?? 0 }),
     holdReasonCode: o.holdReasonCode,
     cancelReasonCode: o.cancelReasonCode,

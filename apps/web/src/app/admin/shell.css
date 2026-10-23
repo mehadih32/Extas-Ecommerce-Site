@@ -396,3 +396,153 @@
   .adm2 .a2-crumb a::after { content: ''; position: absolute; top: -6px; bottom: -6px; left: min(0px, calc(50% - 22px)); right: min(0px, calc(50% - 22px)); }
   .adm2 .a2-skip { min-height: 44px; display: inline-flex; align-items: center; }
 }
+
+/* ---------- PR 140, 141, 152 — the list, detail and confirm-dialog patterns of the new admin (demo r12-zzzzz-adm2.css,
+   copied as they are; first used by the Orders section). The bulk bar's skip line is `.a2-bskip` here (the demo's
+   `.a2-skip`, renamed: the shell's skip link already has that class). ---------- */
+.adm2 .a2-inp,.adm2 .a2-sel,.adm2 .a2-ta{height:38px;border:1px solid var(--ln);border-radius:9px;background:var(--sf);padding:0 12px;font-size:13.5px;min-width:0;width:100%}
+.adm2 .a2-ta{height:auto;padding:9px 12px;line-height:1.45;resize:vertical}
+.adm2 .a2-inp:focus,.adm2 .a2-sel:focus,.adm2 .a2-ta:focus{outline:none;border-color:var(--g6);box-shadow:0 0 0 3px rgba(45,106,93,.14)}
+.adm2 .a2-lbl{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.adm2 .a2-help{font-size:12px;color:var(--mute);margin-top:4px}
+.adm2 .a2-fld{min-width:0}
+.adm2 .a2-fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.adm2 .a2-fg .full{grid-column:1/-1}
+.adm2 .a2-st4{display:flex;flex-wrap:wrap;gap:4px}
+.adm2 .a2-st4 .a2-pill{font-weight:600}
+.adm2 .a2-chk{width:18px;height:18px;accent-color:var(--g);margin:0;flex:none;cursor:pointer}
+.adm2 .a2-kv2{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13.5px}
+.adm2 .a2-kv2>span:nth-child(odd){color:var(--mute)}
+.adm2 .a2-kv2>span:nth-child(even){min-width:0;overflow-wrap:anywhere}
+.adm2 .a2-prow{display:flex;align-items:center;gap:12px;padding:6px 0}
+.adm2 .a2-prow+.a2-prow{border-top:1px solid var(--ln2)}
+.adm2 .a2-prt{flex:1;display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.adm2 .a2-prt b{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.adm2 .a2-prt span{font-size:12px;color:var(--mute)}
+.adm2 .a2-pru{font-size:12.5px;color:var(--mute);white-space:nowrap}
+.adm2 .a2-prs{font-weight:650;font-size:13.5px;min-width:76px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.adm2 .a2-views{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.adm2 .a2-view{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--ln);background:var(--sf);font-size:13px;color:var(--ink2);font-weight:500;white-space:nowrap}
+.adm2 .a2-view:hover{border-color:#D3CBBB}
+.adm2 .a2-view.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:600}
+.adm2 .a2-view .a2-cnt{font-size:11.5px;font-weight:650;opacity:.8}
+.adm2 .a2-fbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.adm2 .a2-fsrch{position:relative;flex:1 1 260px;max-width:420px;min-width:200px}
+.adm2 .a2-fsrch svg{position:absolute;left:11px;top:11px;color:var(--mute)}
+.adm2 .a2-fsrch .a2-inp{padding-left:34px}
+.adm2 .a2-fbar .a2-sel{width:auto;min-width:130px;flex:0 1 auto}
+.adm2 .a2-tblw{background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);box-shadow:var(--sh);overflow-x:auto}
+.adm2 .a2-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.adm2 .a2-tbl th{text-align:left;font-size:12px;font-weight:600;color:var(--mute);padding:10px 12px;border-bottom:1px solid var(--ln);background:var(--sf2);white-space:nowrap;position:sticky;top:0}
+.adm2 .a2-tbl td{padding:11px 12px;border-bottom:1px solid var(--ln2);vertical-align:middle}
+.adm2 .a2-tbl tr:last-child td{border-bottom:0}
+.adm2 .a2-tbl tbody tr{cursor:pointer}
+.adm2 .a2-tbl tbody tr:hover td{background:#FCFBF8}
+.adm2 .a2-tbl tbody tr.sel td{background:var(--g0)}
+.adm2 .a2-tbl .r{text-align:right}.adm2 .a2-tbl .c{text-align:center}
+.adm2 .a2-tbl .w0{width:1%;white-space:nowrap}
+.adm2 .a2-tbl td.a2-tdm{max-width:260px}
+.adm2 .a2-cell{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.adm2 .a2-cell b{font-weight:600}.adm2 .a2-cell span{font-size:12px;color:var(--mute)}
+.adm2 .a2-tblf{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-size:12.5px;color:var(--mute);border-top:1px solid var(--ln2);background:var(--sf2);flex-wrap:wrap;gap:8px}
+.adm2 .a2-bulk{position:sticky;bottom:12px;z-index:25;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px 10px 16px;border-radius:12px;background:var(--g9);color:#E8EFEC;box-shadow:var(--sh2)}
+.adm2 .a2-bulk b{color:#fff}
+.adm2 .a2-bulk .a2-btn{box-shadow:none}
+.adm2 .a2-bulk .a2-bskip{flex-basis:100%;font-size:12.5px;color:#C9D9D3;display:flex;gap:6px;align-items:flex-start}
+.adm2 .a2-bulk .a2-bskip svg{color:#E3C77F;margin-top:1px}
+.adm2 .a2-dlg{width:min(520px,100%);max-height:86vh;overflow:auto;background:var(--sf);border-radius:16px;box-shadow:var(--sh2);border:1px solid var(--ln);animation:a2up .16s ease}
+.adm2 .a2-dlg.wide{width:min(760px,100%)}
+.adm2 .a2-dlgh{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 6px}
+.adm2 .a2-dlgh>div{flex:1;min-width:0}
+.adm2 .a2-dlgb{padding:8px 20px 6px}
+.adm2 .a2-dlgf{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px 18px;flex-wrap:wrap}
+.adm2 .a2-eff{background:var(--sf2);border:1px solid var(--ln2);border-radius:10px;padding:12px 14px;font-size:13px;margin:6px 0 12px}
+.adm2 .a2-eff li{display:flex;gap:8px;padding:3px 0}.adm2 .a2-eff li svg{color:var(--g);margin-top:2px}
+.adm2 .a2-dgrid{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:16px;align-items:start}
+.adm2 .a2-dtabs{display:none}
+.adm2 .a2-lock{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;background:var(--infobg);color:#244A70;font-size:13.5px;margin-bottom:16px;flex-wrap:wrap}
+.adm2 .a2-lock b{font-weight:650}
+.adm2 .a2-tl{position:relative;padding-left:22px}
+.adm2 .a2-tl::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--ln2);border-radius:2px}
+.adm2 .a2-tli{position:relative;padding:0 0 14px}
+.adm2 .a2-tli::before{content:"";position:absolute;left:-21px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--sf);border:2.5px solid var(--g6)}
+.adm2 .a2-tli.warn::before{border-color:var(--warn)}.adm2 .a2-tli.bad::before{border-color:var(--bad)}.adm2 .a2-tli.mute::before{border-color:#C9C3B6}
+.adm2 .a2-tli b{font-weight:600;font-size:13.5px;display:block}
+.adm2 .a2-tli span{font-size:12px;color:var(--mute);display:block}
+.adm2 .a2-tli p{font-size:12.5px;color:var(--ink2);margin-top:3px}
+.adm2 .a2-lines .a2-prow{padding:9px 0}
+.adm2 .a2-tot{display:grid;grid-template-columns:1fr auto;gap:6px 16px;font-size:13.5px}
+.adm2 .a2-tot>span:nth-child(odd){color:var(--ink2)}.adm2 .a2-tot>span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.adm2 .a2-tot .t{font-weight:700;color:var(--ink)!important;border-top:1px solid var(--ln);padding-top:8px;font-size:14.5px}
+.adm2 .a2-rule{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px}
+.adm2 .a2-rule+.a2-rule{border-top:1px solid var(--ln2)}
+.adm2 .a2-rule span{flex:1;min-width:0}
+@media (max-width:1199px){
+.adm2 .a2-dgrid{grid-template-columns:minmax(0,1fr)}
+.adm2 .a2-dtabs{display:flex;margin-bottom:14px}
+.adm2 .a2-dgrid[data-dt="main"]>.a2-dside{display:none}
+.adm2 .a2-dgrid[data-dt="side"]>.a2-dmain{display:none}
+}
+@media (max-width:767px){
+.adm2 .a2-fg{grid-template-columns:minmax(0,1fr)}
+.adm2 .a2-fsrch{max-width:none;flex-basis:100%}
+.adm2 .a2-fbar .a2-sel{flex:1 1 40%}
+.adm2 .a2-views{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 12px;padding:0 16px;scrollbar-width:none}
+.adm2 .a2-views::-webkit-scrollbar{display:none}
+.adm2 .a2-tblw{background:none;border:0;box-shadow:none;overflow:visible}
+.adm2 .a2-tbl,.adm2 .a2-tbl tbody{display:block}
+.adm2 .a2-tbl thead{display:none}
+.adm2 .a2-tbl tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--sh);position:relative}
+.adm2 .a2-tbl tbody tr:hover td,.adm2 .a2-tbl tbody tr.sel td{background:none}
+.adm2 .a2-tbl tbody tr.sel{border-color:var(--g6);background:var(--g0)}
+.adm2 .a2-tbl td{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0;border:0;min-width:0;text-align:left!important;max-width:none!important}
+.adm2 .a2-tbl td[data-l]::before{content:attr(data-l);font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.adm2 .a2-tbl td.a2-tdh{grid-column:1/-1;padding-right:34px}
+.adm2 .a2-tbl td.a2-tdh::before{display:none}
+.adm2 .a2-tbl td.a2-tdw{grid-column:1/-1}
+.adm2 .a2-tbl td.a2-tdx{display:none}
+.adm2 .a2-tbl td.a2-tdc{position:absolute;right:12px;top:12px}
+.adm2 .a2-tbl td.a2-tdc::before{display:none}
+.adm2 .a2-tblf{border-radius:10px;border:1px solid var(--ln)}
+.adm2 .a2-bulk{bottom:72px}
+.adm2 .a2-dlgf .a2-btn{flex:1 1 auto}
+.adm2 .a2-inp,.adm2 .a2-sel,.adm2 .a2-ta{font-size:16px}
+}
+/* Back to the computer's text size from a tablet up — but only with a mouse: a touch screen keeps 16 px, or iOS zooms
+   in when a field is tapped (the device gate's INPUT-FONT-UNDER-16 on tablets). */
+@media (min-width:768px) and (hover:hover) and (pointer:fine){
+.adm2 .a2-inp:not(#a2z):not(#a2z),.adm2 .a2-sel:not(#a2z):not(#a2z),.adm2 .a2-ta:not(#a2z):not(#a2z){font-size:13.5px!important}
+}
+/* …and a touch screen keeps 16 px at every width, tablets included (the gate's INPUT-FONT-UNDER-16). */
+@media (hover:none),(pointer:coarse){
+.adm2 .a2-inp:not(#a2z):not(#a2z),.adm2 .a2-sel:not(#a2z):not(#a2z),.adm2 .a2-ta:not(#a2z):not(#a2z){font-size:16px!important}
+}
+/* the order list's own bits: the name under the number, a long product name, the foot under the cards */
+.adm2 .a2-cell .a2-oname{color:var(--ink);font-size:13px}
+.adm2 .a2-cell .a2-ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:block}
+.adm2 .a2-bulk .a2-bclr{color:#C9D9D3}
+.adm2 .a2-tblf-o{border:1px solid var(--ln);border-radius:var(--r);margin-top:10px}
+.adm2 .a2-fsel{display:contents}
+/* the call queue (ORD-02), the customer's history beside an order, the command row */
+.adm2 .a2-r12{grid-template-columns:340px minmax(0,1fr)}
+.adm2 .a2-q{display:flex;flex-direction:column;gap:6px}
+.adm2 .a2-qi{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--sf);border:1px solid var(--ln);width:100%;text-align:left;color:inherit;text-decoration:none}
+.adm2 .a2-qi.on{border-color:var(--g6);box-shadow:0 0 0 2px rgba(45,106,93,.15)}
+.adm2 .a2-qi>div{flex:1;min-width:0}
+.adm2 .a2-qi b{font-weight:600;font-size:13.5px;display:block}
+.adm2 .a2-qi span{font-size:12px;color:var(--mute)}
+.adm2 .a2-hist{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.adm2 .a2-hist>div{background:var(--sf2);border:1px solid var(--ln2);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column}
+.adm2 .a2-hist b{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.adm2 .a2-hist span{font-size:11.5px;color:var(--mute)}
+.adm2 .a2-cmds{display:flex;gap:8px;flex-wrap:wrap}
+.adm2 .a2-chkl{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:4px 0}
+@media (max-width:1279px){.adm2 .a2-r12{grid-template-columns:280px minmax(0,1fr)}}
+@media (max-width:1023px){.adm2 .a2-r12{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:767px){.adm2 .a2-hist{grid-template-columns:repeat(2,minmax(0,1fr))}.adm2 .a2-cmds .a2-btn{flex:1 1 auto}}
+/* tap targets of these patterns, as the shell's own above */
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .a2-view, .adm2 .a2-seg button, .adm2 .a2-inp, .adm2 .a2-sel, .adm2 .a2-qi, .adm2 .a2-chkl { min-height: 44px; }
+  .adm2 .a2-chkw { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -12px; }
+  /* A tablet still sees the table: the order number and the "Full order" link are tapped, not pointed at. */
+  .adm2 .a2-cell > a, .adm2 .a2-lnk, .adm2 .a2-prow { min-height: 44px; display: inline-flex; align-items: center; }
+}
