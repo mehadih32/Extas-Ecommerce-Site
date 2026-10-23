@@ -3,7 +3,7 @@
 // what is still to pay (Cash on Delivery due at the door, paid, "Pay now" while a prepaid payment waits, "Try again"
 // after a failed one), the order's lines and money as stored, the WhatsApp button and "Keep shopping".
 // Left out until their PRs (the copy says only what the shop really does): the SMS line (no SMS is sent yet), ~~"Track
-// your order" (PR 135)~~, "Complete your look" (PR 128) ~~and the next-steps timeline~~.
+// your order" (PR 135)~~, ~~"Complete your look" (PR 128)~~ ~~and the next-steps timeline~~.
 // Follow-up 58 (`thanks.page`): the delivery note he wrote, said back (on); the trial-at-the-door line while that
 // service is on (`checkout.tryOn.enabled`); and "What happens next" (off, as in the demo: `thanks.nextSteps`).
 // PR 135: "Track your order" opens the order's own page in My account with its welcome panel (`?from=thanks`).
@@ -12,22 +12,28 @@
 // PR 136: "Invoice · print or download" under the order's money opens its invoice (demo inv-btn), while invoices are on.
 // PR 565: a free order shows no band name and no "we call about the area" line, only its promise in hours.
 // PR 127: a line added after placing ("Add to this parcel") carries the demo's "Added" tag (ty_items).
+// PR 128: "Complete your look" in the right column (demo ty_look, block 4) while the owner has it on (`thanks.look`):
+// only pieces the shop's running combos pair with this order, Add while "Add to this parcel" is open for it.
 import '../bag/bag.css';
 import './checkout.css';
 import type { Receipt } from '@extas/checkout';
 import type { ThanksPageSettings } from '@extas/settings';
-import { cardsByIds, colourName } from '@/lib/shop/catalogue';
+import { cardsByIds, colourName, productName } from '@/lib/shop/catalogue';
 import { checkoutWords } from '@/lib/shop/checkout';
 import type { ShopContext } from '@/lib/shop/context';
 import { fill } from '@/lib/shop/dict';
 import { hoursOf, named } from '@/lib/shop/checkout-model';
+import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
 import { nextSteps, placedText } from '@/lib/shop/thanks-model';
+import type { LookData } from '@/lib/shop/thanks-look';
+import { openColours } from '@/lib/shop/thanks-look-model';
 import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { CopyNumber, RetryPayment } from './ThanksActions';
+import { ThanksLook, type LookRowView } from './ThanksLook';
 
 export function ThanksNotFound({ c }: { c: ShopContext }) {
   return (
@@ -97,6 +103,7 @@ export async function ThanksPage({
   tryOn,
   accountCard = true,
   invoice = false,
+  look = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -106,6 +113,8 @@ export async function ThanksPage({
   accountCard?: boolean;
   /** PR 136: the owner keeps invoices on (`account.invoice`). */
   invoice?: boolean;
+  /** PR 128: "Complete your look" (null: off, or nothing honest to show). */
+  look?: LookData | null;
 }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -118,7 +127,7 @@ export async function ThanksPage({
   const hours = r.band ? hoursOf(r.band, n) : null;
   // PR 565: a free order never says "we call about the area" and never names a band — only its promise, when it has one
   const promise = r.freeDelivery ? (hours ? w('del.promise', { hours }) : null) : r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
-  const cards = await cardsByIds(c.storeId, r.lines.map((l) => l.productId).filter((x): x is string => !!x));
+  const cards = await cardsByIds(c.storeId, [...r.lines.map((l) => l.productId).filter((x): x is string => !!x), ...(look ? look.products.keys() : [])]);
   const wa = waOn ? waHref(c.s['contact.whatsapp'], w('ty.waMsg', { number: r.number })) : null;
   // follow-up 58 · the trial at the door (the shop's own switch), the note said back, what happens next
   const trial = tryOn ? (
@@ -218,6 +227,48 @@ export async function ThanksPage({
         </div>
       </div>
     );
+
+  // PR 128 · the look's rows, drawn here (pictures, names, prices in the shop's money) and acted on in ThanksLook
+  const lookRows: LookRowView[] = [];
+  for (const x of look?.rows ?? []) {
+    const card = cards.get(x.productId);
+    const p = look!.products.get(x.productId);
+    if (!card || !p) continue;
+    const name = productName(card, c.lang);
+    const line = x.kind === 'added' ? r.lines.find((l) => l.id === x.lineId) : undefined;
+    const open = openColours(p);
+    const thumbs: Record<string, React.ReactNode> = {};
+    // an added line is drawn in its own colour; a suggestion in each colour he can pick
+    const drawn = line?.colour ? card.colours.filter((k) => k.key === line.colour!.key) : card.colours;
+    for (const k of drawn.length ? drawn : [{ key: '', hex: line?.colour?.hex ?? '' }])
+      thumbs[k.key] = <Thumb c={c} card={card} colourKey={k.key || undefined} hex={k.hex} alt={name} />;
+    lookRows.push({
+      key: x.kind === 'added' ? x.lineId : x.productId,
+      kind: x.kind,
+      lineId: x.kind === 'added' ? x.lineId : null,
+      name,
+      href: hrefIn(c.lang, productPath(c.s['naming.productPathPrefix'], card.slug)),
+      thumbs,
+      colours: card.colours.filter((k) => open.includes(k.key)).map((k) => ({ key: k.key, name: colourName(k, c.lang), hex: k.hex })),
+      sizes: p.sizes,
+      variants: p.variants.map((v) => ({ ...v, pay: m(v.payMinor) })),
+      detail: line ? [line.colour ? colourName(line.colour, c.lang) : null, line.size, line.quantity > 1 ? `×${n(line.quantity)}` : null].filter(Boolean).join(' · ') || null : null,
+      amount: line ? m(line.amountMinor) : null,
+    });
+  }
+  const lookBlock =
+    look && lookRows.length ? (
+      <ThanksLook
+        number={r.number}
+        words={words}
+        rows={lookRows}
+        open={look.state.open}
+        full={look.state.lines.length >= look.state.maxLines}
+        until={look.state.open ? w(look.until === 'confirmed' ? 'ty.lookUntilPack' : 'ty.lookUntilConfirm') : null}
+        newTotal={look.state.lines.length && pay.kind === 'cod' ? m(look.state.dueMinor) : null}
+        fullNote={w('ty.lookFull', { count: n(look.state.maxLines) })}
+      />
+    ) : null;
 
   const row = (k: string, v: React.ReactNode, cls = '', testId?: string) => (
     <div className={`ty-r${cls ? ` ${cls}` : ''}`} data-testid={testId}>
@@ -348,6 +399,7 @@ export async function ThanksPage({
                 <AccountCard c={c} r={r} />
               </div>
             ) : null}
+            {lookBlock ? <div style={{ order: 4 }}>{lookBlock}</div> : null}
             {wa ? (
               <div style={{ order: 8 }}>
                 <a className="wa-btn wa-real btn-block ty-wa" href={wa} target="_blank" rel="noopener" data-testid="ty-wa">

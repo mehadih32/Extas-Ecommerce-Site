@@ -1,5 +1,5 @@
 // S04 · the rest of the customer-side checkout — PR 563 (no order is ever held over an address), PR 561 (the silent
-// address backfill), PR 127 ("Add to this parcel"). Registry version 34
+// address backfill), PR 127 ("Add to this parcel"), PR 128 ("Complete your look"). Registry version 34
 // (33 is the admin shell's). Labels: messages/checkout-more.<lang>.json. No admin screen yet (CN-019, CN-022): the keys
 // live in their sections (Checkout, Orders) and are set through the settings store until the new admin shell has them.
 //
@@ -112,6 +112,13 @@ export const addOnSchema = z
   })
   .strict();
 
+/**
+ * PR 128 — "Complete your look" on the thank-you page: up to `max` pieces that the shop's own running combos pair with
+ * what he ordered, each with "Add" while "Add to this parcel" (`orders.addOn`) is open for his order. No combo, no
+ * block. Off until the owner turns it on.
+ */
+export const thanksLookSchema = z.object({ enabled: z.boolean(), max: z.int().min(1).max(6) }).strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, version: V } as const;
 
 export const checkoutMoreSettings = {
@@ -142,8 +149,18 @@ export const checkoutMoreSettings = {
     helpKey: 'orders.addOn.help',
     sortOrder: 962,
   }),
+  'thanks.look': setting({
+    ...json,
+    group: 'checkout',
+    schema: thanksLookSchema,
+    default: { enabled: false, max: 3 },
+    labelKey: 'thanks.look.label',
+    helpKey: 'thanks.look.help',
+    sortOrder: 963,
+  }),
 };
 
 export type AddressCheckSettings = z.output<typeof addressCheckSchema>;
 export type AddressBackfillSettings = z.output<typeof addressBackfillSchema>;
 export type AddOnSettings = z.output<typeof addOnSchema>;
+export type ThanksLookSettings = z.output<typeof thanksLookSchema>;

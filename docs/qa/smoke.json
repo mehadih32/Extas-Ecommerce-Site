@@ -24,7 +24,8 @@
     {"pr": 12, "what": "the 404 page is the shell's own 'page not found' state (SH-07)", "page": "/admin/no-such-page", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "notfound"},
     {"pr": 12, "what": "the 'no access' state draws inside the shell (SH-07)", "page": "/admin?home=1&state=denied", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "denied"},
     {"pr": 12, "what": "the 'could not load' state draws inside the shell (SH-07)", "page": "/admin?home=1&state=error", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "error"},
-    {"pr": 12, "what": "the old delivery address lands on the Delivery section's Zones tab (permanent redirect)", "page": "/admin/delivery", "selector": "[data-testid=a2-crumb] a", "attribute": "href", "equals": "/admin/delivery/zones"}
+    {"pr": 12, "what": "the old delivery address lands on the Delivery section's Zones tab (permanent redirect)", "page": "/admin/delivery", "selector": "[data-testid=a2-crumb] a", "attribute": "href", "equals": "/admin/delivery/zones"},
+    { "pr": 128, "what": "the test servers' sample thank-you door (POST /api/shop/try-look) is shut on the deployed shop", "request": { "method": "POST", "path": "/api/shop/try-look", "body": "{}", "headers": { "content-type": "application/json", "sec-fetch-site": "same-origin" } }, "status": 404, "field": "error" }
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

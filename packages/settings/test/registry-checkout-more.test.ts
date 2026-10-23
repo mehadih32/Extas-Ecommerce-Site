@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { addOnSchema, addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings } from '../src/registry-checkout-more';
+import { addOnSchema, addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings, thanksLookSchema } from '../src/registry-checkout-more';
 
 describe('checkout-more settings (v34)', () => {
   it('every key is in the registry at version 34, never owner data, labelled in English and Bengali, its default valid', () => {
@@ -38,5 +38,11 @@ describe('checkout-more settings (v34)', () => {
     expect(checkoutMoreSettings['orders.addOn'].default).toEqual({ enabled: false, until: 'confirmed', windowMinutes: 0, maxLines: 3, maxUnits: 1 });
     expect(addOnSchema.safeParse({ enabled: true, until: 'packed', windowMinutes: 0, maxLines: 3, maxUnits: 1 }).success).toBe(false);
     expect(addOnSchema.safeParse({ enabled: true, until: 'placed', windowMinutes: 30, maxLines: 0, maxUnits: 1 }).success).toBe(false);
+  });
+
+  it('PR 128: "Complete your look" is off until the owner turns it on; how many is his number', () => {
+    expect(checkoutMoreSettings['thanks.look'].default).toEqual({ enabled: false, max: 3 });
+    expect(thanksLookSchema.safeParse({ enabled: true, max: 0 }).success).toBe(false);
+    expect(thanksLookSchema.safeParse({ enabled: true, max: 7 }).success).toBe(false);
   });
 });

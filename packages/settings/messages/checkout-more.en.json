@@ -16,5 +16,11 @@
       "label": "Add to this parcel",
       "help": "Lets a customer add a piece to his own Cash on Delivery order from the thank-you page or his order page, as a real order line that goes in the same parcel. It is priced as its product page prices it; nothing already on the order is priced again, and the amount to pay at the door grows by exactly that piece. \"Until\": while the order is new, or also after it is confirmed (until picking starts). Never after a courier is booked. \"Minutes after placing\": 0 means no time limit besides that. \"Lines\" and \"pieces\": how many he may add. Off: the thank-you page shows no add buttons."
     }
+  },
+  "thanks": {
+    "look": {
+      "label": "Complete your look (thank-you page)",
+      "help": "Shows up to \"how many\" pieces under the order on the thank-you page, taken only from your running combos and sets that hold a product of his order (the ones customers pick most come first). While \"Add to this parcel\" is on and open for his order, each has an Add button that puts it in the same parcel. No combo with his product: the block is not shown. Off: never shown."
+    }
   }
 }

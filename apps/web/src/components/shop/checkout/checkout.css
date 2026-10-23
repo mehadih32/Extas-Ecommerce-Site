@@ -150,6 +150,10 @@
 .shop .ty-wrap .ty-sw { width: 30px; height: 30px; position: relative; }
 .shop .ty-wrap .ty-sw::before { content: ""; position: absolute; inset: -7px; }
 .shop .ty-wrap #ty-waist { min-height: 44px; padding: 8px 10px !important; font-size: 14px !important; }
+/* PR 128: the look block's size list keeps the phone's 16 px input floor, its swatches far enough apart that each keeps a 44 px tap, and Copy (short in Bengali) its 44 px */
+.shop .ty-wrap .ty-look select.input { min-height: 44px; padding: 8px 10px !important; font-size: 16px !important; }
+.shop .ty-wrap .ty-look .ty-sws { gap: 14px; }
+.shop .ty-ord .btn-sm { min-width: 44px; }
 .shop .ty-wrap .ty-look .link, .shop .ty-wrap .ty-acc .link, .shop .ty-wrap .ups-hd .link { min-height: 44px; display: inline-flex; align-items: center; }
 .shop .ty-wrap .btn-sm { min-height: 44px; }
 .shop .co-help.co-help .container { padding-right: 16px; justify-content: space-between; }
