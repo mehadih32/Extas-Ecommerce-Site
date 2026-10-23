@@ -330,6 +330,7 @@ describe('PR 603 index pack', () => {
     ['order list by date', 'Order', /idx_order_list_date"/],
     ['order list by status', 'Order', /idx_order_list_status"/],
     ['order list by courier', 'Order', /courierAccountId.*idx_order_list_courier"/],
+    ['Sales by delivered day (PR 155)', 'Order', /\[storeId, status, deliveredAt\].*idx_order_sales_delivered"/],
     ['fuzzy customer name on orders', 'Order', /gin_trgm_ops.*type: Gin.*idx_order_name_trgm"/],
     ['fuzzy address on orders', 'Order', /gin_trgm_ops.*type: Gin.*idx_order_address_trgm"/],
     ['fuzzy saved address', 'CustomerAddress', /gin_trgm_ops.*type: Gin.*idx_address_line_trgm"/],

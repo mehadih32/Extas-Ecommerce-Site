@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { daysPeriod, sumLines } from './pure';
 import { kpi, kpiByDay, kpiByPaymentMethod, kpiByZone, lines, linesBoth } from './metrics';
+import { kpiByDayFromView, linesByMonthFromView, refreshKpiViews } from './views';
 
 const TZ = 'Asia/Dhaka';
 /** A moment on a shop day: hour is the local (UTC+6) hour. */
@@ -153,6 +154,55 @@ describe.skipIf(!HAS_TEST_DB)('metrics on PostgreSQL (PR 155)', () => {
     const sets = await lines(t.prisma, 'ordered', A, P(), TZ, { combos: true });
     expect(sets).toHaveLength(0); // comboId is empty on these sample lines: a set needs its combo
     expect(await lines(t.prisma, 'sales', B, P(), TZ)).toEqual([]);
+  });
+
+  // Follow-up 92: the KPI views (migration 0012) give exactly the live numbers, read only through this package.
+  it('the KPI views, refreshed, say the same as the live functions, day by day and line by line', async () => {
+    await refreshKpiViews(t.prisma);
+    const days = { from: '2026-10-19', to: '2026-10-24' };
+    const fromView = await kpiByDayFromView(t.prisma, A, days, TZ);
+    expect(fromView.source).toBe('view');
+    expect(fromView.rows).toEqual(await kpiByDay(t.prisma, A, days, TZ));
+    expect((await kpiByDayFromView(t.prisma, B, days, TZ)).rows).toEqual(await kpiByDay(t.prisma, B, days, TZ));
+    const months = (await linesByMonthFromView(t.prisma, A, { from: '2026-10', to: '2026-10' }, TZ))!;
+    for (const basis of ['ordered', 'sales'] as const) {
+      const rows = months.filter((r) => r.basis === basis);
+      const live = sumLines(await lines(t.prisma, basis, A, daysPeriod('2026-10-01', '2026-10-31', TZ), TZ));
+      expect(rows.reduce((s, r) => ({ units: s.units + r.units, value: s.value + r.valueMinor, regular: s.regular + r.regularMinor, saved: s.saved + r.savedMinor }), { units: 0, value: 0, regular: 0, saved: 0 })).toEqual({
+        units: live.units,
+        value: live.valueMinor,
+        regular: live.regularMinor,
+        saved: live.savedMinor,
+      });
+      expect(rows.every((r) => r.month === '2026-10-01' && r.productId === productId)).toBe(true);
+    }
+    // A refresh again is safe (CONCURRENTLY, the unique keys hold) and an empty span is empty.
+    await refreshKpiViews(t.prisma);
+    expect(await linesByMonthFromView(t.prisma, A, { from: '2025-01', to: '2025-02' }, TZ)).toEqual([]);
+    await expect(linesByMonthFromView(t.prisma, A, { from: '2026-11', to: '2026-10' }, TZ)).rejects.toThrow(RangeError);
+  });
+
+  it('a view counted in another time zone is never used: the live numbers answer', async () => {
+    await refreshKpiViews(t.prisma);
+    const days = { from: '2026-10-20', to: '2026-10-23' };
+    const other = await kpiByDayFromView(t.prisma, A, days, 'UTC');
+    expect(other.source).toBe('live');
+    expect(other.rows).toEqual(await kpiByDay(t.prisma, A, days, 'UTC'));
+    expect(await linesByMonthFromView(t.prisma, A, { from: '2026-10', to: '2026-10' }, 'UTC')).toBeNull();
+  });
+
+  it('the shop time zone in the views follows the setting store.timeZone (store value first)', async () => {
+    // The settings sync writes the definition on a real installation; a bare test database gets a stand-in row.
+    if (!(await t.prisma.settingDefinition.findUnique({ where: { key: 'store.timeZone' } }))) {
+      await t.prisma.settingDefinition.create({ data: { key: 'store.timeZone', group: 'store', valueType: 'STRING', scope: 'STORE', defaultValue: TZ, labelEn: 'Time zone', labelBn: 'টাইম জোন', sinceVersion: 1 } });
+    }
+    await t.prisma.storeSettingValue.create({ data: { storeId: B, key: 'store.timeZone', value: 'Asia/Kolkata' } });
+    await refreshKpiViews(t.prisma);
+    expect((await kpiByDayFromView(t.prisma, B, { from: '2026-10-22', to: '2026-10-22' }, TZ)).source).toBe('live');
+    expect((await kpiByDayFromView(t.prisma, B, { from: '2026-10-22', to: '2026-10-22' }, 'Asia/Kolkata')).source).toBe('view');
+    await t.prisma.storeSettingValue.update({ where: { storeId_key: { storeId: B, key: 'store.timeZone' } }, data: { value: 'Not/AZone' } });
+    await refreshKpiViews(t.prisma);
+    expect((await kpiByDayFromView(t.prisma, B, { from: '2026-10-22', to: '2026-10-22' }, TZ)).source).toBe('view');
   });
 
   it('refuses a period that ends before it starts', async () => {

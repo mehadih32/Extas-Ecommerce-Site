@@ -2761,6 +2761,8 @@ model Order {
   @@index([storeId, placedAt(sort: Desc)], map: "idx_order_list_date")
   @@index([storeId, status, placedAt(sort: Desc)], map: "idx_order_list_status")
   @@index([storeId, courierAccountId, status, placedAt(sort: Desc)], map: "idx_order_list_courier")
+  // PR 155 (follow-up 93, migration 0012): Sales = DELIVERED orders on the delivered day (@extas/metrics).
+  @@index([storeId, status, deliveredAt], map: "idx_order_sales_delivered")
   // PR 603: fuzzy name and address with pg_trgm (duplicate/fraud engine, PR 519).
   @@index([customerName(ops: raw("gin_trgm_ops"))], type: Gin, map: "idx_order_name_trgm")
   @@index([shippingAddressText(ops: raw("gin_trgm_ops"))], type: Gin, map: "idx_order_address_trgm")

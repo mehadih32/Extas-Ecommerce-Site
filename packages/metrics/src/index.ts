@@ -5,9 +5,13 @@
 //     never instead of it;
 //   - every report view and the admin dashboard read their money numbers through these functions: the headline pair
 //     (`kpi`), day by day (`kpiByDay`), by delivery zone (`kpiByZone`), by payment method (`kpiByPaymentMethod`), and
-//     the order lines of a product or a combo (`lines` / `linesBoth`, added up by `sumLines`).
+//     the order lines of a product or a combo (`lines` / `linesBoth`, added up by `sumLines`);
+//   - the KPI report views (migration 0012: mv_kpi_daily, mv_kpi_lines_monthly) hold the same two figures precomputed;
+//     only views.ts reads them (`kpiByDayFromView`, `linesByMonthFromView`) and refreshes them (`refreshKpiViews`).
+//     The PR 603 views (mv_sales_daily …) count by the placed day; they are superseded and nothing reads them.
 // The rule lives in pure.ts (SALES_STATUSES, NOT_PLACED_STATUSES, BASIS_RULE). src/guard.test.ts fails the build when
 // any other package adds up order or line money on its own. Until the order state machine exists (it waits for the
 // owner's approval of the architecture draft), no order reaches DELIVERED, so Sales is 0 everywhere — that is correct.
 export * from './pure';
 export * from './metrics';
+export * from './views';

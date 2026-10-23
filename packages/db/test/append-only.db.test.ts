@@ -119,6 +119,15 @@ describe.skipIf(!ADMIN_URL)('append-only at the database (PR 139)', () => {
     expect(await attempt(db, `UPDATE "_prisma_migrations" SET "logs" = NULL`, true)).toMatch(/permission denied/i);
   });
 
+  it('PR 155 (0012): the app role refreshes and reads the KPI views only through their function, never owning them', async () => {
+    expect(await attempt(db, `SELECT extas_refresh_kpi_views()`, true)).toBe('ok');
+    expect(await attempt(db, `SELECT count(*) FROM "mv_kpi_daily", "mv_kpi_lines_monthly"`, true)).toBe('ok');
+    // PostgreSQL 16 says "must be owner"; 17 checks its MAINTAIN privilege and says "permission denied".
+    expect(await attempt(db, `REFRESH MATERIALIZED VIEW "mv_kpi_daily"`, true)).toMatch(
+      /must be owner|permission denied/i,
+    );
+  });
+
   it("the server smoke test's check (infra/deploy/app-role.sh) passes here and names a table whose guard is off", async () => {
     const guards = async () => Object.values((await db.$queryRawUnsafe<Record<string, string>[]>(GUARDS_SQL.replace(/;\s*$/, '')))[0]!)[0];
     expect(await guards()).toBe(`ok: ${APPEND_ONLY_LOCKED.length} tables append-only`);

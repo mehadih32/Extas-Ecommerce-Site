@@ -144,6 +144,30 @@ describe('later migrations', () => {
     // The retention purge is documented, not built.
     expect(sql).toMatch(/RETENTION \(not built/);
   });
+
+  it('PR 155: KPI views count exactly like @extas/metrics; the PR 603 views stay, marked superseded (0012_kpi_report_views)', () => {
+    const sql = sqlOf('0012_kpi_report_views');
+    expect(sql).toContain('CREATE INDEX "idx_order_sales_delivered" ON "Order"("storeId", "status", "deliveredAt");');
+    for (const view of ['mv_kpi_daily', 'mv_kpi_lines_monthly']) {
+      expect(sql).toContain(`CREATE MATERIALIZED VIEW "${view}"`);
+      expect(sql).toMatch(new RegExp(`CREATE UNIQUE INDEX "${view}_key"\\s+ON "${view}"`));
+      expect(sql).toContain(`REFRESH MATERIALIZED VIEW CONCURRENTLY "${view}"`);
+      expect(sql).toMatch(new RegExp(`COMMENT ON MATERIALIZED VIEW "${view}" IS[^;]*@extas/metrics`));
+    }
+    // The two bases, as packages/metrics/src/pure.ts BASIS_RULE says.
+    expect(sql.match(/o\."status"::text = 'DELIVERED' AND o\."deliveredAt" IS NOT NULL/g)).toHaveLength(2);
+    expect(sql.match(/o\."status"::text <> 'DRAFT'/g)).toHaveLength(2);
+    expect(sql.match(/o\."archivedAt" IS NULL/g)).toHaveLength(4);
+    // Every old view is still there, only re-commented.
+    for (const old of ['mv_sales_daily', 'mv_style_profit_monthly', 'mv_ad_performance_daily', 'mv_district_sales_monthly']) {
+      expect(sql).toMatch(new RegExp(`COMMENT ON MATERIALIZED VIEW "${old}" IS\\s+'SUPERSEDED`));
+    }
+    // Only the app's role (and the owner) may refresh; nobody else.
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION extas_refresh_kpi_views() FROM PUBLIC;');
+    expect(sql).toMatch(/SECURITY DEFINER SET search_path = public, pg_temp/);
+    const code = sql.replace(/--.*$/gm, '');
+    expect(code).not.toMatch(/\bALTER TABLE\b|\bALTER COLUMN\b|\bRENAME\b|\bUPDATE\s+"/i);
+  });
 });
 
 // All migrations applied in order to a throwaway database must give exactly the schema. Needs TEST_DATABASE_ADMIN_URL
