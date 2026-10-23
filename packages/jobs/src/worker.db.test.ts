@@ -8,21 +8,23 @@
 // - the Server page's read model: ok / stale / stopped / never, the leader, the failed jobs (a job that succeeded on
 //   a later try is not listed);
 // - BullMQ: one leader among two workers, the scheduler's runs land once, a failing job is retried with the backoff
-//   and dead-lettered, and a worker killed mid-job is taken over by the other with no duplicate side effect.
+//   and dead-lettered, and a worker killed mid-job is taken over by the other with no duplicate side effect;
+// - PR 196: a verified ERP webhook stored by the receiver is planned by the leader and applied once.
 import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Redis } from 'ioredis';
-import { allAdapters, createConnections, mockErp } from '@extas/adapters';
+import { allAdapters, createConnections, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, mockErp, signedErpWebhook } from '@extas/adapters';
 import { SYSTEM, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { createColour, createProduct, createSize, createVariant, type CatalogueDeps } from '@extas/catalogue';
-import { createWarehouse, pullStock, type InventoryDeps, type SettingsReader } from '@extas/inventory';
+import { createWarehouse, ERP_WEBHOOK_JOB, pullStock, receiveErpWebhook, type InventoryDeps, type SettingsReader } from '@extas/inventory';
 import { registry, type Key, type Value } from '@extas/settings';
-import type { JobDefinition } from './catalogue';
+import { jobDefinition, type JobDefinition } from './catalogue';
 import type { JobDeps } from './context';
 import { beat, markStopped, newWorkerIdentity } from './heartbeat';
 import { closeLostRuns, runAttempt, type AttemptInput } from './runs';
 import { workerStatus } from './status';
+import { webhookPlanner, webhookRunKey } from './webhooks';
 import { startWorker, type RunningWorker } from './worker';
 
 const T0 = new Date('2026-10-23T06:00:00Z');
@@ -380,6 +382,31 @@ describe.skipIf(!HAS_TEST_DB)('PR 6 on PostgreSQL: job runs, idempotency, heartb
       ]);
       expect(rows[0]!.error).toMatch(/^WORKER_LOST/);
       await b.stop();
+    });
+
+    it('PR 196: a stored ERP webhook is planned by the leader, applied once by the worker, and planned no more', async () => {
+      const secret = randomBytes(24).toString('hex');
+      vaultValues.set('extasErp.webhookSecret', secret);
+      const at = new Date(Math.max(Date.now(), clock.getTime()) + 2 * 3_600_000);
+      const data = { sku: 'TEE-NAVY-M', warehouseId: 'SAMPLE-WH-1', onHand: 11, reserved: 0, available: 11, updatedAt: at.toISOString() };
+      const signed = signedErpWebhook(secret, { id: `evt_${randomBytes(6).toString('hex')}`, type: 'stock.changed', data }, new Date());
+      const got = await receiveErpWebhook(
+        { ...inventory, connections, now: () => new Date() },
+        { rawBody: signed.body, signature: signed.headers[ERP_SIGNATURE_HEADER] ?? null, timestamp: signed.headers[ERP_TIMESTAMP_HEADER] ?? null, idempotencyKey: null },
+      );
+      expect(got).toMatchObject({ status: 202, code: 'ACCEPTED' });
+      const before = await movements();
+      const def = jobDefinition(ERP_WEBHOOK_JOB)!;
+      const w = await startWorker({ deps: live(), redisUrl: REDIS_URL, prefix, jobs: new Map([[def.key, def]]), planners: [webhookPlanner], log: quiet });
+      workers.push(w);
+      expect(await w.tick()).toBe(1);
+      await until('the webhook to be applied', async () => (await t.prisma.webhookEvent.findUniqueOrThrow({ where: { id: got.eventId! } })).status === 'PROCESSED');
+      expect(await movements()).toBe(before + 1);
+      expect(await t.prisma.jobRun.findMany({ where: { idempotencyKey: webhookRunKey(got.eventId!) }, select: { status: true } })).toEqual([{ status: 'SUCCEEDED' }]);
+      // Handled: the next tick plans nothing for it.
+      expect(await w.tick()).toBe(0);
+      await w.stop();
+      vaultValues.delete('extasErp.webhookSecret');
     });
   });
 });

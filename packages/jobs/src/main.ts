@@ -12,6 +12,7 @@ import { getPrisma } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import { errorLine, type JobDeps } from './context';
+import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
 
 async function main(): Promise<void> {
@@ -31,6 +32,8 @@ async function main(): Promise<void> {
     version: process.env.GIT_SHA?.slice(0, 12) || null,
     color: process.env.EXTAS_COLOR || null,
     healthFile: process.env.EXTAS_WORKER_HEALTH_FILE || null,
+    // PR 196: verified ERP webhooks waiting to be applied
+    planners: [webhookPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

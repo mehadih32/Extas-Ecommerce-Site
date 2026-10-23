@@ -9,11 +9,15 @@ import {
   createErpHttpClient,
   erpCodeForStatus,
   ErpError,
+  ERP_SIGNATURE_HEADER,
+  ERP_TIMESTAMP_HEADER,
   extasErp,
   MockErpWorld,
   mockErp,
+  parseErpWebhookEvent,
   retryAfterMs,
   signErpBody,
+  signedErpWebhook,
   toErpError,
   verifyErpSignature,
   type AdapterContext,
@@ -179,6 +183,49 @@ describe('request signing (PR 194, contract: HMAC of the raw body + timestamp, 5
     expect(verifyErpSignature({ ...ok, timestamp: String(Math.floor(now / 1000) - 301) })).toEqual({ ok: false, reason: 'stale' });
     expect(verifyErpSignature({ ...ok, signature: null })).toEqual({ ok: false, reason: 'missing' });
     expect(verifyErpSignature({ ...ok, signature: 'md5=abc' })).toEqual({ ok: false, reason: 'malformed' });
+  });
+});
+
+describe('ERP → shop webhooks (PR 196: stock.changed, variant.changed)', () => {
+  const secret = randomBytes(16).toString('hex');
+  const stock = { sku: 'TEE-NAVY-M', warehouseId: 'SAMPLE-WH-1', onHand: 4, reserved: 1, available: 3, updatedAt: T0.toISOString() };
+
+  it('reads both event types with the rows of the GET endpoints; anything else is named, never thrown', () => {
+    const s = parseErpWebhookEvent({ id: 'evt-1', type: 'stock.changed', occurredAt: T0.toISOString(), data: stock });
+    expect(s).toEqual({ ok: true, event: { id: 'evt-1', type: 'stock.changed', occurredAt: T0, data: { ...stock, updatedAt: T0 } } });
+    const v = parseErpWebhookEvent({ id: 7, type: 'variant.changed', data: { sku: 'TEE-NAVY-M', retailPrice: '1250.50', updatedAt: T0.toISOString() } });
+    expect(v.ok && v.event.id).toBe('7');
+    expect(v.ok && v.event.type === 'variant.changed' && [v.event.data.retailPrice, v.event.data.active, v.event.occurredAt]).toEqual(['1250.50', true, null]);
+    expect(parseErpWebhookEvent({ type: 'stock.changed', data: stock })).toMatchObject({ ok: true, event: { id: null } });
+    expect(parseErpWebhookEvent({ id: 'e', type: 'order.paid', data: {} })).toEqual({ ok: false, reason: 'UNKNOWN_TYPE', id: 'e', type: 'order.paid' });
+    expect(parseErpWebhookEvent({ id: 'e', type: 'stock.changed', data: { ...stock, onHand: 'four' } })).toMatchObject({ ok: false, reason: 'BAD_PAYLOAD', id: 'e', type: 'stock.changed' });
+    expect(parseErpWebhookEvent('not an object')).toMatchObject({ ok: false, reason: 'BAD_PAYLOAD', id: null, type: null });
+    expect(parseErpWebhookEvent({ id: 'e', type: 'stock.changed', occurredAt: 'yesterday', data: stock })).toMatchObject({ ok: false, reason: 'BAD_PAYLOAD' });
+  });
+
+  it('a signed event verifies with the same secret and its own timestamp, and with nothing else', () => {
+    const w = signedErpWebhook(secret, { id: 'evt-2', type: 'stock.changed', data: stock }, T0);
+    const check = (s: string, now = T0.getTime()) => verifyErpSignature({ secret: s, rawBody: w.body, signature: w.headers[ERP_SIGNATURE_HEADER], timestamp: w.headers[ERP_TIMESTAMP_HEADER], maxAgeSeconds: 300, now });
+    expect(w.headers[ERP_TIMESTAMP_HEADER]).toBe(String(T0.getTime() / 1000));
+    expect(check(secret)).toEqual({ ok: true });
+    expect(check(`${secret}x`)).toEqual({ ok: false, reason: 'mismatch' });
+    expect(check(secret, T0.getTime() + 301_000)).toEqual({ ok: false, reason: 'stale' });
+  });
+
+  it('the practice ERP sends signed events of its own state, with the secret it is given', () => {
+    const world = new MockErpWorld();
+    world.now = () => T0;
+    world.setStock('TEE-NAVY-M', 'SAMPLE-WH-1', { onHand: 5, reserved: 2, updatedAt: at(3) });
+    world.setVariant({ sku: 'TEE-NAVY-M', styleCode: 'TEE', retailPrice: '990.00', updatedAt: at(4) });
+    const s = world.stockChangedWebhook(secret, 'TEE-NAVY-M', 'SAMPLE-WH-1', { id: 'evt-s' });
+    expect(s.id).toBe('evt-s');
+    expect(parseErpWebhookEvent(JSON.parse(s.body))).toMatchObject({ ok: true, event: { type: 'stock.changed', data: { onHand: 5, reserved: 2, available: 3, updatedAt: at(3) } } });
+    expect(verifyErpSignature({ secret, rawBody: s.body, signature: s.headers[ERP_SIGNATURE_HEADER], timestamp: s.headers[ERP_TIMESTAMP_HEADER], maxAgeSeconds: 300, now: T0.getTime() })).toEqual({ ok: true });
+    const v = world.variantChangedWebhook(secret, 'TEE-NAVY-M');
+    expect(v.id).toMatch(/^evt_[0-9a-f]{16}$/);
+    expect(parseErpWebhookEvent(JSON.parse(v.body))).toMatchObject({ ok: true, event: { type: 'variant.changed', data: { retailPrice: '990.00', updatedAt: at(4) } } });
+    expect(() => world.stockChangedWebhook(secret, 'NOPE', 'SAMPLE-WH-1')).toThrow(/no stock/);
+    expect(() => world.variantChangedWebhook(secret, 'NOPE')).toThrow(/no variant/);
   });
 });
 

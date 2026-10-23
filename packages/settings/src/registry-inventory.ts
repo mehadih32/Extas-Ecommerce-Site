@@ -9,6 +9,8 @@
 // (tries and pauses), low-stock alerts (thresholds per variant), the stock audit's reasons and limits, the publishing
 // queue's stock rules, the movement report and the ERP reconciliation, and the sync health panel.
 //
+// Version 22 (PR 196): the ERP → shop webhooks — on or off, the dedupe window, the largest body, the worker batch.
+//
 // The ERP's address, key and webhook secret are not settings: the address is on the connection row and the key and
 // secret are in the vault (PR 493, 500). A store's company and warehouse mapping is the owner's data (StoreErpMapping,
 // Store.erpCompanyId — PR 509), not a setting either.
@@ -18,6 +20,7 @@ import { dictionarySchema } from './schemas';
 
 const V = 10;
 const V11 = 11;
+const V22 = 22;
 
 /** A variant's ERP SKU as a settings key. */
 const skuKeySchema = z.string().trim().min(1).max(64);
@@ -196,6 +199,60 @@ export const inventorySettings = {
     isOwnerData: false,
     sortOrder: 110,
     version: V,
+  }),
+  // ---- PR 196 (version 22) · the ERP → shop webhooks (stock.changed, variant.changed). The secret is in the vault;
+  // without it every webhook is refused, and the stock poll stays the fallback either way. ----
+  'erp.webhook.enabled': setting({
+    schema: z.boolean(),
+    // On: with no webhook secret in the vault nothing gets in anyway; off refuses every webhook (the poll still runs).
+    default: true,
+    scope: 'installation',
+    valueType: 'BOOLEAN',
+    group: 'erp',
+    labelKey: 'erp.webhook.enabled.label',
+    helpKey: 'erp.webhook.enabled.help',
+    isOwnerData: false,
+    sortOrder: 111,
+    version: V22,
+  }),
+  'erp.webhook.dedupeHours': setting({
+    schema: z.int().min(1).max(720),
+    // The ERP retries an event for up to 24 h (contract); an event id seen again inside this window is the same event.
+    default: 72,
+    scope: 'installation',
+    valueType: 'INT',
+    group: 'erp',
+    labelKey: 'erp.webhook.dedupeHours.label',
+    helpKey: 'erp.webhook.dedupeHours.help',
+    isOwnerData: false,
+    sortOrder: 112,
+    version: V22,
+  }),
+  'erp.webhook.maxBodyKb': setting({
+    schema: z.int().min(1).max(1024),
+    // One event is one row of stock or one variant: a few hundred bytes.
+    default: 64,
+    scope: 'installation',
+    valueType: 'INT',
+    group: 'erp',
+    labelKey: 'erp.webhook.maxBodyKb.label',
+    helpKey: 'erp.webhook.maxBodyKb.help',
+    isOwnerData: false,
+    sortOrder: 113,
+    version: V22,
+  }),
+  'erp.webhook.batchSize': setting({
+    schema: z.int().min(1).max(1000),
+    // How many waiting events the background worker's scheduler puts on the queue per tick (PR 6).
+    default: 100,
+    scope: 'installation',
+    valueType: 'INT',
+    group: 'erp',
+    labelKey: 'erp.webhook.batchSize.label',
+    helpKey: 'erp.webhook.batchSize.help',
+    isOwnerData: false,
+    sortOrder: 114,
+    version: V22,
   }),
   // ---- PR 195, 499 · the checkout's live stock check: one quick try, then the shop's own copy ----
   'erp.liveCheck.timeoutSeconds': setting({

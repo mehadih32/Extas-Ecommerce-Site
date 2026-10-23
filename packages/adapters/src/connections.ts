@@ -177,6 +177,26 @@ async function test(integrationId: string, who: Who = {}, mode?: Mode): Promise<
       return value as Connected<Api>;
     },
 
+    /**
+     * PR 196 — one key of the connection `use` would pick, for checking what comes in from that service (an incoming
+     * webhook's signature). Null when no connection row is switched on or the key is not in the vault. Read through
+     * the same cache as the adapters' own keys (one vault access-log row per refresh).
+     */
+    async secretOf(kind: Kind, field: string, where: { storeId?: number | null; provider?: string } = {}): Promise<{ value: string; integrationId: string; provider: string; mode: Mode; storeId: number | null } | null> {
+      const row = await findRow(kind, where.storeId ?? null, where.provider);
+      if (!row) return null;
+      const a = adapter(kind, row.provider);
+      if (!a.secrets.includes(field)) return null;
+      let value: string | null;
+      try {
+        value = await context(a, row.mode, row.config, row.storeId).secret(field);
+      } catch {
+        // A connection whose settings are broken is not one to trust incoming messages for.
+        return null;
+      }
+      return value ? { value, integrationId: row.id, provider: row.provider, mode: row.mode, storeId: row.storeId } : null;
+    },
+
     /** Moves a connection to `mode`. Leaving MOCK needs a passing test in that mode first; the switch is audited. */
     async setMode(integrationId: string, mode: Mode, who: Who = {}): Promise<TestOutcome> {
       const row = await opts.db.integration.findUniqueOrThrow({ where: { id: integrationId } });

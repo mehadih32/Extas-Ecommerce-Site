@@ -126,7 +126,13 @@ type PageCounts = Pick<StockPullResult, 'applied' | 'unchanged' | 'stale' | 'unk
   touched: string[];
 };
 
-export async function applyPage(deps: InventoryDeps, storeId: number, runId: string, rows: ErpStockRow[], locations: Map<string, ErpLocation>, kinds: Set<LocationKindName>): Promise<PageCounts> {
+/**
+ * Applies ERP stock rows to one store's mirror. `ref` is what the movements point at: the sync run (its id) or, for a
+ * webhook (PR 196), `{ type: 'WebhookEvent', id }`. The movement keys come from the ERP's own state either way, so a
+ * row that came by webhook and again by the poll moves stock once.
+ */
+export async function applyPage(deps: InventoryDeps, storeId: number, ref: string | { type: string; id: string }, rows: ErpStockRow[], locations: Map<string, ErpLocation>, kinds: Set<LocationKindName>): Promise<PageCounts> {
+  const reference = typeof ref === 'string' ? { type: 'ErpSyncRun', id: ref } : ref;
   return deps.db.$transaction(async (tx) => {
     const c: PageCounts = { applied: 0, unchanged: 0, stale: 0, unknownSku: 0, retiredSku: 0, unmappedWarehouse: 0, movements: 0, variantsChanged: 0, productsRefreshed: 0, maxSeen: null, touched: [] };
     const skus = [...new Set(rows.map((r) => r.sku))];
@@ -186,8 +192,8 @@ export async function applyPage(deps: InventoryDeps, storeId: number, runId: str
           locationId: loc.locationId,
           delta,
           reason: 'erp.sync',
-          referenceType: 'ErpSyncRun',
-          referenceId: runId,
+          referenceType: reference.type,
+          referenceId: reference.id,
           // The ERP's own state names the movement: the same row read again can never move stock twice.
           idempotencyKey: `erp-stock:${v.id}:${loc.locationId}:${r.updatedAt.toISOString()}:${r.onHand}`,
           erpRef: r.warehouseId,

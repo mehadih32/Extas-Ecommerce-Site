@@ -49,9 +49,9 @@ describe('PR 6 · timetable slots', () => {
 });
 
 describe('PR 6 · catalogue', () => {
-  it('knows the inventory jobs on one queue', () => {
+  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release'].sort(),
+      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release'].sort(),
     );
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);
     expect(jobDefinition('nope')).toBeNull();

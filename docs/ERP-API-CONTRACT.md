@@ -37,6 +37,38 @@ documents and never journal lines, and the `companyId` comes from the key.
 - Signed as above. Retried with backoff up to 24 h. Every event is logged in `WebhookEvent`.
 - **Fallback:** the shop polls `updatedSince` every few minutes, so a missed webhook never leaves stock wrong.
 
+### The shop's receiver (PR 196, built 23 Oct 2026)
+- **URL:** `POST https://<shop domain>/api/erp/webhook` (the domain is a setting; on staging, new.extas.com.bd).
+- **Body** (JSON, at most `erp.webhook.maxBodyKb`, default 64 KB):
+  `{ "id": "<event id, unique per integration>", "type": "stock.changed" | "variant.changed", "occurredAt": "<ISO time>", "data": { … } }`.
+  - `stock.changed` data is one row as `GET /stock` returns it: `sku`, `warehouseId`, `onHand`, `reserved`,
+    `available`, `updatedAt`.
+  - `variant.changed` data is one row as `GET /catalog/variants` returns it.
+  - With no `id` in the body, the `Idempotency-Key` header is the event id.
+- **Headers:** `X-Extas-Signature: sha256=<hex HMAC-SHA256 of the raw body with the webhook secret>` and
+  `X-Extas-Timestamp: <unix seconds>`. Older than `erp.webhook.maxAgeSeconds` (default 300) is refused as a replay.
+- **The secret** is the integration's webhook secret, typed into the shop's vault on "Keys & connections"
+  (`extasErp.webhookSecret`). **While no secret is entered, the shop refuses every webhook.**
+- **Answers** (JSON `{ ok, code, eventId? }`):
+
+  | Status | Code | Meaning | ERP should |
+  |---|---|---|---|
+  | 202 | `ACCEPTED` | Verified and stored; the shop applies it in the background. | stop retrying |
+  | 202 | `IGNORED_TYPE` | Verified, but a type the shop does not use; logged. | stop retrying |
+  | 200 | `DUPLICATE` | The same event id within `erp.webhook.dedupeHours` (default 72 h); stored once. | stop retrying |
+  | 400 | `BAD_JSON` / `BAD_PAYLOAD` / `NO_EVENT_ID` | Verified but broken; logged as failed where it has an id. | fix, do not retry the same body |
+  | 401 | `NO_SECRET` / `UNSIGNED` / `BAD_SIGNATURE` / `STALE` | Not accepted; nothing stored. | check the secret and clock |
+  | 413 | `TOO_LARGE` | Over the size limit. | send one row per event |
+  | 503 | `OFF` / `UNAVAILABLE` | The receiver is switched off (`erp.webhook.enabled`) or starting. | retry later |
+
+- **Order:** a change older than what the shop already holds for that SKU (by `updatedAt`) is ignored as out of
+  order, so a late "5" never overwrites a newer "3". The same row by webhook and again by the poll moves stock once.
+- **What it changes:** `stock.changed` updates the shop's stock copy (with a stock movement). `variant.changed`
+  updates the ERP mirror of the variant (barcode, ERP retail price, average cost); the shop's own sale price is never
+  changed by the ERP.
+- **The practice ERP** (the mock used until the real one is connected) can make signed test events
+  (`stockChangedWebhook`, `variantChangedWebhook`); they reach the shop's stock only when `erp.mock.stockEnabled` is on.
+
 ## ERP admin screen
 Settings → Integrations → **E-commerce**:
 - create an integration (platform `CUSTOM_WEBSITE`, name, company, warehouse, shop webhook URL);

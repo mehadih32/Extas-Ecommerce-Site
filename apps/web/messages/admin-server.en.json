@@ -55,7 +55,8 @@
       "inventory_reservations_release": "Expired cart holds",
       "inventory_erp_pushDocuments": "Documents to the ERP",
       "inventory_lowStock_evaluate": "Low stock check",
-      "inventory_erp_reconcile": "Stock check against the ERP"
+      "inventory_erp_reconcile": "Stock check against the ERP",
+      "erp_webhook_process": "Stock news from the ERP"
     },
     "workers": {
       "title": "Workers",

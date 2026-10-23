@@ -70,7 +70,7 @@ export const erpStockRowSchema = z.object({
   updatedAt: dateText,
 });
 
-const variantSchema = z.object({
+export const erpVariantRowSchema = z.object({
   sku: z.string().trim().min(1),
   barcode: optText,
   styleCode: optText,
@@ -218,7 +218,7 @@ export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly b
 
     async variants(q, o): Promise<ErpPage<ErpVariantRow>> {
       const page = pageOf(await get('/catalog/variants', { updatedSince: iso(q.updatedSince), cursor: q.cursor, limit: String(q.limit) }, o));
-      const r = rows(page.items, variantSchema);
+      const r = rows(page.items, erpVariantRowSchema);
       return { items: r.items, rejected: r.rejected, nextCursor: page.nextCursor };
     },
 

@@ -6,8 +6,9 @@
 //
 // The inventory jobs (S09) were shaped for this worker from the start (`@extas/inventory` jobs.ts): the stock pull,
 // the cart-hold expiry, the ERP document relay (the outbox), the low-stock check, the reconcile with the ERP and the
-// default locations. A later stage adds its job here with its key, queue and function.
-import { INVENTORY_QUEUE, runInventoryJob, type InventoryJob } from '@extas/inventory';
+// default locations. PR 196 adds the ERP webhook job (one stored event applied). A later stage adds its job here with
+// its key, queue and function.
+import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -77,7 +78,29 @@ function inventoryJob(name: InventoryJob['name']): JobDefinition<InventoryJob> {
   };
 }
 
-const definitions: JobDefinition<never>[] = [...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>)];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * PR 196 — one verified ERP webhook (WebhookEvent, stored by POST /api/erp/webhook) applied to the shop's copy. Its
+ * run key is the event: planned again and again until it is handled, it runs once. An event that cannot be applied
+ * (practice ERP, unknown SKU, out of order) is marked IGNORED with the reason: that is a finished job, not a failure.
+ */
+const webhookJob: JobDefinition<{ eventId: string }> = {
+  key: ERP_WEBHOOK_JOB,
+  queue: INVENTORY_QUEUE,
+  parse(payload) {
+    const id = (payload as { eventId?: unknown } | null)?.eventId;
+    if (typeof id !== 'string' || !UUID.test(id)) throw new Error(`${ERP_WEBHOOK_JOB}: eventId must be a uuid`);
+    return { eventId: id };
+  },
+  storeOf: () => null,
+  run: async (deps, p) => {
+    const r = await processErpWebhook(deps.inventory, p.eventId);
+    return { ok: true, stats: compactStats(r) };
+  },
+};
+
+const definitions: JobDefinition<never>[] = [...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>), webhookJob as unknown as JobDefinition<never>];
 
 /** Every job by key. */
 export const JOBS: ReadonlyMap<string, JobDefinition<unknown>> = new Map(definitions.map((d) => [d.key, d as unknown as JobDefinition<unknown>]));

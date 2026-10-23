@@ -138,6 +138,23 @@ describe.skipIf(!HAS_DB)('connections with PostgreSQL', () => {
     expect(reads).toBe(1);
   });
 
+  it('PR 196: gives the switched-on connection\'s own key for checking what comes in, once per cache period', async () => {
+    const c = connections();
+    expect(await c.secretOf('OTHER', 'apiKey', { provider: 'echo' })).toBeNull(); // no connection row
+    const row = await t.prisma.integration.create({ data: { kind: 'OTHER', provider: 'echo', name: 'main', enabled: true, mode: 'LIVE' } });
+    await vault.put('echo.apiKey', 'sample-key-246', {}, who);
+    reads = 0;
+    const fresh = connections();
+    for (let i = 0; i < 3; i++) {
+      expect(await fresh.secretOf('OTHER', 'apiKey', { storeId, provider: 'echo' })).toEqual({ value: 'sample-key-246', integrationId: row.id, provider: 'echo', mode: 'LIVE', storeId: null });
+    }
+    expect(reads).toBe(1);
+    expect(await fresh.secretOf('OTHER', 'notAKey', { provider: 'echo' })).toBeNull();
+    // Broken settings: not a connection to trust incoming messages for.
+    await t.prisma.integration.update({ where: { id: row.id }, data: { config: { leak: 'yes' } } });
+    expect(await connections().secretOf('OTHER', 'apiKey', { provider: 'echo' })).toBeNull();
+  });
+
   it('says which settings are wrong without showing their values', async () => {
     const row = await t.prisma.integration.create({
       data: { kind: 'STORAGE', provider: 'azureBlob', name: 'main', enabled: true, config: { accountName: 'Not Valid!', container: 'media' } },
