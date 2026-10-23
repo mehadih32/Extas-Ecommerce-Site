@@ -92,6 +92,24 @@ export const accountLoginSchema = z
   })
   .strict();
 
+/** PR 135 (SIM-F-018) — the late flag: an order past its band's promise in hours (plus a grace) and not yet delivered. */
+export const accountTrackLateSchema = z
+  .object({
+    enabled: z.boolean(),
+    /** Hours after the promise before the order is called late. */
+    graceHours: z.int().min(0).max(168),
+  })
+  .strict();
+
+/** PR 135 (CN-014 idea 10) — the exact-amount line: what the rider may take at the door, and a way to report more. */
+export const accountTrackExactSchema = z
+  .object({
+    enabled: z.boolean(),
+    /** Show "Asked for more? Tell us" with a WhatsApp link (needs the store's WhatsApp number). */
+    report: z.boolean(),
+  })
+  .strict();
+
 const base = { scope: 'store', isOwnerData: false, group: 'accounts', version: V } as const;
 
 export const accountSettings = {
@@ -196,5 +214,33 @@ export const accountSettings = {
     labelKey: 'account.photo.label',
     helpKey: 'account.photo.help',
     sortOrder: 100,
+  }),
+  // ---- PR 135 · the tracking page: the welcome panel, the late flag (SIM-F-018), the exact-amount line (CN-014) ----
+  'account.track.welcome': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'account.track.welcome.label',
+    helpKey: 'account.track.welcome.help',
+    sortOrder: 110,
+  }),
+  'account.track.late': setting({
+    ...base,
+    schema: accountTrackLateSchema,
+    default: { enabled: true, graceHours: 0 },
+    valueType: 'JSON',
+    labelKey: 'account.track.late.label',
+    helpKey: 'account.track.late.help',
+    sortOrder: 120,
+  }),
+  'account.track.exactAmount': setting({
+    ...base,
+    schema: accountTrackExactSchema,
+    default: { enabled: false, report: true },
+    valueType: 'JSON',
+    labelKey: 'account.track.exactAmount.label',
+    helpKey: 'account.track.exactAmount.help',
+    sortOrder: 130,
   }),
 };

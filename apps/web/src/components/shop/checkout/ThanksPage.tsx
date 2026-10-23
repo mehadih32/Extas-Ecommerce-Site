@@ -2,10 +2,11 @@
 // the order's own band in hours (or that we call to confirm an address being checked), the order number with Copy,
 // what is still to pay (Cash on Delivery due at the door, paid, "Pay now" while a prepaid payment waits, "Try again"
 // after a failed one), the order's lines and money as stored, the WhatsApp button and "Keep shopping".
-// Left out until their PRs (the copy says only what the shop really does): the SMS line (no SMS is sent yet), "Track
-// your order" (PR 135), "Complete your look" (PR 128) ~~and the next-steps timeline~~.
+// Left out until their PRs (the copy says only what the shop really does): the SMS line (no SMS is sent yet), ~~"Track
+// your order" (PR 135)~~, "Complete your look" (PR 128) ~~and the next-steps timeline~~.
 // Follow-up 58 (`thanks.page`): the delivery note he wrote, said back (on); the trial-at-the-door line while that
 // service is on (`checkout.tryOn.enabled`); and "What happens next" (off, as in the demo: `thanks.nextSteps`).
+// PR 135: "Track your order" opens the order's own page in My account with its welcome panel (`?from=thanks`).
 // PR 129: the account card — "Your account is ready" (or "This order is in your account") with the number he logs in
 // with and that the code comes by SMS to it. Never a password (SIM-F-039); "You're logged in" when he ordered signed in.
 import '../bag/bag.css';
@@ -296,6 +297,10 @@ export async function ThanksPage({
             </b>
             <CopyNumber number={r.number} words={words} />
           </div>
+          <a className="btn btn-primary ty-track" href={`${hrefIn(c.lang, ROUTES.order(r.number))}?from=thanks`} data-testid="ty-track">
+            <Icon name="truck" size={19} />
+            {c.t('account.track.button')}
+          </a>
         </div>
       </section>
       <div className="container ty-wrap">

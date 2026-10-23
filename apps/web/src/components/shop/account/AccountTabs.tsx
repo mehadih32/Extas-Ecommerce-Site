@@ -39,6 +39,16 @@ export function StatusTag({ c, o }: { c: ShopContext; o: Pick<OrderCard, 'status
   );
 }
 
+/** PR 135 (SIM-F-018): past its band's promise in hours and still on its way. */
+export function LateTag({ c }: { c: ShopContext }) {
+  return (
+    <span className="tag sale" data-testid="acc-late">
+      <Icon name="clock" size={12} />
+      {c.t('account.track.lateTag')}
+    </span>
+  );
+}
+
 /** The parcel's journey in pictures; the whole rail opens the order (demo acc_trackFlow). */
 export function TrackFlow({ c, o }: { c: ShopContext; o: OrderCard }) {
   const cur = o.track.reached - 1;
@@ -77,6 +87,7 @@ function OrderCardView({ c, o, cards }: { c: ShopContext; o: OrderCard; cards: M
         </div>
         <div className="row wrap mt8" style={{ gap: 6 }}>
           <StatusTag c={c} o={o} />
+          {o.late ? <LateTag c={c} /> : null}
         </div>
       </div>
       <div className="acc-ordmid">

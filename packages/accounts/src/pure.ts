@@ -83,6 +83,44 @@ export function trackOf(status: OrderState, t: OrderTimes): TrackView {
   };
 }
 
+/** States after which nothing more is on its way: never late. */
+const FINAL: ReadonlySet<OrderState> = new Set(['DRAFT', 'DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED', 'CANCELLED']);
+
+export interface LateRule {
+  enabled: boolean;
+  graceHours: number;
+}
+
+export interface LateView {
+  /** Past the promise (and the grace), still not delivered. */
+  late: boolean;
+  /** The end of the band's promise (placed + its most hours); null when the band promises no hours. */
+  dueBy: string | null;
+}
+
+const HOUR_MS = 3_600_000;
+
+/**
+ * PR 135 (SIM-F-018) — is the order late? The promise is kept in hours (the band's `hoursMax`, counted from when it was
+ * placed); past it, plus the owner's grace, an order still on its way is late. A band without hours is never late.
+ */
+export function lateOf(o: { status: OrderState; placedAt: Date | string; hoursMax: number | null | undefined }, rule: LateRule, now: Date): LateView {
+  if (o.hoursMax == null || o.hoursMax <= 0) return { late: false, dueBy: null };
+  const due = new Date(o.placedAt).getTime() + o.hoursMax * HOUR_MS;
+  const late = rule.enabled && !FINAL.has(o.status) && now.getTime() > due + rule.graceHours * HOUR_MS;
+  return { late, dueBy: new Date(due).toISOString() };
+}
+
+/**
+ * PR 135 (CN-014 idea 10) — what the rider may take at the door: the Cash-on-Delivery amount, or nothing for a paid
+ * order; null while a prepaid payment still waits (he pays online first, not the rider).
+ */
+export function riderAmountOf(pay: { kind: 'cod' | 'paid' | 'due' | 'failed'; dueMinor?: number }): number | null {
+  if (pay.kind === 'cod') return Math.max(0, pay.dueMinor ?? 0);
+  if (pay.kind === 'paid') return 0;
+  return null;
+}
+
 /** The first word of a name ("Hi, Rahim"), or '' for none. */
 export const firstNameOf = (name: string | null | undefined): string => (name ?? '').trim().split(/\s+/)[0] ?? '';
 

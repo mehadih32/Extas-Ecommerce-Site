@@ -263,6 +263,39 @@
       "notYours": "This order is not in your account",
       "notYoursText": "Log in with the mobile number used for order {number}.",
       "back": "All my orders"
+    },
+    "track": {
+      "button": "Track your order",
+      "label": "Order tracking",
+      "step": {
+        "placed": "Order placed",
+        "confirmed": "Order confirmed",
+        "packed": "Packed",
+        "courier": "With the courier",
+        "delivered": "Delivered"
+      },
+      "next": "Next step",
+      "soon": "Coming up",
+      "within": "Within {hours} hours",
+      "dueBy": "Due by {date}",
+      "lateTag": "Late",
+      "lateTitle": "Late — we are chasing the courier",
+      "lateText": "It was due by {date}. We are on it and will keep you posted.",
+      "lateWa": "Ask us on WhatsApp",
+      "lateMsg": "Hi {store}, my order #{number} is late. Where is it?",
+      "courier": "Courier",
+      "tracking": "Tracking number",
+      "welcomeTitle": "This is your account",
+      "welcomeCreated": "Made with this order. Every order and delivery lives here.",
+      "welcomeExisting": "This order is in your account, with every order and delivery.",
+      "loginWith": "Log in with",
+      "how": "How",
+      "howText": "A code by SMS, no password",
+      "close": "Close",
+      "exact": "Pay the rider exactly {amount}. Not a taka more.",
+      "exactPaid": "This order is paid. Pay the rider nothing.",
+      "exactReport": "Asked for more? Tell us",
+      "exactMsg": "Hi {store}, for order #{number} the rider asked for more than {amount}."
     }
   }
 }
