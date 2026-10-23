@@ -52,7 +52,8 @@
 /* follow-up 5 of PR 85: a long name wraps; a name cut with "…" hides which product it is (the device gate fails it) */
 .pa-nm { font-weight: 700; font-size: 14px; line-height: 24px; color: var(--ad-ink); display: block; overflow-wrap: anywhere; }
 .pa-nm:hover { text-decoration: underline; }
-.pa-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* follow-up 75: a sub-category's path ("Polos › Knit polos") wraps like the name; cut with "…" it hid where it sits */
+.pa-path { overflow-wrap: anywhere; }
 .pa-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--ad-fs-mini); color: var(--ad-text2); margin-top: 4px; min-width: 0; }
 .pa-meta > span:last-child { overflow-wrap: anywhere; min-width: 0; }
 .pa-dots { display: inline-flex; flex-shrink: 0; }

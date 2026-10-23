@@ -26,6 +26,7 @@ describe.skipIf(!HAS_DB)('sample seed on PostgreSQL', () => {
     const variants = sampleCatalogue.products.reduce((n, p) => n + p.colours.length * p.sizes.length, 0);
     expect(r.created).toMatchObject({
       Store: 1,
+      Category: sampleCatalogue.subCategories.length,
       Product: sampleCatalogue.products.length,
       ProductVariant: variants,
       StockLevel: variants,
@@ -67,7 +68,22 @@ describe.skipIf(!HAS_DB)('sample seed on PostgreSQL', () => {
     expect(variant.stockLevels[0]).toMatchObject({ onHand: 0, available: 0 });
     const listings = await db.prisma.categoryProduct.count({ where: { storeId, isVisible: true } });
     expect(listings).toBe(sampleCatalogue.products.length);
-    expect(await db.prisma.category.count({ where: { storeId, isVisible: true } })).toBe(sampleCatalogue.visibleCategories.length);
+    expect(await db.prisma.category.count({ where: { storeId, isVisible: true } })).toBe(
+      sampleCatalogue.visibleCategories.length + sampleCatalogue.subCategories.length,
+    );
+  });
+
+  it('follow-up 75: the sample sub-category sits under its parent with a product, so the phone menu draws it', async () => {
+    expect(sampleCatalogue.subCategories.length).toBeGreaterThan(0);
+    for (const c of sampleCatalogue.subCategories) {
+      const row = await db.prisma.category.findUniqueOrThrow({
+        where: { storeId_slug: { storeId, slug: c.slug } },
+        include: { parent: { select: { slug: true, garmentTypeId: true } }, _count: { select: { products: true } } },
+      });
+      expect(row).toMatchObject({ isVisible: true, parent: { slug: c.parent } });
+      expect(row.garmentTypeId).toBe(row.parent!.garmentTypeId);
+      expect(row._count.products).toBeGreaterThan(0);
+    }
   });
 
   it('second run changes nothing at all — not one row, not one updatedAt', async () => {

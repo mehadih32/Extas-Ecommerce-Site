@@ -77,7 +77,9 @@ describe('general default pack (PR 508)', () => {
 describe('sample catalogue (PR 14)', () => {
   it("holds the demo's catalogue: 17 products in the pack's categories, every colour and size known", () => {
     expect(sampleCatalogue.products).toHaveLength(17);
-    const cats = new Set(defaultPack.categories.map((c) => c.slug));
+    // follow-up 75: a product may sit in a sample sub-category of a pack category
+    const cats = new Set([...defaultPack.categories.map((c) => c.slug), ...sampleCatalogue.subCategories.map((c) => c.slug)]);
+    for (const c of sampleCatalogue.subCategories) expect(defaultPack.categories.some((k) => k.slug === c.parent)).toBe(true);
     for (const p of sampleCatalogue.products) expect(cats.has(p.category), p.slug).toBe(true);
     const variants = sampleCatalogue.products.reduce((n, p) => n + p.colours.length * p.sizes.length, 0);
     expect(variants).toBeGreaterThan(200);
