@@ -52,6 +52,7 @@ export async function CheckoutPage({ c, quote, s }: { c: ShopContext; quote: Che
         lines={<CheckoutLines c={c} view={view} cards={cards} />}
         wa={wa}
         fields={fieldOrder(s['checkout.fieldOrder'])}
+        limits={{ nameMin: s['checkout.form.nameMin'], addressMin: s['checkout.form.addressMin'] }}
       />
     </div>
   );

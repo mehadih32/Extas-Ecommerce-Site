@@ -17,7 +17,14 @@ export function checkoutDeps(): CheckoutDeps | null {
   return { db: getPrisma(), settings: resolver };
 }
 
-const KEYS = ['checkout.fieldOrder', 'checkout.tryOn.enabled', 'checkout.help.enabled', 'policy.exchange.windowHours'] as const satisfies readonly Key[];
+const KEYS = [
+  'checkout.fieldOrder',
+  'checkout.tryOn.enabled',
+  'checkout.help.enabled',
+  'checkout.form.nameMin',
+  'checkout.form.addressMin',
+  'policy.exchange.windowHours',
+] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
 export type CheckoutSettings = { [K in CheckoutKey]: Value<K> };

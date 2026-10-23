@@ -187,6 +187,19 @@
       "cod": "Cash on Delivery",
       "exchange": "Size exchange in {windowHours} hours",
       "secure": "Secure payment"
+    },
+    "form": {
+      "name": "Full name",
+      "phone": "Phone number",
+      "phonePh": "01XXXXXXXXX",
+      "address": "Full address",
+      "addressPh": "বাসা/রোড নম্বর, এলাকা, থানা ও জেলা লিখুন — রাইডার যেন সহজে খুঁজে পায়",
+      "weCall": "We'll call",
+      "phoneCount": "{n}/11 digits",
+      "phoneLong": "Too many digits",
+      "phoneCheck": "Check the number",
+      "phonePrefix": "A mobile number starts with 013 to 019. Check the number.",
+      "phoneLength": "Enter an 11-digit mobile number, like 01XXXXXXXXX."
     }
   },
   "notFound": {
