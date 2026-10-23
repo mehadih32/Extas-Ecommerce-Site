@@ -236,6 +236,12 @@ jobs:
       - name: Device gate summary
         if: always()
         run: cat device-gate-report/device-gate.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      # A failed page (an HTTP 500, say) is only explained by the server's own log, so it is printed and kept.
+      - name: Server log when the gate fails
+        if: failure()
+        run: |
+          tail -n 300 /tmp/web-server.log || true
+          cp /tmp/web-server.log device-gate-report/web-server.log 2>/dev/null || true
       - name: Keep the device gate report
         if: always()
         uses: actions/upload-artifact@v4
