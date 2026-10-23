@@ -1,0 +1,39 @@
+{
+  "name": "@extas/jobs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The background worker (PR 6, CN-022): BullMQ queues on the Redis queue store, one scheduler leader (a Redis lock with renewal), a JobRun row per attempt (status, retries, next attempt, failure reason) with idempotency keys so a retry never repeats a side effect, a heartbeat per worker, and the read model of the admin Server page. The package root has no queue client in it (the web app reads it); the worker itself is `@extas/jobs/worker`.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/adapters": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/inventory": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "@extas/vault": "workspace:*",
+    "bullmq": "5.81.5",
+    "ioredis": "5.11.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@extas/auth": "workspace:*",
+    "@extas/catalogue": "workspace:*",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

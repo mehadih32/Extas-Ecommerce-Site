@@ -20,6 +20,7 @@
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",
     "@extas/inventory": "workspace:*",
+    "@extas/jobs": "workspace:*",
     "@extas/media": "workspace:*",
     "@extas/rules": "workspace:*",
     "@extas/settings": "workspace:*",

@@ -1,5 +1,6 @@
 # EXTAS app (blue/green). Started by infra/deploy/deploy.sh as compose project extas-app-<color>.
-# Replicas and limits come from the auto profile (PR 604); secrets from the server only.
+# Replicas and limits come from the auto profile (PR 604); secrets from the server only. Two services per colour: the
+# web app and the background worker (PR 6).
 services:
   web:
     image: ${APP_IMAGE}
@@ -28,6 +29,47 @@ services:
     networks:
       extas:
         aliases: ["app-${EXTAS_COLOR}"]
+    logging:
+      driver: local
+      options: { max-size: "20m", max-file: "5" }
+
+  # PR 6 (CN-022) — the background worker: BullMQ jobs on the Redis queue store, one scheduler leader, a heartbeat the
+  # admin Server page shows. It runs from the release's migrate image (it holds the workspace sources and tsx), in the
+  # same colour as the web app, so deploy.sh starts, health-checks and rolls it back together with it. The health
+  # check reads the heartbeat file the worker writes on every beat: unhealthy when it is older than
+  # `jobs.heartbeat.staleSeconds` (the worker writes that limit into the file). WORKER_REPLICAS is 0 when the
+  # release has no worker (a rollback to an older version).
+  worker:
+    image: ${WORKER_IMAGE}
+    restart: unless-stopped
+    user: node
+    working_dir: /repo/packages/jobs
+    command: ["./node_modules/.bin/tsx", "src/main.ts"]
+    env_file:
+      - "${EXTAS_ROOT}/config/secrets/app.env"
+      - "${EXTAS_ROOT}/config/secrets/app-connections.env"
+    environment:
+      EXTAS_COLOR: ${EXTAS_COLOR}
+      EXTAS_TIMEZONE: ${EXTAS_TIMEZONE}
+      EXTAS_WORKER_HEALTH_FILE: /tmp/worker-health.json
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=${JOBS_NODE_HEAP_MB}
+    deploy:
+      replicas: ${WORKER_REPLICAS}
+      resources:
+        limits:
+          memory: ${JOBS_REPLICA_MEM_MB}M
+          cpus: "${JOBS_CPUS}"
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=JSON.parse(require('fs').readFileSync('/tmp/worker-health.json','utf8'));process.exit(Date.now()-h.at<h.staleMs?0:1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    # A clean stop lets running jobs finish, gives up the scheduler lock and marks the heartbeat stopped.
+    stop_grace_period: 60s
+    networks:
+      - extas
     logging:
       driver: local
       options: { max-size: "20m", max-file: "5" }

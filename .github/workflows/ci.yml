@@ -48,7 +48,8 @@ jobs:
           EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
-          printf 'APP_IMAGE=extas-web:test\nEXTAS_COLOR=blue\nEXTAS_ROOT=/srv/extas\nEXTAS_NVME_MOUNT=/mnt/nvme\nEXTAS_TIMEZONE=Asia/Dhaka\n' > /tmp/app.env
+          # PR 6: the background worker runs in each colour too (from the migrate image); deploy.sh sets these.
+          printf 'APP_IMAGE=extas-web:test\nWORKER_IMAGE=extas-migrate:test\nWORKER_REPLICAS=1\nEXTAS_COLOR=blue\nEXTAS_ROOT=/srv/extas\nEXTAS_NVME_MOUNT=/mnt/nvme\nEXTAS_TIMEZONE=Asia/Dhaka\n' > /tmp/app.env
           sudo touch /srv/extas/config/secrets/app.env /srv/extas/config/secrets/app-connections.env
           docker compose -f infra/stack/app.yml --env-file /tmp/profile.env --env-file /tmp/app.env config -q
 
@@ -278,6 +279,11 @@ jobs:
           POSTGRES_DB: extas
         ports: ["5432:5432"]
         options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
+      # PR 6 — the worker's queue store for its tests (the server's is set up the same: no eviction).
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 2s --health-retries 30
     env:
       NODE_OPTIONS: --max-old-space-size=4096
       DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
@@ -379,6 +385,15 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/checkout test
+      # PR 6 (CN-022) — the background worker: a JobRun row per attempt, retries with the backoff and the dead letter,
+      # the run-level idempotency (a delivery of a finished run is skipped), one scheduler leader, the heartbeat and the
+      # Server page's read model; a worker killed in the middle of a real stock pull on the practice ERP is taken over
+      # by another with no second stock movement. BullMQ on the job's Redis (its own key prefix).
+      - name: Background worker on PostgreSQL and Redis (PR 6)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+          TEST_REDIS_URL: redis://127.0.0.1:6379/0
+        run: pnpm --filter @extas/jobs test
       # S06 · PR 549–553, 555 — the delivery-zone engine: the gazetteer importer (re-runs change nothing, nothing is
       # deleted), the band map, the resolver, the autocomplete, the charge accuracy suite and phone-first recognition.
       - name: Delivery-zone engine on PostgreSQL (S06 · PR 549–553, 555)

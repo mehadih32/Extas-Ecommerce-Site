@@ -1,0 +1,86 @@
+{
+  "server": {
+    "metaTitle": "Server · Admin",
+    "eyebrow": "System",
+    "title": "Server",
+    "intro": "Is the background work running? Stock coming in from the ERP, expired cart holds, documents to the ERP and the daily checks all run here, away from the shop's pages.",
+    "verdict": {
+      "ok": {
+        "title": "Background work is running",
+        "text": "The worker said \"I am alive\" in the last {seconds} seconds."
+      },
+      "stale": {
+        "title": "Background work has stopped answering",
+        "text": "No sign of life for more than {seconds} seconds. Stock, cart holds and ERP documents wait until it is back. The server restarts it by itself; if this stays, tell the developer."
+      },
+      "stopped": {
+        "title": "Background work is switched off",
+        "text": "The worker was stopped on purpose (an update or a restart). It starts again with the next update."
+      },
+      "never": {
+        "title": "Background work has not started yet",
+        "text": "No worker has run on this server yet. It starts with the next update of the site."
+      }
+    },
+    "kpi": {
+      "lastBeat": "Last sign of life",
+      "lastBeatSub": "Checked every few seconds",
+      "workers": "Workers running",
+      "workersSub": "Copies doing background work",
+      "running": "Jobs running now",
+      "runningSub": "Started and not finished yet",
+      "retrying": "Failed, trying again",
+      "retryingSub": "Each waits a little longer before the next try",
+      "dead": "Given up",
+      "deadSub": "Tried the most times allowed"
+    },
+    "failed": {
+      "title": "Jobs that failed",
+      "sub": "The last {hours} hours. A job that worked on a later try is not listed.",
+      "empty": "No failed jobs. Everything finished.",
+      "status": {
+        "FAILED": "Trying again",
+        "DEAD_LETTERED": "Given up"
+      },
+      "tries": "Try {n} of {max}",
+      "next": "Next try: {time}",
+      "nextSoon": "Next try: in a moment",
+      "dead": "It will not be tried again by itself.",
+      "store": "Store {id}",
+      "more": "{n} more not shown"
+    },
+    "jobs": {
+      "inventory_erp_pullStock": "Stock from the ERP",
+      "inventory_locations_ensureDefaults": "Default stock locations",
+      "inventory_reservations_release": "Expired cart holds",
+      "inventory_erp_pushDocuments": "Documents to the ERP",
+      "inventory_lowStock_evaluate": "Low stock check",
+      "inventory_erp_reconcile": "Stock check against the ERP"
+    },
+    "workers": {
+      "title": "Workers",
+      "sub": "Each copy of the background worker and its last sign of life. Only one plans the jobs at a time (the leader).",
+      "empty": "No worker in the last {hours} hours.",
+      "leader": "Leader",
+      "alive": "Running",
+      "late": "Not answering",
+      "stopped": "Stopped",
+      "jobs": "{n} jobs running",
+      "since": "Started {time}",
+      "beat": "Last sign of life {time}",
+      "version": "Version {version}",
+      "colour": "Copy {colour}"
+    },
+    "time": {
+      "never": "Never",
+      "justNow": "Just now",
+      "secondsAgo": "{n} seconds ago",
+      "minutesAgo": "{n} minutes ago"
+    },
+    "note": "This page only shows; it changes nothing. Memory, disks, cache and alerts come to this page with their own steps.",
+    "errors": {
+      "WORKER_LOST": "The worker stopped in the middle of this job; it runs again.",
+      "STALLED": "The job got stuck too many times and was given up."
+    }
+  }
+}

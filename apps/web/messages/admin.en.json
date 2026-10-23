@@ -28,6 +28,7 @@
   "nav": {
     "products": "Products",
     "publishQueue": "Ready to publish",
+    "server": "Server",
     "integrations": "Keys & connections",
     "sizeCharts": "Size charts",
     "productImport": "Import from a link",

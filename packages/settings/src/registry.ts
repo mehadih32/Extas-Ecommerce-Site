@@ -22,6 +22,7 @@ import { categorySettings } from './registry-category';
 import { bagSettings } from './registry-bag';
 import { productSettings } from './registry-product';
 import { checkoutSettings } from './registry-checkout';
+import { jobsSettings } from './registry-jobs';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1133,6 +1134,8 @@ export const registry = {
   ...productSettings,
   // ---- S04 · PR 115–126 · the checkout: the field order, the try-on line, the form, payment, the wallet, consent, the confirm button, placement, the thank-you page (registry-checkout.ts, version 20). ----
   ...checkoutSettings,
+  // ---- PR 6 · the background worker: heartbeat, scheduler leader, retries (registry-jobs.ts, version 22). ----
+  ...jobsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

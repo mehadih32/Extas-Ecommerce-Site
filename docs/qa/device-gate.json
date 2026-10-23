@@ -14,7 +14,7 @@
     "expect": [".bg-line", "[data-testid=\"bag-summary\"]", "[data-testid=\"bag-checkout\"]"]
   },
   "signedIn": {
-    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer. PR 49-64: the product page with the sample products (a polo with five colours, trousers, a one-size pack; English and Bengali), opened signed out like a customer; `expect` needs the title, the colours or sizes and the Add button.",
+    "$comment": "Follow-up 5 of PR 85 — the signed-in run (--email/--password-file) on a database seeded with the sample catalogue (packages/seed sample, rules sample, combos sample: sample data only, never the owner's). Every lighthouserc path plus `urls` is opened with the session, except `signedOutPaths`. `discover` opens a page and adds the first `take` links its selector finds (required: none found fails the run). `expect` (per path, or per discover entry) lists the controls that only show with data; a page without them fails as CONTROL-MISSING, so the gate never passes on an empty page. PR 45-48: a category page with the sample polos (its grid, sizes and sort), opened signed out like a customer. PR 49-64: the product page with the sample products (a polo with five colours, trousers, a one-size pack; English and Bengali), opened signed out like a customer; `expect` needs the title, the colours or sizes and the Add button. PR 6: the Server page with its worker verdict.",
     "signedOutPaths": [
       "/admin/login",
       "/collections/polos",
@@ -28,6 +28,7 @@
       "/admin",
       "/admin/integrations",
       "/admin/products/new",
+      "/admin/server",
       "/collections/polos",
       "/bn/collections/polos",
       "/p/essential-pique-polo",
@@ -48,6 +49,7 @@
       "/admin/products": ["a.pa-nm"],
       "/admin/size-charts": [".sc-item"],
       "/admin/stock": ["a.st-name"],
+      "/admin/server": ["[data-worker-state]"],
       "/collections/polos": [".grid .pcard", ".cat-sz", ".cat-sortbtn"],
       "/bn/collections/polos": [".grid .pcard", ".cat-sz", ".cat-sortbtn"],
       "/p/essential-pique-polo": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills"],

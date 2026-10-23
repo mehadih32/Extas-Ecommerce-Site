@@ -16,7 +16,7 @@ WORK="$(mktemp -d)"
 EMAIL="owner@example.test"
 
 cleanup() {
-  docker rm -f "$NET-app" "$NET-pg" >/dev/null 2>&1 || true
+  docker rm -f "$NET-app" "$NET-worker" "$NET-redis" "$NET-pg" >/dev/null 2>&1 || true
   docker network rm "$NET" >/dev/null 2>&1 || true
   rm -rf "$WORK"
 }
@@ -46,6 +46,19 @@ mkdir -p "$WORK/out" && chmod 0777 "$WORK/out"
 docker run --rm --network "$NET" --env-file "$WORK/app.env" -v "$WORK/out:/out" "$MIGRATE" \
   sh -c "cd /repo/packages/auth && ./node_modules/.bin/tsx src/cli.ts create-owner --email $EMAIL --name 'E2E owner' --generate-to /out/first-password && chmod 0644 /out/first-password" \
   | sed -E 's/[0-9a-f-]{36}/<id>/'
+
+echo "e2e: the background worker (PR 6: the migrate image, as infra/stack/app.yml runs it) and its queue store"
+docker run -d --name "$NET-redis" --network "$NET" redis:7.4-alpine redis-server --maxmemory-policy noeviction >/dev/null
+echo "REDIS_QUEUE_URL=redis://$NET-redis:6379/0" >> "$WORK/app.env"
+docker run -d --name "$NET-worker" --network "$NET" --env-file "$WORK/app.env" -e EXTAS_WORKER_HEALTH_FILE=/tmp/worker-health.json \
+  -u node -w /repo/packages/jobs "$MIGRATE" ./node_modules/.bin/tsx src/main.ts >/dev/null
+# The same check as the container's health check in app.yml: a heartbeat file newer than its stale limit.
+for _ in $(seq 1 60); do
+  docker exec "$NET-worker" node -e "const h=JSON.parse(require('fs').readFileSync('/tmp/worker-health.json','utf8'));process.exit(Date.now()-h.at<h.staleMs?0:1)" \
+    >/dev/null 2>&1 && break
+  sleep 1
+done
+docker exec "$NET-worker" test -f /tmp/worker-health.json || { echo "e2e: the worker never beat"; docker logs --tail 50 "$NET-worker" 2>&1 | grep -viE 'password|secret|postgresql://'; exit 1; }
 
 echo "e2e: the app image"
 docker run -d --name "$NET-app" --network "$NET" --env-file "$WORK/app.env" -p "127.0.0.1:$PORT:3000" "$WEB" >/dev/null

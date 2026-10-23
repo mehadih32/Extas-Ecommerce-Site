@@ -26,6 +26,7 @@ COPY packages/combos/package.json packages/combos/
 COPY packages/cart/package.json packages/cart/
 COPY packages/checkout/package.json packages/checkout/
 COPY packages/delivery/package.json packages/delivery/
+COPY packages/jobs/package.json packages/jobs/
 # @extas/db generates the Prisma client on install, so its schema and CLI wrapper come in with the manifests.
 COPY packages/db/package.json packages/db/
 COPY packages/db/scripts packages/db/scripts
@@ -43,7 +44,8 @@ RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm status:gen && NODE_OPTIONS=--max
 # PostgreSQL (DATABASE_DIRECT_URL), then the settings migration (PR 496), then the auth sync (PR 16/495: permission
 # catalogue + owner role), then the sample gazetteer (PR 549; only while no real national list has been imported), then
 # the mother store of a fresh installation and the general default pack on every store (PR 508; both add only what
-# is missing). Needs no app build. The same image holds the owner set-up command (packages/auth, cli.ts create-owner).
+# is missing). Needs no app build. The same image holds the owner set-up command (packages/auth, cli.ts create-owner)
+# and runs the background worker (PR 6: packages/jobs, `tsx src/main.ts`; infra/stack/app.yml `worker`).
 FROM deps AS migrate
 COPY packages/ packages/
 ARG GIT_SHA=""

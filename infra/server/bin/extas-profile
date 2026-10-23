@@ -33,7 +33,7 @@ awk -v cpu="$CPU" -v ram="$NOMINAL_GB" \
   -v me="$PROFILE_MEILI_RAM_GB" -v mec="$PROFILE_MEILI_CPU" \
   -v ap="$PROFILE_APP_RAM_GB" -v apc="$PROFILE_APP_CPU" -v apr="$PROFILE_APP_REPLICAS" -v aph="$PROFILE_APP_HEAP_PCT" \
   -v wk="$PROFILE_WORKER_RAM_GB" -v wkc="$PROFILE_WORKER_CPU" \
-  -v jb="$PROFILE_JOBS_RAM_GB" -v jbc="$PROFILE_JOBS_CPU" \
+  -v jb="$PROFILE_JOBS_RAM_GB" -v jbc="$PROFILE_JOBS_CPU" -v jbr="${PROFILE_JOBS_REPLICAS:-1}" \
   -v cd="$PROFILE_CADDY_RAM_GB" -v cdc="$PROFILE_CADDY_CPU" \
   -v os="$PROFILE_OS_RAM_GB" -v ecs="$PROFILE_PG_EFFECTIVE_CACHE_GB" -v head="$PROFILE_PG_LIMIT_HEADROOM_PCT" \
   -v maxc="$PROFILE_PG_MAX_CONNECTIONS" -v pool="$PROFILE_PGBOUNCER_POOL" \
@@ -63,6 +63,8 @@ BEGIN {
   printf "APP_NODE_HEAP_MB=%d\n", int(ap_mb / reps * aph / 100)
   printf "WORKER_MEM_MB=%d\nWORKER_CPUS=%s\n", wk_mb, c(wkc)
   printf "JOBS_MEM_MB=%d\nJOBS_CPUS=%s\n", jb_mb, c(jbc)
+  # PR 6: the background worker, one Node process per copy; the copies share JOBS_MEM_MB like the app replicas
+  printf "JOBS_REPLICAS=%d\nJOBS_REPLICA_MEM_MB=%d\nJOBS_NODE_HEAP_MB=%d\n", jbr, int(jb_mb / jbr), int(jb_mb / jbr * aph / 100)
   printf "CADDY_MEM_MB=%d\nCADDY_CPUS=%s\n", cd_mb, c(cdc)
   printf "OS_RESERVE_MB=%d\n", os_mb
   printf "PROFILE_TOTAL_MB=%d\n", pg_mb + rd_mb + me_mb + ap_mb + wk_mb + jb_mb + cd_mb + os_mb
