@@ -26,6 +26,7 @@ import { jobsSettings } from './registry-jobs';
 import { shopMoreSettings } from './registry-shop-more';
 import { searchSettings } from './registry-search';
 import { storefrontFuSettings } from './registry-storefront-fu';
+import { pdpTemplateSettings } from './registry-pdp-templates';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1146,6 +1147,8 @@ export const registry = {
   // ---- S02 / S04 · the storefront follow-ups: card hover and quick add, structured data, size words, the address
   // suggestions, the thank-you page's next steps (registry-storefront-fu.ts, version 25). ----
   ...storefrontFuSettings,
+  // ---- S02 · PR 50–52, 58 · the product page templates and Find My Size (registry-pdp-templates.ts, version 28). ----
+  ...pdpTemplateSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

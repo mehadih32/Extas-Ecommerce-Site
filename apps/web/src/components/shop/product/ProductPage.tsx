@@ -24,6 +24,7 @@ import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
 import { payWords } from '@/lib/shop/pdp-price';
 import { readRecent, RECENT_COOKIE } from '@/lib/shop/pdp-rows';
 import { ruleCells } from '@/lib/shop/pdp-rules';
+import { TEMPLATE_QUERY, templateFor } from '@/lib/shop/pdp-template';
 import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
 import { trustFacts, trustItems } from '@/lib/shop/pdp-trust';
 import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
@@ -77,6 +78,7 @@ const KEYS = [
   'pdp.rows',
   'pdp.icons',
   'pdp.share',
+  'pdp.templates',
   'catalogue.sizeCharts.diagramFor',
   'policy.exchange.summary',
   'policy.returns.summary',
@@ -119,6 +121,8 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
   m.alternates = { ...m.alternates, canonical: canonicalFor(base, route.colour, data.category?.slug ?? null, set['pdp.page']) };
   const desc = (c.lang === 'bn' && data.descriptionBn?.trim()) || data.descriptionEn?.trim();
   if (desc) m.description = desc.length > 160 ? `${desc.slice(0, 157).trimEnd()}…` : desc;
+  // PR 52: a template preview (`?template=T2`) is never indexed; the canonical above already names the plain address
+  if (one(search[TEMPLATE_QUERY])) m.robots = { index: false, follow: true };
   return m;
 }
 
@@ -154,6 +158,9 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   const lang = c.lang;
   const prefix = c.s['naming.productPathPrefix'];
   const productHref = hrefIn(lang, `${prefix.replace(/\/+$/, '')}/${encodeURIComponent(data.slug)}`);
+
+  // ---- PR 52 · which template: the product's own, its category's, the shop's default (or the admin's preview) ----
+  const tpl = templateFor(set['pdp.templates'], data, data.categoryChain, one(search[TEMPLATE_QUERY])).template;
 
   // ---- PR 61 · price row ----
   const pr = set['pdp.price'];
@@ -367,7 +374,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
 
   return (
     <PdpRoot env={env} initial={{ colour, size: m.sizes.length === 1 ? m.sizes[0]!.key : null }}>
-      <div className="pdp-page pdp-tpl-T1" data-testid="pdp" data-template="T1" data-state={data.state}>
+      <div className={`pdp-page pdp-tpl-${tpl}`} data-testid="pdp" data-template={tpl} data-state={data.state}>
         <div className="container pdp-top">
           {set['pdp.page'].breadcrumb ? (
             <nav className="crumbs pdp-crumbs" aria-label={t('pdp.breadcrumb')}>
