@@ -39,6 +39,8 @@ documents and never journal lines, and the `companyId` comes from the key.
 
 ### The shop's receiver (PR 196, built 23 Oct 2026)
 - **URL:** `POST https://<shop domain>/api/erp/webhook` (the domain is a setting; on staging, new.extas.com.bd).
+  On staging this one request (POST, this exact path) passes the preview password without it, since the ERP has no
+  browser; every other page and method there still asks for the password (follow-up 80, `infra/stack/caddy/auth-block.sh`).
 - **Body** (JSON, at most `erp.webhook.maxBodyKb`, default 64 KB):
   `{ "id": "<event id, unique per integration>", "type": "stock.changed" | "variant.changed", "occurredAt": "<ISO time>", "data": { … } }`.
   - `stock.changed` data is one row as `GET /stock` returns it: `sku`, `warehouseId`, `onHand`, `reserved`,

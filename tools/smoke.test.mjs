@@ -15,6 +15,17 @@ it('PR 6: an extra check passes on the expected value or answer, and says what i
   expect(checkProblem(req, { status: 200 })).toBe('check (PR 196): unsigned refused: answered 200, expected 401');
 });
 
+it('follow-up 80: an anonymous request check passes only on the app\'s own answer, never on the preview gate\'s 401', () => {
+  const req = { pr: 7, what: 'webhook past the gate', request: { method: 'POST', path: '/api/erp/webhook', anonymous: true }, status: 401, field: 'code' };
+  expect(checkProblem(req, { status: 401, json: { ok: false, code: 'BAD_SIGNATURE' } })).toBeNull();
+  expect(checkProblem(req, { status: 401, json: null, gate: true })).toBe('check (PR 7): webhook past the gate: the answer is not the app\'s own (no "code" in it; the preview login was asked for)');
+  expect(checkProblem(req, { status: 401, json: { ok: false } })).toContain('no "code" in it');
+  expect(checkProblem(req, { status: 404, json: { code: 'x' } })).toBe('check (PR 7): webhook past the gate: answered 404, expected 401');
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  const gate = config.checks.find((c) => c.request?.anonymous);
+  expect(gate).toMatchObject({ pr: 7, request: { method: 'POST', path: '/api/erp/webhook' }, field: 'code' });
+});
+
 it('every configured check names its PR and is a page check or a request check', () => {
   const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
   expect(config.checks.length).toBeGreaterThan(0);

@@ -100,30 +100,43 @@ export function requestCounts(url, base, ignore) {
  * value (`page` + `selector` + `attribute` + `equals`), or a request must get a given answer (`request` + `status`).
  * A request check goes through the browser context's own request client (its cookies, never a page), so an answer
  * the check expects to be a refusal is not counted as a failed request of a page. Returns the problem, or null.
+ * Follow-up 80: a request check with `anonymous: true` goes out with no cookie and no preview login at all (like an
+ * outside system's call), and `field` names a key the app's own JSON answer must carry, so a refusal by the preview
+ * gate (same status, no JSON) is told apart from the app's own refusal.
  */
 export function checkProblem(check, observed) {
   const name = `check (PR ${check.pr}): ${check.what}`;
   if (observed.error) return `${name}: ${observed.error}`;
   if (check.request) {
-    return observed.status === check.status ? null : `${name}: answered ${observed.status}, expected ${check.status}`;
+    if (observed.status !== check.status) return `${name}: answered ${observed.status}, expected ${check.status}`;
+    if (check.field && !(observed.json && typeof observed.json === "object" && check.field in observed.json))
+      return `${name}: the answer is not the app's own (no "${check.field}" in it${observed.gate ? "; the preview login was asked for" : ""})`;
+    return null;
   }
   return observed.value === check.equals ? null : `${name}: ${check.selector} ${check.attribute} is "${observed.value ?? "missing"}", expected "${check.equals}"`;
 }
 
-/** Runs the extra checks with the signed-in page; returns their problems. */
-async function runChecks(page, base, checks) {
+/** Runs the extra checks with the signed-in page; returns their problems. `bare` makes a request client with no cookie. */
+async function runChecks(page, base, checks, bare) {
   const out = [];
   for (const check of checks) {
     let observed;
     try {
       if (check.request) {
-        const r = await page.request.fetch(`${base}${check.request.path}`, {
-          method: check.request.method ?? "GET",
-          data: check.request.body,
-          headers: check.request.headers ?? {},
-          failOnStatusCode: false,
-        });
-        observed = { status: r.status() };
+        const client = check.request.anonymous ? await bare() : page.request;
+        try {
+          const r = await client.fetch(`${base}${check.request.path}`, {
+            method: check.request.method ?? "GET",
+            data: check.request.body,
+            headers: check.request.headers ?? {},
+            failOnStatusCode: false,
+          });
+          const json = await r.json().catch(() => null);
+          const gate = /^basic/i.test(r.headers()["www-authenticate"] ?? "");
+          observed = { status: r.status(), json, gate };
+        } finally {
+          if (client !== page.request) await client.dispose();
+        }
       } else {
         await page.goto(`${base}${check.page}`, { waitUntil: "load" });
         const el = await page.waitForSelector(check.selector, { timeout: 15_000 });
@@ -333,7 +346,7 @@ async function previewCookie(browser, base, httpCredentials) {
 }
 
 export async function runSmoke(opts) {
-  const { chromium } = require("playwright");
+  const { chromium, request: requestApi } = require("playwright");
   const config = JSON.parse(
     readFileSync(opts.config ?? join(root, "docs/qa/smoke.json"), "utf8"),
   );
@@ -439,7 +452,9 @@ export async function runSmoke(opts) {
           );
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])
-        problems.push(...(await runChecks(page, opts.base, config.checks ?? [])));
+        problems.push(
+          ...(await runChecks(page, opts.base, config.checks ?? [], () => requestApi.newContext())),
+        );
       // PR 155: the pages that show Sales and Ordered value load, and show the two as separate figures.
       for (const f of config.figures ?? []) {
         const row = await visit(page, opts.base, ignore, f.path, vp.name, opts.out);
