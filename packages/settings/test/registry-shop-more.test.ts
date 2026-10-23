@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
-import { pdpFitSchema, pdpRowsSchema, shopMoreSettings } from '../src/registry-shop-more';
+import { pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shopMoreSettings } from '../src/registry-shop-more';
 
 describe('third storefront batch settings (v21)', () => {
   it('every key is in the registry at version 21, public, never owner data, with both labels', () => {
@@ -37,5 +37,12 @@ describe('third storefront batch settings (v21)', () => {
     expect(pdpRowsSchema.safeParse({ ...r, order: { ...r.order, top: ['Not A Slug'] } }).success).toBe(false);
     expect(pdpRowsSchema.safeParse({ ...r, groupOf: { tee: 'middle' } }).success).toBe(false);
     expect(pdpRowsSchema.safeParse({ ...r, pairTitle: { en: 'Pair it with', bn: 'এর সাথে মানায়' } }).success).toBe(true);
+  });
+
+  it('PR 68: the floating rail is off, the heart after the title (demo SHOWN.pdpIcons); the drift is capped', () => {
+    const i = shopMoreSettings['pdp.icons'].default;
+    expect(i).toMatchObject({ panel: false, wish: 'title', whatsapp: false, driftMaxPx: 38 });
+    expect(pdpIconsSchema.safeParse({ ...i, wish: 'photo' }).success).toBe(false);
+    expect(pdpIconsSchema.safeParse({ ...i, driftMaxPx: 500 }).success).toBe(false);
   });
 });

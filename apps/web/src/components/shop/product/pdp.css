@@ -713,3 +713,32 @@
 @media (prefers-reduced-motion: reduce) { .shop .pdp-page .ob-rv-dots i { transition: none; } }
 .shop .pdp-page .pdp-rowblk .sec-hd { align-items: center; }
 .shop .pdp-page .pdp-rowblk .sec-hd .link { display: inline-flex; align-items: center; justify-content: flex-end; min-height: 44px; min-width: 44px; flex: none; }
+
+/* PR 68 — the floating action rail (demo styles.css 9+10, r11-pdp.css, r12-pdp.css A1): a fixed column at the right,
+   vertically at 38% on a phone and the middle on a desktop, eased by PdpRail (no transition: it would fight the frame
+   loop). While it is on, the rows it crosses on a phone stop short of its strip, and the title keeps a right inset. */
+.shop .pdp-page .pdp-acts { position: fixed; top: 50%; right: 10px; z-index: 70; display: flex; flex-direction: column; gap: 9px; align-items: flex-end; margin: 0px; transform: translateY(-50%); will-change: transform; }
+.shop .pdp-page .pdp-act { position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface); border: 1px solid rgba(0, 0, 0, 0.07); color: var(--ink); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16); cursor: pointer; padding: 0px; }
+.shop .pdp-page .pdp-act.wa { border-color: #bfe8cf; background: #f2fbf5; color: #1fa855; }
+@media (hover: hover) { .shop .pdp-page .pdp-act:hover { filter: brightness(0.97); } }
+@media (min-width: 1024px) {
+  .shop .pdp-page .pdp-acts { right: max(14px, calc((100vw - 1240px) / 2 - 59px)); gap: 10px; }
+  .shop .pdp-page .pdp-act { width: 50px; height: 50px; }
+  .shop .pdp-page .pdp-act[title]::after { content: attr(title); position: absolute; right: calc(100% + 10px); top: 50%; transform: translateY(-50%) translateX(6px); white-space: nowrap; background: var(--ink); color: #fff; font-size: 12px; font-weight: 600; padding: 7px 11px; border-radius: 9px; opacity: 0; pointer-events: none; transition: opacity 0.16s, transform 0.16s; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22); }
+  .shop .pdp-page .pdp-act[title]:hover::after, .shop .pdp-page .pdp-act[title]:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0px); }
+}
+@media (max-width: 1023px) {
+  .shop .pdp-page .pdp-acts { top: 38%; right: 4px; gap: 7px; }
+  .shop .pdp-page .pdp-act { width: 44px; height: 44px; background: rgba(255, 255, 255, 0.72); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); border-color: rgba(0, 0, 0, 0.06); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14); }
+  .shop .pdp-page .pdp-act.wa { background: rgba(242, 251, 245, 0.82); }
+  .shop .pdp-page:has(.pdp-acts) .pdp-titlerow { padding-right: 46px; }
+  .shop .pdp-page:has(.pdp-acts) .pdp-colsec .pdp-sw,
+  .shop .pdp-page:has(.pdp-acts) .pdp-colsec .pdp-lblrow,
+  .shop .pdp-page:has(.pdp-acts) .pdp-prow,
+  .shop .pdp-page:has(.pdp-acts) #pdp-sizes .pdp-lblrow,
+  .shop .pdp-page:has(.pdp-acts) .pdp-pills,
+  .shop .pdp-page:has(.pdp-acts) .pdp-fitline,
+  .shop .pdp-page:has(.pdp-acts) .pdp-ctas,
+  .shop .pdp-page:has(.pdp-acts) .pdp-acc-h { padding-right: 36px; }
+}
+@media (prefers-reduced-motion: reduce) { .shop .pdp-page .pdp-acts { transform: translateY(-50%) !important; } }

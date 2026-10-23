@@ -42,6 +42,7 @@ import { PdpEffects } from './PdpEffects';
 import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
+import { PdpRail } from './PdpRail';
 import { PdpRecentMark } from './PdpRecentMark';
 import { PdpRoot, type PdpEnv } from './PdpRoot';
 import { PdpRows } from './PdpRows';
@@ -66,6 +67,7 @@ const KEYS = [
   'pdp.sweep',
   'pdp.fit',
   'pdp.rows',
+  'pdp.icons',
   'catalogue.sizeCharts.diagramFor',
   'policy.exchange.summary',
   'policy.returns.summary',
@@ -242,6 +244,11 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
       ),
   }));
 
+  // ---- PR 68 · the heart's place and the floating rail ----
+  const icons = set['pdp.icons'];
+  const heartWords = { save: t('card.save'), unsave: t('card.unsave'), saved: t('card.saved'), removed: t('card.removed') };
+  const railWa = icons.panel && icons.whatsapp ? waHref(c.s['contact.whatsapp'], t('rail.waMessage', { ...c.vars, name: m.name })) : null;
+
   // ---- PR 67 · the rows at the foot of the page ----
   const rows = set['pdp.rows'];
   const recentIds = rows.recent ? readRecent((await cookies()).get(RECENT_COOKIE)?.value, rows.recentKeep) : [];
@@ -335,16 +342,19 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                     {head}
                     <span className="pdp-nmend">
                       {last}
-                      <HeartButton
-                        id={m.productId}
-                        className="pdp-wish"
-                        size={22}
-                        testId="pdp-wish"
-                        words={{ save: t('card.save'), unsave: t('card.unsave'), saved: t('card.saved'), removed: t('card.removed') }}
-                      />
+                      {icons.wish === 'title' ? <HeartButton id={m.productId} className="pdp-wish" size={22} testId="pdp-wish" words={heartWords} /> : null}
                     </span>
                   </h1>
                 </div>
+                {icons.panel ? (
+                  <PdpRail
+                    set={icons}
+                    productId={m.productId}
+                    wa={railWa}
+                    waLabel={t('rail.wa')}
+                    heart={icons.wish === 'rail' ? heartWords : null}
+                  />
+                ) : null}
                 <PdpPrice set={pr} freeDelivery={data.freeDelivery} payWords={pay} />
               </div>
               <PdpColour lang={lang} />
