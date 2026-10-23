@@ -30,6 +30,7 @@ import { pdpTemplateSettings } from './registry-pdp-templates';
 import { accountSettings } from './registry-accounts';
 import { comboPageSettings } from './registry-combo-pages';
 import { motionSettings } from './registry-motion';
+import { ordersSettings } from './registry-orders';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1158,6 +1159,8 @@ export const registry = {
   ...comboPageSettings,
   // ---- S02 · PR 86, 87 · the house motion: the light sweeps' switches and the celebration overlay (registry-motion.ts, version 31). ----
   ...motionSettings,
+  // ---- S05 · PR 138, 144, 145, 147, 153 · the order core: cancel reasons and the customer's cancel, hold reasons and the hold check, the advance wait, duplicate orders, internal flags, notes, the order list (registry-orders.ts, version 32). ----
+  ...ordersSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

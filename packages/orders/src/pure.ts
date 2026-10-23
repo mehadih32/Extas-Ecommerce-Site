@@ -1,0 +1,326 @@
+// The order state machine itself (PR 138; BACKEND-ARCHITECTURE §6.5.0, §6.5.1, §6.5.7), without a database: the
+// states, every command with the states it may start from and the state it leads to, the guards that refuse it, and the
+// small sums the order screens show (amount due, the payment pill). The service (service.ts) asks `plan()` before it
+// writes anything, so the rule is written exactly once and the tests can walk every legal and every illegal pair.
+//
+// Four separate facts (§6.5.0): the ORDER status lives here; the courier (Shipment.status), the payment (Payment rows)
+// and the return/refund (ReturnRecord, Refund) have their own records and writers (S07, S08). They move the order only
+// through the commands below (the hooks those stages call), never by writing Order.status.
+//
+// Rules: the order never moves backwards (except hold → release, which goes back to where it was held from); a booked
+// order is never cancelled in one step (cancel after booking, D5); every refusal says which commands are open now.
+
+/** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
+export const ORDER_STATES = [
+  'DRAFT',
+  'PLACED',
+  'AWAITING_ADVANCE',
+  'CONFIRMED',
+  'ON_HOLD',
+  'PROCESSING',
+  'PACKED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'DELIVERED',
+  'PARTIALLY_DELIVERED',
+  'RETURNED',
+  'CANCELLED',
+] as const;
+export type OrderState = (typeof ORDER_STATES)[number];
+
+/** States an order never leaves. */
+export const FINAL_STATES: ReadonlySet<OrderState> = new Set(['DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED', 'CANCELLED']);
+
+/** Still open: placed, not yet finished (the order list's "open orders" and the duplicate check's look-back). */
+export const OPEN_STATES: readonly OrderState[] = ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT'];
+
+/** Every command of the one order service. */
+export const ORDER_COMMANDS = [
+  // staff (admin API), PR 138, 144, 153
+  'confirm',
+  'hold',
+  'release',
+  'cancel',
+  'cancelAfterBooking',
+  'courierCancelConfirmed',
+  'courierCancelRefused',
+  // the customer's cancel after the one-tap cut-off (CN-020 (5)), and the staff's answer to it
+  'requestCancel',
+  'refuseCancelRequest',
+  // PR 147: the staff's internal flags (any state; the status stays)
+  'setFlags',
+  // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
+  'awaitAdvance',
+  'recordAdvance',
+  // hooks for S08 (fulfilment and the courier): no admin route yet; S08 adds its own guards (SKU scan, photo, shortage)
+  'startPicking',
+  'pack',
+  'handover',
+  'courierPickedUp',
+  'delivered',
+  'partiallyDelivered',
+  'returned',
+] as const;
+export type OrderCommand = (typeof ORDER_COMMANDS)[number];
+
+/** Commands that change the status (the others set or clear a flag and keep the status). */
+const MOVES: Readonly<Partial<Record<OrderCommand, { from: readonly OrderState[]; to: OrderState | 'heldFrom' }>>> = {
+  confirm: { from: ['PLACED'], to: 'CONFIRMED' },
+  hold: { from: ['PLACED', 'CONFIRMED'], to: 'ON_HOLD' },
+  release: { from: ['ON_HOLD'], to: 'heldFrom' },
+  // PROCESSING and PACKED: picking or packing started but no courier is booked yet — put the pieces back and cancel.
+  cancel: { from: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED'], to: 'CANCELLED' },
+  courierCancelConfirmed: { from: ['CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 'HANDED_OVER'], to: 'CANCELLED' },
+  awaitAdvance: { from: ['PLACED', 'CONFIRMED', 'ON_HOLD'], to: 'AWAITING_ADVANCE' },
+  recordAdvance: { from: ['AWAITING_ADVANCE'], to: 'PLACED' },
+  startPicking: { from: ['CONFIRMED'], to: 'PROCESSING' },
+  pack: { from: ['CONFIRMED', 'PROCESSING'], to: 'PACKED' },
+  handover: { from: ['PACKED'], to: 'HANDED_OVER' },
+  courierPickedUp: { from: ['HANDED_OVER'], to: 'IN_TRANSIT' },
+  // a courier may report the delivery without a pick-up event in between (one poll sees both)
+  delivered: { from: ['HANDED_OVER', 'IN_TRANSIT'], to: 'DELIVERED' },
+  partiallyDelivered: { from: ['IN_TRANSIT'], to: 'PARTIALLY_DELIVERED' },
+  returned: { from: ['HANDED_OVER', 'IN_TRANSIT'], to: 'RETURNED' },
+};
+
+/** Flag commands: the states they may run in (the status stays). */
+const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
+  cancelAfterBooking: ['CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT'],
+  courierCancelRefused: ['CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT'],
+  requestCancel: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED'],
+  refuseCancelRequest: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED'],
+  setFlags: ORDER_STATES.filter((s) => s !== 'DRAFT'),
+};
+
+/** What the machine needs to know about an order (read under its row lock). */
+export interface MachineOrder {
+  status: OrderState;
+  /** A courier is booked: the order has a shipment that is not failed or cancelled (D5). */
+  booked: boolean;
+  /** Cancel after booking asked, waiting for the courier's answer. */
+  cancelPending: boolean;
+  /** The customer asked to cancel (after the one-tap cut-off). */
+  cancelRequested: boolean;
+  /** An open duplicate (or risk) review: decided first, then confirmed (PR 145). */
+  inReview: boolean;
+  /** Where a held order goes back to. */
+  holdFromStatus: OrderState | null;
+  paidMinor: number;
+  advanceRequiredMinor: number | null;
+}
+
+/** Why a command is refused. Stable codes; the admin and the shop turn them into words. */
+export type RefusalCode =
+  /** Not from this state (409 ILLEGAL_TRANSITION). */
+  | 'ILLEGAL_TRANSITION'
+  /** A courier is booked: use cancel after booking (D5). */
+  | 'BOOKED'
+  /** Not booked: an ordinary cancel is the way. */
+  | 'NOT_BOOKED'
+  /** Cancel after booking is waiting for the courier's answer. */
+  | 'CANCEL_PENDING'
+  /** No cancel after booking was asked. */
+  | 'NO_CANCEL_PENDING'
+  /** The customer asked to cancel: decide that first. */
+  | 'CANCEL_REQUESTED'
+  /** No cancel request to answer. */
+  | 'NO_CANCEL_REQUEST'
+  /** An open duplicate / risk review: decide it first. */
+  | 'IN_REVIEW'
+  /** The advance is not paid in full yet. */
+  | 'ADVANCE_SHORT';
+
+export type Plan = { ok: true; from: OrderState; to: OrderState; moves: boolean } | { ok: false; code: RefusalCode; from: OrderState; allowed: OrderCommand[] };
+
+/** Does the command change the status? */
+export const isMove = (c: OrderCommand): boolean => c in MOVES;
+
+/** The state a command leads to from `from` (null when it cannot run from there); flag commands keep the state. */
+export function targetOf(c: OrderCommand, from: OrderState, heldFrom: OrderState | null = null): OrderState | null {
+  const m = MOVES[c];
+  if (m) {
+    if (!m.from.includes(from)) return null;
+    return m.to === 'heldFrom' ? (heldFrom === 'PLACED' ? 'PLACED' : 'CONFIRMED') : m.to;
+  }
+  const f = FLAGS[c];
+  return f && f.includes(from) ? from : null;
+}
+
+/** The guard of a command that may run from this state: the refusal, or null. */
+function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
+  switch (c) {
+    case 'confirm':
+      if (o.cancelRequested) return 'CANCEL_REQUESTED';
+      if (o.inReview) return 'IN_REVIEW';
+      return null;
+    case 'cancel':
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      if (o.booked) return 'BOOKED';
+      return null;
+    case 'cancelAfterBooking':
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      if (!o.booked) return 'NOT_BOOKED';
+      return null;
+    case 'courierCancelConfirmed':
+    case 'courierCancelRefused':
+      return o.cancelPending ? null : 'NO_CANCEL_PENDING';
+    case 'requestCancel':
+      if (o.cancelRequested) return 'CANCEL_REQUESTED';
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      if (o.booked) return 'BOOKED';
+      return null;
+    case 'refuseCancelRequest':
+      return o.cancelRequested ? null : 'NO_CANCEL_REQUEST';
+    case 'recordAdvance':
+      return o.advanceRequiredMinor !== null && o.paidMinor < o.advanceRequiredMinor ? 'ADVANCE_SHORT' : null;
+    case 'pack':
+    case 'handover':
+      // the old parcel is never packed or handed over again once its cancel is asked (§6.5.7 (a))
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      return c === 'handover' && !o.booked ? 'NOT_BOOKED' : null;
+    default:
+      return null;
+  }
+}
+
+/** The commands open for this order now (the admin's "next legal step" and every refusal's hint). */
+export function allowedCommands(o: MachineOrder): OrderCommand[] {
+  return ORDER_COMMANDS.filter((c) => targetOf(c, o.status, o.holdFromStatus) !== null && guard(c, o) === null);
+}
+
+/** May the command run on this order, and where does it lead? Nothing is written; the service acts on the plan. */
+export function plan(c: OrderCommand, o: MachineOrder): Plan {
+  const to = targetOf(c, o.status, o.holdFromStatus);
+  if (to === null) return { ok: false, code: 'ILLEGAL_TRANSITION', from: o.status, allowed: allowedCommands(o) };
+  const refused = guard(c, o);
+  if (refused) return { ok: false, code: refused, from: o.status, allowed: allowedCommands(o) };
+  return { ok: true, from: o.status, to, moves: isMove(c) };
+}
+
+/** Every (command, from) pair the machine allows — for the transition-table tests and the docs. */
+export function legalPairs(): { command: OrderCommand; from: OrderState; to: OrderState }[] {
+  const out: { command: OrderCommand; from: OrderState; to: OrderState }[] = [];
+  for (const command of ORDER_COMMANDS)
+    for (const from of ORDER_STATES) {
+      const to = targetOf(command, from, 'CONFIRMED');
+      if (to !== null) out.push({ command, from, to });
+    }
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// CN-020 (5) — the customer's own cancel: one tap until the owner's cut-off, then a request until the courier is booked.
+// ---------------------------------------------------------------------------------------------------------------------
+
+export type CustomerCutoff = 'off' | 'placed' | 'confirmed' | 'packed';
+
+/** What the customer's order page offers: cancel with one tap, ask to cancel, "you asked" (waiting), or nothing. */
+export type CustomerCancelMode = 'tap' | 'request' | 'requested' | 'none';
+
+/** The states a one-tap cancel is open in, for each cut-off ("confirmed": until the team confirms). */
+function tapOpen(cutoff: CustomerCutoff, o: MachineOrder): boolean {
+  switch (cutoff) {
+    case 'confirmed':
+      return o.status === 'PLACED' || o.status === 'AWAITING_ADVANCE' || (o.status === 'ON_HOLD' && o.holdFromStatus !== 'CONFIRMED');
+    case 'packed':
+      return ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING'].includes(o.status);
+    default:
+      return false;
+  }
+}
+
+/** The customer's cancel for this order under the owner's setting `orders.cancel.customer`. */
+export function customerCancelMode(cfg: { cutoff: CustomerCutoff; requests: boolean }, o: MachineOrder): CustomerCancelMode {
+  if (cfg.cutoff === 'off' || o.booked || o.cancelPending || FINAL_STATES.has(o.status)) return 'none';
+  if (o.cancelRequested) return 'requested';
+  if (tapOpen(cfg.cutoff, o) && plan('cancel', o).ok) return 'tap';
+  if (cfg.requests && plan('requestCancel', o).ok) return 'request';
+  return 'none';
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Reason codes (§6.5.0). The codes are fixed; their words are the owner's settings (`orders.cancel.reasons`).
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** PR 144 — the cancel reason codes (§6.5.0, plus CUSTOMER_AFTER_CONFIRM for an approved customer request, F-038). */
+export const CANCEL_CODES = [
+  'CUSTOMER_BEFORE_CONFIRM',
+  'CUSTOMER_AFTER_CONFIRM',
+  'CUSTOMER_CHANGE_AFTER_BOOKING',
+  'ADVANCE_NOT_PAID',
+  'RISK_DECLINED',
+  'OUT_OF_STOCK',
+  'DUPLICATE_ORDER',
+  'ADDRESS_UNREACHABLE',
+  'OTHER',
+] as const;
+export type CancelCode = (typeof CANCEL_CODES)[number];
+
+/** A cancel reason that needs a note. */
+export const NOTE_REQUIRED: ReadonlySet<CancelCode> = new Set(['OTHER']);
+
+/** A cancel for a change after booking is never a refusal and never feeds the risk history (§6.5.7 (e)). */
+export const NOT_A_RISK_SIGNAL: ReadonlySet<CancelCode> = new Set(['CUSTOMER_CHANGE_AFTER_BOOKING']);
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Money as the screens show it (F-001, F-040): amount due = total − wallet − paid; the order-level payment pill is
+// computed, never stored (§6.5.3).
+// ---------------------------------------------------------------------------------------------------------------------
+
+export interface MoneyFacts {
+  status: OrderState;
+  paymentMethod: string | null;
+  totalMinor: number;
+  walletAppliedMinor: number;
+  paidMinor: number;
+  /** Refunds for the order that were paid out (COMPLETED), in minor units. */
+  refundedMinor: number;
+}
+
+export type PaymentPill = 'UNPAID' | 'PARTLY_PAID' | 'PAID' | 'OWED_BACK' | 'COD_TO_COLLECT' | 'COD_COLLECTED';
+
+/** What is still to pay (never below 0). */
+export const dueOf = (m: Pick<MoneyFacts, 'totalMinor' | 'walletAppliedMinor' | 'paidMinor'>): number => Math.max(0, m.totalMinor - m.walletAppliedMinor - m.paidMinor);
+
+/** The order's payment pill (§6.5.3). A cancelled or returned order with money in and not all of it refunded is OWED_BACK. */
+export function paymentPill(m: MoneyFacts): PaymentPill {
+  const inMinor = m.paidMinor + m.walletAppliedMinor;
+  if ((m.status === 'CANCELLED' || m.status === 'RETURNED') && inMinor > m.refundedMinor) return 'OWED_BACK';
+  const due = dueOf(m);
+  if (m.paymentMethod === 'COD' && due > 0) return m.status === 'DELIVERED' || m.status === 'PARTIALLY_DELIVERED' ? 'COD_COLLECTED' : 'COD_TO_COLLECT';
+  if (due === 0) return 'PAID';
+  return inMinor > 0 ? 'PARTLY_PAID' : 'UNPAID';
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 145 — how alike two orders are (Blueprint B1.12): the same SKU (style, colour and size) or the same product in the
+// same colour = high; the same product in another colour = medium; the same category = low.
+// ---------------------------------------------------------------------------------------------------------------------
+
+export type Severity = 'low' | 'medium' | 'high';
+export const SEVERITIES: readonly Severity[] = ['low', 'medium', 'high'];
+export const severityRank = (s: Severity): number => SEVERITIES.indexOf(s);
+
+export interface LineFacts {
+  variantId: string | null;
+  productId: string | null;
+  colourId: string | null;
+  categoryIds: readonly string[];
+}
+
+/** How alike two orders' lines are, or null when they share nothing (a different order, not a duplicate). */
+export function overlapOf(a: readonly LineFacts[], b: readonly LineFacts[]): { severity: Severity; productIds: string[] } | null {
+  let best: Severity | null = null;
+  const products = new Set<string>();
+  for (const x of a)
+    for (const y of b) {
+      let s: Severity | null = null;
+      if ((x.variantId && x.variantId === y.variantId) || (x.productId && x.productId === y.productId && x.colourId === y.colourId)) s = 'high';
+      else if (x.productId && x.productId === y.productId) s = 'medium';
+      else if (x.categoryIds.some((c) => y.categoryIds.includes(c))) s = 'low';
+      if (s === null) continue;
+      if (s !== 'low' && x.productId) products.add(x.productId);
+      if (best === null || severityRank(s) > severityRank(best)) best = s;
+    }
+  return best === null ? null : { severity: best, productIds: [...products] };
+}

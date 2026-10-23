@@ -87,7 +87,19 @@
       "read": "See the Server page: is the background worker alive, and which jobs failed"
     },
     "orders": {
-      "invoice": "Open and print the invoice of any order (it shows the customer's name, phone and address)"
+      "invoice": "Open and print the invoice of any order (it shows the customer's name, phone and address)",
+      "read": "See orders, their lines, money, timeline and notes",
+      "confirm": "Confirm a new order",
+      "hold": "Put an order on hold with a reason, and release it",
+      "cancel": "Cancel an order before a courier is booked, with a reason (a paid order only gets a refund request; no money moves)",
+      "cancelAfterBooking": "Cancel after booking: ask the courier to cancel and record the courier's answer",
+      "cancelRequests": "Approve or refuse a customer's request to cancel",
+      "notes": "Write notes and set internal flags on an order",
+      "risk": {
+        "read": "See the duplicate-order review queue",
+        "decide": "Decide a duplicate-order review: not a duplicate, cancel, hold or ask the customer"
+      },
+      "merge": "Put two open orders of one customer in one parcel (prices and charges stay as they are)"
     }
   },
   "totp": {
