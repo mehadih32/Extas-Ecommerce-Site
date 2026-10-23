@@ -36,16 +36,16 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ আর চেকআউট (S04) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৪২টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ আর চেকআউট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৪৪টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 23/58** · **S03 9/22** · **S06 6/33** (wave 2) · **S04 22/41** (wave 3) · total **142/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 23/58** · **S03 9/22** · **S06 6/33** (wave 2) · **S04 22/41** · **S05 2/20** (wave 3) · total **144/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 4 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15 and 17); none stops the build ([table below](#what-waits-on-the-owner)) |
-| Next | The CN-022 foundation items left (one "Sales" KPI, append-only audit log: PR [155](docs/stages/S05.md#pr-155), 139; the background worker PR [6](docs/stages/S0A.md#pr-6) and the ERP webhook PR [196](docs/stages/S09.md#pr-196) are built and go live with the next deploy) beside S02 (the first-screen budget, wishlist, menu, content pages: PR [53](docs/stages/S02.md#pr-53) …); S04 after checkout: "Add to this parcel" (PR [127](docs/stages/S04.md#pr-127) …); the order states, refunds and returns wait for the owner's approval of the architecture draft (CN-022); S03 combos |
+| Next | The CN-022 foundation items are built (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) and go live with the next deploy; S02 continues (the first-screen budget, wishlist, menu, content pages: PR [53](docs/stages/S02.md#pr-53) …); S04 after checkout: "Add to this parcel" (PR [127](docs/stages/S04.md#pr-127) …); the order states, refunds and returns wait for the owner's approval of the architecture draft (CN-022); S03 combos |
 | Last update | 23 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
@@ -65,7 +65,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 23 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 9 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 22 / 41 | In progress |
-| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 0 / 20 | Not started |
+| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 2 / 20 | In progress |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 6 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **142 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **144 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -355,6 +355,7 @@ committed server reports. Guide: [docs/admin-guide/server.md](docs/admin-guide/s
 │   ├── catalogue/            products, variants, categories, colours, fabrics, naming, publish, size charts, CSV …
 │   ├── inventory/            ERP mode and guard, sync, stock pull, holds, pushes, counts, reports, ERP webhooks
 │   ├── jobs/                 background worker: BullMQ queues, scheduler leader, JobRun per attempt, heartbeat
+│   ├── metrics/              the one KPI definition: Sales (delivered) and Ordered value for every report
 │   └── seed/                 default pack, sample catalogue, owner-data check, installation export / import
 ├── infra/
 │   ├── bootstrap/            install-runner.sh (one-time runner install by the owner)
@@ -362,6 +363,7 @@ committed server reports. Guide: [docs/admin-guide/server.md](docs/admin-guide/s
 │   ├── server/               setup.sh, lib.sh, steps/01–12, bin/ (server tools), files/ (systemd units)
 │   ├── stack/                compose.yml (database, cache, search, Caddy), app.yml (blue/green app), Caddyfile, PgBouncer image
 │   ├── deploy/deploy.sh      zero-downtime deploy with automatic rollback
+│   ├── deploy/app-role.sh    the app's own database role (extas_app), its login and the append-only check
 │   └── tests/                infra unit tests and fixtures
 ├── tools/                    hardcode guard (+ rules JSON), status generator, their tests
 └── docs/                     blueprint, register, demo, owner notes, QA, agents, reports — see docs/README.md
@@ -705,7 +707,7 @@ also signs in on the sample data, so admin controls that only show with data are
 - **Set tiers (99):** "any 2 for X, any 3 for Y" read from Smart Rules (S10 PR 212).
 - **Validation, summary, bag (101, 96, 97):** what is still missing before adding; set summary and price (a struck price only from a real "was" price); `addSetToBag` adds one set with its price locked, guarded against double adds, overselling, stale and above-regular prices.
 - **Set photo (575):** composed from the piece photos with sharp; "Make set photo" in the admin.
-- **Report (104):** `?tab=report` — which sets sell, which colour pairs get picked.
+- **Report (104):** `?tab=report` — which sets sell, which colour pairs get picked. Since PR 155 it shows "Ordered value" (placed orders) and "Sales (delivered)" as separate figures from `@extas/metrics`.
 - **Permissions:** `combos.read`, `combos.write`, `combos.publish`, `combos.prices` (owner only, CLAUDE.md rule 6). Guide: [docs/admin-guide/combos.md](docs/admin-guide/combos.md).
 - **Settings:** registry v14, `registry-combos.ts`. Still planned: 91–95, 98, 100, 102, 103, 572–574, 576 (storefront combo pages and the rest).
 
@@ -779,9 +781,25 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 
 Next: "Add to this parcel" (127 …), customer accounts (130 …). Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
-### S05 · Order management — Not started
+### S05 · Order management — In progress (2/20)
 
-Planned — see register PRs 138–155, 541, 546: [S05](docs/MASTER-REGISTER.md#s05--order-management--pr-138155).
+> **বাংলায়:** "বিক্রি" এখন একটাই হিসাব — শুধু ডেলিভারি হওয়া অর্ডার, ডেলিভারির দিনে গোনা; "অর্ডারের মূল্য" (সব দেওয়া অর্ডার) আলাদা করে পাশে দেখায়। সব রিপোর্ট একই হিসাব থেকে নেয়। অডিট লগ আর অন্য ইতিহাস এখন ডাটাবেসেই আটকানো: ওয়েবসাইট নতুন লাইন লিখতে পারে, কিন্তু বদলাতে বা মুছতে পারে না, কেউই পারে না। অর্ডারের ধাপ, রিফান্ড আর রিটার্ন মালিকের অনুমোদনের অপেক্ষায় (CN-022)।
+
+**Built (PR 155): one KPI definition (CN-022, owner 23 Oct).** Package `@extas/metrics`.
+- **The rule, once (`src/pure.ts`):** Sales = orders in DELIVERED, counted on the delivered day (`deliveredAt`); Ordered value = every placed order (all but DRAFT, cancelled and returned too), counted on the placed day; archived orders count in neither; days are shop days in `store.timeZone`. Until the order state machine exists nothing reaches DELIVERED, so Sales shows 0.
+- **Functions (`src/metrics.ts`):** `kpi` (the headline pair), `kpiByDay` (every day filled), `kpiByZone`, `kpiByPaymentMethod`, `lines` / `linesBoth` with `sumLines` / `groupLines` for one product's or combo's own lines.
+- **Views on it:** the combo report `/admin/combos?tab=report` (tiles "Ordered value" and "Sales (delivered)" side by side, sets ordered, per-combo ordered and sales; it showed ordered value labelled as sales before) and the rename before/after report (PR 590).
+- **Guard:** `packages/metrics/src/guard.test.ts` fails on an ad-hoc sum of order or line money, or a read of the PR 603 `mv_` views, anywhere else in the app.
+- **Tests and gates:** pure tests and PostgreSQL tests with orders in every state (PLACED never in Sales), two stores, zones, payment methods, a late-evening delivery; smoke `figures` check on the combo report (`docs/qa/smoke.json`); device gate on the report page (0 fails). Guides: [combos](docs/admin-guide/combos.md), [analytics](docs/admin-guide/analytics.md).
+- **Planned:** dashboard tiles and the order analytics screen (follow-ups 90, 91), KPI-consistent report views (92).
+
+**Built (PR 139): the audit log and the history tables are append-only at the database (CN-022).** Migration `0010_append_only`.
+- **Two guards:** the app connects as its own role `extas_app`, which may insert and read but has no UPDATE, DELETE or TRUNCATE on AuditLog, SecurityEvent, SettingChange, SecretAccessLog, OrderEvent, StockMovement, WalletEntry, RewardEntry, PriceHistory, ProductRename, SmartRuleVersion, CheckoutFlagEvent, FraudDecision and ShipmentEvent; and a trigger on each refuses those for every role, the owner included. A correction is a new row.
+- **Which models:** `packages/db/src/schema-meta.ts` lists the locked ones and every other `@append-only` model with its reason; the schema guard fails when a new one is in neither list.
+- **Server:** server setup makes the role's password (`APP_DB_PASSWORD`, never in Git) and PgBouncer's login; the deploy, after the migrations, gives the role its login and points `DATABASE_URL` and `REPORT_DATABASE_URL` at it (`infra/deploy/app-role.sh`; it never fails a deploy and puts the old settings back when a run fails). Migrations, the settings sync, the seed, backups and the owner scripts keep the owner role. The smoke test checks every guard after each deploy and every night.
+- **Retention:** how a purge would work is documented in the migration (owner role, an audit row, trigger off for one transaction); not built (follow-up 95). Guide: [team](docs/admin-guide/team.md).
+
+Register: [S05](docs/MASTER-REGISTER.md#s05--order-management--pr-138155).
 
 ### S07 · Payments & wallet — Not started
 
@@ -892,6 +910,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #29 | PR [6](docs/stages/S0A.md#pr-6), [196](docs/stages/S09.md#pr-196), [155](docs/stages/S05.md#pr-155), [139](docs/stages/S05.md#pr-139) | 23 Oct | The owner's CN-022 foundation items. A background worker (`@extas/jobs`): BullMQ with one scheduler leader, a `JobRun` row per attempt with retries, backoff and a dead letter, a heartbeat, and a retry never repeats a finished run; stock pull, cart-hold expiry, the ERP outbox and reconcile run on it; the Server page (`/admin/server`) shows the worker's state and the failed jobs (PR [6](docs/stages/S0A.md#pr-6)). An ERP webhook receiver (`POST /api/erp/webhook`) for `stock.changed` and `variant.changed`: signature checked with the key in the vault (refuses everything until it is entered), a time window, stored once per event id, an older change than the shop holds is ignored; polling stays as the fallback and the practice ERP stays until the owner connects the real one (PR [196](docs/stages/S09.md#pr-196)). One KPI definition (`@extas/metrics`): "Sales" = delivered orders only, "Ordered value" shown beside it; the combo report now shows both, and a test fails any report that adds up order money on its own (PR [155](docs/stages/S05.md#pr-155)). The audit log and 13 other history tables are append-only at the database: the app runs as its own role, which cannot change or delete those rows, and a trigger refuses it for every role (PR [139](docs/stages/S05.md#pr-139)). |
 | #28 | PR [115](docs/stages/S04.md#pr-115), [116](docs/stages/S04.md#pr-116), [117](docs/stages/S04.md#pr-117), [118](docs/stages/S04.md#pr-118), [119](docs/stages/S04.md#pr-119), [120](docs/stages/S04.md#pr-120), [121](docs/stages/S04.md#pr-121), [122](docs/stages/S04.md#pr-122), [123](docs/stages/S04.md#pr-123), [124](docs/stages/S04.md#pr-124), [125](docs/stages/S04.md#pr-125), [126](docs/stages/S04.md#pr-126) | 23 Oct | The checkout on new.extas.com.bd (S04 22/41): `/checkout` and `/bn/checkout` from demo V12.2 with the steps header and the phone's order-summary bar; name, phone and address with inline checks; the address read by the national gazetteer, and "where is this address?" instead of a guess; the delivery charge from the zone, shown before typing; payment methods with Cash on Delivery only when the owner's switch and the Smart Rules allow it, and mobile banking, card and online on a test payment page until the gateways' keys arrive (no money moves); quantity and remove, wallet, the marketing opt-in, Confirm button states; order placement that is idempotent (one press, one order) and stores exactly the money shown (SIM-F-003), keeps failed payments with a retry (SIM-F-026); the thank-you page. The order is created in its first state only; order states, refunds and returns wait for the owner (CN-022). Every option is a `checkout.*` setting (registry v20), off or empty where optional, no admin screen (CN-019). Also filed: CN-022 (worker, ERP webhook, one "Sales" KPI, append-only audit log). |
 | #27 | PR [82](docs/stages/S02.md#pr-82), [54](docs/stages/S02.md#pr-54), [55](docs/stages/S02.md#pr-55), [56](docs/stages/S02.md#pr-56), [57](docs/stages/S02.md#pr-57), [60](docs/stages/S02.md#pr-60), [61](docs/stages/S02.md#pr-61), [62](docs/stages/S02.md#pr-62), [63](docs/stages/S02.md#pr-63), [64](docs/stages/S02.md#pr-64), [49](docs/stages/S02.md#pr-49) | 23 Oct | The product page on new.extas.com.bd (S02 23/58): template T1 at `/p/<product>` and `/p/<product>/<colour>` (and `/bn/…`), photos with one swipe strip per colour, thumbnails and full-screen zoom; colour swatches with each colour's own address and "All N colours"; size pills S to 4XL where a sold-out size is crossed out, never hidden (SIM-F-035); the size chart popup in inches and cm; the stock line and "Only N left"; the price block with the ৳ never split from its number; the promise row and the Delivery · Exchange · Returns cells read live from Smart Rules; Fabric & care; and the bag's Add button with the added-to-bag panel (follow-up 38). Every option is a `pdp.*` setting (registry v19), off or empty where it is optional, no admin screen (CN-019). Bengali pages with products no longer stall on fonts (PR [82](docs/stages/S02.md#pr-82), follow-up 23), with a seeded Lighthouse check in CI. |
 | #26 | PR [105](docs/stages/S04.md#pr-105), [106](docs/stages/S04.md#pr-106), [108](docs/stages/S04.md#pr-108), [109](docs/stages/S04.md#pr-109), [110](docs/stages/S04.md#pr-110), [111](docs/stages/S04.md#pr-111), [112](docs/stages/S04.md#pr-112), [113](docs/stages/S04.md#pr-113), [114](docs/stages/S04.md#pr-114), [107](docs/stages/S04.md#pr-107) | 23 Oct | The bag on new.extas.com.bd (S04 10/41): `/bag` and `/bn/bag` from demo V12.2, kept across visits in a secure cookie for 30 days (a setting); lines with size, quantity and price, removed lines archived with Undo (never deleted); set lines with each piece linking to its product; the added-to-bag panel (mounted by the product page, follow-up 38); one offer slot and the tier box; the two-sizes notice asked once (SIM-F-036); the order summary; the discount code box with every refusal in words (SIM-F-009); free-delivery progress; "You may also like". Every word in English and Bengali, every amount and switch a setting (registry v18), no admin screen (CN-019). CI now starts the app as the Dockerfile does (all addresses), so `/bn` pages are measured in Bengali, and runs the bag tests on PostgreSQL. |
