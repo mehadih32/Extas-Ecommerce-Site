@@ -36,16 +36,16 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১১০টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ (S04) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১২০টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 13/58** · **S03 9/22** · **S06 6/33** (wave 2) · total **110/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 13/58** · **S03 9/22** · **S06 6/33** (wave 2) · **S04 10/41** (wave 3) · total **120/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 4 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15 and 17); none stops the build ([table below](#what-waits-on-the-owner)) |
-| Next | S02 storefront: the product page (PR [49](docs/stages/S02.md#pr-49) …) with the four-layer cache, S03 combos |
+| Next | S02 storefront: the product page (PR [49](docs/stages/S02.md#pr-49) …), which mounts the bag's Add button and panel; S04 checkout (PR [115](docs/stages/S04.md#pr-115) …); S03 combos |
 | Last update | 23 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
@@ -64,7 +64,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 13 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 9 / 22 | In progress |
-| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 0 / 41 | Not started |
+| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 10 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 0 / 20 | Not started |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 6 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **110 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **120 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -719,9 +719,21 @@ PostgreSQL) and the web rules API (10 + 3 on PostgreSQL). Screenshots:
 [`docs/qa/screenshots/pr-209/`](docs/qa/screenshots/pr-209). Report: [S10](docs/reports/2026-10-20-S10.md). Left for
 S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `discountWasFor`.
 
-### S04 · Cart, checkout, accounts — Not started
+### S04 · Cart, checkout, accounts — In progress (10/41)
 
-Planned — see register PRs 105–137, 558, 560, 561, 563, 565, 566: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
+> **বাংলায়:** ব্যাগ তৈরি — পণ্য রাখা, রং-সাইজ-সংখ্যা বদলানো, পরে কেনার জন্য রাখা, সরানো আর ফিরিয়ে আনা, সেট, অফারের ঘর, দুই সাইজের প্রশ্ন, অর্ডারের হিসাব, কোড, ফ্রি ডেলিভারির অগ্রগতি আর "আপনার পছন্দ হতে পারে"; "ব্যাগে রাখা হয়েছে" শিট। ডেমো V12.2-এর মতো, বাংলা আর ইংরেজি দুটোতেই। চেকআউট পরে।
+
+**Built (PR 105, 106, 108, 109, 110, 111, 112, 113, 114, 107), matched to demo V12.2 (CN-012).** Package `@extas/cart`, migration `0006_bag`.
+- **Screens / routes:** `/bag` and `/bn/bag` (out of "Coming soon"; noindex); `/bag/try` (test page, only with `EXTAS_SHOP_TEST_PAGES=1`).
+- **The bag (105):** one bag per visitor (HttpOnly `__Host-extas_bag` cookie, SameSite=Lax, kept `bag.keepDays` days), lines and quantities, colour and size changed in place, save for later, take out = archived with Undo (nothing deleted); a double tap is one add; the piece count glows on the header bag and the bottom bar.
+- **Added-to-bag panel (106):** phone sheet or desktop drawer (`bag.panel.style`), "Just added" first, the bag's count and total, a COD / exchange line when delivery is not free (only what is switched on; never "add ৳X more"), "Complete the look" by the fill rule (`bag.panel.fill`, `bag.panel.gapPx`). The product page (PR 49) mounts the same `<AddToBag>` and `<AddedPanel>`.
+- **Lines, sets, two sizes (107, 108, 110):** each set one line with its pieces linking to their own products; the two-sizes notice asked once ("one is for someone else" never flags a family, SIM-F-036).
+- **Offers and totals (109, 111, 112, 113, 114):** one offer slot under the lines, never empty; the tier box (full on a computer, a preview on the phone); the order summary with "You save" in sale red; the discount code with the engine's reason in words (a member-only code says so; a public code works for guests, SIM-F-009); free-delivery progress; "You may also like" from the bag's own categories. Every amount comes from the rules engine in minor units.
+- **API:** `/api/bag/lines` (POST), `/api/bag/lines/<id>` (PATCH, DELETE), `/api/bag/lines/<id>/restore`, `/api/bag/sizes` (PUT), `/api/bag/code` (POST, DELETE), `/api/bag/try` (test servers only); same-site requests only, bodies up to 2 KB.
+- **Settings:** `bag.*` in `packages/settings/src/registry-bag.ts` (registry v18), labels in `packages/settings/messages/bag.*.json`; every claim off unless backed (`bag.trust.*`, `bag.upsell.originalLine`). No admin screen yet (CN-019); no new permission.
+- **Tests and gates:** `packages/cart` (pure and PostgreSQL), `apps/web/src/lib/shop/bag-*.test.ts`, the coupon audience in `packages/rules`; device gate 0 fails in 775 checks including the filled bag (`docs/qa/device-gate.json` `filled`); `/bag` and `/bn/bag` in the Lighthouse budget and the smoke test. Screenshots: `docs/qa/screenshots/pr-107/`.
+
+Next: checkout (115 …). Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
 ### S05 · Order management — Not started
 
@@ -836,6 +848,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #26 | PR [105](docs/stages/S04.md#pr-105), [106](docs/stages/S04.md#pr-106), [108](docs/stages/S04.md#pr-108), [109](docs/stages/S04.md#pr-109), [110](docs/stages/S04.md#pr-110), [111](docs/stages/S04.md#pr-111), [112](docs/stages/S04.md#pr-112), [113](docs/stages/S04.md#pr-113), [114](docs/stages/S04.md#pr-114), [107](docs/stages/S04.md#pr-107) | 23 Oct | The bag on new.extas.com.bd (S04 10/41): `/bag` and `/bn/bag` from demo V12.2, kept across visits in a secure cookie for 30 days (a setting); lines with size, quantity and price, removed lines archived with Undo (never deleted); set lines with each piece linking to its product; the added-to-bag panel (mounted by the product page, follow-up 38); one offer slot and the tier box; the two-sizes notice asked once (SIM-F-036); the order summary; the discount code box with every refusal in words (SIM-F-009); free-delivery progress; "You may also like". Every word in English and Bengali, every amount and switch a setting (registry v18), no admin screen (CN-019). CI now starts the app as the Dockerfile does (all addresses), so `/bn` pages are measured in Bengali, and runs the bag tests on PostgreSQL. |
 | #25 | PR [41](docs/stages/S02.md#pr-41), [85](docs/stages/S02.md#pr-85), [45](docs/stages/S02.md#pr-45), [46](docs/stages/S02.md#pr-46), [47](docs/stages/S02.md#pr-47), [48](docs/stages/S02.md#pr-48) | 23 Oct | Category page on new.extas.com.bd (S02 13/58): `/collections/[slug]` and `/bn/collections/[slug]`, with `/collections/new-in` for the newest styles; a grid with breadcrumb, SEO text block and questions, and Show more pages; filters built from the category's own products with live counts (stock, size, colour, fit, price band, on sale, quick chips; a sold-out size is crossed out, never hidden, SIM-F-035); a real listbox for sort; a sticky filter bar; all settings in `categoryPage` (registry v17), no admin screen (CN-019). The home hero's default words no longer claim a count, season or year, and a test keeps every shop default free of such claims (PR [41](docs/stages/S02.md#pr-41), CN-017). When the device gate fails, CI prints and keeps the app's log (PR [85](docs/stages/S02.md#pr-85)). |
 | #24 | PR [11](docs/stages/S00.md#pr-11), [85](docs/stages/S02.md#pr-85), [214](docs/stages/S10.md#pr-214), [508](docs/stages/S00.md#pr-508) | 23 Oct | Follow-ups: every package lints with ESLint and says what it is for at the top of `src/index.ts` (PR [11](docs/stages/S00.md#pr-11)); the device gate signs in on the sample data, so admin controls that only show with data are checked at 44 × 44, 0 fails in 620 checks (PR [85](docs/stages/S02.md#pr-85)); Eid order-by dates per band and district with a pre-order advance, as engine, settings and API, all off and empty, with no admin screen until the admin architecture is approved (PR [214](docs/stages/S10.md#pr-214)).; the admin session end to end runs in CI on every pull request in real Chromium: sign in, refresh, the sign-in page while signed in, log out, and the old session refused afterwards (PR [508](docs/stages/S00.md#pr-508)). |
 | #23 | PR [82](docs/stages/S02.md#pr-82), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [84](docs/stages/S02.md#pr-84), [42](docs/stages/S02.md#pr-42), [40](docs/stages/S02.md#pr-40), [85](docs/stages/S02.md#pr-85), [41](docs/stages/S02.md#pr-41), [43](docs/stages/S02.md#pr-43), [4](docs/stages/S0A.md#pr-4) | 23 Oct | Storefront foundation and home page on new.extas.com.bd (S02 9/58): four themes on one token set, branding and the eleven logo styles from settings, English and Bengali shop (`/bn`, language switch, hreflang), one slider engine with separate touch, mouse and keyboard pauses, the store shell (announcement bar, header, phone menu, bottom bar, footer, checkout header, coming-soon pages, 404), 44 px tap layers, the home page and the hero slider, matched to demo V12.2; storefront pages in the device gate and the Lighthouse budget (TBT under 200 ms); the footer sign-up form stays hidden until the sign-up list exists (CN-017: no promise the shop can't keep). The nightly smoke test now runs the checks of the live version, so a check merged before its deploy can't give a false alarm (PR [4](docs/stages/S0A.md#pr-4)). |
