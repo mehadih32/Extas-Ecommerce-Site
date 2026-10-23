@@ -7,6 +7,7 @@
 // and the page shows the checkout the server priced for it. PR 118: the band he picks when asked. PR 119: the delivery
 // charge in the summary and the total — the server's figure, or "free", or "+ delivery" while it is not known.
 // PR 120: the payment step; the choice is kept in the tab's draft and priced by the server (the prepaid reward).
+// PR 122: "Your offers" with the wallet; the total and Confirm show what is left to pay.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, type CheckoutView, type DetailsForm, type Field, type FormLimits, type PaymentChoice } from '@extas/checkout/pure';
 import { confirmedOf, payChoiceOf, payOpens } from '@/lib/shop/checkout-model';
@@ -15,6 +16,7 @@ import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
+import { OffersCard } from './OffersCard';
 import { PaymentStep } from './PaymentStep';
 import { nextOnEnter, saveDraft, useDraft } from './draft';
 import { fetchQuote, latest, useSettle, type Choices } from './quote-client';
@@ -51,7 +53,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const [readLine, setReadLine] = useState<string | null>(null);
   const seq = useRef(latest());
   /** What the page last asked the server about: the finished line and the band he chose (PR 118). */
-  const asked = useRef<Choices>({ line: null, confirmed: null, pay: null });
+  const asked = useRef<Choices>({ line: null, confirmed: null, pay: null, wallet: false });
   /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
   const requote = async (patch: Partial<Choices>) => {
     const c = { ...asked.current, ...patch };
@@ -59,7 +61,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
     const k = seq.current.next();
     setReadLine(c.line);
     setReading(true);
-    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed } : null, payment: c.pay });
+    const next = await fetchQuote({ lang: money.lang, address: c.line ? { line: c.line, confirmed: c.confirmed } : null, payment: c.pay, useWallet: c.wallet });
     if (!seq.current.isLatest(k)) return;
     setReading(false);
     if (next) setView(next);
@@ -94,7 +96,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const draftPay = payChoiceOf(stored?.pay);
   useEffect(() => {
     if ((!draftLine && !draftPay) || asked.current.line !== null || asked.current.pay !== null) return;
-    void requote({ line: draftLine || null, confirmed: confirmedOf(stored?.confirmed), pay: draftPay });
+    void requote({ line: draftLine || null, confirmed: confirmedOf(stored?.confirmed), pay: draftPay, wallet: stored?.wallet === true });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the draft arrives
   }, [draftLine, draftPay?.method, draftPay?.option]);
   /** PR 120: he picked a payment method (or a wallet or card inside it). */
@@ -131,7 +133,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
   const [sumOpen, setSumOpen] = useState(false);
   const t = view.totals;
   const saved = t.youSaveMinor;
-  const amount = m(t.totalMinor) + (t.known ? '' : ` ${w('sum.plusDelivery')}`);
+  const amount = m(t.dueMinor) + (t.known ? '' : ` ${w('sum.plusDelivery')}`);
 
   const summary = (
     <>
@@ -150,6 +152,12 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
             <span>−{m(o.amountMinor)}</span>
           </div>
         ))}
+        {t.walletMinor > 0 ? (
+          <div className="co-r disc" data-testid="co-sum-wallet">
+            <span>{w('wallet.row')}</span>
+            <span>−{m(t.walletMinor)}</span>
+          </div>
+        ) : null}
         {t.rewardMinor > 0 ? (
           <div className="co-r disc" data-testid="co-reward-row">
             <span>{w('sum.reward')}</span>
@@ -176,7 +184,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
         <span>{w('sum.total')}</span>
         <span className="co-totv">
           <span className="price" data-testid="co-total">
-            {m(t.totalMinor)}
+            {m(t.dueMinor)}
           </span>
           {t.known ? null : <span className="xs muted"> {w('sum.plusDelivery')}</span>}
         </span>
@@ -227,7 +235,7 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
           </span>
           <span className="co-msum-amt">
             <span className="price" id="co-msum-total">
-              {m(t.totalMinor)}
+              {m(t.dueMinor)}
             </span>
             {saved > 0 ? (
               <span className="co-msum-was">
@@ -291,7 +299,16 @@ export function CheckoutForm({ view: first, words, money, lines, wa, fields, lim
                 onChange={changeBand}
               />
             </section>
-            <PaymentStep pay={view.pay} due={amount} open={payOpens(form.address)} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
+            <PaymentStep pay={view.pay} due={amount} open={payOpens(form.address)} covered={t.known && t.walletMinor > 0 && t.dueMinor === 0} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
+            <OffersCard
+              wallet={view.wallet}
+              w={w}
+              m={m}
+              onToggle={(on) => {
+                void requote({ wallet: on });
+                saveDraft({ wallet: on });
+              }}
+            />
           </div>
           <aside className="co-side">
             <div className="co-float">

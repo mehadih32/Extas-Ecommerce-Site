@@ -151,6 +151,17 @@ export const checkoutSettings = {
     sortOrder: 66,
   }),
 
+  // ---- PR 122 · the customer's wallet at checkout (his own money: shown whenever he has a balance) ----
+  'checkout.wallet.enabled': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.wallet.enabled.label',
+    helpKey: 'checkout.wallet.enabled.help',
+    sortOrder: 67,
+  }),
+
   // ---- PR 120 · the prepaid reward (CN-018 (1)): nothing set (off), and no amount, until the owner decides. Any payment but Cash on
   // Delivery earns it; when delivery is already free a free-delivery reward falls back to the amount or the percentage.
   'checkout.prepaidReward.enabled': setting({
