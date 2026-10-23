@@ -208,7 +208,7 @@
 @media (max-width: 400px) { .shop .pdp-page { --pdp-img: min(35vh, 330px); --pdp-gap: 9px; } }
 @media (max-width: 1023px) { .shop .pdp-page .pdp-main .pimg { min-height: var(--pdp-img); width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; aspect-ratio: auto !important; height: var(--pdp-img) !important; max-height: var(--pdp-img) !important; } }
 @media (max-width: 1023px) { .shop .pdp-page .pdp-main .pimg > svg.garment { width: 100%; height: 100%; max-height: none; object-fit: cover; } }
-@media (max-width: 1023px) { .shop .pdp-page .pdp-trk.t2 > .pdp-tile { flex: 0 0 88%; } }
+@media (max-width: 1023px) { .shop .pdp-page .pdp-trk.t2 > .pdp-tile { flex: 0 0 var(--pdp-peek, 88%); } }
 @media (max-width: 1023px) { .shop .pdp-page .pdp-top { padding-top: 6px; } }
 @media (max-width: 1023px) { .shop .pdp-page .pdp-crumbs { margin-bottom: 0px; } }
 @media (max-width: 1023px) { .shop .pdp-page .pdp-grid { gap: var(--pdp-gap); } }
@@ -584,13 +584,13 @@
 @media (max-width: 1023px) { .shop .pdp-g { margin: 0px -16px; } }
 @media (min-width: 768px) and (max-width: 1023px) { .shop .pdp-g { margin: 0px -24px; } }
 @media (min-width: 1024px) { .shop .pdp-grid { grid-template: "g b" "d b" 1fr / minmax(0px, 1.12fr) minmax(0px, 0.88fr); gap: 36px 56px; align-items: start; } }
-@media (min-width: 1024px) { .shop .pdp-grid.t2 { grid-template-columns: minmax(0px, 1fr) 410px; column-gap: 64px; } }
+@media (min-width: 1024px) { .shop .pdp-grid.t2 { grid-template-columns: minmax(0px, 1fr) var(--pdp-t2buy, 410px); column-gap: 64px; } }
 .shop .pdp-main { position: relative; }
 .shop .pdp-trk { display: flex; overflow: auto hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
 .shop .pdp-trk::-webkit-scrollbar { display: none; }
 .shop .pdp-trk > .pdp-tile { flex: 0 0 100%; scroll-snap-align: start; position: relative; min-width: 0px; }
 .shop .pdp-trk.t2 { gap: 4px; }
-.shop .pdp-trk.t2 > .pdp-tile { flex: 0 0 86%; }
+.shop .pdp-trk.t2 > .pdp-tile { flex: 0 0 var(--pdp-peek, 86%); }
 .shop .pdp-main .pimg { border-radius: 0px; }
 @media (min-width: 1024px) { .shop .pdp-main .pimg { border-radius: var(--card-radius); } }
 .shop .pdp-thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px 2px; scrollbar-width: none; }
@@ -756,3 +756,20 @@
 .shop .pdp-page .size-pill.out .size-w { color: inherit; }
 .shop .pdp-page .pdp-ysout { color: var(--warn); }
 .shop .pdp-page .pdp-ysout .pdp-yslink { font-size: 12px; min-height: 0px; padding: 0px; }
+
+/* PR 50 — template T2, Editorial (demo 30-product.js PDP_CSS "gallery T2" and ".pdp-tpl-T2", r11-pdp.css 1, r12-zzdesk-b.css
+   D-053). Phone: the same strip with the next photo peeking in (--pdp-peek, `pdp.templates.t2.peekPct`) at the first-screen
+   budget's height, square-cornered; computer: every photo stacked in --pdp-t2cols columns at 3:4, no thumbnails, beside a
+   --pdp-t2buy wide buy column. The page sits on the plain surface (t2surf) and the title is a size larger (t2ed), except on
+   a phone the budget has tightened (pdp-tight keeps its 22 px). The details lose their side borders. */
+.shop .pdp-page.pdp-t2surf { background: var(--surface); }
+.shop .pdp-galT2 .pimg { border-radius: 0px; }
+@media (min-width: 1024px) {
+  .shop .pdp-trk.t2.pdp-galT2 { display: grid; grid-template-columns: repeat(var(--pdp-t2cols, 2), minmax(0px, 1fr)); gap: 4px; overflow: visible; scroll-snap-type: none; }
+  .shop .pdp-trk.t2.pdp-galT2 > .pdp-tile { flex: 0 0 auto; }
+  .shop .pdp-main.t2 .pdp-galT2 .pimg { border-radius: var(--card-radius); }
+  .shop .pdp-galT2w .pdp-thumbs { display: none; }
+}
+.shop .pdp-page.pdp-t2ed:not(.pdp-tight) .pdp-name { font-size: 32px; line-height: 1.04; }
+@media (min-width: 1024px) { .shop .pdp-page.pdp-t2ed:not(.pdp-tight) .pdp-name, .shop .pdp-page.pdp-t2ed .pdp-name { font-size: clamp(28px, 2.3vw, 34px); line-height: 1.08; } }
+.shop .pdp-tpl-T2 .pdp-d .pdp-box { border-left: 0px; border-right: 0px; border-radius: 0px; }

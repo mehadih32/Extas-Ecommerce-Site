@@ -38,4 +38,13 @@ describe('product page template settings (v28)', () => {
     expect(pdpTemplatesSchema.safeParse({ ...d, byCategory: { 'Not A Slug': 'T2' } }).success).toBe(false);
     expect(pdpTemplatesSchema.safeParse({ ...d, extra: 1 }).success).toBe(false);
   });
+
+  it('T2 (PR 50): the demo strip and stacked columns, each look on its own switch, with limits', () => {
+    const d = pdpTemplateSettings['pdp.templates'].default;
+    expect(d.t2).toEqual({ peekPct: 88, deskColumns: 2, deskBuyPx: 410, thumbs: true, editorialTitle: true, surface: true });
+    expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, peekPct: 59 } }).success).toBe(false);
+    expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, deskColumns: 4 } }).success).toBe(false);
+    expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, deskBuyPx: 300 } }).success).toBe(false);
+    expect(pdpTemplatesSchema.safeParse({ ...d, t2: { ...d.t2, deskColumns: 1.5 } }).success).toBe(false);
+  });
 });
