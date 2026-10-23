@@ -43,6 +43,36 @@ export const structuredDataSchema = z
   })
   .strict();
 
+// ---- PR 56 · follow-up 62 (SIM-F-047; demo 30-product.js pdp_pills "Your size", pdp_mySizeOut) ----
+
+const sizeKey = z.string().regex(/^[a-z0-9][a-z0-9-]{0,23}$/);
+const sizeWord = z.string().trim().max(16);
+
+/**
+ * The owner's words under the size boxes (S → "ছোট", M → "মাঝারি", L → "বড়"), by size key, for buyers who read a
+ * word better than a letter. Owner data: empty (null) = no words. `show`: on the Bengali pages only, or on both.
+ */
+export const pdpSizeWordsSchema = z
+  .object({
+    show: z.enum(['bn', 'both']),
+    words: z.record(sizeKey, z.object({ en: sizeWord, bn: sizeWord }).strict()),
+  })
+  .strict()
+  .nullable();
+
+/**
+ * "My usual size": the size this browser last put in the bag (tops and bottoms apart) gets a "Your size" tag on the
+ * product page, and when it is sold out in the colour shown, the colours that have it are named. `preselect` also
+ * chooses it when it is in stock. Remembered for `days`. Off: the demo draws it from the account's size (PR 58).
+ */
+export const pdpUsualSizeSchema = z
+  .object({
+    on: z.boolean(),
+    preselect: z.boolean(),
+    days: z.int().min(1).max(730),
+  })
+  .strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 export const storefrontFuSettings = {
@@ -54,6 +84,25 @@ export const storefrontFuSettings = {
     labelKey: 'card.desk.label',
     helpKey: 'card.desk.help',
     sortOrder: 300,
+  }),
+  'pdp.sizeWords': setting({
+    ...json,
+    isOwnerData: true,
+    group: 'productPage',
+    schema: pdpSizeWordsSchema,
+    default: null,
+    labelKey: 'pdp.sizeWords.label',
+    helpKey: 'pdp.sizeWords.help',
+    sortOrder: 910,
+  }),
+  'pdp.usualSize': setting({
+    ...json,
+    group: 'productPage',
+    schema: pdpUsualSizeSchema,
+    default: { on: false, preselect: false, days: 180 },
+    labelKey: 'pdp.usualSize.label',
+    helpKey: 'pdp.usualSize.help',
+    sortOrder: 920,
   }),
   'seo.structuredData': setting({
     ...json,
@@ -68,3 +117,5 @@ export const storefrontFuSettings = {
 
 export type CardDeskSettings = z.output<typeof cardDeskSchema>;
 export type StructuredDataSettings = z.output<typeof structuredDataSchema>;
+export type PdpSizeWordsSettings = z.output<typeof pdpSizeWordsSchema>;
+export type PdpUsualSizeSettings = z.output<typeof pdpUsualSizeSchema>;

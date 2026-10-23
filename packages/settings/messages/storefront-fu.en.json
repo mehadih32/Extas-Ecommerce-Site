@@ -10,5 +10,15 @@
       "label": "Data for search engines (structured data)",
       "help": "What Google reads beside the page, always from what the page itself shows: the breadcrumb trail (sent even when the visible trail is off), the list of products on a category page, and on a product page the product, its price and whether it is in stock. A star rating is never sent until real reviews exist."
     }
+  },
+  "pdp": {
+    "sizeWords": {
+      "label": "Words under the size boxes",
+      "help": "Your own word under each size box, for buyers who read a word better than a letter (S: \"ছোট\", M: \"মাঝারি\", L: \"বড়\"). Set a word per size, and whether it shows on the Bengali pages only or on both. Empty: no words."
+    },
+    "usualSize": {
+      "label": "\"Your size\" on the size row",
+      "help": "The size a shopper last put in the bag on this phone or computer (tops and bottoms apart) gets a \"Your size\" tag on the next product page. When it is sold out in the colour shown, the colours that have it are named. \"Choose it for them\" also picks it when it is in stock. Remembered for the number of days set. Kept only in the shopper's own browser."
+    }
   }
 }

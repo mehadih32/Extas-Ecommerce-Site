@@ -4,11 +4,14 @@
 // colour crossed out and not tappable (its name says so), a size gone in every colour crossed out or left out
 // (SIM-F-035), and under them the chosen size's measurements on one line. "Please choose a size" shows only after a
 // buy button was pressed without one (A8: one message, beside the boxes). A one-size product says so and is chosen.
+// Follow-up 62 (SIM-F-047): the owner's word under each box (`pdp.sizeWords`), and "Your size" on the size this browser
+// last put in the bag (`pdp.usualSize`), with the colours that have it when the one shown is sold out in it.
 import { Fragment, useState } from 'react';
 import type { PdpSizeSettings } from '@extas/settings';
 import { Icon } from '../Icon';
 import { measureParts, measureText, sizePills } from '@/lib/shop/pdp-size';
 import { colourKeyOf, isOneSize, NO_COLOUR } from '@/lib/shop/product-model';
+import { usualElsewhere } from '@/lib/shop/usual-size';
 import { Bold } from './Bold';
 import { PdpChart } from './PdpChart';
 import { PdpNotify } from './PdpNotify';
@@ -17,7 +20,7 @@ import { usePdp } from './PdpRoot';
 
 export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string | null; fitPos: number | null; fitWord: string }) {
   const pdp = usePdp();
-  const { m, set, choice, err, unit, w, num, pickSize, setUnit } = pdp;
+  const { m, set, choice, err, unit, w, num, pickSize, pickColour, setUnit, usualSize } = pdp;
   // SIM-F-035: a crossed-out size asks "tell me when it is back" (off by default, `pdp.size.notifyBack`)
   const [notify, setNotify] = useState<string | null>(null);
   if (!m.sizes.length) return null;
@@ -52,6 +55,16 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
   const parts = set.size.measureLine ? measureParts(m.chart, choice.size, set.size.unitToggle ? unit : 'inch') : [];
   const fmt = (v: number) => w(set.size.unitToggle && unit === 'cm' ? 'cm' : 'inch', { v: num(measureText(v)) });
   const fieldWord = (f: string) => (pdp.lang === 'bn' ? f : f.toLowerCase());
+  const sizeWords = set.sizeWords;
+  const worded = pills.some((p) => sizeWords[p.key]);
+  const usualPill = usualSize ? pills.find((p) => p.key === usualSize) : undefined;
+  const elsewhere = usualPill?.out ? usualElsewhere(m, choice.colour, usualPill.key) : [];
+  // the box's name says its word and "your size" too (both are drawn aria-hidden)
+  const ariaOf = (p: (typeof pills)[number]) => {
+    const size = sizeWords[p.key] ? `${p.label} ${sizeWords[p.key]}` : p.label;
+    const label = p.gone ? w('sizeGoneAria', { size }) : p.out ? w('sizeOutAria', { size, colour }) : w('sizeAria', { size });
+    return p.key === usualSize ? w('usual.aria', { label }) : label;
+  };
 
   return (
     <div className="pdp-sec" id="pdp-sizes">
@@ -70,7 +83,7 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
         {m.chart && set.chart.on ? <PdpChart /> : null}
       </div>
       <div
-        className={`pdp-pills${err ? ' err' : ''}${set.sweep.sizePills ? ' shine' : ''}`}
+        className={`pdp-pills${err ? ' err' : ''}${set.sweep.sizePills ? ' shine' : ''}${worded ? ' worded' : ''}`}
         role="radiogroup"
         aria-label={w('size')}
         style={{ gridTemplateColumns: `repeat(${pills.length},minmax(0,1fr))` }}
@@ -80,12 +93,12 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
           <button
             key={p.key}
             type="button"
-            className={`size-pill${p.on ? ' on' : ''}${p.out ? ' out' : ''}${p.gone ? ' gone' : ''}`}
+            className={`size-pill${p.on ? ' on' : ''}${p.out ? ' out' : ''}${p.gone ? ' gone' : ''}${p.key === usualSize ? ' tagged' : ''}`}
             disabled={p.out && !ask}
             aria-disabled={p.out || undefined}
             role="radio"
             aria-checked={p.on}
-            aria-label={p.gone ? w('sizeGoneAria', { size: p.label }) : p.out ? w('sizeOutAria', { size: p.label, colour }) : w('sizeAria', { size: p.label })}
+            aria-label={ariaOf(p)}
             data-s={p.key}
             onClick={() => {
               if (p.out) return setNotify(notify === p.key ? null : p.key);
@@ -95,9 +108,38 @@ export function PdpSizes({ oneSizeNote, fitPos, fitWord }: { oneSizeNote: string
             }}
           >
             {p.label}
+            {sizeWords[p.key] ? (
+              <span className="size-w" aria-hidden="true">
+                {sizeWords[p.key]}
+              </span>
+            ) : null}
+            {p.key === usualSize ? (
+              <span className="pdp-ystag" aria-hidden="true">
+                {w('usual.tag')}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
+      {usualPill?.out ? (
+        <div className="xs mt8 pdp-ysout" data-testid="pdp-usual-out">
+          {w('usual.out', { size: usualPill.label, colour })}
+          {elsewhere.length ? (
+            <>
+              {' '}
+              {w('usual.inStock')}{' '}
+              {elsewhere.map((x, i) => (
+                <Fragment key={x.key}>
+                  {i ? ', ' : null}
+                  <button type="button" className="link pdp-yslink" onClick={() => pickColour(x.key)}>
+                    {x.name}
+                  </button>
+                </Fragment>
+              ))}
+            </>
+          ) : null}
+        </div>
+      ) : null}
       {notifyPill ? (
         <PdpNotify key={notifyPill.key} variantId={notifyVariant} what={colour ? w('notify.sizeIn', { size: notifyPill.label, colour }) : notifyPill.label} onClose={() => setNotify(null)} />
       ) : null}

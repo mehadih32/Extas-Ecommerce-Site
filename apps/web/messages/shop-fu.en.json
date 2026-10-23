@@ -5,5 +5,11 @@
     "add": "Add size {size} to bag",
     "soldOut": "Sold out in this colour",
     "more": "{n} more sizes on the product page"
+  },
+  "usualSize": {
+    "tag": "Your size",
+    "aria": "{label}, your size",
+    "out": "Your size {size} is sold out in {colour}.",
+    "inStock": "In stock in:"
   }
 }

@@ -746,3 +746,13 @@
 .shop .pdp-page .shr-b.whatsapp { background: #e6f7ec; border-color: #c7ebd6; color: #1fa855; }
 .shop .pdp-page .shr-b.instagram { background: #fce9f1; border-color: #f6d3e3; color: #c13584; }
 @media (hover: hover) { .shop .pdp-page .shr-b:hover { filter: brightness(0.97); } }
+/* PR 56 · follow-up 62 (SIM-F-047; demo 30-product.js .pdp-ystag, r11-pdp.css .size-pill.tagged): the owner's word
+   under a size, and "Your size" sitting on the top edge of the usual size's box */
+.shop .pdp-page .size-pill.tagged { position: relative; padding-top: 13px; }
+.shop .pdp-page .pdp-ystag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); max-width: calc(100% + 14px); overflow: hidden; text-overflow: ellipsis; background: var(--gold-bg); color: var(--gold); font-size: 11px; font-weight: 700; line-height: 1; letter-spacing: 0px; text-decoration: none; padding: 3px 7px; border-radius: 10px; white-space: nowrap; border: 1px solid var(--surface); z-index: 1; }
+.shop .pdp-page .pdp-pills.worded .size-pill { flex-direction: column; gap: 2px; line-height: 1.1; }
+.shop .pdp-page .size-w { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; font-weight: 600; letter-spacing: 0px; color: var(--text2); text-decoration: none; }
+.shop .pdp-page .size-pill.on .size-w { color: inherit; }
+.shop .pdp-page .size-pill.out .size-w { color: inherit; }
+.shop .pdp-page .pdp-ysout { color: var(--warn); }
+.shop .pdp-page .pdp-ysout .pdp-yslink { font-size: 12px; min-height: 0px; padding: 0px; }
