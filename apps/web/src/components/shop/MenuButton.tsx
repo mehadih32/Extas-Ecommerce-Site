@@ -3,8 +3,10 @@
 // 02-core.js openModal). The quick row, the menu tree (every category joins on its own), the Help list, WhatsApp, the
 // hotline, the opening hours and the language switch. Esc, the close button and a tap outside close it, and focus
 // goes back to the menu button; the page under it does not scroll while it is open.
+// PR 74 — a category with sub-categories opens them in place (`shell.menuSubs`: an accordion with "View all" first and
+// a count on each row, one open at a time; or always shown under it, as the demo draws them).
 import type { ShopIcon } from '@extas/settings';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { MenuRow } from '@/lib/shop/shell-model';
 import { Icon } from './Icon';
@@ -14,6 +16,8 @@ export interface MenuData {
   close: string;
   quick: Array<{ id: string; href: string; label: string; icon: ShopIcon }>;
   rows: MenuRow[];
+  /** PR 74: opening one category's sub-categories closes the one that was open. */
+  single: boolean;
   helpTitle: string;
   help: MenuRow[];
   wa: { href: string | null; label: string };
@@ -21,13 +25,58 @@ export interface MenuData {
   hours: string | null;
 }
 
-function Row({ r }: { r: MenuRow }) {
+function RowIcon({ r }: { r: MenuRow }) {
+  return r.icon || r.emptyIcon ? <span className="mn-ic">{r.icon ? <Icon name={r.icon} size={18} /> : <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" />}</span> : null;
+}
+
+function Row({ r, sub }: { r: MenuRow; sub?: boolean }) {
   return (
-    <a className="mn-row" href={r.href} data-testid={r.testid}>
-      {r.icon || r.emptyIcon ? <span className="mn-ic">{r.icon ? <Icon name={r.icon} size={18} /> : <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" />}</span> : null}
+    <a className={sub ? 'mn-row mn-sub' : 'mn-row'} href={r.href} data-testid={r.testid ?? (sub ? 'mn-sub' : undefined)}>
+      <RowIcon r={r} />
       <span className="grow">{r.label}</span>
+      {r.count ? <span className="mn-n">{r.count}</span> : null}
       <Icon name="right" size={16} />
     </a>
+  );
+}
+
+/** PR 74 · the menu tree: a category with sub-categories opens them in place (or shows them under it). */
+function Tree({ rows, single }: { rows: MenuRow[]; single: boolean }) {
+  const [open, setOpen] = useState<readonly string[]>([]);
+  const toggle = (id: string) => setOpen((o) => (o.includes(id) ? o.filter((x) => x !== id) : single ? [id] : [...o, id]));
+  return (
+    <>
+      {rows.map((r) => {
+        if (!r.subs) return <Row key={r.id} r={r} />;
+        if (r.subs.style === 'list')
+          return (
+            <Fragment key={r.id}>
+              <Row r={r} />
+              {r.subs.rows.map((k) => (
+                <Row key={k.id} r={k} sub />
+              ))}
+            </Fragment>
+          );
+        const on = open.includes(r.id);
+        const box = `mn-subs-${r.id}`;
+        return (
+          <Fragment key={r.id}>
+            <button type="button" className="mn-row mn-acc" aria-expanded={on} aria-controls={box} data-testid="mn-acc" onClick={() => toggle(r.id)}>
+              <RowIcon r={r} />
+              <span className="grow">{r.label}</span>
+              <span className="mn-chev">
+                <Icon name="down" size={16} />
+              </span>
+            </button>
+            <div id={box} className="mn-subs" role="group" aria-label={r.label} hidden={!on}>
+              {r.subs.rows.map((k) => (
+                <Row key={k.id} r={k} sub />
+              ))}
+            </div>
+          </Fragment>
+        );
+      })}
+    </>
   );
 }
 
@@ -54,7 +103,7 @@ export function MenuButton({ label, data, lang }: { label: string; data: MenuDat
       }
       if (e.key === 'Tab' && sheet.current) {
         // keep the keyboard inside the sheet while it is open
-        const f = Array.from(sheet.current.querySelectorAll<HTMLElement>('a[href],button,input,[tabindex]:not([tabindex="-1"])'));
+        const f = Array.from(sheet.current.querySelectorAll<HTMLElement>('a[href],button,input,[tabindex]:not([tabindex="-1"])')).filter((x) => x.getClientRects().length);
         if (!f.length) return;
         const first = f[0]!;
         const last = f[f.length - 1]!;
@@ -113,9 +162,7 @@ export function MenuButton({ label, data, lang }: { label: string; data: MenuDat
                       ))}
                     </div>
                   ) : null}
-                  {data.rows.map((r) => (
-                    <Row key={r.id} r={r} />
-                  ))}
+                  <Tree rows={data.rows} single={data.single} />
                   {data.help.length ? <div className="mn-h">{data.helpTitle}</div> : null}
                   {data.help.map((r) => (
                     <Row key={`h-${r.id}`} r={r} />

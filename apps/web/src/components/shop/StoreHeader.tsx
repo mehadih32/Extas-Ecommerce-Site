@@ -2,7 +2,7 @@
 // the announcement bar, the menu button and the wordmark with its slogan, the desktop nav row and the icons in the
 // owner's order (`shell.header`). The bag can never be switched off — it is how every order starts. The desktop
 // wordmark wears the owner's logo style (`brand.logoStyle`, H5); the phone wordmark never changes.
-import type { ShopIcon } from '@extas/settings';
+import type { ShellMenuSubsSettings, ShopIcon } from '@extas/settings';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
@@ -63,7 +63,8 @@ function megaFor(c: ShopContext, cats: readonly ShopCategory[]): Record<string, 
   return out;
 }
 
-export function menuData(c: ShopContext): MenuData {
+/** The phone menu's contents. `subs` (PR 74, `shell.menuSubs`): how a category's sub-categories open; none = plain rows. */
+export function menuData(c: ShopContext, subs?: ShellMenuSubsSettings): MenuData {
   const m = c.s['shell.menu'];
   const t = c.t;
   const quickIcon: Record<string, ShopIcon> = { search: 'search', bag: 'bag', wish: 'heart', account: 'user' };
@@ -72,7 +73,8 @@ export function menuData(c: ShopContext): MenuData {
     title: t('menu.title'),
     close: t('menu.close'),
     quick: m.quick.filter((q) => q.on).map((q) => ({ id: q.id, href: hrefIn(c.lang, quickHref[q.id]!), label: t(`quick.${q.id}`), icon: quickIcon[q.id]! })),
-    rows: phoneMenuRows(m, c.cats, t),
+    rows: phoneMenuRows(m, c.cats, t, subs ? { ...subs, num: c.num } : undefined),
+    single: subs?.single ?? true,
     helpTitle: t.label(m.helpTitle),
     help: helpRows(m, t),
     wa: { href: waHref(c.s['contact.whatsapp'], t('footer.waMessage', c.vars)), label: t('menu.whatsapp') },
@@ -81,7 +83,7 @@ export function menuData(c: ShopContext): MenuData {
   };
 }
 
-export function StoreHeader({ c, bagCount = 0 }: { c: ShopContext; bagCount?: number }) {
+export function StoreHeader({ c, bagCount = 0, menuSubs }: { c: ShopContext; bagCount?: number; menuSubs?: ShellMenuSubsSettings }) {
   const t = c.t;
   const head = c.s['shell.header'];
   const home = hrefIn(c.lang, ROUTES.home);
@@ -139,7 +141,7 @@ export function StoreHeader({ c, bagCount = 0 }: { c: ShopContext; bagCount?: nu
       <header className="hdr">
         <div className="container hdr-in">
           <div className="row" style={{ gap: 2 }}>
-            <MenuButton label={t('header.menu')} data={menuData(c)} lang={<LangSwitch c={c} />} />
+            <MenuButton label={t('header.menu')} data={menuData(c, menuSubs)} lang={<LangSwitch c={c} />} />
             <a className={`logo hide-m${hasSlogan('desk') ? ' sb-hasslog' : ''}`} href={home}>
               <LogoText text={c.storeName} styleNo={c.s['brand.logoStyle']} />
               {sD}

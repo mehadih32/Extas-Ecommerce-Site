@@ -59,5 +59,8 @@
     "bagMove": "Move to wishlist",
     "bagMoveName": "Move {name} to your wishlist",
     "bagMoved": "Moved to your wishlist"
+  },
+  "menuSub": {
+    "viewAll": "View all"
   }
 }

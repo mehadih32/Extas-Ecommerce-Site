@@ -24,6 +24,10 @@
     "fab": {
       "label": "Floating WhatsApp button on every page",
       "help": "A round WhatsApp button that floats over the shop's pages. Off: the WhatsApp icon in the header does this job (owner's decision of 19 Oct). When on, tick the kinds of page that show it (home, category, product, bag, help pages, wishlist, account, any other), the side, and where it sits: low, just above the phone's bottom bars (recommended), or in the middle of the side. It steps out of the way over the footer, and never shows until the store's WhatsApp number is filled in."
+    },
+    "menuSubs": {
+      "label": "Sub-categories in the phone menu",
+      "help": "How the phone menu shows a category's sub-categories (a category with none is a plain link). Accordion (recommended): a tap on the category opens its sub-categories in place, \"View all\" first, and a second tap closes them. List: always shown, indented under the category. Off: the category goes straight to its page. Counts shows the number of products beside each; one at a time closes the open category when another opens. Sub-categories with no products for sale are left out."
     }
   },
   "wish": {
