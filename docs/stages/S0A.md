@@ -24,7 +24,7 @@
 | [3](#pr-3) | Base hardening — SSH keys only, no root login, fail2ban, unattended updates, UFW; ports 22/80/443 opened by us | Live · 2026-10-20 | সার্ভার তালাবন্ধ: শুধু চাবি দিয়ে ঢোকা, ফায়ারওয়াল, ভুল চেষ্টায় ব্লক; ডেটা ডিস্ক ভাগ করা। |
 | [4](#pr-4) | Docker and Docker Compose, with the project's network and volume layout | Live · 2026-10-20 | Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে "লগইন → অ্যাডমিন খোলে" পরীক্ষা চলে। প্রতি ডিপ্লয়ের পর আর প্রতি রাতে সব পাতা ফোন ও কম্পিউটারে খুলে দেখা হয়; সমস্যা পেলে সাইট নিজে আগের ভালো ভার্সনে ফেরে। |
 | [5](#pr-5) | PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum | Live · 2026-10-20 | ডাটাবেস (PostgreSQL 17) সার্ভারের মাপে টিউন করা; ধীর কোয়েরি লগ হয়। |
-| [6](#pr-6) | Redis, and BullMQ queues with their dead-letter handling | Live · 2026-10-20 | Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। |
+| [6](#pr-6) | Redis, and BullMQ queues with their dead-letter handling | Live · 2026-10-20 | Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। 23 Oct: পেছনের কাজের আলাদা মেশিন (ওয়ার্কার) চালু হলো — কোনো কাজ দুবার হয় না, আটকে গেলে সার্ভার পাতায় দেখা যায়। |
 | [7](#pr-7) | Caddy with automatic TLS, HTTP/2 and HTTP/3, compression, and the security headers | Live · 2026-10-20 | HTTPS আর পাসওয়ার্ড দিয়ে প্রিভিউ সাইট সুরক্ষিত; পাসওয়ার্ড শুধু সার্ভারে পড়া যায়। সাইট-দেখার পাসওয়ার্ড একবার দিলেই ব্রাউজার মনে রাখে, বারবার চায় না। |
 | [8](#pr-8) | Nightly encrypted backup of database, uploads and configuration to Google Drive, with one-command restore | Live · 2026-10-20 | প্রতিদিন ব্যাকআপ, প্রতি মিনিটে ডাটাবেসের বদল সেভ, এক কমান্ডে রিস্টোর। ব্যাকআপে পণ্যের ছবি আর সব ডকুমেন্টও যায়। |
 | [9](#pr-9) | Monitoring — uptime, queue depth, error rate, disk and memory, alerting to Telegram | Live · 2026-10-20 | প্রতি মিনিটে সার্ভার চেক হয়; Telegram চাবি দিলে সমস্যার খবর সেখানে যাবে। |
@@ -163,12 +163,12 @@
 
 **Redis, and BullMQ queues with their dead-letter handling**
 
-**বাংলায়:** Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না।
+**বাংলায়:** Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। 23 Oct: পেছনের কাজের আলাদা মেশিন (ওয়ার্কার) চালু হলো — কোনো কাজ দুবার হয় না, আটকে গেলে সার্ভার পাতায় দেখা যায়।
 
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk)
+  - Build status row: Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Redis, and BullMQ queues with their dead-letter handling.
 - **Filed under:** [S0A · Server foundation — PR 1–10](../MASTER-REGISTER.md#s0a--server-foundation--pr-110)
@@ -176,6 +176,11 @@
   - **19 Oct 23:33** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 19 Oct 23:33 (owner server spec):** Redis ~~2 GB~~ 6 GB, 1 CPU, `maxmemory` with LRU eviction; working cache on NVMe, persistence (AOF/RDB) on the data disk; holds settings, the Dhaka area list, products, categories and the 15 s stock display cache (PR 602). Queues: image/video worker (separate process, 6 GB, 2 CPU) and background jobs (courier sync, e-mail, reports; 4 GB, 1 CPU) — heavy image and video work never runs in the web process
   - **19 Oct 23:33** · [Scope added to existing PRs (owner server spec, CN-001; review/SERVER-SETUP-SPEC-OWNER.md; new PR 601–604)](../MASTER-REGISTER.md#how-this-reached-606): **The filing** — the owner approved every point of the analysis at 23:33 and said: where two decisions conflict, take the best one. Four new PRs (601 NVMe boot unit and 604 hardware-aware profile in S0A, 603 database performance pack in S00, 602 four-layer cache in S02); the rest is dated scope on the PR lines below (PR 1, 3–10, 13, 18, 22, 24, 37, 72, 88, 234, 519). **Every server item is required before go-live** — the owner's "later" list (monitoring page, monthly speed measurement, report pre-computation) is not deferred; items that need the app schema are built with their stage and marked *pre-launch required*. **Build order inside S0A:** 1 record specs (PR 1) → 2 hardening and UFW (PR 3) → 3 NVMe boot unit (PR 601) → 4 data-disk LVM (PR 1/3) → 5 Docker (PR 4) → 6 hardware-aware profile (PR 604) → 7 Postgres, PgBouncer and Redis tuning (PR 5, 6) → 8 Caddy, Cloudflare and Origin …
   - **23 Oct** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 23 Oct 2026 (CN-022):** the worker process: a separate BullMQ worker, one scheduler leader, a `JobRun` row per run (status, retries, next attempt, failure reason), a heartbeat; stock pull, cart-hold expiry, ERP outbox and reconcile run through it; a retry never repeats a side effect; failed jobs show on the Server page.
+- **What was built** (from the Build status row):
+  - Code and files: `@extas/jobs`, `infra/stack/app.yml`
+  - Routes: `/admin/server`
+  - Settings and named keys: `system.read`, `jobs.*`
+  - Names in the code: `JobRun`, `WORKER_LOST`, `WorkerHeartbeat`, `0008_worker`, `worker`
 - **Owning agent:** Prohori
 - **Mentions:** [PR 602](S02.md#pr-602)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)

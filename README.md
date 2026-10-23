@@ -45,7 +45,7 @@ documents to it ([how](#how-it-is-built)).
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 4 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15 and 17); none stops the build ([table below](#what-waits-on-the-owner)) |
-| Next | The CN-022 foundation items (worker, ERP webhook, one "Sales" KPI, append-only audit log: PR [6](docs/stages/S0A.md#pr-6), 196, 155, 139) beside S02 (the first-screen budget, wishlist, menu, content pages: PR [53](docs/stages/S02.md#pr-53) …); S04 after checkout: "Add to this parcel" (PR [127](docs/stages/S04.md#pr-127) …); the order states, refunds and returns wait for the owner's approval of the architecture draft (CN-022); S03 combos |
+| Next | The CN-022 foundation items left (one "Sales" KPI, append-only audit log: PR [155](docs/stages/S05.md#pr-155), 139; the background worker PR [6](docs/stages/S0A.md#pr-6) and the ERP webhook PR [196](docs/stages/S09.md#pr-196) are built and go live with the next deploy) beside S02 (the first-screen budget, wishlist, menu, content pages: PR [53](docs/stages/S02.md#pr-53) …); S04 after checkout: "Add to this parcel" (PR [127](docs/stages/S04.md#pr-127) …); the order states, refunds and returns wait for the owner's approval of the architecture draft (CN-022); S03 combos |
 | Last update | 23 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
@@ -154,8 +154,9 @@ Blueprint [A3.1](docs/BLUEPRINT.md#a31-the-stack) and [A2.9](docs/BLUEPRINT.md#a
   (`/api/admin/*`), the public API (`/api/back-in-stock`, `/api/health`, media) and the status page. Route handlers
   are thin: they check the session and permission, then call a package.
 - **`packages/*`** hold all business logic, each with its own tests: `settings`, `vault`, `auth`, `db`, `adapters`,
-  `media`, `catalogue`, `inventory`, `seed` ([folder list](#folder-structure)). Long jobs are written as job functions
-  ready for the BullMQ worker; until the worker runs they run inline right after the answer.
+  `media`, `catalogue`, `inventory`, `jobs`, `seed` ([folder list](#folder-structure)). Long jobs are job functions
+  run by the background worker (`packages/jobs`, PR 6: BullMQ on the queue Redis, one scheduler leader, a `JobRun`
+  row per attempt, retries and a dead letter); a few (image sizes) still run inline right after the answer.
 - **`infra/`** is the server as code: S0A setup scripts, the Docker stack, the deploy script and the backup, restore
   and monitor tools.
 - **Settings, not code.** Every name, number, text and limit is a declared setting (store → installation → default),
@@ -310,9 +311,12 @@ OS disk 128 GB; a separate **1 TB data disk** in LVM; a **440 GB local NVMe** th
 - **`extas-profile`** (PR 604), **`extas-nvme-prepare`** (PR 601), **`extas-find-data-disk`** (finds the 1 TB disk
   safely), **`extas-preview-login`** (the owner reads the preview password; CN-007).
 
-**The admin Server page** (plain-language CPU, RAM, disks, services, cache hit, slow queries, last backups, speed)
-is **planned** — S21, PR 423 (with 601, 602, 603, 604); the demo shows it at `#/admin/server`. Until then the state
-is on `/status` and in the committed server reports.
+**The admin Server page** `/admin/server` (permission `system.read`) — **first part built** with the background
+worker (PR 6, 23 Oct): a verdict (ok · stale · stopped · never started), the leader, jobs waiting / running / failed
+in the last hours, the failed jobs with their reason and next try, and every worker's last heartbeat. The rest
+(plain-language CPU, RAM, disks, services, cache hit, slow queries, last backups, speed) is **planned** — S21, PR 423
+(with 601, 602, 603, 604); the demo shows it at `#/admin/server`. Until then that state is on `/status` and in the
+committed server reports. Guide: [docs/admin-guide/server.md](docs/admin-guide/server.md).
 
 ---
 
@@ -349,7 +353,8 @@ is on `/status` and in the committed server reports.
 │   ├── adapters/             adapter framework (mock / sandbox / live), storage, ERP, page reader
 │   ├── media/                image pipeline, watermark, delivery, media library
 │   ├── catalogue/            products, variants, categories, colours, fabrics, naming, publish, size charts, CSV …
-│   ├── inventory/            ERP mode and guard, sync, stock pull, holds, pushes, counts, reports
+│   ├── inventory/            ERP mode and guard, sync, stock pull, holds, pushes, counts, reports, ERP webhooks
+│   ├── jobs/                 background worker: BullMQ queues, scheduler leader, JobRun per attempt, heartbeat
 │   └── seed/                 default pack, sample catalogue, owner-data check, installation export / import
 ├── infra/
 │   ├── bootstrap/            install-runner.sh (one-time runner install by the owner)
@@ -382,7 +387,13 @@ PR's full scope is its row in the register's **Build status** table.
 PR 1–10, 601, 604. Everything is described under [The server](#the-server). Highlights: idempotent setup as code,
 NVMe boot unit (601), hardware-aware auto profile (604), tuned PostgreSQL + PgBouncer, split Redis, Caddy with the
 preview password (PR 7; the password is generated on the server, rotatable, never in chat — CN-007), backups with a
-tested restore (8), monitoring every minute (9), k6 baseline (10). Deploys (PR 4) now commit their result back to
+tested restore (8), monitoring every minute (9), k6 baseline (10). **Background worker (PR 6, CN-022, 23 Oct):**
+`packages/jobs` runs every long job off the web process — BullMQ on the no-eviction queue Redis, one scheduler leader
+(a Redis lock), a `JobRun` row per attempt (status, tries, next try, reason), backoff and a dead letter, a run that
+already succeeded is never repeated, a dead worker's run is closed as `WORKER_LOST` and taken over; heartbeats in
+`WorkerHeartbeat` (migration `0008_worker`). It runs as the `worker` service of each deploy colour
+([`infra/stack/app.yml`](infra/stack/app.yml), from the migrate image, sized by `extas-profile`); settings `jobs.*`
+(registry v22, group system); the admin Server page shows it; the smoke test checks its heartbeat. Deploys (PR 4) now commit their result back to
 [`docs/reports/server/deploy-latest.md`](docs/reports/server/) with a history line (`[skip ci]`, no loop). Tests: shellcheck and
 [`infra/tests/run.sh`](infra/tests/run.sh) in CI. Register: [S0A](docs/MASTER-REGISTER.md#s0a--server-foundation--pr-110) ·
 report: [`docs/reports/2026-10-20-S0A.md`](docs/reports/2026-10-20-S0A.md).
@@ -594,6 +605,12 @@ PR 194–207, 497–499. Register: [S09](docs/MASTER-REGISTER.md#s09--inventory-
   resumable; one idempotent StockMovement per change; unknown SKUs counted, never guessed.
 - **Company and warehouse mapping (PR 196).** The key decides the company, checked before every sync
   (`COMPANY_MISMATCH` stops it); local warehouses link one-to-one to ERP warehouses.
+- **ERP webhooks (PR 196, CN-022, 23 Oct).** `POST /api/erp/webhook` takes the ERP's `stock.changed` and
+  `variant.changed`: signed with the webhook secret from the vault (no secret → every request refused with 401),
+  timestamp window, stored once in `WebhookEvent` (a retry within `erp.webhook.dedupeHours` is the same event),
+  applied by the background worker; a change older than the shop's copy is ignored, and the poll afterwards adds no
+  second movement. `variant.changed` refreshes the ERP mirror (barcode, ERP price, average cost), never the sale price.
+  The poll stays the fallback; the practice ERP makes signed test events. Answers in [`docs/ERP-API-CONTRACT.md`](docs/ERP-API-CONTRACT.md).
 - **Warehouses and locations (PR 201).** Warehouse, showroom, in transit, damaged; every warehouse keeps a damaged
   bin; damaged stock is never sellable; nothing deleted.
 - **Cart holds (PR 197, 198).** One shared stock pool across stores, so two stores never sell the last piece twice;
@@ -625,7 +642,9 @@ Guide: [docs/admin-guide/stock.md](docs/admin-guide/stock.md).
 | `resync`, `reconcile`, `movements` | re-sync now; check against the ERP (changes nothing); movement report |
 | `audits(/[id])`, `audit-lines/[id]` | stock counts |
 
-Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inventory.*` (registry v11). Tests in
+Public (no session, signed): `POST /api/erp/webhook` — the ERP's webhooks (PR 196).
+
+Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inventory.*` (registry v11; `erp.webhook.*` v22). Tests in
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
 piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
 

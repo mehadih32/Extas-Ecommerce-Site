@@ -2223,16 +2223,30 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk)",
+    "note": "Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat",
     "github": [
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
     ]
    },
    "builtFacts": {
-    "routes": [],
-    "settings": [],
-    "code": [],
-    "names": [],
+    "routes": [
+     "/admin/server"
+    ],
+    "settings": [
+     "system.read",
+     "jobs.*"
+    ],
+    "code": [
+     "@extas/jobs",
+     "infra/stack/app.yml"
+    ],
+    "names": [
+     "JobRun",
+     "WORKER_LOST",
+     "WorkerHeartbeat",
+     "0008_worker",
+     "worker"
+    ],
     "tests": []
    },
    "updates": [
@@ -2262,7 +2276,7 @@
     602
    ],
    "blueprint": [],
-   "bn": "Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না।",
+   "bn": "Redis দুই ভাগে: দ্রুত ক্যাশ আর কাজের সারি (queue); সারির ডেটা হারায় না। 23 Oct: পেছনের কাজের আলাদা মেশিন (ওয়ার্কার) চালু হলো — কোনো কাজ দুবার হয় না, আটকে গেলে সার্ভার পাতায় দেখা যায়।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S0A.md#pr-6"
@@ -13991,7 +14005,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "company and warehouse mapping per store: the key decides the company — checked before every sync (a different company stops it with `COMPANY_MISMATCH`, nothing written), an empty mirror is filled from a real answer (audited), the practice company is shown, never saved; `Store.erpCompanyId` / StoreErpMapping stay owner data (owner-data check 0 findings); the store's ERP warehouse limits the pull; local warehouses link one-to-one to ERP warehouses; `/api/admin/inventory/erp/verify`, `/erp/warehouses`",
+    "note": "company and warehouse mapping per store: the key decides the company — checked before every sync (a different company stops it with `COMPANY_MISMATCH`, nothing written), an empty mirror is filled from a real answer (audited), the practice company is shown, never saved; `Store.erpCompanyId` / StoreErpMapping stay owner data (owner-data check 0 findings); the store's ERP warehouse limits the pull; local warehouses link one-to-one to ERP warehouses; `/api/admin/inventory/erp/verify`, `/erp/warehouses`. 23 Oct (CN-022): the ERP webhook receiver `POST /api/erp/webhook` for `stock.changed` / `variant.changed`: HMAC with the vault's webhook secret (no secret → every request refused), timestamp window, stored once in `WebhookEvent` (dedupe by event id within `erp.webhook.dedupeHours`), applied by the worker (job `erp.webhook.process`), out-of-order changes ignored by `updatedAt`, the poll stays the fallback, signed test events from the practice ERP; settings `erp.webhook.*` (registry v22); smoke check: an unsigned message gets 401",
     "github": [
      "#15 (commit `4563976`), 20 Oct 09:15 (Dhaka)"
     ]
@@ -14001,13 +14015,25 @@
      "/api/admin/inventory/erp/verify",
      "/erp/warehouses"
     ],
-    "settings": [],
-    "code": [],
+    "settings": [
+     "stock.changed",
+     "variant.changed",
+     "erp.webhook.dedupeHours",
+     "erp.webhook.process",
+     "erp.webhook.*"
+    ],
+    "code": [
+     "POST /api/erp/webhook"
+    ],
     "names": [
      "COMPANY_MISMATCH",
-     "Store.erpCompanyId"
+     "Store.erpCompanyId",
+     "WebhookEvent",
+     "updatedAt"
     ],
-    "tests": []
+    "tests": [
+     "23 Oct (CN-022): the ERP webhook receiver `POST /api/erp/webhook` for `stock.changed` / `variant.changed`: HMAC with the vault's webhook secret (no secret → every request refused), timestamp window, stored once in `WebhookEvent` (dedupe by event id within `erp.webhook.dedupeHours`), applied by the worker (job `erp.webhook.process`), out-of-order changes ignored by `updatedAt`, the poll stays the fallback, signed test events from the practice ERP"
+    ]
    },
    "updates": [
     {
@@ -14020,7 +14046,7 @@
    ],
    "mentions": [],
    "blueprint": [],
-   "bn": "দোকান কোন ERP কোম্পানি আর গুদামের, তা মেলানো; ভুল কোম্পানি হলে সিঙ্ক থামে।",
+   "bn": "দোকান কোন ERP কোম্পানি আর গুদামের, তা মেলানো; ভুল কোম্পানি হলে সিঙ্ক থামে। 23 Oct: ERP সই করা খবর পাঠালে স্টক সাথে সাথে বদলায়; সই ছাড়া খবর দোকান নেয় না।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S09.md#pr-196"
