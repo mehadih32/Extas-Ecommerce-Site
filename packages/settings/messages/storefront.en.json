@@ -106,7 +106,7 @@
     },
     "hero": {
       "label": "Home hero",
-      "help": "The big panel at the top: the small line, the title, the line under it, up to three buttons and the promise lines. A promise line only shows when its rule is on (Cash on Delivery, size exchange). On a desktop the coloured panel can reach further right (0 to 240 px)."
+      "help": "The big panel at the top: the small line, the title, the line under it, up to three buttons and the promise lines. A promise line only shows when its rule is on (Cash on Delivery, size exchange). On a desktop the coloured panel can reach further right (0 to 240 px). Each text can be your own words in English and Bengali; the default words name no count, season or year, so write a campaign's own (a season, how many new styles) only while it is true."
     },
     "heroSlides": {
       "label": "Hero pictures",

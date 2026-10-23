@@ -871,7 +871,8 @@ export const storefrontSettings = {
       shift: 112,
       setsLook: 'v3',
       buttons: [
-        { id: 'shop', on: true, label: k('home.hero.shopNow'), href: '/collections/hoodies', style: 'fill' },
+        // ~~href: '/collections/hoodies'~~ PR 41 follow-up (CN-017): a new shop may have no hoodies; New in always opens
+        { id: 'shop', on: true, label: k('home.hero.shopNow'), href: '/collections/new-in', style: 'fill' },
         { id: 'sets', on: true, label: k('home.hero.shopSets'), href: '/combos', style: 'sets' },
       ],
       trust: [
@@ -887,7 +888,8 @@ export const storefrontSettings = {
     isOwnerData: false,
     isPublic: true,
     sortOrder: 20,
-    version: V,
+    // ~~version: V~~ 17: the Shop now link's default changed (sync refuses a changed definition at a recorded version)
+    version: 17,
   }),
   'home.categories': setting({
     schema: homeCategoriesSchema,

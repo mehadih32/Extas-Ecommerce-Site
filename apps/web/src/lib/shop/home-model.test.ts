@@ -31,7 +31,7 @@ describe('the hero (PR 41)', () => {
   });
 
   it('links stay in the shopper\'s language and a switched-off button is gone', () => {
-    expect(heroButtons(hero, bn, {}).map((x) => x.href)).toEqual(['/bn/collections/hoodies', '/bn/combos']);
+    expect(heroButtons(hero, bn, {}).map((x) => x.href)).toEqual(['/bn/collections/new-in', '/bn/combos']);
     const one = { ...hero, buttons: hero.buttons.map((x, i) => ({ ...x, on: i === 0 })) };
     expect(heroButtons(one, en, {})).toHaveLength(1);
   });
