@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-23 15:42 (Asia/Dhaka)
+# Smoke test · 2026-10-23 17:33 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (58টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (62টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `5da5ab61ca9e` · after deploy · result **PASS** (58 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `6c8d06da2901` · after deploy · result **PASS** (62 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -31,10 +31,12 @@ Site: https://new.extas.com.bd · commit `5da5ab61ca9e` · after deploy · resul
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-phone.jpg) |
 | `/admin/rules` | phone | 200 | `/admin/rules` | ok | [picture](admin-rules-phone.jpg) |
 | `/admin/rules/notices` | phone | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-phone.jpg) |
+| `/admin/server` | phone | 200 | `/admin/server` | ok | [picture](admin-server-phone.jpg) |
 | `/admin/size-charts` | phone | 200 | `/admin/size-charts` | ok | [picture](admin-size-charts-phone.jpg) |
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | [picture](admin-stock-phone.jpg) |
 | `/admin/stock/counts` | phone | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-phone.jpg) |
 | `/admin/stock/movements` | phone | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-phone.jpg) |
+| `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
 | `/bn` | desktop | 200 | `/bn` | ok | [picture](bn-desktop.jpg) |
 | `/checkout` | desktop | 200 | `/checkout` | ok | [picture](checkout-desktop.jpg) |
@@ -60,7 +62,11 @@ Site: https://new.extas.com.bd · commit `5da5ab61ca9e` · after deploy · resul
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-desktop.jpg) |
 | `/admin/rules` | desktop | 200 | `/admin/rules` | ok | [picture](admin-rules-desktop.jpg) |
 | `/admin/rules/notices` | desktop | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-desktop.jpg) |
+| `/admin/server` | desktop | 200 | `/admin/server` | ok | [picture](admin-server-desktop.jpg) |
 | `/admin/size-charts` | desktop | 200 | `/admin/size-charts` | ok | [picture](admin-size-charts-desktop.jpg) |
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | [picture](admin-stock-desktop.jpg) |
 | `/admin/stock/counts` | desktop | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-desktop.jpg) |
 | `/admin/stock/movements` | desktop | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-desktop.jpg) |
+| `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
+
+Database (PR 139): ok: 14 tables append-only; the app connects as extas_app.
