@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { ORDER_CANCEL_CODES } from '@extas/settings';
 import {
+  addOnClosedWhy,
   allowedCommands,
   CANCEL_CODES,
   customerCancelMode,
@@ -35,6 +36,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   requestCancel: Object.fromEntries(BEFORE_BOOKING.map((s) => [s, FLAG])),
   refuseCancelRequest: Object.fromEntries(BEFORE_BOOKING.map((s) => [s, FLAG])),
   setFlags: Object.fromEntries(ORDER_STATES.filter((s) => s !== 'DRAFT').map((s) => [s, FLAG])),
+  addLine: { PLACED: FLAG, CONFIRMED: FLAG },
+  removeLine: { PLACED: FLAG, CONFIRMED: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
   startPicking: { CONFIRMED: 'PROCESSING' },
@@ -99,7 +102,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'awaitAdvance'] });
   });
 });
 
@@ -132,6 +135,35 @@ describe('the guards', () => {
   it('the advance moves the order on only when paid in full (F-043)', () => {
     expect(plan('recordAdvance', order('AWAITING_ADVANCE', { advanceRequiredMinor: 50_000, paidMinor: 20_000 }))).toMatchObject({ ok: false, code: 'ADVANCE_SHORT' });
     expect(plan('recordAdvance', order('AWAITING_ADVANCE', { advanceRequiredMinor: 50_000, paidMinor: 50_000 }))).toMatchObject({ ok: true, to: 'PLACED' });
+  });
+});
+
+describe('PR 127 · "Add to this parcel" (SIM-F-004)', () => {
+  it('a booked order takes no new line, nor one with a cancel asked or requested', () => {
+    for (const s of ['PLACED', 'CONFIRMED'] as const) {
+      expect(plan('addLine', order(s, { booked: true }))).toMatchObject({ ok: false, code: 'BOOKED' });
+      expect(plan('removeLine', order(s, { booked: true }))).toMatchObject({ ok: false, code: 'BOOKED' });
+      expect(plan('addLine', order(s, { cancelPending: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });
+      expect(plan('addLine', order(s, { cancelRequested: true }))).toMatchObject({ ok: false, code: 'CANCEL_REQUESTED' });
+    }
+    expect(plan('addLine', order('PROCESSING'))).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION' });
+  });
+
+  it("the customer's window: the owner's switch, Cash on Delivery only, his step, his time", () => {
+    const at = new Date('2026-10-23T06:00:00Z');
+    const later = (min: number) => new Date(at.getTime() + min * 60_000);
+    const on = { enabled: true, until: 'confirmed' as const, windowMinutes: 0 };
+    const o = (s: OrderState, more: Partial<MachineOrder> = {}, paymentMethod: string | null = 'COD') => ({ ...order(s, more), paymentMethod, placedAt: at });
+    expect(addOnClosedWhy({ ...on, enabled: false }, o('PLACED'), at)).toBe('OFF');
+    expect(addOnClosedWhy(on, o('PLACED', {}, 'BKASH'), at)).toBe('NOT_COD');
+    expect(addOnClosedWhy(on, o('PLACED'), later(600))).toBeNull();
+    expect(addOnClosedWhy(on, o('CONFIRMED'), at)).toBeNull();
+    expect(addOnClosedWhy({ ...on, until: 'placed' }, o('CONFIRMED'), at)).toBe('STEP');
+    expect(addOnClosedWhy(on, o('PROCESSING'), at)).toBe('STEP');
+    expect(addOnClosedWhy(on, o('CONFIRMED', { booked: true }), at)).toBe('BOOKED');
+    expect(addOnClosedWhy(on, o('PLACED', { cancelRequested: true }), at)).toBe('CANCEL');
+    expect(addOnClosedWhy({ ...on, windowMinutes: 30 }, o('PLACED'), later(30))).toBeNull();
+    expect(addOnClosedWhy({ ...on, windowMinutes: 30 }, o('PLACED'), later(31))).toBe('TIME');
   });
 });
 

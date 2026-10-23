@@ -3,7 +3,8 @@
 // same-site check and the permission (a reader may look, not act); the list and one order; a command with the
 // Idempotency-Key header (a repeat gets the first answer) and with the screen's version (STALE); an illegal command
 // refused with the commands open now; reasons, notes, flags; the duplicate review queue and a decision; the customer's
-// own cancel through the account API. Every value is a made-up test value.
+// own cancel through the account API. PR 563: the call queue. PR 127: "Add to this parcel" through the account API and
+// the admin's lines routes. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -139,6 +140,36 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     const dec = await api('POST', ['reviews', s.alertId!], { body: { decision: 'approve', note: 'two different gifts' } });
     expect(dec.body.result).toMatchObject({ alertStatus: 'APPROVED' });
     expect((await api('POST', [b.orderId, 'confirm'], { body: {} })).body.result.status).toBe('CONFIRMED');
+  });
+
+  it('PR 127: "Add to this parcel" through the account API (his order only) and the admin lines routes', async () => {
+    const o = await f.place('api-parcel');
+    const shop = (action: string, b: unknown, visitor: string) =>
+      accountHandler(
+        new Request(`https://${HOST}/api/account/${action}`, { method: 'POST', headers: { host: HOST, origin: `https://${HOST}`, 'content-type': 'application/json', cookie: `${BAG_COOKIE}=${visitor}` }, body: JSON.stringify(b) }),
+        { accounts: { db: f.t.prisma, settings: deps.resolver, now: () => f.clock.now }, storeId: f.S, storeName: async () => 'Sample' },
+        action,
+      );
+    // off by default (the resolver reads the registry): the window says why, and an add is refused with it
+    expect(await (await shop('parcel', { number: o.number }, o.visitorId)).json()).toMatchObject({ ok: true, open: false, closed: 'OFF', lines: [] });
+    const closed = await shop('parcel-add', { number: o.number, variantId: f.v.teeM, lang: 'bn' }, o.visitorId);
+    expect(closed.status).toBe(422);
+    expect(await closed.json()).toMatchObject({ ok: false, error: 'ADD_ON_CLOSED', closed: 'OFF' });
+    expect((await shop('parcel', { number: o.number }, 'test-visitor-someone-else-000')).status).toBe(404);
+    // the team adds and takes out a line (orders.lines); a reader may not
+    const before = await api('GET', [o.orderId]);
+    const add = await api('POST', [o.orderId, 'lines'], { body: { variantId: f.v.teeM, version: before.body.order.version } });
+    expect(add).toMatchObject({ status: 200, body: { ok: true, result: { command: 'addLine', status: 'PLACED' } } });
+    expect((await api('POST', [o.orderId, 'lines'], { body: { variantId: f.v.linenM }, cookie: reader })).status).toBe(403);
+    const one = await api('GET', [o.orderId]);
+    const line = one.body.items.find((i: { isAddOn: boolean }) => i.isAddOn);
+    expect(line).toMatchObject({ addedVia: 'admin', status: 'ACTIVE' });
+    expect(one.body.money.totalMinor).toBe(before.body.money.totalMinor + line.lineTotalMinor);
+    const out = await api('POST', [o.orderId, 'lines', line.id, 'remove'], { body: {} });
+    expect(out.body.result).toMatchObject({ command: 'removeLine' });
+    expect((await api('GET', [o.orderId])).body.money.totalMinor).toBe(before.body.money.totalMinor);
+    expect((await api('POST', [o.orderId, 'lines', 'x', 'remove'], { body: {} })).status).toBe(404);
+    expect((await api('POST', [o.orderId, 'lines', line.id], { body: {} })).status).toBe(404);
   });
 
   it("the customer's own cancel through the account API (his browser's order only)", async () => {

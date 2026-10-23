@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings } from '../src/registry-checkout-more';
+import { addOnSchema, addressBackfillSchema, addressCheckSchema, ADDRESS_DETAIL_WORDS, checkoutMoreSettings } from '../src/registry-checkout-more';
 
 describe('checkout-more settings (v34)', () => {
   it('every key is in the registry at version 34, never owner data, labelled in English and Bengali, its default valid', () => {
@@ -32,5 +32,11 @@ describe('checkout-more settings (v34)', () => {
     expect(checkoutMoreSettings['checkout.address.backfill'].default).toEqual({ enabled: false, orders: 'delivered' });
     expect(addressBackfillSchema.safeParse({ enabled: true, orders: 'placed' }).success).toBe(true);
     expect(addressBackfillSchema.safeParse({ enabled: true, orders: 'all' }).success).toBe(false);
+  });
+
+  it('PR 127: "Add to this parcel" is off until the owner turns it on; every limit is a number he sets', () => {
+    expect(checkoutMoreSettings['orders.addOn'].default).toEqual({ enabled: false, until: 'confirmed', windowMinutes: 0, maxLines: 3, maxUnits: 1 });
+    expect(addOnSchema.safeParse({ enabled: true, until: 'packed', windowMinutes: 0, maxLines: 3, maxUnits: 1 }).success).toBe(false);
+    expect(addOnSchema.safeParse({ enabled: true, until: 'placed', windowMinutes: 30, maxLines: 0, maxUnits: 1 }).success).toBe(false);
   });
 });

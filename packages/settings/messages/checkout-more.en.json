@@ -10,5 +10,11 @@
         "help": "When a customer writes an address with no area in it (\"Road 12, House 42\") and his phone number is already known, he is not asked Inside or Outside Dhaka: the charge comes from the address we hold, nothing is shown or filled in on his page, what he typed stays as he typed it, and the full address we hold is attached to the order for packing. An address that names its own area always wins. \"From orders\": use his delivered orders (or any order not cancelled or returned) when he has no saved address. Off: he is asked as usual."
       }
     }
+  },
+  "orders": {
+    "addOn": {
+      "label": "Add to this parcel",
+      "help": "Lets a customer add a piece to his own Cash on Delivery order from the thank-you page or his order page, as a real order line that goes in the same parcel. It is priced as its product page prices it; nothing already on the order is priced again, and the amount to pay at the door grows by exactly that piece. \"Until\": while the order is new, or also after it is confirmed (until picking starts). Never after a courier is booked. \"Minutes after placing\": 0 means no time limit besides that. \"Lines\" and \"pieces\": how many he may add. Off: the thank-you page shows no add buttons."
+    }
   }
 }

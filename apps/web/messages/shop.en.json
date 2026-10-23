@@ -352,6 +352,7 @@
       "failedNote": "Your order is saved. Try again, or message us on WhatsApp.",
       "retry": "Try again",
       "items": "Your order",
+      "added": "Added",
       "discount": "Offers",
       "wa": "Questions? Message us on WhatsApp",
       "waMsg": "Hi {store}, about my order #{number}",

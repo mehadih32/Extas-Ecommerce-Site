@@ -4,7 +4,8 @@
 // - PR 194 the sync layer (sync.ts): retry with backoff from settings, the error surface on ErpSyncRun / ErpSyncState;
 // - PR 195 the stock pull per SKU / colour / size (stock-pull.ts) and the stock views (stock.ts);
 // - PR 196 company and warehouse mapping per store (mapping.ts);
-// - PR 197, 198 one global hold on the shared pool with row locking (reservations.ts);
+// - PR 197, 198 one global hold on the shared pool with row locking (reservations.ts); PR 127 (S04) the pieces of a
+//   line added to a placed order, held and let go on the same pool (order-units.ts);
 // - PR 199, 200 business documents to the ERP through an idempotent outbox (erp-push.ts);
 // - PR 201 warehouses and locations with the damaged bin (locations.ts);
 // - PR 202 low-stock alerts on the shared number (low-stock.ts); follow-up 16: a balance below zero is shown as it is
@@ -27,6 +28,7 @@ export * from './stock';
 export * from './mapping';
 export * from './stock-pull';
 export * from './reservations';
+export * from './order-units';
 export * from './erp-push';
 export * from './low-stock';
 export * from './shortage';

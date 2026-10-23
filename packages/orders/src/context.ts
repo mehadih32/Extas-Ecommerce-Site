@@ -48,6 +48,7 @@ export const ORDER_PERMISSIONS = [
   'orders.risk.read',
   'orders.risk.decide',
   'orders.merge',
+  'orders.lines',
 ] as const;
 export type OrdersPermission = (typeof ORDER_PERMISSIONS)[number];
 

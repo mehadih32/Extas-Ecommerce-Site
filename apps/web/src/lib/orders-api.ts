@@ -28,6 +28,9 @@
 //   POST  /api/admin/orders/:id/notes                         {body, isInternal?} (orders.notes)
 //   POST  /api/admin/orders/:id/notes/:noteId/archive         (orders.notes)
 //   POST  /api/admin/orders/:id/flags                         {flags, version?} (orders.notes)
+//   POST  /api/admin/orders/:id/lines                         {variantId, quantity?, version?} PR 127: a line added
+//                                                             before booking, priced as its product page (orders.lines)
+//   POST  /api/admin/orders/:id/lines/:lineId/remove          {version?} an added line taken out again (orders.lines)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -167,6 +170,11 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
         : notFound();
     case 'flags':
       return one ? run('orders.notes', (x, i, o) => od.setFlags(x.deps, x.who, id, i, o)) : notFound();
+    case 'lines':
+      if (one) return run('orders.lines', (x, i, o) => od.addLine(x.deps, x.who, id, i, o));
+      if (path.length !== 4 || e !== 'remove') return notFound();
+      if (!isUuid(c)) return Promise.resolve(fail(404, 'NOT_FOUND', ['lineId']));
+      return run('orders.lines', (x, _i, o) => od.removeLine(x.deps, x.who, id, c, o));
     default:
       return notFound();
   }

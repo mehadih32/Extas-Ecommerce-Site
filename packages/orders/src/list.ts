@@ -4,6 +4,7 @@
 // (amount due, the payment pill), the shipment, payments and refund requests as their own records (§6.5.0), notes, the
 // open reviews, the timeline and the commands open now. The admin pages come later (S05 UI); the shapes are here.
 // PR 561: one order also carries the full address the shop held and attached for packing (`backfilledAddress`).
+// PR 127: each line says whether it was added after placing ("Add to this parcel") and from where.
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, parse, setting, type OrdersDeps, type Who } from './context';
@@ -160,7 +161,7 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
 export interface OrderDetail {
   order: Record<string, unknown> & { id: string; number: string; status: OrderState; version: number };
   money: { totalMinor: number; walletAppliedMinor: number; paidMinor: number; dueMinor: number; refundedMinor: number; payment: PaymentPill };
-  items: { id: string; sku: string; productName: string; colourName: string | null; sizeLabel: string | null; quantity: number; unitPriceMinor: number; lineTotalMinor: number; status: string }[];
+  items: { id: string; sku: string; productName: string; colourName: string | null; sizeLabel: string | null; quantity: number; unitPriceMinor: number; discountMinor: number; lineTotalMinor: number; status: string; isAddOn: boolean; addedVia: string | null; createdAt: Date }[];
   shipments: { id: string; status: string; courierAccountId: string | null; trackingCode: string | null; cancelRequestedAt: Date | null; cancelOutcome: string | null; createdAt: Date }[];
   payments: { id: string; method: string; status: string; amountMinor: number; createdAt: Date }[];
   refundRequests: { id: string; status: string; amountMinor: number; method: string | null; reason: string | null; source: string | null; createdAt: Date }[];
@@ -225,7 +226,7 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
   });
   if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
   const [items, shipments, payments, refunds, reviews, events, notes, facts, cfg] = await Promise.all([
-    deps.db.orderItem.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true, lineTotalMinor: true, status: true } }),
+    deps.db.orderItem.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true, discountMinor: true, lineTotalMinor: true, status: true, isAddOn: true, addedVia: true, createdAt: true } }),
     deps.db.shipment.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'desc' }, select: { id: true, status: true, courierAccountId: true, trackingCode: true, cancelRequestedAt: true, cancelOutcome: true, createdAt: true } }),
     deps.db.payment.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, method: true, status: true, amountMinor: true, createdAt: true } }),
     deps.db.refund.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, status: true, amountMinor: true, method: true, reason: true, source: true, createdAt: true } }),
