@@ -1,0 +1,30 @@
+// S02 · the third storefront batch (PR 53, 67–71, 74, 75): every key at version 21, the demo's defaults, the limits,
+// and CN-018 (what the demo does not do by default is off).
+import { describe, expect, it } from 'vitest';
+import { messages, lookup } from '../src/messages';
+import { registry } from '../src/registry';
+import { pdpFitSchema, shopMoreSettings } from '../src/registry-shop-more';
+
+describe('third storefront batch settings (v21)', () => {
+  it('every key is in the registry at version 21, public, never owner data, with both labels', () => {
+    for (const [key, spec] of Object.entries(shopMoreSettings)) {
+      expect(registry[key as keyof typeof registry]).toBe(spec);
+      expect(spec.version, key).toBe(21);
+      expect(spec.isOwnerData, key).toBe(false);
+      expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
+      for (const lang of ['en', 'bn'] as const) {
+        expect(lookup(messages[lang], spec.labelKey), `${lang} ${key}`).toBeTruthy();
+        if (spec.helpKey) expect(lookup(messages[lang], spec.helpKey), `${lang} ${key}`).toBeTruthy();
+      }
+    }
+  });
+
+  it('PR 53: the first-screen budget is the demo PDP_FIT and refuses a floor above the ceiling', () => {
+    const f = shopMoreSettings['pdp.fit'].default;
+    expect(f).toMatchObject({ clearPx: 4.75, photoMinPx: 150, photoMinVh: 0.2, photoMaxPx: 500, photoMaxVh: 0.52, deepVh: 0.345 });
+    expect(pdpFitSchema.safeParse({ ...f, photoMinVh: 0.6, photoMaxVh: 0.5 }).success).toBe(false);
+    expect(pdpFitSchema.safeParse({ ...f, photoMinPx: 600, photoMaxPx: 400 }).success).toBe(false);
+    expect(pdpFitSchema.safeParse({ ...f, clearPx: 30 }).success).toBe(false);
+    expect(pdpFitSchema.safeParse({ ...f, extra: 1 }).success).toBe(false);
+  });
+});
