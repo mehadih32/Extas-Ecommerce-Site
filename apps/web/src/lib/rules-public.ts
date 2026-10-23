@@ -30,3 +30,10 @@ export const placeTexts = (input: { storeId: number; placement: string; locale?:
 
 /** The switched-on notices of a place, with the pop-up limits the RulePopup component applies. */
 export const placeNotices = (input: { storeId: number; placement: string; locale?: string }) => safe<rl.PublicNotices | null>(null, (d) => rl.liveNotices(d, input));
+
+/** PR 62 — the live exchange terms for one product (window, covered or not), or null: no live exchange rule. */
+export const productExchangeTerms = (input: { storeId: number; productId: string }) => safe<rl.ExchangeTerms | null>(null, (d) => rl.exchangeTermsFor(d, input));
+
+/** PR 62 — the live free-delivery limit, as the bag's engine sees it for this piece; null: no live rule backs one. */
+export const liveFreeOverMinor = (input: { storeId: number; variantId: string }) =>
+  safe<number | null>(null, async (d) => (await rl.quoteCart(d, { storeId: input.storeId, lines: [{ variantId: input.variantId, quantity: 1 }] })).delivery.freeOverMinor);
