@@ -402,7 +402,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 6 on PostgreSQL: job runs, idempotency, heartb
       expect(await w.tick()).toBe(1);
       await until('the webhook to be applied', async () => (await t.prisma.webhookEvent.findUniqueOrThrow({ where: { id: got.eventId! } })).status === 'PROCESSED');
       expect(await movements()).toBe(before + 1);
-      expect(await t.prisma.jobRun.findMany({ where: { idempotencyKey: webhookRunKey(got.eventId!) }, select: { status: true } })).toEqual([{ status: 'SUCCEEDED' }]);
+      // The job marks the event before its own run is closed, so wait for the run too.
+      const runs = () => t.prisma.jobRun.findMany({ where: { idempotencyKey: webhookRunKey(got.eventId!) }, select: { status: true } });
+      await until('the webhook run to finish', async () => (await runs()).every((r) => r.status !== 'RUNNING'));
+      expect(await runs()).toEqual([{ status: 'SUCCEEDED' }]);
       // Handled: the next tick plans nothing for it.
       expect(await w.tick()).toBe(0);
       await w.stop();

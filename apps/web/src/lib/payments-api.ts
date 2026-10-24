@@ -1,4 +1,4 @@
-// S07 · PR 165, 166 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
+// S07 · PR 165, 166, 170 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
 // money panel comes with the admin UI; these routes are what it calls. Every route signs the person in (guardAdmin),
 // checks the permission in the store it touches (`?storeId=`, default the mother store), then calls @extas/payments,
 // which checks the permission again and writes the audit log in the same transaction. Recording money takes an
@@ -23,11 +23,12 @@
 //                                                    matched line by line (payments.settle)
 //   GET   /api/admin/payments/settlements/:id       one statement with every line, its match and reason (payments.view)
 //   POST  /api/admin/payments/settlements/lines/:lineId/resolve   {note} a checked mismatch marked resolved (payments.settle)
+//   GET   /api/admin/payments/issues?state=failed|abandoned|waiting&limit=   PR 170 (SIM-F-026): the failed, abandoned or
+//                                                    still waiting online payments, newest first (payments.view)
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import * as od from '@extas/orders';
 import * as pay from '@extas/payments';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
-import { ordersDeps } from './orders-api';
+import { paymentsServiceDeps } from './payments-gateway';
 
 interface Ctx {
   deps: pay.PaymentsDeps;
@@ -41,19 +42,8 @@ function storeIdOf(url: URL): number | null {
   return Number.isInteger(n) && n >= 1 ? n : null;
 }
 
-/** The payments service's dependencies for one request, with the order moves money causes. */
-export async function paymentsDeps(deps: AdminDeps): Promise<pay.PaymentsDeps> {
-  return {
-    db: deps.db,
-    settings: deps.resolver,
-    now: deps.now,
-    orders: {
-      async advancePaid(storeId, orderId, by) {
-        await od.recordAdvance(await ordersDeps(deps), { storeId, orderId }, { actorType: by.actorId ? 'STAFF' : 'SYSTEM', actorId: by.actorId, source: by.source });
-      },
-    },
-  };
-}
+/** The payments service's dependencies for one request, with the order moves money causes (payments-gateway.ts). */
+export const paymentsDeps = (deps: AdminDeps): Promise<pay.PaymentsDeps> => paymentsServiceDeps(deps);
 
 function paymentsFail(e: unknown): Response {
   if (pay.isPaymentsError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ? { data: e.data } : {}) }, { status: e.status });
@@ -86,6 +76,12 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
     if (path.length > 1) return notFound();
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'payments.view', async (x) => ({ position: await pay.codPosition(x.deps, x.who) }));
+  }
+  if (a === 'issues') {
+    if (path.length > 1) return notFound();
+    if (m !== 'GET') return notAllowed();
+    const u = new URL(request.url);
+    return handle(request, deps, 'payments.view', async (x) => ({ rows: await pay.paymentIssues(x.deps, x.who, { state: u.searchParams.get('state') ?? undefined, limit: Number(u.searchParams.get('limit') ?? '50') }) }));
   }
   if (a === 'door') {
     if (path.length !== 3 || c !== 'decide') return notFound();

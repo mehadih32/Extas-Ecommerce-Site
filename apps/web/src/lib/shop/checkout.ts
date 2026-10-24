@@ -13,6 +13,7 @@ import type { CheckoutApiDeps } from './checkout-api';
 import { shopStoreId, type ShopContext } from './context';
 import { SHOP_DICTS, keysOf } from './dict';
 import { giftTrialSettings, tryGiftOn } from './try-gift';
+import { callbackBaseUrl, shopPaymentsDeps } from '../payments-gateway';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
 export function checkoutDeps(): CheckoutDeps | null {
@@ -27,7 +28,14 @@ export function checkoutApiDeps(): CheckoutApiDeps | null {
   if (!checkout) return null;
   const storeId = shopStoreId();
   const accounts = accountDeps();
-  return { checkout, storeId, customerOf: async (request) => (await customerOfRequest(request, accounts, storeId))?.customer.id ?? null };
+  return {
+    checkout,
+    storeId,
+    customerOf: async (request) => (await customerOfRequest(request, accounts, storeId))?.customer.id ?? null,
+    // PR 170: "Pay" opens the gateway's page (the practice gateway until the keys are in)
+    payments: shopPaymentsDeps,
+    callbackBase: callbackBaseUrl,
+  };
 }
 
 const KEYS = [

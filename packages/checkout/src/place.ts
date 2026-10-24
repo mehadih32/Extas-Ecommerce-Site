@@ -599,6 +599,8 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
 
 /** What the mock payment page shows: the order's number, what is to be paid now and how. */
 export interface PayView {
+  /** PR 170: the payment the page pays (the gateway session is opened for it). */
+  paymentId: string;
   number: string;
   amountMinor: number;
   method: PaymentMethod;
@@ -611,7 +613,7 @@ export async function payView(deps: CheckoutDeps, req: { storeId: number; visito
   if (!o || o.visitorId !== req.visitorId) return null;
   const p = await deps.db.payment.findFirst({ where: { storeId: req.storeId, orderId: o.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
   if (!p || p.status === 'REFUNDED' || p.status === 'PARTIALLY_REFUNDED' || p.status === 'AUTHORIZED') return null;
-  return { number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status };
+  return { paymentId: p.id, number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

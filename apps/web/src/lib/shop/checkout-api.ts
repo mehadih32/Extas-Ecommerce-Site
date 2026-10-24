@@ -3,7 +3,8 @@
 // customer chose (the finished address line, the band he picked, the payment method …) and the server prices it again
 // with the engines; the answer is the checkout as the page draws it.
 import { findBag, visitorIdSchema } from '@extas/cart';
-import { captureDraft, checkoutQuote, CheckoutError, payAction, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
+import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
+import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
 import { assessRisk, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
@@ -19,6 +20,10 @@ export interface CheckoutApiDeps {
   storeId: number;
   /** PR 130 — the signed-in customer of the request (his wallet, his order), or null for a guest. */
   customerOf?: (request: Request) => Promise<string | null>;
+  /** PR 170 — the payments service with the gateways ("Pay" opens the gateway's page); none: no gateway here. */
+  payments?: () => Promise<PaymentsDeps | null>;
+  /** PR 170 — our callback address for a provider on this request's host. */
+  callbackBase?: (request: Request, provider: string, lang: string) => string;
 }
 
 const customerOf = (request: Request, d: CheckoutApiDeps) => (d.customerOf ? d.customerOf(request) : Promise.resolve(null));
@@ -44,6 +49,7 @@ export async function bagOfRequest(request: Request, d: CheckoutApiDeps): Promis
 export function refusal(e: unknown): Response {
   if (e instanceof CheckoutError) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ?? {}) }, { status: e.status });
   if (e instanceof CartError) return fail(e.status, e.code, e.details);
+  if (isPaymentsError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}) }, { status: e.status });
   return errorResponse(e);
 }
 
@@ -165,12 +171,24 @@ export async function paymentHandler(request: Request, deps: CheckoutApiDeps | n
     const { visitor } = await bagOfRequest(request, deps);
     if (!visitor) return fail(404, 'NOT_FOUND', ['number']);
     const { lang, ...input } = b;
+    // PR 170: "Pay" on a connected gateway — the visitor's own open payment gets the gateway's session
+    if (input.action === 'start') {
+      const view = typeof input.number === 'string' ? await payView(deps.checkout, { storeId: deps.storeId, visitorId: visitor, number: input.number }) : null;
+      if (!view) return fail(404, 'NOT_FOUND', ['number']);
+      const pd = deps.payments ? await deps.payments() : null;
+      if (!pd || !deps.callbackBase) return fail(503, 'GATEWAY_ERROR');
+      const s = await startPayment(pd, { storeId: deps.storeId, paymentId: view.paymentId, callbackBaseUrl: deps.callbackBase(request, view.provider ?? '', langOf(lang)) });
+      return json({ ok: true, status: 'PENDING', next: s.redirectUrl });
+    }
     const r = await payAction(deps.checkout, { storeId: deps.storeId, visitorId: visitor, input });
     return json({ ok: true, status: r.status, next: nextHref(langOf(lang), r.next, r.number) });
   } catch (e) {
     return refusal(e);
   }
 }
+
+/** The gateway's callback answered: the thank-you page once paid, the payment page otherwise (it shows the state). */
+export const callbackNext = (lang: ShopLang, status: string | null, number: string): string => hrefIn(lang, status === 'PAID' ? ROUTES.thanks(number) : ROUTES.checkoutPay(number));
 
 /** POST /api/checkout/draft — SIM-F-026: keeps what he typed for the team's follow-up, when the owner's switch is on. */
 export async function draftHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {

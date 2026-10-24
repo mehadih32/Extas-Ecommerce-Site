@@ -33,8 +33,8 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
   let deps: AdminDeps;
   let owner = '';
   let reader = '';
-  const api = async (method: string, path: string[], opts: { body?: unknown; cookie?: string; key?: string; d?: AdminDeps | null; origin?: string } = {}) => {
-    const res = await paymentsRoute(call(method, `/api/admin/payments/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner, key: opts.key, origin: opts.origin }), opts.d === undefined ? deps : opts.d, path);
+  const api = async (method: string, path: string[], opts: { body?: unknown; cookie?: string; key?: string; d?: AdminDeps | null; origin?: string; query?: string } = {}) => {
+    const res = await paymentsRoute(call(method, `/api/admin/payments/${path.join('/')}${opts.query ?? ''}`, { body: opts.body, cookie: opts.cookie ?? owner, key: opts.key, origin: opts.origin }), opts.d === undefined ? deps : opts.d, path);
     return { status: res.status, body: (await res.json()) as Record<string, any> };
   };
 
@@ -135,5 +135,21 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     expect(pos.status).toBe(200);
     expect(pos.body.position.openMismatches).toEqual({ SHORT_PAID: 1 });
     expect((await api('POST', ['cod'], { body: {} })).status).toBe(405);
+  });
+
+  it('PR 170 (SIM-F-026): failed and still-waiting online payments are listed for the team (payments.view)', async () => {
+    const db = f.t.prisma;
+    const o = await f.place('pay-api-issues');
+    const at = f.clock.now;
+    const row = (n: number, status: 'FAILED' | 'PENDING') => ({ storeId: f.S, orderId: o.orderId, method: 'BKASH' as const, provider: 'bkash', purpose: 'ORDER' as const, status, amountMinor: 1_000, currency: 'BDT', idempotencyKey: `api-issue-${n}`, attempt: n, statusAt: at, ...(status === 'FAILED' ? { failureCode: 'MOCK_FAILURE' } : {}) });
+    await db.payment.createMany({ data: [row(1, 'FAILED'), row(2, 'PENDING')] });
+    expect((await api('GET', ['issues'], { cookie: reader })).status).toBe(403);
+    const failed = await api('GET', ['issues'], { query: '?state=failed' });
+    expect(failed.status).toBe(200);
+    expect(failed.body.rows.filter((r: { orderId: string }) => r.orderId === o.orderId)).toMatchObject([{ status: 'FAILED', failureCode: 'MOCK_FAILURE', attempt: 1, provider: 'bkash' }]);
+    const waiting = await api('GET', ['issues'], { query: '?state=waiting&limit=5' });
+    expect(waiting.body.rows.filter((r: { orderId: string }) => r.orderId === o.orderId)).toMatchObject([{ status: 'PENDING', attempt: 2 }]);
+    expect((await api('POST', ['issues'], { body: {} })).status).toBe(405);
+    expect((await api('GET', ['issues', 'x'])).status).toBe(404);
   });
 });

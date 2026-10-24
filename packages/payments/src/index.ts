@@ -8,6 +8,9 @@
 // - PR 166 Cash on Delivery after the door: the door outcomes with their money and reasons, the partial's approval, the
 //   courier statement matched line by line with a reason code on every mismatch, cash in transit and days to settle
 //   (cod.ts; the pure part, also for the screens, in cod-match.ts).
+// - PR 170 payments through a gateway: start (the hosted session), the one callback receiver (signature, stored once,
+//   the gateway's own answer), the sweep of open payments (recovered or abandoned) and the team's list of failed,
+//   abandoned and waiting payments (gateway.ts). The gateways themselves are @extas/adapters' (PR 167).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -15,3 +18,4 @@ export * from './outcome';
 export * from './record';
 export * from './cod-match';
 export * from './cod';
+export * from './gateway';
