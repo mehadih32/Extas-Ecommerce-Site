@@ -12,6 +12,14 @@
       "rootCauses": {
         "label": "Why a wrong item went out",
         "help": "The reasons staff pick when the customer got the wrong item. Each wrong-item exchange keeps one, so you can see where mistakes happen."
+      },
+      "charge": {
+        "label": "Who pays the exchange delivery",
+        "help": "\"Size choice pays\": the customer pays the second delivery for his own size choice (CN-018), or the shop pays. The charge is the exchange rule's figure for his delivery band; \"Fallback charge\" is used when the rule has none — empty means nothing is collected. Our mistake (defect, damage, wrong item) is always free. \"Claim needs a photo\": a \"you sent the wrong size\" claim is approved by staff with a note and a photo. \"Re-ship after a try-on\": the refusal reasons after which a refused parcel can be sent again in another size, linked to the refused order (not counted against him); \"Free re-ship\" makes that second delivery free (off). Staff can waive a charge with a logged reason (permission)."
+      },
+      "swap": {
+        "label": "One-trip size swap",
+        "help": "The rider brings the new size and takes the old piece back in the same trip, at the swap's own price, only in the delivery bands listed. Off by default; an empty price means nothing is collected."
       }
     },
     "returns": {

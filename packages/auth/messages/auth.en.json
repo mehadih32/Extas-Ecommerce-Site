@@ -175,7 +175,11 @@
     "returns": {
       "view": "See the returns and exchanges board and every case",
       "decide": "Open, approve, refuse and close exchanges and returns",
-      "qc": "Receive returned parcels and check each piece (sellable or not)"
+      "qc": "Receive returned parcels and check each piece (sellable or not)",
+      "waive": "Waive an exchange delivery charge (with a reason that is logged)",
+      "claims": {
+        "decide": "Approve or refuse a customer’s “your mistake” claim on an exchange"
+      }
     }
   },
   "totp": {

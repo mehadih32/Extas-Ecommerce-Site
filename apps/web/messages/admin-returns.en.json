@@ -55,7 +55,11 @@
     "nothing": "Nothing to do",
     "never": "Approving books a new parcel at the money box's amount. No money moves here and no refund is paid; a wallet credit is only a request after QC.",
     "pickup": "Old piece coming back",
-    "erpAgain": "Send to the ERP again (Stock › ERP documents)"
+    "erpAgain": "Send to the ERP again (Stock › ERP documents)",
+    "oneTrip": "One-trip size swap",
+    "yes": "Yes",
+    "waived": "Charge waived",
+    "claim": "“Your mistake” claim"
   },
   "act": {
     "approve": "Approve (books the new parcel)",
@@ -68,7 +72,17 @@
     "approved": "Approved — new parcel {number}",
     "opened": "Exchange {number} opened",
     "complete": "Complete",
-    "completeNote": "Note (needed when the check failed)"
+    "completeNote": "Note (needed when the check failed)",
+    "waive": "Waive charge",
+    "waiveNote": "Waive {amount}: the rider then collects {cod}. Why (logged)",
+    "claim": "Record his “your mistake” claim",
+    "claimNote": "What he says went wrong",
+    "claimPhoto": "His photo",
+    "claimPhotoNeeded": "A claim needs a photo.",
+    "claimSave": "Record the claim",
+    "claimAccept": "Approve claim (no charge)",
+    "claimRefuse": "Refuse claim",
+    "claimRefuseNote": "Why (he is told)"
   },
   "start": {
     "title": "Start an exchange",
@@ -102,7 +116,9 @@
       "REASON": "The exchange rule does not take this reason.",
       "LIMIT": "This piece has no exchanges left.",
       "OPEN": "This piece already has an exchange open."
-    }
+    },
+    "oneTrip": "One-trip size swap: the rider brings the new size and takes the old one back in the same trip (charge {amount})",
+    "reship": "Re-ship after a try-on: linked to the refused order; the refused parcel coming back is the pick-up, the old piece covers only what was paid, and the refusal no longer counts against him."
   },
   "errors": {
     "EXCHANGE_CLOSED": "No exchange now: the policy is off, the window has passed or the parcel is not delivered.",
@@ -129,6 +145,7 @@
     "EDIT_CLOSED": "The new parcel can no longer be changed.",
     "RETURN_CLOSED": "No return now: the policy (no returns after receipt), the window has passed, or the parcel is not with the customer.",
     "RETURN_LIMIT": "These pieces are already coming back (a return or an open exchange).",
+    "IDEMPOTENCY_MISMATCH": "This button was already used for another request. Reload the page.",
     "server-error": "That did not work. Try again."
   },
   "qc": {
@@ -215,5 +232,10 @@
     "defect": "Defect (our mistake)",
     "wrong": "Wrong item (our mistake)",
     "other": "Other (with a note)"
+  },
+  "claim": {
+    "PENDING": "Waiting for a decision",
+    "ACCEPTED": "Approved — no charge",
+    "REFUSED": "Refused"
   }
 }

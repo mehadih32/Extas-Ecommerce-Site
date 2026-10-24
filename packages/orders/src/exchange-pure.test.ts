@@ -1,7 +1,7 @@
 // PR 185 (Blueprint B1.8) — the exchange engine's pure rules: the four tiers strictly in order, the window from the
 // courier's delivered mark, the per-piece limit and the money box. Every value is a made-up test value.
 import { describe, expect, it } from 'vitest';
-import { exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, tierOf, type Candidate, type OriginalPiece, type TierSettings } from './exchange-pure';
+import { exchangeCharge, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, tierOf, type Candidate, type ChargeRules, type OriginalPiece, type TierSettings } from './exchange-pure';
 
 const ALL: TierSettings = { sameColour: true, otherColours: true, sameCategory: true, collectionFirst: true, otherCategories: true, maxOptions: 12 };
 const orig: OriginalPiece = { productId: 'oxford', colourId: 'sky', categoryIds: ['shirts'], collectionIds: ['eid'] };
@@ -87,5 +87,30 @@ describe('the money box (B1.8)', () => {
   });
   it('refuses a broken amount', () => {
     expect(() => moneyBox([{ oldUnitMinor: -1, newUnitMinor: 1, quantity: 1 }], { ourMistake: false, chargeMinor: null })).toThrow();
+  });
+});
+
+describe('PR 190 · who pays the second delivery (CN-018 (5), CN-014e)', () => {
+  const rules: ChargeRules = { sizePays: 'customer', fallbackMinor: null, reshipFree: false };
+  const one = [{ oldUnitMinor: 150_000, newUnitMinor: 150_000, quantity: 1 }];
+  it('the customer pays for his own size choice: the rule for his band, else the owner fallback, else nothing set', () => {
+    expect(exchangeCharge({ reason: 'size', ruleChargeMinor: 6_000, rules, reship: false, oneTrip: null })).toEqual({ chargeMinor: 6_000 });
+    expect(exchangeCharge({ reason: 'size', ruleChargeMinor: null, rules: { ...rules, fallbackMinor: 8_000 }, reship: false, oneTrip: null })).toEqual({ chargeMinor: 8_000 });
+    expect(moneyBox(one, { ourMistake: false, ...exchangeCharge({ reason: 'size', ruleChargeMinor: null, rules, reship: false, oneTrip: null }) })).toMatchObject({ chargeState: 'NOT_SET', codMinor: 0 });
+  });
+  it('the shop pays when the owner says so, a waiver or an accepted claim — nothing collected for the charge', () => {
+    const store = exchangeCharge({ reason: 'size', ruleChargeMinor: 6_000, rules: { ...rules, sizePays: 'store' }, reship: false, oneTrip: null });
+    expect(moneyBox(one, { ourMistake: false, ...store })).toMatchObject({ chargeMinor: 0, chargeState: 'STORE', codMinor: 0 });
+    for (const state of ['WAIVED', 'CLAIM_ACCEPTED'] as const) expect(moneyBox([{ oldUnitMinor: 100, newUnitMinor: 150, quantity: 1 }], { ourMistake: false, chargeMinor: 6_000, state })).toMatchObject({ chargeMinor: 0, chargeState: state, codMinor: 50 });
+  });
+  it('a re-ship after a try-on pays like any size choice unless the perk is on; the one-trip swap has its own price', () => {
+    expect(exchangeCharge({ reason: 'size', ruleChargeMinor: 6_000, rules, reship: true, oneTrip: null })).toEqual({ chargeMinor: 6_000 });
+    expect(exchangeCharge({ reason: 'size', ruleChargeMinor: 6_000, rules: { ...rules, reshipFree: true }, reship: true, oneTrip: null })).toEqual({ chargeMinor: null, state: 'STORE' });
+    const trip = exchangeCharge({ reason: 'size', ruleChargeMinor: 6_000, rules, reship: false, oneTrip: { chargeMinor: 9_000 } });
+    expect(moneyBox(one, { ourMistake: false, ...trip })).toMatchObject({ chargeMinor: 9_000, chargeState: 'ONE_TRIP', codMinor: 9_000 });
+    expect(exchangeCharge({ reason: 'size', ruleChargeMinor: 6_000, rules, reship: false, oneTrip: { chargeMinor: null } })).toEqual({ chargeMinor: null });
+  });
+  it('our mistake stays free whatever the charge says', () => {
+    expect(moneyBox(one, { ourMistake: true, chargeMinor: 9_000, state: 'ONE_TRIP' })).toMatchObject({ chargeMinor: 0, chargeState: 'FREE_OUR_MISTAKE' });
   });
 });

@@ -11,6 +11,12 @@
 // the linked exchange order; a cheaper piece → the difference is a wallet credit (a REQUEST, recorded only after the old
 // piece passes QC), the charge is still collected; the same price → the charge only; our mistake (defect, damage, wrong
 // item) → nothing to pay. Nothing here moves money.
+//
+// PR 190 (CN-018 (5), CN-014e, SIM-F-021) — who pays the second delivery: the customer for his own size choice (the
+// exchange rule's charge for his band, or the owner's fallback figure; none set → nothing collected); the shop when the
+// owner's rule says so, when staff waive it with a logged reason, or when his "your mistake" claim is approved; the
+// one-trip size swap's own price in its areas; a re-ship after a try-on follows the same rule (free only when the owner
+// switches that perk on).
 
 /** Why a customer may exchange (the Smart Rules exchange rule uses the same codes). No colour change, no "didn't like it". */
 export const EXCHANGE_REASON_CODES = ['size', 'defect', 'damage', 'wrong'] as const;
@@ -126,6 +132,32 @@ export interface ChargeFacts {
   ourMistake: boolean;
   /** The exchange delivery charge for the order's band (null: not set). */
   chargeMinor: number | null;
+  /**
+   * PR 190: who pays instead of the customer — STORE (the owner's rule), WAIVED (staff, with a reason), CLAIM_ACCEPTED
+   * (his claim approved): no charge; ONE_TRIP: `chargeMinor` is the swap's own price.
+   */
+  state?: 'STORE' | 'WAIVED' | 'CLAIM_ACCEPTED' | 'ONE_TRIP';
+}
+
+/** PR 190 — the owner's charge rules, as the money box needs them (`orders.exchange.charge`, `orders.exchange.swap`). */
+export interface ChargeRules {
+  /** Who pays the second delivery for the customer's own size choice. */
+  sizePays: 'customer' | 'store';
+  /** The charge when the exchange rule has none for the band (null: not set, nothing collected). */
+  fallbackMinor: number | null;
+  /** A re-ship in another size after a try-on refusal is free (a perk, off by default). */
+  reshipFree: boolean;
+}
+
+/**
+ * PR 190 — the charge an exchange starts with: the one-trip swap's own price; the shop pays (the owner's rule for a
+ * size choice, or a free re-ship); else the exchange rule's charge for the band, else the owner's fallback (null: not
+ * set). Our mistake stays free in the money box whatever this says.
+ */
+export function exchangeCharge(f: { reason: ExchangeReason; ruleChargeMinor: number | null; rules: ChargeRules; reship: boolean; oneTrip: { chargeMinor: number | null } | null }): Pick<ChargeFacts, 'chargeMinor' | 'state'> {
+  if (f.oneTrip) return f.oneTrip.chargeMinor === null ? { chargeMinor: null } : { chargeMinor: f.oneTrip.chargeMinor, state: 'ONE_TRIP' };
+  if ((f.reship && f.rules.reshipFree) || (f.reason === 'size' && f.rules.sizePays === 'store')) return { chargeMinor: null, state: 'STORE' };
+  return { chargeMinor: f.ruleChargeMinor ?? f.rules.fallbackMinor };
 }
 
 export interface MoneyBox {
@@ -155,8 +187,9 @@ export function moneyBox(lines: readonly SwapLine[], c: ChargeFacts): MoneyBox {
   const creditMinor = sum((l) => Math.max(0, l.oldUnitMinor - l.newUnitMinor));
   if (c.ourMistake) return { differenceMinor, owedMinor: 0, creditMinor, chargeMinor: 0, chargeState: 'FREE_OUR_MISTAKE', codMinor: 0, coveredMinor: sum((l) => l.newUnitMinor) }; // hardcode-ok: our mistake is free, nothing is collected (a neutral zero)
   const owedMinor = sum((l) => Math.max(0, l.newUnitMinor - l.oldUnitMinor));
-  const chargeState: ChargeState = c.chargeMinor === null ? 'NOT_SET' : 'SET';
-  const chargeMinor = c.chargeMinor ?? 0;
+  const free = c.state === 'STORE' || c.state === 'WAIVED' || c.state === 'CLAIM_ACCEPTED';
+  const chargeState: ChargeState = free ? c.state! : c.chargeMinor === null ? 'NOT_SET' : c.state === 'ONE_TRIP' ? 'ONE_TRIP' : 'SET';
+  const chargeMinor = free ? 0 : (c.chargeMinor ?? 0); // hardcode-ok: the shop pays the charge (a neutral zero)
   return { differenceMinor, owedMinor, creditMinor, chargeMinor, chargeState, codMinor: owedMinor + chargeMinor, coveredMinor: sum((l) => Math.min(l.oldUnitMinor, l.newUnitMinor)) };
 }
 

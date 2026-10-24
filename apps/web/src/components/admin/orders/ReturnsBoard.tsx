@@ -6,7 +6,8 @@
 // the buttons run in the browser (ReturnsActions). No money moves here; approving books the linked exchange order.
 // PR 188: each piece going out shows its other sizes at the same price (the size switcher) until the courier has it.
 // PR 189: under "Start an exchange", a return after receipt — only when the policy allows it (no returns after receipt
-// by default, said in words).
+// by default, said in words). PR 190: who pays the second delivery — waive (reason logged), the "your mistake" claim
+// and its decision, the one-trip swap box, and the re-ship of a parcel refused after a try-on.
 import Link from 'next/link';
 import type { ExchangeChoices, ExchangeSizes, ExchangeView, ReturnChoices } from '@extas/orders';
 import type { AdminView } from '@/lib/admin-page';
@@ -14,7 +15,7 @@ import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, sizeChips, statusTone 
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { ShellIcon } from '../shell/ShellIcon';
-import { OpenExchangeForm, OpenReturnForm, ReturnsAction, SizeSwitch, type ActionTexts } from './ReturnsActions';
+import { ClaimForm, OpenExchangeForm, OpenReturnForm, ReturnsAction, SizeSwitch, type ActionTexts } from './ReturnsActions';
 
 export interface StartStep {
   number: string;
@@ -38,6 +39,10 @@ export interface ReturnsData {
   causes: { key: string; label: string }[];
   /** PR 188: the other sizes of each piece going out, when the chosen case may still switch (else null). */
   sizes: ExchangeSizes[] | null;
+  /** PR 190: may waive a charge (`returns.waive`), decide a claim (`returns.claims.decide`); a claim needs a photo. */
+  canWaive: boolean;
+  canClaims: boolean;
+  claimPhoto: boolean;
 }
 
 
@@ -104,10 +109,32 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
     [r(d, 'case.cod'), <b key="c">{m(x.money.codMinor)}</b>],
     ...(x.windowEndsAt ? ([[r(d, 'case.window'), dt.format(new Date(x.windowEndsAt))]] as [string, string][]) : []),
     ...(x.decisionNote ? ([[r(d, 'case.decision'), x.decisionNote]] as [string, string][]) : []),
+    ...(x.oneTrip ? ([[r(d, 'case.oneTrip'), r(d, 'case.yes')]] as [string, string][]) : []),
+    ...(x.waiveReason ? ([[r(d, 'case.waived'), x.waiveReason]] as [string, string][]) : []),
+    ...(x.claimState ? ([[r(d, 'case.claim'), `${r(d, `claim.${x.claimState}`)}${x.claimNote ? ` · ${x.claimNote}` : ''}`]] as [string, string][]) : []),
   ];
   const base = `/api/admin/returns/exchanges/${x.id}`;
   const p = x.pickup;
   const pickupOpen = !!p && (p.status === 'EXPECTED' || p.status === 'RECEIVED');
+  // PR 190: who pays the second delivery, while the exchange is only requested
+  const free = ['WAIVED', 'CLAIM_ACCEPTED', 'STORE', 'FREE_OUR_MISTAKE'].includes(x.money.chargeState ?? '');
+  const charge =
+    x.status === 'REQUESTED' ? (
+      <>
+        {data.canWaive && !free && x.money.chargeMinor > 0 ? (
+          <ReturnsAction label={r(d, 'act.waive')} url={`${base}/waive`} body={{ version: x.version }} note={{ label: r(d, 'act.waiveNote', { amount: m(x.money.chargeMinor), cod: m(Math.max(0, x.money.codMinor - x.money.chargeMinor)) }), required: true }} noteKey="reason" texts={texts} testId="exchange-waive" />
+        ) : null}
+        {data.canDecide && !free && !x.isOurMistake && x.claimState !== 'PENDING' ? (
+          <ClaimForm url={`${base}/claim`} version={x.version} photoNeeded={data.claimPhoto} texts={{ ...texts, open: r(d, 'act.claim'), note: r(d, 'act.claimNote'), photo: r(d, 'act.claimPhoto'), photoDone: r(d, 'qc.photoDone'), photoNeeded: r(d, 'act.claimPhotoNeeded'), save: r(d, 'act.claimSave') }} />
+        ) : null}
+        {data.canClaims && x.claimState === 'PENDING' ? (
+          <>
+            <ReturnsAction label={r(d, 'act.claimAccept')} url={`${base}/claim-decision`} body={{ accept: true, version: x.version }} tone="pri" texts={texts} testId="exchange-claim-accept" />
+            <ReturnsAction label={r(d, 'act.claimRefuse')} url={`${base}/claim-decision`} body={{ accept: false, version: x.version }} tone="badf" note={{ label: r(d, 'act.claimRefuseNote'), required: true }} texts={texts} testId="exchange-claim-refuse" />
+          </>
+        ) : null}
+      </>
+    ) : null;
   const acts =
     x.status === 'REQUESTED' && data.canDecide ? (
       <>
@@ -179,6 +206,7 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
       ) : null}
       <div className="a2-kv2 a2-mt12">{kv.flatMap(([k, v]) => [<span key={`${k}-k`}>{k}</span>, <span key={`${k}-v`}>{v}</span>])}</div>
       <div className="a2-cmds a2-mt12">{acts ?? <span className="a2-sm a2-mute">{r(d, 'case.nothing')}</span>}</div>
+      {charge ? <div className="a2-cmds a2-mt12" data-testid="exchange-charge">{charge}</div> : null}
       <div className="a2-note">
         <ShellIcon name="info" size={15} />
         <span>{r(d, 'case.never')}</span>
@@ -193,7 +221,14 @@ function StartCard({ view, data }: { view: AdminView; data: ReturnsData }) {
   const m = (n: number) => formatMoney(n, data.money);
   const n = (x: number) => formatNumber(x, view.locale);
   const c = s.choices;
-  const texts = { ...actionTexts(d), open: r(d, 'start.open'), rootCause: r(d, 'start.rootCause'), received: r(d, 'start.received'), reasonNote: r(d, 'start.reasonNote') };
+  const texts = {
+    ...actionTexts(d),
+    open: r(d, 'start.open'),
+    rootCause: r(d, 'start.rootCause'),
+    received: r(d, 'start.received'),
+    reasonNote: r(d, 'start.reasonNote'),
+    ...(c?.oneTrip ? { oneTrip: r(d, 'start.oneTrip', { amount: c.oneTrip.chargeMinor === null ? r(d, 'charge.NOT_SET') : m(c.oneTrip.chargeMinor) }) } : {}),
+  };
   return (
     <section className="a2-card" data-testid="exchange-start">
       <div className="a2-ch">
@@ -281,6 +316,12 @@ function StartCard({ view, data }: { view: AdminView; data: ReturnsData }) {
             </div>
           ) : (
             <>
+              {c.reship ? (
+                <div className="a2-note" data-testid="exchange-reship">
+                  <ShellIcon name="info" size={15} />
+                  <span>{r(d, 'start.reship')}</span>
+                </div>
+              ) : null}
               <div className="a2-h4 a2-mt12">{r(d, 'start.options', { n: c.tier ?? '' })}</div>
               <div className="a2-xs a2-mute">{r(d, 'start.note')}</div>
               {c.options.map((o) => (

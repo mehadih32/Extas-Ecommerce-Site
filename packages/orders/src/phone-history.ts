@@ -5,7 +5,8 @@
 // It is a read: for the risk score (PR 156) and for the order page beside the order (`orders.read`).
 //
 // SIM-F-044: a refusal for one of the owner's "our fault" reasons (`risk.history.ourFaultRefusals`) is shown, marked,
-// and never counted against the number. Nothing here changes an order, blocks a number or moves money.
+// and never counted against the number; so is a refusal re-shipped in another size after a try-on (PR 190, SIM-F-021).
+// Nothing here changes an order, blocks a number or moves money.
 import { phoneNormalizeBD } from '@extas/delivery';
 import { allow, setting, UUID, type OrdersDeps, type Who } from './context';
 import { summarizeHistory, type OrderState, type PastOrder, type PhoneSummary } from './pure';
@@ -70,11 +71,15 @@ export async function pastOrdersOf(
 ): Promise<PastOrder[]> {
   const ids = rows.map((r) => r.id);
   if (!ids.length) return [];
-  const [keys, calls, returns] = await Promise.all([
-    refusalKeys(deps, storeId, rows.filter((r) => r.status === 'RETURNED').map((r) => r.id)),
+  const refused = rows.filter((r) => r.status === 'RETURNED').map((r) => r.id);
+  const [keys, calls, returns, reships] = await Promise.all([
+    refusalKeys(deps, storeId, refused),
     deps.db.callTask.findMany({ where: { storeId, orderId: { in: ids }, outcome: { not: null } }, select: { orderId: true, outcome: true } }),
     deps.db.returnRecord.findMany({ where: { storeId, orderId: { in: ids }, kind: { in: RETURN_KINDS_AFTER_DELIVERY } }, select: { orderId: true, kind: true, reasonCode: true } }),
+    // PR 190 (SIM-F-021): a refusal followed by a linked size re-ship is a try-on, not a refusal
+    refused.length ? deps.db.exchange.findMany({ where: { storeId, orderId: { in: refused }, status: { notIn: ['REJECTED', 'CANCELLED'] } }, select: { orderId: true } }) : Promise.resolve([] as { orderId: string }[]),
   ]);
+  const reshipped = new Set(reships.map((x) => x.orderId));
   return rows.map((r) => ({
     id: r.id,
     number: r.number,
@@ -86,6 +91,7 @@ export async function pastOrdersOf(
     areaId: r.areaId,
     callOutcomes: calls.filter((c) => c.orderId === r.id).map((c) => c.outcome!),
     returns: returns.filter((x) => x.orderId === r.id).map((x) => ({ kind: x.kind, reasonCode: x.reasonCode })),
+    ...(reshipped.has(r.id) ? { reshipped: true } : {}),
   }));
 }
 
@@ -133,7 +139,7 @@ export async function orderPhoneHistory(deps: OrdersDeps, who: Who, orderId: str
       placedAt: x.placedAt,
       totalMinor: x.totalMinor,
       refusalKey: x.refusalKey,
-      ourFault: x.status === 'RETURNED' && !!x.refusalKey && opts.ourFault.has(x.refusalKey),
+      ourFault: x.status === 'RETURNED' && ((!!x.refusalKey && opts.ourFault.has(x.refusalKey)) || !!x.reshipped),
       cancelCode: x.cancelCode,
     })),
   };

@@ -626,7 +626,11 @@
       "exchange_completed": "বদল শেষ",
       "exchange_switched": "বদলের সাইজ বদলানো",
       "order_returnCase": "ফেরত খোলা হয়েছে (নেওয়ার পরে)",
-      "return_closed": "ফেরত বন্ধ"
+      "return_closed": "ফেরত বন্ধ",
+      "exchange_waived": "বদলের চার্জ মাফ",
+      "exchange_claimed": "\"আপনাদের ভুল\" দাবি লেখা হয়েছে",
+      "exchange_claimAccepted": "দাবি মানা হয়েছে — চার্জ নেই",
+      "exchange_claimRefused": "দাবি মানা হয়নি"
     },
     "band": {
       "cancelPending": "বাতিল চাওয়া হয়েছে · কুরিয়ারের উত্তর বাকি — {courier}-কে ফোন করে ওরা কী বলল লিখুন।",

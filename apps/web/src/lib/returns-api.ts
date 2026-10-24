@@ -28,6 +28,11 @@
 //                                                               Idempotency-Key (PR 189, returns.decide)
 //   POST  /api/admin/returns/parcels/:id/close                  {note?, version?} — checked, or with a note (PR 189,
 //                                                               returns.decide)
+//   POST  /api/admin/returns/exchanges/:id/waive                {reason, version?} — the charge off, the reason logged
+//                                                               (PR 190, returns.waive)
+//   POST  /api/admin/returns/exchanges/:id/claim                {note, photoAssetIds?, version?} — his "your mistake"
+//                                                               claim recorded (PR 190, returns.decide)
+//   POST  /api/admin/returns/exchanges/:id/claim-decision       {accept, note?, version?} (PR 190, returns.claims.decide)
 //   GET   /api/admin/returns/parcels?status=&order=             the returned parcels, newest first (returns.view or .qc)
 //   GET   /api/admin/returns/parcels/:id                        one parcel with its pieces and their ERP answer
 //   POST  /api/admin/returns/parcels/:id/receive                {note?, version?} — at the shop (returns.qc)
@@ -79,6 +84,21 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
         return handle(request, deps, 'returns.decide', async (x) => {
           const d = await decision(request);
           return { result: await od.switchExchangeVariant(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
+      case 'waive':
+        return handle(request, deps, 'returns.waive', async (x) => {
+          const d = await decision(request);
+          return { result: await od.waiveExchangeCharge(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
+      case 'claim':
+        return handle(request, deps, 'returns.decide', async (x) => {
+          const d = await decision(request);
+          return { result: await od.recordExchangeClaim(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
+      case 'claim-decision':
+        return handle(request, deps, 'returns.claims.decide', async (x) => {
+          const d = await decision(request);
+          return { result: await od.decideExchangeClaim(x.deps, x.who, b, d.input, { version: d.version }) };
         });
       case 'approve':
         return handle(request, deps, 'returns.decide', async (x) => {
