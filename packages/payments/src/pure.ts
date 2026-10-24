@@ -221,3 +221,6 @@ export const PAYMENT_CALL_REASON = 'PAYMENT_FAILED';
 export const PAYMENT_EVENTS = { paid: 'payment.paid', failed: 'payment.failed', retry: 'payment.retry', abandoned: 'payment.abandoned', recorded: 'payment.recorded' } as const;
 /** A payment's failure codes the shop itself sets (a gateway's own codes are kept as it sends them). */
 export const FAILURE_CODES = { cancelled: 'CUSTOMER_CANCELLED', abandoned: 'ABANDONED' } as const;
+
+// PR 171 — the wallet's rules (the ledger balance, the reversal, lateness and the apology credit).
+export * from './wallet-pure';

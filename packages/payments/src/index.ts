@@ -13,6 +13,9 @@
 //   abandoned and waiting payments (gateway.ts). The gateways themselves are @extas/adapters' (PR 167).
 // - S06 · PR 542 the pay link of an advance asked from the order (`/pay/<token>`): its page, the test page's answers,
 //   "Try again" with the same token and "Pay" on a real gateway (advance-link.ts).
+// - PR 171 the wallet: the one ledger writer (a credit, a debit, the balance after it; a correction is a new entry the
+//   other way), a customer's wallet with its ledger, a person's own entry and reversal, the late-delivery apology
+//   credit and its list of late orders (wallet.ts; the pure part, also for the screens, in wallet-pure.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -22,3 +25,4 @@ export * from './cod-match';
 export * from './cod';
 export * from './gateway';
 export * from './advance-link';
+export * from './wallet';
