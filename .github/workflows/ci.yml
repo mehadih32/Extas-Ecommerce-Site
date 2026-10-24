@@ -1,4 +1,14 @@
 # CI on GitHub-hosted runners (PR 17). Heavy jobs move to extas-vm once the app exists.
+# CN-023 (owner, 24 Oct): under 25 minutes with every gate as strict as before. The app and its two images are built
+# once (`build`); lint and type-check, unit tests, the database tests and the infra checks start at once beside it; the
+# sign-in end to end, the device gate (4 runners) and Lighthouse (one runner per shard of pages, tools/lh-pages.mjs)
+# run in parallel on that one build. `web` and `device-gate` keep their names (branch protection may require them) and
+# fail when any of their gates fails:
+#   web          = build + lint/type-check + unit tests + sign-in and session end to end + Lighthouse
+#   device-gate  = the device gate on every size + Lighthouse on the sample data (it ran in that job before)
+# Lighthouse measures one page list (lighthouserc.json): on a pull request the core set plus the pages the diff
+# touches; on every push to main (what deploys: deploy.yml waits for this workflow) the full set, so a failing page
+# still blocks the deploy. Every night and by hand, nightly.yml runs this whole workflow on main with the full set.
 name: ci
 
 on:
@@ -10,20 +20,37 @@ on:
     paths-ignore:
       - "docs/reports/server/**"
       - "docs/reports/smoke/**"
+  # CN-023: nightly.yml (every night and by hand) calls this workflow; its run is named "nightly", so deploy.yml
+  # (which follows "ci" runs) never starts for it.
+  workflow_call:
+
+# A newer push to the same pull request stops the older run; pushes to main and the nightly never wait for or stop
+# each other.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
+env:
+  PLAYWRIGHT_VERSION: 1.63.0
+  # The Prisma client of the full schema (333 models) costs every type-check about 2.5–3 GB of heap; Node's default
+  # limit on the runner is about 2 GB.
+  NODE_OPTIONS: --max-old-space-size=4096
+
 jobs:
   infra:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      # A broken workflow file runs nothing at all (and a broken deploy.yml deploys nothing): parse every one of them.
+      # A broken workflow file runs nothing at all (and a broken deploy.yml deploys nothing): parse every one of them,
+      # and the local actions the workflows use (PR 17, CN-023).
       - name: Workflow files parse
         run: |
           python3 -c 'import yaml' 2>/dev/null || python3 -m pip install -q --user pyyaml
-          for f in .github/workflows/*.yml; do python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$f" || { echo "::error file=$f::not valid YAML"; exit 1; }; done
+          for f in .github/workflows/*.yml .github/actions/*/action.yml; do python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$f" || { echo "::error file=$f::not valid YAML"; exit 1; }; done
       - name: ShellCheck
         run: shellcheck -x -S warning -e SC2034 infra/server/setup.sh infra/server/lib.sh infra/server/steps/*.sh infra/server/bin/* infra/tests/run.sh infra/bootstrap/install-runner.sh
       - name: Infra unit tests (disk detection, NVMe detection, auto profile)
@@ -53,33 +80,18 @@ jobs:
           sudo touch /srv/extas/config/secrets/app.env /srv/extas/config/secrets/app-connections.env
           docker compose -f infra/stack/app.yml --env-file /tmp/profile.env --env-file /tmp/app.env config -q
 
-  # PR 17 — the app: lint, type-check, unit tests, build, the Lighthouse budget (lighthouserc.json, Blueprint V2.1
-  # speed targets) and the production image.
-  web:
+  # PR 17 (CN-023) — the one build: the app image (the Next.js build runs inside it, exactly as deploy.yml builds it on
+  # the VM) and the migrate image. The parallel jobs get the standalone server copied out of the app image
+  # (`web-standalone`: pnpm's standalone output has symlinks, which an artifact upload would lose, so it travels as one
+  # tar) and both images (`images`, docker save). The Next.js build cache (Turbopack's cache and the type-check's build
+  # info, apps/web/.next/cache) comes from actions/cache, keyed on the lockfile and the sources; main, the nightly and
+  # manual runs save the new one (pull requests only read it, so they never push main's cache out).
+  build:
+    name: build (app and images, once)
     runs-on: ubuntu-24.04
-    # PR 508 — a throwaway PostgreSQL for the admin session end to end (the last step), on this job's own build.
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: extas
-          POSTGRES_PASSWORD: ci-only
-          POSTGRES_DB: extas
-        ports: ["5432:5432"]
-        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
-    env:
-      # The Prisma client of the full schema (333 models) costs every type-check about 2.5–3 GB of heap; Node's default
-      # limit on the runner is about 2 GB.
-      NODE_OPTIONS: --max-old-space-size=4096
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
       - name: Image copies every workspace manifest
         run: |
           missing=0
@@ -90,6 +102,74 @@ jobs:
       - name: Fonts are self-hosted (the image build must not download fonts)
         run: |
           if grep -rn "next/font/google" apps/web/src; then echo "use the self-hosted fonts in apps/web/src/fonts"; exit 1; fi
+      - name: Next.js build cache
+        id: nextcache
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**', 'apps/web/messages/**', 'apps/web/public/**', 'apps/web/*.ts', 'apps/web/*.mjs', 'packages/*/src/**', 'packages/*/messages/**') }}
+          # The newest cache of the same lockfile (a new Next.js version starts a fresh one instead of piling up).
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - name: Production image builds (the app's only build)
+        run: docker build --progress=plain -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
+      - name: Migrate image builds (deploy step 0 — schema migrations + settings sync)
+        run: docker build --progress=plain -f apps/web/Dockerfile --target migrate --build-arg GIT_SHA="$GITHUB_SHA" -t extas-migrate:ci .
+      # /app in the image is the standalone output with its static files and public folder; `static` is also kept
+      # beside it, where tools/admin-session-e2e.sh copies it from.
+      - name: Pack the build and the images for the parallel jobs
+        run: |
+          out="$RUNNER_TEMP/pack"
+          mkdir -p "$out/standalone"
+          cid="$(docker create extas-web:ci)"
+          docker cp "$cid:/app/." - | tar -x -C "$out/standalone"
+          docker rm "$cid" > /dev/null
+          test -f "$out/standalone/apps/web/server.js" && test -d "$out/standalone/apps/web/.next/static"
+          cp -r "$out/standalone/apps/web/.next/static" "$out/static"
+          tar -czf "$RUNNER_TEMP/web-standalone.tgz" -C "$out" standalone static
+          docker save extas-web:ci extas-migrate:ci | gzip -1 > "$RUNNER_TEMP/images.tar.gz"
+          ls -lh "$RUNNER_TEMP/web-standalone.tgz" "$RUNNER_TEMP/images.tar.gz"
+      - name: Keep the build for the parallel jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-standalone
+          path: ${{ runner.temp }}/web-standalone.tgz
+          compression-level: 0
+          retention-days: 1
+      - name: Keep the images for the end to end
+        uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: ${{ runner.temp }}/images.tar.gz
+          compression-level: 0
+          retention-days: 1
+      # The image's build already ran; the next-cache stage only copies its cache out (BuildKit reuses the build).
+      - name: Next.js build cache, taken out of the build
+        id: nextcache_out
+        if: github.event_name != 'pull_request' && steps.nextcache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: |
+          docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" --target next-cache --output "type=local,dest=$RUNNER_TEMP/next-cache" .
+          rm -rf apps/web/.next/cache
+          mkdir -p apps/web/.next
+          mv "$RUNNER_TEMP/next-cache" apps/web/.next/cache
+          du -sh apps/web/.next/cache
+      - name: Next.js build cache, saved for the next runs
+        if: steps.nextcache_out.outcome == 'success'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web/.next/cache
+          key: ${{ steps.nextcache.outputs.cache-primary-key }}
+
+  # PR 17, 494, 509 — the checks that need no build, started at once: guards, the generated docs, lint, type-check.
+  checks:
+    name: lint and type-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/pnpm-install
       - name: Hardcode guard (PR 494)
         run: node tools/hardcode-guard.mjs
       # PR 509 — no default, default-pack value or sample value is the owner's own data; the register matches the schema
@@ -110,74 +190,104 @@ jobs:
         run: pnpm lint
       - name: Type-check
         run: pnpm typecheck
+
+  # PR 17 — every package's unit tests (and the tools' tests, with the web tests); no database here: the database tests
+  # run in `db`.
+  unit:
+    name: unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/pnpm-install
+      - name: Status data from the register
+        run: pnpm status:gen
       - name: Unit tests
         run: pnpm test
-      - name: Build
-        run: pnpm --filter @extas/web build
-      - name: Lighthouse budget
-        run: |
-          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
-          npx -y @lhci/cli@0.15.1 autorun
-      - name: Keep the Lighthouse reports
-        if: always()
-        uses: actions/upload-artifact@v4
+
+  # PR 4 (owner, 20 Oct): log in → the admin loads, on the build job's two images and a fresh installation (the migrate
+  # image's own command, the first owner with a generated password, a real browser). PR 508 (follow-up 19): the admin
+  # session end to end on the same build's standalone server (sign in, refresh, the sign-in page while signed in, log
+  # out, the old cookie refused). deploy.yml only runs after CI passed, so no deploy goes out without them.
+  e2e:
+    name: sign-in end to end
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/pnpm-install
+      - uses: ./.github/actions/playwright
         with:
-          name: lighthouse
-          path: .lighthouseci
-          include-hidden-files: true
-          retention-days: 7
-      # PR 85 — the device gate (next job) reuses this build: the standalone server with its static files, packed as
-      # one tar (pnpm's standalone output has symlinks, which an artifact upload would lose).
-      - name: Pack the build for the device gate
-        run: |
-          cp -r apps/web/public apps/web/.next/standalone/apps/web/ 2>/dev/null || true
-          tar -czf /tmp/web-standalone.tgz -C apps/web/.next standalone
-      - name: Keep the build for the device gate
-        uses: actions/upload-artifact@v4
+          version: ${{ env.PLAYWRIGHT_VERSION }}
+          prefix: ${{ runner.temp }}/qa
+      - name: The images from the build job
+        uses: actions/download-artifact@v4
+        with:
+          name: images
+          path: ${{ runner.temp }}/images
+      - name: Load them
+        run: docker load -i "$RUNNER_TEMP/images/images.tar.gz"
+      - name: The build from the build job
+        uses: actions/download-artifact@v4
         with:
           name: web-standalone
-          path: /tmp/web-standalone.tgz
-          retention-days: 1
-      - name: Production image builds
-        run: docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
-      - name: Migrate image builds (deploy step 0 — schema migrations + settings sync)
-        run: docker build -f apps/web/Dockerfile --target migrate --build-arg GIT_SHA="$GITHUB_SHA" -t extas-migrate:ci .
-      # PR 4 (owner, 20 Oct): log in → the admin loads, on these two images and a fresh installation (the migrate
-      # image's own command, the first owner with a generated password, a real browser). deploy.yml only runs after
-      # CI passed, so no deploy goes out without it. Playwright stays outside the workspace (no lockfile change).
+          path: ${{ runner.temp }}/web-standalone
+      - name: Unpack it
+        run: mkdir -p apps/web/.next && tar -xzf "$RUNNER_TEMP/web-standalone/web-standalone.tgz" -C apps/web/.next
       - name: Sign-in end to end (log in → the admin loads)
         env:
-          NODE_PATH: ${{ runner.temp }}/e2e/node_modules
-        run: |
-          npm install --prefix "$RUNNER_TEMP/e2e" --no-save --no-audit --no-fund playwright@1.63.0
-          "$RUNNER_TEMP/e2e/node_modules/.bin/playwright" install --with-deps chromium
-          bash tools/admin-login-e2e.sh extas-web:ci extas-migrate:ci
-      # PR 508 (PROGRESS follow-up 19) — the admin session end to end on this job's build: a fresh installation on a
-      # throwaway database (the migrate image's own command, read from the Dockerfile), a test-only admin with a first
-      # password generated at run time, then a real browser signs in, refreshes, opens the sign-in page while signed in
-      # (it must go to the admin), logs out, and finds the admin closed again, also for the old session cookie. Any
-      # console error or failed request on the way fails it. Reuses the Playwright of the step above.
+          NODE_PATH: ${{ runner.temp }}/qa/node_modules
+        run: bash tools/admin-login-e2e.sh extas-web:ci extas-migrate:ci
       - name: Admin session end to end (sign in, refresh, sign-in page while signed in, log out)
         env:
-          NODE_PATH: ${{ runner.temp }}/e2e/node_modules
+          NODE_PATH: ${{ runner.temp }}/qa/node_modules
           E2E_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: bash tools/admin-session-e2e.sh
 
-  # PR 85 — the device gate (Blueprint Appendix C1/C2, D1.4): every lighthouserc URL on the 15 phones, 10 tablet sizes
-  # and 6 desktop widths, with the demo gate's layout checks (docs/qa/device-matrix.js) plus tap targets (44 × 44),
-  # 16 px form fields on touch screens and nothing cut off at either edge. 0 fails or the job fails. One Chromium,
-  # several pages at once; the report (Markdown, JSON, screenshots of failures) is kept as an artifact.
-  # Follow-up 5: signed in, on a throwaway database holding the sample catalogue (sample data only, never the owner's),
-  # so the admin controls that only show with data (colour chips, their remove buttons, the photo-kind picker, the
-  # size-chart list, the stock rows) are measured as well (docs/qa/device-gate.json `signedIn`).
-  device-gate:
-    needs: web
+  # PR 17 (CN-023) — which pages Lighthouse measures in this run and how they are split over runners
+  # (tools/lh-pages.mjs; the table is in the job summary). A pull request's checkout is the merge commit, so its first
+  # parent is the base and the diff is exactly what the pull request changes.
+  lh-plan:
+    name: lighthouse pages
     runs-on: ubuntu-24.04
-    # The seeded Lighthouse list and the gate's pages grow with every storefront batch (PR 75 added the help pages and
-    # the wishlist: Lighthouse alone took 15 minutes, the Playwright install 9), so 30 minutes cut the gate off mid-run.
-    # PR 136 (#34): with the invoice paths the setup and the seeded Lighthouse took 50 minutes and 60 cut the gate off
-    # after 10; 90 until follow-up 187 moves the seeded Lighthouse to its own job beside the gate.
-    timeout-minutes: 90
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      pages: ${{ steps.plan.outputs.pages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pages of this run
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+        run: node tools/lh-pages.mjs plan --event="$EVENT" --base=HEAD^1 --head=HEAD
+
+  # PR 17 + follow-up 23 (PR 82) + CN-023 — the Lighthouse budget (Blueprint V2.1 speed targets: real 4G + 4× CPU,
+  # median of 3) on the sample data, once, each shard of pages on its own runner so no page is measured under
+  # another's load; then PR 88's page and image weight targets (docs/qa/page-weight.json) on the same runs.
+  lighthouse:
+    name: lighthouse ${{ matrix.shard }}
+    needs: [build, lh-plan]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.lh-plan.outputs.matrix) }}
     services:
       postgres:
         image: postgres:17
@@ -188,82 +298,82 @@ jobs:
         ports: ["5432:5432"]
         options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
     env:
-      PLAYWRIGHT_VERSION: 1.63.0
-      NODE_OPTIONS: --max-old-space-size=4096
       DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
       DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install
+      - uses: ./.github/actions/seeded-app
+      - name: Lighthouse budget on the sample data (this shard's pages)
+        env:
+          LH_URLS: ${{ toJSON(matrix.urls) }}
         run: |
-          corepack enable
-          pnpm install --frozen-lockfile
-      # What a deploy's migrate step runs, then the sample data (the sample store becomes the mother store on this empty
-      # database) and a throwaway owner with a generated first password; the gate changes it at its first sign-in.
-      - name: Sample database and the gate's owner
-        run: |
-          pnpm --filter @extas/db migrate:deploy
-          pnpm --filter @extas/settings sync
-          pnpm --filter @extas/auth sync
-          pnpm --filter @extas/delivery gazetteer:import --deploy
-          pnpm --filter @extas/seed sample
-          pnpm --filter @extas/rules sample
-          pnpm --filter @extas/combos sample
-          pnpm --filter @extas/auth create-owner --email gate@example.test --name "Device gate" --generate-to "$RUNNER_TEMP/gate-password"
-      # PR 139 (CN-022): the app runs as its own role, as on the server (infra/deploy/app-role.sh): migration 0010 made
-      # extas_app without a login; this throwaway database gives it one. Every page the gate opens, and the sign-in
-      # with its audit rows, then runs without UPDATE, DELETE or TRUNCATE on the history tables.
-      - name: The app's own database role (extas_app)
-        run: psql "$DATABASE_DIRECT_URL" -v ON_ERROR_STOP=1 -qc "ALTER ROLE extas_app LOGIN PASSWORD 'ci-only-app'"
-      - name: The web build from the web job
-        uses: actions/download-artifact@v4
-        with:
-          name: web-standalone
-          path: /tmp
-      - name: Unpack it
-        run: mkdir -p apps/web/.next && tar -xzf /tmp/web-standalone.tgz -C apps/web/.next
-      # Playwright stays outside the workspace (no lockfile change); the gate finds it through NODE_PATH.
-      - name: Playwright and Chromium
-        run: |
-          npm install --prefix "$RUNNER_TEMP/qa" --no-save --no-audit --no-fund "playwright@$PLAYWRIGHT_VERSION"
-          "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
-      # PR 107: EXTAS_SHOP_TEST_PAGES=1 opens the sample-bag fill the gate uses for the filled bag (device-gate.json
-      # `filled`). HOSTNAME=0.0.0.0 as in the Dockerfile: bound to 127.0.0.1, the /bn rewrite became a full URL on
-      # "localhost", the proxy ran twice and every /bn page was measured in English.
-      - name: Start the app (standalone server, on the sample database; throwaway keys)
-        run: |
-          rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
-          DATABASE_URL=postgresql://extas_app:ci-only-app@127.0.0.1:5432/extas \
-          SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=0.0.0.0 EXTAS_SHOP_TEST_PAGES=1 \
-            nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
-          for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
-          cat /tmp/web-server.log; exit 1
-      # Follow-up 23 (PR 82): the storefront's Lighthouse budget on the sample data too (the web job's run has no
-      # database, so its pages carry no products). Before the gate, which signs in and changes the owner's password.
-      - name: Lighthouse budget on the sample data
-        run: npx -y @lhci/cli@0.15.1 autorun --config=lighthouserc.seeded.json
-      - name: Keep the sample-data Lighthouse reports
-        if: always()
+          node tools/lh-pages.mjs rc --out="$RUNNER_TEMP/lighthouserc.shard.json"
+          npx -y @lhci/cli@0.15.1 autorun --config="$RUNNER_TEMP/lighthouserc.shard.json"
+      # PR 88: every run of each page is in .lighthouseci (lhr-*.json); the median one is judged.
+      - name: Page and image weight on the same runs
+        if: ${{ !cancelled() }}
+        run: node tools/page-weight.mjs .lighthouseci
+      - name: Server log when a check fails
+        if: failure()
+        run: tail -n 200 /tmp/web-server.log || true
+      - name: Keep the Lighthouse reports
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: lighthouse-seeded
-          path: .lighthouseci-seeded
+          name: lighthouse-${{ matrix.id }}
+          path: |
+            .lighthouseci
+            .lighthouseci-report
           include-hidden-files: true
           retention-days: 7
-      # PR 88: the page and image weight targets (docs/qa/page-weight.json) on the same runs, all three of each page.
-      - name: Page and image weight on the sample data
-        run: node tools/page-weight.mjs .lighthouseci
+
+  # PR 85 — the device gate (Blueprint Appendix C1/C2, D1.4): every lighthouserc URL on the 15 phones, 10 tablet sizes
+  # and 6 desktop widths, with the demo gate's layout checks (docs/qa/device-matrix.js) plus tap targets (44 × 44),
+  # 16 px form fields on touch screens and nothing cut off at either edge. 0 fails or the job fails. One Chromium,
+  # several pages at once; the report (Markdown, JSON, screenshots of failures) is kept as an artifact.
+  # Follow-up 5: signed in, on a throwaway database holding the sample catalogue (sample data only, never the owner's),
+  # so the admin controls that only show with data are measured as well (docs/qa/device-gate.json `signedIn`).
+  # CN-023: the sizes are split round-robin over the matrix's runners (--shard=k/n, n = the number of shards); together
+  # they check every size and page. Follow-up 187 is done: Lighthouse no longer runs before the gate in this job.
+  device-gate-shard:
+    name: device-gate ${{ matrix.shard }}/${{ strategy.job-total }}
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
+    env:
+      DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+      DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/seeded-app
+        with:
+          gate-owner-password-file: ${{ runner.temp }}/gate-password
+      - uses: ./.github/actions/playwright
+        with:
+          version: ${{ env.PLAYWRIGHT_VERSION }}
+          prefix: ${{ runner.temp }}/qa
       - name: Device gate, signed in on the sample data (0 fails)
         env:
           NODE_PATH: ${{ runner.temp }}/qa/node_modules
+          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
         run: |
-          node tools/device-gate.mjs --base=http://127.0.0.1:3000 --out=device-gate-report \
+          node tools/device-gate.mjs --base=http://127.0.0.1:3000 --out=device-gate-report --shard="$SHARD" \
             --email=gate@example.test --password-file="$RUNNER_TEMP/gate-password"
       - name: Device gate summary
-        if: always()
+        if: ${{ !cancelled() }}
         run: cat device-gate-report/device-gate.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
       # A failed page (an HTTP 500, say) is only explained by the server's own log, so it is printed and kept.
       - name: Server log when the gate fails
@@ -272,17 +382,46 @@ jobs:
           tail -n 300 /tmp/web-server.log || true
           cp /tmp/web-server.log device-gate-report/web-server.log 2>/dev/null || true
       - name: Keep the device gate report
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: device-gate
+          name: device-gate-${{ matrix.shard }}
           path: device-gate-report
           retention-days: 7
+
+  # The job names branch protection may require, kept (CN-023). Each passes only when every job of its gate passed;
+  # a failed, skipped or cancelled part fails it.
+  web:
+    if: ${{ !cancelled() }}
+    needs: [build, checks, unit, e2e, lighthouse]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Build, lint and type-check, unit tests, end to end and Lighthouse all passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+
+  device-gate:
+    if: ${{ !cancelled() }}
+    needs: [device-gate-shard, lighthouse]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: The device gate on every size and Lighthouse on the sample data passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
 
   # PR 13 / 603 — the schema's migrations apply to a real PostgreSQL 17 with pg_trgm (throwaway CI database); then the
   # settings framework's database tests (PR 491–496, 510) and the seed package's (PR 14, 508, 509).
   db:
     runs-on: ubuntu-24.04
+    timeout-minutes: 40
     services:
       postgres:
         image: postgres:17
@@ -298,18 +437,12 @@ jobs:
         ports: ["6379:6379"]
         options: --health-cmd "redis-cli ping" --health-interval 2s --health-retries 30
     env:
-      NODE_OPTIONS: --max-old-space-size=4096
       DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
       DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
+      # PR 17 (CN-023): the pnpm store from the cache.
+      - uses: ./.github/actions/pnpm-install
       - name: Apply the migrations
         run: pnpm --filter @extas/db migrate:deploy
       - name: Schema matches the migrations (no drift)

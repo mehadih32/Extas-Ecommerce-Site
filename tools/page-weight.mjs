@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // PR 88 — the page and image weight targets (docs/qa/page-weight.json), checked on the Lighthouse reports CI already
-// writes for the seeded storefront (lighthouserc.seeded.json; every run sits in .lighthouseci as lhr-*.json, the median
-// runs in .lighthouseci-seeded as *.report.json): everything a page downloaded
+// writes on the sample data (lighthouserc.json, one shard per runner since CN-023; every run sits in .lighthouseci as
+// lhr-*.json, the median runs in .lighthouseci-report as *.report.json): everything a page downloaded
 // (Lighthouse `total-byte-weight`) and every image it downloaded (`network-requests`, transfer size), per kind of page.
 // The median run of each page is judged, as the Lighthouse budget does.
 // usage: node tools/page-weight.mjs <dir of Lighthouse JSON reports> [budget file, default docs/qa/page-weight.json]

@@ -1,0 +1,68 @@
+# PR 17 (CN-023) — the app on the sample data, as the device gate and Lighthouse use it, on every runner of theirs:
+# the workspace's packages (pnpm store cached), what a deploy's migrate step runs plus the sample catalogue, rules and
+# combos on the job's throwaway PostgreSQL (sample data only, never the owner's; about 20 s), optionally a throwaway
+# owner with a generated first password for the signed-in gate, the app's own database role, and the standalone server
+# of the build job's one build on 127.0.0.1:3000. The job provides the `postgres` service and DATABASE_URL /
+# DATABASE_DIRECT_URL (the owner role, for the migrations); the app itself runs as extas_app.
+name: The app on the sample data
+description: Seeds the job's PostgreSQL with the sample data and starts the build job's standalone server on port 3000
+inputs:
+  gate-owner-password-file:
+    description: When set, a throwaway owner (gate@example.test) is made and its first password written to this file
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/pnpm-install
+
+    # What a deploy's migrate step runs, then the sample data (the sample store becomes the mother store on this empty
+    # database).
+    - name: Sample database
+      shell: bash
+      run: |
+        pnpm --filter @extas/db migrate:deploy
+        pnpm --filter @extas/settings sync
+        pnpm --filter @extas/auth sync
+        pnpm --filter @extas/delivery gazetteer:import --deploy
+        pnpm --filter @extas/seed sample
+        pnpm --filter @extas/rules sample
+        pnpm --filter @extas/combos sample
+
+    # A throwaway owner with a generated first password; the device gate changes it at its first sign-in.
+    - name: The gate's owner
+      if: inputs.gate-owner-password-file != ''
+      shell: bash
+      env:
+        OWNER_FILE: ${{ inputs.gate-owner-password-file }}
+      run: pnpm --filter @extas/auth create-owner --email gate@example.test --name "Device gate" --generate-to "$OWNER_FILE"
+
+    # PR 139 (CN-022): the app runs as its own role, as on the server (infra/deploy/app-role.sh): migration 0010 made
+    # extas_app without a login; this throwaway database gives it one. Every page then runs without UPDATE, DELETE or
+    # TRUNCATE on the history tables.
+    - name: The app's own database role (extas_app)
+      shell: bash
+      run: psql "$DATABASE_DIRECT_URL" -v ON_ERROR_STOP=1 -qc "ALTER ROLE extas_app LOGIN PASSWORD 'ci-only-app'"
+
+    - name: The build from the build job
+      uses: actions/download-artifact@v4
+      with:
+        name: web-standalone
+        path: ${{ runner.temp }}/web-standalone
+
+    - name: Unpack it
+      shell: bash
+      run: mkdir -p apps/web/.next && tar -xzf "$RUNNER_TEMP/web-standalone/web-standalone.tgz" -C apps/web/.next
+
+    # PR 107: EXTAS_SHOP_TEST_PAGES=1 opens the sample fills the gate uses (device-gate.json `filled`). HOSTNAME=0.0.0.0
+    # as in the Dockerfile: bound to 127.0.0.1, the /bn rewrite became a full URL on "localhost", the proxy ran twice
+    # and every /bn page was measured in English. The log is /tmp/web-server.log (printed when a check fails).
+    - name: Start the app (standalone server, on the sample database; throwaway keys)
+      shell: bash
+      run: |
+        rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+        DATABASE_URL=postgresql://extas_app:ci-only-app@127.0.0.1:5432/extas \
+        SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=0.0.0.0 EXTAS_SHOP_TEST_PAGES=1 \
+          nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
+        for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
+        cat /tmp/web-server.log; exit 1

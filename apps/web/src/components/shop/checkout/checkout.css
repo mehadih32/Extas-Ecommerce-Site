@@ -79,7 +79,7 @@
 .shop .co-help .wa-btn.co-wa { padding: 8px 16px; }
 .shop .co-help.co-help { position: relative; overflow: hidden; background: transparent; border-bottom: 1px solid var(--line2); }
 .shop .co-help.co-help .container { padding-top: 11px; padding-bottom: 11px; gap: 10px; align-items: center; }
-.shop .co-help.co-help::after { content: ""; position: absolute; top: 0px; bottom: 0px; left: -40%; width: 34%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.95), transparent); animation: 7s ease-in-out 1.8s infinite normal none running coHelpSheen; pointer-events: none; }
+.shop .co-help.co-help::after { content: ""; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.95), transparent) -80% 0px / 34% 100% no-repeat; animation: 7s ease-in-out 1.8s infinite normal none running coHelpSheen; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .shop .co-help.co-help::after { display: none; } }
 .shop .co-helpt.co-helpt { font-size: 17.5px; font-weight: 700; color: var(--ink); line-height: 1.25; letter-spacing: -0.01em; min-width: 0px; white-space: nowrap; }
 .shop .co-hl { display: none; }
@@ -119,6 +119,8 @@
 .shop .co-msum.open { position: relative; z-index: 21; }
 @media (min-width: 1024px) { .shop .co-sumback { display: none; } }
 .shop .co-confirm.co-confirm { min-height: 62px; font-size: 18px; font-weight: 800; letter-spacing: -0.005em; position: relative; overflow: hidden; gap: 10px; }
+/* A total that does not fit beside "Confirm Order" (a narrow summary column, a large order) goes to a second line, never under the edge. */
+.shop .co-confirm.co-confirm { flex-wrap: wrap; white-space: normal; row-gap: 0; text-align: center; line-height: 1.2; }
 .shop .co-confirm.co-confirm .co-amt { font-size: 20px; font-weight: 800; margin-left: 1px; }
 .shop .co-confirm.co-confirm svg { width: 19px; height: 19px; }
 .shop .co-confirm.co-need-on { opacity: 1; cursor: not-allowed; padding: 9px 16px; box-shadow: rgba(201, 162, 74, 0.45) 0px 0px 0px 1px inset; background: var(--warn-bg) !important; border-color: rgb(201, 162, 74) !important; color: rgb(90, 62, 18) !important; }
@@ -126,7 +128,7 @@
 .shop .co-need b { font-size: 17px; font-weight: 800; letter-spacing: -0.005em; }
 .shop .co-need span { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: center; font-size: 12.5px; font-weight: 600; opacity: 0.9; white-space: normal; line-height: 1.3; }
 .shop .co-need span svg { width: 13px; height: 13px; flex-shrink: 0; }
-.shop .co-confirm.co-need-on::after { content: ""; position: absolute; top: 0px; bottom: 0px; width: 38%; left: -45%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.85), transparent); animation: 5.5s ease-in-out 1s infinite normal none running coSheen; pointer-events: none; }
+.shop .co-confirm.co-need-on::after { content: ""; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.85), transparent) -80% 0px / 38% 100% no-repeat; animation: 5.5s ease-in-out 1s infinite normal none running coSheen; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .shop .co-confirm.co-need-on::after { display: none; } }
 .shop .co-wrap .btn-primary, .shop .ty-wrap .btn-primary, .shop .ty-hero .btn-primary { font-size: 16.5px; font-weight: 700; min-height: 52px; }
 .shop .co-wrap .btn-secondary, .shop .ty-wrap .btn-secondary { font-size: 15.5px; font-weight: 700; }
@@ -350,7 +352,7 @@
 .shop .co-door { margin: 8px 0px 0px; font-size: 12.5px; font-weight: 700; color: var(--ink); line-height: 1.35; }
 .shop .co-confirm { font-size: 17px; font-weight: 800; letter-spacing: 0.01em; position: relative; overflow: hidden; min-height: 58px !important; }
 .shop .co-confirm .co-amt { font-size: 19px; font-weight: 800; margin-left: 2px; }
-.shop .co-confirm:not(:disabled)::after { content: ""; position: absolute; top: 0px; bottom: 0px; width: 38%; left: -45%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent); animation: 6.5s ease-in-out 1.5s infinite normal none running coSheen; pointer-events: none; }
+.shop .co-confirm:not(:disabled)::after { content: ""; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent) -80% 0px / 38% 100% no-repeat; animation: 6.5s ease-in-out 1.5s infinite normal none running coSheen; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .shop .co-confirm::after { display: none; } }
 @media (max-width: 1023px) { .shop .co-sec { padding: 12px 14px; } }
 @media (max-width: 1023px) { .shop .co-wrap .stack.s16 { gap: 9px; } }
@@ -402,10 +404,12 @@
 .shop .ty-it .co-th { width: 52px; }
 .shop .ty-it .pimg-label { display: none; }
 .shop .ty-r { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; padding: 3px 0px; }
+/* The sheens move their background inside the box, never the box past its edge: a box past the edge widens the
+   button's scroll width, which reads as cut-off text (device gate TEXT-CUT-OFF), as the bag's ctaSheenBg does. */
 @keyframes coHelpSheen { 
-  0% { left: -40%; }
-  17% { left: 118%; }
-  100% { left: 118%; }
+  0% { background-position: -80% 0px; }
+  17% { background-position: 180% 0px; }
+  100% { background-position: 180% 0px; }
 }
 @keyframes coAskIn { 
   0% { opacity: 0; transform: translateY(-4px); }
@@ -417,9 +421,9 @@
   100% { transform: translateX(330%); }
 }
 @keyframes coSheen { 
-  0% { left: -45%; }
-  16% { left: 115%; }
-  100% { left: 115%; }
+  0% { background-position: -80% 0px; }
+  16% { background-position: 180% 0px; }
+  100% { background-position: 180% 0px; }
 }
 /* PR 119 — the delivery promise row under the free box (demo r12-zzzz-n54.css) */
 .shop .co-wrap .co-promrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: wrap; }

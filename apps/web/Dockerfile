@@ -2,6 +2,11 @@
 # as a check:
 #   docker build -f apps/web/Dockerfile -t extas-web:<sha> .                    the app (last stage, `run`)
 #   docker build -f apps/web/Dockerfile --target migrate -t extas-migrate:<sha> . schema migrations + settings and auth sync
+# PR 17 (CN-023): CI builds the app once, here; the device gate, Lighthouse and the session end to end run the
+# standalone output copied out of the app image. CI also brings the Next.js build cache (apps/web/.next/cache, kept by
+# actions/cache; .dockerignore lets only that folder of .next in) and takes the updated one back out with
+#   docker build -f apps/web/Dockerfile --target next-cache --output type=local,dest=<dir> .
+# The VM's deploy checks out clean, so it has no cache folder and builds exactly as before.
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1 COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 # Prisma's engines need libssl (the slim image has none).
@@ -43,6 +48,10 @@ ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA
 # The build type-checks against the full Prisma client (about 3 GB of heap), above Node's default limit.
 RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm status:gen && NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter @extas/web build
+
+# CI only (never a deploy target): the build's Next.js cache (Turbopack's file-system cache), for the next run.
+FROM scratch AS next-cache
+COPY --from=build /repo/apps/web/.next/cache /
 
 # Runs once per deploy, before the new colour starts (infra/deploy/deploy.sh): `prisma migrate deploy` straight to
 # PostgreSQL (DATABASE_DIRECT_URL), then the settings migration (PR 496), then the auth sync (PR 16/495: permission

@@ -1,0 +1,15 @@
+# PR 17 (CN-023) — Node 22, pnpm (the version in package.json's packageManager) and the workspace's packages, with
+# pnpm's store cached by actions/setup-node (keyed on pnpm-lock.yaml), so every CI job installs from the cache.
+name: pnpm install
+description: Node 22, pnpm from packageManager, pnpm install --frozen-lockfile with the pnpm store cached
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+    - name: Install
+      shell: bash
+      run: pnpm install --frozen-lockfile

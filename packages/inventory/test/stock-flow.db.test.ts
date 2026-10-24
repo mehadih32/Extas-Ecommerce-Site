@@ -444,6 +444,8 @@ describe.skipIf(!HAS_TEST_DB)('S09 wave 1 on PostgreSQL: holds, documents, alert
     expect((await productReadiness(catDeps(), who, products.A!.scarf!)).reminders).not.toContain('sellableStock');
     overrides.delete('catalogue.publish.checks');
 
+    // Products with no queue item yet (sample data, imports) join it from the stock page too, without the Products queue page.
+    await t.prisma.publishQueueItem.deleteMany({ where: { storeId: store.A } });
     const q = await stockQueue(deps(), { actor: viewer, storeId: store.A });
     const scarf = q.items.find((i) => i.productId === products.A!.scarf);
     expect(scarf?.sellable).toBe(2);
