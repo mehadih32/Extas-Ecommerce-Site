@@ -75,6 +75,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // PR 167 — bKash (tokenized checkout): the address bKash gives (sandbox or live) and its four keys. The practice
+  // gateway serves until they are entered and the Test button passes; no customer is offered bKash online until the
+  // owner switches the method on in the checkout's payment settings.
+  {
+    id: 'bkash',
+    kind: 'PAYMENT',
+    provider: 'bkash',
+    adapter: true,
+    secrets: [{ field: 'appKey' }, { field: 'appSecret' }, { field: 'username' }, { field: 'password' }],
+    config: [{ field: 'baseUrl' }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   {
     id: 'localDisk',
     kind: 'STORAGE',

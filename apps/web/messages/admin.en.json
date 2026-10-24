@@ -162,6 +162,17 @@
         "webhookSecret": "Webhook secret (from the same page)"
       }
     },
+    "bkash": {
+      "name": "bKash payments",
+      "desc": "Customers pay online with bKash on its own page. Practice mode (no money moves) until the address and the four keys from bKash are in and the test passes",
+      "fields": {
+        "baseUrl": "bKash address (https://…, the sandbox or live one bKash gave you)",
+        "appKey": "App key",
+        "appSecret": "App secret",
+        "username": "Username (from bKash)",
+        "password": "Password (from bKash)"
+      }
+    },
     "localDisk": {
       "name": "Server disk",
       "desc": "When no other storage is on, photos and media stay on the server's own disk"
