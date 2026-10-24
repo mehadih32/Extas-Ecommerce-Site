@@ -51,6 +51,7 @@ import { riskLevelSettings } from './registry-risk-levels';
 import { advanceRequestSettings } from './registry-advance-request';
 import { walletSettings } from './registry-wallet';
 import { courierSyncSettings } from './registry-courier-sync';
+import { returnsSettings } from './registry-returns';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1220,6 +1221,8 @@ export const registry = {
   ...adminLookSettings,
   // ---- S08 · PR 184, 525, 526 · what the courier tells us after booking: the courier's news on his order page (registry-courier-sync.ts, version 58). ----
   ...courierSyncSettings,
+  // ---- S08 · PR 185–191 · exchanges, returns and refused parcels: the exchange tiers and engine, QC, return handling, the exchange charge and the refused-parcel list (registry-returns.ts, version 57). ----
+  ...returnsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

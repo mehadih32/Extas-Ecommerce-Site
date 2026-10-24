@@ -29,6 +29,8 @@ export * from './identity-ties';
 export * from './risk-level-plan';
 // PR 542: how much an advance request asks (advance-plan.ts).
 export * from './advance-plan';
+// S08 · PR 185: the exchange tiers, window and money box (exchange-pure.ts).
+export * from './exchange-pure';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
@@ -101,6 +103,8 @@ export const ORDER_COMMANDS = [
   'returned',
   // PR 525: a person's correction of a "Delivered" the shop's own records contradict (an open true-delivery check)
   'deliveryCorrected',
+  // S08 · PR 185: an exchange opened on a delivered order (the status stays; the new parcel is its own linked order)
+  'exchange',
 ] as const;
 export type OrderCommand = (typeof ORDER_COMMANDS)[number];
 
@@ -153,6 +157,9 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's
   // booking writes the shipment in the same transaction)
   book: ['CONFIRMED', 'PROCESSING', 'PACKED'],
+  // S08 · PR 185 (B1.8): an exchange is opened once the parcel is with the customer (or came back refused for a size,
+  // PR 190, SIM-F-021); the order keeps its final state, the exchange and its new parcel are records of their own
+  exchange: ['DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED'],
 };
 
 /** What the machine needs to know about an order (read under its row lock). */

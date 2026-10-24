@@ -1,0 +1,87 @@
+// S08 · PR 185 — ORD-05 Returns & exchanges at /admin/orders/returns (demo V12.2 #/admin/orders/returns; Blueprint
+// B1.8): the board of exchange cases, one case's card (`?case=<id>`) and "Start an exchange" for a delivered order
+// (`?order=<number>&line=<orderItemId>&reason=&size=`). Seeing needs `returns.view`; approving, refusing and opening an
+// exchange need `returns.decide`, which the order service checks again on every call. The page's own words are in
+// messages/admin-returns.*.json (under `returns.*`).
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { MOTHER_STORE_ID } from '@extas/db/client';
+import * as od from '@extas/orders';
+import { AdminNotice } from '@/components/admin/AdminFrame';
+import { readDeps } from '@/components/admin/orders/OrderListPage';
+import { ReturnsBoard, type ReturnsData, type StartStep } from '@/components/admin/orders/ReturnsBoard';
+import { moneyOf } from '@/components/admin/products/model';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { adminDeps } from '@/lib/admin-auth';
+import { ADMIN_LOGIN } from '@/lib/admin-nav';
+import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { returnsHref } from '@/lib/admin-returns/model';
+import { locateKey } from '@/lib/admin-shell/sections';
+import { t, type Dict } from '@/lib/i18n';
+import bn from '../../../../../messages/admin-returns.bn.json';
+import en from '../../../../../messages/admin-returns.en.json';
+
+export const dynamic = 'force-dynamic';
+
+const KEY = 'ordersReturns';
+
+type Search = Promise<Record<string, string | string[] | undefined>>;
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() || null;
+
+/** The admin dictionary with this screen's own messages under `returns.*`. */
+function withScreen(view: AdminView): AdminView {
+  return { ...view, dict: { ...view.dict, returns: (view.lang === 'bn' ? bn : en) as Dict } };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const view = withScreen(await adminView());
+  return { title: `${t(view.dict, 'returns.metaTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
+}
+
+/** A read the page can live without (a case or an order that is not there any more): null instead of an error. */
+async function maybe<T>(p: Promise<T>): Promise<T | null> {
+  try {
+    return await p;
+  } catch (e) {
+    if (e instanceof od.OrdersError && (e.code === 'NOT_FOUND' || e.code === 'INVALID_INPUT')) return null;
+    throw e;
+  }
+}
+
+export default async function ReturnsPage({ searchParams }: { searchParams: Search }) {
+  const deps = adminDeps();
+  const [plain, sp, access] = await Promise.all([adminView(deps), searchParams, pageAccess('returns.view', deps, MOTHER_STORE_ID)]);
+  const view = withScreen(plain);
+  const q = { case: one(sp.case), order: one(sp.order), line: one(sp.line), reason: one(sp.reason), size: one(sp.size) };
+  if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(returnsHref(q))}`);
+  if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
+  if (access.kind === 'forbidden')
+    return (
+      <div className="a2-z">
+        <ShellState view={view} kind="denied" permission="returns.view" />
+      </div>
+    );
+  const perms = access.guard.permissions ?? new Set<string>();
+  const who: od.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
+  const rd = readDeps(access.deps);
+  const [rows, currency, causes, found] = await Promise.all([
+    od.listExchanges(rd, who, {}),
+    access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }),
+    access.deps.resolver.value('orders.exchange.rootCauses', { storeId: MOTHER_STORE_ID }),
+    q.order ? od.exchangeOrderLines(rd, who, q.order) : Promise.resolve(null),
+  ]);
+  const chosen = q.case ? (rows.find((r) => r.id === q.case) ?? (await maybe(od.exchangeDetail(rd, who, q.case)))) : null;
+  const line = found && q.line && found.lines.some((l) => l.id === q.line) ? q.line : null;
+  const choices = found && line ? await maybe(od.exchangeChoices(rd, who, found.orderId, { orderItemId: line, reason: q.reason ?? od.EXCHANGE_REASON_CODES[0], ...(q.size ? { sizeKey: q.size } : {}) })) : null;
+  const start: StartStep = { number: q.order ?? '', found, line, reason: choices && q.reason && choices.reasons.includes(q.reason as od.ExchangeReason) ? q.reason : null, size: q.size, choices };
+  const data: ReturnsData = {
+    rows,
+    chosen,
+    start,
+    money: moneyOf(currency, view.locale),
+    canDecide: perms.has('returns.decide'),
+    causes: causes.map((c) => ({ key: c.key, label: view.lang === 'bn' ? c.bn : c.en })),
+  };
+  const d = view.dict;
+  return <ReturnsBoard view={view} data={data} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} />} tabs={<SectionTabs view={view} current={KEY} />} />;
+}

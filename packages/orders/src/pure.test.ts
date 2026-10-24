@@ -64,6 +64,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   delivered: { HANDED_OVER: 'DELIVERED', IN_TRANSIT: 'DELIVERED' },
   partiallyDelivered: { IN_TRANSIT: 'PARTIALLY_DELIVERED' },
   returned: { HANDED_OVER: 'RETURNED', IN_TRANSIT: 'RETURNED' },
+  // S08 · PR 185: an exchange is opened on a finished parcel; the order keeps its state
+  exchange: { DELIVERED: FLAG, PARTIALLY_DELIVERED: FLAG, RETURNED: FLAG },
 };
 
 const order = (status: OrderState, more: Partial<MachineOrder> = {}): MachineOrder => ({
@@ -108,10 +110,12 @@ describe('the transition table (§6.5.1)', () => {
     expect(legalPairs().map((p) => `${p.command}:${p.from}:${p.to}`).sort()).toEqual(fromSpec.sort());
   });
 
-  it('nothing ever leaves a final state except a flag', () => {
-    for (const s of ['DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED', 'CANCELLED'] as const) {
-      expect(allowedCommands(order(s))).toEqual(['setFlags']);
+  it('nothing ever leaves a final state; only flags (and, once the parcel is with the customer or back, an exchange) run there', () => {
+    for (const s of ['DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED'] as const) {
+      expect(allowedCommands(order(s))).toEqual(['setFlags', 'exchange']);
+      for (const c of allowedCommands(order(s))) expect(plan(c, order(s))).toMatchObject({ ok: true, moves: false });
     }
+    expect(allowedCommands(order('CANCELLED'))).toEqual(['setFlags']);
   });
 
   it('PR 525: a delivered order is corrected to returned only while a true-delivery check is open', () => {
