@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
-import { BAG_COOKIE, COUNT_COOKIE } from './bag-model';
+import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { draftHandler, paymentHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
 
 const ORIGIN = 'https://shop.example.test';
@@ -56,6 +56,22 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     expect(o).toMatchObject({ ip: '192.0.2.125', visitorId: p.visitorId, deliveryChargeMinor: 8_000 });
     // S06 · PR 156: the owner's risk score is off by default, so the order is never scored
     expect(o.riskScore).toBeNull();
+  });
+
+  it('S06 · PR 159: a new browser gets the shop\'s own device id (kept the owner\'s days); the next order keeps the same one; a shared point is kept rounded', async () => {
+    // two more orders than the other tests use: room in the sample stock for them
+    await f.t.prisma.stockLevel.updateMany({ where: { variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }, data: { onHand: { increment: 2 }, available: { increment: 2 } } });
+    const p = await page('api-dev');
+    const first = await placeHandler(req('/api/checkout/orders', { ...p.order, gps: { lat: 23.7808875, lng: 90.4073 } }, { cookie: p.cookie }), deps());
+    const set = first.headers.getSetCookie().find((c) => c.startsWith(`${DEVICE_COOKIE}=`));
+    expect(set).toMatch(/HttpOnly; Secure; SameSite=Lax; Max-Age=15552000$/);
+    const device = decodeURIComponent(set!.split(';')[0]!.split('=')[1]!);
+    const a = (await first.json()) as { number: string };
+    expect(await f.t.prisma.order.findFirstOrThrow({ where: { number: a.number, storeId: f.S }, select: { deviceId: true, gpsLat: true } })).toMatchObject({ deviceId: device });
+    // the same browser again: the same id
+    const q = await page('api-dev-2');
+    const second = (await (await placeHandler(req('/api/checkout/orders', q.order, { cookie: `${q.cookie}; ${DEVICE_COOKIE}=${device}` }), deps())).json()) as { number: string };
+    expect((await f.t.prisma.order.findFirstOrThrow({ where: { number: second.number, storeId: f.S }, select: { deviceId: true } })).deviceId).toBe(device);
   });
 
   it('S06 · PR 156: with the owner\'s risk score on, the order is scored once as it lands (team only)', async () => {

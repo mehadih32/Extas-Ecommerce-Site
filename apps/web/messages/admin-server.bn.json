@@ -58,7 +58,8 @@
       "inventory_erp_reconcile": "ERP-র সাথে স্টক মেলানো",
       "erp_webhook_process": "ERP থেকে আসা স্টকের খবর",
       "search_index": "সার্চের তালিকা",
-      "messages_run": "কাস্টমারকে মেসেজ পাঠানো"
+      "messages_run": "কাস্টমারকে মেসেজ পাঠানো",
+      "orders_pii_purge": "রাখা IP, ডিভাইস আর লোকেশন মুছে ফেলা"
     },
     "workers": {
       "title": "ওয়ার্কার",

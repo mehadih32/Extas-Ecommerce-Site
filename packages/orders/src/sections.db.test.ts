@@ -182,6 +182,34 @@ describe.skipIf(!HAS_TEST_DB)('PR 541 · the risk sections (PostgreSQL)', () => 
     f.overrides.delete('risk.signals');
   });
 
+  it('PR 159: the same device under another number, and many numbers from one connection, put an order in "new identity"', async () => {
+    score(true);
+    f.overrides.set('risk.signals', { ...signals, deviceMatch: { enabled: true, weight: 20, windowDays: 90 }, ipPhones: { enabled: true, weight: 15, atLeast: 2, withinHours: 24 } });
+    const device = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b';
+    const ip = '198.51.100.59';
+    const a1 = await f.place('sec-dev-1', { phone: '01700000330' });
+    const a2 = await f.place('sec-dev-2', { phone: '01700000331' });
+    await db().order.update({ where: { id: a1.orderId }, data: { deviceId: device, ip, status: 'RETURNED' } });
+    await db().order.update({ where: { id: a2.orderId }, data: { ip } });
+    await db().orderEvent.create({ data: { storeId: f.S, orderId: a1.orderId, type: 'order.returned', fromStatus: 'IN_TRANSIT', toStatus: 'RETURNED', reasonCode: 'changed-mind', actorType: 'COURIER', source: 'courier' } });
+    const now = await f.place('sec-dev-3', { phone: '01700000332' });
+    await db().order.update({ where: { id: now.orderId }, data: { deviceId: device, ip } });
+    const a = await assessRisk(f.ordersDeps(), ref(now.orderId));
+    expect(a!.fired.find((x) => x.key === 'deviceMatch')?.values).toMatchObject({ count: 1, number: a1.number, refusedNumber: a1.number });
+    expect(a!.fired.find((x) => x.key === 'ipPhones')?.values).toMatchObject({ count: 2, withinHours: 24 });
+    const r = await placeInSection(f.ordersDeps(), ref(now.orderId));
+    expect(r).toMatchObject({ section: 'identity', review: true });
+    expect(r!.because).toEqual(expect.arrayContaining(['deviceMatch', 'ipPhones']));
+    // once the purge has cleared the device and the connection, nothing matches any more
+    await db().order.updateMany({ where: { id: { in: [a1.orderId, a2.orderId] } }, data: { deviceId: null, ip: null } });
+    const later = await f.place('sec-dev-4', { phone: '01700000333' });
+    await db().order.update({ where: { id: later.orderId }, data: { deviceId: device, ip } });
+    const b = await assessRisk(f.ordersDeps(), ref(later.orderId));
+    // only the order still holding them (sec-dev-3) can match now
+    expect(b!.fired.find((x) => x.key === 'deviceMatch')?.values).toMatchObject({ count: 1, number: now.number });
+    f.overrides.delete('risk.signals');
+  });
+
   it('a re-order while another is open is "re-order", with the other order matched; "ask" makes a call task, "hold" needs a reason', async () => {
     score(true);
     newPhoneWeight(10);

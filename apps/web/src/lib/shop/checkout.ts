@@ -58,6 +58,8 @@ const KEYS = [
   'checkout.address.backfill',
   // PR 605: gift mode
   'checkout.gift',
+  // PR 159: the "Share my location" button and how long the point is kept
+  'risk.capture',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

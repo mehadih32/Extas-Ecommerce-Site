@@ -63,7 +63,7 @@ export function signalDetail(view: AdminView, s: FiredSignal, currency: string):
   const parts = [t(d, `orders.risk.why.${s.key}`, vars)];
   if (s.key === 'refusals' && vars.ourFault) parts.push(t(d, 'orders.risk.ourFault', { n: vars.ourFault }));
   if (typeof v.windowDays === 'number' && v.windowDays > 0) parts.push(t(d, 'orders.risk.window', { days: v.windowDays }));
-  if (s.key === 'identityMatch' && v.refusedNumber) parts.push(t(d, 'orders.risk.refusedAs', { number: String(v.refusedNumber) }));
+  if ((s.key === 'identityMatch' || s.key === 'deviceMatch') && v.refusedNumber) parts.push(t(d, 'orders.risk.refusedAs', { number: String(v.refusedNumber) }));
   if (s.key === 'areaMismatch' && v.from) parts.push(t(d, `orders.risk.known.${v.from === 'saved' ? 'saved' : 'order'}`));
   return parts.filter(Boolean).join(' · ');
 }

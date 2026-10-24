@@ -194,14 +194,38 @@ describe('PR 156 · the risk score model', () => {
     expect(keys(facts({ past: [] }))).not.toContain('identityMatch');
   });
 
+  it('PR 159: the same device under another number (the earlier refusal named), and many numbers from one connection', () => {
+    const refused = past('RETURNED', { refusalKey: 'changed-mind', placedAt: ago(20 * D) });
+    const later = past('DELIVERED', { placedAt: ago(2 * D) });
+    const r = scoreRisk(facts({ device: [refused, later] }), config());
+    expect(r.fired.find((x) => x.key === 'deviceMatch')?.values).toMatchObject({ count: 2, number: later.number, refusedNumber: refused.number });
+    const short = allOn();
+    short.deviceMatch.windowDays = 7;
+    expect(scoreRisk(facts({ device: [refused, later] }), config(short)).fired.find((x) => x.key === 'deviceMatch')?.values).toMatchObject({ count: 1, refusedNumber: null });
+    expect(keys(facts())).not.toContain('deviceMatch');
+    // the owner's count: 3 other numbers by default
+    const ip = allOn();
+    ip.ipPhones.atLeast = 3;
+    expect(keys(facts({ ipPhones: { phones: 2, latest: 'EX-9' } }), config(ip))).not.toContain('ipPhones');
+    expect(scoreRisk(facts({ ipPhones: { phones: 3, latest: 'EX-9' } }), config(ip)).fired.find((x) => x.key === 'ipPhones')?.values).toEqual({ count: 3, number: 'EX-9', withinHours: 24 });
+    // off (the shipped default): never counts
+    const off = riskSettings['risk.signals'].default;
+    expect(off.deviceMatch.enabled).toBe(false);
+    expect(off.ipPhones.enabled).toBe(false);
+  });
+
   it('PR 541: an owner\'s stored signals from v43 still read — the new signals take their defaults (off), nothing he set is lost', () => {
     const old = structuredClone(riskSettings['risk.signals'].default) as Partial<RiskSignals>;
     delete old.orderPieces;
     delete old.identityMatch;
+    delete old.deviceMatch;
+    delete old.ipPhones;
     old.refusals = { ...old.refusals!, weight: 42 };
     const parsed = riskSettings['risk.signals'].schema.parse(old);
     expect(parsed.refusals.weight).toBe(42);
     expect(parsed.orderPieces).toEqual({ enabled: false, weight: 15, atLeast: null, firstOrderOnly: true });
     expect(parsed.identityMatch.enabled).toBe(false);
+    expect(parsed.deviceMatch).toEqual({ enabled: false, weight: 20, windowDays: 90 });
+    expect(parsed.ipPhones).toEqual({ enabled: false, weight: 15, atLeast: 3, withinHours: 24 });
   });
 });

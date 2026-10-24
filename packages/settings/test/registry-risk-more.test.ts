@@ -30,6 +30,14 @@ describe('risk sections (v46)', () => {
     for (const r of RISK_REVIEW_SECTIONS) expect(RISK_SECTIONS).toContain(r);
   });
 
+  it('PR 159: what the checkout keeps — the IP and the device id on, the location button on (asks only after a tap), kept 180 days', () => {
+    const c = riskMoreSettings['risk.capture'];
+    expect(c.default).toEqual({ ip: true, device: true, gpsButton: true, gpsDecimals: 3, gpsWaitSeconds: 20, retentionDays: 180, purgeEveryMinutes: 60 });
+    expect(c.schema.safeParse({ ...c.default, retentionDays: 0 }).success).toBe(false);
+    expect(c.schema.safeParse({ ...c.default, gpsDecimals: 7 }).success).toBe(false);
+    expect(riskMoreSettings['risk.sections'].default.identitySignals).toEqual(['identityMatch', 'deviceMatch', 'ipPhones']);
+  });
+
   it('refuses a band in both lists, a signal the model does not have, and a section that cannot wait (prepaid, clear)', () => {
     const d = riskMoreSettings['risk.sections'].default;
     expect(riskSectionsSchema.safeParse({ ...d, watchBands: ['high'] }).success).toBe(false);

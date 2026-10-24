@@ -7,6 +7,8 @@ import type { ShopT } from './dict';
 export const BAG_COOKIE = '__Host-extas_bag';
 /** The number on the bag icon (header and bottom bar), read by the server layout; never trusted for money. */
 export const COUNT_COOKIE = 'extas_bag_n';
+/** PR 159: the shop's own random device id (first-party, HttpOnly), kept with an order for the risk checks (`risk.capture.device`). */
+export const DEVICE_COOKIE = '__Host-extas_dev';
 /** The most the badge shows. */
 export const BADGE_MAX = 99;
 

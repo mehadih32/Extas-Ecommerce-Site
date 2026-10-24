@@ -34,6 +34,13 @@ export interface RiskFacts {
    * address alike), placed before this one. Read only while `identityMatch` is on.
    */
   identity?: readonly PastOrder[];
+  /**
+   * PR 159: earlier orders from the same device (the shop's device id) under ANOTHER number, placed before this one. Read
+   * only while `deviceMatch` is on, and only while the device id is kept (`risk.capture`).
+   */
+  device?: readonly PastOrder[];
+  /** PR 159: the OTHER numbers that ordered from this order's connection (IP) in `ipPhones.withinHours`, with the latest order. */
+  ipPhones?: { phones: number; latest: string | null };
 }
 
 export interface RiskConfig {
@@ -139,6 +146,18 @@ export function scoreRisk(f: RiskFacts, c: RiskConfig): RiskResult {
       // the earlier refusal is named (SIM-F-015: "the earlier refusal was not named")
       const refused = hits.find((o) => o.status === 'RETURNED' && !(o.refusalKey && ourFault.has(o.refusalKey)));
       return { count: hits.length, number: hits[0]!.number, refused: h.refused, refusedNumber: refused?.number ?? null, delivered: h.delivered, windowDays: s.identityMatch.windowDays };
+    },
+    // PR 159: the same device under another number, and many numbers from one connection
+    deviceMatch: () => {
+      const since = sinceOf(f.placedAt, s.deviceMatch.windowDays);
+      const hits = (f.device ?? []).filter((o) => o.status !== 'DRAFT' && o.placedAt <= f.placedAt && (!since || o.placedAt >= since)).sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime());
+      if (!hits.length) return null;
+      const refused = hits.find((o) => o.status === 'RETURNED' && !(o.refusalKey && ourFault.has(o.refusalKey)));
+      return { count: hits.length, number: hits[0]!.number, refusedNumber: refused?.number ?? null, windowDays: s.deviceMatch.windowDays };
+    },
+    ipPhones: () => {
+      const n = f.ipPhones?.phones ?? 0;
+      return n >= s.ipPhones.atLeast ? { count: n, number: f.ipPhones?.latest ?? null, withinHours: s.ipPhones.withinHours } : null;
     },
     // PR 158: the address against the gazetteer
     addressUnresolved: () => addressUnresolved(f.address),

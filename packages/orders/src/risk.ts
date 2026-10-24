@@ -12,7 +12,7 @@ import type { Prisma } from '@extas/db/client';
 import { ADDRESS_FACTS_SELECT, placeFactsOf } from './address-facts';
 import { allow, setting, UUID, type OrdersDeps, type Who } from './context';
 import { OrdersError, isOrdersError } from './errors';
-import { IDENTITY_SELECT, identityOrders } from './identity';
+import { deviceOrders, IDENTITY_SELECT, identityOrders, ipPhoneCount } from './identity';
 import { phoneOrders } from './phone-history';
 import { scoreRisk, type AddressFacts, type FiredSignal, type KnownPlace, type PhoneSummary, type RiskConfig, type RiskFacts, type RiskResult } from './pure';
 import { placeInSection } from './sections';
@@ -36,14 +36,17 @@ export async function riskFactsOf(deps: OrdersDeps, storeId: number, orderId: st
   });
   if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
   const s = config.signals;
-  const [past, identity] = await Promise.all([
+  const [past, identity, device, ipPhones] = await Promise.all([
     phoneOrders(deps, storeId, o.phone, { excludeOrderId: o.id, before: o.placedAt, take: historyOrders }),
     // PR 541 (SIM-F-015): only read while the owner has the identity check on
     s.identityMatch.enabled ? identityOrders(deps, storeId, o, s.identityMatch, historyOrders) : Promise.resolve([]),
+    // PR 159: the device and the connection, only while their signal is on
+    s.deviceMatch.enabled ? deviceOrders(deps, storeId, o, s.deviceMatch, historyOrders) : Promise.resolve([]),
+    s.ipPhones.enabled ? ipPhoneCount(deps, storeId, o, s.ipPhones) : Promise.resolve(undefined),
   ]);
   const place = await placeFactsOf(deps, storeId, o, past, { refusals: s.areaRefusals.enabled });
   const pieces = o.items.reduce((n, i) => n + i.quantity, 0);
-  const facts: RiskFacts = { placedAt: o.placedAt, totalMinor: o.totalMinor, past, ...place, pieces, identity };
+  const facts: RiskFacts = { placedAt: o.placedAt, totalMinor: o.totalMinor, past, ...place, pieces, identity, device, ...(ipPhones ? { ipPhones } : {}) };
   return { order: o, facts };
 }
 

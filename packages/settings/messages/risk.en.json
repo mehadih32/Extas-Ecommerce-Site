@@ -10,7 +10,7 @@
     },
     "signals": {
       "label": "Risk signals and weights",
-      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place. PR 541 adds, both off: many pieces in one order (your number; empty: never), and the same person under another number — earlier orders of another number with the same name and an address this alike, a refusal among them named."
+      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place. PR 541 adds, both off: many pieces in one order (your number; empty: never), and the same person under another number — earlier orders of another number with the same name and an address this alike, a refusal among them named. Same device, another number (off): earlier orders from this device under another number. Many numbers from one connection (off): other numbers ordered from the same connection within the hours you set."
     },
     "bands": {
       "label": "Risk bands",
@@ -19,6 +19,10 @@
     "sections": {
       "label": "Order sections",
       "help": "When on, every new order is placed in one section the moment it lands, with a note on its timeline, so the order list shows each order already sorted: possible duplicate, re-order (another order open or on its way — the signals you pick), new identity (the same person under another number — the signals you pick), high risk and watch (the bands you pick), prepaid (never in the call queue; a flagged prepaid order is still reviewed) and clear. \"Wait for a person\": orders in these sections are neither confirmed nor booked until someone decides (approve, hold, ask the customer or decline). Marking is instant; the decision never is: nothing is cancelled, blocked, held or changed by itself."
+    },
+    "capture": {
+      "label": "What the checkout keeps for the checks",
+      "help": "The connection (IP) and the shop's own device code are kept with each order; the customer's location only when he taps \"Share my location\", rounded. All three are deleted from the order after the days you set (180 unless you change it). They only inform the risk checks; nobody is blocked by them."
     }
   },
   "defaults": {

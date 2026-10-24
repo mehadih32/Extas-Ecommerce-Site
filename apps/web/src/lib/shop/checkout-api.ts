@@ -7,7 +7,7 @@ import { captureDraft, checkoutQuote, CheckoutError, payAction, placeOrder, view
 import { CartError } from '@extas/cart';
 import { assessRisk, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
-import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
+import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 
@@ -134,7 +134,11 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const b = await body(request);
     const [{ visitor }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
     if (!visitor) return fail(409, 'EMPTY');
-    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip: requestContext(request).ip ?? null, input: b });
+    // PR 159: the device id this browser already has, or a new random one while the owner keeps device ids
+    const capture = await deps.checkout.settings.value('risk.capture', { storeId: deps.storeId });
+    const had = readCookie(request, DEVICE_COOKIE);
+    const device = capture.device ? (had && visitorIdSchema.safeParse(had).success ? had : crypto.randomUUID()) : null;
+    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip: requestContext(request).ip ?? null, deviceId: device, input: b });
     if (!r.replay) {
       await screenForDuplicates(deps, r.orderId);
       await checkTwoSizes(deps, r.orderId);
@@ -145,6 +149,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });
     const headers = new Headers();
     headers.append('set-cookie', bagCookie(COUNT_COOKIE, '0', days));
+    if (device) headers.append('set-cookie', bagCookie(DEVICE_COOKIE, device, capture.retentionDays));
     return json({ ok: true, number: r.number, replay: r.replay, next: nextHref(lang, r.next, r.number) }, { status: r.replay ? 200 : 201, headers });
   } catch (e) {
     return refusal(e);

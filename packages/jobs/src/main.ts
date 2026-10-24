@@ -16,6 +16,7 @@ import { sendersFrom } from '@extas/messages';
 import { meiliFromEnv } from '@extas/search';
 import { errorLine, type JobDeps } from './context';
 import { messagesPlanner } from './messages';
+import { piiPlanner } from './pii';
 import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
@@ -41,7 +42,7 @@ async function main(): Promise<void> {
     healthFile: process.env.EXTAS_WORKER_HEALTH_FILE || null,
     // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue;
     // PR 148: each store's message run per slot
-    planners: [webhookPlanner, searchPlanner, messagesPlanner],
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

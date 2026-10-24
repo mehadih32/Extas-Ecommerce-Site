@@ -166,6 +166,13 @@ describe('the row’s chips', () => {
     expect(signalDetail(view('en'), { key: 'identityMatch', weight: 20, values: { count: 2, number: 'EX-9', refusedNumber: 'EX-7', windowDays: 365 } } as never, 'BDT')).toBe('2 earlier orders under another number, latest EX-9 · ' + t(adminDicts.en, 'orders.risk.window', { days: 365 }) + ' · refused: EX-7');
   });
 
+  it('PR 159: the device and the connection signals say what they saw', () => {
+    expect(signalDetail(view('en'), { key: 'deviceMatch', weight: 20, values: { count: 1, number: 'EX-3', refusedNumber: 'EX-3', windowDays: 90 } } as never, 'BDT')).toBe(
+      '1 earlier orders from this device under another number, latest EX-3 · ' + t(adminDicts.en, 'orders.risk.window', { days: 90 }) + ' · refused: EX-3',
+    );
+    expect(signalDetail(view('bn'), { key: 'ipPhones', weight: 15, values: { count: 3, number: 'EX-9', withinHours: 24 } } as never, 'BDT')).toContain('24');
+  });
+
   it('the phone is said back the way the team reads it', () => {
     expect(phoneText('+8801712345678')).toBe('01712-345678');
     expect(phoneText(null)).toBe('');

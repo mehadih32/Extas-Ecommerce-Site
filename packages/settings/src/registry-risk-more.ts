@@ -8,6 +8,11 @@
 // the decision never is: a section in `review` only waits for a person (an open review, so it is neither confirmed nor
 // booked before someone decides, SIM-F-014). Nothing here cancels, blocks, holds, asks for an advance or changes COD,
 // a price or a charge (CLAUDE.md rule 6; R5 of the architecture).
+//
+// S06 · PR 159 — what the checkout keeps for these checks (Blueprint B6.4, BACKEND-ARCHITECTURE §8.7): the connection's
+// IP, the shop's own random device id (a first-party cookie, never a fingerprint) and, only when the customer taps
+// "Share my location", a rounded GPS point. All three are cleared after `retentionDays` by the worker's purge job
+// (`orders.pii.purge`), so no order keeps them longer than the owner allows.
 import { z } from 'zod';
 import { setting } from './define';
 import { RISK_SIGNAL_KEYS, type RiskSignalKey } from './registry-risk';
@@ -48,6 +53,25 @@ export const riskSectionsSchema = z
   .refine((v) => !v.highBands.some((b) => v.watchBands.includes(b)), { message: 'a band is either high or watch, not both' });
 export type RiskSections = z.output<typeof riskSectionsSchema>;
 
+/**
+ * `ip` / `device`: keep the connection's IP and the device id with the order. `gpsButton`: the checkout shows "Share my
+ * location" (the browser asks only after the tap). `gpsDecimals`: how finely the point is kept (3 ≈ 110 m). `gpsWaitSeconds`: how long the page waits for the phone's answer. `retentionDays`:
+ * after this many days the IP, the device id and the point are cleared from the order. `purgeEveryMinutes`: how often the
+ * worker clears them.
+ */
+export const riskCaptureSchema = z
+  .object({
+    ip: z.boolean(),
+    device: z.boolean(),
+    gpsButton: z.boolean(),
+    gpsDecimals: z.int().min(2).max(5),
+    gpsWaitSeconds: z.int().min(5).max(120),
+    retentionDays: z.int().min(1).max(3_650),
+    purgeEveryMinutes: z.int().min(5).max(1_440),
+  })
+  .strict();
+export type RiskCapture = z.output<typeof riskCaptureSchema>;
+
 export const riskMoreSettings = {
   // The demo V12.3 ORD-03 sections; review waits only for the strong ones. Nothing is scored until the owner switches
   // `risk.score` on, so before that an order is only a duplicate (PR 145), prepaid or clear.
@@ -58,10 +82,24 @@ export const riskMoreSettings = {
     group: 'orders',
     version: V,
     schema: riskSectionsSchema,
-    default: { enabled: true, review: ['reorder', 'identity', 'high'], highBands: ['high'], watchBands: ['medium'], reorderSignals: ['recentOrder', 'inTransit'], identitySignals: ['identityMatch'] },
+    default: { enabled: true, review: ['reorder', 'identity', 'high'], highBands: ['high'], watchBands: ['medium'], reorderSignals: ['recentOrder', 'inTransit'], identitySignals: ['identityMatch', 'deviceMatch', 'ipPhones'] },
     valueType: 'JSON',
     labelKey: 'risk.sections.label',
     helpKey: 'risk.sections.help',
     sortOrder: 340,
+  }),
+  // PR 159: the signals' raw facts, kept only as long as the owner allows (180 days unless he changes it)
+  'risk.capture': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'orders',
+    version: V,
+    schema: riskCaptureSchema,
+    default: { ip: true, device: true, gpsButton: true, gpsDecimals: 3, gpsWaitSeconds: 20, retentionDays: 180, purgeEveryMinutes: 60 },
+    valueType: 'JSON',
+    labelKey: 'risk.capture.label',
+    helpKey: 'risk.capture.help',
+    sortOrder: 341,
   }),
 };

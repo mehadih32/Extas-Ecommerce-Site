@@ -29,7 +29,10 @@ describe('risk settings (v43)', () => {
     const s = riskSettings['risk.signals'].default;
     expect(s.orderValue).toMatchObject({ enabled: false, atLeastMinor: null });
     expect(s.riskyArea).toMatchObject({ enabled: false, areaIds: [] });
-    expect(RISK_SIGNAL_KEYS).toHaveLength(16);
+    expect(RISK_SIGNAL_KEYS).toHaveLength(18);
+    // PR 159: the device and the connection start off
+    expect(s.deviceMatch.enabled).toBe(false);
+    expect(s.ipPhones.enabled).toBe(false);
     // PR 541: the new signals start off, the pieces empty
     expect(s.orderPieces).toMatchObject({ enabled: false, atLeast: null });
     expect(s.identityMatch.enabled).toBe(false);
