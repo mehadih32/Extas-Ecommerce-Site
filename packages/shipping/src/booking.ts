@@ -17,6 +17,8 @@
 // completes the parcel (the consignment id, the first state as an event), fails it (BOOKING_FAILED with the reason; the
 // order is ready to book again), or — a timeout or a 5xx — leaves it BOOKING with the reason: "Try again" first asks
 // the courier for that reference (`findByRef`) and only books again when the courier has nothing (§7.7: never twice).
+// PR 177: the second courier (Pathao) books through the same code; a courier that charges by weight never gets a parcel
+// without one (NO_WEIGHT), and one that cannot be asked by reference is never booked again by guess.
 // No money moves here.
 import { z } from 'zod';
 import type { CourierApi, CourierParcel, Mode } from '@extas/adapters';
@@ -169,6 +171,8 @@ async function prepare(db: Db, storeId: number, courier: Courier, orderId: strin
   ]);
   const weights = new Map(variants.map((x) => [x.id, x.weightGrams]));
   const lines: ParcelLine[] = o.items.map((i) => ({ productName: i.productName, colourName: i.colourName, sizeLabel: i.sizeLabel, quantity: i.quantity, weightGrams: i.variantId ? (weights.get(i.variantId) ?? null) : null }));
+  // PR 177: a courier that charges by weight never gets a parcel without one (SIM-F-029)
+  if (courier.api.capabilities.weightRequired && parcelWeight(lines) === null) return { skip: skipped(o.id, o.number, 'NO_WEIGHT', null, { pieces: lines.filter((l) => l.weightGrams === null).map((l) => l.productName) }) } as const;
   return {
     order: o,
     lines,
@@ -326,7 +330,13 @@ export async function retryBooking(deps: ShippingDeps, who: Who, shipmentId: str
   const account = await bookableCourier(deps.db, who.storeId, s.courierAccountId);
   const conn = await courierApi(deps, who.storeId, account.providerKey);
   if (lostAnswer) {
-    const found = await conn.api.findByRef(s.merchantRef!);
+    let found: Awaited<ReturnType<CourierApi['findByRef']>>;
+    try {
+      found = await conn.api.findByRef(s.merchantRef!);
+    } catch (e) {
+      // PR 177: a courier that cannot be asked by reference (Pathao) is never booked again by guess: staff check its panel
+      throw new ShippingError('NOT_RETRYABLE', 'the courier cannot be asked whether it has this parcel', ['shipmentId'], { status: s.status, lookup: e instanceof Error ? e.message : String(e) });
+    }
     if (found) {
       await complete(deps, who, s.id, { consignmentId: found.consignmentId, trackingCode: found.trackingCode, status: found.status, rawStatus: found.rawStatus, chargeMinor: null });
       return { orderId: s.orderId, number: s.order.number, outcome: 'booked', code: null, shipmentId: s.id, consignmentId: found.consignmentId, error: null, data: { recovered: true } };

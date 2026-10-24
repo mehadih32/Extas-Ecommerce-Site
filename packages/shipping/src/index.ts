@@ -13,6 +13,8 @@
 // booking again (booking.ts). Status polling of the parcels the couriers hold (tracking.ts; the worker's
 // `courier.track` job). Steadfast is the first real courier behind the contract (`@extas/adapters`).
 //
+// PR 177: Pathao, the second courier, behind the same contract: the same booking and tracking, its zone ids and weight.
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';

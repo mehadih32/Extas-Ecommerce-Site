@@ -123,6 +123,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // PR 177 — Pathao Courier: the merchant API's client id and secret and the merchant login (e-mail, password), with the
+  // Pathao store the parcels go out from. Practice until the Test (a token) passes.
+  {
+    id: 'pathao',
+    kind: 'COURIER',
+    provider: 'pathao',
+    adapter: true,
+    secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }],
+    config: [{ field: 'storeId' }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

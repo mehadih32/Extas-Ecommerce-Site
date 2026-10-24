@@ -61,6 +61,8 @@ export interface CourierCapabilities {
   zoneIds: boolean;
   /** The booking takes the parcel's weight (SIM-F-029: the courier charges by weight). */
   weight: boolean;
+  /** PR 177: the courier refuses a parcel without a weight (it charges by weight); the shop then never books one. */
+  weightRequired?: boolean;
   /** The booking takes a declared value (SIM-F-017: a claim for a lost or damaged parcel needs it). */
   declaredValue: boolean;
   /** A booking can be cancelled through the API (otherwise staff phone the courier: D5). */
