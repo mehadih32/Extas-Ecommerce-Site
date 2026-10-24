@@ -10,6 +10,12 @@
 // PR 176 (`delivery.courier.booking`, `delivery.courier.tracking`): booking is a staff action (never automatic); a gift
 // with "deliver on or after" is held until its booking day (SIM-F-007); the courier note's gift line in both languages;
 // how many orders one "Book all" takes; how often the parcels the couriers hold are read again.
+//
+// PR 554 (registry version 56, `delivery.courier.zoneSync`): reading each courier's own place list (cities → zones →
+// areas) and matching it to the shop's areas. How often the list is read again, how many courier calls one run may
+// make, whether the areas level is read, whether names that match exactly are paired on their own (a person always can
+// change a pair; an unclear name is never guessed), and when a parcel waits for a person to pair its area: only when
+// the courier needs its own ids (`whenRequired`), or for every courier that takes them (`always`).
 import { z } from 'zod';
 import { setting } from './define';
 import { moneyMinorSchema, templateTextSchema } from './schemas';
@@ -17,6 +23,8 @@ import { moneyMinorSchema, templateTextSchema } from './schemas';
 const V = 50;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'delivery', version: V } as const;
+const V56 = 56;
+const base56 = { ...base, version: V56 } as const;
 
 /**
  * PR 175 (SIM-F-027) — the RTO cost book. `count`: which parts of a returned parcel's cost are counted (the courier's
@@ -58,6 +66,26 @@ export const courierBookingSchema = z
  */
 export const courierTrackingSchema = z.object({ enabled: z.boolean(), everyMinutes: z.int().min(5).max(24 * 60), batch: z.int().min(1).max(2_000) }).strict();
 
+/** PR 554 — when a parcel to an area not paired with the courier's own place waits for a person. */
+export const ZONE_UNMAPPED_RULES = ['whenRequired', 'always'] as const;
+
+/**
+ * PR 554 — the courier zone sync. `enabled`: the worker reads every courier's place list on its own, every `everyDays`
+ * days (staff can always press "Read the list now"); `callsPerRun`: how many courier calls one run makes before it
+ * stops and goes on next time; `areas`: the third level (areas) is read too; `autoMatch`: a courier place whose name is
+ * exactly one of the shop's areas is paired on its own; `unmapped`: see ZONE_UNMAPPED_RULES.
+ */
+export const courierZoneSyncSchema = z
+  .object({
+    enabled: z.boolean(),
+    everyDays: z.int().min(1).max(90),
+    callsPerRun: z.int().min(10).max(5_000),
+    areas: z.boolean(),
+    autoMatch: z.boolean(),
+    unmapped: z.enum(ZONE_UNMAPPED_RULES),
+  })
+  .strict();
+
 export const shippingSettings = {
   'delivery.courier.rtoCost': setting({
     ...base,
@@ -92,8 +120,18 @@ export const shippingSettings = {
     helpKey: 'delivery.courier.tracking.help',
     sortOrder: 902,
   }),
+  'delivery.courier.zoneSync': setting({
+    ...base56,
+    valueType: 'JSON',
+    schema: courierZoneSyncSchema,
+    default: { enabled: true, everyDays: 7, callsPerRun: 600, areas: true, autoMatch: true, unmapped: 'whenRequired' },
+    labelKey: 'delivery.courier.zoneSync.label',
+    helpKey: 'delivery.courier.zoneSync.help',
+    sortOrder: 903,
+  }),
 };
 
 export type RtoCostSettings = z.output<typeof rtoCostSchema>;
 export type CourierBookingSettings = z.output<typeof courierBookingSchema>;
 export type CourierTrackingSettings = z.output<typeof courierTrackingSchema>;
+export type CourierZoneSyncSettings = z.output<typeof courierZoneSyncSchema>;

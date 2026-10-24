@@ -11,6 +11,10 @@
 //   refuses every edit and add-on (SIM-F-004, decision D5), so the parcel and the order never differ.
 // - The weight is the pieces' own weights, or none when a piece has no weight (SIM-F-029; never guessed), with the
 //   courier's own zone ids when the area is mapped (PR 554), and the goods' value recorded for a claim.
+// - PR 554: the zone ids come from the area's pair with this courier, or the nearest pair above it (zones.ts `pairFor`).
+//   A courier that needs its ids (or, with the owner's `unmapped: always`, any courier that takes them) never gets a
+//   parcel to an area without a pair: the order is skipped with AREA_UNMAPPED (AREA_UNKNOWN when the order has no
+//   resolved area) and its timeline says why, once — the courier never refuses it for an area it does not know.
 //
 // Two steps, so the courier is never called inside a database transaction: the parcel row is written first (BOOKING,
 // with the shop's reference `<order number>-<try>` and its idempotency key), then the courier is asked. Its answer
@@ -31,6 +35,8 @@ import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Tx
 import { ShippingError } from './errors';
 import { applyEventsIn } from './events';
 import { addDays, bookingNoteOf, courierPhone, giftBooking, localDay, parcelDescription, parcelWeight, type BookingOutcomeKind, type ParcelLine } from './pure';
+import { zoneNeedOf } from './zone-match';
+import { pairFor } from './zones';
 
 /** What happened to one order of a booking press. */
 export interface BookingOutcome {
@@ -156,7 +162,7 @@ interface Courier {
 type Db = ShippingDeps['db'] | Tx;
 
 /** The parcel's facts from the order row (read again under the order's lock before anything is written). */
-async function prepare(db: Db, storeId: number, courier: Courier, orderId: string, cfg: CourierBookingSettings, today: string) {
+async function prepare(db: Db, storeId: number, courier: Courier, orderId: string, cfg: CourierBookingSettings, today: string, zoneRule: 'whenRequired' | 'always') {
   const o = await db.order.findFirst({ where: { id: orderId, storeId, archivedAt: null }, select: ORDER_SELECT });
   if (!o) return { skip: skipped(orderId, null, 'NOT_FOUND') } as const;
   const target = deliveryTarget(o);
@@ -165,10 +171,13 @@ async function prepare(db: Db, storeId: number, courier: Courier, orderId: strin
   const gift = giftBooking(target.gift?.deliverAfter ?? null, cfg.giftLeadDays, today);
   if (gift.waits) return { skip: skipped(o.id, o.number, 'GIFT_DATE', null, { bookFrom: gift.bookFrom }) } as const;
   const variantIds = o.items.map((i) => i.variantId).filter((x): x is string => !!x);
+  const need = zoneNeedOf(courier.api.capabilities, zoneRule);
   const [variants, zone] = await Promise.all([
     db.productVariant.findMany({ where: { id: { in: variantIds } }, select: { id: true, weightGrams: true } }),
-    o.areaId ? db.courierAreaMapping.findUnique({ where: { courierAccountId_areaId: { courierAccountId: courier.id, areaId: o.areaId } }, select: { courierCityId: true, courierZoneId: true, courierAreaId: true } }) : null,
+    o.areaId && courier.api.capabilities.zoneIds ? pairFor(db, courier.id, o.areaId, need) : null,
   ]);
+  // PR 554: a courier that needs its own ids waits for the area's pair (never sent to fail at the courier)
+  if (need && !zone) return { skip: skipped(o.id, o.number, o.areaId ? 'AREA_UNMAPPED' : 'AREA_UNKNOWN', null, { areaId: o.areaId, need }) } as const;
   const weights = new Map(variants.map((x) => [x.id, x.weightGrams]));
   const lines: ParcelLine[] = o.items.map((i) => ({ productName: i.productName, colourName: i.colourName, sizeLabel: i.sizeLabel, quantity: i.quantity, weightGrams: i.variantId ? (weights.get(i.variantId) ?? null) : null }));
   // PR 177: a courier that charges by weight never gets a parcel without one (SIM-F-029)
@@ -192,11 +201,14 @@ class Skip extends Error {
 
 /** One order: checks, the parcel row under the order service's lock, then the courier. */
 async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: string): Promise<BookingOutcome> {
-  const [cfg, timeZone] = await Promise.all([setting(deps, who.storeId, 'delivery.courier.booking'), setting(deps, who.storeId, 'store.timeZone')]);
+  const [cfg, timeZone, zones] = await Promise.all([setting(deps, who.storeId, 'delivery.courier.booking'), setting(deps, who.storeId, 'store.timeZone'), setting(deps, who.storeId, 'delivery.courier.zoneSync')]);
   const today = localDay(nowOf(deps), timeZone);
   // a quick look first (no lock): most refusals need no transaction
-  const first = await prepare(deps.db, who.storeId, courier, orderId, cfg, today);
-  if (first.skip) return first.skip;
+  const first = await prepare(deps.db, who.storeId, courier, orderId, cfg, today, zones.unmapped);
+  if (first.skip) {
+    if (first.skip.code === 'AREA_UNMAPPED' || first.skip.code === 'AREA_UNKNOWN') await noteAreaHeld(deps, who, courier.id, first.skip);
+    return first.skip;
+  }
   const number = first.order.number;
 
   let booked = null as { shipmentId: string; lines: ParcelLine[] } | null;
@@ -204,7 +216,7 @@ async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: 
     await bookWith(ordersDeps(deps), { storeId: who.storeId, orderId }, staffBy(who.actor, who.ctx), async (tx, locked) => {
       await assertBookable(tx, who.storeId, orderId);
       // the row as it is under the lock: an edit that raced this press is what goes to the courier, or the reason why not
-      const p = await prepare(tx, who.storeId, courier, orderId, cfg, today);
+      const p = await prepare(tx, who.storeId, courier, orderId, cfg, today, zones.unmapped);
       if (p.skip) throw new Skip(p.skip);
       const attempt = (await tx.shipment.count({ where: { storeId: who.storeId, orderId } })) + 1;
       const merchantRef = `${locked.number}-${attempt}`;
@@ -245,6 +257,19 @@ async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: 
   // a replayed command (same idempotency key) writes nothing new: nothing to send
   if (!booked) return skipped(orderId, number, 'BOOKED');
   return send(deps, who, courier, booked.shipmentId, booked.lines, cfg.itemNames);
+}
+
+/**
+ * PR 554: the order's timeline says once per courier and area that the parcel waits for the area's pair (the courier's
+ * page lists the areas parcels wait for). Pressing "Book" again writes nothing new.
+ */
+async function noteAreaHeld(deps: ShippingDeps, who: Who, courierAccountId: string, skip: BookingOutcome): Promise<void> {
+  const areaId = (skip.data?.areaId as string | null | undefined) ?? null;
+  const before = await deps.db.orderEvent.findMany({ where: { storeId: who.storeId, orderId: skip.orderId, type: 'shipment.areaHeld' }, select: { data: true } });
+  if (before.some((e) => { const d = e.data as { courierAccountId?: string; areaId?: string | null } | null; return d?.courierAccountId === courierAccountId && (d.areaId ?? null) === areaId; })) return;
+  await deps.db.orderEvent.create({
+    data: { storeId: who.storeId, orderId: skip.orderId, type: 'shipment.areaHeld', data: { code: skip.code, courierAccountId, areaId, need: (skip.data?.need as string | undefined) ?? null }, actorType: who.actor.staffUserId ? 'STAFF' : 'SYSTEM', actorId: who.actor.staffUserId, source: 'admin' },
+  });
 }
 
 const PARCEL_SELECT = { id: true, orderId: true, order: { select: { number: true } }, merchantRef: true, receiver: true, courierCityId: true, courierZoneId: true, courierAreaId: true, codAmountMinor: true, declaredValueMinor: true, weightGrams: true, bookingNote: true } as const;

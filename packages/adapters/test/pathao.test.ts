@@ -133,6 +133,46 @@ describe('Pathao (PR 177)', () => {
     world.reset();
   });
 
+  it('PR 554: reads Pathao\'s own cities, a city\'s zones and a zone\'s areas (ids as text, names as Pathao spells them); a list needs its parent', async () => {
+    const s = stand({
+      '/aladdin/api/v1/city-list': { body: { message: 'City successfully fetched.', type: 'success', code: 200, data: { data: [{ city_id: 1, city_name: 'Dhaka' }, { city_id: 2, city_name: 'Chittagong' }, { city_id: 3 }] } } },
+      '/aladdin/api/v1/cities/1/zone-list': { body: { code: 200, data: { data: [{ zone_id: 52, zone_name: 'Dhanmondi' }] } } },
+      '/aladdin/api/v1/zones/52/area-list': { body: { code: 200, data: { data: [{ area_id: 1033, area_name: ' Road 1 ', home_delivery_available: true }] } } },
+    });
+    const api = createPathaoClient({ baseUrl: BASE, ...KEYS, fetch: s.fetchFn });
+    expect(pathaoAdapter.mock).toBeDefined();
+    expect(await api.places!('city', null)).toEqual([{ id: '1', name: 'Dhaka' }, { id: '2', name: 'Chittagong' }]);
+    expect(await api.places!('zone', '1')).toEqual([{ id: '52', name: 'Dhanmondi' }]);
+    expect(await api.places!('area', '52')).toEqual([{ id: '1033', name: 'Road 1' }]);
+    expect(s.seen.filter((x) => !x.url.endsWith('issue-token')).map((x) => [x.method, x.url.replace(BASE, '')])).toEqual([
+      ['GET', '/aladdin/api/v1/city-list'],
+      ['GET', '/aladdin/api/v1/cities/1/zone-list'],
+      ['GET', '/aladdin/api/v1/zones/52/area-list'],
+    ]);
+    await expect(api.places!('zone', null)).rejects.toThrow(/parent/);
+  });
+
+  it('PR 554: the practice Pathao has the practice place list; the world can drop, add and fail a read', async () => {
+    const api = await pathaoAdapter.mock!({} as never);
+    const world = mockCourierWorld('pathao');
+    world.reset();
+    const cities = await api.places!('city', null);
+    expect(cities.map((c) => c.name)).toEqual(expect.arrayContaining(['Dhaka', 'Gazipur', 'Bogra']));
+    const dhaka = cities.find((c) => c.name === 'Dhaka')!;
+    const zones = await api.places!('zone', dhaka.id);
+    expect(zones.filter((z) => z.name === 'Uttara')).toHaveLength(2);
+    const mirpur = zones.find((z) => z.name === 'Mirpur')!;
+    world.dropPlace('zone', mirpur.id);
+    expect((await api.places!('zone', dhaka.id)).map((z) => z.id)).not.toContain(mirpur.id);
+    expect(await api.places!('area', mirpur.id)).toEqual([]);
+    world.addPlace('zone', { id: mirpur.id, name: 'Mirpur', parentId: dhaka.id });
+    expect((await api.places!('zone', dhaka.id)).map((z) => z.id)).toContain(mirpur.id);
+    world.failPlaceReads(1);
+    await expect(api.places!('city', null)).rejects.toThrow(/planned failure/);
+    expect((await api.places!('city', null)).length).toBe(cities.length);
+    world.reset();
+  });
+
   it('Keys & connections: four keys and the Pathao store; Sandbox talks to Pathao\'s sandbox, Live to Pathao; one more courier, nothing else changes', async () => {
     expect(pathaoAdapter).toMatchObject({ kind: 'COURIER', provider: 'pathao', modes: ['SANDBOX', 'LIVE'], secrets: ['clientId', 'clientSecret', 'username', 'password'] });
     expect(pathaoAdapter.configSchema.safeParse({}).success).toBe(false);

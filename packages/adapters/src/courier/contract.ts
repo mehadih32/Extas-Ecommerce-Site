@@ -59,6 +59,13 @@ export interface CourierCapabilities {
   partialDelivery: boolean;
   /** The booking accepts the courier's own city / zone / area ids (PR 554 maps the gazetteer onto them). */
   zoneIds: boolean;
+  /** PR 554: the courier publishes its own place list (cities → zones → areas), read with `places()`. */
+  zoneList?: boolean;
+  /**
+   * PR 554: the deepest of the courier's ids a booking must carry, or none (the courier reads the address itself). A
+   * parcel to an area the shop has not mapped that deep is never sent: it waits with the reason (never a refusal).
+   */
+  zoneNeeds?: CourierPlaceLevel | null;
   /** The booking takes the parcel's weight (SIM-F-029: the courier charges by weight). */
   weight: boolean;
   /** PR 177: the courier refuses a parcel without a weight (it charges by weight); the shop then never books one. */
@@ -142,10 +149,25 @@ export interface CourierParcelRef {
   lastRawStatus?: string | null;
 }
 
+/** PR 554: the three levels of a courier's own place list. */
+export const COURIER_PLACE_LEVELS = ['city', 'zone', 'area'] as const;
+export type CourierPlaceLevel = (typeof COURIER_PLACE_LEVELS)[number];
+
+/** PR 554: one place of a courier's own list: its id (the courier's, as text) and its name in the courier's words. */
+export interface CourierPlace {
+  id: string;
+  name: string;
+}
+
 export interface CourierApi {
   /** The adapter's provider key (`steadfast`, `pathao`, `mockCourier`). */
   readonly provider: string;
   readonly capabilities: CourierCapabilities;
+  /**
+   * PR 554 (§7.4 `syncZones`): one level of the courier's own place list — its cities (`parentId` null), a city's zones,
+   * a zone's areas. Only a courier with `capabilities.zoneList` has it. Reading never books or changes anything.
+   */
+  places?(level: CourierPlaceLevel, parentId: string | null): Promise<CourierPlace[]>;
   book(parcel: CourierParcel): Promise<BookResult>;
   /**
    * The parcel booked under this reference, if the courier has one (recovery after a timeout; never books). A courier

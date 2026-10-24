@@ -18,9 +18,11 @@
 //   Delivered → DELIVERED · Partial_Delivery → PARTIALLY_DELIVERED · Delivery_Failed → ATTEMPT_FAILED · On_Hold →
 //   ATTEMPT_FAILED (receiver asked for another day) · Return → RETURNING · Paid_Return → RETURNED · Pickup_Cancelled →
 //   CANCELLED · Payment_Invoice, Exchange … → kept raw.
+// PR 554: Pathao's own place list for the courier zone sync — `city-list`, a city's `zone-list`, a zone's `area-list`
+// (ids and names in Pathao's words); reading it books nothing.
 import { z } from 'zod';
 import { AdapterError, defineAdapter, requireSecret } from '../define';
-import { takaToMinor, type BookResult, type CourierApi, type CourierCapabilities, type CourierParcel, type StatusTable } from './contract';
+import { takaToMinor, type BookResult, type CourierApi, type CourierCapabilities, type CourierParcel, type CourierPlace, type CourierPlaceLevel, type StatusTable } from './contract';
 import { createMockCourier, type MockVocabulary } from './mock';
 
 export const PATHAO_PROVIDER = 'pathao';
@@ -59,6 +61,9 @@ export const pathaoCapabilities: CourierCapabilities = {
   tracking: 'both',
   partialDelivery: true,
   zoneIds: true,
+  // PR 554: Pathao publishes its cities, zones and areas; a booking without them is read from the address
+  zoneList: true,
+  zoneNeeds: null,
   weight: true,
   weightRequired: true,
   declaredValue: false,
@@ -130,6 +135,8 @@ interface PtBody {
   access_token?: string;
   expires_in?: number;
   data?: {
+    /** PR 554: a list answer (city-list, zone-list, area-list) carries its rows here. */
+    data?: Record<string, unknown>[];
     consignment_id?: string | number;
     merchant_order_id?: string;
     order_status?: string;
@@ -256,6 +263,19 @@ export function createPathaoClient(opts: ClientOptions): CourierApi {
           chargeMinor: null,
         },
       ];
+    },
+    async places(level: CourierPlaceLevel, parentId: string | null): Promise<CourierPlace[]> {
+      if (level !== 'city' && !parentId) throw new AdapterError(`Pathao's ${level} list needs its parent`);
+      const path = level === 'city' ? '/aladdin/api/v1/city-list' : level === 'zone' ? `/aladdin/api/v1/cities/${encodeURIComponent(parentId!)}/zone-list` : `/aladdin/api/v1/zones/${encodeURIComponent(parentId!)}/area-list`;
+      const r = await call('GET', path);
+      const rows = Array.isArray(r.data?.data) ? r.data.data : [];
+      const out: CourierPlace[] = [];
+      for (const row of rows) {
+        const id = row[`${level}_id`];
+        const name = row[`${level}_name`];
+        if ((typeof id === 'number' || typeof id === 'string') && typeof name === 'string' && name.trim()) out.push({ id: String(id), name: name.trim() });
+      }
+      return out;
     },
     async health() {
       await bearer(true);

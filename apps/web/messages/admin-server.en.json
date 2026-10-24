@@ -61,7 +61,8 @@
       "messages_run": "Customer messages",
       "orders_pii_purge": "Clearing kept IP, device and location",
       "payments_pending_sweep": "Unfinished online payments",
-      "courier_track": "Reading parcel updates from the couriers"
+      "courier_track": "Reading parcel updates from the couriers",
+      "courier_zones": "Reading and pairing the couriers' area lists"
     },
     "workers": {
       "title": "Workers",

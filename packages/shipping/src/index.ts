@@ -15,6 +15,10 @@
 //
 // PR 177: Pathao, the second courier, behind the same contract: the same booking and tracking, its zone ids and weight.
 //
+// PR 554: the courier zone sync — each courier's own place list read through its adapter, paired with the gazetteer
+// (exact names only, unclear ones left for a person), dropped places and pairs archived, never deleted; a booking to an
+// area without a pair waits with its reason instead of failing at the courier (zones.ts, zone-match.ts).
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -25,3 +29,5 @@ export * from './parcels';
 export * from './rto';
 export * from './booking';
 export * from './tracking';
+export * from './zone-match';
+export * from './zones';

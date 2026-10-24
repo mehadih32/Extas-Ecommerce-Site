@@ -8,6 +8,7 @@ import { steadfastAdapter } from './steadfast';
 export * from './contract';
 export * from './mock';
 export * from './practice';
+export * from './mock-places';
 export * from './steadfast';
 export * from './pathao';
 

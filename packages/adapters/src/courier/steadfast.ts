@@ -41,6 +41,9 @@ export const steadfastCapabilities: CourierCapabilities = {
   tracking: 'both',
   partialDelivery: true,
   zoneIds: false,
+  // PR 554: Steadfast reads the address itself and publishes no place list: nothing to sync
+  zoneList: false,
+  zoneNeeds: null,
   weight: false,
   declaredValue: false,
   cancel: false,

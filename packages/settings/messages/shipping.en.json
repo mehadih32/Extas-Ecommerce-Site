@@ -12,6 +12,10 @@
       "tracking": {
         "label": "Reading parcel updates",
         "help": "How the shop keeps up with the couriers: when on, the background worker asks each courier about the parcels it holds, each parcel at most once every \"minutes\", up to \"per run\" parcels at a time. Off: nothing is read on its own; staff can still read one parcel now. Courier exceptions (a failed try, an address problem, lost, damaged) show on the parcel the moment they are read."
+      },
+      "zoneSync": {
+        "label": "Courier area lists (zone sync)",
+        "help": "Each courier has its own list of cities, zones and areas, and some couriers want their own ids on every parcel. The shop reads each courier's list and pairs it with the shop's own areas. \"On\": the list is read again by itself every few days (\"Every … days\"); you can always press \"Read the list now\" on the courier's page. \"Calls per run\": how many questions one reading asks the courier before it stops and carries on next time. \"Areas too\": the smallest level is read as well. \"Pair exact names\": a courier place whose name is exactly one of the shop's areas is paired by itself; a name that is unclear is never guessed — it waits on the courier's page for a person. \"Hold a parcel\": when an area has no pair, the parcel waits with a clear note instead of failing — only for a courier that needs its ids (recommended), or for every courier that takes them. A place the courier drops is archived, never deleted, and its pair is kept for the record."
       }
     }
   }
