@@ -14,6 +14,7 @@
 import { isOrdersError, orderStep, type By, type OrdersDeps } from '@extas/orders';
 import type { ShippingDeps } from './context';
 import { orderMovesFor, type OrderMove, type ShipmentStatus } from './pure';
+import { holdsDelivered } from './truth';
 
 /** The order's timeline type for the courier's "out for delivery" (`@extas/messages` OUT_FOR_DELIVERY_EVENT). */
 export const OUT_FOR_DELIVERY_EVENT = 'shipment.outForDelivery';
@@ -44,9 +45,9 @@ export interface SyncHooks {
   holdDelivered?: (s: { id: string; orderId: string; storeId: number }) => Promise<boolean>;
 }
 
-/** The hooks every sync of the shop runs with. */
-export function shopHooks(_deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>): SyncHooks {
-  return {};
+/** The hooks every sync of the shop runs with: PR 525's true-delivery check holds a contradicted "Delivered". */
+export function shopHooks(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>): SyncHooks {
+  return { holdDelivered: (s) => holdsDelivered(deps, s) };
 }
 
 /**
@@ -115,6 +116,8 @@ export async function syncLagging(deps: Pick<ShippingDeps, 'db' | 'settings' | '
     SELECT s."id"::text AS id
     FROM "Shipment" s JOIN "Order" o ON o."id" = s."orderId"
     WHERE s."storeId" = ${storeId} AND o."archivedAt" IS NULL
+      -- PR 525: a "Delivered" a person must check first is not caught up
+      AND NOT EXISTS (SELECT 1 FROM "DeliveryCheck" d WHERE d."shipmentId" = s."id" AND d."state"::text = 'OPEN')
       AND (
         (s."status"::text IN ('PICKED_UP','IN_TRANSIT','OUT_FOR_DELIVERY','ATTEMPT_FAILED','ADDRESS_PROBLEM','LOST','DAMAGED','RETURNING','DELIVERED','PARTIALLY_DELIVERED','RETURNED')
           AND o."status"::text IN ('CONFIRMED','PROCESSING','PACKED','HANDED_OVER'))

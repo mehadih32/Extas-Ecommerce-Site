@@ -2,7 +2,8 @@
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the
 // permission; the courier accounts; the parcels with an exception recorded by staff; the RTO cost book. PR 176: the
 // orders ready to book, a press of "Book" with Steadfast on its practice world, a parcel read now, "Try again" refused on
-// a parcel the courier holds. Every value is a made-up test value.
+// a parcel the courier holds. PR 184: the late view. PR 525: the true-delivery checks and their resolution. Every value
+// is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { MOCK_COURIER_PROVIDER, STEADFAST_PROVIDER } from '@extas/adapters';
@@ -13,7 +14,8 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { confirmOrder } from '@extas/orders';
-import { bookingsRoute, couriersRoute, parcelsRoute, rtoCostRoute } from './shipping-api';
+import { applyEvents, syncOrder } from '@extas/shipping';
+import { bookingsRoute, checksRoute, couriersRoute, parcelsRoute, rtoCostRoute } from './shipping-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -125,6 +127,33 @@ describe.skipIf(!HAS_TEST_DB)('courier admin API on PostgreSQL (S08 · PR 175)',
     expect(await parcels('POST', [shipmentId, 'track'])).toMatchObject({ status: 200, body: { result: { from: 'IN_REVIEW', status: 'IN_TRANSIT' } } });
     expect(await parcels('POST', [shipmentId, 'retry'])).toMatchObject({ status: 409, body: { error: 'NOT_RETRYABLE', data: { status: 'IN_TRANSIT' } } });
     expect((await parcels('GET', [shipmentId, 'track'])).status).toBe(405);
+    // PR 184: the late view is a view like the others
+    expect(await parcels('GET', [], { qs: '?view=late' })).toMatchObject({ status: 200, body: { ok: true, counts: { late: 0 } } });
+  });
+
+  it('PR 525: the true-delivery checks — the list, a resolution with its own key, and the refusals', async () => {
+    const checks = (method: string, path: string[], opts: { body?: unknown; cookie?: string; qs?: string } = {}) =>
+      checksRoute(call(method, `/api/admin/delivery/checks/${path.join('/')}${opts.qs ?? ''}`, { body: opts.body, cookie: opts.cookie ?? owner }), deps, path).then(read);
+    f.overrides.set('delivery.truthCheck', { enabled: true, holdOrder: true, lookbackDays: 30 });
+    const courierId = await f.courier(MOCK_COURIER_PROVIDER, 'API practice check');
+    const o = await f.place('api-check', { phone: '01700005259' }); // hardcode-ok: a made-up test number
+    await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
+    const booked = await bookingsRoute(call('POST', '/api/admin/delivery/bookings', { body: { courierAccountId: courierId, orderIds: [o.orderId] }, cookie: owner }), deps).then(read);
+    const shipmentId = booked.body.results[0].shipmentId as string;
+    await parcels('POST', [shipmentId, 'track']);
+    await applyEvents(f.shippingDeps(), { storeId: f.S, shipmentId }, [{ providerEventId: `${shipmentId}:dlv`, status: 'DELIVERED', rawStatus: 'delivered', occurredAt: new Date(Math.max(Date.now(), f.clock.now.getTime()) + 600_000), note: null, reasonKey: null, codCollectedMinor: 0, chargeMinor: null }], 'poll');
+    await syncOrder(f.shippingDeps(), { storeId: f.S, shipmentId });
+    const list = await checks('GET', []);
+    expect(list).toMatchObject({ status: 200, body: { ok: true, open: 1 } });
+    const id = list.body.rows[0].id as string;
+    expect((await checks('GET', [], { cookie: reader })).status).toBe(403);
+    expect((await checks('POST', [id, 'resolve'], { body: { outcome: 'RETURNED' }, cookie: reader })).status).toBe(403);
+    expect(await checks('POST', [id, 'resolve'], { body: { outcome: 'LOST' } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    expect((await checks('GET', [id, 'resolve'])).status).toBe(405);
+    expect((await checks('POST', [id, 'other'])).status).toBe(404);
+    expect(await checks('POST', [id, 'resolve'], { body: { outcome: 'RETURNED' } })).toMatchObject({ status: 200, body: { ok: true, orderStep: 'returned', check: { state: 'RESOLVED' } } });
+    expect(await checks('POST', [id, 'resolve'], { body: { outcome: 'RETURNED' } })).toMatchObject({ status: 409, body: { error: 'ALREADY_RESOLVED' } });
+    f.overrides.delete('delivery.truthCheck');
   });
 
   it('PR 554: the zone sync — read a practice list now, the courier page tabs, pair and unpair an area, Steadfast has none', async () => {

@@ -58,6 +58,9 @@ export const KNOWN_ERRORS = [
   'PARTIAL_UNSET',
   'NOTHING_DUE',
   'NO_CHANNEL',
+  // PR 525: the true-delivery check's answers
+  'ALREADY_RESOLVED',
+  'ORDER_REFUSED',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

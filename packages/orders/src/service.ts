@@ -106,6 +106,8 @@ export type LockedOrder = Prisma.OrderGetPayload<{ select: typeof LOCKED_SELECT 
 export interface OrderFacts {
   shipment: { id: string; status: string } | null;
   inReview: boolean;
+  /** PR 525: an open true-delivery check on the order. */
+  deliveryCheckOpen?: boolean;
 }
 
 /** What a command's own effects hand back to `execute()`. */
@@ -148,6 +150,7 @@ export const machineOf = (o: MachineRow, f: OrderFacts): MachineOrder => ({
   holdFromStatus: (o.holdFromStatus as OrderState | null) ?? null,
   paidMinor: o.paidMinor,
   advanceRequiredMinor: o.advanceRequiredMinor,
+  deliveryCheckOpen: f.deliveryCheckOpen ?? false,
 });
 
 /** A shipment that counts as "booked": anything but a failed or cancelled booking (D5). */
@@ -161,11 +164,12 @@ export async function lockOrder(tx: Tx, storeId: number, orderId: string): Promi
 }
 
 export async function factsOf(tx: Db, o: Pick<LockedOrder, 'id' | 'storeId'>): Promise<OrderFacts> {
-  const [shipment, open] = await Promise.all([
+  const [shipment, open, checks] = await Promise.all([
     tx.shipment.findFirst({ where: { storeId: o.storeId, orderId: o.id, status: { notIn: [...NOT_BOOKED_SHIPMENT] } }, orderBy: { createdAt: 'desc' }, select: { id: true, status: true } }),
     tx.fraudAlert.count({ where: { storeId: o.storeId, orderId: o.id, status: 'OPEN' } }),
+    tx.deliveryCheck.count({ where: { storeId: o.storeId, orderId: o.id, state: 'OPEN' } }),
   ]);
-  return { shipment, inReview: open > 0 };
+  return { shipment, inReview: open > 0, deliveryCheckOpen: checks > 0 };
 }
 
 /** The order fields the audit row keeps before and after a command. */

@@ -3,7 +3,7 @@
 // returned parcel with every part named (SIM-F-027). PR 176: booking's rules — the phone a courier takes, a gift's
 // booking day (SIM-F-007), the rider's note, the parcel's description and weight (SIM-F-029).
 import { describe, expect, it } from 'vitest';
-import { addDays, bookingNoteOf, courierPhone, fillTemplate, giftBooking, lateOf, localDay, orderMovesFor, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
+import { addDays, bookingNoteOf, correctionStep, courierPhone, fillTemplate, giftBooking, lateOf, localDay, orderMovesFor, truthSignals, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
 
 const T0 = new Date('2026-10-20T10:00:00Z').getTime(); // hardcode-ok: a fixed test clock
 const at = (min: number) => new Date(T0 + min * 60_000);
@@ -172,5 +172,33 @@ describe('PR 184 · the order follows its parcel', () => {
     expect(lateOf({ ...o, status: 'DELIVERED' }, 0, at(99 * 60)).late).toBe(false);
     expect(lateOf({ ...o, hoursMax: null }, 0, at(99 * 60))).toEqual({ late: false, dueBy: null });
     expect(lateOf({ ...o, addressUnclear: true }, 0, at(99 * 60)).late).toBe(false);
+  });
+});
+
+describe('PR 525 · the true-delivery check', () => {
+  const f = { cod: true, codAmountMinor: 176_000, codCollectedMinor: 176_000, deliveryChargeMinor: 6_000, toleranceMinor: 0, doorReturned: false, statementReturn: false, returnReceived: false }; // hardcode-ok: made-up test amounts
+  it('a COD parcel collected at no more than the delivery charge (plus tolerance) contradicts "Delivered"', () => {
+    expect(truthSignals(f)).toEqual([]);
+    expect(truthSignals({ ...f, codCollectedMinor: 6_000 })).toEqual(['CHARGE_ONLY']);
+    expect(truthSignals({ ...f, codCollectedMinor: 0 })).toEqual(['CHARGE_ONLY']);
+    expect(truthSignals({ ...f, codCollectedMinor: 6_500, toleranceMinor: 500 })).toEqual(['CHARGE_ONLY']);
+    expect(truthSignals({ ...f, codCollectedMinor: 6_501, toleranceMinor: 500 })).toEqual([]);
+    // the courier said no amount, a prepaid parcel, or nothing due beyond the charge: no sign
+    expect(truthSignals({ ...f, codCollectedMinor: null })).toEqual([]);
+    expect(truthSignals({ ...f, cod: false, codCollectedMinor: 0 })).toEqual([]);
+    expect(truthSignals({ ...f, codAmountMinor: 6_000, codCollectedMinor: 6_000 })).toEqual([]);
+  });
+
+  it('the shop\'s own records each add their sign', () => {
+    expect(truthSignals({ ...f, doorReturned: true, statementReturn: true, returnReceived: true })).toEqual(['DOOR_RETURNED', 'STATEMENT', 'RETURN_RECEIVED']);
+  });
+
+  it('a person\'s answer runs the order\'s own step from where the order is', () => {
+    expect(correctionStep('DELIVERED', 'IN_TRANSIT')).toBe('delivered');
+    expect(correctionStep('DELIVERED', 'DELIVERED')).toBeNull();
+    expect(correctionStep('CHARGE_PAID_RETURN', 'IN_TRANSIT')).toBe('returned');
+    expect(correctionStep('RETURNED', 'HANDED_OVER')).toBe('returned');
+    expect(correctionStep('RETURNED', 'DELIVERED')).toBe('deliveryCorrected');
+    expect(correctionStep('RETURNED', 'RETURNED')).toBeNull();
   });
 });

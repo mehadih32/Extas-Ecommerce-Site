@@ -99,6 +99,8 @@ export const ORDER_COMMANDS = [
   'delivered',
   'partiallyDelivered',
   'returned',
+  // PR 525: a person's correction of a "Delivered" the shop's own records contradict (an open true-delivery check)
+  'deliveryCorrected',
 ] as const;
 export type OrderCommand = (typeof ORDER_COMMANDS)[number];
 
@@ -122,6 +124,8 @@ const MOVES: Readonly<Partial<Record<OrderCommand, { from: readonly OrderState[]
   delivered: { from: ['HANDED_OVER', 'IN_TRANSIT'], to: 'DELIVERED' },
   partiallyDelivered: { from: ['IN_TRANSIT'], to: 'PARTIALLY_DELIVERED' },
   returned: { from: ['HANDED_OVER', 'IN_TRANSIT'], to: 'RETURNED' },
+  // PR 525: the only way out of DELIVERED — a person found the parcel came back (an open true-delivery check, audited)
+  deliveryCorrected: { from: ['DELIVERED'], to: 'RETURNED' },
 };
 
 /** Flag commands: the states they may run in (the status stays). */
@@ -166,6 +170,8 @@ export interface MachineOrder {
   holdFromStatus: OrderState | null;
   paidMinor: number;
   advanceRequiredMinor: number | null;
+  /** PR 525: an open true-delivery check (the courier said delivered; the shop's records say it came back). */
+  deliveryCheckOpen?: boolean;
 }
 
 /** Why a command is refused. Stable codes; the admin and the shop turn them into words. */
@@ -187,7 +193,9 @@ export type RefusalCode =
   /** An open duplicate / risk review: decide it first. */
   | 'IN_REVIEW'
   /** The advance is not paid in full yet. */
-  | 'ADVANCE_SHORT';
+  | 'ADVANCE_SHORT'
+  /** PR 525: no open true-delivery check: a delivered order stays delivered. */
+  | 'NO_DELIVERY_CHECK';
 
 export type Plan = { ok: true; from: OrderState; to: OrderState; moves: boolean } | { ok: false; code: RefusalCode; from: OrderState; allowed: OrderCommand[] };
 
@@ -248,6 +256,8 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
       if (o.cancelRequested) return 'CANCEL_REQUESTED';
       if (o.inReview) return 'IN_REVIEW';
       return null;
+    case 'deliveryCorrected':
+      return o.deliveryCheckOpen ? null : 'NO_DELIVERY_CHECK';
     case 'courierPickedUp':
       // PR 184: only a parcel a courier holds, and never one whose cancel is waiting for the courier's answer (D5)
       if (o.cancelPending) return 'CANCEL_PENDING';

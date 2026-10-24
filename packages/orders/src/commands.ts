@@ -334,7 +334,7 @@ export async function recordAdvance(deps: OrdersDeps, r: { storeId: number; orde
 }
 
 /** The fulfilment and courier steps S08 drives (it adds its guards: the SKU scan, the packing photo, the shortage card). */
-export type OrderStep = Extract<OrderCommand, 'startPicking' | 'pack' | 'handover' | 'courierPickedUp' | 'delivered' | 'partiallyDelivered' | 'returned'>;
+export type OrderStep = Extract<OrderCommand, 'startPicking' | 'pack' | 'handover' | 'courierPickedUp' | 'delivered' | 'partiallyDelivered' | 'returned' | 'deliveryCorrected'>;
 
 const STEP_TIME: Partial<Record<OrderStep, keyof LockedOrder | 'packedAt' | 'handedOverAt' | 'deliveredAt' | 'returnedAt'>> = {
   pack: 'packedAt',
@@ -342,6 +342,7 @@ const STEP_TIME: Partial<Record<OrderStep, keyof LockedOrder | 'packedAt' | 'han
   delivered: 'deliveredAt',
   partiallyDelivered: 'deliveredAt',
   returned: 'returnedAt',
+  deliveryCorrected: 'returnedAt',
 };
 
 export const stepInput = z.object({ at: z.coerce.date().optional(), keptItemIds: z.array(z.uuid()).min(1).max(500).optional(), refusalKey: z.string().trim().min(1).max(60).optional(), note }).strict();
@@ -363,7 +364,7 @@ export async function orderStep(
   if (step === 'partiallyDelivered' && !d.keptItemIds) throw new OrdersError('INVALID_INPUT', 'a partial delivery names the kept lines', ['keptItemIds']);
   let refusal: { key: string; en: string; bn: string } | null = null;
   if (d.refusalKey) {
-    if (step !== 'returned' && step !== 'partiallyDelivered') throw new OrdersError('INVALID_INPUT', 'only a refused parcel has a refusal reason', ['refusalKey']);
+    if (step !== 'returned' && step !== 'partiallyDelivered' && step !== 'deliveryCorrected') throw new OrdersError('INVALID_INPUT', 'only a refused parcel has a refusal reason', ['refusalKey']);
     refusal = (await setting(deps, r.storeId, 'orders.refusal.reasons')).find((x) => x.key === d.refusalKey) ?? null;
     if (!refusal) throw new OrdersError('REASON_REQUIRED', 'pick a refusal reason from the list', ['refusalKey']);
     if (refusal.key === OTHER_KEY && !d.note) throw new OrdersError('REASON_REQUIRED', 'this reason needs a note', ['note']);

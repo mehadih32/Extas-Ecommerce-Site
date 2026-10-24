@@ -99,7 +99,8 @@
       "parcels": "See courier parcels: the receiver, the courier's every update, the exceptions, the cost of returned parcels",
       "book": "Book a courier for orders ready to go (never a cancelled, held or in-review order), try a failed booking again",
       "exceptions": "Record what the courier said on the phone: a failed delivery try, an address problem, a lost or damaged parcel",
-      "couriers": "Add a courier account, rename it, switch it on or off, archive it (nothing is deleted)"
+      "couriers": "Add a courier account, rename it, switch it on or off, archive it (nothing is deleted)",
+      "outcomes": "Resolve a parcel the courier called delivered while our records say it came back, and record why a parcel came back (never moves money or changes COD)"
     },
     "system": {
       "read": "See the Server page: is the background worker alive, and which jobs failed",

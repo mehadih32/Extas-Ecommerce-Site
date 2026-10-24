@@ -240,6 +240,7 @@ model Store {
   exchangeItems           ExchangeItem[]
   returnRecords           ReturnRecord[]
   returnItems             ReturnItem[]
+  deliveryChecks          DeliveryCheck[]
   chargeMismatches        ChargeMismatch[]
   holidayPeriods          HolidayPeriod[]
   storeErpMapping         StoreErpMapping?
@@ -4392,6 +4393,47 @@ model ReturnItem {
   qcStatus     QcStatus?
   createdAt    DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime     @updatedAt @db.Timestamptz(3)
+}
+
+/// @stage S08 · PR 525 — true-delivery check: a parcel the courier calls "Delivered" while the shop's own records say it
+/// came back (only the delivery charge was paid, the door record says returned, the courier's statement, the return was
+/// received). One per parcel; a person resolves it. `signals` the signs found (CHARGE_ONLY, DOOR_RETURNED, STATEMENT,
+/// RETURN_RECEIVED), `collectedMinor` / `chargeMinor` what the courier reported, `resolution` what really happened.
+/// Nothing here moves money or changes COD.
+model DeliveryCheck {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store                 @relation(fields: [storeId], references: [id])
+  orderId        String                @db.Uuid
+  shipmentId     String                @unique @db.Uuid
+  customerId     String?               @db.Uuid
+  courierClaim   String
+  signals        String[]              @default([])
+  evidence       Json?
+  collectedMinor Int?
+  chargeMinor    Int?
+  state          DeliveryCheckState    @default(OPEN)
+  resolution     DeliveryCheckOutcome?
+  resolvedById   String?               @db.Uuid
+  resolvedAt     DateTime?             @db.Timestamptz(3)
+  note           String?
+  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime              @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, state, createdAt])
+  @@index([storeId, orderId])
+  @@index([storeId, customerId])
+}
+
+enum DeliveryCheckState {
+  OPEN
+  RESOLVED
+}
+
+enum DeliveryCheckOutcome {
+  DELIVERED
+  CHARGE_PAID_RETURN
+  RETURNED
 }
 
 /// @stage S08 · PR 564 — the courier resolved a different location than the band charged: recorded, nothing changed.

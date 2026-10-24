@@ -38,7 +38,7 @@ export interface Who {
  * `.read` key on purpose: a parcel shows the receiver's name, phone and address, and the read-only smoke check account
  * never gets customers' details.
  */
-export const SHIPPING_PERMISSIONS = ['delivery.parcels', 'delivery.book', 'delivery.exceptions', 'delivery.couriers'] as const;
+export const SHIPPING_PERMISSIONS = ['delivery.parcels', 'delivery.book', 'delivery.exceptions', 'delivery.couriers', 'delivery.outcomes'] as const;
 export type ShippingPermission = (typeof SHIPPING_PERMISSIONS)[number];
 
 /**
