@@ -1,0 +1,29 @@
+{
+  "orders": {
+    "exchange": {
+      "tiers": {
+        "label": "What an exchange may offer",
+        "help": "The pieces offered instead of the one coming back, strictly in this order — the first step that has something in stock is the only one shown, so nobody can skip a step (Blueprint B1.8). 1: the same product and colour in the size he needs. 2: the same product in other colours. 3: the same category in that size, the same collection first. 4: other categories, only when the category has nothing. Switch a step off to never offer it. \"Most options\" caps how many pieces are listed. Excluded categories (Exchange policy) are never offered."
+      },
+      "engine": {
+        "label": "How exchanges work",
+        "help": "The exchange's own number (prefix and first number); the new parcel takes the shop's next order number and is linked to the old order. \"Most pieces\": how many pieces one exchange may take. \"Photo for our mistake\": when a defect, damage or wrong item needs a photo — never, only when the customer asks from his account, or always. \"Root cause for a wrong item\": staff say why the wrong item went out (wrong pick, label, packing), so the wrong-pick rate can be seen. \"Confirm at once\": the new parcel is confirmed and sent to the ERP as soon as the exchange is approved, instead of waiting in the confirm queue."
+      },
+      "rootCauses": {
+        "label": "Why a wrong item went out",
+        "help": "The reasons staff pick when the customer got the wrong item. Each wrong-item exchange keeps one, so you can see where mistakes happen."
+      }
+    }
+  },
+  "defaults": {
+    "orders": {
+      "exchangeRootCauses": {
+        "wrong-pick": "Wrong piece picked from the shelf",
+        "wrong-label": "Wrong label or tag on the piece",
+        "packing-mixup": "Mixed up with another parcel at packing",
+        "supplier": "The supplier sent it wrong",
+        "unknown": "Not known yet"
+      }
+    }
+  }
+}

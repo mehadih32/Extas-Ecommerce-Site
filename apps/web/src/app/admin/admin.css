@@ -15,6 +15,8 @@
 @import './delivery/delivery.css';
 /* S0A · PR 6 — the Server page (the background worker), same file for the same reason. */
 @import './server/server.css';
+/* S08 · PR 185 — the Returns & exchanges board, same file for the same reason. */
+@import './orders/returns/returns.css';
 
 .ad {
   /* colours (demo "classic" theme + admin shell) */

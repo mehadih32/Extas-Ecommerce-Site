@@ -56,7 +56,19 @@ export type OrdersErrorCode =
   /** PR 542: nothing is left to pay on this order, so there is no advance to ask. */
   | 'NOTHING_DUE'
   /** PR 542: no way to reach the customer was picked (SMS, WhatsApp or a call). */
-  | 'NO_CHANNEL';
+  | 'NO_CHANNEL'
+  /** PR 185: no exchange now — the policy is off, the window has passed or the delivered mark is missing (`data.why`). */
+  | 'EXCHANGE_CLOSED'
+  /** PR 185: this piece may not be exchanged (an excluded category, a reason the policy does not take) (`data.why`). */
+  | 'NOT_EXCHANGEABLE'
+  /** PR 185: the piece's exchanges are used up (`policy.exchange.perItem` or the rule), or one is already open. */
+  | 'EXCHANGE_LIMIT'
+  /** PR 185 (B1.8): the piece chosen is not among the ones offered (the tiers are strictly in order). */
+  | 'NOT_OFFERED'
+  /** PR 185: our mistake needs a photo here (`orders.exchange.engine.ourMistakePhoto`). */
+  | 'PHOTO_REQUIRED'
+  /** PR 185: the exchange is not in a state for this step (`data.status`). */
+  | 'EXCHANGE_STATE';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -101,6 +113,11 @@ export class OrdersError extends Error {
       case 'NOTHING_DUE':
       case 'NO_CHANNEL':
       case 'RISK_OFF':
+      case 'EXCHANGE_CLOSED':
+      case 'NOT_EXCHANGEABLE':
+      case 'EXCHANGE_LIMIT':
+      case 'NOT_OFFERED':
+      case 'PHOTO_REQUIRED':
         return 422;
       default:
         return 409;

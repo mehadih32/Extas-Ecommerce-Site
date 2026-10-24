@@ -54,7 +54,8 @@
         "all": "All orders",
         "confirm": "To confirm",
         "riskrules": "Risk rules",
-        "packing": "Packing & print"
+        "packing": "Packing & print",
+        "returns": "Returns & exchanges"
       }
     },
     "purpose": {
@@ -314,7 +315,8 @@
       "countsReview": "Stock counts to review",
       "erpFailed": "ERP documents that failed",
       "jobsDead": "Background jobs that stopped",
-      "sub": "{n} waiting · oldest {age}"
+      "sub": "{n} waiting · oldest {age}",
+      "ordersReturns": "Returns & exchanges"
     },
     "age": {
       "now": "just now",

@@ -197,6 +197,11 @@ export const PERMISSIONS = {
   // S07 · PR 173 — ask a pre-order's advance on an order (a part paid online now, the rest at the door), within the
   // owner's cap and only while `payments.partial` is on. It asks money; it never takes or moves any.
   'payments.advance': { group: 'payments' },
+  // S08 · PR 185 — exchanges and returns (ORD-05): see the returns board and every case (`returns.view`); open an
+  // exchange or a return, approve or refuse it, close it (`returns.decide`). None moves money, refunds anything or
+  // changes a price, a discount or COD: a difference in the customer's favour is only a wallet-credit REQUEST.
+  'returns.view': { group: 'orders' },
+  'returns.decide': { group: 'orders' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

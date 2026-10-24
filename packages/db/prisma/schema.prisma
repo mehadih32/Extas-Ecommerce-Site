@@ -239,6 +239,7 @@ model Store {
   exchanges               Exchange[]
   exchangeItems           ExchangeItem[]
   returnRecords           ReturnRecord[]
+  refusedParcelEntries    RefusedParcelEntry[]
   returnItems             ReturnItem[]
   deliveryChecks          DeliveryCheck[]
   chargeMismatches        ChargeMismatch[]
@@ -4306,11 +4307,43 @@ model Exchange {
   erpSyncedAt          DateTime?      @db.Timestamptz(3)
   createdAt            DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 185 (B1.8; migration 0040) — the reason's note, the root cause of a wrong item (SIM-F-022), the order's
+  /// delivery band when the charge was read, who opened it and from where, its key (one exchange per press) and its
+  /// version (two people never decide it at once). `newOrderId` is the linked exchange order (one per exchange).
+  reasonNote           String?
+  rootCause            String?
+  bandKey              String?
+  source               String         @default("admin")
+  createdById          String?        @db.Uuid
+  idempotencyKey       String?
+  version              Int            @default(0)
+  decidedById          String?        @db.Uuid
+  decidedAt            DateTime?      @db.Timestamptz(3)
+  decisionNote         String?
+  /// PR 187 — the wallet credit of a cheaper swap, recorded as a refund REQUEST after QC passes (no money moves).
+  refundId             String?        @db.Uuid
+  /// PR 190 (CN-018 (5), CN-014e) — who pays the second delivery charge and why: SET (the customer, for his own size
+  /// choice), NOT_SET (no charge figure yet), FREE_OUR_MISTAKE, WAIVED (staff, with a logged reason), CLAIM_ACCEPTED
+  /// (his "your mistake" claim approved by staff) or ONE_TRIP (the one-trip size swap price). The claim's note and photos
+  /// (`photoAssetIds`), who decided it; the waiver's reason and who gave it.
+  chargeState          String?
+  chargePayer          String?
+  oneTrip              Boolean        @default(false)
+  claimState           String?
+  claimNote            String?
+  claimDecidedById     String?        @db.Uuid
+  claimDecidedAt       DateTime?      @db.Timestamptz(3)
+  waiveReason          String?
+  waivedById           String?        @db.Uuid
+  waivedAt             DateTime?      @db.Timestamptz(3)
 
   items ExchangeItem[]
 
   @@unique([storeId, number])
+  @@unique([storeId, idempotencyKey])
+  @@unique([newOrderId])
   @@index([storeId, status])
+  @@index([storeId, orderId])
 }
 
 enum ExchangeStatus {
@@ -4339,6 +4372,19 @@ model ExchangeItem {
   restockAction       String?
   createdAt           DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt           DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 185, 188 (migration 0040) — the swap as it was priced: the old piece and the new one with their prices then,
+  /// the new piece's words for the timeline, its tier (1 same colour · 2 other colours · 3 same category · 4 other), and
+  /// the SKU that is really coming back (SIM-F-022: a wrong item returns what was packed, not what was ordered).
+  oldVariantId        String?   @db.Uuid
+  oldSku              String?
+  oldUnitMinor        Int       @default(0)
+  newSku              String?
+  newUnitMinor        Int       @default(0)
+  newName             String?
+  newColourName       String?
+  newSizeLabel        String?
+  tier                Int?
+  receivedSku         String?
 }
 
 enum QcStatus {
@@ -4350,28 +4396,43 @@ enum QcStatus {
 /// @stage S08 · PR 189, 191, 525, 526 — a parcel that came back (refused at the door, returned, charge-paid return), the
 /// rider's reason, and what was really received.
 model ReturnRecord {
-  id              String     @id @default(uuid(7)) @db.Uuid
+  id              String       @id @default(uuid(7)) @db.Uuid
   storeId         Int
-  store           Store      @relation(fields: [storeId], references: [id])
-  orderId         String     @db.Uuid
-  shipmentId      String?    @db.Uuid
-  customerId      String?    @db.Uuid
+  store           Store        @relation(fields: [storeId], references: [id])
+  orderId         String       @db.Uuid
+  shipmentId      String?      @db.Uuid
+  customerId      String?      @db.Uuid
   kind            ReturnKind
   reasonCode      String?
   riderNote       String?
-  chargePaidMinor Int        @default(0)
+  chargePaidMinor Int          @default(0)
   courierClaim    String?
   actualOutcome   String?
-  mismatch        Boolean    @default(false)
-  receivedAt      DateTime?  @db.Timestamptz(3)
-  erpSyncedAt     DateTime?  @db.Timestamptz(3)
-  createdAt       DateTime   @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime   @updatedAt @db.Timestamptz(3)
+  mismatch        Boolean      @default(false)
+  receivedAt      DateTime?    @db.Timestamptz(3)
+  erpSyncedAt     DateTime?    @db.Timestamptz(3)
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
+  /// PR 187, 189, 191 (§6.5.4 D4; migration 0040) — where the parcel is (EXPECTED → RECEIVED → QC_DONE → CLOSED), whether
+  /// the shop caused it (never counted against the customer, SIM-F-044), the exchange it belongs to (an exchange
+  /// pick-up), its key, who received and closed it, and the staff's note.
+  status          ReturnStatus @default(EXPECTED)
+  ourFault        Boolean      @default(false)
+  exchangeId      String?      @db.Uuid
+  idempotencyKey  String?
+  receivedById    String?      @db.Uuid
+  closedAt        DateTime?    @db.Timestamptz(3)
+  closedById      String?      @db.Uuid
+  note            String?
+  version         Int          @default(0)
 
   items ReturnItem[]
 
+  @@unique([storeId, idempotencyKey])
   @@index([storeId, customerId])
   @@index([storeId, kind, createdAt])
+  @@index([storeId, status])
+  @@index([storeId, orderId])
 }
 
 enum ReturnKind {
@@ -4379,20 +4440,98 @@ enum ReturnKind {
   RETURNED
   CHARGE_PAID_RETURN
   DEFECT_RETURN
+  /// PR 185 — the old piece of an exchange, picked up when the new one is delivered.
+  EXCHANGE_PICKUP
+}
+
+/// PR 187, 189 (§6.5.4) — a return's place: on its way, at the shop, every piece checked, closed.
+enum ReturnStatus {
+  EXPECTED
+  RECEIVED
+  QC_DONE
+  CLOSED
+}
+
+/// PR 187 (§6.5.4 D4) — what QC decided for a piece: sellable again (the ERP restocks it) or not (a loss).
+enum ReturnDisposition {
+  SELLABLE
+  UNSELLABLE
+}
+
+/// PR 187 (§6.5.4 D4) — where a decided piece stands: sent to the ERP and waiting, restocked, the ERP refused or never
+/// answered, no ERP connected (nothing to restock), or written off as a loss.
+enum DispositionState {
+  ERP_PENDING
+  RESTOCKED
+  ERP_FAILED
+  NO_ERP
+  LOSS_RECORDED
 }
 
 /// @stage S08 · PR 189 — an item on a return with its QC result.
 model ReturnItem {
-  id           String       @id @default(uuid(7)) @db.Uuid
-  storeId      Int
-  store        Store        @relation(fields: [storeId], references: [id])
-  returnId     String       @db.Uuid
-  returnRecord ReturnRecord @relation(fields: [returnId], references: [id])
-  orderItemId  String       @db.Uuid
-  quantity     Int
-  qcStatus     QcStatus?
-  createdAt    DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime     @updatedAt @db.Timestamptz(3)
+  id               String             @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store              @relation(fields: [storeId], references: [id])
+  returnId         String             @db.Uuid
+  returnRecord     ReturnRecord       @relation(fields: [returnId], references: [id])
+  orderItemId      String             @db.Uuid
+  quantity         Int
+  qcStatus         QcStatus?
+  createdAt        DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(3)
+  /// PR 187 (§6.5.4; SIM-F-022; migration 0040) — the SKU expected back and the SKU scanned at QC (what is restocked is
+  /// always what was scanned), the piece's disposition and where it stands, the loss reason and its cost entry, the ERP
+  /// document, who checked it and when, the photos and the note. `exchangeItemId`: the exchange line it closes.
+  variantId        String?            @db.Uuid
+  exchangeItemId   String?            @db.Uuid
+  expectedSku      String?
+  scannedSku       String?
+  disposition      ReturnDisposition?
+  dispositionState DispositionState?
+  lossReason       String?
+  lossCostEntryId  String?            @db.Uuid
+  erpPushId        String?            @db.Uuid
+  qcById           String?            @db.Uuid
+  qcAt             DateTime?          @db.Timestamptz(3)
+  photoAssetIds    String[]           @db.Uuid
+  note             String?
+
+  @@index([returnId])
+  @@index([storeId, dispositionState])
+}
+
+/// @stage S08 · PR 191 — one phone number that refused parcels, proposed for the refused-parcel list (Blueprint C6: the
+/// list ad audiences exclude, PR 264). A person decides every entry (LISTED, DISMISSED, REMOVED); nothing here blocks an
+/// order, turns COD off or changes a price (CLAUDE.md rule 6). A refusal the shop caused never feeds it (SIM-F-044).
+model RefusedParcelEntry {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store            @relation(fields: [storeId], references: [id])
+  phone          String
+  customerId     String?          @db.Uuid
+  state          RefusedListState @default(PROPOSED)
+  refusals       Int              @default(0)
+  lastOrderId    String?          @db.Uuid
+  lastReasonCode String?
+  lastRefusedAt  DateTime         @db.Timestamptz(3)
+  decidedById    String?          @db.Uuid
+  decidedAt      DateTime?        @db.Timestamptz(3)
+  decisionNote   String?
+  version        Int              @default(0)
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, phone])
+  @@index([storeId, state, lastRefusedAt])
+}
+
+/// PR 191 — a refused-parcel list entry: proposed by a refusal, then on the list, dismissed, or taken off again.
+enum RefusedListState {
+  PROPOSED
+  LISTED
+  DISMISSED
+  REMOVED
 }
 
 /// @stage S08 · PR 525 — true-delivery check: a parcel the courier calls "Delivered" while the shop's own records say it

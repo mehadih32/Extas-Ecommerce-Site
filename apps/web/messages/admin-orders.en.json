@@ -617,7 +617,10 @@
       "delivery_checkOpened": "Courier said delivered — our records disagree",
       "delivery_checkResolved": "Delivery check resolved",
       "order_deliveryCorrected": "Corrected: came back, not delivered",
-      "return_reason": "Why it came back"
+      "return_reason": "Why it came back",
+      "order_exchange": "Exchange opened",
+      "exchange_approved": "Exchange approved — new parcel booked",
+      "exchange_refused": "Exchange refused"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",

@@ -617,7 +617,10 @@
       "delivery_checkOpened": "কুরিয়ার বলছে পৌঁছেছে — আমাদের হিসাব মেলে না",
       "delivery_checkResolved": "ডেলিভারি যাচাইয়ের মীমাংসা",
       "order_deliveryCorrected": "ঠিক করা হলো: ফেরত এসেছে, ডেলিভারি হয়নি",
-      "return_reason": "কেন ফেরত এলো"
+      "return_reason": "কেন ফেরত এলো",
+      "order_exchange": "বদল খোলা হয়েছে",
+      "exchange_approved": "বদল অনুমোদিত — নতুন পার্সেল বুক",
+      "exchange_refused": "বদল নেওয়া হয়নি"
     },
     "band": {
       "cancelPending": "বাতিল চাওয়া হয়েছে · কুরিয়ারের উত্তর বাকি — {courier}-কে ফোন করে ওরা কী বলল লিখুন।",

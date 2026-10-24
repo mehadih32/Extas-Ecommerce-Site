@@ -41,6 +41,9 @@
 // S06 · PR 542: the one-click advance request from the order — the pay link, its SMS/WhatsApp through the order
 // messages and a call task, the order waiting for the money; "Send again"; the owner's auto option (advance-request.ts)
 // and its card on Orders › Risk rules (advance-settings.ts).
+// S08 · PR 185: the four-tier exchange engine — what may be offered (strictly in order), the window and the per-piece
+// limit, the money box, the exchange opened on the delivered order and, once approved, its linked exchange order with
+// the stock held and the old piece's pick-up opened (exchange.ts; the pure rules in exchange-pure.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -78,3 +81,4 @@ export * from './advance-settings';
 export * from './booking';
 export * from './checkout-layers';
 export * from './checkout-risk';
+export * from './exchange';
