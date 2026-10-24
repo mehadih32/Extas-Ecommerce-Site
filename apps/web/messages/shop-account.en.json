@@ -395,6 +395,49 @@
         "big": "That photo is too large.",
         "offline": "That did not go through. Please try again."
       }
+    },
+    "edit": {
+      "title": "Change address, phone or size",
+      "openPlaced": "You can edit this order until we confirm it.",
+      "openConfirmed": "You can edit this order until we start packing it.",
+      "button": {
+        "one": "Edit order ({n} left)",
+        "other": "Edit order ({n} left)"
+      },
+      "closed": {
+        "STEP": "We have started on this order, so it can't be edited here.",
+        "TIME": "The time to edit this order has passed, so it can't be edited here.",
+        "CAP": {
+          "one": "You have used your {n} edit for this order.",
+          "other": "You have used all {n} edits for this order."
+        },
+        "BOOKED": "This order is with the courier, so it can't be edited.",
+        "CANCEL": "You asked to cancel this order, so it can't be edited."
+      },
+      "left": {
+        "one": "You can edit this order {n} more time before we start on it.",
+        "other": "You can edit this order {n} more times before we start on it."
+      },
+      "address": "Delivery address",
+      "phone": "Mobile number",
+      "sizes": "Sizes",
+      "sizeFor": "Size for {name}",
+      "oneSize": "One size",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "close": "Close",
+      "saved": {
+        "one": "Order updated · {n} edit left",
+        "other": "Order updated · {n} edits left"
+      },
+      "savedLast": "Order updated · no edits left",
+      "err": {
+        "address": "Please write the full address — house, road and area.",
+        "nothing": "Nothing has changed yet.",
+        "closed": "This order can't be edited any more.",
+        "stock": "That size has just run out. Please pick another.",
+        "price": "That size costs a different price now, so it can't be swapped here."
+      }
     }
   }
 }

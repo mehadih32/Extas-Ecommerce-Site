@@ -323,7 +323,14 @@ export interface CustomerEditState {
   phone: string | null;
   address: string | null;
   /** Each line with the other sizes of the same piece in the same colour at the same price. */
-  lines: { lineId: string; label: string; size: string | null; sizes: { variantId: string; size: string | null }[] }[];
+  lines: {
+    lineId: string;
+    label: string;
+    size: string | null;
+    sizes: { variantId: string; size: string | null }[];
+    /** Follow-up 260: the size row the order page draws — the line's own size and those others, in the piece's size order. */
+    choices: { variantId: string; size: string | null; current: boolean }[];
+  }[];
 }
 
 export const customerBy = (c: CustomerRef): By => ({ actorType: 'CUSTOMER', actorId: c.customerId, source: 'shop' });
@@ -356,15 +363,14 @@ export async function customerEditState(deps: OrdersDeps, c: CustomerRef, n: str
         })
       : [];
     const colourOf = new Map(variants.map((v) => [v.id, v.colourId]));
-    for (const i of items)
-      lines.push({
-        lineId: i.id,
-        label: labelOf(i),
-        size: i.sizeLabel,
-        sizes: variants
-          .filter((v) => v.productId === i.productId && v.id !== i.variantId && v.colourId === (i.variantId ? colourOf.get(i.variantId) : undefined) && v.priceMinor === i.unitPriceMinor)
-          .map((v) => ({ variantId: v.id, size: v.size?.label ?? null })),
-      });
+    for (const i of items) {
+      const same = variants.filter((v) => v.productId === i.productId && v.colourId === (i.variantId ? colourOf.get(i.variantId) : undefined) && (v.id === i.variantId || v.priceMinor === i.unitPriceMinor));
+      const sizes = same.filter((v) => v.id !== i.variantId).map((v) => ({ variantId: v.id, size: v.size?.label ?? null }));
+      // the line's own size where the piece lists it (in its place); a size no longer on sale goes first
+      const choices = same.map((v) => ({ variantId: v.id, size: v.size?.label ?? null, current: v.id === i.variantId }));
+      if (i.variantId && !choices.some((x) => x.current)) choices.unshift({ variantId: i.variantId, size: i.sizeLabel, current: true });
+      lines.push({ lineId: i.id, label: labelOf(i), size: i.sizeLabel, sizes, choices: i.variantId ? choices : [] });
+    }
   }
   return {
     open: closed === null,

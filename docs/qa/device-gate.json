@@ -58,6 +58,12 @@
       "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-line\"]", "[data-testid=\"order-review-open\"]"]
     },
     {
+      "$comment": "Follow-up 260 (PR 143) — the sample order's page with the customer's edit card (POST /api/account/try-cards, test servers only: the same sample sign-in, and this browser reads the customer's edit and the two-size question as on; nothing written to the settings): \"Change address, phone or size\" with \"Edit order (n left)\".",
+      "paths": ["/account/orders/TRY-131?cards=1", "/bn/account/orders/TRY-131?cards=1"],
+      "fill": "/api/account/try-cards",
+      "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-edit\"]", "[data-testid=\"order-edit-open\"]"]
+    },
+    {
       "$comment": "PR 136 — the sample order's invoice (TRY-131, same fill): the sheet drawn from the stored order, Download and Print / Save as PDF pinned under it; the order page's \"Get invoice\" row and the invoice icon in My orders lead here.",
       "paths": ["/account/orders/TRY-131/invoice", "/bn/account/orders/TRY-131/invoice"],
       "fill": "/api/account/try",

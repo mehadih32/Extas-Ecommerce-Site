@@ -13,18 +13,22 @@
 // PR 65: "Rate & review" under each line of a delivered order, for the signed-in customer whose order it is. His
 // review is saved waiting for the shop's check, and the line then says so ("Review waiting for approval"); nothing of
 // it is shown to anyone before a member of staff approves it (SIM-F-008).
+// Follow-up 260 (PR 143): "Change address, phone or size" under the items (demo ord_editCard), while the owner lets
+// customers edit (`orders.edit.customer`, off): open with "Edit order (n left)", or closed with the reason.
 import '../bag/bag.css';
 import './account.css';
 import type { ReactNode } from 'react';
 import type { Receipt } from '@extas/checkout';
 import type { OrderReviewBox } from '@/lib/shop/account-review';
+import type { OrderExtras } from '@/lib/shop/account-order';
+import { phoneNormalizeBD } from '@/lib/phone-bd';
 import { lateOf, riderAmountOf, trackOf, type LateRule, type OrderState } from '@extas/accounts/pure';
 import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords } from '@/lib/shop/checkout';
 import { hoursOf } from '@/lib/shop/checkout-model';
 import type { ShopContext } from '@/lib/shop/context';
 import { dateText } from '@/lib/shop/account-view';
-import { fill } from '@/lib/shop/dict';
+import { fill, keysOf, SHOP_DICTS } from '@/lib/shop/dict';
 import { plural } from '@/lib/shop/bag-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
@@ -33,6 +37,7 @@ import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { AccountCrumbs } from './AccountShell';
 import { LateTag, StatusTag } from './AccountTabs';
+import { OrderEditCard } from './OrderEditCard';
 import { OrderTrack } from './OrderTrack';
 import { ReviewForm, ReviewState, type ReviewWords } from './ReviewForm';
 import { OrderWelcome } from './OrderWelcome';
@@ -80,6 +85,20 @@ export interface TrackOptions {
   exact: { enabled: boolean; report: boolean };
 }
 
+/** The words under `prefix` with the prefix taken off ("account.edit.title" → "title"), slots left for the client. */
+function prefixed(c: ShopContext, prefix: string): Record<string, string> {
+  return Object.fromEntries(
+    keysOf(SHOP_DICTS[c.lang])
+      .filter((k) => k.startsWith(prefix))
+      .map((k) => [k.slice(prefix.length), c.t(k, c.vars)]),
+  );
+}
+
+/** Follow-up 260 — the edit card's words, with the phone box's errors and "something went wrong" from `account.err`. */
+function editWordsOf(c: ShopContext): Record<string, string> {
+  return { ...prefixed(c, 'account.edit.'), 'err.phoneEmpty': c.t('account.err.phoneEmpty'), 'err.phoneBad': c.t('account.err.phoneBad'), 'err.offline': c.t('account.err.offline') };
+}
+
 /** Signed out, or not his order: log in (with the number of that order), then come back here. */
 export function OrderPrompt({ c, number, signedIn }: { c: ShopContext; number: string; signedIn: boolean }) {
   const t = c.t;
@@ -110,6 +129,7 @@ export async function OrderPage({
   fromThanks = false,
   invoiceNo = null,
   review = null,
+  extras = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -120,6 +140,8 @@ export async function OrderPage({
   invoiceNo?: string | null;
   /** PR 65: the review box of this order (null: not his account, reviews off, or nothing to review). */
   review?: OrderReviewBox | null;
+  /** Follow-up 260: the edit card (null: none). */
+  extras?: OrderExtras | null;
 }) {
   const t = c.t;
   const words = checkoutWords(c);
@@ -142,6 +164,15 @@ export async function OrderPage({
   // PR 65: the review words, flattened once for the client form (every one of them the owner's to change)
   const reviewWords: ReviewWords = review ? Object.fromEntries(REVIEW_KEYS.map((k) => [k, t(`account.review.${k}`)])) : {};
   const rewardText = review?.rewardMinor ? m(review.rewardMinor) : null;
+  // follow-up 260: the edit card's words (`account.edit.*`) and the phone box's own errors, in the page's language
+  const edit = extras?.edit ?? null;
+  const editWords = edit ? editWordsOf(c) : {};
+  const editLines = edit
+    ? edit.state.lines.map((x) => {
+        const l = r.lines.find((y) => y.id === x.lineId);
+        return { lineId: x.lineId, name: l ? nameOf(l, c) : x.label, detail: l?.colour ? colourName(l.colour, c.lang) : '', choices: x.choices };
+      })
+    : [];
   const methodName = (p: { method: string | null; provider: string | null }) =>
     p.method === 'ONLINE' || p.provider === 'online' ? w('pay.online') : p.provider && words[`pm.${p.provider}`] ? w(`pm.${p.provider}`) : (p.provider ?? p.method ?? '');
   const row = (k: string, v: ReactNode, cls = '', testId?: string) => (
@@ -322,6 +353,23 @@ export async function OrderPage({
               </div>
             ) : null}
           </section>
+          {edit ? (
+            <OrderEditCard
+              words={editWords}
+              number={r.number}
+              open={edit.state.open}
+              closed={edit.state.closed}
+              openText={t(edit.until === 'placed' ? 'account.edit.openPlaced' : 'account.edit.openConfirmed')}
+              leftText={plural(t, 'account.edit.left', edit.state.editsLeft, c.num)}
+              buttonText={plural(t, 'account.edit.button', edit.state.editsLeft, c.num)}
+              closedText={edit.state.closed === 'CAP' ? plural(t, 'account.edit.closed.CAP', edit.state.maxEdits, c.num) : edit.state.closed ? t(`account.edit.closed.${edit.state.closed}`) : null}
+              savedTexts={Array.from({ length: edit.state.editsLeft + 1 }, (_, n) => (n === 0 ? t('account.edit.savedLast') : plural(t, 'account.edit.saved', n, c.num)))}
+              can={edit.state.can}
+              phone={phoneNormalizeBD(edit.state.phone).nice || (edit.state.phone ?? '')}
+              address={edit.state.address ?? ''}
+              lines={editLines}
+            />
+          ) : null}
           <a className="btn btn-ghost acc-start" href={hrefIn(c.lang, ROUTES.orders)}>
             <Icon name="back" size={16} />
             {t('account.order.back')}

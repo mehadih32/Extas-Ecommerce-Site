@@ -219,7 +219,8 @@ export function signedInPlan(base, signedIn, lighthouseUrls, discovered = []) {
  * `filled`, one fill or a list of them. Each
  * path is opened as a customer (signed out) after a POST to `fill` in the same browser (the test server's sample-bag
  * fill, EXTAS_SHOP_TEST_PAGES=1), and must show `expect`. `?gate=filled` keeps them apart from the empty pages that
- * lighthouserc lists.
+ * lighthouserc lists. Follow-up 260: an entry may also name `clicks` (as `opened` does), pressed in order after the
+ * page opens, so a form that opens in place (the order page's edit form) is measured open.
  */
 export function filledPlan(base, filled) {
   // PR 71: `filled` may list several fills (the bag, the wishlist); one object is still read as before
@@ -229,7 +230,7 @@ export function filledPlan(base, filled) {
     return (f.paths ?? []).map((p) => {
       const u = new URL(p, base);
       u.searchParams.set('gate', 'filled');
-      return { url: u.toString(), signedOut: true, expect: [...(f.expect ?? [])], fill };
+      return { url: u.toString(), signedOut: true, expect: [...(f.expect ?? [])], fill, ...(f.clicks?.length ? { clicks: [...f.clicks] } : {}) };
     });
   });
 }
