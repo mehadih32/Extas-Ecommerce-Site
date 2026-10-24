@@ -27,6 +27,7 @@
     { "id": "products/size-charts", "route": "/admin/size-charts" },
     { "id": "products/import", "route": "/admin/products/import" },
     { "id": "products/audit", "route": "/admin/products/audit" },
+    { "id": "customers/all", "route": "/admin/customers" },
     { "id": "customers/review", "route": "/admin/customers/review" },
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },

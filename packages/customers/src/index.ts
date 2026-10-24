@@ -8,10 +8,15 @@
 // graph; the owner's `customers.merge` setting), and merges, "not the same person" and splits by a person only:
 // reversible, audited, nothing moved or deleted, no money touched (merge.ts). Phone numbers are masked for anyone
 // without `customers.phone` (`customers.phoneMask`). The rules without a database are in `@extas/customers/pure`.
+//
+// PR 285: the Customers list — one row per person with his orders, Sales beside Ordered value, refusals that were not
+// the shop's fault and exchanges; the owner's views (New, Returning, VIP, At risk, Refused before, Exchanged, No offers)
+// with their counts, search by name, e-mail or any of his numbers, a source filter and five sorts (list.ts).
 export * from './access';
 export * from './context';
 export * from './errors';
 export * from './family';
+export * from './list';
 export * from './merge';
 export * from './pure';
 export * from './view';

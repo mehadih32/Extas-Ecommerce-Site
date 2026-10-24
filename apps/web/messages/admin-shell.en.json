@@ -58,6 +58,7 @@
         "returns": "Returns & exchanges"
       },
       "customers": {
+        "all": "All customers",
         "review": "To review"
       }
     },

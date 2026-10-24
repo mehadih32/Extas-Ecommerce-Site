@@ -1,7 +1,8 @@
 // The customers rules without a database (client-safe; the admin's browser parts import it too): how a phone number is
 // shown (in full to a person with `customers.phone`, masked to everyone else: Note 24.1 with the owner's mask), how the
 // merge rules compare two profiles (an e-mail, a WhatsApp number, a name with an address), which profile of a pair
-// stays, and what makes a merge impossible. One number, one helper: phoneNormalizeBD from @extas/delivery/phone.
+// stays, and what makes a merge impossible; the Customers list's views and sorts (PR 285). One number, one helper:
+// phoneNormalizeBD from @extas/delivery/phone.
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 
 /** The digits kept visible at each end of a masked number (`customers.phoneMask`). */
@@ -99,3 +100,13 @@ export function groupPairs(ids: readonly string[], max: number): [string, string
   for (let i = 1; i < uniq.length && out.length < max; i++) out.push([uniq[0]!, uniq[i]!]);
   return out;
 }
+
+/** PR 285 — the Customers list's views (`vip` only while the owner has a VIP figure) and sorts. */
+export const CUSTOMER_VIEWS = ['all', 'new', 'returning', 'vip', 'atrisk', 'refused', 'exchanged', 'nooffers'] as const;
+export type CustomerView = (typeof CUSTOMER_VIEWS)[number];
+
+export const CUSTOMER_SORTS = ['last', 'new', 'spend', 'orders', 'name'] as const;
+export type CustomerSort = (typeof CUSTOMER_SORTS)[number];
+
+/** PR 285 — the digits a number search needs (fewer would match half the shop). */
+export const PHONE_SEARCH_MIN_DIGITS = 4;

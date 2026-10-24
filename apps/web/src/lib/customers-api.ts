@@ -1,4 +1,4 @@
-// S14 · PR 284 — the customers admin API (BACKEND-ARCHITECTURE §5.5, §9.10). Every route signs the person in
+// S14 · PR 284, 285 — the customers admin API (BACKEND-ARCHITECTURE §5.5, §9.10). Every route signs the person in
 // (guardAdmin), checks the permission in the store it touches (`?storeId=`, default the mother store), then calls
 // @extas/customers, which checks the permission again, masks the phone numbers for anyone without `customers.phone`
 // and writes the audit log in the same transaction as a change. Answers are `{ ok: true, … }` or
@@ -6,6 +6,8 @@
 // path to `customersRoute`. Customer data is personal: nothing here exports a list (exports are PR 299, with their own
 // key), and opening a customer and copying or calling his number are logged ("Who looked at this customer").
 //
+//   GET   /api/admin/customers?view=&q=&source=&sort=&page=   PR 285: the Customers list, one row per person, with the
+//                                                     count of each view (customers.read)
 //   GET   /api/admin/customers/by-phone?phone=        the person a number belongs to, however it is written (customers.read)
 //   GET   /api/admin/customers/:id                    the single view: his profiles, numbers, order counts and lifetime
 //                                                     value; a merged profile answers with its survivor (customers.read)
@@ -56,6 +58,9 @@ async function handle(request: Request, deps: AdminDeps | null, permission: cu.C
   }
 }
 
+/** The list's query parameters (anything else is ignored). */
+const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page'] as const;
+
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
 const badId = (field: string) => Promise.resolve(fail(404, 'NOT_FOUND', [field]));
@@ -64,6 +69,13 @@ const badId = (field: string) => Promise.resolve(fail(404, 'NOT_FOUND', [field])
 export async function customersRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
   const [a, b, c] = path;
+  if (!a) {
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'customers.read', async (x) => {
+      const q = Object.fromEntries(LIST_PARAMS.filter((k) => x.url.searchParams.has(k)).map((k) => [k, x.url.searchParams.get(k) ?? '']));
+      return { ...(await cu.customerList(x.deps, x.who, q)) };
+    });
+  }
   if (a === 'by-phone') {
     if (path.length > 1) return notFound();
     if (m !== 'GET') return notAllowed();

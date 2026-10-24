@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { customerSettings, MERGE_SIGNALS, mergeRulesSchema, phoneMaskSchema } from '../src/registry-customers';
+import { customerListSchema, customerSettings, MERGE_SIGNALS, mergeRulesSchema, phoneMaskSchema } from '../src/registry-customers';
 
 describe('customers settings (v60)', () => {
   it('every key is in the registry at version 60 in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -33,5 +33,14 @@ describe('customers settings (v60)', () => {
   it('PR 284: a masked number keeps three digits at each end', () => {
     expect(customerSettings['customers.phoneMask'].default).toEqual({ first: 3, last: 3 });
     expect(phoneMaskSchema.safeParse({ first: 6, last: 3 }).success).toBe(false);
+  });
+
+  it('PR 285: the list shows 50 a page, 2 orders make "Returning", 60 days make "At risk", and no VIP figure until the owner types one', () => {
+    const l = customerSettings['customers.list'].default;
+    expect(l).toEqual({ pageSize: 50, returningMinOrders: 2, atRiskDays: 60, vipMinSalesMinor: null });
+    expect(customerListSchema.safeParse({ ...l, vipMinSalesMinor: 500_000 }).success).toBe(true);
+    expect(customerListSchema.safeParse({ ...l, vipMinSalesMinor: -1 }).success).toBe(false);
+    expect(customerListSchema.safeParse({ ...l, returningMinOrders: 1 }).success).toBe(false);
+    expect(customerListSchema.safeParse({ ...l, pageSize: 1000 }).success).toBe(false);
   });
 });

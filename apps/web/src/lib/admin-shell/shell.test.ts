@@ -104,7 +104,9 @@ describe('the 14 sections', () => {
     expect(sectionHome(sectionById('products')!, viewer(['inventory.read']))).toBe('/admin/stock');
     expect(sectionHome(sectionById('products')!, OWNER)).toBe('/admin/products');
     expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money');
-    expect(placeholderSections().map((s) => s.id)).toEqual(['customers', 'delivery', 'messages', 'support', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
+    // PR 285: the Customers section's front page is All customers
+    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'support', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
+    expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
 
   it('an address belongs to the longest page that owns it, else to a section', () => {
@@ -178,7 +180,9 @@ describe('page guides (PR 594, CN-026)', () => {
     expect(guidePlace('/admin/orders/1f0c?tab=x')).toEqual({ section: 'orders', page: 'orders/order' });
     expect(guidePlace('/admin/stock/counts/')).toEqual({ section: 'products', page: 'products/stock-counts' });
     expect(guidePlace('/admin')).toEqual({ section: 'dashboard', page: 'dashboard/home' });
-    expect(guidePlace('/admin/customers')?.page ?? null).toBeNull();
+    expect(guidePlace('/admin/customers')).toEqual({ section: 'customers', page: 'customers/all' });
+    expect(guidePlace('/admin/customers/review')).toEqual({ section: 'customers', page: 'customers/review' });
+    expect(guidePlace('/admin/marketing')?.page ?? null).toBeNull();
     expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/returns', 'orders/returns-qc', 'orders/returns-refused', 'orders/pack']);
     expect(guidePlace('/admin/orders/risk-rules/checkout')?.page).toBe('orders/checkout-advance');
     // PR 179: Packing & print's print run, a fixed path under /admin/orders that beats an order's [id]

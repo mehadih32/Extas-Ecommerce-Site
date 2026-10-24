@@ -1,4 +1,4 @@
-// S14 · PR 284 — the customers admin API end to end on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
+// S14 · PR 284, 285 — the customers admin API end to end on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
 // login and the permissions (a reader of customers sees masked numbers, may not merge or copy a number); the single
 // view by id and by phone; the merge rules' suggestions; a merge with its Idempotency-Key done once; a split with its
 // reason; unknown paths, ids and methods refused. Every value is a made-up test value.
@@ -94,5 +94,15 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await api('POST', `merges/${m.body.result.id}/undo`, { body: { note: 'two brothers' } })).status).toBe(200);
     expect((await api('GET', `merge-preview?a=${a}&b=${b}`)).body.pair).toMatchObject({ survivor: { id: a }, merged: { id: b } });
     expect((await api('GET', `merge-preview?a=${a}&b=${a}`)).status).toBe(404);
+  });
+
+  it('PR 285: the list, one row per person, its views counted; masked for a reader; a bad sort refused', async () => {
+    const l = await api('GET', '?q=Sample%20Rahim', { cookie: reader });
+    expect(l.status).toBe(200);
+    expect(l.body.rows.map((r: { id: string }) => r.id).sort()).toEqual([a, b].sort());
+    expect(l.body.rows[0].phone.masked).toBe(true);
+    expect(l.body.counts.all).toBe(2);
+    expect((await api('GET', '?sort=phone')).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await api('POST', '')).status).toBe(405);
   });
 });
