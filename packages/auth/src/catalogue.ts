@@ -179,6 +179,9 @@ export const PERMISSIONS = {
   'payments.refunds.request': { group: 'payments' },
   'payments.refunds.approve': { group: 'payments' },
   'payments.refunds.execute': { group: 'payments' },
+  // S07 · PR 173 — ask a pre-order's advance on an order (a part paid online now, the rest at the door), within the
+  // owner's cap and only while `payments.partial` is on. It asks money; it never takes or moves any.
+  'payments.advance': { group: 'payments' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

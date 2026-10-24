@@ -48,7 +48,7 @@ export interface Who {
 }
 
 /** The payments permissions (packages/auth/src/catalogue.ts). */
-export const PAYMENT_PERMISSIONS = ['payments.view', 'payments.record', 'payments.door', 'payments.partials', 'payments.settle', 'payments.wallet', 'payments.apology', 'payments.refunds.request', 'payments.refunds.approve', 'payments.refunds.execute'] as const;
+export const PAYMENT_PERMISSIONS = ['payments.view', 'payments.record', 'payments.door', 'payments.partials', 'payments.settle', 'payments.wallet', 'payments.apology', 'payments.refunds.request', 'payments.refunds.approve', 'payments.refunds.execute', 'payments.advance'] as const;
 export type PaymentsPermission = (typeof PAYMENT_PERMISSIONS)[number];
 
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;

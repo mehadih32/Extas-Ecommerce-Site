@@ -226,3 +226,5 @@ export const FAILURE_CODES = { cancelled: 'CUSTOMER_CANCELLED', abandoned: 'ABAN
 export * from './wallet-pure';
 // PR 172 — the refund's states, the owner's rules on when a refund may be asked, and what is left to refund.
 export * from './refund-pure';
+// PR 173 — partial payment: the owner's cap on a pre-order's advance and what the door collects after it.
+export * from './advance-pure';

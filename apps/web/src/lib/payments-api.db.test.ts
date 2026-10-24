@@ -4,7 +4,7 @@
 // off until `payments.manual` is on, then needing the Idempotency-Key (a repeat is one payment), and an advance paid in
 // full moving the order on through the order service. PR 166: the door outcome, a partial's approval, a courier
 // statement with a trap, its line resolved, and the cash in transit. PR 172: a refund asked, approved by the owner and
-// paid out by hand with its reference; nothing pays out by itself. Every value is a made-up test value.
+// paid out by hand with its reference; nothing pays out by itself. PR 173: a pre-order's advance asked within the cap. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { awaitAdvance, staffBy } from '@extas/orders';
@@ -200,5 +200,20 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     expect((await api('POST', ['refunds', id, 'teleport'], { body: {} })).status).toBe(404);
     expect((await api('POST', ['refunds', 'nope', 'approve'], { body: {} })).status).toBe(404);
     expect((await api('GET', ['orders', paid.orderId, 'refunds'])).status).toBe(405);
+  });
+  it('PR 173: a pre-order advance — the quote, off until switched on, then asked within the cap with a key', async () => {
+    const o = await f.place('pay-api-advance-173');
+    const q = await api('GET', ['orders', o.orderId, 'advance']);
+    expect(q).toMatchObject({ status: 200, body: { quote: { enabled: false, blocked: 'PARTIAL_OFF' } } });
+    expect((await api('GET', ['orders', o.orderId, 'advance'], { cookie: reader })).status).toBe(403);
+    expect(await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', confirm: true }, key: 'api-advance-0001' })).toMatchObject({ status: 422, body: { error: 'PARTIAL_OFF' } });
+    await deps.resolver.set('payments.partial', { enabled: true, capPercent: 10, minMinor: null, allowFull: false }, storeTarget(f.S));
+    const quote = (await api('GET', ['orders', o.orderId, 'advance'])).body.quote;
+    expect(quote).toMatchObject({ enabled: true, blocked: null });
+    expect(quote.capMinor).toBe(Math.min(quote.dueMinor, Math.floor(quote.totalMinor / 10)));
+    expect(await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', amountMinor: quote.capMinor + 1, confirm: true }, key: 'api-advance-0001' })).toMatchObject({ status: 422, body: { error: 'OVER_CAP', data: { capMinor: quote.capMinor } } });
+    const r = await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', confirm: true }, key: 'api-advance-0001' });
+    expect(r).toMatchObject({ status: 201, body: { result: { advanceMinor: quote.capMinor, codAfterMinor: quote.dueMinor - quote.capMinor, replay: false } } });
+    expect((await api('PUT', ['orders', o.orderId, 'advance'])).status).toBe(405);
   });
 });

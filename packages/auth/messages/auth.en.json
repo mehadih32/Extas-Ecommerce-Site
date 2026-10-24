@@ -156,7 +156,8 @@
         "request": "Ask for a refund on an order (it waits for approval; nothing is paid)",
         "approve": "Approve or reject a refund (the owner's OK before any money goes back)",
         "execute": "Pay out an approved refund — to the wallet, or record the money sent back by hand — or mark its payout failed"
-      }
+      },
+      "advance": "Ask a pre-order's advance on an order (paid online by the customer; the rest at the door), within the owner's cap"
     },
     "risk": {
       "rules": {
