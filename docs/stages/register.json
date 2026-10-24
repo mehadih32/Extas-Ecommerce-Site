@@ -1887,6 +1887,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-025",
+   "date": "24 Oct",
+   "title": "owner: every admin section modern in the live build; extra designs only where asked; ready to add more later",
+   "text": "",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [

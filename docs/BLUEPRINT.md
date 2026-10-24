@@ -993,6 +993,14 @@ to read code or open GitHub.
 >
 > No new PR numbers: (1) lands on PR 594 and 509; (2) and (3) are a shared admin capability on PR 597 and the content/catalogue PRs of each item, built to `docs/BACKEND-ARCHITECTURE.md` states.
 
+> **CN-025 · 24 Oct 2026 (owner: every admin section modern in the live build; extra designs only where asked; ready to add more later).**
+> - **Dashboard, Orders, Products:** 3 designs each (A/B/C), as in demo V12.4.
+> - **Delivery, Money, Marketing, Reports:** 2 designs each. The default is fully redesigned to the V12.4 modern standard, plus one extra design, also cutting-edge (a data-rich command-center style). Both are user-friendly and information-rich.
+> - **Customers, Messages, Support, Website, AI Center, Settings, Help & Build:** 1 design each. The current default is redesigned to the same modern standard; no extra design for now.
+> - **No new demo work:** these are built directly in the live app, following the V12.4 design language (shell, type, colour, charts, the To-do drawer, plain English with বাং via the toggle) and `docs/BACKEND-ARCHITECTURE.md`. Each section is built in its own stage; parts already built get follow-ups.
+> - **Ready for more:** the Settings → Admin look registry makes a new design a new render module per page. A short "how to add a design" note in `docs/` lets the owner later ask for 2–3 more designs for any section with one command, without touching the rest.
+> - No new PR numbers: the shared admin shell and registry (PR 597 / the admin shell PRs) plus each section's PRs.
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 

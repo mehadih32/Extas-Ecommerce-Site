@@ -463,6 +463,14 @@ the server.*
 >
 > No new PR numbers: (1) lands on PR 594 and 509; (2) and (3) are a shared admin capability on PR 597 and the content/catalogue PRs of each item, built to `docs/BACKEND-ARCHITECTURE.md` states.
 
+> **CN-025 · 24 Oct 2026 (owner: every admin section modern in the live build; extra designs only where asked; ready to add more later).**
+> - **Dashboard, Orders, Products:** 3 designs each (A/B/C), as in demo V12.4.
+> - **Delivery, Money, Marketing, Reports:** 2 designs each. The default is fully redesigned to the V12.4 modern standard, plus one extra design, also cutting-edge (a data-rich command-center style). Both are user-friendly and information-rich.
+> - **Customers, Messages, Support, Website, AI Center, Settings, Help & Build:** 1 design each. The current default is redesigned to the same modern standard; no extra design for now.
+> - **No new demo work:** these are built directly in the live app, following the V12.4 design language (shell, type, colour, charts, the To-do drawer, plain English with বাং via the toggle) and `docs/BACKEND-ARCHITECTURE.md`. Each section is built in its own stage; parts already built get follow-ups.
+> - **Ready for more:** the Settings → Admin look registry makes a new design a new render module per page. A short "how to add a design" note in `docs/` lets the owner later ask for 2–3 more designs for any section with one command, without touching the rest.
+> - No new PR numbers: the shared admin shell and registry (PR 597 / the admin shell PRs) plus each section's PRs.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |

@@ -839,3 +839,6 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 - The latest demo always lives with the shop at its own link (on/off switch). The owner compares the demo with the live site. The final demo goes into the handover package; a new owner can turn it on or off.
 - Every important section gets a 100% side-by-side preview before publishing. Revert: undo, version history, or back to launch default / snapshot.
 - The owner liked demo V12.4 (designs to be discussed later).
+
+## Note 65 — 24 Oct 18:02 · Admin designs per section, built live (CN-025)
+- Delivery, Money, Marketing and Reports get a modern default plus one extra design. The other 7 sections get their current default redesigned to the modern standard. Dashboard, Orders and Products keep 3 designs. No new demo; built live. More designs can be added later by command.
