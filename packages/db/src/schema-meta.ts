@@ -205,6 +205,7 @@ export const APPEND_ONLY_LOCKED = [
   'CheckoutFlagEvent',
   'FraudDecision',
   'ShipmentEvent',
+  'NotificationAttempt',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

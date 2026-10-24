@@ -38,6 +38,16 @@
     "engine": {
       "label": "Message engine",
       "help": "How often the worker plans and sends messages (seconds), how far back it reads the order timeline (a step older than this is never sent late, minutes) and how many messages it handles at a time."
+    },
+    "retry": {
+      "label": "Retries",
+      "help": "When a sender fails, the message is tried again after each wait in turn (minutes; the last wait repeats), up to this many tries in all. Then it is marked failed, shown in the message log, and the step's fallback channel is tried. A number the channel cannot reach (not on WhatsApp) is not retried. Staff may retry a failed message once more by hand."
+    },
+    "log": {
+      "pageSize": {
+        "label": "Message log page size",
+        "help": "How many messages one page of the message log shows."
+      }
     }
   }
 }

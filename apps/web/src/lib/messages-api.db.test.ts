@@ -1,6 +1,6 @@
 // S05 · PR 148 — the Messages admin API on a real PostgreSQL (a throwaway database; skipped without
 // TEST_DATABASE_ADMIN_URL): login, the journey with its version, a save through the settings (and a stale one
-// refused), the self-confirm reply route, and the path table's refusals.
+// refused), the self-confirm reply route, the message log and its retry route (PR 149), and the path table's refusals.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -73,5 +73,19 @@ describe.skipIf(!HAS_TEST_DB)('Messages admin API on PostgreSQL', () => {
     const r = await api('POST', ['self-confirm'], { orderNumber: 'NO-SUCH', answer: 1 });
     expect([r.status, r.body.error]).toEqual([404, 'NOT_FOUND']);
     expect((await api('POST', ['self-confirm'], { orderNumber: 'X', answer: 4 })).body.error).toBe('INVALID_INPUT');
+  });
+
+  it('PR 149: the log with its counts; one message; a retry of a message that does not exist', async () => {
+    const r = await api('GET', ['log']);
+    expect(r.status).toBe(200);
+    expect(r.body.log).toMatchObject({ rows: [], next: null, counts: { FAILED: 0, SENT: 0 } });
+    expect((await api('GET', ['log'], undefined, '')).status).toBe(401);
+    expect((await api('GET', ['log', 'not-a-uuid'])).body.error).toBe('INVALID_INPUT');
+    const id = '0192f0e0-0000-7000-8000-000000000149';
+    expect((await api('GET', ['log', id])).status).toBe(404);
+    expect((await api('POST', ['log', id, 'retry'])).body.error).toBe('NOT_FOUND');
+    expect((await api('GET', ['log', id, 'retry'])).status).toBe(405);
+    expect((await api('POST', ['log', id, 'nope'])).status).toBe(404);
+    expect((await api('POST', ['log'])).status).toBe(405);
   });
 });

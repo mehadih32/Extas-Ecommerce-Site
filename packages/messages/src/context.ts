@@ -100,7 +100,7 @@ export interface Who {
 }
 
 /** The message permissions (packages/auth/src/catalogue.ts; BACKEND-ARCHITECTURE §5.7). */
-export const MESSAGE_PERMISSIONS = ['messages.journey.read', 'messages.journey.write', 'messages.selfConfirm.reply'] as const;
+export const MESSAGE_PERMISSIONS = ['messages.journey.read', 'messages.journey.write', 'messages.selfConfirm.reply', 'messages.log.view', 'messages.log.retry'] as const;
 export type MessagesPermission = (typeof MESSAGE_PERMISSIONS)[number];
 
 export async function allow(deps: Pick<MessagesDeps, 'db'>, who: Who, permission: MessagesPermission): Promise<void> {

@@ -1,6 +1,7 @@
 // S05 · the Messages control centre — PR 148 (order status messages by SMS, WhatsApp and e-mail with the no-double-send
 // guard; CN-014 idea 5 the WhatsApp self-confirm and idea 10 the exact-amount line; CN-019 the order journey with caps)
-// (BACKEND-ARCHITECTURE §5.7 MSG-01, MSG-05; §6.5.6; §8.8). Registry version 40. Labels: messages/messages.<lang>.json.
+// (BACKEND-ARCHITECTURE §5.7 MSG-01, MSG-05; §6.5.6; §8.8). Registry version 40; PR 149 (the log with retries) 41.
+// Labels: messages/messages.<lang>.json.
 // The words of every message are templates (NotificationTemplate, the default pack); only the short lines the engine
 // adds to a template (`{amountLine}`, `{exactAmountLine}`) are texts here, in both languages.
 //
@@ -152,6 +153,18 @@ export const exactAmountTextSchema = z
   .object({ due: templateTextSchema(['amount', 'link'], 200), paid: templateTextSchema(['link'], 200) })
   .strict();
 
+/**
+ * PR 149 — retries (§8.8): a message whose sender failed is tried again after each wait in turn (the last wait repeats),
+ * up to `maxAttempts` tries in all; then it is FAILED and its step's fallback channel is tried. A number the channel
+ * cannot reach at all (not on WhatsApp) is never retried. Staff may retry a FAILED message once more by hand.
+ */
+export const messageRetrySchema = z
+  .object({
+    maxAttempts: z.int().min(1).max(10),
+    delaysMinutes: z.array(z.int().min(1).max(60 * 24)).min(1).max(9),
+  })
+  .strict();
+
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'messages', version: V } as const;
 
 export const messageSettings = {
@@ -238,5 +251,26 @@ export const messageSettings = {
     labelKey: 'messages.engine.label',
     helpKey: 'messages.engine.help',
     sortOrder: 90,
+  }),
+  // ---- PR 149 · the notification log with retries ----
+  'messages.retry': setting({
+    ...base,
+    version: 41,
+    schema: messageRetrySchema,
+    default: { maxAttempts: 3, delaysMinutes: [5, 30] },
+    valueType: 'JSON',
+    labelKey: 'messages.retry.label',
+    helpKey: 'messages.retry.help',
+    sortOrder: 100,
+  }),
+  'messages.log.pageSize': setting({
+    ...base,
+    version: 41,
+    schema: z.int().min(10).max(200),
+    default: 50,
+    valueType: 'INT',
+    labelKey: 'messages.log.pageSize.label',
+    helpKey: 'messages.log.pageSize.help',
+    sortOrder: 110,
   }),
 };

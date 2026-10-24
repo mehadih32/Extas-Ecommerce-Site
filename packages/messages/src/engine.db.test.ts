@@ -3,7 +3,8 @@
 // journey end to end: the timeline becomes messages, never twice; the caps; the amount always the amount still due
 // (SIM-F-001); the self-confirm counts as the one WhatsApp (SIM-F-011), its replies go to the call queue and never
 // change the order; the no-reply timer; the fallback channel; quiet hours; the master switch; the mock senders; the
-// journey screen's save with its version. Every value is a made-up test value.
+// journey screen's save with its version. PR 149: every try logged (append-only), the retries on their waits, the
+// log with its counts, a retry by hand. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createConnections, messageAdapters, mockWhatsAppOutbox } from '@extas/adapters';
@@ -14,9 +15,12 @@ import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
 import { DEFAULT_JOURNEY, type Journey, type MessageChannel } from '@extas/settings';
 import {
   journeyScreen,
+  messageDetail,
+  messageLog,
   planMessages,
   recipientOf,
   recordSelfConfirmReply,
+  retryMessage,
   runMessages,
   saveJourney,
   selfConfirmTimers,
@@ -36,18 +40,21 @@ async function code(p: Promise<unknown>): Promise<string> {
   }
 }
 
-describe.skipIf(!HAS_TEST_DB)('PR 148 · the order journey on PostgreSQL', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 148, 149 · the order journey and its log on PostgreSQL', () => {
   let f: OrdersFixture;
   let staff: Who;
   let reader: Who;
   const db = () => f.t.prisma;
   const outbox: { channel: MessageChannel; to: string; text: string; subject: string | null; purpose: string }[] = [];
   const unreachable = new Set<MessageChannel>();
+  /** PR 149: channels whose sender fails (a provider error, worth another try). */
+  const failing = new Set<MessageChannel>();
   const sender: MessagesDeps['sender'] = async (_storeId, channel) => ({
     provider: 'test',
     mode: 'MOCK',
     send: async (m) => {
       if (unreachable.has(channel)) return { ok: false, error: 'not on this channel', unreachable: true };
+      if (failing.has(channel)) return { ok: false, error: 'gateway timeout' };
       outbox.push({ channel, ...m });
       return { ok: true, messageId: randomUUID() };
     },
@@ -70,7 +77,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 148 · the order journey on PostgreSQL', () =>
   beforeAll(async () => {
     f = await setUpOrders('messages');
     const p = db();
-    const role = await createRole(p, SYSTEM, { key: 'test-messages', nameEn: 'messages', nameBn: 'messages', permissions: ['messages.journey.read', 'messages.journey.write', 'messages.selfConfirm.reply'] });
+    const role = await createRole(p, SYSTEM, { key: 'test-messages', nameEn: 'messages', nameBn: 'messages', permissions: ['messages.journey.read', 'messages.journey.write', 'messages.selfConfirm.reply', 'messages.log.view', 'messages.log.retry'] });
     const readRole = await createRole(p, SYSTEM, { key: 'test-messages-read', nameEn: 'reader', nameBn: 'reader', permissions: ['messages.journey.read'] });
     const u = await p.staffUser.create({ data: { email: 'messages@example.com', displayName: 'Messages Staff', passwordHash: 'not-a-login' } });
     const r = await p.staffUser.create({ data: { email: 'messages-reader@example.com', displayName: 'Reader', passwordHash: 'not-a-login' } });
@@ -87,6 +94,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 148 · the order journey on PostgreSQL', () =>
     f.clock.now = new Date();
     outbox.length = 0;
     unreachable.clear();
+    failing.clear();
     f.overrides.delete('messages.journey');
     f.overrides.delete('messages.caps');
     f.overrides.delete('messages.quietHours');
@@ -359,5 +367,69 @@ describe.skipIf(!HAS_TEST_DB)('PR 148 · the order journey on PostgreSQL', () =>
     expect(saved.version).not.toBe(s.version);
     expect(await code(saveJourney(d, staff, { caps: { SMS: 2, WHATSAPP: 1, EMAIL: null, total: null } }, s.version))).toBe('STALE');
     expect(await db().auditLog.count({ where: { action: 'messages.journey.save' } })).toBe(1);
+  });
+
+  it('PR 149: a failed send is tried again on the waits, every try logged; after the last it is FAILED and shows in the log', async () => {
+    failing.add('SMS');
+    const o = await f.place('retry');
+    await run();
+    let row = await db().notificationLog.findFirstOrThrow({ where: { orderId: o.orderId, step: 'placed' } });
+    expect(row).toMatchObject({ status: 'QUEUED', reason: 'RETRY', attempts: 1, error: 'gateway timeout' });
+    expect(row.sendAfter!.getTime() - f.clock.now.getTime()).toBe(5 * 60_000);
+    // not before its wait
+    await run();
+    expect((await db().notificationLog.findUniqueOrThrow({ where: { id: row.id } })).attempts).toBe(1);
+    f.clock.now = new Date(row.sendAfter!.getTime() + 1_000);
+    await sendDue(deps(), f.S);
+    row = await db().notificationLog.findUniqueOrThrow({ where: { id: row.id } });
+    expect(row).toMatchObject({ status: 'QUEUED', attempts: 2 });
+    expect(row.sendAfter!.getTime() - f.clock.now.getTime()).toBe(30 * 60_000);
+    f.clock.now = new Date(row.sendAfter!.getTime() + 1_000);
+    await sendDue(deps(), f.S);
+    row = await db().notificationLog.findUniqueOrThrow({ where: { id: row.id } });
+    expect(row).toMatchObject({ status: 'FAILED', reason: 'SEND_FAILED', attempts: 3, sendAfter: null });
+    const tries = await db().notificationAttempt.findMany({ where: { notificationLogId: row.id }, orderBy: { attempt: 'asc' } });
+    expect(tries.map((t) => [t.attempt, t.ok, t.provider, t.mode, t.error])).toEqual([
+      [1, false, 'test', 'MOCK', 'gateway timeout'],
+      [2, false, 'test', 'MOCK', 'gateway timeout'],
+      [3, false, 'test', 'MOCK', 'gateway timeout'],
+    ]);
+    // the tries are history: never changed, never removed (locked at the database)
+    expect(await code(db().notificationAttempt.update({ where: { id: tries[0]!.id }, data: { ok: true } }))).not.toBe('ok');
+    expect(await code(db().notificationAttempt.delete({ where: { id: tries[0]!.id } }))).not.toBe('ok');
+
+    // the log: the failure is there for staff, with its tries; the reader of the journey may not see it
+    expect(await code(messageLog(deps(), reader))).toBe('FORBIDDEN');
+    const log = await messageLog(deps(), staff, { status: 'FAILED', orderNumber: o.number });
+    expect(log.rows.map((x) => [x.order?.number, x.step, x.channel, x.status, x.attempts])).toEqual([[o.number, 'placed', 'SMS', 'FAILED', 3]]);
+    expect(log.counts.FAILED).toBeGreaterThanOrEqual(1);
+    expect((await messageLog(deps(), staff, { orderNumber: 'NO-SUCH' })).rows).toEqual([]);
+    expect(await code(messageLog(deps(), staff, { status: 'LOST' }))).toBe('INVALID_INPUT');
+    expect((await messageDetail(deps(), staff, row.id)).tries).toHaveLength(3);
+
+    // retried by hand once the gateway is back: one more try, sent, with who asked; audited; not again
+    failing.clear();
+    expect(await code(retryMessage(deps(), reader, row.id))).toBe('FORBIDDEN');
+    const r = await retryMessage(deps(), staff, row.id);
+    expect(r.outcome).toBe('SENT');
+    expect(r.message).toMatchObject({ status: 'SENT', attempts: 4 });
+    expect(r.message.tries.at(-1)).toMatchObject({ attempt: 4, ok: true, retriedById: staff.actor.staffUserId });
+    expect(mine(o).map((m) => m.purpose)).toEqual(['order.placed']);
+    expect(await db().auditLog.count({ where: { action: 'messages.log.retry', entityId: row.id } })).toBe(1);
+    expect(await code(retryMessage(deps(), staff, row.id))).toBe('NOT_RETRYABLE');
+  });
+
+  it('PR 149: a number the channel cannot reach is not retried; a step that went by its fallback is never retried by hand', async () => {
+    journey({ selfConfirm: { ...DEFAULT_JOURNEY.selfConfirm, on: true } });
+    unreachable.add('WHATSAPP');
+    const o = await f.place('no-retry');
+    await run();
+    await run();
+    const wa = await db().notificationLog.findFirstOrThrow({ where: { orderId: o.orderId, step: 'selfConfirm', channel: 'WHATSAPP' } });
+    expect(wa).toMatchObject({ status: 'FAILED', reason: 'UNREACHABLE', attempts: 1 });
+    expect(await db().notificationLog.findFirstOrThrow({ where: { orderId: o.orderId, step: 'selfConfirm', channel: 'SMS' } })).toMatchObject({ status: 'SENT' });
+    unreachable.clear();
+    expect(await code(retryMessage(deps(), staff, wa.id))).toBe('NOT_RETRYABLE');
+    expect(mine(o).filter((m) => m.purpose === 'order.selfConfirm')).toHaveLength(1);
   });
 });

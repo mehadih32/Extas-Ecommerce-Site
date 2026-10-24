@@ -14,12 +14,16 @@
 // 3. self-confirm (CN-014 idea 5): an order whose self-confirm WhatsApp got no reply in `messages.selfConfirm.waitHours`
 //    goes to the call queue (self-confirm.ts).
 //
+// PR 149: every try is one NotificationAttempt row (append-only). A failed try is tried again after the waits of
+// `messages.retry` (the row stays QUEUED with the next `sendAfter`); after the last try it is FAILED and the step's
+// fallback channel is tried. A number the channel cannot reach is never retried. Staff retry a FAILED row (log.ts).
+//
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
 import type { Journey, JourneyStep, MessageChannel } from '@extas/settings';
-import { nowOf, setting, type MessagesDeps } from './context';
+import { nowOf, setting, TX, type MessagesDeps, type SendResult } from './context';
 import { answerTemplate, audienceFits, dedupeKey, dueAt, isCapped, messageLocale, NEVER_QUIET, orderLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
@@ -165,7 +169,7 @@ async function linkHost(deps: MessagesDeps, storeId: number): Promise<string | n
   return d?.hostname ?? (await deps.settings.value('system.stagingHost')) ?? null;
 }
 
-interface RunContext {
+export interface RunContext {
   storeId: number;
   now: Date;
   master: boolean;
@@ -179,11 +183,12 @@ interface RunContext {
   host: string | null;
   amountLine: { en: string; bn: string };
   exact: { due: { en: string; bn: string }; paid: { en: string; bn: string } } | null;
+  retry: { maxAttempts: number; delaysMinutes: number[] };
   senders: Map<MessageChannel, Awaited<ReturnType<MessagesDeps['sender']>>>;
 }
 
-async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
-  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host] = await Promise.all([
+export async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
+  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry] = await Promise.all([
     setting(deps, storeId, 'messages.enabled'),
     setting(deps, storeId, 'messages.journey'),
     setting(deps, storeId, 'messages.caps'),
@@ -198,6 +203,7 @@ async function runContext(deps: MessagesDeps, storeId: number): Promise<RunConte
     setting(deps, storeId, 'store.name'),
     deps.db.store.findUniqueOrThrow({ where: { id: storeId }, select: { name: true } }),
     linkHost(deps, storeId),
+    setting(deps, storeId, 'messages.retry'),
   ]);
   return {
     storeId,
@@ -213,12 +219,14 @@ async function runContext(deps: MessagesDeps, storeId: number): Promise<RunConte
     host,
     amountLine,
     exact: exactOn.enabled ? exactCfg : null,
+    retry,
     senders: new Map(),
   };
 }
 
 const ROW_SELECT = { id: true, orderId: true, step: true, channel: true, attempts: true, sendAfter: true, dedupeKey: true, eventId: true } satisfies Prisma.NotificationLogSelect;
-type Row = Prisma.NotificationLogGetPayload<{ select: typeof ROW_SELECT }>;
+export { ROW_SELECT };
+export type Row = Prisma.NotificationLogGetPayload<{ select: typeof ROW_SELECT }>;
 
 /** What a row sends: a journey step's switch and template, or a self-confirm answer's template (from the reply's code). */
 async function wordsKeyOf(deps: MessagesDeps, c: RunContext, row: Row): Promise<{ on: boolean; template: string } | null> {
@@ -232,7 +240,16 @@ async function wordsKeyOf(deps: MessagesDeps, c: RunContext, row: Row): Promise<
 }
 
 /** How one row ended this run. */
-export type SendOutcome = 'SENT' | 'SKIPPED' | 'BLOCKED' | 'FAILED' | 'WAITING';
+export type SendOutcome = 'SENT' | 'SKIPPED' | 'BLOCKED' | 'FAILED' | 'RETRYING' | 'WAITING';
+
+/** How a row is sent: by the engine, or once more by hand (no further automatic tries; the staff member is recorded). */
+export interface SendOptions {
+  retriedById?: string | null;
+  manual?: boolean;
+}
+
+/** The wait before try `next` (2, 3 …): the waits in turn, the last one repeating. */
+export const retryDelayMinutes = (delays: readonly number[], next: number): number => delays[Math.min(Math.max(next - 2, 0), delays.length - 1)] ?? 0;
 
 const SENT_STATES: NotificationStatus[] = ['SENT', 'DELIVERED'];
 
@@ -265,7 +282,7 @@ async function queueFallback(deps: MessagesDeps, c: RunContext, row: Row): Promi
 }
 
 /** Step 2 for one row: every check at the moment it goes, then the sender. */
-async function sendOne(deps: MessagesDeps, c: RunContext, row: Row): Promise<SendOutcome> {
+export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions = {}): Promise<SendOutcome> {
   // the claim: this run alone holds the row for the lease
   const claimed = await deps.db.notificationLog.updateMany({
     where: { id: row.id, status: 'QUEUED', sendAfter: row.sendAfter },
@@ -310,27 +327,45 @@ async function sendOne(deps: MessagesDeps, c: RunContext, row: Row): Promise<Sen
     exactAmount: c.exact ? { due: c.exact.due[lang], paid: c.exact.paid[lang] } : null,
   });
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
-  let sender = c.senders.get(row.channel as MessageChannel);
+  const attempt = row.attempts + 1;
+  let sender = c.senders.get(row.channel as MessageChannel) ?? null;
+  let r: SendResult;
   try {
     if (!sender) {
       sender = await deps.sender(c.storeId, row.channel as MessageChannel);
       c.senders.set(row.channel as MessageChannel, sender);
     }
+    try {
+      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: `${cfg.template}` });
+    } catch (e) {
+      r = { ok: false, error: errorText(e) };
+    }
   } catch (e) {
-    return close(deps, c, row, 'FAILED', 'NO_SENDER', { recipient: to, templateId: t.id, locale: t.locale, error: errorText(e), attempts: { increment: 1 } }, true).then(() => 'FAILED');
+    r = { ok: false, error: `NO_SENDER: ${errorText(e)}` };
   }
-  let r: Awaited<ReturnType<typeof sender.send>>;
-  try {
-    r = await sender.send({ to, text: words.text, subject: words.subject, purpose: `${cfg.template}` });
-  } catch (e) {
-    r = { ok: false, error: errorText(e) };
-  }
-  const base = { recipient: to, templateId: t.id, locale: t.locale, provider: sender.provider, mode: sender.mode, attempts: { increment: 1 } } satisfies Prisma.NotificationLogUpdateInput;
+  const tried = { recipient: to, templateId: t.id, locale: t.locale, provider: sender?.provider ?? null, mode: sender?.mode ?? null, attempts: attempt } satisfies Prisma.NotificationLogUpdateInput;
+  const tryRow = (ok: boolean, more: { error?: string; providerMessageId?: string }) =>
+    deps.db.notificationAttempt.create({
+      data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok, retriedById: opts.retriedById ?? null, ...more },
+    });
   if (r.ok) {
-    await deps.db.notificationLog.update({ where: { id: row.id }, data: { ...base, status: 'SENT', providerMessageId: r.messageId, sentAt: c.now, sendAfter: null, reason: null, error: null } });
+    const messageId = r.messageId;
+    await deps.db.$transaction(async (tx) => {
+      await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null } });
+      await tx.notificationAttempt.create({
+        data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok: true, providerMessageId: messageId, retriedById: opts.retriedById ?? null },
+      });
+    }, TX);
     return 'SENT';
   }
-  await close(deps, c, row, 'FAILED', r.unreachable ? 'UNREACHABLE' : 'SEND_FAILED', { ...base, error: r.error.slice(0, 300) }, true);
+  const error = r.error.slice(0, 300);
+  await tryRow(false, { error });
+  if (!r.unreachable && !opts.manual && attempt < c.retry.maxAttempts) {
+    const next = new Date(c.now.getTime() + retryDelayMinutes(c.retry.delaysMinutes, attempt + 1) * 60_000);
+    await deps.db.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'QUEUED', sendAfter: next, reason: 'RETRY', error } });
+    return 'RETRYING';
+  }
+  await close(deps, c, row, 'FAILED', r.unreachable ? 'UNREACHABLE' : error.startsWith('NO_SENDER') ? 'NO_SENDER' : 'SEND_FAILED', { ...tried, error }, true);
   return 'FAILED';
 }
 
@@ -342,6 +377,8 @@ export interface SendRunResult {
   skipped: number;
   blocked: number;
   failed: number;
+  /** Failed this time, tried again later (PR 149). */
+  retrying: number;
   waiting: number;
   /** Every sender was the mock: nothing left the server. */
   mock: boolean;
@@ -357,13 +394,14 @@ export async function sendDue(deps: MessagesDeps, storeId: number): Promise<Send
     take: engine.batchSize,
     select: ROW_SELECT,
   });
-  const out: SendRunResult = { due: rows.length, sent: 0, skipped: 0, blocked: 0, failed: 0, waiting: 0, mock: true };
+  const out: SendRunResult = { due: rows.length, sent: 0, skipped: 0, blocked: 0, failed: 0, retrying: 0, waiting: 0, mock: true };
   for (const row of rows) {
     const r = await sendOne(deps, c, row);
     if (r === 'SENT') out.sent++;
     else if (r === 'SKIPPED') out.skipped++;
     else if (r === 'BLOCKED') out.blocked++;
     else if (r === 'FAILED') out.failed++;
+    else if (r === 'RETRYING') out.retrying++;
     else out.waiting++;
   }
   out.mock = [...c.senders.values()].every((s) => s.mode === 'MOCK');

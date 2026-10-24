@@ -202,6 +202,7 @@ model Store {
   notificationTemplates   NotificationTemplate[]
   notificationRules       NotificationRule[]
   notificationLogs        NotificationLog[]
+  notificationAttempts    NotificationAttempt[]
   deliveryBands           DeliveryBand[]
   areaBands               AreaBand[]
   courierAreaMappings     CourierAreaMapping[]
@@ -3109,42 +3110,72 @@ model NotificationRule {
 /// @extas/messages and sent by the worker once `sendAfter` has passed. No message text is stored (the template and the
 /// order make it again); `reason` says why a row was skipped or blocked by the guard (cap, audience, no number …).
 model NotificationLog {
-  id                String              @id @default(uuid(7)) @db.Uuid
+  id                String                @id @default(uuid(7)) @db.Uuid
   storeId           Int
-  store             Store               @relation(fields: [storeId], references: [id])
-  orderId           String?             @db.Uuid
-  customerId        String?             @db.Uuid
-  broadcastId       String?             @db.Uuid
+  store             Store                 @relation(fields: [storeId], references: [id])
+  orderId           String?               @db.Uuid
+  customerId        String?               @db.Uuid
+  broadcastId       String?               @db.Uuid
   channel           NotificationChannel
-  templateId        String?             @db.Uuid
+  templateId        String?               @db.Uuid
   recipient         String
-  status            NotificationStatus  @default(QUEUED)
+  status            NotificationStatus    @default(QUEUED)
   dedupeKey         String
   providerMessageId String?
-  attempts          Int                 @default(0)
+  attempts          Int                   @default(0)
   error             String?
   costMinor         Int?
-  sentAt            DateTime?           @db.Timestamptz(3)
-  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime            @updatedAt @db.Timestamptz(3)
+  sentAt            DateTime?             @db.Timestamptz(3)
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
   /// PR 148 — the journey step (`placed`, `confirmed`, `day1Care` …) or what else the message is for (`account.code`).
   step              String?
   /// PR 148 — the language the message goes in (`bn`, `en`).
   locale            String?
   /// PR 148, 149 — not sent before this time: the step's delay, the quiet hours, or the next try after a failure.
-  sendAfter         DateTime?           @db.Timestamptz(3)
+  sendAfter         DateTime?             @db.Timestamptz(3)
   /// PR 148 — why a row was SKIPPED or BLOCKED_BY_GUARD (a code: CAP_SMS, AUDIENCE, NO_RECIPIENT, MASTER_OFF …).
   reason            String?
   /// PR 148 — the sender that took it: its provider key and mode (MOCK = "would send": nothing left the server).
   provider          String?
   mode              AdapterMode?
   /// PR 148 — the order timeline row (OrderEvent) that planned it.
-  eventId           String?             @db.Uuid
+  eventId           String?               @db.Uuid
+  /// PR 149 — every try at sending it, with its result (append-only).
+  tries             NotificationAttempt[]
 
   @@unique([storeId, dedupeKey])
   @@index([storeId, orderId])
   @@index([storeId, status, createdAt])
   @@index([status, sendAfter])
+}
+
+/// @stage S05 · PR 149 — one try at sending a message: the sender (provider and mode), the result, the provider's
+/// message id and cost, and who asked for it when staff retried by hand. A retry is a new row; a row is never changed
+/// (append-only, locked at the database). No message text is stored.
+/// @append-only
+model NotificationAttempt {
+  id                String              @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store               @relation(fields: [storeId], references: [id])
+  notificationLogId String              @db.Uuid
+  notificationLog   NotificationLog     @relation(fields: [notificationLogId], references: [id])
+  /// 1 for the first try, then 2, 3 …
+  attempt           Int
+  channel           NotificationChannel
+  provider          String?
+  mode              AdapterMode?
+  ok                Boolean
+  /// Why it failed (a short line from the sender), or null.
+  error             String?
+  providerMessageId String?
+  costMinor         Int?
+  /// The staff member who asked for this try (Messages › log › Retry), or null for the engine's own tries.
+  retriedById       String?             @db.Uuid
+  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
+
+  @@unique([notificationLogId, attempt])
+  @@index([storeId, createdAt])
 }
 
 enum NotificationStatus {

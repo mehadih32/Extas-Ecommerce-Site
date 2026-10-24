@@ -124,6 +124,11 @@ export const PERMISSIONS = {
   'messages.journey.read': { group: 'messages' },
   'messages.journey.write': { group: 'messages' },
   'messages.selfConfirm.reply': { group: 'messages' },
+  // S05 · PR 149 — the message log: every message with its state, why it was skipped or blocked, and every try; and a
+  // failed message tried again by hand. Not a `.read` key on purpose: the log shows customers' numbers, and the
+  // read-only smoke check account never gets customers' details.
+  'messages.log.view': { group: 'messages' },
+  'messages.log.retry': { group: 'messages' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
