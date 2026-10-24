@@ -69,3 +69,12 @@ a2Page({path:'/admin/products/:id', section:'products', tab:'all', en:'Product',
 - Phone (≤767 px): sidebar becomes a drawer, bottom bar Home · Orders · Support · Search · More, tables become cards, 44 px targets. Tablet (768–1199): icon rail.
 - Roles: `A2_ROLES` (owner, manager, packer, support, accounts) with start pages (§19.5). Demo controls and the account menu switch roles.
 - Tests: `scratchpad/a2qa/flows.js` (click-through, 74 checks), `a2qa/smoke.js` (every route, layout audit), `a2qa/pdiff.js` (storefront unchanged).
+
+## V12.4 — page designs and the new shell (97z-adm2-rd*.js, r12-zzzzzzz-rd.css)
+
+- Dashboard, Orders (list + confirm) and Products (list + Add product) have switchable designs: A = the V12.3 page (captured automatically), B = the owner's mock-ups (default), C = command center.
+- Add a design: `a3Design(page, 'D', {en, bn, desc, descBn, views:{home|list|confirm|add: {render(p, q, ctx), after?, skel?, empty?}}})` and, if it needs a thumbnail, a branch in `a3Thumb`. Routes are taken over once with `a3Hook(path, page, view)`; the page that was there becomes design A.
+- Pick: per person in the page's “…” menu (`a3LookMe()`), team default `look.<page>` in Settings → Admin look (`/admin/settings/look`), preview with `?design=X`.
+- Shell (`a3Shell` replaces `a2Shell`): deep-green top bar (search, Ask AI, View shop, To do with a dot, notifications, EN/বাং, account), icon rail with hover fly-outs (expand toggle; drawer on tablet/phone), phone bottom bar Home · Orders · Products · To do · More. `a2Queues()` feeds the To do drawer (`A2.drawers.todo`); no count badges on the rail.
+- Drawing kit: `a3Line`, `a3Bars` (stacked + line), `a3Spark`, `a3Funnel`, `a3Heat`, `a3Water` — inline SVG, hover tooltips via `data-a3c` / `data-tip`. Skeletons `a3Skel` for the loading preview.
+- Tests: `scratchpad/rd/flows.js` (click-through, ~305 checks per width/language), `rd/allroutes.txt` for `a2qa/smoke.js`.

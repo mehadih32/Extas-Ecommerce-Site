@@ -1,7 +1,7 @@
 # docs/ — index
 
 > **বাংলায় সংক্ষেপে:** `docs` ফোল্ডারে কোন কাগজ কী কাজের, এক লাইনে। সবচেয়ে দরকারি তিনটা: `BLUEPRINT.md` (পুরো
-> নির্দেশনা), `MASTER-REGISTER.md` (সব PR আর কোনটা কতদূর), আর ডেমো `demo/EXTAS-demo-V12.3.html` (দোকান দেখতে কেমন হবে)।
+> নির্দেশনা), `MASTER-REGISTER.md` (সব PR আর কোনটা কতদূর), আর ডেমো `demo/EXTAS-demo-V12.4.html` (দোকান দেখতে কেমন হবে)।
 
 Every file and folder in `docs/`, one line each. Large tool and skill folders are listed by folder. The repository's
 front page is [`../README.md`](../README.md). This index is updated in the same PR that adds, moves or removes a

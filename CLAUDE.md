@@ -15,7 +15,7 @@ Every session in this repository reads this file first, then `docs/START-HERE.md
 |---|---|
 | `docs/BLUEPRINT.md` | The full specification (V2.1 final, 20 Oct 2026). **Read it from here; it is never re-uploaded.** |
 | `docs/MASTER-REGISTER.md` | All 606 PRs in 28 stages (600 active, 6 parked). **Nothing gets built unless it is in here.** |
-| `docs/demo/EXTAS-demo-V12.3.html` | The approved clickable demo, **V12.3** (23 Oct: storefront = V12.2; the **new admin** built to `docs/BACKEND-ARCHITECTURE.md` (CN-022) at `#/admin`, classic admin kept at `#/admin-classic`; framework `docs/demo/ADMIN2-FRAMEWORK.md`; V12.2/V12.1/V12 kept as history). **It is the UI truth.** Section guides for the admin are in `docs/admin-guide/`. The source is in `docs/demo/src/`. Before/after details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md`, `docs/qa/ADMIN-AUDIT.md`. |
+| `docs/demo/EXTAS-demo-V12.4.html` | The approved clickable demo, **V12.4** (24 Oct: storefront = V12.2; new admin per CN-022 with the redesigned Dashboard, Orders and Products, each with 3 switchable designs A/B/C via Settings → Admin look (CN-025); English default, বাং toggle; framework `docs/demo/ADMIN2-FRAMEWORK.md`; V12.3 and older kept as history). **It is the UI truth.** Section guides for the admin are in `docs/admin-guide/`. The source is in `docs/demo/src/`. Before/after details: `docs/owner/ROUND15.md` Note 51, `docs/qa/QA-REPORT-V12B.md`, `docs/qa/ADMIN-AUDIT.md`. |
 | `docs/qa/ECOMMERCE-CHECKLIST.md` | The QA checklist. The gates are in Blueprint Appendix C. |
 | `docs/owner/` | The owner's decisions, review notes, server spec and guides. |
 | `docs/agents/` | The seven agent profiles, protocol, skills and lessons (`lessons/ALL.md`). Read the lessons. |
