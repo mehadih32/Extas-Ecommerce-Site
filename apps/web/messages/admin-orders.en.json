@@ -556,7 +556,8 @@
       "order_riskSection": "Placed in its section",
       "order_risk_approved": "Risk review: approved",
       "order_risk_ask": "Risk review: customer to be asked",
-      "order_book": "Courier booked"
+      "order_book": "Courier booked",
+      "order_identityLinked": "Linked to the customer's identity"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -717,6 +718,18 @@
       "because": "because: {why}",
       "review": "waits for a person",
       "moved": "was {from}"
+    },
+    "identity": {
+      "new": "a new identity: no earlier order of the same person",
+      "joined": "the same person as {orders}",
+      "merged": "{n} identities joined into one",
+      "afterEdit": "after an edit",
+      "via": {
+        "phone": "same phone",
+        "device": "same device",
+        "nameAddress": "alike name and address",
+        "linked": "through his other orders"
+      }
     }
   }
 }

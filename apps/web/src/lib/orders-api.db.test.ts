@@ -7,6 +7,7 @@
 // the admin's lines routes. PR 151: the order export as a CSV download. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
+import { linkIdentity } from '@extas/orders';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
@@ -237,5 +238,23 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await api('GET', [o.orderId, 'risk', 'x'])).status).toBe(404);
     expect((await api('POST', [o.orderId, 'risk'], { body: {} })).status).toBe(405);
     expect((await api('GET', ['01a16af2-30f0-7462-aab8-719bb3ce5999', 'risk'])).status).toBe(404);
+  });
+
+  it("S06 · PR 519: the order's identity (orders.risk.read) — off by default it says so; on, the same person's other order", async () => {
+    const a = await f.place('api-identity-a', { phone: '01700000519' });
+    const off = await api('GET', [a.orderId, 'identity']);
+    expect(off).toMatchObject({ status: 200, body: { ok: true, identity: { enabled: false, clusterId: null, orders: [] } } });
+    expect((await api('GET', [a.orderId, 'identity'], { cookie: reader })).status).toBe(403);
+    const on = Object.create(deps.resolver) as AdminDeps['resolver'];
+    on.value = ((key: string, opts?: { storeId?: number }) => (key === 'risk.identity' ? Promise.resolve({ ...registry['risk.identity'].default, enabled: true }) : deps.resolver.value(key as never, opts))) as never;
+    const d = { ...deps, resolver: on };
+    const b = await f.place('api-identity-b', { phone: '01700000519' });
+    await linkIdentity({ db: deps.db, settings: on }, { storeId: f.S, orderId: b.orderId });
+    const seen = await api('GET', [b.orderId, 'identity'], { d });
+    // the same phone (and, in this file, the same test name and address as the other test orders)
+    expect(seen.body.identity).toMatchObject({ enabled: true, clusterId: expect.any(String), orders: expect.arrayContaining([expect.objectContaining({ id: a.orderId, via: expect.arrayContaining(['phone']) })]) });
+    expect((await api('POST', [a.orderId, 'identity'], { body: {} })).status).toBe(405);
+    expect((await api('GET', [a.orderId, 'identity', 'x'])).status).toBe(404);
+    expect((await api('GET', ['01a16af2-30f0-7462-aab8-719bb3ce5519', 'identity'])).status).toBe(404);
   });
 });

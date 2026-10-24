@@ -30,6 +30,8 @@
 // review where a person must decide (sections.ts; the rule in risk-section.ts), the identity check beyond the phone
 // (identity.ts, SIM-F-015) and the courier booking through the machine, never while a review is open (booking.ts,
 // SIM-F-014).
+// S06 · PR 519: the Order Identity Graph — one identity from the phone, the name, the address, the device and the IP,
+// linked when an order lands; the risk score's identity and device signals read it (identity-graph.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -57,4 +59,5 @@ export * from './risk';
 export * from './risk-panel';
 export * from './sections';
 export * from './identity';
+export * from './identity-graph';
 export * from './booking';
