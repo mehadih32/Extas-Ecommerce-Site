@@ -9,7 +9,7 @@
     },
     "journey": {
       "label": "Order journey",
-      "help": "For each step of an order (received, self-confirm, confirmed, packed, booked, out for delivery, delivery day, delivered, Day-1 care, Day-3 review) and each notice (cancelled — with the reason, see Cancellation notice — on hold, advance asked, gift receiver): on or off, the channel and a fallback, also by e-mail, when it goes (at once, minutes later, or at a time some days later), which orders (all, cash on delivery, prepaid) and its template. A step never goes twice for one order."
+      "help": "For each step of an order (received, self-confirm, confirmed, packed, booked, out for delivery, delivery day, delivered, Day-1 care, Day-3 review) and each notice (cancelled — with the reason, see Cancellation notice — cancel request refused, on hold, advance asked, gift receiver): on or off, the channel and a fallback, also by e-mail, when it goes (at once, minutes later, or at a time some days later), which orders (all, cash on delivery, prepaid) and its template. A step never goes twice for one order."
     },
     "caps": {
       "label": "Caps per order",

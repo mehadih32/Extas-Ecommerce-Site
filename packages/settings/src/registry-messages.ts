@@ -1,7 +1,7 @@
 // S05 · the Messages control centre — PR 148 (order status messages by SMS, WhatsApp and e-mail with the no-double-send
 // guard; CN-014 idea 5 the WhatsApp self-confirm and idea 10 the exact-amount line; CN-019 the order journey with caps)
 // (BACKEND-ARCHITECTURE §5.7 MSG-01, MSG-05; §6.5.6; §8.8). Registry version 40; PR 149 (the log with retries) 41;
-// PR 546 (the cancellation notice, SIM-F-013) 45.
+// PR 546 (the cancellation notice, SIM-F-013) and follow-up 287 (the "cancel request refused" notice) 45.
 // Labels: messages/messages.<lang>.json.
 // The words of every message are templates (NotificationTemplate, the default pack); only the short lines the engine
 // adds to a template (`{amountLine}`, `{exactAmountLine}`) are texts here, in both languages.
@@ -38,6 +38,8 @@ export const JOURNEY_STEPS = [
   'day1Care',
   'day3Review',
   'cancelled',
+  // follow-up 287 (registry v45): the shop said no to his cancel request; the order goes on
+  'cancelRefused',
   'onHold',
   'advanceRequested',
   'giftReceiver',
@@ -83,7 +85,14 @@ const step = (on: boolean, channel: MessageChannel, template: string, more: Part
   ...more,
 });
 
-export const journeySchema = z.object(Object.fromEntries(JOURNEY_STEPS.map((s) => [s, journeyStepSchema])) as Record<JourneyStep, typeof journeyStepSchema>).strict();
+/** Steps added after the journey shipped: a journey saved before one existed reads it as its default (off). */
+const LATER_STEPS: Partial<Record<JourneyStep, JourneyStepConfig>> = {
+  cancelRefused: step(false, 'SMS', 'order.cancelRefused'),
+};
+
+export const journeySchema = z
+  .object(Object.fromEntries(JOURNEY_STEPS.map((s) => [s, LATER_STEPS[s] ? journeyStepSchema.default(LATER_STEPS[s]) : journeyStepSchema])) as Record<JourneyStep, typeof journeyStepSchema>)
+  .strict();
 export type Journey = z.output<typeof journeySchema>;
 
 /** The owner's send rule as the shipped journey (B2.5 V2; CN-019 Day-1 and Day-3 on). */
@@ -99,6 +108,7 @@ export const DEFAULT_JOURNEY: Journey = {
   day1Care: step(true, 'WHATSAPP', 'order.care', { when: { kind: 'at', days: 1, hour: 11, minute: 0 } }),
   day3Review: step(true, 'WHATSAPP', 'order.review', { when: { kind: 'at', days: 3, hour: 11, minute: 0 } }),
   cancelled: step(false, 'SMS', 'order.cancelled'),
+  cancelRefused: LATER_STEPS.cancelRefused!,
   onHold: step(false, 'SMS', 'order.onHold'),
   advanceRequested: step(false, 'SMS', 'order.advanceRequested'),
   giftReceiver: step(false, 'SMS', 'gift.receiver'),
@@ -107,7 +117,8 @@ export const DEFAULT_JOURNEY: Journey = {
 /**
  * The caps per order (MSG-01, Doot D09): at most this many messages of the order journey on each channel, and in
  * total; `null` = no cap. A message over a cap is not sent and is logged as blocked. The follow-ups after delivery
- * (Day-1, Day-3) and the event notices (cancelled, on hold, advance, gift receiver) are outside the caps.
+ * (Day-1, Day-3) and the event notices (cancelled, cancel request refused, on hold, advance, gift receiver) are outside
+ * the caps.
  */
 export const capsSchema = z
   .object({
@@ -221,6 +232,8 @@ export const messageSettings = {
   }),
   'messages.journey': setting({
     ...base,
+    // follow-up 287: the "cancel request refused" step (a journey saved before reads it as off)
+    version: 45,
     schema: journeySchema,
     default: DEFAULT_JOURNEY,
     valueType: 'JSON',

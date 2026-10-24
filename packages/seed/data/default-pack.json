@@ -689,6 +689,38 @@
       "body": "Hi {customerName}, order {orderNumber} is cancelled because the same order was placed twice. Your order {keptOrderNumber} goes ahead, follow it here: {keptOrderLink}"
     },
     {
+      "key": "order.cancelRefused",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Cancel request refused",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} বাতিলের অনুরোধ রাখা গেল না, অর্ডারটি আগের মতোই চলবে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.cancelRefused",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Cancel request refused",
+      "enabled": true,
+      "body": "{storeName}: we could not cancel order {orderNumber}; it goes ahead as planned. Questions? {orderLink}"
+    },
+    {
+      "key": "order.cancelRefused",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Cancel request refused",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} বাতিলের অনুরোধ রাখা গেল না, অর্ডারটি আগের মতোই চলবে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.cancelRefused",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Cancel request refused",
+      "enabled": true,
+      "body": "Hi {customerName}, we could not cancel order {orderNumber}; it goes ahead as planned. Questions? {orderLink}"
+    },
+    {
       "key": "order.onHold",
       "channel": "SMS",
       "locale": "bn",

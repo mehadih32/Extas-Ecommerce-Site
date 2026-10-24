@@ -1,6 +1,6 @@
 // PR 148 — the journey's rules without a database: which event starts which step, the times in the store's zone, the
 // quiet hours, the caps, and the words (SIM-F-001: the amount is always the amount still due; SIM-F-031: no empty link).
-import { DEFAULT_JOURNEY } from '@extas/settings';
+import { DEFAULT_JOURNEY, journeySchema } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
 import {
   answerTemplate,
@@ -15,6 +15,7 @@ import {
   render,
   stepsOf,
   stillFits,
+  CANCEL_REFUSED_EVENT,
   OUT_FOR_DELIVERY_EVENT,
   SELF_CONFIRM_ANSWERS,
   type RenderInput,
@@ -42,6 +43,8 @@ describe('steps', () => {
     expect(stepsOf({ type: 'order.status', toStatus: 'DELIVERED' })).toEqual(['delivered', 'day1Care', 'day3Review']);
     expect(stepsOf({ type: OUT_FOR_DELIVERY_EVENT, toStatus: null })).toEqual(['outForDelivery', 'deliveryDay']);
     expect(stepsOf({ type: 'order.note', toStatus: null })).toEqual([]);
+    // follow-up 287: a refused cancel request changes no status; its own timeline row starts the notice
+    expect(stepsOf({ type: CANCEL_REFUSED_EVENT, toStatus: null })).toEqual(['cancelRefused']);
   });
 
   it('a delayed step never contradicts what happened since', () => {
@@ -51,6 +54,9 @@ describe('steps', () => {
     expect(stillFits('day3Review', 'RETURNED')).toBe(false);
     expect(stillFits('packed', 'CANCELLED')).toBe(false);
     expect(stillFits('cancelled', 'CANCELLED')).toBe(true);
+    expect(stillFits('cancelRefused', 'CONFIRMED')).toBe(true);
+    expect(stillFits('cancelRefused', 'CANCELLED')).toBe(false);
+    expect(stillFits('cancelRefused', 'DELIVERED')).toBe(false);
   });
 
   it('the caps count the journey only; the self-confirm counts when it is the one WhatsApp', () => {
@@ -59,6 +65,14 @@ describe('steps', () => {
     expect(isCapped('selfConfirm', true)).toBe(true);
     expect(isCapped('selfConfirm', false)).toBe(false);
     expect(isCapped('selfConfirmAnswer', true)).toBe(false);
+    expect(isCapped('cancelRefused', true)).toBe(false);
+  });
+
+  it('follow-up 287: a journey saved before the "cancel request refused" step reads it as off', () => {
+    const { cancelRefused: _gone, ...before } = DEFAULT_JOURNEY;
+    const r = journeySchema.safeParse(before);
+    expect(r.success).toBe(true);
+    expect(r.data?.cancelRefused).toMatchObject({ on: false, channel: 'SMS', template: 'order.cancelRefused' });
   });
 
   it('the default journey keeps the owner rule: 2 SMS, 1 WhatsApp, the rest off (Day-1/Day-3 on, outside the caps)', () => {

@@ -2,11 +2,12 @@
 // pack's templates; orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL). SIM-F-013 is the
 // acceptance test: an order cancelled or declined tells the customer — one notice in the log, the reason in plain words
 // (never the team's note), and for a duplicate the order that goes ahead with its tracking link; never for a fake or
-// test decline (the owner's silent reasons); outside the caps; never twice. Every value is a made-up test value.
+// test decline (the owner's silent reasons); outside the caps; never twice. Follow-up 287: the "cancel request refused"
+// notice, off by default. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { cancelOrder, confirmOrder, customerCancel, decideReview, screenOrder } from '@extas/orders';
+import { cancelOrder, confirmOrder, customerCancel, decideReview, refuseCancelRequest, screenOrder } from '@extas/orders';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
 import { DEFAULT_CANCEL_NOTICE, DEFAULT_JOURNEY, type Journey, type MessageChannel } from '@extas/settings';
 import { runMessages, type MessagesDeps } from './index';
@@ -32,7 +33,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 546 · the cancellation notice on PostgreSQL',
   const journey = (patch: Partial<Journey>) => f.overrides.set('messages.journey', { ...DEFAULT_JOURNEY, ...patch });
   const cancelOn = () => journey({ cancelled: { ...DEFAULT_JOURNEY.cancelled, on: true } });
   const mine = (o: { number: string }) => outbox.filter((m) => new RegExp(`${o.number}(?!\\d)`).test(m.text));
-  const notices = (orderId: string) => db().notificationLog.findMany({ where: { orderId, step: 'cancelled' } });
+  const notices = (orderId: string) => db().notificationLog.findMany({ where: { orderId, step: { in: ['cancelled', 'cancelRefused'] } } });
   /** A customer of his own (his own phone), so another test's orders are never "his other order". */
   const phone = () => `017100${String(++n).padStart(5, '0')}`;
   const me = (visitorId: string) => ({ storeId: f.S, customerId: null, visitorId });
@@ -159,5 +160,28 @@ describe.skipIf(!HAS_TEST_DB)('PR 546 · the cancellation notice on PostgreSQL',
     await run();
     expect((await notices(o.orderId)).map((r) => r.status)).toEqual(['SENT']);
     expect(mine(o).map((m) => m.purpose)).toEqual(['order.placed', 'order.cancelled']);
+  });
+
+  it('follow-up 287: the "cancel request refused" notice — off by default; on, one notice and the order goes on', async () => {
+    const tel = phone();
+    const a = await f.place('refuse-off', { phone: tel });
+    await confirmOrder(f.ordersDeps(), f.staff, a.orderId);
+    await customerCancel(f.ordersDeps(), me(a.visitorId), { number: a.number, reasonKey: 'changed-mind' });
+    await refuseCancelRequest(f.ordersDeps(), f.staff, a.orderId, { note: 'already packed for him' });
+    await run();
+    expect(await notices(a.orderId)).toHaveLength(0);
+
+    journey({ cancelRefused: { ...DEFAULT_JOURNEY.cancelRefused, on: true } });
+    const b = await f.place('refuse-on', { phone: phone() });
+    await confirmOrder(f.ordersDeps(), f.staff, b.orderId);
+    await customerCancel(f.ordersDeps(), me(b.visitorId), { number: b.number, reasonKey: 'changed-mind' });
+    await refuseCancelRequest(f.ordersDeps(), f.staff, b.orderId, { note: 'already packed for him' });
+    await run();
+    await run();
+    const sent = mine(b).filter((m) => m.purpose === 'order.cancelRefused');
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.text).toContain(`/account/orders/${b.number}`);
+    expect(sent[0]!.text).not.toContain('packed for him');
+    expect((await db().order.findUniqueOrThrow({ where: { id: b.orderId } })).status).toBe('CONFIRMED');
   });
 });
