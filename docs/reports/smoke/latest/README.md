@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-24 03:55 (Asia/Dhaka)
+# Smoke test · 2026-10-24 09:47 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (94টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (116টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `48e95aeae51b` · nightly · result **PASS** (94 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `e2942acce549` · after deploy · result **PASS** (116 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -34,7 +34,18 @@ Site: https://new.extas.com.bd · commit `48e95aeae51b` · nightly · result **P
 | `/search?q=polo` | phone | 200 | `/search` | ok | [picture](search-q-polo-phone.jpg) |
 | `/bn/search?q=polo` | phone | 200 | `/bn/search` | ok | [picture](bn-search-q-polo-phone.jpg) |
 | `/search?q=exchange` | phone | 200 | `/search` | ok | [picture](search-q-exchange-phone.jpg) |
+| `/account/login` | phone | 200 | `/account/login` | ok | [picture](account-login-phone.jpg) |
+| `/bn/account/login` | phone | 200 | `/bn/account/login` | ok | [picture](bn-account-login-phone.jpg) |
+| `/account` | phone | 200 | `/account` | ok | [picture](account-phone.jpg) |
+| `/bn/account` | phone | 200 | `/bn/account` | ok | [picture](bn-account-phone.jpg) |
+| `/account/profile` | phone | 200 | `/account/profile` | ok | [picture](account-profile-phone.jpg) |
+| `/account/orders/0` | phone | 200 | `/account/orders/0` | ok | [picture](account-orders-0-phone.jpg) |
+| `/bn/account/orders/0` | phone | 200 | `/bn/account/orders/0` | ok | [picture](bn-account-orders-0-phone.jpg) |
+| `/combos` | phone | 200 | `/combos` | ok | [picture](combos-phone.jpg) |
+| `/bn/combos` | phone | 200 | `/bn/combos` | ok | [picture](bn-combos-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
+| `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
+| `/bn/account/orders/0/invoice` | phone | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-phone.jpg) |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
 | `/admin` | phone | 200 | `/admin/products` | ok | [picture](admin-phone.jpg) |
 | `/admin/combos` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-phone.jpg) |
@@ -81,7 +92,18 @@ Site: https://new.extas.com.bd · commit `48e95aeae51b` · nightly · result **P
 | `/search?q=polo` | desktop | 200 | `/search` | ok | [picture](search-q-polo-desktop.jpg) |
 | `/bn/search?q=polo` | desktop | 200 | `/bn/search` | ok | [picture](bn-search-q-polo-desktop.jpg) |
 | `/search?q=exchange` | desktop | 200 | `/search` | ok | [picture](search-q-exchange-desktop.jpg) |
+| `/account/login` | desktop | 200 | `/account/login` | ok | [picture](account-login-desktop.jpg) |
+| `/bn/account/login` | desktop | 200 | `/bn/account/login` | ok | [picture](bn-account-login-desktop.jpg) |
+| `/account` | desktop | 200 | `/account` | ok | [picture](account-desktop.jpg) |
+| `/bn/account` | desktop | 200 | `/bn/account` | ok | [picture](bn-account-desktop.jpg) |
+| `/account/profile` | desktop | 200 | `/account/profile` | ok | [picture](account-profile-desktop.jpg) |
+| `/account/orders/0` | desktop | 200 | `/account/orders/0` | ok | [picture](account-orders-0-desktop.jpg) |
+| `/bn/account/orders/0` | desktop | 200 | `/bn/account/orders/0` | ok | [picture](bn-account-orders-0-desktop.jpg) |
+| `/combos` | desktop | 200 | `/combos` | ok | [picture](combos-desktop.jpg) |
+| `/bn/combos` | desktop | 200 | `/bn/combos` | ok | [picture](bn-combos-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
+| `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
+| `/bn/account/orders/0/invoice` | desktop | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin/products` | ok | [picture](admin-desktop.jpg) |
 | `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
 | `/admin/delivery` | desktop | 200 | `/admin/delivery` | ok | [picture](admin-delivery-desktop.jpg) |
