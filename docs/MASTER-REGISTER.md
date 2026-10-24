@@ -422,6 +422,45 @@ the server.*
 > - No budget, assertion or gate is lowered: the same Lighthouse budget and page-weight targets, the same device sizes and rules (0 fails), the same end-to-end journeys. The two Lighthouse page lists become one (`lighthouserc.json`). The job names that branch protection may require (`web`, `device-gate`, `db`, `infra`, `readme-guard`, `commits`) stay, each failing when its gate fails.
 > - No new PR number: on PR 17 (CI). It closes follow-up 187 (the seeded Lighthouse beside the device gate).
 
+> **CN-024 · 24 Oct 2026 (owner: the demo lives with the shop; side-by-side preview everywhere it matters; always a way back).**
+>
+> **(1) Demo Center** (Settings → System → Demo; PR 594, plus PR 509 for handover).
+> - Every deploy copies the latest `docs/demo/EXTAS-demo-V*.html` to the server. Older versions are kept, each with its date.
+> - An on/off switch opens the demo at its own address (e.g. `/demo`).
+> - Access is admin-login only, or a separate demo password (owner's choice). It is never shown to customers and is `noindex`.
+> - The demo runs only on sample data and never touches real orders, stock or money; a "DEMO — sample data" banner says so.
+> - Each admin section has a small "Demo" icon that opens the same section of the demo, optionally side by side with the live page, and a list of what is "in the demo, not live yet" (generated from the register).
+> - **Handover:** the final demo ships in the handover package. A new installation starts with the demo on; its owner turns it off after going live. No owner data is ever included (PR 509).
+>
+> **(2) Side-by-side preview before publishing,** on every change that customers or staff will see:
+> - products and combos/sets (card, product page, phone/tablet/desktop);
+> - hero and campaigns;
+> - page layouts and the site builder;
+> - header, menus, footer and logo;
+> - banners, notices, pop-ups and side canvas;
+> - checkout texts and field order;
+> - message templates (SMS/WhatsApp/e-mail, filled with a real sample order);
+> - invoice, sticker and label templates;
+> - landing pages;
+> - blog posts;
+> - SEO snippet (search-result preview);
+> - size charts;
+> - policies and texts;
+> - coupon and offer display;
+> - ad and studio creatives;
+> - the admin look (designs A/B/C).
+>
+> The preview shows **"Live now" and "Your change" side by side**, with device and EN/বাং toggles and a highlight on what changed. Nothing reaches customers before Publish.
+>
+> **(3) Always a way back,** in three levels on every item above and on settings:
+> - (a) undo the last change;
+> - (b) the version history of that item: pick any earlier version, preview it side by side, restore it;
+> - (c) the whole look back to the "Launch default" or a named snapshot (PR 597).
+>
+> Every restore is logged and can itself be undone. Settings groups also have "Reset to default".
+>
+> No new PR numbers: (1) lands on PR 594 and 509; (2) and (3) are a shared admin capability on PR 597 and the content/catalogue PRs of each item, built to `docs/BACKEND-ARCHITECTURE.md` states.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |

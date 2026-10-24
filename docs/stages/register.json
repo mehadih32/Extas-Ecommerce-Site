@@ -1878,6 +1878,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-024",
+   "date": "24 Oct",
+   "title": "owner: the demo lives with the shop; side-by-side preview everywhere it matters; always a way back",
+   "text": "",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
