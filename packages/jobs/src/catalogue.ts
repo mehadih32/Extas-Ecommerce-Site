@@ -7,10 +7,13 @@
 // The inventory jobs (S09) were shaped for this worker from the start (`@extas/inventory` jobs.ts): the stock pull,
 // the cart-hold expiry, the ERP document relay (the outbox), the low-stock check, the reconcile with the ERP and the
 // default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
-// (search.ts). A later stage adds its job here with its key, queue and function.
+// (search.ts), PR 148 the message engine's run (messages.ts). A later stage adds its job here with its key, queue and
+// function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
+import { runMessages } from '@extas/messages';
 import { indexStore } from '@extas/search';
+import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -119,11 +122,34 @@ const searchIndexJob: JobDefinition<{ storeId: number; version?: string }> = {
   run: async (deps, p) => outcomeOf(await indexStore(searchDeps(deps), p.storeId)),
 };
 
+/**
+ * PR 148 — one store's message run (packages/messages `runMessages`; planned by messages.ts `messagesPlanner` once per
+ * slot of `messages.engine.everySeconds`). Safe to run twice: a message's key is its order, step and channel.
+ */
+const messagesJob: JobDefinition<{ storeId: number }> = {
+  key: MESSAGES_JOB,
+  queue: MESSAGES_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${MESSAGES_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => {
+    const m = messagesDeps(deps);
+    if (!m) return { ok: true, stats: { skipped: 'no senders' } };
+    const r = await runMessages(m, p.storeId);
+    return { ok: true, stats: r ? compactStats(r) : { skipped: 'messages off' } };
+  },
+};
+
 // PR 72: the search index (search.ts), planned by its own planner when a store's index is behind its catalogue
+// PR 148: the message engine (messages.ts), planned per store and slot
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
   searchIndexJob as unknown as JobDefinition<never>,
+  messagesJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

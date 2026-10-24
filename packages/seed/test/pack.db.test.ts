@@ -84,4 +84,21 @@ describe.skipIf(!HAS_DB)('general default pack on PostgreSQL', () => {
     expect([a.status, b.status].sort()).toEqual(['applied', 'unchanged']);
     expect(await db.prisma.category.count({ where: { storeId: third } })).toBe(defaultPack.categories.length);
   });
+
+  it('PR 148: an untouched earlier template takes the new words; an edited one is never touched', async () => {
+    const store = (await makeStore(db.prisma, 'pack-d')).id;
+    const sms = (locale: string) => defaultPack.notificationTemplates.find((t) => t.key === 'order.placed' && t.channel === 'SMS' && t.locale === locale)!;
+    // a store from before PR 148: the old words, the English one never edited, the Bengali one edited by the owner
+    await db.prisma.notificationTemplate.create({ data: { storeId: store, key: 'order.placed', channel: 'SMS', locale: 'en', name: 'Order placed', body: sms('en').replaces![0]!, enabled: true } });
+    await db.prisma.notificationTemplate.create({ data: { storeId: store, key: 'order.placed', channel: 'SMS', locale: 'bn', name: 'Order placed', body: 'নিজের লেখা {orderNumber}', enabled: true } });
+    const r = await applyPack(db.prisma, defaultPack, { storeId: store });
+    expect(r.updated.NotificationTemplate).toBe(1);
+    const rows = await db.prisma.notificationTemplate.findMany({ where: { storeId: store, key: 'order.placed', channel: 'SMS' }, orderBy: { locale: 'asc' } });
+    expect(rows.map((x) => [x.locale, x.body])).toEqual([
+      ['bn', 'নিজের লেখা {orderNumber}'],
+      ['en', sms('en').body],
+    ]);
+    // and a second run changes nothing
+    expect((await applyPack(db.prisma, defaultPack, { storeId: store })).status).toBe('unchanged');
+  });
 });

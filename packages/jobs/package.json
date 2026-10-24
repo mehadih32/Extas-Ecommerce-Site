@@ -20,6 +20,7 @@
     "@extas/adapters": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/inventory": "workspace:*",
+    "@extas/messages": "workspace:*",
     "@extas/search": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/vault": "workspace:*",

@@ -2,6 +2,7 @@
 // inventory's dependencies (the ERP connection layer with the vault's keys, PR 18/493) and a clock for tests.
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
+import type { MessagesDeps } from '@extas/messages';
 import type { MeiliConfig } from '@extas/search';
 
 export type { SettingsReader };
@@ -13,6 +14,8 @@ export interface JobDeps {
   inventory: InventoryDeps;
   /** PR 72: the server's Meilisearch (MEILI_URL and its key), or null — the search index job then does nothing. */
   search?: { meili: MeiliConfig | null };
+  /** PR 148: the message senders (SMS, WhatsApp, e-mail; each the mock until its key is entered), or none — no message job. */
+  messages?: { sender: MessagesDeps['sender'] };
   /** Clock, for tests. */
   now?: () => Date;
 }

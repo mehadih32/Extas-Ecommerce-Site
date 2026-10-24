@@ -1,7 +1,7 @@
 {
   "$comment": "PR 508 — the general default pack: neutral, editable defaults seeded into every store of every installation. Structure only: no money (every band ships off, without a charge; prices, discounts, COD and charges are the owner's decisions, CLAUDE.md rule 6), no owner data (PR 509), no media. Applying it only adds what is missing; it never overwrites a row the owner edited. The policy shapes, AI settings and theme are settings in packages/settings/src/registry.ts (seeded by the settings migration, reset with PR 510). Roles are seeded by the role builder (PR 15, 16, 495).",
   "key": "general",
-  "version": 1,
+  "version": 2,
   "motherStore": { "slug": "main" },
   "garmentTypes": [
     {
@@ -89,22 +89,6 @@
   ],
   "notificationTemplates": [
     {
-      "key": "order.placed",
-      "channel": "SMS",
-      "locale": "bn",
-      "name": "Order placed",
-      "enabled": true,
-      "body": "{storeName}: আপনার অর্ডার {orderNumber} পেয়েছি। মোট {total}। ধন্যবাদ!"
-    },
-    {
-      "key": "order.placed",
-      "channel": "SMS",
-      "locale": "en",
-      "name": "Order placed",
-      "enabled": true,
-      "body": "{storeName}: we got your order {orderNumber}. Total {total}. Thank you!"
-    },
-    {
       "key": "order.processing",
       "channel": "SMS",
       "locale": "bn",
@@ -137,24 +121,6 @@
       "body": "Hi {customerName}, your order {orderNumber} from {storeName} is being packed. Track it here: {trackingLink}"
     },
     {
-      "key": "order.placed",
-      "channel": "EMAIL",
-      "locale": "bn",
-      "name": "Order confirmation e-mail",
-      "enabled": true,
-      "subject": "আপনার অর্ডার {orderNumber}",
-      "body": "{customerName},\n\nঅর্ডার {orderNumber} এর জন্য ধন্যবাদ। মোট: {total}।\nএখানে অর্ডারের খবর দেখুন: {orderLink}\n\n{storeName}"
-    },
-    {
-      "key": "order.placed",
-      "channel": "EMAIL",
-      "locale": "en",
-      "name": "Order confirmation e-mail",
-      "enabled": true,
-      "subject": "Your order {orderNumber}",
-      "body": "Hi {customerName},\n\nThank you for your order {orderNumber}. Total: {total}.\nFollow it here: {orderLink}\n\n{storeName}"
-    },
-    {
       "key": "order.pickedUp",
       "channel": "SMS",
       "locale": "bn",
@@ -171,35 +137,375 @@
       "body": "{storeName}: the courier has picked up order {orderNumber}. Track it: {trackingLink}"
     },
     {
+      "key": "order.placed",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Order placed",
+      "enabled": true,
+      "body": "{storeName}: আপনার অর্ডার {orderNumber} পেয়েছি। {amountLine} ধন্যবাদ!",
+      "replaces": [
+        "{storeName}: আপনার অর্ডার {orderNumber} পেয়েছি। মোট {total}। ধন্যবাদ!"
+      ]
+    },
+    {
+      "key": "order.placed",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Order placed",
+      "enabled": true,
+      "body": "{storeName}: we got your order {orderNumber}. {amountLine} Thank you!",
+      "replaces": [
+        "{storeName}: we got your order {orderNumber}. Total {total}. Thank you!"
+      ]
+    },
+    {
+      "key": "order.placed",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Order placed",
+      "enabled": true,
+      "body": "{customerName}, {storeName}-এ আপনার অর্ডার {orderNumber} পেয়েছি। {amountLine} এখানে দেখুন: {orderLink}"
+    },
+    {
+      "key": "order.placed",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Order placed",
+      "enabled": true,
+      "body": "Hi {customerName}, we got your order {orderNumber} at {storeName}. {amountLine} Follow it here: {orderLink}"
+    },
+    {
+      "key": "order.placed",
+      "channel": "EMAIL",
+      "locale": "bn",
+      "name": "Order confirmation e-mail",
+      "enabled": true,
+      "subject": "আপনার অর্ডার {orderNumber}",
+      "body": "{customerName},\n\nঅর্ডার {orderNumber} এর জন্য ধন্যবাদ। {amountLine}\nএখানে অর্ডারের খবর দেখুন: {orderLink}\n\n{storeName}",
+      "replaces": [
+        "{customerName},\n\nঅর্ডার {orderNumber} এর জন্য ধন্যবাদ। মোট: {total}।\nএখানে অর্ডারের খবর দেখুন: {orderLink}\n\n{storeName}"
+      ]
+    },
+    {
+      "key": "order.placed",
+      "channel": "EMAIL",
+      "locale": "en",
+      "name": "Order confirmation e-mail",
+      "enabled": true,
+      "subject": "Your order {orderNumber}",
+      "body": "Hi {customerName},\n\nThank you for your order {orderNumber}. {amountLine}\nFollow it here: {orderLink}\n\n{storeName}",
+      "replaces": [
+        "Hi {customerName},\n\nThank you for your order {orderNumber}. Total: {total}.\nFollow it here: {orderLink}\n\n{storeName}"
+      ]
+    },
+    {
+      "key": "order.selfConfirm",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Self-confirm (reply 1, 2 or 3)",
+      "enabled": true,
+      "body": "{customerName}, {storeName}-এর অর্ডার {orderNumber} প্যাকের জন্য তৈরি। {amountLine} পাঠাতে 1, বদলাতে 2, বাতিল করতে 3 লিখুন।"
+    },
+    {
+      "key": "order.selfConfirm",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Self-confirm (reply 1, 2 or 3)",
+      "enabled": true,
+      "body": "Hi {customerName}, your {storeName} order {orderNumber} is ready to pack. {amountLine} Reply 1 to send it, 2 to change it, 3 to cancel it."
+    },
+    {
+      "key": "order.selfConfirm",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Self-confirm (reply 1, 2 or 3)",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} প্যাকের জন্য তৈরি। {amountLine} পাঠাতে 1, বদলাতে 2, বাতিল করতে 3 লিখুন।"
+    },
+    {
+      "key": "order.selfConfirm",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Self-confirm (reply 1, 2 or 3)",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is ready to pack. {amountLine} Reply 1 to send it, 2 to change it, 3 to cancel it."
+    },
+    {
+      "key": "order.selfConfirmed",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Self-confirm answer to 1",
+      "enabled": true,
+      "body": "ধন্যবাদ, {customerName}। অর্ডার {orderNumber}-এর জন্য আপনার হ্যাঁ পেয়েছি।"
+    },
+    {
+      "key": "order.selfConfirmed",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Self-confirm answer to 1",
+      "enabled": true,
+      "body": "Thank you, {customerName}. We have your yes for order {orderNumber}."
+    },
+    {
+      "key": "order.selfConfirmed",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Self-confirm answer to 1",
+      "enabled": true,
+      "body": "{storeName}: ধন্যবাদ। অর্ডার {orderNumber}-এর জন্য আপনার হ্যাঁ পেয়েছি।"
+    },
+    {
+      "key": "order.selfConfirmed",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Self-confirm answer to 1",
+      "enabled": true,
+      "body": "{storeName}: thank you. We have your yes for order {orderNumber}."
+    },
+    {
+      "key": "order.selfConfirmChange",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Self-confirm answer to 2",
+      "enabled": true,
+      "body": "ঠিক আছে, {customerName}। অর্ডার {orderNumber} বদলের জন্য আমাদের টিম আপনাকে ফোন করবে।"
+    },
+    {
+      "key": "order.selfConfirmChange",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Self-confirm answer to 2",
+      "enabled": true,
+      "body": "Noted, {customerName}. Our team will call you about the change to order {orderNumber}."
+    },
+    {
+      "key": "order.selfConfirmChange",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Self-confirm answer to 2",
+      "enabled": true,
+      "body": "{storeName}: ঠিক আছে। অর্ডার {orderNumber} বদলের জন্য আমাদের টিম আপনাকে ফোন করবে।"
+    },
+    {
+      "key": "order.selfConfirmChange",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Self-confirm answer to 2",
+      "enabled": true,
+      "body": "{storeName}: noted. Our team will call you about the change to order {orderNumber}."
+    },
+    {
+      "key": "order.selfConfirmCancel",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Self-confirm answer to 3",
+      "enabled": true,
+      "body": "ঠিক আছে, {customerName}। অর্ডার {orderNumber} বাতিলের জন্য আমাদের টিম আপনাকে ফোন করবে।"
+    },
+    {
+      "key": "order.selfConfirmCancel",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Self-confirm answer to 3",
+      "enabled": true,
+      "body": "Noted, {customerName}. Our team will call you to cancel order {orderNumber}."
+    },
+    {
+      "key": "order.selfConfirmCancel",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Self-confirm answer to 3",
+      "enabled": true,
+      "body": "{storeName}: ঠিক আছে। অর্ডার {orderNumber} বাতিলের জন্য আমাদের টিম আপনাকে ফোন করবে।"
+    },
+    {
+      "key": "order.selfConfirmCancel",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Self-confirm answer to 3",
+      "enabled": true,
+      "body": "{storeName}: noted. Our team will call you to cancel order {orderNumber}."
+    },
+    {
+      "key": "order.confirmed",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Order confirmed",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} কনফার্ম হয়েছে। এখানে দেখুন: {trackingLink}"
+    },
+    {
+      "key": "order.confirmed",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Order confirmed",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is confirmed. Follow it here: {trackingLink}"
+    },
+    {
+      "key": "order.confirmed",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Order confirmed",
+      "enabled": true,
+      "body": "{customerName}, {storeName}-এর অর্ডার {orderNumber} কনফার্ম হয়েছে। এখানে দেখুন: {trackingLink}"
+    },
+    {
+      "key": "order.confirmed",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Order confirmed",
+      "enabled": true,
+      "body": "Hi {customerName}, your {storeName} order {orderNumber} is confirmed. Follow it here: {trackingLink}"
+    },
+    {
+      "key": "order.packed",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Order being packed",
+      "enabled": true,
+      "body": "{customerName}, {storeName} থেকে আপনার অর্ডার {orderNumber} প্যাক হচ্ছে। {amountLine} এখানে ট্র্যাক করুন: {trackingLink}"
+    },
+    {
+      "key": "order.packed",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Order being packed",
+      "enabled": true,
+      "body": "Hi {customerName}, your order {orderNumber} from {storeName} is being packed. {amountLine} Track it here: {trackingLink}"
+    },
+    {
+      "key": "order.packed",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Order being packed",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} প্যাক হচ্ছে। ট্র্যাক করুন: {trackingLink}"
+    },
+    {
+      "key": "order.packed",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Order being packed",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is being packed. Track it: {trackingLink}"
+    },
+    {
+      "key": "order.booked",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Order on its way",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} পাঠানো হচ্ছে। ট্র্যাক করুন: {trackingLink} {exactAmountLine}"
+    },
+    {
+      "key": "order.booked",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Order on its way",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is on its way. Track it: {trackingLink} {exactAmountLine}"
+    },
+    {
+      "key": "order.booked",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Order on its way",
+      "enabled": true,
+      "body": "{customerName}, আপনার অর্ডার {orderNumber} কুরিয়ারে দেওয়া হয়েছে। এখানে ট্র্যাক করুন: {trackingLink} {exactAmountLine}"
+    },
+    {
+      "key": "order.booked",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Order on its way",
+      "enabled": true,
+      "body": "Hi {customerName}, your order {orderNumber} is with the courier. Track it here: {trackingLink} {exactAmountLine}"
+    },
+    {
       "key": "order.outForDelivery",
       "channel": "SMS",
       "locale": "bn",
-      "name": "Out for delivery (off by default)",
-      "enabled": false,
-      "body": "{storeName}: অর্ডার {orderNumber} আজ আপনার কাছে পৌঁছাবে।"
+      "name": "Out for delivery",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} আজ আপনার কাছে পৌঁছাবে। {amountLine} {exactAmountLine}",
+      "replaces": [
+        "{storeName}: অর্ডার {orderNumber} আজ আপনার কাছে পৌঁছাবে।"
+      ]
     },
     {
       "key": "order.outForDelivery",
       "channel": "SMS",
       "locale": "en",
-      "name": "Out for delivery (off by default)",
-      "enabled": false,
-      "body": "{storeName}: order {orderNumber} is out for delivery today."
+      "name": "Out for delivery",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is out for delivery today. {amountLine} {exactAmountLine}",
+      "replaces": [
+        "{storeName}: order {orderNumber} is out for delivery today."
+      ]
+    },
+    {
+      "key": "order.outForDelivery",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Out for delivery",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} আজ আপনার কাছে পৌঁছাবে। {amountLine} {exactAmountLine}"
+    },
+    {
+      "key": "order.outForDelivery",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Out for delivery",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} is out for delivery today. {amountLine} {exactAmountLine}"
+    },
+    {
+      "key": "order.deliveryDay",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Delivery day morning",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} আজ পৌঁছাবে। {amountLine} {exactAmountLine}"
+    },
+    {
+      "key": "order.deliveryDay",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Delivery day morning",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} arrives today. {amountLine} {exactAmountLine}"
+    },
+    {
+      "key": "order.deliveryDay",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Delivery day morning",
+      "enabled": true,
+      "body": "শুভ সকাল {customerName}, অর্ডার {orderNumber} আজ পৌঁছাবে। {amountLine} {exactAmountLine}"
+    },
+    {
+      "key": "order.deliveryDay",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Delivery day morning",
+      "enabled": true,
+      "body": "Good morning {customerName}, order {orderNumber} arrives today. {amountLine} {exactAmountLine}"
     },
     {
       "key": "order.delivered",
       "channel": "SMS",
       "locale": "bn",
-      "name": "Delivered (off by default)",
-      "enabled": false,
+      "name": "Delivered",
+      "enabled": true,
       "body": "{storeName}: অর্ডার {orderNumber} পৌঁছে গেছে। ধন্যবাদ!"
     },
     {
       "key": "order.delivered",
       "channel": "SMS",
       "locale": "en",
-      "name": "Delivered (off by default)",
-      "enabled": false,
+      "name": "Delivered",
+      "enabled": true,
       "body": "{storeName}: order {orderNumber} has been delivered. Thank you!"
     },
     {
@@ -233,6 +539,198 @@
       "name": "Two sizes: which one? (off by default)",
       "enabled": false,
       "body": "{storeName}: order {orderNumber} has one piece in two sizes. Both, or only one? Choose here: {orderLink}"
+    },
+    {
+      "key": "order.delivered",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Delivered",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} পৌঁছে গেছে। {storeName}-এ কেনাকাটার জন্য ধন্যবাদ!"
+    },
+    {
+      "key": "order.delivered",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Delivered",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} has been delivered. Thank you for shopping at {storeName}!"
+    },
+    {
+      "key": "order.care",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Day-1 care",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber}-এর সাইজ ঠিক হয়েছে? না হলে এখানে জানান: {orderLink}"
+    },
+    {
+      "key": "order.care",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Day-1 care",
+      "enabled": true,
+      "body": "Hi {customerName}, did your order {orderNumber} fit well? If not, tell us here: {orderLink}"
+    },
+    {
+      "key": "order.care",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Day-1 care",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber}-এর সাইজ ঠিক হয়েছে? না হলে এখানে জানান: {orderLink}"
+    },
+    {
+      "key": "order.care",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Day-1 care",
+      "enabled": true,
+      "body": "{storeName}: did order {orderNumber} fit well? If not, tell us here: {orderLink}"
+    },
+    {
+      "key": "order.review",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Day-3 review request",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} কেমন লাগলো? ছোট একটা রিভিউ অন্যদের কাজে লাগবে: {orderLink}"
+    },
+    {
+      "key": "order.review",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Day-3 review request",
+      "enabled": true,
+      "body": "Hi {customerName}, how do you like your order {orderNumber}? A short review helps other buyers: {orderLink}"
+    },
+    {
+      "key": "order.review",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Day-3 review request",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} কেমন লাগলো? ছোট একটা রিভিউ দিন: {orderLink}"
+    },
+    {
+      "key": "order.review",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Day-3 review request",
+      "enabled": true,
+      "body": "{storeName}: how do you like order {orderNumber}? A short review helps other buyers: {orderLink}"
+    },
+    {
+      "key": "order.cancelled",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Cancelled",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} বাতিল হয়েছে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.cancelled",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Cancelled",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is cancelled. Questions? {orderLink}"
+    },
+    {
+      "key": "order.cancelled",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Cancelled",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} বাতিল হয়েছে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.cancelled",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Cancelled",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} is cancelled. Questions? {orderLink}"
+    },
+    {
+      "key": "order.onHold",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "On hold",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} আমাদের টিমের যাচাইয়ের অপেক্ষায় আছে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.onHold",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "On hold",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is waiting for a check by our team. Questions? {orderLink}"
+    },
+    {
+      "key": "order.onHold",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "On hold",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} আমাদের টিমের যাচাইয়ের অপেক্ষায় আছে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.onHold",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "On hold",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} is waiting for a check by our team. Questions? {orderLink}"
+    },
+    {
+      "key": "order.advanceRequested",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Advance asked",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} পাঠানোর আগে {amountDue} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।"
+    },
+    {
+      "key": "order.advanceRequested",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Advance asked",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} needs an advance of {amountDue} before it is sent. Our team will call you about it."
+    },
+    {
+      "key": "order.advanceRequested",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Advance asked",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} পাঠানোর আগে {amountDue} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।"
+    },
+    {
+      "key": "order.advanceRequested",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Advance asked",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} needs an advance of {amountDue} before it is sent. Our team will call you about it."
+    },
+    {
+      "key": "gift.receiver",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Gift receiver notice",
+      "enabled": true,
+      "body": "{storeName}: {senderName} আপনার জন্য একটি উপহার পাঠিয়েছেন (অর্ডার {orderNumber})। {amountLine}"
+    },
+    {
+      "key": "gift.receiver",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Gift receiver notice",
+      "enabled": true,
+      "body": "{storeName}: a gift from {senderName} is on its way to you (order {orderNumber}). {amountLine}"
     }
   ]
 }

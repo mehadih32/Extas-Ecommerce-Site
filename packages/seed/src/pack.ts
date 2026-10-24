@@ -4,7 +4,8 @@
 //
 // Applying a pack only ever adds what is missing — a row the owner already has (same key) is never touched, so his
 // edits survive every re-run — and records the application once in DefaultPackApplication. Running it again changes
-// nothing. A newer pack version adds its new rows the same way.
+// nothing. A newer pack version adds its new rows the same way. PR 148: a template whose stored body is still an
+// earlier default word for word (`replaces`, so never edited) takes the new default words.
 //
 // Money never travels in a pack: a band has no charge field (the schema below rejects one), ships switched off, and
 // gets its charge from the owner (CLAUDE.md rule 6). Owner data never travels in a pack either (PR 509): the CI check
@@ -14,8 +15,13 @@ import type { Prisma, PrismaClient } from '@extas/db/client';
 import packJson from '../data/default-pack.json';
 import { lockSeed } from './lock';
 
-/** The `{tokens}` a notification template may use; the sender fills them in when the message goes out. */
-export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink'] as const;
+/**
+ * The `{tokens}` a notification template may use; the sender (@extas/messages) fills them in when the message goes out.
+ * PR 148 (SIM-F-001): an amount is always the amount still due (total − paid) — `{amountDue}`, or `{amountLine}`, a
+ * whole sentence that is left out for a fully paid order; `{total}` is kept for older templates and is read as the
+ * amount due too. `{exactAmountLine}`: CN-014 idea 10. `{senderName}`: a gift's sender (PR 605).
+ */
+export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName'] as const;
 
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'lower-case words joined by -' });
 const dottedKey = z.string().regex(/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)*$/, { message: 'dotted camelCase key' });
@@ -73,6 +79,11 @@ const notificationTemplate = z
     subject: text(200).optional(),
     body: text(2000),
     enabled: z.boolean(),
+    /**
+     * PR 148 — the bodies this default had in earlier pack versions. A store row that still holds one of them word for
+     * word was never edited, so it takes the new default; a row the owner changed is never touched.
+     */
+    replaces: z.array(text(2000)).max(10).optional(),
   })
   .strict()
   .refine((t) => onlyTemplateTokens(t.body) && onlyTemplateTokens(t.subject), {
@@ -147,6 +158,8 @@ export interface PackReport {
   created: Record<PackTable, number>;
   /** Rows the store already had (left exactly as they are). */
   kept: Record<PackTable, number>;
+  /** PR 148: rows that still held an earlier default word for word and took the new one (templates only). */
+  updated: Record<PackTable, number>;
   /** The DefaultPackApplication row was written now. */
   recorded: boolean;
 }
@@ -169,6 +182,7 @@ export async function applyPackTx(tx: Prisma.TransactionClient, pack: PackData, 
   const tally = () => Object.fromEntries(PACK_TABLES.map((t) => [t, 0])) as Record<PackTable, number>;
   const created = tally();
   const kept = tally();
+  const updated = tally();
 
   const store = await tx.store.findUnique({ where: { id: storeId }, select: { id: true } });
   if (!store) throw new Error(`store ${storeId} does not exist`);
@@ -250,10 +264,14 @@ export async function applyPackTx(tx: Prisma.TransactionClient, pack: PackData, 
   for (const t of pack.notificationTemplates) {
     const row = await tx.notificationTemplate.findUnique({
       where: { storeId_key_channel_locale: { storeId, key: t.key, channel: t.channel, locale: t.locale } },
-      select: { id: true },
+      select: { id: true, body: true },
     });
     if (row) {
-      kept.NotificationTemplate++;
+      // PR 148: an untouched earlier default (its body word for word) takes the new words; an edited row stays.
+      if (t.replaces?.includes(row.body)) {
+        await tx.notificationTemplate.update({ where: { id: row.id }, data: { name: t.name, subject: t.subject ?? null, body: t.body, enabled: t.enabled } });
+        updated.NotificationTemplate++;
+      } else kept.NotificationTemplate++;
       continue;
     }
     await tx.notificationTemplate.create({
@@ -277,10 +295,10 @@ export async function applyPackTx(tx: Prisma.TransactionClient, pack: PackData, 
   });
   if (!recordedBefore) {
     await tx.defaultPackApplication.create({
-      data: { storeId, packKey: pack.key, version: pack.version, summary: { created, kept }, appliedById: opts.actorId ?? null },
+      data: { storeId, packKey: pack.key, version: pack.version, summary: { created, kept, updated }, appliedById: opts.actorId ?? null },
     });
   }
-  const createdAny = Object.values(created).some((n) => n > 0);
+  const createdAny = Object.values(created).some((n) => n > 0) || Object.values(updated).some((n) => n > 0);
   return {
     status: createdAny || !recordedBefore ? 'applied' : 'unchanged',
     storeId,
@@ -288,6 +306,7 @@ export async function applyPackTx(tx: Prisma.TransactionClient, pack: PackData, 
     version: pack.version,
     created,
     kept,
+    updated,
     recorded: !recordedBefore,
   };
 }

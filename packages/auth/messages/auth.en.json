@@ -21,7 +21,8 @@
     "combos": "Combos and sets",
     "delivery": "Delivery areas and charges",
     "system": "Server and background jobs",
-    "orders": "Orders"
+    "orders": "Orders",
+    "messages": "Messages"
   },
   "permissions": {
     "settings": {
@@ -118,6 +119,15 @@
       "read": "See every review with its state (waiting, published, hidden)",
       "moderate": "Publish, hide or refuse a review and mark a verified buyer (approving a photo review also pays the photo reward, only while the owner has switched it on with his own amount)",
       "write": "Add a review the shop collected itself, and bring in a file of reviews"
+    },
+    "messages": {
+      "journey": {
+        "read": "See the order messages (steps, channels, limits)",
+        "write": "Change the order messages"
+      },
+      "selfConfirm": {
+        "reply": "Record a customer's self-confirm reply (1, 2 or 3)"
+      }
     }
   },
   "totp": {

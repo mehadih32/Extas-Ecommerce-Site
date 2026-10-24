@@ -18,7 +18,8 @@
 // (PR 127, 128, 561, 563, 565, 605) in messages/checkout-more.<lang>.json, the Find My Size learning and the
 // product reviews (S02, PR 59, 65; registry v35) in messages/reviews.<lang>.json, and "Build your own set" (S03, PR 98,
 // 100; registry v36) in messages/set-builder.<lang>.json, and the support explanation panel and the bulk / corporate
-// lane (S04, PR 566, 606; registry v38) in messages/support-lane.<lang>.json, merged in here.
+// lane (S04, PR 566, 606; registry v38) in messages/support-lane.<lang>.json, and the Messages control centre (S05,
+// PR 148, 149; registry v40, v41) in messages/messages.<lang>.json, merged in here.
 import adminShellBn from '../messages/admin-shell.bn.json';
 import adminShellEn from '../messages/admin-shell.en.json';
 import toolsBn from '../messages/catalogue-tools.bn.json';
@@ -67,6 +68,8 @@ import setBuilderBn from '../messages/set-builder.bn.json';
 import setBuilderEn from '../messages/set-builder.en.json';
 import supportLaneBn from '../messages/support-lane.bn.json';
 import supportLaneEn from '../messages/support-lane.en.json';
+import messagesBn from '../messages/messages.bn.json';
+import messagesEn from '../messages/messages.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -89,8 +92,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn), messagesEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn), messagesBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
