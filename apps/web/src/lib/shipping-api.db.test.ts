@@ -2,8 +2,8 @@
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the
 // permission; the courier accounts; the parcels with an exception recorded by staff; the RTO cost book. PR 176: the
 // orders ready to book, a press of "Book" with Steadfast on its practice world, a parcel read now, "Try again" refused on
-// a parcel the courier holds. PR 184: the late view. PR 525: the true-delivery checks and their resolution. Every value
-// is a made-up test value.
+// a parcel the courier holds. PR 184: the late view. PR 525: the true-delivery checks and their resolution. PR 526: why
+// the parcel came back. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { MOCK_COURIER_PROVIDER, STEADFAST_PROVIDER } from '@extas/adapters';
@@ -153,6 +153,12 @@ describe.skipIf(!HAS_TEST_DB)('courier admin API on PostgreSQL (S08 · PR 175)',
     expect((await checks('POST', [id, 'other'])).status).toBe(404);
     expect(await checks('POST', [id, 'resolve'], { body: { outcome: 'RETURNED' } })).toMatchObject({ status: 200, body: { ok: true, orderStep: 'returned', check: { state: 'RESOLVED' } } });
     expect(await checks('POST', [id, 'resolve'], { body: { outcome: 'RETURNED' } })).toMatchObject({ status: 409, body: { error: 'ALREADY_RESOLVED' } });
+    // PR 526: why it came back — its own key, a reason from the owner's list, on the return the resolution made
+    const why = (body: unknown, cookie?: string) => parcels('POST', [shipmentId, 'return-reason'], { body, ...(cookie ? { cookie } : {}) });
+    expect((await why({ reasonKey: 'did-not-like' }, reader)).status).toBe(403);
+    expect(await why({ reasonKey: 'no-such-reason' })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    expect((await parcels('GET', [shipmentId, 'return-reason'])).status).toBe(405);
+    expect(await why({ reasonKey: 'did-not-like', note: 'tried it, did not like the colour' })).toMatchObject({ status: 200, body: { ok: true, result: { reasonKey: 'did-not-like', riderNote: 'tried it, did not like the colour', created: false } } });
     f.overrides.delete('delivery.truthCheck');
   });
 

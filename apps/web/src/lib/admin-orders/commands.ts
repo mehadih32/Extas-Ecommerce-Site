@@ -61,6 +61,8 @@ export const KNOWN_ERRORS = [
   // PR 525: the true-delivery check's answers
   'ALREADY_RESOLVED',
   'ORDER_REFUSED',
+  // PR 526: a return reason on a parcel that did not come back
+  'NOT_RETURNED',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

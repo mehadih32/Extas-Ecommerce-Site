@@ -3,6 +3,11 @@
 // shop's own records contradicted (a true-delivery check), and how a person resolved each — really delivered, came
 // back with the delivery charge paid, came back — store-wide or for one customer. The charge a charge-paid return
 // carried is the courier's reported figure, noted on the return, never a sale (Sales stays the KPI's, metrics.ts).
+//
+// S08 · PR 526 — why parcels came back (SIM-F-038; fed into PR 521's phone history and the customer's RTO book): the
+// return records written in a period (by the day each was recorded), by the reason a person picked from the owner's
+// list (`orders.refusal.reasons` keys; a key the owner later removed still counts under its own name) and by kind,
+// store-wide or for one customer. Archived orders are left out. Counts only.
 import { Prisma } from '@extas/db/client';
 import type { Db } from './metrics';
 import type { Period } from './pure';
@@ -59,4 +64,42 @@ export async function deliveryTruth(db: Db, storeId: number, period: Period, opt
     returned: Number(r?.returned ?? 0),
     chargePaidMinor: Number(r?.charge_minor ?? 0),
   };
+}
+
+export interface ReturnReasons {
+  /** Return records in the period. */
+  total: number;
+  /** Of those, how many have a reason. */
+  withReason: number;
+  /** Count per reason key, the most frequent first (ties by key). */
+  byReason: { key: string; count: number }[];
+  /** Count per return kind (REFUSED_AT_DOOR, CHARGE_PAID_RETURN, RETURNED, DEFECT_RETURN). */
+  byKind: Record<string, number>;
+}
+
+/** Why parcels came back in a period, store-wide or for one customer (`customerId`). */
+export async function returnReasons(db: Db, storeId: number, period: Period, opts: { customerId?: string } = {}): Promise<ReturnReasons> {
+  checkPeriod(period);
+  const customer = opts.customerId ? Prisma.sql`AND o."customerId" = ${opts.customerId}::uuid` : Prisma.empty;
+  const rows = await db.$queryRaw<{ reason: string | null; kind: string; n: bigint }[]>`
+    SELECT r."reasonCode" AS reason, r."kind"::text AS kind, count(*) AS n
+    FROM "ReturnRecord" r
+    JOIN "Order" o ON o."id" = r."orderId"
+    WHERE r."storeId" = ${storeId} AND o."archivedAt" IS NULL AND r."createdAt" >= ${period.from} AND r."createdAt" < ${period.to} ${customer}
+    GROUP BY 1, 2`;
+  const reasons = new Map<string, number>();
+  const byKind: Record<string, number> = {};
+  let total = 0;
+  let withReason = 0;
+  for (const r of rows) {
+    const n = Number(r.n);
+    total += n;
+    byKind[r.kind] = (byKind[r.kind] ?? 0) + n;
+    if (r.reason) {
+      withReason += n;
+      reasons.set(r.reason, (reasons.get(r.reason) ?? 0) + n);
+    }
+  }
+  const byReason = [...reasons].map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  return { total, withReason, byReason, byKind };
 }

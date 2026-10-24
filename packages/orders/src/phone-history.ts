@@ -19,12 +19,19 @@ export function phoneForms(phone: string | null | undefined): string[] {
   return p.ok ? [...new Set([p.e164, p.digits])] : [phone];
 }
 
-/** The refusal reason of each returned order: the order service's `returned` step, else the courier's return record. */
+/**
+ * The timeline types that carry why an order came back: the order service's `returned` step, its PR 525 correction, and
+ * PR 526's return reason (a person's pick from the owner's list, recorded later than the step — the newest wins).
+ */
+export const REFUSAL_EVENTS = ['order.returned', 'order.deliveryCorrected', 'return.reason'] as const;
+
+/** The refusal reason of each returned order: the newest reason on its timeline, else the courier's return record. */
 export async function refusalKeys(deps: OrdersDeps, storeId: number, ids: string[]): Promise<Map<string, string | null>> {
   if (!ids.length) return new Map();
   const [events, records] = await Promise.all([
-    deps.db.orderEvent.findMany({ where: { storeId, orderId: { in: ids }, type: 'order.returned' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { orderId: true, reasonCode: true } }),
-    deps.db.returnRecord.findMany({ where: { storeId, orderId: { in: ids }, kind: 'REFUSED_AT_DOOR' }, orderBy: { createdAt: 'asc' }, select: { orderId: true, reasonCode: true } }),
+    deps.db.orderEvent.findMany({ where: { storeId, orderId: { in: ids }, type: { in: [...REFUSAL_EVENTS] } }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { orderId: true, reasonCode: true } }),
+    // a refusal at the door, with or without the delivery charge paid (PR 525, 526)
+    deps.db.returnRecord.findMany({ where: { storeId, orderId: { in: ids }, kind: { in: ['REFUSED_AT_DOOR', 'CHARGE_PAID_RETURN'] } }, orderBy: { createdAt: 'asc' }, select: { orderId: true, reasonCode: true } }),
   ]);
   const out = new Map<string, string | null>();
   for (const r of records) if (r.reasonCode) out.set(r.orderId, r.reasonCode);

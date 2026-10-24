@@ -42,6 +42,9 @@
 //                                                          the checks with their signs, the order and courier (delivery.parcels)
 //   POST  /api/admin/delivery/checks/:id/resolve           {outcome: DELIVERED | CHARGE_PAID_RETURN | RETURNED, refusalKey?, note?}
 //                                                          what really happened, through the order service (delivery.outcomes)
+// PR 526 — why a parcel came back:
+//   POST  /api/admin/delivery/parcels/:id/return-reason    {reasonKey, note?} a reason from the owner's orders.refusal.reasons
+//                                                          and the rider's words, on the parcel's return record (delivery.outcomes)
 import { courierAdapters, createConnections } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
@@ -155,6 +158,10 @@ export async function parcelsRoute(request: Request, deps: AdminDeps | null, pat
   if (action === 'exception') {
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'delivery.exceptions', async (x) => ({ result: await sh.recordException(x.deps, x.who, id, await body(request)) }));
+  }
+  if (action === 'return-reason') {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.outcomes', async (x) => ({ result: await sh.recordReturnReason(x.deps, x.who, id, await body(request)) }));
   }
   if (action === 'retry') {
     if (m !== 'POST') return notAllowed();

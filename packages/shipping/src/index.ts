@@ -40,6 +40,9 @@
 // PR 525: the true-delivery check — a "Delivered" the shop's own records contradict, held for a person to resolve
 // (truth.ts); what really happened is kept beside what the courier claimed.
 //
+// PR 526: why a parcel came back — the rider's note kept from the courier's door outcome, and the reason a person picks
+// from the owner's list on the parcel's one return record, on the order's timeline and in the phone history (returns.ts).
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -59,3 +62,4 @@ export * from './picking-pure';
 export * from './picking';
 export * from './sync';
 export * from './truth';
+export * from './returns';

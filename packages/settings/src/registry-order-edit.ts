@@ -88,9 +88,11 @@ export const orderEditSettings = {
   }),
   // PR 157 (SIM-F-044, registry v43): "arrived late", "the wrong item" and "damaged" join the list — refusals the shop
   // caused, which `risk.history.ourFaultRefusals` keeps out of the customer's risk score.
+  // PR 526 (registry v58): "didn't like it" and "ordered by mistake" join the list — the rider's words on a return;
+  // the list now names why any parcel came back (refused at the door or sent back with the rider), not only refusals.
   'orders.refusal.reasons': setting({
     ...base,
-    version: 43,
+    version: 58,
     schema: list,
     default: ordersDictionaryDefault('refusalReasons'),
     valueType: 'JSON',

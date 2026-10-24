@@ -32,7 +32,9 @@ export type ShippingErrorCode =
   /** PR 525: the true-delivery check was resolved already (`data.resolution`). */
   | 'ALREADY_RESOLVED'
   /** PR 525, 526: the order service refused the step (`data.code`, e.g. CANCEL_PENDING); nothing was changed. */
-  | 'ORDER_REFUSED';
+  | 'ORDER_REFUSED'
+  /** PR 526: a return reason is only for a parcel that came back (`data.status`). */
+  | 'NOT_RETURNED';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;
