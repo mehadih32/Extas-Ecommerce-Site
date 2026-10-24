@@ -86,6 +86,10 @@ describe('device gate', () => {
     expect(filledPlan('http://h:1', undefined)).toEqual([]);
     // one fill, as before PR 71
     expect(filledPlan('http://h:1', rules.filled[0]).map((p) => p.url)).toEqual(['http://h:1/bag?gate=filled', 'http://h:1/bn/bag?gate=filled']);
+    // follow-up 260: a filled page may be measured with something opened on it (the order page's edit form)
+    const opened = filledPlan('http://h:1', { fill: '/api/account/try-cards', paths: ['/account/orders/TRY-146?cards=1'], expect: ['#x'], clicks: ['[data-testid="order-edit-open"]'] });
+    expect(opened).toEqual([{ url: 'http://h:1/account/orders/TRY-146?cards=1&gate=filled', signedOut: true, expect: ['#x'], fill: 'http://h:1/api/account/try-cards', clicks: ['[data-testid="order-edit-open"]'] }]);
+    expect(filledPlan('http://h:1', rules.filled[0]).every((p) => !('clicks' in p))).toBe(true);
     const rc = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../lighthouserc.json'), 'utf8')).ci.collect.url.map((u) => new URL(u).pathname);
     for (const p of ['/bag', '/bn/bag']) expect(rc).toContain(p);
   });

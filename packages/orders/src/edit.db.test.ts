@@ -191,6 +191,12 @@ describe.skipIf(!HAS_TEST_DB)('PR 142, 143 · order edits by the team and by the
       expect(st).toMatchObject({ open: true, closed: null, maxEdits: 2, editsLeft: 2, can: { phone: true, address: true, size: true } });
       expect(st.lines[0]!.sizes.map((s) => s.variantId)).toContain(f.v.skyL);
       expect(st.lines[0]!.sizes.map((s) => s.variantId)).not.toContain(f.v.whiteM);
+      // follow-up 260: the page's size row is his own size and those others, in the piece's size order, his marked
+      const row = st.lines[0]!.choices;
+      expect(row.filter((x) => x.current).map((x) => x.variantId)).toEqual([f.v.skyM]);
+      expect(row.map((x) => x.variantId)).toEqual(expect.arrayContaining([f.v.skyM, f.v.skyL]));
+      expect(row.findIndex((x) => x.variantId === f.v.skyM)).toBeLessThan(row.findIndex((x) => x.variantId === f.v.skyL));
+      expect(row.map((x) => x.variantId)).not.toContain(f.v.whiteM);
       // somebody else's browser: no such order
       expect(await code(customerEdit(d(), { storeId: f.S, customerId: null, visitorId: randomUUID() }, { number: o.number, phone: '01710000099' }))).toBe('NOT_FOUND');
       // another colour is not his to change here

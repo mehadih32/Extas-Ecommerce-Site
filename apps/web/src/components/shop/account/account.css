@@ -292,3 +292,14 @@
 .shop .ord-rev-body { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 560px) { .shop .ord-rev-body { grid-template-columns: 1fr 1fr; } }
 .shop .ord-rev-done { display: inline-flex; align-items: center; gap: 5px; }
+
+/* Follow-up 260 (PR 143) — "Change address, phone or size" (demo ord_editCard, ord_editHTML): the button beside the
+   words, the form in place under them; the size row is the product page's pills (44 px), the boxes 16 px text. */
+.shop .ord-edit-t { min-width: 0; flex: 1 1 260px; }
+.shop .ord-edit-b { min-height: 44px; }
+.shop .ord-edit form .btn { min-height: 44px; }
+.shop .ord-eline { padding: 12px 0; border-top: 1px solid var(--line2); }
+.shop .ord-eline:first-of-type { border-top: 0; padding-top: 4px; }
+.shop .ord-edit .size-pill { min-width: 54px; min-height: 44px; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--input); background: var(--surface); font-weight: 600; font-size: 14px; cursor: pointer; color: var(--ink); }
+.shop .ord-edit .size-pill.on { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+
