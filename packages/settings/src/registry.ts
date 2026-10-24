@@ -31,6 +31,7 @@ import { accountSettings } from './registry-accounts';
 import { comboPageSettings } from './registry-combo-pages';
 import { motionSettings } from './registry-motion';
 import { ordersSettings } from './registry-orders';
+import { adminLookSettings } from './registry-admin-look';
 import { adminShellSettings } from './registry-admin-shell';
 import { checkoutMoreSettings } from './registry-checkout-more';
 import { reviewSettings } from './registry-reviews';
@@ -1214,6 +1215,8 @@ export const registry = {
   ...advanceRequestSettings,
   // ---- S07 · PR 171–174 · the wallet ledger and the apology credit, refunds, advances, gateway statements (registry-wallet.ts, version 55). ----
   ...walletSettings,
+  // ---- PR 12 (CN-025, CN-026 (b)) · Settings → Admin look: page designs, where the guide opens, the To do drawer, the Dashboard designs' numbers (registry-admin-look.ts, version 51). ----
+  ...adminLookSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

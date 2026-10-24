@@ -11,6 +11,8 @@
 - Delivery charges, Delivery time, Payment line, WhatsApp, Home page, Invoice wording, SMS & WhatsApp messages, Bag, Product page ইত্যাদি গ্রুপ
 - নতুন গ্রুপ: Checkout words and field order, Payment at checkout
 - নতুন: "Optional features in this section" — Gift mode
+- নতুন ট্যাব (PR 12): **অ্যাডমিনের চেহারা** (`/admin/settings/look`) — কোন পাতা কোন ডিজাইনে দেখাবে, আর গাইড কোথায়
+  খুলবে। বিস্তারিত: [admin-look.md](admin-look.md)
 
 ## এখানে কী করা যায়
 

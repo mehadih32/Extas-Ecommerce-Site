@@ -693,6 +693,9 @@ model StaffUser {
   twoFactorEnabled Boolean         @default(false)
   /// Admin language (D11): `en` by default from settings, Bengali on switch.
   adminLocale      String?
+  /// PR 12 (CN-025, CN-026 (b)): the person's own admin choices — the design per admin page (`look`, page id →
+  /// design key) and where the guide opens (`guide`). Read only when `admin.look` / `admin.guideOpens` allow it.
+  adminPrefs       Json?
   status           StaffUserStatus @default(ACTIVE)
   lastLoginAt      DateTime?       @db.Timestamptz(3)
   archivedAt       DateTime?       @db.Timestamptz(3)

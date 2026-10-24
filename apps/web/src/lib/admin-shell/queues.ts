@@ -12,6 +12,7 @@ import { orderQueueCounts } from '@extas/orders';
 import type { AdminSectionId } from '@extas/settings';
 import type { ShellIconName } from './icons';
 import type { ShellViewer } from './sections';
+import type { TodoGroup } from './todo';
 
 export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead';
 
@@ -24,19 +25,21 @@ export interface QueueDef {
   icon: ShellIconName;
   /** Counted in its section's sidebar badge (§5.1: Products = launch queue, Reports = urgent problems). */
   badge: boolean;
+  /** PR 12 (CN-025): the heading it sits under in the "To do" drawer (demo V12.4 A3_TODO_GROUP); else by section. */
+  group?: TodoGroup;
 }
 
 export const QUEUES: readonly QueueDef[] = [
-  { id: 'ordersConfirm', perm: 'orders.confirm', href: '/admin/orders/confirm', section: 'orders', tone: 'warn', icon: 'phone', badge: true },
-  { id: 'ordersPrepaid', perm: 'orders.confirm', href: '/admin/orders/confirm?view=prepaid', section: 'orders', tone: 'info', icon: 'wallet', badge: true },
-  { id: 'ordersReview', perm: 'orders.risk.read', href: '/admin/orders?view=inReview', section: 'orders', tone: 'warn', icon: 'shield', badge: true },
-  { id: 'ordersCancelRequests', perm: 'orders.confirm', href: '/admin/orders/confirm?view=cancelRequests', section: 'orders', tone: 'bad', icon: 'x', badge: false },
-  { id: 'ordersCancelPending', perm: 'orders.read', href: '/admin/orders?view=cancelPending', section: 'orders', tone: 'bad', icon: 'uturn', badge: false },
-  { id: 'launch', perm: 'catalogue.read', href: '/admin/products/queue', section: 'products', tone: 'info', icon: 'shirt', badge: true },
-  { id: 'lowStock', perm: 'inventory.read', href: '/admin/stock#st-low', section: 'products', tone: 'warn', icon: 'box', badge: false },
-  { id: 'countsReview', perm: 'inventory.read', href: '/admin/stock/counts', section: 'products', tone: 'info', icon: 'check', badge: false },
-  { id: 'erpFailed', perm: 'inventory.read', href: '/admin/stock#st-docs', section: 'products', tone: 'bad', icon: 'sync', badge: false },
-  { id: 'jobsDead', perm: 'system.read', href: '/admin/server', section: 'reports', tone: 'bad', icon: 'alert', badge: true },
+  { id: 'ordersConfirm', perm: 'orders.confirm', href: '/admin/orders/confirm', section: 'orders', tone: 'warn', icon: 'phone', badge: true, group: 'orders' },
+  { id: 'ordersPrepaid', perm: 'orders.confirm', href: '/admin/orders/confirm?view=prepaid', section: 'orders', tone: 'info', icon: 'wallet', badge: true, group: 'orders' },
+  { id: 'ordersReview', perm: 'orders.risk.read', href: '/admin/orders?view=inReview', section: 'orders', tone: 'warn', icon: 'shield', badge: true, group: 'orders' },
+  { id: 'ordersCancelRequests', perm: 'orders.confirm', href: '/admin/orders/confirm?view=cancelRequests', section: 'orders', tone: 'bad', icon: 'x', badge: false, group: 'orders' },
+  { id: 'ordersCancelPending', perm: 'orders.read', href: '/admin/orders?view=cancelPending', section: 'orders', tone: 'bad', icon: 'uturn', badge: false, group: 'orders' },
+  { id: 'launch', perm: 'catalogue.read', href: '/admin/products/queue', section: 'products', tone: 'info', icon: 'shirt', badge: true, group: 'products' },
+  { id: 'lowStock', perm: 'inventory.read', href: '/admin/stock#st-low', section: 'products', tone: 'warn', icon: 'box', badge: false, group: 'stock' },
+  { id: 'countsReview', perm: 'inventory.read', href: '/admin/stock/counts', section: 'products', tone: 'info', icon: 'check', badge: false, group: 'stock' },
+  { id: 'erpFailed', perm: 'inventory.read', href: '/admin/stock#st-docs', section: 'products', tone: 'bad', icon: 'sync', badge: false, group: 'stock' },
+  { id: 'jobsDead', perm: 'system.read', href: '/admin/server', section: 'reports', tone: 'bad', icon: 'alert', badge: true, group: 'system' },
 ];
 
 export interface QueueCount {

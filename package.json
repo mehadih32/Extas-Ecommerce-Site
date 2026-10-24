@@ -6,6 +6,7 @@
   "scripts": {
     "status:gen": "node tools/make-status.mjs",
     "docs:stages": "node tools/docs/gen-stage-pages.mjs",
+    "admin:design": "node tools/admin-look/new-design.mjs",
     "dev": "pnpm --filter @extas/web dev",
     "build": "pnpm status:gen && pnpm -r build",
     "lint": "pnpm -r lint",

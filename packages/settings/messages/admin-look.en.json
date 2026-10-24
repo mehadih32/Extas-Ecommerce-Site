@@ -1,0 +1,20 @@
+{
+  "admin": {
+    "look": {
+      "label": "Admin look: page designs",
+      "help": "Which design each admin page shows the team (a page not listed shows its standard design), and whether each person may pick their own design from the page's \"…\" menu. Every design shows the same numbers and runs the same actions."
+    },
+    "guideOpens": {
+      "label": "Where the guide opens",
+      "help": "On a computer the guide opens in a side panel beside the page (so the page stays visible), in a pop-up window or on its own page; on a phone it opens as a full-screen sheet. Each person may choose their own when this allows it."
+    },
+    "todo": {
+      "label": "To do drawer",
+      "help": "How many hours \"Later\" puts a waiting list aside, and which lists are \"Mine\" for each role. A role not listed sees the lists of its start section."
+    },
+    "dashboardDesigns": {
+      "label": "Dashboard designs: targets and rows",
+      "help": "The order-to-courier target in hours (0 = none), how many days the sales charts cover at least and average over, how many rows the product and stock cards list, how many days the courier cards and top products cover, how many days a date range of your own may cover, and how many weeks the week-by-week lines show."
+    }
+  }
+}

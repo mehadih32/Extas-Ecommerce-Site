@@ -47,6 +47,17 @@ export const SHELL_ICONS = {
   flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
   shield: 'M12 3.5l7.5 3v5.5c0 4.3-3.2 7.9-7.5 8.5-4.3-.6-7.5-4.2-7.5-8.5V6.5z',
   print: 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z',
+  // PR 12 (CN-025) — the V12.4 shell and the Dashboard designs (97z-adm2-rd1-core.js)
+  inbox: 'M3.5 13.5h5l1.5 3h4l1.5-3h5M5.5 5h13l2 8.5V19h-17v-5.5z',
+  rail: 'M4 4h16v16H4zM9.5 4v16',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+  dl: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  cal: 'M4 6h16v14H4zM4 10h16M8 3.5v4M16 3.5v4',
+  eye: 'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  palette: 'M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1.5 3.3c.5.6.3 2.7-2.5 2.7zM7.5 11h.01M10 7.5h.01M14.5 7.5h.01',
+  pulse: 'M3 12h4l3-7 4 14 3-7h4',
+  trend: 'M3.5 17 9 11.5l4 4L20.5 8M15 8h5.5v5.5',
 } as const;
 
 export type ShellIconName = keyof typeof SHELL_ICONS;

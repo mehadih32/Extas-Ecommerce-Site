@@ -26,6 +26,7 @@
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "settings/keys", "route": "/admin/integrations" },
     { "id": "settings/cache", "route": "/admin/settings/system/cache" },
+    { "id": "settings/look", "route": "/admin/settings/look" },
     { "id": "help/manual", "route": "/admin/help" }
   ],
   "notGuided": [

@@ -109,6 +109,10 @@ function settingEntries(): Entry[] {
     card('inventory.read', '/admin/stock#st-low', (l) => t(adminDicts[l], 'stock.low.title'), stock, both('stock.low.title')),
     card('inventory.read', '/admin/stock#st-docs', (l) => t(adminDicts[l], 'stock.docs.title'), stock, both('stock.docs.title')),
   ];
+  // PR 12 (CN-025): the page designs and where the guide opens.
+  const look = (lang: AdminLang) => `${t(adminDicts[lang], 'shell.sec.settings')} › ${t(adminDicts[lang], 'shell.tab.settings.look')}`;
+  out.push(card('settings.read', '/admin/settings/look', (l) => t(adminDicts[l], 'look.search.designs'), look, [...both('look.search.designs'), ...both('look.search.words')]));
+  out.push(card('settings.read', '/admin/settings/look#look-guide', (l) => t(adminDicts[l], 'look.guide.title'), look, both('look.guide.title')));
   for (const c of connectionCatalogue) {
     const k = `connections.${c.id}.name`;
     out.push(card('vault.read', '/admin/integrations', (l) => t(adminDicts[l], k), keys, [...both(k), ...both(`connections.${c.id}.desc`)]));
