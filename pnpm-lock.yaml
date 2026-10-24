@@ -669,6 +669,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../db
+      '@extas/delivery':
+        specifier: workspace:*
+        version: link:../delivery
       '@extas/inventory':
         specifier: workspace:*
         version: link:../inventory

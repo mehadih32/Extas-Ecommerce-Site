@@ -16,6 +16,8 @@ export const COMMAND_PATHS = {
   courierCancel: 'courier-cancel',
   flags: 'flags',
   notes: 'notes',
+  // PR 142: the team's edit (the full dialog, and "Correct phone")
+  edit: 'edit',
 } as const;
 export type CommandId = keyof typeof COMMAND_PATHS;
 
@@ -36,6 +38,13 @@ export const KNOWN_ERRORS = [
   'NOT_FOUND',
   'NOT_MERGEABLE',
   'IDEMPOTENCY_MISMATCH',
+  'NOTHING_CHANGED',
+  'BAD_PHONE',
+  'NOT_SAME_PIECE',
+  'PRICE_DIFFERS',
+  'OFFER_ON_ORDER',
+  'LAST_LINE',
+  'OUT_OF_STOCK',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

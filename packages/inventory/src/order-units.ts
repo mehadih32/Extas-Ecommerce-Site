@@ -54,3 +54,29 @@ export async function releaseOrderUnits(deps: InventoryDeps, input: z.input<type
   await refreshPools(tx, rows, now, kinds);
   return { released: n };
 }
+
+const resetInput = z.object({ storeId: z.int().min(1), orderId: z.uuid(), variantId: z.uuid(), quantity: z.int().min(0) }).strict();
+
+/**
+ * S05 · PR 142 — an order edit (a size changed, a piece taken out): every piece of this variant the order holds (its
+ * first pieces and any added line's) is let go, then exactly `quantity` are held again on the same shared pool, under
+ * the same row locks, in the caller's transaction. So after an edit the order holds what its lines say, never more.
+ * OUT_OF_STOCK (`SKU:free`) when fewer are free; the caller's transaction then changes nothing.
+ */
+export async function resetOrderUnits(deps: InventoryDeps, input: z.input<typeof resetInput>, opts: { tx: Tx }): Promise<{ released: number; held: number }> {
+  const d = parse(resetInput, input, 'reset');
+  const kinds = await sellableKinds(deps);
+  const tx = opts.tx;
+  const now = nowOf(deps);
+  const holds = await tx.stockReservation.findMany({ where: { storeId: d.storeId, orderId: d.orderId, variantId: d.variantId, status: 'CONVERTED', releasedAt: null }, select: { id: true } });
+  let released = 0;
+  if (holds.length) {
+    const v = await tx.productVariant.findUnique({ where: { id: d.variantId }, select: { sku: true } });
+    const rows = await lockPools(tx, v ? [v.sku] : []);
+    released = (await tx.stockReservation.updateMany({ where: { id: { in: holds.map((h) => h.id) }, releasedAt: null }, data: { status: 'RELEASED', releasedAt: now } })).count;
+    await refreshPools(tx, rows, now, kinds);
+  }
+  if (d.quantity === 0) return { released, held: 0 };
+  await holdOrderUnits(deps, { storeId: d.storeId, orderId: d.orderId, variantId: d.variantId, quantity: d.quantity }, opts);
+  return { released, held: d.quantity };
+}

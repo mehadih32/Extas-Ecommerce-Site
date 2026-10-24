@@ -93,25 +93,28 @@ export async function duplicateMatches(deps: OrdersDeps, storeId: number, orderI
 /**
  * Layer 2 — runs once when an order lands (the shop calls it after placing; a second call finds the first result and
  * does nothing more). Never throws for the customer's sake: the caller logs a failure and the order stays placed.
+ * PR 142 (B1.10 "every edit re-runs the fraud check"): `again` runs it after an edit changed the phone or the lines —
+ * a new check event every time, a review only when none is open yet, and never a hold by itself (a person is editing).
  */
-export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orderId: string }): Promise<ScreenResult> {
+export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orderId: string }, opts: { again?: { by: By } } = {}): Promise<ScreenResult> {
   const cfg = await setting(deps, ref.storeId, 'orders.duplicates');
   const none: ScreenResult = { severity: null, matches: [], alertId: null, held: false };
   if (!cfg.enabled) return none;
-  const seen = await deps.db.orderEvent.findFirst({ where: { storeId: ref.storeId, orderId: ref.orderId, type: 'order.duplicateCheck' }, select: { id: true } });
+  const seen = opts.again ? null : await deps.db.orderEvent.findFirst({ where: { storeId: ref.storeId, orderId: ref.orderId, type: 'order.duplicateCheck' }, select: { id: true } });
   if (seen) return none;
   const matches = await duplicateMatches(deps, ref.storeId, ref.orderId);
-  const by = systemBy('duplicate-check');
+  const by = opts.again?.by ?? systemBy('duplicate-check');
   const top = matches[0]?.severity ?? null;
   const review = top !== null && severityRank(top) >= severityRank(cfg.reviewFrom);
   const now = nowOf(deps);
   const alertId = await deps.db.$transaction(async (tx) => {
     const o = await lockOrder(tx, ref.storeId, ref.orderId);
     // a second call at the same moment waited for the lock: the first one's result stands
-    if (await tx.orderEvent.count({ where: { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck' } })) return undefined;
-    const summary = { section: DUPLICATE_SECTION, matches: matches.map((m) => ({ orderId: m.orderId, number: m.number, severity: m.severity, productIds: m.productIds })) };
+    if (!opts.again && (await tx.orderEvent.count({ where: { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck' } }))) return undefined;
+    const summary = { section: DUPLICATE_SECTION, matches: matches.map((m) => ({ orderId: m.orderId, number: m.number, severity: m.severity, productIds: m.productIds })), ...(opts.again ? { after: 'edit' } : {}) };
     let id: string | null = null;
-    if (review) {
+    const open = opts.again ? await tx.fraudAlert.count({ where: { storeId: o.storeId, orderId: o.id, status: 'OPEN' } }) : 0;
+    if (review && !open) {
       const a = await tx.fraudAlert.create({
         data: { storeId: o.storeId, orderId: o.id, matchedOrderIds: matches.map((m) => m.orderId), severity: top, proposedAction: cfg.autoHold && top === 'high' ? 'HOLD' : 'WARN', summary, createdAt: now },
         select: { id: true },
@@ -124,7 +127,7 @@ export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orde
   }, TX);
   if (alertId === undefined) return none;
   let held = false;
-  if (alertId && cfg.autoHold && top === 'high') {
+  if (alertId && cfg.autoHold && top === 'high' && !opts.again) {
     const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
     if (reasons.some((r) => r.key === DUPLICATE_HOLD_KEY)) {
       try {

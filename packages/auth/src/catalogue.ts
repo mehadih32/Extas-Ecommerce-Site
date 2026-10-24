@@ -114,6 +114,9 @@ export const PERMISSIONS = {
   // S04 · PR 127 — add a line to an order not yet with the courier, or take out a line added after placing ("Add to
   // this parcel"): priced as its product page prices it, the order's COD amount grows by exactly that line.
   'orders.lines': { group: 'orders' },
+  // S05 · PR 142 — edit an order not yet with the courier: the customer's name, phone and address, a size at the same
+  // price, a piece taken out (with a reason and where the customer asked). Never a price, discount, charge or COD.
+  'orders.edit': { group: 'orders' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

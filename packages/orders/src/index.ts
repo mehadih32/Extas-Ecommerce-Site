@@ -12,7 +12,9 @@
 // reading for the sticker and the booking (delivery-target.ts, also in `@extas/orders/pure`).
 // PR 140: the list's courier and return/refund facts per row (admin-read.ts). PR 141:
 // the customer's history beside one order and the names its page shows (history.ts). PR 154:
-// the search by number, phone, name or tracking number (search.ts).
+// the search by number, phone, name or tracking number (search.ts). PR 142: the team's edit of an order not yet
+// with the courier — contact, address, a size at the same price, a piece taken out — with its reason, where the
+// customer asked, and the stock and fraud checks again (edit.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -30,3 +32,4 @@ export * from './addon';
 export * from './admin-read';
 export * from './history';
 export * from './search';
+export * from './edit';

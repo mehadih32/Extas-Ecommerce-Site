@@ -113,6 +113,8 @@ export interface Effect {
   message?: string | null;
   eventData?: Record<string, unknown>;
   refundRequestIds?: string[];
+  /** PR 142: more fields the audit row keeps before and after (an edit's phone, address, lines and money). */
+  audit?: { before: Record<string, unknown>; after: Record<string, unknown> };
 }
 
 export interface CommandSpec {
@@ -275,7 +277,7 @@ export async function execute(deps: OrdersDeps, ref: { storeId: number; orderId:
         message: eff.message ?? null,
         data: eff.eventData,
       });
-      await auditRow(tx, by, { storeId: o.storeId, action: `order.${spec.command}`, entityType: 'Order', entityId: o.id, before: auditView(o), after: { ...auditView(after), input: spec.input ?? null } });
+      await auditRow(tx, by, { storeId: o.storeId, action: `order.${spec.command}`, entityType: 'Order', entityId: o.id, before: { ...auditView(o), ...eff.audit?.before }, after: { ...auditView(after), ...eff.audit?.after, input: spec.input ?? null } });
       const result: CommandResult = {
         orderId: o.id,
         number: o.number,

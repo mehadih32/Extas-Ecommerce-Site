@@ -60,6 +60,22 @@
         "label": "Remember a repeated press (hours)",
         "help": "A button pressed twice (a slow network, a double tap) is done once: the order service keeps each command's answer this many hours and gives it back for the same request."
       }
+    },
+    "edit": {
+      "reasons": {
+        "label": "Edit reasons",
+        "help": "Why the team changes an order (the customer called, a wrong number was typed, a size change …). The team picks one with every edit; the timeline and the audit log keep it with who and when. Add, remove or reword them in both languages."
+      },
+      "channels": {
+        "label": "Where the customer asked",
+        "help": "Where the change came from (a phone call, WhatsApp, Messenger, in the shop …). Kept with every edit the team makes; the customer's own edits are marked as his, from his order page."
+      }
+    },
+    "refusal": {
+      "reasons": {
+        "label": "Parcel refusal reasons",
+        "help": "Why a customer did not take the parcel at the door (bought elsewhere, arrived after Eid …). The team picks one when it records a refused parcel; the reports count them. Add, remove or reword them in both languages."
+      }
     }
   },
   "defaults": {
@@ -73,6 +89,7 @@
         "OUT_OF_STOCK": "Out of stock",
         "DUPLICATE_ORDER": "Duplicate order",
         "ADDRESS_UNREACHABLE": "Address unreachable",
+        "NOT_ORDERED": "Did not order (someone else used the number)",
         "OTHER": "Other (note required)"
       },
       "customerReasons": {
@@ -98,6 +115,34 @@
         "vip": "Valued customer",
         "complaint-before": "Had a complaint before",
         "special-packing": "Special packing"
+      },
+      "editReasons": {
+        "customer-asked": "Customer asked for a change",
+        "wrong-phone": "Wrong phone number typed",
+        "address-detail": "Address detail added or corrected",
+        "size-change": "Size change",
+        "two-size": "Two-size answer",
+        "our-mistake": "Our mistake",
+        "other": "Other"
+      },
+      "editChannels": {
+        "phone-call": "Phone call",
+        "whatsapp": "WhatsApp",
+        "messenger": "Messenger",
+        "in-shop": "In the shop",
+        "telegram": "Telegram",
+        "team": "Our team found it"
+      },
+      "refusalReasons": {
+        "changed-mind": "Changed his mind",
+        "bought-elsewhere": "Bought it elsewhere",
+        "after-eid": "Arrived after Eid",
+        "not-reachable": "Not reachable on the phone",
+        "no-money": "Did not have the money",
+        "size-fit": "Size or fit not right",
+        "not-as-pictured": "Not as in the picture",
+        "did-not-order": "Did not order it",
+        "other": "Other"
       }
     }
   }

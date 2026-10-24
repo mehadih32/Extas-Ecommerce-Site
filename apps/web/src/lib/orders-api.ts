@@ -31,6 +31,10 @@
 //   POST  /api/admin/orders/:id/lines                         {variantId, quantity?, version?} PR 127: a line added
 //                                                             before booking, priced as its product page (orders.lines)
 //   POST  /api/admin/orders/:id/lines/:lineId/remove          {version?} an added line taken out again (orders.lines)
+//   POST  /api/admin/orders/:id/edit                          PR 142: {reasonKey, channel?, note?, customerName?, phone?,
+//                                                             address?, deliveryNote?, lines?: [{lineId, variantId} |
+//                                                             {lineId, remove: true}], version?} (orders.edit); the dialog
+//                                                             may send each line as `line:<lineId>`: keep | remove | <variantId>
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -86,6 +90,28 @@ async function command(request: Request, opts: od.CommandOptions): Promise<{ inp
 }
 
 const query = (url: URL, keys: string[]) => Object.fromEntries(keys.flatMap((k) => (url.searchParams.has(k) ? [[k, url.searchParams.get(k)!]] : [])));
+
+/**
+ * PR 142 — the edit dialog's flat form as the service's input: each `line:<lineId>` field is "keep" (nothing), "remove",
+ * or the id of the size it changes to; every other field goes as it is (the service skips what did not change).
+ */
+export function editBody(input: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const lines: { lineId: string; variantId?: string; remove?: true }[] = Array.isArray(input.lines) ? (input.lines as never[]) : [];
+  for (const [k, v] of Object.entries(input)) {
+    if (k === 'lines') continue;
+    if (!k.startsWith('line:')) {
+      out[k] = v;
+      continue;
+    }
+    const lineId = k.slice('line:'.length);
+    if (v === 'remove') lines.push({ lineId, remove: true });
+    else if (typeof v === 'string' && isUuid(v)) lines.push({ lineId, variantId: v });
+    else if (v !== 'keep') throw new od.OrdersError('INVALID_INPUT', 'a line is kept, taken out or changed to a size', ['lines']);
+  }
+  if (lines.length) out.lines = lines;
+  return out;
+}
 
 /** Every order admin route: `path` is what comes after /api/admin/orders. */
 export async function ordersRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
@@ -170,6 +196,8 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
         : notFound();
     case 'flags':
       return one ? run('orders.notes', (x, i, o) => od.setFlags(x.deps, x.who, id, i, o)) : notFound();
+    case 'edit':
+      return one ? run('orders.edit', (x, i, o) => od.editOrder(x.deps, x.who, id, editBody(i), o)) : notFound();
     case 'lines':
       if (one) return run('orders.lines', (x, i, o) => od.addLine(x.deps, x.who, id, i, o));
       if (path.length !== 4 || e !== 'remove') return notFound();

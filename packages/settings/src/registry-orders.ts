@@ -22,6 +22,8 @@ export const ORDER_CANCEL_CODES = [
   'OUT_OF_STOCK',
   'DUPLICATE_ORDER',
   'ADDRESS_UNREACHABLE',
+  // PR 142 (SIM-F-038, registry v37): the phone's owner never ordered (someone else used his number); never a risk signal
+  'NOT_ORDERED',
   'OTHER',
 ] as const;
 
@@ -53,7 +55,7 @@ export const duplicatesSchema = z
 const hours = z.int().min(0).max(24 * 60);
 
 /** A starting list from `defaults.orders.<path>` in messages/orders.<lang>.json, in file order, both languages. */
-function dictionaryDefault(path: string): Dictionary {
+export function ordersDictionaryDefault(path: string): Dictionary {
   const node = lookupTree(path);
   return Object.keys(node).map((key) => ({ key, en: text('en', `${path}.${key}`), bn: text('bn', `${path}.${key}`) }));
 }
@@ -74,6 +76,8 @@ const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orde
 export const ordersSettings = {
   'orders.cancel.reasons': setting({
     ...base,
+    // ~~version: V~~ 37: PR 142 added NOT_ORDERED to the codes (SIM-F-038), so the default changed
+    version: 37,
     schema: cancelReasonsSchema,
     default: ORDER_CANCEL_CODES.map((code) => ({ code, en: text('en', `cancelReasons.${code}`), bn: text('bn', `cancelReasons.${code}`) })),
     valueType: 'JSON',
@@ -95,7 +99,7 @@ export const ordersSettings = {
     ...base,
     isPublic: true,
     schema: dictionarySchema.refine((l) => l.length > 0, { message: 'at least one reason' }),
-    default: dictionaryDefault('customerReasons'),
+    default: ordersDictionaryDefault('customerReasons'),
     valueType: 'JSON',
     labelKey: 'orders.cancel.customerReasons.label',
     helpKey: 'orders.cancel.customerReasons.help',
@@ -104,7 +108,7 @@ export const ordersSettings = {
   'orders.hold.reasons': setting({
     ...base,
     schema: dictionarySchema.refine((l) => l.length > 0, { message: 'at least one reason' }),
-    default: dictionaryDefault('holdReasons'),
+    default: ordersDictionaryDefault('holdReasons'),
     valueType: 'JSON',
     labelKey: 'orders.hold.reasons.label',
     helpKey: 'orders.hold.reasons.help',
@@ -140,7 +144,7 @@ export const ordersSettings = {
   'orders.flags.list': setting({
     ...base,
     schema: dictionarySchema,
-    default: dictionaryDefault('flags'),
+    default: ordersDictionaryDefault('flags'),
     valueType: 'JSON',
     labelKey: 'orders.flags.list.label',
     helpKey: 'orders.flags.list.help',

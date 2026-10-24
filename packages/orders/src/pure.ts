@@ -11,6 +11,8 @@
 // order is never cancelled in one step (cancel after booking, D5); every refusal says which commands are open now.
 // PR 127: a line is added to (or an added line taken out of) an order only before a courier is booked — new or
 // confirmed, no cancel asked (SIM-F-004: an edit after booking would never reach the parcel, so it is refused).
+// PR 142: the team's edit (contact, address, a size at the same price, a piece taken out) — the same rule: never once a
+// courier is booked, never while a cancel is asked (SIM-F-004).
 // PR 605: who and where a parcel goes to — a gift's receiver — for the sticker and the booking (delivery-target.ts).
 export * from './delivery-target';
 
@@ -56,6 +58,8 @@ export const ORDER_COMMANDS = [
   // PR 127: "Add to this parcel" — a line added after placing, and an added line taken out again (the status stays)
   'addLine',
   'removeLine',
+  // PR 142: the team's edit of an order not yet with the courier (the status stays)
+  'edit',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -99,6 +103,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   setFlags: ORDER_STATES.filter((s) => s !== 'DRAFT'),
   addLine: ['PLACED', 'CONFIRMED'],
   removeLine: ['PLACED', 'CONFIRMED'],
+  // the demo's "Edit items & address": new, waiting for its advance, confirmed or on hold — until picking starts
+  edit: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
 };
 
 /** What the machine needs to know about an order (read under its row lock). */
@@ -182,6 +188,7 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
       return o.cancelRequested ? null : 'NO_CANCEL_REQUEST';
     case 'addLine':
     case 'removeLine':
+    case 'edit':
       // SIM-F-004: the parcel the courier has is the parcel; nothing is added once it is booked
       if (o.booked) return 'BOOKED';
       if (o.cancelPending) return 'CANCEL_PENDING';
@@ -268,6 +275,8 @@ export const CANCEL_CODES = [
   'OUT_OF_STOCK',
   'DUPLICATE_ORDER',
   'ADDRESS_UNREACHABLE',
+  // PR 142 (SIM-F-038): the phone's owner never ordered — someone else used his number
+  'NOT_ORDERED',
   'OTHER',
 ] as const;
 export type CancelCode = (typeof CANCEL_CODES)[number];
@@ -275,8 +284,11 @@ export type CancelCode = (typeof CANCEL_CODES)[number];
 /** A cancel reason that needs a note. */
 export const NOTE_REQUIRED: ReadonlySet<CancelCode> = new Set(['OTHER']);
 
-/** A cancel for a change after booking is never a refusal and never feeds the risk history (§6.5.7 (e)). */
-export const NOT_A_RISK_SIGNAL: ReadonlySet<CancelCode> = new Set(['CUSTOMER_CHANGE_AFTER_BOOKING']);
+/**
+ * A cancel for a change after booking is never a refusal and never feeds the risk history (§6.5.7 (e)); nor is an
+ * order the phone's owner never placed (PR 142, SIM-F-038: the number was someone else's to give, not his fault).
+ */
+export const NOT_A_RISK_SIGNAL: ReadonlySet<CancelCode> = new Set(['CUSTOMER_CHANGE_AFTER_BOOKING', 'NOT_ORDERED']);
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Money as the screens show it (F-001, F-040): amount due = total − wallet − paid; the order-level payment pill is

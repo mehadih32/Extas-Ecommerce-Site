@@ -27,6 +27,7 @@ export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
   courierCancel: 'orders.cancelAfterBooking',
   flags: 'orders.notes',
   notes: 'orders.notes',
+  edit: 'orders.edit',
 };
 
 /** The key a button (by its spec id, the `?do=` deep link) needs: a link to a command the person may not use shows "no access". */
@@ -41,6 +42,8 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   approveRequest: 'orders.cancelRequests',
   refuseRequest: 'orders.cancelRequests',
   flags: 'orders.notes',
+  edit: 'orders.edit',
+  phone: 'orders.edit',
 };
 
 /** How many of the customer's other orders the page lists (the counts cover all of them). */
@@ -157,6 +160,66 @@ const may = (perms: ReadonlySet<string>, c: CommandId) => perms.has(COMMAND_PERM
 /** The name of a list entry in the admin's language. */
 const nameOf = (view: AdminView, x: { en: string; bn: string }) => (view.lang === 'bn' ? x.bn || x.en : x.en);
 
+/** PR 142 — what the edit dialog starts from: the order's contact and lines as stored, and each line's choices now. */
+export interface EditStart {
+  customerName: string | null;
+  phone: string | null;
+  address: string | null;
+  note: string | null;
+  lines: { id: string; label: string; size: string | null; colour: string | null }[];
+  choices: od.EditChoice[];
+}
+
+/** PR 142 — "Edit items & address" and "Correct phone (logged)" (demo V12.3 a2o-edit, a2o-phone): one route, two dialogs. */
+export function editSpecs(view: AdminView, o: { id: string; number: string; version: number }, start: EditStart, reasons: od.ReasonLists): CommandSpec[] {
+  const d = view.dict;
+  const tt = (k: string, v?: Record<string, string>) => t(d, `orders.cmd.${k}`, v);
+  const reason = (fallback: string): FieldSpec => ({ name: 'reasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: reasons.edit.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) })), value: reasons.edit.some((r) => r.key === fallback) ? fallback : undefined });
+  const channel: FieldSpec = { name: 'channel', kind: 'select', label: t(d, 'orders.dlg.channel'), options: reasons.channels.map((c) => ({ value: c.key, label: nameOf(view, c) })) };
+  const note: FieldSpec = { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), labelNeeded: t(d, 'orders.dlg.note'), noteFor: 'reasonKey', maxLength: 2000, placeholder: t(d, 'orders.dlg.notePh') };
+  const phone: FieldSpec = { name: 'phone', kind: 'text', label: t(d, 'orders.dlg.phone'), value: phoneText(start.phone) || '', maxLength: 40, required: true };
+  const choice = new Map(start.choices.map((c) => [c.lineId, c]));
+  const lineFields: FieldSpec[] = start.lines.map((l) => {
+    const c = choice.get(l.id);
+    const options = [
+      { value: 'keep', label: t(d, 'orders.dlg.lineKeep', { size: [l.colour, l.size].filter(Boolean).join(' · ') || '—' }) },
+      ...(c?.swaps ?? []).map((s) => ({ value: s.variantId, label: t(d, 'orders.dlg.lineTo', { size: [s.colour, s.size].filter(Boolean).join(' · ') }) })),
+      ...(c && c.removeRefusal === null ? [{ value: 'remove', label: t(d, 'orders.dlg.lineRemove') }] : []),
+    ];
+    return { name: `line:${l.id}`, kind: 'select', label: l.label, options, value: 'keep' };
+  });
+  const base = (k: string, extra: Partial<CommandSpec>): CommandSpec => ({
+    id: k,
+    label: tt(`${k}.label`),
+    url: commandUrl(o.id, 'edit'),
+    version: o.version,
+    title: tt(`${k}.title`, { n: o.number }),
+    effects: [],
+    fields: [],
+    ok: tt(`${k}.ok`),
+    okTone: 'pri',
+    done: tt(`${k}.done`, { n: o.number }),
+    ...extra,
+  });
+  return [
+    base('edit', {
+      icon: 'edit',
+      effects: [t(d, 'orders.eff.editLog'), t(d, 'orders.eff.editMoney'), t(d, 'orders.eff.editArea'), t(d, 'orders.eff.editStock'), t(d, 'orders.eff.editPaid')],
+      fields: [
+        reason('customer-asked'),
+        channel,
+        { name: 'customerName', kind: 'text', label: t(d, 'orders.dlg.name'), value: start.customerName ?? '', maxLength: 120 },
+        phone,
+        { name: 'address', kind: 'textarea', label: t(d, 'orders.dlg.address'), value: start.address ?? '', maxLength: 500 },
+        { name: 'deliveryNote', kind: 'textarea', label: t(d, 'orders.dlg.deliveryNote'), value: start.note ?? '', maxLength: 500 },
+        ...lineFields,
+        note,
+      ],
+    }),
+    base('phone', { icon: 'phone', effects: [t(d, 'orders.eff.editLog'), t(d, 'orders.eff.phoneNext')], fields: [phone, reason('wrong-phone'), channel, note] }),
+  ];
+}
+
 /** Every command button of one order: the primary ones, the bands', the "More actions" menu. */
 export function commandSpecs(
   view: AdminView,
@@ -164,6 +227,7 @@ export function commandSpecs(
   allowed: readonly OrderCommand[],
   perms: ReadonlySet<string>,
   reasons: od.ReasonLists,
+  editStart: EditStart | null = null,
 ): { primary: CommandSpec[]; more: CommandSpec[]; courier: CommandSpec[]; request: CommandSpec[] } {
   const d = view.dict;
   const tt = (k: string, v?: Record<string, string>) => t(d, `orders.cmd.${k}`, v);
@@ -211,6 +275,7 @@ export function commandSpecs(
     if (has('cancel')) request.push(base('approveCancelRequest', 'approveRequest', { tone: 'badf', effects: cancelFx, fields: [note()], okTone: 'badf', doneRefund: tt('approveRequest.doneRefund', { n: '{n}' }) }));
     if (has('refuseCancelRequest')) request.push(base('refuseCancelRequest', 'refuseRequest', { effects: [t(d, 'orders.eff.refuseKeep')], fields: [note()] }));
   }
+  if (has('edit') && may(perms, 'edit') && editStart) more.push(...editSpecs(view, o, editStart, reasons));
   if (has('hold') && may(perms, 'hold')) more.push(base('hold', 'hold', { icon: 'clock', effects: [...to('hold'), t(d, 'orders.eff.holdStock')], fields: [{ name: 'reasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: opts(reasons.hold) }, note(false, 'reasonKey')] }));
   if (has('cancel') && !o.cancelRequested && may(perms, 'cancel'))
     more.push(base('cancel', 'cancel', { icon: 'x', tone: 'bad', effects: cancelFx, fields: [{ name: 'reasonCode', kind: 'select', label: t(d, 'orders.dlg.reason'), options: opts(reasons.cancel) }, note(false, 'reasonCode')], okTone: 'badf', doneRefund: tt('cancel.doneRefund', { n: '{n}' }) }));
@@ -259,7 +324,21 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.note': 'mute',
   'order.note.archived': 'mute',
   'order.setFlags': 'mute',
+  'order.edit': 'warn',
 };
+
+/** PR 142 — an edit's timeline line: each field and line before → after (the staff see exactly what changed). */
+export function editSummary(view: AdminView, data: unknown): string | null {
+  const x = (data ?? {}) as { fields?: { field: string; before: string | null; after: string | null }[]; lines?: { kind: string; label: string; toLabel?: string }[]; channel?: { en: string; bn: string } | null };
+  const d = view.dict;
+  const show = (field: string, v: string | null) => (v ? (field === 'phone' ? phoneText(v) || v : v) : t(d, 'orders.list.none'));
+  const parts = [
+    ...(x.fields ?? []).map((f) => t(d, 'orders.ev.editField', { field: t(d, `orders.dlg.${f.field === 'customerName' ? 'name' : f.field}`), before: show(f.field, f.before), after: show(f.field, f.after) })),
+    ...(x.lines ?? []).map((l) => (l.kind === 'remove' ? t(d, 'orders.ev.editRemoved', { line: l.label }) : t(d, 'orders.ev.editLine', { line: l.label, to: l.toLabel ?? '' }))),
+    ...(x.channel ? [t(d, 'orders.ev.editVia', { via: nameOf(view, x.channel) })] : []),
+  ];
+  return parts.length ? parts.join(' · ') : null;
+}
 
 /** Everything the order page draws, or null when there is no such order in this store. */
 export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: AdminView, id: string, perms: ReadonlySet<string>): Promise<OrderDetailView | null> {
@@ -277,17 +356,20 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const m = (n: number) => formatMoney(n, money);
   const dt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' });
   const matchedIds = [...new Set(detail.reviews.flatMap((r) => r.matchedOrderIds))];
-  const [extras, history, reasons, names, matchedRows, noteMax] = await Promise.all([
+  const editable = detail.allowed.includes('edit') && perms.has('orders.edit');
+  const [extras, history, reasons, names, matchedRows, noteMax, choices] = await Promise.all([
     od.listExtras(deps, who, [o.id]),
     od.orderHistory(deps, who, o.id, HISTORY_SHOWN),
     od.reasonLists(deps, who.storeId),
     od.staffNames(deps, who, [...detail.timeline.map((e) => (e.actorType === 'STAFF' ? e.actorId : null)), ...detail.notes.map((n) => n.authorId)]),
     od.orderNumbers(deps, who, matchedIds),
     deps.settings.value('orders.notes.maxChars', { storeId: who.storeId }) as Promise<number>,
+    editable ? od.editChoices(deps, who, o.id) : Promise.resolve(null),
   ]);
   const x = extras[o.id];
   const holdName = new Map(reasons.hold.map((r) => [r.key, nameOf(view, r)]));
   const cancelName = new Map(reasons.cancel.map((r) => [r.key, nameOf(view, r)]));
+  const editReason = new Map(reasons.edit.map((r) => [r.key, nameOf(view, r)]));
   const row: od.OrderRow = {
     id: o.id,
     number: o.number,
@@ -315,7 +397,17 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   };
   const chips = statusChips(view, row, x);
   const flags = flagChips(view, row, { holdReasons: holdName, flags: new Map(reasons.flags.map((f) => [f.key, nameOf(view, f)])) });
-  const specs = commandSpecs(view, { ...o, paidMinor: detail.money.paidMinor + detail.money.walletAppliedMinor }, detail.allowed, perms, reasons);
+  const editStart: EditStart | null = choices
+    ? {
+        customerName: o.customerName,
+        phone: o.phone,
+        address: o.shippingAddressText,
+        note: o.note,
+        lines: detail.items.filter((i) => i.status === 'ACTIVE').map((i) => ({ id: i.id, label: `${i.productName} × ${formatNumber(i.quantity, view.locale)}`, size: i.sizeLabel, colour: i.colourName })),
+        choices,
+      }
+    : null;
+  const specs = commandSpecs(view, { ...o, paidMinor: detail.money.paidMinor + detail.money.walletAppliedMinor }, detail.allowed, perms, reasons, editStart);
   const active = detail.items.filter((i) => i.status === 'ACTIVE');
   const units = active.reduce((s, i) => s + i.quantity, 0);
   const n = (v: number) => formatNumber(v, view.locale);
@@ -382,7 +474,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       const reason = e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const detailText = [move, reason, e.message].filter(Boolean).join(' · ');
+      const detailText = [move, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? reason) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
     .reverse();
