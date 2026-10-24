@@ -26,10 +26,11 @@ import { hrefIn } from "@/lib/shop/lang";
 import { shopMetadata } from "@/lib/shop/meta";
 import { ROUTES } from "@/lib/shop/routes";
 import { AddedPanel } from "../bag/AddedPanel";
-import "../bag/bag.css";
+// PR 573 (follow-up 358): the rules of bag.css and pdp.css this route can draw with, cut by tools/route-css.mjs in
+// their own order, instead of both whole files (most of their ~1,200 rules never match here and held the first paint back)
+import "./combo-shared.css";
 import { Icon } from "../Icon";
 import { ProductCard } from "../ProductCard";
-import "../product/pdp.css";
 import { ComboColours, ComboGallery } from "./ComboGallery";
 import { ComboPairs } from "./ComboPairs";
 import {
