@@ -52,6 +52,15 @@ export async function phoneOrders(deps: OrdersDeps, storeId: number, phone: stri
     take: Math.max(0, opts.take),
     select: { id: true, number: true, placedAt: true, status: true, totalMinor: true, cancelReasonCode: true, areaId: true },
   });
+  return pastOrdersOf(deps, storeId, rows);
+}
+
+/** PR 541: earlier orders (found by the phone, or by the identity check's name and address) with their outcomes. */
+export async function pastOrdersOf(
+  deps: OrdersDeps,
+  storeId: number,
+  rows: readonly { id: string; number: string; placedAt: Date; status: string; totalMinor: number; cancelReasonCode: string | null; areaId: string | null }[],
+): Promise<PastOrder[]> {
   const ids = rows.map((r) => r.id);
   if (!ids.length) return [];
   const [keys, calls, returns] = await Promise.all([

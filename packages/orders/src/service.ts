@@ -97,6 +97,8 @@ export const LOCKED_SELECT = {
   orderGroupId: true,
   placedAt: true,
   customerEditCount: true,
+  // PR 541: the section it was placed in when it landed
+  riskSection: true,
 } satisfies Prisma.OrderSelect;
 export type LockedOrder = Prisma.OrderGetPayload<{ select: typeof LOCKED_SELECT }>;
 

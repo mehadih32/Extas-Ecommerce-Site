@@ -162,7 +162,7 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
   const [a, b, c, e] = path;
   if (!a) {
     if (m !== 'GET') return notAllowed();
-    return handle(request, deps, 'orders.read', async (x) => ({ ...(await od.listOrders(x.deps, x.who, query(x.url, ['view', 'status', 'q', 'cursor', 'limit']))) }));
+    return handle(request, deps, 'orders.read', async (x) => ({ ...(await od.listOrders(x.deps, x.who, query(x.url, ['view', 'status', 'q', 'payment', 'source', 'risk', 'section', 'sort', 'cursor', 'limit']))) }));
   }
   if (a === 'reasons') {
     if (path.length > 1) return notFound();
@@ -172,7 +172,7 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
   if (a === 'reviews') {
     if (!b) {
       if (m !== 'GET') return notAllowed();
-      return handle(request, deps, 'orders.risk.read', async (x) => ({ ...(await od.reviewQueue(x.deps, x.who, query(x.url, ['status', 'cursor', 'limit']))) }));
+      return handle(request, deps, 'orders.risk.read', async (x) => ({ ...(await od.reviewQueue(x.deps, x.who, query(x.url, ['status', 'section', 'cursor', 'limit']))) }));
     }
     if (path.length > 2) return notFound();
     if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['alertId']));

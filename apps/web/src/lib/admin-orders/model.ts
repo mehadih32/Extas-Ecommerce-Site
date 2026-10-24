@@ -61,11 +61,20 @@ export const RET_TONE: Readonly<Record<string, Tone>> = {
 /** A courier booking that no longer holds the parcel (the order is not "booked", D5). */
 export const UNBOOKED_SHIPMENT: ReadonlySet<string> = new Set(['BOOKING_FAILED', 'CANCELLED']);
 
-/** The list pages of the Orders section and the views each shows (in this order; the first is the default). */
+/**
+ * The list pages of the Orders section and the views each shows (in this order; the first is the default). PR 541
+ * (SIM-F-020): "Prepaid" — paid orders nothing flagged, confirmed without a call — beside the call queue.
+ */
 export const LIST_PAGES = {
-  all: { base: '/admin/orders', views: ['all', 'toConfirm', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'open', 'finished'] },
-  confirm: { base: '/admin/orders/confirm', views: ['toConfirm', 'cancelRequests', 'awaitingAdvance'] },
+  all: { base: '/admin/orders', views: ['all', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'open', 'finished'] },
+  confirm: { base: '/admin/orders/confirm', views: ['toConfirm', 'prepaid', 'cancelRequests', 'awaitingAdvance'] },
 } as const;
+
+/**
+ * PR 541: each section's colour (the demo's ORD-03 sections; a duplicate or a re-order to look at, a new identity or a
+ * high risk to decide, a band to watch, prepaid, clear).
+ */
+export const SECTION_TONE: Readonly<Record<string, Tone>> = { duplicate: 'warn', reorder: 'warn', identity: 'bad', high: 'bad', watch: 'warn', prepaid: 'info', clear: 'ok' };
 export type ListPageId = keyof typeof LIST_PAGES;
 
 /** What a list page is showing: the view, the search and the filters (all optional but the view). */
@@ -75,6 +84,10 @@ export interface ListQuery {
   status?: string;
   payment?: string;
   source?: string;
+  /** PR 541 (follow-up 295): the risk band, the section, and the sort ("risk": highest score first). */
+  risk?: string;
+  section?: string;
+  sort?: string;
   cursor?: string;
 }
 
@@ -84,7 +97,7 @@ export function listHref(page: ListPageId, cur: ListQuery, change: Partial<ListQ
   const next: ListQuery = { ...cur, cursor: undefined, ...change };
   const sp = new URLSearchParams();
   if (next.view && next.view !== p.views[0]) sp.set('view', next.view);
-  for (const k of ['q', 'status', 'payment', 'source', 'cursor'] as const) {
+  for (const k of ['q', 'status', 'payment', 'source', 'risk', 'section', 'sort', 'cursor'] as const) {
     const v = next[k];
     if (v) sp.set(k, v);
   }

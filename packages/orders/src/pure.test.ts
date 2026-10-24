@@ -46,6 +46,10 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   twoSizeAnswer: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
   // PR 156: the risk score is stored while the order is open; the status stays
   riskAssess: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
+  // PR 541: the section is set while the order is open; the status stays
+  riskSection: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
+  // PR 541 (SIM-F-014): a courier is booked for a confirmed order before it is handed over; the status stays
+  book: { CONFIRMED: FLAG, PROCESSING: FLAG, PACKED: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
   startPicking: { CONFIRMED: 'PROCESSING' },
@@ -110,11 +114,21 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'awaitAdvance'] });
   });
 });
 
 describe('the guards', () => {
+  it('SIM-F-014: a courier is never booked while a review is open, a cancel is asked or pending, or it is booked already', () => {
+    expect(plan('book', order('CONFIRMED'))).toMatchObject({ ok: true, to: 'CONFIRMED', moves: false });
+    expect(plan('book', order('PACKED', { inReview: true }))).toMatchObject({ ok: false, code: 'IN_REVIEW' });
+    expect(plan('book', order('CONFIRMED', { cancelRequested: true }))).toMatchObject({ ok: false, code: 'CANCEL_REQUESTED' });
+    expect(plan('book', order('PACKED', { booked: true }))).toMatchObject({ ok: false, code: 'BOOKED' });
+    expect(plan('book', order('PACKED', { booked: true, cancelPending: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });
+    // not before it is confirmed, never while on hold or waiting for an advance, never once cancelled
+    for (const s of ['PLACED', 'ON_HOLD', 'AWAITING_ADVANCE', 'CANCELLED'] as const) expect(plan('book', order(s))).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION' });
+  });
+
   it('confirm waits for an open review and for a customer cancel request', () => {
     expect(plan('confirm', order('PLACED', { inReview: true }))).toMatchObject({ ok: false, code: 'IN_REVIEW' });
     expect(plan('confirm', order('PLACED', { cancelRequested: true }))).toMatchObject({ ok: false, code: 'CANCEL_REQUESTED' });

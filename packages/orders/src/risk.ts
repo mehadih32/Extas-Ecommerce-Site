@@ -12,8 +12,10 @@ import type { Prisma } from '@extas/db/client';
 import { ADDRESS_FACTS_SELECT, placeFactsOf } from './address-facts';
 import { allow, setting, UUID, type OrdersDeps, type Who } from './context';
 import { OrdersError, isOrdersError } from './errors';
+import { IDENTITY_SELECT, identityOrders } from './identity';
 import { phoneOrders } from './phone-history';
 import { scoreRisk, type AddressFacts, type FiredSignal, type KnownPlace, type PhoneSummary, type RiskConfig, type RiskFacts, type RiskResult } from './pure';
+import { placeInSection } from './sections';
 import { execute, staffBy, systemBy, type By, type CommandResult } from './service';
 
 /** Why an order was scored: when it landed, after the team's edit, or by a person's "score again". */
@@ -28,11 +30,20 @@ export async function riskConfig(deps: OrdersDeps, storeId: number): Promise<{ c
 
 /** The order's facts the score is worked out from (PR 157, 158), with the order's own fields the result is stored with. */
 export async function riskFactsOf(deps: OrdersDeps, storeId: number, orderId: string, config: RiskConfig, historyOrders: number) {
-  const o = await deps.db.order.findFirst({ where: { id: orderId, storeId }, select: { ...ADDRESS_FACTS_SELECT, totalMinor: true } });
+  const o = await deps.db.order.findFirst({
+    where: { id: orderId, storeId },
+    select: { ...ADDRESS_FACTS_SELECT, ...IDENTITY_SELECT, totalMinor: true, items: { where: { status: 'ACTIVE' }, select: { quantity: true } } },
+  });
   if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
-  const past = await phoneOrders(deps, storeId, o.phone, { excludeOrderId: o.id, before: o.placedAt, take: historyOrders });
-  const place = await placeFactsOf(deps, storeId, o, past, { refusals: config.signals.areaRefusals.enabled });
-  const facts: RiskFacts = { placedAt: o.placedAt, totalMinor: o.totalMinor, past, ...place };
+  const s = config.signals;
+  const [past, identity] = await Promise.all([
+    phoneOrders(deps, storeId, o.phone, { excludeOrderId: o.id, before: o.placedAt, take: historyOrders }),
+    // PR 541 (SIM-F-015): only read while the owner has the identity check on
+    s.identityMatch.enabled ? identityOrders(deps, storeId, o, s.identityMatch, historyOrders) : Promise.resolve([]),
+  ]);
+  const place = await placeFactsOf(deps, storeId, o, past, { refusals: s.areaRefusals.enabled });
+  const pieces = o.items.reduce((n, i) => n + i.quantity, 0);
+  const facts: RiskFacts = { placedAt: o.placedAt, totalMinor: o.totalMinor, past, ...place, pieces, identity };
   return { order: o, facts };
 }
 
@@ -112,15 +123,27 @@ export async function assessRisk(deps: OrdersDeps, ref: { storeId: number; order
 export async function reassessOrder(deps: OrdersDeps, who: Who, orderId: string): Promise<RiskAssessed> {
   await allow(deps, who, 'orders.risk.decide');
   if (!UUID.test(orderId)) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
-  const r = await assessRisk(deps, { storeId: who.storeId, orderId }, { after: 'manual', by: staffBy(who.actor, who.ctx) });
+  const by = staffBy(who.actor, who.ctx);
+  const r = await assessRisk(deps, { storeId: who.storeId, orderId }, { after: 'manual', by });
+  // PR 541: the order moves to the section its new score puts it in (a decided review is never opened again)
+  await resection(deps, { storeId: who.storeId, orderId }, 'manual', by);
   return r!;
+}
+
+/** PR 541: placed again after a new score; a failure never undoes the score (the section stays until the next one). */
+async function resection(deps: OrdersDeps, ref: { storeId: number; orderId: string }, after: RiskAfter, by: By): Promise<void> {
+  try {
+    await placeInSection(deps, ref, { after, by });
+  } catch {
+    // the score is stored; the section follows with the next score
+  }
 }
 
 /** PR 142 / B1.10: scored again after the team's edit changed the phone, the address or the lines; never undoes the edit. */
 export async function rescoreAfterEdit(deps: OrdersDeps, ref: { storeId: number; orderId: string }, by: By, c: { phone?: unknown; address?: unknown; lines?: readonly unknown[] }): Promise<void> {
   if (c.phone === undefined && c.address === undefined && !c.lines?.length) return;
   try {
-    await assessRisk(deps, ref, { after: 'edit', by });
+    if (await assessRisk(deps, ref, { after: 'edit', by })) await resection(deps, ref, 'edit', by);
   } catch {
     // the order is edited; its earlier score stays until the next edit or "score again"
   }

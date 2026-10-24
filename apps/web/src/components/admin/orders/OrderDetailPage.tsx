@@ -134,7 +134,8 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
     <RiskPanel key="risk" order={{ id: o.id, number: o.number, currency: o.currency }} view={view} />,
     <SupportExplain key="explain" orderId={o.id} view={view} />,
     ...o.reviews.map((r) => (
-      <Card key={r.id} testId="order-review" title={t(d, 'orders.review.title')} sub={`${r.severity ? `${r.severity} · ` : ''}${r.at}`} right={<span className={`a2-pill ${r.open ? 'warn' : 'ok'}`}>{t(d, r.open ? 'orders.review.open' : 'orders.review.decided')}</span>}>
+      <Card key={r.id} testId="order-review" title={r.title} sub={`${r.severity ? `${r.severity} · ` : ''}${r.at}`} right={<span className={`a2-pill ${r.open ? 'warn' : 'ok'}`}>{t(d, r.open ? 'orders.review.open' : 'orders.review.decided')}</span>}>
+        {r.why ? <div className="a2-sm">{r.why}</div> : null}
         {r.matched.length ? (
           <div className="a2-lines">
             <div className="a2-xs a2-mute a2-b">{t(d, 'orders.review.matched')}</div>
@@ -153,6 +154,7 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
             <Buttons specs={r.specs} size="sm" open={open} />
           </div>
         ) : null}
+        {r.never && r.open ? <div className="a2-xs a2-mute a2-mt12">{r.never}</div> : null}
       </Card>
     )),
     <Card key="money" testId="order-money" title={t(d, 'orders.money.title')} right={<Chips chips={[o.money.chip]} />}>

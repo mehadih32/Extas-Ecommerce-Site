@@ -27,6 +27,13 @@ export interface RiskFacts {
   known: KnownPlace | null;
   /** Parcels to the same place refused before (any number), with their reason and when. */
   placeRefusals: readonly PlaceRefusal[];
+  /** PR 541: the pieces in the order (active lines). */
+  pieces?: number;
+  /**
+   * PR 541 (SIM-F-015): earlier orders under ANOTHER number that the identity check matched (the same name and an
+   * address alike), placed before this one. Read only while `identityMatch` is on.
+   */
+  identity?: readonly PastOrder[];
 }
 
 export interface RiskConfig {
@@ -115,6 +122,23 @@ export function scoreRisk(f: RiskFacts, c: RiskConfig): RiskResult {
       if (at === null || f.totalMinor < at) return null;
       if (s.orderValue.firstOrderOnly && history.orders > 0) return null;
       return { totalMinor: f.totalMinor, atLeastMinor: at, firstOrderOnly: s.orderValue.firstOrderOnly };
+    },
+    // PR 541 (SIM-F-015): many pieces on a (first) order, and the same person under another number
+    orderPieces: () => {
+      const at = s.orderPieces.atLeast;
+      const pieces = f.pieces ?? 0;
+      if (at === null || pieces < at) return null;
+      if (s.orderPieces.firstOrderOnly && history.orders > 0) return null;
+      return { pieces, atLeast: at, firstOrderOnly: s.orderPieces.firstOrderOnly };
+    },
+    identityMatch: () => {
+      const since = sinceOf(f.placedAt, s.identityMatch.windowDays);
+      const hits = (f.identity ?? []).filter((o) => o.status !== 'DRAFT' && o.placedAt <= f.placedAt && (!since || o.placedAt >= since)).sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime());
+      if (!hits.length) return null;
+      const h = summarizeHistory(hits, { ourFault });
+      // the earlier refusal is named (SIM-F-015: "the earlier refusal was not named")
+      const refused = hits.find((o) => o.status === 'RETURNED' && !(o.refusalKey && ourFault.has(o.refusalKey)));
+      return { count: hits.length, number: hits[0]!.number, refused: h.refused, refusedNumber: refused?.number ?? null, delivered: h.delivered, windowDays: s.identityMatch.windowDays };
     },
     // PR 158: the address against the gazetteer
     addressUnresolved: () => addressUnresolved(f.address),

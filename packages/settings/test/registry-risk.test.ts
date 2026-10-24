@@ -12,7 +12,8 @@ describe('risk settings (v43)', () => {
     expect(registryVersion(registry)).toBeGreaterThanOrEqual(43);
     for (const [key, spec] of Object.entries(riskSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(43);
+      // PR 541 (v46) added two signals to `risk.signals` (since v43)
+      expect(spec.version, key).toBe(key === 'risk.signals' ? 46 : 43);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.isPublic, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -28,7 +29,10 @@ describe('risk settings (v43)', () => {
     const s = riskSettings['risk.signals'].default;
     expect(s.orderValue).toMatchObject({ enabled: false, atLeastMinor: null });
     expect(s.riskyArea).toMatchObject({ enabled: false, areaIds: [] });
-    expect(RISK_SIGNAL_KEYS).toHaveLength(14);
+    expect(RISK_SIGNAL_KEYS).toHaveLength(16);
+    // PR 541: the new signals start off, the pieces empty
+    expect(s.orderPieces).toMatchObject({ enabled: false, atLeast: null });
+    expect(s.identityMatch.enabled).toBe(false);
   });
 
   it('a weight is 0–100 and every signal has its own switch', () => {

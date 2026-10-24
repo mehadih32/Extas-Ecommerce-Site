@@ -5,7 +5,7 @@
 import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { CartError } from '@extas/cart';
-import { assessRisk, screenOrder, twoSizeCheck } from '@extas/orders';
+import { assessRisk, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -105,6 +105,19 @@ async function scoreRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> 
   }
 }
 
+/**
+ * S05 · PR 541 — the order's section the moment it lands, after the duplicate screen and the score (`risk.sections`):
+ * a duplicate, a re-order, a new identity, high risk, watch, prepaid or clear, with its note on the timeline; the strong
+ * sections wait for a person. Marking only: nothing is cancelled, held or blocked, and the customer's order never fails.
+ */
+async function sectionRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await placeInSection({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`risk section: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
 /** Where the page goes after the order or a payment answer, in its language. */
 export const nextHref = (lang: ShopLang, next: PlaceNext, number: string): string => hrefIn(lang, next === 'pay' ? ROUTES.checkoutPay(number) : ROUTES.thanks(number));
 
@@ -126,6 +139,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       await screenForDuplicates(deps, r.orderId);
       await checkTwoSizes(deps, r.orderId);
       await scoreRisk(deps, r.orderId);
+      await sectionRisk(deps, r.orderId);
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

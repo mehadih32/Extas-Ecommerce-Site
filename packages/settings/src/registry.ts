@@ -39,6 +39,7 @@ import { orderEditSettings } from './registry-order-edit';
 import { supportLaneSettings } from './registry-support-lane';
 import { messageSettings } from './registry-messages';
 import { riskSettings } from './registry-risk';
+import { riskMoreSettings } from './registry-risk-more';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1185,6 +1186,7 @@ export const registry = {
   ...messageSettings,
   // ---- S06 · PR 157, 156 · a number's history (how many orders, the refusals that are our fault, unanswered calls) and the risk score: the signals and their weights, the bands (registry-risk.ts, version 43). ----
   ...riskSettings,
+  ...riskMoreSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

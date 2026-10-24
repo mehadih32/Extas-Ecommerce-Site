@@ -2,7 +2,7 @@
 // a switched-off signal never counts, the owner's weights and thresholds decide the score and the band, the sum is capped
 // at 100, and SIM-F-044 — a refusal the shop caused never counts against the customer. Every value is made up.
 import { describe, expect, it } from 'vitest';
-import { riskSettings, type RiskSignals } from '@extas/settings';
+import { RISK_SIGNAL_KEYS, riskSettings, type RiskSignals } from '@extas/settings';
 import { bandOf, scoreRisk, type AddressFacts, type KnownPlace, type PastOrder, type RiskConfig, type RiskFacts } from './pure';
 
 const T = new Date('2026-10-24T06:00:00Z');
@@ -19,6 +19,7 @@ function allOn(): RiskSignals {
   s.orderValue.atLeastMinor = 500_000;
   s.riskyArea.areaIds = ['00000000-0000-4000-8000-0000000000d9'];
   s.areaRefusals.atLeast = 2;
+  s.orderPieces.atLeast = 4;
   return s;
 }
 const config = (signals: RiskSignals = allOn()): RiskConfig => ({ signals, bands: riskSettings['risk.bands'].default, ourFault: HISTORY.ourFaultRefusals, noAnswerOutcomes: HISTORY.noAnswerOutcomes });
@@ -47,7 +48,7 @@ describe('PR 156 · the risk score model', () => {
     expect(r.fired).toEqual([]);
     expect(r.score).toBe(0);
     expect(r.band.key).toBe('low');
-    expect(r.checked).toHaveLength(14);
+    expect(r.checked).toHaveLength(RISK_SIGNAL_KEYS.length);
     expect(r.off).toEqual([]);
   });
 
@@ -167,5 +168,40 @@ describe('PR 156 · the risk score model', () => {
   it('the same facts and settings always give the same answer (the stored reasons are the reasons)', () => {
     const f = facts({ past: [past('RETURNED', { refusalKey: 'no-money' })] });
     expect(scoreRisk(f, config())).toEqual(scoreRisk(f, config()));
+  });
+
+  it('PR 541 (SIM-F-015): many pieces on a first order, and the same person under another number with the earlier refusal named', () => {
+    expect(keys(facts({ past: [], pieces: 4 }))).toContain('orderPieces');
+    expect(keys(facts({ past: [], pieces: 3 }))).not.toContain('orderPieces');
+    // "first order only": a known customer's big order is not flagged; switched to every order, it is
+    expect(keys(facts({ pieces: 9 }))).not.toContain('orderPieces');
+    const every = allOn();
+    every.orderPieces.firstOrderOnly = false;
+    expect(keys(facts({ pieces: 9 }), config(every))).toContain('orderPieces');
+    // empty (the shipped default): never
+    const empty = allOn();
+    empty.orderPieces.atLeast = null;
+    expect(keys(facts({ past: [], pieces: 50 }), config(empty))).not.toContain('orderPieces');
+
+    const refused = past('RETURNED', { refusalKey: 'changed-mind', placedAt: ago(10 * D) });
+    const ourFault = past('RETURNED', { refusalKey: 'late', placedAt: ago(5 * D) });
+    const r = scoreRisk(facts({ past: [], identity: [refused, ourFault] }), config());
+    expect(r.fired.find((x) => x.key === 'identityMatch')?.values).toMatchObject({ count: 2, number: ourFault.number, refused: 1, refusedNumber: refused.number });
+    // the owner's window: matches older than it do not count
+    const short = allOn();
+    short.identityMatch.windowDays = 3;
+    expect(keys(facts({ past: [], identity: [refused, ourFault] }), config(short))).not.toContain('identityMatch');
+    expect(keys(facts({ past: [] }))).not.toContain('identityMatch');
+  });
+
+  it('PR 541: an owner\'s stored signals from v43 still read — the new signals take their defaults (off), nothing he set is lost', () => {
+    const old = structuredClone(riskSettings['risk.signals'].default) as Partial<RiskSignals>;
+    delete old.orderPieces;
+    delete old.identityMatch;
+    old.refusals = { ...old.refusals!, weight: 42 };
+    const parsed = riskSettings['risk.signals'].schema.parse(old);
+    expect(parsed.refusals.weight).toBe(42);
+    expect(parsed.orderPieces).toEqual({ enabled: false, weight: 15, atLeast: null, firstOrderOnly: true });
+    expect(parsed.identityMatch.enabled).toBe(false);
   });
 });

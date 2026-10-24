@@ -1,4 +1,4 @@
-// S06 · a number's history and the risk score. Registry version 43. Labels: messages/risk.<lang>.json (the Orders
+// S06 · a number's history and the risk score. Registry version 43 (`risk.signals` changed in v46: PR 541's signals). Labels: messages/risk.<lang>.json (the Orders
 // group; the admin's place is Orders → Risk rules, ORD-06 of docs/BACKEND-ARCHITECTURE.md §5.3, built on the new
 // admin shell).
 //
@@ -65,6 +65,17 @@ const historySignals = {
   inTransit: z.object({ enabled: z.boolean(), weight }).strict(),
   /** The order is worth `atLeastMinor` or more (empty: never), on a first order only when `firstOrderOnly`. */
   orderValue: z.object({ enabled: z.boolean(), weight, atLeastMinor: moneyMinorSchema.nullable(), firstOrderOnly: z.boolean() }).strict(),
+  /**
+   * PR 541 (v46, SIM-F-015): `atLeast` pieces or more in one order (empty: never), on a first order only when
+   * `firstOrderOnly` — the ৳7,400 first order of 4 panjabis at Eid. Off and empty until the owner sets it.
+   */
+  orderPieces: z.object({ enabled: z.boolean(), weight, atLeast: z.int().min(1).max(500).nullable(), firstOrderOnly: z.boolean() }).strict().default({ enabled: false, weight: 15, atLeast: null, firstOrderOnly: true }),
+  /**
+   * PR 541 (v46, SIM-F-015): the identity check beyond the phone — earlier orders under ANOTHER number with the same
+   * name and an address at least `addressSimilarity` alike (pg_trgm), in the last `windowDays` (0: ever). A refusal among
+   * them is named. Off until the owner switches it on.
+   */
+  identityMatch: z.object({ enabled: z.boolean(), weight, windowDays: days, addressSimilarity: z.number().min(0.3).max(1) }).strict().default({ enabled: false, weight: 20, windowDays: 365, addressSimilarity: 0.6 }),
 };
 
 /** Signals read from the address against the gazetteer (PR 158). */
@@ -144,6 +155,8 @@ export const riskSettings = {
       recentOrder: { enabled: true, weight: 25, withinHours: 24 },
       inTransit: { enabled: true, weight: 20 },
       orderValue: { enabled: false, weight: 15, atLeastMinor: null, firstOrderOnly: true },
+      orderPieces: { enabled: false, weight: 15, atLeast: null, firstOrderOnly: true },
+      identityMatch: { enabled: false, weight: 20, windowDays: 365, addressSimilarity: 0.6 },
       addressUnresolved: { enabled: true, weight: 10 },
       addressUnsure: { enabled: true, weight: 5 },
       addressNoDetail: { enabled: true, weight: 5 },
@@ -151,6 +164,10 @@ export const riskSettings = {
       riskyArea: { enabled: false, weight: 15, areaIds: [] },
       areaRefusals: { enabled: false, weight: 10, atLeast: 3, windowDays: 90 },
     },
+    // PR 541 (v46) added orderPieces and identityMatch (off): an owner's stored set from v43 still reads, the new
+    // signals taking their defaults (the schema's `.default`), so nothing he set is lost.
+    version: 46,
+    since: V,
     valueType: 'JSON',
     labelKey: 'risk.signals.label',
     helpKey: 'risk.signals.help',

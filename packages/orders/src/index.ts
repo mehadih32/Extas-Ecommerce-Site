@@ -26,6 +26,10 @@
 // S06 · PR 156: the risk score — the owner's signals and weights, scored once when the order lands and stored with its
 // reasons (risk.ts; the model in risk-score.ts). It only informs: nothing is blocked or held by it.
 // S06 · PR 160: the risk panel — why the score is what it is, from what was stored (risk-panel.ts).
+// S05 · PR 541: the risk-sectioned dashboard — every order placed in its section with a note the moment it lands, a
+// review where a person must decide (sections.ts; the rule in risk-section.ts), the identity check beyond the phone
+// (identity.ts, SIM-F-015) and the courier booking through the machine, never while a review is open (booking.ts,
+// SIM-F-014).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -51,3 +55,6 @@ export * from './phone-history';
 export * from './address-facts';
 export * from './risk';
 export * from './risk-panel';
+export * from './sections';
+export * from './identity';
+export * from './booking';

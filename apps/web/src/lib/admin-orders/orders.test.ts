@@ -17,7 +17,11 @@ import en from '../../../messages/admin-orders.en.json';
 import { adminDicts } from '../admin-i18n';
 import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
-import { FILTER_STATES, flagChips, parseListQuery, phoneText, statusChips } from './list';
+import { FILTER_STATES, flagChips, parseListQuery, phoneText, riskChips, statusChips } from './list';
+import { sectionSummary } from './detail';
+import { signalDetail } from './risk';
+import { filterSelects } from '@/components/admin/orders/OrderListPage';
+import { RISK_SECTIONS } from '@extas/settings';
 import { LIST_PAGES, ORDER_TONE, PAY_TONE, SHIP_TONE, latinDigits, listHref } from './model';
 
 function keys(d: Dict, prefix = ''): string[] {
@@ -61,7 +65,7 @@ describe('the list address', () => {
   });
 
   it('reads the choices and drops what the service does not know', () => {
-    expect(parseListQuery('all', {})).toEqual({ view: 'all', q: undefined, status: undefined, payment: undefined, source: undefined, cursor: undefined });
+    expect(parseListQuery('all', {})).toEqual({ view: 'all', q: undefined, status: undefined, payment: undefined, source: undefined, risk: undefined, section: undefined, sort: undefined, cursor: undefined });
     const q = parseListQuery('all', { view: 'onHold', q: '  0171 ', status: 'PLACED', payment: 'BKASH', source: 'PHONE', cursor: UUID });
     expect(q).toEqual({ view: 'onHold', q: '0171', status: 'PLACED', payment: 'BKASH', source: 'PHONE', cursor: UUID });
     const bad = parseListQuery('all', { view: 'secret', status: 'DRAFT', payment: 'GOLD', source: 'x', cursor: 'not-a-uuid', q: 'x'.repeat(200) });
@@ -69,6 +73,11 @@ describe('the list address', () => {
     expect(bad.q).toHaveLength(80);
     expect(parseListQuery('confirm', { view: 'all' }).view).toBe('toConfirm');
     expect(FILTER_STATES).not.toContain('DRAFT');
+    // PR 541 (follow-up 295): a band key, a section and the risk sort are read; anything else is dropped
+    expect(parseListQuery('all', { risk: 'high', section: 'identity', sort: 'risk' })).toMatchObject({ risk: 'high', section: 'identity', sort: 'risk' });
+    expect(parseListQuery('all', { risk: 'HIGH; drop', section: 'secret', sort: 'new' })).toMatchObject({ risk: undefined, section: undefined, sort: undefined });
+    expect(listHref('all', { view: 'all', risk: 'high', sort: 'risk' })).toBe('/admin/orders?risk=high&sort=risk');
+    expect(LIST_PAGES.confirm.views).toContain('prepaid');
   });
 
   it('writes a clean link back (the default view and empty choices left out, a new choice starts at page one)', () => {
@@ -110,6 +119,9 @@ describe('the row’s chips', () => {
     flags: [],
     internalFlags: ['vip'],
     orderGroupId: null,
+    riskScore: null,
+    riskBand: null,
+    riskSection: null,
   };
 
   it('four separate statuses: order, courier, payment, and return/refund only when there is one', () => {
@@ -125,8 +137,33 @@ describe('the row’s chips', () => {
   it('flags say what to notice, with the owner’s own words for hold reasons and flags', () => {
     const labels = { holdReasons: new Map([['customer-wait', 'Customer asked to wait']]), flags: new Map([['vip', 'Valued customer']]) };
     const f = flagChips(view('en'), row, labels).map((c) => c.label);
-    expect(f).toEqual(['Cancel request', 'Duplicate review', 'On hold: Customer asked to wait', 'Valued customer', 'Phone order']);
+    expect(f).toEqual(['Cancel request', 'In review', 'On hold: Customer asked to wait', 'Valued customer', 'Phone order']);
     expect(flagChips(view('en'), { ...row, status: 'PLACED', cancelRequested: false, inReview: false, internalFlags: ['gone'], source: 'WEBSITE' }, labels).map((c) => c.label)).toEqual(['gone']);
+  });
+
+  it('PR 541 (follow-up 295): the risk column shows the band with its score and the section; clear and unscored show nothing', () => {
+    const bands = [{ key: 'high', en: 'High', bn: 'বেশি', tone: 'bad' as const }];
+    expect(riskChips(view('en'), { riskBand: null, riskScore: null, riskSection: null }, bands)).toEqual({ band: null, section: null });
+    expect(riskChips(view('en'), { riskBand: null, riskScore: null, riskSection: 'clear' }, bands)).toEqual({ band: null, section: null });
+    const r = riskChips(view('en'), { riskBand: 'high', riskScore: 72, riskSection: 'identity' }, bands);
+    expect(r.band).toMatchObject({ label: 'High · 72', tone: 'bad' });
+    expect(r.section).toMatchObject({ label: 'New identity', tone: 'bad' });
+    expect(riskChips(view('bn'), { riskBand: 'high', riskScore: 72, riskSection: 'prepaid' }, bands).band!.label).toBe('বেশি · 72');
+    // a band the owner removed since: its key, never a blank
+    expect(riskChips(view('en'), { riskBand: 'gone', riskScore: 5, riskSection: null }, bands).band).toMatchObject({ label: 'gone · 5', tone: 'line' });
+    for (const s of RISK_SECTIONS) for (const lang of ['en', 'bn'] as const) expect(t(adminDicts[lang], `orders.section.${s}`), s).not.toBe(`orders.section.${s}`);
+  });
+
+  it('PR 541: the list filters carry the owner’s bands, the sections and the sort; the timeline says why a section was given', () => {
+    const sels = filterSelects(view('en'), { view: 'all', risk: 'high' }, [{ value: 'high', label: 'High' }]);
+    expect(sels.map((s) => s.name)).toEqual(['status', 'payment', 'source', 'risk', 'section', 'sort']);
+    expect(sels.find((s) => s.name === 'risk')).toMatchObject({ value: 'high', options: [{ value: 'high', label: 'High' }] });
+    expect(sels.find((s) => s.name === 'section')!.options.map((o) => o.value)).toEqual([...RISK_SECTIONS]);
+    expect(sels.find((s) => s.name === 'sort')!.options).toEqual([{ value: 'risk', label: 'Highest risk first' }]);
+    expect(sectionSummary(view('en'), { section: 'high', previous: 'watch', because: ['refusals'], review: true })).toBe('High risk · because: ' + t(adminDicts.en, 'orders.risk.sig.refusals') + ' · waits for a person · was Watch');
+    expect(sectionSummary(view('en'), {})).toBeNull();
+    expect(signalDetail(view('en'), { key: 'orderPieces', weight: 15, values: { pieces: 6, atLeast: 4 } } as never, 'BDT')).toBe('6 pieces (from 4)');
+    expect(signalDetail(view('en'), { key: 'identityMatch', weight: 20, values: { count: 2, number: 'EX-9', refusedNumber: 'EX-7', windowDays: 365 } } as never, 'BDT')).toBe('2 earlier orders under another number, latest EX-9 · ' + t(adminDicts.en, 'orders.risk.window', { days: 365 }) + ' · refused: EX-7');
   });
 
   it('the phone is said back the way the team reads it', () => {
