@@ -115,7 +115,9 @@ const MOVES: Readonly<Partial<Record<OrderCommand, { from: readonly OrderState[]
   startPicking: { from: ['CONFIRMED'], to: 'PROCESSING' },
   pack: { from: ['CONFIRMED', 'PROCESSING'], to: 'PACKED' },
   handover: { from: ['PACKED'], to: 'HANDED_OVER' },
-  courierPickedUp: { from: ['HANDED_OVER'], to: 'IN_TRANSIT' },
+  // PR 184: the courier's pick-up proves the hand-over, so a booked parcel the courier picked up moves its order on even
+  // when nobody pressed "Handed over" (the hand-over time is then the courier's pick-up time)
+  courierPickedUp: { from: ['CONFIRMED', 'PROCESSING', 'PACKED', 'HANDED_OVER'], to: 'IN_TRANSIT' },
   // a courier may report the delivery without a pick-up event in between (one poll sees both)
   delivered: { from: ['HANDED_OVER', 'IN_TRANSIT'], to: 'DELIVERED' },
   partiallyDelivered: { from: ['IN_TRANSIT'], to: 'PARTIALLY_DELIVERED' },
@@ -246,6 +248,10 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
       if (o.cancelRequested) return 'CANCEL_REQUESTED';
       if (o.inReview) return 'IN_REVIEW';
       return null;
+    case 'courierPickedUp':
+      // PR 184: only a parcel a courier holds, and never one whose cancel is waiting for the courier's answer (D5)
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      return o.booked ? null : 'NOT_BOOKED';
     case 'pack':
     case 'handover':
       // the old parcel is never packed or handed over again once its cancel is asked (§6.5.7 (a))

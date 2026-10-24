@@ -58,7 +58,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   startPicking: { CONFIRMED: 'PROCESSING' },
   pack: { CONFIRMED: 'PACKED', PROCESSING: 'PACKED' },
   handover: { PACKED: 'HANDED_OVER' },
-  courierPickedUp: { HANDED_OVER: 'IN_TRANSIT' },
+  // PR 184: the courier's pick-up moves a booked order on from wherever packing stood
+  courierPickedUp: { CONFIRMED: 'IN_TRANSIT', PROCESSING: 'IN_TRANSIT', PACKED: 'IN_TRANSIT', HANDED_OVER: 'IN_TRANSIT' },
   delivered: { HANDED_OVER: 'DELIVERED', IN_TRANSIT: 'DELIVERED' },
   partiallyDelivered: { IN_TRANSIT: 'PARTIALLY_DELIVERED' },
   returned: { HANDED_OVER: 'RETURNED', IN_TRANSIT: 'RETURNED' },
@@ -83,6 +84,7 @@ const PASSING: Partial<Record<OrderCommand, Partial<MachineOrder>>> = {
   courierCancelRefused: { booked: true, cancelPending: true },
   refuseCancelRequest: { cancelRequested: true },
   handover: { booked: true },
+  courierPickedUp: { booked: true },
 };
 
 describe('the transition table (§6.5.1)', () => {

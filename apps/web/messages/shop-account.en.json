@@ -296,7 +296,25 @@
       "exact": "Pay the rider exactly {amount}. Not a taka more.",
       "exactPaid": "This order is paid. Pay the rider nothing.",
       "exactReport": "Asked for more? Tell us",
-      "exactMsg": "Hi {store}, for order #{number} the rider asked for more than {amount}."
+      "exactMsg": "Hi {store}, for order #{number} the rider asked for more than {amount}.",
+      "news": {
+        "out": {
+          "title": "Out for delivery",
+          "text": "The courier has your parcel on the way to you now. Please keep your phone close."
+        },
+        "tryFailed": {
+          "title": "The courier could not deliver yet",
+          "text": "The rider tried but could not hand it over. They will try again; please keep your phone close."
+        },
+        "address": {
+          "title": "The rider is looking for your address",
+          "text": "The courier could not find the address. We may call you to check it."
+        },
+        "checking": {
+          "title": "We are checking with the courier",
+          "text": "Something is holding your parcel up. We are on it with the courier and will tell you."
+        }
+      }
     },
     "invoice": {
       "pageTitle": "Invoice {invoice}",

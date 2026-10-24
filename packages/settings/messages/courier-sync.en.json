@@ -1,0 +1,10 @@
+{
+  "account": {
+    "track": {
+      "courier": {
+        "label": "Courier news on his order page",
+        "help": "Off by default. On, his order page also says what the courier last told us: out for delivery, and (with \"Problems too\") a delivery try that failed or an address the rider could not find, with \"we are checking with the courier\" for a lost or damaged parcel. The order's own steps show either way."
+      }
+    }
+  }
+}

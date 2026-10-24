@@ -45,6 +45,8 @@ describe('steps', () => {
     expect(stepsOf({ type: 'order.status', toStatus: 'CONFIRMED' })).toEqual(['confirmed']);
     expect(stepsOf({ type: 'order.status', toStatus: 'PACKED' })).toEqual(['packed']);
     expect(stepsOf({ type: 'order.status', toStatus: 'HANDED_OVER' })).toEqual(['booked', 'giftReceiver']);
+    // PR 184: a pick-up straight from packed starts the same steps (each still sent once)
+    expect(stepsOf({ type: 'order.status', toStatus: 'IN_TRANSIT' })).toEqual(['booked', 'giftReceiver']);
     expect(stepsOf({ type: 'order.status', toStatus: 'DELIVERED' })).toEqual(['delivered', 'day1Care', 'day3Review']);
     expect(stepsOf({ type: OUT_FOR_DELIVERY_EVENT, toStatus: null })).toEqual(['outForDelivery', 'deliveryDay']);
     expect(stepsOf({ type: 'order.note', toStatus: null })).toEqual([]);

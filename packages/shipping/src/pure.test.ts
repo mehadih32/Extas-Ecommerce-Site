@@ -3,7 +3,7 @@
 // returned parcel with every part named (SIM-F-027). PR 176: booking's rules — the phone a courier takes, a gift's
 // booking day (SIM-F-007), the rider's note, the parcel's description and weight (SIM-F-029).
 import { describe, expect, it } from 'vitest';
-import { addDays, bookingNoteOf, courierPhone, fillTemplate, giftBooking, localDay, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
+import { addDays, bookingNoteOf, courierPhone, fillTemplate, giftBooking, lateOf, localDay, orderMovesFor, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
 
 const T0 = new Date('2026-10-20T10:00:00Z').getTime(); // hardcode-ok: a fixed test clock
 const at = (min: number) => new Date(T0 + min * 60_000);
@@ -139,5 +139,38 @@ describe('booking rules (PR 176)', () => {
     expect(parcelDescription([l(700, 2), l(null, 1, { productName: 'Pocket tee', colourName: null, sizeLabel: 'L' })], true)).toBe('Oxford shirt (Sky, M) x2; Pocket tee (L) x1');
     expect(parcelDescription([l(700)], false)).toBeNull();
     expect(parcelDescription(Array.from({ length: 40 }, () => l(700)), true)!.length).toBe(250);
+  });
+});
+
+describe('PR 184 · the order follows its parcel', () => {
+  const p = (status: Parameters<typeof orderMovesFor>[0]['status'], picked = true) => ({ status, pickedAt: picked ? at(0) : null });
+  it('picked up moves a packed or confirmed order on; a finished parcel closes it; nothing goes backwards', () => {
+    expect(orderMovesFor(p('PENDING_PICKUP', false), 'CONFIRMED')).toEqual([]);
+    expect(orderMovesFor(p('PICKED_UP'), 'CONFIRMED')).toEqual(['courierPickedUp']);
+    expect(orderMovesFor(p('IN_TRANSIT'), 'HANDED_OVER')).toEqual(['courierPickedUp']);
+    expect(orderMovesFor(p('IN_TRANSIT'), 'IN_TRANSIT')).toEqual([]);
+    expect(orderMovesFor(p('DELIVERED'), 'PACKED')).toEqual(['courierPickedUp', 'delivered']);
+    expect(orderMovesFor(p('DELIVERED'), 'IN_TRANSIT')).toEqual(['delivered']);
+    expect(orderMovesFor(p('RETURNED'), 'IN_TRANSIT')).toEqual(['returned']);
+    expect(orderMovesFor(p('DELIVERED'), 'DELIVERED')).toEqual([]);
+    expect(orderMovesFor(p('DELIVERED'), 'ON_HOLD')).toEqual([]);
+    expect(orderMovesFor(p('DELIVERED'), 'CANCELLED')).toEqual([]);
+  });
+
+  it('exceptions never move the order; a partial needs its kept pieces; a held "delivered" waits for a person', () => {
+    for (const s of ['ATTEMPT_FAILED', 'ADDRESS_PROBLEM', 'LOST', 'DAMAGED', 'RETURNING', 'OUT_FOR_DELIVERY'] as const) expect(orderMovesFor(p(s), 'IN_TRANSIT'), s).toEqual([]);
+    expect(orderMovesFor(p('PARTIALLY_DELIVERED'), 'IN_TRANSIT')).toEqual([]);
+    expect(orderMovesFor(p('PARTIALLY_DELIVERED'), 'IN_TRANSIT', { keptItemIds: ['k'] })).toEqual(['partiallyDelivered']);
+    expect(orderMovesFor(p('DELIVERED'), 'IN_TRANSIT', { holdDelivered: true })).toEqual([]);
+  });
+
+  it('SIM-F-018: late past the band\'s most hours plus the grace, only while the courier holds it', () => {
+    const o = { placedAt: at(0), hoursMax: 48, status: 'IN_TRANSIT' as const };
+    expect(lateOf(o, 0, at(47 * 60))).toEqual({ late: false, dueBy: at(48 * 60) });
+    expect(lateOf(o, 0, at(49 * 60)).late).toBe(true);
+    expect(lateOf(o, 2, at(49 * 60)).late).toBe(false);
+    expect(lateOf({ ...o, status: 'DELIVERED' }, 0, at(99 * 60)).late).toBe(false);
+    expect(lateOf({ ...o, hoursMax: null }, 0, at(99 * 60))).toEqual({ late: false, dueBy: null });
+    expect(lateOf({ ...o, addressUnclear: true }, 0, at(99 * 60)).late).toBe(false);
   });
 });

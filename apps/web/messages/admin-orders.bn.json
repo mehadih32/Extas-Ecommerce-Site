@@ -100,7 +100,11 @@
       "RETURNING": "ফেরত আসছে",
       "RETURNED": "দোকানে ফেরত",
       "CANCEL_REQUESTED": "বাতিলের অনুরোধ",
-      "CANCELLED": "বাতিল"
+      "CANCELLED": "বাতিল",
+      "ATTEMPT_FAILED": "ডেলিভারির চেষ্টা হয়নি",
+      "ADDRESS_PROBLEM": "ঠিকানায় সমস্যা",
+      "LOST": "কুরিয়ার হারিয়েছে",
+      "DAMAGED": "কুরিয়ারে নষ্ট হয়েছে"
     },
     "pay": {
       "UNPAID": "টাকা আসেনি",
@@ -495,7 +499,27 @@
         "REFUSED": "কুরিয়ার বাতিল করতে পারেনি"
       },
       "booking": "বুকিং",
-      "theCourier": "কুরিয়ার"
+      "theCourier": "কুরিয়ার",
+      "now": "এখন",
+      "problem": "কুরিয়ার বলছে",
+      "picked": "কুরিয়ার নিয়েছে",
+      "delivered": "পৌঁছেছে",
+      "returned": "দোকানে ফেরত",
+      "lastRead": "শেষ খবর নেওয়া",
+      "notRead": "এখনো খবর নেওয়া হয়নি",
+      "why": {
+        "receiverUnreachable": "ফোন ধরেননি",
+        "receiverNotAvailable": "বাসায় ছিলেন না",
+        "receiverAskedLater": "পরে দিতে বলেছেন",
+        "paymentNotReady": "টাকা ছিল না",
+        "addressNotFound": "রাইডার ঠিকানা পায়নি",
+        "addressIncomplete": "ঠিকানা অসম্পূর্ণ",
+        "wrongArea": "ভুল এলাকা",
+        "lostInTransit": "পথে হারিয়েছে",
+        "damagedInTransit": "পথে নষ্ট হয়েছে",
+        "wetOrTorn": "ভেজা বা ছেঁড়া",
+        "other": "অন্য কারণ"
+      }
     },
     "money": {
       "title": "পেমেন্ট আর রিফান্ড",
@@ -525,7 +549,8 @@
     "who": {
       "staff": "স্টাফ",
       "customer": "কাস্টমার",
-      "system": "সিস্টেম"
+      "system": "সিস্টেম",
+      "courier": "কুরিয়ার"
     },
     "ev": {
       "move": "{from} → {to}",
@@ -580,7 +605,8 @@
       "order_riskLevel": "ঝুঁকির লেভেলের ধাপ",
       "order_advanceResend": "পে লিংক আবার পাঠানো হয়েছে",
       "shipment_areaHeld": "কুরিয়ার বুকিং অপেক্ষায়: কুরিয়ার এই এলাকা এখনো চেনে না",
-      "shipment_bookingFailed": "কুরিয়ার বুকিং হয়নি"
+      "shipment_bookingFailed": "কুরিয়ার বুকিং হয়নি",
+      "shipment_outForDelivery": "কুরিয়ার ডেলিভারিতে বের হয়েছে"
     },
     "band": {
       "cancelPending": "বাতিল চাওয়া হয়েছে · কুরিয়ারের উত্তর বাকি — {courier}-কে ফোন করে ওরা কী বলল লিখুন।",

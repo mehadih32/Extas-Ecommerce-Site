@@ -174,7 +174,7 @@ describe('the invoice sheet (Blueprint B2.1, demo inv_sheet)', () => {
 
   it('the parts the owner leaves out are not drawn', () => {
     const off = { ...SET, blocks: { ...SET.blocks, customer: false, address: false, variant: false, marks: false, payment: false, footer: false, sku: true } };
-    const v = invoiceView(ctx('en'), receipt({ shipment: { courier: 'Sample Courier', tracking: 'TRK-1' } }), off, NO_SHOP, OPTS);
+    const v = invoiceView(ctx('en'), receipt({ shipment: { courier: 'Sample Courier', tracking: 'TRK-1', status: 'IN_TRANSIT' } }), off, NO_SHOP, OPTS);
     expect(v.parties).toEqual([{ label: 'Courier', lines: ['Sample Courier', 'Tracking TRK-1'] }]);
     expect(v.rows[0]!.subs).toEqual(['Code SAMPLE-P1-NAVY-M', `saves ${formatMoney(30_000, 'BDT', 'en', false)}`]);
     expect(v.rows[0]!.marks).toEqual([]);

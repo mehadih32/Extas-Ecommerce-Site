@@ -1,6 +1,6 @@
 // The tracking steps read from what the order stores (PR 131, 135): never a step the order has not reached.
 import { describe, expect, it } from 'vitest';
-import { firstNameOf, initialsOf, lateOf, riderAmountOf, trackOf } from './pure';
+import { courierNewsOf, firstNameOf, initialsOf, lateOf, riderAmountOf, trackOf } from './pure';
 
 const T = { placedAt: '2026-10-20T06:00:00Z', confirmedAt: '2026-10-20T08:00:00Z', packedAt: '2026-10-21T06:00:00Z', handedOverAt: '2026-10-21T10:00:00Z' };
 
@@ -54,5 +54,25 @@ describe('the late flag (SIM-F-018) and the amount for the rider (CN-014 idea 10
     expect(riderAmountOf({ kind: 'paid' })).toBe(0);
     expect(riderAmountOf({ kind: 'due', dueMinor: 1000 })).toBeNull();
     expect(riderAmountOf({ kind: 'failed', dueMinor: 1000 })).toBeNull();
+  });
+});
+
+describe('PR 184: the courier news on his order page', () => {
+  const ON = { enabled: true, exceptions: true };
+  it('says what the courier last told us while the order is on its way, never once it is finished', () => {
+    expect(courierNewsOf({ status: 'OUT_FOR_DELIVERY' }, 'IN_TRANSIT', ON)).toBe('out');
+    expect(courierNewsOf({ status: 'ATTEMPT_FAILED' }, 'IN_TRANSIT', ON)).toBe('tryFailed');
+    expect(courierNewsOf({ status: 'ADDRESS_PROBLEM' }, 'IN_TRANSIT', ON)).toBe('address');
+    expect(courierNewsOf({ status: 'LOST' }, 'IN_TRANSIT', ON)).toBe('checking');
+    expect(courierNewsOf({ status: 'DAMAGED' }, 'HANDED_OVER', ON)).toBe('checking');
+    expect(courierNewsOf({ status: 'IN_TRANSIT' }, 'IN_TRANSIT', ON)).toBeNull();
+    expect(courierNewsOf({ status: 'OUT_FOR_DELIVERY' }, 'DELIVERED', ON)).toBeNull();
+    expect(courierNewsOf(null, 'IN_TRANSIT', ON)).toBeNull();
+  });
+
+  it('off by default; the problems only with their own switch', () => {
+    expect(courierNewsOf({ status: 'OUT_FOR_DELIVERY' }, 'IN_TRANSIT', { enabled: false, exceptions: true })).toBeNull();
+    expect(courierNewsOf({ status: 'ATTEMPT_FAILED' }, 'IN_TRANSIT', { enabled: true, exceptions: false })).toBeNull();
+    expect(courierNewsOf({ status: 'OUT_FOR_DELIVERY' }, 'IN_TRANSIT', { enabled: true, exceptions: false })).toBe('out');
   });
 });

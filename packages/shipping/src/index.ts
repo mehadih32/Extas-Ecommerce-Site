@@ -32,6 +32,10 @@
 // PR 181: the daily consolidated picking list — every order still with us (approved, or booked and not picked up),
 // held and problem orders apart and uncounted, the pieces category → style → colour → size with the most pieces first,
 // shortages against the shop's stock, the summary line; printing it keeps the list (picking.ts, picking-pure.ts).
+// PR 184: the order follows its parcel — each read's courier word moves the order through the one order service (in
+// transit, delivered, returned, partly delivered once the kept pieces are named), the courier's "out for delivery" on the
+// order's timeline, the orders behind their parcel caught up on every run (sync.ts); late parcels past their band's
+// promise in their own list (parcels.ts, SIM-F-018); the order page reads the courier's last word through the order service's detail.
 //
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
@@ -50,3 +54,4 @@ export * from './fulfil';
 export * from './handover';
 export * from './picking-pure';
 export * from './picking';
+export * from './sync';

@@ -41,7 +41,7 @@ import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsO
 const CLAIM_LEASE_MS = 10 * 60_000;
 
 /** The order statuses whose timeline rows start a step (the planner reads only these). */
-const STEP_STATUSES = ['CONFIRMED', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'DELIVERED', 'PARTIALLY_DELIVERED', 'CANCELLED', 'ON_HOLD', 'AWAITING_ADVANCE'] as const;
+const STEP_STATUSES = ['CONFIRMED', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED', 'CANCELLED', 'ON_HOLD', 'AWAITING_ADVANCE'] as const;
 
 type NotificationStatus = NonNullable<Prisma.NotificationLogCreateManyInput['status']>;
 
