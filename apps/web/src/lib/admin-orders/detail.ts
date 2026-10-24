@@ -14,6 +14,7 @@ import { KNOWN_ERRORS, commandUrl, reviewUrl, type CommandId } from './commands'
 import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
 import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
+import { riskSummary } from './risk';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
 export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
@@ -29,6 +30,7 @@ export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
   notes: 'orders.notes',
   edit: 'orders.edit',
   twoSize: 'orders.edit',
+  riskAssess: 'orders.risk.decide',
 };
 
 /** The key a button (by its spec id, the `?do=` deep link) needs: a link to a command the person may not use shows "no access". */
@@ -45,6 +47,7 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   flags: 'orders.notes',
   edit: 'orders.edit',
   phone: 'orders.edit',
+  riskAssess: 'orders.risk.decide',
 };
 
 /** How many of the customer's other orders the page lists (the counts cover all of them). */
@@ -78,6 +81,8 @@ export interface ReviewCard {
 export interface OrderDetailView {
   id: string;
   number: string;
+  /** The order's currency (the risk card writes its amounts in it). */
+  currency: string;
   name: string;
   total: string;
   placed: string;
@@ -524,9 +529,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     .map((e): TimelineItem => {
       const key = `orders.ev.${e.type.replace(/\./g, '_')}`;
       const named = t(d, key);
-      const reason = e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : null;
+      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : null;
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
@@ -546,6 +551,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   return {
     id: o.id,
     number: o.number,
+    currency: o.currency,
     name: o.customerName ?? '',
     total: m(o.totalMinor),
     placed: dt.format(o.placedAt),

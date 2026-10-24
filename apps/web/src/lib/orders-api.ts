@@ -43,6 +43,10 @@
 //                                                             customer's two-size answer; "only M" takes the other sizes out (orders.edit)
 //   GET   /api/admin/orders/:id/phone-history                 PR 157: the number's other orders and what became of them
 //                                                             (refused, our fault and not counted, cancelled …) (orders.read)
+//   GET   /api/admin/orders/:id/risk                          PR 160: the risk panel — the stored score, every signal with
+//                                                             its weight, earlier scores, rules changed since (orders.risk.read)
+//   POST  /api/admin/orders/:id/risk/assess                   PR 160: "score again" — a new dated score with today's rules;
+//                                                             the old one stays; nothing is blocked or held (orders.risk.decide)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -212,6 +216,17 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (path.length > 2) return notFound();
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'orders.read', async (x) => ({ history: found(await od.orderPhoneHistory(x.deps, x.who, id)) }));
+  }
+  // S06 · PR 160: the risk panel (why the score is what it is) and "score again"
+  if (b === 'risk') {
+    if (!c) {
+      if (path.length > 2) return notFound();
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'orders.risk.read', async (x) => ({ risk: found(await od.orderRisk(x.deps, x.who, id)) }));
+    }
+    if (c !== 'assess' || path.length > 3) return notFound();
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.reassessOrder(x.deps, x.who, id) }));
   }
   if (m !== 'POST') return notAllowed();
   const run = (perm: od.OrdersPermission, fn: (x: Ctx, input: Record<string, unknown>, opts: od.CommandOptions) => Promise<od.CommandResult>) =>

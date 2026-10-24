@@ -25,6 +25,7 @@
 // S06 · PR 158: the address and zone facts read against the gazetteer for the checks (address-facts.ts).
 // S06 · PR 156: the risk score — the owner's signals and weights, scored once when the order lands and stored with its
 // reasons (risk.ts; the model in risk-score.ts). It only informs: nothing is blocked or held by it.
+// S06 · PR 160: the risk panel — why the score is what it is, from what was stored (risk-panel.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -49,3 +50,4 @@ export * from './export';
 export * from './phone-history';
 export * from './address-facts';
 export * from './risk';
+export * from './risk-panel';

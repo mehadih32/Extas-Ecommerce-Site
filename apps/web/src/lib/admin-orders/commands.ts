@@ -20,6 +20,8 @@ export const COMMAND_PATHS = {
   edit: 'edit',
   // PR 146: the two-size answer (keep all, or only one size)
   twoSize: 'two-size',
+  // PR 160: "Score again" on the risk card (a new dated score; the old one stays)
+  riskAssess: 'risk/assess',
 } as const;
 export type CommandId = keyof typeof COMMAND_PATHS;
 
@@ -47,6 +49,7 @@ export const KNOWN_ERRORS = [
   'OFFER_ON_ORDER',
   'LAST_LINE',
   'OUT_OF_STOCK',
+  'RISK_OFF',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',
