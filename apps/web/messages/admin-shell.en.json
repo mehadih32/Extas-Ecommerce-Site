@@ -43,7 +43,8 @@
       },
       "settings": {
         "keys": "Keys & connections",
-        "system": "System"
+        "system": "System",
+        "look": "Admin look"
       },
       "help": {
         "manual": "Help & manual"
@@ -111,7 +112,12 @@
       "search": "Search",
       "more": "More",
       "skip": "Skip to content",
-      "waiting": "{n} waiting"
+      "waiting": "{n} waiting",
+      "expand": "Expand the menu",
+      "collapse": "Collapse the menu",
+      "expandShort": "Expand",
+      "collapseShort": "Collapse",
+      "todo": "To do"
     },
     "top": {
       "search": "Search pages, settings, orders, products, customers…",
@@ -122,7 +128,15 @@
       "bellUnread": "Notifications, {n} unread",
       "guide": "Guide for this page",
       "account": "Account",
-      "store": "Store"
+      "store": "Store",
+      "searchV4": "Search orders, phones, products or pages…",
+      "shop": "View shop",
+      "shopTitle": "Open the shop as a customer sees it",
+      "todo": "To do",
+      "todoWaiting": "To do, {n} lists waiting",
+      "todoTitle": "To do (T)",
+      "home": "Admin home",
+      "storeTitle": "One store until more stores are added"
     },
     "me": {
       "menu": "Account menu",
@@ -218,6 +232,34 @@
         "planned": "Pages planned:",
         "ready": "Ready now:"
       }
+    },
+    "todo": {
+      "title": "What to do now",
+      "sub": "{n} lists · most urgent first · a task leaves by itself when it is done",
+      "aria": "Which lists",
+      "all": "All",
+      "mine": "Mine",
+      "later": "Later",
+      "start": "Start",
+      "putAside": "Look at it later ({n} hours)",
+      "putAsideShort": "Later ({n} h)",
+      "bringBack": "Bring back now",
+      "clear": "All clear",
+      "clearNote": "New work shows up here by itself, most urgent first.",
+      "asideNone": "Nothing put aside",
+      "asideNote": "Use the clock on a task to look at it in {n} hours.",
+      "keyHint": "opens this from any page",
+      "close": "Close",
+      "groups": {
+        "urgent": "Urgent",
+        "orders": "Orders",
+        "delivery": "Delivery",
+        "products": "Products",
+        "stock": "Stock & returns",
+        "money": "Money & approvals",
+        "messages": "Messages",
+        "system": "System"
+      }
     }
   },
   "dash": {
@@ -286,5 +328,198 @@
     "built": "Ready",
     "planned": "Planned",
     "open": "Open the section"
+  },
+  "dsh": {
+    "soon": "{what} comes with {stage}. Until then this card stays empty — no number is made up.",
+    "soonShort": "{what} · comes with {stage}",
+    "stage": {
+      "S07": "S07 · Payments",
+      "S08": "S08 · Courier & returns",
+      "S13": "S13 · Marketing & ads",
+      "S15": "S15 · AI",
+      "S16": "S16 · Costs & reports",
+      "S21": "S21 · Site health",
+      "S22": "S22 · Support"
+    },
+    "pts": "{n} pts",
+    "funnel": {
+      "ofBefore": "{n}% of the step before",
+      "placedHere": "placed in this period"
+    },
+    "live": "Live · {time}",
+    "download": "Download these numbers (CSV)",
+    "vsYesterday": "vs yesterday",
+    "vsBefore": "vs the {n} days before",
+    "rangeCustom": "{from} – {to}",
+    "rangeToday": "today",
+    "rangeLast": "last {n} days",
+    "range": {
+      "custom": "Custom",
+      "pick": "Pick your own dates",
+      "from": "From",
+      "to": "To",
+      "show": "Show",
+      "cancel": "Cancel",
+      "bad": "Pick a “From” day on or before the “To” day, not after today, {n} days at most."
+    },
+    "csv": {
+      "figure": "Figure",
+      "value": "Value",
+      "note": "Note",
+      "range": "Dates",
+      "file": "dashboard-{day}.csv"
+    },
+    "sales": "Delivered sales",
+    "salesNote": "delivered orders only",
+    "ordered": "Ordered value",
+    "orderedNote": "Orders placed: {n} · never counted as sales",
+    "ordersPlaced": "Orders placed",
+    "deliveredOrders": "Delivered orders",
+    "aov": "Average order",
+    "aovNote": "delivered sales ÷ delivered orders",
+    "success": "Delivery success",
+    "lastDays": "last {n} days",
+    "openOrders": "Open orders",
+    "provisionalTip": "Delivered, but the courier may not have paid this cash yet. It becomes final when the money is matched.",
+    "vsAmount": "{vs} ({amount})",
+    "legend": {
+      "cur": "Last {n} days",
+      "prev": "The {n} days before"
+    },
+    "prevPeriod": "Previous period",
+    "chartLabel": "Delivered sales by day, {range}",
+    "foot": "{amount} · {n} delivered orders",
+    "smoothNote": "The lines show a {n}-day average, so one busy day does not hide the trend. Point at a day for its own number.",
+    "orders": "Orders",
+    "avgOrdered": "avg order {amount}",
+    "accepted": "{kept} of {n} accepted",
+    "noneFinished": "No parcel has finished in the last {n} days yet",
+    "returned": "Returned parcels",
+    "cameBack": "{n} came back",
+    "pipe": {
+      "title": "Where orders are now",
+      "open": "Open orders: {n}",
+      "go": "Go to orders",
+      "new": "New",
+      "oldest": "oldest waiting {age}",
+      "noneWaiting": "none waiting",
+      "confirmed": "Confirmed",
+      "toPack": "waiting to be packed",
+      "packed": "Packed",
+      "toBook": "{n} not booked with a courier",
+      "allBooked": "all booked",
+      "courier": "With courier",
+      "today": "Delivered today",
+      "yesterday": "yesterday by now {n}",
+      "o2c": "Order to courier, on average",
+      "target": "target {n} h",
+      "noO2c": "no order has reached a courier yet",
+      "faster": "{n} h faster",
+      "slower": "{n} h slower"
+    },
+    "hours": "{n} h",
+    "top": {
+      "title": "Top products",
+      "sub": "by delivered sales, last {n} days",
+      "none": "No delivered sales yet",
+      "orders": "{n} orders"
+    },
+    "pcs": "{n} pcs",
+    "all": "All",
+    "cour": {
+      "title": "How couriers are doing",
+      "sub": "delivery success · last {n} days",
+      "returns": "returns {pct}",
+      "reaches": " · reaches in {n} days",
+      "noCourier": "The parcels that finished in the last {n} days have no courier named yet",
+      "best": "{band}: {courier} delivers best ({pct})"
+    },
+    "low": {
+      "title": "Stock running out",
+      "sub": "judged by how fast each size sells",
+      "link": "Stock",
+      "none": "Every size has enough stock",
+      "left": "{n} left",
+      "out": "Sold out",
+      "days": "about {n} days left",
+      "slow": "slow seller",
+      "want": "{n} want it back",
+      "restock": "restock in the ERP"
+    },
+    "prob": {
+      "title": "What needs a look",
+      "sub": "cancel requests, reviews and low stock",
+      "none": "Nothing is going wrong right now",
+      "later": "Customer problems from {a} and {b} join this card when they are built."
+    },
+    "viewAria": "Dashboard view",
+    "viewOverview": "Overview",
+    "viewMoney": "Money & marketing",
+    "mv": {
+      "ad": "Ad spend",
+      "adWhat": "Ad spend",
+      "roas": "ROAS · what ads bring back",
+      "roasWhat": "What ads bring back",
+      "cod": "COD held by couriers",
+      "codWhat": "COD held by couriers",
+      "rto": "Cost of returns (RTO)",
+      "rtoWhat": "The cost of returns",
+      "water": "From sales to profit, step by step",
+      "waterSub": "after goods, courier and ads",
+      "waterWhat": "Profit",
+      "chan": "Which ads paid off",
+      "chanSub": "Facebook, Google and TikTok together",
+      "chanWhat": "Sales by channel",
+      "codStuck": "COD stuck with couriers",
+      "codStuckSub": "who holds how much, and since when",
+      "why": "Why parcels come back",
+      "whySub": "the reasons couriers give",
+      "whyWhat": "Return reasons",
+      "adsSales": "Every day: ads vs sales",
+      "adsSalesSub": "delivered sales per day; ad spend joins it later"
+    }
+  },
+  "look": {
+    "metaTitle": "Admin look · Settings",
+    "title": "Admin look",
+    "sub": "Pick how each admin page looks. Every design shows the same numbers and runs the same actions — only the layout changes. You can also switch from the “…” menu on each page.",
+    "onlyOne": "One design for now",
+    "ownChoice": "Your own choice",
+    "followingTeam": "Following the team default",
+    "useTeam": "Use the team default",
+    "inUse": "In use",
+    "teamDefault": "Team default",
+    "using": "You are using this",
+    "use": "Use this design",
+    "preview": "Preview",
+    "makeTeam": "Make team default",
+    "moreComing": "More designs for this page are on the way.",
+    "failed": "Could not save. Please try again.",
+    "menu": {
+      "more": "More",
+      "design": "Page design (just for you)",
+      "team": "Use the team default",
+      "all": "All designs in Settings",
+      "csv": "Download these numbers",
+      "saved": "Saved",
+      "failed": "Could not save"
+    },
+    "search": {
+      "designs": "Admin look · page designs",
+      "words": "design layout look theme switch dashboard orders products"
+    },
+    "guide": {
+      "title": "Where the guide opens",
+      "now": "Now: {mode}",
+      "sub": "On a computer or tablet the guide can open beside the page, in its own small window, or as a full page.",
+      "team": "For the team",
+      "mine": "Just for you",
+      "panel": "Side panel",
+      "popup": "Pop-up window",
+      "page": "Its own page",
+      "followTeam": "Follow the team",
+      "phone": "On a phone the guide always opens as a full-screen sheet.",
+      "note": "The choice is saved now. Until the guide’s next step is built it still opens as a side panel."
+    }
   }
 }

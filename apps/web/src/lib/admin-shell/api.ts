@@ -14,6 +14,7 @@ import { adminDeps, errorResponse, fail, guardAdmin, json, readCookie, type Admi
 import { ADMIN_LANG_COOKIE, pickAdminLang, type AdminLang } from '../admin-i18n';
 import { guideDir, readGuide, readPageGuide } from './guide';
 import { guidePlace, PAGE_GUIDE_ID, sectionOfGuide, sectionPages } from './help-pages';
+import { todoItems } from './model';
 import { badgesFrom, cachedQueues, visibleQueues } from './queues';
 import { adminSearch } from './search';
 import type { ShellViewer } from './sections';
@@ -46,7 +47,9 @@ export async function badgesHandler(request: Request, deps: AdminDeps | null = a
   const c = await shellCall(request, deps);
   if (c instanceof Response) return c;
   try {
-    return json({ ok: true, badges: badgesFrom(await queuesFor(c)) });
+    // PR 12 (CN-025): the same rows feed the "To do" drawer, so the tray's dot and list stay current between pages.
+    const rows = await queuesFor(c);
+    return json({ ok: true, badges: badgesFrom(rows), todo: todoItems(rows) });
   } catch (e) {
     return errorResponse(e);
   }

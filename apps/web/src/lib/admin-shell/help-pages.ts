@@ -64,9 +64,9 @@ export function guidePlace(pathname: string): GuidePlace | null {
 export const sectionPages = (section: string) => HELP_PAGES.filter((p) => sectionOfGuide(p.id) === section);
 
 /**
- * Where the guide opens (CN-026 (b)). The person's own choice is the Settings → Admin look setting (CN-025, wired by a
- * follow-up); until then nothing is passed and the guide opens as the side panel. A phone always gets the full-screen
- * sheet. The pop-up and own-page modes are follow-ups too, so a choice of them opens the side panel for now.
+ * Where the guide opens (CN-026 (b)). The person's own choice is the Settings → Admin look setting (`admin.guideOpens`,
+ * PR 12 / CN-025: the admin layout passes the person's choice, or the team's; "panel" arrives as "side"). A phone always
+ * gets the full-screen sheet. The pop-up and own-page modes are follow-up 389, so a choice of them opens the side panel.
  */
 export type GuideMode = 'side' | 'sheet';
 
