@@ -842,3 +842,6 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 
 ## Note 65 — 24 Oct 18:02 · Admin designs per section, built live (CN-025)
 - Delivery, Money, Marketing and Reports get a modern default plus one extra design. The other 7 sections get their current default redesigned to the modern standard. Dashboard, Orders and Products keep 3 designs. No new demo; built live. More designs can be added later by command.
+
+## Note 66 — 24 Oct 18:36 · A guide per page, formatting, a smart AI helper (CN-026)
+- The section guide shows the same text on every sub-page. Each sub-page needs its own What/Why/How guide. The guide text and form formatting must be fixed. Keep it simple. AI must explain in detail, take commands, teach step by step, and show pictures on request.

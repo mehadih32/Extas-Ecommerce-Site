@@ -1001,6 +1001,40 @@ to read code or open GitHub.
 > - **Ready for more:** the Settings → Admin look registry makes a new design a new render module per page. A short "how to add a design" note in `docs/` lets the owner later ask for 2–3 more designs for any section with one command, without touching the rest.
 > - No new PR numbers: the shared admin shell and registry (PR 597 / the admin shell PRs) plus each section's PRs.
 
+> **CN-026 · 24 Oct 2026 (owner: a help guide per page, not only per section; well-formatted; a smart AI helper on every page).** This extends CN-014. Keep it simple for staff.
+>
+> **(1) A guide for every page.** Each admin page and sub-page (for example Products → All products, Launch queue, Combos & sets, Stock, Catalog setup) has its own Bengali guide in `docs/admin-guide/`, with one fixed shape:
+> - **What it is:** 1–2 lines.
+> - **Why it matters:** with a real EXTAS example.
+> - **How to do it:** step by step.
+> - **What every button and field means.**
+> - **Common mistakes.**
+> - **What happens next.**
+>
+> Each section also has a short overview listing its pages.
+>
+> **(2) Context-aware.** The guide button opens the guide of the page the user is on. The section overview sits at the top, and the other pages are listed beside it. Complex fields and buttons get a small "?" with a one-line hint.
+>
+> **(3) Proper formatting** (the owner found the demo guide text and form formatting poor):
+> - clear headings, spacing, bullets and numbered steps;
+> - a readable Bengali font size;
+> - aligned forms and tables;
+> - nothing cramped;
+> - checked at phone and desktop sizes.
+>
+> **(4) A smart AI helper on every page** (in the Ask AI panel, aware of the current page):
+> - **It explains:** what this page does, why, and how, in detail.
+> - **It walks the user through a task step by step,** highlighting each step on the screen ("Show me").
+> - **On request it shows pictures:** auto-taken screenshots of the page with numbered marks on the buttons each step uses.
+> - **It takes commands,** e.g. "make a 3-piece polo combo". It prepares the action and the user confirms. Every AI action follows the AI rules: approval queue; never deletes; nothing sent to buyers and no money, price or COD change without the owner's OK; it acts under the AI service account and is logged.
+> - **It answers from the guides and the live data** the user is allowed to see, with links to the exact page.
+>
+> The AI stays off until the owner turns it on and costs follow AI Center caps. Without AI, the guides, "?" hints and "Show me" still work.
+>
+> **(5) Never stale.** Every PR that adds or changes an admin page updates that page's guide and its pictures in the same PR. A CI check fails when a page has no guide, or when a visible button or field label is not explained in it. Already-built pages become follow-ups.
+>
+> No new PR numbers: this lands on CN-014's rule, PR 594 (Help & Build), and the AI Center PRs (S15).
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 

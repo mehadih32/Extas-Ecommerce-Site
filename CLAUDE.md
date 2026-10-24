@@ -122,6 +122,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 
 ## Admin section guide (owner, 20 Oct 14:10 — CN-014)
 - `docs/admin-guide/` has one Bengali file per admin section, plus `README.md` as the index. Each file covers: what the section is for, every menu and tab, what can be done, every switch and number with its default, and what happens next. Every PR that adds or changes an admin screen updates its guide in the same PR. Each admin section links to its guide.
+- **Per page, not per section (CN-026):** every admin page and sub-page has its own guide (What · Why · How · every button/field · common mistakes · what happens next); the guide button opens the current page's guide; "?" hints on complex fields; clean formatting; the page-aware AI helper explains, walks through ("Show me"), shows marked screenshots and takes commands through the approval queue. CI fails when a page has no guide or a visible label is unexplained.
 - New optional features: off by default, an on/off switch, every number editable, placed in the section where they belong.
 
 ## Think beyond the ask (owner, 20 Oct 13:52 — CN-013)

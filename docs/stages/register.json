@@ -1896,6 +1896,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-026",
+   "date": "24 Oct",
+   "title": "owner: a help guide per page, not only per section; well-formatted; a smart AI helper on every page",
+   "text": "This extends CN-014. Keep it simple for staff.",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
