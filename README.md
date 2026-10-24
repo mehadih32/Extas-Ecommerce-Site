@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ১৭৮টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ১৯৫টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -191,7 +191,8 @@ No SSH key is exchanged.
 
 | Workflow | Runs on | When | What it does |
 |---|---|---|---|
-| [`ci.yml`](.github/workflows/ci.yml) | GitHub-hosted | every pull request and every push to `main` | **infra:** shellcheck + infra unit tests · **web:** manifest and font checks, hardcode guard, owner-data check, lint, type-check, unit tests, build, Lighthouse budget, both Docker images · **db:** migrations on PostgreSQL 17 with a drift check, every package's database tests, settings / auth / sample sync run twice (second run must change nothing), installation export / import |
+| [`ci.yml`](.github/workflows/ci.yml) | GitHub-hosted | every pull request and every push to `main` (and called by `nightly.yml`) | CN-023: one **build** (both Docker images; the standalone app copied out for the other jobs) and, in parallel: **lint and type-check** (hardcode guard, owner-data check, generated docs, lint, type-check) · **unit tests** · **sign-in end to end** on the built images · **device gate** on 4 runners · **Lighthouse** (one page list, `tools/lh-pages.mjs`: the core set plus the touched pages on a pull request, every page on `main`; one runner per shard; page and image weights) · **db:** migrations on PostgreSQL 17 with a drift check, every package's database tests, settings / auth / sample sync run twice (second run must change nothing), installation export / import · **infra**. `web` and `device-gate` are the gates over their parts. Caches: pnpm store, Next.js build cache, Playwright's Chromium |
+| [`nightly.yml`](.github/workflows/nightly.yml) | GitHub-hosted | every night at 02:00 Dhaka, and by hand | the whole `ci.yml` on `main` with every Lighthouse page; never deploys |
 | [`deploy.yml`](.github/workflows/deploy.yml) | `extas-vm` | after `ci` passes on `main` (or by hand, with a "rollback" switch) | builds the app and migrate images on the VM, then [`infra/deploy/deploy.sh`](infra/deploy/deploy.sh): migrate the database (schema, settings sync, auth sync, default pack), start the new colour beside the old, smoke-test it, switch Caddy gracefully, keep the old colour on any failure; writes `state/last-deploy.json` |
 | [`smoke.yml`](.github/workflows/smoke.yml) | `extas-vm` | every night at 03:30 Dhaka, and by hand | the smoke test (below) on the live version; commits the report to [`docs/reports/smoke/latest/`](docs/reports/smoke/latest/README.md) |
 | [`server-setup.yml`](.github/workflows/server-setup.yml) | `extas-vm` | by hand, or when `infra/server`, `infra/stack` or `infra/config` change | runs [`infra/server/setup.sh`](infra/server/setup.sh) (idempotent), commits the machine report to [`docs/reports/server/`](docs/reports/server/latest.md); inputs: only some steps, data-disk override, k6 re-measure, rotate the preview password |
@@ -337,7 +338,8 @@ committed server reports. Guide: [docs/admin-guide/server.md](docs/admin-guide/s
 ├── pnpm-workspace.yaml       workspace = apps/* + packages/*
 ├── lighthouserc.json         the Lighthouse speed budget and the pages it measures
 ├── .github/
-│   ├── workflows/            ci.yml · deploy.yml · server-setup.yml
+│   ├── workflows/            ci.yml · nightly.yml · deploy.yml · smoke.yml · server-setup.yml · owner-*.yml · store-settings.yml
+│   ├── actions/              CI's shared steps: pnpm-install · playwright · seeded-app
 │   └── pull_request_template.md
 ├── .claude/agents/           build-agent roles: stage-builder, qa-gate, infra-prohori
 ├── apps/
@@ -419,7 +421,16 @@ report: [`docs/reports/2026-10-20-S00.md`](docs/reports/2026-10-20-S00.md).
 **Repository, CI and deploy (PR 11, 12, 17).** pnpm workspace, Next.js 16 + TypeScript strict + Tailwind 4,
 [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md), the PR template, CI and the blue/green deploy
 ([above](#deploy-the-runner-on-the-vm-cn-003)). The Lighthouse gate measures real paint under 4G + 4× CPU
-throttling, median of 3, on every admin page listed in [`lighthouserc.json`](lighthouserc.json).
+throttling, median of 3, on every page listed in [`lighthouserc.json`](lighthouserc.json), on the sample data.
+**CI under 25 minutes (PR 17, updated 24 Oct, CN-023):** the app and its images are built once and the gates run
+beside each other on that build: lint and type-check, unit tests, the sign-in end to end, the device gate on 4
+runners (`tools/device-gate.mjs --shard=k/n`) and Lighthouse, one runner per shard of pages. One page list
+(`lighthouserc.json`, with every budget as before); [`tools/lh-pages.mjs`](tools/lh-pages.mjs) picks the core set
+(home, category, product, combo, bag, checkout, in both languages) plus the pages a pull request touches, and every
+page on `main`, every night ([`nightly.yml`](.github/workflows/nightly.yml)) and by hand, so a failing page still
+blocks the deploy. pnpm, the Next.js build cache and Playwright's Chromium are cached. Time: before about 115
+minutes a run; after: measured on the first run (`PROGRESS.md`). Tests: `tools/lh-pages.test.mjs`,
+`tools/device-gate.test.mjs`.
 
 **Status page (`/status`).** Bengali progress page: stages and PRs done (from the register), the last good deploy,
 server health and the last backups (from the server's `state/` files: `last-good-deploy.json`, `health.json`,
@@ -825,7 +836,7 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   `packages/settings/src/registry-storefront-fu.ts` (registry v25), labels in `packages/settings/messages/storefront-fu.*.json`.
 - **Tests and gates:** unit tests beside the code (`apps/web/src/lib/shop/*.test.ts`, `packages/settings/test`),
   device gate 0 fails in 372 storefront checks and 124 product-page checks (2077 checks with T1, T2 and T3 in both languages, PR 50–58), storefront pages in the Lighthouse budget
-  (TBT under 200 ms; the product page T1 and T3 in both languages and T2 in the seeded budget, `lighthouserc.seeded.json`; page and image weights, `tools/page-weight.mjs`) and in the
+  (TBT under 200 ms; the product page T1 and T3 in both languages and T2 on the sample data, `lighthouserc.json` (one list since CN-023); page and image weights, `tools/page-weight.mjs`) and in the
   smoke test (`docs/qa/smoke.json`; product pages are found from New in, never named). Screenshots:
   `docs/qa/screenshots/pr-40/`, `pr-41/`, `pr-43/`, `pr-45/` … `pr-48/`, `pr-49/`, `pr-53/` (PR 53, 67–71, 74, 75), `pr-72/` (PR 72, 73), `pr-65/` (PR 59, 65).
   The reviews journey itself is a test (`apps/web/src/lib/reviews-journey.db.test.ts`, SIM-F-008) and the smoke list
@@ -1132,7 +1143,8 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #36 | PR [59](docs/stages/S02.md#pr-59), [65](docs/stages/S02.md#pr-65) | 24 Oct | Find My Size learns from real "how did it fit" answers per garment type (off by default, the chart until enough answers; admin API and permission `catalogue.sizeAdvice`). Product reviews on the product page: up to three, photo reviews first, sliding with pause and resume; a customer reviews a delivered order, staff approve or hide it through the admin API, and only approved reviews show (SIM-F-008). The photo-review reward is off with no amount; once the owner turns it on, staff approval pays it once into the wallet. Migration `0021_reviews`. |
+| #35 | PR [17](docs/stages/S00.md#pr-17) (CN-023) | 24 Oct | CI in parallel jobs on one build (owner, CN-023; every gate and budget as strict as before): the images are built once, then lint and type-check, unit tests, the sign-in e2e, the device gate (4 shards) and one Lighthouse run on the sample data (in shards) run side by side; a pull request checks the core pages plus the pages it touches, a push to main and the nightly run check every page and still block the deploy; pnpm, Next.js and Playwright caches. Before about 115 minutes per run. |
+| #35 | PR [59](docs/stages/S02.md#pr-59), [65](docs/stages/S02.md#pr-65) | 24 Oct | Find My Size learns from real "how did it fit" answers per garment type (off by default, the chart until enough answers; admin API and permission `catalogue.sizeAdvice`). Product reviews on the product page: up to three, photo reviews first, sliding with pause and resume; a customer reviews a delivered order, staff approve or hide it through the admin API, and only approved reviews show (SIM-F-008). The photo-review reward is off with no amount; once the owner turns it on, staff approval pays it once into the wallet. Migration `0021_reviews`. |
 | #35 | PR [140](docs/stages/S05.md#pr-140), [141](docs/stages/S05.md#pr-141), [154](docs/stages/S05.md#pr-154), [152](docs/stages/S05.md#pr-152), [12](docs/stages/S00.md#pr-12), [136](docs/stages/S04.md#pr-136) | 24 Oct | The admin order screens on the new shell (demo V12.3 `#/admin/orders`; no new setting, migration or permission). All orders: views with counts (to confirm, on hold, cancel requests, duplicate review …), search by number, phone (any way it is written, Bengali digits too), name or tracking code, filters, four separate status chips; a table on a computer and cards on a phone. One order's page: products, the customer and his earlier orders, the timeline and notes, and only the buttons the order allows now and the person may press, each with a "what will happen" box; a change made meanwhile reloads and says so. To confirm: the call queue. Bulk confirm, hold and release with the skipped ones and why. The Orders badge and order rows in "Needs you now"; "Get invoice" for staff (follow-ups 200, 180). |
 | #35 | PR [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [561](docs/stages/S04.md#pr-561), [127](docs/stages/S04.md#pr-127), [128](docs/stages/S04.md#pr-128), [605](docs/stages/S04.md#pr-605) | 24 Oct | The rest of the customer checkout (S04, settings v34, migration `0020_gift_mode`, permission `orders.lines`; every new feature off by default). No order is held over an address: it is placed and the team calls once (landmark-only lines get one address check). Free delivery never asks for a delivery band. A known number can skip the address line (off). "Add to this parcel" lets a customer add a piece to his COD order before it is confirmed (off). "Complete your look" on the thank-you page offers only pieces a running combo pairs with the order (off). Gift mode sends the order to someone else with a note, a deliver-after date and the prices hidden (off). |
 | #35 | PR [12](docs/stages/S00.md#pr-12), [155](docs/stages/S05.md#pr-155), [495](docs/stages/S00.md#pr-495), [28](docs/stages/S01.md#pr-28) | 24 Oct | The new admin shell (CN-018, CN-022; demo V12.3 `#/admin`; settings v33, no migration). Every admin page now sits in one of 14 sections in four groups (Daily work, Grow, Business, and Settings / Help & Build at the bottom), with section tabs and "More", an icon rail on a tablet and a drawer plus Home · Orders · Support · Search · More on a phone. The menu shows only what a person's role can open, with waiting-work badges. Ctrl K or "/" opens one search for pages, settings, products, orders and customers. Each section has its Bengali guide in a side panel. `/admin` is the Dashboard: "Needs you now" from the real queues, plus Delivered sales and Ordered value for today / 7 / 30 days from `@extas/metrics`. A role can start on its own section (off by default); the size-chart links' tap area is 44 px. `/admin/delivery` moved to `/admin/delivery/zones` (redirected). |
@@ -1220,6 +1232,7 @@ the register.
 | CN-017 | 23 Oct | 50-order simulation on demo V12.2: 39 findings, each a required acceptance test of its PR; bulk / corporate lane is new PR 606 | [register](docs/MASTER-REGISTER.md#build-status) · [report](docs/qa/SIMULATION-REPORT.md) |
 | CN-018 | 23 Oct | Owner's answers to the simulation questions, all as backend settings; "build the system, never ask for numbers"; simple admin architecture first | [register](docs/MASTER-REGISTER.md#build-status) |
 | CN-019 | 23 Oct | One Messages control centre; a modern, simple admin with mock-ups first; a detailed Bengali manual; 20 more simulation orders | [register](docs/MASTER-REGISTER.md#build-status) |
+| CN-023 | 24 Oct | CI under 25 minutes with every gate as strict: one Lighthouse run (core set plus touched pages on a pull request, every page on `main`, nightly and by hand), one build reused by parallel jobs, pnpm / Next.js / Playwright caches | [register](docs/MASTER-REGISTER.md#build-status) |
 
 ---
 
