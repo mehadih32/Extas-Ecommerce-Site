@@ -8,7 +8,8 @@
 // (admin-combos.<lang>.json, everything under `combos.*` and their own error codes), and the Server page (PR 6) its
 // own (admin-server.<lang>.json, everything under `server.*`), and the admin shell with the Dashboard and Help (PR 12,
 // CN-022) theirs (admin-shell.<lang>.json: `shell.*`, `dash.*`, `help.*`), and the Orders section (S05 · PR 140, 141,
-// 152, 154) theirs (admin-orders.<lang>.json, everything under `orders.*`), merged in here.
+// 152, 154) theirs (admin-orders.<lang>.json, everything under `orders.*`), and the support explanation panel on an
+// order (PR 566) its own (admin-support.<lang>.json, everything under `support.*`), merged in here.
 import bn from '../../messages/admin.bn.json';
 import en from '../../messages/admin.en.json';
 import productsBn from '../../messages/admin-products.bn.json';
@@ -27,6 +28,8 @@ import shellBn from '../../messages/admin-shell.bn.json';
 import shellEn from '../../messages/admin-shell.en.json';
 import ordersBn from '../../messages/admin-orders.bn.json';
 import ordersEn from '../../messages/admin-orders.en.json';
+import supportBn from '../../messages/admin-support.bn.json';
+import supportEn from '../../messages/admin-support.en.json';
 import type { Dict } from './i18n';
 
 export type AdminLang = 'bn' | 'en';
@@ -44,8 +47,8 @@ export function mergeDicts(a: Dict, b: Dict): Dict {
 }
 
 export const adminDicts: Record<AdminLang, Dict> = {
-  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn), combosBn), serverBn), shellBn), ordersBn),
-  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn), combosEn), serverEn), shellEn), ordersEn),
+  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn), combosBn), serverBn), shellBn), ordersBn), supportBn),
+  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn), combosEn), serverEn), shellEn), ordersEn), supportEn),
 };
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);

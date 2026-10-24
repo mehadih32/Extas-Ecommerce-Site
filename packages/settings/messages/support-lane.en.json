@@ -1,0 +1,8 @@
+{
+  "orders": {
+    "explain": {
+      "label": "Support explanation panel",
+      "help": "On every order's page, the card \"Why this advance and this delivery charge\" tells the team, from the order's own records, why the customer was asked to pay in advance (and why only the delivery charge rather than the full amount), and why the delivery charge is what it is. Under it are ready words to read out on the phone or copy into a chat, in Bengali and English: edit them here; {amount}, {paid}, {charge}, {band}, {area} and {over} are filled in from the order. \"Show the risk score\": the agent sees the score and level (never in the words for the customer). Off: the card is not shown."
+    }
+  }
+}

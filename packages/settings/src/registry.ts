@@ -36,6 +36,7 @@ import { checkoutMoreSettings } from './registry-checkout-more';
 import { reviewSettings } from './registry-reviews';
 import { setBuilderSettings } from './registry-set-builder';
 import { orderEditSettings } from './registry-order-edit';
+import { supportLaneSettings } from './registry-support-lane';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1176,6 +1177,8 @@ export const registry = {
   ...setBuilderSettings,
   // ---- S05 · PR 142, 143, 146 · order edits: the team's edit reasons and channels, the customer's own edit, the two-size follow-up, the refusal reasons (registry-order-edit.ts, version 37). ----
   ...orderEditSettings,
+  // ---- S04 · PR 566, 606 · the support explanation panel and the bulk / corporate lane (registry-support-lane.ts, version 38). ----
+  ...supportLaneSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
