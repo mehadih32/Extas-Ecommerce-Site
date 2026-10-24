@@ -4,6 +4,7 @@
 // exchange need `returns.decide`, which the order service checks again on every call. The page's own words are in
 // messages/admin-returns.*.json (under `returns.*`).
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
@@ -12,6 +13,7 @@ import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { ReturnsBoard, type ReturnsData, type StartStep } from '@/components/admin/orders/ReturnsBoard';
 import { moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -80,8 +82,15 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
     start,
     money: moneyOf(currency, view.locale),
     canDecide: perms.has('returns.decide'),
+    canQc: perms.has('returns.qc'),
     causes: causes.map((c) => ({ key: c.key, label: view.lang === 'bn' ? c.bn : c.en })),
   };
   const d = view.dict;
-  return <ReturnsBoard view={view} data={data} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} />} tabs={<SectionTabs view={view} current={KEY} />} />;
+  const right = data.canQc ? (
+    <Link className="a2-btn pri" href={`${returnsHref()}/qc`} data-testid="returns-qc-link">
+      <ShellIcon name="check" size={15} />
+      {t(d, 'returns.qc.open')}
+    </Link>
+  ) : null;
+  return <ReturnsBoard view={view} data={data} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
 }

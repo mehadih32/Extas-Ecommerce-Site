@@ -11,6 +11,7 @@
     { "id": "orders/picking", "route": "/admin/orders/packing/picking" },
     { "id": "orders/handover", "route": "/admin/orders/packing/handover" },
     { "id": "orders/returns", "route": "/admin/orders/returns" },
+    { "id": "orders/returns-qc", "route": "/admin/orders/returns/qc" },
     { "id": "products/all", "route": "/admin/products" },
     { "id": "products/new", "route": "/admin/products/new" },
     { "id": "products/edit", "route": "/admin/products/[id]" },

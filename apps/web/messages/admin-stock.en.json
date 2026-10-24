@@ -125,7 +125,8 @@
       },
       "type": {
         "order_create": "Order {order}",
-        "order_status": "Order {order}: status change"
+        "order_status": "Order {order}: status change",
+        "return_create": "Order {order}: return (sellable pieces)"
       },
       "tries": "{n} tries",
       "empty": "Nothing is waiting or stuck.",

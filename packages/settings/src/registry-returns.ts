@@ -11,6 +11,10 @@
 // shown); how many options; the exchange's own number; how many pieces one exchange takes; when a photo is needed for
 // "our mistake"; and why a wrong item went out (SIM-F-022: a wrong-item case carries its root cause).
 //
+// PR 187 (`orders.returns.qc`, `orders.returns.lossReasons`; §6.5.4 D4): Receive & QC — whether a piece that is not the
+// SKU expected may be recorded (with a note; what is scanned is what is restocked), whether a "not sellable" piece needs
+// a photo, and the reasons a piece cannot be sold again (its loss is recorded at its cost, never sent to ERP stock).
+//
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone (CLAUDE.md rule 6). A difference in
 // the customer's favour becomes a wallet-credit REQUEST after QC passes; a difference he owes is collected as Cash on
 // Delivery on the linked exchange order.
@@ -61,6 +65,13 @@ export const exchangeEngineSchema = z
   })
   .strict();
 
+/**
+ * PR 187 (§6.5.4, D4; SIM-F-022) — Receive & QC. `acceptOtherSku`: a piece whose scanned SKU is not the one expected
+ * may still be recorded, with a note (the SKU scanned is what is restocked); off, it is refused until a person fixes the
+ * case. `photoForLoss`: a "not sellable" piece needs a photo.
+ */
+export const returnsQcSchema = z.object({ acceptOtherSku: z.boolean(), photoForLoss: z.boolean() }).strict();
+
 export const returnsSettings = {
   'orders.exchange.tiers': setting({
     ...base,
@@ -88,5 +99,23 @@ export const returnsSettings = {
     labelKey: 'orders.exchange.rootCauses.label',
     helpKey: 'orders.exchange.rootCauses.help',
     sortOrder: 402,
+  }),
+  'orders.returns.qc': setting({
+    ...base,
+    valueType: 'JSON',
+    schema: returnsQcSchema,
+    default: { acceptOtherSku: true, photoForLoss: false },
+    labelKey: 'orders.returns.qc.label',
+    helpKey: 'orders.returns.qc.help',
+    sortOrder: 403,
+  }),
+  'orders.returns.lossReasons': setting({
+    ...base,
+    valueType: 'JSON',
+    schema: list,
+    default: ordersDictionaryDefault('returnLossReasons'),
+    labelKey: 'orders.returns.lossReasons.label',
+    helpKey: 'orders.returns.lossReasons.help',
+    sortOrder: 404,
   }),
 };

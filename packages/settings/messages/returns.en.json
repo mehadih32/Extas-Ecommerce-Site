@@ -13,6 +13,16 @@
         "label": "Why a wrong item went out",
         "help": "The reasons staff pick when the customer got the wrong item. Each wrong-item exchange keeps one, so you can see where mistakes happen."
       }
+    },
+    "returns": {
+      "qc": {
+        "label": "Receive & QC",
+        "help": "\"Accept another SKU\": when the piece scanned is not the one expected (a wrong item came back), it can still be recorded with a note — the SKU scanned is the one restocked. Off: it is refused until someone fixes the case. \"Photo for not sellable\": a piece that cannot be sold again needs a photo."
+      },
+      "lossReasons": {
+        "label": "Why a piece cannot be sold again",
+        "help": "The reasons picked at QC for a piece that is not sellable. Its loss is recorded at its cost in the shop's records and never sent to the ERP as stock."
+      }
     }
   },
   "defaults": {
@@ -23,6 +33,13 @@
         "packing-mixup": "Mixed up with another parcel at packing",
         "supplier": "The supplier sent it wrong",
         "unknown": "Not known yet"
+      },
+      "returnLossReasons": {
+        "stained": "Stained",
+        "torn": "Torn or damaged",
+        "used": "Used or washed",
+        "tags": "Tags removed",
+        "other": "Other"
       }
     }
   }

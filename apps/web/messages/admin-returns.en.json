@@ -53,7 +53,9 @@
     "decision": "Decision note",
     "window": "Window ends",
     "nothing": "Nothing to do",
-    "never": "Approving books a new parcel at the money box's amount. No money moves here and no refund is paid; a wallet credit is only a request after QC."
+    "never": "Approving books a new parcel at the money box's amount. No money moves here and no refund is paid; a wallet credit is only a request after QC.",
+    "pickup": "Old piece coming back",
+    "erpAgain": "Send to the ERP again (Stock › ERP documents)"
   },
   "act": {
     "approve": "Approve (books the new parcel)",
@@ -64,7 +66,9 @@
     "cancel": "Cancel",
     "done": "Done",
     "approved": "Approved — new parcel {number}",
-    "opened": "Exchange {number} opened"
+    "opened": "Exchange {number} opened",
+    "complete": "Complete",
+    "completeNote": "Note (needed when the check failed)"
   },
   "start": {
     "title": "Start an exchange",
@@ -113,6 +117,62 @@
     "FORBIDDEN": "You may not do this.",
     "INVALID_INPUT": "Something is missing or not valid.",
     "NOT_FOUND": "Not found.",
+    "RETURN_STATE": "The parcel is not at that step any more. The page shows it as it is now.",
+    "SKU_MISMATCH": "The SKU scanned is not the one expected. Tick \"not the SKU expected\" and write a note — or scan again.",
+    "UNKNOWN_SKU": "That SKU is not a piece of this shop. Scan again or type it from the label.",
+    "QC_INCOMPLETE": "Check every piece of the parcel, each once, then save.",
+    "LOSS_REASON_REQUIRED": "A piece that is not sellable needs its reason (and a photo when the setting asks).",
     "server-error": "That did not work. Try again."
+  },
+  "qc": {
+    "metaTitle": "Receive & QC",
+    "title": "Receive & QC",
+    "open": "Receive & QC",
+    "sub": "Phone-first: find the parcel → check each piece → sellable or not → save. A typed SKU works when the scanner is off.",
+    "step1": "1 · Find the parcel",
+    "findLabel": "Order number",
+    "find": "Find",
+    "expected": "Expected back · {n}",
+    "nothing": "Nothing expected",
+    "step2": "2 · Expected vs received",
+    "expectedSku": "Expected SKU {sku}",
+    "scanned": "SKU scanned from the piece",
+    "sellable": "Sellable",
+    "unsellable": "Not sellable",
+    "reason": "Why (required)",
+    "choose": "Choose…",
+    "photo": "Photo of the piece",
+    "photoAdd": "Add a photo",
+    "photoDone": "Photo added",
+    "photoNeeded": "A photo is needed for a piece that is not sellable.",
+    "otherSku": "This is not the SKU expected — record what really came back",
+    "otherNote": "Note (needed for another SKU)",
+    "note": "Note (optional)",
+    "save": "Record QC",
+    "saveHint": "Saving also marks the parcel as received.",
+    "receive": "Mark received only",
+    "d4": "Sellable pieces go to the ERP; stock rises only when the ERP confirms. Not-sellable pieces are a loss in the shop’s records and are never sent to ERP stock.",
+    "done": "Checked — nothing left to do here.",
+    "back": "Returns & exchanges",
+    "state": {
+      "ERP_PENDING": "Sellable · ERP waiting",
+      "RESTOCKED": "Sellable · ERP confirmed",
+      "ERP_FAILED": "Sellable · ERP failed",
+      "NO_ERP": "Sellable · no ERP",
+      "LOSS_RECORDED": "Not sellable · loss"
+    },
+    "parcel": {
+      "EXPECTED": "On its way",
+      "RECEIVED": "At the shop",
+      "QC_DONE": "Checked",
+      "CLOSED": "Closed"
+    },
+    "kind": {
+      "REFUSED_AT_DOOR": "Refused at the door",
+      "RETURNED": "Returned",
+      "CHARGE_PAID_RETURN": "Returned, charge paid",
+      "DEFECT_RETURN": "Fault return",
+      "EXCHANGE_PICKUP": "Exchange pick-up"
+    }
   }
 }

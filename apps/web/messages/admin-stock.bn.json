@@ -125,7 +125,8 @@
       },
       "type": {
         "order_create": "অর্ডার {order}",
-        "order_status": "অর্ডার {order}: অবস্থা বদল"
+        "order_status": "অর্ডার {order}: অবস্থা বদল",
+        "return_create": "অর্ডার {order}: ফেরত (বিক্রি করা যাবে এমন পিস)"
       },
       "tries": "{n} বার চেষ্টা",
       "empty": "কিছুই অপেক্ষায় বা আটকে নেই।",

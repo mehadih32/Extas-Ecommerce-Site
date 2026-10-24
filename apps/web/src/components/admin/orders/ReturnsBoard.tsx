@@ -28,6 +28,8 @@ export interface ReturnsData {
   start: StartStep;
   money: Money;
   canDecide: boolean;
+  /** PR 187: may receive and check returned parcels (`returns.qc`). */
+  canQc: boolean;
   causes: { key: string; label: string }[];
 }
 
@@ -96,13 +98,22 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
     ...(x.decisionNote ? ([[r(d, 'case.decision'), x.decisionNote]] as [string, string][]) : []),
   ];
   const base = `/api/admin/returns/exchanges/${x.id}`;
+  const p = x.pickup;
+  const pickupOpen = !!p && (p.status === 'EXPECTED' || p.status === 'RECEIVED');
   const acts =
     x.status === 'REQUESTED' && data.canDecide ? (
       <>
         <ReturnsAction label={r(d, 'act.approve')} url={`${base}/approve`} body={{ version: x.version }} tone="pri" texts={texts} testId="exchange-approve" />
         <ReturnsAction label={r(d, 'act.refuse')} url={`${base}/refuse`} body={{ version: x.version }} tone="badf" note={{ label: r(d, 'act.refuseNote'), required: true }} texts={texts} testId="exchange-refuse" />
       </>
+    ) : pickupOpen && data.canQc ? (
+      <Link className="a2-btn pri" href={`${returnsHref()}/qc?id=${p!.returnId}`} data-testid="exchange-qc">
+        {r(d, 'qc.open')}
+      </Link>
+    ) : (x.status === 'QC_PASSED' || x.status === 'QC_FAILED') && data.canDecide ? (
+      <ReturnsAction label={r(d, 'act.complete')} url={`${base}/complete`} body={{ version: x.version }} tone="pri" note={x.status === 'QC_FAILED' ? { label: r(d, 'act.completeNote'), required: true } : undefined} texts={texts} testId="exchange-complete" />
     ) : null;
+  const stateTone = (s: string | null) => (s === 'RESTOCKED' ? 'ok' : s === 'ERP_FAILED' || s === 'LOSS_RECORDED' ? 'bad' : 'warn');
   return (
     <section className="a2-card" data-testid="exchange-case" data-number={x.number} data-status={x.status}>
       <div className="a2-ch">
@@ -131,6 +142,25 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
           {i.receivedSku ? <div className="a2-xs a2-mute">{r(d, 'case.coming', { sku: i.receivedSku })}</div> : null}
         </div>
       ))}
+      {p ? (
+        <div className="a2-mt12" data-testid="exchange-pickup" data-status={p.status}>
+          <div className="a2-h4">
+            {r(d, 'case.pickup')}
+            <span className={`a2-pill ${pickupOpen ? 'warn' : 'ok'} rt-ml`}>{r(d, `qc.parcel.${p.status}`)}</span>
+          </div>
+          {p.items.map((i) => (
+            <div key={i.id} className="a2-xs a2-mt6">
+              <span className="a2-mono">{i.scannedSku ?? i.expectedSku}</span>
+              {i.dispositionState ? <span className={`a2-pill ${stateTone(i.dispositionState)} rt-ml`}>{r(d, `qc.state.${i.dispositionState}`)}</span> : null}
+            </div>
+          ))}
+          {p.items.some((i) => i.dispositionState === 'ERP_FAILED') ? (
+            <Link className="a2-lnk a2-mt6" href="/admin/stock">
+              {r(d, 'case.erpAgain')}
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
       <div className="a2-kv2 a2-mt12">{kv.flatMap(([k, v]) => [<span key={`${k}-k`}>{k}</span>, <span key={`${k}-v`}>{v}</span>])}</div>
       <div className="a2-cmds a2-mt12">{acts ?? <span className="a2-sm a2-mute">{r(d, 'case.nothing')}</span>}</div>
       <div className="a2-note">

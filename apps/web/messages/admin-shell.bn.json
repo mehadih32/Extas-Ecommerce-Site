@@ -316,7 +316,8 @@
       "erpFailed": "ERP-তে যেতে ব্যর্থ কাগজ",
       "jobsDead": "থেমে যাওয়া ব্যাকগ্রাউন্ড কাজ",
       "sub": "{n}টা অপেক্ষায় · সবচেয়ে পুরনো {age}",
-      "ordersReturns": "ফেরত আর বদল"
+      "ordersReturns": "ফেরত আর বদল",
+      "ordersReturnsQc": "ফেরত মাল চেক"
     },
     "age": {
       "now": "এইমাত্র",

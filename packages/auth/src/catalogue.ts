@@ -202,6 +202,8 @@ export const PERMISSIONS = {
   // changes a price, a discount or COD: a difference in the customer's favour is only a wallet-credit REQUEST.
   'returns.view': { group: 'orders' },
   'returns.decide': { group: 'orders' },
+  // PR 187 — Receive & QC: mark a parcel received, check each piece (sellable or not) and send the sellable ones to the ERP.
+  'returns.qc': { group: 'orders' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

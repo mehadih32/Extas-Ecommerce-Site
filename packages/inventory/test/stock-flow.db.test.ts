@@ -18,6 +18,7 @@ import {
   createWarehouse,
   enqueueOrderPush,
   enqueueOrderStatus,
+  enqueueReturnPush,
   evaluateLowStock,
   getStockAudit,
   holdCart,
@@ -556,5 +557,39 @@ describe.skipIf(!HAS_TEST_DB)('S09 wave 1 on PostgreSQL: holds, documents, alert
     expect((await inventorySchedule(deps()))[1]!.everyMs).toBe(30_000);
     overrides.delete('inventory.reservation.sweepSeconds');
     expect(await runInventoryJob(deps(), { name: 'inventory.lowStock.evaluate' })).toMatchObject({ raised: expect.any(Number) });
+  });
+
+  it('PR 187: a return waits for its order, puts the scanned SKU back on hand in the ERP once, and marks the piece RESTOCKED', async () => {
+    const o = order(store.A, 'CAP-NAVY-M', 1);
+    await enqueueOrderPush(deps(), o);
+    const item = { storeId: store.A, orderItemId: randomUUID(), quantity: 1, expectedSku: 'CAP-NAVY-M', scannedSku: 'CAP-NAVY-M', disposition: 'SELLABLE' as const, dispositionState: 'ERP_PENDING' as const };
+    const ret = await t.prisma.returnRecord.create({ data: { storeId: store.A, orderId: o.orderId, kind: 'RETURNED', status: 'QC_DONE', items: { create: [item] } }, include: { items: true } });
+    const input = { storeId: store.A, returnId: ret.id, orderId: o.orderId, externalOrderId: o.externalOrderId, reason: 'size-fit', items: [{ sku: 'CAP-NAVY-M', quantity: 1 }], version: 0 };
+    const q = await enqueueReturnPush(deps(), input);
+    expect([q.status, q.created]).toEqual(['PENDING', true]);
+    expect(await enqueueReturnPush(deps(), input)).toEqual({ ...q, created: false });
+    expect(await code(enqueueReturnPush(deps(), { ...input, items: [{ sku: 'CAP-NAVY-M', quantity: 2 }] }))).toBe('IDEMPOTENCY_MISMATCH');
+    await t.prisma.returnItem.update({ where: { id: ret.items[0]!.id }, data: { erpPushId: q.pushId } });
+    // a return of an order the ERP does not have yet waits
+    const early = order(store.A, 'CAP-NAVY-M', 1);
+    const wait = await enqueueReturnPush(deps(), { ...input, returnId: randomUUID(), orderId: early.orderId, externalOrderId: early.externalOrderId });
+    const before = world.stockOf('CAP-NAVY-M', 'SAMPLE-WH-1')!;
+    await relayErpPushes(deps(), { storeId: store.A });
+    const sent = await t.prisma.erpPush.findUniqueOrThrow({ where: { id: q.pushId } });
+    expect([sent.status, sent.idempotencyKey, sent.erpId]).toEqual(['SENT', `return:${ret.id}:v0`, expect.stringMatching(/^SAMPLE-RT-\d+$/)]);
+    expect((await t.prisma.erpPush.findUniqueOrThrow({ where: { id: wait.pushId } })).status).toBe('PENDING');
+    // the order reserved one, the return put one back on hand
+    expect(world.stockOf('CAP-NAVY-M', 'SAMPLE-WH-1')).toEqual({ onHand: before.onHand + 1, reserved: before.reserved + 1 });
+    expect((await t.prisma.returnItem.findUniqueOrThrow({ where: { id: ret.items[0]!.id } })).dispositionState).toBe('RESTOCKED');
+    // sent again by hand after a failure: the piece waits again (its key unchanged, so the ERP restocks once)
+    await t.prisma.erpPush.update({ where: { id: q.pushId }, data: { status: 'FAILED' } });
+    await t.prisma.returnItem.update({ where: { id: ret.items[0]!.id }, data: { dispositionState: 'ERP_FAILED' } });
+    expect(await retryErpPushes(deps(), { actor: syncer, storeId: store.A }, { ids: [q.pushId] })).toEqual({ queued: 1 });
+    expect((await t.prisma.returnItem.findUniqueOrThrow({ where: { id: ret.items[0]!.id } })).dispositionState).toBe('ERP_PENDING');
+    await relayErpPushes(deps(), { storeId: store.A });
+    expect((await t.prisma.erpPush.findUniqueOrThrow({ where: { id: q.pushId } })).status).toBe('SENT');
+    expect(world.stockOf('CAP-NAVY-M', 'SAMPLE-WH-1')!.onHand).toBe(before.onHand + 1);
+    expect((await t.prisma.returnItem.findUniqueOrThrow({ where: { id: ret.items[0]!.id } })).dispositionState).toBe('RESTOCKED');
+    await t.prisma.erpPush.update({ where: { id: wait.pushId }, data: { status: 'FAILED' } });
   });
 });

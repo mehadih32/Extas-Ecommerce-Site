@@ -143,6 +143,8 @@ export function documentRoute(doc: ErpDocument): { method: 'POST' | 'PATCH'; pat
       return { method: 'POST', path: '/orders', body: doc.body };
     case 'order.status':
       return { method: 'PATCH', path: `/orders/${encodeURIComponent(doc.externalOrderId)}`, body: doc.body };
+    case 'return.create':
+      return { method: 'POST', path: '/returns', body: doc.body };
   }
 }
 
@@ -152,7 +154,7 @@ export const IDEMPOTENT_REPLAY_HEADER = 'idempotent-replayed';
 function erpIdOf(body: unknown): string | null {
   if (!body || typeof body !== 'object') return null;
   const o = body as Record<string, unknown>;
-  for (const k of ['erpOrderId', 'erpId', 'id']) {
+  for (const k of ['erpOrderId', 'erpReturnId', 'erpId', 'id']) {
     const v = o[k];
     if ((typeof v === 'string' && v) || typeof v === 'number') return String(v).slice(0, MAX_TEXT);
   }

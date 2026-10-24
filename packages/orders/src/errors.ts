@@ -68,7 +68,17 @@ export type OrdersErrorCode =
   /** PR 185: our mistake needs a photo here (`orders.exchange.engine.ourMistakePhoto`). */
   | 'PHOTO_REQUIRED'
   /** PR 185: the exchange is not in a state for this step (`data.status`). */
-  | 'EXCHANGE_STATE';
+  | 'EXCHANGE_STATE'
+  /** PR 187: the return is not in a state for this step (`data.status`). */
+  | 'RETURN_STATE'
+  /** PR 187 (SIM-F-022): the SKU scanned is not the one expected (`data.expected`, `data.scanned`); accept it with a note. */
+  | 'SKU_MISMATCH'
+  /** PR 187: the SKU scanned is not a piece of this shop. */
+  | 'UNKNOWN_SKU'
+  /** PR 187: every piece of the parcel is checked in one save, each once (`details`: the pieces missing or twice). */
+  | 'QC_INCOMPLETE'
+  /** PR 187: a piece that is not sellable needs its reason (and a photo when `orders.returns.qc.photoForLoss`). */
+  | 'LOSS_REASON_REQUIRED';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -118,6 +128,10 @@ export class OrdersError extends Error {
       case 'EXCHANGE_LIMIT':
       case 'NOT_OFFERED':
       case 'PHOTO_REQUIRED':
+      case 'SKU_MISMATCH':
+      case 'UNKNOWN_SKU':
+      case 'QC_INCOMPLETE':
+      case 'LOSS_REASON_REQUIRED':
         return 422;
       default:
         return 409;

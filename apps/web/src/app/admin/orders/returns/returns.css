@@ -22,3 +22,11 @@
   .adm2 .a2-col{scroll-snap-align:start}
   .adm2 .rt-form{grid-template-columns:minmax(0,1fr)}
 }
+/* PR 187 — Receive & QC: one card per piece, the two outcomes side by side across the card. */
+.adm2 .rt-piece{background:#FDFCFA}
+/* the crumb back to the board: the arrow beside its words on every width */
+.adm2 .rt-crumb{display:inline-flex;align-items:center;gap:4px}
+.adm2 .rt-seg{display:flex;width:100%}
+.adm2 .rt-seg button{flex:1;justify-content:center}
+.adm2 .rt-check{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4}
+.adm2 .rt-check input{margin-top:2px;width:18px;height:18px;flex:none}

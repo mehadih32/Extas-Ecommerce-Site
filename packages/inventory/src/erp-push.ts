@@ -1,3 +1,6 @@
+// PR 187 — returns: a return's sellable pieces go as `return.create` (POST /returns), after the order itself; the relay
+// marks the pieces RESTOCKED, ERP_FAILED or NO_ERP as the document's outcome is known (§6.5.4).
+//
 // PR 199, 200 — business documents to the ERP, as documents and never as journal lines (Blueprint A3.5 rule 1; ERP ↔
 // shop API contract, CN-005), with idempotency on every push so no duplicate stock movement is possible (B1.1).
 //
@@ -26,7 +29,7 @@
 // carries the order's amounts for the ERP's books; payments are their own document (S07).
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, toErpError, type ErpDocument, type ErpDocumentType } from '@extas/adapters';
+import { ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, ERP_RETURN_QC_GOOD, toErpError, type ErpDocument, type ErpDocumentType } from '@extas/adapters';
 import type { Prisma } from '@extas/db/client';
 import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx, type Who } from './context';
 import { InventoryError } from './errors';
@@ -60,6 +63,24 @@ export const orderPushInput = z
   })
   .strict();
 export type OrderPushInput = z.input<typeof orderPushInput>;
+
+/**
+ * PR 187 (§6.5.4, D4) — a return's sellable pieces, by the SKU scanned at QC (SIM-F-022). `version` is the return's
+ * version at the QC save: the key `return:{returnId}:v{version}` names that save, so a repeat finds the first row.
+ */
+export const returnPushInput = z
+  .object({
+    storeId: z.int().min(1),
+    returnId: z.uuid(),
+    /** The order the pieces came back from (the ERP knows it by its number; the document waits until that order is sent). */
+    orderId: z.uuid(),
+    externalOrderId: z.string().trim().min(1).max(64),
+    reason: z.string().trim().min(1).max(64),
+    items: z.array(z.object({ sku: z.string().trim().min(1).max(64), quantity: z.int().min(1) }).strict()).min(1).max(500),
+    version: z.int().min(0),
+  })
+  .strict();
+export type ReturnPushInput = z.input<typeof returnPushInput>;
 
 export const orderStatusInput = z
   .object({ storeId: z.int().min(1), orderId: z.uuid(), externalOrderId: z.string().trim().min(1).max(64), status: z.enum(ERP_ORDER_STATUSES), revision: z.int().min(0).optional() })
@@ -105,6 +126,9 @@ export function pushKey(documentType: ErpDocumentType, orderId: string, extra: {
   const rev = extra.revision ? `:r${extra.revision}` : '';
   return documentType === 'order.create' ? `order:${orderId}:create${rev}` : `order:${orderId}:status:${extra.status}${rev}`;
 }
+
+/** PR 187: the key of a return's QC save. */
+export const returnPushKey = (returnId: string, version: number) => `return:${returnId}:v${version}`;
 
 /** Canonical JSON (keys sorted), so the same document always hashes the same. */
 export function canonical(v: unknown): string {
@@ -166,6 +190,27 @@ export async function enqueueOrderStatus(deps: InventoryDeps, input: OrderStatus
   return enqueue(deps, d.storeId, d.orderId, pushKey('order.status', d.orderId, { status: d.status, revision: d.revision }), doc, opts.tx);
 }
 
+/**
+ * PR 187 — queues a return's sellable pieces (`POST /returns`, each as `good`). Pass `tx` to save it with the QC. The
+ * same SKU twice is one line. An unsellable piece is never sent: it stays a loss in the shop's records (D4).
+ */
+export async function enqueueReturnPush(deps: InventoryDeps, input: ReturnPushInput, opts: { tx?: Tx } = {}): Promise<EnqueueResult> {
+  const d = parse(returnPushInput, input, 'return document');
+  const bySku = new Map<string, number>();
+  for (const i of d.items) bySku.set(i.sku, (bySku.get(i.sku) ?? 0) + i.quantity);
+  const doc: ErpDocument = { type: 'return.create', body: { externalOrderId: d.externalOrderId, reason: d.reason, items: [...bySku].map(([sku, quantity]) => ({ sku, quantity, qc: ERP_RETURN_QC_GOOD })) } };
+  return enqueue(deps, d.storeId, d.orderId, returnPushKey(d.returnId, d.version), doc, opts.tx);
+}
+
+/**
+ * PR 187 — a return document's outcome on the pieces it carries (ReturnItem.erpPushId): sent → RESTOCKED, refused or
+ * dead → ERP_FAILED, skipped (no ERP) → NO_ERP, queued again by hand → ERP_PENDING. A piece's own QC never changes.
+ */
+async function settleReturnItems(db: Db, pushIds: string[], state: 'RESTOCKED' | 'ERP_FAILED' | 'NO_ERP' | 'ERP_PENDING'): Promise<void> {
+  if (!pushIds.length) return;
+  await db.returnItem.updateMany({ where: { erpPushId: { in: pushIds }, dispositionState: { in: ['ERP_PENDING', 'ERP_FAILED', 'NO_ERP'] } }, data: { dispositionState: state } });
+}
+
 // ---- the relay ------------------------------------------------------------------------------------------------------
 
 /** The pause before the n-th try again (n ≥ 1): base × 2^(n−1) seconds, at most the cap. */
@@ -211,6 +256,7 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
     const { disposition } = await pushDisposition(deps, storeId);
     if (disposition === 'skip') {
       out.skipped += (await db.erpPush.updateMany({ where: { id: { in: rows.map((r) => r.id) }, status: 'PENDING' }, data: { status: 'SKIPPED_NO_ERP', lastError: 'SKIPPED_NO_ERP' } })).count;
+      await settleReturnItems(db, rows.filter((r) => r.documentType === 'return.create').map((r) => r.id), 'NO_ERP');
       continue;
     }
     if (disposition === 'hold' || !('api' in link)) {
@@ -234,8 +280,8 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
     }
     const sentOrders = new Set((await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', status: 'SENT', referenceId: { in: rows.map((r) => r.referenceId) } }, select: { referenceId: true } })).map((r) => r.referenceId));
     for (const row of rows) {
-      // A status change waits for its order (contract: the order must exist first).
-      if (row.documentType === 'order.status' && !sentOrders.has(row.referenceId)) {
+      // A status change or a return waits for its order (contract: the order must exist first).
+      if ((row.documentType === 'order.status' || row.documentType === 'return.create') && !sentOrders.has(row.referenceId)) {
         out.waiting++;
         continue;
       }
@@ -250,6 +296,7 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
           data: { status: 'SENT', responseStatus: r.status, responseBody: (r.body ?? null) as Prisma.InputJsonValue, erpId: r.erpId, sentAt: nowOf(deps), nextAttemptAt: null, lastError: null },
         });
         if (row.documentType === 'order.create') sentOrders.add(row.referenceId);
+        if (row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'RESTOCKED');
         out.sent++;
         if (r.replayed) out.replayed++;
         ok++;
@@ -260,9 +307,11 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
         bad++;
         if (REFUSED.has(err.code)) {
           await db.erpPush.update({ where: { id: row.id }, data: { status: 'FAILED', responseStatus: err.status, lastError: text, nextAttemptAt: null } });
+          if (row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'ERP_FAILED');
           out.failed++;
         } else if (attempts >= maxAttempts) {
           await db.erpPush.update({ where: { id: row.id }, data: { status: 'DEAD', responseStatus: err.status, lastError: text, nextAttemptAt: null } });
+          if (row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'ERP_FAILED');
           out.dead++;
         } else {
           await db.erpPush.update({ where: { id: row.id }, data: { responseStatus: err.status, lastError: text, nextAttemptAt: new Date(nowOf(deps).getTime() + pushBackoffMs(attempts, baseS, maxS)) } });
@@ -300,7 +349,7 @@ const viewOf = (r: { id: string; documentType: string; referenceId: string; requ
     id: r.id,
     documentType: r.documentType,
     referenceId: r.referenceId,
-    externalOrderId: doc.type === 'order.create' ? doc.body.externalOrderId : doc.type === 'order.status' ? doc.externalOrderId : null,
+    externalOrderId: doc.type === 'order.create' || doc.type === 'return.create' ? doc.body.externalOrderId : doc.type === 'order.status' ? doc.externalOrderId : null,
     status: r.status,
     attempts: r.attempts,
     lastError: r.lastError,
@@ -354,9 +403,10 @@ export async function retryErpPushes(deps: InventoryDeps, who: Who, input: z.inp
   const d = parse(retryInput, input, 'retry');
   return deps.db.$transaction(async (tx) => {
     const where = { storeId: who.storeId, status: { in: ['FAILED' as const, 'DEAD' as const, 'SKIPPED_NO_ERP' as const] }, ...(d.ids ? { id: { in: d.ids } } : {}) };
-    const rows = await tx.erpPush.findMany({ where, select: { id: true, status: true } });
+    const rows = await tx.erpPush.findMany({ where, select: { id: true, status: true, documentType: true } });
     if (!rows.length) return { queued: 0 };
     const n = (await tx.erpPush.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { status: 'PENDING', attempts: 0, nextAttemptAt: null } })).count;
+    await settleReturnItems(tx, rows.filter((r) => r.documentType === 'return.create').map((r) => r.id), 'ERP_PENDING');
     await logChange(tx, who, { action: 'erp.push.retry', entityType: 'ErpPush', entityId: d.ids ? rows.map((r) => r.id).join(',').slice(0, 500) : 'all', before: { statuses: [...new Set(rows.map((r) => r.status))] }, after: { status: 'PENDING', count: n }, storeId: who.storeId });
     return { queued: n };
   }, TX);

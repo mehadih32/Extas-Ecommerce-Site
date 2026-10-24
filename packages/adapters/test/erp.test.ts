@@ -351,4 +351,19 @@ describe('documents to the ERP (PR 199, 200: SalesOrder as a document, Idempoten
     expect(w.calls.at(-1)).toMatchObject({ method: 'PATCH', path: '/orders/S-4' });
     expect(await codeOf(api.push({ type: 'order.status', externalOrderId: 'NOPE', body: { status: 'PACKED' } }, { idempotencyKey: 's5' }))).toBe('NOT_FOUND');
   });
+
+  it('PR 187: a return puts the sellable pieces back on hand once, by the SKU scanned; the same key replays', async () => {
+    const w = new MockErpWorld();
+    w.setStock('DOC-SKU', 'SAMPLE-WH-1', { onHand: 4, updatedAt: at(0) });
+    const api = client(w);
+    await api.push(order('S-6', 1), { idempotencyKey: 'c6' });
+    await api.push({ type: 'order.status', externalOrderId: 'S-6', body: { status: 'DELIVERED' } }, { idempotencyKey: 's6' });
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 3, reserved: 0 });
+    const ret = { type: 'return.create' as const, body: { externalOrderId: 'S-6', reason: 'exchange', items: [{ sku: 'DOC-SKU', quantity: 1, qc: 'good' as const }] } };
+    expect(await api.push(ret, { idempotencyKey: 'return:1:v1' })).toMatchObject({ erpId: 'SAMPLE-RT-1', status: 201, replayed: false });
+    expect(await api.push(ret, { idempotencyKey: 'return:1:v1' })).toMatchObject({ erpId: 'SAMPLE-RT-1', replayed: true });
+    expect(w.stockOf('DOC-SKU', 'SAMPLE-WH-1')).toEqual({ onHand: 4, reserved: 0 });
+    expect(w.calls.at(-1)).toMatchObject({ method: 'POST', path: '/returns' });
+    expect(await codeOf(api.push({ type: 'return.create', body: { ...ret.body, externalOrderId: 'NOPE' } }, { idempotencyKey: 'r2' }))).toBe('NOT_FOUND');
+  });
 });
