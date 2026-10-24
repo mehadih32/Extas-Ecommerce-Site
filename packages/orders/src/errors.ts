@@ -48,7 +48,15 @@ export type OrdersErrorCode =
   /** PR 151: more orders than one export file holds (`data.count`, `data.maxRows`); narrow the filter. */
   | 'EXPORT_TOO_LARGE'
   /** PR 156: "score again" while the owner has the risk score switched off (`risk.score`). */
-  | 'RISK_OFF';
+  | 'RISK_OFF'
+  /** PR 542: an advance of the delivery charge for an order that has none. */
+  | 'NO_CHARGE'
+  /** PR 542: a part of the amount asked while the owner has not set its percent (`risk.levels.partialPercent`). */
+  | 'PARTIAL_UNSET'
+  /** PR 542: nothing is left to pay on this order, so there is no advance to ask. */
+  | 'NOTHING_DUE'
+  /** PR 542: no way to reach the customer was picked (SMS, WhatsApp or a call). */
+  | 'NO_CHANNEL';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -88,6 +96,10 @@ export class OrdersError extends Error {
       case 'LAST_LINE':
       case 'EDIT_CLOSED':
       case 'EXPORT_TOO_LARGE':
+      case 'NO_CHARGE':
+      case 'PARTIAL_UNSET':
+      case 'NOTHING_DUE':
+      case 'NO_CHANNEL':
       case 'RISK_OFF':
         return 422;
       default:

@@ -10,6 +10,9 @@
 //                                   with the bands, the owner's hold reasons, Claude's suggested set and the version
 //                                   (risk.rules.read)
 //   PUT   /api/admin/risk/levels    {value, version?} saves the levels whole; a stale version is 409 STALE (risk.rules.write)
+//   GET   /api/admin/risk/advance   PR 542: the advance request card — auto (off as it ships), the ways ticked first, the
+//                                   payment service of the pay link, whether the levels are on, the version (risk.rules.read)
+//   PUT   /api/admin/risk/advance   {value, version?} saves it whole; a stale version is 409 STALE (risk.rules.write)
 // A switch only decides whether a rule marks and proposes: nothing here blocks anyone, decides an order, moves money or
 // changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
@@ -25,6 +28,11 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
   if (path[0] === 'levels' && path.length === 1) {
     if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskLevels(x.deps, x.who)) }));
     if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveRiskLevels({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
+    return notAllowed();
+  }
+  if (path[0] === 'advance' && path.length === 1) {
+    if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.advanceSettings(x.deps, x.who)) }));
+    if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveAdvanceSettings({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
     return notAllowed();
   }
   if (path[0] !== 'rules' || path.length > 1) return notFound();

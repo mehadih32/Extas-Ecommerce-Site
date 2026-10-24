@@ -9,7 +9,8 @@
 // messages/shop-combo.<lang>.json (`combo.*`), "Build your own set" (S03, PR 98, 100) in
 // messages/shop-build.<lang>.json (`build.*`) the bulk / corporate lane (S04, PR 606) in
 // messages/shop-bulk.<lang>.json (`bulk.*`) and the combo templates (S03, PR 572–574) in
-// messages/shop-ctpl.<lang>.json (`ctpl.*`), merged the same way.
+// messages/shop-ctpl.<lang>.json (`ctpl.*`) and the advance pay link (S06, PR 542) in messages/shop-paylink.<lang>.json
+// (`paylink.*`), merged the same way.
 import bn from '../../../messages/shop.bn.json';
 import en from '../../../messages/shop.en.json';
 import moreBn from '../../../messages/shop-more.bn.json';
@@ -30,6 +31,8 @@ import bulkBn from '../../../messages/shop-bulk.bn.json';
 import bulkEn from '../../../messages/shop-bulk.en.json';
 import ctplBn from '../../../messages/shop-ctpl.bn.json';
 import ctplEn from '../../../messages/shop-ctpl.en.json';
+import paylinkBn from '../../../messages/shop-paylink.bn.json';
+import paylinkEn from '../../../messages/shop-paylink.en.json';
 import type { ShopLabel } from '@extas/settings';
 import type { Dict } from '../i18n';
 import type { ShopLang } from './lang';
@@ -40,8 +43,8 @@ function withMore(base: Dict, more: Dict): Dict {
 }
 
 export const SHOP_DICTS: Record<ShopLang, Dict> = {
-  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn),
-  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn),
+  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn), paylinkEn),
+  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn), paylinkBn),
 };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;

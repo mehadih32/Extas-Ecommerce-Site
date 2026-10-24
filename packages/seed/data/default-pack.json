@@ -758,7 +758,10 @@
       "locale": "bn",
       "name": "Advance asked",
       "enabled": true,
-      "body": "{storeName}: অর্ডার {orderNumber} পাঠানোর আগে {amountDue} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।"
+      "body": "{storeName}: অর্ডার {orderNumber} পাঠানোর আগে {advanceAmount} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।",
+      "replaces": [
+        "{storeName}: অর্ডার {orderNumber} পাঠানোর আগে {amountDue} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।"
+      ]
     },
     {
       "key": "order.advanceRequested",
@@ -766,7 +769,10 @@
       "locale": "en",
       "name": "Advance asked",
       "enabled": true,
-      "body": "{storeName}: order {orderNumber} needs an advance of {amountDue} before it is sent. Our team will call you about it."
+      "body": "{storeName}: order {orderNumber} needs an advance of {advanceAmount} before it is sent. Our team will call you about it.",
+      "replaces": [
+        "{storeName}: order {orderNumber} needs an advance of {amountDue} before it is sent. Our team will call you about it."
+      ]
     },
     {
       "key": "order.advanceRequested",
@@ -774,7 +780,10 @@
       "locale": "bn",
       "name": "Advance asked",
       "enabled": true,
-      "body": "{customerName}, অর্ডার {orderNumber} পাঠানোর আগে {amountDue} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।"
+      "body": "{customerName}, অর্ডার {orderNumber} পাঠানোর আগে {advanceAmount} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।",
+      "replaces": [
+        "{customerName}, অর্ডার {orderNumber} পাঠানোর আগে {amountDue} অগ্রিম লাগবে। আমাদের টিম আপনাকে ফোন করবে।"
+      ]
     },
     {
       "key": "order.advanceRequested",
@@ -782,7 +791,42 @@
       "locale": "en",
       "name": "Advance asked",
       "enabled": true,
-      "body": "Hi {customerName}, order {orderNumber} needs an advance of {amountDue} before it is sent. Our team will call you about it."
+      "body": "Hi {customerName}, order {orderNumber} needs an advance of {advanceAmount} before it is sent. Our team will call you about it.",
+      "replaces": [
+        "Hi {customerName}, order {orderNumber} needs an advance of {amountDue} before it is sent. Our team will call you about it."
+      ]
+    },
+    {
+      "key": "order.advanceRequest",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Advance request with pay link",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} পাঠাতে আগে {advanceAmount} দিন। এখানে দিন: {payLink}"
+    },
+    {
+      "key": "order.advanceRequest",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Advance request with pay link",
+      "enabled": true,
+      "body": "{storeName}: please pay {advanceAmount} first so we can send order {orderNumber}. Pay here: {payLink}"
+    },
+    {
+      "key": "order.advanceRequest",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Advance request with pay link",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} পাঠানোর আগে {advanceAmount} অগ্রিম দিতে হবে। এই লিংকে দিন: {payLink}\nটাকা এলেই অর্ডারটা এগিয়ে যাবে। — {storeName}"
+    },
+    {
+      "key": "order.advanceRequest",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Advance request with pay link",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} needs an advance of {advanceAmount} before we send it. Pay here: {payLink}\nYour order goes ahead as soon as it is in. — {storeName}"
     },
     {
       "key": "gift.receiver",

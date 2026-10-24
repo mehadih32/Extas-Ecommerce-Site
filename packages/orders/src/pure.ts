@@ -27,6 +27,8 @@ export * from './risk-section';
 export * from './identity-ties';
 // PR 161: the steps an order's risk level asks for (risk-level-plan.ts).
 export * from './risk-level-plan';
+// PR 542: how much an advance request asks (advance-plan.ts).
+export * from './advance-plan';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
@@ -85,6 +87,8 @@ export const ORDER_COMMANDS = [
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
+  // PR 542: the advance request's pay link sent again (its SMS/WhatsApp, a call task) while the order waits for it
+  'advanceResend',
   // hooks for S08 (fulfilment and the courier): no admin route yet; S08 adds its own guards (SKU scan, photo, shortage)
   // PR 541 (SIM-F-014): booking a courier, from any screen, comes through here — never while a review is open
   'book',
@@ -138,6 +142,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   riskSection: OPEN_STATES,
   // PR 161: written after a score that put the order in a level with steps, while it is open
   riskLevel: OPEN_STATES,
+  // PR 542: "Send again" on an order waiting for its advance
+  advanceResend: ['AWAITING_ADVANCE'],
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's
   // booking writes the shipment in the same transaction)
   book: ['CONFIRMED', 'PROCESSING', 'PACKED'],

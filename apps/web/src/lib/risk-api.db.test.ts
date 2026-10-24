@@ -102,4 +102,22 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect((await api('PUT', ['levels'], { body: { value: { ...value, levels: { ...value.levels, medium: { watch: false, hold: false, call: false, ask: 'partial' } } } } })).body).toMatchObject({ error: 'INVALID_INPUT' });
     expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.levels.save' } })).toBe(1);
   });
+
+  it('PR 542: the advance request card ships with auto off; saved whole with its audit row; a stale screen and a bad value are refused', async () => {
+    const got = await api('GET', ['advance']);
+    expect(got.status).toBe(200);
+    expect(got.body.value).toEqual({ auto: false, channels: { SMS: true, WHATSAPP: false, CALL: true }, provider: 'bkash', template: 'order.advanceRequest' });
+    expect(got.body.providers).toContain('nagad');
+    expect((await api('GET', ['advance'], { cookie: reader })).status).toBe(403);
+    expect((await api('PUT', ['advance'], { cookie: reader, body: { value: got.body.value } })).status).toBe(403);
+    expect((await api('DELETE', ['advance'])).status).toBe(405);
+    const value = { ...got.body.value, auto: true, provider: 'nagad', channels: { SMS: false, WHATSAPP: true, CALL: true } };
+    const put = await api('PUT', ['advance'], { body: { version: got.body.version, value } });
+    expect(put).toMatchObject({ status: 200, body: { value } });
+    expect(await deps.resolver.value('orders.advanceRequest', { storeId: f.S })).toEqual(value);
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'orders.advanceRequest.save' } })).toBe(1);
+    expect(await api('PUT', ['advance'], { body: { version: got.body.version, value: got.body.value } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect((await api('PUT', ['advance'], { body: { value: { ...value, provider: 'paypal' } } })).body).toMatchObject({ error: 'INVALID_INPUT' });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'orders.advanceRequest.save' } })).toBe(1);
+  });
 });
