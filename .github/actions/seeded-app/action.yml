@@ -57,11 +57,13 @@ runs:
     # PR 107: EXTAS_SHOP_TEST_PAGES=1 opens the sample fills the gate uses (device-gate.json `filled`). HOSTNAME=0.0.0.0
     # as in the Dockerfile: bound to 127.0.0.1, the /bn rewrite became a full URL on "localhost", the proxy ran twice
     # and every /bn page was measured in English. The log is /tmp/web-server.log (printed when a check fails).
+    # connection_limit=20: the parallel page checks outran Prisma's default pool (2 vCPU → 5 connections; P2024 on
+    # device-gate 2/4 of #41, pages drawn without their data). On the server the app goes through PgBouncer.
     - name: Start the app (standalone server, on the sample database; throwaway keys)
       shell: bash
       run: |
         rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
-        DATABASE_URL=postgresql://extas_app:ci-only-app@127.0.0.1:5432/extas \
+        DATABASE_URL='postgresql://extas_app:ci-only-app@127.0.0.1:5432/extas?connection_limit=20&pool_timeout=20' \
         SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=0.0.0.0 EXTAS_SHOP_TEST_PAGES=1 \
           nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
         for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
