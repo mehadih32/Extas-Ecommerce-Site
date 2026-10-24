@@ -18,6 +18,10 @@
 //                                                               [{orderItemId, quantity?, newVariantId, receivedSku?}]}
 //                                                               (returns.decide)
 //   POST  /api/admin/returns/exchanges/:id/complete             {note?, version?} — after the old piece is checked (PR 187)
+//   GET   /api/admin/returns/exchanges/:id/sizes                the other sizes of each piece going out (same product and
+//                                                               colour), with stock and price now (PR 188, returns.view)
+//   POST  /api/admin/returns/exchanges/:id/switch               {exchangeItemId, newVariantId, version?} — another size at
+//                                                               the same price, stock-checked (PR 188, returns.decide)
 //   GET   /api/admin/returns/parcels?status=&order=             the returned parcels, newest first (returns.view or .qc)
 //   GET   /api/admin/returns/parcels/:id                        one parcel with its pieces and their ERP answer
 //   POST  /api/admin/returns/parcels/:id/receive                {note?, version?} — at the shop (returns.qc)
@@ -59,8 +63,17 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
       return handle(request, deps, 'returns.view', async (x) => ({ exchange: await od.exchangeDetail(x.deps, x.who, b) }));
     }
     if (path.length > 3) return notFound();
+    if (c === 'sizes') {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'returns.view', async (x) => ({ sizes: await od.exchangeSizes(x.deps, x.who, b) }));
+    }
     if (m !== 'POST') return notAllowed();
     switch (c) {
+      case 'switch':
+        return handle(request, deps, 'returns.decide', async (x) => {
+          const d = await decision(request);
+          return { result: await od.switchExchangeVariant(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
       case 'approve':
         return handle(request, deps, 'returns.decide', async (x) => {
           const d = await decision(request);

@@ -4,14 +4,15 @@
 // the decisions open now), and "Start an exchange" for a delivered order (`?order=<number>&line=<id>&reason=&size=`:
 // the order's lines, then what the first tier with stock offers, each with its money box). Drawn on the server; only
 // the buttons run in the browser (ReturnsActions). No money moves here; approving books the linked exchange order.
+// PR 188: each piece going out shows its other sizes at the same price (the size switcher) until the courier has it.
 import Link from 'next/link';
-import type { ExchangeChoices, ExchangeView } from '@extas/orders';
+import type { ExchangeChoices, ExchangeSizes, ExchangeView } from '@extas/orders';
 import type { AdminView } from '@/lib/admin-page';
-import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, statusTone } from '@/lib/admin-returns/model';
+import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, sizeChips, statusTone } from '@/lib/admin-returns/model';
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { ShellIcon } from '../shell/ShellIcon';
-import { OpenExchangeForm, ReturnsAction, type ActionTexts } from './ReturnsActions';
+import { OpenExchangeForm, ReturnsAction, SizeSwitch, type ActionTexts } from './ReturnsActions';
 
 export interface StartStep {
   number: string;
@@ -31,7 +32,10 @@ export interface ReturnsData {
   /** PR 187: may receive and check returned parcels (`returns.qc`). */
   canQc: boolean;
   causes: { key: string; label: string }[];
+  /** PR 188: the other sizes of each piece going out, when the chosen case may still switch (else null). */
+  sizes: ExchangeSizes[] | null;
 }
+
 
 const r = (d: Dict, key: string, vars?: Record<string, string | number>) => t(d, `returns.${key}`, vars);
 
@@ -113,6 +117,13 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
     ) : (x.status === 'QC_PASSED' || x.status === 'QC_FAILED') && data.canDecide ? (
       <ReturnsAction label={r(d, 'act.complete')} url={`${base}/complete`} body={{ version: x.version }} tone="pri" note={x.status === 'QC_FAILED' ? { label: r(d, 'act.completeNote'), required: true } : undefined} texts={texts} testId="exchange-complete" />
     ) : null;
+  const sizesOf = (itemId: string) => {
+    const s = data.sizes?.find((z) => z.exchangeItemId === itemId);
+    if (!s) return null;
+    const chips = sizeChips(s, x.status === 'REQUESTED', { price: r(d, 'switch.price'), out: r(d, 'switch.out') });
+    if (!chips.some((c) => !c.current && !c.why)) return <div className="a2-xs a2-mute a2-mt6">{r(d, 'switch.none')}</div>;
+    return <SizeSwitch url={`${base}/switch`} exchangeItemId={itemId} version={x.version} chips={chips} title={r(d, 'switch.title')} texts={texts} />;
+  };
   const stateTone = (s: string | null) => (s === 'RESTOCKED' ? 'ok' : s === 'ERP_FAILED' || s === 'LOSS_RECORDED' ? 'bad' : 'warn');
   return (
     <section className="a2-card" data-testid="exchange-case" data-number={x.number} data-status={x.status}>
@@ -140,6 +151,7 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
             {i.tier ? <span className="a2-pill line rt-ml">{r(d, 'case.tier', { n: i.tier })}</span> : null}
           </div>
           {i.receivedSku ? <div className="a2-xs a2-mute">{r(d, 'case.coming', { sku: i.receivedSku })}</div> : null}
+          {sizesOf(i.id)}
         </div>
       ))}
       {p ? (

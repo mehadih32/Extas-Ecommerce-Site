@@ -2,7 +2,7 @@
 // sample catalogue; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the permission (a person
 // with only orders.read may not look); an order's exchange choices, opening one with the Idempotency-Key header (a
 // repeat gets the same exchange), the board, one case, approving it with the screen's version (an older version is
-// STALE) into the linked exchange order. Every value is a made-up test value.
+// STALE) into the linked exchange order; PR 188's size switch. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -103,6 +103,15 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
     const one = await api('GET', `exchanges/${id}`);
     expect(one.body.exchange).toMatchObject({ id, status: 'REQUESTED', orderId: o.orderId });
 
+    // PR 188: the size switcher — the other sizes of the piece, then a switch back to the same price with the version
+    const sizes = (await api('GET', `exchanges/${id}/sizes`)).body.sizes;
+    expect(sizes[0]).toMatchObject({ exchangeItemId: one.body.exchange.items[0].id, newVariantId: pick.variantId });
+    const other = sizes[0].sizes.find((s: { current: boolean; samePrice: boolean; sellable: number }) => !s.current && s.samePrice && s.sellable > 0);
+    expect((await api('POST', `exchanges/${id}/switch`, { body: { exchangeItemId: one.body.exchange.items[0].id, newVariantId: pick.variantId } })).body).toMatchObject({ ok: false, error: 'NOTHING_CHANGED' });
+    expect((await api('POST', `exchanges/${id}/switch`, { cookie: reader, body: { exchangeItemId: one.body.exchange.items[0].id, newVariantId: other.variantId } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const sw = await api('POST', `exchanges/${id}/switch`, { body: { exchangeItemId: one.body.exchange.items[0].id, newVariantId: other.variantId, version: one.body.exchange.version } });
+    expect(sw.body).toMatchObject({ ok: true, result: { to: { variantId: other.variantId }, newOrderId: null } });
+    one.body.exchange.version += 1;
     const stale = await api('POST', `exchanges/${id}/approve`, { body: { version: one.body.exchange.version + 5 } });
     expect(stale).toMatchObject({ status: 409, body: { ok: false, error: 'STALE' } });
     expect((await api('POST', `exchanges/${id}/approve`, { body: { version: 'x' } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });

@@ -122,6 +122,11 @@
     "UNKNOWN_SKU": "That SKU is not a piece of this shop. Scan again or type it from the label.",
     "QC_INCOMPLETE": "Check every piece of the parcel, each once, then save.",
     "LOSS_REASON_REQUIRED": "A piece that is not sellable needs its reason (and a photo when the setting asks).",
+    "NOT_SAME_PIECE": "Only another size of the same product and colour.",
+    "PRICE_DIFFERS": "That size costs another price now. An exchange never changes a price.",
+    "NOTHING_CHANGED": "That is the size already chosen.",
+    "ILLEGAL_TRANSITION": "The new parcel is booked with the courier; the size cannot change now.",
+    "EDIT_CLOSED": "The new parcel can no longer be changed.",
     "server-error": "That did not work. Try again."
   },
   "qc": {
@@ -174,5 +179,12 @@
       "DEFECT_RETURN": "Fault return",
       "EXCHANGE_PICKUP": "Exchange pick-up"
     }
+  },
+  "switch": {
+    "title": "Another size",
+    "sub": "Same piece and colour, same price. Pick a size to switch; the stock is checked first.",
+    "none": "No other size at this price.",
+    "out": "none free",
+    "price": "other price"
   }
 }
