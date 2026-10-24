@@ -24,3 +24,13 @@
 .adm2 .a2-chips{display:flex;flex-wrap:wrap;gap:8px}
 .adm2 .a2-kv.a2-kvw{white-space:normal;overflow-wrap:anywhere;font-size:16px}
 .adm2 .a2-chipn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:550;padding:5px 10px;border-radius:999px;background:var(--g0);color:var(--g);border:1px solid var(--g1)}
+/* S04 · PR 558 — the Checkout advance panel: band chips that toggle, signal checkboxes, the "move up" arrow */
+.adm2 .a2-chipt{display:inline-flex;align-items:center;min-height:44px;min-width:44px;justify-content:center;font:inherit;font-size:12.5px;font-weight:550;padding:5px 12px;border-radius:999px;background:var(--sf);color:var(--ink2);border:1px solid var(--ln);cursor:pointer}
+.adm2 .a2-chipt.on{background:var(--g);color:var(--sf);border-color:var(--g)}
+.adm2 .a2-chipt:disabled{cursor:default;opacity:.7}
+.adm2 .a2-chipt:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+.adm2 .a2-ckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 14px}
+.adm2 .a2-ckb{display:flex;align-items:center;gap:8px;font-size:13px;min-height:44px;cursor:pointer}
+.adm2 .a2-ckb input{width:18px;height:18px;flex:none}
+.adm2 .a2-up svg{transform:rotate(180deg)}
+.adm2 .a2-sch>div.a2-lyctl{flex:none;display:flex;gap:4px}

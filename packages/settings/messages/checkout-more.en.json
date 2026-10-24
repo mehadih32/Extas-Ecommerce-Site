@@ -13,6 +13,10 @@
     "gift": {
       "label": "Gift mode",
       "help": "\"Send as a gift\" in the bag opens the checkout as a gift. The name, phone and address are the receiver's (the sticker and the courier use them); the sender writes his own name and a contact for updates (a phone of any country or an e-mail). A gift note, a \"deliver on or after\" date and \"hide prices on the invoice\" go with it. Advance: when required, \"full\" means the whole gift is paid ahead (Cash on Delivery is not offered); \"fixed amount\" or \"percentage\" take part ahead — until part payment comes, the team gets a call task to collect it. Note length 0 or date days 0 hides that box. Off: no gift link anywhere."
+    },
+    "advance": {
+      "label": "Checkout advance (Parameter for Checkout)",
+      "help": "The one switch of the advance-payment checkout mode and the most layers its panel takes. Off: every customer sees the checkout as before. On: a customer one of your layers flags — and only once he has filled in his name, phone and address — sees bKash, Nagad and card without Cash on Delivery, with one plain line saying what to pay now (the delivery charge, a part or the full amount, as his layer asks); he never sees a score or a reason. The order waits for that advance and comes back to the queue once it is paid; it is never cancelled or blocked by itself. No price, charge or discount changes. The layers are set on Orders › Risk rules › Checkout advance."
     }
   },
   "orders": {

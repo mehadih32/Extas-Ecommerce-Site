@@ -2666,18 +2666,23 @@ model CheckoutParameterLayer {
   position    Int
   conditions  Json
   requirement AdvanceRequirement
+  /// PR 558: PART_AMOUNT only — the percentage of what is due asked ahead (1–99).
+  partPercent Int?
   enabled     Boolean            @default(false)
   archivedAt  DateTime?          @db.Timestamptz(3)
   createdAt   DateTime           @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime           @updatedAt @db.Timestamptz(3)
 
   events CheckoutFlagEvent[]
+
+  @@index([storeId, archivedAt, position])
 }
 
 enum AdvanceRequirement {
   NONE
   DELIVERY_CHARGE
   FULL_AMOUNT
+  PART_AMOUNT
 }
 
 /// @stage S06 · PR 562, 566 — a flagged checkout and its outcome (paid the advance or walked away): the number that tunes
@@ -3646,6 +3651,7 @@ enum PaymentPurpose {
   FULL_ADVANCE
   EXCHANGE_DIFFERENCE
   PREORDER_ADVANCE
+  PART_ADVANCE
 }
 
 enum PaymentStatus {

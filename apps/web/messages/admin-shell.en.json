@@ -50,7 +50,8 @@
       },
       "orders": {
         "all": "All orders",
-        "confirm": "To confirm"
+        "confirm": "To confirm",
+        "riskrules": "Risk rules"
       }
     },
     "purpose": {

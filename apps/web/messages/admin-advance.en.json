@@ -1,0 +1,98 @@
+{
+  "metaTitle": "Checkout advance · Admin",
+  "title": "Checkout advance",
+  "sub": "Who is asked to pay ahead at checkout, and how much. Its own panel: the risk score's settings are not changed here.",
+  "where": "Orders › Risk rules › Checkout advance",
+  "master": {
+    "title": "Advance-payment checkout",
+    "on": "On — a flagged customer pays ahead; Cash on Delivery is not offered to him",
+    "off": "Off — every customer sees the checkout as before",
+    "hint": "A customer is only checked once he has filled in his name, phone and address. He never sees a score or a reason, only one line about paying ahead.",
+    "aria": "Advance-payment checkout"
+  },
+  "kpi": {
+    "state": "Switch",
+    "on": "On",
+    "off": "Off",
+    "layers": "Layers",
+    "layersOf": "{n} of {max}",
+    "live": "Layers switched on",
+    "liveOf": "{n}"
+  },
+  "safe": {
+    "title": "Nothing is blocked or priced again.",
+    "text": "A flagged customer can still order: he pays the advance with bKash, Nagad or a card and the rest on delivery. Prices, charges and discounts stay exactly as they are."
+  },
+  "layers": {
+    "title": "Layers",
+    "sub": "Tried from the top. The first layer that matches decides what the customer is asked for.",
+    "none": "No layer yet. Add one to say what counts as a flag.",
+    "add": "Add a layer",
+    "addFull": "At most {max} layers (More options).",
+    "name": "Name (for the team only)",
+    "namePlaceholder": "e.g. High risk",
+    "enabled": "This layer is on",
+    "up": "Move up",
+    "down": "Move down",
+    "remove": "Take off the list",
+    "removeNote": "Taken off: it is archived, never deleted; past flags keep its name.",
+    "number": "Layer {n}",
+    "flagTitle": "What counts as a flag (any one is enough)",
+    "minScore": "Risk score at least",
+    "minScoreNone": "Not a condition",
+    "bands": "Risk band",
+    "signals": "Signals",
+    "signalsMore": "Signals ({n} chosen)",
+    "needOne": "Choose at least one condition — a layer never flags everyone.",
+    "askTitle": "What this layer asks for",
+    "ask": {
+      "NONE": "Nothing (Cash on Delivery stays)",
+      "DELIVERY_CHARGE": "The delivery charge ahead",
+      "PART_AMOUNT": "A part ahead",
+      "FULL_AMOUNT": "The full amount ahead"
+    },
+    "askHint": {
+      "NONE": "Use it to let a group through before a stricter layer below.",
+      "DELIVERY_CHARGE": "Paid now; the rest on delivery. When delivery is free nothing is asked.",
+      "PART_AMOUNT": "This percentage of what is due, paid now; the rest on delivery.",
+      "FULL_AMOUNT": "Everything paid now; no Cash on Delivery."
+    },
+    "percent": "Part (%)",
+    "percentHint": "1 to 99",
+    "askLabel": "Ask for"
+  },
+  "more": {
+    "title": "More options",
+    "maxLayers": "Most layers on this panel",
+    "layers": "{n} layers",
+    "default": "Default: {v}"
+  },
+  "save": "Save",
+  "saving": "Saving…",
+  "saved": "Saved — the audit log has it",
+  "unchanged": "Nothing changed",
+  "readOnly": "You can see the layers. Changing them needs the \"Risk rules: change\" permission (risk.rules.write).",
+  "confirm": {
+    "title": "Switch the advance-payment checkout on?",
+    "effects": {
+      "who": "A customer one of your layers flags is asked to pay ahead, once he has filled everything in",
+      "cod": "Cash on Delivery is not offered to him; bKash, Nagad and card stay open",
+      "words": "He sees one neutral line, never a score or a reason",
+      "price": "No price, charge or discount changes"
+    },
+    "reason": "Why (optional, for the audit log)",
+    "cancel": "Cancel",
+    "ok": "Yes, switch it on",
+    "working": "Saving…",
+    "close": "Close"
+  },
+  "errors": {
+    "STALE": "Someone else changed the layers. The page shows theirs now; change it again if needed.",
+    "FORBIDDEN": "This needs the \"Risk rules: change\" permission.",
+    "INVALID_INPUT": "A layer is not complete: give it a name and at least one condition, and a part between 1 and 99.",
+    "NOT_FOUND": "A layer was removed meanwhile. Reload the page.",
+    "UNAUTHENTICATED": "Your sign-in has ended. Sign in again.",
+    "network": "No connection. Check the internet and try again.",
+    "server-error": "Something went wrong. Try again in a minute."
+  }
+}

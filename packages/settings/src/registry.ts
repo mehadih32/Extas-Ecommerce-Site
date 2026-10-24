@@ -45,6 +45,7 @@ import { paymentSettings } from './registry-payments';
 import { riskRulesSettings } from './registry-risk-rules';
 import { shippingSettings } from './registry-shipping';
 import { cacheSettings } from './registry-cache';
+import { advanceSettings } from './registry-advance';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1202,6 +1203,8 @@ export const registry = {
   ...shippingSettings,
   // ---- S02 · PR 602 · the four-layer cache: page times, the stock shown, the rare options (registry-cache.ts, version 53). ----
   ...cacheSettings,
+  // ---- S04 · PR 558, 560 · the advance-payment checkout mode's one switch (registry-advance.ts, version 53). ----
+  ...advanceSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

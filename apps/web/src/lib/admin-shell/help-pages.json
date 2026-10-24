@@ -5,6 +5,7 @@
     { "id": "orders/all", "route": "/admin/orders" },
     { "id": "orders/order", "route": "/admin/orders/[id]" },
     { "id": "orders/confirm", "route": "/admin/orders/confirm" },
+    { "id": "orders/checkout-advance", "route": "/admin/orders/risk-rules/checkout" },
     { "id": "products/all", "route": "/admin/products" },
     { "id": "products/new", "route": "/admin/products/new" },
     { "id": "products/edit", "route": "/admin/products/[id]" },
@@ -23,6 +24,7 @@
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "settings/keys", "route": "/admin/integrations" },
+    { "id": "settings/cache", "route": "/admin/settings/system/cache" },
     { "id": "help/manual", "route": "/admin/help" }
   ],
   "notGuided": [
