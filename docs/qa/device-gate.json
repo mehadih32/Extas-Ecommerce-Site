@@ -156,7 +156,7 @@
         "required": true,
         "expect": [".pa-col", ".pa-x", ".pa-kind"]
       },
-      { "from": "/admin/orders", "selector": "[data-testid=\"order-row\"] a.a2-b", "take": 1, "required": true, "expect": ["[data-testid=\"order-detail\"]", "[data-testid=\"order-customer\"]", "[data-testid=\"cmd-confirm\"]"] },
+      { "from": "/admin/orders", "selector": "[data-testid=\"order-row\"] a.a2-b", "take": 1, "required": true, "expect": ["[data-testid=\"order-detail\"]", "[data-testid=\"order-customer\"]", "[data-testid=\"cmd-confirm\"]", "[data-testid=\"order-invoice\"]"] },
       { "from": "/collections/shirts", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
       { "from": "/collections/panjabi", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
       { "from": "/collections/hoodies", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },

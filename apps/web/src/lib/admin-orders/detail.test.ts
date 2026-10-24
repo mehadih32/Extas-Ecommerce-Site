@@ -1,4 +1,4 @@
-// S05 · PR 141 — the order page's buttons without a database: a button exists only for a command the order service
+// S05 · PR 141 (and follow-up 180) — the order page's buttons without a database: a button exists only for a command the order service
 // says is open now AND the person's keys allow (a role without orders.cancel gets no Cancel); a paid order's cancel
 // says it records a refund REQUEST and nothing more; the dialog sends exactly the fields, the note an "Other" reason
 // needs and the order's version; a refusal is a stable code with its own words, and a lost connection never throws.
@@ -12,6 +12,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { COMMAND_PERM, DO_PERM, commandSpecs, reviewSpecs } from './detail';
+import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
 
 const view = (lang: 'en' | 'bn'): AdminView => ({ lang, dict: adminDicts[lang], locale: lang, timeZone: 'Asia/Dhaka', storeName: null });
@@ -100,6 +101,12 @@ describe('which buttons an order shows', () => {
         for (const d of [en, bn] as Dict[]) expect(t(d, `orders.cmd.${s.id}.${part}`), `${s.id}.${part}`).not.toBe(`orders.cmd.${s.id}.${part}`);
       }
     }
+  });
+
+  it('follow-up 180: the staff "Get invoice" opens the order\'s invoice page, its number made safe for an address', () => {
+    expect(invoiceHref('EX-1001')).toBe('/account/orders/EX-1001/invoice');
+    expect(invoiceHref('EX 1/2')).toBe('/account/orders/EX%201%2F2/invoice');
+    for (const d of [en, bn] as Dict[]) expect(t(d, 'orders.detail.invoice')).not.toBe('orders.detail.invoice');
   });
 
   it('duplicate review: each decision needs its own key; decline needs the cancel key', () => {

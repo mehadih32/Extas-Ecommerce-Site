@@ -17,6 +17,7 @@ import { orderSearchWhere } from '@extas/orders';
 import deliveryBn from '../../../messages/admin-delivery.bn.json';
 import deliveryEn from '../../../messages/admin-delivery.en.json';
 import { adminDicts, type AdminLang } from '../admin-i18n';
+import { invoiceHref } from '../admin-orders/model';
 import { t, type Dict } from '../i18n';
 import { latinDigits, phoneNormalizeBD } from '../phone-bd';
 import type { ShellIconName } from './icons';
@@ -178,7 +179,6 @@ async function productItems(ctx: SearchContext, q: string): Promise<SearchItem[]
   }));
 }
 
-const invoiceHref = (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice`;
 
 /** Where an order opens from the palette: its admin page with `orders.read`, else its invoice (`orders.invoice`). */
 export const paletteOrderHref = (v: ShellViewer, o: { id: string; number: string }) => (has(v, 'orders.read') ? `/admin/orders/${o.id}` : invoiceHref(o.number));

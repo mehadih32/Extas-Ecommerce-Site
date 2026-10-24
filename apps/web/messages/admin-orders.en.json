@@ -206,7 +206,8 @@
       "more": "More actions",
       "tabs": "Order page parts",
       "details": "Details",
-      "timeline": "Timeline"
+      "timeline": "Timeline",
+      "invoice": "Get invoice"
     },
     "dlg": {
       "cancel": "Cancel",

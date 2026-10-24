@@ -12,7 +12,7 @@ import type { AdminView } from '../admin-page';
 import { t } from '../i18n';
 import { KNOWN_ERRORS, commandUrl, reviewUrl, type CommandId } from './commands';
 import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
-import { ORDER_TONE, orderHref, type Tone } from './model';
+import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
@@ -94,6 +94,8 @@ export interface OrderDetailView {
   primary: CommandSpec[];
   more: CommandSpec[];
   canNote: boolean;
+  /** Follow-up 180: the invoice, for those with `orders.invoice` (null: no button). */
+  invoice: string | null;
   noteMax: number;
   noteUrl: string;
 }
@@ -428,6 +430,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     primary: specs.primary,
     more: specs.more,
     canNote,
+    invoice: perms.has('orders.invoice') ? invoiceHref(o.number) : null,
     noteMax,
     noteUrl: commandUrl(o.id, 'notes'),
   };

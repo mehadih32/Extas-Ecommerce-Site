@@ -59,6 +59,12 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
   const right = (
     <>
       <Buttons specs={o.primary} open={open} />
+      {o.invoice ? (
+        <a className="a2-btn" href={o.invoice} target="_blank" rel="noopener" data-testid="order-invoice">
+          <ShellIcon name="file" size={15} />
+          {t(d, 'orders.detail.invoice')}
+        </a>
+      ) : null}
       <MoreMenu label={more} specs={o.more} open={open} />
     </>
   );
