@@ -80,6 +80,10 @@
         "label": "Parcel refusal reasons",
         "help": "Why a customer did not take the parcel at the door (bought elsewhere, arrived after Eid …). The team picks one when it records a refused parcel; the reports count them. Add, remove or reword them in both languages."
       }
+    },
+    "twoSize": {
+      "label": "Two-size follow-up",
+      "help": "Off by default. enabled: when an order has the same piece in neighbouring sizes (S and M), the order gets \"2 sizes — check\". If the customer said in the bag that they are for different people, it is only a note and nobody is asked. askCustomer: his order page asks which he wants (keep all, or only one size); his answer takes the other sizes out before packing. callTask: the confirmation caller also gets a call. No answer: all are sent."
     }
   },
   "defaults": {

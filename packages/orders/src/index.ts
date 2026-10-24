@@ -15,7 +15,9 @@
 // the search by number, phone, name or tracking number (search.ts). PR 142: the team's edit of an order not yet
 // with the courier — contact, address, a size at the same price, a piece taken out — with its reason, where the
 // customer asked, and the stock and fraud checks again (edit.ts). PR 143: the customer's own edit (phone, address, a
-// size) until processing starts, capped, off by default (edit.ts).
+// size) until processing starts, capped, off by default (edit.ts). PR 146: the two-size follow-up — after placing,
+// the same piece in neighbouring sizes is asked about (a family's sizes, said in the bag, are only a note: SIM-F-036),
+// and the answer takes the other sizes out before packing (two-size.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -34,3 +36,4 @@ export * from './admin-read';
 export * from './history';
 export * from './search';
 export * from './edit';
+export * from './two-size';

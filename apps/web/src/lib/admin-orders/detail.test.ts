@@ -12,7 +12,8 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, editSummary, reviewSpecs, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, editSummary, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { flagChips } from './list';
 import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
 
@@ -236,5 +237,35 @@ describe('PR 142 · the edit dialogs (SIM-F-037)', () => {
     expect(editSummary(view('en'), data)).toBe('Phone: 01710-000071 → 01710-000072 · Oxford · Sky · M → Oxford · Sky · L · via Phone call');
     expect(editSummary(view('bn'), data)).toContain('ফোন কল');
     expect(editSummary(view('en'), {})).toBeNull();
+  });
+});
+
+describe('PR 146 · the two-size band (SIM-F-036)', () => {
+  const S = '01a16af2-30f0-7462-aab8-719bb3ce51c1';
+  const M = '01a16af2-30f0-7462-aab8-719bb3ce51c2';
+  const g: od.TwoSizeGroup = { key: 'p|c|s+m', product: 'Oxford shirt', colour: 'Sky', sizes: [{ sizeId: S, label: 'S', lineIds: ['a'] }, { sizeId: M, label: 'M', lineIds: ['b'] }] };
+  const o = { id: ID, number: 'EX-1001', version: 4 };
+
+  it('keep all, only S, only M: each sends the question and the size with the version; a paid order says it is only a refund REQUEST', () => {
+    const specs = twoSizeSpecs(view('en'), o, g, 0, true);
+    expect(specs.map((s) => s.label)).toEqual(['Keep all', 'Only S', 'Only M']);
+    for (const s of specs) expect(s.url).toBe(`/api/admin/orders/${ID}/two-size`);
+    expect(bodyOf(specs[2]!, { note: '' })).toEqual({ key: 'p|c|s+m', keep: M, version: 4 });
+    expect(bodyOf(specs[0]!, { note: 'both' })).toEqual({ key: 'p|c|s+m', keep: 'all', note: 'both', version: 4 });
+    expect(specs[2]!.effects.join(' ')).toContain('S is taken out');
+    expect(specs[2]!.effects.join(' ')).toContain(t(adminDicts.en, 'orders.eff.editPaid'));
+    expect(twoSizeSpecs(view('en'), o, g, 0, false)[2]!.effects.join(' ')).not.toContain(t(adminDicts.en, 'orders.eff.editPaid'));
+    expect(COMMAND_PERM.twoSize).toBe('orders.edit');
+    expect(twoSizeSpecs(view('bn'), o, g, 0, false)[1]!.label).toBe('শুধু S');
+  });
+
+  it('the flags say "2 sizes — check" or, for a family, "2 sizes — for someone else"; the timeline says what was asked and kept', () => {
+    const row = { status: 'PLACED', cancelRequested: false, inReview: false, holdReasonCode: null, customerWantsChange: false, orderGroupId: null, internalFlags: [], source: 'WEBSITE' } as unknown as od.OrderRow;
+    const labels = { holdReasons: new Map<string, string>(), flags: new Map<string, string>() };
+    expect(flagChips(view('en'), { ...row, flags: ['TWO_SIZES'] }, labels).map((c) => c.label)).toEqual(['2 sizes — check']);
+    expect(flagChips(view('en'), { ...row, flags: ['TWO_SIZES_OTHER'] }, labels).map((c) => c.label)).toEqual(['2 sizes — for someone else']);
+    expect(twoSizeSummary(view('en'), 'order.twoSizeCheck', { asked: [], noted: [{ product: 'Oxford shirt', sizes: [{ label: 'S' }, { label: 'M' }, { label: 'L' }] }] })).toBe('for someone else (said in the bag): Oxford shirt S + M + L');
+    expect(twoSizeSummary(view('en'), 'order.twoSizeAnswer', { product: 'Oxford shirt', sizes: ['S', 'M'], keep: 'M', applied: true, via: 'order-page' })).toContain('Oxford shirt S + M: keep M');
+    expect(twoSizeSummary(view('en'), 'order.twoSizeAnswer', { product: 'Oxford shirt', sizes: ['S', 'M'], keep: 'M', applied: false })).toContain('offer');
   });
 });

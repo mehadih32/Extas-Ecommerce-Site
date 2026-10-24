@@ -41,6 +41,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   addLine: { PLACED: FLAG, CONFIRMED: FLAG },
   removeLine: { PLACED: FLAG, CONFIRMED: FLAG },
   edit: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
+  twoSizeCheck: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
+  twoSizeAnswer: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
   startPicking: { CONFIRMED: 'PROCESSING' },
@@ -105,7 +107,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'awaitAdvance'] });
   });
 });
 
@@ -173,6 +175,16 @@ describe('PR 143 · the customer\'s own edit window', () => {
     expect(customerEditClosedWhy(cfg, o('PLACED', { cancelRequested: true }), at)).toBe('CANCEL');
     expect(customerEditClosedWhy({ ...cfg, windowMinutes: 30 }, o('PLACED'), new Date(at.getTime() + 31 * 60_000))).toBe('TIME');
     expect(customerEditClosedWhy(cfg, o('PLACED', { edits: 2 }), at)).toBe('CAP');
+  });
+});
+
+describe('PR 146 · the two-size answer (SIM-F-004: never once booked)', () => {
+  it('the answer takes sizes out, so it follows the edit: refused once booked or while a cancel is asked; the check itself is only a note', () => {
+    expect(plan('twoSizeAnswer', order('CONFIRMED'))).toMatchObject({ ok: true, moves: false });
+    expect(plan('twoSizeAnswer', order('CONFIRMED', { booked: true }))).toMatchObject({ ok: false, code: 'BOOKED' });
+    expect(plan('twoSizeAnswer', order('PLACED', { cancelRequested: true }))).toMatchObject({ ok: false, code: 'CANCEL_REQUESTED' });
+    expect(plan('twoSizeAnswer', order('PROCESSING'))).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION' });
+    expect(plan('twoSizeCheck', order('PLACED', { inReview: true }))).toMatchObject({ ok: true, moves: false });
   });
 });
 

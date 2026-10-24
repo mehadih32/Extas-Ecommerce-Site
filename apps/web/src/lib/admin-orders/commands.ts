@@ -18,6 +18,8 @@ export const COMMAND_PATHS = {
   notes: 'notes',
   // PR 142: the team's edit (the full dialog, and "Correct phone")
   edit: 'edit',
+  // PR 146: the two-size answer (keep all, or only one size)
+  twoSize: 'two-size',
 } as const;
 export type CommandId = keyof typeof COMMAND_PATHS;
 

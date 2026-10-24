@@ -201,6 +201,38 @@
       "name": "Delivered (off by default)",
       "enabled": false,
       "body": "{storeName}: order {orderNumber} has been delivered. Thank you!"
+    },
+    {
+      "key": "order.twoSize",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Two sizes: which one? (off by default)",
+      "enabled": false,
+      "body": "{customerName}, {storeName}-এ আপনার অর্ডার {orderNumber}-এ একই পণ্যের দুইটা সাইজ আছে। দুইটাই রাখবেন, নাকি একটা সাইজ? অর্ডার পেজে বেছে নিন: {orderLink} — অথবা এই মেসেজের উত্তর দিন।"
+    },
+    {
+      "key": "order.twoSize",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Two sizes: which one? (off by default)",
+      "enabled": false,
+      "body": "Hi {customerName}, your order {orderNumber} from {storeName} has the same piece in two sizes. Do you want both, or only one size? Choose on your order page: {orderLink} — or simply reply to this message."
+    },
+    {
+      "key": "order.twoSize",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Two sizes: which one? (off by default)",
+      "enabled": false,
+      "body": "{storeName}: অর্ডার {orderNumber}-এ একই পণ্যের দুই সাইজ। দুইটাই, নাকি একটা? এখানে বেছে নিন: {orderLink}"
+    },
+    {
+      "key": "order.twoSize",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Two sizes: which one? (off by default)",
+      "enabled": false,
+      "body": "{storeName}: order {orderNumber} has one piece in two sizes. Both, or only one? Choose here: {orderLink}"
     }
   ]
 }
