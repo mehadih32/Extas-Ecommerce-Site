@@ -812,13 +812,21 @@ function relinkReadme(md) {
   return lines.join('\n');
 }
 
+/** The README's Bengali summary repeats the progress count; keep it equal to the register's Progress line. */
+function syncBnCount(md) {
+  const m = progressLine.match(/total\s+(\d+)\s*\/\s*(\d+)/i);
+  if (!m) return md;
+  const bnDigits = (x) => String(x).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[Number(d)]);
+  return md.replace(/\(([০-৯]+)টা PR-এর মধ্যে ([০-৯]+)টা\)/, `(${bnDigits(m[2])}টা PR-এর মধ্যে ${bnDigits(m[1])}টা)`);
+}
+
 // ---------------------------------------------------------------- write or check
 
 const outputs = new Map();
 for (const s of stages) outputs.set(`docs/stages/${s.id}.md`, renderStage(s));
 outputs.set('docs/stages/README.md', renderIndex());
 outputs.set('docs/stages/register.json', renderJson());
-outputs.set('README.md', relinkReadme(readmeIn));
+outputs.set('README.md', syncBnCount(relinkReadme(readmeIn)));
 
 const problems = [];
 const missingBn = prs.filter((p) => p.bnMissingForBuilt).map((p) => p.number);
