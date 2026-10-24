@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Courier shipping (S08, BACKEND-ARCHITECTURE §6.5.2, §7.4): courier accounts, the parcel states with the courier's exceptions and their events (PR 175), the RTO cost book from real returned parcels only (PR 175); booking through the order service and status polling, Steadfast behind the adapter (PR 176). Every courier runs on its practice world until its keys are entered. No money moves here.",
+  "description": "Courier shipping (S08, BACKEND-ARCHITECTURE §6.5.2, §7.4): courier accounts, the parcel states with the courier's exceptions and their events (PR 175), the RTO cost book from real returned parcels only (PR 175); booking through the order service and status polling, Steadfast behind the adapter (PR 176); Pathao, the second courier (PR 177). Every courier runs on its practice world until its keys are entered. No money moves here.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

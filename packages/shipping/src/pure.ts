@@ -156,7 +156,7 @@ export type BookingOutcomeKind = (typeof BOOKING_OUTCOMES)[number];
  * Why an order was not booked (labels: `courier.booking.code.<code>`): the order service's refusals, an open packing
  * card, and the shop's own (a gift before its day, no usable receiver, the courier refused or gave no answer).
  */
-export const BOOKING_CODES = ['IN_REVIEW', 'BOOKED', 'CANCEL_REQUESTED', 'CANCEL_PENDING', 'ILLEGAL_TRANSITION', 'SHORTAGE_OPEN', 'NOT_FOUND', 'GIFT_DATE', 'NO_RECEIVER', 'COURIER_REFUSED', 'NO_ANSWER'] as const;
+export const BOOKING_CODES = ['IN_REVIEW', 'BOOKED', 'CANCEL_REQUESTED', 'CANCEL_PENDING', 'ILLEGAL_TRANSITION', 'SHORTAGE_OPEN', 'NOT_FOUND', 'GIFT_DATE', 'NO_RECEIVER', 'COURIER_REFUSED', 'NO_ANSWER', 'NO_WEIGHT'] as const;
 
 /** The receiver's phone as a courier takes it: a Bangladeshi mobile 01XXXXXXXXX (the order keeps +8801…), else null. */
 export function courierPhone(phone: string | null | undefined): string | null {

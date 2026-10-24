@@ -142,6 +142,8 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
       if (!BD_MOBILE.test(parcel.receiver.phone)) return { ok: false, error: 'the receiver phone is not a mobile number 01XXXXXXXXX', unknown: false };
       if (!parcel.receiver.address.trim()) return { ok: false, error: 'the address is empty', unknown: false };
       if (!parcel.receiver.name.trim()) return { ok: false, error: 'the receiver name is empty', unknown: false };
+      // like the real courier: one that charges by weight refuses a parcel without it
+      if (capabilities.weightRequired && parcel.weightGrams === null) return { ok: false, error: 'the parcel weight is missing', unknown: false };
       const consignmentId = idOf(parcel.merchantRef);
       let p = s.parcels.get(consignmentId);
       if (!p) {

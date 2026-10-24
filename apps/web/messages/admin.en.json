@@ -193,6 +193,18 @@
         "secretKey": "Secret key (same page)",
         "baseUrl": "Address — only for a test server"
       }
+    },
+    "pathao": {
+      "name": "Pathao Courier",
+      "desc": "Book parcels and read their status. Practice mode until the four keys and the store are in and the test passes",
+      "fields": {
+        "clientId": "Client ID (Pathao merchant panel → Developers API)",
+        "clientSecret": "Client secret (same page)",
+        "username": "Merchant login e-mail",
+        "password": "Merchant login password",
+        "storeId": "Pathao store ID the parcels go out from (merchant panel → Stores)",
+        "baseUrl": "Address — only for a test server"
+      }
     }
   },
   "errors": {
@@ -250,7 +262,8 @@
     },
     "providers": {
       "mockCourier": "Practice courier",
-      "steadfast": "Steadfast"
+      "steadfast": "Steadfast",
+      "pathao": "Pathao"
     },
     "practice": "Practice — nothing is sent to a courier",
     "booking": {
@@ -271,7 +284,8 @@
         "GIFT_DATE": "Gift — waits for its booking day",
         "NO_RECEIVER": "Name, mobile number or address missing",
         "COURIER_REFUSED": "The courier refused it (see the reason)",
-        "NO_ANSWER": "The courier did not answer"
+        "NO_ANSWER": "The courier did not answer",
+        "NO_WEIGHT": "A piece has no weight — this courier needs it"
       }
     }
   }
