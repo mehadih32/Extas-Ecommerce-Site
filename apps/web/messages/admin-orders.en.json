@@ -623,7 +623,8 @@
       "exchange_refused": "Exchange refused",
       "return_received": "Returned parcel received at the shop",
       "return_qc": "Returned pieces checked (QC)",
-      "exchange_completed": "Exchange completed"
+      "exchange_completed": "Exchange completed",
+      "exchange_switched": "Exchange size switched"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",

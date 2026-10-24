@@ -109,7 +109,8 @@ export function removeRefusal(line: { comboId: string | null }, order: { discoun
  * The edit itself, inside a command's transaction under the order's lock (the machine already said `edit` is open).
  * Throws NOTHING_CHANGED when every field is as stored. Used by the team's edit, the customer's own and the two-size answer.
  */
-export async function applyEdit(deps: OrdersDeps, tx: Tx, o: LockedOrder, c: EditChanges, meta: { reason: string; by: By; sameColour?: boolean }): Promise<EditDone> {
+/** `priceOf` (PR 188): the price a size is compared at — the exchange's live price with its discount — instead of the list price. */
+export async function applyEdit(deps: OrdersDeps, tx: Tx, o: LockedOrder, c: EditChanges, meta: { reason: string; by: By; sameColour?: boolean; priceOf?: (variantId: string) => Promise<number | null> }): Promise<EditDone> {
   const data: Prisma.OrderUncheckedUpdateInput = {};
   const fields: FieldChange[] = [];
   const set = (field: EditField, before: string | null, after: string | null) => {
@@ -174,7 +175,8 @@ export async function applyEdit(deps: OrdersDeps, tx: Tx, o: LockedOrder, c: Edi
         const was = await tx.productVariant.findUnique({ where: { id: i.variantId }, select: { colourId: true } });
         if (was?.colourId !== v.colourId) throw new OrdersError('NOT_SAME_PIECE', 'the customer changes only the size, in the same colour', ['lines']);
       }
-      if (v.priceMinor !== i.unitPriceMinor) throw new OrdersError('PRICE_DIFFERS', 'that size costs another price now; an edit never changes a price', ['lines'], { priceMinor: v.priceMinor, linePriceMinor: i.unitPriceMinor });
+      const priceNow = meta.priceOf ? await meta.priceOf(v.id) : v.priceMinor;
+      if (priceNow !== i.unitPriceMinor) throw new OrdersError('PRICE_DIFFERS', 'that size costs another price now; an edit never changes a price', ['lines'], { priceMinor: priceNow, linePriceMinor: i.unitPriceMinor });
       const to = { productName: i.productName, colourName: v.colour?.nameEn ?? null, sizeLabel: v.size?.label ?? null };
       // the line keeps its id (reviews, Find My Size answers and exchanges link to it) and its stored money
       await tx.orderItem.update({ where: { id: i.id }, data: { variantId: v.id, sku: v.sku, colourName: to.colourName, sizeLabel: to.sizeLabel } });

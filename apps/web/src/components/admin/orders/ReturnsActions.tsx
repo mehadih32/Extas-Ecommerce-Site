@@ -3,10 +3,12 @@
 // (lib/returns-api.ts) with the case's version, optionally after asking for a note; the open-an-exchange form sends the
 // piece chosen with an idempotency key (a second press opens nothing new). Every refusal is said in words from the
 // page's messages; after a decision the page is read again from the server, so the buttons are the steps open now.
+// PR 188 adds the size switcher of a piece going out.
 import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { call, type Answer } from '@/components/admin/api';
 import { newKey } from '@/lib/admin-orders/commands';
+import type { SizeChip } from '@/lib/admin-returns/model';
 
 export interface ActionTexts {
   send: string;
@@ -167,6 +169,42 @@ export function OpenExchangeForm({ url, reason, orderItemId, newVariantId, cause
           {texts.open}
         </button>
       </div>
+    </div>
+  );
+}
+
+/** PR 188: another size of the piece going out — one press switches it (with the case's version). */
+export function SizeSwitch({ url, exchangeItemId, version, chips, title, texts }: { url: string; exchangeItemId: string; version: number; chips: SizeChip[]; title: string; texts: ActionTexts }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const go = async (newVariantId: string) => {
+    setBusy(true);
+    setErr('');
+    const a = await post(url, { exchangeItemId, newVariantId, version }, null);
+    setBusy(false);
+    if (!a.data.ok) {
+      setErr(errorOf(a, texts));
+      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE') router.refresh();
+      return;
+    }
+    router.refresh();
+  };
+  return (
+    <div className="a2-mt6" data-testid="exchange-sizes">
+      <div className="a2-seg" role="group" aria-label={title}>
+        {chips.map((c) => (
+          <button key={c.variantId} type="button" className={c.current ? 'on' : undefined} aria-pressed={c.current} disabled={busy || c.current || !!c.why} title={c.why ?? undefined} onClick={() => go(c.variantId)} data-testid="exchange-size" data-current={c.current ? '1' : undefined}>
+            {c.label}
+            {c.why ? <span className="a2-xs a2-mute rt-ml">{c.why}</span> : null}
+          </button>
+        ))}
+      </div>
+      {err ? (
+        <p className="a2-xs rt-bad" role="alert">
+          {err}
+        </p>
+      ) : null}
     </div>
   );
 }

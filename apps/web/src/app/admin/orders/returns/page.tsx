@@ -73,6 +73,8 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
     q.order ? od.exchangeOrderLines(rd, who, q.order) : Promise.resolve(null),
   ]);
   const chosen = q.case ? (rows.find((r) => r.id === q.case) ?? (await maybe(od.exchangeDetail(rd, who, q.case)))) : null;
+  // PR 188: the size switcher, while the piece going out may still change (before the courier has it).
+  const sizes = chosen && perms.has('returns.decide') && od.EXCHANGE_SWITCHABLE.includes(chosen.status as (typeof od.EXCHANGE_SWITCHABLE)[number]) ? await maybe(od.exchangeSizes(rd, who, chosen.id)) : null;
   const line = found && q.line && found.lines.some((l) => l.id === q.line) ? q.line : null;
   const choices = found && line ? await maybe(od.exchangeChoices(rd, who, found.orderId, { orderItemId: line, reason: q.reason ?? od.EXCHANGE_REASON_CODES[0], ...(q.size ? { sizeKey: q.size } : {}) })) : null;
   const start: StartStep = { number: q.order ?? '', found, line, reason: choices && q.reason && choices.reasons.includes(q.reason as od.ExchangeReason) ? q.reason : null, size: q.size, choices };
@@ -84,6 +86,7 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
     canDecide: perms.has('returns.decide'),
     canQc: perms.has('returns.qc'),
     causes: causes.map((c) => ({ key: c.key, label: view.lang === 'bn' ? c.bn : c.en })),
+    sizes,
   };
   const d = view.dict;
   const right = data.canQc ? (

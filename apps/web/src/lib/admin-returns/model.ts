@@ -1,7 +1,30 @@
 // S08 · PR 185 — what the Returns & exchanges board shows, without React: which column each exchange sits in (demo
 // 97s-adm2-orders2.js a2Board: Requested / Approved · on the way / Received & QC / Done), the tone of its reason pill,
-// and the page's own address with a case or a start step open. The words come from messages/admin-returns.*.json.
-import type { ExchangeView } from '@extas/orders';
+// and the page's own address with a case or a start step open; PR 188's size buttons. The words come from
+// messages/admin-returns.*.json.
+import type { ExchangeSizes, ExchangeView } from '@extas/orders';
+
+/** One size button of the size switcher (PR 188); `why` says what stops it (another price, none free), null = free. */
+export interface SizeChip {
+  variantId: string;
+  label: string;
+  current: boolean;
+  why: string | null;
+}
+
+/**
+ * The size buttons of one piece going out: the current size, and each other size with what stops it — another price
+ * now (an exchange never changes a price), or none free while the exchange is only requested (after approval the
+ * order's edit checks the stock under the row locks).
+ */
+export function sizeChips(s: ExchangeSizes, requested: boolean, words: { price: string; out: string }): SizeChip[] {
+  return s.sizes.map((z) => ({
+    variantId: z.variantId,
+    label: z.sizeLabel ?? z.sku,
+    current: z.current,
+    why: z.current ? null : !z.samePrice ? words.price : requested && z.sellable < 1 ? words.out : null,
+  }));
+}
 
 export const BOARD_COLUMNS = ['requested', 'approved', 'qc', 'done'] as const;
 export type BoardColumn = (typeof BOARD_COLUMNS)[number];

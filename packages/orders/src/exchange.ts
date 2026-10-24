@@ -783,7 +783,7 @@ export interface ExchangeView {
   refundId: string | null;
   decisionNote: string | null;
   createdAt: string;
-  items: { id: string; oldSku: string | null; oldUnitMinor: number; newSku: string | null; newName: string | null; newColourName: string | null; newSizeLabel: string | null; newUnitMinor: number; quantity: number; tier: number | null; receivedSku: string | null; qcStatus: string | null; restockAction: string | null }[];
+  items: { id: string; oldSku: string | null; oldUnitMinor: number; newVariantId: string | null; newSku: string | null; newName: string | null; newColourName: string | null; newSizeLabel: string | null; newUnitMinor: number; quantity: number; tier: number | null; receivedSku: string | null; qcStatus: string | null; restockAction: string | null }[];
   /** PR 187: the old piece's pick-up (an EXCHANGE_PICKUP return) and where each piece stands after QC. */
   pickup: { returnId: string; status: string; version: number; items: { id: string; expectedSku: string | null; scannedSku: string | null; disposition: string | null; dispositionState: string | null; lossReason: string | null }[] } | null;
 }
@@ -827,7 +827,7 @@ async function viewsOf(db: Db, rows: Prisma.ExchangeGetPayload<{ include: typeof
     refundId: e.refundId,
     decisionNote: e.decisionNote,
     createdAt: e.createdAt.toISOString(),
-    items: e.items.map((i) => ({ id: i.id, oldSku: i.oldSku, oldUnitMinor: i.oldUnitMinor, newSku: i.newSku, newName: i.newName, newColourName: i.newColourName, newSizeLabel: i.newSizeLabel, newUnitMinor: i.newUnitMinor, quantity: i.quantity, tier: i.tier, receivedSku: i.receivedSku, qcStatus: i.qcStatus, restockAction: i.restockAction })),
+    items: e.items.map((i) => ({ id: i.id, oldSku: i.oldSku, oldUnitMinor: i.oldUnitMinor, newVariantId: i.newVariantId, newSku: i.newSku, newName: i.newName, newColourName: i.newColourName, newSizeLabel: i.newSizeLabel, newUnitMinor: i.newUnitMinor, quantity: i.quantity, tier: i.tier, receivedSku: i.receivedSku, qcStatus: i.qcStatus, restockAction: i.restockAction })),
     pickup: (() => {
       const p = pickups.get(e.id);
       return p ? { returnId: p.id, status: p.status, version: p.version, items: p.items } : null;
