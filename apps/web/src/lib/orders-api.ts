@@ -10,6 +10,9 @@
 //   GET   /api/admin/orders?view=&status=&q=&cursor=&limit=    the list with the count of every view (orders.read)
 //   GET   /api/admin/orders/reasons                           the cancel and hold reasons, the customer's, the flags
 //   GET   /api/admin/orders/reviews?status=open|decided|all   the duplicate review queue (orders.risk.read)
+//   GET   /api/admin/orders/reviews/:alertId                  PR 521: the alert summary — why it fired, the matched orders,
+//                                                             what the riders wrote, the customer's history and the
+//                                                             decisions open to this person, proposed first (orders.risk.read)
 //   POST  /api/admin/orders/reviews/:alertId                  {decision: approve|decline|hold|ask|merge, note?, holdReasonKey?, mergeWith?}
 //   POST  /api/admin/orders/merge                             {orderIds: [a, b], note?} one parcel (orders.merge)
 //   GET   /api/admin/orders/calls?reason=&status=open|closed|all&cursor=&limit=
@@ -179,6 +182,7 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     }
     if (path.length > 2) return notFound();
     if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['alertId']));
+    if (m === 'GET') return handle(request, deps, 'orders.risk.read', async (x) => ({ summary: found(await od.alertSummary(x.deps, x.who, b)) }));
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.decideReview(x.deps, x.who, b, await body(request)) }));
   }

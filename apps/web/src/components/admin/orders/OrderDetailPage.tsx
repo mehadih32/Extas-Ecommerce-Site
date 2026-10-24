@@ -2,7 +2,7 @@
 // status chips, when and where it was placed, the next step and "More actions"), the bands that need someone now
 // (cancel pending courier, the customer's cancel request, a hold, a booked parcel's lock), then the record cards on two
 // thirds (items and totals, customer and address with the customer's history, the courier, the risk card (PR 160), the
-// duplicate review, payments and refund requests) and the timeline on one third with the team's notes. A phone gets "Details · Timeline".
+// duplicate review with its alert summary (PR 521), payments and refund requests) and the timeline on one third with the team's notes. A phone gets "Details · Timeline".
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import type { AdminView } from '@/lib/admin-page';
@@ -12,6 +12,7 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { PageHead } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
+import { AlertExplain } from './AlertExplain';
 import { ArchiveNote, CommandButton, DetailGrid, MoreMenu, NoteForm } from './OrderCommands';
 import { Chips } from './OrderTable';
 import { RiskPanel } from './RiskPanel';
@@ -149,6 +150,8 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
             ))}
           </div>
         ) : null}
+        {/* S06 · PR 521: one click explains the alert */}
+        {r.explain ? <AlertExplain e={r.explain} /> : null}
         {r.specs.length ? (
           <div className="a2-cmds a2-mt12">
             <Buttons specs={r.specs} size="sm" open={open} />

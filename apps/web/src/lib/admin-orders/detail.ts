@@ -14,6 +14,7 @@ import { KNOWN_ERRORS, commandUrl, reviewUrl, type CommandId } from './commands'
 import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
 import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
+import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { identitySummary } from './identity';
 import { riskSummary } from './risk';
 
@@ -83,6 +84,8 @@ export interface ReviewCard {
   matched: { number: string; href: string; status: string; tone: Tone }[];
   at: string;
   specs: CommandSpec[];
+  /** PR 521: why the alert fired, what matched, what the riders wrote, his history and the options (one click opens it). */
+  explain: AlertExplainView | null;
 }
 
 export interface OrderDetailView {
@@ -450,6 +453,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     editable ? od.editChoices(deps, who, o.id) : Promise.resolve(null),
   ]);
   const twoSize = askTwoSize ? await od.twoSizeQuestions(deps, who, o.id) : [];
+  // PR 521: each review explained (a reading aid: if one cannot be read, the card still shows everything else)
+  const explained = perms.has('orders.risk.read')
+    ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
+    : detail.reviews.map(() => null);
   const x = extras[o.id];
   const holdName = new Map(reasons.hold.map((r) => [r.key, nameOf(view, r)]));
   const cancelName = new Map(reasons.cancel.map((r) => [r.key, nameOf(view, r)]));
@@ -543,7 +550,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
 
   const numbers = new Map(matchedRows.map((r) => [r.id, r]));
   const paidText = detail.money.paidMinor + detail.money.walletAppliedMinor > 0 ? m(detail.money.paidMinor + detail.money.walletAppliedMinor) : null;
-  const reviews: ReviewCard[] = detail.reviews.map((r) => {
+  const reviews: ReviewCard[] = detail.reviews.map((r, i) => {
+    const sum = explained[i];
     const matched = r.matchedOrderIds.map((mid) => numbers.get(mid)).filter((v): v is NonNullable<typeof v> => !!v);
     const why = r.because.map((k) => t(d, `orders.risk.sig.${k}`)).join(' · ');
     return {
@@ -556,6 +564,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       matched: matched.map((mm) => ({ number: mm.number, href: orderHref(mm.id), status: t(d, `orders.st.${mm.status}`), tone: ORDER_TONE[mm.status] })),
       at: dt.format(r.createdAt),
       specs: r.status === 'OPEN' ? reviewSpecs(view, r.id, o.number, matched, perms, reasons, paidText, r.risk) : [],
+      explain: sum ? alertExplainView(view, sum, { money: (minor) => m(minor), date: (at) => dt.format(at) }) : null,
     };
   });
 
@@ -564,9 +573,11 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     .map((e): TimelineItem => {
       const key = `orders.ev.${e.type.replace(/\./g, '_')}`;
       const named = t(d, key);
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
+      // PR 521: when the duplicate rules ran, their line replaces the bare reason code
+      const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : null;
+      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : ruled;
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

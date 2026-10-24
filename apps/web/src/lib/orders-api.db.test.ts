@@ -7,7 +7,7 @@
 // the admin's lines routes. PR 151: the order export as a CSV download. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
-import { linkIdentity } from '@extas/orders';
+import { linkIdentity, screenOrder } from '@extas/orders';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
@@ -256,5 +256,17 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await api('POST', [a.orderId, 'identity'], { body: {} })).status).toBe(405);
     expect((await api('GET', [a.orderId, 'identity', 'x'])).status).toBe(404);
     expect((await api('GET', ['01a16af2-30f0-7462-aab8-719bb3ce5519', 'identity'])).status).toBe(404);
+  });
+
+  it('S06 · PR 521: one alert explained (orders.risk.read) — why, the matched order, his history, the options', async () => {
+    const a = await f.place('api-alert-a', { phone: '01700000521' });
+    const b = await f.place('api-alert-b', { phone: '01700000521' });
+    const r = await screenOrder({ db: deps.db, settings: deps.resolver }, { storeId: f.S, orderId: b.orderId });
+    const got = await api('GET', ['reviews', r.alertId!]);
+    expect(got).toMatchObject({ status: 200, body: { ok: true, summary: { kind: 'duplicate', status: 'OPEN', severity: 'high', proposed: 'approve', matches: [expect.objectContaining({ orderId: a.orderId, number: a.number })], options: expect.arrayContaining(['approve', 'decline', 'merge']) } } });
+    expect(got.body.summary.history.phone.orders).toBeGreaterThanOrEqual(1);
+    expect((await api('GET', ['reviews', r.alertId!], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['reviews', '01a16af2-30f0-7462-aab8-719bb3ce5521'])).status).toBe(404);
+    expect((await api('PUT', ['reviews', r.alertId!], { body: {} })).status).toBe(405);
   });
 });
