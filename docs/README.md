@@ -16,6 +16,7 @@ docs file (CN-011).
 | [`BLUEPRINT.md`](BLUEPRINT.md) | The full build specification, V2.1 final, with every change note (CN-###) as a dated block; read it from here |
 | [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 606 PRs in 28 stages (600 active, 6 parked): the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
 | [`START-HERE.md`](START-HERE.md) | How every build session runs: reading order, build order, the gates, speed targets, the go-live gate |
+| [`LAUNCH-TRACK.md`](LAUNCH-TRACK.md) | **The build order (CN-027):** the Launch list (what real orders need, built first) and the After-launch list (built automatically right after), with counts and status per PR |
 | [`CONVENTIONS.md`](CONVENTIONS.md) | Branches, PR titles, commits, what to update after every PR, code mechanics (PR 11) |
 | [`ERP-API-CONTRACT.md`](ERP-API-CONTRACT.md) | The ERP ↔ shop API: security, endpoints under `/api/v1/ecommerce`, webhooks, rules (CN-005) |
 | [`SERVER.md`](SERVER.md) | The server in plain Bengali: what runs, the three disks, restart, RAM/CPU split, alerts, restore, where to see status (PR 10 runbook) |

@@ -529,6 +529,22 @@ the server.*
 >
 > **(d) Small, subtle "Demo" and helper icons.** No big floating buttons.
 
+> **CN-027 · 24 Oct 2026 (owner: finish first exactly what is needed to go live and take real orders safely; everything else continues automatically right after).** The build order is `docs/LAUNCH-TRACK.md`.
+>
+> **(1) Two lists.** Every active PR not yet built is on one of two lists:
+> - **Launch** (90 PRs left; 291 with the 201 already built): what real orders need — the stages in progress (S02 cache 602, S04 558 and 560, S06 161, 502, 519, 542), payments, advances and refunds as records (S07), courier booking and tracking, returns and exchanges with QC, COD reconciliation (S08, with courier zone sync 554), the Messages essentials and customers basics (S14), the customer invoice (S20), the basic support inbox (S22), SEO basics for indexing (S11) and server-side purchase events (S13 257), money basics with the month-end close (S16), the site health hub, journeys and Server page (S21), the CDN item of PR 362, security and compliance basics with the policy pages (S18), and all of S19 go-live.
+> - **After launch** (296 PRs left): everything else, including full ads control, the studios (S23–S25), AI agents and skills (S15), multi-store (S17), the blog, advanced reports, loyalty and referrals, experiments, the competitor tools and the extra designs and builders beyond the default.
+>
+> **(2) Order.** The build runs the Launch list first, top to bottom: the stages already in progress, then the E3 waves in order. It then **continues automatically with the After-launch list in the existing order** (E3 waves, stage by stage, PR number order inside a stage), with no owner input. Open follow-ups keep the CN-016 rule.
+>
+> **(3) Scope does not change.** Already-filed scope stays as filed: every PR is built as its register row, dated "Updated" lines and CN notes say. Unitemised rows (S16, S18–S21 slots) are itemised from the blueprint section the launch track names.
+>
+> **(4) Off until built.** After-launch features ship switched off or hidden until they are built; nothing half-built reaches a customer.
+>
+> **(5) The gate.** Real orders start only when every Launch row is merged and live, the START-HERE go-live gate is met (Blob and Drive backups with a passed restore test, Telegram alerts, every server item of A2.9) and the CN-013 simulation rerun (CN-017 findings as acceptance tests) passes on new.extas.com.bd. The hard rules stay: no money, price, discount or COD automation and no blocking without the owner, and the main-domain switch only on his explicit go-ahead (CN-022 Q1: AI, ads control and the studios are not gates).
+>
+> No new PR numbers; the total stays 606 (600 active, 6 parked).
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |

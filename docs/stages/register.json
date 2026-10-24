@@ -1905,6 +1905,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-027",
+   "date": "24 Oct",
+   "title": "owner: finish first exactly what is needed to go live and take real orders safely; everything else continues automatically right after",
+   "text": "The build order is `docs/LAUNCH-TRACK.md`.",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [

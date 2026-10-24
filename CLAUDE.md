@@ -70,6 +70,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - The owner's computer and browser may be off. Everything runs in the cloud and on the VM runner; nothing waits for him.
 - **Never stop to ask permission** for building, testing, merging your own PRs, deploying to new.extas.com.bd or
   starting the next stage. Merge yourself once the gates pass.
+- Build order (CN-027): finish every PR in `docs/LAUNCH-TRACK.md` → Launch first, then continue the After-launch list automatically.
 - **The wave boundary is no longer a stop** (this replaces Blueprint A1.1 rule 7): write the Bengali wave report,
   show it in chat, and **carry straight on** to the next wave.
 - Blocked on the owner? Add it to `BLOCKED.md` and move to the next PR. Never sit idle.
