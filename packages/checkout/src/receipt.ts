@@ -10,6 +10,7 @@
 // customer whose order it is (any of his devices) — with the order's stored state and times, the add-on mark of each
 // line and the name it goes to.
 // PR 135: the tracking page adds the courier and its tracking code of the order's booked shipment (as stored).
+// PR 184: and the parcel's state, as the courier last told us (the courier news line).
 // PR 136: the invoice adds each line's stored unit price, its stored saving and its SKU — read, never worked out again;
 // and a staff member the caller has checked (the `orders.read` permission) reads any placed order of the store.
 // PR 565: `freeDelivery` — a free order shows no band and no band promise (@extas/delivery bandExempt).
@@ -95,7 +96,8 @@ export interface Receipt {
   status: string;
   times: ReceiptTimes;
   /** PR 135: the courier carrying it and its tracking code, once a shipment is booked (null before). */
-  shipment: { courier: string; tracking: string | null } | null;
+  /** PR 184: `status` the parcel's state as the courier last told us (the order page's courier news, `account.track.courier`). */
+  shipment: { courier: string; tracking: string | null; status: string } | null;
   /** PR 605: a gift (null: an ordinary order) — the sender, the note, "deliver on or after" (YYYY-MM-DD), hidden prices. */
   gift: ReceiptGift | null;
 }
@@ -127,7 +129,7 @@ export async function orderReceipt(
       // PR 560: the checkout's own payment, the order's or its advance's
       payments: { where: { purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, take: 1 },
       events: { where: { type: ORDER_EVENTS.placed }, orderBy: { createdAt: 'asc' }, take: 1, select: { data: true } },
-      shipments: { where: { isExchangeLeg: false }, orderBy: { createdAt: 'desc' }, take: 1, select: { trackingCode: true, consignmentId: true, courierAccount: { select: { name: true } } } },
+      shipments: { where: { isExchangeLeg: false }, orderBy: { createdAt: 'desc' }, take: 1, select: { trackingCode: true, consignmentId: true, status: true, courierAccount: { select: { name: true } } } },
     },
   });
   const placedHere = !!req.visitorId && o?.visitorId === req.visitorId;
@@ -186,7 +188,7 @@ export async function orderReceipt(
       cancelledAt: o.cancelledAt?.toISOString() ?? null,
       returnedAt: o.returnedAt?.toISOString() ?? null,
     },
-    shipment: o.shipments[0] ? { courier: o.shipments[0].courierAccount.name, tracking: o.shipments[0].trackingCode ?? o.shipments[0].consignmentId } : null,
+    shipment: o.shipments[0] ? { courier: o.shipments[0].courierAccount.name, tracking: o.shipments[0].trackingCode ?? o.shipments[0].consignmentId, status: o.shipments[0].status } : null,
     number: o.number,
     firstName: ((gift ? gift.senderName : o.customerName) ?? '').trim().split(/\s+/)[0] ?? '',
     phone: phone.ok ? phone.nice : o.phone,

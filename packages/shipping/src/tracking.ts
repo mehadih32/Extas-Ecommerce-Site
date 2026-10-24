@@ -3,13 +3,17 @@
 // the owner's `everyMinutes`, oldest read first, up to `batch`; each courier's adapter answers in its own words, and the
 // events go through `applyEvents` (stored once, state worked out again, exceptions shown at once — SIM-F-017). A courier
 // that cannot be reached for one parcel does not stop the others; that parcel is read again next time. Staff can read one
-// parcel now (`trackParcel`). Reading never changes the order or moves money: the order follows in PR 184.
+// parcel now (`trackParcel`). Reading never moves money.
+//
+// PR 184: after each read the parcel's order follows it through the order service (sync.ts `syncOrder`: in transit,
+// delivered, returned …), and each run then catches up the orders still behind their parcel (`syncLagging`).
 import type { CourierApi } from '@extas/adapters';
 import { courierApi } from './accounts';
 import { allow, nowOf, setting, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
 import { applyEvents, type Applied } from './events';
 import { ACTIVE_STATES, isException } from './pure';
+import { syncLagging, syncOrder, type Synced } from './sync';
 
 const TRACK_SELECT = { id: true, consignmentId: true, trackingCode: true, merchantRef: true, providerStatus: true, courierAccount: { select: { providerKey: true } } } as const;
 
@@ -22,9 +26,15 @@ interface Tracked {
   courierAccount: { providerKey: string };
 }
 
-async function readOne(deps: ShippingDeps, storeId: number, api: CourierApi, s: Tracked): Promise<Applied> {
+/** What one read did: the parcel's events applied, then its order synced (PR 184). */
+export interface Read extends Applied {
+  order: Synced | null;
+}
+
+async function readOne(deps: ShippingDeps, storeId: number, api: CourierApi, s: Tracked): Promise<Read> {
   const events = await api.track({ consignmentId: s.consignmentId, trackingCode: s.trackingCode, merchantRef: s.merchantRef, lastRawStatus: s.providerStatus });
-  return applyEvents(deps, { storeId, shipmentId: s.id }, events, 'poll');
+  const applied = await applyEvents(deps, { storeId, shipmentId: s.id }, events, 'poll');
+  return { ...applied, order: await syncOrder(deps, { storeId, shipmentId: s.id }) };
 }
 
 export interface TrackRun {
@@ -36,12 +46,15 @@ export interface TrackRun {
   failed: number;
   /** Why the first failure failed (the rest are counted). */
   firstError: string | null;
+  /** PR 184: orders moved on after their parcel's read, and orders caught up that were behind their parcel. */
+  ordersMoved: number;
+  caughtUp: number;
 }
 
 /** One store's due parcels read from their couriers (the worker's job). */
 export async function trackParcels(deps: ShippingDeps, storeId: number): Promise<TrackRun> {
   const cfg = await setting(deps, storeId, 'delivery.courier.tracking');
-  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null };
+  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0 };
   if (!cfg.enabled) return run;
   const now = nowOf(deps);
   const due = new Date(now.getTime() - cfg.everyMinutes * 60_000);
@@ -65,6 +78,7 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
       run.read += 1;
       if (r.changed) run.changed += 1;
       if (r.changed && isException(r.status)) run.exceptions += 1;
+      if (r.order?.moved.length) run.ordersMoved += 1;
     } catch (e) {
       run.failed += 1;
       run.firstError ??= `${s.courierAccount.providerKey}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 300);
@@ -72,11 +86,12 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
       await deps.db.shipment.update({ where: { id: s.id }, data: { lastTrackedAt: now } });
     }
   }
+  run.caughtUp = (await syncLagging(deps, storeId, cfg.batch)).moved;
   return run;
 }
 
-/** Staff read one parcel from its courier now. */
-export async function trackParcel(deps: ShippingDeps, who: Who, shipmentId: string): Promise<Applied> {
+/** Staff read one parcel from its courier now (its order follows, PR 184). */
+export async function trackParcel(deps: ShippingDeps, who: Who, shipmentId: string): Promise<Read> {
   await allow(deps, who, 'delivery.parcels');
   const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: { ...TRACK_SELECT, status: true } });
   if (!s) throw new ShippingError('NOT_FOUND', 'no such parcel', ['shipmentId']);

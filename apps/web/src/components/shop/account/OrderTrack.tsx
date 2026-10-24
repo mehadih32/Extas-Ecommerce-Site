@@ -18,9 +18,11 @@ export function OrderTrack({ c, track, late, hours, lateWa }: { c: ShopContext; 
           const now = !track.ended && i === track.reached + 1;
           const line = i + 1 <= track.reached;
           const at = track.at[step];
+          // PR 184: a step passed without its own time (the courier picked the parcel up before anyone pressed
+          // "Packed") shows no "coming up"
           const sub = at
             ? dateText(c, at, true)
-            : track.ended
+            : track.ended || done
               ? ''
               : step === 'delivered'
                 ? late.late && late.dueBy

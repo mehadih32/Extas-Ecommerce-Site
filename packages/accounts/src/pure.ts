@@ -114,6 +114,31 @@ export function lateOf(o: { status: OrderState; placedAt: Date | string; hoursMa
   return { late, dueBy: new Date(due).toISOString() };
 }
 
+/** PR 184: the courier's own news on his order page (`account.track.courier`). */
+export type CourierNews = 'out' | 'tryFailed' | 'address' | 'checking';
+
+/** The parcel states that carry news for the customer, and which of them are a problem (shown with `exceptions` only). */
+const NEWS: Readonly<Record<string, { news: CourierNews; problem: boolean }>> = {
+  OUT_FOR_DELIVERY: { news: 'out', problem: false },
+  ATTEMPT_FAILED: { news: 'tryFailed', problem: true },
+  ADDRESS_PROBLEM: { news: 'address', problem: true },
+  LOST: { news: 'checking', problem: true },
+  DAMAGED: { news: 'checking', problem: true },
+};
+
+/**
+ * PR 184 — what the courier last told us, in the customer's words, while the order is still on its way: out for
+ * delivery today; with `exceptions`, a try that failed, an address the rider could not find, or "we are checking with
+ * the courier" (a lost or damaged parcel is never called lost to him). Null when the owner keeps it off or there is
+ * nothing to say.
+ */
+export function courierNewsOf(parcel: { status: string } | null, orderStatus: OrderState, rule: { enabled: boolean; exceptions: boolean }): CourierNews | null {
+  if (!rule.enabled || !parcel || FINAL.has(orderStatus)) return null;
+  const n = NEWS[parcel.status];
+  if (!n || (n.problem && !rule.exceptions)) return null;
+  return n.news;
+}
+
 /**
  * PR 135 (CN-014 idea 10) — what the rider may take at the door: the Cash-on-Delivery amount, or nothing for a paid
  * order; null while a prepaid payment still waits (he pays online first, not the rider).

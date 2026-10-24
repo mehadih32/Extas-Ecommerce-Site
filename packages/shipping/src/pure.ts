@@ -242,3 +242,52 @@ export function parcelWeight(lines: readonly ParcelLine[]): number | null {
   if (!lines.length || lines.some((l) => l.weightGrams === null)) return null;
   return lines.reduce((sum, l) => sum + l.weightGrams! * l.quantity, 0);
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 184 — the order follows its parcel (BACKEND-ARCHITECTURE §6.5.0 mapping rules), without a database.
+
+/** The order steps the courier's word drives, in the order they run (each one a command of the order service). */
+export type OrderMove = 'courierPickedUp' | 'delivered' | 'partiallyDelivered' | 'returned';
+
+/** Order states before the courier has the parcel (the courier's pick-up moves these on). */
+const BEFORE_PICKUP: ReadonlySet<string> = new Set(['CONFIRMED', 'PROCESSING', 'PACKED', 'HANDED_OVER']);
+/** Order states a final courier outcome may close. */
+const ON_THE_WAY: ReadonlySet<string> = new Set([...BEFORE_PICKUP, 'IN_TRANSIT']);
+
+/**
+ * Where the order goes now that its parcel is where it is: picked up (or anything after it) → in transit; delivered →
+ * delivered (unless a person must first check it: PR 525's true-delivery check, `holdDelivered`); returned → returned;
+ * partly delivered → only once a person has named the kept pieces (`keptItemIds`, from the door record, PR 166), else the
+ * order stays in transit and the order page asks for them. Lost, damaged, a failed try or an address problem never move
+ * the order (§6.5.0): the parcel shows them. Nothing goes backwards; a step the order already passed is left out.
+ */
+export function orderMovesFor(
+  parcel: { status: ShipmentStatus; pickedAt: Date | null },
+  orderStatus: string,
+  opts: { keptItemIds?: readonly string[] | null; holdDelivered?: boolean } = {},
+): OrderMove[] {
+  if (!ON_THE_WAY.has(orderStatus)) return [];
+  const moves: OrderMove[] = [];
+  const picked = parcel.pickedAt !== null || AFTER_PICKUP.has(parcel.status);
+  if (picked && BEFORE_PICKUP.has(orderStatus)) moves.push('courierPickedUp');
+  if (!picked) return moves;
+  if (parcel.status === 'DELIVERED' && !opts.holdDelivered) moves.push('delivered');
+  else if (parcel.status === 'RETURNED') moves.push('returned');
+  else if (parcel.status === 'PARTIALLY_DELIVERED' && opts.keptItemIds?.length) moves.push('partiallyDelivered');
+  return moves;
+}
+
+/** Hours, in milliseconds. */
+const HOUR = 3_600_000;
+
+/**
+ * SIM-F-018 — is a parcel late? The promise is the order's delivery band's most hours, counted from when it was placed
+ * (the same promise the customer's tracking page shows, PR 135), plus the owner's grace hours. A band without hours, an
+ * address the shop could not settle, or a parcel no longer with the courier is never late.
+ */
+export function lateOf(o: { placedAt: Date; hoursMax: number | null; addressUnclear?: boolean | null; status: ShipmentStatus }, graceHours: number, now: Date): { late: boolean; dueBy: Date | null } {
+  if (o.hoursMax === null || o.hoursMax <= 0 || o.addressUnclear) return { late: false, dueBy: null };
+  const dueBy = new Date(o.placedAt.getTime() + o.hoursMax * HOUR);
+  const active = (ACTIVE_STATES as readonly string[]).includes(o.status);
+  return { late: active && now.getTime() > dueBy.getTime() + Math.max(0, graceHours) * HOUR, dueBy };
+}

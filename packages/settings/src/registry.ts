@@ -50,6 +50,7 @@ import { advanceSettings } from './registry-advance';
 import { riskLevelSettings } from './registry-risk-levels';
 import { advanceRequestSettings } from './registry-advance-request';
 import { walletSettings } from './registry-wallet';
+import { courierSyncSettings } from './registry-courier-sync';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1217,6 +1218,8 @@ export const registry = {
   ...walletSettings,
   // ---- PR 12 (CN-025, CN-026 (b)) · Settings → Admin look: page designs, where the guide opens, the To do drawer, the Dashboard designs' numbers (registry-admin-look.ts, version 51). ----
   ...adminLookSettings,
+  // ---- S08 · PR 184, 525, 526 · what the courier tells us after booking: the courier's news on his order page (registry-courier-sync.ts, version 58). ----
+  ...courierSyncSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

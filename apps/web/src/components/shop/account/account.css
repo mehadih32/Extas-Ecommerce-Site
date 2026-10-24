@@ -236,6 +236,11 @@
 .shop .ord-latec { color: var(--sale); font-weight: 600; }
 .shop .ord-late { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--sale); border-radius: var(--radius); padding: 12px 14px; background: var(--surface); }
 .shop .ord-late-i { color: var(--sale); flex-shrink: 0; display: inline-flex; margin-top: 1px; }
+/* PR 184: the courier's news line (out for delivery; a problem in the sale colour) */
+.shop .ord-news { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; background: var(--surface); }
+.shop .ord-news-i { color: var(--ink); flex-shrink: 0; display: inline-flex; margin-top: 1px; }
+.shop .ord-news.warn { border-color: var(--sale); }
+.shop .ord-news.warn .ord-news-i { color: var(--sale); }
 .shop .ord-late .link, .shop .ord-exact .link { display: inline-flex; align-items: center; min-height: 44px; margin: 0 0 -10px; }
 .shop .ord-welcome { padding: 13px 14px; border: 1.5px solid var(--brand); background: var(--brand-tint); }
 @media (min-width: 1024px) { .shop .ord-welcome { padding: 16px; } }

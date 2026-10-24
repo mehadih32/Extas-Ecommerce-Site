@@ -351,7 +351,14 @@ export const stepInput = z.object({ at: z.coerce.date().optional(), keptItemIds:
  * (returned, or the refused part of a partial delivery) may carry why, from the owner's `orders.refusal.reasons` (PR 142,
  * SIM-F-038: "bought elsewhere", "arrived after Eid" …), so the RTO reports count real reasons instead of "Other".
  */
-export async function orderStep(deps: OrdersDeps, r: { storeId: number; orderId: string }, by: By, step: OrderStep, input: unknown = {}, opts: CommandOptions = {}): Promise<CommandResult> {
+export async function orderStep(
+  deps: OrdersDeps,
+  r: { storeId: number; orderId: string },
+  by: By,
+  step: OrderStep,
+  input: unknown = {},
+  opts: CommandOptions & { eventData?: Record<string, unknown>; check?: (o: LockedOrder, f: OrderFacts) => void | Promise<void> } = {},
+): Promise<CommandResult> {
   const d = parse(stepInput, input, 'step');
   if (step === 'partiallyDelivered' && !d.keptItemIds) throw new OrdersError('INVALID_INPUT', 'a partial delivery names the kept lines', ['keptItemIds']);
   let refusal: { key: string; en: string; bn: string } | null = null;
@@ -364,10 +371,13 @@ export async function orderStep(deps: OrdersDeps, r: { storeId: number; orderId:
   return execute(deps, r, by, {
     command: step,
     input: { ...d, at: d.at?.toISOString() ?? null },
-    effect: async (_tx, _o, _f, { now }) => {
+    check: opts.check,
+    effect: async (_tx, _o, _f, { from, now }) => {
       const field = STEP_TIME[step];
-      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}) };
-      return { data: field ? { [field]: d.at ?? now } : {}, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined };
+      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(opts.eventData ?? {}) };
+      // PR 184: a pick-up the courier reports before anyone pressed "Handed over" is the hand-over
+      const handed = step === 'courierPickedUp' && from !== 'HANDED_OVER' ? { handedOverAt: d.at ?? now } : {};
+      return { data: { ...(field ? { [field]: d.at ?? now } : {}), ...handed }, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined };
     },
   }, opts);
 }

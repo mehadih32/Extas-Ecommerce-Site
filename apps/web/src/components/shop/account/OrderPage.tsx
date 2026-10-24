@@ -5,6 +5,8 @@
 // whose order it is, or for the browser that placed it; anyone else is asked to log in (no word on whose order it is).
 // Left out until their PRs: ~~the invoice (PR 136)~~, reviews, size exchange and order edits (S06/S05), the demo-only
 // controls. ~~The tracking steps and the welcome panel come with PR 135.~~
+// PR 184: the courier's news under the steps when the owner turns it on (out for delivery, a failed try, the address,
+// "we are checking with the courier").
 // PR 135: the tracking steps with their times and the band's promise, the late flag past that promise (SIM-F-018), the
 // courier and its tracking code once booked, the welcome panel when he comes from the thank-you page (his account and
 // how he logs in: a code by SMS, never a password), and the exact amount for the rider (CN-014 idea 10, off by default).
@@ -24,7 +26,7 @@ import type { Receipt } from '@extas/checkout';
 import type { OrderReviewBox } from '@/lib/shop/account-review';
 import type { OrderExtras } from '@/lib/shop/account-order';
 import { phoneNormalizeBD } from '@/lib/phone-bd';
-import { lateOf, riderAmountOf, trackOf, type LateRule, type OrderState } from '@extas/accounts/pure';
+import { courierNewsOf, lateOf, riderAmountOf, trackOf, type LateRule, type OrderState } from '@extas/accounts/pure';
 import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords } from '@/lib/shop/checkout';
 import { hoursOf } from '@/lib/shop/checkout-model';
@@ -87,6 +89,8 @@ export interface TrackOptions {
   welcome: boolean;
   late: LateRule;
   exact: { enabled: boolean; report: boolean };
+  /** PR 184: the courier's news line (`account.track.courier`, off by default). */
+  courier: { enabled: boolean; exceptions: boolean };
 }
 
 /** The words under `prefix` with the prefix taken off ("account.edit.title" → "title"), slots left for the client. */
@@ -155,6 +159,7 @@ export async function OrderPage({
   const view = { status, track: trackOf(status, { placedAt: r.placedAt, ...r.times }) };
   const late = lateOf({ status, placedAt: r.placedAt, hoursMax: r.addressUnclear ? null : r.band?.hoursMax }, opts.late, new Date());
   const hours = r.band && !r.addressUnclear ? hoursOf(r.band, c.num) : null;
+  const news = courierNewsOf(r.shipment, status, opts.courier);
   const units = r.lines.reduce((s, l) => s + l.quantity, 0);
   const cards = await cardsByIds(c.storeId, r.lines.map((l) => l.productId).filter((x): x is string => !!x));
   const wa = waOn ? waHref(c.s['contact.whatsapp'], t('account.order.helpMsg', { ...c.vars, number: r.number })) : null;
@@ -263,6 +268,19 @@ export async function OrderPage({
               </div>
             </div>
             <OrderTrack c={c} track={view.track} late={late} hours={hours} lateWa={lateWa} />
+            {news ? (
+              <div className={`ord-news mt16${news === 'out' ? '' : ' warn'}`} role="status" data-testid="order-courier-news" data-news={news}>
+                <span className="ord-news-i">
+                  <Icon name={news === 'out' ? 'truck' : 'info'} size={18} />
+                </span>
+                <div>
+                  <div className="bold small">{t(`account.track.news.${news}.title`)}</div>
+                  <div className="xs text2" style={{ marginTop: 2 }}>
+                    {t(`account.track.news.${news}.text`)}
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="ord-meta">
               {r.shipment ? (
                 <>

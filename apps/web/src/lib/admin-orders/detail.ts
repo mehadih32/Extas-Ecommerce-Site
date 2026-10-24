@@ -342,6 +342,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.cancel': 'bad',
   'order.courierCancelConfirmed': 'bad',
   'order.returned': 'bad',
+  'shipment.outForDelivery': 'mute',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -430,6 +431,13 @@ export function editSummary(view: AdminView, data: unknown): string | null {
     ...(x.via === 'order-page' ? [t(d, 'orders.ev.editViaPage')] : []),
   ];
   return parts.length ? parts.join(' · ') : null;
+}
+
+/** PR 184: the courier's exception reason in words (a key the courier table does not know shows as itself). */
+export function courierReason(view: AdminView, key: string): string {
+  const k = `orders.courier.why.${key}`;
+  const named = t(view.dict, k);
+  return named === k ? key : named;
 }
 
 /** Everything the order page draws, or null when there is no such order in this store. */
@@ -550,6 +558,13 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
           { label: t(d, 'orders.courier.name'), value: x?.shipment?.courierName ?? t(d, 'orders.list.none') },
           { label: t(d, 'orders.courier.tracking'), value: ship.trackingCode ?? t(d, 'orders.list.none'), mono: true },
           { label: t(d, 'orders.courier.since'), value: dt.format(ship.createdAt) },
+          // PR 184: where the parcel is now, by the courier's last word (the order follows it through the order service)
+          { label: t(d, 'orders.courier.now'), value: t(d, `orders.ship.${ship.status}`) + (ship.providerStatus ? ` · ${ship.providerStatus}` : ''), strong: true },
+          ...(ship.exceptionKey ? [{ label: t(d, 'orders.courier.problem'), value: courierReason(view, ship.exceptionKey) }] : []),
+          ...(ship.pickedAt ? [{ label: t(d, 'orders.courier.picked'), value: dt.format(ship.pickedAt) }] : []),
+          ...(ship.deliveredAt ? [{ label: t(d, 'orders.courier.delivered'), value: dt.format(ship.deliveredAt) }] : []),
+          ...(ship.returnedAt ? [{ label: t(d, 'orders.courier.returned'), value: dt.format(ship.returnedAt) }] : []),
+          { label: t(d, 'orders.courier.lastRead'), value: ship.lastTrackedAt ? dt.format(ship.lastTrackedAt) : t(d, 'orders.courier.notRead') },
           ...(ship.cancelOutcome ? [{ label: t(d, 'orders.courier.cancelOutcome'), value: t(d, `orders.courier.outcome.${ship.cancelOutcome}`) }] : []),
         ]
       : [{ label: t(d, 'orders.courier.booking'), value: t(d, `orders.ship.${shipState}`) }],
@@ -580,7 +595,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     };
   });
 
-  const actor = (type: string, aid: string | null) => (type === 'STAFF' ? (aid && names[aid]) || t(d, 'orders.who.staff') : t(d, `orders.who.${type === 'CUSTOMER' ? 'customer' : 'system'}`));
+  const actor = (type: string, aid: string | null) => (type === 'STAFF' ? (aid && names[aid]) || t(d, 'orders.who.staff') : t(d, `orders.who.${type === 'CUSTOMER' ? 'customer' : type === 'COURIER' ? 'courier' : 'system'}`));
   // PR 161: a level's line names its band as the score stored it
   const scoredBands = detail.timeline.flatMap((e) => {
     const b = e.type === 'order.riskAssess' ? (e.data as { band?: { key?: unknown; en?: unknown; bn?: unknown } } | null)?.band : null;

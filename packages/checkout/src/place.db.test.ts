@@ -469,7 +469,7 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       // PR 135: once a shipment is booked, the courier and its tracking code, as stored
       const courier = await f.t.prisma.courierAccount.create({ data: { storeId: f.S, providerKey: 'mock', name: 'Test Courier' } });
       await f.t.prisma.shipment.create({ data: { storeId: f.S, orderId: r.orderId, courierAccountId: courier.id, trackingCode: 'TRK-135', idempotencyKey: 'test-ship-135' } });
-      expect((await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number }))?.shipment).toEqual({ courier: 'Test Courier', tracking: 'TRK-135' });
+      expect((await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number }))?.shipment).toEqual({ courier: 'Test Courier', tracking: 'TRK-135', status: 'BOOKING' });
       const other = await f.t.prisma.customer.create({ data: { storeId: f.S, phone: '+8801700000134', name: 'Someone Else' } });
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', customerId: other.id, number: r.number })).toBeNull();
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: null, customerId: null, number: r.number })).toBeNull();

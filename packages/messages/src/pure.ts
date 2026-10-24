@@ -65,7 +65,9 @@ export function stepsOf(e: Pick<TimelineEvent, 'type' | 'toStatus'>): JourneySte
     case 'PROCESSING':
     case 'PACKED':
       return ['packed'];
+    // PR 184: the courier's pick-up (IN_TRANSIT) is the hand-over when nobody pressed it (the dedupe key sends each step once)
     case 'HANDED_OVER':
+    case 'IN_TRANSIT':
       return ['booked', 'giftReceiver'];
     case 'DELIVERED':
     case 'PARTIALLY_DELIVERED':
