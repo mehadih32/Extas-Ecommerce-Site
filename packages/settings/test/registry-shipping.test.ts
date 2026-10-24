@@ -3,10 +3,10 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { courierBookingSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, rtoCostSchema, shippingSettings } from '../src/registry-shipping';
+import { courierBookingSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, handoverSheetSchema, rtoCostSchema, shippingSettings, stickerQueueSchema } from '../src/registry-shipping';
 
 /** The registry version each key arrived at. */
-const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56 };
+const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56, 'delivery.sticker.queue': 56, 'delivery.handover.sheet': 56 };
 
 describe('courier shipping settings (v50)', () => {
   it('every key is in the registry at its version (50; PR 554, 179: 56) in the Delivery group, labelled in English and Bengali, its default valid', () => {
@@ -48,5 +48,14 @@ describe('courier shipping settings (v50)', () => {
     expect(courierZoneSyncSchema.safeParse({ ...z, callsPerRun: 5 }).success).toBe(false);
     expect(courierZoneSyncSchema.safeParse({ ...z, unmapped: 'never' }).success).toBe(false);
     expect(courierZoneSyncSchema.safeParse({ ...z, unmapped: 'always' }).success).toBe(true);
+  });
+
+  it('PR 180: a reprint asks why, the last 20 prints are listed; the handover sheet is A4 at 150 dpi with names and signatures', () => {
+    expect(shippingSettings['delivery.sticker.queue'].default).toEqual({ reprintReason: true, recentPrints: 20 });
+    expect(stickerQueueSchema.safeParse({ reprintReason: true, recentPrints: 1 }).success).toBe(false);
+    const h = shippingSettings['delivery.handover.sheet'].default;
+    expect(h).toEqual({ paper: 'a4', dpi: 150, lang: 'en', receiverName: true, signatures: true, packOnHandover: true });
+    expect(handoverSheetSchema.safeParse({ ...h, dpi: 72 }).success).toBe(false);
+    expect(handoverSheetSchema.safeParse({ ...h, paper: 'letter' }).success).toBe(false);
   });
 });

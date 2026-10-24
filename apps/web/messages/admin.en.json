@@ -41,7 +41,8 @@
     "notices": "Notices & pop-ups",
     "combos": "Combos & customer sets",
     "delivery": "Delivery areas & charges",
-    "packingPrint": "Print run"
+    "packingPrint": "Print run",
+    "packingHandover": "Handover"
   },
   "login": {
     "metaTitle": "Admin sign-in",

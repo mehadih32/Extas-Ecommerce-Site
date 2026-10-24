@@ -41,7 +41,8 @@
     "notices": "নোটিশ ও পপ-আপ",
     "combos": "কম্বো ও কাস্টমারের সেট",
     "delivery": "ডেলিভারি এলাকা ও চার্জ",
-    "packingPrint": "প্রিন্ট"
+    "packingPrint": "প্রিন্ট",
+    "packingHandover": "হ্যান্ডওভার"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

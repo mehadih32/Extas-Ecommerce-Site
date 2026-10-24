@@ -80,12 +80,15 @@ export async function SectionTabs({ view, current }: { view: AdminView; current:
         </nav>
       ) : null}
       {pages.length > 1 ? (
-        <nav className="ad-tabs" aria-label={t(view.dict, 'shell.tabs.sub', { tab: label(place.tab.id) })}>
-          {pages.map((p) => (
-            <Link key={p.href} className="ad-chip" href={p.href} aria-current={p.keys.includes(current) ? 'page' : undefined}>
-              {t(view.dict, `nav.${p.keys[0]}`)}
-            </Link>
-          ))}
+        <nav className="a2-seg a2-subtabs" aria-label={t(view.dict, 'shell.tabs.sub', { tab: label(place.tab.id) })} data-testid="a2-subtabs">
+          {pages.map((p) => {
+            const on = p.keys.includes(current);
+            return (
+              <Link key={p.href} className={on ? 'on' : undefined} href={p.href} aria-current={on ? 'page' : undefined}>
+                {t(view.dict, `nav.${p.keys[0]}`)}
+              </Link>
+            );
+          })}
         </nav>
       ) : null}
     </>

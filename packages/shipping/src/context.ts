@@ -41,8 +41,12 @@ export interface Who {
 export const SHIPPING_PERMISSIONS = ['delivery.parcels', 'delivery.book', 'delivery.exceptions', 'delivery.couriers'] as const;
 export type ShippingPermission = (typeof SHIPPING_PERMISSIONS)[number];
 
-/** PR 179 — Orders › Packing & print: `fulfilment.print` prints courier stickers (they carry the receiver's details). */
-export const FULFIL_PERMISSIONS = ['fulfilment.print'] as const;
+/**
+ * PR 179–181 — Orders › Packing & print: `fulfilment.read` sees the print run, the recent prints, the handover lists and
+ * the picking list (no customer's details); `fulfilment.print` prints courier stickers (they carry the receiver's
+ * details); `fulfilment.handover` prints the rider's handover sheet and marks a batch handed over.
+ */
+export const FULFIL_PERMISSIONS = ['fulfilment.read', 'fulfilment.print', 'fulfilment.handover'] as const;
 export type FulfilPermission = (typeof FULFIL_PERMISSIONS)[number];
 
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;

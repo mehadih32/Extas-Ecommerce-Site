@@ -167,7 +167,9 @@
       }
     },
     "fulfilment": {
-      "print": "Print a booked parcel's courier sticker (it shows the receiver's name, phone and address) and a sample sticker"
+      "print": "Print a booked parcel's courier sticker (it shows the receiver's name, phone and address) and a sample sticker",
+      "read": "See the print run, the recent prints, the handover lists and the picking list, and print the picking list (no customer's details)",
+      "handover": "Print the rider's handover sheet (it can show the receivers' names) and mark a batch handed over to the courier"
     }
   },
   "totp": {

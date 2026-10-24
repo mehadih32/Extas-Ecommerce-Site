@@ -12,7 +12,10 @@
       "forbidden": "You do not have the permission for this.",
       "unauthorized": "You are signed out. Sign in again.",
       "NOT_PRINTABLE": "Some stickers cannot be printed now: {fields}. Untick them, or re-book the parcel first.",
-      "popup": "The PDF is ready but the browser blocked the new tab. It was downloaded instead."
+      "popup": "The PDF is ready but the browser blocked the new tab. It was downloaded instead.",
+      "REASON_REQUIRED": "These stickers were printed before: say why they are printed again.",
+      "NOTHING_TO_HAND_OVER": "Nothing is ready to hand over to this courier: {fields}. Print the stickers first, or re-book a parcel that changed.",
+      "ALREADY_HANDED_OVER": "This batch was marked handed over already. Reload the page."
     },
     "couriers": {
       "title": "Couriers",
@@ -148,15 +151,19 @@
       },
       "more": "{n} more wait for the next print (up to {max} per print).",
       "empty": "Nothing waiting to print",
-      "emptySub": "A parcel appears here once a courier is booked, and leaves when the courier picks it up.",
-      "done": "PDF ready: {n} stickers."
+      "emptySub": "A parcel appears here once a courier is booked, and leaves when it is handed over or the courier picks it up.",
+      "done": "PDF ready: {n} stickers.",
+      "reasonOn": "Reprint asks why: on",
+      "reasonOff": "Reprint asks why: off"
     },
     "sticker": {
       "problem": {
         "NOT_BOOKED": "not booked yet",
         "NOT_WITH_US": "the courier has it already",
         "COD_CHANGED": "amount changed after booking: re-book",
-        "RECEIVER_CHANGED": "receiver changed after booking: re-book"
+        "RECEIVER_CHANGED": "receiver changed after booking: re-book",
+        "NOT_PRINTED": "sticker not printed yet",
+        "NOT_READY": "order not ready (on hold or moved on)"
       },
       "words": {
         "to": "To",
@@ -191,6 +198,96 @@
         "colour2": "Colour",
         "size2": "L",
         "note": "The customer’s delivery note"
+      }
+    },
+    "reprint": {
+      "label": "Why print it again?",
+      "placeholder": "e.g. the sticker tore",
+      "go": "Print again",
+      "short": "Write a short reason (at least 3 letters).",
+      "ask": "Printed before: {orders}. Write why, then press Print again. It stays the same parcel."
+    },
+    "recent": {
+      "title": "Recent prints",
+      "empty": "Nothing printed yet.",
+      "parcels": "{n} parcels",
+      "again": "printed again",
+      "reason": "why: {reason}",
+      "kind": {
+        "STICKER": "Stickers",
+        "HANDOVER_SHEET": "Handover sheet",
+        "PICKING_LIST": "Picking list"
+      }
+    },
+    "handover": {
+      "title": "Handover",
+      "sub": "The parcels to give each courier's rider: booked, still with us, sticker printed. Print the sheet, let the rider tick and sign it, then mark it handed over.",
+      "counts": {
+        "couriers": "Couriers",
+        "waiting": "Waiting",
+        "ready": "Ready",
+        "notReady": "Not ready"
+      },
+      "sheetTitle": "Handover sheet",
+      "paper": {
+        "a4": "A4 paper",
+        "a5": "A5 paper"
+      },
+      "names": "Receiver's name: {on}",
+      "signs": "Signature lines: {on}",
+      "packs": "Mark packed on handover: {on}",
+      "on": "on",
+      "off": "off",
+      "settingsNote": "Paper, printer dots, language, names, signatures and \"mark packed\" are delivery settings (Delivery → More options).",
+      "readyLine": "Ready: {parcels} parcels · {pieces} pieces · to collect {amount}",
+      "openBatch": "Sheet printed ×{n} with {parcels} parcels, started {at}. Not handed over yet.",
+      "print": "Print handover sheet",
+      "printAgain": "Print the sheet again",
+      "done": "Handed over",
+      "doing": "Saving…",
+      "receivedBy": "Rider's name (who took the parcels)",
+      "receivedByPh": "e.g. Karim, Steadfast rider",
+      "doneAll": "Done: {n} orders handed over.",
+      "doneSome": "{n} orders handed over. Left out: {left}.",
+      "skip": {
+        "NOT_PACKED": "not packed yet",
+        "COD_CHANGED": "amount changed: re-book",
+        "RECEIVER_CHANGED": "receiver changed: re-book",
+        "NOT_WITH_US": "the courier has it already",
+        "NOT_BOOKED": "not booked",
+        "NOT_PRINTED": "sticker not printed",
+        "NOT_READY": "order not ready",
+        "CANCEL_PENDING": "a cancel is being asked",
+        "other": "the order changed"
+      },
+      "col": {
+        "collect": "To collect",
+        "state": "State"
+      },
+      "paid": "paid",
+      "ready": "ready",
+      "empty": "Nothing to hand over",
+      "emptySub": "A parcel appears here once it is booked and its sticker printed, and leaves when it is handed over.",
+      "sheet": {
+        "title": "Handover sheet · {courier}",
+        "summary": "{parcels} parcels · {pieces} pieces · to collect {amount}",
+        "printed": "Printed {at} · print {n}",
+        "again": "PRINTED AGAIN ({n}) — the same parcels, not new ones",
+        "practice": "PRACTICE — not real parcels",
+        "col": {
+          "order": "Order",
+          "consignment": "Consignment",
+          "receiver": "Receiver",
+          "pieces": "Pcs",
+          "collect": "Collect"
+        },
+        "paid": "paid",
+        "total": "Total to collect: {amount} ({parcels} parcels)",
+        "handedBy": "Handed over by (shop)",
+        "receivedBy": "Received by (rider): name and signature",
+        "foot": "Batch {batch} · print {n}",
+        "page": "{n}/{of}",
+        "empty": "No parcel on this sheet"
       }
     }
   }

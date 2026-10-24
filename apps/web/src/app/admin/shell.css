@@ -395,6 +395,8 @@
 .adm2 .a2-kspark.gold { color: var(--gold); }
 .adm2 .a2-seg a { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 30px; border-radius: 7px; font-size: 13px; color: var(--ink2); font-weight: 500; white-space: nowrap; }
 .adm2 .a2-seg a.on { background: var(--sf); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); font-weight: 600; }
+/* a tab of several pages (Orders → Packing & print): its pages as a segmented row under the tabs */
+.adm2 .a2-subtabs { margin: 0 0 16px; }
 .adm2 .a2-needs { padding: 18px 12px 10px; }
 .adm2 .a2-needs > .a2-ch { padding: 0 8px; margin-bottom: 6px; }
 .adm2 .a2-helprow { display: flex; align-items: center; gap: 12px; padding: 10px 8px; flex-wrap: wrap; }

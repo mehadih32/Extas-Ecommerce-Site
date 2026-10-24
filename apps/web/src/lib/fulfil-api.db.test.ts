@@ -2,7 +2,8 @@
 // orders placed through the real checkout and booked with Steadfast on its practice world; skipped without
 // TEST_DATABASE_ADMIN_URL): login, the same-site check and the permission; the print run; the stickers as a real PDF
 // drawn with the server's fonts, counted, a second print a reprint; a parcel changed after booking refused (SIM-F-004);
-// the sample sticker. Every value is a made-up test value.
+// the sample sticker. PR 180: a reprint needs its reason, the same press key is the same print, the recent prints; the
+// rider's handover sheet as a real A4 PDF and the batch handed over. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { STEADFAST_PROVIDER } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -13,7 +14,7 @@ import { bookOrders } from '@extas/shipping';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { stickersRoute } from './fulfil-api';
+import { handoverRoute, stickersRoute } from './fulfil-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -29,13 +30,14 @@ function call(method: string, path: string, opts: { body?: unknown; cookie?: str
 const cookiesOf = (res: Response) => res.headers.getSetCookie().map((c) => c.split(';')[0] ?? '').filter((c) => c && !c.endsWith('=')).join('; ');
 const pages = (pdf: Buffer) => (pdf.toString('latin1').match(/\/Type \/Page /g) ?? []).length;
 
-describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179)', () => {
+describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179, 180)', () => {
   let f: ShippingFixture;
   let deps: AdminDeps;
   let owner = '';
   let reader = '';
   let courierId = '';
   const stickers = (method: string, path: string[], opts: { body?: unknown; cookie?: string; origin?: string | null } = {}) => stickersRoute(call(method, `/api/admin/packing/stickers/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner, origin: opts.origin }), deps, path);
+  const handover = (method: string, path: string[], opts: { body?: unknown; cookie?: string } = {}) => handoverRoute(call(method, `/api/admin/packing/handover/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner }), deps, path);
   const booked = async (name: string, phone: string) => {
     const o = await f.place(name, { phone });
     await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
@@ -88,8 +90,17 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179)
     expect(pages(pdf)).toBe(2);
     expect(await f.t.prisma.shipment.findUniqueOrThrow({ where: { id: a.shipmentId } })).toMatchObject({ labelPrintCount: 1 });
 
-    const again = await stickers('POST', [], { body: { shipmentIds: [a.shipmentId] } });
+    const ask = await stickers('POST', [], { body: { shipmentIds: [a.shipmentId] } });
+    expect(ask.status).toBe(422);
+    expect(await ask.json()).toMatchObject({ ok: false, error: 'REASON_REQUIRED', data: { reprints: [expect.objectContaining({ shipmentId: a.shipmentId })] } });
+    const again = await stickers('POST', [], { body: { shipmentIds: [a.shipmentId], reason: 'Sticker torn', requestKey: 'api-press-0001' } });
     expect(again.status).toBe(200);
+    expect(again.headers.get('x-print-replay')).toBe('0');
+    const twice = await stickers('POST', [], { body: { shipmentIds: [a.shipmentId], reason: 'Sticker torn', requestKey: 'api-press-0001' } });
+    expect(twice.headers.get('x-print-replay')).toBe('1');
+    expect(twice.headers.get('x-print-job')).toBe(again.headers.get('x-print-job'));
+    const recent = (await (await stickers('GET', ['recent'])).json()) as { ok: boolean; jobs: { id: string; reason: string | null }[] };
+    expect(recent.jobs[0]).toMatchObject({ id: again.headers.get('x-print-job'), reason: 'Sticker torn' });
     expect(await f.t.prisma.orderEvent.findMany({ where: { orderId: a.orderId, type: 'shipment.stickerPrinted' }, select: { data: true }, orderBy: { createdAt: 'asc' } })).toEqual([{ data: expect.objectContaining({ print: 1, reprint: false }) }, { data: expect.objectContaining({ print: 2, reprint: true }) }]);
   });
 
@@ -109,5 +120,31 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179)
     expect(pages(pdf)).toBe(1);
     // 100 × 150 mm by default
     expect(pdf.toString('latin1')).toContain('/MediaBox [0 0 283.46 425.20]');
+  });
+
+  it('PR 180: the handover list, the rider\'s sheet as a real A4 PDF, and the batch handed over', async () => {
+    const d = await booked('fa-4', '01700001904'); // hardcode-ok: a made-up test number
+    expect((await stickers('POST', [], { body: { shipmentIds: [d.shipmentId] } })).status).toBe(200);
+    expect((await handover('GET', [], { cookie: reader })).status).toBe(403);
+    const list = (await (await handover('GET', [])).json()) as { ok: boolean; couriers: { courierAccountId: string; parcels: { shipmentId: string; problem: string | null }[] }[] };
+    expect(list.couriers.find((c) => c.courierAccountId === courierId)!.parcels.find((p) => p.shipmentId === d.shipmentId)).toMatchObject({ problem: null });
+
+    const sheet = await handover('POST', ['sheet'], { body: { courierAccountId: courierId } });
+    expect(sheet.status).toBe(200);
+    expect(sheet.headers.get('content-type')).toBe('application/pdf');
+    const pdf = Buffer.from(await sheet.arrayBuffer());
+    expect(pdf.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4');
+    expect(pdf.toString('latin1')).toContain('/MediaBox [0 0 595.28 841.89]');
+    const batch = await f.t.prisma.handoverBatch.findFirstOrThrow({ where: { courierAccountId: courierId, handedOverAt: null } });
+    expect(batch.shipmentIds).toContain(d.shipmentId);
+
+    expect((await handover('POST', ['done'], { body: { batchId: batch.id } })).status).toBe(400);
+    const done = await handover('POST', ['done'], { body: { batchId: batch.id, receivedBy: 'Rider Karim' } });
+    expect(done.status).toBe(200);
+    expect(await done.json()).toMatchObject({ ok: true, batchId: batch.id, handedOver: expect.arrayContaining([d.number]) });
+    expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: d.orderId } })).toMatchObject({ status: 'HANDED_OVER' });
+    expect((await handover('POST', ['done'], { body: { batchId: batch.id, receivedBy: 'Rider Karim' } })).status).toBe(409);
+    expect((await handover('GET', ['sheet'])).status).toBe(405);
+    expect((await handover('POST', ['teleport'])).status).toBe(404);
   });
 });

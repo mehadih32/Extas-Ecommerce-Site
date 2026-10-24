@@ -7,6 +7,8 @@
 //   courier).
 // - `printOrder`: the stickers come out in packing order — the category with the most pieces first, then the style with
 //   the most pieces; an order with several categories goes with its biggest category.
+// - PR 180 (B1.5) `handoverProblem`: a parcel goes on the rider's handover sheet only when its sticker can be printed,
+//   was printed at least once, and its order is waiting to be handed over (confirmed, picking or packed).
 import { dueOf, type DeliveryTarget } from '@extas/orders/pure';
 import { courierPhone } from './pure';
 
@@ -42,12 +44,14 @@ export interface StickerFacts {
   receiver: BookedReceiver;
   order: { totalMinor: number; walletAppliedMinor: number; paidMinor: number };
   target: Pick<DeliveryTarget, 'name' | 'phone' | 'address'>;
+  /** PR 180: the order was handed over to the courier already (it is no longer with us). */
+  handedOver?: boolean;
 }
 
 /** Why this parcel's sticker cannot be printed now, or null. */
 export function stickerProblem(f: StickerFacts): StickerProblem | null {
   if (!f.consignmentId) return 'NOT_BOOKED';
-  if (!(STILL_WITH_US as readonly string[]).includes(f.status)) return 'NOT_WITH_US';
+  if (!(STILL_WITH_US as readonly string[]).includes(f.status) || f.handedOver) return 'NOT_WITH_US';
   if (dueOf(f.order) !== f.codAmountMinor) return 'COD_CHANGED';
   if (!same(f.receiver.name, f.target.name) || !same(f.receiver.phone, courierPhone(f.target.phone)) || !same(f.receiver.address, f.target.address)) return 'RECEIVER_CHANGED';
   return null;
@@ -82,4 +86,20 @@ export function printOrder(parcels: readonly PrintOrderParcel[]): string[] {
   });
   placed.sort((a, b) => byCount(cat)(a.group, b.group) || byCount(style)(a.style, b.style) || a.p.orderNumber.localeCompare(b.p.orderNumber, 'en', { numeric: true }));
   return placed.map((x) => x.p.key);
+}
+
+/** PR 180 — the order states a parcel is handed over from (confirmed, picking started, packed). */
+export const HANDOVER_FROM = ['CONFIRMED', 'PROCESSING', 'PACKED'] as const;
+
+/** Why a parcel is not on the handover sheet: a sticker problem, the sticker never printed, or the order not waiting. */
+export const HANDOVER_PROBLEMS = [...STICKER_PROBLEMS, 'NOT_PRINTED', 'NOT_READY'] as const;
+export type HandoverProblem = (typeof HANDOVER_PROBLEMS)[number];
+
+/** Why this parcel cannot be handed over now, or null. */
+export function handoverProblem(f: StickerFacts & { printCount: number; orderStatus: string }): HandoverProblem | null {
+  const sticker = stickerProblem(f);
+  if (sticker) return sticker;
+  if (!(HANDOVER_FROM as readonly string[]).includes(f.orderStatus)) return 'NOT_READY';
+  if (f.printCount < 1) return 'NOT_PRINTED';
+  return null;
 }

@@ -4211,18 +4211,29 @@ model ShipmentEvent {
 
 /// @stage S08 · PR 180 — a sticker / picking-list / handover print job (reprints reuse the stored consignment).
 model PrintJob {
-  id         String           @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store            @relation(fields: [storeId], references: [id])
-  kind       DocumentKind
-  orderIds   String[]         @db.Uuid
-  isReprint  Boolean          @default(false)
-  documentId String?          @db.Uuid
-  status     BackgroundStatus @default(QUEUED)
-  actorId    String?          @db.Uuid
-  printedAt  DateTime?        @db.Timestamptz(3)
-  createdAt  DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
+  id          String           @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store            @relation(fields: [storeId], references: [id])
+  kind        DocumentKind
+  orderIds    String[]         @db.Uuid
+  isReprint   Boolean          @default(false)
+  documentId  String?          @db.Uuid
+  status      BackgroundStatus @default(QUEUED)
+  actorId     String?          @db.Uuid
+  printedAt   DateTime?        @db.Timestamptz(3)
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime         @updatedAt @db.Timestamptz(3)
+  /// PR 180 (B1.5) — the parcels printed (a sticker print), the reason a reprint was asked for, the key of the press
+  /// (a repeated press returns the same job and counts nothing twice), what was printed (each parcel's print number),
+  /// and the handover batch a handover sheet belongs to.
+  shipmentIds String[]         @default([]) @db.Uuid
+  reason      String?
+  requestKey  String?
+  data        Json?
+  batchId     String?          @db.Uuid
+
+  @@unique([storeId, requestKey])
+  @@index([storeId, createdAt])
 }
 
 /// @stage S08 · PR 180 — the handover sheet: parcels given to a courier.
@@ -4239,6 +4250,14 @@ model HandoverBatch {
   createdById      String?        @db.Uuid
   createdAt        DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 180 (B1.5) — the orders on the sheet, who marked the batch handed over, how many times the sheet was printed,
+  /// and what the sheet showed (each parcel's consignment and amount to collect when it was printed).
+  orderIds         String[]       @default([]) @db.Uuid
+  handedOverById   String?        @db.Uuid
+  printCount       Int            @default(0)
+  data             Json?
+
+  @@index([storeId, courierAccountId, createdAt])
 }
 
 /// @stage S08 · PR 183; B1.2 — Damaged / Not found at packing, and its resolution. Never auto-cancelled.
