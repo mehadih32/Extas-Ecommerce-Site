@@ -6,6 +6,9 @@
 // timer fills the call queue. Every step, channel, time, cap and word is a setting or a template; nothing here moves
 // money or changes an order.
 //
+// PR 149: every try is logged (NotificationAttempt, append-only), a failed send is tried again on the `messages.retry`
+// waits, and the log (log.ts) shows staff every message with its state and tries; a failed one can be retried by hand.
+//
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';
@@ -16,6 +19,7 @@ export * from './pure';
 export * from './engine';
 export * from './self-confirm';
 export * from './admin';
+export * from './log';
 
 export interface RunResult {
   plan: PlanResult;

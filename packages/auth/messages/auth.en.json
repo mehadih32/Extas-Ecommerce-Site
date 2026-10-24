@@ -127,6 +127,10 @@
       },
       "selfConfirm": {
         "reply": "Record a customer's self-confirm reply (1, 2 or 3)"
+      },
+      "log": {
+        "view": "See the message log (who got which message, failures and tries)",
+        "retry": "Try a failed message again"
       }
     }
   },

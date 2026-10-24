@@ -1,5 +1,5 @@
-// S05 · PR 148 — every Messages admin route (the order journey, a self-confirm reply). The table of paths is in
-// lib/messages-api.ts.
+// S05 · PR 148, 149 — every Messages admin route (the order journey, a self-confirm reply, the message log and a
+// retry). The table of paths is in lib/messages-api.ts.
 import { adminDeps } from '@/lib/admin-auth';
 import { messagesRoute } from '@/lib/messages-api';
 
