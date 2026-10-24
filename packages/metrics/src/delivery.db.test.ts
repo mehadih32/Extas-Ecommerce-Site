@@ -4,7 +4,7 @@
 // made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { deliveryTruth } from './delivery';
+import { deliveryTruth, returnReasons } from './delivery';
 
 describe.skipIf(!HAS_TEST_DB)('delivery truth on PostgreSQL (PR 525)', () => {
   let t: TestDatabase;
@@ -59,5 +59,20 @@ describe.skipIf(!HAS_TEST_DB)('delivery truth on PostgreSQL (PR 525)', () => {
     expect(await deliveryTruth(t.prisma, A, P, { customerId })).toMatchObject({ courierDelivered: 2, checked: 2, chargePaidReturns: 1, returned: 1 });
     expect(await deliveryTruth(t.prisma, A, { from: day('2025-01-01'), to: day('2025-02-01') })).toEqual({ courierDelivered: 0, checked: 0, open: 0, confirmedDelivered: 0, chargePaidReturns: 0, returned: 0, chargePaidMinor: 0 });
     await expect(deliveryTruth(t.prisma, A, { from: P.to, to: P.from })).rejects.toThrow(RangeError);
+  });
+
+  it('PR 526: why parcels came back — by reason (most first) and by kind, for one customer, an empty period all zeros', async () => {
+    const recs = await t.prisma.returnRecord.findMany({ where: { storeId: A }, orderBy: { createdAt: 'asc' }, select: { id: true, orderId: true } });
+    const orders = await t.prisma.order.findMany({ where: { id: { in: recs.map((r) => r.orderId) } }, select: { id: true, placedAt: true } });
+    const at = new Map(orders.map((o) => [o.id, o.placedAt]));
+    // each record dated by its order's day; two of them get the same reason
+    for (const [i, r] of recs.entries()) await t.prisma.returnRecord.update({ where: { id: r.id }, data: { createdAt: at.get(r.orderId)!, reasonCode: i === 0 ? 'size-fit' : i === 1 ? 'did-not-like' : 'size-fit' } });
+    const all = await returnReasons(t.prisma, A, P);
+    // in the period, not archived: the charge-paid return (10-08) and the plain return (10-09)
+    expect(all).toEqual({ total: 2, withReason: 2, byReason: [{ key: 'did-not-like', count: 1 }, { key: 'size-fit', count: 1 }], byKind: { CHARGE_PAID_RETURN: 1, REFUSED_AT_DOOR: 1 } });
+    expect(await returnReasons(t.prisma, A, P, { customerId })).toMatchObject({ total: 2 });
+    expect(await returnReasons(t.prisma, A, { from: day('2026-09-01'), to: P.to })).toMatchObject({ total: 3, withReason: 3, byReason: [{ key: 'size-fit', count: 2 }, { key: 'did-not-like', count: 1 }] });
+    expect(await returnReasons(t.prisma, A, { from: day('2025-01-01'), to: day('2025-02-01') })).toEqual({ total: 0, withReason: 0, byReason: [], byKind: {} });
+    await expect(returnReasons(t.prisma, A, { from: P.to, to: P.from })).rejects.toThrow(RangeError);
   });
 });

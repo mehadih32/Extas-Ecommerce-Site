@@ -335,3 +335,24 @@ export function correctionStep(outcome: CheckOutcome, orderStatus: string): 'del
   if (onTheWay) return 'returned';
   return orderStatus === 'DELIVERED' ? 'deliveryCorrected' : null;
 }
+
+/** PR 526: the parcel states that mean it came back (whole or in part). */
+export const RETURN_STATES = ['RETURNING', 'RETURNED', 'PARTIALLY_DELIVERED'] as const satisfies readonly ShipmentStatus[];
+const RETURNS: ReadonlySet<string> = new Set(RETURN_STATES);
+
+/** PR 526: the door outcomes whose courier note is the rider's own words (ShipmentEvent.riderNote). */
+export const RIDER_NOTE_STATES: ReadonlySet<string> = new Set([...RETURN_STATES, 'ATTEMPT_FAILED']);
+
+/** PR 526: a parcel came back when the courier says so, or when the order was corrected to returned (PR 525). */
+export function cameBack(parcelStatus: string, orderStatus: string): boolean {
+  return RETURNS.has(parcelStatus) || orderStatus === 'RETURNED' || orderStatus === 'PARTIALLY_DELIVERED';
+}
+
+/**
+ * PR 526: the kind of return a parcel's own record starts as: pieces refused from a partly delivered parcel, or a
+ * parcel refused at the door — with the delivery charge paid when the courier reports collecting money on it.
+ */
+export function returnKindOf(parcelStatus: string, codCollectedMinor: number | null): 'REFUSED_AT_DOOR' | 'CHARGE_PAID_RETURN' {
+  if (parcelStatus === 'PARTIALLY_DELIVERED') return 'REFUSED_AT_DOOR';
+  return (codCollectedMinor ?? 0) > 0 ? 'CHARGE_PAID_RETURN' : 'REFUSED_AT_DOOR';
+}

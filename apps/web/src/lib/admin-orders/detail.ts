@@ -6,7 +6,7 @@
 // discount or COD, or blocks anyone; a paid order's cancel says it records a refund REQUEST for the owner, nothing more.
 import type { PermissionKey } from '@extas/auth';
 import * as od from '@extas/orders';
-import { openCheckOf } from '@extas/shipping';
+import { openCheckOf, returnReasonOf } from '@extas/shipping';
 import { targetOf, type OrderCommand, type OrderState } from '@extas/orders/pure';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -345,6 +345,35 @@ export function deliveryCheckSpecs(view: AdminView, checkId: string, number: str
   ];
 }
 
+/**
+ * PR 526: "Why it came back" on a parcel that came back — a reason from the owner's list and the rider's words (started
+ * from the courier's note), on its own key (`delivery.outcomes`). Nothing moves money.
+ */
+export function returnReasonSpecs(view: AdminView, shipmentId: string, number: string, perms: ReadonlySet<string>, reasons: od.ReasonLists, riderNote: string | null): CommandSpec[] {
+  if (!perms.has('delivery.outcomes') || !reasons.refusal.length) return [];
+  const d = view.dict;
+  const tt = (k: string) => t(d, `orders.retReason.${k}`, { n: number });
+  return [
+    {
+      id: 'return-reason',
+      label: tt('label'),
+      tone: 'pri',
+      url: `/api/admin/delivery/parcels/${shipmentId}/return-reason`,
+      version: null,
+      title: tt('title'),
+      effects: [tt('eff.saved'), t(d, 'orders.check.eff.noMoney')],
+      fields: [
+        // starts on "pick one", so a reason is always a person's choice, never the list's first line
+        { name: 'reasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), required: true, options: [{ value: '', label: t(d, 'orders.dlg.pickReason') }, ...reasons.refusal.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) }))] },
+        { name: 'note', kind: 'textarea', label: tt('note'), labelNeeded: tt('noteNeeded'), noteFor: 'reasonKey', maxLength: 500, placeholder: tt('notePh'), ...(riderNote ? { value: riderNote } : {}) },
+      ],
+      ok: tt('ok'),
+      okTone: 'pri',
+      done: tt('done'),
+    },
+  ];
+}
+
 export function reviewSpecs(view: AdminView, alertId: string, number: string, matched: { id: string; number: string }[], perms: ReadonlySet<string>, reasons: od.ReasonLists, paid: string | null, risk = false): CommandSpec[] {
   if (!perms.has('orders.risk.decide')) return [];
   const d = view.dict;
@@ -378,6 +407,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'shipment.outForDelivery': 'mute',
   'delivery.checkOpened': 'warn',
   'order.deliveryCorrected': 'bad',
+  'return.reason': 'warn',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -506,6 +536,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const twoSize = askTwoSize ? await od.twoSizeQuestions(deps, who, o.id) : [];
   // PR 525: an open true-delivery check (the courier said delivered, our records say it came back)
   const check = await openCheckOf(deps, who.storeId, o.id);
+  // PR 526: why the parcel came back (its reason and the rider's note), once it did
+  const back = await returnReasonOf(deps, who.storeId, o.id);
   // PR 521: each review explained (a reading aid: if one cannot be read, the card still shows everything else)
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
@@ -514,6 +546,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const holdName = new Map(reasons.hold.map((r) => [r.key, nameOf(view, r)]));
   const cancelName = new Map(reasons.cancel.map((r) => [r.key, nameOf(view, r)]));
   const editReason = new Map(reasons.edit.map((r) => [r.key, nameOf(view, r)]));
+  const refusalName = new Map(reasons.refusal.map((r) => [r.key, nameOf(view, r)]));
   const ox = detail.order as unknown as { riskScore: number | null; riskBand: string | null; riskSection: string | null };
   const row: od.OrderRow = {
     id: o.id,
@@ -601,6 +634,13 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
           ...(ship.pickedAt ? [{ label: t(d, 'orders.courier.picked'), value: dt.format(ship.pickedAt) }] : []),
           ...(ship.deliveredAt ? [{ label: t(d, 'orders.courier.delivered'), value: dt.format(ship.deliveredAt) }] : []),
           ...(ship.returnedAt ? [{ label: t(d, 'orders.courier.returned'), value: dt.format(ship.returnedAt) }] : []),
+          // PR 526: why it came back, and the rider's own words
+          ...(back && back.shipmentId === ship.id
+            ? [
+                { label: t(d, 'orders.courier.whyBack'), value: back.reasonKey ? (refusalName.get(back.reasonKey) ?? back.reasonKey) : t(d, 'orders.courier.noReason') },
+                ...(back.riderNote ? [{ label: t(d, 'orders.courier.riderNote'), value: back.riderNote }] : []),
+              ]
+            : []),
           { label: t(d, 'orders.courier.lastRead'), value: ship.lastTrackedAt ? dt.format(ship.lastTrackedAt) : t(d, 'orders.courier.notRead') },
           ...(ship.cancelOutcome ? [{ label: t(d, 'orders.courier.cancelOutcome'), value: t(d, `orders.courier.outcome.${ship.cancelOutcome}`) }] : []),
         ]
@@ -644,7 +684,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
       const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : ruled);
@@ -668,6 +708,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     const signs = check.signals.map((sg) => t(d, `orders.check.sig.${sg}`)).join(' · ');
     const collected = check.collectedMinor !== null ? m(check.collectedMinor) : null;
     bands.push({ id: 'deliveryCheck', kind: 'bad', text: t(d, 'orders.band.deliveryCheck', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier'), signs }), specs: deliveryCheckSpecs(view, check.id, o.number, perms, reasons, collected) });
+  }
+  if (back && !back.reasonKey) {
+    const asked = returnReasonSpecs(view, back.shipmentId, o.number, perms, reasons, back.riderNote);
+    if (asked.length) bands.push({ id: 'returnReason', kind: 'stale', text: t(d, 'orders.band.returnReason', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier') }), specs: asked });
   }
   if (o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
 

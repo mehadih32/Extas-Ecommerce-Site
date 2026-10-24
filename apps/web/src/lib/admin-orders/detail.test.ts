@@ -12,7 +12,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
 import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
@@ -140,6 +140,20 @@ describe('which buttons an order shows', () => {
       expect(specs[1]!.fields.map((f) => f.name)).toEqual(['refusalKey', 'note']);
       expect(specs[1]!.fields[0]!.options![0]!.value).toBe(''); // no reason picked unless a person picks one
       expect(specs[1]!.effects.join(' ')).toContain('৳60');
+    }
+  });
+
+  it("PR 526 · why it came back: behind its own key, the owner's reasons to pick from, the rider's note to start from", () => {
+    const back = { ...reasons, refusal: [{ key: 'did-not-like', en: "Didn't like it", bn: 'পছন্দ হয়নি', noteRequired: false }, { key: 'other', en: 'Other', bn: 'অন্য', noteRequired: true }] };
+    expect(returnReasonSpecs(view('en'), ID, 'EX-1', new Set(['delivery.parcels']), back, null)).toEqual([]);
+    expect(returnReasonSpecs(view('en'), ID, 'EX-1', new Set(['delivery.outcomes']), reasons, null)).toEqual([]); // no list, no button
+    for (const lang of ['en', 'bn'] as const) {
+      const [s, ...rest] = returnReasonSpecs(view(lang), ID, 'EX-1', new Set(['delivery.outcomes']), back, 'refused at the door');
+      expect(rest).toEqual([]);
+      expect(s).toMatchObject({ id: 'return-reason', url: `/api/admin/delivery/parcels/${ID}/return-reason`, version: null });
+      expect(s!.fields[0]).toMatchObject({ name: 'reasonKey', required: true, options: [{ value: '' }, { value: 'did-not-like', label: lang === 'en' ? "Didn't like it" : 'পছন্দ হয়নি' }, { value: 'other', noteRequired: true }] });
+      expect(s!.fields[1]).toMatchObject({ name: 'note', noteFor: 'reasonKey', value: 'refused at the door' });
+      for (const w of [s!.label, s!.title, s!.ok, s!.done, ...s!.effects]) expect(w, lang).not.toMatch(/orders\.(retReason|check)\./);
     }
   });
 });

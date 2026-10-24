@@ -11,8 +11,8 @@ describe('order edit settings (v37)', () => {
   it('every key is in the registry at version 37, never owner data, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(orderEditSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      // PR 157 (SIM-F-044) moved the refusal reasons to v43 ("late", "wrong item", "damaged")
-      expect(spec.version, key).toBe(key === 'orders.refusal.reasons' ? 43 : 37);
+      // PR 157 (SIM-F-044) moved the refusal reasons to v43 ("late", "wrong item", "damaged"), PR 526 to v58
+      expect(spec.version, key).toBe(key === 'orders.refusal.reasons' ? 58 : 37);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
@@ -40,5 +40,12 @@ describe('order edit settings (v37)', () => {
     expect(refusal).toEqual(expect.arrayContaining(['bought-elsewhere', 'after-eid', 'other']));
     expect(orderEditSettings['orders.edit.reasons'].default.map((r) => r.key)).toEqual(expect.arrayContaining(['wrong-phone', 'other']));
     expect(orderEditSettings['orders.edit.reasons'].schema.safeParse([]).success).toBe(false);
+  });
+
+  it("PR 526: the return reasons hold the rider's four — didn't like it, size, not as in the picture, ordered by mistake — with \"other\" last", () => {
+    const list = orderEditSettings['orders.refusal.reasons'].default;
+    expect(list.map((r) => r.key)).toEqual(expect.arrayContaining(['did-not-like', 'size-fit', 'not-as-pictured', 'ordered-by-mistake']));
+    expect(list.at(-1)!.key).toBe('other');
+    for (const r of list) expect(r.bn, r.key).not.toBe(r.en);
   });
 });

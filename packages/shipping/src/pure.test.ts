@@ -3,7 +3,7 @@
 // returned parcel with every part named (SIM-F-027). PR 176: booking's rules — the phone a courier takes, a gift's
 // booking day (SIM-F-007), the rider's note, the parcel's description and weight (SIM-F-029).
 import { describe, expect, it } from 'vitest';
-import { addDays, bookingNoteOf, correctionStep, courierPhone, fillTemplate, giftBooking, lateOf, localDay, orderMovesFor, truthSignals, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
+import { addDays, bookingNoteOf, cameBack, correctionStep, courierPhone, RIDER_NOTE_STATES, returnKindOf, fillTemplate, giftBooking, lateOf, localDay, orderMovesFor, truthSignals, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
 
 const T0 = new Date('2026-10-20T10:00:00Z').getTime(); // hardcode-ok: a fixed test clock
 const at = (min: number) => new Date(T0 + min * 60_000);
@@ -200,5 +200,21 @@ describe('PR 525 · the true-delivery check', () => {
     expect(correctionStep('RETURNED', 'HANDED_OVER')).toBe('returned');
     expect(correctionStep('RETURNED', 'DELIVERED')).toBe('deliveryCorrected');
     expect(correctionStep('RETURNED', 'RETURNED')).toBeNull();
+  });
+});
+
+describe('PR 526 · a parcel that came back', () => {
+  it('came back: the courier says returning, returned or partly delivered, or the order was corrected to returned', () => {
+    for (const s of ['RETURNING', 'RETURNED', 'PARTIALLY_DELIVERED']) expect(cameBack(s, 'IN_TRANSIT'), s).toBe(true);
+    expect(cameBack('DELIVERED', 'RETURNED')).toBe(true);
+    for (const s of ['DELIVERED', 'ATTEMPT_FAILED', 'IN_TRANSIT', 'LOST']) expect(cameBack(s, 'IN_TRANSIT'), s).toBe(false);
+  });
+
+  it("the rider's note is kept on door outcomes only; the return's kind follows the money the courier reports", () => {
+    expect([...RIDER_NOTE_STATES].sort()).toEqual(['ATTEMPT_FAILED', 'PARTIALLY_DELIVERED', 'RETURNED', 'RETURNING']);
+    expect(returnKindOf('RETURNED', null)).toBe('REFUSED_AT_DOOR');
+    expect(returnKindOf('RETURNED', 0)).toBe('REFUSED_AT_DOOR');
+    expect(returnKindOf('RETURNED', 6_000)).toBe('CHARGE_PAID_RETURN'); // hardcode-ok: a made-up test amount
+    expect(returnKindOf('PARTIALLY_DELIVERED', 90_000)).toBe('REFUSED_AT_DOOR'); // hardcode-ok: a made-up test amount
   });
 });

@@ -78,7 +78,7 @@
     "refusal": {
       "reasons": {
         "label": "Parcel refusal reasons",
-        "help": "Why a customer did not take the parcel at the door (bought elsewhere, arrived after Eid …). The team picks one when it records a refused parcel; the reports count them. Add, remove or reword them in both languages."
+        "help": "Why a parcel came back: the customer did not take it at the door, or sent it back with the rider (didn't like it, size or fit, not as in the picture, ordered by mistake, bought elsewhere, arrived after Eid …). The team picks one when it records a returned parcel, with the rider's note; the reports count them. Add, remove or reword them in both languages."
       }
     },
     "twoSize": {
@@ -172,6 +172,8 @@
         "late": "Arrived later than we promised",
         "wrong-item": "We sent the wrong item",
         "damaged": "Arrived damaged",
+        "did-not-like": "Didn't like it",
+        "ordered-by-mistake": "Ordered by mistake",
         "other": "Other"
       }
     }

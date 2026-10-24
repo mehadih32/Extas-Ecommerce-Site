@@ -7,14 +7,15 @@
 //
 // Staff record what the courier told them on the phone (a failed try, an address problem, lost, damaged) with a reason
 // from the list (`recordException`): the same event store, marked as staff's, with the audit row. Nothing here moves
-// money or changes the order: the order's own status follows in PR 184.
+// money or changes the order: the order's own status follows in PR 184. PR 526: the courier's note on a door outcome
+// is also kept as the rider's note (`riderNote`), which the return reason starts from (returns.ts).
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { EXCEPTION_REASONS, type CourierEvent, type ExceptionState } from '@extas/adapters';
 import type { Prisma } from '@extas/db/client';
 import { allow, logChange, nowOf, parse, TX, type ShippingDeps, type Tx, type Who } from './context';
 import { ShippingError } from './errors';
-import { EXCEPTION_STATUSES, FINAL_STATES, stateOf, type EventFact, type ShipmentStatus } from './pure';
+import { EXCEPTION_STATUSES, FINAL_STATES, RIDER_NOTE_STATES, stateOf, type EventFact, type ShipmentStatus } from './pure';
 
 /** Where an event came from. */
 export type EventSource = 'booking' | 'poll' | 'webhook' | 'staff';
@@ -77,6 +78,8 @@ export async function applyEventsIn(tx: Tx, ref: { storeId: number; shipmentId: 
       status: (e.status ?? current.status) as ShipmentStatus,
       rawStatus: e.rawStatus.slice(0, 120),
       message: e.note?.slice(0, 500) ?? null,
+      // PR 526: on a door outcome (a return, a partial delivery, a failed try) the courier's note is the rider's words
+      riderNote: e.status && RIDER_NOTE_STATES.has(e.status) && e.note?.trim() ? e.note.trim().slice(0, 500) : null,
       reasonKey: e.reasonKey,
       occurredAt: e.occurredAt,
       providerEventId: e.providerEventId.slice(0, 200),

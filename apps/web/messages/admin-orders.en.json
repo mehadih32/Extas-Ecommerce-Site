@@ -248,7 +248,8 @@
       "deliveryNote": "Note for the parcel",
       "lineKeep": "Keep ({size})",
       "lineTo": "Change to {size}",
-      "lineRemove": "Take this piece out"
+      "lineRemove": "Take this piece out",
+      "pickReason": "Pick a reason"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -283,7 +284,8 @@
       "NOTHING_DUE": "Nothing is left to pay on this order.",
       "NO_CHANNEL": "Tick at least one way: SMS, WhatsApp or a call.",
       "ALREADY_RESOLVED": "Someone has resolved this check already. Reload to see it.",
-      "ORDER_REFUSED": "The order cannot move now (for example a cancel is waiting). Sort that out first."
+      "ORDER_REFUSED": "The order cannot move now (for example a cancel is waiting). Sort that out first.",
+      "NOT_RETURNED": "This parcel did not come back, so it takes no return reason."
     },
     "cmd": {
       "confirm": {
@@ -521,7 +523,10 @@
         "damagedInTransit": "Damaged on the way",
         "wetOrTorn": "Wet or torn",
         "other": "Other reason"
-      }
+      },
+      "whyBack": "Why it came back",
+      "noReason": "Not recorded yet",
+      "riderNote": "Rider's note"
     },
     "money": {
       "title": "Payments & refunds",
@@ -611,7 +616,8 @@
       "shipment_outForDelivery": "Courier out for delivery",
       "delivery_checkOpened": "Courier said delivered — our records disagree",
       "delivery_checkResolved": "Delivery check resolved",
-      "order_deliveryCorrected": "Corrected: came back, not delivered"
+      "order_deliveryCorrected": "Corrected: came back, not delivered",
+      "return_reason": "Why it came back"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -620,7 +626,8 @@
       "cancelled": "Cancelled: {reason}",
       "locked": "Booked with {courier} · {tracking}: the parcel is locked. To change it, cancel after booking.",
       "twoSize": "{product}: {sizes} on one order — ask which size the customer wants before packing.",
-      "deliveryCheck": "{courier} says delivered, but our records say it came back: {signs}. Check with the courier and the customer, then record what really happened."
+      "deliveryCheck": "{courier} says delivered, but our records say it came back: {signs}. Check with the courier and the customer, then record what really happened.",
+      "returnReason": "The parcel came back from {courier}. Ask the rider or the customer why, and record it — the reports and the customer's history count it."
     },
     "items": {
       "title": "Items",
@@ -1010,6 +1017,18 @@
         "noMoney": "No money moves and COD does not change: the courier settlement is checked in Money."
       },
       "notKnown": "Not known yet"
+    },
+    "retReason": {
+      "label": "Why it came back",
+      "title": "Why did order #{n} come back?",
+      "note": "Rider's note (optional)",
+      "noteNeeded": "Rider's note",
+      "notePh": "What the rider or the customer said",
+      "ok": "Save the reason",
+      "done": "Reason saved for order #{n}",
+      "eff": {
+        "saved": "The reason and the rider's note are kept on the return, the timeline and the customer's history."
+      }
     }
   }
 }
