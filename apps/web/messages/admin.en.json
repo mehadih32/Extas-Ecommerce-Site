@@ -205,5 +205,43 @@
     "database-not-configured": "This server has no database connected yet.",
     "server-error": "Something went wrong on the server; please try again shortly.",
     "network": "Could not reach the server — check the connection and try again."
+  },
+  "courier": {
+    "status": {
+      "BOOKING": "Booking…",
+      "BOOKING_FAILED": "Booking failed",
+      "IN_REVIEW": "Courier is checking it",
+      "PENDING_PICKUP": "Waiting for pickup",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "On the way",
+      "OUT_FOR_DELIVERY": "Out for delivery",
+      "DELIVERED": "Delivered",
+      "PARTIALLY_DELIVERED": "Partly delivered",
+      "ATTEMPT_FAILED": "Delivery try failed",
+      "ADDRESS_PROBLEM": "Address problem",
+      "LOST": "Lost",
+      "DAMAGED": "Damaged",
+      "RETURNING": "Coming back",
+      "RETURNED": "Returned",
+      "CANCELLED": "Cancelled",
+      "CANCEL_REQUESTED": "Cancel asked"
+    },
+    "reasons": {
+      "receiverUnreachable": "Receiver not answering the phone",
+      "receiverNotAvailable": "Receiver not there",
+      "receiverAskedLater": "Receiver asked for another day",
+      "paymentNotReady": "Receiver did not have the money ready",
+      "addressNotFound": "Rider cannot find the address",
+      "addressIncomplete": "Address incomplete",
+      "wrongArea": "Address in another area",
+      "lostInTransit": "Lost on the way",
+      "damagedInTransit": "Damaged on the way",
+      "wetOrTorn": "Wet or torn",
+      "other": "Other (see the note)"
+    },
+    "providers": {
+      "mockCourier": "Practice courier"
+    },
+    "practice": "Practice — nothing is sent to a courier"
   }
 }

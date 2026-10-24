@@ -24,6 +24,8 @@ export * from './whatsapp';
 export * from './email';
 // PR 167 — the payment gateways: one contract, the practice gateway behind MOCK, bKash (Nagad and card follow).
 export * from './payment';
+// S08 · PR 175 — the courier contract, the practice courier and its scripted worlds (courier/).
+export * from './courier';
 
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;

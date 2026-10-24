@@ -43,6 +43,7 @@ import { riskMoreSettings } from './registry-risk-more';
 import { comboTemplateSettings } from './registry-combo-templates';
 import { paymentSettings } from './registry-payments';
 import { riskRulesSettings } from './registry-risk-rules';
+import { shippingSettings } from './registry-shipping';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1196,6 +1197,8 @@ export const registry = {
   ...paymentSettings,
   // ---- S06 · PR 519, 520 · the identity graph and the duplicate & re-order rules (registry-risk-rules.ts, version 48). ----
   ...riskRulesSettings,
+  // ---- S08 · PR 175–177 · courier shipping: the RTO cost book (registry-shipping.ts, version 50). ----
+  ...shippingSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

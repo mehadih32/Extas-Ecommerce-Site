@@ -1,0 +1,10 @@
+{
+  "delivery": {
+    "courier": {
+      "rtoCost": {
+        "label": "Cost of a returned parcel (RTO)",
+        "help": "What a parcel that came back cost the shop, for the RTO cost book. \"Count\": which parts are added up — the courier's charge to take it out, its charge to bring it back (both from the courier's rate card), packaging, handling and, if you want it, a share of the ad cost per order. Type your own packaging, handling and ad share per parcel here; until you do, the book shows those parts as \"not entered\" instead of counting them as nothing. Practice parcels (a courier still on its practice mode) are never counted as real cost."
+      }
+    }
+  }
+}
