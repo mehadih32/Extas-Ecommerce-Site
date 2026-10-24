@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-24 11:31 (Asia/Dhaka)
+# Smoke test · 2026-10-24 12:44 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (116টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (150টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `88b2ef5cbde9` · after deploy · result **PASS** (116 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `d22e6527f771` · after deploy · result **PASS** (150 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -10,6 +10,7 @@ Site: https://new.extas.com.bd · commit `88b2ef5cbde9` · after deploy · resul
 | `/bn` | phone | 200 | `/bn` | ok | [picture](bn-phone.jpg) |
 | `/checkout` | phone | 200 | `/checkout` | ok | [picture](checkout-phone.jpg) |
 | `/bn/checkout` | phone | 200 | `/bn/checkout` | ok | [picture](bn-checkout-phone.jpg) |
+| `/checkout?gift=1` | phone | 200 | `/checkout` | ok | [picture](checkout-gift-1-phone.jpg) |
 | `/checkout/thanks/0` | phone | 200 | `/checkout/thanks/0` | ok | [picture](checkout-thanks-0-phone.jpg) |
 | `/bn/checkout/thanks/0` | phone | 200 | `/bn/checkout/thanks/0` | ok | [picture](bn-checkout-thanks-0-phone.jpg) |
 | `/checkout/pay/0` | phone | 200 | `/checkout/pay/0` | ok | [picture](checkout-pay-0-phone.jpg) |
@@ -43,31 +44,48 @@ Site: https://new.extas.com.bd · commit `88b2ef5cbde9` · after deploy · resul
 | `/bn/account/orders/0` | phone | 200 | `/bn/account/orders/0` | ok | [picture](bn-account-orders-0-phone.jpg) |
 | `/combos` | phone | 200 | `/combos` | ok | [picture](combos-phone.jpg) |
 | `/bn/combos` | phone | 200 | `/bn/combos` | ok | [picture](bn-combos-phone.jpg) |
+| `/combos/build-your-own` | phone | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-phone.jpg) |
+| `/bn/combos/build-your-own` | phone | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
 | `/bn/account/orders/0/invoice` | phone | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-phone.jpg) |
-| `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
-| `/admin` | phone | 200 | `/admin/products` | ok | [picture](admin-phone.jpg) |
-| `/admin/combos` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-phone.jpg) |
-| `/admin/delivery` | phone | 200 | `/admin/delivery` | ok | [picture](admin-delivery-phone.jpg) |
+| `/admin` | phone | 200 | `/admin` | ok | [picture](admin-phone.jpg) |
+| `/admin/delivery/zones` | phone | 200 | `/admin/delivery/zones` | ok | [picture](admin-delivery-zones-phone.jpg) |
+| `/admin/help` | phone | 200 | `/admin/help` | ok | [picture](admin-help-phone.jpg) |
 | `/admin/integrations` | phone | 200 | `/admin/integrations` | ok | [picture](admin-integrations-phone.jpg) |
-| `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | phone | 200 | `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | ok | [picture](admin-products-01a16549-1be0-7de3-96d0-c4bf0cad5327-phone.jpg) |
-| `/admin/products/audit` | phone | 200 | `/admin/products/audit` | ok | [picture](admin-products-audit-phone.jpg) |
-| `/admin/products/back-in-stock` | phone | 200 | `/admin/products/back-in-stock` | ok | [picture](admin-products-back-in-stock-phone.jpg) |
-| `/admin/products/import` | phone | 200 | `/admin/products/import` | ok | [picture](admin-products-import-phone.jpg) |
+| `/admin/orders` | phone | 200 | `/admin/orders` | ok | [picture](admin-orders-phone.jpg) |
+| `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-phone.jpg) |
 | `/admin/rules` | phone | 200 | `/admin/rules` | ok | [picture](admin-rules-phone.jpg) |
-| `/admin/rules/notices` | phone | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-phone.jpg) |
 | `/admin/server` | phone | 200 | `/admin/server` | ok | [picture](admin-server-phone.jpg) |
-| `/admin/size-charts` | phone | 200 | `/admin/size-charts` | ok | [picture](admin-size-charts-phone.jpg) |
+| `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
+| `/admin/products/import` | phone | 200 | `/admin/products/import` | ok | [picture](admin-products-import-phone.jpg) |
+| `/admin/products/audit` | phone | 200 | `/admin/products/audit` | ok | [picture](admin-products-audit-phone.jpg) |
+| `/admin/products/back-in-stock` | phone | 200 | `/admin/products/back-in-stock` | ok | [picture](admin-products-back-in-stock-phone.jpg) |
+| `/admin/combos` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-phone.jpg) |
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | [picture](admin-stock-phone.jpg) |
 | `/admin/stock/counts` | phone | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-phone.jpg) |
 | `/admin/stock/movements` | phone | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-phone.jpg) |
+| `/admin/size-charts` | phone | 200 | `/admin/size-charts` | ok | [picture](admin-size-charts-phone.jpg) |
+| `/admin/delivery` | phone | 200 | `/admin/delivery/zones` | ok | [picture](admin-delivery-phone.jpg) |
+| `/admin/rules/notices` | phone | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-phone.jpg) |
+| `/admin/orders/confirm` | phone | 200 | `/admin/orders/confirm` | ok | [picture](admin-orders-confirm-phone.jpg) |
+| `/admin/customers` | phone | 200 | `/admin/customers` | ok | [picture](admin-customers-phone.jpg) |
+| `/admin/messages` | phone | 200 | `/admin/messages` | ok | [picture](admin-messages-phone.jpg) |
+| `/admin/support` | phone | 200 | `/admin/support` | ok | [picture](admin-support-phone.jpg) |
+| `/admin/marketing` | phone | 200 | `/admin/marketing` | ok | [picture](admin-marketing-phone.jpg) |
+| `/admin/website` | phone | 200 | `/admin/website` | ok | [picture](admin-website-phone.jpg) |
+| `/admin/money` | phone | 200 | `/admin/money` | ok | [picture](admin-money-phone.jpg) |
+| `/admin/reports` | phone | 200 | `/admin/reports` | ok | [picture](admin-reports-phone.jpg) |
+| `/admin/ai` | phone | 200 | `/admin/ai` | ok | [picture](admin-ai-phone.jpg) |
+| `/admin/settings` | phone | 200 | `/admin/settings` | ok | [picture](admin-settings-phone.jpg) |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
+| `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
 | `/bn` | desktop | 200 | `/bn` | ok | [picture](bn-desktop.jpg) |
 | `/checkout` | desktop | 200 | `/checkout` | ok | [picture](checkout-desktop.jpg) |
 | `/bn/checkout` | desktop | 200 | `/bn/checkout` | ok | [picture](bn-checkout-desktop.jpg) |
+| `/checkout?gift=1` | desktop | 200 | `/checkout` | ok | [picture](checkout-gift-1-desktop.jpg) |
 | `/checkout/thanks/0` | desktop | 200 | `/checkout/thanks/0` | ok | [picture](checkout-thanks-0-desktop.jpg) |
 | `/bn/checkout/thanks/0` | desktop | 200 | `/bn/checkout/thanks/0` | ok | [picture](bn-checkout-thanks-0-desktop.jpg) |
 | `/checkout/pay/0` | desktop | 200 | `/checkout/pay/0` | ok | [picture](checkout-pay-0-desktop.jpg) |
@@ -101,26 +119,42 @@ Site: https://new.extas.com.bd · commit `88b2ef5cbde9` · after deploy · resul
 | `/bn/account/orders/0` | desktop | 200 | `/bn/account/orders/0` | ok | [picture](bn-account-orders-0-desktop.jpg) |
 | `/combos` | desktop | 200 | `/combos` | ok | [picture](combos-desktop.jpg) |
 | `/bn/combos` | desktop | 200 | `/bn/combos` | ok | [picture](bn-combos-desktop.jpg) |
+| `/combos/build-your-own` | desktop | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-desktop.jpg) |
+| `/bn/combos/build-your-own` | desktop | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
 | `/bn/account/orders/0/invoice` | desktop | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-desktop.jpg) |
-| `/admin` | desktop | 200 | `/admin/products` | ok | [picture](admin-desktop.jpg) |
-| `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
-| `/admin/delivery` | desktop | 200 | `/admin/delivery` | ok | [picture](admin-delivery-desktop.jpg) |
+| `/admin` | desktop | 200 | `/admin` | ok | [picture](admin-desktop.jpg) |
+| `/admin/delivery/zones` | desktop | 200 | `/admin/delivery/zones` | ok | [picture](admin-delivery-zones-desktop.jpg) |
+| `/admin/help` | desktop | 200 | `/admin/help` | ok | [picture](admin-help-desktop.jpg) |
 | `/admin/integrations` | desktop | 200 | `/admin/integrations` | ok | [picture](admin-integrations-desktop.jpg) |
+| `/admin/orders` | desktop | 200 | `/admin/orders` | ok | [picture](admin-orders-desktop.jpg) |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | [picture](admin-products-desktop.jpg) |
-| `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | desktop | 200 | `/admin/products/01a16549-1be0-7de3-96d0-c4bf0cad5327` | ok | [picture](admin-products-01a16549-1be0-7de3-96d0-c4bf0cad5327-desktop.jpg) |
-| `/admin/products/audit` | desktop | 200 | `/admin/products/audit` | ok | [picture](admin-products-audit-desktop.jpg) |
-| `/admin/products/back-in-stock` | desktop | 200 | `/admin/products/back-in-stock` | ok | [picture](admin-products-back-in-stock-desktop.jpg) |
-| `/admin/products/import` | desktop | 200 | `/admin/products/import` | ok | [picture](admin-products-import-desktop.jpg) |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-desktop.jpg) |
 | `/admin/rules` | desktop | 200 | `/admin/rules` | ok | [picture](admin-rules-desktop.jpg) |
-| `/admin/rules/notices` | desktop | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-desktop.jpg) |
 | `/admin/server` | desktop | 200 | `/admin/server` | ok | [picture](admin-server-desktop.jpg) |
-| `/admin/size-charts` | desktop | 200 | `/admin/size-charts` | ok | [picture](admin-size-charts-desktop.jpg) |
+| `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
+| `/admin/products/import` | desktop | 200 | `/admin/products/import` | ok | [picture](admin-products-import-desktop.jpg) |
+| `/admin/products/audit` | desktop | 200 | `/admin/products/audit` | ok | [picture](admin-products-audit-desktop.jpg) |
+| `/admin/products/back-in-stock` | desktop | 200 | `/admin/products/back-in-stock` | ok | [picture](admin-products-back-in-stock-desktop.jpg) |
+| `/admin/combos` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-desktop.jpg) |
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | [picture](admin-stock-desktop.jpg) |
 | `/admin/stock/counts` | desktop | 200 | `/admin/stock/counts` | ok | [picture](admin-stock-counts-desktop.jpg) |
 | `/admin/stock/movements` | desktop | 200 | `/admin/stock/movements` | ok | [picture](admin-stock-movements-desktop.jpg) |
+| `/admin/size-charts` | desktop | 200 | `/admin/size-charts` | ok | [picture](admin-size-charts-desktop.jpg) |
+| `/admin/delivery` | desktop | 200 | `/admin/delivery/zones` | ok | [picture](admin-delivery-desktop.jpg) |
+| `/admin/rules/notices` | desktop | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-desktop.jpg) |
+| `/admin/orders/confirm` | desktop | 200 | `/admin/orders/confirm` | ok | [picture](admin-orders-confirm-desktop.jpg) |
+| `/admin/customers` | desktop | 200 | `/admin/customers` | ok | [picture](admin-customers-desktop.jpg) |
+| `/admin/messages` | desktop | 200 | `/admin/messages` | ok | [picture](admin-messages-desktop.jpg) |
+| `/admin/support` | desktop | 200 | `/admin/support` | ok | [picture](admin-support-desktop.jpg) |
+| `/admin/marketing` | desktop | 200 | `/admin/marketing` | ok | [picture](admin-marketing-desktop.jpg) |
+| `/admin/website` | desktop | 200 | `/admin/website` | ok | [picture](admin-website-desktop.jpg) |
+| `/admin/money` | desktop | 200 | `/admin/money` | ok | [picture](admin-money-desktop.jpg) |
+| `/admin/reports` | desktop | 200 | `/admin/reports` | ok | [picture](admin-reports-desktop.jpg) |
+| `/admin/ai` | desktop | 200 | `/admin/ai` | ok | [picture](admin-ai-desktop.jpg) |
+| `/admin/settings` | desktop | 200 | `/admin/settings` | ok | [picture](admin-settings-desktop.jpg) |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
+| `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
 Database (PR 139): ok: 14 tables append-only; the app connects as extas_app.
