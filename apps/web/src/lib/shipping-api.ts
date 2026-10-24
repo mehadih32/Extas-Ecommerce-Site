@@ -36,6 +36,12 @@
 //   GET   /api/admin/delivery/couriers/:id/places?q=&level=  the courier's places by name (delivery.read)
 //   POST  /api/admin/delivery/couriers/:id/areas           {areaId, placeId} a person pairs an area (delivery.couriers)
 //   POST  /api/admin/delivery/couriers/:id/areas/:areaId/unmap   takes a pair away: archived, never deleted (delivery.couriers)
+// PR 184: the parcel list's `view=late` — still with the courier past the band's promise (SIM-F-018).
+// PR 525 — the true-delivery check (a "Delivered" the shop's own records contradict; nothing moves money or COD):
+//   GET   /api/admin/delivery/checks?view=open|resolved|all&orderId=&customerId=&cursor=&limit=
+//                                                          the checks with their signs, the order and courier (delivery.parcels)
+//   POST  /api/admin/delivery/checks/:id/resolve           {outcome: DELIVERED | CHARGE_PAID_RETURN | RETURNED, refusalKey?, note?}
+//                                                          what really happened, through the order service (delivery.outcomes)
 import { courierAdapters, createConnections } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
@@ -159,6 +165,20 @@ export async function parcelsRoute(request: Request, deps: AdminDeps | null, pat
     return handle(request, deps, 'delivery.parcels', async (x) => ({ result: await sh.trackParcel(x.deps, x.who, id) }));
   }
   return notFound();
+}
+
+/** PR 525 — the true-delivery checks: `path` is what comes after /api/admin/delivery/checks. */
+export async function checksRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
+  const m = request.method.toUpperCase();
+  const [id, action, ...rest] = path;
+  if (!id) {
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'delivery.parcels', async (x) => ({ ...(await sh.listDeliveryChecks(x.deps, x.who, query(x.url, ['view', 'orderId', 'customerId', 'cursor', 'limit']))) }));
+  }
+  if (!isUuid(id)) return Promise.resolve(fail(404, 'NOT_FOUND', ['checkId']));
+  if (rest.length || action !== 'resolve') return notFound();
+  if (m !== 'POST') return notAllowed();
+  return handle(request, deps, 'delivery.outcomes', async (x) => ({ ...(await sh.resolveDeliveryCheck(x.deps, x.who, id, await body(request))) }));
 }
 
 /** Booking: the orders ready to book, and a press of "Book" or "Book all". */

@@ -7,6 +7,7 @@
 //
 // PR 184: after each read the parcel's order follows it through the order service (sync.ts `syncOrder`: in transit,
 // delivered, returned …), and each run then catches up the orders still behind their parcel (`syncLagging`).
+// PR 525: each run also looks for late signs against a courier's "Delivered" (truth.ts `sweepDeliveryChecks`).
 import type { CourierApi } from '@extas/adapters';
 import { courierApi } from './accounts';
 import { allow, nowOf, setting, type ShippingDeps, type Who } from './context';
@@ -14,6 +15,7 @@ import { ShippingError } from './errors';
 import { applyEvents, type Applied } from './events';
 import { ACTIVE_STATES, isException } from './pure';
 import { syncLagging, syncOrder, type Synced } from './sync';
+import { sweepDeliveryChecks } from './truth';
 
 const TRACK_SELECT = { id: true, consignmentId: true, trackingCode: true, merchantRef: true, providerStatus: true, courierAccount: { select: { providerKey: true } } } as const;
 
@@ -49,12 +51,14 @@ export interface TrackRun {
   /** PR 184: orders moved on after their parcel's read, and orders caught up that were behind their parcel. */
   ordersMoved: number;
   caughtUp: number;
+  /** PR 525: true-delivery checks opened by a late sign (the courier's statement, the return received …). */
+  checksOpened: number;
 }
 
 /** One store's due parcels read from their couriers (the worker's job). */
 export async function trackParcels(deps: ShippingDeps, storeId: number): Promise<TrackRun> {
   const cfg = await setting(deps, storeId, 'delivery.courier.tracking');
-  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0 };
+  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0, checksOpened: 0 };
   if (!cfg.enabled) return run;
   const now = nowOf(deps);
   const due = new Date(now.getTime() - cfg.everyMinutes * 60_000);
@@ -87,6 +91,7 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
     }
   }
   run.caughtUp = (await syncLagging(deps, storeId, cfg.batch)).moved;
+  run.checksOpened = (await sweepDeliveryChecks(deps, storeId, cfg.batch)).opened;
   return run;
 }
 

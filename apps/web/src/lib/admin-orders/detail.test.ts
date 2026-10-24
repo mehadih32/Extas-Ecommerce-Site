@@ -12,7 +12,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, editSummary, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
 import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
@@ -124,6 +124,23 @@ describe('which buttons an order shows', () => {
     expect(some.map((s) => s.fixed?.decision)).toEqual(['approve', 'ask']);
     const all = reviewSpecs(view('bn'), ID, 'EX-1', [{ id: ID, number: 'EX-2' }], new Set(['orders.risk.decide', 'orders.hold', 'orders.merge', 'orders.cancel']), reasons, null);
     expect(all.map((s) => s.fixed?.decision)).toEqual(['approve', 'hold', 'ask', 'merge', 'decline']);
+  });
+
+  it('PR 525 · a delivery check: three answers behind their own key, each to the check route, with words in both languages', () => {
+    expect(deliveryCheckSpecs(view('en'), ID, 'EX-1', new Set(['orders.read', 'delivery.parcels']), reasons, null)).toEqual([]);
+    for (const lang of ['en', 'bn'] as const) {
+      const specs = deliveryCheckSpecs(view(lang), ID, 'EX-1', new Set(['delivery.outcomes']), reasons, '৳60'); // hardcode-ok: a made-up test amount
+      expect(specs.map((s) => s.fixed?.outcome)).toEqual(['DELIVERED', 'CHARGE_PAID_RETURN', 'RETURNED']);
+      for (const s of specs) {
+        expect(s.url).toBe(`/api/admin/delivery/checks/${ID}/resolve`);
+        expect(s.version).toBeNull();
+        for (const w of [s.label, s.title, s.ok, s.done, ...s.effects]) expect(w, `${lang} ${s.id}`).not.toMatch(/orders\.check\./);
+      }
+      expect(specs[0]!.fields.map((f) => f.name)).toEqual(['note']);
+      expect(specs[1]!.fields.map((f) => f.name)).toEqual(['refusalKey', 'note']);
+      expect(specs[1]!.fields[0]!.options![0]!.value).toBe(''); // no reason picked unless a person picks one
+      expect(specs[1]!.effects.join(' ')).toContain('৳60');
+    }
   });
 });
 

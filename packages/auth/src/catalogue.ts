@@ -97,6 +97,10 @@ export const PERMISSIONS = {
   'delivery.book': { group: 'delivery' },
   'delivery.exceptions': { group: 'delivery' },
   'delivery.couriers': { group: 'delivery' },
+  // S08 · PR 525, 526 — what really happened at the door: resolve a true-delivery check (the courier said delivered, the
+  // shop's records say it came back) and record why a parcel came back (the rider's note, the reason from the owner's
+  // list). It never moves money, changes COD or decides a refund: a return is recorded, the money stays with payments.
+  'delivery.outcomes': { group: 'delivery' },
   // S0A · PR 6 — the Server page: whether the background worker is alive, which one leads the scheduler, and the jobs
   // that failed with their reason and next try. Seeing only; nothing here changes anything.
   'system.read': { group: 'system' },

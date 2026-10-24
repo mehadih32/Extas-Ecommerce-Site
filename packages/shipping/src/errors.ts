@@ -28,7 +28,11 @@ export type ShippingErrorCode =
   /** PR 180: this courier has no parcel ready to hand over (booked, with us, its sticker printed, nothing changed). */
   | 'NOTHING_TO_HAND_OVER'
   /** PR 180: this handover batch was marked handed over already (`data.handedOverAt`). */
-  | 'ALREADY_HANDED_OVER';
+  | 'ALREADY_HANDED_OVER'
+  /** PR 525: the true-delivery check was resolved already (`data.resolution`). */
+  | 'ALREADY_RESOLVED'
+  /** PR 525, 526: the order service refused the step (`data.code`, e.g. CANCEL_PENDING); nothing was changed. */
+  | 'ORDER_REFUSED';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;

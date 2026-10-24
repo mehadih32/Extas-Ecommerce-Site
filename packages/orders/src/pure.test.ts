@@ -60,6 +60,7 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   handover: { PACKED: 'HANDED_OVER' },
   // PR 184: the courier's pick-up moves a booked order on from wherever packing stood
   courierPickedUp: { CONFIRMED: 'IN_TRANSIT', PROCESSING: 'IN_TRANSIT', PACKED: 'IN_TRANSIT', HANDED_OVER: 'IN_TRANSIT' },
+  deliveryCorrected: { DELIVERED: 'RETURNED' },
   delivered: { HANDED_OVER: 'DELIVERED', IN_TRANSIT: 'DELIVERED' },
   partiallyDelivered: { IN_TRANSIT: 'PARTIALLY_DELIVERED' },
   returned: { HANDED_OVER: 'RETURNED', IN_TRANSIT: 'RETURNED' },
@@ -85,6 +86,7 @@ const PASSING: Partial<Record<OrderCommand, Partial<MachineOrder>>> = {
   refuseCancelRequest: { cancelRequested: true },
   handover: { booked: true },
   courierPickedUp: { booked: true },
+  deliveryCorrected: { deliveryCheckOpen: true },
 };
 
 describe('the transition table (§6.5.1)', () => {
@@ -110,6 +112,13 @@ describe('the transition table (§6.5.1)', () => {
     for (const s of ['DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED', 'CANCELLED'] as const) {
       expect(allowedCommands(order(s))).toEqual(['setFlags']);
     }
+  });
+
+  it('PR 525: a delivered order is corrected to returned only while a true-delivery check is open', () => {
+    expect(plan('deliveryCorrected', order('DELIVERED'))).toMatchObject({ ok: false, code: 'NO_DELIVERY_CHECK' });
+    expect(plan('deliveryCorrected', order('DELIVERED', { deliveryCheckOpen: true }))).toMatchObject({ ok: true, to: 'RETURNED' });
+    expect(allowedCommands(order('DELIVERED', { deliveryCheckOpen: true }))).toEqual(['setFlags', 'deliveryCorrected']);
+    expect(plan('deliveryCorrected', order('IN_TRANSIT', { deliveryCheckOpen: true }))).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION' });
   });
 
   it('release goes back to where the order was held from', () => {

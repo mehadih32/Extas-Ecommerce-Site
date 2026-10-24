@@ -291,3 +291,47 @@ export function lateOf(o: { placedAt: Date; hoursMax: number | null; addressUncl
   const active = (ACTIVE_STATES as readonly string[]).includes(o.status);
   return { late: active && now.getTime() > dueBy.getTime() + Math.max(0, graceHours) * HOUR, dueBy };
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 525 — the true-delivery check (SIM-F-005, SIM-F-028), without a database.
+
+/** The signs that a parcel the courier calls delivered came back. */
+export const CHECK_SIGNALS = ['CHARGE_ONLY', 'DOOR_RETURNED', 'STATEMENT', 'RETURN_RECEIVED'] as const;
+export type CheckSignal = (typeof CHECK_SIGNALS)[number];
+
+/** What a person decides really happened. */
+export const CHECK_OUTCOMES = ['DELIVERED', 'CHARGE_PAID_RETURN', 'RETURNED'] as const;
+export type CheckOutcome = (typeof CHECK_OUTCOMES)[number];
+
+/**
+ * The signs against a courier's "Delivered": on a cash-on-delivery parcel with goods to pay for, the courier collected
+ * no more than the delivery charge (plus the owner's COD tolerance) — `CHARGE_ONLY`; a person's door record says it came
+ * back — `DOOR_RETURNED`; the courier's own statement line pays it as a return — `STATEMENT`; the parcel was received
+ * back at the shop — `RETURN_RECEIVED`. An empty list: nothing contradicts the courier.
+ */
+export function truthSignals(f: {
+  cod: boolean;
+  codAmountMinor: number | null;
+  codCollectedMinor: number | null;
+  deliveryChargeMinor: number;
+  toleranceMinor: number;
+  doorReturned: boolean;
+  statementReturn: boolean;
+  returnReceived: boolean;
+}): CheckSignal[] {
+  const out: CheckSignal[] = [];
+  const chargeLine = f.deliveryChargeMinor + Math.max(0, f.toleranceMinor);
+  if (f.cod && f.codAmountMinor !== null && f.codAmountMinor > chargeLine && f.codCollectedMinor !== null && f.codCollectedMinor <= chargeLine) out.push('CHARGE_ONLY');
+  if (f.doorReturned) out.push('DOOR_RETURNED');
+  if (f.statementReturn) out.push('STATEMENT');
+  if (f.returnReceived) out.push('RETURN_RECEIVED');
+  return out;
+}
+
+/** The order step a person's decision runs, from the order's state now (null: nothing to move). */
+export function correctionStep(outcome: CheckOutcome, orderStatus: string): 'delivered' | 'returned' | 'deliveryCorrected' | null {
+  const onTheWay = orderStatus === 'HANDED_OVER' || orderStatus === 'IN_TRANSIT';
+  if (outcome === 'DELIVERED') return onTheWay ? 'delivered' : null;
+  if (onTheWay) return 'returned';
+  return orderStatus === 'DELIVERED' ? 'deliveryCorrected' : null;
+}

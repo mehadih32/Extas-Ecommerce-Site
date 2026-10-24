@@ -37,6 +37,9 @@
 // order's timeline, the orders behind their parcel caught up on every run (sync.ts); late parcels past their band's
 // promise in their own list (parcels.ts, SIM-F-018); the order page reads the courier's last word through the order service's detail.
 //
+// PR 525: the true-delivery check — a "Delivered" the shop's own records contradict, held for a person to resolve
+// (truth.ts); what really happened is kept beside what the courier claimed.
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -55,3 +58,4 @@ export * from './handover';
 export * from './picking-pure';
 export * from './picking';
 export * from './sync';
+export * from './truth';

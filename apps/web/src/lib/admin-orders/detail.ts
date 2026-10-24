@@ -6,6 +6,7 @@
 // discount or COD, or blocks anyone; a paid order's cancel says it records a refund REQUEST for the owner, nothing more.
 import type { PermissionKey } from '@extas/auth';
 import * as od from '@extas/orders';
+import { openCheckOf } from '@extas/shipping';
 import { targetOf, type OrderCommand, type OrderState } from '@extas/orders/pure';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -312,6 +313,38 @@ export function commandSpecs(
  * key; decline cancels, so it needs the cancel key too. A risk review's hold starts on the owner's first reason (the
  * service asks for one); "One parcel" shows only when earlier orders matched.
  */
+/**
+ * PR 525 — the true-delivery check's three answers (only with `delivery.outcomes`): really delivered, came back with the
+ * charge paid, came back. A return asks why from the owner's refusal list. Nothing moves money or changes COD.
+ */
+export function deliveryCheckSpecs(view: AdminView, checkId: string, number: string, perms: ReadonlySet<string>, reasons: od.ReasonLists, collected: string | null): CommandSpec[] {
+  if (!perms.has('delivery.outcomes')) return [];
+  const d = view.dict;
+  const tt = (k: string) => t(d, `orders.check.${k}`, { n: number, amount: collected ?? t(d, 'orders.list.none') });
+  const note: FieldSpec = { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), labelNeeded: t(d, 'orders.dlg.note'), noteFor: 'refusalKey', maxLength: 500, placeholder: t(d, 'orders.dlg.notePh') };
+  // the reason starts empty: a return recorded without one keeps a reason recorded earlier (PR 526), never a guess
+  const why: FieldSpec = { name: 'refusalKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: [{ value: '', label: t(d, 'orders.check.notKnown') }, ...reasons.refusal.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) }))] };
+  const spec = (k: 'delivered' | 'chargePaid' | 'returned', outcome: string, extra: Partial<CommandSpec>): CommandSpec => ({
+    id: `check-${k}`,
+    label: tt(`${k}.label`),
+    url: `/api/admin/delivery/checks/${checkId}/resolve`,
+    version: null,
+    fixed: { outcome },
+    title: tt(`${k}.title`),
+    effects: [],
+    fields: [note],
+    ok: tt(`${k}.ok`),
+    okTone: 'pri',
+    done: tt(`${k}.done`),
+    ...extra,
+  });
+  return [
+    spec('delivered', 'DELIVERED', { tone: 'pri', effects: [tt('eff.delivered'), t(d, 'orders.check.eff.noMoney')], fields: [{ name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), maxLength: 500 }] }),
+    spec('chargePaid', 'CHARGE_PAID_RETURN', { effects: [tt('eff.returned'), tt('eff.charge'), t(d, 'orders.check.eff.noMoney')], fields: [why, note] }),
+    spec('returned', 'RETURNED', { tone: 'bad', okTone: 'badf', effects: [tt('eff.returned'), t(d, 'orders.check.eff.noMoney')], fields: [why, note] }),
+  ];
+}
+
 export function reviewSpecs(view: AdminView, alertId: string, number: string, matched: { id: string; number: string }[], perms: ReadonlySet<string>, reasons: od.ReasonLists, paid: string | null, risk = false): CommandSpec[] {
   if (!perms.has('orders.risk.decide')) return [];
   const d = view.dict;
@@ -343,6 +376,8 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.courierCancelConfirmed': 'bad',
   'order.returned': 'bad',
   'shipment.outForDelivery': 'mute',
+  'delivery.checkOpened': 'warn',
+  'order.deliveryCorrected': 'bad',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -469,6 +504,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     editable ? od.editChoices(deps, who, o.id) : Promise.resolve(null),
   ]);
   const twoSize = askTwoSize ? await od.twoSizeQuestions(deps, who, o.id) : [];
+  // PR 525: an open true-delivery check (the courier said delivered, our records say it came back)
+  const check = await openCheckOf(deps, who.storeId, o.id);
   // PR 521: each review explained (a reading aid: if one cannot be read, the card still shows everything else)
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
@@ -627,6 +664,11 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   twoSize.forEach((g, i) => bands.push({ id: `twoSize-${i}`, kind: 'stale', text: t(d, 'orders.band.twoSize', { product: `${g.product}${g.colour ? ` · ${g.colour}` : ''}`, sizes: g.sizes.map((s) => s.label).join(' + ') }), specs: twoSizeSpecs(view, o, g, i, !!paidText) }));
   const waits = advanceBand(view, adv, o.status, o.currency);
   if (waits) bands.push({ id: 'advance', kind: 'stale', text: waits, specs: advance.resend ? [advance.resend] : [] });
+  if (check) {
+    const signs = check.signals.map((sg) => t(d, `orders.check.sig.${sg}`)).join(' · ');
+    const collected = check.collectedMinor !== null ? m(check.collectedMinor) : null;
+    bands.push({ id: 'deliveryCheck', kind: 'bad', text: t(d, 'orders.band.deliveryCheck', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier'), signs }), specs: deliveryCheckSpecs(view, check.id, o.number, perms, reasons, collected) });
+  }
   if (o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
 
   return {
