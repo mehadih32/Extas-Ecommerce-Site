@@ -51,6 +51,13 @@ describe('device gate', () => {
     expect(plan.find((p) => p.url.endsWith('/admin/products/p1')).expect).toEqual(['.pa-x', '.pa-kind']);
   });
 
+  it('PR 100 · a page whose query changes it (?try=1) takes its own control list, not the plain path\'s', () => {
+    const signedIn = { urls: ['/combos/build-your-own', '/combos/build-your-own?try=1'], expect: { '/combos/build-your-own': ['.off'], '/combos/build-your-own?try=1': ['.on'] } };
+    const plan = signedInPlan('http://h:1', signedIn, []);
+    expect(plan.find((p) => p.url.endsWith('/combos/build-your-own')).expect).toEqual(['.off']);
+    expect(plan.find((p) => p.url.endsWith('?try=1')).expect).toEqual(['.on']);
+  });
+
   it('the shipped signed-in config checks the controls of follow-up 5 on seeded pages', () => {
     const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
     const expected = [...Object.values(rules.signedIn.expect).flat(), ...rules.signedIn.discover.flatMap((d) => d.expect)];

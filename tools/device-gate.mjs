@@ -197,12 +197,15 @@ export function firstScreenFor(url, device, rules) {
 export function signedInPlan(base, signedIn, lighthouseUrls, discovered = []) {
   const plan = new Map();
   const add = (path, expect = []) => {
-    const url = new URL(path, base).toString();
+    const u = new URL(path, base);
+    const url = u.toString();
     const had = plan.get(url);
+    // PR 100: a page whose query changes what it shows (`?try=1`) has its own list; else the path's list applies
+    const own = signedIn.expect?.[u.pathname + u.search] ?? signedIn.expect?.[u.pathname] ?? [];
     plan.set(url, {
       url,
-      signedOut: (signedIn.signedOutPaths ?? []).includes(new URL(url).pathname),
-      expect: [...new Set([...(had?.expect ?? []), ...(signedIn.expect?.[new URL(url).pathname] ?? []), ...expect])],
+      signedOut: (signedIn.signedOutPaths ?? []).includes(u.pathname),
+      expect: [...new Set([...(had?.expect ?? []), ...own, ...expect])],
     });
   };
   for (const u of lighthouseUrls) add(new URL(u).pathname + new URL(u).search);
