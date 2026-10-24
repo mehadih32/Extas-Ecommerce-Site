@@ -353,6 +353,11 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
         await page.evaluate(() => scrollTo(0, 0));
       }
     }
+    // The shop shell's measured fits (the footer columns, the phone header) run after the first paint, a task each: on a busy
+    // runner they can land after the settle time, so the page is measured once they say they are done.
+    await page
+      .waitForFunction(() => !document.querySelector('.shop') || document.documentElement.getAttribute('data-shell-fits') === 'done', null, { timeout: rules.fitsMs ?? 5000 })
+      .catch(() => undefined);
     // Layout first, taps last: the tap probe scrolls the page.
     issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);
     issues.push(...(await page.evaluate(appChecks, {
