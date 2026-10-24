@@ -8972,6 +8972,7 @@
     "date": "2026-10-22",
     "note": "combo analytics: views, colour picks and adds counted per day (ComboDailyStat) and per colour pair (PopularPair) with SQL upserts; report tab `/admin/combos?tab=report` (`combos.report.defaultDays/topCount`): sets sold, orders, sales and what customers saved from real orders only, best combos, most-picked pairs; `GET /api/admin/combos/report`",
     "github": [
+     "#43, 24 Oct",
      "#22, 22 Oct"
     ]
    },
@@ -26259,6 +26260,7 @@
     "date": "",
     "note": "",
     "github": [
+     "#44, 24 Oct",
      "#20, 20 Oct",
      "#19, 20 Oct"
     ]
@@ -26334,6 +26336,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s21-addition--pr-register-in-the-backend-owner-19-oct-14591505",
      "text": "**Updated 23 Oct 2026 (CN-015):** the \"Running problems\" list (README and `docs/problems/<id>.md`) is refreshed by a scheduled workflow, anonymised before it reaches GitHub."
+    },
+    {
+     "date": "24 Oct",
+     "sortKey": 34560,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s21-addition--pr-register-in-the-backend-owner-19-oct-14591505",
+     "text": "**Updated 24 Oct 2026 (CN-026, cut by CN-027):** the part every launch PR needs is built (merged on branch, not yet the whole PR, so the Build status and Progress are unchanged): a Bengali page guide per built admin page in six fixed parts (`docs/admin-guide/pages/<section>/<page>.md`, 23 pages) and an overview per section (`pages/<section>/index.md`, 14), mapped in `apps/web/src/lib/admin-shell/help-pages.json`; `GET /api/admin/guide` (by address or id); a small top-bar icon opens the current page's guide as the side panel (desktop) or full-screen sheet (phone); the admin typography (self-hosted Instrument Sans + Hind Siliguri, readable guide text, Tip / Careful / Example boxes, aligned forms); and `tools/admin-guide-check.mjs` in CI fails on a built page without its guide. After launch (CN-027, PROGRESS follow-ups 390–396): the \"?\" hints, \"Show me\", the pop-up and own-page modes, the mode on the CN-025 Admin look setting, guides for pages built later, the live visible-label check, and all AI parts (S15)."
     }
    ],
    "mentions": [],

@@ -1230,6 +1230,27 @@ feature states disagree with the register. Every deploy copies README.md and doc
 `/docs/current` for the admin tabs still to be built. Planned — see register PRs 413–424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin;
 423 = the Server page): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
+**Page guides (scope on PR 594, CN-026 cut by CN-027, 24 Oct):**
+
+> **বাংলায়:** অ্যাডমিনের প্রতিটা তৈরি পাতার নিজের বাংলা গাইড এসেছে, ছয় ভাগে: এটা কী, কেন দরকার (একটা উদাহরণসহ), কীভাবে
+> করবেন, প্রতিটা বোতামের মানে, সাধারণ ভুল, এরপর কী হয়। উপরের বারের ছোট **?** চাপলে যে পাতায় আছেন তার গাইড খোলে —
+> কম্পিউটারে পাশে, ফোনে পুরো পর্দায়। লেখা বড় আর পরিষ্কার, টিপ / সাবধান / উদাহরণ রঙিন বাক্সে। গাইড ছাড়া নতুন পাতা এলে CI আটকায়।
+
+| Part | What it does |
+|---|---|
+| page guides | `docs/admin-guide/pages/<section>/<page>.md`, one per built admin page (23), in six fixed parts with Tip / Careful / Example boxes (`> [!TIP]`, `> [!WARNING]`, `> [!NOTE]`); `pages/<section>/index.md` is the overview of each of the 14 sections |
+| route table | [`apps/web/src/lib/admin-shell/help-pages.json`](apps/web/src/lib/admin-shell/help-pages.json): each built page's route and its guide; login, the 404 catch-all and the old delivery redirect are listed as not guided, with the reason |
+| guide API | `GET /api/admin/guide?path=<admin address>` or `?page=<section>/<page>` (`<section>/index` = the overview only): the page guide, the section overview and the section's pages; the same session rule as the other shell routes; only `[a-z0-9-]` ids are read |
+| guide icon | a small help icon in the top bar before the bell opens the current page's guide (`data-testid=a2-help`); the side panel on a computer (the page moves left at 1280 px and wider, not modal), the full-screen sheet on a phone; it follows the person to the next page; "এই সেকশনে কী করা যায়" opens the same guide, Help opens the section overviews |
+| admin type | self-hosted Instrument Sans + Hind Siliguri for the admin (`apps/web/src/fonts/admin-ui.css`, display optional as in the shop, preloaded), 15.5 px guide text at 1.7 line height, numbered steps, aligned forms (inputs and buttons take the admin font) |
+| CI check | `node tools/admin-guide-check.mjs` in the `checks` job: a built admin page with no row, a row with no guide, a guide not in the six parts, a section without its overview or an overview that does not list its pages fails the build |
+
+Tests: `shell.test.ts` (route matching, the mode, boxes, comments, page links, every row's guide in the six parts),
+`api.db.test.ts` (the guide API on PostgreSQL), `tools/admin-guide-check.test.mjs`. Smoke: the guide API and the top-bar
+icon (`docs/qa/smoke.json`). No setting, no migration, no permission. After launch (CN-027, follow-ups 390–396): the "?"
+hints, "Show me", the pop-up and own-page modes and the Admin look setting (CN-025), the live label check, the AI helper.
+Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
+
 ### S24 · Virtual Photoshoot Studio — Not started
 
 Planned — see register PRs 444–480, 539: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
@@ -1272,6 +1293,8 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #44 | PR [594](docs/stages/S21.md#pr-594) | 24 Oct | A Bengali guide for every built admin page (what it is, why, steps, every button and field, common mistakes, what happens next), opened from a small help icon in the top bar: a side panel on a computer that follows you page to page, a full-screen sheet on a phone; the admin gets its own self-hosted fonts and calmer type; CI fails when a built admin page has no guide (CN-026, cut to the launch scope by CN-027) |
+| #43 | PR [104](docs/stages/S03.md#pr-104) | 24 Oct | Combo pages no longer keep a request open for a minute after they load (the page-opened count now reads its answer), so Lighthouse and the smoke test see the page settle at once; a test stops any page from leaving such a request open again |
 | #42 | PR [519](docs/stages/S06.md#pr-519), [520](docs/stages/S06.md#pr-520), [521](docs/stages/S06.md#pr-521), [544](docs/stages/S06.md#pr-544), [175](docs/stages/S08.md#pr-175), [176](docs/stages/S08.md#pr-176), [177](docs/stages/S08.md#pr-177) | 24 Oct | One identity per customer from the phone, the device and an alike name and address, so a new number no longer hides the same person; the duplicate and re-order rules A–E, H, I, each with its own switch and a proposal a person decides (no block); "Why this alert, and the options" on the order page's review card; one list of every fraud and duplicate rule with its switch (admin API). All off by default. The courier framework with the practice courier (exception states with reasons, events stored once, the RTO cost book from real returned parcels only), Steadfast and Pathao behind it: staff book one, the ticked or all ready orders (never a cancelled, held, unconfirmed or in-review one), consignment ids, and the worker reads parcel updates; both stay on practice until the owner's keys pass the Test. |
 | #41 | PR [572](docs/stages/S03.md#pr-572), [573](docs/stages/S03.md#pr-573), [574](docs/stages/S03.md#pr-574), [576](docs/stages/S03.md#pr-576), [165](docs/stages/S07.md#pr-165), [166](docs/stages/S07.md#pr-166), [167](docs/stages/S07.md#pr-167), [170](docs/stages/S07.md#pr-170), [125](docs/stages/S04.md#pr-125) | 24 Oct | Combo templates: each colour-pair rule gets its own list page (`/combos/<rule>`) in five layouts, the pair page and the set in the bag each get five more, and the current look stays the default until the owner picks another. A test tool plays every template at four screen sizes and scores it out of 100. S03 is done (22/22). Payments start (S07 4/10): every payment has one state and a money status, cash on delivery is settled after the door (a paid customer is never asked again), bKash sits behind one gateway contract on its practice mode until the owner adds the keys, and callbacks are signature-checked and counted once. | Merged |
 | #40 | PR [541](docs/stages/S05.md#pr-541), [159](docs/stages/S06.md#pr-159) | 24 Oct | Every new order lands in one section with a note the moment it is placed (duplicate, re-order, new identity, high risk, watch, prepaid, clear); the strong sections wait for a person, and an order under review can never be booked. Prepaid orders get their own confirm view. The order list gets a risk column, filters and a "highest risk first" sort. Checkout keeps the IP, the shop's own random device id and a location the customer chooses to share, each by its own switch, and clears them after 180 days. S05 is complete. |
