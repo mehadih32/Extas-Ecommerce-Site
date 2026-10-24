@@ -117,6 +117,11 @@ export const PERMISSIONS = {
   // S05 · PR 142 — edit an order not yet with the courier: the customer's name, phone and address, a size at the same
   // price, a piece taken out (with a reason and where the customer asked). Never a price, discount, charge or COD.
   'orders.edit': { group: 'orders' },
+  // S05 · PR 151 — export the orders the list shows (its filters, or the ticked ones) as a CSV file; with
+  // `orders.exportPersonal` the file also carries the customer's name, phone, e-mail and address. Every export is
+  // audited. Nothing is changed by an export.
+  'orders.export': { group: 'orders' },
+  'orders.exportPersonal': { group: 'orders' },
   // S05 · PR 148 — Messages › Order journey (MSG-01): see the journey (its steps, channels, caps and whether each channel
   // is live or on its mock); change it; and record a customer's self-confirm reply (1, 2 or 3) until the WhatsApp
   // provider's replies arrive by themselves. A 1 confirms the order only with `messages.selfConfirm.confirmOnYes`, as a

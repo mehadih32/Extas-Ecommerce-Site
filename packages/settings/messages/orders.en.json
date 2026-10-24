@@ -84,6 +84,20 @@
     "twoSize": {
       "label": "Two-size follow-up",
       "help": "Off by default. enabled: when an order has the same piece in neighbouring sizes (S and M), the order gets \"2 sizes — check\". If the customer said in the bag that they are for different people, it is only a note and nobody is asked. askCustomer: his order page asks which he wants (keep all, or only one size); his answer takes the other sizes out before packing. callTask: the confirmation caller also gets a call. No answer: all are sent."
+    },
+    "export": {
+      "maxRows": {
+        "label": "Order export: most orders per file",
+        "help": "An export of more orders than this is refused with the count, so the filter can be narrowed (by view, status, payment method, channel or search)."
+      },
+      "columns": {
+        "label": "Order export: columns",
+        "help": "The columns of the order CSV, in this order. The customer's name, phone, e-mail and address go only to staff allowed to export personal details; the others never name a person."
+      },
+      "delimiter": {
+        "label": "Order export: separator",
+        "help": "The character between the cells of the CSV file: a comma, a semicolon (some spreadsheets in Bangla or European settings) or a tab."
+      }
     }
   },
   "defaults": {

@@ -50,6 +50,8 @@ export const ORDER_PERMISSIONS = [
   'orders.merge',
   'orders.lines',
   'orders.edit',
+  'orders.export',
+  'orders.exportPersonal',
 ] as const;
 export type OrdersPermission = (typeof ORDER_PERMISSIONS)[number];
 

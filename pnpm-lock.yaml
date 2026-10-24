@@ -721,6 +721,9 @@ importers:
       '@extas/cart':
         specifier: workspace:*
         version: link:../cart
+      '@extas/catalogue':
+        specifier: workspace:*
+        version: link:../catalogue
       '@extas/db':
         specifier: workspace:*
         version: link:../db
