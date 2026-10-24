@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { comboListPageSchema, comboPairPageSchema, comboTemplateSettings } from '../src/registry-combo-templates';
+import { comboBagCompactSchema, comboListPageSchema, comboPairPageSchema, comboTemplateSettings } from '../src/registry-combo-templates';
 
 describe('combo template settings (v39)', () => {
   it('every key is in the registry at version 39, public, not owner data, with both labels', () => {
@@ -32,6 +32,14 @@ describe('combo template settings (v39)', () => {
     expect(registry['combos.template.page'].version).toBe(39);
     expect(registry['combos.template.page'].schema.safeParse('P4').success).toBe(true);
     expect(comboPairPageSchema.safeParse({ otherPairs: 14, packSwatches: 0, upsell: true }).success).toBe(false);
+  });
+
+  it('PR 574: the bag keeps the current look until the owner picks a template; B5 rows from 3 sets', () => {
+    expect(registry['combos.template.bag'].default).toBe('current');
+    expect(registry['combos.template.bag'].version).toBe(39);
+    expect(registry['combos.template.bag'].schema.safeParse('B3').success).toBe(true);
+    expect(comboTemplateSettings['combos.bag.compactFrom'].default).toBe(3);
+    expect(comboBagCompactSchema.safeParse(0).success).toBe(false);
   });
 
   it('refuses what is not a setting of these pages', () => {

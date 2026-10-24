@@ -3,6 +3,8 @@
 // (under them on a phone) the order summary; under everything "You may also like" with the tier ladder; on a phone the
 // checkout bar while the summary's button is out of sight. Server-drawn from the engines; BagActions does the clicks.
 // PR 606: the bulk / corporate card under the WhatsApp card, while the owner has the lane on (bulk/BulkBagCard).
+// PR 574: each set in its bag template (B1–B5, `combos.template.bag`; the current look by default), `?btpl=` previews
+// another with the template bar while `combos.template.preview` is on.
 import './bag.css';
 import { Fragment } from 'react';
 import type { BagView } from '@extas/cart';
@@ -18,6 +20,10 @@ import { BulkBagCard } from '../bulk/BulkBagCard';
 import { BagActions, type BagWords } from './BagActions';
 import { EmptyBag, SavedBox } from './BagExtras';
 import { ItemLine, SetLine } from './BagLines';
+import { BagSetCard } from './BagSetCard';
+import { bagSetLooks } from '@/lib/shop/combo-bag';
+import { BAG_TEMPLATES } from '@/lib/shop/combo-bag-model';
+import { PreviewBar } from '../combo/PreviewBar';
 import { FreeBar } from './FreeBar';
 import { OfferSlot } from './OfferSlot';
 import { SizesCard } from './SizesCard';
@@ -47,14 +53,15 @@ export function bagWords(c: ShopContext): BagWords {
   };
 }
 
-export async function BagPage({ c, view, s }: { c: ShopContext; view: BagView; s: BagSettings }) {
+export async function BagPage({ c, view, s, btpl = null }: { c: ShopContext; view: BagView; s: BagSettings; btpl?: string | null }) {
   const t = c.t;
   const empty = !view.items.length && !view.sets.length;
   const savedOn = s['bag.saved.enabled'];
   const pictureIds = [...view.items, ...view.saved.items].map((i) => i.productId).concat([...view.sets, ...view.saved.sets].flatMap((x) => x.pieces.map((p) => p.productId).filter((id): id is string => !!id)));
-  const [cards, picks] = await Promise.all([
+  const [cards, picks, looks] = await Promise.all([
     cardsByIds(c.storeId, pictureIds),
     !empty && s['bag.upsell.enabled'] ? bagPickCards(c.storeId, view.productIds, s['bag.upsell.count']) : Promise.resolve({ cards: [], from: 'none' as const }),
+    bagSetLooks(c.storeId, view.sets, btpl),
   ]);
   const trust = reassurance(c.flags, { securePayment: s['bag.trust.securePayment'], originalLine: s['bag.upsell.originalLine'] });
   const words = bagWords(c);
@@ -96,9 +103,14 @@ export async function BagPage({ c, view, s }: { c: ShopContext; view: BagView; s
           <div className="stack s16" style={{ minWidth: 0 }}>
             {s['bag.freeProgress.enabled'] ? <FreeBar c={c} free={view.free} /> : null}
             <div className="card bg-lines">
-              {view.sets.map((x) => (
-                <SetLine key={x.groupKey} c={c} set={x} cards={cards} />
-              ))}
+              {view.sets.map((x) => {
+                const draw = looks.draw.get(x.groupKey) ?? 'current';
+                return draw === 'current' ? (
+                  <SetLine key={x.groupKey} c={c} set={x} cards={cards} />
+                ) : (
+                  <BagSetCard key={x.groupKey} c={c} set={x} cards={cards} draw={draw} nudge={looks.nudges.get(x.groupKey) ?? null} lowStockAt={s['bag.lowStockAt']} />
+                );
+              })}
               {view.items.map((i) => (
                 <Fragment key={i.lineId}>
                   <ItemLine c={c} item={i} card={cards.get(i.productId)} blocked={blocked.get(i.lineId)} lowStockAt={s['bag.lowStockAt']} toWish={s['wish.list'].fromBag} />
@@ -125,6 +137,9 @@ export async function BagPage({ c, view, s }: { c: ShopContext; view: BagView; s
             ) : null}
             <BulkBagCard c={c} view={view} />
             {savedOn ? <SavedBox c={c} saved={view.saved} cards={cards} keepDays={s['bag.keepDays']} /> : null}
+            {looks.preview && view.sets.length ? (
+              <PreviewBar c={c} kind="bag" list={BAG_TEMPLATES} current={looks.preview} hrefOf={(t) => `${bagHref}?btpl=${t}`} chosen={bagHref} />
+            ) : null}
           </div>
           <aside className="sticky-d">
             <BagSummary c={c} view={view} codeOn={s['bag.code.enabled']} trust={trust} blocked={isBlocked} gift={s['checkout.gift'].enabled} />

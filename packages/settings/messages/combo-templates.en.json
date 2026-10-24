@@ -13,6 +13,12 @@
     "pairPage": {
       "label": "A combo pair page (templates P1–P5): what it shows",
       "help": "otherPairs: how many other colour pairs of the same style the pair page (P1) shows under it (0 hides the row). packSwatches: how many packs the fixed-pack page (P5) shows as colour circles before \"All N packs\". upsell: \"Make it 3 pcs\" on the pair page, when the rule offers a 3-piece set of the same product."
+    },
+    "bag": {
+      "compactFrom": {
+        "label": "Compact rows in the bag: from how many sets",
+        "help": "With the bag template B5, each combo shows as one short row (tap ▸ to see the pieces, change a size or remove it) once the bag holds this many combos. With fewer, B5 shows the full card with the sizes (B2)."
+      }
     }
   }
 }

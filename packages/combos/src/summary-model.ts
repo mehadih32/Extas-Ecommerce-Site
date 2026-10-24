@@ -42,8 +42,15 @@ export function pageTemplateFor(i: PageTemplateInput): PageTemplate {
   return PAGE.test(t) ? (t as PageTemplate) : 'current';
 }
 
-/** The bag look (D8.4): the combo's, else its rule's, else the shop's (`combos.template.bag`, B5 by default). */
-export const bagTemplateFor = (i: { combo: string | null; rule: string | null; shop: string }): string => i.combo || i.rule || i.shop;
+/** The bag look (D8.4): the combo's, else its rule's, else the shop's (`combos.template.bag`; PR 574: "current" by
+ * default, ~~B5~~). Any set can take B1–B5 (a combo, a set built by hand, an auto pair); anything unknown is the current
+ * look. */
+export const BAG_LOOKS = ['current', 'B1', 'B2', 'B3', 'B4', 'B5'] as const;
+export type BagLook = (typeof BAG_LOOKS)[number];
+export const bagTemplateFor = (i: { combo: string | null; rule: string | null; shop: string }): BagLook => {
+  const t = i.combo || i.rule || i.shop;
+  return (BAG_LOOKS as readonly string[]).includes(t) ? (t as BagLook) : 'current';
+};
 
 /** The list card look (D8.4): the combo's, else its rule's, else the shop's (`combos.template.list`). */
 export const listTemplateFor = (i: { combo: string | null; rule: string | null; shop: string }): string => i.combo || i.rule || i.shop;

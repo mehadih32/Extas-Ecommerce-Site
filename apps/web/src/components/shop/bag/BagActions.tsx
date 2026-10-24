@@ -172,9 +172,34 @@ export function BagActions({ words, undoMs, bagHref, stamp }: { words: BagWords;
         el.hidden = true;
         form.querySelector('input')?.focus();
       } else if (act === 'code-remove') void run({ url: `${API}/code`, method: 'DELETE' }, () => toast(words.codeRemoved));
+      else if (act === 'set-grow') {
+        // PR 574 · B3 "Add 1 more": the 3-piece set of this pair's colours and a 3rd takes the pair's place (one write;
+        // the pair's lines are archived, never deleted)
+        const addKey = `grow-${el.dataset.group ?? ''}`.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
+        void run({ url: `${API}/sets`, method: 'POST', body: { slug: el.dataset.slug, choices: parsed(el.dataset.choices), replaceGroupKey: el.dataset.group, addKey } }, () => toast(el.dataset.msg ?? words.restored));
+      }
+    };
+    const parsed = (json: string | undefined): unknown[] => {
+      try {
+        const v: unknown = JSON.parse(json ?? '[]');
+        return Array.isArray(v) ? v : [];
+      } catch {
+        return [];
+      }
     };
     const onChange = (ev: Event) => {
       const el = ev.target as HTMLSelectElement;
+      if (el.matches?.('[data-bag-change="set-size"]') && root.contains(el)) {
+        // PR 574 · B2 / B3 / B5: one piece of a set in another size — the whole set re-checked and re-priced in place
+        const was = el.dataset.was ?? '';
+        const choices = parsed(el.dataset.choices) as { colourId: string | null; sizeId: string | null }[];
+        const i = Number(el.dataset.i);
+        if (choices[i]) choices[i] = { ...choices[i], sizeId: el.value };
+        void run({ url: `${API}/sets`, method: 'PATCH', body: { groupKey: el.dataset.group, choices } }, () => toast(fill(el.dataset.msg ?? words.changed, { to: el.selectedOptions[0]?.textContent ?? '', now: el.selectedOptions[0]?.textContent ?? '' }))).then((ok) => {
+          if (ok === false && was) el.value = was;
+        });
+        return;
+      }
       if (!el.matches?.('[data-bag-change="variant"]') || !root.contains(el)) return;
       const was = el.dataset.was ?? '';
       void run({ url: line(el.dataset.id ?? ''), method: 'PATCH', body: { variantId: el.value } }, () => toast(fill(words.changed, { now: el.selectedOptions[0]?.textContent ?? '' }))).then((ok) => {

@@ -162,6 +162,21 @@
       "error": "That did not go in — please try again.",
       "ask": "Ask about this combo",
       "askText": "Hi {store}, about the combo {name}{sizes}"
+    },
+    "bag": {
+      "youSave": "you save {amount}",
+      "sizeFor": "Size for {piece}",
+      "sizeChanged": "{piece}: size {from} → {to}",
+      "nudge": "Add 1 more → {pieces} for {price}",
+      "each": "{price} each",
+      "saveMore": "save {amount} more",
+      "add1": "Add 1",
+      "pick": "Pick the 3rd colour, in size {size}. Your combo becomes {pieces} for {price}.",
+      "outSize": "{size} sold out",
+      "grown": "Now {pieces} pcs · {price}",
+      "discount": "Combo discount",
+      "youPay": "You pay for this combo",
+      "open": "Show the pieces, change a size or remove"
     }
   }
 }

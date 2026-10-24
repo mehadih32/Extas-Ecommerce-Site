@@ -20,7 +20,7 @@ import { checkSet } from './validate';
 import { bagUse, comboForSale, type ComboForSale } from './set-check';
 import { picksPrice, wasAllowed } from './summary';
 import { recordSetAdded } from './analytics';
-import type { SetPrice } from './summary-model';
+import { bagTemplateFor, type BagLook, type SetPrice } from './summary-model';
 
 /** Where a bag line came from (PR 338 events). */
 export const SET_SOURCE = 'combo';
@@ -131,9 +131,11 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
     const unit = new Map(c.variants.map((v) => [v.id, v.priceMinor!]));
     const at = nowOf(deps);
     if (d.replaceGroupKey) await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.replaceGroupKey, removedAt: null }, data: { removedAt: at } });
-    for (const variantId of picks.variants) {
+    // PR 574 · each line a millisecond after the one before, so reading the set by `createdAt` keeps its slot order
+    // (the bag's B2 size change sends its choices in that order)
+    for (const [i, variantId] of picks.variants.entries()) {
       await tx.cartItem.create({
-        data: { storeId: d.storeId, cartId: d.cartId, variantId, quantity: 1, unitPriceMinor: unit.get(variantId)!, comboId: c.view.id, comboGroupKey: groupKey, setPriceMinor: picks.payMinor, source: d.source ?? SET_SOURCE, createdAt: at },
+        data: { storeId: d.storeId, cartId: d.cartId, variantId, quantity: 1, unitPriceMinor: unit.get(variantId)!, comboId: c.view.id, comboGroupKey: groupKey, setPriceMinor: picks.payMinor, source: d.source ?? SET_SOURCE, createdAt: new Date(at.getTime() + i) },
       });
     }
     await tx.cart.update({ where: { id: d.cartId }, data: { lastActivityAt: at } });
@@ -227,6 +229,10 @@ export interface BagSet {
   regularMinor: number;
   savingMinor: number;
   note: BagSetNote;
+  /** PR 574 · the auto rule that made the pair (B3's "Add 1 more" reads its 3-piece companion), else null. */
+  ruleId: string | null;
+  /** PR 574 · how the bag draws it: the combo's, its rule's or the shop's `combos.template.bag`. */
+  bagTemplate: BagLook;
 }
 
 /**
@@ -243,7 +249,7 @@ export async function bagSets(deps: CombosDeps, input: z.input<typeof cartSchema
   if (!lines.length) return [];
   const variantRows = await db.productVariant.findMany({ where: { storeId: d.storeId, id: { in: [...new Set(lines.map((l) => l.variantId))] } }, select: { id: true, productId: true, colourId: true, sizeId: true } });
   const variantOf = new Map(variantRows.map((v) => [v.id, v]));
-  const [follow, allowed] = await Promise.all([setting(deps, d.storeId, 'combos.bag.followPriceChanges'), wasAllowed(deps, d.storeId)]);
+  const [follow, allowed, shopBag] = await Promise.all([setting(deps, d.storeId, 'combos.bag.followPriceChanges'), wasAllowed(deps, d.storeId), setting(deps, d.storeId, 'combos.template.bag')]);
   const combos = new Map<string, ComboForSale | null>();
   for (const id of new Set(lines.map((l) => l.comboId!))) combos.set(id, await comboForSale(deps, d.storeId, { comboId: id }, db).catch(() => null));
   const groups = new Map<string, typeof lines>();
@@ -270,6 +276,8 @@ export async function bagSets(deps: CombosDeps, input: z.input<typeof cartSchema
       regularMinor,
       savingMinor: Math.max(0, regularMinor - payMinor),
       note: !live ? 'ENDED_KEEPS_PRICE' : payMinor !== locked ? 'PRICE_CHANGED' : null,
+      ruleId: c?.rule?.id ?? null,
+      bagTemplate: bagTemplateFor({ combo: c?.view.bagTemplateKey ?? null, rule: c?.rule?.bagTemplateKey ?? null, shop: shopBag }),
     });
   }
   return out;

@@ -162,6 +162,21 @@
       "error": "ব্যাগে যায়নি — আবার চেষ্টা করুন।",
       "ask": "এই কম্বো নিয়ে জিজ্ঞেস করুন",
       "askText": "হাই {store}, কম্বো {name} নিয়ে জানতে চাই{sizes}"
+    },
+    "bag": {
+      "youSave": "সাশ্রয় {amount}",
+      "sizeFor": "{piece}-এর সাইজ",
+      "sizeChanged": "{piece}: সাইজ {from} → {to}",
+      "nudge": "আর ১টা যোগ করুন → {pieces}টা {price}-এ",
+      "each": "প্রতিটা {price}",
+      "saveMore": "আরও {amount} সাশ্রয়",
+      "add1": "১টা যোগ করুন",
+      "pick": "৩য় রং বাছুন, সাইজ {size}। কম্বোটা হবে {pieces}টা {price}-এ।",
+      "outSize": "{size} শেষ",
+      "grown": "এখন {pieces} পিস · {price}",
+      "discount": "কম্বো ছাড়",
+      "youPay": "এই কম্বোর জন্য দেবেন",
+      "open": "পিসগুলো দেখুন, সাইজ বদলান বা সরান"
     }
   }
 }

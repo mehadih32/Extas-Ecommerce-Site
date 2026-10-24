@@ -133,8 +133,9 @@ export const combosSettings = {
   }),
   'combos.template.bag': setting({
     schema: comboBagTemplateSchema,
-    // The demo's R15 ranking winner (43-combo-tpl.js cbt_tpl); 'current' stays selectable.
-    default: 'B5',
+    // PR 574 (23 Oct): the current look stays until the owner picks a template (~~default 'B5', the demo's R15
+    // ranking winner~~ — B5 is still the ranking's pick, one setting away)
+    default: 'current',
     scope: 'store',
     valueType: 'ENUM',
     group: 'combos',
@@ -142,7 +143,8 @@ export const combosSettings = {
     helpKey: 'combos.template.bag.help',
     isOwnerData: false,
     sortOrder: 80,
-    version: V,
+    version: 39,
+    since: V,
   }),
   // ---- PR 96 · the "auto" combo product page: P2 (pick your colours) once a rule makes more pairs than this ----
   'combos.template.longListPairs': setting({

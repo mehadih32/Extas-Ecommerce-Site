@@ -1,7 +1,8 @@
 // PR 572 on a real PostgreSQL (a throwaway database with the real migrations, the sample catalogue and the sample
 // combos; skipped without TEST_DATABASE_ADMIN_URL): a rule's own page in one read — its pairs with links, sizes and
 // set prices that agree with the bag, the price table, the 2 ↔ 3 piece companion, top + bottom pairs sized one by one,
-// and a rule that is switched off keeping its page with no pairs.
+// and a rule that is switched off keeping its page with no pairs. PR 574: a set in the bag keeps its slot order, knows
+// its rule and its bag look, and one piece changes size in place.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/testing';
 import { seedSample } from '@extas/seed';
@@ -11,7 +12,7 @@ import { seedSampleCombos } from './sample';
 import { rulePage } from './rule-page';
 import { filterPairs, NO_FILTER, pairPrice } from './rule-page-model';
 import { priceSet } from './summary';
-import { addSetToBag } from './bag';
+import { addSetToBag, bagSets, changeSetInBag } from './bag';
 
 describe.skipIf(!HAS_TEST_DB)('a rule`s own page on PostgreSQL (S03 · PR 572)', () => {
   let t: TestDatabase;
@@ -82,6 +83,26 @@ describe.skipIf(!HAS_TEST_DB)('a rule`s own page on PostgreSQL (S03 · PR 572)',
     expect(lines.filter((l) => l.comboGroupKey === first.groupKey).every((l) => l.removedAt !== null)).toBe(true);
     expect(lines.filter((l) => l.comboGroupKey === next.groupKey && l.removedAt === null)).toHaveLength(2);
     await expect(addSetToBag(deps(), { storeId: S, cartId, slug: b!.slug, choices: choicesOf(b), replaceGroupKey: 'set-none' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('PR 574: a set in the bag keeps its slot order, its rule and its look; one piece changes size in place', async () => {
+    const p = (await rulePage(deps(), S, { key: 'sample-hoodie-trousers' }))!;
+    const pair = filterPairs(p.pairs, NO_FILTER)[0]!;
+    const sizes = (productId: string) => p.products.find((x) => x.id === productId)!.variants.filter((v) => v.sellable > 0);
+    const choices = pair.slots.map((s) => ({ colourId: s.colourId, sizeId: sizes(s.productId).find((v) => v.colourId === s.colourId)!.sizeId }));
+    const cartId = (await t.prisma.cart.create({ data: { storeId: S, visitorId: 'rule-page-bag-look' }, select: { id: true } })).id;
+    const added = await addSetToBag(deps(), { storeId: S, cartId, slug: pair.slug, choices, addKey: 'bag-look-test-01' });
+    const [set] = await bagSets(deps(), { storeId: S, cartId });
+    expect(set).toMatchObject({ groupKey: added.groupKey, ruleId: p.rule.id, bagTemplate: 'current' });
+    expect(set!.lines.map((l) => l.productId)).toEqual(pair.slots.map((s) => s.productId));
+    // the last piece in another size it is made in: the same set, the same lines, that one piece changed
+    const last = pair.slots.length - 1;
+    const other = sizes(pair.slots[last]!.productId).find((v) => v.colourId === pair.slots[last]!.colourId && v.sizeId !== choices[last]!.sizeId)!;
+    const next = choices.map((c, i) => (i === last ? { ...c, sizeId: other.sizeId } : c));
+    await changeSetInBag(deps(), { storeId: S, cartId, groupKey: added.groupKey, choices: next });
+    const [after] = await bagSets(deps(), { storeId: S, cartId });
+    expect(after!.lines.map((l) => l.id)).toEqual(set!.lines.map((l) => l.id));
+    expect(after!.lines.map((l) => l.sizeId)).toEqual(next.map((c) => c.sizeId));
   });
 
   it('a switched-off rule keeps its page with no pairs; an unknown key has none', async () => {
