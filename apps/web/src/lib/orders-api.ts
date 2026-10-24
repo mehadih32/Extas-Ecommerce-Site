@@ -43,6 +43,9 @@
 //                                                             customer's two-size answer; "only M" takes the other sizes out (orders.edit)
 //   GET   /api/admin/orders/:id/phone-history                 PR 157: the number's other orders and what became of them
 //                                                             (refused, our fault and not counted, cancelled …) (orders.read)
+//   GET   /api/admin/orders/:id/identity                      PR 519: the order's identity — the same person's other orders,
+//                                                             how each is tied (phone, device, name and address), his other
+//                                                             numbers and what those orders came to (orders.risk.read)
 //   GET   /api/admin/orders/:id/risk                          PR 160: the risk panel — the stored score, every signal with
 //                                                             its weight, earlier scores, rules changed since (orders.risk.read)
 //   POST  /api/admin/orders/:id/risk/assess                   PR 160: "score again" — a new dated score with today's rules;
@@ -216,6 +219,12 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (path.length > 2) return notFound();
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'orders.read', async (x) => ({ history: found(await od.orderPhoneHistory(x.deps, x.who, id)) }));
+  }
+  // S06 · PR 519: the order's identity — the same person's other orders (by phone, device, name and address) and numbers
+  if (b === 'identity') {
+    if (path.length > 2) return notFound();
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'orders.risk.read', async (x) => ({ identity: found(await od.identityView(x.deps, x.who, id)) }));
   }
   // S06 · PR 160: the risk panel (why the score is what it is) and "score again"
   if (b === 'risk') {

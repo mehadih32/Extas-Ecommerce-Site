@@ -23,6 +23,8 @@ export * from './address-checks';
 export * from './risk-score';
 // PR 541: the section an order is placed in the moment it lands (risk-section.ts).
 export * from './risk-section';
+// PR 519: how two orders of one identity are tied (identity-ties.ts).
+export * from './identity-ties';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [

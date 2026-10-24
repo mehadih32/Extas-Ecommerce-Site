@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { assessRisk, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
+import { assessRisk, linkIdentity, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -69,6 +69,19 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);
+  }
+}
+
+/**
+ * S06 · PR 519 — the order joins its customer's identity the moment it lands (off until the owner turns `risk.identity`
+ * on): the same phone, the same device, or an alike name and address. First, so the duplicate rules and the risk score
+ * read it. A record only: it never fails, holds or blocks the customer's order (a problem is logged).
+ */
+async function linkToIdentity(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await linkIdentity({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`identity link: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
   }
 }
 
@@ -146,6 +159,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const device = capture.device ? (had && visitorIdSchema.safeParse(had).success ? had : crypto.randomUUID()) : null;
     const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip: requestContext(request).ip ?? null, deviceId: device, input: b });
     if (!r.replay) {
+      await linkToIdentity(deps, r.orderId);
       await screenForDuplicates(deps, r.orderId);
       await checkTwoSizes(deps, r.orderId);
       await scoreRisk(deps, r.orderId);

@@ -71,6 +71,27 @@ describe.skipIf(!HAS_TEST_DB)('PR 159 · the 180-day purge on PostgreSQL', () =>
     expect((await row(fresh.id)).ip).toBeNull();
   });
 
+  it("PR 519: the identity graph's IP and device links go by the same day rule; its phone, name and address links stay", async () => {
+    const c = await t.prisma.identityCluster.create({ data: { storeId }, select: { id: true } });
+    const o = await order(200, -20);
+    const link = (kind: 'IP' | 'DEVICE' | 'PHONE' | 'NAME', valueNorm: string, firstSeenAgoDays: number, expiresInDays: number | null) =>
+      t.prisma.identityLink.create({
+        data: { storeId, clusterId: c.id, kind, valueNorm, orderId: o.id, firstSeenAt: new Date(NOW.getTime() - firstSeenAgoDays * D), expiresAt: expiresInDays === null ? null : new Date(NOW.getTime() + expiresInDays * D) },
+        select: { id: true },
+      });
+    const oldIp = await link('IP', '203.0.113.7', 200, null);
+    const dueDevice = await link('DEVICE', 'dev-1', 10, -1);
+    const freshDevice = await link('DEVICE', 'dev-2', 10, 170);
+    const phone = await link('PHONE', '+8801700000519', 200, null); // hardcode-ok: a made-up test number
+    const name = await link('NAME', 'test customer', 200, null);
+    const r = await purgeOrderPii(t.prisma, storeId, NOW, 180);
+    expect(r.links).toBe(2);
+    const left = new Set((await t.prisma.identityLink.findMany({ where: { clusterId: c.id }, select: { id: true } })).map((x) => x.id));
+    expect(left.has(oldIp.id) || left.has(dueDevice.id)).toBe(false);
+    for (const x of [freshDevice, phone, name]) expect(left.has(x.id)).toBe(true);
+    expect((await purgeOrderPii(t.prisma, storeId, NOW, 180)).links).toBe(0);
+  });
+
   it('runs as a job from the catalogue with the owner\'s days, and the planner plans one run per store and slot', async () => {
     days = 5;
     const o = await order(6, 100);

@@ -23,6 +23,10 @@
     "capture": {
       "label": "What the checkout keeps for the checks",
       "help": "The connection (IP) and the shop's own device code are kept with each order; the customer's location only when he taps \"Share my location\", rounded. All three are deleted from the order after the days you set (180 unless you change it). They only inform the risk checks; nobody is blocked by them."
+    },
+    "identity": {
+      "label": "One identity per customer",
+      "help": "When on, every new order is linked to one identity the moment it lands (and again when the team edits the phone, the name or the address): orders with the same phone, the same device, or a name and an address that are alike (spelling a little off still matches) belong to the same person, so a customer who changes his number is still known. The connection (IP) never joins two orders by itself, because many people share one mobile connection; it is only counted. While this is on, the risk signals \"same person under another number\" and \"same device\" read this identity. How far back a match reaches (days, 0 = ever), how alike the name and the address must be (1 = the same text), whether the same device joins two numbers, and how many earlier orders one step reads. It only records and informs: nothing is blocked, held or cancelled by it."
     }
   },
   "defaults": {

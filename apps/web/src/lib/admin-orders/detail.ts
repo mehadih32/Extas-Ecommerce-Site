@@ -14,6 +14,7 @@ import { KNOWN_ERRORS, commandUrl, reviewUrl, type CommandId } from './commands'
 import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
 import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
+import { identitySummary } from './identity';
 import { riskSummary } from './risk';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
@@ -338,6 +339,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.requestCancel': 'warn',
   'order.duplicateCheck': 'warn',
   'order.riskSection': 'warn',
+  'order.identityLinked': 'mute',
   'order.note': 'mute',
   'order.note.archived': 'mute',
   'order.setFlags': 'mute',
@@ -564,7 +566,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : null;
+      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : null;
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

@@ -42,6 +42,7 @@ import { riskSettings } from './registry-risk';
 import { riskMoreSettings } from './registry-risk-more';
 import { comboTemplateSettings } from './registry-combo-templates';
 import { paymentSettings } from './registry-payments';
+import { riskRulesSettings } from './registry-risk-rules';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1193,6 +1194,8 @@ export const registry = {
   ...comboTemplateSettings,
   // ---- S07 · PR 165 · payments: money received outside the checkout (off), the words of the mismatch reasons (registry-payments.ts, version 47). ----
   ...paymentSettings,
+  // ---- S06 · PR 519, 520 · the identity graph and the duplicate & re-order rules (registry-risk-rules.ts, version 48). ----
+  ...riskRulesSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
