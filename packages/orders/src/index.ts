@@ -23,6 +23,8 @@
 // key, audited (export.ts).
 // S06 · PR 157: a number's history — its other orders and what became of them (phone-history.ts).
 // S06 · PR 158: the address and zone facts read against the gazetteer for the checks (address-facts.ts).
+// S06 · PR 156: the risk score — the owner's signals and weights, scored once when the order lands and stored with its
+// reasons (risk.ts; the model in risk-score.ts). It only informs: nothing is blocked or held by it.
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -46,3 +48,4 @@ export * from './explain';
 export * from './export';
 export * from './phone-history';
 export * from './address-facts';
+export * from './risk';

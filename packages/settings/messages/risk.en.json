@@ -3,6 +3,27 @@
     "history": {
       "label": "A number's history",
       "help": "What the order page shows beside an order, and what the risk score reads: the number's other orders and what became of them. \"Earlier orders read\": how many of its past orders count, newest first. \"Refusals that are our fault\": refusal reasons (from \"Parcel refusal reasons\") that never count against the customer — arrived late, the wrong item, damaged, after Eid, did not order; such a parcel is shown as \"our fault, not counted\" and never raises the score. \"Unanswered call outcomes\": the call screen's results that mean the customer did not pick up."
+    },
+    "score": {
+      "label": "Risk score",
+      "help": "When on, every new order gets a risk score the moment it lands: the signals below that apply, each with its weight, added up (at most 100). The score, its band and the reasons are kept on the order and in its timeline, and they never change by themselves; an edit by the team scores the order again (\"after an edit\"), as a new line. The score only informs the team: nothing is blocked, held, asked in advance or changed by it. \"Show on the order\": the order page shows the risk card. Off: no order is scored."
+    },
+    "signals": {
+      "label": "Risk signals and weights",
+      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place."
+    },
+    "bands": {
+      "label": "Risk bands",
+      "help": "The levels a score falls into, each from its lowest score up to the next band's. The first starts at 0 and the thresholds rise. Each band has its name in English and Bengali and its colour (green, amber, red). What happens at a level — watch, hold, a call, an advance — is set with the risk rules' actions."
+    }
+  },
+  "defaults": {
+    "risk": {
+      "bands": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
     }
   }
 }

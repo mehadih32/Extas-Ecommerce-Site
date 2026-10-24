@@ -1,10 +1,11 @@
-// S06 · PR 157 (registry v43): `risk.history` at version 43, never owner data, labelled in English and Bengali, its
-// default valid; the refusals the shop caused (SIM-F-044) are in the refusal list.
+// S06 · PR 157, 156 (registry v43): every risk key at version 43, never owner data, labelled in English and Bengali, its
+// default valid; the model is off until the owner switches it on (CN-018), the bands' thresholds rise from 0, and the
+// refusals the shop caused (SIM-F-044) are in the refusal list and kept out of the score.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry, registryVersion } from '../src/index';
 import { orderEditSettings } from '../src/registry-order-edit';
-import { riskSettings } from '../src/registry-risk';
+import { RISK_SIGNAL_KEYS, riskBandsSchema, riskSettings, riskSignalsSchema } from '../src/registry-risk';
 
 describe('risk settings (v43)', () => {
   it('every key is in the registry at version 43, never owner data, labelled in both languages, its default valid', () => {
@@ -20,6 +21,32 @@ describe('risk settings (v43)', () => {
         expect(lookup(messages[lang], spec.helpKey!), `${key} ${lang}`).toBeTruthy();
       }
     }
+  });
+
+  it('CN-018: no order is scored until the owner switches the model on; amounts and place lists start empty', () => {
+    expect(riskSettings['risk.score'].default.enabled).toBe(false);
+    const s = riskSettings['risk.signals'].default;
+    expect(s.orderValue).toMatchObject({ enabled: false, atLeastMinor: null });
+    expect(s.riskyArea).toMatchObject({ enabled: false, areaIds: [] });
+    expect(RISK_SIGNAL_KEYS).toHaveLength(14);
+  });
+
+  it('a weight is 0–100 and every signal has its own switch', () => {
+    const s = riskSettings['risk.signals'].default;
+    expect(riskSignalsSchema.safeParse({ ...s, refusals: { ...s.refusals, weight: 101 } }).success).toBe(false);
+    expect(riskSignalsSchema.safeParse({ ...s, refusals: { ...s.refusals, weight: -1 } }).success).toBe(false);
+    for (const k of RISK_SIGNAL_KEYS) expect(typeof s[k].enabled, k).toBe('boolean');
+    // a cancel code outside the order core's list is refused
+    expect(riskSignalsSchema.safeParse({ ...s, cancels: { ...s.cancels, codes: ['NOPE'] } }).success).toBe(false);
+  });
+
+  it('the bands start at 0, their thresholds rise and their keys are unique; both languages come from the messages', () => {
+    const b = riskSettings['risk.bands'].default;
+    expect(b.map((x) => x.minScore)).toEqual([0, 35, 65]);
+    expect(b[0]).toMatchObject({ en: 'Low', bn: 'কম' });
+    expect(riskBandsSchema.safeParse([{ ...b[0]!, minScore: 5 }]).success).toBe(false);
+    expect(riskBandsSchema.safeParse([b[0], { ...b[1]!, minScore: 0 }]).success).toBe(false);
+    expect(riskBandsSchema.safeParse([b[0], { ...b[1]!, key: 'low' }]).success).toBe(false);
   });
 
   it('SIM-F-044: "late", "wrong item" and "damaged" are refusal reasons, and every our-fault key is one of them', () => {

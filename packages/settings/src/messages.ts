@@ -19,8 +19,8 @@
 // product reviews (S02, PR 59, 65; registry v35) in messages/reviews.<lang>.json, and "Build your own set" (S03, PR 98,
 // 100; registry v36) in messages/set-builder.<lang>.json, and the support explanation panel and the bulk / corporate
 // lane (S04, PR 566, 606; registry v38) in messages/support-lane.<lang>.json, and the Messages control centre (S05,
-// PR 148, 149; registry v40, v41) in messages/messages.<lang>.json, and a number's history (S06, PR 157; registry v43) in
-// messages/risk.<lang>.json, merged in here.
+// PR 148, 149; registry v40, v41) in messages/messages.<lang>.json, and a number's history and the risk score (S06, PR 157,
+// 156; registry v43) in messages/risk.<lang>.json, merged in here.
 import adminShellBn from '../messages/admin-shell.bn.json';
 import adminShellEn from '../messages/admin-shell.en.json';
 import toolsBn from '../messages/catalogue-tools.bn.json';

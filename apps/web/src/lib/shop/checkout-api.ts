@@ -5,7 +5,7 @@
 import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { CartError } from '@extas/cart';
-import { screenOrder, twoSizeCheck } from '@extas/orders';
+import { assessRisk, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -92,6 +92,19 @@ async function checkTwoSizes(deps: CheckoutApiDeps, orderId: string): Promise<vo
   }
 }
 
+/**
+ * S06 · PR 156 — the risk score the moment the order lands (off until the owner turns `risk.score` on): stored once on
+ * the order with its reasons, for the team only. It never fails, holds or blocks the customer's order: a problem is
+ * logged and the order stays placed, unscored (a person can score it again from the order page).
+ */
+async function scoreRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await assessRisk({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`risk score: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
 /** Where the page goes after the order or a payment answer, in its language. */
 export const nextHref = (lang: ShopLang, next: PlaceNext, number: string): string => hrefIn(lang, next === 'pay' ? ROUTES.checkoutPay(number) : ROUTES.thanks(number));
 
@@ -112,6 +125,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     if (!r.replay) {
       await screenForDuplicates(deps, r.orderId);
       await checkTwoSizes(deps, r.orderId);
+      await scoreRisk(deps, r.orderId);
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

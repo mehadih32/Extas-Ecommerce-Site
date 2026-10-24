@@ -532,7 +532,8 @@
       "twoSizeNoted": "for someone else (said in the bag): {groups}",
       "twoSizeKeep": "{product} {sizes}: keep {keep}",
       "twoSizeEvery": "all",
-      "twoSizeTeam": "a piece has an offer — take it out with the customer"
+      "twoSizeTeam": "a piece has an offer — take it out with the customer",
+      "order_riskAssess": "Risk score"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",

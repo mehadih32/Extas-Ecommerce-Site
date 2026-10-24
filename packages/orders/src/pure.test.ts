@@ -9,6 +9,7 @@ import {
   allowedCommands,
   CANCEL_CODES,
   NOT_A_RISK_SIGNAL,
+  OPEN_STATES,
   customerCancelMode,
   dueOf,
   legalPairs,
@@ -43,6 +44,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   edit: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
   twoSizeCheck: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
   twoSizeAnswer: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
+  // PR 156: the risk score is stored while the order is open; the status stays
+  riskAssess: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
   startPicking: { CONFIRMED: 'PROCESSING' },
@@ -107,7 +110,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'awaitAdvance'] });
   });
 });
 

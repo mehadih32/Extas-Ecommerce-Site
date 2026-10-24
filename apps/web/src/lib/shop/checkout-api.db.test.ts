@@ -54,6 +54,26 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     expect(again).toMatchObject({ status: 200, body: { ok: true, number: a.number, replay: true } });
     const o = await f.t.prisma.order.findFirstOrThrow({ where: { number: a.number, storeId: f.S } });
     expect(o).toMatchObject({ ip: '192.0.2.125', visitorId: p.visitorId, deliveryChargeMinor: 8_000 });
+    // S06 · PR 156: the owner's risk score is off by default, so the order is never scored
+    expect(o.riskScore).toBeNull();
+  });
+
+  it('S06 · PR 156: with the owner\'s risk score on, the order is scored once as it lands (team only)', async () => {
+    f.overrides.set('risk.score', { enabled: true, afterEdit: true, showOnOrder: true });
+    try {
+      const on = await page('api-risk-on');
+      const first = await read(await placeHandler(req('/api/checkout/orders', on.order, { cookie: on.cookie }), deps()));
+      expect(first.status).toBe(201);
+      // the customer's answer never carries a score or a level
+      expect(JSON.stringify(first.body)).not.toMatch(/risk|score/i);
+      const o = await f.t.prisma.order.findFirstOrThrow({ where: { number: first.body.number as string, storeId: f.S }, select: { id: true, riskScore: true, riskBand: true, status: true } });
+      expect(o).toMatchObject({ riskScore: expect.any(Number), riskBand: expect.any(String), status: 'PLACED' });
+      // a second press of the same order is a replay: not scored twice
+      await placeHandler(req('/api/checkout/orders', on.order, { cookie: on.cookie }), deps());
+      expect(await f.t.prisma.riskAssessment.count({ where: { orderId: o.id } })).toBe(1);
+    } finally {
+      f.overrides.delete('risk.score');
+    }
   });
 
   it('refuses another site, a missing bag, an unfinished form and money that moved (with the checkout as it is now)', async () => {

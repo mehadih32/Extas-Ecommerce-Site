@@ -46,7 +46,9 @@ export type OrdersErrorCode =
   /** PR 143: the customer's edit window is closed (`data.closed` says why: OFF, STEP, TIME, CAP, BOOKED, CANCEL). */
   | 'EDIT_CLOSED'
   /** PR 151: more orders than one export file holds (`data.count`, `data.maxRows`); narrow the filter. */
-  | 'EXPORT_TOO_LARGE';
+  | 'EXPORT_TOO_LARGE'
+  /** PR 156: "score again" while the owner has the risk score switched off (`risk.score`). */
+  | 'RISK_OFF';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -86,6 +88,7 @@ export class OrdersError extends Error {
       case 'LAST_LINE':
       case 'EDIT_CLOSED':
       case 'EXPORT_TOO_LARGE':
+      case 'RISK_OFF':
         return 422;
       default:
         return 409;
