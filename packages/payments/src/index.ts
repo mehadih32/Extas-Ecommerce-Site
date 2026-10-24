@@ -23,6 +23,11 @@
 // - PR 173 partial payment: a pre-order's advance asked on a Cash on Delivery order within the owner's cap, paid online
 //   by the customer, the rest at the door; and the quote the order screen and the checkout show (advance.ts; the pure
 //   part in advance-pure.ts).
+// - PR 174 the reconciliation report: a gateway's statement imported and matched line by line with a reason code on
+//   every mismatch, the practice gateway's statement, and the report of a period — ours against each gateway's
+//   statements, every open mismatch with its reason (SIM-F-028), the COD position, the money owed to customers, paid
+//   cancelled or returned orders with no refund asked (SIM-F-041) and the wallet ledger check (statements.ts; the pure
+//   part in statement-match.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -35,3 +40,4 @@ export * from './advance-link';
 export * from './wallet';
 export * from './refunds';
 export * from './advance';
+export * from './statements';

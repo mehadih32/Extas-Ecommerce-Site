@@ -4,7 +4,8 @@
 // off until `payments.manual` is on, then needing the Idempotency-Key (a repeat is one payment), and an advance paid in
 // full moving the order on through the order service. PR 166: the door outcome, a partial's approval, a courier
 // statement with a trap, its line resolved, and the cash in transit. PR 172: a refund asked, approved by the owner and
-// paid out by hand with its reference; nothing pays out by itself. PR 173: a pre-order's advance asked within the cap. Every value is a made-up test value.
+// paid out by hand with its reference; nothing pays out by itself. PR 173: a pre-order's advance asked within the cap. PR 174: a
+// gateway statement imported and the reconciliation report. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { awaitAdvance, staffBy } from '@extas/orders';
@@ -215,5 +216,36 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     const r = await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', confirm: true }, key: 'api-advance-0001' });
     expect(r).toMatchObject({ status: 201, body: { result: { advanceMinor: quote.capMinor, codAfterMinor: quote.dueMinor - quote.capMinor, replay: false } } });
     expect((await api('PUT', ['orders', o.orderId, 'advance'])).status).toBe(405);
+  });
+  it('PR 174: a gateway statement imported and matched, a line resolved, and the reconciliation report with every reason', async () => {
+    const paid = await f.place('pay-api-statement', { payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const p = (await api('GET', ['orders', paid.orderId])).body.money.payments[0];
+    const db = f.t.prisma;
+    const row = await db.payment.findUniqueOrThrow({ where: { id: p.id } });
+    expect(row.providerTrxId).toBeTruthy();
+    const amount = ((row.receivedMinor ?? row.amountMinor) / 100).toFixed(2);
+    const csv = `trx_id,amount,fee\n${row.providerTrxId},${amount},12.00\nNOPE1,10.00,\n`;
+    const from = new Date(f.clock.now.getTime() - 86_400_000).toISOString();
+    const to = new Date(f.clock.now.getTime() + 86_400_000).toISOString();
+    const input = { provider: row.provider, reference: 'API-ST-1', periodFrom: from, periodTo: to, csv };
+    expect((await api('POST', ['statements'], { body: input, cookie: reader })).status).toBe(403);
+    const s = await api('POST', ['statements'], { body: input });
+    expect(s).toMatchObject({ status: 201, body: { statement: { matched: 1, mismatched: 1, reasons: { UNKNOWN_PAYMENT: 1 } } } });
+    const id = s.body.statement.statementId as string;
+    expect(await api('GET', ['statements', id])).toMatchObject({ status: 200, body: { statement: { statementId: id } } });
+    const line = s.body.statement.lines.find((l: { reasonCode: string | null }) => l.reasonCode === 'UNKNOWN_PAYMENT');
+    expect(line.words.bn).toBeTruthy();
+    const q = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    const r = await api('GET', ['reconciliation'], { query: q });
+    expect(r.status).toBe(200);
+    expect(r.body.report.unexplained).toBe(0);
+    expect(r.body.report.mismatches.map((m: { id: string }) => m.id)).toContain(line.id);
+    expect(await api('POST', ['statements', 'lines', line.id, 'resolve'], { body: { note: 'checked with the gateway' } })).toMatchObject({ status: 200, body: { line: { resolutionNote: 'checked with the gateway' } } });
+    expect((await api('GET', ['reconciliation'], { query: q })).body.report.mismatches.map((m: { id: string }) => m.id)).not.toContain(line.id);
+    expect((await api('GET', ['reconciliation'])).status).toBe(400);
+    expect((await api('POST', ['reconciliation'], { body: {} })).status).toBe(405);
+    expect((await api('GET', ['statements'])).status).toBe(405);
+    expect((await api('GET', ['statements', 'nope'])).status).toBe(404);
+    expect((await api('GET', ['statements', 'practice'])).status).toBe(405);
   });
 });

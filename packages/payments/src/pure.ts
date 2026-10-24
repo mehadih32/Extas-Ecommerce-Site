@@ -228,3 +228,5 @@ export * from './wallet-pure';
 export * from './refund-pure';
 // PR 173 — partial payment: the owner's cap on a pre-order's advance and what the door collects after it.
 export * from './advance-pure';
+// PR 174 — a payment gateway's statement read line by line and matched, with a reason code on every mismatch.
+export * from './statement-match';

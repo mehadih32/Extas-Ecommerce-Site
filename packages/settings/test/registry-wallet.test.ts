@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { apologySchema, partialSchema, refundRulesSchema, walletManualSchema, walletSettings } from '../src/registry-wallet';
+import { apologySchema, gatewayStatementSchema, partialSchema, refundRulesSchema, STATEMENT_MISMATCH_CODES, statementReasonsSchema, walletManualSchema, walletSettings } from '../src/registry-wallet';
 
 describe('wallet, refunds, advances and statements settings (v55)', () => {
   it('every key is in the registry at version 55 in the payment group, labelled in English and Bengali, its default valid', () => {
@@ -43,5 +43,16 @@ describe('wallet, refunds, advances and statements settings (v55)', () => {
     expect(p).toEqual({ enabled: false, capPercent: 10, minMinor: null, allowFull: false });
     expect(partialSchema.safeParse({ ...p, capPercent: 101 }).success).toBe(false);
     expect(partialSchema.safeParse({ ...p, capPercent: 12.5 }).success).toBe(false);
+  });
+
+  it('PR 174: statements are read exactly (no difference allowed, nothing missing until the owner sets days); every reason has its words', () => {
+    const st = walletSettings['payments.statement'].default;
+    expect(st).toMatchObject({ toleranceMinor: 0, missingAfterDays: 0 });
+    expect(st.columns.trx.length).toBeGreaterThan(0);
+    expect(gatewayStatementSchema.safeParse({ ...st, columns: { ...st.columns, amount: [] } }).success).toBe(false);
+    const reasons = walletSettings['payments.statement.reasons'].default;
+    expect(reasons.map((r) => r.code)).toEqual([...STATEMENT_MISMATCH_CODES]);
+    expect(statementReasonsSchema.safeParse(reasons.slice(1)).success).toBe(false);
+    expect(statementReasonsSchema.safeParse([...reasons.slice(1), reasons[1]]).success).toBe(false);
   });
 });

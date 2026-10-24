@@ -13,7 +13,9 @@
 //   PR 170's sweep).
 // - Refunds: PR 172 records refunds that a person pays out by hand (bKash send-money, a bank transfer) after the owner's
 //   approval, so no `refund` call is here and nothing in the shop can move money out; a gateway's own refund API joins
-//   behind the owner's approval later (PROGRESS follow-up 421). Statements (`fetchStatement`, PR 174) join with theirs.
+//   behind the owner's approval later (PROGRESS follow-up 421). Statements: PR 174 imports the file a person
+//   downloads from the gateway's merchant panel (and the practice gateway's own); a `fetchStatement` call joins when a
+//   gateway's statement API and its keys are known (follow-up 426).
 // - Card data never touches the shop: every gateway is a hosted page.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
