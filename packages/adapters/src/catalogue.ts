@@ -111,6 +111,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // PR 176 — Steadfast Courier: the API key and the secret key from its merchant panel. Runs on its practice world
+  // (MOCK) until both are entered and the Test (the balance read) passes. Several couriers may be on at once.
+  {
+    id: 'steadfast',
+    kind: 'COURIER',
+    provider: 'steadfast',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }, { field: 'secretKey' }],
+    config: [{ field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

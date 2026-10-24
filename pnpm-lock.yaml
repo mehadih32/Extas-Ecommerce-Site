@@ -570,6 +570,9 @@ importers:
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings
+      '@extas/shipping':
+        specifier: workspace:*
+        version: link:../shipping
       '@extas/vault':
         specifier: workspace:*
         version: link:../vault

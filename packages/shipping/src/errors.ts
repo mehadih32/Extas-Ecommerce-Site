@@ -10,7 +10,15 @@ export type ShippingErrorCode =
   /** The courier account is switched off or archived: nothing is booked with it. */
   | 'COURIER_OFF'
   /** The parcel is not in a state this action applies to (`data.status`). */
-  | 'NOT_ACTIVE';
+  | 'NOT_ACTIVE'
+  /** PR 176: only a failed booking, or one whose answer was lost, is tried again (`data.status`). */
+  | 'NOT_RETRYABLE'
+  /** PR 176 (SIM-F-007): a gift to be delivered on or after a day is not booked before its booking day (`data.bookFrom`). */
+  | 'GIFT_DATE'
+  /** PR 176: the order has no receiver name, mobile number or address the courier can use (`details`). */
+  | 'NO_RECEIVER'
+  /** PR 176: more orders in one press than the owner's "per press" (`data.max`). */
+  | 'TOO_MANY';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;
@@ -34,6 +42,9 @@ export class ShippingError extends Error {
       case 'NOT_FOUND':
         return 404;
       case 'COURIER_OFF':
+      case 'GIFT_DATE':
+      case 'NO_RECEIVER':
+      case 'TOO_MANY':
         return 422;
       default:
         return 409;

@@ -8,7 +8,7 @@
 //   GIT_SHA, EXTAS_COLOR   shown on the Server page
 //   EXTAS_WORKER_HEALTH_FILE   where the heartbeat file for the container's health check goes (optional)
 // SIGTERM / SIGINT stop it cleanly: running jobs finish, the leader lock is let go, the heartbeat row says "stopped".
-import { allAdapters, createConnections, messageAdapters, paymentAdapters } from '@extas/adapters';
+import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters } from '@extas/adapters';
 import { connectionGateways } from '@extas/payments';
 import { getPrisma } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
@@ -16,6 +16,7 @@ import { createVault } from '@extas/vault';
 import { sendersFrom } from '@extas/messages';
 import { meiliFromEnv } from '@extas/search';
 import { errorLine, type JobDeps } from './context';
+import { courierPlanner } from './courier';
 import { messagesPlanner } from './messages';
 import { piiPlanner } from './pii';
 import { paymentsPlanner } from './payments';
@@ -35,6 +36,8 @@ async function main(): Promise<void> {
   const connections = createConnections({ db, vault, adapters: allAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
   // PR 148: the message senders have their own connection layer (each the mock until the owner enters its key)
   const senders = createConnections({ db, vault, adapters: messageAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
+  // PR 176: the couriers too (the practice courier and each real one, its practice world until the owner's keys pass)
+  const couriers = createConnections({ db, vault, adapters: courierAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
   // PR 170: the payment gateways (each the practice gateway until the owner's keys pass the Test button)
   const gateways = createConnections({ db, vault, adapters: paymentAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
   const deps: JobDeps = {
@@ -44,6 +47,7 @@ async function main(): Promise<void> {
     search: { meili: meiliFromEnv() },
     messages: { sender: sendersFrom(senders) },
     payments: { gateways: connectionGateways(gateways) },
+    couriers: { connections: couriers },
   };
   const worker = await startWorker({
     deps,
@@ -53,8 +57,8 @@ async function main(): Promise<void> {
     healthFile: process.env.EXTAS_WORKER_HEALTH_FILE || null,
     // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue;
     // PR 148: each store's message run per slot; PR 159: each store's purge of kept IP, device and location; PR 170:
-    // each store's sweep of open online payments per slot
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner],
+    // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

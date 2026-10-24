@@ -1,8 +1,9 @@
 // PR 175 — the parcel's rules without a database: its state from its events (out of order, unknown words, finished
 // parcels, exceptions with their reasons), the rate card by destination and weight (SIM-F-029) and the cost of a
-// returned parcel with every part named (SIM-F-027).
+// returned parcel with every part named (SIM-F-027). PR 176: booking's rules — the phone a courier takes, a gift's
+// booking day (SIM-F-007), the rider's note, the parcel's description and weight (SIM-F-029).
 import { describe, expect, it } from 'vitest';
-import { rateFor, rtoCostOf, stateOf, type EventFact, type RateCardRow } from './pure';
+import { addDays, bookingNoteOf, courierPhone, fillTemplate, giftBooking, localDay, parcelDescription, parcelWeight, rateFor, rtoCostOf, stateOf, type EventFact, type ParcelLine, type RateCardRow } from './pure';
 
 const T0 = new Date('2026-10-20T10:00:00Z').getTime(); // hardcode-ok: a fixed test clock
 const at = (min: number) => new Date(T0 + min * 60_000);
@@ -100,5 +101,43 @@ describe('the cost of a returned parcel (SIM-F-027)', () => {
     expect(c).toMatchObject({ knownMinor: 10_000, missing: ['return', 'packaging', 'handling'], complete: false });
     // a courier with no return charge: the owner enters 0 on its rate card
     expect(rtoCostOf({ forwardMinor: 10_000, returnMinor: 0, packagingMinor: 0, handlingMinor: 0, adShareMinor: null }, all)).toMatchObject({ knownMinor: 10_000, complete: true });
+  });
+});
+
+describe('booking rules (PR 176)', () => {
+  it('a courier calls a Bangladeshi mobile 01XXXXXXXXX; the order\'s +880 form is turned into it, anything else is refused', () => {
+    expect(courierPhone('+8801700001760')).toBe('01700001760'); // hardcode-ok: a made-up test number
+    expect(courierPhone('01700001760')).toBe('01700001760'); // hardcode-ok: a made-up test number
+    expect(courierPhone('+447700900123')).toBeNull(); // hardcode-ok: a made-up test number
+    expect(courierPhone('01200001760')).toBeNull(); // hardcode-ok: a made-up test number (no such operator)
+    expect(courierPhone(null)).toBeNull();
+  });
+
+  it('SIM-F-007: a gift waits until its day less the lead days, in the store\'s own calendar', () => {
+    expect(localDay(new Date('2026-10-23T19:30:00Z'), 'Asia/Dhaka')).toBe('2026-10-24'); // hardcode-ok: a fixed test clock
+    expect(addDays('2026-10-30', -3)).toBe('2026-10-27'); // hardcode-ok: a fixed test day
+    expect(addDays('2026-12-30', 3)).toBe('2027-01-02'); // hardcode-ok: a fixed test day
+    expect(giftBooking(null, 2, '2026-10-24')).toEqual({ bookFrom: null, waits: false }); // hardcode-ok: a fixed test day
+    expect(giftBooking('2026-10-27', 0, '2026-10-24')).toEqual({ bookFrom: '2026-10-27', waits: true }); // hardcode-ok: a fixed test day
+    expect(giftBooking('2026-10-27', 3, '2026-10-24')).toEqual({ bookFrom: '2026-10-24', waits: false }); // hardcode-ok: a fixed test day
+  });
+
+  it('the rider\'s note: the owner\'s gift line filled in, then the customer\'s note; empty values leave no gap', () => {
+    expect(fillTemplate('Gift from {sender}: on or after {date}. {note}', { sender: 'Rafiq', date: '2026-11-02', note: null })).toBe('Gift from Rafiq: on or after 2026-11-02.'); // hardcode-ok: a fixed test day
+    const line = 'Gift from {sender}: deliver on or after {date}. {note}';
+    expect(bookingNoteOf({ customerNote: 'Call before coming', gift: null, giftLine: line })).toBe('Call before coming');
+    expect(bookingNoteOf({ customerNote: '  ', gift: null, giftLine: line })).toBeNull();
+    expect(bookingNoteOf({ customerNote: 'Gate 2', gift: { senderName: 'Rafiq', note: 'Happy Eid!', deliverAfter: '2026-11-02' }, giftLine: line })).toBe('Gift from Rafiq: deliver on or after 2026-11-02. Happy Eid! | Gate 2'); // hardcode-ok: a fixed test day
+    expect(bookingNoteOf({ customerNote: null, gift: { senderName: 'R', note: 'x'.repeat(600), deliverAfter: null }, giftLine: line })!.length).toBe(500);
+  });
+
+  it('SIM-F-029: the parcel weighs its pieces; one piece without a weight leaves the weight unknown, never guessed', () => {
+    const l = (weightGrams: number | null, quantity = 1, over: Partial<ParcelLine> = {}): ParcelLine => ({ productName: 'Oxford shirt', colourName: 'Sky', sizeLabel: 'M', quantity, weightGrams, ...over });
+    expect(parcelWeight([l(700, 3)])).toBe(2100);
+    expect(parcelWeight([l(700), l(null)])).toBeNull();
+    expect(parcelWeight([])).toBeNull();
+    expect(parcelDescription([l(700, 2), l(null, 1, { productName: 'Pocket tee', colourName: null, sizeLabel: 'L' })], true)).toBe('Oxford shirt (Sky, M) x2; Pocket tee (L) x1');
+    expect(parcelDescription([l(700)], false)).toBeNull();
+    expect(parcelDescription(Array.from({ length: 40 }, () => l(700)), true)!.length).toBe(250);
   });
 });

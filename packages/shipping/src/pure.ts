@@ -144,3 +144,99 @@ export function rtoCostOf(i: RtoInputs, counted: Readonly<Record<RtoPart, boolea
   const missing = parts.filter((p) => p.minor === null).map((p) => p.key);
   return { parts, knownMinor: parts.reduce((s, p) => s + (p.minor ?? 0), 0), missing, complete: missing.length === 0 };
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 176 — booking's rules without a database.
+
+/** What happened to one order of a booking press (labels: admin messages `courier.booking.outcome.<key>`). */
+export const BOOKING_OUTCOMES = ['booked', 'unknown', 'failed', 'skipped'] as const;
+export type BookingOutcomeKind = (typeof BOOKING_OUTCOMES)[number];
+
+/**
+ * Why an order was not booked (labels: `courier.booking.code.<code>`): the order service's refusals, an open packing
+ * card, and the shop's own (a gift before its day, no usable receiver, the courier refused or gave no answer).
+ */
+export const BOOKING_CODES = ['IN_REVIEW', 'BOOKED', 'CANCEL_REQUESTED', 'CANCEL_PENDING', 'ILLEGAL_TRANSITION', 'SHORTAGE_OPEN', 'NOT_FOUND', 'GIFT_DATE', 'NO_RECEIVER', 'COURIER_REFUSED', 'NO_ANSWER'] as const;
+
+/** The receiver's phone as a courier takes it: a Bangladeshi mobile 01XXXXXXXXX (the order keeps +8801…), else null. */
+export function courierPhone(phone: string | null | undefined): string | null {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  const local = digits.startsWith('880') && digits.length === 13 ? `0${digits.slice(3)}` : digits;
+  return /^01[3-9]\d{8}$/.test(local) ? local : null;
+}
+
+/** The calendar day (YYYY-MM-DD) of `at` in the store's time zone (`store.timeZone`). */
+export function localDay(at: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
+}
+
+/** A YYYY-MM-DD day moved by `n` days. */
+export function addDays(day: string, n: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * SIM-F-007: the first day a gift with "deliver on or after" may be booked (that day less the owner's lead days), and
+ * whether it still waits today. A gift without a day, or an ordinary order, never waits.
+ */
+export function giftBooking(deliverAfter: string | null, leadDays: number, today: string): { bookFrom: string | null; waits: boolean } {
+  if (!deliverAfter) return { bookFrom: null, waits: false };
+  const bookFrom = addDays(deliverAfter, -leadDays);
+  return { bookFrom, waits: bookFrom > today };
+}
+
+/** Fills a `{token}` text; an empty value leaves no gap behind. */
+export function fillTemplate(text: string, values: Readonly<Record<string, string | null | undefined>>): string {
+  return text
+    .replace(/\{(\w+)\}/g, (_, k: string) => values[k]?.trim() ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** The most a courier note holds (a technical bound of the couriers' APIs, not a setting). */
+export const NOTE_MAX = 500;
+
+/**
+ * The note the rider reads (SIM-F-007): for a gift, the owner's gift line with the sender, the day and the gift note;
+ * then the customer's own delivery note. Never the sender's contact.
+ */
+export function bookingNoteOf(o: { customerNote: string | null; gift: { senderName: string | null; note: string | null; deliverAfter: string | null } | null; giftLine: string }): string | null {
+  const lines: string[] = [];
+  if (o.gift) lines.push(fillTemplate(o.giftLine, { sender: o.gift.senderName, date: o.gift.deliverAfter, note: o.gift.note }));
+  if (o.customerNote?.trim()) lines.push(o.customerNote.trim());
+  const text = lines.filter(Boolean).join(' | ');
+  return text ? text.slice(0, NOTE_MAX) : null;
+}
+
+/** One piece of the parcel as booking reads it. */
+export interface ParcelLine {
+  productName: string;
+  colourName: string | null;
+  sizeLabel: string | null;
+  quantity: number;
+  /** The variant's weight, or null when it is not entered. */
+  weightGrams: number | null;
+}
+
+/** The most a parcel description holds (a technical bound of the couriers' APIs). */
+export const DESCRIPTION_MAX = 250;
+
+/** What is in the parcel, for the courier: the pieces by name (the owner's `itemNames`), else nothing. */
+export function parcelDescription(lines: readonly ParcelLine[], itemNames: boolean): string | null {
+  if (!itemNames || !lines.length) return null;
+  return lines
+    .map((l) => {
+      const variant = [l.colourName, l.sizeLabel].filter(Boolean).join(', ');
+      return `${l.productName}${variant ? ` (${variant})` : ''} x${l.quantity}`;
+    })
+    .join('; ')
+    .slice(0, DESCRIPTION_MAX);
+}
+
+/** SIM-F-029: the parcel's weight from its pieces; null when any piece's weight is unknown (never guessed). */
+export function parcelWeight(lines: readonly ParcelLine[]): number | null {
+  if (!lines.length || lines.some((l) => l.weightGrams === null)) return null;
+  return lines.reduce((sum, l) => sum + l.weightGrams! * l.quantity, 0);
+}

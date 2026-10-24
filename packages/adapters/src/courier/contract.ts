@@ -132,9 +132,12 @@ export interface CourierEvent {
 
 /** Where a parcel is, as the courier knows it. */
 export interface CourierParcelRef {
-  consignmentId: string;
+  /** Null when the courier answered a lost booking by reference only (track by `merchantRef`). */
+  consignmentId: string | null;
   trackingCode: string | null;
   merchantRef: string | null;
+  /** PR 176: the courier's last word the shop holds; a courier that reports only the current word reports a change. */
+  lastRawStatus?: string | null;
 }
 
 export interface CourierApi {
@@ -142,8 +145,11 @@ export interface CourierApi {
   readonly provider: string;
   readonly capabilities: CourierCapabilities;
   book(parcel: CourierParcel): Promise<BookResult>;
-  /** The parcel booked under this reference, if the courier has one (recovery after a timeout; never books). */
-  findByRef(merchantRef: string): Promise<{ consignmentId: string; trackingCode: string | null; status: CourierState | null; rawStatus: string | null } | null>;
+  /**
+   * The parcel booked under this reference, if the courier has one (recovery after a timeout; never books). A courier
+   * that answers by reference with the status only gives no consignment id: the parcel is then tracked by reference.
+   */
+  findByRef(merchantRef: string): Promise<{ consignmentId: string | null; trackingCode: string | null; status: CourierState | null; rawStatus: string | null } | null>;
   /** The parcel's events as the courier reports them now (oldest first). */
   track(ref: CourierParcelRef): Promise<CourierEvent[]>;
   /** One cheap call that proves the keys work (the Test button). */

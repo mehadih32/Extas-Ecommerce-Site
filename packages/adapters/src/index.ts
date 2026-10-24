@@ -9,6 +9,7 @@ import { smsAdapters } from './sms';
 import { whatsappAdapters } from './whatsapp';
 import { emailAdapters } from './email';
 import { paymentAdapters } from './payment';
+import { keyedCourierAdapters } from './courier';
 
 export * from './define';
 export * from './connections';
@@ -30,4 +31,5 @@ export * from './courier';
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
 
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters] as const;
+// PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not.
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters] as const;

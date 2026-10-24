@@ -159,7 +159,7 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
       return { consignmentId: p.consignmentId, trackingCode: p.trackingCode, status: mapStatus(vocab.table, raw).status, rawStatus: raw };
     },
     async track(ref) {
-      const p = s.parcels.get(ref.consignmentId);
+      const p = ref.consignmentId ? s.parcels.get(ref.consignmentId) : ref.merchantRef ? s.parcels.get(idOf(ref.merchantRef)) : undefined;
       if (!p) return [];
       // every read moves the practice parcel one step on, so a few polls play its whole life
       p.reached = Math.min(p.reached + 1, MOCK_SCRIPTS[p.scenario].length);

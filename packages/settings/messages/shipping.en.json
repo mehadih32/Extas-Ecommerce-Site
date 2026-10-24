@@ -4,6 +4,14 @@
       "rtoCost": {
         "label": "Cost of a returned parcel (RTO)",
         "help": "What a parcel that came back cost the shop, for the RTO cost book. \"Count\": which parts are added up — the courier's charge to take it out, its charge to bring it back (both from the courier's rate card), packaging, handling and, if you want it, a share of the ad cost per order. Type your own packaging, handling and ad share per parcel here; until you do, the book shows those parts as \"not entered\" instead of counting them as nothing. Practice parcels (a courier still on its practice mode) are never counted as real cost."
+      },
+      "booking": {
+        "label": "Booking a courier",
+        "help": "Booking is always done by a person (one order, the ticked ones, or \"Book all\" for the orders ready to go) — never by itself, and never for a cancelled, held or in-review order. \"Gift lead days\": a gift that should arrive on or after a day is booked no earlier than this many days before it (0: on the day). \"Gift line\": what the courier's note says for a gift; {sender}, {date} and {note} are filled in. \"Note language\": the language of the courier's note. \"Piece names\": the parcel's description lists the pieces (off: only how many). \"Per press\": how many orders one \"Book all\" takes; the rest wait for the next press."
+      },
+      "tracking": {
+        "label": "Reading parcel updates",
+        "help": "How the shop keeps up with the couriers: when on, the background worker asks each courier about the parcels it holds, each parcel at most once every \"minutes\", up to \"per run\" parcels at a time. Off: nothing is read on its own; staff can still read one parcel now. Courier exceptions (a failed try, an address problem, lost, damaged) show on the parcel the moment they are read."
       }
     }
   }
