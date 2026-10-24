@@ -53,6 +53,33 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
   }
   const orderOf = (id: string) => f.t.prisma.order.findUniqueOrThrow({ where: { id }, include: { items: true, events: true, payments: true } });
 
+  describe('PR 159 · what the order keeps for the risk checks, and until when', () => {
+    it('the IP, the device id and the shared point (rounded) with the day they are cleared; each switch keeps its own', async () => {
+      const device = randomUUID();
+      const s = await shown('keep');
+      const r = await placeOrder(f.deps(), { storeId: f.S, visitorId: s.visitorId, customerId: null, ip: '192.0.2.159', deviceId: device, input: { ...s.input, gps: { lat: 23.7808875, lng: 90.4073 } } });
+      const o = await f.t.prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, select: { ip: true, deviceId: true, gpsLat: true, gpsLng: true, piiExpiresAt: true, placedAt: true } });
+      expect(o).toMatchObject({ ip: '192.0.2.159', deviceId: device });
+      expect(Number(o.gpsLat)).toBe(23.781);
+      expect(Number(o.gpsLng)).toBe(90.407);
+      expect(o.piiExpiresAt!.getTime() - o.placedAt.getTime()).toBeGreaterThanOrEqual(179 * 86_400_000);
+      // the owner keeps nothing: no IP, no device, no point, no day
+      f.overrides.set('risk.capture', { ip: false, device: false, gpsButton: false, gpsDecimals: 3, gpsWaitSeconds: 20, retentionDays: 30, purgeEveryMinutes: 60 });
+      try {
+        const n = await shown('keep-none');
+        const r2 = await placeOrder(f.deps(), { storeId: f.S, visitorId: n.visitorId, customerId: null, ip: '192.0.2.159', deviceId: device, input: { ...n.input, gps: { lat: 23.78, lng: 90.4 } } });
+        expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: r2.orderId }, select: { ip: true, deviceId: true, gpsLat: true, piiExpiresAt: true } })).toEqual({ ip: null, deviceId: null, gpsLat: null, piiExpiresAt: null });
+      } finally {
+        f.overrides.delete('risk.capture');
+      }
+      // a point off the earth is refused; a device id that is not the shop's own is not kept
+      const bad = await shown('keep-bad');
+      expect(await code(bad.place({ gps: { lat: 123, lng: 0 } }))).toBe('INVALID_INPUT');
+      const odd = await placeOrder(f.deps(), { storeId: f.S, visitorId: bad.visitorId, customerId: null, ip: null, deviceId: 'not-a-device', input: bad.input });
+      expect((await f.t.prisma.order.findUniqueOrThrow({ where: { id: odd.orderId }, select: { deviceId: true, piiExpiresAt: true } }))).toEqual({ deviceId: null, piiExpiresAt: null });
+    });
+  });
+
   describe('SIM-F-003 · the delivery charge shown is the charge stored', () => {
     it('a recognised address: the band, place, charge and total the page showed', async () => {
       const s = await shown('known');

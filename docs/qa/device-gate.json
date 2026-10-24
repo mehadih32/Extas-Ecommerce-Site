@@ -102,6 +102,12 @@
       "expect": ["[data-testid=\"co-page\"]", "[data-testid=\"co-gift\"]", "#co-senderName", "[data-testid=\"co-gift-hide\"]"]
     },
     {
+      "$comment": "PR 159 — the filled checkout (the sample bag, POST /api/bag/try): \"Share my location for the rider\" under the address is a whole 44 px tap on every screen; the browser asks for the location only after the tap.",
+      "paths": ["/checkout", "/bn/checkout"],
+      "fill": "/api/bag/try",
+      "expect": ["[data-testid=\"co-page\"]", "[data-testid=\"co-gps\"]", "[data-testid=\"co-gps-btn\"]"]
+    },
+    {
       "$comment": "PR 605 — the bag with \"Send as a gift\" under Checkout (the same gift-trial fill).",
       "paths": ["/bag", "/bn/bag"],
       "fill": "/api/shop/try-gift",

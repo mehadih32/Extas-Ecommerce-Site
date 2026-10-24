@@ -31,6 +31,7 @@ import { fill } from '@/lib/shop/dict';
 import { formatMoney, formatNumber, type ShopLang } from '@/lib/shop/lang';
 import { Icon, WaGlyph } from '../Icon';
 import { showToast } from '../toast';
+import { GpsShare, type GpsConfig, type GpsPoint } from './GpsShare';
 import { DeliveryStep } from './DeliveryStep';
 import { DetailsFields } from './DetailsFields';
 import { GiftCard, type GiftConfig, type GiftForm } from './GiftCard';
@@ -88,6 +89,8 @@ export interface CheckoutFormProps {
   backfill?: boolean;
   /** PR 605: the checkout is a gift (opened as one, gift mode on); null: an ordinary checkout. */
   gift?: GiftConfig | null;
+  /** PR 159: "Share my location" (`risk.capture.gpsButton`; never on a gift), how finely and how long it is kept; null: off. */
+  gps?: GpsConfig | null;
 }
 
 const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
@@ -113,6 +116,7 @@ export function CheckoutForm({
   remember = null,
   backfill = false,
   gift: giftCfg = null,
+  gps: gpsCfg = null,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -301,6 +305,8 @@ export function CheckoutForm({
   const covered = view.totals.known && view.totals.walletMinor > 0 && view.totals.dueMinor === 0;
   // PR 125: placing the order. The key is made once and kept in the tab until the order is in.
   const [placing, setPlacing] = useState(false);
+  // PR 159: the point he chose to share (only after his tap), sent with the order
+  const [point, setPoint] = useState<GpsPoint | null>(null);
   const askField = (formEl: HTMLFormElement, field: Field | GiftField) => {
     setTried(true);
     setPhoneChecked(true);
@@ -326,6 +332,7 @@ export function CheckoutForm({
       consent,
       note: note || null,
       ...(giftCfg ? { gift: { ...giftForm, note: giftForm.note || null, deliverAfter: giftForm.deliverAfter || null } } : {}),
+      ...(gpsCfg && point ? { gps: point } : {}),
       fingerprint: view.fingerprint,
     });
     const a = r.data;
@@ -574,6 +581,7 @@ export function CheckoutForm({
                   wrap={wrapField}
                   invalid={invalid}
                 />
+                {gpsCfg ? <GpsShare cfg={gpsCfg} value={point} onChange={setPoint} w={w} /> : null}
               </div>
             </section>
             <section className="card co-sec" data-testid="co-delivery">

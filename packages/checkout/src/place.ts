@@ -79,6 +79,8 @@ export const placeInputSchema = z
     note: z.string().max(TEXT_MAX).nullable().optional(),
     /** PR 605: the order is a gift (ignored while gift mode is off). */
     gift: giftInputSchema.nullable().optional(),
+    /** PR 159: the point the customer shared by tapping "Share my location" (kept rounded, only while the owner's button is on). */
+    gps: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).strict().nullable().optional(),
     /** The fingerprint of the money the page showed (CheckoutView.fingerprint). */
     fingerprint: z.string().regex(/^[0-9a-f]{64}$/),
   })
@@ -92,7 +94,31 @@ export interface PlaceRequest {
   /** The signed-in customer (PR 130); null for a guest. */
   customerId?: string | null;
   ip?: string | null;
+  /** PR 159: the shop's own random device id (a first-party cookie the API keeps); never a fingerprint. */
+  deviceId?: string | null;
   input: unknown;
+}
+
+const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DAY_MS = 86_400_000;
+
+/** PR 159: a coordinate kept only as finely as the owner allows (`risk.capture.gpsDecimals`). */
+export function roundPoint(v: number, decimals: number): number {
+  const f = 10 ** decimals;
+  return Math.round(v * f) / f;
+}
+
+/**
+ * PR 159 (Blueprint B6.4, BACKEND-ARCHITECTURE §8.7): what this order keeps for the risk checks, by the owner's
+ * `risk.capture`: the connection (IP), the device id, and the shared point (never for a gift — the buyer is not where the
+ * parcel goes), each only while its switch is on, all with the day they are cleared (`piiExpiresAt`).
+ */
+export function captureOf(cap: { ip: boolean; device: boolean; gpsButton: boolean; gpsDecimals: number; retentionDays: number }, sent: { ip?: string | null; deviceId?: string | null; gps?: { lat: number; lng: number } | null; gift: boolean }, now: Date) {
+  const ip = cap.ip && sent.ip ? sent.ip : null;
+  const deviceId = cap.device && sent.deviceId && DEVICE_ID.test(sent.deviceId) ? sent.deviceId.toLowerCase() : null;
+  const point = cap.gpsButton && sent.gps && !sent.gift ? { lat: roundPoint(sent.gps.lat, cap.gpsDecimals), lng: roundPoint(sent.gps.lng, cap.gpsDecimals) } : null;
+  const piiExpiresAt = ip || deviceId || point ? new Date(now.getTime() + cap.retentionDays * DAY_MS) : null;
+  return { ip, deviceId, gpsLat: point?.lat ?? null, gpsLng: point?.lng ?? null, piiExpiresAt };
 }
 
 /** Where the page goes next: the payment (a prepaid order with something to pay) or the thank-you page. */
@@ -253,7 +279,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (again) return again;
 
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
-  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck, giftCfg, timeZone] = await Promise.all([
+  const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck, giftCfg, timeZone, capture] = await Promise.all([
     s('checkout.form.nameMin'),
     s('checkout.form.addressMin'),
     s('checkout.fieldOrder'),
@@ -268,6 +294,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     s('checkout.address.check'),
     d.gift ? s('checkout.gift') : Promise.resolve(null),
     d.gift ? s('store.timeZone') : Promise.resolve(null),
+    s('risk.capture'),
   ]);
   const check = checkForm(d.form, { nameMin, addressMin }, fieldOrder(order));
   if (!check.ok) throw new CheckoutError('FORM', 'a field is not finished', [check.field], { field: check.field, problem: check.problem satisfies FieldProblem });
@@ -306,6 +333,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (t.dueMinor > 0 && !choice) throw new CheckoutError('NO_PAYMENT', 'no payment method is open for this order');
 
   const now = nowOf(deps);
+  const kept = captureOf(capture, { ip: req.ip ?? null, deviceId: req.deviceId ?? null, gps: d.gps ?? null, gift: gift !== null }, now);
   const prepaid = isPrepaid(choice) && t.dueMinor > 0;
   const method = paymentMethodOf(choice, t.dueMinor);
   const resolved = q.address.status === 'resolved' ? q.address : null;
@@ -396,7 +424,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           smsMarketingConsent: consent.sms,
           whatsappMarketingConsent: consent.whatsapp,
           visitorId,
-          ip: req.ip ?? null,
+          // PR 159: the IP, the device id and the shared point, by the owner's switches, cleared after his days
+          ...kept,
           idempotencyKey: d.idempotencyKey,
           note: note || null,
           flags,

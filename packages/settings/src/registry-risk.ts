@@ -76,6 +76,13 @@ const historySignals = {
    * them is named. Off until the owner switches it on.
    */
   identityMatch: z.object({ enabled: z.boolean(), weight, windowDays: days, addressSimilarity: z.number().min(0.3).max(1) }).strict().default({ enabled: false, weight: 20, windowDays: 365, addressSimilarity: 0.6 }),
+  /**
+   * PR 159 (v46, Blueprint B6.4): earlier orders from the same device (the shop's own random device id, `risk.capture`)
+   * under ANOTHER number, in the last `windowDays` (0: ever, but never past the retention). A refusal among them is named.
+   */
+  deviceMatch: z.object({ enabled: z.boolean(), weight, windowDays: days }).strict().default({ enabled: false, weight: 20, windowDays: 90 }),
+  /** PR 159 (v46): at least `atLeast` OTHER numbers ordered from the same connection (IP) in the `withinHours` before this one. */
+  ipPhones: z.object({ enabled: z.boolean(), weight, atLeast: count, withinHours: z.int().min(1).max(24 * 30) }).strict().default({ enabled: false, weight: 15, atLeast: 3, withinHours: 24 }),
 };
 
 /** Signals read from the address against the gazetteer (PR 158). */
@@ -157,6 +164,8 @@ export const riskSettings = {
       orderValue: { enabled: false, weight: 15, atLeastMinor: null, firstOrderOnly: true },
       orderPieces: { enabled: false, weight: 15, atLeast: null, firstOrderOnly: true },
       identityMatch: { enabled: false, weight: 20, windowDays: 365, addressSimilarity: 0.6 },
+      deviceMatch: { enabled: false, weight: 20, windowDays: 90 },
+      ipPhones: { enabled: false, weight: 15, atLeast: 3, withinHours: 24 },
       addressUnresolved: { enabled: true, weight: 10 },
       addressUnsure: { enabled: true, weight: 5 },
       addressNoDetail: { enabled: true, weight: 5 },

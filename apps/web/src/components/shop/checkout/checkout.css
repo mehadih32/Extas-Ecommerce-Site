@@ -490,3 +490,8 @@
 @media (max-width: 380px) {
   .shop .co-mbar .co-confirm:not(.co-need-on) { flex-wrap: wrap; row-gap: 0; line-height: 1.15; }
 }
+
+/* PR 159: "Share my location" under the address — a whole 44 px tap; the browser asks only after the tap. */
+.shop .co-gps .co-gps-btn { width: 100%; min-height: 44px; justify-content: center; gap: 8px; }
+.shop .co-gps .co-gps-on { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+.shop .co-gps .co-gps-x { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }

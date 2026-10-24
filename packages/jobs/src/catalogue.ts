@@ -14,6 +14,7 @@ import type { JobDeps } from './context';
 import { runMessages } from '@extas/messages';
 import { indexStore } from '@extas/search';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
+import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -143,13 +144,32 @@ const messagesJob: JobDefinition<{ storeId: number }> = {
   },
 };
 
+/**
+ * PR 159 — one store's purge of the IP, device id and shared location its orders kept for the risk checks, once the
+ * owner's `risk.capture.retentionDays` have passed (pii.ts; planned per store and slot of `purgeEveryMinutes`). Safe to
+ * run twice: a cleared order matches no more.
+ */
+const piiPurgeJob: JobDefinition<{ storeId: number }> = {
+  key: PII_PURGE_JOB,
+  queue: PII_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${PII_PURGE_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runPiiPurge(deps, p.storeId)) }),
+};
+
 // PR 72: the search index (search.ts), planned by its own planner when a store's index is behind its catalogue
 // PR 148: the message engine (messages.ts), planned per store and slot
+// PR 159: the purge of the kept IP, device id and location (pii.ts), planned per store and slot
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
   searchIndexJob as unknown as JobDefinition<never>,
   messagesJob as unknown as JobDefinition<never>,
+  piiPurgeJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

@@ -58,7 +58,8 @@
       "inventory_erp_reconcile": "Stock check against the ERP",
       "erp_webhook_process": "Stock news from the ERP",
       "search_index": "Search index",
-      "messages_run": "Customer messages"
+      "messages_run": "Customer messages",
+      "orders_pii_purge": "Clearing kept IP, device and location"
     },
     "workers": {
       "title": "Workers",

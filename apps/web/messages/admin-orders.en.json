@@ -642,7 +642,9 @@
         "riskyArea": "One of your watched places",
         "areaRefusals": "Many refusals at this place",
         "orderPieces": "Many pieces in one order",
-        "identityMatch": "Same person, another number"
+        "identityMatch": "Same person, another number",
+        "deviceMatch": "Same device, another number",
+        "ipPhones": "Many numbers from one connection"
       },
       "why": {
         "refusals": "{count} refused at the door",
@@ -660,7 +662,9 @@
         "riskyArea": "{area}",
         "areaRefusals": "{count} refused parcels at {area}",
         "orderPieces": "{pieces} pieces (from {atLeast})",
-        "identityMatch": "{count} earlier orders under another number, latest {number}"
+        "identityMatch": "{count} earlier orders under another number, latest {number}",
+        "deviceMatch": "{count} earlier orders from this device under another number, latest {number}",
+        "ipPhones": "{count} other numbers ordered from the same connection within {hours} hours (latest {number})"
       },
       "refusedAs": "refused: {number}"
     },

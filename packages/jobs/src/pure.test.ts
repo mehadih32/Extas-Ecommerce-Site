@@ -53,7 +53,7 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72) and the messages (PR 148) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index', 'messages.run'].sort(),
+      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index', 'messages.run', 'orders.pii.purge'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('search.index')!.queue).toBe('search');

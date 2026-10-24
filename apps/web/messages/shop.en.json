@@ -404,6 +404,14 @@
         "note": "The gift note is too long",
         "deliverAfter": "Pick a date from the calendar, or leave it empty"
       }
+    },
+    "gps": {
+      "add": "Share my location for the rider",
+      "asking": "Finding your location…",
+      "added": "Location added. The rider can find you more easily.",
+      "remove": "Remove",
+      "off": "Your location is not available. The address you typed is enough.",
+      "note": "Optional. Kept only for this delivery and deleted after {days} days."
     }
   },
   "notFound": {

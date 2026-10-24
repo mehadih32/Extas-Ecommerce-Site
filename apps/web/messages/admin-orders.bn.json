@@ -642,7 +642,9 @@
         "riskyArea": "আপনার নজরের জায়গা",
         "areaRefusals": "এই জায়গায় অনেক ফেরত",
         "orderPieces": "এক অর্ডারে অনেক পিস",
-        "identityMatch": "অন্য নম্বরে একই মানুষ"
+        "identityMatch": "অন্য নম্বরে একই মানুষ",
+        "deviceMatch": "একই ডিভাইস, অন্য নম্বর",
+        "ipPhones": "এক কানেকশনে অনেক নম্বর"
       },
       "why": {
         "refusals": "{count}টা দরজা থেকে ফেরত",
@@ -660,7 +662,9 @@
         "riskyArea": "{area}",
         "areaRefusals": "{area} এ {count}টা পার্সেল ফেরত",
         "orderPieces": "{pieces} পিস ({atLeast} থেকে)",
-        "identityMatch": "অন্য নম্বরে আগের {count}টা অর্ডার, শেষেরটা {number}"
+        "identityMatch": "অন্য নম্বরে আগের {count}টা অর্ডার, শেষেরটা {number}",
+        "deviceMatch": "এই ডিভাইস থেকে অন্য নম্বরে আগের {count}টা অর্ডার, শেষেরটা {number}",
+        "ipPhones": "{hours} ঘণ্টার মধ্যে একই কানেকশন থেকে আরও {count}টা নম্বরে অর্ডার (শেষেরটা {number})"
       },
       "refusedAs": "ফেরত দিয়েছিল: {number}"
     },
