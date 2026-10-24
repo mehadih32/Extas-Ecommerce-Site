@@ -1,0 +1,57 @@
+/* PR 606 — the bulk / corporate enquiry page and the bag's card. Phone first: one column (the bag's pieces, the form,
+   the ways to talk), 44 px taps, 16 px text in the boxes. Computer: the form beside a 360 px column. Demo tokens only. */
+.shop .bk-wrap { padding-top: 16px; padding-bottom: 40px; }
+/* the bag's card and button styles, loaded with the bag only (bag.css), for this page too */
+.shop .bk-page .p16 { padding: 16px; }
+.shop .bk-page .btn-secondary { background: var(--surface); border-color: var(--brand); color: var(--brand) !important; }
+.shop .bk-crumbs { margin-bottom: 4px; font-size: 12.5px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.shop .bk-crumbs a { color: var(--muted); display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; margin: -10px 0; }
+.shop .bk-crumbs [aria-current] { color: var(--ink); }
+.shop .bk-head { max-width: 720px; }
+.shop .bk-head .h1 { margin: 4px 0 8px; }
+.shop .bk-sub { font-size: 15px; line-height: 1.5; margin: 0; }
+.shop .bk-why { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
+.shop .bk-why li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); }
+.shop .bk-why li svg { color: var(--brand); flex-shrink: 0; }
+.shop .bk-split { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+.shop .bk-split > * { min-width: 0px; }
+.shop .bk-side { display: contents; }
+.shop .bk-bagbox { order: -1; }
+.shop .bk-talk { order: 2; }
+.shop .bk-form { padding: 16px; display: grid; gap: 16px; }
+.shop .bk-f { min-width: 0px; }
+.shop .bk-two { display: grid; gap: 16px; }
+.shop .bk-area { font: inherit; font-size: 16px; resize: vertical; min-height: 48px; line-height: 1.45; }
+.shop .bk-hint { display: block; margin-top: 6px; }
+.shop .bk-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; cursor: pointer; }
+.shop .bk-check input { width: 20px; height: 20px; accent-color: var(--brand); flex-shrink: 0; }
+.shop .bk-err { margin: 6px 0 0; font-size: 13px; color: var(--sale); }
+.shop .bk-err-form { margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--warn-bg); color: var(--ink); }
+.shop .bk-form .btn-primary { min-height: 48px; }
+.shop .bk-lines { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; font-size: 14px; }
+.shop .bk-lines li { overflow-wrap: anywhere; }
+.shop .bk-talk .small { margin: 4px 0 12px; }
+.shop .bk-talk-btns { display: grid; gap: 8px; }
+.shop .bk-talk-btns .btn { min-height: 44px; justify-content: center; gap: 8px; }
+.shop .bk-mail span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0px; }
+.shop .bk-done { padding: 24px 16px; text-align: center; display: grid; justify-items: center; gap: 8px; }
+.shop .bk-done .h2 { margin: 4px 0 0; }
+.shop .bk-done p { margin: 0; max-width: 460px; }
+.shop .bk-done-ic { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--brand-tint); color: var(--brand); }
+.shop .bk-done-back { margin-top: 8px; min-height: 44px; }
+.shop .bk-bag-call { display: inline-flex; align-items: center; min-height: 44px; margin: 4px 0 -10px 46px; }
+@media (min-width: 768px) {
+  .shop .bk-two { grid-template-columns: 1fr 1fr; }
+  .shop .bk-form { padding: 24px; }
+}
+@media (min-width: 1024px) {
+  .shop .bk-wrap { padding-top: 24px; }
+  .shop .bk-split { display: grid; grid-template-columns: minmax(0px, 1fr) 360px; gap: 32px; align-items: start; }
+  .shop .bk-side { display: grid; gap: 16px; position: sticky; top: 96px; }
+  .shop .bk-bagbox, .shop .bk-talk { order: 0; }
+}
+@media (max-width: 767px) {
+  .shop .bk-bag .row { flex-wrap: wrap; }
+  .shop .bk-bag .row .btn { width: 100%; justify-content: center; min-height: 44px; }
+  .shop .bk-bag-call { margin-left: 0; margin-bottom: -8px; }
+}

@@ -40,7 +40,11 @@ export type CheckoutErrorCode =
   /** PR 125: no payment method is open for this order. */
   | 'NO_PAYMENT'
   /** PR 125: the order key belongs to someone else's order. */
-  | 'IDEMPOTENCY';
+  | 'IDEMPOTENCY'
+  /** PR 606: the owner has this lane switched off (the bulk / corporate enquiry). */
+  | 'NOT_OPEN'
+  /** PR 606: enough enquiries from this number or browser today (`data.perDay`). */
+  | 'TOO_MANY';
 
 /** One error type for every refusal of the checkout. The `code` is stable; the shop turns it into words. */
 export class CheckoutError extends Error {
@@ -61,7 +65,10 @@ export class CheckoutError extends Error {
   get status(): number {
     switch (this.code) {
       case 'NOT_FOUND':
+      case 'NOT_OPEN':
         return 404;
+      case 'TOO_MANY':
+        return 429;
       case 'INVALID_INPUT':
       case 'FORM':
         return 400;

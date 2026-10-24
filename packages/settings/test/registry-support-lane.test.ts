@@ -1,9 +1,9 @@
-// S04 · PR 566 (registry v38): every key at version 38, never owner data, labelled in both languages, its default valid;
+// S04 · PR 566 / 606 (registry v38): every key at version 38, never owner data, labelled in both languages, its default valid;
 // the words for the customer use only their own {tokens} and carry no amount typed into them.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { EXPLAIN_TOKENS, orderExplainSchema, supportLaneSettings } from '../src/registry-support-lane';
+import { bulkLaneSchema, EXPLAIN_TOKENS, orderExplainSchema, supportLaneSettings } from '../src/registry-support-lane';
 import { tokensOf } from '../src/schemas';
 
 describe('support explanation and bulk lane settings (v38)', () => {
@@ -31,5 +31,17 @@ describe('support explanation and bulk lane settings (v38)', () => {
     }
     expect(orderExplainSchema.safeParse({ ...d, say: { ...d.say, chargeBand: { en: 'Pay {score}', bn: 'x' } } }).success).toBe(false);
     expect(orderExplainSchema.safeParse({ ...d, say: { ...d.say, chargeBand: { en: '', bn: 'x' } } }).success).toBe(false);
+  });
+
+  it('PR 606: the bulk lane ships off, with none of the owner\'s numbers (minimum, logo price, advance) set', () => {
+    const d = supportLaneSettings['orders.bulkLane'].default;
+    expect(d.enabled).toBe(false);
+    expect(d.minQuantity).toBeNull();
+    expect(d.bag.atPieces).toBeNull();
+    expect(d.logo.priceMinor).toBeNull();
+    expect(d.advance).toEqual({ type: 'none', amountMinor: null, percent: null });
+    expect(bulkLaneSchema.safeParse({ ...d, minQuantity: 50, maxQuantity: 10 }).success).toBe(false);
+    expect(bulkLaneSchema.safeParse({ ...d, minQuantity: 10, maxQuantity: 10 }).success).toBe(true);
+    expect(bulkLaneSchema.safeParse({ ...d, perDay: 0 }).success).toBe(false);
   });
 });

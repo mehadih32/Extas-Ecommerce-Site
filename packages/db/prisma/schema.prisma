@@ -192,6 +192,7 @@ model Store {
   checkoutDrafts          CheckoutDraft[]
   checkoutParameterLayers CheckoutParameterLayer[]
   checkoutFlagEvents      CheckoutFlagEvent[]
+  bulkEnquiries           BulkEnquiry[]
   orders                  Order[]
   orderItems              OrderItem[]
   orderEvents             OrderEvent[]
@@ -2696,6 +2697,47 @@ model CheckoutFlagEvent {
   createdAt       DateTime                @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, createdAt])
+}
+
+/// @stage S04 · PR 606 — a bulk / corporate order enquiry (Blueprint B8.5 item 4; CN-017 SIM-F-023): from the bag, the
+/// menu or its own page, with what he wants (the bag's lines or his own words), how many, a logo or not, and by when.
+/// The team calls back and quotes it; the quote, its advance and the order it becomes are the Orders screen's (ORD-09).
+/// `refNo` is the store's running enquiry number (shown with the setting's prefix). Nothing here prices or moves money.
+model BulkEnquiry {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store     @relation(fields: [storeId], references: [id])
+  refNo      Int
+  /// NEW · CONTACTED · QUOTED · WON · LOST — the team's own stage (the quote flow adds its own steps later).
+  status     String    @default("NEW")
+  name       String
+  /// The mobile number in E.164 (phoneNormalizeBD), as every phone box stores it.
+  phone      String
+  email      String?
+  company    String?
+  /// The bag's lines when he came from the bag ([{ productId, variantId, name, colour, size, quantity }]); else empty.
+  items      Json?
+  /// What he wants, in his own words.
+  itemsText  String?
+  quantity   Int
+  logo       Boolean   @default(false)
+  neededBy   DateTime? @db.Date
+  note       String?
+  /// Where he came from: bag · menu · page.
+  source     String
+  lang       String
+  visitorId  String?
+  customerId String?   @db.Uuid
+  ip         String?
+  /// The order it became, once the quote is accepted (ORD-09).
+  orderId    String?   @db.Uuid
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, refNo])
+  @@index([storeId, status, createdAt])
+  @@index([storeId, phone, createdAt])
+  @@index([storeId, visitorId, createdAt])
 }
 
 // =====================================================================================================================

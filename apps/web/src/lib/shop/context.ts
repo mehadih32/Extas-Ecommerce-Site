@@ -11,6 +11,7 @@ import { shopT, type ShopT, type Vars } from './dict';
 import { formatMoney, isShopLang, LANG_HEADER, PATH_HEADER, THEME_HEADER, toBnDigits, type ShopLang } from './lang';
 import { SIGNUP_LIST_LIVE, type Flags, type ShopCategory } from './shell-model';
 import { shopTheme, todayIn, type ShopTheme } from './theme';
+import { bulkTrial, tryBulkOn } from './try-bulk';
 import { tryContactNumber } from './try-contact';
 
 const KEYS = [
@@ -61,6 +62,8 @@ const KEYS = [
   'home.newIn',
   'home.reviews',
   'home.rowFade',
+  // PR 606: the bulk / corporate lane — its menu row and the bag's card (both off until the owner turns the lane on)
+  'orders.bulkLane',
 ] as const satisfies readonly Key[];
 
 type ShopKey = (typeof KEYS)[number];
@@ -185,9 +188,11 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   const lang: ShopLang = isShopLang(h.get(LANG_HEADER)) ? (h.get(LANG_HEADER) as ShopLang) : 'en';
   const path = h.get(PATH_HEADER) || '/';
   const storeId = shopStoreId();
-  const [{ values: read, live }, { cats, storeName: rowName }, tryNumber] = await Promise.all([readSettings(storeId), readCategories(storeId), tryContactNumber()]);
+  const [{ values: read, live }, { cats, storeName: rowName }, tryNumber, tryBulk] = await Promise.all([readSettings(storeId), readCategories(storeId), tryContactNumber(), tryBulkOn()]);
   // follow-up 59: a test server draws with the sample contact when the gate asks (lib/shop/try-contact; never live)
-  const s: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
+  const withContact: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
+  // PR 606: a test server's bulk trial (POST /api/shop/try-bulk) draws the lane as if it were on (never live)
+  const s: ShopSettings = tryBulk ? { ...withContact, 'orders.bulkLane': bulkTrial(withContact['orders.bulkLane']) } : withContact;
   const t = shopT(lang, s['language.labels']);
   const now = new Date();
   const today = todayIn(s['store.timeZone'], now);

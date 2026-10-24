@@ -82,6 +82,18 @@
       "expect": ["[data-testid=\"bag-summary\"]", "[data-testid=\"bag-gift\"]"]
     },
     {
+      "$comment": "PR 606 — the bulk / corporate enquiry page (POST /api/shop/try-bulk, test servers only: the sample bag, and this browser draws the lane as if the owner had it on; nothing written to the settings). Its boxes (16 px text), the logo tick and Send keep their 44 px taps; from the bag, the bag's pieces show beside the form.",
+      "paths": ["/bulk-order", "/bn/bulk-order", "/bulk-order?from=bag", "/bn/bulk-order?from=bag"],
+      "fill": "/api/shop/try-bulk",
+      "expect": ["[data-testid=\"bulk-page\"]", "[data-testid=\"bulk-form\"]", "#bk-name", "#bk-phone", "[data-testid=\"bulk-send\"]"]
+    },
+    {
+      "$comment": "PR 606 — the bag's \"Ordering for a company or a team?\" card (the same bulk-trial fill; the trial shows the card from two pieces).",
+      "paths": ["/bag", "/bn/bag"],
+      "fill": "/api/shop/try-bulk",
+      "expect": ["[data-testid=\"bag-summary\"]", "[data-testid=\"bag-bulk\"]", "[data-testid=\"bag-bulk-go\"]"]
+    },
+    {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",
       "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",
