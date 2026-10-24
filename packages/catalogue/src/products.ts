@@ -8,6 +8,7 @@
 // - Nothing is deleted: a product is archived (only when not on sale), a colour is taken off by archiving its row.
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
+import { emitCacheEvent } from '@extas/cache/events';
 import { allow, assertImage, changed, found, logChange, parse, TX, type CatalogueDeps, type Db, type Tx, type Who } from './context';
 import { effectiveGarmentTypeOf } from './categories';
 import { CatalogueError } from './errors';
@@ -322,6 +323,8 @@ export async function updateProduct(deps: CatalogueDeps, who: Who, id: string, p
     const action = archived === true && !cur.archivedAt ? 'product.archive' : archived === false && cur.archivedAt ? 'product.restore' : 'product.update';
     await logChange(tx, who, action, 'Product', cur.id, diff.before, diff.after);
   }, TX);
+  // PR 602: its words, its category or its being archived show on its page and its lists
+  emitCacheEvent({ kind: 'product', storeId: who.storeId, productIds: [id], reason: 'content' });
   return getProduct(deps, who, id);
 }
 
@@ -391,5 +394,6 @@ export async function setProductColours(deps: CatalogueDeps, who: Who, productId
     const after = d.colours.map((c, i) => ({ colourId: c.colourId, sortOrder: i * ORDER_STEP }));
     await logChange(tx, who, 'product.colours', 'Product', product.id, { colours: before }, { colours: after, removed: removed.map((r) => r.colourId) });
   }, TX);
+  emitCacheEvent({ kind: 'product', storeId: who.storeId, productIds: [productId], reason: 'content' });
   return getProduct(deps, who, productId);
 }

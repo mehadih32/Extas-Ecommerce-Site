@@ -12,6 +12,7 @@ write_stack_env() {
   gen_secret "$s/meili.env" MEILI_MASTER_KEY 48
   gen_secret "$s/app.env" SESSION_SECRET 64
   gen_secret "$s/app.env" VAULT_MASTER_KEY 64      # encrypts the credential vault (PR 493); never in Git
+  gen_secret "$s/app.env" CACHE_HOOK_TOKEN 48      # PR 602: the deploy's "clear the cache" call to the new app
   # Rotation (workflow input rotate_staging_password): drop the old preview password so a new one is generated.
   if [ "${ROTATE_STAGING:-no}" = yes ] && [ -f "$s/staging.env" ]; then sed -i '/^STAGING_PASSWORD=/d' "$s/staging.env"; fi
   gen_secret "$s/staging.env" STAGING_PASSWORD 20

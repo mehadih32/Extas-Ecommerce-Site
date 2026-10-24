@@ -20,8 +20,27 @@
 	}
 }
 
+# PR 602 (S02) — the cache's edge rules (server spec §5, packages/cache). The bag, the checkout, the account, the admin
+# and the API are never kept: not by the browser, not by Cloudflare (apps/web/src/lib/cache-policy.ts NEVER_CACHED has
+# the same list; apps/web/src/lib/cache.test.ts checks both). Next.js's hashed files keep a year at Cloudflare too,
+# because a new build gives them new names. The app's internal addresses (the deploy's "clear the cache" call) are
+# never reachable from outside: deploy.sh calls the app inside the Docker network.
+(cache_headers) {
+	@never_cached path /bag /bag/* /checkout /checkout/* /account /account/* /bn/bag /bn/bag/* /bn/checkout /bn/checkout/* /bn/account /bn/account/* /admin /admin/* /api/*
+	header @never_cached {
+		Cache-Control "private, no-store"
+		CDN-Cache-Control "no-store"
+		defer
+	}
+	@hashed_files path /_next/static/*
+	header @hashed_files CDN-Cache-Control "public, max-age=31536000, immutable"
+	@internal path /api/internal /api/internal/*
+	respond @internal 404
+}
+
 {$EXTAS_STAGING_HOST} {
 	import security_headers
+	import cache_headers
 	encode zstd gzip
 	tls {
 		issuer acme

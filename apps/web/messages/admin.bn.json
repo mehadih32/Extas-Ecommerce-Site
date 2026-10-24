@@ -136,7 +136,12 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "desc": "CDN, ক্যাশ মোছা, সুরক্ষা"
+      "desc": "CDN, ক্যাশ মোছা, সুরক্ষা। টোকেন না দেওয়া পর্যন্ত ক্যাশ মোছা এখানে অনুশীলন হয়, কিছু পাঠানো হয় না",
+      "fields": {
+        "zoneId": "Zone ID (Cloudflare → আপনার ডোমেইন → Overview → API)",
+        "hosts": "দোকানের হোস্ট নাম, কমা দিয়ে আলাদা (যেমন shop.example.com)",
+        "apiToken": "API টোকেন — শুধু ঐ জোনের \"Cache Purge\" অনুমতি"
+      }
     },
     "telegram": {
       "name": "টেলিগ্রাম (AI 360 চ্যানেল)",

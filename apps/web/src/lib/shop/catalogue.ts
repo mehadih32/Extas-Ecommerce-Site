@@ -7,6 +7,7 @@ import { getPrisma, type Prisma } from '@extas/db/client';
 import { wasPriceFor, type WasPriceSource } from '@extas/catalogue';
 import { imageSources, type ImageSource } from '@extas/media';
 import type { HomeFlashSale } from '@extas/settings';
+import { cachedCategoryPage } from '../cache';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import type { SizeMeta } from './category-filter';
 import type { CatItem } from './category-model';
@@ -405,7 +406,11 @@ export async function categoryData(
 ): Promise<CategoryData | undefined> {
   if (!process.env.DATABASE_URL) return newIn.slug === slug ? EMPTY_CATEGORY(null) : undefined;
   try {
-    return await withTimeout(readCategory(storeId, slug, newIn, now), settingsTimeoutMs() * 3);
+    // PR 602: kept by the server for `cache.pages.categoryMinutes`; any product on it, or any category change, clears it
+    return await withTimeout(
+      cachedCategoryPage(storeId, `${slug}:${JSON.stringify(newIn)}`, () => readCategory(storeId, slug, newIn, now)),
+      settingsTimeoutMs() * 3,
+    );
   } catch (e) {
     console.warn(`shop: category page unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return { ...EMPTY_CATEGORY(null), unavailable: true };

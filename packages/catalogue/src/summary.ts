@@ -1,6 +1,7 @@
 // The product's denormalised summary (A3.4 / PR 603: list and category pages read these, never the variants):
 // `Product.inStock`, `Product.minPriceMinor`, and the same two on each of its category listings. Recomputed in the
 // same transaction as any variant change, so the lists never disagree with the product page.
+import { emitCacheEvent } from '@extas/cache/events';
 import type { Tx } from './context';
 
 export interface ProductSummary {
@@ -20,5 +21,8 @@ export async function refreshProductSummary(tx: Tx, storeId: number, productId: 
   const s = summarise(variants);
   await tx.product.update({ where: { id: productId }, data: { inStock: s.inStock, minPriceMinor: s.minPriceMinor } });
   await tx.categoryProduct.updateMany({ where: { storeId, productId }, data: { inStock: s.inStock, priceMinor: s.minPriceMinor } });
+  // PR 602: a price or a size's stock changed — its page, its lists and Cloudflare are cleared (once more a moment
+  // later, after this transaction has committed)
+  emitCacheEvent({ kind: 'product', storeId, productIds: [productId], reason: 'stock' });
   return s;
 }

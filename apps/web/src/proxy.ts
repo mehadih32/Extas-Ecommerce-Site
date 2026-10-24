@@ -3,8 +3,19 @@
 // it in request headers; every other shop request gets the English header. Whatever a browser sends in these
 // headers is overwritten, so a page can trust them. The admin, the API, the progress page and media are untouched.
 // Also hands over `?theme=` (PR 82 preview link); the page decides whether previews are allowed (`theme.previewParam`).
+// PR 602: every shop page answers with its cache headers (lib/cache-policy.ts): the bag, the checkout and the account
+// are never kept anywhere; Cloudflare keeps a category or product page only while the owner has page caching at
+// Cloudflare on, and never one asked for with a cookie of the visitor's own.
 import { NextResponse, type NextRequest } from 'next/server';
+import { shopCacheHeaders } from './lib/cache-policy';
 import { isShopPath, LANG_HEADER, PATH_HEADER, splitLang, THEME_HEADER } from './lib/shop/lang';
+
+function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
+  const h = shopCacheHeaders(req.nextUrl.pathname, req.cookies.getAll().map((c) => c.name));
+  if (h['cache-control']) res.headers.set('cache-control', h['cache-control']);
+  res.headers.set('cdn-cache-control', h['cdn-cache-control']);
+  return res;
+}
 
 export function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
@@ -20,9 +31,9 @@ export function proxy(req: NextRequest) {
   if (lang === 'bn') {
     const url = req.nextUrl.clone();
     url.pathname = path;
-    return NextResponse.rewrite(url, { request: { headers: h } });
+    return withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req);
   }
-  return NextResponse.next({ request: { headers: h } });
+  return withCacheHeaders(NextResponse.next({ request: { headers: h } }), req);
 }
 
 export const config = {

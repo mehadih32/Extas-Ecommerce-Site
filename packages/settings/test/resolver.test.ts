@@ -66,6 +66,30 @@ describe('cache', () => {
     expect(await r.value('store.locale')).toBe('en-GB');
   });
 
+  it('PR 602: tells its listener about a write or reset here (key, store) and about a reload after another process wrote', async () => {
+    const b = memoryBackend({ knownKeys: Object.keys(registry), stores: [1] });
+    let clock = 0;
+    const seen: unknown[] = [];
+    const r = new SettingsResolver(b, registry, { checkIntervalMs: 1_000, now: () => clock, onChange: (c) => seen.push(c) });
+    const other = new SettingsResolver(b, registry);
+    await r.value('store.locale');
+    await r.set('store.locale', 'en-GB', storeTarget(1));
+    await r.reset('store.locale', storeTarget(1));
+    expect(seen).toEqual([
+      { keys: ['store.locale'], storeId: 1 },
+      { keys: ['store.locale'], storeId: 1 },
+    ]);
+    await r.value('store.locale');
+    await other.set('store.currency', 'USD', INSTALLATION);
+    clock = 1_000;
+    await r.value('store.currency');
+    expect(seen.at(-1)).toEqual({ keys: null, storeId: null });
+    expect(seen).toHaveLength(3);
+    clock = 2_000;
+    await r.value('store.currency');
+    expect(seen).toHaveLength(3);
+  });
+
   it('concurrent reads share one load', async () => {
     const b = memoryBackend();
     const r = new SettingsResolver(b, registry);

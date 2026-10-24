@@ -619,6 +619,28 @@ check "rollback: no image a record needs is removed" "$(grep -c '^RMI' "$T/docke
 rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new" dep rollback || rc=$?
 check "rollback: a worker image that is gone runs 0 copies and says why" "$rc:$(jq -r .worker "$T/root/state/last-deploy.json"):$(jq -r .worker_image "$T/root/state/last-deploy.json")" \
   "0:off: image extas-migrate:oldw is not on this server:"
+# PR 602: after the switch the deploy asks the new colour to clear every cache layer once — inside the Docker network,
+# with the server's own token, and never failing the deploy. Without the token (setup not re-run) it only says so.
+check "cache hook: no token, no call" "$(grep -c 'cache/deployed' "$T/docker.log" || true)" "0"
+printf 'SESSION_SECRET=x\nCACHE_HOOK_TOKEN=tok-0123456789abcdef0123456789abcdef\n' > "$T/root/config/secrets/app.env"
+: > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new extas-migrate:oldw" dep rollback || rc=$?
+check "cache hook: the deploy still succeeds" "$rc:$(jq -r .result "$T/root/state/last-deploy.json")" "0:ok"
+check "cache hook: one call to the new colour, with the token" \
+  "$(grep -cE "^ARGS exec extas-caddy wget .*x-extas-cache-hook: tok-0123456789abcdef0123456789abcdef http://app-(blue|green):3000/api/internal/cache/deployed$" "$T/docker.log" || true)" "1"
 rm -rf "$T"
+
+# PR 602: Caddy's cache rules — the never-kept pages (both languages), the hashed files, the internal addresses closed.
+CF=../stack/caddy/Caddyfile
+check "caddy cache: the site imports the cache rules" "$(grep -c '^	import cache_headers$' "$CF")" "1"
+never="$(grep '@never_cached path' "$CF")"
+miss=""; for p in /bag /checkout /account /bn/bag /bn/checkout /bn/account /admin /api/; do
+  grep -q " $p" <<<"$never" || miss="$miss $p"; done
+check "caddy cache: bag, checkout, account, admin and the API are never kept" "${miss:-none}" "none"
+check "caddy cache: never kept means no-store for the browser and Cloudflare" \
+  "$(grep -c 'Cache-Control "private, no-store"' "$CF"):$(grep -c 'CDN-Cache-Control "no-store"' "$CF")" "1:1"
+check "caddy cache: hashed files keep a year at Cloudflare" "$(grep -c '@hashed_files CDN-Cache-Control "public, max-age=31536000, immutable"' "$CF")" "1"
+check "caddy cache: the internal addresses answer 404 from outside" "$(grep -c '^	respond @internal 404$' "$CF")" "1"
+check "setup: the cache hook token is made on the server" "$(grep -c 'gen_secret "$s/app.env" CACHE_HOOK_TOKEN 48' ../server/steps/09-stack.sh)" "1"
 
 exit $fail

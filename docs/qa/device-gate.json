@@ -231,6 +231,7 @@
       "/admin/orders",
       "/admin/orders?view=toConfirm",
       "/admin/orders/confirm",
+      "/admin/settings/system/cache",
       "/collections/polos",
       "/bn/collections/polos",
       "/p/essential-pique-polo",

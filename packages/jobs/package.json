@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@extas/adapters": "workspace:*",
+    "@extas/cache": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/inventory": "workspace:*",
     "@extas/messages": "workspace:*",

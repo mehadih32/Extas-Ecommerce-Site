@@ -5,7 +5,7 @@
 //   passing test moves the connection out of MOCK. Their secret fields must be exactly the adapter's `secrets`
 //   (checked by test/catalogue.test.ts).
 // - `adapter: false` rows are integrations the blueprint needs whose adapter comes with a later PR (Google Drive
-//   backup PR 8/395, Cloudflare PR 602, Telegram PR 9). They show as "not connected" with no button: nothing pretends
+//   backup PR 8/395, ~~Cloudflare PR 602~~ built, Telegram PR 9). They show as "not connected" with no button: nothing pretends
 //   to work before its code exists.
 // - Labels are keys into the admin messages files (apps/web/messages/admin.<lang>.json → `connections.<id>.…`).
 // - Adding a provider = one entry here + its labels in both messages files.
@@ -51,7 +51,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
   },
   { id: 'googleDrive', kind: 'GOOGLE_DRIVE', provider: 'googleDrive', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
   { id: 'googleDriveAddOnly', kind: 'GOOGLE_DRIVE', provider: 'googleDriveAddOnly', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
-  { id: 'cloudflare', kind: 'CDN', provider: 'cloudflare', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
+  // PR 602 — Cloudflare's cache purge: an API token with the zone's "Cache Purge" right, the zone id and the shop's host
+  // names. The mock records the purges until the token's test passes.
+  {
+    id: 'cloudflare',
+    kind: 'CDN',
+    provider: 'cloudflare',
+    adapter: true,
+    secrets: [{ field: 'apiToken' }],
+    config: [{ field: 'zoneId' }, { field: 'hosts' }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
   { id: 'telegram', kind: 'TELEGRAM', provider: 'telegram', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
   {
     id: 's3',

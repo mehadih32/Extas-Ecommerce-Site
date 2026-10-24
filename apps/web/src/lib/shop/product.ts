@@ -9,6 +9,7 @@ import { getPrisma, type Prisma } from '@extas/db/client';
 import { activeSizeEase, bothUnits, ghostState, groupKey, productFitKey, readMeta, readRows, sortRows, wasPriceFor, type GhostReason } from '@extas/catalogue';
 import { sellableUnits } from '@extas/inventory';
 import { imageSources, type ImageSource } from '@extas/media';
+import { cachedProductPage, cachedStock } from '../cache';
 import { placeTexts } from '../rules-public';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { priceRules, sourceOf } from './catalogue';
@@ -132,15 +133,39 @@ const productSelect = {
   },
 } satisfies Prisma.ProductSelect;
 
-/** The product page's data, or null (no such product, never on the shop, or the catalogue is out of reach). */
+/**
+ * The product page's data, or null (no such product, never on the shop, or the catalogue is out of reach). PR 602: the
+ * server keeps it for `cache.pages.productMinutes` (cleared the moment its price, stock, words or photos change), and
+ * the stock shown is read again every `cache.stockDisplaySeconds` (display only: the bag and the checkout read it live).
+ */
 export async function productData(storeId: number, slug: string, now = new Date()): Promise<ProductData | null> {
   if (!process.env.DATABASE_URL) return null;
   try {
-    return await withTimeout(readProduct(storeId, slug, now), settingsTimeoutMs() * 3);
+    return await withTimeout(
+      (async () => {
+        const data = await cachedProductPage(storeId, slug, () => readProduct(storeId, slug, now));
+        if (!data) return null;
+        const stock = await cachedStock(storeId, data.id, () => liveStock(storeId, data.id));
+        // a kept page is shared by every visitor: the stock goes on a copy
+        return { ...data, variants: data.variants.map((v) => ({ ...v, stock: stock.get(v.id) ?? v.stock })) };
+      })(),
+      settingsTimeoutMs() * 3,
+    );
   } catch (e) {
     console.warn(`shop: product page unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return null;
   }
+}
+
+/** PR 602: each variant's sellable stock now, as the page shows it (0 when it is marked sold out). */
+async function liveStock(storeId: number, productId: string): Promise<Map<string, number>> {
+  const r = settingsResolver();
+  const kinds = new Set(r ? await r.value('inventory.sellableLocationKinds', { storeId }) : (['WAREHOUSE'] as const));
+  const rows = await getPrisma().productVariant.findMany({
+    where: { storeId, productId, archivedAt: null, active: true },
+    select: { id: true, inStock: true, stockLevels: productSelect.variants.select.stockLevels },
+  });
+  return new Map(rows.map((v) => [v.id, v.inStock ? sellableUnits(v.stockLevels, kinds) : 0]));
 }
 
 const fieldsOf = (json: unknown): { key: string; labelEn: string; labelBn: string; unit: 'inch' | 'cm' }[] =>

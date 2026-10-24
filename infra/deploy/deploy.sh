@@ -122,6 +122,22 @@ migrate_db() { # migrate_db <image>: schema migrations, then the settings sync �
 
 caddy_reload() { docker exec extas-caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null; }
 
+# PR 602: after a deploy the new version clears every cache layer once (its own pages, the other copies through Redis,
+# Cloudflare when connected). Inside the Docker network only — Caddy answers /api/internal/* from outside with 404.
+# Best effort: a missing token (server-setup stack not run since PR 602) or a failed call never fails the deploy.
+cache_hook() { # cache_hook <color>
+  local token
+  token="$(sed -n 's/^CACHE_HOOK_TOKEN=//p' "$SEC/app.env" 2>/dev/null | tail -n 1)"
+  if [ -z "$token" ]; then log "cache: no CACHE_HOOK_TOKEN in app.env (run server-setup stack) — not cleared"; return 0; fi
+  if docker exec extas-caddy wget -qO- --post-data='' --header "x-extas-cache-hook: $token" \
+    "http://app-$1:$APP_PORT/api/internal/cache/deployed" 2>/dev/null | grep -q '"ok":true'; then
+    log "cache: cleared after the deploy"
+  else
+    log "cache: the clear-after-deploy call did not answer ok (pages renew by their own times)"
+  fi
+  return 0
+}
+
 smoke() { # smoke <color>: health + the status page, straight to the new replicas (before any traffic moves)
   local c="$1" i
   for i in $(seq 1 30); do
@@ -266,6 +282,7 @@ if [ "$CUR" = blue ] || [ "$CUR" = green ]; then
   sleep "${DEPLOY_DRAIN_SECONDS:-15}"
   IMAGE_FOR_COLOR="$IMAGE" app "$CUR" down >/dev/null 2>&1 || true
 fi
+cache_hook "$NEW"
 record ok "$NEW live"
 rm -f "$SEC/.app.env.before-role" "$SEC/.app-connections.env.before-role"
 # Keep the newest images; older ones only take disk space. Never removed, however many failed builds came after

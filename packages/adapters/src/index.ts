@@ -10,6 +10,7 @@ import { whatsappAdapters } from './whatsapp';
 import { emailAdapters } from './email';
 import { paymentAdapters } from './payment';
 import { keyedCourierAdapters } from './courier';
+import { cdnAdapters } from './cdn';
 
 export * from './define';
 export * from './connections';
@@ -27,9 +28,11 @@ export * from './email';
 export * from './payment';
 // S08 · PR 175 — the courier contract, the practice courier and its scripted worlds (courier/).
 export * from './courier';
+// PR 602 — the CDN (Cloudflare): dropping what it keeps; the mock until the owner types its token.
+export * from './cdn';
 
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters] as const;

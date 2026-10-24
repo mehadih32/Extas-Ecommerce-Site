@@ -4,11 +4,15 @@
 //   DATABASE_URL       the database (through PgBouncer), like the web app
 //   REDIS_QUEUE_URL    the Redis queue store (no eviction, AOF on the data disk; PR 6 server setup)
 //   VAULT_MASTER_KEY   opens the vault, so the ERP connection gets its keys (none = the practice ERP)
+//   REDIS_CACHE_URL    PR 602: the cache store — the worker's own changes (the ERP's stock) clear the web app's pages
+//                      (none = the pages' short lifetimes bound what the web app still shows)
 //   MEILI_URL, MEILI_MASTER_KEY   the server's Meilisearch (PR 72; none = no search index job, the shop searches PostgreSQL)
 //   GIT_SHA, EXTAS_COLOR   shown on the Server page
 //   EXTAS_WORKER_HEALTH_FILE   where the heartbeat file for the container's health check goes (optional)
 // SIGTERM / SIGINT stop it cleanly: running jobs finish, the leader lock is let go, the heartbeat row says "stopped".
-import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters } from '@extas/adapters';
+import { hostname } from 'node:os';
+import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters, type CdnPurger } from '@extas/adapters';
+import { createCacheRuntime, dayIn, SHOP_PATHS } from '@extas/cache';
 import { connectionGateways } from '@extas/payments';
 import { getPrisma } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
@@ -49,6 +53,21 @@ async function main(): Promise<void> {
     payments: { gateways: connectionGateways(gateways) },
     couriers: { connections: couriers },
   };
+  // PR 602: a change the worker makes (the ERP's stock, a price) is cleared from every web process's page cache over
+  // Redis and, while Cloudflare keeps pages, at Cloudflare (the mock until the owner's token passes its test)
+  const cache = createCacheRuntime({
+    db,
+    settings,
+    cdn: async () => {
+      const c = await connections.use<CdnPurger>('CDN');
+      return { api: c.api, provider: c.provider, mode: c.mode };
+    },
+    redisUrl: process.env.REDIS_CACHE_URL || null,
+    origin: `worker-${hostname()}-${process.env.EXTAS_COLOR ?? 'dev'}-${process.pid}`,
+    paths: SHOP_PATHS,
+    day: () => dayIn(process.env.EXTAS_TIMEZONE || 'UTC'),
+  });
+  const stopCache = await cache.start();
   const worker = await startWorker({
     deps,
     redisUrl,
@@ -67,6 +86,7 @@ async function main(): Promise<void> {
     console.log(`[worker] ${signal}: stopping`);
     worker
       .stop()
+      .then(() => stopCache())
       .then(() => db.$disconnect())
       .then(
         () => process.exit(0),

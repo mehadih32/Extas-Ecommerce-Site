@@ -23,6 +23,17 @@ export interface ResolverOptions {
   now?: () => number;
   /** Called when a refresh fails and the last snapshot keeps answering. */
   onStale?: (error: unknown) => void;
+  /**
+   * PR 602 — called after a value changed: a write or reset in this process (with its key and store), or a reload
+   * because another process wrote (keys unknown: null). The cache clears the pages that read settings.
+   */
+  onChange?: (change: SettingsChange) => void;
+}
+
+/** What changed (PR 602). `keys` null: something changed in another process; `storeId` null: installation-wide. */
+export interface SettingsChange {
+  keys: string[] | null;
+  storeId: number | null;
 }
 
 export interface WriteOptions extends ChangeMeta {
@@ -36,6 +47,7 @@ export class SettingsResolver<R extends RegistryShape> {
   private readonly checkIntervalMs: number;
   private readonly now: () => number;
   private readonly onStale?: (error: unknown) => void;
+  private readonly onChange?: (change: SettingsChange) => void;
   private snapshot: Snapshot | undefined;
   private checkedAt = 0;
   private refreshing: Promise<Snapshot> | undefined;
@@ -46,6 +58,7 @@ export class SettingsResolver<R extends RegistryShape> {
     this.checkIntervalMs = opts.checkIntervalMs ?? DEFAULT_CHECK_INTERVAL_MS;
     this.now = opts.now ?? Date.now;
     this.onStale = opts.onStale;
+    this.onChange = opts.onChange;
   }
 
   /** The effective value of one setting for a store (or installation-wide when storeId is omitted). */
@@ -93,7 +106,9 @@ export class SettingsResolver<R extends RegistryShape> {
       );
     }
     try {
-      return await this.backend.write({ key, target, value: parsed.data, ...meta(opts) });
+      const r = await this.backend.write({ key, target, value: parsed.data, ...meta(opts) });
+      this.changed(key, target);
+      return r;
     } finally {
       this.invalidate();
     }
@@ -107,7 +122,9 @@ export class SettingsResolver<R extends RegistryShape> {
     this.spec(key);
     this.checkWrite(key, target, opts);
     try {
-      return await this.backend.clear({ key, target, ...meta(opts) });
+      const r = await this.backend.clear({ key, target, ...meta(opts) });
+      this.changed(key, target);
+      return r;
     } finally {
       this.invalidate();
     }
@@ -117,6 +134,14 @@ export class SettingsResolver<R extends RegistryShape> {
   invalidate(): void {
     this.snapshot = undefined;
     this.checkedAt = 0;
+  }
+
+  private changed(key: string, target: SettingTarget) {
+    try {
+      this.onChange?.({ keys: [key], storeId: target.level === 'store' ? target.storeId : null });
+    } catch {
+      // a listener's trouble never fails the write
+    }
   }
 
   private spec(key: string) {
@@ -163,6 +188,14 @@ export class SettingsResolver<R extends RegistryShape> {
       const snap = await this.backend.load();
       this.snapshot = snap;
       this.checkedAt = this.now();
+      // another process wrote (a write in this process told its own listeners already, and dropped `previous`)
+      if (previous && snap.version !== previous.version) {
+        try {
+          this.onChange?.({ keys: null, storeId: null });
+        } catch {
+          // a listener's trouble never fails a read
+        }
+      }
       return snap;
     } catch (error) {
       // No snapshot yet, or a write in this process dropped it meanwhile: never answer with pre-write values.
