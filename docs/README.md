@@ -155,6 +155,7 @@ the pages are out of date.
 | [`reports/2026-10-20-S00.md`](reports/2026-10-20-S00.md) | S00 stage report: the foundation (19/19) |
 | [`reports/2026-10-20-S01.md`](reports/2026-10-20-S01.md) | S01 stage report: products, photos and catalogue (22/22) |
 | [`reports/2026-10-20-S10.md`](reports/2026-10-20-S10.md) | S10 stage report: Smart Rules (12/12) |
+| [`reports/2026-10-24-S04.md`](reports/2026-10-24-S04.md) | S04 stage report: bag, checkout, accounts (41/41) |
 | [`reports/2026-10-24-S05.md`](reports/2026-10-24-S05.md) | S05 stage report: Order management (20/20) |
 | [`reports/2026-10-24-S03.md`](reports/2026-10-24-S03.md) | S03 stage report: combos and sets, with the template ranking (22/22) |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
