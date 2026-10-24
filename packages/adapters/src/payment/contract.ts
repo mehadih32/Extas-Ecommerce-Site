@@ -11,8 +11,9 @@
 //   query), and only that answer is written (§7.5 "never trust the redirect").
 // - `query`: the gateway's answer for a session, to recover unknown outcomes (a timeout, a callback that never came;
 //   PR 170's sweep).
-// - Refunds (`refund`, PR 172) and statements (`fetchStatement`, PR 174) join this interface with their PRs: none is
-//   here, so nothing in the shop can move money out yet.
+// - Refunds: PR 172 records refunds that a person pays out by hand (bKash send-money, a bank transfer) after the owner's
+//   approval, so no `refund` call is here and nothing in the shop can move money out; a gateway's own refund API joins
+//   behind the owner's approval later (PROGRESS follow-up 421). Statements (`fetchStatement`, PR 174) join with theirs.
 // - Card data never touches the shop: every gateway is a hosted page.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 

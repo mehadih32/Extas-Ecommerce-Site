@@ -12,6 +12,14 @@
 // only once the order came later than its promise by the owner's hours), to the wallet. The "next order" target waits
 // for the coupons (PR 272, after launch) and is not offered yet.
 //
+// PR 172 (`payments.refunds`): the rules for when a refund may be asked and how it goes back. B3.6: no refunds after the
+// customer received the goods — exchange is the post-delivery route — except the sources the owner lists (the rider's
+// overcharge, CN-018 #7, by default). Whether real money may go back to the wallet as store credit instead (off: the
+// way it came). An RTO of a prepaid parcel (SIM-F-041) gives everything back, or keeps the delivery charge when the
+// owner says so. Four eyes (off): the person who asked a refund may not approve it. Every refund still needs the
+// approval of someone with the "approve refunds" permission (the owner; CLAUDE.md rule 6), and money back by bKash or
+// the bank is sent by a person, never by the shop itself.
+//
 // Nothing here moves real money or changes a price, a charge, a discount or Cash on Delivery (CLAUDE.md rule 6): the
 // wallet is store credit, and every entry is a person's action, audited.
 import { z } from 'zod';
@@ -51,6 +59,21 @@ export const apologySchema = z
   })
   .strict();
 
+/** PR 172 — the sources a person may ask a refund for by hand (CANCEL and EDIT come from the order service). */
+export const REFUND_RULE_SOURCES = ['RTO', 'RIDER_OVERCHARGE', 'OUR_MISTAKE', 'OTHER'] as const;
+
+/** PR 172 — when a refund may be asked and how it goes back (see the file header). */
+export const refundRulesSchema = z
+  .object({
+    toWallet: z.boolean(),
+    afterDelivery: z.boolean(),
+    afterDeliverySources: z.array(z.enum(REFUND_RULE_SOURCES)).max(REFUND_RULE_SOURCES.length),
+    rtoDeliveryCharge: z.enum(['REFUND', 'KEEP']),
+    fourEyes: z.boolean(),
+  })
+  .strict()
+  .refine((v) => new Set(v.afterDeliverySources).size === v.afterDeliverySources.length, { message: 'every source once' });
+
 export const walletSettings = {
   'payments.wallet.manual': setting({
     ...base,
@@ -69,5 +92,14 @@ export const walletSettings = {
     labelKey: 'payments.wallet.apology.label',
     helpKey: 'payments.wallet.apology.help',
     sortOrder: 210,
+  }),
+  'payments.refunds': setting({
+    ...base,
+    schema: refundRulesSchema,
+    default: { toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false },
+    valueType: 'JSON',
+    labelKey: 'payments.refunds.label',
+    helpKey: 'payments.refunds.help',
+    sortOrder: 220,
   }),
 };

@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { apologySchema, walletManualSchema, walletSettings } from '../src/registry-wallet';
+import { apologySchema, refundRulesSchema, walletManualSchema, walletSettings } from '../src/registry-wallet';
 
 describe('wallet, refunds, advances and statements settings (v55)', () => {
   it('every key is in the registry at version 55 in the payment group, labelled in English and Bengali, its default valid', () => {
@@ -29,5 +29,12 @@ describe('wallet, refunds, advances and statements settings (v55)', () => {
     expect(apologySchema.safeParse({ ...a, percent: 101 }).success).toBe(false);
     // the next-order target waits for the coupons (PR 272): not offered yet
     expect(apologySchema.safeParse({ ...a, to: 'NEXT_ORDER' }).success).toBe(false);
+  });
+
+  it('PR 172: the refund rules ship at their safest: no wallet refunds, none after delivery but the rider overcharge', () => {
+    const r = walletSettings['payments.refunds'].default;
+    expect(r).toEqual({ toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false });
+    expect(refundRulesSchema.safeParse({ ...r, afterDeliverySources: ['OTHER', 'OTHER'] }).success).toBe(false);
+    expect(refundRulesSchema.safeParse({ ...r, afterDeliverySources: ['CANCEL'] }).success).toBe(false);
   });
 });
