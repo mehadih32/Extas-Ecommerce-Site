@@ -26,6 +26,15 @@ export function gatewayResolver(deps: AdminDeps): GatewayResolver {
   return async (storeId, provider) => connectionGateways(await connectionsFor(deps))(storeId, provider);
 }
 
+/**
+ * Follow-up 50 — the mode a provider's gateway runs in now for a store, for the shop's payment page and its go-live guard
+ * (the test page answers only on the practice gateway; MOCK without a database).
+ */
+export async function paymentModeOf(storeId: number, provider: string): Promise<'MOCK' | 'SANDBOX' | 'LIVE'> {
+  const d = adminDeps();
+  return d ? (await gatewayResolver(d)(storeId, provider)).mode : 'MOCK';
+}
+
 /** The payments service's dependencies: the gateways, and the order service for an advance paid in full. */
 export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps> {
   return {

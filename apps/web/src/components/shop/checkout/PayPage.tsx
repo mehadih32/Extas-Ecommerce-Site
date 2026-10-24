@@ -1,7 +1,9 @@
 'use client';
-// PR 125 — the mock payment page (A1.3: a mock until the payment service's key arrives, S07). It says plainly that no
-// money is taken; "Pay" and "Make it fail (test)" stand for the gateway's two answers. A failure is kept on the order
-// (the team sees it) and "Try again" opens a new payment for the same order — never a second order (SIM-F-026).
+// PR 125 — the payment page. With a real gateway connected (S07) "Pay" opens the gateway's own page (PR 170). Until then
+// it is the test page (A1.3): it says plainly that no money is taken; "Pay" and "Make it fail (test)" stand for the
+// gateway's two answers, and only while the owner's test payments are on (follow-up 50); otherwise it says online
+// payment is not open now. A failure is kept on the order (the team sees it) and "Try again" opens a new payment for
+// the same order — never a second order (SIM-F-026).
 import '../bag/bag.css';
 import './checkout.css';
 import { useState } from 'react';
@@ -18,18 +20,22 @@ export interface PayPageProps {
   method: string;
   failed: boolean;
   open: boolean;
+  /** Follow-up 50: the test buttons may answer (test payments on, no real gateway). */
+  test: boolean;
+  /** PR 170: a real gateway is connected; "Pay" opens its page. */
+  gateway: boolean;
   lang: ShopLang;
   words: Record<string, string>;
   thanks: string;
 }
 
-export function PayPage({ number, amount, method, failed, open, lang, words, thanks }: PayPageProps) {
+export function PayPage({ number, amount, method, failed, open, test, gateway, lang, words, thanks }: PayPageProps) {
   const [busy, setBusy] = useState(false);
   const w = (k: string, vars: Record<string, string | number> = {}) => fill(words[k] ?? k, vars);
-  const act = async (action: 'approve' | 'fail' | 'retry', el: HTMLElement) => {
+  const act = async (action: 'approve' | 'fail' | 'retry' | 'start', el: HTMLElement) => {
     if (busy) return;
     setBusy(true);
-    const r = await postJson<{ ok: boolean; next?: string }>(PAYMENTS_URL, { number, action, lang });
+    const r = await postJson<{ ok: boolean; next?: string; error?: string }>(PAYMENTS_URL, { number, action, lang });
     if (r.data?.ok && r.data.next) {
       // the same address again (a failure, or try again) still has to show the new state
       window.location.assign(r.data.next);
@@ -37,7 +43,7 @@ export function PayPage({ number, amount, method, failed, open, lang, words, tha
       return;
     }
     setBusy(false);
-    showToast(el, w(r.data ? 'err.other' : 'err.network'));
+    showToast(el, w(!r.data ? 'err.network' : r.data.error === 'TEST_PAYMENT_OFF' ? 'mock.unavailable' : 'err.other'));
   };
   return (
     <div className="container co-wrap co-paypage" data-testid="co-pay-page">
@@ -53,10 +59,16 @@ export function PayPage({ number, amount, method, failed, open, lang, words, tha
           </b>
           {method ? <span className="small text2">{w('mock.with', { method })}</span> : null}
         </div>
-        <p className="co-paytest mt16" data-testid="co-pay-test">
-          <Icon name="info" size={15} />
-          <span>{w('mock.test')}</span>
-        </p>
+        {gateway ? (
+          <p className="text2 mt16" data-testid="co-pay-redirect">
+            {w('mock.redirect', { method: method || w('pay.online') })}
+          </p>
+        ) : test ? (
+          <p className="co-paytest mt16" data-testid="co-pay-test">
+            <Icon name="info" size={15} />
+            <span>{w('mock.test')}</span>
+          </p>
+        ) : null}
         {failed ? (
           <p className="co-payfail mt12" role="alert" data-testid="co-pay-failed">
             <Icon name="info" size={15} />
@@ -64,7 +76,17 @@ export function PayPage({ number, amount, method, failed, open, lang, words, tha
           </p>
         ) : null}
         <div className="stack s12 mt16">
-          {open ? (
+          {open && gateway ? (
+            <button type="button" className="btn btn-primary btn-block" disabled={busy} onClick={(e) => void act('start', e.currentTarget)} data-testid="co-pay-start">
+              <Icon name="lock" size={18} />
+              {busy ? w('mock.wait') : w('mock.approve', { amount })}
+            </button>
+          ) : open && !test ? (
+            <p className="co-payfail" role="status" data-testid="co-pay-unavailable">
+              <Icon name="info" size={15} />
+              <span>{w('mock.unavailable')}</span>
+            </p>
+          ) : open ? (
             <>
               <button type="button" className="btn btn-primary btn-block" disabled={busy} onClick={(e) => void act('approve', e.currentTarget)} data-testid="co-pay-approve">
                 <Icon name="lock" size={18} />

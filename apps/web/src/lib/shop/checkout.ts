@@ -13,13 +13,14 @@ import type { CheckoutApiDeps } from './checkout-api';
 import { shopStoreId, type ShopContext } from './context';
 import { SHOP_DICTS, keysOf } from './dict';
 import { giftTrialSettings, tryGiftOn } from './try-gift';
-import { callbackBaseUrl, shopPaymentsDeps } from '../payments-gateway';
+import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-gateway';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
 export function checkoutDeps(): CheckoutDeps | null {
   const resolver = settingsResolver();
   if (!resolver) return null;
-  return { db: getPrisma(), settings: resolver };
+  // follow-up 50: the payment page's go-live guard asks which gateway a provider runs on now
+  return { db: getPrisma(), settings: resolver, paymentMode: paymentModeOf };
 }
 
 /** The checkout API's dependencies: the engines and the store the shop serves. */

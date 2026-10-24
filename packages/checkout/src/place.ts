@@ -547,16 +547,44 @@ export interface PayActionResult {
   next: PlaceNext;
 }
 
+/** Follow-up 50 — how a payment of this provider may be paid now. */
+export interface PayModes {
+  /** The test page's "paid" and "fail" may answer: the owner's test payments are on and no real gateway is connected. */
+  test: boolean;
+  /** A real gateway (sandbox or live) is connected: "Pay" opens its page, and only its own answer pays the order. */
+  gateway: boolean;
+}
+
 /**
- * The mock payment page's answer (A1.3: a mock until the gateway's key arrives): approve marks the payment paid and the
+ * Follow-up 50 — the go-live guard of the test payment page: "paid" and "fail" answer only while `payments.testPayments`
+ * is on (switched off on go-live day, PR 587) and the provider's gateway is the practice one. Once a real gateway is
+ * connected, nobody can mark an order paid from the shop's own page. A gateway that cannot be read is neither.
+ */
+export async function payModes(deps: CheckoutDeps, storeId: number, provider: string | null): Promise<PayModes> {
+  try {
+    const [testOn, mode] = await Promise.all([setting(deps, storeId, 'payments.testPayments'), deps.paymentMode && provider ? deps.paymentMode(storeId, provider) : Promise.resolve('MOCK' as const)]);
+    const real = mode === 'SANDBOX' || mode === 'LIVE';
+    return { test: testOn && !real, gateway: real };
+  } catch {
+    return { test: false, gateway: false };
+  }
+}
+
+/**
+ * The test payment page's answer (A1.3: a mock until the gateway's key arrives): approve marks the payment paid and the
  * order paid that much; fail keeps the failure (FAILED, the order flagged, one call task); retry makes a new payment
- * for the same order. No money moves here.
+ * for the same order. No money moves here. Approve and fail answer only under `payModes(...).test` (follow-up 50).
  */
 export async function payAction(deps: CheckoutDeps, req: { storeId: number; visitorId: string; input: unknown }): Promise<PayActionResult> {
   checkStoreId(req.storeId);
   const { storeId } = req;
   const d = parse(payActionSchema, req.input, 'payment');
   const now = nowOf(deps);
+  if (d.action !== 'retry') {
+    const mine = await ownOrder(deps.db, storeId, req.visitorId, d.number);
+    const last = await deps.db.payment.findFirst({ where: { storeId, orderId: mine.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, select: { provider: true } });
+    if (last && !(await payModes(deps, storeId, last.provider)).test) throw new CheckoutError('TEST_PAYMENT_OFF', 'the test payment page is off here; the payment service answers for this payment', ['action']);
+  }
   return deps.db.$transaction(async (tx) => {
     const mine = await ownOrder(tx, storeId, req.visitorId, d.number);
     await tx.$queryRaw`SELECT 1 FROM "Order" WHERE "id" = ${mine.id}::uuid FOR UPDATE`;
@@ -597,8 +625,8 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
   }, TX);
 }
 
-/** What the mock payment page shows: the order's number, what is to be paid now and how. */
-export interface PayView {
+/** What the payment page shows: the order's number, what is to be paid now and how, and how it can be paid. */
+export interface PayView extends PayModes {
   /** PR 170: the payment the page pays (the gateway session is opened for it). */
   paymentId: string;
   number: string;
@@ -613,7 +641,7 @@ export async function payView(deps: CheckoutDeps, req: { storeId: number; visito
   if (!o || o.visitorId !== req.visitorId) return null;
   const p = await deps.db.payment.findFirst({ where: { storeId: req.storeId, orderId: o.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
   if (!p || p.status === 'REFUNDED' || p.status === 'PARTIALLY_REFUNDED' || p.status === 'AUTHORIZED') return null;
-  return { paymentId: p.id, number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status };
+  return { paymentId: p.id, number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status, ...(await payModes(deps, req.storeId, p.provider)) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

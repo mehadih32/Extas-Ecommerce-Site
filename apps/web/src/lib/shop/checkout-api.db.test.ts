@@ -33,8 +33,8 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     await f?.t.drop();
   });
 
-  async function page(name: string, payment: unknown = null) {
-    const bag = await f.bag(name, [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }]);
+  async function page(name: string, payment: unknown = null, size = 'M') {
+    const bag = await f.bag(name, [{ variantId: f.variant('oxford-cotton-shirt', 'sky', size).id }]);
     const cookie = `${BAG_COOKIE}=${bag.visitorId}`;
     const q = await read(await quoteHandler(req('/api/checkout/quote', { lang: 'bn', address: { line: FORM.address }, payment }, { cookie }), deps()));
     expect(q.status).toBe(200);
@@ -116,6 +116,15 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     expect(await act('approve')).toMatchObject({ body: { status: 'PAID' } });
     expect(await read(await paymentHandler(req('/api/checkout/payments', { number, action: 'approve' }), deps()))).toMatchObject({ status: 404 });
     expect(await f.t.prisma.order.count({ where: { visitorId: p.visitorId } })).toBe(1);
+  });
+
+  it('follow-up 50: with a real gateway connected the test page cannot mark an order paid (409 TEST_PAYMENT_OFF)', async () => {
+    const p = await page('api-golive', { method: 'card', option: 'visa' }, 'L');
+    const number = (await read(await placeHandler(req('/api/checkout/orders', p.order, { cookie: p.cookie }), deps()))).body.number as string;
+    const live = (): CheckoutApiDeps => ({ ...deps(), checkout: { ...f.deps(), paymentMode: async () => 'LIVE' } });
+    expect(await read(await paymentHandler(req('/api/checkout/payments', { number, action: 'approve' }, { cookie: p.cookie }), live()))).toMatchObject({ status: 409, body: { error: 'TEST_PAYMENT_OFF' } });
+    expect(await read(await paymentHandler(req('/api/checkout/payments', { number, action: 'fail' }, { cookie: p.cookie }), live()))).toMatchObject({ status: 409, body: { error: 'TEST_PAYMENT_OFF' } });
+    expect((await f.t.prisma.payment.findFirstOrThrow({ where: { order: { number } } })).status).toBe('INITIATED');
   });
 
   it('keeps an unfinished checkout only with the owner\'s switch on', async () => {

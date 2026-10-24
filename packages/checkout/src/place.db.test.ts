@@ -358,6 +358,32 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(await payView(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', number: r.number })).toBeNull();
     });
 
+    it('follow-up 50 · the go-live guard: the test page answers only with test payments on and no real gateway', async () => {
+      const s = await shown('golive', { payment: { method: 'mobile', option: 'bkash' } });
+      const r = await s.place();
+      const who = { storeId: f.S, visitorId: s.visitorId };
+      const act = (deps: ReturnType<typeof f.deps>, action: string) => code(payAction(deps, { ...who, input: { number: r.number, action } }));
+      // on staging (the default): the test page, no gateway
+      expect(await payView(f.deps(), { ...who, number: r.number })).toMatchObject({ test: true, gateway: false });
+      // a real gateway connected (sandbox or live): only its own answer pays the order
+      const live = { ...f.deps(), paymentMode: async () => 'LIVE' as const };
+      expect(await payView(live, { ...who, number: r.number })).toMatchObject({ test: false, gateway: true });
+      expect(await act(live, 'approve')).toBe('TEST_PAYMENT_OFF');
+      expect(await act({ ...f.deps(), paymentMode: async () => 'SANDBOX' as const }, 'fail')).toBe('TEST_PAYMENT_OFF');
+      // a gateway that cannot be read is neither
+      expect(await payView({ ...f.deps(), paymentMode: async () => Promise.reject(new Error('down')) }, { ...who, number: r.number })).toMatchObject({ test: false, gateway: false });
+      // go-live day: test payments off — even on the practice gateway nothing answers "paid"
+      f.overrides.set('payments.testPayments', false);
+      try {
+        expect(await payView(f.deps(), { ...who, number: r.number })).toMatchObject({ test: false, gateway: false });
+        expect(await act(f.deps(), 'approve')).toBe('TEST_PAYMENT_OFF');
+      } finally {
+        f.overrides.delete('payments.testPayments');
+      }
+      expect((await orderOf(r.orderId)).payments.map((p) => p.status)).toEqual(['INITIATED']);
+      expect(await act(f.deps(), 'approve')).toBe('ok');
+    });
+
     it('what he typed and left is kept only with the owner\'s switch on, one draft per visitor, marked when he orders', async () => {
       const s = await shown('draft');
       const typed = { form: { ...FORM }, payment: { method: 'cod' as const }, step: 'payment' as const };

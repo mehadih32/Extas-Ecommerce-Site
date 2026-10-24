@@ -21,6 +21,11 @@ export interface CheckoutDeps {
   now?: () => Date;
   /** The gazetteer to read addresses with instead of the shared one from the database (tests). */
   gazetteer?: Gazetteer;
+  /**
+   * Follow-up 50 (PR 125, S07): the mode a payment provider's gateway runs in now for a store (the app's connection
+   * layer: MOCK until the owner's keys pass the Test button). Without it there is no gateway here: the test page only.
+   */
+  paymentMode?: (storeId: number, provider: string) => Promise<'MOCK' | 'SANDBOX' | 'LIVE'>;
 }
 
 export type CheckoutErrorCode =
@@ -44,7 +49,9 @@ export type CheckoutErrorCode =
   /** PR 606: the owner has this lane switched off (the bulk / corporate enquiry). */
   | 'NOT_OPEN'
   /** PR 606: enough enquiries from this number or browser today (`data.perDay`). */
-  | 'TOO_MANY';
+  | 'TOO_MANY'
+  /** Follow-up 50: the test page's "paid" or "fail" while test payments are off or a real gateway is connected. */
+  | 'TEST_PAYMENT_OFF';
 
 /** One error type for every refusal of the checkout. The `code` is stable; the shop turns it into words. */
 export class CheckoutError extends Error {
