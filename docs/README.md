@@ -152,6 +152,7 @@ the pages are out of date.
 | [`reports/2026-10-20-S00.md`](reports/2026-10-20-S00.md) | S00 stage report: the foundation (19/19) |
 | [`reports/2026-10-20-S01.md`](reports/2026-10-20-S01.md) | S01 stage report: products, photos and catalogue (22/22) |
 | [`reports/2026-10-20-S10.md`](reports/2026-10-20-S10.md) | S10 stage report: Smart Rules (12/12) |
+| [`reports/2026-10-24-S05.md`](reports/2026-10-24-S05.md) | S05 stage report: Order management (20/20) |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
 | [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |
