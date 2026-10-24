@@ -26,6 +26,10 @@ export interface PaymentsFixture {
   payment: (orderId: string, p?: Partial<{ amountMinor: number; method: 'BKASH' | 'NAGAD' | 'CARD'; provider: string; purpose: 'ORDER' | 'ADVANCE_DELIVERY_CHARGE'; key: string; storeId: number; createdAt: Date }>) => Promise<{ id: string }>;
   /** PR 166: a courier account in store A. */
   courier: (name: string) => Promise<{ id: string }>;
+  /** PR 171: a customer of a store (store A unless given). */
+  customer: (name: string, storeId?: number) => Promise<{ id: string }>;
+  /** PR 171: a delivery band with its promise in hours (store A). */
+  band: (key: string, hoursMax: number | null) => Promise<{ id: string }>;
   /** PR 166: a booked parcel of an order (COD as the order's, unless given). */
   shipment: (orderId: string, s: { courierAccountId: string; consignmentId: string; status?: 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'PARTIALLY_DELIVERED' | 'RETURNED'; codAmountMinor?: number; chargeMinor?: number | null; deliveredAt?: Date | null }) => Promise<{ id: string }>;
 }
@@ -43,6 +47,11 @@ export interface OrderSpec {
   advanceRequiredMinor?: number | null;
   flags?: string[];
   visitorId?: string;
+  /** PR 171: the order's customer, placed and delivered moments and its delivery band. */
+  customerId?: string;
+  placedAt?: Date;
+  deliveredAt?: Date | null;
+  deliveryBandId?: string;
 }
 
 export async function setUpPayments(label: string): Promise<PaymentsFixture> {
@@ -94,7 +103,10 @@ export async function setUpPayments(label: string): Promise<PaymentsFixture> {
           status: o.status ?? 'PLACED',
           source: 'WEBSITE',
           currency: 'BDT',
-          placedAt: clock.now,
+          placedAt: o.placedAt ?? clock.now,
+          deliveredAt: o.deliveredAt ?? null,
+          customerId: o.customerId ?? null,
+          deliveryBandId: o.deliveryBandId ?? null,
           customerName: 'Test Customer',
           phone: '+8801700000165', // hardcode-ok: test fixture, a made-up number
           shippingAddressText: 'House 4, Road 5, Sample Area',
@@ -125,6 +137,13 @@ export async function setUpPayments(label: string): Promise<PaymentsFixture> {
         },
         select: { id: true, number: true },
       });
+    },
+    async customer(name, storeId = A) {
+      seq += 1;
+      return p.customer.create({ data: { storeId, name, phone: `+88017000${String(10_000 + seq).slice(-5)}` }, select: { id: true } }); // hardcode-ok: test fixture, made-up numbers
+    },
+    async band(key, hoursMax) {
+      return p.deliveryBand.create({ data: { storeId: A, key, nameEn: key, chargeMinor: 0, hoursMax, enabled: true }, select: { id: true } }); // hardcode-ok: test fixture, a made-up band
     },
     async courier(name) {
       return p.courierAccount.create({ data: { storeId: A, providerKey: 'mock', name, enabled: true }, select: { id: true } });

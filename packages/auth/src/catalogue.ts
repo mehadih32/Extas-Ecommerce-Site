@@ -166,6 +166,12 @@ export const PERMISSIONS = {
   'payments.door': { group: 'payments' },
   'payments.partials': { group: 'payments' },
   'payments.settle': { group: 'payments' },
+  // S07 · PR 171 — the wallet (§6.5.4 fact 4b, SIM-F-054): credit or debit a customer's wallet by hand with a reason, or put
+  // an entry right with a new one the other way (`payments.wallet`, only while the owner has `payments.wallet.manual`
+  // on); give the late-delivery apology credit on an order (`payments.apology`, only while `payments.wallet.apology` is
+  // on). Each is a ledger line and an audit row; nothing is edited, nothing is paid out.
+  'payments.wallet': { group: 'payments' },
+  'payments.apology': { group: 'payments' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

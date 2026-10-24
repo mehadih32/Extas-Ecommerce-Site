@@ -152,4 +152,29 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     expect((await api('POST', ['issues'], { body: {} })).status).toBe(405);
     expect((await api('GET', ['issues', 'x'])).status).toBe(404);
   });
+  it('PR 171: a wallet with its ledger, a credit by hand (off until switched on), a reversal, the apology list and credit', async () => {
+    const db = f.t.prisma;
+    const c = await db.customer.create({ data: { storeId: f.S, name: 'API wallet customer', phone: '+8801700017100' } }); // hardcode-ok: a made-up test number
+    expect((await api('GET', ['wallets', c.id], { cookie: reader })).status).toBe(403);
+    expect(await api('GET', ['wallets', c.id])).toMatchObject({ status: 200, body: { wallet: { balanceMinor: 0, ledgerMinor: 0, entries: [] } } });
+    expect((await api('GET', ['wallets', '00000000-0000-4000-8000-000000000000'])).status).toBe(404);
+    expect((await api('GET', ['wallets', 'nope'])).status).toBe(404);
+    const credit = { direction: 'CREDIT', amountMinor: 4_000, note: 'goodwill for a late reply', confirm: true };
+    expect(await api('POST', ['wallets', c.id, 'entries'], { body: credit, key: 'api-wallet-0001' })).toMatchObject({ status: 422, body: { error: 'WALLET_OFF' } });
+    await deps.resolver.set('payments.wallet.manual', { enabled: true, maxMinor: null }, storeTarget(f.S));
+    const r = await api('POST', ['wallets', c.id, 'entries'], { body: credit, key: 'api-wallet-0001' });
+    expect(r).toMatchObject({ status: 201, body: { entry: { reason: 'MANUAL_CREDIT', balanceAfterMinor: 4_000, replay: false } } });
+    expect((await api('POST', ['wallets', c.id, 'entries'], { body: credit, key: 'api-wallet-0001' })).body.entry).toMatchObject({ entryId: r.body.entry.entryId, replay: true });
+    expect((await api('GET', ['wallets', c.id, 'entries'])).status).toBe(405);
+    const back = await api('POST', ['wallets', 'entries', r.body.entry.entryId, 'reverse'], { body: { note: 'given to the wrong person', confirm: true } });
+    expect(back).toMatchObject({ status: 201, body: { entry: { reason: 'CORRECTION', direction: 'DEBIT', balanceAfterMinor: 0 } } });
+    expect((await api('GET', ['wallets', c.id])).body.wallet.entries).toHaveLength(2);
+    expect(await api('GET', ['apology'])).toMatchObject({ status: 200, body: { apology: { enabled: false, rows: [] } } });
+    const o = await f.place('pay-api-apology');
+    await db.order.update({ where: { id: o.orderId }, data: { customerId: c.id } });
+    expect(await api('POST', ['orders', o.orderId, 'apology'], { body: { amountMinor: 1_000, confirm: true } })).toMatchObject({ status: 422, body: { error: 'APOLOGY_OFF' } });
+    await deps.resolver.set('payments.wallet.apology', { enabled: true, mode: 'PER_ORDER', kind: 'AMOUNT', amountMinor: null, percent: null, capMinor: 2_000, lateAfterHours: 0, to: 'WALLET' }, storeTarget(f.S));
+    expect(await api('POST', ['orders', o.orderId, 'apology'], { body: { amountMinor: 1_000, confirm: true } })).toMatchObject({ status: 201, body: { result: { amountMinor: 1_000, balanceAfterMinor: 1_000 } } });
+    expect((await api('GET', ['orders', o.orderId, 'apology'])).status).toBe(405);
+  });
 });

@@ -1,0 +1,14 @@
+{
+  "payments": {
+    "wallet": {
+      "manual": {
+        "label": "Credit or debit a wallet by hand",
+        "help": "When on, a team member with the \"wallet\" permission can add credit to a customer's wallet or take it off by hand, always with a reason and a note (a goodwill credit, a correction the customer agreed to). Every entry is a new line in the wallet's ledger and in the audit log; nothing is ever edited or deleted, and a mistake is put right with a new entry the other way. \"Largest entry\": the most one entry may be (empty = no limit). A debit never takes a wallet below zero. Off: nobody can change a wallet by hand."
+      },
+      "apology": {
+        "label": "Late-delivery apology credit",
+        "help": "Whether a customer whose parcel came late may get an apology credit in his wallet. \"Per order\": a team member gives it on the order and types the amount (up to the limit). \"By rule\": the amount follows from your rule — a fixed amount, or a percentage of the order's goods — and it can only be given once the order came this many hours later than its promise. One credit per order. \"Most per order\": the limit (empty = no limit). The credit is store credit in the wallet; nothing is paid out and no price changes. Off: no apology credit is given."
+      }
+    }
+  }
+}

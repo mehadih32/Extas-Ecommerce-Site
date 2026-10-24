@@ -48,6 +48,7 @@ import { cacheSettings } from './registry-cache';
 import { advanceSettings } from './registry-advance';
 import { riskLevelSettings } from './registry-risk-levels';
 import { advanceRequestSettings } from './registry-advance-request';
+import { walletSettings } from './registry-wallet';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1211,6 +1212,8 @@ export const registry = {
   ...riskLevelSettings,
   // ---- S06 · PR 542 · the one-click advance request from the order: its channels, pay service, words and auto option (off) (registry-advance-request.ts, version 54). ----
   ...advanceRequestSettings,
+  // ---- S07 · PR 171–174 · the wallet ledger and the apology credit, refunds, advances, gateway statements (registry-wallet.ts, version 55). ----
+  ...walletSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
