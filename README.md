@@ -36,17 +36,17 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৯৩টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ১৯৫টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 41/58** · **S03 16/22** · **S06 6/33** (wave 2) · **S04 37/41** · **S05 11/20** (wave 3) · total **193/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 43/58** · **S03 16/22** · **S06 6/33** (wave 2) · **S04 37/41** · **S05 11/20** (wave 3) · total **195/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
-| Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3 and Find my size built: PR [50–52](docs/stages/S02.md), 58; next the size reports and reviews: PR [59](docs/stages/S02.md#pr-59), 65 …); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
-| Last update | 23 Oct 2026 |
+| Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
+| Last update | 24 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
 [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md#build-status). Keep the "Stages" row above identical to it.
@@ -62,7 +62,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
-| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 41 / 58 | In progress |
+| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 43 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 16 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 37 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 11 / 20 | In progress |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **193 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **195 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -692,11 +692,11 @@ Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inve
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
 piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
 
-### S02 · Storefront — In progress (41/58)
+### S02 · Storefront — In progress (43/58)
 
-> **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি; তিনটা টেমপ্লেট T1, T2, T3; "আমার সাইজ খুঁজুন" — উচ্চতা আর ওজন দিলে প্রোডাক্টের নিজের চার্ট থেকে সাইজ, কারণসহ), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি, সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) আর সার্চ (হেডারের খোঁজার জানালা, লিখতে লিখতে পরামর্শ, ফলাফলের পাতা ফিল্টার আর সাজানো সহ, বাংলা শব্দেও) তৈরি — ডেমো V12.2-এর মতো। পাতাগুলো এখন আরও তাড়াতাড়ি হাতে সাড়া দেয় (পণ্যের পাতায় আটকে থাকার সময় 263 থেকে 24 ms), দেখতে একদম আগের মতো।
+> **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি; তিনটা টেমপ্লেট T1, T2, T3; "আমার সাইজ খুঁজুন" — উচ্চতা আর ওজন দিলে প্রোডাক্টের নিজের চার্ট থেকে সাইজ, কারণসহ), ক্রেতাদের রিভিউ (ছবিসহ রিভিউ আগে, অনুমোদনের পরেই দেখা যায়), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি, সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) আর সার্চ (হেডারের খোঁজার জানালা, লিখতে লিখতে পরামর্শ, ফলাফলের পাতা ফিল্টার আর সাজানো সহ, বাংলা শব্দেও) তৈরি — ডেমো V12.2-এর মতো। পাতাগুলো এখন আরও তাড়াতাড়ি হাতে সাড়া দেয় (পণ্যের পাতায় আটকে থাকার সময় 263 থেকে 24 ms), দেখতে একদম আগের মতো।
 
-**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75, 72, 73, 52, 50, 58, 51, 88, 66, 87, 86), matched to demo V12.2 (CN-012).**
+**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75, 72, 73, 52, 50, 58, 51, 88, 66, 87, 86, 59, 65), matched to demo V12.2 (CN-012).**
 - **Screens / routes:** `/` and `/bn` (home), `/collections/<slug>` and `/bn/collections/<slug>` (category pages; `new-in` = the newest styles of every category), `/p/<product>` and `/p/<product>/<colour>` with `/bn/…` (product pages; the prefix is the setting `naming.productPathPrefix`), `/account/wishlist` (wishlist), `/help/faq`, `/help/delivery`, `/help/exchange`, `/help/privacy`, `/help/terms`, `/help/story`, `/help/contact` (help pages), `/search?q=` and `/bn/search?q=` (search results; `GET /search/suggest` answers the header panel), `/checkout` (empty checkout with the slim header), the shop 404; every
   storefront route not built yet shows "Coming soon" in the shell (CN-010). `/status` is the progress page.
 - **Shell (40):** announcement bar, header, phone menu, bottom bar, footer (phone bands with the social row incl.
@@ -782,6 +782,26 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   shop, a master switch and one switch per sweep (`shop.sweep`; Add to Bag off as designed), written as one small
   stylesheet only when the owner changes something; the checkout and Order Now buttons keep theirs when "all other green
   buttons" is off; reduced motion always wins. Screenshots: [`docs/qa/screenshots/pr-136/`](docs/qa/screenshots/pr-136).
+- **Reviews and size learning (65, 59):** the product page shows the buyers' own reviews above the questions — the
+  summary box (the average, the stars, how many), the rating line under the title that jumps down to them, and up to
+  3 cards in one sliding row with the photo reviews first, each card carrying only what its review really has (his
+  words, "Verified buyer" from the order, "5'9" · 72 kg · bought M", how the size felt, his photo); the row uses the
+  one slider engine, so its mouse, touch and keyboard pauses each have a tested resume; a product with no approved
+  review shows no block and no rating at all (`pdp.reviews`, on; max 3, photos first). A review can only come from a
+  buyer, from My account, about a line of his own **delivered** order, within 90 days, one per line
+  (`reviews.submit`; he may give how the size felt, his height, his weight and one photo up to 8 MB). Every review
+  waits as PENDING: it is in no page, no average and no search-engine rating until staff approve it through
+  `/api/admin/reviews` (permissions `reviews.read`, `reviews.moderate`, `reviews.write`: approve, hide, reject, put
+  back, the verified mark, and the shop's own reviews from WhatsApp), and hiding it takes it off the page again.
+  Nothing is ever deleted. The photo-review reward is **off with no amount**: when the owner switches it on and types
+  his own figure it is credited once, at approval, as one entry in his wallet ledger, keyed by the review, at most
+  one per order (`reviews.photoReward`; CLAUDE.md rule 6, CN-018). SIM-F-008 is checked end to end as a test: review
+  submitted → in the shop → approved → on the page → wallet credited. Find My Size now learns from real answers
+  (`catalogue.sizeAdvice`, 59): the report groups every recorded answer by garment type and fit — followed, went up,
+  went down, with the exchanges and the approved reviews behind them — and flags a chart that keeps running tight or
+  loose; it can train a new ease per group, which **arrives switched off** until the owner turns it on
+  (`/api/admin/size-advice`, permission `catalogue.sizeAdvice`). Neither has an admin screen yet: the moderation
+  queue and the size report go on the new 14-section admin shell (follow-ups 230, 231).
 - **Follow-ups (23 Oct; 41, 40, 45, 56, 74, 222):** on a computer a card shows its back view and Quick add with the
   size buttons on mouse hover or keyboard focus (`card.desk`, on; `GET /api/shop/card/<id>`; the bag's own added panel,
   also on the home and category pages), and the home page's cards fit like the category page's; the phone slogan steps
@@ -795,15 +815,23 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
 - **Settings (66, 86, 87):** `pdp.qa` in `registry-product.ts` and `shop.sweep`, `thanks.celebrate` in
   `packages/settings/src/registry-motion.ts` (registry v31), labels in `packages/settings/messages/storefront.*.json`; the
   words in `apps/web/messages/shop-more.*.json` (`qa.*`, `celebrate.*`). No schema change, no admin screen (CN-019).
+- **Settings (59, 65):** `catalogue.sizeAdvice`, `pdp.reviews`, `reviews.submit`, `reviews.moderation`,
+  `reviews.photoReward` in `packages/settings/src/registry-reviews.ts` (registry v35, group `reviews`), labels in
+  `packages/settings/messages/reviews.*.json`; the words in `apps/web/messages/shop-more.*.json` (`reviews.*`) and
+  `shop-account.*.json` (`account.review.*`); permissions `catalogue.sizeAdvice`, `reviews.read`, `reviews.moderate`,
+  `reviews.write`; migration `0021_reviews` (additive: the review's order line, source, the buyer's fit, height and
+  weight, who checked it and when, and what the reward paid). No admin screen (CN-019, follow-ups 230, 231).
 - **Settings (follow-ups):** `card.desk`, `seo.structuredData`, `pdp.sizeWords`, `pdp.usualSize`, `thanks.page` in
   `packages/settings/src/registry-storefront-fu.ts` (registry v25), labels in `packages/settings/messages/storefront-fu.*.json`.
 - **Tests and gates:** unit tests beside the code (`apps/web/src/lib/shop/*.test.ts`, `packages/settings/test`),
   device gate 0 fails in 372 storefront checks and 124 product-page checks (2077 checks with T1, T2 and T3 in both languages, PR 50–58), storefront pages in the Lighthouse budget
   (TBT under 200 ms; the product page T1 and T3 in both languages and T2 in the seeded budget, `lighthouserc.seeded.json`; page and image weights, `tools/page-weight.mjs`) and in the
   smoke test (`docs/qa/smoke.json`; product pages are found from New in, never named). Screenshots:
-  `docs/qa/screenshots/pr-40/`, `pr-41/`, `pr-43/`, `pr-45/` … `pr-48/`, `pr-49/`, `pr-53/` (PR 53, 67–71, 74, 75), `pr-72/` (PR 72, 73).
+  `docs/qa/screenshots/pr-40/`, `pr-41/`, `pr-43/`, `pr-45/` … `pr-48/`, `pr-49/`, `pr-53/` (PR 53, 67–71, 74, 75), `pr-72/` (PR 72, 73), `pr-65/` (PR 59, 65).
+  The reviews journey itself is a test (`apps/web/src/lib/reviews-journey.db.test.ts`, SIM-F-008) and the smoke list
+  checks that the review API refuses a request with no account.
 
-Next: the size reports and reviews (59, 65 …). The CI device gate itself (PR 85, CI part) runs on every pull
+Next: "Goes well with" and the rest of the product page rows (67 …). The CI device gate itself (PR 85, CI part) runs on every pull
 request: 15 phones, 10 tablets and 6 desktop sizes (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Since 23 Oct it
 also signs in on the sample data, so admin controls that only show with data are checked at 44 × 44 too (0 fails in
 620 checks). Register:
@@ -1104,6 +1132,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #36 | PR [59](docs/stages/S02.md#pr-59), [65](docs/stages/S02.md#pr-65) | 24 Oct | Find My Size learns from real "how did it fit" answers per garment type (off by default, the chart until enough answers; admin API and permission `catalogue.sizeAdvice`). Product reviews on the product page: up to three, photo reviews first, sliding with pause and resume; a customer reviews a delivered order, staff approve or hide it through the admin API, and only approved reviews show (SIM-F-008). The photo-review reward is off with no amount; once the owner turns it on, staff approval pays it once into the wallet. Migration `0021_reviews`. |
 | #35 | PR [140](docs/stages/S05.md#pr-140), [141](docs/stages/S05.md#pr-141), [154](docs/stages/S05.md#pr-154), [152](docs/stages/S05.md#pr-152), [12](docs/stages/S00.md#pr-12), [136](docs/stages/S04.md#pr-136) | 24 Oct | The admin order screens on the new shell (demo V12.3 `#/admin/orders`; no new setting, migration or permission). All orders: views with counts (to confirm, on hold, cancel requests, duplicate review …), search by number, phone (any way it is written, Bengali digits too), name or tracking code, filters, four separate status chips; a table on a computer and cards on a phone. One order's page: products, the customer and his earlier orders, the timeline and notes, and only the buttons the order allows now and the person may press, each with a "what will happen" box; a change made meanwhile reloads and says so. To confirm: the call queue. Bulk confirm, hold and release with the skipped ones and why. The Orders badge and order rows in "Needs you now"; "Get invoice" for staff (follow-ups 200, 180). |
 | #35 | PR [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [561](docs/stages/S04.md#pr-561), [127](docs/stages/S04.md#pr-127), [128](docs/stages/S04.md#pr-128), [605](docs/stages/S04.md#pr-605) | 24 Oct | The rest of the customer checkout (S04, settings v34, migration `0020_gift_mode`, permission `orders.lines`; every new feature off by default). No order is held over an address: it is placed and the team calls once (landmark-only lines get one address check). Free delivery never asks for a delivery band. A known number can skip the address line (off). "Add to this parcel" lets a customer add a piece to his COD order before it is confirmed (off). "Complete your look" on the thank-you page offers only pieces a running combo pairs with the order (off). Gift mode sends the order to someone else with a note, a deliver-after date and the prices hidden (off). |
 | #35 | PR [12](docs/stages/S00.md#pr-12), [155](docs/stages/S05.md#pr-155), [495](docs/stages/S00.md#pr-495), [28](docs/stages/S01.md#pr-28) | 24 Oct | The new admin shell (CN-018, CN-022; demo V12.3 `#/admin`; settings v33, no migration). Every admin page now sits in one of 14 sections in four groups (Daily work, Grow, Business, and Settings / Help & Build at the bottom), with section tabs and "More", an icon rail on a tablet and a drawer plus Home · Orders · Support · Search · More on a phone. The menu shows only what a person's role can open, with waiting-work badges. Ctrl K or "/" opens one search for pages, settings, products, orders and customers. Each section has its Bengali guide in a side panel. `/admin` is the Dashboard: "Needs you now" from the real queues, plus Delivered sales and Ordered value for today / 7 / 30 days from `@extas/metrics`. A role can start on its own section (off by default); the size-chart links' tap area is 44 px. `/admin/delivery` moved to `/admin/delivery/zones` (redirected). |
