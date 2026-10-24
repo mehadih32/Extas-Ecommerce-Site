@@ -13,6 +13,10 @@
     "refunds": {
       "label": "Refund rules",
       "help": "When a refund may be asked and how the money goes back. Every refund waits for someone with the \"approve refunds\" permission (you); the shop never sends money back by itself — after approval a team member sends it the way it came (bKash, bank) and records the reference, or it goes to the customer's wallet as store credit. \"Refund to the wallet\" (off): real money may go back to the wallet instead. \"After delivery\" (off): no refunds once the customer received the goods (exchange is the way), except the sources in the list (the rider's overcharge). \"Returned prepaid parcel\": give everything back, or keep the delivery charge. \"Four eyes\" (off): the person who asked a refund may not approve it."
+    },
+    "partial": {
+      "label": "Partial payment and the pre-order advance",
+      "help": "Whether a pre-order may be paid partly now and the rest at the door. A team member asks the advance on the order and the customer pays it online (bKash, Nagad, card); only money that came in lowers what the rider collects. \"Cap\": the most the shop may ask as an advance, as a percentage of the order's total (10% to start). \"Smallest advance\": below this no payment is asked (empty = no minimum). \"Pay it all now\" (off): the customer may pay the whole order in advance instead. Off: no advance is asked for a pre-order."
     }
   }
 }

@@ -20,6 +20,9 @@
 //   refunds" permission, then completed — to the wallet through the ledger, or the way the money came by a person who
 //   records the payout reference (the shop never sends money out by itself) — and the list with the money owed to
 //   customers (refunds.ts; the pure part in refund-pure.ts).
+// - PR 173 partial payment: a pre-order's advance asked on a Cash on Delivery order within the owner's cap, paid online
+//   by the customer, the rest at the door; and the quote the order screen and the checkout show (advance.ts; the pure
+//   part in advance-pure.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -31,3 +34,4 @@ export * from './gateway';
 export * from './advance-link';
 export * from './wallet';
 export * from './refunds';
+export * from './advance';

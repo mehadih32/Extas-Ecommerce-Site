@@ -1,4 +1,4 @@
-// S07 · PR 165, 166, 170, 171, 172 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
+// S07 · PR 165, 166, 170, 171, 172, 173 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
 // money panel comes with the admin UI; these routes are what it calls. Every route signs the person in (guardAdmin),
 // checks the permission in the store it touches (`?storeId=`, default the mother store), then calls @extas/payments,
 // which checks the permission again and writes the audit log in the same transaction. Recording money takes an
@@ -44,6 +44,11 @@
 //   POST  /api/admin/payments/refunds/:id/complete  {reference?, note?, confirm: true} paid out: to the wallet, or the money a
 //                                                    person sent back by hand with its reference (Idempotency-Key) (payments.refunds.execute)
 //   POST  /api/admin/payments/refunds/:id/fail      {note} the payout did not go through (payments.refunds.execute)
+//   GET   /api/admin/payments/orders/:id/advance    PR 173: what a pre-order's advance may be — the owner's cap, the
+//                                                    default ask, what the rider collects after it (payments.view)
+//   POST  /api/admin/payments/orders/:id/advance    {method, provider?, amountMinor? | full?, note?, confirm: true} a COD
+//                                                    order's advance for the customer to pay online, within the cap; off
+//                                                    until `payments.partial` is on (Idempotency-Key) (payments.advance)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -188,10 +193,18 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
       return { money };
     });
   }
-  if (m !== 'POST') return c === 'payments' || c === 'door' || c === 'apology' || c === 'refunds' ? notAllowed() : notFound();
+  if (c === 'advance' && m === 'GET') {
+    return handle(request, deps, 'payments.view', async (x) => {
+      const quote = await pay.advanceQuote(x.deps, x.who, b);
+      if (!quote) throw new pay.PaymentsError('NOT_FOUND', 'no such order', ['orderId']);
+      return { quote };
+    });
+  }
+  if (m !== 'POST') return c === 'payments' || c === 'door' || c === 'apology' || c === 'refunds' || c === 'advance' ? notAllowed() : notFound();
   if (c === 'payments') return handle(request, deps, 'payments.record', async (x) => ({ result: await pay.recordPayment(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
   if (c === 'door') return handle(request, deps, 'payments.door', async (x) => ({ result: await pay.recordDoorOutcome(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
   if (c === 'apology') return handle(request, deps, 'payments.apology', async (x) => ({ result: await pay.giveApology(x.deps, x.who, b, await body(request)) }), 201);
   if (c === 'refunds') return handle(request, deps, 'payments.refunds.request', async (x) => ({ refund: (await pay.requestRefund(x.deps, x.who, b, await body(request), { idempotencyKey: x.key })).refund }), 201);
+  if (c === 'advance') return handle(request, deps, 'payments.advance', async (x) => ({ result: await pay.requestAdvance(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
   return notFound();
 }
