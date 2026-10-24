@@ -9,7 +9,7 @@
     },
     "journey": {
       "label": "Order journey",
-      "help": "For each step of an order (received, self-confirm, confirmed, packed, booked, out for delivery, delivery day, delivered, Day-1 care, Day-3 review) and each notice (cancelled, on hold, advance asked, gift receiver): on or off, the channel and a fallback, also by e-mail, when it goes (at once, minutes later, or at a time some days later), which orders (all, cash on delivery, prepaid) and its template. A step never goes twice for one order."
+      "help": "For each step of an order (received, self-confirm, confirmed, packed, booked, out for delivery, delivery day, delivered, Day-1 care, Day-3 review) and each notice (cancelled — with the reason, see Cancellation notice — on hold, advance asked, gift receiver): on or off, the channel and a fallback, also by e-mail, when it goes (at once, minutes later, or at a time some days later), which orders (all, cash on delivery, prepaid) and its template. A step never goes twice for one order."
     },
     "caps": {
       "label": "Caps per order",
@@ -48,6 +48,10 @@
         "label": "Message log page size",
         "help": "How many messages one page of the message log shows."
       }
+    },
+    "cancelNotice": {
+      "label": "Cancellation notice",
+      "help": "What the \"cancelled\" step of the order journey tells the customer (switch the step on there; off when shipped). Its template's {cancelReason} is the reason in plain words for each cancel reason; a reason without words says nothing, and the team's own note is never sent. Silent reasons send nothing at all (shipped: declined as fake, and someone else used his number). A duplicate cancelled while his other order goes ahead gets the duplicate template, with that order's number and tracking link. The notice is outside the caps and never goes twice."
     }
   }
 }

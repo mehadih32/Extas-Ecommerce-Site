@@ -19,9 +19,10 @@ import { lockSeed } from './lock';
  * The `{tokens}` a notification template may use; the sender (@extas/messages) fills them in when the message goes out.
  * PR 148 (SIM-F-001): an amount is always the amount still due (total − paid) — `{amountDue}`, or `{amountLine}`, a
  * whole sentence that is left out for a fully paid order; `{total}` is kept for older templates and is read as the
- * amount due too. `{exactAmountLine}`: CN-014 idea 10. `{senderName}`: a gift's sender (PR 605).
+ * amount due too. `{exactAmountLine}`: CN-014 idea 10. `{senderName}`: a gift's sender (PR 605). PR 546: `{cancelReason}`
+ * (a cancellation's reason in plain words), `{keptOrderNumber}` and `{keptOrderLink}` (the order that goes ahead).
  */
-export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName'] as const;
+export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink'] as const;
 
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'lower-case words joined by -' });
 const dottedKey = z.string().regex(/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)*$/, { message: 'dotted camelCase key' });

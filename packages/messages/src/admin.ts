@@ -1,7 +1,8 @@
 // PR 148 — Messages › Order journey (MSG-01, ADMIN-ARCHITECTURE: one screen, the steps in order, rare options under
 // "More options"). The screen reads every setting of the journey in one go with a version, which the save sends back
 // ([ver]): a save over someone else's newer change is refused with STALE. Each channel shows whether it is live or on
-// its mock, and each step whether its template exists in both languages.
+// its mock, and each step whether its template exists in both languages. PR 546: the cancellation notice's words (the
+// reason per cancel code, the silent reasons, the duplicate's template) are part of the same screen.
 import { createHash } from 'node:crypto';
 import { JOURNEY_STEPS, MESSAGE_CHANNELS, registry, storeTarget, type Key, type MessageChannel, type Value } from '@extas/settings';
 import { z } from 'zod';
@@ -17,6 +18,7 @@ const K = {
   language: 'messages.language',
   amountLine: 'messages.amountLine',
   exactAmount: 'messages.exactAmount',
+  cancelNotice: 'messages.cancelNotice',
 } as const satisfies Record<string, Key>;
 type Field = keyof typeof K;
 export type JourneyConfig = { [F in Field]: Value<(typeof K)[F]> };
@@ -57,7 +59,7 @@ export async function journeyScreen(deps: MessagesDeps, who: Who): Promise<Journ
       }
     }),
   );
-  const keys = [...new Set(JOURNEY_STEPS.map((s) => config.journey[s].template))];
+  const keys = [...new Set([...JOURNEY_STEPS.map((s) => config.journey[s].template), config.cancelNotice.duplicateTemplate])];
   const rows = await deps.db.notificationTemplate.findMany({ where: { storeId: who.storeId, key: { in: keys }, archivedAt: null }, select: { key: true, channel: true, locale: true } });
   const templates: JourneyScreen['templates'] = {};
   for (const r of rows) {
@@ -79,6 +81,7 @@ const saveInput = z
     language: z.unknown(),
     amountLine: z.unknown(),
     exactAmount: z.unknown(),
+    cancelNotice: z.unknown(),
   })
   .partial()
   .strict();

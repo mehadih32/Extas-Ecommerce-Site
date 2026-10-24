@@ -7,7 +7,8 @@
 //   GET   /api/admin/messages/journey        the journey: steps, channels (live or mock), caps, quiet hours, self-confirm,
 //                                            the templates each step has, and the version to send back
 //   PUT   /api/admin/messages/journey        {version?, enabled?, journey?, caps?, selfConfirm?, quietHours?, language?,
-//                                            amountLine?, exactAmount?} save (STALE when someone saved in between)
+//                                            amountLine?, exactAmount?, cancelNotice? (PR 546)} save (STALE when someone
+//                                            saved in between)
 //   POST  /api/admin/messages/self-confirm   {orderNumber, answer: 1 | 2 | 3} the customer's reply, recorded by staff
 //                                            (until the WhatsApp provider's replies arrive by themselves)
 //   GET   /api/admin/messages/log            PR 149: the log, newest first (?status, ?channel, ?step, ?orderNumber, ?from,
