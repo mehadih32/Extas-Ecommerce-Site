@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১৮টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২২২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,11 +36,11 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২১৮টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) আর পেমেন্ট (S07) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২২২টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 11/33** (wave 2) · **S04 39/41** · **S05 20/20** (wave 3) · total **218/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 11/33** (wave 2) · **S04 39/41** · **S05 20/20** · **S07 4/10** (wave 3) · total **222/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -67,7 +67,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 20 / 20 | **Done** |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 11 / 33 | In progress |
-| [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
+| [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 4 / 10 | In progress |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **218 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **222 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -956,7 +956,7 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 - **Tests and gates:** `packages/cart` (pure and PostgreSQL), `apps/web/src/lib/shop/bag-*.test.ts`, the coupon audience in `packages/rules`; device gate 0 fails in 775 checks including the filled bag (`docs/qa/device-gate.json` `filled`); `/bag` and `/bn/bag` in the Lighthouse budget and the smoke test. Screenshots: `docs/qa/screenshots/pr-107/`.
 
 **Built (PR 115–126): the checkout, matched to demo V12.2 (CN-012).** Package `@extas/checkout`, migration `0007_checkout` (payment methods Rocket, Upay, Online).
-- **Screens / routes:** `/checkout` and `/bn/checkout`; `/checkout/pay/<number>` (the test payment page until the S07 gateways) and `/checkout/thanks/<number>` (both noindex, only for the browser that placed the order).
+- **Screens / routes:** `/checkout` and `/bn/checkout`; `/checkout/pay/<number>` ("Pay" opens the connected gateway, S07 PR 170; until then the test payment page, which answers only while `payments.testPayments` is on and no real gateway is connected: follow-up 50, the go-live guard) and `/checkout/thanks/<number>` (both noindex, only for the browser that placed the order).
 - **Form (115, 116, 124):** the steps header, the phone's order-summary bar and sticky Confirm, the desktop side summary; name, phone, address in the owner's order (`checkout.fieldOrder`) with one set of checks for browser and server; Confirm never looks off: it shows the first missing field with a Bengali line in its box (`checkout.confirm.style`).
 - **Address and charge (117, 118, 119):** the S06 gazetteer reads the address on the server (longest name first); an unclear line asks "Where is this address?" with each band's charge and hours, never guesses; the charge is the owner's band figure (never from text), "+ delivery" while a band has no charge, the rules only decide free delivery. Since follow-up 54 the rules engine uses the same band figure, so the rule admin's preview and simulation say what the checkout charges (the COD limit check is unchanged; follow-up 121 waits for the owner).
 - **Payment, wallet, opt-in, items (120–123):** COD only when the owner's switch, the COD rule and the band's limit allow it; mobile banking, card & bank, Pay online; the prepaid reward system (off, no value; the owner sets it); "Use my wallet" for signed-in customers; SMS offers ticked, WhatsApp not, each a dated consent; quantity and Remove with Undo in the summary.
@@ -1101,9 +1101,23 @@ Stage report (Bengali): [`docs/reports/2026-10-24-S05.md`](docs/reports/2026-10-
 
 Register: [S05](docs/MASTER-REGISTER.md#s05--order-management--pr-138155).
 
-### S07 · Payments & wallet — Not started
+### S07 · Payments & wallet — In progress (4/10)
 
-Planned — see register PRs 165–174: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
+> **বাংলায় সংক্ষেপে:** প্রতিটা পেমেন্টের অবস্থা আর টাকার হিসাব এখন এক জায়গায়; গরমিল হলে সবসময় কারণসহ দেখায়। টাকা দেওয়া কাস্টমারকে
+> রাইডার আর টাকা চাইবে না। কুরিয়ারের হিসাব (CSV) মিলিয়ে দেখা যায়। বিকাশ যুক্ত করার ব্যবস্থা তৈরি, চাবি না দেওয়া পর্যন্ত অনুশীলন মোডে।
+> পেমেন্ট ব্যর্থ হলে বা ফেরার পথে নেট গেলেও অর্ডার একটাই থাকে, টাকা এলে সার্ভার নিজে খুঁজে লিখে রাখে। ফেরত (রিফান্ড) আর ওয়ালেট পরে আসবে।
+
+**Built (PR 165, 166, 167, 170, package `@extas/payments`, migration `0030_payments`, registry v47).** No refund, wallet, COD rule, price, charge or discount changed; no money moves by itself.
+- **Payment model (165):** payment states INITIATED → PENDING → AUTHORIZED → PAID / FAILED / CANCELLED through one outcome writer; money status ESTIMATED → PROVISIONAL → RECONCILED → FINAL, only forward; the amount due and what the rider collects; every mismatch has a reason code (SIM-F-028). Staff-recorded money is off by default (`payments.manual`), needs `payments.record`, one per Idempotency-Key, audited.
+- **COD after the door (166):** a paid customer is never asked again (SIM-F-001); the rider's outcome per parcel — delivered, partial, charge paid and returned, refused (SIM-F-005), once per parcel (`payments.door`); a partial waits for approval (`payments.cod.partialNeedsApproval`, on; `payments.partials`); courier statements by CSV or lines (`payments.settle`), each line matched with its reason, a checked line resolved with a note; the cash with the courier and on the road.
+- **Gateways (167):** one gateway contract for bKash, Nagad and card in `@extas/adapters` with the practice gateway; bKash tokenized checkout behind it, keys only in Keys & connections, on the practice gateway until the Test passes.
+- **Callbacks (170, SIM-F-026):** `GET|POST /api/payments/callback/<provider>` checks our signed address, stores each callback once (a repeat is one payment, a forged one is never processed) and asks the gateway before writing money; "Pay" opens the gateway; the worker's `payments.pending.sweep` asks about unanswered payments after 10 minutes and marks them abandoned only when the owner sets a time (off); failed, abandoned and waiting payments for the team.
+- **Go-live guard (PR 125, follow-up 50):** the test payment page answers only while `payments.testPayments` is on (switched off on go-live day) and no real gateway is connected.
+- **Admin API:** `/api/admin/payments/` — `orders/:id` (money), `orders/:id/payments` (record), `orders/:id/door`, `door/:id/decide`, `cod`, `settlements`, `settlements/:id`, `settlements/lines/:id/resolve`, `issues`. Permissions `payments.view`, `payments.record`, `payments.door`, `payments.partials`, `payments.settle`. No admin page yet (follow-up 333); guide `docs/admin-guide/integrations.md`.
+- **Settings:** group `payment` — `payments.manual`, `payments.mismatch.reasons`, `payments.cod`, `payments.cod.statement`, `payments.pending`, `payments.testPayments`; every number editable, new features off.
+- **Tests:** the pure model, matching and statements; PostgreSQL money, door, statements, callbacks, the sweep and SIM-F-001/005/026/028; the bKash adapter against a fake bKash; the admin API, the shop's callback journey and the guard; the worker's job and planner.
+- Still planned in S07: Nagad (168), card (169), wallet (171), refunds (172), 173–174.
+Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 
 ### S08 · Courier, returns, exchange — Not started
 
@@ -1228,7 +1242,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #41 | PR [572](docs/stages/S03.md#pr-572), [573](docs/stages/S03.md#pr-573), [574](docs/stages/S03.md#pr-574), [576](docs/stages/S03.md#pr-576) | 24 Oct | Combo templates: each colour-pair rule gets its own list page (`/combos/<rule>`) in five layouts, the pair page and the set in the bag each get five more, and the current look stays the default until the owner picks another. A test tool plays every template at four screen sizes and scores it out of 100. S03 is done (22/22). | Merged |
+| #41 | PR [572](docs/stages/S03.md#pr-572), [573](docs/stages/S03.md#pr-573), [574](docs/stages/S03.md#pr-574), [576](docs/stages/S03.md#pr-576), [165](docs/stages/S07.md#pr-165), [166](docs/stages/S07.md#pr-166), [167](docs/stages/S07.md#pr-167), [170](docs/stages/S07.md#pr-170), [125](docs/stages/S04.md#pr-125) | 24 Oct | Combo templates: each colour-pair rule gets its own list page (`/combos/<rule>`) in five layouts, the pair page and the set in the bag each get five more, and the current look stays the default until the owner picks another. A test tool plays every template at four screen sizes and scores it out of 100. S03 is done (22/22). Payments start (S07 4/10): every payment has one state and a money status, cash on delivery is settled after the door (a paid customer is never asked again), bKash sits behind one gateway contract on its practice mode until the owner adds the keys, and callbacks are signature-checked and counted once. | Merged |
 | #40 | PR [541](docs/stages/S05.md#pr-541), [159](docs/stages/S06.md#pr-159) | 24 Oct | Every new order lands in one section with a note the moment it is placed (duplicate, re-order, new identity, high risk, watch, prepaid, clear); the strong sections wait for a person, and an order under review can never be booked. Prepaid orders get their own confirm view. The order list gets a risk column, filters and a "highest risk first" sort. Checkout keeps the IP, the shop's own random device id and a location the customer chooses to share, each by its own switch, and clears them after 180 days. S05 is complete. |
 | #39 | PR [44](docs/stages/S02.md#pr-44), [546](docs/stages/S05.md#pr-546), [148](docs/stages/S05.md#pr-148) (follow-up [287](docs/stages/S14.md#pr-287)) | 24 Oct | The home page flash sale: two rows gliding opposite ways with a live countdown, drawn only while the owner has a sale set (empty and off by default; a sale never changes a price). The customer is told in plain words why an order was cancelled; a duplicate's notice names the order that goes ahead, with its tracking link. The "cancel request refused" notice is its own step. Both notices are off by default. |
 | #38 | PR [157](docs/stages/S06.md#pr-157), [158](docs/stages/S06.md#pr-158), [156](docs/stages/S06.md#pr-156), [160](docs/stages/S06.md#pr-160) | 24 Oct | The risk score (off until the owner turns it on): each new order gets a score from 0 to 100 from the owner's signals and weights (the number's past orders and refusals, cancels, a very recent order, an unclear or mismatched address …), stored once with its reasons. The order's admin page shows a "Risk" card that says why. It only informs: nothing is blocked, and no price, charge or COD changes. |
