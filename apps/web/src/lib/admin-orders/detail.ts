@@ -329,13 +329,15 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
 
 /** PR 142 — an edit's timeline line: each field and line before → after (the staff see exactly what changed). */
 export function editSummary(view: AdminView, data: unknown): string | null {
-  const x = (data ?? {}) as { fields?: { field: string; before: string | null; after: string | null }[]; lines?: { kind: string; label: string; toLabel?: string }[]; channel?: { en: string; bn: string } | null };
+  const x = (data ?? {}) as { fields?: { field: string; before: string | null; after: string | null }[]; lines?: { kind: string; label: string; toLabel?: string }[]; channel?: { en: string; bn: string } | null; via?: string };
   const d = view.dict;
   const show = (field: string, v: string | null) => (v ? (field === 'phone' ? phoneText(v) || v : v) : t(d, 'orders.list.none'));
   const parts = [
     ...(x.fields ?? []).map((f) => t(d, 'orders.ev.editField', { field: t(d, `orders.dlg.${f.field === 'customerName' ? 'name' : f.field}`), before: show(f.field, f.before), after: show(f.field, f.after) })),
     ...(x.lines ?? []).map((l) => (l.kind === 'remove' ? t(d, 'orders.ev.editRemoved', { line: l.label }) : t(d, 'orders.ev.editLine', { line: l.label, to: l.toLabel ?? '' }))),
     ...(x.channel ? [t(d, 'orders.ev.editVia', { via: nameOf(view, x.channel) })] : []),
+    // PR 143: the customer's own edit from his order page
+    ...(x.via === 'order-page' ? [t(d, 'orders.ev.editViaPage')] : []),
   ];
   return parts.length ? parts.join(' · ') : null;
 }
@@ -474,7 +476,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       const reason = e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const detailText = [move, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? reason) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
+      const detailText = [move, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
     .reverse();

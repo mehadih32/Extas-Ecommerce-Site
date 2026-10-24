@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { ORDER_CANCEL_CODES } from '@extas/settings';
 import {
   addOnClosedWhy,
+  customerEditClosedWhy,
   allowedCommands,
   CANCEL_CODES,
   NOT_A_RISK_SIGNAL,
@@ -155,6 +156,23 @@ describe('PR 142 · the team\'s edit (SIM-F-004: never once booked)', () => {
     expect(CANCEL_CODES).toContain('NOT_ORDERED');
     expect(NOT_A_RISK_SIGNAL.has('NOT_ORDERED')).toBe(true);
     expect(NOT_A_RISK_SIGNAL.has('ADDRESS_UNREACHABLE')).toBe(false);
+  });
+});
+
+describe('PR 143 · the customer\'s own edit window', () => {
+  const cfg = { enabled: true, until: 'confirmed' as const, windowMinutes: 0, maxEdits: 2 };
+  const at = new Date('2026-10-24T10:00:00Z');
+  const o = (s: OrderState, more: Partial<MachineOrder> & { edits?: number; placedAt?: Date } = {}) => ({ ...order(s, more), placedAt: more.placedAt ?? at, edits: more.edits ?? 0 });
+  it('off, the step, the time, the cap — and the machine first: never once booked or while a cancel is asked (SIM-F-004)', () => {
+    expect(customerEditClosedWhy({ ...cfg, enabled: false }, o('PLACED'), at)).toBe('OFF');
+    expect(customerEditClosedWhy(cfg, o('CONFIRMED'), at)).toBeNull();
+    expect(customerEditClosedWhy({ ...cfg, until: 'placed' }, o('CONFIRMED'), at)).toBe('STEP');
+    expect(customerEditClosedWhy({ ...cfg, until: 'placed' }, o('ON_HOLD', { holdFromStatus: 'PLACED' }), at)).toBeNull();
+    expect(customerEditClosedWhy(cfg, o('PROCESSING'), at)).toBe('STEP');
+    expect(customerEditClosedWhy(cfg, o('CONFIRMED', { booked: true }), at)).toBe('BOOKED');
+    expect(customerEditClosedWhy(cfg, o('PLACED', { cancelRequested: true }), at)).toBe('CANCEL');
+    expect(customerEditClosedWhy({ ...cfg, windowMinutes: 30 }, o('PLACED'), new Date(at.getTime() + 31 * 60_000))).toBe('TIME');
+    expect(customerEditClosedWhy(cfg, o('PLACED', { edits: 2 }), at)).toBe('CAP');
   });
 });
 

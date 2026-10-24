@@ -69,6 +69,10 @@
       "channels": {
         "label": "Where the customer asked",
         "help": "Where the change came from (a phone call, WhatsApp, Messenger, in the shop …). Kept with every edit the team makes; the customer's own edits are marked as his, from his order page."
+      },
+      "customer": {
+        "label": "Customer edits his order",
+        "help": "Off by default. enabled: the customer can change his phone, address or a size from his order page. until: \"placed\" — only while the order is new; \"confirmed\" — also after you confirm it, until packing starts. Never after a courier is booked. windowMinutes: minutes after placing (0 = only the step counts). maxEdits: saves per order. phone, address, size: what he may change; a size only to another size of the same piece at the same price, when it is in stock. Prices, discounts and the delivery charge never change; a changed address gets a call task so the team checks the delivery area."
       }
     },
     "refusal": {

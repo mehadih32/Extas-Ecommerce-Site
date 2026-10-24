@@ -7,6 +7,8 @@
 // which size goes in it at the SAME price, and taking a piece out lowers the order's total by exactly that piece (a paid
 // order's overpaid part only becomes a refund REQUEST; no money moves). SIM-F-004: every edit is refused once a courier
 // is booked, so an edit never silently diverges from the parcel.
+// PR 143: the customer's own edit from his order page — off by default (CN-018), capped, until processing starts.
+import { z } from 'zod';
 import { setting } from './define';
 import { ordersDictionaryDefault } from './registry-orders';
 import { dictionarySchema } from './schemas';
@@ -14,6 +16,25 @@ import { dictionarySchema } from './schemas';
 const V = 37;
 
 const list = dictionarySchema.refine((l) => l.length > 0, { message: 'at least one entry' });
+
+/**
+ * PR 143 — the customer's own edit from his order page (B1.10 "may edit twice from the dashboard before packing";
+ * demo 60-account.js ord_editCard). `until`: "placed" while the order is new, "confirmed" also after the team confirms
+ * it, until picking starts (never after a courier is booked). `windowMinutes`: after placing (0: only the step counts).
+ * `maxEdits`: how many saves per order. `phone`, `address`, `size`: what he may change (a size only to another size of
+ * the same piece in the same colour at the same price, with stock).
+ */
+export const customerEditSchema = z
+  .object({
+    enabled: z.boolean(),
+    until: z.enum(['placed', 'confirmed']),
+    windowMinutes: z.int().min(0).max(60 * 24 * 14),
+    maxEdits: z.int().min(1).max(20),
+    phone: z.boolean(),
+    address: z.boolean(),
+    size: z.boolean(),
+  })
+  .strict();
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -35,6 +56,16 @@ export const orderEditSettings = {
     labelKey: 'orders.edit.channels.label',
     helpKey: 'orders.edit.channels.help',
     sortOrder: 220,
+  }),
+  'orders.edit.customer': setting({
+    ...base,
+    isPublic: true,
+    schema: customerEditSchema,
+    default: { enabled: false, until: 'confirmed', windowMinutes: 0, maxEdits: 2, phone: true, address: true, size: true },
+    valueType: 'JSON',
+    labelKey: 'orders.edit.customer.label',
+    helpKey: 'orders.edit.customer.help',
+    sortOrder: 230,
   }),
   // SIM-F-038: the parcel-refusal reasons (bought elsewhere, arrived after Eid …) for the outcome the courier reports.
   'orders.refusal.reasons': setting({

@@ -506,7 +506,8 @@
       "editField": "{field}: {before} → {after}",
       "editLine": "{line} → {to}",
       "editRemoved": "Taken out: {line}",
-      "editVia": "via {via}"
+      "editVia": "via {via}",
+      "editViaPage": "by the customer, from his order page"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
