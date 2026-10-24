@@ -69,3 +69,4 @@ export * from './duplicate-rules';
 export * from './alert-summary';
 export * from './rule-switches';
 export * from './booking';
+export * from './checkout-layers';

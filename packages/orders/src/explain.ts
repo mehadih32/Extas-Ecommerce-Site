@@ -65,7 +65,7 @@ export interface ExplainFacts {
   deliveryChargeMinor: number;
   paidMinor: number;
   paymentMethod: string | null;
-  advanceRequirement: 'NONE' | 'DELIVERY_CHARGE' | 'FULL_AMOUNT';
+  advanceRequirement: 'NONE' | 'DELIVERY_CHARGE' | 'FULL_AMOUNT' | 'PART_AMOUNT';
   advanceRequiredMinor: number | null;
   advanceDueAt: Date | null;
   addressUnclear: boolean;

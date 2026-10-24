@@ -164,7 +164,8 @@ describe('page guides (PR 594, CN-026)', () => {
     expect(guidePlace('/admin/stock/counts/')).toEqual({ section: 'products', page: 'products/stock-counts' });
     expect(guidePlace('/admin')).toEqual({ section: 'dashboard', page: 'dashboard/home' });
     expect(guidePlace('/admin/customers')?.page ?? null).toBeNull();
-    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm']);
+    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/checkout-advance']);
+    expect(guidePlace('/admin/orders/risk-rules/checkout')?.page).toBe('orders/checkout-advance');
   });
 
   it('opens as the side panel on a computer and the full-screen sheet on a phone; other modes wait (follow-up)', () => {
