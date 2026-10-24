@@ -1,0 +1,196 @@
+// S08 · PR 181 — Orders → Packing & print → Picking list (ORD-04a; Blueprint B1.6, B1.7): the one list the store keeper
+// holds to pull every piece of the run — every order still with us that has not gone to the courier, however many days
+// they span — grouped category → style → colour → size with the most pieces first, sizes short of the shop's stock
+// marked. The summary line counts orders and pieces separately, the line items, the categories in order, shortages and
+// the held and problem orders (listed apart, never counted). The owner may narrow it to days (the day the order was
+// placed); a dispatched order never enters it. "Print picking list" makes the PDF on the letterhead with a tick box per
+// row. No customer's details: order numbers and pieces only.
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { MOTHER_STORE_ID } from '@extas/db/client';
+import * as sh from '@extas/shipping';
+import { AdminNotice } from '@/components/admin/AdminFrame';
+import { PdfButton } from '@/components/admin/fulfil/Print';
+import { formatNumber } from '@/components/admin/products/model';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
+import { adminDeps } from '@/lib/admin-auth';
+import { withFulfil } from '@/lib/admin-fulfil/i18n';
+import { categoryName } from '@/lib/admin-fulfil/picking';
+import { ADMIN_LOGIN } from '@/lib/admin-nav';
+import { adminView, pageAccess } from '@/lib/admin-page';
+import { locateKey } from '@/lib/admin-shell/sections';
+import { t, type Dict } from '@/lib/i18n';
+import { shippingDeps } from '@/lib/shipping-api';
+
+export const dynamic = 'force-dynamic';
+
+const HERE = '/admin/orders/packing/picking';
+const API = '/api/admin/packing/picking';
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const view = withFulfil(await adminView());
+  return { title: `${t(view.dict, 'ful.picking.title')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
+}
+
+type Search = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function PickingPage({ searchParams }: { searchParams: Search }) {
+  const deps = adminDeps();
+  const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('fulfilment.read', deps, MOTHER_STORE_ID), searchParams]);
+  const view = withFulfil(plain);
+  const d = view.dict;
+  if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
+  if (access.kind === 'unavailable') return <AdminNotice view={view} current="packingPicking" text={t(d, 'page.noDb')} />;
+  if (access.kind === 'forbidden')
+    return (
+      <div className="a2-z">
+        <ShellState view={view} kind="denied" permission="fulfilment.read" />
+      </div>
+    );
+  const one = (v: string | string[] | undefined) => (typeof v === 'string' && DAY.test(v) ? v : null);
+  let from = one(sp.from);
+  let to = one(sp.to);
+  const badRange = !!from && !!to && from > to;
+  if (badRange) [from, to] = [null, null];
+  const who: sh.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
+  const sd = await shippingDeps(access.deps);
+  const [list, cfg] = await Promise.all([sh.pickingList(sd, who, { from, to }), sd.settings.value('delivery.picking.list', { storeId: MOTHER_STORE_ID })]);
+  const fd: Dict = { ful: d.ful as Dict };
+  const n = (x: number) => formatNumber(x, view.locale);
+  const s = list.summary;
+  const none = t(d, 'ful.picking.sheet.noCategory');
+  const cat = (name: string) => categoryName(list, name, view.lang, none);
+  const counts: [string, number][] = [
+    ['orders', s.orders],
+    ['pieces', s.pieces],
+    ['lines', s.lineItems],
+    ['short', s.shortages],
+    ['held', s.held],
+  ];
+
+  return (
+    <div className="a2-z" data-testid="picking-page">
+      <PageHead
+        view={view}
+        place={locateKey('packingPicking')}
+        title={t(d, 'ful.picking.title')}
+        sub={t(d, 'ful.picking.sub')}
+        right={<PdfButton dict={fd} url={API} body={{ from, to }} label={t(d, 'ful.picking.print')} busyLabel={t(d, 'ful.packing.printing')} tone="pri" size="" testId="picking-print" disabled={!s.orders} fileName="picking-list.pdf" />}
+      />
+      <SectionTabs view={view} current="packingPicking" />
+      <div className="a2-kpis a2-mt12" data-testid="picking-summary">
+        {counts.map(([k, v]) => (
+          <div key={k} className="a2-card a2-kpi">
+            <div className="a2-kl">{t(d, `ful.picking.counts.${k}`)}</div>
+            <div className="a2-kv">{n(v)}</div>
+          </div>
+        ))}
+      </div>
+      <section className="a2-card tight a2-mt12" aria-label={t(d, 'ful.picking.rangeTitle')} data-testid="picking-range">
+        <form method="get" action={HERE} className="a2-gap8" style={{ flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <label className="a2-stack a2-xs" style={{ gap: 4 }}>
+            {t(d, 'ful.picking.from')}
+            <input type="date" name="from" className="a2-inp" defaultValue={from ?? ''} />
+          </label>
+          <label className="a2-stack a2-xs" style={{ gap: 4 }}>
+            {t(d, 'ful.picking.to')}
+            <input type="date" name="to" className="a2-inp" defaultValue={to ?? ''} />
+          </label>
+          <button type="submit" className="a2-btn sm">
+            {t(d, 'ful.picking.apply')}
+          </button>
+          {from || to ? (
+            <Link href={HERE} className="a2-btn sm ghost">
+              {t(d, 'ful.picking.allDays')}
+            </Link>
+          ) : null}
+        </form>
+        <p className="a2-xs a2-mute a2-mt6">{badRange ? t(d, 'ful.picking.badRange') : t(d, 'ful.picking.rangeNote')}</p>
+        <div className="a2-gap8 a2-mt6" style={{ flexWrap: 'wrap' }}>
+          <span className="a2-pill line">{t(d, `ful.handover.paper.${cfg.paper}`)}</span>
+          <span className="a2-pill line">{t(d, 'ful.packing.dpi', { dpi: n(cfg.dpi) })}</span>
+          <span className="a2-pill line">{t(d, `ful.packing.lang.${cfg.lang}`)}</span>
+          <span className="a2-pill line">{t(d, 'ful.picking.shortPill', { on: t(d, cfg.markShortages ? 'ful.handover.on' : 'ful.handover.off') })}</span>
+        </div>
+        <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.picking.settingsNote')}</p>
+      </section>
+      {s.categories.length ? <p className="a2-xs a2-mt12">{t(d, 'ful.picking.sheet.categories', { list: s.categories.map((c) => `${cat(c.name)} ${n(c.pieces)}`).join(' · ') })}</p> : null}
+      {list.groups.length ? (
+        <div className="a2-tblw a2-mt12" data-testid="picking-list">
+          <table className="a2-tbl">
+            <thead>
+              <tr>
+                <th>{t(d, 'ful.picking.sheet.col.item')}</th>
+                <th className="r">{t(d, 'ful.picking.sheet.col.pieces')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.groups.flatMap((g) => [
+                <tr key={`c-${g.category}`} data-testid="picking-category">
+                  <td className="a2-tdh">
+                    <b>{cat(g.category)}</b>
+                  </td>
+                  <td className="r">
+                    <b className="a2-num">{n(g.pieces)}</b>
+                  </td>
+                </tr>,
+                ...g.styles.map((st) => (
+                  <tr key={`s-${g.category}-${st.styleKey}`}>
+                    <td className="a2-tdh">
+                      <div className="a2-cell" style={{ paddingInlineStart: 16 }}>
+                        <b>{st.style}</b>
+                        {st.colours.map((c) => (
+                          <span key={c.colour ?? ''} className="a2-xs">
+                            {c.colour ?? t(d, 'ful.picking.sheet.noColour')} · {n(c.pieces)}:{' '}
+                            {c.sizes.map((z, i) => (
+                              <span key={z.variantId ?? z.size ?? i}>
+                                {i ? ' · ' : ''}
+                                {z.size ?? t(d, 'ful.picking.sheet.noSize')} {n(z.quantity)}
+                                {z.short ? <span className="a2-pill bad">{t(d, 'ful.picking.sheet.short', { n: n(z.short) })}</span> : null}
+                              </span>
+                            ))}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="r" data-l={t(d, 'ful.picking.sheet.col.pieces')}>
+                      <b className="a2-num">{n(st.pieces)}</b>
+                    </td>
+                  </tr>
+                )),
+              ])}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="a2-state a2-mt12" data-testid="picking-empty">
+          <div className="a2-sti">
+            <ShellIcon name="print" size={26} />
+          </div>
+          <h3>{t(d, 'ful.picking.empty')}</h3>
+          <p>{t(d, 'ful.picking.emptySub')}</p>
+        </div>
+      )}
+      <section className="a2-card tight a2-mt12" aria-label={t(d, 'ful.picking.heldTitle')} data-testid="picking-held">
+        <h2 className="a2-h4">{t(d, 'ful.picking.heldTitle')}</h2>
+        {list.held.length ? (
+          <ul className="a2-stack a2-mt6" style={{ gap: 6, listStyle: 'none', padding: 0, margin: 0 }}>
+            {list.held.map((h) => (
+              <li key={h.orderId} className="a2-xs">
+                <b>
+                  <Link className="a2-lnk" href={`/admin/orders/${h.orderId}`}>{h.orderNumber}</Link>
+                </b>{' '}
+                · {t(d, `ful.picking.reason.${h.reason}`)} · {t(d, 'ful.picking.heldPieces', { n: n(h.pieces) })}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.picking.noHeld')}</p>
+        )}
+      </section>
+    </div>
+  );
+}

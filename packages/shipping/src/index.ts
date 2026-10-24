@@ -29,6 +29,10 @@
 // open batch per courier, the ready parcels with their consignment ids and amounts to collect, and "handed over"
 // through the order machine (handover.ts).
 //
+// PR 181: the daily consolidated picking list — every order still with us (approved, or booked and not picked up),
+// held and problem orders apart and uncounted, the pieces category → style → colour → size with the most pieces first,
+// shortages against the shop's stock, the summary line; printing it keeps the list (picking.ts, picking-pure.ts).
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -44,3 +48,5 @@ export * from './zones';
 export * from './fulfil-pure';
 export * from './fulfil';
 export * from './handover';
+export * from './picking-pure';
+export * from './picking';

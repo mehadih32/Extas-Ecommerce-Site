@@ -3,7 +3,8 @@
 // TEST_DATABASE_ADMIN_URL): login, the same-site check and the permission; the print run; the stickers as a real PDF
 // drawn with the server's fonts, counted, a second print a reprint; a parcel changed after booking refused (SIM-F-004);
 // the sample sticker. PR 180: a reprint needs its reason, the same press key is the same print, the recent prints; the
-// rider's handover sheet as a real A4 PDF and the batch handed over. Every value is a made-up test value.
+// rider's handover sheet as a real A4 PDF and the batch handed over. PR 181: the picking list as data and as a real
+// PDF, kept with a print job. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { STEADFAST_PROVIDER } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -14,7 +15,7 @@ import { bookOrders } from '@extas/shipping';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { handoverRoute, stickersRoute } from './fulfil-api';
+import { handoverRoute, pickingRoute, stickersRoute } from './fulfil-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -30,7 +31,7 @@ function call(method: string, path: string, opts: { body?: unknown; cookie?: str
 const cookiesOf = (res: Response) => res.headers.getSetCookie().map((c) => c.split(';')[0] ?? '').filter((c) => c && !c.endsWith('=')).join('; ');
 const pages = (pdf: Buffer) => (pdf.toString('latin1').match(/\/Type \/Page /g) ?? []).length;
 
-describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179, 180)', () => {
+describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179–181)', () => {
   let f: ShippingFixture;
   let deps: AdminDeps;
   let owner = '';
@@ -38,6 +39,7 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179,
   let courierId = '';
   const stickers = (method: string, path: string[], opts: { body?: unknown; cookie?: string; origin?: string | null } = {}) => stickersRoute(call(method, `/api/admin/packing/stickers/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner, origin: opts.origin }), deps, path);
   const handover = (method: string, path: string[], opts: { body?: unknown; cookie?: string } = {}) => handoverRoute(call(method, `/api/admin/packing/handover/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner }), deps, path);
+  const picking = (method: string, query = '', opts: { body?: unknown; cookie?: string } = {}) => pickingRoute(call(method, `/api/admin/packing/picking${query}`, { body: opts.body, cookie: opts.cookie ?? owner }), deps, []);
   const booked = async (name: string, phone: string) => {
     const o = await f.place(name, { phone });
     await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
@@ -146,5 +148,25 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179,
     expect((await handover('POST', ['done'], { body: { batchId: batch.id, receivedBy: 'Rider Karim' } })).status).toBe(409);
     expect((await handover('GET', ['sheet'])).status).toBe(405);
     expect((await handover('POST', ['teleport'])).status).toBe(404);
+  });
+
+  it('PR 181: the picking list as data (with a date range) and as a real PDF, kept with a print job', async () => {
+    const e = await booked('fa-5', '01700001905'); // hardcode-ok: a made-up test number
+    expect((await picking('GET', '', { cookie: reader })).status).toBe(403);
+    const data = (await (await picking('GET')).json()) as { ok: boolean; orderIds: string[]; summary: { orders: number; pieces: number } };
+    expect(data.ok).toBe(true);
+    expect(data.orderIds).toContain(e.orderId);
+    expect(data.summary.pieces).toBeGreaterThanOrEqual(data.summary.orders);
+    expect((await picking('GET', '?from=2000-01-01&to=2000-01-02')).status).toBe(200);
+    expect((await picking('GET', '?from=2000-01-03&to=2000-01-02')).status).toBe(400);
+    const res = await picking('POST', '', { body: {} });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('application/pdf');
+    const pdf = Buffer.from(await res.arrayBuffer());
+    expect(pdf.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4');
+    expect(pdf.toString('latin1')).toContain('/MediaBox [0 0 595.28 841.89]');
+    const listId = res.headers.get('x-picking-list')!;
+    expect(await f.t.prisma.pickingList.findUniqueOrThrow({ where: { id: listId } })).toMatchObject({ orderIds: expect.arrayContaining([e.orderId]) });
+    expect((await picking('PATCH')).status).toBe(405);
   });
 });

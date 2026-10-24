@@ -217,7 +217,8 @@
         "STICKER": "Stickers",
         "HANDOVER_SHEET": "Handover sheet",
         "PICKING_LIST": "Picking list"
-      }
+      },
+      "orders": "{n} orders"
     },
     "handover": {
       "title": "Handover",
@@ -288,6 +289,66 @@
         "foot": "Batch {batch} · print {n}",
         "page": "{n}/{of}",
         "empty": "No parcel on this sheet"
+      }
+    },
+    "picking": {
+      "title": "Picking list",
+      "sub": "Every piece to pull for the orders still with us — approved, or booked and not picked up — however many days they span. Category by category, the one with the most pieces first.",
+      "print": "Print picking list",
+      "counts": {
+        "orders": "Orders",
+        "pieces": "Pieces",
+        "lines": "Line items",
+        "short": "Short rows",
+        "held": "Held apart"
+      },
+      "rangeTitle": "Days",
+      "from": "From (order day)",
+      "to": "To",
+      "apply": "Show",
+      "allDays": "All days",
+      "rangeNote": "Leave empty for every order still with us. Days only narrow the list: an order the courier has never enters it.",
+      "badRange": "The first day was after the last: showing all days.",
+      "shortPill": "Mark shortages: {on}",
+      "settingsNote": "Paper, printer dots, language and \"mark shortages\" are delivery settings (Delivery → More options).",
+      "empty": "Nothing to pick",
+      "emptySub": "Orders appear here once they are confirmed, and leave when they are handed over to the courier.",
+      "heldTitle": "Held and problem orders (not counted)",
+      "noHeld": "None: every order still with us is counted above.",
+      "heldPieces": "{n} pcs",
+      "reason": {
+        "ON_HOLD": "on hold",
+        "CANCEL_ASKED": "a cancel is asked",
+        "IN_REVIEW": "in review (duplicate or risk)",
+        "COD_CHANGED": "amount changed after booking: re-book",
+        "RECEIVER_CHANGED": "receiver changed after booking: re-book"
+      },
+      "sheet": {
+        "title": "Picking list",
+        "counts": "{orders} orders · {pieces} pieces · {lines} line items",
+        "categories": "Categories: {list}",
+        "shortages": "Short: {n} rows ({pieces} pieces) — marked SHORT",
+        "noShortages": "Short: none",
+        "shortagesOff": "Shortages not marked",
+        "held": "Held and problem orders: {n}, listed at the end, not counted",
+        "noHeld": "Held and problem orders: none",
+        "range": "Orders placed {from} to {to}",
+        "allDays": "Every order still with us, all days",
+        "col": {
+          "item": "Category · style · colour · size",
+          "pieces": "Pcs"
+        },
+        "noCategory": "Other",
+        "noColour": "No colour",
+        "noSize": "One size",
+        "short": "SHORT {n}",
+        "heldTitle": "Held and problem orders (not counted above):",
+        "heldLine": "{order} — {reason} — {pieces} pcs",
+        "pickedBy": "Picked by",
+        "checkedBy": "Checked by",
+        "foot": "Printed {at}",
+        "page": "{n}/{of}",
+        "empty": "Nothing to pick"
       }
     }
   }

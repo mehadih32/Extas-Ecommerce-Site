@@ -181,7 +181,7 @@ export default async function PrintRunPage() {
           <ul className="a2-stack a2-mt6" style={{ gap: 6, listStyle: 'none', padding: 0, margin: 0 }}>
             {recent.map((j) => (
               <li key={j.id} className="a2-xs" data-testid="print-recent-row">
-                <b>{t(d, `ful.recent.kind.${j.kind}`)}</b> · {t(d, 'ful.recent.parcels', { n: n(j.parcels) })} · {printedAt(j.at, view.timeZone)}
+                <b>{t(d, `ful.recent.kind.${j.kind}`)}</b> · {t(d, j.kind === 'PICKING_LIST' ? 'ful.recent.orders' : 'ful.recent.parcels', { n: n(j.parcels) })} · {printedAt(j.at, view.timeZone)}
                 {j.by ? ` · ${j.by}` : ''}
                 {j.isReprint ? (
                   <>

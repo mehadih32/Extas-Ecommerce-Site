@@ -65,11 +65,13 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
         { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
       ] },
-      // S08 · PR 179, 180: Packing & print (ORD-04) — the print run of courier stickers and the rider's handover.
+      // S08 · PR 179–181: Packing & print (ORD-04) — the print run of courier stickers, the daily picking list and the
+      // rider's handover.
       {
         id: 'packing',
         pages: [
           { href: '/admin/orders/packing/print', perm: 'fulfilment.read', keys: ['packingPrint'] },
+          { href: '/admin/orders/packing/picking', perm: 'fulfilment.read', keys: ['packingPicking'] },
           { href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] },
         ],
       },

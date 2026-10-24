@@ -37,6 +37,12 @@
         "label": "Rider handover sheet",
         "help": "The sheet the rider signs when he takes the parcels: one per courier, each parcel's consignment id, order number and amount to collect, the total to collect, and a tick box per parcel. \"Paper\": A4 or A5. \"Printer dots\": 150 is enough for most printers, 300 is sharper. \"Language\": the sheet's own words. \"Receiver's name\": the name on each line, so the rider can check it against the sticker. \"Signatures\": the \"handed over by\" and \"received by\" lines. \"Mark packed on handover\": handing an order over also marks it packed when nobody did; turn it off once the packing screen is in use."
       }
+    },
+    "picking": {
+      "list": {
+        "label": "Daily picking list",
+        "help": "The one list the store keeper holds to pull every piece of the run: category by category, the one with the most pieces first, then style, colour and size, a tick box per row. \"Paper\": A4 or A5. \"Printer dots\": 150 is enough for most printers, 300 is sharper. \"Language\": the list's own words. \"Mark shortages\": a row needing more pieces than the shop's stock shows SHORT."
+      }
     }
   }
 }
