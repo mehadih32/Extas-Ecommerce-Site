@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১০টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -40,7 +40,7 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 43/58** · **S03 18/22** · **S06 10/33** (wave 2) · **S04 39/41** · **S05 18/20** (wave 3) · total **210/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 18/22** · **S06 10/33** (wave 2) · **S04 39/41** · **S05 19/20** (wave 3) · total **212/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -62,10 +62,10 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
-| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 43 / 58 | In progress |
+| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 44 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 18 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
-| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 18 / 20 | In progress |
+| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 19 / 20 | In progress |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 10 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **210 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **212 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -703,11 +703,11 @@ Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inve
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
 piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
 
-### S02 · Storefront — In progress (43/58)
+### S02 · Storefront — In progress (44/58)
 
-> **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি; তিনটা টেমপ্লেট T1, T2, T3; "আমার সাইজ খুঁজুন" — উচ্চতা আর ওজন দিলে প্রোডাক্টের নিজের চার্ট থেকে সাইজ, কারণসহ), ক্রেতাদের রিভিউ (ছবিসহ রিভিউ আগে, অনুমোদনের পরেই দেখা যায়), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি, সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) আর সার্চ (হেডারের খোঁজার জানালা, লিখতে লিখতে পরামর্শ, ফলাফলের পাতা ফিল্টার আর সাজানো সহ, বাংলা শব্দেও) তৈরি — ডেমো V12.2-এর মতো। পাতাগুলো এখন আরও তাড়াতাড়ি হাতে সাড়া দেয় (পণ্যের পাতায় আটকে থাকার সময় 263 থেকে 24 ms), দেখতে একদম আগের মতো।
+> **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ, ঘড়িসহ ফ্ল্যাশ সেল — মালিক সেল দিলে তবেই দেখায়) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি; তিনটা টেমপ্লেট T1, T2, T3; "আমার সাইজ খুঁজুন" — উচ্চতা আর ওজন দিলে প্রোডাক্টের নিজের চার্ট থেকে সাইজ, কারণসহ), ক্রেতাদের রিভিউ (ছবিসহ রিভিউ আগে, অনুমোদনের পরেই দেখা যায়), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি, সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) আর সার্চ (হেডারের খোঁজার জানালা, লিখতে লিখতে পরামর্শ, ফলাফলের পাতা ফিল্টার আর সাজানো সহ, বাংলা শব্দেও) তৈরি — ডেমো V12.2-এর মতো। পাতাগুলো এখন আরও তাড়াতাড়ি হাতে সাড়া দেয় (পণ্যের পাতায় আটকে থাকার সময় 263 থেকে 24 ms), দেখতে একদম আগের মতো।
 
-**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75, 72, 73, 52, 50, 58, 51, 88, 66, 87, 86, 59, 65), matched to demo V12.2 (CN-012).**
+**Built (PR 82, 501, 503, 84, 42, 40, 85, 41, 43, 45, 46, 47, 48, 54, 55, 56, 57, 60, 61, 62, 63, 64, 49, 53, 67, 68, 69, 70, 71, 74, 75, 72, 73, 52, 50, 58, 51, 88, 66, 87, 86, 59, 65, 44), matched to demo V12.2 (CN-012).**
 - **Screens / routes:** `/` and `/bn` (home), `/collections/<slug>` and `/bn/collections/<slug>` (category pages; `new-in` = the newest styles of every category), `/p/<product>` and `/p/<product>/<colour>` with `/bn/…` (product pages; the prefix is the setting `naming.productPathPrefix`), `/account/wishlist` (wishlist), `/help/faq`, `/help/delivery`, `/help/exchange`, `/help/privacy`, `/help/terms`, `/help/story`, `/help/contact` (help pages), `/search?q=` and `/bn/search?q=` (search results; `GET /search/suggest` answers the header panel), `/checkout` (empty checkout with the slim header), the shop 404; every
   storefront route not built yet shows "Coming soon" in the shell (CN-010). `/status` is the progress page.
 - **Shell (40):** announcement bar, header, phone menu, bottom bar, footer (phone bands with the social row incl.
@@ -719,6 +719,13 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   category tiles, new in, reviews; one slider engine with separate touch / mouse / keyboard pauses, each with a
   tested resume (42). The hero's default words make no count, season or year claim; a test keeps every shop word
   and setting default free of such claims (CN-017).
+- **Flash sale (44):** two rows gliding opposite ways on the one slider engine (each pause with its resume; a short
+  sale repeats its cards, hidden from screen readers and Tab) and a countdown that ticks after the first paint, stops
+  at zero and hides the section. The sale is the owner's (`home.flashSale`, empty: nothing is drawn until he sets
+  one): on, start and end, and the owner's products, a collection or every real markdown. A sale never changes a
+  price: the struck price and "Up to N% off" come only from the PR 38 rule. The section is laid out only as it
+  nears the screen (TBT). `/?try=flash` fills a sample sale on test servers only; screenshots
+  [`docs/qa/screenshots/pr-44/`](docs/qa/screenshots/pr-44/README.md); the admin page is follow-up 310.
 - **Category page (45–48):** crumbs, title and blurb, the grid with "Showing X of Y" and Show more (24 a page), the
   no-match state, the SEO block and questions (general ones only when their rule is on); filters built from the
   category's own products with live counts (a sold-out size is crossed out, never hidden), price bands from its own
@@ -821,7 +828,7 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   (`seo.structuredData`, on; Organization is still to come, follow-up 110); the owner's word under each size box
   (`pdp.sizeWords`, empty = off) and "Your size" on the size this browser last put in the bag (`pdp.usualSize`, off);
   a sample sub-category so the gate measures the menu accordion.
-- **Settings:** `theme.*`, `brand.*`, `shell.*`, `language.*`, `slider.engine`, `home.*` (registry v16; `home.hero` v17), `category.*` (registry v17), `pdp.*` (registry v19: page, gallery, colour, size, chart, stock, price, trust, rules, details, buy, sweep; no admin screen yet, CN-019); registry v23: `pdp.fit`, `pdp.rows`, `pdp.icons`, `pdp.share`, `shell.fab`, `shell.menuSubs`, `wish.list`, `pages.help`, `pages.text` (owner data); registry v28: `pdp.templates` (default T1, per category, T2 and T3 options), `pdp.finder` (the body estimate, tolerance, length check, stepper range, keep and record switches); registry v24: `search.engine`, `search.match`, `search.words`, `search.help`,
+- **Settings:** `theme.*`, `brand.*`, `shell.*`, `language.*`, `slider.engine`, `home.*` (registry v16; `home.hero` v17; `home.flashSale`, `home.flashRows` v45), `category.*` (registry v17), `pdp.*` (registry v19: page, gallery, colour, size, chart, stock, price, trust, rules, details, buy, sweep; no admin screen yet, CN-019); registry v23: `pdp.fit`, `pdp.rows`, `pdp.icons`, `pdp.share`, `shell.fab`, `shell.menuSubs`, `wish.list`, `pages.help`, `pages.text` (owner data); registry v28: `pdp.templates` (default T1, per category, T2 and T3 options), `pdp.finder` (the body estimate, tolerance, length check, stepper range, keep and record switches); registry v24: `search.engine`, `search.match`, `search.words`, `search.help`,
   `search.panel`, `search.results`. No schema change, no new permission.
 - **Settings (66, 86, 87):** `pdp.qa` in `registry-product.ts` and `shop.sweep`, `thanks.celebrate` in
   `packages/settings/src/registry-motion.ts` (registry v31), labels in `packages/settings/messages/storefront.*.json`; the
@@ -998,7 +1005,7 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 
 Next: PR 558 and 560 (the checkout's advance rules), the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
-### S05 · Order management — In progress (15/20)
+### S05 · Order management — In progress (19/20)
 
 > **বাংলায়:** "বিক্রি" এখন একটাই হিসাব — শুধু ডেলিভারি হওয়া অর্ডার, ডেলিভারির দিনে গোনা; "অর্ডারের মূল্য" (সব দেওয়া অর্ডার) আলাদা করে পাশে দেখায়। সব রিপোর্ট একই হিসাব থেকে নেয়। অডিট লগ আর অন্য ইতিহাস এখন ডাটাবেসেই আটকানো: ওয়েবসাইট নতুন লাইন লিখতে পারে, কিন্তু বদলাতে বা মুছতে পারে না, কেউই পারে না। অর্ডারের ধাপ এখন একটাই নিয়মে চলে: ভুল ধাপ আটকে যায়, প্রতিটা বদল টাইমলাইনে লেখা থাকে; কারণসহ বাতিল আর হোল্ড, টাকা দেওয়া অর্ডার বাতিলে শুধু রিফান্ডের অনুরোধ (টাকা যায় না), ডুপ্লিকেট অর্ডারের যাচাই-তালিকা, নোট আর ফ্ল্যাগ। অর্ডারের অ্যাডমিন পাতাও এখন তৈরি: অর্ডারের তালিকা (কোন অর্ডার কোন অবস্থায় আছে তার ভিউ, খোঁজা, ফিল্টার, ফোনে এক অর্ডার এক কার্ড), এক অর্ডারের পুরো পাতা (সব তথ্য, টাইমলাইন, আর এখন যে কাজগুলো করা যায় শুধু সেগুলোর বাটন — প্রতিটায় "কী হবে" লেখা থাকে), কনফার্ম করার লাইন, আর একসাথে অনেক অর্ডার কনফার্ম / হোল্ড / ছাড়া। টাকা, দাম বা ডিসকাউন্ট কোনো পাতা বদলায় না; টাকা দেওয়া অর্ডার বাতিলে শুধু রিফান্ডের অনুরোধ জমা হয়। রিফান্ড আর রিটার্ন পরের ধাপে। অর্ডার এডিটও এখন তৈরি: কাস্টমার ফোন করলে টিম অর্ডারের পাতা থেকেই নাম, ফোন (লগসহ), ঠিকানা, একই দামে অন্য সাইজ বা একটা পণ্য বাদ দিতে পারে — কারণ আর মাধ্যমসহ টাইমলাইনে লেখা থাকে; কাস্টমারের নিজের এডিট আর "দুই সাইজ" প্রশ্ন (S আর M একসাথে নিলে কোনটা রাখবেন; পরিবারের জন্য হলে শুধু নোট) — দুটোই শুরুতে বন্ধ। কুরিয়ার বুক হলে কোনো এডিট হয় না। কাস্টমারের "আমার অর্ডার" এখন পুরো ইতিহাস রাখে: পাতা পাতা করে সব অর্ডার, অর্ডার বেশি হলে "সব · পথে আছে · ডেলিভারি হয়েছে · বাতিল ও ফেরত" বাছাই, আর প্রতিটা অর্ডারের পাতায় ভাঁজ করা "যা যা হয়েছে" — কখন কী হলো, কে কী বদলাল (টিমের নোট বা ফ্ল্যাগ কখনো না)। অর্ডারের পাতায় কাস্টমারের নিজের এডিটের কার্ড আর "দুই সাইজ" প্রশ্নের কার্ডও এখন আছে — সুইচ চালু করলেই দেখা যাবে।
 
@@ -1048,6 +1055,14 @@ Next: PR 558 and 560 (the checkout's advance rules), the rest of S04. Register: 
 - **Admin API and permissions:** `GET|PUT /api/admin/messages/journey`, `POST /api/admin/messages/self-confirm`, `GET /api/admin/messages/log`, `GET /api/admin/messages/log/:id`, `POST /api/admin/messages/log/:id/retry`, `GET|POST /api/admin/orders/export`; `messages.journey.read`, `messages.journey.write`, `messages.selfConfirm.reply`, `messages.log.view`, `messages.log.retry`, `orders.export`, `orders.exportPersonal`.
 - **Tests:** the pure rules (steps, render rules, answers), the journey on PostgreSQL with orders placed through the real checkout (never twice, caps, look-back, quiet hours, the master switch, fallback, gift sender, self-confirm answers and timer, the yes-confirm and its guards, retries and the log), the export (permissions, personal columns, filters, ticked orders, limit, formula guard) and the admin API end to end. Guides: [comms](docs/admin-guide/comms.md), [orders](docs/admin-guide/orders.md).
 - **Planned:** the Messages pages (280), live WhatsApp and e-mail providers (281; SMS is follow-up 140), the WhatsApp reply webhook (282), the out-for-delivery event from S08 (283), promotions (284), the Export button (222).
+
+**Built (PR 546, follow-up 287): the cancellation notice (SIM-F-013)** (backend and admin API, on the PR 148 journey; registry v45, default pack v3, no migration).
+- **Why, in plain words:** the journey's "cancelled" step (off by default, outside the caps, never twice) fills `{cancelReason}` from `messages.cancelNotice` — short words per cancel code in English and Bengali ("The item ran out of stock. Sorry!"); the team's own note is never sent.
+- **Silent reasons:** a fake order (RISK_DECLINED) and "someone else used his number" (NOT_ORDERED) send nothing and the log says `REASON_SILENT`; the list is a setting.
+- **Duplicates:** a duplicate cancelled while his other order goes ahead gets `order.cancelledDuplicate` with that order's number and tracking link (`{keptOrderNumber}`, `{keptOrderLink}`): the duplicate review's match, else his other open order by phone or account; with none, the plain notice. A kept-order token without such an order is refused, never sent empty.
+- **Cancel request refused (follow-up 287):** its own step `cancelRefused` (off, SMS, `order.cancelRefused`), started by the refusal's timeline row; only while the order still goes ahead.
+- **Admin API:** `GET|PUT /api/admin/messages/journey` reads and saves `cancelNotice` too. Guide: [comms](docs/admin-guide/comms.md).
+- **Tests:** the words and refusals, the pack, and on PostgreSQL through the real checkout: off by default, one notice with the reason and the link, the one-tap cancel, a duplicate declined in review and one cancelled by hand, the silent reasons, outside the caps, the refused request.
 
 **Built (PR 155): one KPI definition (CN-022, owner 23 Oct).** Package `@extas/metrics`.
 - **The rule, once (`src/pure.ts`):** Sales = orders in DELIVERED, counted on the delivered day (`deliveredAt`); Ordered value = every placed order (all but DRAFT, cancelled and returned too), counted on the placed day; archived orders count in neither; days are shop days in `store.timeZone`. Until the order state machine exists nothing reaches DELIVERED, so Sales shows 0.
@@ -1188,6 +1203,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #39 | PR [44](docs/stages/S02.md#pr-44), [546](docs/stages/S05.md#pr-546), [148](docs/stages/S05.md#pr-148) (follow-up [287](docs/stages/S14.md#pr-287)) | 24 Oct | The home page flash sale: two rows gliding opposite ways with a live countdown, drawn only while the owner has a sale set (empty and off by default; a sale never changes a price). The customer is told in plain words why an order was cancelled; a duplicate's notice names the order that goes ahead, with its tracking link. The "cancel request refused" notice is its own step. Both notices are off by default. |
 | #38 | PR [157](docs/stages/S06.md#pr-157), [158](docs/stages/S06.md#pr-158), [156](docs/stages/S06.md#pr-156), [160](docs/stages/S06.md#pr-160) | 24 Oct | The risk score (off until the owner turns it on): each new order gets a score from 0 to 100 from the owner's signals and weights (the number's past orders and refusals, cancels, a very recent order, an unclear or mismatched address …), stored once with its reasons. The order's admin page shows a "Risk" card that says why. It only informs: nothing is blocked, and no price, charge or COD changes. |
 | #37 | PR [150](docs/stages/S05.md#pr-150), [143](docs/stages/S05.md#pr-143) (follow-up [260](docs/stages/S13.md#pr-260)), [146](docs/stages/S05.md#pr-146) (follow-up [261](docs/stages/S13.md#pr-261)) | 24 Oct | "My orders" keeps every order, a page at a time, with All · On the way · Delivered · Cancelled & returned, and each order page has "What happened" with its steps and changes. When the owner turns them on, the order page also has the customer's own edit card (address, phone, a size) and the two-size question ("Keep both, or only M?"). |
 | #37 | PR [148](docs/stages/S05.md#pr-148), [149](docs/stages/S05.md#pr-149), [151](docs/stages/S05.md#pr-151) | 24 Oct | The customer gets a message at each order step by SMS, WhatsApp or e-mail (which step uses which channel is a setting; the same message never goes twice; on the mock until the owner types a key in). Every try is logged and retried by itself, and staff can retry a failed one. Orders can be exported as a CSV file, with the customer's personal details only for staff allowed to see them. |
