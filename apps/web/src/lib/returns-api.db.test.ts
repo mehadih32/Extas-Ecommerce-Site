@@ -2,7 +2,8 @@
 // sample catalogue; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the permission (a person
 // with only orders.read may not look); an order's exchange choices, opening one with the Idempotency-Key header (a
 // repeat gets the same exchange), the board, one case, approving it with the screen's version (an older version is
-// STALE) into the linked exchange order; PR 188's size switch; PR 189's return handling; PR 190's waiver and claim. Every value is made up.
+// STALE) into the linked exchange order; PR 188's size switch; PR 189's return handling; PR 190's waiver and claim; PR 191's
+// refused parcels by kind and the refused-parcel list a person decides. Every value is made up.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -57,6 +58,8 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
   beforeAll(async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     f = await setUpOrders('returns_api');
+    // the route reads the real clock (its exchange window counts from the delivery), so the orders are placed now
+    f.clock.now = new Date();
     const db = f.t.prisma;
     await syncSettings(db, { registry, messages });
     await createFirstOwner(db, defaultSecurityPolicy(), { email: 'admin-owner@example.com', displayName: 'Sample owner', password: OWNER_PW, passwordChosenByOwner: true });
@@ -187,5 +190,19 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
     expect((await api('POST', `exchanges/${b.id}/claim-decision`, { cookie: reader, body: { accept: true } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
     const ok = await api('POST', `exchanges/${b.id}/claim-decision`, { body: { accept: true } });
     expect(ok.body).toMatchObject({ ok: true, result: { claimState: 'ACCEPTED', chargeState: 'CLAIM_ACCEPTED' } });
+  });
+
+  it('PR 191: the refused parcels by kind; the refused-parcel list is read (returns.view) and a person decides (returns.decide)', async () => {
+    expect((await api('GET', 'parcels?kind=CHARGE_PAID_RETURN')).body).toMatchObject({ ok: true, parcels: [] });
+    expect((await api('GET', 'refused', { cookie: reader })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const e = await f.t.prisma.refusedParcelEntry.create({ data: { storeId: f.S, phone: '+8801711000909', state: 'PROPOSED', refusals: 2, lastReasonCode: 'changed-mind', lastRefusedAt: f.clock.now } });
+    const listed = await api('GET', 'refused?state=PROPOSED');
+    expect(listed.body).toMatchObject({ ok: true, entries: [{ id: e.id, phoneNice: '01711-000909', refusals: 2, version: 0 }] });
+    expect((await api('POST', `refused/${e.id}/decide`, { cookie: reader, body: { state: 'LISTED' } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    expect((await api('POST', `refused/${e.id}/decide`, { body: { state: 'LISTED', version: 5 } })).body).toMatchObject({ ok: false, error: 'STALE' });
+    expect((await api('POST', `refused/${e.id}/decide`, { body: { state: 'LISTED', version: 0 } })).body).toMatchObject({ ok: true, result: { state: 'LISTED' } });
+    expect((await api('POST', `refused/${e.id}/decide`, { body: { state: 'DISMISSED' } })).body).toMatchObject({ ok: false, error: 'RETURN_STATE' });
+    expect((await api('GET', `refused/${e.id}/decide`)).status).toBe(405);
+    expect((await api('POST', 'refused/not-a-uuid/decide', { body: {} })).status).toBe(404);
   });
 });

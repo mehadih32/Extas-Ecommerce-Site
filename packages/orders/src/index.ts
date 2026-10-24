@@ -49,7 +49,8 @@
 // return handling — the courier's returned parcel opens its return, a return after receipt only when the policy allows
 // it (no returns after receipt by default), a person closes it (return-cases.ts). PR 190: who pays the second delivery —
 // staff waivers with a logged reason and "your mistake" claims (exchange-charge.ts); the rules, the one-trip swap and the
-// linked re-ship after a try-on live in the engine (exchange.ts, exchange-pure.ts).
+// linked re-ship after a try-on live in the engine (exchange.ts, exchange-pure.ts). PR 191: refused parcels — the shop's
+// fault marked, the charge paid at the door kept, and the refused-parcel list a person decides (refused.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -92,3 +93,4 @@ export * from './returns';
 export * from './exchange-switch';
 export * from './return-cases';
 export * from './exchange-charge';
+export * from './refused';

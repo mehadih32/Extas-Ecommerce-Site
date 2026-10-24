@@ -56,14 +56,16 @@ describe.skipIf(!HAS_TEST_DB)('PR 526 · why a parcel came back (PostgreSQL)', (
     expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).status).toBe('RETURNED');
     const noted = await db().shipmentEvent.findMany({ where: { shipmentId: o.shipmentId, riderNote: { not: null } }, select: { status: true, riderNote: true } });
     expect(noted).toEqual([{ status: 'RETURNING', riderNote: 'refused at the door' }]);
-    expect(await returnReasonOf(f.shippingDeps(), f.S, o.orderId)).toEqual({ shipmentId: o.shipmentId, returnId: null, reasonKey: null, riderNote: 'refused at the door' });
+    // the courier's "returned" opened the order's return (PR 187); the reason goes on that one record
+    const opened = await db().returnRecord.findFirstOrThrow({ where: { orderId: o.orderId } });
+    expect(await returnReasonOf(f.shippingDeps(), f.S, o.orderId)).toEqual({ shipmentId: o.shipmentId, returnId: opened.id, reasonKey: null, riderNote: 'refused at the door' });
 
     expect(await code(recordReturnReason(f.shippingDeps(), f.looker, o.shipmentId, { reasonKey: 'did-not-like' }))).toBe('FORBIDDEN');
     expect(await code(recordReturnReason(f.shippingDeps(), f.shipper, o.shipmentId, { reasonKey: 'no-such-reason' }))).toBe('INVALID_INPUT');
     expect(await code(recordReturnReason(f.shippingDeps(), f.shipper, o.shipmentId, { reasonKey: 'other' }))).toBe('INVALID_INPUT'); // "other" needs the words
 
     const r = await recordReturnReason(f.shippingDeps(), f.shipper, o.shipmentId, { reasonKey: 'did-not-like' });
-    expect(r).toMatchObject({ reasonKey: 'did-not-like', riderNote: 'refused at the door', created: true });
+    expect(r).toMatchObject({ returnId: opened.id, reasonKey: 'did-not-like', riderNote: 'refused at the door', created: false });
     const ret = await db().returnRecord.findUniqueOrThrow({ where: { id: r.returnId } });
     expect(ret).toMatchObject({ orderId: o.orderId, shipmentId: o.shipmentId, kind: 'REFUSED_AT_DOOR', reasonCode: 'did-not-like', riderNote: 'refused at the door', courierClaim: 'RETURNED', chargePaidMinor: 0, mismatch: false });
     expect(await refusalKeys(f.ordersDeps(), f.S, [o.orderId])).toEqual(new Map([[o.orderId, 'did-not-like']]));
@@ -106,10 +108,26 @@ describe.skipIf(!HAS_TEST_DB)('PR 526 · why a parcel came back (PostgreSQL)', (
     const o = await booked('rr-known', 'refused');
     await reads(o.shipmentId, 5);
     const order = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
-    const known = await db().returnRecord.create({ data: { storeId: f.S, orderId: o.orderId, customerId: order.customerId, kind: 'REFUSED_AT_DOOR', receivedAt: f.clock.now } });
+    const known = await db().returnRecord.findFirstOrThrow({ where: { storeId: f.S, orderId: o.orderId, customerId: order.customerId, kind: 'REFUSED_AT_DOOR' } });
+    await db().returnRecord.update({ where: { id: known.id }, data: { receivedAt: f.clock.now } });
     const r = await recordReturnReason(f.shippingDeps(), f.shipper, o.shipmentId, { reasonKey: 'changed-mind' });
     expect(r).toMatchObject({ returnId: known.id, created: false });
     expect(await db().returnRecord.findUniqueOrThrow({ where: { id: known.id } })).toMatchObject({ shipmentId: o.shipmentId, reasonCode: 'changed-mind', riderNote: 'refused at the door' });
     expect(await returnReasonOf(f.shippingDeps(), f.S, o.orderId)).toMatchObject({ returnId: known.id, reasonKey: 'changed-mind' });
+    expect(await db().returnRecord.count({ where: { orderId: o.orderId } })).toBe(1);
+  });
+
+  it('a reason recorded while the parcel is still on its way back is the record the courier\'s "returned" fills, never a second one', async () => {
+    const o = await booked('rr-early', 'refused');
+    await reads(o.shipmentId, 4); // … returning
+    expect((await db().shipment.findUniqueOrThrow({ where: { id: o.shipmentId } })).status).toBe('RETURNING');
+    const r = await recordReturnReason(f.shippingDeps(), f.shipper, o.shipmentId, { reasonKey: 'did-not-like' });
+    expect(r).toMatchObject({ created: true });
+    await reads(o.shipmentId, 1); // returned: the order step opens the return on the same record
+    expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).status).toBe('RETURNED');
+    const all = await db().returnRecord.findMany({ where: { orderId: o.orderId }, include: { items: true } });
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ id: r.returnId, shipmentId: o.shipmentId, reasonCode: 'did-not-like', status: 'EXPECTED', idempotencyKey: `order:${o.orderId}:returned` });
+    expect(all[0]!.items.length).toBeGreaterThan(0);
   });
 });

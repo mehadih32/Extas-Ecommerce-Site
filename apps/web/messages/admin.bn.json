@@ -45,7 +45,10 @@
     "packingHandover": "হ্যান্ডওভার",
     "packingPicking": "পিকিং লিস্ট",
     "ordersReturns": "বদল",
-    "ordersReturnsQc": "ফেরত মাল চেক"
+    "ordersReturnsQc": "ফেরত মাল চেক",
+    "ordersReturnsRefused": "দরজায় ফেরত",
+    "riskRules": "ঝুঁকির নিয়ম",
+    "checkoutAdvance": "চেকআউটে অগ্রিম"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

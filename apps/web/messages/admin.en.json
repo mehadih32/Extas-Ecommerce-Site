@@ -45,7 +45,10 @@
     "packingHandover": "Handover",
     "packingPicking": "Picking list",
     "ordersReturns": "Exchanges",
-    "ordersReturnsQc": "Receive & QC"
+    "ordersReturnsQc": "Receive & QC",
+    "ordersReturnsRefused": "Refused parcels",
+    "riskRules": "Risk rules",
+    "checkoutAdvance": "Checkout advance"
   },
   "login": {
     "metaTitle": "Admin sign-in",

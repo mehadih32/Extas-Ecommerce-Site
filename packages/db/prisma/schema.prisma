@@ -4307,7 +4307,7 @@ model Exchange {
   erpSyncedAt          DateTime?      @db.Timestamptz(3)
   createdAt            DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
-  /// PR 185 (B1.8; migration 0040) — the reason's note, the root cause of a wrong item (SIM-F-022), the order's
+  /// PR 185 (B1.8; migration 0044) — the reason's note, the root cause of a wrong item (SIM-F-022), the order's
   /// delivery band when the charge was read, who opened it and from where, its key (one exchange per press) and its
   /// version (two people never decide it at once). `newOrderId` is the linked exchange order (one per exchange).
   reasonNote           String?
@@ -4372,7 +4372,7 @@ model ExchangeItem {
   restockAction       String?
   createdAt           DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt           DateTime  @updatedAt @db.Timestamptz(3)
-  /// PR 185, 188 (migration 0040) — the swap as it was priced: the old piece and the new one with their prices then,
+  /// PR 185, 188 (migration 0044) — the swap as it was priced: the old piece and the new one with their prices then,
   /// the new piece's words for the timeline, its tier (1 same colour · 2 other colours · 3 same category · 4 other), and
   /// the SKU that is really coming back (SIM-F-022: a wrong item returns what was packed, not what was ordered).
   oldVariantId        String?   @db.Uuid
@@ -4413,7 +4413,7 @@ model ReturnRecord {
   erpSyncedAt     DateTime?    @db.Timestamptz(3)
   createdAt       DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
-  /// PR 187, 189, 191 (§6.5.4 D4; migration 0040) — where the parcel is (EXPECTED → RECEIVED → QC_DONE → CLOSED), whether
+  /// PR 187, 189, 191 (§6.5.4 D4; migration 0044) — where the parcel is (EXPECTED → RECEIVED → QC_DONE → CLOSED), whether
   /// the shop caused it (never counted against the customer, SIM-F-044), the exchange it belongs to (an exchange
   /// pick-up), its key, who received and closed it, and the staff's note.
   status          ReturnStatus @default(EXPECTED)
@@ -4480,7 +4480,7 @@ model ReturnItem {
   qcStatus         QcStatus?
   createdAt        DateTime           @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime           @updatedAt @db.Timestamptz(3)
-  /// PR 187 (§6.5.4; SIM-F-022; migration 0040) — the SKU expected back and the SKU scanned at QC (what is restocked is
+  /// PR 187 (§6.5.4; SIM-F-022; migration 0044) — the SKU expected back and the SKU scanned at QC (what is restocked is
   /// always what was scanned), the piece's disposition and where it stands, the loss reason and its cost entry, the ERP
   /// document, who checked it and when, the photos and the note. `exchangeItemId`: the exchange line it closes.
   variantId        String?            @db.Uuid
