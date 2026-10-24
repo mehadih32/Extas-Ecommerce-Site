@@ -16,7 +16,7 @@ import { OrdersError } from './errors';
 import { notesOf, type OrderNoteView } from './notes';
 import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
 import { orderSearchWhere } from './search';
-import { reviewKindOf } from './duplicates';
+import { reviewKindOf, type StoredRuleHit } from './duplicates';
 import { factsOf, machineOf, MACHINE_SELECT, NOT_BOOKED_SHIPMENT } from './service';
 
 export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'finished'] as const;
@@ -242,7 +242,8 @@ export interface OrderDetail {
   shipments: { id: string; status: string; courierAccountId: string | null; trackingCode: string | null; cancelRequestedAt: Date | null; cancelOutcome: string | null; createdAt: Date }[];
   payments: { id: string; method: string; status: string; amountMinor: number; createdAt: Date }[];
   refundRequests: { id: string; status: string; amountMinor: number; method: string | null; reason: string | null; source: string | null; createdAt: Date }[];
-  reviews: { id: string; status: string; severity: string | null; matchedOrderIds: string[]; createdAt: Date; section: string; risk: boolean; because: string[] }[];
+  /** PR 520: `rules` the duplicate rules that fired, `proposedAction` and `confidence` the alert's proposal. */
+  reviews: { id: string; status: string; severity: string | null; confidence: number | null; proposedAction: string; matchedOrderIds: string[]; createdAt: Date; section: string; risk: boolean; because: string[]; rules: StoredRuleHit[] }[];
   notes: OrderNoteView[];
   timeline: { id: string; type: string; fromStatus: string | null; toStatus: string | null; reasonCode: string | null; message: string | null; data: unknown; actorType: string; actorId: string | null; source: string | null; createdAt: Date }[];
   /** The commands open now (the admin shows these buttons). */
@@ -317,7 +318,7 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
     deps.db.shipment.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'desc' }, select: { id: true, status: true, courierAccountId: true, trackingCode: true, cancelRequestedAt: true, cancelOutcome: true, createdAt: true } }),
     deps.db.payment.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, method: true, status: true, amountMinor: true, createdAt: true } }),
     deps.db.refund.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, status: true, amountMinor: true, method: true, reason: true, source: true, createdAt: true } }),
-    deps.db.fraudAlert.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, status: true, severity: true, matchedOrderIds: true, summary: true, createdAt: true } }),
+    deps.db.fraudAlert.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'asc' }, select: { id: true, status: true, severity: true, confidence: true, proposedAction: true, matchedOrderIds: true, summary: true, createdAt: true } }),
     deps.db.orderEvent.findMany({ where: { storeId: o.storeId, orderId: o.id }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { id: true, type: true, fromStatus: true, toStatus: true, reasonCode: true, message: true, data: true, actorType: true, actorId: true, source: true, createdAt: true } }),
     notesOf(deps, o.storeId, o.id),
     factsOf(deps.db, o),

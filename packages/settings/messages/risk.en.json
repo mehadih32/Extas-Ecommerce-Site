@@ -27,6 +27,19 @@
     "identity": {
       "label": "One identity per customer",
       "help": "When on, every new order is linked to one identity the moment it lands (and again when the team edits the phone, the name or the address): orders with the same phone, the same device, or a name and an address that are alike (spelling a little off still matches) belong to the same person, so a customer who changes his number is still known. The connection (IP) never joins two orders by itself, because many people share one mobile connection; it is only counted. While this is on, the risk signals \"same person under another number\" and \"same device\" read this identity. How far back a match reaches (days, 0 = ever), how alike the name and the address must be (1 = the same text), whether the same device joins two numbers, and how many earlier orders one step reads. It only records and informs: nothing is blocked, held or cancelled by it."
+    },
+    "duplicateRules": {
+      "label": "Duplicate & re-order rules",
+      "help": "When on, every new order is checked against these rules instead of the one look-back of the duplicate check (whose own switch still turns the whole check off). Each rule has its own switch, its window in minutes (how far back the other order may be; 0 = no limit), the confidence a match needs (0–100) and what it proposes: cancel (the review proposes cancelling it as a duplicate), hold (the review waits for a person), warn (a note on the timeline only) or allow (recorded, nothing else). There is no block action, and a rule never acts by itself: with cancel or hold the order is neither confirmed nor booked until a person decides. \"The same customer\" is the same account, the same phone, or — while \"One identity per customer\" is on — the same identity. A: the same items again while the first is not yet with the courier. B: different items in the window. C: a parcel of his is with the courier. D: an alike address under a new phone. E: the same style in another size in his other open order. H: a number, identity or address a person blocked. I: a bulk-looking order (at least the pieces you set, in this order or with his open orders in the window).",
+      "scenario": {
+        "A": "Same customer, same items again",
+        "B": "Same customer, different items",
+        "C": "A parcel of his is with the courier",
+        "D": "Alike address, new phone",
+        "E": "Same style, another size",
+        "H": "Blocked number, identity or address",
+        "I": "Bulk-looking order"
+      }
     }
   },
   "defaults": {

@@ -12,12 +12,23 @@
 // Nothing here blocks a customer or cancels an order by itself (CLAUDE.md rule 6); the optional auto-hold (off by
 // default) only parks a high match with the reason "possible duplicate" for a person. A merge never changes a price or a
 // charge: both orders keep their money; whether a second delivery charge is given back is the owner's call (BLOCKED.md).
+//
+// S06 · PR 520 — while the owner's `risk.duplicateRules` is on, layer 2 runs the duplicate & re-order rules engine
+// (duplicate-rules.ts) instead of the one look-back: the scenarios A–E, H and I, each with its own switch, window,
+// confidence and proposal. "The same customer" is the same account, the same phone, or — with the identity graph on
+// (PR 519) — the same identity. A rule that proposes cancel or hold opens the same review (layers 3 and 4 unchanged);
+// warn and allow are a note on the timeline. The review's summary keeps every rule that fired, so the card says why
+// (PR 521). Off (the default): exactly the look-back above. Within one order, two sizes stay PR 146's (two-size.ts).
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, nowOf, parse, setting, TX, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OTHER_KEY, cancelWith, holdWith } from './commands';
 import { OrdersError } from './errors';
-import { RISK_REVIEW_SECTIONS } from '@extas/settings';
+import { RISK_REVIEW_SECTIONS, type DuplicateRules } from '@extas/settings';
+import { duplicateRuleHits, type AddressCandidate, type BlockedMatch, type RuleAction, type RuleCandidate, type RuleFacts, type RuleHit, type SameBy } from './duplicate-rules';
+import { alikeOrders, IDENTITY_SELECT } from './identity';
+import { clusterOrders } from './identity-graph';
+import { phoneForms } from './phone-history';
 import { OPEN_STATES, overlapOf, severityRank, type LineFacts, type OrderState, type Severity } from './pure';
 import { auditRow, eventRow, factsOf, lockOrder, staffBy, systemBy, type By, type CommandResult } from './service';
 
@@ -28,11 +39,39 @@ export const RISK_REVIEW_KIND = 'risk';
 /** PR 541: why the team calls when the decision on a risk review is "ask the customer". */
 export const RISK_CALL_REASON = 'RISK_CHECK';
 
-/** A review's section, whether a risk section opened it, and the signals that put it there (PR 541), from its summary. */
-export function reviewKindOf(summary: unknown): { section: string; risk: boolean; because: string[] } {
-  const s = summary && typeof summary === 'object' && !Array.isArray(summary) ? (summary as Record<string, unknown>) : {};
+/** PR 520: one rule that fired, as the review's summary keeps it (the card's words read it back, PR 521). */
+export type StoredRuleHit = {
+  rule: string;
+  confidence: number;
+  action: string;
+  suggest: string;
+  matches: { orderId: string; number: string; confidence: number }[];
+  blocked: string[];
+  values: Record<string, number | string | null>;
+};
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/** The rules a summary kept (PR 520), read defensively: anything that is not a rule hit is left out. */
+export function storedRules(v: unknown): StoredRuleHit[] {
+  if (!Array.isArray(v)) return [];
+  return v.flatMap((h): StoredRuleHit[] => {
+    if (!isObj(h) || typeof h.rule !== 'string' || typeof h.action !== 'string') return [];
+    const matches = Array.isArray(h.matches)
+      ? h.matches.flatMap((m) => (isObj(m) && typeof m.orderId === 'string' ? [{ orderId: m.orderId, number: typeof m.number === 'string' ? m.number : '', confidence: typeof m.confidence === 'number' ? m.confidence : 0 }] : []))
+      : [];
+    const values: Record<string, number | string | null> = {};
+    if (isObj(h.values)) for (const [k, x] of Object.entries(h.values)) if (typeof x === 'number' || typeof x === 'string' || x === null) values[k] = x;
+    const blocked = Array.isArray(h.blocked) ? h.blocked.filter((b): b is string => typeof b === 'string') : [];
+    return [{ rule: h.rule, confidence: typeof h.confidence === 'number' ? h.confidence : 0, action: h.action, suggest: typeof h.suggest === 'string' ? h.suggest : '', matches, blocked, values }];
+  });
+}
+
+/** A review's section, whether a risk section opened it, the signals that put it there (PR 541) and the duplicate rules that fired (PR 520), from its summary. */
+export function reviewKindOf(summary: unknown): { section: string; risk: boolean; because: string[]; rules: StoredRuleHit[] } {
+  const s = isObj(summary) ? summary : {};
   const because = Array.isArray(s.because) ? s.because.filter((k): k is string => typeof k === 'string') : [];
-  return { section: typeof s.section === 'string' ? s.section : DUPLICATE_SECTION, risk: s.kind === RISK_REVIEW_KIND, because };
+  return { section: typeof s.section === 'string' ? s.section : DUPLICATE_SECTION, risk: s.kind === RISK_REVIEW_KIND, because, rules: storedRules(s.rules) };
 }
 
 /** The hold reason key the auto-hold and the "hold" decision use when the owner's list has it. */
@@ -45,7 +84,8 @@ export interface DuplicateMatch {
   number: string;
   status: OrderState;
   placedAt: Date;
-  severity: Severity;
+  /** How alike the lines are; null for a match that shares none (PR 520: B different items, D an address, I bulk). */
+  severity: Severity | null;
   productIds: string[];
 }
 
@@ -53,10 +93,17 @@ export interface ScreenResult {
   /** The strongest match, or null (no other open order of this customer is alike). */
   severity: Severity | null;
   matches: DuplicateMatch[];
-  /** The open review it waits in, when the match is at or above `reviewFrom`. */
+  /** The open review it waits in, when the match is at or above `reviewFrom` (PR 520: a rule proposed cancel or hold). */
   alertId: string | null;
   held: boolean;
+  /** PR 520: the rules that fired (empty while `risk.duplicateRules` is off). */
+  rules: RuleHit[];
+  /** PR 520: the strongest proposal of the rules, or null. */
+  proposed: RuleAction | null;
 }
+
+/** A severity's rank, with "nothing alike" (null) below low. */
+const sevRank = (s: Severity | null): number => (s ? severityRank(s) : -1);
 
 /** The lines of some orders as the comparison needs them: the variant, the product, its colour and its category. */
 async function lineFacts(db: Db, storeId: number, orderIds: string[]): Promise<Map<string, LineFacts[]>> {
@@ -100,42 +147,166 @@ export async function duplicateMatches(deps: OrdersDeps, storeId: number, orderI
     const m = overlapOf(mine, facts.get(x.id) ?? []);
     if (m) out.push({ orderId: x.id, number: x.number, status: x.status as OrderState, placedAt: x.placedAt, severity: m.severity, productIds: m.productIds });
   }
-  return out.sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+  return out.sort((a, b) => sevRank(b.severity) - sevRank(a.severity));
 }
+
+/** What one check found and what it opens: the look-back's (PR 145) or the rules engine's (PR 520). */
+interface ScreenPlan {
+  matches: DuplicateMatch[];
+  severity: Severity | null;
+  review: boolean;
+  proposedAction: 'CANCEL' | 'HOLD' | 'WARN';
+  confidence: number | null;
+  rules: RuleHit[];
+  proposed: RuleAction | null;
+}
+
+/** PR 145 as it was: one look-back, a review from `reviewFrom`. */
+async function lookbackPlan(deps: OrdersDeps, storeId: number, orderId: string, cfg: { reviewFrom: Severity; autoHold: boolean }): Promise<ScreenPlan> {
+  const matches = await duplicateMatches(deps, storeId, orderId);
+  const top = matches[0]?.severity ?? null;
+  const review = top !== null && severityRank(top) >= severityRank(cfg.reviewFrom);
+  return { matches, severity: top, review, proposedAction: cfg.autoHold && top === 'high' ? 'HOLD' : 'WARN', confidence: null, rules: [], proposed: null };
+}
+
+const MINUTE = 60_000;
+/** How many other orders, alike addresses and identity orders one check reads at most. */
+const RULE_TAKE = { candidates: 50, addresses: 20, cluster: 200 } as const;
+
+/** The rules engine's facts of one order (PR 520): only what the switched-on rules need is read. */
+async function ruleFacts(deps: OrdersDeps, storeId: number, orderId: string, rc: DuplicateRules): Promise<{ facts: RuleFacts; lines: Map<string, LineFacts[]> }> {
+  const o = await deps.db.order.findFirst({ where: { id: orderId, storeId }, select: { ...IDENTITY_SELECT, customerId: true } });
+  if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
+  const r = rc.rules;
+  const forms = phoneForms(o.phone);
+  const identityOn = (await setting(deps, storeId, 'risk.identity')).enabled;
+  const cluster = identityOn ? await clusterOrders(deps, storeId, o.id, RULE_TAKE.cluster) : null;
+  const sameBy = (x: { customerId: string | null; phone: string | null }): SameBy => (o.customerId && x.customerId === o.customerId ? 'customer' : x.phone && forms.includes(x.phone) ? 'phone' : 'identity');
+
+  // the same customer's other open orders, in the longest window of the rules that read them (0 = no limit)
+  const reading = (['A', 'B', 'C', 'E', 'I'] as const).filter((k) => r[k].enabled);
+  const windows = reading.map((k) => r[k].windowMinutes);
+  const since = windows.length && !windows.includes(0) ? new Date(o.placedAt.getTime() - Math.max(...windows) * MINUTE) : undefined;
+  const who: Prisma.OrderWhereInput[] = [];
+  if (o.customerId) who.push({ customerId: o.customerId });
+  if (forms.length) who.push({ phone: { in: forms } });
+  if (cluster?.orders.length) who.push({ id: { in: cluster.orders.map((x) => x.id) } });
+  const others =
+    reading.length && who.length
+      ? await deps.db.order.findMany({
+          where: { storeId, id: { not: o.id }, OR: who, status: { in: [...OPEN_STATES] }, ...(since ? { placedAt: { gte: since } } : {}) },
+          orderBy: [{ placedAt: 'desc' }, { id: 'desc' }],
+          take: RULE_TAKE.candidates,
+          select: { id: true, number: true, status: true, placedAt: true, customerId: true, phone: true },
+        })
+      : [];
+  const ids = [o.id, ...others.map((x) => x.id)];
+  const lines = await lineFacts(deps.db, storeId, ids);
+  const sums = await deps.db.orderItem.groupBy({ by: ['orderId'], where: { storeId, orderId: { in: ids }, status: 'ACTIVE' }, _sum: { quantity: true } });
+  const pieces = new Map(sums.map((g) => [g.orderId, g._sum.quantity ?? 0]));
+  const candidates: RuleCandidate[] = others.map((x) => ({ orderId: x.id, number: x.number, status: x.status as OrderState, placedAt: x.placedAt, lines: lines.get(x.id) ?? [], pieces: pieces.get(x.id) ?? 0, by: sameBy(x) }));
+
+  // D: earlier orders under another number to an alike address (any name)
+  let addresses: AddressCandidate[] = [];
+  if (r.D.enabled) {
+    const windowDays = r.D.windowMinutes > 0 ? Math.ceil(r.D.windowMinutes / 1440) : 0;
+    const alike = await alikeOrders(deps, storeId, o, { windowDays, addressSimilarity: Math.max(0.3, r.D.minConfidence / 100), name: null }, RULE_TAKE.addresses);
+    const sim = new Map(alike.map((x) => [x.id, x.similarity]));
+    const rows = alike.length ? await deps.db.order.findMany({ where: { storeId, id: { in: [...sim.keys()] } }, select: { id: true, number: true, status: true, placedAt: true } }) : [];
+    addresses = rows.map((x) => ({ orderId: x.id, number: x.number, status: x.status as OrderState, placedAt: x.placedAt, similarity: sim.get(x.id) ?? 0 }));
+  }
+
+  // H: the block register's BLOCKED entries this order matches (a read only: nothing here blocks anyone)
+  const blocked: BlockedMatch[] = [];
+  if (r.H.enabled) {
+    const by: Prisma.BlockEntryWhereInput[] = [];
+    if (forms.length) by.push({ phone: { in: forms } });
+    if (o.customerId) by.push({ customerId: o.customerId });
+    if (cluster) by.push({ identityClusterId: cluster.clusterId });
+    const direct = by.length ? await deps.db.blockEntry.findMany({ where: { storeId, status: 'BLOCKED', OR: by }, select: { id: true, phone: true, customerId: true, blockedAt: true } }) : [];
+    for (const e of direct) blocked.push({ entryId: e.id, how: e.phone && forms.includes(e.phone) ? 'phone' : o.customerId && e.customerId === o.customerId ? 'customer' : 'identity', blockedAt: e.blockedAt });
+    const address = o.shippingAddressText?.trim();
+    if (address) {
+      const floor = Math.max(0.3, r.H.minConfidence / 100);
+      const near = await deps.db.$queryRaw<{ id: string; similarity: number; blockedAt: Date | null }[]>`
+        SELECT "id"::text AS id, similarity(lower("addressGiven"), lower(${address}))::float8 AS similarity, "blockedAt" AS "blockedAt" FROM "BlockEntry"
+        WHERE "storeId" = ${storeId} AND "status"::text = 'BLOCKED' AND "addressGiven" IS NOT NULL
+          AND similarity(lower("addressGiven"), lower(${address})) >= ${floor}::real
+        ORDER BY similarity DESC LIMIT ${RULE_TAKE.addresses}`;
+      const seen = new Set(blocked.map((x) => x.entryId));
+      for (const n of near) if (!seen.has(n.id)) blocked.push({ entryId: n.id, how: 'address', similarity: Number(n.similarity), blockedAt: n.blockedAt });
+    }
+  }
+  return { facts: { placedAt: o.placedAt, lines: lines.get(o.id) ?? [], pieces: pieces.get(o.id) ?? 0, candidates, addresses, blocked }, lines };
+}
+
+const PROPOSED: Readonly<Record<RuleAction, ScreenPlan['proposedAction']>> = { cancel: 'CANCEL', hold: 'HOLD', warn: 'WARN', allow: 'WARN' };
+
+/** PR 520: the rules engine's plan — a review when the strongest proposal is cancel or hold. */
+async function rulesPlan(deps: OrdersDeps, storeId: number, orderId: string, rc: DuplicateRules): Promise<ScreenPlan> {
+  const { facts, lines } = await ruleFacts(deps, storeId, orderId, rc);
+  const res = duplicateRuleHits(facts, rc);
+  const info = new Map<string, { status: OrderState; placedAt: Date }>([...facts.candidates, ...facts.addresses].map((x) => [x.orderId, { status: x.status, placedAt: x.placedAt }]));
+  const byId = new Map<string, DuplicateMatch>();
+  for (const h of res.hits)
+    for (const m of h.matches) {
+      const i = info.get(m.orderId);
+      if (!i) continue;
+      const was = byId.get(m.orderId)?.severity ?? null;
+      const severity = sevRank(m.severity) > sevRank(was) ? m.severity : was;
+      byId.set(m.orderId, { orderId: m.orderId, number: m.number, status: i.status, placedAt: i.placedAt, severity, productIds: overlapOf(facts.lines, lines.get(m.orderId) ?? [])?.productIds ?? [] });
+    }
+  const matches = [...byId.values()].sort((a, b) => sevRank(b.severity) - sevRank(a.severity) || b.placedAt.getTime() - a.placedAt.getTime());
+  const severity = matches[0]?.severity ?? null;
+  const review = res.top === 'cancel' || res.top === 'hold';
+  const strongest = res.hits.filter((h) => h.action === res.top).map((h) => h.confidence);
+  return { matches, severity, review, proposedAction: res.top ? PROPOSED[res.top] : 'WARN', confidence: strongest.length ? Math.max(...strongest) : null, rules: res.hits, proposed: res.top };
+}
+
+/** One hit as the summary keeps it (no dates, no lines: the order ids, the numbers, the confidences and the words' values). */
+const storedHit = (h: RuleHit): StoredRuleHit => ({ rule: h.rule, confidence: h.confidence, action: h.action, suggest: h.suggest, matches: h.matches.map((m) => ({ orderId: m.orderId, number: m.number, confidence: m.confidence })), blocked: h.blocked, values: h.values });
 
 /**
  * Layer 2 — runs once when an order lands (the shop calls it after placing; a second call finds the first result and
  * does nothing more). Never throws for the customer's sake: the caller logs a failure and the order stays placed.
  * PR 142 (B1.10 "every edit re-runs the fraud check"): `again` runs it after an edit changed the phone or the lines —
  * a new check event every time, a review only when none is open yet, and never a hold by itself (a person is editing).
+ * PR 520: with `risk.duplicateRules` on, the rules engine decides what is found and proposed; nothing is cancelled here.
  */
 export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orderId: string }, opts: { again?: { by: By } } = {}): Promise<ScreenResult> {
   const cfg = await setting(deps, ref.storeId, 'orders.duplicates');
-  const none: ScreenResult = { severity: null, matches: [], alertId: null, held: false };
+  const none: ScreenResult = { severity: null, matches: [], alertId: null, held: false, rules: [], proposed: null };
   if (!cfg.enabled) return none;
   const seen = opts.again ? null : await deps.db.orderEvent.findFirst({ where: { storeId: ref.storeId, orderId: ref.orderId, type: 'order.duplicateCheck' }, select: { id: true } });
   if (seen) return none;
-  const matches = await duplicateMatches(deps, ref.storeId, ref.orderId);
+  const rc = await setting(deps, ref.storeId, 'risk.duplicateRules');
+  const plan = rc.enabled ? await rulesPlan(deps, ref.storeId, ref.orderId, rc) : await lookbackPlan(deps, ref.storeId, ref.orderId, cfg);
+  const { matches, review } = plan;
+  const top = plan.severity;
   const by = opts.again?.by ?? systemBy('duplicate-check');
-  const top = matches[0]?.severity ?? null;
-  const review = top !== null && severityRank(top) >= severityRank(cfg.reviewFrom);
   const now = nowOf(deps);
   const alertId = await deps.db.$transaction(async (tx) => {
     const o = await lockOrder(tx, ref.storeId, ref.orderId);
     // a second call at the same moment waited for the lock: the first one's result stands
     if (!opts.again && (await tx.orderEvent.count({ where: { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck' } }))) return undefined;
-    const summary = { section: DUPLICATE_SECTION, matches: matches.map((m) => ({ orderId: m.orderId, number: m.number, severity: m.severity, productIds: m.productIds })), ...(opts.again ? { after: 'edit' } : {}) };
+    const summary = {
+      section: DUPLICATE_SECTION,
+      matches: matches.map((m) => ({ orderId: m.orderId, number: m.number, severity: m.severity, productIds: m.productIds })),
+      ...(rc.enabled ? { rules: plan.rules.map(storedHit), proposed: plan.proposed } : {}),
+      ...(opts.again ? { after: 'edit' } : {}),
+    };
     let id: string | null = null;
     const open = opts.again ? await tx.fraudAlert.count({ where: { storeId: o.storeId, orderId: o.id, status: 'OPEN' } }) : 0;
     if (review && !open) {
       const a = await tx.fraudAlert.create({
-        data: { storeId: o.storeId, orderId: o.id, matchedOrderIds: matches.map((m) => m.orderId), severity: top, proposedAction: cfg.autoHold && top === 'high' ? 'HOLD' : 'WARN', summary, createdAt: now },
+        data: { storeId: o.storeId, orderId: o.id, matchedOrderIds: matches.map((m) => m.orderId), severity: top, confidence: plan.confidence, proposedAction: plan.proposedAction, summary, createdAt: now },
         select: { id: true },
       });
       id = a.id;
     }
-    await eventRow(tx, by, { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck', reasonCode: top, data: { ...summary, review, alertId: id } });
-    if (id) await auditRow(tx, by, { storeId: o.storeId, action: 'order.duplicate.review', entityType: 'FraudAlert', entityId: id, before: null, after: { orderId: o.id, severity: top } });
+    await eventRow(tx, by, { storeId: o.storeId, orderId: o.id, type: 'order.duplicateCheck', reasonCode: top ?? plan.proposed, data: { ...summary, review, alertId: id } });
+    const ruled = rc.enabled ? { proposed: plan.proposed, rules: plan.rules.map((h) => h.rule) } : {};
+    if (id) await auditRow(tx, by, { storeId: o.storeId, action: 'order.duplicate.review', entityType: 'FraudAlert', entityId: id, before: null, after: { orderId: o.id, severity: top, ...ruled } });
     return id;
   }, TX);
   if (alertId === undefined) return none;
@@ -152,7 +323,7 @@ export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orde
       }
     }
   }
-  return { severity: top, matches, alertId, held };
+  return { severity: top, matches, alertId, held, rules: plan.rules, proposed: plan.proposed };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -165,6 +336,9 @@ export interface ReviewRow {
   section: string;
   risk: boolean;
   because: string[];
+  /** PR 520: the duplicate rules that fired, and how sure the strongest proposal is (0–100; null for the look-back). */
+  rules: StoredRuleHit[];
+  confidence: number | null;
   status: string;
   severity: string | null;
   proposedAction: string;
@@ -206,13 +380,14 @@ export async function reviewQueue(deps: OrdersDeps, who: Who, query: unknown = {
   );
   const rows: ReviewRow[] = page.map((a) => {
     const o = orders.get(a.orderId)!;
-    const listed = ((a.summary as { matches?: { orderId: string; severity: string }[] } | null)?.matches ?? []).map((m) => [m.orderId, m.severity] as const);
+    const listed = ((a.summary as { matches?: { orderId: string; severity: string | null }[] } | null)?.matches ?? []).map((m) => [m.orderId, m.severity] as const);
     const sev = new Map(listed);
     return {
       alertId: a.id,
       ...reviewKindOf(a.summary),
       status: a.status,
       severity: a.severity,
+      confidence: a.confidence,
       proposedAction: a.proposedAction,
       createdAt: a.createdAt,
       decidedAt: a.decidedAt,
