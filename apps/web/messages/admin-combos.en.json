@@ -209,7 +209,8 @@
     },
     "pageTpl": {
       "default": "Shop default",
-      "auto": "Auto (P1, or P2 when many)",
+      "current": "Current look",
+      "auto": "Auto (P3 for top + bottom, else P1, or P2 when many)",
       "P1": "P1 · Pair page",
       "P2": "P2 · Pick colours",
       "P3": "P3 · Top + bottom set",

@@ -350,7 +350,7 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
   describe('PR 96 · the set summary on the server', () => {
     it('a top + bottom set: its pieces in order with colours, sizes and stock, the P3 page, and one set price', async () => {
       const sum = await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' });
-      expect(sum).toMatchObject({ slug: 'sample-polo-chino-set', type: 'TOP_BOTTOM', state: 'live', onSale: true, pieceCount: 2, needsMix: false, pageTemplate: 'P3', bagTemplate: 'B5', listTemplate: 'L1' });
+      expect(sum).toMatchObject({ slug: 'sample-polo-chino-set', type: 'TOP_BOTTOM', state: 'live', onSale: true, pieceCount: 2, needsMix: false, pageTemplate: 'current', bagTemplate: 'B5', listTemplate: 'L1' });
       expect(sum.pieces.map((p) => p.productId)).toEqual([ids['essential-pique-polo'], ids['slim-chino-trousers']]);
       for (const p of sum.pieces) {
         expect(p.colours.length).toBeGreaterThan(0);
@@ -381,12 +381,14 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       expect(full.price!.regularMinor).toBe(variants.reduce((s, v) => s + v.priceMinor!, 0));
     });
 
-    it('an auto pair is priced by its rule (% off), P1 for a short list and P2 past the long-list setting', async () => {
+    it('an auto pair is priced by its rule (% off); the current page by default, and on "auto" P1 for a short list and P2 past the long-list setting', async () => {
       const rule = await t.prisma.comboAutoRule.findFirstOrThrow({ where: { storeId: S, key: 'sample-polo-pairs' }, select: { id: true, percentOff: true } });
       const pairs = await t.prisma.combo.findMany({ where: { storeId: S, autoRuleId: rule.id, status: { not: 'ENDED' }, archivedAt: null }, select: { slug: true, items: { select: { productId: true } } } });
       const pair = pairs.find((p) => new Set(p.items.map((i) => i.productId)).size === 1)!;
       expect(pair).toBeDefined();
       await t.prisma.combo.updateMany({ where: { storeId: S, slug: pair.slug }, data: { status: 'RUNNING' } });
+      expect((await setSummary(deps(), { storeId: S, slug: pair.slug })).pageTemplate).toBe('current');
+      overrides.set('combos.template.page', 'auto');
       const sum = await setSummary(deps(), { storeId: S, slug: pair.slug });
       expect(sum.pageTemplate).toBe(pairs.length > 28 ? 'P2' : 'P1');
       expect(sum.pieces.every((p) => p.colours.length === 1 && p.defaultColourId === p.colours[0]!.id)).toBe(true);
@@ -398,6 +400,7 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       overrides.set('combos.template.longListPairs', 2);
       expect((await setSummary(deps(), { storeId: S, slug: pair.slug })).pageTemplate).toBe(pairs.length > 2 ? 'P2' : 'P1');
       overrides.delete('combos.template.longListPairs');
+      overrides.delete('combos.template.page');
     });
   });
 

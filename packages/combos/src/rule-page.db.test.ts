@@ -11,6 +11,7 @@ import { seedSampleCombos } from './sample';
 import { rulePage } from './rule-page';
 import { filterPairs, NO_FILTER, pairPrice } from './rule-page-model';
 import { priceSet } from './summary';
+import { addSetToBag } from './bag';
 
 describe.skipIf(!HAS_TEST_DB)('a rule`s own page on PostgreSQL (S03 · PR 572)', () => {
   let t: TestDatabase;
@@ -65,6 +66,22 @@ describe.skipIf(!HAS_TEST_DB)('a rule`s own page on PostgreSQL (S03 · PR 572)',
     expect(open.length).toBeGreaterThan(0);
     expect(open[0]!.sizes).toEqual([]);
     expect(open[0]!.openSizes).toBeGreaterThan(0);
+  });
+
+  it('PR 573: another pair takes the place of a set in the bag (colours changed while editing); the old lines are archived', async () => {
+    const p = (await rulePage(deps(), S, { key: 'sample-polo-pairs' }))!;
+    const [a, b] = filterPairs(p.pairs, NO_FILTER);
+    const sizeOf = (productId: string) => p.products.find((x) => x.id === productId)!.sizes[0]!.id;
+    const choicesOf = (x: typeof a) => x!.slots.map((s) => ({ colourId: s.colourId, sizeId: sizeOf(s.productId) }));
+    const cartId = (await t.prisma.cart.create({ data: { storeId: S, visitorId: 'rule-page-replace' }, select: { id: true } })).id;
+    const first = await addSetToBag(deps(), { storeId: S, cartId, slug: a!.slug, choices: choicesOf(a), addKey: 'replace-test-0001' });
+    const next = await addSetToBag(deps(), { storeId: S, cartId, slug: b!.slug, choices: choicesOf(b), addKey: 'replace-test-0002', replaceGroupKey: first.groupKey });
+    expect(next.added).toBe(true);
+    expect(next.groupKey).not.toBe(first.groupKey);
+    const lines = await t.prisma.cartItem.findMany({ where: { cartId }, select: { comboGroupKey: true, removedAt: true } });
+    expect(lines.filter((l) => l.comboGroupKey === first.groupKey).every((l) => l.removedAt !== null)).toBe(true);
+    expect(lines.filter((l) => l.comboGroupKey === next.groupKey && l.removedAt === null)).toHaveLength(2);
+    await expect(addSetToBag(deps(), { storeId: S, cartId, slug: b!.slug, choices: choicesOf(b), replaceGroupKey: 'set-none' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
   it('a switched-off rule keeps its page with no pairs; an unknown key has none', async () => {

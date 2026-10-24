@@ -167,7 +167,7 @@ export async function summaryOf(deps: CombosDeps, storeId: number, c: ComboForSa
     endsOn: v.endsOn,
     pieceCount: c.slots.length,
     needsMix,
-    pageTemplate: pageTemplateFor({ combo: v.pageTemplateKey, rule: c.rule?.pageTemplateKey ?? null, shop: shopPage, mixed: productIds.size > 1, pairs: c.rule?.pairs ?? 0, longListPairs }),
+    pageTemplate: pageTemplateFor({ combo: v.pageTemplateKey, rule: c.rule?.pageTemplateKey ?? null, shop: shopPage, mixed: productIds.size > 1, pairs: c.rule?.pairs ?? 0, longListPairs, generated: Boolean(c.rule) }),
     bagTemplate: bagTemplateFor({ combo: v.bagTemplateKey, rule: c.rule?.bagTemplateKey ?? null, shop: shopBag }),
     listTemplate: listTemplateFor({ combo: v.listTemplateKey, rule: c.rule?.listTemplateKey ?? null, shop: shopList }),
     photoAssetId: v.setPhotoAssetId,

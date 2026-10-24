@@ -5,7 +5,9 @@
 // a phone the same parts in the demo's order C (a short photo, the title, price, pickers, pairs, buttons in the bar
 // held at the bottom). A set that is not on sale now keeps its page: "This set isn't available right now", its pieces
 // to buy separately and the sets on sale now. A link to a set being changed in the bag (`?from=<set>`) opens on its
-// picks with "Update set in bag". No price is worked out here: every price is @extas/combos'.
+// picks with "Update set in bag". No price is worked out here: every price is @extas/combos'. PR 573: a pair an auto
+// rule made opens in its template (P1–P5, `PairPage`) once the owner picks one; "current" (the default) is this page.
+// While previews are on, `?tpl=P3` shows another template with the template bar (never indexed).
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -42,7 +44,18 @@ import {
 } from "./ComboParts";
 import { ComboRoot } from "./ComboRoot";
 import { MoreSets } from "./SetCards";
+import { PairPage } from "./PairPage";
+import { PreviewBar } from "./PreviewBar";
+import {
+  PAIR_TEMPLATES,
+  pairTemplateOf,
+  type PairTemplate,
+} from "@/lib/shop/combo-pair-model";
+import { pairEnv, readPairSettings } from "@/lib/shop/combo-pair";
 import "./combo.css";
+// PR 573: the pair templates' styles, with the rule pages' shared ones inlined (combo-pair.css @imports them), so this
+// route gets them in its own stylesheet instead of three more shared ones
+import "./combo-pair.css";
 
 export type ComboSearch = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) =>
@@ -70,7 +83,7 @@ export async function comboMetadata(
     "";
   if (desc) m.description = desc;
   // only the owner's featured sets are search results; a generated colour pair is one of many of the same rule
-  if (!r.page.isFeatured || one(search.from) || one(search.added))
+  if (!r.page.isFeatured || one(search.from) || one(search.added) || one(search.tpl) || one(search.pick))
     m.robots = { index: false, follow: true };
   return m;
 }
@@ -98,6 +111,29 @@ function Crumbs({
       <a className="hide-m" href={hrefIn(c.lang, ROUTES.combos)}>
         {c.t("combo.crumbCombos")}
       </a>
+      <span aria-hidden="true">/</span>
+      <span>{name}</span>
+    </nav>
+  );
+}
+
+/** PR 573 · Home / Combos / the rule / the pair (demo ca_crumbs). */
+function PairCrumbs({
+  c,
+  rule,
+  name,
+}: {
+  c: ShopContext;
+  rule: { title: string; href: string };
+  name: string;
+}) {
+  return (
+    <nav className="ca-crumbs xs" aria-label={c.t("pdp.breadcrumb")}>
+      <a href={hrefIn(c.lang, ROUTES.home)}>{c.t("pdp.home")}</a>
+      <span aria-hidden="true">/</span>
+      <a href={hrefIn(c.lang, ROUTES.combos)}>{c.t("combo.crumbCombos")}</a>
+      <span aria-hidden="true">/</span>
+      <a href={rule.href}>{rule.title}</a>
       <span aria-hidden="true">/</span>
       <span>{name}</span>
     </nav>
@@ -275,6 +311,42 @@ export async function ComboPage({
   const r = await pageFor(slug, one(search.from));
   if (!r || r.kind === "missing") notFound();
   if (!r.page.summary.onSale) return <Unavailable c={c} r={r} />;
+  // PR 573 · a pair an auto rule made, in its template (P1–P5); "current" goes on below
+  const pairSet = r.page.ruleId ? await readPairSettings(c.storeId) : null;
+  const preview = Boolean(pairSet?.["combos.template.preview"]);
+  const asked = one(search.tpl);
+  const tpl = r.page.ruleId
+    ? pairTemplateOf(r.page.summary.pageTemplate, { tpl: asked, pick: one(search.pick) === "1" }, preview)
+    : "current";
+  const previewing = preview && Boolean(r.page.ruleId) && asked === tpl;
+  const base = hrefIn(c.lang, ROUTES.combo(r.page.summary.slug));
+  const bar = previewing ? (
+    <div className="container ca-page">
+      <PreviewBar
+        c={c}
+        kind="page"
+        list={["current", ...PAIR_TEMPLATES]}
+        current={tpl}
+        hrefOf={(x) => `${base}?tpl=${x}`}
+        chosen={base}
+      />
+    </div>
+  ) : null;
+  if (tpl !== "current") {
+    const env = await pairEnv(c, r, tpl as PairTemplate, previewing);
+    if (env)
+      return (
+        <div
+          className="container ca-page ca-pair"
+          data-testid="ca-pair"
+          data-template={tpl}
+        >
+          <PairCrumbs c={c} rule={env.side.rule} name={r.env.name} />
+          <PairPage env={env} />
+          {bar}
+        </div>
+      );
+  }
   const t = c.t;
   const { env, set } = r;
   const parts = set["combos.page.parts"];
@@ -394,6 +466,7 @@ export async function ComboPage({
           />
         ) : null}
       </div>
+      {bar}
       <ComboBar />
       {view && added && bagCards && bagSet ? (
         <AddedPanel

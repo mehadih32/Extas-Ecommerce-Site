@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { comboListPageSchema, comboTemplateSettings } from '../src/registry-combo-templates';
+import { comboListPageSchema, comboPairPageSchema, comboTemplateSettings } from '../src/registry-combo-templates';
 
 describe('combo template settings (v39)', () => {
   it('every key is in the registry at version 39, public, not owner data, with both labels', () => {
@@ -24,6 +24,14 @@ describe('combo template settings (v39)', () => {
   it('the demo`s numbers: "See all" past 15 pairs with the first 8, six big cards, the builder card on; previews on', () => {
     expect(comboTemplateSettings['combos.list'].default).toEqual({ seeAllOver: 15, firstShown: 8, bigListShown: 6, builderCard: true });
     expect(comboTemplateSettings['combos.template.preview'].default).toBe(true);
+    expect(comboTemplateSettings['combos.pairPage'].default).toEqual({ otherPairs: 14, packSwatches: 4, upsell: true });
+  });
+
+  it('PR 573: the pair page keeps the current look until the owner picks a template', () => {
+    expect(registry['combos.template.page'].default).toBe('current');
+    expect(registry['combos.template.page'].version).toBe(39);
+    expect(registry['combos.template.page'].schema.safeParse('P4').success).toBe(true);
+    expect(comboPairPageSchema.safeParse({ otherPairs: 14, packSwatches: 0, upsell: true }).success).toBe(false);
   });
 
   it('refuses what is not a setting of these pages', () => {

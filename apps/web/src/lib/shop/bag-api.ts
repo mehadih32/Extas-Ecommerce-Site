@@ -168,7 +168,9 @@ export async function codeHandler(request: Request, deps: BagApiDeps | null): Pr
 /**
  * POST /api/bag/sets — PR 91: puts a set in the bag (one locked-price set, `addSetToBag`; makes the bag on the first
  * add; the page's `addKey` makes a resent tap the same add). PATCH — PR 95: changes the colours or sizes of a set already
- * in the bag (`changeSetInBag`, re-checked and re-priced). The set price is the engine's, never the browser's.
+ * in the bag (`changeSetInBag`, re-checked and re-priced). PR 573: a POST with `replaceGroupKey` puts another combo in
+ * that set's place (a pair page's colour change while editing, the bag's "Add 1 more"). The set price is the engine's,
+ * never the browser's.
  */
 export async function setHandler(request: Request, deps: BagApiDeps | null): Promise<Response> {
   const stop = await guard(request, deps, ['POST', 'PATCH']);
@@ -183,7 +185,8 @@ export async function setHandler(request: Request, deps: BagApiDeps | null): Pro
       return answer(deps, bag, { groupKey: r.groupKey, lineId: r.lines[0]?.id ?? null, setPriceMinor: r.setPriceMinor });
     }
     const bag = (await bagOf(request, deps, true))!;
-    const r = await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: b.slug as string, choices, addKey: (b.addKey as string | undefined) || undefined });
+    const replaceGroupKey = (b.replaceGroupKey as string | undefined) || undefined;
+    const r = await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: b.slug as string, choices, addKey: (b.addKey as string | undefined) || undefined, replaceGroupKey });
     return answer(deps, bag, { added: r.added, groupKey: r.groupKey, lineId: r.lines[0]?.id ?? null, setPriceMinor: r.setPriceMinor }, r.added ? 201 : 200);
   } catch (e) {
     return refusal(e);

@@ -39,6 +39,9 @@ export const addSetSchema = z
     addKey: z.string().regex(/^[A-Za-z0-9_-]{8,80}$/).optional(),
     /** Where the add came from ("combo" by default; "set", "upsell" …). */
     source: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(),
+    /** PR 573 · this add takes the place of a set already in the bag (its colours changed to another combo of the same
+     * rule, or "add 1 more" made it a 3-piece set): that set's lines are archived in the same write, never deleted. */
+    replaceGroupKey: z.string().min(1).max(120).optional(),
   })
   .strict()
   .refine((v) => Boolean(v.comboId) !== Boolean(v.slug), { message: 'give the combo id or its link, not both' });
@@ -113,16 +116,21 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
       if (same) return same;
     }
     // The same set again within the guard window is the same add (checked before stock: a double tap after the first
-    // add took the last piece is still the same set, not "sold out").
+    // add took the last piece is still the same set, not "sold out"). A replacement is never a repeat.
     const wanted = checkSet({ slots: c.slots, choices: d.choices, sizeForAll: d.sizeForAll, variants: c.variants, needsMix: false, onSale: true }).variants;
-    if (wanted.every((v) => v !== null)) {
+    if (!d.replaceGroupKey && wanted.every((v) => v !== null)) {
       const repeat = await recentSame(tx, d, c.view.id, guardMs, nowOf(deps), wanted as string[]);
       if (repeat) return (await again(repeat))!;
     }
-    const picks = await checkedPicks(deps, tx, c, d);
+    // PR 573 · the set it replaces must be in this bag; its pieces do not count against the new set's stock
+    if (d.replaceGroupKey && !(await tx.cartItem.count({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.replaceGroupKey, removedAt: null } }))) {
+      throw new CombosError('NOT_FOUND', 'no such set in this bag', ['replaceGroupKey']);
+    }
+    const picks = await checkedPicks(deps, tx, c, d, d.replaceGroupKey);
     const groupKey = groupKeyOf(d.addKey);
     const unit = new Map(c.variants.map((v) => [v.id, v.priceMinor!]));
     const at = nowOf(deps);
+    if (d.replaceGroupKey) await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.replaceGroupKey, removedAt: null }, data: { removedAt: at } });
     for (const variantId of picks.variants) {
       await tx.cartItem.create({
         data: { storeId: d.storeId, cartId: d.cartId, variantId, quantity: 1, unitPriceMinor: unit.get(variantId)!, comboId: c.view.id, comboGroupKey: groupKey, setPriceMinor: picks.payMinor, source: d.source ?? SET_SOURCE, createdAt: at },
