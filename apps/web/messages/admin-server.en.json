@@ -59,7 +59,8 @@
       "erp_webhook_process": "Stock news from the ERP",
       "search_index": "Search index",
       "messages_run": "Customer messages",
-      "orders_pii_purge": "Clearing kept IP, device and location"
+      "orders_pii_purge": "Clearing kept IP, device and location",
+      "payments_pending_sweep": "Unfinished online payments"
     },
     "workers": {
       "title": "Workers",

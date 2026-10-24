@@ -3,6 +3,7 @@
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import type { MessagesDeps } from '@extas/messages';
+import type { GatewayResolver } from '@extas/payments';
 import type { MeiliConfig } from '@extas/search';
 
 export type { SettingsReader };
@@ -16,6 +17,8 @@ export interface JobDeps {
   search?: { meili: MeiliConfig | null };
   /** PR 148: the message senders (SMS, WhatsApp, e-mail; each the mock until its key is entered), or none — no message job. */
   messages?: { sender: MessagesDeps['sender'] };
+  /** PR 170: the payment gateways (each the practice gateway until its keys pass the Test), or none — no payments sweep. */
+  payments?: { gateways: GatewayResolver };
   /** Clock, for tests. */
   now?: () => Date;
 }

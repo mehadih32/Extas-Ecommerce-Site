@@ -3,6 +3,7 @@
 // checks its permission itself (B6.5), scopes rows by `storeId` (A4.1) and writes the audit log in the same transaction
 // as the change. The order's status is never written here: when money makes an order ready (an advance paid in full),
 // the caller's `orders` hook moves it through the one order service (@extas/orders), which this package does not import.
+import type { Mode, PaymentGateway } from '@extas/adapters';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import type { Key, Value } from '@extas/settings';
@@ -23,12 +24,20 @@ export interface OrderHooks {
   advancePaid?(storeId: number, orderId: string, by: { actorId: string | null; source: string }): Promise<void>;
 }
 
+/**
+ * PR 170 — the gateway a payment's provider runs on now for a store (the app's connection layer: the practice gateway
+ * until the owner's keys pass the Test button, A1.3).
+ */
+export type GatewayResolver = (storeId: number, provider: string) => Promise<{ api: PaymentGateway; mode: Mode }>;
+
 export interface PaymentsDeps {
   db: PrismaClient;
   settings: SettingsReader;
   /** Clock, for tests. */
   now?: () => Date;
   orders?: OrderHooks;
+  /** PR 170: the payment gateways (none: nothing goes through a gateway here). */
+  gateways?: GatewayResolver;
 }
 
 /** A staff member (or the system, `staffUserId: null`) acting in one store. */

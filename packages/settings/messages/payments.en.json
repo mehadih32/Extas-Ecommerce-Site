@@ -17,6 +17,14 @@
         "label": "Courier COD statement file",
         "help": "How a courier's COD statement file (CSV) is read: the column names for the consignment, the COD amount, the courier's charge and the status, and the status words the courier uses for delivered, partly delivered and returned. Every line is matched to our own records and every difference gets a reason."
       }
+    },
+    "pending": {
+      "label": "Unfinished online payments",
+      "help": "What happens to an online payment whose answer never came back (the customer closed the page, the network dropped). \"Ask the gateway after minutes\" (10): the shop asks bKash (or the other gateway) itself and records the money if it really came in, so a customer who paid is never asked again (0 = never ask). \"Give up after minutes\" (0 = never): the payment is marked abandoned and the order shows \"payment failed\"; \"Call task\" (off) also asks the team to call. \"Every minutes\" (5): how often the shop checks. No money moves here."
+    },
+    "testPayments": {
+      "label": "Test payment buttons",
+      "help": "The test payment page (\"Pay\" and \"Make it fail (test)\") lets you try the checkout without money. The buttons work only while this is on and the payment service is still in practice mode: once its real keys are in, they never work. Switch this off on the live shop."
     }
   },
   "defaults": {

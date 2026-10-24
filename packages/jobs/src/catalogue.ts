@@ -7,14 +7,16 @@
 // The inventory jobs (S09) were shaped for this worker from the start (`@extas/inventory` jobs.ts): the stock pull,
 // the cart-hold expiry, the ERP document relay (the outbox), the low-stock check, the reconcile with the ERP and the
 // default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
-// (search.ts), PR 148 the message engine's run (messages.ts). A later stage adds its job here with its key, queue and
-// function.
+// (search.ts), PR 148 the message engine's run (messages.ts), PR 170 the sweep of open online payments (payments.ts).
+// A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
 import { runMessages } from '@extas/messages';
 import { indexStore } from '@extas/search';
+import { sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
+import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -161,6 +163,28 @@ const piiPurgeJob: JobDefinition<{ storeId: number }> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runPiiPurge(deps, p.storeId)) }),
 };
 
+/**
+ * PR 170 — one store's open online payments (packages/payments `sweepPending`; planned by payments.ts
+ * `paymentsPlanner` once per slot of `payments.pending.everyMinutes`): recovered by the gateway's answer or, when the
+ * owner set it, given up as abandoned. Safe to run twice.
+ */
+const paymentsSweepJob: JobDefinition<{ storeId: number }> = {
+  key: PAYMENTS_SWEEP_JOB,
+  queue: PAYMENTS_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${PAYMENTS_SWEEP_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => {
+    const d = paymentsDeps(deps);
+    if (!d) return { ok: true, stats: { skipped: 'no gateways' } };
+    const r = await sweepPending(d, p.storeId);
+    return r.errors > 0 && r.errors === r.checked ? { ok: false, error: 'no open payment could be checked', stats: compactStats(r) } : { ok: true, stats: compactStats(r) };
+  },
+};
+
 // PR 72: the search index (search.ts), planned by its own planner when a store's index is behind its catalogue
 // PR 148: the message engine (messages.ts), planned per store and slot
 // PR 159: the purge of the kept IP, device id and location (pii.ts), planned per store and slot
@@ -170,6 +194,7 @@ const definitions: JobDefinition<never>[] = [
   searchIndexJob as unknown as JobDefinition<never>,
   messagesJob as unknown as JobDefinition<never>,
   piiPurgeJob as unknown as JobDefinition<never>,
+  paymentsSweepJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

@@ -12,6 +12,13 @@
 // parcel with no statement line is missing (0: off), and the column names and status words of the couriers' COD
 // statement files (SIM-F-028: the file is read line by line, nothing is typed by hand).
 //
+// PR 170 (`payments.pending`, `payments.testPayments`): a payment whose answer never came is asked about again at the
+// gateway after a few minutes (recovery: money that really came in is never left unrecorded, so a paid customer is
+// never asked again at the door; 0 = off), and — only when the owner sets it (0 = off) — given up as ABANDONED after
+// a longer wait, with a call for the team if he wants one (off). The test payment page's buttons (practice money)
+// run only while this switch is on *and* the payment's gateway is still on its practice mode (the go-live guard,
+// follow-up 50: they can never run once real keys are in); switch it off on the live shop.
+//
 // Nothing here moves money, refunds anything, or changes a price, a charge, a discount or Cash on Delivery (CLAUDE.md
 // rule 6): these settings only say what may be recorded and how a difference is named.
 import { z } from 'zod';
@@ -87,6 +94,16 @@ export const codStatementSchema = z
   })
   .strict();
 
+/** PR 170 — open gateway payments: recovery by the gateway's own answer, the abandoned mark, the sweep's interval. */
+export const pendingSchema = z
+  .object({
+    recoverAfterMinutes: z.int().min(0).max(1_440),
+    abandonAfterMinutes: z.int().min(0).max(43_200),
+    callTaskOnAbandon: z.boolean(),
+    everyMinutes: z.int().min(1).max(1_440),
+  })
+  .strict();
+
 function text(lang: 'en' | 'bn', path: string): string {
   const v = lookup(messages[lang], `defaults.payments.${path}`);
   if (!v) throw new Error(`payments message "defaults.payments.${path}" is missing in ${lang}`);
@@ -141,5 +158,23 @@ export const paymentSettings = {
     labelKey: 'payments.cod.statement.label',
     helpKey: 'payments.cod.statement.help',
     sortOrder: 130,
+  }),
+  'payments.pending': setting({
+    ...base,
+    schema: pendingSchema,
+    default: { recoverAfterMinutes: 10, abandonAfterMinutes: 0, callTaskOnAbandon: false, everyMinutes: 5 },
+    valueType: 'JSON',
+    labelKey: 'payments.pending.label',
+    helpKey: 'payments.pending.help',
+    sortOrder: 140,
+  }),
+  'payments.testPayments': setting({
+    ...base,
+    schema: z.boolean(),
+    default: true,
+    valueType: 'BOOLEAN',
+    labelKey: 'payments.testPayments.label',
+    helpKey: 'payments.testPayments.help',
+    sortOrder: 150,
   }),
 };

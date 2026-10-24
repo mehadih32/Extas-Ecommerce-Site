@@ -24,7 +24,13 @@ export type PaymentsErrorCode =
   /** PR 166: the parcel already has its closing door outcome, or the line is already resolved (`data`: which one). */
   | 'ALREADY_RECORDED'
   /** PR 166: the door record is not waiting for a decision, or the line has nothing to resolve. */
-  | 'NOT_PENDING';
+  | 'NOT_PENDING'
+  /** PR 170: the payment is not open any more (`data.status`). */
+  | 'NOT_OPEN'
+  /** PR 170: the practice gateway is switched off (`payments.testPayments`) and no real one is connected. */
+  | 'TEST_PAYMENTS_OFF'
+  /** PR 170: the payment gateway did not answer (try again later; nothing was charged by us). */
+  | 'GATEWAY_ERROR';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;
@@ -53,7 +59,11 @@ export class PaymentsError extends Error {
       case 'DUPLICATE_REFERENCE':
       case 'ALREADY_RECORDED':
       case 'NOT_PENDING':
+      case 'NOT_OPEN':
+      case 'TEST_PAYMENTS_OFF':
         return 409;
+      case 'GATEWAY_ERROR':
+        return 502;
       default:
         return 422;
     }

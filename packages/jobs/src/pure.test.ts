@@ -5,6 +5,7 @@ import { registry } from '@extas/settings';
 import { retryDelayMs, retryPolicyOf } from './backoff';
 import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogue';
 import { messagesPlanner } from './messages';
+import { paymentsPlanner } from './payments';
 import { searchPlanner, searchRunKey } from './search';
 import { errorLine, MAX_ERROR } from './context';
 import { LeaderLock, type LockStore } from './leader';
@@ -51,11 +52,12 @@ describe('PR 6 · timetable slots', () => {
 });
 
 describe('PR 6 · catalogue', () => {
-  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72) and the messages (PR 148) on their own', () => {
+  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index', 'messages.run', 'orders.pii.purge'].sort(),
+      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index', 'messages.run', 'orders.pii.purge', 'payments.pending.sweep'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
+    expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
     expect(jobDefinition('search.index')!.queue).toBe('search');
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);
     expect(jobDefinition('nope')).toBeNull();
@@ -93,6 +95,25 @@ describe('PR 6 · catalogue', () => {
     expect(planned.map((p) => p.key)).toEqual([`messages.run/1/${slotOf(at.getTime(), 60_000)}`, `messages.run/2/${slotOf(at.getTime(), 60_000)}`]);
     expect(planned.every((p) => p.queue === 'messages')).toBe(true);
     expect(await searchPlanner({} as never, new Date())).toEqual([]);
+  });
+  it('PR 170: the payments sweep needs a store; one run per store and slot of `payments.pending.everyMinutes`, none while both marks are off', async () => {
+    const job = jobDefinition('payments.pending.sweep')!;
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 5 }))).toBe(5);
+    // without gateways (no connection layer) nothing is planned and a run does nothing
+    expect(await paymentsPlanner({} as never, new Date())).toEqual([]);
+    expect(await job.run({} as never, { storeId: 5 })).toEqual({ ok: true, stats: { skipped: 'no gateways' } });
+    const pending = new Map<number, unknown>([
+      [1, registry['payments.pending'].default],
+      [2, { ...registry['payments.pending'].default, recoverAfterMinutes: 0, abandonAfterMinutes: 0 }],
+    ]);
+    const settings = { value: async (_k: string, s: { storeId: number }) => pending.get(s.storeId) };
+    const deps = { payments: { gateways: async () => null }, settings, db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } } } as never;
+    const at = new Date(Date.UTC(2026, 9, 24, 6, 7, 0));
+    const every = registry['payments.pending'].default.everyMinutes * 60_000;
+    const planned = await paymentsPlanner(deps, at);
+    expect(planned.map((p) => p.key)).toEqual([`payments.pending.sweep/1/${slotOf(at.getTime(), every)}`]);
+    expect(planned[0]!.queue).toBe('payments');
   });
   it('keeps a small summary and turns a reported failure into a retry', () => {
     const long = 'x'.repeat(300);
