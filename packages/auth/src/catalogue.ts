@@ -111,6 +111,10 @@ export const PERMISSIONS = {
   'orders.risk.read': { group: 'orders' },
   'orders.risk.decide': { group: 'orders' },
   'orders.merge': { group: 'orders' },
+  // S06 · PR 544 — the risk rules list (ORD-06): see every fraud and duplicate rule with its switch, and switch one on or
+  // off. A rule only marks and proposes; switching it never blocks anyone, moves money or changes COD, a price or a charge.
+  'risk.rules.read': { group: 'orders' },
+  'risk.rules.write': { group: 'orders' },
   // S04 · PR 127 — add a line to an order not yet with the courier, or take out a line added after placing ("Add to
   // this parcel"): priced as its product page prices it, the order's COD amount grows by exactly that line.
   'orders.lines': { group: 'orders' },

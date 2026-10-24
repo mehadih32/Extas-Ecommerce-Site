@@ -142,6 +142,12 @@
       "door": "Record what happened at the door and the money the rider collected (delivered, partly delivered, returned with the charge paid, returned, attempt failed)",
       "partials": "Approve or reject the money of a partial delivery",
       "settle": "Import a courier's COD statement and mark a checked mismatch as resolved"
+    },
+    "risk": {
+      "rules": {
+        "read": "See every fraud and duplicate rule with its switch (the risk rules list)",
+        "write": "Switch a fraud or duplicate rule on or off (the rule only marks and proposes; nothing is blocked)"
+      }
     }
   },
   "totp": {

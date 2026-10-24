@@ -52,6 +52,9 @@ export const ORDER_PERMISSIONS = [
   'orders.edit',
   'orders.export',
   'orders.exportPersonal',
+  // S06 · PR 544: the risk rules list and its switches
+  'risk.rules.read',
+  'risk.rules.write',
 ] as const;
 export type OrdersPermission = (typeof ORDER_PERMISSIONS)[number];
 
