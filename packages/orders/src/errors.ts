@@ -42,7 +42,9 @@ export type OrdersErrorCode =
   /** PR 142: the piece is in a set or the order has an offer, so taking it out would change a price or a discount. */
   | 'OFFER_ON_ORDER'
   /** PR 142: the order's last piece is never taken out; cancel the order instead. */
-  | 'LAST_LINE';
+  | 'LAST_LINE'
+  /** PR 143: the customer's edit window is closed (`data.closed` says why: OFF, STEP, TIME, CAP, BOOKED, CANCEL). */
+  | 'EDIT_CLOSED';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -80,6 +82,7 @@ export class OrdersError extends Error {
       case 'PRICE_DIFFERS':
       case 'OFFER_ON_ORDER':
       case 'LAST_LINE':
+      case 'EDIT_CLOSED':
         return 422;
       default:
         return 409;

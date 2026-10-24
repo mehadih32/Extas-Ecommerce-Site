@@ -14,7 +14,8 @@
 // the customer's history beside one order and the names its page shows (history.ts). PR 154:
 // the search by number, phone, name or tracking number (search.ts). PR 142: the team's edit of an order not yet
 // with the courier — contact, address, a size at the same price, a piece taken out — with its reason, where the
-// customer asked, and the stock and fraud checks again (edit.ts).
+// customer asked, and the stock and fraud checks again (edit.ts). PR 143: the customer's own edit (phone, address, a
+// size) until processing starts, capped, off by default (edit.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';

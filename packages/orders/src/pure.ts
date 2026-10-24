@@ -378,3 +378,29 @@ export function addOnClosedWhy(cfg: AddOnConfig, o: MachineOrder & { paymentMeth
   if (cfg.windowMinutes > 0 && now.getTime() - o.placedAt.getTime() > cfg.windowMinutes * 60_000) return 'TIME';
   return null;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PR 143 — the customer's own edit (phone, address, a size) under the owner's switch (`orders.edit.customer`).
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** Why the customer may not edit now: switched off, past the owner's step or time, no edits left, or the machine says no. */
+export type CustomerEditClosed = 'OFF' | 'STEP' | 'TIME' | 'CAP' | 'BOOKED' | 'CANCEL';
+
+export interface CustomerEditConfig {
+  enabled: boolean;
+  /** "placed": while the order is new (or waiting for its advance); "confirmed": until picking starts. */
+  until: 'placed' | 'confirmed';
+  /** Minutes after placing (0: only the step counts). */
+  windowMinutes: number;
+  maxEdits: number;
+}
+
+/** The customer's edit window for this order now (null: open). The machine's guards come first (SIM-F-004: never once booked). */
+export function customerEditClosedWhy(cfg: CustomerEditConfig, o: MachineOrder & { placedAt: Date; edits: number }, now: Date): CustomerEditClosed | null {
+  if (!cfg.enabled) return 'OFF';
+  const p = plan('edit', o);
+  if (!p.ok) return p.code === 'BOOKED' ? 'BOOKED' : p.code === 'CANCEL_PENDING' || p.code === 'CANCEL_REQUESTED' ? 'CANCEL' : 'STEP';
+  if (cfg.until === 'placed' && o.status !== 'PLACED' && o.status !== 'AWAITING_ADVANCE' && !(o.status === 'ON_HOLD' && o.holdFromStatus === 'PLACED')) return 'STEP';
+  if (cfg.windowMinutes > 0 && now.getTime() - o.placedAt.getTime() > cfg.windowMinutes * 60_000) return 'TIME';
+  return o.edits >= cfg.maxEdits ? 'CAP' : null;
+}

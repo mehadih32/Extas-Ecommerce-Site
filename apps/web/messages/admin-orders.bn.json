@@ -506,7 +506,8 @@
       "editField": "{field}: {before} → {after}",
       "editLine": "{line} → {to}",
       "editRemoved": "বাদ: {line}",
-      "editVia": "মাধ্যম: {via}"
+      "editVia": "মাধ্যম: {via}",
+      "editViaPage": "কাস্টমার নিজে, তার অর্ডার পেজ থেকে"
     },
     "band": {
       "cancelPending": "বাতিল চাওয়া হয়েছে · কুরিয়ারের উত্তর বাকি — {courier}-কে ফোন করে ওরা কী বলল লিখুন।",

@@ -15,6 +15,11 @@
 //                                S04 · PR 127 "Add to this parcel": what his order may take now (`orders.addOn`)
 //   POST /api/account/parcel-add {number, variantId, quantity?, from?} → {status, …the same}  a real order line
 //   POST /api/account/parcel-remove {number, lineId}        → {status, …the same}  a piece he added, taken out again
+//   POST /api/account/edit-state {number}                   → {open, closed, maxEdits, editsLeft, can, phone, address, lines}
+//                                S05 · PR 143: what his own edit may change now (`orders.edit.customer`, off by default)
+//   POST /api/account/edit       {number, phone?, address?, lines?: [{lineId, variantId}]} → {status, …the same}
+//                                his phone, address or a size (same piece, same colour, same price) until processing
+//                                starts, capped; never once a courier is booked (SIM-F-004)
 //   POST /api/account/test-code  {phone}                    → {code}   test servers only (EXTAS_SHOP_TEST_PAGES=1, mock SMS)
 //   POST /api/account/try                                   → {next}   test servers only: signed in as the sample account
 //
@@ -23,7 +28,7 @@
 import { askForCode, isAccountError, normalPhone, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
 import type { RequestContext } from '@extas/auth';
-import { addOnState, customerAddOn, customerCancel, customerCancelState, customerRemoveAddOn, isOrdersError, type CustomerRef } from '@extas/orders';
+import { addOnState, customerAddOn, customerCancel, customerCancelState, customerEdit, customerEditState, customerRemoveAddOn, isOrdersError, type CustomerRef } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE } from './bag-model';
 import { mergeWishes, visitorOf } from './wishlist';
@@ -139,7 +144,9 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
       case 'cancel-state':
       case 'parcel':
       case 'parcel-add':
-      case 'parcel-remove': {
+      case 'parcel-remove':
+      case 'edit-state':
+      case 'edit': {
         // the order is his by his account or by this browser (a guest's order); anything else is "no such order"
         const auth = await customerOfRequest(request, a, deps.storeId);
         const who: CustomerRef = { storeId: deps.storeId, customerId: auth?.customer.id ?? null, visitorId: visitorOf(readCookie(request, BAG_COOKIE)) };
@@ -148,11 +155,17 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         const number = text(b.number, 40);
         if (action === 'cancel-state') return json({ ok: true, ...(await customerCancelState(od, who, number)) });
         if (action === 'parcel') return json({ ok: true, ...(await addOnState(od, who, number)) });
+        if (action === 'edit-state') return json({ ok: true, ...(await customerEditState(od, who, number)) });
         const { lang: _lang, ...input } = b;
         if (action === 'parcel-add' || action === 'parcel-remove') {
           // PR 127: a real order line through the one order service; the answer is the window as it is now
           const r = action === 'parcel-add' ? await customerAddOn(od, who, input) : await customerRemoveAddOn(od, who, input);
           return json({ ok: true, status: r.status, ...(await addOnState(od, who, number)) });
+        }
+        if (action === 'edit') {
+          // PR 143: his own edit through the one order service; the answer is the window as it is now
+          const r = await customerEdit(od, who, input);
+          return json({ ok: true, status: r.status, ...(await customerEditState(od, who, number)) });
         }
         const r = await customerCancel(od, who, input);
         return json({ ok: true, outcome: r.outcome, status: r.status });

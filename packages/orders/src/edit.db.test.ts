@@ -4,11 +4,13 @@
 // reason that is never a risk signal, "arrived after Eid" as a refusal reason) and SIM-F-004 (an edit after booking is
 // refused, so it never silently diverges from the parcel). Also: a size at the same price with the stock moved, a piece
 // taken out with the money consistent, a paid order's overpaid part only a refund REQUEST, the version check, the keys,
-// and the duplicate check run again after a phone change (B1.10). Every value is a made-up test value.
+// and the duplicate check run again after a phone change (B1.10). PR 143: the customer's own edit — off by default,
+// capped, until the owner's step, his own order only, and closed once a courier is booked (SIM-F-004 again). Every value
+// is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { cancelOrder, confirmOrder, editChoices, editOrder, orderStep, systemBy } from './index';
+import { cancelOrder, confirmOrder, customerEdit, customerEditState, editChoices, editOrder, holdOrder, orderStep, systemBy } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -20,7 +22,7 @@ async function code(p: Promise<unknown>): Promise<string> {
   }
 }
 
-describe.skipIf(!HAS_TEST_DB)('PR 142 · the team edits an order (PostgreSQL)', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 142, 143 · order edits by the team and by the customer (PostgreSQL)', () => {
   let f: OrdersFixture;
   let courierId: string;
   const db = () => f.t.prisma;
@@ -169,5 +171,74 @@ describe.skipIf(!HAS_TEST_DB)('PR 142 · the team edits an order (PostgreSQL)', 
     const ret = await db().orderEvent.findFirstOrThrow({ where: { orderId: b.orderId, type: 'order.returned' } });
     expect(ret.reasonCode).toBe('after-eid');
     expect(ret.data).toMatchObject({ refusal: { en: 'Arrived after Eid' } });
+  });
+  // ---- PR 143: the customer's own edit (SIM-F-004 is its required acceptance test) ----
+  const me = (o: { visitorId: string }) => ({ storeId: f.S, customerId: null, visitorId: o.visitorId });
+  const ON = { enabled: true, until: 'confirmed', windowMinutes: 0, maxEdits: 2, phone: true, address: true, size: true };
+
+  it('PR 143: off by default — the page offers nothing and a save is refused', async () => {
+    const o = await f.place('cedit-off');
+    expect(await customerEditState(d(), me(o), o.number)).toMatchObject({ open: false, closed: 'OFF', lines: [] });
+    expect(await code(customerEdit(d(), me(o), { number: o.number, phone: '01710000099' }))).toBe('EDIT_CLOSED');
+  });
+
+  it('PR 143: his phone, address and a size in the same colour at the same price; each save counts; capped; only his own order', async () => {
+    f.overrides.set('orders.edit.customer', ON);
+    try {
+      const o = await f.place('cedit-on', { lines: [{ variantId: f.v.skyM }] });
+      const line = await db().orderItem.findFirstOrThrow({ where: { orderId: o.orderId } });
+      const st = await customerEditState(d(), me(o), o.number);
+      expect(st).toMatchObject({ open: true, closed: null, maxEdits: 2, editsLeft: 2, can: { phone: true, address: true, size: true } });
+      expect(st.lines[0]!.sizes.map((s) => s.variantId)).toContain(f.v.skyL);
+      expect(st.lines[0]!.sizes.map((s) => s.variantId)).not.toContain(f.v.whiteM);
+      // somebody else's browser: no such order
+      expect(await code(customerEdit(d(), { storeId: f.S, customerId: null, visitorId: randomUUID() }, { number: o.number, phone: '01710000099' }))).toBe('NOT_FOUND');
+      // another colour is not his to change here
+      expect(await code(customerEdit(d(), me(o), { number: o.number, lines: [{ lineId: line.id, variantId: f.v.whiteM }] }))).toBe('NOT_SAME_PIECE');
+      await customerEdit(d(), me(o), { number: o.number, phone: '01710000099', address: 'House 12, Road 3, Mirpur 10, Dhaka', lines: [{ lineId: line.id, variantId: f.v.skyL }] });
+      const after = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+      expect(after).toMatchObject({ phone: '+8801710000099', shippingAddressText: 'House 12, Road 3, Mirpur 10, Dhaka', customerEditCount: 1 });
+      expect(await held(o.orderId, f.v.skyL)).toBe(1);
+      const ev = await db().orderEvent.findFirstOrThrow({ where: { orderId: o.orderId, type: 'order.edit' } });
+      expect(ev).toMatchObject({ actorType: 'CUSTOMER', source: 'shop', reasonCode: 'customer' });
+      expect(ev.data).toMatchObject({ via: 'order-page' });
+      // the address changed: a person checks the delivery area (the charge stays as stored)
+      expect(await db().callTask.count({ where: { orderId: o.orderId, reason: 'ADDRESS_CHANGED', status: 'OPEN' } })).toBe(1);
+      await customerEdit(d(), me(o), { number: o.number, phone: '01710000098' });
+      expect(await customerEditState(d(), me(o), o.number)).toMatchObject({ open: false, closed: 'CAP', editsLeft: 0 });
+      expect(await code(customerEdit(d(), me(o), { number: o.number, phone: '01710000097' }))).toBe('EDIT_CLOSED');
+    } finally {
+      f.overrides.delete('orders.edit.customer');
+    }
+  });
+
+  it('PR 143: "placed" closes it at the team\'s confirm; a switch that is off refuses that field', async () => {
+    f.overrides.set('orders.edit.customer', { ...ON, until: 'placed', phone: false });
+    try {
+      const o = await f.place('cedit-placed');
+      expect(await code(customerEdit(d(), me(o), { number: o.number, phone: '01710000099' }))).toBe('INVALID_INPUT');
+      await confirmOrder(d(), f.staff, o.orderId);
+      expect(await customerEditState(d(), me(o), o.number)).toMatchObject({ open: false, closed: 'STEP' });
+      const h = await f.place('cedit-held');
+      await holdOrder(d(), f.staff, h.orderId, { reasonKey: 'customer-wait' });
+      expect(await customerEditState(d(), me(h), h.number)).toMatchObject({ open: true });
+    } finally {
+      f.overrides.delete('orders.edit.customer');
+    }
+  });
+
+  it('SIM-F-004 (PR 143): once a courier is booked his edit is closed and refused — the address never silently differs from the parcel', async () => {
+    f.overrides.set('orders.edit.customer', ON);
+    try {
+      const o = await f.place('cedit-booked');
+      await confirmOrder(d(), f.staff, o.orderId);
+      await book(o.orderId);
+      expect(await customerEditState(d(), me(o), o.number)).toMatchObject({ open: false, closed: 'BOOKED' });
+      const before = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+      expect(await code(customerEdit(d(), me(o), { number: o.number, address: 'House 1, Village Road, Pirganj, Rangpur' }))).toBe('EDIT_CLOSED');
+      expect(await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).toEqual(before);
+    } finally {
+      f.overrides.delete('orders.edit.customer');
+    }
   });
 });
