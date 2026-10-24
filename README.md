@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২০০টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২০২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -40,7 +40,7 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 43/58** · **S03 18/22** · **S06 6/33** (wave 2) · **S04 37/41** · **S05 14/20** (wave 3) · total **200/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 43/58** · **S03 18/22** · **S06 6/33** (wave 2) · **S04 39/41** · **S05 14/20** (wave 3) · total **202/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -64,7 +64,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 43 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 18 / 22 | In progress |
-| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 37 / 41 | In progress |
+| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 14 / 20 | In progress |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 6 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **200 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **202 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -925,9 +925,9 @@ PostgreSQL) and the web rules API (10 + 3 on PostgreSQL). Screenshots:
 [`docs/qa/screenshots/pr-209/`](docs/qa/screenshots/pr-209). Report: [S10](docs/reports/2026-10-20-S10.md). Left for
 S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `discountWasFor`.
 
-### S04 · Cart, checkout, accounts — In progress (37/41)
+### S04 · Cart, checkout, accounts — In progress (39/41)
 
-> **বাংলায়:** ব্যাগ তৈরি — পণ্য রাখা, রং-সাইজ-সংখ্যা বদলানো, পরে কেনার জন্য রাখা, সরানো আর ফিরিয়ে আনা, সেট, অফারের ঘর, দুই সাইজের প্রশ্ন, অর্ডারের হিসাব, কোড, ফ্রি ডেলিভারির অগ্রগতি আর "আপনার পছন্দ হতে পারে"; "ব্যাগে রাখা হয়েছে" শিট। চেকআউটও তৈরি — নাম-ফোন-ঠিকানা, ঠিকানা থেকে এলাকা আর চার্জ (না বুঝলে জিজ্ঞেস করে), পেমেন্টের উপায়, ওয়ালেট, অফারের টিক, কনফার্ম বোতাম, একবার চাপলে একটাই অর্ডার, আর ধন্যবাদ পাতা। কার্ড/মোবাইল পেমেন্ট এখন টেস্ট পাতায়, কোনো টাকা নড়ে না। ডেমো V12.2-এর মতো, বাংলা আর ইংরেজি দুটোতেই।
+> **বাংলায়:** ব্যাগ তৈরি — পণ্য রাখা, রং-সাইজ-সংখ্যা বদলানো, পরে কেনার জন্য রাখা, সরানো আর ফিরিয়ে আনা, সেট, অফারের ঘর, দুই সাইজের প্রশ্ন, অর্ডারের হিসাব, কোড, ফ্রি ডেলিভারির অগ্রগতি আর "আপনার পছন্দ হতে পারে"; "ব্যাগে রাখা হয়েছে" শিট। চেকআউটও তৈরি — নাম-ফোন-ঠিকানা, ঠিকানা থেকে এলাকা আর চার্জ (না বুঝলে জিজ্ঞেস করে), পেমেন্টের উপায়, ওয়ালেট, অফারের টিক, কনফার্ম বোতাম, একবার চাপলে একটাই অর্ডার, আর ধন্যবাদ পাতা। কার্ড/মোবাইল পেমেন্ট এখন টেস্ট পাতায়, কোনো টাকা নড়ে না। ডেমো V12.2-এর মতো, বাংলা আর ইংরেজি দুটোতেই। অর্ডারের পাতায় এখন "কেন অগ্রিম, কেন এই চার্জ" কার্ড, আর বাল্ক-কর্পোরেট অর্ডারের অনুরোধ (ডিফল্ট বন্ধ)।
 
 **Built (PR 105, 106, 108, 109, 110, 111, 112, 113, 114, 107), matched to demo V12.2 (CN-012).** Package `@extas/cart`, migration `0006_bag`.
 - **Screens / routes:** `/bag` and `/bn/bag` (out of "Coming soon"; noindex); `/bag/try` (test page, only with `EXTAS_SHOP_TEST_PAGES=1`).
@@ -991,10 +991,12 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 - **Add to this parcel (127, SIM-F-004):** with `orders.addOn` on (off; until confirmed, minutes, lines, pieces), a customer adds a piece to his COD order from the thank-you or order page: a real order line, priced as its product page, held from stock, the money moving by exactly that line; refused once a courier is booked. API: `POST /api/account/parcel`, `/parcel-add`, `/parcel-remove`; staff `POST /api/admin/orders/<id>/lines` and `/lines/<lineId>/remove` (`orders.lines`).
 - **Complete your look (128):** with `thanks.look` on (off, max 3), the thank-you page offers only pieces a running combo pairs with the order, at their live price, added through 127; no honest pick, no block. Test servers: `POST /api/shop/try-look`.
 - **Gift mode (605, SIM-F-007):** with `checkout.gift` on (off; advance required: full, fixed or percent; note 200 characters; date up to 30 days; hide prices ticked), "Send as a gift" sits under the bag's Checkout and opens `/checkout?gift=1`: the sender's name and a phone of any country or an e-mail (updates only), the gift note and "deliver on or after"; the name, phone and address are the receiver's. Full advance = no Cash on Delivery; a part = the flag GIFT_ADVANCE, `advanceRequiredMinor` and a call task until S07's part payment. No account is made for the receiver. The thank-you page thanks the sender; the invoice hides every price. `deliveryTarget()` in `@extas/orders` is what the sticker and the booking read. Test servers: `POST /api/shop/try-gift`.
-- **Settings:** registry v34 (`registry-checkout-more.ts`, labels in `checkout-more.*.json`); no admin screen (CN-019). Guides: `docs/admin-guide/orders.md`, `delivery.md`, `combos.md`.
+- **Why an advance, why this charge (566):** on an order's admin page (`/admin/orders/<id>`, orders.read) the card "Why an advance, why this delivery charge" (`orders.explain`, on; the risk line on) reads the order's own records — the placed event (now with `codOff`), the advance requests, the checkout flag and its layer, the risk assessment, the band and area kept on the order — and gives the reasons in words (team-only lines marked) and ready "what to say" lines in Bengali and English with Copy. Read only.
+- **Bulk / corporate lane (606, SIM-F-023):** with `orders.bulkLane` on (off; menu row on; the bag's card at the owner's number of pieces, empty, or when a line can take no more; contact shown; minimum empty, maximum 100000; 3 a day per number or browser; note 1000; prefix BQ-; logo offered, its price empty; advance none) the phone menu and the bag lead to `/bulk-order` (noindex; "page not found" while off): name, mobile, company, e-mail, what, how many, logo, needed by, note, with the bag's pieces and never a price. Migration `0023_bulk_enquiry`; `POST /api/shop/bulk`, `GET /api/admin/bulk-enquiries` (orders.read), `POST /api/admin/bulk-enquiries/:id/status` (orders.notes, audited), `POST /api/shop/try-bulk` (test servers only). The ORD-09 screen and the quote are follow-up 270.
+- **Settings:** registry v34 (`registry-checkout-more.ts`, labels in `checkout-more.*.json`) and v38 (`registry-support-lane.ts`, labels in `support-lane.*.json`); no new admin section (CN-019). Guides: `docs/admin-guide/orders.md`, `delivery.md`, `combos.md`.
 - **Tests and gates:** guard 0; lint, format and typecheck clean; tests settings 2364, checkout 57, orders 337, db 133, delivery 207, combos 99, web 663 and the rest, all pass; device gate 0 fails in 2146 checks; seeded Lighthouse medians inside the budget; checked in a browser at 390 and 1366 px in English and Bengali.
 
-Next: PR 566 and 606, the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
+Next: PR 558 and 560 (the checkout's advance rules), the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
 ### S05 · Order management — In progress (14/20)
 
@@ -1158,6 +1160,8 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #37 | PR [85](docs/stages/S02.md#pr-85) (fix) | 24 Oct | The device gate measures a shop page only after the shell's fits (footer columns, phone header) have run, so a busy runner no longer catches the footer links in the moment before they fit (main's run failed on it at 360 px). |
+| #37 | PR [566](docs/stages/S04.md#pr-566), [606](docs/stages/S04.md#pr-606) | 24 Oct | The support card on an order's admin page explains, from the order's own records, why the customer was asked for an advance and why the delivery charge is what it is, with ready "what to say" lines in both languages (read only). The bulk / corporate lane: `/bulk-order`, a phone-menu row and a bag card send an enquiry (BQ-1001 …) for the team to call back, never a price; off until the owner turns it on. |
 | #36 | PR [142](docs/stages/S05.md#pr-142), [143](docs/stages/S05.md#pr-143), [146](docs/stages/S05.md#pr-146) | 24 Oct | Order edits through the one order service: the team changes contact, address, a size at the same price or takes a piece out (reason, where the customer asked, timeline and audit log; refused once a courier is booked; a paid order's overpaid part only becomes a refund request), the customer edits his own phone, address or size until processing (off by default, capped), and the two-size follow-up asks "both, or only M?" after placing (off by default). Settings registry v37, permission `orders.edit`, no migration |
 | #36 | PR [98](docs/stages/S03.md#pr-98), [100](docs/stages/S03.md#pr-100) | 24 Oct | "Build your own set" (demo V12.2 `41-set.js`): `/combos/build-your-own` and one page per set group, made from the owner's Smart Rules set tier rules; tier cards, slots, style cards with colours and sizes, the summary beside on a computer and a bar at the bottom of a phone; "Add set to Bag" puts the picks in the bag, where the same tier price applies by itself. Off by default (`combos.builder`, registry v36, migration `0022_set_builder`); admin API `GET/POST /api/admin/combos/builder`; the admin screen is follow-up 240 |
 | #35 | PR [17](docs/stages/S00.md#pr-17) (CN-023) | 24 Oct | CI in parallel jobs on one build (owner, CN-023; every gate and budget as strict as before): the images are built once, then lint and type-check, unit tests, the sign-in e2e, the device gate (4 shards) and one Lighthouse run on the sample data (in shards) run side by side; a pull request checks the core pages plus the pages it touches, a push to main and the nightly run check every page and still block the deploy; pnpm, Next.js and Playwright caches. Before about 115 minutes per run, after about 14 minutes. |
