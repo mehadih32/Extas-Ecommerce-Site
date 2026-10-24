@@ -7,6 +7,7 @@ import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
 import type { Reassurance } from '@/lib/shop/bag-model';
+import { CardFits } from '../CardFits';
 import { Icon } from '../Icon';
 import { ProductCard } from '../ProductCard';
 import { Ladder, PhoneTier } from './OfferSlot';
@@ -47,11 +48,12 @@ export function Upsell({
         {tiers ? <Ladder c={c} tiers={tiers} phone={phoneLadder} /> : null}
         {tiers && !phoneLadder ? <PhoneTier c={c} tiers={tiers} /> : null}
         {cards.length ? (
-          <div className="ups-row mt12" style={{ ['--n' as string]: Math.min(4, cards.length) }} id="bg-upsrow">
+          // The cards' badges fit like the category page's (CARD_FIT), so a long badge on a narrow phone steps down, never cut.
+          <CardFits className="ups-row mt12" style={{ ['--n' as string]: Math.min(4, cards.length) }} id="bg-upsrow">
             {cards.map((card) => (
               <ProductCard key={card.id} card={card} c={c} />
             ))}
-          </div>
+          </CardFits>
         ) : null}
         {why ? (
           <div className="ups-why">

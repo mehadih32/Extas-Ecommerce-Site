@@ -4,6 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
+import { Prisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
 import {
   adminProductList,
@@ -23,6 +24,7 @@ import {
   productStock,
   publishProduct,
   publishQueue,
+  queueUnchecked,
   saveProductForm,
   suggestSku,
   unpublishProduct,
@@ -187,6 +189,18 @@ describe.skipIf(!HAS_TEST_DB)('publishing on PostgreSQL (PR 21, 26, 29, 35)', ()
     const open = await t.prisma.publishQueueItem.findMany({ where: { productId: id, status: 'OPEN' } });
     expect(open.map((o) => o.reason)).toEqual(['unpublished']);
     expect(await code(unpublishProduct(deps(), sys(), id))).toBe('CONFLICT');
+  });
+
+  it('a live product whose checklist never ran (sample data, an import) joins the queue as live-failing on the first look', async () => {
+    const id = await full('Never checked polo');
+    await publishProduct(deps(), sys(), id);
+    await t.prisma.productMedia.updateMany({ where: { productId: id, role: 'BACK' }, data: { archivedAt: clock } });
+    await t.prisma.publishQueueItem.deleteMany({ where: { productId: id } });
+    await t.prisma.product.update({ where: { id }, data: { healthIssues: Prisma.DbNull } });
+    expect(await queueUnchecked(deps(), sys(), 100)).toBeGreaterThanOrEqual(1);
+    expect(await t.prisma.publishQueueItem.findFirst({ where: { productId: id, status: 'OPEN' } })).toMatchObject({ reason: 'live-failing' });
+    // checked once: the next look does not run it again
+    expect((await t.prisma.product.findUniqueOrThrow({ where: { id } })).healthIssues).not.toBeNull();
   });
 
   it('the queue lists every product not on the shop, checks the unchecked ones first, and filters ready / waiting / live', async () => {

@@ -1,0 +1,20 @@
+# PR 17 (CN-023) — every night (02:00 in Dhaka, before the 02:30 backup and the 03:30 smoke test) and by hand: the
+# whole CI (ci.yml, called) on main with the FULL Lighthouse set (tools/lh-pages.mjs measures every page on any event
+# but a pull request), the device gate on every size, the end to end and the database tests. A pull request's run only
+# measures the core set and the pages it touches; this catches anything that slipped past between releases.
+# Called (workflow_call) rather than a schedule inside ci.yml: this run is named "nightly", and deploy.yml only follows
+# "ci" runs, so the nightly never deploys and never puts a deploy run into the VM's queue (concurrency group extas-vm).
+# Nothing here runs on the VM.
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml

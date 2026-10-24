@@ -428,6 +428,8 @@
 .shop .pcard .pinfo > .row.between { flex-wrap: nowrap; gap: 6px; min-width: 0px; }
 .shop .pcard .pinfo > .row.between > .tiny { flex: 0 1 auto; min-width: 0px; white-space: nowrap; overflow: hidden; text-align: right; }
 .shop .pcard .badge-img { max-width: calc(100% - 66px); white-space: nowrap; overflow: hidden; box-sizing: border-box; padding: 0.36em 0.62em; letter-spacing: 0.045em; }
+/* A badge that does not fit even at its smallest size (lib/shop/fit.ts collapse) is left off, on every page that shows cards (the bag's too). */
+.shop .pcard .badge-img.fit-x { display: none; }
 .shop .hm-hero .hm-hero-trust { justify-content: space-between; gap: 0px 8px; font-size: clamp(8.6px, -1px + 3.05vw, 13px); letter-spacing: -0.004em; line-height: 1.2; }
 .shop .hm-hero .hm-hero-trust span { gap: 0.46em; }
 .shop .hm-hero .hm-hero-trust svg { width: 1.25em; height: 1.25em; }

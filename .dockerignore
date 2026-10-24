@@ -1,5 +1,8 @@
 **/node_modules
 **/.next
+# PR 17 (CN-023): the Next.js build cache CI restores (actions/cache) goes in, so the image's build reuses it; the rest
+# of .next stays out. A clean checkout (the VM's deploy) has no such folder.
+!apps/web/.next/cache
 .git
 docs/demo
 docs/owner

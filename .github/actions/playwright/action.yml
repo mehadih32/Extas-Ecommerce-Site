@@ -1,0 +1,38 @@
+# PR 17 (CN-023) — Playwright for the device gate and the end-to-end checks, outside the workspace (no lockfile change;
+# the tools find it through NODE_PATH=<prefix>/node_modules). Chromium comes from the cache (keyed on the Playwright
+# version); its system libraries are installed on every run, because a fresh runner never has them.
+name: Playwright and Chromium
+description: npm-installs playwright into a prefix, Chromium from the cache, then its system libraries
+inputs:
+  version:
+    description: Playwright version (the workflow's PLAYWRIGHT_VERSION)
+    required: true
+  prefix:
+    description: Folder to npm-install playwright into (NODE_PATH is <prefix>/node_modules)
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Playwright package
+      shell: bash
+      env:
+        PW_VERSION: ${{ inputs.version }}
+        PW_PREFIX: ${{ inputs.prefix }}
+      run: npm install --prefix "$PW_PREFIX" --no-save --no-audit --no-fund "playwright@$PW_VERSION"
+    - name: Chromium from the cache
+      id: browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-chromium-${{ runner.os }}-${{ inputs.version }}
+    - name: Chromium (only when the cache had none)
+      if: steps.browsers.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        PW_PREFIX: ${{ inputs.prefix }}
+      run: '"$PW_PREFIX/node_modules/.bin/playwright" install chromium'
+    - name: Chromium's system libraries
+      shell: bash
+      env:
+        PW_PREFIX: ${{ inputs.prefix }}
+      run: '"$PW_PREFIX/node_modules/.bin/playwright" install-deps chromium'

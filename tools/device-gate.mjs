@@ -13,7 +13,9 @@
 // SIGNED-OUT and CONTROL-MISSING fail a page that lost its session or rendered without its data.
 // PR 53: on a product page FIRST-SCREEN (phone: the sizes and the measurement line end above the buy bar, before and
 // after a size is chosen) and BUY-BELOW-FOLD (desktop: the buy buttons above the fold), device-gate.json `firstScreen`.
-//   node tools/device-gate.mjs [--base=http://127.0.0.1:3000] [--group=phones|tablets|desktop|all]
+// PR 17 (CN-023): --shard=k/n checks only every n-th size (from the k-th), so CI runs the gate on n runners at once;
+// together the shards check every size and page, each with the same rules.
+//   node tools/device-gate.mjs [--base=http://127.0.0.1:3000] [--group=phones|tablets|desktop|all] [--shard=k/n]
 //                              [--out=device-gate-report] [--concurrency=8] [--urls=/a,/b (instead of lighthouserc)]
 //                              [--email=… --password-file=… (or DEVICE_GATE_EMAIL / DEVICE_GATE_PASSWORD_FILE)]
 // Needs the `playwright` package (CI installs it outside the workspace and sets NODE_PATH) and a running app.
@@ -33,6 +35,16 @@ export function deviceList(group, matrix = require(join(root, 'docs/qa/device-ma
   const pick = group === 'all' ? [...all.phones, ...all.tablets, ...all.desktop] : all[group];
   if (!pick) throw new Error(`unknown group ${group} (phones, tablets, desktop or all)`);
   return pick.map((d) => ({ ...d, touch: d.group !== 'desktop' }));
+}
+
+/** PR 17 (CN-023): one shard of the sizes, `k/n` = every n-th size from the k-th (round-robin); empty = all of them. */
+export function shardOf(devices, spec) {
+  if (!spec) return devices;
+  const m = /^(\d+)\/(\d+)$/.exec(spec);
+  const k = Number(m?.[1]);
+  const n = Number(m?.[2]);
+  if (!m || n < 1 || k < 1 || k > n) throw new Error(`--shard must be k/n with 1 ≤ k ≤ n (got ${spec})`);
+  return devices.filter((_, i) => i % n === k - 1);
 }
 
 /** The URLs to check: the paths of lighthouserc.json's ci.collect.url, on the given base. */
@@ -396,7 +408,7 @@ async function main() {
   const out = arg('out', 'device-gate-report');
   const concurrency = Number(arg('concurrency', rules.concurrency));
   const matrix = require(join(root, 'docs/qa/device-matrix.js'));
-  const devices = deviceList(arg('group', 'all'), matrix);
+  const devices = shardOf(deviceList(arg('group', 'all'), matrix), arg('shard', ''));
   const only = arg('urls', '');
   let urls = only ? only.split(',').map((p) => new URL(p, base).toString()) : urlList(base);
   // Signed in (follow-up 5): an account on a database seeded with the sample catalogue. The password is read from a

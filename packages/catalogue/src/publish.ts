@@ -12,7 +12,7 @@
 // Status changes need `catalogue.publish`; every one writes the audit log in the same transaction.
 import { z } from 'zod';
 import { requirePermission } from '@extas/auth';
-import type { Prisma } from '@extas/db/client';
+import { Prisma } from '@extas/db/client';
 import { allow, found, logChange, parse, setting, TX, type CatalogueDeps, type Db, type Who } from './context';
 import { CatalogueError, isCatalogueError } from './errors';
 import { productReadiness, readStoredHealth, type Readiness, type StoredHealth } from './health';
@@ -198,6 +198,28 @@ export interface QueueView {
 }
 
 /**
+ * Checks up to `limit` products that were never checked (made before the queue, by an import or by the sample data):
+ * the ones not on the shop with no open queue item yet, and the live ones whose checklist never ran (a failing one
+ * joins as "live-failing"). So every one of them shows in the queue: here and on the stock page (PR 204), whichever
+ * opens first, without waiting for someone to open a product. Returns how many were checked.
+ */
+export async function queueUnchecked(deps: CatalogueDeps, who: Who, limit: number): Promise<number> {
+  const queued = (await deps.db.publishQueueItem.findMany({ where: { storeId: who.storeId, status: 'OPEN' }, select: { productId: true } })).map((i) => i.productId);
+  const unchecked = await deps.db.product.findMany({
+    where: {
+      storeId: who.storeId,
+      archivedAt: null,
+      NOT: { id: { in: queued } },
+      OR: [{ status: { not: 'PUBLISHED' } }, { healthIssues: { equals: Prisma.DbNull } }],
+    },
+    select: { id: true, status: true },
+    take: limit,
+  });
+  for (const p of unchecked) await checkProduct(deps, who, p.id, p.status === 'PUBLISHED' ? {} : { reason: p.status === 'UNPUBLISHED' ? 'unpublished' : 'new' });
+  return unchecked.length;
+}
+
+/**
  * The "Ready to publish" queue, oldest first. Products not on the shop that were never checked (made before this
  * screen, or by an import) are checked first, so every one of them shows.
  */
@@ -205,12 +227,7 @@ export async function publishQueue(deps: CatalogueDeps, who: Who, query: QueueQu
   await allow(deps, who, 'catalogue.read');
   const q = parse(queueQuery, query, 'publish queue');
   const pageSize = await setting(deps, who, 'catalogue.admin.pageSize');
-  const unchecked = await deps.db.product.findMany({
-    where: { storeId: who.storeId, archivedAt: null, status: { not: 'PUBLISHED' }, NOT: { id: { in: (await deps.db.publishQueueItem.findMany({ where: { storeId: who.storeId, status: 'OPEN' }, select: { productId: true } })).map((i) => i.productId) } } },
-    select: { id: true, status: true },
-    take: pageSize,
-  });
-  for (const p of unchecked) await checkProduct(deps, who, p.id, { reason: p.status === 'UNPUBLISHED' ? 'unpublished' : 'new' });
+  await queueUnchecked(deps, who, pageSize);
 
   const open = await deps.db.publishQueueItem.findMany({ where: { storeId: who.storeId, status: 'OPEN' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
   const products = new Map(

@@ -6,12 +6,12 @@
 //   whose stock is gone shows up as failing — the queue follows the ERP, nobody has to press "recheck". The checklist's
 //   `sellableStock` check (catalogue health.ts) reads the stock mirror itself; it is a setting like every check.
 // - `stockQueue` is the queue as the stock page shows it: open items with the sellable pieces each product has now,
-//   the ones with stock first.
+//   the ones with stock first. Products never checked yet are checked first, as on the Products queue page.
 // - `newErpStyles` lists the ERP's styles the shop does not have yet (SKUs not in this store, retired SKUs count as
 //   known: they are never reused), grouped by style — the start of the queue for a new ERP style. On the practice ERP
 //   it lists practice styles, marked so; with no ERP it is empty (PR 499).
 import { SYSTEM } from '@extas/auth';
-import { checkProduct, type CatalogueDeps } from '@extas/catalogue';
+import { checkProduct, queueUnchecked, type CatalogueDeps } from '@extas/catalogue';
 import { allow, setting, type InventoryDeps, type Who } from './context';
 import { InventoryError } from './errors';
 import { behaviourOf, resolveErp } from './guard';
@@ -51,6 +51,8 @@ export interface StockQueueItem {
 export async function stockQueue(deps: InventoryDeps, who: Who, opts: { limit?: number } = {}): Promise<{ total: number; items: StockQueueItem[] }> {
   await allow(deps, who, 'inventory.read');
   const [limit, kinds] = await Promise.all([opts.limit ?? setting(deps, null, 'inventory.admin.listSize'), sellableKinds(deps)]);
+  // Products never checked yet join the queue here too, so this list does not wait for the Products queue to be opened.
+  await queueUnchecked(catalogueDeps(deps), { actor: SYSTEM, storeId: who.storeId, ctx: { source: 'stock-page' } }, limit);
   const where = { storeId: who.storeId, status: { in: ['OPEN' as const, 'IN_PROGRESS' as const] } };
   const [total, items] = await Promise.all([deps.db.publishQueueItem.count({ where }), deps.db.publishQueueItem.findMany({ where, orderBy: { createdAt: 'asc' } })]);
   const products = await deps.db.product.findMany({

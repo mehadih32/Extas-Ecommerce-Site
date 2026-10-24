@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, markdownReport, openedPlan, pickLinks, signedInPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, markdownReport, openedPlan, pickLinks, shardOf, signedInPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -19,6 +19,16 @@ describe('device gate', () => {
     expect(desktop.every((d) => !d.touch && d.dpr === 1)).toBe(true);
     expect(deviceList('phones', matrix)).toHaveLength(1);
     expect(() => deviceList('watches', matrix)).toThrow(/unknown group/);
+  });
+
+  it('PR 17 (CN-023) · splits the sizes round-robin into shards that together are every size, once', () => {
+    const all = deviceList('all', matrix);
+    expect(shardOf(all, '')).toBe(all);
+    const parts = [1, 2, 3].map((k) => shardOf(all, `${k}/3`));
+    expect(parts.map((p) => p.length)).toEqual([3, 3, 2]);
+    expect(parts.flat().map((d) => d.name).sort()).toEqual(all.map((d) => d.name).sort());
+    expect(parts[0].map((d) => d.name)).toEqual([all[0].name, all[3].name, all[6].name]);
+    for (const bad of ['0/3', '4/3', '1/0', 'x', '1-2']) expect(() => shardOf(all, bad)).toThrow(/--shard/);
   });
 
   it('takes the lighthouserc URLs onto the base, once each', () => {
