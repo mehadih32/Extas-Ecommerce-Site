@@ -9,6 +9,14 @@
         "label": "Money mismatch reasons",
         "help": "The words for each reason a money figure does not match: a payment, what the rider collected, or a line of the courier's payment statement. The reasons themselves are fixed (so reports can count them); only their words are yours. A mismatch is never shown without its reason."
       }
+    },
+    "cod": {
+      "label": "Cash on delivery after the door",
+      "help": "How the money of a Cash on Delivery parcel is checked after the rider. \"Partial needs approval\" (on): when a customer keeps some pieces and returns the rest, the amount the rider collected waits for a team member to approve it. \"Tolerance\": how many paisa of difference still count as a match (0 = exact). \"Late after days\": a courier payment that arrives more days after delivery than this is marked late (0 = off). \"Missing after days\": a delivered parcel with no line on any courier statement after this many days is listed as missing (0 = off). Nothing here changes a price, a charge or Cash on Delivery itself.",
+      "statement": {
+        "label": "Courier COD statement file",
+        "help": "How a courier's COD statement file (CSV) is read: the column names for the consignment, the COD amount, the courier's charge and the status, and the status words the courier uses for delivered, partly delivered and returned. Every line is matched to our own records and every difference gets a reason."
+      }
     }
   },
   "defaults": {

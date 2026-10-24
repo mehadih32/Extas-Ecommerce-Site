@@ -20,7 +20,11 @@ export type PaymentsErrorCode =
   /** The order is cancelled: money is not recorded against it here. */
   | 'ORDER_CLOSED'
   /** The person did not confirm the amount ([confirm], F-040). */
-  | 'CONFIRM_REQUIRED';
+  | 'CONFIRM_REQUIRED'
+  /** PR 166: the parcel already has its closing door outcome, or the line is already resolved (`data`: which one). */
+  | 'ALREADY_RECORDED'
+  /** PR 166: the door record is not waiting for a decision, or the line has nothing to resolve. */
+  | 'NOT_PENDING';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;
@@ -47,6 +51,8 @@ export class PaymentsError extends Error {
       case 'DERIVED_STATE':
       case 'IDEMPOTENCY_MISMATCH':
       case 'DUPLICATE_REFERENCE':
+      case 'ALREADY_RECORDED':
+      case 'NOT_PENDING':
         return 409;
       default:
         return 422;

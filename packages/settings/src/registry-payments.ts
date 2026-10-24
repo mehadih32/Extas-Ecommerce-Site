@@ -6,6 +6,12 @@
 // a new feature, so off until the owner switches it on (CN-018); and the words of every mismatch reason code
 // (SIM-F-028: a mismatch never comes without a reason; the codes are fixed, the words are the owner's).
 //
+// PR 166 (`payments.cod`, `payments.cod.statement`): Cash on Delivery after the door — whether a partial delivery waits
+// for our approval (on: the money of a partial is never taken as right on the rider's word alone, SIM-F-005), how many
+// paisa of difference still count as a match (0: exact), after how many days a settlement is late and a delivered
+// parcel with no statement line is missing (0: off), and the column names and status words of the couriers' COD
+// statement files (SIM-F-028: the file is read line by line, nothing is typed by hand).
+//
 // Nothing here moves money, refunds anything, or changes a price, a charge, a discount or Cash on Delivery (CLAUDE.md
 // rule 6): these settings only say what may be recorded and how a difference is named.
 import { z } from 'zod';
@@ -62,6 +68,25 @@ export const mismatchReasonsSchema = z
   .length(PAYMENT_MISMATCH_CODES.length)
   .refine((l) => new Set(l.map((x) => x.code)).size === l.length, { message: 'every code once' });
 
+/** PR 166 — Cash on Delivery after the door: the approval of partials, the tolerance, late and missing. */
+export const codSchema = z
+  .object({
+    partialNeedsApproval: z.boolean(),
+    toleranceMinor: z.int().min(0).max(100_000),
+    lateAfterDays: z.int().min(0).max(365),
+    missingAfterDays: z.int().min(0).max(365),
+  })
+  .strict();
+
+const words = z.array(z.string().trim().min(1).max(60)).min(1).max(20);
+/** PR 166 — how a courier's COD statement file is read: the header names of each field and the status words. */
+export const codStatementSchema = z
+  .object({
+    columns: z.object({ consignment: words, cod: words, charge: words, status: words }).strict(),
+    statusWords: z.object({ DELIVERED: words, PARTIAL: words, RETURNED: words }).strict(),
+  })
+  .strict();
+
 function text(lang: 'en' | 'bn', path: string): string {
   const v = lookup(messages[lang], `defaults.payments.${path}`);
   if (!v) throw new Error(`payments message "defaults.payments.${path}" is missing in ${lang}`);
@@ -86,5 +111,35 @@ export const paymentSettings = {
     labelKey: 'payments.mismatch.reasons.label',
     helpKey: 'payments.mismatch.reasons.help',
     sortOrder: 110,
+  }),
+  'payments.cod': setting({
+    ...base,
+    schema: codSchema,
+    default: { partialNeedsApproval: true, toleranceMinor: 0, lateAfterDays: 0, missingAfterDays: 0 },
+    valueType: 'JSON',
+    labelKey: 'payments.cod.label',
+    helpKey: 'payments.cod.help',
+    sortOrder: 120,
+  }),
+  'payments.cod.statement': setting({
+    ...base,
+    schema: codStatementSchema,
+    default: {
+      columns: {
+        consignment: ['consignment_id', 'consignment', 'cn', 'tracking_code', 'tracking_id', 'parcel_id'],
+        cod: ['collected_amount', 'cod_amount', 'cash_collection', 'collected', 'cod'],
+        charge: ['delivery_charge', 'charge', 'delivery_fee', 'fee', 'total_charge'],
+        status: ['status', 'delivery_status', 'parcel_status'],
+      },
+      statusWords: {
+        DELIVERED: ['delivered'],
+        PARTIAL: ['partial', 'partial_delivered', 'partially delivered', 'partial delivery'],
+        RETURNED: ['returned', 'return', 'cancelled', 'paid_return'],
+      },
+    },
+    valueType: 'JSON',
+    labelKey: 'payments.cod.statement.label',
+    helpKey: 'payments.cod.statement.help',
+    sortOrder: 130,
   }),
 };

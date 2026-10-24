@@ -138,7 +138,10 @@
     },
     "payments": {
       "view": "See payments, what each order still owes and the COD money (customers' payments, collections, statements)",
-      "record": "Record money received outside the checkout (bKash or Nagad to the shop's number, a bank transfer, cash) — never more than the amount due"
+      "record": "Record money received outside the checkout (bKash or Nagad to the shop's number, a bank transfer, cash) — never more than the amount due",
+      "door": "Record what happened at the door and the money the rider collected (delivered, partly delivered, returned with the charge paid, returned, attempt failed)",
+      "partials": "Approve or reject the money of a partial delivery",
+      "settle": "Import a courier's COD statement and mark a checked mismatch as resolved"
     }
   },
   "totp": {

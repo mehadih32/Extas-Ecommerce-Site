@@ -39,7 +39,7 @@ export interface Who {
 }
 
 /** The payments permissions (packages/auth/src/catalogue.ts). */
-export const PAYMENT_PERMISSIONS = ['payments.view', 'payments.record'] as const;
+export const PAYMENT_PERMISSIONS = ['payments.view', 'payments.record', 'payments.door', 'payments.partials', 'payments.settle'] as const;
 export type PaymentsPermission = (typeof PAYMENT_PERMISSIONS)[number];
 
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;

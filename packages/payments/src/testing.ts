@@ -1,7 +1,8 @@
 // The PostgreSQL tests' shared set-up (never imported by app code): a throwaway database with the real migrations, two
 // sample stores, the permission catalogue, a settings reader on the registry's defaults with per-test overrides, a
 // clock, a staff member with every payments permission and one who may only look, and stored orders with made-up
-// lines and money in the state given (as the checkout and the order service store them). Every value is made up.
+// lines and money in the state given (as the checkout and the order service store them). PR 166: a courier account and
+// a booked parcel (no code books parcels before S08, so the tests store them as S08 will). Every value is made up.
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { registry, type Key, type Value } from '@extas/settings';
@@ -23,6 +24,10 @@ export interface PaymentsFixture {
   order: (o: OrderSpec) => Promise<{ id: string; number: string }>;
   /** A payment row on an order, as the checkout makes it (INITIATED, attempt 1). */
   payment: (orderId: string, p?: Partial<{ amountMinor: number; method: 'BKASH' | 'NAGAD' | 'CARD'; provider: string; purpose: 'ORDER' | 'ADVANCE_DELIVERY_CHARGE'; key: string; storeId: number; createdAt: Date }>) => Promise<{ id: string }>;
+  /** PR 166: a courier account in store A. */
+  courier: (name: string) => Promise<{ id: string }>;
+  /** PR 166: a booked parcel of an order (COD as the order's, unless given). */
+  shipment: (orderId: string, s: { courierAccountId: string; consignmentId: string; status?: 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'PARTIALLY_DELIVERED' | 'RETURNED'; codAmountMinor?: number; chargeMinor?: number | null; deliveredAt?: Date | null }) => Promise<{ id: string }>;
 }
 
 export interface OrderSpec {
@@ -119,6 +124,27 @@ export async function setUpPayments(label: string): Promise<PaymentsFixture> {
           },
         },
         select: { id: true, number: true },
+      });
+    },
+    async courier(name) {
+      return p.courierAccount.create({ data: { storeId: A, providerKey: 'mock', name, enabled: true }, select: { id: true } });
+    },
+    async shipment(orderId, s) {
+      const o = await p.order.findUniqueOrThrow({ where: { id: orderId }, select: { storeId: true, codAmountMinor: true } });
+      return p.shipment.create({
+        data: {
+          storeId: o.storeId,
+          orderId,
+          courierAccountId: s.courierAccountId,
+          consignmentId: s.consignmentId,
+          status: s.status ?? 'IN_TRANSIT',
+          codAmountMinor: s.codAmountMinor ?? o.codAmountMinor,
+          chargeMinor: s.chargeMinor === undefined ? null : s.chargeMinor,
+          deliveredAt: s.deliveredAt ?? null,
+          bookedAt: clock.now,
+          idempotencyKey: `test-ship-${s.consignmentId}`,
+        },
+        select: { id: true },
       });
     },
     async payment(orderId, x = {}) {
