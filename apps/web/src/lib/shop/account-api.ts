@@ -25,8 +25,9 @@
 //   POST /api/account/two-size-answer {number, key, keep: all|<sizeId>} → {status, …the same}  "only M" takes S out
 //   POST /api/account/test-code  {phone}                    → {code}   test servers only (EXTAS_SHOP_TEST_PAGES=1, mock SMS)
 //   POST /api/account/try                                   → {next}   test servers only: signed in as the sample account
-//   POST /api/account/try-cards                             → {next}   test servers only (follow-up 260): the same, and this
-//                                browser reads the customer's edit as on (lib/shop/try-cards.ts; nothing written to the settings)
+//   POST /api/account/try-cards                             → {next}   test servers only (follow-ups 260, 261): the same,
+//                                plus the two-size sample order TRY-146, and this browser reads the customer's edit and the
+//                                two-size question as on (lib/shop/try-cards.ts; nothing written to the settings)
 //
 // The session cookie is `__Host-extas_c`, the device cookie `__Host-extas_dev` (lib/shop/account.ts). Follow-up 71: a
 // sign-in brings this browser's wishlist hearts into the account (lib/shop/wishlist.ts mergeWishes).
@@ -38,7 +39,7 @@ import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin
 import { BAG_COOKIE } from './bag-model';
 import { mergeWishes, visitorOf } from './wishlist';
 import { tryOpen, trySignIn } from './account-try';
-import { cardsTrialSettings, tryCardsCookie, tryCardsOnRequest } from './try-cards';
+import { cardsTrialSettings, tryCardsCookie, tryCardsOnRequest, tryTwoSizeOrder } from './try-cards';
 import { accountCookie, CUSTOMER_COOKIE, clearAccountCookie, customerOfRequest, DEVICE_COOKIE, newDeviceToken } from './account';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
@@ -159,7 +160,7 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         const auth = await customerOfRequest(request, a, deps.storeId);
         const who: CustomerRef = { storeId: deps.storeId, customerId: auth?.customer.id ?? null, visitorId: visitorOf(readCookie(request, BAG_COOKIE)) };
         if (!who.customerId && !who.visitorId) return fail(404, 'NOT_FOUND', ['number']);
-        // follow-up 260: a test server's browser that asked for the cards reads the customer's edit as on
+        // follow-ups 260, 261: a test server's browser that asked for the cards reads the two switches as on
         const od = { db: a.db, settings: tryCardsOnRequest(request) ? cardsTrialSettings(a.settings) : a.settings, now: a.now };
         const number = text(b.number, 40);
         if (action === 'cancel-state') return json({ ok: true, ...(await customerCancelState(od, who, number)) });
@@ -201,7 +202,8 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         const s = await trySignIn(a, { storeId: deps.storeId }, ctxOf(request));
         const headers = await signedInHeaders(deps, s.token, s.expiresAt, device);
         if (action === 'try-cards') {
-          // follow-up 260: the order page with the customer's edit card
+          // follow-ups 260, 261: the order page with the edit card and the two-size question (TRY-146)
+          await tryTwoSizeOrder(a, deps.storeId);
           headers.append('set-cookie', tryCardsCookie());
         }
         return json({ ok: true, next: hrefIn(lang, ROUTES.account) }, { headers });

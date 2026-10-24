@@ -438,6 +438,15 @@
         "stock": "That size has just run out. Please pick another.",
         "price": "That size costs a different price now, so it can't be swapped here."
       }
+    },
+    "twoSize": {
+      "title": "You ordered two sizes",
+      "text": "{product}{colour}: {sizes}. Do you want them all, or only one size?",
+      "noAnswer": "With no answer, we send them all.",
+      "keepAll": "Keep all",
+      "only": "Only {size}",
+      "done": "Thanks — we've noted your choice.",
+      "err": "This can't be changed here any more."
     }
   }
 }

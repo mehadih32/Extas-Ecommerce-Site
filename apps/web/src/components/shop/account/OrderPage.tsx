@@ -13,6 +13,7 @@
 // PR 65: "Rate & review" under each line of a delivered order, for the signed-in customer whose order it is. His
 // review is saved waiting for the shop's check, and the line then says so ("Review waiting for approval"); nothing of
 // it is shown to anyone before a member of staff approves it (SIM-F-008).
+// Follow-up 261 (PR 146): the two-size question under the order's head, while one is open (`orders.twoSize`, off).
 // Follow-up 260 (PR 143): "Change address, phone or size" under the items (demo ord_editCard), while the owner lets
 // customers edit (`orders.edit.customer`, off): open with "Edit order (n left)", or closed with the reason.
 import '../bag/bag.css';
@@ -29,7 +30,7 @@ import { hoursOf } from '@/lib/shop/checkout-model';
 import type { ShopContext } from '@/lib/shop/context';
 import { dateText } from '@/lib/shop/account-view';
 import { fill, keysOf, SHOP_DICTS } from '@/lib/shop/dict';
-import { plural } from '@/lib/shop/bag-model';
+import { listText, plural } from '@/lib/shop/bag-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
@@ -41,6 +42,7 @@ import { OrderEditCard } from './OrderEditCard';
 import { OrderTrack } from './OrderTrack';
 import { ReviewForm, ReviewState, type ReviewWords } from './ReviewForm';
 import { OrderWelcome } from './OrderWelcome';
+import { TwoSizeCard } from './TwoSizeCard';
 
 /** PR 65 — the words the client review form needs, from the shop dictionary (`account.review.*`). */
 const REVIEW_KEYS = [
@@ -140,7 +142,7 @@ export async function OrderPage({
   invoiceNo?: string | null;
   /** PR 65: the review box of this order (null: not his account, reviews off, or nothing to review). */
   review?: OrderReviewBox | null;
-  /** Follow-up 260: the edit card (null: none). */
+  /** Follow-ups 260, 261: the edit card and the two-size question (null: neither). */
   extras?: OrderExtras | null;
 }) {
   const t = c.t;
@@ -173,6 +175,14 @@ export async function OrderPage({
         return { lineId: x.lineId, name: l ? nameOf(l, c) : x.label, detail: l?.colour ? colourName(l.colour, c.lang) : '', choices: x.choices };
       })
     : [];
+  // follow-up 261: each open question in the page's words ("Polo · Navy: S and M. …")
+  const twoSize = extras?.twoSize?.questions.length
+    ? extras.twoSize.questions.map((q) => ({
+        key: q.key,
+        sizes: q.sizes,
+        text: t('account.twoSize.text', { product: q.product, colour: q.colour ? ` · ${q.colour}` : '', sizes: listText(q.sizes.map((s) => s.label), t('bag.sizes.and')) }),
+      }))
+    : null;
   const methodName = (p: { method: string | null; provider: string | null }) =>
     p.method === 'ONLINE' || p.provider === 'online' ? w('pay.online') : p.provider && words[`pm.${p.provider}`] ? w(`pm.${p.provider}`) : (p.provider ?? p.method ?? '');
   const row = (k: string, v: ReactNode, cls = '', testId?: string) => (
@@ -276,6 +286,7 @@ export async function OrderPage({
               </div>
             </div>
           </section>
+          {twoSize ? <TwoSizeCard words={{ ...prefixed(c, 'account.twoSize.'), offline: t('account.err.offline') }} number={r.number} questions={twoSize} /> : null}
           <section className="card" aria-labelledby="oi-h" data-testid="order-items">
             <div className="ord-cardhd">
               <h2 className="h3" id="oi-h">

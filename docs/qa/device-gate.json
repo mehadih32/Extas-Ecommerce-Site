@@ -64,6 +64,13 @@
       "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-edit\"]", "[data-testid=\"order-edit-open\"]"]
     },
     {
+      "$comment": "Follow-ups 260, 261 (PR 143, 146) — the two-size sample order (TRY-146, made by the same fill: two neighbouring sizes of one piece in one colour, checked by the two-size check): the question with \"Keep all\" and \"Only S\" / \"Only M\" under the order's head, and the edit form opened in place (the address and phone boxes at 16 px, the size pills of each piece, Save and Close).",
+      "paths": ["/account/orders/TRY-146?cards=1", "/bn/account/orders/TRY-146?cards=1"],
+      "fill": "/api/account/try-cards",
+      "clicks": ["[data-testid=\"order-edit-open\"]"],
+      "expect": ["[data-testid=\"order-two-size\"]", "[data-testid=\"order-two-size-all\"]", "[data-testid=\"order-two-size-only\"]", "[data-testid=\"order-edit-form\"]", "[data-testid=\"order-edit-size\"]", "[data-testid=\"order-edit-save\"]"]
+    },
+    {
       "$comment": "PR 136 — the sample order's invoice (TRY-131, same fill): the sheet drawn from the stored order, Download and Print / Save as PDF pinned under it; the order page's \"Get invoice\" row and the invoice icon in My orders lead here.",
       "paths": ["/account/orders/TRY-131/invoice", "/bn/account/orders/TRY-131/invoice"],
       "fill": "/api/account/try",

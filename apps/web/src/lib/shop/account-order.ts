@@ -1,10 +1,11 @@
 // What the order page in My account adds under the order itself, read on the server for the customer whose order it is
 // (his account, or the browser that placed it — the same customer the account API answers):
 // - follow-up 260 (PR 143): the customer's own edit — what he may change now, or why not (`orders.edit.customer`, off
-//   by default: no card at all while it is off, and none on a cancelled or returned order).
-// A test server's browser that asked for the cards (POST /api/account/try-cards) reads the switch as on. Without
+//   by default: no card at all while it is off, and none on a cancelled or returned order);
+// - follow-up 261 (PR 146): the two-size question still open on it (`orders.twoSize`, off by default);
+// A test server's browser that asked for the cards (POST /api/account/try-cards) reads the two switches as on. Without
 // a database, or when a read is slow or fails, that part is simply not drawn — the page never guesses.
-import { customerEditState, type CustomerEditState, type CustomerRef, type OrdersDeps } from '@extas/orders';
+import { customerEditState, customerTwoSizeState, type CustomerEditState, type CustomerRef, type CustomerTwoSizeState, type OrdersDeps } from '@extas/orders';
 import { settingsTimeoutMs, withTimeout } from '../settings';
 import { accountDeps, signedIn } from './account';
 import { visitorId } from './bag';
@@ -19,9 +20,10 @@ export interface OrderEditView {
 
 export interface OrderExtras {
   edit: OrderEditView | null;
+  twoSize: CustomerTwoSizeState | null;
 }
 
-const NONE: OrderExtras = { edit: null };
+const NONE: OrderExtras = { edit: null, twoSize: null };
 
 /** States after which there is nothing to change or answer (the edit card is not drawn at all). */
 const ENDED = new Set(['CANCELLED', 'RETURNED']);
@@ -44,11 +46,14 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: strin
   if (!who.customerId && !who.visitorId) return NONE;
   const settings = trial ? cardsTrialSettings(deps.settings) : deps.settings;
   const od: OrdersDeps = { db: deps.db, settings, ...(deps.now ? { now: deps.now } : {}) };
-  const edit = ENDED.has(status)
-    ? null
-    : await part('edit card', async () => {
-        const [state, cfg] = await Promise.all([customerEditState(od, who, number), settings.value('orders.edit.customer', { storeId: c.storeId })]);
-        return state.closed === 'OFF' ? null : { state, until: cfg.until };
-      });
-  return { edit };
+  const [edit, twoSize] = await Promise.all([
+    ENDED.has(status)
+      ? null
+      : part('edit card', async () => {
+          const [state, cfg] = await Promise.all([customerEditState(od, who, number), settings.value('orders.edit.customer', { storeId: c.storeId })]);
+          return state.closed === 'OFF' ? null : { state, until: cfg.until };
+        }),
+    ENDED.has(status) ? null : part('two-size question', async () => customerTwoSizeState(od, who, number)),
+  ]);
+  return { edit, twoSize: twoSize?.open ? twoSize : null };
 }
