@@ -5,7 +5,7 @@
 import { erpAdapters } from './erp';
 import { pageReaderAdapters } from './page-reader';
 import { storageAdapters } from './storage';
-import { smsAdapters } from './sms';
+import { liveSmsAdapters, smsAdapters } from './sms';
 import { whatsappAdapters } from './whatsapp';
 import { emailAdapters } from './email';
 import { paymentAdapters } from './payment';
@@ -19,7 +19,7 @@ export * from './storage';
 // PR 194, 497, 498 — the ERP adapters (the generic contract, the shop's own ERP, the practice ERP behind MOCK).
 export * from './erp';
 export * from './page-reader';
-// PR 130 — the SMS sender: the mock until the gateway's key arrives (not in `allAdapters` until then; see sms/index.ts).
+// PR 130 — the SMS sender: the mock until the gateway's key arrives; PR 291 the real gateway (BulkSMSBD, sms/).
 export * from './sms';
 // PR 148 — the WhatsApp and e-mail senders of the order journey: mocks until their keys arrive (like the SMS sender).
 export * from './whatsapp';
@@ -34,5 +34,6 @@ export * from './cdn';
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
 
-// PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters] as const;
+// PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
+// gateway too (its key and Test button); the mock senders are not.
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...liveSmsAdapters] as const;

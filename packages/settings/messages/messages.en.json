@@ -52,6 +52,16 @@
     "cancelNotice": {
       "label": "Cancellation notice",
       "help": "What the \"cancelled\" step of the order journey tells the customer (switch the step on there; off when shipped). Its template's {cancelReason} is the reason in plain words for each cancel reason; a reason without words says nothing, and the team's own note is never sent. Silent reasons send nothing at all (shipped: declined as fake, and someone else used his number). A duplicate cancelled while his other order goes ahead gets the duplicate template, with that order's number and tracking link. The notice is outside the caps and never goes twice."
+    },
+    "sms": {
+      "masking": {
+        "label": "SMS masking name",
+        "help": "The shop's name an SMS comes from instead of a number (up to 11 letters or digits). Ask the SMS gateway for it, then mark here where it stands: not asked, asked, approved or refused. Only once it is approved (and \"use it\" is on) does every SMS go from the name; until then from the gateway's own number."
+      },
+      "rates": {
+        "label": "Price of one SMS part",
+        "help": "What the gateway charges for one SMS part, with the masking name and without it. Empty = not known: the message log then shows no cost. A long or Bengali SMS takes more parts (the template editor shows how many)."
+      }
     }
   }
 }

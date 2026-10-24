@@ -60,6 +60,10 @@
       "customers": {
         "all": "সব কাস্টমার",
         "review": "যাচাই বাকি"
+      },
+      "messages": {
+        "log": "মেসেজ লগ",
+        "channels": "চ্যানেল আর সীমা"
       }
     },
     "purpose": {

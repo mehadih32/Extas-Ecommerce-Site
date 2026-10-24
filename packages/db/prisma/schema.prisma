@@ -3088,6 +3088,13 @@ model NotificationTemplate {
   archivedAt         DateTime?           @db.Timestamptz(3)
   createdAt          DateTime            @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime            @updatedAt @db.Timestamptz(3)
+  /// PR 291, 292 — the provider's word on `providerTemplateId` (WhatsApp: Meta's review; SMS: the gateway's registered
+  /// text for the masking name): PENDING, APPROVED, REJECTED or PAUSED; null = never sent for approval.
+  providerStatus     String?
+  /// PR 291, 292 — the provider's reason for a refusal (a short line), when it gave one.
+  providerReason     String?
+  /// PR 292 — when the state was last read from the provider (or set by a person).
+  providerCheckedAt  DateTime?           @db.Timestamptz(3)
 
   rules NotificationRule[]
 
@@ -3160,11 +3167,18 @@ model NotificationLog {
   eventId           String?               @db.Uuid
   /// PR 149 — every try at sending it, with its result (append-only).
   tries             NotificationAttempt[]
+  /// PR 291 — how many SMS parts the text took (the gateway counts each part; Bengali parts are shorter).
+  segments          Int?
+  /// PR 291, 292 — when the provider said the message reached the phone (its delivery receipt).
+  deliveredAt       DateTime?             @db.Timestamptz(3)
+  /// PR 291, 292 — the provider's own last word on it (`delivered`, `read`, `failed 131026` …), from its receipt.
+  providerStatus    String?
 
   @@unique([storeId, dedupeKey])
   @@index([storeId, orderId])
   @@index([storeId, status, createdAt])
   @@index([status, sendAfter])
+  @@index([provider, providerMessageId])
 }
 
 /// @stage S05 · PR 149 — one try at sending a message: the sender (provider and mode), the result, the provider's
@@ -6279,19 +6293,26 @@ enum CustomerMergeDecision {
 /// @stage S14 · PR 123, 298 — a consent change per channel, with where and when (SMS and WhatsApp stored separately).
 /// @append-only
 model ConsentRecord {
-  id         String              @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store               @relation(fields: [storeId], references: [id])
-  customerId String?             @db.Uuid
-  orderId    String?             @db.Uuid
-  phone      String?
-  channel    NotificationChannel
-  granted    Boolean
-  source     String
-  ip         String?
-  createdAt  DateTime            @default(now()) @db.Timestamptz(3)
+  id           String              @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store               @relation(fields: [storeId], references: [id])
+  customerId   String?             @db.Uuid
+  orderId      String?             @db.Uuid
+  phone        String?
+  channel      NotificationChannel
+  granted      Boolean
+  source       String
+  ip           String?
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+  /// PR 298 — what the answer is about: MARKETING (offers; the checkout and account ticks) or ALL (every message on the
+  /// channel, order updates too: the customer's STOP, or his request through the team). The newest row per phone (or
+  /// customer), channel and scope is the answer the message engine honours before every send.
+  scope        String              @default("MARKETING")
+  /// PR 298 — the staff member who recorded it at the customer's request (null for the customer's own answer).
+  recordedById String?             @db.Uuid
 
   @@index([storeId, customerId, channel, createdAt])
+  @@index([storeId, phone, channel, createdAt])
 }
 
 /// @stage S14 · PR 287, 294 — a saved segment from real behaviour.

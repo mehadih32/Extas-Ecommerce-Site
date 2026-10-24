@@ -39,6 +39,7 @@ import { setBuilderSettings } from './registry-set-builder';
 import { orderEditSettings } from './registry-order-edit';
 import { supportLaneSettings } from './registry-support-lane';
 import { messageSettings } from './registry-messages';
+import { messageChannelSettings } from './registry-message-channels';
 import { riskSettings } from './registry-risk';
 import { riskMoreSettings } from './registry-risk-more';
 import { comboTemplateSettings } from './registry-combo-templates';
@@ -1198,6 +1199,8 @@ export const registry = {
   ...supportLaneSettings,
   // ---- S05 · PR 148 · the Messages control centre: the master switch, the order journey, caps, self-confirm, language, quiet hours, the amount lines, the engine's pace (registry-messages.ts, version 40). ----
   ...messageSettings,
+  // ---- S14 · PR 291, 292, 298, 505 · the Messages channels: the SMS masking name and part prices (registry-message-channels.ts, version 61). ----
+  ...messageChannelSettings,
   // ---- S06 · PR 157, 156 · a number's history (how many orders, the refusals that are our fault, unanswered calls) and the risk score: the signals and their weights, the bands (registry-risk.ts, version 43). ----
   ...riskSettings,
   ...riskMoreSettings,

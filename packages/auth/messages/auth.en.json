@@ -145,6 +145,10 @@
       "log": {
         "view": "See the message log (who got which message, failures and tries)",
         "retry": "Try a failed message again"
+      },
+      "channels": {
+        "read": "See the message channels (providers, credit, masking name, caps, quiet hours)",
+        "write": "Change the message channels and limits"
       }
     },
     "payments": {

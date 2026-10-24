@@ -60,6 +60,10 @@
       "customers": {
         "all": "All customers",
         "review": "To review"
+      },
+      "messages": {
+        "log": "Message log",
+        "channels": "Channels & limits"
       }
     },
     "purpose": {

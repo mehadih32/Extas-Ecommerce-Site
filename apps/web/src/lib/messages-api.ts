@@ -15,6 +15,10 @@
 //                                            ?to, ?cursor, ?limit) with the counts per state
 //   GET   /api/admin/messages/log/:id        one message with every try
 //   POST  /api/admin/messages/log/:id/retry  a FAILED message tried once more, now
+//   GET   /api/admin/messages/channels       PR 291: Channels & limits — each channel's provider, mode and credit, its 7
+//                                            days, the master switch, caps, quiet hours, SMS masking name and part prices
+//   PUT   /api/admin/messages/channels       {version?, enabled?, caps?, quietHours?, masking?, smsRates?} (STALE when
+//                                            someone saved in between)
 import { createConnections, messageAdapters } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as ms from '@extas/messages';
@@ -52,6 +56,12 @@ async function handle(request: Request, deps: AdminDeps | null, permission: ms.M
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 
+/** A screen's version as sent back with a save (absent: no check). */
+function versionOf(version: unknown): string | undefined {
+  if (version !== undefined && typeof version !== 'string') throw new ms.MessagesError('INVALID_INPUT', 'the version is not valid', ['version']);
+  return version;
+}
+
 /** Every Messages route: `path` is what comes after /api/admin/messages. */
 export async function messagesRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
@@ -83,5 +93,14 @@ export async function messagesRoute(request: Request, deps: AdminDeps | null, pa
     return notAllowed();
   }
   if (a === 'self-confirm') return m === 'POST' ? handle(request, deps, 'messages.selfConfirm.reply', async (x) => ({ reply: await ms.recordSelfConfirmReply(x.deps, x.who, await body(request)) })) : notAllowed();
+  if (a === 'channels') {
+    if (m === 'GET') return handle(request, deps, 'messages.channels.read', async (x) => ({ channels: await ms.channelsScreen(x.deps, x.who) }));
+    if (m === 'PUT')
+      return handle(request, deps, 'messages.channels.write', async (x) => {
+        const { version, ...input } = await body(request);
+        return { channels: await ms.saveChannels(x.deps, x.who, input, versionOf(version)) };
+      });
+    return notAllowed();
+  }
   return fail(404, 'not-found');
 }

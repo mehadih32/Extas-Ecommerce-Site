@@ -29,15 +29,27 @@ export interface OutgoingMessage {
   subject: string | null;
   /** What it is for (`order.placed` …); never the text. */
   purpose: string;
+  /** PR 291 — SMS only: the shop's approved masking name, or null for the gateway's own number. */
+  senderId?: string | null;
 }
 
-export type SendResult = { ok: true; messageId: string } | { ok: false; error: string; /** this channel cannot reach the number at all */ unreachable?: boolean };
+export type SendResult =
+  | { ok: true; messageId: string; /** PR 291: the provider's own price for it (minor units), when it says */ costMinor?: number | null }
+  | { ok: false; error: string; /** this channel cannot reach the number at all */ unreachable?: boolean };
+
+/** PR 291 — the credit left with a provider (an amount in minor units, or a count of messages), when it says. */
+export interface SenderBalance {
+  amountMinor: number | null;
+  count: number | null;
+}
 
 /** One channel's sender in a store, as the connection layer picked it. */
 export interface Sender {
   provider: string;
   mode: AdapterMode;
   send(m: OutgoingMessage): Promise<SendResult>;
+  /** PR 291 — the credit left on the provider's account (absent or null when the provider does not say). */
+  balance?(): Promise<SenderBalance | null>;
 }
 
 export interface MessagesDeps {
@@ -56,7 +68,16 @@ export function sendersFrom(connections: Pick<Connections, 'use'>): MessagesDeps
   return async (storeId, channel) => {
     if (channel === 'SMS') {
       const c = await connections.use<SmsSender>('SMS', { storeId });
-      return { provider: c.provider, mode: c.mode, send: (m) => c.api.send({ to: m.to, text: m.text, purpose: m.purpose }) };
+      return {
+        provider: c.provider,
+        mode: c.mode,
+        send: (m) => c.api.send({ to: m.to, text: m.text, purpose: m.purpose, senderId: m.senderId ?? null }),
+        // PR 291: the gateway's credit (the mock has none)
+        async balance() {
+          const b = c.api.balance ? await c.api.balance() : null;
+          return b ? { amountMinor: b.amountMinor, count: b.sms } : null;
+        },
+      };
     }
     if (channel === 'WHATSAPP') {
       const c = await connections.use<WhatsAppSender>('WHATSAPP', { storeId });
@@ -100,7 +121,16 @@ export interface Who {
 }
 
 /** The message permissions (packages/auth/src/catalogue.ts; BACKEND-ARCHITECTURE §5.7). */
-export const MESSAGE_PERMISSIONS = ['messages.journey.read', 'messages.journey.write', 'messages.selfConfirm.reply', 'messages.log.view', 'messages.log.retry'] as const;
+export const MESSAGE_PERMISSIONS = [
+  'messages.journey.read',
+  'messages.journey.write',
+  'messages.selfConfirm.reply',
+  'messages.log.view',
+  'messages.log.retry',
+  // PR 291: Messages › Channels & limits
+  'messages.channels.read',
+  'messages.channels.write',
+] as const;
 export type MessagesPermission = (typeof MESSAGE_PERMISSIONS)[number];
 
 export async function allow(deps: Pick<MessagesDeps, 'db'>, who: Who, permission: MessagesPermission): Promise<void> {

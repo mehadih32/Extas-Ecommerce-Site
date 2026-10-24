@@ -23,6 +23,7 @@ export * from './engine';
 export * from './self-confirm';
 export * from './admin';
 export * from './log';
+export * from './channels';
 
 export interface RunResult {
   plan: PlanResult;
