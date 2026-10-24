@@ -1,83 +1,63 @@
-/* S06 · PR 550, 551 — the delivery page: the "Three delivery bands" card after the demo (r12-zadmin2.css .zk-bands /
-   .zk-band / .zk-bv; 92-admin-couriers.js zk_bandsCard), the sub-area list and the band sheet. Only the admin's own
-   tokens (admin.css). Phone first: one column, the bands one under the other; three bands side by side from 600 px
-   inside the card; the two cards side by side from 1024 px (demo .zs-g2). Every button and field is at least the tap
-   size (--ad-tap); fields keep 16 px text so a phone never zooms. */
+/* S06 · PR 550, 551 — the delivery page. PR 502: moved onto the new admin shell (demo V12.3 #/admin/delivery/zones:
+   the three band cards in a row, then the areas card and "Try an address"). Only the new shell's tokens (.adm2 in
+   shell.css); cards, fields, buttons and switches are the shell's own (a2-*, settings-cards.css). Phone first: one
+   column; the band cards side by side from 768 px (.a2-r3); the areas and "Try an address" cards side by side from
+   1200 px. Fields keep 16 px text on a phone so it never zooms; every button and row is a whole tap. */
 
-.dl-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 1024px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; } }
-.dl-card { display: flex; flex-direction: column; gap: 4px; container-type: inline-size; }
-.dl-note { margin: 10px 0 0; }
+.adm2 .dz-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); margin-top: 16px; align-items: start; }
+@media (min-width: 1200px) { .adm2 .dz-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
 
-/* ---------- the three bands (demo .zk-bands) ---------- */
-.dl-bands { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-/* side by side only when the card itself is wide enough (a half-width card on a 1024 px screen keeps one column) */
-@container (min-width: 480px) { .dl-bands { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.dl-band { border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); padding: 10px 12px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.dl-band.off { background: var(--ad-surface2); }
-.dl-band-name { font-size: var(--ad-fs-small); font-weight: 700; overflow-wrap: anywhere; }
-.dl-band-other:empty { display: none; }
-.dl-band-v { font-family: var(--ad-font-display); font-size: 24px; font-weight: 800; line-height: 1.2; margin-top: 2px; }
-.dl-band-v.unset { font-size: 16px; line-height: 1.5; color: var(--ad-muted); font-weight: 700; }
-.dl-band-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 8px; min-width: 0; }
-.dl-band-foot .dl-pill { margin-left: auto; }
+/* ---------- the three bands ---------- */
+.adm2 .dz-band { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.adm2 .dz-band.off { background: var(--sf2); }
+.adm2 .dz-v { font-family: var(--fd, inherit); font-size: 24px; font-weight: 800; line-height: 1.2; margin-top: 4px; overflow-wrap: anywhere; }
+.adm2 .dz-v.unset { font-size: 15px; line-height: 1.5; color: var(--mute); font-weight: 650; }
+.adm2 .dz-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 10px; }
+.adm2 .dz-status { min-height: 20px; margin-top: 10px; }
 
-/* a small state chip (on / off, the band a listed place is in) */
-.dl-pill { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-size: var(--ad-fs-mini); font-weight: 700; padding: 3px 9px; border-radius: var(--ad-pill); background: var(--ad-line2); color: var(--ad-text2); white-space: nowrap; }
-.dl-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ad-dot-off); flex: 0 0 auto; }
-.dl-pill.on { background: var(--ad-brand-tint); color: var(--ad-brand-dark); }
-.dl-pill.on::before { background: var(--ad-brand); }
-
-/* ---------- the sub-area list ---------- */
-.dl-find { margin-top: 4px; }
-.dl-find-row { display: flex; gap: 8px; min-width: 0; }
-.dl-find-row .ad-input { flex: 1 1 auto; min-width: 0; padding-top: 9px; padding-bottom: 9px; }
-.dl-find-row .ad-btn { flex: 0 0 auto; }
-.dl-found { margin-top: 10px; padding: 8px 12px; border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); background: var(--ad-surface2); }
-.dl-cap { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-.dl-list { list-style: none; margin: 4px 0 0; padding: 0; }
-.dl-listed { margin-top: 12px; }
-.dl-li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ad-line2); min-width: 0; font-size: var(--ad-fs-small); }
-.dl-li:first-child { border-top: 0; }
-.dl-li-main { flex: 1 1 auto; min-width: 0; }
-.dl-li-main > b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dl-li-main .ad-mini { overflow-wrap: anywhere; }
-.dl-li .ad-btn { flex: 0 0 auto; }
+/* ---------- areas ---------- */
+.adm2 .dz-find { display: flex; gap: 8px; min-width: 0; margin-top: 12px; }
+.adm2 .dz-find .a2-inp { flex: 1 1 auto; }
+.adm2 .dz-find .a2-btn { flex: 0 0 auto; }
+.adm2 .dz-found { margin-top: 10px; padding: 4px 12px; border: 1px solid var(--ln); border-radius: 9px; background: var(--sf2); }
+.adm2 .dz-list { list-style: none; margin: 0; padding: 0; }
+.adm2 .dz-li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ln2); min-width: 0; font-size: 13.5px; }
+.adm2 .dz-li:first-child { border-top: 0; }
+.adm2 .dz-main { flex: 1 1 auto; min-width: 0; }
+.adm2 .dz-main > b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm2 .dz-main .a2-xs { overflow-wrap: anywhere; }
+.adm2 .dz-acts { display: flex; gap: 6px; flex: 0 0 auto; }
+.adm2 .dz-mine { margin-top: 18px; }
 @media (max-width: 479px) {
-  .dl-li { flex-wrap: wrap; }
-  .dl-li-main { flex: 1 1 100%; }
-  .dl-li .ad-btn { margin-left: auto; }
+  .adm2 .dz-li { flex-wrap: wrap; }
+  .adm2 .dz-main { flex: 1 1 100%; }
+  .adm2 .dz-acts { margin-left: auto; }
 }
-.dl-empty { margin: 12px 0 0; }
 
-/* a check box with its sentence: the whole line is the tap target */
-.dl-check { display: flex; align-items: center; gap: 10px; min-height: var(--ad-tap); font-size: var(--ad-fs-small); cursor: pointer; }
-.dl-check input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--ad-brand); }
-
-/* ---------- the band sheet (in a portal at the end of the body; .ad gives it the tokens, not the page's box) ---------- */
-.ad.dl-portal { min-height: 0; background: transparent; }
-.dl-help { margin-top: 6px; }
-.dl-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.dl-span { grid-column: 1 / -1; margin-top: -4px; }
-.ad-modal select.ad-input { appearance: auto; }
+/* ---------- a place's drawer ---------- */
+.adm2 .dz-sec + .dz-sec { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--ln); }
+.adm2 .dz-sec .a2-fld + .a2-fld { margin-top: 10px; }
+.adm2 .dz-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.adm2 .dz-said { font-size: 12.5px; margin-top: 8px; }
+.adm2 .dz-said.bad { color: var(--bad); }
 
 /* ---------- PR 551 · "Try an address" (the demo checkout's delivery block: 51-checkout.js .co-zone, .co-zask,
-   .co-zboth, .co-zpick, .co-zbtn; styles.css .co-zpick.z3) ---------- */
-@media (min-width: 1024px) { .dl-wide { grid-column: 1 / -1; } }
-.dl-try-out { margin-top: 12px; min-height: 24px; }
-.dl-zone { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--ad-brand); background: var(--ad-brand-tint); border-radius: var(--ad-radius); padding: 10px 12px; min-width: 0; flex-wrap: wrap; }
-.dl-zone > svg { color: var(--ad-brand); flex-shrink: 0; }
-.dl-zone-main { flex: 1 1 160px; min-width: 0; }
-.dl-zone-v { font-family: var(--ad-font-display); font-size: 18px; flex-shrink: 0; }
-.dl-zask { margin: 0 0 9px; font-size: 14.5px; font-weight: 700; color: var(--ad-ink); }
-.dl-zboth { display: flex; align-items: flex-start; gap: 7px; margin: 0 0 10px; font-size: 12.5px; color: var(--ad-text2); line-height: 1.4; }
-.dl-zboth svg { color: var(--ad-warn); flex-shrink: 0; margin-top: 1px; }
-.dl-zpick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.dl-zbtn { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left; min-height: 62px; padding: 10px 12px; border: 1.5px solid var(--ad-input); border-radius: var(--ad-radius); background: var(--ad-surface); color: var(--ad-ink); cursor: pointer; font-family: inherit; min-width: 0; }
-.dl-zbtn:hover { border-color: var(--ad-brand); background: var(--ad-brand-tint); }
-.dl-zbtn:focus-visible { outline: 2px solid var(--ad-brand); outline-offset: 2px; }
-.dl-zbtn b { font-size: 13.5px; overflow-wrap: anywhere; }
-.dl-zbtn span { font-size: 12px; color: var(--ad-text2); }
-/* all three in doubt: they stack as rows (demo .co-zpick.z3) */
-.dl-zpick.z3 { grid-template-columns: minmax(0, 1fr); }
-.dl-zpick.z3 .dl-zbtn { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+   .co-zboth, .co-zpick, .co-zbtn) ---------- */
+.adm2 .dz-try-out { margin-top: 12px; min-height: 24px; }
+.adm2 .dz-zone { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--g); background: var(--g0); border-radius: 9px; padding: 10px 12px; min-width: 0; flex-wrap: wrap; }
+.adm2 .dz-zone > svg { color: var(--g); flex-shrink: 0; }
+.adm2 .dz-zone-main { flex: 1 1 160px; min-width: 0; }
+.adm2 .dz-zone-v { font-size: 18px; flex-shrink: 0; }
+.adm2 .dz-zask { margin: 0 0 9px; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.adm2 .dz-zboth { display: flex; align-items: flex-start; gap: 7px; margin: 0 0 10px; font-size: 12.5px; color: var(--ink2); line-height: 1.4; }
+.adm2 .dz-zboth svg { color: var(--warn); flex-shrink: 0; margin-top: 1px; }
+.adm2 .dz-zpick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.adm2 .dz-zbtn { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left; min-height: 62px; padding: 10px 12px; border: 1.5px solid var(--ln); border-radius: 9px; background: var(--sf); color: var(--ink); cursor: pointer; font-family: inherit; min-width: 0; }
+.adm2 .dz-zbtn:hover { border-color: var(--g); background: var(--g0); }
+.adm2 .dz-zbtn:focus-visible { outline: 2px solid var(--g); outline-offset: 2px; }
+.adm2 .dz-zbtn b { font-size: 13.5px; overflow-wrap: anywhere; }
+.adm2 .dz-zbtn span { font-size: 12px; color: var(--ink2); }
+
+@media (max-width: 767px) {
+  .adm2 .dz-find .a2-inp, .adm2 .dz-sec .a2-inp, .adm2 .dz-sec .a2-ta, .adm2 .dz-sec .a2-sel, .adm2 .dz-try .a2-inp { font-size: 16px; }
+}

@@ -83,6 +83,8 @@ describe.skipIf(!HAS_TEST_DB)('band mapping on PostgreSQL (PR 550)', () => {
     expect(await codeOf(setAreaBand(f.deps(), who(lister), { areaId: '00000000-0000-4000-8000-000000000000' }))).toBe('NOT_FOUND');
     expect(await codeOf(setAreaBand(f.deps(), who(lister), { areaId: 'gazipur' }))).toBe('INVALID_INPUT');
     expect(await codeOf(setAreaBand(f.deps(), who(lister), { areaId: gazipur, bandId: await f.band('dhaka-city') }))).toBe('ok');
+    // PR 502: the sub-area band's own switch — on, so its places are in it (off, they go by the map: places.db.test.ts)
+    await updateBand(f.deps(), who(charger), await f.band('dhaka-sub-area'), { enabled: true, chargeMinor: 9000 });
     const listed = await setAreaBand(f.deps(), who(lister), { areaId: gazipur }); // the sub-area band unless named; moves
     expect(listed).toMatchObject({ id: gazipur, bandKey: 'dhaka-sub-area', archived: false, level: 'DISTRICT', parentEn: 'Dhaka' });
     let map = await loadBandMap(f.deps(), f.A);

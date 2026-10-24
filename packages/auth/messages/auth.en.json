@@ -121,7 +121,10 @@
       "lines": "Add a line to an order not yet with the courier, or take out a line added after placing (priced as its product page; nothing else is priced again)",
       "edit": "Edit an order not yet with the courier: the customer's name, phone and address, a size at the same price, or take a piece out (with a reason; prices, discounts, the delivery charge and COD never change)",
       "export": "Export orders as a CSV file (no personal details)",
-      "exportPersonal": "Include the customer's name, phone, e-mail and address in an order export"
+      "exportPersonal": "Include the customer's name, phone, e-mail and address in an order export",
+      "advance": {
+        "request": "Ask a customer for an advance from the order: make the pay link and send it by SMS or WhatsApp, or put a call in the queue (no money moves; COD, prices and charges never change)"
+      }
     },
     "reviews": {
       "read": "See every review with its state (waiting, published, hidden)",
@@ -146,7 +149,15 @@
       "record": "Record money received outside the checkout (bKash or Nagad to the shop's number, a bank transfer, cash) — never more than the amount due",
       "door": "Record what happened at the door and the money the rider collected (delivered, partly delivered, returned with the charge paid, returned, attempt failed)",
       "partials": "Approve or reject the money of a partial delivery",
-      "settle": "Import a courier's COD statement and mark a checked mismatch as resolved"
+      "settle": "Import a courier's COD statement or a payment service's statement, and mark a checked mismatch as resolved",
+      "wallet": "Credit or debit a customer's wallet by hand with a reason, and put a wallet entry right with a new one the other way",
+      "apology": "Give a late-delivery apology credit to a customer's wallet on an order",
+      "refunds": {
+        "request": "Ask for a refund on an order (it waits for approval; nothing is paid)",
+        "approve": "Approve or reject a refund (the owner's OK before any money goes back)",
+        "execute": "Pay out an approved refund — to the wallet, or record the money sent back by hand — or mark its payout failed"
+      },
+      "advance": "Ask a pre-order's advance on an order (paid online by the customer; the rest at the door), within the owner's cap"
     },
     "risk": {
       "rules": {

@@ -16,7 +16,8 @@ import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { identitySummary } from './identity';
-import { riskSummary } from './risk';
+import { levelSummary, riskSummary } from './risk';
+import { advanceBand, advanceSpecs, advanceSummary } from './advance';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
 export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
@@ -33,6 +34,8 @@ export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
   edit: 'orders.edit',
   twoSize: 'orders.edit',
   riskAssess: 'orders.risk.decide',
+  advanceRequest: 'orders.advance.request',
+  advanceResend: 'orders.advance.request',
 };
 
 /** The key a button (by its spec id, the `?do=` deep link) needs: a link to a command the person may not use shows "no access". */
@@ -50,6 +53,8 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   edit: 'orders.edit',
   phone: 'orders.edit',
   riskAssess: 'orders.risk.decide',
+  advanceRequest: 'orders.advance.request',
+  advanceResend: 'orders.advance.request',
 };
 
 /** How many of the customer's other orders the page lists (the counts cover all of them). */
@@ -342,6 +347,9 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.requestCancel': 'warn',
   'order.duplicateCheck': 'warn',
   'order.riskSection': 'warn',
+  'order.riskLevel': 'warn',
+  'order.awaitAdvance': 'warn',
+  'order.advanceResend': 'mute',
   'order.identityLinked': 'mute',
   'order.note': 'mute',
   'order.note.archived': 'mute',
@@ -503,6 +511,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       }
     : null;
   const specs = commandSpecs(view, { ...o, paidMinor: detail.money.paidMinor + detail.money.walletAppliedMinor }, detail.allowed, perms, reasons, editStart);
+  // PR 542: "Request advance" (first when the risk level proposed one) and, while it waits, its band with "Send again"
+  const adv = perms.has('orders.advance.request') || o.status === 'AWAITING_ADVANCE' ? await od.advanceRequestView(deps, who.storeId, o.id) : null;
+  const advance = advanceSpecs(view, o, adv, detail.allowed, perms);
+  if (advance.request) (adv?.proposed ? specs.primary : specs.more).push(advance.request);
   const active = detail.items.filter((i) => i.status === 'ACTIVE');
   const units = active.reduce((s, i) => s + i.quantity, 0);
   const n = (v: number) => formatNumber(v, view.locale);
@@ -569,15 +581,21 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   });
 
   const actor = (type: string, aid: string | null) => (type === 'STAFF' ? (aid && names[aid]) || t(d, 'orders.who.staff') : t(d, `orders.who.${type === 'CUSTOMER' ? 'customer' : 'system'}`));
+  // PR 161: a level's line names its band as the score stored it
+  const scoredBands = detail.timeline.flatMap((e) => {
+    const b = e.type === 'order.riskAssess' ? (e.data as { band?: { key?: unknown; en?: unknown; bn?: unknown } } | null)?.band : null;
+    return b && typeof b.key === 'string' && typeof b.en === 'string' && typeof b.bn === 'string' ? [{ key: b.key, en: b.en, bn: b.bn }] : [];
+  });
   const timeline: TimelineItem[] = detail.timeline
     .map((e): TimelineItem => {
       const key = `orders.ev.${e.type.replace(/\./g, '_')}`;
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : ruled;
+      const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
@@ -592,6 +610,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   if (o.status === 'ON_HOLD') bands.push({ id: 'hold', kind: 'off', text: t(d, 'orders.band.hold', { reason: (o.holdReasonCode && holdName.get(o.holdReasonCode)) || o.holdReasonCode || t(d, 'orders.list.none'), age: o.onHoldSince ? ageText(view, o.onHoldSince, now) : '' }) + (o.holdReason ? ` · ${o.holdReason}` : ''), specs: [] });
   if (o.status === 'CANCELLED') bands.push({ id: 'cancelled', kind: 'off', text: t(d, 'orders.band.cancelled', { reason: (o.cancelReasonCode && cancelName.get(o.cancelReasonCode)) || o.cancelReasonCode || t(d, 'orders.list.none') }) + (o.cancelNote ? ` · ${o.cancelNote}` : ''), specs: [] });
   twoSize.forEach((g, i) => bands.push({ id: `twoSize-${i}`, kind: 'stale', text: t(d, 'orders.band.twoSize', { product: `${g.product}${g.colour ? ` · ${g.colour}` : ''}`, sizes: g.sizes.map((s) => s.label).join(' + ') }), specs: twoSizeSpecs(view, o, g, i, !!paidText) }));
+  const waits = advanceBand(view, adv, o.status, o.currency);
+  if (waits) bands.push({ id: 'advance', kind: 'stale', text: waits, specs: advance.resend ? [advance.resend] : [] });
   if (o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
 
   return {

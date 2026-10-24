@@ -269,4 +269,19 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await api('GET', ['reviews', '01a16af2-30f0-7462-aab8-719bb3ce5521'])).status).toBe(404);
     expect((await api('PUT', ['reviews', r.alertId!], { body: {} })).status).toBe(405);
   });
+
+  it('S06 · PR 542: "Request advance" and "Send again" (orders.advance.request) — the order waits, the pay link comes back', async () => {
+    const o = await f.place('api-advance', { phone: '01700000542' });
+    const one = await api('GET', [o.orderId]);
+    const version = one.body.order?.version ?? one.body.detail?.order?.version;
+    expect((await api('POST', [o.orderId, 'advance', 'request'], { body: { kind: 'full', channels: ['SMS'] }, cookie: reader })).status).toBe(403);
+    expect(await api('POST', [o.orderId, 'advance', 'request'], { body: { kind: 'full', channels: [] } })).toMatchObject({ status: 422, body: { error: 'NO_CHANNEL' } });
+    const r = await api('POST', [o.orderId, 'advance', 'request'], { body: { kind: 'full', channels: ['SMS', 'CALL'], ...(typeof version === 'number' ? { version } : {}) }, key: 'api-advance-request-1' });
+    expect(r).toMatchObject({ status: 200, body: { ok: true, result: { command: 'awaitAdvance', status: 'AWAITING_ADVANCE' }, link: { path: expect.stringMatching(/^\/pay\/[A-Za-z0-9_-]{24}$/), channels: ['SMS', 'CALL'] } } });
+    expect(r.body.link.callTaskId).toBeTruthy();
+    const again = await api('POST', [o.orderId, 'advance', 'resend'], { body: { channels: ['WHATSAPP'] } });
+    expect(again).toMatchObject({ status: 200, body: { result: { command: 'advanceResend', status: 'AWAITING_ADVANCE' }, link: { path: r.body.link.path } } });
+    expect((await api('POST', [o.orderId, 'advance', 'teleport'], { body: {} })).status).toBe(404);
+    expect((await api('POST', [o.orderId, 'advance'], { body: {} })).status).toBe(404);
+  });
 });

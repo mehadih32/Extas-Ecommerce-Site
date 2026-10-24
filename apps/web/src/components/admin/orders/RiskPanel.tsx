@@ -3,7 +3,8 @@
 // scored, the earlier scores, whether the owner's rules changed since, and the number's history now (PR 157).
 // Self-contained like the support explanation: it checks `orders.risk.read` itself and draws nothing for a person
 // without it, when the owner hides the card (`risk.score.showOnOrder`), or for an order never scored while the model is
-// off. "Score again" (a new dated score, `orders.risk.decide`) is the only button. The score only informs.
+// off. "Score again" (a new dated score, `orders.risk.decide`) is the only button. The score only informs. PR 161: the
+// level's steps (watch, hold, call) and the advance it proposes, as a line under the heading.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { orderRisk } from '@extas/orders';
 import { adminDeps } from '@/lib/admin-auth';
@@ -44,6 +45,20 @@ export async function RiskPanel({ order, view: given }: { order: { id: string; n
         </div>
         {v.rescore ? <CommandButton spec={v.rescore} size="sm" /> : null}
       </div>
+      {v.level ? (
+        <div className="a2-note" data-testid="risk-level">
+          <ShellIcon name="flag" size={15} />
+          <span>
+            <b>{v.level.line}</b>
+            {v.level.ask ? (
+              <span className="a2-blk" data-testid="risk-level-ask">
+                {v.level.ask}
+                <span className="a2-xs a2-mute a2-blk">{v.level.askNote}</span>
+              </span>
+            ) : null}
+          </span>
+        </div>
+      ) : null}
       {v.rows.length ? (
         <div className="a2-lines" data-testid="risk-signals">
           {v.rows.map((r) => (

@@ -11,6 +11,23 @@
 // - PR 170 payments through a gateway: start (the hosted session), the one callback receiver (signature, stored once,
 //   the gateway's own answer), the sweep of open payments (recovered or abandoned) and the team's list of failed,
 //   abandoned and waiting payments (gateway.ts). The gateways themselves are @extas/adapters' (PR 167).
+// - S06 · PR 542 the pay link of an advance asked from the order (`/pay/<token>`): its page, the test page's answers,
+//   "Try again" with the same token and "Pay" on a real gateway (advance-link.ts).
+// - PR 171 the wallet: the one ledger writer (a credit, a debit, the balance after it; a correction is a new entry the
+//   other way), a customer's wallet with its ledger, a person's own entry and reversal, the late-delivery apology
+//   credit and its list of late orders (wallet.ts; the pure part, also for the screens, in wallet-pure.ts).
+// - PR 172 refunds: asked by a person within the owner's rules, approved or rejected by someone with the "approve
+//   refunds" permission, then completed — to the wallet through the ledger, or the way the money came by a person who
+//   records the payout reference (the shop never sends money out by itself) — and the list with the money owed to
+//   customers (refunds.ts; the pure part in refund-pure.ts).
+// - PR 173 partial payment: a pre-order's advance asked on a Cash on Delivery order within the owner's cap, paid online
+//   by the customer, the rest at the door; and the quote the order screen and the checkout show (advance.ts; the pure
+//   part in advance-pure.ts).
+// - PR 174 the reconciliation report: a gateway's statement imported and matched line by line with a reason code on
+//   every mismatch, the practice gateway's statement, and the report of a period — ours against each gateway's
+//   statements, every open mismatch with its reason (SIM-F-028), the COD position, the money owed to customers, paid
+//   cancelled or returned orders with no refund asked (SIM-F-041) and the wallet ledger check (statements.ts; the pure
+//   part in statement-match.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -19,3 +36,8 @@ export * from './record';
 export * from './cod-match';
 export * from './cod';
 export * from './gateway';
+export * from './advance-link';
+export * from './wallet';
+export * from './refunds';
+export * from './advance';
+export * from './statements';

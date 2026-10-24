@@ -22,6 +22,9 @@ export const COMMAND_PATHS = {
   twoSize: 'two-size',
   // PR 160: "Score again" on the risk card (a new dated score; the old one stays)
   riskAssess: 'risk/assess',
+  // PR 542: "Request advance" and "Send again" (the pay link, its SMS/WhatsApp, a call task)
+  advanceRequest: 'advance/request',
+  advanceResend: 'advance/resend',
 } as const;
 export type CommandId = keyof typeof COMMAND_PATHS;
 
@@ -50,6 +53,11 @@ export const KNOWN_ERRORS = [
   'LAST_LINE',
   'OUT_OF_STOCK',
   'RISK_OFF',
+  // PR 542: an advance that cannot be asked of this order
+  'NO_CHARGE',
+  'PARTIAL_UNSET',
+  'NOTHING_DUE',
+  'NO_CHANNEL',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

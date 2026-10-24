@@ -10,6 +10,10 @@
 //   POST   /api/admin/delivery/areas               {areaId, bandId?} put a place on the list (the sub-area band by default)
 //   PATCH  /api/admin/delivery/areas/:areaId       {archived: true} take it off (archived, never deleted) · {bandId} move
 //   GET    /api/admin/delivery/places?q=           the place search: prefix matches, each with the band it sits in now
+//   POST   /api/admin/delivery/places              PR 502: {parentId, nameEn, nameBn?, level?, aliases?, bandId?} add a place
+//   GET    /api/admin/delivery/places/:id          PR 502: one place — its names, spellings, what is under it, its band
+//   PATCH  /api/admin/delivery/places/:id          PR 502: {nameEn?, nameBn?, keepOld?} rename · {aliases} the spellings
+//   POST   /api/admin/delivery/places/:id/merge    PR 502: {intoId} merge into another place (archived, never deleted)
 //   POST   /api/admin/delivery/resolve             {line, savedAreaId?, confirmed?} "Try an address": what checkout does
 //   POST   /api/delivery/resolve                   the same read for the checkout (public: same-site, size-capped, reads
 //                                                  only the gazetteer and the bands — never a customer)
@@ -90,8 +94,30 @@ export function areaHandler(request: Request, deps: AdminDeps | null, areaId: st
 }
 
 export function placesHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
-  if (method(request) !== 'GET') return notAllowed();
+  const m = method(request);
+  if (m === 'POST') return handle(request, deps, 'delivery.areas', async (c) => ({ place: await del.addPlace(c.deps, c.who, await body(request)) }), 201);
+  if (m !== 'GET') return notAllowed();
   return handle(request, deps, 'delivery.read', async (c) => ({ places: await del.searchPlaces(c.deps, c.who, c.url.searchParams.get('q') ?? '') }));
+}
+
+/** PR 502 — one place: read it, rename it or replace its spellings (one change per call). */
+export function placeHandler(request: Request, deps: AdminDeps | null, areaId: string): Promise<Response> {
+  const m = method(request);
+  if (!isUuid(areaId)) return badId('areaId');
+  if (m === 'GET') return handle(request, deps, 'delivery.read', async (c) => ({ place: await del.placeDetail(c.deps, c.who, areaId) }));
+  if (m !== 'PATCH') return notAllowed();
+  return handle(request, deps, 'delivery.areas', async (c) => {
+    const b = await body(request);
+    if ('aliases' in b) return { place: await del.setPlaceAliases(c.deps, c.who, areaId, b) };
+    return { place: await del.renamePlace(c.deps, c.who, areaId, b) };
+  });
+}
+
+/** PR 502 — merge a place into another one (the merged one is archived, never deleted). */
+export function placeMergeHandler(request: Request, deps: AdminDeps | null, areaId: string): Promise<Response> {
+  if (method(request) !== 'POST') return notAllowed();
+  if (!isUuid(areaId)) return badId('areaId');
+  return handle(request, deps, 'delivery.areas', async (c) => ({ merge: await del.mergePlace(c.deps, c.who, areaId, await body(request)) }));
 }
 
 export function tryAddressHandler(request: Request, deps: AdminDeps | null): Promise<Response> {

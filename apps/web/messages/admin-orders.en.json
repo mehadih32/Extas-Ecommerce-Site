@@ -155,11 +155,13 @@
       "wantsChange": "Wants a change",
       "merged": "One parcel",
       "twoSizes": "2 sizes — check",
-      "twoSizesOther": "2 sizes — for someone else"
+      "twoSizesOther": "2 sizes — for someone else",
+      "riskWatch": "Watch"
     },
     "page": {
       "all": "All orders",
-      "confirm": "To confirm"
+      "confirm": "To confirm",
+      "riskRules": "Risk rules"
     },
     "bulk": {
       "aria": "Bulk actions",
@@ -271,7 +273,11 @@
       "OFFER_ON_ORDER": "This piece is in a set or the order has an offer; taking it out would change a price. Cancel and place a new order, or ask the owner.",
       "LAST_LINE": "The last piece cannot be taken out. Cancel the order instead.",
       "OUT_OF_STOCK": "Not enough pieces of that size are free now.",
-      "RISK_OFF": "The risk score is switched off (Orders → Risk rules)."
+      "RISK_OFF": "The risk score is switched off (Orders → Risk rules).",
+      "NO_CHARGE": "This order has no delivery charge to ask first. Pick another amount.",
+      "PARTIAL_UNSET": "Set the percent of a part in Orders › Risk rules first.",
+      "NOTHING_DUE": "Nothing is left to pay on this order.",
+      "NO_CHANNEL": "Tick at least one way: SMS, WhatsApp or a call."
     },
     "cmd": {
       "confirm": {
@@ -365,6 +371,18 @@
         "title": "Score {n} again?",
         "ok": "Score again",
         "done": "{n} scored again"
+      },
+      "advanceRequest": {
+        "label": "Request advance",
+        "title": "Ask an advance for {n}",
+        "ok": "Send",
+        "done": "The advance is asked for {n}"
+      },
+      "advanceResend": {
+        "label": "Send again",
+        "title": "Send the pay link again for {n}",
+        "ok": "Send again",
+        "done": "The pay link is sent again for {n}"
       }
     },
     "eff": {
@@ -395,7 +413,8 @@
       "twoSizeClose": "The “2 sizes — check” flag and its call task close; the timeline keeps the answer.",
       "riskAssess": "A new score with today's risk rules; the earlier one stays on the order's record",
       "riskInforms": "Nothing is blocked, held or asked in advance",
-      "reviewDecline": "Cancelled with the reason \"Declined after risk review\" — never a block"
+      "reviewDecline": "Cancelled with the reason \"Declined after risk review\" — never a block",
+      "riskLevels": "Your risk levels may then add a watch mark, a hold or a call; nothing is blocked or asked by itself"
     },
     "review": {
       "title": "Duplicate review",
@@ -557,7 +576,9 @@
       "order_risk_approved": "Risk review: approved",
       "order_risk_ask": "Risk review: customer to be asked",
       "order_book": "Courier booked",
-      "order_identityLinked": "Linked to the customer's identity"
+      "order_identityLinked": "Linked to the customer's identity",
+      "order_riskLevel": "Risk level steps",
+      "order_advanceResend": "Pay link sent again"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -668,7 +689,24 @@
         "deviceMatch": "{count} earlier orders from this device under another number, latest {number}",
         "ipPhones": "{count} other numbers ordered from the same connection within {hours} hours (latest {number})"
       },
-      "refusedAs": "refused: {number}"
+      "refusedAs": "refused: {number}",
+      "informsLevels": "The score informs the team. Your Risk rules › Levels may add a watch mark, a hold or a call for its band — never a block, a COD change or a charge. Asking for money first is always a person's step.",
+      "level": {
+        "line": "Level {band}",
+        "watch": "watch mark",
+        "held": "held",
+        "NO_REASON": "not held: the hold reason is not on your list",
+        "NOT_HOLDABLE": "not held: the order could not be held at that moment",
+        "call": "confirmation call in the queue",
+        "none": "no step",
+        "ask": {
+          "delivery": "Proposed: ask the delivery charge first",
+          "partial": "Proposed: ask a part of the price first",
+          "full": "Proposed: ask the whole amount first",
+          "codOff": "Proposed: no cash on delivery for this order — ask the whole amount first"
+        },
+        "askNote": "Only a proposal: press “Request advance” on this order to send it."
+      }
     },
     "section": {
       "duplicate": "Possible duplicate",
@@ -786,6 +824,125 @@
       "decided": "Decided: nothing left to do",
       "noRights": "You can read this alert; deciding needs the review permission",
       "yours": "A rule only marks and proposes; the decision is yours. Nothing was cancelled, held or blocked by itself."
+    },
+    "rr": {
+      "sub": "What follows when an order's risk score lands in a band. Nothing here blocks anyone or changes a COD rule, a price or a charge.",
+      "levelsH": "Levels — what happens in each band",
+      "levelsD": "Off until you switch it on. Watch, hold and call run by themselves only while switched on; asking the customer to pay first is a proposal that a person sends from the order, unless you switch on “Send the proposal by itself” below.",
+      "master": "Act on risk levels",
+      "masterHelp": "When off, a score only informs the team, as before.",
+      "offNote": "Off — no band does anything until you switch this on. You can set the bands now and switch on later.",
+      "from": "From score {n}",
+      "watch": "Watch mark",
+      "watchHelp": "A “Watch” chip on the order for the team",
+      "hold": "Hold the order",
+      "holdHelp": "Not confirmed or sent until a person releases it",
+      "call": "Confirmation call",
+      "callHelp": "A call task in the call queue",
+      "ask": "Ask to pay first (a proposal)",
+      "askOpt": {
+        "none": "Nothing",
+        "delivery": "The delivery charge",
+        "partial": "A part of the price",
+        "full": "The whole amount",
+        "codOff": "No cash on delivery for this order"
+      },
+      "partial": "Part to ask (%)",
+      "partialPh": "You set it",
+      "partialHelp": "Needed before “A part of the price” can be chosen. Empty until you fill it.",
+      "reason": "Hold reason",
+      "reasonHelp": "From your hold reasons. The team sees it on the order.",
+      "suggest": "Use the suggested set",
+      "suggestHelp": "Fills in a suggestion: medium — watch, call and the delivery charge; high — watch, hold, call and the whole amount. Nothing is saved until you press Save.",
+      "reset": "Reset to default",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "discard": "Discard",
+      "readOnly": "You can see these rules. Changing them needs the permission to change the risk rules.",
+      "noBands": "No risk bands are set yet.",
+      "never": "Never by itself: blocking anyone, changing COD, a price or a charge. Asking for money only with “Send the proposal by itself” on.",
+      "later": "Coming with their own steps: the risk matrix, rule switches, duplicate rules, the blocklist and protection & learning.",
+      "err": {
+        "STALE": "Someone else changed these rules. They have been loaded again — check and save once more.",
+        "INVALID_INPUT": "Something is not right. Check the percent (1–99) and try again.",
+        "PARTIAL_UNSET": "Set the percent first, or choose another ask.",
+        "REASON_REQUIRED": "Pick a hold reason from the list.",
+        "FORBIDDEN": "You don't have the permission for this.",
+        "UNAUTHENTICATED": "You are signed out. Sign in again.",
+        "network": "No connection. Nothing was changed — try again.",
+        "other": "It did not work. Nothing was changed — try again."
+      },
+      "adv": {
+        "h": "Advance request — how the pay link goes",
+        "d": "Used by “Request advance” on an order. The SMS / WhatsApp carries the amount and the pay link; “Call” puts a task in the call queue.",
+        "auto": "Send the proposal by itself",
+        "autoHelp": "Off: a level’s proposal waits for a person to press “Request advance”. On: it is sent right after the level proposes it.",
+        "autoOff": "Off — nothing is asked from a customer until a person presses Send on the order.",
+        "autoNoLevels": "The risk levels above are off, so nothing proposes an ask yet.",
+        "channels": "Ticked first when the dialog opens",
+        "ch": {
+          "SMS": "SMS",
+          "WHATSAPP": "WhatsApp",
+          "CALL": "Call (a task in the call queue)"
+        },
+        "provider": "Pay link uses",
+        "providerHelp": "Runs on its practice gateway until your keys pass the Test button in Keys & connections.",
+        "prov": {
+          "bkash": "bKash",
+          "nagad": "Nagad",
+          "rocket": "Rocket",
+          "upay": "Upay",
+          "online": "Online (card and other ways)"
+        },
+        "words": "The words are in Messages › Templates (“Advance request with pay link”).",
+        "noChannel": "Tick at least one way while “Send the proposal by itself” is on."
+      }
+    },
+    "adv": {
+      "channels": "How to reach the customer",
+      "ch": {
+        "SMS": "SMS",
+        "WHATSAPP": "WhatsApp",
+        "CALL": "Call (a task in the call queue)"
+      },
+      "notePh": "For the team (the customer does not see it)",
+      "kind": {
+        "label": "What to ask first",
+        "delivery": "The delivery charge — {amount}",
+        "partial": "A part of the price — {amount}",
+        "full": "The whole amount — {amount}",
+        "codOff": "No cash on delivery for this order: the whole amount online — {amount}"
+      },
+      "kindName": {
+        "delivery": "the delivery charge",
+        "partial": "a part of the price",
+        "full": "the whole amount",
+        "codOff": "the whole amount (no cash on delivery)"
+      },
+      "no": {
+        "NO_CHARGE": "this order has no delivery charge",
+        "PARTIAL_UNSET": "set the percent in Risk rules first",
+        "NOTHING_DUE": "nothing is left to pay"
+      },
+      "proposed": "The risk level proposes {what}.",
+      "eff": {
+        "link": "A pay link is made for exactly that amount (an earlier unpaid link of this order is closed)",
+        "messages": "The SMS / WhatsApp you tick goes now with the amount and the link (quiet hours wait)",
+        "messagesOff": "The order messages are switched off: the SMS / WhatsApp is only logged, not sent",
+        "call": "With “Call”, a task lands in the call queue",
+        "never": "Nothing else changes: no COD rule, price, discount or charge, and no money moves",
+        "wait": "If it is not paid in {h} hours, a person is asked to call; the order is never cancelled by itself",
+        "noWait": "No deadline: the order waits until it is paid or cancelled",
+        "sameLink": "The same link goes again (a fresh try of it if the last one failed)"
+      },
+      "band": "Waiting for the advance: {amount} ({what}) · pay link {path} · {state}",
+      "ev": {
+        "asked": "Asked {amount} ({what}) · {ways}",
+        "again": "The pay link sent again · {ways}",
+        "newTry": "a fresh try of the link"
+      }
     }
   }
 }

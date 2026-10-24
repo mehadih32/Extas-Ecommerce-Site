@@ -1,0 +1,43 @@
+{
+  "payments": {
+    "wallet": {
+      "manual": {
+        "label": "Credit or debit a wallet by hand",
+        "help": "When on, a team member with the \"wallet\" permission can add credit to a customer's wallet or take it off by hand, always with a reason and a note (a goodwill credit, a correction the customer agreed to). Every entry is a new line in the wallet's ledger and in the audit log; nothing is ever edited or deleted, and a mistake is put right with a new entry the other way. \"Largest entry\": the most one entry may be (empty = no limit). A debit never takes a wallet below zero. Off: nobody can change a wallet by hand."
+      },
+      "apology": {
+        "label": "Late-delivery apology credit",
+        "help": "Whether a customer whose parcel came late may get an apology credit in his wallet. \"Per order\": a team member gives it on the order and types the amount (up to the limit). \"By rule\": the amount follows from your rule — a fixed amount, or a percentage of the order's goods — and it can only be given once the order came this many hours later than its promise. One credit per order. \"Most per order\": the limit (empty = no limit). The credit is store credit in the wallet; nothing is paid out and no price changes. Off: no apology credit is given."
+      }
+    },
+    "refunds": {
+      "label": "Refund rules",
+      "help": "When a refund may be asked and how the money goes back. Every refund waits for someone with the \"approve refunds\" permission (you); the shop never sends money back by itself — after approval a team member sends it the way it came (bKash, bank) and records the reference, or it goes to the customer's wallet as store credit. \"Refund to the wallet\" (off): real money may go back to the wallet instead. \"After delivery\" (off): no refunds once the customer received the goods (exchange is the way), except the sources in the list (the rider's overcharge). \"Returned prepaid parcel\": give everything back, or keep the delivery charge. \"Four eyes\" (off): the person who asked a refund may not approve it."
+    },
+    "partial": {
+      "label": "Partial payment and the pre-order advance",
+      "help": "Whether a pre-order may be paid partly now and the rest at the door. A team member asks the advance on the order and the customer pays it online (bKash, Nagad, card); only money that came in lowers what the rider collects. \"Cap\": the most the shop may ask as an advance, as a percentage of the order's total (10% to start). \"Smallest advance\": below this no payment is asked (empty = no minimum). \"Pay it all now\" (off): the customer may pay the whole order in advance instead. Off: no advance is asked for a pre-order."
+    },
+    "statement": {
+      "label": "Reading the payment services' statements",
+      "help": "How the statement file of a payment service (bKash, Nagad, card) is read: the column names it may have (the transaction ID, the amount, the fee, the date, the type) and the words that mark a line as money going back (refund, reversal). Every line is matched with our own payment by its transaction ID. \"Difference allowed\": how many paisa of difference still count as a match (0 = exact). \"Missing after\": after how many days a paid online payment that no statement shows is listed as missing (0 = off). Nothing is changed and nobody is messaged: a mismatch is only listed, with its reason, for you to check.",
+      "reasons": {
+        "label": "Payment statement mismatch reasons",
+        "help": "The words for each reason a line of a payment service's statement does not match our records. The reasons themselves are fixed (so reports can count them); only their words are yours. A mismatch is never shown without its reason."
+      }
+    }
+  },
+  "defaults": {
+    "payments": {
+      "statement": {
+        "UNKNOWN_PAYMENT": "The statement shows money we have no payment for",
+        "AMOUNT_DIFFERS": "The statement shows another amount than our payment",
+        "DOUBLE_LINE": "The same payment is on the statement again",
+        "NOT_PAID": "The statement shows money for a payment we did not record as paid",
+        "UNKNOWN_REFUND": "The statement shows money sent back that we have no refund for",
+        "REFUND_DIFFERS": "The statement shows another refund amount than ours",
+        "MISSING": "A paid online payment is on no statement yet"
+      }
+    }
+  }
+}

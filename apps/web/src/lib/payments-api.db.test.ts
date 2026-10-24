@@ -1,9 +1,11 @@
-// S07 · PR 165, 166 — the payments admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
+// S07 · PR 165, 166, 170, 171, 172 — the payments admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the
 // permission; an order's money (due, what the rider collects, the pill, the payment rows); money recorded by staff —
 // off until `payments.manual` is on, then needing the Idempotency-Key (a repeat is one payment), and an advance paid in
 // full moving the order on through the order service. PR 166: the door outcome, a partial's approval, a courier
-// statement with a trap, its line resolved, and the cash in transit. Every value is a made-up test value.
+// statement with a trap, its line resolved, and the cash in transit. PR 172: a refund asked, approved by the owner and
+// paid out by hand with its reference; nothing pays out by itself. PR 173: a pre-order's advance asked within the cap. PR 174: a
+// gateway statement imported and the reconciliation report. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { awaitAdvance, staffBy } from '@extas/orders';
@@ -151,5 +153,99 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     expect(waiting.body.rows.filter((r: { orderId: string }) => r.orderId === o.orderId)).toMatchObject([{ status: 'PENDING', attempt: 2 }]);
     expect((await api('POST', ['issues'], { body: {} })).status).toBe(405);
     expect((await api('GET', ['issues', 'x'])).status).toBe(404);
+  });
+  it('PR 171: a wallet with its ledger, a credit by hand (off until switched on), a reversal, the apology list and credit', async () => {
+    const db = f.t.prisma;
+    const c = await db.customer.create({ data: { storeId: f.S, name: 'API wallet customer', phone: '+8801700017100' } }); // hardcode-ok: a made-up test number
+    expect((await api('GET', ['wallets', c.id], { cookie: reader })).status).toBe(403);
+    expect(await api('GET', ['wallets', c.id])).toMatchObject({ status: 200, body: { wallet: { balanceMinor: 0, ledgerMinor: 0, entries: [] } } });
+    expect((await api('GET', ['wallets', '00000000-0000-4000-8000-000000000000'])).status).toBe(404);
+    expect((await api('GET', ['wallets', 'nope'])).status).toBe(404);
+    const credit = { direction: 'CREDIT', amountMinor: 4_000, note: 'goodwill for a late reply', confirm: true };
+    expect(await api('POST', ['wallets', c.id, 'entries'], { body: credit, key: 'api-wallet-0001' })).toMatchObject({ status: 422, body: { error: 'WALLET_OFF' } });
+    await deps.resolver.set('payments.wallet.manual', { enabled: true, maxMinor: null }, storeTarget(f.S));
+    const r = await api('POST', ['wallets', c.id, 'entries'], { body: credit, key: 'api-wallet-0001' });
+    expect(r).toMatchObject({ status: 201, body: { entry: { reason: 'MANUAL_CREDIT', balanceAfterMinor: 4_000, replay: false } } });
+    expect((await api('POST', ['wallets', c.id, 'entries'], { body: credit, key: 'api-wallet-0001' })).body.entry).toMatchObject({ entryId: r.body.entry.entryId, replay: true });
+    expect((await api('GET', ['wallets', c.id, 'entries'])).status).toBe(405);
+    const back = await api('POST', ['wallets', 'entries', r.body.entry.entryId, 'reverse'], { body: { note: 'given to the wrong person', confirm: true } });
+    expect(back).toMatchObject({ status: 201, body: { entry: { reason: 'CORRECTION', direction: 'DEBIT', balanceAfterMinor: 0 } } });
+    expect((await api('GET', ['wallets', c.id])).body.wallet.entries).toHaveLength(2);
+    expect(await api('GET', ['apology'])).toMatchObject({ status: 200, body: { apology: { enabled: false, rows: [] } } });
+    const o = await f.place('pay-api-apology');
+    await db.order.update({ where: { id: o.orderId }, data: { customerId: c.id } });
+    expect(await api('POST', ['orders', o.orderId, 'apology'], { body: { amountMinor: 1_000, confirm: true } })).toMatchObject({ status: 422, body: { error: 'APOLOGY_OFF' } });
+    await deps.resolver.set('payments.wallet.apology', { enabled: true, mode: 'PER_ORDER', kind: 'AMOUNT', amountMinor: null, percent: null, capMinor: 2_000, lateAfterHours: 0, to: 'WALLET' }, storeTarget(f.S));
+    expect(await api('POST', ['orders', o.orderId, 'apology'], { body: { amountMinor: 1_000, confirm: true } })).toMatchObject({ status: 201, body: { result: { amountMinor: 1_000, balanceAfterMinor: 1_000 } } });
+    expect((await api('GET', ['orders', o.orderId, 'apology'])).status).toBe(405);
+  });
+  it('PR 172: a refund asked with a key, the owner\'s OK with [confirm], paid out by hand with its reference; the list shows what is owed', async () => {
+    const paid = await f.place('pay-api-refund', { payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const money = (await api('GET', ['orders', paid.orderId])).body.money;
+    const ask = { source: 'OUR_MISTAKE', amountMinor: 5_000, note: 'one piece was out of stock', paymentId: money.payments[0].id };
+    expect((await api('POST', ['orders', paid.orderId, 'refunds'], { body: ask, cookie: reader, key: 'api-refund-0001' })).status).toBe(403);
+    expect(await api('POST', ['orders', paid.orderId, 'refunds'], { body: ask })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    const r = await api('POST', ['orders', paid.orderId, 'refunds'], { body: ask, key: 'api-refund-0001' });
+    expect(r).toMatchObject({ status: 201, body: { refund: { status: 'REQUESTED', amountMinor: 5_000, method: 'original' } } });
+    const id = r.body.refund.id as string;
+    const owed = await api('GET', ['refunds'], { query: '?state=owed' });
+    expect(owed.status).toBe(200);
+    expect(owed.body.refunds.owed.requestedMinor).toBeGreaterThanOrEqual(5_000);
+    expect(owed.body.refunds.rows.map((x: { id: string }) => x.id)).toContain(id);
+    expect(await api('POST', ['refunds', id, 'complete'], { body: { reference: 'BK-API-1', confirm: true }, key: 'api-refund-pay-1' })).toMatchObject({ status: 409, body: { error: 'NOT_PENDING' } });
+    expect(await api('POST', ['refunds', id, 'approve'], { body: {} })).toMatchObject({ status: 400, body: { error: 'CONFIRM_REQUIRED' } });
+    expect(await api('POST', ['refunds', id, 'approve'], { body: { confirm: true } })).toMatchObject({ status: 200, body: { refund: { status: 'APPROVED' } } });
+    expect(await api('POST', ['refunds', id, 'complete'], { body: { reference: 'BK-API-1', confirm: true }, key: 'api-refund-pay-1' })).toMatchObject({ status: 200, body: { refund: { status: 'COMPLETED', payoutReference: 'BK-API-1' } } });
+    expect((await f.t.prisma.payment.findUniqueOrThrow({ where: { id: ask.paymentId } })).status).toBe('PARTIALLY_REFUNDED');
+    expect((await api('GET', ['refunds', id, 'approve'])).status).toBe(405);
+    expect((await api('POST', ['refunds', id, 'teleport'], { body: {} })).status).toBe(404);
+    expect((await api('POST', ['refunds', 'nope', 'approve'], { body: {} })).status).toBe(404);
+    expect((await api('GET', ['orders', paid.orderId, 'refunds'])).status).toBe(405);
+  });
+  it('PR 173: a pre-order advance — the quote, off until switched on, then asked within the cap with a key', async () => {
+    const o = await f.place('pay-api-advance-173');
+    const q = await api('GET', ['orders', o.orderId, 'advance']);
+    expect(q).toMatchObject({ status: 200, body: { quote: { enabled: false, blocked: 'PARTIAL_OFF' } } });
+    expect((await api('GET', ['orders', o.orderId, 'advance'], { cookie: reader })).status).toBe(403);
+    expect(await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', confirm: true }, key: 'api-advance-0001' })).toMatchObject({ status: 422, body: { error: 'PARTIAL_OFF' } });
+    await deps.resolver.set('payments.partial', { enabled: true, capPercent: 10, minMinor: null, allowFull: false }, storeTarget(f.S));
+    const quote = (await api('GET', ['orders', o.orderId, 'advance'])).body.quote;
+    expect(quote).toMatchObject({ enabled: true, blocked: null });
+    expect(quote.capMinor).toBe(Math.min(quote.dueMinor, Math.floor(quote.totalMinor / 10)));
+    expect(await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', amountMinor: quote.capMinor + 1, confirm: true }, key: 'api-advance-0001' })).toMatchObject({ status: 422, body: { error: 'OVER_CAP', data: { capMinor: quote.capMinor } } });
+    const r = await api('POST', ['orders', o.orderId, 'advance'], { body: { method: 'BKASH', confirm: true }, key: 'api-advance-0001' });
+    expect(r).toMatchObject({ status: 201, body: { result: { advanceMinor: quote.capMinor, codAfterMinor: quote.dueMinor - quote.capMinor, replay: false } } });
+    expect((await api('PUT', ['orders', o.orderId, 'advance'])).status).toBe(405);
+  });
+  it('PR 174: a gateway statement imported and matched, a line resolved, and the reconciliation report with every reason', async () => {
+    const paid = await f.place('pay-api-statement', { payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const p = (await api('GET', ['orders', paid.orderId])).body.money.payments[0];
+    const db = f.t.prisma;
+    const row = await db.payment.findUniqueOrThrow({ where: { id: p.id } });
+    expect(row.providerTrxId).toBeTruthy();
+    const amount = ((row.receivedMinor ?? row.amountMinor) / 100).toFixed(2);
+    const csv = `trx_id,amount,fee\n${row.providerTrxId},${amount},12.00\nNOPE1,10.00,\n`;
+    const from = new Date(f.clock.now.getTime() - 86_400_000).toISOString();
+    const to = new Date(f.clock.now.getTime() + 86_400_000).toISOString();
+    const input = { provider: row.provider, reference: 'API-ST-1', periodFrom: from, periodTo: to, csv };
+    expect((await api('POST', ['statements'], { body: input, cookie: reader })).status).toBe(403);
+    const s = await api('POST', ['statements'], { body: input });
+    expect(s).toMatchObject({ status: 201, body: { statement: { matched: 1, mismatched: 1, reasons: { UNKNOWN_PAYMENT: 1 } } } });
+    const id = s.body.statement.statementId as string;
+    expect(await api('GET', ['statements', id])).toMatchObject({ status: 200, body: { statement: { statementId: id } } });
+    const line = s.body.statement.lines.find((l: { reasonCode: string | null }) => l.reasonCode === 'UNKNOWN_PAYMENT');
+    expect(line.words.bn).toBeTruthy();
+    const q = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    const r = await api('GET', ['reconciliation'], { query: q });
+    expect(r.status).toBe(200);
+    expect(r.body.report.unexplained).toBe(0);
+    expect(r.body.report.mismatches.map((m: { id: string }) => m.id)).toContain(line.id);
+    expect(await api('POST', ['statements', 'lines', line.id, 'resolve'], { body: { note: 'checked with the gateway' } })).toMatchObject({ status: 200, body: { line: { resolutionNote: 'checked with the gateway' } } });
+    expect((await api('GET', ['reconciliation'], { query: q })).body.report.mismatches.map((m: { id: string }) => m.id)).not.toContain(line.id);
+    expect((await api('GET', ['reconciliation'])).status).toBe(400);
+    expect((await api('POST', ['reconciliation'], { body: {} })).status).toBe(405);
+    expect((await api('GET', ['statements'])).status).toBe(405);
+    expect((await api('GET', ['statements', 'nope'])).status).toBe(404);
+    expect((await api('GET', ['statements', 'practice'])).status).toBe(405);
   });
 });

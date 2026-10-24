@@ -48,10 +48,13 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   riskAssess: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   // PR 541: the section is set while the order is open; the status stays
   riskSection: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
+  // PR 161: a risk level's steps are written while the order is open; the status stays
+  riskLevel: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   // PR 541 (SIM-F-014): a courier is booked for a confirmed order before it is handed over; the status stays
   book: { CONFIRMED: FLAG, PROCESSING: FLAG, PACKED: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
+  advanceResend: { AWAITING_ADVANCE: FLAG },
   startPicking: { CONFIRMED: 'PROCESSING' },
   pack: { CONFIRMED: 'PACKED', PROCESSING: 'PACKED' },
   handover: { PACKED: 'HANDED_OVER' },
@@ -114,7 +117,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'awaitAdvance'] });
   });
 });
 

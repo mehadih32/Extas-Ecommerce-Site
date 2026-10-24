@@ -24,13 +24,18 @@
 // match, else his own other open order) in its own template. Like every notice it is outside the caps. Follow-up 287:
 // a refused cancel request (its timeline row, `order.refuseCancelRequest`) starts the `cancelRefused` notice, off.
 //
+// PR 542: a person's advance request from the order (or the owner's auto option) is its own message — not a journey
+// step, so no journey switch and no cap; quiet hours still hold — one row per channel ticked, keyed by that timeline row
+// (`order:<id>:advanceRequest:<eventId>:<channel>`, so "Send again" goes again), with `{advanceAmount}` and `{payLink}`.
+// It is skipped once the order no longer waits for its advance.
+//
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
 import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel } from '@extas/settings';
 import { nowOf, setting, TX, type MessagesDeps, type SendResult } from './context';
-import { answerTemplate, audienceFits, dedupeKey, dueAt, isCapped, messageLocale, NEVER_QUIET, orderLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, messageLocale, NEVER_QUIET, orderLink, payLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -59,6 +64,8 @@ const ORDER_SELECT = {
   giftSenderName: true,
   giftSenderContact: true,
   cancelReasonCode: true,
+  // PR 542: the advance it waits for ({advanceAmount})
+  advanceRequiredMinor: true,
 } satisfies Prisma.OrderSelect;
 type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER_SELECT }>;
 
@@ -113,15 +120,19 @@ export async function planMessages(deps: MessagesDeps, storeId: number): Promise
     where: {
       storeId,
       createdAt: { gte: new Date(now.getTime() - engine.lookbackMinutes * 60_000), lte: now },
-      OR: [{ type: { in: ['order.placed', OUT_FOR_DELIVERY_EVENT, CANCEL_REFUSED_EVENT] } }, { toStatus: { in: [...STEP_STATUSES] } }],
+      OR: [{ type: { in: ['order.placed', OUT_FOR_DELIVERY_EVENT, CANCEL_REFUSED_EVENT, ADVANCE_RESEND_EVENT] } }, { toStatus: { in: [...STEP_STATUSES] } }],
     },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    select: { id: true, orderId: true, type: true, toStatus: true, createdAt: true },
+    select: { id: true, orderId: true, type: true, toStatus: true, createdAt: true, data: true },
   });
-  const wanted = events.map((e) => ({ e, steps: stepsOf(e).filter((s) => journey[s].on) })).filter((x) => x.steps.length);
-  if (!wanted.length) return { events: events.length, planned: 0 };
+  // PR 542: a person's advance request sends its own message (amount and pay link), never the journey's "advance asked"
+  const requests = events.filter((e) => advanceChannelsOf(e).length);
+  const wanted = events
+    .map((e) => ({ e, steps: isAdvanceRequest(e) ? [] : stepsOf(e).filter((s) => journey[s].on) }))
+    .filter((x) => x.steps.length);
+  if (!wanted.length && !requests.length) return { events: events.length, planned: 0 };
   const orders = new Map(
-    (await deps.db.order.findMany({ where: { storeId, id: { in: [...new Set(wanted.map((x) => x.e.orderId))] } }, select: ORDER_SELECT })).map((o) => [o.id, o]),
+    (await deps.db.order.findMany({ where: { storeId, id: { in: [...new Set([...wanted.map((x) => x.e.orderId), ...requests.map((e) => e.orderId)])] } }, select: ORDER_SELECT })).map((o) => [o.id, o]),
   );
   // A step an order already has a row for, on any channel, is never planned again: a channel changed in the journey
   // since then must not send the same step a second time on the new channel.
@@ -159,6 +170,14 @@ export async function planMessages(deps: MessagesDeps, storeId: number): Promise
       }
     }
   }
+  // PR 542: one row per channel the person ticked, keyed by the press (a "Send again" goes again); due at once
+  for (const e of requests) {
+    const o = orders.get(e.orderId);
+    if (!o) continue;
+    for (const channel of advanceChannelsOf(e)) {
+      rows.push({ storeId, orderId: o.id, customerId: o.customerId, channel, recipient: recipientOf(o, ADVANCE_REQUEST, channel) ?? '', status: 'QUEUED', dedupeKey: advanceDedupeKey(o.id, e.id, channel), step: ADVANCE_REQUEST, sendAfter: e.createdAt, eventId: e.id });
+    }
+  }
   const made = rows.length ? await deps.db.notificationLog.createMany({ data: rows, skipDuplicates: true }) : { count: 0 };
   return { events: events.length, planned: made.count };
 }
@@ -192,11 +211,13 @@ export interface RunContext {
   exact: { due: { en: string; bn: string }; paid: { en: string; bn: string } } | null;
   retry: { maxAttempts: number; delaysMinutes: number[] };
   cancelNotice: CancelNotice;
+  /** PR 542: the advance request's words (`orders.advanceRequest.template`). */
+  advanceTemplate: string;
   senders: Map<MessageChannel, Awaited<ReturnType<MessagesDeps['sender']>>>;
 }
 
 export async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
-  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice] = await Promise.all([
+  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance] = await Promise.all([
     setting(deps, storeId, 'messages.enabled'),
     setting(deps, storeId, 'messages.journey'),
     setting(deps, storeId, 'messages.caps'),
@@ -213,6 +234,7 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     linkHost(deps, storeId),
     setting(deps, storeId, 'messages.retry'),
     setting(deps, storeId, 'messages.cancelNotice'),
+    setting(deps, storeId, 'orders.advanceRequest'),
   ]);
   return {
     storeId,
@@ -230,6 +252,7 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     exact: exactOn.enabled ? exactCfg : null,
     retry,
     cancelNotice,
+    advanceTemplate: advance.template,
     senders: new Map(),
   };
 }
@@ -271,8 +294,17 @@ async function wordsKeyOf(deps: MessagesDeps, c: RunContext, row: Row): Promise<
     const template = answerTemplate(reply?.reasonCode ?? null);
     return template ? { on: true, template } : null;
   }
+  // PR 542: a person pressed Send (or the owner's auto option): no journey switch to ask
+  if (row.step === ADVANCE_REQUEST) return { on: true, template: c.advanceTemplate };
   const cfg = c.journey[row.step as JourneyStep];
   return cfg ? { on: cfg.on, template: cfg.template } : null;
+}
+
+/** PR 542 — the advance the order waits for (what is still to pay of it) and its live pay link in the message's language. */
+async function advanceOf(deps: MessagesDeps, c: RunContext, o: OrderFacts, lang: 'bn' | 'en'): Promise<{ amountMinor: number; link: string | null } | null> {
+  if (o.status !== 'AWAITING_ADVANCE' || o.advanceRequiredMinor === null) return null;
+  const p = await deps.db.payment.findFirst({ where: { storeId: c.storeId, orderId: o.id, linkToken: { not: null }, status: { in: ['INITIATED', 'PENDING'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { linkToken: true } });
+  return { amountMinor: Math.max(0, o.advanceRequiredMinor - o.paidMinor), link: payLink(c.host, p?.linkToken ?? null, lang) };
 }
 
 /** How one row ended this run. */
@@ -357,6 +389,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const t = dup ?? (await templateOf(deps, c.storeId, cfg.template, row.channel as MessageChannel, c.locale));
   if (!t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }, true).then(() => 'SKIPPED');
   const lang = t.locale === 'en' ? 'en' : 'bn';
+  const wantsAdvance = [...tokensIn(t.body), ...tokensIn(t.subject ?? '')].some((x) => ADVANCE_TOKENS.has(x));
   const words = render(t.body, row.channel === 'EMAIL' ? (t.subject ?? '') : null, {
     storeName: c.storeName,
     customerName: (o.isGift ? o.giftSenderName : o.customerName)?.trim() || '',
@@ -369,6 +402,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
     exactAmount: c.exact ? { due: c.exact.due[lang], paid: c.exact.paid[lang] } : null,
     cancelReason: code ? (c.cancelNotice.reasons[code]?.[lang] ?? '') : '',
     kept: dup && kept ? { number: kept.number, link: orderLink(c.host, kept.number) } : null,
+    advance: wantsAdvance ? await advanceOf(deps, c, o, lang) : null,
   });
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
   const attempt = row.attempts + 1;

@@ -221,3 +221,12 @@ export const PAYMENT_CALL_REASON = 'PAYMENT_FAILED';
 export const PAYMENT_EVENTS = { paid: 'payment.paid', failed: 'payment.failed', retry: 'payment.retry', abandoned: 'payment.abandoned', recorded: 'payment.recorded' } as const;
 /** A payment's failure codes the shop itself sets (a gateway's own codes are kept as it sends them). */
 export const FAILURE_CODES = { cancelled: 'CUSTOMER_CANCELLED', abandoned: 'ABANDONED' } as const;
+
+// PR 171 — the wallet's rules (the ledger balance, the reversal, lateness and the apology credit).
+export * from './wallet-pure';
+// PR 172 — the refund's states, the owner's rules on when a refund may be asked, and what is left to refund.
+export * from './refund-pure';
+// PR 173 — partial payment: the owner's cap on a pre-order's advance and what the door collects after it.
+export * from './advance-pure';
+// PR 174 — a payment gateway's statement read line by line and matched, with a reason code on every mismatch.
+export * from './statement-match';

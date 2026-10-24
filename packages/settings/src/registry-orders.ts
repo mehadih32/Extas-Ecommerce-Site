@@ -150,6 +150,10 @@ export const ordersSettings = {
     ...base,
     schema: dictionarySchema.refine((l) => l.length > 0, { message: 'at least one reason' }),
     default: ordersDictionaryDefault('holdReasons'),
+    // PR 161 (v54): "risk-check", the reason a risk level's hold uses (`risk.levels.holdReasonKey`); a list the owner
+    // saved before keeps his own entries (the level then says it has no hold reason until he adds one).
+    version: 54,
+    since: V,
     valueType: 'JSON',
     labelKey: 'orders.hold.reasons.label',
     helpKey: 'orders.hold.reasons.help',

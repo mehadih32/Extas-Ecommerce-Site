@@ -98,6 +98,10 @@
         "label": "Order export: separator",
         "help": "The character between the cells of the CSV file: a comma, a semicolon (some spreadsheets in Bangla or European settings) or a tab."
       }
+    },
+    "advanceRequest": {
+      "label": "Advance request from the order",
+      "help": "How \"Request advance\" on the order page asks the customer to pay first: the ways ticked when it opens (SMS, WhatsApp, a call), the payment service the pay link uses, and the words. Nothing goes to a customer until a person presses Send. \"Request by itself\" (off) sends the risk level's proposal on its own."
     }
   },
   "defaults": {
@@ -129,6 +133,7 @@
         "defective-item": "Item defective, waiting for a replacement",
         "no-answer": "No answer on the phone",
         "possible-duplicate": "Possible duplicate order",
+        "risk-check": "Risk check: call before packing",
         "other": "Other"
       },
       "flags": {

@@ -3610,6 +3610,9 @@ model Payment {
   statusAt             DateTime?      @db.Timestamptz(3)
   /// PR 165 — the staff's note on a recorded payment.
   note                 String?
+  /// S06 · PR 542 — the pay link of an advance a person asked for from the order (`/pay/<linkToken>`): a random token,
+  /// the same on every try of that request ("Try again" makes a new payment row with the same token), never an id.
+  linkToken            String?
 
   refunds Refund[]
 
@@ -3618,6 +3621,8 @@ model Payment {
   @@index([provider, providerTrxId])
   // PR 170: the open payments the sweep looks at, oldest first
   @@index([storeId, status, createdAt])
+  // PR 542: the pay link's page finds its payment by the token
+  @@index([linkToken])
 }
 
 /// PR 165 (§6.5.3) — where an amount of money stands, shared by payments, COD collections and settlement lines (and later
@@ -3651,6 +3656,7 @@ enum PaymentPurpose {
   FULL_ADVANCE
   EXCHANGE_DIFFERENCE
   PREORDER_ADVANCE
+  /// also S06 · PR 542: a part of the amount due asked first from the order (the owner's percent, `risk.levels.partialPercent`).
   PART_ADVANCE
 }
 
@@ -3850,9 +3856,13 @@ model WalletEntry {
   note              String?
   actorId           String?
   createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  /// PR 171 (migration 0038) — a correction is a new entry the other way, never an edit: the entry this one reverses
+  /// (an entry is reversed at most once).
+  reversesEntryId   String?         @unique @db.Uuid
 
   @@unique([walletId, idempotencyKey])
   @@index([walletId, createdAt])
+  @@index([storeId, reason, createdAt])
 }
 
 enum LedgerDirection {
@@ -3882,9 +3892,20 @@ model Refund {
   /// request moves no money; approving and paying it is the owner's (CLAUDE.md rule 6, PR 172).
   source            String?
   idempotencyKey    String?
+  /// PR 172 (migration 0038; §6.5.4 facts 4a/4b, F-041) — the requester's note; the approver's decision (when, and
+  /// why); who paid it out and how: the wallet entry of a refund to the wallet, or the reference of money a person sent
+  /// back by hand (a bKash send-money, a bank transfer) — nothing is paid out by itself; why a payout failed.
+  note              String?
+  decidedAt         DateTime?    @db.Timestamptz(3)
+  decisionNote      String?
+  executedById      String?      @db.Uuid
+  walletEntryId     String?      @db.Uuid
+  payoutReference   String?
+  failureNote       String?
 
   @@unique([storeId, idempotencyKey])
   @@index([storeId, orderId])
+  @@index([storeId, status, createdAt])
 }
 
 enum RefundStatus {
@@ -3897,18 +3918,28 @@ enum RefundStatus {
 
 /// @stage S07 · PR 174 — a gateway statement imported for reconciliation.
 model GatewayStatement {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  storeId     Int
-  store       Store    @relation(fields: [storeId], references: [id])
-  provider    String
-  periodFrom  DateTime @db.Timestamptz(3)
-  periodTo    DateTime @db.Timestamptz(3)
-  fileAssetId String?  @db.Uuid
-  status      String
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  id           String   @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store    @relation(fields: [storeId], references: [id])
+  provider     String
+  periodFrom   DateTime @db.Timestamptz(3)
+  periodTo     DateTime @db.Timestamptz(3)
+  fileAssetId  String?  @db.Uuid
+  status       String
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  /// PR 174 (migration 0038; SIM-F-028) — the gateway's own statement reference, the imported file's hash (the same
+  /// file twice is one statement), who imported it, and the statement's own totals (money in and the gateway's fees).
+  reference    String?
+  fileHash     String?
+  importedById String?  @db.Uuid
+  totalMinor   Int      @default(0)
+  feesMinor    Int      @default(0)
 
   lines GatewayStatementLine[]
+
+  @@unique([storeId, provider, fileHash])
+  @@unique([storeId, provider, reference])
 }
 
 /// @stage S07 · PR 174 — one statement line and what it matched.
@@ -3926,8 +3957,21 @@ model GatewayStatementLine {
   matchStatus      String
   createdAt        DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
+  /// PR 174 (migration 0038; SIM-F-028) — the line's row in the file, whether it is money in (PAYMENT) or money back
+  /// (REFUND), what our own record expected, the reason code of every mismatch, and how a person resolved it. A payment
+  /// is on one statement line only: a second line for it is kept without the payment and marked DOUBLE_LINE.
+  lineNo           Int              @default(0)
+  kind             String           @default("PAYMENT")
+  expectedMinor    Int?
+  reasonCode       String?
+  resolvedAt       DateTime?        @db.Timestamptz(3)
+  resolvedById     String?          @db.Uuid
+  resolutionNote   String?
 
+  @@unique([storeId, matchedPaymentId, kind])
   @@index([statementId, matchStatus])
+  @@index([storeId, providerTrxId])
+  @@index([storeId, matchStatus])
 }
 
 // =====================================================================================================================

@@ -127,6 +127,9 @@ export const PERMISSIONS = {
   // off. A rule only marks and proposes; switching it never blocks anyone, moves money or changes COD, a price or a charge.
   'risk.rules.read': { group: 'orders' },
   'risk.rules.write': { group: 'orders' },
+  // S06 · PR 542 — ask a customer for an advance from the order ("Request advance"): the pay link, its SMS/WhatsApp and a
+  // call task. The order waits for the money; nothing moves money, changes COD, a price or a charge, or blocks anyone.
+  'orders.advance.request': { group: 'orders' },
   // S04 · PR 127 — add a line to an order not yet with the courier, or take out a line added after placing ("Add to
   // this parcel"): priced as its product page prices it, the order's COD amount grows by exactly that line.
   'orders.lines': { group: 'orders' },
@@ -162,7 +165,24 @@ export const PERMISSIONS = {
   // checked mismatch resolved (`payments.settle`). Each is audited; none moves money or changes COD.
   'payments.door': { group: 'payments' },
   'payments.partials': { group: 'payments' },
+  // PR 174: also a payment gateway's statement (bKash, Nagad, card) and its practice statement.
   'payments.settle': { group: 'payments' },
+  // S07 · PR 171 — the wallet (§6.5.4 fact 4b, SIM-F-054): credit or debit a customer's wallet by hand with a reason, or put
+  // an entry right with a new one the other way (`payments.wallet`, only while the owner has `payments.wallet.manual`
+  // on); give the late-delivery apology credit on an order (`payments.apology`, only while `payments.wallet.apology` is
+  // on). Each is a ledger line and an audit row; nothing is edited, nothing is paid out.
+  'payments.wallet': { group: 'payments' },
+  'payments.apology': { group: 'payments' },
+  // S07 · PR 172 — refunds (§6.5.4 facts 4a/4b, F-041; BACKEND-ARCHITECTURE MNY-03): ask for a refund on an order
+  // (`payments.refunds.request`, support and the desk), approve or reject one (`payments.refunds.approve`, the owner:
+  // CLAUDE.md rule 6), and pay out an approved one — a wallet credit, or the reference of money a person sent back by
+  // hand — or mark its payout failed (`payments.refunds.execute`, accounts). Nothing is ever paid out by itself.
+  'payments.refunds.request': { group: 'payments' },
+  'payments.refunds.approve': { group: 'payments' },
+  'payments.refunds.execute': { group: 'payments' },
+  // S07 · PR 173 — ask a pre-order's advance on an order (a part paid online now, the rest at the door), within the
+  // owner's cap and only while `payments.partial` is on. It asks money; it never takes or moves any.
+  'payments.advance': { group: 'payments' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -849,6 +849,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../db
+      '@extas/metrics':
+        specifier: workspace:*
+        version: link:../metrics
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings

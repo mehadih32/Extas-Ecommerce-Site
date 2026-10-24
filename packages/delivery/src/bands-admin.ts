@@ -5,6 +5,8 @@
 // - A band is switched on only together with its charge in the same change (CHARGE_REQUIRED): a band never goes live
 //   on a figure nobody typed. Charges are the owner's decision (CLAUDE.md rule 6), behind `delivery.charges`.
 // - The mode (own · city · outside) belongs to the sub-area band only (MODE_NOT_ALLOWED elsewhere).
+// - PR 502: the sub-area band's on/off is its own switch: while it is off, the places on it go by the map (bands.ts);
+//   charged as Dhaka City or as outside, it switches on without a charge of its own.
 // - A place on the list is taken off by archiving its row (rule 3: nothing is deleted); adding it again brings the
 //   same row back. Only a place of the gazetteer can be listed.
 // - Every change writes one audit row in the same transaction.
@@ -144,7 +146,9 @@ export async function updateBand(deps: DeliveryDeps, who: Who, bandId: string, i
     const before = await tx.deliveryBand.findFirst({ where: { id: bandId, storeId: who.storeId, archivedAt: null }, select: BAND_SELECT });
     if (!before) throw new DeliveryError('NOT_FOUND', 'no such band in this store', ['bandId']);
     if (patch.mode !== undefined && before.key !== config.subAreaKey) throw new DeliveryError('MODE_NOT_ALLOWED', 'only the sub-area band has a mode', ['mode']);
-    if (patch.enabled === true && !before.enabled && patch.chargeMinor === undefined) throw new DeliveryError('CHARGE_REQUIRED', 'switching a band on needs its charge in the same change', ['chargeMinor']);
+    // PR 502: the sub-area band charged as Dhaka City or as outside has no charge of its own to type
+    const folded = before.key === config.subAreaKey && (patch.mode ?? (isSubAreaMode(before.mode) ? before.mode : 'own')) !== 'own';
+    if (patch.enabled === true && !before.enabled && patch.chargeMinor === undefined && !folded) throw new DeliveryError('CHARGE_REQUIRED', 'switching a band on needs its charge in the same change', ['chargeMinor']);
     const hoursMin = patch.hoursMin === undefined ? before.hoursMin : patch.hoursMin;
     const hoursMax = patch.hoursMax === undefined ? before.hoursMax : patch.hoursMax;
     if (hoursMin != null && hoursMax != null && hoursMin > hoursMax) throw new DeliveryError('INVALID_INPUT', 'the shortest time is above the longest', ['hoursMin']);

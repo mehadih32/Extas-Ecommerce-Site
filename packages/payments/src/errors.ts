@@ -30,7 +30,39 @@ export type PaymentsErrorCode =
   /** PR 170: the practice gateway is switched off (`payments.testPayments`) and no real one is connected. */
   | 'TEST_PAYMENTS_OFF'
   /** PR 170: the payment gateway did not answer (try again later; nothing was charged by us). */
-  | 'GATEWAY_ERROR';
+  | 'GATEWAY_ERROR'
+  /** PR 171: changing a wallet by hand is switched off (`payments.wallet.manual`). */
+  | 'WALLET_OFF'
+  /** PR 171: the apology credit is switched off (`payments.wallet.apology`). */
+  | 'APOLOGY_OFF'
+  /** PR 171: a debit would take the wallet below zero (`data.balanceMinor`). */
+  | 'INSUFFICIENT_BALANCE'
+  /** PR 171: more than the owner's limit (`data.limitMinor`). */
+  | 'OVER_LIMIT'
+  /** PR 171: this entry is not put right by a reversal (money spent or refunded), or it was reversed already. */
+  | 'NOT_REVERSIBLE'
+  /** PR 171: the order has no customer, so there is no wallet. */
+  | 'NO_CUSTOMER'
+  /** PR 171: the wallet is not active (frozen or closed). */
+  | 'WALLET_CLOSED'
+  /** PR 171: the order did not come late enough for the owner's rule. */
+  | 'NOT_LATE'
+  /** PR 171: the owner has not set the amount this needs yet. */
+  | 'NOT_CONFIGURED'
+  /** PR 172: the owner's refund rules do not allow this refund (`data.rule`: AFTER_DELIVERY, ORDER_STATE, RTO_NOT_RETURNED). */
+  | 'REFUND_NOT_ALLOWED'
+  /** PR 172: more than is left to refund on this order (`data.roomMinor`). */
+  | 'OVER_REFUNDABLE'
+  /** PR 172 (four eyes): the person who asked this refund may not decide it. */
+  | 'SAME_PERSON'
+  /** PR 173: partial payment is switched off (`payments.partial`). */
+  | 'PARTIAL_OFF'
+  /** PR 173: more than the owner's cap on an advance (`data.capMinor`). */
+  | 'OVER_CAP'
+  /** PR 173: less than the smallest advance the owner set (`data.minMinor`). */
+  | 'BELOW_MIN'
+  /** PR 173: this order cannot take an advance (not Cash on Delivery, or past packing; `data.status`). */
+  | 'ADVANCE_NOT_ALLOWED';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;
@@ -61,6 +93,7 @@ export class PaymentsError extends Error {
       case 'NOT_PENDING':
       case 'NOT_OPEN':
       case 'TEST_PAYMENTS_OFF':
+      case 'SAME_PERSON':
         return 409;
       case 'GATEWAY_ERROR':
         return 502;

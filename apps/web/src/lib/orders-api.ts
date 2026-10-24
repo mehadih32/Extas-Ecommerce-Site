@@ -53,6 +53,11 @@
 //                                                             its weight, earlier scores, rules changed since (orders.risk.read)
 //   POST  /api/admin/orders/:id/risk/assess                   PR 160: "score again" — a new dated score with today's rules;
 //                                                             the old one stays; nothing is blocked or held (orders.risk.decide)
+//   POST  /api/admin/orders/:id/advance/request               PR 542: {kind: delivery | partial | full | codOff, channels:
+//                                                             [SMS | WHATSAPP | CALL], note?, version?} "Request advance": the
+//                                                             order waits for it, the pay link, its messages and a call task
+//                                                             (orders.advance.request; nothing moves money or changes COD)
+//   POST  /api/admin/orders/:id/advance/resend                PR 542: {channels, note?, version?} "Send again" (orders.advance.request)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -279,6 +284,15 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
       return one ? run('orders.edit', (x, i, o) => od.editOrder(x.deps, x.who, id, editBody(i), o)) : notFound();
     case 'two-size':
       return one ? run('orders.edit', (x, i, o) => od.answerTwoSize(x.deps, x.who, id, i, o)) : notFound();
+    case 'advance': {
+      // S06 · PR 542: "Request advance" and "Send again" (the answer carries the pay link's page)
+      if (path.length !== 3 || (c !== 'request' && c !== 'resend')) return notFound();
+      return handle(request, deps, 'orders.advance.request', async (x) => {
+        const cmd = await command(request, x.opts);
+        const r = c === 'request' ? await od.requestAdvance(x.deps, x.who, id, cmd.input, cmd.opts) : await od.resendAdvance(x.deps, x.who, id, cmd.input, cmd.opts);
+        return { result: r.command, link: { path: od.payLinkPath(r.token), paymentId: r.paymentId, channels: r.channels, callTaskId: r.callTaskId } };
+      });
+    }
     case 'lines':
       if (one) return run('orders.lines', (x, i, o) => od.addLine(x.deps, x.who, id, i, o));
       if (path.length !== 4 || e !== 'remove') return notFound();

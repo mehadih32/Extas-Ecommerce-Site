@@ -37,6 +37,8 @@ export const ROUTES = {
   category: (slug: string) => `/collections/${slug}`,
   /** PR 606: the bulk / corporate enquiry (only while the owner has `orders.bulkLane` on; otherwise "page not found"). */
   bulkOrder: '/bulk-order',
+  /** S06 · PR 542: the pay link of an advance asked from the order (sent by SMS/WhatsApp; no login, the token is the key). */
+  payLink: (token: string) => `/pay/${encodeURIComponent(token)}`,
 } as const;
 
 /** The product page's query word that opens it on one colour (demo `#/p/<id>?color=<key>`; the product page, PR 49). */

@@ -1,6 +1,7 @@
 // S06 · PR 550 — the delivery admin API end to end on a real PostgreSQL (a throwaway database with the SAMPLE gazetteer;
 // skipped without TEST_DATABASE_ADMIN_URL): login, same-site and method checks, the bands as shipped (off, no charge),
 // switching a band on only with its charge, the sub-area mode, the sub-area list (add, take off, move) and the search.
+// PR 502: the sub-area band's own switch, and the area admin — open, rename, re-spell, add and merge a place.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -9,7 +10,7 @@ import { sampleGazetteerRows } from '@extas/delivery/sample';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { areaHandler, areasHandler, bandHandler, bandsHandler, placesHandler } from './delivery-api';
+import { areaHandler, areasHandler, bandHandler, bandsHandler, placeHandler, placeMergeHandler, placesHandler } from './delivery-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -88,6 +89,9 @@ describe.skipIf(!HAS_TEST_DB)('delivery admin API on PostgreSQL', () => {
     const added = await read(await areasHandler(call('POST', '/api/admin/delivery/areas', { cookie: owner, body: { areaId: gazipur.id } }), deps));
     expect(added.status).toBe(201);
     expect(added.body.area).toMatchObject({ id: gazipur.id, bandKey: 'dhaka-sub-area' });
+    // PR 502: the sub-area band (charged as outside, so no charge of its own) is switched on: its places are in it
+    const sub = (await read(await bandsHandler(call('GET', '/api/admin/delivery/bands', { cookie: owner }), deps))).body.bands[1].id as string;
+    expect((await read(await bandHandler(call('PATCH', `/api/admin/delivery/bands/${sub}`, { cookie: owner, body: { enabled: true } }), deps, sub))).body.band).toMatchObject({ enabled: true, mode: 'outside' });
     const again = await read(await placesHandler(call('GET', '/api/admin/delivery/places?q=tongi', { cookie: owner }), deps));
     expect(again.body.places.find((p: { code: string }) => p.code === 'bd.dhaka.gazipur.gazipur-sadar.tongi')).toMatchObject({ bandKey: 'dhaka-sub-area', via: 'owner-list', listedAreaId: gazipur.id });
 
@@ -101,5 +105,28 @@ describe.skipIf(!HAS_TEST_DB)('delivery admin API on PostgreSQL', () => {
     const moved = await read(await areaHandler(call('PATCH', `/api/admin/delivery/areas/${gazipur.id}`, { cookie: owner, body: { bandId: outside } }), deps, gazipur.id));
     expect(moved.body.area).toMatchObject({ bandKey: 'outside-dhaka', archived: false });
     expect(await t.prisma.areaBand.count()).toBe(1);
+  });
+
+  it('PR 502: opens a place, renames it, edits its spellings, adds one and merges two; all audited, never deleted', async () => {
+    const find = async (q: string) => (await read(await placesHandler(call('GET', `/api/admin/delivery/places?q=${q}`, { cookie: owner }), deps))).body.places as { id: string; code: string | null }[];
+    const kaliganj = (await find('kaliganj')).find((p) => p.code === 'bd.dhaka.gazipur.kaliganj')!;
+    const sreepur = (await find('sreepur')).find((p) => p.code === 'bd.dhaka.gazipur.sreepur')!;
+    const url = (id: string, more = '') => `/api/admin/delivery/places/${id}${more}`;
+    expect((await placeHandler(call('GET', url('x'), { cookie: owner }), deps, 'x')).status).toBe(400);
+    expect((await placeHandler(call('DELETE', url(kaliganj.id), { cookie: owner }), deps, kaliganj.id)).status).toBe(405);
+    const open = await read(await placeHandler(call('GET', url(kaliganj.id), { cookie: owner }), deps, kaliganj.id));
+    expect(open.body.place).toMatchObject({ nameEn: 'Kaliganj', ownerMade: false, level: 'UPAZILA' });
+    const renamed = await read(await placeHandler(call('PATCH', url(kaliganj.id), { cookie: owner, body: { nameEn: 'Kaliganj Gazipur' } }), deps, kaliganj.id));
+    expect(renamed.body.place).toMatchObject({ nameEn: 'Kaliganj Gazipur', aliases: expect.arrayContaining(['Kaliganj']) });
+    const spelt = await read(await placeHandler(call('PATCH', url(kaliganj.id), { cookie: owner, body: { aliases: ['Kaliganj', 'kaligonj'] } }), deps, kaliganj.id));
+    expect(spelt.body.place.aliases).toEqual(['Kaliganj', 'kaligonj']);
+    const added = await read(await placesHandler(call('POST', '/api/admin/delivery/places', { cookie: owner, body: { parentId: sreepur.id, nameEn: 'Nolkhola' } }), deps));
+    expect(added).toMatchObject({ status: 201, body: { place: { nameEn: 'Nolkhola', ownerMade: true } } });
+    const twin = await read(await placesHandler(call('POST', '/api/admin/delivery/places', { cookie: owner, body: { parentId: sreepur.id, nameEn: 'Nolkhola Bazar' } }), deps));
+    expect((await read(await placeMergeHandler(call('POST', url(twin.body.place.id, '/merge'), { cookie: owner, body: { intoId: sreepur.id } }), deps, twin.body.place.id))).body.error).toBe('LEVEL_MISMATCH');
+    const merged = await read(await placeMergeHandler(call('POST', url(twin.body.place.id, '/merge'), { cookie: owner, body: { intoId: added.body.place.id } }), deps, twin.body.place.id));
+    expect(merged).toMatchObject({ status: 200, body: { merge: { mergedId: twin.body.place.id, into: { aliases: ['Nolkhola Bazar'] } } } });
+    expect(await t.prisma.geoArea.findUniqueOrThrow({ where: { id: twin.body.place.id }, select: { archivedAt: true } })).toMatchObject({ archivedAt: expect.any(Date) });
+    expect(await t.prisma.auditLog.count({ where: { action: { startsWith: 'delivery.place.' } } })).toBe(6);
   });
 });
