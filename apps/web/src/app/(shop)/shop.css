@@ -526,6 +526,11 @@
 @media (max-width: 767px) { .shop .hm-flash-hd .hm-cd-row { gap: 0.15em; } }
 @media (max-width: 767px) { .shop .hm-flash-hd .hm-cd-row > span:not(.hm-cd-sep) { font-size: 0.875em; min-width: 1.95em; padding: 0.28em 0.3em; } }
 @media (max-width: 767px) { .shop .hm-flash-hd .hm-cd-sep { font-size: 0.7em; } }
+@media (max-width: 767px) { .shop .hm-flash-hd.fit-x .hm-cd-lbl { display: none; } }
+/* PR 44 · the flash sale sits well below the first screen: its cards are laid out only as it nears (the TBT budget) */
+.shop .hm-flash { content-visibility: auto; contain-intrinsic-size: auto 780px; }
+@media (min-width: 768px) { .shop .hm-flash { contain-intrinsic-size: auto 900px; } }
+@media (min-width: 1024px) { .shop .hm-flash { contain-intrinsic-size: auto 1070px; } }
 .shop .ftr-s3 .ftr-cols { grid-template-columns: repeat(3, minmax(0px, 1fr)); font-size: 14px; }
 @media (max-width: 767px) { .shop .ftr-s3 .ftr-cols { font-size: 12.5px; } }
 .shop .ftr-s3 .ftr-cols a { font-size: 1em; min-width: 0px; }

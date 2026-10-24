@@ -12,8 +12,12 @@ import { ProductPicture } from './ProductPicture';
 /** How wide a card is drawn: two across on a phone, four on a desktop (the `sizes` of its photo). */
 export const CARD_SIZES = '(max-width: 767px) 50vw, (max-width: 1239px) 25vw, 300px';
 
-/** `colour`: draw the card in that colour and open the product on it (PR 46: a colour filter is on, demo opts.color). */
-export function ProductCard({ card, c, priority = false, colour: pick }: { card: ShopCard; c: ShopContext; priority?: boolean; colour?: string | null }) {
+/**
+ * `colour`: draw the card in that colour and open the product on it (PR 46: a colour filter is on, demo opts.color).
+ * `copy`: the card only repeats one already on the page (PR 44's flash rows): hidden from screen readers and from Tab,
+ * like the slider's own copies, but a tap still opens the product.
+ */
+export function ProductCard({ card, c, priority = false, colour: pick, copy = false }: { card: ShopCard; c: ShopContext; priority?: boolean; colour?: string | null; copy?: boolean }) {
   const name = productName(card, c.lang);
   const chosen = pick ? card.colours.find((x) => x.key === pick) : undefined;
   const colour = chosen ?? card.colours[0];
@@ -24,9 +28,9 @@ export function ProductCard({ card, c, priority = false, colour: pick }: { card:
   const badge = cardBadge(card, c.t, c.num);
   const sw = cardSwatches(card.colours);
   return (
-    <div className="pcard-w" data-pid={card.id} data-c={colour?.key}>
+    <div className="pcard-w" data-pid={card.id} data-c={colour?.key} aria-hidden={copy || undefined} data-copy={copy ? '1' : undefined}>
       <div className="pcard">
-        <a className="pcard-lnk" href={href} aria-label={price ? c.t('card.label', { name, price }) : name} />
+        <a className="pcard-lnk" href={href} aria-label={price ? c.t('card.label', { name, price }) : name} tabIndex={copy ? -1 : undefined} />
         <ProductPicture
           garment={card.garment}
           hex={colour?.hex ?? ''}
@@ -39,6 +43,7 @@ export function ProductCard({ card, c, priority = false, colour: pick }: { card:
           {badge ? <span className={`badge-img${badge.sale ? ' sale' : ''}`}>{badge.text}</span> : null}
           <HeartButton
             id={card.id}
+            tabIndex={copy ? -1 : undefined}
             words={{ save: c.t('card.save'), unsave: c.t('card.unsave'), saved: c.t('card.saved'), removed: c.t('card.removed'), full: c.t('wish.full'), error: c.t('wish.error') }}
           />
         </ProductPicture>

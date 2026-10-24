@@ -129,6 +129,14 @@
     "rowFade": {
       "label": "Soft edges on sliding rows",
       "help": "Sliding rows fade out at both edges. Off = plain straight edges."
+    },
+    "flashSale": {
+      "label": "Flash sale",
+      "help": "Your flash sale on the home page: on or paused, when it starts (empty = at once) and when it ends, and its products — your own list in your order, a collection in its order while its dates run, or every product with a real struck price. The clock counts down to the end and the section hides itself at zero; with no sale set, nothing shows. The sale never changes a price: set the sale prices on the products themselves."
+    },
+    "flashRows": {
+      "label": "Flash sale rows",
+      "help": "How the sale's two rows look: only products with a real struck price (a sale is a discount; on), only products in stock, the most cards each row slides through (10), how many cards a short sale repeats so both rows glide (5), how fast they glide (24 px a second; the top row drifts left, the bottom row right) and the \"Up to N% off\" tag."
     }
   },
   "category": {
