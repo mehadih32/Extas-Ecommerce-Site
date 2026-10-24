@@ -6,7 +6,8 @@
 // (`risk.score.afterEdit`) or a person's "score again" adds a new, dated assessment.
 //
 // The score only informs. Nothing here blocks anyone, holds an order, asks for an advance, turns COD off or touches a
-// price or a charge (CLAUDE.md rule 6; architecture R5). Off until the owner switches `risk.score` on (CN-018).
+// price or a charge (CLAUDE.md rule 6; architecture R5). Off until the owner switches `risk.score` on (CN-018). What
+// follows at the band it reached is PR 161's (risk-levels.ts): only the steps the owner switched on.
 import { createHash } from 'node:crypto';
 import type { Prisma } from '@extas/db/client';
 import { ADDRESS_FACTS_SELECT, placeFactsOf } from './address-facts';
@@ -16,6 +17,7 @@ import { deviceOrders, IDENTITY_SELECT, identityOrders, ipPhoneCount } from './i
 import { identityRiskFacts } from './identity-graph';
 import { phoneOrders } from './phone-history';
 import { scoreRisk, type AddressFacts, type FiredSignal, type KnownPlace, type PhoneSummary, type RiskConfig, type RiskFacts, type RiskResult } from './pure';
+import { applyRiskLevel } from './risk-levels';
 import { placeInSection } from './sections';
 import { execute, staffBy, systemBy, type By, type CommandResult } from './service';
 
@@ -120,6 +122,12 @@ export async function assessRisk(deps: OrdersDeps, ref: { storeId: number; order
       },
       after === 'placed' ? { idempotencyKey: `risk-assess:${ref.orderId}` } : {},
     );
+    // PR 161: the owner's steps for this band (watch, hold, a call; the advance only proposed). A failure never undoes the score.
+    try {
+      await applyRiskLevel(deps, ref, { band: r.band.key, assessmentId, by: opts.by });
+    } catch (e) {
+      console.warn(`risk level: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+    }
     return { assessmentId, score: r.score, band: r.band, fired: r.fired, command };
   } catch (e) {
     // scored before (a second call at the same moment), or the order moved on (cancelled in the same second)

@@ -146,6 +146,7 @@ the pages are out of date.
 |---|---|
 | [`admin-guide/README.md`](admin-guide/README.md) | Index of the admin section guides |
 | [`admin-guide/combos.md`](admin-guide/combos.md) | Combos & customer sets (`/admin/combos`): the tabs, every setting with its default, what happens after each action |
+| [`admin-guide/pages/orders/risk-rules.md`](admin-guide/pages/orders/risk-rules.md) | Page guide (CN-026 six parts): Orders › Risk rules, its Levels card (`/admin/orders/risk-rules`, PR 161) |
 
 ## `reports/` — what got built, in Bengali
 

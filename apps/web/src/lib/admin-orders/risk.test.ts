@@ -1,14 +1,15 @@
 // S06 · PR 160 — the risk card's words: every signal has its label and its "what it saw" in both admin languages, each
 // row carries its weight, the band is named as it was stored, an our-fault refusal is shown as not counted (SIM-F-044),
 // the card hides when the owner hides it or the order was never scored while the model is off, "Score again" needs
-// `orders.risk.decide`, and the timeline line names the score, the band and every signal with its weight.
+// `orders.risk.decide`, and the timeline line names the score, the band and every signal with its weight. PR 161: the
+// level's steps and the advance it proposes, in both languages; the card no longer says "nothing is held" once levels run.
 import { describe, expect, it } from 'vitest';
 import { RISK_SIGNAL_KEYS } from '@extas/settings';
 import type { FiredSignal, PhoneSummary, RiskPanel } from '@extas/orders';
 import { adminDicts } from '../admin-i18n';
 import type { AdminView } from '../admin-page';
 import { t } from '../i18n';
-import { historyLine, riskCardView, riskSummary, signalDetail } from './risk';
+import { historyLine, levelSummary, riskCardView, riskSummary, signalDetail } from './risk';
 
 const view = (lang: 'en' | 'bn'): AdminView => ({ lang, dict: adminDicts[lang], locale: lang, timeZone: 'Asia/Dhaka', storeName: null });
 const ORDER = { id: '01a16af2-30f0-7462-aab8-719bb3ce51b1', number: 'EX-1001', currency: 'BDT' };
@@ -31,6 +32,8 @@ function panel(over: Partial<RiskPanel> = {}): RiskPanel {
     rulesChanged: false,
     canRescore: true,
     phone: { phone: '01700-000138', summary: { ...EMPTY, orders: 4, delivered: 1, refused: 2, ourFault: 1 }, recent: [] },
+    level: null,
+    levelsOn: false,
     ...over,
   };
 }
@@ -99,5 +102,30 @@ describe('PR 160 · the risk card', () => {
   it('the timeline line: the score, the band and each signal with its weight', () => {
     expect(riskSummary(view('en'), { score: 40, band: { en: 'Medium', bn: 'মাঝারি' }, fired: [{ key: 'refusals', weight: 30 }, { key: 'newPhone', weight: 10 }] })).toBe('40 · Medium · Refused parcels before +30 · First order from this number +10');
     expect(riskSummary(view('en'), {})).toBeNull();
+  });
+
+  it('PR 161: the level line — its steps and the advance it proposes (a person sends it); the card says what levels may do', () => {
+    const at = new Date('2026-10-24T06:05:00Z');
+    const v = riskCardView(view('en'), panel({ levelsOn: true, level: { band: 'medium', watch: true, hold: 'held', call: true, ask: 'delivery', at } }), ORDER, new Set(['orders.risk.decide']))!;
+    expect(v.level).toEqual({ line: 'Level Medium · held · watch mark · confirmation call in the queue', ask: 'Proposed: ask the delivery charge first', askNote: expect.stringContaining('proposal') });
+    expect(v.informs).toBe(t(view('en').dict, 'orders.risk.informsLevels'));
+    expect(v.rescore!.effects).toContain(t(view('en').dict, 'orders.eff.riskLevels'));
+    expect(riskCardView(view('en'), panel(), ORDER, new Set())!.level).toBeNull();
+    expect(riskCardView(view('en'), panel(), ORDER, new Set())!.informs).toBe(t(view('en').dict, 'orders.risk.informs'));
+    const bn = riskCardView(view('bn'), panel({ levelsOn: true, level: { band: 'medium', watch: false, hold: 'NO_REASON', call: false, ask: 'none', at } }), ORDER, new Set())!;
+    expect(bn.level).toEqual({ line: 'লেভেল মাঝারি · হোল্ড হয়নি: হোল্ডের কারণটা আপনার তালিকায় নেই', ask: null, askNote: null });
+    for (const lang of ['en', 'bn'] as const) {
+      const d = view(lang).dict;
+      for (const k of ['line', 'watch', 'held', 'NO_REASON', 'NOT_HOLDABLE', 'call', 'none', 'askNote', 'ask.delivery', 'ask.partial', 'ask.full', 'ask.codOff']) expect(t(d, `orders.risk.level.${k}`), `${lang} ${k}`).not.toBe(`orders.risk.level.${k}`);
+      for (const k of ['ev.order_riskLevel', 'flag.riskWatch', 'eff.riskLevels', 'risk.informsLevels', 'page.riskRules']) expect(t(d, `orders.${k}`), `${lang} ${k}`).not.toBe(`orders.${k}`);
+    }
+  });
+
+  it('PR 161: the timeline line of a level names the band as the score stored it', () => {
+    const bands = [{ key: 'high', en: 'High', bn: 'বেশি' }];
+    expect(levelSummary(view('en'), { band: 'high', watch: true, hold: 'held', call: false, ask: 'full' }, bands)).toBe('Level High · held · watch mark · Proposed: ask the whole amount first');
+    expect(levelSummary(view('bn'), { band: 'high', watch: false, hold: null, call: true, ask: 'none' }, bands)).toBe('লেভেল বেশি · কনফার্ম করার কল তালিকায়');
+    expect(levelSummary(view('en'), { band: 'x', watch: false, hold: null, call: false, ask: 'none' })).toBe('Level x · no step');
+    expect(levelSummary(view('en'), {})).toBeNull();
   });
 });

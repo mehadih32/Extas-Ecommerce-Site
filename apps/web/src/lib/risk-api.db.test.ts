@@ -1,7 +1,9 @@
 // S06 · PR 544 — the risk rules admin API end to end on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
 // login, the same-site check and the permissions (a reader of orders may not see or switch the rules); the list of every
 // rule as the settings ship it; a switch saved through the real settings resolver (its change log), the version refusing
-// a stale screen, an unknown rule refused with nothing written. Every value is a made-up test value.
+// a stale screen, an unknown rule refused with nothing written. PR 161: the levels read and saved whole (off as they ship;
+// a stale screen, a band that does not exist, a hold reason not on the list and a partial ask without its percent refused
+// with nothing written). Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -77,5 +79,27 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     const bad = await api('PUT', ['rules'], { body: { switches: { 'risk.score': true, 'nope.rule': false } } });
     expect(bad).toMatchObject({ status: 404, body: { error: 'NOT_FOUND', details: ['nope.rule'] } });
     expect((await deps.resolver.value('risk.score', { storeId: f.S })).enabled).toBe(false);
+  });
+
+  it('PR 161: the levels ship off; saved whole through the settings; a stale screen, an unknown band, a reason not on the list and a partial ask without its percent are refused', async () => {
+    const got = await api('GET', ['levels']);
+    expect(got.status).toBe(200);
+    expect(got.body.value).toMatchObject({ enabled: false, partialPercent: null, holdReasonKey: 'risk-check' });
+    expect(got.body.bands.map((b: { key: string }) => b.key)).toEqual(['low', 'medium', 'high']);
+    expect((await api('GET', ['levels'], { cookie: reader })).status).toBe(403);
+    expect((await api('PUT', ['levels'], { cookie: reader, body: { value: got.body.value } })).status).toBe(403);
+    expect((await api('POST', ['levels'], { body: {} })).status).toBe(405);
+    const value = { ...got.body.value, enabled: true, levels: { ...got.body.value.levels, high: { watch: true, hold: true, call: true, ask: 'full' } } };
+    const put = await api('PUT', ['levels'], { body: { version: got.body.version, value } });
+    expect(put.status).toBe(200);
+    expect(put.body.value.levels.high).toEqual({ watch: true, hold: true, call: true, ask: 'full' });
+    expect(put.body.version).not.toBe(got.body.version);
+    expect(await deps.resolver.value('risk.levels', { storeId: f.S })).toMatchObject({ enabled: true, levels: { high: { hold: true } } });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.levels.save' } })).toBe(1);
+    expect(await api('PUT', ['levels'], { body: { version: got.body.version, value } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect((await api('PUT', ['levels'], { body: { value: { ...value, levels: { ...value.levels, extreme: value.levels.high } } } })).body).toMatchObject({ error: 'INVALID_INPUT', details: ['levels.extreme'] });
+    expect((await api('PUT', ['levels'], { body: { value: { ...value, holdReasonKey: 'no-such-reason' } } })).body).toMatchObject({ error: 'REASON_REQUIRED' });
+    expect((await api('PUT', ['levels'], { body: { value: { ...value, levels: { ...value.levels, medium: { watch: false, hold: false, call: false, ask: 'partial' } } } } })).body).toMatchObject({ error: 'INVALID_INPUT' });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.levels.save' } })).toBe(1);
   });
 });

@@ -5,6 +5,7 @@
     { "id": "orders/all", "route": "/admin/orders" },
     { "id": "orders/order", "route": "/admin/orders/[id]" },
     { "id": "orders/confirm", "route": "/admin/orders/confirm" },
+    { "id": "orders/risk-rules", "route": "/admin/orders/risk-rules" },
     { "id": "orders/checkout-advance", "route": "/admin/orders/risk-rules/checkout" },
     { "id": "products/all", "route": "/admin/products" },
     { "id": "products/new", "route": "/admin/products/new" },

@@ -46,6 +46,7 @@ import { riskRulesSettings } from './registry-risk-rules';
 import { shippingSettings } from './registry-shipping';
 import { cacheSettings } from './registry-cache';
 import { advanceSettings } from './registry-advance';
+import { riskLevelSettings } from './registry-risk-levels';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1205,6 +1206,8 @@ export const registry = {
   ...cacheSettings,
   // ---- S04 · PR 558, 560 · the advance-payment checkout mode's one switch (registry-advance.ts, version 53). ----
   ...advanceSettings,
+  // ---- S06 · PR 161 · what happens at each risk level: watch, hold, a call, the advance asked (registry-risk-levels.ts, version 54). ----
+  ...riskLevelSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
