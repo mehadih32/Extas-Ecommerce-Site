@@ -149,7 +149,7 @@
       "record": "Record money received outside the checkout (bKash or Nagad to the shop's number, a bank transfer, cash) — never more than the amount due",
       "door": "Record what happened at the door and the money the rider collected (delivered, partly delivered, returned with the charge paid, returned, attempt failed)",
       "partials": "Approve or reject the money of a partial delivery",
-      "settle": "Import a courier's COD statement and mark a checked mismatch as resolved",
+      "settle": "Import a courier's COD statement or a payment service's statement, and mark a checked mismatch as resolved",
       "wallet": "Credit or debit a customer's wallet by hand with a reason, and put a wallet entry right with a new one the other way",
       "apology": "Give a late-delivery apology credit to a customer's wallet on an order",
       "refunds": {

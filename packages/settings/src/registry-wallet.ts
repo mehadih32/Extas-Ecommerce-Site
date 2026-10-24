@@ -26,10 +26,18 @@
 // order in advance instead (off). Asking an advance moves no money: the customer pays it through the gateway, and only
 // money that came in lowers what the rider collects.
 //
+// PR 174 (`payments.statement`, `payments.statement.reasons`): the payment gateways' statements (bKash, Nagad, card),
+// read line by line from the file the gateway gives (nothing typed by hand): the column names and the words that mark
+// a line as money going back (a refund or a reversal), how many paisa of difference still count as a match (0: exact),
+// after how many days a paid online payment on no statement is missing (0: off), and the words of every statement
+// mismatch reason (SIM-F-028: a mismatch never comes without its reason; the codes are fixed, the words are the
+// owner's).
+//
 // Nothing here moves real money or changes a price, a charge, a discount or Cash on Delivery (CLAUDE.md rule 6): the
 // wallet is store credit, and every entry is a person's action, audited.
 import { z } from 'zod';
 import { setting } from './define';
+import { lookup, messages } from './messages';
 import { moneyMinorSchema } from './schemas';
 
 const V = 55;
@@ -90,6 +98,34 @@ export const partialSchema = z
   })
   .strict();
 
+/** PR 174 — the reason codes of a gateway statement line, and of a paid payment no statement shows (fixed). */
+export const STATEMENT_MISMATCH_CODES = ['UNKNOWN_PAYMENT', 'AMOUNT_DIFFERS', 'DOUBLE_LINE', 'NOT_PAID', 'UNKNOWN_REFUND', 'REFUND_DIFFERS', 'MISSING'] as const;
+
+const words = z.array(z.string().trim().min(1).max(60)).max(20);
+
+/** PR 174 — how a gateway's statement file is read, and when a difference or a missing line counts. */
+export const gatewayStatementSchema = z
+  .object({
+    columns: z.object({ trx: words.min(1), amount: words.min(1), fee: words, date: words, type: words }).strict(),
+    refundWords: words,
+    toleranceMinor: z.int().min(0).max(100_000),
+    missingAfterDays: z.int().min(0).max(365),
+  })
+  .strict();
+
+const reasonLabel = z.string().trim().min(1).max(120);
+/** PR 174 — the words of each fixed statement reason code, in both languages; every code once. */
+export const statementReasonsSchema = z
+  .array(z.object({ code: z.enum(STATEMENT_MISMATCH_CODES), en: reasonLabel, bn: reasonLabel }).strict())
+  .length(STATEMENT_MISMATCH_CODES.length)
+  .refine((v) => new Set(v.map((r) => r.code)).size === v.length, { message: 'every code once' });
+
+function reasonText(lang: 'en' | 'bn', code: string): string {
+  const v = lookup(messages[lang], `defaults.payments.statement.${code}`);
+  if (!v) throw new Error(`message "defaults.payments.statement.${code}" is missing in ${lang}`);
+  return v;
+}
+
 export const walletSettings = {
   'payments.wallet.manual': setting({
     ...base,
@@ -126,5 +162,34 @@ export const walletSettings = {
     labelKey: 'payments.partial.label',
     helpKey: 'payments.partial.help',
     sortOrder: 230,
+  }),
+  'payments.statement': setting({
+    ...base,
+    schema: gatewayStatementSchema,
+    default: {
+      columns: {
+        trx: ['trx_id', 'trxid', 'transaction_id', 'trx', 'payment_id'],
+        amount: ['amount', 'paid_amount', 'transaction_amount'],
+        fee: ['fee', 'charge', 'mdr', 'commission', 'gateway_fee'],
+        date: ['date', 'transaction_date', 'datetime', 'time', 'created_at'],
+        type: ['type', 'transaction_type', 'txn_type'],
+      },
+      refundWords: ['refund', 'reversal', 'reversed', 'chargeback'],
+      toleranceMinor: 0,
+      missingAfterDays: 0,
+    },
+    valueType: 'JSON',
+    labelKey: 'payments.statement.label',
+    helpKey: 'payments.statement.help',
+    sortOrder: 240,
+  }),
+  'payments.statement.reasons': setting({
+    ...base,
+    schema: statementReasonsSchema,
+    default: STATEMENT_MISMATCH_CODES.map((code) => ({ code, en: reasonText('en', code), bn: reasonText('bn', code) })),
+    valueType: 'JSON',
+    labelKey: 'payments.statement.reasons.label',
+    helpKey: 'payments.statement.reasons.help',
+    sortOrder: 250,
   }),
 };
