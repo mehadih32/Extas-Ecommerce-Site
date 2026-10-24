@@ -1,0 +1,27 @@
+{
+  "paylink": {
+    "pageTitle": "Pay the advance",
+    "title": "Pay the advance for your order",
+    "order": "Order #{number}",
+    "amount": "Advance to pay now",
+    "with": "With {method}",
+    "why": "We send your order as soon as this advance is in. The rest is paid as agreed with our team.",
+    "test": "Test payment page: no money is taken. The real payment page comes when the payment service is connected.",
+    "approve": "Pay {amount}",
+    "fail": "Make it fail (test)",
+    "failed": "The payment did not go through. Your order is saved — you can try again.",
+    "retry": "Try again",
+    "paid": "Thank you — the advance is paid. Your order goes ahead now.",
+    "closed": "This pay link is not open any more. If you still need to pay, please call us.",
+    "wait": "Please wait…",
+    "redirect": "You will pay on {method}'s own secure page, then come back here.",
+    "unavailable": "Online payment is not open right now. Your order is saved — please try again a little later, or call us.",
+    "notFound": "This pay link was not found. Please check the link in your message, or call us.",
+    "home": "Go to the shop",
+    "online": "online payment",
+    "err": {
+      "network": "No connection. Please check your internet and try again.",
+      "other": "Something went wrong. Please try again."
+    }
+  }
+}

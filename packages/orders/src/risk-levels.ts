@@ -5,8 +5,9 @@
 //     audit row) — it is then neither confirmed nor booked until a person releases it (SIM-F-014);
 //   - watch, call and the ask are written as ONE timeline row (the `riskLevel` command; the status untouched): the watch
 //     mark on the order, a confirmation call task in the call queue, and the advance the level proposes;
-//   - the ask itself (the delivery charge, a part, the whole amount, no cash on delivery for this order) is never acted
-//     on here: the order page shows it as the proposal, and a person presses "Request advance" (PR 542).
+//   - the ask itself (the delivery charge, a part, the whole amount, no cash on delivery for this order) is a proposal:
+//     the order page shows it, and a person presses "Request advance" (PR 542) — unless the owner turned on that
+//     request's own auto option (`orders.advanceRequest.auto`, off), which asks it right here (advance-request.ts).
 // Every switch is off by default; with the master off nothing happens. A score again in the same band does nothing again;
 // a new band writes its own row (an order that went up from medium to high is held then, not before). Nothing here
 // blocks anyone, changes a COD rule, a price or a charge (CLAUDE.md rule 6; architecture R5).
@@ -19,6 +20,7 @@ import { audit } from '@extas/auth';
 import { NO_RISK_ACTIONS, registry, RISK_LEVEL_ASKS, riskLevelsSchema, storeTarget, SUGGESTED_RISK_LEVELS, type RiskBands, type RiskLevelActions, type RiskLevels } from '@extas/settings';
 import { z } from 'zod';
 import { allow, parse, setting, type OrdersDeps, type Who } from './context';
+import { autoAdvance, type AdvanceRequestResult } from './advance-request';
 import { holdWith } from './commands';
 import { OrdersError, isOrdersError } from './errors';
 import { levelPlanOf, type LevelPlan } from './pure';
@@ -39,6 +41,11 @@ export interface LevelApplied {
   hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | null;
   callTaskId: string | null;
   command: CommandResult;
+  /**
+   * PR 542: the owner's auto option (`orders.advanceRequest.auto`, off) asked the level's advance by itself — the
+   * request, or why it could not be asked (NOTHING_DUE, NO_CHARGE …); null when the option is off or nothing is asked.
+   */
+  advance: AdvanceRequestResult | string | null;
 }
 
 /** The level written on an order last (its band and steps), from its timeline; null when none was. */
@@ -119,7 +126,9 @@ export async function applyRiskLevel(deps: OrdersDeps, ref: { storeId: number; o
       },
       { idempotencyKey: `risk-level:${opts.assessmentId}` },
     );
-    return { plan, hold, callTaskId, command };
+    // PR 542: only with the owner's auto option on; otherwise the ask stays a proposal for a person
+    const advance = await autoAdvance(deps, ref, plan.ask, `risk-level-advance:${opts.assessmentId}`, by);
+    return { plan, hold, callTaskId, command, advance };
   } catch (e) {
     // the order moved on (cancelled in the same second): nothing to mark
     if (isOrdersError(e) && e.code === 'ILLEGAL_TRANSITION') return null;

@@ -47,6 +47,7 @@ import { shippingSettings } from './registry-shipping';
 import { cacheSettings } from './registry-cache';
 import { advanceSettings } from './registry-advance';
 import { riskLevelSettings } from './registry-risk-levels';
+import { advanceRequestSettings } from './registry-advance-request';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1208,6 +1209,8 @@ export const registry = {
   ...advanceSettings,
   // ---- S06 · PR 161 · what happens at each risk level: watch, hold, a call, the advance asked (registry-risk-levels.ts, version 54). ----
   ...riskLevelSettings,
+  // ---- S06 · PR 542 · the one-click advance request from the order: its channels, pay service, words and auto option (off) (registry-advance-request.ts, version 54). ----
+  ...advanceRequestSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

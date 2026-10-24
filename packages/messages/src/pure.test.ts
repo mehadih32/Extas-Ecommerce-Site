@@ -3,7 +3,12 @@
 import { DEFAULT_JOURNEY, journeySchema } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
 import {
+  advanceChannelsOf,
+  advanceDedupeKey,
   answerTemplate,
+  isAdvanceRequest,
+  payLink,
+  ADVANCE_REQUEST,
   audienceFits,
   dedupeKey,
   dueAt,
@@ -172,5 +177,30 @@ describe('PR 546 · the cancellation words (SIM-F-013)', () => {
     expect(render(dup, null, { ...base, kept })).toMatchObject({ ok: true, text: 'Order S-1001 is cancelled. Your order S-0999 goes ahead: https://shop.example/account/orders/S-0999' });
     expect(render(dup, null, { ...base, kept: null })).toEqual({ ok: false, reason: 'NO_KEPT_ORDER', field: 'keptOrderNumber' });
     expect(render('Follow it: {keptOrderLink}', null, { ...base, kept: { number: 'S-0999', link: null } })).toEqual({ ok: false, reason: 'NO_LINK', field: 'keptOrderLink' });
+  });
+});
+
+describe('PR 542 · the advance request words', () => {
+  it('a press of Send (or its "Send again") is a request; its message channels never include the call', () => {
+    const ev = (type: string, data: unknown) => ({ type, data });
+    expect(isAdvanceRequest(ev('order.awaitAdvance', { request: true, channels: ['SMS'] }))).toBe(true);
+    expect(isAdvanceRequest(ev('order.awaitAdvance', { requiredMinor: 100 }))).toBe(false);
+    expect(advanceChannelsOf(ev('order.advanceResend', { channels: ['CALL', 'WHATSAPP', 'SMS'] }))).toEqual(['SMS', 'WHATSAPP']);
+    expect(advanceChannelsOf(ev('order.awaitAdvance', { request: true, channels: ['CALL'] }))).toEqual([]);
+    expect(advanceDedupeKey('o1', 'e1', 'SMS')).toBe(`order:o1:${ADVANCE_REQUEST}:e1:SMS`);
+    expect(stillFits(ADVANCE_REQUEST, 'AWAITING_ADVANCE')).toBe(true);
+    expect(stillFits(ADVANCE_REQUEST, 'PLACED')).toBe(false);
+    expect(isCapped(ADVANCE_REQUEST, true)).toBe(false);
+  });
+
+  it('the advance still to pay and its pay link — never shown empty or once paid', () => {
+    const t = 'Pay {advanceAmount} first: {payLink}';
+    expect(payLink('shop.example', 'tok_123', 'bn')).toBe('https://shop.example/bn/pay/tok_123');
+    expect(payLink('shop.example', 'tok_123', 'en')).toBe('https://shop.example/pay/tok_123');
+    expect(payLink(null, 'tok_123', 'en')).toBeNull();
+    expect(render(t, null, { ...base, advance: { amountMinor: 12_000, link: 'https://shop.example/pay/tok_123' } })).toMatchObject({ ok: true, text: 'Pay ৳120 first: https://shop.example/pay/tok_123' });
+    expect(render(t, null, { ...base, advance: { amountMinor: 0, link: 'https://shop.example/pay/tok_123' } })).toEqual({ ok: false, reason: 'AMOUNT_RULE', field: 'advanceAmount' });
+    expect(render(t, null, { ...base, advance: { amountMinor: 12_000, link: null } })).toEqual({ ok: false, reason: 'NO_LINK', field: 'payLink' });
+    expect(render(t, null, base)).toEqual({ ok: false, reason: 'AMOUNT_RULE', field: 'advanceAmount' });
   });
 });

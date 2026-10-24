@@ -237,6 +237,12 @@ describe('secrets (PR 493)', () => {
   const SECRETISH = /(password|passcode|secret|token(?!s$)|apikey|privatekey|accesskey|otp|pincode|cvv|cardnumber)/i;
   // Hashes, vault references, names and encrypted parts (ciphertext + iv + auth tag, like the vault) are allowed.
   const SAFE_SUFFIX = /(Hash|Ref|Name|Names|Id|Ids|At|Count|Version|Prefix|Last4|Key|Hint|Type|Status|Ciphertext|Iv|AuthTag)$/;
+  // Columns that look like a secret but are not a credential, each with its written reason (like the hardcode guard's
+  // opt-outs). Payment.linkToken (PR 542): the random part of a pay link the shop sends by SMS / WhatsApp and must send
+  // again ("Send again") and render later in the message engine, so it is kept readable — the same text already sits in
+  // the message log. It opens only that one order's "pay this amount" page (order number and amount, no name, phone
+  // or address) and can only pay money to the shop; it signs nobody in.
+  const NOT_A_CREDENTIAL = new Set(['Payment.linkToken']);
 
   it('has no plaintext secret columns (String/Bytes/Json named like a secret, not a hash or reference)', () => {
     const bad = schema.models
@@ -245,7 +251,8 @@ describe('secrets (PR 493)', () => {
         m.fields
           .filter((f) => ['String', 'Bytes', 'Json'].includes(f.type))
           .filter((f) => SECRETISH.test(f.name) && (!SAFE_SUFFIX.test(f.name) || /(apiKey|privateKey|accessKey)$/i.test(f.name)))
-          .map((f) => `${m.name}.${f.name}`),
+          .map((f) => `${m.name}.${f.name}`)
+          .filter((name) => !NOT_A_CREDENTIAL.has(name)),
       );
     expect(bad).toEqual([]);
   });

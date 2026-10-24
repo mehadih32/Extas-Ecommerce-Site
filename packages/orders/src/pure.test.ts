@@ -54,6 +54,7 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   book: { CONFIRMED: FLAG, PROCESSING: FLAG, PACKED: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
+  advanceResend: { AWAITING_ADVANCE: FLAG },
   startPicking: { CONFIRMED: 'PROCESSING' },
   pack: { CONFIRMED: 'PACKED', PROCESSING: 'PACKED' },
   handover: { PACKED: 'HANDED_OVER' },
