@@ -1,16 +1,18 @@
 // PR 105–112 — the bag's public API on a real PostgreSQL (a throwaway database with the sample catalogue and the sample
 // combos; skipped without TEST_DATABASE_ADMIN_URL), called the way the browser calls it: the visitor cookie made on
 // the first add and sent back after, both cookies refreshed on every answer, same-site only, small bodies only, and
-// the engine's refusal codes passed through for the shop's words. Also the bag's catalogue reads (pictures, picks).
+// the engine's refusal codes passed through for the shop's words. Also the bag's catalogue reads (pictures, picks),
+// and PR 98 / 100's "Add set to Bag" from the set builder.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/testing';
 import { productFacts, type ProductFact } from '@extas/combos';
 import { seedSampleCombos } from '@extas/combos/sample';
 import { disconnectPrisma } from '@extas/db/client';
 import { seedSample } from '@extas/seed';
+import { contentColumns, ruleContentSchema } from '@extas/rules';
 import { registry, type Key, type Value } from '@extas/settings';
 import type { SettingsReader } from '@extas/cart';
-import { addLineHandler, codeHandler, deleteLineHandler, patchLineHandler, restoreLineHandler, sizeAnswerHandler, tryFillHandler, type BagApiDeps } from './bag-api';
+import { addLineHandler, builtSetHandler, codeHandler, deleteLineHandler, patchLineHandler, restoreLineHandler, sizeAnswerHandler, tryFillHandler, type BagApiDeps } from './bag-api';
 import { BAG_COOKIE, COUNT_COOKIE } from './bag-model';
 import { bagPickCards, cardsByIds } from './catalogue';
 
@@ -167,5 +169,43 @@ describe.skipIf(!HAS_TEST_DB)('the bag API on PostgreSQL (S04)', () => {
     }
     expect(picks.cards.length).toBeLessThanOrEqual(6);
     expect(await bagPickCards(S, [], 6)).toEqual({ cards: [], from: 'none' });
+  });
+  it('PR 98 / 100 · "Add set to Bag" makes the bag, adds the picks as loose lines once per tap, and passes the refusals through', async () => {
+    const cat = await t.prisma.category.findFirstOrThrow({ where: { storeId: S, slug: 'polos' }, select: { id: true } });
+    const content = ruleContentSchema.parse({
+      key: 'test-bag-any-polos',
+      kind: 'setTier',
+      nameEn: 'Test any polos',
+      text: {},
+      params: [{ key: 'tier2', type: 'money', value: 150000, labelEn: 'Any 2' }],
+      scope: { include: [{ type: 'category', id: cat.id }], exclude: [] },
+      conditions: { all: [] },
+      actions: [{ type: 'setTier', tiers: [{ quantity: 2, param: 'tier2' }] }],
+      placements: [],
+      priority: 0,
+      stackable: false,
+      status: 'ACTIVE',
+      startsAt: null,
+      endsAt: null,
+    });
+    const ruleId = (await t.prisma.smartRule.create({ data: { storeId: S, ...contentColumns(content) }, select: { id: true } })).id;
+    const a = variant('essential-pique-polo', 'navy', 'M');
+    const b = variant('essential-pique-polo', 'navy', 'L');
+    const path = '/api/bag/built-sets';
+    // the builder is off by default: nothing goes in
+    const off = await read(await builtSetHandler(req('POST', path, { body: { ruleId, picks: [a.id, b.id], addKey: 'tap-off-0001' } }), deps()));
+    expect(off).toMatchObject({ status: 409, body: { error: 'SET_INVALID', details: ['NOT_ON'] } });
+    overrides.set('combos.builder', { on: true, rules: [], categories: [], maxStyles: 24, perItem: true, entries: true });
+    const r = await builtSetHandler(req('POST', path, { body: { ruleId, picks: [a.id, b.id], addKey: 'tap-on-0001' } }), deps());
+    const first = await read(r);
+    expect(first).toMatchObject({ status: 201, body: { ok: true, added: true, pieces: 2, count: 2 } });
+    const again = await read(await builtSetHandler(req('POST', path, { body: { ruleId, picks: [a.id, b.id], addKey: 'tap-on-0001' }, cookie: jar(r) }), deps()));
+    expect(again).toMatchObject({ status: 200, body: { added: false, count: 2 } });
+    const tooFew = await read(await builtSetHandler(req('POST', path, { body: { ruleId, picks: [a.id], addKey: 'tap-on-0002' }, cookie: jar(r) }), deps()));
+    expect(tooFew).toMatchObject({ status: 409, body: { error: 'SET_INVALID', details: ['TOO_FEW'] } });
+    expect((await builtSetHandler(req('POST', path, { body: { ruleId, picks: [a.id, b.id] }, site: 'cross-site' }), deps())).status).toBe(403);
+    expect((await builtSetHandler(req('POST', path, { body: { ruleId: 'nope', picks: [a.id, b.id] } }), deps())).status).toBe(400);
+    expect((await builtSetHandler(req('GET', path), deps())).status).toBe(405);
+    overrides.delete('combos.builder');
   });
 });

@@ -155,4 +155,19 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     expect((await api('POST', ['report'], {})).status).toBe(405);
     expect((await api('GET', ['report', 'x'])).status).toBe(404);
   });
+
+  it('PR 98, 100 — the set builder: its switches (off), the rules it offers, what was built; changing it needs combos.publish', async () => {
+    const got = await api('GET', ['builder']);
+    expect(got.status).toBe(200);
+    expect(got.body.builder).toMatchObject({ settings: { on: false, rules: [] }, days: 30, report: [] });
+    expect((await combosRoute(call('GET', '/api/admin/combos/builder?days=0', { cookie: owner }), deps, ['builder'])).status).toBe(400);
+    const on = await api('POST', ['builder'], { on: true, maxStyles: 12 });
+    expect(on.status).toBe(200);
+    expect(on.body.settings).toMatchObject({ on: true, maxStyles: 12 });
+    expect((await api('POST', ['builder'], { priceMinor: 1 })).body.error).toBe('INVALID_INPUT');
+    expect((await api('POST', ['builder'], { on: false })).body.settings.on).toBe(false);
+    expect((await api('PUT', ['builder'])).status).toBe(405);
+    expect((await api('GET', ['builder', 'x'])).status).toBe(404);
+    expect((await api('GET', ['builder'], undefined, '')).status).toBe(401);
+  });
 });

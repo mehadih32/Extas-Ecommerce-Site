@@ -3,7 +3,7 @@
 // `bag.keepDays`, the badge number). Prices are never taken from the browser: the page reads them again from the
 // engines after every change. Refusals are the engine's stable codes (OUT_OF_STOCK, TOO_MANY …) for the shop's words.
 // PR 91: a whole set goes in (and is changed) through `/api/bag/sets`; a combo page's counts and prices through
-// `/api/shop/combo`.
+// `/api/shop/combo`. PR 98: a set the customer built ("Build your own set") through `/api/bag/built-sets`.
 import { randomBytes } from 'node:crypto';
 import {
   addItem,
@@ -21,7 +21,7 @@ import {
   visitorIdSchema,
   type CartDeps,
 } from '@extas/cart';
-import { addSetToBag, changeSetInBag, priceCell, priceSet, productFacts, recordColourPick, recordComboView, setSummary, type SlotChoice } from '@extas/combos';
+import { addBuiltSetToBag, addSetToBag, changeSetInBag, priceCell, priceSet, productFacts, recordColourPick, recordComboView, setSummary, type SlotChoice } from '@extas/combos';
 import { body, errorResponse, fail, isUuid, json, readCookie, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 
@@ -185,6 +185,24 @@ export async function setHandler(request: Request, deps: BagApiDeps | null): Pro
     const bag = (await bagOf(request, deps, true))!;
     const r = await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: b.slug as string, choices, addKey: (b.addKey as string | undefined) || undefined });
     return answer(deps, bag, { added: r.added, groupKey: r.groupKey, lineId: r.lines[0]?.id ?? null, setPriceMinor: r.setPriceMinor }, r.added ? 201 : 200);
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/**
+ * POST /api/bag/built-sets — PR 98, 100: puts a set the customer built into the bag ({ruleId, picks, addKey}): one tap
+ * one add, checked again against live stock and the bag, the pieces priced by the bag's own set tier rules (never by
+ * the browser).
+ */
+export async function builtSetHandler(request: Request, deps: BagApiDeps | null): Promise<Response> {
+  const stop = await guard(request, deps, ['POST']);
+  if (stop || !deps) return stop ?? noBag();
+  try {
+    const b = await body(request);
+    const bag = (await bagOf(request, deps, true))!;
+    const r = await addBuiltSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, ruleId: b.ruleId as string, picks: b.picks as string[], addKey: (b.addKey as string | undefined) || undefined });
+    return answer(deps, bag, { added: r.added, pieces: r.pieces, lineId: r.lineIds[0] ?? null, payMinor: r.payMinor }, r.added ? 201 : 200);
   } catch (e) {
     return refusal(e);
   }

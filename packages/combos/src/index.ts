@@ -8,6 +8,8 @@
 //   - set validation (PR 101), the set summary with price and saving (PR 96) and adding a set to the bag as one set
 //     with its price locked (PR 97) — the server functions the storefront and the S04 bag call;
 //   - the set photo composed from the piece photos with sharp (PR 575) and combo analytics (PR 104);
+//   - "Build your own set" (PR 98, 100, builder.ts): any pieces of a set group, the Smart Rules set tier price applied
+//     by itself, the pieces put in the bag as ordinary lines the same rules price;
 //   - "Complete your look" on the thank-you page (S04 · PR 128, look.ts): the pieces the running combos pair with an
 //     order's products, ranked by customers' picks, then featured and the owner's order — nothing invented.
 // The price rule is one decision everywhere (model.ts `setPricing`): never above the regular total, and the struck
@@ -29,3 +31,4 @@ export * from './set-photo';
 export * from './analytics';
 export * from './page';
 export * from './look';
+export * from './builder';

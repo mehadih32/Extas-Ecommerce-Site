@@ -71,7 +71,7 @@ export interface AddedSet {
 }
 
 /** The open cart, locked for this write (two adds at once wait for each other). */
-async function openCart(tx: Tx, storeId: number, cartId: string): Promise<void> {
+export async function openCart(tx: Tx, storeId: number, cartId: string): Promise<void> {
   const rows = await tx.$queryRaw<{ status: string }[]>`SELECT "status"::text AS status FROM "Cart" WHERE "id" = ${cartId}::uuid AND "storeId" = ${storeId} FOR UPDATE`;
   if (rows[0]?.status !== 'ACTIVE') throw new CombosError('CART_NOT_OPEN', 'the bag is not open', ['cartId']);
 }

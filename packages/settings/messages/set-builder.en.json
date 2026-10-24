@@ -1,0 +1,8 @@
+{
+  "combos": {
+    "builder": {
+      "label": "Build your own set",
+      "help": "The page where customers pick any pieces of a set group and the set price applies by itself (\"Any 2 polos ৳X · Any 3 ৳Y\"). The prices and the groups are your set tier rules in Smart Rules; this only opens the page. on: customers can use it (off until you turn it on; while off the page says it is taking a break and shows your ready-made sets). rules: which set tier rules it offers, by their key (empty = every live one). categories: only products of these categories show (empty = every category the rules cover). maxStyles: the most styles one group shows. perItem: \"৳X per item\" under each set price. entries: the \"Build your own\" row on the sets page and the link beside \"More sets\"."
+    }
+  }
+}

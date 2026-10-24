@@ -8,3 +8,4 @@ export * from './set-words';
 export * from './summary-model';
 export * from './photo-layout';
 export * from './page-model';
+export * from './builder-model';
