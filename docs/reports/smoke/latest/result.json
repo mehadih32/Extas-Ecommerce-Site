@@ -1,7 +1,7 @@
 {
-  "at": "2026-10-24 14:31 (Asia/Dhaka)",
+  "at": "2026-10-24 16:00 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "62bb285343e3",
+  "sha": "0adcfd5b5aea",
   "kind": "after deploy",
   "rolledBack": true,
   "ok": true,
