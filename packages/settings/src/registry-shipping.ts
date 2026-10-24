@@ -16,6 +16,12 @@
 // make, whether the areas level is read, whether names that match exactly are paired on their own (a person always can
 // change a pair; an unclear name is never guessed), and when a parcel waits for a person to pair its area: only when
 // the courier needs its own ids (`whenRequired`), or for every courier that takes them (`always`).
+//
+// PR 179 (registry version 56, `delivery.sticker.layout`, `delivery.sticker.exactAmount`): the courier sticker — its
+// size (the common thermal rolls, A6/A5 paper, four on an A4 sheet, or the owner's own size), the printer's dots per
+// inch, the sticker's language, the type size and how small it may get before the pieces carry on onto a second
+// sticker; and the exact-amount line (CN-014b idea 10): off by default, never printed on a paid parcel, its words in
+// both languages and a short report link or number the owner types (empty until he does).
 import { z } from 'zod';
 import { setting } from './define';
 import { moneyMinorSchema, templateTextSchema } from './schemas';
@@ -86,6 +92,44 @@ export const courierZoneSyncSchema = z
   })
   .strict();
 
+/** PR 179 — the sticker sizes on offer: thermal rolls (width × height in mm), paper, four on an A4 sheet, or custom. */
+export const STICKER_SIZES = ['100x150', '100x100', '75x100', 'a6', 'a5', 'a4x4', 'custom'] as const;
+/** PR 179 — the printer's dots per inch: 203 (most thermal sticker printers) or 300. */
+export const STICKER_DPIS = [203, 300] as const;
+
+/**
+ * PR 179 — the courier sticker. `size`: see STICKER_SIZES; `customMm`: the size when `size` is custom; `dpi`: see
+ * STICKER_DPIS; `lang`: the language of the sticker's own words (the receiver's address prints as it was typed);
+ * `scalePercent`: the type size (100 = normal); `minScalePercent`: the smallest the type may get to keep one sticker per
+ * parcel before the pieces carry on onto a second one; `showShop`: the shop's name and phone at the top; `maxPerPdf`: how
+ * many parcels one print takes (the rest wait for the next press).
+ */
+export const stickerLayoutSchema = z
+  .object({
+    size: z.enum(STICKER_SIZES),
+    customMm: z.object({ width: z.int().min(40).max(210), height: z.int().min(40).max(297) }).strict(),
+    dpi: z.union([z.literal(STICKER_DPIS[0]), z.literal(STICKER_DPIS[1])]),
+    lang: z.enum(['en', 'bn']),
+    scalePercent: z.int().min(70).max(150),
+    minScalePercent: z.int().min(50).max(100),
+    showShop: z.boolean(),
+    maxPerPdf: z.int().min(1).max(500),
+  })
+  .strict()
+  .refine((v) => v.minScalePercent <= v.scalePercent, { message: 'the smallest type cannot be larger than the type', path: ['minScalePercent'] });
+
+/** The `{tokens}` the sticker's exact-amount line may use. */
+export const STICKER_EXACT_TOKENS = ['amount', 'link'] as const;
+
+/**
+ * PR 179 (CN-014b idea 10) — the exact-amount line under the amount to collect: "Pay exactly {amount}. The rider may
+ * not ask for more." `link`: what {link} prints (a short report link or a WhatsApp number; empty until the owner types
+ * it). Off by default; never printed on a parcel with nothing to collect.
+ */
+export const stickerExactAmountSchema = z
+  .object({ enabled: z.boolean(), text: templateTextSchema(STICKER_EXACT_TOKENS, 160), link: z.string().trim().min(1).max(120).nullable() })
+  .strict();
+
 export const shippingSettings = {
   'delivery.courier.rtoCost': setting({
     ...base,
@@ -129,9 +173,33 @@ export const shippingSettings = {
     helpKey: 'delivery.courier.zoneSync.help',
     sortOrder: 903,
   }),
+  'delivery.sticker.layout': setting({
+    ...base56,
+    valueType: 'JSON',
+    schema: stickerLayoutSchema,
+    default: { size: '100x150', customMm: { width: 100, height: 150 }, dpi: 203, lang: 'en', scalePercent: 100, minScalePercent: 80, showShop: true, maxPerPdf: 100 }, // hardcode-ok: the sticker's normal type (100 %) and the smallest it may shrink to (80 %); the owner changes both here
+    labelKey: 'delivery.sticker.layout.label',
+    helpKey: 'delivery.sticker.layout.help',
+    sortOrder: 910,
+  }),
+  'delivery.sticker.exactAmount': setting({
+    ...base56,
+    valueType: 'JSON',
+    schema: stickerExactAmountSchema,
+    default: {
+      enabled: false,
+      text: { en: 'Pay exactly {amount}. The rider may not ask for more. {link}', bn: 'ঠিক {amount} দিন। ডেলিভারিম্যান এর বেশি চাইতে পারবেন না। {link}' },
+      link: null,
+    },
+    labelKey: 'delivery.sticker.exactAmount.label',
+    helpKey: 'delivery.sticker.exactAmount.help',
+    sortOrder: 911,
+  }),
 };
 
 export type RtoCostSettings = z.output<typeof rtoCostSchema>;
 export type CourierBookingSettings = z.output<typeof courierBookingSchema>;
 export type CourierTrackingSettings = z.output<typeof courierTrackingSchema>;
 export type CourierZoneSyncSettings = z.output<typeof courierZoneSyncSchema>;
+export type StickerLayoutSettings = z.output<typeof stickerLayoutSchema>;
+export type StickerExactAmountSettings = z.output<typeof stickerExactAmountSchema>;

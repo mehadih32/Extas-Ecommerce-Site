@@ -53,7 +53,8 @@
       "orders": {
         "all": "All orders",
         "confirm": "To confirm",
-        "riskrules": "Risk rules"
+        "riskrules": "Risk rules",
+        "packing": "Packing & print"
       }
     },
     "purpose": {

@@ -21,6 +21,7 @@
     "@extas/combos": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",
+    "@extas/documents": "workspace:*",
     "@extas/inventory": "workspace:*",
     "@extas/jobs": "workspace:*",
     "@extas/media": "workspace:*",

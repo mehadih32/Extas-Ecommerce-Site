@@ -20,7 +20,9 @@ export type ShippingErrorCode =
   /** PR 176: more orders in one press than the owner's "per press" (`data.max`). */
   | 'TOO_MANY'
   /** PR 554: this courier publishes no place list (Steadfast reads the address itself): nothing to sync. */
-  | 'NO_ZONE_LIST';
+  | 'NO_ZONE_LIST'
+  /** PR 179: a sticker cannot be printed now — not booked, picked up already, its COD or receiver changed (`data.refused`). */
+  | 'NOT_PRINTABLE';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;

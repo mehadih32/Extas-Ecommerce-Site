@@ -141,6 +141,10 @@ export const PERMISSIONS = {
   // audited. Nothing is changed by an export.
   'orders.export': { group: 'orders' },
   'orders.exportPersonal': { group: 'orders' },
+  // S08 · PR 179 — Orders › Packing & print: print a booked parcel's courier sticker (it carries the receiver's name,
+  // phone and address, so not a `.read` key) and a sample sticker to try the size. Printing never books, re-books or
+  // changes a parcel, its COD or a charge.
+  'fulfilment.print': { group: 'fulfilment' },
   // S05 · PR 148 — Messages › Order journey (MSG-01): see the journey (its steps, channels, caps and whether each channel
   // is live or on its mock); change it; and record a customer's self-confirm reply (1, 2 or 3) until the WhatsApp
   // provider's replies arrive by themselves. A 1 confirms the order only with `messages.selfConfirm.confirmOnYes`, as a

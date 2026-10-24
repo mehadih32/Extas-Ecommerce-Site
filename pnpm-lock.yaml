@@ -40,6 +40,9 @@ importers:
       '@extas/delivery':
         specifier: workspace:*
         version: link:../../packages/delivery
+      '@extas/documents':
+        specifier: workspace:*
+        version: link:../../packages/documents
       '@extas/inventory':
         specifier: workspace:*
         version: link:../../packages/inventory
@@ -540,6 +543,31 @@ importers:
       tsx:
         specifier: 4.23.15
         version: 4.23.15
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.72.0
+        version: 8.72.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
+  packages/documents:
+    dependencies:
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@22.20.5)
+    devDependencies:
+      '@eslint/js':
+        specifier: 9.39.5
+        version: 9.39.5
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3

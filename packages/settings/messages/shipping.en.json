@@ -17,6 +17,16 @@
         "label": "Courier area lists (zone sync)",
         "help": "Each courier has its own list of cities, zones and areas, and some couriers want their own ids on every parcel. The shop reads each courier's list and pairs it with the shop's own areas. \"On\": the list is read again by itself every few days (\"Every … days\"); you can always press \"Read the list now\" on the courier's page. \"Calls per run\": how many questions one reading asks the courier before it stops and carries on next time. \"Areas too\": the smallest level is read as well. \"Pair exact names\": a courier place whose name is exactly one of the shop's areas is paired by itself; a name that is unclear is never guessed — it waits on the courier's page for a person. \"Hold a parcel\": when an area has no pair, the parcel waits with a clear note instead of failing — only for a courier that needs its ids (recommended), or for every courier that takes them. A place the courier drops is archived, never deleted, and its pair is kept for the record."
       }
+    },
+    "sticker": {
+      "layout": {
+        "label": "Courier sticker: size and type",
+        "help": "The sticker printed for every booked parcel. \"Size\": a thermal roll (100 × 150 mm is the usual one, or 100 × 100, 75 × 100), A6 or A5 paper, four stickers on one A4 sheet, or your own size in millimetres. \"Printer dots\": 203 for most sticker printers, 300 for sharper ones. \"Language\": the words on the sticker (the address prints as the customer typed it). \"Type size\": 100 is normal. \"Smallest type\": when an order has many pieces the type gets smaller down to this, and only then do the pieces carry on onto a second sticker marked 2/2. \"Shop name\": your shop's name and phone at the top. \"Per print\": how many parcels one print takes; the rest wait for the next press."
+      },
+      "exactAmount": {
+        "label": "Courier sticker: exact-amount line",
+        "help": "A line under the amount to collect, so the customer knows the rider may not ask for more: \"Pay exactly ৳1,580…\". Off until you turn it on. It is never printed on a parcel that is already paid. {amount} is the amount to collect; {link} prints what you type in \"Report link\" (a short link or a WhatsApp number) — empty until you type it."
+      }
     }
   }
 }

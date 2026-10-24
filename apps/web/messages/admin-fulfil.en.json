@@ -10,7 +10,9 @@
       "UNKNOWN_PROVIDER": "The shop has no connection for this courier.",
       "NO_ZONE_LIST": "This courier publishes no area list: it reads the address itself.",
       "forbidden": "You do not have the permission for this.",
-      "unauthorized": "You are signed out. Sign in again."
+      "unauthorized": "You are signed out. Sign in again.",
+      "NOT_PRINTABLE": "Some stickers cannot be printed now: {fields}. Untick them, or re-book the parcel first.",
+      "popup": "The PDF is ready but the browser blocked the new tab. It was downloaded instead."
     },
     "couriers": {
       "title": "Couriers",
@@ -98,6 +100,98 @@
       "prev": "Previous",
       "next": "Next",
       "noListLong": "This courier publishes no area list: it reads the receiver's address itself, so nothing needs pairing."
+    },
+    "packing": {
+      "printTitle": "Print run",
+      "printSub": "Courier stickers for every booked parcel still with us, in packing order: the category and style with the most pieces first. A sticker printed again is marked REPRINT.",
+      "stickerTitle": "Sticker",
+      "size": {
+        "100x150": "100 × 150 mm (label printer)",
+        "100x100": "100 × 100 mm (label printer)",
+        "75x100": "75 × 100 mm (label printer)",
+        "a6": "A6 paper",
+        "a5": "A5 paper",
+        "a4x4": "A4 · 4 per sheet",
+        "custom": "Own size: {w} × {h} mm"
+      },
+      "dpi": "{dpi} dots per inch",
+      "lang": {
+        "en": "Words in English",
+        "bn": "Words in Bengali"
+      },
+      "exactOn": "Exact-amount line: on",
+      "exactOff": "Exact-amount line: off",
+      "perPrint": "Up to {n} stickers per print",
+      "settingsNote": "Size, printer dots, language and the exact-amount line are delivery settings (Delivery → More options).",
+      "sample": "Sample sticker",
+      "counts": {
+        "waiting": "Waiting",
+        "new": "Not printed",
+        "printed": "Printed before",
+        "problems": "Need re-booking"
+      },
+      "printNew": "Print new stickers · {n}",
+      "printing": "Making the PDF…",
+      "printOne": "Print",
+      "reprintOne": "Reprint",
+      "col": {
+        "order": "Order",
+        "courier": "Courier",
+        "consignment": "Consignment",
+        "pieces": "Pieces",
+        "printed": "Sticker"
+      },
+      "pill": {
+        "new": "new",
+        "printed": "printed ×{n}",
+        "practice": "practice"
+      },
+      "more": "{n} more wait for the next print (up to {max} per print).",
+      "empty": "Nothing waiting to print",
+      "emptySub": "A parcel appears here once a courier is booked, and leaves when the courier picks it up.",
+      "done": "PDF ready: {n} stickers."
+    },
+    "sticker": {
+      "problem": {
+        "NOT_BOOKED": "not booked yet",
+        "NOT_WITH_US": "the courier has it already",
+        "COD_CHANGED": "amount changed after booking: re-book",
+        "RECEIVER_CHANGED": "receiver changed after booking: re-book"
+      },
+      "words": {
+        "to": "To",
+        "order": "Order",
+        "collect": "Collect",
+        "paid": "PAID: collect nothing",
+        "items": "Items",
+        "pieces": "{count} pcs",
+        "consignment": "Consignment",
+        "tracking": "Tracking",
+        "giftFrom": "Gift from",
+        "deliverAfter": "Deliver on or after",
+        "note": "Note",
+        "reprint": "REPRINT {n}",
+        "page": "{n}/{of}",
+        "continued": "Continued on the next sticker",
+        "practice": "PRACTICE: not a real parcel"
+      },
+      "sample": {
+        "order": "SAMPLE-1",
+        "courier": "Sample courier",
+        "consignment": "00000000",
+        "tracking": "SAMPLE-TRACK",
+        "name": "Sample Receiver",
+        "phone": "Mobile number",
+        "address": "House, road, area, district (the address prints in full here)",
+        "amountMinor": "158000",
+        "item1": "Sample style",
+        "colour1": "Colour",
+        "size1": "M",
+        "item2": "Second style",
+        "colour2": "Colour",
+        "size2": "L",
+        "note": "The customer’s delivery note"
+      }
     }
   }
 }
