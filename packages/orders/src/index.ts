@@ -32,6 +32,8 @@
 // SIM-F-014).
 // S06 · PR 519: the Order Identity Graph — one identity from the phone, the name, the address, the device and the IP,
 // linked when an order lands; the risk score's identity and device signals read it (identity-graph.ts).
+// S06 · PR 520: the duplicate & re-order rules engine — scenarios A–E, H, I as separate rules with their own switch,
+// window, confidence and action, run by the duplicate check when the owner switches them on (duplicate-rules.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -60,4 +62,5 @@ export * from './risk-panel';
 export * from './sections';
 export * from './identity';
 export * from './identity-graph';
+export * from './duplicate-rules';
 export * from './booking';
