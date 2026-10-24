@@ -1,10 +1,12 @@
 // Builds the status page data from the repository's own records (no hand-kept copy):
 //   docs/MASTER-REGISTER.md  → stages (stage table) and PR states (Build status table)
 //   BLOCKED.md               → what is waiting for the owner
+//   docs/LAUNCH-TRACK.md     → Launch X/N, the PRs needed before real orders (CN-027)
 // Output: apps/web/src/generated/status.json (generated at build time, not committed).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { launchCount } from './launch-status.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(root, p), 'utf8');
@@ -41,7 +43,7 @@ export function expandRange(range) {
   return out;
 }
 
-export function buildStatus({ register, blocked, now = new Date().toISOString(), commit = '' }) {
+export function buildStatus({ register, blocked, track = '', now = new Date().toISOString(), commit = '' }) {
   const states = new Map();
   for (const [pr, , state] of tableAfter(register, '## Build status')) {
     for (const n of expandRange(pr)) states.set(n, clean(state).toLowerCase());
@@ -60,17 +62,19 @@ export function buildStatus({ register, blocked, now = new Date().toISOString(),
   const waiting = tableAfter(blocked, '# BLOCKED')
     .filter((r) => r.length >= 4 && !/হয়ে গেছে|ব্লক নয়|done/i.test(r[3]))
     .map(([n, what, why, state]) => ({ n, what: clean(what), why: clean(why), state: clean(state) }));
-  return { generatedAt: now, commit, totals: { active, done }, stages, waiting };
+  const { done: launchDone, total: launchTotal } = launchCount({ track, register });
+  return { generatedAt: now, commit, totals: { active, done }, launch: { done: launchDone, total: launchTotal }, stages, waiting };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const status = buildStatus({
     register: read('docs/MASTER-REGISTER.md'),
     blocked: read('BLOCKED.md'),
+    track: read('docs/LAUNCH-TRACK.md'),
     commit: process.env.GIT_SHA || process.env.GITHUB_SHA || '',
   });
   const out = join(root, 'apps/web/src/generated/status.json');
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, JSON.stringify(status, null, 2) + '\n');
-  console.log(`status: ${status.totals.done}/${status.totals.active} PRs, ${status.waiting.length} waiting for the owner`);
+  console.log(`status: ${status.totals.done}/${status.totals.active} PRs, Launch ${status.launch.done}/${status.launch.total}, ${status.waiting.length} waiting for the owner`);
 }

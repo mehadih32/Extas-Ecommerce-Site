@@ -8,6 +8,8 @@ export type BuildStatus = {
   generatedAt: string;
   commit: string;
   totals: { active: number; done: number };
+  /** CN-027: the PRs needed before real orders (docs/LAUNCH-TRACK.md), done = merged or live. */
+  launch?: { done: number; total: number };
   stages: Stage[];
   waiting: Waiting[];
 };
