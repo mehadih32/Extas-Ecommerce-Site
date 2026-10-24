@@ -57,7 +57,7 @@ export function shopHooks(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>): 
 export async function syncOrder(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>, ref: { storeId: number; shipmentId: string }, hooks: SyncHooks = shopHooks(deps)): Promise<Synced | null> {
   const s = await deps.db.shipment.findFirst({
     where: { id: ref.shipmentId, storeId: ref.storeId },
-    select: { id: true, storeId: true, orderId: true, status: true, pickedAt: true, deliveredAt: true, returnedAt: true, courierAccount: { select: { providerKey: true } }, order: { select: { status: true } } },
+    select: { id: true, storeId: true, orderId: true, status: true, codCollectedMinor: true, pickedAt: true, deliveredAt: true, returnedAt: true, courierAccount: { select: { providerKey: true } }, order: { select: { status: true } } },
   });
   if (!s || SILENT.has(s.status)) return null;
   // the order's own active parcel only (an older failed or cancelled try never speaks for it)
@@ -81,7 +81,7 @@ export async function syncOrder(deps: Pick<ShippingDeps, 'db' | 'settings' | 'no
   for (const step of moves) {
     try {
       const at = atOf[step];
-      await orderStep(ordersDeps(deps), { storeId: s.storeId, orderId: s.orderId }, by, step, { ...(at ? { at } : {}), ...(step === 'partiallyDelivered' && kept ? { keptItemIds: kept } : {}) }, { eventData: { shipmentId: s.id, courierStatus: s.status } });
+      await orderStep(ordersDeps(deps), { storeId: s.storeId, orderId: s.orderId }, by, step, { ...(at ? { at } : {}), ...(step === 'partiallyDelivered' && kept ? { keptItemIds: kept } : {}), ...(step === 'returned' && (s.codCollectedMinor ?? 0) > 0 ? { chargePaidMinor: s.codCollectedMinor! } : {}) }, { eventData: { shipmentId: s.id, courierStatus: s.status } });
       out.moved.push(step);
     } catch (e) {
       if (isOrdersError(e) && WAITS.has(e.code)) {

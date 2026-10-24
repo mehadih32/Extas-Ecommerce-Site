@@ -54,7 +54,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 189 · return handling, no returns after recei
     await orderStep(d(), a.r, by, 'returned', { refusalKey: 'after-eid' });
     const ra = await db().returnRecord.findFirstOrThrow({ where: { orderId: a.o.orderId }, include: { items: true } });
     const lineA = await db().orderItem.findFirstOrThrow({ where: { orderId: a.o.orderId } });
-    expect(ra).toMatchObject({ kind: 'REFUSED_AT_DOOR', reasonCode: 'after-eid', status: 'EXPECTED', ourFault: false });
+    expect(ra).toMatchObject({ kind: 'REFUSED_AT_DOOR', reasonCode: 'after-eid', status: 'EXPECTED', ourFault: true }); // PR 191: "after Eid" is one of the shop's own-fault reasons
     expect(ra.items).toMatchObject([{ orderItemId: lineA.id, expectedSku: lineA.sku, quantity: lineA.quantity }]);
     const ev = await db().orderEvent.findFirstOrThrow({ where: { orderId: a.o.orderId, type: 'order.returned' } });
     expect(ev.data).toMatchObject({ returnId: ra.id });

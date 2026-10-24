@@ -95,11 +95,20 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
     claimPhoto: chargeRules.claimPhoto,
   };
   const d = view.dict;
-  const right = data.canQc ? (
-    <Link className="a2-btn pri" href={`${returnsHref()}/qc`} data-testid="returns-qc-link">
-      <ShellIcon name="check" size={15} />
-      {t(d, 'returns.qc.open')}
-    </Link>
-  ) : null;
+  // PR 191: the refused parcels and the refused-parcel list beside Receive & QC
+  const right = (
+    <div className="a2-gap8">
+      <Link className="a2-btn" href={`${returnsHref()}/refused`} data-testid="returns-refused-link">
+        <ShellIcon name="info" size={15} />
+        {t(d, 'returns.refused.open')}
+      </Link>
+      {data.canQc ? (
+        <Link className="a2-btn pri" href={`${returnsHref()}/qc`} data-testid="returns-qc-link">
+          <ShellIcon name="check" size={15} />
+          {t(d, 'returns.qc.open')}
+        </Link>
+      ) : null}
+    </div>
+  );
   return <ReturnsBoard view={view} data={data} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
 }

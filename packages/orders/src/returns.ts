@@ -275,6 +275,8 @@ export interface ReturnView {
   orderNumber: string;
   customerName: string | null;
   reasonCode: string | null;
+  /** PR 191: the delivery charge paid at the door before refusing (a CHARGE_PAID_RETURN). */
+  chargePaidMinor: number;
   ourFault: boolean;
   exchangeId: string | null;
   exchangeNumber: string | null;
@@ -287,7 +289,7 @@ export interface ReturnView {
 
 const RETURN_INCLUDE = { items: { orderBy: { createdAt: 'asc' as const } } };
 
-async function returnViewsOf(db: Db, rows: { id: string; kind: string; status: string; version: number; orderId: string; reasonCode: string | null; ourFault: boolean; exchangeId: string | null; receivedAt: Date | null; closedAt: Date | null; note: string | null; createdAt: Date; items: { id: string; orderItemId: string; quantity: number; expectedSku: string | null; scannedSku: string | null; disposition: string | null; dispositionState: string | null; lossReason: string | null; erpPushId: string | null; qcAt: Date | null; note: string | null }[] }[]): Promise<ReturnView[]> {
+async function returnViewsOf(db: Db, rows: { id: string; kind: string; status: string; version: number; orderId: string; reasonCode: string | null; chargePaidMinor: number; ourFault: boolean; exchangeId: string | null; receivedAt: Date | null; closedAt: Date | null; note: string | null; createdAt: Date; items: { id: string; orderItemId: string; quantity: number; expectedSku: string | null; scannedSku: string | null; disposition: string | null; dispositionState: string | null; lossReason: string | null; erpPushId: string | null; qcAt: Date | null; note: string | null }[] }[]): Promise<ReturnView[]> {
   const orderIds = [...new Set(rows.map((r) => r.orderId))];
   const itemIds = [...new Set(rows.flatMap((r) => r.items.map((i) => i.orderItemId)))];
   const pushIds = [...new Set(rows.flatMap((r) => r.items.map((i) => i.erpPushId).filter((x): x is string => !!x)))];
@@ -311,6 +313,7 @@ async function returnViewsOf(db: Db, rows: { id: string; kind: string; status: s
     orderNumber: om.get(r.orderId)?.number ?? '',
     customerName: om.get(r.orderId)?.customerName ?? null,
     reasonCode: r.reasonCode,
+    chargePaidMinor: r.chargePaidMinor,
     ourFault: r.ourFault,
     exchangeId: r.exchangeId,
     exchangeNumber: r.exchangeId ? (xm.get(r.exchangeId)?.number ?? null) : null,
@@ -345,6 +348,8 @@ async function returnViewsOf(db: Db, rows: { id: string; kind: string; status: s
 export const returnsListInput = z
   .object({
     status: z.array(z.enum(RETURN_STATUSES)).max(4).optional(),
+    /** PR 191: only these kinds (the refused parcels: REFUSED_AT_DOOR, CHARGE_PAID_RETURN). */
+    kind: z.array(z.enum(['REFUSED_AT_DOOR', 'RETURNED', 'CHARGE_PAID_RETURN', 'DEFECT_RETURN', 'EXCHANGE_PICKUP'])).max(5).optional(),
     /** An order number: the returns of that order. */
     orderNumber: z.string().trim().min(1).max(40).optional(),
     limit: z.int().min(1).max(200).optional(),
@@ -356,7 +361,7 @@ export async function listReturns(deps: OrdersDeps, who: Who, input: unknown = {
   await allowOne(deps, who, ['returns.view', 'returns.qc']);
   const d = parse(returnsListInput, input, 'returns list');
   const rows = await deps.db.returnRecord.findMany({
-    where: { storeId: who.storeId, ...(d.status ? { status: { in: d.status } } : {}), ...(d.orderNumber ? { orderId: { in: (await deps.db.order.findMany({ where: { storeId: who.storeId, number: { equals: d.orderNumber, mode: 'insensitive' } }, select: { id: true } })).map((o) => o.id) } } : {}) },
+    where: { storeId: who.storeId, ...(d.status ? { status: { in: d.status } } : {}), ...(d.kind ? { kind: { in: d.kind } } : {}), ...(d.orderNumber ? { orderId: { in: (await deps.db.order.findMany({ where: { storeId: who.storeId, number: { equals: d.orderNumber, mode: 'insensitive' } }, select: { id: true } })).map((o) => o.id) } } : {}) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: d.limit ?? 100,
     include: RETURN_INCLUDE,

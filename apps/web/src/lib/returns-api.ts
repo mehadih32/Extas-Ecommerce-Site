@@ -39,6 +39,12 @@
 //   POST  /api/admin/returns/parcels/:id/qc                     {items: [{returnItemId, scannedSku, disposition,
 //                                                               lossReason?, photoAssetIds?, note?, otherSku?}], note?,
 //                                                               version?} — every piece in one save (returns.qc)
+//   GET   /api/admin/returns/parcels?kind=                      only these kinds (the refused parcels, PR 191)
+//   GET   /api/admin/returns/refused?state=                     the refused-parcel list a person decides, the newest
+//                                                               refusal first (PR 191, returns.view)
+//   POST  /api/admin/returns/refused/:id/decide                 {state: LISTED | DISMISSED | REMOVED, note?, version?} —
+//                                                               a person decides one number; taking it off needs a note
+//                                                               (PR 191, returns.decide). Nothing blocks an order.
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
 import { handle } from './orders-api';
@@ -125,8 +131,9 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
       // The list is read by both roles; the order service checks returns.view or returns.qc again.
       return handle(request, deps, null, async (x) => {
         const status = list(x.url, 'status');
+        const kind = list(x.url, 'kind');
         const order = x.url.searchParams.get('order')?.trim();
-        return { parcels: await od.listReturns(x.deps, x.who, { ...(status.length ? { status } : {}), ...(order ? { orderNumber: order } : {}) }) };
+        return { parcels: await od.listReturns(x.deps, x.who, { ...(status.length ? { status } : {}), ...(kind.length ? { kind } : {}), ...(order ? { orderNumber: order } : {}) }) };
       });
     }
     if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['returnId']));
@@ -156,6 +163,22 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
       default:
         return notFound();
     }
+  }
+  if (a === 'refused') {
+    if (!b) {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'returns.view', async (x) => {
+        const state = list(x.url, 'state');
+        return { entries: await od.listRefusedEntries(x.deps, x.who, state.length ? { state } : {}) };
+      });
+    }
+    if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['id']));
+    if (path.length !== 3 || c !== 'decide') return notFound();
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'returns.decide', async (x) => {
+      const d = await decision(request);
+      return { result: await od.decideRefusedEntry(x.deps, x.who, b, d.input, { version: d.version }) };
+    });
   }
   if (a === 'orders') {
     if (!b || !isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['orderId']));

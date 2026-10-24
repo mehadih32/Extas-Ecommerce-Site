@@ -44,7 +44,7 @@ async function lastRiderNote(deps: Pick<ShippingDeps, 'db'>, storeId: number, sh
 
 /** The parcel's return record: the one on this parcel, else the order's own record without a parcel (the oldest). */
 function returnOf(db: Db, storeId: number, orderId: string, shipmentId: string) {
-  return db.returnRecord.findFirst({ where: { storeId, OR: [{ shipmentId }, { orderId, shipmentId: null }] }, orderBy: { createdAt: 'asc' }, select: { id: true, reasonCode: true, riderNote: true, shipmentId: true } });
+  return db.returnRecord.findFirst({ where: { storeId, OR: [{ shipmentId }, { orderId, shipmentId: null, kind: { in: ['REFUSED_AT_DOOR', 'CHARGE_PAID_RETURN'] } }] }, orderBy: { createdAt: 'asc' }, select: { id: true, reasonCode: true, riderNote: true, shipmentId: true, courierClaim: true } });
 }
 
 /** The order's last parcel, when it came back (or the order says it did); else null. */
@@ -76,7 +76,7 @@ export async function recordReturnReason(deps: Base, who: Who, shipmentId: strin
     const known = await returnOf(tx, who.storeId, s.orderId, s.id);
     const kind = returnKindOf(s.status, s.codCollectedMinor);
     const ret = known
-      ? await tx.returnRecord.update({ where: { id: known.id }, data: { reasonCode: reason.key, riderNote, shipmentId: s.id }, select: { id: true } })
+      ? await tx.returnRecord.update({ where: { id: known.id }, data: { reasonCode: reason.key, riderNote, shipmentId: s.id, ...(known.courierClaim ? {} : { courierClaim: s.status }) }, select: { id: true } })
       : await tx.returnRecord.create({
           data: { storeId: who.storeId, orderId: s.orderId, shipmentId: s.id, customerId: s.order.customerId, kind, reasonCode: reason.key, riderNote, courierClaim: s.status, chargePaidMinor: kind === 'CHARGE_PAID_RETURN' ? Math.max(0, s.codCollectedMinor ?? 0) : 0 },
           select: { id: true },

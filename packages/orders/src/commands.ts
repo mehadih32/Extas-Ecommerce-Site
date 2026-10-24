@@ -346,7 +346,16 @@ const STEP_TIME: Partial<Record<OrderStep, keyof LockedOrder | 'packedAt' | 'han
   deliveryCorrected: 'returnedAt',
 };
 
-export const stepInput = z.object({ at: z.coerce.date().optional(), keptItemIds: z.array(z.uuid()).min(1).max(500).optional(), refusalKey: z.string().trim().min(1).max(60).optional(), note }).strict();
+export const stepInput = z
+  .object({
+    at: z.coerce.date().optional(),
+    keptItemIds: z.array(z.uuid()).min(1).max(500).optional(),
+    refusalKey: z.string().trim().min(1).max(60).optional(),
+    /** PR 191: the delivery charge the customer paid at the door before refusing the rest (a CHARGE_PAID_RETURN). */
+    chargePaidMinor: z.int().min(0).max(100_000_000).optional(),
+    note,
+  })
+  .strict();
 
 /**
  * One fulfilment or courier step (S08 hook). A partial delivery needs the list of kept lines (§6.5.0). A refused parcel
@@ -365,6 +374,7 @@ export async function orderStep(
 ): Promise<CommandResult> {
   const d = parse(stepInput, input, 'step');
   if (step === 'partiallyDelivered' && !d.keptItemIds) throw new OrdersError('INVALID_INPUT', 'a partial delivery names the kept lines', ['keptItemIds']);
+  if (d.chargePaidMinor !== undefined && step !== 'returned') throw new OrdersError('INVALID_INPUT', 'only a refused parcel has a charge paid at the door', ['chargePaidMinor']);
   let refusal: { key: string; en: string; bn: string } | null = null;
   if (d.refusalKey) {
     if (step !== 'returned' && step !== 'partiallyDelivered' && step !== 'deliveryCorrected') throw new OrdersError('INVALID_INPUT', 'only a refused parcel has a refusal reason', ['refusalKey']);
@@ -378,7 +388,7 @@ export async function orderStep(
     check: opts.check,
     effect: async (tx, o, _f, { from, now }) => {
       const field = STEP_TIME[step];
-      const returnId = step === 'returned' || step === 'partiallyDelivered' ? await openCourierReturn(tx, o, { step, refusalKey: refusal?.key ?? null, keptItemIds: d.keptItemIds ?? [] }) : null;
+      const returnId = step === 'returned' || step === 'partiallyDelivered' ? await openCourierReturn(deps, tx, o, { step, refusalKey: refusal?.key ?? null, keptItemIds: d.keptItemIds ?? [], chargePaidMinor: d.chargePaidMinor ?? 0, now }) : null;
       const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(opts.eventData ?? {}) };
       // PR 184: a pick-up the courier reports before anyone pressed "Handed over" is the hand-over
       const handed = step === 'courierPickedUp' && from !== 'HANDED_OVER' ? { handedOverAt: d.at ?? now } : {};

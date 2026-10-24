@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { exchangeChargeSchema, exchangeEngineSchema, exchangeSwapSchema, exchangeTiersSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
+import { exchangeChargeSchema, exchangeEngineSchema, exchangeSwapSchema, exchangeTiersSchema, refusedListSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
 
 describe('exchange and return settings (v57)', () => {
   it('every key is in the registry at version 57 in the Orders group, labelled in English and Bengali, its default valid', () => {
@@ -54,5 +54,10 @@ describe('exchange and return settings (v57)', () => {
     // the re-ship reasons are refusal reasons the owner has
     const refusals = (registry['orders.refusal.reasons'].default as { key: string }[]).map((r) => r.key);
     for (const k of returnsSettings['orders.exchange.charge'].default.reshipRefusals) expect(refusals).toContain(k);
+  });
+
+  it('PR 191: the refused-parcel list is off; when on, a person decides every number it proposes', () => {
+    expect(returnsSettings['orders.refused.list'].default).toEqual({ enabled: false, minRefusals: 2 });
+    expect(refusedListSchema.safeParse({ enabled: true, minRefusals: 0 }).success).toBe(false);
   });
 });

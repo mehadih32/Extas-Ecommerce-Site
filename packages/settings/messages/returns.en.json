@@ -35,6 +35,12 @@
         "label": "Return handling",
         "help": "The policy is that there are no returns after receipt (Exchange & return policy › returns after delivery, off): once the customer has the parcel, the way back is an exchange. \"Our mistake may come back\": a defect or a wrong item may still be sent back after receipt — off by default. \"Window\": how many hours after the courier's delivered mark a return may be opened; empty = the exchange window. A parcel the courier brings back is always received and checked. No money is paid back here."
       }
+    },
+    "refused": {
+      "list": {
+        "label": "Refused-parcel list",
+        "help": "Numbers that refused parcels, for the ad audiences to leave out (they are not blocked: they can still order, with Cash on Delivery). Off by default. When on, a number whose refusals reach \"Proposed after\" is proposed — refusals the shop caused (our-fault reasons) and refusals re-shipped in another size after a try-on are not counted — and a person puts it on the list, dismisses it, or takes it off again."
+      }
     }
   },
   "defaults": {

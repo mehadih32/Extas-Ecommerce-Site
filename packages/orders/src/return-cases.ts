@@ -20,6 +20,7 @@ import { allow, nowOf, parse, setting, type Db, type OrdersDeps, type Tx, type W
 import { OrdersError } from './errors';
 import { OPEN_EXCHANGE, paidPerPiece } from './exchange';
 import { exchangeWindow, type ExchangeWindow } from './exchange-pure';
+import { ourFaultRefusal, proposeRefused } from './refused';
 import { onReturn, type ReturnStepOptions } from './returns';
 import { execute, staffBy, type By, type CommandOptions } from './service';
 
@@ -79,29 +80,42 @@ async function takenBack(db: Db, storeId: number, orderId: string): Promise<Map<
 // The courier brings it back (the §6.5.0 mapping rule)
 // ---------------------------------------------------------------------------------------------------------------------
 
+/** The kinds of a parcel that came back from the door (never an exchange pick-up or a return after receipt). */
+const DOOR_KINDS = ['REFUSED_AT_DOOR', 'CHARGE_PAID_RETURN'] as const;
+
 /**
  * Opens the return of a parcel the courier brings back, in the order step's own transaction: every active line not
  * kept by the customer is expected back. No line left → nothing. Called by `orderStep` for `returned` and for the
  * refused part of `partiallyDelivered`; one per order and step (its key).
  */
-export async function openCourierReturn(tx: Tx, o: { id: string; storeId: number; customerId: string | null }, x: { step: 'returned' | 'partiallyDelivered'; refusalKey: string | null; keptItemIds: readonly string[] }): Promise<string | null> {
+export async function openCourierReturn(
+  deps: Pick<OrdersDeps, 'settings'>,
+  tx: Tx,
+  o: { id: string; storeId: number; customerId: string | null; phone: string | null },
+  x: { step: 'returned' | 'partiallyDelivered'; refusalKey: string | null; keptItemIds: readonly string[]; chargePaidMinor: number; now: Date },
+): Promise<string | null> {
   const lines = await tx.orderItem.findMany({ where: { storeId: o.storeId, orderId: o.id, status: 'ACTIVE', id: { notIn: [...x.keptItemIds] } }, orderBy: { createdAt: 'asc' }, select: LINE_FACTS });
   if (!lines.length) return null;
-  const ret = await tx.returnRecord.create({
-    data: {
-      storeId: o.storeId,
-      orderId: o.id,
-      customerId: o.customerId,
-      // a parcel that never stayed with the customer: refused at the door or failed for good (the phone history keeps
-      // RETURNED for a return after receipt, PR 157)
-      kind: 'REFUSED_AT_DOOR',
-      reasonCode: x.refusalKey,
-      status: 'EXPECTED',
-      idempotencyKey: `order:${o.id}:${x.step}`,
-      items: { create: lines.map((l) => ({ storeId: o.storeId, orderItemId: l.id, quantity: l.quantity, variantId: l.variantId, expectedSku: l.sku })) },
-    },
-    select: { id: true },
-  });
+  // PR 191: the shop's own fault (SIM-F-044) is marked and never counted; the delivery charge paid at the door is kept
+  const ourFault = await ourFaultRefusal(deps, o.storeId, x.refusalKey);
+  const items = { create: lines.map((l) => ({ storeId: o.storeId, orderItemId: l.id, quantity: l.quantity, variantId: l.variantId, expectedSku: l.sku })) };
+  const facts = {
+    // a parcel that never stayed with the customer: refused at the door or failed for good (the phone history keeps
+    // RETURNED for a return after receipt, PR 157); he paid the delivery charge at the door and refused the rest
+    kind: x.chargePaidMinor > 0 ? ('CHARGE_PAID_RETURN' as const) : ('REFUSED_AT_DOOR' as const),
+    chargePaidMinor: x.chargePaidMinor,
+    ourFault,
+    status: 'EXPECTED' as const,
+    idempotencyKey: `order:${o.id}:${x.step}`,
+  };
+  // PR 526: the parcel's one return record — a reason recorded while the parcel was still on its way back (or a
+  // delivery check resolved) already opened it, so the courier's "returned" fills that record instead of a second one
+  const early = await tx.returnRecord.findFirst({ where: { storeId: o.storeId, orderId: o.id, kind: { in: [...DOOR_KINDS] }, idempotencyKey: null, exchangeId: null, items: { none: {} } }, orderBy: { createdAt: 'asc' }, select: { id: true, reasonCode: true } });
+  const ret = early
+    ? await tx.returnRecord.update({ where: { id: early.id }, data: { ...facts, reasonCode: x.refusalKey ?? early.reasonCode, items }, select: { id: true } })
+    : await tx.returnRecord.create({ data: { storeId: o.storeId, orderId: o.id, customerId: o.customerId, ...facts, reasonCode: x.refusalKey, items }, select: { id: true } });
+  // PR 191: a number with enough counted refusals is proposed for the refused-parcel list (a person decides)
+  if (x.step === 'returned') await proposeRefused(deps, tx, o, { refusalKey: x.refusalKey, ourFault, now: x.now });
   return ret.id;
 }
 

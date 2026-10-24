@@ -220,7 +220,7 @@ export async function resolveDeliveryCheck(deps: Base, who: Who, checkId: string
   if (step) {
     try {
       const at = step === 'delivered' ? parcel.deliveredAt : null;
-      await orderStep(ordersDeps(deps), { storeId: who.storeId, orderId: c.orderId }, by, step, { ...(at ? { at } : {}), ...(d.refusalKey ? { refusalKey: d.refusalKey } : {}), ...(d.note ? { note: d.note } : {}) }, { eventData: { checkId: c.id, shipmentId: c.shipmentId, outcome: d.outcome } });
+      await orderStep(ordersDeps(deps), { storeId: who.storeId, orderId: c.orderId }, by, step, { ...(at ? { at } : {}), ...(d.refusalKey ? { refusalKey: d.refusalKey } : {}), ...(d.note ? { note: d.note } : {}), ...(step === 'returned' && d.outcome === 'CHARGE_PAID_RETURN' && (c.collectedMinor ?? 0) > 0 ? { chargePaidMinor: c.collectedMinor! } : {}) }, { eventData: { checkId: c.id, shipmentId: c.shipmentId, outcome: d.outcome } });
     } catch (e) {
       if (isOrdersError(e)) throw new ShippingError(e.code === 'REASON_REQUIRED' ? 'INVALID_INPUT' : 'ORDER_REFUSED', e.message, e.details, { code: e.code });
       throw e;
@@ -232,7 +232,7 @@ export async function resolveDeliveryCheck(deps: Base, who: Who, checkId: string
     if (d.outcome !== 'DELIVERED') {
       const kind = KIND[d.outcome];
       const chargePaidMinor = d.outcome === 'CHARGE_PAID_RETURN' ? Math.max(0, c.collectedMinor ?? 0) : 0;
-      const known = await tx.returnRecord.findFirst({ where: { storeId: who.storeId, OR: [{ shipmentId: c.shipmentId }, { orderId: c.orderId, shipmentId: null }] }, orderBy: { createdAt: 'asc' }, select: { id: true } });
+      const known = await tx.returnRecord.findFirst({ where: { storeId: who.storeId, OR: [{ shipmentId: c.shipmentId }, { orderId: c.orderId, shipmentId: null, kind: { in: ['REFUSED_AT_DOOR', 'CHARGE_PAID_RETURN'] } }] }, orderBy: { createdAt: 'asc' }, select: { id: true } });
       const data = { kind, courierClaim: c.courierClaim, actualOutcome: d.outcome, mismatch: true, chargePaidMinor, ...(d.refusalKey ? { reasonCode: d.refusalKey } : {}) };
       returnId = known
         ? (await tx.returnRecord.update({ where: { id: known.id }, data: { ...data, shipmentId: c.shipmentId }, select: { id: true } })).id

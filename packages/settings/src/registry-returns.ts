@@ -26,6 +26,10 @@
 // reasons allow a linked re-ship in another size after a try-on (and whether that re-ship is free, a perk, off); the
 // one-trip size swap (off; its price and areas). Staff waivers are a permission (`returns.waive`), never a setting.
 //
+// PR 191 (`orders.refused.list`; Blueprint C6 item 4): the refused-parcel list ad audiences leave out (PR 264). Off by
+// default; when on, a number whose refusals (not the shop's fault, not re-shipped after a try-on) reach `minRefusals` is
+// PROPOSED, and a person decides every entry. Nothing blocks an order, turns COD off or asks for an advance.
+//
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone (CLAUDE.md rule 6). A difference in
 // the customer's favour becomes a wallet-credit REQUEST after QC passes; a difference he owes is collected as Cash on
 // Delivery on the linked exchange order.
@@ -116,6 +120,9 @@ export const exchangeSwapSchema = z
   .object({ enabled: z.boolean(), chargeMinor: moneyMinorSchema.nullable(), bandKeys: z.array(z.string().trim().min(1).max(60)).max(100) })
   .strict();
 
+/** PR 191 — the refused-parcel list: on or off (off), and how many counted refusals propose a number for it. */
+export const refusedListSchema = z.object({ enabled: z.boolean(), minRefusals: z.int().min(1).max(20) }).strict();
+
 export const returnsSettings = {
   'orders.exchange.tiers': setting({
     ...base,
@@ -188,5 +195,14 @@ export const returnsSettings = {
     labelKey: 'orders.exchange.swap.label',
     helpKey: 'orders.exchange.swap.help',
     sortOrder: 407,
+  }),
+  'orders.refused.list': setting({
+    ...base,
+    valueType: 'JSON',
+    schema: refusedListSchema,
+    default: { enabled: false, minRefusals: 2 },
+    labelKey: 'orders.refused.list.label',
+    helpKey: 'orders.refused.list.help',
+    sortOrder: 408,
   }),
 };

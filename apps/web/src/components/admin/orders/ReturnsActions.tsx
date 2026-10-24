@@ -49,7 +49,7 @@ export function ReturnsAction({ label, url, body = {}, tone = '', note, noteKey 
     setBusy(false);
     if (!a.data.ok) {
       setErr(errorOf(a, texts));
-      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE') router.refresh();
+      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE' || a.data.error === 'RETURN_STATE') router.refresh();
       return;
     }
     setOpen(false);
@@ -197,7 +197,7 @@ export function SizeSwitch({ url, exchangeItemId, version, chips, title, texts }
     setBusy(false);
     if (!a.data.ok) {
       setErr(errorOf(a, texts));
-      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE') router.refresh();
+      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE' || a.data.error === 'RETURN_STATE') router.refresh();
       return;
     }
     router.refresh();
@@ -317,7 +317,7 @@ export function ClaimForm({ url, version, photoNeeded, texts }: { url: string; v
     setBusy(false);
     if (!a.data.ok) {
       setErr(errorOf(a, texts));
-      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE') router.refresh();
+      if (a.data.error === 'STALE' || a.data.error === 'EXCHANGE_STATE' || a.data.error === 'RETURN_STATE') router.refresh();
       return;
     }
     setOpen(false);

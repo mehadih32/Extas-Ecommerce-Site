@@ -85,6 +85,8 @@ describe('the 14 sections', () => {
     expect(locate('/admin/orders/confirm')?.tab?.id).toBe('confirm');
     expect(locate('/admin/orders/returns')?.tab?.id).toBe('returns');
     expect(locate('/admin/orders/returns/qc')?.page?.keys).toEqual(['ordersReturnsQc']);
+    expect(locate('/admin/orders/returns/refused')?.page?.keys).toEqual(['ordersReturnsRefused']);
+    expect(locate('/admin/orders/returns/refused')?.tab?.id).toBe('returns');
     expect(sectionHome(orders, viewer(['returns.qc']))).toBe('/admin/orders/returns/qc');
     expect(visibleTabs(orders, viewer(['orders.read', 'returns.view'])).map((x) => x.id)).toEqual(['all', 'returns']);
     expect(locateKey('order')?.page?.href).toBe('/admin/orders');
@@ -177,7 +179,7 @@ describe('page guides (PR 594, CN-026)', () => {
     expect(guidePlace('/admin/stock/counts/')).toEqual({ section: 'products', page: 'products/stock-counts' });
     expect(guidePlace('/admin')).toEqual({ section: 'dashboard', page: 'dashboard/home' });
     expect(guidePlace('/admin/customers')?.page ?? null).toBeNull();
-    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/returns', 'orders/returns-qc']);
+    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/returns', 'orders/returns-qc', 'orders/returns-refused']);
     expect(guidePlace('/admin/orders/risk-rules/checkout')?.page).toBe('orders/checkout-advance');
     // PR 179: Packing & print's print run, a fixed path under /admin/orders that beats an order's [id]
     expect(guidePlace('/admin/orders/packing/print')).toEqual({ section: 'orders', page: 'orders/print' });

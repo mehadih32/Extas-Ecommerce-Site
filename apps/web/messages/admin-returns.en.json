@@ -237,5 +237,44 @@
     "PENDING": "Waiting for a decision",
     "ACCEPTED": "Approved — no charge",
     "REFUSED": "Refused"
+  },
+  "refused": {
+    "metaTitle": "Refused parcels",
+    "title": "Refused parcels",
+    "open": "Refused parcels",
+    "sub": "Parcels refused at the door, and the refused-parcel list a person decides. Nothing here blocks an order.",
+    "back": "Returns & exchanges",
+    "parcels": "Refused at the door · {n}",
+    "noParcels": "No refused parcels yet.",
+    "noReason": "No reason given",
+    "chargePaid": "delivery charge paid {amount}",
+    "ourFault": "Our fault · not counted",
+    "parcelsNote": "A refusal the shop caused (late, wrong item, damaged) is marked and never counted against the customer. A size that did not fit at the door is a try-on: it is not counted either.",
+    "list": "Refused-parcel list",
+    "listOn": "On · a number is proposed after {n} counted refusals",
+    "listOff": "Off · the owner can switch it on in Settings → Orders → Refused-parcel list",
+    "on": "On",
+    "off": "Off",
+    "refusals": "Counted refusals: {n}",
+    "state": {
+      "PROPOSED": "Proposed",
+      "LISTED": "On the list",
+      "DISMISSED": "Dismissed",
+      "REMOVED": "Taken off"
+    },
+    "empty": {
+      "PROPOSED": "No number waiting for a decision.",
+      "LISTED": "No number on the list.",
+      "DISMISSED": "No dismissed number.",
+      "REMOVED": "No number taken off."
+    },
+    "act": {
+      "LISTED": "Put on the list",
+      "DISMISSED": "Dismiss",
+      "REMOVED": "Take off the list"
+    },
+    "noteOptional": "Note (optional)",
+    "noteRemove": "Why is this number taken off? (required)",
+    "never": "The list only tells the ad audiences which numbers to leave out (once a person put them there). It never blocks an order, turns Cash on Delivery off or asks for an advance."
   }
 }

@@ -123,7 +123,7 @@ describe('the transition table (§6.5.1)', () => {
   it('PR 525: a delivered order is corrected to returned only while a true-delivery check is open', () => {
     expect(plan('deliveryCorrected', order('DELIVERED'))).toMatchObject({ ok: false, code: 'NO_DELIVERY_CHECK' });
     expect(plan('deliveryCorrected', order('DELIVERED', { deliveryCheckOpen: true }))).toMatchObject({ ok: true, to: 'RETURNED' });
-    expect(allowedCommands(order('DELIVERED', { deliveryCheckOpen: true }))).toEqual(['setFlags', 'deliveryCorrected']);
+    expect(allowedCommands(order('DELIVERED', { deliveryCheckOpen: true }))).toEqual(['setFlags', 'deliveryCorrected', 'exchange', 'returnCase']);
     expect(plan('deliveryCorrected', order('IN_TRANSIT', { deliveryCheckOpen: true }))).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION' });
   });
 
