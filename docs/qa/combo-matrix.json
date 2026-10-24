@@ -1,0 +1,37 @@
+{
+  "$comment": "PR 576 — the combo template test matrix (tools/combo-matrix.mjs): every template of the three combo pages played like a first-time guest on the sample data, on each screen, through the template preview links (?tpl=, ?btpl=; `combos.template.preview` is on by default). Product pages: each sample set type (a same-product pair, a top + bottom, a fixed 3-pack) in every pair template and the current look. Category pages: each sample rule in L1–L5; the journey continues on the pair page in P1 (the method's rule, so the L templates meet the same next page). Bag: the current look and B1–B5 on the test server's sample fill with one set and with three (POST /api/bag/try?sets=N, test servers only). The weights and knock-outs: tools/combo-ranking.mjs (docs/owner/COMBO-RANKING.md §2). Results: docs/qa/combo-ranking/latest.json and docs/qa/COMBO-TEMPLATE-MATRIX.md.",
+  "screens": [
+    { "name": "phone-360", "width": 360, "height": 800, "phone": true },
+    { "name": "phone-393", "width": 393, "height": 852, "phone": true },
+    { "name": "phone-430", "width": 430, "height": 932, "phone": true },
+    { "name": "desktop-1280", "width": 1280, "height": 800, "phone": false }
+  ],
+  "product": {
+    "templates": ["current", "P1", "P2", "P3", "P4", "P5"],
+    "sets": [
+      { "set": "pair", "label": "polo pair", "path": "/combo/sample-polo-pairs~essential-pique-polo~navy-black" },
+      { "set": "topBottom", "label": "hoodie + trousers (sized one by one)", "path": "/combo/sample-hoodie-trousers~heavyweight-hoodie.black-relaxed-twill-trousers.black" },
+      { "set": "pack", "label": "polo 3-pack", "path": "/combo/sample-polo-trios~essential-pique-polo~navy-black-white" }
+    ]
+  },
+  "category": {
+    "templates": ["L1", "L2", "L3", "L4", "L5"],
+    "next": "P1",
+    "sets": [
+      { "set": "pair", "label": "polo pairs (with a 3-piece tier)", "path": "/combos/sample-polo-pairs" },
+      { "set": "topBottom", "label": "hoodie + trousers", "path": "/combos/sample-hoodie-trousers" }
+    ]
+  },
+  "bag": {
+    "templates": ["current", "B1", "B2", "B3", "B4", "B5"],
+    "fills": [
+      { "label": "1 combo", "fill": "/api/bag/try?sets=1", "sets": 1 },
+      { "label": "3 combos", "fill": "/api/bag/try?sets=3", "sets": 3 }
+    ],
+    "$linkTaps": "a template without a size in the bag changes a size through \"Change size or colour\": the pair page on the set's picks (a new page), its size, then \"Update\" — counted, not played",
+    "linkTaps": 4
+  },
+  "maxSteps": 8,
+  "concurrency": 4,
+  "settleMs": 500
+}

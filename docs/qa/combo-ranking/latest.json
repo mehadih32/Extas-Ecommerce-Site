@@ -1,0 +1,7271 @@
+{
+ "meta": {
+  "date": "2026-10-24",
+  "base": "http://127.0.0.1:3472",
+  "commit": "pr-572-combo-templates (PR 576)",
+  "screens": "360×800, 393×852, 430×932, 1280×800"
+ },
+ "ranking": {
+  "product": [
+   {
+    "template": "P1",
+    "runs": 12,
+    "mean": 93.9,
+    "lowest": 92.5,
+    "knockedOut": 0
+   },
+   {
+    "template": "P3",
+    "runs": 12,
+    "mean": 93.5,
+    "lowest": 89.1,
+    "knockedOut": 0
+   },
+   {
+    "template": "P5",
+    "runs": 12,
+    "mean": 93.1,
+    "lowest": 87.9,
+    "knockedOut": 0
+   },
+   {
+    "template": "P2",
+    "runs": 12,
+    "mean": 92,
+    "lowest": 88.3,
+    "knockedOut": 0
+   },
+   {
+    "template": "P4",
+    "runs": 12,
+    "mean": 86.6,
+    "lowest": 76.9,
+    "knockedOut": 0
+   },
+   {
+    "template": "current",
+    "runs": 12,
+    "mean": 76.4,
+    "lowest": 71.1,
+    "knockedOut": 0
+   }
+  ],
+  "category": [
+   {
+    "template": "L3",
+    "runs": 8,
+    "mean": 90.8,
+    "lowest": 85.9,
+    "knockedOut": 0
+   },
+   {
+    "template": "L1",
+    "runs": 8,
+    "mean": 90.6,
+    "lowest": 78.9,
+    "knockedOut": 0
+   },
+   {
+    "template": "L5",
+    "runs": 8,
+    "mean": 86.4,
+    "lowest": 78.5,
+    "knockedOut": 0
+   },
+   {
+    "template": "L2",
+    "runs": 8,
+    "mean": 83.4,
+    "lowest": 78.4,
+    "knockedOut": 0
+   },
+   {
+    "template": "L4",
+    "runs": 8,
+    "mean": 79,
+    "lowest": 77.3,
+    "knockedOut": 0
+   }
+  ],
+  "bag": [
+   {
+    "template": "B2",
+    "runs": 8,
+    "mean": 92.8,
+    "lowest": 83.1,
+    "knockedOut": 0
+   },
+   {
+    "template": "B5",
+    "runs": 8,
+    "mean": 92.4,
+    "lowest": 82.7,
+    "knockedOut": 0
+   },
+   {
+    "template": "B3",
+    "runs": 8,
+    "mean": 90.5,
+    "lowest": 81.6,
+    "knockedOut": 0
+   },
+   {
+    "template": "current",
+    "runs": 8,
+    "mean": 80.8,
+    "lowest": 74.8,
+    "knockedOut": 0
+   },
+   {
+    "template": "B1",
+    "runs": 8,
+    "mean": 80.2,
+    "lowest": 70.5,
+    "knockedOut": 0
+   },
+   {
+    "template": "B4",
+    "runs": 8,
+    "mean": 78.9,
+    "lowest": 69.6,
+    "knockedOut": 0
+   }
+  ]
+ },
+ "runs": {
+  "product": [
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 127,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 10,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.4000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 6.5,
+     "targets": 0,
+     "words": 0,
+     "desktop": 5
+    },
+    "total": 71.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 54,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 10,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 0,
+     "words": 4.1,
+     "desktop": 5
+    },
+    "total": 79.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 60,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 10,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 0,
+     "words": 3.8,
+     "desktop": 5
+    },
+    "total": 78.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 75,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 10,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 0,
+     "words": 2.8,
+     "desktop": 5
+    },
+    "total": 77.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 112,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 7,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.4000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 6.5,
+     "targets": 0,
+     "words": 0.5,
+     "desktop": 5
+    },
+    "total": 72,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 50,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 7,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 0,
+     "words": 4.4,
+     "desktop": 5
+    },
+    "total": 79.4,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 50,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 7,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 0,
+     "words": 4.4,
+     "desktop": 5
+    },
+    "total": 79.4,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 65,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 7,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 0,
+     "words": 3.4,
+     "desktop": 5
+    },
+    "total": 78.4,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 2,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 115,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 6,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 5.7,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 5.8,
+     "targets": 0,
+     "words": 0.3,
+     "desktop": 5
+    },
+    "total": 71.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 50,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 6,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.5,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 7.3,
+     "targets": 0,
+     "words": 4.4,
+     "desktop": 5
+    },
+    "total": 76.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 50,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 6,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.5,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 7.3,
+     "targets": 0,
+     "words": 4.4,
+     "desktop": 5
+    },
+    "total": 76.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "current",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 66,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 6,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.5,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 7.3,
+     "targets": 0,
+     "words": 3.4,
+     "desktop": 5
+    },
+    "total": 75.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 123,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 0,
+     "desktop": 5
+    },
+    "total": 95,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 64,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.5,
+     "desktop": 5
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 64,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.5,
+     "desktop": 5
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 70,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.1,
+     "desktop": 5
+    },
+    "total": 93.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 119,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 0.1,
+     "desktop": 5
+    },
+    "total": 95.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 59,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.8,
+     "desktop": 5
+    },
+    "total": 93.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 59,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.8,
+     "desktop": 5
+    },
+    "total": 93.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 80,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.5,
+     "desktop": 5
+    },
+    "total": 92.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 101,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 1.2,
+     "desktop": 5
+    },
+    "total": 96.2,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 63,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.6,
+     "desktop": 5
+    },
+    "total": 93.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 69,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.2,
+     "desktop": 5
+    },
+    "total": 93.2,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 69,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.2,
+     "desktop": 5
+    },
+    "total": 93.2,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 88,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2,
+     "desktop": 5
+    },
+    "total": 97,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 62,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.6,
+     "desktop": 5
+    },
+    "total": 88.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 64,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.5,
+     "desktop": 5
+    },
+    "total": 88.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 68,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.3,
+     "desktop": 5
+    },
+    "total": 88.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 82,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.4,
+     "desktop": 5
+    },
+    "total": 97.4,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 57,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.9,
+     "desktop": 5
+    },
+    "total": 88.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 59,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.8,
+     "desktop": 5
+    },
+    "total": 88.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 62,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.6,
+     "desktop": 5
+    },
+    "total": 88.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 87,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.1,
+     "desktop": 5
+    },
+    "total": 97.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 57,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.9,
+     "desktop": 5
+    },
+    "total": 93.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 61,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.7,
+     "desktop": 5
+    },
+    "total": 93.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 67,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.3,
+     "desktop": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 105,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 0.9,
+     "desktop": 5
+    },
+    "total": 90.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 55,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 4.1,
+     "desktop": 5
+    },
+    "total": 89.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 63,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.6,
+     "desktop": 5
+    },
+    "total": 93.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 68,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.3,
+     "desktop": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 95,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 1.6,
+     "desktop": 5
+    },
+    "total": 96.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 59,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.8,
+     "desktop": 5
+    },
+    "total": 93.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 64,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.5,
+     "desktop": 5
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 68,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.3,
+     "desktop": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 87,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.1,
+     "desktop": 5
+    },
+    "total": 97.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 57,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.9,
+     "desktop": 5
+    },
+    "total": 93.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 61,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.7,
+     "desktop": 5
+    },
+    "total": 93.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 67,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.3,
+     "desktop": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 90,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.4,
+    "parts": {
+     "taps": 10,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 5,
+     "targets": 10,
+     "words": 1.9,
+     "desktop": 5
+    },
+    "total": 76.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 56,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.4,
+    "parts": {
+     "taps": 10,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 5,
+     "targets": 10,
+     "words": 4,
+     "desktop": 5
+    },
+    "total": 79,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 57,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.4,
+    "parts": {
+     "taps": 10,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 5,
+     "targets": 10,
+     "words": 3.9,
+     "desktop": 5
+    },
+    "total": 78.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 57,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 4.4,
+    "parts": {
+     "taps": 10,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 5,
+     "targets": 10,
+     "words": 3.9,
+     "desktop": 5
+    },
+    "total": 78.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 85,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 6.7,
+     "targets": 10,
+     "words": 2.2,
+     "desktop": 5
+    },
+    "total": 88.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 54,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 6.7,
+     "targets": 10,
+     "words": 4.1,
+     "desktop": 5
+    },
+    "total": 85.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 55,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 6.7,
+     "targets": 10,
+     "words": 4.1,
+     "desktop": 5
+    },
+    "total": 85.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 55,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 6.7,
+     "targets": 10,
+     "words": 4.1,
+     "desktop": 5
+    },
+    "total": 85.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 85,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.2,
+     "desktop": 5
+    },
+    "total": 97.2,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 52,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 4.3,
+     "desktop": 5
+    },
+    "total": 94.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 52,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 4.3,
+     "desktop": 5
+    },
+    "total": 94.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 60,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.8,
+     "desktop": 5
+    },
+    "total": 93.8,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 96,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 1.5,
+     "desktop": 5
+    },
+    "total": 96.5,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 74,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.9,
+     "desktop": 5
+    },
+    "total": 87.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 77,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.7,
+     "desktop": 5
+    },
+    "total": 92.7,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pack",
+    "setLabel": "polo 3-pack",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 81,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.4,
+     "desktop": 5
+    },
+    "total": 92.4,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 84,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.3,
+     "desktop": 5
+    },
+    "total": 97.3,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 62,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.6,
+     "desktop": 5
+    },
+    "total": 93.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 65,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.4,
+     "desktop": 5
+    },
+    "total": 93.4,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "pair",
+    "setLabel": "polo pair",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 73,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.9,
+     "desktop": 5
+    },
+    "total": 92.9,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 95,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 1.6,
+     "desktop": 5
+    },
+    "total": 96.6,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 70,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      false,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 10,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.1,
+     "desktop": 5
+    },
+    "total": 88.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 70,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 3.1,
+     "desktop": 5
+    },
+    "total": 93.1,
+    "knockedOut": false
+   },
+   {
+    "page": "product",
+    "template": "P5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers (sized one by one)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "added": true,
+    "early": true,
+    "look": {
+     "overflow": false,
+     "words": 78,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true,
+      true,
+      false
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "errors": [],
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 20,
+     "first": 15,
+     "errors": 15,
+     "layout": 15,
+     "time": 10,
+     "targets": 10,
+     "words": 2.6,
+     "desktop": 5
+    },
+    "total": 92.6,
+    "knockedOut": false
+   }
+  ],
+  "category": [
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 1,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 108,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 12
+    },
+    "errors": [],
+    "seconds": 5.1,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 6.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.8
+    },
+    "total": 78.9,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 128,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 8
+    },
+    "errors": [],
+    "seconds": 3.9000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 128,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 8
+    },
+    "errors": [],
+    "seconds": 3.9000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 128,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 8
+    },
+    "errors": [],
+    "seconds": 3.9000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 110,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 6.2,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 7.1,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.6
+    },
+    "total": 79.4,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 98,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.4
+    },
+    "total": 95.2,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 98,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.4
+    },
+    "total": 95.2,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L1",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 98,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.4
+    },
+    "total": 95.2,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 2,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 73,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 5
+    },
+    "errors": [],
+    "seconds": 8,
+    "parts": {
+     "taps": 15,
+     "first": 13.3,
+     "layout": 15,
+     "time": 4.1,
+     "choice": 8.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.9
+    },
+    "total": 78.7,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 83,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 5
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 15,
+     "first": 13.3,
+     "layout": 15,
+     "time": 4.9,
+     "choice": 8.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.3
+    },
+    "total": 78.8,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 83,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 5
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 15,
+     "first": 13.3,
+     "layout": 15,
+     "time": 4.9,
+     "choice": 8.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.3
+    },
+    "total": 78.8,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 90,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 5
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 15,
+     "first": 13.3,
+     "layout": 15,
+     "time": 4.9,
+     "choice": 8.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.9
+    },
+    "total": 78.4,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 2,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 56,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 8,
+    "parts": {
+     "taps": 20,
+     "first": 13.3,
+     "layout": 15,
+     "time": 5.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 4
+    },
+    "total": 87.8,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 62,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 20,
+     "first": 13.3,
+     "layout": 15,
+     "time": 6.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 3.6
+    },
+    "total": 88.4,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 66,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 20,
+     "first": 13.3,
+     "layout": 15,
+     "time": 6.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 3.4
+    },
+    "total": 88.2,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L2",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 74,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 20,
+     "first": 13.3,
+     "layout": 15,
+     "time": 6.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.9
+    },
+    "total": 87.7,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 104,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 4,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 15,
+     "first": 20,
+     "layout": 15,
+     "time": 4.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1
+    },
+    "total": 85.9,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 79,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 5.6000000000000005,
+    "parts": {
+     "taps": 15,
+     "first": 20,
+     "layout": 15,
+     "time": 5.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.6
+    },
+    "total": 88.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 84,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 5.6000000000000005,
+    "parts": {
+     "taps": 15,
+     "first": 20,
+     "layout": 15,
+     "time": 5.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.3
+    },
+    "total": 88.1,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 96,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 5.6000000000000005,
+    "parts": {
+     "taps": 15,
+     "first": 20,
+     "layout": 15,
+     "time": 5.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.5
+    },
+    "total": 87.4,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 106,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 4,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 6.800000000000001,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 6.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.9
+    },
+    "total": 92.3,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 81,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 5.6000000000000005,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 7.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.4
+    },
+    "total": 95.3,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 86,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 5.6000000000000005,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 7.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.1
+    },
+    "total": 95,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L3",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 2,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 98,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 7
+    },
+    "errors": [],
+    "seconds": 5.6000000000000005,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 7.9,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.4
+    },
+    "total": 94.2,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 72,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 4
+    },
+    "errors": [],
+    "seconds": 3.4000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 9.7,
+     "choice": 6.7,
+     "errors": 10,
+     "targets": 10,
+     "words": 3
+    },
+    "total": 81,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 72,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 2
+    },
+    "errors": [],
+    "seconds": 3.4000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 9.7,
+     "choice": 3.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 3
+    },
+    "total": 77.7,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 72,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 2
+    },
+    "errors": [],
+    "seconds": 3.4000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 9.7,
+     "choice": 3.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 3
+    },
+    "total": 77.7,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 1,
+    "pages": 0,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 78,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 2
+    },
+    "errors": [],
+    "seconds": 3.4000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 9.7,
+     "choice": 3.3,
+     "errors": 10,
+     "targets": 10,
+     "words": 2.6
+    },
+    "total": 77.3,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 54,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 4
+    },
+    "errors": [],
+    "seconds": 6.2,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 7.1,
+     "choice": 6.7,
+     "errors": 10,
+     "targets": 10,
+     "words": 4.1
+    },
+    "total": 79.6,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 51,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 3
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 5,
+     "errors": 10,
+     "targets": 10,
+     "words": 4.3
+    },
+    "total": 79.8,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 54,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 3
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 5,
+     "errors": 10,
+     "targets": 10,
+     "words": 4.1
+    },
+    "total": 79.6,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L4",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 60,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 3
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 5,
+     "errors": 10,
+     "targets": 10,
+     "words": 3.8
+    },
+    "total": 79.2,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 1,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 108,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 12
+    },
+    "errors": [],
+    "seconds": 5.1,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 6.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.8
+    },
+    "total": 78.9,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 128,
+     "cut": 0,
+     "wrapped": 13,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 8
+    },
+    "errors": [],
+    "seconds": 3.9000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 0,
+     "time": 8.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0
+    },
+    "total": 78.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 138,
+     "cut": 0,
+     "wrapped": 10,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 8
+    },
+    "errors": [],
+    "seconds": 3.9000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 0,
+     "time": 8.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0
+    },
+    "total": 78.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "pair",
+    "setLabel": "polo pairs (with a 3-piece tier)",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 138,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 8
+    },
+    "errors": [],
+    "seconds": 3.9000000000000004,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.5,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0
+    },
+    "total": 93.5,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 1,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 103,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      false,
+      true
+     ],
+     "fullCards": 0,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 6.2,
+    "parts": {
+     "taps": 20,
+     "first": 6.7,
+     "layout": 15,
+     "time": 7.1,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 1.1
+    },
+    "total": 79.8,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 115,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.3
+    },
+    "total": 94.1,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 115,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.3
+    },
+    "total": 94.1,
+    "knockedOut": false
+   },
+   {
+    "page": "category",
+    "template": "L5",
+    "set": "topBottom",
+    "setLabel": "hoodie + trousers",
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "added": true,
+    "look": {
+     "overflow": false,
+     "words": 115,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [
+      true,
+      true
+     ],
+     "fullCards": 2,
+     "cardsTwoScreens": 6
+    },
+    "errors": [],
+    "seconds": 5,
+    "parts": {
+     "taps": 20,
+     "first": 20,
+     "layout": 15,
+     "time": 8.8,
+     "choice": 10,
+     "errors": 10,
+     "targets": 10,
+     "words": 0.3
+    },
+    "total": 94.1,
+    "knockedOut": false
+   }
+  ],
+  "bag": [
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 158,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 218.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 74,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 54,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 229
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.5
+    },
+    "total": 83.7,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 59,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 210.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.9
+    },
+    "total": 84.1,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 90,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 210.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.9
+    },
+    "total": 84.1,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 221,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 218.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 70.5,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 100,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 229
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.5
+    },
+    "total": 80.2,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 124,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 210.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.9
+    },
+    "total": 80.6,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B1",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 129,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 210.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.9
+    },
+    "total": 84.1,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 154,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 226.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 5,
+     "compact": 1.6
+    },
+    "total": 86.6,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 50,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 237
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.4
+    },
+    "total": 96.4,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 55,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 218.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.8
+    },
+    "total": 96.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 86,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 218.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.8
+    },
+    "total": 96.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 201,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 226.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 5,
+     "compact": 1.6
+    },
+    "total": 83.1,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 89,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 237
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.4
+    },
+    "total": 92.9,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 112,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 218.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.8
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B2",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 117,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 218.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.8
+    },
+    "total": 96.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 146,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 296.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 5,
+     "compact": 0.1
+    },
+    "total": 85.1,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 63,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 307
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 0
+    },
+    "total": 95,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 73,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 288.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 0.3
+    },
+    "total": 95.3,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 78,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 288.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 0.3
+    },
+    "total": 95.3,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 218,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 296.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 5,
+     "compact": 0.1
+    },
+    "total": 81.6,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 102,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 307
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 8,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 0
+    },
+    "total": 88,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 132,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 288.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 0.3
+    },
+    "total": 91.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B3",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 139,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 288.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 0.3
+    },
+    "total": 91.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 140,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 260
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 2.2,
+     "compact": 0.9
+    },
+    "total": 73.1,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 62,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 252
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1
+    },
+    "total": 83.2,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 67,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 252
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1
+    },
+    "total": 83.2,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 80,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 252
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1
+    },
+    "total": 83.2,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 217,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 260
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 2.2,
+     "compact": 0.9
+    },
+    "total": 69.6,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 101,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 252
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1
+    },
+    "total": 79.7,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 129,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 252
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1
+    },
+    "total": 79.7,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B4",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 140,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 252
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1
+    },
+    "total": 79.7,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 154,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 226.765625
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 5,
+     "compact": 1.6
+    },
+    "total": 86.6,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 50,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 237
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.4
+    },
+    "total": 96.4,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 55,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 218.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.8
+    },
+    "total": 96.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 2,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 86,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 218.5
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 2.2,
+    "parts": {
+     "taps": 20,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 5,
+     "compact": 1.8
+    },
+    "total": 96.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 172,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 101
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 3.3,
+     "compact": 4.3
+    },
+    "total": 82.7,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 58,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 65
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 3.3,
+     "compact": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 58,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 65
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 3.3,
+     "compact": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "B5",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 3,
+    "scrolls": 0,
+    "pages": 0,
+    "changed": true,
+    "inBag": true,
+    "look": {
+     "overflow": false,
+     "words": 89,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 65
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 3.3000000000000003,
+    "parts": {
+     "taps": 15,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 3.3,
+     "compact": 5
+    },
+    "total": 93.3,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 165,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 180
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 2.2,
+     "compact": 2.6
+    },
+    "total": 74.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 51,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 216.25
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 84,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 51,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 216.25
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 84,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "1 combo",
+    "sets": 1,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 82,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 1,
+     "full": 1,
+     "totalSeen": true,
+     "total": "৳ 4,180",
+     "prices": [
+      "৳ 1,530"
+     ],
+     "features": [
+      1
+     ],
+     "px": 216.25
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 84,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "desktop-1280",
+    "phone": false,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 217,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 12,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 180
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 0,
+     "time": 2.2,
+     "compact": 2.6
+    },
+    "total": 74.8,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-360",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 90,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 229.75
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.5
+    },
+    "total": 80.2,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-393",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 100,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 2,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 216.25
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 11.5,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 80.5,
+    "knockedOut": false
+   },
+   {
+    "page": "bag",
+    "template": "current",
+    "fill": "3 combos",
+    "sets": 3,
+    "screen": "phone-430",
+    "phone": true,
+    "taps": 4,
+    "scrolls": 0,
+    "pages": 1,
+    "changed": true,
+    "inBag": false,
+    "look": {
+     "overflow": false,
+     "words": 105,
+     "cut": 0,
+     "wrapped": 0,
+     "small": 0,
+     "first": [],
+     "fullCards": 0,
+     "cardsTwoScreens": 0
+    },
+    "facts": {
+     "sets": 3,
+     "full": 3,
+     "totalSeen": true,
+     "total": "৳ 7,240",
+     "prices": [
+      "৳ 1,530",
+      "৳ 1,530",
+      "৳ 1,530"
+     ],
+     "features": [
+      1,
+      1,
+      1
+     ],
+     "px": 216.25
+    },
+    "errors": [],
+    "moneyOk": true,
+    "seconds": 5,
+    "parts": {
+     "taps": 10,
+     "money": 15,
+     "first": 15,
+     "features": 15,
+     "layout": 15,
+     "targets": 10,
+     "time": 2.2,
+     "compact": 1.8
+    },
+    "total": 84,
+    "knockedOut": false
+   }
+  ]
+ }
+}
