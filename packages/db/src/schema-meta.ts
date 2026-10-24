@@ -243,6 +243,7 @@ export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   CacheStatSample: SAMPLES,
   LayoutRestore: NOT_BUILT,
   ComboTemplateScore: NOT_BUILT,
+  SetBuilderAdd: 'a visitor`s tapped set adds (cart and picks, PR 98), kept for the report until the bag retention rule clears them',
   DuplicateNoticeEvent: NOT_BUILT,
   ChargeMismatch: NOT_BUILT,
   LocalStockIntake: NOT_BUILT,

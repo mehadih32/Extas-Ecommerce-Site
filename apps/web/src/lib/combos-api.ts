@@ -31,9 +31,13 @@
 //   GET   /api/admin/combos/tiers                  "What customers can combine"
 //   PR 104 · combo analytics
 //   GET   /api/admin/combos/report?days=           which sets sell, which pairs get picked
+//   PR 98, 100 · "Build your own set" (its screen comes on the new admin shell)
+//   GET   /api/admin/combos/builder?days=          the builder's switches, the set tier rules it offers, what was built
+//   POST  /api/admin/combos/builder                {on?, rules?, categories?, maxStyles?, perItem?, entries?} (combos.publish)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
 import { imageSources } from '@extas/media';
+import type { SetBuilderSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { mediaDeps } from './media';
 
@@ -122,6 +126,16 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
       const raw = x.url.searchParams.get('days');
       return { report: await cb.comboReport(x.deps, x.who, raw === null ? {} : { days: Number(raw) }) };
     });
+  }
+  if (a === 'builder') {
+    if (path.length > 1) return notFound();
+    if (m === 'GET')
+      return handle(request, deps, 'combos.read', async (x) => {
+        const raw = x.url.searchParams.get('days');
+        return { builder: await cb.builderAdmin(x.deps, x.who, raw === null ? {} : { days: Number(raw) }) };
+      });
+    if (m === 'POST') return handle(request, deps, 'combos.publish', async (x) => ({ settings: await cb.setBuilderOptions(x.deps, x.who, (await body(request)) as Partial<SetBuilderSettings>) }));
+    return notAllowed();
   }
   if (a === 'tiers') {
     if (path.length > 1) return notFound();

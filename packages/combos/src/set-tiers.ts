@@ -58,7 +58,8 @@ export interface LiveSetTier {
 /** Smart Rules' status in the combos' words (ACTIVE = switched on). */
 const statusOf = (r: Rule) => (r.status === 'ACTIVE' ? 'RUNNING' : r.status);
 
-function tiersOf(rule: Rule): SetTierTier[] {
+/** A set tier rule's tiers with their prices from Smart Rules (null = not offered). */
+export function tiersOf(rule: Rule): SetTierTier[] {
   const out: SetTierTier[] = [];
   for (const a of rule.actions) {
     if (a.type !== 'setTier') continue;

@@ -390,6 +390,7 @@ model Store {
   creativeBriefs          CreativeBrief[]
   creativeExports         CreativeExport[]
   comboDailyStats         ComboDailyStat[]
+  setBuilderAdds          SetBuilderAdd[]
 }
 
 enum StoreStatus {
@@ -2503,6 +2504,28 @@ model ComboDailyStat {
 
   @@unique([comboId, day])
   @@index([storeId, day])
+}
+
+/// @stage S03 · PR 98, 100 — one "Build your own set" put into a bag: the tap's key (the same tap again is the same add),
+/// the set tier rule it was built in and its pieces. The pieces go into the bag as ordinary lines, priced there by the
+/// same Smart Rules set tiers; the amounts here are only what the builder showed at that moment (for the report).
+/// @append-only
+model SetBuilderAdd {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store    @relation(fields: [storeId], references: [id])
+  cartId       String   @db.Uuid
+  addKey       String
+  ruleId       String   @db.Uuid
+  ruleKey      String
+  variantIds   String[] @db.Uuid
+  pieces       Int
+  regularMinor Int
+  payMinor     Int
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([cartId, addKey])
+  @@index([storeId, createdAt])
 }
 
 /// @stage S03 · PR 576 — the 100-point score of a combo template in the test matrix.

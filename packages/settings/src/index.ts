@@ -37,4 +37,5 @@ export { messages, lookup, pair, type MessageTree, type SettingsMessages, type L
 export * from './registry-orders';
 export * from './registry-checkout-more';
 export * from './registry-reviews';
+export * from './registry-set-builder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
