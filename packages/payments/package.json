@@ -1,0 +1,33 @@
+{
+  "name": "@extas/payments",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The payments service (S07, BACKEND-ARCHITECTURE §6.5.3, §7.5): PR 165 the payment model — the rows' states, the money status and the reason code on every mismatch (SIM-F-028), the one writer of a payment's outcome onto its order, and money received outside the checkout recorded by permitted staff (F-040). The order's amount due and payment pill live here (SIM-F-001). No refund, no wallet and no money moved here.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/auth": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

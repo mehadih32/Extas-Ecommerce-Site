@@ -221,6 +221,7 @@ model Store {
   paymentLinks            PaymentLink[]
   courierSettlements      CourierSettlement[]
   courierSettlementLines  CourierSettlementLine[]
+  codCollections          CodCollection[]
   walletAccounts          WalletAccount[]
   walletEntries           WalletEntry[]
   refunds                 Refund[]
@@ -3579,17 +3580,49 @@ model Payment {
   providerTrxId        String?
   idempotencyKey       String
   paidAt               DateTime?      @db.Timestamptz(3)
+  /// Free text kept for history; PR 165 writes `moneyStatus` instead (§6.6 S11: the old column stays, nothing writes it).
   reconciliationStatus String?
   reconciledAt         DateTime?      @db.Timestamptz(3)
   erpSyncedAt          DateTime?      @db.Timestamptz(3)
   createdAt            DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 165 (§6.5.3, §6.6 S11) — where the money stands (null while none has come in): PROVISIONAL from the gateway's
+  /// answer or a staff record, RECONCILED once matched to a statement (PR 174), FINAL at the month close.
+  moneyStatus          MoneyStatus?
+  /// PR 165 (F-040) — the staff member who recorded money received outside the checkout (bKash to the merchant number,
+  /// a bank transfer); null for a gateway payment.
+  recordedById         String?        @db.Uuid
+  /// PR 165 — the try of this order's payment for this purpose (1, 2 … after "Try again"; SIM-F-026).
+  attempt              Int            @default(1)
+  /// PR 165 — what the gateway (or the staff record) says really came in, in minor units; null until money is in.
+  receivedMinor        Int?
+  /// PR 165, 170 — why the payment failed or closed: the gateway's code, CUSTOMER_CANCELLED, ABANDONED (no answer in time).
+  failureCode          String?
+  /// PR 165 (SIM-F-028) — the reason code of a mismatch on this payment (AMOUNT_DIFFERS, PAID_AFTER_CLOSE, DUPLICATE_PAYMENT …);
+  /// a mismatch is never silent.
+  mismatchReason       String?
+  /// PR 165 — when the status last changed (the abandoned-payment sweep reads it).
+  statusAt             DateTime?      @db.Timestamptz(3)
+  /// PR 165 — the staff's note on a recorded payment.
+  note                 String?
 
   refunds Refund[]
 
   @@unique([storeId, idempotencyKey])
   @@index([storeId, orderId])
   @@index([provider, providerTrxId])
+  // PR 170: the open payments the sweep looks at, oldest first
+  @@index([storeId, status, createdAt])
+}
+
+/// PR 165 (§6.5.3) — where an amount of money stands, shared by payments, COD collections and settlement lines (and later
+/// the cost ledger and P&L): ESTIMATED from a rate card, PROVISIONAL from an event, RECONCILED when matched to a
+/// settlement or statement, FINAL when the month is closed and pushed. It only moves forward.
+enum MoneyStatus {
+  ESTIMATED
+  PROVISIONAL
+  RECONCILED
+  FINAL
 }
 
 /// PR 125 (S04): the checkout's methods (PR 120) — Rocket and Upay among the mobile wallets, and the one "Pay online"
@@ -3647,41 +3680,134 @@ model PaymentLink {
 
 /// @stage S07 · PR 166 — a courier COD settlement (what the courier paid us for a period).
 model CourierSettlement {
-  id               String         @id @default(uuid(7)) @db.Uuid
-  storeId          Int
-  store            Store          @relation(fields: [storeId], references: [id])
-  courierAccountId String         @db.Uuid
-  courierAccount   CourierAccount @relation(fields: [courierAccountId], references: [id])
-  reference        String
-  periodFrom       DateTime?      @db.Timestamptz(3)
-  periodTo         DateTime?      @db.Timestamptz(3)
-  totalCodMinor    Int
-  chargesMinor     Int
-  netMinor         Int
-  receivedAt       DateTime?      @db.Timestamptz(3)
-  status           String
-  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+  id                 String         @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store          @relation(fields: [storeId], references: [id])
+  courierAccountId   String         @db.Uuid
+  courierAccount     CourierAccount @relation(fields: [courierAccountId], references: [id])
+  reference          String
+  periodFrom         DateTime?      @db.Timestamptz(3)
+  periodTo           DateTime?      @db.Timestamptz(3)
+  totalCodMinor      Int
+  chargesMinor       Int
+  netMinor           Int
+  receivedAt         DateTime?      @db.Timestamptz(3)
+  status             String
+  createdAt          DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 166 (§6.5.5, §6.6 S5; CN-021 P16) — how the payout reached us (BANK, BKASH, CASH_AT_COURIER_OFFICE) and the account
+  /// Accounts posts it to; the imported file's hash (the same file twice is one settlement); who imported it.
+  receivedAs         String?
+  receivedAccountRef String?
+  fileHash           String?
+  importedById       String?        @db.Uuid
 
   lines CourierSettlementLine[]
 
   @@unique([courierAccountId, reference])
+  @@unique([courierAccountId, fileHash])
 }
 
 /// @stage S07 · PR 166 — one parcel on a COD settlement.
 model CourierSettlementLine {
-  id            String            @id @default(uuid(7)) @db.Uuid
-  storeId       Int
-  store         Store             @relation(fields: [storeId], references: [id])
-  settlementId  String            @db.Uuid
-  settlement    CourierSettlement @relation(fields: [settlementId], references: [id])
-  orderId       String?           @db.Uuid
-  shipmentId    String?           @db.Uuid
-  consignmentId String?
-  codMinor      Int
-  chargeMinor   Int
-  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime          @updatedAt @db.Timestamptz(3)
+  id                  String            @id @default(uuid(7)) @db.Uuid
+  storeId             Int
+  store               Store             @relation(fields: [storeId], references: [id])
+  settlementId        String            @db.Uuid
+  settlement          CourierSettlement @relation(fields: [settlementId], references: [id])
+  orderId             String?           @db.Uuid
+  shipmentId          String?           @db.Uuid
+  consignmentId       String?
+  codMinor            Int
+  chargeMinor         Int
+  createdAt           DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime          @updatedAt @db.Timestamptz(3)
+  /// PR 166 (§6.5.5, §6.6 S4; SIM-F-028) — the line as the courier's file had it (its row and status words), what we
+  /// expected (cash and charge, from our own records), the match with its reason code, the days the money took to
+  /// arrive, where the money stands, and how a person resolved a mismatch. A parcel is on one settled line per kind:
+  /// a second line for the same parcel is kept without its shipment and marked DOUBLE_LINE.
+  lineNo              Int               @default(0)
+  kind                String            @default("COD")
+  courierStatus       String?
+  expectedMinor       Int?
+  expectedChargeMinor Int?
+  matchState          SettlementMatch?
+  reasonCode          String?
+  settleDays          Int?
+  moneyStatus         MoneyStatus?
+  resolvedAt          DateTime?         @db.Timestamptz(3)
+  resolvedById        String?           @db.Uuid
+  resolutionNote      String?
+
+  @@unique([storeId, shipmentId, kind])
+  @@index([settlementId, lineNo])
+  @@index([storeId, matchState])
+}
+
+/// PR 166 (§6.5.5; SIM-F-028) — how a settlement line stands against our records: MATCHED, MISMATCH (always with a reason
+/// code), or LATE (the money is right but came after the owner's limit).
+enum SettlementMatch {
+  MATCHED
+  MISMATCH
+  LATE
+}
+
+/// @stage S07 · PR 166 — what the rider did at the door and the money with it (SIM-F-001, SIM-F-005, SIM-F-028): one row per
+/// outcome the courier reports or the team records — delivered, partly delivered (kept pieces; our approval when the
+/// owner's setting asks for it), returned with the delivery charge paid, returned, attempt failed. What we expected the
+/// rider to collect (the order's live amount due, never the total: a paid customer is never asked again), what he
+/// collected, the charge collected, and the reason of every difference. The money stays PROVISIONAL until the courier's
+/// settlement line matches it. Order status and stock are moved by their own services (S08), never here.
+model CodCollection {
+  id                   String             @id @default(uuid(7)) @db.Uuid
+  storeId              Int
+  store                Store              @relation(fields: [storeId], references: [id])
+  orderId              String             @db.Uuid
+  shipmentId           String?            @db.Uuid
+  outcome              CodOutcome
+  state                CodCollectionState @default(RECORDED)
+  expectedMinor        Int
+  collectedMinor       Int
+  chargeCollectedMinor Int                @default(0)
+  varianceReason       String?
+  keptItemIds          String[]           @default([]) @db.Uuid
+  returnedItemIds      String[]           @default([]) @db.Uuid
+  note                 String?
+  /// Who reported it: courier (an event), staff (typed from the rider's report), system.
+  source               String
+  recordedById         String?            @db.Uuid
+  decidedById          String?            @db.Uuid
+  decidedAt            DateTime?          @db.Timestamptz(3)
+  decisionNote         String?
+  moneyStatus          MoneyStatus        @default(PROVISIONAL)
+  settlementLineId     String?            @db.Uuid
+  idempotencyKey       String
+  occurredAt           DateTime           @db.Timestamptz(3)
+  createdAt            DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime           @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, idempotencyKey])
+  @@index([storeId, orderId])
+  @@index([storeId, state, occurredAt])
+  @@index([shipmentId])
+}
+
+/// PR 166 (SIM-F-005) — the door outcomes with money: every one the couriers support, each with its own money effect.
+enum CodOutcome {
+  DELIVERED
+  PARTIAL
+  RETURNED_CHARGE_PAID
+  RETURNED
+  ATTEMPT_FAILED
+}
+
+/// PR 166 — a recorded door outcome: RECORDED, or PENDING_APPROVAL (a partial delivery while the owner's setting asks
+/// for our approval) → APPROVED / REJECTED.
+enum CodCollectionState {
+  RECORDED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
 }
 
 /// @stage S07 · PR 171 — a customer's wallet (store credit; works at the counter too, A6.2).

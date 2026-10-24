@@ -23,6 +23,7 @@
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",
     "@extas/inventory": "workspace:*",
+    "@extas/payments": "workspace:*",
     "@extas/rules": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"

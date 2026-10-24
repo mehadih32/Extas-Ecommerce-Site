@@ -48,6 +48,8 @@ export const PAY_TONE: Readonly<Record<PaymentPill, Tone>> = {
   OWED_BACK: 'bad',
   COD_TO_COLLECT: 'warn',
   COD_COLLECTED: 'info',
+  // PR 165/166: the courier paid the COD money to us
+  COD_SETTLED: 'ok',
 };
 
 export const RET_TONE: Readonly<Record<string, Tone>> = {

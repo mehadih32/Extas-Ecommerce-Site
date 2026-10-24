@@ -22,7 +22,8 @@
     "delivery": "Delivery areas and charges",
     "system": "Server and background jobs",
     "orders": "Orders",
-    "messages": "Messages"
+    "messages": "Messages",
+    "payments": "Payments and COD"
   },
   "permissions": {
     "settings": {
@@ -134,6 +135,10 @@
         "view": "See the message log (who got which message, failures and tries)",
         "retry": "Try a failed message again"
       }
+    },
+    "payments": {
+      "view": "See payments, what each order still owes and the COD money (customers' payments, collections, statements)",
+      "record": "Record money received outside the checkout (bKash or Nagad to the shop's number, a bank transfer, cash) — never more than the amount due"
     }
   },
   "totp": {

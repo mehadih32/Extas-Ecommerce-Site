@@ -24,6 +24,7 @@
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",
     "@extas/inventory": "workspace:*",
+    "@extas/payments": "workspace:*",
     "@extas/rules": "workspace:*",
     "@extas/seed": "workspace:*",
     "@extas/settings": "workspace:*",

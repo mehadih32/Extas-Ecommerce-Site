@@ -134,6 +134,13 @@ export const PERMISSIONS = {
   // read-only smoke check account never gets customers' details.
   'messages.log.view': { group: 'messages' },
   'messages.log.retry': { group: 'messages' },
+  // S07 · PR 165 — payments (BACKEND-ARCHITECTURE §6.5.3): see an order's payments, its amount due and where its money
+  // stands, with the reason of every mismatch (`payments.view`; not a `.read` key on purpose: it shows customers' payment
+  // references, and the read-only smoke check account never gets them); record money received outside the checkout
+  // (`payments.record`, F-040: with the amount confirmed, never more than the amount due, only while the owner has
+  // `payments.manual` on). Recording is audited. No key here moves money, refunds anything or changes COD.
+  'payments.view': { group: 'payments' },
+  'payments.record': { group: 'payments' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
