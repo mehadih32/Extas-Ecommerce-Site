@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২২২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২২৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,11 +36,11 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) আর পেমেন্ট (S07) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২২২টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) আর পেমেন্ট (S07) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২২৬টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 11/33** (wave 2) · **S04 39/41** · **S05 20/20** · **S07 4/10** (wave 3) · total **222/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 15/33** (wave 2) · **S04 39/41** · **S05 20/20** · **S07 4/10** (wave 3) · total **226/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -66,7 +66,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 20 / 20 | **Done** |
-| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 11 / 33 | In progress |
+| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 15 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 4 / 10 | In progress |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **222 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **226 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1127,6 +1127,7 @@ Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGIST
 
 > **বাংলায় সংক্ষেপে:** ঠিকানা থেকে দোকান নিজে ডেলিভারি এলাকা আর চার্জ বের করে, আন্দাজে কখনো না; না বুঝলে কাস্টমারকে জিজ্ঞেস করে। অ্যাডমিনে "ডেলিভারি" পেজে তিনটা ব্যান্ড, আপনার সাব-এরিয়ার তালিকা, আর একটা ঠিকানা দিয়ে পরীক্ষা। চার্জ আপনি নিজে বসাবেন; শুরুতে সব বন্ধ।
 > নতুন: চেকআউটে "রাইডারের জন্য আমার লোকেশন দিন" বাটন; IP, ডিভাইস কোড আর লোকেশন 180 দিন পরে নিজে থেকে মুছে যায়।
+> নতুন: কাস্টমার নম্বর বদলালেও একটাই পরিচয়ে চেনা যায়; ডুপ্লিকেট আর আবার অর্ডারের আলাদা নিয়ম (A–E, H, I), প্রতিটার নিজের সুইচ; যাচাই কার্ডে এক ক্লিকে "কেন এই সতর্কতা"; সব নিয়মের সুইচ এক তালিকায়। নিয়ম শুধু প্রস্তাব করে, সিদ্ধান্ত আপনার; শুরুতে বন্ধ।
 > প্রতিটা অর্ডারের একটা ঝুঁকির স্কোর (০–১০০) — নম্বরের আগের অর্ডার আর ঠিকানা দেখে, আপনার ঠিক করা সংকেত আর নম্বরে। অর্ডারের পাতায় "ঝুঁকি" কার্ড বলে কেন এই স্কোর। শুধু জানায়, কিছু আটকায় না; আমাদের দোষে ফেরত গোনা হয় না। শুরুতে বন্ধ।
 
 **Delivery-zone engine (PR 549–553, 555, `@extas/delivery`).**
@@ -1150,7 +1151,21 @@ Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGIST
 - **Signals:** `deviceMatch` (the same device under another number, +20, 90 days) and `ipPhones` (3 other numbers from one connection in 24 h, +15), both off; they put an order in "new identity".
 - **The 180-day rule:** the worker job `orders.pii.purge` (queue `privacy`, every 60 minutes) clears those four fields once the owner's days have passed; the order and its money stay.
 - **Tests:** the capture on PostgreSQL (rounded, switched off, refused point), the API's device cookie, the signals on PostgreSQL, the purge (once, a shorter rule, through the catalogue and planner); the worker started once with the new queue.
-- Still planned in S06: the rest of the fraud and duplicate-order engine (161–164, 519–524, 540, 542–545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
+**Order Identity Graph (PR 519).** Registry v48 (`risk.identity`, off), no migration (IdentityCluster / IdentityLink).
+- **One identity per customer:** the phone (any stored form), the shop's own device id, and a name and an address alike (pg_trgm, PR 603: spelling a little off still matches), transitively; two identities that meet merge into the older (the newer is marked, never deleted); the IP is linked and counted, never joins two people.
+- **When:** each order is linked when it lands (before the duplicate check) and again after the team edits its phone, name or address; the matched history is linked in the same step, so the graph fills the day it is switched on.
+- **Read by:** the risk score's `identityMatch` and `deviceMatch` (SIM-F-015) and the duplicate rules ("the same customer"). Device and IP links are cleared with the order's kept facts (`orders.pii.purge`). Timeline line "the same person as 1001 (same phone)"; `GET /api/admin/orders/:id/identity` (`orders.risk.read`).
+- **Settings:** window 365 days, name 0.7, address 0.6, the device joins, 200 orders per step.
+
+**Duplicate & re-order rules (PR 520).** Registry v48 (`risk.duplicateRules`, master off), no migration.
+- **Scenarios as separate rules:** A the same items again before the courier (cancel), B different items (warn), C a parcel of his with the courier (hold), D an alike address under a new phone (off), E the same style in another size (off), H a blocked number, account, identity or address (off; the block list is only read), I bulk-looking from 10 pieces (off). Each has its own switch, window in minutes, confidence and proposal: cancel · hold · warn · allow — **no block action**.
+- **What happens:** cancel or hold opens the same review as PR 145 (confirm and booking wait for a person, who decides); warn and allow are a timeline note. Off: the PR 145 look-back exactly as before.
+
+**Alert summary card (PR 521).** In each review card on `/admin/orders/<id>`, one click on "Why this alert, and the options": the rules that fired with how sure, the earlier orders that matched (how alike, which rule, how it is the same person), what the riders wrote on his parcels, his number's and identity's history, and the decisions open to this person with the proposed one first. `GET /api/admin/orders/reviews/:alertId` (`orders.risk.read`).
+
+**Rule master switches (PR 544).** One list of every fraud and duplicate rule — the duplicate check, the rules master and A–I, two sizes, the identity, the score and each signal, the sections — with on, active (on and everything above on) and the default; defaults unchanged. `GET/PUT /api/admin/risk/rules` (`risk.rules.read` / `risk.rules.write`; versioned, all-or-nothing, the settings change log and an audit row). The Risk rules screen (ORD-06) comes with the new admin shell.
+- **Tests:** the identity graph and the rules engine (pure and on PostgreSQL, each scenario, off = as before), the alert summary, the switches, the routes, the card's words in both languages; device gate 0 fails on the order page signed in. Guide: [docs/admin-guide/orders.md](docs/admin-guide/orders.md).
+- Still planned in S06: the rest of the fraud engine (161–164, 522–524, 540, 542, 543, 545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
 
 ### S14 · CRM & customers — Not started
 
@@ -1242,6 +1257,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #42 | PR [519](docs/stages/S06.md#pr-519), [520](docs/stages/S06.md#pr-520), [521](docs/stages/S06.md#pr-521), [544](docs/stages/S06.md#pr-544) | 24 Oct | One identity per customer from the phone, the device and an alike name and address, so a new number no longer hides the same person; the duplicate and re-order rules A–E, H, I, each with its own switch and a proposal a person decides (no block); "Why this alert, and the options" on the order page's review card; one list of every fraud and duplicate rule with its switch (admin API). All off by default. |
 | #41 | PR [572](docs/stages/S03.md#pr-572), [573](docs/stages/S03.md#pr-573), [574](docs/stages/S03.md#pr-574), [576](docs/stages/S03.md#pr-576), [165](docs/stages/S07.md#pr-165), [166](docs/stages/S07.md#pr-166), [167](docs/stages/S07.md#pr-167), [170](docs/stages/S07.md#pr-170), [125](docs/stages/S04.md#pr-125) | 24 Oct | Combo templates: each colour-pair rule gets its own list page (`/combos/<rule>`) in five layouts, the pair page and the set in the bag each get five more, and the current look stays the default until the owner picks another. A test tool plays every template at four screen sizes and scores it out of 100. S03 is done (22/22). Payments start (S07 4/10): every payment has one state and a money status, cash on delivery is settled after the door (a paid customer is never asked again), bKash sits behind one gateway contract on its practice mode until the owner adds the keys, and callbacks are signature-checked and counted once. | Merged |
 | #40 | PR [541](docs/stages/S05.md#pr-541), [159](docs/stages/S06.md#pr-159) | 24 Oct | Every new order lands in one section with a note the moment it is placed (duplicate, re-order, new identity, high risk, watch, prepaid, clear); the strong sections wait for a person, and an order under review can never be booked. Prepaid orders get their own confirm view. The order list gets a risk column, filters and a "highest risk first" sort. Checkout keeps the IP, the shop's own random device id and a location the customer chooses to share, each by its own switch, and clears them after 180 days. S05 is complete. |
 | #39 | PR [44](docs/stages/S02.md#pr-44), [546](docs/stages/S05.md#pr-546), [148](docs/stages/S05.md#pr-148) (follow-up [287](docs/stages/S14.md#pr-287)) | 24 Oct | The home page flash sale: two rows gliding opposite ways with a live countdown, drawn only while the owner has a sale set (empty and off by default; a sale never changes a price). The customer is told in plain words why an order was cancelled; a duplicate's notice names the order that goes ahead, with its tracking link. The "cancel request refused" notice is its own step. Both notices are off by default. |
