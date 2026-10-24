@@ -108,7 +108,8 @@
       "PAID": "পেমেন্ট হয়েছে",
       "OWED_BACK": "ফেরত দিতে হবে",
       "COD_TO_COLLECT": "COD বাকি",
-      "COD_COLLECTED": "COD নেওয়া হয়েছে"
+      "COD_COLLECTED": "COD নেওয়া হয়েছে",
+      "COD_SETTLED": "COD-এর টাকা কুরিয়ার দিয়েছে"
     },
     "ret": {
       "REFUND_APPROVED": "রিফান্ড অনুমোদিত · বাকি",

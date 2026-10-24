@@ -1,0 +1,40 @@
+{
+  "payments": {
+    "manual": {
+      "label": "Record money received outside the checkout",
+      "help": "When on, a team member with the \"record payments\" permission can record money a customer sent outside the checkout — bKash or Nagad to the shop's number, a bank transfer, cash at the counter — against an order, with the transaction number and the amount confirmed. The order's amount due and the amount the rider collects go down by exactly that much, so the customer is never asked for it again. Never more than the amount due. Every record is in the audit log. Off: nobody can record money this way."
+    },
+    "mismatch": {
+      "reasons": {
+        "label": "Money mismatch reasons",
+        "help": "The words for each reason a money figure does not match: a payment, what the rider collected, or a line of the courier's payment statement. The reasons themselves are fixed (so reports can count them); only their words are yours. A mismatch is never shown without its reason."
+      }
+    }
+  },
+  "defaults": {
+    "payments": {
+      "mismatch": {
+        "AMOUNT_DIFFERS": "The payment service confirmed another amount",
+        "CURRENCY_DIFFERS": "The payment service confirmed another currency",
+        "PAID_AFTER_CLOSE": "Money came in after the payment was closed",
+        "DUPLICATE_PAYMENT": "Money came in for an order already paid in full",
+        "ORDER_CLOSED": "Money came in for a cancelled order",
+        "OVER_COLLECTED": "The rider collected more than was due",
+        "SHORT_COLLECTED": "The rider collected less than was due",
+        "PAID_ORDER_COLLECTED": "Money was collected from a customer who had already paid",
+        "PARTIAL_DELIVERY": "Partly delivered: some pieces came back",
+        "CHARGE_PAID_RETURN": "Returned, the customer paid the delivery charge",
+        "UNKNOWN_PARCEL": "The courier paid for a parcel we cannot find",
+        "DOUBLE_LINE": "The same parcel is on the statement twice",
+        "DOUBLE_CHARGE": "The courier's charge was taken twice",
+        "CHARGE_DIFFERS": "The courier's charge is not the expected one",
+        "SHORT_PAID": "The courier paid less than expected",
+        "OVER_PAID": "The courier paid more than expected",
+        "RETURN_AS_DELIVERED": "Marked delivered, but it came back with the charge paid",
+        "NOT_COLLECTED": "Paid for a parcel that was returned or not delivered",
+        "LATE_SETTLEMENT": "The courier paid late",
+        "MISSING": "Delivered, but no statement has paid for it yet"
+      }
+    }
+  }
+}

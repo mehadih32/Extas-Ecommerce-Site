@@ -26,6 +26,7 @@
     "@extas/messages": "workspace:*",
     "@extas/metrics": "workspace:*",
     "@extas/orders": "workspace:*",
+    "@extas/payments": "workspace:*",
     "@extas/rules": "workspace:*",
     "@extas/search": "workspace:*",
     "@extas/settings": "workspace:*",

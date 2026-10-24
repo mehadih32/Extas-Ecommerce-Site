@@ -20,7 +20,8 @@
 //
 // SIM-F-026: the failure path. A prepaid order's payment runs on the mock until the gateways of S07 are connected
 // (A1.3): a failed payment is kept (FAILED, flagged on the order, a call task), and "Try again" makes a new payment for
-// the same order — still one order. With the owner's switch on, what a customer typed and left is kept as a checkout
+// the same order — still one order. PR 165: the answer is written by the payments service's one outcome writer
+// (@extas/payments applyOutcome), the same one a real gateway's callback uses. With the owner's switch on, what a customer typed and left is kept as a checkout
 // draft for the team's follow-up (PR 274/275), and marked converted when he orders.
 //
 // PR 129: the order belongs to an account in the same transaction — the signed-in customer, else the customer with the
@@ -35,6 +36,7 @@
 // `advanceRequiredMinor` and asks the team to call for it (until S07's part payment).
 import { createHash, randomBytes } from 'node:crypto';
 import { linkOrderAccount } from '@extas/accounts';
+import { applyOutcome, PAYMENT_CALL_REASON, PAYMENT_EVENTS, PAYMENT_FLAGS } from '@extas/payments';
 import { findBag } from '@extas/cart';
 import type { Prisma } from '@extas/db/client';
 import { hasAddressDetail } from '@extas/delivery';
@@ -137,14 +139,14 @@ export const ORDER_FLAGS = {
   addressUnclear: 'ADDRESS_UNCLEAR',
   chargeNotSet: 'CHARGE_NOT_SET',
   addressCheck: 'ADDRESS_CHECK',
-  paymentPending: 'PAYMENT_PENDING',
-  paymentFailed: 'PAYMENT_FAILED',
+  paymentPending: PAYMENT_FLAGS.pending,
+  paymentFailed: PAYMENT_FLAGS.failed,
   giftAdvance: 'GIFT_ADVANCE',
 } as const;
 /** Why the team calls (CallTask.reason). */
-export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: 'PAYMENT_FAILED', giftAdvance: 'GIFT_ADVANCE' } as const;
-/** What the order's events are called. */
-export const ORDER_EVENTS = { placed: 'order.placed', paid: 'payment.paid', failed: 'payment.failed', retry: 'payment.retry' } as const;
+export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: PAYMENT_CALL_REASON, giftAdvance: 'GIFT_ADVANCE' } as const;
+/** What the order's events are called (the payment's own are the payments service's). */
+export const ORDER_EVENTS = { placed: 'order.placed', paid: PAYMENT_EVENTS.paid, failed: PAYMENT_EVENTS.failed, retry: PAYMENT_EVENTS.retry } as const;
 /** Where the order came from (OrderEvent.source, ConsentRecord.source). */
 export const CHECKOUT_SOURCE = 'checkout';
 /** A prepaid payment runs on the mock until the gateways of S07 (PR 167–169) are connected. */
@@ -502,7 +504,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       }
       if (prepaid) {
         await tx.payment.create({
-          data: { storeId, orderId: o.id, method, provider: choice!.option ?? choice!.method, purpose: 'ORDER', status: 'INITIATED', amountMinor: t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1` },
+          data: { storeId, orderId: o.id, method, provider: choice!.option ?? choice!.method, purpose: 'ORDER', status: 'INITIATED', amountMinor: t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1`, attempt: 1, statusAt: now },
         });
       }
       const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : null;
@@ -565,23 +567,20 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
     const event = (type: string, data: Record<string, unknown>) => tx.orderEvent.create({ data: { storeId, orderId: o.id, type, actorType: 'CUSTOMER', source: CHECKOUT_SOURCE, data: { paymentId: last.id, provider: MOCK_PROVIDER, ...data } } });
     const open = last.status === 'INITIATED' || last.status === 'PENDING';
     const without = (...f: string[]) => o.flags.filter((x) => !f.includes(x));
+    // PR 165: the mock's answer is written like a gateway's (the one outcome writer); the customer stands behind it
+    const answer = (outcome: 'PAID' | 'FAILED') =>
+      applyOutcome(tx, storeId, { paymentId: last.id, outcome, from: 'gateway', providerTrxId: outcome === 'PAID' ? `${MOCK_PROVIDER}-${randomBytes(6).toString('hex')}` : null, by: { actorType: 'CUSTOMER', actorId: null, source: CHECKOUT_SOURCE }, eventData: { provider: MOCK_PROVIDER } }, now);
 
     if (d.action === 'approve') {
       if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
       if (!open) throw new CheckoutError('CART_NOT_OPEN', 'this payment is closed; try again makes a new one', ['action']);
-      await tx.payment.update({ where: { id: last.id }, data: { status: 'PAID', paidAt: now, providerTrxId: `${MOCK_PROVIDER}-${randomBytes(6).toString('hex')}` } });
-      await tx.order.update({ where: { id: o.id }, data: { paidMinor: o.paidMinor + last.amountMinor, flags: without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), version: { increment: 1 } } });
-      await event(ORDER_EVENTS.paid, { amountMinor: last.amountMinor });
+      await answer('PAID');
       return { number: d.number, status: 'PAID', next: 'thanks' };
     }
     if (d.action === 'fail') {
       if (last.status === 'FAILED') return { number: d.number, status: 'FAILED', next: 'thanks' };
       if (!open) throw new CheckoutError('CART_NOT_OPEN', 'this payment is closed', ['action']);
-      await tx.payment.update({ where: { id: last.id }, data: { status: 'FAILED' } });
-      await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentFailed], version: { increment: 1 } } });
-      await event(ORDER_EVENTS.failed, { amountMinor: last.amountMinor });
-      const task = await tx.callTask.findFirst({ where: { storeId, orderId: o.id, reason: CALL_REASONS.paymentFailed, status: { in: ['OPEN', 'IN_PROGRESS'] } }, select: { id: true } });
-      if (!task) await tx.callTask.create({ data: { storeId, orderId: o.id, reason: CALL_REASONS.paymentFailed } });
+      await answer('FAILED');
       return { number: d.number, status: 'FAILED', next: 'thanks' };
     }
     // retry — never on a cancelled order (its payment was closed by the cancel, PR 144)
@@ -590,7 +589,7 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
     if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
     const tries = await tx.payment.count({ where: { storeId, orderId: o.id, purpose: 'ORDER' } });
     await tx.payment.create({
-      data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: 'ORDER', status: 'INITIATED', amountMinor: last.amountMinor, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}` },
+      data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: 'ORDER', status: 'INITIATED', amountMinor: last.amountMinor, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}`, attempt: tries + 1, statusAt: now },
     });
     await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentPending], version: { increment: 1 } } });
     await event(ORDER_EVENTS.retry, { tries: tries + 1 });

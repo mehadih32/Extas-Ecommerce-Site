@@ -108,7 +108,8 @@
       "PAID": "Paid",
       "OWED_BACK": "Owed back",
       "COD_TO_COLLECT": "COD to collect",
-      "COD_COLLECTED": "COD collected"
+      "COD_COLLECTED": "COD collected",
+      "COD_SETTLED": "COD settled"
     },
     "ret": {
       "REFUND_APPROVED": "Refund approved · unpaid",

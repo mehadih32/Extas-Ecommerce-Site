@@ -327,33 +327,12 @@ export const NOT_A_RISK_SIGNAL: ReadonlySet<CancelCode> = new Set(['CUSTOMER_CHA
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Money as the screens show it (F-001, F-040): amount due = total − wallet − paid; the order-level payment pill is
-// computed, never stored (§6.5.3).
+// computed, never stored (§6.5.3). PR 165: the payments service owns them now (@extas/payments/pure); the order core
+// re-exports them, so every screen, message and sticker reads the same figure. `codToCollect` is what the rider collects
+// at the door (SIM-F-001: nothing for a prepaid order).
 // ---------------------------------------------------------------------------------------------------------------------
 
-export interface MoneyFacts {
-  status: OrderState;
-  paymentMethod: string | null;
-  totalMinor: number;
-  walletAppliedMinor: number;
-  paidMinor: number;
-  /** Refunds for the order that were paid out (COMPLETED), in minor units. */
-  refundedMinor: number;
-}
-
-export type PaymentPill = 'UNPAID' | 'PARTLY_PAID' | 'PAID' | 'OWED_BACK' | 'COD_TO_COLLECT' | 'COD_COLLECTED';
-
-/** What is still to pay (never below 0). */
-export const dueOf = (m: Pick<MoneyFacts, 'totalMinor' | 'walletAppliedMinor' | 'paidMinor'>): number => Math.max(0, m.totalMinor - m.walletAppliedMinor - m.paidMinor);
-
-/** The order's payment pill (§6.5.3). A cancelled or returned order with money in and not all of it refunded is OWED_BACK. */
-export function paymentPill(m: MoneyFacts): PaymentPill {
-  const inMinor = m.paidMinor + m.walletAppliedMinor;
-  if ((m.status === 'CANCELLED' || m.status === 'RETURNED') && inMinor > m.refundedMinor) return 'OWED_BACK';
-  const due = dueOf(m);
-  if (m.paymentMethod === 'COD' && due > 0) return m.status === 'DELIVERED' || m.status === 'PARTIALLY_DELIVERED' ? 'COD_COLLECTED' : 'COD_TO_COLLECT';
-  if (due === 0) return 'PAID';
-  return inMinor > 0 ? 'PARTLY_PAID' : 'UNPAID';
-}
+export { codToCollect, dueOf, paymentPill, type CodStage, type MoneyFacts, type PaymentPill } from '@extas/payments/pure';
 
 // ---------------------------------------------------------------------------------------------------------------------
 // PR 145 — how alike two orders are (Blueprint B1.12): the same SKU (style, colour and size) or the same product in the
