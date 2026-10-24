@@ -448,6 +448,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           data: {
             payment: choice ? { method: choice.method, option: choice.option } : null,
             reward: q.pay.reward?.kind ?? null,
+            // PR 566: why Cash on Delivery was not offered, if it was not (the support explanation reads it back)
+            codOff: q.pay.codOff,
             charge: q.charge.state,
             account: account?.kind ?? null,
             ...(gift ? { gift: { advance: q.gift?.advance ?? 'none', partMinor: giftPart, deliverAfter: gift.deliverAfter, hidePrices: gift.hidePrices } } : {}),

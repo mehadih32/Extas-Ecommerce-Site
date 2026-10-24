@@ -14,6 +14,7 @@ import { PageHead } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
 import { ArchiveNote, CommandButton, DetailGrid, MoreMenu, NoteForm } from './OrderCommands';
 import { Chips } from './OrderTable';
+import { SupportExplain } from './SupportExplain';
 
 function Kv({ rows }: { rows: Row2[] }) {
   return (
@@ -128,6 +129,7 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
     <Card key="courier" testId="order-courier" title={t(d, 'orders.courier.title')} right={<Chips chips={[o.courier.chip]} />}>
       <Kv rows={o.courier.rows} />
     </Card>,
+    <SupportExplain key="explain" orderId={o.id} view={view} />,
     ...o.reviews.map((r) => (
       <Card key={r.id} testId="order-review" title={t(d, 'orders.review.title')} sub={`${r.severity ? `${r.severity} · ` : ''}${r.at}`} right={<span className={`a2-pill ${r.open ? 'warn' : 'ok'}`}>{t(d, r.open ? 'orders.review.open' : 'orders.review.decided')}</span>}>
         {r.matched.length ? (
