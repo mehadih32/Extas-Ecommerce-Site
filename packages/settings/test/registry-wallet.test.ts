@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { apologySchema, refundRulesSchema, walletManualSchema, walletSettings } from '../src/registry-wallet';
+import { apologySchema, partialSchema, refundRulesSchema, walletManualSchema, walletSettings } from '../src/registry-wallet';
 
 describe('wallet, refunds, advances and statements settings (v55)', () => {
   it('every key is in the registry at version 55 in the payment group, labelled in English and Bengali, its default valid', () => {
@@ -36,5 +36,12 @@ describe('wallet, refunds, advances and statements settings (v55)', () => {
     expect(r).toEqual({ toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false });
     expect(refundRulesSchema.safeParse({ ...r, afterDeliverySources: ['OTHER', 'OTHER'] }).success).toBe(false);
     expect(refundRulesSchema.safeParse({ ...r, afterDeliverySources: ['CANCEL'] }).success).toBe(false);
+  });
+
+  it('PR 173: partial payment ships off, with the 10% cap of §59 answer 29, no minimum and no full advance', () => {
+    const p = walletSettings['payments.partial'].default;
+    expect(p).toEqual({ enabled: false, capPercent: 10, minMinor: null, allowFull: false });
+    expect(partialSchema.safeParse({ ...p, capPercent: 101 }).success).toBe(false);
+    expect(partialSchema.safeParse({ ...p, capPercent: 12.5 }).success).toBe(false);
   });
 });

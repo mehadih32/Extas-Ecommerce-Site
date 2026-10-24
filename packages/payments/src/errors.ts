@@ -54,7 +54,15 @@ export type PaymentsErrorCode =
   /** PR 172: more than is left to refund on this order (`data.roomMinor`). */
   | 'OVER_REFUNDABLE'
   /** PR 172 (four eyes): the person who asked this refund may not decide it. */
-  | 'SAME_PERSON';
+  | 'SAME_PERSON'
+  /** PR 173: partial payment is switched off (`payments.partial`). */
+  | 'PARTIAL_OFF'
+  /** PR 173: more than the owner's cap on an advance (`data.capMinor`). */
+  | 'OVER_CAP'
+  /** PR 173: less than the smallest advance the owner set (`data.minMinor`). */
+  | 'BELOW_MIN'
+  /** PR 173: this order cannot take an advance (not Cash on Delivery, or past packing; `data.status`). */
+  | 'ADVANCE_NOT_ALLOWED';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;

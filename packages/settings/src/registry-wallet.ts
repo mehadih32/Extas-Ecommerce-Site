@@ -20,6 +20,12 @@
 // approval of someone with the "approve refunds" permission (the owner; CLAUDE.md rule 6), and money back by bKash or
 // the bank is sent by a person, never by the shop itself.
 //
+// PR 173 (`payments.partial`): partial payment — a pre-order's advance asked online now, the rest at the door. Off by
+// default. The cap (§59 answer 29: a percentage, 10% by default) is the most the shop may ask as an advance, of the
+// order's total; the smallest advance worth a payment session (empty: none); whether the customer may pay the whole
+// order in advance instead (off). Asking an advance moves no money: the customer pays it through the gateway, and only
+// money that came in lowers what the rider collects.
+//
 // Nothing here moves real money or changes a price, a charge, a discount or Cash on Delivery (CLAUDE.md rule 6): the
 // wallet is store credit, and every entry is a person's action, audited.
 import { z } from 'zod';
@@ -74,6 +80,16 @@ export const refundRulesSchema = z
   .strict()
   .refine((v) => new Set(v.afterDeliverySources).size === v.afterDeliverySources.length, { message: 'every source once' });
 
+/** PR 173 — partial payment and the pre-order advance, capped (see the file header). */
+export const partialSchema = z
+  .object({
+    enabled: z.boolean(),
+    capPercent: z.int().min(0).max(100),
+    minMinor: moneyMinorSchema.nullable(),
+    allowFull: z.boolean(),
+  })
+  .strict();
+
 export const walletSettings = {
   'payments.wallet.manual': setting({
     ...base,
@@ -101,5 +117,14 @@ export const walletSettings = {
     labelKey: 'payments.refunds.label',
     helpKey: 'payments.refunds.help',
     sortOrder: 220,
+  }),
+  'payments.partial': setting({
+    ...base,
+    schema: partialSchema,
+    default: { enabled: false, capPercent: 10, minMinor: null, allowFull: false }, // hardcode-ok: registry default (§59 answer 29: 10%)
+    valueType: 'JSON',
+    labelKey: 'payments.partial.label',
+    helpKey: 'payments.partial.help',
+    sortOrder: 230,
   }),
 };
