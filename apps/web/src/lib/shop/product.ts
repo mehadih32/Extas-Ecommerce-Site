@@ -6,7 +6,7 @@
 // that never was has no page. Without a database (CI, `next build`) or when it is slow, the page is "not found" rather
 // than a guess.
 import { getPrisma, type Prisma } from '@extas/db/client';
-import { bothUnits, ghostState, productFitKey, readMeta, readRows, sortRows, wasPriceFor, type GhostReason } from '@extas/catalogue';
+import { activeSizeEase, bothUnits, ghostState, groupKey, productFitKey, readMeta, readRows, sortRows, wasPriceFor, type GhostReason } from '@extas/catalogue';
 import { sellableUnits } from '@extas/inventory';
 import { imageSources, type ImageSource } from '@extas/media';
 import { placeTexts } from '../rules-public';
@@ -160,13 +160,15 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
   if (!page) return null;
   const r = settingsResolver();
   const at = { storeId };
-  const [kinds, fits, fallbackFit, howTo, cmDecimals, defaultEase, rules, tags] = await Promise.all([
+  const [kinds, fits, fallbackFit, howTo, cmDecimals, defaultEase, sizeAdvice, rules, tags] = await Promise.all([
     r ? r.value('inventory.sellableLocationKinds', at) : Promise.resolve(['WAREHOUSE' as const]),
     r ? r.value('catalogue.fits', at) : Promise.resolve([]),
     r ? r.value('catalogue.sizeCharts.fallbackFit', at) : Promise.resolve(''),
     r ? r.value('catalogue.sizeCharts.howToMeasure', at) : Promise.resolve({}),
     r ? r.value('catalogue.sizeCharts.cmDecimals', at) : Promise.resolve(0),
     r ? r.value('catalogue.sizeCharts.defaultEaseInch', at) : Promise.resolve(0),
+    // PR 59: the ease a trained version gives, only while the owner has `useTrainedEase` on (off: not one query)
+    r ? r.value('catalogue.sizeAdvice', at) : Promise.resolve(null),
     priceRules(storeId),
     prisma.productTag.findMany({
       where: { storeId, archivedAt: null, productId: p.id, tag: { archivedAt: null } },
@@ -261,7 +263,10 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
       const fields = fieldsOf(garmentType?.measurementFields);
       const meta = readMeta(pick.chart.columns);
       const order = sizes.map((s) => s.key);
-      const input = { name: pick.chart.name, fields: meta.fields, rows: sortRows(readRows(pick.chart.rows), order), easeInch: meta.easeInch ?? defaultEase };
+      // PR 59: the chart's own ease, unless a trained version for this garment type and fit is switched on and the
+      // owner has the trained ease on (the chart itself is never changed)
+      const trained = sizeAdvice?.useTrainedEase ? (await activeSizeEase({ db: prisma }, storeId)).get(groupKey(pick.chart.garmentTypeId, pick.chart.fitKey ?? null)) : undefined;
+      const input = { name: pick.chart.name, fields: meta.fields, rows: sortRows(readRows(pick.chart.rows), order), easeInch: trained ?? meta.easeInch ?? defaultEase };
       const convert = (v: number, unit: 'inch' | 'cm') => bothUnits(v, unit, cmDecimals);
       const metaFor = (lang: ShopLang) =>
         new Map<string, FieldMeta>(

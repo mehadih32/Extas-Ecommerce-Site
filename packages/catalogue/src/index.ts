@@ -32,6 +32,9 @@ export * from './size-chart-math';
 export * from './size-charts';
 // PR 58 Find My Size, rule-based (browser-safe: `@extas/catalogue/size-finder`).
 export * from './size-finder';
+// PR 59 the Find My Size training engine (pure), the size report, the ease model and its versions.
+export * from './size-training';
+export * from './size-advice';
 export * from './collections';
 export * from './csv';
 export * from './catalogue-csv';

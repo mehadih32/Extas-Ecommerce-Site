@@ -37,7 +37,7 @@ export interface Who {
   ctx?: RequestContext;
 }
 
-export type CataloguePermission = 'catalogue.read' | 'catalogue.write' | 'catalogue.prices' | 'catalogue.import' | 'catalogue.export' | 'catalogue.interest';
+export type CataloguePermission = 'catalogue.read' | 'catalogue.write' | 'catalogue.prices' | 'catalogue.import' | 'catalogue.export' | 'catalogue.interest' | 'catalogue.sizeAdvice';
 
 /** Checks the permission in that store and that the store exists and is not archived. */
 export async function allow(deps: CatalogueDeps, who: Who, permission: CataloguePermission): Promise<void> {
