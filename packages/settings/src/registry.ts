@@ -38,6 +38,7 @@ import { setBuilderSettings } from './registry-set-builder';
 import { orderEditSettings } from './registry-order-edit';
 import { supportLaneSettings } from './registry-support-lane';
 import { messageSettings } from './registry-messages';
+import { riskSettings } from './registry-risk';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1182,6 +1183,8 @@ export const registry = {
   ...supportLaneSettings,
   // ---- S05 · PR 148 · the Messages control centre: the master switch, the order journey, caps, self-confirm, language, quiet hours, the amount lines, the engine's pace (registry-messages.ts, version 40). ----
   ...messageSettings,
+  // ---- S06 · PR 157 · a number's history: how many orders, the refusals that are our fault, unanswered calls (registry-risk.ts, version 43). ----
+  ...riskSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

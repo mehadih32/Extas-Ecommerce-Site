@@ -209,4 +209,14 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await dl('PUT')).status).toBe(405);
     expect((await ordersRoute(call('GET', '/api/admin/orders/export/x', { cookie: owner }), deps, ['export', 'x'])).status).toBe(404);
   });
+
+  it('S06 · PR 157: the number\'s history beside the order — a reader may look; only GET; an unknown order is not found', async () => {
+    const o = await f.place('api-phone-history', { phone: '01700000298' });
+    const h = await api('GET', [o.orderId, 'phone-history'], { cookie: reader });
+    expect(h).toMatchObject({ status: 200, body: { ok: true, history: { phone: '01700-000298', summary: { orders: 0 }, recent: [] } } });
+    expect((await api('POST', [o.orderId, 'phone-history'], { body: {} })).status).toBe(405);
+    expect((await api('GET', [o.orderId, 'phone-history', 'x'])).status).toBe(404);
+    expect((await api('GET', ['01a16af2-30f0-7462-aab8-719bb3ce5998', 'phone-history'])).status).toBe(404);
+  });
+
 });

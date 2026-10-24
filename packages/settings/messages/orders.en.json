@@ -164,6 +164,9 @@
         "size-fit": "Size or fit not right",
         "not-as-pictured": "Not as in the picture",
         "did-not-order": "Did not order it",
+        "late": "Arrived later than we promised",
+        "wrong-item": "We sent the wrong item",
+        "damaged": "Arrived damaged",
         "other": "Other"
       }
     }

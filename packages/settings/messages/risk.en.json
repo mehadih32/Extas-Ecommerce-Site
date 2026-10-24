@@ -1,0 +1,8 @@
+{
+  "risk": {
+    "history": {
+      "label": "A number's history",
+      "help": "What the order page shows beside an order, and what the risk score reads: the number's other orders and what became of them. \"Earlier orders read\": how many of its past orders count, newest first. \"Refusals that are our fault\": refusal reasons (from \"Parcel refusal reasons\") that never count against the customer — arrived late, the wrong item, damaged, after Eid, did not order; such a parcel is shown as \"our fault, not counted\" and never raises the score. \"Unanswered call outcomes\": the call screen's results that mean the customer did not pick up."
+    }
+  }
+}

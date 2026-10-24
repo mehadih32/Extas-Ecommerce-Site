@@ -15,6 +15,8 @@
 // courier is booked, never while a cancel is asked (SIM-F-004).
 // PR 605: who and where a parcel goes to — a gift's receiver — for the sticker and the booking (delivery-target.ts).
 export * from './delivery-target';
+// PR 157: one phone number's history in counts, our-fault refusals apart (phone-summary.ts).
+export * from './phone-summary';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [

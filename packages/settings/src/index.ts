@@ -40,4 +40,5 @@ export * from './registry-reviews';
 export * from './registry-set-builder';
 export * from './registry-support-lane';
 export * from './registry-messages';
+export * from './registry-risk';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
