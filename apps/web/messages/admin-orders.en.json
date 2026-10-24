@@ -730,6 +730,62 @@
         "nameAddress": "alike name and address",
         "linked": "through his other orders"
       }
+    },
+    "alert": {
+      "label": "Why this alert, and the options",
+      "why": "Why it fired",
+      "fired": "Rules: {rules}",
+      "noneFired": "No rule fired",
+      "rule": {
+        "A": "Same customer, same items again",
+        "B": "Same customer, different items",
+        "C": "A parcel of his is with the courier",
+        "D": "Alike address, new phone",
+        "E": "Same style, another size",
+        "H": "Blocked number, identity or address",
+        "I": "Bulk-looking order"
+      },
+      "sure": "{pct}% sure",
+      "within": "within {time}",
+      "anyTime": "any time",
+      "minutes": "{n} minutes",
+      "hours": "{n} hours",
+      "days": "{n} days",
+      "pieces": "{pieces} pieces (from {atLeast})",
+      "how": {
+        "phone": "blocked number",
+        "customer": "blocked account",
+        "identity": "blocked identity",
+        "address": "blocked address"
+      },
+      "proposes": "proposes {action}",
+      "action": {
+        "cancel": "cancel",
+        "hold": "hold",
+        "warn": "a note",
+        "allow": "nothing"
+      },
+      "lookback": "Another open order of the same customer looks alike ({sev})",
+      "signals": "Risk signals: {why}",
+      "noWhy": "No reason was kept with this alert",
+      "matched": "Earlier orders that matched",
+      "alike": "{sev} match",
+      "byRules": "rule {rules}",
+      "noMatch": "No earlier order matched: the alert is about this order itself",
+      "rider": "What the rider wrote",
+      "from": {
+        "courier": "courier update",
+        "return": "return"
+      },
+      "noRider": "No rider note on this customer's parcels",
+      "history": "This customer",
+      "phone": "This number: {line}",
+      "identity": "Same person, all numbers ({phones} other numbers): {line}",
+      "proposed": "Proposed: {decision}",
+      "options": "What you can do: {list}",
+      "decided": "Decided: nothing left to do",
+      "noRights": "You can read this alert; deciding needs the review permission",
+      "yours": "A rule only marks and proposes; the decision is yours. Nothing was cancelled, held or blocked by itself."
     }
   }
 }
