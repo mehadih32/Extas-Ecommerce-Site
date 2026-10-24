@@ -6,9 +6,12 @@ import { useEffect, useRef, useState } from 'react';
 import { openGuide, openPalette } from './events';
 import { ShellIcon } from './ShellIcon';
 
-export function GuideButton({ slug, section, label, ghost }: { slug: string; section: string; label: string; ghost?: boolean }) {
+// PR 594 (CN-026): the guide button opens the guide of the page it is on (its section's overview above it); `slug`
+// names the section guide the page belonged to before page guides, kept on the button for the tests and the smoke run.
+// `page` opens one guide instead (Help & manual's rows: `<section>/index`, the section's overview).
+export function GuideButton({ slug, section, label, ghost, page }: { slug: string; section: string; label: string; ghost?: boolean; page?: string }) {
   return (
-    <button type="button" className={ghost ? 'a2-btn ghost' : 'a2-guide'} lang="bn" onClick={() => openGuide({ slug, section })} data-testid="a2-guide" data-guide={slug}>
+    <button type="button" className={ghost ? 'a2-btn ghost' : 'a2-guide'} lang="bn" onClick={() => openGuide(page ? { page, section } : { path: window.location.pathname, section })} data-testid="a2-guide" data-guide={slug}>
       <ShellIcon name="book" size={ghost ? 15 : 16} />
       {label}
     </button>

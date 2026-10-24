@@ -27,6 +27,7 @@ docs file (CN-011).
 | Path | What it is |
 |---|---|
 | [`admin-guide/README.md`](admin-guide/README.md) | Bengali guide per admin section (CN-014), the index |
+| `admin-guide/pages/<section>/` | One Bengali guide per built admin page in six fixed parts, plus `index.md` per section (the section overview); opened from the admin top bar's guide icon; CI fails on a built page without one (`tools/admin-guide-check.mjs`; PR 594, CN-026) |
 | [`admin-guide/dashboard.md`](admin-guide/dashboard.md) | The Dashboard: Sales and Ordered value tiles, Needs you now, role start pages (`/admin`, PR 12, 155, 495) |
 | [`admin-guide/delivery.md`](admin-guide/delivery.md) | Delivery areas and charges (`/admin/delivery/zones`, moved from `/admin/delivery` in PR 12; S06) |
 | [`admin-guide/login.md`](admin-guide/login.md) | Admin sign-in and the admin shell: 14 sections, search, notifications, guide panel (`/admin/login`, S00; PR 12) |

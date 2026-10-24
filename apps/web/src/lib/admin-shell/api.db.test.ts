@@ -1,6 +1,6 @@
 // PR 12, PR 6 (follow-up 84) — the shell's admin API on a real PostgreSQL: badges and "Needs you now" from the real
 // tables, only what the person may open; the palette's search; the person's notifications (honestly empty); and the
-// guides. A throwaway database (skipped without TEST_DATABASE_ADMIN_URL).
+// guides, and (PR 594) the page guide of an address. A throwaway database (skipped without TEST_DATABASE_ADMIN_URL).
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -10,7 +10,7 @@ import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
-import { badgesHandler, helpHandler, notificationsHandler, queuesHandler, searchHandler } from './api';
+import { badgesHandler, guideHandler, helpHandler, notificationsHandler, queuesHandler, searchHandler } from './api';
 import type { SearchGroup } from './search';
 
 const HOST = 'admin.example.test';
@@ -62,7 +62,7 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
   });
 
   it('every shell route needs a session (401), and says when there is no database (503)', async () => {
-    for (const r of [badgesHandler(call('GET', '/api/admin/shell/badges'), deps), searchHandler(call('GET', '/api/admin/search?q=x'), deps), notificationsHandler(call('GET', '/api/admin/notifications'), deps), helpHandler(call('GET', '/api/admin/help/README'), 'README', deps), queuesHandler(call('GET', '/api/admin/dashboard/queues'), deps)])
+    for (const r of [badgesHandler(call('GET', '/api/admin/shell/badges'), deps), searchHandler(call('GET', '/api/admin/search?q=x'), deps), notificationsHandler(call('GET', '/api/admin/notifications'), deps), helpHandler(call('GET', '/api/admin/help/README'), 'README', deps), guideHandler(call('GET', '/api/admin/guide?path=/admin'), deps), queuesHandler(call('GET', '/api/admin/dashboard/queues'), deps)])
       expect((await r).status).toBe(401);
     expect((await badgesHandler(call('GET', '/api/admin/shell/badges'), null)).status).toBe(503);
   });
@@ -109,5 +109,22 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
     expect(g.blocks.length).toBeGreaterThan(3);
     expect((await helpHandler(call('GET', '/api/admin/help/x', { cookie: staff }), '../../CLAUDE', deps)).status).toBe(404);
     expect((await helpHandler(call('GET', '/api/admin/help/x', { cookie: staff }), 'no-such-guide', deps)).status).toBe(404);
+  });
+
+  it('page guides (PR 594): the guide of an address with its section overview and pages; a bad id is 404', async () => {
+    type G = { section: string; page: string | null; overview: { title: string } | null; guide: { title: string } | null; pages: { id: string; href: string | null }[] };
+    const res = await guideHandler(call('GET', '/api/admin/guide?path=/admin/orders/confirm', { cookie: staff }), deps);
+    expect(res.status).toBe(200);
+    const g = (await res.json()) as G;
+    expect(g).toMatchObject({ section: 'orders', page: 'orders/confirm' });
+    expect(g.overview?.title).toBeTruthy();
+    expect(g.guide?.title).toBeTruthy();
+    expect(g.pages.find((p) => p.id === 'orders/order')?.href).toBeNull();
+    expect(g.pages.find((p) => p.id === 'orders/all')?.href).toBe('/admin/orders');
+    const overview = (await (await guideHandler(call('GET', '/api/admin/guide?page=customers/index', { cookie: staff }), deps)).json()) as G;
+    expect(overview).toMatchObject({ section: 'customers', page: null, guide: null });
+    expect(overview.overview?.title).toBeTruthy();
+    for (const bad of ['../../CLAUDE', 'orders/../x', 'nosection/index'])
+      expect((await guideHandler(call('GET', `/api/admin/guide?page=${encodeURIComponent(bad)}`, { cookie: staff }), deps)).status, bad).toBe(404);
   });
 });

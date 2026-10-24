@@ -59,7 +59,7 @@ export default async function HelpPage() {
                 <i>{t(d, `shell.purpose.${sec.id}`)}</i>
               </span>
               <span className={`a2-pill ${ready ? 'ok' : 'line'}`}>{ready ? t(d, 'help.built') : t(d, 'help.planned')}</span>
-              <PlaceGuide view={view} place={place} />
+              <PlaceGuide view={view} place={place} overview />
               <Link className="a2-btn" href={sectionHome(sec, viewer)}>
                 {t(d, 'help.open')}
               </Link>

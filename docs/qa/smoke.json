@@ -21,6 +21,8 @@
     {"pr": 12, "what": "Control+K opens the command palette (SH-02)", "page": "/admin?home=1", "press": "Control+k", "selector": "[data-testid=a2-palette] [role=dialog]", "attribute": "aria-modal", "equals": "true"},
     {"pr": 12, "what": "the person's notifications answer (SH-03)", "request": {"method": "GET", "path": "/api/admin/notifications"}, "status": 200, "field": "items"},
     {"pr": 6, "what": "the section guide is read from the deployed docs copy (SH-05, follow-up 84)", "request": {"method": "GET", "path": "/api/admin/help/dashboard"}, "status": 200, "field": "guide"},
+    {"pr": 594, "what": "the page guide of an admin address is read from the deployed docs copy, with its section overview (CN-026)", "request": {"method": "GET", "path": "/api/admin/guide?path=/admin/orders"}, "status": 200, "field": "guide"},
+    {"pr": 594, "what": "the top bar carries the guide icon for the current page, closed until pressed (CN-026)", "page": "/admin?home=1", "selector": "[data-testid=a2-help]", "attribute": "aria-expanded", "equals": "false"},
     {"pr": 12, "what": "Needs you now answers from the real queues (DSH-01)", "request": {"method": "GET", "path": "/api/admin/dashboard/queues"}, "status": 200, "field": "queues"},
     {"pr": 12, "what": "an admin address that does not exist answers 404 (SH-07)", "request": {"method": "GET", "path": "/admin/no-such-page"}, "status": 404},
     {"pr": 12, "what": "the 404 page is the shell's own 'page not found' state (SH-07)", "page": "/admin/no-such-page", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "notfound"},

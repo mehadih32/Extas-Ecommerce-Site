@@ -10,7 +10,8 @@ import en from '../../../messages/admin-shell.en.json';
 import { ADMIN_PAGES } from '../admin-nav';
 import { t, type Dict } from '../i18n';
 import { ageOf, hourIn, partOfDay, rangeOf, startHref, startSection, trend } from './dashboard';
-import { guideDir, parseInline, parseMarkdown, readGuide, type Block } from './guide';
+import { guideDir, parseInline, parseMarkdown, readGuide, readPageGuide, type Block } from './guide';
+import { guidePlace, HELP_PAGES, PAGE_GUIDE_ID, resolveGuideMode, routeScore, sectionOfGuide, sectionPages } from './help-pages';
 import { initialsOf } from './model';
 import { badgesFrom, QUEUES, visibleQueues, type QueueCount } from './queues';
 import { paletteOrderHref, parseQuery } from './search';
@@ -33,9 +34,10 @@ describe('shell words (Bengali and English side by side)', () => {
     }
   });
 
-  it('English shows no Bengali except the guide button (the guides are Bengali, CN-014)', () => {
+  it('English shows no Bengali except the guide button and the guide boxes (the guides are Bengali, CN-014, CN-026)', () => {
     const BN = /[ঀ-৿]/;
-    for (const k of keys(en as Dict)) if (k !== 'shell.guide.button') expect(BN.test(t(en as Dict, k)), k).toBe(false);
+    const bengali = (k: string) => k === 'shell.guide.button' || k.startsWith('shell.guide.box.');
+    for (const k of keys(en as Dict)) if (!bengali(k)) expect(BN.test(t(en as Dict, k)), k).toBe(false);
   });
 
   it('every section, tab, sub-page and waiting list has its words', () => {
@@ -134,6 +136,55 @@ describe('the guides (SH-05, follow-up 84)', () => {
       { t: 'text', v: 'x' },
       { t: 'text', v: ' <b>' },
     ]);
+  });
+});
+
+describe('page guides (PR 594, CN-026)', () => {
+  it('every built page row has its guide and its section overview, in the six parts', async () => {
+    const dir = guideDir();
+    const ids = HELP_PAGES.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const p of HELP_PAGES) {
+      expect(PAGE_GUIDE_ID.test(p.id), p.id).toBe(true);
+      expect(SHELL_SECTIONS.some((s) => s.id === sectionOfGuide(p.id)), p.id).toBe(true);
+      const g = await readPageGuide(p.id, dir);
+      expect(g?.title, p.id).toBeTruthy();
+      const parts = g!.blocks.filter((b): b is Extract<Block, { t: 'h' }> => b.t === 'h' && b.level === 2).map((b) => (b.c[0] as { v: string }).v);
+      expect(parts, p.id).toEqual(['এটা কী', 'কেন দরকার', 'কীভাবে করবেন', 'প্রতিটা বোতাম আর ঘরের মানে', 'সাধারণ ভুল', 'এরপর কী হয়']);
+    }
+    for (const s of SHELL_SECTIONS) expect((await readPageGuide(`${s.id}/index`, dir))?.title, s.id).toBeTruthy();
+  });
+
+  it('finds the page of an address: fixed segments beat [id], else the section overview', () => {
+    expect(routeScore('/admin/orders/[id]', '/admin/orders/abc')).toBe(2);
+    expect(routeScore('/admin/orders/confirm', '/admin/orders/confirm')).toBe(3);
+    expect(routeScore('/admin/orders', '/admin/orders/abc')).toBeNull();
+    expect(guidePlace('/admin/orders/confirm')).toEqual({ section: 'orders', page: 'orders/confirm' });
+    expect(guidePlace('/admin/orders/1f0c?tab=x')).toEqual({ section: 'orders', page: 'orders/order' });
+    expect(guidePlace('/admin/stock/counts/')).toEqual({ section: 'products', page: 'products/stock-counts' });
+    expect(guidePlace('/admin')).toEqual({ section: 'dashboard', page: 'dashboard/home' });
+    expect(guidePlace('/admin/customers')?.page ?? null).toBeNull();
+    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm']);
+  });
+
+  it('opens as the side panel on a computer and the full-screen sheet on a phone; other modes wait (follow-up)', () => {
+    expect(resolveGuideMode(null, false)).toBe('side');
+    expect(resolveGuideMode('popup', false)).toBe('side');
+    expect(resolveGuideMode('side', true)).toBe('sheet');
+  });
+
+  it('reads boxes, drops HTML comments, and turns page links into page links', async () => {
+    const b = parseMarkdown('<!-- note -->\n> [!TIP]\n> Use **this**.\n\n> [!WARNING]\n> Careful.\n\n> [!NOTE]\n> For example.');
+    expect(b.map((x) => (x.t === 'box' ? x.kind : x.t))).toEqual(['tip', 'careful', 'example']);
+    expect(JSON.stringify(b)).not.toContain('note');
+    const g = await readPageGuide('products/edit');
+    const links = JSON.stringify(g);
+    expect(links).toContain('"t":"page","id":"products/all"');
+    expect(await readPageGuide('../x')).toBeNull();
+    expect(await readPageGuide('orders/../../CLAUDE')).toBeNull();
+    expect(await readPageGuide('orders/no-such-page')).toBeNull();
+    // Outside a page guide the same link is a section guide, as before.
+    expect(parseInline('[a](all.md)')[0]).toEqual({ t: 'guide', slug: 'all', c: [{ t: 'text', v: 'a' }] });
   });
 });
 

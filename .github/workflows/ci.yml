@@ -186,6 +186,10 @@ jobs:
       - name: Stage pages match the register
         run: |
           node tools/docs/gen-stage-pages.mjs --check || { echo "::error::docs/stages or the README links are out of date: run pnpm docs:stages and commit the result"; exit 1; }
+      # PR 594 (CN-026) — every built admin page has its Bengali page guide (docs/admin-guide/pages/) in the six parts,
+      # listed in apps/web/src/lib/admin-shell/help-pages.json, and every section has its overview.
+      - name: Every admin page has its guide
+        run: node tools/admin-guide-check.mjs
       - name: Lint
         run: pnpm lint
       - name: Type-check

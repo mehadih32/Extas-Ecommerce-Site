@@ -46,7 +46,7 @@
   --ad-toast-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   --ad-lang-bg-main: #e9e5df;
   /* type */
-  --ad-font-body: var(--font-instrument), var(--font-bengali), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ad-font-body: var(--a2-font, var(--font-instrument), var(--font-bengali)), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --ad-font-display: var(--font-archivo), var(--font-bengali), system-ui, sans-serif;
   --ad-fs-body: 15px;
   --ad-fs-small: 13px;

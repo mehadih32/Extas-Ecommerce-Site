@@ -118,6 +118,7 @@
       "kbd": "Ctrl K",
       "bell": "Notifications",
       "bellUnread": "Notifications, {n} unread",
+      "guide": "Guide for this page",
       "account": "Account",
       "store": "Store"
     },
@@ -137,7 +138,14 @@
       "title": "{section} — guide",
       "loading": "Loading the guide…",
       "error": "The guide could not be opened. Try again.",
-      "close": "Close"
+      "close": "Close",
+      "pages": "Pages in this section",
+      "openPage": "Open this page",
+      "box": {
+        "tip": "টিপ",
+        "careful": "সাবধান",
+        "example": "উদাহরণ"
+      }
     },
     "palette": {
       "aria": "Search",

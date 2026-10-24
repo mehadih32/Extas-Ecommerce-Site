@@ -1,0 +1,49 @@
+/* PR 594 (CN-026 (a)) — the admin's own UI type, loaded only by the admin (app/admin/layout.tsx), never by the shop:
+ * "EXTAS Admin Bangla" (Hind Siliguri, the Bengali block only) for all Bengali text and "EXTAS Admin Sans" (Instrument
+ * Sans, one variable file for every weight) for English beside it. Self-hosted files already in the repo (OFL-1.1,
+ * licences next to them), the same files the shop uses, so a browser that has them cached loads nothing new.
+ * display: optional, as in the shop — the first faces are preloaded by the layout (lib/admin-fonts.ts), so they are
+ * there for the first paint; a slow first visit keeps the fallback for that page and nothing jumps (a swap moved the
+ * Dashboard's rows: CLS 0.098 measured). size-adjust 104 % sets the Bengali letters to the
+ * same visual size as the English ones (Hind Siliguri's Bengali draws a little small beside Instrument Sans). */
+@font-face {
+  font-family: 'EXTAS Admin Sans';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 400 700;
+  src: url('./instrument-sans/instrument-sans-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'EXTAS Admin Bangla';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 400;
+  size-adjust: 104%;
+  src: url('./hind-siliguri/hind-siliguri-bengali-400-normal.woff2') format('woff2');
+  unicode-range: U+0964-0965,U+0980-09FE,U+200C-200D,U+25CC;
+}
+@font-face {
+  font-family: 'EXTAS Admin Bangla';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 500;
+  size-adjust: 104%;
+  src: url('./hind-siliguri/hind-siliguri-bengali-500-normal.woff2') format('woff2');
+  unicode-range: U+0964-0965,U+0980-09FE,U+200C-200D,U+25CC;
+}
+@font-face {
+  font-family: 'EXTAS Admin Bangla';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 600 800;
+  size-adjust: 104%;
+  src: url('./hind-siliguri/hind-siliguri-bengali-600-normal.woff2') format('woff2');
+  unicode-range: U+0964-0965,U+0980-09FE,U+200C-200D,U+25CC;
+}
+
+/* The admin's type tokens: shell.css and admin.css read these inside the admin only. */
+.adm2, .ad {
+  --a2-font: 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --a2-font-bn: 'EXTAS Admin Bangla', 'EXTAS Admin Sans', system-ui, sans-serif;
+}

@@ -4,8 +4,13 @@ export const GUIDE_EVENT = 'a2:guide';
 export const PALETTE_EVENT = 'a2:palette';
 
 export interface GuideRequest {
-  slug: string;
-  /** The section's name, for the panel's title. */
+  /** One guide by its file name (docs/admin-guide/<slug>.md: the palette's section guides). */
+  slug?: string;
+  /** PR 594 (CN-026): the guide of the page at this address (the page the person is on). */
+  path?: string;
+  /** PR 594: one page guide by its id (`<section>/<page>`, a tap on the section's page list). */
+  page?: string;
+  /** The section's name, for the panel's title until the guide has loaded. */
   section: string;
 }
 
