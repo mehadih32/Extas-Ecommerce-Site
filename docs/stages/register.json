@@ -2859,6 +2859,7 @@
     "date": "2026-10-20",
     "note": "pnpm workspace, Next.js 16 App Router + TypeScript strict + Tailwind 4; Bengali status page at `/status`.",
     "github": [
+     "#47, 24 Oct",
      "#35, 24 Oct",
      "#3 (commit `d2ed429`), 20 Oct 02:59 (Dhaka)"
     ]
@@ -2870,7 +2871,8 @@
      "/api/admin/search",
      "/admin/delivery",
      "/admin/delivery/zones",
-     "/admin/help"
+     "/admin/help",
+     "/admin/settings/look"
     ],
     "settings": [
      "dashboard.read",
@@ -2879,9 +2881,13 @@
      "admin.dashboard"
     ],
     "code": [
-     "#/admin"
+     "#/admin",
+     "PUT /api/admin/look"
     ],
-    "names": [],
+    "names": [
+     "pnpm admin:design",
+     "0042_admin_prefs"
+    ],
     "tests": []
    },
    "updates": [
@@ -2898,6 +2904,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 23 Oct 2026 (follow-up 200):** the Orders section is its built pages — All orders and To confirm — instead of a placeholder, with the sidebar badge counting orders to confirm plus duplicate reviews and four order rows in \"Needs you now\" (to confirm, duplicate review, cancel requests, cancel pending courier), each only for the keys that open its list"
+    },
+    {
+     "date": "24 Oct",
+     "sortKey": 34560,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 24 Oct 2026 (CN-025, CN-026 (b), CN-027):** the admin look registry (Settings › Admin look, `/admin/settings/look`, `PUT /api/admin/look`): a team default and a per-person choice for each page, one design = one module + one registry line (`pnpm admin:design`), the guide-opens setting (CN-026 (b), the setting only); the demo V12.4 shell look and \"To do\" drawer; the Dashboard as design A, the V12.4 default \"Calm overview\", on real data through one loader (Sales = delivered orders only, Ordered value separate, a stage named where a figure is not built); settings v51, migration `0042_admin_prefs`. Dashboard designs B and C and the other sections' redesigns are after launch (CN-027; follow-ups 380–389)"
     }
    ],
    "mentions": [],
