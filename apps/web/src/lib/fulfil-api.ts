@@ -1,4 +1,4 @@
-// S08 · PR 179, 180 — the Packing & print admin API (Orders → Packing & print; Blueprint B1.4). Every route signs the person
+// S08 · PR 179–181 — the Packing & print admin API (Orders → Packing & print; Blueprint B1.4). Every route signs the person
 // in (guardAdmin), checks the permission in the store it touches (`?storeId=`, default the mother store), then calls
 // @extas/shipping, which checks the permission again and audits. JSON answers are `{ ok: true, … }` or
 // `{ ok: false, error: CODE, details, data }`; a PDF answer is the file itself.
@@ -20,9 +20,15 @@
 //                                              ready parcels on the courier's open batch, counted (fulfilment.handover)
 //   POST  /api/admin/packing/handover/done     {batchId, receivedBy} the batch handed over: its ready orders move to
 //                                              "handed over"; the rest are named (fulfilment.handover)
+//   GET   /api/admin/packing/picking           PR 181: the daily picking list (?from=&to= days, optional): orders and
+//                                              pieces, category → style → colour → size, shortages, held orders apart
+//                                              (fulfilment.read; no customer's details)
+//   POST  /api/admin/packing/picking           {from?, to?} the picking list as a PDF; the list is kept with a print
+//                                              job (fulfilment.read)
 import * as sh from '@extas/shipping';
 import { body, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { handoverPdf, type Letterhead } from './admin-fulfil/handover';
+import { pickingPdf } from './admin-fulfil/picking';
 import { sampleParcel, stickerInput, stickersPdf, pdfName, type StickerContext } from './admin-fulfil/sticker';
 import { fulfilDicts } from './admin-fulfil/i18n';
 import { shippingDeps, shippingFail, storeIdOf } from './shipping-api';
@@ -119,4 +125,23 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
     return guarded(request, deps, 'fulfilment.handover', async (x) => json({ ok: true, ...(await sh.completeHandover(x.deps, x.who, await body(request))) }));
   }
   return fail(404, 'not-found');
+}
+
+/** PR 181 — `path` is what comes after /api/admin/packing/picking. */
+export async function pickingRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
+  const m = request.method.toUpperCase();
+  if (path.length) return fail(404, 'not-found');
+  if (m === 'GET')
+    return guarded(request, deps, 'fulfilment.read', async (x) => {
+      const q = x.url.searchParams;
+      return json({ ok: true, ...(await sh.pickingList(x.deps, x.who, { from: q.get('from') || null, to: q.get('to') || null })) });
+    });
+  if (m === 'POST')
+    return guarded(request, deps, 'fulfilment.read', async (x) => {
+      const list = await sh.printPicking(x.deps, x.who, await body(request));
+      const cfg = await x.deps.settings.value('delivery.picking.list', { storeId: x.who.storeId });
+      const { head, timeZone } = await letterhead(x.deps, x.who.storeId, cfg.lang);
+      return pdf(await pickingPdf(list, cfg, head, timeZone, list.printedAt), pdfName(`picking-list-${list.printedAt.slice(0, 10)}`), { 'x-picking-list': list.listId });
+    });
+  return fail(405, 'method-not-allowed');
 }

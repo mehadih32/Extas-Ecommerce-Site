@@ -42,7 +42,8 @@
     "combos": "Combos & customer sets",
     "delivery": "Delivery areas & charges",
     "packingPrint": "Print run",
-    "packingHandover": "Handover"
+    "packingHandover": "Handover",
+    "packingPicking": "Picking list"
   },
   "login": {
     "metaTitle": "Admin sign-in",

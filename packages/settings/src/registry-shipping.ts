@@ -27,6 +27,9 @@
 // printed again asks why, and how many recent prints the Print run lists; the rider's handover sheet — its paper and
 // dots per inch, its language, whether it shows the receiver's name and the signature lines, and whether handing a
 // parcel over also marks it packed when nobody did (until the packing screen, PR 182, is in use).
+//
+// PR 181 (registry version 56, `delivery.picking.list`): the daily picking list — its paper, dots per inch and
+// language, and whether a size row short of the shop's stock is marked.
 import { z } from 'zod';
 import { setting } from './define';
 import { moneyMinorSchema, templateTextSchema } from './schemas';
@@ -157,6 +160,13 @@ export const handoverSheetSchema = z
   .object({ paper: z.enum(LIST_PAPERS), dpi: listDpiSchema, lang: z.enum(['en', 'bn']), receiverName: z.boolean(), signatures: z.boolean(), packOnHandover: z.boolean() })
   .strict();
 
+/**
+ * PR 181 (B1.6) — the daily picking list. `paper`, `dpi`: see LIST_PAPERS, LIST_DPIS; `lang`: the list's own words
+ * (category names in that language when the category has them); `markShortages`: a size row whose quantity is more
+ * than the shop's stock of that variant is marked SHORT.
+ */
+export const pickingListSchema = z.object({ paper: z.enum(LIST_PAPERS), dpi: listDpiSchema, lang: z.enum(['en', 'bn']), markShortages: z.boolean() }).strict();
+
 export const shippingSettings = {
   'delivery.courier.rtoCost': setting({
     ...base,
@@ -240,6 +250,15 @@ export const shippingSettings = {
     helpKey: 'delivery.handover.sheet.help',
     sortOrder: 913,
   }),
+  'delivery.picking.list': setting({
+    ...base56,
+    valueType: 'JSON',
+    schema: pickingListSchema,
+    default: { paper: 'a4', dpi: 150, lang: 'en', markShortages: true },
+    labelKey: 'delivery.picking.list.label',
+    helpKey: 'delivery.picking.list.help',
+    sortOrder: 914,
+  }),
 };
 
 export type RtoCostSettings = z.output<typeof rtoCostSchema>;
@@ -250,3 +269,4 @@ export type StickerLayoutSettings = z.output<typeof stickerLayoutSchema>;
 export type StickerExactAmountSettings = z.output<typeof stickerExactAmountSchema>;
 export type StickerQueueSettings = z.output<typeof stickerQueueSchema>;
 export type HandoverSheetSettings = z.output<typeof handoverSheetSchema>;
+export type PickingListSettings = z.output<typeof pickingListSchema>;
