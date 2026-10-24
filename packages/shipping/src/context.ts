@@ -41,6 +41,10 @@ export interface Who {
 export const SHIPPING_PERMISSIONS = ['delivery.parcels', 'delivery.book', 'delivery.exceptions', 'delivery.couriers'] as const;
 export type ShippingPermission = (typeof SHIPPING_PERMISSIONS)[number];
 
+/** PR 179 — Orders › Packing & print: `fulfilment.print` prints courier stickers (they carry the receiver's details). */
+export const FULFIL_PERMISSIONS = ['fulfilment.print'] as const;
+export type FulfilPermission = (typeof FULFIL_PERMISSIONS)[number];
+
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;
 
 export const nowOf = (deps: Pick<ShippingDeps, 'now'>): Date => deps.now?.() ?? new Date();
@@ -50,7 +54,7 @@ export function checkStoreId(storeId: number): void {
 }
 
 /** Checks the permission in that store (or `delivery.read`, the courier list) and that the store exists and is not archived. */
-export async function allow(deps: Pick<ShippingDeps, 'db'>, who: Who, permission: ShippingPermission | 'delivery.read'): Promise<void> {
+export async function allow(deps: Pick<ShippingDeps, 'db'>, who: Who, permission: ShippingPermission | FulfilPermission | 'delivery.read'): Promise<void> {
   checkStoreId(who.storeId);
   await requirePermission(deps.db, who.actor, permission, { storeId: who.storeId });
   const store = await deps.db.store.findUnique({ where: { id: who.storeId }, select: { archivedAt: true } });

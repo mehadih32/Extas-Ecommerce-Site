@@ -65,6 +65,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
         { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
       ] },
+      // S08 · PR 179: Packing & print (ORD-04) — the print run of courier stickers.
+      { id: 'packing', pages: [{ href: '/admin/orders/packing/print', perm: 'fulfilment.print', keys: ['packingPrint'] }] },
     ],
   },
   {

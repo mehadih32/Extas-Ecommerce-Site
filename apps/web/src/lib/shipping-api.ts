@@ -47,7 +47,7 @@ interface Ctx {
   url: URL;
 }
 
-function storeIdOf(url: URL): number | null {
+export function storeIdOf(url: URL): number | null {
   const raw = url.searchParams.get('storeId');
   const n = raw === null ? MOTHER_STORE_ID : Number(raw);
   return Number.isInteger(n) && n >= 1 ? n : null;
@@ -62,7 +62,7 @@ export async function shippingDeps(deps: AdminDeps): Promise<sh.ShippingDeps> {
 }
 
 /** A refusal of the shipping service with what the screen needs. */
-function shippingFail(e: unknown): Response {
+export function shippingFail(e: unknown): Response {
   if (sh.isShippingError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ? { data: e.data } : {}) }, { status: e.status });
   return errorResponse(e);
 }

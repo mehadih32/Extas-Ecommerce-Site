@@ -6,10 +6,10 @@ import { registry } from '../src/registry';
 import { courierBookingSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, rtoCostSchema, shippingSettings } from '../src/registry-shipping';
 
 /** The registry version each key arrived at. */
-const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56 };
+const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56 };
 
 describe('courier shipping settings (v50)', () => {
-  it('every key is in the registry at its version (50; PR 554: 56) in the Delivery group, labelled in English and Bengali, its default valid', () => {
+  it('every key is in the registry at its version (50; PR 554, 179: 56) in the Delivery group, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(shippingSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
       expect(spec.version, key).toBe(SINCE[key] ?? 50);

@@ -40,7 +40,8 @@
     "rules": "Smart Rules",
     "notices": "Notices & pop-ups",
     "combos": "Combos & customer sets",
-    "delivery": "Delivery areas & charges"
+    "delivery": "Delivery areas & charges",
+    "packingPrint": "Print run"
   },
   "login": {
     "metaTitle": "Admin sign-in",

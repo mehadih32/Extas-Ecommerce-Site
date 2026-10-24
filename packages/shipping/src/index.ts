@@ -19,6 +19,11 @@
 // (exact names only, unclear ones left for a person), dropped places and pairs archived, never deleted; a booking to an
 // area without a pair waits with its reason instead of failing at the courier (zones.ts, zone-match.ts).
 //
+// PR 179: the courier sticker's data — the print run of booked parcels still with us in packing order, and printing:
+// the courier's COD equal to the live amount due and the receiver the courier has, else refused (SIM-F-004); a gift's
+// receiver, sender and day (SIM-F-007); the consignment id and tracking code (follow-up 376); every print counted and a
+// second print a reprint (fulfil.ts, fulfil-pure.ts). The PDF itself is drawn by `@extas/documents`.
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -31,3 +36,5 @@ export * from './booking';
 export * from './tracking';
 export * from './zone-match';
 export * from './zones';
+export * from './fulfil-pure';
+export * from './fulfil';
