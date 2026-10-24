@@ -295,7 +295,7 @@
     ],
     "expect": {
       "/admin/orders/packing": ["[data-testid=\"pack-page\"]", "[data-testid=\"pack-steps\"]", "[data-testid=\"pack-settings\"]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/customers/review": ["[data-testid=\"customers-review\"]", "[data-testid=\"review-views\"]"],
+      "/admin/customers/review": ["[data-testid=\"customers-review\"]", "[data-testid=\"review-views\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/picking": ["[data-testid=\"picking-page\"]", "[data-testid=\"picking-summary\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/handover": ["[data-testid=\"handover-page\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/print": ["[data-testid=\"print-run\"]", "[data-testid=\"a2-tabs\"]"],
@@ -306,7 +306,7 @@
       "/admin/settings/look": ["[data-testid=\"look-card\"]", "[data-testid=\"look-guide\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin?home=1&range=30": ["[data-testid=\"dash-kpi-sales\"]", "[data-testid=\"dash-kpi-ordered\"]"],
       "/admin/help": ["[data-testid=\"help-row\"]", "[data-testid=\"a2-guide\"]"],
-      "/admin/customers": ["[data-testid=\"a2-placeholder\"]"],
+      "/admin/customers": ["[data-testid=\"customers-list\"]", "[data-testid=\"cus-kpis\"]", "[data-testid=\"cus-views\"]", "[data-testid=\"cus-row\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin?home=1&state=notfound": ["[data-testid=\"a2-state\"]"],
       "/admin/delivery/zones": ["[data-testid=\"dz-bands\"]", "[data-testid=\"dl-band\"]", "[data-testid=\"dz-sub-switch\"]", "[data-testid=\"dz-areas\"]", "[data-testid=\"dz-try\"]"],
       "/admin/products": ["a.pa-nm"],

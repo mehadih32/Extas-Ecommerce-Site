@@ -84,6 +84,70 @@
       "MOVED_ON": "This profile was merged again elsewhere; undo that merge instead.",
       "KEY_REUSED": "This was already sent with different details. Reload the page.",
       "FORBIDDEN": "You do not have the permission for this."
+    },
+    "list": {
+      "title": "All customers",
+      "sub": "One row per person, by phone. Opening a customer and copying a number are logged.",
+      "viewsAria": "Customer views",
+      "view": {
+        "all": "All",
+        "new": "New",
+        "returning": "Returning",
+        "vip": "VIP",
+        "atrisk": "At risk",
+        "refused": "Refused before",
+        "exchanged": "Exchanged",
+        "nooffers": "No offers"
+      },
+      "kpi": {
+        "people": "Customers",
+        "peopleNote": "one row per person, however many numbers",
+        "returning": "Returning",
+        "returningNote": "{n} or more orders",
+        "atrisk": "At risk",
+        "atriskNote": "no order for {n} days",
+        "refused": "Refused before",
+        "refusedNote": "not counting the shop's own mistakes"
+      },
+      "search": "Name, e-mail or phone",
+      "searchGo": "Search",
+      "filtersAria": "Search and filter customers",
+      "source": "First came from",
+      "anySource": "Any source",
+      "sort": "Sort",
+      "sortLast": "Last order first",
+      "sortNew": "Newest customer first",
+      "sortSpend": "Highest spend first",
+      "sortOrders": "Most orders first",
+      "sortName": "Name A–Z",
+      "clear": "Clear",
+      "cols": {
+        "customer": "Customer",
+        "orders": "Orders",
+        "sales": "Sales",
+        "ordered": "Ordered value",
+        "delivery": "True delivery",
+        "refused": "Refusals",
+        "last": "Last order",
+        "offers": "Offers"
+      },
+      "none": "—",
+      "offerSms": "SMS",
+      "offerWa": "WhatsApp",
+      "offerNone": "none",
+      "merged": "+{n} profile",
+      "codPolicy": "COD rule set",
+      "shown": "{n} shown",
+      "next": "More",
+      "first": "First page",
+      "empty": {
+        "title": "No customer matches",
+        "body": "Try a shorter name or the last digits of the phone, or clear the filters.",
+        "none": "No customers yet",
+        "noneBody": "Every order makes or finds its customer by phone; they show here.",
+        "view": "No one in this view",
+        "viewBody": "Other views may have them."
+      }
     }
   }
 }

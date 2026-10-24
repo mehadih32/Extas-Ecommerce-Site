@@ -114,14 +114,18 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'audit', more: true, pages: [{ href: '/admin/products/audit', perm: 'catalogue.read', keys: ['productAudit'] }] },
     ],
   },
-  // S14 · PR 284: To review (CUS-05) — the merge rules' "Same person?" pairs and the decisions made.
+  // S14 · PR 284: To review (CUS-05) — the merge rules' "Same person?" pairs and the decisions made. PR 285: All
+  // customers (CUS-01), the section's front page.
   {
     id: 'customers',
     icon: 'users',
     group: 'daily',
     base: '/admin/customers',
     guide: 'customers',
-    tabs: [{ id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] }],
+    tabs: [
+      { id: 'all', pages: [{ href: '/admin/customers', perm: 'customers.read', keys: ['customers'] }] },
+      { id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] },
+    ],
   },
   {
     id: 'delivery',

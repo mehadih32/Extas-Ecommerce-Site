@@ -9,8 +9,13 @@
 // only while the owner has it on). "Not the same person" takes a pair off the list for good. How many pairs the list
 // reads at a time. The phone number is shown in full to a person who holds the "full phone number" permission (Note
 // 24.1: the owner sees every number); everyone else sees it masked, with this many digits kept at the start and the end.
+//
+// PR 285 (`customers.list`): the Customers list — how many customers one page shows, how many orders make a customer
+// "Returning" (fewer is "New"), after how many days without an order a customer who had a delivery is "At risk", and the
+// delivered spend that makes a customer VIP (empty: no VIP view until the owner types his own figure, CN-018).
 import { z } from 'zod';
 import { setting } from './define';
+import { moneyMinorSchema } from './schemas';
 
 const V = 60;
 
@@ -36,6 +41,19 @@ export const mergeRulesSchema = z
 /** PR 284 — the digits kept at the start and the end of a masked phone number (01712-345678 → 017•••••678). */
 export const phoneMaskSchema = z.object({ first: z.int().min(0).max(5), last: z.int().min(0).max(5) }).strict();
 
+/** PR 285 — the list and its views. */
+export const customerListSchema = z
+  .object({
+    pageSize: z.int().min(10).max(100),
+    /** Orders that make a customer "Returning"; fewer is "New". */
+    returningMinOrders: z.int().min(2).max(50),
+    /** Days without an order after which a customer who had a delivery is "At risk". */
+    atRiskDays: z.int().min(7).max(3650),
+    /** Delivered spend (minor units) that makes a customer VIP; null: no VIP view. */
+    vipMinSalesMinor: moneyMinorSchema.nullable(),
+  })
+  .strict();
+
 export const customerSettings = {
   'customers.merge': setting({
     ...base,
@@ -54,5 +72,14 @@ export const customerSettings = {
     labelKey: 'customers.phoneMask.label',
     helpKey: 'customers.phoneMask.help',
     sortOrder: 110,
+  }),
+  'customers.list': setting({
+    ...base,
+    schema: customerListSchema,
+    default: { pageSize: 50, returningMinOrders: 2, atRiskDays: 60, vipMinSalesMinor: null }, // hardcode-ok: registry default (demo 91-admin-crm.js: 2+ orders, 60 days)
+    valueType: 'JSON',
+    labelKey: 'customers.list.label',
+    helpKey: 'customers.list.help',
+    sortOrder: 120,
   }),
 };

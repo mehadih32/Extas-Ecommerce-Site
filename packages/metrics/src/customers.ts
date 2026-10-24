@@ -7,7 +7,8 @@
 // for whoever owns that number. Each order counts once, however many ways it matches.
 //
 // `customerFiguresSql` is the figure as a SQL subquery over any set of people (the Customers list joins it to sort and
-// filter by spend); `customerKpis` runs it for a few named people (one customer's page, a merge pair). Like metrics.ts,
+// filter by spend); `customerKpis` runs it for a few named people (one customer's page, a merge pair);
+// `customerOrdersSql` is the person-to-order rule itself, for counts that are not money (the list's refusals). Like metrics.ts,
 // everything is store-scoped, skips archived orders, and reads the status rule from pure.ts (BASIS_RULE).
 import { Prisma } from '@extas/db/client';
 import { BASIS_RULE, NO_ORDERS, type Basis, type OrderFigure } from './pure';
@@ -36,6 +37,18 @@ export function statusRule(basis: Basis): Prisma.Sql {
 }
 
 /**
+ * The person's orders as rows `(k, id)`: any order of one of his profiles, and a guest's order (never a gift) with one
+ * of his numbers — the one rule every customer figure and list count uses. `people` as in `customerFiguresSql`.
+ * Drafts and archived orders are left to the caller (counts read the order's status).
+ */
+export function customerOrdersSql(storeId: number, people: Prisma.Sql): Prisma.Sql {
+  return Prisma.sql`
+      SELECT p.k, o."id" FROM (${people}) p JOIN "Order" o ON o."customerId" = p.cid WHERE o."storeId" = ${storeId}
+      UNION
+      SELECT p.k, o."id" FROM (${people}) p JOIN "Order" o ON o."customerId" IS NULL AND NOT o."isGift" AND o."phone" = p.phone WHERE o."storeId" = ${storeId}`;
+}
+
+/**
  * Per person, both figures over all time. `people` is a SQL query with the columns `k` (the person's key, text),
  * `cid` (one of his profile ids, uuid, or null) and `phone` (one of his numbers, or null). The result's columns: k,
  * ordered_orders, ordered_value, ordered_items, ordered_delivery, sales_orders, sales_value, sales_items,
@@ -45,12 +58,7 @@ export function customerFiguresSql(storeId: number, people: Prisma.Sql): Prisma.
   const ordered = statusRule('ordered');
   const sales = statusRule('sales');
   return Prisma.sql`
-    WITH p AS (${people}),
-    own AS (
-      SELECT p.k, o."id" FROM p JOIN "Order" o ON o."customerId" = p.cid WHERE o."storeId" = ${storeId}
-      UNION
-      SELECT p.k, o."id" FROM p JOIN "Order" o ON o."customerId" IS NULL AND NOT o."isGift" AND o."phone" = p.phone WHERE o."storeId" = ${storeId}
-    )
+    WITH own AS (${customerOrdersSql(storeId, people)})
     SELECT own.k AS "k",
            count(*) FILTER (WHERE ${ordered})                                                  AS "ordered_orders",
            COALESCE(sum(o."totalMinor") FILTER (WHERE ${ordered}), 0)::bigint                   AS "ordered_value",
