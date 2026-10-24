@@ -5,6 +5,8 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ADMIN_SECTIONS } from '@extas/settings';
+import adminBn from '../../../messages/admin.bn.json';
+import adminEn from '../../../messages/admin.en.json';
 import bn from '../../../messages/admin-shell.bn.json';
 import en from '../../../messages/admin-shell.en.json';
 import { ADMIN_PAGES } from '../admin-nav';
@@ -82,8 +84,17 @@ describe('the 14 sections', () => {
     expect(locate('/admin/orders/0193')?.tab?.id).toBe('all');
     expect(locate('/admin/orders/confirm')?.tab?.id).toBe('confirm');
     expect(locate('/admin/orders/returns')?.tab?.id).toBe('returns');
+    expect(locate('/admin/orders/returns/qc')?.page?.keys).toEqual(['ordersReturnsQc']);
+    expect(sectionHome(orders, viewer(['returns.qc']))).toBe('/admin/orders/returns/qc');
     expect(visibleTabs(orders, viewer(['orders.read', 'returns.view'])).map((x) => x.id)).toEqual(['all', 'returns']);
     expect(locateKey('order')?.page?.href).toBe('/admin/orders');
+  });
+
+  it('a tab of several pages names each page in both languages, never the bare key', () => {
+    for (const s of SHELL_SECTIONS)
+      for (const tab of s.tabs)
+        if (tab.pages.length > 1)
+          for (const p of tab.pages) for (const d of [adminEn, adminBn]) expect(t(d as unknown as Dict, `nav.${p.keys[0]}`), p.href).not.toContain('nav.');
   });
 
   it('an entry leads to the Dashboard itself, the first tab the person may open, or the placeholder', () => {
@@ -166,7 +177,7 @@ describe('page guides (PR 594, CN-026)', () => {
     expect(guidePlace('/admin/stock/counts/')).toEqual({ section: 'products', page: 'products/stock-counts' });
     expect(guidePlace('/admin')).toEqual({ section: 'dashboard', page: 'dashboard/home' });
     expect(guidePlace('/admin/customers')?.page ?? null).toBeNull();
-    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/returns']);
+    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/returns', 'orders/returns-qc']);
     expect(guidePlace('/admin/orders/risk-rules/checkout')?.page).toBe('orders/checkout-advance');
     // PR 179: Packing & print's print run, a fixed path under /admin/orders that beats an order's [id]
     expect(guidePlace('/admin/orders/packing/print')).toEqual({ section: 'orders', page: 'orders/print' });

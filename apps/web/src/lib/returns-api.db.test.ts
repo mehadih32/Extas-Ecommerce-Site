@@ -112,5 +112,21 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
     const order = await f.t.prisma.order.findUniqueOrThrow({ where: { id: ok.body.result.newOrderId } });
     expect(order.flags).toContain('EXCHANGE');
     expect((await api('POST', `exchanges/${id}/refuse`, { body: { note: 'too late' } })).body).toMatchObject({ ok: false, error: 'EXCHANGE_STATE' });
+
+    // PR 187: the old piece's parcel — found, received, checked in one save; then the exchange is completed
+    const retId = ok.body.result.returnId as string;
+    expect((await api('GET', 'parcels', { cookie: reader })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const parcels = await api('GET', `parcels?status=EXPECTED&order=${o.number}`);
+    expect(parcels.body.parcels.map((p: { id: string }) => p.id)).toEqual([retId]);
+    const parcel = (await api('GET', `parcels/${retId}`)).body.parcel;
+    expect(parcel).toMatchObject({ status: 'EXPECTED', kind: 'EXCHANGE_PICKUP', items: [{ expectedSku: line.sku }] });
+    expect((await api('POST', `parcels/${retId}/receive`, { body: { version: parcel.version } })).body).toMatchObject({ ok: true, result: { status: 'RECEIVED' } });
+    const wrong = await api('POST', `parcels/${retId}/qc`, { body: { items: [{ returnItemId: parcel.items[0].id, scannedSku: pick.sku, disposition: 'SELLABLE' }] } });
+    expect(wrong).toMatchObject({ status: 422, body: { ok: false, error: 'SKU_MISMATCH' } });
+    const qc = await api('POST', `parcels/${retId}/qc`, { body: { items: [{ returnItemId: parcel.items[0].id, scannedSku: line.sku, disposition: 'SELLABLE' }] } });
+    expect(qc.body).toMatchObject({ ok: true, result: { status: 'QC_DONE', exchangeStatus: 'QC_PASSED' } });
+    expect((await api('POST', `parcels/${retId}/teleport`, { body: {} })).status).toBe(404);
+    const done = await api('POST', `exchanges/${id}/complete`, { body: {} });
+    expect(done.body).toMatchObject({ ok: true, result: { status: 'COMPLETED' } });
   });
 });

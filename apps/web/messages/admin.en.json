@@ -43,7 +43,9 @@
     "delivery": "Delivery areas & charges",
     "packingPrint": "Print run",
     "packingHandover": "Handover",
-    "packingPicking": "Picking list"
+    "packingPicking": "Picking list",
+    "ordersReturns": "Exchanges",
+    "ordersReturnsQc": "Receive & QC"
   },
   "login": {
     "metaTitle": "Admin sign-in",

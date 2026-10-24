@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { exchangeEngineSchema, exchangeTiersSchema, returnsSettings } from '../src/registry-returns';
+import { exchangeEngineSchema, exchangeTiersSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
 
 describe('exchange and return settings (v57)', () => {
   it('every key is in the registry at version 57 in the Orders group, labelled in English and Bengali, its default valid', () => {
@@ -29,5 +29,13 @@ describe('exchange and return settings (v57)', () => {
     const causes = returnsSettings['orders.exchange.rootCauses'].default;
     expect(causes.map((c) => c.key)).toContain('wrong-pick');
     for (const c of causes) expect(c.bn.length, c.key).toBeGreaterThan(0);
+  });
+
+  it('PR 187 (D4, SIM-F-022): another SKU may be recorded with a note, no photo by default, the loss reasons in both languages', () => {
+    expect(returnsSettings['orders.returns.qc'].default).toEqual({ acceptOtherSku: true, photoForLoss: false });
+    expect(returnsQcSchema.safeParse({ acceptOtherSku: true }).success).toBe(false);
+    const reasons = returnsSettings['orders.returns.lossReasons'].default;
+    expect(reasons.map((r) => r.key)).toEqual(['stained', 'torn', 'used', 'tags', 'other']);
+    for (const r of reasons) expect(r.bn.length, r.key).toBeGreaterThan(0);
   });
 });

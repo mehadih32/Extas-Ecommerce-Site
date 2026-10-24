@@ -174,7 +174,8 @@
     },
     "returns": {
       "view": "See the returns and exchanges board and every case",
-      "decide": "Open, approve, refuse and close exchanges and returns"
+      "decide": "Open, approve, refuse and close exchanges and returns",
+      "qc": "Receive returned parcels and check each piece (sellable or not)"
     }
   },
   "totp": {

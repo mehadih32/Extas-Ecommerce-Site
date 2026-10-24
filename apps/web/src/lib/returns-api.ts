@@ -17,6 +17,13 @@
 //   POST  /api/admin/returns/orders/:orderId/exchange           {reason, reasonNote?, rootCause?, photoAssetIds?, items:
 //                                                               [{orderItemId, quantity?, newVariantId, receivedSku?}]}
 //                                                               (returns.decide)
+//   POST  /api/admin/returns/exchanges/:id/complete             {note?, version?} — after the old piece is checked (PR 187)
+//   GET   /api/admin/returns/parcels?status=&order=             the returned parcels, newest first (returns.view or .qc)
+//   GET   /api/admin/returns/parcels/:id                        one parcel with its pieces and their ERP answer
+//   POST  /api/admin/returns/parcels/:id/receive                {note?, version?} — at the shop (returns.qc)
+//   POST  /api/admin/returns/parcels/:id/qc                     {items: [{returnItemId, scannedSku, disposition,
+//                                                               lossReason?, photoAssetIds?, note?, otherSku?}], note?,
+//                                                               version?} — every piece in one save (returns.qc)
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
 import { handle } from './orders-api';
@@ -63,6 +70,44 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
         return handle(request, deps, 'returns.decide', async (x) => {
           const d = await decision(request);
           return { result: await od.refuseExchange(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
+      case 'complete':
+        return handle(request, deps, 'returns.decide', async (x) => {
+          const d = await decision(request);
+          return { result: await od.completeExchange(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
+      default:
+        return notFound();
+    }
+  }
+  if (a === 'parcels') {
+    if (!b) {
+      if (m !== 'GET') return notAllowed();
+      // The list is read by both roles; the order service checks returns.view or returns.qc again.
+      return handle(request, deps, null, async (x) => {
+        const status = list(x.url, 'status');
+        const order = x.url.searchParams.get('order')?.trim();
+        return { parcels: await od.listReturns(x.deps, x.who, { ...(status.length ? { status } : {}), ...(order ? { orderNumber: order } : {}) }) };
+      });
+    }
+    if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['returnId']));
+    if (!c) {
+      if (path.length > 2) return notFound();
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, null, async (x) => ({ parcel: await od.returnDetail(x.deps, x.who, b) }));
+    }
+    if (path.length > 3) return notFound();
+    if (m !== 'POST') return notAllowed();
+    switch (c) {
+      case 'receive':
+        return handle(request, deps, 'returns.qc', async (x) => {
+          const d = await decision(request);
+          return { result: await od.receiveReturn(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
+      case 'qc':
+        return handle(request, deps, 'returns.qc', async (x) => {
+          const d = await decision(request);
+          return { result: await od.qcReturn(x.deps, x.who, b, d.input, { version: d.version }) };
         });
       default:
         return notFound();

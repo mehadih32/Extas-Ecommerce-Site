@@ -31,6 +31,7 @@ export const MEDIA_REFERENCES: readonly MediaReference[] = [
   ref('Combo', 'setPhotoAssetId'),
   ref('GatewayStatement', 'fileAssetId'),
   ref('Exchange', 'photoAssetIds', true),
+  ref('ReturnItem', 'photoAssetIds', true),
   ref('SeoMeta', 'ogImageAssetId'),
   ref('SitemapBuild', 'fileAssetId'),
   ref('BlogAuthor', 'avatarAssetId'),

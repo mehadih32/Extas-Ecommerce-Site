@@ -316,7 +316,8 @@
       "erpFailed": "ERP documents that failed",
       "jobsDead": "Background jobs that stopped",
       "sub": "{n} waiting · oldest {age}",
-      "ordersReturns": "Returns & exchanges"
+      "ordersReturns": "Returns & exchanges",
+      "ordersReturnsQc": "Receive & QC"
     },
     "age": {
       "now": "just now",

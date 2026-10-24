@@ -43,7 +43,7 @@ describe('stock pages messages', () => {
       for (const s of ['QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELLED']) has(`stock.runs.status.${s}`);
       for (const s of ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP']) has(`stock.docs.status.${s}`);
       for (const s of ['pending', 'failed', 'dead', 'skipped', 'sent']) has(`stock.docs.counts.${s}`);
-      for (const k of ['order.create', 'order.status']) has(`stock.docs.type.${keyOf(k)}`);
+      for (const k of ['order.create', 'order.status', 'return.create']) has(`stock.docs.type.${keyOf(k)}`);
       for (const k of MISMATCH_KINDS) has(`stock.reconcile.kind.${k}`);
       for (const s of ['COUNTING', 'REVIEW', 'COMPLETED', 'CANCELLED']) {
         has(`stock.counts.status.${s}`);

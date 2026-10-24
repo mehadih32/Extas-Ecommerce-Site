@@ -104,9 +104,27 @@ export interface ErpSalesOrder {
  * Every document the shop can send. Each later stage adds its own kind here (payment S07, shipment S08, return S08,
  * ad spend S13) with its contract path in the HTTP client. There is deliberately no kind for journal lines.
  */
+/**
+ * PR 187 (S08; BACKEND-ARCHITECTURE §6.5.4, decision D4) — a return as the contract's `POST /returns` takes it: the
+ * order, why it came back, and the pieces by the SKU **scanned at QC** (SIM-F-022). Only sellable pieces are sent, as
+ * `good`: an unsellable piece stays a loss in the shop's records and is never sent to ERP stock.
+ */
+export const ERP_RETURN_QC_GOOD = 'good';
+export interface ErpReturnLine {
+  sku: string;
+  quantity: number;
+  qc: typeof ERP_RETURN_QC_GOOD;
+}
+export interface ErpReturn {
+  externalOrderId: string;
+  reason: string;
+  items: ErpReturnLine[];
+}
+
 export type ErpDocument =
   | { type: 'order.create'; body: ErpSalesOrder }
-  | { type: 'order.status'; externalOrderId: string; body: { status: ErpOrderStatus } };
+  | { type: 'order.status'; externalOrderId: string; body: { status: ErpOrderStatus } }
+  | { type: 'return.create'; body: ErpReturn };
 
 export type ErpDocumentType = ErpDocument['type'];
 

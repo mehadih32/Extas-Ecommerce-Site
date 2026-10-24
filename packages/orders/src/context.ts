@@ -60,6 +60,8 @@ export const ORDER_PERMISSIONS = [
   // S08 · PR 185: exchanges and returns (ORD-05)
   'returns.view',
   'returns.decide',
+  // S08 · PR 187: Receive & QC
+  'returns.qc',
 ] as const;
 export type OrdersPermission = (typeof ORDER_PERMISSIONS)[number];
 

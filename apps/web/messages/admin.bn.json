@@ -43,7 +43,9 @@
     "delivery": "ডেলিভারি এলাকা ও চার্জ",
     "packingPrint": "প্রিন্ট",
     "packingHandover": "হ্যান্ডওভার",
-    "packingPicking": "পিকিং লিস্ট"
+    "packingPicking": "পিকিং লিস্ট",
+    "ordersReturns": "বদল",
+    "ordersReturnsQc": "ফেরত মাল চেক"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

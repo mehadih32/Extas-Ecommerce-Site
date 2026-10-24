@@ -75,8 +75,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] },
         ],
       },
-      // S08 · PR 185: Returns & exchanges (the board, a case, starting an exchange).
-      { id: 'returns', pages: [{ href: '/admin/orders/returns', perm: 'returns.view', keys: ['ordersReturns'] }] },
+      // S08 · PR 185, 187: Returns & exchanges (the board, a case, starting an exchange) and Receive & QC.
+      {
+        id: 'returns',
+        pages: [
+          { href: '/admin/orders/returns', perm: 'returns.view', keys: ['ordersReturns'] },
+          // PR 187: Receive & QC (ORD-05a)
+          { href: '/admin/orders/returns/qc', perm: 'returns.qc', keys: ['ordersReturnsQc'] },
+        ],
+      },
     ],
   },
   {

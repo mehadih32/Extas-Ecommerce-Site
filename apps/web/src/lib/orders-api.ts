@@ -88,11 +88,12 @@ function ordersFail(e: unknown): Response {
 }
 
 /** One admin request of the order service: the store, the session and the permission, then `fn`, its refusals as JSON (PR 544's risk routes too). */
-export async function handle(request: Request, deps: AdminDeps | null, permission: od.OrdersPermission, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
+/** `permission` null: signed in only — the order service itself checks which of several permissions is enough (PR 187). */
+export async function handle(request: Request, deps: AdminDeps | null, permission: od.OrdersPermission | null, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
-  const g = await guardAdmin(request, deps, { permission, storeId });
+  const g = await guardAdmin(request, deps, { permission: permission ?? undefined, storeId });
   if (g instanceof Response) return g;
   try {
     const key = request.headers.get('idempotency-key')?.trim() || undefined;

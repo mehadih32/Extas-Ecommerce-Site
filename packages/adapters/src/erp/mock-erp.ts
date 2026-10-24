@@ -11,6 +11,8 @@
 // - orders (PR 199, 200): `POST /orders` needs an Idempotency-Key, reserves stock with the ERP's own logic (or answers
 //   409 with the short SKUs), `PATCH /orders/{externalOrderId}` changes the status (CANCELLED gives the reservation
 //   back); the same key with the same body returns the first answer and changes nothing;
+// - returns (PR 187): `POST /returns` takes the order's sellable pieces (`qc: good`) and puts them back on hand in the
+//   warehouse the order took them from (the first warehouse for a SKU the order did not have);
 // - webhooks (PR 196): it can send signed `stock.changed` / `variant.changed` events of its own state, with the
 //   webhook secret a test or a developer gives it (never one of its own).
 //
@@ -55,6 +57,8 @@ interface Company extends MockCompanySpec {
   stock: Map<string, Map<string, StockCell>>;
   variants: Map<string, Required<MockVariant>>;
   orders: Map<string, MockOrder>;
+  /** PR 187: the returns the ERP has taken, in order. */
+  returns: { erpReturnId: string; externalOrderId: string; items: { sku: string; quantity: number; warehouseId: string }[] }[];
   /** Idempotency-Key → the first answer (contract: "a repeat returns the first result"). */
   idempotency: Map<string, IdempotencyRecord>;
 }
@@ -168,7 +172,7 @@ export class MockErpWorld {
     this.companies.clear();
     this.keys.clear();
     for (const c of companies) {
-      this.companies.set(c.id, { ...c, warehouses: c.warehouses.map((w) => ({ ...w })), stock: new Map(), variants: new Map(), orders: new Map(), idempotency: new Map() });
+      this.companies.set(c.id, { ...c, warehouses: c.warehouses.map((w) => ({ ...w })), stock: new Map(), variants: new Map(), orders: new Map(), returns: [], idempotency: new Map() });
       this.keys.set(randomBytes(18).toString('base64url'), c.id);
     }
   }
@@ -401,6 +405,20 @@ export class MockErpWorld {
       }
       order.status = status;
       return { status: 200, answer: { erpOrderId: order.erpOrderId, externalOrderId: order.externalOrderId, status } };
+    }
+    if (method === 'POST' && path === '/returns') {
+      const ext = typeof b.externalOrderId === 'string' ? b.externalOrderId : '';
+      const items = Array.isArray(b.items) ? (b.items as { sku?: unknown; quantity?: unknown; qc?: unknown }[]) : [];
+      if (!ext || !items.length || items.some((i) => typeof i.sku !== 'string' || !Number.isInteger(i.quantity) || (i.quantity as number) < 1 || i.qc !== 'good')) {
+        return err(400, 'INVALID_RETURN', 'a return needs externalOrderId and items with sku, quantity and qc "good"');
+      }
+      const order = c.orders.get(ext);
+      if (!order) return err(404, 'ORDER_NOT_FOUND', 'no such order');
+      const back = items.map((i) => ({ sku: i.sku as string, quantity: i.quantity as number, warehouseId: order.items.find((p) => p.sku === i.sku)?.warehouseId ?? c.warehouses[0]!.id }));
+      for (const p of back) this.adjustStock(p.sku, p.warehouseId, { onHand: p.quantity }, c.id);
+      const erpReturnId = `SAMPLE-RT-${c.returns.length + 1}`;
+      c.returns.push({ erpReturnId, externalOrderId: ext, items: back });
+      return { status: 201, answer: { erpReturnId, externalOrderId: ext } };
     }
     return err(404, 'NOT_FOUND', 'the practice ERP does not take this document yet');
   }

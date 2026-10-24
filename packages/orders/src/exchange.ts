@@ -728,6 +728,21 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
   return res;
 }
 
+/**
+ * PR 187 — completes an exchange once its old piece is checked (QC_PASSED, or QC_FAILED after a person has looked).
+ * Needs `returns.decide`. A credit due to the customer is only noted (the wallet request: follow-up 440).
+ */
+export async function completeExchange(deps: OrdersDeps, who: Who, id: string, input: unknown = {}, opts: DecideOptions = {}): Promise<{ exchangeId: string; status: string }> {
+  await allow(deps, who, 'returns.decide');
+  const d = parse(decideInput, input, 'completion');
+  return decide(deps, who, id, opts, async (tx, ex) => {
+    if (ex.status !== 'QC_PASSED' && ex.status !== 'QC_FAILED') throw new OrdersError('EXCHANGE_STATE', 'an exchange is completed after its old piece is checked', ['status'], { status: ex.status });
+    if (ex.status === 'QC_FAILED' && !d.note) throw new OrdersError('INVALID_INPUT', 'a failed check needs a note to complete', ['note']);
+    await tx.exchange.update({ where: { id: ex.id }, data: { status: 'COMPLETED' } });
+    return { action: 'completed', message: d.note ?? null, after: { status: 'COMPLETED', from: ex.status }, result: { exchangeId: ex.id, status: 'COMPLETED' } };
+  });
+}
+
 /** Refuses a requested exchange with the reason the customer is told. Needs `returns.decide`. */
 export async function refuseExchange(deps: OrdersDeps, who: Who, id: string, input: unknown, opts: DecideOptions = {}): Promise<{ exchangeId: string; status: string }> {
   await allow(deps, who, 'returns.decide');
@@ -769,6 +784,8 @@ export interface ExchangeView {
   decisionNote: string | null;
   createdAt: string;
   items: { id: string; oldSku: string | null; oldUnitMinor: number; newSku: string | null; newName: string | null; newColourName: string | null; newSizeLabel: string | null; newUnitMinor: number; quantity: number; tier: number | null; receivedSku: string | null; qcStatus: string | null; restockAction: string | null }[];
+  /** PR 187: the old piece's pick-up (an EXCHANGE_PICKUP return) and where each piece stands after QC. */
+  pickup: { returnId: string; status: string; version: number; items: { id: string; expectedSku: string | null; scannedSku: string | null; disposition: string | null; dispositionState: string | null; lossReason: string | null }[] } | null;
 }
 
 const VIEW_INCLUDE = { items: { orderBy: { createdAt: 'asc' as const } } };
@@ -776,6 +793,15 @@ const VIEW_INCLUDE = { items: { orderBy: { createdAt: 'asc' as const } } };
 async function viewsOf(db: Db, rows: Prisma.ExchangeGetPayload<{ include: typeof VIEW_INCLUDE }>[]): Promise<ExchangeView[]> {
   const ids = [...new Set(rows.flatMap((r) => [r.orderId, r.newOrderId].filter((x): x is string => !!x)))];
   const orders = new Map((await db.order.findMany({ where: { id: { in: ids } }, select: { id: true, number: true, customerName: true } })).map((o) => [o.id, o]));
+  const pickups = new Map(
+    (
+      await db.returnRecord.findMany({
+        where: { exchangeId: { in: rows.map((r) => r.id) }, kind: 'EXCHANGE_PICKUP' },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, exchangeId: true, status: true, version: true, items: { orderBy: { createdAt: 'asc' }, select: { id: true, expectedSku: true, scannedSku: true, disposition: true, dispositionState: true, lossReason: true } } },
+      })
+    ).map((r) => [r.exchangeId!, r]),
+  );
   return rows.map((e) => ({
     id: e.id,
     number: e.number,
@@ -802,6 +828,10 @@ async function viewsOf(db: Db, rows: Prisma.ExchangeGetPayload<{ include: typeof
     decisionNote: e.decisionNote,
     createdAt: e.createdAt.toISOString(),
     items: e.items.map((i) => ({ id: i.id, oldSku: i.oldSku, oldUnitMinor: i.oldUnitMinor, newSku: i.newSku, newName: i.newName, newColourName: i.newColourName, newSizeLabel: i.newSizeLabel, newUnitMinor: i.newUnitMinor, quantity: i.quantity, tier: i.tier, receivedSku: i.receivedSku, qcStatus: i.qcStatus, restockAction: i.restockAction })),
+    pickup: (() => {
+      const p = pickups.get(e.id);
+      return p ? { returnId: p.id, status: p.status, version: p.version, items: p.items } : null;
+    })(),
   }));
 }
 

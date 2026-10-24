@@ -43,7 +43,8 @@
 // and its card on Orders › Risk rules (advance-settings.ts).
 // S08 · PR 185: the four-tier exchange engine — what may be offered (strictly in order), the window and the per-piece
 // limit, the money box, the exchange opened on the delivered order and, once approved, its linked exchange order with
-// the stock held and the old piece's pick-up opened (exchange.ts; the pure rules in exchange-pure.ts).
+// the stock held and the old piece's pick-up opened (exchange.ts; the pure rules in exchange-pure.ts). PR 187: Receive &
+// QC — every returned piece by the SKU scanned, sellable to the ERP, not sellable a loss (returns.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -82,3 +83,4 @@ export * from './booking';
 export * from './checkout-layers';
 export * from './checkout-risk';
 export * from './exchange';
+export * from './returns';
