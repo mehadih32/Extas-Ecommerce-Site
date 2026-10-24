@@ -1,6 +1,7 @@
 // S05 · the Messages control centre — PR 148 (order status messages by SMS, WhatsApp and e-mail with the no-double-send
 // guard; CN-014 idea 5 the WhatsApp self-confirm and idea 10 the exact-amount line; CN-019 the order journey with caps)
-// (BACKEND-ARCHITECTURE §5.7 MSG-01, MSG-05; §6.5.6; §8.8). Registry version 40; PR 149 (the log with retries) 41.
+// (BACKEND-ARCHITECTURE §5.7 MSG-01, MSG-05; §6.5.6; §8.8). Registry version 40; PR 149 (the log with retries) 41;
+// PR 546 (the cancellation notice, SIM-F-013) 45.
 // Labels: messages/messages.<lang>.json.
 // The words of every message are templates (NotificationTemplate, the default pack); only the short lines the engine
 // adds to a template (`{amountLine}`, `{exactAmountLine}`) are texts here, in both languages.
@@ -11,6 +12,7 @@
 // is the owner's to change; nothing here moves money. Every channel runs on its mock until the owner types a key in.
 import { z } from 'zod';
 import { setting } from './define';
+import { ORDER_CANCEL_CODES } from './registry-orders';
 import { templateTextSchema } from './schemas';
 
 const V = 40;
@@ -70,9 +72,6 @@ export const journeyStepSchema = z
   .refine((s) => s.fallback !== s.channel, { message: 'the fallback is another channel' });
 export type JourneyStepConfig = z.output<typeof journeyStepSchema>;
 
-export const journeySchema = z.object(Object.fromEntries(JOURNEY_STEPS.map((s) => [s, journeyStepSchema])) as Record<JourneyStep, typeof journeyStepSchema>).strict();
-export type Journey = z.output<typeof journeySchema>;
-
 const step = (on: boolean, channel: MessageChannel, template: string, more: Partial<JourneyStepConfig> = {}): JourneyStepConfig => ({
   on,
   channel,
@@ -83,6 +82,9 @@ const step = (on: boolean, channel: MessageChannel, template: string, more: Part
   template,
   ...more,
 });
+
+export const journeySchema = z.object(Object.fromEntries(JOURNEY_STEPS.map((s) => [s, journeyStepSchema])) as Record<JourneyStep, typeof journeyStepSchema>).strict();
+export type Journey = z.output<typeof journeySchema>;
 
 /** The owner's send rule as the shipped journey (B2.5 V2; CN-019 Day-1 and Day-3 on). */
 export const DEFAULT_JOURNEY: Journey = {
@@ -164,6 +166,46 @@ export const messageRetrySchema = z
     delaysMinutes: z.array(z.int().min(1).max(60 * 24)).min(1).max(9),
   })
   .strict();
+
+/** A cancel reason code (registry-orders.ts, PR 144). */
+export type CancelCode = (typeof ORDER_CANCEL_CODES)[number];
+
+/**
+ * PR 546 (SIM-F-013) — what the "order cancelled" step tells the customer (the step's on/off, channel and template are
+ * the journey's `cancelled`). `{cancelReason}` in its template is the reason in plain words for the order's cancel code
+ * (a code without words says nothing; the team's own note is never sent). `silent`: codes that send nothing (a fake
+ * order, or one somebody placed with his number: he should not be told about an order he never made). A duplicate
+ * cancelled while his other order goes ahead gets `duplicateTemplate`, with that order's number and tracking link
+ * (`{keptOrderNumber}`, `{keptOrderLink}`); without such an order (or without that template) the plain one.
+ */
+export const cancelNoticeSchema = z
+  .object({
+    reasons: z.partialRecord(z.enum(ORDER_CANCEL_CODES), templateTextSchema([], 200)),
+    silent: z
+      .array(z.enum(ORDER_CANCEL_CODES))
+      .max(ORDER_CANCEL_CODES.length)
+      .refine((l) => new Set(l).size === l.length, { message: 'every code once' }),
+    duplicateTemplate: templateKey,
+  })
+  .strict();
+export type CancelNotice = z.output<typeof cancelNoticeSchema>;
+
+/** The shipped words: short, plain, never blaming (OTHER has none: its reason is only the team's note). */
+export const DEFAULT_CANCEL_NOTICE: CancelNotice = {
+  reasons: {
+    CUSTOMER_BEFORE_CONFIRM: { en: 'You cancelled it yourself.', bn: 'আপনি নিজেই বাতিল করেছেন।' },
+    CUSTOMER_AFTER_CONFIRM: { en: 'You asked us to cancel it.', bn: 'আপনার অনুরোধে বাতিল করা হয়েছে।' },
+    CUSTOMER_CHANGE_AFTER_BOOKING: { en: 'You asked for a change after it was handed to the courier.', bn: 'কুরিয়ারে দেওয়ার পর আপনি বদল চেয়েছেন।' },
+    ADVANCE_NOT_PAID: { en: 'The advance payment did not arrive in time.', bn: 'অগ্রিম টাকা সময়মতো আসেনি।' },
+    RISK_DECLINED: { en: 'We could not confirm this order.', bn: 'অর্ডারটি আমরা নিশ্চিত করতে পারিনি।' },
+    OUT_OF_STOCK: { en: 'The item ran out of stock. Sorry!', bn: 'পণ্যটি স্টকে শেষ হয়ে গেছে, দুঃখিত।' },
+    DUPLICATE_ORDER: { en: 'You placed the same order twice.', bn: 'একই অর্ডার দুইবার হয়েছিল।' },
+    ADDRESS_UNREACHABLE: { en: 'We could not deliver to this address.', bn: 'ডেলিভারির ঠিকানায় পৌঁছানো যায়নি।' },
+    NOT_ORDERED: { en: 'Someone else placed it with your number.', bn: 'আপনার নম্বর দিয়ে অন্য কেউ অর্ডার করেছিল।' },
+  },
+  silent: ['RISK_DECLINED', 'NOT_ORDERED'],
+  duplicateTemplate: 'order.cancelledDuplicate',
+};
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'messages', version: V } as const;
 
@@ -272,5 +314,16 @@ export const messageSettings = {
     labelKey: 'messages.log.pageSize.label',
     helpKey: 'messages.log.pageSize.help',
     sortOrder: 110,
+  }),
+  // ---- PR 546 · the cancellation notice (SIM-F-013) ----
+  'messages.cancelNotice': setting({
+    ...base,
+    version: 45,
+    schema: cancelNoticeSchema,
+    default: DEFAULT_CANCEL_NOTICE,
+    valueType: 'JSON',
+    labelKey: 'messages.cancelNotice.label',
+    helpKey: 'messages.cancelNotice.help',
+    sortOrder: 120,
   }),
 };

@@ -72,6 +72,18 @@ describe('general default pack (PR 508)', () => {
     expect(placed.body).toContain('{amountLine}');
   });
 
+  it('PR 546: the cancelled notice says why, an untouched old one takes the new words, and a duplicate names the kept order', () => {
+    const cancelled = defaultPack.notificationTemplates.filter((t) => t.key === 'order.cancelled');
+    expect(cancelled).toHaveLength(4);
+    for (const t of cancelled) {
+      expect(t.body, `${t.channel} ${t.locale}`).toContain('{cancelReason}');
+      expect(t.replaces?.[0], `${t.channel} ${t.locale}`).not.toContain('{cancelReason}');
+    }
+    const dup = defaultPack.notificationTemplates.filter((t) => t.key === 'order.cancelledDuplicate');
+    expect(dup.map((t) => `${t.channel}:${t.locale}`).sort()).toEqual(['SMS:bn', 'SMS:en', 'WHATSAPP:bn', 'WHATSAPP:en']);
+    for (const t of dup) expect(t.body).toMatch(/\{keptOrderNumber\}.*\{keptOrderLink\}/);
+  });
+
   it('templates name only known tokens, never a typed-in amount', () => {
     const bad = clone(defaultPack);
     bad.notificationTemplates[0]!.body = 'Delivery {chargeInside}';

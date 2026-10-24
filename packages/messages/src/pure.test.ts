@@ -140,3 +140,23 @@ describe('the words', () => {
     expect(render('Body', 'Your order {orderNumber}', base)).toEqual({ ok: true, text: 'Body', subject: 'Your order S-1001' });
   });
 });
+
+describe('PR 546 · the cancellation words (SIM-F-013)', () => {
+  const plain = '{storeName}: order {orderNumber} is cancelled. {cancelReason} Questions? {orderLink}';
+  it('the reason in plain words; a reason without words leaves no gap', () => {
+    expect(render(plain, null, { ...base, cancelReason: 'The item ran out of stock. Sorry!' })).toMatchObject({
+      ok: true,
+      text: 'Sample Shop: order S-1001 is cancelled. The item ran out of stock. Sorry! Questions? https://shop.example/account/orders/S-1001',
+    });
+    expect(render(plain, null, { ...base, cancelReason: '' })).toMatchObject({ ok: true, text: 'Sample Shop: order S-1001 is cancelled. Questions? https://shop.example/account/orders/S-1001' });
+    expect(render(plain, null, base)).toMatchObject({ ok: true });
+  });
+
+  it('the order that goes ahead: its number and link, never an empty promise', () => {
+    const dup = 'Order {orderNumber} is cancelled. Your order {keptOrderNumber} goes ahead: {keptOrderLink}';
+    const kept = { number: 'S-0999', link: 'https://shop.example/account/orders/S-0999' };
+    expect(render(dup, null, { ...base, kept })).toMatchObject({ ok: true, text: 'Order S-1001 is cancelled. Your order S-0999 goes ahead: https://shop.example/account/orders/S-0999' });
+    expect(render(dup, null, { ...base, kept: null })).toEqual({ ok: false, reason: 'NO_KEPT_ORDER', field: 'keptOrderNumber' });
+    expect(render('Follow it: {keptOrderLink}', null, { ...base, kept: { number: 'S-0999', link: null } })).toEqual({ ok: false, reason: 'NO_LINK', field: 'keptOrderLink' });
+  });
+});

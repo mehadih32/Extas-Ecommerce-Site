@@ -1,7 +1,7 @@
 {
   "$comment": "PR 508 — the general default pack: neutral, editable defaults seeded into every store of every installation. Structure only: no money (every band ships off, without a charge; prices, discounts, COD and charges are the owner's decisions, CLAUDE.md rule 6), no owner data (PR 509), no media. Applying it only adds what is missing; it never overwrites a row the owner edited. The policy shapes, AI settings and theme are settings in packages/settings/src/registry.ts (seeded by the settings migration, reset with PR 510). Roles are seeded by the role builder (PR 15, 16, 495).",
   "key": "general",
-  "version": 2,
+  "version": 3,
   "motherStore": { "slug": "main" },
   "garmentTypes": [
     {
@@ -626,7 +626,8 @@
       "locale": "bn",
       "name": "Cancelled",
       "enabled": true,
-      "body": "{storeName}: অর্ডার {orderNumber} বাতিল হয়েছে। কিছু জানার থাকলে: {orderLink}"
+      "body": "{storeName}: অর্ডার {orderNumber} বাতিল হয়েছে। {cancelReason} কিছু জানার থাকলে: {orderLink}",
+      "replaces": ["{storeName}: অর্ডার {orderNumber} বাতিল হয়েছে। কিছু জানার থাকলে: {orderLink}"]
     },
     {
       "key": "order.cancelled",
@@ -634,7 +635,8 @@
       "locale": "en",
       "name": "Cancelled",
       "enabled": true,
-      "body": "{storeName}: order {orderNumber} is cancelled. Questions? {orderLink}"
+      "body": "{storeName}: order {orderNumber} is cancelled. {cancelReason} Questions? {orderLink}",
+      "replaces": ["{storeName}: order {orderNumber} is cancelled. Questions? {orderLink}"]
     },
     {
       "key": "order.cancelled",
@@ -642,7 +644,8 @@
       "locale": "bn",
       "name": "Cancelled",
       "enabled": true,
-      "body": "{customerName}, অর্ডার {orderNumber} বাতিল হয়েছে। কিছু জানার থাকলে: {orderLink}"
+      "body": "{customerName}, অর্ডার {orderNumber} বাতিল হয়েছে। {cancelReason} কিছু জানার থাকলে: {orderLink}",
+      "replaces": ["{customerName}, অর্ডার {orderNumber} বাতিল হয়েছে। কিছু জানার থাকলে: {orderLink}"]
     },
     {
       "key": "order.cancelled",
@@ -650,7 +653,40 @@
       "locale": "en",
       "name": "Cancelled",
       "enabled": true,
-      "body": "Hi {customerName}, order {orderNumber} is cancelled. Questions? {orderLink}"
+      "body": "Hi {customerName}, order {orderNumber} is cancelled. {cancelReason} Questions? {orderLink}",
+      "replaces": ["Hi {customerName}, order {orderNumber} is cancelled. Questions? {orderLink}"]
+    },
+    {
+      "key": "order.cancelledDuplicate",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Cancelled as a duplicate",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber} বাতিল হয়েছে, কারণ একই অর্ডার দুইবার হয়েছিল। আপনার অর্ডার {keptOrderNumber} ঠিকঠাক চলছে: {keptOrderLink}"
+    },
+    {
+      "key": "order.cancelledDuplicate",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Cancelled as a duplicate",
+      "enabled": true,
+      "body": "{storeName}: order {orderNumber} is cancelled because the same order was placed twice. Your order {keptOrderNumber} goes ahead: {keptOrderLink}"
+    },
+    {
+      "key": "order.cancelledDuplicate",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Cancelled as a duplicate",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber} বাতিল হয়েছে, কারণ একই অর্ডার দুইবার হয়েছিল। আপনার অর্ডার {keptOrderNumber} ঠিকঠাক চলছে, এখানে দেখুন: {keptOrderLink}"
+    },
+    {
+      "key": "order.cancelledDuplicate",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Cancelled as a duplicate",
+      "enabled": true,
+      "body": "Hi {customerName}, order {orderNumber} is cancelled because the same order was placed twice. Your order {keptOrderNumber} goes ahead, follow it here: {keptOrderLink}"
     },
     {
       "key": "order.onHold",

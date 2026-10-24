@@ -18,11 +18,16 @@
 // `messages.retry` (the row stays QUEUED with the next `sendAfter`); after the last try it is FAILED and the step's
 // fallback channel is tried. A number the channel cannot reach is never retried. Staff retry a FAILED row (log.ts).
 //
+// PR 546 (SIM-F-013): the "cancelled" step says why in plain words (`messages.cancelNotice`, by the order's cancel code;
+// never the team's note), sends nothing for a silent reason (a fake order, his number used by someone else: logged
+// REASON_SILENT), and for a duplicate names the order that goes ahead with its tracking link (the duplicate review's
+// match, else his own other open order) in its own template. Like every notice it is outside the caps.
+//
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
-import type { Journey, JourneyStep, MessageChannel } from '@extas/settings';
+import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel } from '@extas/settings';
 import { nowOf, setting, TX, type MessagesDeps, type SendResult } from './context';
 import { answerTemplate, audienceFits, dedupeKey, dueAt, isCapped, messageLocale, NEVER_QUIET, orderLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
 
@@ -52,6 +57,7 @@ const ORDER_SELECT = {
   isGift: true,
   giftSenderName: true,
   giftSenderContact: true,
+  cancelReasonCode: true,
 } satisfies Prisma.OrderSelect;
 type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER_SELECT }>;
 
@@ -184,11 +190,12 @@ export interface RunContext {
   amountLine: { en: string; bn: string };
   exact: { due: { en: string; bn: string }; paid: { en: string; bn: string } } | null;
   retry: { maxAttempts: number; delaysMinutes: number[] };
+  cancelNotice: CancelNotice;
   senders: Map<MessageChannel, Awaited<ReturnType<MessagesDeps['sender']>>>;
 }
 
 export async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
-  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry] = await Promise.all([
+  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice] = await Promise.all([
     setting(deps, storeId, 'messages.enabled'),
     setting(deps, storeId, 'messages.journey'),
     setting(deps, storeId, 'messages.caps'),
@@ -204,6 +211,7 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     deps.db.store.findUniqueOrThrow({ where: { id: storeId }, select: { name: true } }),
     linkHost(deps, storeId),
     setting(deps, storeId, 'messages.retry'),
+    setting(deps, storeId, 'messages.cancelNotice'),
   ]);
   return {
     storeId,
@@ -220,8 +228,35 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     amountLine,
     exact: exactOn.enabled ? exactCfg : null,
     retry,
+    cancelNotice,
     senders: new Map(),
   };
+}
+
+/** The statuses of an order that is not going ahead any more (or never went): never "the order that goes ahead". */
+const NOT_GOING_AHEAD = ['DRAFT', 'CANCELLED', 'RETURNED', 'DELIVERED', 'PARTIALLY_DELIVERED'] as const;
+
+/**
+ * PR 546 — the order that goes ahead when this one was cancelled as its duplicate: one the duplicate review matched
+ * (the cancel's timeline row names the review), else his own other order (same phone, or same account) that is still
+ * open — the nearest in time. None (all cancelled, or delivered already): null, and the plain notice goes.
+ */
+async function keptOrderOf(deps: MessagesDeps, c: RunContext, row: Row, o: OrderFacts): Promise<{ number: string } | null> {
+  const ev = row.eventId ? await deps.db.orderEvent.findFirst({ where: { id: row.eventId, storeId: c.storeId }, select: { data: true } }) : null;
+  const data = ev?.data && typeof ev.data === 'object' && !Array.isArray(ev.data) ? (ev.data as Record<string, unknown>) : {};
+  const alert = typeof data.alertId === 'string' ? await deps.db.fraudAlert.findFirst({ where: { id: data.alertId, storeId: c.storeId }, select: { matchedOrderIds: true } }) : null;
+  const buyer: Prisma.OrderWhereInput[] = [...(o.phone ? [{ phone: o.phone }] : []), ...(o.customerId ? [{ customerId: o.customerId }] : [])];
+  const ids = alert?.matchedOrderIds.filter((id) => id !== o.id) ?? [];
+  if (!ids.length && !buyer.length) return null;
+  const open = await deps.db.order.findMany({
+    where: { storeId: c.storeId, id: ids.length ? { in: ids } : { not: o.id }, status: { notIn: [...NOT_GOING_AHEAD] }, ...(ids.length ? {} : { OR: buyer }) },
+    orderBy: [{ placedAt: 'desc' }, { id: 'asc' }],
+    take: 10,
+    select: { number: true, placedAt: true },
+  });
+  const at = o.placedAt?.getTime() ?? 0;
+  const near = open.sort((a, b) => Math.abs((a.placedAt?.getTime() ?? 0) - at) - Math.abs((b.placedAt?.getTime() ?? 0) - at))[0];
+  return near ? { number: near.number } : null;
 }
 
 const ROW_SELECT = { id: true, orderId: true, step: true, channel: true, attempts: true, sendAfter: true, dedupeKey: true, eventId: true } satisfies Prisma.NotificationLogSelect;
@@ -304,6 +339,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const o = await deps.db.order.findUnique({ where: { id: row.orderId }, select: ORDER_SELECT });
   if (!o) return close(deps, c, row, 'SKIPPED', 'NO_ORDER').then(() => 'SKIPPED');
   if (!stillFits(step, o.status)) return close(deps, c, row, 'SKIPPED', 'ORDER_MOVED_ON').then(() => 'SKIPPED');
+  const code = step === 'cancelled' ? (o.cancelReasonCode as CancelCode | null) : null;
+  if (code && c.cancelNotice.silent.includes(code)) return close(deps, c, row, 'SKIPPED', 'REASON_SILENT').then(() => 'SKIPPED');
   const to = recipientOf(o, step, row.channel as MessageChannel);
   if (!to) return close(deps, c, row, 'SKIPPED', 'NO_RECIPIENT', { recipient: '' }, true).then(() => 'SKIPPED');
   if (isCapped(step, c.selfConfirmCounts)) {
@@ -312,7 +349,11 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
     if (cap !== null && (sent.byChannel.get(row.channel) ?? 0) >= cap) return close(deps, c, row, 'BLOCKED_BY_GUARD', `CAP_${row.channel}`, { recipient: to }).then(() => 'BLOCKED');
     if (c.caps.total !== null && sent.total >= c.caps.total) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_TOTAL', { recipient: to }).then(() => 'BLOCKED');
   }
-  const t = await templateOf(deps, c.storeId, cfg.template, row.channel as MessageChannel, c.locale);
+  // a duplicate whose other order goes ahead: its own words, naming that order (without them, the plain notice)
+  const kept = code === 'DUPLICATE_ORDER' ? await keptOrderOf(deps, c, row, o) : null;
+  const dup = kept ? await templateOf(deps, c.storeId, c.cancelNotice.duplicateTemplate, row.channel as MessageChannel, c.locale) : null;
+  const template = dup ? c.cancelNotice.duplicateTemplate : cfg.template;
+  const t = dup ?? (await templateOf(deps, c.storeId, cfg.template, row.channel as MessageChannel, c.locale));
   if (!t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }, true).then(() => 'SKIPPED');
   const lang = t.locale === 'en' ? 'en' : 'bn';
   const words = render(t.body, row.channel === 'EMAIL' ? (t.subject ?? '') : null, {
@@ -325,6 +366,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
     link: orderLink(c.host, o.number),
     amountLine: c.amountLine[lang],
     exactAmount: c.exact ? { due: c.exact.due[lang], paid: c.exact.paid[lang] } : null,
+    cancelReason: code ? (c.cancelNotice.reasons[code]?.[lang] ?? '') : '',
+    kept: dup && kept ? { number: kept.number, link: orderLink(c.host, kept.number) } : null,
   });
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
   const attempt = row.attempts + 1;
@@ -336,7 +379,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
       c.senders.set(row.channel as MessageChannel, sender);
     }
     try {
-      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: `${cfg.template}` });
+      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: template });
     } catch (e) {
       r = { ok: false, error: errorText(e) };
     }

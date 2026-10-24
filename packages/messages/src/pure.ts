@@ -2,7 +2,8 @@
 // which step, when a step's message is due (now, minutes later, or at a time of day some days later, in the store's
 // time zone), the quiet hours, which steps count against the caps, whether a delayed step still fits the order when its
 // time comes, the no-double-send key, and the words: a template's `{tokens}` filled in, the amount always the amount
-// still due (SIM-F-001) and never shown for a fully paid order.
+// still due (SIM-F-001) and never shown for a fully paid order. PR 546 (SIM-F-013): a cancellation says why in plain
+// words (`{cancelReason}`), and a duplicate names the order that goes ahead (`{keptOrderNumber}`, `{keptOrderLink}`).
 import type { Journey, JourneyStep, JourneyStepConfig, MessageChannel } from '@extas/settings';
 
 export type { Journey, JourneyStep, JourneyStepConfig, MessageChannel };
@@ -180,6 +181,8 @@ export const tokensIn = (text: string): string[] => [...text.matchAll(/\{([A-Za-
 export const AMOUNT_TOKENS: ReadonlySet<string> = new Set(['amountDue', 'total']);
 /** The tokens that print a link to the shop: never filled with nothing (a promise of a link must hold one, SIM-F-031). */
 export const LINK_TOKENS: ReadonlySet<string> = new Set(['trackingLink', 'orderLink']);
+/** PR 546 — the tokens of the order that goes ahead when a duplicate is cancelled: never filled with nothing either. */
+export const KEPT_TOKENS: ReadonlySet<string> = new Set(['keptOrderNumber', 'keptOrderLink']);
 
 export interface RenderInput {
   storeName: string;
@@ -195,9 +198,13 @@ export interface RenderInput {
   amountLine: string;
   /** The exact-amount words (null while `account.track.exactAmount` is off): when money is due, and when it is paid. */
   exactAmount: { due: string; paid: string } | null;
+  /** PR 546 — a cancellation's reason in plain words in the message's language ('' = no words for that reason). */
+  cancelReason?: string;
+  /** PR 546 — the order that goes ahead when this one was cancelled as its duplicate (its number and its own page). */
+  kept?: { number: string; link: string | null } | null;
 }
 
-export type Rendered = { ok: true; text: string; subject: string | null } | { ok: false; reason: 'AMOUNT_RULE' | 'NO_LINK' | 'UNKNOWN_TOKEN'; field: string };
+export type Rendered = { ok: true; text: string; subject: string | null } | { ok: false; reason: 'AMOUNT_RULE' | 'NO_LINK' | 'NO_KEPT_ORDER' | 'UNKNOWN_TOKEN'; field: string };
 
 const fill = (text: string, vars: Record<string, string>) => text.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (m, k: string) => vars[k] ?? m);
 const tidy = (text: string) =>
@@ -216,6 +223,8 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
   for (const t of all) {
     if (AMOUNT_TOKENS.has(t) && v.dueMinor <= 0) return { ok: false, reason: 'AMOUNT_RULE', field: t };
     if (LINK_TOKENS.has(t) && !v.link) return { ok: false, reason: 'NO_LINK', field: t };
+    if (KEPT_TOKENS.has(t) && !v.kept) return { ok: false, reason: 'NO_KEPT_ORDER', field: t };
+    if (t === 'keptOrderLink' && !v.kept?.link) return { ok: false, reason: 'NO_LINK', field: t };
   }
   const amount = formatAmount(Math.max(0, v.dueMinor), v.currency);
   const exactWords = v.exactAmount && all.includes('exactAmountLine') ? (v.dueMinor > 0 ? v.exactAmount.due : v.exactAmount.paid) : null;
@@ -233,6 +242,9 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     exactAmountLine: exact,
     trackingLink: v.link ?? '',
     orderLink: v.link ?? '',
+    cancelReason: v.cancelReason ?? '',
+    keptOrderNumber: v.kept?.number ?? '',
+    keptOrderLink: v.kept?.link ?? '',
   };
   for (const t of all) if (!(t in vars)) return { ok: false, reason: 'UNKNOWN_TOKEN', field: t };
   return { ok: true, text: tidy(fill(body, vars)), subject: subject === null ? null : tidy(fill(subject, vars)) };
