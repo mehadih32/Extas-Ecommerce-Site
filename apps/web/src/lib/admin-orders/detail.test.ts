@@ -11,7 +11,8 @@ import { adminDicts } from '../admin-i18n';
 import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
-import { COMMAND_PERM, DO_PERM, commandSpecs, reviewSpecs } from './detail';
+import { editBody } from '../orders-api';
+import { COMMAND_PERM, DO_PERM, commandSpecs, editSummary, reviewSpecs, type EditStart } from './detail';
 import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
 
@@ -25,6 +26,13 @@ const reasons: od.ReasonLists = {
   hold: [{ key: 'call-back', en: 'Call back', bn: 'পরে কল', noteRequired: false }],
   customerCancel: [],
   flags: [{ key: 'vip', en: 'VIP', bn: 'ভিআইপি' }],
+  edit: [
+    { key: 'customer-asked', en: 'Customer asked', bn: 'কাস্টমার চেয়েছে', noteRequired: false },
+    { key: 'wrong-phone', en: 'Wrong phone', bn: 'ভুল ফোন', noteRequired: false },
+    { key: 'other', en: 'Other', bn: 'অন্য', noteRequired: true },
+  ],
+  channels: [{ key: 'phone-call', en: 'Phone call', bn: 'ফোন কল' }],
+  refusal: [],
 };
 const order = (over: Partial<Parameters<typeof commandSpecs>[1]> = {}): Parameters<typeof commandSpecs>[1] => ({
   id: ID,
@@ -176,5 +184,57 @@ describe('sending a command', () => {
     }
     expect(Object.keys(COMMAND_PATHS).every((c) => COMMAND_PERM[c as keyof typeof COMMAND_PERM])).toBe(true);
     expect(newKey()).not.toBe(newKey());
+  });
+});
+
+describe('PR 142 · the edit dialogs (SIM-F-037)', () => {
+  const LINE = '01a16af2-30f0-7462-aab8-719bb3ce51b2';
+  const SIZE_L = '01a16af2-30f0-7462-aab8-719bb3ce51b3';
+  const start: EditStart = {
+    customerName: 'Test Customer',
+    phone: '+8801710000071',
+    address: 'House 4, Road 5, Dhanmondi',
+    note: null,
+    lines: [{ id: LINE, label: 'Oxford shirt × 1', size: 'M', colour: 'Sky' }],
+    choices: [{ lineId: LINE, removeRefusal: 'LAST_LINE', swaps: [{ variantId: SIZE_L, colour: 'Sky', size: 'L' }] }],
+  };
+  const open: OrderCommand[] = ['confirm', 'edit'];
+
+  it('"Edit items & address" and "Correct phone (logged)" in More, only with orders.edit and while the service has edit open', () => {
+    const r = commandSpecs(view('en'), order(), open, OWNER, reasons, start);
+    expect(r.more.map((s) => s.id)).toEqual(['edit', 'phone']);
+    for (const s of r.more) expect(s.url).toBe(`/api/admin/orders/${ID}/edit`);
+    expect(DO_PERM.edit).toBe('orders.edit');
+    expect(DO_PERM.phone).toBe('orders.edit');
+    const noEdit = new Set([...OWNER].filter((k) => k !== 'orders.edit'));
+    expect(ids(commandSpecs(view('en'), order(), open, noEdit, reasons, start))).not.toContain('edit');
+    expect(ids(commandSpecs(view('en'), order({ booked: true }), ['confirm'], OWNER, reasons, start))).not.toContain('phone');
+  });
+
+  it('the phone dialog starts from the stored number, read back; a reason is picked and "other" needs a note', () => {
+    const phone = commandSpecs(view('en'), order(), open, OWNER, reasons, start).more.find((s) => s.id === 'phone')!;
+    const values = Object.fromEntries(phone.fields.map((f) => [f.name, startOf(f)]));
+    expect(values.phone).toBe('01710-000071');
+    expect(values.reasonKey).toBe('wrong-phone');
+    expect(bodyOf(phone, { ...values, phone: '01710-000072' })).toEqual({ phone: '01710-000072', reasonKey: 'wrong-phone', channel: 'phone-call', version: 3 });
+    expect(missingOf(phone, { ...values, reasonKey: 'other' })).toEqual(['note']);
+  });
+
+  it("each line offers keep, the other sizes at the same price, and taking out only when the service allows it", () => {
+    const edit = commandSpecs(view('en'), order(), open, OWNER, reasons, start).more.find((s) => s.id === 'edit')!;
+    const line = edit.fields.find((f) => f.name === `line:${LINE}`)!;
+    expect(line.options!.map((o) => o.value)).toEqual(['keep', SIZE_L]);
+    expect(line.value).toBe('keep');
+    expect(editBody({ reasonKey: 'customer-asked', [`line:${LINE}`]: SIZE_L, phone: '01710-000071' })).toEqual({ reasonKey: 'customer-asked', phone: '01710-000071', lines: [{ lineId: LINE, variantId: SIZE_L }] });
+    expect(editBody({ reasonKey: 'customer-asked', [`line:${LINE}`]: 'keep' })).toEqual({ reasonKey: 'customer-asked' });
+    expect(editBody({ [`line:${LINE}`]: 'remove' })).toEqual({ lines: [{ lineId: LINE, remove: true }] });
+    expect(() => editBody({ [`line:${LINE}`]: 'nonsense' })).toThrow();
+  });
+
+  it('the timeline says what changed, before → after, in both languages', () => {
+    const data = { fields: [{ field: 'phone', before: '+8801710000071', after: '+8801710000072' }], lines: [{ kind: 'size', label: 'Oxford · Sky · M', toLabel: 'Oxford · Sky · L' }], channel: { en: 'Phone call', bn: 'ফোন কল' } };
+    expect(editSummary(view('en'), data)).toBe('Phone: 01710-000071 → 01710-000072 · Oxford · Sky · M → Oxford · Sky · L · via Phone call');
+    expect(editSummary(view('bn'), data)).toContain('ফোন কল');
+    expect(editSummary(view('en'), {})).toBeNull();
   });
 });

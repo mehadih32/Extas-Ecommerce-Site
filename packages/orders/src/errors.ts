@@ -30,7 +30,19 @@ export type OrdersErrorCode =
   /** PR 127: not enough free pieces on the shared pool. */
   | 'OUT_OF_STOCK'
   /** PR 127: the delivery band's Cash on Delivery limit would be passed. */
-  | 'COD_LIMIT';
+  | 'COD_LIMIT'
+  /** PR 142: the edit changes nothing (every field is as stored). */
+  | 'NOTHING_CHANGED'
+  /** PR 142: the phone is not a Bangladeshi mobile number (`data.reason`: empty, prefix, length). */
+  | 'BAD_PHONE'
+  /** PR 142: a size is changed only to another size (or colour) of the same piece. */
+  | 'NOT_SAME_PIECE'
+  /** PR 142: the other size costs another price now; a price is never changed by an edit. */
+  | 'PRICE_DIFFERS'
+  /** PR 142: the piece is in a set or the order has an offer, so taking it out would change a price or a discount. */
+  | 'OFFER_ON_ORDER'
+  /** PR 142: the order's last piece is never taken out; cancel the order instead. */
+  | 'LAST_LINE';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -63,6 +75,11 @@ export class OrdersError extends Error {
       case 'NOT_SELLABLE':
       case 'OUT_OF_STOCK':
       case 'COD_LIMIT':
+      case 'BAD_PHONE':
+      case 'NOT_SAME_PIECE':
+      case 'PRICE_DIFFERS':
+      case 'OFFER_ON_ORDER':
+      case 'LAST_LINE':
         return 422;
       default:
         return 409;

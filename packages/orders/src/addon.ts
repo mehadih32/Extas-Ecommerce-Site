@@ -88,7 +88,7 @@ interface AddSpec {
 const moneyOf = (tx: Tx, id: string) => tx.order.findUniqueOrThrow({ where: { id }, select: { subtotalMinor: true, totalMinor: true, codAmountMinor: true, deliveryBand: { select: { codLimitMinor: true } } } });
 
 /** The ERP already has this order: send it again as the next revision, with its lines as they are now. */
-async function resendErp(deps: OrdersDeps, tx: Tx, o: LockedOrder, codAmountMinor: number, totalMinor: number): Promise<string | null> {
+export async function resendErp(deps: OrdersDeps, tx: Tx, o: LockedOrder, codAmountMinor: number, totalMinor: number): Promise<string | null> {
   const sent = await tx.erpPush.count({ where: { storeId: o.storeId, referenceId: o.id, documentType: 'order.create' } });
   return sent ? queueErpOrder(deps, tx, { ...o, codAmountMinor, totalMinor }, sent) : null;
 }

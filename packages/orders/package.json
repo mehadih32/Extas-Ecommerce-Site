@@ -19,6 +19,7 @@
   "dependencies": {
     "@extas/auth": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/delivery": "workspace:*",
     "@extas/inventory": "workspace:*",
     "@extas/rules": "workspace:*",
     "@extas/settings": "workspace:*",

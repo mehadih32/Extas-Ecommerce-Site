@@ -35,21 +35,32 @@ export interface ReasonLists {
   hold: ReasonOption[];
   customerCancel: ReasonOption[];
   flags: { key: string; en: string; bn: string }[];
+  /** PR 142: why the team edits an order, and where the customer asked. */
+  edit: ReasonOption[];
+  channels: { key: string; en: string; bn: string }[];
+  /** PR 142 (SIM-F-038): why a parcel was refused at the door. */
+  refusal: ReasonOption[];
 }
 
 /** Every reason list of the order screens, from the store's settings. */
 export async function reasonLists(deps: OrdersDeps, storeId: number): Promise<ReasonLists> {
-  const [cancel, hold, customer, flags] = await Promise.all([
+  const [cancel, hold, customer, flags, edit, channels, refusal] = await Promise.all([
     setting(deps, storeId, 'orders.cancel.reasons'),
     setting(deps, storeId, 'orders.hold.reasons'),
     setting(deps, storeId, 'orders.cancel.customerReasons'),
     setting(deps, storeId, 'orders.flags.list'),
+    setting(deps, storeId, 'orders.edit.reasons'),
+    setting(deps, storeId, 'orders.edit.channels'),
+    setting(deps, storeId, 'orders.refusal.reasons'),
   ]);
   return {
     cancel: cancel.map((r) => ({ key: r.code, en: r.en, bn: r.bn, noteRequired: NOTE_REQUIRED.has(r.code) })),
     hold: hold.map((r) => ({ ...r, noteRequired: r.key === OTHER_KEY })),
     customerCancel: customer.map((r) => ({ ...r, noteRequired: false })),
     flags,
+    edit: edit.map((r) => ({ ...r, noteRequired: r.key === OTHER_KEY })),
+    channels,
+    refusal: refusal.map((r) => ({ ...r, noteRequired: r.key === OTHER_KEY })),
   };
 }
 
@@ -175,7 +186,8 @@ export async function cancelWith(
         data: { cancelledAt: now, cancelReasonCode: reason.code, cancelNote: text || null, holdFromStatus: null, onHoldSince: null, cancelRequestedAt: null },
         reasonCode: reason.code,
         message: text ?? null,
-        eventData: { reason: { en: reason.en, bn: reason.bn }, ...fx, ...(opts.extra ?? {}), ...more },
+        // PR 142 (SIM-F-038): "did not order" is never held against the phone (NOT_A_RISK_SIGNAL)
+        eventData: { reason: { en: reason.en, bn: reason.bn }, riskSignal: !NOT_A_RISK_SIGNAL.has(reason.code), ...fx, ...(opts.extra ?? {}), ...more },
         refundRequestIds: fx.refundRequestIds,
       };
     },
@@ -324,18 +336,30 @@ const STEP_TIME: Partial<Record<OrderStep, keyof LockedOrder | 'packedAt' | 'han
   returned: 'returnedAt',
 };
 
-export const stepInput = z.object({ at: z.coerce.date().optional(), keptItemIds: z.array(z.uuid()).min(1).max(500).optional(), note }).strict();
+export const stepInput = z.object({ at: z.coerce.date().optional(), keptItemIds: z.array(z.uuid()).min(1).max(500).optional(), refusalKey: z.string().trim().min(1).max(60).optional(), note }).strict();
 
-/** One fulfilment or courier step (S08 hook). A partial delivery needs the list of kept lines (§6.5.0). */
+/**
+ * One fulfilment or courier step (S08 hook). A partial delivery needs the list of kept lines (§6.5.0). A refused parcel
+ * (returned, or the refused part of a partial delivery) may carry why, from the owner's `orders.refusal.reasons` (PR 142,
+ * SIM-F-038: "bought elsewhere", "arrived after Eid" …), so the RTO reports count real reasons instead of "Other".
+ */
 export async function orderStep(deps: OrdersDeps, r: { storeId: number; orderId: string }, by: By, step: OrderStep, input: unknown = {}, opts: CommandOptions = {}): Promise<CommandResult> {
   const d = parse(stepInput, input, 'step');
   if (step === 'partiallyDelivered' && !d.keptItemIds) throw new OrdersError('INVALID_INPUT', 'a partial delivery names the kept lines', ['keptItemIds']);
+  let refusal: { key: string; en: string; bn: string } | null = null;
+  if (d.refusalKey) {
+    if (step !== 'returned' && step !== 'partiallyDelivered') throw new OrdersError('INVALID_INPUT', 'only a refused parcel has a refusal reason', ['refusalKey']);
+    refusal = (await setting(deps, r.storeId, 'orders.refusal.reasons')).find((x) => x.key === d.refusalKey) ?? null;
+    if (!refusal) throw new OrdersError('REASON_REQUIRED', 'pick a refusal reason from the list', ['refusalKey']);
+    if (refusal.key === OTHER_KEY && !d.note) throw new OrdersError('REASON_REQUIRED', 'this reason needs a note', ['note']);
+  }
   return execute(deps, r, by, {
     command: step,
     input: { ...d, at: d.at?.toISOString() ?? null },
     effect: async (_tx, _o, _f, { now }) => {
       const field = STEP_TIME[step];
-      return { data: field ? { [field]: d.at ?? now } : {}, message: d.note ?? null, eventData: d.keptItemIds ? { keptItemIds: d.keptItemIds } : undefined };
+      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}) };
+      return { data: field ? { [field]: d.at ?? now } : {}, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined };
     },
   }, opts);
 }

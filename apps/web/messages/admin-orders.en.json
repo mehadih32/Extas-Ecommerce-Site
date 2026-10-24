@@ -223,7 +223,15 @@
       "courierPerson": "Who at the courier",
       "courierRef": "Their reference",
       "flags": "Flags on this order",
-      "mergeWith": "Join in one parcel with"
+      "mergeWith": "Join in one parcel with",
+      "channel": "Where the customer asked",
+      "name": "Customer name",
+      "phone": "Phone",
+      "address": "Address",
+      "deliveryNote": "Note for the parcel",
+      "lineKeep": "Keep ({size})",
+      "lineTo": "Change to {size}",
+      "lineRemove": "Take this piece out"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -244,7 +252,14 @@
       "FORBIDDEN": "You don't have the permission for this.",
       "UNAUTHENTICATED": "You are signed out. Sign in again.",
       "network": "No connection. Nothing was changed — try again.",
-      "other": "It did not work. Nothing was changed — try again."
+      "other": "It did not work. Nothing was changed — try again.",
+      "NOTHING_CHANGED": "Nothing changed — every field is as it was.",
+      "BAD_PHONE": "That is not a Bangladeshi mobile number. Type 11 digits, like 01XXXXXXXXX.",
+      "NOT_SAME_PIECE": "A line changes only to another size or colour of the same piece.",
+      "PRICE_DIFFERS": "That size costs a different price now. An edit never changes a price — cancel and place a new order, or ask the owner.",
+      "OFFER_ON_ORDER": "This piece is in a set or the order has an offer; taking it out would change a price. Cancel and place a new order, or ask the owner.",
+      "LAST_LINE": "The last piece cannot be taken out. Cancel the order instead.",
+      "OUT_OF_STOCK": "Not enough pieces of that size are free now."
     },
     "cmd": {
       "confirm": {
@@ -308,6 +323,18 @@
         "title": "Flags on {n}",
         "ok": "Save flags",
         "done": "Flags saved"
+      },
+      "edit": {
+        "label": "Edit items & address",
+        "title": "Edit {n}",
+        "ok": "Save changes",
+        "done": "{n} saved · every change is on the timeline"
+      },
+      "phone": {
+        "label": "Correct phone (logged)",
+        "title": "Correct the phone of {n}",
+        "ok": "Save the number",
+        "done": "Phone of {n} corrected · logged on the timeline"
       }
     },
     "eff": {
@@ -325,7 +352,13 @@
       "cabNext": "Next: phone the courier, then record what they said",
       "reviewApprove": "The review closes; the order can be confirmed",
       "reviewAsk": "A call task is made for the team to ask the customer",
-      "merge": "The two orders go out in one parcel; prices, charges and payments stay as they are"
+      "merge": "The two orders go out in one parcel; prices, charges and payments stay as they are",
+      "editLog": "Each change is written on the timeline and the audit log: before → after, who, when, why",
+      "editMoney": "Prices, discounts, the delivery charge and COD never change; taking a piece out lowers the total and the amount to collect by that piece only",
+      "editArea": "The delivery area and its charge stay as the checkout stored them; if the new address is in another area, tell the owner",
+      "editStock": "A new size is held from stock and the old one goes back; the duplicate check runs again",
+      "editPaid": "A paid order: anything paid beyond the new total becomes a refund request for the owner — no money moves",
+      "phoneNext": "The courier, the messages and the duplicate check use the new number from now on"
     },
     "review": {
       "title": "Duplicate review",
@@ -468,7 +501,12 @@
       "order_merged": "Joined in one parcel",
       "order_note": "Note added",
       "order_note_archived": "Note archived",
-      "order_followUp": "Handed to a person"
+      "order_followUp": "Handed to a person",
+      "order_edit": "Order edited",
+      "editField": "{field}: {before} → {after}",
+      "editLine": "{line} → {to}",
+      "editRemoved": "Taken out: {line}",
+      "editVia": "via {via}"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",

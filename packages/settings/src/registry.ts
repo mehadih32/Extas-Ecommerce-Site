@@ -35,6 +35,7 @@ import { adminShellSettings } from './registry-admin-shell';
 import { checkoutMoreSettings } from './registry-checkout-more';
 import { reviewSettings } from './registry-reviews';
 import { setBuilderSettings } from './registry-set-builder';
+import { orderEditSettings } from './registry-order-edit';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1173,6 +1174,8 @@ export const registry = {
   ...reviewSettings,
   // ---- S03 · PR 98, 100 · "Build your own set": the set builder page, off until the owner turns it on (registry-set-builder.ts, version 36). ----
   ...setBuilderSettings,
+  // ---- S05 · PR 142, 143, 146 · order edits: the team's edit reasons and channels, the customer's own edit, the two-size follow-up, the refusal reasons (registry-order-edit.ts, version 37). ----
+  ...orderEditSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

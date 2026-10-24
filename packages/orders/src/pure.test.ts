@@ -7,6 +7,7 @@ import {
   addOnClosedWhy,
   allowedCommands,
   CANCEL_CODES,
+  NOT_A_RISK_SIGNAL,
   customerCancelMode,
   dueOf,
   legalPairs,
@@ -38,6 +39,7 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   setFlags: Object.fromEntries(ORDER_STATES.filter((s) => s !== 'DRAFT').map((s) => [s, FLAG])),
   addLine: { PLACED: FLAG, CONFIRMED: FLAG },
   removeLine: { PLACED: FLAG, CONFIRMED: FLAG },
+  edit: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
   recordAdvance: { AWAITING_ADVANCE: 'PLACED' },
   startPicking: { CONFIRMED: 'PROCESSING' },
@@ -102,7 +104,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'awaitAdvance'] });
   });
 });
 
@@ -135,6 +137,24 @@ describe('the guards', () => {
   it('the advance moves the order on only when paid in full (F-043)', () => {
     expect(plan('recordAdvance', order('AWAITING_ADVANCE', { advanceRequiredMinor: 50_000, paidMinor: 20_000 }))).toMatchObject({ ok: false, code: 'ADVANCE_SHORT' });
     expect(plan('recordAdvance', order('AWAITING_ADVANCE', { advanceRequiredMinor: 50_000, paidMinor: 50_000 }))).toMatchObject({ ok: true, to: 'PLACED' });
+  });
+});
+
+describe('PR 142 · the team\'s edit (SIM-F-004: never once booked)', () => {
+  it('open before picking, refused once a courier is booked, while a cancel is asked or requested, and from picking on', () => {
+    for (const s of ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'] as const) {
+      expect(plan('edit', order(s))).toMatchObject({ ok: true, from: s, to: s, moves: false });
+      expect(plan('edit', order(s, { booked: true }))).toMatchObject({ ok: false, code: 'BOOKED' });
+      expect(plan('edit', order(s, { cancelPending: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });
+      expect(plan('edit', order(s, { cancelRequested: true }))).toMatchObject({ ok: false, code: 'CANCEL_REQUESTED' });
+    }
+    for (const s of ['PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'] as const) expect(plan('edit', order(s))).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION' });
+  });
+
+  it('SIM-F-038: "did not order" is a cancel reason and never a risk signal', () => {
+    expect(CANCEL_CODES).toContain('NOT_ORDERED');
+    expect(NOT_A_RISK_SIGNAL.has('NOT_ORDERED')).toBe(true);
+    expect(NOT_A_RISK_SIGNAL.has('ADDRESS_UNREACHABLE')).toBe(false);
   });
 });
 
