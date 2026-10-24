@@ -141,6 +141,12 @@ export const PERMISSIONS = {
   // `payments.manual` on). Recording is audited. No key here moves money, refunds anything or changes COD.
   'payments.view': { group: 'payments' },
   'payments.record': { group: 'payments' },
+  // S07 · PR 166 — Cash on Delivery after the door (§6.5.5): record what the rider did and collected (`payments.door`),
+  // approve or reject a partial delivery's money (`payments.partials`), import a courier's COD statement and mark a
+  // checked mismatch resolved (`payments.settle`). Each is audited; none moves money or changes COD.
+  'payments.door': { group: 'payments' },
+  'payments.partials': { group: 'payments' },
+  'payments.settle': { group: 'payments' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

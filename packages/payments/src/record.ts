@@ -9,14 +9,16 @@
 //   in the same transaction. An advance paid in full is handed to the order service (`deps.orders.advancePaid`).
 // - `orderMoney`: one order's money as the payments screen shows it (`payments.view`): the total, the wallet, the paid
 //   amount, the amount due, what the rider collects, the pill, every payment row with its state, money status, attempt,
-//   failure code and mismatch reason, and the list of mismatches with their reasons (SIM-F-028).
+//   failure code and mismatch reason, and the list of mismatches with their reasons (SIM-F-028). PR 166 adds the door
+//   records and the courier statement lines, their reasons, and where the Cash on Delivery money stands (the pill's
+//   collected / settled).
 import { Prisma } from '@extas/db/client';
 import { MANUAL_PAYMENT_METHODS } from '@extas/settings';
 import { z } from 'zod';
 import { allow, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, type Who } from './context';
 import { PaymentsError } from './errors';
 import { applyOutcome } from './outcome';
-import { codToCollect, dueOf, PAYMENT_EVENTS, paymentPill, type MismatchReason, type PaymentPill } from './pure';
+import { codToCollect, dueOf, PAYMENT_EVENTS, paymentPill, type CodStage, type MismatchReason, type PaymentPill } from './pure';
 
 export const PAYMENT_PURPOSES = ['ORDER', 'ADVANCE_DELIVERY_CHARGE', 'FULL_ADVANCE', 'EXCHANGE_DIFFERENCE', 'PREORDER_ADVANCE'] as const;
 
@@ -188,6 +190,30 @@ export interface MismatchItem {
   bn: string;
 }
 
+export interface DoorRow {
+  id: string;
+  outcome: string;
+  state: string;
+  expectedMinor: number;
+  collectedMinor: number;
+  chargeCollectedMinor: number;
+  varianceReason: string | null;
+  moneyStatus: string;
+  occurredAt: Date;
+}
+
+export interface StatementRow {
+  id: string;
+  settlementId: string;
+  codMinor: number;
+  chargeMinor: number;
+  matchState: string | null;
+  reasonCode: string | null;
+  settleDays: number | null;
+  moneyStatus: string | null;
+  resolvedAt: Date | null;
+}
+
 export interface OrderMoney {
   orderId: string;
   number: string;
@@ -202,7 +228,11 @@ export interface OrderMoney {
   /** What the rider collects at the door (0 for a prepaid order; SIM-F-001). */
   codToCollectMinor: number;
   pill: PaymentPill;
+  /** PR 166: where the COD money stands after the door (collected, settled by the courier), null before. */
+  cod: CodStage;
   payments: PaymentRow[];
+  door: DoorRow[];
+  statementLines: StatementRow[];
   mismatches: MismatchItem[];
 }
 
@@ -219,13 +249,27 @@ export async function orderMoney(deps: PaymentsDeps, who: Who, orderId: string):
   const storeId = who.storeId;
   const o = await deps.db.order.findFirst({ where: { id: orderId, storeId }, select: { id: true, number: true, status: true, currency: true, ...MONEY } });
   if (!o) return null;
-  const [payments, refunded, words] = await Promise.all([
+  const [payments, refunded, words, door, lines] = await Promise.all([
     deps.db.payment.findMany({ where: { storeId, orderId }, orderBy: { createdAt: 'asc' } }),
     deps.db.refund.aggregate({ where: { storeId, orderId, status: 'COMPLETED' }, _sum: { amountMinor: true } }),
     reasonWords(deps, storeId),
+    deps.db.codCollection.findMany({
+      where: { storeId, orderId },
+      orderBy: { occurredAt: 'asc' },
+      select: { id: true, outcome: true, state: true, expectedMinor: true, collectedMinor: true, chargeCollectedMinor: true, varianceReason: true, moneyStatus: true, occurredAt: true, settlementLineId: true },
+    }),
+    deps.db.courierSettlementLine.findMany({
+      where: { storeId, orderId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, settlementId: true, codMinor: true, chargeMinor: true, matchState: true, reasonCode: true, settleDays: true, moneyStatus: true, resolvedAt: true },
+    }),
   ]);
   const refundedMinor = refunded._sum.amountMinor ?? 0;
   const word = (code: string) => words.get(code) ?? { en: code, bn: code };
+  // the COD money: settled once a statement line for the order is matched (or resolved), collected once the rider has it
+  const settled = lines.some((l) => l.matchState === 'MATCHED' || l.matchState === 'LATE' || l.resolvedAt);
+  const collected = door.some((x) => (x.outcome === 'DELIVERED' || x.outcome === 'PARTIAL') && x.state !== 'REJECTED' && x.state !== 'PENDING_APPROVAL' && x.collectedMinor > 0);
+  const cod: CodStage = settled ? 'settled' : collected ? 'collected' : null;
   return {
     orderId: o.id,
     number: o.number,
@@ -238,7 +282,8 @@ export async function orderMoney(deps: PaymentsDeps, who: Who, orderId: string):
     refundedMinor,
     dueMinor: dueOf(o),
     codToCollectMinor: codToCollect(o),
-    pill: paymentPill({ ...o, refundedMinor }),
+    pill: paymentPill({ ...o, refundedMinor, cod }),
+    cod,
     payments: payments.map((p) => ({
       id: p.id,
       method: p.method,
@@ -258,6 +303,12 @@ export async function orderMoney(deps: PaymentsDeps, who: Who, orderId: string):
       paidAt: p.paidAt,
       createdAt: p.createdAt,
     })),
-    mismatches: payments.filter((p) => p.mismatchReason).map((p) => ({ kind: 'payment' as const, id: p.id, reason: p.mismatchReason as MismatchReason, ...word(p.mismatchReason!) })),
+    door: door.map(({ settlementLineId: _s, ...x }) => x),
+    statementLines: lines,
+    mismatches: [
+      ...payments.filter((p) => p.mismatchReason).map((p) => ({ kind: 'payment' as const, id: p.id, reason: p.mismatchReason as MismatchReason, ...word(p.mismatchReason!) })),
+      ...door.filter((x) => x.varianceReason).map((x) => ({ kind: 'collection' as const, id: x.id, reason: x.varianceReason as MismatchReason, ...word(x.varianceReason!) })),
+      ...lines.filter((l) => l.reasonCode && !l.resolvedAt).map((l) => ({ kind: 'line' as const, id: l.id, reason: l.reasonCode as MismatchReason, ...word(l.reasonCode!) })),
+    ],
   };
 }

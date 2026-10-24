@@ -5,8 +5,13 @@
 //   and payment pill, the reason codes of every mismatch (pure.ts, also `@extas/payments/pure`); the one writer of a
 //   payment's outcome onto its order (outcome.ts); money received outside the checkout recorded by permitted staff,
 //   and one order's money for the payments screen (record.ts).
+// - PR 166 Cash on Delivery after the door: the door outcomes with their money and reasons, the partial's approval, the
+//   courier statement matched line by line with a reason code on every mismatch, cash in transit and days to settle
+//   (cod.ts; the pure part, also for the screens, in cod-match.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
 export * from './outcome';
 export * from './record';
+export * from './cod-match';
+export * from './cod';

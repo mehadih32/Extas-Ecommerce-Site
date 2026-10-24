@@ -1,4 +1,4 @@
-// S07 · PR 165 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
+// S07 · PR 165, 166 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
 // money panel comes with the admin UI; these routes are what it calls. Every route signs the person in (guardAdmin),
 // checks the permission in the store it touches (`?storeId=`, default the mother store), then calls @extas/payments,
 // which checks the permission again and writes the audit log in the same transaction. Recording money takes an
@@ -12,6 +12,17 @@
 //   POST  /api/admin/payments/orders/:id/payments   {method, amountMinor, reference, receivedAt?, note?, confirm: true,
 //                                                    purpose?} money received outside the checkout (a bKash send-money,
 //                                                    a bank transfer); off until `payments.manual` is on (payments.record)
+//   POST  /api/admin/payments/orders/:id/door       PR 166: {outcome, collectedMinor, chargeCollectedMinor?, shipmentId?,
+//                                                    keptItemIds?, note?, occurredAt?, source?} what happened at the door
+//                                                    and the money (Idempotency-Key) (payments.door)
+//   POST  /api/admin/payments/door/:collectionId/decide   {decision: approve|reject, note?} a partial's money (payments.partials)
+//   GET   /api/admin/payments/cod                   cash in transit per courier, days to settle, missing parcels, open
+//                                                    mismatches by reason (payments.view)
+//   POST  /api/admin/payments/settlements           {courierAccountId, reference, csv | lines, receivedAt?, receivedAs?,
+//                                                    receivedAccountRef?, periodFrom?, periodTo?} a courier's COD statement,
+//                                                    matched line by line (payments.settle)
+//   GET   /api/admin/payments/settlements/:id       one statement with every line, its match and reason (payments.view)
+//   POST  /api/admin/payments/settlements/lines/:lineId/resolve   {note} a checked mismatch marked resolved (payments.settle)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import * as pay from '@extas/payments';
@@ -65,12 +76,45 @@ async function handle(request: Request, deps: AdminDeps | null, permission: pay.
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
 
+const badId = (field: string) => Promise.resolve(fail(404, 'NOT_FOUND', [field]));
+
 /** Every payments admin route: `path` is what comes after /api/admin/payments. */
 export async function paymentsRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
-  const [a, b, c] = path;
+  const [a, b, c, e] = path;
+  if (a === 'cod') {
+    if (path.length > 1) return notFound();
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'payments.view', async (x) => ({ position: await pay.codPosition(x.deps, x.who) }));
+  }
+  if (a === 'door') {
+    if (path.length !== 3 || c !== 'decide') return notFound();
+    if (!isUuid(b!)) return badId('collectionId');
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'payments.partials', async (x) => ({ result: await pay.decidePartial(x.deps, x.who, b!, await body(request)) }));
+  }
+  if (a === 'settlements') {
+    if (!b) {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'payments.settle', async (x) => ({ settlement: await pay.importSettlement(x.deps, x.who, await body(request)) }), 201);
+    }
+    if (b === 'lines') {
+      if (path.length !== 4 || e !== 'resolve') return notFound();
+      if (!isUuid(c!)) return badId('lineId');
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'payments.settle', async (x) => ({ line: await pay.resolveLine(x.deps, x.who, c!, await body(request)) }));
+    }
+    if (path.length > 2) return notFound();
+    if (!isUuid(b)) return badId('settlementId');
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'payments.view', async (x) => {
+      const s = await pay.getSettlement(x.deps, x.who, b);
+      if (!s) throw new pay.PaymentsError('NOT_FOUND', 'no such statement', ['settlementId']);
+      return { settlement: s };
+    });
+  }
   if (a !== 'orders' || !b || path.length > 3) return notFound();
-  if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['orderId']));
+  if (!isUuid(b)) return badId('orderId');
   if (!c) {
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'payments.view', async (x) => {
@@ -79,7 +123,8 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
       return { money };
     });
   }
-  if (c !== 'payments') return notFound();
-  if (m !== 'POST') return notAllowed();
-  return handle(request, deps, 'payments.record', async (x) => ({ result: await pay.recordPayment(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
+  if (m !== 'POST') return c === 'payments' || c === 'door' ? notAllowed() : notFound();
+  if (c === 'payments') return handle(request, deps, 'payments.record', async (x) => ({ result: await pay.recordPayment(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
+  if (c === 'door') return handle(request, deps, 'payments.door', async (x) => ({ result: await pay.recordDoorOutcome(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
+  return notFound();
 }

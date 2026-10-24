@@ -25,6 +25,8 @@ export const ALLOWED: Record<string, string> = {
   'packages/rules/src/simulate-service.ts': 'a discount simulation adds up its own before/after quotes for the orders it replays, not a sales figure',
   'packages/orders/src/edit.ts': 'a piece taken out of one order lowers that order’s own total and COD amount (PR 142), not a sales figure',
   'packages/seed/src/sample.ts': 'builds one sample order’s own subtotal from its sample lines (sample data, not a report)',
+  'packages/payments/src/cod-match.ts': 'a partly delivered parcel’s amount due from that one order’s kept lines (PR 166), not a sales figure',
+  'packages/payments/src/cod.ts': 'the cash still with each courier and on the road (the COD position, PR 166), money owed to the shop, not a sales figure',
 };
 
 function sources(dir: string, out: string[] = []): string[] {

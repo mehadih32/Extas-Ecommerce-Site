@@ -1,8 +1,9 @@
-// S07 · PR 165 — the payments admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
+// S07 · PR 165, 166 — the payments admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the
 // permission; an order's money (due, what the rider collects, the pill, the payment rows); money recorded by staff —
 // off until `payments.manual` is on, then needing the Idempotency-Key (a repeat is one payment), and an advance paid in
-// full moving the order on through the order service. Every value is a made-up test value.
+// full moving the order on through the order service. PR 166: the door outcome, a partial's approval, a courier
+// statement with a trap, its line resolved, and the cash in transit. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { awaitAdvance, staffBy } from '@extas/orders';
@@ -105,5 +106,34 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     expect((await db.order.findUniqueOrThrow({ where: { id: o.orderId } })).status).toBe('PLACED');
     const after = (await api('GET', ['orders', o.orderId])).body.money;
     expect(after).toMatchObject({ pill: 'COD_TO_COLLECT', paidMinor: 6_000 });
+  });
+
+  it('PR 166: the door, a partial approved, a statement with its reasons, a line resolved and the cash in transit', async () => {
+    const db = f.t.prisma;
+    const o = await f.place('pay-api-door', { lines: [{ variantId: f.v.skyM }, { variantId: f.v.teeM }] });
+    const items = await db.orderItem.findMany({ where: { orderId: o.orderId }, select: { id: true } });
+    const courier = await db.courierAccount.create({ data: { storeId: f.S, providerKey: 'mock', name: 'API courier', enabled: true } });
+    const ship = await db.shipment.create({
+      data: { storeId: f.S, orderId: o.orderId, courierAccountId: courier.id, consignmentId: 'API-CN-1', status: 'PARTIALLY_DELIVERED', codAmountMinor: (await db.order.findUniqueOrThrow({ where: { id: o.orderId } })).codAmountMinor, deliveredAt: f.clock.now, idempotencyKey: 'api-ship-1' },
+    });
+    const input = { outcome: 'PARTIAL', collectedMinor: 50_000, keptItemIds: [items[0]!.id], shipmentId: ship.id };
+    expect(await api('POST', ['orders', o.orderId, 'door'], { body: input, cookie: reader, key: 'api-door-0001' })).toMatchObject({ status: 403 });
+    expect((await api('GET', ['orders', o.orderId, 'door'])).status).toBe(405);
+    const d = await api('POST', ['orders', o.orderId, 'door'], { body: input, key: 'api-door-0001' });
+    expect(d).toMatchObject({ status: 201, body: { result: { state: 'PENDING_APPROVAL', outcome: 'PARTIAL' } } });
+    expect((await api('POST', ['door', 'not-a-uuid', 'decide'], { body: {} })).status).toBe(404);
+    expect(await api('POST', ['door', d.body.result.id, 'decide'], { body: { decision: 'approve' } })).toMatchObject({ status: 200, body: { result: { state: 'APPROVED' } } });
+
+    const st = await api('POST', ['settlements'], { body: { courierAccountId: courier.id, reference: 'API-STM-1', csv: 'cn,cod,charge,status\nAPI-CN-1,1,0,Delivered\nAPI-CN-404,5,0,Delivered\n' } });
+    expect(st.status).toBe(201);
+    expect(st.body.settlement.lines.map((l: { reasonCode: string }) => l.reasonCode)).toEqual(['SHORT_PAID', 'UNKNOWN_PARCEL']);
+    expect((await api('GET', ['settlements', st.body.settlement.settlementId])).body.settlement.mismatched).toBe(2);
+    expect((await api('GET', ['settlements'])).status).toBe(405);
+    const line = st.body.settlement.lines[1].id;
+    expect(await api('POST', ['settlements', 'lines', line, 'resolve'], { body: { note: 'not our parcel; told the courier' } })).toMatchObject({ status: 200, body: { line: { moneyStatus: 'RECONCILED' } } });
+    const pos = await api('GET', ['cod']);
+    expect(pos.status).toBe(200);
+    expect(pos.body.position.openMismatches).toEqual({ SHORT_PAID: 1 });
+    expect((await api('POST', ['cod'], { body: {} })).status).toBe(405);
   });
 });
