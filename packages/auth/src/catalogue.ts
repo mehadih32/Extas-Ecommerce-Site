@@ -174,6 +174,10 @@ export const PERMISSIONS = {
   // read-only smoke check account never gets customers' details.
   'messages.log.view': { group: 'messages' },
   'messages.log.retry': { group: 'messages' },
+  // S14 · PR 291, 292 — Messages › Channels & limits (MSG-05): see each channel's provider (live or mock), its credit,
+  // the SMS masking name, the part prices, the master switch, the caps and the quiet hours; change them. Sends nothing.
+  'messages.channels.read': { group: 'messages' },
+  'messages.channels.write': { group: 'messages' },
   // S07 · PR 165 — payments (BACKEND-ARCHITECTURE §6.5.3): see an order's payments, its amount due and where its money
   // stands, with the reason of every mismatch (`payments.view`; not a `.read` key on purpose: it shows customers' payment
   // references, and the read-only smoke check account never gets them); record money received outside the checkout

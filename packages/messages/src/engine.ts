@@ -33,9 +33,9 @@
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
-import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel } from '@extas/settings';
+import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates } from '@extas/settings';
 import { nowOf, setting, TX, type MessagesDeps, type SendResult } from './context';
-import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, messageLocale, NEVER_QUIET, orderLink, payLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -213,11 +213,14 @@ export interface RunContext {
   cancelNotice: CancelNotice;
   /** PR 542: the advance request's words (`orders.advanceRequest.template`). */
   advanceTemplate: string;
+  /** PR 291: the SMS masking name (null: none yet) and what one SMS part costs (null: not known). */
+  masking: SmsMasking | null;
+  smsRates: SmsRates | null;
   senders: Map<MessageChannel, Awaited<ReturnType<MessagesDeps['sender']>>>;
 }
 
 export async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
-  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance] = await Promise.all([
+  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance, masking, smsRates] = await Promise.all([
     setting(deps, storeId, 'messages.enabled'),
     setting(deps, storeId, 'messages.journey'),
     setting(deps, storeId, 'messages.caps'),
@@ -235,6 +238,8 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     setting(deps, storeId, 'messages.retry'),
     setting(deps, storeId, 'messages.cancelNotice'),
     setting(deps, storeId, 'orders.advanceRequest'),
+    setting(deps, storeId, 'messages.sms.masking'),
+    setting(deps, storeId, 'messages.sms.rates'),
   ]);
   return {
     storeId,
@@ -253,6 +258,8 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     retry,
     cancelNotice,
     advanceTemplate: advance.template,
+    masking,
+    smsRates,
     senders: new Map(),
   };
 }
@@ -406,6 +413,10 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   });
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
   const attempt = row.attempts + 1;
+  // PR 291: an SMS goes from the approved masking name (else the gateway's own number) and takes this many parts
+  const sms = row.channel === 'SMS';
+  const senderId = sms ? maskingSender(c.masking) : null;
+  const segments = sms ? smsParts(words.text).parts : null;
   let sender = c.senders.get(row.channel as MessageChannel) ?? null;
   let r: SendResult;
   try {
@@ -414,24 +425,26 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
       c.senders.set(row.channel as MessageChannel, sender);
     }
     try {
-      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: template });
+      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: template, ...(sms ? { senderId } : {}) });
     } catch (e) {
       r = { ok: false, error: errorText(e) };
     }
   } catch (e) {
     r = { ok: false, error: `NO_SENDER: ${errorText(e)}` };
   }
-  const tried = { recipient: to, templateId: t.id, locale: t.locale, provider: sender?.provider ?? null, mode: sender?.mode ?? null, attempts: attempt } satisfies Prisma.NotificationLogUpdateInput;
+  const tried = { recipient: to, templateId: t.id, locale: t.locale, provider: sender?.provider ?? null, mode: sender?.mode ?? null, attempts: attempt, segments } satisfies Prisma.NotificationLogUpdateInput;
   const tryRow = (ok: boolean, more: { error?: string; providerMessageId?: string }) =>
     deps.db.notificationAttempt.create({
       data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok, retriedById: opts.retriedById ?? null, ...more },
     });
   if (r.ok) {
     const messageId = r.messageId;
+    // PR 291: the provider's own price, else the owner's part price (an estimate); a mock send costs nothing
+    const costMinor = sender?.mode === 'MOCK' ? null : (r.costMinor ?? (sms ? smsCostMinor(segments ?? 0, c.smsRates, senderId !== null) : null));
     await deps.db.$transaction(async (tx) => {
-      await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null } });
+      await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null, costMinor } });
       await tx.notificationAttempt.create({
-        data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok: true, providerMessageId: messageId, retriedById: opts.retriedById ?? null },
+        data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok: true, providerMessageId: messageId, retriedById: opts.retriedById ?? null, costMinor },
       });
     }, TX);
     return 'SENT';

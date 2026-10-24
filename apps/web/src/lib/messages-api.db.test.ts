@@ -88,4 +88,26 @@ describe.skipIf(!HAS_TEST_DB)('Messages admin API on PostgreSQL', () => {
     expect((await api('POST', ['log', id, 'nope'])).status).toBe(404);
     expect((await api('POST', ['log'])).status).toBe(405);
   });
+
+  it('PR 291: Channels & limits — every channel on its mock (no credit read), the masking name saved with its version', async () => {
+    const r = await api('GET', ['channels']);
+    expect(r.status).toBe(200);
+    expect(r.body.channels.channels.map((c: { channel: string; mode: string; balance: unknown }) => [c.channel, c.mode, c.balance])).toEqual([
+      ['SMS', 'MOCK', null],
+      ['WHATSAPP', 'MOCK', null],
+      ['EMAIL', 'MOCK', null],
+    ]);
+    expect(r.body.channels.config).toMatchObject({ masking: null, smsRates: null });
+    const version = r.body.channels.version as string;
+    const masking = { senderName: 'SHOPNAME', state: 'requested', useWhenApproved: true };
+    const saved = await api('PUT', ['channels'], { version, masking });
+    expect(saved.status).toBe(200);
+    expect(saved.body.channels.config.masking).toEqual(masking);
+    expect(await deps.resolver.value('messages.sms.masking', { storeId: 1 })).toEqual(masking);
+    expect((await api('PUT', ['channels'], { version, enabled: false })).body.error).toBe('STALE');
+    expect((await api('PUT', ['channels'], { version: 7 })).body.error).toBe('INVALID_INPUT');
+    expect((await api('PUT', ['channels'], { masking: { senderName: 'A NAME FAR TOO LONG', state: 'approved', useWhenApproved: true } })).body.error).toBe('INVALID_INPUT');
+    expect((await api('POST', ['channels'], {})).status).toBe(405);
+    expect((await api('GET', ['channels'], undefined, '')).status).toBe(401);
+  });
 });

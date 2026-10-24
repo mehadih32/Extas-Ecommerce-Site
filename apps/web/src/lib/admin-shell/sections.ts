@@ -139,7 +139,19 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courier'] }] },
     ],
   },
-  { id: 'messages', icon: 'msg', group: 'daily', base: '/admin/messages', tabs: [], guide: 'comms' },
+  // S14 (PR 291): the Message log (MSG-04) and Channels & limits (MSG-05). The order journey, campaigns and templates
+  // join as their PRs are built.
+  {
+    id: 'messages',
+    icon: 'msg',
+    group: 'daily',
+    base: '/admin/messages',
+    guide: 'comms',
+    tabs: [
+      { id: 'log', pages: [{ href: '/admin/messages/log', perm: 'messages.log.view', keys: ['messagesLog'] }] },
+      { id: 'channels', pages: [{ href: '/admin/messages/channels', perm: 'messages.channels.read', keys: ['messagesChannels'] }] },
+    ],
+  },
   { id: 'support', icon: 'headset', group: 'daily', base: '/admin/support', tabs: [], guide: 'support' },
   {
     id: 'marketing',

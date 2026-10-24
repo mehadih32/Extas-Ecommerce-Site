@@ -298,6 +298,47 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
   return { ok: true, text: tidy(fill(body, vars)), subject: subject === null ? null : tidy(fill(subject, vars)) };
 }
 
+// ---- PR 291 · SMS parts ----
+
+/** The GSM 03.38 basic set: one unit each in a plain SMS. */
+const GSM_BASIC = new Set([...'@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà']);
+/** The GSM extension table: two units each (an escape and the character). */
+const GSM_EXTENDED = new Set([...'^{}\\[~]|€']);
+
+export interface SmsParts {
+  /** Needs the unicode form (Bengali, emoji …): 70 characters in one part, 67 in each of several. */
+  unicode: boolean;
+  /** Characters as the gateway counts them (an extension character is two in a plain SMS). */
+  units: number;
+  /** How many SMS parts the gateway sends (and charges) for it; 0 for an empty text. */
+  parts: number;
+  /** What one part holds in this form. */
+  perPart: number;
+}
+
+/** How an SMS text is split into parts (each part is one SMS on the gateway's bill). */
+export function smsParts(text: string): SmsParts {
+  const chars = [...text];
+  const unicode = chars.some((c) => !GSM_BASIC.has(c) && !GSM_EXTENDED.has(c));
+  // in the unicode form a character outside the basic plane (an emoji) takes two units
+  const units = unicode ? chars.reduce((n, c) => n + (c.codePointAt(0)! > 0xffff ? 2 : 1), 0) : chars.reduce((n, c) => n + (GSM_EXTENDED.has(c) ? 2 : 1), 0);
+  const single = unicode ? 70 : 160;
+  const multi = unicode ? 67 : 153;
+  const parts = units === 0 ? 0 : units <= single ? 1 : Math.ceil(units / multi);
+  return { unicode, units, parts, perPart: parts > 1 ? multi : single };
+}
+
+/** The shop's masking name, when the owner marked it approved and wants it used (else the gateway's own number). */
+export function maskingSender(m: { senderName: string; state: string; useWhenApproved: boolean } | null): string | null {
+  return m && m.state === 'approved' && m.useWhenApproved && m.senderName.trim() ? m.senderName.trim() : null;
+}
+
+/** An SMS's cost from the owner's part prices (null when that price is not known). */
+export function smsCostMinor(parts: number, rates: { maskedMinor: number | null; nonMaskedMinor: number | null } | null, masked: boolean): number | null {
+  const rate = rates ? (masked ? rates.maskedMinor : rates.nonMaskedMinor) : null;
+  return rate === null ? null : rate * parts;
+}
+
 /** The language of a message: the setting, or the store's own language (`bn-BD` → `bn`). */
 export function messageLocale(setting: 'store' | 'bn' | 'en', storeLocale: string): 'bn' | 'en' {
   if (setting !== 'store') return setting;

@@ -49,7 +49,9 @@
     "ordersReturnsRefused": "Refused parcels",
     "riskRules": "Risk rules",
     "checkoutAdvance": "Checkout advance",
-    "packingPack": "Pack"
+    "packingPack": "Pack",
+    "messagesLog": "Message log",
+    "messagesChannels": "Channels & limits"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -217,6 +219,15 @@
         "username": "Merchant login e-mail",
         "password": "Merchant login password",
         "storeId": "Pathao store ID the parcels go out from (merchant panel → Stores)",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "bulkSmsBd": {
+      "name": "SMS gateway (BulkSMSBD)",
+      "desc": "Order SMS and sign-in codes. Mock until the key is in and the test (the balance) passes: nothing is sent before that",
+      "fields": {
+        "apiKey": "API key (the gateway's panel → API)",
+        "senderId": "Sender id the gateway gave you (its number; the masking name is set in Messages → Channels & limits)",
         "baseUrl": "Address — only for a test server"
       }
     }

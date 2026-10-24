@@ -33,6 +33,8 @@
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },
     { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]" },
+    { "id": "messages/log", "route": "/admin/messages/log" },
+    { "id": "messages/channels", "route": "/admin/messages/channels" },
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
     { "id": "reports/server", "route": "/admin/server" },

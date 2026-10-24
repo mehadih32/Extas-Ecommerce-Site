@@ -1,7 +1,7 @@
 // PR 148 — the mock WhatsApp and e-mail senders of the order journey: nothing leaves the server, a bad address is
 // refused, and neither is listed in Keys & connections until its real provider comes.
 import { describe, expect, it } from 'vitest';
-import { allAdapters, messageAdapters, mockEmailAdapter, mockEmailOutbox, mockSmsAdapter, mockWhatsAppAdapter, mockWhatsAppOutbox } from '../src';
+import { allAdapters, bulkSmsBdAdapter, messageAdapters, mockEmailAdapter, mockEmailOutbox, mockSmsAdapter, mockWhatsAppAdapter, mockWhatsAppOutbox } from '../src';
 
 const ctx = { mode: 'MOCK' as const, config: {}, storeId: 1, secret: async () => null };
 
@@ -38,6 +38,6 @@ describe('mock WhatsApp and e-mail (PR 148)', () => {
       await expect(a.create(ctx)).rejects.toThrow();
     }
     expect(allAdapters.some((a) => a.kind === 'WHATSAPP' || a.kind === 'EMAIL')).toBe(false);
-    expect(messageAdapters).toEqual([mockSmsAdapter, mockWhatsAppAdapter, mockEmailAdapter]);
+    expect(messageAdapters).toEqual([mockSmsAdapter, bulkSmsBdAdapter, mockWhatsAppAdapter, mockEmailAdapter]);
   });
 });

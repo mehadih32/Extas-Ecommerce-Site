@@ -46,6 +46,11 @@ export interface MessageLogRow {
   /** When it goes (or is tried again) when it is still waiting. */
   sendAfter: Date | null;
   costMinor: number | null;
+  /** PR 291: the SMS parts it took (null for other channels or before it went). */
+  segments: number | null;
+  /** PR 291, 292: when the provider said it reached the phone, and the provider's own last word on it. */
+  deliveredAt: Date | null;
+  providerStatus: string | null;
 }
 
 export interface MessageLogPage {
@@ -71,6 +76,9 @@ const LOG_SELECT = {
   sentAt: true,
   sendAfter: true,
   costMinor: true,
+  segments: true,
+  deliveredAt: true,
+  providerStatus: true,
 } satisfies Prisma.NotificationLogSelect;
 
 async function withOrders(deps: MessagesDeps, storeId: number, rows: Prisma.NotificationLogGetPayload<{ select: typeof LOG_SELECT }>[]): Promise<MessageLogRow[]> {

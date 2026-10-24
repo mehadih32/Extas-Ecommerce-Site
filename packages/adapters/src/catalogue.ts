@@ -146,6 +146,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S14 · PR 291 — the SMS gateway (BulkSMSBD): the API key from its panel and the sender id it gave the account (its own
+  // number, used until the shop's masking name is approved). The mock serves until the Test (the balance) passes; one
+  // SMS gateway is on at a time.
+  {
+    id: 'bulkSmsBd',
+    kind: 'SMS',
+    provider: 'bulkSmsBd',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'senderId' }, { field: 'baseUrl', optional: true }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {
