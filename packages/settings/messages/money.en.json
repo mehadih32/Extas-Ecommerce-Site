@@ -17,6 +17,27 @@
     "partial": {
       "label": "Partial payment and the pre-order advance",
       "help": "Whether a pre-order may be paid partly now and the rest at the door. A team member asks the advance on the order and the customer pays it online (bKash, Nagad, card); only money that came in lowers what the rider collects. \"Cap\": the most the shop may ask as an advance, as a percentage of the order's total (10% to start). \"Smallest advance\": below this no payment is asked (empty = no minimum). \"Pay it all now\" (off): the customer may pay the whole order in advance instead. Off: no advance is asked for a pre-order."
+    },
+    "statement": {
+      "label": "Reading the payment services' statements",
+      "help": "How the statement file of a payment service (bKash, Nagad, card) is read: the column names it may have (the transaction ID, the amount, the fee, the date, the type) and the words that mark a line as money going back (refund, reversal). Every line is matched with our own payment by its transaction ID. \"Difference allowed\": how many paisa of difference still count as a match (0 = exact). \"Missing after\": after how many days a paid online payment that no statement shows is listed as missing (0 = off). Nothing is changed and nobody is messaged: a mismatch is only listed, with its reason, for you to check.",
+      "reasons": {
+        "label": "Payment statement mismatch reasons",
+        "help": "The words for each reason a line of a payment service's statement does not match our records. The reasons themselves are fixed (so reports can count them); only their words are yours. A mismatch is never shown without its reason."
+      }
+    }
+  },
+  "defaults": {
+    "payments": {
+      "statement": {
+        "UNKNOWN_PAYMENT": "The statement shows money we have no payment for",
+        "AMOUNT_DIFFERS": "The statement shows another amount than our payment",
+        "DOUBLE_LINE": "The same payment is on the statement again",
+        "NOT_PAID": "The statement shows money for a payment we did not record as paid",
+        "UNKNOWN_REFUND": "The statement shows money sent back that we have no refund for",
+        "REFUND_DIFFERS": "The statement shows another refund amount than ours",
+        "MISSING": "A paid online payment is on no statement yet"
+      }
     }
   }
 }

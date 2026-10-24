@@ -165,6 +165,7 @@ export const PERMISSIONS = {
   // checked mismatch resolved (`payments.settle`). Each is audited; none moves money or changes COD.
   'payments.door': { group: 'payments' },
   'payments.partials': { group: 'payments' },
+  // PR 174: also a payment gateway's statement (bKash, Nagad, card) and its practice statement.
   'payments.settle': { group: 'payments' },
   // S07 · PR 171 — the wallet (§6.5.4 fact 4b, SIM-F-054): credit or debit a customer's wallet by hand with a reason, or put
   // an entry right with a new one the other way (`payments.wallet`, only while the owner has `payments.wallet.manual`

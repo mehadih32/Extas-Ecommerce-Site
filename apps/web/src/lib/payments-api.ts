@@ -1,4 +1,4 @@
-// S07 · PR 165, 166, 170, 171, 172, 173 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
+// S07 · PR 165, 166, 170–174 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
 // money panel comes with the admin UI; these routes are what it calls. Every route signs the person in (guardAdmin),
 // checks the permission in the store it touches (`?storeId=`, default the mother store), then calls @extas/payments,
 // which checks the permission again and writes the audit log in the same transaction. Recording money takes an
@@ -49,6 +49,15 @@
 //   POST  /api/admin/payments/orders/:id/advance    {method, provider?, amountMinor? | full?, note?, confirm: true} a COD
 //                                                    order's advance for the customer to pay online, within the cap; off
 //                                                    until `payments.partial` is on (Idempotency-Key) (payments.advance)
+//   POST  /api/admin/payments/statements            PR 174: {provider, reference, periodFrom, periodTo, csv | lines} a
+//                                                    gateway's statement, matched line by line (payments.settle)
+//   GET   /api/admin/payments/statements/:id        one gateway statement with every line, its match and reason (payments.view)
+//   POST  /api/admin/payments/statements/lines/:lineId/resolve   {note} a checked mismatch marked resolved (payments.settle)
+//   POST  /api/admin/payments/statements/practice   {provider, from, to} the practice gateway's statement for a period,
+//                                                    only while it runs on practice money (payments.settle)
+//   GET   /api/admin/payments/reconciliation?from=&to=   the reconciliation report: ours against each gateway's
+//                                                    statements, every open mismatch with its reason (SIM-F-028), the COD
+//                                                    position, money owed to customers, the wallet ledger check (payments.view)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -168,6 +177,37 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
     if (m !== 'GET') return notAllowed();
     const u = new URL(request.url);
     return handle(request, deps, 'payments.view', async (x) => ({ apology: await pay.apologyCandidates(x.deps, x.who, { limit: Number(u.searchParams.get('limit') ?? '50') }) }));
+  }
+  if (a === 'statements') {
+    if (!b) {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'payments.settle', async (x) => ({ statement: await pay.importGatewayStatement(x.deps, x.who, await body(request)) }), 201);
+    }
+    if (b === 'practice') {
+      if (path.length > 2) return notFound();
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'payments.settle', async (x) => ({ practice: await pay.practiceStatement(x.deps, x.who, await body(request)) }));
+    }
+    if (b === 'lines') {
+      if (path.length !== 4 || e !== 'resolve') return notFound();
+      if (!isUuid(c!)) return badId('lineId');
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'payments.settle', async (x) => ({ line: await pay.resolveGatewayLine(x.deps, x.who, c!, await body(request)) }));
+    }
+    if (path.length > 2) return notFound();
+    if (!isUuid(b)) return badId('statementId');
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'payments.view', async (x) => {
+      const st = await pay.getGatewayStatement(x.deps, x.who, b);
+      if (!st) throw new pay.PaymentsError('NOT_FOUND', 'no such statement', ['statementId']);
+      return { statement: st };
+    });
+  }
+  if (a === 'reconciliation') {
+    if (path.length > 1) return notFound();
+    if (m !== 'GET') return notAllowed();
+    const q = new URL(request.url).searchParams;
+    return handle(request, deps, 'payments.view', async (x) => ({ report: await pay.reconciliationReport(x.deps, x.who, { from: q.get('from') ?? undefined, to: q.get('to') ?? undefined }) }));
   }
   if (a === 'refunds') {
     if (!b) {
