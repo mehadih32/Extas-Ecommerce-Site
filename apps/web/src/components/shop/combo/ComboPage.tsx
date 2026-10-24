@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { bagSettings, currentBag } from "@/lib/shop/bag";
+import { buildEntry } from "@/lib/shop/build";
 import { reassurance } from "@/lib/shop/bag-model";
 import { bagPickCards, cardsByIds } from "@/lib/shop/catalogue";
 import {
@@ -282,6 +283,8 @@ export async function ComboPage({
     ? await setCardGroups(c, { exceptId: r.page.summary.comboId })
     : null;
   const more = all ? otherGroups(all, r, moreSet.max) : [];
+  // PR 98 · "Build your own" beside "More sets" while the set builder is open
+  const build = all && more.length ? await buildEntry(c) : null;
   const s = r.page.summary;
   const blurb =
     ((c.lang === "bn" && s.descriptionBn?.trim()) || s.descriptionEn?.trim()) ??
@@ -387,6 +390,7 @@ export async function ComboPage({
             groups={more}
             all={all}
             title={t("combo.more.title")}
+            build={build ? hrefIn(c.lang, ROUTES.buildSet) : null}
           />
         ) : null}
       </div>

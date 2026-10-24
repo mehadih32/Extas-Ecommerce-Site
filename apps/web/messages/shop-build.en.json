@@ -1,0 +1,96 @@
+{
+  "build": {
+    "title": "Build your own set",
+    "eyebrow": "Mix & match",
+    "lead": "Pick your own styles and colours. The set price applies automatically as soon as you reach it.",
+    "missing": "That set offer isn't available right now. Here are the sets you can build instead.",
+    "groups": "Set groups",
+    "tabOne": "{n} for {price}",
+    "tabTwo": "{n} for {price} · {m} for {price2}",
+    "headFirst": "Any {n} {price}",
+    "headMore": "Any {n} {price}",
+    "headJoin": " · ",
+    "ruleNote": "Mix any styles, colours and sizes from this group. Items from other groups keep their regular price.",
+    "tier": {
+      "any": "Any {n}",
+      "each": "{price} per item",
+      "unlocked": "Unlocked",
+      "more": "Add {n} more",
+      "pick": "Pick any {n}"
+    },
+    "set": {
+      "title": "Your set",
+      "picked": "{n} of {max} picked",
+      "pickItem": "Pick item",
+      "item": "Item {n}",
+      "optional": "Item {n} · optional",
+      "remove": "Remove {name} {colour} {size}",
+      "regular": "Regular price",
+      "price": "Set price",
+      "save": "You save",
+      "showsHere": "Your set price shows here as you pick."
+    },
+    "status": {
+      "atLeast": "Pick at least {n} items",
+      "first": "Any {n} for {price}",
+      "unlock": "Add {more} more to unlock {price}",
+      "line": "{n} items · {price}",
+      "lineSave": "{n} items · {price} · Save {saving}",
+      "next": "Add {more} more → {n} for {price}",
+      "best": "Best set price unlocked"
+    },
+    "grid": {
+      "title": "Pick your styles",
+      "styles": "{n} styles",
+      "one": "{n} style",
+      "none": "No styles in this group right now."
+    },
+    "card": {
+      "colour": "Colour",
+      "size": "Size",
+      "add": "Add to set",
+      "full": "Set full",
+      "soldOut": "Sold out",
+      "inSet": "In your set",
+      "inSetN": "In your set ×{n}",
+      "front": "Front",
+      "back": "Back",
+      "detail": "Detail",
+      "look": "{name} — see the {view}",
+      "sizeAria": "Size {size}",
+      "sizeOut": "Size {size} sold out",
+      "colourOut": "{colour} (sold out)"
+    },
+    "err": {
+      "pickSize": "Pick a size first",
+      "sizeGone": "Size {size} is sold out in {colour}. Pick another size.",
+      "soldOut": "Size {size} is sold out in {colour}.",
+      "onlyLeft": "Only {stock} left in {colour} · {size}. Try another colour or size.",
+      "onlyLeftBag": "Only {stock} left in {colour} · {size} (some are already in your bag). Try another colour or size.",
+      "full": "Your set is full — remove an item to swap it",
+      "tooFew": "Pick at least {n} items for the set price",
+      "error": "Your set could not go in the bag. Please try again.",
+      "ended": "This set offer has just changed. Please check your set again."
+    },
+    "added": "Added {name} — {colour} · {size}",
+    "addedNext": "Added {name} — {colour} · {size} · Add {more} more → {n} for {price}",
+    "addedSet": "Added {name} — {colour} · {size} · Set price {price}",
+    "toBag": "Add set to Bag",
+    "note": "Set price applies automatically. Not combined with other offers.",
+    "off": {
+      "title": "Build-your-own sets are taking a break",
+      "text": "Right now there are no mix-and-match offers.",
+      "sets": "Our ready-made sets still have a set price — have a look below.",
+      "soon": "Check back soon for new set prices.",
+      "home": "Back to the shop",
+      "readyMade": "Ready-made sets"
+    },
+    "hub": {
+      "rail": "Build your own",
+      "card": "Build your own set",
+      "sub": "Any {list} pieces",
+      "or": " or ",
+      "more": "Build your own"
+    }
+  }
+}

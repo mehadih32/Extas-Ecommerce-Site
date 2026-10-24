@@ -2,9 +2,11 @@
 // "Combos", the season tabs when the rules use two seasons or more (`combos.seasons`), then one row per kind of set —
 // the 2-piece packs, the 3-piece packs, the top + bottom sets — of cards, each card one fixed set or one auto rule and
 // product (its colour pairs). On a computer the rows share lines of four columns (D-038); a phone shows one row under
-// the other, each scrolling sideways. Off (`combos.landing`): "Coming soon". A rule's own list (PR 572) and "Build your
-// own" (PR 98) are still to come, so a card opens the first set of its group.
+// the other, each scrolling sideways. Off (`combos.landing`): "Coming soon". A rule's own list (PR 572) is still to
+// come, so a card opens the first set of its group. PR 98: while the set builder is open (`combos.builder`, with its
+// entries on) a last row "Build your own" holds its one card ("Any 2 or 3 pieces"), packed like the others.
 import type { Metadata } from 'next';
+import { buildEntry } from '@/lib/shop/build';
 import { cardView, setCardGroups } from '@/lib/shop/combo';
 import { hubRails, hubSeasons, packRails } from '@/lib/shop/combo-model';
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
@@ -13,6 +15,7 @@ import { shopMetadata } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { ComingSoon } from '../ComingSoon';
 import { HubTabs } from './HubTabs';
+import { Icon } from '../Icon';
 import { HubCard } from './SetCards';
 import './combos.css';
 
@@ -26,9 +29,36 @@ export async function combosMetadata(): Promise<Metadata> {
   return m;
 }
 
-function Rails({ c, all, season, perRail }: { c: ShopContext; all: Awaited<ReturnType<typeof setCardGroups>>; season: string | null; perRail: number }) {
+type Build = Awaited<ReturnType<typeof buildEntry>>;
+
+/** PR 98 · the "Build your own" row's one card (demo ca_L3 `build`): the empty set picture with a plus, the builder's sizes. */
+function BuildRail({ c, build, p }: { c: ShopContext; build: NonNullable<Build>; p: ReturnType<typeof packRails>[number] }) {
+  const list = build.quantities.map((n) => c.num(n)).join(c.t('build.hub.or'));
+  return (
+    <section className="ca-rail" data-testid="ca-rail-build" style={{ '--n': p.n, '--span': p.span, '--o': p.order } as React.CSSProperties}>
+      <div className="row between">
+        <h2 className="h2">{c.t('build.hub.rail')}</h2>
+      </div>
+      <div className="ca-railtrk">
+        <a className="ca-card ca-build" href={hrefIn(c.lang, ROUTES.buildSet)} data-testid="ca-build">
+          <div className="ca-ph ca-ph-card n2 ca-ph-empty">
+            <span className="ca-plus">
+              <Icon name="plus" size={28} />
+            </span>
+          </div>
+          <div className="ca-cinfo">
+            <div className="ca-ctitle">{c.t('build.hub.card')}</div>
+            <div className="ca-csub">{c.t('build.hub.sub', { list })}</div>
+          </div>
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function Rails({ c, all, season, perRail, build }: { c: ShopContext; all: Awaited<ReturnType<typeof setCardGroups>>; season: string | null; perRail: number; build: Build }) {
   const rails = hubRails(all.groups, all.rules, season).map((r) => ({ ...r, items: r.items.slice(0, perRail) }));
-  const packed = packRails(rails.map((r) => ({ key: r.key, count: r.items.length })));
+  const packed = packRails([...rails.map((r) => ({ key: r.key, count: r.items.length })), ...(build ? [{ key: 'build', count: 1 }] : [])]);
   return (
     <div className="ca-rails">
       {rails.map((r, i) => {
@@ -52,6 +82,7 @@ function Rails({ c, all, season, perRail }: { c: ShopContext; all: Awaited<Retur
           </section>
         );
       })}
+      {build ? <BuildRail c={c} build={build} p={packed[rails.length]!} /> : null}
     </div>
   );
 }
@@ -61,7 +92,7 @@ export async function CombosHub() {
   const set = await readPageSettings(KEYS, c.storeId);
   const landing = set['combos.landing'];
   if (!landing.on) return <ComingSoon c={c} soonKey="combos" />;
-  const all = await setCardGroups(c);
+  const [all, build] = await Promise.all([setCardGroups(c), buildEntry(c)]);
   const seasonList = set['combos.seasons'];
   const seasons = landing.seasonTabs ? hubSeasons(all.groups, all.rules, seasonList.map((s) => s.key)) : [];
   const tabs = seasons.length >= 2 ? seasons.map((k) => ({ key: k, label: (() => { const s = seasonList.find((x) => x.key === k); return s ? c.t.label({ en: s.en, bn: s.bn }) : k; })() })) : [];
@@ -80,18 +111,18 @@ export async function CombosHub() {
         {counts.length ? <div className="eyebrow">{c.t('combo.hub.eyebrow', { counts: counts.join(c.t('combo.hub.or')) })}</div> : null}
         <h1 className="h1">{c.t('combo.hub.title')}</h1>
       </header>
-      {all.groups.length ? (
+      {all.groups.length || build ? (
         tabs.length ? (
           <>
             <HubTabs tabs={tabs} label={c.t('combo.hub.seasons')} initial={tabs[0]!.key} />
             {tabs.map((t, i) => (
               <div key={t.key} data-season-panel={t.key} hidden={i > 0}>
-                <Rails c={c} all={all} season={t.key} perRail={landing.perRail} />
+                <Rails c={c} all={all} season={t.key} perRail={landing.perRail} build={build} />
               </div>
             ))}
           </>
         ) : (
-          <Rails c={c} all={all} season={null} perRail={landing.perRail} />
+          <Rails c={c} all={all} season={null} perRail={landing.perRail} build={build} />
         )
       ) : (
         <div className="ca-empty" data-testid="ca-empty">

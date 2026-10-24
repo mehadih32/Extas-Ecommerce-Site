@@ -49,13 +49,19 @@ export function SetCardItem({ c, v }: { c: ShopContext; v: CardView }) {
   );
 }
 
-/** "More sets" (demo cb_moreSets), or nothing when no other set is on sale. */
-export function MoreSets({ c, groups, all, title }: { c: ShopContext; groups: readonly HubGroup[]; all: SetCardGroups; title: string }) {
+/** "More sets" (demo cb_moreSets), or nothing when no other set is on sale. PR 98: "Build your own" beside the title
+ * while the set builder is open (`build`: its link). */
+export function MoreSets({ c, groups, all, title, build = null }: { c: ShopContext; groups: readonly HubGroup[]; all: SetCardGroups; title: string; build?: string | null }) {
   if (!groups.length) return null;
   return (
     <section className="section" id="cb-more" data-testid="cb-more">
       <div className="sec-hd">
         <h2 className="h2">{title}</h2>
+        {build ? (
+          <a className="link" href={build} data-testid="cb-more-build">
+            {c.t('build.hub.more')}
+          </a>
+        ) : null}
       </div>
       <div className="grid g3">
         {groups.map((g) => (
