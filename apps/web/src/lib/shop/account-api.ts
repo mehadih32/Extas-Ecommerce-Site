@@ -20,6 +20,9 @@
 //   POST /api/account/edit       {number, phone?, address?, lines?: [{lineId, variantId}]} → {status, …the same}
 //                                his phone, address or a size (same piece, same colour, same price) until processing
 //                                starts, capped; never once a courier is booked (SIM-F-004)
+//   POST /api/account/two-size   {number}                   → {open, questions: [{key, product, colour, sizes}]}
+//                                S05 · PR 146: which size he wants when the order has S and M (`orders.twoSize`, off)
+//   POST /api/account/two-size-answer {number, key, keep: all|<sizeId>} → {status, …the same}  "only M" takes S out
 //   POST /api/account/test-code  {phone}                    → {code}   test servers only (EXTAS_SHOP_TEST_PAGES=1, mock SMS)
 //   POST /api/account/try                                   → {next}   test servers only: signed in as the sample account
 //
@@ -28,7 +31,7 @@
 import { askForCode, isAccountError, normalPhone, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
 import type { RequestContext } from '@extas/auth';
-import { addOnState, customerAddOn, customerCancel, customerCancelState, customerEdit, customerEditState, customerRemoveAddOn, isOrdersError, type CustomerRef } from '@extas/orders';
+import { addOnState, customerAddOn, customerCancel, customerCancelState, customerEdit, customerEditState, customerRemoveAddOn, customerTwoSizeAnswer, customerTwoSizeState, isOrdersError, type CustomerRef } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE } from './bag-model';
 import { mergeWishes, visitorOf } from './wishlist';
@@ -146,7 +149,9 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
       case 'parcel-add':
       case 'parcel-remove':
       case 'edit-state':
-      case 'edit': {
+      case 'edit':
+      case 'two-size':
+      case 'two-size-answer': {
         // the order is his by his account or by this browser (a guest's order); anything else is "no such order"
         const auth = await customerOfRequest(request, a, deps.storeId);
         const who: CustomerRef = { storeId: deps.storeId, customerId: auth?.customer.id ?? null, visitorId: visitorOf(readCookie(request, BAG_COOKIE)) };
@@ -156,6 +161,7 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         if (action === 'cancel-state') return json({ ok: true, ...(await customerCancelState(od, who, number)) });
         if (action === 'parcel') return json({ ok: true, ...(await addOnState(od, who, number)) });
         if (action === 'edit-state') return json({ ok: true, ...(await customerEditState(od, who, number)) });
+        if (action === 'two-size') return json({ ok: true, ...(await customerTwoSizeState(od, who, number)) });
         const { lang: _lang, ...input } = b;
         if (action === 'parcel-add' || action === 'parcel-remove') {
           // PR 127: a real order line through the one order service; the answer is the window as it is now
@@ -166,6 +172,11 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
           // PR 143: his own edit through the one order service; the answer is the window as it is now
           const r = await customerEdit(od, who, input);
           return json({ ok: true, status: r.status, ...(await customerEditState(od, who, number)) });
+        }
+        if (action === 'two-size-answer') {
+          // PR 146: his answer through the one order service; the answer is the question as it is now
+          const r = await customerTwoSizeAnswer(od, who, input);
+          return json({ ok: true, status: r.status, ...(await customerTwoSizeState(od, who, number)) });
         }
         const r = await customerCancel(od, who, input);
         return json({ ok: true, outcome: r.outcome, status: r.status });

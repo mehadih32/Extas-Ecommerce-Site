@@ -49,7 +49,8 @@ describe('general default pack (PR 508)', () => {
     const on = defaultPack.notificationTemplates.filter((t) => t.enabled && t.locale === 'bn').map((t) => `${t.channel}:${t.key}`);
     expect(on.sort()).toEqual(['EMAIL:order.placed', 'SMS:order.placed', 'SMS:order.processing', 'WHATSAPP:order.processing']);
     const off = defaultPack.notificationTemplates.filter((t) => !t.enabled).map((t) => t.key);
-    expect(new Set(off)).toEqual(new Set(['order.pickedUp', 'order.outForDelivery', 'order.delivered']));
+    // PR 146: the two-size question (WhatsApp and SMS) waits for the owner too
+    expect(new Set(off)).toEqual(new Set(['order.pickedUp', 'order.outForDelivery', 'order.delivered', 'order.twoSize']));
     for (const t of defaultPack.notificationTemplates) {
       expect(defaultPack.notificationTemplates.some((o) => o.key === t.key && o.channel === t.channel && o.locale !== t.locale), `${t.key} in both languages`).toBe(true);
     }

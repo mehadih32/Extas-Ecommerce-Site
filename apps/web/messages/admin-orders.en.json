@@ -144,7 +144,9 @@
       "inReview": "Duplicate review",
       "hold": "On hold: {reason}",
       "wantsChange": "Wants a change",
-      "merged": "One parcel"
+      "merged": "One parcel",
+      "twoSizes": "2 sizes — check",
+      "twoSizesOther": "2 sizes — for someone else"
     },
     "page": {
       "all": "All orders",
@@ -335,6 +337,18 @@
         "title": "Correct the phone of {n}",
         "ok": "Save the number",
         "done": "Phone of {n} corrected · logged on the timeline"
+      },
+      "twoSizeAll": {
+        "label": "Keep all",
+        "title": "Keep every size on {n}",
+        "ok": "Keep all",
+        "done": "Answer saved on {n} · every size goes"
+      },
+      "twoSizeOne": {
+        "label": "Only {s}",
+        "title": "Only {s} of {product} on {n}",
+        "ok": "Take the others out",
+        "done": "Answer saved on {n} · only {s} goes"
       }
     },
     "eff": {
@@ -358,7 +372,11 @@
       "editArea": "The delivery area and its charge stay as the checkout stored them; if the new address is in another area, tell the owner",
       "editStock": "A new size is held from stock and the old one goes back; the duplicate check runs again",
       "editPaid": "A paid order: anything paid beyond the new total becomes a refund request for the owner — no money moves",
-      "phoneNext": "The courier, the messages and the duplicate check use the new number from now on"
+      "phoneNext": "The courier, the messages and the duplicate check use the new number from now on",
+      "twoSizeAll": "Every size goes in the parcel; nothing on the order changes.",
+      "twoSizeOut": "{sizes} is taken out: the total and the amount to collect fall by exactly its price, and its stock is freed.",
+      "twoSizeOffer": "A piece with an offer or a set price is not taken out by itself: the answer is kept and the order waits for you.",
+      "twoSizeClose": "The “2 sizes — check” flag and its call task close; the timeline keeps the answer."
     },
     "review": {
       "title": "Duplicate review",
@@ -507,14 +525,22 @@
       "editLine": "{line} → {to}",
       "editRemoved": "Taken out: {line}",
       "editVia": "via {via}",
-      "editViaPage": "by the customer, from his order page"
+      "editViaPage": "by the customer, from his order page",
+      "order_twoSizeCheck": "Two-size check",
+      "order_twoSizeAnswer": "Two-size answer",
+      "twoSizeAsked": "ask: {groups}",
+      "twoSizeNoted": "for someone else (said in the bag): {groups}",
+      "twoSizeKeep": "{product} {sizes}: keep {keep}",
+      "twoSizeEvery": "all",
+      "twoSizeTeam": "a piece has an offer — take it out with the customer"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
       "cancelRequest": "The customer asked to cancel: “{why}” · {age}",
       "hold": "On hold: {reason} · {age}",
       "cancelled": "Cancelled: {reason}",
-      "locked": "Booked with {courier} · {tracking}: the parcel is locked. To change it, cancel after booking."
+      "locked": "Booked with {courier} · {tracking}: the parcel is locked. To change it, cancel after booking.",
+      "twoSize": "{product}: {sizes} on one order — ask which size the customer wants before packing."
     },
     "items": {
       "title": "Items",

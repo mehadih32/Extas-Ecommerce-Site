@@ -326,10 +326,10 @@ export interface CustomerEditState {
   lines: { lineId: string; label: string; size: string | null; sizes: { variantId: string; size: string | null }[] }[];
 }
 
-const customerBy = (c: CustomerRef): By => ({ actorType: 'CUSTOMER', actorId: c.customerId, source: 'shop' });
+export const customerBy = (c: CustomerRef): By => ({ actorType: 'CUSTOMER', actorId: c.customerId, source: 'shop' });
 
 /** His order by number, or NOT_FOUND (anyone else's order is "no such order"). */
-async function ownOrderId(deps: OrdersDeps, c: CustomerRef, n: string): Promise<string> {
+export async function ownOrderId(deps: OrdersDeps, c: CustomerRef, n: string): Promise<string> {
   const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId: c.storeId, number: n } }, select: { id: true, customerId: true, visitorId: true } });
   const his = o && ((c.customerId && o.customerId === c.customerId) || (c.visitorId && o.visitorId === c.visitorId));
   if (!o || !his) throw new OrdersError('NOT_FOUND', 'no such order', ['number']);

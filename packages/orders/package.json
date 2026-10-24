@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@extas/auth": "workspace:*",
+    "@extas/cart": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",
     "@extas/inventory": "workspace:*",

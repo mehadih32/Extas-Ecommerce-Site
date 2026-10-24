@@ -35,6 +35,8 @@
 //                                                             address?, deliveryNote?, lines?: [{lineId, variantId} |
 //                                                             {lineId, remove: true}], version?} (orders.edit); the dialog
 //                                                             may send each line as `line:<lineId>`: keep | remove | <variantId>
+//   POST  /api/admin/orders/:id/two-size                      PR 146: {key, keep: all | <sizeId>, note?, version?} the
+//                                                             customer's two-size answer; "only M" takes the other sizes out (orders.edit)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -198,6 +200,8 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
       return one ? run('orders.notes', (x, i, o) => od.setFlags(x.deps, x.who, id, i, o)) : notFound();
     case 'edit':
       return one ? run('orders.edit', (x, i, o) => od.editOrder(x.deps, x.who, id, editBody(i), o)) : notFound();
+    case 'two-size':
+      return one ? run('orders.edit', (x, i, o) => od.answerTwoSize(x.deps, x.who, id, i, o)) : notFound();
     case 'lines':
       if (one) return run('orders.lines', (x, i, o) => od.addLine(x.deps, x.who, id, i, o));
       if (path.length !== 4 || e !== 'remove') return notFound();

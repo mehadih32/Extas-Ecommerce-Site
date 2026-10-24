@@ -119,6 +119,9 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
   if (r.inReview) out.push({ label: t(d, 'orders.flag.inReview'), tone: 'warn' });
   if (r.status === 'ON_HOLD' && r.holdReasonCode) out.push({ label: t(d, 'orders.flag.hold', { reason: labels.holdReasons.get(r.holdReasonCode) ?? r.holdReasonCode }), tone: 'mute' });
   if (r.customerWantsChange) out.push({ label: t(d, 'orders.flag.wantsChange'), tone: 'warn' });
+  // PR 146 (demo 02-core.js): the same piece in two sizes — to ask, or the family's "for someone else" (SIM-F-036)
+  if (r.flags.includes('TWO_SIZES')) out.push({ label: t(d, 'orders.flag.twoSizes'), tone: 'warn' });
+  if (r.flags.includes('TWO_SIZES_OTHER')) out.push({ label: t(d, 'orders.flag.twoSizesOther'), tone: 'mute' });
   if (r.orderGroupId) out.push({ label: t(d, 'orders.flag.merged'), tone: 'info' });
   for (const f of r.internalFlags) out.push({ label: labels.flags.get(f) ?? f, tone: 'gold' });
   if (r.source !== 'WEBSITE') out.push({ label: t(d, `orders.source.${r.source}`), tone: 'line' });

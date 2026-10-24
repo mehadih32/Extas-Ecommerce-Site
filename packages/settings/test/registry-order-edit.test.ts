@@ -1,4 +1,4 @@
-// S05 · PR 142, 143 (registry v37): every order-edit key at version 37, never owner data, labelled in English and Bengali,
+// S05 · PR 142, 143, 146 (registry v37): every order-edit key at version 37, never owner data, labelled in English and Bengali,
 // its default valid; the reason lists carry the real-life reasons SIM-F-038 found missing, and the cancel codes gained
 // "did not order" (so the cancel reasons' definition moved to version 37 too).
 import { describe, expect, it } from 'vitest';
@@ -24,6 +24,10 @@ describe('order edit settings (v37)', () => {
   it('PR 143: the customer cannot edit his order until the owner switches it on', () => {
     expect(orderEditSettings['orders.edit.customer'].default.enabled).toBe(false);
     expect(orderEditSettings['orders.edit.customer'].isPublic).toBe(true);
+  });
+
+  it('PR 146: the two-size follow-up waits for the owner\'s switch; when on, it asks the customer and leaves a call', () => {
+    expect(orderEditSettings['orders.twoSize'].default).toEqual({ enabled: false, askCustomer: true, callTask: true });
   });
 
   it('SIM-F-038: "did not order" is a cancel reason, and the refusal list has "bought elsewhere" and "arrived after Eid", in both languages', () => {

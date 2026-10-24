@@ -28,6 +28,7 @@ export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
   flags: 'orders.notes',
   notes: 'orders.notes',
   edit: 'orders.edit',
+  twoSize: 'orders.edit',
 };
 
 /** The key a button (by its spec id, the `?do=` deep link) needs: a link to a command the person may not use shows "no access". */
@@ -325,7 +326,53 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.note.archived': 'mute',
   'order.setFlags': 'mute',
   'order.edit': 'warn',
+  'order.twoSizeCheck': 'warn',
+  'order.twoSizeAnswer': 'warn',
 };
+
+/** PR 146 — the two-size band's answers: keep all, or only one size (the other sizes' lines are taken out). */
+export function twoSizeSpecs(view: AdminView, o: { id: string; number: string; version: number }, g: od.TwoSizeGroup, i: number, paid: boolean): CommandSpec[] {
+  const d = view.dict;
+  const all = g.sizes.map((s) => s.label).join(' + ');
+  const note: FieldSpec = { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), maxLength: 2000, placeholder: t(d, 'orders.dlg.notePh') };
+  const close = t(d, 'orders.eff.twoSizeClose');
+  const spec = (id: string, k: 'twoSizeAll' | 'twoSizeOne', keep: string, effects: string[], s = ''): CommandSpec => ({
+    id,
+    label: t(d, `orders.cmd.${k}.label`, { s }),
+    tone: k === 'twoSizeAll' ? 'ghost' : '',
+    url: commandUrl(o.id, 'twoSize'),
+    version: o.version,
+    fixed: { key: g.key, keep },
+    title: t(d, `orders.cmd.${k}.title`, { n: o.number, s, product: g.product }),
+    sub: `${g.product}${g.colour ? ` · ${g.colour}` : ''} · ${all}`,
+    effects,
+    fields: [note],
+    ok: t(d, `orders.cmd.${k}.ok`),
+    okTone: 'pri',
+    done: t(d, `orders.cmd.${k}.done`, { n: o.number, s }),
+  });
+  return [
+    spec(`twoSize-${i}-all`, 'twoSizeAll', 'all', [t(d, 'orders.eff.twoSizeAll'), close]),
+    ...g.sizes.map((s) => {
+      const others = g.sizes.filter((x) => x !== s).map((x) => x.label).join(' + ');
+      return spec(`twoSize-${i}-${s.sizeId}`, 'twoSizeOne', s.sizeId, [t(d, 'orders.eff.twoSizeOut', { sizes: others }), t(d, 'orders.eff.twoSizeOffer'), ...(paid ? [t(d, 'orders.eff.editPaid')] : []), close], s.label);
+    }),
+  ];
+}
+
+/** PR 146 — the two-size check's and answer's timeline line. */
+export function twoSizeSummary(view: AdminView, type: string, data: unknown): string | null {
+  const d = view.dict;
+  const x = (data ?? {}) as { asked?: { product: string; sizes: { label: string }[] }[]; noted?: { product: string; sizes: { label: string }[] }[]; product?: string; sizes?: string[]; keep?: string; applied?: boolean; via?: string };
+  const groups = (l: { product: string; sizes: { label: string }[] }[]) => l.map((g) => `${g.product} ${g.sizes.map((s) => s.label).join(' + ')}`).join('; ');
+  if (type === 'order.twoSizeCheck')
+    return [...(x.asked?.length ? [t(d, 'orders.ev.twoSizeAsked', { groups: groups(x.asked) })] : []), ...(x.noted?.length ? [t(d, 'orders.ev.twoSizeNoted', { groups: groups(x.noted) })] : [])].join(' · ') || null;
+  return [
+    t(d, 'orders.ev.twoSizeKeep', { product: x.product ?? '', sizes: (x.sizes ?? []).join(' + '), keep: x.keep === 'all' || !x.keep ? t(d, 'orders.ev.twoSizeEvery') : x.keep }),
+    ...(x.applied === false ? [t(d, 'orders.ev.twoSizeTeam')] : []),
+    ...(x.via === 'order-page' ? [t(d, 'orders.ev.editViaPage')] : []),
+  ].join(' · ');
+}
 
 /** PR 142 — an edit's timeline line: each field and line before → after (the staff see exactly what changed). */
 export function editSummary(view: AdminView, data: unknown): string | null {
@@ -359,6 +406,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const dt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' });
   const matchedIds = [...new Set(detail.reviews.flatMap((r) => r.matchedOrderIds))];
   const editable = detail.allowed.includes('edit') && perms.has('orders.edit');
+  // PR 146: the two-size question, while it is open and the order may still change
+  const askTwoSize = o.flags.includes('TWO_SIZES') && detail.allowed.includes('twoSizeAnswer') && perms.has('orders.edit');
   const [extras, history, reasons, names, matchedRows, noteMax, choices] = await Promise.all([
     od.listExtras(deps, who, [o.id]),
     od.orderHistory(deps, who, o.id, HISTORY_SHOWN),
@@ -368,6 +417,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     deps.settings.value('orders.notes.maxChars', { storeId: who.storeId }) as Promise<number>,
     editable ? od.editChoices(deps, who, o.id) : Promise.resolve(null),
   ]);
+  const twoSize = askTwoSize ? await od.twoSizeQuestions(deps, who, o.id) : [];
   const x = extras[o.id];
   const holdName = new Map(reasons.hold.map((r) => [r.key, nameOf(view, r)]));
   const cancelName = new Map(reasons.cancel.map((r) => [r.key, nameOf(view, r)]));
@@ -476,7 +526,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       const reason = e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const detailText = [move, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
+      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : null;
+      const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
     .reverse();
@@ -489,6 +540,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   if (o.cancelRequested && o.status !== 'CANCELLED') bands.push({ id: 'cancelRequest', kind: 'bad', text: t(d, 'orders.band.cancelRequest', { why: o.cancelRequestReason ?? t(d, 'orders.list.none'), age: o.cancelRequestedAt ? ageText(view, o.cancelRequestedAt, now) : '' }), specs: specs.request });
   if (o.status === 'ON_HOLD') bands.push({ id: 'hold', kind: 'off', text: t(d, 'orders.band.hold', { reason: (o.holdReasonCode && holdName.get(o.holdReasonCode)) || o.holdReasonCode || t(d, 'orders.list.none'), age: o.onHoldSince ? ageText(view, o.onHoldSince, now) : '' }) + (o.holdReason ? ` · ${o.holdReason}` : ''), specs: [] });
   if (o.status === 'CANCELLED') bands.push({ id: 'cancelled', kind: 'off', text: t(d, 'orders.band.cancelled', { reason: (o.cancelReasonCode && cancelName.get(o.cancelReasonCode)) || o.cancelReasonCode || t(d, 'orders.list.none') }) + (o.cancelNote ? ` · ${o.cancelNote}` : ''), specs: [] });
+  twoSize.forEach((g, i) => bands.push({ id: `twoSize-${i}`, kind: 'stale', text: t(d, 'orders.band.twoSize', { product: `${g.product}${g.colour ? ` · ${g.colour}` : ''}`, sizes: g.sizes.map((s) => s.label).join(' + ') }), specs: twoSizeSpecs(view, o, g, i, !!paidText) }));
   if (o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
 
   return {

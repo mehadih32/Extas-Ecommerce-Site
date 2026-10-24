@@ -8,6 +8,8 @@
 // order's overpaid part only becomes a refund REQUEST; no money moves). SIM-F-004: every edit is refused once a courier
 // is booked, so an edit never silently diverges from the parcel.
 // PR 143: the customer's own edit from his order page — off by default (CN-018), capped, until processing starts.
+// PR 146: the two-size follow-up — off by default; a family's sizes (the bag's "for different people" answer) are only a
+// note (SIM-F-036), any other S + M asks the customer which he wants before packing.
 import { z } from 'zod';
 import { setting } from './define';
 import { ordersDictionaryDefault } from './registry-orders';
@@ -35,6 +37,13 @@ export const customerEditSchema = z
     size: z.boolean(),
   })
   .strict();
+
+/**
+ * PR 146 — the two-size follow-up (Blueprint B1.10; demo 02-core.js "2 sizes — check" / "2 sizes — for someone else").
+ * `enabled`: the check runs after each order. `askCustomer`: his order page asks which size he wants (keep all, or only
+ * one). `callTask`: the confirmation caller also gets a call task (TWO_SIZE). With no answer, every piece goes.
+ */
+export const twoSizeSchema = z.object({ enabled: z.boolean(), askCustomer: z.boolean(), callTask: z.boolean() }).strict();
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -68,6 +77,15 @@ export const orderEditSettings = {
     sortOrder: 230,
   }),
   // SIM-F-038: the parcel-refusal reasons (bought elsewhere, arrived after Eid …) for the outcome the courier reports.
+  'orders.twoSize': setting({
+    ...base,
+    schema: twoSizeSchema,
+    default: { enabled: false, askCustomer: true, callTask: true },
+    valueType: 'JSON',
+    labelKey: 'orders.twoSize.label',
+    helpKey: 'orders.twoSize.help',
+    sortOrder: 240,
+  }),
   'orders.refusal.reasons': setting({
     ...base,
     schema: list,

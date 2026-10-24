@@ -60,6 +60,9 @@ export const ORDER_COMMANDS = [
   'removeLine',
   // PR 142: the team's edit of an order not yet with the courier (the status stays)
   'edit',
+  // PR 146: the two-size follow-up — the system's check after placing (a note, the question asked), and the answer
+  'twoSizeCheck',
+  'twoSizeAnswer',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -105,6 +108,9 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   removeLine: ['PLACED', 'CONFIRMED'],
   // the demo's "Edit items & address": new, waiting for its advance, confirmed or on hold — until picking starts
   edit: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
+  // PR 146: asked once, right after placing; answered until picking starts (an answer takes the other sizes out)
+  twoSizeCheck: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
+  twoSizeAnswer: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
 };
 
 /** What the machine needs to know about an order (read under its row lock). */
@@ -189,6 +195,7 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
     case 'addLine':
     case 'removeLine':
     case 'edit':
+    case 'twoSizeAnswer':
       // SIM-F-004: the parcel the courier has is the parcel; nothing is added once it is booked
       if (o.booked) return 'BOOKED';
       if (o.cancelPending) return 'CANCEL_PENDING';
