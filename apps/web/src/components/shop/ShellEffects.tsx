@@ -240,7 +240,12 @@ export function ShellEffects() {
       const root = shopRoot();
       if (root) fitAll(root, [HERO_PIN_FIT]);
     });
-    let stop: Cancel = series([header, floating, footer, bars]);
+    // `data-shell-fits` says whether the fits have run on the page as it stands (the device gate measures after them)
+    const html = document.documentElement;
+    const pending = () => html.setAttribute('data-shell-fits', 'pending');
+    const done = () => html.setAttribute('data-shell-fits', 'done');
+    pending();
+    let stop: Cancel = series([header, floating, footer, bars, done]);
     let raf = 0;
     let full = false;
     const tick = (all: boolean) => {
@@ -253,7 +258,8 @@ export function ShellEffects() {
         floating();
         if (!f) return;
         stop();
-        stop = series([header, pins, footer, bars]);
+        pending();
+        stop = series([header, pins, footer, bars, done]);
       });
     };
     const onScroll = () => tick(false);
@@ -281,6 +287,7 @@ export function ShellEffects() {
     if (fonts && fonts.status !== 'loaded') fonts.ready.then(onFonts).catch(() => undefined);
     return () => {
       stop();
+      html.removeAttribute('data-shell-fits');
       cancelAnimationFrame(raf);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
