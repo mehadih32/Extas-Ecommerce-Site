@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২০৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১০টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,11 +36,11 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২০১টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২১০টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 43/58** · **S03 18/22** · **S06 6/33** (wave 2) · **S04 39/41** · **S05 18/20** (wave 3) · total **206/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 43/58** · **S03 18/22** · **S06 10/33** (wave 2) · **S04 39/41** · **S05 18/20** (wave 3) · total **210/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -66,7 +66,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 18 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 18 / 20 | In progress |
-| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 6 / 33 | In progress |
+| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 10 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **206 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **210 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1078,6 +1078,7 @@ Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGIST
 ### S06 · Fraud & location — In progress
 
 > **বাংলায় সংক্ষেপে:** ঠিকানা থেকে দোকান নিজে ডেলিভারি এলাকা আর চার্জ বের করে, আন্দাজে কখনো না; না বুঝলে কাস্টমারকে জিজ্ঞেস করে। অ্যাডমিনে "ডেলিভারি" পেজে তিনটা ব্যান্ড, আপনার সাব-এরিয়ার তালিকা, আর একটা ঠিকানা দিয়ে পরীক্ষা। চার্জ আপনি নিজে বসাবেন; শুরুতে সব বন্ধ।
+> নতুন: প্রতিটা অর্ডারের একটা ঝুঁকির স্কোর (০–১০০) — নম্বরের আগের অর্ডার আর ঠিকানা দেখে, আপনার ঠিক করা সংকেত আর নম্বরে। অর্ডারের পাতায় "ঝুঁকি" কার্ড বলে কেন এই স্কোর। শুধু জানায়, কিছু আটকায় না; আমাদের দোষে ফেরত গোনা হয় না। শুরুতে বন্ধ।
 
 **Delivery-zone engine (PR 549–553, 555, `@extas/delivery`).**
 - **Gazetteer (549):** division → district → upazila/thana → area with Bengali, English and Banglish names; importer and a shared index. A public **sample** list ships; the national list comes later.
@@ -1088,7 +1089,14 @@ Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGIST
 - **Admin:** ~~`/admin/delivery`~~ `/admin/delivery/zones` (Delivery › Zones in the new admin shell; the old address redirects) — three bands (charge, hours, on/off), the sub-area list (add, remove, put back), Try an address. Permissions `delivery.read`, `delivery.charges`, `delivery.areas`. Guide: [docs/admin-guide/delivery.md](docs/admin-guide/delivery.md).
 - **Settings:** registry v15, group `delivery` (suggestions, phone-first limits, resolver waits) — every number editable.
 - **Tests:** gazetteer, bands, resolver, suggest, phone helper, collision suite; device gate 0 fails.
-- Still planned in S06: fraud and duplicate-order engine (156–164, 519–524, 540, 542–545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
+**Risk score (PR 157, 158, 156, 160, `@extas/orders`).** Off until the owner switches it on; it only informs — nothing is blocked, held, asked in advance or changed by it.
+- **Phone history (157):** a number's other orders in any stored form (the one BD phone helper), each with what became of it — delivered, refused and why, cancelled and the code, open, with the courier, unanswered calls, returns after delivery. Refusals the shop caused (late, wrong item, damaged, after Eid, did not order) are shown and never counted (SIM-F-044). `GET /api/admin/orders/:id/phone-history` (`orders.read`).
+- **Address and zone checks (158):** read from the place the checkout stored, never the text again — no place, place not sure, no house details, another district than the number is known by (saved address, else latest delivered order), one of the owner's places, refusals at the same place.
+- **The model (156):** 14 signals, each with its own switch, weight (0–100) and limits, and three bands (low 0, medium 35, high 65); one pure scoring function; scored **once** when the order lands and stored append-only with every reason (RiskAssessment, `riskScore` / `riskBand`, a timeline and audit row through the order service's `riskAssess` command, the status untouched); scored again only after the team's edit or "score again", as a new dated line.
+- **The panel (160):** a read-only **Risk** card on `/admin/orders/<id>` (demo V12.3) — the band and score, each signal with its +weight and what it saw, the history line, earlier scores, "the rules changed since", and **Score again** (`orders.risk.decide`). `GET /api/admin/orders/:id/risk` (`orders.risk.read`), `POST /api/admin/orders/:id/risk/assess`. Guide: [docs/admin-guide/orders.md](docs/admin-guide/orders.md).
+- **Settings:** registry v43, group `orders` — `risk.history` (200 orders, the our-fault list, unanswered call outcomes), `risk.score` (off; after an edit on; card on), `risk.signals`, `risk.bands`; `orders.refusal.reasons` gains three reasons.
+- **Tests:** the pure history, checks and model per signal; PostgreSQL history, address facts, scoring once, after an edit, SIM-F-044, the panel; the routes; the checkout end to end; the card's words in both languages.
+- Still planned in S06: the rest of the fraud and duplicate-order engine (159, 161–164, 519–524, 540, 542–545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
 
 ### S14 · CRM & customers — Not started
 
@@ -1180,6 +1188,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #38 | PR [157](docs/stages/S06.md#pr-157), [158](docs/stages/S06.md#pr-158), [156](docs/stages/S06.md#pr-156), [160](docs/stages/S06.md#pr-160) | 24 Oct | The risk score (off until the owner turns it on): each new order gets a score from 0 to 100 from the owner's signals and weights (the number's past orders and refusals, cancels, a very recent order, an unclear or mismatched address …), stored once with its reasons. The order's admin page shows a "Risk" card that says why. It only informs: nothing is blocked, and no price, charge or COD changes. |
 | #37 | PR [150](docs/stages/S05.md#pr-150), [143](docs/stages/S05.md#pr-143) (follow-up [260](docs/stages/S13.md#pr-260)), [146](docs/stages/S05.md#pr-146) (follow-up [261](docs/stages/S13.md#pr-261)) | 24 Oct | "My orders" keeps every order, a page at a time, with All · On the way · Delivered · Cancelled & returned, and each order page has "What happened" with its steps and changes. When the owner turns them on, the order page also has the customer's own edit card (address, phone, a size) and the two-size question ("Keep both, or only M?"). |
 | #37 | PR [148](docs/stages/S05.md#pr-148), [149](docs/stages/S05.md#pr-149), [151](docs/stages/S05.md#pr-151) | 24 Oct | The customer gets a message at each order step by SMS, WhatsApp or e-mail (which step uses which channel is a setting; the same message never goes twice; on the mock until the owner types a key in). Every try is logged and retried by itself, and staff can retry a failed one. Orders can be exported as a CSV file, with the customer's personal details only for staff allowed to see them. |
 | #37 | PR [85](docs/stages/S02.md#pr-85) (fix) | 24 Oct | The device gate measures a shop page only after the shell's fits (footer columns, phone header) have run, so a busy runner no longer catches the footer links in the moment before they fit (main's run failed on it at 360 px). |
