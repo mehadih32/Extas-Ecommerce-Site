@@ -1,0 +1,89 @@
+{
+  "cus": {
+    "review": {
+      "title": "To review",
+      "sub": "Two profiles that may be one person, side by side. Only a person merges; nothing moves or is deleted, and a merge can be split again.",
+      "viewsAria": "To review views",
+      "view": {
+        "suggest": "Same person?",
+        "done": "Decisions made"
+      },
+      "off": "Merge suggestions are switched off in the customer settings. You can still merge two profiles by hand from a customer's page.",
+      "noRules": "No merge rule is chosen, so nothing is suggested.",
+      "empty": "No merge suggestions",
+      "emptyBody": "When two profiles share an e-mail, a WhatsApp number, or a name with the same address, they show here.",
+      "emptyDone": "No decision yet",
+      "emptyDoneBody": "Every merge, split and \"not the same person\" is kept here with who decided and why.",
+      "pair": "Same person?",
+      "more": "Showing {shown} of {total}. Decide these first; the next ones then show.",
+      "hand": "Merge by hand",
+      "handNone": "These two profiles cannot be shown side by side (one is missing, or it is the same profile).",
+      "readOnly": "You can see the suggestions; merging needs the \"Merge customers\" permission."
+    },
+    "signal": {
+      "email": "Same e-mail",
+      "whatsapp": "WhatsApp is the other's phone",
+      "nameAddress": "Same name and address",
+      "identity": "Same identity in orders",
+      "manual": "By hand"
+    },
+    "side": {
+      "stays": "Stays",
+      "joins": "Joins it",
+      "orders": "{n} orders",
+      "sales": "Sales {v}",
+      "last": "Last order {at}",
+      "never": "No order yet",
+      "login": "Has a shop login",
+      "members": "{n} merged into it",
+      "noName": "No name",
+      "noPhone": "No number",
+      "whatsapp": "WhatsApp {n}"
+    },
+    "merge": {
+      "go": "Merge",
+      "busy": "Merging…",
+      "ask": "Merge these two profiles?",
+      "eff1": "The second profile shows inside the first one; its orders, wallet and notes stay where they are.",
+      "eff2": "Nothing is deleted and no money moves.",
+      "eff3": "It can be split again, with a reason; both steps stay in the log.",
+      "note": "Note (why they are one person)",
+      "noteOptional": "Note (optional)",
+      "confirm": "Yes, merge",
+      "cancel": "Cancel",
+      "done": "Merged.",
+      "notSame": "Not the same person",
+      "notSameBusy": "Saving…",
+      "notSameDone": "This pair will not be suggested again."
+    },
+    "decision": {
+      "MERGED": "Merged",
+      "NOT_SAME": "Not the same person",
+      "into": "{merged} into {survivor}",
+      "pair": "{a} and {b}",
+      "by": "by {by}",
+      "at": "{at}",
+      "undone": "Undone {at} by {by}: {note}",
+      "split": "Split",
+      "undo": "Take back",
+      "undoNote": "Why (at least 3 letters)",
+      "undoBusy": "Saving…",
+      "system": "the system"
+    },
+    "err": {
+      "default": "That did not work. Please try again.",
+      "network": "No connection. Check the internet and try again.",
+      "INVALID_INPUT": "Please check: {fields}",
+      "NOT_FOUND": "This customer or decision no longer exists. Reload the page.",
+      "SAME_PROFILE": "A profile cannot be merged with itself.",
+      "ALREADY_MERGED": "One of them is already merged into another profile. Merge with that one instead.",
+      "HAS_MERGED": "Other profiles are merged into this one; it can only be the one that stays.",
+      "NOT_ACTIVE": "An archived or erased profile is never merged.",
+      "NOTE_REQUIRED": "The merge rules ask for a short note.",
+      "ALREADY_UNDONE": "This decision was undone already.",
+      "MOVED_ON": "This profile was merged again elsewhere; undo that merge instead.",
+      "KEY_REUSED": "This was already sent with different details. Reload the page.",
+      "FORBIDDEN": "You do not have the permission for this."
+    }
+  }
+}

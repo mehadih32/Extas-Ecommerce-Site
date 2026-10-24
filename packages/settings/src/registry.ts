@@ -53,6 +53,7 @@ import { walletSettings } from './registry-wallet';
 import { courierSyncSettings } from './registry-courier-sync';
 import { returnsSettings } from './registry-returns';
 import { fulfilmentSettings } from './registry-fulfilment';
+import { customerSettings } from './registry-customers';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1226,6 +1227,8 @@ export const registry = {
   ...returnsSettings,
   // ---- S08 · PR 182, 183 · the packing step: how each piece is checked, the packing proof photo (off), the parcel's weight (off), the screen's lists, and what a damaged or missing piece does (registry-fulfilment.ts, version 59). ----
   ...fulfilmentSettings,
+  // ---- S14 · PR 284–286 · customers: the merge rules, masked phone numbers, the list's views, one customer's page (registry-customers.ts, version 60). ----
+  ...customerSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

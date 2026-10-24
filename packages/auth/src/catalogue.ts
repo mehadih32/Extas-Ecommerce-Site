@@ -214,6 +214,16 @@ export const PERMISSIONS = {
   // PR 190 (CN-018 (5)) — waive an exchange's delivery charge with a logged reason, and decide a "your mistake" claim.
   'returns.waive': { group: 'orders' },
   'returns.claims.decide': { group: 'orders' },
+  // S14 · PR 284–286 — customers (BACKEND-ARCHITECTURE §5.5, §9.10; Blueprint B5.1, Note 24.1): see the customer list and
+  // one customer's page — the orders, the lifetime value, the exchanges and the support history — with the phone number
+  // masked (`customers.read`; every profile open is logged); see, call and copy the full phone number, each copy and
+  // call logged (`customers.phone`; not a `.read` key on purpose: the read-only smoke check account never gets
+  // customers' numbers); merge two profiles of one person, split a merge again, or mark a pair "not the same person"
+  // (`customers.merge`; nothing moves, nothing is deleted, every decision is audited). There is no customer export here:
+  // PR 299 brings its own key.
+  'customers.read': { group: 'customers' },
+  'customers.phone': { group: 'customers' },
+  'customers.merge': { group: 'customers' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

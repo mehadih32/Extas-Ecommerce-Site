@@ -276,7 +276,8 @@
       "/admin/orders/packing/print",
       "/admin/orders/packing/handover",
       "/admin/orders/packing/picking",
-      "/admin/orders/packing"
+      "/admin/orders/packing",
+      "/admin/customers/review"
     ],
     "discover": [
       {
@@ -294,6 +295,7 @@
     ],
     "expect": {
       "/admin/orders/packing": ["[data-testid=\"pack-page\"]", "[data-testid=\"pack-steps\"]", "[data-testid=\"pack-settings\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/customers/review": ["[data-testid=\"customers-review\"]", "[data-testid=\"review-views\"]"],
       "/admin/orders/packing/picking": ["[data-testid=\"picking-page\"]", "[data-testid=\"picking-summary\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/handover": ["[data-testid=\"handover-page\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/print": ["[data-testid=\"print-run\"]", "[data-testid=\"a2-tabs\"]"],

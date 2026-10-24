@@ -9,6 +9,9 @@
 //   - the KPI report views (migration 0012: mv_kpi_daily, mv_kpi_lines_monthly) hold the same two figures precomputed;
 //     only views.ts reads them (`kpiByDayFromView`, `linesByMonthFromView`) and refreshes them (`refreshKpiViews`).
 //     The PR 603 views (mv_sales_daily …) count by the placed day; they are superseded and nothing reads them.
+// customers.ts (S14, PR 284, 285): one customer's lifetime value — Sales (delivered, all time) beside Ordered value —
+// over his merged profiles and his numbers (`customerKpis`), and the same figure as a SQL subquery for the Customers
+// list (`customerFiguresSql`).
 // money.ts (S07, PR 172, 174): the payments screens' figures — the money owed to customers, and what came in through
 // each gateway in a period (reconciled against the gateway's statement).
 // S08 · PR 525: `deliveryTruth` — the parcels a courier marked delivered beside what really happened (delivery.ts; counts).
@@ -21,3 +24,4 @@ export * from './metrics';
 export * from './views';
 export * from './money';
 export * from './delivery';
+export * from './customers';

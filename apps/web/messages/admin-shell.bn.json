@@ -56,6 +56,9 @@
         "riskrules": "ঝুঁকির নিয়ম",
         "packing": "প্যাকিং আর প্রিন্ট",
         "returns": "ফেরত আর বদল"
+      },
+      "customers": {
+        "review": "যাচাই বাকি"
       }
     },
     "purpose": {
