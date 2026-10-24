@@ -121,7 +121,10 @@
       "lines": "Add a line to an order not yet with the courier, or take out a line added after placing (priced as its product page; nothing else is priced again)",
       "edit": "Edit an order not yet with the courier: the customer's name, phone and address, a size at the same price, or take a piece out (with a reason; prices, discounts, the delivery charge and COD never change)",
       "export": "Export orders as a CSV file (no personal details)",
-      "exportPersonal": "Include the customer's name, phone, e-mail and address in an order export"
+      "exportPersonal": "Include the customer's name, phone, e-mail and address in an order export",
+      "advance": {
+        "request": "Ask a customer for an advance from the order: make the pay link and send it by SMS or WhatsApp, or put a call in the queue (no money moves; COD, prices and charges never change)"
+      }
     },
     "reviews": {
       "read": "See every review with its state (waiting, published, hidden)",

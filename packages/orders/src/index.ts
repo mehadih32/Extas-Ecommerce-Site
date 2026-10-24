@@ -38,6 +38,9 @@
 // customer's history and the decisions open to this person (alert-summary.ts).
 // S06 · PR 544: the rule master switches — one list of every fraud and duplicate rule, each switchable (rule-switches.ts).
 // S06 · PR 161: the actions per risk level — watch, hold, a confirmation call, and the advance a level proposes (risk-levels.ts).
+// S06 · PR 542: the one-click advance request from the order — the pay link, its SMS/WhatsApp through the order
+// messages and a call task, the order waiting for the money; "Send again"; the owner's auto option (advance-request.ts)
+// and its card on Orders › Risk rules (advance-settings.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -70,6 +73,8 @@ export * from './duplicate-rules';
 export * from './alert-summary';
 export * from './rule-switches';
 export * from './risk-levels';
+export * from './advance-request';
+export * from './advance-settings';
 export * from './booking';
 export * from './checkout-layers';
 export * from './checkout-risk';

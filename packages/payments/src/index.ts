@@ -11,6 +11,8 @@
 // - PR 170 payments through a gateway: start (the hosted session), the one callback receiver (signature, stored once,
 //   the gateway's own answer), the sweep of open payments (recovered or abandoned) and the team's list of failed,
 //   abandoned and waiting payments (gateway.ts). The gateways themselves are @extas/adapters' (PR 167).
+// - S06 · PR 542 the pay link of an advance asked from the order (`/pay/<token>`): its page, the test page's answers,
+//   "Try again" with the same token and "Pay" on a real gateway (advance-link.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -19,3 +21,4 @@ export * from './record';
 export * from './cod-match';
 export * from './cod';
 export * from './gateway';
+export * from './advance-link';

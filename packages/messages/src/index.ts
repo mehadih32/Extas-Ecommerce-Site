@@ -9,6 +9,9 @@
 // PR 149: every try is logged (NotificationAttempt, append-only), a failed send is tried again on the `messages.retry`
 // waits, and the log (log.ts) shows staff every message with its state and tries; a failed one can be retried by hand.
 //
+// PR 542: a person's advance request from the order ("Request advance", "Send again") is its own message per channel
+// ticked, with the advance still to pay and its pay link (`{advanceAmount}`, `{payLink}`); never a journey step or cap.
+//
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';

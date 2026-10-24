@@ -4,6 +4,7 @@
 // time comes, the no-double-send key, and the words: a template's `{tokens}` filled in, the amount always the amount
 // still due (SIM-F-001) and never shown for a fully paid order. PR 546 (SIM-F-013): a cancellation says why in plain
 // words (`{cancelReason}`), and a duplicate names the order that goes ahead (`{keptOrderNumber}`, `{keptOrderLink}`).
+// PR 542: an advance request from the order is its own message (`advanceRequest`), with `{advanceAmount}` and `{payLink}`.
 import type { Journey, JourneyStep, JourneyStepConfig, MessageChannel } from '@extas/settings';
 
 export type { Journey, JourneyStep, JourneyStepConfig, MessageChannel };
@@ -15,7 +16,34 @@ export interface TimelineEvent {
   type: string;
   toStatus: string | null;
   createdAt: Date;
+  /** PR 542: the row's data (an advance request names its channels there). */
+  data?: unknown;
 }
+
+/**
+ * PR 542 — an advance a person asked for from the order (or the owner's auto option): not a journey step (it follows a
+ * press of Send, never the journey's switches or caps). The order service's `order.awaitAdvance` row with
+ * `data.request` and its `order.advanceResend` row ("Send again") name the channels; each becomes one message with the
+ * amount and the pay link (`{advanceAmount}`, `{payLink}`), keyed by that row so a "Send again" goes again.
+ */
+export const ADVANCE_REQUEST = 'advanceRequest';
+export const ADVANCE_RESEND_EVENT = 'order.advanceResend';
+
+const dataOf = (e: Pick<TimelineEvent, 'data'>): Record<string, unknown> => (e.data && typeof e.data === 'object' && !Array.isArray(e.data) ? (e.data as Record<string, unknown>) : {});
+
+/** Whether a timeline row is a person's (or the auto option's) advance request or its "Send again". */
+export const isAdvanceRequest = (e: Pick<TimelineEvent, 'type' | 'data'>): boolean =>
+  e.type === ADVANCE_RESEND_EVENT || (e.type === 'order.awaitAdvance' && dataOf(e).request === true);
+
+/** The message channels an advance request asked for (a call is the call queue's, never a message). */
+export function advanceChannelsOf(e: Pick<TimelineEvent, 'type' | 'data'>): ('SMS' | 'WHATSAPP')[] {
+  if (!isAdvanceRequest(e)) return [];
+  const c = dataOf(e).channels;
+  return Array.isArray(c) ? (['SMS', 'WHATSAPP'] as const).filter((x) => c.includes(x)) : [];
+}
+
+/** The no-double-send key of one advance request's message on one channel (each press is its own). */
+export const advanceDedupeKey = (orderId: string, eventId: string, channel: string): string => `order:${orderId}:${ADVANCE_REQUEST}:${eventId}:${channel}`;
 
 /**
  * S08 writes this timeline type when the courier reports the parcel out for delivery (a courier status, not an order
@@ -81,6 +109,7 @@ export function stillFits(step: string, status: string): boolean {
     case 'onHold':
       return status === 'ON_HOLD';
     case 'advanceRequested':
+    case ADVANCE_REQUEST:
       return status === 'AWAITING_ADVANCE';
     default:
       return !DONE.includes(status);
@@ -189,6 +218,11 @@ export const AMOUNT_TOKENS: ReadonlySet<string> = new Set(['amountDue', 'total']
 export const LINK_TOKENS: ReadonlySet<string> = new Set(['trackingLink', 'orderLink']);
 /** PR 546 — the tokens of the order that goes ahead when a duplicate is cancelled: never filled with nothing either. */
 export const KEPT_TOKENS: ReadonlySet<string> = new Set(['keptOrderNumber', 'keptOrderLink']);
+/**
+ * PR 542 — the advance asked (`{advanceAmount}`: what is still to pay of it, never shown once it is paid) and its pay
+ * link (`{payLink}`: never filled with nothing).
+ */
+export const ADVANCE_TOKENS: ReadonlySet<string> = new Set(['advanceAmount', 'payLink']);
 
 export interface RenderInput {
   storeName: string;
@@ -208,6 +242,8 @@ export interface RenderInput {
   cancelReason?: string;
   /** PR 546 — the order that goes ahead when this one was cancelled as its duplicate (its number and its own page). */
   kept?: { number: string; link: string | null } | null;
+  /** PR 542 — the advance still to pay (asked − paid) and its pay link, when the order waits for one. */
+  advance?: { amountMinor: number; link: string | null } | null;
 }
 
 export type Rendered = { ok: true; text: string; subject: string | null } | { ok: false; reason: 'AMOUNT_RULE' | 'NO_LINK' | 'NO_KEPT_ORDER' | 'UNKNOWN_TOKEN'; field: string };
@@ -231,6 +267,8 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     if (LINK_TOKENS.has(t) && !v.link) return { ok: false, reason: 'NO_LINK', field: t };
     if (KEPT_TOKENS.has(t) && !v.kept) return { ok: false, reason: 'NO_KEPT_ORDER', field: t };
     if (t === 'keptOrderLink' && !v.kept?.link) return { ok: false, reason: 'NO_LINK', field: t };
+    if (t === 'advanceAmount' && !(v.advance && v.advance.amountMinor > 0)) return { ok: false, reason: 'AMOUNT_RULE', field: t };
+    if (t === 'payLink' && !v.advance?.link) return { ok: false, reason: 'NO_LINK', field: t };
   }
   const amount = formatAmount(Math.max(0, v.dueMinor), v.currency);
   const exactWords = v.exactAmount && all.includes('exactAmountLine') ? (v.dueMinor > 0 ? v.exactAmount.due : v.exactAmount.paid) : null;
@@ -251,6 +289,8 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     cancelReason: v.cancelReason ?? '',
     keptOrderNumber: v.kept?.number ?? '',
     keptOrderLink: v.kept?.link ?? '',
+    advanceAmount: v.advance ? formatAmount(Math.max(0, v.advance.amountMinor), v.currency) : '',
+    payLink: v.advance?.link ?? '',
   };
   for (const t of all) if (!(t in vars)) return { ok: false, reason: 'UNKNOWN_TOKEN', field: t };
   return { ok: true, text: tidy(fill(body, vars)), subject: subject === null ? null : tidy(fill(subject, vars)) };
@@ -271,3 +311,6 @@ export function audienceFits(who: JourneyStepConfig['who'], paymentMethod: strin
 
 /** The order's own page on the shop, from the shop's address (a host name). */
 export const orderLink = (host: string | null, number: string): string | null => (host ? `https://${host}/account/orders/${encodeURIComponent(number)}` : null);
+
+/** PR 542 — an advance's pay link on the shop, in the message's language (the shop serves Bengali under `/bn`). */
+export const payLink = (host: string | null, token: string | null, lang: 'bn' | 'en'): string | null => (host && token ? `https://${host}${lang === 'bn' ? '/bn' : ''}/pay/${encodeURIComponent(token)}` : null);

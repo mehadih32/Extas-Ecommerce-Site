@@ -3610,6 +3610,9 @@ model Payment {
   statusAt             DateTime?      @db.Timestamptz(3)
   /// PR 165 — the staff's note on a recorded payment.
   note                 String?
+  /// S06 · PR 542 — the pay link of an advance a person asked for from the order (`/pay/<linkToken>`): a random token,
+  /// the same on every try of that request ("Try again" makes a new payment row with the same token), never an id.
+  linkToken            String?
 
   refunds Refund[]
 
@@ -3618,6 +3621,8 @@ model Payment {
   @@index([provider, providerTrxId])
   // PR 170: the open payments the sweep looks at, oldest first
   @@index([storeId, status, createdAt])
+  // PR 542: the pay link's page finds its payment by the token
+  @@index([linkToken])
 }
 
 /// PR 165 (§6.5.3) — where an amount of money stands, shared by payments, COD collections and settlement lines (and later
@@ -3651,6 +3656,7 @@ enum PaymentPurpose {
   FULL_ADVANCE
   EXCHANGE_DIFFERENCE
   PREORDER_ADVANCE
+  /// also S06 · PR 542: a part of the amount due asked first from the order (the owner's percent, `risk.levels.partialPercent`).
   PART_ADVANCE
 }
 
