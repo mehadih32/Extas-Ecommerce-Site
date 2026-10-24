@@ -1,5 +1,7 @@
 # EXTAS E-commerce: Backend and Admin Architecture (DRAFT for review)
 
+> **25 Oct 2026 (CN-028):** §7.9 and decisions D1 and D4 are partly superseded by `docs/RETAIL-ERP-MODEL.md`: the shop no longer checks returns itself (the ERP counts the return list), the month-end push becomes a daily summary and monthly fixed costs, selling price is fully the shop's own, and cost is the ERP's buying price only. Books, the match engine and the switch-over are PR 607–621.
+
 | | |
 |---|---|
 | **Document** | `EXTAS-BACKEND-ARCHITECTURE-DRAFT.md`, one self-contained file |

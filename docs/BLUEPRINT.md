@@ -15,7 +15,7 @@ without a tag. Part E is rewritten for 600 PRs; V1's Part E is kept at its end a
 
 **V2.1 (19 Oct 2026, 23:33).** This file is V2 with change note **CN-001** applied — the owner's server specification (`review/SERVER-SETUP-SPEC-OWNER.md`), approved point by point (ROUND15 Note 48). `EXTAS-ECOMMERCE-V2.md` is kept unchanged beside it as history. V2.1 changes sit in **V2.1 blocks** (quoted paragraphs starting "V2.1 · 19 Oct 23:33"), in-place tags **[Replaced 19 Oct 23:33 …]** with the old text struck through, and the new section **A2.9** (the full server specification). Nothing from V2 is dropped.
 
-**Source of truth for scope:** `master/MASTER-REGISTER.md` (~~604~~ **606 PRs** since 23 Oct 2026, 28 stages; 600 at V2, 604 at V2.1). Where this file and the
+**Source of truth for scope:** `master/MASTER-REGISTER.md` (~~604~~ ~~606~~ **621 PRs** since 25 Oct 2026, 28 stages; 600 at V2, 604 at V2.1, 606 on 23 Oct). Where this file and the
 register disagree, the register wins and this file is wrong. Owner notes: `review/ROUND15.md` (Notes ~~1–48~~ **1–49**, V2.1 final · 20 Oct).
 **Working reference:** the demo, `scratchpad/proto/src/` (built to `dist/r16.html`); demo files are cited by
 name where they define behaviour.
@@ -177,7 +177,7 @@ name where they define behaviour.
 - F2. Questions raised while writing this specification
 - F4. Status of every V1 question (V2, 19 Oct)
 
-**Appendix A · Every PR, 1–606**
+**Appendix A · Every PR, 1–621**
 
 
 **Appendix B · Open owner decisions and owner data still needed**
@@ -211,7 +211,7 @@ name where they define behaviour.
 | **C** | AI 360, costs, agents, organic growth, social, studio, video | Locked | **Locked, updated.** Seven fixed agents and chain of command (C10), blog engine (C11), Google traffic plan (C12), naming and URL control (C13) |
 | **D** | UI/UX | In review | **Reviewed through round 15, phone and desktop; ready for the code phase** (owner, Note 44.1). New D8 combos, D9 desktop, D10 site-building tools, D11 admin language, D12 performance budgets. **Paused items: PR 596 (extensions), 598, 599, 600**. **V2.1 final · 20 Oct:** owner bag review 43.3–43.10 built (D3.11; Shimmer control and tier box, D10.4), timing rules from TA-2 (D1.2 R18), phone price rule (R19), admin language 0 Bengali in English mode on 206 routes (D11) |
 | **F** | Decisions still open (V1 list) | Reference | **Reference.** Each V1 question now carries its status; the live open list is Appendix B |
-| **App. A** | Every PR 1–606 (1–600 at V2, 1–604 at V2.1; 605–606 added 23 Oct 2026): title, stage, status, owner, demo file | — | New |
+| **App. A** | Every PR 1–621 (1–600 at V2, 1–604 at V2.1; 605–606 added 23 Oct 2026; 607–621 added 25 Oct 2026): title, stage, status, owner, demo file | — | New |
 | **App. B** | Open owner decisions and owner data still needed | — | New. **V2.1 final · 20 Oct:** B.4 #13 (4-piece tier prices) |
 | **App. C** | QA gate definition and test inventory | — | New |
 
@@ -1074,6 +1074,29 @@ to read code or open GitHub.
 > **(5) The gate.** Real orders start only when every Launch row is merged and live, the START-HERE go-live gate is met (Blob and Drive backups with a passed restore test, Telegram alerts, every server item of A2.9) and the CN-013 simulation rerun (CN-017 findings as acceptance tests) passes on new.extas.com.bd. The hard rules stay: no money, price, discount or COD automation and no blocking without the owner, and the main-domain switch only on his explicit go-ahead (CN-022 Q1: AI, ads control and the studios are not gates).
 >
 > No new PR numbers; the total stays 606 (600 active, 6 parked).
+
+> **CN-028 · 25 Oct 2026 (owner, after a planning session with the ERP project: Extas Retail is a separate buyer of the ERP; Retail keeps its own books; the shop's ledger and the ERP's ledger must agree every day, week, month, year and for the whole life of the shop).** The ERP project's contract is `docs/erp/site-changes-v6.md` (v5 kept beside it). The shop's side, the two ledgers and the match engine are in `docs/RETAIL-ERP-MODEL.md`. From the switch date (the ERP announces it) this replaces CN-005's money rules, and it replaces decisions D1 and D4 of `docs/BACKEND-ARCHITECTURE.md` where they differ (the old text stays as history).
+>
+> **(1) The model.** To the ERP, Extas Retail is a special wholesale buyer that buys at a shop price (`shopPrice`) and can buy one piece. The ERP keeps only which pieces it gave, which it took back, what it was paid and what is still owed. The shop keeps its own profit and loss and sends the ERP its own correct figures. The ERP sends no `retailPrice` and no `avgCost`. Selling prices, discounts, coupons and combos are the shop's alone.
+>
+> **(2) Billing and returns.** The ERP bills when the parcel leaves, at the price fixed when the order was placed. Money changes on a return only when the owner checks the returned piece in the ERP: approved A-grade pieces are credited at the price Retail paid; declined pieces are Retail's loss and are never sold again. The shop's own quality check at receipt (ORD-05a) is replaced by return lists with a counted-pieces note and an early courier claim when the count differs.
+>
+> **(3) No refunds after delivery.** The only way back is an exchange within 72 hours of the courier's "delivered". The ERP sends the new piece unbilled and waits for the old piece (4 days from the exchange parcel's delivery, the ERP's setting). It bills the new piece if the old one is late, declined or never comes, and settles only the price difference otherwise. If the new piece's price has risen in new stock, the customer pays the difference (the exchange terms are updated). Regular orders get stock before exchanges.
+>
+> **(4) Account hold and checks.** 30 days without a payment while money is owed holds new orders (exchange orders still go through). The shop warns from day 15 and pauses checkout by itself while the hold lasts (a setting). The owner checks returned pieces within 7, 10 or 15 days (the ERP's setting).
+>
+> **(5) Two ledgers that must agree.** The shop keeps an append-only ERP account (every bill, exchange entry, credit, payment, transfer and reversal) and the profit and loss it sends. One formula ties them: balance owed = opening + goods + return losses + pipeline stock + switch transfer − payments. The match engine closes every day (01:30) against the ERP's account and statement rows, returns and exchange summaries, stored daily summaries and fixed costs. Week, month, year and lifetime are built from the day closes and checked against each other and against the ERP's balance. Tolerance is zero. Nothing is fixed by editing a number, only by reversing and adding (an adjustment needs the PIN, a reason and the ERP's matching entry). A month closes only when every day matched; an override needs the PIN and is logged.
+>
+> **(6) Daily figures to the ERP.** The daily summary (00:30, retried until accepted, answered at once on `summary.missing`, gaps filled by the shop itself) carries the shop's own figures on the delivery-day basis and a list of categories not yet known (never sent as 0). The monthly fixed costs go by their own call. Exchange charges, courier costs, delivery charges and fees are Retail's alone and reach the ERP only inside those figures.
+>
+> **(7) Switch-over (owner chose "ক": one rule, the buying price).** At the switch the ERP moves the unpaid amount of old delivered orders to Retail at the buying price, in one transfer. Retail imports the opening balance. The month so far is filled backwards from the ERP's `GET /cost-of-goods`.
+>
+> **(8) PRs.** New numbers **607–621** (15): S09 607–608, S01 609, S05 610, S08 611–614, S16 615–618, S19 619 and 621, S18 620. Updated: PR 185–191, 196, 199, 200, 497, 525, 526 and the S16 money PRs. 14 are on the Launch list (the real ERP carries the first real orders); PR 620 is After launch. Nothing is switched before the ERP announces the switch date and sends its final `openapi.yaml`. The code is built behind a setting (`erp.model`), so nothing changes before then.
+>
+> **(9) Rules that do not move.** Only the Accounts role and the owner record money. A PIN is needed for adjustments and for closing with differences. No AI sends anything to a buyer. Nothing is deleted.
+>
+> The owner's answers to the ERP's eight questions (Q1–Q8) are in `docs/RETAIL-ERP-MODEL.md` §1.
+> Total now **621 PRs** (615 active, 6 parked).
 
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
@@ -2201,6 +2224,8 @@ The point: two months after launch the owner says "move this menu", and the blue
 > **V2.1 · 19 Oct 23:33:** **604 PRs, 28 stages**; 598 active, 6 parked (PR 601–604 added by CN-001).
 >
 > **23 Oct 2026 (CN-014 h, CN-017):** **606 PRs, 28 stages**; 600 active, 6 parked (PR 605 gift mode and PR 606 bulk / corporate lane, both in S04).
+>
+> **25 Oct 2026 (CN-028):** **621 PRs, 28 stages**; 615 active, 6 parked (PR 607–621, Retail and the ERP supplier model).
 
 
 | Item | Value |
@@ -2250,11 +2275,13 @@ Demo: `#/admin/settings` (`89-admin-system.js`, `89s-shop-settings.js`).
 > **V2.1 · 19 Oct 23:33 (CN-001):** 604 PRs — PR 601 and 604 in S0A, 603 in S00, 602 in S02. E0–E3 are updated in place; Appendix A lists all 604.
 >
 > **23 Oct 2026 (CN-014 h, CN-017):** 606 PRs — PR 605 (gift mode) and PR 606 (bulk / corporate lane), both in S04. E0–E3 and Appendix A are updated in place.
+>
+> **25 Oct 2026 (CN-028):** 621 PRs — PR 607–621 (Retail and the ERP supplier model) in S01, S05, S08, S09, S16, S18 and S19. E0–E3 and Appendix A are updated in place.
 
 This is the spine of the build. Every PR belongs to exactly one stage, and the stage decides build order.
 **PR numbers 1–490 run in build order; from 491 a number is an identity, not a position** — a new PR takes the
 next free number but is built inside its stage (PR 491 is built at S00 time). The register is the source of truth
-(`master/MASTER-REGISTER.md`); Appendix A lists all ~~600~~ ~~604 (V2.1)~~ 606 (23 Oct 2026).
+(`master/MASTER-REGISTER.md`); Appendix A lists all ~~600~~ ~~604 (V2.1)~~ ~~606 (23 Oct 2026)~~ 621 (25 Oct 2026).
 
 ## E0. The stage table (from the register, 19 Oct)
 
@@ -2262,25 +2289,25 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 |---|---|---:|---|---:|---|---|
 | S0A | Server foundation | 12 | 1–10, 601, 604 | 10 | locked; **server spec filed 19 Oct 23:33** | Prohori |
 | S00 | Foundation — repo, CI, schema, auth, **settings framework** | 19 | 11–18, 491–496, 500, 508–510, 603 | 8 | locked | Prohori |
-| S01 | Catalog, media & images | 22 | 19–39, 590 | 19 | locked | Bhandari |
+| S01 | Catalog, media & images | 23 | 19–39, 590, 609 | 19 | locked | Bhandari |
 | S02 | Storefront | 58 | 40–88, 501, 503, 595–600, 602 | 35 | locked; UI in review | Sawdagor (design: Shilpi) |
 | S03 | Combo & bundles | 22 | 89–104, 571–576 | 16 | locked; UI in review | Sawdagor |
 | S04 | Cart, checkout, accounts | 41 | 105–137, 558, 560, 561, 563, 565, 566, 605, 606 | 33 | locked; UI in review; **605–606 filed 23 Oct** | Sawdagor |
-| S05 | Order management | 20 | 138–155, 541, 546 | 18 | locked | Sawdagor |
+| S05 | Order management | 21 | 138–155, 541, 546, 610 | 18 | locked | Sawdagor |
 | S06 | Fraud & location | 33 | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | 9 | **answered 18 Oct** | Gyani |
 | S07 | Payments & wallet | 10 | 165–174 | 10 | locked | Sawdagor |
-| S08 | Courier, returns, exchange | 22 | 175–193, 525–526, 564 | 22 | locked | Bhandari |
-| S09 | Inventory & ERP sync | 17 | 194–207, 497–499 | 14 | locked | Bhandari |
+| S08 | Courier, returns, exchange | 26 | 175–193, 525–526, 564, 611–614 | 22 | locked | Bhandari |
+| S09 | Inventory & ERP sync | 19 | 194–207, 497–499, 607–608 | 14 | locked | Bhandari |
 | S10 | Smart Rules | 12 | 208–219 | 14 | locked | Gyani |
 | S11 | SEO engine | 22 | 220–238, 527, 586, 588 | 17 | **answered 18 Oct** | Doot |
 | S12 | Content & blog | 22 | 239–253, 528–530, 547, 591–593 | 14 | **answered 18 Oct** | Doot (+ 5 authors) |
 | S13 | Marketing & ads | 35 | 254–283, 531–532, 548, 569, 589 | 30 | **answered 18 Oct** | Doot; paid ads Tirondaj |
 | S14 | CRM & customers | 24 | 284–303, 505, 533–535 | 23 | locked | Doot |
 | S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | 34 | locked | Gyani |
-| S16 | Finance, costs & reports | 18 | 342–355, 504, 536–537, 568 | 14 | **answered 18 Oct** | Gyani |
+| S16 | Finance, costs & reports | 22 | 342–355, 504, 536–537, 568, 615–618 | 14 | **answered 18 Oct** | Gyani |
 | S17 | Multi-store | 24 | 356–377, 511–512 | 22 | settings open | Prohori |
-| S18 | Compliance, security, manual | 13 | 378–390 | 12 | settings open | Prohori |
-| S19 | Deploy, backup, go-live | 15 | 391–403, 507, 587 | 14 | locked | Prohori |
+| S18 | Compliance, security, manual | 14 | 378–390, 620 | 12 | settings open | Prohori |
+| S19 | Deploy, backup, go-live | 17 | 391–403, 507, 587, 619, 621 | 14 | locked | Prohori |
 | S20 | Fulfilment & documents | 9 | 404–412 | 7 | locked | Bhandari |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | 10 | locked | Prohori |
 | S22 | Support (all-in-one) | 13 | 425–436, 538 | 12 | locked | Gyani |
@@ -2289,7 +2316,7 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | 10 | locked | Gyani |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | — | **parked** — handover pack | — (parked) |
 | S27 | No-ERP stock module | parked | — | — | **parked** — handover pack; numbered when approved | — (parked) |
-| | **Total** | **606** | | **473** | 600 active · 6 parked | |
+| | **Total** | **621** | | **473** | 615 active · 6 parked | |
 
 Shilpi (A360-05) owns the design layer of every customer-facing surface and reviews what Sawdagor builds;
 Tirondaj (A360-07) owns the paid-ads PRs inside S13 (256–270, 278, 283, 531, 581); the five author agents
@@ -2297,13 +2324,13 @@ Tirondaj (A360-07) owns the paid-ads PRs inside S13 (256–270, 278, 283, 531, 5
 
 **Why the counts moved since V1 (473 → 600):** the 12 mis-filed PRs were re-filed into the stages that describe
 them (S08 → S02 page builder and label dictionary; S10 → S11 category SEO; S14 → S20 invoice templates; S19 → S02
-celebration overlay; S20 → S18 user manual; S23 → S02 Find My Size), and 127 PRs were added. The trail is E1. **V2.1:** four more (601–604, the owner's server spec) → **604**. **23 Oct 2026:** two more (605 gift mode, 606 bulk / corporate lane, both S04) → **606**.
+celebration overlay; S20 → S18 user manual; S23 → S02 Find My Size), and 127 PRs were added. The trail is E1. **V2.1:** four more (601–604, the owner's server spec) → **604**. **23 Oct 2026:** two more (605 gift mode, 606 bulk / corporate lane, both S04) → **606**. **25 Oct 2026:** fifteen more (607–621, Retail and the ERP supplier model; S01, S05, S08, S09, S16, S18, S19) → **621**.
 
 ## E1. How the count was arrived at (V2 trail)
 
 The V1 trail to 473 / 483 is in E-H below. From the re-tally the register records every step:
 
-*(The register's own table; its heading still reads "How this reached 582" but it runs to 600.)* *(V2.1: the heading now reads "How this reached 604".)* *(23 Oct 2026: "How this reached 606".)*
+*(The register's own table; its heading still reads "How this reached 582" but it runs to 600.)* *(V2.1: the heading now reads "How this reached 604".)* *(23 Oct 2026: "How this reached 606".)* *(25 Oct 2026: "How this reached 621".)*
 
 | Step | Change | Total |
 |---|---|---:|
@@ -2339,11 +2366,12 @@ The V1 trail to 473 / 483 is in E-H below. From the re-tally the register record
 | In-dashboard help and the handover user manual — no coder needed (owner, 19 Oct 22:14) | +1 | 599 |
 | On-page edit mode with phone review and the AI checker (owner, 19 Oct 22:27–22:33) | +1 | 600 |
 | Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | 604 |
-| Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | **606** |
+| Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | 606 |
+| Retail and the ERP supplier model (CN-028, 25 Oct 2026) | +15 | **621** |
 
 ## E2. Checks on the numbers
 
-- **Both routes agree.** The stage column sums to ~~**604** (V2.1; 600 at V2)~~ **606** (23 Oct 2026; 604 at V2.1, 600 at V2); the ranges expand to 606 distinct numbers, 1–606, with
+- **Both routes agree.** The stage column sums to ~~**604** (V2.1; 600 at V2)~~ ~~**606** (23 Oct 2026)~~ **621** (25 Oct 2026; 606 on 23 Oct, 604 at V2.1, 600 at V2); the ranges expand to 621 distinct numbers, 1–621, with
   no gap and no duplicate (verification script, Appendix C, C9).
 - **V1's three warnings:** (1) the 12 mis-filed PRs are re-filed (above); (2) the S0A/S19 double count stays fixed;
   (3) the old "263 authoritative" section stays superseded.
@@ -2360,14 +2388,14 @@ their stages. 2–3 agents build at once (A1.4 V2).
 | Wave | Stages | New PRs built inside the wave (since V1) | Why they go together |
 |---|---|---|---|
 | 0 | S0A | 1–10 (PR 1–3 updated for the new VPS; **V2.1:** PR 1–10 carry the owner's server spec), **601 NVMe boot unit, 604 hardware-aware profile** — order in A2.9.16 | Server first; no application code before its checks pass |
-| 1 | S00, S01, S09 | 491–496, 500, 508–510 (settings framework, **with the schema on day one**); **603 database performance pack with the schema (V2.1)**; 590 naming and URLs; image pipeline PR 22, 24, 37 (V2.1 scope); 497–499 ERP-optional seam | Schema, settings, catalogue and the ERP link |
+| 1 | S00, S01, S09 | 609 import from the ERP by style code (25 Oct 2026); 491–496, 500, 508–510 (settings framework, **with the schema on day one**); **603 database performance pack with the schema (V2.1)**; 590 naming and URLs; image pipeline PR 22, 24, 37 (V2.1 scope); 497–499 ERP-optional seam | Schema, settings, catalogue and the ERP link |
 | 2 | S02, S03, S10 | **602 four-layer cache (V2.1)**; 501, 503 (branding, language, admin English); 595 layout builder, 597 launch default, 596 side canvas (desktop only), 598 → 599 → 600 (paused, finished here in this order); 571–576 combos | The storefront, its builder and the rules that drive it |
-| 3 | S04, S05, S07, S08 | 558, 560, 561, 563, 565, 566 checkout parameter and address rules; 605 gift mode and 606 bulk / corporate lane (23 Oct 2026); 541, 546 order dashboard and cancellation notice; 525, 526, 564 courier reconciliation | The money path, end to end |
+| 3 | S04, S05, S07, S08 | 610 orders to the ERP v6 and 611–614 shipment, return lists, Returns section and exchange through the ERP (25 Oct 2026); 607–608 ERP contract v6 and event ledger (S09, built with them); 558, 560, 561, 563, 565, 566 checkout parameter and address rules; 605 gift mode and 606 bulk / corporate lane (23 Oct 2026); 541, 546 order dashboard and cancellation notice; 525, 526, 564 courier reconciliation | The money path, end to end |
 | 4 | S06, S14, S20, S22 | 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 fraud and delivery-zone engines; 505, 533–535 CRM; 538 support | Everything around an order once it exists |
 | 5 | S11, S12, S13, S23 | 527, 586, 588 SEO; 528–530, 547, 591–593 blog; 531, 532, 548, 569, 589 marketing | Being found and being marketed |
-| 6 | S15, S16, S21 | 506, 577–585 AI 360 and agents; 504, 536, 537, 568 finance; 570 audit runner, 594 PR register | The control room and the numbers it governs |
+| 6 | S15, S16, S21 | 615–618 the ERP account ledger, books match, daily summary and fixed costs (25 Oct 2026; Launch, built as soon as 607–614 are in); 506, 577–585 AI 360 and agents; 504, 536, 537, 568 finance; 570 audit runner, 594 PR register | The control room and the numbers it governs |
 | 7 | S24, S25 | 539 | Imagery, once the catalogue is real |
-| 8 | S17, S18, S19 | 511, 512 multi-store; 507 backup settings; 587 WordPress migration (on go-live day, with 586) | Multi-store, compliance and go-live |
+| 8 | S17, S18, S19 | 619 switch-over and 621 ERP acceptance suite (25 Oct 2026), 620 signed ERP calls; 511, 512 multi-store; 507 backup settings; 587 WordPress migration (on go-live day, with 586) | Multi-store, compliance and go-live |
 | — | S26, S27 | 513–518 (parked); S27 unnumbered | Handover pack, built only on the owner's word |
 
 **Dependencies that cross waves (Gyani's build notes, not owner decisions):**
@@ -6796,13 +6824,13 @@ F3 rows: buy-button colours → #61; floating WhatsApp → #62; sub-menu → #63
 
 ---
 
-# Appendix A · Every PR, 1–606
+# Appendix A · Every PR, 1–621
 
 Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register data the demo builds from it (`proto/src/04-register-data.js`, written by `tools/make-register.py` after Note 45: status, owning agent, demo file). **Status:** *Filed* = specified in the register, built in the code phase · *In demo* = a working reference exists in the demo (the register generator's reading of demo source headers; "route hint" = matched by route only) · *Parked* = S26 handover pack · *paused* = finished in the code phase (status table at the top). **165 titles are marked *(derived)*:** the register lists those PRs by range only; their titles come from V1's own item lists in order (positional, to be confirmed when the register is itemised), from agent files that name them, or from the stage's section of this specification.
 
 **V2.1 (19 Oct 23:33, CN-001):** rows 601–604 are added; rows whose scope the owner's server spec changed carry "· updated 19 Oct 23:33 (CN-001)" in the title.
 
-**23 Oct 2026:** rows 605 (gift mode, CN-014 h) and 606 (bulk / corporate lane, CN-017 SIM-F-023) are added. The dated scope from CN-012 … CN-019 is on the register rows ("Updated 23 Oct 2026 (CN-0xx)").
+**25 Oct 2026:** rows 607–621 (Retail and the ERP supplier model, CN-028) are added. **23 Oct 2026:** rows 605 (gift mode, CN-014 h) and 606 (bulk / corporate lane, CN-017 SIM-F-023) are added. The dated scope from CN-012 … CN-019 is on the register rows ("Updated 23 Oct 2026 (CN-0xx)").
 
 | PR | Title | Stage | Status | Owner | Demo reference |
 |---:|---|---|---|---|---|
@@ -7412,6 +7440,21 @@ Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register da
 | 604 | Hardware-aware auto profile and run-anywhere — limits from detected CPU and RAM, storage adapter (local / Blob / S3), CDN optional (owner server spec, 19 Oct 23:33) | S0A | Filed | Prohori | V2.1 final · 20 Oct: auto profile card in demo `#/admin/server` (sample data) |
 | 605 | Gift mode — receiver name and phone, hide prices on the invoice, a gift note, a "deliver on or after" date; off by default (CN-014 h, 23 Oct 2026) | S04 | Filed | Sawdagor |  |
 | 606 | Bulk / corporate lane — enquiry from the cart, quote and order flow; minimum quantity, logo price and advance as settings, off by default (CN-017 SIM-F-023, P11; 23 Oct 2026) | S04 | Filed | Sawdagor |  |
+| 607 | ERP contract v6 in the adapter and the mock ERP — typed calls, shop price only, old calls switched off at the switch date, behind `erp.model` (CN-028; 25 Oct 2026) | S09 | Filed | Bhandari |  |
+| 608 | ERP event ledger and webhook receiver v6 — every new event, permanent unique event ids, reversals, hourly pulls (CN-028; 25 Oct 2026) | S09 | Filed | Bhandari |  |
+| 609 | Import from ERP by style code — shop price as the buying price, B-grade listings, price-change flag, selling-price floor (CN-028; 25 Oct 2026) | S01 | Filed | Bhandari |  |
+| 610 | Orders to the ERP, v6 — line ids, whole-taka customer price split, `erpTotal` and `billedAt`, hold and short-stock handling, the packing-check short line (CN-028; 25 Oct 2026) | S05 | Filed | Sawdagor |  |
+| 611 | Shipment at pickup and delivery results to the ERP — the "Partial delivery" box and the identification colour (CN-028; 25 Oct 2026) | S08 | Filed | Bhandari |  |
+| 612 | Courier return lists to the ERP — scan at hand-back, counted pieces and condition note, early courier claim (replaces the shop-side quality check) (CN-028; 25 Oct 2026) | S08 | Filed | Bhandari |  |
+| 613 | Returns section — seven tabs, parcel timelines, losses report, courier claims, nightly returns compare with the ERP (CN-028; 25 Oct 2026) | S08 | Filed | Bhandari |  |
+| 614 | Exchange through the ERP — line marking, price-difference consent, stock-first rule, the 4-day return watch, late-return mark (CN-028; 25 Oct 2026) | S08 | Filed | Bhandari |  |
+| 615 | Retail's ERP account ledger and the pipeline stock — append-only entries, payments to the ERP, opening balance (CN-028; 25 Oct 2026) | S16 | Filed | Gyani |  |
+| 616 | Books match engine — daily, weekly, monthly, yearly and lifetime match with the ERP, differences, month-close gate, explain view (CN-028; 25 Oct 2026) | S16 | Filed | Gyani |  |
+| 617 | Daily summary to the ERP — 00:30 send, retry queue, `summary.missing`, gap fill, re-send window, categories not yet known, log (CN-028; 25 Oct 2026) | S16 | Filed | Gyani |  |
+| 618 | Fixed costs and the extra cost lines — salary, rent, utilities, accessories, payment fees (CN-028; 25 Oct 2026) | S16 | Filed | Gyani |  |
+| 619 | Switch-over to the ERP model — switch date, opening balance, old-order list, backfill, the ERP link page (CN-028; 25 Oct 2026) | S19 | Filed | Prohori |  |
+| 620 | Signed calls from the ERP to the shop — top products and customers on click (CN-028; 25 Oct 2026) | S18 | Filed | Prohori |  |
+| 621 | ERP v6 acceptance suite against the demo ERP — the contract checklist and the books drills, run every night (CN-028; 25 Oct 2026) | S19 | Filed | Prohori |  |
 
 ---
 

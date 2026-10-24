@@ -1,10 +1,10 @@
 # EXTAS — Master Register
 
-**606 PRs · 28 stages · as of 23 October 2026**
+**621 PRs · 28 stages · as of 25 October 2026**
 
-**600 are active. 6 are parked** — S26, the handover pack, together with S27. See *The parking lot*.
+**615 are active. 6 are parked** — S26, the handover pack, together with S27. See *The parking lot*.
 
-*Active* means filed and specified for the build, not coded: no PR has been coded yet. (Until 19 Oct 23:33 this line read "594 are built now", where "built" meant filed and specified.) The four newest, **PR 601–604**, come from the owner's server specification approved 19 Oct 23:33 (change note **CN-001**, blueprint V2.1) — filed, not built. **V2.1 final · 20 Oct:** the pre-code demo work is finished and folded into blueprint V2.1 (its last update before code) — **no new PR numbers**; dated scope "V2.1 final · 20 Oct" on PR 42, 45, 61, 98, 107, 109, 503, 570, 598 and in the 20 Oct scope block below. **23 Oct 2026:** two more, **PR 605** (gift mode, CN-014 h) and **PR 606** (bulk / corporate lane, CN-017 SIM-F-023), both in S04 — filed, not built; CN-012 … CN-019 are filed as dated "Updated 23 Oct 2026" lines on the PR rows they name.
+*Active* means filed and specified for the build, not coded: no PR has been coded yet. (Until 19 Oct 23:33 this line read "594 are built now", where "built" meant filed and specified.) The four newest, **PR 601–604**, come from the owner's server specification approved 19 Oct 23:33 (change note **CN-001**, blueprint V2.1) — filed, not built. **V2.1 final · 20 Oct:** the pre-code demo work is finished and folded into blueprint V2.1 (its last update before code) — **no new PR numbers**; dated scope "V2.1 final · 20 Oct" on PR 42, 45, 61, 98, 107, 109, 503, 570, 598 and in the 20 Oct scope block below. **23 Oct 2026:** two more, **PR 605** (gift mode, CN-014 h) and **PR 606** (bulk / corporate lane, CN-017 SIM-F-023), both in S04 — filed, not built; CN-012 … CN-019 are filed as dated "Updated 23 Oct 2026" lines on the PR rows they name. **25 Oct 2026 (CN-028):** fifteen more, **PR 607–621** (Retail and the ERP supplier model, in S01, S05, S08, S09, S16, S18 and S19) — filed, not built.
 
 This is the one table everything hangs off. Every approved requirement has a stage, a PR number and a
 line here. When something new is agreed, it is filed into this table first — into an existing PR if it
@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17 · S10 12/12 · S02 45/58 · S03 22/22 · S04 41/41 · S05 20/20 · S06 19/33 · S07 8/10 · S08 6/22 · total 243/600**
+**Progress: S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19 · S10 12/12 · S02 45/58 · S03 22/22 · S04 41/41 · S05 20/21 · S06 19/33 · S07 8/10 · S08 6/26 · total 243/615**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -574,31 +574,54 @@ the server.*
 >
 > No new PR numbers; the total stays 606 (600 active, 6 parked).
 
+> **CN-028 · 25 Oct 2026 (owner, after a planning session with the ERP project: Extas Retail is a separate buyer of the ERP; Retail keeps its own books; the shop's ledger and the ERP's ledger must agree every day, week, month, year and for the whole life of the shop).** The ERP project's contract is `docs/erp/site-changes-v6.md` (v5 kept beside it). The shop's side, the two ledgers and the match engine are in `docs/RETAIL-ERP-MODEL.md`. From the switch date (the ERP announces it) this replaces CN-005's money rules, and it replaces decisions D1 and D4 of `docs/BACKEND-ARCHITECTURE.md` where they differ (the old text stays as history).
+>
+> **(1) The model.** To the ERP, Extas Retail is a special wholesale buyer that buys at a shop price (`shopPrice`) and can buy one piece. The ERP keeps only which pieces it gave, which it took back, what it was paid and what is still owed. The shop keeps its own profit and loss and sends the ERP its own correct figures. The ERP sends no `retailPrice` and no `avgCost`. Selling prices, discounts, coupons and combos are the shop's alone.
+>
+> **(2) Billing and returns.** The ERP bills when the parcel leaves, at the price fixed when the order was placed. Money changes on a return only when the owner checks the returned piece in the ERP: approved A-grade pieces are credited at the price Retail paid; declined pieces are Retail's loss and are never sold again. The shop's own quality check at receipt (ORD-05a) is replaced by return lists with a counted-pieces note and an early courier claim when the count differs.
+>
+> **(3) No refunds after delivery.** The only way back is an exchange within 72 hours of the courier's "delivered". The ERP sends the new piece unbilled and waits for the old piece (4 days from the exchange parcel's delivery, the ERP's setting). It bills the new piece if the old one is late, declined or never comes, and settles only the price difference otherwise. If the new piece's price has risen in new stock, the customer pays the difference (the exchange terms are updated). Regular orders get stock before exchanges.
+>
+> **(4) Account hold and checks.** 30 days without a payment while money is owed holds new orders (exchange orders still go through). The shop warns from day 15 and pauses checkout by itself while the hold lasts (a setting). The owner checks returned pieces within 7, 10 or 15 days (the ERP's setting).
+>
+> **(5) Two ledgers that must agree.** The shop keeps an append-only ERP account (every bill, exchange entry, credit, payment, transfer and reversal) and the profit and loss it sends. One formula ties them: balance owed = opening + goods + return losses + pipeline stock + switch transfer − payments. The match engine closes every day (01:30) against the ERP's account and statement rows, returns and exchange summaries, stored daily summaries and fixed costs. Week, month, year and lifetime are built from the day closes and checked against each other and against the ERP's balance. Tolerance is zero. Nothing is fixed by editing a number, only by reversing and adding (an adjustment needs the PIN, a reason and the ERP's matching entry). A month closes only when every day matched; an override needs the PIN and is logged.
+>
+> **(6) Daily figures to the ERP.** The daily summary (00:30, retried until accepted, answered at once on `summary.missing`, gaps filled by the shop itself) carries the shop's own figures on the delivery-day basis and a list of categories not yet known (never sent as 0). The monthly fixed costs go by their own call. Exchange charges, courier costs, delivery charges and fees are Retail's alone and reach the ERP only inside those figures.
+>
+> **(7) Switch-over (owner chose "ক": one rule, the buying price).** At the switch the ERP moves the unpaid amount of old delivered orders to Retail at the buying price, in one transfer. Retail imports the opening balance. The month so far is filled backwards from the ERP's `GET /cost-of-goods`.
+>
+> **(8) PRs.** New numbers **607–621** (15): S09 607–608, S01 609, S05 610, S08 611–614, S16 615–618, S19 619 and 621, S18 620. Updated: PR 185–191, 196, 199, 200, 497, 525, 526 and the S16 money PRs. 14 are on the Launch list (the real ERP carries the first real orders); PR 620 is After launch. Nothing is switched before the ERP announces the switch date and sends its final `openapi.yaml`. The code is built behind a setting (`erp.model`), so nothing changes before then.
+>
+> **(9) Rules that do not move.** Only the Accounts role and the owner record money. A PIN is needed for adjustments and for closing with differences. No AI sends anything to a buyer. Nothing is deleted.
+>
+> The owner's answers to the ERP's eight questions (Q1–Q8) are in `docs/RETAIL-ERP-MODEL.md` §1.
+> Total now **621 PRs** (615 active, 6 parked).
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
 |---|---|---:|---|---|
 | S0A | Server foundation | 12 | 1–10, 601, 604 | locked; **server spec filed 19 Oct 23:33** |
 | S00 | Foundation — repo, CI, schema, auth, **settings framework** | 19 | 11–18, 491–496, 500, 508–510, 603 | locked |
-| S01 | Catalog, media & images | 22 | 19–39, 590 | locked |
+| S01 | Catalog, media & images | 23 | 19–39, 590, 609 | locked |
 | S02 | Storefront | 58 | 40–88, 501, 503, 595–600, 602 | locked; UI in review |
 | S03 | Combo & bundles | 22 | 89–104, 571–576 | locked; UI in review |
 | S04 | Cart, checkout, accounts | 41 | 105–137, 558, 560, 561, 563, 565, 566, 605, 606 | locked; UI in review; **605–606 filed 23 Oct** |
-| S05 | Order management | 20 | 138–155, 541, 546 | locked |
+| S05 | Order management | 21 | 138–155, 541, 546, 610 | locked |
 | S06 | Fraud & location | 33 | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | **answered 18 Oct** |
 | S07 | Payments & wallet | 10 | 165–174 | locked |
-| S08 | Courier, returns, exchange | 22 | 175–193, 525–526, 564 | locked |
-| S09 | Inventory & ERP sync | 17 | 194–207, 497–499 | locked |
+| S08 | Courier, returns, exchange | 26 | 175–193, 525–526, 564, 611–614 | locked |
+| S09 | Inventory & ERP sync | 19 | 194–207, 497–499, 607–608 | locked |
 | S10 | Smart Rules | 12 | 208–219 | locked |
 | S11 | SEO engine | 22 | 220–238, 527, 586, 588 | **answered 18 Oct** |
 | S12 | Content & blog | 22 | 239–253, 528–530, 547, 591–593 | **answered 18 Oct** |
 | S13 | Marketing & ads | 35 | 254–283, 531–532, 548, 569, 589 | **answered 18 Oct** |
 | S14 | CRM & customers | 24 | 284–303, 505, 533–535 | locked |
 | S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | locked |
-| S16 | Finance, costs & reports | 18 | 342–355, 504, 536–537, 568 | **answered 18 Oct** |
+| S16 | Finance, costs & reports | 22 | 342–355, 504, 536–537, 568, 615–618 | **answered 18 Oct** |
 | S17 | Multi-store | 24 | 356–377, 511–512 | settings open |
-| S18 | Compliance, security, manual | 13 | 378–390 | settings open |
-| S19 | Deploy, backup, go-live | 15 | 391–403, 507, 587 | locked |
+| S18 | Compliance, security, manual | 14 | 378–390, 620 | settings open |
+| S19 | Deploy, backup, go-live | 17 | 391–403, 507, 587, 619, 621 | locked |
 | S20 | Fulfilment & documents | 9 | 404–412 | locked |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | locked |
 | S22 | Support (all-in-one) | 13 | 425–436, 538 | locked |
@@ -607,9 +630,9 @@ the server.*
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack |
 | S27 | No-ERP stock module | parked | — | **parked** — handover pack; numbered when approved |
-| | **Total** | **606** | | 600 active · 6 parked |
+| | **Total** | **621** | | 615 active · 6 parked |
 
-### How this reached 606
+### How this reached 621
 
 | Step | Change | Total |
 |---|---|---:|
@@ -645,7 +668,8 @@ the server.*
 | In-dashboard help and the handover user manual — no coder needed (owner, 19 Oct 22:14) | +1 | 599 |
 | On-page edit mode with phone review and the AI checker (owner, 19 Oct 22:27–22:33) | +1 | 600 |
 | Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | 604 |
-| Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | **606** |
+| Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | 606 |
+| Retail and the ERP supplier model (CN-028, 25 Oct 2026): ERP contract v6, event ledger, import by style code, orders, shipment and delivery results, return lists, Returns section, exchange through the ERP, ERP account ledger, books match, daily summary, fixed costs, switch-over, signed ERP calls, acceptance suite | +15 | **621** |
 
 **Owner answers, 19 Oct 11:39 (scope on existing PRs, no new numbers):** marketing consent = SMS tick on by default, **WhatsApp marketing tick separate and unticked** (PR 148/505); trial at delivery allowed — customer may try in front of the rider (setting, on; S08); Bengali pages get their own /bn/ URLs with hreflang for Google traffic (S11); barcodes internal/courier, no GS1 (S01); same size added twice → "already in bag" by default, **quantity +1 as a settings option** (S04); sliders keep auto-drift but snap after a manual drag (S02); admin shows customer phone numbers in full, every profile open and number copy is logged (S14; the address rule PR 561 is unchanged); Google Shopping BD → Merchant Center test after go-live; VAT/invoice details after launch with the accountant.
 
@@ -690,6 +714,17 @@ the server.*
 - **PR 431 (S22, rider issues)** — Updated 23 Oct 2026 (CN-018 (7)): rider overcharge — a complaint logged with proof; staff approve and refund the exact extra amount (wallet or original method) with a note; the amount is recovered from the courier claim. Section: Support → Rider issues.
 - **PR 423 (S21, site health page)** — Updated 23 Oct 2026 (CN-015): Site health → Customer problems — privacy-safe probe records grouped into problems (Urgent / Important / Can wait), statuses, a date view and a detail page; open problems also listed at the top of README.
 - **PR 538 (S22)** — Updated 23 Oct 2026 (CN-017): SIM-F-012 (AI draft answers the wrong question) is a required acceptance test.
+
+**Scope added to existing PRs, 25 Oct 2026 (CN-028; new PR 607–621):**
+- **PR 185–190 (S08, exchange engine)** — Updated 25 Oct 2026 (CN-028): an exchange also goes to the ERP as a new order that names the old order and line (PR 614); there are no refunds after delivery, only an exchange within 72 hours; a higher price of the new piece in new stock is paid by the customer.
+- **PR 187 / 189 / 191 (S08, receipt, quality check, refused parcels)** — Updated 25 Oct 2026 (CN-028): the shop's own quality check and "sellable / not sellable" decision are replaced by return lists with a counted-pieces note (PR 612); the owner decides in the ERP; declined pieces are Retail's loss.
+- **PR 196 (S09, ERP webhook receiver)** — Updated 25 Oct 2026 (CN-028): the v6 events and the permanent event ledger are PR 608; the 72-hour filter stays for stock and price events.
+- **PR 199 / 200 (S09, order push, idempotency)** — Updated 25 Oct 2026 (CN-028): the v6 order fields, `erpTotal` and the refusals are PR 610; a retry after `409 INSUFFICIENT_STOCK` uses a new idempotency key.
+- **PR 497 (S09, ERP mode switch)** — Updated 25 Oct 2026 (CN-028): `erp.model` (`v5` / `v6`) is added; the contract is `docs/erp/site-changes-v6.md` (PR 607).
+- **PR 525 / 526 (S08, true-delivery reconciliation, return reasons)** — Updated 25 Oct 2026 (CN-028): the courier's result is reported to the ERP (PR 611); the rider's reason stays the shop's own data.
+- **PR 166 / 174 (S07, COD and payment reconciliation)** — Updated 25 Oct 2026 (CN-028): customer payments are no longer sent to the ERP from the switch date; COD and gateway reconciliation stay in the shop. Payments **to** the ERP are PR 615.
+- **PR 342–355, 504, 536–537, 568 (S16, finance, costs, reports, month close)** — Updated 25 Oct 2026 (CN-028): the month-end expense push to the ERP is replaced by the daily summary (PR 617) and fixed costs (PR 618); `MonthClose` closes through the books match (PR 616) and no longer carries a push to the ERP; every report figure has an "explain this number" view.
+- **Dashboard, Money and Reports pages (S05, S16)** — Updated 25 Oct 2026 (CN-028): the "Books status" card (matched days, open differences, balance owed to the ERP, returns waiting for the owner's check, exchanges at risk) and its Needs-you-now rows.
 
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
 invoice and PDF templates S14 → S20 · celebration overlay S19 → S02 · user manual S20 → S18 ·
@@ -1074,6 +1109,27 @@ The owner's largest single input. Scenarios A–M are recorded in `PENDING_CHANG
 |---:|---|
 | 605 | **Gift mode** (CN-014 h, simulation idea 22) — receiver name and phone, hide prices on the invoice, a gift note, and a "deliver on or after" date. **Off by default**, its own switch, every number and text editable. Section: Checkout settings. The receiver, the receiver's address band and the date reach the sticker and the courier booking (CN-017 SIM-F-007: a gift parcel must never go to the payer's address). **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-007 (gift receiver and date never used) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 606 | **Bulk / corporate lane** (CN-017 SIM-F-023, simulation idea 21, proposal P11) — a bulk / corporate order enquiry from the cart and the menu (Blueprint B8.5 item 4), a quote and order flow for large or logo orders. Minimum quantity, logo price, advance type and amount are **backend settings, off by default** (CN-018 standing rule); the owner decides each later. Section: Orders. Renumbered from the report's "605" because gift mode holds 605. **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-023 (no bulk / corporate lane) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
+
+### CN-028 additions — Retail and the ERP supplier model (25 Oct 2026)
+
+| PR | What it does |
+|---:|---|
+| 607 | **ERP contract v6 in the adapter and the mock ERP** (CN-028). Typed calls and answers of `docs/erp/site-changes-v6.md`: `GET /catalog/variants?styleCode=`, `shopPrice`, `grade`, `fromReturnStock`, `POST /orders` v6 fields and refusals, `POST /shipments`, `PUT /orders/{id}/delivery`, `PATCH /orders/{id}/lines/{lineId}`, `POST /return-lists`, `GET /returns` (+ `/summary`, `/claims`), `GET /exchanges`, `POST /exchanges/{id}/late-return`, `GET /account`, `PUT /daily-summaries/{date}`, `GET /daily-summaries`, `PUT /fixed-costs/{month}`, `GET /cost-of-goods`. The shop stops reading `retailPrice` and `avgCost`. The practice ERP mock speaks v6 (holds, short stock, return stock, exchanges, partial deliveries, deliberate faults). Contract tests run against the final `openapi.yaml` when it arrives. From the switch date the old calls (`POST /payments`, `/returns`, `/ad-spend`, shipment events, `PATCH` DELIVERED or RETURNED) are never sent. Everything is built behind the setting `erp.model` (`v5` until the switch, then `v6`). Launch. |
+| 608 | **ERP event ledger and webhook receiver v6** (CN-028; extends PR 196). All v6 events: `delivery.identified`, `return.parcel.resolved`, `return.piece.decided`, `order.line.short` / `filled`, `exchange.billed` / `settled` / `credited` / `cancelled`, `summary.missing`, `account.hold` / `released`, `shop-price.changed`, `payment.recorded`. Events that move money or credit go into a **permanent** ledger with a unique `eventId` (the 72-hour filter stays for stock and price events). A `reverses` that arrives before its original waits for it. Hourly and start-up pulls of `GET /returns`, `/exchanges`, `/returns/claims`. The same event by webhook and by pull is applied once. Launch. |
+| 609 | **Import from ERP by style code** (CN-028). The admin types a style code; every SKU of the style (colour, size, barcode, grade, `shopPrice`) comes in and groups into one product. The admin sees "bought from ERP at" (never shown to customers) and sets the selling price on top. A changed `shopPrice` updates the buying price and flags the admin; it never changes a selling price by itself. B-grade lines are separate listings (a switch, off by default). A **selling-price floor**: buying price + a minimum margin (a setting, empty until the owner sets it) blocks a price, coupon, combo or discount that falls below it. Launch. |
+| 610 | **Orders to the ERP, v6** (CN-028; extends PR 199 and 200). `lineId`, `customerPrice` in whole taka (the remainder of a combo or discount split on the last piece), `deliveryCharge`, `advancePaid`, `grade`; the answer's `erpTotal`, `shopPrice` per line and `billedAt` are stored. `409 ACCOUNT_ON_HOLD` queues the order and **pauses checkout by itself** (`erp.hold.pauseCheckout`, on) until `account.released`; `409 NO_SHOP_PRICE` stops that SKU; `409 INSUFFICIENT_STOCK` retries with a **new** idempotency key. A line filled from Return stock shows "From ERP return stock"; if that piece fails the packing check (`order.line.short`) the order waits and the admin chooses wait, replace or cancel the line. Launch. |
+| 611 | **Shipment at pickup and delivery results** (CN-028; extends PR 525). `POST /shipments` when the courier confirms pickup (that is when the ERP bills); every courier result (delivered, partial, returned) goes by `PUT /orders/{id}/delivery`. The order page gets a **Partial delivery** box (kept lines, amount paid, any discount promised by phone), required when the courier says partial, and shows the ERP's identification colour (green, yellow, orange). Delivery charge and underpaid amounts stay in Retail's books. Launch. |
+| 612 | **Courier return lists to the ERP** (CN-028; replaces the quality check of PR 187 and ORD-05a). Staff scan the consignments at hand-back, count the pieces and write a short condition note (a photo of the sealed bag when `returns.handback.photo` is on); the list goes by `POST /return-lists` with `receivedCount` and `note`. A count that differs from the ERP's expectation starts the courier claim at once. Returns that do not come through a courier (a showroom) use `courier: HAND`. The shop never decides whether a piece can be sold again; the owner decides in the ERP. Launch. |
+| 613 | **Returns section** (CN-028). Tabs: Partial deliveries · Handed back · On hold in ERP · In ERP return stock · Exchanges · Approved · Declined (our loss). Each parcel has a read-only timeline (result and colour, return list and consignment, the owner's tick, each piece's decision, reason and date). A losses report (declined pieces and billed exchange pieces by reason and month, at the price paid to the ERP, plus delivery charges and underpayments), the courier claims list from `GET /returns/claims`, the countdown to the owner's check, and a nightly compare with `GET /returns/summary?date`. A difference is fixed by pulling, never by editing. Launch. |
+| 614 | **Exchange through the ERP** (CN-028; extends PR 185–190). Within 72 hours of the courier's "delivered" the admin approves and **marks the lines** exchanged. Before approving: live ERP stock of the new piece, regular orders first (an exchange waits and the admin is told), and the price difference shown; if the new price is higher the customer pays the difference (`exchange.passPriceRiseToCustomer`, on; the exchange terms are updated). The exchange goes as a new order naming the old order and line, with a clear note. The shop shows the 4-day watch, the risk list from `GET /exchanges?status=pending`, and a **late-return mark** (`POST /exchanges/{id}/late-return`). The customer's original sale stands; the swap difference and exchange charge are Retail's income lines. Launch. |
+| 615 | **Retail's ERP account ledger and the pipeline stock** (CN-028). An append-only list of entries (bill, exchange extra / adjustment / bill / credit, return credit, payment, switch transfer, reversal, adjustment) with the ERP event id (unique forever), the ERP's own date, whole-taka signed amount and a hash chain; the balance owed; the pipeline stock at buying price from the shop's own piece states; `waitingCheck` and `exchangesAtRisk` beside it. Payments to the ERP are recorded by the Accounts role or the owner and matched to the ERP's `payment.recorded`. Opening balance at the switch. Launch. |
+| 616 | **Books match engine** (CN-028; the heart of `docs/RETAIL-ERP-MODEL.md` §3.4 and §4). Checks A–F every night at 01:30 (account and statement rows, the profit-and-loss tie formula, returns and exchanges, stored daily summaries, fixed costs, billed orders); an immutable day close; week, month, year and lifetime built from the day closes and checked against each other and the ERP's balance; zero tolerance; timing waits only while the pull fetches a known event; differences listed by class and fixed only by reversing and adding (`books.adjust`, PIN, reason, the ERP's matching entry); a month closes only when every day matched (an override needs the PIN and is logged); the Books status card and the "Needs you now" rows; the **explain this number** view on every figure. Launch. |
+| 617 | **Daily summary to the ERP** (CN-028). Builds the day from the shop's own records (delivery-day basis, the exact source of every line in `docs/RETAIL-ERP-MODEL.md` §3.3), sends it at 00:30, retries with backoff until accepted, answers `summary.missing` at once, fills gaps by `GET /daily-summaries?from&to`, re-sends an open day when a late fact changes it (`books.resend.days`), lists unknown categories in `incomplete` (never 0), keeps every summary it sent and the ERP's reply in a log the admin sees, and checks the ERP's stored copy against its own. Launch. |
+| 618 | **Fixed costs and the extra cost lines** (CN-028). A Retail dashboard page where the owner sets the monthly fixed costs (salary, rent, utilities, other) and raises them when they rise; sent by `PUT /fixed-costs/{month}` and shown with the same by-day spreading rule as the ERP (exact to the paisa, the remainder on the last day). New cost lines for accessories and payment-gateway or COD fees feed the daily summary. Fixed costs never go into the daily `costs.other`. Launch. |
+| 619 | **Switch-over to the ERP model** (CN-028). The switch date from the ERP; import of the ERP's list of moved old orders and the opening balance (at the buying price, owner's choice "ক"); backfill of the month's summaries from `GET /cost-of-goods`; stop sending customer payments and ad spend; the `erp.model` switch from `v5` to `v6` with a dry run first; an admin page "ERP link": what is synced, the last accepted summary, queued orders, exchanges and summaries, the balance owed, and the state of the books match. Launch. |
+| 620 | **Signed calls from the ERP to the shop** (CN-028). `GET /erp-api/top-products` and `GET /erp-api/customers`, signed like the webhooks (`X-Extas-Signature` over `METHOD\nPATH?QUERY\nTIMESTAMP`, constant-time check, refused when older than 5 minutes), opened on the staging password gate for that path only, every call logged, customer data returned live and never pushed. The admin shows the base URL to put into the ERP. After launch. |
+| 621 | **ERP v6 acceptance suite** (CN-028; a go-live gate). The test list of `docs/erp/site-changes-v6.md` §4 plus the books drills: a lost webhook, the same webhook twice, a two-day outage, a reversal before its original, a closed day that moves, a month that must not close, the switch day, an exchange never returned, a hold and its release. Runs against the demo ERP (`https://demo.extasbd.com/api/v1/ecommerce`) with a demo shop key the owner types into the vault, every night and before every release. Launch. |
+
 
 ### S06 additions — the approval loop (review round, 18 Oct)
 

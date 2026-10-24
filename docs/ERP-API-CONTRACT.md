@@ -1,5 +1,7 @@
 # EXTAS ERP ↔ E-commerce — API contract (CN-005, 20 Oct 2026)
 
+> **25 Oct 2026 (CN-028):** the ERP now treats Retail as a separate buyer and has issued contract v6 (`docs/erp/site-changes-v6.md`). Where this file and v6 disagree, v6 wins: bills are made at shipment, returns go back as return lists, payments are never reported by the shop, and the shop sends a daily summary. The shop-side design is `docs/RETAIL-ERP-MODEL.md`; the adapter is PR 607–608, behind the setting `erp.model` (v5 stays until the switch-over, PR 619).
+
 Both sides build against this file: the ERP project builds the endpoints, and the e-commerce project builds the
 adapter (S09: PR 194–207, 497–499). Blueprint A3 is the rule book: the ERP is the master, the shop pushes business
 documents and never journal lines, and the `companyId` comes from the key.

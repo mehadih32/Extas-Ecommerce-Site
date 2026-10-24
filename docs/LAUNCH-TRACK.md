@@ -1,13 +1,13 @@
 # EXTAS — Launch track
 
-**CN-027 · 24 Oct 2026.** The build order until go-live and after it. Generated from `docs/MASTER-REGISTER.md` (Build status: total 214/600) and Blueprint Appendix A. Counted in PRs, never in days.
+**CN-027 · 24 Oct 2026.** The build order until go-live and after it. Generated from `docs/MASTER-REGISTER.md` (Build status: total 243/615 on 25 Oct 2026) and Blueprint Appendix A. Counted in PRs, never in days. **25 Oct 2026 (CN-028):** PR 607–619 and 621 (Retail and the ERP supplier model) are added to Launch, PR 620 to After launch.
 
 ## বাংলায় সংক্ষেপে
 
 - **লক্ষ্য:** আগে শুধু সেই কাজগুলো শেষ হবে, যেগুলো ছাড়া নিরাপদে আসল অর্ডার নেওয়া যায় না। এটাই **Launch** লিস্ট।
 - **Launch-এ আছে:** দোকান ঘোরা, প্রোডাক্ট, কম্বো, ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (বেশিরভাগ বানানো শেষ); অর্ডার; পেমেন্ট, অগ্রিম আর রিফান্ডের হিসাব; কুরিয়ার বুকিং আর ট্র্যাকিং; QC-সহ রিটার্ন আর এক্সচেঞ্জ; COD মেলানো; ঝুঁকির বেসিক নিয়ম; অর্ডারের SMS আর WhatsApp; প্রতিদিন দোকান চালানোর অ্যাডমিন পেজ; সিকিউরিটি; ব্যাকআপ, রিস্টোর পরীক্ষা আর মনিটরিং; গুগলে আসার বেসিক SEO; নীতিমালার পেজ; আর গো-লাইভের কাজ, সাথে 70-অর্ডারের সিমুলেশন আবার চালানো (CN-013)।
-- **হিসাব:** Launch-এ মোট 291টা PR, এর মধ্যে 201টা বানানো শেষ। **লাইভে যাওয়ার আগে আর 90টা PR বাকি।** সবচেয়ে বেশি বাকি কুরিয়ার-রিটার্নে (16টা), গো-লাইভে (15টা), SEO-তে (14টা), সিকিউরিটিতে (9টা) আর পেমেন্টে (8টা)।
-- **লাইভের পরে (309টা PR, 13টা আগেই বানানো, বাকি 296টা):** পুরো অ্যাড কন্ট্রোল, ফটো-ভিডিও স্টুডিও, AI এজেন্ট আর স্কিল, মাল্টি-স্টোর, বড় রিপোর্ট, লয়্যালটি আর রেফারেল, A/B টেস্ট, কম্পিটিটর টুল, ব্লগ, আর ডিফল্টের বাইরের বাড়তি অ্যাডমিন ডিজাইন।
+- **হিসাব:** Launch-এ মোট 305টা PR, এর মধ্যে 222টা বানানো শেষ। **লাইভে যাওয়ার আগে আর 83টা PR বাকি।** (২৫ অক্টোবর: রিটেইল আর ERP-র নতুন হিসাবের 14টা PR যোগ হয়েছে, CN-028।) সবচেয়ে বেশি বাকি কুরিয়ার-রিটার্নে (16টা), গো-লাইভে (15টা), SEO-তে (14টা), সিকিউরিটিতে (9টা) আর পেমেন্টে (8টা)।
+- **লাইভের পরে (310টা PR, 21টা আগেই বানানো, বাকি 289টা):** পুরো অ্যাড কন্ট্রোল, ফটো-ভিডিও স্টুডিও, AI এজেন্ট আর স্কিল, মাল্টি-স্টোর, বড় রিপোর্ট, লয়্যালটি আর রেফারেল, A/B টেস্ট, কম্পিটিটর টুল, ব্লগ, আর ডিফল্টের বাইরের বাড়তি অ্যাডমিন ডিজাইন।
 - **আপনাকে কিছু করতে হবে না।** Launch শেষ হলে বিল্ড নিজে থেকেই লাইভের পরের লিস্ট আগের ক্রমে বানাতে থাকবে। যা বানানো হয়নি, তা বন্ধ বা লুকানো থাকবে। টাকা, দাম, COD বা মেইন ডোমেইন বদলানো আগের মতোই আপনার লিখিত OK ছাড়া হবে না।
 
 ## The rule (CN-027)
@@ -24,15 +24,15 @@
 
 | List | Done | Total | Left |
 |---|---:|---:|---:|
-| **Launch** | 201 | 291 | **90** |
-| **After launch** | 13 | 309 | 296 |
-| Active total | 214 | 600 | 386 |
+| **Launch** | 222 | 305 | **83** |
+| **After launch** | 21 | 310 | 289 |
+| Active total | 243 | 615 | 372 |
 
 Parked (not counted): S26 handover pack, PR 513–518, and S27 (unnumbered). They stay in the parking lot until the owner says so.
 
-**Launch left, by stage:** S02 1 · S04 2 · S06 5 · S07 8 · S08 16 · S11 14 · S13 1 · S14 7 · S16 5 · S17 1 · S18 9 · S19 15 · S20 1 · S21 3 · S22 2 = 90.
+**Launch left, by stage (25 Oct 2026):** S01 1 · S05 1 · S08 15 · S09 2 · S11 14 · S13 1 · S14 7 · S16 9 · S17 1 · S18 9 · S19 17 · S20 1 · S21 3 · S22 2 = 83.
 
-**After launch left, by stage:** S02 13 · S03 4 · S06 17 · S07 2 · S08 6 · S11 8 · S12 22 · S13 34 · S14 17 · S15 48 · S16 13 · S17 23 · S18 4 · S20 8 · S21 11 · S22 11 · S23 7 · S24 38 · S25 10 = 296.
+**After launch left, by stage (25 Oct 2026):** S02 13 · S06 14 · S07 2 · S08 5 · S11 8 · S12 22 · S13 34 · S14 17 · S15 48 · S16 13 · S17 23 · S18 5 · S20 8 · S21 11 · S22 11 · S23 7 · S24 38 · S25 10 = 289.
 
 ## Launch
 
@@ -47,90 +47,104 @@ Build order, top to bottom. Group A finishes the stages already in progress (S02
 | 5 | 542 | S06 | One-click advance-charge request — from the order itself: SMS, WhatsApp or call, with the payment link and the order's state change, in… | to build (stage in progress) |
 | 6 | 502 | S06 | Zone, charge and area admin — the three charge bands, the COD limits, and every area: add, rename, merge, move an area between bands,… | to build (stage in progress) |
 | 7 | 519 | S06 | Order Identity Graph — one identity built from phone, name, address, IP and device, so a customer who changes his phone number is still… *(server spec §6 item, A2.9.16)* | to build (stage in progress) |
-| 8 | 165 | S07 | Payment model, states, and the reconciliation fields | to build |
-| 9 | 166 | S07 | Cash on Delivery: amount due, rider collection, settlement | to build |
-| 10 | 167 | S07 | bKash integration behind the adapter, with the mock | to build |
-| 11 | 170 | S07 | Payment callbacks with idempotency keys | to build |
-| 12 | 171 | S07 | Wallet: credit, debit, balance, and the ledger behind it | to build |
-| 13 | 172 | S07 | Refund to wallet, and the rules for when a refund is allowed | to build |
-| 14 | 173 | S07 | Partial payment and advance for pre-orders, capped | to build |
-| 15 | 174 | S07 | Payment reconciliation report against the gateway statements | to build |
-| 16 | 175 | S08 | Courier adapter framework with the mock | to build |
-| 17 | 176 | S08 | Steadfast integration — booking, consignment ID, status polling | to build |
-| 18 | 554 | S06 | Courier zone sync — our gazetteer mapped to each courier's own city/zone/area ids, so a booking never fails on an area the courier does not… *(S06; needs the courier adapter 175/176)* | to build |
-| 19 | 179 | S08 | Courier sticker — the one fulfilment document, custom size, barcode, COD amount, full item list | to build |
-| 20 | 180 | S08 | Sticker print queue, reprint safety, and the handover sheet | to build |
-| 21 | 181 | S08 | Daily consolidated picking list PDF | to build |
-| 22 | 182 | S08 | Fulfilment page: pick, pack, hand over, all on one screen | to build |
-| 23 | 183 | S08 | Defective or out-of-stock at packing: the resolution card and the hold | to build |
-| 24 | 184 | S08 | Tracking status sync back to the order and the customer's tracking page | to build |
-| 25 | 185 | S08 | Four-tier exchange engine | to build |
-| 26 | 187 | S08 | Exchange QC — good or damaged — then restock or write-off | to build |
-| 27 | 188 | S08 | Exchange variant switcher: same product, different size | to build |
-| 28 | 189 | S08 | Return handling, with the policy that there are no returns after receipt | to build |
-| 29 | 190 | S08 | Delivery charge rules for exchanges, and who pays | to build |
-| 30 | 191 | S08 | Refused-parcel handling and the exclusion list it feeds | to build |
-| 31 | 525 | S08 | True-delivery reconciliation — the courier marks a charge-paid return as "Delivered" | to build |
-| 32 | 526 | S08 | Return-reason capture — the rider's note (didn't like it, size didn't fit, not as expected, ordered by mistake) recorded against the… | to build |
-| 33 | 284 | S14 | Customer model, merge rules, and the single view by phone number | to build |
-| 34 | 285 | S14 | Customers section: list, filters, search | to build |
-| 35 | 286 | S14 | Customer detail — orders, exchanges, support history, lifetime value | to build |
-| 36 | 291 | S14 | SMS adapter with masking approval, templates, delivery log | to build |
-| 37 | 292 | S14 | WhatsApp Business API adapter, templates, delivery log | to build |
-| 38 | 298 | S14 | Consent and opt-out handling, honoured across every channel | to build |
-| 39 | 505 | S14 | Notification template editor — every SMS, email and WhatsApp template, the auto-replies, and which event sends which message, all… | to build |
-| 40 | 407 | S20 | Customer invoice | to build |
-| 41 | 425 | S22 | Support core: conversation/message model, threads, attachments, internal notes, assignment, who-replied log | to build |
-| 42 | 426 | S22 | Channel connectors: Messenger Page API, WhatsApp Business API webhook in and out, website live-chat widget | to build |
-| 43 | 220 | S11 | URL structure and canonical rules — English at /, Bengali at /bn/ behind the translation gate | to build |
-| 44 | 221 | S11 | Title and meta description templates per page type, with AI drafting | to build |
-| 45 | 222 | S11 | Structured data: Product, Offer, BreadcrumbList, Organization | to build |
-| 46 | 227 | S11 | Sub-category SEO content and the filter-page indexing rules — indexed only where it genuinely earns traffic, not every combination… | to build |
-| 47 | 228 | S11 | Sitemaps, split by type, with automatic regeneration | to build |
-| 48 | 229 | S11 | robots.txt, and the switch for AI crawlers — GPTBot, ClaudeBot, PerplexityBot, Google-Extended | to build |
-| 49 | 232 | S11 | Image alt text, auto-applied; English live, Bengali held in the dictionary | to build |
-| 50 | 233 | S11 | Search Console and Bing Webmaster connection, with the verification flow | to build |
-| 51 | 234 | S11 | Core Web Vitals monitoring against the real field data | to build |
-| 52 | 235 | S11 | Redirect manager, and the 404 report with one-click fixes | to build |
-| 53 | 236 | S11 | Hreflang and the language alternates | to build |
-| 54 | 527 | S11 | Permanent URL policy — no product, category or page URL is ever deleted or allowed to 404 | to build |
-| 55 | 586 | S11 | Hash-to-real-URL forwarder — a small script maps every old demo #/… link to its live URL (location.replace), with a test table, so no… *(go-live condition, E3)* | to build |
-| 56 | 588 | S11 | Bengali translation gate — per page a "Bengali ready" flag (main content translated and approved) | to build |
-| 57 | 257 | S13 | Server-side event tracking — view, add to bag, checkout, purchase *(Tracking & feeds, §13 R9: purchase events from day one)* | to build |
-| 58 | 342 | S16 | Slot — money overview: cash received, COD due from couriers, refunds waiting (§5 MNY-01; B3.10) | to build |
-| 59 | 343 | S16 | Slot — cost ledger: every paid call writes a cost row; prepaid SMS balance drawn down (B3.9) | to build |
-| 60 | 344 | S16 | Slot — retail expenses quick entry; corrections are reversing entries (§5 MNY-04; B3.8, D2) | to build |
-| 61 | 345 | S16 | Slot — costs & fees inputs: courier rates, gateway fees, packaging, RTO cost inputs (§5 MNY-06) | to build |
-| 62 | 346 | S16 | Slot — month-end close sheet and the monthly expense push to the ERP (§5 MNY-05; B3.9, D2; needed before the first month end) *(before the first month end)* | to build |
-| 63 | 413 | S21 | Slot — Site health hub: one status line each for problems, server, speed, audit, smoke (§5 REP-07) | to build |
-| 64 | 414 | S21 | Slot — saved browser journeys (customer, admin, accountant, warehouse) replayed on a schedule, AI not needed (B7.3) | to build |
-| 65 | 423 | S21 | Site health page with spike alerts | to build |
-| 66 | 362 | S17 | Per-store domain, certificate and Cloudflare routing *(server spec §4 CDN item, A2.9.16; the extra store domains still come with S17)* | to build |
-| 67 | 378 | S18 | Slot — security headers, CSP, CSRF and rate limits reviewed end to end (B6.1) | to build |
-| 68 | 379 | S18 | Slot — invisible bot protection on login and checkout, no CAPTCHA (B6.3) | to build |
-| 69 | 380 | S18 | Slot — admin 2FA required, session limits, IP allowlist option, new-login alerts (B6.1, B6.5; §5 SET-04d) | to build |
-| 70 | 381 | S18 | Slot — dependency vulnerability scanning in CI and an independent security review before real money flows (B6.1) | to build |
-| 71 | 382 | S18 | Slot — privacy and data: consent records, IP/GPS purge job, erasure requests (§5 SET-08d, CUS-07) | to build |
-| 72 | 383 | S18 | Slot — legal numbers (DBID, trade licence, BIN) on the store details, and a guard so empty placeholders never reach the live site (§5 SET-01; F2 q27) | to build |
-| 73 | 384 | S18 | Slot — policy pages: terms, privacy, exchange, delivery, filled from Smart Rules (§5 SET-03) | to build |
-| 74 | 385 | S18 | Slot — immutable backups and the written break-glass restore runbook (B6.1, B6.2) | to build |
-| 75 | 386 | S18 | Slot — Cloudflare WAF and DDoS protection in front of the shop (B6.1) | to build |
-| 76 | 391 | S19 | Slot — Azure Blob and Google Drive backups switched live with the owner's keys (go-live gate; PR 8) | to build |
-| 77 | 392 | S19 | Slot — Telegram alerts live (go-live gate; PR 9) | to build |
-| 78 | 393 | S19 | Slot — staging acceptance list (§13 summary) and the Appendix C QA gate green | to build |
-| 79 | 394 | S19 | Slot — every server item of A2.9 verified before go-live (A2.9.16) | to build |
-| 80 | 395 | S19 | Google Drive backup and restore drills | to build |
-| 81 | 396 | S19 | Restoring production: typed confirmation, staging first | to build |
-| 82 | 397 | S19 | Slot — Cloudflare Origin certificate, Full (strict) on the main domain (PR 7 scope) | to build |
-| 83 | 398 | S19 | Slot — go-live runbook and rollback plan for the domain switch (A1.5) | to build |
-| 84 | 399 | S19 | Slot — owner-data check before go-live: legal numbers, contacts, charges entered by the owner (PR 509) | to build |
-| 85 | 400 | S19 | Slot — payment, courier and SMS connections moved from mock to live after a passing test (A1.3) | to build |
-| 86 | 401 | S19 | Slot — main-domain indexing: sitemap submitted, Search Console on the main domain | to build |
-| 87 | 402 | S19 | Slot — first-week watch on the main domain: nightly smoke, alerts, daily check | to build |
-| 88 | 403 | S19 | Slot — go-live day: preview password and noindex removed on the main domain only | to build |
-| 89 | 507 | S19 | Backup settings and restore drills, Google Drive (with PR 395) | to build |
+| 8 | 607 | S09 | ERP contract v6 in the adapter and the mock ERP — typed calls, shop price only, old calls switched off at the switch date, behind `erp.model` (CN-028; 25 Oct 2026) | to build |
+| 9 | 608 | S09 | ERP event ledger and webhook receiver v6 — every new event, permanent unique event ids, reversals, hourly pulls (CN-028; 25 Oct 2026) | to build |
+| 10 | 609 | S01 | Import from ERP by style code — shop price as the buying price, B-grade listings, price-change flag, selling-price floor (CN-028; 25 Oct 2026) | to build |
+| 11 | 610 | S05 | Orders to the ERP, v6 — line ids, whole-taka customer price split, `erpTotal` and `billedAt`, hold and short-stock handling, the packing-check short line (CN-028; 25 Oct 2026) | to build |
+| 12 | 165 | S07 | Payment model, states, and the reconciliation fields | to build |
+| 13 | 166 | S07 | Cash on Delivery: amount due, rider collection, settlement | to build |
+| 14 | 167 | S07 | bKash integration behind the adapter, with the mock | to build |
+| 15 | 170 | S07 | Payment callbacks with idempotency keys | to build |
+| 16 | 171 | S07 | Wallet: credit, debit, balance, and the ledger behind it | to build |
+| 17 | 172 | S07 | Refund to wallet, and the rules for when a refund is allowed | to build |
+| 18 | 173 | S07 | Partial payment and advance for pre-orders, capped | to build |
+| 19 | 174 | S07 | Payment reconciliation report against the gateway statements | to build |
+| 20 | 175 | S08 | Courier adapter framework with the mock | to build |
+| 21 | 176 | S08 | Steadfast integration — booking, consignment ID, status polling | to build |
+| 22 | 554 | S06 | Courier zone sync — our gazetteer mapped to each courier's own city/zone/area ids, so a booking never fails on an area the courier does not… *(S06; needs the courier adapter 175/176)* | to build |
+| 23 | 179 | S08 | Courier sticker — the one fulfilment document, custom size, barcode, COD amount, full item list | to build |
+| 24 | 180 | S08 | Sticker print queue, reprint safety, and the handover sheet | to build |
+| 25 | 181 | S08 | Daily consolidated picking list PDF | to build |
+| 26 | 182 | S08 | Fulfilment page: pick, pack, hand over, all on one screen | to build |
+| 27 | 183 | S08 | Defective or out-of-stock at packing: the resolution card and the hold | to build |
+| 28 | 184 | S08 | Tracking status sync back to the order and the customer's tracking page | to build |
+| 29 | 185 | S08 | Four-tier exchange engine | to build |
+| 30 | 187 | S08 | Exchange QC — good or damaged — then restock or write-off | to build |
+| 31 | 188 | S08 | Exchange variant switcher: same product, different size | to build |
+| 32 | 189 | S08 | Return handling, with the policy that there are no returns after receipt | to build |
+| 33 | 190 | S08 | Delivery charge rules for exchanges, and who pays | to build |
+| 34 | 191 | S08 | Refused-parcel handling and the exclusion list it feeds | to build |
+| 35 | 525 | S08 | True-delivery reconciliation — the courier marks a charge-paid return as "Delivered" | to build |
+| 36 | 526 | S08 | Return-reason capture — the rider's note (didn't like it, size didn't fit, not as expected, ordered by mistake) recorded against the… | to build |
+| 37 | 611 | S08 | Shipment at pickup and delivery results to the ERP — the "Partial delivery" box and the identification colour (CN-028; 25 Oct 2026) | to build |
+| 38 | 612 | S08 | Courier return lists to the ERP — scan at hand-back, counted pieces and condition note, early courier claim (replaces the shop-side quality check) (CN-028; 25 Oct 2026) | to build |
+| 39 | 613 | S08 | Returns section — seven tabs, parcel timelines, losses report, courier claims, nightly returns compare with the ERP (CN-028; 25 Oct 2026) | to build |
+| 40 | 614 | S08 | Exchange through the ERP — line marking, price-difference consent, stock-first rule, the 4-day return watch, late-return mark (CN-028; 25 Oct 2026) | to build |
+| 41 | 284 | S14 | Customer model, merge rules, and the single view by phone number | to build |
+| 42 | 285 | S14 | Customers section: list, filters, search | to build |
+| 43 | 286 | S14 | Customer detail — orders, exchanges, support history, lifetime value | to build |
+| 44 | 291 | S14 | SMS adapter with masking approval, templates, delivery log | to build |
+| 45 | 292 | S14 | WhatsApp Business API adapter, templates, delivery log | to build |
+| 46 | 298 | S14 | Consent and opt-out handling, honoured across every channel | to build |
+| 47 | 505 | S14 | Notification template editor — every SMS, email and WhatsApp template, the auto-replies, and which event sends which message, all… | to build |
+| 48 | 407 | S20 | Customer invoice | to build |
+| 49 | 425 | S22 | Support core: conversation/message model, threads, attachments, internal notes, assignment, who-replied log | to build |
+| 50 | 426 | S22 | Channel connectors: Messenger Page API, WhatsApp Business API webhook in and out, website live-chat widget | to build |
+| 51 | 220 | S11 | URL structure and canonical rules — English at /, Bengali at /bn/ behind the translation gate | to build |
+| 52 | 221 | S11 | Title and meta description templates per page type, with AI drafting | to build |
+| 53 | 222 | S11 | Structured data: Product, Offer, BreadcrumbList, Organization | to build |
+| 54 | 227 | S11 | Sub-category SEO content and the filter-page indexing rules — indexed only where it genuinely earns traffic, not every combination… | to build |
+| 55 | 228 | S11 | Sitemaps, split by type, with automatic regeneration | to build |
+| 56 | 229 | S11 | robots.txt, and the switch for AI crawlers — GPTBot, ClaudeBot, PerplexityBot, Google-Extended | to build |
+| 57 | 232 | S11 | Image alt text, auto-applied; English live, Bengali held in the dictionary | to build |
+| 58 | 233 | S11 | Search Console and Bing Webmaster connection, with the verification flow | to build |
+| 59 | 234 | S11 | Core Web Vitals monitoring against the real field data | to build |
+| 60 | 235 | S11 | Redirect manager, and the 404 report with one-click fixes | to build |
+| 61 | 236 | S11 | Hreflang and the language alternates | to build |
+| 62 | 527 | S11 | Permanent URL policy — no product, category or page URL is ever deleted or allowed to 404 | to build |
+| 63 | 586 | S11 | Hash-to-real-URL forwarder — a small script maps every old demo #/… link to its live URL (location.replace), with a test table, so no… *(go-live condition, E3)* | to build |
+| 64 | 588 | S11 | Bengali translation gate — per page a "Bengali ready" flag (main content translated and approved) | to build |
+| 65 | 257 | S13 | Server-side event tracking — view, add to bag, checkout, purchase *(Tracking & feeds, §13 R9: purchase events from day one)* | to build |
+| 66 | 342 | S16 | Slot — money overview: cash received, COD due from couriers, refunds waiting (§5 MNY-01; B3.10) | to build |
+| 67 | 343 | S16 | Slot — cost ledger: every paid call writes a cost row; prepaid SMS balance drawn down (B3.9) | to build |
+| 68 | 344 | S16 | Slot — retail expenses quick entry; corrections are reversing entries (§5 MNY-04; B3.8, D2) | to build |
+| 69 | 345 | S16 | Slot — costs & fees inputs: courier rates, gateway fees, packaging, RTO cost inputs (§5 MNY-06) | to build |
+| 70 | 346 | S16 | Slot — month-end close sheet and the monthly expense push to the ERP (§5 MNY-05; B3.9, D2; needed before the first month end) *(before the first month end)* | to build |
+| 71 | 615 | S16 | Retail's ERP account ledger and the pipeline stock — append-only entries, payments to the ERP, opening balance (CN-028; 25 Oct 2026) | to build |
+| 72 | 616 | S16 | Books match engine — daily, weekly, monthly, yearly and lifetime match with the ERP, differences, month-close gate, explain view (CN-028; 25 Oct 2026) | to build |
+| 73 | 617 | S16 | Daily summary to the ERP — 00:30 send, retry queue, `summary.missing`, gap fill, re-send window, categories not yet known, log (CN-028; 25 Oct 2026) | to build |
+| 74 | 618 | S16 | Fixed costs and the extra cost lines — salary, rent, utilities, accessories, payment fees (CN-028; 25 Oct 2026) | to build |
+| 75 | 413 | S21 | Slot — Site health hub: one status line each for problems, server, speed, audit, smoke (§5 REP-07) | to build |
+| 76 | 414 | S21 | Slot — saved browser journeys (customer, admin, accountant, warehouse) replayed on a schedule, AI not needed (B7.3) | to build |
+| 77 | 423 | S21 | Site health page with spike alerts | to build |
+| 78 | 362 | S17 | Per-store domain, certificate and Cloudflare routing *(server spec §4 CDN item, A2.9.16; the extra store domains still come with S17)* | to build |
+| 79 | 378 | S18 | Slot — security headers, CSP, CSRF and rate limits reviewed end to end (B6.1) | to build |
+| 80 | 379 | S18 | Slot — invisible bot protection on login and checkout, no CAPTCHA (B6.3) | to build |
+| 81 | 380 | S18 | Slot — admin 2FA required, session limits, IP allowlist option, new-login alerts (B6.1, B6.5; §5 SET-04d) | to build |
+| 82 | 381 | S18 | Slot — dependency vulnerability scanning in CI and an independent security review before real money flows (B6.1) | to build |
+| 83 | 382 | S18 | Slot — privacy and data: consent records, IP/GPS purge job, erasure requests (§5 SET-08d, CUS-07) | to build |
+| 84 | 383 | S18 | Slot — legal numbers (DBID, trade licence, BIN) on the store details, and a guard so empty placeholders never reach the live site (§5 SET-01; F2 q27) | to build |
+| 85 | 384 | S18 | Slot — policy pages: terms, privacy, exchange, delivery, filled from Smart Rules (§5 SET-03) | to build |
+| 86 | 385 | S18 | Slot — immutable backups and the written break-glass restore runbook (B6.1, B6.2) | to build |
+| 87 | 386 | S18 | Slot — Cloudflare WAF and DDoS protection in front of the shop (B6.1) | to build |
+| 88 | 391 | S19 | Slot — Azure Blob and Google Drive backups switched live with the owner's keys (go-live gate; PR 8) | to build |
+| 89 | 392 | S19 | Slot — Telegram alerts live (go-live gate; PR 9) | to build |
+| 90 | 393 | S19 | Slot — staging acceptance list (§13 summary) and the Appendix C QA gate green | to build |
+| 91 | 394 | S19 | Slot — every server item of A2.9 verified before go-live (A2.9.16) | to build |
+| 92 | 395 | S19 | Google Drive backup and restore drills | to build |
+| 93 | 396 | S19 | Restoring production: typed confirmation, staging first | to build |
+| 94 | 397 | S19 | Slot — Cloudflare Origin certificate, Full (strict) on the main domain (PR 7 scope) | to build |
+| 95 | 398 | S19 | Slot — go-live runbook and rollback plan for the domain switch (A1.5) | to build |
+| 96 | 399 | S19 | Slot — owner-data check before go-live: legal numbers, contacts, charges entered by the owner (PR 509) | to build |
+| 97 | 400 | S19 | Slot — payment, courier and SMS connections moved from mock to live after a passing test (A1.3) | to build |
+| 98 | 401 | S19 | Slot — main-domain indexing: sitemap submitted, Search Console on the main domain | to build |
+| 99 | 402 | S19 | Slot — first-week watch on the main domain: nightly smoke, alerts, daily check | to build |
+| 100 | 403 | S19 | Slot — go-live day: preview password and noindex removed on the main domain only | to build |
+| 101 | 507 | S19 | Backup settings and restore drills, Google Drive (with PR 395) | to build |
+| 102 | 619 | S19 | Switch-over to the ERP model — switch date, opening balance, old-order list, backfill, the ERP link page (CN-028; 25 Oct 2026) | to build |
+| 103 | 621 | S19 | ERP v6 acceptance suite against the demo ERP — the contract checklist and the books drills, run every night (CN-028; 25 Oct 2026) | to build |
 | — | gate | CN-013 | **The 70-order real-life journey simulation rerun on new.extas.com.bd** (CN-013, CN-017 findings as acceptance tests, §13); real orders start only after it passes | to run |
-| 90 | 587 | S19 | WordPress → new site migration (extas.com.bd) *(go-live day, after the gate)* | to build |
+| 104 | 587 | S19 | WordPress → new site migration (extas.com.bd) *(go-live day, after the gate)* | to build |
 
 <details><summary>Launch PRs already built (201)</summary>
 
@@ -642,6 +656,7 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 | 294 | 388 | S18 | Slot — user manual screenshots with numbered marks (B7.5) | to build |
 | 295 | 389 | S18 | Slot — user manual search and "What's new" (B7.5; §5 HLP-01) | to build |
 | 296 | 390 | S18 | Slot — user manual copy kept with the blueprint documents (B7.5) | to build |
+| 297 | 620 | S18 | Signed calls from the ERP to the shop — top products and customers on click (CN-028; 25 Oct 2026) | to build |
 
 <details><summary>After-launch PRs already built (13; they stay as they are)</summary>
 
