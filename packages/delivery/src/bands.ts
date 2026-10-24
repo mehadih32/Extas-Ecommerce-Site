@@ -8,6 +8,8 @@
 // - The charge the customer sees is the owner's figure on the band row; it never depends on the courier. The sub-area
 //   band has three modes: its own charge · folded into the city charge · folded into the outside charge.
 // - A band that is switched off has no charge yet: nothing is quoted from it (PR 553), checkout asks or confirms.
+// - PR 502: the sub-area band's switch is its own: while it is off, the places on the owner's list for it go by the map
+//   (city or outside) and it is not one of the customer's choices; switched on, they are in it.
 // The band keys come from settings (delivery.bands.*Key), matching the default pack's three rows (PR 508).
 import type { Gazetteer, GeoEntry } from './gazetteer';
 
@@ -108,6 +110,12 @@ export class BandMap {
     return b;
   }
 
+  /** PR 502: an entry of the owner's list counts unless it points at the sub-area band while that band is off. */
+  private inForce(bandId: string): boolean {
+    const b = this.byId.get(bandId);
+    return !!b && !(this.roleOf(b) === 'subArea' && !b.enabled);
+  }
+
   /** Where a place sits; null when the store has no band row for it (a store without the three bands). */
   bandOf(entry: GeoEntry): BandAnswer | null {
     const hit = this.answers.get(entry.id);
@@ -122,7 +130,8 @@ export class BandMap {
     let band: BandRow | undefined;
     let via: BandAnswer['via'] = 'outside';
     let listedAreaId: string | null = null;
-    const listed = lineage.find((e) => this.override.has(e.id));
+    // PR 502: the sub-area band has its own switch — while it is off, the places on it go by the map (city or outside)
+    const listed = lineage.find((e) => this.override.has(e.id) && this.inForce(this.override.get(e.id)!));
     if (listed) {
       band = this.byId.get(this.override.get(listed.id)!);
       via = 'owner-list';
@@ -158,6 +167,7 @@ export class BandMap {
     const seen = new Set<string>();
     const out: BandRow[] = [];
     for (const b of [...this.bands].sort((a, z) => a.sortOrder - z.sortOrder || a.key.localeCompare(z.key))) {
+      if (this.roleOf(b) === 'subArea' && !b.enabled) continue; // PR 502: switched off, it is not a choice
       const c = this.chargedBand(b);
       if (seen.has(c.id) || (within && !within.has(c.id))) continue;
       seen.add(c.id);

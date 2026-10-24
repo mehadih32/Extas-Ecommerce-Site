@@ -148,6 +148,7 @@ the pages are out of date.
 | [`admin-guide/combos.md`](admin-guide/combos.md) | Combos & customer sets (`/admin/combos`): the tabs, every setting with its default, what happens after each action |
 | [`admin-guide/pages/orders/risk-rules.md`](admin-guide/pages/orders/risk-rules.md) | Page guide (CN-026 six parts): Orders › Risk rules, its Levels card (`/admin/orders/risk-rules`, PR 161) and the Advance request card (PR 542) |
 | [`admin-guide/pages/orders/advance-request.md`](admin-guide/pages/orders/advance-request.md) | Page guide (CN-026 six parts): "Request advance" on the order page, the pay link `/pay/<token>` and the Advance request card (PR 542) |
+| [`admin-guide/pages/delivery/zones.md`](admin-guide/pages/delivery/zones.md) | Page guide (CN-026 six parts): Delivery › Zones & charges (`/admin/delivery/zones`): the three bands, COD limits, the sub-area switch, the area admin (PR 550, 551, 502) |
 
 ## `reports/` — what got built, in Bengali
 

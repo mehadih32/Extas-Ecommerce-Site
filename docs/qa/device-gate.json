@@ -290,7 +290,7 @@
       "/admin/help": ["[data-testid=\"help-row\"]", "[data-testid=\"a2-guide\"]"],
       "/admin/customers": ["[data-testid=\"a2-placeholder\"]"],
       "/admin?home=1&state=notfound": ["[data-testid=\"a2-state\"]"],
-      "/admin/delivery/zones": ["[data-testid=\"a2-crumb\"]"],
+      "/admin/delivery/zones": ["[data-testid=\"a2-crumb\"]", "[data-testid=\"dz-bands\"]", "[data-testid=\"dl-band\"]", "[data-testid=\"dz-sub-switch\"]", "[data-testid=\"dz-areas\"]", "[data-testid=\"dz-try\"]"],
       "/admin/products": ["a.pa-nm"],
       "/admin/size-charts": [".sc-item"],
       "/admin/stock": ["a.st-name"],
