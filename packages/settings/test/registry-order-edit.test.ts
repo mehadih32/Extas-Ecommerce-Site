@@ -11,7 +11,8 @@ describe('order edit settings (v37)', () => {
   it('every key is in the registry at version 37, never owner data, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(orderEditSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(37);
+      // PR 157 (SIM-F-044) moved the refusal reasons to v43 ("late", "wrong item", "damaged")
+      expect(spec.version, key).toBe(key === 'orders.refusal.reasons' ? 43 : 37);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

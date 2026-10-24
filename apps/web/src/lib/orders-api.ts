@@ -41,6 +41,8 @@
 //                                                             may send each line as `line:<lineId>`: keep | remove | <variantId>
 //   POST  /api/admin/orders/:id/two-size                      PR 146: {key, keep: all | <sizeId>, note?, version?} the
 //                                                             customer's two-size answer; "only M" takes the other sizes out (orders.edit)
+//   GET   /api/admin/orders/:id/phone-history                 PR 157: the number's other orders and what became of them
+//                                                             (refused, our fault and not counted, cancelled …) (orders.read)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -86,6 +88,12 @@ async function handle(request: Request, deps: AdminDeps | null, permission: od.O
 }
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
+
+/** A read that found no order in this store is the order service's NOT_FOUND. */
+function found<T>(v: T | null): T {
+  if (v === null) throw new od.OrdersError('NOT_FOUND', 'no such order', ['orderId']);
+  return v;
+}
 
 /** PR 151: the CSV file itself (not the `{ ok }` envelope): filters from the address (GET) or the body (POST, with ids). */
 async function exportCsv(request: Request, deps: AdminDeps | null, m: string): Promise<Response> {
@@ -198,6 +206,12 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (!isUuid(c)) return Promise.resolve(fail(404, 'NOT_FOUND', ['noteId']));
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.notes', async (x) => ({ note: await od.archiveNote(x.deps, x.who, id, c) }));
+  }
+  // S06 · PR 157: the number's history beside the order
+  if (b === 'phone-history') {
+    if (path.length > 2) return notFound();
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'orders.read', async (x) => ({ history: found(await od.orderPhoneHistory(x.deps, x.who, id)) }));
   }
   if (m !== 'POST') return notAllowed();
   const run = (perm: od.OrdersPermission, fn: (x: Ctx, input: Record<string, unknown>, opts: od.CommandOptions) => Promise<od.CommandResult>) =>

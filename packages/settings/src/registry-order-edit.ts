@@ -86,8 +86,11 @@ export const orderEditSettings = {
     helpKey: 'orders.twoSize.help',
     sortOrder: 240,
   }),
+  // PR 157 (SIM-F-044, registry v43): "arrived late", "the wrong item" and "damaged" join the list — refusals the shop
+  // caused, which `risk.history.ourFaultRefusals` keeps out of the customer's risk score.
   'orders.refusal.reasons': setting({
     ...base,
+    version: 43,
     schema: list,
     default: ordersDictionaryDefault('refusalReasons'),
     valueType: 'JSON',

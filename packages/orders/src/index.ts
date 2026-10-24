@@ -21,6 +21,7 @@
 // and why its delivery charge is what it is, from its stored facts only (explain.ts).
 // PR 151: the order export — the list's filter or the ticked orders as a CSV file, personal columns only with their own
 // key, audited (export.ts).
+// S06 · PR 157: a number's history — its other orders and what became of them (phone-history.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -42,3 +43,4 @@ export * from './edit';
 export * from './two-size';
 export * from './explain';
 export * from './export';
+export * from './phone-history';
