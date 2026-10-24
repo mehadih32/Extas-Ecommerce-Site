@@ -52,7 +52,7 @@ describe('general default pack (PR 508)', () => {
       expect(defaultPack.notificationTemplates.some((o) => o.key === t.key && o.channel === t.channel && o.locale !== t.locale), `${t.key} in both languages`).toBe(true);
     }
     const has = (key: string, channel: string) => defaultPack.notificationTemplates.some((t) => t.key === key && t.channel === channel && t.locale === 'bn');
-    for (const key of ['order.placed', 'order.selfConfirm', 'order.confirmed', 'order.packed', 'order.booked', 'order.outForDelivery', 'order.deliveryDay', 'order.delivered', 'order.care', 'order.review', 'order.cancelled', 'order.onHold', 'order.advanceRequested']) {
+    for (const key of ['order.placed', 'order.selfConfirm', 'order.confirmed', 'order.packed', 'order.booked', 'order.outForDelivery', 'order.deliveryDay', 'order.delivered', 'order.care', 'order.review', 'order.cancelled', 'order.cancelRefused', 'order.onHold', 'order.advanceRequested']) {
       expect(has(key, 'SMS') || has(key, 'WHATSAPP'), key).toBe(true);
     }
     expect(has('order.placed', 'EMAIL')).toBe(true);

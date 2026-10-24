@@ -21,7 +21,8 @@
 // PR 546 (SIM-F-013): the "cancelled" step says why in plain words (`messages.cancelNotice`, by the order's cancel code;
 // never the team's note), sends nothing for a silent reason (a fake order, his number used by someone else: logged
 // REASON_SILENT), and for a duplicate names the order that goes ahead with its tracking link (the duplicate review's
-// match, else his own other open order) in its own template. Like every notice it is outside the caps.
+// match, else his own other open order) in its own template. Like every notice it is outside the caps. Follow-up 287:
+// a refused cancel request (its timeline row, `order.refuseCancelRequest`) starts the `cancelRefused` notice, off.
 //
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
@@ -29,7 +30,7 @@ import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
 import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel } from '@extas/settings';
 import { nowOf, setting, TX, type MessagesDeps, type SendResult } from './context';
-import { answerTemplate, audienceFits, dedupeKey, dueAt, isCapped, messageLocale, NEVER_QUIET, orderLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
+import { answerTemplate, audienceFits, dedupeKey, dueAt, isCapped, messageLocale, NEVER_QUIET, orderLink, quietUntil, render, SELF_CONFIRM_ANSWER, stepsOf, stillFits, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -112,7 +113,7 @@ export async function planMessages(deps: MessagesDeps, storeId: number): Promise
     where: {
       storeId,
       createdAt: { gte: new Date(now.getTime() - engine.lookbackMinutes * 60_000), lte: now },
-      OR: [{ type: { in: ['order.placed', OUT_FOR_DELIVERY_EVENT] } }, { toStatus: { in: [...STEP_STATUSES] } }],
+      OR: [{ type: { in: ['order.placed', OUT_FOR_DELIVERY_EVENT, CANCEL_REFUSED_EVENT] } }, { toStatus: { in: [...STEP_STATUSES] } }],
     },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     select: { id: true, orderId: true, type: true, toStatus: true, createdAt: true },

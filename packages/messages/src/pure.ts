@@ -23,10 +23,14 @@ export interface TimelineEvent {
  */
 export const OUT_FOR_DELIVERY_EVENT = 'shipment.outForDelivery';
 
+/** Follow-up 287: the timeline row of a refused cancel request (the order's status does not change). */
+export const CANCEL_REFUSED_EVENT = 'order.refuseCancelRequest';
+
 /** The steps an order event starts. */
 export function stepsOf(e: Pick<TimelineEvent, 'type' | 'toStatus'>): JourneyStep[] {
   if (e.type === 'order.placed') return ['placed', 'selfConfirm'];
   if (e.type === OUT_FOR_DELIVERY_EVENT) return ['outForDelivery', 'deliveryDay'];
+  if (e.type === CANCEL_REFUSED_EVENT) return ['cancelRefused'];
   switch (e.toStatus) {
     case 'CONFIRMED':
       return ['confirmed'];
@@ -72,6 +76,8 @@ export function stillFits(step: string, status: string): boolean {
       return DELIVERED.includes(status);
     case 'cancelled':
       return status === 'CANCELLED';
+    case 'cancelRefused':
+      return !DONE.includes(status) && !DELIVERED.includes(status);
     case 'onHold':
       return status === 'ON_HOLD';
     case 'advanceRequested':
