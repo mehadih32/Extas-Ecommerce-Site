@@ -17,6 +17,15 @@
 //   GET   /api/admin/delivery/rto-cost?from=&to=&practice=1
 //                                                          the RTO cost book: real returned parcels only, both courier
 //                                                          legs, every part not entered named (delivery.parcels)
+// PR 176 — booking (always a person's press, never automatic) and reading a parcel now:
+//   GET   /api/admin/delivery/bookings?limit=               the orders ready to book (the order service's own view), the
+//                                                          gifts still waiting for their day, the owner's "per press" (delivery.book)
+//   POST  /api/admin/delivery/bookings                     {courierAccountId, orderIds: [...]} or {courierAccountId, all: true}
+//                                                          each order its own outcome: booked, unknown, failed, skipped
+//                                                          with the reason (IN_REVIEW, BOOKED, GIFT_DATE …) (delivery.book)
+//   POST  /api/admin/delivery/parcels/:id/retry            a failed booking, or one without an answer: asks the courier
+//                                                          for the shop's reference first, never books twice (delivery.book)
+//   POST  /api/admin/delivery/parcels/:id/track            reads the parcel from its courier now (delivery.parcels)
 import { courierAdapters, createConnections } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
@@ -99,7 +108,23 @@ export async function parcelsRoute(request: Request, deps: AdminDeps | null, pat
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'delivery.exceptions', async (x) => ({ result: await sh.recordException(x.deps, x.who, id, await body(request)) }));
   }
+  if (action === 'retry') {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.book', async (x) => ({ result: await sh.retryBooking(x.deps, x.who, id) }));
+  }
+  if (action === 'track') {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.parcels', async (x) => ({ result: await sh.trackParcel(x.deps, x.who, id) }));
+  }
   return notFound();
+}
+
+/** Booking: the orders ready to book, and a press of "Book" or "Book all". */
+export async function bookingsRoute(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const m = request.method.toUpperCase();
+  if (m === 'GET') return handle(request, deps, 'delivery.book', async (x) => ({ ...(await sh.readyToBook(x.deps, x.who, query(x.url, ['limit']))) }));
+  if (m === 'POST') return handle(request, deps, 'delivery.book', async (x) => ({ ...(await sh.bookOrders(x.deps, x.who, await body(request))) }));
+  return notAllowed();
 }
 
 /** The RTO cost book. */

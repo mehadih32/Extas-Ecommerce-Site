@@ -1,17 +1,19 @@
 // S08 · PR 175 — the courier admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the
-// permission; the courier accounts; the parcels with an exception recorded by staff; the RTO cost book. Every value is a
-// made-up test value.
+// permission; the courier accounts; the parcels with an exception recorded by staff; the RTO cost book. PR 176: the
+// orders ready to book, a press of "Book" with Steadfast on its practice world, a parcel read now, "Try again" refused on
+// a parcel the courier holds. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { MOCK_COURIER_PROVIDER } from '@extas/adapters';
+import { MOCK_COURIER_PROVIDER, STEADFAST_PROVIDER } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { setUpShipping, type ShippingFixture } from '@extas/shipping/testing';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { couriersRoute, parcelsRoute, rtoCostRoute } from './shipping-api';
+import { confirmOrder } from '@extas/orders';
+import { bookingsRoute, couriersRoute, parcelsRoute, rtoCostRoute } from './shipping-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -104,5 +106,24 @@ describe.skipIf(!HAS_TEST_DB)('courier admin API on PostgreSQL (S08 · PR 175)',
     const book = await read(await rtoCostRoute(call('GET', '/api/admin/delivery/rto-cost?practice=1', { cookie: owner }), deps));
     expect(book).toMatchObject({ status: 200, body: { ok: true, real: { parcels: 0, knownMinor: 0 } } });
     expect((await rtoCostRoute(call('GET', '/api/admin/delivery/rto-cost', { cookie: reader }), deps)).status).toBe(403);
+  });
+
+  it('PR 176: the orders ready to book, a press of "Book" (practice Steadfast), a parcel read now, "Try again" only where it applies', async () => {
+    const bookings = (method: string, opts: { body?: unknown; cookie?: string } = {}) => bookingsRoute(call(method, '/api/admin/delivery/bookings', { body: opts.body, cookie: opts.cookie ?? owner }), deps).then(read);
+    const courierId = await f.courier(STEADFAST_PROVIDER, 'API Steadfast');
+    const o = await f.place('api-book', { phone: '01700001770' }); // hardcode-ok: a made-up test number
+    await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
+    expect((await bookings('GET', { cookie: reader })).status).toBe(403);
+    expect((await bookings('DELETE')).status).toBe(405);
+    const ready = await bookings('GET');
+    expect(ready).toMatchObject({ status: 200, body: { ok: true, total: 1, giftsWaiting: 0 } });
+    expect(ready.body.rows[0]).toMatchObject({ orderId: o.orderId, phone: '+8801700001770', problems: [] }); // hardcode-ok: a made-up test number
+    expect(await bookings('POST', { body: { courierAccountId: courierId } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    const booked = await bookings('POST', { body: { courierAccountId: courierId, orderIds: [o.orderId] } });
+    expect(booked).toMatchObject({ status: 200, body: { ok: true, mode: 'MOCK', counts: { booked: 1 } } });
+    const shipmentId = booked.body.results[0].shipmentId as string;
+    expect(await parcels('POST', [shipmentId, 'track'])).toMatchObject({ status: 200, body: { result: { from: 'IN_REVIEW', status: 'IN_TRANSIT' } } });
+    expect(await parcels('POST', [shipmentId, 'retry'])).toMatchObject({ status: 409, body: { error: 'NOT_RETRYABLE', data: { status: 'IN_TRANSIT' } } });
+    expect((await parcels('GET', [shipmentId, 'track'])).status).toBe(405);
   });
 });

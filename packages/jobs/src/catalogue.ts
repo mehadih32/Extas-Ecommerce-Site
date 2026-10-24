@@ -17,6 +17,8 @@ import { sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
+import { trackParcels } from '@extas/shipping';
+import { COURIER_QUEUE, COURIER_TRACK_JOB, courierDeps } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -188,6 +190,27 @@ const paymentsSweepJob: JobDefinition<{ storeId: number }> = {
 // PR 72: the search index (search.ts), planned by its own planner when a store's index is behind its catalogue
 // PR 148: the message engine (messages.ts), planned per store and slot
 // PR 159: the purge of the kept IP, device id and location (pii.ts), planned per store and slot
+/**
+ * PR 176 — one store's parcels read from their couriers (packages/shipping `trackParcels`; planned by courier.ts
+ * `courierPlanner` per store and slot of `delivery.courier.tracking.everyMinutes`). Safe to run twice: a parcel's events
+ * are stored once each. A courier that cannot be reached for a parcel is counted, not a failed run (it is read again).
+ */
+const courierTrackJob: JobDefinition<{ storeId: number }> = {
+  key: COURIER_TRACK_JOB,
+  queue: COURIER_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${COURIER_TRACK_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => {
+    const c = courierDeps(deps);
+    if (!c) return { ok: true, stats: { skipped: 'no couriers' } };
+    return { ok: true, stats: compactStats(await trackParcels(c, p.storeId)) };
+  },
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -195,6 +218,7 @@ const definitions: JobDefinition<never>[] = [
   messagesJob as unknown as JobDefinition<never>,
   piiPurgeJob as unknown as JobDefinition<never>,
   paymentsSweepJob as unknown as JobDefinition<never>,
+  courierTrackJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

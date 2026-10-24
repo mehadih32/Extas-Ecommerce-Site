@@ -60,7 +60,8 @@
       "search_index": "সার্চের তালিকা",
       "messages_run": "কাস্টমারকে মেসেজ পাঠানো",
       "orders_pii_purge": "রাখা IP, ডিভাইস আর লোকেশন মুছে ফেলা",
-      "payments_pending_sweep": "শেষ না হওয়া অনলাইন পেমেন্ট"
+      "payments_pending_sweep": "শেষ না হওয়া অনলাইন পেমেন্ট",
+      "courier_track": "কুরিয়ার থেকে পার্সেলের খবর পড়া"
     },
     "workers": {
       "title": "ওয়ার্কার",

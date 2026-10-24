@@ -1,5 +1,6 @@
 // What every job and the worker get: the database, the settings (through the two-tier resolver, PR 492), the
 // inventory's dependencies (the ERP connection layer with the vault's keys, PR 18/493) and a clock for tests.
+import type { Connections } from '@extas/adapters';
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import type { MessagesDeps } from '@extas/messages';
@@ -19,6 +20,8 @@ export interface JobDeps {
   messages?: { sender: MessagesDeps['sender'] };
   /** PR 170: the payment gateways (each the practice gateway until its keys pass the Test), or none — no payments sweep. */
   payments?: { gateways: GatewayResolver };
+  /** PR 176: the courier connections (each courier its practice world until its keys pass), or none — no tracking job. */
+  couriers?: { connections: Pick<Connections, 'use'> };
   /** Clock, for tests. */
   now?: () => Date;
 }

@@ -184,6 +184,15 @@
         "testUrl": "A product page to test with (https://…)",
         "userAgent": "Name sent to the sites read — optional"
       }
+    },
+    "steadfast": {
+      "name": "Steadfast Courier",
+      "desc": "Book parcels and read their status. Practice mode until both keys are in and the test passes",
+      "fields": {
+        "apiKey": "API key (Steadfast merchant panel → API)",
+        "secretKey": "Secret key (same page)",
+        "baseUrl": "Address — only for a test server"
+      }
     }
   },
   "errors": {
@@ -240,8 +249,30 @@
       "other": "Other (see the note)"
     },
     "providers": {
-      "mockCourier": "Practice courier"
+      "mockCourier": "Practice courier",
+      "steadfast": "Steadfast"
     },
-    "practice": "Practice — nothing is sent to a courier"
+    "practice": "Practice — nothing is sent to a courier",
+    "booking": {
+      "outcome": {
+        "booked": "Booked",
+        "unknown": "No answer yet — try again",
+        "failed": "Courier refused",
+        "skipped": "Not booked"
+      },
+      "code": {
+        "IN_REVIEW": "Waiting for a review decision",
+        "BOOKED": "Already booked",
+        "CANCEL_REQUESTED": "The customer asked to cancel",
+        "CANCEL_PENDING": "Cancel waiting for the courier",
+        "ILLEGAL_TRANSITION": "Not confirmed, held, cancelled or already sent",
+        "SHORTAGE_OPEN": "A packing card is still open",
+        "NOT_FOUND": "Order not found",
+        "GIFT_DATE": "Gift — waits for its booking day",
+        "NO_RECEIVER": "Name, mobile number or address missing",
+        "COURIER_REFUSED": "The courier refused it (see the reason)",
+        "NO_ANSWER": "The courier did not answer"
+      }
+    }
   }
 }

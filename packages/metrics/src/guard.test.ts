@@ -27,6 +27,7 @@ export const ALLOWED: Record<string, string> = {
   'packages/seed/src/sample.ts': 'builds one sample order’s own subtotal from its sample lines (sample data, not a report)',
   'packages/payments/src/cod-match.ts': 'a partly delivered parcel’s amount due from that one order’s kept lines (PR 166), not a sales figure',
   'packages/payments/src/cod.ts': 'the cash still with each courier and on the road (the COD position, PR 166), money owed to the shop, not a sales figure',
+  'packages/shipping/src/booking.ts': "a parcel's declared value for the courier (its own lines' totals, PR 176), not a sales figure",
 };
 
 function sources(dir: string, out: string[] = []): string[] {

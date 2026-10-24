@@ -7,6 +7,12 @@
 // parcel (parcels.ts); the RTO cost book from the shop's own returned parcels only, both courier legs, every missing
 // part named (rto.ts, SIM-F-027). The rules without a database are in `@extas/shipping/pure`.
 //
+// PR 176: booking — a staff action only, through the order service's `bookWith` (never a cancelled, held or in-review
+// order: SIM-F-002, SIM-F-014), to the order's delivery target with a gift held until its day (SIM-F-007), the live
+// amount due (SIM-F-004), the pieces' weight (SIM-F-029); a lost answer is recovered by the shop's reference before
+// booking again (booking.ts). Status polling of the parcels the couriers hold (tracking.ts; the worker's
+// `courier.track` job). Steadfast is the first real courier behind the contract (`@extas/adapters`).
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -15,3 +21,5 @@ export * from './accounts';
 export * from './events';
 export * from './parcels';
 export * from './rto';
+export * from './booking';
+export * from './tracking';

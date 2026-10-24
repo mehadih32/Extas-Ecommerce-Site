@@ -2,7 +2,7 @@
 // languages, so the Delivery screens never show a raw code.
 import { describe, expect, it } from 'vitest';
 import { courierAdapters, EXCEPTION_REASONS } from '@extas/adapters';
-import { ACTIVE_STATES, FINAL_STATES } from '@extas/shipping/pure';
+import { ACTIVE_STATES, BOOKING_CODES, BOOKING_OUTCOMES, FINAL_STATES } from '@extas/shipping/pure';
 import bn from '../../messages/admin.bn.json';
 import en from '../../messages/admin.en.json';
 import { t } from './i18n';
@@ -15,6 +15,9 @@ describe('courier labels (PR 175)', () => {
       for (const s of states) expect(t(d, `courier.status.${s}`), s).not.toBe(`courier.status.${s}`);
       for (const r of reasons) expect(t(d, `courier.reasons.${r}`), r).not.toBe(`courier.reasons.${r}`);
       for (const a of courierAdapters) expect(t(d, `courier.providers.${a.provider}`), a.provider).not.toBe(`courier.providers.${a.provider}`);
+      // PR 176: every booking outcome and every reason an order was not booked
+      for (const o of BOOKING_OUTCOMES) expect(t(d, `courier.booking.outcome.${o}`), o).not.toBe(`courier.booking.outcome.${o}`);
+      for (const c of BOOKING_CODES) expect(t(d, `courier.booking.code.${c}`), c).not.toBe(`courier.booking.code.${c}`);
     }
   });
 });
