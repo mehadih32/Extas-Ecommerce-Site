@@ -3,7 +3,7 @@
 // (lib/returns-api.ts) with the case's version, optionally after asking for a note; the open-an-exchange form sends the
 // piece chosen with an idempotency key (a second press opens nothing new). Every refusal is said in words from the
 // page's messages; after a decision the page is read again from the server, so the buttons are the steps open now.
-// PR 188 adds the size switcher of a piece going out.
+// PR 188 adds the size switcher of a piece going out; PR 189 the form of a return after receipt.
 import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { call, type Answer } from '@/components/admin/api';
@@ -205,6 +205,77 @@ export function SizeSwitch({ url, exchangeItemId, version, chips, title, texts }
           {err}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+export interface OpenReturnTexts extends ActionTexts {
+  reason: string;
+  quantity: string;
+  note: string;
+  noteOther: string;
+  open: string;
+}
+
+/** PR 189: a return after receipt for the chosen line (only offered when the policy allows a reason), with a key. */
+export function OpenReturnForm({ url, orderItemId, max, reasons, texts, nextHref }: { url: string; orderItemId: string; max: number; reasons: { code: string; label: string }[]; texts: OpenReturnTexts; nextHref: string | null }) {
+  const router = useRouter();
+  const ids = { reason: useId(), qty: useId(), note: useId() };
+  const [key] = useState(newKey);
+  const [reason, setReason] = useState(reasons[0]?.code ?? '');
+  const [qty, setQty] = useState(max);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const needsNote = reason === 'other';
+  const go = async () => {
+    setBusy(true);
+    setErr('');
+    const a = await post(url, { reason, ...(note.trim() ? { note: note.trim() } : {}), items: [{ orderItemId, quantity: qty }] }, key);
+    setBusy(false);
+    if (!a.data.ok) return setErr(errorOf(a, texts));
+    const ret = a.data.result as { returnId?: string } | undefined;
+    if (nextHref && ret?.returnId) router.push(`${nextHref}${ret.returnId}`);
+    else router.refresh();
+  };
+  return (
+    <div className="a2-stack" data-testid="open-return">
+      <div className="rt-form">
+        <div>
+          <label className="a2-lbl" htmlFor={ids.reason}>
+            {texts.reason}
+          </label>
+          <select id={ids.reason} className="a2-sel" value={reason} onChange={(e) => setReason(e.target.value)}>
+            {reasons.map((r) => (
+              <option key={r.code} value={r.code}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="a2-lbl" htmlFor={ids.qty}>
+            {texts.quantity}
+          </label>
+          <input id={ids.qty} className="a2-inp" type="number" inputMode="numeric" min={1} max={max} value={qty} onChange={(e) => setQty(Math.max(1, Math.min(max, Number(e.target.value) || 1)))} />
+        </div>
+      </div>
+      <div>
+        <label className="a2-lbl" htmlFor={ids.note}>
+          {needsNote ? texts.noteOther : texts.note}
+        </label>
+        <input id={ids.note} className="a2-inp" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
+      </div>
+      {err ? (
+        <p className="a2-xs rt-bad" role="alert">
+          {err}
+        </p>
+      ) : null}
+      <div className="a2-cmds">
+        <button type="button" className="a2-btn pri" disabled={busy || !reason || (needsNote && !note.trim())} onClick={go} data-testid="open-return-go">
+          {texts.open}
+        </button>
+      </div>
     </div>
   );
 }

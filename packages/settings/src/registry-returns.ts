@@ -15,6 +15,11 @@
 // SKU expected may be recorded (with a note; what is scanned is what is restocked), whether a "not sellable" piece needs
 // a photo, and the reasons a piece cannot be sold again (its loss is recorded at its cost, never sent to ERP stock).
 //
+// PR 189 (`orders.returns.handling`; §6.5.0, §6.5.4): return handling. The owner's policy is that there are no returns
+// after receipt (`policy.returns.afterDelivery`, off); this key only says whether the shop's own mistake (a defect, a
+// wrong item) may still come back when that policy is off — off by default — and how long after the courier's
+// delivered mark (empty = the exchange window).
+//
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone (CLAUDE.md rule 6). A difference in
 // the customer's favour becomes a wallet-credit REQUEST after QC passes; a difference he owes is collected as Cash on
 // Delivery on the linked exchange order.
@@ -72,6 +77,14 @@ export const exchangeEngineSchema = z
  */
 export const returnsQcSchema = z.object({ acceptOtherSku: z.boolean(), photoForLoss: z.boolean() }).strict();
 
+/**
+ * PR 189 (§6.5.4) — return handling. `ourFaultReturns`: a defect or a wrong item may be sent back after receipt even
+ * though returns after delivery are off (`policy.returns.afterDelivery`); off by default. `windowHours`: how long after
+ * the courier's delivered mark a return after receipt may be opened; empty = the exchange window
+ * (`policy.exchange.windowHours`).
+ */
+export const returnsHandlingSchema = z.object({ ourFaultReturns: z.boolean(), windowHours: z.int().min(1).max(8_760).nullable() }).strict();
+
 export const returnsSettings = {
   'orders.exchange.tiers': setting({
     ...base,
@@ -117,5 +130,14 @@ export const returnsSettings = {
     labelKey: 'orders.returns.lossReasons.label',
     helpKey: 'orders.returns.lossReasons.help',
     sortOrder: 404,
+  }),
+  'orders.returns.handling': setting({
+    ...base,
+    valueType: 'JSON',
+    schema: returnsHandlingSchema,
+    default: { ourFaultReturns: false, windowHours: null },
+    labelKey: 'orders.returns.handling.label',
+    helpKey: 'orders.returns.handling.help',
+    sortOrder: 405,
   }),
 };

@@ -105,6 +105,8 @@ export const ORDER_COMMANDS = [
   'deliveryCorrected',
   // S08 · PR 185: an exchange opened on a delivered order (the status stays; the new parcel is its own linked order)
   'exchange',
+  // S08 · PR 189: a return after receipt opened on a delivered order, when the policy allows it (the status stays)
+  'returnCase',
 ] as const;
 export type OrderCommand = (typeof ORDER_COMMANDS)[number];
 
@@ -160,6 +162,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   // S08 · PR 185 (B1.8): an exchange is opened once the parcel is with the customer (or came back refused for a size,
   // PR 190, SIM-F-021); the order keeps its final state, the exchange and its new parcel are records of their own
   exchange: ['DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED'],
+  // S08 · PR 189: a return after receipt, only once the customer has the parcel (the policy is checked by the service)
+  returnCase: ['DELIVERED', 'PARTIALLY_DELIVERED'],
 };
 
 /** What the machine needs to know about an order (read under its row lock). */

@@ -22,6 +22,12 @@
 //                                                               colour), with stock and price now (PR 188, returns.view)
 //   POST  /api/admin/returns/exchanges/:id/switch               {exchangeItemId, newVariantId, version?} — another size at
 //                                                               the same price, stock-checked (PR 188, returns.decide)
+//   GET   /api/admin/returns/orders/:orderId/return-choices      a return after receipt: the policy (no returns after
+//                                                               receipt by default), the window, the lines (PR 189)
+//   POST  /api/admin/returns/orders/:orderId/return             {reason, note?, items: [{orderItemId, quantity?}]} with an
+//                                                               Idempotency-Key (PR 189, returns.decide)
+//   POST  /api/admin/returns/parcels/:id/close                  {note?, version?} — checked, or with a note (PR 189,
+//                                                               returns.decide)
 //   GET   /api/admin/returns/parcels?status=&order=             the returned parcels, newest first (returns.view or .qc)
 //   GET   /api/admin/returns/parcels/:id                        one parcel with its pieces and their ERP answer
 //   POST  /api/admin/returns/parcels/:id/receive                {note?, version?} — at the shop (returns.qc)
@@ -122,6 +128,11 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
           const d = await decision(request);
           return { result: await od.qcReturn(x.deps, x.who, b, d.input, { version: d.version }) };
         });
+      case 'close':
+        return handle(request, deps, 'returns.decide', async (x) => {
+          const d = await decision(request);
+          return { result: await od.closeReturn(x.deps, x.who, b, d.input, { version: d.version }) };
+        });
       default:
         return notFound();
     }
@@ -147,6 +158,14 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
     if (c === 'exchange') {
       if (m !== 'POST') return notAllowed();
       return handle(request, deps, 'returns.decide', async (x) => ({ exchange: await od.openExchange(x.deps, x.who, b, await body(request), x.opts) }), 201);
+    }
+    if (c === 'return-choices') {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'returns.view', async (x) => ({ choices: await od.returnChoices(x.deps, x.who, b) }));
+    }
+    if (c === 'return') {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'returns.decide', async (x) => ({ result: await od.openReturn(x.deps, x.who, b, await body(request), x.opts) }), 201);
     }
     return notFound();
   }

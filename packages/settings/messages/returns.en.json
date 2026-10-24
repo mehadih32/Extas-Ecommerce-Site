@@ -22,6 +22,10 @@
       "lossReasons": {
         "label": "Why a piece cannot be sold again",
         "help": "The reasons picked at QC for a piece that is not sellable. Its loss is recorded at its cost in the shop's records and never sent to the ERP as stock."
+      },
+      "handling": {
+        "label": "Return handling",
+        "help": "The policy is that there are no returns after receipt (Exchange & return policy › returns after delivery, off): once the customer has the parcel, the way back is an exchange. \"Our mistake may come back\": a defect or a wrong item may still be sent back after receipt — off by default. \"Window\": how many hours after the courier's delivered mark a return may be opened; empty = the exchange window. A parcel the courier brings back is always received and checked. No money is paid back here."
       }
     }
   },

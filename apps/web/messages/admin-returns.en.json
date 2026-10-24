@@ -127,6 +127,8 @@
     "NOTHING_CHANGED": "That is the size already chosen.",
     "ILLEGAL_TRANSITION": "The new parcel is booked with the courier; the size cannot change now.",
     "EDIT_CLOSED": "The new parcel can no longer be changed.",
+    "RETURN_CLOSED": "No return now: the policy (no returns after receipt), the window has passed, or the parcel is not with the customer.",
+    "RETURN_LIMIT": "These pieces are already coming back (a return or an open exchange).",
     "server-error": "That did not work. Try again."
   },
   "qc": {
@@ -178,7 +180,11 @@
       "CHARGE_PAID_RETURN": "Returned, charge paid",
       "DEFECT_RETURN": "Fault return",
       "EXCHANGE_PICKUP": "Exchange pick-up"
-    }
+    },
+    "close": "Close",
+    "closeNote": "Note (optional)",
+    "closeEarly": "Why close it before QC (required) — e.g. the courier lost it",
+    "toClose": "Checked · to close · {n}"
   },
   "switch": {
     "title": "Another size",
@@ -186,5 +192,28 @@
     "none": "No other size at this price.",
     "out": "none free",
     "price": "other price"
+  },
+  "retStart": {
+    "title": "Or a return",
+    "sub": "Only when the policy allows it; otherwise an exchange is the way back.",
+    "reason": "Reason",
+    "quantity": "Pieces",
+    "note": "Note (optional)",
+    "noteOther": "Note (needed for Other)",
+    "open": "Open this return",
+    "none": "These pieces are already coming back (a return or an open exchange).",
+    "paid": "Paid for these pieces: {amount} — noted only; no money is paid back here",
+    "closed": {
+      "POLICY": "No returns after receipt — the shop's policy. An exchange is the way back (Settings › Orders › Return handling for our own mistakes).",
+      "NOT_DELIVERED": "Not delivered yet — a return after receipt opens once the parcel is with the customer.",
+      "UNKNOWN": "The delivered mark is missing — check the courier first.",
+      "WINDOW": "The return window has passed."
+    }
+  },
+  "retReason": {
+    "changed-mind": "Changed his mind",
+    "defect": "Defect (our mistake)",
+    "wrong": "Wrong item (our mistake)",
+    "other": "Other (with a note)"
   }
 }

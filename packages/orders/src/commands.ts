@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { allow, parse, setting, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
 import { CANCEL_CODES, NOT_A_RISK_SIGNAL, NOTE_REQUIRED, type CancelCode, type OrderCommand } from './pure';
+import { openCourierReturn } from './return-cases';
 import { cancelEffects, execute, queueErpOrder, staffBy, type By, type CommandOptions, type CommandResult, type LockedOrder, type OrderFacts } from './service';
 
 const NOTE_MAX = 2_000;
@@ -351,6 +352,8 @@ export const stepInput = z.object({ at: z.coerce.date().optional(), keptItemIds:
  * One fulfilment or courier step (S08 hook). A partial delivery needs the list of kept lines (§6.5.0). A refused parcel
  * (returned, or the refused part of a partial delivery) may carry why, from the owner's `orders.refusal.reasons` (PR 142,
  * SIM-F-038: "bought elsewhere", "arrived after Eid" …), so the RTO reports count real reasons instead of "Other".
+ * PR 189 (§6.5.0): a parcel coming back — returned, or the refused part of a partial delivery — opens its return record
+ * (EXPECTED, every line not kept) in the same transaction, for Receive & QC.
  */
 export async function orderStep(
   deps: OrdersDeps,
@@ -373,9 +376,10 @@ export async function orderStep(
     command: step,
     input: { ...d, at: d.at?.toISOString() ?? null },
     check: opts.check,
-    effect: async (_tx, _o, _f, { from, now }) => {
+    effect: async (tx, o, _f, { from, now }) => {
       const field = STEP_TIME[step];
-      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(opts.eventData ?? {}) };
+      const returnId = step === 'returned' || step === 'partiallyDelivered' ? await openCourierReturn(tx, o, { step, refusalKey: refusal?.key ?? null, keptItemIds: d.keptItemIds ?? [] }) : null;
+      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(opts.eventData ?? {}) };
       // PR 184: a pick-up the courier reports before anyone pressed "Handed over" is the hand-over
       const handed = step === 'courierPickedUp' && from !== 'HANDED_OVER' ? { handedOverAt: d.at ?? now } : {};
       return { data: { ...(field ? { [field]: d.at ?? now } : {}), ...handed }, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined };
