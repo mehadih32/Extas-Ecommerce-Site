@@ -1869,6 +1869,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-023",
+   "date": "24 Oct",
+   "title": "",
+   "text": "One CI run on a pull request took about 115 minutes (the `web` job 57.5 min, then the `device-gate` job 57 min after it), because Lighthouse ran twice (36 min without a database in `web`, 18 min on the sample data in `device-gate`) and every check ran one after another. The owner's rules:",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
@@ -3140,6 +3149,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s00--foundation--pr-1118",
      "text": "**Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`."
+    },
+    {
+     "date": "24 Oct",
+     "sortKey": 34560,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s00--foundation--pr-1118",
+     "text": "**Updated 24 Oct 2026 (CN-023):** CI under 25 minutes with every gate as strict as before: one Lighthouse run on the sample database from one page list (on a pull request the core set — home, a category, a product, a combo, bag, checkout — plus the pages its diff touches; the full set on every push to `main`, nightly and by hand, still blocking the deploy), pages in parallel on separate runners; one build of the app and its images, reused by parallel jobs (lint and type-check, unit tests, sign-in end to end, device gate, Lighthouse); pnpm, Next.js build and Playwright browser caches; time measured before and after in `PROGRESS.md`."
     }
    ],
    "mentions": [],
