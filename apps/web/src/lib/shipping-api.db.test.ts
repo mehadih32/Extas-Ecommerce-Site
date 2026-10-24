@@ -126,4 +126,27 @@ describe.skipIf(!HAS_TEST_DB)('courier admin API on PostgreSQL (S08 · PR 175)',
     expect(await parcels('POST', [shipmentId, 'retry'])).toMatchObject({ status: 409, body: { error: 'NOT_RETRYABLE', data: { status: 'IN_TRANSIT' } } });
     expect((await parcels('GET', [shipmentId, 'track'])).status).toBe(405);
   });
+
+  it('PR 554: the zone sync — read a practice list now, the courier page tabs, pair and unpair an area, Steadfast has none', async () => {
+    const id = (await couriers('POST', [], { body: { providerKey: MOCK_COURIER_PROVIDER, name: 'Practice zones' } })).body.courier.id as string;
+    const sf = (await couriers('GET', [])).body.couriers.find((c: { providerKey: string }) => c.providerKey === STEADFAST_PROVIDER)?.id as string | undefined;
+    if (sf) expect(await couriers('POST', [sf, 'zone-sync'])).toMatchObject({ status: 422, body: { error: 'NO_ZONE_LIST' } });
+    expect((await couriers('POST', [id, 'zone-sync'], { cookie: reader })).status).toBe(403);
+    const now = await couriers('POST', [id, 'zone-sync']);
+    expect(now).toMatchObject({ status: 200, body: { ok: true, now: true, run: { status: 'SUCCEEDED' } } });
+    const page = await couriers('GET', [id, 'zones'], { qs: '?tab=unmapped&q=Uttara' });
+    expect(page.body).toMatchObject({ ok: true, tab: 'unmapped', counts: { places: { city: 8 } } });
+    const uttara = page.body.rows.find((r: { area: { name: string } }) => r.area.name === 'Uttara');
+    expect(uttara.candidates).toHaveLength(2);
+    const places = await couriers('GET', [id, 'places'], { qs: '?q=Uttara' });
+    expect(places.body.places).toHaveLength(2);
+    expect(await couriers('POST', [id, 'areas'], { body: { areaId: uttara.area.id, placeId: places.body.places[0].id } })).toMatchObject({ status: 200, body: { pair: { ids: { cityId: '1' } } } });
+    expect(await couriers('POST', [id, 'areas'], { body: { areaId: 'x' } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    expect((await couriers('GET', [id, 'zones'], { qs: '?tab=mapped&q=Uttara' })).body.rows[0]).toMatchObject({ source: 'staff' });
+    expect(await couriers('POST', [id, 'areas', uttara.area.id, 'unmap'])).toMatchObject({ status: 200, body: { ok: true } });
+    expect(await couriers('POST', [id, 'areas', uttara.area.id, 'unmap'])).toMatchObject({ status: 404, body: { error: 'NOT_FOUND' } });
+    expect((await couriers('GET', [id, 'zones'], { qs: '?tab=teleport' })).status).toBe(400);
+    expect((await couriers('GET', [id, 'zone-sync'])).status).toBe(405);
+    expect((await couriers('GET', [id, 'teleport'])).status).toBe(404);
+  });
 });

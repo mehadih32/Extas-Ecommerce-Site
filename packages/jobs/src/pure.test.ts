@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
 import { retryDelayMs, retryPolicyOf } from './backoff';
 import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogue';
-import { courierPlanner } from './courier';
+import { courierPlanner, courierZonesPlanner, ZONE_TURN_MINUTES } from './courier';
 import { messagesPlanner } from './messages';
 import { paymentsPlanner } from './payments';
 import { searchPlanner, searchRunKey } from './search';
@@ -55,7 +55,7 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'messages.run', 'orders.pii.purge', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'messages.run', 'orders.pii.purge', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
@@ -111,6 +111,20 @@ describe('PR 6 · catalogue', () => {
     const planned = await courierPlanner(deps, at);
     expect(planned.map((p) => p.key)).toEqual([`courier.track/1/${slotOf(at.getTime(), 30 * 60_000)}`]);
     expect(planned[0]!.queue).toBe('courier');
+  });
+
+  it('PR 554: the zone sync turn needs a store; one per store and hour slot with the sync on or a run still going', async () => {
+    const job = jobDefinition('courier.zones')!;
+    expect(job.queue).toBe('courier');
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(await courierZonesPlanner({} as never, new Date())).toEqual([]);
+    expect(await job.run({} as never, { storeId: 5 })).toEqual({ ok: true, stats: { skipped: 'no couriers' } });
+    // store 1: on · store 2: off, nothing going · store 3: off, but a "Read the list now" still going
+    const settings = { value: async (_k: string, o?: { storeId?: number }) => ({ enabled: o?.storeId === 1 }) };
+    const db = { store: { findMany: async () => [{ id: 1 }, { id: 2 }, { id: 3 }] }, courierZoneSync: { count: async (q: { where: { storeId: number } }) => (q.where.storeId === 3 ? 1 : 0) } };
+    const at = new Date(Date.UTC(2026, 9, 24, 6, 0, 30));
+    const planned = await courierZonesPlanner({ couriers: { connections: { use: async () => null } }, settings, db } as never, at);
+    expect(planned.map((p) => p.key)).toEqual([1, 3].map((s) => `courier.zones/${s}/${slotOf(at.getTime(), ZONE_TURN_MINUTES * 60_000)}`));
   });
 
   it('PR 170: the payments sweep needs a store; one run per store and slot of `payments.pending.everyMinutes`, none while both marks are off', async () => {

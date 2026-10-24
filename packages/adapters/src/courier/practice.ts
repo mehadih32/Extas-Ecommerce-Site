@@ -25,7 +25,10 @@ export const practiceCapabilities: CourierCapabilities = {
   booking: true,
   tracking: 'poll',
   partialDelivery: true,
-  zoneIds: false,
+  // PR 554: the practice courier has a practice place list and takes its ids when the area is mapped (never needs them)
+  zoneIds: true,
+  zoneList: true,
+  zoneNeeds: null,
   weight: true,
   declaredValue: true,
   cancel: false,

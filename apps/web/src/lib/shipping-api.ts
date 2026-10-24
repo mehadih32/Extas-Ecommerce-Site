@@ -1,5 +1,5 @@
-// S08 · PR 175 — the courier admin API (BACKEND-ARCHITECTURE §5.6 DLV-03, DLV-05). No admin pages yet: the Delivery
-// screens come with the new admin shell; these routes are what they call. Every route signs the person in
+// S08 · PR 175 — the courier admin API (BACKEND-ARCHITECTURE §5.6 DLV-03, DLV-05). The Delivery → Couriers pages (PR 554)
+// and the screens still to come call these routes. Every route signs the person in
 // (guardAdmin), checks the permission in the store it touches (`?storeId=`, default the mother store), then calls
 // @extas/shipping, which checks the permission again and writes the audit log in the same transaction. Answers are
 // `{ ok: true, … }` or `{ ok: false, error: CODE, details, data }`.
@@ -26,6 +26,16 @@
 //   POST  /api/admin/delivery/parcels/:id/retry            a failed booking, or one without an answer: asks the courier
 //                                                          for the shop's reference first, never books twice (delivery.book)
 //   POST  /api/admin/delivery/parcels/:id/track            reads the parcel from its courier now (delivery.parcels)
+// PR 554 — the courier zone sync (DLV-05 "Sync zones"):
+//   GET   /api/admin/delivery/couriers/:id/zones?tab=&q=&page=&limit=
+//                                                          the courier page: counts, the last run, one tab of rows —
+//                                                          needed (areas parcels wait for), unmapped (with candidates),
+//                                                          mapped, dropped (delivery.read)
+//   POST  /api/admin/delivery/couriers/:id/zone-sync       "Read the list now": a practice courier is read at once, a real
+//                                                          one by the worker's next turn (delivery.couriers)
+//   GET   /api/admin/delivery/couriers/:id/places?q=&level=  the courier's places by name (delivery.read)
+//   POST  /api/admin/delivery/couriers/:id/areas           {areaId, placeId} a person pairs an area (delivery.couriers)
+//   POST  /api/admin/delivery/couriers/:id/areas/:areaId/unmap   takes a pair away: archived, never deleted (delivery.couriers)
 import { courierAdapters, createConnections } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
@@ -84,10 +94,42 @@ export async function couriersRoute(request: Request, deps: AdminDeps | null, pa
     if (m === 'POST') return handle(request, deps, 'delivery.couriers', async (x) => ({ courier: await sh.addCourier(x.deps, x.who, await body(request)) }), 201);
     return notAllowed();
   }
-  if (rest.length) return notFound();
   if (!isUuid(id)) return Promise.resolve(fail(404, 'NOT_FOUND', ['courierAccountId']));
+  if (rest.length) return courierZoneRoute(request, deps, id, rest);
   if (m !== 'PATCH') return notAllowed();
   return handle(request, deps, 'delivery.couriers', async (x) => ({ courier: await sh.updateCourier(x.deps, x.who, id, await body(request)) }));
+}
+
+/** PR 554: one courier's zone sync: `rest` is what comes after /api/admin/delivery/couriers/:id. */
+function courierZoneRoute(request: Request, deps: AdminDeps | null, id: string, rest: string[]): Promise<Response> {
+  const m = request.method.toUpperCase();
+  const [what, areaId, action, ...more] = rest;
+  if (more.length) return notFound();
+  if (what === 'zones' && !areaId) {
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'delivery.read', async (x) => ({ ...(await sh.courierZones(x.deps, x.who, id, query(x.url, ['tab', 'q', 'page', 'limit']))) }));
+  }
+  if (what === 'zone-sync' && !areaId) {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.couriers', async (x) => ({ ...(await sh.readListNow(x.deps, x.who, id)) }));
+  }
+  if (what === 'places' && !areaId) {
+    if (m !== 'GET') return notAllowed();
+    return handle(request, deps, 'delivery.read', async (x) => ({ places: await sh.searchCourierPlaces(x.deps, x.who, id, query(x.url, ['q', 'level', 'limit'])) }));
+  }
+  if (what === 'areas' && !areaId) {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.couriers', async (x) => ({ pair: await sh.mapArea(x.deps, x.who, id, await body(request)) }));
+  }
+  if (what === 'areas' && areaId && action === 'unmap') {
+    if (!isUuid(areaId)) return Promise.resolve(fail(404, 'NOT_FOUND', ['areaId']));
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.couriers', async (x) => {
+      await sh.unmapArea(x.deps, x.who, id, areaId);
+      return {};
+    });
+  }
+  return notFound();
 }
 
 /** The parcels: `path` is what comes after /api/admin/delivery/parcels. */

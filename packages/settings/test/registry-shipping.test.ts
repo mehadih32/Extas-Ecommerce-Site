@@ -1,15 +1,18 @@
 // S08 · PR 175–177 (registry v50): every courier key at version 50, never owner data, labelled in both languages, its
-// default valid; the owner's figures ship empty.
+// default valid; the owner's figures ship empty. PR 554 (v56): the courier zone sync.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { courierBookingSchema, courierTrackingSchema, GIFT_NOTE_TOKENS, rtoCostSchema, shippingSettings } from '../src/registry-shipping';
+import { courierBookingSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, rtoCostSchema, shippingSettings } from '../src/registry-shipping';
+
+/** The registry version each key arrived at. */
+const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56 };
 
 describe('courier shipping settings (v50)', () => {
-  it('every key is in the registry at version 50 in the Delivery group, labelled in English and Bengali, its default valid', () => {
+  it('every key is in the registry at its version (50; PR 554: 56) in the Delivery group, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(shippingSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(50);
+      expect(spec.version, key).toBe(SINCE[key] ?? 50);
       expect(spec.group, key).toBe('delivery');
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -36,5 +39,14 @@ describe('courier shipping settings (v50)', () => {
     expect(courierBookingSchema.safeParse({ ...b, maxPerRun: 0 }).success).toBe(false);
     expect(shippingSettings['delivery.courier.tracking'].default).toEqual({ enabled: true, everyMinutes: 60, batch: 200 });
     expect(courierTrackingSchema.safeParse({ enabled: true, everyMinutes: 1, batch: 200 }).success).toBe(false);
+  });
+
+  it('PR 554: the zone sync is on, weekly, within 600 calls a run, pairs exact names, and holds a parcel only when the courier needs its ids', () => {
+    const z = shippingSettings['delivery.courier.zoneSync'].default;
+    expect(z).toEqual({ enabled: true, everyDays: 7, callsPerRun: 600, areas: true, autoMatch: true, unmapped: 'whenRequired' });
+    expect(courierZoneSyncSchema.safeParse({ ...z, everyDays: 0 }).success).toBe(false);
+    expect(courierZoneSyncSchema.safeParse({ ...z, callsPerRun: 5 }).success).toBe(false);
+    expect(courierZoneSyncSchema.safeParse({ ...z, unmapped: 'never' }).success).toBe(false);
+    expect(courierZoneSyncSchema.safeParse({ ...z, unmapped: 'always' }).success).toBe(true);
   });
 });

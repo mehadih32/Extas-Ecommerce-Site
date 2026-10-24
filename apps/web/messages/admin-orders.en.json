@@ -578,7 +578,9 @@
       "order_book": "Courier booked",
       "order_identityLinked": "Linked to the customer's identity",
       "order_riskLevel": "Risk level steps",
-      "order_advanceResend": "Pay link sent again"
+      "order_advanceResend": "Pay link sent again",
+      "shipment_areaHeld": "Courier booking waits: the courier does not know this area yet",
+      "shipment_bookingFailed": "Courier booking failed"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",

@@ -6,11 +6,16 @@
 // SIM-F-017: a failed delivery try, an address problem, a lost parcel, a damaged parcel, a partial delivery and a refusal
 // that comes back.
 //
+// PR 554: a practice courier with `capabilities.zoneList` answers `places()` from its own copy of the practice place
+// list (mock-places.ts); tests and the staging check drop or add places to play a courier changing its list, and can
+// make the next list read fail (a sync never archives anything after a failed read).
+//
 // What the mock never does: invent money. It reports no charge and no collected amount, so a practice parcel can never
 // be read as the shop's real courier cost (SIM-F-027). Tests and the staging check steer it through `mockCourierWorld`.
 import { createHash } from 'node:crypto';
-import type { BookResult, CourierApi, CourierCapabilities, CourierEvent, CourierParcel, CourierState, StatusTable } from './contract';
+import type { BookResult, CourierApi, CourierCapabilities, CourierEvent, CourierParcel, CourierPlace, CourierPlaceLevel, CourierState, StatusTable } from './contract';
 import { mapStatus } from './contract';
+import { practicePlaces, type MockPlaceRow } from './mock-places';
 
 /** A scripted parcel life. `delivered` is the default; the others are the simulation's exceptions. */
 export const MOCK_SCENARIOS = ['delivered', 'review', 'failedAttempt', 'addressProblem', 'lost', 'damaged', 'partial', 'refused'] as const;
@@ -60,17 +65,25 @@ interface MockState {
   failNext: ('error' | 'timeout')[];
   /** The clock the world's event times are read from (tests set the shop's test clock). */
   clock: (() => number) | null;
+  /** PR 554: this world's own copy of the practice place list (made on the first read). */
+  places: Record<CourierPlaceLevel, MockPlaceRow[]> | null;
+  /** PR 554: how many place reads fail from now on (planned failures). */
+  failPlaces: number;
+  /** PR 554: every place read, for the tests (level and parent). */
+  placeReads: { level: CourierPlaceLevel; parentId: string | null }[];
 }
 
 const G = globalThis as unknown as { __extasMockCourier?: Map<string, MockState> };
 const worlds = (): Map<string, MockState> => (G.__extasMockCourier ??= new Map());
 function stateOf(provider: string): MockState {
   let s = worlds().get(provider);
-  if (!s) worlds().set(provider, (s = { parcels: new Map(), planned: new Map(), failNext: [], clock: null }));
+  if (!s) worlds().set(provider, (s = { parcels: new Map(), planned: new Map(), failNext: [], clock: null, places: null, failPlaces: 0, placeReads: [] }));
   return s;
 }
 
 const MINUTE = 60_000;
+
+const placesOf = (s: MockState): Record<CourierPlaceLevel, MockPlaceRow[]> => (s.places ??= practicePlaces());
 
 /** Tests and the staging check steer one provider's practice courier (this process only). */
 export function mockCourierWorld(provider: string) {
@@ -95,11 +108,38 @@ export function mockCourierWorld(provider: string) {
     useClock(clock: (() => number) | null): void {
       s.clock = clock;
     },
+    /** PR 554: the courier takes a place off its list (and, for a city or a zone, everything under it). */
+    dropPlace(level: CourierPlaceLevel, id: string): void {
+      const list = placesOf(s);
+      list[level] = list[level].filter((p) => p.id !== id);
+      if (level === 'city') {
+        const zones = list.zone.filter((z) => z.parentId === id).map((z) => z.id);
+        list.zone = list.zone.filter((z) => z.parentId !== id);
+        list.area = list.area.filter((a) => !zones.includes(a.parentId!));
+      }
+      if (level === 'zone') list.area = list.area.filter((a) => a.parentId !== id);
+    },
+    /** PR 554: the courier adds a place (or brings one back under the same id), or renames one. */
+    addPlace(level: CourierPlaceLevel, place: MockPlaceRow): void {
+      const list = placesOf(s);
+      list[level] = [...list[level].filter((p) => p.id !== place.id), place];
+    },
+    /** PR 554: the next `n` place reads fail (the courier did not answer). */
+    failPlaceReads(n = 1): void {
+      s.failPlaces = n;
+    },
+    /** PR 554: every place read since the last reset. */
+    placeReads(): { level: CourierPlaceLevel; parentId: string | null }[] {
+      return [...s.placeReads];
+    },
     reset(): void {
       s.parcels.clear();
       s.planned.clear();
       s.failNext.length = 0;
       s.clock = null;
+      s.places = null;
+      s.failPlaces = 0;
+      s.placeReads.length = 0;
     },
   };
 }
@@ -133,7 +173,7 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
     return out;
   }
 
-  return {
+  const api: CourierApi = {
     provider,
     capabilities,
     async book(parcel): Promise<BookResult> {
@@ -171,4 +211,15 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
       return { ok: true, message: 'practice courier: nothing leaves the server' };
     },
   };
+  if (capabilities.zoneList) {
+    api.places = async (level, parentId): Promise<CourierPlace[]> => {
+      s.placeReads.push({ level, parentId });
+      if (s.failPlaces > 0) {
+        s.failPlaces -= 1;
+        throw new Error('practice courier: the place list did not answer (planned failure)');
+      }
+      return placesOf(s)[level].filter((p) => p.parentId === parentId).map((p) => ({ id: p.id, name: p.name }));
+    };
+  }
+  return api;
 }

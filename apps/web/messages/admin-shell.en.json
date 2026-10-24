@@ -33,7 +33,8 @@
         "audit": "Product audit"
       },
       "delivery": {
-        "zones": "Zones & charges"
+        "zones": "Zones & charges",
+        "couriers": "Couriers"
       },
       "marketing": {
         "rules": "Smart Rules"

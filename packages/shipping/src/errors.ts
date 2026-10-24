@@ -18,7 +18,9 @@ export type ShippingErrorCode =
   /** PR 176: the order has no receiver name, mobile number or address the courier can use (`details`). */
   | 'NO_RECEIVER'
   /** PR 176: more orders in one press than the owner's "per press" (`data.max`). */
-  | 'TOO_MANY';
+  | 'TOO_MANY'
+  /** PR 554: this courier publishes no place list (Steadfast reads the address itself): nothing to sync. */
+  | 'NO_ZONE_LIST';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;
@@ -45,6 +47,7 @@ export class ShippingError extends Error {
       case 'GIFT_DATE':
       case 'NO_RECEIVER':
       case 'TOO_MANY':
+      case 'NO_ZONE_LIST':
         return 422;
       default:
         return 409;

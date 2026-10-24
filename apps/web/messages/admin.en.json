@@ -290,7 +290,9 @@
         "NO_RECEIVER": "Name, mobile number or address missing",
         "COURIER_REFUSED": "The courier refused it (see the reason)",
         "NO_ANSWER": "The courier did not answer",
-        "NO_WEIGHT": "A piece has no weight — this courier needs it"
+        "NO_WEIGHT": "A piece has no weight — this courier needs it",
+        "AREA_UNMAPPED": "Waiting: this courier does not know the area yet — pair it on the courier's page",
+        "AREA_UNKNOWN": "Waiting: the order has no known area — fix the address first"
       }
     }
   }

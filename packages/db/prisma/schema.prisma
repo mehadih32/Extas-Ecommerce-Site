@@ -206,6 +206,8 @@ model Store {
   deliveryBands           DeliveryBand[]
   areaBands               AreaBand[]
   courierAreaMappings     CourierAreaMapping[]
+  courierPlaces           CourierPlace[]
+  courierZoneSyncs        CourierZoneSync[]
   identityClusters        IdentityCluster[]
   identityLinks           IdentityLink[]
   riskSignalConfigs       RiskSignalConfig[]
@@ -3305,8 +3307,76 @@ model CourierAreaMapping {
   syncedAt         DateTime?      @db.Timestamptz(3)
   createdAt        DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 554 — who made the mapping: `auto` (the zone sync matched the names exactly) or `staff` (a person picked the
+  /// courier's place; a sync never changes it); how it was matched; who mapped it. A mapping whose courier place was
+  /// dropped from the courier's list is archived with the reason (`courierDropped`; a person's `staff`), never deleted,
+  /// and the sync brings it back when the courier lists the place again.
+  source           String         @default("staff")
+  matchedBy        String?
+  mappedById       String?        @db.Uuid
+  archivedAt       DateTime?      @db.Timestamptz(3)
+  archivedReason   String?
 
   @@unique([courierAccountId, areaId])
+}
+
+/// @stage S06 · PR 554 — one place of a courier's own list (a city, a zone of a city, an area of a zone), as the courier
+/// itself names it, read by the courier zone sync. A place the courier no longer lists is archived, never deleted, and
+/// comes back with the same row when the courier lists it again.
+model CourierPlace {
+  id               String            @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store             @relation(fields: [storeId], references: [id])
+  courierAccountId String            @db.Uuid
+  courierAccount   CourierAccount    @relation(fields: [courierAccountId], references: [id])
+  level            CourierPlaceLevel
+  /// The courier's own id of the place (text, whatever the courier uses).
+  providerId       String
+  /// The courier ids above it: the city of a zone; the city and the zone of an area.
+  cityId           String?
+  zoneId           String?
+  name             String
+  /// The name as the matcher reads it (lower case, letters and digits only; PR 554 `placeKey`).
+  nameKey          String
+  /// The start of the last sync that saw the place in the courier's list.
+  lastSeenAt       DateTime          @db.Timestamptz(3)
+  archivedAt       DateTime?         @db.Timestamptz(3)
+  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
+
+  @@unique([courierAccountId, level, providerId])
+  @@index([courierAccountId, nameKey])
+  @@index([courierAccountId, level, cityId])
+}
+
+enum CourierPlaceLevel {
+  CITY
+  ZONE
+  AREA
+}
+
+/// @stage S06 · PR 554 — one run of the courier zone sync for a courier account: asked by a person or due by the
+/// owner's interval, read level by level within a budget of calls (the walk left is kept in `cursor`, so a long list
+/// is read over several runs), and only a complete read archives the places the courier dropped.
+model CourierZoneSync {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store            @relation(fields: [storeId], references: [id])
+  courierAccountId String           @db.Uuid
+  courierAccount   CourierAccount   @relation(fields: [courierAccountId], references: [id])
+  status           BackgroundStatus @default(QUEUED)
+  mode             AdapterMode?
+  requestedById    String?          @db.Uuid
+  startedAt        DateTime?        @db.Timestamptz(3)
+  finishedAt       DateTime?        @db.Timestamptz(3)
+  cursor           Json?
+  stats            Json?
+  error            String?
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
+
+  @@index([courierAccountId, createdAt])
+  @@index([storeId, status])
 }
 
 /// @stage S06 · PR 519 — one identity built from phone, name, address, IP and device (a customer who changes his number
@@ -4000,6 +4070,8 @@ model CourierAccount {
   areaMappings CourierAreaMapping[]
   settlements  CourierSettlement[]
   handovers    HandoverBatch[]
+  places       CourierPlace[]
+  zoneSyncs    CourierZoneSync[]
 
   @@unique([storeId, providerKey, name])
 }

@@ -99,7 +99,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'daily',
     base: '/admin/delivery',
     guide: 'delivery',
-    tabs: [{ id: 'zones', pages: [{ href: '/admin/delivery/zones', perm: 'delivery.read', keys: ['delivery'] }] }],
+    tabs: [
+      { id: 'zones', pages: [{ href: '/admin/delivery/zones', perm: 'delivery.read', keys: ['delivery'] }] },
+      // PR 554: the courier accounts with their area lists (the zone sync); one courier's page is under it
+      { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courier'] }] },
+    ],
   },
   { id: 'messages', icon: 'msg', group: 'daily', base: '/admin/messages', tabs: [], guide: 'comms' },
   { id: 'support', icon: 'headset', group: 'daily', base: '/admin/support', tabs: [], guide: 'support' },

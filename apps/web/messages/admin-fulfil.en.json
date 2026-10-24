@@ -1,0 +1,103 @@
+{
+  "ful": {
+    "cancel": "Cancel",
+    "err": {
+      "default": "That did not work. Try again; if it keeps failing, tell the owner.",
+      "network": "No connection to the server. Check the internet and try again.",
+      "INVALID_INPUT": "Something is missing or not valid: {fields}.",
+      "NOT_FOUND": "Not found — it may have been changed. Reload the page.",
+      "DUPLICATE": "A courier account with this name exists already.",
+      "UNKNOWN_PROVIDER": "The shop has no connection for this courier.",
+      "NO_ZONE_LIST": "This courier publishes no area list: it reads the address itself.",
+      "forbidden": "You do not have the permission for this.",
+      "unauthorized": "You are signed out. Sign in again."
+    },
+    "couriers": {
+      "title": "Couriers",
+      "sub": "Each courier account, its mode, and its own list of areas paired with the shop's.",
+      "add": "Add a courier",
+      "addName": "Name on the screen",
+      "addNamePh": "e.g. Pathao main",
+      "addProvider": "Courier",
+      "addGo": "Add",
+      "empty": "No courier account yet. Add one: it runs on its practice mode until the courier's keys are entered in Keys & connections.",
+      "mode": {
+        "MOCK": "Practice",
+        "SANDBOX": "Test keys",
+        "LIVE": "Live"
+      },
+      "on": "On",
+      "off": "Off",
+      "switchOff": "Switch off",
+      "switchOn": "Switch on",
+      "open": "Open",
+      "noList": "Reads the address itself — no area list to pair.",
+      "zoneLine": "{places} places read · {mapped} areas paired",
+      "dropped": "{n} dropped by the courier",
+      "neverRead": "Area list not read yet.",
+      "lastRead": "Last read {at}",
+      "readNow": "Read the list now",
+      "reading": "Reading …",
+      "readQueued": "Asked: the list is read in the background within the hour.",
+      "readDone": "Done: the list is read and paired.",
+      "running": "Being read: {calls} questions asked so far, {left} left.",
+      "practiceNote": "Practice mode: nothing leaves the server; the practice list is a sample, not the courier's real one."
+    },
+    "courier": {
+      "back": "Couriers",
+      "status": {
+        "SUCCEEDED": "Read",
+        "FAILED": "Failed",
+        "RUNNING": "Reading",
+        "QUEUED": "Waiting",
+        "CANCELLED": "Stopped"
+      },
+      "lastRun": "Last reading",
+      "lastRunNone": "Not read yet",
+      "stats": "{city} cities · {zone} zones · {area} areas · {paired} paired by name · {unclear} unclear names",
+      "statsDropped": "{places} places and {pairs} pairs archived (the courier dropped them) · {restored} came back",
+      "failed": "The courier did not answer: {error}. Nothing was archived; read again later.",
+      "tabs": {
+        "needed": "Parcels waiting",
+        "unmapped": "Not paired",
+        "mapped": "Paired",
+        "dropped": "Dropped by the courier"
+      },
+      "search": "Find an area",
+      "searchPh": "Area name, e.g. Uttara",
+      "searchGo": "Find",
+      "clear": "Clear",
+      "held": "{n} parcels waiting",
+      "candidates": "Same name in the courier's list:",
+      "noCandidate": "No courier place with this name. Find one below.",
+      "pairWith": "Pair with {place}",
+      "pick": "Find a courier place",
+      "pickPh": "Courier's place name",
+      "pickGo": "Search",
+      "pickNone": "Nothing found with that name.",
+      "source": {
+        "auto": "Paired by name",
+        "staff": "Paired by a person"
+      },
+      "unpair": "Take away",
+      "unpairAsk": "Take this pair away? Parcels to this area then use the area above it, or wait for a new pair.",
+      "droppedNote": "The courier no longer lists {place}. The pair is kept for the record and comes back if the courier lists it again.",
+      "level": {
+        "CITY": "City",
+        "ZONE": "Zone",
+        "AREA": "Area",
+        "DISTRICT": "District",
+        "UPAZILA": "Upazila",
+        "THANA": "Thana"
+      },
+      "emptyNeeded": "No parcel is waiting for an area of this courier.",
+      "emptyUnmapped": "Every area has a pair.",
+      "emptyMapped": "No area is paired yet. Press \"Read the list now\".",
+      "emptyDropped": "The courier has not dropped any paired place.",
+      "page": "Page {page} of {pages}",
+      "prev": "Previous",
+      "next": "Next",
+      "noListLong": "This courier publishes no area list: it reads the receiver's address itself, so nothing needs pairing."
+    }
+  }
+}

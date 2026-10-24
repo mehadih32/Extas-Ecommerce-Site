@@ -578,7 +578,9 @@
       "order_book": "কুরিয়ার বুক হয়েছে",
       "order_identityLinked": "কাস্টমারের পরিচয়ের সাথে জোড়া হলো",
       "order_riskLevel": "ঝুঁকির লেভেলের ধাপ",
-      "order_advanceResend": "পে লিংক আবার পাঠানো হয়েছে"
+      "order_advanceResend": "পে লিংক আবার পাঠানো হয়েছে",
+      "shipment_areaHeld": "কুরিয়ার বুকিং অপেক্ষায়: কুরিয়ার এই এলাকা এখনো চেনে না",
+      "shipment_bookingFailed": "কুরিয়ার বুকিং হয়নি"
     },
     "band": {
       "cancelPending": "বাতিল চাওয়া হয়েছে · কুরিয়ারের উত্তর বাকি — {courier}-কে ফোন করে ওরা কী বলল লিখুন।",

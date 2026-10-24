@@ -17,8 +17,8 @@ import { sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
-import { trackParcels } from '@extas/shipping';
-import { COURIER_QUEUE, COURIER_TRACK_JOB, courierDeps } from './courier';
+import { trackParcels, zoneSyncTurn } from '@extas/shipping';
+import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -211,6 +211,27 @@ const courierTrackJob: JobDefinition<{ storeId: number }> = {
   },
 };
 
+/**
+ * PR 554 — one store's courier zone sync turn (packages/shipping `zoneSyncTurn`; planned by courier.ts
+ * `courierZonesPlanner` per hour slot). Safe to run twice: a run carries on from its cursor, and a place or a pair is
+ * written once. A courier that did not answer fails its own run (nothing archived), not the job.
+ */
+const courierZonesJob: JobDefinition<{ storeId: number }> = {
+  key: COURIER_ZONES_JOB,
+  queue: COURIER_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${COURIER_ZONES_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => {
+    const c = courierDeps(deps);
+    if (!c) return { ok: true, stats: { skipped: 'no couriers' } };
+    return { ok: true, stats: compactStats(await zoneSyncTurn(c, p.storeId)) };
+  },
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -219,6 +240,7 @@ const definitions: JobDefinition<never>[] = [
   piiPurgeJob as unknown as JobDefinition<never>,
   paymentsSweepJob as unknown as JobDefinition<never>,
   courierTrackJob as unknown as JobDefinition<never>,
+  courierZonesJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

@@ -21,6 +21,8 @@
     { "id": "products/import", "route": "/admin/products/import" },
     { "id": "products/audit", "route": "/admin/products/audit" },
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
+    { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },
+    { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]" },
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
     { "id": "reports/server", "route": "/admin/server" },
