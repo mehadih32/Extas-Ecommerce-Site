@@ -2,6 +2,7 @@
 // progress, the lines (items, sets, the two-sizes cards), the one offer slot, saved for later; beside them on a computer
 // (under them on a phone) the order summary; under everything "You may also like" with the tier ladder; on a phone the
 // checkout bar while the summary's button is out of sight. Server-drawn from the engines; BagActions does the clicks.
+// PR 606: the bulk / corporate card under the WhatsApp card, while the owner has the lane on (bulk/BulkBagCard).
 import './bag.css';
 import { Fragment } from 'react';
 import type { BagView } from '@extas/cart';
@@ -13,6 +14,7 @@ import { plural, reassurance } from '@/lib/shop/bag-model';
 import type { BagSettings } from '@/lib/shop/bag';
 import { waHref } from '@/lib/shop/links';
 import { Icon, WaGlyph } from '../Icon';
+import { BulkBagCard } from '../bulk/BulkBagCard';
 import { BagActions, type BagWords } from './BagActions';
 import { EmptyBag, SavedBox } from './BagExtras';
 import { ItemLine, SetLine } from './BagLines';
@@ -121,6 +123,7 @@ export async function BagPage({ c, view, s }: { c: ShopContext; view: BagView; s
                 </a>
               </div>
             ) : null}
+            <BulkBagCard c={c} view={view} />
             {savedOn ? <SavedBox c={c} saved={view.saved} cards={cards} keepDays={s['bag.keepDays']} /> : null}
           </div>
           <aside className="sticky-d">

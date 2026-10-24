@@ -1,9 +1,12 @@
-// S04 · the support explanation panel — PR 566. Registry version 38 (36 is the set builder's, 37 the order edit's). Labels:
-// messages/support-lane.<lang>.json. The panel is a card on one order's admin page (/admin/orders/<id>); its key lives in
-// Orders → Order settings and is set through the settings store until that tab is drawn on the new admin shell.
+// S04 · the support explanation panel — PR 566 — and the bulk / corporate lane — PR 606. Registry version 38 (36 is the set
+// builder's, 37 the order edit's). Labels: messages/support-lane.<lang>.json. The panel is a card on one order's admin page (/admin/orders/<id>);
+// the lane is the shop's enquiry page, a line in the bag and a row in the menu. Both keys live in Orders → Order
+// settings and are set through the settings store until that tab is drawn on the new admin shell.
 //
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone: the panel only reads what the order
-// already stores (the advance asked and why, the delivery band and charge the customer was shown) and puts it in words.
+// already stores (the advance asked and why, the delivery band and charge the customer was shown) and puts it in words;
+// the lane only takes an enquiry for the team to call back. The bulk lane's own numbers — the smallest quantity, the
+// logo price, the advance of a quote — are the owner's, empty until he types them (CN-018), and the lane is off.
 import { z } from 'zod';
 import { setting } from './define';
 import { templateTextSchema } from './schemas';
@@ -44,6 +47,35 @@ export const orderExplainSchema = z
       .strict(),
   })
   .strict();
+
+/**
+ * PR 606 (CN-017 SIM-F-023, simulation idea 21, proposal P11; Blueprint B8.5 item 4) — the bulk / corporate lane: a
+ * company, a school or an office that wants many pieces (uniforms, Eid staff gifts, a logo) asks for a quote instead
+ * of the bag silently stopping at the stock in hand. While `enabled`: the enquiry page (/bulk-order), a row in the
+ * menu (`menuLink`), and a card in the bag (`bag`) when the bag holds `atPieces` pieces or more (empty: never by
+ * count) or when a line has reached the stock that can be sold now (`atStockLimit`). `showContact`: the shop's own
+ * phone and e-mail (Contact settings) are printed on the page and the bag card. The form asks for at least
+ * `minQuantity` pieces (empty: no minimum) and at most `maxQuantity`; `perDay`: enquiries one number or one browser
+ * may send in a day; `noteMaxChars`: the longest note; `refPrefix`: the enquiry number's prefix (BQ-1001).
+ * `logo.offered`: the form asks "with your logo?"; `logo.priceMinor` and `advance` are for the quote (ORD-09) — the
+ * owner's own numbers, empty. Off until the owner turns it on; nothing here prices an order.
+ */
+export const bulkLaneSchema = z
+  .object({
+    enabled: z.boolean(),
+    menuLink: z.boolean(),
+    bag: z.object({ atPieces: z.int().min(2).max(100_000).nullable(), atStockLimit: z.boolean() }).strict(),
+    showContact: z.boolean(),
+    minQuantity: z.int().min(2).max(100_000).nullable(),
+    maxQuantity: z.int().min(2).max(1_000_000),
+    perDay: z.int().min(1).max(100),
+    noteMaxChars: z.int().min(0).max(4_000),
+    refPrefix: z.string().trim().max(10),
+    logo: z.object({ offered: z.boolean(), priceMinor: z.int().min(0).nullable() }).strict(),
+    advance: z.object({ type: z.enum(['none', 'fixed', 'percent']), amountMinor: z.int().min(1).nullable(), percent: z.int().min(1).max(100).nullable() }).strict(),
+  })
+  .strict()
+  .refine((v) => v.minQuantity === null || v.minQuantity <= v.maxQuantity, { message: 'the minimum is above the maximum', path: ['minQuantity'] });
 
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, version: V } as const;
 
@@ -102,6 +134,28 @@ export const supportLaneSettings = {
     helpKey: 'orders.explain.help',
     sortOrder: 970,
   }),
+  'orders.bulkLane': setting({
+    ...json,
+    group: 'orders',
+    schema: bulkLaneSchema,
+    default: {
+      enabled: false,
+      menuLink: true,
+      bag: { atPieces: null, atStockLimit: true },
+      showContact: true,
+      minQuantity: null,
+      maxQuantity: 100_000,
+      perDay: 3,
+      noteMaxChars: 1_000,
+      refPrefix: 'BQ-',
+      logo: { offered: true, priceMinor: null },
+      advance: { type: 'none', amountMinor: null, percent: null },
+    },
+    labelKey: 'orders.bulkLane.label',
+    helpKey: 'orders.bulkLane.help',
+    sortOrder: 971,
+  }),
 };
 
 export type OrderExplainSettings = z.output<typeof orderExplainSchema>;
+export type BulkLaneSettings = z.output<typeof bulkLaneSchema>;

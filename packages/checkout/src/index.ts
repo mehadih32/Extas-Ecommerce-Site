@@ -10,6 +10,8 @@
 // - PR 126 the thank-you page's receipt, for the browser that placed the order only (receipt.ts).
 // - PR 605 gift mode: the gift card's checks and the advance (gift.ts, via pure.ts), the gift order (place.ts) and its
 //   receipt (receipt.ts).
+// - PR 606 the bulk / corporate lane: the enquiry form's checks and the bag's card (bulk.ts, via pure.ts), the enquiry
+//   and the team's list of them (bulk-service.ts).
 export * from './context';
 export * from './address';
 export * from './pure';
@@ -18,3 +20,4 @@ export * from './payment';
 export * from './consent';
 export * from './place';
 export * from './receipt';
+export * from './bulk-service';

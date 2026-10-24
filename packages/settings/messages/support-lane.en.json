@@ -3,6 +3,10 @@
     "explain": {
       "label": "Support explanation panel",
       "help": "On every order's page, the card \"Why this advance and this delivery charge\" tells the team, from the order's own records, why the customer was asked to pay in advance (and why only the delivery charge rather than the full amount), and why the delivery charge is what it is. Under it are ready words to read out on the phone or copy into a chat, in Bengali and English: edit them here; {amount}, {paid}, {charge}, {band}, {area} and {over} are filled in from the order. \"Show the risk score\": the agent sees the score and level (never in the words for the customer). Off: the card is not shown."
+    },
+    "bulkLane": {
+      "label": "Bulk & corporate orders",
+      "help": "For companies, schools and offices that want many pieces (uniforms, Eid staff gifts, a logo): instead of the bag stopping at the stock in hand, they send an enquiry and the team calls back with a quote. When on: the enquiry page, a row in the menu (\"Show in the menu\"), and a card in the bag when it holds \"pieces in the bag\" or more (empty: never by count) or when a line reaches the stock that can be sold now. \"Show contact\": the shop's phone and e-mail (Contact settings) are printed on the page and the card. \"Smallest quantity\" (empty: none) and \"largest quantity\" bound the form; \"per day\": how many enquiries one number or one browser may send in a day; \"note length\"; \"number prefix\" (BQ-1001). \"Ask about a logo\" adds the question. The logo price per piece and the quote's advance are your own numbers for quotes, empty until you fill them. Off: no page, no menu row, no bag card."
     }
   }
 }

@@ -2,12 +2,13 @@
 // the announcement bar, the menu button and the wordmark with its slogan, the desktop nav row and the icons in the
 // owner's order (`shell.header`). The bag can never be switched off — it is how every order starts. The desktop
 // wordmark wears the owner's logo style (`brand.logoStyle`, H5); the phone wordmark never changes.
+// PR 606: the phone menu gains a "Bulk & corporate orders" row while the owner has the lane on (`orders.bulkLane`).
 import type { ShellMenuSubsSettings, ShopIcon } from '@extas/settings';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
-import { deskNavItems, liveAnnouncements, phoneMenuRows, helpRows, type ShopCategory } from '@/lib/shop/shell-model';
+import { deskNavItems, liveAnnouncements, phoneMenuRows, helpRows, type MenuRow, type ShopCategory } from '@/lib/shop/shell-model';
 import { AnnounceBar } from './AnnounceBar';
 import { DeskNav, type MegaData } from './DeskNav';
 import { Icon, WaGlyph } from './Icon';
@@ -63,6 +64,13 @@ function megaFor(c: ShopContext, cats: readonly ShopCategory[]): Record<string, 
   return out;
 }
 
+/** PR 606: the bulk / corporate lane's row under the menu's help rows, while the owner has the lane and its menu row on. */
+function bulkRow(c: ShopContext): MenuRow[] {
+  const lane = c.s['orders.bulkLane'];
+  if (!lane.enabled || !lane.menuLink) return [];
+  return [{ id: 'bulk', href: `${hrefIn(c.lang, ROUTES.bulkOrder)}?from=menu`, label: c.t('bulk.menu'), icon: 'box', testid: 'mn-bulk' }];
+}
+
 /** The phone menu's contents. `subs` (PR 74, `shell.menuSubs`): how a category's sub-categories open; none = plain rows. */
 export function menuData(c: ShopContext, subs?: ShellMenuSubsSettings): MenuData {
   const m = c.s['shell.menu'];
@@ -76,7 +84,7 @@ export function menuData(c: ShopContext, subs?: ShellMenuSubsSettings): MenuData
     rows: phoneMenuRows(m, c.cats, t, subs ? { ...subs, num: c.num } : undefined),
     single: subs?.single ?? true,
     helpTitle: t.label(m.helpTitle),
-    help: helpRows(m, t),
+    help: [...helpRows(m, t), ...bulkRow(c)],
     wa: { href: waHref(c.s['contact.whatsapp'], t('footer.waMessage', c.vars)), label: t('menu.whatsapp') },
     hotline: c.s['contact.phone'] ? { href: `tel:${c.s['contact.phone'].replace(/[^\d+]/g, '')}`, label: t('menu.hotline', { number: c.s['contact.phone'] }) } : null,
     hours: c.s['contact.hours'] ? c.s['contact.hours'][c.lang] || c.s['contact.hours'].en : null,

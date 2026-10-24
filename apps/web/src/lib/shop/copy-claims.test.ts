@@ -40,6 +40,7 @@ const NOT_A_CLAIM: Record<string, string> = {
   'finder.cardSub2': 'the same, shortest',
   'account.login.phonePh': 'the mobile number format (01XXXXXXXXX), the login page (PR 130)',
   'account.err.phoneBad': 'the mobile number format (11 digits, 01XXXXXXXXX), the login page (PR 130)',
+  'bulk.err.phone': 'the mobile number format (11 digits, 01XXXXXXXXX), the bulk enquiry form (PR 606)',
   'pdp.stock.ships': "\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
 };
 

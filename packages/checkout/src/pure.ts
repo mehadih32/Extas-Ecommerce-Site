@@ -7,6 +7,8 @@ export type { CardType, CodOff, PaymentChoice, PaymentInput, PaymentView, Reward
 export type { ConsentAnswer, ConsentInput } from './consent';
 // PR 605: gift mode's checks and its advance (gift.ts, no zod: safe in the client bundle)
 export * from './gift';
+// PR 606: the bulk / corporate enquiry's checks and the bag's card (bulk.ts, no zod)
+export * from './bulk';
 
 /** PR 120 — the payment step's methods, in the page's order. */
 export const PAY_METHODS = ['cod', 'mobile', 'card', 'online'] as const;
