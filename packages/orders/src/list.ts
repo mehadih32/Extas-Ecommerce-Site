@@ -127,18 +127,29 @@ export async function openReviewIds(deps: OrdersDeps, storeId: number): Promise<
   return rows.map((r) => r.orderId);
 }
 
+/** The list's filters (view, status, search, payment method, channel) as one condition; PR 151's export uses it too. */
+export type ListFilters = Pick<z.output<typeof listQuery>, 'view' | 'status' | 'q' | 'payment' | 'source'>;
+
+/** Every order of the store the list shows (never a draft or an archived order). */
+export const listBase = (storeId: number): Prisma.OrderWhereInput => ({ storeId, archivedAt: null, status: { not: 'DRAFT' } });
+
+/** The condition of the list's filters, with the open reviews (for the `inReview` and `toConfirm` views). */
+export function listWhere(storeId: number, q: ListFilters, reviews: string[]): Prisma.OrderWhereInput {
+  if (q.status && !(OPEN_STATES as readonly string[]).concat([...FINAL_STATES], ['DRAFT']).includes(q.status)) throw new OrdersError('INVALID_INPUT', 'no such status', ['status']);
+  const search = orderSearchWhere(q.q); // PR 154: number, phone, name, tracking number
+  const status = q.status ? { status: q.status as OrderState } : {};
+  const filters: Prisma.OrderWhereInput = { ...(q.payment ? { paymentMethod: q.payment } : {}), ...(q.source ? { source: q.source } : {}) };
+  return { AND: [listBase(storeId), viewWhere(q.view, reviews), status, filters, search] };
+}
+
 /** One page of orders, newest first, with the count of every view (the tabs). */
 export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}): Promise<{ rows: OrderRow[]; next: string | null; counts: Record<OrderView, number> }> {
   await allow(deps, who, 'orders.read');
   const q = parse(listQuery, query, 'query');
   const take = q.limit ?? (await setting(deps, who.storeId, 'orders.list.pageSize'));
   const reviews = await openReviewIds(deps, who.storeId);
-  const search = orderSearchWhere(q.q); // PR 154: number, phone, name, tracking number
-  const status = q.status ? { status: q.status as OrderState } : {};
-  const filters: Prisma.OrderWhereInput = { ...(q.payment ? { paymentMethod: q.payment } : {}), ...(q.source ? { source: q.source } : {}) };
-  if (q.status && !(OPEN_STATES as readonly string[]).concat([...FINAL_STATES], ['DRAFT']).includes(q.status)) throw new OrdersError('INVALID_INPUT', 'no such status', ['status']);
-  const base: Prisma.OrderWhereInput = { storeId: who.storeId, archivedAt: null, status: { not: 'DRAFT' } };
-  const where: Prisma.OrderWhereInput = { AND: [base, viewWhere(q.view, reviews), status, filters, search] };
+  const base = listBase(who.storeId);
+  const where = listWhere(who.storeId, q, reviews);
   const found = await deps.db.order.findMany({ where, orderBy: [{ placedAt: 'desc' }, { id: 'desc' }], take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}), select: ROW_SELECT });
   const page = found.slice(0, take);
   const refunded = await refundedOf(deps, who.storeId, page.map((o) => o.id));

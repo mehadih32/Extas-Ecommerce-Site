@@ -1,4 +1,4 @@
-// S05 · PR 138, 144, 145, 147, 153 — the order admin API (BACKEND-ARCHITECTURE §9.10). No admin pages yet: the order
+// S05 · PR 138, 144, 145, 147, 151, 153 — the order admin API (BACKEND-ARCHITECTURE §9.10). No admin pages yet: the order
 // screens come with the admin UI; these routes are what they call. Every route signs the person in (guardAdmin), checks
 // the permission in the store it touches (`?storeId=`, default the mother store), then calls @extas/orders, which
 // checks the permission again and writes the timeline and the audit log in the same transaction. A command takes the
@@ -14,6 +14,10 @@
 //   POST  /api/admin/orders/merge                             {orderIds: [a, b], note?} one parcel (orders.merge)
 //   GET   /api/admin/orders/calls?reason=&status=open|closed|all&cursor=&limit=
 //                                                             PR 563: the call queue (address unclear, address check …)
+//   GET   /api/admin/orders/export?view=&status=&q=&payment=&source=
+//   POST  /api/admin/orders/export                            {view?, status?, q?, payment?, source?, ids?} PR 151: the
+//                                                             list's orders (or the ticked ones) as a CSV file
+//                                                             (orders.export; personal columns with orders.exportPersonal)
 //   GET   /api/admin/orders/:id                               one order: lines, money, shipment, payments, refund
 //                                                             requests, reviews, notes, timeline, the commands open now
 //   POST  /api/admin/orders/:id/confirm                       {version?} (orders.confirm)
@@ -82,6 +86,31 @@ async function handle(request: Request, deps: AdminDeps | null, permission: od.O
 }
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
+
+/** PR 151: the CSV file itself (not the `{ ok }` envelope): filters from the address (GET) or the body (POST, with ids). */
+async function exportCsv(request: Request, deps: AdminDeps | null, m: string): Promise<Response> {
+  const url = new URL(request.url);
+  const storeId = storeIdOf(url);
+  if (storeId === null) return fail(400, 'invalid-store-id');
+  const g = await guardAdmin(request, deps, { permission: 'orders.export', storeId });
+  if (g instanceof Response) return g;
+  try {
+    const input = m === 'POST' ? await body(request) : query(url, ['view', 'status', 'q', 'payment', 'source']);
+    const x = await od.exportOrders(await ordersDeps(deps!), { actor: g.actor, storeId, ctx: g.ctx }, input);
+    return new Response(x.csv, {
+      status: 200,
+      headers: {
+        'content-type': 'text/csv; charset=utf-8',
+        'content-disposition': `attachment; filename="${x.fileName}"`,
+        'cache-control': 'no-store',
+        'x-rows': String(x.rows),
+        'x-personal': x.personal ? '1' : '0',
+      },
+    });
+  } catch (e) {
+    return ordersFail(e);
+  }
+}
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
 
 /** The body without `version`, and the version as a command option. */
@@ -137,6 +166,11 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['alertId']));
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.decideReview(x.deps, x.who, b, await body(request)) }));
+  }
+  if (a === 'export') {
+    if (path.length > 1) return notFound();
+    if (m !== 'GET' && m !== 'POST') return notAllowed();
+    return exportCsv(request, deps, m);
   }
   if (a === 'calls') {
     if (path.length > 1) return notFound();

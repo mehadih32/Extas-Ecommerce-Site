@@ -4,7 +4,7 @@
 // Idempotency-Key header (a repeat gets the first answer) and with the screen's version (STALE); an illegal command
 // refused with the commands open now; reasons, notes, flags; the duplicate review queue and a decision; the customer's
 // own cancel through the account API. PR 563: the call queue. PR 127: "Add to this parcel" through the account API and
-// the admin's lines routes. Every value is a made-up test value.
+// the admin's lines routes. PR 151: the order export as a CSV download. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -188,5 +188,25 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect(await r.json()).toMatchObject({ ok: true, outcome: 'cancelled', status: 'CANCELLED' });
     const twice = await shop('cancel', { number: o.number, reasonKey: 'by-mistake' }, o.visitorId);
     expect(twice.status).toBe(422);
+  });
+
+  it('PR 151: the export is a CSV download for `orders.export` (a reader may not); GET takes the filters, POST the ticked ids', async () => {
+    const o = await f.place('api-export');
+    const dl = (method: string, opts: { cookie?: string; body?: unknown; qs?: string } = {}) =>
+      ordersRoute(call(method, `/api/admin/orders/export${opts.qs ?? ''}`, { cookie: opts.cookie ?? owner, body: opts.body }), deps, ['export']);
+    expect((await dl('GET', { cookie: reader })).status).toBe(403);
+    expect((await dl('GET', { cookie: '' })).status).toBe(401);
+    const res = await dl('GET', { qs: `?q=${encodeURIComponent(o.number)}` });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/csv; charset=utf-8');
+    expect(res.headers.get('content-disposition')).toMatch(/^attachment; filename="orders-\d{4}-\d{2}-\d{2}\.csv"$/);
+    expect([res.headers.get('x-rows'), res.headers.get('x-personal'), res.headers.get('cache-control')]).toEqual(['1', '1', 'no-store']);
+    expect(await res.text()).toContain(o.number);
+    const ticked = await dl('POST', { body: { ids: [o.orderId] } });
+    expect([ticked.status, ticked.headers.get('x-rows')]).toEqual([200, '1']);
+    const bad = await dl('POST', { body: { ids: ['nope'] } });
+    expect([bad.status, (await bad.json()).error]).toEqual([400, 'INVALID_INPUT']);
+    expect((await dl('PUT')).status).toBe(405);
+    expect((await ordersRoute(call('GET', '/api/admin/orders/export/x', { cookie: owner }), deps, ['export', 'x'])).status).toBe(404);
   });
 });

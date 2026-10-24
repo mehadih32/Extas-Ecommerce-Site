@@ -1,5 +1,5 @@
 // S05 · the order core — PR 138, 144, 145, 147, 153 (BACKEND-ARCHITECTURE §5.3 ORD-10, §6.5; CN-020 (5), CN-022).
-// Registry version 32 (31 is the invoice's). Labels: messages/orders.<lang>.json; the reason and flag lists' starting
+// Registry version 32 (31 is the invoice's); PR 151 (the order export) 42. Labels: messages/orders.<lang>.json; the reason and flag lists' starting
 // words are under `defaults.orders` there, in both languages, and the owner edits them in the admin.
 //
 // Nothing here moves money or changes a price, a discount or COD. Every timer only hands an order to a person (a call
@@ -11,6 +11,47 @@ import { lookup, messages } from './messages';
 import { dictionarySchema, type Dictionary } from './schemas';
 
 const V = 32;
+
+/**
+ * PR 151 — the columns an order export (CSV) can carry, in this order. The personal ones (the customer's name, phone,
+ * e-mail and address) go only to staff holding `orders.exportPersonal`; the others never name a person. Cost, the ERP's
+ * figures, IP, device and the owner's settings are never exported.
+ */
+export const ORDER_EXPORT_COLUMNS = [
+  'number',
+  'placedAt',
+  'status',
+  'source',
+  'paymentMethod',
+  'items',
+  'pieces',
+  'subtotal',
+  'discount',
+  'deliveryCharge',
+  'wallet',
+  'total',
+  'paid',
+  'due',
+  'currency',
+  'coupon',
+  'deliveryBand',
+  'tracking',
+  'confirmedAt',
+  'deliveredAt',
+  'cancelledAt',
+  'cancelReason',
+  'holdReason',
+  'flags',
+  'gift',
+  'utmSource',
+  'utmCampaign',
+  'customerName',
+  'phone',
+  'email',
+  'address',
+] as const;
+export type OrderExportColumn = (typeof ORDER_EXPORT_COLUMNS)[number];
+export const ORDER_EXPORT_PERSONAL: ReadonlySet<OrderExportColumn> = new Set(['customerName', 'phone', 'email', 'address']);
 
 /** PR 144 — the cancel reason codes (fixed, so reports can count them; BACKEND-ARCHITECTURE §6.5.0). @extas/orders keeps the same list. */
 export const ORDER_CANCEL_CODES = [
@@ -176,5 +217,40 @@ export const ordersSettings = {
     labelKey: 'orders.commands.replayHours.label',
     helpKey: 'orders.commands.replayHours.help',
     sortOrder: 200,
+  }),
+  // ---- PR 151 · the order export (CSV) ----
+  'orders.export.maxRows': setting({
+    ...base,
+    version: 42,
+    schema: z.int().min(1).max(50_000),
+    default: 5_000,
+    valueType: 'INT',
+    labelKey: 'orders.export.maxRows.label',
+    helpKey: 'orders.export.maxRows.help',
+    sortOrder: 210,
+  }),
+  'orders.export.columns': setting({
+    ...base,
+    version: 42,
+    schema: z
+      .array(z.enum(ORDER_EXPORT_COLUMNS))
+      .min(1)
+      .max(ORDER_EXPORT_COLUMNS.length)
+      .refine((c) => new Set(c).size === c.length, { message: 'each column once' }),
+    default: [...ORDER_EXPORT_COLUMNS],
+    valueType: 'JSON',
+    labelKey: 'orders.export.columns.label',
+    helpKey: 'orders.export.columns.help',
+    sortOrder: 220,
+  }),
+  'orders.export.delimiter': setting({
+    ...base,
+    version: 42,
+    schema: z.enum([',', ';', '\t']),
+    default: ',',
+    valueType: 'ENUM',
+    labelKey: 'orders.export.delimiter.label',
+    helpKey: 'orders.export.delimiter.help',
+    sortOrder: 230,
   }),
 };
