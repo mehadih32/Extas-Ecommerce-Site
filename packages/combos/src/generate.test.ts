@@ -104,6 +104,15 @@ describe('the generator', () => {
     expect(sizeRun(same.sizes)).toEqual({ kind: 'some', labels: ['M', 'L'] });
   });
 
+  it('PR 572: a top and trousers with no size in common are sized one by one — open while every piece has a size', () => {
+    const trousers = product('trousers', ['black', 'olive'], { sizes: ['30', '32', '34'], stock: (c, s) => (c === 'olive' ? 0 : s === '30' ? 0 : 2) });
+    const g = generatePairs(rule({ pairing: 'ACROSS' }), [polo, trousers], NO_SALES, ctx);
+    const black = g.all.find((p) => p.pairSlug === 'polo.black-trousers.black')!;
+    expect(black.sizes).toEqual([]);
+    expect(black.openSizes).toBe(2);
+    expect(g.visible.map((p) => p.pairSlug)).not.toContain('polo.black-trousers.olive');
+  });
+
   it('best sellers: pins first, then the pair’s sales, then the colours’ sales; the newest colour is tagged', () => {
     const p = product('p', ['black', 'navy', 'white'], { newColour: 'white' });
     const signals = { pair: new Map([['p.p:navy-p.p:white', 7]]), colour: new Map([['p|p:black', 50]]) };

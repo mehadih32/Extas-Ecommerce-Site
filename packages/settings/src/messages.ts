@@ -20,7 +20,8 @@
 // 100; registry v36) in messages/set-builder.<lang>.json, and the support explanation panel and the bulk / corporate
 // lane (S04, PR 566, 606; registry v38) in messages/support-lane.<lang>.json, and the Messages control centre (S05,
 // PR 148, 149; registry v40, v41) in messages/messages.<lang>.json, and a number's history and the risk score (S06, PR 157,
-// 156; registry v43) in messages/risk.<lang>.json, merged in here.
+// 156; registry v43) in messages/risk.<lang>.json, and the combo templates (S03, PR 572–574; registry v39) in
+// messages/combo-templates.<lang>.json, merged in here.
 import adminShellBn from '../messages/admin-shell.bn.json';
 import adminShellEn from '../messages/admin-shell.en.json';
 import toolsBn from '../messages/catalogue-tools.bn.json';
@@ -73,6 +74,8 @@ import supportLaneBn from '../messages/support-lane.bn.json';
 import supportLaneEn from '../messages/support-lane.en.json';
 import messagesBn from '../messages/messages.bn.json';
 import messagesEn from '../messages/messages.en.json';
+import comboTplBn from '../messages/combo-templates.bn.json';
+import comboTplEn from '../messages/combo-templates.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -95,8 +98,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn), messagesEn), riskEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn), messagesBn), riskBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn), messagesEn), riskEn), comboTplEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn), messagesBn), riskBn), comboTplBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */

@@ -200,7 +200,8 @@ export function signedInPlan(base, signedIn, lighthouseUrls, discovered = []) {
     const u = new URL(path, base);
     const url = u.toString();
     const had = plan.get(url);
-    // PR 100: a page whose query changes what it shows (`?try=1`) has its own list; else the path's list applies
+    // PR 100, PR 572: a page whose query changes what it shows (`?try=1`, a template preview `?tpl=L4`) has its own
+    // list; else the path's list applies
     const own = signedIn.expect?.[u.pathname + u.search] ?? signedIn.expect?.[u.pathname] ?? [];
     plan.set(url, {
       url,

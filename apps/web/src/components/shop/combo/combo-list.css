@@ -1,0 +1,119 @@
+/* PR 572 — a rule's own page /combos/<rule key> in its templates L1–L5, as the approved demo V12.2 draws it
+ * (docs/demo/src 42-combo-auto.js ca_listPage, r12-zauto.css "offer strip", "filters", "grid + cards", "L4 big list",
+ * "price line, sizes"; the desktop grid of r12-zzdesk-b.css), every rule scoped to the shop wrapper. Loaded with
+ * combos.css by the rule's page only. Every tap target is 40–48 px. */
+
+/* the few shared pieces this page uses that the landing page does not load */
+.shop .ca-page .chip.on { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.shop .ca-page .strike { text-decoration: line-through; color: var(--muted); }
+.shop .ca-page .link { background: none; border: 0; padding: 4px 0; color: var(--brand); font-weight: 600; text-decoration: underline; cursor: pointer; font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
+.shop .ca-page .btn-secondary { background: var(--surface); border-color: var(--brand); color: var(--brand) !important; }
+.shop .ca-page .btn-sm { min-height: 44px; padding: 7px 12px; font-size: 13px; }
+.shop .ca-page .h3 { font-size: 15px; font-weight: 600; margin: 0; }
+.shop .ca-page .mt32 { margin-top: 32px; }
+
+/* offer strip + the 2 / 3 piece switch */
+.shop .ca-strip { background: var(--brand-tint); border: 1px solid var(--brand-line); border-radius: var(--radius); padding: 10px 12px; }
+.shop .ca-strip1 { font-weight: 700; font-size: 15px; line-height: 1.3; }
+.shop .ca-strip2 { font-size: 12.5px; color: var(--text2); margin-top: 2px; }
+.shop .ca-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.shop .ca-segb { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 48px; border: 1.5px solid var(--input); background: var(--surface); color: var(--ink) !important; font-weight: 700; font-size: 14px; border-radius: var(--radius); padding: 6px 8px; text-align: center; line-height: 1.2; }
+.shop .ca-segb.on { border-color: var(--brand); background: var(--brand-tint); box-shadow: 0 0 0 1px var(--brand); }
+.shop .ca-best { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gold); background: var(--gold-bg); padding: 2px 6px; border-radius: var(--radius); vertical-align: 2px; }
+.shop .ca-segsub { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.shop .ca-seg.big { margin-top: 4px; }
+.shop .ca-seg.big .ca-segb { min-height: 64px; font-size: 16px; }
+.shop .ca-l5top { margin-bottom: 10px; }
+
+/* filters: "Has:" colour chips, "My size", the order */
+.shop .ca-filters { margin-top: 12px; }
+.shop .ca-hasrow { display: flex; gap: 6px; align-items: center; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+.shop .ca-hasrow::-webkit-scrollbar { display: none; }
+.shop .ca-haslbl { font-size: 12.5px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+.shop .ca-colchip { min-height: 44px; flex-shrink: 0; }
+.shop .ca-colchip i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.22); display: inline-block; }
+.shop .chip.on.ca-colchip i { border-color: rgba(255, 255, 255, 0.8); }
+.shop .ca-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; position: relative; }
+.shop .ca-tools .chip { min-height: 44px; }
+.shop .ca-sort { margin-left: auto; }
+.shop .ca-sort select { font-size: 16px; min-height: 44px; border: 1px solid var(--input); background: var(--surface); border-radius: var(--radius); padding: 6px 8px; max-width: 190px; color: var(--ink); }
+.shop .ca-count { margin: 10px 0 8px; }
+@media (min-width: 768px) { .shop .ca-hasrow { margin: 0; padding: 2px 0 4px; flex-wrap: wrap; -webkit-mask-image: none; mask-image: none; } }
+.shop .ca-sizepick > summary { list-style: none; }
+.shop .ca-sizepick > summary::-webkit-details-marker { display: none; }
+.shop .ca-sizepop { position: absolute; left: 0; top: calc(100% + 6px); z-index: 20; width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14); padding: 12px; }
+.shop .ca-sizepop .ca-sizes { margin-top: 10px; }
+.shop .ca-sizepop a.size-pill { display: flex; align-items: center; justify-content: center; color: var(--ink); }
+
+/* grid + cards */
+.shop .ca-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 768px) { .shop .ca-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1024px) { .shop .ca-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; } }
+.shop .ca-ok { color: var(--brand); font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+.shop .ca-bdg.new { top: 8px; right: 8px; background: var(--surface); color: var(--brand); border: 1px solid var(--brand-line); }
+.shop .ca-list .ca-empty { padding: 36px 16px; text-align: center; }
+.shop .ca-note { margin: 4px 0 8px; }
+
+/* L4 big list */
+.shop .ca-l4list { display: grid; gap: 16px; }
+@media (min-width: 768px) { .shop .ca-l4list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } }
+.shop .ca-l4 { background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); overflow: hidden; }
+.shop .ca-l4ph { display: block; }
+.shop .ca-l4b { padding: 12px 14px 14px; }
+.shop .ca-l4t { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1.15; }
+
+/* price line, sizes, errors (shared with the pair page) */
+.shop .ca-pline { font-size: 15px; color: var(--text2); line-height: 1.4; }
+.shop .ca-pline .price { font-size: 20px; color: var(--ink); }
+.shop .ca-savetxt { color: var(--sale); font-weight: 700; }
+.shop .ca-lbl { font-size: 13px; font-weight: 700; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.shop .ca-sizes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; max-width: 440px; }
+.shop .ca-sizes.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.shop .ca-sizes.n4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.shop .ca-sizes.n7 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.shop .ca-page .size-pill { min-height: 44px; border-radius: var(--radius); border: 1.5px solid var(--input); background: var(--surface); font-weight: 700; cursor: pointer; color: var(--ink); touch-action: manipulation; }
+.shop .ca-page .size-pill.on { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); box-shadow: rgba(0, 0, 0, 0.14) 0 2px 10px; }
+.shop .ca-page .size-pill.out { background: var(--bg); border-style: dashed; color: rgb(107, 101, 92); text-decoration: line-through; cursor: not-allowed; }
+.shop .ca-sizes .size-pill { min-width: 0; width: 100%; padding: 10px 0; font-size: 14px; }
+@media (max-width: 340px) { .shop .ca-sizes { gap: 4px; } .shop .ca-sizes .size-pill { font-size: 13px; } }
+.shop .ca-why { font-size: 12.5px; color: var(--muted); margin-top: 7px; line-height: 1.45; }
+.shop .ca-low { font-size: 12.5px; color: var(--warn); font-weight: 600; margin-top: 6px; }
+.shop .ca-err { display: flex; align-items: flex-start; gap: 6px; color: var(--sale); font-size: 13px; font-weight: 600; margin-top: 8px; }
+
+/* a rule that is not on sale now (demo ca_endedHTML) */
+.shop .ca-ended { background: var(--warn-bg); border-radius: var(--radius); padding: 16px; margin-top: 4px; }
+.shop .ca-ended-b { display: flex; flex-direction: column; gap: 2px; margin: 6px 0 0; }
+.shop .ca-sec { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+/* L5 "each · total": the total goes to the next line rather than past the card */
+.shop .ca-cprice.ca-ceach { white-space: normal; line-height: 1.35; }
+/* "Sizes for each piece" on a 320 px card wraps instead of being cut (device gate TEXT-CUT-OFF) */
+.shop .ca-list .ca-csz > span:last-child { white-space: normal; overflow: visible; }
+/* Cards below the screen are laid out only when they come near it (a Bengali list of 15+ cards cost one 0.5 s layout
+   task on a slow phone, Lighthouse TBT); `auto` keeps each card's real height once seen */
+.shop .ca-list .ca-grid > *, .shop .ca-list .ca-l4list > *, .shop .ca-list [data-testid="ca-singles"] { content-visibility: auto; contain-intrinsic-size: auto 320px; }
+
+/* the template bar, only while previewing (`?tpl=`; PreviewBar) */
+.shop .ca-tplbar {
+  margin-top: 40px;
+  padding: 12px;
+  border: 1px dashed var(--input);
+  border-radius: var(--radius);
+  background: var(--surface2);
+}
+.shop .ca-tplrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  align-items: center;
+}
+.shop .ca-tplrow .chip {
+  min-height: 44px;
+  font-size: 12.5px;
+}
+.shop .ca-tplrow .chip.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}

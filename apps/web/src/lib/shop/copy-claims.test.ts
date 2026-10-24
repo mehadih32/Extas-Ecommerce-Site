@@ -42,6 +42,21 @@ const NOT_A_CLAIM: Record<string, string> = {
   'account.err.phoneBad': 'the mobile number format (11 digits, 01XXXXXXXXX), the login page (PR 130)',
   'bulk.err.phone': 'the mobile number format (11 digits, 01XXXXXXXXX), the bulk enquiry form (PR 606)',
   'pdp.stock.ships': "\"ships today\" (PR 60): said only before the owner's own dispatch time (pdp.stock.dispatchCutoff, empty by default), checked on the store clock at each page view",
+  // PR 572–574: a combo template's own piece counts — a 2- or 3-piece set and its "1 more" — say what the set is, never
+  // a claim about the shop, and shown only where the rule really sells that set (its 3-piece companion)
+  'ctpl.list.oneTier': 'the 2 / 3 piece switch it names (a rule sells one pack size only), PR 572',
+  'ctpl.list.sizeFor3': "a 3-piece set's own size row (L4), PR 572",
+  'ctpl.list.add3': "a 3-piece set's own button (L4), PR 572",
+  'ctpl.tpl.L5': 'the name of template L5 (2 or 3 pieces first), PR 572',
+  'ctpl.tpl.B3': 'the name of template B3 ("Add 1 more"), PR 574',
+  'ctpl.pair.same3': "a 3-piece set's own size switch, PR 573",
+  'ctpl.pair.pickThird': "the 3-piece companion's third colour, PR 573",
+  'ctpl.pair.upsell': 'the 3-piece companion ("make it 3 pcs, add 1 more"); every amount is a slot from the price engine, PR 573',
+  'ctpl.pair.upLabel': "the 3-piece companion's third colour, PR 573",
+  'ctpl.pair.sameColour3': "a 3-piece pack's own colour switch, PR 573",
+  'ctpl.bag.nudge': "B3's \"add 1 more\" to the rule's 3-piece set; the count and price are slots, PR 574",
+  'ctpl.bag.add1': "B3's \"add 1 more\" button, PR 574",
+  'ctpl.bag.pick': "B3's third colour of the 3-piece set; the count and price are slots, PR 574",
 };
 
 const DIGIT = /[0-9০-৯]/;

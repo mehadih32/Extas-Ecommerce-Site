@@ -156,7 +156,7 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
 
     it('the sample combos go only to the sample store, once', async () => {
       const first = await seedSampleCombos(deps());
-      expect(first).toEqual({ storeId: S, combos: 3, rules: 2 });
+      expect(first).toEqual({ storeId: S, combos: 3, rules: 4 });
       expect((await seedSampleCombos(deps())).combos).toBe(0);
       const list = await listCombos(deps(), as('reader'));
       const set = list.find((c) => c.slug === 'sample-polo-chino-set')!;

@@ -3,14 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Combos and sets (S03 core, PR 89–104, 571, 575): the combo model with its pieces, set price, saving and active window (PR 89), the combo admin services (PR 90), auto colour-pair combos from a rule (PR 571, the owner's model), set tiers read from Smart Rules (PR 99), set validation (PR 101), the set summary with price and saving (PR 96), adding a set to the bag as one locked-price set (PR 97), the set photo composed from the piece photos (PR 575), combo analytics (PR 104) and the thank-you page's \"Complete your look\" from the running combos (S04 · PR 128).",
+  "description": "Combos and sets (S03 core, PR 89–104, 571, 575): the combo model with its pieces, set price, saving and active window (PR 89), the combo admin services (PR 90), auto colour-pair combos from a rule (PR 571, the owner's model), set tiers read from Smart Rules (PR 99), set validation (PR 101), the set summary with price and saving (PR 96), adding a set to the bag as one locked-price set (PR 97), the set photo composed from the piece photos (PR 575), combo analytics (PR 104), a rule's category page with its pairs for the combo templates (PR 572–574) and the thank-you page's \"Complete your look\" from the running combos (S04 · PR 128).",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
     "./pure": "./src/pure.ts",
     "./sample": "./src/sample.ts",
-    "./page-model": "./src/page-model.ts"
+    "./page-model": "./src/page-model.ts",
+    "./rule-page-model": "./src/rule-page-model.ts"
   },
   "scripts": {
     "sample": "tsx src/cli.ts sample",

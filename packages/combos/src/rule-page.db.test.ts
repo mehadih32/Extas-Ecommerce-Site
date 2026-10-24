@@ -1,0 +1,77 @@
+// PR 572 on a real PostgreSQL (a throwaway database with the real migrations, the sample catalogue and the sample
+// combos; skipped without TEST_DATABASE_ADMIN_URL): a rule's own page in one read — its pairs with links, sizes and
+// set prices that agree with the bag, the price table, the 2 ↔ 3 piece companion, top + bottom pairs sized one by one,
+// and a rule that is switched off keeping its page with no pairs.
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/testing';
+import { seedSample } from '@extas/seed';
+import { registry, type Key, type Value } from '@extas/settings';
+import type { CombosDeps, SettingsReader } from './context';
+import { seedSampleCombos } from './sample';
+import { rulePage } from './rule-page';
+import { filterPairs, NO_FILTER, pairPrice } from './rule-page-model';
+import { priceSet } from './summary';
+
+describe.skipIf(!HAS_TEST_DB)('a rule`s own page on PostgreSQL (S03 · PR 572)', () => {
+  let t: TestDatabase;
+  let S = 0;
+  const settings: SettingsReader = {
+    async value<K extends Key>(key: K): Promise<Value<K>> {
+      return registry[key].default as Value<K>;
+    },
+  };
+  const deps = (): CombosDeps => ({ db: t.prisma, settings });
+
+  beforeAll(async () => {
+    t = await createTestDatabase('rulepage');
+    S = (await seedSample(t.prisma)).storeId;
+    await seedSampleCombos(deps());
+  });
+
+  afterAll(async () => {
+    await t?.drop();
+  });
+
+  it('the polo pairs: every pair with its link, sizes and a set price the bag agrees with', async () => {
+    const p = (await rulePage(deps(), S, { key: 'sample-polo-pairs' }))!;
+    expect(p.onSale).toBe(true);
+    expect(p.rule).toMatchObject({ key: 'sample-polo-pairs', pieces: 2, pairing: 'STYLE', state: 'live' });
+    expect(p.pairs.length).toBeGreaterThan(5);
+    const first = filterPairs(p.pairs, NO_FILTER)[0]!;
+    expect(first.slug.startsWith('sample-polo-pairs~')).toBe(true);
+    expect(first.sizes.length).toBeGreaterThan(0);
+    expect(first.price.pay).not.toBeNull();
+    const choices = first.slots.map((s) => ({ colourId: s.colourId, sizeId: p.products.find((x) => x.id === s.productId)!.sizes[1]!.id }));
+    const priced = await priceSet(deps(), { storeId: S, slug: first.slug, choices });
+    expect(priced.check.ok).toBe(true);
+    expect(priced.price?.payMinor).toBe(first.price.pay);
+    const variantPrices = first.slots.map((s, i) => p.products.find((x) => x.id === s.productId)!.variants.find((v) => v.colourId === s.colourId && v.sizeId === choices[i]!.sizeId)?.priceMinor ?? null);
+    expect(pairPrice(first, variantPrices, p.prices).pay).toBe(first.price.pay);
+  });
+
+  it('the 2-piece rule names its 3-piece companion and back', async () => {
+    const two = (await rulePage(deps(), S, { key: 'sample-polo-pairs' }))!;
+    expect(two.rule.addOneMore).toBe(true);
+    expect(two.companion?.rule.key).toBe('sample-polo-trios');
+    const three = (await rulePage(deps(), S, { key: 'sample-polo-trios' }))!;
+    expect(three.companion?.rule.key).toBe('sample-polo-pairs');
+    expect(three.pairs[0]!.pieces).toHaveLength(3);
+  });
+
+  it('a top and trousers with no size in common are sized one by one, not sold out', async () => {
+    const p = (await rulePage(deps(), S, { key: 'sample-hoodie-trousers' }))!;
+    expect(p.onSale).toBe(true);
+    const open = filterPairs(p.pairs, NO_FILTER);
+    expect(open.length).toBeGreaterThan(0);
+    expect(open[0]!.sizes).toEqual([]);
+    expect(open[0]!.openSizes).toBeGreaterThan(0);
+  });
+
+  it('a switched-off rule keeps its page with no pairs; an unknown key has none', async () => {
+    const off = (await rulePage(deps(), S, { key: 'sample-shirt-tee' }))!;
+    expect(off.onSale).toBe(false);
+    expect(off.rule.state).not.toBe('live');
+    expect(await rulePage(deps(), S, { key: 'no-such-rule' })).toBeNull();
+    expect(await rulePage(deps(), S, {})).toBeNull();
+  });
+});
