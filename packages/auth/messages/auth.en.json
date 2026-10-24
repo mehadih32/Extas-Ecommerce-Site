@@ -151,7 +151,12 @@
       "partials": "Approve or reject the money of a partial delivery",
       "settle": "Import a courier's COD statement and mark a checked mismatch as resolved",
       "wallet": "Credit or debit a customer's wallet by hand with a reason, and put a wallet entry right with a new one the other way",
-      "apology": "Give a late-delivery apology credit to a customer's wallet on an order"
+      "apology": "Give a late-delivery apology credit to a customer's wallet on an order",
+      "refunds": {
+        "request": "Ask for a refund on an order (it waits for approval; nothing is paid)",
+        "approve": "Approve or reject a refund (the owner's OK before any money goes back)",
+        "execute": "Pay out an approved refund — to the wallet, or record the money sent back by hand — or mark its payout failed"
+      }
     },
     "risk": {
       "rules": {

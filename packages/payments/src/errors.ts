@@ -48,7 +48,13 @@ export type PaymentsErrorCode =
   /** PR 171: the order did not come late enough for the owner's rule. */
   | 'NOT_LATE'
   /** PR 171: the owner has not set the amount this needs yet. */
-  | 'NOT_CONFIGURED';
+  | 'NOT_CONFIGURED'
+  /** PR 172: the owner's refund rules do not allow this refund (`data.rule`: AFTER_DELIVERY, ORDER_STATE, RTO_NOT_RETURNED). */
+  | 'REFUND_NOT_ALLOWED'
+  /** PR 172: more than is left to refund on this order (`data.roomMinor`). */
+  | 'OVER_REFUNDABLE'
+  /** PR 172 (four eyes): the person who asked this refund may not decide it. */
+  | 'SAME_PERSON';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;
@@ -79,6 +85,7 @@ export class PaymentsError extends Error {
       case 'NOT_PENDING':
       case 'NOT_OPEN':
       case 'TEST_PAYMENTS_OFF':
+      case 'SAME_PERSON':
         return 409;
       case 'GATEWAY_ERROR':
         return 502;

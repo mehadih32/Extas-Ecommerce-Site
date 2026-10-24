@@ -16,6 +16,10 @@
 // - PR 171 the wallet: the one ledger writer (a credit, a debit, the balance after it; a correction is a new entry the
 //   other way), a customer's wallet with its ledger, a person's own entry and reversal, the late-delivery apology
 //   credit and its list of late orders (wallet.ts; the pure part, also for the screens, in wallet-pure.ts).
+// - PR 172 refunds: asked by a person within the owner's rules, approved or rejected by someone with the "approve
+//   refunds" permission, then completed — to the wallet through the ledger, or the way the money came by a person who
+//   records the payout reference (the shop never sends money out by itself) — and the list with the money owed to
+//   customers (refunds.ts; the pure part in refund-pure.ts).
 export * from './context';
 export * from './errors';
 export * from './pure';
@@ -26,3 +30,4 @@ export * from './cod';
 export * from './gateway';
 export * from './advance-link';
 export * from './wallet';
+export * from './refunds';

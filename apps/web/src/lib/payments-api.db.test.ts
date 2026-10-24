@@ -1,9 +1,10 @@
-// S07 · PR 165, 166 — the payments admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
+// S07 · PR 165, 166, 170, 171, 172 — the payments admin API end to end on a real PostgreSQL (a throwaway database with the sample catalogue;
 // orders placed through the real checkout; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the
 // permission; an order's money (due, what the rider collects, the pill, the payment rows); money recorded by staff —
 // off until `payments.manual` is on, then needing the Idempotency-Key (a repeat is one payment), and an advance paid in
 // full moving the order on through the order service. PR 166: the door outcome, a partial's approval, a courier
-// statement with a trap, its line resolved, and the cash in transit. Every value is a made-up test value.
+// statement with a trap, its line resolved, and the cash in transit. PR 172: a refund asked, approved by the owner and
+// paid out by hand with its reference; nothing pays out by itself. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { awaitAdvance, staffBy } from '@extas/orders';
@@ -176,5 +177,28 @@ describe.skipIf(!HAS_TEST_DB)('payments admin API on PostgreSQL (S07 · PR 165)'
     await deps.resolver.set('payments.wallet.apology', { enabled: true, mode: 'PER_ORDER', kind: 'AMOUNT', amountMinor: null, percent: null, capMinor: 2_000, lateAfterHours: 0, to: 'WALLET' }, storeTarget(f.S));
     expect(await api('POST', ['orders', o.orderId, 'apology'], { body: { amountMinor: 1_000, confirm: true } })).toMatchObject({ status: 201, body: { result: { amountMinor: 1_000, balanceAfterMinor: 1_000 } } });
     expect((await api('GET', ['orders', o.orderId, 'apology'])).status).toBe(405);
+  });
+  it('PR 172: a refund asked with a key, the owner\'s OK with [confirm], paid out by hand with its reference; the list shows what is owed', async () => {
+    const paid = await f.place('pay-api-refund', { payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const money = (await api('GET', ['orders', paid.orderId])).body.money;
+    const ask = { source: 'OUR_MISTAKE', amountMinor: 5_000, note: 'one piece was out of stock', paymentId: money.payments[0].id };
+    expect((await api('POST', ['orders', paid.orderId, 'refunds'], { body: ask, cookie: reader, key: 'api-refund-0001' })).status).toBe(403);
+    expect(await api('POST', ['orders', paid.orderId, 'refunds'], { body: ask })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    const r = await api('POST', ['orders', paid.orderId, 'refunds'], { body: ask, key: 'api-refund-0001' });
+    expect(r).toMatchObject({ status: 201, body: { refund: { status: 'REQUESTED', amountMinor: 5_000, method: 'original' } } });
+    const id = r.body.refund.id as string;
+    const owed = await api('GET', ['refunds'], { query: '?state=owed' });
+    expect(owed.status).toBe(200);
+    expect(owed.body.refunds.owed.requestedMinor).toBeGreaterThanOrEqual(5_000);
+    expect(owed.body.refunds.rows.map((x: { id: string }) => x.id)).toContain(id);
+    expect(await api('POST', ['refunds', id, 'complete'], { body: { reference: 'BK-API-1', confirm: true }, key: 'api-refund-pay-1' })).toMatchObject({ status: 409, body: { error: 'NOT_PENDING' } });
+    expect(await api('POST', ['refunds', id, 'approve'], { body: {} })).toMatchObject({ status: 400, body: { error: 'CONFIRM_REQUIRED' } });
+    expect(await api('POST', ['refunds', id, 'approve'], { body: { confirm: true } })).toMatchObject({ status: 200, body: { refund: { status: 'APPROVED' } } });
+    expect(await api('POST', ['refunds', id, 'complete'], { body: { reference: 'BK-API-1', confirm: true }, key: 'api-refund-pay-1' })).toMatchObject({ status: 200, body: { refund: { status: 'COMPLETED', payoutReference: 'BK-API-1' } } });
+    expect((await f.t.prisma.payment.findUniqueOrThrow({ where: { id: ask.paymentId } })).status).toBe('PARTIALLY_REFUNDED');
+    expect((await api('GET', ['refunds', id, 'approve'])).status).toBe(405);
+    expect((await api('POST', ['refunds', id, 'teleport'], { body: {} })).status).toBe(404);
+    expect((await api('POST', ['refunds', 'nope', 'approve'], { body: {} })).status).toBe(404);
+    expect((await api('GET', ['orders', paid.orderId, 'refunds'])).status).toBe(405);
   });
 });

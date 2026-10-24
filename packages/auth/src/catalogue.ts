@@ -172,6 +172,13 @@ export const PERMISSIONS = {
   // on). Each is a ledger line and an audit row; nothing is edited, nothing is paid out.
   'payments.wallet': { group: 'payments' },
   'payments.apology': { group: 'payments' },
+  // S07 · PR 172 — refunds (§6.5.4 facts 4a/4b, F-041; BACKEND-ARCHITECTURE MNY-03): ask for a refund on an order
+  // (`payments.refunds.request`, support and the desk), approve or reject one (`payments.refunds.approve`, the owner:
+  // CLAUDE.md rule 6), and pay out an approved one — a wallet credit, or the reference of money a person sent back by
+  // hand — or mark its payout failed (`payments.refunds.execute`, accounts). Nothing is ever paid out by itself.
+  'payments.refunds.request': { group: 'payments' },
+  'payments.refunds.approve': { group: 'payments' },
+  'payments.refunds.execute': { group: 'payments' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
