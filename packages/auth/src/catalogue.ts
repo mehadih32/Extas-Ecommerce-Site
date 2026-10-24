@@ -88,6 +88,15 @@ export const PERMISSIONS = {
   'delivery.read': { group: 'delivery' },
   'delivery.charges': { group: 'delivery' },
   'delivery.areas': { group: 'delivery' },
+  // S08 · PR 175, 176 — courier parcels (BACKEND-ARCHITECTURE §5.6): see parcels with their receiver and every courier
+  // event (not a `.read` key on purpose: a parcel shows the receiver's name, phone and address); book a courier for
+  // ready orders (through the one order service: never a cancelled, held or in-review order); record a courier
+  // exception told on the phone (a failed try, an address problem, lost, damaged); add, rename, switch off or archive a
+  // courier account. No key here moves money, changes COD or a charge, or blocks anyone.
+  'delivery.parcels': { group: 'delivery' },
+  'delivery.book': { group: 'delivery' },
+  'delivery.exceptions': { group: 'delivery' },
+  'delivery.couriers': { group: 'delivery' },
   // S0A · PR 6 — the Server page: whether the background worker is alive, which one leads the scheduler, and the jobs
   // that failed with their reason and next try. Seeing only; nothing here changes anything.
   'system.read': { group: 'system' },

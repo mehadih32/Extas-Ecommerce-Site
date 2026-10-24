@@ -4008,6 +4008,23 @@ model Shipment {
   cancelConfirmedAt   DateTime?      @db.Timestamptz(3)
   cancelRef           String?
   cancelOutcome       String?
+  /// PR 175 (§7.4, SIM-F-017, SIM-F-027) — the booking as it was sent: the adapter's mode (a MOCK parcel is practice and
+  /// never a real cost), the try number, the shop's reference the courier knows the parcel by, the declared value, the
+  /// courier's own city / zone / area ids, the receiver block and the note sent, why a booking failed, the courier's
+  /// latest exception reason, when tracking last read it, and who booked it.
+  mode                AdapterMode?
+  attempt             Int            @default(1)
+  merchantRef         String?
+  declaredValueMinor  Int?
+  courierCityId       String?
+  courierZoneId       String?
+  courierAreaId       String?
+  receiver            Json?
+  bookingNote         String?
+  bookingError        String?
+  exceptionKey        String?
+  lastTrackedAt       DateTime?      @db.Timestamptz(3)
+  bookedById          String?        @db.Uuid
 
   events ShipmentEvent[]
 
@@ -4032,23 +4049,38 @@ enum ShipmentStatus {
   BOOKING_FAILED
   /// PR 144 (§6.5.7, D5): cancel after booking asked; staff phone the courier and record the answer.
   CANCEL_REQUESTED
+  /// PR 175 (§6.5.2, SIM-F-017): the courier's exceptions — a delivery try failed (receiver unreachable, not at home),
+  /// the address is a problem, the parcel is lost, the parcel is damaged. Recorded and shown; nothing moves money.
+  ATTEMPT_FAILED
+  ADDRESS_PROBLEM
+  LOST
+  DAMAGED
 }
 
 /// @stage S08 · PR 184 — a courier status event with its time and the rider's note.
 /// @append-only
 model ShipmentEvent {
-  id         String         @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store          @relation(fields: [storeId], references: [id])
-  shipmentId String         @db.Uuid
-  shipment   Shipment       @relation(fields: [shipmentId], references: [id])
-  status     ShipmentStatus
-  rawStatus  String?
-  message    String?
-  riderNote  String?
-  occurredAt DateTime       @db.Timestamptz(3)
-  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+  id              String         @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store          @relation(fields: [storeId], references: [id])
+  shipmentId      String         @db.Uuid
+  shipment        Shipment       @relation(fields: [shipmentId], references: [id])
+  status          ShipmentStatus
+  rawStatus       String?
+  message         String?
+  riderNote       String?
+  occurredAt      DateTime       @db.Timestamptz(3)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  /// PR 175 (§7.4, §7.7) — the courier's own id of the event (a poll or a webhook), so one event is stored once; the
+  /// reason of an exception (`courier.reasons`); where it came from (booking, poll, webhook, staff); what the courier
+  /// sent with it (the amount it says it collected, its charge, the raw words); the staff member who recorded it.
+  providerEventId String?
+  reasonKey       String?
+  source          String         @default("courier")
+  data            Json?
+  actorId         String?        @db.Uuid
 
+  @@unique([shipmentId, providerEventId])
   @@index([shipmentId, occurredAt])
 }
 

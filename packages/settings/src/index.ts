@@ -44,4 +44,5 @@ export * from './registry-risk';
 export * from './registry-risk-more';
 export * from './registry-payments';
 export * from './registry-risk-rules';
+export * from './registry-shipping';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

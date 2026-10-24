@@ -30,6 +30,7 @@
     "@extas/rules": "workspace:*",
     "@extas/search": "workspace:*",
     "@extas/settings": "workspace:*",
+    "@extas/shipping": "workspace:*",
     "@extas/vault": "workspace:*",
     "next": "16.4.2",
     "react": "19.3.1",

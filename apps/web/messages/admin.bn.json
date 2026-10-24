@@ -205,5 +205,43 @@
     "database-not-configured": "এই সার্ভারে এখনো ডেটাবেস যুক্ত হয়নি।",
     "server-error": "সার্ভারে সমস্যা হয়েছে, একটু পরে আবার চেষ্টা করুন।",
     "network": "সার্ভারে পৌঁছানো গেল না — ইন্টারনেট দেখে আবার চেষ্টা করুন।"
+  },
+  "courier": {
+    "status": {
+      "BOOKING": "বুক হচ্ছে…",
+      "BOOKING_FAILED": "বুকিং হয়নি",
+      "IN_REVIEW": "কুরিয়ার যাচাই করছে",
+      "PENDING_PICKUP": "পিকআপের অপেক্ষায়",
+      "PICKED_UP": "পিকআপ হয়েছে",
+      "IN_TRANSIT": "পথে আছে",
+      "OUT_FOR_DELIVERY": "ডেলিভারিতে বের হয়েছে",
+      "DELIVERED": "ডেলিভারি হয়েছে",
+      "PARTIALLY_DELIVERED": "আংশিক ডেলিভারি",
+      "ATTEMPT_FAILED": "ডেলিভারির চেষ্টা ব্যর্থ",
+      "ADDRESS_PROBLEM": "ঠিকানায় সমস্যা",
+      "LOST": "হারিয়ে গেছে",
+      "DAMAGED": "নষ্ট হয়েছে",
+      "RETURNING": "ফেরত আসছে",
+      "RETURNED": "ফেরত এসেছে",
+      "CANCELLED": "বাতিল",
+      "CANCEL_REQUESTED": "বাতিলের অনুরোধ"
+    },
+    "reasons": {
+      "receiverUnreachable": "যিনি পাবেন তিনি ফোন ধরছেন না",
+      "receiverNotAvailable": "যিনি পাবেন তিনি নেই",
+      "receiverAskedLater": "অন্য দিন দিতে বলেছেন",
+      "paymentNotReady": "টাকা হাতে ছিল না",
+      "addressNotFound": "রাইডার ঠিকানা খুঁজে পাচ্ছেন না",
+      "addressIncomplete": "ঠিকানা অসম্পূর্ণ",
+      "wrongArea": "ঠিকানা অন্য এলাকায়",
+      "lostInTransit": "পথে হারিয়ে গেছে",
+      "damagedInTransit": "পথে নষ্ট হয়েছে",
+      "wetOrTorn": "ভেজা বা ছেঁড়া",
+      "other": "অন্য কারণ (নোট দেখুন)"
+    },
+    "providers": {
+      "mockCourier": "প্র্যাকটিস কুরিয়ার"
+    },
+    "practice": "প্র্যাকটিস — কোনো কুরিয়ারে কিছু যায় না"
   }
 }
