@@ -16,6 +16,8 @@
 // - PR 563 (S04) the address-detail check: does the line say where the house is (detail.ts)? Only a flag and a call.
 // - PR 565 (S04) free delivery is exempt from the band machinery: no band shown, corrected or messaged (exempt.ts).
 // - PR 561 (S04) the address the shop holds for a phone number, for the silent backfill (held.ts). Never shown.
+// - PR 502 the owner's area admin: open, rename, re-spell, add and merge places, never deleting; the sub-area band's own
+//   switch; an import never undoes the owner's names or a merge (places-admin.ts, import.ts).
 export * from './text';
 export * from './detail';
 export * from './exempt';
@@ -29,6 +31,7 @@ export * from './context';
 export * from './bands';
 export * from './places';
 export * from './bands-admin';
+export * from './places-admin';
 export * from './resolver';
 export * from './settle';
 export * from './resolve-service';

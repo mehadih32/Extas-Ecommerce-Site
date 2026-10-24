@@ -3,13 +3,13 @@
 // line is read the way checkout reads it (the shared settle controller): never while typing; on leaving the box, or
 // after a pause once it has enough words; typing again starts the wait over. A line still ambiguous asks "Where is this
 // address?" with the bands in doubt (demo 51-checkout.js co-zask / co-zboth / co-zpick); picking one is kept, and a
-// later sure read that disagrees asks again — nothing changes silently.
+// later sure read that disagrees asks again — nothing changes silently. PR 502: on the new admin shell.
 import { useEffect, useRef, useState } from 'react';
 import type { ResolveView } from '@extas/delivery';
 import { createSettle, type SettleController } from '@extas/delivery/settle';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
-import { Icon } from '../Icon';
+import { ShellIcon } from '../shell/ShellIcon';
 import type { Money } from '../products/model';
 import { askLine, nameOf, optionLine, outCharge, hoursText, placeLabel, refusalText, type Lang } from './model';
 
@@ -69,15 +69,17 @@ export function TryAddress({ dict: d, lang, locale, money, settleMs, minWords }:
   };
 
   return (
-    <section className="ad-card dl-card dl-wide" aria-labelledby="dl-try-h">
-      <h2 id="dl-try-h">{t(d, 'delivery.try.title')}</h2>
-      <p className="ad-sub">{t(d, 'delivery.try.sub')}</p>
-      <label className="ad-label" htmlFor="dl-try">
+    <section className="a2-sc dz-try" aria-labelledby="dl-try-h" data-testid="dz-try">
+      <h2 className="a2-h3" id="dl-try-h">
+        {t(d, 'delivery.try.title')}
+      </h2>
+      <p className="a2-scd">{t(d, 'delivery.try.sub')}</p>
+      <label className="a2-lbl a2-mt12" htmlFor="dl-try">
         {t(d, 'delivery.try.label')}
       </label>
       <input
         id="dl-try"
-        className="ad-input"
+        className="a2-inp"
         value={line}
         placeholder={t(d, 'delivery.try.placeholder')}
         autoComplete="off"
@@ -91,24 +93,24 @@ export function TryAddress({ dict: d, lang, locale, money, settleMs, minWords }:
         }}
         data-testid="dl-try"
       />
-      <div className="dl-try-out" aria-live="polite" data-testid="dl-try-out">
-        {error ? <p className="ad-err">{error}</p> : null}
-        {waiting ? <p className="ad-mini">{t(d, 'delivery.try.waiting')}</p> : null}
+      <div className="dz-try-out" aria-live="polite" data-testid="dl-try-out">
+        {error ? <p className="dz-said bad">{error}</p> : null}
+        {waiting ? <p className="a2-xs a2-mute">{t(d, 'delivery.try.waiting')}</p> : null}
         {!waiting && read?.status === 'resolved' ? (
-          <div className="dl-zone">
-            <Icon name="truck" size={22} />
-            <div className="dl-zone-main">
+          <div className="dz-zone">
+            <ShellIcon name="truck" size={22} />
+            <div className="dz-zone-main">
               <b>{nameOf(lang, read.band)}</b>
-              <div className="ad-mini">
+              <div className="a2-xs a2-mute">
                 {hoursText(d, read.band, locale)}
                 {t(d, 'delivery.sep')}
                 {read.area ? t(d, 'delivery.try.readFrom', { place: placeLabel(lang, read.area) }) : t(d, `delivery.try.via.${read.via}`)}
               </div>
-              {!read.placeSure ? <div className="ad-mini">{t(d, 'delivery.try.placeUnsure')}</div> : null}
+              {!read.placeSure ? <div className="a2-xs a2-mute">{t(d, 'delivery.try.placeUnsure')}</div> : null}
             </div>
-            <b className="dl-zone-v">{outCharge(d, read.band, money)}</b>
+            <b className="dz-zone-v">{outCharge(d, read.band, money)}</b>
             {read.via === 'choice' ? (
-              <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={unpick}>
+              <button type="button" className="a2-btn ghost" onClick={unpick}>
                 {t(d, 'delivery.try.change')}
               </button>
             ) : null}
@@ -116,16 +118,16 @@ export function TryAddress({ dict: d, lang, locale, money, settleMs, minWords }:
         ) : null}
         {!waiting && read?.status === 'ask' ? (
           <div>
-            <p className="dl-zask">{t(d, 'delivery.try.ask')}</p>
-            <p className="dl-zboth">
-              <Icon name="info" size={14} />
+            <p className="dz-zask">{t(d, 'delivery.try.ask')}</p>
+            <p className="dz-zboth">
+              <ShellIcon name="info" size={14} />
               <span>{askLine(d, lang, read)}</span>
             </p>
-            <div className={`dl-zpick${read.options.length > 2 ? ' z3' : ''}`}>
+            <div className="dz-zpick">
               {read.options.map((o) => {
                 const place = o.places.length === 1 ? o.places[0]! : null;
                 return (
-                  <button key={o.band.id} type="button" className="dl-zbtn" onClick={() => pick(o.band.id, place?.id ?? null)} data-testid="dl-zbtn">
+                  <button key={o.band.id} type="button" className="dz-zbtn" onClick={() => pick(o.band.id, place?.id ?? null)} data-testid="dl-zbtn">
                     <b>{place && read.reason !== 'wide-place' ? placeLabel(lang, place) : nameOf(lang, o.band)}</b>
                     <span>{optionLine(d, o.band, money, locale)}</span>
                   </button>
