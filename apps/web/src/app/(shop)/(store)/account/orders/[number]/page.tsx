@@ -5,7 +5,7 @@
 // PR 136: the invoice row with "Get invoice" (follow-up 147), while the owner keeps invoices on (`account.invoice`).
 // PR 65: "Rate & review" under each line of a delivered order, for the customer whose account it is; what he writes
 // waits for the shop's check (`reviews.submit`, `reviews.photoReward`).
-// Follow-up 260: the customer's edit card (lib/shop/account-order.ts).
+// Follow-ups 260, 261: the customer's edit card and the two-size question (lib/shop/account-order.ts).
 import type { Metadata } from 'next';
 import { OrderPage, OrderPrompt } from '@/components/shop/account/OrderPage';
 import { orderExtras } from '@/lib/shop/account-order';
