@@ -10,7 +10,27 @@
     },
     "signals": {
       "label": "Risk signals and weights",
-      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place. PR 541 adds, both off: many pieces in one order (your number; empty: never), and the same person under another number — earlier orders of another number with the same name and an address this alike, a refusal among them named. Same device, another number (off): earlier orders from this device under another number. Many numbers from one connection (off): other numbers ordered from the same connection within the hours you set."
+      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place. PR 541 adds, both off: many pieces in one order (your number; empty: never), and the same person under another number — earlier orders of another number with the same name and an address this alike, a refusal among them named. Same device, another number (off): earlier orders from this device under another number. Many numbers from one connection (off): other numbers ordered from the same connection within the hours you set.",
+      "names": {
+        "refusals": "Refused parcels before",
+        "cancels": "Cancelled orders before",
+        "successRatio": "Few parcels taken at the door",
+        "newPhone": "First order from this number",
+        "noAnswer": "Did not answer calls before",
+        "recentOrder": "Another order in the last hours",
+        "inTransit": "A parcel is already on its way",
+        "orderValue": "High order value",
+        "addressUnresolved": "Address could not be placed",
+        "addressUnsure": "Place not sure",
+        "addressNoDetail": "No house details",
+        "areaMismatch": "Another district than usual",
+        "riskyArea": "One of your watched places",
+        "areaRefusals": "Many refusals at this place",
+        "orderPieces": "Many pieces in one order",
+        "identityMatch": "Same person, another number",
+        "deviceMatch": "Same device, another number",
+        "ipPhones": "Many numbers from one connection"
+      }
     },
     "bands": {
       "label": "Risk bands",

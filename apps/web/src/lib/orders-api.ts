@@ -82,7 +82,8 @@ function ordersFail(e: unknown): Response {
   return errorResponse(e);
 }
 
-async function handle(request: Request, deps: AdminDeps | null, permission: od.OrdersPermission, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
+/** One admin request of the order service: the store, the session and the permission, then `fn`, its refusals as JSON (PR 544's risk routes too). */
+export async function handle(request: Request, deps: AdminDeps | null, permission: od.OrdersPermission, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
