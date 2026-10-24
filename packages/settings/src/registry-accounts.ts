@@ -12,6 +12,8 @@ import { localizedTextSchema, templateStringSchema, templateTextSchema } from '.
 const V = 29;
 /** PR 136 — the invoice's keys: registry version 31 (the parallel combo pages took 30). */
 const V31 = 31;
+/** S05 · PR 150 — My orders' whole history and the order page's "What happened": registry version 44 (38–43 are the support lane, combo templates, messages, the order export and the risk score). */
+const V44 = 44;
 
 /** PR 130 — the one-time sign-in code: its length, how long it works, wrong tries, and how often one may be asked for. */
 export const accountCodeLimitsSchema = z
@@ -44,6 +46,14 @@ export const accountListsSchema = z
     newIn: z.int().min(0).max(24),
   })
   .strict();
+
+/**
+ * S05 · PR 150 — the whole order history. `filters`: My orders offers its groups (all, on the way, delivered,
+ * cancelled & returned) once his orders fill more than one page (`account.lists.orders` a page; older pages always
+ * open). `timeline`: each order's page tells "What happened" — its steps, his edits and the team's, a piece added or
+ * taken out, his two-size answer, his cancel request — from what the order stores, never the team's own notes.
+ */
+export const accountHistorySchema = z.object({ filters: z.boolean(), timeline: z.boolean() }).strict();
 
 /** PR 132 — one of the owner's member offers on the banner: his own words, and the coupon code when it needs one. */
 export const accountOfferSchema = z
@@ -309,6 +319,17 @@ export const accountSettings = {
     labelKey: 'account.invoice.label',
     helpKey: 'account.invoice.help',
     sortOrder: 150,
+  }),
+  // ---- S05 · PR 150 · the whole order history and each order's life ----
+  'account.history': setting({
+    ...base,
+    version: V44,
+    schema: accountHistorySchema,
+    default: { filters: true, timeline: true },
+    valueType: 'JSON',
+    labelKey: 'account.history.label',
+    helpKey: 'account.history.help',
+    sortOrder: 85,
   }),
   /** PR 136 — the shop's VAT registration number (BIN) on the invoice. Owner data (prefix `legal.`): no default. */
   'legal.bin': setting({

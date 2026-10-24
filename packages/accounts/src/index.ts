@@ -10,6 +10,8 @@
 // - PR 135 the late flag past the band's promise in hours (SIM-F-018) and the amount the rider may take (pure.ts); the
 //   order cards carry the late flag (dashboard.ts).
 // - PR 137 a signed-in customer's checkout starts with his own name, number and address (profile.ts checkoutPrefill).
+// - S05 · PR 150 his whole order history, a page of one group at a time (history.ts), and each order's life as he may
+//   see it: its steps and the timeline rows about him or his parcel, never the team's own (lifecycle.ts).
 export * from './context';
 export * from './identity';
 export * from './codes';
@@ -18,3 +20,5 @@ export * from './pure';
 export * from './dashboard';
 export * from './profile';
 export * from './offers';
+export * from './lifecycle';
+export * from './history';

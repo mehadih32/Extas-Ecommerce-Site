@@ -396,6 +396,55 @@
         "offline": "That did not go through. Please try again."
       }
     },
+    "history": {
+      "filter": "Show my orders",
+      "show": {
+        "all": "All",
+        "open": "On the way",
+        "delivered": "Delivered",
+        "ended": "Cancelled & returned"
+      },
+      "none": "No orders here.",
+      "seeAll": "See all orders",
+      "pages": "Pages of my orders",
+      "page": "Page {page} of {pages}",
+      "newer": "Newer",
+      "older": "Older"
+    },
+    "life": {
+      "title": "What happened",
+      "kind": {
+        "placed": "Order placed",
+        "advanceWait": "Waiting for the advance payment",
+        "advancePaid": "Advance payment received",
+        "confirmed": "Order confirmed",
+        "edited": "Order changed",
+        "added": "Added to this parcel",
+        "removed": "Taken out of this parcel",
+        "sizeAnswered": "Size chosen",
+        "cancelAsked": "You asked to cancel",
+        "cancelKept": "Your cancel request was answered: the order goes ahead",
+        "packed": "Packed",
+        "courier": "Handed to the courier",
+        "delivered": "Delivered",
+        "partDelivered": "Partly delivered",
+        "returned": "Returned",
+        "cancelled": "Order cancelled"
+      },
+      "by": {
+        "you": "by you",
+        "shop": "by us"
+      },
+      "field": {
+        "name": "name",
+        "phone": "mobile number",
+        "address": "address",
+        "note": "delivery note"
+      },
+      "changed": "Changed: {fields}",
+      "keepOne": "{product}: only {size}",
+      "keepAll": "{product}: every size"
+    },
     "edit": {
       "title": "Change address, phone or size",
       "openPlaced": "You can edit this order until we confirm it.",

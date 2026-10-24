@@ -2,9 +2,10 @@
 // prompt that comes back here; a section the owner hides (`account.tabs`) is "page not found"; otherwise the frame
 // (AccountShell) around the section's own body. The pages under app/(shop)/(store)/account call it.
 // PR 132: the offer banner on top of My orders; For you lists the same offers as cards.
+// S05 · PR 150: My orders is the whole history — a page of one group at a time, from the address's `show` and `page`.
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { liveOffers, offerBanner, orderCards, profileView, walletView } from '@extas/accounts';
+import { isOrderShow, liveOffers, offerBanner, orderHistory, pageOf, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
 import { accountDeps } from '@/lib/shop/account';
 import { accountPage, accountWords } from '@/lib/shop/account-view';
@@ -18,7 +19,7 @@ import { PhotoCard } from './AccountPhoto';
 import { OfferBanner, OfferCards } from './OfferBanner';
 import { DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 
-export async function AccountSection({ tab }: { tab: Exclude<AccountTab, 'wishlist'> }) {
+export async function AccountSection({ tab, query = {} }: { tab: Exclude<AccountTab, 'wishlist'>; query?: { show?: unknown; page?: unknown } }) {
   const c = await shopContext();
   const page = await accountPage(c);
   const deps = accountDeps();
@@ -28,16 +29,19 @@ export async function AccountSection({ tab }: { tab: Exclude<AccountTab, 'wishli
   }
   if (!page.tabs.includes(tab)) notFound();
   const who = { storeId: c.storeId, customerId: page.me.customer.id };
-  const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled', 'account.offerBanner'] as const, c.storeId);
+  const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled', 'account.offerBanner', 'account.history'] as const, c.storeId);
   let body: ReactNode;
   switch (tab) {
     case 'orders': {
       // PR 132: the banner sits on top of My orders only (For you lists the offers, Wallet has its own balance)
-      const [banner, orders] = await Promise.all([offerBanner(deps, who), orderCards(deps, who)]);
+      // PR 150: a group only while the owner offers the groups; any page of it (past the end: the last one)
+      const filters = s['account.history'].filters;
+      const show = filters && isOrderShow(query.show) ? query.show : 'all';
+      const [banner, history] = await Promise.all([offerBanner(deps, who), orderHistory(deps, { ...who, show, page: pageOf(query.page) })]);
       body = (
         <>
           <OfferBanner c={c} banner={banner} walletUsable={s['checkout.wallet.enabled']} showAll={page.tabs.includes('foryou')} />
-          <OrdersTab c={c} orders={orders} />
+          <OrdersTab c={c} history={history} filters={filters} />
         </>
       );
       break;

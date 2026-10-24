@@ -6,8 +6,11 @@
 // rows (sales figures), ~~the invoice button (PR 136)~~ and the exchange-window tag (S06).
 // PR 136: the invoice icon beside the order number opens that order's invoice (demo R16 acc-oinv), while the owner keeps
 // invoices on (`account.invoice`).
+// S05 · PR 150: My orders is the whole history — a page at a time (`account.lists.orders` a page; "Newer" / "Older"
+// under it), and once his orders fill more than one page, the groups as chips with their counts (All, On the way,
+// Delivered, Cancelled & returned; `account.history.filters`). A customer with one page of orders sees the demo's list.
 import type { ReactNode } from 'react';
-import type { OrderCard, WalletView } from '@extas/accounts';
+import { ORDER_SHOWS, type OrderCard, type OrderHistory, type OrderShow, type WalletView } from '@extas/accounts';
 import { TRACK_STEPS } from '@extas/accounts/pure';
 import type { ShopIcon } from '@extas/settings';
 import { cardsByIds, type ShopCard } from '@/lib/shop/catalogue';
@@ -126,27 +129,89 @@ function OrderCardView({ c, o, cards, invoice }: { c: ShopContext; o: OrderCard;
   );
 }
 
-export async function OrdersTab({ c, orders }: { c: ShopContext; orders: OrderCard[] }) {
+/** The address of a group's page of My orders (the first page of "All" is the plain address). */
+function historyHref(c: ShopContext, show: OrderShow, page: number): string {
+  const q = new URLSearchParams();
+  if (show !== 'all') q.set('show', show);
+  if (page > 1) q.set('page', String(page));
+  const s = q.toString();
+  return `${hrefIn(c.lang, c.path)}${s ? `?${s}` : ''}`;
+}
+
+/** PR 150 — the groups as chips, each with its count (only once his orders fill more than one page, or one is chosen). */
+function HistoryChips({ c, h }: { c: ShopContext; h: OrderHistory }) {
   const t = c.t;
+  return (
+    <nav className="scroll-x acc-chips acc-hchips" aria-label={t('account.history.filter')} data-testid="acc-history-chips">
+      {ORDER_SHOWS.map((k) => (
+        <a key={k} className={`chip${k === h.show ? ' on' : ''}`} href={historyHref(c, k, 1)} aria-current={k === h.show ? 'page' : undefined} data-show={k}>
+          {t(`account.history.show.${k}`)}
+          <span className="acc-hn">{c.num(h.counts[k])}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+/** PR 150 — "Newer" / "Older" and where he is, under the list (only with more than one page). */
+function HistoryPager({ c, h }: { c: ShopContext; h: OrderHistory }) {
+  const t = c.t;
+  return (
+    <nav className="acc-pager" aria-label={t('account.history.pages')} data-testid="acc-history-pager">
+      {h.page > 1 ? (
+        <a className="btn btn-secondary btn-sm" href={historyHref(c, h.show, h.page - 1)} rel="prev" data-testid="acc-history-newer">
+          <Icon name="back" size={15} />
+          {t('account.history.newer')}
+        </a>
+      ) : (
+        <span />
+      )}
+      <span className="xs muted">{t('account.history.page', { page: c.num(h.page), pages: c.num(h.pages) })}</span>
+      {h.page < h.pages ? (
+        <a className="btn btn-secondary btn-sm" href={historyHref(c, h.show, h.page + 1)} rel="next" data-testid="acc-history-older">
+          {t('account.history.older')}
+          <Icon name="right" size={15} />
+        </a>
+      ) : (
+        <span />
+      )}
+    </nav>
+  );
+}
+
+export async function OrdersTab({ c, history: h, filters }: { c: ShopContext; history: OrderHistory; filters: boolean }) {
+  const t = c.t;
+  const orders = h.cards;
   const ids = [...new Set(orders.flatMap((o) => o.lines.flatMap((l) => (l.productId ? [l.productId] : []))))];
   const [cards, more] = await Promise.all([
     ids.length ? cardsByIds(c.storeId, ids) : Promise.resolve(new Map<string, ShopCard>()),
     readPageSettings(['account.invoice'] as const, c.storeId),
   ]);
   const invoice = more['account.invoice'].enabled;
+  const chips = filters && (h.counts.all > h.perPage || h.show !== 'all');
   return (
-    <section aria-labelledby="ao-h" data-testid="acc-orders">
+    <section aria-labelledby="ao-h" data-testid="acc-orders" data-show={h.show} data-page={h.page}>
       <div className="sec-hd">
         <h2 className="h2" id="ao-h">
           {t('account.orders.title')}
         </h2>
-        <span className="small muted">{plural(t, 'account.orders.count', orders.length, c.num)}</span>
+        <span className="small muted">{plural(t, 'account.orders.count', h.counts[h.show], c.num)}</span>
       </div>
+      {chips ? <HistoryChips c={c} h={h} /> : null}
       {orders.length ? (
         <div className="stack s12">
           {orders.map((o) => (
             <OrderCardView key={o.number} c={c} o={o} cards={cards} invoice={invoice} />
           ))}
+        </div>
+      ) : h.counts.all > 0 ? (
+        <div className="card empty" data-testid="acc-history-none">
+          <p className="small" style={{ margin: '0 0 14px' }}>
+            {t('account.history.none')}
+          </p>
+          <a className="btn btn-secondary" href={historyHref(c, 'all', 1)}>
+            {t('account.history.seeAll')}
+          </a>
         </div>
       ) : (
         <div className="card empty" data-testid="acc-orders-empty">
@@ -161,6 +226,7 @@ export async function OrdersTab({ c, orders }: { c: ShopContext; orders: OrderCa
           </a>
         </div>
       )}
+      {h.pages > 1 ? <HistoryPager c={c} h={h} /> : null}
     </section>
   );
 }

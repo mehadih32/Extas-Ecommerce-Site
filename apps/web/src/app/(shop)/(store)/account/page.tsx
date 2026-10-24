@@ -10,6 +10,8 @@ export function generateMetadata(): Promise<Metadata> {
   return accountMetadata('orders');
 }
 
-export default function MyAccount() {
-  return <AccountSection tab="orders" />;
+// S05 · PR 150: the whole history, a page of one group at a time (?show=open|delivered|ended&page=2)
+export default async function MyAccount({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const q = await searchParams;
+  return <AccountSection tab="orders" query={{ show: q.show, page: q.page }} />;
 }
