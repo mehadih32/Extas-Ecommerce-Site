@@ -33,6 +33,7 @@ import { OTHER_KEY } from './commands';
 import { allow, nowOf, parse, setting, UUID, type OrdersDeps, type Tx, type Who } from './context';
 import type { CustomerRef } from './customer';
 import { screenOrder } from './duplicates';
+import { rescoreAfterEdit } from './risk';
 import { OrdersError } from './errors';
 import { customerEditClosedWhy, type CustomerEditClosed } from './pure';
 import { execute, factsOf, inventoryOf, MACHINE_SELECT, machineOf, staffBy, type By, type CommandOptions, type CommandResult, type Effect, type LockedOrder } from './service';
@@ -229,6 +230,8 @@ export async function applyEdit(deps: OrdersDeps, tx: Tx, o: LockedOrder, c: Edi
 
 /** B1.10: the fraud check again after the phone or the lines changed. It never undoes the edit; a failure waits for the next one. */
 export async function rescreenAfterEdit(deps: OrdersDeps, ref: { storeId: number; orderId: string }, by: By, c: EditChanges): Promise<void> {
+  // PR 156: the risk score again (a new, dated assessment) when the phone, the address or the lines changed
+  await rescoreAfterEdit(deps, ref, by, c);
   if (c.phone === undefined && !c.lines?.length) return;
   try {
     await screenOrder(deps, ref, { again: { by } });

@@ -532,7 +532,8 @@
       "twoSizeNoted": "অন্য কারও জন্য (ব্যাগে বলেছে): {groups}",
       "twoSizeKeep": "{product} {sizes}: রাখবে {keep}",
       "twoSizeEvery": "সবগুলো",
-      "twoSizeTeam": "একটা পিসে অফার আছে — কাস্টমারের সাথে কথা বলে বাদ দিন"
+      "twoSizeTeam": "একটা পিসে অফার আছে — কাস্টমারের সাথে কথা বলে বাদ দিন",
+      "order_riskAssess": "ঝুঁকির স্কোর"
     },
     "band": {
       "cancelPending": "বাতিল চাওয়া হয়েছে · কুরিয়ারের উত্তর বাকি — {courier}-কে ফোন করে ওরা কী বলল লিখুন।",

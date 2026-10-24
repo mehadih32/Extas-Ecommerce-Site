@@ -19,6 +19,8 @@ export * from './delivery-target';
 export * from './phone-summary';
 // PR 158: address and zone checks against the gazetteer (address-checks.ts).
 export * from './address-checks';
+// PR 156: the risk score model, a pure function of the order's facts and the owner's settings (risk-score.ts).
+export * from './risk-score';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
@@ -67,6 +69,8 @@ export const ORDER_COMMANDS = [
   // PR 146: the two-size follow-up — the system's check after placing (a note, the question asked), and the answer
   'twoSizeCheck',
   'twoSizeAnswer',
+  // PR 156: the risk score stored on the order (the status stays; never blocks, holds or asks for anything)
+  'riskAssess',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -115,6 +119,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   // PR 146: asked once, right after placing; answered until picking starts (an answer takes the other sizes out)
   twoSizeCheck: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
   twoSizeAnswer: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
+  // PR 156: scored when it lands, again after an edit or by hand while it is open
+  riskAssess: OPEN_STATES,
 };
 
 /** What the machine needs to know about an order (read under its row lock). */

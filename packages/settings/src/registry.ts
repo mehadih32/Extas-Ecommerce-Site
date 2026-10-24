@@ -1183,7 +1183,7 @@ export const registry = {
   ...supportLaneSettings,
   // ---- S05 · PR 148 · the Messages control centre: the master switch, the order journey, caps, self-confirm, language, quiet hours, the amount lines, the engine's pace (registry-messages.ts, version 40). ----
   ...messageSettings,
-  // ---- S06 · PR 157 · a number's history: how many orders, the refusals that are our fault, unanswered calls (registry-risk.ts, version 43). ----
+  // ---- S06 · PR 157, 156 · a number's history (how many orders, the refusals that are our fault, unanswered calls) and the risk score: the signals and their weights, the bands (registry-risk.ts, version 43). ----
   ...riskSettings,
 } satisfies RegistryShape;
 
