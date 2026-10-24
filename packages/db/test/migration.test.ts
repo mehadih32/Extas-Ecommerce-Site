@@ -168,6 +168,21 @@ describe('later migrations', () => {
     const code = sql.replace(/--.*$/gm, '');
     expect(code).not.toMatch(/\bALTER TABLE\b|\bALTER COLUMN\b|\bRENAME\b|\bUPDATE\s+"/i);
   });
+
+  it('PR 65: reviews only gain columns, every one nullable or with a default, and the reward only points at the ledger (0021_reviews)', () => {
+    const sql = sqlOf('0021_reviews');
+    for (const c of ['orderId', 'source', 'fitVerdict', 'heightCm', 'weightKg', 'sizeLabel', 'colourName', 'moderatedById', 'moderatedAt', 'hiddenReason', 'rewardWalletEntryId', 'rewardAmountMinor', 'rewardedAt']) {
+      expect(sql).toMatch(new RegExp(`ADD COLUMN\\s+"${c}"`));
+    }
+    // Every review that already exists stays valid: the one NOT NULL column has a default.
+    for (const line of sql.split('\n').filter((l) => /NOT NULL/.test(l))) expect(line).toMatch(/DEFAULT/);
+    expect(sql).toContain('CREATE INDEX "Review_storeId_status_createdAt_idx" ON "Review"("storeId", "status", "createdAt");');
+    expect(sql).toContain('CREATE INDEX "Review_storeId_orderItemId_idx" ON "Review"("storeId", "orderItemId");');
+    const code = sql.replace(/--.*$/gm, '');
+    expect(code).not.toMatch(/\bALTER COLUMN\b|\bRENAME\b|\bUPDATE\s+"/i);
+    // No money column holds an amount of its own accord: the reward is a WalletEntry, these only point at it.
+    expect(code).not.toMatch(/"rewardAmountMinor"[^,]*DEFAULT/i);
+  });
 });
 
 // All migrations applied in order to a throwaway database must give exactly the schema. Needs TEST_DATABASE_ADMIN_URL

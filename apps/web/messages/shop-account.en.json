@@ -355,6 +355,46 @@
       "giftFrom": "A gift from",
       "giftHidden": "This is a gift: prices are not shown.",
       "leadGift": "Invoice {invoice} for order #{number} · {items} · a gift, prices hidden."
+    },
+    "review": {
+      "cta": "Rate & review",
+      "title": "Rate & review",
+      "line": "Tell other buyers how it fits.",
+      "rating": "Your rating",
+      "ratingN": "{n} stars",
+      "fitAsk": "How was the size?",
+      "fit": {
+        "small": "Too small",
+        "right": "Just right",
+        "big": "Too big"
+      },
+      "height": "Your height",
+      "feet": "feet",
+      "inches": "inches",
+      "weight": "Your weight (kg)",
+      "photo": "Add a photo (optional)",
+      "photoReward": "Approved photo reviews get {amount} in your wallet",
+      "body": "What should other buyers know?",
+      "submit": "Submit review",
+      "sending": "Sending…",
+      "sent": "Thanks! Your review will appear after our check.",
+      "close": "Close",
+      "state": {
+        "pending": "Review waiting for approval",
+        "published": "Review published",
+        "hidden": "Review not shown"
+      },
+      "err": {
+        "rating": "Please choose a rating first.",
+        "signedOut": "Please log in again.",
+        "off": "Reviews are closed at the moment.",
+        "notDelivered": "You can review this once the parcel is delivered.",
+        "late": "The time for reviewing this order has passed.",
+        "exists": "You have already reviewed this item.",
+        "photo": "That photo could not be used. Try another one.",
+        "big": "That photo is too large.",
+        "offline": "That did not go through. Please try again."
+      }
     }
   }
 }

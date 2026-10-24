@@ -1,8 +1,31 @@
 {
+  "groups": {
+    "reviews": "Reviews"
+  },
   "catalogue": {
     "sizeAdvice": {
       "label": "Find My Size learning",
       "help": "Reads the answers Find My Size has given (height, weight, the size it said, the size the customer took, the order line it led to and any size exchange) and, with \"Use reviews\" on, approved reviews that say how the size felt. The size report shows, per garment type and fit, how often customers took the size we said, how often they went up or down, and flags a chart that keeps running tight or loose. \"Smallest number of signals\" is how many are needed before a proposal is made at all. From those signals a new ease (the room over the body) is proposed, at most \"Most it may move\" inches in steps of \"Step\". Nothing is applied by itself: you look at a proposed version and switch it on. \"Use the trained ease\" off means Find My Size uses your own chart ease and nothing else; on means an active version's ease is used for that garment type and fit — your chart is never changed either way."
+    }
+  },
+  "pdp": {
+    "reviews": {
+      "label": "Reviews on the product page",
+      "help": "The reviews block under the product page: the summary box (the average, the stars and how many) and the review cards in a row that slides on its own. \"How many\" is how many cards the row carries. \"Photo reviews first\" puts the reviews with a buyer photo at the front. Only approved reviews are ever shown, and a card shows only what its review really carries — the height, weight and size line, the photo and the \"Verified buyer\" tag each have their own switch. \"Rating line\" puts the stars and the count under the product title, linked down to this block."
+    }
+  },
+  "reviews": {
+    "submit": {
+      "label": "Who can write a review",
+      "help": "Only a buyer can review, from My account, and the review waits for your check before anyone sees it. \"Only after delivery\" means the order must have reached Delivered. \"Within (days)\" is how long after delivery he may still write it (0 = no limit). \"Longest text\" is in letters. The fit answer (too small · just right · too big) and the height and weight feed Find My Size learning and the fit bar; they are never shown unless he gives them. The photo is his own picture of the garment, with its largest size in MB."
+    },
+    "moderation": {
+      "label": "Checking reviews",
+      "help": "How many reviews one page of the list carries, whether a second review of the same order line is refused, and whether a review that comes from a real order carries the \"Verified buyer\" mark by itself. A review you have not approved is in no average, on no page and in no search-engine rating."
+    },
+    "photoReward": {
+      "label": "Photo review reward",
+      "help": "Off, with no amount. Switch it on and type your own figure to pay a customer for an approved review that carries his own photo. The money goes to his wallet as one entry, only when a member of staff approves that review, and only once for that review — never automatically, never twice. \"Smallest stars\" is the lowest rating that earns it, and \"One per order\" keeps it to one reward however many lines of that order are reviewed. While it is off, the review form says nothing about a reward."
     }
   }
 }

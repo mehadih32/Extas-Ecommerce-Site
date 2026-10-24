@@ -3,8 +3,11 @@
 // PR 135 — its tracking: the steps, the late flag, the courier, the welcome panel after "Track your order" on the
 // thank-you page (`?from=thanks`), and the exact amount for the rider when the owner turns it on.
 // PR 136: the invoice row with "Get invoice" (follow-up 147), while the owner keeps invoices on (`account.invoice`).
+// PR 65: "Rate & review" under each line of a delivered order, for the customer whose account it is; what he writes
+// waits for the shop's check (`reviews.submit`, `reviews.photoReward`).
 import type { Metadata } from 'next';
 import { OrderPage, OrderPrompt } from '@/components/shop/account/OrderPage';
+import { orderReviewBox } from '@/lib/shop/account-review';
 import { accountReceipt, checkoutSettings } from '@/lib/shop/checkout';
 import { invoiceNumber } from '@/lib/shop/invoice';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
@@ -28,6 +31,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
     readPageSettings(['account.track.welcome', 'account.track.late', 'account.track.exactAmount', 'account.invoice'] as const, c.storeId),
   ]);
   if (!receipt) return <OrderPrompt c={c} number={number} signedIn={signedIn} />;
+  const review = await orderReviewBox(c, receipt.number);
   return (
     <OrderPage
       c={c}
@@ -36,6 +40,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
       fromThanks={fromThanks}
       opts={{ welcome: track['account.track.welcome'], late: track['account.track.late'], exact: track['account.track.exactAmount'] }}
       invoiceNo={track['account.invoice'].enabled ? invoiceNumber(track['account.invoice'].number, receipt.number) : null}
+      review={review}
     />
   );
 }

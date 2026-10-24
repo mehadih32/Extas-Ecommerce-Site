@@ -205,7 +205,7 @@
 .shop .ord-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line2); }
 .shop .ord-meta .wide { grid-column: 1 / -1; }
 @media (min-width: 1024px) { .shop .ord-meta { grid-template-columns: 150px 170px minmax(0, 1fr); } .shop .ord-meta .wide { grid-column: auto; } .shop .ord-meta .wide:only-child { grid-column: 1 / -1; } }
-.shop .ord-line { display: flex; gap: 14px; padding: 16px; border-top: 1px solid var(--line2); }
+.shop .ord-line { display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; border-top: 1px solid var(--line2); }
 @media (min-width: 1024px) { .shop .ord-line { padding: 18px 20px; gap: 18px; } }
 .shop .ord-thumb { width: 76px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; }
 @media (min-width: 1024px) { .shop .ord-thumb { width: 92px; } }
@@ -278,3 +278,17 @@
   .shop .inv-page { padding: 0; max-width: none; }
   .shop .inv-doc { border: 0; border-radius: 0; }
 }
+
+/* PR 65 — "Rate & review" under a delivered line (demo 60-account.js ord_revHTML): the button, then the form in place.
+   The stars are 44px tap targets; the box never covers the page, so he keeps his place in the order. */
+/* PR 65: the review has the whole line to itself, so its stars and boxes fit a 320 px phone (the line wraps). */
+.shop .ord-rev-slot { flex: 0 0 100%; }
+.shop .ord-rev-cta { min-height: 44px; padding: 10px 14px; font-size: 14px; font-weight: 650; }
+.shop .ord-rev { border: 1px solid var(--line2); border-radius: var(--radius); padding: 14px; background: var(--surface2); }
+.shop .ord-rev fieldset { border: 0px; padding: 0px; margin: 0px; }
+.shop .ord-rev legend { padding: 0px; }
+.shop .ord-rev-star { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0px; background: none; cursor: pointer; color: var(--line); }
+.shop .ord-rev-star.on { color: var(--brand); }
+.shop .ord-rev-body { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 560px) { .shop .ord-rev-body { grid-template-columns: 1fr 1fr; } }
+.shop .ord-rev-done { display: inline-flex; align-items: center; gap: 5px; }

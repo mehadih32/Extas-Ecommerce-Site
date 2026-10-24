@@ -112,6 +112,11 @@
       },
       "merge": "Put two open orders of one customer in one parcel (prices and charges stay as they are)",
       "lines": "Add a line to an order not yet with the courier, or take out a line added after placing (priced as its product page; nothing else is priced again)"
+    },
+    "reviews": {
+      "read": "See every review with its state (waiting, published, hidden)",
+      "moderate": "Publish, hide or refuse a review and mark a verified buyer (approving a photo review also pays the photo reward, only while the owner has switched it on with his own amount)",
+      "write": "Add a review the shop collected itself, and bring in a file of reviews"
     }
   },
   "totp": {

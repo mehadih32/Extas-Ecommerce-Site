@@ -884,3 +884,18 @@
   .shop .pdp-page:has(.pdp-acts) .pdp-qa-i summary, .shop .pdp-page:has(.pdp-acts) .pdp-qa-all { padding-right: 34px; }
 }
 @media (prefers-reduced-motion: reduce) { .shop .pdp-page .pdp-qa-i summary svg { transition: none; } }
+
+/* PR 65 — the reviews block (demo 30-product.js reviews styles, r11-pdp.css §44, r12-pdp.css): the summary box beside
+   the sliding row on a computer, stacked on a phone. The cards are the page's own boxes, so they wear the theme. */
+.shop .pdp-page .pdp-revgrid { display: grid; gap: 12px; }
+@media (min-width: 1024px) { .shop .pdp-page .pdp-revgrid { grid-template-columns: 280px minmax(0, 1fr); gap: 24px; align-items: start; } }
+.shop .pdp-page .pdp-revlist { display: grid; gap: 12px; }
+.shop .pdp-page .pdp-avg { font-family: var(--font-display); font-weight: 800; font-size: 44px; line-height: 1; }
+.shop .pdp-page .pdp-rev { display: flex; flex-direction: column; }
+.shop .pdp-page .pdp-rev-text { margin: 10px 0px 0px; line-height: 1.55; }
+.shop .pdp-page .pdp-rev-rule { margin: 16px 0px 0px; line-height: 1.5; }
+.shop .pdp-page .pdp-rev-photo { width: 84px; margin-top: 12px; border-radius: var(--radius); overflow: hidden; }
+.shop .pdp-page .pdp-rev-photo img { display: block; width: 100%; height: auto; }
+.shop .pdp-page #pdp-reviews { scroll-margin-top: 84px; }
+/* "Questions?" is a thumb target like every other link in a heading (Appendix C2: 44 px). */
+.shop .pdp-page #pdp-reviews .sec-hd .link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
