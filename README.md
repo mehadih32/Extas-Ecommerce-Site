@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১৪টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১৮টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,11 +36,11 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২১০টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05) আর ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২১৮টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 18/22** · **S06 11/33** (wave 2) · **S04 39/41** · **S05 20/20** (wave 3) · total **214/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 11/33** (wave 2) · **S04 39/41** · **S05 20/20** (wave 3) · total **218/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -63,7 +63,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 44 / 58 | In progress |
-| [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 18 / 22 | In progress |
+| [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 20 / 20 | **Done** |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 11 / 33 | In progress |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **214 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **218 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -855,9 +855,9 @@ also signs in on the sample data, so admin controls that only show with data are
 620 checks). Register:
 [S02](docs/MASTER-REGISTER.md#s02--storefront--pr-4088).
 
-### S03 · Combo & bundles — In progress
+### S03 · Combo & bundles — Done (22/22)
 
-> **বাংলায় সংক্ষেপে:** অ্যাডমিনে "কম্বো" পেজে নির্দিষ্ট কম্বো বানানো, রঙের জোড়ার রুল দিলে নিজে থেকে কম্বো, সেটের দাম আর কত বাঁচে, পিসের ছবি দিয়ে সেটের ছবি, আর কম্বো রিপোর্ট। সেটের দাম আপনি নিজে বসাবেন। ~~দোকানের কম্বো পাতা পরে আসবে (S02/S03-এর বাকি PR)।~~ দোকানের কম্বো পাতা এখন তৈরি (২৩ অক্টোবর): কাস্টমার প্রতিটা পিসের রং আর সাইজ বেছে পুরো সেট এক দামে ব্যাগে নেয়; সব সেটের একটা পাতা `/combos`, আর প্রোডাক্ট পাতায় "এটা দিয়ে সেট"। ~~নিজের মতো সেট বানানোর পাতা পরে আসবে।~~ নিজের মতো সেট বানানোর পাতাও তৈরি (২৪ অক্টোবর): যেকোনো 2 বা 3 পিস বাছলে সেটের দাম নিজে বসে; আপনি সুইচ চালু না করা পর্যন্ত পাতাটা "এখন বিরতিতে" দেখায়।
+> **বাংলায় সংক্ষেপে:** অ্যাডমিনে "কম্বো" পেজে নির্দিষ্ট কম্বো বানানো, রঙের জোড়ার রুল দিলে নিজে থেকে কম্বো, সেটের দাম আর কত বাঁচে, পিসের ছবি দিয়ে সেটের ছবি, আর কম্বো রিপোর্ট। সেটের দাম আপনি নিজে বসাবেন। ~~দোকানের কম্বো পাতা পরে আসবে (S02/S03-এর বাকি PR)।~~ দোকানের কম্বো পাতা এখন তৈরি (২৩ অক্টোবর): কাস্টমার প্রতিটা পিসের রং আর সাইজ বেছে পুরো সেট এক দামে ব্যাগে নেয়; সব সেটের একটা পাতা `/combos`, আর প্রোডাক্ট পাতায় "এটা দিয়ে সেট"। ~~নিজের মতো সেট বানানোর পাতা পরে আসবে।~~ নিজের মতো সেট বানানোর পাতাও তৈরি (২৪ অক্টোবর): যেকোনো 2 বা 3 পিস বাছলে সেটের দাম নিজে বসে; আপনি সুইচ চালু না করা পর্যন্ত পাতাটা "এখন বিরতিতে" দেখায়। কম্বোর তালিকা, জোড়ার পাতা আর ব্যাগ — প্রতিটার ৫ রকম সাজ তৈরি (২৪ অক্টোবর), আর সব সাজ ১০০ নম্বরে মাপা হয়েছে; এখনকার চেহারাই থাকে, আপনি একটা সেটিং বদলালে তবে অন্য সাজ আসে।
 
 **Combo core (PR 89, 90, 571, 99, 101, 96, 97, 575, 104, `@extas/combos`, migration `0004_combos`).**
 - **Model (89):** pieces, set price, saving against buying separately, active window.
@@ -867,7 +867,7 @@ also signs in on the sample data, so admin controls that only show with data are
 - **Set photo (575):** composed from the piece photos with sharp; "Make set photo" in the admin.
 - **Report (104):** `?tab=report` — which sets sell, which colour pairs get picked. Since PR 155 it shows "Ordered value" (placed orders) and "Sales (delivered)" as separate figures from `@extas/metrics`.
 - **Permissions:** `combos.read`, `combos.write`, `combos.publish`, `combos.prices` (owner only, CLAUDE.md rule 6). Guide: [docs/admin-guide/combos.md](docs/admin-guide/combos.md).
-- **Settings:** registry v14, `registry-combos.ts`. ~~Still planned: 91–95, 98, 100, 102, 103, 572–574, 576 (storefront combo pages and the rest).~~ ~~Still planned: 98, 100, 572–574, 576 (the set builder and the page templates).~~ Still planned: 572–574, 576 (the page templates).
+- **Settings:** registry v14, `registry-combos.ts`. ~~Still planned: 91–95, 98, 100, 102, 103, 572–574, 576 (storefront combo pages and the rest).~~ ~~Still planned: 98, 100, 572–574, 576 (the set builder and the page templates).~~ ~~Still planned: 572–574, 576 (the page templates).~~ All 22 built (24 Oct).
 
 **Combo storefront (PR 91, 92, 93, 94, 95, 102, 103; demo V12.2 `40-combo.js`, `42-combo-auto.js`; 23 Oct).**
 - **Combo page `/combo/<link>`, `/bn/combo/<link>` (91):** template C1 (one card per piece) with the crumbs, the picked colours, the price box from `@extas/combos` only (set price, separately, the saving, each piece's regular price on a computer), the rules card (each line only when its rule is on), set summary, "Add set to Bag" / "Order Now", WhatsApp only with the shop's number, the phone's bar. A phone shows a toast with "View bag" (touch, mouse and keyboard pause it separately); a computer opens the added panel. An ended combo keeps its page with "Buy them separately". Noindex unless the combo is featured. The bag's set links and "Change" open this page.
@@ -888,6 +888,15 @@ also signs in on the sample data, so admin controls that only show with data are
 - **API:** `POST /api/bag/built-sets` (same-site only, one tap one add); admin `GET /api/admin/combos/builder?days=` (`combos.read`: settings, the set tier rules, adds, pieces and money per rule) and `POST /api/admin/combos/builder` (`combos.publish`: the options). The admin screen comes with the new admin shell (follow-up 240).
 - **Settings (registry v36, `registry-set-builder.ts`, no admin screen, CN-019):** `combos.builder` — off; `rules` [] (all), `categories` [] (all), `maxStyles` 24, `perItem` on, `entries` on. Words: `apps/web/messages/shop-build.<lang>.json`.
 - **Tests and gates:** engine tests (`builder-model`, `builder.db`), the bag endpoint and admin API on PostgreSQL, the page model; device gate and seeded Lighthouse on the test server's preview (`?try=1`) of the sample draft rule in both languages; smoke opens `/combos/build-your-own` in both languages.
+
+**Combo templates and their ranking (PR 572, 573, 574, 576; demo V12.2 / V12.3 `42-combo-auto.js`; 24 Oct).** The current look stays the default everywhere, so nothing a customer sees changes until the owner picks a template (one setting each).
+- **A rule's own page `/combos/<rule key>`, `/bn/…` (572):** each auto colour-pair rule's list in its template (rule, else `combos.template.list`, L1): L1 pair grid (offer strip, 2 / 3 piece switch, "Has:" colour chips, "My size", order, count, "See all", a pick-your-own card, singles), L2 style cards, L3 season hub, L4 big cards with the size for both and "Add both to bag" right in the list, L5 2 or 3 pieces first. Every filter is in the link (filtered pages noindex); an off, ended or future rule keeps its page with a note and the sets on sale now. `/combos` rule cards open it (follow-up 173).
+- **The pair page (573):** `combos.template.page` = current (the C1/C2 page above, ~~auto~~), or P1 pair page (2 taps to bag, "Size for both", "Make it 3 pcs", "Add both to bag · ৳…", sticky phone bar), P2 pick colours, P3 top + bottom, P4 mixed set, P5 fixed pack. The button always says what is still missing. A pair changed while editing takes the old set's place (`replaceGroupKey`, lines archived).
+- **The set in the bag (574):** `combos.template.bag` = current (~~B5~~), or B1 one card with each piece's picture, B2 sizes changed in the bag (`PATCH /api/bag/sets`, re-checked and re-priced), B3 B2 + "Add 1 more → 3 for ৳…", B4 each piece's own price + one "Combo discount" line, B5 one short row per set once the bag holds `combos.bag.compactFrom` (3) sets, opening to B2. The bag engine's money in every template.
+- **Previews:** `?tpl=L1…L5 / P1…P5` and `/bag?btpl=B1…B5` with a template bar while `combos.template.preview` is on (noindex); the test server's `POST /api/bag/try?sets=N` fills sample sets.
+- **The ranking (576, QA tool, no admin screen):** `tools/combo-matrix.mjs` plays every template on the sample sets at 360, 393, 430 and 1280 px; `tools/combo-ranking.mjs` scores 100 points (taps to bag, first-screen completeness, words, layout, tap targets) and knocks out any template that shows another total than the current look. Config `docs/qa/combo-matrix.json`, results `docs/qa/combo-ranking/latest.json`, report [docs/qa/COMBO-TEMPLATE-MATRIX.md](docs/qa/COMBO-TEMPLATE-MATRIX.md). Nothing is switched by it.
+- **Settings (registry v39, no admin screen, CN-019):** `combos.list` (seeAllOver 15, firstShown 8, bigListShown 6, builderCard on), `combos.template.preview` (on), `combos.pairPage` (otherPairs 14, packSwatches 4, upsell on), `combos.template.page` and `combos.template.bag` default current, `combos.bag.compactFrom` 3. No migration. Guide: [docs/admin-guide/combos.md](docs/admin-guide/combos.md).
+- **Tests and gates:** engine tests (`rule-page-model`, `rule-page.db`, `summary-model`), cart view, the web models and bag/combo APIs on PostgreSQL, the matrix and ranking tools; device gate 0 fails in 4192 checks (the rule pages, every P and B template, both languages); seeded Lighthouse: the rule pages, `/combos` and the bag pass, the Bengali rule page at the edge, the P1 preview misses LCP (2.7 s) like the route's existing combo page on the same box (follow-ups 358, 359).
 
 ### S10 · Smart Rules — Done (12/12)
 
@@ -1219,6 +1228,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #41 | PR [572](docs/stages/S03.md#pr-572), [573](docs/stages/S03.md#pr-573), [574](docs/stages/S03.md#pr-574), [576](docs/stages/S03.md#pr-576) | 24 Oct | Combo templates: each colour-pair rule gets its own list page (`/combos/<rule>`) in five layouts, the pair page and the set in the bag each get five more, and the current look stays the default until the owner picks another. A test tool plays every template at four screen sizes and scores it out of 100. S03 is done (22/22). | Merged |
 | #40 | PR [541](docs/stages/S05.md#pr-541), [159](docs/stages/S06.md#pr-159) | 24 Oct | Every new order lands in one section with a note the moment it is placed (duplicate, re-order, new identity, high risk, watch, prepaid, clear); the strong sections wait for a person, and an order under review can never be booked. Prepaid orders get their own confirm view. The order list gets a risk column, filters and a "highest risk first" sort. Checkout keeps the IP, the shop's own random device id and a location the customer chooses to share, each by its own switch, and clears them after 180 days. S05 is complete. |
 | #39 | PR [44](docs/stages/S02.md#pr-44), [546](docs/stages/S05.md#pr-546), [148](docs/stages/S05.md#pr-148) (follow-up [287](docs/stages/S14.md#pr-287)) | 24 Oct | The home page flash sale: two rows gliding opposite ways with a live countdown, drawn only while the owner has a sale set (empty and off by default; a sale never changes a price). The customer is told in plain words why an order was cancelled; a duplicate's notice names the order that goes ahead, with its tracking link. The "cancel request refused" notice is its own step. Both notices are off by default. |
 | #38 | PR [157](docs/stages/S06.md#pr-157), [158](docs/stages/S06.md#pr-158), [156](docs/stages/S06.md#pr-156), [160](docs/stages/S06.md#pr-160) | 24 Oct | The risk score (off until the owner turns it on): each new order gets a score from 0 to 100 from the owner's signals and weights (the number's past orders and refusals, cancels, a very recent order, an unclear or mismatched address …), stored once with its reasons. The order's admin page shows a "Risk" card that says why. It only informs: nothing is blocked, and no price, charge or COD changes. |
