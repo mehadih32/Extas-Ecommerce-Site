@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২২৯টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২৩২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -40,8 +40,8 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 208/291** · 83 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 15/33** (wave 2) · **S04 39/41** · **S05 20/20** · **S07 4/10** · **S08 3/22** (wave 3) · total **229/600** active PRs |
+| Launch | **Launch 211/291** · 80 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 15/33** (wave 2) · **S04 41/41** · **S05 20/20** · **S07 4/10** · **S08 3/22** (wave 3) · total **232/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -63,9 +63,9 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590) | 22 / 22 | **Done** |
-| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 44 / 58 | In progress |
+| [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 45 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
-| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
+| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 41 / 41 | **Done** |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 20 / 20 | **Done** |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 15 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 4 / 10 | In progress |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **229 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **232 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -704,7 +704,7 @@ Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inve
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
 piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
 
-### S02 · Storefront — In progress (44/58)
+### S02 · Storefront — In progress (45/58)
 
 > **বাংলায়:** দোকানের কাঠামো (হেডার, মেনু, ফুটার, নিচের বার), চারটা থিম, লোগো, বাংলা আর ইংরেজি, হোম পেজ (হিরোর চলন্ত ছবি, ক্যাটাগরি, নতুন পণ্য, রিভিউ, ঘড়িসহ ফ্ল্যাশ সেল — মালিক সেল দিলে তবেই দেখায়) ক্যাটাগরি পেজ (ফিল্টার, সাজানো, আটকে থাকা বার, প্রশ্ন-উত্তর), পণ্যের পাতা (ছবি আর জুম, প্রতিটা রঙের নিজের লিংক, সাইজ, সাইজ চার্ট, স্টক, দাম, এক্সচেঞ্জ-ডেলিভারির কথা Smart Rules থেকে, কাপড় ও যত্ন, ব্যাগে রাখুন, নিচে "এর সাথে পরুন" আর "আগে দেখা" সারি; তিনটা টেমপ্লেট T1, T2, T3; "আমার সাইজ খুঁজুন" — উচ্চতা আর ওজন দিলে প্রোডাক্টের নিজের চার্ট থেকে সাইজ, কারণসহ), ক্রেতাদের রিভিউ (ছবিসহ রিভিউ আগে, অনুমোদনের পরেই দেখা যায়), উইশলিস্ট, ফোনের মেনুতে সাব-ক্যাটাগরি, সাহায্যের পাতা (প্রশ্ন-উত্তর, এক্সচেঞ্জ, যোগাযোগ …) আর সার্চ (হেডারের খোঁজার জানালা, লিখতে লিখতে পরামর্শ, ফলাফলের পাতা ফিল্টার আর সাজানো সহ, বাংলা শব্দেও) তৈরি — ডেমো V12.2-এর মতো। পাতাগুলো এখন আরও তাড়াতাড়ি হাতে সাড়া দেয় (পণ্যের পাতায় আটকে থাকার সময় 263 থেকে 24 ms), দেখতে একদম আগের মতো।
 
@@ -850,6 +850,23 @@ piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205)
   The reviews journey itself is a test (`apps/web/src/lib/reviews-journey.db.test.ts`, SIM-F-008) and the smoke list
   checks that the review API refuses a request with no account.
 
+**Built (PR 602): the four-layer cache and its invalidation.** New package `@extas/cache`; no migration; settings registry v53.
+- **The layers:** the browser keeps hashed files a year; Cloudflare keeps files, and category and product pages only with `cache.pages.cdn`
+  (off until a Cloudflare cache rule is set, follow-up 401); the server keeps built category and product pages a few minutes; Redis carries
+  every clear to every process. The bag, the checkout, the account, the admin and the API are never kept (proxy headers and Caddy
+  `cache_headers`; `/api/internal/*` answers 404 from outside).
+- **What clears what:** a price or stock change clears that product, its category pages and Cloudflare at once; a setting clears every page;
+  a new product its categories. The stock shown is kept 15 s; adding to the bag and the checkout always read live stock with a row lock.
+- **Screens / routes:** Settings › System › Cache (`/admin/settings/system/cache`, permission `system.cache`): the layers, hit counts, how long
+  each keeps, "Clear all" with a confirmation and a reason (audited). API `/api/admin/cache/*`; the deploy's hook `/api/internal/cache/deployed`
+  (token `CACHE_HOOK_TOKEN`, made by `09-stack.sh`; best effort, never fails a deploy).
+- **Settings:** `cache.pages` {server on, cdn off, category 5 min, product 5 min}, `cache.stockDisplaySeconds` 15, `cache.tuning` {1000 pages,
+  repeat 2 s, stats 7 days} in `registry-cache.ts`. Cloudflare purge adapter in `@extas/adapters` (on its mock until the owner's token
+  passes the Test in Keys & connections). Guide: [cache.md](docs/admin-guide/cache.md).
+- **Tests and gates:** see the S04 block below (one run for PR 602, 558 and 560).
+
+> **বাংলায়:** চার স্তরের ক্যাশ তৈরি: দাম, স্টক বা সেটিং বদলালে সেই পাতা সাথে সাথে নতুন হয়; ব্যাগ, চেকআউট আর অ্যাকাউন্ট কখনো জমা থাকে না।
+
 Next: "Goes well with" and the rest of the product page rows (67 …). The CI device gate itself (PR 85, CI part) runs on every pull
 request: 15 phones, 10 tablets and 6 desktop sizes (`tools/device-gate.mjs`, `docs/qa/device-gate.json`). Since 23 Oct it
 also signs in on the sample data, so admin controls that only show with data are checked at 44 × 44 too (0 fails in
@@ -942,7 +959,7 @@ PostgreSQL) and the web rules API (10 + 3 on PostgreSQL). Screenshots:
 [`docs/qa/screenshots/pr-209/`](docs/qa/screenshots/pr-209). Report: [S10](docs/reports/2026-10-20-S10.md). Left for
 S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `discountWasFor`.
 
-### S04 · Cart, checkout, accounts — In progress (39/41)
+### S04 · Cart, checkout, accounts — Done (41/41)
 
 > **বাংলায়:** ব্যাগ তৈরি — পণ্য রাখা, রং-সাইজ-সংখ্যা বদলানো, পরে কেনার জন্য রাখা, সরানো আর ফিরিয়ে আনা, সেট, অফারের ঘর, দুই সাইজের প্রশ্ন, অর্ডারের হিসাব, কোড, ফ্রি ডেলিভারির অগ্রগতি আর "আপনার পছন্দ হতে পারে"; "ব্যাগে রাখা হয়েছে" শিট। চেকআউটও তৈরি — নাম-ফোন-ঠিকানা, ঠিকানা থেকে এলাকা আর চার্জ (না বুঝলে জিজ্ঞেস করে), পেমেন্টের উপায়, ওয়ালেট, অফারের টিক, কনফার্ম বোতাম, একবার চাপলে একটাই অর্ডার, আর ধন্যবাদ পাতা। কার্ড/মোবাইল পেমেন্ট এখন টেস্ট পাতায়, কোনো টাকা নড়ে না। ডেমো V12.2-এর মতো, বাংলা আর ইংরেজি দুটোতেই। অর্ডারের পাতায় এখন "কেন অগ্রিম, কেন এই চার্জ" কার্ড, আর বাল্ক-কর্পোরেট অর্ডারের অনুরোধ (ডিফল্ট বন্ধ)।
 
@@ -1013,7 +1030,25 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 - **Settings:** registry v34 (`registry-checkout-more.ts`, labels in `checkout-more.*.json`) and v38 (`registry-support-lane.ts`, labels in `support-lane.*.json`); no new admin section (CN-019). Guides: `docs/admin-guide/orders.md`, `delivery.md`, `combos.md`.
 - **Tests and gates:** guard 0; lint, format and typecheck clean; tests settings 2364, checkout 57, orders 337, db 133, delivery 207, combos 99, web 663 and the rest, all pass; device gate 0 fails in 2146 checks; seeded Lighthouse medians inside the budget; checked in a browser at 390 and 1366 px in English and Bengali.
 
-Next: PR 558 and 560 (the checkout's advance rules), the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
+**Built (PR 558, 560): the checkout's advance (Parameter for Checkout and the advance-payment checkout mode, SIM-F-016).** Migration
+`0036_checkout_advance` (additive); settings registry v53 (`registry-advance.ts`).
+- **The panel (558):** Orders › Risk rules › Checkout advance (`/admin/orders/risk-rules/checkout`, a "More" tab; `risk.rules.read`,
+  saving `risk.rules.write`). One switch `checkout.advance` {off, at most 5 layers: 3/5/10}. Each layer: what counts as a flag (a risk
+  score at least, a risk band, a signal; any one; a layer with none is refused), what it asks (nothing, the delivery charge, a part 1–99 %,
+  the full amount). Tried from the top; the first switched-on match wins. Saved all at once with its version and one audit row; switching on
+  asks for a confirmation; a layer taken off is archived, never deleted. API `GET/PUT /api/admin/risk/checkout-layers`.
+- **The checkout (560):** only while the switch is on, only once he has filled in his name, a real mobile number and an address that settled,
+  only where Cash on Delivery would show, never on a gift, and only with a prepaid method open. Flagged: the same page, the payment section
+  swapped: no Cash on Delivery, bKash, Nagad and card, and one neutral line ("pay ৳X now, the rest ৳Y at your door"). Never a score, a band or
+  a reason. A part or the delivery charge ahead is a COD order priced as COD with that much paid now; the full amount is an ordinary prepaid
+  order. The order waits in "advance due" and comes back to the queue when it is paid; nothing is cancelled, blocked or repriced.
+- **Settings:** `checkout.advance` (labels in `checkout-more.*.json`); the layers are rows (`CheckoutParameterLayer`). Guide:
+  [checkout-advance.md](docs/admin-guide/checkout-advance.md).
+- **Tests and gates:** Gates on this box: guard 0 findings (1214 files); lint and format clean; typecheck clean (whole workspace, and the web build's own check); tests on PostgreSQL and Redis — db 143, settings 2701, adapters 125, cache 19, checkout 71, catalogue 153, orders 565 (the SIM-F-016 journey included), web 879 in 135 files, all pass; `infra/tests/run.sh` 191 PASS (the Caddy cache headers, the internal addresses 404 from outside, the deploy's cache hook, the setup's cache hook token); web build clean; device gate **PASS, 0 fails in 310 checks** (home, checkout, a category and a product page in en and bn, Settings › System › Cache and Orders › Risk rules › Checkout advance signed in; the first round's 50 tap-size fails on the two admin pages fixed: the switch is a 44 px tap box, the chips and tick boxes 44 px); seeded Lighthouse medians of 3: `/checkout` perf 0.98 / a11y 1 / LCP 1.96 s / TBT 12 ms, `/bn/checkout` 0.97 / 1 / 2.10 s / 30 ms, `/collections/polos` 0.98 / 1 / 1.90 s / 45 ms, `/bn/collections/polos` 0.97 / 1 / 2.09 s / 89 ms, `/p/essential-pique-polo` 0.95 / 1 / 2.31 s / 47 ms, CLS ≤ 0.049; `/bn/p/essential-pique-polo` over the LCP budget on this loaded box (0.86 / 1 / 2.71 s / 240 ms), and the base 44bdd80 measured the same in interleaved runs (follow-up 408); the server page cache answered 96% of page reads as hits. Checked in a real browser at 390 and 1366 px in English and Bengali: the owner adds a layer and switches the panel on behind its confirm; a flagged customer sees nothing until name, phone and address are done, then COD goes and one neutral line says what to pay now and what is left; no score, layer or risk word on the page, no sideways scroll, no console error.
+
+> **বাংলায়:** চেকআউটে অগ্রিম তৈরি: আপনি ঠিক করেন কাকে আগে টাকা দিতে বলা হবে। চিহ্নিত কাস্টমার একই পেজে ক্যাশ অন ডেলিভারি ছাড়া bKash, Nagad আর কার্ড দেখেন, সাথে একটা সাধারণ লাইন। শুরুতে বন্ধ।
+
+S04 is complete (41/41); stage report [2026-10-24-S04](docs/reports/2026-10-24-S04.md). ~~Next: PR 558 and 560 (the checkout's advance rules), the rest of S04.~~ Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
 ### S05 · Order management — Done (20/20)
 
@@ -1293,6 +1328,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #45 | PR [602](docs/stages/S02.md#pr-602), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560) | 24 Oct | Pages load from a four-layer cache (browser, Cloudflare when switched on, the server, Redis) and a price, stock or setting change clears the right pages at once; the bag, checkout and account are never kept. A new checkout-advance panel under Orders › Risk rules decides who pays ahead, and a flagged customer then pays the advance on the same checkout page instead of cash on delivery. All off by default. S04 is done (41/41). |
 | #44 | PR [594](docs/stages/S21.md#pr-594) | 24 Oct | A Bengali guide for every built admin page (what it is, why, steps, every button and field, common mistakes, what happens next), opened from a small help icon in the top bar: a side panel on a computer that follows you page to page, a full-screen sheet on a phone; the admin gets its own self-hosted fonts and calmer type; CI fails when a built admin page has no guide (CN-026, cut to the launch scope by CN-027) |
 | #43 | PR [104](docs/stages/S03.md#pr-104) | 24 Oct | Combo pages no longer keep a request open for a minute after they load (the page-opened count now reads its answer), so Lighthouse and the smoke test see the page settle at once; a test stops any page from leaving such a request open again |
 | #42 | PR [519](docs/stages/S06.md#pr-519), [520](docs/stages/S06.md#pr-520), [521](docs/stages/S06.md#pr-521), [544](docs/stages/S06.md#pr-544), [175](docs/stages/S08.md#pr-175), [176](docs/stages/S08.md#pr-176), [177](docs/stages/S08.md#pr-177) | 24 Oct | One identity per customer from the phone, the device and an alike name and address, so a new number no longer hides the same person; the duplicate and re-order rules A–E, H, I, each with its own switch and a proposal a person decides (no block); "Why this alert, and the options" on the order page's review card; one list of every fraud and duplicate rule with its switch (admin API). All off by default. The courier framework with the practice courier (exception states with reasons, events stored once, the RTO cost book from real returned parcels only), Steadfast and Pathao behind it: staff book one, the ticked or all ready orders (never a cancelled, held, unconfirmed or in-review one), consignment ids, and the worker reads parcel updates; both stay on practice until the owner's keys pass the Test. |
