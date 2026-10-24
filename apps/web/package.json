@@ -14,6 +14,7 @@
     "@extas/accounts": "workspace:*",
     "@extas/adapters": "workspace:*",
     "@extas/auth": "workspace:*",
+    "@extas/cache": "workspace:*",
     "@extas/cart": "workspace:*",
     "@extas/catalogue": "workspace:*",
     "@extas/checkout": "workspace:*",

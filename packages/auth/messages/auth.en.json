@@ -101,7 +101,8 @@
       "couriers": "Add a courier account, rename it, switch it on or off, archive it (nothing is deleted)"
     },
     "system": {
-      "read": "See the Server page: is the background worker alive, and which jobs failed"
+      "read": "See the Server page: is the background worker alive, and which jobs failed",
+      "cache": "Set how long the cache keeps pages, and clear every cache (Settings → System → Cache)"
     },
     "orders": {
       "invoice": "Open and print the invoice of any order (it shows the customer's name, phone and address)",

@@ -8,6 +8,7 @@
 // The template key (PR 52) and the "was" price source (PR 38) belong to their own PRs and are not changed here.
 import { z } from 'zod';
 import { dictionaryKeySchema } from '@extas/settings';
+import { emitCacheEvent } from '@extas/cache/events';
 import { allow, assertImage, changed, found, logChange, parse, setting, slugOptions, TX, type CatalogueDeps, type Tx, type Who } from './context';
 import { CatalogueError } from './errors';
 import { forwardingElsewhere, moveLink } from './redirects';
@@ -227,6 +228,8 @@ export async function createCategory(deps: CatalogueDeps, who: Who, input: Categ
     await logChange(tx, who, 'category.create', 'Category', row.id, null, { slug, nameEn: d.nameEn, parentId: row.parentId, garmentTypeId: row.garmentTypeId, isVisible: row.isVisible });
     return row.id;
   }, TX);
+  // PR 602: a new or changed category changes the lists (its page, its parent's)
+  emitCacheEvent({ kind: 'category', storeId: who.storeId, categoryIds: [id] });
   return getCategory(deps, who, id);
 }
 
@@ -275,5 +278,6 @@ export async function updateCategory(deps: CatalogueDeps, who: Who, id: string, 
     const action = archived === true ? 'category.archive' : archived === false && cur.archivedAt ? 'category.restore' : d.parentId !== undefined && d.parentId !== cur.parentId ? 'category.move' : 'category.update';
     await logChange(tx, who, action, 'Category', cur.id, diff.before, diff.after);
   }, TX);
+  emitCacheEvent({ kind: 'category', storeId: who.storeId, categoryIds: [id] });
   return getCategory(deps, who, id);
 }

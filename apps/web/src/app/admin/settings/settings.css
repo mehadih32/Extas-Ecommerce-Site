@@ -1,0 +1,26 @@
+/* S02 · PR 602 — the new admin's settings card and switch (demo V12.3 docs/demo/src/r12-zzzzz-adm2.css "settings card",
+   .a2-sw), copied as they are, for the Settings pages (Cache) and the Risk rules' checkout advance layers (PR 558).
+   Only what the shell's own stylesheet (../shell.css) does not have yet. */
+/* the switch: a 44 × 44 tap box (device gate) with the 40 × 23 track and its knob drawn inside */
+.adm2 .a2-sw{width:44px;height:44px;border-radius:12px;background:none;position:relative;flex:none;padding:0}
+.adm2 .a2-sw::before{content:"";position:absolute;top:10.5px;left:2px;width:40px;height:23px;border-radius:12px;background:#D7D2C7;transition:background .15s}
+.adm2 .a2-sw::after{content:"";position:absolute;top:13px;left:4.5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.adm2 .a2-sw.on::before{background:var(--g)}.adm2 .a2-sw.on::after{left:21.5px}
+.adm2 .a2-sw:disabled{opacity:.55;cursor:not-allowed}
+.adm2 .a2-sw:focus-visible{outline:2px solid var(--g);outline-offset:0}
+.adm2 .a2-sc{background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);box-shadow:var(--sh);padding:16px 20px;scroll-margin-top:84px}
+.adm2 .a2-sc+.a2-sc{margin-top:12px}
+.adm2 .a2-sch{display:flex;align-items:flex-start;gap:14px}
+.adm2 .a2-sch>div{flex:1;min-width:0}
+.adm2 .a2-scw{font-size:11.5px;color:var(--mute);font-weight:500;margin-bottom:2px}
+.adm2 .a2-scd{font-size:12.5px;color:var(--mute);margin-top:3px}
+.adm2 .a2-scb{margin-top:14px;padding-top:14px;border-top:1px dashed var(--ln)}
+.adm2 .a2-scv{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.adm2 .a2-def{font-size:11.5px;color:var(--mute);margin-top:3px}
+.adm2 .a2-swl{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.adm2 .a2-swl>span{flex:1}
+.adm2 .a2-sel{width:100%}
+.adm2 details.a2-more-opts>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
+.adm2 .a2-chips{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .a2-kv.a2-kvw{white-space:normal;overflow-wrap:anywhere;font-size:16px}
+.adm2 .a2-chipn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:550;padding:5px 10px;border-radius:999px;background:var(--g0);color:var(--g);border:1px solid var(--g1)}

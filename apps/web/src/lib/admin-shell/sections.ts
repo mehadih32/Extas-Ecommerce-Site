@@ -131,7 +131,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'bottom',
     base: '/admin/settings',
     guide: 'settings',
-    tabs: [{ id: 'keys', guide: 'integrations', pages: [{ href: '/admin/integrations', perm: 'vault.read', keys: ['integrations'] }] }],
+    tabs: [
+      { id: 'keys', guide: 'integrations', pages: [{ href: '/admin/integrations', perm: 'vault.read', keys: ['integrations'] }] },
+      // S02 · PR 602 — SET-08b Cache (System); Backups, Images, Data purge join with their PRs.
+      { id: 'system', guide: 'cache', pages: [{ href: '/admin/settings/system/cache', perm: 'system.read', keys: ['cache'] }] },
+    ],
   },
   {
     id: 'help',

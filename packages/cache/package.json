@@ -1,0 +1,35 @@
+{
+  "name": "@extas/cache",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The four-layer cache and its invalidation (PR 602): which address may be kept where and for how long, the server's page cache with its tags, the purge rules (price, stock, settings, new product), the purge between processes over Redis, and the Cloudflare purge through Keys & connections.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./events": "./src/events.ts",
+    "./policy": "./src/policy.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/adapters": "workspace:*",
+    "@extas/auth": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "ioredis": "5.11.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

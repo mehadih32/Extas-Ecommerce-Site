@@ -47,6 +47,20 @@
       "help": "How long a connection keeps a key in memory before reading the vault again. Every vault read is logged."
     }
   },
+  "cache": {
+    "pages": {
+      "label": "Category and product pages: how long they are kept",
+      "help": "The server keeps a ready category or product page for these minutes, and clears it the moment its price, stock or words change. Cloudflare keeps them too only while that switch is on (it also needs a cache rule at Cloudflare)."
+    },
+    "stockDisplaySeconds": {
+      "label": "Stock shown on pages (seconds)",
+      "help": "How long the \"only 2 left\" number on a product page is kept. Display only: adding to the bag and the checkout always check the live stock."
+    },
+    "tuning": {
+      "label": "Cache: more options",
+      "help": "How many pages one server process keeps, how soon a clear is done once more, and how many days of hit counts are kept."
+    }
+  },
   "ownerData": {
     "settingReason": "The owner's own data: kept out of every export to a new installation.",
     "reasons": {

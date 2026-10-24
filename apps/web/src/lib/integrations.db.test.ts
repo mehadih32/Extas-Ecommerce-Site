@@ -107,9 +107,11 @@ describe.skipIf(!HAS_TEST_DB)('Keys & connections API on PostgreSQL (PR 500)', (
     const rows = await list(owner);
     expect(rows.map((r) => r.id)).toEqual(cat.declarations.map((d) => d.id));
     expect(rows.every((r) => !r.keySaved && r.integrationId === null)).toBe(true);
-    expect(rows.find((r) => r.id === 'cloudflare')).toMatchObject({ adapter: false, secrets: [] });
+    expect(rows.find((r) => r.id === 'googleDrive')).toMatchObject({ adapter: false, secrets: [] });
+    // PR 602: Cloudflare has its cache-purge adapter now (no key saved: the purge runs on its mock)
+    expect(rows.find((r) => r.id === 'cloudflare')).toMatchObject({ adapter: true, keySaved: false, secrets: [{ field: 'apiToken', optional: false, set: false }] });
     expect(rows.find((r) => r.id === 'localDisk')).toMatchObject({ builtIn: true, inUse: true });
-    expect((await act('cloudflare', { action: 'save', secrets: {} })).status).toBe(409);
+    expect((await act('googleDrive', { action: 'save', secrets: {} })).status).toBe(409);
     expect((await act('localDisk', { action: 'remove' })).status).toBe(409);
     expect((await act('nope', { action: 'test' })).status).toBe(404);
   });

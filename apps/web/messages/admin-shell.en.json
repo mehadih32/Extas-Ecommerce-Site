@@ -42,7 +42,8 @@
         "health": "Site health"
       },
       "settings": {
-        "keys": "Keys & connections"
+        "keys": "Keys & connections",
+        "system": "System"
       },
       "help": {
         "manual": "Help & manual"

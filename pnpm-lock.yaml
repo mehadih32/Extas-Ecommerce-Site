@@ -19,6 +19,9 @@ importers:
       '@extas/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@extas/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
       '@extas/cart':
         specifier: workspace:*
         version: link:../../packages/cart
@@ -237,6 +240,46 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
 
+  packages/cache:
+    dependencies:
+      '@extas/adapters':
+        specifier: workspace:*
+        version: link:../adapters
+      '@extas/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@extas/db':
+        specifier: workspace:*
+        version: link:../db
+      '@extas/settings':
+        specifier: workspace:*
+        version: link:../settings
+      ioredis:
+        specifier: 5.11.1
+        version: 5.11.1
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@eslint/js':
+        specifier: 9.39.5
+        version: 9.39.5
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.72.0
+        version: 8.72.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
   packages/cart:
     dependencies:
       '@extas/auth':
@@ -285,6 +328,9 @@ importers:
       '@extas/auth':
         specifier: workspace:*
         version: link:../auth
+      '@extas/cache':
+        specifier: workspace:*
+        version: link:../cache
       '@extas/db':
         specifier: workspace:*
         version: link:../db
@@ -549,6 +595,9 @@ importers:
       '@extas/adapters':
         specifier: workspace:*
         version: link:../adapters
+      '@extas/cache':
+        specifier: workspace:*
+        version: link:../cache
       '@extas/db':
         specifier: workspace:*
         version: link:../db

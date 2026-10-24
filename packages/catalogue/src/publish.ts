@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { requirePermission } from '@extas/auth';
 import { Prisma } from '@extas/db/client';
+import { emitCacheEvent } from '@extas/cache/events';
 import { allow, found, logChange, parse, setting, TX, type CatalogueDeps, type Db, type Who } from './context';
 import { CatalogueError, isCatalogueError } from './errors';
 import { productReadiness, readStoredHealth, type Readiness, type StoredHealth } from './health';
@@ -95,6 +96,8 @@ export async function publishProduct(deps: CatalogueDeps, who: Who, productId: s
     await logChange(tx, who, 'product.publish', 'Product', p.id, { status: p.status }, { status: row.status, score: r.score, reminders: r.reminders });
     return { status: row.status, publishedAt: row.publishedAt };
   }, TX);
+  // PR 602: a new product on the shop — its page, every category list and the sitemap
+  emitCacheEvent({ kind: 'product', storeId: who.storeId, productIds: [productId], reason: 'publish' });
   return { productId, status: out.status, publishedAt: out.publishedAt?.toISOString() ?? null, readiness: { ...r, status: out.status } };
 }
 
@@ -109,6 +112,7 @@ export async function unpublishProduct(deps: CatalogueDeps, who: Who, productId:
     await tx.categoryProduct.updateMany({ where: { storeId: who.storeId, productId: p.id }, data: { isVisible: false } });
     await logChange(tx, who, 'product.unpublish', 'Product', p.id, { status: p.status }, { status: 'UNPUBLISHED' });
   }, TX);
+  emitCacheEvent({ kind: 'product', storeId: who.storeId, productIds: [productId], reason: 'publish' });
   const r = await checkProduct(deps, who, productId, { reason: 'unpublished' });
   const row = await deps.db.product.findUniqueOrThrow({ where: { id: productId }, select: { status: true, publishedAt: true } });
   return { productId, status: row.status, publishedAt: row.publishedAt?.toISOString() ?? null, readiness: r };

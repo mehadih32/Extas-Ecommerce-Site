@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@extas/auth": "workspace:*",
+    "@extas/cache": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/media": "workspace:*",
     "@extas/metrics": "workspace:*",

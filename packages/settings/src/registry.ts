@@ -44,6 +44,7 @@ import { comboTemplateSettings } from './registry-combo-templates';
 import { paymentSettings } from './registry-payments';
 import { riskRulesSettings } from './registry-risk-rules';
 import { shippingSettings } from './registry-shipping';
+import { cacheSettings } from './registry-cache';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1199,6 +1200,8 @@ export const registry = {
   ...riskRulesSettings,
   // ---- S08 · PR 175–177 · courier shipping: the RTO cost book (registry-shipping.ts, version 50). ----
   ...shippingSettings,
+  // ---- S02 · PR 602 · the four-layer cache: page times, the stock shown, the rare options (registry-cache.ts, version 53). ----
+  ...cacheSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

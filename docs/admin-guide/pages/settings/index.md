@@ -5,5 +5,6 @@
 
 **এই সেকশনের পাতা:**
 - [চাবি ও সংযোগ](keys.md) — বাইরের সেবার চাবি, পরীক্ষা, চালু/নকল মোড (`/admin/integrations`)
+- [ক্যাশ](cache.md) — পেজ কতক্ষণ জমা থাকে, "সব মুছুন", Cloudflare (`/admin/settings/system/cache`)
 
 বড় গাইড: [চাবি ও সংযোগ](../../integrations.md) · পরিকল্পনা: [সেটিংস](../../settings.md)।

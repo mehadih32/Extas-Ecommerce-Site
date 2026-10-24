@@ -136,7 +136,12 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "desc": "CDN, cache clearing, protection"
+      "desc": "CDN, cache clearing, protection. Until the token is in, cache clearing is practised here and nothing is sent",
+      "fields": {
+        "zoneId": "Zone ID (Cloudflare → your domain → Overview → API)",
+        "hosts": "Shop host names, separated by commas (e.g. shop.example.com)",
+        "apiToken": "API token with the zone's \"Cache Purge\" right only"
+      }
     },
     "telegram": {
       "name": "Telegram (AI 360 channel)",

@@ -100,6 +100,9 @@ export const PERMISSIONS = {
   // S0A · PR 6 — the Server page: whether the background worker is alive, which one leads the scheduler, and the jobs
   // that failed with their reason and next try. Seeing only; nothing here changes anything.
   'system.read': { group: 'system' },
+  // S02 · PR 602 — the Cache page (SET-08b): change how long each layer keeps a page, and "Clear all". Clearing loses
+  // nothing (orders, products and settings are untouched); pages are built again on the next visit.
+  'system.cache': { group: 'system' },
   // S04 · PR 136 — open the invoice of any order of the store (its customer's name, phone and address are on it), to
   // print or send it. Not a `.read` key on purpose: the read-only smoke check account never gets customers' details.
   // The order screens of S05 add their own keys.

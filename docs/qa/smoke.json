@@ -6,11 +6,13 @@
     { "from": "/bn/collections/new-in", "selector": "a.pcard-lnk", "take": 1 },
     { "from": "/combos", "selector": "a.ca-card", "take": 2 }
   ],
-  "admin": ["/admin?home=1", "/admin/products", "/admin/products/queue", "/admin/products/import", "/admin/products/audit", "/admin/products/back-in-stock", "/admin/combos", "/admin/stock", "/admin/stock/counts", "/admin/stock/movements", "/admin/size-charts", "/admin/delivery", "/admin/delivery/zones", "/admin/rules", "/admin/rules/notices", "/admin/server", "/admin/integrations", "/admin/help", "/admin/orders", "/admin/orders/confirm", "/admin/customers", "/admin/messages", "/admin/support", "/admin/marketing", "/admin/website", "/admin/money", "/admin/reports", "/admin/ai", "/admin/settings"],
+  "admin": ["/admin?home=1", "/admin/products", "/admin/products/queue", "/admin/products/import", "/admin/products/audit", "/admin/products/back-in-stock", "/admin/combos", "/admin/stock", "/admin/stock/counts", "/admin/stock/movements", "/admin/size-charts", "/admin/delivery", "/admin/delivery/zones", "/admin/rules", "/admin/rules/notices", "/admin/server", "/admin/integrations", "/admin/help", "/admin/orders", "/admin/orders/confirm", "/admin/customers", "/admin/messages", "/admin/support", "/admin/marketing", "/admin/website", "/admin/money", "/admin/reports", "/admin/ai", "/admin/settings", "/admin/settings/system/cache"],
   "adminDiscover": [{ "from": "/admin/orders", "selector": "[data-testid=order-row] a.a2-b", "take": 1 }],
   "ignoreRequests": [],
   "checks": [
     { "pr": 6, "what": "the background worker's heartbeat is fresh on the Server page", "page": "/admin/server", "selector": "[data-worker-state]", "attribute": "data-worker-state", "equals": "ok" },
+    { "pr": 602, "what": "the Cache page reads its settings and shows how long each layer keeps a page", "page": "/admin/settings/system/cache", "selector": "[data-testid=cache-times]", "attribute": "id", "equals": "a2s-cachedur" },
+    { "pr": 602, "what": "the deploy's clear-the-cache call is closed from outside (Caddy answers 404)", "request": { "method": "POST", "path": "/api/internal/cache/deployed", "body": "{}", "headers": { "content-type": "application/json" } }, "status": 404 },
     { "pr": 72, "what": "the search window's live suggestions answer", "request": { "method": "GET", "path": "/search/suggest?q=polo" }, "status": 200 },
     { "pr": 196, "what": "the ERP webhook refuses an unsigned message", "request": { "method": "POST", "path": "/api/erp/webhook", "body": "{}", "headers": { "content-type": "application/json" } }, "status": 401 },
     { "pr": 7, "what": "the preview gate lets the ERP webhook through with no login and no cookie, and the app itself refuses the unsigned message (follow-up 80)", "request": { "method": "POST", "path": "/api/erp/webhook", "body": "{}", "headers": { "content-type": "application/json" }, "anonymous": true }, "status": 401, "field": "code" },

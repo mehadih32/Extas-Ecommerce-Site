@@ -2,7 +2,7 @@
 // only when the server gave the app a database (DATABASE_URL, through PgBouncer). CI and `next build` have no
 // database: every caller then gets the environment fallback, and nothing waits on a connection.
 import { getPrisma, MOTHER_STORE_ID } from '@extas/db/client';
-import { listSettingsForAdmin, messages, prismaBackend, registry, SettingsResolver } from '@extas/settings';
+import { listSettingsForAdmin, messages, prismaBackend, registry, SettingsResolver, type SettingsChange } from '@extas/settings';
 import { locale as envLocale, timeZone as envTimeZone } from './format';
 
 export type AppResolver = SettingsResolver<typeof registry>;
@@ -17,13 +17,19 @@ export const settingsTimeoutMs = () => intEnv('SETTINGS_DB_TIMEOUT_MS', 1_500);
 /** After a failed read, how long the fallback is used before the database is tried again. */
 const retryAfterMs = () => intEnv('SETTINGS_DB_RETRY_MS', 30_000);
 
-const holder = globalThis as unknown as { __settingsResolver?: AppResolver; __settingsDownUntil?: number };
+const holder = globalThis as unknown as { __settingsResolver?: AppResolver; __settingsDownUntil?: number; __settingsChanged?: (change: SettingsChange) => void };
+
+/** PR 602: who hears that a setting changed (the cache, lib/cache.ts, sets it when it starts). */
+export function onSettingsChanged(fn: (change: SettingsChange) => void): void {
+  holder.__settingsChanged = fn;
+}
 
 export function settingsResolver(): AppResolver | null {
   if (!process.env.DATABASE_URL) return null;
   holder.__settingsResolver ??= new SettingsResolver(prismaBackend(getPrisma()), registry, {
     checkIntervalMs: intEnv('SETTINGS_CACHE_CHECK_MS', 2_000),
     onStale: (e) => console.warn(`settings: database unreachable, serving the last values (${errText(e)})`),
+    onChange: (c) => holder.__settingsChanged?.(c),
   });
   return holder.__settingsResolver;
 }
