@@ -41,7 +41,11 @@
     },
     "lists": {
       "label": "Lists in My account",
-      "help": "How many orders My orders lists, how many wallet entries the wallet shows, and how many new products the \"New in\" row on For you shows (0 hides the row)."
+      "help": "How many orders a page of My orders lists (older orders are on the next pages), how many wallet entries the wallet shows, and how many new products the \"New in\" row on For you shows (0 hides the row)."
+    },
+    "history": {
+      "label": "Order history in My account",
+      "help": "On by default. Filters: once a customer's orders fill more than one page, My orders offers All, On the way, Delivered, and Cancelled & returned, each with its count. Timeline: each order's page shows \"What happened\" — when it was placed, confirmed, packed, handed to the courier and delivered, and every change he or your team made (address, phone, a size, a piece added or taken out, his two-size answer, his cancel request). Your team's notes, flags, holds and names are never shown."
     },
     "offerBanner": {
       "label": "Offer banner in My account",

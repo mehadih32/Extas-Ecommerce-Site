@@ -71,6 +71,19 @@
       "expect": ["[data-testid=\"order-two-size\"]", "[data-testid=\"order-two-size-all\"]", "[data-testid=\"order-two-size-only\"]", "[data-testid=\"order-edit-form\"]", "[data-testid=\"order-edit-size\"]", "[data-testid=\"order-edit-save\"]"]
     },
     {
+      "$comment": "S05 · PR 150 — the whole order history: My orders showing one group (?show=delivered) with the groups as chips and their counts, signed in as the sample customer (/api/account/try).",
+      "paths": ["/account?show=delivered", "/bn/account?show=delivered", "/account/orders?show=open"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-history-chips\"]", "[data-testid=\"acc-ocard\"]"]
+    },
+    {
+      "$comment": "S05 · PR 150 — \"What happened\" on the sample order's page, opened (TRY-131, the same fill): the order's life, oldest first.",
+      "paths": ["/account/orders/TRY-131?life=1", "/bn/account/orders/TRY-131?life=1"],
+      "fill": "/api/account/try",
+      "clicks": ["[data-testid=\"order-life-open\"]"],
+      "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-life\"][open]", ".ord-life-r"]
+    },
+    {
       "$comment": "PR 136 — the sample order's invoice (TRY-131, same fill): the sheet drawn from the stored order, Download and Print / Save as PDF pinned under it; the order page's \"Get invoice\" row and the invoice icon in My orders lead here.",
       "paths": ["/account/orders/TRY-131/invoice", "/bn/account/orders/TRY-131/invoice"],
       "fill": "/api/account/try",

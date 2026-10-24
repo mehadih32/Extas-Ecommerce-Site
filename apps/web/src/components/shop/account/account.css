@@ -309,3 +309,26 @@
 .shop .ord-two-q { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--brand-line); }
 .shop .ord-two .btn-sm { min-height: 44px; }
 
+/* S05 · PR 150 — the whole history: the groups as chips with their counts, "Newer" / "Older" under the list. */
+.shop .acc-hchips { margin-bottom: 12px; }
+.shop .acc-hchips .chip { font-weight: 600; }
+.shop .acc-hn { font-size: 12px; font-weight: 700; color: var(--muted); }
+.shop .acc-hchips .chip.on .acc-hn { color: inherit; opacity: 0.85; }
+.shop .acc-pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-top: 14px; }
+.shop .acc-pager .btn { min-height: 44px; justify-self: start; }
+.shop .acc-pager .btn[rel='next'] { justify-self: end; }
+/* PR 150 — "What happened": folded shut; open, a dot and a line per row, oldest first. */
+.shop .ord-life-s { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; min-height: 52px; cursor: pointer; }
+.shop .ord-life-s::-webkit-details-marker { display: none; }
+@media (min-width: 1024px) { .shop .ord-life-s { padding: 16px 20px; } }
+.shop .ord-life-c { color: var(--muted); transition: transform 0.15s ease; flex-shrink: 0; }
+.shop .ord-life[open] .ord-life-c { transform: rotate(180deg); }
+.shop .ord-life-l { list-style: none; margin: 0; padding: 4px 16px 16px; border-top: 1px solid var(--line2); }
+@media (min-width: 1024px) { .shop .ord-life-l { padding: 6px 20px 18px; } }
+.shop .ord-life-r { display: flex; gap: 12px; position: relative; padding-top: 12px; }
+.shop .ord-life-r::before { content: ''; position: absolute; left: 4px; top: 26px; bottom: -14px; width: 2px; background: var(--line2); }
+.shop .ord-life-r:last-child::before { display: none; }
+.shop .ord-life-d { width: 10px; height: 10px; border-radius: 50%; background: var(--brand); flex-shrink: 0; margin-top: 5px; position: relative; z-index: 1; }
+.shop .ord-life-d.end { background: var(--muted); }
+.shop .ord-life-x { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .shop .ord-life-c { transition: none; } }

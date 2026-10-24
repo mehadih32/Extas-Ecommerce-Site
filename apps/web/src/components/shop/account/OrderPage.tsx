@@ -16,6 +16,7 @@
 // Follow-up 261 (PR 146): the two-size question under the order's head, while one is open (`orders.twoSize`, off).
 // Follow-up 260 (PR 143): "Change address, phone or size" under the items (demo ord_editCard), while the owner lets
 // customers edit (`orders.edit.customer`, off): open with "Edit order (n left)", or closed with the reason.
+// S05 · PR 150: "What happened" under it, folded shut — the order's life as he may see it (`account.history.timeline`).
 import '../bag/bag.css';
 import './account.css';
 import type { ReactNode } from 'react';
@@ -39,6 +40,7 @@ import { nameOf, Thumb } from '../bag/BagLines';
 import { AccountCrumbs } from './AccountShell';
 import { LateTag, StatusTag } from './AccountTabs';
 import { OrderEditCard } from './OrderEditCard';
+import { OrderLife } from './OrderLife';
 import { OrderTrack } from './OrderTrack';
 import { ReviewForm, ReviewState, type ReviewWords } from './ReviewForm';
 import { OrderWelcome } from './OrderWelcome';
@@ -142,7 +144,7 @@ export async function OrderPage({
   invoiceNo?: string | null;
   /** PR 65: the review box of this order (null: not his account, reviews off, or nothing to review). */
   review?: OrderReviewBox | null;
-  /** Follow-ups 260, 261: the edit card and the two-size question (null: neither). */
+  /** Follow-ups 260, 261 and PR 150: the edit card, the two-size question and "What happened" (null: none of them). */
   extras?: OrderExtras | null;
 }) {
   const t = c.t;
@@ -381,6 +383,7 @@ export async function OrderPage({
               lines={editLines}
             />
           ) : null}
+          {extras?.life ? <OrderLife c={c} steps={extras.life} /> : null}
           <a className="btn btn-ghost acc-start" href={hrefIn(c.lang, ROUTES.orders)}>
             <Icon name="back" size={16} />
             {t('account.order.back')}

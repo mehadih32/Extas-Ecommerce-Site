@@ -1,6 +1,7 @@
 // PR 131 — My account's read side (demo 60-account.js acc_header, acc_tabOrders, acc_orderCard, acc_tabWallet): the
 // header's figures, the order cards, the wallet. Everything is read for the signed-in customer only, in his store, as
 // it is stored: an order's state and times (never moved here, CN-022), the wallet's balance and its ledger.
+import type { Prisma } from '@extas/db/client';
 import { checkStoreId, setting, type AccountsDeps } from './context';
 import { firstNameOf, lateOf, trackOf, type OrderState, type TrackView } from './pure';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
@@ -69,7 +70,8 @@ export interface WalletView {
 /** The lines an order card shows as pictures. */
 const CARD_LINES = 4;
 
-const orderWhere = (storeId: number, customerId: string) => ({ storeId, customerId, archivedAt: null, status: { not: 'DRAFT' as const } });
+/** His placed orders in this store (a started checkout's draft is not an order; an archived one is gone from his view). */
+export const orderWhere = (storeId: number, customerId: string) => ({ storeId, customerId, archivedAt: null, status: { not: 'DRAFT' as const } });
 
 type ItemRef = { variantId: string | null; colourName: string | null };
 type Looks = Map<string, { nameBn: string | null; colour: LineColour | null }>;
@@ -111,32 +113,31 @@ export async function accountSummary(deps: AccountsDeps, input: { storeId: numbe
   };
 }
 
-/** His orders, newest first (`account.lists.orders` of them), each as its card. */
-export async function orderCards(deps: AccountsDeps, input: { storeId: number; customerId: string; now?: Date }): Promise<OrderCard[]> {
-  checkStoreId(input.storeId);
-  const [{ orders: take }, lateRule] = await Promise.all([setting(deps, input.storeId, 'account.lists'), setting(deps, input.storeId, 'account.track.late')]);
-  const now = input.now ?? new Date();
-  const rows = await deps.db.order.findMany({
-    where: orderWhere(input.storeId, input.customerId),
-    orderBy: { placedAt: 'desc' },
-    take,
-    select: {
-      number: true,
-      placedAt: true,
-      status: true,
-      confirmedAt: true,
-      packedAt: true,
-      handedOverAt: true,
-      deliveredAt: true,
-      cancelledAt: true,
-      returnedAt: true,
-      totalMinor: true,
-      deliveryBand: { select: { hoursMax: true } },
-      items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productId: true, variantId: true, productName: true, colourName: true, quantity: true } },
-    },
-  });
+/** What an order card reads of an order. */
+const CARD_SELECT = {
+  number: true,
+  placedAt: true,
+  status: true,
+  confirmedAt: true,
+  packedAt: true,
+  handedOverAt: true,
+  deliveredAt: true,
+  cancelledAt: true,
+  returnedAt: true,
+  totalMinor: true,
+  deliveryBand: { select: { hoursMax: true } },
+  items: { where: { status: 'ACTIVE' as const }, orderBy: { createdAt: 'asc' as const }, select: { productId: true, variantId: true, productName: true, colourName: true, quantity: true } },
+};
+
+/**
+ * PR 150 — one page of his orders as cards, newest first (`where` already holds his store and his account). Ties in
+ * the placing time keep one order (the id), so a page never repeats or skips an order.
+ */
+export async function cardsOf(deps: AccountsDeps, storeId: number, where: Prisma.OrderWhereInput, page: { skip: number; take: number }, now: Date): Promise<OrderCard[]> {
+  const lateRule = await setting(deps, storeId, 'account.track.late');
+  const rows = await deps.db.order.findMany({ where, orderBy: [{ placedAt: 'desc' }, { id: 'desc' }], skip: page.skip, take: page.take, select: CARD_SELECT });
   const shown = rows.flatMap((o) => o.items.slice(0, CARD_LINES));
-  const colours = await lineColours(deps, input.storeId, shown);
+  const colours = await lineColours(deps, storeId, shown);
   return rows.map((o) => ({
     number: o.number,
     placedAt: o.placedAt.toISOString(),
@@ -148,6 +149,13 @@ export async function orderCards(deps: AccountsDeps, input: { storeId: number; c
     lines: o.items.slice(0, CARD_LINES).map((i) => ({ productId: i.productId, nameEn: i.productName, quantity: i.quantity, ...lineLook(colours, i) })),
     more: Math.max(0, o.items.length - CARD_LINES),
   }));
+}
+
+/** His orders, newest first (`account.lists.orders` of them), each as its card. PR 150: the first page of orderHistory. */
+export async function orderCards(deps: AccountsDeps, input: { storeId: number; customerId: string; now?: Date }): Promise<OrderCard[]> {
+  checkStoreId(input.storeId);
+  const { orders: take } = await setting(deps, input.storeId, 'account.lists');
+  return cardsOf(deps, input.storeId, orderWhere(input.storeId, input.customerId), { skip: 0, take }, input.now ?? new Date());
 }
 
 /** His wallet: the balance and the newest entries of its ledger (`account.lists.walletEntries`). */
