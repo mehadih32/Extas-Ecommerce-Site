@@ -188,7 +188,7 @@ const money = z.int().min(1).max(100_000_000);
 
 export const FIXED_COMBO_TYPES = ['FIXED_SET', 'TOP_BOTTOM', 'MIXED_SET', 'FIXED_COLOUR_PACK', 'COLOUR_PAIR'] as const;
 export const LIST_TEMPLATES = ['L1', 'L2', 'L3', 'L4', 'L5'] as const;
-export const PAGE_TEMPLATES = ['auto', 'P1', 'P2', 'P3', 'P4', 'P5'] as const;
+export const PAGE_TEMPLATES = ['current', 'auto', 'P1', 'P2', 'P3', 'P4', 'P5'] as const;
 export const BAG_TEMPLATES = ['current', 'B1', 'B2', 'B3', 'B4', 'B5'] as const;
 
 const templateOf = <T extends readonly [string, ...string[]]>(values: T) => z.enum(values).nullish().transform((v) => v ?? null);

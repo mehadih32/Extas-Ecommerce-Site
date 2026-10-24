@@ -9,6 +9,14 @@ const R = { stepMinor: 1000, direction: 'down' as const };
 const page = (over: Partial<Parameters<typeof pageTemplateFor>[0]> = {}) => pageTemplateFor({ combo: null, rule: null, shop: 'auto', mixed: false, pairs: 0, longListPairs: 28, ...over });
 
 describe('PR 96 · which page and bag look', () => {
+  it('PR 573: "current" (the shop`s default) keeps the page as built; a set made by hand never takes P1–P5', () => {
+    expect(page({ shop: 'current', mixed: true })).toBe('current');
+    expect(page({ shop: '' })).toBe('current');
+    expect(page({ rule: 'P2', shop: 'current' })).toBe('P2');
+    expect(page({ combo: 'P3', generated: false })).toBe('current');
+    expect(page({ generated: true, mixed: true })).toBe('P3');
+  });
+
   it('"auto": P3 for a mixed set, P1 for a same-product pack, P2 once a rule makes a very long list', () => {
     expect(page({ mixed: true, pairs: 400 })).toBe('P3');
     expect(page()).toBe('P1');
@@ -17,11 +25,11 @@ describe('PR 96 · which page and bag look', () => {
     expect(page({ pairs: 29, longListPairs: 40 })).toBe('P1');
   });
 
-  it('the combo wins over its rule, the rule over the shop; anything unknown is P1', () => {
+  it('the combo wins over its rule, the rule over the shop; anything unknown is the current page (~~P1~~)', () => {
     expect(page({ combo: 'P5', rule: 'P2', shop: 'P4' })).toBe('P5');
     expect(page({ rule: 'P2', shop: 'P4' })).toBe('P2');
     expect(page({ shop: 'P4' })).toBe('P4');
-    expect(page({ combo: 'P9' })).toBe('P1');
+    expect(page({ combo: 'P9' })).toBe('current');
     expect(bagTemplateFor({ combo: null, rule: 'B2', shop: 'B5' })).toBe('B2');
     expect(bagTemplateFor({ combo: null, rule: null, shop: 'B5' })).toBe('B5');
     expect(listTemplateFor({ combo: 'L4', rule: 'L2', shop: 'L1' })).toBe('L4');

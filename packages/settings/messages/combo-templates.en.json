@@ -9,6 +9,10 @@
         "label": "Preview links for the combo templates",
         "help": "On: a link ending in ?tpl=L2 (or P3 on a combo's page, ?btpl=B4 on the bag) shows that template, so you can look at each one before you choose it. It changes nothing for anyone else, and such a page is hidden from search engines. Off: the links show the template you chose."
       }
+    },
+    "pairPage": {
+      "label": "A combo pair page (templates P1–P5): what it shows",
+      "help": "otherPairs: how many other colour pairs of the same style the pair page (P1) shows under it (0 hides the row). packSwatches: how many packs the fixed-pack page (P5) shows as colour circles before \"All N packs\". upsell: \"Make it 3 pcs\" on the pair page, when the rule offers a 3-piece set of the same product."
     }
   }
 }

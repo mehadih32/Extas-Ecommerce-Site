@@ -18,8 +18,9 @@ const V = 14;
 export const comboRoundingSchema = z.enum(['down', 'nearest', 'up']);
 /** Category page templates of a combo rule (demo ACW_LIST, PR 572). */
 export const comboListTemplateSchema = z.enum(['L1', 'L2', 'L3', 'L4', 'L5']);
-/** Combo product page templates (demo ACW_PAGE, PR 573): auto = P1, or P2 when there are many colours. */
-export const comboPageTemplateSchema = z.enum(['auto', 'P1', 'P2', 'P3', 'P4', 'P5']);
+/** Combo product page templates (demo ACW_PAGE, PR 573): current = the page as it was built (PR 91–95), auto = the
+ * ranking's pick (P3 for a top + bottom, P1, or P2 when there are many colours), or one of P1–P5. */
+export const comboPageTemplateSchema = z.enum(['current', 'auto', 'P1', 'P2', 'P3', 'P4', 'P5']);
 /** How a combo shows in the bag (demo CBT_LIST, PR 574). */
 export const comboBagTemplateSchema = z.enum(['current', 'B1', 'B2', 'B3', 'B4', 'B5']);
 export const comboPhotoFormatSchema = z.enum(['webp', 'jpeg']);
@@ -118,7 +119,8 @@ export const combosSettings = {
   }),
   'combos.template.page': setting({
     schema: comboPageTemplateSchema,
-    default: 'auto',
+    // PR 573 (23 Oct): the current look stays until the owner picks a template (~~default 'auto'~~)
+    default: 'current',
     scope: 'store',
     valueType: 'ENUM',
     group: 'combos',
@@ -126,7 +128,8 @@ export const combosSettings = {
     helpKey: 'combos.template.page.help',
     isOwnerData: false,
     sortOrder: 70,
-    version: V,
+    version: 39,
+    since: V,
   }),
   'combos.template.bag': setting({
     schema: comboBagTemplateSchema,

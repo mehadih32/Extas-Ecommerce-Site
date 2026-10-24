@@ -8,7 +8,7 @@
 import { setWasPrice, type DiscountWasReason } from '@extas/rules/pure';
 import { eachMinor, type SetPricing } from './model';
 
-export type PageTemplate = 'P1' | 'P2' | 'P3' | 'P4' | 'P5';
+export type PageTemplate = 'current' | 'P1' | 'P2' | 'P3' | 'P4' | 'P5';
 const PAGE = /^P[1-5]$/;
 
 export interface PageTemplateInput {
@@ -16,8 +16,10 @@ export interface PageTemplateInput {
   combo: string | null;
   /** Its auto rule's choice (null = not set, or a fixed combo). */
   rule: string | null;
-  /** The shop's default (`combos.template.page`, "auto" by default). */
+  /** The shop's default (`combos.template.page`, "current" by default; ~~"auto"~~ PR 573). */
   shop: string;
+  /** PR 573 · a pair an auto rule made (P1–P5 draw only those; a set made by hand keeps the current page). */
+  generated?: boolean;
   /** The set mixes products (a top + bottom, a mixed set). */
   mixed: boolean;
   /** Pairs the combo's rule makes now (0 for a fixed combo). */
@@ -28,13 +30,16 @@ export interface PageTemplateInput {
 
 /**
  * The combo product page (D8.4, the demo's ca_pageTpl): the combo's own choice, else its rule's, else the shop's.
- * "auto" is the R15 ranking winner: P3 for a top + bottom or mixed set, P1 for a same-product pack, P2 (pick your
- * colours) when its rule makes a very long list of pairs. Anything unknown falls back to P1.
+ * "current" is the page as PR 91–95 built it (the shop's default, so nothing changes until the owner picks a template;
+ * PR 573). "auto" is the R15 ranking winner: P3 for a top + bottom or mixed set, P1 for a same-product pack, P2 (pick
+ * your colours) when its rule makes a very long list of pairs. P1–P5 draw only a pair an auto rule made: a set made by
+ * hand keeps the current page. Anything unknown falls back to the current page (~~P1~~).
  */
 export function pageTemplateFor(i: PageTemplateInput): PageTemplate {
-  const t = i.combo || i.rule || i.shop || 'auto';
+  const t = i.combo || i.rule || i.shop || 'current';
+  if (t === 'current' || i.generated === false) return 'current';
   if (t === 'auto') return i.mixed ? 'P3' : i.pairs > i.longListPairs ? 'P2' : 'P1';
-  return PAGE.test(t) ? (t as PageTemplate) : 'P1';
+  return PAGE.test(t) ? (t as PageTemplate) : 'current';
 }
 
 /** The bag look (D8.4): the combo's, else its rule's, else the shop's (`combos.template.bag`, B5 by default). */

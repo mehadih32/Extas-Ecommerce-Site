@@ -38,7 +38,7 @@
       },
       "page": {
         "label": "Combo product page (shop default)",
-        "help": "The design of one combo's page when the rule does not choose its own."
+        "help": "The design of a combo page a rule made (one colour pair) when the rule does not choose its own. “Current look” keeps the page as it is; “Auto” picks P3 for a top + bottom, P2 when a rule makes very many pairs, else P1. A set you made by hand always keeps the current look."
       },
       "bag": {
         "label": "Combo in the bag (shop default)",

@@ -20,6 +20,16 @@ export const comboListPageSchema = z
   .strict()
   .refine((v) => v.firstShown <= v.seeAllOver, { message: 'show at most as many as the "See all" point', path: ['firstShown'] });
 
+/** PR 573 — the pair page (P1–P5): how many other pairs P1's strip shows, how many packs P5's colour row shows, and
+ * whether P1 offers "Make it 3 pcs" (the 2-piece rule's own "add 1 more" switch must be on as well). */
+export const comboPairPageSchema = z
+  .object({
+    otherPairs: z.int().min(0).max(60),
+    packSwatches: z.int().min(1).max(12),
+    upsell: z.boolean(),
+  })
+  .strict();
+
 const base = { scope: 'store', isOwnerData: false, isPublic: true, group: 'combos', version: V } as const;
 
 export const comboTemplateSettings = {
@@ -31,6 +41,15 @@ export const comboTemplateSettings = {
     labelKey: 'combos.list.label',
     helpKey: 'combos.list.help',
     sortOrder: 300,
+  }),
+  'combos.pairPage': setting({
+    ...base,
+    schema: comboPairPageSchema,
+    default: { otherPairs: 14, packSwatches: 4, upsell: true },
+    valueType: 'JSON',
+    labelKey: 'combos.pairPage.label',
+    helpKey: 'combos.pairPage.help',
+    sortOrder: 305,
   }),
   // A review aid, like the demo's template bar: `?tpl=L2` (or P3, `?btpl=B4` on the bag) shows another template on
   // the shop without changing the shop's choice; such a page is never shown to search engines.

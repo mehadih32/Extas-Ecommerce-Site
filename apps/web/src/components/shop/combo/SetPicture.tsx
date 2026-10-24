@@ -52,13 +52,17 @@ export function SetPicture({
   );
 }
 
-export function HubPicture({ parts, lang, alt, children }: { parts: readonly SetPart[]; lang: ShopLang; alt: string; children?: ReactNode }) {
+/** PR 573 · the layouts of the demo's ca_setPhoto: a card, a thumbnail, a fan (pair page P1/P2/P5) and top + bottom (P3/P4). */
+export type HubLayout = 'card' | 'thumb' | 'fan' | 'tb';
+
+export function HubPicture({ parts, lang, alt, children, layout = 'card' }: { parts: readonly SetPart[]; lang: ShopLang; alt: string; children?: ReactNode; layout?: HubLayout }) {
+  const big = layout === 'fan' || layout === 'tb';
   return (
-    <div className={`ca-ph ca-ph-card n${Math.min(parts.length, 3)}`} role="img" aria-label={alt}>
+    <div className={`ca-ph ca-ph-${layout} n${Math.min(parts.length, 3)}`} role="img" aria-label={alt}>
       {parts.slice(0, 3).map((p, i) => (
         <div key={i} className={`ca-pc p${i}`}>
           <div className="ca-art">
-            <Art part={p} lang={lang} sizes="(min-width: 1024px) 18vw, 40vw" slot="card" />
+            <Art part={p} lang={lang} sizes={big ? '(min-width: 1024px) 30vw, 60vw' : layout === 'thumb' ? '112px' : '(min-width: 1024px) 18vw, 40vw'} slot="card" />
           </div>
         </div>
       ))}
