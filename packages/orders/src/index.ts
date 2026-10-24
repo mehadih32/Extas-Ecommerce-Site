@@ -22,6 +22,7 @@
 // PR 151: the order export — the list's filter or the ticked orders as a CSV file, personal columns only with their own
 // key, audited (export.ts).
 // S06 · PR 157: a number's history — its other orders and what became of them (phone-history.ts).
+// S06 · PR 158: the address and zone facts read against the gazetteer for the checks (address-facts.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -44,3 +45,4 @@ export * from './two-size';
 export * from './explain';
 export * from './export';
 export * from './phone-history';
+export * from './address-facts';

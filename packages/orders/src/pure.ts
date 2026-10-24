@@ -17,6 +17,8 @@
 export * from './delivery-target';
 // PR 157: one phone number's history in counts, our-fault refusals apart (phone-summary.ts).
 export * from './phone-summary';
+// PR 158: address and zone checks against the gazetteer (address-checks.ts).
+export * from './address-checks';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
