@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২২৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২২৯টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,11 +36,11 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) আর পেমেন্ট (S07) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২২৬টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২২৯টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 15/33** (wave 2) · **S04 39/41** · **S05 20/20** · **S07 4/10** (wave 3) · total **226/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 22/22** · **S06 15/33** (wave 2) · **S04 39/41** · **S05 20/20** · **S07 4/10** · **S08 3/22** (wave 3) · total **229/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -68,7 +68,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 20 / 20 | **Done** |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 15 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 4 / 10 | In progress |
-| [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
+| [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 3 / 22 | In progress |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 0 / 22 | In progress (PR 222 partly) |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **226 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **229 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1119,9 +1119,23 @@ Register: [S05](docs/MASTER-REGISTER.md#s05--order-management--pr-138155).
 - Still planned in S07: Nagad (168), card (169), wallet (171), refunds (172), 173–174.
 Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 
-### S08 · Courier, returns, exchange — Not started
+### S08 · Courier, returns, exchange — In progress (3/22)
 
-Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGISTER.md#s08--courier-returns-exchange--pr-175193).
+> **বাংলায় সংক্ষেপে:** কুরিয়ারের কাঠামো তৈরি: Steadfast আর Pathao একই নিয়মে চলে, চাবি না দেওয়া পর্যন্ত প্র্যাকটিস মোডে।
+> বুকিং সবসময় একজন মানুষ করেন; বাতিল, হোল্ড বা রিভিউতে থাকা অর্ডার কখনো বুক হয় না; গিফট যায় যে পাবেন তার কাছে, তার দিনের আগে না।
+> কুরিয়ারের সমস্যা (ডেলিভারি ব্যর্থ, ঠিকানায় সমস্যা, হারানো, নষ্ট) কারণসহ দেখা যায়; ফেরত পার্সেলের খরচ শুধু আসল পার্সেল থেকে। টাকা এখান থেকে কখনো নড়ে না।
+
+**Built (PR 175, 176, 177): couriers behind one adapter.** New package `@extas/shipping`; the courier contract in `@extas/adapters` (`src/courier/`); migration `0033_courier` (additive: parcel mode, try, reference, receiver, note, exception, tracking time; event id, reason, source); settings registry v50 (`packages/settings/src/registry-shipping.ts`, group `delivery`); backend and admin API only — the Delivery screens come on the new admin shell (follow-up 370).
+- **The contract (175):** one `CourierApi` — book, find by the shop's reference, track, health — with the shop's own parcel states and the courier exceptions of SIM-F-017 (a failed try, an address problem, lost, damaged), each with a reason. A courier word the table does not know is stored raw and flagged, never guessed. A courier never invents money: a charge or a collected amount is only what the courier itself said.
+- **Practice first (A1.3):** every courier runs on its practice world until the owner types its keys into Keys & connections and the Test passes — deterministic `MOCK-` ids, scripted lives (delivered, review, failed try, address problem, lost, damaged, partial, refused) in the courier's own words, planned failures and timeouts, no money ever (SIM-F-027).
+- **Parcels (175):** courier accounts (`/api/admin/delivery/couriers`: add, switch off, archive — never deleted); events stored once per courier event id, the state from the newest understood event (out-of-order safe, finished stays finished); staff record what the courier said on the phone (`POST …/parcels/:id/exception`, audited); the parcel list by view and one parcel with every event (`/api/admin/delivery/parcels`).
+- **RTO cost book (175, SIM-F-027):** `GET /api/admin/delivery/rto-cost` — the shop's own returned parcels only, both courier legs (the courier's report, else the owner's rate card by weight slab), packaging, handling and the ad share from `delivery.courier.rtoCost` (owner figures empty; a missing part named, never counted as zero); practice parcels never real cost.
+- **Booking (176):** always a person's press — one order, the ticked ones or "Book all" (`GET/POST /api/admin/delivery/bookings`) — through the order service's `bookWith` and its `readyToBook` view, so a cancelled, held, unconfirmed or in-review order is never booked (SIM-F-002, SIM-F-014). The parcel goes to `deliveryTarget()` (a gift's receiver, the owner's gift line, held until its booking day; SIM-F-007), carries the live amount due, and the order refuses every edit once booked (SIM-F-004); the weight is the pieces' own, unknown never guessed (SIM-F-029). Refused → `BOOKING_FAILED` with the reason, ready again; no answer → "Try again" asks the courier by reference first (`POST …/parcels/:id/retry`), never booked twice.
+- **Tracking (176):** the worker job `courier.track` (queue `courier`) reads the parcels the couriers hold per store and slot; staff read one now (`POST …/parcels/:id/track`).
+- **Steadfast (176) and Pathao (177):** Steadfast — API key and secret key; its `hold` is a failed try. Pathao — client id and secret, merchant login, Pathao store id; Sandbox/Live addresses; zone ids from the area mapping, weight in kg, its own fee recorded as the courier's charge; it charges by weight, so a parcel without one is never sent (`NO_WEIGHT`); no lookup by reference, so a lost answer is never booked again by guess.
+- **Settings (v50):** `delivery.courier.rtoCost`; `delivery.courier.booking` (gift lead days 0, gift line en/bn, note language en, piece names on, 100 per press); `delivery.courier.tracking` (on, every 60 minutes, 200 a run). Permissions `delivery.parcels`, `delivery.book`, `delivery.exceptions`, `delivery.couriers`.
+- **Tests:** the contract and both clients against stand-in servers (no real keys); booking, tracking and the RTO book on PostgreSQL (every SIM finding above); the routes; the job and its planner; every state, reason, outcome and courier labelled in both languages. Guides: [couriers](docs/admin-guide/couriers.md), [Keys & connections](docs/admin-guide/integrations.md).
+- **Not here (their own PRs):** COD collection and the courier's money (S07, 525–526), returns and refused parcels (189, 191), the order's status from the parcel and courier webhooks (184), the sticker (179), the courier choice by real cost (178), the rest of S08.
 
 ### S06 · Fraud & location — In progress
 
@@ -1257,7 +1271,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #42 | PR [519](docs/stages/S06.md#pr-519), [520](docs/stages/S06.md#pr-520), [521](docs/stages/S06.md#pr-521), [544](docs/stages/S06.md#pr-544) | 24 Oct | One identity per customer from the phone, the device and an alike name and address, so a new number no longer hides the same person; the duplicate and re-order rules A–E, H, I, each with its own switch and a proposal a person decides (no block); "Why this alert, and the options" on the order page's review card; one list of every fraud and duplicate rule with its switch (admin API). All off by default. |
+| #42 | PR [519](docs/stages/S06.md#pr-519), [520](docs/stages/S06.md#pr-520), [521](docs/stages/S06.md#pr-521), [544](docs/stages/S06.md#pr-544), [175](docs/stages/S08.md#pr-175), [176](docs/stages/S08.md#pr-176), [177](docs/stages/S08.md#pr-177) | 24 Oct | One identity per customer from the phone, the device and an alike name and address, so a new number no longer hides the same person; the duplicate and re-order rules A–E, H, I, each with its own switch and a proposal a person decides (no block); "Why this alert, and the options" on the order page's review card; one list of every fraud and duplicate rule with its switch (admin API). All off by default. The courier framework with the practice courier (exception states with reasons, events stored once, the RTO cost book from real returned parcels only), Steadfast and Pathao behind it: staff book one, the ticked or all ready orders (never a cancelled, held, unconfirmed or in-review one), consignment ids, and the worker reads parcel updates; both stay on practice until the owner's keys pass the Test. |
 | #41 | PR [572](docs/stages/S03.md#pr-572), [573](docs/stages/S03.md#pr-573), [574](docs/stages/S03.md#pr-574), [576](docs/stages/S03.md#pr-576), [165](docs/stages/S07.md#pr-165), [166](docs/stages/S07.md#pr-166), [167](docs/stages/S07.md#pr-167), [170](docs/stages/S07.md#pr-170), [125](docs/stages/S04.md#pr-125) | 24 Oct | Combo templates: each colour-pair rule gets its own list page (`/combos/<rule>`) in five layouts, the pair page and the set in the bag each get five more, and the current look stays the default until the owner picks another. A test tool plays every template at four screen sizes and scores it out of 100. S03 is done (22/22). Payments start (S07 4/10): every payment has one state and a money status, cash on delivery is settled after the door (a paid customer is never asked again), bKash sits behind one gateway contract on its practice mode until the owner adds the keys, and callbacks are signature-checked and counted once. | Merged |
 | #40 | PR [541](docs/stages/S05.md#pr-541), [159](docs/stages/S06.md#pr-159) | 24 Oct | Every new order lands in one section with a note the moment it is placed (duplicate, re-order, new identity, high risk, watch, prepaid, clear); the strong sections wait for a person, and an order under review can never be booked. Prepaid orders get their own confirm view. The order list gets a risk column, filters and a "highest risk first" sort. Checkout keeps the IP, the shop's own random device id and a location the customer chooses to share, each by its own switch, and clears them after 180 days. S05 is complete. |
 | #39 | PR [44](docs/stages/S02.md#pr-44), [546](docs/stages/S05.md#pr-546), [148](docs/stages/S05.md#pr-148) (follow-up [287](docs/stages/S14.md#pr-287)) | 24 Oct | The home page flash sale: two rows gliding opposite ways with a live countdown, drawn only while the owner has a sale set (empty and off by default; a sale never changes a price). The customer is told in plain words why an order was cancelled; a duplicate's notice names the order that goes ahead, with its tracking link. The "cancel request refused" notice is its own step. Both notices are off by default. |
