@@ -1,6 +1,7 @@
 // S06 · PR 550 — the delivery page's pure part (no React, no database), shared by the server page and its components
 // and tested on its own (model.test.ts): a band's charge, hours and "charged as" line as text, a place's line, a
-// refusal as text, and the band edit form turned into the one change the API takes.
+// refusal as text, and the band edit form turned into the one change the API takes. PR 502: the COD limit in the form
+// and as text, a folded sub-area band switched on without a charge of its own, and the spellings box as a list.
 import type { BandOut, BandView, PlaceView, ResolveView } from '@extas/delivery';
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, toMajor, toMinor, type Money } from '../products/model';
@@ -53,6 +54,8 @@ export function refusalText(d: Dict, code: string | undefined, details: string[]
 
 export interface BandForm {
   charge: string;
+  /** PR 502: the most a cash-on-delivery order in this band may be; empty = no limit. */
+  codLimit: string;
   hoursMin: string;
   hoursMax: string;
   enabled: boolean;
@@ -60,7 +63,14 @@ export interface BandForm {
 }
 
 export function bandForm(b: BandView, m: Money): BandForm {
-  return { charge: b.enabled ? toMajor(b.chargeMinor, m) : '', hoursMin: b.hoursMin == null ? '' : String(b.hoursMin), hoursMax: b.hoursMax == null ? '' : String(b.hoursMax), enabled: b.enabled, mode: b.mode ?? 'own' };
+  return {
+    charge: b.enabled ? toMajor(b.chargeMinor, m) : '',
+    codLimit: b.codLimitMinor == null ? '' : toMajor(b.codLimitMinor, m),
+    hoursMin: b.hoursMin == null ? '' : String(b.hoursMin),
+    hoursMax: b.hoursMax == null ? '' : String(b.hoursMax),
+    enabled: b.enabled,
+    mode: b.mode ?? 'own',
+  };
 }
 
 const hoursOf = (s: string): number | null | undefined => {
@@ -73,20 +83,37 @@ const hoursOf = (s: string): number | null | undefined => {
  * The one PATCH a band's form sends: only what changed, the charge whenever the band is on (switching on needs it in
  * the same change). `error` names what to fix first, before anything is sent.
  */
-export function bandPatch(b: BandView, f: BandForm, m: Money): { patch: Record<string, unknown>; error: 'badCharge' | 'badHours' | null } {
+export function bandPatch(b: BandView, f: BandForm, m: Money): { patch: Record<string, unknown>; error: 'badCharge' | 'badHours' | 'badCod' | null } {
   const patch: Record<string, unknown> = {};
   const charge = toMinor(f.charge, m);
-  if (charge === undefined || (f.enabled && charge === null)) return { patch, error: 'badCharge' };
+  // PR 502: the sub-area band charged as Dhaka City or as outside has no charge of its own to type
+  const folded = b.role === 'subArea' && f.mode !== 'own';
+  if (charge === undefined || (f.enabled && !folded && charge === null)) return { patch, error: 'badCharge' };
+  const cod = (f.codLimit ?? '').trim() ? toMinor(f.codLimit, m) : null;
+  if (cod === undefined) return { patch, error: 'badCod' };
+  if (cod !== b.codLimitMinor) patch.codLimitMinor = cod;
   const hMin = hoursOf(f.hoursMin);
   const hMax = hoursOf(f.hoursMax);
   if (hMin === undefined || hMax === undefined || (hMin != null && hMax != null && hMin > hMax)) return { patch, error: 'badHours' };
-  if (charge !== null && (charge !== b.chargeMinor || (f.enabled && !b.enabled))) patch.chargeMinor = charge;
+  if (charge !== null && (charge !== b.chargeMinor || (f.enabled && !b.enabled && !folded))) patch.chargeMinor = charge;
   if (f.enabled !== b.enabled) patch.enabled = f.enabled;
   if (hMin !== b.hoursMin) patch.hoursMin = hMin;
   if (hMax !== b.hoursMax) patch.hoursMax = hMax;
   if (b.role === 'subArea' && f.mode !== (b.mode ?? 'own')) patch.mode = f.mode;
   return { patch, error: null };
 }
+
+/** PR 502: "COD up to 3,000 ৳" — or no limit. */
+export function codText(d: Dict, b: Pick<BandView, 'codLimitMinor'>, m: Money): string {
+  return b.codLimitMinor == null ? t(d, 'delivery.bands.codNone') : t(d, 'delivery.bands.cod', { amount: formatMoney(b.codLimitMinor, m) });
+}
+
+/** PR 502: the spellings box (one per line, or commas) as the list the API takes. */
+export const aliasesOf = (text: string): string[] =>
+  text
+    .split(/[\n,]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
 
 // ------------------------------------------------------------------------------------------------ "Try an address" (PR 551)
 

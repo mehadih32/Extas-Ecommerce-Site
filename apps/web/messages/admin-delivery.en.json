@@ -28,7 +28,15 @@
       "subArea": "Dhaka sub-area",
       "outside": "Outside Dhaka",
       "other": "Other band"
-    }
+    },
+    "cod": "Cash on delivery up to {amount}",
+    "codNone": "No cash-on-delivery limit",
+    "subSwitch": "Use the sub-area band",
+    "subSwitchHelp": "Off: the places on your list are charged by the map (Dhaka City or outside) until you switch it on.",
+    "subOffNote": "Off — your list is kept; its places pay the map's charge for now.",
+    "subTurnedOn": "Sub-area band switched on",
+    "subTurnedOff": "Sub-area band switched off — its places go by the map",
+    "needCharge": "Type its charge first: press “Change”, fill the charge and switch it on there."
   },
   "edit": {
     "title": "{name}",
@@ -48,11 +56,13 @@
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
-    "saved": "{name} saved"
+    "saved": "{name} saved",
+    "codLimit": "Cash-on-delivery limit ({currency})",
+    "codHelp": "A bigger order in this band cannot pay cash on delivery; the customer pays online instead. Empty = no limit."
   },
   "list": {
-    "title": "Your sub-area list",
-    "sub": "A place here — and everything inside it — is in the sub-area band. Only places from the area list can be added.",
+    "title": "Areas",
+    "sub": "Find a place to open it: rename it, edit its spellings, move it to another band or merge it with another spelling of the same place. Your list below is the exception to the map.",
     "search": "Find a place",
     "placeholder": "Gazipur, Savar, Tongi…",
     "find": "Find",
@@ -81,7 +91,10 @@
       "UPAZILA": "Upazila",
       "THANA": "Thana",
       "AREA": "Area"
-    }
+    },
+    "mine": "Your list (the exception to the map)",
+    "open": "Open",
+    "addPlace": "Add a place"
   },
   "errors": {
     "CHARGE_REQUIRED": "Type the charge before switching the band on.",
@@ -94,7 +107,11 @@
     "badHours": "Hours are whole numbers, the fastest not above the slowest.",
     "server-error": "Something went wrong. Please try again.",
     "network": "No connection. Please try again.",
-    "TOO_LARGE": "That is too long."
+    "TOO_LARGE": "That is too long.",
+    "badCod": "Type the cash-on-delivery limit as a number, or leave it empty.",
+    "DUPLICATE_PLACE": "A place of that name is already there. Open that one instead, or pick another name.",
+    "LEVEL_MISMATCH": "Only two places of the same kind merge (an area into an area, an upazila into an upazila).",
+    "BAND_CONFLICT": "These two places sit in different bands on your list. Move one first, then merge."
   },
   "fields": {
     "chargeMinor": "the charge",
@@ -104,7 +121,13 @@
     "mode": "the sub-area choice",
     "enabled": "on / off",
     "areaId": "the place",
-    "bandId": "the band"
+    "bandId": "the band",
+    "nameEn": "the English name",
+    "nameBn": "the Bengali name",
+    "aliases": "the spellings",
+    "parentId": "the place it sits in",
+    "intoId": "the place to merge into",
+    "level": "the kind of place"
   },
   "try": {
     "title": "Try an address",
@@ -127,5 +150,44 @@
     "change": "Change",
     "notSet": "charge not set",
     "option": "{charge} · {hours}"
+  },
+  "pageSub": "Three bands: Dhaka City (the city-corporation map), the sub-area band (your own list) and outside Dhaka. The address decides the band by itself; the courier never changes what the customer pays.",
+  "place": {
+    "title": "{name}",
+    "loading": "Opening…",
+    "ownerMade": "Added by you",
+    "under": "{n} places inside it",
+    "now": "Now: {band} ({via})",
+    "names": "Name",
+    "nameEn": "Name in English",
+    "nameBn": "Name in Bengali",
+    "keepOld": "Keep the old name as a spelling, so old addresses still find it",
+    "saveName": "Save the name",
+    "renamed": "{name} renamed",
+    "spellings": "Other spellings",
+    "spellingsHelp": "One per line — how customers also write it (Gabtoli, গাবতলি…). Checkout and the search read every one.",
+    "saveSpellings": "Save the spellings",
+    "spelt": "Spellings of {name} saved",
+    "band": "Band",
+    "byMap": "By the map (not on your list)",
+    "bandHelp": "Moving a place takes everything inside it along. “By the map” takes it off your list (kept, never deleted).",
+    "saveBand": "Move",
+    "moved": "{name} moved",
+    "merge": "Merge with another spelling",
+    "mergeHelp": "When the list has the same place twice. This one is archived (never deleted); its names become spellings of the other, the places inside it move across, and saved customer addresses follow. Placed orders keep what they had.",
+    "mergeFind": "Find the place to keep",
+    "mergeInto": "Merge into {name}",
+    "merged": "{from} merged into {into}",
+    "mergeSameKind": "Only places of the same kind are shown."
+  },
+  "add": {
+    "title": "Add a place",
+    "desc": "For a place the area list does not have yet (a new housing, a market people name). It sits inside the place you pick.",
+    "parent": "Inside which place",
+    "parentPick": "Pick",
+    "parentPicked": "Inside: {name}",
+    "save": "Add the place",
+    "added": "{name} added",
+    "needParent": "Pick the place it sits in first."
   }
 }

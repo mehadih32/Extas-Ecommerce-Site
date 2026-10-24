@@ -12,7 +12,13 @@ export type DeliveryErrorCode =
   /** Too many phone look-ups from one place in a short time (PR 555). */
   | 'RATE_LIMITED'
   /** PR 555: the full saved address needs a login or a confirmed one-time code; a bare number opens the area only. */
-  | 'PROOF_REQUIRED';
+  | 'PROOF_REQUIRED'
+  /** PR 502: a place of that name is already under the same parent (details: its id). */
+  | 'DUPLICATE_PLACE'
+  /** PR 502: only two places of the same level are merged (two spellings of one place). */
+  | 'LEVEL_MISMATCH'
+  /** PR 502: the two places sit in different bands on the owner's list; move one first, then merge. */
+  | 'BAND_CONFLICT';
 
 export class DeliveryError extends Error {
   readonly code: DeliveryErrorCode;
@@ -33,6 +39,9 @@ export class DeliveryError extends Error {
       case 'CHARGE_REQUIRED':
       case 'MODE_NOT_ALLOWED':
       case 'UNRESOLVED':
+      case 'DUPLICATE_PLACE':
+      case 'LEVEL_MISMATCH':
+      case 'BAND_CONFLICT':
         return 409;
       case 'RATE_LIMITED':
         return 429;

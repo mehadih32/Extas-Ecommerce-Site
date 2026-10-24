@@ -5,24 +5,30 @@
 // every call. The charges, hours and the list are owner data: the shop ships them empty and off.
 // PR 12 (CN-022): the Delivery section's "Zones & charges" tab, at /admin/delivery/zones (demo V12.3); the old address
 // /admin/delivery sends here permanently until the section's own overview is built.
+// PR 502: on the new admin shell (demo V12.3 #/admin/delivery/zones: the band cards in a row, then "Areas" and "Try an
+// address"): the cash-on-delivery limit per band, the sub-area band's own switch, and the area admin — open, rename,
+// re-spell, add, merge, move between bands (never deleting). Guide: docs/admin-guide/pages/delivery/zones.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as del from '@extas/delivery';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminNotice } from '@/components/admin/AdminFrame';
+import { AreaAdmin } from '@/components/admin/delivery/AreaAdmin';
 import { DeliveryBands } from '@/components/admin/delivery/DeliveryBands';
 import { nameOf } from '@/components/admin/delivery/model';
-import { SubAreaList } from '@/components/admin/delivery/SubAreaList';
 import { TryAddress } from '@/components/admin/delivery/TryAddress';
-import { Icon } from '@/components/admin/Icon';
 import { moneyOf } from '@/components/admin/products/model';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { deliveryDeps } from '@/lib/delivery-api';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-delivery.bn.json';
 import en from '../../../../../messages/admin-delivery.en.json';
+import '../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +51,12 @@ export default async function DeliveryPage() {
   const view = withScreen(plain);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
+  if (access.kind === 'forbidden')
+    return (
+      <div className="a2-z">
+        <ShellState view={view} kind="denied" permission="delivery.read" />
+      </div>
+    );
 
   const d = deliveryDeps(access.deps);
   const who: del.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
@@ -59,27 +70,25 @@ export default async function DeliveryPage() {
   ]);
   const money = moneyOf(currency, view.locale);
   const dict = view.dict;
-  const bandNames = Object.fromEntries(bands.map((b) => [b.id, nameOf(view.lang, b)]));
+  const choices = bands.map((b) => ({ id: b.id, name: nameOf(view.lang, b) }));
 
   return (
-    <AdminFrame view={view} current={KEY}>
-      <div className="ad-hd">
-        <div className="ad-eyebrow">{t(dict, 'delivery.eyebrow')}</div>
-        <h1 className="ad-h1">{t(dict, 'delivery.title')}</h1>
-        <p className="ad-intro">{t(dict, 'delivery.intro')}</p>
-      </div>
-      <SystemTabs view={view} current={KEY} />
+    <div className="a2-z" data-testid="delivery-zones" lang={view.lang}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(dict, 'delivery.title')} sub={t(dict, 'delivery.pageSub')} />
+      <SectionTabs view={view} current={KEY} />
       {source === null || source === 'sample' ? (
-        <div className="ad-note ad-note-top">
-          <Icon name="info" size={16} />
-          <div>{t(dict, 'delivery.sample')}</div>
+        <div className="a2-note">
+          <ShellIcon name="info" size={15} />
+          <span>{t(dict, 'delivery.sample')}</span>
         </div>
       ) : null}
-      <div className="dl-grid">
+      <div className="a2-mt12">
         <DeliveryBands dict={dict} lang={view.lang} locale={view.locale} money={money} bands={bands} canEdit={can('delivery.charges')} />
-        <SubAreaList dict={dict} lang={view.lang} areas={areas} bandNames={bandNames} canEdit={can('delivery.areas')} />
+      </div>
+      <div className="dz-grid">
+        <AreaAdmin dict={dict} lang={view.lang} areas={areas} bands={choices} canEdit={can('delivery.areas')} />
         <TryAddress dict={dict} lang={view.lang} locale={view.locale} money={money} settleMs={timings.settleMs} minWords={timings.minWords} />
       </div>
-    </AdminFrame>
+    </div>
   );
 }

@@ -1,13 +1,15 @@
 // S06 · PR 550 — the delivery page's pure part: a band as text (an off band shows "not set", never a figure), the
 // sub-area band's "charged as", a place's line, refusals in the screen's words, and the band form's one PATCH. PR 551 — the
 // "Try an address" lines: a place with its district, an off band shows no figure, and the question names the places.
+// PR 502 — the COD limit in the form and as text, a folded sub-area band switched on without its own charge, the
+// spellings box as a list.
 import { describe, expect, it } from 'vitest';
 import type { BandOut, BandView, PlaceView, ResolveView } from '@extas/delivery';
 import type { Dict } from '@/lib/i18n';
 import bn from '../../../../messages/admin-delivery.bn.json';
 import en from '../../../../messages/admin-delivery.en.json';
 import { moneyOf } from '../products/model';
-import { askLine, bandForm, bandPatch, chargedAsText, chargeText, hoursText, optionLine, outCharge, placeLabel, placeLine, refusalText } from './model';
+import { aliasesOf, askLine, bandForm, bandPatch, chargedAsText, chargeText, codText, hoursText, optionLine, outCharge, placeLabel, placeLine, refusalText } from './model';
 
 const d = { delivery: en } as unknown as Dict;
 const money = moneyOf('BDT', 'en-BD');
@@ -96,6 +98,29 @@ describe('the band form', () => {
     expect(bandPatch(b, { ...bandForm(b, money), hoursMin: '72', hoursMax: '24' }, money).error).toBe('badHours');
     expect(bandPatch(b, { ...bandForm(b, money), hoursMin: '1.5' }, money).error).toBe('badHours');
     expect(bandPatch(b, { ...bandForm(b, money), hoursMin: '' }, money).patch).toEqual({ hoursMin: null });
+  });
+
+  it('PR 502: the COD limit — empty is no limit, a number is sent once, anything else is refused before sending', () => {
+    const b = band();
+    expect(bandForm(band({ codLimitMinor: 300000 }), money).codLimit).toBe('3000');
+    expect(bandPatch(b, { ...bandForm(b, money), codLimit: '3000' }, money).patch).toEqual({ codLimitMinor: 300000 });
+    expect(bandPatch(b, { ...bandForm(b, money), codLimit: 'lots' }, money).error).toBe('badCod');
+    const limited = band({ codLimitMinor: 300000 });
+    expect(bandPatch(limited, { ...bandForm(limited, money), codLimit: '' }, money).patch).toEqual({ codLimitMinor: null });
+    expect(codText(d, b, money)).toBe(en.bands.codNone);
+    expect(codText(d, limited, money)).toMatch(/3,000/);
+  });
+
+  it('PR 502: the sub-area band charged as the city switches on without a charge of its own', () => {
+    const sub = band({ role: 'subArea', key: 'dhaka-sub-area', mode: 'city' });
+    expect(bandPatch(sub, { ...bandForm(sub, money), enabled: true }, money)).toEqual({ patch: { enabled: true }, error: null });
+    const own = band({ role: 'subArea', key: 'dhaka-sub-area', mode: 'own' });
+    expect(bandPatch(own, { ...bandForm(own, money), enabled: true }, money).error).toBe('badCharge');
+  });
+
+  it('PR 502: the spellings box is one per line (or commas), blanks dropped', () => {
+    expect(aliasesOf(' Gabtoli \n\nগাবতলি, gabtali ')).toEqual(['Gabtoli', 'গাবতলি', 'gabtali']);
+    expect(aliasesOf('')).toEqual([]);
   });
 
   it('sends the mode only for the sub-area band', () => {
