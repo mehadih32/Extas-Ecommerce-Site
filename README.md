@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬০০টা PR-এর মধ্যে ২১৪টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -40,7 +40,7 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 18/22** · **S06 10/33** (wave 2) · **S04 39/41** · **S05 19/20** (wave 3) · total **212/600** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/22 · S09 17/17** (wave 1 done) · **S10 12/12** · **S02 44/58** · **S03 18/22** · **S06 11/33** (wave 2) · **S04 39/41** · **S05 20/20** (wave 3) · total **214/600** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 20 Oct 2026, 12:43 (Dhaka) · commit `f3822d0` (CN-009, documents) · **success**. Last code deploy: 11:42, PR [197–207](docs/stages/S09.md) (#17) |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -65,8 +65,8 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 44 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 18 / 22 | In progress |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 39 / 41 | In progress |
-| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 19 / 20 | In progress |
-| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 10 / 33 | In progress |
+| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546) | 20 / 20 | **Done** |
+| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 11 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 0 / 10 | Not started |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564) | 0 / 22 | Not started |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md) | 17 / 17 | **Done** |
@@ -88,7 +88,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **606 PRs** | **212 / 600 active** | 6 parked |
+| | **Total** | | **606 PRs** | **214 / 600 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1005,9 +1005,19 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 
 Next: PR 558 and 560 (the checkout's advance rules), the rest of S04. Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
-### S05 · Order management — In progress (19/20)
+### S05 · Order management — Done (20/20)
+
+Stage report (Bengali): [`docs/reports/2026-10-24-S05.md`](docs/reports/2026-10-24-S05.md).
 
 > **বাংলায়:** "বিক্রি" এখন একটাই হিসাব — শুধু ডেলিভারি হওয়া অর্ডার, ডেলিভারির দিনে গোনা; "অর্ডারের মূল্য" (সব দেওয়া অর্ডার) আলাদা করে পাশে দেখায়। সব রিপোর্ট একই হিসাব থেকে নেয়। অডিট লগ আর অন্য ইতিহাস এখন ডাটাবেসেই আটকানো: ওয়েবসাইট নতুন লাইন লিখতে পারে, কিন্তু বদলাতে বা মুছতে পারে না, কেউই পারে না। অর্ডারের ধাপ এখন একটাই নিয়মে চলে: ভুল ধাপ আটকে যায়, প্রতিটা বদল টাইমলাইনে লেখা থাকে; কারণসহ বাতিল আর হোল্ড, টাকা দেওয়া অর্ডার বাতিলে শুধু রিফান্ডের অনুরোধ (টাকা যায় না), ডুপ্লিকেট অর্ডারের যাচাই-তালিকা, নোট আর ফ্ল্যাগ। অর্ডারের অ্যাডমিন পাতাও এখন তৈরি: অর্ডারের তালিকা (কোন অর্ডার কোন অবস্থায় আছে তার ভিউ, খোঁজা, ফিল্টার, ফোনে এক অর্ডার এক কার্ড), এক অর্ডারের পুরো পাতা (সব তথ্য, টাইমলাইন, আর এখন যে কাজগুলো করা যায় শুধু সেগুলোর বাটন — প্রতিটায় "কী হবে" লেখা থাকে), কনফার্ম করার লাইন, আর একসাথে অনেক অর্ডার কনফার্ম / হোল্ড / ছাড়া। টাকা, দাম বা ডিসকাউন্ট কোনো পাতা বদলায় না; টাকা দেওয়া অর্ডার বাতিলে শুধু রিফান্ডের অনুরোধ জমা হয়। রিফান্ড আর রিটার্ন পরের ধাপে। অর্ডার এডিটও এখন তৈরি: কাস্টমার ফোন করলে টিম অর্ডারের পাতা থেকেই নাম, ফোন (লগসহ), ঠিকানা, একই দামে অন্য সাইজ বা একটা পণ্য বাদ দিতে পারে — কারণ আর মাধ্যমসহ টাইমলাইনে লেখা থাকে; কাস্টমারের নিজের এডিট আর "দুই সাইজ" প্রশ্ন (S আর M একসাথে নিলে কোনটা রাখবেন; পরিবারের জন্য হলে শুধু নোট) — দুটোই শুরুতে বন্ধ। কুরিয়ার বুক হলে কোনো এডিট হয় না। কাস্টমারের "আমার অর্ডার" এখন পুরো ইতিহাস রাখে: পাতা পাতা করে সব অর্ডার, অর্ডার বেশি হলে "সব · পথে আছে · ডেলিভারি হয়েছে · বাতিল ও ফেরত" বাছাই, আর প্রতিটা অর্ডারের পাতায় ভাঁজ করা "যা যা হয়েছে" — কখন কী হলো, কে কী বদলাল (টিমের নোট বা ফ্ল্যাগ কখনো না)। অর্ডারের পাতায় কাস্টমারের নিজের এডিটের কার্ড আর "দুই সাইজ" প্রশ্নের কার্ডও এখন আছে — সুইচ চালু করলেই দেখা যাবে।
+
+**Built (PR 541, with follow-up 295): the risk-sectioned order list.** Registry v46 (`risk.sections` in `packages/settings/src/registry-risk-more.ts`, on), no migration, no new admin section (the `/admin/orders` list and the order page, demo V12.3). Marking is instant; the decision never is.
+- **Sections (541):** the moment an order lands (after the duplicate check and the score) it is placed in **one** section with a note on its timeline: possible duplicate, re-order, new identity, high risk, watch, prepaid or clear (command `riskSection`, the status untouched). Re-order, new identity and high risk **wait for a person**: a "Risk review · <section>" card on `/admin/orders/<id>` says why and lists the matched orders, with Looks fine · Hold (a reason) · Ask the customer (a `RISK_CHECK` call task) · One parcel · Decline (`RISK_DECLINED`, never a block). Re-placed after an edit or "Score again".
+- **SIM-F-014:** an order in review is never confirmed or booked — the order machine's new `book` command refuses `IN_REVIEW`, `bookWith` is the one booking entry and `readyToBook` the one list for S08.
+- **SIM-F-015:** new signals `identityMatch` (the same name and an alike address under another number, the earlier refusal named) and `orderPieces` (many pieces on a first order), both off.
+- **SIM-F-020:** "To confirm" is the COD call queue only; prepaid orders wait in their own **Prepaid** view (and the Dashboard row "Prepaid orders to confirm"); a flagged prepaid order goes to review.
+- **The list (follow-up 295):** a Risk column (band · score, section), filters by band and section, and "Highest risk first". API `GET /api/admin/orders?risk=&section=&sort=risk`, `GET /api/admin/orders/reviews?section=`.
+- **Tests and gates:** pure `sectionOf` and the machine's `book` guard; PostgreSQL sections (clear, off, prepaid vs COD, SIM-F-014, SIM-F-015, re-order, decisions, list band/sort with cursor pages); the web list chips, filters and timeline words. Guide: [docs/admin-guide/orders.md](docs/admin-guide/orders.md).
 
 **Built (PR 150, with follow-ups 260 and 261): the customer's whole order history and "What happened".** Registry v44 (`account.history` in `packages/settings/src/registry-accounts.ts`: `filters` and `timeline`, both on), no migration, no admin screen (follow-up 302). Matched to demo V12.2 `60-account.js` on the phone; the desktop keeps its own two-column layout.
 - **My orders keeps every order (150):** `/account` and `/account/orders` (+ `/bn/…`) list all of his orders, newest first, `account.lists.orders` (20) a page, with Newer / Older and "Page 1 of 3" (`?page=`). Once he has more than a page, the groups **All · On the way · Delivered · Cancelled & returned** show as chips with their counts (`?show=`), and a group with nothing in it says so with a link back to all. `@extas/accounts` `orderHistory` (counts by one grouped read).
@@ -1093,7 +1103,8 @@ Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGIST
 ### S06 · Fraud & location — In progress
 
 > **বাংলায় সংক্ষেপে:** ঠিকানা থেকে দোকান নিজে ডেলিভারি এলাকা আর চার্জ বের করে, আন্দাজে কখনো না; না বুঝলে কাস্টমারকে জিজ্ঞেস করে। অ্যাডমিনে "ডেলিভারি" পেজে তিনটা ব্যান্ড, আপনার সাব-এরিয়ার তালিকা, আর একটা ঠিকানা দিয়ে পরীক্ষা। চার্জ আপনি নিজে বসাবেন; শুরুতে সব বন্ধ।
-> নতুন: প্রতিটা অর্ডারের একটা ঝুঁকির স্কোর (০–১০০) — নম্বরের আগের অর্ডার আর ঠিকানা দেখে, আপনার ঠিক করা সংকেত আর নম্বরে। অর্ডারের পাতায় "ঝুঁকি" কার্ড বলে কেন এই স্কোর। শুধু জানায়, কিছু আটকায় না; আমাদের দোষে ফেরত গোনা হয় না। শুরুতে বন্ধ।
+> নতুন: চেকআউটে "রাইডারের জন্য আমার লোকেশন দিন" বাটন; IP, ডিভাইস কোড আর লোকেশন 180 দিন পরে নিজে থেকে মুছে যায়।
+> প্রতিটা অর্ডারের একটা ঝুঁকির স্কোর (০–১০০) — নম্বরের আগের অর্ডার আর ঠিকানা দেখে, আপনার ঠিক করা সংকেত আর নম্বরে। অর্ডারের পাতায় "ঝুঁকি" কার্ড বলে কেন এই স্কোর। শুধু জানায়, কিছু আটকায় না; আমাদের দোষে ফেরত গোনা হয় না। শুরুতে বন্ধ।
 
 **Delivery-zone engine (PR 549–553, 555, `@extas/delivery`).**
 - **Gazetteer (549):** division → district → upazila/thana → area with Bengali, English and Banglish names; importer and a shared index. A public **sample** list ships; the national list comes later.
@@ -1111,7 +1122,12 @@ Planned — see register PRs 175–193, 525–526, 564: [S08](docs/MASTER-REGIST
 - **The panel (160):** a read-only **Risk** card on `/admin/orders/<id>` (demo V12.3) — the band and score, each signal with its +weight and what it saw, the history line, earlier scores, "the rules changed since", and **Score again** (`orders.risk.decide`). `GET /api/admin/orders/:id/risk` (`orders.risk.read`), `POST /api/admin/orders/:id/risk/assess`. Guide: [docs/admin-guide/orders.md](docs/admin-guide/orders.md).
 - **Settings:** registry v43, group `orders` — `risk.history` (200 orders, the our-fault list, unanswered call outcomes), `risk.score` (off; after an edit on; card on), `risk.signals`, `risk.bands`; `orders.refusal.reasons` gains three reasons.
 - **Tests:** the pure history, checks and model per signal; PostgreSQL history, address facts, scoring once, after an edit, SIM-F-044, the panel; the routes; the checkout end to end; the card's words in both languages.
-- Still planned in S06: the rest of the fraud and duplicate-order engine (159, 161–164, 519–524, 540, 542–545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
+**IP, device and GPS, with the 180-day rule (PR 159).** Registry v46 (`risk.capture`), no migration (the Order's `ip`, `deviceId`, `gpsLat`, `gpsLng`, `piiExpiresAt` are used).
+- **What the checkout keeps:** the connection (IP), the shop's own random device id (an HttpOnly first-party cookie, never a fingerprint) and, only when the customer taps **"Share my location for the rider"** under the address (on by default, never on a gift, 44 px), the point rounded to 3 decimals — each by its own switch, with the day it is cleared.
+- **Signals:** `deviceMatch` (the same device under another number, +20, 90 days) and `ipPhones` (3 other numbers from one connection in 24 h, +15), both off; they put an order in "new identity".
+- **The 180-day rule:** the worker job `orders.pii.purge` (queue `privacy`, every 60 minutes) clears those four fields once the owner's days have passed; the order and its money stay.
+- **Tests:** the capture on PostgreSQL (rounded, switched off, refused point), the API's device cookie, the signals on PostgreSQL, the purge (once, a shorter rule, through the catalogue and planner); the worker started once with the new queue.
+- Still planned in S06: the rest of the fraud and duplicate-order engine (161–164, 519–524, 540, 542–545), courier zone sync (554), the rest (502, 556–557, 559, 562, 567).
 
 ### S14 · CRM & customers — Not started
 
@@ -1203,6 +1219,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #40 | PR [541](docs/stages/S05.md#pr-541), [159](docs/stages/S06.md#pr-159) | 24 Oct | Every new order lands in one section with a note the moment it is placed (duplicate, re-order, new identity, high risk, watch, prepaid, clear); the strong sections wait for a person, and an order under review can never be booked. Prepaid orders get their own confirm view. The order list gets a risk column, filters and a "highest risk first" sort. Checkout keeps the IP, the shop's own random device id and a location the customer chooses to share, each by its own switch, and clears them after 180 days. S05 is complete. |
 | #39 | PR [44](docs/stages/S02.md#pr-44), [546](docs/stages/S05.md#pr-546), [148](docs/stages/S05.md#pr-148) (follow-up [287](docs/stages/S14.md#pr-287)) | 24 Oct | The home page flash sale: two rows gliding opposite ways with a live countdown, drawn only while the owner has a sale set (empty and off by default; a sale never changes a price). The customer is told in plain words why an order was cancelled; a duplicate's notice names the order that goes ahead, with its tracking link. The "cancel request refused" notice is its own step. Both notices are off by default. |
 | #38 | PR [157](docs/stages/S06.md#pr-157), [158](docs/stages/S06.md#pr-158), [156](docs/stages/S06.md#pr-156), [160](docs/stages/S06.md#pr-160) | 24 Oct | The risk score (off until the owner turns it on): each new order gets a score from 0 to 100 from the owner's signals and weights (the number's past orders and refusals, cancels, a very recent order, an unclear or mismatched address …), stored once with its reasons. The order's admin page shows a "Risk" card that says why. It only informs: nothing is blocked, and no price, charge or COD changes. |
 | #37 | PR [150](docs/stages/S05.md#pr-150), [143](docs/stages/S05.md#pr-143) (follow-up [260](docs/stages/S13.md#pr-260)), [146](docs/stages/S05.md#pr-146) (follow-up [261](docs/stages/S13.md#pr-261)) | 24 Oct | "My orders" keeps every order, a page at a time, with All · On the way · Delivered · Cancelled & returned, and each order page has "What happened" with its steps and changes. When the owner turns them on, the order page also has the customer's own edit card (address, phone, a size) and the two-size question ("Keep both, or only M?"). |
