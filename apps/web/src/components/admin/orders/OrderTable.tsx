@@ -70,6 +70,7 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
               <th>{col('items')}</th>
               <th className="r">{col('total')}</th>
               <th>{col('status')}</th>
+              <th>{col('risk')}</th>
               <th>{col('courier')}</th>
               <th>{col('flags')}</th>
             </tr>
@@ -111,6 +112,15 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                   </td>
                   <td className="a2-tdw" data-l={col('status')}>
                     <Chips chips={r.chips} />
+                  </td>
+                  <td data-l={col('risk')} data-testid="order-risk">
+                    {r.risk.band || r.risk.section ? (
+                      <div className="a2-cell">
+                        <Chips chips={[r.risk.band, r.risk.section].filter((c): c is Chip => c !== null)} />
+                      </div>
+                    ) : (
+                      <span className="a2-faint">{dash}</span>
+                    )}
                   </td>
                   <td data-l={col('courier')}>
                     {r.courier ? (

@@ -6,6 +6,7 @@
 // currency. The words come from messages/admin-orders.<lang>.json; nothing here is a sample.
 import * as od from '@extas/orders';
 import { ORDER_STATES, type OrderState } from '@extas/orders/pure';
+import { RISK_SECTIONS } from '@extas/settings';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
 import { ageOf } from '../admin-shell/dashboard';
@@ -13,7 +14,7 @@ import type { ShellIconName } from '../admin-shell/icons';
 import type { FieldOption } from './spec';
 import { t } from '../i18n';
 import { phoneNormalizeBD } from '../phone-bd';
-import { LIST_PAGES, ORDER_TONE, orderHref, PAY_TONE, RET_TONE, SHIP_TONE, UNBOOKED_SHIPMENT, type ListPageId, type ListQuery, type Tone } from './model';
+import { LIST_PAGES, ORDER_TONE, orderHref, PAY_TONE, RET_TONE, SECTION_TONE, SHIP_TONE, UNBOOKED_SHIPMENT, type ListPageId, type ListQuery, type Tone } from './model';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const QUERY_MAX = 80;
@@ -35,9 +36,15 @@ export function parseListQuery(page: ListPageId, sp: Search): ListQuery {
     status: pick(one(sp.status), FILTER_STATES),
     payment: pick(one(sp.payment), od.PAYMENT_METHODS),
     source: pick(one(sp.source), od.ORDER_SOURCES),
+    // PR 541 (follow-up 295): a band key as the owner's bands write them, a section, the sort
+    risk: one(sp.risk) && BAND_KEY.test(one(sp.risk)!) ? one(sp.risk) : undefined,
+    section: pick(one(sp.section), RISK_SECTIONS),
+    sort: pick(one(sp.sort), od.LIST_SORTS.filter((s) => s !== 'new')),
     cursor: cursor && UUID.test(cursor) ? cursor : undefined,
   };
 }
+
+const BAND_KEY = /^[a-z0-9][a-z0-9-]{0,59}$/;
 
 export interface Chip {
   label: string;
@@ -72,6 +79,8 @@ export interface OrderRowView {
   chips: Chip[];
   courier: { name: string; tracking: string | null } | null;
   flags: Chip[];
+  /** PR 541 (follow-up 295): the band with the score ("High · 72") and the section it was placed in (clear: none). */
+  risk: { band: Chip | null; section: Chip | null };
   facts: BulkFacts;
 }
 
@@ -82,6 +91,17 @@ export interface OrderListData {
   next: string | null;
   /** PR 152: the owner's hold reasons, for the bulk Hold. */
   holdOptions: FieldOption[];
+  /** PR 541: the owner's risk bands, for the list's risk filter. */
+  bands: FieldOption[];
+}
+
+/** PR 541: a row's band with its score, in the owner's words and colour, and its section (none while clear). */
+export function riskChips(view: AdminView, r: Pick<od.OrderRow, 'riskBand' | 'riskScore' | 'riskSection'>, bands: readonly { key: string; en: string; bn: string; tone: Tone }[]): OrderRowView['risk'] {
+  const b = r.riskBand ? bands.find((x) => x.key === r.riskBand) : undefined;
+  const name = b ? (view.lang === 'bn' ? b.bn || b.en : b.en) : r.riskBand;
+  const band: Chip | null = name && r.riskScore !== null ? { label: `${name} · ${formatNumber(r.riskScore, view.locale)}`, tone: b?.tone ?? 'line', title: t(view.dict, 'orders.list.cols.risk') } : null;
+  const section: Chip | null = r.riskSection && r.riskSection !== 'clear' ? { label: t(view.dict, `orders.section.${r.riskSection}`), tone: SECTION_TONE[r.riskSection] ?? 'line', title: t(view.dict, 'orders.list.section') } : null;
+  return { band, section };
 }
 
 export interface ListLabels {
@@ -130,8 +150,18 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
 
 /** One page of a list page's orders, ready to draw. */
 export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: AdminView, page: ListPageId, query: ListQuery): Promise<OrderListData> {
-  const list = await od.listOrders(deps, who, { view: query.view, ...(query.q ? { q: query.q } : {}), ...(query.status ? { status: query.status } : {}), ...(query.payment ? { payment: query.payment } : {}), ...(query.source ? { source: query.source } : {}), ...(query.cursor ? { cursor: query.cursor } : {}) });
-  const [extras, reasons] = await Promise.all([od.listExtras(deps, who, list.rows.map((r) => r.id)), od.reasonLists(deps, who.storeId)]);
+  const list = await od.listOrders(deps, who, {
+    view: query.view,
+    ...(query.q ? { q: query.q } : {}),
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.payment ? { payment: query.payment } : {}),
+    ...(query.source ? { source: query.source } : {}),
+    ...(query.risk ? { risk: query.risk } : {}),
+    ...(query.section ? { section: query.section } : {}),
+    ...(query.sort ? { sort: query.sort } : {}),
+    ...(query.cursor ? { cursor: query.cursor } : {}),
+  });
+  const [extras, reasons, riskBands] = await Promise.all([od.listExtras(deps, who, list.rows.map((r) => r.id)), od.reasonLists(deps, who.storeId), od.setting(deps, who.storeId, 'risk.bands')]);
   const name = (x: { en: string; bn: string }) => (view.lang === 'bn' ? x.bn || x.en : x.en);
   const labels: ListLabels = { holdReasons: new Map(reasons.hold.map((r) => [r.key, name(r)])), flags: new Map(reasons.flags.map((f) => [f.key, name(f)])) };
   const now = (deps.now ?? (() => new Date()))();
@@ -157,6 +187,7 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
       chips: statusChips(view, r, x),
       courier: x?.shipment && !UNBOOKED_SHIPMENT.has(x.shipment.status) ? { name: x.shipment.courierName, tracking: x.shipment.trackingCode } : null,
       flags,
+      risk: riskChips(view, r, riskBands),
       facts: {
         status: r.status,
         version: r.version,
@@ -168,5 +199,6 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
     };
   });
   const holdOptions = reasons.hold.map((r) => ({ value: r.key, label: name(r), ...(r.noteRequired ? { noteRequired: true } : {}) }));
-  return { query, rows, counts: list.counts, next: list.next, holdOptions };
+  const bands = riskBands.map((b) => ({ value: b.key, label: name(b) }));
+  return { query, rows, counts: list.counts, next: list.next, holdOptions, bands };
 }

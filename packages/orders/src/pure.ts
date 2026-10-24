@@ -21,6 +21,8 @@ export * from './phone-summary';
 export * from './address-checks';
 // PR 156: the risk score model, a pure function of the order's facts and the owner's settings (risk-score.ts).
 export * from './risk-score';
+// PR 541: the section an order is placed in the moment it lands (risk-section.ts).
+export * from './risk-section';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [
@@ -71,10 +73,14 @@ export const ORDER_COMMANDS = [
   'twoSizeAnswer',
   // PR 156: the risk score stored on the order (the status stays; never blocks, holds or asks for anything)
   'riskAssess',
+  // PR 541: the order placed in its risk section with a note (the status stays; a review section only waits for a person)
+  'riskSection',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
   // hooks for S08 (fulfilment and the courier): no admin route yet; S08 adds its own guards (SKU scan, photo, shortage)
+  // PR 541 (SIM-F-014): booking a courier, from any screen, comes through here — never while a review is open
+  'book',
   'startPicking',
   'pack',
   'handover',
@@ -121,6 +127,11 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   twoSizeAnswer: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
   // PR 156: scored when it lands, again after an edit or by hand while it is open
   riskAssess: OPEN_STATES,
+  // PR 541: placed in its section when it lands, again when it is scored again, while it is open
+  riskSection: OPEN_STATES,
+  // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's
+  // booking writes the shipment in the same transaction)
+  book: ['CONFIRMED', 'PROCESSING', 'PACKED'],
 };
 
 /** What the machine needs to know about an order (read under its row lock). */
@@ -213,6 +224,13 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
       return null;
     case 'recordAdvance':
       return o.advanceRequiredMinor !== null && o.paidMinor < o.advanceRequiredMinor ? 'ADVANCE_SHORT' : null;
+    case 'book':
+      // SIM-F-014: an order in review (duplicate or risk) waits for a person's decision, on every screen
+      if (o.cancelPending) return 'CANCEL_PENDING';
+      if (o.booked) return 'BOOKED';
+      if (o.cancelRequested) return 'CANCEL_REQUESTED';
+      if (o.inReview) return 'IN_REVIEW';
+      return null;
     case 'pack':
     case 'handover':
       // the old parcel is never packed or handed over again once its cancel is asked (§6.5.7 (a))

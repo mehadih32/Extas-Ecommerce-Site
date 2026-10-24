@@ -251,7 +251,8 @@
     },
     "queue": {
       "ordersConfirm": "Orders to confirm",
-      "ordersReview": "Orders in duplicate review",
+      "ordersPrepaid": "Prepaid orders to confirm (no call needed)",
+      "ordersReview": "Orders in review (duplicate or risk)",
       "ordersCancelRequests": "Customers asking to cancel",
       "ordersCancelPending": "Cancels waiting for the courier",
       "launch": "Products waiting to launch",

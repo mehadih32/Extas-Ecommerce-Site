@@ -13,6 +13,8 @@ import { BULK_COMMANDS, BULK_PERM } from '@/lib/admin-orders/bulk';
 import { FILTER_STATES, ageText, loadOrderList } from '@/lib/admin-orders/list';
 import { LIST_PAGES, listHref, type ListPageId, type ListQuery } from '@/lib/admin-orders/model';
 import { locateKey } from '@/lib/admin-shell/sections';
+import type { FieldOption } from '@/lib/admin-orders/spec';
+import { RISK_SECTIONS } from '@extas/settings';
 import { t, type Dict } from '@/lib/i18n';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -110,21 +112,32 @@ export function EmptyList({ view, filtered, clear, all }: { view: AdminView; fil
   );
 }
 
-/** The search and the three filters, with words and the person's language. */
-export function filterSelects(view: AdminView, q: ListQuery): FilterSelect[] {
+/**
+ * The search and the filters, with words and the person's language. PR 541 (follow-up 295): the risk band (the owner's
+ * bands), the section, and the order of the list (newest first, or the highest risk first).
+ */
+export function filterSelects(view: AdminView, q: ListQuery, bands: readonly FieldOption[] = []): FilterSelect[] {
   const d = view.dict;
-  const sel = (name: 'status' | 'payment' | 'source', values: readonly string[], key: string): FilterSelect => {
+  const sel = (name: 'status' | 'payment' | 'source' | 'section', values: readonly string[], key: string): FilterSelect => {
     const label = t(d, `orders.list.${name}`);
     return { name, label, any: t(d, 'orders.list.any', { name: label }), value: q[name] ?? '', options: values.map((v) => ({ value: v, label: t(d, `orders.${key}.${v}`) })) };
   };
-  return [sel('status', FILTER_STATES, 'st'), sel('payment', od.PAYMENT_METHODS, 'method'), sel('source', od.ORDER_SOURCES, 'source')];
+  const risk = t(d, 'orders.list.risk');
+  return [
+    sel('status', FILTER_STATES, 'st'),
+    sel('payment', od.PAYMENT_METHODS, 'method'),
+    sel('source', od.ORDER_SOURCES, 'source'),
+    { name: 'risk', label: risk, any: t(d, 'orders.list.any', { name: risk }), value: q.risk ?? '', options: bands.map((b) => ({ value: b.value, label: b.label })) },
+    sel('section', RISK_SECTIONS, 'section'),
+    { name: 'sort', label: t(d, 'orders.list.sort'), any: t(d, 'orders.list.sortNew'), value: q.sort ?? '', options: [{ value: 'risk', label: t(d, 'orders.list.sortRisk') }] },
+  ];
 }
 
 export async function OrderListPage({ view, a, query, now }: { view: AdminView; a: ListAccess; query: ListQuery; now: Date }) {
   const d = view.dict;
   const page: ListPageId = 'all';
   const data = await loadOrderList(readDeps(a.deps), a.who, view, page, query);
-  const filtered = !!(query.q || query.status || query.payment || query.source);
+  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const shown = formatNumber(data.rows.length, view.locale);
   return (
@@ -142,8 +155,8 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
         search={t(d, 'orders.list.search')}
         go={t(d, 'orders.list.searchGo')}
         aria={t(d, 'orders.list.filtersAria')}
-        selects={filterSelects(view, query)}
-        clear={filtered ? { href: listHref(page, { view: query.view }), label: t(d, 'orders.list.clear') } : null}
+        selects={filterSelects(view, query, data.bands)}
+        clear={filtered || query.sort ? { href: listHref(page, { view: query.view }), label: t(d, 'orders.list.clear') } : null}
       />
       {data.rows.length ? (
         <>

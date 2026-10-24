@@ -17,11 +17,24 @@ import type { Prisma } from '@extas/db/client';
 import { allow, nowOf, parse, setting, TX, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OTHER_KEY, cancelWith, holdWith } from './commands';
 import { OrdersError } from './errors';
+import { RISK_REVIEW_SECTIONS } from '@extas/settings';
 import { OPEN_STATES, overlapOf, severityRank, type LineFacts, type OrderState, type Severity } from './pure';
 import { auditRow, eventRow, factsOf, lockOrder, staffBy, systemBy, type By, type CommandResult } from './service';
 
 /** The FraudAlert section of a duplicate review (the risk engine of S06 writes its own sections). */
 export const DUPLICATE_SECTION = 'duplicate';
+/** PR 541: the FraudAlert `summary.kind` of a review a risk section opened (sections.ts; a duplicate's has none). */
+export const RISK_REVIEW_KIND = 'risk';
+/** PR 541: why the team calls when the decision on a risk review is "ask the customer". */
+export const RISK_CALL_REASON = 'RISK_CHECK';
+
+/** A review's section, whether a risk section opened it, and the signals that put it there (PR 541), from its summary. */
+export function reviewKindOf(summary: unknown): { section: string; risk: boolean; because: string[] } {
+  const s = summary && typeof summary === 'object' && !Array.isArray(summary) ? (summary as Record<string, unknown>) : {};
+  const because = Array.isArray(s.because) ? s.because.filter((k): k is string => typeof k === 'string') : [];
+  return { section: typeof s.section === 'string' ? s.section : DUPLICATE_SECTION, risk: s.kind === RISK_REVIEW_KIND, because };
+}
+
 /** The hold reason key the auto-hold and the "hold" decision use when the owner's list has it. */
 export const DUPLICATE_HOLD_KEY = 'possible-duplicate';
 /** Why the team calls (CallTask.reason) when the decision is "ask the customer". */
@@ -148,6 +161,10 @@ export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orde
 
 export interface ReviewRow {
   alertId: string;
+  /** PR 541: "duplicate", or the risk section that opened it. */
+  section: string;
+  risk: boolean;
+  because: string[];
   status: string;
   severity: string | null;
   proposedAction: string;
@@ -158,16 +175,27 @@ export interface ReviewRow {
   matches: { orderId: string; number: string; status: string; severity: string; placedAt: Date | null; totalMinor: number | null }[];
 }
 
-export const reviewQuery = z.object({ status: z.enum(['open', 'decided', 'all']).default('open'), cursor: z.uuid().optional(), limit: z.coerce.number().int().min(1).max(100).optional() }).strict();
+/** PR 541 (follow-up 194): the review queue's sections — the duplicates, each risk section, or all of them. */
+export const REVIEW_SECTIONS = ['all', DUPLICATE_SECTION, ...RISK_REVIEW_SECTIONS] as const;
 
-/** The duplicate reviews, oldest open first (so nobody waits longest). */
+export const reviewQuery = z
+  .object({ status: z.enum(['open', 'decided', 'all']).default('open'), section: z.enum(REVIEW_SECTIONS).default('all'), cursor: z.uuid().optional(), limit: z.coerce.number().int().min(1).max(100).optional() })
+  .strict();
+
+/** The reviews (duplicates, PR 145, and the risk sections', PR 541), oldest open first (so nobody waits longest). */
 export async function reviewQueue(deps: OrdersDeps, who: Who, query: unknown = {}): Promise<{ rows: ReviewRow[]; next: string | null }> {
   await allow(deps, who, 'orders.risk.read');
   const q = parse(reviewQuery, query, 'query');
   const take = q.limit ?? (await setting(deps, who.storeId, 'orders.list.pageSize'));
+  const sections: Prisma.FraudAlertWhereInput =
+    q.section === 'all'
+      ? { OR: [{ summary: { path: ['section'], equals: DUPLICATE_SECTION } }, { summary: { path: ['kind'], equals: RISK_REVIEW_KIND } }] }
+      : q.section === DUPLICATE_SECTION
+        ? { summary: { path: ['section'], equals: DUPLICATE_SECTION } }
+        : { AND: [{ summary: { path: ['kind'], equals: RISK_REVIEW_KIND } }, { summary: { path: ['section'], equals: q.section } }] };
   const where: Prisma.FraudAlertWhereInput = {
     storeId: who.storeId,
-    summary: { path: ['section'], equals: DUPLICATE_SECTION },
+    ...sections,
     ...(q.status === 'open' ? { status: 'OPEN' } : q.status === 'decided' ? { status: { not: 'OPEN' } } : {}),
   };
   const alerts = await deps.db.fraudAlert.findMany({ where, orderBy: [{ createdAt: q.status === 'open' ? 'asc' : 'desc' }, { id: 'asc' }], take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}) });
@@ -182,6 +210,7 @@ export async function reviewQueue(deps: OrdersDeps, who: Who, query: unknown = {
     const sev = new Map(listed);
     return {
       alertId: a.id,
+      ...reviewKindOf(a.summary),
       status: a.status,
       severity: a.severity,
       proposedAction: a.proposedAction,
@@ -226,10 +255,10 @@ export interface DecideResult {
 }
 
 /** The decision log row (FraudDecision is append-only, PR 543), the alert's answer and the order's timeline row. */
-async function decided(tx: Tx, by: By, a: { id: string; storeId: number; orderId: string }, decision: Decision, note: string | undefined, status: 'APPROVED' | 'DECLINED' | 'OPEN', now: Date): Promise<void> {
+async function decided(tx: Tx, by: By, a: { id: string; storeId: number; orderId: string }, decision: Decision, note: string | undefined, status: 'APPROVED' | 'DECLINED' | 'OPEN', now: Date, kind: 'duplicate' | 'risk' = 'duplicate'): Promise<void> {
   if (status !== 'OPEN') await tx.fraudAlert.update({ where: { id: a.id }, data: { status, decidedById: by.actorId, decisionReason: decision, decidedAt: now } });
-  await tx.fraudDecision.create({ data: { storeId: a.storeId, alertId: a.id, orderId: a.orderId, decision: `duplicate.${decision}`, reason: note ?? null, actorType: by.actorType, actorId: by.actorId } });
-  await auditRow(tx, by, { storeId: a.storeId, action: `order.duplicate.${decision}`, entityType: 'FraudAlert', entityId: a.id, before: { status: 'OPEN' }, after: { status, note: note ?? null } });
+  await tx.fraudDecision.create({ data: { storeId: a.storeId, alertId: a.id, orderId: a.orderId, decision: `${kind}.${decision}`, reason: note ?? null, actorType: by.actorType, actorId: by.actorId } });
+  await auditRow(tx, by, { storeId: a.storeId, action: `order.${kind}.${decision}`, entityType: 'FraudAlert', entityId: a.id, before: { status: 'OPEN' }, after: { status, note: note ?? null } });
 }
 
 /** One review's decision. Every path writes the decision log, the audit row and the order's timeline row. */
@@ -237,8 +266,12 @@ export async function decideReview(deps: OrdersDeps, who: Who, alertId: string, 
   await allow(deps, who, 'orders.risk.decide');
   const d = parse(decideInput, input, 'decision');
   if (!z.uuid().safeParse(alertId).success) throw new OrdersError('NOT_FOUND', 'no such review', ['alertId']);
-  const a = await deps.db.fraudAlert.findFirst({ where: { id: alertId, storeId: who.storeId, summary: { path: ['section'], equals: DUPLICATE_SECTION } } });
-  if (!a) throw new OrdersError('NOT_FOUND', 'no such review', ['alertId']);
+  const found = await deps.db.fraudAlert.findFirst({ where: { id: alertId, storeId: who.storeId } });
+  // PR 541: a duplicate's review (PR 145) or a risk section's, decided the same way; nothing else is a review here
+  const kindOf = found ? reviewKindOf(found.summary) : null;
+  const a = found && kindOf && (kindOf.risk || kindOf.section === DUPLICATE_SECTION) ? found : null;
+  if (!a || !kindOf) throw new OrdersError('NOT_FOUND', 'no such review', ['alertId']);
+  const kind = kindOf.risk ? 'risk' : 'duplicate';
   if (a.status !== 'OPEN') throw new OrdersError('ILLEGAL_TRANSITION', 'this review is already decided', ['alertId'], { status: a.status });
   const by = staffBy(who.actor, who.ctx);
   const now = nowOf(deps);
@@ -255,31 +288,33 @@ export async function decideReview(deps: OrdersDeps, who: Who, alertId: string, 
       await deps.db.$transaction(async (tx) => {
         await lockOrder(tx, ref.storeId, ref.orderId);
         await takeOpen(tx);
-        await decided(tx, by, a, 'approve', d.note, 'APPROVED', now);
-        await eventRow(tx, by, { ...ref, type: 'order.duplicate.approved', message: d.note ?? null, data: { alertId: a.id } });
+        await decided(tx, by, a, 'approve', d.note, 'APPROVED', now, kind);
+        await eventRow(tx, by, { ...ref, type: `order.${kind}.approved`, message: d.note ?? null, data: { alertId: a.id, section: kindOf.section } });
       }, TX);
       return result({ alertStatus: 'APPROVED' });
     }
     case 'decline': {
       await allow(deps, who, 'orders.cancel');
-      const order = await cancelWith(deps, ref, by, 'DUPLICATE_ORDER', d.note, {
+      // a risk section's decline is "declined after risk review", never a block (that is a separate proposal)
+      const order = await cancelWith(deps, ref, by, kind === 'risk' ? 'RISK_DECLINED' : 'DUPLICATE_ORDER', d.note, {
         picked: false,
         extra: { alertId: a.id },
         also: async (tx, _o, at) => {
           await takeOpen(tx);
-          await decided(tx, by, a, 'decline', d.note, 'DECLINED', at);
+          await decided(tx, by, a, 'decline', d.note, 'DECLINED', at, kind);
         },
       });
       return result({ alertStatus: 'DECLINED', order });
     }
     case 'hold': {
       await allow(deps, who, 'orders.hold');
-      const key = d.holdReasonKey ?? DUPLICATE_HOLD_KEY;
+      const key = d.holdReasonKey ?? (kind === 'duplicate' ? DUPLICATE_HOLD_KEY : undefined);
+      if (!key) throw new OrdersError('REASON_REQUIRED', 'pick a hold reason from the list', ['holdReasonKey']);
       if (key === OTHER_KEY && !d.note) throw new OrdersError('REASON_REQUIRED', 'this reason needs a note', ['note']);
       const order = await holdWith(deps, ref, by, key, d.note, {
         also: async (tx, _o, at) => {
           await takeOpen(tx);
-          await decided(tx, by, a, 'hold', d.note, 'OPEN', at);
+          await decided(tx, by, a, 'hold', d.note, 'OPEN', at, kind);
           return { alertId: a.id };
         },
       });
@@ -289,10 +324,11 @@ export async function decideReview(deps: OrdersDeps, who: Who, alertId: string, 
       const taskId = await deps.db.$transaction(async (tx) => {
         const o = await lockOrder(tx, ref.storeId, ref.orderId);
         await takeOpen(tx);
-        const open = await tx.callTask.findFirst({ where: { storeId: o.storeId, orderId: o.id, reason: DUPLICATE_CALL_REASON, status: { in: ['OPEN', 'IN_PROGRESS'] } }, select: { id: true } });
-        const t = open ?? (await tx.callTask.create({ data: { storeId: o.storeId, orderId: o.id, customerId: o.customerId, reason: DUPLICATE_CALL_REASON, notes: d.note ?? null }, select: { id: true } }));
-        await decided(tx, by, a, 'ask', d.note, 'OPEN', now);
-        await eventRow(tx, by, { ...ref, type: 'order.duplicate.ask', message: d.note ?? null, data: { alertId: a.id, callTaskId: t.id } });
+        const reason = kind === 'risk' ? RISK_CALL_REASON : DUPLICATE_CALL_REASON;
+        const open = await tx.callTask.findFirst({ where: { storeId: o.storeId, orderId: o.id, reason, status: { in: ['OPEN', 'IN_PROGRESS'] } }, select: { id: true } });
+        const t = open ?? (await tx.callTask.create({ data: { storeId: o.storeId, orderId: o.id, customerId: o.customerId, reason, notes: d.note ?? null }, select: { id: true } }));
+        await decided(tx, by, a, 'ask', d.note, 'OPEN', now, kind);
+        await eventRow(tx, by, { ...ref, type: `order.${kind}.ask`, message: d.note ?? null, data: { alertId: a.id, callTaskId: t.id } });
         return t.id;
       }, TX);
       return result({ callTaskId: taskId });
@@ -300,7 +336,7 @@ export async function decideReview(deps: OrdersDeps, who: Who, alertId: string, 
     case 'merge': {
       const other = d.mergeWith ?? a.matchedOrderIds[0];
       if (!other || !a.matchedOrderIds.includes(other)) throw new OrdersError('NOT_MERGEABLE', 'merge with one of the matched orders', ['mergeWith']);
-      const m = await mergeOrders(deps, who, { orderIds: [a.orderId, other], note: d.note }, { alertId: a.id, by, now });
+      const m = await mergeOrders(deps, who, { orderIds: [a.orderId, other], note: d.note }, { alertId: a.id, by, now, kind });
       return result({ alertStatus: 'APPROVED', groupId: m.groupId });
     }
   }
@@ -321,7 +357,7 @@ export interface MergeResult {
 }
 
 /** Puts two open orders of one customer in one parcel (OrderGroup). Each order keeps its lines, prices and charges. */
-export async function mergeOrders(deps: OrdersDeps, who: Who, input: unknown, review?: { alertId: string; by: By; now: Date }): Promise<MergeResult> {
+export async function mergeOrders(deps: OrdersDeps, who: Who, input: unknown, review?: { alertId: string; by: By; now: Date; kind?: 'duplicate' | 'risk' }): Promise<MergeResult> {
   await allow(deps, who, 'orders.merge');
   const d = parse(mergeInput, input, 'merge');
   const ids = [...new Set(d.orderIds)].sort();
@@ -351,7 +387,7 @@ export async function mergeOrders(deps: OrdersDeps, who: Who, input: unknown, re
     }
     if (review) {
       const alert = await tx.fraudAlert.findUniqueOrThrow({ where: { id: review.alertId }, select: { id: true, storeId: true, orderId: true } });
-      await decided(tx, by, alert, 'merge', d.note, 'APPROVED', review.now);
+      await decided(tx, by, alert, 'merge', d.note, 'APPROVED', review.now, review.kind);
     }
     return { groupId, orders: out };
   }, TX);

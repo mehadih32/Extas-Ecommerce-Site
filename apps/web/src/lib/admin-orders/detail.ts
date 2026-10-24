@@ -71,6 +71,12 @@ export interface TimelineItem {
 
 export interface ReviewCard {
   id: string;
+  /** PR 541: "Possible duplicate" for a duplicate review, "Risk review · High risk" for one a risk section opened. */
+  title: string;
+  /** PR 541: why a risk section asked for a person (the signals' words); empty for a duplicate. */
+  why: string;
+  /** PR 541: "the decision is yours" under a risk review. */
+  never: string | null;
   open: boolean;
   severity: string;
   matched: { number: string; href: string; status: string; tone: Tone }[];
@@ -292,11 +298,15 @@ export function commandSpecs(
   return { primary, more, courier, request };
 }
 
-/** The duplicate review's decisions (PR 145): each needs its own key; decline cancels, so it needs the cancel key too. */
-export function reviewSpecs(view: AdminView, alertId: string, number: string, matched: { id: string; number: string }[], perms: ReadonlySet<string>, reasons: od.ReasonLists, paid: string | null): CommandSpec[] {
+/**
+ * The review's decisions (PR 145; PR 541 for a review a risk section opened, with its own words): each needs its own
+ * key; decline cancels, so it needs the cancel key too. A risk review's hold starts on the owner's first reason (the
+ * service asks for one); "One parcel" shows only when earlier orders matched.
+ */
+export function reviewSpecs(view: AdminView, alertId: string, number: string, matched: { id: string; number: string }[], perms: ReadonlySet<string>, reasons: od.ReasonLists, paid: string | null, risk = false): CommandSpec[] {
   if (!perms.has('orders.risk.decide')) return [];
   const d = view.dict;
-  const tt = (k: string) => t(d, `orders.review.${k}`, { n: number });
+  const tt = (k: string) => t(d, `orders.${risk ? 'riskReview' : 'review'}.${k}`, { n: number });
   const spec = (decision: string, extra: Partial<CommandSpec>): CommandSpec => ({
     id: `review-${decision}`,
     label: tt(`${decision}.label`),
@@ -312,10 +322,10 @@ export function reviewSpecs(view: AdminView, alertId: string, number: string, ma
     ...extra,
   });
   const out = [spec('approve', { tone: 'pri', effects: [t(d, 'orders.eff.reviewApprove')] })];
-  if (perms.has('orders.hold')) out.push(spec('hold', { effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.ON_HOLD') })], fields: [{ name: 'holdReasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: reasons.hold.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) })), value: reasons.hold.some((r) => r.key === 'possible-duplicate') ? 'possible-duplicate' : undefined }, { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), labelNeeded: t(d, 'orders.dlg.note'), noteFor: 'holdReasonKey', maxLength: 2000 }] }));
+  if (perms.has('orders.hold')) out.push(spec('hold', { effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.ON_HOLD') })], fields: [{ name: 'holdReasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: reasons.hold.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) })), value: risk ? reasons.hold[0]?.key : reasons.hold.some((r) => r.key === 'possible-duplicate') ? 'possible-duplicate' : undefined }, { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), labelNeeded: t(d, 'orders.dlg.note'), noteFor: 'holdReasonKey', maxLength: 2000 }] }));
   out.push(spec('ask', { effects: [t(d, 'orders.eff.reviewAsk')] }));
   if (perms.has('orders.merge') && matched.length) out.push(spec('merge', { effects: [t(d, 'orders.eff.merge')], fields: [{ name: 'mergeWith', kind: 'select', label: t(d, 'orders.dlg.mergeWith'), options: matched.map((m) => ({ value: m.id, label: m.number })) }, { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), maxLength: 2000 }] }));
-  if (perms.has('orders.cancel')) out.push(spec('decline', { tone: 'bad', okTone: 'badf', effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.CANCELLED') }), t(d, 'orders.eff.cancelStock'), ...(paid ? [t(d, 'orders.eff.refundReq', { amount: paid })] : [])] }));
+  if (perms.has('orders.cancel')) out.push(spec('decline', { tone: 'bad', okTone: 'badf', effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.CANCELLED') }), ...(risk ? [t(d, 'orders.eff.reviewDecline')] : []), t(d, 'orders.eff.cancelStock'), ...(paid ? [t(d, 'orders.eff.refundReq', { amount: paid })] : [])] }));
   return out;
 }
 
@@ -327,6 +337,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
   'order.duplicateCheck': 'warn',
+  'order.riskSection': 'warn',
   'order.note': 'mute',
   'order.note.archived': 'mute',
   'order.setFlags': 'mute',
@@ -363,6 +374,20 @@ export function twoSizeSpecs(view: AdminView, o: { id: string; number: string; v
       return spec(`twoSize-${i}-${s.sizeId}`, 'twoSizeOne', s.sizeId, [t(d, 'orders.eff.twoSizeOut', { sizes: others }), t(d, 'orders.eff.twoSizeOffer'), ...(paid ? [t(d, 'orders.eff.editPaid')] : []), close], s.label);
     }),
   ];
+}
+
+/** PR 541 — a section's timeline line: "High risk · because: … · waits for a person · was Watch". */
+export function sectionSummary(view: AdminView, data: unknown): string | null {
+  const x = (data ?? {}) as { section?: string; previous?: string | null; because?: string[]; review?: boolean };
+  if (!x.section) return null;
+  const d = view.dict;
+  const because = (x.because ?? []).map((k) => t(d, `orders.risk.sig.${k}`)).join(', ');
+  return [
+    t(d, `orders.section.${x.section}`),
+    ...(because ? [t(d, 'orders.secNote.because', { why: because })] : []),
+    ...(x.review ? [t(d, 'orders.secNote.review')] : []),
+    ...(x.previous ? [t(d, 'orders.secNote.moved', { from: t(d, `orders.section.${x.previous}`) })] : []),
+  ].join(' · ');
 }
 
 /** PR 146 — the two-size check's and answer's timeline line. */
@@ -427,6 +452,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const holdName = new Map(reasons.hold.map((r) => [r.key, nameOf(view, r)]));
   const cancelName = new Map(reasons.cancel.map((r) => [r.key, nameOf(view, r)]));
   const editReason = new Map(reasons.edit.map((r) => [r.key, nameOf(view, r)]));
+  const ox = detail.order as unknown as { riskScore: number | null; riskBand: string | null; riskSection: string | null };
   const row: od.OrderRow = {
     id: o.id,
     number: o.number,
@@ -451,6 +477,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     flags: o.flags,
     internalFlags: o.internalFlags,
     orderGroupId: o.orderGroupId,
+    riskScore: ox.riskScore ?? null,
+    riskBand: ox.riskBand ?? null,
+    riskSection: ox.riskSection ?? null,
   };
   const chips = statusChips(view, row, x);
   const flags = flagChips(view, row, { holdReasons: holdName, flags: new Map(reasons.flags.map((f) => [f.key, nameOf(view, f)])) });
@@ -514,13 +543,17 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const paidText = detail.money.paidMinor + detail.money.walletAppliedMinor > 0 ? m(detail.money.paidMinor + detail.money.walletAppliedMinor) : null;
   const reviews: ReviewCard[] = detail.reviews.map((r) => {
     const matched = r.matchedOrderIds.map((mid) => numbers.get(mid)).filter((v): v is NonNullable<typeof v> => !!v);
+    const why = r.because.map((k) => t(d, `orders.risk.sig.${k}`)).join(' · ');
     return {
       id: r.id,
+      title: r.risk ? t(d, 'orders.riskReview.title', { section: t(d, `orders.section.${r.section}`) }) : t(d, 'orders.review.title'),
+      why: r.risk && why ? t(d, 'orders.secNote.because', { why }) : '',
+      never: r.risk ? t(d, 'orders.riskReview.never') : null,
       open: r.status === 'OPEN',
       severity: r.severity ? t(d, `orders.review.sev.${r.severity}`) : '',
       matched: matched.map((mm) => ({ number: mm.number, href: orderHref(mm.id), status: t(d, `orders.st.${mm.status}`), tone: ORDER_TONE[mm.status] })),
       at: dt.format(r.createdAt),
-      specs: r.status === 'OPEN' ? reviewSpecs(view, r.id, o.number, matched, perms, reasons, paidText) : [],
+      specs: r.status === 'OPEN' ? reviewSpecs(view, r.id, o.number, matched, perms, reasons, paidText, r.risk) : [],
     };
   });
 
@@ -529,9 +562,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     .map((e): TimelineItem => {
       const key = `orders.ev.${e.type.replace(/\./g, '_')}`;
       const named = t(d, key);
-      const reason = e.type === 'order.riskAssess' ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : null;
+      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : null;
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

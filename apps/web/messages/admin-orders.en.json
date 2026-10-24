@@ -3,7 +3,7 @@
     "metaTitle": "Orders",
     "list": {
       "sub": "Every order from placed to done. Four separate statuses: order, courier, payment, return.",
-      "confirmSub": "New orders to call and confirm, the customers' cancel requests, and orders waiting for an advance.",
+      "confirmSub": "New orders to call and confirm, prepaid orders to confirm without a call, the customers' cancel requests, and orders waiting for an advance.",
       "search": "Search order no., phone, name, tracking",
       "searchGo": "Search",
       "filtersAria": "Search and filters",
@@ -26,7 +26,8 @@
         "total": "Total",
         "status": "Status",
         "courier": "Courier",
-        "flags": "Flags"
+        "flags": "Flags",
+        "risk": "Risk"
       },
       "empty": {
         "title": "Nothing matches",
@@ -38,7 +39,12 @@
       },
       "none": "—",
       "select": "Select order {n}",
-      "selectAll": "Select all shown"
+      "selectAll": "Select all shown",
+      "risk": "Risk",
+      "section": "Section",
+      "sort": "Order",
+      "sortNew": "Newest first",
+      "sortRisk": "Highest risk first"
     },
     "kpi": {
       "today": "Orders today",
@@ -60,8 +66,10 @@
       "onHold": "On hold",
       "cancelRequests": "Cancel requests",
       "cancelPending": "Cancel pending courier",
-      "inReview": "Duplicate review",
-      "finished": "Finished"
+      "inReview": "In review",
+      "finished": "Finished",
+      "prepaid": "Prepaid",
+      "readyToBook": "Ready to book"
     },
     "st": {
       "DRAFT": "Draft",
@@ -141,7 +149,7 @@
     },
     "flag": {
       "cancelRequest": "Cancel request",
-      "inReview": "Duplicate review",
+      "inReview": "In review",
       "hold": "On hold: {reason}",
       "wantsChange": "Wants a change",
       "merged": "One parcel",
@@ -186,7 +194,7 @@
       "notDoneHead": "Not done — open the order to check",
       "why": {
         "CANCEL_REQUESTED": "customer asked to cancel",
-        "IN_REVIEW": "in duplicate review",
+        "IN_REVIEW": "in review (duplicate or risk)",
         "CANCEL_PENDING": "cancel waiting for the courier",
         "BOOKED": "courier booked",
         "NOT_BOOKED": "no courier booked",
@@ -244,7 +252,7 @@
       "NO_CANCEL_PENDING": "No cancel is waiting for the courier.",
       "CANCEL_REQUESTED": "The customer asked to cancel. Answer that first.",
       "NO_CANCEL_REQUEST": "There is no cancel request to answer.",
-      "IN_REVIEW": "A duplicate review is open. Decide it first.",
+      "IN_REVIEW": "A review is open (duplicate or risk). Decide it first.",
       "ADVANCE_SHORT": "The advance is not paid in full yet.",
       "REASON_REQUIRED": "Pick a reason from the list (and write the note “Other” needs).",
       "INVALID_INPUT": "Something in the form is not right. Check it and try again.",
@@ -385,7 +393,8 @@
       "twoSizeOffer": "A piece with an offer or a set price is not taken out by itself: the answer is kept and the order waits for you.",
       "twoSizeClose": "The “2 sizes — check” flag and its call task close; the timeline keeps the answer.",
       "riskAssess": "A new score with today's risk rules; the earlier one stays on the order's record",
-      "riskInforms": "Nothing is blocked, held or asked in advance"
+      "riskInforms": "Nothing is blocked, held or asked in advance",
+      "reviewDecline": "Cancelled with the reason \"Declined after risk review\" — never a block"
     },
     "review": {
       "title": "Duplicate review",
@@ -542,7 +551,11 @@
       "twoSizeKeep": "{product} {sizes}: keep {keep}",
       "twoSizeEvery": "all",
       "twoSizeTeam": "a piece has an offer — take it out with the customer",
-      "order_riskAssess": "Risk score"
+      "order_riskAssess": "Risk score",
+      "order_riskSection": "Placed in its section",
+      "order_risk_approved": "Risk review: approved",
+      "order_risk_ask": "Risk review: customer to be asked",
+      "order_book": "Courier booked"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -627,7 +640,9 @@
         "addressNoDetail": "No house details",
         "areaMismatch": "Another district than usual",
         "riskyArea": "One of your watched places",
-        "areaRefusals": "Many refusals at this place"
+        "areaRefusals": "Many refusals at this place",
+        "orderPieces": "Many pieces in one order",
+        "identityMatch": "Same person, another number"
       },
       "why": {
         "refusals": "{count} refused at the door",
@@ -643,8 +658,60 @@
         "addressNoDetail": "The address says nowhere where the house is",
         "areaMismatch": "Known in {known}, this order goes to {now}",
         "riskyArea": "{area}",
-        "areaRefusals": "{count} refused parcels at {area}"
-      }
+        "areaRefusals": "{count} refused parcels at {area}",
+        "orderPieces": "{pieces} pieces (from {atLeast})",
+        "identityMatch": "{count} earlier orders under another number, latest {number}"
+      },
+      "refusedAs": "refused: {number}"
+    },
+    "section": {
+      "duplicate": "Possible duplicate",
+      "reorder": "Re-order",
+      "identity": "New identity",
+      "high": "High risk",
+      "watch": "Watch",
+      "prepaid": "Prepaid",
+      "clear": "Clear"
+    },
+    "riskReview": {
+      "title": "Risk review · {section}",
+      "approve": {
+        "label": "Looks fine",
+        "title": "{n} looks fine?",
+        "ok": "Approve",
+        "done": "Review closed"
+      },
+      "hold": {
+        "label": "Hold",
+        "title": "Hold {n} while you check",
+        "ok": "Hold",
+        "done": "{n} is on hold"
+      },
+      "ask": {
+        "label": "Ask the customer",
+        "title": "Ask the customer about {n}",
+        "ok": "Make the call task",
+        "done": "Call task made"
+      },
+      "merge": {
+        "label": "One parcel",
+        "title": "Send {n} in one parcel",
+        "ok": "Join",
+        "done": "Joined in one parcel"
+      },
+      "decline": {
+        "label": "Decline",
+        "title": "Decline {n} after the risk review?",
+        "ok": "Decline",
+        "done": "{n} declined"
+      },
+      "matched": "Matched earlier orders",
+      "never": "Marking is instant; the decision is yours. Nothing was cancelled, blocked or held by itself."
+    },
+    "secNote": {
+      "because": "because: {why}",
+      "review": "waits for a person",
+      "moved": "was {from}"
     }
   }
 }

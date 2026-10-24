@@ -2,7 +2,8 @@
 // from the real tables, never a sample. Each row says how many and how old the oldest is, and links to the list that
 // holds them; a row at 0 is not shown, and nobody sees a row (or a badge) for work they cannot open (its key).
 // The order rows (follow-up 200, S05): orders to confirm and duplicate reviews (the Orders badge), the customers'
-// cancel requests and cancels waiting for the courier; parcels to book and returns come with S07/S08.
+// cancel requests and cancels waiting for the courier; parcels to book and returns come with S07/S08. PR 541: the
+// prepaid orders to confirm without a call (SIM-F-020), and the review row counts risk reviews beside duplicates.
 // Counts are kept for `admin.shell.badgeCacheSeconds` per store (one count for everyone; the keys filter per person).
 import type { PrismaClient } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
@@ -12,7 +13,7 @@ import type { AdminSectionId } from '@extas/settings';
 import type { ShellIconName } from './icons';
 import type { ShellViewer } from './sections';
 
-export type QueueId = 'ordersConfirm' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead';
 
 export interface QueueDef {
   id: QueueId;
@@ -27,6 +28,7 @@ export interface QueueDef {
 
 export const QUEUES: readonly QueueDef[] = [
   { id: 'ordersConfirm', perm: 'orders.confirm', href: '/admin/orders/confirm', section: 'orders', tone: 'warn', icon: 'phone', badge: true },
+  { id: 'ordersPrepaid', perm: 'orders.confirm', href: '/admin/orders/confirm?view=prepaid', section: 'orders', tone: 'info', icon: 'wallet', badge: true },
   { id: 'ordersReview', perm: 'orders.risk.read', href: '/admin/orders?view=inReview', section: 'orders', tone: 'warn', icon: 'shield', badge: true },
   { id: 'ordersCancelRequests', perm: 'orders.confirm', href: '/admin/orders/confirm?view=cancelRequests', section: 'orders', tone: 'bad', icon: 'x', badge: false },
   { id: 'ordersCancelPending', perm: 'orders.read', href: '/admin/orders?view=cancelPending', section: 'orders', tone: 'bad', icon: 'uturn', badge: false },
@@ -60,7 +62,7 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 export async function countQueues(deps: QueueDeps, storeId: number): Promise<QueueCount[]> {
   const { db } = deps;
   const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs] = await Promise.all([
-    orderQueueCounts(db, storeId, ['toConfirm', 'inReview', 'cancelRequests', 'cancelPending']),
+    orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
     db.lowStockAlert.count({ where: { resolvedAt: null } }),
@@ -76,6 +78,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
   const o = (id: QueueId, view: string): QueueCount => ({ id, n: orders[view]?.n ?? 0, oldest: iso(orders[view]?.oldest) });
   return [
     o('ordersConfirm', 'toConfirm'),
+    o('ordersPrepaid', 'prepaid'),
     o('ordersReview', 'inReview'),
     o('ordersCancelRequests', 'cancelRequests'),
     o('ordersCancelPending', 'cancelPending'),

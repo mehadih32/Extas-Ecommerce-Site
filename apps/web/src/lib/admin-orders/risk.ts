@@ -56,10 +56,14 @@ export function signalDetail(view: AdminView, s: FiredSignal, currency: string):
     area: pick(v.area, v.areaBn),
     known: pick(v.known, v.knownBn),
     now: pick(v.now, v.nowBn),
+    // PR 541: the pieces of one order and the owner's limit
+    pieces: Number(v.pieces ?? 0),
+    atLeast: Number(v.atLeast ?? 0),
   };
   const parts = [t(d, `orders.risk.why.${s.key}`, vars)];
   if (s.key === 'refusals' && vars.ourFault) parts.push(t(d, 'orders.risk.ourFault', { n: vars.ourFault }));
   if (typeof v.windowDays === 'number' && v.windowDays > 0) parts.push(t(d, 'orders.risk.window', { days: v.windowDays }));
+  if (s.key === 'identityMatch' && v.refusedNumber) parts.push(t(d, 'orders.risk.refusedAs', { number: String(v.refusedNumber) }));
   if (s.key === 'areaMismatch' && v.from) parts.push(t(d, `orders.risk.known.${v.from === 'saved' ? 'saved' : 'order'}`));
   return parts.filter(Boolean).join(' · ');
 }

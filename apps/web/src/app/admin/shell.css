@@ -575,4 +575,8 @@
   .adm2 .a2-chkw { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -12px; }
   /* A tablet still sees the table: the order number and the "Full order" link are tapped, not pointed at. */
   .adm2 .a2-cell > a, .adm2 .a2-lnk, .adm2 .a2-prow { min-height: 44px; display: inline-flex; align-items: center; }
+  /* a one-word command ("Hold", "ধরে রাখুন") is still a 44 px wide tap */
+  .adm2 .a2-btn { min-width: 44px; }
 }
+/* What a closed "More" holds is not on the page until it is opened (no hidden button under a visible one). */
+.adm2 details:not([open]) > :not(summary) { display: none; }
