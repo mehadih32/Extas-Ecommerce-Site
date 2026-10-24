@@ -1034,6 +1034,30 @@ to read code or open GitHub.
 > **(5) Never stale.** Every PR that adds or changes an admin page updates that page's guide and its pictures in the same PR. A CI check fails when a page has no guide, or when a visible button or field label is not explained in it. Already-built pages become follow-ups.
 >
 > No new PR numbers: this lands on CN-014's rule, PR 594 (Help & Build), and the AI Center PRs (S15).
+>
+> **Updated 24 Oct 18:40 (owner).**
+>
+> **(a) Typography of guides and help text.**
+> - One proper self-hosted Bengali UI font for all Bengali text, with a clean English UI font beside it, matched in size.
+> - **Bold** for key terms and button names.
+> - Clear heading sizes and line height 1.6–1.7.
+> - Styled numbered steps and bullets.
+> - Coloured "Tip", "Careful" and "Example" boxes.
+> - Labels on forms are bold, with aligned inputs and readable spacing.
+> - Nothing in default browser styling.
+>
+> **(b) Where the guide opens is a setting** (Settings → Admin look, per user, with a team default):
+> - desktop: a **side panel** (the default; the page stays visible so the user can follow along), or a pop-up window, or its own page;
+> - phone: a full-screen sheet.
+>
+> **(c) AI used to the full, all inside the AI rules** (approval queue, AI service account, logs, cost caps, off until the owner turns it on):
+> - the page-aware helper described in (4);
+> - **natural-language commands and questions** from the top bar, e.g. "orders waiting over 2 hours", "last week's RTO by courier", "make a combo of 2 polos";
+> - **proactive suggestions on each page,** e.g. "2 photos are blurry", "this courier is slow in Sylhet this week", "stock of Navy L runs out in 3 days";
+> - **drafts on request:** product descriptions, SEO, message texts, replies to customers. Anything that goes to a customer is sent only after a person approves it;
+> - **a daily summary** to the owner, plus alerts when something looks unusual.
+>
+> **(d) Small, subtle "Demo" and helper icons.** No big floating buttons.
 
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.

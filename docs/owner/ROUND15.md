@@ -845,3 +845,4 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 
 ## Note 66 — 24 Oct 18:36 · A guide per page, formatting, a smart AI helper (CN-026)
 - The section guide shows the same text on every sub-page. Each sub-page needs its own What/Why/How guide. The guide text and form formatting must be fixed. Keep it simple. AI must explain in detail, take commands, teach step by step, and show pictures on request.
+- 24 Oct 18:40: the guide text needs a proper font, bold and well-formatted text; where the guide opens (pop-up or panel) is a desktop setting; use AI to the full; the demo admin button was too big, so it is now a small icon.
