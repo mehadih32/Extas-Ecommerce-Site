@@ -34,6 +34,9 @@ export const PERMISSIONS = {
   'catalogue.write': { group: 'catalogue' },
   // Prices are the owner's decision (CLAUDE.md rule 6): setting a variant's sale or compare-at price is its own key.
   'catalogue.prices': { group: 'catalogue' },
+  // S02 · PR 59 — Find My Size learning: train a version from the recorded answers and switch one on or off. It only
+  // ever proposes an ease for a garment type and fit; a size chart is the owner's and is never changed by it.
+  'catalogue.sizeAdvice': { group: 'catalogue' },
   // PR 21, 35 — put a product on the shop or take it off (one by one or in bulk). Publishing always runs the publish
   // checklist first (PR 26, 29, 35); there is no way around it.
   'catalogue.publish': { group: 'catalogue' },

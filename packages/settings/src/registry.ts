@@ -33,6 +33,7 @@ import { motionSettings } from './registry-motion';
 import { ordersSettings } from './registry-orders';
 import { adminShellSettings } from './registry-admin-shell';
 import { checkoutMoreSettings } from './registry-checkout-more';
+import { reviewSettings } from './registry-reviews';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1167,6 +1168,8 @@ export const registry = {
   ...adminShellSettings,
   // ---- S04 · PR 127, 128, 561, 563, 565, 605 · the rest of the customer-side checkout: the address check, the silent backfill, free delivery's exemption, add to this parcel, complete your look, gift mode (registry-checkout-more.ts, version 34). ----
   ...checkoutMoreSettings,
+  // ---- S02 · PR 59, 65 · Find My Size learning and product reviews: the size report and the ease model (registry-reviews.ts, version 35). ----
+  ...reviewSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

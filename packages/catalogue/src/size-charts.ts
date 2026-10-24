@@ -632,6 +632,56 @@ export interface SizeChartResolution {
   fitKey: string | null;
 }
 
+/** PR 59 — one product with the chart it shows, that chart's garment type, fit and ease (the training engine's input). */
+export interface ProductChartChoice {
+  productId: string;
+  slug: string;
+  nameEn: string;
+  nameBn: string | null;
+  /** The chart the product's page shows, or null when it has none (then it is not trained on). */
+  chartId: string | null;
+  chartName: string | null;
+  garmentTypeId: string | null;
+  garmentTypeKey: string | null;
+  garmentTypeNameEn: string | null;
+  /** The chart's fit (null: the chart is for every fit of that garment type). */
+  fitKey: string | null;
+  /** The room that chart leaves over the body, inches (the chart's own, else `catalogue.sizeCharts.defaultEaseInch`). */
+  easeInch: number | null;
+  /** How the chart was reached: the product's own chart or its category's default. */
+  via: 'product' | 'category' | null;
+}
+
+/**
+ * PR 59 — every product of the store with the chart it shows. One pass over the store's charts, assignments, category
+ * tree and products, with the same `choose` the product page and the chart admin use, so the size report speaks of the
+ * chart the customer really saw. The shop's size order comes back with it (the engine compares sizes by their place).
+ */
+export async function productChartChoices(deps: CatalogueDeps, who: Who): Promise<{ products: ProductChartChoice[]; sizeOrder: string[]; sizeLabels: Map<string, string> }> {
+  await allow(deps, who, 'catalogue.read');
+  const [s, m] = await Promise.all([sizeChartSettings(deps, who), storeMap(deps.db, who.storeId, { products: true })]);
+  const products = m.products.map((p) => {
+    const choice = choose(m, s, p.id, p.categoryId, productFitKey(p.pdpBlocks, s.fits));
+    const chart = choice ? (m.charts.find((c) => c.id === choice.chartId) ?? null) : null;
+    const meta = chart ? readMeta(chart.columns) : null;
+    return {
+      productId: p.id,
+      slug: p.slug,
+      nameEn: p.nameEn,
+      nameBn: p.nameBn,
+      chartId: chart?.id ?? null,
+      chartName: chart?.name ?? null,
+      garmentTypeId: chart?.garmentType.id ?? null,
+      garmentTypeKey: chart?.garmentType.key ?? null,
+      garmentTypeNameEn: chart?.garmentType.nameEn ?? null,
+      fitKey: chart?.fitKey ?? null,
+      easeInch: chart ? (meta?.easeInch ?? s.defaultEaseInch) : null,
+      via: choice?.via ?? null,
+    };
+  });
+  return { products, sizeOrder: m.order, sizeLabels: new Map([...m.sizes].map(([k, v]) => [k, v.label])) };
+}
+
 /** The chart a product shows, or a new product in a category with a fit gets ("When you add a product"). */
 export async function resolveSizeChart(deps: CatalogueDeps, who: Who, query: SizeChartResolveQuery): Promise<SizeChartResolution> {
   await allow(deps, who, 'catalogue.read');

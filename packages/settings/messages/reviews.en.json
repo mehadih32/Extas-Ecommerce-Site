@@ -1,0 +1,8 @@
+{
+  "catalogue": {
+    "sizeAdvice": {
+      "label": "Find My Size learning",
+      "help": "Reads the answers Find My Size has given (height, weight, the size it said, the size the customer took, the order line it led to and any size exchange) and, with \"Use reviews\" on, approved reviews that say how the size felt. The size report shows, per garment type and fit, how often customers took the size we said, how often they went up or down, and flags a chart that keeps running tight or loose. \"Smallest number of signals\" is how many are needed before a proposal is made at all. From those signals a new ease (the room over the body) is proposed, at most \"Most it may move\" inches in steps of \"Step\". Nothing is applied by itself: you look at a proposed version and switch it on. \"Use the trained ease\" off means Find My Size uses your own chart ease and nothing else; on means an active version's ease is used for that garment type and fit — your chart is never changed either way."
+    }
+  }
+}
