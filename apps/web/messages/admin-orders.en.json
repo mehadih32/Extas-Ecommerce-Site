@@ -261,7 +261,8 @@
       "PRICE_DIFFERS": "That size costs a different price now. An edit never changes a price — cancel and place a new order, or ask the owner.",
       "OFFER_ON_ORDER": "This piece is in a set or the order has an offer; taking it out would change a price. Cancel and place a new order, or ask the owner.",
       "LAST_LINE": "The last piece cannot be taken out. Cancel the order instead.",
-      "OUT_OF_STOCK": "Not enough pieces of that size are free now."
+      "OUT_OF_STOCK": "Not enough pieces of that size are free now.",
+      "RISK_OFF": "The risk score is switched off (Orders → Risk rules)."
     },
     "cmd": {
       "confirm": {
@@ -349,6 +350,12 @@
         "title": "Only {s} of {product} on {n}",
         "ok": "Take the others out",
         "done": "Answer saved on {n} · only {s} goes"
+      },
+      "riskAssess": {
+        "label": "Score again",
+        "title": "Score {n} again?",
+        "ok": "Score again",
+        "done": "{n} scored again"
       }
     },
     "eff": {
@@ -376,7 +383,9 @@
       "twoSizeAll": "Every size goes in the parcel; nothing on the order changes.",
       "twoSizeOut": "{sizes} is taken out: the total and the amount to collect fall by exactly its price, and its stock is freed.",
       "twoSizeOffer": "A piece with an offer or a set price is not taken out by itself: the answer is kept and the order waits for you.",
-      "twoSizeClose": "The “2 sizes — check” flag and its call task close; the timeline keeps the answer."
+      "twoSizeClose": "The “2 sizes — check” flag and its call task close; the timeline keeps the answer.",
+      "riskAssess": "A new score with today's risk rules; the earlier one stays on the order's record",
+      "riskInforms": "Nothing is blocked, held or asked in advance"
     },
     "review": {
       "title": "Duplicate review",
@@ -566,6 +575,76 @@
       "subNone": "Nothing waits to be confirmed",
       "full": "Full order",
       "never": "After Confirm the next order in the queue opens."
+    },
+    "risk": {
+      "title": "Risk",
+      "sub": "Why the score is what it is — as it was stored when the order was scored",
+      "none": "No signal counted",
+      "notScored": "Not scored — the risk score was off when this order came in",
+      "informs": "The score only informs the team: nothing is blocked, held or asked in advance by it.",
+      "rulesChanged": "The risk rules changed since this score — \"Score again\" uses the new ones; this one stays as it was.",
+      "earlier": "Earlier scores",
+      "earlierRow": "{score} · {band} · {why} · {at}",
+      "ourFault": "(+{n} our fault, not counted)",
+      "window": "in the last {days} days",
+      "known": {
+        "saved": "from the saved address",
+        "order": "from an earlier delivered order"
+      },
+      "after": {
+        "placed": "Scored when the order came in · {at}",
+        "edit": "Scored again after an edit · {at}",
+        "manual": "Scored again by hand · {at}"
+      },
+      "afterShort": {
+        "placed": "when it came in",
+        "edit": "after an edit",
+        "manual": "by hand"
+      },
+      "hist": {
+        "label": "This number · {phone}",
+        "first": "First order from this number",
+        "order": "{n} other order",
+        "orders": "{n} other orders",
+        "delivered": "{n} delivered",
+        "refused": "{n} refused",
+        "cancelled": "{n} cancelled",
+        "returns": "{n} returned after delivery",
+        "inTransit": "{n} on the way",
+        "noAnswer": "{n} calls not answered"
+      },
+      "sig": {
+        "refusals": "Refused parcels before",
+        "cancels": "Cancelled orders before",
+        "successRatio": "Few parcels taken at the door",
+        "newPhone": "First order from this number",
+        "noAnswer": "Did not answer calls before",
+        "recentOrder": "Another order in the last hours",
+        "inTransit": "A parcel is already on its way",
+        "orderValue": "High order value",
+        "addressUnresolved": "Address could not be placed",
+        "addressUnsure": "Place not sure",
+        "addressNoDetail": "No house details",
+        "areaMismatch": "Another district than usual",
+        "riskyArea": "One of your watched places",
+        "areaRefusals": "Many refusals at this place"
+      },
+      "why": {
+        "refusals": "{count} refused at the door",
+        "cancels": "{count} cancelled",
+        "successRatio": "{pct}% of {parcels} parcels taken (below {below}%)",
+        "newPhone": "No earlier order from this number",
+        "noAnswer": "{count} calls not answered",
+        "recentOrder": "{number}, within {hours} hours",
+        "inTransit": "{number} is with the courier",
+        "orderValue": "{total} (from {at})",
+        "addressUnresolved": "No place in the list settles the address",
+        "addressUnsure": "Two places have this name ({area})",
+        "addressNoDetail": "The address says nowhere where the house is",
+        "areaMismatch": "Known in {known}, this order goes to {now}",
+        "riskyArea": "{area}",
+        "areaRefusals": "{count} refused parcels at {area}"
+      }
     }
   }
 }

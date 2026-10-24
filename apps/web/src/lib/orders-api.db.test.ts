@@ -219,4 +219,23 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await api('GET', ['01a16af2-30f0-7462-aab8-719bb3ce5998', 'phone-history'])).status).toBe(404);
   });
 
+  it('S06 · PR 160: the risk panel (orders.risk.read) and "score again" (orders.risk.decide)', async () => {
+    const o = await f.place('api-risk', { phone: '01700000299' });
+    // off by default: nothing scored, "score again" says so
+    let risk = await api('GET', [o.orderId, 'risk']);
+    expect(risk).toMatchObject({ status: 200, body: { ok: true, risk: { enabled: false, current: null, canRescore: false } } });
+    expect(await api('POST', [o.orderId, 'risk', 'assess'], { body: {} })).toMatchObject({ status: 422, body: { error: 'RISK_OFF' } });
+    expect((await api('GET', [o.orderId, 'risk'], { cookie: reader })).status).toBe(403);
+    // the owner switches the score on (here: a reader of the settings that says so)
+    const on = Object.create(deps.resolver) as AdminDeps['resolver'];
+    on.value = ((key: string, opts?: { storeId?: number }) => (key === 'risk.score' ? Promise.resolve({ ...registry['risk.score'].default, enabled: true }) : deps.resolver.value(key as never, opts))) as never;
+    const d = { ...deps, resolver: on };
+    const scored = await api('POST', [o.orderId, 'risk', 'assess'], { body: {}, d });
+    expect(scored).toMatchObject({ status: 200, body: { result: { score: expect.any(Number), command: { command: 'riskAssess', status: 'PLACED' } } } });
+    risk = await api('GET', [o.orderId, 'risk'], { d });
+    expect(risk.body.risk).toMatchObject({ enabled: true, canRescore: true, current: { after: 'manual', fired: expect.arrayContaining([{ key: 'newPhone', weight: 10, values: {} }]) } });
+    expect((await api('GET', [o.orderId, 'risk', 'x'])).status).toBe(404);
+    expect((await api('POST', [o.orderId, 'risk'], { body: {} })).status).toBe(405);
+    expect((await api('GET', ['01a16af2-30f0-7462-aab8-719bb3ce5999', 'risk'])).status).toBe(404);
+  });
 });

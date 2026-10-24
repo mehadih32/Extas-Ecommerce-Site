@@ -1,8 +1,8 @@
 // PR 141 — ORD-07 one order (demo V12.3 #/admin/orders/:id): the header (number, name and total, the four separate
 // status chips, when and where it was placed, the next step and "More actions"), the bands that need someone now
 // (cancel pending courier, the customer's cancel request, a hold, a booked parcel's lock), then the record cards on two
-// thirds (items and totals, customer and address with the customer's history, the courier, the duplicate review,
-// payments and refund requests) and the timeline on one third with the team's notes. A phone gets "Details · Timeline".
+// thirds (items and totals, customer and address with the customer's history, the courier, the risk card (PR 160), the
+// duplicate review, payments and refund requests) and the timeline on one third with the team's notes. A phone gets "Details · Timeline".
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import type { AdminView } from '@/lib/admin-page';
@@ -14,6 +14,7 @@ import { PageHead } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
 import { ArchiveNote, CommandButton, DetailGrid, MoreMenu, NoteForm } from './OrderCommands';
 import { Chips } from './OrderTable';
+import { RiskPanel } from './RiskPanel';
 import { SupportExplain } from './SupportExplain';
 
 function Kv({ rows }: { rows: Row2[] }) {
@@ -129,6 +130,8 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
     <Card key="courier" testId="order-courier" title={t(d, 'orders.courier.title')} right={<Chips chips={[o.courier.chip]} />}>
       <Kv rows={o.courier.rows} />
     </Card>,
+    // S06 · PR 160: the risk card (demo V12.3: after the courier, before the money)
+    <RiskPanel key="risk" order={{ id: o.id, number: o.number, currency: o.currency }} view={view} />,
     <SupportExplain key="explain" orderId={o.id} view={view} />,
     ...o.reviews.map((r) => (
       <Card key={r.id} testId="order-review" title={t(d, 'orders.review.title')} sub={`${r.severity ? `${r.severity} · ` : ''}${r.at}`} right={<span className={`a2-pill ${r.open ? 'warn' : 'ok'}`}>{t(d, r.open ? 'orders.review.open' : 'orders.review.decided')}</span>}>
