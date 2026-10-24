@@ -2,7 +2,7 @@
 // sample catalogue; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the permission (a person
 // with only orders.read may not look); an order's exchange choices, opening one with the Idempotency-Key header (a
 // repeat gets the same exchange), the board, one case, approving it with the screen's version (an older version is
-// STALE) into the linked exchange order; PR 188's size switch; PR 189's return handling. Every value is made up.
+// STALE) into the linked exchange order; PR 188's size switch; PR 189's return handling; PR 190's waiver and claim. Every value is made up.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -163,5 +163,29 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
     expect((await api('POST', `parcels/${parcel.id}/close`, { cookie: reader, body: { note: 'lost' } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
     const closed = await api('POST', `parcels/${parcel.id}/close`, { body: { note: 'the courier lost it', version: parcel.version } });
     expect(closed.body).toMatchObject({ ok: true, result: { status: 'CLOSED' } });
+  });
+
+  it('PR 190: the charge waived with a logged reason (returns.waive); a claim needs a photo and is decided (returns.claims.decide)', async () => {
+    const open = async (name: string) => {
+      const o = await delivered(name);
+      const line = await f.t.prisma.orderItem.findFirstOrThrow({ where: { orderId: o.orderId } });
+      const ch = await api('GET', `orders/${o.orderId}/choices?orderItemId=${line.id}&reason=size&sizeKey=l`);
+      const pick = ch.body.choices.options[0];
+      const res = await api('POST', `orders/${o.orderId}/exchange`, { body: { reason: 'size', items: [{ orderItemId: line.id, newVariantId: pick.variantId }] }, key: `api-${randomUUID()}` });
+      return (await api('GET', `exchanges/${res.body.exchange.exchangeId}`)).body.exchange as { id: string; version: number; money: { chargeMinor: number } };
+    };
+    const a = await open('api-waive');
+    expect(a.money.chargeMinor).toBeGreaterThan(0);
+    expect((await api('POST', `exchanges/${a.id}/waive`, { cookie: reader, body: { reason: 'loyal' } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    expect((await api('POST', `exchanges/${a.id}/waive`, { body: { version: a.version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    const w = await api('POST', `exchanges/${a.id}/waive`, { body: { reason: 'loyal customer', version: a.version } });
+    expect(w.body).toMatchObject({ ok: true, result: { chargeState: 'WAIVED', waivedMinor: a.money.chargeMinor } });
+
+    const b = await open('api-claim');
+    expect((await api('POST', `exchanges/${b.id}/claim`, { body: { note: 'sent XL' } })).body).toMatchObject({ ok: false, error: 'PHOTO_REQUIRED' });
+    expect((await api('POST', `exchanges/${b.id}/claim`, { body: { note: 'sent XL', photoAssetIds: [randomUUID()], version: b.version } })).body).toMatchObject({ ok: true, result: { claimState: 'PENDING' } });
+    expect((await api('POST', `exchanges/${b.id}/claim-decision`, { cookie: reader, body: { accept: true } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const ok = await api('POST', `exchanges/${b.id}/claim-decision`, { body: { accept: true } });
+    expect(ok.body).toMatchObject({ ok: true, result: { claimState: 'ACCEPTED', chargeState: 'CLAIM_ACCEPTED' } });
   });
 });

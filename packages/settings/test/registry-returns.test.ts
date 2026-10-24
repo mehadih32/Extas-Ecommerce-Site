@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { exchangeEngineSchema, exchangeTiersSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
+import { exchangeChargeSchema, exchangeEngineSchema, exchangeSwapSchema, exchangeTiersSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
 
 describe('exchange and return settings (v57)', () => {
   it('every key is in the registry at version 57 in the Orders group, labelled in English and Bengali, its default valid', () => {
@@ -44,5 +44,15 @@ describe('exchange and return settings (v57)', () => {
     expect(returnsSettings['orders.returns.handling'].default).toEqual({ ourFaultReturns: false, windowHours: null });
     expect(returnsHandlingSchema.safeParse({ ourFaultReturns: true, windowHours: 0 }).success).toBe(false);
     expect(returnsHandlingSchema.safeParse({ ourFaultReturns: true, windowHours: 48 }).success).toBe(true);
+  });
+
+  it('PR 190: the customer pays for his own size choice, no figure set; claims need a photo; the re-ship and the swap perks are off', () => {
+    expect(returnsSettings['orders.exchange.charge'].default).toEqual({ sizePays: 'customer', fallbackMinor: null, claimPhoto: true, reshipRefusals: ['size-fit'], reshipFree: false });
+    expect(exchangeChargeSchema.safeParse({ ...returnsSettings['orders.exchange.charge'].default, fallbackMinor: -1 }).success).toBe(false);
+    expect(returnsSettings['orders.exchange.swap'].default).toEqual({ enabled: false, chargeMinor: null, bandKeys: [] });
+    expect(exchangeSwapSchema.safeParse({ enabled: true, chargeMinor: 9000, bandKeys: ['dhaka-city'] }).success).toBe(true);
+    // the re-ship reasons are refusal reasons the owner has
+    const refusals = (registry['orders.refusal.reasons'].default as { key: string }[]).map((r) => r.key);
+    for (const k of returnsSettings['orders.exchange.charge'].default.reshipRefusals) expect(refusals).toContain(k);
   });
 });

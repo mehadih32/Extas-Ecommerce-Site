@@ -7,6 +7,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { call, type Answer } from '@/components/admin/api';
+import { uploadReturnPhoto } from './return-photo';
 
 export interface QcPiece {
   id: string;
@@ -41,19 +42,6 @@ const differs = (expected: string | null, sku: string) => !!expected && !!sku.tr
 
 const errorOf = (a: Answer, t: QcTexts) => t.errors[a.data.error ?? ''] ?? t.errors['server-error'] ?? '';
 
-/** Uploads one photo to the media library (needs `media.upload`); its id goes with the piece. */
-async function upload(file: File): Promise<string | null> {
-  const form = new FormData();
-  form.set('file', file);
-  form.set('folder', 'returns');
-  try {
-    const res = await fetch('/api/admin/media', { method: 'POST', credentials: 'same-origin', body: form });
-    const data = (await res.json().catch(() => null)) as { ok?: boolean; asset?: { id?: string } } | null;
-    return data?.ok && data.asset?.id ? data.asset.id : null;
-  } catch {
-    return null;
-  }
-}
 
 export function ReturnsQcForm({ url, receiveUrl, version, pieces, reasons, photoForLoss, acceptOtherSku, canReceive, texts }: { url: string; receiveUrl: string | null; version: number; pieces: QcPiece[]; reasons: { key: string; label: string }[]; photoForLoss: boolean; acceptOtherSku: boolean; canReceive: boolean; texts: QcTexts }) {
   const router = useRouter();
@@ -158,7 +146,7 @@ export function ReturnsQcForm({ url, receiveUrl, version, pieces, reasons, photo
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      const got = await upload(file);
+                      const got = await uploadReturnPhoto(file);
                       set(p.id, { photo: got });
                       if (!got) setErr(texts.errors['server-error'] ?? '');
                     }}

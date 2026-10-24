@@ -27,6 +27,8 @@ export interface PastOrder {
   callOutcomes: string[];
   /** Returns after delivery (ReturnRecord, S08), with their reason. */
   returns: { kind: string; reasonCode: string | null }[];
+  /** PR 190 (SIM-F-021): a refused parcel re-shipped in another size after a try-on — shown, never counted. */
+  reshipped?: boolean;
 }
 
 /** What the number's history comes to (the order page's line and the risk score's facts). */
@@ -71,7 +73,7 @@ export function summarizeHistory(past: readonly PastOrder[], opts: SummaryOption
     if (!s.lastAt || o.placedAt > s.lastAt) s.lastAt = o.placedAt;
     if (isDelivered(o.status)) s.delivered++;
     else if (o.status === 'RETURNED') {
-      if (o.refusalKey && opts.ourFault.has(o.refusalKey)) s.ourFault++;
+      if ((o.refusalKey && opts.ourFault.has(o.refusalKey)) || o.reshipped) s.ourFault++;
       else s.refused++;
     } else if (o.status === 'CANCELLED') {
       s.cancelled++;

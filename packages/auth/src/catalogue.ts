@@ -204,6 +204,9 @@ export const PERMISSIONS = {
   'returns.decide': { group: 'orders' },
   // PR 187 — Receive & QC: mark a parcel received, check each piece (sellable or not) and send the sellable ones to the ERP.
   'returns.qc': { group: 'orders' },
+  // PR 190 (CN-018 (5)) — waive an exchange's delivery charge with a logged reason, and decide a "your mistake" claim.
+  'returns.waive': { group: 'orders' },
+  'returns.claims.decide': { group: 'orders' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -15,6 +15,12 @@
 // SIM-F-022: the SKU really coming back (`receivedSku`, a wrong item returns what was packed) is kept from the start;
 // QC restocks what is scanned. A wrong item carries its root cause.
 //
+// PR 190 (CN-018 (5), CN-014e, SIM-F-021): the charge follows the owner's rules (exchangeCharge in exchange-pure.ts);
+// the one-trip size swap in its bands; a parcel refused at the door for one of the owner's re-ship reasons (a try-on)
+// may take a size exchange, linked to the refused order: the window counts from the refusal, the old piece covers only
+// what was really paid, and the courier's return of the refused parcel is its pick-up (no second one). Waivers and
+// claims: exchange-charge.ts.
+//
 // Never here: moving money, a refund, changing a price, a discount or COD by hand, or blocking anyone (CLAUDE.md rule 6).
 // The new parcel's amount follows the money box; a wallet credit is only a REQUEST after QC (PR 187).
 import { z } from 'zod';
@@ -23,7 +29,7 @@ import { holdOrderUnits, InventoryError, sellableKinds, sellableUnits } from '@e
 import { discountWasFor, exchangeTermsFor } from '@extas/rules';
 import { allow, nowOf, parse, setting, TX, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
-import { EXCHANGE_REASON_CODES, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, type Candidate, type ExchangeReason, type ExchangeTier, type ExchangeWindow, type MoneyBox, type OriginalPiece } from './exchange-pure';
+import { EXCHANGE_REASON_CODES, exchangeCharge, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, type Candidate, type ChargeRules, type ExchangeReason, type ExchangeTier, type ExchangeWindow, type MoneyBox, type OriginalPiece } from './exchange-pure';
 import { confirmBy } from './commands';
 import { auditRow, eventRow, execute, inventoryOf, staffBy, type By, type CommandOptions } from './service';
 
@@ -44,6 +50,8 @@ const ORDER_FACTS = {
   customerId: true,
   deliveredAt: true,
   returnedAt: true,
+  paidMinor: true,
+  totalMinor: true,
   deliveryBand: { select: { key: true } },
 } as const;
 
@@ -65,6 +73,37 @@ type ItemFacts = { id: string; orderId: string; variantId: string | null; produc
 
 /** What the customer paid for one piece of a line (its total after the line's discounts, per piece). */
 export const paidPerPiece = (i: Pick<ItemFacts, 'lineTotalMinor' | 'quantity'>): number => (i.quantity > 0 ? Math.floor(i.lineTotalMinor / i.quantity) : 0);
+
+/**
+ * PR 190 — what the old piece counts for: a delivered piece what was paid for it; a piece refused at the door (a
+ * re-ship) only its share of what was really paid before (nothing on Cash on Delivery), so the re-ship is never cheaper
+ * than the parcel he refused.
+ */
+export function coveredPerPiece(i: Pick<ItemFacts, 'lineTotalMinor' | 'quantity'>, o: { status: string; paidMinor: number; totalMinor: number }): number {
+  if (o.status !== 'RETURNED') return paidPerPiece(i);
+  const share = o.totalMinor > 0 ? Math.min(1, Math.max(0, o.paidMinor) / o.totalMinor) : 0;
+  return Math.floor(paidPerPiece(i) * share);
+}
+
+/** PR 190 (SIM-F-021): a refused parcel may take a size exchange when its refusal is one of the owner's re-ship reasons. */
+export const reshipAllowed = (status: string, refusalKey: string | null, reason: string, reshipRefusals: readonly string[]): boolean =>
+  status === 'RETURNED' && reason === 'size' && !!refusalKey && reshipRefusals.includes(refusalKey);
+
+/** The refusal reason of a refused order (the order service's `returned` step). */
+async function refusalOf(db: Db, storeId: number, o: { id: string; status: string }): Promise<string | null> {
+  if (o.status !== 'RETURNED') return null;
+  return (await db.orderEvent.findFirst({ where: { storeId, orderId: o.id, type: 'order.returned' }, orderBy: { createdAt: 'desc' }, select: { reasonCode: true } }))?.reasonCode ?? null;
+}
+
+/** PR 190 — the owner's charge rules and the one-trip swap. */
+async function chargeSettings(deps: OrdersDeps, storeId: number): Promise<{ rules: ChargeRules & { claimPhoto: boolean; reshipRefusals: string[] }; swap: { enabled: boolean; chargeMinor: number | null; bandKeys: string[] } }> {
+  const [rules, swap] = await Promise.all([setting(deps, storeId, 'orders.exchange.charge'), setting(deps, storeId, 'orders.exchange.swap')]);
+  return { rules, swap };
+}
+
+/** The one-trip swap for this band and reason, when the owner has it on (null: not offered). */
+const swapFor = (swap: { enabled: boolean; chargeMinor: number | null; bandKeys: string[] }, reason: string, bandKey: string | null): { chargeMinor: number | null } | null =>
+  swap.enabled && reason === 'size' && !!bandKey && swap.bandKeys.includes(bandKey) ? { chargeMinor: swap.chargeMinor } : null;
 
 /** The exchange terms for one piece: the live rule's when there is one, else the policy settings. */
 export interface ExchangePolicy {
@@ -262,6 +301,10 @@ export interface ExchangeChoices {
   neededSizeKey: string | null;
   tier: ExchangeTier | null;
   options: (ExchangeOption & { money: MoneyBox })[];
+  /** PR 190 (SIM-F-021): a size re-ship of a parcel refused at the door after a try-on, linked to this order. */
+  reship: boolean;
+  /** PR 190 (CN-014e): the one-trip size swap is offered here, at this price (null: not offered). */
+  oneTrip: { chargeMinor: number | null } | null;
 }
 
 /** The order's facts under no lock (a screen) or in a transaction. */
@@ -286,7 +329,11 @@ export async function exchangeChoices(deps: OrdersDeps, who: Who, orderId: strin
   const item = await itemOf(db, who.storeId, o.id, d.orderItemId);
   const piece = await pieceOf(db, who.storeId, item);
   const policy = await exchangePolicyFor(deps, who.storeId, item.productId ?? piece?.productId ?? '', o.deliveryBand?.key ?? null);
-  const window = exchangeWindow(o.deliveredAt, policy.windowHours, nowOf(deps));
+  const cs = await chargeSettings(deps, who.storeId);
+  const reship = reshipAllowed(o.status, await refusalOf(db, who.storeId, o), d.reason, cs.rules.reshipRefusals);
+  // a re-ship after a try-on counts from the refusal: the parcel never reached him
+  const window = exchangeWindow(reship ? o.returnedAt : o.deliveredAt, policy.windowHours, nowOf(deps));
+  const covered = coveredPerPiece(item, o);
   const excluded = await excludedCategoryIds(db, who.storeId, await setting(deps, who.storeId, 'policy.exchange.excludedCategories'));
   const used = await usedOn(db, who.storeId, item.id);
   const left = perItemLeft(policy.perItem, used.counted);
@@ -302,16 +349,18 @@ export async function exchangeChoices(deps: OrdersDeps, who: Who, orderId: strin
   const base = {
     orderId: o.id,
     number: o.number,
-    item: { id: item.id, sku: item.sku, productName: item.productName, colourName: item.colourName, sizeLabel: item.sizeLabel, quantity: item.quantity, paidPerPieceMinor: paidPerPiece(item) },
+    item: { id: item.id, sku: item.sku, productName: item.productName, colourName: item.colourName, sizeLabel: item.sizeLabel, quantity: item.quantity, paidPerPieceMinor: covered },
     window,
     windowHours: policy.windowHours,
     perItemLeft: left,
     reasons: policy.reasons,
     sizes,
+    reship,
+    oneTrip: swapFor(cs.swap, d.reason, o.deliveryBand?.key ?? null),
   };
   const neededSizeKey = d.sizeKey === undefined || d.sizeKey === null ? (piece?.sizeKey ?? null) : d.sizeKey;
   const shut = (closed: ExchangeChoices['closed']): ExchangeChoices => ({ ...base, closed, neededSizeKey, tier: null, options: [] });
-  const why = closedWhy(policy, o.status, window);
+  const why = closedWhy(policy, reship ? 'DELIVERED' : o.status, window);
   if (why) return shut(why);
   if (!piece || piece.categoryIds.some((c) => excluded.has(c))) return shut('EXCLUDED');
   if (!policy.covered) return shut('NOT_COVERED');
@@ -326,7 +375,10 @@ export async function exchangeChoices(deps: OrdersDeps, who: Who, orderId: strin
     closed: null,
     neededSizeKey,
     tier: offer.tier,
-    options: offer.options.map((x) => ({ ...x, money: moneyBox([{ oldUnitMinor: paidPerPiece(item), newUnitMinor: x.priceMinor, quantity: qty }], { ourMistake, chargeMinor: policy.chargeMinor }) })),
+    options: offer.options.map((x) => ({
+      ...x,
+      money: moneyBox([{ oldUnitMinor: covered, newUnitMinor: x.priceMinor, quantity: qty }], { ourMistake, ...exchangeCharge({ reason: d.reason, ruleChargeMinor: policy.chargeMinor, rules: cs.rules, reship, oneTrip: null }) }),
+    })),
   };
 }
 
@@ -355,6 +407,8 @@ export const openExchangeInput = z
     /** SIM-F-022: why a wrong item went out (`orders.exchange.rootCauses`). */
     rootCause: z.string().trim().min(1).max(60).optional(),
     photoAssetIds: z.array(z.uuid()).max(10).optional(),
+    /** PR 190 (CN-014e): the one-trip size swap, where the owner offers it. */
+    oneTrip: z.boolean().optional(),
     items: z
       .array(
         z
@@ -417,7 +471,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
     if (again && again.orderId !== r.orderId) throw new OrdersError('IDEMPOTENCY_MISMATCH', 'this key was used for another request', ['idempotencyKey']);
     if (again) return { ...(await resultOf(deps.db, again.id)), replay: true };
   }
-  const [engine, causes, excludedSlugs] = await Promise.all([setting(deps, storeId, 'orders.exchange.engine'), setting(deps, storeId, 'orders.exchange.rootCauses'), setting(deps, storeId, 'policy.exchange.excludedCategories')]);
+  const [engine, causes, excludedSlugs, cs] = await Promise.all([setting(deps, storeId, 'orders.exchange.engine'), setting(deps, storeId, 'orders.exchange.rootCauses'), setting(deps, storeId, 'policy.exchange.excludedCategories'), chargeSettings(deps, storeId)]);
   const ourMistakeReason = isOurMistake(d.reason);
   if (d.reason === 'wrong' && engine.rootCauseForWrong && !d.rootCause) throw new OrdersError('REASON_REQUIRED', 'a wrong item needs its root cause', ['rootCause']);
   if (d.rootCause && !causes.some((c) => c.key === d.rootCause)) throw new OrdersError('REASON_REQUIRED', 'pick a root cause from the list', ['rootCause']);
@@ -438,9 +492,12 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
       input: d as unknown as Record<string, unknown>,
       effect: async (tx, lo, _f, { now }) => {
         const o = await tx.order.findUniqueOrThrow({ where: { id: lo.id }, select: ORDER_FACTS });
-        const refusal = o.status === 'RETURNED' ? ((await tx.orderEvent.findFirst({ where: { storeId, orderId: o.id, type: 'order.returned' }, orderBy: { createdAt: 'desc' }, select: { reasonCode: true } }))?.reasonCode ?? null) : null;
-        const allowed = meta.hooks?.allowState ? meta.hooks.allowState(o.status, refusal) : o.status === 'DELIVERED' || o.status === 'PARTIALLY_DELIVERED';
+        const refusal = await refusalOf(tx, storeId, o);
+        const reship = reshipAllowed(o.status, refusal, d.reason, cs.rules.reshipRefusals);
+        const allowed = meta.hooks?.allowState ? meta.hooks.allowState(o.status, refusal) : o.status === 'DELIVERED' || o.status === 'PARTIALLY_DELIVERED' || reship;
         if (!allowed) throw new OrdersError('EXCHANGE_CLOSED', 'the parcel is not with the customer', ['status'], { why: 'NOT_DELIVERED' });
+        const oneTrip = d.oneTrip ? swapFor(cs.swap, d.reason, o.deliveryBand?.key ?? null) : null;
+        if (d.oneTrip && !oneTrip) throw new OrdersError('NOT_EXCHANGEABLE', 'the one-trip size swap is not offered here', ['oneTrip'], { why: 'ONE_TRIP' });
         const excluded = await excludedCategoryIds(tx, storeId, excludedSlugs);
         const lines: { item: ItemFacts; quantity: number; newVariantId: string; receivedSku: string | null; option: ExchangeOption; policy: ExchangePolicy }[] = [];
         let windowEndsAt: Date | null = null;
@@ -473,8 +530,8 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
         }
         const ourMistake = ourMistakeReason && lines.every((l) => l.policy.freeWhenOurMistake);
         const money = moneyBox(
-          lines.map((l) => ({ oldUnitMinor: paidPerPiece(l.item), newUnitMinor: l.option.priceMinor, quantity: l.quantity })),
-          { ourMistake, chargeMinor: lines[0]!.policy.chargeMinor },
+          lines.map((l) => ({ oldUnitMinor: coveredPerPiece(l.item, o), newUnitMinor: l.option.priceMinor, quantity: l.quantity })),
+          { ourMistake, ...exchangeCharge({ reason: d.reason, ruleChargeMinor: lines[0]!.policy.chargeMinor, rules: cs.rules, reship, oneTrip }) },
         );
         const number = await nextExchangeNumber(tx, storeId, engine.numberPrefix, engine.numberStart);
         const ex = await tx.exchange.create({
@@ -494,7 +551,8 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
             walletCreditMinor: money.creditMinor,
             codToCollectMinor: money.codMinor,
             chargeState: money.chargeState,
-            chargePayer: money.chargeMinor > 0 ? 'CUSTOMER' : null,
+            chargePayer: money.chargeMinor > 0 ? 'CUSTOMER' : money.chargeState === 'STORE' || money.chargeState === 'FREE_OUR_MISTAKE' ? 'STORE' : null,
+            oneTrip: !!oneTrip,
             photoAssetIds: d.photoAssetIds ?? [],
             windowEndsAt,
             bandKey: o.deliveryBand?.key ?? null,
@@ -507,7 +565,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
                 originalOrderItemId: l.item.id,
                 oldVariantId: l.item.variantId,
                 oldSku: l.item.sku,
-                oldUnitMinor: paidPerPiece(l.item),
+                oldUnitMinor: coveredPerPiece(l.item, o),
                 newVariantId: l.newVariantId,
                 newSku: l.option.sku,
                 newUnitMinor: l.option.priceMinor,
@@ -526,7 +584,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
         return {
           reasonCode: d.reason,
           message: d.reasonNote ?? null,
-          eventData: { exchangeId: ex.id, number, rootCause: d.rootCause ?? null, items: lines.map((l) => ({ from: l.item.sku, to: l.option.sku, quantity: l.quantity, tier: l.option.tier, receivedSku: l.receivedSku })), money },
+          eventData: { exchangeId: ex.id, number, rootCause: d.rootCause ?? null, items: lines.map((l) => ({ from: l.item.sku, to: l.option.sku, quantity: l.quantity, tier: l.option.tier, receivedSku: l.receivedSku })), money, ...(reship ? { reship: { refusalKey: refusal } } : {}), ...(oneTrip ? { oneTrip: true } : {}) },
           audit: { before: {}, after: { exchangeId: ex.id, number, money } },
         };
       },
@@ -589,8 +647,8 @@ export interface DecideOptions {
   version?: number;
 }
 
-/** A decision on an exchange, written with its timeline row on the original order and its audit row. */
-async function decide<T>(deps: OrdersDeps, who: Who, id: string, opts: DecideOptions, fn: (tx: Tx, ex: LockedExchange, now: Date, by: By) => Promise<{ action: string; after: Record<string, unknown>; result: T; message?: string | null }>): Promise<T> {
+/** A decision on an exchange, written with its timeline row on the original order and its audit row (PR 190 reuses it). */
+export async function decideExchange<T>(deps: OrdersDeps, who: Who, id: string, opts: DecideOptions, fn: (tx: Tx, ex: LockedExchange, now: Date, by: By) => Promise<{ action: string; after: Record<string, unknown>; result: T; message?: string | null }>): Promise<T> {
   const by = staffBy(who.actor, who.ctx);
   const now = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
@@ -603,6 +661,28 @@ async function decide<T>(deps: OrdersDeps, who: Who, id: string, opts: DecideOpt
     await auditRow(tx, by, { storeId: ex.storeId, action: `exchange.${out.action}`, entityType: 'Exchange', entityId: ex.id, before, after: { ...after, ...out.after } });
     return out.result;
   }, TX);
+}
+
+/**
+ * PR 190 — links the courier's return of a refused parcel (REFUSED_AT_DOOR, not yet anyone's pick-up) to a re-ship
+ * exchange: its pieces close the exchange's lines, and the exchange takes the step the parcel is at (received, or its
+ * QC result when it was checked already). null when there is none (then a pick-up is opened as for any exchange).
+ */
+async function linkRefusedReturn(tx: Tx, ex: LockedExchange): Promise<{ id: string; exchangeStatus: 'APPROVED' | 'RECEIVED' | 'QC_PASSED' | 'QC_FAILED' } | null> {
+  const r = await tx.returnRecord.findFirst({ where: { storeId: ex.storeId, orderId: ex.orderId, kind: 'REFUSED_AT_DOOR', exchangeId: null }, orderBy: { createdAt: 'desc' }, include: { items: true } });
+  if (!r) return null;
+  await tx.returnRecord.update({ where: { id: r.id }, data: { exchangeId: ex.id, version: { increment: 1 } } });
+  const mine: { disposition: string | null }[] = [];
+  for (const i of ex.items) {
+    const piece = r.items.find((x) => x.orderItemId === i.originalOrderItemId && !x.exchangeItemId);
+    if (!piece) continue;
+    await tx.returnItem.update({ where: { id: piece.id }, data: { exchangeItemId: i.id } });
+    if (piece.disposition) await tx.exchangeItem.update({ where: { id: i.id }, data: { qcStatus: piece.disposition === 'SELLABLE' ? 'GOOD' : 'DAMAGED', restockAction: piece.disposition === 'SELLABLE' ? 'ERP_RETURN' : 'LOSS', receivedSku: piece.scannedSku } });
+    mine.push({ disposition: piece.disposition });
+  }
+  const checked = r.status === 'QC_DONE' || r.status === 'CLOSED';
+  const exchangeStatus = checked ? (mine.every((x) => x.disposition === 'SELLABLE') ? 'QC_PASSED' : 'QC_FAILED') : r.status === 'RECEIVED' ? 'RECEIVED' : 'APPROVED';
+  return { id: r.id, exchangeStatus };
 }
 
 export interface ApproveResult {
@@ -624,11 +704,11 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
   await allow(deps, who, 'returns.decide');
   const d = parse(decideInput, input, 'approval');
   const [prefix, start, engine] = await Promise.all([setting(deps, who.storeId, 'checkout.order.numberPrefix'), setting(deps, who.storeId, 'checkout.order.numberStart'), setting(deps, who.storeId, 'orders.exchange.engine')]);
-  const res = await decide<ApproveResult>(deps, who, id, opts, async (tx, ex, now, by) => {
+  const res = await decideExchange<ApproveResult>(deps, who, id, opts, async (tx, ex, now, by) => {
     if (ex.status !== 'REQUESTED') throw new OrdersError('EXCHANGE_STATE', 'only a requested exchange is approved', ['status'], { status: ex.status });
     const o = await tx.order.findUniqueOrThrow({
       where: { id: ex.orderId },
-      select: { id: true, number: true, customerId: true, fulfillmentType: true, currency: true, phone: true, customerName: true, email: true, shippingAddressText: true, backfilledAddress: true, areaId: true, deliveryBandId: true, visitorId: true },
+      select: { id: true, number: true, status: true, customerId: true, fulfillmentType: true, currency: true, phone: true, customerName: true, email: true, shippingAddressText: true, backfilledAddress: true, areaId: true, deliveryBandId: true, visitorId: true },
     });
     const variants = await tx.productVariant.findMany({ where: { storeId: ex.storeId, id: { in: ex.items.map((i) => i.newVariantId!).filter(Boolean) } }, select: { id: true, productId: true, avgCostMinor: true } });
     const vOf = new Map(variants.map((v) => [v.id, v]));
@@ -696,7 +776,10 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
     }
     await eventRow(tx, by, { storeId: ex.storeId, orderId: n.id, type: 'order.placed', to: 'PLACED', data: { exchange: { id: ex.id, number: ex.number, fromOrderId: o.id, fromNumber: o.number } } });
     await auditRow(tx, by, { storeId: ex.storeId, action: 'order.exchangePlaced', entityType: 'Order', entityId: n.id, before: null, after: { number, exchangeId: ex.id, fromOrderId: o.id, totalMinor: subtotal + charge } });
-    const ret = await tx.returnRecord.create({
+    // PR 190 (SIM-F-021): a re-ship after a try-on — the refused parcel is already on its way back (its courier return,
+    // PR 189) and becomes this exchange's pick-up; the exchange moves on with it (checked already → its QC result).
+    const linked = o.status === 'RETURNED' ? await linkRefusedReturn(tx, ex) : null;
+    const ret = linked ?? await tx.returnRecord.create({
       data: {
         storeId: ex.storeId,
         orderId: o.id,
@@ -713,7 +796,7 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
       },
       select: { id: true },
     });
-    await tx.exchange.update({ where: { id: ex.id }, data: { status: 'APPROVED', newOrderId: n.id, decidedById: who.actor.staffUserId, decidedAt: now, decisionNote: d.note ?? null } });
+    await tx.exchange.update({ where: { id: ex.id }, data: { status: linked?.exchangeStatus ?? 'APPROVED', newOrderId: n.id, decidedById: who.actor.staffUserId, decidedAt: now, decisionNote: d.note ?? null } });
     return { action: 'approved', message: d.note ?? null, after: { status: 'APPROVED', newOrderId: n.id, newOrderNumber: number, returnId: ret.id }, result: { exchangeId: ex.id, newOrderId: n.id, newOrderNumber: number, returnId: ret.id, confirmed: false } };
   });
   if (engine.autoConfirm) {
@@ -735,7 +818,7 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
 export async function completeExchange(deps: OrdersDeps, who: Who, id: string, input: unknown = {}, opts: DecideOptions = {}): Promise<{ exchangeId: string; status: string }> {
   await allow(deps, who, 'returns.decide');
   const d = parse(decideInput, input, 'completion');
-  return decide(deps, who, id, opts, async (tx, ex) => {
+  return decideExchange(deps, who, id, opts, async (tx, ex) => {
     if (ex.status !== 'QC_PASSED' && ex.status !== 'QC_FAILED') throw new OrdersError('EXCHANGE_STATE', 'an exchange is completed after its old piece is checked', ['status'], { status: ex.status });
     if (ex.status === 'QC_FAILED' && !d.note) throw new OrdersError('INVALID_INPUT', 'a failed check needs a note to complete', ['note']);
     await tx.exchange.update({ where: { id: ex.id }, data: { status: 'COMPLETED' } });
@@ -747,7 +830,7 @@ export async function completeExchange(deps: OrdersDeps, who: Who, id: string, i
 export async function refuseExchange(deps: OrdersDeps, who: Who, id: string, input: unknown, opts: DecideOptions = {}): Promise<{ exchangeId: string; status: string }> {
   await allow(deps, who, 'returns.decide');
   const d = parse(refuseInput, input, 'refusal');
-  return decide(deps, who, id, opts, async (tx, ex, now) => {
+  return decideExchange(deps, who, id, opts, async (tx, ex, now) => {
     if (ex.status !== 'REQUESTED') throw new OrdersError('EXCHANGE_STATE', 'only a requested exchange is refused', ['status'], { status: ex.status });
     await tx.exchange.update({ where: { id: ex.id }, data: { status: 'REJECTED', decidedById: who.actor.staffUserId, decidedAt: now, decisionNote: d.note } });
     return { action: 'refused', message: d.note, after: { status: 'REJECTED' }, result: { exchangeId: ex.id, status: 'REJECTED' } };
@@ -784,7 +867,7 @@ export interface ExchangeView {
   decisionNote: string | null;
   createdAt: string;
   items: { id: string; oldSku: string | null; oldUnitMinor: number; newVariantId: string | null; newSku: string | null; newName: string | null; newColourName: string | null; newSizeLabel: string | null; newUnitMinor: number; quantity: number; tier: number | null; receivedSku: string | null; qcStatus: string | null; restockAction: string | null }[];
-  /** PR 187: the old piece's pick-up (an EXCHANGE_PICKUP return) and where each piece stands after QC. */
+  /** PR 187: the old piece's pick-up (an EXCHANGE_PICKUP return; a re-ship's refused parcel, PR 190) and where each piece stands after QC. */
   pickup: { returnId: string; status: string; version: number; items: { id: string; expectedSku: string | null; scannedSku: string | null; disposition: string | null; dispositionState: string | null; lossReason: string | null }[] } | null;
 }
 
@@ -796,7 +879,8 @@ async function viewsOf(db: Db, rows: Prisma.ExchangeGetPayload<{ include: typeof
   const pickups = new Map(
     (
       await db.returnRecord.findMany({
-        where: { exchangeId: { in: rows.map((r) => r.id) }, kind: 'EXCHANGE_PICKUP' },
+        // the pick-up of the old piece, or (PR 190, a re-ship) the refused parcel's own return
+        where: { exchangeId: { in: rows.map((r) => r.id) }, kind: { in: ['EXCHANGE_PICKUP', 'REFUSED_AT_DOOR'] } },
         orderBy: { createdAt: 'asc' },
         select: { id: true, exchangeId: true, status: true, version: true, items: { orderBy: { createdAt: 'asc' }, select: { id: true, expectedSku: true, scannedSku: true, disposition: true, dispositionState: true, lossReason: true } } },
       })

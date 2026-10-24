@@ -62,6 +62,9 @@ export const ORDER_PERMISSIONS = [
   'returns.decide',
   // S08 · PR 187: Receive & QC
   'returns.qc',
+  // S08 · PR 190: waive an exchange charge, decide a "your mistake" claim
+  'returns.waive',
+  'returns.claims.decide',
 ] as const;
 export type OrdersPermission = (typeof ORDER_PERMISSIONS)[number];
 

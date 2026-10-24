@@ -47,7 +47,9 @@
 // QC — every returned piece by the SKU scanned, sellable to the ERP, not sellable a loss (returns.ts). PR 188: the
 // variant switcher — another size of the same piece at the same price, stock held again (exchange-switch.ts). PR 189:
 // return handling — the courier's returned parcel opens its return, a return after receipt only when the policy allows
-// it (no returns after receipt by default), a person closes it (return-cases.ts).
+// it (no returns after receipt by default), a person closes it (return-cases.ts). PR 190: who pays the second delivery —
+// staff waivers with a logged reason and "your mistake" claims (exchange-charge.ts); the rules, the one-trip swap and the
+// linked re-ship after a try-on live in the engine (exchange.ts, exchange-pure.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -89,3 +91,4 @@ export * from './exchange';
 export * from './returns';
 export * from './exchange-switch';
 export * from './return-cases';
+export * from './exchange-charge';

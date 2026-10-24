@@ -20,13 +20,19 @@
 // wrong item) may still come back when that policy is off — off by default — and how long after the courier's
 // delivered mark (empty = the exchange window).
 //
+// PR 190 (`orders.exchange.charge`, `orders.exchange.swap`; CN-018 (5), CN-014e, SIM-F-021): who pays the second
+// delivery. The customer for his own size choice (the exchange rule's charge for his band, else the fallback figure —
+// empty: nothing collected), unless the owner says the shop pays; "your mistake" claims need a photo; which refusal
+// reasons allow a linked re-ship in another size after a try-on (and whether that re-ship is free, a perk, off); the
+// one-trip size swap (off; its price and areas). Staff waivers are a permission (`returns.waive`), never a setting.
+//
 // Nothing here moves money, changes a price, a discount or COD, or blocks anyone (CLAUDE.md rule 6). A difference in
 // the customer's favour becomes a wallet-credit REQUEST after QC passes; a difference he owes is collected as Cash on
 // Delivery on the linked exchange order.
 import { z } from 'zod';
 import { setting } from './define';
 import { ordersDictionaryDefault } from './registry-orders';
-import { dictionarySchema } from './schemas';
+import { dictionaryKeySchema, dictionarySchema, moneyMinorSchema } from './schemas';
 
 const V = 57;
 
@@ -85,6 +91,31 @@ export const returnsQcSchema = z.object({ acceptOtherSku: z.boolean(), photoForL
  */
 export const returnsHandlingSchema = z.object({ ourFaultReturns: z.boolean(), windowHours: z.int().min(1).max(8_760).nullable() }).strict();
 
+/**
+ * PR 190 (CN-018 (5), SIM-F-021) — who pays the second delivery charge. `sizePays`: the customer (his own size choice)
+ * or the shop. `fallbackMinor`: the charge when the exchange rule has none for his band (empty: not set, nothing is
+ * collected). `claimPhoto`: a "your mistake" claim needs a photo. `reshipRefusals`: refusal reasons (keys of
+ * `orders.refusal.reasons`) after which a refused parcel may be re-shipped in another size, linked to the refused order
+ * (a try-on); empty = no re-ship. `reshipFree`: that re-ship's delivery is free (a perk, off).
+ */
+export const exchangeChargeSchema = z
+  .object({
+    sizePays: z.enum(['customer', 'store']),
+    fallbackMinor: moneyMinorSchema.nullable(),
+    claimPhoto: z.boolean(),
+    reshipRefusals: z.array(dictionaryKeySchema).max(50),
+    reshipFree: z.boolean(),
+  })
+  .strict();
+
+/**
+ * PR 190 (CN-014e, idea 17) — the one-trip size swap: the rider brings the new size and takes the old piece in the same
+ * trip, at its own price, in the bands listed. Off by default; `chargeMinor` empty = not set (nothing collected).
+ */
+export const exchangeSwapSchema = z
+  .object({ enabled: z.boolean(), chargeMinor: moneyMinorSchema.nullable(), bandKeys: z.array(z.string().trim().min(1).max(60)).max(100) })
+  .strict();
+
 export const returnsSettings = {
   'orders.exchange.tiers': setting({
     ...base,
@@ -139,5 +170,23 @@ export const returnsSettings = {
     labelKey: 'orders.returns.handling.label',
     helpKey: 'orders.returns.handling.help',
     sortOrder: 405,
+  }),
+  'orders.exchange.charge': setting({
+    ...base,
+    valueType: 'JSON',
+    schema: exchangeChargeSchema,
+    default: { sizePays: 'customer', fallbackMinor: null, claimPhoto: true, reshipRefusals: ['size-fit'], reshipFree: false },
+    labelKey: 'orders.exchange.charge.label',
+    helpKey: 'orders.exchange.charge.help',
+    sortOrder: 406,
+  }),
+  'orders.exchange.swap': setting({
+    ...base,
+    valueType: 'JSON',
+    schema: exchangeSwapSchema,
+    default: { enabled: false, chargeMinor: null, bandKeys: [] },
+    labelKey: 'orders.exchange.swap.label',
+    helpKey: 'orders.exchange.swap.help',
+    sortOrder: 407,
   }),
 };
