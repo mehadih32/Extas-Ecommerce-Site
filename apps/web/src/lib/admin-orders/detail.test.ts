@@ -209,7 +209,7 @@ describe('sending a command', () => {
   it('every known refusal and every timeline event has words in both languages; an unknown code is "other"', () => {
     for (const code of KNOWN_ERRORS) for (const d of [en, bn] as Dict[]) expect(t(d, errorKey(code)), code).not.toBe(errorKey(code));
     expect(errorKey('SOMETHING_NEW')).toBe('orders.err.other');
-    const events = [...ORDER_COMMANDS.map((c) => `order.${c}`), 'order.placed', 'order.duplicateCheck', 'order.duplicate.approved', 'order.duplicate.ask', 'order.merged', 'order.note', 'order.note.archived', 'order.followUp', 'order.identityLinked', 'exchange.approved', 'exchange.refused', 'exchange.completed', 'exchange.switched', 'return.received', 'return.qc'];
+    const events = [...ORDER_COMMANDS.map((c) => `order.${c}`), 'order.placed', 'order.duplicateCheck', 'order.duplicate.approved', 'order.duplicate.ask', 'order.merged', 'order.note', 'order.note.archived', 'order.followUp', 'order.identityLinked', 'exchange.approved', 'exchange.refused', 'exchange.completed', 'exchange.switched', 'return.received', 'return.qc', 'return.closed'];
     for (const e of events) {
       const k = `orders.ev.${e.replace(/\./g, '_')}`;
       for (const d of [en, bn] as Dict[]) expect(t(d, k), k).not.toBe(k);

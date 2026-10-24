@@ -5,14 +5,16 @@
 // the order's lines, then what the first tier with stock offers, each with its money box). Drawn on the server; only
 // the buttons run in the browser (ReturnsActions). No money moves here; approving books the linked exchange order.
 // PR 188: each piece going out shows its other sizes at the same price (the size switcher) until the courier has it.
+// PR 189: under "Start an exchange", a return after receipt — only when the policy allows it (no returns after receipt
+// by default, said in words).
 import Link from 'next/link';
-import type { ExchangeChoices, ExchangeSizes, ExchangeView } from '@extas/orders';
+import type { ExchangeChoices, ExchangeSizes, ExchangeView, ReturnChoices } from '@extas/orders';
 import type { AdminView } from '@/lib/admin-page';
 import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, sizeChips, statusTone } from '@/lib/admin-returns/model';
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { ShellIcon } from '../shell/ShellIcon';
-import { OpenExchangeForm, ReturnsAction, SizeSwitch, type ActionTexts } from './ReturnsActions';
+import { OpenExchangeForm, OpenReturnForm, ReturnsAction, SizeSwitch, type ActionTexts } from './ReturnsActions';
 
 export interface StartStep {
   number: string;
@@ -21,6 +23,8 @@ export interface StartStep {
   reason: string | null;
   size: string | null;
   choices: ExchangeChoices | null;
+  /** PR 189: a return after receipt for the chosen line — the policy, the window, the pieces left (null: no line). */
+  ret: ReturnChoices | null;
 }
 
 export interface ReturnsData {
@@ -294,7 +298,46 @@ function StartCard({ view, data }: { view: AdminView; data: ReturnsData }) {
           )}
         </div>
       ) : null}
+      {s.found && s.line && s.ret ? <ReturnStart view={view} data={data} ret={s.ret} line={s.line} /> : null}
     </section>
+  );
+}
+
+/** PR 189: "Or a return" — the policy said in words when it is closed, else the form (with `returns.decide`). */
+function ReturnStart({ view, data, ret, line }: { view: AdminView; data: ReturnsData; ret: ReturnChoices; line: string }) {
+  const d = view.dict;
+  const n = (x: number) => formatNumber(x, view.locale);
+  const l = ret.lines.find((x) => x.id === line);
+  if (!l) return null;
+  const texts = { ...actionTexts(d), reason: r(d, 'retStart.reason'), quantity: r(d, 'retStart.quantity'), note: r(d, 'retStart.note'), noteOther: r(d, 'retStart.noteOther'), open: r(d, 'retStart.open') };
+  return (
+    <div className="a2-mt12" data-testid="return-start" data-closed={ret.closed ?? undefined}>
+      <div className="a2-h4">{r(d, 'retStart.title')}</div>
+      <div className="a2-xs a2-mute">{r(d, 'retStart.sub')}</div>
+      {ret.closed ? (
+        <div className="a2-note warn" data-testid="return-closed" data-why={ret.closed}>
+          <ShellIcon name="alert" size={15} />
+          <span>{r(d, `retStart.closed.${ret.closed}`)}</span>
+        </div>
+      ) : l.returnable < 1 ? (
+        <div className="a2-note warn">
+          <ShellIcon name="alert" size={15} />
+          <span>{r(d, 'retStart.none')}</span>
+        </div>
+      ) : (
+        <>
+          <div className="a2-xs a2-mute a2-mt6">
+            {ret.window.state === 'OPEN' ? r(d, 'start.left', { n: n(ret.window.hoursLeft), total: n(ret.windowHours) }) : null}
+            {` · ${r(d, 'retStart.paid', { amount: formatMoney(l.paidPerPieceMinor * l.returnable, data.money) })}`}
+          </div>
+          {data.canDecide ? (
+            <div className="a2-card tight a2-mt12">
+              <OpenReturnForm url={`/api/admin/returns/orders/${ret.orderId}/return`} orderItemId={l.id} max={l.returnable} reasons={ret.reasons.map((x) => ({ code: x.code, label: r(d, `retReason.${x.code}`) }))} texts={texts} nextHref={data.canQc ? `${returnsHref()}/qc?id=` : null} />
+            </div>
+          ) : null}
+        </>
+      )}
+    </div>
   );
 }
 

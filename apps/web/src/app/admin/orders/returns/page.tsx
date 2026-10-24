@@ -77,7 +77,9 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
   const sizes = chosen && perms.has('returns.decide') && od.EXCHANGE_SWITCHABLE.includes(chosen.status as (typeof od.EXCHANGE_SWITCHABLE)[number]) ? await maybe(od.exchangeSizes(rd, who, chosen.id)) : null;
   const line = found && q.line && found.lines.some((l) => l.id === q.line) ? q.line : null;
   const choices = found && line ? await maybe(od.exchangeChoices(rd, who, found.orderId, { orderItemId: line, reason: q.reason ?? od.EXCHANGE_REASON_CODES[0], ...(q.size ? { sizeKey: q.size } : {}) })) : null;
-  const start: StartStep = { number: q.order ?? '', found, line, reason: choices && q.reason && choices.reasons.includes(q.reason as od.ExchangeReason) ? q.reason : null, size: q.size, choices };
+  // PR 189: a return after receipt for the same line (the policy says whether there is one)
+  const ret = found && line ? await maybe(od.returnChoices(rd, who, found.orderId)) : null;
+  const start: StartStep = { number: q.order ?? '', found, line, reason: choices && q.reason && choices.reasons.includes(q.reason as od.ExchangeReason) ? q.reason : null, size: q.size, choices, ret };
   const data: ReturnsData = {
     rows,
     chosen,

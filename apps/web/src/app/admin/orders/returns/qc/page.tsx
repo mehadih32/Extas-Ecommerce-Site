@@ -2,6 +2,7 @@
 // step 1, the parcels expected back or at the shop (`?order=<number>` finds one order's); step 2 (`?id=<returnId>`),
 // each piece checked — the SKU scanned, sellable or not, the reason and photo of a loss — in one save. Needs
 // `returns.qc`; the order service checks it again on every call. Words: messages/admin-returns.*.json (`returns.qc.*`).
+// PR 189: with `returns.decide`, the checked parcels waiting to be closed, and Close (before QC only with a note).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -10,6 +11,7 @@ import * as od from '@extas/orders';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { actionTexts } from '@/components/admin/orders/ReturnsBoard';
+import { ReturnsAction } from '@/components/admin/orders/ReturnsActions';
 import { ReturnsQcForm, type QcTexts } from '@/components/admin/orders/ReturnsQcForm';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -63,8 +65,10 @@ export default async function ReturnsQcPage({ searchParams }: { searchParams: Se
     );
   const who: od.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const rd = readDeps(access.deps);
-  const [waiting, qc, lossReasons] = await Promise.all([
+  const canDecide = (access.guard.permissions ?? new Set<string>()).has('returns.decide');
+  const [waiting, toClose, qc, lossReasons] = await Promise.all([
     od.listReturns(rd, who, { status: ['EXPECTED', 'RECEIVED'], ...(q.order ? { orderNumber: q.order } : {}) }),
+    canDecide ? od.listReturns(rd, who, { status: ['QC_DONE'], ...(q.order ? { orderNumber: q.order } : {}) }) : Promise.resolve([] as od.ReturnView[]),
     access.deps.resolver.value('orders.returns.qc', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('orders.returns.lossReasons', { storeId: MOTHER_STORE_ID }),
   ]);
@@ -128,6 +132,19 @@ export default async function ReturnsQcPage({ searchParams }: { searchParams: Se
           ) : (
             <div className="a2-sm a2-mute a2-mt6">{r('nothing')}</div>
           )}
+          {toClose.length ? (
+            <>
+              <div className="a2-h4 a2-mt12">{r('toClose', { n: formatNumber(toClose.length, view.locale) })}</div>
+              {toClose.map((x) => (
+                <Link key={x.id} className={`a2-qi a2-mt6${chosen?.id === x.id ? ' on' : ''}`} href={qcHref({ id: x.id, order: q.order })} scroll={false} aria-current={chosen?.id === x.id ? 'true' : undefined} data-testid="qc-to-close">
+                  <div>
+                    <b>{`${x.orderNumber} · ${x.customerName ?? ''}`}</b>
+                    <span>{`${r(`kind.${x.kind}`)} · ${r(`parcel.${x.status}`)}`}</span>
+                  </div>
+                </Link>
+              ))}
+            </>
+          ) : null}
         </section>
         <div className="a2-stack">
           {chosen ? (
@@ -165,9 +182,14 @@ export default async function ReturnsQcPage({ searchParams }: { searchParams: Se
                       {i.erp?.lastError && i.dispositionState === 'ERP_FAILED' ? <div className="a2-xs rt-bad">{i.erp.lastError}</div> : null}
                     </div>
                   ))}
-                  <p className="a2-sm a2-mute a2-mt12">{r('done')}</p>
+                  {chosen.status === 'CLOSED' || !canDecide ? <p className="a2-sm a2-mute a2-mt12">{r('done')}</p> : null}
                 </>
               )}
+              {canDecide && chosen.status !== 'CLOSED' && !(chosen.exchangeId && chosen.status !== 'QC_DONE') ? (
+                <div className="a2-cmds a2-mt12">
+                  <ReturnsAction label={r('close')} url={`/api/admin/returns/parcels/${chosen.id}/close`} body={{ version: chosen.version }} tone={chosen.status === 'QC_DONE' ? 'pri' : ''} note={{ label: r(chosen.status === 'QC_DONE' ? 'closeNote' : 'closeEarly'), required: chosen.status !== 'QC_DONE' }} texts={actionTexts(d)} testId="return-close" />
+                </div>
+              ) : null}
               <div className="a2-note">
                 <ShellIcon name="info" size={15} />
                 <span>{r('d4')}</span>

@@ -2,7 +2,7 @@
 // sample catalogue; skipped without TEST_DATABASE_ADMIN_URL): login, the same-site check and the permission (a person
 // with only orders.read may not look); an order's exchange choices, opening one with the Idempotency-Key header (a
 // repeat gets the same exchange), the board, one case, approving it with the screen's version (an older version is
-// STALE) into the linked exchange order; PR 188's size switch. Every value is a made-up test value.
+// STALE) into the linked exchange order; PR 188's size switch; PR 189's return handling. Every value is made up.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -137,5 +137,31 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
     expect((await api('POST', `parcels/${retId}/teleport`, { body: {} })).status).toBe(404);
     const done = await api('POST', `exchanges/${id}/complete`, { body: {} });
     expect(done.body).toMatchObject({ ok: true, result: { status: 'COMPLETED' } });
+  });
+
+  it('PR 189: no returns after receipt by default (said, refused); a parcel the courier brought back is closed with a note', async () => {
+    const o = await delivered('api-ret');
+    const line = await f.t.prisma.orderItem.findFirstOrThrow({ where: { orderId: o.orderId } });
+    const ch = await api('GET', `orders/${o.orderId}/return-choices`);
+    expect(ch.body.choices).toMatchObject({ closed: 'POLICY', reasons: [], lines: [{ id: line.id, returnable: line.quantity }] });
+    expect((await api('GET', `orders/${o.orderId}/return-choices`, { cookie: reader })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const refused = await api('POST', `orders/${o.orderId}/return`, { body: { reason: 'defect', items: [{ orderItemId: line.id }] }, key: `ret-${randomUUID()}` });
+    expect(refused).toMatchObject({ status: 422, body: { ok: false, error: 'RETURN_CLOSED', data: { why: 'POLICY' } } });
+
+    const b = await f.place('api-ret-back');
+    const by = systemBy('test');
+    const r = { storeId: f.S, orderId: b.orderId };
+    const courier = await f.t.prisma.courierAccount.create({ data: { storeId: f.S, providerKey: 'mock', name: 'Courier back', enabled: true } });
+    await confirmOrder(f.ordersDeps(), f.staff, b.orderId);
+    await orderStep(f.ordersDeps(), r, by, 'pack');
+    await f.t.prisma.shipment.create({ data: { storeId: f.S, orderId: b.orderId, courierAccountId: courier.id, status: 'PENDING_PICKUP', idempotencyKey: randomUUID(), bookedAt: f.clock.now } });
+    await orderStep(f.ordersDeps(), r, by, 'handover');
+    await orderStep(f.ordersDeps(), r, by, 'returned');
+    const parcel = (await api('GET', `parcels?order=${b.number}`)).body.parcels[0];
+    expect(parcel).toMatchObject({ kind: 'REFUSED_AT_DOOR', status: 'EXPECTED' });
+    expect((await api('POST', `parcels/${parcel.id}/close`, { body: { version: parcel.version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await api('POST', `parcels/${parcel.id}/close`, { cookie: reader, body: { note: 'lost' } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const closed = await api('POST', `parcels/${parcel.id}/close`, { body: { note: 'the courier lost it', version: parcel.version } });
+    expect(closed.body).toMatchObject({ ok: true, result: { status: 'CLOSED' } });
   });
 });

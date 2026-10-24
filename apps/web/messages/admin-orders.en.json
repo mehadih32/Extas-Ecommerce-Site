@@ -624,7 +624,9 @@
       "return_received": "Returned parcel received at the shop",
       "return_qc": "Returned pieces checked (QC)",
       "exchange_completed": "Exchange completed",
-      "exchange_switched": "Exchange size switched"
+      "exchange_switched": "Exchange size switched",
+      "order_returnCase": "Return opened (after receipt)",
+      "return_closed": "Return closed"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",

@@ -78,7 +78,12 @@ export type OrdersErrorCode =
   /** PR 187: every piece of the parcel is checked in one save, each once (`details`: the pieces missing or twice). */
   | 'QC_INCOMPLETE'
   /** PR 187: a piece that is not sellable needs its reason (and a photo when `orders.returns.qc.photoForLoss`). */
-  | 'LOSS_REASON_REQUIRED';
+  | 'LOSS_REASON_REQUIRED'
+  /** PR 189: no return after receipt now — the policy (no returns after receipt), the window, or the parcel is not with
+   * the customer (`data.why`: POLICY, WINDOW, UNKNOWN, NOT_DELIVERED). */
+  | 'RETURN_CLOSED'
+  /** PR 189: these pieces are already coming back (another return or an open exchange) (`data.left`). */
+  | 'RETURN_LIMIT';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -132,6 +137,8 @@ export class OrdersError extends Error {
       case 'UNKNOWN_SKU':
       case 'QC_INCOMPLETE':
       case 'LOSS_REASON_REQUIRED':
+      case 'RETURN_CLOSED':
+      case 'RETURN_LIMIT':
         return 422;
       default:
         return 409;

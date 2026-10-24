@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { exchangeEngineSchema, exchangeTiersSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
+import { exchangeEngineSchema, exchangeTiersSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
 
 describe('exchange and return settings (v57)', () => {
   it('every key is in the registry at version 57 in the Orders group, labelled in English and Bengali, its default valid', () => {
@@ -37,5 +37,12 @@ describe('exchange and return settings (v57)', () => {
     const reasons = returnsSettings['orders.returns.lossReasons'].default;
     expect(reasons.map((r) => r.key)).toEqual(['stained', 'torn', 'used', 'tags', 'other']);
     for (const r of reasons) expect(r.bn.length, r.key).toBeGreaterThan(0);
+  });
+
+  it('PR 189: no returns after receipt stays the policy — our own mistake may come back only when switched on; the window follows the exchange', () => {
+    expect(registry['policy.returns.afterDelivery'].default).toBe(false);
+    expect(returnsSettings['orders.returns.handling'].default).toEqual({ ourFaultReturns: false, windowHours: null });
+    expect(returnsHandlingSchema.safeParse({ ourFaultReturns: true, windowHours: 0 }).success).toBe(false);
+    expect(returnsHandlingSchema.safeParse({ ourFaultReturns: true, windowHours: 48 }).success).toBe(true);
   });
 });
