@@ -97,3 +97,6 @@ export const latinDigits = (s: string) => s.replace(/[০-৯]/g, (c) => String(
 
 /** One order's address in the admin. */
 export const orderHref = (id: string) => `/admin/orders/${id}`;
+
+/** One order's invoice (PR 136; the staff open it with `orders.invoice`, follow-up 180). */
+export const invoiceHref = (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice`;
