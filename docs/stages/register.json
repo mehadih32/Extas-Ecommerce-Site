@@ -3106,8 +3106,9 @@
     "state": "live",
     "built": true,
     "date": "2026-10-20",
-    "note": "CI: lint, type-check, vitest, build, Lighthouse budget (`lighthouserc.json`), image build; green `main` deploys",
+    "note": "CI: lint, type-check, vitest, build, Lighthouse budget (`lighthouserc.json`), image build; green `main` deploys. 24 Oct (CN-023): one build reused by parallel jobs (lint and type-check, unit tests, sign-in end to end, the device gate on 4 runners, Lighthouse in shards); one page list (core set plus touched pages on a pull request, the full set on main, nightly and by hand); pnpm, Next.js and Playwright caches; follow-up 187 done",
     "github": [
+     "#35, 24 Oct",
      "#20, 20 Oct",
      "#19, 20 Oct",
      "#18, 20 Oct",
@@ -3125,7 +3126,8 @@
      "main"
     ],
     "tests": [
-     "CI: lint, type-check, vitest, build, Lighthouse budget (`lighthouserc.json`), image build"
+     "CI: lint, type-check, vitest, build, Lighthouse budget (`lighthouserc.json`), image build",
+     "24 Oct (CN-023): one build reused by parallel jobs (lint and type-check, unit tests, sign-in end to end, the device gate on 4 runners, Lighthouse in shards)"
     ]
    },
    "updates": [
@@ -6045,7 +6047,7 @@
     "date": "2026-10-24",
     "note": "Find My Size learns from the real answers (`catalogue.sizeAdvice`, registry v35, **the trained ease off**; permission `catalogue.sizeAdvice`): the size report groups every recorded answer by garment type and fit — answers, followed, went up / down, the exchange and review signals behind them — and flags a chart that keeps running tight or loose (`report.minAnswers` 5, `flagSharePct` 25, `windowDays` 180); `trainSizeAdvice` makes a new ease version per group from those signals, at most `train.maxEaseAdjustInch` 0.5 in `train.stepInch` 0.25 steps, and it arrives **switched off** — the finder keeps using the chart's own ease until the owner turns `useTrainedEase` on, one active version per group; follow-up 153 done (each answer is linked to the order line it led to and to an exchange's new size, the ambiguous case left alone); the admin API `/api/admin/size-advice` (report, models, train, activate, link) checks its permission per store; no admin screen (the report screen is follow-up 231 on the new admin shell)",
     "github": [
-     "#36, 24 Oct"
+     "#35, 24 Oct"
     ]
    },
    "builtFacts": {
@@ -6349,7 +6351,7 @@
     "date": "2026-10-24",
     "note": "product reviews on the product page (`pdp.reviews`, registry v35, on: up to 3, photo reviews first, the summary box, the rating line under the title, the buyer's height · weight · \"bought L\" line, the verified-buyer tag, his photo, \"Questions?\"; one sliding row on the shared slider engine with its own tested mouse, touch and keyboard pause and resume) and the whole journey behind it (SIM-F-008 acceptance test: review submitted → in the shop → approved → on the page → wallet credited). Only a buyer writes one, from My account, about a line of his own **delivered** order (`reviews.submit`: `onlyDelivered` on, `withinDays` 90, `bodyMax` 1200, his fit, height, weight and one photo up to 8 MB); every review is saved **PENDING** and nothing of it is shown anywhere — not on the page, not in the average, not in the search-engine rating — until staff approve it through the admin API `/api/admin/reviews` (permissions `reviews.read`, `reviews.moderate`, `reviews.write`; approve · hide · reject · restore, the verified mark, the shop's own reviews, `reviews.moderation`: `oneReviewPerLine` on, `verifyFromOrder` on); the photo-review perk is a setting **off with no amount** (`reviews.photoReward`: `minRating` 4, `onePerOrder` on) and, once the owner switches it on with his own figure, it pays one CREDIT in the existing wallet ledger at approval only, keyed by the review so it can never pay twice (CLAUDE.md rule 6, CN-018); PR 59's size learning now reads the approved fit words (`approvedFitSignals`); customer photo uploads go through the library (`uploadCustomerImage`, folder `review-photos`); migration `0021_reviews` (additive); sample reviews in the sample seed and a delivered sample order (TRY-65) for the gate; no admin screen (the moderation queue is follow-up 230 on the new admin shell)",
     "github": [
-     "#36, 24 Oct"
+     "#35, 24 Oct"
     ]
    },
    "builtFacts": {
