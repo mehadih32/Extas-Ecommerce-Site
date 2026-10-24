@@ -19,6 +19,7 @@
     "@extas/catalogue": "workspace:*",
     "@extas/checkout": "workspace:*",
     "@extas/combos": "workspace:*",
+    "@extas/customers": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/delivery": "workspace:*",
     "@extas/documents": "workspace:*",

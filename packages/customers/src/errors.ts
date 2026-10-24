@@ -1,0 +1,53 @@
+// One error type for every refusal of the customers service. The `code` is stable; the admin turns it into words from
+// its messages files (`cus.err.<code>`). `data` carries what a screen needs with the refusal (the survivor to merge into).
+export type CustomersErrorCode =
+  | 'INVALID_INPUT'
+  | 'NOT_FOUND'
+  /** PR 284: a profile cannot be merged with itself. */
+  | 'SAME_PROFILE'
+  /** PR 284: this profile was merged into another already (`data.survivorId`): merge with that one instead. */
+  | 'ALREADY_MERGED'
+  /** PR 284: other profiles are merged into this one (`data.members`): it can only be the one that stays. */
+  | 'HAS_MERGED'
+  /** PR 284: an erased or archived profile is never merged. */
+  | 'NOT_ACTIVE'
+  /** PR 284: the owner's merge rules ask for a short note. */
+  | 'NOTE_REQUIRED'
+  /** PR 284: this decision was undone already (`data.undoneAt`). */
+  | 'ALREADY_UNDONE'
+  /** PR 284: the profile moved on since this merge (merged again elsewhere): it is not this merge's to undo. */
+  | 'MOVED_ON'
+  /** PR 284: the same Idempotency-Key with a different request. */
+  | 'KEY_REUSED';
+
+export class CustomersError extends Error {
+  readonly code: CustomersErrorCode;
+  readonly details: string[];
+  readonly data: Record<string, unknown> | undefined;
+
+  constructor(code: CustomersErrorCode, message: string, details: string[] = [], data?: Record<string, unknown>) {
+    super(`${code}: ${message}`);
+    this.name = 'CustomersError';
+    this.code = code;
+    this.details = details;
+    this.data = data;
+  }
+
+  /** HTTP status for the APIs (§7.1: 400 validation, 404, 409 state conflicts, 422 business rule). */
+  get status(): number {
+    switch (this.code) {
+      case 'INVALID_INPUT':
+        return 400;
+      case 'NOT_FOUND':
+        return 404;
+      case 'SAME_PROFILE':
+      case 'NOTE_REQUIRED':
+      case 'NOT_ACTIVE':
+        return 422;
+      default:
+        return 409;
+    }
+  }
+}
+
+export const isCustomersError = (e: unknown): e is CustomersError => e instanceof CustomersError;

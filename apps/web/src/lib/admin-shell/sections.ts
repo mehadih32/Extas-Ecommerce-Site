@@ -114,7 +114,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'audit', more: true, pages: [{ href: '/admin/products/audit', perm: 'catalogue.read', keys: ['productAudit'] }] },
     ],
   },
-  { id: 'customers', icon: 'users', group: 'daily', base: '/admin/customers', tabs: [], guide: 'customers' },
+  // S14 · PR 284: To review (CUS-05) — the merge rules' "Same person?" pairs and the decisions made.
+  {
+    id: 'customers',
+    icon: 'users',
+    group: 'daily',
+    base: '/admin/customers',
+    guide: 'customers',
+    tabs: [{ id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] }],
+  },
   {
     id: 'delivery',
     icon: 'truck',

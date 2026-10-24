@@ -24,7 +24,8 @@
     "orders": "Orders",
     "messages": "Messages",
     "payments": "Payments and COD",
-    "fulfilment": "Packing and print"
+    "fulfilment": "Packing and print",
+    "customers": "Customers"
   },
   "permissions": {
     "settings": {
@@ -182,6 +183,11 @@
       "claims": {
         "decide": "Approve or refuse a customer’s “your mistake” claim on an exchange"
       }
+    },
+    "customers": {
+      "read": "See the customers and one customer's page (orders, lifetime value, exchanges, support), with the phone number masked; every profile open is logged",
+      "phone": "See, call and copy a customer's full phone number (each copy and call is logged)",
+      "merge": "Merge two profiles of the same person, split a merge again, or mark a pair as not the same person (nothing moves or is deleted)"
     }
   },
   "totp": {

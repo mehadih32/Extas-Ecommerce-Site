@@ -317,6 +317,7 @@ model Store {
   customerTags            CustomerTag[]
   customerTagLinks        CustomerTagLink[]
   customerAccessLogs      CustomerAccessLog[]
+  customerMerges          CustomerMerge[]
   consentRecords          ConsentRecord[]
   segments                Segment[]
   segmentMembers          SegmentMember[]
@@ -6140,6 +6141,10 @@ model Customer {
   legacyImportId           String?        @db.Uuid
   erasedAt                 DateTime?      @db.Timestamptz(3)
   archivedAt               DateTime?      @db.Timestamptz(3)
+  /// PR 284: a person merged this profile into another one (the survivor). The survivor's single view shows both; nothing
+  /// moves and nothing is deleted, and a split (CustomerMerge.undoneAt) makes it its own profile again.
+  mergedIntoId             String?        @db.Uuid
+  mergedAt                 DateTime?      @db.Timestamptz(3)
   createdAt                DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
 
@@ -6154,6 +6159,7 @@ model Customer {
 
   @@unique([storeId, phone])
   @@index([storeId, lastOrderAt])
+  @@index([storeId, mergedIntoId])
   // PR 603: fuzzy name matching for the identity graph (PR 519).
   @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "idx_customer_name_trgm")
 }
@@ -6236,6 +6242,38 @@ model CustomerAccessLog {
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([customerId, createdAt])
+}
+
+/// @stage S14 · PR 284 — a person's decision on two customer profiles: MERGED (the second into the first, the survivor;
+/// undone by a split, which keeps this row with who split it and why) or NOT_SAME (the pair is never suggested again).
+/// Nothing is deleted: the profiles, their orders, wallets and notes stay where they are.
+model CustomerMerge {
+  id             String                @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store                 @relation(fields: [storeId], references: [id])
+  decision       CustomerMergeDecision
+  survivorId     String                @db.Uuid
+  mergedId       String                @db.Uuid
+  /// The merge rules that matched when it was decided (email, whatsapp, nameAddress, identity) or `manual`.
+  signals        String[]
+  note           String?
+  decidedById    String?               @db.Uuid
+  idempotencyKey String?
+  undoneAt       DateTime?             @db.Timestamptz(3)
+  undoneById     String?               @db.Uuid
+  undoNote       String?
+  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime              @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, idempotencyKey])
+  @@index([storeId, survivorId])
+  @@index([storeId, mergedId])
+  @@index([storeId, decision, createdAt])
+}
+
+enum CustomerMergeDecision {
+  MERGED
+  NOT_SAME
 }
 
 /// @stage S14 · PR 123, 298 — a consent change per channel, with where and when (SMS and WhatsApp stored separately).

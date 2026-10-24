@@ -1,0 +1,15 @@
+{
+  "groups": {
+    "customers": "Customers"
+  },
+  "customers": {
+    "merge": {
+      "label": "Merge rules (two profiles of one person)",
+      "help": "Which matches put two customer profiles on the \"To review\" list as maybe the same person: the same e-mail, one profile's WhatsApp number being the other's phone, the same name with the same address, or the same identity in the order identity graph (only while that graph is on in Orders › Risk rules). The shop never merges by itself: a person with the merge permission looks at both and presses Merge, or \"Not the same person\" (then the pair is never suggested again). A merge moves nothing — orders, wallets and notes stay where they are and the first profile's page shows both — and \"Split\" undoes it exactly. \"Per page\": how many pairs the list shows at a time. \"Note needed\": a merge needs a short note (a split always does). Off (\"Suggest pairs\" off): no suggestions; a person can still merge two profiles by hand."
+    },
+    "phoneMask": {
+      "label": "Masked phone numbers",
+      "help": "A team member without the \"full phone number\" permission sees customers' numbers masked, with this many digits kept at the start and at the end (3 and 3: 017•••••678). With the permission (you have every permission) the number is shown in full, and every copy and call is logged in \"Who looked at this customer\"."
+    }
+  }
+}

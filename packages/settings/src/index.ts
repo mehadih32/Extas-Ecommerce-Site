@@ -53,4 +53,5 @@ export * from './registry-advance-request';
 export * from './registry-wallet';
 export * from './registry-courier-sync';
 export * from './registry-fulfilment';
+export * from './registry-customers';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

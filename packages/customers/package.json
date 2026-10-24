@@ -1,0 +1,36 @@
+{
+  "name": "@extas/customers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Customers (S14, BACKEND-ARCHITECTURE §5.5; Blueprint B5): one customer record keyed by phone, the single view over a person's merged profiles and numbers, the merge rules, merges and splits by a person only (nothing moves or is deleted) and who looked at a customer (PR 284). Phone numbers are masked for anyone without the full-number key.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/auth": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/delivery": "workspace:*",
+    "@extas/metrics": "workspace:*",
+    "@extas/orders": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}
