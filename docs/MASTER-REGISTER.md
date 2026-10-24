@@ -397,6 +397,14 @@ the server.*
 > - **(3) One KPI definition (PR 155) and an append-only audit log (PR 139).** "Sales" means delivered orders only; the ordered value is shown separately. Every report view and the dashboard use the same metric functions. The app's database role cannot update or delete audit rows.
 > - Each item gets tests and a smoke check. The order state machine, refunds and returns wait until the owner approves the architecture draft.
 
+> **CN-023 · 24 Oct 2026 (owner): CI under 25 minutes, with every gate as strict as before.** One CI run on a pull request took about 115 minutes (the `web` job 57.5 min, then the `device-gate` job 57 min after it), because Lighthouse ran twice (36 min without a database in `web`, 18 min on the sample data in `device-gate`) and every check ran one after another. The owner's rules:
+> - **(1) Lighthouse runs once**, on the sample database. On a pull request it measures a fixed core set (home, a category, a product, a combo, the bag and the checkout, in English and Bengali) plus the pages whose route or component files the pull request touches. The full set runs on every push to `main` (so a failure still blocks the deploy), every night and by hand. The pages run in parallel, on separate runners, so no page is measured under another's load.
+> - **(2) Build once and reuse it.** The app and its two images are built once; lint and type-check, the unit tests, the sign-in end to end, the device gate and Lighthouse run as parallel jobs on that one build.
+> - **(3) Caches:** the pnpm store, the Next.js build cache and the Playwright browsers.
+> - **(4) Measure** the time before and after, and write both numbers in `PROGRESS.md`.
+> - No budget, assertion or gate is lowered: the same Lighthouse budget and page-weight targets, the same device sizes and rules (0 fails), the same end-to-end journeys. The two Lighthouse page lists become one (`lighthouserc.json`). The job names that branch protection may require (`web`, `device-gate`, `db`, `infra`, `readme-guard`, `commits`) stay, each failing when its gate fails.
+> - No new PR number: on PR 17 (CI). It closes follow-up 187 (the seeded Lighthouse beside the device gate).
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
@@ -571,7 +579,7 @@ built handover-ready from day one.
 | 14 | Seed data and fixtures: categories, products, colours, sizes, a demo order |
 | 15 | Authentication — customer accounts, admin accounts, sessions, password rules **Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-039 (a guest-order account has the phone number as its password) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4. |
 | 16 | Role and permission model: owner, manager, support, auditor (read-only) |
-| 17 | CI — lint, type-check, unit tests, build, and the Lighthouse gate **Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`. |
+| 17 | CI — lint, type-check, unit tests, build, and the Lighthouse gate **Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`. **Updated 24 Oct 2026 (CN-023):** CI under 25 minutes with every gate as strict as before: one Lighthouse run on the sample database from one page list (on a pull request the core set — home, a category, a product, a combo, bag, checkout — plus the pages its diff touches; the full set on every push to `main`, nightly and by hand, still blocking the deploy), pages in parallel on separate runners; one build of the app and its images, reused by parallel jobs (lint and type-check, unit tests, sign-in end to end, device gate, Lighthouse); pnpm, Next.js build and Playwright browser caches; time measured before and after in `PROGRESS.md`. |
 | 18 | The adapter framework: every integration has a mock / sandbox / live mode and a test-connection button. **Updated 19 Oct 23:33 (owner server spec):** includes the **storage adapter** — local disk / Azure Blob / S3-compatible — so media works with or without Blob and with or without the CDN (PR 604) |
 
 ### S00 additions — the settings framework (approved 18 Oct)

@@ -830,3 +830,7 @@ Full list (H = home/header/footer, C = category, P = product, B = bag drawer, G 
 
 ## Note 63 — 23 Oct 19:22 · Architecture approved (CN-022)
 - After the third-party review, the owner approved the design and everything in it, with the recommended answers. Next: build everything in the demo (the new admin) and build the backend as planned.
+
+## Note 64 — 24 Oct · CI time (CN-023)
+- "CI time (now ~85 min per run → target under 25 min, no budget or gate lowered): (1) Run Lighthouse once, not twice (today: 36 min in "web" + 18 min in "device-gate"). On each PR, check the pages that PR touches plus a fixed core set (home, category, product, combo, bag, checkout), with URLs in parallel. Run the full set nightly and before every release; it still blocks deploy on failure. (2) Build once and reuse the image. Run type-check, unit tests, sign-in e2e, device-gate and Lighthouse as parallel jobs, not one after another. (3) Cache pnpm, the Next.js build cache and the Playwright browsers. (4) Measure before and after, and write both numbers in PROGRESS.md."
+- Measured before on the #34 run: `web` 57.5 min, then `device-gate` 57 min after it, about 115 min per pull request. On PR 17; closes follow-up 187.
