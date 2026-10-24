@@ -37,6 +37,19 @@ it('every configured check names its PR and is a page check or a request check',
   }
 });
 
+it('follow-up 200: every adminDiscover entry names a built admin page, a selector and how many to open', () => {
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  expect(config.adminDiscover.length).toBeGreaterThan(0);
+  for (const d of config.adminDiscover) {
+    expect(d.from.startsWith('/admin/'), d.from).toBe(true);
+    expect(config.admin.includes(d.from), d.from).toBe(true); // the page it looks on is opened on its own too
+    expect(typeof d.selector, d.from).toBe('string');
+    expect(Number.isInteger(d.take) && d.take > 0, d.from).toBe(true);
+  }
+  // one order's page from the list, whatever the order numbers are; never another site, never a repeat
+  expect(discovered(['/admin/orders/a1?x=1', '/admin/orders/a1', 'https://evil.test/admin/orders/b', '/admin/orders/b2'], 1)).toEqual(['/admin/orders/a1']);
+});
+
 it('PR 155: Sales and Ordered value each show once, with a label and a figure, and never as the same figure', () => {
   const sel = ['[data-testid=cb-kpi-ordered]', '[data-testid=cb-kpi-sales]'];
   const ok = [[{ label: 'Ordered value', value: '৳0' }], [{ label: 'Sales (delivered)', value: '৳0' }]];

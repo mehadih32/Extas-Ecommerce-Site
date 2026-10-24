@@ -75,3 +75,21 @@ export async function viewOldest(deps: OrdersDeps, who: Who, view: OrderView): P
   });
   return o?.placedAt ?? null;
 }
+
+/**
+ * PR 12 (follow-up 200): the order work waiting in some views, for the sidebar badge and the Dashboard's "Needs you
+ * now": how many, and when the oldest was placed. No key check here: the shell shows each row only to the people whose
+ * keys open its list (the counts are one per store, like the shell's other queues).
+ */
+export async function orderQueueCounts(db: OrdersDeps['db'], storeId: number, views: readonly OrderView[]): Promise<Record<string, { n: number; oldest: Date | null }>> {
+  const reviews = await openReviewIds({ db } as OrdersDeps, storeId);
+  const base = { storeId, archivedAt: null, status: { not: 'DRAFT' as const } };
+  const rows = await Promise.all(
+    views.map(async (v) => {
+      const where = { AND: [base, viewWhere(v, reviews)] };
+      const [n, first] = await Promise.all([db.order.count({ where }), db.order.findFirst({ where, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], select: { placedAt: true } })]);
+      return [v, { n, oldest: first?.placedAt ?? null }] as const;
+    }),
+  );
+  return Object.fromEntries(rows);
+}

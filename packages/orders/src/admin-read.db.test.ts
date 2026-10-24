@@ -5,7 +5,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { cancelOrder, listExtras, listOrders, orderHistory, orderNumbers, returnRefundState, staffNames, viewOldest } from './index';
+import { cancelOrder, listExtras, listOrders, orderHistory, orderNumbers, orderQueueCounts, returnRefundState, staffNames, viewOldest } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 describe('the return / refund chip (no database)', () => {
@@ -121,6 +121,15 @@ describe.skipIf(!HAS_TEST_DB)('the admin order screens read on PostgreSQL (S05 U
     const nums = await orderNumbers(d(), f.staff, [plain.orderId, paid.orderId, randomUUID()]);
     expect(nums.map((r) => r.number).sort()).toEqual([plain.number, paid.number].sort());
     expect(nums.find((r) => r.id === paid.orderId)!.status).toBe('CANCELLED');
+  });
+
+  it('follow-up 200: the waiting work for the badge and "Needs you now" is the views\' own counts, with the oldest', async () => {
+    const views = ['toConfirm', 'inReview', 'cancelRequests', 'cancelPending'] as const;
+    const q = await orderQueueCounts(db(), f.S, views);
+    const l = await listOrders(d(), f.staff, {});
+    for (const v of views) expect(q[v]!.n, v).toBe(l.counts[v]);
+    expect(q.toConfirm!.oldest?.getTime()).toBe((await viewOldest(d(), f.staff, 'toConfirm'))?.getTime());
+    expect(q.cancelPending).toEqual({ n: 0, oldest: null });
   });
 
   it('read with the order keys only: someone without orders.read is refused', async () => {

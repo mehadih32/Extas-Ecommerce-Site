@@ -46,6 +46,10 @@
       },
       "help": {
         "manual": "Help & manual"
+      },
+      "orders": {
+        "all": "All orders",
+        "confirm": "To confirm"
       }
     },
     "purpose": {
@@ -246,6 +250,10 @@
       "clear": "All clear"
     },
     "queue": {
+      "ordersConfirm": "Orders to confirm",
+      "ordersReview": "Orders in duplicate review",
+      "ordersCancelRequests": "Customers asking to cancel",
+      "ordersCancelPending": "Cancels waiting for the courier",
       "launch": "Products waiting to launch",
       "lowStock": "Low-stock sizes",
       "countsReview": "Stock counts to review",

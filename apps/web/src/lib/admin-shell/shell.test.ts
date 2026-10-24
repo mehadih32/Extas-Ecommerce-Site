@@ -71,7 +71,15 @@ describe('the 14 sections', () => {
     expect(sectionVisible(products, viewer(['inventory.read']))).toBe(true);
     expect(visibleTabs(products, viewer(['inventory.read'])).map((x) => x.id)).toEqual(['stock']);
     expect(sectionVisible(sectionById('customers')!, viewer(['catalogue.read']))).toBe(false);
-    expect(sectionVisible(sectionById('orders')!, viewer(['orders.invoice']))).toBe(true);
+    // follow-up 200: the Orders section is its built pages; the invoice key alone opens none of them
+    const orders = sectionById('orders')!;
+    expect(sectionVisible(orders, viewer(['orders.invoice']))).toBe(false);
+    expect(visibleTabs(orders, viewer(['orders.read'])).map((x) => x.id)).toEqual(['all']);
+    expect(visibleTabs(orders, viewer(['orders.read', 'orders.confirm'])).map((x) => x.id)).toEqual(['all', 'confirm']);
+    expect(sectionHome(orders, viewer(['orders.confirm']))).toBe('/admin/orders/confirm');
+    expect(locate('/admin/orders/0193')?.tab?.id).toBe('all');
+    expect(locate('/admin/orders/confirm')?.tab?.id).toBe('confirm');
+    expect(locateKey('order')?.page?.href).toBe('/admin/orders');
   });
 
   it('an entry leads to the Dashboard itself, the first tab the person may open, or the placeholder', () => {
@@ -79,7 +87,7 @@ describe('the 14 sections', () => {
     expect(sectionHome(sectionById('products')!, viewer(['inventory.read']))).toBe('/admin/stock');
     expect(sectionHome(sectionById('products')!, OWNER)).toBe('/admin/products');
     expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money');
-    expect(placeholderSections().map((s) => s.id)).toEqual(['orders', 'customers', 'delivery', 'messages', 'support', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
+    expect(placeholderSections().map((s) => s.id)).toEqual(['customers', 'delivery', 'messages', 'support', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
   });
 
   it('an address belongs to the longest page that owns it, else to a section', () => {
@@ -147,6 +155,21 @@ describe('waiting work and badges', () => {
   it('badges: Products = the launch queue, Reports = stopped jobs', () => {
     expect(badgesFrom(visibleQueues(counts, OWNER))).toEqual({ products: 3, reports: 4 });
     expect(badgesFrom(visibleQueues(counts, viewer(['inventory.read'])))).toEqual({});
+  });
+
+  it('follow-up 200: the Orders badge is orders to confirm plus duplicate reviews, each for its own key', () => {
+    const withOrders: QueueCount[] = [
+      { id: 'ordersConfirm', n: 5, oldest: '2026-10-23T00:00:00.000Z' },
+      { id: 'ordersReview', n: 2, oldest: null },
+      { id: 'ordersCancelRequests', n: 1, oldest: null },
+      { id: 'ordersCancelPending', n: 3, oldest: null },
+      ...counts,
+    ];
+    expect(visibleQueues(withOrders, OWNER).map((r) => r.id).slice(0, 4)).toEqual(['ordersConfirm', 'ordersReview', 'ordersCancelRequests', 'ordersCancelPending']);
+    expect(badgesFrom(visibleQueues(withOrders, OWNER))).toEqual({ orders: 7, products: 3, reports: 4 });
+    expect(badgesFrom(visibleQueues(withOrders, viewer(['orders.confirm'])))).toEqual({ orders: 5 });
+    expect(visibleQueues(withOrders, viewer(['orders.read'])).map((r) => r.id)).toEqual(['ordersCancelPending']);
+    for (const q of QUEUES) for (const d of [en, bn] as Dict[]) expect(t(d, `dash.queue.${q.id}`), q.id).not.toBe(`dash.queue.${q.id}`);
   });
 });
 
