@@ -32,6 +32,8 @@ describe('PR 96 · which page and bag look', () => {
     expect(page({ combo: 'P9' })).toBe('current');
     expect(bagTemplateFor({ combo: null, rule: 'B2', shop: 'B5' })).toBe('B2');
     expect(bagTemplateFor({ combo: null, rule: null, shop: 'B5' })).toBe('B5');
+    expect(bagTemplateFor({ combo: null, rule: null, shop: 'current' })).toBe('current');
+    expect(bagTemplateFor({ combo: 'B9', rule: null, shop: 'B5' })).toBe('current');
     expect(listTemplateFor({ combo: 'L4', rule: 'L2', shop: 'L1' })).toBe('L4');
   });
 });

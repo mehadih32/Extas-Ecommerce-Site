@@ -350,7 +350,7 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
   describe('PR 96 · the set summary on the server', () => {
     it('a top + bottom set: its pieces in order with colours, sizes and stock, the P3 page, and one set price', async () => {
       const sum = await setSummary(deps(), { storeId: S, slug: 'sample-polo-chino-set' });
-      expect(sum).toMatchObject({ slug: 'sample-polo-chino-set', type: 'TOP_BOTTOM', state: 'live', onSale: true, pieceCount: 2, needsMix: false, pageTemplate: 'current', bagTemplate: 'B5', listTemplate: 'L1' });
+      expect(sum).toMatchObject({ slug: 'sample-polo-chino-set', type: 'TOP_BOTTOM', state: 'live', onSale: true, pieceCount: 2, needsMix: false, pageTemplate: 'current', bagTemplate: 'current', listTemplate: 'L1' });
       expect(sum.pieces.map((p) => p.productId)).toEqual([ids['essential-pique-polo'], ids['slim-chino-trousers']]);
       for (const p of sum.pieces) {
         expect(p.colours.length).toBeGreaterThan(0);

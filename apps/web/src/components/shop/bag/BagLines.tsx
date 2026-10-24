@@ -28,7 +28,7 @@ export function Thumb({ c, card, colourKey, hex, garment, alt }: { c: ShopContex
   return <ProductPicture garment={card?.garment ?? garment ?? null} hex={hex} photo={photo} ratio="ratio-11" alt={alt} lang={c.lang} sizes={THUMB} />;
 }
 
-function Note({ text, bad = false, testId }: { text: string; bad?: boolean; testId: string }) {
+export function Note({ text, bad = false, testId }: { text: string; bad?: boolean; testId: string }) {
   return (
     <div className={`zc-note${bad ? ' bad' : ''}`} role={bad ? 'alert' : undefined} data-testid={testId}>
       <Icon name="info" size={13} />

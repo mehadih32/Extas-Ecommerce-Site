@@ -51,16 +51,37 @@ export interface BagItem extends Named {
   unavailable: boolean;
 }
 
+/** PR 574 · one piece of a set in the bag, with what the bag templates show of it. */
+export interface BagSetPiece extends Named {
+  lineId: string;
+  productId: string | null;
+  slug: string | null;
+  colour: BagColour | null;
+  size: string | null;
+  /** The piece's colour and size (B2 sends every piece's choice, in this order, when one size changes). */
+  colourId: string | null;
+  sizeId: string | null;
+  /** The piece's own price kept on the line (B4's split lines). */
+  unitPriceMinor: number;
+  /** Pieces of this colour and size left with the rest of the bag counted, this piece included ("Only 2 left"). */
+  left: number;
+  /** The sizes this colour is made in; `ok` = it can take this piece now (the bag's other lines counted). */
+  sizes: { id: string; label: string; ok: boolean }[];
+}
+
 export interface BagSetView extends Named {
   groupKey: string;
   /** A line of the set: the API takes the whole set by any of its lines. */
   lineId: string;
   slug: string;
-  pieces: (Named & { lineId: string; productId: string | null; slug: string | null; colour: BagColour | null; size: string | null })[];
+  pieces: BagSetPiece[];
   payMinor: number;
   regularMinor: number;
   savingMinor: number;
   note: BagSet['note'];
+  /** PR 574 · the auto rule that made the pair (B3), and how the bag draws the set (`combos.template.bag`). */
+  ruleId: string | null;
+  bagTemplate: BagSet['bagTemplate'];
 }
 
 export interface SummaryRow extends Named {
@@ -252,12 +273,32 @@ export async function bagView(
     nameBn: s.nameBn,
     pieces: s.lines.map((l) => {
       const p = l.productId ? facts.get(l.productId) : undefined;
-      return { lineId: l.id, productId: l.productId, slug: p?.slug ?? null, nameEn: p?.nameEn ?? '', nameBn: p?.nameBn ?? null, colour: colourOf(p, l.colourId), size: p?.sizes.find((x) => x.id === l.sizeId)?.label ?? null };
+      const live = (variantId: string) => Math.max(0, (p?.variants.find((v) => v.id === variantId)?.sellable ?? 0) - (held.get(variantId) ?? 0));
+      const mine = held.get(l.variantId) ?? 0;
+      return {
+        lineId: l.id,
+        productId: l.productId,
+        slug: p?.slug ?? null,
+        nameEn: p?.nameEn ?? '',
+        nameBn: p?.nameBn ?? null,
+        colour: colourOf(p, l.colourId),
+        size: p?.sizes.find((x) => x.id === l.sizeId)?.label ?? null,
+        colourId: l.colourId,
+        sizeId: l.sizeId,
+        unitPriceMinor: l.unitPriceMinor,
+        left: Math.max(0, (p?.variants.find((v) => v.id === l.variantId)?.sellable ?? 0) - Math.max(0, mine - 1)),
+        sizes: (p?.sizes ?? []).flatMap((z) => {
+          const v = p?.variants.find((x) => x.colourId === l.colourId && x.sizeId === z.id && x.priceMinor !== null);
+          return v ? [{ id: z.id, label: z.label, ok: v.id === l.variantId || live(v.id) >= 1 }] : [];
+        }),
+      };
     }),
     payMinor: s.payMinor,
     regularMinor: s.regularMinor,
     savingMinor: s.savingMinor,
     note: s.note,
+    ruleId: s.ruleId,
+    bagTemplate: s.bagTemplate,
   });
   const liveSets = allSets.filter((s) => !s.savedForLater);
   const setPieces = rows.filter((r) => r.comboGroupKey && !r.savedForLater && liveSets.some((s) => s.groupKey === r.comboGroupKey));

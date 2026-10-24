@@ -30,6 +30,9 @@ export const comboPairPageSchema = z
   })
   .strict();
 
+/** PR 574 — B5 draws each set as one compact row (▸ opens it) once the bag holds this many sets; under it B5 draws B2. */
+export const comboBagCompactSchema = z.int().min(1).max(50);
+
 const base = { scope: 'store', isOwnerData: false, isPublic: true, group: 'combos', version: V } as const;
 
 export const comboTemplateSettings = {
@@ -50,6 +53,15 @@ export const comboTemplateSettings = {
     labelKey: 'combos.pairPage.label',
     helpKey: 'combos.pairPage.help',
     sortOrder: 305,
+  }),
+  'combos.bag.compactFrom': setting({
+    ...base,
+    schema: comboBagCompactSchema,
+    default: 3,
+    valueType: 'INT',
+    labelKey: 'combos.bag.compactFrom.label',
+    helpKey: 'combos.bag.compactFrom.help',
+    sortOrder: 307,
   }),
   // A review aid, like the demo's template bar: `?tpl=L2` (or P3, `?btpl=B4` on the bag) shows another template on
   // the shop without changing the shop's choice; such a page is never shown to search engines.

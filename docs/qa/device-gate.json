@@ -130,6 +130,43 @@
       "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",
       "expect": ["[data-testid=\"hdr-wa\"]"]
+    },
+    {
+      "$comment": "PR 574 — the bag templates B1, B2, B4 and the preview bar, through their preview links (`?btpl=`, previews on by default), on a bag the test server fills with three sample sets (POST /api/bag/try?sets=3, test servers only, sample data): B1 the grouped card, B2 a size per piece in the bag, B4 the pieces at their own prices with the combo discount.",
+      "paths": ["/bag?btpl=B1"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B1\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
+    },
+    {
+      "paths": ["/bag?btpl=B2"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B2\"]", "[data-testid=\"bag-size-sel\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
+    },
+    {
+      "paths": ["/bn/bag?btpl=B4"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B4\"]", "[data-testid=\"bag-split\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
+    },
+    {
+      "$comment": "PR 574 — B3 (B2 with \"Add 1 more → 3 for ৳…\" on a polo pair whose rule sells the 3-piece set) and B5 (one compact row per set from three sets), in both languages.",
+      "paths": ["/bag?btpl=B3"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B3\"]", "[data-testid=\"bag-nudge\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
+    },
+    {
+      "paths": ["/bn/bag?btpl=B3"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B3\"]", "[data-testid=\"bag-nudge\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
+    },
+    {
+      "paths": ["/bag?btpl=B5"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B5\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
+    },
+    {
+      "paths": ["/bn/bag?btpl=B5"],
+      "fill": "/api/bag/try?sets=3",
+      "expect": ["[data-testid=\"bag-set\"][data-btpl=\"B5\"]", "[data-testid=\"ca-tplbar\"]", "[data-testid=\"bag-total\"]"]
     }
   ],
   "opened": [

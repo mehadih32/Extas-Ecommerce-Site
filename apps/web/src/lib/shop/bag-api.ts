@@ -254,7 +254,10 @@ export const testPagesOn = () => process.env.EXTAS_SHOP_TEST_PAGES === '1';
  * POST /api/bag/try — test servers only (EXTAS_SHOP_TEST_PAGES=1): fills this browser's bag with sample items the way
  * a customer would (two neighbouring sizes of one product, one other product, and a running set when there is one),
  * so the device gate, the smoke test and the screenshots see a bag with lines. Uses the shop's own add functions.
+ * PR 574: `?sets=N` (at most TRY_SETS_MAX) puts the first N running sets in, so the bag templates' compact rows (B5,
+ * from `combos.bag.compactFrom` sets) and "Add 1 more" (B3, a polo pair) are seen too.
  */
+export const TRY_SETS_MAX = 6; // hardcode-ok: test-server fill only (EXTAS_SHOP_TEST_PAGES), not a shop limit
 export async function tryFillHandler(request: Request, deps: BagApiDeps | null): Promise<Response> {
   if (!testPagesOn()) return fail(404, 'not-found');
   const stop = await guard(request, deps, ['POST']);
@@ -279,11 +282,14 @@ export async function tryFillHandler(request: Request, deps: BagApiDeps | null):
     const otherVariant = other?.variants.find((v) => v.sellable > 1 && v.priceMinor !== null);
     if (otherVariant) picks.push(otherVariant.id);
     for (const variantId of picks) await addItem(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, variantId, source: 'try' }).catch(() => null);
-    const combo = await db.combo.findFirst({ where: { storeId: deps.storeId, status: 'RUNNING', archivedAt: null }, orderBy: { sortRank: 'desc' }, select: { slug: true } });
-    if (combo) {
+    const wanted = Math.min(TRY_SETS_MAX, Math.max(1, Number(new URL(request.url).searchParams.get('sets')) || 1));
+    const combos = await db.combo.findMany({ where: { storeId: deps.storeId, status: 'RUNNING', archivedAt: null }, orderBy: [{ sortRank: 'desc' }, { slug: 'asc' }], select: { slug: true }, take: wanted * 4 });
+    let sets = 0;
+    for (const combo of combos) {
+      if (sets >= wanted) break;
       const sum = await setSummary(deps.cart, { storeId: deps.storeId, slug: combo.slug }).catch(() => null);
       const choices = sum?.pieces.map((p) => ({ colourId: p.defaultColourId, sizeId: (p.defaultColourId && p.openSizes[p.defaultColourId]?.[0]) || null }));
-      if (choices?.every((c) => c.sizeId)) await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: combo.slug, choices }).catch(() => null);
+      if (choices?.every((c) => c.sizeId) && (await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: combo.slug, choices }).catch(() => null))) sets += 1;
     }
     return answer(deps, bag, { filled: picks.length });
   } catch (e) {

@@ -42,7 +42,7 @@
       },
       "bag": {
         "label": "Combo in the bag (shop default)",
-        "help": "How a set shows in the bag."
+        "help": "How a set shows in the bag. “Current look” keeps the bag as it is. B1 one card with each piece; B2 the same card with the size of each piece changed right in the bag; B3 B2 with “Add 1 more” for a 2-piece pair whose rule also sells 3; B4 each piece at its own price and one combo discount line; B5 one short row per combo once the bag holds several (the template ranking’s pick). The amount charged is the same in every template."
       },
       "longListPairs": {
         "label": "Pick-your-colours page from (pairs)",
