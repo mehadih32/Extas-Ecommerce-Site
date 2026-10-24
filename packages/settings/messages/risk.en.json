@@ -60,6 +60,10 @@
         "H": "Blocked number, identity or address",
         "I": "Bulk-looking order"
       }
+    },
+    "levels": {
+      "label": "What happens at each risk level",
+      "help": "Off until you switch it on. For each risk band (low, medium, high) you choose what follows when an order lands in it: a watch mark, a hold with your hold reason (the order is not confirmed or sent until a person releases it), a confirmation call task, and what the customer is asked to pay first — nothing, the delivery charge, a part, the whole amount, or no cash on delivery for this order. Watch, hold and call run by themselves only while switched on. The payment ask is always a proposal on the order page: a person presses \"Request advance\". Nothing here blocks anyone or changes a COD rule, a price or a charge. The partial percent is yours to set; until then the partial ask cannot be used."
     }
   },
   "defaults": {

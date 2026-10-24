@@ -6,6 +6,7 @@ import { allow, setting, UUID, type OrdersDeps, type Who } from './context';
 import { orderPhoneHistory, type PhoneHistoryView } from './phone-history';
 import { OPEN_STATES, type OrderState } from './pure';
 import { riskConfig, type StoredRisk } from './risk';
+import { storedLevel, type StoredLevel } from './risk-levels';
 
 export interface RiskAssessmentView extends StoredRisk {
   id: string;
@@ -28,6 +29,10 @@ export interface RiskPanel {
   /** The order may be scored again now (open, the model on). */
   canRescore: boolean;
   phone: PhoneHistoryView;
+  /** PR 161: the steps the order's risk level took (watch, hold, a call) and the advance it proposes; null: none. */
+  level: StoredLevel | null;
+  /** PR 161: the owner's levels are on (a score may then mark, hold or call; it still never blocks or asks by itself). */
+  levelsOn: boolean;
 }
 
 /** How many assessments of one order the panel reads (newest first). */
@@ -40,11 +45,13 @@ export async function orderRisk(deps: OrdersDeps, who: Who, orderId: string): Pr
   if (!UUID.test(orderId)) return null;
   const o = await deps.db.order.findFirst({ where: { id: orderId, storeId: who.storeId }, select: { id: true, status: true } });
   if (!o) return null;
-  const [cfg, rows, phone, { version }] = await Promise.all([
+  const [cfg, rows, phone, { version }, level, levels] = await Promise.all([
     setting(deps, who.storeId, 'risk.score'),
     deps.db.riskAssessment.findMany({ where: { storeId: who.storeId, orderId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: ASSESSMENTS_READ }),
     orderPhoneHistory(deps, who, orderId),
     riskConfig(deps, who.storeId),
+    storedLevel(deps, who.storeId, orderId),
+    setting(deps, who.storeId, 'risk.levels'),
   ]);
   const views: RiskAssessmentView[] = rows.map((r) => ({ ...asStored(r.signals), id: r.id, score: r.score, at: r.createdAt, modelVersion: r.modelVersion }));
   const current = views[0] ?? null;
@@ -56,5 +63,7 @@ export async function orderRisk(deps: OrdersDeps, who: Who, orderId: string): Pr
     rulesChanged: !!current && current.modelVersion !== version,
     canRescore: cfg.enabled && OPEN_STATES.includes(o.status as OrderState),
     phone: phone!,
+    level,
+    levelsOn: levels.enabled,
   };
 }

@@ -6,8 +6,12 @@
 //   PUT   /api/admin/risk/rules     {switches: {<rule key>: true | false, …}, version?} switches one or more rules at
 //                                   once, all-or-nothing; a stale version is 409 STALE; returns the new list
 //                                   (risk.rules.write)
+//   GET   /api/admin/risk/levels    PR 161: what happens at each risk band — watch, hold, a call, the advance proposed —
+//                                   with the bands, the owner's hold reasons, Claude's suggested set and the version
+//                                   (risk.rules.read)
+//   PUT   /api/admin/risk/levels    {value, version?} saves the levels whole; a stale version is 409 STALE (risk.rules.write)
 // A switch only decides whether a rule marks and proposes: nothing here blocks anyone, decides an order, moves money or
-// changes COD, a price or a charge. The rules screen itself (ORD-06) comes with the new admin shell.
+// changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
 import { body, fail, type AdminDeps } from './admin-auth';
 import { handle } from './orders-api';
@@ -18,6 +22,11 @@ const notFound = () => Promise.resolve(fail(404, 'not-found'));
 /** Every risk admin route. */
 export async function riskRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
+  if (path[0] === 'levels' && path.length === 1) {
+    if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskLevels(x.deps, x.who)) }));
+    if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveRiskLevels({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
+    return notAllowed();
+  }
   if (path[0] !== 'rules' || path.length > 1) return notFound();
   if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskRules(x.deps, x.who)) }));
   if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.switchRules({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));

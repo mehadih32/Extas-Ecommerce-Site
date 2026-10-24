@@ -155,11 +155,13 @@
       "wantsChange": "Wants a change",
       "merged": "One parcel",
       "twoSizes": "2 sizes — check",
-      "twoSizesOther": "2 sizes — for someone else"
+      "twoSizesOther": "2 sizes — for someone else",
+      "riskWatch": "Watch"
     },
     "page": {
       "all": "All orders",
-      "confirm": "To confirm"
+      "confirm": "To confirm",
+      "riskRules": "Risk rules"
     },
     "bulk": {
       "aria": "Bulk actions",
@@ -395,7 +397,8 @@
       "twoSizeClose": "The “2 sizes — check” flag and its call task close; the timeline keeps the answer.",
       "riskAssess": "A new score with today's risk rules; the earlier one stays on the order's record",
       "riskInforms": "Nothing is blocked, held or asked in advance",
-      "reviewDecline": "Cancelled with the reason \"Declined after risk review\" — never a block"
+      "reviewDecline": "Cancelled with the reason \"Declined after risk review\" — never a block",
+      "riskLevels": "Your risk levels may then add a watch mark, a hold or a call; nothing is blocked or asked by itself"
     },
     "review": {
       "title": "Duplicate review",
@@ -557,7 +560,8 @@
       "order_risk_approved": "Risk review: approved",
       "order_risk_ask": "Risk review: customer to be asked",
       "order_book": "Courier booked",
-      "order_identityLinked": "Linked to the customer's identity"
+      "order_identityLinked": "Linked to the customer's identity",
+      "order_riskLevel": "Risk level steps"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -668,7 +672,24 @@
         "deviceMatch": "{count} earlier orders from this device under another number, latest {number}",
         "ipPhones": "{count} other numbers ordered from the same connection within {hours} hours (latest {number})"
       },
-      "refusedAs": "refused: {number}"
+      "refusedAs": "refused: {number}",
+      "informsLevels": "The score informs the team. Your Risk rules › Levels may add a watch mark, a hold or a call for its band — never a block, a COD change or a charge. Asking for money first is always a person's step.",
+      "level": {
+        "line": "Level {band}",
+        "watch": "watch mark",
+        "held": "held",
+        "NO_REASON": "not held: the hold reason is not on your list",
+        "NOT_HOLDABLE": "not held: the order could not be held at that moment",
+        "call": "confirmation call in the queue",
+        "none": "no step",
+        "ask": {
+          "delivery": "Proposed: ask the delivery charge first",
+          "partial": "Proposed: ask a part of the price first",
+          "full": "Proposed: ask the whole amount first",
+          "codOff": "Proposed: no cash on delivery for this order — ask the whole amount first"
+        },
+        "askNote": "Only a proposal: a person sends it from this order."
+      }
     },
     "section": {
       "duplicate": "Possible duplicate",
@@ -786,6 +807,56 @@
       "decided": "Decided: nothing left to do",
       "noRights": "You can read this alert; deciding needs the review permission",
       "yours": "A rule only marks and proposes; the decision is yours. Nothing was cancelled, held or blocked by itself."
+    },
+    "rr": {
+      "sub": "What follows when an order's risk score lands in a band. Nothing here blocks anyone or changes a COD rule, a price or a charge.",
+      "levelsH": "Levels — what happens in each band",
+      "levelsD": "Off until you switch it on. Watch, hold and call run by themselves only while switched on; asking the customer to pay first is always a proposal that a person sends from the order.",
+      "master": "Act on risk levels",
+      "masterHelp": "When off, a score only informs the team, as before.",
+      "offNote": "Off — no band does anything until you switch this on. You can set the bands now and switch on later.",
+      "from": "From score {n}",
+      "watch": "Watch mark",
+      "watchHelp": "A “Watch” chip on the order for the team",
+      "hold": "Hold the order",
+      "holdHelp": "Not confirmed or sent until a person releases it",
+      "call": "Confirmation call",
+      "callHelp": "A call task in the call queue",
+      "ask": "Ask to pay first (a proposal)",
+      "askOpt": {
+        "none": "Nothing",
+        "delivery": "The delivery charge",
+        "partial": "A part of the price",
+        "full": "The whole amount",
+        "codOff": "No cash on delivery for this order"
+      },
+      "partial": "Part to ask (%)",
+      "partialPh": "You set it",
+      "partialHelp": "Needed before “A part of the price” can be chosen. Empty until you fill it.",
+      "reason": "Hold reason",
+      "reasonHelp": "From your hold reasons. The team sees it on the order.",
+      "suggest": "Use the suggested set",
+      "suggestHelp": "Fills in a suggestion: medium — watch, call and the delivery charge; high — watch, hold, call and the whole amount. Nothing is saved until you press Save.",
+      "reset": "Reset to default",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "discard": "Discard",
+      "readOnly": "You can see these rules. Changing them needs the permission to change the risk rules.",
+      "noBands": "No risk bands are set yet.",
+      "never": "Never by itself: blocking anyone, changing COD, a price or a charge, or asking for money.",
+      "later": "Coming with their own steps: the risk matrix, rule switches, duplicate rules, the blocklist and protection & learning.",
+      "err": {
+        "STALE": "Someone else changed these rules. They have been loaded again — check and save once more.",
+        "INVALID_INPUT": "Something is not right. Check the percent (1–99) and try again.",
+        "PARTIAL_UNSET": "Set the percent first, or choose another ask.",
+        "REASON_REQUIRED": "Pick a hold reason from the list.",
+        "FORBIDDEN": "You don't have the permission for this.",
+        "UNAUTHENTICATED": "You are signed out. Sign in again.",
+        "network": "No connection. Nothing was changed — try again.",
+        "other": "It did not work. Nothing was changed — try again."
+      }
     }
   }
 }
