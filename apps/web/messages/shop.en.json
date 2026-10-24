@@ -440,6 +440,13 @@
     "newIn": "New in",
     "newInSub": "Our newest styles",
     "viewAll": "View all",
+    "flash": {
+      "title": "Flash sale",
+      "upTo": "Up to {n}% off",
+      "sub": "Limited stock at these prices",
+      "endsIn": "Ends in",
+      "clock": "Ends in {h} hours {m} minutes"
+    },
     "reviews": {
       "title": "What customers say",
       "sub": "In their own words, after delivery",

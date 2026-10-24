@@ -77,6 +77,12 @@ export const HERO_PIN_FIT: FitRule = { sel: '.hm-slider .hm-sl .hm-pin', min: 9,
  */
 export const CAT_TOOLS_FIT: FitRule = { sel: '.cat-ptools.cat-ph', min: 10.5, collapse: true, box: true };
 
+/**
+ * PR 44 · the flash sale's heading row on a phone (demo 20-home.js fitRule, R14): the title, the tag, the line and the
+ * clock are sized in em off the row, so the row steps down as one; when even 12 px is too big, "Ends in" goes (.fit-x).
+ */
+export const FLASH_HEAD_FIT: FitRule = { sel: '.hm-flash-hd', min: 12, box: true, collapse: true };
+
 /** The product card's two tight spots (demo 21-category.js): the swatches-and-fit line, and the picture's badge. */
 export const CARD_FIT: readonly FitRule[] = [
   { sel: '.pcard .pinfo>.row.between', min: 10, collapse: true },

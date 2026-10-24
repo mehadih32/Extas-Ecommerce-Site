@@ -20,8 +20,9 @@ import { registry } from '../src/registry';
 const menu = storefrontSettings['shell.menu'].default;
 
 describe('storefront settings (v16)', () => {
-  // ~~every key at version 16~~ PR 41 follow-up: home.hero moved to 17 when its Shop now link's default changed
-  const LATER: Record<string, number> = { 'home.hero': 17 };
+  // ~~every key at version 16~~ PR 41 follow-up: home.hero moved to 17 when its Shop now link's default changed;
+  // PR 44 added the flash sale (home.flashSale, home.flashRows) at 45
+  const LATER: Record<string, number> = { 'home.hero': 17, 'home.flashSale': 45, 'home.flashRows': 45 };
   it('every storefront key is in the registry at version 16, apart from the ones changed since', () => {
     for (const [key, spec] of Object.entries(storefrontSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);

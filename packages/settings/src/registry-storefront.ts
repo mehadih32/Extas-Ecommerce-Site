@@ -1,6 +1,6 @@
 // S02 · the storefront foundation — PR 82 (four themes and their tokens), 501 (branding and appearance from settings),
 // 503 + 84 (the language framework and the switch), 40 (store shell: header, menus, footer, bottom bar, slim headers)
-// and 42 (the one slider engine). Registry version 16 (~~12~~: main reached 15 first). Labels: messages/storefront.<lang>.json.
+// and 42 (the one slider engine). Registry version 16 (~~12~~: main reached 15 first); PR 44 (the flash sale) 45. Labels: messages/storefront.<lang>.json.
 //
 // What lives here is the SHAPE of the shop as data: which icons sit in the header and in what order, which links the
 // menus and the footer carry, which theme is worn and when, how the sliders move. The words themselves are keys into
@@ -424,6 +424,53 @@ export const homeHeroSlidesSchema = z
     wash: z.boolean(),
     /** Phones show the two arrows too (§58.11: a phone could only drag). Off = the approved demo's phone look. */
     phoneArrows: z.boolean(),
+  })
+  .strict();
+
+// ---- PR 44 · the flash sale (registry version 45) ----
+
+/** Where the sale's products come from: the owner's own list, a collection in its order, or every real markdown. */
+export const FLASH_SOURCES = ['products', 'collection', 'markdowns'] as const;
+
+/**
+ * PR 44 · the sale itself — the owner's (PR 509: no default, nothing ships): on or paused, when it starts (empty = at
+ * once) and when it ends (the clock counts down to it; the section hides itself at zero), and which products. A sale
+ * is a showcase: it never changes a price (CLAUDE.md rule 6); a card's struck price is only ever the PR 38 rule's.
+ */
+export const homeFlashSaleSchema = z
+  .object({
+    on: z.boolean(),
+    startsAt: z.iso.datetime({ offset: true }).nullable(),
+    endsAt: z.iso.datetime({ offset: true }),
+    source: z.enum(FLASH_SOURCES),
+    /** `products`: the products in the owner's order. */
+    productIds: z
+      .array(z.uuid())
+      .max(200)
+      .refine((l) => new Set(l).size === l.length, UNIQUE),
+    /** `collection`: a collection's link name; its products in its own order, while its own dates run. */
+    collection: categorySlugSchema.nullable(),
+  })
+  .strict()
+  .refine((s) => !s.startsAt || Date.parse(s.startsAt) < Date.parse(s.endsAt), { message: 'the sale ends after it starts' })
+  .refine((s) => s.source !== 'collection' || s.collection !== null, { message: 'name the collection' });
+
+/** PR 44 · how the sale's two rows look and move (the demo's numbers); the sale itself is `home.flashSale`. */
+export const homeFlashRowsSchema = z
+  .object({
+    /** H3 · only real markdowns: a card shows only with a struck price the PR 38 rule allows (a sale is a discount). */
+    onlyMarkdowns: z.boolean(),
+    /** Only products that can be bought now. */
+    inStockOnly: z.boolean(),
+    /** The most cards one row slides through (§57.1: with 100 sale products, about ten in each row). */
+    perRow: z.int().min(2).max(30),
+    /** A short sale repeats its cards up to this many per row, so both rows can glide: a row moves once its cards are
+     *  wider than the screen (four show on a desktop, so 5; the demo drew 8 before the engine made its own copies). */
+    fillTo: z.int().min(2).max(30),
+    /** The glide, pixels per second (the demo's 24); the top row drifts left, the bottom row right (§58.1). */
+    speed: z.int().min(4).max(120),
+    /** The "Up to N% off" tag beside the title, worked out from the cards' own struck prices. */
+    upTo: z.boolean(),
   })
   .strict();
 
@@ -944,6 +991,33 @@ export const storefrontSettings = {
     sortOrder: 25,
     version: V,
   }),
+  /** PR 44 · the flash sale: the owner's sale (none until he sets one) and how its two rows look. */
+  'home.flashSale': setting({
+    schema: homeFlashSaleSchema.nullable(),
+    default: null,
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.flashSale.label',
+    helpKey: 'home.flashSale.help',
+    isOwnerData: true,
+    isPublic: true,
+    sortOrder: 55,
+    version: 45,
+  }),
+  'home.flashRows': setting({
+    schema: homeFlashRowsSchema,
+    default: { onlyMarkdowns: true, inStockOnly: true, perRow: 10, fillTo: 5, speed: 24, upTo: true },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'home',
+    labelKey: 'home.flashRows.label',
+    helpKey: 'home.flashRows.help',
+    isOwnerData: false,
+    isPublic: true,
+    sortOrder: 56,
+    version: 45,
+  }),
   /** H9 · the sliding rows fade at both edges (off = the earlier plain box edges). */
   'home.rowFade': setting({
     schema: z.boolean(),
@@ -963,6 +1037,8 @@ export const storefrontSettings = {
 export type HomeHero = z.output<typeof homeHeroSchema>;
 export type HomeSections = z.output<typeof homeSectionsSchema>;
 export type HomeHeroSlides = z.output<typeof homeHeroSlidesSchema>;
+export type HomeFlashSale = z.output<typeof homeFlashSaleSchema>;
+export type HomeFlashRows = z.output<typeof homeFlashRowsSchema>;
 export type SliderEngine = z.output<typeof sliderEngineSchema>;
 export type ShellMenu = z.output<typeof menuSchema>;
 export type ShellFooter = z.output<typeof footerSchema>;

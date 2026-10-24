@@ -6,6 +6,7 @@
 import { getPrisma, type Prisma } from '@extas/db/client';
 import { wasPriceFor, type WasPriceSource } from '@extas/catalogue';
 import { imageSources, type ImageSource } from '@extas/media';
+import type { HomeFlashSale } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import type { SizeMeta } from './category-filter';
 import type { CatItem } from './category-model';
@@ -133,11 +134,18 @@ async function photoMap(storeId: number, rows: readonly Row[]): Promise<Map<stri
   return out;
 }
 
+/**
+ * PR 44 · a test server's flash-sale trial only (lib/shop/flash.ts, EXTAS_SHOP_TEST_PAGES=1): the store-wide "was" price
+ * choice drawn as if the owner had picked it, so the sample catalogue's compare-at prices show through the same PR 38
+ * rule. Never on the live shop; nothing is written.
+ */
+export type PriceRuleTrial = Pick<PriceRules, 'store' | 'mrpOwnLabel'>;
+
 /** Rows as cards. `withPhotos: false` leaves the photos out (PR 45: a long category reads them for the page shown only). */
-async function toCards(storeId: number, rows: Row[], withPhotos = true): Promise<ShopCard[]> {
+async function toCards(storeId: number, rows: Row[], withPhotos = true, trial?: PriceRuleTrial): Promise<ShopCard[]> {
   if (!rows.length) return [];
   const prisma = getPrisma();
-  const rules = await priceRules(storeId);
+  const rules = { ...(await priceRules(storeId)), ...(trial ?? {}) };
   const now = new Date();
   // the cheapest live variant is the card's price; its struck price follows the rule
   const cheapest = new Map(
@@ -300,6 +308,36 @@ export function heroCollectionCards(storeId: number, slug: string, count: number
     const cards = await toCards(storeId, rows);
     const byId = new Map(cards.map((c) => [c.id, c]));
     return order.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])).slice(0, count);
+  });
+}
+
+// ---- PR 44 · the flash sale ----
+
+/** The most products the "every real markdown" sale reads (in the owner's order) before it keeps the markdowns. */
+export const FLASH_READ_CAP = 200;
+
+/**
+ * The flash sale's products as cards, in the sale's order: the owner's own list, a collection (only while its own dates
+ * run), or every product whose card carries a struck price the PR 38 rule allows. Only what a customer may see now
+ * (published, in a shown category), in stock when `inStockOnly`. Which of them show is the flash model's (flash-model.ts).
+ */
+export function flashSaleCards(
+  storeId: number,
+  sale: Pick<HomeFlashSale, 'source' | 'productIds' | 'collection'>,
+  inStockOnly: boolean,
+  now = new Date(),
+  trial?: PriceRuleTrial,
+): Promise<ShopCard[]> {
+  return guarded('flash sale', [] as ShopCard[], async () => {
+    const shown = { storeId, ...live, ...(inStockOnly ? { inStock: true } : {}), category: { isVisible: true, archivedAt: null } };
+    if (sale.source === 'collection') return sale.collection ? ((await heroCollectionCards(storeId, sale.collection, FLASH_READ_CAP, inStockOnly, now)) ?? []) : [];
+    if (sale.source === 'products') {
+      if (!sale.productIds.length) return [];
+      const byId = new Map((await toCards(storeId, await rowsOf({ where: { ...shown, id: { in: [...sale.productIds] } } }), true, trial)).map((c) => [c.id, c]));
+      return sale.productIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+    }
+    const rows = await rowsOf({ where: shown, orderBy: [{ sortRank: 'desc' }, { nameEn: 'asc' }], take: FLASH_READ_CAP });
+    return (await toCards(storeId, rows, true, trial)).filter((c) => c.priceMinor != null && c.wasMinor != null && c.wasMinor > c.priceMinor);
   });
 }
 

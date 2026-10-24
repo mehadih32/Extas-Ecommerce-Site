@@ -22,7 +22,8 @@ export interface HeartWords {
 }
 
 /** `className` / `size`: the product page's heart after the title (PR 49, demo .pdp-wish, 22 px). */
-export function HeartButton({ id, words, className = 'heart', size = 18, testId }: { id: string; words: HeartWords; className?: string; size?: number; testId?: string }) {
+/** `tabIndex`: -1 on a card that only repeats one shown already (PR 44's flash rows), so Tab never visits it twice. */
+export function HeartButton({ id, words, className = 'heart', size = 18, testId, tabIndex }: { id: string; words: HeartWords; className?: string; size?: number; testId?: string; tabIndex?: number }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
     // PR 88: every heart on the page reads one shared copy and shares one pair of listeners (lib/shop/wish-client)
@@ -38,6 +39,7 @@ export function HeartButton({ id, words, className = 'heart', size = 18, testId 
       className={className}
       data-testid={testId}
       data-wish={id}
+      tabIndex={tabIndex}
       aria-label={on ? words.unsave : words.save}
       aria-pressed={on}
       onClick={(e) => {
