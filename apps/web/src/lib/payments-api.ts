@@ -1,4 +1,4 @@
-// S07 · PR 165, 166, 170, 171 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
+// S07 · PR 165, 166, 170, 171, 172 — the payments admin API (BACKEND-ARCHITECTURE §6.5.3, §9.10). No admin pages yet: the order screen's
 // money panel comes with the admin UI; these routes are what it calls. Every route signs the person in (guardAdmin),
 // checks the permission in the store it touches (`?storeId=`, default the mother store), then calls @extas/payments,
 // which checks the permission again and writes the audit log in the same transaction. Recording money takes an
@@ -35,6 +35,15 @@
 //   GET   /api/admin/payments/apology?limit=         PR 171 (CN-018 #8): delivered orders that came late, no apology yet (payments.view)
 //   POST  /api/admin/payments/orders/:id/apology     {amountMinor?, note?, confirm: true} the late-delivery apology credit,
 //                                                    once per order; off until `payments.wallet.apology` is on (payments.apology)
+//   GET   /api/admin/payments/refunds?state=requested|approved|failed|owed|…&orderId=&limit=   PR 172: the refunds, newest
+//                                                    first, with the money owed to customers (F-041) (payments.view)
+//   POST  /api/admin/payments/orders/:id/refunds    {source, amountMinor?, method?, note, paymentId?} a refund asked within
+//                                                    the owner's rules (`payments.refunds`) (Idempotency-Key) (payments.refunds.request)
+//   POST  /api/admin/payments/refunds/:id/approve   {method?, note?, confirm: true} the owner's OK (payments.refunds.approve)
+//   POST  /api/admin/payments/refunds/:id/reject    {note} (payments.refunds.approve)
+//   POST  /api/admin/payments/refunds/:id/complete  {reference?, note?, confirm: true} paid out: to the wallet, or the money a
+//                                                    person sent back by hand with its reference (Idempotency-Key) (payments.refunds.execute)
+//   POST  /api/admin/payments/refunds/:id/fail      {note} the payout did not go through (payments.refunds.execute)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -77,6 +86,14 @@ const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
 
 const badId = (field: string) => Promise.resolve(fail(404, 'NOT_FOUND', [field]));
+
+/** PR 172 — the steps of one refund: the owner's decision, and the payout a person records. */
+const REFUND_ACTIONS = {
+  approve: { permission: 'payments.refunds.approve', run: (x: Ctx, id: string, b: unknown) => pay.approveRefund(x.deps, x.who, id, b) },
+  reject: { permission: 'payments.refunds.approve', run: (x: Ctx, id: string, b: unknown) => pay.rejectRefund(x.deps, x.who, id, b) },
+  complete: { permission: 'payments.refunds.execute', run: (x: Ctx, id: string, b: unknown) => pay.completeRefund(x.deps, x.who, id, b, { idempotencyKey: x.key }) },
+  fail: { permission: 'payments.refunds.execute', run: (x: Ctx, id: string, b: unknown) => pay.failRefund(x.deps, x.who, id, b) },
+} satisfies Record<string, { permission: pay.PaymentsPermission; run: (x: Ctx, id: string, b: unknown) => Promise<pay.RefundResult> }>;
 
 /** Every payments admin route: `path` is what comes after /api/admin/payments. */
 export async function paymentsRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
@@ -147,6 +164,20 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
     const u = new URL(request.url);
     return handle(request, deps, 'payments.view', async (x) => ({ apology: await pay.apologyCandidates(x.deps, x.who, { limit: Number(u.searchParams.get('limit') ?? '50') }) }));
   }
+  if (a === 'refunds') {
+    if (!b) {
+      if (m !== 'GET') return notAllowed();
+      const u = new URL(request.url);
+      const q = u.searchParams;
+      return handle(request, deps, 'payments.view', async (x) => ({ refunds: await pay.listRefunds(x.deps, x.who, { state: q.get('state') ?? undefined, orderId: q.get('orderId') ?? undefined, limit: Number(q.get('limit') ?? '50') }) }));
+    }
+    if (path.length !== 3) return notFound();
+    if (!isUuid(b)) return badId('refundId');
+    const act = REFUND_ACTIONS[c as keyof typeof REFUND_ACTIONS];
+    if (!act) return notFound();
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, act.permission, async (x) => ({ refund: (await act.run(x, b, await body(request))).refund }));
+  }
   if (a !== 'orders' || !b || path.length > 3) return notFound();
   if (!isUuid(b)) return badId('orderId');
   if (!c) {
@@ -157,9 +188,10 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
       return { money };
     });
   }
-  if (m !== 'POST') return c === 'payments' || c === 'door' || c === 'apology' ? notAllowed() : notFound();
+  if (m !== 'POST') return c === 'payments' || c === 'door' || c === 'apology' || c === 'refunds' ? notAllowed() : notFound();
   if (c === 'payments') return handle(request, deps, 'payments.record', async (x) => ({ result: await pay.recordPayment(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
   if (c === 'door') return handle(request, deps, 'payments.door', async (x) => ({ result: await pay.recordDoorOutcome(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
   if (c === 'apology') return handle(request, deps, 'payments.apology', async (x) => ({ result: await pay.giveApology(x.deps, x.who, b, await body(request)) }), 201);
+  if (c === 'refunds') return handle(request, deps, 'payments.refunds.request', async (x) => ({ refund: (await pay.requestRefund(x.deps, x.who, b, await body(request), { idempotencyKey: x.key })).refund }), 201);
   return notFound();
 }

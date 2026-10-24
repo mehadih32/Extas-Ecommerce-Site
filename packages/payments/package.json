@@ -20,6 +20,7 @@
     "@extas/adapters": "workspace:*",
     "@extas/auth": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/metrics": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"
   },

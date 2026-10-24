@@ -9,9 +9,12 @@
 //   - the KPI report views (migration 0012: mv_kpi_daily, mv_kpi_lines_monthly) hold the same two figures precomputed;
 //     only views.ts reads them (`kpiByDayFromView`, `linesByMonthFromView`) and refreshes them (`refreshKpiViews`).
 //     The PR 603 views (mv_sales_daily …) count by the placed day; they are superseded and nothing reads them.
+// money.ts (S07, PR 172, 174): the payments screens' figures — the money owed to customers, and what came in through
+// each gateway in a period (reconciled against the gateway's statement).
 // The rule lives in pure.ts (SALES_STATUSES, NOT_PLACED_STATUSES, BASIS_RULE). src/guard.test.ts fails the build when
 // any other package adds up order or line money on its own. Until the order state machine exists (it waits for the
 // owner's approval of the architecture draft), no order reaches DELIVERED, so Sales is 0 everywhere — that is correct.
 export * from './pure';
 export * from './metrics';
 export * from './views';
+export * from './money';

@@ -9,6 +9,10 @@
         "label": "Late-delivery apology credit",
         "help": "Whether a customer whose parcel came late may get an apology credit in his wallet. \"Per order\": a team member gives it on the order and types the amount (up to the limit). \"By rule\": the amount follows from your rule — a fixed amount, or a percentage of the order's goods — and it can only be given once the order came this many hours later than its promise. One credit per order. \"Most per order\": the limit (empty = no limit). The credit is store credit in the wallet; nothing is paid out and no price changes. Off: no apology credit is given."
       }
+    },
+    "refunds": {
+      "label": "Refund rules",
+      "help": "When a refund may be asked and how the money goes back. Every refund waits for someone with the \"approve refunds\" permission (you); the shop never sends money back by itself — after approval a team member sends it the way it came (bKash, bank) and records the reference, or it goes to the customer's wallet as store credit. \"Refund to the wallet\" (off): real money may go back to the wallet instead. \"After delivery\" (off): no refunds once the customer received the goods (exchange is the way), except the sources in the list (the rider's overcharge). \"Returned prepaid parcel\": give everything back, or keep the delivery charge. \"Four eyes\" (off): the person who asked a refund may not approve it."
     }
   }
 }
