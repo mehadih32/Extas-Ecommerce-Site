@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The payments service (S07, BACKEND-ARCHITECTURE §6.5.3, §7.5): PR 165 the payment model — the rows' states, the money status and the reason code on every mismatch (SIM-F-028), the one writer of a payment's outcome onto its order, and money received outside the checkout recorded by permitted staff (F-040). The order's amount due and payment pill live here (SIM-F-001). No refund, no wallet and no money moved here.",
+  "description": "The payments service (S07, BACKEND-ARCHITECTURE §6.5.3, §7.5): PR 165 the payment model — the rows' states, the money status and the reason code on every mismatch (SIM-F-028), the one writer of a payment's outcome onto its order, and money received outside the checkout recorded by permitted staff (F-040). The order's amount due and payment pill live here (SIM-F-001). PR 171 the wallet ledger (one writer, corrections as reversing entries) and the late-delivery apology credit. No money leaves the shop here.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
