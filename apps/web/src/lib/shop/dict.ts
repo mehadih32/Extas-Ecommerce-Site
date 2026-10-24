@@ -7,8 +7,9 @@
 // Size (S02, PR 58, 51) in messages/shop-finder.<lang>.json under `finder` and the customer accounts (S04, PR 129–137)
 // in messages/shop-account.<lang>.json (`account.*`) and the combo storefront (S03, PR 91–95, 102, 103) in
 // messages/shop-combo.<lang>.json (`combo.*`), "Build your own set" (S03, PR 98, 100) in
-// messages/shop-build.<lang>.json (`build.*`) and the bulk / corporate lane (S04, PR 606) in
-// messages/shop-bulk.<lang>.json (`bulk.*`), merged the same way.
+// messages/shop-build.<lang>.json (`build.*`) the bulk / corporate lane (S04, PR 606) in
+// messages/shop-bulk.<lang>.json (`bulk.*`) and the combo templates (S03, PR 572–574) in
+// messages/shop-ctpl.<lang>.json (`ctpl.*`), merged the same way.
 import bn from '../../../messages/shop.bn.json';
 import en from '../../../messages/shop.en.json';
 import moreBn from '../../../messages/shop-more.bn.json';
@@ -27,6 +28,8 @@ import buildBn from '../../../messages/shop-build.bn.json';
 import buildEn from '../../../messages/shop-build.en.json';
 import bulkBn from '../../../messages/shop-bulk.bn.json';
 import bulkEn from '../../../messages/shop-bulk.en.json';
+import ctplBn from '../../../messages/shop-ctpl.bn.json';
+import ctplEn from '../../../messages/shop-ctpl.en.json';
 import type { ShopLabel } from '@extas/settings';
 import type { Dict } from '../i18n';
 import type { ShopLang } from './lang';
@@ -37,8 +40,8 @@ function withMore(base: Dict, more: Dict): Dict {
 }
 
 export const SHOP_DICTS: Record<ShopLang, Dict> = {
-  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn),
-  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn),
+  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn),
+  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn),
 };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;

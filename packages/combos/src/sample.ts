@@ -2,7 +2,7 @@
 // rows. SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509): it runs only on the explicit `sample` command and only on the
 // store the sample catalogue seed made (its DefaultPackApplication mark); it refuses every other store. The prices in
 // the file are made-up sample values, never the owner's. Idempotent: a combo is created only when its slug is
-// missing; nothing is updated or deleted.
+// missing; nothing is deleted, and the one update is a sample 2-piece rule's link to its sample 3-piece rule.
 import { audit, SYSTEM } from '@extas/auth';
 import { SAMPLE_PACK_KEY } from '@extas/seed';
 import { z } from 'zod';
@@ -47,6 +47,8 @@ const sampleSchema = z
             priceMode: z.enum(['FIXED', 'PERCENT']),
             samplePercentOff: z.int().min(1).optional(),
             samplePriceMinor: z.int().min(1).optional(),
+            /** PR 572–574: this 3-piece rule is the "add 1 more" of that 2-piece sample rule. */
+            upsellOf: z.string().startsWith('sample-').optional(),
             on: z.boolean(),
           })
           .strict(),
@@ -147,6 +149,8 @@ export async function seedSampleCombos(deps: CombosDeps): Promise<SampleCombosRe
       return row.id;
     }, TX);
     await syncRule(deps, storeId, id);
+    // The 2-piece rule grows into this one ("Make it 3 pcs"), only when it has no upsell of its own yet.
+    if (r.upsellOf) await deps.db.comboAutoRule.updateMany({ where: { storeId, key: r.upsellOf, upsellRuleId: null }, data: { addOneMore: true, upsellRuleId: id } });
     rules++;
   }
   return { storeId, combos: made, rules };

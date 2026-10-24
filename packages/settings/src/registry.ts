@@ -40,6 +40,7 @@ import { supportLaneSettings } from './registry-support-lane';
 import { messageSettings } from './registry-messages';
 import { riskSettings } from './registry-risk';
 import { riskMoreSettings } from './registry-risk-more';
+import { comboTemplateSettings } from './registry-combo-templates';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1187,6 +1188,8 @@ export const registry = {
   // ---- S06 · PR 157, 156 · a number's history (how many orders, the refusals that are our fault, unanswered calls) and the risk score: the signals and their weights, the bands (registry-risk.ts, version 43). ----
   ...riskSettings,
   ...riskMoreSettings,
+  // ---- S03 · PR 572–574 · the combo templates: how much a rule's category page (L1–L5), the pair page (P1–P5) and a set in the bag (B1–B5) show, and the template preview links (registry-combo-templates.ts, version 39). ----
+  ...comboTemplateSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

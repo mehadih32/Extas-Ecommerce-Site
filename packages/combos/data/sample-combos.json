@@ -1,5 +1,5 @@
 {
-  "$comment": "SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509): made-up combos for the sample store, so the combo screens can be built and tested on real rows. The prices are made-up sample values, never the owner's: his combos and set prices are typed in on /admin/combos (the demo's 4-piece prices are demo defaults, BLOCKED 3). Rules (auto colour pairs, PR 571) make their pairs when seeded. Products are named by their sample slug; colours by their sample key.",
+  "$comment": "SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509): made-up combos for the sample store, so the combo screens can be built and tested on real rows. The prices are made-up sample values, never the owner's: his combos and set prices are typed in on /admin/combos (the demo's 4-piece prices are demo defaults, BLOCKED 3). Rules (auto colour pairs, PR 571) make their pairs when seeded. Products are named by their sample slug; colours by their sample key. PR 572–574: a 3-piece rule is the \"add 1 more\" of the 2-piece polo rule (`upsellOf`, linked only when that rule has no upsell yet), and a top + bottom rule is on, so every combo template has a sample to show.",
   "version": 1,
   "marker": "sample-combos-v1",
   "combos": [
@@ -92,6 +92,37 @@
       "priceMode": "FIXED",
       "samplePriceMinor": 180000,
       "on": false
+    },
+    {
+      "key": "sample-polo-trios",
+      "nameEn": "Sample polo trios",
+      "nameBn": "নমুনা পোলোর তিনটা",
+      "titleEn": "Sample polo",
+      "products": [
+        "essential-pique-polo",
+        "contrast-collar-polo"
+      ],
+      "pieces": 3,
+      "pairing": "STYLE",
+      "priceMode": "PERCENT",
+      "samplePercentOff": 15,
+      "upsellOf": "sample-polo-pairs",
+      "on": true
+    },
+    {
+      "key": "sample-hoodie-trousers",
+      "nameEn": "Sample hoodie + trousers sets",
+      "nameBn": "নমুনা হুডি + ট্রাউজার সেট",
+      "titleEn": "Hoodie + trousers",
+      "products": [
+        "heavyweight-hoodie",
+        "relaxed-twill-trousers"
+      ],
+      "pieces": 2,
+      "pairing": "ACROSS",
+      "priceMode": "FIXED",
+      "samplePriceMinor": 270000,
+      "on": true
     }
   ]
 }

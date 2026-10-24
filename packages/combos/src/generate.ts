@@ -63,7 +63,10 @@ export interface GeneratedPair {
   /** The pieces' colours, in piece order. */
   colourIds: string[];
   sizes: PairSize[];
-  /** Sizes open now; 0 = sold out (hidden from lists, its page still opens). */
+  /**
+   * Sizes open now; 0 = sold out (hidden from lists, its page still opens). PR 572: pieces with no size in common (a
+   * top in S–XXL and trousers in waist sizes) are sized one by one — then it is the fewest sizes any piece is open in.
+   */
   openSizes: number;
   pricing: SetPricing;
   pinned: boolean;
@@ -140,6 +143,26 @@ export function pairSizes(slots: readonly Slot[]): PairSize[] {
   });
 }
 
+/**
+ * PR 572 — pieces sized one by one (no size every piece is made in): the fewest sizes any piece is open in, each
+ * (product, colour) needing as many pieces as the pair holds of it. A piece made without sizes counts as one size.
+ */
+function eachOpen(slots: readonly Slot[]): number {
+  if (slots.length < 2) return 0;
+  const need = new Map<string, { slot: Slot; n: number }>();
+  for (const s of slots) {
+    const k = `${s.p.id}|${s.c.id}`;
+    need.set(k, { slot: s, n: (need.get(k)?.n ?? 0) + 1 });
+  }
+  let fewest = Number.POSITIVE_INFINITY;
+  for (const { slot, n } of need.values()) {
+    const own = slot.p.variants.filter((v) => v.colourId === slot.c.id && v.priceMinor !== null && v.sellable >= n);
+    const open = slot.p.sizes.length ? slot.p.sizes.filter((z) => own.some((v) => v.sizeId === z.id)).length : own.length ? 1 : 0;
+    fewest = Math.min(fewest, open);
+  }
+  return Number.isFinite(fewest) ? fewest : 0;
+}
+
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 function build(rule: GenRule, slots: Slot[], multiStyle: boolean, signals: SalesSignals, ctx: { rounding: RoundingRule; now: Date; newColourMs: number }): GeneratedPair {
@@ -154,6 +177,7 @@ function build(rule: GenRule, slots: Slot[], multiStyle: boolean, signals: Sales
       : slots.map((s) => `${s.p.slug}.${s.c.key}`).join('-');
   const pricing = setPricing(rule.price, slots.map((s) => ({ priceMinor: colourPrice(s.p, s.c.id), quantity: 1 })), ctx.rounding);
   const sizes = pairSizes(slots);
+  const open = sizes.length ? sizes.filter((s) => s.ok).length : eachOpen(slots);
   const pinned = rule.pinnedKeys.includes(pieceKey) || rule.pinnedKeys.includes(pairSlug);
   return {
     pieceKey,
@@ -162,7 +186,7 @@ function build(rule: GenRule, slots: Slot[], multiStyle: boolean, signals: Sales
     sameProduct,
     colourIds: slots.map((s) => s.c.id),
     sizes,
-    openSizes: sizes.filter((s) => s.ok).length,
+    openSizes: open,
     pricing,
     pinned,
     pairSales: signals.pair.get(pieceKey) ?? 0,

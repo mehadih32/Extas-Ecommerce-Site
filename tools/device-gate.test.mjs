@@ -58,6 +58,13 @@ describe('device gate', () => {
     expect(plan.find((p) => p.url.endsWith('?try=1')).expect).toEqual(['.on']);
   });
 
+  it('a page opened with a query takes the controls listed with that query, else those of its bare path (PR 572)', () => {
+    const rc = ['http://h:1/combos/r', 'http://h:1/combos/r?tpl=L4', 'http://h:1/combos/r?tpl=L3'];
+    const signedIn = { expect: { '/combos/r': ['.ca-card'], '/combos/r?tpl=L4': ['.ca-l4'] } };
+    const plan = signedInPlan('http://h:1', signedIn, rc);
+    expect(plan.map((p) => p.expect)).toEqual([['.ca-card'], ['.ca-l4'], ['.ca-card']]);
+  });
+
   it('the shipped signed-in config checks the controls of follow-up 5 on seeded pages', () => {
     const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
     const expected = [...Object.values(rules.signedIn.expect).flat(), ...rules.signedIn.discover.flatMap((d) => d.expect)];

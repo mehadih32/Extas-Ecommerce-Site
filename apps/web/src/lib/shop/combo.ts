@@ -219,7 +219,8 @@ export interface CardView {
   sameProduct: boolean;
 }
 
-/** A group's card, its link the first set of the group (a rule's own list is PR 572). */
+/** A group's card: a rule's group opens the rule's own page (PR 572, follow-up 173), a fixed set its own page.
+ * ~~its link the first set of the group (a rule's own list is PR 572)~~ */
 export function cardView(c: Pick<ShopContext, 'lang'>, g: HubGroup, all: SetCardGroups): CardView {
   const first: SetCard = g.cards[0]!;
   const rule = g.ruleId ? all.rules.find((r) => r.id === g.ruleId) : undefined;
@@ -232,7 +233,7 @@ export function cardView(c: Pick<ShopContext, 'lang'>, g: HubGroup, all: SetCard
   const colourIds = [...new Set(g.cards.flatMap((x) => x.colourIds))];
   return {
     key: g.key,
-    href: hrefIn(c.lang, ROUTES.combo(first.slug)),
+    href: hrefIn(c.lang, rule ? ROUTES.comboRule(rule.key) : ROUTES.combo(first.slug)),
     name,
     styleName: nameOfProduct(first.productIds[0]!),
     pieceNames: sameProduct ? null : first.productIds.map(nameOfProduct).filter(Boolean).join(' + '),

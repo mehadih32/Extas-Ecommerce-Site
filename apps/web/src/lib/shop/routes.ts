@@ -24,8 +24,10 @@ export const ROUTES = {
   invoiceFile: (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice/file`,
   search: '/search',
   newIn: '/collections/new-in',
-  /** PR 103: the sets landing page; a rule's own list (`/combos/<rule>`, PR 572) is still to come. ~~and the set builder (PR 98)~~ built: PR 98, 100. */
+  /** PR 103: the sets landing page; ~~a rule's own list (`/combos/<rule>`, PR 572) is still to come~~ built below. ~~and the set builder (PR 98)~~ built: PR 98, 100. */
   combos: '/combos',
+  /** PR 572: one auto colour-pair rule's own page (templates L1–L5), at the link the admin shows (`/combos/{rule key}`). */
+  comboRule: (key: string) => `/combos/${encodeURIComponent(key)}`,
   /** PR 91: one combo's page (a fixed set or a generated pair), at the link the admin shows (`/combo/{slug}`). */
   combo: (slug: string) => `/combo/${encodeURIComponent(slug)}`,
   /** PR 98, 100: "Build your own set"; a set group's own builder is `/combos/build-your-own/<rule key>`. */
@@ -50,7 +52,7 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
   // ~~{ key: 'bag', path: '/bag', deep: false }~~ — built: PR 107 (the bag page)
   // ~~{ key: 'account', path: '/account', deep: true },~~ — built: PR 131 (My account and its sections)
   // ~~{ key: 'account', path: '/account/orders', deep: true }, // one order's own page, PR 134~~ — built: PR 134
-  { key: 'combos', path: '/combos', deep: true },
+  // ~~{ key: 'combos', path: '/combos', deep: true },~~ built: PR 103 (the landing page), PR 98, 100 (the set builder), PR 572 (a rule's own page)
   { key: 'journal', path: '/journal', deep: true },
   { key: 'help', path: '/help', deep: true },
 ];
@@ -62,7 +64,7 @@ export const BUILT_INSIDE: readonly string[] = [
   ROUTES.orders, // PR 131 — My orders (app/(shop)/(store)/account/orders); ~~each order's page comes with PR 134~~ (built)
   // PR 75 — the help pages (app/(shop)/(store)/help/[slug]); "Ways to pay", "Careers" and the size guide are still to come.
   // A built help page with nothing true to say yet still says "Coming soon" itself.
-  ROUTES.combos, // PR 103 — the sets landing page (app/(shop)/(store)/combos); each rule's own list (PR 572) is still to come; ~~the set builder (PR 98)~~ built below
+  ROUTES.combos, // PR 103 — the sets landing page (app/(shop)/(store)/combos); ~~each rule's own list (PR 572) is still to come~~ built: combos/[rule]; ~~the set builder (PR 98)~~ built below
   ROUTES.buildSet, // PR 98, 100 — the set builder (app/(shop)/(store)/combos/build-your-own/[[...group]]), its group pages have their own route too
   ...['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'].map(ROUTES.help),
 ];

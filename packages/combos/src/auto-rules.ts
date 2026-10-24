@@ -148,7 +148,7 @@ export interface AutoRuleView {
   version: number;
 }
 
-const genRule = (r: Pick<RuleRow, 'key' | 'pieces' | 'pairing' | 'sameColour' | 'excludeColourIds' | 'priceMode' | 'priceMinor' | 'percentOff' | 'sortMode' | 'pinnedKeys'>): GenRule => ({
+export const genRule = (r: Pick<RuleRow, 'key' | 'pieces' | 'pairing' | 'sameColour' | 'excludeColourIds' | 'priceMode' | 'priceMinor' | 'percentOff' | 'sortMode' | 'pinnedKeys'>): GenRule => ({
   key: r.key,
   pieces: r.pieces,
   pairing: r.pairing,
@@ -181,7 +181,7 @@ function pairView(p: GeneratedPair, ruleKey: string, facts: ReadonlyMap<string, 
   };
 }
 
-interface GenCtx {
+export interface GenCtx {
   rounding: RoundingRule;
   now: Date;
   newColourDays: number;
@@ -189,7 +189,7 @@ interface GenCtx {
   salesDays: number;
 }
 
-async function genCtx(deps: CombosDeps, storeId: number): Promise<GenCtx> {
+export async function genCtx(deps: CombosDeps, storeId: number): Promise<GenCtx> {
   const [rounding, newColourDays, cap, salesDays] = await Promise.all([
     roundingOf(deps, storeId),
     setting(deps, storeId, 'combos.newColourDays'),
@@ -226,7 +226,7 @@ async function salesSignals(db: Db, storeId: number, facts: ReadonlyMap<string, 
 }
 
 /** The pairs of a rule now: bound products, their facts, past sales, generated. */
-async function generateFor(deps: CombosDeps, storeId: number, r: Pick<RuleRow, 'key' | 'sourceIds' | 'productIds' | 'pieces' | 'pairing' | 'sameColour' | 'excludeColourIds' | 'priceMode' | 'priceMinor' | 'percentOff' | 'sortMode' | 'pinnedKeys'> & { id?: string }, ctx: GenCtx, db: Db = deps.db): Promise<{ gen: GenResult; facts: Map<string, ProductFact>; rows: { id: string; pieceKey: string | null; pieceCount: number }[] }> {
+export async function generateFor(deps: CombosDeps, storeId: number, r: Pick<RuleRow, 'key' | 'sourceIds' | 'productIds' | 'pieces' | 'pairing' | 'sameColour' | 'excludeColourIds' | 'priceMode' | 'priceMinor' | 'percentOff' | 'sortMode' | 'pinnedKeys'> & { id?: string }, ctx: GenCtx, db: Db = deps.db): Promise<{ gen: GenResult; facts: Map<string, ProductFact>; rows: { id: string; pieceKey: string | null; pieceCount: number }[] }> {
   const ids = await boundProductIds(db, storeId, { categoryIds: r.sourceIds, productIds: r.productIds });
   const facts = await productFacts({ db, settings: deps.settings }, storeId, ids);
   const ordered = ids.flatMap((id) => (facts.has(id) ? [facts.get(id)!] : []));

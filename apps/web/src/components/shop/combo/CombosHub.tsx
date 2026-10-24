@@ -2,8 +2,9 @@
 // "Combos", the season tabs when the rules use two seasons or more (`combos.seasons`), then one row per kind of set —
 // the 2-piece packs, the 3-piece packs, the top + bottom sets — of cards, each card one fixed set or one auto rule and
 // product (its colour pairs). On a computer the rows share lines of four columns (D-038); a phone shows one row under
-// the other, each scrolling sideways. Off (`combos.landing`): "Coming soon". A rule's own list (PR 572) is still to
-// come, so a card opens the first set of its group. PR 98: while the set builder is open (`combos.builder`, with its
+// the other, each scrolling sideways. Off (`combos.landing`): "Coming soon". A rule's card opens the rule's own page
+// (PR 572; ~~a rule's own list is still to come, so a card opens the first set of its group~~), whose template L3 is
+// this page's body (`HubBody`). PR 98: while the set builder is open (`combos.builder`, with its
 // entries on) a last row "Build your own" holds its one card ("Any 2 or 3 pieces"), packed like the others.
 import type { Metadata } from 'next';
 import { buildEntry } from '@/lib/shop/build';
@@ -87,15 +88,57 @@ function Rails({ c, all, season, perRail, build }: { c: ShopContext; all: Awaite
   );
 }
 
+/** The landing page's rows with their season tabs (also a rule's own page in template L3, opened on its season). */
+export function HubBody({
+  c,
+  all,
+  build,
+  seasonTabs,
+  seasonList,
+  perRail,
+  first = null,
+}: {
+  c: ShopContext;
+  all: Awaited<ReturnType<typeof setCardGroups>>;
+  build: Build;
+  seasonTabs: boolean;
+  seasonList: readonly { key: string; en: string; bn: string }[];
+  perRail: number;
+  /** The season to open on (a rule's own season), else the first. */
+  first?: string | null;
+}) {
+  const seasons = seasonTabs ? hubSeasons(all.groups, all.rules, seasonList.map((s) => s.key)) : [];
+  const tabs = seasons.length >= 2 ? seasons.map((k) => ({ key: k, label: (() => { const s = seasonList.find((x) => x.key === k); return s ? c.t.label({ en: s.en, bn: s.bn }) : k; })() })) : [];
+  if (!all.groups.length && !build) {
+    return (
+      <div className="ca-empty" data-testid="ca-empty">
+        <p className="text2">{c.t('combo.hub.empty')}</p>
+        <a className="btn btn-primary mt12" href={hrefIn(c.lang, ROUTES.home)}>
+          {c.t('soon.home')}
+        </a>
+      </div>
+    );
+  }
+  if (!tabs.length) return <Rails c={c} all={all} season={null} perRail={perRail} build={build} />;
+  const open = tabs.find((t) => t.key === first)?.key ?? tabs[0]!.key;
+  return (
+    <>
+      <HubTabs tabs={tabs} label={c.t('combo.hub.seasons')} initial={open} />
+      {tabs.map((t) => (
+        <div key={t.key} data-season-panel={t.key} hidden={t.key !== open}>
+          <Rails c={c} all={all} season={t.key} perRail={perRail} build={build} />
+        </div>
+      ))}
+    </>
+  );
+}
+
 export async function CombosHub() {
   const c = await shopContext();
   const set = await readPageSettings(KEYS, c.storeId);
   const landing = set['combos.landing'];
   if (!landing.on) return <ComingSoon c={c} soonKey="combos" />;
   const [all, build] = await Promise.all([setCardGroups(c), buildEntry(c)]);
-  const seasonList = set['combos.seasons'];
-  const seasons = landing.seasonTabs ? hubSeasons(all.groups, all.rules, seasonList.map((s) => s.key)) : [];
-  const tabs = seasons.length >= 2 ? seasons.map((k) => ({ key: k, label: (() => { const s = seasonList.find((x) => x.key === k); return s ? c.t.label({ en: s.en, bn: s.bn }) : k; })() })) : [];
   const counts = [...new Set(all.groups.map((g) => g.cards[0]!.productIds.length))].sort((a, b) => a - b).map((n) => c.num(n));
   return (
     <div className="container ca-page ca-list ca-L3" data-testid="combos-hub">
@@ -111,27 +154,7 @@ export async function CombosHub() {
         {counts.length ? <div className="eyebrow">{c.t('combo.hub.eyebrow', { counts: counts.join(c.t('combo.hub.or')) })}</div> : null}
         <h1 className="h1">{c.t('combo.hub.title')}</h1>
       </header>
-      {all.groups.length || build ? (
-        tabs.length ? (
-          <>
-            <HubTabs tabs={tabs} label={c.t('combo.hub.seasons')} initial={tabs[0]!.key} />
-            {tabs.map((t, i) => (
-              <div key={t.key} data-season-panel={t.key} hidden={i > 0}>
-                <Rails c={c} all={all} season={t.key} perRail={landing.perRail} build={build} />
-              </div>
-            ))}
-          </>
-        ) : (
-          <Rails c={c} all={all} season={null} perRail={landing.perRail} build={build} />
-        )
-      ) : (
-        <div className="ca-empty" data-testid="ca-empty">
-          <p className="text2">{c.t('combo.hub.empty')}</p>
-          <a className="btn btn-primary mt12" href={hrefIn(c.lang, ROUTES.home)}>
-            {c.t('soon.home')}
-          </a>
-        </div>
-      )}
+      <HubBody c={c} all={all} build={build} seasonTabs={landing.seasonTabs} seasonList={set['combos.seasons']} perRail={landing.perRail} />
     </div>
   );
 }
