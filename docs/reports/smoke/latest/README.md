@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-25 03:50 (Asia/Dhaka)
+# Smoke test · 2026-10-25 04:28 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (162টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (170টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `849f2e984d06` · nightly · result **PASS** (162 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `bd0f7927b88e` · after deploy · result **PASS** (170 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -82,6 +82,10 @@ Site: https://new.extas.com.bd · commit `849f2e984d06` · nightly · result **P
 | `/admin/reports` | phone | 200 | `/admin/reports` | ok | [picture](admin-reports-phone.jpg) |
 | `/admin/ai` | phone | 200 | `/admin/ai` | ok | [picture](admin-ai-phone.jpg) |
 | `/admin/settings` | phone | 200 | `/admin/settings` | ok | [picture](admin-settings-phone.jpg) |
+| `/admin/delivery/couriers` | phone | 200 | `/admin/delivery/couriers` | ok | [picture](admin-delivery-couriers-phone.jpg) |
+| `/admin/orders/packing/print` | phone | 200 | `/admin/orders/packing/print` | ok | [picture](admin-orders-packing-print-phone.jpg) |
+| `/admin/orders/packing/handover` | phone | 200 | `/admin/orders/packing/handover` | ok | [picture](admin-orders-packing-handover-phone.jpg) |
+| `/admin/orders/packing/picking` | phone | 200 | `/admin/orders/packing/picking` | ok | [picture](admin-orders-packing-picking-phone.jpg) |
 | `/admin/settings/system/cache` | phone | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-phone.jpg) |
 | `/admin/orders/risk-rules/checkout` | phone | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-phone.jpg) |
 | `/admin/orders/risk-rules` | phone | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-phone.jpg) |
@@ -163,6 +167,10 @@ Site: https://new.extas.com.bd · commit `849f2e984d06` · nightly · result **P
 | `/admin/reports` | desktop | 200 | `/admin/reports` | ok | [picture](admin-reports-desktop.jpg) |
 | `/admin/ai` | desktop | 200 | `/admin/ai` | ok | [picture](admin-ai-desktop.jpg) |
 | `/admin/settings` | desktop | 200 | `/admin/settings` | ok | [picture](admin-settings-desktop.jpg) |
+| `/admin/delivery/couriers` | desktop | 200 | `/admin/delivery/couriers` | ok | [picture](admin-delivery-couriers-desktop.jpg) |
+| `/admin/orders/packing/print` | desktop | 200 | `/admin/orders/packing/print` | ok | [picture](admin-orders-packing-print-desktop.jpg) |
+| `/admin/orders/packing/handover` | desktop | 200 | `/admin/orders/packing/handover` | ok | [picture](admin-orders-packing-handover-desktop.jpg) |
+| `/admin/orders/packing/picking` | desktop | 200 | `/admin/orders/packing/picking` | ok | [picture](admin-orders-packing-picking-desktop.jpg) |
 | `/admin/settings/system/cache` | desktop | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-desktop.jpg) |
 | `/admin/orders/risk-rules/checkout` | desktop | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-desktop.jpg) |
 | `/admin/orders/risk-rules` | desktop | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-desktop.jpg) |
