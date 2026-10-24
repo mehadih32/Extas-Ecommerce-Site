@@ -1,0 +1,33 @@
+{
+  "$comment": "PR 594 (CN-026) — the page guides of the built admin pages: each built page (an app/admin/**/page.tsx route) names its Bengali guide docs/admin-guide/pages/<id>.md, whose section (the part before the slash) has its overview docs/admin-guide/pages/<section>/index.md. The shell's guide (the top bar's help icon, a page's guide button) opens the guide of the page it is on, the section overview above it and the section's other pages beside it (lib/admin-shell/help-pages.ts). `notGuided` lists the admin routes with no guide of their own and why. tools/admin-guide-check.mjs fails CI when a built admin page has no entry, a guide file is missing or lacks one of the six parts (docs/admin-guide/README.md). Order inside a section is the order the overview lists the pages in.",
+  "pages": [
+    { "id": "dashboard/home", "route": "/admin" },
+    { "id": "orders/all", "route": "/admin/orders" },
+    { "id": "orders/order", "route": "/admin/orders/[id]" },
+    { "id": "orders/confirm", "route": "/admin/orders/confirm" },
+    { "id": "products/all", "route": "/admin/products" },
+    { "id": "products/new", "route": "/admin/products/new" },
+    { "id": "products/edit", "route": "/admin/products/[id]" },
+    { "id": "products/queue", "route": "/admin/products/queue" },
+    { "id": "products/combos", "route": "/admin/combos" },
+    { "id": "products/stock", "route": "/admin/stock" },
+    { "id": "products/stock-counts", "route": "/admin/stock/counts" },
+    { "id": "products/stock-count", "route": "/admin/stock/counts/[id]" },
+    { "id": "products/stock-movements", "route": "/admin/stock/movements" },
+    { "id": "products/back-in-stock", "route": "/admin/products/back-in-stock" },
+    { "id": "products/size-charts", "route": "/admin/size-charts" },
+    { "id": "products/import", "route": "/admin/products/import" },
+    { "id": "products/audit", "route": "/admin/products/audit" },
+    { "id": "delivery/zones", "route": "/admin/delivery/zones" },
+    { "id": "marketing/rules", "route": "/admin/rules" },
+    { "id": "marketing/notices", "route": "/admin/rules/notices" },
+    { "id": "reports/server", "route": "/admin/server" },
+    { "id": "settings/keys", "route": "/admin/integrations" },
+    { "id": "help/manual", "route": "/admin/help" }
+  ],
+  "notGuided": [
+    { "route": "/admin/login", "why": "the sign-in page has no shell (no top bar, no guide icon); docs/admin-guide/login.md explains it" },
+    { "route": "/admin/[...rest]", "why": "the placeholder of a section with no built page: the guide shows that section's overview" },
+    { "route": "/admin/delivery", "why": "a permanent redirect to /admin/delivery/zones" }
+  ]
+}

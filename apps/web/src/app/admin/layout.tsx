@@ -4,7 +4,11 @@
 // PR 12 (CN-018, CN-022) — the new admin shell around every signed-in admin page (14 sections, demo V12.3 #/admin):
 // drawn here once per request with the person's sections, keys and waiting-work badges; the sign-in page and a request
 // without a session get the page alone (the page sends them to sign in).
+// PR 594 (CN-026 (a)): the admin's own UI type (fonts/admin-ui.css: one Bengali and one English face, swap), with its
+// first faces preloaded; the shop never loads it.
+import { preload } from 'react-dom';
 import '../../fonts/admin.css';
+import '../../fonts/admin-ui.css';
 import './admin.css';
 // PR 21, 35: the product pages' styles, in the same stylesheet as the frame's (one render-blocking file, not two).
 import './products/products.css';
@@ -13,6 +17,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminShell } from '@/components/admin/shell/AdminShell';
 import { ShellTextProvider } from '@/components/admin/shell/ShellText';
 import { langLabels } from '@/components/admin/AdminFrame';
+import { adminFontPreloads } from '@/lib/admin-fonts';
 import { adminView } from '@/lib/admin-page';
 import { initialsOf, type ShellModel } from '@/lib/admin-shell/model';
 import { badgesFrom, cachedQueues, visibleQueues } from '@/lib/admin-shell/queues';
@@ -45,6 +50,7 @@ async function shellModel(): Promise<ShellModel | null> {
 
 export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const [model, view] = await Promise.all([shellModel(), adminView()]);
+  for (const href of adminFontPreloads(view.lang)) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   // The error page draws in the browser: it gets the system states' words here (lib/admin-shell, SH-07).
   const text = { lang: view.lang, dict: { shell: { state: (view.dict.shell as Dict).state } } as Dict, inShell: model !== null };
   return (

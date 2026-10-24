@@ -9,7 +9,7 @@
  --g:#1F4E46;--g9:#12302A;--g8:#173B34;--g6:#2D6A5D;--g1:#E4EEEA;--g0:#F1F6F4;--gold:#B8913F;--goldbg:#F7F0E0;--goldink:#7A5A17;
  --ok:#25694A;--okbg:#E5F2EA;--warn:#8A5508;--warnbg:#FBF0DA;--bad:#A33A31;--badbg:#F9E6E2;--info:#2F5E8C;--infobg:#E7EEF6;
  --r:12px;--sh:0 1px 2px rgba(23,32,28,.04),0 1px 1px rgba(23,32,28,.03);--sh2:0 18px 48px rgba(10,30,26,.18),0 2px 6px rgba(0,0,0,.06);
- font-family:'Instrument Sans','Hind Siliguri',system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45;
+ font-family:var(--a2-font,'Instrument Sans','Hind Siliguri',system-ui,sans-serif);color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45;
  -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;align-items:stretch}
 :where(.a2-z) *,:where(.a2-z) *::before,:where(.a2-z) *::after{box-sizing:border-box}
 :where(.a2-z) h1,:where(.a2-z) h2,:where(.a2-z) h3,:where(.a2-z) h4,:where(.a2-z) p,:where(.a2-z) ul,:where(.a2-z) ol,:where(.a2-z) figure{margin:0}
@@ -29,14 +29,14 @@
 .adm2 .a2-b{font-weight:650}
 .adm2 .a2-nowrap{white-space:nowrap}
 .adm2 .a2-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
-.adm2 .a2-bn{font-family:'Hind Siliguri','Instrument Sans',sans-serif}
+.adm2 .a2-bn{font-family:var(--a2-font-bn,'Hind Siliguri','Instrument Sans',sans-serif)}
 .adm2 .a2-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .adm2 .a2-sb{width:248px;flex:none;background:var(--g9);color:#C6D6D0;display:flex;flex-direction:column;padding:16px 12px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:40;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
 .adm2 .a2-brand{display:flex;align-items:center;gap:11px;padding:2px 8px 16px}
 .adm2 .a2-logo{width:34px;height:34px;border-radius:9px;background:#F1EADB;color:var(--g9);display:grid;place-items:center;font:700 17px 'Instrument Sans';letter-spacing:-.02em;flex:none}
 .adm2 .a2-wm{font:700 16px 'Instrument Sans';letter-spacing:.24em;color:#fff;line-height:1.1}
 .adm2 .a2-wm-s{font-size:12px;color:#8FA9A1;margin-top:2px}
-.adm2 .a2-wm[data-script=bn]{letter-spacing:0;font-family:'Hind Siliguri','Instrument Sans',sans-serif}
+.adm2 .a2-wm[data-script=bn]{letter-spacing:0;font-family:var(--a2-font-bn,'Hind Siliguri','Instrument Sans',sans-serif)}
 .adm2 .a2-store{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#DCE7E3;margin:0 0 6px}
 .adm2 .a2-store span{display:flex;flex-direction:column;line-height:1.25;min-width:0}
 .adm2 .a2-store b{font-weight:600;font-size:13.5px;color:#fff}
@@ -88,7 +88,7 @@
 .adm2 .a2-h1{font-size:26px;font-weight:650;letter-spacing:-.015em;line-height:1.2;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .adm2 .a2-subt{color:var(--mute);font-size:13px;margin-top:4px}
 .adm2 .a2-phr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.adm2 .a2-guide{display:inline-flex;align-items:center;gap:7px;font-family:'Hind Siliguri','Instrument Sans',sans-serif;font-size:14px;font-weight:500;color:var(--g);padding:0 12px;height:36px;border-radius:9px;background:var(--g0);border:1px solid var(--g1);white-space:nowrap}
+.adm2 .a2-guide{display:inline-flex;align-items:center;gap:7px;font-family:var(--a2-font-bn,'Hind Siliguri','Instrument Sans',sans-serif);font-size:14px;font-weight:500;color:var(--g);padding:0 12px;height:36px;border-radius:9px;background:var(--g0);border:1px solid var(--g1);white-space:nowrap}
 .adm2 .a2-guide:hover{background:var(--g1)}
 .adm2 .a2-tabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--ln);margin:0 0 20px;position:relative}
 .adm2 .a2-tabs-s{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;min-width:0}
@@ -341,24 +341,54 @@
 .adm2 .a2-center { justify-content: center; }
 .adm2 .a2-plan { max-width: 640px; margin-top: 6px; }
 .adm2 .a2-ntf-note { margin-top: 14px; }
-/* the guide panel's text (Bengali, CN-014) */
-.adm2 .a2-guidebody { font-family: 'Hind Siliguri', 'Instrument Sans', sans-serif; font-size: 14.5px; line-height: 1.65; color: var(--ink2); }
-.adm2 .a2-guidebody h3 { font-size: 16px; font-weight: 650; color: var(--ink); margin: 18px 0 6px; }
-.adm2 .a2-guidebody h4 { font-size: 14.5px; font-weight: 650; color: var(--ink); margin: 14px 0 4px; }
-.adm2 .a2-guidebody > :first-child { margin-top: 0; }
-.adm2 .a2-guidebody p { margin: 0 0 8px; }
-.adm2 .a2-guidebody ul, .adm2 .a2-guidebody ol { margin: 0 0 8px; padding-left: 20px; }
-.adm2 .a2-guidebody ul { list-style: disc; }
-.adm2 .a2-guidebody ol { list-style: decimal; }
-.adm2 .a2-guidebody li { margin: 2px 0; }
-.adm2 .a2-guidebody li > ul, .adm2 .a2-guidebody li > ol { margin: 2px 0 2px; }
+/* the guide panel's text (Bengali, CN-014). PR 594 (CN-026 (a)): the admin's Bengali face, a readable size, line height
+   1.7, clear part headings, styled numbered steps and bullets, bold key words and button names, and the coloured Tip /
+   Careful / Example boxes — nothing in the browser's own styling. */
+.adm2 .a2-guidebody { font-family: var(--a2-font-bn, 'Hind Siliguri', 'Instrument Sans', sans-serif); font-size: 15.5px; line-height: 1.7; color: var(--ink2); }
+.adm2 .a2-guidebody h3 { font-size: 17px; font-weight: 650; line-height: 1.45; color: var(--ink); margin: 22px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--ln2); }
+.adm2 .a2-guidebody h4 { font-size: 15.5px; font-weight: 650; line-height: 1.45; color: var(--ink); margin: 16px 0 6px; }
+.adm2 .a2-guidebody > :first-child, .adm2 .a2-guidebody article > :first-child { margin-top: 0; }
+.adm2 .a2-guidebody p { margin: 0 0 10px; }
+.adm2 .a2-guidebody b { font-weight: 650; color: var(--ink); }
+.adm2 .a2-guidebody ul, .adm2 .a2-guidebody ol { margin: 0 0 12px; padding: 0; list-style: none; }
+.adm2 .a2-guidebody li { position: relative; margin: 6px 0; }
+.adm2 .a2-guidebody ul > li { padding-left: 20px; }
+.adm2 .a2-guidebody ul > li::before { content: ''; position: absolute; left: 5px; top: .72em; width: 6px; height: 6px; border-radius: 50%; background: var(--g6); }
+.adm2 .a2-guidebody ol { counter-reset: a2step; }
+.adm2 .a2-guidebody ol > li { counter-increment: a2step; padding-left: 36px; min-height: 26px; }
+.adm2 .a2-guidebody ol > li::before { content: counter(a2step); position: absolute; left: 0; top: .1em; width: 25px; height: 25px; border-radius: 50%; background: var(--g1); color: var(--g); font: 650 13px/25px var(--a2-font, 'Instrument Sans', sans-serif); text-align: center; }
+.adm2 .a2-guidebody li > ul, .adm2 .a2-guidebody li > ol { margin: 4px 0 2px; }
 .adm2 .a2-guidebody code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; background: #F1EFEA; border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
 .adm2 .a2-guidebody pre { background: #F4F2ED; border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-size: 12.5px; margin: 0 0 10px; }
 .adm2 .a2-guidebody a { color: var(--g); font-weight: 600; text-decoration: underline; display: inline-block; padding: 6px 0; }
-.adm2 .a2-gtbl { overflow-x: auto; margin: 0 0 10px; border: 1px solid var(--ln); border-radius: 10px; }
-.adm2 .a2-gtbl table { border-collapse: collapse; width: 100%; font-size: 13px; }
-.adm2 .a2-gtbl th, .adm2 .a2-gtbl td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--ln2); vertical-align: top; }
+.adm2 .a2-guidebody a.a2-btn { text-decoration: none; padding: 0 12px; }
+.adm2 .a2-gtbl { overflow-x: auto; margin: 0 0 12px; border: 1px solid var(--ln); border-radius: 10px; }
+.adm2 .a2-gtbl table { border-collapse: collapse; width: 100%; font-size: 13.5px; line-height: 1.55; }
+.adm2 .a2-gtbl th, .adm2 .a2-gtbl td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--ln2); vertical-align: top; }
 .adm2 .a2-gtbl th { background: var(--sf2); font-weight: 650; color: var(--ink); }
+.adm2 .a2-gbox { margin: 12px 0; padding: 10px 14px 4px; border-radius: 10px; border-left: 4px solid var(--info); background: var(--infobg); }
+.adm2 .a2-gbox.tip { border-left-color: var(--ok); background: var(--okbg); }
+.adm2 .a2-gbox.careful { border-left-color: var(--warn); background: var(--warnbg); }
+.adm2 .a2-gbox-t { display: block; font-size: 13.5px; font-weight: 650; color: var(--info); margin-bottom: 2px; }
+.adm2 .a2-gbox.tip .a2-gbox-t { color: var(--ok); }
+.adm2 .a2-gbox.careful .a2-gbox-t { color: var(--warn); }
+.adm2 .a2-gbox p { margin-bottom: 6px; }
+/* the section's overview (folded under the page's own guide), the section's pages, the page's title */
+.adm2 .a2-gov { margin: 0 0 14px; border: 1px solid var(--ln); border-radius: 10px; background: var(--sf2); }
+.adm2 .a2-gov > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; cursor: pointer; list-style: none; font-weight: 600; color: var(--ink); }
+.adm2 .a2-gov > summary::-webkit-details-marker { display: none; }
+.adm2 .a2-gov > summary > span { flex: 1; min-width: 0; }
+.adm2 .a2-gov[open] > summary > svg:last-child { transform: rotate(180deg); }
+.adm2 .a2-govb { padding: 2px 14px 6px; border-top: 1px solid var(--ln2); }
+.adm2 .a2-gpl { font-size: 13px; font-weight: 650; color: var(--mute); margin: 0 0 6px; }
+.adm2 .a2-guidebody .a2-gpages ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+.adm2 .a2-guidebody .a2-gpages li { margin: 0; padding: 0; }
+.adm2 .a2-guidebody .a2-gpages li::before { content: none; }
+.adm2 .a2-gpages button { min-height: 36px; padding: 0 12px; border: 1px solid var(--ln); border-radius: 18px; background: var(--sf); color: var(--ink2); font: 500 13.5px/1.3 var(--a2-font-bn, sans-serif); cursor: pointer; text-align: left; }
+.adm2 .a2-gpages button:hover { border-color: var(--g6); color: var(--g); }
+.adm2 .a2-gpages button.on { background: var(--g); border-color: var(--g); color: #fff; font-weight: 600; }
+.adm2 .a2-guidebody .a2-gpt { font-size: 20px; font-weight: 700; line-height: 1.35; color: var(--ink); margin: 0 0 10px; padding: 0; border: 0; }
+.adm2 .a2-gopen { margin: 0 0 8px; }
 /* the Dashboard and Help pages */
 .adm2 .a2-kpis.k2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .adm2 .a2-kspark { color: var(--g); }
@@ -580,3 +610,24 @@
 }
 /* What a closed "More" holds is not on the page until it is opened (no hidden button under a visible one). */
 .adm2 details:not([open]) > :not(summary) { display: none; }
+/* PR 594 (CN-026) — the guide beside the page: the top bar's small help icon opens the guide of the page as a side panel
+   that does not dim or block the page (the person follows the steps on it); from 1280 px the page moves over to make
+   room, below that the panel lies over the page's right side. On a phone the guide is a full-screen sheet. Form fields
+   and buttons of every admin page take the admin's own type, never the browser's. */
+.adm2 { --a2-gw: 440px; }
+.adm2 .a2-gside { position: fixed; top: 0; right: 0; bottom: 0; width: min(var(--a2-gw), 100vw); z-index: 55; display: flex; flex-direction: column; background: var(--sf); border-left: 1px solid var(--ln); box-shadow: -12px 0 32px rgba(10, 30, 26, .08); animation: a2in .18s ease; }
+.adm2 .a2-drw.full { top: 0; max-height: none; height: 100dvh; border-radius: 0; }
+@media (min-width: 1280px) {
+  .adm2.a2-gopen .a2-main { margin-right: var(--a2-gw); min-width: 0; }
+}
+@media (min-width: 1600px) {
+  .adm2 { --a2-gw: 480px; }
+}
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .a2-gpages button { min-height: 44px; }
+}
+.adm2 :where(input, select, textarea, button) { font-family: inherit; }
+/* The admin Bengali face is a little wider than the old fallback: on a phone a task line wraps instead of being cut. */
+@media (max-width: 767px) {
+  .adm2 .a2-tkt span { white-space: normal; }
+}

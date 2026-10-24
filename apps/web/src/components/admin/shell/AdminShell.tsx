@@ -5,13 +5,18 @@
 //   - the top bar: search (Ctrl/⌘ K, "/", or a tap), the bell, EN | বাং and the account menu;
 //   - the phone's bottom bar: Home · Orders · Support · Search · More (Orders and Support only for those who see them);
 //   - the panels: the search palette, notifications and the guide ("এই সেকশনে কী করা যায়").
+// PR 594 (CN-026): a small help icon in the top bar opens the guide of the page the person is on (as a page's own guide
+// button does); on a computer it is a side panel beside the page (the page moves over when there is room) and it
+// follows the person to the next page; on a phone a full-screen sheet. `guideMode` is the person's choice of where it
+// opens (CN-025's Settings → Admin look, a follow-up); none given is the side panel.
 // Only sections the person may open are drawn; badges count waiting work they may open (GET /api/admin/shell/badges,
 // asked again when a page changes and the count is older than the setting allows). The sign-in page has no shell.
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import type { AdminSectionId } from '@extas/settings';
 import { ADMIN_LANG_COOKIE, ADMIN_LOGIN } from '@/lib/admin-nav';
+import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
 import { viewerOf, type ShellModel } from '@/lib/admin-shell/model';
 import { locate, sectionHome, sectionVisible, SHELL_GROUPS, SHELL_SECTIONS, type ShellSection } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
@@ -24,7 +29,16 @@ import { ShellIcon } from './ShellIcon';
 const YEAR_SECONDS = 365 * 24 * 60 * 60;
 type Pop = 'me' | 'me2' | null;
 
-export function AdminShell({ model, children }: { model: ShellModel; children: ReactNode }) {
+/** A phone's width (the shell's own phone break, shell.css): the guide opens as a full-screen sheet there. */
+const PHONE = '(max-width: 767px)';
+const onPhoneChange = (cb: () => void) => {
+  const m = window.matchMedia(PHONE);
+  m.addEventListener('change', cb);
+  return () => m.removeEventListener('change', cb);
+};
+const isPhone = () => window.matchMedia(PHONE).matches;
+
+export function AdminShell({ model, children, guideMode }: { model: ShellModel; children: ReactNode; guideMode?: string | null }) {
   const pathname = usePathname() ?? '/admin';
   const router = useRouter();
   const [, start] = useTransition();
@@ -52,7 +66,11 @@ export function AdminShell({ model, children }: { model: ShellModel; children: R
     setSeenPath(pathname);
     setSb(false);
     setPop(null);
+    // The side panel stays open and turns to the new page's guide (the person follows the steps across pages).
+    if (guide?.path) setGuide({ ...guide, path: pathname });
   }
+  const phone = useSyncExternalStore(onPhoneChange, isPhone, () => false);
+  const mode = resolveGuideMode(guideMode, phone);
 
   const remember = () => {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -154,6 +172,12 @@ export function AdminShell({ model, children }: { model: ShellModel; children: R
     );
   };
 
+  const openHere = () => {
+    remember();
+    setPop(null);
+    setGuide({ path: pathname, section: here ? label(here.section) : '' });
+  };
+
   const lang = (v: 'bn' | 'en') => {
     if (v === model.lang) return;
     const secure = window.location.protocol === 'https:' ? '; Secure' : '';
@@ -203,7 +227,7 @@ export function AdminShell({ model, children }: { model: ShellModel; children: R
   const homeHref = sectionVisible(dashboard, viewer) ? sectionHome(dashboard, viewer) : '/admin';
 
   return (
-    <div className="adm2" translate="no" lang={model.lang} data-testid="a2-shell">
+    <div className={`adm2${guide && mode === 'side' ? ' a2-gopen' : ''}`} translate="no" lang={model.lang} data-testid="a2-shell">
       <a className="a2-skip" href="#main">
         {tt('nav.skip')}
       </a>
@@ -269,6 +293,9 @@ export function AdminShell({ model, children }: { model: ShellModel; children: R
                 {model.storeName}
               </span>
             ) : null}
+            <button type="button" className="a2-icb a2-help" aria-label={tt('top.guide')} title={tt('top.guide')} aria-expanded={!!guide} onClick={() => (guide ? setGuide(null) : openHere())} data-testid="a2-help">
+              <ShellIcon name="help" size={19} />
+            </button>
             <button
               type="button"
               className="a2-icb"
@@ -335,6 +362,8 @@ export function AdminShell({ model, children }: { model: ShellModel; children: R
         <GuidePanel
           dict={d}
           request={guide}
+          mode={mode}
+          here={pathname}
           onOpen={(g) => setGuide(g)}
           onClose={() => {
             setGuide(null);

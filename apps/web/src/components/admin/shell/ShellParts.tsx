@@ -24,11 +24,11 @@ export async function shellViewer(): Promise<ShellViewer> {
 const secName = (view: AdminView, id: string) => t(view.dict, `shell.sec.${id}`);
 const tabName = (view: AdminView, p: ShellPlace) => (p.tab ? t(view.dict, `shell.tab.${p.section.id}.${p.tab.id}`) : '');
 
-/** The guide button of a place (always Bengali: the guides are, CN-014). */
-export function PlaceGuide({ view, place }: { view: AdminView; place: ShellPlace }) {
+/** The guide button of a place (always Bengali: the guides are, CN-014); `overview`: the section's overview alone. */
+export function PlaceGuide({ view, place, overview }: { view: AdminView; place: ShellPlace; overview?: boolean }) {
   // A tab with its own guide (Stock, Size charts …) names itself in the panel's title; otherwise the section does.
   const name = place.tab?.guide ? tabName(view, place) : secName(view, place.section.id);
-  return <GuideButton slug={guideOf(place)} section={name} label={t(view.dict, 'shell.guide.button')} />;
+  return <GuideButton slug={guideOf(place)} section={name} label={t(view.dict, 'shell.guide.button')} page={overview ? `${place.section.id}/index` : undefined} />;
 }
 
 export async function PageCrumb({ view, current }: { view: AdminView; current: string }) {
