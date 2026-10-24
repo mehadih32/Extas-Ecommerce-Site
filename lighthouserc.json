@@ -21,6 +21,8 @@
         "http://127.0.0.1:3000/admin/delivery/zones",
         "http://127.0.0.1:3000/admin",
         "http://127.0.0.1:3000/admin/help",
+        "http://127.0.0.1:3000/admin/orders",
+        "http://127.0.0.1:3000/admin/orders/confirm",
         "http://127.0.0.1:3000/",
         "http://127.0.0.1:3000/bn",
         "http://127.0.0.1:3000/checkout",

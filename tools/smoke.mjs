@@ -464,6 +464,19 @@ export async function runSmoke(opts) {
           rows.push(
             await visit(page, opts.base, ignore, path, vp.name, opts.out),
           );
+      // Follow-up 200: admin pages found on a built admin page, signed in (one order's page from the order list; a
+      // shop with no order yet opens none).
+      for (const d of config.adminDiscover ?? []) {
+        const from = await visit(page, opts.base, ignore, d.from, vp.name, null);
+        const hrefs = from.ok
+          ? await page
+              .$$eval(d.selector, (els) => els.map((e) => e.getAttribute("href") ?? ""))
+              .catch(() => [])
+          : [];
+        for (const path of discovered(hrefs, d.take))
+          if (!seen.has(path))
+            rows.push(await visit(page, opts.base, ignore, path, vp.name, opts.out));
+      }
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])
         problems.push(

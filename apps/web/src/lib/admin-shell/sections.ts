@@ -47,8 +47,20 @@ export const SHELL_GROUPS: readonly Exclude<ShellGroup, 'bottom'>[] = ['daily', 
 
 export const SHELL_SECTIONS: readonly ShellSection[] = [
   { id: 'dashboard', icon: 'grid', group: 'daily', base: '/admin', tabs: [], perms: ['dashboard.read'], guide: 'dashboard' },
-  // The order screens are S05's (another PR): until then the section is its placeholder, for those who open invoices.
-  { id: 'orders', icon: 'bag', group: 'daily', base: '/admin/orders', tabs: [], perms: ['orders.invoice'], guide: 'orders' },
+  // S05 (PR 140, 141; follow-up 200): All orders (and one order's page) and the To confirm call queue. Risk review,
+  // packing, returns and the order settings join as their PRs are built. `orders.invoice` alone no longer shows the
+  // section (its pages need orders.read); the palette still opens invoices for that key.
+  {
+    id: 'orders',
+    icon: 'bag',
+    group: 'daily',
+    base: '/admin/orders',
+    guide: 'orders',
+    tabs: [
+      { id: 'all', pages: [{ href: '/admin/orders', perm: 'orders.read', keys: ['orders', 'order'] }] },
+      { id: 'confirm', pages: [{ href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] }] },
+    ],
+  },
   {
     id: 'products',
     icon: 'shirt',
