@@ -328,7 +328,9 @@
       "retry": "Try again",
       "back": "Back to my order",
       "closed": "This payment is not open any more.",
-      "wait": "Please wait…"
+      "wait": "Please wait…",
+      "redirect": "You will pay on {method}'s own secure page, then come back here.",
+      "unavailable": "Online payment is not open right now. Your order is saved — please try again a little later, or call us."
     },
     "ty": {
       "pageTitle": "Order confirmed",
