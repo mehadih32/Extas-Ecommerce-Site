@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-25 00:14 (Asia/Dhaka)
+# Smoke test · 2026-10-25 01:58 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (150টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (160টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `2fea840f9da5` · after deploy · result **PASS** (150 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `7b780eff604c` · after deploy · result **PASS** (160 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -49,6 +49,8 @@ Site: https://new.extas.com.bd · commit `2fea840f9da5` · after deploy · resul
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
 | `/bn/account/orders/0/invoice` | phone | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-phone.jpg) |
+| `/pay/0` | phone | 200 | `/pay/0` | ok | [picture](pay-0-phone.jpg) |
+| `/bn/pay/0` | phone | 200 | `/bn/pay/0` | ok | [picture](bn-pay-0-phone.jpg) |
 | `/admin` | phone | 200 | `/admin` | ok | [picture](admin-phone.jpg) |
 | `/admin/delivery/zones` | phone | 200 | `/admin/delivery/zones` | ok | [picture](admin-delivery-zones-phone.jpg) |
 | `/admin/help` | phone | 200 | `/admin/help` | ok | [picture](admin-help-phone.jpg) |
@@ -79,6 +81,9 @@ Site: https://new.extas.com.bd · commit `2fea840f9da5` · after deploy · resul
 | `/admin/reports` | phone | 200 | `/admin/reports` | ok | [picture](admin-reports-phone.jpg) |
 | `/admin/ai` | phone | 200 | `/admin/ai` | ok | [picture](admin-ai-phone.jpg) |
 | `/admin/settings` | phone | 200 | `/admin/settings` | ok | [picture](admin-settings-phone.jpg) |
+| `/admin/settings/system/cache` | phone | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-phone.jpg) |
+| `/admin/orders/risk-rules/checkout` | phone | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-phone.jpg) |
+| `/admin/orders/risk-rules` | phone | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-phone.jpg) |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -124,6 +129,8 @@ Site: https://new.extas.com.bd · commit `2fea840f9da5` · after deploy · resul
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
 | `/bn/account/orders/0/invoice` | desktop | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-desktop.jpg) |
+| `/pay/0` | desktop | 200 | `/pay/0` | ok | [picture](pay-0-desktop.jpg) |
+| `/bn/pay/0` | desktop | 200 | `/bn/pay/0` | ok | [picture](bn-pay-0-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin` | ok | [picture](admin-desktop.jpg) |
 | `/admin/delivery/zones` | desktop | 200 | `/admin/delivery/zones` | ok | [picture](admin-delivery-zones-desktop.jpg) |
 | `/admin/help` | desktop | 200 | `/admin/help` | ok | [picture](admin-help-desktop.jpg) |
@@ -154,6 +161,9 @@ Site: https://new.extas.com.bd · commit `2fea840f9da5` · after deploy · resul
 | `/admin/reports` | desktop | 200 | `/admin/reports` | ok | [picture](admin-reports-desktop.jpg) |
 | `/admin/ai` | desktop | 200 | `/admin/ai` | ok | [picture](admin-ai-desktop.jpg) |
 | `/admin/settings` | desktop | 200 | `/admin/settings` | ok | [picture](admin-settings-desktop.jpg) |
+| `/admin/settings/system/cache` | desktop | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-desktop.jpg) |
+| `/admin/orders/risk-rules/checkout` | desktop | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-desktop.jpg) |
+| `/admin/orders/risk-rules` | desktop | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-desktop.jpg) |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
