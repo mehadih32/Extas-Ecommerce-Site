@@ -135,6 +135,11 @@ export function checkOwnerData(input: CheckInput): Finding[] {
   marked('order.number (Order)', input.sample.order.number);
   marked('order.address (Order)', input.sample.order.address);
   for (const [i, q] of (input.sample.questions ?? []).entries()) marked(`questions[${i}].question (ProductQuestion)`, q.question);
+  // PR 65: a sample review is plainly a sample, in the words a customer would read and in the name beside them
+  for (const [i, r] of (input.sample.reviews ?? []).entries()) {
+    marked(`reviews[${i}].body (Review)`, r.body);
+    marked(`reviews[${i}].name (Review)`, r.name);
+  }
   if (!SAMPLE_PHONE.test(input.sample.customer.phone)) {
     add('sample-phone', 'sample customer.phone (Customer)', 'a sample phone must be in the unallocated +88010 range');
   }

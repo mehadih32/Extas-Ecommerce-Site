@@ -10,7 +10,9 @@
 // only, with the WhatsApp ask (PdpQa, `pdp.qa`). A product taken off sale keeps its page,
 // everything shown sold out (PR 36). The parts that change with the shopper's choice are small client parts sharing
 // one state (PdpRoot); the rest is drawn here. PR 102: the sets this product is in, one line each above the buttons
-// ("Polo Duo: any 2 colours for ৳1,800 · Save ৳200", `combos.pdpOffer`), each linking to its combo page.
+// ("Polo Duo: any 2 colours for ৳1,800 · Save ৳200", `combos.pdpOffer`), each linking to its combo page. PR 65: the
+// buyers' reviews above the questions, the ones with a photo first, in one sliding row (PdpReviews, `pdp.reviews`),
+// with the rating line under the title that jumps down to them; approved reviews only, so a page with none shows none.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -30,6 +32,8 @@ import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
 import { finderOffered, FIT_COOKIE, readFit, sizeFor } from '@/lib/shop/pdp-finder';
 import { payWords } from '@/lib/shop/pdp-price';
 import { readRecent, RECENT_COOKIE } from '@/lib/shop/pdp-rows';
+import { pdpReviewsView, ratingLineOf } from '@/lib/shop/pdp-reviews';
+import { productReviews } from '@/lib/shop/pdp-reviews-load';
 import { ruleCells } from '@/lib/shop/pdp-rules';
 import { TEMPLATE_QUERY, templateFor } from '@/lib/shop/pdp-template';
 import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
@@ -58,6 +62,7 @@ import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
 import { PdpQa } from './PdpQa';
+import { PdpReviews, ReviewStars, reviewAvgText, reviewCountText } from './PdpReviews';
 import { PdpRail } from './PdpRail';
 import { PdpShare } from './PdpShare';
 import { PdpRecentMark } from './PdpRecentMark';
@@ -87,6 +92,8 @@ const KEYS = [
   'pdp.buy',
   'pdp.sweep',
   'pdp.qa',
+  // PR 65: the reviews block under the page, and the rating line under the title
+  'pdp.reviews',
   'pdp.fit',
   'pdp.rows',
   'pdp.icons',
@@ -105,6 +112,8 @@ export type ProductSearch = Record<string, string | string[] | undefined>;
 
 const settingsFor = cache((storeId: number) => readPageSettings(KEYS, storeId));
 const dataFor = cache((storeId: number, slug: string) => productData(storeId, slug));
+/** PR 65: the product's approved reviews, read once for the rating line under the title and the block below it. */
+const reviewsFor = cache((storeId: number, productId: string, max: number) => productReviews(storeId, productId, max));
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? null;
 
@@ -227,6 +236,11 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
     },
     { free: t('pdp.rules.free'), more: t('pdp.rules.more'), swapOnly: t('pdp.rules.swapOnly') },
   );
+
+  // ---- PR 65 · the reviews block, and the rating line under the title (approved reviews only; none = neither) ----
+  const revSet = set['pdp.reviews'];
+  const reviewData = revSet.on ? await reviewsFor(c.storeId, m.productId, revSet.max) : { rows: [], average: 0, total: 0 };
+  const ratingLine = ratingLineOf(pdpReviewsView(reviewData.rows, { average: reviewData.average, total: reviewData.total }, revSet), revSet);
 
   // ---- PR 64 · details ----
   const fabric = fabricLine(lang === 'bn' ? (data.fabricBn ?? data.fabricEn) : data.fabricEn, data.gsm, (n) => t('pdp.details.gsm', { n: c.num(n) }));
@@ -447,6 +461,13 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                     </span>
                   </h1>
                 </div>
+                {ratingLine ? (
+                  <a className="pdp-rating" href="#pdp-reviews" data-testid="pdp-rating">
+                    <ReviewStars rating={ratingLine.average} size={14} label={t('reviews.stars', { n: reviewAvgText(c, ratingLine.average) })} />
+                    <b>{reviewAvgText(c, ratingLine.average)}</b>
+                    <span className="muted">· {reviewCountText(c, ratingLine.total)}</span>
+                  </a>
+                ) : null}
                 {icons.panel ? (
                   <PdpRail
                     set={icons}
@@ -512,6 +533,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             </div>
           </div>
         </div>
+        <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />
         <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />
         <PdpRows
           c={c}

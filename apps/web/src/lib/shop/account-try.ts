@@ -1,6 +1,7 @@
 // PR 131 — test servers only (EXTAS_SHOP_TEST_PAGES=1, and only while the SMS sender is the mock): POST
 // /api/account/try signs this browser in as the sample customer, so the device gate and the journeys measure My account
-// with something in it: the sample customer (made once, with one sample order of the sample catalogue; never the
+// with something in it: the sample customer (made once, with two sample orders of the sample catalogue — one open, one
+// delivered, so PR 65's "Rate & review" has a real line to sit on; never the
 // owner's data: the number is in the unallocated +88010 range, the order number is the test server's own) gets a session
 // like any sign-in, without the code's rate limits (the gate opens every page on every device). The real door, the
 // SMS code, has its own tests (packages/accounts login.db.test.ts) and the journeys.
@@ -9,8 +10,10 @@ import { securityPolicy, startCustomerSession, type RequestContext } from '@exta
 
 /** The sample account's number (the +88010 range is unallocated: never anyone's). */
 export const TRY_ACCOUNT_PHONE = '+8801000000131'; // hardcode-ok: sample data, the unallocated +88010 range, test servers only
-/** The sample account's one order. */
+/** The sample account's open order. */
 export const TRY_ORDER_NUMBER = 'TRY-131'; // hardcode-ok: sample data, test servers only
+/** PR 65: his delivered order, the one that can be reviewed ("Rate & review" on its line). */
+export const TRY_DELIVERED_ORDER_NUMBER = 'TRY-65'; // hardcode-ok: sample data, test servers only
 
 const SAMPLE_NAME = 'Sample Customer'; // hardcode-ok: sample data, test servers only
 
@@ -35,45 +38,51 @@ export async function trySignIn(a: AccountsDeps, input: { storeId: number }, ctx
       if ((e as { code?: string }).code !== 'P2002') throw e;
       return a.db.customer.findUniqueOrThrow({ where, select: { id: true } });
     });
-  const had = await a.db.order.findUnique({ where: { storeId_number: { storeId, number: TRY_ORDER_NUMBER } }, select: { id: true } });
-  if (!had) {
+  // PR 131: his open order; PR 65: a second, delivered order, so "Rate & review" is on a real line for the gate
+  const orders = [
+    { number: TRY_ORDER_NUMBER, delivered: false },
+    { number: TRY_DELIVERED_ORDER_NUMBER, delivered: true },
+  ] as const;
+  for (const o of orders) {
+    const had = await a.db.order.findUnique({ where: { storeId_number: { storeId, number: o.number } }, select: { id: true } });
+    if (had) continue;
     const v = await a.db.productVariant.findFirst({
       where: { storeId, archivedAt: null, active: true, priceMinor: { gt: 0 }, product: { status: 'PUBLISHED', archivedAt: null } },
       orderBy: { createdAt: 'asc' },
       select: { id: true, sku: true, priceMinor: true, size: { select: { label: true } }, product: { select: { id: true, nameEn: true } }, colour: { select: { nameEn: true } } },
     });
-    if (v?.priceMinor) {
-      const now = new Date();
-      const price = v.priceMinor;
-      await a.db.order
-        .create({
+    if (!v?.priceMinor) continue;
+    const now = new Date();
+    const price = v.priceMinor;
+    await a.db.order
+      .create({
         data: {
           storeId,
-          number: TRY_ORDER_NUMBER,
+          number: o.number,
           customerId: customer.id,
-          status: 'CONFIRMED',
+          status: o.delivered ? 'DELIVERED' : 'CONFIRMED',
           source: 'WEBSITE',
           currency: 'BDT',
           placedAt: now,
           confirmedAt: now,
+          ...(o.delivered ? { deliveredAt: now } : {}),
           customerName: SAMPLE_NAME,
           phone,
           shippingAddressText: 'House 1, Road 1, Sample Area', // hardcode-ok: sample data, test servers only
           subtotalMinor: price,
           totalMinor: price,
-          codAmountMinor: price,
+          codAmountMinor: o.delivered ? 0 : price,
           paymentMethod: 'COD',
-          idempotencyKey: `try:${TRY_ORDER_NUMBER}`,
+          idempotencyKey: `try:${o.number}`,
           items: {
             create: [{ storeId, variantId: v.id, productId: v.product.id, sku: v.sku, productName: v.product.nameEn, colourName: v.colour?.nameEn ?? null, sizeLabel: v.size?.label ?? null, quantity: 1, unitPriceMinor: price, lineTotalMinor: price }],
           },
         },
       })
-        // the same race on the sample order: the other fill made it first (unique store + number), which is all we need
-        .catch((e: unknown) => {
-          if ((e as { code?: string }).code !== 'P2002') throw e;
-        });
-    }
+      // the same race on the sample order: the other fill made it first (unique store + number), which is all we need
+      .catch((e: unknown) => {
+        if ((e as { code?: string }).code !== 'P2002') throw e;
+      });
   }
   const policy = await securityPolicy(a.settings, { storeId });
   return startCustomerSession({ db: a.db, policy, now: a.now }, { storeId, customerId: customer.id, deviceLabel: 'try' }, ctx);

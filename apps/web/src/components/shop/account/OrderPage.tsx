@@ -10,10 +10,14 @@
 // how he logs in: a code by SMS, never a password), and the exact amount for the rider (CN-014 idea 10, off by default).
 // PR 136 (follow-up 147): under the items, the invoice row — "Invoice INV-…", every item ready to print or keep, and
 // "Get invoice", which opens the order's invoice page (demo ord-invrow).
+// PR 65: "Rate & review" under each line of a delivered order, for the signed-in customer whose order it is. His
+// review is saved waiting for the shop's check, and the line then says so ("Review waiting for approval"); nothing of
+// it is shown to anyone before a member of staff approves it (SIM-F-008).
 import '../bag/bag.css';
 import './account.css';
 import type { ReactNode } from 'react';
 import type { Receipt } from '@extas/checkout';
+import type { OrderReviewBox } from '@/lib/shop/account-review';
 import { lateOf, riderAmountOf, trackOf, type LateRule, type OrderState } from '@extas/accounts/pure';
 import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords } from '@/lib/shop/checkout';
@@ -30,7 +34,44 @@ import { nameOf, Thumb } from '../bag/BagLines';
 import { AccountCrumbs } from './AccountShell';
 import { LateTag, StatusTag } from './AccountTabs';
 import { OrderTrack } from './OrderTrack';
+import { ReviewForm, ReviewState, type ReviewWords } from './ReviewForm';
 import { OrderWelcome } from './OrderWelcome';
+
+/** PR 65 — the words the client review form needs, from the shop dictionary (`account.review.*`). */
+const REVIEW_KEYS = [
+  'cta',
+  'title',
+  'line',
+  'rating',
+  'ratingN',
+  'fitAsk',
+  'fit.small',
+  'fit.right',
+  'fit.big',
+  'height',
+  'feet',
+  'inches',
+  'weight',
+  'photo',
+  'photoReward',
+  'body',
+  'submit',
+  'sending',
+  'sent',
+  'close',
+  'state.pending',
+  'state.published',
+  'state.hidden',
+  'err.rating',
+  'err.signedOut',
+  'err.off',
+  'err.notDelivered',
+  'err.late',
+  'err.exists',
+  'err.photo',
+  'err.big',
+  'err.offline',
+] as const;
 
 /** PR 135 — what the owner switched on for the tracking page (`account.track.*`). */
 export interface TrackOptions {
@@ -68,6 +109,7 @@ export async function OrderPage({
   opts,
   fromThanks = false,
   invoiceNo = null,
+  review = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -76,6 +118,8 @@ export async function OrderPage({
   fromThanks?: boolean;
   /** PR 136: the order's invoice number, or null while the owner has invoices off. */
   invoiceNo?: string | null;
+  /** PR 65: the review box of this order (null: not his account, reviews off, or nothing to review). */
+  review?: OrderReviewBox | null;
 }) {
   const t = c.t;
   const words = checkoutWords(c);
@@ -95,6 +139,9 @@ export async function OrderPage({
   const rider = opts.exact.enabled && !view.track.done && !view.track.ended ? riderAmountOf(pay) : null;
   const riderWa = rider !== null && opts.exact.report ? waHref(c.s['contact.whatsapp'], t('account.track.exactMsg', { ...c.vars, number: r.number, amount: m(rider) })) : null;
   const welcome = fromThanks && opts.welcome && (r.account === 'created' || r.account === 'existing');
+  // PR 65: the review words, flattened once for the client form (every one of them the owner's to change)
+  const reviewWords: ReviewWords = review ? Object.fromEntries(REVIEW_KEYS.map((k) => [k, t(`account.review.${k}`)])) : {};
+  const rewardText = review?.rewardMinor ? m(review.rewardMinor) : null;
   const methodName = (p: { method: string | null; provider: string | null }) =>
     p.method === 'ONLINE' || p.provider === 'online' ? w('pay.online') : p.provider && words[`pm.${p.provider}`] ? w(`pm.${p.provider}`) : (p.provider ?? p.method ?? '');
   const row = (k: string, v: ReactNode, cls = '', testId?: string) => (
@@ -237,6 +284,28 @@ export async function OrderPage({
                       </div>
                     ) : null}
                   </div>
+                  {/* PR 65: the review sits on its own full-width row of the line, so the stars and the two
+                      measurement boxes have the whole card to use on a 320 px phone, not the text column */}
+                  {review ? (
+                    <div className="ord-rev-slot">
+                      {review.reviewed[l.id] ? (
+                        <ReviewState words={reviewWords} state={review.reviewed[l.id]!} />
+                      ) : review.ask ? (
+                        <ReviewForm
+                          words={reviewWords}
+                          number={r.number}
+                          orderItemId={l.id}
+                          name={name}
+                          askFit={review.askFit}
+                          askBody={review.askBody}
+                          bodyMax={review.bodyMax}
+                          photos={review.photos}
+                          photoMaxMb={review.photoMaxMb}
+                          rewardText={rewardText}
+                        />
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               );
             })}

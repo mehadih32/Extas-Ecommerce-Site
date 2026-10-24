@@ -18,6 +18,8 @@ const NOT_A_CLAIM: Record<string, string> = {
   'search.helpOne': 'the one-form of a counted {n} (plural rule, PR 73)',
   'home.reviews.one': 'the one-form of a counted {n} (plural rule)',
   'home.reviews.stars': 'the rating scale ("out of 5"), not a count',
+  'reviews.one': 'the one-form of a counted {n} (plural rule, PR 65 product page reviews)',
+  'reviews.stars': 'the rating scale ("out of 5"), not a count',
   'footer.join.empty': 'the mobile number format (01XXXXXXXXX)',
   'footer.join.short': 'the mobile number format (11 digits)',
   'footer.join.prefix': 'the mobile number format (013 to 019, 11 digits)',

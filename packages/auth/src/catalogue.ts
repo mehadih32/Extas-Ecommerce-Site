@@ -37,6 +37,13 @@ export const PERMISSIONS = {
   // S02 · PR 59 — Find My Size learning: train a version from the recorded answers and switch one on or off. It only
   // ever proposes an ease for a garment type and fit; a size chart is the owner's and is never changed by it.
   'catalogue.sizeAdvice': { group: 'catalogue' },
+  // S02 · PR 65 — product reviews: see every review with its moderation state (`reviews.read`); approve, hide, reject
+  // or mark a review verified (`reviews.moderate`); write or import a review the shop itself collected
+  // (`reviews.write`, D3.16). Paying the photo-review reward is part of approving, and only while the owner has
+  // switched that perk on with his own amount (`reviews.photoReward`); nobody can move money with another key.
+  'reviews.read': { group: 'catalogue' },
+  'reviews.moderate': { group: 'catalogue' },
+  'reviews.write': { group: 'catalogue' },
   // PR 21, 35 — put a product on the shop or take it off (one by one or in bulk). Publishing always runs the publish
   // checklist first (PR 26, 29, 35); there is no way around it.
   'catalogue.publish': { group: 'catalogue' },

@@ -11,7 +11,8 @@ import { z } from 'zod';
 import { allow, found, logChange, parse, setting, type CatalogueDeps, type Who } from './context';
 import { CatalogueError } from './errors';
 import { productChartChoices, type ProductChartChoice } from './size-charts';
-import { groupStats, proposeEase, readModelData, type GroupStats, type EaseProposal, type SizeAdviceModelData, type SizeAnswer, type TrainingNumbers } from './size-training';
+import { approvedFitSignals } from './reviews';
+import { groupStats, proposeEase, readModelData, type FitVerdict, type GroupStats, type EaseProposal, type SizeAdviceModelData, type SizeAnswer, type TrainingNumbers } from './size-training';
 
 const DAY_MS = 86_400_000;
 
@@ -96,7 +97,7 @@ interface AnswerRow extends SizeAnswer {
  * The answers of the window, each with the size it gave, the size the shopper took and the size he swapped to. The
  * sizes come back as the shop's own keys, so the engine can compare their places in one order.
  */
-async function answersIn(deps: CatalogueDeps, who: Who, from: Date, to: Date): Promise<AnswerRow[]> {
+async function answersIn(deps: CatalogueDeps, who: Who, from: Date, to: Date, useReviews = false): Promise<AnswerRow[]> {
   const rows = await deps.db.sizeRecommendation.findMany({
     where: { storeId: who.storeId, createdAt: { gte: from, lte: to } },
     select: { productId: true, recommendedSizeId: true, chosenSizeId: true, orderItemId: true, exchangedForSize: true, reasoning: true },
@@ -109,15 +110,30 @@ async function answersIn(deps: CatalogueDeps, who: Who, from: Date, to: Date): P
   // the size a size exchange swapped to, for the lines these answers led to (the strongest signal there is)
   const itemIds = [...new Set(rows.flatMap((r) => (r.orderItemId ? [r.orderItemId] : [])))];
   const swapped = itemIds.length ? await swapTargets(deps, who, itemIds) : new Map<string, string>();
+  // PR 65: what an approved review of that same line says about the size, in the buyer's own words
+  const verdicts = useReviews ? await reviewVerdicts(deps, who, from, to) : new Map<string, FitVerdict>();
   return rows.map((r) => ({
     productId: r.productId,
     recommended: r.recommendedSizeId ? (keyOf.get(r.recommendedSizeId) ?? null) : null,
     chosen: r.chosenSizeId ? (keyOf.get(r.chosenSizeId) ?? null) : null,
     ordered: r.orderItemId !== null,
     exchangedTo: r.orderItemId ? (swapped.get(r.orderItemId) ?? null) : null,
-    verdict: null,
+    verdict: r.orderItemId ? (verdicts.get(r.orderItemId) ?? null) : null,
     easeInch: easeOf(r.reasoning),
   }));
+}
+
+/**
+ * PR 65 — the approved reviews of the window that say how the size felt, by the order line they are about. Only
+ * APPROVED reviews are read (`approvedFitSignals`): a waiting or hidden review teaches the finder nothing either.
+ */
+async function reviewVerdicts(deps: CatalogueDeps, who: Who, from: Date, to: Date): Promise<Map<string, FitVerdict>> {
+  const signals = await approvedFitSignals(deps, who.storeId, from, to);
+  const out = new Map<string, FitVerdict>();
+  for (const s of signals) {
+    if (s.orderItemId) out.set(s.orderItemId, s.fit === 'SMALL' ? 'small' : s.fit === 'BIG' ? 'big' : 'right');
+  }
+  return out;
 }
 
 const easeOf = (reasoning: unknown): number | null => {
@@ -160,7 +176,7 @@ export async function sizeReport(deps: CatalogueDeps, who: Who, query: SizeRepor
   const from = new Date(to.getTime() - days * DAY_MS);
   const [{ products, sizeOrder }, answers, models] = await Promise.all([
     productChartChoices(deps, who),
-    answersIn(deps, who, from, to),
+    answersIn(deps, who, from, to, n.useReviews),
     deps.db.sizeAdviceModel.findMany({ where: { storeId: who.storeId, archivedAt: null }, orderBy: [{ version: 'desc' }] }),
   ]);
   const byProduct = new Map(products.map((p) => [p.productId, p]));

@@ -55,7 +55,13 @@ export type CatalogueErrorCode =
   /** The product can be bought now: there is nothing to wait for (PR 36). */
   | 'NOT_OUT_OF_STOCK'
   /** Too many requests from one phone or e-mail today (`catalogue.ghost.interest.maxPerContactPerDay`). */
-  | 'TOO_MANY_REQUESTS';
+  | 'TOO_MANY_REQUESTS'
+  /** Writing reviews is switched off in this store (`reviews.submit.enabled`, PR 65). */
+  | 'REVIEWS_OFF'
+  /** Only a delivered order can be reviewed (`reviews.submit.onlyDelivered`, PR 65). */
+  | 'NOT_DELIVERED'
+  /** The time for reviewing that order has passed (`reviews.submit.withinDays`, PR 65). */
+  | 'TOO_LATE';
 
 export class CatalogueError extends Error {
   readonly code: CatalogueErrorCode;
@@ -89,6 +95,9 @@ export class CatalogueError extends Error {
       case 'PRICES_NOT_ALLOWED':
       case 'LINK_IMPORT_OFF':
       case 'INTEREST_OFF':
+      case 'REVIEWS_OFF':
+      case 'NOT_DELIVERED':
+      case 'TOO_LATE':
         return 403;
       case 'PAGE_UNREADABLE':
         // Not 502: the proxy in front would show its own error page instead of the answer.

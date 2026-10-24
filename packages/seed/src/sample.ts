@@ -1,5 +1,6 @@
 // PR 14 — the sample catalogue: a sample store with the approved demo's categories, colours, sizes, products, variants,
-// stock, size charts, one demo order and a few answered questions (PR 66), so every demo screen can be built and tested against real rows.
+// stock, size charts, one demo order, a few answered questions (PR 66) and a few approved reviews (PR 65), so every
+// demo screen can be built and tested against real rows.
 //
 // SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509). The store, brand, customer and order are made up and carry the sample
 // marker; the prices are the demo's sample figures, never the owner's; the phone is in the unallocated +88010 range and
@@ -118,6 +119,29 @@ const sampleSchema = z
     questions: z
       .array(z.object({ product: slug, question: text(300), answer: text(1000), answeredAt: z.iso.datetime() }).strict())
       .optional(),
+    /**
+     * PR 65: approved sample reviews, so the product page's reviews block and the home page's "What customers say" are
+     * built and measured on real rows. Each one says "Sample" and carries what a real review carries — the fit, the
+     * height and the weight — because PR 59's Find My Size learning reads those.
+     */
+    reviews: z
+      .array(
+        z
+          .object({
+            product: slug,
+            rating: z.int().min(1).max(5),
+            name: text(80),
+            body: text(1_000),
+            fit: z.enum(['SMALL', 'RIGHT', 'BIG']),
+            heightCm: z.int().min(80).max(260),
+            weightKg: z.int().min(25).max(250),
+            size: slug,
+            colour: slug.optional(),
+            publishedAt: z.iso.datetime(),
+          })
+          .strict(),
+      )
+      .optional(),
   })
   .strict()
   .superRefine((s, ctx) => {
@@ -156,6 +180,11 @@ const sampleSchema = z
       }
     }
     for (const q of s.questions ?? []) if (!products.has(q.product)) bad(`question: unknown product ${q.product}`);
+    for (const r of s.reviews ?? []) {
+      if (!products.has(r.product)) bad(`review: unknown product ${r.product}`);
+      if (!sizes.has(r.size)) bad(`review of ${r.product}: unknown size ${r.size}`);
+      if (r.colour && !colours.has(r.colour)) bad(`review of ${r.product}: unknown colour ${r.colour}`);
+    }
     for (const i of s.order.items) {
       const p = products.get(i.product);
       if (!p) bad(`order: unknown product ${i.product}`);
@@ -204,6 +233,7 @@ export const SAMPLE_TABLES = [
   'OrderItem',
   'OrderEvent',
   'ProductQuestion',
+  'Review',
 ] as const;
 export type SampleTable = (typeof SAMPLE_TABLES)[number];
 
@@ -542,6 +572,37 @@ async function seedSampleTx(
     if (!has) {
       await tx.productQuestion.create({ data: { storeId, productId, question: q.question, answer: q.answer, answeredAt: new Date(q.answeredAt), status: 'APPROVED' } });
       made('ProductQuestion');
+    }
+  }
+
+  // --- PR 65 · the sample reviews, approved and published (natural key: the product and the words) ---
+  for (const r of s.reviews ?? []) {
+    const productId = productIds.get(r.product);
+    if (!productId) throw new SampleSeedRefused(`review: unknown product ${r.product}`);
+    const has = await tx.review.findFirst({ where: { storeId, productId, body: r.body }, select: { id: true } });
+    if (!has) {
+      const at = new Date(r.publishedAt);
+      await tx.review.create({
+        data: {
+          storeId,
+          productId,
+          rating: r.rating,
+          body: r.body,
+          displayName: r.name,
+          status: 'APPROVED',
+          source: 'STAFF',
+          isVerifiedPurchase: true,
+          fitVerdict: r.fit,
+          heightCm: r.heightCm,
+          weightKg: r.weightKg,
+          sizeLabel: sizeIds.get(r.size)?.label ?? null,
+          colourName: r.colour ? (colourIds.get(r.colour)?.nameEn ?? null) : null,
+          publishedAt: at,
+          moderatedAt: at,
+          createdAt: at,
+        },
+      });
+      made('Review');
     }
   }
 

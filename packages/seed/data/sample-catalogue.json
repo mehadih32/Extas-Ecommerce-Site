@@ -1,5 +1,5 @@
 {
-  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer, order and questions are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation.",
+  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer, order, questions and reviews are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation.",
   "version": 1,
   "marker": "Sample",
   "store": {
@@ -904,6 +904,54 @@
       "question": "Sample question: is this knit see-through?",
       "answer": "Sample answer: no, the knit is close and not see-through, even in light colours.",
       "answeredAt": "2026-10-19T06:00:00.000Z"
+    }
+  ],
+  "reviews": [
+    {
+      "product": "essential-pique-polo",
+      "rating": 5,
+      "name": "Sample buyer (Rahim)",
+      "body": "Sample review: the fit is exactly what the size chart said, and the collar still sits flat after four washes.",
+      "fit": "RIGHT",
+      "heightCm": 175,
+      "weightKg": 72,
+      "size": "m",
+      "colour": "navy",
+      "publishedAt": "2026-10-21T06:00:00.000Z"
+    },
+    {
+      "product": "essential-pique-polo",
+      "rating": 4,
+      "name": "Sample buyer (Shuvo)",
+      "body": "Sample review: good cotton for Dhaka heat. I took one size up because I like it loose.",
+      "fit": "SMALL",
+      "heightCm": 180,
+      "weightKg": 84,
+      "size": "l",
+      "colour": "white",
+      "publishedAt": "2026-10-19T06:00:00.000Z"
+    },
+    {
+      "product": "essential-pique-polo",
+      "rating": 5,
+      "name": "Sample buyer (Nabil)",
+      "body": "Sample review: ordered two colours, both stitched clean, and the parcel came the next day.",
+      "fit": "RIGHT",
+      "heightCm": 168,
+      "weightKg": 61,
+      "size": "s",
+      "publishedAt": "2026-10-16T06:00:00.000Z"
+    },
+    {
+      "product": "slim-chino-trousers",
+      "rating": 4,
+      "name": "Sample buyer (Tanvir)",
+      "body": "Sample review: the waist is true to the chart; the length needed an inch off at the tailor.",
+      "fit": "RIGHT",
+      "heightCm": 172,
+      "weightKg": 70,
+      "size": "w32",
+      "publishedAt": "2026-10-20T06:00:00.000Z"
     }
   ]
 }

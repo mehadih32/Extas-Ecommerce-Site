@@ -52,6 +52,12 @@
       "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-line\"]", "[data-testid=\"order-summary\"]", "[data-testid=\"order-track\"]", "[data-testid=\"order-invoice-get\"]"]
     },
     {
+      "$comment": "PR 65 — the sample account's delivered order (TRY-65, made by the same fill): \"Rate & review\" on its line, which opens the review form in place (the stars, the fit chips, his height and weight, the photo and his words).",
+      "paths": ["/account/orders/TRY-65", "/bn/account/orders/TRY-65"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"order-page\"]", "[data-testid=\"order-line\"]", "[data-testid=\"order-review-open\"]"]
+    },
+    {
       "$comment": "PR 136 — the sample order's invoice (TRY-131, same fill): the sheet drawn from the stored order, Download and Print / Save as PDF pinned under it; the order page's \"Get invoice\" row and the invoice icon in My orders lead here.",
       "paths": ["/account/orders/TRY-131/invoice", "/bn/account/orders/TRY-131/invoice"],
       "fill": "/api/account/try",
@@ -178,8 +184,8 @@
       "/admin/orders/confirm": ["[data-testid=\"call-queue\"]", "[data-testid=\"call-card\"]"],
       "/collections/polos": [".grid .pcard", ".cat-sz", ".cat-sortbtn"],
       "/bn/collections/polos": [".grid .pcard", ".cat-sz", ".cat-sortbtn"],
-      "/p/essential-pique-polo": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"qa-featured\"]", "[data-testid=\"qa-all\"]"],
-      "/bn/p/essential-pique-polo": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"qa-featured\"]", "[data-testid=\"qa-all\"]"],
+      "/p/essential-pique-polo": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"qa-featured\"]", "[data-testid=\"qa-all\"]", "[data-testid=\"pdp-reviews\"]", "[data-testid=\"pdp-review\"]", "[data-testid=\"pdp-rating\"]"],
+      "/bn/p/essential-pique-polo": [".pdp-name", ".pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"qa-featured\"]", "[data-testid=\"qa-all\"]", "[data-testid=\"pdp-reviews\"]", "[data-testid=\"pdp-review\"]", "[data-testid=\"pdp-rating\"]"],
       "/p/textured-knit-polo": [".pdp-name", "[data-template=\"T2\"] .pdp-galT2 .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"fms-card\"]"],
       "/bn/p/textured-knit-polo": [".pdp-name", "[data-template=\"T2\"] .pdp-galT2 .pdp-tile", "[data-testid=\"add-to-bag\"]", ".pdp-pills", "[data-testid=\"fms-card\"]"],
       "/p/contrast-collar-polo": [".pdp-name", "[data-template=\"T3\"] .pdp-gal .pdp-tile", "[data-testid=\"add-to-bag\"]", "[data-testid=\"t3-card\"] .pdp-pills", "[data-testid=\"t3-find\"]", ".pdp-t3-rest"],

@@ -35,6 +35,8 @@ export * from './size-finder';
 // PR 59 the Find My Size training engine (pure), the size report, the ease model and its versions.
 export * from './size-training';
 export * from './size-advice';
+// PR 65 product reviews: the customer's own, the shop's check, the photo reward and the fit signals PR 59 reads.
+export * from './reviews';
 export * from './collections';
 export * from './csv';
 export * from './catalogue-csv';

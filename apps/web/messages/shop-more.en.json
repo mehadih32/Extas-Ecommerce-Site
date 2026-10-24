@@ -114,5 +114,23 @@
   },
   "celebrate": {
     "text": "Thank you!"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "questions": "Questions?",
+    "count": "{n} reviews",
+    "one": "1 review",
+    "stars": "{n} out of 5",
+    "verified": "Verified buyer",
+    "bought": "bought {size}",
+    "height": "{feet}'{inches}\"",
+    "weight": "{n} kg",
+    "photoAlt": "Buyer photo of {name}",
+    "onlyBuyers": "Only buyers can review — from My account after delivery. Reviews appear after our check.",
+    "fit": {
+      "small": "Too small",
+      "right": "Just right",
+      "big": "Too big"
+    }
   }
 }

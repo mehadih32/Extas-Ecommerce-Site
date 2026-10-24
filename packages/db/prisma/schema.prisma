@@ -2080,29 +2080,51 @@ model AbAssignment {
 
 /// @stage S02 · PR 65, 223, 295 — a product or set review. Review schema is emitted only from these real rows.
 model Review {
-  id                 String       @id @default(uuid(7)) @db.Uuid
-  storeId            Int
-  store              Store        @relation(fields: [storeId], references: [id])
-  productId          String?      @db.Uuid
-  comboId            String?      @db.Uuid
-  orderItemId        String?      @db.Uuid
-  customerId         String?      @db.Uuid
-  rating             Int
-  title              String?
-  body               String?
-  displayName        String?
-  status             ReviewStatus @default(PENDING)
-  isVerifiedPurchase Boolean      @default(false)
-  reply              String?
-  repliedById        String?      @db.Uuid
-  publishedAt        DateTime?    @db.Timestamptz(3)
-  archivedAt         DateTime?    @db.Timestamptz(3)
-  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime     @updatedAt @db.Timestamptz(3)
+  id                  String       @id @default(uuid(7)) @db.Uuid
+  storeId             Int
+  store               Store        @relation(fields: [storeId], references: [id])
+  productId           String?      @db.Uuid
+  comboId             String?      @db.Uuid
+  orderItemId         String?      @db.Uuid
+  customerId          String?      @db.Uuid
+  rating              Int
+  title               String?
+  body                String?
+  displayName         String?
+  status              ReviewStatus @default(PENDING)
+  isVerifiedPurchase  Boolean      @default(false)
+  reply               String?
+  repliedById         String?      @db.Uuid
+  publishedAt         DateTime?    @db.Timestamptz(3)
+  archivedAt          DateTime?    @db.Timestamptz(3)
+  createdAt           DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime     @updatedAt @db.Timestamptz(3)
+  /// PR 65 — the order the review is about (the line is `orderItemId`); null for a review the shop entered by hand.
+  orderId             String?      @db.Uuid
+  /// PR 65 — where the review came from: CUSTOMER (My account), STAFF (the shop entered it), IMPORT (a file).
+  source              String       @default("CUSTOMER")
+  /// PR 65 — what the buyer said about the size, in his own words: SMALL, RIGHT or BIG (null: not asked, not given).
+  fitVerdict          String?
+  /// PR 65 — his height in centimetres and weight in kilogrammes, only when he gave them (PR 59 reads them).
+  heightCm            Int?
+  weightKg            Int?
+  /// PR 65 — the size and colour he bought, as the order line stored them (never looked up again later).
+  sizeLabel           String?
+  colourName          String?
+  /// PR 65 — who checked it and when, and why it was hidden or refused.
+  moderatedById       String?      @db.Uuid
+  moderatedAt         DateTime?    @db.Timestamptz(3)
+  hiddenReason        String?
+  /// PR 65 — the photo-review reward, once a member of staff approved it: the ledger entry, the amount and when.
+  rewardWalletEntryId String?      @db.Uuid
+  rewardAmountMinor   Int?
+  rewardedAt          DateTime?    @db.Timestamptz(3)
 
   media ReviewMedia[]
 
   @@index([storeId, productId, status, publishedAt])
+  @@index([storeId, status, createdAt])
+  @@index([storeId, orderItemId])
 }
 
 enum ReviewStatus {

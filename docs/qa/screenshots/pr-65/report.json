@@ -1,0 +1,124 @@
+[
+ {
+  "w": 390,
+  "lang": "en",
+  "rating": "4.7· 3 reviews",
+  "cards": [
+   "Sample buyer (Rahim)Verified buyer5'9\" · 72 kg · bought MJust rightSample review: the fit is exactly",
+   "Sample buyer (Shuvo)Verified buyer5'11\" · 84 kg · bought LToo smallSample review: good cotton for Dh",
+   "Sample buyer (Nabil)Verified buyer5'6\" · 61 kg · bought SJust rightSample review: ordered two colour",
+   "Sample buyer (Rahim)Verified buyer5'9\" · 72 kg · bought MJust rightSample review: the fit is exactly",
+   "Sample buyer (Shuvo)Verified buyer5'11\" · 84 kg · bought LToo smallSample review: good cotton for Dh",
+   "Sample buyer (Nabil)Verified buyer5'6\" · 61 kg · bought SJust rightSample review: ordered two colour"
+  ],
+  "overflow": 0,
+  "slides": {
+   "free": false,
+   "underMouse": false,
+   "afterMouse": true,
+   "onKeyFocus": true
+  },
+  "errs": []
+ },
+ {
+  "w": 390,
+  "lang": "en",
+  "where": "order",
+  "star": {
+   "w": 44,
+   "h": 44
+  },
+  "cta": null,
+  "errs": []
+ },
+ {
+  "w": 390,
+  "lang": "bn",
+  "rating": "৪.৭· ৩টি রিভিউ",
+  "cards": [
+   "Sample buyer (Rahim)যাচাই করা ক্রেতা৫'৯\" · ৭২ কেজি · M নিয়েছেনঠিক আছেSample review: the fit is exac",
+   "Sample buyer (Shuvo)যাচাই করা ক্রেতা৫'১১\" · ৮৪ কেজি · L নিয়েছেনছোট লেগেছেSample review: good cotton",
+   "Sample buyer (Nabil)যাচাই করা ক্রেতা৫'৬\" · ৬১ কেজি · S নিয়েছেনঠিক আছেSample review: ordered two col",
+   "Sample buyer (Rahim)যাচাই করা ক্রেতা৫'৯\" · ৭২ কেজি · M নিয়েছেনঠিক আছেSample review: the fit is exac",
+   "Sample buyer (Shuvo)যাচাই করা ক্রেতা৫'১১\" · ৮৪ কেজি · L নিয়েছেনছোট লেগেছেSample review: good cotton",
+   "Sample buyer (Nabil)যাচাই করা ক্রেতা৫'৬\" · ৬১ কেজি · S নিয়েছেনঠিক আছেSample review: ordered two col"
+  ],
+  "overflow": 0,
+  "slides": {
+   "free": false,
+   "underMouse": false,
+   "afterMouse": true,
+   "onKeyFocus": true
+  },
+  "errs": []
+ },
+ {
+  "w": 390,
+  "lang": "bn",
+  "where": "order",
+  "star": {
+   "w": 44,
+   "h": 44
+  },
+  "cta": null,
+  "errs": []
+ },
+ {
+  "w": 1366,
+  "lang": "en",
+  "rating": "4.7· 3 reviews",
+  "cards": [
+   "Sample buyer (Rahim)Verified buyer5'9\" · 72 kg · bought MJust rightSample review: the fit is exactly",
+   "Sample buyer (Shuvo)Verified buyer5'11\" · 84 kg · bought LToo smallSample review: good cotton for Dh",
+   "Sample buyer (Nabil)Verified buyer5'6\" · 61 kg · bought SJust rightSample review: ordered two colour"
+  ],
+  "overflow": 0,
+  "slides": {
+   "free": false,
+   "underMouse": false,
+   "afterMouse": false,
+   "onKeyFocus": false
+  },
+  "errs": []
+ },
+ {
+  "w": 1366,
+  "lang": "en",
+  "where": "order",
+  "star": {
+   "w": 44,
+   "h": 44
+  },
+  "cta": null,
+  "errs": []
+ },
+ {
+  "w": 1366,
+  "lang": "bn",
+  "rating": "৪.৭· ৩টি রিভিউ",
+  "cards": [
+   "Sample buyer (Rahim)যাচাই করা ক্রেতা৫'৯\" · ৭২ কেজি · M নিয়েছেনঠিক আছেSample review: the fit is exac",
+   "Sample buyer (Shuvo)যাচাই করা ক্রেতা৫'১১\" · ৮৪ কেজি · L নিয়েছেনছোট লেগেছেSample review: good cotton",
+   "Sample buyer (Nabil)যাচাই করা ক্রেতা৫'৬\" · ৬১ কেজি · S নিয়েছেনঠিক আছেSample review: ordered two col"
+  ],
+  "overflow": 0,
+  "slides": {
+   "free": false,
+   "underMouse": false,
+   "afterMouse": false,
+   "onKeyFocus": false
+  },
+  "errs": []
+ },
+ {
+  "w": 1366,
+  "lang": "bn",
+  "where": "order",
+  "star": {
+   "w": 44,
+   "h": 44
+  },
+  "cta": null,
+  "errs": []
+ }
+]

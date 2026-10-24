@@ -200,6 +200,84 @@ export async function uploadImage(deps: MediaDeps, actor: Actor, input: UploadIn
   return { asset: summary(fresh, expected), reused: false, processing };
 }
 
+export interface CustomerUploadInput {
+  storeId: number;
+  body: Uint8Array;
+  /** The name the file had on his phone (kept for search, never trusted for the type). */
+  fileName?: string | null;
+  /** The largest file this page takes, in bytes — the page's own setting (e.g. `reviews.submit.photos.maxMb`). */
+  maxBytes: number;
+  /** Where it is filed in the library, so staff can tell these apart from the shop's own photos. */
+  folder: string;
+  /** What it is, for the file name ("review photo"). */
+  name: string;
+}
+
+/**
+ * S02 · PR 65 — a photo a **customer** sends with his review. Nobody signs in as staff here, so there is no staff
+ * permission to check: the caller has already checked that this is the signed-in customer's own order, and the page's
+ * own setting says how large a file it takes. Everything else is the staff upload's path — the same type and size
+ * checks, the same "same bytes, one file" reuse, the same renditions job (PR 22) — because the photo ends up on the
+ * product page beside the shop's own pictures. The library row carries no uploader: a customer is not staff.
+ */
+export async function uploadCustomerImage(deps: MediaDeps, input: CustomerUploadInput): Promise<UploadResult> {
+  const rules = await uploadRules(deps.settings, input.storeId);
+  const body = input.body;
+  const maxBytes = Math.min(input.maxBytes, rules.maxBytes);
+  if (body.byteLength === 0) throw new MediaError('INVALID_INPUT', 'the file is empty', ['file']);
+  if (body.byteLength > maxBytes) throw new MediaError('TOO_LARGE', 'the file is larger than this page allows', [`max:${maxBytes}`]);
+  const info = await inspectImage(body);
+  if (!info) throw new MediaError('NOT_AN_IMAGE', 'the file is not a picture');
+  if (!rules.acceptedTypes.includes(info.mime)) throw new MediaError('TYPE_NOT_ALLOWED', 'this kind of picture is not accepted', [info.mime]);
+  const fileName = cleanText(input.fileName, 'fileName') ?? null;
+  const folder = cleanText(input.folder, 'folder') ?? null;
+  const checksum = sha256(body);
+  const expected = await expectedRenditions(deps, input.storeId);
+
+  const same = await deps.db.mediaAsset.findFirst({ where: { storeId: input.storeId, checksumSha256: checksum, kind: 'IMAGE', isOriginal: true }, orderBy: { createdAt: 'asc' } });
+  if (same) {
+    const processing = await dispatch(deps, { name: 'media.render', assetId: same.id }, rules.processing);
+    const fresh = await deps.db.mediaAsset.findUniqueOrThrow({ where: { id: same.id }, include: COUNTS });
+    return { asset: summary(fresh, expected), reused: true, processing };
+  }
+
+  const ext = extensionOf(info.format === 'heif' ? (info.mime === 'image/avif' ? 'avif' : 'heif') : (info.format as 'jpeg'));
+  const key = originalKey({ storeId: input.storeId, checksum, slug: slugify(input.name), ext, at: nowOf(deps) });
+  const storage = await deps.storage(input.storeId);
+  await storage.put(key, body, info.mime);
+  const asset = await deps.db.$transaction(async (tx) => {
+    const a = await tx.mediaAsset.create({
+      data: {
+        storeId: input.storeId,
+        kind: 'IMAGE',
+        storage: storage.provider,
+        storageKey: key,
+        originalFileName: fileName,
+        mimeType: info.mime,
+        bytes: BigInt(body.byteLength),
+        width: info.width,
+        height: info.height,
+        checksumSha256: checksum,
+        isOriginal: true,
+        folder,
+        tags: [],
+        createdAt: nowOf(deps),
+      },
+      include: COUNTS,
+    });
+    await audit(
+      tx,
+      { staffUserId: null },
+      { storeId: input.storeId, action: 'media.customerUpload', entityType: 'MediaAsset', entityId: a.id, after: { storageKey: key, mimeType: info.mime, bytes: body.byteLength, folder } },
+      { source: 'shop-account' },
+    );
+    return a;
+  });
+  const processing = await dispatch(deps, { name: 'media.render', assetId: asset.id }, rules.processing);
+  const fresh = processing === 'done' ? await deps.db.mediaAsset.findUniqueOrThrow({ where: { id: asset.id }, include: COUNTS }) : asset;
+  return { asset: summary(fresh, expected), reused: false, processing };
+}
+
 export interface StoredFileInput {
   storeId: number;
   kind: 'PDF' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'AUDIO' | 'OTHER';
