@@ -7,6 +7,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { compareLaunch, launchCount, launchLabel } from './launch-status.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -65,13 +66,15 @@ export function compare({ readme, register }) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const read = (p) => readFileSync(join(root, p), 'utf8');
-  const problems = compare({ readme: read('README.md'), register: read('docs/MASTER-REGISTER.md') });
+  const [readme, register, track] = [read('README.md'), read('docs/MASTER-REGISTER.md'), read('docs/LAUNCH-TRACK.md')];
+  // CN-027: README's "Launch X/N" row too (docs/LAUNCH-TRACK.md's Launch list against the register's states).
+  const problems = [...compare({ readme, register }), ...compareLaunch({ readme, track, register })];
   if (problems.length) {
     console.error('README status disagrees with docs/MASTER-REGISTER.md (its "**Progress: …**" line is the truth):');
     for (const p of problems) console.error(`  - ${p}`);
-    console.error('Fix: copy the register progress counts into the "Stages" row of README.md.');
+    console.error('Fix: copy the register progress counts into the "Stages" row of README.md, and `node tools/launch-status.mjs` into its "Launch" row.');
   } else {
-    console.log(`README status matches the register: ${registerProgress(read('docs/MASTER-REGISTER.md'))}`);
+    console.log(`README status matches the register: ${registerProgress(register)} · ${launchLabel(launchCount({ track, register }))}`);
   }
   process.exitCode = problems.length > 0 ? 1 : 0;
 }

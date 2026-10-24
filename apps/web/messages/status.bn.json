@@ -1,6 +1,8 @@
 {
   "title": "নতুন সাইট · কাজের অগ্রগতি",
   "subtitle": "নতুন সাইট তৈরির অবস্থা। প্রতিটা আপডেটের পর এই পাতা নিজে নিজে নতুন হয়।",
+  "launch": "Launch {done}/{total} · লাইভে যাওয়ার আগে আর {left}টা PR বাকি",
+  "launchDone": "Launch {done}/{total} · লাইভে যাওয়ার সব PR তৈরি",
   "total": "মোট {done} / {active}টা PR তৈরি",
   "lastDeploy": "শেষ আপডেট",
   "never": "এখনো হয়নি",
