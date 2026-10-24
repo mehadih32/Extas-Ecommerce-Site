@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { assessRisk, linkIdentity, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, linkIdentity, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -65,7 +65,7 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
   try {
     const b = await body(request);
     const [{ cartId }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
-    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true, ip: requestContext(request).ip ?? null, gift: b.gift === true });
+    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true, ip: requestContext(request).ip ?? null, gift: b.gift === true, details: (b.details ?? null) as never });
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);
@@ -137,6 +137,19 @@ async function sectionRisk(deps: CheckoutApiDeps, orderId: string): Promise<void
   }
 }
 
+/**
+ * S04 · PR 560 — a checkout the owner's Parameter for Checkout flagged waits for its advance the moment it lands (the
+ * order service's AWAITING_ADVANCE; the payment page pays it and puts it back in the queue). Never cancelled, held or
+ * blocked by itself, and the customer's order never fails: a problem is logged and the order stays placed.
+ */
+async function waitForAdvance(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await askCheckoutAdvance({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`checkout advance: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
 /** Where the page goes after the order or a payment answer, in its language. */
 export const nextHref = (lang: ShopLang, next: PlaceNext, number: string): string => hrefIn(lang, next === 'pay' ? ROUTES.checkoutPay(number) : ROUTES.thanks(number));
 
@@ -164,6 +177,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       await checkTwoSizes(deps, r.orderId);
       await scoreRisk(deps, r.orderId);
       await sectionRisk(deps, r.orderId);
+      await waitForAdvance(deps, r.orderId);
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

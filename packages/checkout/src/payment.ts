@@ -33,8 +33,11 @@ export interface PaymentChoice {
   option: string | null;
 }
 
-/** Why Cash on Delivery is not offered on this order (PR 605 GIFT: a gift is paid ahead in full, `checkout.gift`). */
-export type CodOff = 'OFF' | 'RULE' | 'BAND_LIMIT' | 'GIFT';
+/**
+ * Why Cash on Delivery is not offered on this order (PR 605 GIFT: a gift is paid ahead in full, `checkout.gift`; PR 560
+ * ADVANCE: a layer of the owner's Parameter for Checkout asks this finished checkout to pay ahead, `checkout.advance`).
+ */
+export type CodOff = 'OFF' | 'RULE' | 'BAND_LIMIT' | 'GIFT' | 'ADVANCE';
 
 /** What paying now earns (shown on each prepaid option). */
 export type RewardOffer = { kind: 'freeDelivery'; amountMinor: number | null } | { kind: 'amount' | 'percent'; amountMinor: number };
@@ -91,7 +94,7 @@ export async function paySettings(deps: Pick<CheckoutDeps, 'settings'>, storeId:
 }
 
 /** The methods open on this order, in the page's order. */
-function openMethods(p: Pick<PaySettings, 'mobile' | 'card' | 'online'>, cod: boolean): PayMethod[] {
+export function openMethods(p: Pick<PaySettings, 'mobile' | 'card' | 'online'>, cod: boolean): PayMethod[] {
   return PAY_METHODS.filter((m) => (m === 'cod' ? cod : m === 'mobile' ? p.mobile.length > 0 : m === 'card' ? p.card.length > 0 : p.online));
 }
 

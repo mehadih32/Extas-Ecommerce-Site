@@ -133,6 +133,13 @@ export function CheckoutForm({
   const asked = useRef<Choices>({ line: null, confirmed: null, pay: null, wallet: false });
   /** PR 561: the phone number as typed now (read when a quote is asked for). */
   const phoneNow = useRef('');
+  /** PR 560: the name as typed now (sent with a quote only once the name and the number are both finished). */
+  const nameNow = useRef('');
+  /** PR 560: the name and number, once both are finished (the owner's Parameter for Checkout looks only then). */
+  const detailsNow = () => {
+    const name = nameNow.current.trim();
+    return [...name].length >= Math.max(1, limits.nameMin) && phoneNormalizeBD(phoneNow.current).ok ? { name, phone: phoneNow.current } : null;
+  };
   /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
   const requote = async (patch: Partial<Choices>) => {
     const c = { ...asked.current, ...patch };
@@ -147,6 +154,7 @@ export function CheckoutForm({
       payment: c.pay,
       useWallet: c.wallet,
       ...(giftCfg ? { gift: true } : {}),
+      details: detailsNow(),
     });
     if (!seq.current.isLatest(k)) return;
     setReading(false);
@@ -242,6 +250,22 @@ export function CheckoutForm({
   useEffect(() => {
     phoneNow.current = form.phone;
   }, [form.phone]);
+  useEffect(() => {
+    nameNow.current = form.name;
+  }, [form.name]);
+  // PR 560: the name and number just got finished (or a finished one changed, or was taken back): price it again, so a
+  // checkout the owner's layers flag shows its payment section on this same page
+  const nameDone = [...form.name.trim()].length >= Math.max(1, limits.nameMin);
+  const typedNow = phoneNormalizeBD(form.phone);
+  const detailsKey = nameDone && typedNow.ok ? typedNow.e164 : null;
+  const seenDetails = useRef<string | null>(null);
+  useEffect(() => {
+    if (seenDetails.current === detailsKey) return;
+    seenDetails.current = detailsKey;
+    if (!asked.current.line) return;
+    void requote({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the finished details change
+  }, [detailsKey]);
   // PR 561: a whole number (or another one) while the band is asked, or was settled from the old number: read again
   const typedPhone = phoneNormalizeBD(form.phone);
   const backfillKey = backfill && typedPhone.ok ? typedPhone.e164 : null;
@@ -604,7 +628,7 @@ export function CheckoutForm({
                 onChange={changeBand}
               />
             </section>
-            <PaymentStep pay={view.pay} due={amount} open={payOpens(form.address)} covered={covered} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
+            <PaymentStep pay={view.pay} due={view.advance ? m(view.advance.amountMinor) : amount} advance={view.advance} restPlus={t.known ? '' : ` ${w('sum.plusDelivery')}`} open={payOpens(form.address)} covered={covered} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
             <OffersCard
               wallet={view.wallet}
               w={w}

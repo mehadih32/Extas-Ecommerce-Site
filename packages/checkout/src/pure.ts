@@ -5,6 +5,7 @@ import { phoneNormalizeBD, type PhoneBD } from '@extas/delivery/phone';
 export type { CheckoutView, DeliveryCharge, DeliveryView, FreeReason, GiftView, Totals, WalletView } from './quote';
 export type { CardType, CodOff, PaymentChoice, PaymentInput, PaymentView, RewardOffer, Wallet } from './payment';
 export type { ConsentAnswer, ConsentInput } from './consent';
+export type { AdvanceKind, AdvanceView, CheckoutDetails } from './advance';
 // PR 605: gift mode's checks and its advance (gift.ts, no zod: safe in the client bundle)
 export * from './gift';
 // PR 606: the bulk / corporate enquiry's checks and the bag's card (bulk.ts, no zod)

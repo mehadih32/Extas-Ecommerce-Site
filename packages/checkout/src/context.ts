@@ -5,6 +5,7 @@ import type { Prisma, PrismaClient } from '@extas/db/client';
 import type { Gazetteer } from '@extas/delivery';
 import type { Key, Value } from '@extas/settings';
 import type { z } from 'zod';
+import type { AdvanceFlag, AdvanceFlagInput } from './advance';
 
 export type Db = PrismaClient | Prisma.TransactionClient;
 export type Tx = Prisma.TransactionClient;
@@ -26,6 +27,13 @@ export interface CheckoutDeps {
    * layer: MOCK until the owner's keys pass the Test button). Without it there is no gateway here: the test page only.
    */
   paymentMode?: (storeId: number, provider: string) => Promise<'MOCK' | 'SANDBOX' | 'LIVE'>;
+  /**
+   * PR 560 — the Parameter for Checkout's look at a finished checkout (the app passes @extas/orders `checkoutFlag`): the
+   * layer that flags it, or null. Without it nobody is ever flagged.
+   */
+  advanceFlag?: (input: AdvanceFlagInput) => Promise<AdvanceFlag | null>;
+  /** PR 560 — an order waiting for its advance has it in full now (the app passes the order service's `recordAdvance`). */
+  advancePaid?: (storeId: number, orderId: string) => Promise<void>;
 }
 
 export type CheckoutErrorCode =

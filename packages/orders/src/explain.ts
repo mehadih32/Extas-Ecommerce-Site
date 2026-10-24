@@ -17,7 +17,7 @@ import { staffNames } from './history';
 export type AdvanceKind = 'none' | 'delivery' | 'full' | 'part';
 
 /** Why Cash on Delivery was not offered at checkout (the checkout's own reasons, stored on the placed event). */
-export type CodOffReason = 'OFF' | 'RULE' | 'BAND_LIMIT' | 'GIFT';
+export type CodOffReason = 'OFF' | 'RULE' | 'BAND_LIMIT' | 'GIFT' | 'ADVANCE';
 
 /** One reason, as a code with the values its words need (amounts in minor units, dates as Date). */
 export interface ExplainLine {
@@ -100,7 +100,7 @@ export interface ExplainFacts {
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const str = (v: unknown): string | null => (typeof v === 'string' && v ? v : null);
 const int = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
-const CODOFF: readonly CodOffReason[] = ['OFF', 'RULE', 'BAND_LIMIT', 'GIFT'];
+const CODOFF: readonly CodOffReason[] = ['OFF', 'RULE', 'BAND_LIMIT', 'GIFT', 'ADVANCE'];
 
 /** The amount the order asks for in all (what the advance is compared with). */
 const dueOf = (f: ExplainFacts) => Math.max(0, f.totalMinor - f.walletAppliedMinor);

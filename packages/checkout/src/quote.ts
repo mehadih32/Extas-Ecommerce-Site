@@ -16,13 +16,24 @@
 // band from the address the shop holds; the page sees the band and charge only.
 // PR 605 — gift mode (`checkout.gift`): a gift checkout whose advance is the whole amount offers no Cash on Delivery
 // (codOff GIFT); one whose advance is a part keeps it for the rest and says how much is taken ahead (`gift`).
+// PR 560 — the advance-payment checkout mode (advance.ts): once the customer has filled everything in (`details`), the
+// owner's Parameter for Checkout may flag him; then Cash on Delivery goes (codOff ADVANCE), the prepaid methods stay,
+// and `advance` says what is paid now and what at the door. The money is the Cash on Delivery money for a part or the
+// delivery charge ahead (no prepaid reward), an ordinary prepaid order for the full amount. `flag` stays on the server.
 import { createHash } from 'node:crypto';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
 import { bandOut, loadBandMap, type AskReason, type BandMap, type BandOut } from '@extas/delivery';
 import { deliveryDeps, placeName, readAddress, type AddressInput, type AddressRead, type PlaceName } from './address';
 import { checkStoreId, parse, setting, type CheckoutDeps } from './context';
+import { z } from 'zod';
+import { advanceAmountOf, detailsFinished, KIND_OF, type AdvanceFlag, type AdvanceView, type CheckoutDetails } from './advance';
 import { giftAdvanceOf } from './gift';
-import { choosePayment, isPrepaid, paymentInputSchema, paySettings, rewardOf, rulesPaymentMethod, type PaymentInput, type PaymentView } from './payment';
+import { choosePayment, isPrepaid, openMethods, paymentInputSchema, paySettings, rewardOf, rulesPaymentMethod, type PaymentInput, type PaymentView } from './payment';
+
+/** PR 560: the details the page sends with a quote once typed (the longest name or number any form takes). */
+export const detailsInputSchema = z.object({ name: z.string().max(500), phone: z.string().max(40) }).strict();
+/** The Smart Rules' payment method for Cash on Delivery (a part paid ahead is still a Cash on Delivery order). */
+const COD_RULES = rulesPaymentMethod({ method: 'cod', option: null });
 
 export interface CheckoutRequest {
   storeId: number;
@@ -40,6 +51,8 @@ export interface CheckoutRequest {
   ip?: string | null;
   /** PR 605: the checkout is a gift ("Send as a gift"); ignored while the owner has gift mode off. */
   gift?: boolean;
+  /** PR 560: the name and phone he typed (null: not yet); only a finished checkout is looked at. */
+  details?: CheckoutDetails | null;
 }
 
 /** PR 605 — a gift checkout: how it is paid ahead (`checkout.gift.advance`). */
@@ -140,6 +153,10 @@ export interface CheckoutQuote {
   wallet: WalletView | null;
   /** PR 605: the gift checkout (null: not a gift, or gift mode is off). */
   gift: GiftView | null;
+  /** PR 560: what a flagged customer pays now and at the door (null: not flagged). */
+  advance: AdvanceView | null;
+  /** PR 560: the layer that flagged him — the server's own record, never sent to the page. */
+  flag: AdvanceFlag | null;
   /** A hash of every amount on the page: placement refuses an order whose money changed since the page showed it. */
   fingerprint: string;
 }
@@ -163,6 +180,8 @@ export interface CheckoutView {
   pay: PaymentView;
   wallet: WalletView | null;
   gift: GiftView | null;
+  /** PR 560: the one neutral line of a flagged checkout (no score, no reason). */
+  advance: AdvanceView | null;
   fingerprint: string;
 }
 
@@ -181,6 +200,8 @@ export const emptyQuote = (): CheckoutQuote => {
     pay: { cod: false, codOff: 'OFF', mobile: [], card: [], online: false, chosen: null, reward: null },
     wallet: null,
     gift: null,
+    advance: null,
+    flag: null,
     fingerprint: fingerprintOf({ totals }),
   };
 };
@@ -202,6 +223,7 @@ export function viewOf(q: CheckoutQuote): CheckoutView {
     pay: q.pay,
     wallet: q.wallet,
     gift: q.gift,
+    advance: q.advance,
     fingerprint: q.fingerprint,
   };
 }
@@ -215,6 +237,7 @@ export function fingerprintOf(parts: unknown): string {
 export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest): Promise<CheckoutQuote> {
   checkStoreId(input.storeId);
   const asked = input.payment ? parse(paymentInputSchema, input.payment, 'payment') : null;
+  const details = input.details ? parse(detailsInputSchema, input.details, 'details') : null;
   const [address, map, ps, balance, giftCfg] = await Promise.all([
     readAddress(deps, input.storeId, input.address, { ip: input.ip ?? null }),
     loadBandMap(deliveryDeps(deps), input.storeId),
@@ -247,9 +270,24 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
         : bandCodLimit !== null && codTotal > bandCodLimit
           ? 'BAND_LIMIT'
           : null;
-  if (codOff) {
+  // PR 560: Cash on Delivery is open, he has filled everything in, a prepaid method is open (he can always order):
+  // the owner's layers may ask him to pay ahead
+  let flag: AdvanceFlag | null = null;
+  if (codOff === null && !giftOn && deps.advanceFlag && address.status === 'resolved' && openMethods(ps, false).length > 0) {
+    const done = detailsFinished(details, await setting(deps, input.storeId, 'checkout.form.nameMin'), true);
+    const line = address.line.status === 'resolved' ? address.line : null;
+    if (done) {
+      const f = await deps.advanceFlag({ storeId: input.storeId, phone: done.phone, areaId: line?.area.areaId ?? null, resolved: true, placeSure: address.read.placeSure, totalMinor: codTotal, pieces: bag.summary.count });
+      if (f && advanceAmountOf(f.requirement, f.partPercent, { dueMinor: codTotal, chargeMinor: before.state === 'charge' ? before.chargeMinor : null }) > ZERO) flag = f;
+    }
+  }
+  /** A part or the delivery charge ahead: the rest is Cash on Delivery, and the order is priced as one. */
+  const partial = flag !== null && flag.requirement !== 'FULL_AMOUNT';
+  const off: PaymentView['codOff'] = codOff ?? (flag ? 'ADVANCE' : null);
+  if (off) {
     const moved = choosePayment(asked, ps, false);
-    if (rulesPaymentMethod(moved) !== rulesPaymentMethod(choice)) bag = await priceBag(rulesPaymentMethod(moved));
+    const priceAs = partial ? COD_RULES : rulesPaymentMethod(moved);
+    if (priceAs !== rulesPaymentMethod(choice)) bag = await priceBag(priceAs);
     choice = moved;
   }
 
@@ -259,7 +297,7 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
   let charge = deliveryChargeOf(address, bag.free);
   const reward = rewardOf(ps.reward, { itemsMinor, deliveryFree: charge.state === 'free', chargeMinor: charge.state === 'charge' ? charge.chargeMinor : null });
   let rewardMinor = ZERO;
-  if (reward && isPrepaid(choice)) {
+  if (reward && isPrepaid(choice) && !partial) {
     if (reward.kind === 'freeDelivery') charge = { state: 'free', reason: 'PREPAID', freeOverMinor: null };
     else rewardMinor = reward.amountMinor;
   }
@@ -280,7 +318,10 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     youSaveMinor,
     regularMinor: totalMinor + youSaveMinor,
   };
-  const pay: PaymentView = { cod: codOff === null, codOff, mobile: ps.mobile, card: ps.card, online: ps.online, chosen: choice, reward };
+  const pay: PaymentView = { cod: off === null, codOff: off, mobile: ps.mobile, card: ps.card, online: ps.online, chosen: choice, reward: partial ? null : reward };
+  // PR 560: the one neutral line — what is paid now, what at the door
+  const ahead$ = flag ? advanceAmountOf(flag.requirement, flag.partPercent, { dueMinor: totals.dueMinor, chargeMinor: charge.state === 'charge' ? charge.chargeMinor : null }) : ZERO;
+  const advance: AdvanceView | null = flag && ahead$ > ZERO ? { kind: KIND_OF[flag.requirement], amountMinor: ahead$, restMinor: totals.dueMinor - ahead$ } : null;
   // PR 605: the part paid ahead is worked out on what is left to pay at the door
   const ahead = giftOn ? giftAdvanceOf(giftOn.advance, totals.dueMinor) : null;
   const gift: GiftView | null = ahead ? { advance: ahead.kind, partMinor: ahead.kind === 'part' && choice?.method === 'cod' ? ahead.amountMinor : null } : null;
@@ -291,6 +332,7 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     charge,
     pay: [choice?.method ?? null, reward?.kind ?? null],
     gift: gift ? [gift.advance, gift.partMinor] : null,
+    advance: advance ? [advance.kind, advance.amountMinor] : null,
   });
   return {
     cartId: bag.cartId,
@@ -304,6 +346,8 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     pay,
     wallet,
     gift,
+    advance,
+    flag: advance ? flag : null,
     fingerprint,
   };
 }

@@ -43,6 +43,7 @@ import { hasAddressDetail } from '@extas/delivery';
 import { convertCart, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
 import { z } from 'zod';
 import { addressInputSchema } from './address';
+import { ADVANCE_PURPOSE, CHECKOUT_PAY_PURPOSES, FLAG_OUTCOMES } from './advance';
 import { consentInputSchema, consentOf, consentSettings, recordConsent } from './consent';
 import { CheckoutError, checkStoreId, nowOf, parse, setting, TX, type CheckoutDeps, type Db, type Tx } from './context';
 import { checkGift, storeToday } from './gift';
@@ -266,7 +267,7 @@ async function replayOf(deps: CheckoutDeps, storeId: number, visitorId: string, 
 
 /** The order's payment still waiting (INITIATED or PENDING), if any. */
 async function openPayment(db: Db, storeId: number, orderId: string) {
-  return db.payment.findFirst({ where: { storeId, orderId, purpose: 'ORDER', status: { in: ['INITIATED', 'PENDING'] }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
+  return db.payment.findFirst({ where: { storeId, orderId, purpose: { in: CHECKOUT_PAY_PURPOSES }, status: { in: ['INITIATED', 'PENDING'] }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
 }
 
 /** Places the order the customer confirmed. Idempotent on `idempotencyKey`; refuses with the checkout's codes. */
@@ -325,6 +326,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     useWallet: d.useWallet === true,
     ip: req.ip ?? null,
     gift: gift !== null,
+    // PR 560: the finished details, so the owner's Parameter for Checkout looks at exactly what the page showed
+    details: { name: d.form.name, phone: check.phone.e164 },
   });
   if (!q.bag.items.length && !q.bag.sets.length) throw new CheckoutError('EMPTY', 'the bag has nothing to order');
   if (q.bag.blocked.length) throw new CheckoutError('OUT_OF_STOCK', 'a line cannot be ordered now', q.bag.blocked.map((b) => `${b.lineId}:${b.free}`));
@@ -337,7 +340,12 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   const now = nowOf(deps);
   const kept = captureOf(capture, { ip: req.ip ?? null, deviceId: req.deviceId ?? null, gps: d.gps ?? null, gift: gift !== null }, now);
   const prepaid = isPrepaid(choice) && t.dueMinor > 0;
-  const method = paymentMethodOf(choice, t.dueMinor);
+  // PR 560: a part or the delivery charge ahead is a Cash on Delivery order with that much paid now by his method
+  const adv = q.advance;
+  const flagged = adv && q.flag ? q.flag : null;
+  const partAhead = adv !== null && adv.kind !== 'full';
+  const payMethod = paymentMethodOf(choice, t.dueMinor);
+  const method = partAhead ? 'COD' : payMethod;
   const resolved = q.address.status === 'resolved' ? q.address : null;
   const charged = resolved?.line.status === 'resolved' ? resolved.line : null;
   // PR 565: free delivery is exempt from the band machinery — a band nobody settled is no question and no flag; only
@@ -442,6 +450,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
                 advanceRequiredMinor: giftPart,
               }
             : {}),
+          ...(adv && flagged ? { advanceRequirement: flagged.requirement, advanceRequiredMinor: adv.amountMinor } : {}),
         },
         select: { id: true },
       });
@@ -484,9 +493,16 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             charge: q.charge.state,
             account: account?.kind ?? null,
             ...(gift ? { gift: { advance: q.gift?.advance ?? 'none', partMinor: giftPart, deliverAfter: gift.deliverAfter, hidePrices: gift.hidePrices } } : {}),
+            // PR 560: what the checkout asked ahead (the layer is on the flag event, for the team only)
+            ...(adv ? { advance: { kind: adv.kind, amountMinor: adv.amountMinor } } : {}),
           },
         },
       });
+      // PR 560: the flag, kept for the team and the outcome report (PR 562): which layer, what it asked, the score
+      if (adv && flagged)
+        await tx.checkoutFlagEvent.create({
+          data: { storeId, layerId: flagged.layerId, orderId: o.id, customerId: ownerId, requirement: flagged.requirement, outcome: FLAG_OUTCOMES.asked, explanation: { layer: flagged.layerName, score: flagged.score, band: flagged.band, kind: adv.kind, amountMinor: adv.amountMinor, restMinor: adv.restMinor } },
+        });
       await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: CHECKOUT_SOURCE });
 
       if (t.walletMinor > 0) {
@@ -504,7 +520,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       }
       if (prepaid) {
         await tx.payment.create({
-          data: { storeId, orderId: o.id, method, provider: choice!.option ?? choice!.method, purpose: 'ORDER', status: 'INITIATED', amountMinor: t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1`, attempt: 1, statusAt: now },
+          data: { storeId, orderId: o.id, method: payMethod, provider: choice!.option ?? choice!.method, purpose: adv ? ADVANCE_PURPOSE[adv.kind] : 'ORDER', status: 'INITIATED', amountMinor: adv ? adv.amountMinor : t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1`, attempt: 1, statusAt: now },
         });
       }
       const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : null;
@@ -582,15 +598,17 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
   const now = nowOf(deps);
   if (d.action !== 'retry') {
     const mine = await ownOrder(deps.db, storeId, req.visitorId, d.number);
-    const last = await deps.db.payment.findFirst({ where: { storeId, orderId: mine.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, select: { provider: true } });
+    const last = await deps.db.payment.findFirst({ where: { storeId, orderId: mine.id, purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, select: { provider: true } });
     if (last && !(await payModes(deps, storeId, last.provider)).test) throw new CheckoutError('TEST_PAYMENT_OFF', 'the test payment page is off here; the payment service answers for this payment', ['action']);
   }
-  return deps.db.$transaction(async (tx) => {
+  /** PR 560: the order whose advance this payment completed (the order service moves it back to the queue). */
+  let met: string | null = null;
+  const result = await deps.db.$transaction(async (tx): Promise<PayActionResult> => {
     const mine = await ownOrder(tx, storeId, req.visitorId, d.number);
     await tx.$queryRaw`SELECT 1 FROM "Order" WHERE "id" = ${mine.id}::uuid FOR UPDATE`;
     // read again under the lock: an order command (S05, @extas/orders) may have changed it in between
     const o = await ownOrder(tx, storeId, req.visitorId, d.number);
-    const last = await tx.payment.findFirst({ where: { storeId, orderId: o.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
+    const last = await tx.payment.findFirst({ where: { storeId, orderId: o.id, purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
     if (!last) throw new CheckoutError('NOT_FOUND', 'this order has no payment to make', ['number']);
     const event = (type: string, data: Record<string, unknown>) => tx.orderEvent.create({ data: { storeId, orderId: o.id, type, actorType: 'CUSTOMER', source: CHECKOUT_SOURCE, data: { paymentId: last.id, provider: MOCK_PROVIDER, ...data } } });
     const open = last.status === 'INITIATED' || last.status === 'PENDING';
@@ -602,7 +620,8 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
     if (d.action === 'approve') {
       if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
       if (!open) throw new CheckoutError('CART_NOT_OPEN', 'this payment is closed; try again makes a new one', ['action']);
-      await answer('PAID');
+      const r = await answer('PAID');
+      if (r.advanceMet) met = o.id;
       return { number: d.number, status: 'PAID', next: 'thanks' };
     }
     if (d.action === 'fail') {
@@ -615,14 +634,17 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
     if (o.status === 'CANCELLED') throw new CheckoutError('CART_NOT_OPEN', 'this order is cancelled', ['number']);
     if (open) return { number: d.number, status: 'INITIATED', next: 'pay' };
     if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
-    const tries = await tx.payment.count({ where: { storeId, orderId: o.id, purpose: 'ORDER' } });
+    const tries = await tx.payment.count({ where: { storeId, orderId: o.id, purpose: { in: CHECKOUT_PAY_PURPOSES } } });
     await tx.payment.create({
-      data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: 'ORDER', status: 'INITIATED', amountMinor: last.amountMinor, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}`, attempt: tries + 1, statusAt: now },
+      data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: last.purpose, status: 'INITIATED', amountMinor: last.amountMinor, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}`, attempt: tries + 1, statusAt: now },
     });
     await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentPending], version: { increment: 1 } } });
     await event(ORDER_EVENTS.retry, { tries: tries + 1 });
     return { number: d.number, status: 'INITIATED', next: 'pay' };
   }, TX);
+  // PR 560: an advance paid in full puts the order back in the queue (never fails the customer's payment answer)
+  if (met && deps.advancePaid) await deps.advancePaid(storeId, met).catch((e: unknown) => console.warn(`advance paid: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`));
+  return result;
 }
 
 /** What the payment page shows: the order's number, what is to be paid now and how, and how it can be paid. */
@@ -639,7 +661,7 @@ export interface PayView extends PayModes {
 export async function payView(deps: CheckoutDeps, req: { storeId: number; visitorId: string; number: string }): Promise<PayView | null> {
   const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId: req.storeId, number: req.number } }, select: { id: true, number: true, visitorId: true } });
   if (!o || o.visitorId !== req.visitorId) return null;
-  const p = await deps.db.payment.findFirst({ where: { storeId: req.storeId, orderId: o.id, purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
+  const p = await deps.db.payment.findFirst({ where: { storeId: req.storeId, orderId: o.id, purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
   if (!p || p.status === 'REFUNDED' || p.status === 'PARTIALLY_REFUNDED' || p.status === 'AUTHORIZED') return null;
   return { paymentId: p.id, number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status, ...(await payModes(deps, req.storeId, p.provider)) };
 }
