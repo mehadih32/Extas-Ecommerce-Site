@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
+import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { draftHandler, paymentHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
 
@@ -141,5 +142,39 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     // the order the same visitor places later is the one the quote shows
     const q = await checkoutQuote(f.deps(), { storeId: f.S, cartId: p.cartId, lang: 'bn', address: { line: FORM.address } });
     expect(q.fingerprint).toBe(p.order.fingerprint);
+  });
+
+  it('S04 · PR 560 (SIM-F-016): a flagged checkout pays the delivery charge ahead on the same page; the order waits for it and comes back', async () => {
+    // the app's wiring: the Parameter for Checkout's look and the order service for a paid advance
+    const od = () => ({ db: f.t.prisma, settings: f.deps().settings });
+    const wired = (): CheckoutApiDeps => ({
+      ...deps(),
+      checkout: { ...f.deps(), advanceFlag: (i) => checkoutFlag(od(), i), advancePaid: async (storeId, orderId) => void (await recordAdvance(od(), { storeId, orderId }, systemBy('checkout'))) },
+    });
+    await f.t.prisma.checkoutParameterLayer.create({ data: { storeId: f.S, name: 'Sample layer', position: 1, enabled: true, conditions: { minScore: null, bands: [], signals: ['newPhone'] }, requirement: 'DELIVERY_CHARGE' } });
+    f.overrides.set('checkout.advance', { enabled: true, maxLayers: 5 });
+    try {
+      const bag = await f.bag('api-advance', [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'S').id }]);
+      const cookie = `${BAG_COOKIE}=${bag.visitorId}`;
+      const form = { ...FORM, phone: '01700000560' };
+      const quote = async (details: unknown) => read(await quoteHandler(req('/api/checkout/quote', { lang: 'en', address: { line: FORM.address }, details }, { cookie }), wired()));
+      // before the details are finished: Cash on Delivery as always
+      expect((await quote(null)).body.view).toMatchObject({ pay: { cod: true, codOff: null }, advance: null });
+      const q = await quote({ name: form.name, phone: form.phone });
+      const view = q.body.view as { pay: { cod: boolean; codOff: string; chosen: unknown }; advance: { kind: string; amountMinor: number }; fingerprint: string };
+      expect(view).toMatchObject({ pay: { cod: false, codOff: 'ADVANCE' }, advance: { kind: 'delivery', amountMinor: 8_000 } });
+      expect(JSON.stringify(q.body)).not.toMatch(/Sample layer|score|risk/i);
+      const placed = await read(await placeHandler(req('/api/checkout/orders', { idempotencyKey: randomUUID(), lang: 'en', form, payment: view.pay.chosen, fingerprint: view.fingerprint }, { cookie }), wired()));
+      expect(placed.status).toBe(201);
+      const number = placed.body.number as string;
+      expect(placed.body.next).toBe(`/checkout/pay/${number}`);
+      expect(JSON.stringify(placed.body)).not.toMatch(/Sample layer|score|risk/i);
+      const o = await f.t.prisma.order.findFirstOrThrow({ where: { number, storeId: f.S } });
+      expect(o).toMatchObject({ status: 'AWAITING_ADVANCE', paymentMethod: 'COD', advanceRequirement: 'DELIVERY_CHARGE', advanceRequiredMinor: 8_000 });
+      expect(await read(await paymentHandler(req('/api/checkout/payments', { number, action: 'approve', lang: 'en' }, { cookie }), wired()))).toMatchObject({ status: 200, body: { status: 'PAID' } });
+      expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: o.id } })).toMatchObject({ status: 'PLACED', paidMinor: 8_000, paymentMethod: 'COD' });
+    } finally {
+      f.overrides.delete('checkout.advance');
+    }
   });
 });

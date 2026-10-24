@@ -5,6 +5,7 @@ import { checkoutQuote, emptyQuote, orderReceipt, payView, type CheckoutDeps, ty
 import { findBag } from '@extas/cart';
 import { checkoutPrefill, type CheckoutPrefill } from '@extas/accounts';
 import { getPrisma } from '@extas/db/client';
+import { checkoutFlag } from '@extas/orders';
 import { registry, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { accountDeps, customerOfRequest, signedIn } from './account';
@@ -19,8 +20,20 @@ import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-ga
 export function checkoutDeps(): CheckoutDeps | null {
   const resolver = settingsResolver();
   if (!resolver) return null;
-  // follow-up 50: the payment page's go-live guard asks which gateway a provider runs on now
-  return { db: getPrisma(), settings: resolver, paymentMode: paymentModeOf };
+  const db = getPrisma();
+  return {
+    db,
+    settings: resolver,
+    // follow-up 50: the payment page's go-live guard asks which gateway a provider runs on now
+    paymentMode: paymentModeOf,
+    // PR 560: the owner's Parameter for Checkout looks at a finished checkout (nobody flagged while it is off)
+    advanceFlag: (input) => checkoutFlag({ db, settings: resolver }, input),
+    // PR 560: an advance paid on the shop's own payment page puts the order back in the queue (the order service)
+    advancePaid: async (storeId, orderId) => {
+      const p = await shopPaymentsDeps();
+      await p?.orders?.advancePaid?.(storeId, orderId, { actorId: null, source: 'checkout' });
+    },
+  };
 }
 
 /** The checkout API's dependencies: the engines and the store the shop serves. */

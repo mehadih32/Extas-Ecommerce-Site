@@ -18,6 +18,7 @@
 import type { OrderAccountKind } from '@extas/accounts';
 import { bandExempt } from '@extas/delivery/exempt';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
+import { CHECKOUT_PAY_PURPOSES } from './advance';
 import type { CheckoutDeps } from './context';
 import { MOCK_PROVIDER, ORDER_EVENTS, type PaymentMethod } from './place';
 
@@ -123,7 +124,8 @@ export async function orderReceipt(
     include: {
       items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' } },
       deliveryBand: { select: { nameEn: true, nameBn: true, hoursMin: true, hoursMax: true } },
-      payments: { where: { purpose: 'ORDER', method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, take: 1 },
+      // PR 560: the checkout's own payment, the order's or its advance's
+      payments: { where: { purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, take: 1 },
       events: { where: { type: ORDER_EVENTS.placed }, orderBy: { createdAt: 'asc' }, take: 1, select: { data: true } },
       shipments: { where: { isExchangeLeg: false }, orderBy: { createdAt: 'desc' }, take: 1, select: { trackingCode: true, consignmentId: true, courierAccount: { select: { name: true } } } },
     },

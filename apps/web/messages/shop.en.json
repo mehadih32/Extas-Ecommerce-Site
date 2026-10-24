@@ -243,7 +243,12 @@
       "none": "No payment method is open right now. Message us on WhatsApp and we will help you order.",
       "codNotHere": "Cash on Delivery is not available on this order.",
       "walletCovers": "Your wallet pays for the whole order — nothing more to pay.",
-      "codGift": "A gift is paid in advance — Cash on Delivery is not offered."
+      "codGift": "A gift is paid in advance — Cash on Delivery is not offered.",
+      "advance": {
+        "delivery": "To confirm your order, pay the delivery charge {amount} now. The rest, {rest}, you pay at your door.",
+        "part": "To confirm your order, pay {amount} now. The rest, {rest}, you pay at your door.",
+        "full": "To confirm your order, pay the full {amount} now."
+      }
     },
     "pm": {
       "cod": "COD",

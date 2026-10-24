@@ -6,7 +6,9 @@
 // On a phone, before one finished word of the address, the step only names what can be paid with (demo rule 39); a
 // computer always shows the boxes.
 // PR 605: a gift paid ahead in full says why Cash on Delivery is not there.
-import type { PaymentChoice, PaymentView, PayMethod } from '@extas/checkout/pure';
+// PR 560: a checkout the owner's Parameter for Checkout flagged has the same boxes less Cash on Delivery, and one neutral
+// line saying what is paid now and what at the door — never a score or a reason.
+import type { AdvanceView, PaymentChoice, PaymentView, PayMethod } from '@extas/checkout/pure';
 import { Icon } from '../Icon';
 import { PayMark } from './PayMark';
 
@@ -24,9 +26,13 @@ export interface PaymentStepProps {
   wa: string | null;
   /** PR 122: the wallet pays the whole order: nothing to choose. */
   covered?: boolean;
+  /** PR 560: what a flagged checkout pays now and at the door (null: not flagged). */
+  advance?: AdvanceView | null;
+  /** PR 560: said after what is left for the door while the delivery charge is not known yet (" + delivery"). */
+  restPlus?: string;
 }
 
-export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = false }: PaymentStepProps) {
+export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = false, advance = null, restPlus = '' }: PaymentStepProps) {
   const name = (id: string) => w(`pm.${id}`);
   const mark = (id: string) => <PayMark key={id} id={id} name={name(id)} short={w(`mk.${id}`)} />;
   const marks = (list: readonly string[], max: number) => <span className="co-pmks">{list.slice(0, max).map(mark)}</span>;
@@ -176,6 +182,12 @@ export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = f
         <p className="co-fdays" data-testid="co-cod-not-here">
           <Icon name="info" size={14} />
           <span>{w(pay.codOff === 'GIFT' ? 'pay.codGift' : 'pay.codNotHere')}</span>
+        </p>
+      ) : null}
+      {pay.codOff === 'ADVANCE' && advance ? (
+        <p className="co-fdays" data-testid="co-pay-advance" data-kind={advance.kind}>
+          <Icon name="info" size={14} />
+          <span>{w(`pay.advance.${advance.kind}`, { amount: m(advance.amountMinor), rest: m(advance.restMinor) + restPlus })}</span>
         </p>
       ) : null}
       <div className="stack s8 mt12">{boxes}</div>

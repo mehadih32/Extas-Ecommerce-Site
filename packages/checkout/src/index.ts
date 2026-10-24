@@ -20,4 +20,5 @@ export * from './payment';
 export * from './consent';
 export * from './place';
 export * from './receipt';
+export * from './advance';
 export * from './bulk-service';

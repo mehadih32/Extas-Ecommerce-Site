@@ -70,3 +70,4 @@ export * from './alert-summary';
 export * from './rule-switches';
 export * from './booking';
 export * from './checkout-layers';
+export * from './checkout-risk';
