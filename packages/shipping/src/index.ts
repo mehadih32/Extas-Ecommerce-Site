@@ -24,6 +24,11 @@
 // receiver, sender and day (SIM-F-007); the consignment id and tracking code (follow-up 376); every print counted and a
 // second print a reprint (fulfil.ts, fulfil-pure.ts). The PDF itself is drawn by `@extas/documents`.
 //
+// PR 180: the print queue — every press one print job, a repeated press key the same job counted once, a reprint the
+// same parcel with its reason when the owner asks why, the recent prints (fulfil.ts); the rider's handover sheet — one
+// open batch per courier, the ready parcels with their consignment ids and amounts to collect, and "handed over"
+// through the order machine (handover.ts).
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -38,3 +43,4 @@ export * from './zone-match';
 export * from './zones';
 export * from './fulfil-pure';
 export * from './fulfil';
+export * from './handover';

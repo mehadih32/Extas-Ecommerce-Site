@@ -6,6 +6,8 @@
 // - layout.ts: one page being drawn — lines, boxes, the barcode, and text shaped by the server's fonts (Pango).
 // - sticker.ts: the courier sticker (PR 179), fitted to the owner's sticker size; the pieces carry on onto a second
 //   sticker only when even the smallest type does not fit.
+// - list.ts: a paper list on A4/A5 (PR 180 the rider's handover sheet, PR 181 the picking list): the letterhead on every
+//   page, a header row that repeats, rows that never split, tick boxes, marks in a black box, signatures at the end.
 //
 // Pure: data in (already in words), PDF bytes out. Nothing here reads the database or the settings; the callers
 // (@extas/shipping for the data, the admin routes for the words) do.
@@ -13,3 +15,4 @@ export { CODE128_PATTERNS, QUIET_MODULES, canEncode, code128Modules, code128Svg,
 export { mmToPt, mmToPx, writePdf, type PdfPage } from './pdf';
 export { FONT_FAMILIES, Sheet, sharpText, tile, type TextBlock, type TextEngine, type TextStyle } from './layout';
 export { stickerPages, stickerPdf, type StickerInput, type StickerItem, type StickerLayout, type StickerWords } from './sticker';
+export { PAPER_MM, listPages, listPdf, type ListColumn, type ListDocument, type ListRow, type Paper } from './list';

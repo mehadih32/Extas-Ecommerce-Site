@@ -22,6 +22,11 @@
 // inch, the sticker's language, the type size and how small it may get before the pieces carry on onto a second
 // sticker; and the exact-amount line (CN-014b idea 10): off by default, never printed on a paid parcel, its words in
 // both languages and a short report link or number the owner types (empty until he does).
+//
+// PR 180 (registry version 56, `delivery.sticker.queue`, `delivery.handover.sheet`): the print queue — whether a sticker
+// printed again asks why, and how many recent prints the Print run lists; the rider's handover sheet — its paper and
+// dots per inch, its language, whether it shows the receiver's name and the signature lines, and whether handing a
+// parcel over also marks it packed when nobody did (until the packing screen, PR 182, is in use).
 import { z } from 'zod';
 import { setting } from './define';
 import { moneyMinorSchema, templateTextSchema } from './schemas';
@@ -130,6 +135,28 @@ export const stickerExactAmountSchema = z
   .object({ enabled: z.boolean(), text: templateTextSchema(STICKER_EXACT_TOKENS, 160), link: z.string().trim().min(1).max(120).nullable() })
   .strict();
 
+/**
+ * PR 180 (B1.5) — the print queue. `reprintReason`: a sticker printed again asks why (the reason goes on the order's
+ * timeline and on the print's record); `recentPrints`: how many of the last prints the Print run page lists.
+ */
+export const stickerQueueSchema = z.object({ reprintReason: z.boolean(), recentPrints: z.int().min(5).max(100) }).strict();
+
+/** PR 180, 181 — the paper of a printed list (A4 or A5) and its dots per inch. */
+export const LIST_PAPERS = ['a4', 'a5'] as const;
+export const LIST_DPIS = [150, 300] as const;
+const listDpiSchema = z.union([z.literal(LIST_DPIS[0]), z.literal(LIST_DPIS[1])]);
+
+/**
+ * PR 180 (B1.5) — the rider's handover sheet: one per courier, the parcels handed over with each one's consignment id,
+ * order number and amount to collect, the total to collect, a tick box per parcel. `paper`, `dpi`: see LIST_PAPERS,
+ * LIST_DPIS; `lang`: the sheet's own words; `receiverName`: the receiver's name on each line (the rider checks it
+ * against the sticker); `signatures`: "handed over by" and "received by" lines at the end; `packOnHandover`: handing an
+ * order over also marks it packed when nobody did (off once the packing screen, PR 182, is in use).
+ */
+export const handoverSheetSchema = z
+  .object({ paper: z.enum(LIST_PAPERS), dpi: listDpiSchema, lang: z.enum(['en', 'bn']), receiverName: z.boolean(), signatures: z.boolean(), packOnHandover: z.boolean() })
+  .strict();
+
 export const shippingSettings = {
   'delivery.courier.rtoCost': setting({
     ...base,
@@ -195,6 +222,24 @@ export const shippingSettings = {
     helpKey: 'delivery.sticker.exactAmount.help',
     sortOrder: 911,
   }),
+  'delivery.sticker.queue': setting({
+    ...base56,
+    valueType: 'JSON',
+    schema: stickerQueueSchema,
+    default: { reprintReason: true, recentPrints: 20 },
+    labelKey: 'delivery.sticker.queue.label',
+    helpKey: 'delivery.sticker.queue.help',
+    sortOrder: 912,
+  }),
+  'delivery.handover.sheet': setting({
+    ...base56,
+    valueType: 'JSON',
+    schema: handoverSheetSchema,
+    default: { paper: 'a4', dpi: 150, lang: 'en', receiverName: true, signatures: true, packOnHandover: true },
+    labelKey: 'delivery.handover.sheet.label',
+    helpKey: 'delivery.handover.sheet.help',
+    sortOrder: 913,
+  }),
 };
 
 export type RtoCostSettings = z.output<typeof rtoCostSchema>;
@@ -203,3 +248,5 @@ export type CourierTrackingSettings = z.output<typeof courierTrackingSchema>;
 export type CourierZoneSyncSettings = z.output<typeof courierZoneSyncSchema>;
 export type StickerLayoutSettings = z.output<typeof stickerLayoutSchema>;
 export type StickerExactAmountSettings = z.output<typeof stickerExactAmountSchema>;
+export type StickerQueueSettings = z.output<typeof stickerQueueSchema>;
+export type HandoverSheetSettings = z.output<typeof handoverSheetSchema>;

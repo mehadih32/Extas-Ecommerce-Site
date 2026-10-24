@@ -39,7 +39,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     const s = await db().shipment.findFirstOrThrow({ where: { orderId: o.orderId } });
     return { ...o, shipmentId: s.id, shipment: s };
   };
-  const print = (shipmentIds: string[]) => printStickers(f.shippingDeps(), f.shipper, { shipmentIds });
+  const print = async (shipmentIds: string[], extra: Record<string, unknown> = {}) => (await printStickers(f.shippingDeps(), f.shipper, { shipmentIds, ...extra })).parcels;
 
   beforeAll(async () => {
     f = await setUpShipping('shipping_sticker');
@@ -79,7 +79,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     expect(await db().orderEvent.count({ where: { orderId: cod.orderId, type: 'shipment.stickerPrinted' } })).toBe(1);
     expect(await db().auditLog.count({ where: { entityId: cod.shipmentId, action: 'shipment.sticker.print' } })).toBe(1);
 
-    const again = await print([cod.shipmentId]);
+    const again = await print([cod.shipmentId], { reason: 'Sticker torn' });
     expect(again[0]).toMatchObject({ reprint: 1 });
     expect((await printRun(f.shippingDeps(), f.shipper)).rows.find((r) => r.shipmentId === cod.shipmentId)).toMatchObject({ printCount: 2 });
     // printing never books again: still one parcel

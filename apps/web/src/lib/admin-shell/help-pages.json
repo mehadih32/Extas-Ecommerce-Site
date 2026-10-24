@@ -8,6 +8,7 @@
     { "id": "orders/risk-rules", "route": "/admin/orders/risk-rules" },
     { "id": "orders/checkout-advance", "route": "/admin/orders/risk-rules/checkout" },
     { "id": "orders/print", "route": "/admin/orders/packing/print" },
+    { "id": "orders/handover", "route": "/admin/orders/packing/handover" },
     { "id": "products/all", "route": "/admin/products" },
     { "id": "products/new", "route": "/admin/products/new" },
     { "id": "products/edit", "route": "/admin/products/[id]" },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookedReceiver, printOrder, stickerProblem, type StickerFacts } from './fulfil-pure';
+import { bookedReceiver, handoverProblem, printOrder, stickerProblem, type StickerFacts } from './fulfil-pure';
 
 const facts = (over: Partial<StickerFacts> = {}): StickerFacts => ({
   status: 'IN_REVIEW',
@@ -55,5 +55,19 @@ describe('PR 179 · packing order (B1.4)', () => {
   it('keeps order numbers in number order on a tie', () => {
     const p = (key: string, orderNumber: string) => ({ key, orderNumber, pieces: [{ category: 'X', style: 's', quantity: 1 }] });
     expect(printOrder([p('x', '1010'), p('y', '999'), p('z', '1002')])).toEqual(['y', 'z', 'x']);
+  });
+});
+
+describe('PR 180 · when a parcel goes on the handover sheet', () => {
+  const ho = (over: Partial<StickerFacts> & { printCount?: number; orderStatus?: string } = {}) => handoverProblem({ ...facts(over), printCount: over.printCount ?? 1, orderStatus: over.orderStatus ?? 'CONFIRMED' });
+  it('a printed sticker of a parcel still with us whose order waits (confirmed, picking or packed)', () => {
+    for (const orderStatus of ['CONFIRMED', 'PROCESSING', 'PACKED']) expect(ho({ orderStatus })).toBeNull();
+  });
+  it('not before its sticker is printed, not when the sticker cannot be printed, not twice', () => {
+    expect(ho({ printCount: 0 })).toBe('NOT_PRINTED');
+    expect(ho({ consignmentId: null })).toBe('NOT_BOOKED');
+    expect(ho({ order: { totalMinor: 158_000, walletAppliedMinor: 0, paidMinor: 10_000 } })).toBe('COD_CHANGED');
+    expect(ho({ handedOver: true })).toBe('NOT_WITH_US');
+    for (const orderStatus of ['ON_HOLD', 'HANDED_OVER', 'CANCELLED']) expect(ho({ orderStatus })).toBe('NOT_READY');
   });
 });

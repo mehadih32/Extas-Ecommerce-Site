@@ -22,7 +22,13 @@ export type ShippingErrorCode =
   /** PR 554: this courier publishes no place list (Steadfast reads the address itself): nothing to sync. */
   | 'NO_ZONE_LIST'
   /** PR 179: a sticker cannot be printed now — not booked, picked up already, its COD or receiver changed (`data.refused`). */
-  | 'NOT_PRINTABLE';
+  | 'NOT_PRINTABLE'
+  /** PR 180: a sticker printed again needs a short reason (the owner's "ask why on a reprint"). */
+  | 'REASON_REQUIRED'
+  /** PR 180: this courier has no parcel ready to hand over (booked, with us, its sticker printed, nothing changed). */
+  | 'NOTHING_TO_HAND_OVER'
+  /** PR 180: this handover batch was marked handed over already (`data.handedOverAt`). */
+  | 'ALREADY_HANDED_OVER';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;
@@ -50,6 +56,8 @@ export class ShippingError extends Error {
       case 'NO_RECEIVER':
       case 'TOO_MANY':
       case 'NO_ZONE_LIST':
+      case 'REASON_REQUIRED':
+      case 'NOTHING_TO_HAND_OVER':
         return 422;
       default:
         return 409;

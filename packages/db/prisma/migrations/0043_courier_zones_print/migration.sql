@@ -81,3 +81,29 @@ ALTER TABLE "CourierZoneSync" ADD CONSTRAINT "CourierZoneSync_storeId_fkey" FORE
 -- AddForeignKey
 ALTER TABLE "CourierZoneSync" ADD CONSTRAINT "CourierZoneSync_courierAccountId_fkey" FOREIGN KEY ("courierAccountId") REFERENCES "CourierAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+-- PR 180 (S08; Blueprint B1.5): the print queue and the handover sheet. A print job keeps the parcels it printed, the
+-- reason of a reprint, the key of the press (a repeated press is the same job; nothing is counted twice) and what it
+-- printed; a handover batch keeps its orders, who handed it over, how many times its sheet was printed and what the
+-- sheet showed. Only adds columns and indexes.
+
+-- AlterTable
+ALTER TABLE "HandoverBatch" ADD COLUMN     "data" JSONB,
+ADD COLUMN     "handedOverById" UUID,
+ADD COLUMN     "orderIds" UUID[] DEFAULT ARRAY[]::UUID[],
+ADD COLUMN     "printCount" INTEGER NOT NULL DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "PrintJob" ADD COLUMN     "batchId" UUID,
+ADD COLUMN     "data" JSONB,
+ADD COLUMN     "reason" TEXT,
+ADD COLUMN     "requestKey" TEXT,
+ADD COLUMN     "shipmentIds" UUID[] DEFAULT ARRAY[]::UUID[];
+
+-- CreateIndex
+CREATE INDEX "HandoverBatch_storeId_courierAccountId_createdAt_idx" ON "HandoverBatch"("storeId", "courierAccountId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "PrintJob_storeId_createdAt_idx" ON "PrintJob"("storeId", "createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PrintJob_storeId_requestKey_key" ON "PrintJob"("storeId", "requestKey");
