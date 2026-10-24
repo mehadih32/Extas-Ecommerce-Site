@@ -16,7 +16,7 @@ import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { identitySummary } from './identity';
-import { riskSummary } from './risk';
+import { levelSummary, riskSummary } from './risk';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
 export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
@@ -342,6 +342,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.requestCancel': 'warn',
   'order.duplicateCheck': 'warn',
   'order.riskSection': 'warn',
+  'order.riskLevel': 'warn',
   'order.identityLinked': 'mute',
   'order.note': 'mute',
   'order.note.archived': 'mute',
@@ -569,15 +570,20 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   });
 
   const actor = (type: string, aid: string | null) => (type === 'STAFF' ? (aid && names[aid]) || t(d, 'orders.who.staff') : t(d, `orders.who.${type === 'CUSTOMER' ? 'customer' : 'system'}`));
+  // PR 161: a level's line names its band as the score stored it
+  const scoredBands = detail.timeline.flatMap((e) => {
+    const b = e.type === 'order.riskAssess' ? (e.data as { band?: { key?: unknown; en?: unknown; bn?: unknown } } | null)?.band : null;
+    return b && typeof b.key === 'string' && typeof b.en === 'string' && typeof b.bn === 'string' ? [{ key: b.key, en: b.en, bn: b.bn }] : [];
+  });
   const timeline: TimelineItem[] = detail.timeline
     .map((e): TimelineItem => {
       const key = `orders.ev.${e.type.replace(/\./g, '_')}`;
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
-      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : ruled;
+      const two = e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : ruled;
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

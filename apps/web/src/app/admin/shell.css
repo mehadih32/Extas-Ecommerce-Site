@@ -631,3 +631,9 @@
 @media (max-width: 767px) {
   .adm2 .a2-tkt span { white-space: normal; }
 }
+/* S06 · PR 161: a tab with more than one page (Orders › Risk rules: the levels, the checkout advance) shows its pages as
+   chips under the tabs (SectionTabs); in the shell's colours, and 44 px tall on every screen (a touch tablet can be
+   1366 px wide, so no width cut-off). */
+.adm2 .ad-tabs { padding: 0 0 6px; margin: 2px 0 16px; }
+.adm2 .ad-tabs .ad-chip { min-height: 44px; border-color: var(--ln); background: var(--sf); color: var(--ink); }
+.adm2 .ad-tabs .ad-chip[aria-current='page'] { background: var(--g); border-color: var(--g); color: #fff; }

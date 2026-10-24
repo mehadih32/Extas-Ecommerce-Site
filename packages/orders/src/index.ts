@@ -37,6 +37,7 @@
 // S06 · PR 521: the alert summary — one review explained: why it fired, the matched orders, what the riders wrote, the
 // customer's history and the decisions open to this person (alert-summary.ts).
 // S06 · PR 544: the rule master switches — one list of every fraud and duplicate rule, each switchable (rule-switches.ts).
+// S06 · PR 161: the actions per risk level — watch, hold, a confirmation call, and the advance a level proposes (risk-levels.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -68,6 +69,7 @@ export * from './identity-graph';
 export * from './duplicate-rules';
 export * from './alert-summary';
 export * from './rule-switches';
+export * from './risk-levels';
 export * from './booking';
 export * from './checkout-layers';
 export * from './checkout-risk';

@@ -129,6 +129,7 @@
         "defective-item": "Item defective, waiting for a replacement",
         "no-answer": "No answer on the phone",
         "possible-duplicate": "Possible duplicate order",
+        "risk-check": "Risk check: call before packing",
         "other": "Other"
       },
       "flags": {

@@ -59,8 +59,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       { id: 'all', pages: [{ href: '/admin/orders', perm: 'orders.read', keys: ['orders', 'order'] }] },
       { id: 'confirm', pages: [{ href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] }] },
-      // S04 · PR 558: Risk rules (demo ORD-06), a rare tab — its Checkout advance panel (the Parameter for Checkout)
-      { id: 'riskrules', more: true, guide: 'checkout-advance', pages: [{ href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] }] },
+      // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);
+      // S04 · PR 558: its Checkout advance panel (the Parameter for Checkout) is the tab's second page
+      { id: 'riskrules', more: true, pages: [
+        { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
+        { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
+      ] },
     ],
   },
   {

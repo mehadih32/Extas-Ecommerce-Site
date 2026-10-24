@@ -3,7 +3,8 @@
 // it saw, when and why it was scored (when the order came in, after an edit, again by hand), whether the owner's rules
 // changed since, the earlier scores, and the number's history now (PR 157). Words from messages/admin-orders.<lang>.json
 // (`orders.risk.*`); amounts as money and moments in the store's time zone. Read only, apart from "Score again" for a
-// person with `orders.risk.decide` (a new dated score; the old one stays). The score only informs.
+// person with `orders.risk.decide` (a new dated score; the old one stays). The score only informs. PR 161: the steps the
+// order's risk level took (watch, hold, a call) and the advance it proposes, as one line under the pill.
 import type { FiredSignal, PhoneSummary, RiskPanel } from '@extas/orders';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -32,6 +33,32 @@ export interface RiskCardView {
   history: { label: string; line: string };
   informs: string;
   rescore: CommandSpec | null;
+  /** PR 161: "Level High · held · confirmation call in the queue" and the advance it proposes (a person sends it). */
+  level: { line: string; ask: string | null; askNote: string | null } | null;
+}
+
+/** PR 161 — the steps one level took, in words (the card's line and the timeline's). */
+function levelSteps(view: AdminView, x: { watch?: unknown; hold?: unknown; call?: unknown }): string[] {
+  const d = view.dict;
+  const out: string[] = [];
+  if (x.hold === 'held') out.push(t(d, 'orders.risk.level.held'));
+  else if (x.hold === 'NO_REASON' || x.hold === 'NOT_HOLDABLE') out.push(t(d, `orders.risk.level.${x.hold}`));
+  if (x.watch === true) out.push(t(d, 'orders.risk.level.watch'));
+  if (x.call === true) out.push(t(d, 'orders.risk.level.call'));
+  return out;
+}
+
+const ASKS = ['delivery', 'partial', 'full', 'codOff'];
+
+/** PR 161 — the timeline line of a level's steps: "Level High · held · watch mark · Proposed: ask the whole amount first". */
+export function levelSummary(view: AdminView, data: unknown, bands: readonly { key: string; en: string; bn: string }[] = []): string | null {
+  const x = (data ?? {}) as { band?: string; watch?: unknown; hold?: unknown; call?: unknown; ask?: string };
+  if (typeof x.band !== 'string') return null;
+  const d = view.dict;
+  const b = bands.find((y) => y.key === x.band);
+  const ask = x.ask && ASKS.includes(x.ask) ? [t(d, `orders.risk.level.ask.${x.ask}`)] : [];
+  const steps = levelSteps(view, x);
+  return [t(d, 'orders.risk.level.line', { band: b ? bandName(view, b) : x.band }), ...(steps.length ? steps : ask.length ? [] : [t(d, 'orders.risk.level.none')]), ...ask].join(' · ');
 }
 
 const bandName = (view: AdminView, b: { en: string; bn: string }) => (view.lang === 'bn' ? b.bn : b.en);
@@ -99,7 +126,7 @@ export function riskCardView(view: AdminView, p: RiskPanel, o: { id: string; num
           url: commandUrl(o.id, 'riskAssess'),
           version: null,
           title: t(d, 'orders.cmd.riskAssess.title', { n: o.number }),
-          effects: [t(d, 'orders.eff.riskAssess'), t(d, 'orders.eff.riskInforms')],
+          effects: [t(d, 'orders.eff.riskAssess'), t(d, p.levelsOn ? 'orders.eff.riskLevels' : 'orders.eff.riskInforms')],
           fields: [],
           ok: t(d, 'orders.cmd.riskAssess.ok'),
           okTone: 'pri',
@@ -118,8 +145,15 @@ export function riskCardView(view: AdminView, p: RiskPanel, o: { id: string; num
       ? { title: t(d, 'orders.risk.earlier'), rows: p.earlier.map((e) => t(d, 'orders.risk.earlierRow', { score: e.score, band: bandName(view, e.band), at: dt.format(new Date(e.at)), why: t(d, `orders.risk.afterShort.${e.after}`) })) }
       : null,
     history: { label: t(d, 'orders.risk.hist.label', { phone: p.phone.phone ?? t(d, 'orders.list.none') }), line: historyLine(view, p.phone.summary) },
-    informs: t(d, 'orders.risk.informs'),
+    informs: t(d, p.levelsOn ? 'orders.risk.informsLevels' : 'orders.risk.informs'),
     rescore,
+    level: p.level
+      ? {
+          line: [t(d, 'orders.risk.level.line', { band: c && c.band.key === p.level.band ? bandName(view, c.band) : p.level.band }), ...levelSteps(view, p.level)].join(' · '),
+          ask: p.level.ask !== 'none' ? t(d, `orders.risk.level.ask.${p.level.ask}`) : null,
+          askNote: p.level.ask !== 'none' ? t(d, 'orders.risk.level.askNote') : null,
+        }
+      : null,
   };
 }
 
