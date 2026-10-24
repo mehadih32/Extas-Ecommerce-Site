@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
 import { retryDelayMs, retryPolicyOf } from './backoff';
 import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogue';
+import { messagesPlanner } from './messages';
 import { searchPlanner, searchRunKey } from './search';
 import { errorLine, MAX_ERROR } from './context';
 import { LeaderLock, type LockStore } from './leader';
@@ -50,10 +51,11 @@ describe('PR 6 · timetable slots', () => {
 });
 
 describe('PR 6 · catalogue', () => {
-  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72) on its own', () => {
+  it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72) and the messages (PR 148) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index'].sort(),
+      ['erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'search.index', 'messages.run'].sort(),
     );
+    expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('search.index')!.queue).toBe('search');
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);
     expect(jobDefinition('nope')).toBeNull();
@@ -76,6 +78,20 @@ describe('PR 6 · catalogue', () => {
     expect(searchRunKey(2, 'lq3x-1a:2b')).toBe('search.index/2/lq3x-1a2b');
     // without Meilisearch on the server nothing is planned (the shop searches PostgreSQL)
     expect(await searchPlanner({ search: { meili: null } } as never, new Date())).toEqual([]);
+  });
+  it('PR 148: the message run needs a store; one run per store and slot of `messages.engine.everySeconds`', async () => {
+    const job = jobDefinition('messages.run')!;
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 3 }))).toBe(3);
+    // without senders (no connection layer) nothing is planned and a run does nothing
+    expect(await messagesPlanner({} as never, new Date())).toEqual([]);
+    expect(await job.run({} as never, { storeId: 3 })).toEqual({ ok: true, stats: { skipped: 'no senders' } });
+    const settings = { value: async (k: string) => (k === 'messages.engine' ? { everySeconds: 60, lookbackMinutes: 180, batchSize: 100 } : true) };
+    const deps = { messages: { sender: async () => null }, settings, db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } } } as never;
+    const at = new Date(Date.UTC(2026, 9, 24, 6, 0, 30));
+    const planned = await messagesPlanner(deps, at);
+    expect(planned.map((p) => p.key)).toEqual([`messages.run/1/${slotOf(at.getTime(), 60_000)}`, `messages.run/2/${slotOf(at.getTime(), 60_000)}`]);
+    expect(planned.every((p) => p.queue === 'messages')).toBe(true);
     expect(await searchPlanner({} as never, new Date())).toEqual([]);
   });
   it('keeps a small summary and turns a reported failure into a retry', () => {

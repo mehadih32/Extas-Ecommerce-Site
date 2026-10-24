@@ -46,6 +46,9 @@ importers:
       '@extas/media':
         specifier: workspace:*
         version: link:../../packages/media
+      '@extas/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@extas/metrics':
         specifier: workspace:*
         version: link:../../packages/metrics
@@ -543,6 +546,9 @@ importers:
       '@extas/inventory':
         specifier: workspace:*
         version: link:../inventory
+      '@extas/messages':
+        specifier: workspace:*
+        version: link:../messages
       '@extas/search':
         specifier: workspace:*
         version: link:../search
@@ -623,6 +629,52 @@ importers:
       tsx:
         specifier: 4.23.15
         version: 4.23.15
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.72.0
+        version: 8.72.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
+  packages/messages:
+    dependencies:
+      '@extas/adapters':
+        specifier: workspace:*
+        version: link:../adapters
+      '@extas/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@extas/db':
+        specifier: workspace:*
+        version: link:../db
+      '@extas/delivery':
+        specifier: workspace:*
+        version: link:../delivery
+      '@extas/orders':
+        specifier: workspace:*
+        version: link:../orders
+      '@extas/settings':
+        specifier: workspace:*
+        version: link:../settings
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@eslint/js':
+        specifier: 9.39.5
+        version: 9.39.5
+      '@extas/checkout':
+        specifier: workspace:*
+        version: link:../checkout
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3

@@ -57,7 +57,8 @@
       "inventory_lowStock_evaluate": "কম স্টকের চেক",
       "inventory_erp_reconcile": "ERP-র সাথে স্টক মেলানো",
       "erp_webhook_process": "ERP থেকে আসা স্টকের খবর",
-      "search_index": "সার্চের তালিকা"
+      "search_index": "সার্চের তালিকা",
+      "messages_run": "কাস্টমারকে মেসেজ পাঠানো"
     },
     "workers": {
       "title": "ওয়ার্কার",

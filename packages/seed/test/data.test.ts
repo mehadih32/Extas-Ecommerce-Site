@@ -45,15 +45,31 @@ describe('general default pack (PR 508)', () => {
     expect(() => parsePack(withCod)).toThrow(/codLimitMinor/);
   });
 
-  it('templates follow the 2 SMS + 1 WhatsApp rule (B2.5): later steps exist, off', () => {
-    const on = defaultPack.notificationTemplates.filter((t) => t.enabled && t.locale === 'bn').map((t) => `${t.channel}:${t.key}`);
-    expect(on.sort()).toEqual(['EMAIL:order.placed', 'SMS:order.placed', 'SMS:order.processing', 'WHATSAPP:order.processing']);
-    const off = defaultPack.notificationTemplates.filter((t) => !t.enabled).map((t) => t.key);
-    // PR 146: the two-size question (WhatsApp and SMS) waits for the owner too
-    expect(new Set(off)).toEqual(new Set(['order.pickedUp', 'order.outForDelivery', 'order.delivered', 'order.twoSize']));
+  it('templates: every journey step has its words in both languages; the send rule itself is the journey (PR 148)', () => {
+    // Since PR 148 the owner's send rule (2 SMS + 1 WhatsApp, B2.5) is the `messages.journey` setting, which switches
+    // each step; the templates are only the words. The rows that shipped before stay (hard rule 3).
     for (const t of defaultPack.notificationTemplates) {
       expect(defaultPack.notificationTemplates.some((o) => o.key === t.key && o.channel === t.channel && o.locale !== t.locale), `${t.key} in both languages`).toBe(true);
     }
+    const has = (key: string, channel: string) => defaultPack.notificationTemplates.some((t) => t.key === key && t.channel === channel && t.locale === 'bn');
+    for (const key of ['order.placed', 'order.selfConfirm', 'order.confirmed', 'order.packed', 'order.booked', 'order.outForDelivery', 'order.deliveryDay', 'order.delivered', 'order.care', 'order.review', 'order.cancelled', 'order.onHold', 'order.advanceRequested']) {
+      expect(has(key, 'SMS') || has(key, 'WHATSAPP'), key).toBe(true);
+    }
+    expect(has('order.placed', 'EMAIL')).toBe(true);
+    expect(has('gift.receiver', 'SMS')).toBe(true);
+    for (const old of ['order.processing', 'order.pickedUp']) expect(defaultPack.notificationTemplates.some((t) => t.key === old), old).toBe(true);
+  });
+
+  it('SIM-F-001: no template names the order total; an amount is always the amount due (PR 148)', () => {
+    for (const t of defaultPack.notificationTemplates) {
+      const words = `${t.subject ?? ''} ${t.body}`;
+      if (t.key === 'order.processing' || t.key === 'order.pickedUp') continue; // shipped before, unchanged, no amount
+      expect(words, `${t.key} ${t.channel} ${t.locale}`).not.toContain('{total}');
+    }
+    // the old "Total {total}" words are replaced in a store that never edited them
+    const placed = defaultPack.notificationTemplates.find((t) => t.key === 'order.placed' && t.channel === 'SMS' && t.locale === 'en')!;
+    expect(placed.replaces?.[0]).toContain('{total}');
+    expect(placed.body).toContain('{amountLine}');
   });
 
   it('templates name only known tokens, never a typed-in amount', () => {

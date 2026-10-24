@@ -117,6 +117,13 @@ export const PERMISSIONS = {
   // S05 · PR 142 — edit an order not yet with the courier: the customer's name, phone and address, a size at the same
   // price, a piece taken out (with a reason and where the customer asked). Never a price, discount, charge or COD.
   'orders.edit': { group: 'orders' },
+  // S05 · PR 148 — Messages › Order journey (MSG-01): see the journey (its steps, channels, caps and whether each channel
+  // is live or on its mock); change it; and record a customer's self-confirm reply (1, 2 or 3) until the WhatsApp
+  // provider's replies arrive by themselves. A 1 confirms the order only with `messages.selfConfirm.confirmOnYes`, as a
+  // confirm by hand would; a reply never cancels an order: 2 and 3 go to the call queue.
+  'messages.journey.read': { group: 'messages' },
+  'messages.journey.write': { group: 'messages' },
+  'messages.selfConfirm.reply': { group: 'messages' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

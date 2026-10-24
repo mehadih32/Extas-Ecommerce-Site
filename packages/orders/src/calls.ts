@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { allow, parse, setting, type OrdersDeps, type Who } from './context';
 
 /** The reasons the shop's own steps give a call task (CallTask.reason). */
-export const CALL_TASK_REASONS = ['ADDRESS_UNCLEAR', 'CHARGE_NOT_SET', 'ADDRESS_CHECK', 'PAYMENT_FAILED', 'HOLD_REVIEW', 'ADVANCE_OVERDUE', 'DUPLICATE_CHECK', 'ADDRESS_CHANGED', 'TWO_SIZE'] as const;
+export const CALL_TASK_REASONS = ['ADDRESS_UNCLEAR', 'CHARGE_NOT_SET', 'ADDRESS_CHECK', 'PAYMENT_FAILED', 'HOLD_REVIEW', 'ADVANCE_OVERDUE', 'DUPLICATE_CHECK', 'ADDRESS_CHANGED', 'TWO_SIZE', 'SELF_CONFIRM_NO_REPLY', 'SELF_CONFIRM_CHANGE', 'SELF_CONFIRM_CANCEL'] as const;
 
 export const callQueueQuery = z
   .object({

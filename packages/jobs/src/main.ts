@@ -8,12 +8,14 @@
 //   GIT_SHA, EXTAS_COLOR   shown on the Server page
 //   EXTAS_WORKER_HEALTH_FILE   where the heartbeat file for the container's health check goes (optional)
 // SIGTERM / SIGINT stop it cleanly: running jobs finish, the leader lock is let go, the heartbeat row says "stopped".
-import { allAdapters, createConnections } from '@extas/adapters';
+import { allAdapters, createConnections, messageAdapters } from '@extas/adapters';
 import { getPrisma } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
+import { sendersFrom } from '@extas/messages';
 import { meiliFromEnv } from '@extas/search';
 import { errorLine, type JobDeps } from './context';
+import { messagesPlanner } from './messages';
 import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
@@ -28,15 +30,18 @@ async function main(): Promise<void> {
   const vault = key && key.length >= 32 ? createVault(db, key) : { get: async () => null };
   const [testS, cacheS] = await Promise.all([settings.value('system.integrationTestTimeoutSeconds'), settings.value('system.integrationKeyCacheSeconds')]);
   const connections = createConnections({ db, vault, adapters: allAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
-  const deps: JobDeps = { db, settings, inventory: { db, settings, connections }, search: { meili: meiliFromEnv() } };
+  // PR 148: the message senders have their own connection layer (each the mock until the owner enters its key)
+  const senders = createConnections({ db, vault, adapters: messageAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
+  const deps: JobDeps = { db, settings, inventory: { db, settings, connections }, search: { meili: meiliFromEnv() }, messages: { sender: sendersFrom(senders) } };
   const worker = await startWorker({
     deps,
     redisUrl,
     version: process.env.GIT_SHA?.slice(0, 12) || null,
     color: process.env.EXTAS_COLOR || null,
     healthFile: process.env.EXTAS_WORKER_HEALTH_FILE || null,
-    // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue
-    planners: [webhookPlanner, searchPlanner],
+    // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue;
+    // PR 148: each store's message run per slot
+    planners: [webhookPlanner, searchPlanner, messagesPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

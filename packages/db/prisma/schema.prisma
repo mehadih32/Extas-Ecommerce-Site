@@ -3104,6 +3104,10 @@ model NotificationRule {
 }
 
 /// @stage S05 · PR 148, 149 — the notification log with retries and the no-double-send guard (`dedupeKey`).
+/// PR 148 (CN-019): one row per message the shop means to send — an order-journey step on one channel
+/// (`order:<orderId>:<step>:<channel>`), so a step never goes twice — planned from the order's timeline by
+/// @extas/messages and sent by the worker once `sendAfter` has passed. No message text is stored (the template and the
+/// order make it again); `reason` says why a row was skipped or blocked by the guard (cap, audience, no number …).
 model NotificationLog {
   id                String              @id @default(uuid(7)) @db.Uuid
   storeId           Int
@@ -3123,10 +3127,24 @@ model NotificationLog {
   sentAt            DateTime?           @db.Timestamptz(3)
   createdAt         DateTime            @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime            @updatedAt @db.Timestamptz(3)
+  /// PR 148 — the journey step (`placed`, `confirmed`, `day1Care` …) or what else the message is for (`account.code`).
+  step              String?
+  /// PR 148 — the language the message goes in (`bn`, `en`).
+  locale            String?
+  /// PR 148, 149 — not sent before this time: the step's delay, the quiet hours, or the next try after a failure.
+  sendAfter         DateTime?           @db.Timestamptz(3)
+  /// PR 148 — why a row was SKIPPED or BLOCKED_BY_GUARD (a code: CAP_SMS, AUDIENCE, NO_RECIPIENT, MASTER_OFF …).
+  reason            String?
+  /// PR 148 — the sender that took it: its provider key and mode (MOCK = "would send": nothing left the server).
+  provider          String?
+  mode              AdapterMode?
+  /// PR 148 — the order timeline row (OrderEvent) that planned it.
+  eventId           String?             @db.Uuid
 
   @@unique([storeId, dedupeKey])
   @@index([storeId, orderId])
   @@index([storeId, status, createdAt])
+  @@index([status, sendAfter])
 }
 
 enum NotificationStatus {

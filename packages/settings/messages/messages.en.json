@@ -1,0 +1,43 @@
+{
+  "groups": {
+    "messages": "Messages"
+  },
+  "messages": {
+    "enabled": {
+      "label": "Messages to customers",
+      "help": "The master switch. Off: no SMS, WhatsApp or e-mail goes to any customer; every planned message is logged as skipped. Until a provider's key is entered, each channel runs on its mock and the log says \"would send\"."
+    },
+    "journey": {
+      "label": "Order journey",
+      "help": "For each step of an order (received, self-confirm, confirmed, packed, booked, out for delivery, delivery day, delivered, Day-1 care, Day-3 review) and each notice (cancelled, on hold, advance asked, gift receiver): on or off, the channel and a fallback, also by e-mail, when it goes (at once, minutes later, or at a time some days later), which orders (all, cash on delivery, prepaid) and its template. A step never goes twice for one order."
+    },
+    "caps": {
+      "label": "Caps per order",
+      "help": "At most this many messages of the order journey per order on each channel, and in total (empty = no cap). A message over a cap is not sent and the log says why. The Day-1 and Day-3 follow-ups and the notices are outside the caps."
+    },
+    "selfConfirm": {
+      "label": "WhatsApp self-confirm",
+      "help": "Switched on in the order journey (step \"Self-confirm\", off). Here: only a customer's first order, the hours to wait for a reply before the order goes to the call queue (0 = no call for a missing reply), whether his 1 confirms the order (on; not while a duplicate review, a cancel request or an advance is open), and whether it is the order's one WhatsApp (then the \"packed\" WhatsApp does not go)."
+    },
+    "language": {
+      "label": "Message language",
+      "help": "The language of the messages: the store's language, or always Bengali, or always English."
+    },
+    "quietHours": {
+      "label": "Quiet hours",
+      "help": "Off by default. When on, a message that falls between these hours (the store's time) waits until they end. The \"order received\" message is never held."
+    },
+    "amountLine": {
+      "label": "Amount line",
+      "help": "The {amountLine} of a template: the amount still to pay (total minus what is paid). A fully paid order gets no amount line at all."
+    },
+    "exactAmount": {
+      "label": "Exact-amount line",
+      "help": "The {exactAmountLine} of a template, sent only while \"Exact amount for the rider\" is on (the order page settings): the words when money is still due, and the words for a fully paid order. {link} is the order's page."
+    },
+    "engine": {
+      "label": "Message engine",
+      "help": "How often the worker plans and sends messages (seconds), how far back it reads the order timeline (a step older than this is never sent late, minutes) and how many messages it handles at a time."
+    }
+  }
+}

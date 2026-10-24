@@ -57,7 +57,8 @@
       "inventory_lowStock_evaluate": "Low stock check",
       "inventory_erp_reconcile": "Stock check against the ERP",
       "erp_webhook_process": "Stock news from the ERP",
-      "search_index": "Search index"
+      "search_index": "Search index",
+      "messages_run": "Customer messages"
     },
     "workers": {
       "title": "Workers",

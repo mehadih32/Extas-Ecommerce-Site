@@ -91,7 +91,15 @@ export type Also = (tx: Tx, o: LockedOrder, now: Date) => Promise<Record<string,
 /** PLACED → CONFIRMED. Refused while a duplicate/risk review or a customer's cancel request is open. D6: the order goes to the ERP now. */
 export async function confirmOrder(deps: OrdersDeps, who: Who, orderId: string, opts: CommandOptions = {}): Promise<CommandResult> {
   await allow(deps, who, 'orders.confirm');
-  return execute(deps, ref(who, orderId), staffBy(who.actor, who.ctx), {
+  return confirmBy(deps, ref(who, orderId), staffBy(who.actor, who.ctx), opts);
+}
+
+/**
+ * The same confirm for a caller that checks its own permission or switch (PR 148: the customer's "1" to the WhatsApp
+ * self-confirm, `messages.selfConfirm.confirmOnYes`). Every guard of a staff confirm holds; a refusal is the caller's to note.
+ */
+export async function confirmBy(deps: OrdersDeps, r: { storeId: number; orderId: string }, by: By, opts: CommandOptions = {}): Promise<CommandResult> {
+  return execute(deps, r, by, {
     command: 'confirm',
     effect: async (tx, o, _f, { now }) => {
       const pushId = await queueErpOrder(deps, tx, o);

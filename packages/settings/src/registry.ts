@@ -37,6 +37,7 @@ import { reviewSettings } from './registry-reviews';
 import { setBuilderSettings } from './registry-set-builder';
 import { orderEditSettings } from './registry-order-edit';
 import { supportLaneSettings } from './registry-support-lane';
+import { messageSettings } from './registry-messages';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1179,6 +1180,8 @@ export const registry = {
   ...orderEditSettings,
   // ---- S04 · PR 566, 606 · the support explanation panel and the bulk / corporate lane (registry-support-lane.ts, version 38). ----
   ...supportLaneSettings,
+  // ---- S05 · PR 148 · the Messages control centre: the master switch, the order journey, caps, self-confirm, language, quiet hours, the amount lines, the engine's pace (registry-messages.ts, version 40). ----
+  ...messageSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
