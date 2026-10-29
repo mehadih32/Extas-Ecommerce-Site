@@ -230,4 +230,24 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
     expect((await packing('GET', ['not-a-uuid'])).status).toBe(404);
     expect((await packing('POST', [g.orderId, 'teleport'])).status).toBe(404);
   });
+
+  it('PR 183: a damaged piece reported holds the order with its card; "found it" closes the card and releases the hold', async () => {
+    const h = await f.place('fa-7', { phone: '01700001907' }); // hardcode-ok: a made-up test number
+    await confirmOrder(f.ordersDeps(), f.staff, h.orderId);
+    const line = await f.t.prisma.orderItem.findFirstOrThrow({ where: { orderId: h.orderId, status: 'ACTIVE' } });
+    expect((await packing('POST', [h.orderId, 'issue'], { body: { lineId: line.id, kind: 'BROKEN' } })).status).toBe(400);
+    const rep = await packing('POST', [h.orderId, 'issue'], { body: { lineId: line.id, kind: 'DAMAGED', note: 'Torn seam' } });
+    expect(rep.status).toBe(200);
+    const view = (await rep.json()) as { order: { status: string; openIssues: { id: string; kind: string }[] } };
+    expect(view.order).toMatchObject({ status: 'ON_HOLD', openIssues: [expect.objectContaining({ kind: 'DAMAGED' })] });
+    const issueId = view.order.openIssues[0]!.id;
+    expect(await (await packing('POST', [h.orderId, 'issue'], { body: { lineId: line.id, kind: 'NOT_FOUND' } })).json()).toMatchObject({ ok: false, error: 'ISSUE_OPEN' });
+    const called = await packing('POST', [h.orderId, 'issues', issueId, 'call'], { body: {} });
+    expect(await called.json()).toMatchObject({ ok: true, created: true });
+    const done = await packing('POST', [h.orderId, 'issues', issueId, 'resolve'], { body: { decision: 'STOCK_FOUND' } });
+    expect(await done.json()).toMatchObject({ ok: true, decision: 'STOCK_FOUND', released: true });
+    expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: h.orderId } })).toMatchObject({ status: 'CONFIRMED' });
+    expect((await packing('POST', [h.orderId, 'issues', issueId, 'teleport'], { body: {} })).status).toBe(404);
+    expect((await packing('GET', [h.orderId, 'issues', issueId, 'resolve'])).status).toBe(405);
+  });
 });

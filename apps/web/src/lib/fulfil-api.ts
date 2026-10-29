@@ -40,6 +40,12 @@
 //   POST  …/orders/{id}/photo                  multipart `file`: the packing photo, its metadata stripped, kept in the
 //                                              media library for the owner's days (fulfilment.pack; PHOTO_OFF when off)
 //   POST  …/orders/{id}/waive                  {reason} the owner's override of a required photo (fulfilment.photoWaive)
+//   POST  …/orders/{id}/issue                  PR 183: {lineId, kind: DAMAGED|NOT_FOUND, note?} a packing card on one line,
+//                                              the order held with it by the owner's switch (fulfilment.pack)
+//   POST  …/orders/{id}/issues/{issueId}/resolve  {decision: STOCK_FOUND|SWAP_SIZE|SHIP_REST|CANCEL_ORDER, variantId?,
+//                                              note?}: carried out by the order service (its own orders.edit /
+//                                              orders.cancel; a paid order's refund only a request) (fulfilment.pack)
+//   POST  …/orders/{id}/issues/{issueId}/call  {note?} a call task for the customer; the card stays open (fulfilment.pack)
 import sharp from 'sharp';
 import { storeGeneratedFile } from '@extas/media';
 import { isOrdersError } from '@extas/orders';
@@ -209,6 +215,14 @@ export async function packingRoute(request: Request, deps: AdminDeps | null, pat
     return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, ...(await sh.startPickingAll(x.deps, x.who)) }));
   }
   const [id, action, ...rest] = path;
+  // PR 183: …/orders/{id}/issues/{issueId}/resolve|call
+  if (action === 'issues') {
+    const [issueId, verb, ...more] = rest;
+    if (!isUuid(id) || !isUuid(issueId) || more.length || (verb !== 'resolve' && verb !== 'call')) return fail(404, 'not-found');
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    if (verb === 'resolve') return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, ...(await sh.resolveIssue(x.deps, x.who, id, issueId, await body(request))) }));
+    return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, ...(await sh.callAboutIssue(x.deps, x.who, id, issueId, await body(request))) }));
+  }
   if (!isUuid(id) || rest.length) return fail(404, 'not-found');
   if (!action) {
     if (m !== 'GET') return fail(405, 'method-not-allowed');
@@ -226,6 +240,8 @@ export async function packingRoute(request: Request, deps: AdminDeps | null, pat
       return guarded(request, deps, 'fulfilment.pack', (x) => packingPhoto(request, x, id));
     case 'waive':
       return guarded(request, deps, 'fulfilment.photoWaive', async (x) => json({ ok: true, order: await sh.waivePackingPhoto(x.deps, x.who, id, await body(request)) }));
+    case 'issue':
+      return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, order: await sh.reportIssue(x.deps, x.who, id, await body(request)) }));
     default:
       return fail(404, 'not-found');
   }

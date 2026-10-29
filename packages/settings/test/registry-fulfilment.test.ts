@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registryVersion } from '../src/define';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { fulfilmentSettings, packingCheckSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema } from '../src/registry-fulfilment';
+import { fulfilmentSettings, packingCheckSchema, packingIssuesSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema } from '../src/registry-fulfilment';
 
 describe('packing settings (v59)', () => {
   it('every key is in the registry at version 59 in the Delivery group, labelled in English and Bengali, its default valid', () => {
@@ -42,5 +42,14 @@ describe('packing settings (v59)', () => {
     expect(d).toEqual({ enabled: false, gapPercent: 15, gapGrams: 100, requireReading: false });
     expect(packingWeightSchema.safeParse({ ...d, gapPercent: 0 }).success).toBe(false);
     expect(packingQueueSchema.safeParse({ doneDays: 31, listMax: 200 }).success).toBe(false);
+  });
+
+  it("PR 183: a reported piece holds the order with reasons on the owner's lists; a card is marked late after 48 hours, never decided by itself", () => {
+    const d = fulfilmentSettings['fulfilment.packing.issues'].default;
+    expect(d).toEqual({ holdOrder: true, damagedReasonKey: 'defective-item', missingReasonKey: 'waiting-stock', decideWithinHours: 48, editReasonKey: 'customer-asked' });
+    expect(registry['orders.hold.reasons'].default.map((r) => r.key)).toEqual(expect.arrayContaining([d.damagedReasonKey, d.missingReasonKey]));
+    expect(registry['orders.edit.reasons'].default.map((r) => r.key)).toContain(d.editReasonKey);
+    expect(packingIssuesSchema.safeParse({ ...d, decideWithinHours: 0 }).success).toBe(true);
+    expect(packingIssuesSchema.safeParse({ ...d, damagedReasonKey: '' }).success).toBe(false);
   });
 });
