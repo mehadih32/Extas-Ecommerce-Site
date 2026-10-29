@@ -1,0 +1,67 @@
+{
+  "metaTitle": "SEO · Admin",
+  "title": "SEO",
+  "sub": "How the shop is found on Google: which pages search engines may list and the address each page gives as its own.",
+  "kpi": {
+    "engines": "Search engines",
+    "open": "Open",
+    "closed": "Closed",
+    "closedSub": "nothing is listed yet",
+    "openSub": "listed on the shop's own address only",
+    "address": "Shop address",
+    "noPrimary": "Not set yet",
+    "noPrimarySub": "set at go-live; until then pages name the preview address",
+    "primarySub": "every page names this address",
+    "preview": "Preview",
+    "previewSub": "always hidden from search engines",
+    "none": "—",
+    "bengali": "Bengali pages ready",
+    "bengaliOff": "Bengali is off",
+    "bengaliSub": "only ready pages are listed in Bengali"
+  },
+  "safe": {
+    "title": "The preview is never listed.",
+    "text": "Search engines see the shop only on its own address, and only after you open it below. Customers' pages (bag, checkout, account, orders) are never listed."
+  },
+  "indexing": {
+    "where": "Website › SEO",
+    "title": "Search engines",
+    "desc": "English pages live at /, Bengali at /bn with the same link words. Each page names itself, in its own language, as its address.",
+    "engines": "Let search engines list the shop",
+    "enginesHint": "Off by default. Turn it on on go-live day, after the shop's own address is set.",
+    "pages": "Which pages may be listed",
+    "pagesHint": "Once the shop is open. A filtered list, a preview or a page that is not on sale is never listed.",
+    "page": {
+      "home": "Home page",
+      "category": "Category pages",
+      "product": "Product pages",
+      "combo": "Featured sets",
+      "comboList": "Set lists (one rule's sets)",
+      "combosHub": "The combos page",
+      "setBuilder": "Build your own set",
+      "help": "Help pages",
+      "search": "Search results"
+    },
+    "more": "More options",
+    "xDefault": "Searchers in other languages",
+    "xDefaultHint": "Which page a searcher who reads neither English nor Bengali is sent to.",
+    "xDefaultEn": "The English page",
+    "xDefaultNone": "No page",
+    "default": "Default: {v}",
+    "on": "on",
+    "off": "off",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "unchanged": "Nothing changed.",
+    "readOnly": "You can see these settings. Changing them needs the \"Change the SEO settings\" permission."
+  },
+  "errors": {
+    "STALE": "Someone else changed these settings. The page shows the new values; check them and save again.",
+    "VALIDATION": "Some values are not valid: {fields}",
+    "FORBIDDEN": "You do not have permission to change the SEO settings.",
+    "UNAUTHENTICATED": "Your session has ended. Sign in again.",
+    "network": "No connection to the server. Try again.",
+    "server-error": "Something went wrong on the server. Try again."
+  }
+}

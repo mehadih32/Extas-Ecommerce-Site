@@ -66,6 +66,9 @@
         "channels": "Channels & limits",
         "journey": "Order journey",
         "templates": "Templates"
+      },
+      "website": {
+        "seo": "SEO"
       }
     },
     "purpose": {
@@ -93,7 +96,7 @@
       "messages": "Order journey · Campaigns · Templates · Message log · Channels & limits",
       "support": "Inbox · Rider issues · Claims & credits · Saved replies · Support settings",
       "marketing": "Campaigns & ads · Coupons & offers · Landing pages · Creative studio · More: Market intel, YouTube",
-      "website": "Site builder · Page layouts · Blog · SEO · Words · More: Eye toggles, Launch default, Effects",
+      "website": "Site builder · Page layouts · Blog · Words · More: Eye toggles, Launch default, Effects",
       "money": "Profit & loss · COD reconciliation · Payments & refunds · Expenses & salaries · Month-end close · Costs & fees",
       "reports": "Overview · Sales · Products · Customers · Delivery · More: Marketing, Experiments, Scheduled reports, Funnels",
       "ai": "Control room · Approvals · Agents · Skills · Audit · Costs · More: Models, Routing, Diary, Media, Memory",

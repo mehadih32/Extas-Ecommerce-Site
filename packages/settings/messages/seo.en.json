@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "seo": "SEO"
+  },
+  "seo": {
+    "indexing": {
+      "label": "Search engines",
+      "help": "Off until the shop goes live. On, Google and other search engines may list the kinds of page ticked here, and only on the shop's own address (the store's primary domain); the preview site always stays hidden. Every page names itself as its own address in its language (English at /, Bengali at /bn, the same link words). A Bengali page is listed only after it is marked ready. \"Other languages\" sends searchers with another language to the English page, or nowhere."
+    }
+  }
+}

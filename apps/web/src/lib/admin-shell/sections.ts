@@ -179,7 +179,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
     ],
   },
-  { id: 'website', icon: 'globe', group: 'grow', base: '/admin/website', tabs: [], guide: 'site' },
+  // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,
+  // page layouts, blog and words join with their PRs.
+  {
+    id: 'website',
+    icon: 'globe',
+    group: 'grow',
+    base: '/admin/website',
+    guide: 'site',
+    tabs: [{ id: 'seo', guide: 'seo', pages: [{ href: '/admin/website/seo', perm: 'seo.read', keys: ['seo'] }] }],
+  },
   { id: 'money', icon: 'wallet', group: 'business', base: '/admin/money', tabs: [], guide: 'finance' },
   {
     id: 'reports',

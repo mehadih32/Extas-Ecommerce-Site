@@ -19,7 +19,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const c = await shopContext();
   if (!isHelpSlug(slug)) return { ...(await shopMetadata(c, 'soon-help', c.t('soon.title'))), robots: { index: false, follow: true } };
   const m = (await loadHelp(c)).models[slug];
-  if (m.soon) return { ...(await shopMetadata(c, `help-${slug}`, c.t('soon.title'))), robots: { index: false, follow: true } };
+  if (m.soon) return shopMetadata(c, `help-${slug}`, c.t('soon.title'), { index: false });
   return shopMetadata(c, `help-${slug}`, m.title);
 }
 
