@@ -2,7 +2,144 @@
   "erp": {
     "model": {
       "label": "ERP contract",
-      "help": "v5 until the ERP announces its switch date; then v6, where the shop buys from the ERP at its shop price. It is switched on the ERP's switch date, after a dry run."
+      "help": "Empty means v5, the contract until the ERP's switch date. v6 (the shop buys from the ERP at its shop price) is set once, by the switch-over on that date after a dry run, with the owner's written OK. The switch is one-way: the v5 documents it retires are never sent again, even if it is set back."
+    },
+    "events": {
+      "pullMinutes": {
+        "label": "Pull ERP events every (minutes)",
+        "help": "The shop asks the ERP for return and exchange events it may have missed, this often and on start-up."
+      },
+      "applySeconds": {
+        "label": "Apply stored ERP events every (seconds)",
+        "help": "How often the shop works through the ERP events it has stored."
+      },
+      "applyBatch": {
+        "label": "ERP events per run",
+        "help": "How many stored ERP events one run applies."
+      },
+      "maxAttempts": {
+        "label": "Tries before an ERP event is marked failed",
+        "help": "An event that cannot be applied is tried again this many times, then shown as failed."
+      },
+      "claimsLookbackDays": {
+        "label": "Courier claims: look back (days)",
+        "help": "How many days back the shop asks the ERP for missing or damaged pieces to claim from the courier."
+      },
+      "correctionWaitHours": {
+        "label": "Wait for a correction's original (hours)",
+        "help": "A correction whose original event never arrives waits this long, then it is marked failed and shown on the stock health panel."
+      },
+      "maxChain": {
+        "label": "Corrections followed in one go",
+        "help": "How deep a chain of corrections (a correction of a correction) is followed in one run."
+      }
+    },
+    "hold": {
+      "pauseCheckout": {
+        "label": "Pause checkout while the ERP account is on hold",
+        "help": "On: while the ERP refuses new orders because Retail's account is on hold, customers see \"back soon\" at checkout. Off: checkout stays open and the orders wait until the account is released."
+      },
+      "warnDays": {
+        "label": "Warn before an ERP hold (days)",
+        "help": "The admin is warned this many days before the ERP would put Retail's account on hold for an unpaid balance. The ERP's own number is used when it sends one."
+      }
+    },
+    "account": {
+      "checkMinutes": {
+        "label": "Check the ERP account every (minutes)",
+        "help": "How often the shop reads what Retail owes the ERP and whether the account is on hold."
+      }
+    },
+    "summary": {
+      "sendAt": {
+        "label": "Send yesterday's summary at",
+        "help": "The time (the store's own clock) the shop sends yesterday's figures to the ERP. The ERP checks them at 01:00."
+      },
+      "retry": {
+        "minutes": {
+          "label": "Try again after (minutes)",
+          "help": "When the ERP does not accept a summary, the shop waits this long before each new try, in order; the last wait repeats until it is accepted."
+        }
+      }
+    },
+    "fixedCosts": {
+      "spread": {
+        "label": "How fixed costs are spread",
+        "help": "The ERP's rule: a month's fixed costs are spread by the days of the month, exact to the paisa, with the remainder on the last day. The shop's own view uses the same rule."
+      }
+    }
+  },
+  "groups": {
+    "books": "Books (ERP match)"
+  },
+  "books": {
+    "week": {
+      "start": {
+        "label": "Week starts on",
+        "help": "The first day of a week in the books (the week close and the weekly report)."
+      }
+    },
+    "fiscalYear": {
+      "startMonth": {
+        "label": "Financial year starts in month",
+        "help": "The first month of the financial year (1 = January, 7 = July). The year close runs from it."
+      }
+    },
+    "timing": {
+      "maxMinutes": {
+        "label": "Wait for a late ERP event (minutes)",
+        "help": "A difference the ERP's own rows explain waits this long while the shop fetches the missing event; then it must be solved or it shows as a mismatch. Amounts must match exactly: there is no tolerance."
+      }
+    },
+    "resend": {
+      "days": {
+        "label": "Send an open day again for (days)",
+        "help": "A late fact (a courier correction, a cost entry) sends that day's summary to the ERP again, for this many days while the month is open."
+      }
+    },
+    "close": {
+      "requireMatched": {
+        "label": "Close a month only when every day matched",
+        "help": "On: a month closes only when every day matched. The owner can still close it with differences, with a reason and the PIN; that is logged and shown on every report of the month."
+      },
+      "runAt": {
+        "label": "Close yesterday at",
+        "help": "The time (the store's own clock) the books close yesterday, after the ERP's own check at 01:00."
+      }
+    }
+  },
+  "exchange": {
+    "passPriceRiseToCustomer": {
+      "label": "Customer pays a price rise on exchange",
+      "help": "On: when the new piece costs more on the day of the exchange, the customer pays the difference (the exchange terms say so). A cheaper piece is never refunded. Off: the shop absorbs the rise."
+    },
+    "returnWatch": {
+      "days": {
+        "label": "Old piece must come back within (days)",
+        "help": "After the exchange parcel is delivered, the old piece must reach the ERP within this many days, or the ERP bills the new piece. The ERP's own number is shown beside it."
+      }
+    }
+  },
+  "returns": {
+    "handback": {
+      "photo": {
+        "label": "Photo of the sealed bag at hand-back",
+        "help": "On: staff take a photo of each sealed return bag when the courier hands it back. Off: a count and a short note are enough."
+      }
+    }
+  },
+  "catalogue": {
+    "bGrade": {
+      "listing": {
+        "label": "B-grade pieces as their own listing",
+        "help": "On: a style's B-grade SKUs come in as a separate listing with their own price. Off: they are left out of the import."
+      }
+    },
+    "floor": {
+      "minMarginPercent": {
+        "label": "Lowest selling price: buying price plus (%)",
+        "help": "Empty = off. When set, a selling price, combo, coupon or discount below the buying price plus this percentage is refused. Only the owner sets it."
+      }
     }
   }
 }

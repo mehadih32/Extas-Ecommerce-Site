@@ -19,15 +19,23 @@
 //      PR 607: in `erp.model` v6 the ERP's retail price and average cost are never read (owner answer Q7).
 //    - Processing an event twice changes nothing the second time (its status is checked first, and the stock path is
 //      idempotent on its own).
+// 3. PR 608 (CN-028): a v6 event (delivery.identified, return.*, order.line.*, exchange.*, summary.missing, account.*,
+//    shop-price.changed, payment.recorded) signed with the webhook secret of a v6 store's OWN connection goes into that
+//    store's permanent ERP event ledger instead (erp-events.ts: once by its eventId, forever, no 72-hour window), and
+//    the job `inventory.erp.applyEvents` applies it. Otherwise it is logged IGNORED as before. CN-029 §16: the store is
+//    the one whose secret verified the signature, never guessed from the event's content; a v6 event that verifies
+//    with the secrets of two connections is refused (401 SHARED_SECRET: every store must have a secret of its own).
 // The poll (`inventory.erp.pullStock`, every `erp.sync.stockPollMinutes`) stays the fallback: a missed webhook never
 // leaves stock wrong for longer than one poll. On the practice ERP a webhook is applied only with
 // `erp.mock.stockEnabled` (guard path `webhook.apply`), so test events never reach real stock by accident.
 import type { Prisma } from '@extas/db/client';
-import { EXTAS_ERP_PROVIDER, parseErpWebhookEvent, verifyErpSignature, type Connections, type ErpStockRow, type ErpVariantRow } from '@extas/adapters';
+import { EXTAS_ERP_PROVIDER, parseErpV6Event, parseErpWebhookEvent, verifyErpSignature, type Connections, type ErpStockRow, type ErpVariantRow, type ErpWebhookParse } from '@extas/adapters';
 import { nowOf, setting, type InventoryDeps } from './context';
 import { storesWithErp } from './erp-mode';
 import { currencyDigits } from './erp-push';
 import { isV6 } from './erp-model';
+import { recordBrokenErpEvent, recordErpEvent } from './erp-events';
+import { v6LinkFor } from './erp-link';
 import { behaviourOf, resolveErp } from './guard';
 import { sellableKinds } from './locations';
 import { afterStockChange, applyPage, erpStockLocations } from './stock-pull';
@@ -47,6 +55,8 @@ export interface WebhookRequest {
   timestamp: string | null;
   /** The `Idempotency-Key` header: the event id when the body has none. */
   idempotencyKey: string | null;
+  /** PR 608: the `X-Extas-Delivery` header of a v6 event (its eventId). */
+  deliveryId?: string | null;
 }
 
 export type WebhookCode =
@@ -59,8 +69,14 @@ export type WebhookCode =
   | 'UNSIGNED'
   | 'STALE'
   | 'BAD_SIGNATURE'
+  /** CN-029 §16: a v6 event that verifies with the secrets of two connections: no store can be told apart. */
+  | 'SHARED_SECRET'
   | 'BAD_JSON'
   | 'BAD_PAYLOAD'
+  /** PR 608: a v6 event for a v6 store that does not read as v6: kept in the ledger as FAILED (health panel), 202. */
+  | 'KEPT_FAILED'
+  /** PR 608: a known eventId with another body: never applied, counted on the stored event (health panel), 202. */
+  | 'BODY_CHANGED'
   | 'NO_EVENT_ID';
 
 export interface WebhookAnswer {
@@ -115,16 +131,14 @@ export async function receiveErpWebhook(deps: WebhookDeps, req: WebhookRequest):
   const keys = await candidates(deps);
   if (!keys.length) return { status: 401, code: 'NO_SECRET' };
   const now = nowOf(deps);
-  let match: Candidate | null = null;
+  const matches: Candidate[] = [];
   let refusal: WebhookCode = 'BAD_SIGNATURE';
   for (const k of keys) {
     const r = verifyErpSignature({ secret: k.secret, rawBody: req.rawBody, signature: req.signature, timestamp: req.timestamp, maxAgeSeconds: maxAge, now: now.getTime() });
-    if (r.ok) {
-      match = k;
-      break;
-    }
-    refusal = REFUSAL[r.reason];
+    if (r.ok) matches.push(k);
+    else refusal = REFUSAL[r.reason];
   }
+  const match = matches[0] ?? null;
   if (!match) return { status: 401, code: refusal };
 
   let json: unknown;
@@ -133,8 +147,38 @@ export async function receiveErpWebhook(deps: WebhookDeps, req: WebhookRequest):
   } catch {
     return { status: 400, code: 'BAD_JSON' };
   }
-  const parsed = parseErpWebhookEvent(json);
-  const id = (parsed.ok ? parsed.event.id : parsed.id) ?? req.idempotencyKey?.trim().slice(0, 200) ?? null;
+  // PR 608: a v6 event through a connection a v6 store uses goes to the permanent ledger (no 72-hour window).
+  const v6 = parseErpV6Event(json, req.deliveryId ?? req.idempotencyKey ?? null);
+  if (!(!v6.ok && v6.reason === 'NOT_V6')) {
+    // CN-029 §16: one secret, one store. Two connections with the same secret could be either store: refused.
+    if (matches.length > 1) return { status: 401, code: 'SHARED_SECRET' };
+    const link = match.storeId != null ? await v6LinkFor(deps, match.storeId, match.integrationId) : null;
+    if (link) {
+      if (v6.ok) {
+        const rec = await recordErpEvent(deps, { integrationId: match.integrationId, storeId: link.storeId, linkId: link.id, source: 'WEBHOOK', event: v6.event, rawBody: req.rawBody });
+        if (rec.conflict) return { status: 202, code: 'BODY_CHANGED', eventId: rec.id };
+        return rec.created ? { status: 202, code: 'ACCEPTED', eventId: rec.id } : { status: 200, code: 'DUPLICATE', eventId: rec.id };
+      }
+      // A broken v6 event from the store's own ERP company: kept as FAILED in the store's ledger (the health panel
+      // shows it) and answered 2xx, so the ERP does not send it again and again.
+      const bad = v6 as Extract<typeof v6, { reason: 'BAD_PAYLOAD' }>;
+      const rec = await recordBrokenErpEvent(deps, {
+        integrationId: match.integrationId,
+        storeId: link.storeId,
+        linkId: link.id,
+        eventId: bad.eventId ?? req.deliveryId?.trim() ?? null,
+        type: bad.type ?? null,
+        detail: bad.detail,
+        rawBody: req.rawBody,
+        body: json,
+      });
+      return { status: 202, code: 'KEPT_FAILED', eventId: rec.id };
+    }
+  }
+  const parsed: ErpWebhookParse = parseErpWebhookEvent(json);
+  // A v6 event that is not for a v6 ledger (v5, or a shared connection) is logged under its own eventId.
+  const v6Id = v6.ok ? v6.event.eventId : v6.reason === 'BAD_PAYLOAD' ? v6.eventId : null;
+  const id = (parsed.ok ? parsed.event.id : parsed.id) ?? v6Id ?? req.idempotencyKey?.trim().slice(0, 200) ?? null;
   if (!id) return { status: 400, code: 'NO_EVENT_ID' };
   const type = parsed.ok ? parsed.event.type : (parsed.type ?? 'unknown');
 

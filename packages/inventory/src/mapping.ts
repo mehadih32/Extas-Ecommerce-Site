@@ -13,6 +13,7 @@ import { SYSTEM } from '@extas/auth';
 import type { ErpHealth } from '@extas/adapters';
 import { allow, logChange, parse, setting, TX, type InventoryDeps, type Tx, type Who } from './context';
 import { readErpSetup, type ErpSetup } from './erp-mode';
+import { isV6 } from './erp-model';
 import { InventoryError } from './errors';
 import { behaviourOf, resolveErp, type ErpLink } from './guard';
 import { callErp, retryPolicy } from './sync';
@@ -78,6 +79,11 @@ export async function checkCompany(deps: InventoryDeps, link: Extract<ErpLink, {
   const matches = mapped && health.companyId ? mapped === health.companyId : null;
   if (practice) return { practice, erp: health, mapped, matches, learned: false };
   if (matches === false) throw new InventoryError('COMPANY_MISMATCH', 'the ERP key belongs to another company than this store is mapped to', [`store: ${mapped}`, `key: ${health.companyId}`]);
+  // CN-029 §16: in v6 a key of a company another store's open ERP link holds is refused before anything is learned.
+  if (health.companyId && (await isV6(deps, link.setup.storeId))) {
+    const other = await deps.db.erpStoreLink.findFirst({ where: { openErpCompanyId: health.companyId, storeId: { not: link.setup.storeId } }, select: { storeId: true } });
+    if (other) throw new InventoryError('SHARED_COMPANY', 'this ERP key belongs to a company already linked to another store: one store = one ERP company (§16)', [`key: ${health.companyId}`, `store: ${other.storeId}`]);
+  }
   let learned = false;
   if (!mapped && health.companyId) {
     const storeId = link.setup.storeId;

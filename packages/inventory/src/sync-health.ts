@@ -6,11 +6,13 @@
 // The verdict (`level`), most serious first:
 // - `off`      the store runs without an ERP (nothing is wrong: there is nothing to sync);
 // - `down`     an ERP is chosen but cannot be used, or documents are DEAD;
-// - `failing`  the latest stock pull failed, or documents FAILED;
+// - `failing`  the latest stock pull failed, or documents FAILED, or ERP events FAILED or came again with another body
+//              (PR 608, the v6 event ledger);
 // - `practice` the practice ERP is in use (keys not in yet);
 // - `late`     no good pull for `inventory.admin.lateAfterMinutes`;
 // - `ok`.
 import { allow, nowOf, setting, type InventoryDeps, type Who } from './context';
+import { erpEventProblems } from './erp-events';
 import { pushCounts, type PushCounts } from './erp-push';
 import { resolveErp, type ErpLinkState } from './guard';
 import { holdSummary, type HoldSummary } from './reservations';
@@ -36,6 +38,8 @@ export interface SyncHealth {
   status: ErpSyncStatus;
   recentRuns: RunView[];
   pushes: PushCounts;
+  /** PR 608: the v6 event ledger's events that need a person (failed, or repeated with another body). */
+  events: { failed: number; conflicts: number };
   holds: HoldSummary;
   lowStockOpen: number;
   auditsOpen: number;
@@ -63,9 +67,10 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
     setting(deps, null, 'erp.sync.stockPollMinutes'),
     setting(deps, null, 'inventory.admin.lateAfterMinutes'),
   ]);
-  const [runs, pushes, holds, lowStockOpen, auditsOpen, state] = await Promise.all([
+  const [runs, pushes, events, holds, lowStockOpen, auditsOpen, state] = await Promise.all([
     db.erpSyncRun.findMany({ where: { storeId: who.storeId }, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }], take: recentN }),
     pushCounts(db, who.storeId),
+    erpEventProblems(db, who.storeId),
     holdSummary(db, now),
     db.lowStockAlert.count({ where: { resolvedAt: null } }),
     db.stockAudit.count({ where: { status: { in: ['COUNTING', 'REVIEW'] } } }),
@@ -76,7 +81,7 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
   const syncing = link.state === 'connected' || (link.state === 'mock' && link.stockEnabled);
   const late = syncing && (minutesSinceSuccess == null || minutesSinceSuccess > lateAfterMinutes);
   return {
-    level: healthLevel({ link: link.state, lastPullFailed: lastPull?.status === 'FAILED', late, dead: pushes.dead, failed: pushes.failed }),
+    level: healthLevel({ link: link.state, lastPullFailed: lastPull?.status === 'FAILED', late, dead: pushes.dead, failed: pushes.failed + events.failed + events.conflicts }),
     link: {
       state: link.state,
       mode: link.setup.mode,
@@ -91,6 +96,7 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
     status,
     recentRuns: runs.map((r) => ({ id: r.id, kind: r.kind, status: r.status, itemsOk: r.itemsOk, itemsFailed: r.itemsFailed, error: r.error, startedAt: r.startedAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null })),
     pushes,
+    events,
     holds,
     lowStockOpen,
     auditsOpen,

@@ -20,6 +20,8 @@ export type InventoryErrorCode =
   | 'ERP_UNAVAILABLE'
   /** The key belongs to another ERP company than the one this store is mapped to (PR 196): nothing is synced. */
   | 'COMPANY_MISMATCH'
+  /** CN-029 §16: in contract v6 this ERP company is already linked to another store (one store = one ERP company). */
+  | 'SHARED_COMPANY'
   /** The ERP call failed after its tries (PR 194); details carry the ERP error code. */
   | 'ERP_ERROR'
   /** Not enough free pieces in the shared pool for a hold (PR 197/198); details name each short SKU and what is free. */
@@ -56,6 +58,7 @@ export class InventoryError extends Error {
       case 'DAMAGED_BIN_REQUIRED':
       case 'ERP_NOT_CONNECTED':
       case 'COMPANY_MISMATCH':
+      case 'SHARED_COMPANY':
       case 'OUT_OF_STOCK':
       case 'IDEMPOTENCY_MISMATCH':
       case 'REASON_REQUIRED':

@@ -9,13 +9,19 @@
 // - `connected`   — an ERP is chosen and its connection is in SANDBOX or LIVE.
 // - `unavailable` — an ERP is chosen but cannot be used: its connection is gone, or no adapter for it exists in code
 //                   (e.g. "another ERP" before its adapter is written). Treated like an ERP that is down.
+//                   CN-029 §16: in contract v6 also when the store has no connection of its own and only an
+//                   installation-wide one is set up (`SHARED_LINK`): one store = one ERP company, with its own key and
+//                   secrets, so a store never talks to the ERP with a key another store uses; and when the ERP company
+//                   the store is mapped to is held by another store's open ERP link (`SHARED_COMPANY`: store B typed
+//                   with store A's key).
 import { EXTAS_ERP_PROVIDER, type ErpApi, type Mode } from '@extas/adapters';
 import { setting, type InventoryDeps } from './context';
 import { readErpSetup, type ErpSetup } from './erp-mode';
+import { isV6 } from './erp-model';
 
 export type ErpLink =
   | { state: 'none'; setup: ErpSetup }
-  | { state: 'unavailable'; setup: ErpSetup; code: 'CONNECTION_MISSING' | 'ADAPTER_MISSING' | 'NOT_CONFIGURED'; reason: string }
+  | { state: 'unavailable'; setup: ErpSetup; code: 'CONNECTION_MISSING' | 'ADAPTER_MISSING' | 'NOT_CONFIGURED' | 'SHARED_LINK' | 'SHARED_COMPANY'; reason: string }
   | {
       state: 'mock' | 'connected';
       setup: ErpSetup;
@@ -45,6 +51,19 @@ export async function resolveErp(deps: InventoryDeps, storeId: number): Promise<
   }
   try {
     const c = await deps.connections.use<ErpApi>('ERP', { storeId, provider });
+    // CN-029 §16: in v6 a store speaks to the ERP only through its own connection (its own key and secrets), to an ERP
+    // company no other store's open link holds.
+    if (c.integrationId && (await isV6(deps, storeId))) {
+      if (c.storeId !== storeId) {
+        return { state: 'unavailable', setup, code: 'SHARED_LINK', reason: "ERP contract v6 needs the store's own ERP connection, with its own key and secrets; only a shared one is set up" };
+      }
+      const other = setup.erpCompanyId
+        ? await deps.db.erpStoreLink.findFirst({ where: { openErpCompanyId: setup.erpCompanyId, storeId: { not: storeId } }, select: { storeId: true } })
+        : null;
+      if (other) {
+        return { state: 'unavailable', setup, code: 'SHARED_COMPANY', reason: `the ERP company ${setup.erpCompanyId} is linked to another store (${other.storeId}); one store = one ERP company` };
+      }
+    }
     const mock = c.mode === 'MOCK';
     return {
       state: mock ? 'mock' : 'connected',
@@ -96,12 +115,20 @@ export const ERP_DEPENDENT_PATHS = {
    * only with `erp.mock.stockEnabled`; on an unusable connection it is kept and skipped (the poll catches up).
    */
   'webhook.apply': { none: 'skip', mock: 'skip', unavailable: 'skip', connected: 'run' },
+  /**
+   * PR 608 — the hourly pull of the ERP's v6 events (returns, exchanges, courier claims). On the practice ERP only with
+   * `erp.mock.stockEnabled` (its practice data switched on), like the stock pull.
+   */
+  'events.pull': { none: 'skip', mock: 'skip', unavailable: 'fail', connected: 'run' },
 } as const satisfies Record<string, Record<ErpLinkState, string>>;
 
 export type ErpDependentPath = keyof typeof ERP_DEPENDENT_PATHS;
 
-/** Paths that read the ERP's stock: on the practice ERP they run once its stock is switched on (`erp.mock.stockEnabled`). */
-const STOCK_PATHS: ReadonlySet<ErpDependentPath> = new Set(['stock.pull', 'stock.liveCheck', 'stock.resync', 'stock.reconcile', 'webhook.apply']);
+/**
+ * Paths that read the ERP's stock (and, PR 608, its events): on the practice ERP they run once its data is switched on
+ * (`erp.mock.stockEnabled`).
+ */
+const STOCK_PATHS: ReadonlySet<ErpDependentPath> = new Set(['stock.pull', 'stock.liveCheck', 'stock.resync', 'stock.reconcile', 'webhook.apply', 'events.pull']);
 
 /** The behaviour of a path for a link (`mock` with the practice stock switched on behaves like `connected`). */
 export function behaviourOf(path: ErpDependentPath, link: ErpLink): string {

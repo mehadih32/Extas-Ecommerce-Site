@@ -1,10 +1,11 @@
-// PR 196 — POST /api/erp/webhook: the ERP's `stock.changed` and `variant.changed` messages (docs/ERP-API-CONTRACT.md).
+// PR 196 — POST /api/erp/webhook: the ERP's `stock.changed` and `variant.changed` messages (docs/ERP-API-CONTRACT.md),
+// and (PR 608, `erp.model` v6) every v6 event, kept once in the permanent ERP event ledger.
 // No session and no cookie: the message proves itself with its signature (X-Extas-Signature, X-Extas-Timestamp) made
 // with the webhook secret the owner typed into Keys & connections (the vault). With no secret in the vault, every
 // request is refused. A verified event is stored once (WebhookEvent) and answered 202; the background worker applies
 // it (PR 6, job `erp.webhook.process`). Answers: `{ ok, code, eventId? }`, never a reason a sender could learn from
 // beyond the code. Every check, setting and status is in @extas/inventory webhook.ts.
-import { allAdapters, createConnections, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, type Connections } from '@extas/adapters';
+import { allAdapters, createConnections, ERP_DELIVERY_HEADER, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, type Connections } from '@extas/adapters';
 import { receiveErpWebhook } from '@extas/inventory';
 import { adminDeps } from '@/lib/admin-auth';
 
@@ -44,6 +45,8 @@ export async function POST(request: Request): Promise<Response> {
         signature: request.headers.get(ERP_SIGNATURE_HEADER),
         timestamp: request.headers.get(ERP_TIMESTAMP_HEADER),
         idempotencyKey: request.headers.get('idempotency-key'),
+        // PR 608: a v6 event repeats its eventId in X-Extas-Delivery.
+        deliveryId: request.headers.get(ERP_DELIVERY_HEADER),
       },
     );
     return answer(r.status, { ok: r.status < 300, code: r.code, ...(r.eventId ? { eventId: r.eventId } : {}) });

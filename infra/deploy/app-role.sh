@@ -29,13 +29,22 @@ app_role_ready() {
 }
 
 # The SQL behind app_role_guards (also run by the db package's tests, so the check itself is tested on PostgreSQL).
+# PR 608 (migration 0049): the ERP event ledger has a guard of its own (its body is fixed, its processing state moves):
+# both of its triggers on extas_erp_event_fixed must be on, and the app role may never DELETE or TRUNCATE it.
 APP_ROLE_GUARDS_SQL="WITH g AS (
   SELECT c.oid, c.relname, bool_and(t.tgenabled = 'O') AS enabled, count(*) AS n
     FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_proc p ON p.oid = t.tgfoid
    WHERE p.proname = 'extas_append_only' AND NOT t.tgisinternal
-   GROUP BY c.oid, c.relname)
+   GROUP BY c.oid, c.relname),
+e AS (
+  SELECT c.oid, count(t.oid) FILTER (WHERE p.proname = 'extas_erp_event_fixed' AND t.tgenabled = 'O' AND NOT t.tgisinternal) AS n
+    FROM pg_class c LEFT JOIN pg_trigger t ON t.tgrelid = c.oid LEFT JOIN pg_proc p ON p.oid = t.tgfoid
+   WHERE c.relname = 'ErpEvent' AND c.relkind = 'r'
+   GROUP BY c.oid)
 SELECT CASE
   WHEN NOT EXISTS (SELECT 1 FROM g WHERE relname = 'AuditLog') THEN 'problem: AuditLog has no append-only guard'
+  WHEN EXISTS (SELECT 1 FROM e WHERE n < 2 OR has_table_privilege('$APP_DB_ROLE', oid, 'DELETE')
+       OR has_table_privilege('$APP_DB_ROLE', oid, 'TRUNCATE')) THEN 'problem: guard off or app role may change ErpEvent'
   ELSE COALESCE('problem: guard off or app role may change ' || (SELECT string_agg(relname, ', ' ORDER BY relname) FROM g
     WHERE NOT enabled OR n < 2 OR has_table_privilege('$APP_DB_ROLE', oid, 'UPDATE')
        OR has_table_privilege('$APP_DB_ROLE', oid, 'DELETE') OR has_table_privilege('$APP_DB_ROLE', oid, 'TRUNCATE')),

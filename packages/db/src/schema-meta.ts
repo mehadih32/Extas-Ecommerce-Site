@@ -207,6 +207,20 @@ export const APPEND_ONLY_LOCKED = [
   'ShipmentEvent',
   'NotificationAttempt',
   'PackingScan',
+  // CN-028 · PR 615–618 (migration 0049_erp_v6): Retail's ERP account, the pipeline moves, the payments to the ERP, the
+  // books closes, notes and adjustments, and every summary and fixed-cost version with each send to the ERP.
+  // (ErpEvent, PR 608, is guarded differently: its body never changes and no row is removed, but its processing state
+  // moves — trigger ErpEvent_body_fixed, function extas_erp_event_fixed, in the same migration.)
+  'ErpAccountEntry',
+  'ErpPaymentRecord',
+  'ErpPipelineMove',
+  'BooksDayClose',
+  'BooksPeriodClose',
+  'BooksDifferenceNote',
+  'BooksAdjustment',
+  'ErpDailySummary',
+  'ErpFixedCostMonth',
+  'ErpBooksSend',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
