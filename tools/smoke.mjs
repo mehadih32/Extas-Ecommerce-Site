@@ -153,7 +153,8 @@ async function runChecks(page, base, checks, bare) {
           await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
           await page.keyboard.press(check.press);
         }
-        const el = await page.waitForSelector(check.selector, { timeout: 15_000 });
+        // PR 220: a tag in the page's head (meta robots, Open Graph) is never visible, so such a check says `"state": "attached"`.
+        const el = await page.waitForSelector(check.selector, { state: check.state ?? "visible", timeout: 15_000 });
         observed = { value: await el.getAttribute(check.attribute) };
       }
     } catch (e) {

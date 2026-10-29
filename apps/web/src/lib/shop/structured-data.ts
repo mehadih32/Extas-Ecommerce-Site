@@ -2,6 +2,9 @@
 // the JSON-LD the shop's pages carry, built only from what the page itself draws: the breadcrumb trail, the category
 // page's list of products, and the product page's product with its price and stock. Never a rating or a review until
 // real review rows exist (PR 223), never a price the page does not show. Pure: the pages pass their own data in.
+// S11 · PR 222 (follow-up 110, C12.4): the shop itself on the home page (Organization: only what the owner filled in;
+// WebSite: the name Google shows above the results), a set page as a Product with one Offer at its set price (in stock
+// only while every piece can be sold), and the struck price beside an offer only where the page shows it struck.
 import type { ImageSource } from '@extas/media';
 
 export interface LdCrumb {
@@ -20,6 +23,8 @@ export interface LdOfferVariant {
   priceMinor: number | null;
   /** Pieces that can be sold now. */
   stock: number;
+  /** PR 222: the struck price the page shows beside it (the honest-price rule, PR 38), or null. */
+  wasMinor?: number | null;
 }
 
 export interface LdProduct {
@@ -35,6 +40,8 @@ export interface LdProduct {
   /** false: a sold-out, taken-off or archived product (the page shows everything sold out). */
   onSale: boolean;
   variants: readonly LdOfferVariant[];
+  /** PR 222: send the struck price the page shows (`seo.structuredData.wasPrice`). */
+  wasPrice?: boolean;
 }
 
 type Ld = Record<string, unknown>;
@@ -94,9 +101,12 @@ export function productLd(origin: URL | string, p: LdProduct): Ld | null {
   const prices = priced.map((v) => v.priceMinor);
   const low = Math.min(...prices);
   const high = Math.max(...prices);
+  // one struck price for every priced variant, above the price, or none (an AggregateOffer never carries one)
+  const was = [...new Set(priced.map((v) => v.wasMinor ?? null))];
+  const struck = p.wasPrice && was.length === 1 && typeof was[0] === 'number' && was[0] > low ? was[0] : null;
   const offers: Ld =
     low === high
-      ? { '@type': 'Offer', url, priceCurrency: p.currency, price: majorPrice(low, p.currency), availability, itemCondition: `${CONTEXT}/NewCondition` }
+      ? { '@type': 'Offer', url, priceCurrency: p.currency, price: majorPrice(low, p.currency), ...strikethrough(struck, p.currency), availability, itemCondition: `${CONTEXT}/NewCondition` }
       : {
           '@type': 'AggregateOffer',
           url,
@@ -113,6 +123,119 @@ export function productLd(origin: URL | string, p: LdProduct): Ld | null {
   if (p.brand?.trim()) out.brand = { '@type': 'Brand', name: p.brand.trim() };
   if (p.category?.trim()) out.category = p.category.trim();
   out.offers = offers;
+  return out;
+}
+
+/** The struck price as Google reads it beside an offer (a StrikethroughPrice price specification), or nothing. */
+function strikethrough(wasMinor: number | null, currency: string): Ld {
+  if (wasMinor === null) return {};
+  return { priceSpecification: [{ '@type': 'UnitPriceSpecification', priceType: `${CONTEXT}/StrikethroughPrice`, price: majorPrice(wasMinor, currency), priceCurrency: currency }] };
+}
+
+// ---- PR 222 · the shop itself (home page) ----
+
+export interface LdShop {
+  /** The shop's name (`store.name`); without one, nothing is sent. */
+  name: string;
+  /** The home page in the page's language. */
+  href: string;
+  lang: 'en' | 'bn';
+  /** The largest copy of the owner's logo (`brand.logo`), or null. */
+  logo: string | null;
+  phone: string | null;
+  email: string | null;
+  /** The shop's own pages elsewhere (`social.*`), the filled-in ones. */
+  sameAs: readonly string[];
+  /** The languages the shop answers in. */
+  languages: readonly string[];
+}
+
+/** Organization: the shop's name and address, and only the logo, contact and social pages the owner filled in. */
+export function organizationLd(origin: URL | string, s: LdShop): Ld | null {
+  if (!s.name.trim()) return null;
+  const out: Ld = { '@context': CONTEXT, '@type': 'Organization', name: s.name.trim(), url: absolute(origin, '/') };
+  if (s.logo) out.logo = absolute(origin, s.logo);
+  if (s.phone || s.email)
+    out.contactPoint = [
+      { '@type': 'ContactPoint', contactType: 'customer service', ...(s.phone ? { telephone: s.phone } : {}), ...(s.email ? { email: s.email } : {}), ...(s.languages.length ? { availableLanguage: [...s.languages] } : {}) },
+    ];
+  const same = s.sameAs.filter((u) => /^https:\/\//.test(u));
+  if (same.length) out.sameAs = same;
+  return out;
+}
+
+/** WebSite: the name Google shows above the shop's results, on the home page. */
+export function websiteLd(origin: URL | string, s: Pick<LdShop, 'name' | 'href' | 'lang'>): Ld | null {
+  if (!s.name.trim()) return null;
+  return { '@context': CONTEXT, '@type': 'WebSite', name: s.name.trim(), url: absolute(origin, s.href), inLanguage: s.lang };
+}
+
+// ---- PR 222 · a set page (C12.4: Product + Offer at the set price) ----
+
+export interface LdSetSlot {
+  productId: string;
+  colourIds: readonly string[];
+  sizeIds: readonly string[];
+  fixedVariantId: string | null;
+}
+
+export interface LdSetVariant {
+  id: string;
+  productId: string;
+  colourId: string | null;
+  sizeId: string | null;
+  /** Pieces that can be sold now. */
+  sellable: number;
+}
+
+/** Whether the set can be bought now: every piece has one to sell, and a product used twice has enough for both. */
+export function setInStock(slots: readonly LdSetSlot[], variants: readonly LdSetVariant[]): boolean {
+  if (!slots.length) return false;
+  const allowed = (s: LdSetSlot) =>
+    s.fixedVariantId
+      ? variants.filter((v) => v.id === s.fixedVariantId)
+      : variants.filter((v) => v.productId === s.productId && (!s.colourIds.length || (v.colourId !== null && s.colourIds.includes(v.colourId))) && (!s.sizeIds.length || v.sizeId === null || s.sizeIds.includes(v.sizeId)));
+  const pieces = (vs: readonly LdSetVariant[]) => vs.reduce((n, v) => n + Math.max(0, v.sellable), 0);
+  if (!slots.every((s) => pieces(allowed(s)) > 0)) return false;
+  const byProduct = new Map<string, LdSetSlot[]>();
+  for (const s of slots) byProduct.set(s.productId, [...(byProduct.get(s.productId) ?? []), s]);
+  return [...byProduct.values()].every((group) => {
+    const union = new Map(group.flatMap((s) => allowed(s)).map((v) => [v.id, v]));
+    return pieces([...union.values()]) >= group.length;
+  });
+}
+
+export interface LdSet {
+  name: string;
+  href: string;
+  description: string | null;
+  images: string[];
+  currency: string;
+  /** The set price the page shows (minor units), or null: no price, nothing sent. */
+  payMinor: number | null;
+  /** The struck price the page shows, or null. */
+  wasMinor: number | null;
+  wasPrice: boolean;
+  /** On sale and every piece can be sold (`setInStock`). */
+  inStock: boolean;
+}
+
+export function setLd(origin: URL | string, s: LdSet): Ld | null {
+  if (s.payMinor === null || s.payMinor < 0 || !s.name.trim()) return null;
+  const url = absolute(origin, s.href);
+  const struck = s.wasPrice && s.wasMinor !== null && s.wasMinor > s.payMinor ? s.wasMinor : null;
+  const out: Ld = { '@context': CONTEXT, '@type': 'Product', name: s.name.trim(), url };
+  if (s.description?.trim()) out.description = s.description.trim();
+  if (s.images.length) out.image = s.images.map((src) => absolute(origin, src));
+  out.offers = {
+    '@type': 'Offer',
+    url,
+    priceCurrency: s.currency,
+    price: majorPrice(s.payMinor, s.currency),
+    ...strikethrough(struck, s.currency),
+    availability: `${CONTEXT}/${s.inStock ? 'InStock' : 'OutOfStock'}`,
+    itemCondition: `${CONTEXT}/NewCondition`,
+  };
   return out;
 }
 

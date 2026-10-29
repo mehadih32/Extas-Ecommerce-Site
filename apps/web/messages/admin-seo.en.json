@@ -151,5 +151,19 @@
       "en": "English",
       "bn": "Bengali"
     }
+  },
+  "sd": {
+    "title": "Data for search engines",
+    "desc": "What Google reads beside each page, always from what the page itself shows (structured data).",
+    "part": {
+      "breadcrumbs": "The trail (Home › Category › Product)",
+      "itemList": "The list of products on a category page",
+      "product": "A product with its price and stock",
+      "wasPrice": "The struck price, where the page shows one",
+      "combo": "A set with its set price and stock",
+      "organization": "The shop itself on the home page (name, logo, contact, social pages)",
+      "website": "The website's name on the home page"
+    },
+    "never": "A star rating is never sent until real reviews exist, and never a price the page does not show."
   }
 }

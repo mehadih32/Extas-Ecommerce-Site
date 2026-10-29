@@ -11,7 +11,8 @@ describe('storefront follow-up settings (v25)', () => {
   it('every key is in the registry at version 25, public, with both labels; only the owner`s own words are owner data', () => {
     for (const [key, spec] of Object.entries(storefrontFuSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(25);
+      // PR 222 (S11) extended the structured data: that key moved to v64
+      expect(spec.version, key).toBe(key === 'seo.structuredData' ? 64 : 25);
       expect(spec.isPublic, key).toBe(true);
       expect(spec.isOwnerData, key).toBe(OWNER_DATA.includes(key));
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -28,8 +29,10 @@ describe('storefront follow-up settings (v25)', () => {
   });
 
   it('follow-ups 35, 61: the structured data is on (it says only what the page shows) and has no rating switch', () => {
-    expect(storefrontFuSettings['seo.structuredData'].default).toEqual({ breadcrumbs: true, itemList: true, product: true });
+    expect(storefrontFuSettings['seo.structuredData'].default).toEqual({ breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true });
     expect(structuredDataSchema.safeParse({ breadcrumbs: true, itemList: true, product: true, rating: true }).success).toBe(false);
+    // PR 222: a value saved before the home page, set page and struck-price parts existed reads them as on
+    expect(structuredDataSchema.parse({ breadcrumbs: false, itemList: true, product: true })).toEqual({ breadcrumbs: false, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true });
   });
 
   it('follow-up 62: the size words are the owner`s (empty), "Your size" is off; only real size keys take a word', () => {

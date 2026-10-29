@@ -21,9 +21,20 @@ import {
   type ComboPageResult,
   type SetCardGroups,
 } from "@/lib/shop/combo";
-import { shopContext, type ShopContext } from "@/lib/shop/context";
+import {
+  readPageSettings,
+  shopContext,
+  type ShopContext,
+} from "@/lib/shop/context";
 import { hrefIn } from "@/lib/shop/lang";
-import { shopMetadata } from "@/lib/shop/meta";
+import { shopMetadata, shopOrigin } from "@/lib/shop/meta";
+import {
+  breadcrumbLd,
+  largestUrl,
+  setInStock,
+  setLd,
+} from "@/lib/shop/structured-data";
+import { JsonLd } from "../JsonLd";
 import { ROUTES } from "@/lib/shop/routes";
 import { AddedPanel } from "../bag/AddedPanel";
 // PR 573 (follow-up 358): the rules of bag.css and pdp.css this route can draw with, cut by tools/route-css.mjs in
@@ -74,7 +85,14 @@ export async function comboMetadata(
   const r = await pageFor(slug, one(search.from));
   if (!r || r.kind === "missing") return {};
   // only the owner's featured sets are search results; a generated colour pair is one of many of the same rule
-  const index = r.page.isFeatured && !(one(search.from) || one(search.added) || one(search.tpl) || one(search.pick));
+  const index =
+    r.page.isFeatured &&
+    !(
+      one(search.from) ||
+      one(search.added) ||
+      one(search.tpl) ||
+      one(search.pick)
+    );
   const s = r.page.summary;
   const desc =
     ((c.lang === "bn" && s.descriptionBn?.trim()) || s.descriptionEn?.trim()) ??
@@ -89,7 +107,10 @@ export async function comboMetadata(
       tokens: {
         name: r.env.name,
         pieces: c.t("combo.setOf", { n: c.num(r.env.pieces.length) }),
-        price: r.env.onSale && r.env.firstPrice.pay != null ? c.money(r.env.firstPrice.pay) : "",
+        price:
+          r.env.onSale && r.env.firstPrice.pay != null
+            ? c.money(r.env.firstPrice.pay)
+            : "",
       },
       own: { description: desc || null },
     },
@@ -308,6 +329,67 @@ async function Unavailable({
   );
 }
 
+const LD_KEYS = ["seo.structuredData"] as const;
+
+/**
+ * S11 · PR 222 (C12.4) — the set for search engines: a Product with one Offer at the set price the page shows, its
+ * struck price only when the page shows it struck, in stock only while every piece can be sold; the pieces' own
+ * photos (never a drawing). Nothing when switched off (`seo.structuredData.combo`) or the set has no price. With
+ * `crumbs`, the trail the page shows too (Home / Combos / the set).
+ */
+async function comboLd(
+  c: ShopContext,
+  r: Extract<ComboPageResult, { kind: "page" }>,
+  crumbs: boolean,
+) {
+  const [set, origin] = await Promise.all([
+    readPageSettings(LD_KEYS, c.storeId),
+    shopOrigin(c.storeId),
+  ]);
+  const sd = set["seo.structuredData"];
+  if (!origin || !(sd.combo || (crumbs && sd.breadcrumbs))) return null;
+  const { env } = r;
+  const s = r.page.summary;
+  const href = hrefIn(c.lang, ROUTES.combo(s.slug));
+  const images = env.pieces.flatMap((p) => {
+    const first = Object.values(p.shots)[0];
+    const u = largestUrl(first?.front.photo ?? null);
+    return u ? [u] : [];
+  });
+  return (
+    <JsonLd
+      data={[
+        crumbs && sd.breadcrumbs
+          ? breadcrumbLd(origin, [
+              { name: c.t("pdp.home"), href: hrefIn(c.lang, ROUTES.home) },
+              {
+                name: c.t("combo.crumbCombos"),
+                href: hrefIn(c.lang, ROUTES.combos),
+              },
+              { name: env.name, href },
+            ])
+          : null,
+        sd.combo
+          ? setLd(origin, {
+              name: env.name,
+              href,
+              description:
+                (c.lang === "bn" && s.descriptionBn?.trim()) ||
+                s.descriptionEn?.trim() ||
+                null,
+              images,
+              currency: env.currency,
+              payMinor: env.onSale ? env.firstPrice.pay : null,
+              wasMinor: env.firstPrice.was,
+              wasPrice: sd.wasPrice,
+              inStock: env.onSale && setInStock(env.slots, env.variants),
+            })
+          : null,
+      ]}
+    />
+  );
+}
+
 export async function ComboPage({
   slug,
   search,
@@ -328,6 +410,7 @@ export async function ComboPage({
     : "current";
   const previewing = preview && Boolean(r.page.ruleId) && asked === tpl;
   const base = hrefIn(c.lang, ROUTES.combo(r.page.summary.slug));
+  const ld = await comboLd(c, r, tpl === "current");
   const bar = previewing ? (
     <div className="container ca-page">
       <PreviewBar
@@ -349,6 +432,7 @@ export async function ComboPage({
           data-testid="ca-pair"
           data-template={tpl}
         >
+          {ld}
           <PairCrumbs c={c} rule={env.side.rule} name={r.env.name} />
           <PairPage env={env} />
           {bar}
@@ -399,6 +483,7 @@ export async function ComboPage({
         data-layout={env.layout}
         data-template={s.pageTemplate}
       >
+        {ld}
         <Crumbs c={c} name={env.name} more={more.length > 0} />
         <div className="cb-main">
           <div className="cb-left zo-gal">

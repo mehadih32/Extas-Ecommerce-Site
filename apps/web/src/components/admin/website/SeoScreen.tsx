@@ -157,3 +157,33 @@ export function IndexingCard({ d, value, defaults, version, canWrite, pageTypes 
     </SeoCard>
   );
 }
+
+// ---- PR 222 · data for search engines (`seo.structuredData`) ----
+
+/** The parts of the structured data, in the order the card lists them. */
+export const SD_PARTS = ["breadcrumbs", "itemList", "product", "wasPrice", "combo", "organization", "website"] as const;
+export type SeoStructuredValue = Record<(typeof SD_PARTS)[number], boolean>;
+
+export function StructuredDataCard({ d, value, defaults, version, canWrite }: { d: Dict; value: SeoStructuredValue; defaults: SeoStructuredValue; version: number; canWrite: boolean }) {
+  const s = useSeoSave(d, "seo.structuredData", value, version);
+  const v = s.value;
+  const ro = !canWrite || s.busy;
+  const onOff = (b: boolean) => seoText(d, b ? "indexing.on" : "indexing.off");
+  return (
+    <SeoCard id="a2s-seosd" testId="seo-sd" where={seoText(d, "indexing.where")} title={seoText(d, "sd.title")} desc={seoText(d, "sd.desc")}>
+      <div className="a2-ckgrid" data-testid="seo-sd-parts">
+        {SD_PARTS.map((k) => (
+          <label key={k} className="a2-ckb">
+            <input type="checkbox" checked={v[k]} disabled={ro} onChange={(e) => s.setValue({ ...v, [k]: e.target.checked })} data-testid={`seo-sd-${k}`} />
+            <span>
+              {seoText(d, `sd.part.${k}`)}
+              <span className="a2-def a2-blk">{seoText(d, "indexing.default", { v: onOff(defaults[k]) })}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <p className="a2-xs a2-mute a2-mt12">{seoText(d, "sd.never")}</p>
+      <SeoSaveRow d={d} canWrite={canWrite} busy={s.busy} note={s.note} onSave={s.save} testId="seo-sd" />
+    </SeoCard>
+  );
+}
