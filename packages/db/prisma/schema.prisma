@@ -4928,6 +4928,8 @@ enum ErpPushStatus {
   FAILED
   DEAD
   SKIPPED_NO_ERP
+  /// PR 607 (CN-028): a v5 call that v6 retired on the switch date; kept for the record, never sent.
+  RETIRED
 }
 
 /// @stage S27 · parked — goods received into the shared pool when no ERP is connected (the no-ERP seam, PR 499).

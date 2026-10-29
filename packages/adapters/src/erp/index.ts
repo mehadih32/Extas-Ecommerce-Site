@@ -4,6 +4,9 @@
 import { extasErp } from './extas-erp';
 
 export * from './contract';
+// PR 607 (CN-028) — contract v6 and the practice ERP's v6 books.
+export * from './v6';
+export * from './mock-erp-v6';
 export * from './http-client';
 export * from './mock-erp';
 export * from './signature';

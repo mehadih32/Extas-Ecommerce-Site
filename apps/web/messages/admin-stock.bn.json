@@ -121,12 +121,20 @@
         "SENT": "গেছে",
         "FAILED": "ফিরিয়েছে",
         "DEAD": "হাল ছেড়েছে",
-        "SKIPPED_NO_ERP": "ERP নেই"
+        "SKIPPED_NO_ERP": "ERP নেই",
+        "RETIRED": "আর পাঠানো হয় না (ERP-এর নতুন নিয়ম)"
       },
       "type": {
         "order_create": "অর্ডার {order}",
         "order_status": "অর্ডার {order}: অবস্থা বদল",
-        "return_create": "অর্ডার {order}: ফেরত (বিক্রি করা যাবে এমন পিস)"
+        "return_create": "অর্ডার {order}: ফেরত (বিক্রি করা যাবে এমন পিস)",
+        "shipment_create": "অর্ডার {order}: পার্সেল রওনা হলো",
+        "order_delivery": "অর্ডার {order}: ডেলিভারির ফল",
+        "order_line": "অর্ডার {order}: এক লাইনের সিদ্ধান্ত",
+        "returnList_create": "কুরিয়ারের ফেরত তালিকা",
+        "exchange_lateReturn": "এক্সচেঞ্জ: দেরিতে ফেরত",
+        "dailySummary_put": "দিনের হিসাব",
+        "fixedCosts_put": "মাসের স্থির খরচ"
       },
       "tries": "{n} বার চেষ্টা",
       "empty": "কিছুই অপেক্ষায় বা আটকে নেই।",

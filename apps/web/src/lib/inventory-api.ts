@@ -170,7 +170,7 @@ export function resyncHandler(request: Request, deps: AdminDeps | null): Promise
   });
 }
 
-const PUSH_STATUSES: readonly inv.PushStatusName[] = ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP'];
+const PUSH_STATUSES: readonly inv.PushStatusName[] = ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP', 'RETIRED'];
 
 export function pushesHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   if (method(request) !== 'GET') return notAllowed();

@@ -104,6 +104,11 @@ import seoEn from '../messages/seo.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
+// CN-028 · PR 607–618 (registry v62): the ERP contract v6, its event pulls, every setting of RETAIL-ERP-MODEL §11
+// (hold, summary, fixed costs, books, exchange, hand-back, B grade, price floor) in messages/erp-v6.<lang>.json, merged below.
+import erpV6Bn from '../messages/erp-v6.bn.json';
+import erpV6En from '../messages/erp-v6.en.json';
+
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
   en: MessageTree;
@@ -126,6 +131,9 @@ export const messages: SettingsMessages = {
   en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn), messagesEn), riskEn), comboTplEn), paymentsEn), shippingEn), moneyEn), adminLookEn), courierSyncEn), returnsEn), fulfilmentEn), customersEn), seoEn),
   bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn), messagesBn), riskBn), comboTplBn), paymentsBn), shippingBn), moneyBn), adminLookBn), courierSyncBn), returnsBn), fulfilmentBn), customersBn), seoBn),
 };
+
+messages.en = mergeMessages(messages.en, erpV6En);
+messages.bn = mergeMessages(messages.bn, erpV6Bn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

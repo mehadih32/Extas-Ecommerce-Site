@@ -187,7 +187,8 @@ export async function qcReturn(deps: OrdersDeps, who: Who, id: string, input: un
     const push = sellable.length
       ? await enqueueReturnPush(inv, { storeId: r.storeId, returnId: r.id, orderId: r.orderId, externalOrderId: o.number, reason: (r.reasonCode ?? r.kind).slice(0, 64), items: sellable.map((p) => ({ sku: p.v.sku, quantity: p.item.quantity })), version: r.version }, { tx })
       : null;
-    const sellState = push?.status === 'SKIPPED_NO_ERP' ? 'NO_ERP' : 'ERP_PENDING';
+    // PR 607: from the switch date (`erp.model` v6) POST /returns is retired: the pieces are not sent (RETIRED).
+    const sellState = push?.status === 'SKIPPED_NO_ERP' || push?.status === 'RETIRED' ? 'NO_ERP' : 'ERP_PENDING';
 
     const out: QcResult['items'] = [];
     for (const p of plan) {

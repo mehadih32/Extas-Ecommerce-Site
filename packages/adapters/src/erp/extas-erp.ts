@@ -4,6 +4,14 @@
 // `extasErp.webhookSecret`. Until then, and whenever its test fails, the connection stays on MOCK and talks to the
 // practice ERP (mock-erp.ts) — the shop never waits for a key (A1.3).
 //
+// CN-029 §16 (PR 607): one store = one ERP company. In contract v6 each store has its own connection row (storeId set)
+// with its own secrets in the vault under the store's id (the connection reads them with the store's id in ctx). The
+// API key and the webhook secret are this adapter's `secrets`; the third per-store secret, the signing secret the ERP's
+// own calls to the shop are checked with (`extasErp.signingSecret`, ERP_LINK_SECRET_FIELDS), joins them with PR 620,
+// with its field on the "Keys & connections" page, so the v5 page and its two fields stay as they are until then. An
+// installation-wide row (one key for several stores) is refused for a v6 store (the guard's SHARED_LINK). On MOCK each store gets its own practice
+// company and key (`MockErpWorld.companyForStore`), so practice data of one store never reaches another.
+//
 // SANDBOX and LIVE are the same client pointed at the address saved on the connection (the ERP's test system or the
 // real one). The Test button calls `/health`: a pass proves the address, the key and which company the key belongs to.
 import { z } from 'zod';
@@ -33,9 +41,9 @@ export const extasErp = defineAdapter<ErpApi, ExtasErpConfig>({
     const apiKey = await requireSecret(ctx, 'apiKey');
     return createErpHttpClient({ baseUrl: ctx.config.baseUrl, apiKey, provider: EXTAS_ERP_PROVIDER });
   },
-  async mock() {
+  async mock(ctx) {
     const world = mockErp();
-    return createErpHttpClient({ baseUrl: MOCK_ERP_BASE_URL, apiKey: world.defaultKey, provider: EXTAS_ERP_PROVIDER, fetch: world.fetch });
+    return createErpHttpClient({ baseUrl: MOCK_ERP_BASE_URL, apiKey: world.keyFor(world.companyForStore(ctx.storeId)), provider: EXTAS_ERP_PROVIDER, fetch: world.fetch });
   },
   async test(api) {
     const h = await api.health();

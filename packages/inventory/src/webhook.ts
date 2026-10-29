@@ -16,6 +16,7 @@
 //      the same row by webhook and again by the poll moves stock once. Low stock and the publish check follow.
 //    - variant.changed refreshes the ERP mirror of the variant (barcode, the ERP's retail price and average cost,
 //      `erpUpdatedAt`), never the shop's own sale price; an older change than the one held is ignored the same way.
+//      PR 607: in `erp.model` v6 the ERP's retail price and average cost are never read (owner answer Q7).
 //    - Processing an event twice changes nothing the second time (its status is checked first, and the stock path is
 //      idempotent on its own).
 // The poll (`inventory.erp.pullStock`, every `erp.sync.stockPollMinutes`) stays the fallback: a missed webhook never
@@ -26,6 +27,7 @@ import { EXTAS_ERP_PROVIDER, parseErpWebhookEvent, verifyErpSignature, type Conn
 import { nowOf, setting, type InventoryDeps } from './context';
 import { storesWithErp } from './erp-mode';
 import { currencyDigits } from './erp-push';
+import { isV6 } from './erp-model';
 import { behaviourOf, resolveErp } from './guard';
 import { sellableKinds } from './locations';
 import { afterStockChange, applyPage, erpStockLocations } from './stock-pull';
@@ -283,10 +285,12 @@ async function applyVariant(deps: InventoryDeps, stores: number[], row: ErpVaria
       continue;
     }
     const digits = currencyDigits(store.currency);
+    // PR 607: v6 sends only the shop price; whatever else a v6 store receives about money is not read.
+    const v6 = await isV6(deps, storeId);
     const data = {
       barcode: row.barcode ?? v.barcode,
-      erpRetailPriceMinor: decimalToMinor(row.retailPrice, digits) ?? v.erpRetailPriceMinor,
-      avgCostMinor: decimalToMinor(row.avgCost, digits) ?? v.avgCostMinor,
+      erpRetailPriceMinor: v6 ? v.erpRetailPriceMinor : (decimalToMinor(row.retailPrice, digits) ?? v.erpRetailPriceMinor),
+      avgCostMinor: v6 ? v.avgCostMinor : (decimalToMinor(row.avgCost, digits) ?? v.avgCostMinor),
       erpUpdatedAt: row.updatedAt,
     };
     const same = data.barcode === v.barcode && data.erpRetailPriceMinor === v.erpRetailPriceMinor && data.avgCostMinor === v.avgCostMinor && v.erpUpdatedAt?.getTime() === row.updatedAt.getTime();

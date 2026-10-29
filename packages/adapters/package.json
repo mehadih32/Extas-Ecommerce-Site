@@ -18,6 +18,7 @@
     "@aws-sdk/client-s3": "3.1139.0",
     "@azure/storage-blob": "12.34.0",
     "@extas/db": "workspace:*",
+    "@extas/erp-types": "workspace:*",
     "@extas/vault": "workspace:*",
     "zod": "4.6.7"
   },

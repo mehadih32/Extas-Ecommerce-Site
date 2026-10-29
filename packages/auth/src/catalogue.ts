@@ -242,6 +242,27 @@ export const PERMISSIONS = {
   // (`seo.manage`). Nothing here touches a price, an order or a customer.
   'seo.read': { group: 'seo' },
   'seo.manage': { group: 'seo' },
+  // CN-028 · PR 612, 614 (CN-029 Phase 0; docs/RETAIL-ERP-MODEL.md §12) — returns and exchanges through the ERP: count
+  // and note the parcels a courier hands back and send the return list (`returns.handback`, packers and the desk; the
+  // shop never decides whether a piece can be sold again, the owner does in the ERP); approve an exchange within 72
+  // hours and mark its lines (`exchange.approve`). Neither moves money, refunds anything or changes COD.
+  'returns.handback': { group: 'orders' },
+  'exchange.approve': { group: 'orders' },
+  // CN-028 · PR 615–618 (§12) — the books with the ERP: see the books, the match and every figure's parts
+  // (`books.read`); run the match and write notes on a difference (`books.reconcile`); put a difference right by a
+  // reversing and a new entry, with the owner's PIN, a reason and the ERP's matching event (`books.adjust`: Accounts and
+  // the owner only); close a week, month or year, or close a month with differences (PIN, logged) (`books.close`: the
+  // owner); see Retail's account at the ERP, the balance owed and the hold (`erp.account.read`); record a payment Retail
+  // made to the ERP (`erp.payments.record`: Accounts and the owner only, the money rule); set a month's fixed costs
+  // (`fixedcosts.write`). Only the owner role holds them until he gives them to a role in the role builder. None moves
+  // money by itself: a payment is recorded after it was made, and nothing is ever edited (reversing and adding only).
+  'books.read': { group: 'books' },
+  'books.reconcile': { group: 'books' },
+  'books.adjust': { group: 'books' },
+  'books.close': { group: 'books' },
+  'erp.account.read': { group: 'books' },
+  'erp.payments.record': { group: 'books' },
+  'fixedcosts.write': { group: 'books' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -251,6 +272,33 @@ export const PERMISSION_KEYS = Object.keys(PERMISSIONS) as PermissionKey[];
 export function isPermissionKey(key: string): key is PermissionKey {
   return Object.prototype.hasOwnProperty.call(PERMISSIONS, key);
 }
+
+/** One branch of the role builder's access tree: a group and its permissions, in catalogue order. */
+export interface AccessBranch {
+  group: string;
+  keys: readonly PermissionKey[];
+}
+
+/**
+ * The access tree of the role builder (SET-04b "nested permission tree", PR 16, 495): every permission once, under its
+ * group, groups in the order the catalogue first names them. Built from PERMISSIONS, so a key added above is in the
+ * tree with no second list to forget (RETAIL-ERP-MODEL §12: "All also go into ACCESS_TREE").
+ */
+export const ACCESS_TREE: readonly AccessBranch[] = (() => {
+  const byGroup = new Map<string, PermissionKey[]>();
+  for (const key of PERMISSION_KEYS) {
+    const g = PERMISSIONS[key].group;
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g)!.push(key);
+  }
+  return [...byGroup].map(([group, keys]) => ({ group, keys }));
+})();
+
+/**
+ * CN-028 (§4.3, §4.4, §12): actions that also need the owner's PIN at the moment they are done (a shop correction of the
+ * books; a month closed with differences or re-opened). The key alone is not enough; the service checks the PIN.
+ */
+export const PIN_PERMISSIONS: readonly PermissionKey[] = ['books.adjust', 'books.close'];
 
 /** The seeded role that always holds every permission. Its key is structural, its names are labels. */
 export const OWNER_ROLE_KEY = 'owner';

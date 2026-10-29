@@ -1,0 +1,8 @@
+{
+  "erp": {
+    "model": {
+      "label": "ERP contract",
+      "help": "v5 until the ERP announces its switch date; then v6, where the shop buys from the ERP at its shop price. It is switched on the ERP's switch date, after a dry run."
+    }
+  }
+}

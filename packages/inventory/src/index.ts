@@ -21,6 +21,8 @@
 export * from './errors';
 export * from './context';
 export * from './erp-mode';
+// PR 607 (CN-028): the ERP contract a store speaks (`erp.model`) and the v5 calls v6 retires.
+export * from './erp-model';
 export * from './guard';
 export * from './sync';
 export * from './locations';
