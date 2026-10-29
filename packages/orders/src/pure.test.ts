@@ -30,7 +30,7 @@ const BOOKABLE: OrderState[] = ['CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 
 /** The spec: from which states each command runs and where it leads ("stays" = a flag command, the status stays). */
 const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof FLAG>>> = {
   confirm: { PLACED: 'CONFIRMED' },
-  hold: { PLACED: 'ON_HOLD', CONFIRMED: 'ON_HOLD' },
+  hold: { PLACED: 'ON_HOLD', CONFIRMED: 'ON_HOLD', PROCESSING: 'ON_HOLD' },
   release: { ON_HOLD: 'CONFIRMED' },
   cancel: Object.fromEntries(BEFORE_BOOKING.map((s) => [s, 'CANCELLED'])),
   cancelAfterBooking: Object.fromEntries(BOOKABLE.map((s) => [s, FLAG])),

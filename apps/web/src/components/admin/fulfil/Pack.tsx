@@ -5,7 +5,8 @@
 // the "the weight is right" answer to a big gap), and "Book courier" for one packed order. Every press goes to the admin
 // API, which runs the step through the order service; a refusal is shown in words from the page's messages
 // (`ful.err.<code>`), never the server's own wording. "Mark packed" sends an Idempotency-Key kept until it is answered,
-// so a second tap after a lost answer never packs twice.
+// so a second tap after a lost answer never packs twice. PR 183: "Report defect / out of stock" (a packing card on one
+// line) and the card's "send another size or colour".
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import { call } from '@/components/admin/api';
@@ -317,6 +318,117 @@ export function StartAll({ dict, count }: { dict: Dict; count: number }) {
       <button type="button" className="a2-btn" onClick={go} disabled={busy || !count} data-testid="pack-start-all">
         {t(dict, 'ful.pack.startAll')}
       </button>
+      <Said msg={msg} />
+    </span>
+  );
+}
+
+/**
+ * PR 183 — "Report defect / out of stock": which line, damaged or not on the shelf, and a short note. The order gets a
+ * packing card (and, by the owner's switch, goes on hold with it); a person decides the card.
+ */
+export function ReportIssue({ dict, orderId, lines }: { dict: Dict; orderId: string; lines: { id: string; label: string }[] }) {
+  const router = useRouter();
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [lineId, setLine] = useState(lines[0]?.id ?? '');
+  const [kind, setKind] = useState<'DAMAGED' | 'NOT_FOUND'>('DAMAGED');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  if (!open)
+    return (
+      <button type="button" className="a2-btn bad" onClick={() => setOpen(true)} data-testid="pack-report">
+        {t(dict, 'ful.pack.report.open')}
+      </button>
+    );
+  const go = async () => {
+    setBusy(true);
+    setMsg(null);
+    const a = await call('POST', `${API}/${orderId}/issue`, { lineId, kind, ...(note.trim() ? { note: note.trim() } : {}) });
+    setBusy(false);
+    if (!a.data.ok) {
+      setMsg({ ok: false, text: refusal(dict, a.status, a.data) });
+      return;
+    }
+    setOpen(false);
+    setNote('');
+    router.refresh();
+  };
+  return (
+    <div className="a2-card tight a2-stack" style={{ gap: 8, width: '100%' }} data-testid="pack-report-form">
+      <label className="a2-xs a2-mute" htmlFor={`${id}-l`}>
+        {t(dict, 'ful.pack.report.line')}
+      </label>
+      <select id={`${id}-l`} className="a2-sel" value={lineId} onChange={(e) => setLine(e.target.value)} disabled={busy}>
+        {lines.map((l) => (
+          <option key={l.id} value={l.id}>
+            {l.label}
+          </option>
+        ))}
+      </select>
+      <fieldset className="a2-gap8" style={{ border: 0, padding: 0, margin: 0 }}>
+        <legend className="a2-sr">{t(dict, 'ful.pack.report.kind')}</legend>
+        {(['DAMAGED', 'NOT_FOUND'] as const).map((k) => (
+          <label key={k} className="a2-gap8" style={{ minHeight: 44 }}>
+            <input type="radio" name={`${id}-k`} value={k} checked={kind === k} onChange={() => setKind(k)} disabled={busy} />
+            {t(dict, `ful.pack.issueKind.${k}`)}
+          </label>
+        ))}
+      </fieldset>
+      <label className="a2-xs a2-mute" htmlFor={`${id}-n`}>
+        {t(dict, 'ful.pack.report.note')}
+      </label>
+      <input id={`${id}-n`} className="a2-inp" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} disabled={busy} />
+      <span className="a2-gap8">
+        <button type="button" className="a2-btn bad" onClick={go} disabled={busy || !lineId} data-testid="pack-report-send">
+          {t(dict, 'ful.pack.report.send')}
+        </button>
+        <button type="button" className="a2-btn ghost" onClick={() => setOpen(false)} disabled={busy}>
+          {t(dict, 'ful.cancel')}
+        </button>
+      </span>
+      <p className="a2-xs a2-mute">{t(dict, 'ful.pack.report.hint')}</p>
+      <Said msg={msg} />
+    </div>
+  );
+}
+
+/** PR 183 — "Send another size or colour" on a card: the same piece at the same price (the order's edit). */
+export function SwapPick({ dict, orderId, issueId, swaps }: { dict: Dict; orderId: string; issueId: string; swaps: { variantId: string; label: string }[] }) {
+  const router = useRouter();
+  const id = useId();
+  const [variantId, setVariant] = useState(swaps[0]?.variantId ?? '');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  const go = async () => {
+    setBusy(true);
+    setMsg(null);
+    const a = await call('POST', `${API}/${orderId}/issues/${issueId}/resolve`, { decision: 'SWAP_SIZE', variantId });
+    setBusy(false);
+    if (!a.data.ok) {
+      setMsg({ ok: false, text: refusal(dict, a.status, a.data) });
+      return;
+    }
+    router.refresh();
+  };
+  return (
+    <span className="a2-stack" style={{ gap: 4 }}>
+      <span className="a2-gap8" style={{ flexWrap: 'nowrap' }}>
+        <label className="a2-sr" htmlFor={`${id}-v`}>
+          {t(dict, 'ful.pack.card.swapPick')}
+        </label>
+        <select id={`${id}-v`} className="a2-sel" value={variantId} onChange={(e) => setVariant(e.target.value)} disabled={busy}>
+          {swaps.map((s) => (
+            <option key={s.variantId} value={s.variantId}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+        <button type="button" className="a2-btn sm" onClick={go} disabled={busy || !variantId} data-testid="pack-card-swap">
+          {t(dict, 'ful.pack.card.swap')}
+        </button>
+      </span>
       <Said msg={msg} />
     </span>
   );

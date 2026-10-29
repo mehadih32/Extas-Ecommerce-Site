@@ -7,14 +7,19 @@
 // Book courier, then the handover sheet. Every state move goes through the order service (the API checks the
 // permission again). The screen shows no customer's details: order numbers, pieces, codes, the courier and its
 // consignment id.
+// PR 183: "Report defect / out of stock" on a line raises a packing card (and holds the order, the owner's switch);
+// each open card shows what a person can decide — found it, another size or colour, send the rest, call the customer,
+// cancel the order — each carried out by the order service with its own permission. Nothing is decided by itself;
+// a card past the owner's hours is marked late.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { editChoices, isOrdersError, type EditChoice } from '@extas/orders';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { Act } from '@/components/admin/fulfil/Act';
-import { BookOne, PackButton, PhotoUpload, ScanBox, StartAll, TickLine } from '@/components/admin/fulfil/Pack';
+import { BookOne, PackButton, PhotoUpload, ReportIssue, ScanBox, StartAll, SwapPick, TickLine } from '@/components/admin/fulfil/Pack';
 import { PdfButton } from '@/components/admin/fulfil/Print';
 import { invoiceHref } from '@/lib/admin-orders/model';
 import { formatNumber } from '@/components/admin/products/model';
@@ -89,6 +94,19 @@ export default async function PackPage({ searchParams }: Props) {
       couriers = list.couriers.filter((c) => c.enabled && !c.archived).map((c) => ({ id: c.id, name: c.mode === 'MOCK' ? `${c.name} · ${t(d, 'ful.packing.pill.practice')}` : c.name }));
     } catch (e) {
       if (!sh.isShippingError(e)) throw e;
+    }
+  }
+  // PR 183: the lines a packer can still raise a card on (one open card per line)
+  const reportable = (order?.lines ?? [])
+    .filter((l) => !order?.openIssues.some((i) => i.orderItemId === l.lineId))
+    .map((l) => ({ id: l.lineId, label: `${[l.productName, l.colourName, l.sizeLabel].filter(Boolean).join(' · ')} · ${l.sku}` }));
+  // what a card's swap or "send the rest" may do (the order's edit; needs orders.read to see, orders.edit to do)
+  let choices: EditChoice[] = [];
+  if (order?.openIssues.length && can('orders.edit') && !order.parcel) {
+    try {
+      choices = await editChoices({ db: sd.db, settings: sd.settings, now: sd.now }, who, order.orderId);
+    } catch (e) {
+      if (!isOrdersError(e)) throw e;
     }
   }
   const fd: Dict = { ful: d.ful as Dict };
@@ -193,15 +211,42 @@ export default async function PackPage({ searchParams }: Props) {
                   </div>
                 ) : null}
                 {order.openIssues.length ? (
-                  <div className="a2-note bad" style={{ marginTop: 0, marginBottom: 12 }} role="alert" data-testid="pack-issues">
-                    <ShellIcon name="alert" size={15} />
-                    <span>
-                      <b>{t(d, 'ful.pack.issueTitle')}</b>
-                      <br />
-                      {order.openIssues.map((i) => `${t(d, `ful.pack.issueKind.${i.kind}`)}: ${lineOf(i.orderItemId)?.sku ?? ''}`).join(' · ')}
-                      <br />
-                      {t(d, 'ful.pack.issueOpen')}
-                    </span>
+                  <div className="a2-stack" style={{ gap: 8, marginBottom: 12 }} data-testid="pack-issues">
+                    <div className="a2-note bad" style={{ marginTop: 0 }} role="alert">
+                      <ShellIcon name="alert" size={15} />
+                      <span>
+                        <b>{t(d, 'ful.pack.issueTitle')}</b>
+                      </span>
+                    </div>
+                    {order.openIssues.map((i) => {
+                      const l = lineOf(i.orderItemId);
+                      const choice = choices.find((c) => c.lineId === i.orderItemId);
+                      const base = `/api/admin/packing/orders/${order.orderId}/issues/${i.id}`;
+                      const swaps = (choice?.swaps ?? []).map((s) => ({ variantId: s.variantId, label: [s.colour, s.size].filter(Boolean).join(' · ') }));
+                      return (
+                        <div key={i.id} className="a2-card tight" style={{ borderColor: 'var(--bad)' }} data-testid="pack-card">
+                          <div className="a2-between" style={{ alignItems: 'flex-start' }}>
+                            <div>
+                              <b className="a2-h4">{t(d, `ful.pack.issueKind.${i.kind}`)}</b>{' '}
+                              {i.overdue ? <span className="a2-pill gold">{t(d, 'ful.pack.card.late')}</span> : null}
+                              <div className="a2-sm a2-mt6">{l ? `${[l.productName, l.colourName, l.sizeLabel].filter(Boolean).join(' · ')} · ${l.sku}` : ''}</div>
+                              <div className="a2-xs a2-mute">{t(d, 'ful.pack.card.raised', { at: new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(i.createdAt)) })}{i.note ? ` · ${i.note}` : ''}</div>
+                            </div>
+                          </div>
+                          {order.parcel ? <p className="a2-xs a2-mt6">{t(d, 'ful.pack.card.booked')}</p> : null}
+                          {canPack ? (
+                            <div className="a2-gap8 a2-mt6" style={{ alignItems: 'flex-start' }}>
+                              {i.kind !== 'SHORTAGE' || can('inventory.audit') ? <Act dict={fd} url={`${base}/resolve`} body={{ decision: 'STOCK_FOUND' }} label={t(d, i.kind === 'DAMAGED' ? 'ful.pack.card.fine' : 'ful.pack.card.found')} ask={t(d, 'ful.pack.card.foundAsk')} testId="pack-card-found" /> : null}
+                              {swaps.length && !order.parcel ? <SwapPick dict={fd} orderId={order.orderId} issueId={i.id} swaps={swaps} /> : null}
+                              {choice && choice.removeRefusal === null && !order.parcel ? <Act dict={fd} url={`${base}/resolve`} body={{ decision: 'SHIP_REST' }} label={t(d, 'ful.pack.card.rest')} ask={t(d, 'ful.pack.card.restAsk')} testId="pack-card-rest" /> : null}
+                              <Act dict={fd} url={`${base}/call`} label={t(d, 'ful.pack.card.call')} tone="ghost" testId="pack-card-call" />
+                              {can('orders.cancel') && !order.parcel ? <Act dict={fd} url={`${base}/resolve`} body={{ decision: 'CANCEL_ORDER' }} label={t(d, 'ful.pack.card.cancel')} note={{ field: 'note', label: t(d, 'ful.pack.card.cancelWhy') }} tone="bad" testId="pack-card-cancel" /> : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                    <p className="a2-xs a2-mute">{t(d, 'ful.pack.issueOpen')}</p>
                   </div>
                 ) : null}
                 {order.status === 'ON_HOLD' ? (
@@ -310,6 +355,7 @@ export default async function PackPage({ searchParams }: Props) {
                       {t(d, 'ful.pack.invoice')}
                     </a>
                   ) : null}
+                  {canPack && (checking || order.status === 'ON_HOLD') && reportable.length ? <ReportIssue dict={fd} orderId={order.orderId} lines={reportable} /> : null}
                 </div>
                 {checking && order.blocked && order.blocked !== 'WEIGHT_GAP' ? (
                   <p className="a2-xs a2-mute a2-mt6" data-testid="pack-blocked">

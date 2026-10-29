@@ -51,6 +51,18 @@ export const packingWeightSchema = z
 /** PR 182 — the packing screen's lists. */
 export const packingQueueSchema = z.object({ doneDays: z.int().min(0).max(30), listMax: z.int().min(10).max(500) }).strict();
 
+const reasonKey = z.string().trim().min(1).max(60);
+/**
+ * PR 183 — a defective or missing piece at packing (Blueprint B1.2): `holdOrder` puts the order on hold with the
+ * card (the hold reasons are keys of `orders.hold.reasons`, one for a damaged piece and one for a missing one); the
+ * card's swap or "send the rest" is the order's edit with the reason `editReasonKey` (a key of `orders.edit.reasons`);
+ * a card older than `decideWithinHours` is marked late on the packing screen (0: never). Nothing is ever decided,
+ * released or cancelled by a timer (owner's answer 41: the team decides).
+ */
+export const packingIssuesSchema = z
+  .object({ holdOrder: z.boolean(), damagedReasonKey: reasonKey, missingReasonKey: reasonKey, decideWithinHours: z.int().min(0).max(24 * 30), editReasonKey: reasonKey })
+  .strict();
+
 export const fulfilmentSettings = {
   'fulfilment.packing.check': setting({
     ...base,
@@ -84,8 +96,17 @@ export const fulfilmentSettings = {
     helpKey: 'fulfilment.packing.queue.help',
     sortOrder: 923,
   }),
+  'fulfilment.packing.issues': setting({
+    ...base,
+    schema: packingIssuesSchema,
+    default: { holdOrder: true, damagedReasonKey: 'defective-item', missingReasonKey: 'waiting-stock', decideWithinHours: 48, editReasonKey: 'customer-asked' }, // hardcode-ok: the setting's own default; the owner changes it here
+    labelKey: 'fulfilment.packing.issues.label',
+    helpKey: 'fulfilment.packing.issues.help',
+    sortOrder: 924,
+  }),
 };
 
 export type PackingCheckSettings = z.output<typeof packingCheckSchema>;
 export type PackingPhotoSettings = z.output<typeof packingPhotoSchema>;
 export type PackingWeightSettings = z.output<typeof packingWeightSchema>;
+export type PackingIssuesSettings = z.output<typeof packingIssuesSchema>;

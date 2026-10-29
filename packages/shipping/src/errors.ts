@@ -54,7 +54,11 @@ export type ShippingErrorCode =
   /** PR 182 (follow-up 434): the owner wants the parcel weighed before it is packed. */
   | 'WEIGHT_REQUIRED'
   /** PR 182 (follow-up 434): the reading is far from the pieces' weight (`data`): weigh again or confirm. */
-  | 'WEIGHT_GAP';
+  | 'WEIGHT_GAP'
+  /** PR 183: this line has an open packing card already (one card per line at a time). */
+  | 'ISSUE_OPEN'
+  /** PR 183: this packing card is decided already. */
+  | 'ISSUE_DECIDED';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;

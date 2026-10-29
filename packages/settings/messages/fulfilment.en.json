@@ -16,6 +16,10 @@
       "queue": {
         "label": "Packing screen: lists",
         "help": "\"Days on Handed over\": how many days an order stays on the last step after it was handed over (0: today only). \"Orders per step\": the most orders one step lists, oldest first."
+      },
+      "issues": {
+        "label": "Packing: a defective or missing piece",
+        "help": "When a packer reports a damaged piece or one not on the shelf, the order gets a card that a person decides: the piece found after all, another size or colour (the order's edit), the rest sent without it, or the order cancelled. Nothing is ever decided or cancelled by itself. \"Hold the order\": the order goes on hold with the card (the hold reason for a damaged piece and for a missing one are keys of the hold reasons list); it comes back to its step when its last card is decided. \"Hours to decide\": a card older than this is marked late on the packing screen (0: never). \"Edit reason\": the reason the swap or the \"send the rest\" edit is recorded with (a key of the edit reasons list)."
       }
     }
   }

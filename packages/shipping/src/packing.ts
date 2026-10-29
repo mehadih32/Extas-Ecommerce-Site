@@ -31,7 +31,12 @@ const LIVE_SHIPMENT = { status: { notIn: ['BOOKING_FAILED', 'CANCELLED'] } } as 
 
 /** The orders the packing screen works on, at every step (one filter for the lists and the bulk actions). */
 async function queueWhere(deps: ShippingDeps, storeId: number): Promise<Prisma.OrderWhereInput> {
-  const [queue, timeZone, reviews] = await Promise.all([setting(deps, storeId, 'fulfilment.packing.queue'), setting(deps, storeId, 'store.timeZone'), openReviewIds(ordersDeps(deps), storeId)]);
+  const [queue, timeZone, reviews, carded] = await Promise.all([
+    setting(deps, storeId, 'fulfilment.packing.queue'),
+    setting(deps, storeId, 'store.timeZone'),
+    openReviewIds(ordersDeps(deps), storeId),
+    deps.db.packingIssue.findMany({ where: { storeId, resolvedAt: null }, select: { orderId: true }, distinct: ['orderId'] }),
+  ]);
   const since = dayStart(nowOf(deps), timeZone, queue.doneDays);
   return {
     storeId,
@@ -40,13 +45,18 @@ async function queueWhere(deps: ShippingDeps, storeId: number): Promise<Prisma.O
     cancelPending: false,
     cancelRequestedAt: null,
     id: { notIn: reviews },
-    OR: [{ status: { in: ['CONFIRMED', 'PROCESSING', 'PACKED'] } }, { status: 'HANDED_OVER', handedOverAt: { gte: since } }],
+    OR: [
+      { status: { in: ['CONFIRMED', 'PROCESSING', 'PACKED'] } },
+      { status: 'HANDED_OVER', handedOverAt: { gte: since } },
+      // PR 183: held from its step with an open packing card — it stays there, with the card, until a person decides
+      { status: 'ON_HOLD', holdFromStatus: { in: ['CONFIRMED', 'PROCESSING'] }, id: { in: carded.map((c) => c.orderId) } },
+    ],
   };
 }
 
 const STEP_WHERE: Record<PackStep, Prisma.OrderWhereInput> = {
-  pick: { status: 'CONFIRMED' },
-  pack: { status: 'PROCESSING' },
+  pick: { OR: [{ status: 'CONFIRMED' }, { status: 'ON_HOLD', holdFromStatus: 'CONFIRMED' }] },
+  pack: { OR: [{ status: 'PROCESSING' }, { status: 'ON_HOLD', holdFromStatus: 'PROCESSING' }] },
   ready: { status: 'PACKED' },
   done: { status: 'HANDED_OVER' },
 };
@@ -56,6 +66,7 @@ const QUEUE_SELECT = {
   number: true,
   status: true,
   holdFromStatus: true,
+  holdReasonCode: true,
   placedAt: true,
   packedAt: true,
   handedOverAt: true,
@@ -156,7 +167,9 @@ export interface PackOrder {
   lines: PackOrderLine[];
   allChecked: boolean;
   /** Open packing cards (shortages, damaged or missing pieces): decided by a person before packing and booking. */
-  openIssues: { id: string; kind: string; orderItemId: string; createdAt: string }[];
+  openIssues: { id: string; kind: string; orderItemId: string; note: string | null; createdAt: string; overdue: boolean }[];
+  /** PR 183: the hold, when the order is held (the packing card's hold, or another one). */
+  hold: { from: string | null; reasonKey: string | null } | null;
   photo: { state: PhotoState; count: number; needed: number; keepDays: number; lastAt: string | null; waivedReason: string | null };
   weight: { enabled: boolean; expectedGrams: number | null; weighedGrams: number | null; gap: WeightGap | null; confirmed: boolean };
   parcel: { shipmentId: string; courierName: string; consignmentId: string | null; printCount: number } | null;
@@ -170,8 +183,8 @@ interface Loaded {
   lines: PackLine[];
   weights: Map<string, number | null>;
   barcodes: Map<string, string | null>;
-  scans: { orderItemId: string; quantity: number }[];
-  issues: { id: string; kind: string; orderItemId: string; createdAt: Date }[];
+  scans: { orderItemId: string; quantity: number; sku: string }[];
+  issues: { id: string; kind: string; orderItemId: string; note: string | null; createdAt: Date }[];
   photos: { createdAt: Date }[];
   check: { weighedGrams: number | null; expectedGrams: number | null; weightGapConfirmed: boolean; photoWaivedReason: string | null } | null;
 }
@@ -182,8 +195,8 @@ async function load(db: Db, storeId: number, orderId: string): Promise<Loaded> {
   const variantIds = o.items.map((i) => i.variantId).filter((x): x is string => !!x);
   const [variants, scans, issues, photos, check] = await Promise.all([
     variantIds.length ? db.productVariant.findMany({ where: { id: { in: variantIds } }, select: { id: true, barcode: true, weightGrams: true } }) : [],
-    db.packingScan.findMany({ where: { storeId, orderId }, select: { orderItemId: true, quantity: true } }),
-    db.packingIssue.findMany({ where: { storeId, orderId, resolvedAt: null }, select: { id: true, kind: true, orderItemId: true, createdAt: true }, orderBy: { createdAt: 'asc' } }),
+    db.packingScan.findMany({ where: { storeId, orderId }, select: { orderItemId: true, quantity: true, sku: true } }),
+    db.packingIssue.findMany({ where: { storeId, orderId, resolvedAt: null }, select: { id: true, kind: true, orderItemId: true, note: true, createdAt: true }, orderBy: { createdAt: 'asc' } }),
     db.packingPhoto.findMany({ where: { storeId, orderId, archivedAt: null }, select: { createdAt: true }, orderBy: { createdAt: 'asc' } }),
     db.packingCheck.findUnique({ where: { storeId_orderId: { storeId, orderId } }, select: { weighedGrams: true, expectedGrams: true, weightGapConfirmed: true, photoWaivedReason: true } }),
   ]);
@@ -191,14 +204,23 @@ async function load(db: Db, storeId: number, orderId: string): Promise<Loaded> {
   const barcodes = new Map(o.items.map((i) => [i.id, i.variantId ? (byId.get(i.variantId)?.barcode ?? null) : null]));
   const weights = new Map(o.items.map((i) => [i.id, i.variantId ? (byId.get(i.variantId)?.weightGrams ?? null) : null]));
   const lines = o.items.map((i) => ({ id: i.id, sku: i.sku, barcode: barcodes.get(i.id) ?? null, quantity: i.quantity }));
-  return { o, lines, weights, barcodes, scans, issues, photos, check };
+  // PR 183: a scan counts while its line still holds the SKU it was scanned for (after a size swap the new piece is
+  // checked again); the scans themselves are never changed
+  const skuOf = new Map(o.items.map((i) => [i.id, i.sku]));
+  const live = scans.filter((s) => skuOf.get(s.orderItemId) === s.sku);
+  return { o, lines, weights, barcodes, scans: live, issues, photos, check };
 }
 
 const expectedOf = (l: Loaded): number | null => parcelWeight(l.o.items.map((i) => ({ productName: i.productName, colourName: i.colourName, sizeLabel: i.sizeLabel, quantity: i.quantity, weightGrams: l.weights.get(i.id) ?? null })));
 
 async function packSettings(deps: ShippingDeps, storeId: number) {
-  const [check, photo, weight] = await Promise.all([setting(deps, storeId, 'fulfilment.packing.check'), setting(deps, storeId, 'fulfilment.packing.photo'), setting(deps, storeId, 'fulfilment.packing.weight')]);
-  return { check, photo, weight };
+  const [check, photo, weight, issues] = await Promise.all([
+    setting(deps, storeId, 'fulfilment.packing.check'),
+    setting(deps, storeId, 'fulfilment.packing.photo'),
+    setting(deps, storeId, 'fulfilment.packing.weight'),
+    setting(deps, storeId, 'fulfilment.packing.issues'),
+  ]);
+  return { check, photo, weight, issues, now: nowOf(deps) };
 }
 type PackSettings = Awaited<ReturnType<typeof packSettings>>;
 
@@ -218,7 +240,8 @@ function viewOf(l: Loaded, cfg: PackSettings, input: { weighedGrams?: number | n
     gift: l.o.isGift ? { deliverAfter: l.o.giftDeliverAfter ? l.o.giftDeliverAfter.toISOString().slice(0, 10) : null } : null,
     lines: l.o.items.map((i, k) => ({ ...checks[k]!, sku: i.sku, barcode: l.barcodes.get(i.id) ?? null, productName: i.productName, colourName: i.colourName, sizeLabel: i.sizeLabel, weightGrams: l.weights.get(i.id) ?? null })),
     allChecked: allChecked(checks),
-    openIssues: l.issues.map((i) => ({ id: i.id, kind: i.kind, orderItemId: i.orderItemId, createdAt: i.createdAt.toISOString() })),
+    openIssues: l.issues.map((i) => ({ id: i.id, kind: i.kind, orderItemId: i.orderItemId, note: i.note, createdAt: i.createdAt.toISOString(), overdue: cfg.issues.decideWithinHours > 0 && cfg.now.getTime() - i.createdAt.getTime() > cfg.issues.decideWithinHours * 3_600_000 })),
+    hold: l.o.status === 'ON_HOLD' ? { from: l.o.holdFromStatus, reasonKey: l.o.holdReasonCode } : null,
     photo: { state: photo, count: l.photos.length, needed: cfg.photo.minPhotos, keepDays: cfg.photo.keepDays, lastAt: l.photos.at(-1)?.createdAt.toISOString() ?? null, waivedReason: l.check?.photoWaivedReason ?? null },
     weight: { enabled: cfg.weight.enabled, expectedGrams, weighedGrams, gap: weightGap(expectedGrams, weighedGrams, cfg.weight), confirmed },
     parcel: s ? { shipmentId: s.id, courierName: s.courierAccount.name, consignmentId: s.consignmentId, printCount: s.labelPrintCount } : null,
@@ -260,7 +283,8 @@ export interface StartAllResult {
 export async function startPickingAll(deps: ShippingDeps, who: Who): Promise<StartAllResult> {
   await allow(deps, who, 'fulfilment.pack');
   const [base, cfg] = await Promise.all([queueWhere(deps, who.storeId), setting(deps, who.storeId, 'fulfilment.packing.queue')]);
-  const rows = await deps.db.order.findMany({ where: { AND: [base, STEP_WHERE.pick] }, select: { id: true, number: true }, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], take: cfg.listMax });
+  // a held order on the Pick step waits for its card: never started here
+  const rows = await deps.db.order.findMany({ where: { AND: [base, { status: 'CONFIRMED' }] }, select: { id: true, number: true }, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], take: cfg.listMax });
   const out: StartAllResult = { started: [], skipped: [] };
   const by = staffBy(who.actor, who.ctx);
   for (const r of rows) {
@@ -285,7 +309,7 @@ const pieceInput = z.union([
 ]);
 
 /** Locks the order row for a packing write (two scanners at once wait for each other). */
-async function lockOrder(tx: Tx, storeId: number, orderId: string): Promise<void> {
+export async function lockOrder(tx: Tx, storeId: number, orderId: string): Promise<void> {
   const rows = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Order" WHERE "id" = ${orderId}::uuid AND "storeId" = ${storeId} FOR UPDATE`;
   if (!rows.length) throw new ShippingError('NOT_FOUND', 'no such order', ['orderId']);
 }

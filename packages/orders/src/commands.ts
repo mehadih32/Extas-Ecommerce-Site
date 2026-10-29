@@ -149,17 +149,22 @@ export async function holdWith(
   }, opts);
 }
 
-/** ON_HOLD → back to where it was held from (PLACED or CONFIRMED). */
+/** ON_HOLD → back to where it was held from (PLACED, CONFIRMED, or PR 183: PROCESSING). */
 export async function releaseOrder(deps: OrdersDeps, who: Who, orderId: string, input: unknown = {}, opts: CommandOptions = {}): Promise<CommandResult> {
   await allow(deps, who, 'orders.hold');
   const d = parse(z.object({ note }).strict(), input, 'release');
-  return execute(deps, ref(who, orderId), staffBy(who.actor, who.ctx), {
+  return releaseWith(deps, ref(who, orderId), staffBy(who.actor, who.ctx), d.note, opts);
+}
+
+/** PR 183 — the release itself, also for the packing step's own hold once its last packing card is decided. */
+export async function releaseWith(deps: OrdersDeps, r: { storeId: number; orderId: string }, by: By, text: string | undefined, opts: CommandOptions = {}): Promise<CommandResult> {
+  return execute(deps, r, by, {
     command: 'release',
-    input: { note: d.note ?? null },
+    input: { note: text ?? null },
     effect: async (_tx, o, _f, { now }) => ({
       data: { holdFromStatus: null, holdReasonCode: null, holdReason: null, onHoldSince: null },
       reasonCode: o.holdReasonCode,
-      message: d.note ?? null,
+      message: text ?? null,
       eventData: { heldMinutes: o.onHoldSince ? Math.round((now.getTime() - o.onHoldSince.getTime()) / 60_000) : null, heldFor: o.holdReason },
     }),
   }, opts);

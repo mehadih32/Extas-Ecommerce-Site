@@ -33,7 +33,16 @@
       "CANCEL_REQUESTED": "The customer asked to cancel: decide that first.",
       "IN_REVIEW": "This order waits for a review decision.",
       "BOOKED": "This order is booked already.",
-      "IDEMPOTENCY_MISMATCH": "That press went twice with different values. Try again."
+      "IDEMPOTENCY_MISMATCH": "That press went twice with different values. Try again.",
+      "ISSUE_OPEN": "This item has an open packing card already. Decide that card first.",
+      "ISSUE_DECIDED": "This card was decided already. Reload the page.",
+      "PRICE_DIFFERS": "That size or colour has another price: it cannot be swapped here.",
+      "OFFER_ON_ORDER": "An offer on this order depends on this item: take it off on the order's page.",
+      "LAST_LINE": "This is the only item of the order: cancel the order instead.",
+      "NOT_SAME_PIECE": "That is not the same piece in another size or colour.",
+      "OUT_OF_STOCK": "That size or colour is out of stock too.",
+      "NOTHING_CHANGED": "Nothing changed.",
+      "FORBIDDEN": "You do not have the permission for this."
     },
     "couriers": {
       "title": "Couriers",
@@ -431,7 +440,7 @@
         "DAMAGED": "Damaged piece",
         "NOT_FOUND": "Piece not found"
       },
-      "issueOpen": "Decide it on the order's page. Nothing is cancelled by itself.",
+      "issueOpen": "A person decides each card. Nothing is cancelled by itself; a paid order's money back is only a request for the owner.",
       "heldNote": "On hold — nothing moves until the hold is released.",
       "scanTitle": "Scan each item (SKU must match)",
       "tickTitle": "Tick each item as it goes into the parcel",
@@ -487,6 +496,29 @@
         "PACKING_ISSUE_OPEN": "A packing card is open: a person decides it first.",
         "PHOTO_REQUIRED": "Take the packing photo first (or the owner lets it go without one).",
         "WEIGHT_REQUIRED": "Type the parcel's weight, then “Mark packed”."
+      },
+      "report": {
+        "open": "Report defect / out of stock",
+        "line": "Which item",
+        "kind": "What is wrong",
+        "note": "Note (optional)",
+        "send": "Report",
+        "hint": "The order gets a packing card and waits (on hold) until a person decides it."
+      },
+      "card": {
+        "late": "late",
+        "raised": "Reported {at}",
+        "booked": "Booked with the courier: the parcel is the parcel. Another size or \"send the rest\" needs the booking cancelled first, on the order's page.",
+        "found": "Found it on the shelf",
+        "fine": "The piece is fine after all",
+        "foundAsk": "Close this card? The order goes on as it is.",
+        "swapPick": "Another size or colour",
+        "swap": "Send this instead",
+        "rest": "Send the rest without it",
+        "restAsk": "Take this item off the order and send the rest? A paid order gets a refund request for the owner; no money moves now.",
+        "call": "Call the customer",
+        "cancel": "Cancel the order (out of stock)",
+        "cancelWhy": "Why (kept on the order)"
       }
     }
   }

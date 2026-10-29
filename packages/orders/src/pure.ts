@@ -113,7 +113,8 @@ export type OrderCommand = (typeof ORDER_COMMANDS)[number];
 /** Commands that change the status (the others set or clear a flag and keep the status). */
 const MOVES: Readonly<Partial<Record<OrderCommand, { from: readonly OrderState[]; to: OrderState | 'heldFrom' }>>> = {
   confirm: { from: ['PLACED'], to: 'CONFIRMED' },
-  hold: { from: ['PLACED', 'CONFIRMED'], to: 'ON_HOLD' },
+  // PR 183: also from picking (a defective or missing piece at the packing table); release goes back to it
+  hold: { from: ['PLACED', 'CONFIRMED', 'PROCESSING'], to: 'ON_HOLD' },
   release: { from: ['ON_HOLD'], to: 'heldFrom' },
   // PROCESSING and PACKED: picking or packing started but no courier is booked yet — put the pieces back and cancel.
   cancel: { from: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED'], to: 'CANCELLED' },
@@ -218,7 +219,7 @@ export function targetOf(c: OrderCommand, from: OrderState, heldFrom: OrderState
   const m = MOVES[c];
   if (m) {
     if (!m.from.includes(from)) return null;
-    return m.to === 'heldFrom' ? (heldFrom === 'PLACED' ? 'PLACED' : 'CONFIRMED') : m.to;
+    return m.to === 'heldFrom' ? (heldFrom === 'PLACED' || heldFrom === 'PROCESSING' ? heldFrom : 'CONFIRMED') : m.to;
   }
   const f = FLAGS[c];
   return f && f.includes(from) ? from : null;
@@ -321,7 +322,8 @@ export type CustomerCancelMode = 'tap' | 'request' | 'requested' | 'none';
 function tapOpen(cutoff: CustomerCutoff, o: MachineOrder): boolean {
   switch (cutoff) {
     case 'confirmed':
-      return o.status === 'PLACED' || o.status === 'AWAITING_ADVANCE' || (o.status === 'ON_HOLD' && o.holdFromStatus !== 'CONFIRMED');
+      // PR 183: an order held from picking is past "confirmed" too
+      return o.status === 'PLACED' || o.status === 'AWAITING_ADVANCE' || (o.status === 'ON_HOLD' && o.holdFromStatus !== 'CONFIRMED' && o.holdFromStatus !== 'PROCESSING');
     case 'packed':
       return ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING'].includes(o.status);
     default:

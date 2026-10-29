@@ -537,6 +537,26 @@
   বাধ্যতামূলক **বন্ধ**।
 - `fulfilment.packing.queue` — "দেওয়া হয়েছে" ধাপে **1** দিন আগ পর্যন্ত (0–30) · একটা তালিকায় সর্বোচ্চ **200**টা (10–500)।
 
+## প্যাকিং আর প্রিন্ট → প্যাক: ত্রুটি বা স্টক নেই — কার্ড, সিদ্ধান্ত আর হোল্ড (S08 · PR 183)
+
+- **কোথায়:** একই প্যাক পাতা — অর্ডারের নিচে **ত্রুটি / স্টক নেই**, আর অর্ডারের উপরে লাল কার্ড। পাতার গাইড: [প্যাক](pages/orders/pack.md)।
+- **কার্ড:** প্যাকার একটা পণ্যে "ত্রুটি আছে" বা "পিস পাওয়া যায়নি" জানালে কার্ড খোলে; "স্টক কম" কার্ড স্টকের হিসাব থেকে নিজেই খোলে (শেয়ার
+  করা স্টক 0-এর নিচে গেলে)। কার্ড খোলা থাকলে প্যাক হয়েছে আর কুরিয়ার বুক — দুটোই আটকায় (SIM-F-006)। একটা পণ্যে একটাই খোলা কার্ড
+  (`ISSUE_OPEN`)।
+- **হোল্ড:** সেটিং চালু থাকলে কার্ডের সাথে অর্ডার হোল্ডে যায় (অর্ডার সার্ভিসের ভেতর দিয়ে, একই লকে) — কনফার্ম বা পিকিং, দুই অবস্থা থেকেই।
+  হোল্ডের অর্ডার তার আগের ধাপের তালিকায় থাকে, যাতে সিদ্ধান্ত দেওয়া যায়। শেষ কার্ডের সিদ্ধান্তে হোল্ড ওঠে (যদি এই কার্ডের কারণেই হোল্ড)।
+- **সিদ্ধান্ত (প্রতিটা একজন মানুষের চাপ):** পাওয়া গেছে / ঠিক আছে (কার্ড বন্ধ) · অন্য সাইজ বা রঙ (একই দাম; স্টক না থাকলে `OUT_OF_STOCK`; অর্ডারের বদল,
+  `orders.edit`) · বাকিটা পাঠান (পণ্য সরে; টাকা দেওয়া অর্ডারে টাকা ফেরতের **অনুরোধ**, PR 172-এর পথে, মালিক অনুমোদন দেন) · অর্ডার বাতিল
+  (স্টক নেই, কারণসহ, `orders.cancel`)। **কাস্টমারকে ফোন** — কলের তালিকায় একটা কল, কার্ড খোলা থাকে।
+- **কখনো নিজে থেকে না:** বাতিল, টাকা ফেরত, দাম বদল। সিদ্ধান্তের সময় পার হলে শুধু "দেরি" চিপ। বুক হওয়া পার্সেলে সাইজ বদল বা পণ্য সরানো হয় না
+  (`BOOKED`) — আগে বুকিং বাতিল।
+- **অনুমতি:** কার্ড, ফোন, সিদ্ধান্ত — `fulfilment.pack`; সাথে সাইজ বদল আর বাকিটা পাঠাতে `orders.edit`, বাতিলে `orders.cancel`, "স্টক কম"
+  কার্ড বন্ধে `inventory.audit`।
+
+### সুইচ আর সংখ্যা (ডিফল্টসহ) — ডেলিভারি → আরও অপশন
+- `fulfilment.packing.issues` — কার্ডে অর্ডার হোল্ড **চালু** · ত্রুটিতে হোল্ডের কারণ **defective-item** · পাওয়া না গেলে **waiting-stock** ·
+  সিদ্ধান্তের সময় **48 ঘণ্টা** (0–720; 0 = "দেরি" দেখায় না) · অর্ডার বদলের কারণ **customer-asked**।
+
 ### API
 - `GET /api/admin/packing/stickers` — প্রিন্টের তালিকা · `POST /api/admin/packing/stickers` `{shipmentIds: [...]}` — PDF; কোনোটা প্রিন্ট না
   হলে পুরোটাই আটকায় (`NOT_PRINTABLE`, প্রতিটার কারণসহ) · `GET /api/admin/packing/stickers/sample` — নমুনা স্টিকার। ~~সবগুলোতে `fulfilment.print`।~~
@@ -552,6 +572,10 @@
   `{code, source: scan|typed}` বা `{lineId, source: tick}` · `POST …/orders/<id>/pack` `{weighedGrams?, weightConfirmed?}` (Idempotency-Key;
   আটকালে `NOT_CHECKED`, `PACKING_ISSUE_OPEN`, `PHOTO_REQUIRED`, `WEIGHT_REQUIRED`, `WEIGHT_GAP`) · `POST …/orders/<id>/photo` (ফাইল) — এগুলোতে
   `fulfilment.pack` · `POST …/orders/<id>/waive` `{reason}` — `fulfilment.photoWaive`।
+- PR 183: `POST …/orders/<id>/issue` `{lineId, kind: DAMAGED|NOT_FOUND, note?}` — কার্ড (`ISSUE_OPEN` দ্বিতীয়বার) ·
+  `POST …/orders/<id>/issues/<issueId>/resolve` `{decision: STOCK_FOUND|SWAP_SIZE|SHIP_REST|CANCEL_ORDER, variantId?, note?}` — উত্তরে
+  `refundRequestIds` আর `released` (`ISSUE_DECIDED` দ্বিতীয়বার; অর্ডার সার্ভিসের `PRICE_DIFFERS`, `LAST_LINE`, `OFFER_ON_ORDER`, `BOOKED`) ·
+  `POST …/orders/<id>/issues/<issueId>/call` `{note?}` — কল (`created: false` আগে থেকে থাকলে)। তিনটাতেই `fulfilment.pack`।
 
 ## ফেরত আর বদল (S08 · PR 185 — অর্ডার → ফেরত আর বদল, `/admin/orders/returns`)
 
