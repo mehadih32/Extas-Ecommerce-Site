@@ -121,12 +121,20 @@
         "SENT": "Sent",
         "FAILED": "Refused",
         "DEAD": "Gave up",
-        "SKIPPED_NO_ERP": "No ERP"
+        "SKIPPED_NO_ERP": "No ERP",
+        "RETIRED": "No longer sent (new ERP rules)"
       },
       "type": {
         "order_create": "Order {order}",
         "order_status": "Order {order}: status change",
-        "return_create": "Order {order}: return (sellable pieces)"
+        "return_create": "Order {order}: return (sellable pieces)",
+        "shipment_create": "Order {order}: parcel left",
+        "order_delivery": "Order {order}: delivery result",
+        "order_line": "Order {order}: decision on a line",
+        "returnList_create": "Courier return list",
+        "exchange_lateReturn": "Exchange: late return",
+        "dailySummary_put": "Daily summary",
+        "fixedCosts_put": "Monthly fixed costs"
       },
       "tries": "{n} tries",
       "empty": "Nothing is waiting or stuck.",

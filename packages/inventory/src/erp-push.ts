@@ -22,6 +22,10 @@
 // ERP → the row waits (PENDING) until a real connection is there; connected → sent. The company of the key is checked
 // before every round (PR 196): a document is never sent to another company.
 //
+// PR 607 (CN-028): from the switch date (`erp.model` = v6) the retired v5 calls are never sent: such a document is
+// written as a RETIRED row (kept for the record, never sent, never sent again by hand), and a row queued before the
+// switch that is still waiting becomes RETIRED instead of going out.
+//
 // Failures: a retryable one (timeout, network, ERP error, rate limit, a refused key) waits `erp.push.backoffBaseSeconds`
 // × 2^(n−1), at most `erp.push.backoffMaxSeconds`, and after `erp.push.maxAttempts` tries the row is DEAD (shown on the
 // sync health panel, PR 205; sent again by hand, PR 206). A document the ERP refuses as wrong (400, 409 short stock,
@@ -35,6 +39,7 @@ import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDep
 import { InventoryError } from './errors';
 import { pushDisposition, resolveErp } from './guard';
 import { checkCompany } from './mapping';
+import { RETIRED_V6, retiredFor } from './erp-model';
 import { callErp, errorText, retryPolicy } from './sync';
 
 // ---- the minimal order the push needs (orders themselves are built in the checkout stages, S04/S05) --------------
@@ -153,7 +158,8 @@ export interface EnqueueResult {
 
 async function enqueue(deps: InventoryDeps, storeId: number, referenceId: string, key: string, doc: ErpDocument, tx?: Tx): Promise<EnqueueResult> {
   assertNoJournal(doc);
-  const { pushStatus } = await pushDisposition(deps, storeId);
+  const retired = await retiredFor(deps, storeId, doc);
+  const pushStatus = retired ? 'RETIRED' : (await pushDisposition(deps, storeId)).pushStatus;
   const db: Db = tx ?? deps.db;
   const requestBody = { ...doc, hash: hashOf(doc) } as unknown as Prisma.InputJsonValue;
   const existing = await db.erpPush.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: key } } });
@@ -163,7 +169,8 @@ async function enqueue(deps: InventoryDeps, storeId: number, referenceId: string
     return { pushId: existing.id, status: existing.status, created: false };
   }
   try {
-    const row = await db.erpPush.create({ data: { storeId, documentType: doc.type, referenceId, idempotencyKey: key, status: pushStatus, requestBody, ...(pushStatus === 'SKIPPED_NO_ERP' ? { lastError: 'SKIPPED_NO_ERP' } : {}) } });
+    const lastError = pushStatus === 'SKIPPED_NO_ERP' ? 'SKIPPED_NO_ERP' : pushStatus === 'RETIRED' ? RETIRED_V6 : null;
+    const row = await db.erpPush.create({ data: { storeId, documentType: doc.type, referenceId, idempotencyKey: key, status: pushStatus, requestBody, ...(lastError ? { lastError } : {}) } });
     return { pushId: row.id, status: row.status, created: true };
   } catch (e) {
     // Two callers at once: the unique key lets one in; the other finds its row.
@@ -206,7 +213,7 @@ export async function enqueueReturnPush(deps: InventoryDeps, input: ReturnPushIn
  * PR 187 — a return document's outcome on the pieces it carries (ReturnItem.erpPushId): sent → RESTOCKED, refused or
  * dead → ERP_FAILED, skipped (no ERP) → NO_ERP, queued again by hand → ERP_PENDING. A piece's own QC never changes.
  */
-async function settleReturnItems(db: Db, pushIds: string[], state: 'RESTOCKED' | 'ERP_FAILED' | 'NO_ERP' | 'ERP_PENDING'): Promise<void> {
+export async function settleReturnItems(db: Db, pushIds: string[], state: 'RESTOCKED' | 'ERP_FAILED' | 'NO_ERP' | 'ERP_PENDING'): Promise<void> {
   if (!pushIds.length) return;
   await db.returnItem.updateMany({ where: { erpPushId: { in: pushIds }, dispositionState: { in: ['ERP_PENDING', 'ERP_FAILED', 'NO_ERP'] } }, data: { dispositionState: state } });
 }
@@ -231,6 +238,8 @@ export interface RelayResult {
   skipped: number;
   /** Rows left waiting for a real ERP connection (practice or unusable ERP). */
   waiting: number;
+  /** PR 607: rows queued before the switch whose call v6 retired (never sent). */
+  retired: number;
   runIds: string[];
 }
 
@@ -241,7 +250,7 @@ const docOf = (body: Prisma.JsonValue): ErpDocument => {
 
 /** Sends what is due (job `inventory.erp.pushDocuments`). One store, or every store with something due. */
 export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: number } = {}): Promise<RelayResult> {
-  const out: RelayResult = { stores: 0, sent: 0, replayed: 0, retrying: 0, failed: 0, dead: 0, skipped: 0, waiting: 0, runIds: [] };
+  const out: RelayResult = { stores: 0, sent: 0, replayed: 0, retrying: 0, failed: 0, dead: 0, skipped: 0, waiting: 0, retired: 0, runIds: [] };
   const db = deps.db;
   const now = nowOf(deps);
   const due = { status: 'PENDING' as const, OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: now } }] };
@@ -280,6 +289,13 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
     }
     const sentOrders = new Set((await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', status: 'SENT', referenceId: { in: rows.map((r) => r.referenceId) } }, select: { referenceId: true } })).map((r) => r.referenceId));
     for (const row of rows) {
+      // PR 607: a call v6 retired never goes out, even when it was queued before the switch.
+      if (await retiredFor(deps, storeId, docOf(row.requestBody))) {
+        const n = (await db.erpPush.updateMany({ where: { id: row.id, status: 'PENDING' }, data: { status: 'RETIRED', lastError: RETIRED_V6, nextAttemptAt: null } })).count;
+        if (n && row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'NO_ERP');
+        out.retired += n;
+        continue;
+      }
       // A status change or a return waits for its order (contract: the order must exist first).
       if ((row.documentType === 'order.status' || row.documentType === 'return.create') && !sentOrders.has(row.referenceId)) {
         out.waiting++;
@@ -326,7 +342,7 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
 
 // ---- reading and sending again by hand (PR 205, 206) ------------------------------------------------------------------
 
-export type PushStatusName = 'PENDING' | 'SENT' | 'FAILED' | 'DEAD' | 'SKIPPED_NO_ERP';
+export type PushStatusName = 'PENDING' | 'SENT' | 'FAILED' | 'DEAD' | 'SKIPPED_NO_ERP' | 'RETIRED';
 
 export interface PushView {
   id: string;
@@ -349,7 +365,12 @@ const viewOf = (r: { id: string; documentType: string; referenceId: string; requ
     id: r.id,
     documentType: r.documentType,
     referenceId: r.referenceId,
-    externalOrderId: doc.type === 'order.create' || doc.type === 'return.create' ? doc.body.externalOrderId : doc.type === 'order.status' ? doc.externalOrderId : null,
+    externalOrderId:
+      doc.type === 'order.create' || doc.type === 'return.create' || doc.type === 'shipment.create'
+        ? doc.body.externalOrderId
+        : doc.type === 'order.status' || doc.type === 'order.delivery' || doc.type === 'order.line'
+          ? doc.externalOrderId
+          : null,
     status: r.status,
     attempts: r.attempts,
     lastError: r.lastError,
@@ -366,6 +387,8 @@ export interface PushCounts {
   dead: number;
   skipped: number;
   sent: number;
+  /** PR 607: documents of a call v6 retired (kept, never sent). */
+  retired: number;
   oldestPendingAt: string | null;
   nextAttemptAt: string | null;
 }
@@ -377,7 +400,7 @@ export async function pushCounts(db: Db, storeId: number): Promise<PushCounts> {
     db.erpPush.findFirst({ where: { storeId, status: 'PENDING', nextAttemptAt: { not: null } }, orderBy: { nextAttemptAt: 'asc' }, select: { nextAttemptAt: true } }),
   ]);
   const n = (s: PushStatusName) => groups.find((g) => g.status === s)?._count._all ?? 0;
-  return { pending: n('PENDING'), failed: n('FAILED'), dead: n('DEAD'), skipped: n('SKIPPED_NO_ERP'), sent: n('SENT'), oldestPendingAt: oldest?.createdAt.toISOString() ?? null, nextAttemptAt: next?.nextAttemptAt?.toISOString() ?? null };
+  return { pending: n('PENDING'), failed: n('FAILED'), dead: n('DEAD'), skipped: n('SKIPPED_NO_ERP'), sent: n('SENT'), retired: n('RETIRED'), oldestPendingAt: oldest?.createdAt.toISOString() ?? null, nextAttemptAt: next?.nextAttemptAt?.toISOString() ?? null };
 }
 
 /** Documents of this store, newest first, optionally of some states (needs `inventory.read`). */

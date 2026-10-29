@@ -39,6 +39,11 @@ export interface Connected<Api> {
   integrationId: string | null;
   provider: string;
   mode: Mode;
+  /**
+   * CN-029 §16: the store of the connection row in use — the asking store's own row, or null for an installation-wide
+   * row (or no row at all: the practice adapter). A caller that needs the store's own link (ERP contract v6) checks it.
+   */
+  storeId?: number | null;
 }
 
 export interface Who {
@@ -162,7 +167,7 @@ async function test(integrationId: string, who: Who = {}, mode?: Mode): Promise<
       if (row) {
         const a = adapter(kind, row.provider);
         const ctx = context(a, row.mode, row.config, row.storeId);
-        value = { api: await build(a, ctx), integrationId: row.id, provider: row.provider, mode: row.mode };
+        value = { api: await build(a, ctx), integrationId: row.id, provider: row.provider, mode: row.mode, storeId: row.storeId };
       } else {
         const fb = opts.fallbacks?.[kind];
         const a = fb && (!where.provider || where.provider === fb.provider)
@@ -171,7 +176,7 @@ async function test(integrationId: string, who: Who = {}, mode?: Mode): Promise<
         if (!a) throw new AdapterError(`no adapter for ${kind}${where.provider ? ` / ${where.provider}` : ''}`);
         const mode: Mode = fb && a.provider === fb.provider ? fb.mode : 'MOCK';
         const ctx = context(a, mode, fb && a.provider === fb.provider ? fb.config : {}, storeId);
-        value = { api: await build(a, ctx), integrationId: null, provider: a.provider, mode };
+        value = { api: await build(a, ctx), integrationId: null, provider: a.provider, mode, storeId: null };
       }
       resolved.set(rk, { value, at: now() });
       return value as Connected<Api>;

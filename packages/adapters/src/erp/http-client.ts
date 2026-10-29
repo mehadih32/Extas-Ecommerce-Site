@@ -24,6 +24,19 @@ import {
   type ErpStockRow,
   type ErpVariantRow,
 } from './contract';
+import {
+  erpAccountSchema,
+  erpClaimSchema,
+  erpCostOfGoodsSchema,
+  erpExchangeSchema,
+  erpFixedCostMonthSchema,
+  erpOrderAnswerSchema,
+  erpReturnItemSchema,
+  erpReturnsSummarySchema,
+  erpStoredSummarySchema,
+  ERP_GRADES,
+  type ErpV6Reads,
+} from './v6';
 
 /** The contract's base path on the ERP. Part of the API contract, like a route. */
 export const ERP_API_BASE_PATH = '/api/v1/ecommerce';
@@ -67,6 +80,9 @@ export const erpStockRowSchema = z.object({
   onHand: z.int(),
   reserved: z.int().min(0),
   available: z.int(),
+  // PR 607 (v6): grade and the unchecked returned pieces inside `available`; v5 answers have neither.
+  grade: z.enum(ERP_GRADES).default('A'),
+  fromReturnStock: z.int().min(0).default(0),
   updatedAt: dateText,
 });
 
@@ -79,6 +95,9 @@ export const erpVariantRowSchema = z.object({
   size: optText,
   retailPrice: decimalText.nullish().transform((v) => v ?? null),
   avgCost: decimalText.nullish().transform((v) => v ?? null),
+  // PR 607 (v6): the shop price ("bought from ERP at") and the grade; v5 answers have neither.
+  shopPrice: decimalText.nullish().transform((v) => v ?? null),
+  grade: z.enum(ERP_GRADES).default('A'),
   active: z.boolean().default(true),
   updatedAt: dateText,
 });
@@ -121,23 +140,26 @@ async function failure(res: Response): Promise<ErpError> {
   let erpCode: string | null = null;
   let message = `the ERP answered ${res.status}`;
   let details: string[] = [];
+  let detailsBody: unknown = null;
   try {
     const b = (await res.json()) as { error?: { code?: unknown; message?: unknown; details?: unknown } };
     if (b?.error) {
       erpCode = clip(b.error.code);
       message = clip(b.error.message) ?? message;
       const d = b.error.details;
+      detailsBody = d ?? null;
       if (Array.isArray(d)) details = d.map((x) => (typeof x === 'string' ? x : JSON.stringify(x)).slice(0, MAX_TEXT)).slice(0, 50);
       else if (d && typeof d === 'object') details = [JSON.stringify(d).slice(0, MAX_TEXT)];
     }
   } catch {
     // Not JSON: the status alone tells the story.
   }
-  return new ErpError(erpCodeForStatus(res.status), message, { status: res.status, erpCode, details, retryAfterMs: retryAfterMs(res.headers.get('retry-after')) });
+  return new ErpError(erpCodeForStatus(res.status), message, { status: res.status, erpCode, details, detailsBody, retryAfterMs: retryAfterMs(res.headers.get('retry-after')) });
 }
 
 /** The contract's method and path for each document kind (PR 199). */
-export function documentRoute(doc: ErpDocument): { method: 'POST' | 'PATCH'; path: string; body: unknown } {
+export function documentRoute(doc: ErpDocument): { method: 'POST' | 'PATCH' | 'PUT'; path: string; body: unknown } {
+  const id = encodeURIComponent;
   switch (doc.type) {
     case 'order.create':
       return { method: 'POST', path: '/orders', body: doc.body };
@@ -145,7 +167,39 @@ export function documentRoute(doc: ErpDocument): { method: 'POST' | 'PATCH'; pat
       return { method: 'PATCH', path: `/orders/${encodeURIComponent(doc.externalOrderId)}`, body: doc.body };
     case 'return.create':
       return { method: 'POST', path: '/returns', body: doc.body };
+    // PR 607 — contract v6 (§2.12 "New calls").
+    case 'shipment.create':
+      return { method: 'POST', path: '/shipments', body: doc.body };
+    case 'order.delivery':
+      return { method: 'PUT', path: `/orders/${id(doc.externalOrderId)}/delivery`, body: doc.body };
+    case 'order.line':
+      return { method: 'PATCH', path: `/orders/${id(doc.externalOrderId)}/lines/${id(doc.lineId)}`, body: doc.body };
+    case 'returnList.create':
+      return { method: 'POST', path: '/return-lists', body: doc.body };
+    case 'exchange.lateReturn':
+      return { method: 'POST', path: `/exchanges/${id(doc.exchangeId)}/late-return`, body: doc.body };
+    case 'dailySummary.put':
+      return { method: 'PUT', path: `/daily-summaries/${id(doc.date)}`, body: doc.body };
+    case 'fixedCosts.put':
+      return { method: 'PUT', path: `/fixed-costs/${id(doc.month)}`, body: doc.body };
   }
+}
+
+/** Reads an answer with a schema; a broken answer is BAD_RESPONSE with the first problems named. */
+function answer<T>(body: unknown, schema: z.ZodType<T>, what: string): T {
+  const r = schema.safeParse(body);
+  if (r.success) return r.data;
+  throw new ErpError('BAD_RESPONSE', `the ${what} answer is not what the contract says`, { details: r.error.issues.slice(0, 5).map((i) => `${i.path.join('.') || '(answer)'}: ${i.message}`.slice(0, MAX_TEXT)) });
+}
+
+/** A list answer: `{ items }`, a bare array, or one named array (`claims`, `days`, …). */
+function listOf(body: unknown, key: string): unknown[] {
+  if (Array.isArray(body)) return body;
+  if (body && typeof body === 'object') {
+    const o = body as Record<string, unknown>;
+    for (const k of [key, 'items', 'data']) if (Array.isArray(o[k])) return o[k] as unknown[];
+  }
+  throw new ErpError('BAD_RESPONSE', `the ERP did not answer with a list of ${key}`);
 }
 
 /** The header an ERP sets when it answers a repeated Idempotency-Key from its record (common practice). */
@@ -208,7 +262,70 @@ export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly b
 
   const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
+  // PR 607 — the v6 reads. A page that breaks the contract row by row reports the row (`rejected`); a whole answer that
+  // breaks it is BAD_RESPONSE.
+  const v6: ErpV6Reads = {
+    async variantsByStyle(styleCode, o) {
+      const out: ErpVariantRow[] = [];
+      let cursor: string | null = null;
+      const bad: string[] = [];
+      for (let pages = 0; pages < 1000; pages++) {
+        const page = pageOf(await get('/catalog/variants', { styleCode, cursor, limit: '1000' }, o));
+        const r = rows(page.items, erpVariantRowSchema);
+        out.push(...r.items);
+        bad.push(...r.rejected.map((x) => x.reason));
+        cursor = page.nextCursor;
+        if (!cursor) break;
+      }
+      if (bad.length) throw new ErpError('BAD_RESPONSE', `${bad.length} SKU row(s) of the style break the contract`, { details: bad.slice(0, 20) });
+      // The filter is the ERP's; a row of another style is never taken.
+      return out.filter((v) => (v.styleCode ?? '').trim().toUpperCase() === styleCode.trim().toUpperCase());
+    },
+    async account(q = {}, o) {
+      return answer(await get('/account', { from: q.from, to: q.to }, o), erpAccountSchema, 'account');
+    },
+    async returns(q, o) {
+      const page = pageOf(await get('/returns', { updatedSince: iso(q.updatedSince), cursor: q.cursor, limit: String(q.limit) }, o));
+      const r = rows(page.items, erpReturnItemSchema);
+      return { items: r.items, rejected: r.rejected, nextCursor: page.nextCursor };
+    },
+    async returnsSummary(date, o) {
+      return answer(await get('/returns/summary', { date }, o), erpReturnsSummarySchema, 'returns summary');
+    },
+    async returnClaims(q, o) {
+      const r = rows(listOf(await get('/returns/claims', { from: q.from, to: q.to }, o), 'claims'), erpClaimSchema);
+      if (r.rejected.length) throw new ErpError('BAD_RESPONSE', `${r.rejected.length} claim row(s) break the contract`, { details: r.rejected.map((x) => x.reason) });
+      return r.items;
+    },
+    async exchanges(q, o) {
+      const body = await get('/exchanges', { status: q.status, updatedSince: iso(q.updatedSince), cursor: q.cursor, limit: String(q.limit) }, o);
+      const page = pageOf(body);
+      const r = rows(page.items, erpExchangeSchema);
+      const total = body && typeof body === 'object' && !Array.isArray(body) ? (body as { totalAtRisk?: unknown }).totalAtRisk : undefined;
+      return { items: r.items, rejected: r.rejected, nextCursor: page.nextCursor, totalAtRisk: total === undefined || total === null ? '0' : String(total) };
+    },
+    async dailySummaries(q, o) {
+      const r = rows(listOf(await get('/daily-summaries', { from: q.from, to: q.to }, o), 'days'), erpStoredSummarySchema);
+      if (r.rejected.length) throw new ErpError('BAD_RESPONSE', `${r.rejected.length} stored day(s) break the contract`, { details: r.rejected.map((x) => x.reason) });
+      return r.items;
+    },
+    async fixedCosts(o) {
+      const r = rows(listOf(await get('/fixed-costs', {}, o), 'months'), erpFixedCostMonthSchema);
+      if (r.rejected.length) throw new ErpError('BAD_RESPONSE', `${r.rejected.length} month(s) break the contract`, { details: r.rejected.map((x) => x.reason) });
+      return r.items;
+    },
+    async costOfGoods(q, o) {
+      const r = rows(listOf(await get('/cost-of-goods', { from: q.from, to: q.to }, o), 'rows'), erpCostOfGoodsSchema);
+      if (r.rejected.length) throw new ErpError('BAD_RESPONSE', `${r.rejected.length} cost row(s) break the contract`, { details: r.rejected.map((x) => x.reason) });
+      return r.items;
+    },
+    async order(externalOrderId, o) {
+      return answer(await get(`/orders/${encodeURIComponent(externalOrderId)}`, {}, o), erpOrderAnswerSchema, 'order');
+    },
+  };
+
   return {
+    v6,
     provider: opts.provider,
     baseUrl: opts.baseUrl,
 
@@ -219,7 +336,7 @@ export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly b
     },
 
     async variants(q, o): Promise<ErpPage<ErpVariantRow>> {
-      const page = pageOf(await get('/catalog/variants', { updatedSince: iso(q.updatedSince), cursor: q.cursor, limit: String(q.limit) }, o));
+      const page = pageOf(await get('/catalog/variants', { updatedSince: iso(q.updatedSince), cursor: q.cursor, limit: String(q.limit), styleCode: q.styleCode }, o));
       const r = rows(page.items, erpVariantRowSchema);
       return { items: r.items, rejected: r.rejected, nextCursor: page.nextCursor };
     },

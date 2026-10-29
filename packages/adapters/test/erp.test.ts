@@ -80,7 +80,7 @@ describe('practice ERP + HTTP client (PR 498)', () => {
 
     const p1 = await api.stock({ limit: 2 });
     expect(p1.items.map((r) => r.sku)).toEqual(['SKU-0', 'SKU-1']);
-    expect(p1.items[0]).toEqual({ sku: 'SKU-0', warehouseId: 'SAMPLE-WH-1', onHand: 10, reserved: 2, available: 8, updatedAt: at(0) });
+    expect(p1.items[0]).toEqual({ sku: 'SKU-0', warehouseId: 'SAMPLE-WH-1', onHand: 10, reserved: 2, available: 8, grade: 'A', fromReturnStock: 0, updatedAt: at(0) });
     expect(p1.nextCursor).toBeTruthy();
     const p2 = await api.stock({ limit: 2, cursor: p1.nextCursor });
     const p3 = await api.stock({ limit: 2, cursor: p2.nextCursor });
@@ -192,7 +192,7 @@ describe('ERP → shop webhooks (PR 196: stock.changed, variant.changed)', () =>
 
   it('reads both event types with the rows of the GET endpoints; anything else is named, never thrown', () => {
     const s = parseErpWebhookEvent({ id: 'evt-1', type: 'stock.changed', occurredAt: T0.toISOString(), data: stock });
-    expect(s).toEqual({ ok: true, event: { id: 'evt-1', type: 'stock.changed', occurredAt: T0, data: { ...stock, updatedAt: T0 } } });
+    expect(s).toEqual({ ok: true, event: { id: 'evt-1', type: 'stock.changed', occurredAt: T0, data: { ...stock, grade: 'A', fromReturnStock: 0, updatedAt: T0 } } });
     const v = parseErpWebhookEvent({ id: 7, type: 'variant.changed', data: { sku: 'TEE-NAVY-M', retailPrice: '1250.50', updatedAt: T0.toISOString() } });
     expect(v.ok && v.event.id).toBe('7');
     expect(v.ok && v.event.type === 'variant.changed' && [v.event.data.retailPrice, v.event.data.active, v.event.occurredAt]).toEqual(['1250.50', true, null]);

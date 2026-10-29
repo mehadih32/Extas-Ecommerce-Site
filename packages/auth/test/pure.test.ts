@@ -15,8 +15,11 @@ import {
   needsRehash,
   newToken,
   otpauthUri,
+  ACCESS_TREE,
+  CHECK_PERMISSIONS,
   PERMISSION_KEYS,
   PERMISSIONS,
+  PIN_PERMISSIONS,
   permissionCatalogue,
   staffPasswordIssues,
   totpAt,
@@ -118,6 +121,21 @@ describe('permission catalogue (PR 16, 495)', () => {
       expect(lookup(authMessages.bn, `permissionGroups.${g}`), g).toBeTruthy();
     }
     expect(permissionCatalogue()).toHaveLength(PERMISSION_KEYS.length);
+  });
+
+  it('CN-028 §12: the books and ERP keys are in the catalogue and in the access tree, each once, under its group', () => {
+    const erpKeys = ['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'returns.handback', 'exchange.approve', 'fixedcosts.write'];
+    for (const k of erpKeys) expect(PERMISSION_KEYS, k).toContain(k);
+    const inTree = ACCESS_TREE.flatMap((b) => b.keys);
+    expect([...inTree].sort()).toEqual([...PERMISSION_KEYS].sort());
+    expect(new Set(inTree).size).toBe(inTree.length);
+    for (const b of ACCESS_TREE) for (const k of b.keys) expect(PERMISSIONS[k].group, k).toBe(b.group);
+    expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write']);
+    // A correction of the books and a month closed with differences also need the owner's PIN.
+    expect([...PIN_PERMISSIONS]).toEqual(['books.adjust', 'books.close']);
+    // The read-only smoke check account may see the books, never change them or record money.
+    expect(CHECK_PERMISSIONS).toEqual(expect.arrayContaining(['books.read', 'erp.account.read']));
+    for (const k of ['books.reconcile', 'books.adjust', 'books.close', 'erp.payments.record', 'fixedcosts.write', 'returns.handback', 'exchange.approve']) expect(CHECK_PERMISSIONS, k).not.toContain(k);
   });
 
   it('keys look like area.action', () => {

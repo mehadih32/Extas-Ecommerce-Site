@@ -2,6 +2,7 @@
 // admin file, every state, kind and code the pages show has its words, and the small text helpers.
 import { describe, expect, it } from 'vitest';
 import { ERP_DEPENDENT_PATHS, MISMATCH_KINDS, SYNC_KINDS, healthLevel, type HealthLevel } from '@extas/inventory';
+import { ERP_DOCUMENT_TYPES } from '@extas/adapters';
 import { ERP_MODES } from '@extas/settings';
 import adminBn from '../../../../messages/admin.bn.json';
 import adminEn from '../../../../messages/admin.en.json';
@@ -41,9 +42,9 @@ describe('stock pages messages', () => {
       for (const s of Object.keys(ERP_DEPENDENT_PATHS['stock.pull'])) has(`stock.erp.states.${s}`);
       for (const k of SYNC_KINDS) has(`stock.runs.kind.${keyOf(k)}`);
       for (const s of ['QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELLED']) has(`stock.runs.status.${s}`);
-      for (const s of ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP']) has(`stock.docs.status.${s}`);
+      for (const s of ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP', 'RETIRED']) has(`stock.docs.status.${s}`);
       for (const s of ['pending', 'failed', 'dead', 'skipped', 'sent']) has(`stock.docs.counts.${s}`);
-      for (const k of ['order.create', 'order.status', 'return.create']) has(`stock.docs.type.${keyOf(k)}`);
+      for (const k of ERP_DOCUMENT_TYPES) has(`stock.docs.type.${keyOf(k)}`);
       for (const k of MISMATCH_KINDS) has(`stock.reconcile.kind.${k}`);
       for (const s of ['COUNTING', 'REVIEW', 'COMPLETED', 'CANCELLED']) {
         has(`stock.counts.status.${s}`);

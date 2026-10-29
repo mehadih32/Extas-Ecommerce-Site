@@ -26,7 +26,8 @@
     "payments": "Payments and COD",
     "fulfilment": "Packing and print",
     "customers": "Customers",
-    "seo": "Website and SEO"
+    "seo": "Website and SEO",
+    "books": "Books and the ERP account"
   },
   "permissions": {
     "settings": {
@@ -195,6 +196,24 @@
       "waive": "Waive an exchange delivery charge (with a reason that is logged)",
       "claims": {
         "decide": "Approve or refuse a customer’s “your mistake” claim on an exchange"
+      },
+      "handback": "Count and note the parcels a courier hands back, and send the return list to the ERP"
+    },
+    "exchange": {
+      "approve": "Approve an exchange within 72 hours and mark its lines"
+    },
+    "books": {
+      "read": "See the books, the match with the ERP and the parts of every figure",
+      "reconcile": "Run the books match and write notes on a difference",
+      "adjust": "Put a difference right by a reversing and a new entry (owner’s PIN, reason, the ERP’s matching event)",
+      "close": "Close a week, month or year, or close a month with differences (PIN, logged)"
+    },
+    "erp": {
+      "account": {
+        "read": "See Retail’s account at the ERP: the balance owed and the hold"
+      },
+      "payments": {
+        "record": "Record a payment Retail made to the ERP"
       }
     },
     "customers": {
@@ -205,6 +224,9 @@
     "seo": {
       "read": "See the SEO page: which pages search engines may list, the title and description templates, the AI drafts and the structured data",
       "manage": "Change the SEO settings, write AI drafts of titles and descriptions, and accept or discard a draft (Website → SEO)"
+    },
+    "fixedcosts": {
+      "write": "Set a month’s fixed costs (salary, rent, utilities, other)"
     }
   },
   "totp": {

@@ -6,6 +6,7 @@
 // variants and stock; the company is decided by the key on the ERP side, never sent by the shop; stock comes per SKU
 // per ERP warehouse. Business documents (PR 199, 200) go out through `push`, each with its Idempotency-Key.
 import { AdapterError } from '../define';
+import type { ErpDailySummary, ErpDeliveryResult, ErpFixedCosts, ErpGrade, ErpLateReturn, ErpLineDecision, ErpReturnList, ErpSalesOrderV6, ErpShipmentV6, ErpV6Reads } from './v6';
 
 /** Who the key belongs to, from the ERP's `/health`. */
 export interface ErpHealth {
@@ -31,6 +32,10 @@ export interface ErpVariantRow {
   size: string | null;
   retailPrice: string | null;
   avgCost: string | null;
+  /** PR 607 (v6): the price Retail buys at ("bought from ERP at"); never shown to customers. Null or absent before v6. */
+  shopPrice?: string | null;
+  /** PR 607 (v6): A, or B for the factory's own B-grade line (its own SKU, shop price and stock). Absent = A. */
+  grade?: ErpGrade;
   active: boolean;
   updatedAt: Date;
 }
@@ -42,6 +47,10 @@ export interface ErpStockRow {
   onHand: number;
   reserved: number;
   available: number;
+  /** PR 607 (v6): the SKU's grade (absent = A). */
+  grade?: ErpGrade;
+  /** PR 607 (v6): how many of `available` are unchecked returned pieces in the ERP's Return stock (sold as normal stock); absent = 0. */
+  fromReturnStock?: number;
   updatedAt: Date;
 }
 
@@ -55,6 +64,8 @@ export interface ErpPage<T> {
 
 export interface ErpListQuery {
   updatedSince?: Date | null;
+  /** PR 607 (v6): only the SKUs of one style (`GET /catalog/variants?styleCode=`). */
+  styleCode?: string | null;
   cursor?: string | null;
   limit: number;
 }
@@ -122,11 +133,33 @@ export interface ErpReturn {
 }
 
 export type ErpDocument =
-  | { type: 'order.create'; body: ErpSalesOrder }
+  | { type: 'order.create'; body: ErpSalesOrder | ErpSalesOrderV6 }
   | { type: 'order.status'; externalOrderId: string; body: { status: ErpOrderStatus } }
-  | { type: 'return.create'; body: ErpReturn };
+  | { type: 'return.create'; body: ErpReturn }
+  // PR 607 — the v6 documents (docs/erp/site-changes-v6.md §2.12 "New calls").
+  | { type: 'shipment.create'; body: ErpShipmentV6 }
+  | { type: 'order.delivery'; externalOrderId: string; body: ErpDeliveryResult }
+  | { type: 'order.line'; externalOrderId: string; lineId: string; body: ErpLineDecision }
+  | { type: 'returnList.create'; body: ErpReturnList }
+  | { type: 'exchange.lateReturn'; exchangeId: string; body: ErpLateReturn }
+  | { type: 'dailySummary.put'; date: string; body: ErpDailySummary }
+  | { type: 'fixedCosts.put'; month: string; body: ErpFixedCosts };
 
 export type ErpDocumentType = ErpDocument['type'];
+
+/** Every document kind, for lists and labels (PR 607: the v5 kinds and the v6 ones). */
+export const ERP_DOCUMENT_TYPES = [
+  'order.create',
+  'order.status',
+  'return.create',
+  'shipment.create',
+  'order.delivery',
+  'order.line',
+  'returnList.create',
+  'exchange.lateReturn',
+  'dailySummary.put',
+  'fixedCosts.put',
+] as const satisfies readonly ErpDocumentType[];
 
 /** Sending a document: the Idempotency-Key is required (contract); the same key always means the same document. */
 export interface ErpPushOptions extends ErpCallOptions {
@@ -157,6 +190,8 @@ export interface ErpApi {
    * the same Idempotency-Key, so a document the ERP already has is never applied twice (PR 200).
    */
   push(doc: ErpDocument, o: ErpPushOptions): Promise<ErpPushResult>;
+  /** PR 607 — the v6 reads, when the adapter speaks contract v6 (the shop's own ERP does; another ERP may not yet). */
+  readonly v6?: ErpV6Reads;
 }
 
 /**
@@ -195,8 +230,10 @@ export class ErpError extends AdapterError {
   readonly erpCode: string | null;
   readonly details: string[];
   readonly retryAfterMs: number | null;
+  /** PR 607: the ERP's `details` exactly as sent (e.g. `{ shortSkus: [...] }` of a 409 INSUFFICIENT_STOCK), when JSON. */
+  readonly detailsBody: unknown;
 
-  constructor(code: ErpErrorCode, message: string, extra: { status?: number | null; erpCode?: string | null; details?: string[]; retryAfterMs?: number | null } = {}) {
+  constructor(code: ErpErrorCode, message: string, extra: { status?: number | null; erpCode?: string | null; details?: string[]; retryAfterMs?: number | null; detailsBody?: unknown } = {}) {
     super(`${code}: ${message}`);
     this.name = 'ErpError';
     this.code = code;
@@ -204,6 +241,7 @@ export class ErpError extends AdapterError {
     this.erpCode = extra.erpCode ?? null;
     this.details = extra.details ?? [];
     this.retryAfterMs = extra.retryAfterMs ?? null;
+    this.detailsBody = extra.detailsBody ?? null;
   }
 
   /** Another try may succeed (rate limit, ERP error, timeout, network). */
