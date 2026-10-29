@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬১টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬৪টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,14 +36,14 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬১টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬৪টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 240/305** · 65 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S14 7/24** (wave 4) · total **261/615** active PRs |
+| Launch | **Launch 243/305** · 62 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** (wave 4) · total **264/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 03:35 (Dhaka) · commit `56d4e0e` (#50, PR 4: the smoke test opens Returns and Refused parcels) · **success**, smoke test 174 pages OK |
+| Last deploy | 30 Oct 2026, 05:23 (Dhaka) · commit `068aaf4` (#51, PR [182](docs/stages/S08.md#pr-182), 183, 284–286, 291, 292, 298, 505 packing, customers, messages) · **success**, smoke test 188 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
@@ -72,7 +72,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 17 / 26 | In progress |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 17 / 19 | In progress |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
-| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 0 / 22 | In progress (PR 222 partly) |
+| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 3 / 22 | In progress |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
 | [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 7 / 24 | In progress |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **261 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **264 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1378,13 +1378,37 @@ Planned — see register PRs 404–412: [Blueprint Appendix A](docs/BLUEPRINT.md
 
 Planned — see register PRs 425–436, 538: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
-### S11 · SEO engine — In progress (0/22)
+### S11 · SEO engine — In progress (3/22)
 
-> **বাংলায়:** গুগলের জন্য পণ্য আর ক্যাটাগরি পাতায় কাঠামোবদ্ধ তথ্য (দাম, স্টক, পথ) বসেছে; দোকানের পরিচয়ের অংশ বাকি, তাই PR 222 এখনো গোনা হয়নি।
+> **বাংলায়:** দোকানের ঠিকানার নিয়ম, প্রতিটা পাতার সার্চের শিরোনাম আর বিবরণ, আর Google-এর জন্য পাতার তথ্য (দাম, স্টক, পথ, দোকানের পরিচয়) তৈরি। আপনি চালু না করা পর্যন্ত Google-এ দোকান আসে না, AI খসড়াও বন্ধ।
 
-Started: PR 222 partly (follow-up 61, not counted as built): Product, Offer and BreadcrumbList JSON-LD on the product
-page and BreadcrumbList and ItemList on the category page (PR 45), from the page's own price and stock, no rating until
-real reviews (`seo.structuredData`); Organization is follow-up 110. Planned — see register PRs 220–238, 527, 586, 588: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
+Built (PR [220](docs/stages/S11.md#pr-220), 221, 222; 29 Oct; not deployed yet):
+
+- **Addresses and canonicals (PR 220):** English at `/`, Bengali at `/bn/` with the same slug. Every page names itself, in
+  its own language, as its canonical on the shop's own origin (the store's primary domain, else `system.stagingHost`, else
+  the request host). hreflang en/bn/x-default only where the Bengali twin passed the translation gate (PR 588). A page
+  that says no (filtered list, preview, set builder, search) is `noindex,follow` without hreflang. Capitals in a public
+  address 301 to lower case.
+- **Search titles and descriptions (PR 221):** one template per page kind (`seo.titles`: home, category, combo, combo
+  list, combos page, help, en and bn, each with its own tokens; the product templates stay in `naming.*`). The page's own
+  text first, then an accepted AI draft, then the template (cut to `naming.seoTitleMaxChars` /
+  `naming.metaDescriptionMaxChars`), then the page's own words. og:title, og:description and og:url (= canonical) too.
+- **AI drafts (PR 221):** `seo.aiDrafts` (off; 20 per press; products and categories) works only while AI is on
+  (CN-026), on the practice AI writer until the real one (PR 306). A draft waits for a person; accepted, it fills only
+  empty fields. Audited (`seo.drafts.create`, `accept`, `discard`).
+- **Structured data (PR 222):** Product, Offer / AggregateOffer and BreadcrumbList on product pages, BreadcrumbList and
+  ItemList on category pages, Organization (only what the owner filled in) and WebSite on the home page, a set as a
+  Product with one Offer at its set price, in stock only while every piece can be sold. The struck price only where the
+  page shows it. Never a rating before real reviews (PR 223). `seo.structuredData` (all parts on).
+- **Admin:** Website › SEO (`/admin/website/seo`): search engines, titles and descriptions with a live preview, data for
+  search engines, AI drafts. Permissions `seo.read` (the check account has it) and `seo.manage`. API
+  `/api/admin/seo` (GET/PUT) and `/api/admin/seo/drafts`. Guide: [`docs/admin-guide/seo.md`](docs/admin-guide/seo.md).
+- **Settings:** registry v64 (`registry-seo.ts`: `seo.indexing`, `seo.titles`, `seo.aiDrafts`; `seo.structuredData`
+  extended). Search engines off until go-live, so the preview always stays noindex.
+- **Tests:** settings (registry), the URL and indexing rules, the title templates, the structured data, the practice
+  AI writer, and DB tests for the SEO API and the AI drafts.
+
+Planned — see register PRs 223–238, 527, 586, 588: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
 
 ### S12 · Content & blog — Not started
 
@@ -1477,6 +1501,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #52 | PR [220](docs/stages/S11.md#pr-220), [221](docs/stages/S11.md#pr-221), [222](docs/stages/S11.md#pr-222) | 30 Oct | The SEO engine's base: each page names its own address in its own language, search engines stay off until go-live (the preview is always hidden from them), search titles and descriptions from templates with AI drafts a person accepts (off until AI is on), and structured data for the shop, the website, products and sets. New admin page Website › SEO with its guide. |
 | #51 | PR [182](docs/stages/S08.md#pr-182), [183](docs/stages/S08.md#pr-183), [284](docs/stages/S14.md#pr-284), [285](docs/stages/S14.md#pr-285), [286](docs/stages/S14.md#pr-286), [185](docs/stages/S08.md#pr-185) (follow-up [466](docs/stages/S24.md#pr-466)), [198](docs/stages/S09.md#pr-198), [291](docs/stages/S14.md#pr-291), [292](docs/stages/S14.md#pr-292), [298](docs/stages/S14.md#pr-298), [505](docs/stages/S14.md#pr-505) | 30 Oct | Orders → Packing & print → Pack: pick, check every piece, pack (photo and weight checks, off by default) and hand over; a damaged or missing piece opens a card and holds the order until a person decides. Customers: the list with its views and search, one customer's page (orders, Sales delivered only, exchanges, who looked), and To review for the same person's profiles. Messages: SMS (BulkSMSBD) and WhatsApp (Meta) on their mocks until the keys, consent and stop words checked before every send, the template editor with a live preview, the order journey, the message log and channels. The Orders tabs no longer squeeze on a phone. |
 | direct | CN-029 (docs only) | 30 Oct | PR [607–621](docs/stages/README.md) will be built in one run with five builders in parallel (two new section agents, Pherot and Hisabi); each store has its own ERP keys; the old exchange and return code is reworked inside PR [610–614](docs/stages/README.md). Plan in `docs/RETAIL-ERP-MODEL.md` §15–16. |
 | #50 | PR [4](docs/stages/S0A.md#pr-4) | 30 Oct | The nightly and after-deploy smoke test now also opens Orders → Returns and Refused parcels (the check account can see them, still read-only), so a broken returns page rolls the deploy back. |
