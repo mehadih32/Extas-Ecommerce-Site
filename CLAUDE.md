@@ -42,7 +42,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
    Then it gets built.
 9. **Quality is ours.** Type checks, tests, the Lighthouse budget, the device gate (0 fails) and the journeys must
    pass before a merge. You create the PR, test it and merge it yourself (A1.1 rule 3).
-10. **2–3 agents in parallel at most**, each on its own git worktree. S0A and S00 (including the full Prisma schema skeleton) run with one agent alone
+10. **2–3 agents in parallel at most**, each on its own git worktree. **Exception (owner, 30 Oct 2026, CN-029): the run PR 607–621 uses five builders in parallel** (Bhandari, Sawdagor, Gyani, Pherot, Hisabi) after Phase 0 has written the shared base; see `docs/RETAIL-ERP-MODEL.md` §15. S0A and S00 (including the full Prisma schema skeleton) run with one agent alone
     before parallel work starts. Shared files (Prisma schema, design tokens, routing table) have one
     owner (A1.4).
 

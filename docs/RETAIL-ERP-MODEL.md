@@ -316,3 +316,42 @@ claims list.
 
 New numbers 607–621 and the existing PRs they update are in `docs/MASTER-REGISTER.md` (CN-028 block and the stage
 tables). Fourteen are Launch (the real ERP carries the first real orders); the signed ERP-to-site calls are After launch.
+
+## 15. The build plan: PR 607–621 in one run (CN-029, 30 Oct 2026)
+
+**Owner's decision:** all fifteen PRs in one run, no parts. Speed comes from five builders working at the same time on their own git worktrees, quality from tests first, one independent reviewer (`qa-gate`) and a whole-ERP check at the end. One commit per register PR (`PR <n>: …`), each PR rebase-merged after its gates pass.
+
+### Phase 0 — the shared base (one agent, Bhandari, alone, first)
+Nothing else starts until it is merged, because it holds every file that more than one lane would otherwise change.
+- PR 607 (contract v6 in the adapter and the mock ERP) and PR 608 (event ledger and webhook receiver v6), both **per store** (§16).
+- One additive migration with every new table of PR 607–618 (event ledger, ERP account entries, pipeline pieces, day closes, match results and differences, daily summaries, fixed costs, return lists and hand-back counts, exchange links, books adjustments, the store's ERP link without its secrets). Migration numbers for later changes are reserved per lane (Bhandari 1, Sawdagor 2, Pherot 3, Gyani 4, Hisabi 5 in the number gaps the migration file names) so that no two lanes pick the same number.
+- Every new setting of §11, every permission of §12 (also in `ACCESS_TREE`), and the switch `erp.model` (v5 stays the default).
+- The shared TypeScript types of the ledger, the pipeline stock and the summary (`@extas/erp-types`), so each lane can write against them before the other lanes land.
+
+### Phase 1 — five lanes at the same time
+| Lane (agent) | PRs | Notes |
+|---|---|---|
+| Bhandari | 609 import by style code and the price floor, then 620 signed ERP→shop calls | 620 is After launch and goes last |
+| Sawdagor | 610 orders to the ERP v6 with hold, pause and the short line, then 611 shipment at pickup and the delivery results | 611 sends `POST /shipments` when the courier confirms pickup |
+| Pherot (new) | 612 return lists, 613 Returns section, 614 exchange through the ERP, and the rework of PR 184–191, 525, 526 | old flow keeps working while `erp.model` is v5 |
+| Gyani | 615 ERP account ledger and pipeline stock, 616 books match engine | the three-way match and the day close |
+| Hisabi (new) | 617 daily summary, 618 fixed costs and extra cost lines, the Books status card | writes against the Phase 0 types until 615 lands |
+
+Rules for all lanes: tests for the owner's rules first, then the code; a lane touches only its own PRs (anything shared goes to its owner, one line in `PROGRESS.md`); every new admin page gets its guide (CN-026) and every new screen is checked at 390 / 768 / 1366 / 1920 px in English and Bengali; each PR updates `README.md`, `PROGRESS.md` and `docs/stages/bn.json` (then `pnpm docs:stages`). `qa-gate` reviews each lane's PRs before they merge.
+
+### Phase 2 — switch-over and acceptance (Prohori, after Phase 1)
+- PR 619 switch-over (switch date, opening balance, the moved old orders at buying price, the ERP link page) and PR 621 the acceptance suite.
+- The acceptance suite must prove, on the mock and (when the owner has typed the demo key) on the demo ERP: the tie formula for a day, a week, a month, a year and for life; a lost webhook, a doubled event, a wrong amount and a late return each found and fixed only by a reversing entry; the 72-hour exchange rule; hold → checkout pause → resume; and that store A's key can never read or write store B.
+
+### Phase 3 — the whole-ERP check
+`qa-gate` runs the device gate, the smoke test (the new pages added to `docs/qa/smoke.json`), the journeys and the 70-order simulation's money lines; fresh reviewers look at the whole change for money and data problems, round after round (at most 3) until a round finds none. Then the Bengali report for the owner, with the one step only he can do: type the demo ERP key in the vault.
+
+### What the old work becomes
+PR 184, 185, 187, 188, 189, 190, 191, 525 and 526 stay as built while `erp.model` is v5. PR 610–614 add the v6 path beside them; at the switch-over (619) the v6 path takes over and the old shop-side QC, restock and write-off paths are switched off (kept in the code as switches, never deleted: CLAUDE.md rule 3).
+
+## 16. One ERP link per store (CN-029)
+
+- One store = one ERP company. Each store has its **own** API key, its **own** webhook secret and its **own** signing secret for the ERP's calls to the shop (PR 620). They are typed by the owner in "Keys & connections", stored only in the encrypted vault under the store's id, never in Git, in chat or in a log, and never shared between stores.
+- Every ERP call, webhook, ledger entry, day close, match result and summary carries the store id and goes through the store guard; a call made with store A's key can never read or write store B (test, PR 607 and 621).
+- The switch date, the opening balance and the settings of §11 are per store. A handover to a new owner replaces the store's three secrets (the new owner types their own), starts that store's own ledgers and keeps the history of the old one unreachable from the new keys (PR 509, PR 619).
+- Development and tests use the mock ERP with one test key per test store. The real demo key is typed by the owner when he connects the demo ERP.

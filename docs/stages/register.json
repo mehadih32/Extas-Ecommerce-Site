@@ -1948,6 +1948,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-029",
+   "date": "30 Oct",
+   "title": "owner: build PR 607–621 all at once, with five builders in parallel; each store has its own ERP keys",
+   "text": "No new PR numbers; the total stays 621 (615 active, 6 parked).",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
@@ -16239,7 +16248,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over."
+    }
+   ],
    "mentions": [
     525
    ],
@@ -16270,7 +16287,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over."
+    }
+   ],
    "mentions": [
     187
    ],
@@ -16301,7 +16326,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "শিগগির — এখনো বানানো হয়নি। “কুরিয়ার, ফেরত আর এক্সচেঞ্জ” ধাপের অংশ: কুরিয়ার বুকিং, স্টিকার, পিকিং লিস্ট, প্যাকিং, ট্র্যাকিং আর এক্সচেঞ্জ।",
@@ -16330,7 +16363,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over."
+    }
+   ],
    "mentions": [
     185,
     186,
@@ -17225,7 +17266,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 607, 608** — Updated 30 Oct 2026 (CN-029): the ERP link is per store. The base URL, API key, webhook secret and signing secret are read from the vault for the store in `ctx`, never from one shared setting; a call made with store A's key can never touch store B (test); the mock ERP has one key per test store."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "শিগগির — এখনো বানানো হয়নি। “স্টক আর ERP সংযোগ” ধাপের অংশ: আপনার ERP থেকে স্টক আনা, অর্ডার ERP-তে পাঠানো আর গুদামের হিসাব।",
@@ -17254,7 +17303,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 607, 608** — Updated 30 Oct 2026 (CN-029): the ERP link is per store. The base URL, API key, webhook secret and signing secret are read from the vault for the store in `ctx`, never from one shared setting; a call made with store A's key can never touch store B (test); the mock ERP has one key per test store."
+    }
+   ],
    "mentions": [
     196
    ],
@@ -25194,7 +25251,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 512** — Updated 30 Oct 2026 (CN-029): the multi-store scope carries the ERP link, the account ledger, the day closes and the match results per store."
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -26402,7 +26467,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 619** — Updated 30 Oct 2026 (CN-029): the switch date, opening balance and moved-orders list are kept per store; a handover pack replaces the store's ERP keys (the new owner types their own) and starts the store's own ledgers."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "শিগগির — এখনো বানানো হয়নি। “চালু করা, ব্যাকআপ আর go-live” ধাপের অংশ: ব্যাকআপের সেটিংস, রিস্টোর মহড়া আর extas.com.bd-তে নতুন দোকান চালু করা।",

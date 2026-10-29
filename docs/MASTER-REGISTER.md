@@ -606,6 +606,18 @@ the server.*
 > The owner's answers to the ERP's eight questions (Q1–Q8) are in `docs/RETAIL-ERP-MODEL.md` §1.
 > Total now **621 PRs** (615 active, 6 parked).
 
+> **CN-029 · 30 Oct 2026 (owner: build PR 607–621 all at once, with five builders in parallel; each store has its own ERP keys).** No new PR numbers; the total stays 621 (615 active, 6 parked).
+>
+> **(1) One run, not parts.** PR 607–621 are built as one run, one commit per register PR, in the order: Phase 0 alone (the shared base), Phase 1 five lanes in parallel, Phase 2 the switch-over and the acceptance suite, then the whole-ERP check. The plan, the lanes and the merge order are in `docs/RETAIL-ERP-MODEL.md` §15.
+>
+> **(2) The old exchange and return work is brought to the new rules inside the same run.** What PR 184–191, 525 and 526 built under the old model (the shop's own QC, restock or write-off, the shop's own refund handling) is reworked by PR 611–614 and 610 as their register rows' "Updated 25 Oct 2026 (CN-028)" lines say. It is not a separate PR. Until the switch-over (PR 619) the old flow keeps working when `erp.model` is v5; v6 is the new flow. Each reworked part keeps its tests and gets the new ones.
+>
+> **(3) Five builders in parallel (this replaces the "2–3 agents at most" part of CLAUDE.md rule 10 for this run).** The owner asked on 30 Oct 2026 for the usual lanes plus two more. The five lanes are Bhandari, Sawdagor, Gyani and two new section agents, Pherot (returns and exchange) and Hisabi (daily summary and fixed costs). Each works on its own git worktree and only inside its own PRs; the shared files (Prisma schema, settings registry, permissions, routing table, design tokens) are written first in Phase 0 by one agent and are then changed only by their owner. An independent reviewer (`qa-gate`) checks each lane and the whole run.
+>
+> **(4) Every store has its own ERP link and its own keys.** One store = one ERP company = its own API key, its own webhook secret and its own signing secret for the ERP's calls to the shop, all typed by the owner in the vault (never in Git, never in chat), never shared between stores, replaced at a handover. The switch date, the opening balance, the ledgers, the day closes and the match results are kept per store. A store's key can never read or write another store's account. The demo key is typed by the owner when the real demo ERP is connected; until then the mock runs.
+>
+> **(5) Where it is written.** Updated lines on PR 607, 608, 619 and 512 (CN-029) and the new §15–16 of `docs/RETAIL-ERP-MODEL.md`; two new agent profiles `docs/agents/pherot.md` and `docs/agents/hisabi.md`; CLAUDE.md rule 10.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
@@ -734,6 +746,10 @@ the server.*
 - **PR 166 / 174 (S07, COD and payment reconciliation)** — Updated 25 Oct 2026 (CN-028): customer payments are no longer sent to the ERP from the switch date; COD and gateway reconciliation stay in the shop. Payments **to** the ERP are PR 615.
 - **PR 342–355, 504, 536–537, 568 (S16, finance, costs, reports, month close)** — Updated 25 Oct 2026 (CN-028): the month-end expense push to the ERP is replaced by the daily summary (PR 617) and fixed costs (PR 618); `MonthClose` closes through the books match (PR 616) and no longer carries a push to the ERP; every report figure has an "explain this number" view.
 - **Dashboard, Money and Reports pages (S05, S16)** — Updated 25 Oct 2026 (CN-028): the "Books status" card (matched days, open differences, balance owed to the ERP, returns waiting for the owner's check, exchanges at risk) and its Needs-you-now rows.
+- **PR 607, 608** — Updated 30 Oct 2026 (CN-029): the ERP link is per store. The base URL, API key, webhook secret and signing secret are read from the vault for the store in `ctx`, never from one shared setting; a call made with store A's key can never touch store B (test); the mock ERP has one key per test store.
+- **PR 619** — Updated 30 Oct 2026 (CN-029): the switch date, opening balance and moved-orders list are kept per store; a handover pack replaces the store's ERP keys (the new owner types their own) and starts the store's own ledgers.
+- **PR 512** — Updated 30 Oct 2026 (CN-029): the multi-store scope carries the ERP link, the account ledger, the day closes and the match results per store.
+- **PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over.
 
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
 invoice and PDF templates S14 → S20 · celebration overlay S19 → S02 · user manual S20 → S18 ·
