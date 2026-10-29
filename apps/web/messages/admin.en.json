@@ -52,7 +52,9 @@
     "packingPack": "Pack",
     "messagesLog": "Message log",
     "messagesChannels": "Channels & limits",
-    "messagesConsent": "Consent"
+    "messagesConsent": "Consent",
+    "messagesJourney": "Order journey",
+    "messagesTemplates": "Templates"
   },
   "login": {
     "metaTitle": "Admin sign-in",

@@ -70,6 +70,10 @@
     "consent": {
       "label": "Consent and stop words",
       "help": "A customer who replies with a stop word (STOP, UNSUBSCRIBE, বন্ধ …) gets no more messages on that channel; a start word takes it back. Choose whether a stop covers every message or only offers, the channel he wrote on or every channel, which journey steps are offers (sent only to a customer who ticked yes), and whether the stop is answered. A stop is always honoured."
+    },
+    "autoReply": {
+      "label": "Auto-reply",
+      "help": "When a customer writes to the shop on WhatsApp (anything but a 1, 2, 3 answer or a stop word), he gets a short answer: the template, once in so many hours for his number, always or only outside the shop's hours. A customer who stopped messages gets nothing. Off as it ships."
     }
   }
 }

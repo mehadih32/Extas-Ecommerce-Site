@@ -488,3 +488,110 @@ export function consentWordOf(cfg: { stopWords: readonly string[]; startWords: r
   if (cfg.startWords.some((s) => replyWords(s) === w)) return 'start';
   return null;
 }
+
+// ---- PR 505 · the template editor ----
+
+/**
+ * The `{tokens}` a template may use: exactly what `render` fills (the default pack checks the same list, @extas/seed
+ * `TEMPLATE_TOKENS`). A token outside it would go out as written, so the editor refuses it.
+ */
+export const MESSAGE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'amountDue', 'amountLine', 'exactAmountLine', 'trackingLink', 'orderLink', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink'] as const;
+export type MessageToken = (typeof MESSAGE_TOKENS)[number];
+
+/** The longest body and subject a template keeps (the default pack's own limits). */
+export const TEMPLATE_LIMITS = { body: 2_000, subject: 200 } as const;
+
+/**
+ * What the editor says about a template's words. EMPTY, UNKNOWN_TOKEN, NO_SUBJECT and TOO_LONG refuse a save; the rest
+ * are warnings: NOT_BENGALI (a Bengali template with no Bengali letter: SIM-F-025, the journey half English),
+ * AMOUNT_ON_PAID (`{total}` / `{amountDue}`: a fully paid order skips the whole message — `{amountLine}` drops only its
+ * line, SIM-F-001) and LINK_PROMISE (a link the shop cannot make yet: the message is skipped, never sent with an empty
+ * link, SIM-F-031). A WhatsApp template also gets its approval problems (`waBodyProblems`).
+ */
+export const TEMPLATE_PROBLEMS = ['EMPTY', 'UNKNOWN_TOKEN', 'NO_SUBJECT', 'TOO_LONG', 'NOT_BENGALI', 'AMOUNT_ON_PAID', 'LINK_PROMISE'] as const;
+export type TemplateProblem = (typeof TEMPLATE_PROBLEMS)[number];
+export const BLOCKING_PROBLEMS: ReadonlySet<TemplateProblem> = new Set(['EMPTY', 'UNKNOWN_TOKEN', 'NO_SUBJECT', 'TOO_LONG']);
+
+const BENGALI_LETTER = /[ঀ-৿]/;
+const LINKS_OF_SHOP: ReadonlySet<string> = new Set([...LINK_TOKENS, 'keptOrderLink', 'payLink', 'exactAmountLine']);
+
+export interface TemplateWords {
+  channel: MessageChannel;
+  locale: string;
+  body: string;
+  subject: string | null;
+}
+
+/** The tokens of a template's words that `render` does not know. */
+export const unknownTokens = (t: Pick<TemplateWords, 'body' | 'subject'>): string[] =>
+  [...new Set([...tokensIn(t.body), ...tokensIn(t.subject ?? '')])].filter((k) => !(MESSAGE_TOKENS as readonly string[]).includes(k));
+
+/** Everything the editor says about a template's words (`hasHost`: the shop's address is known, so links can be made). */
+export function templateProblems(t: TemplateWords, hasHost: boolean): TemplateProblem[] {
+  const out: TemplateProblem[] = [];
+  const all = [...tokensIn(t.body), ...tokensIn(t.subject ?? '')];
+  if (!t.body.trim()) out.push('EMPTY');
+  if (unknownTokens(t).length) out.push('UNKNOWN_TOKEN');
+  if (t.channel === 'EMAIL' && !t.subject?.trim()) out.push('NO_SUBJECT');
+  if ([...t.body].length > TEMPLATE_LIMITS.body || [...(t.subject ?? '')].length > TEMPLATE_LIMITS.subject) out.push('TOO_LONG');
+  const words = `${t.body} ${t.subject ?? ''}`.replace(/\{[A-Za-z][A-Za-z0-9]*\}/g, '');
+  if (t.locale === 'bn' && t.body.trim() && !BENGALI_LETTER.test(words)) out.push('NOT_BENGALI');
+  if (all.some((k) => AMOUNT_TOKENS.has(k))) out.push('AMOUNT_ON_PAID');
+  if (!hasHost && all.some((k) => LINKS_OF_SHOP.has(k))) out.push('LINK_PROMISE');
+  return out;
+}
+
+export type SamplePreview = { sample: SampleCase; ok: true; text: string; subject: string | null; smsParts: number | null } | { sample: SampleCase; ok: false; reason: string; field: string };
+
+/** A template filled for each sample order (cash on delivery, prepaid, part-paid), as the engine would fill it. */
+export function previewTemplate(t: TemplateWords, s: SampleSettings): SamplePreview[] {
+  const lang = t.locale === 'en' ? 'en' : 'bn';
+  return SAMPLE_CASES.map((sample): SamplePreview => {
+    const r = render(t.body, t.channel === 'EMAIL' ? (t.subject ?? '') : null, sampleInput(s, lang, sample));
+    return r.ok ? { sample, ok: true, text: r.text, subject: r.subject, smsParts: t.channel === 'SMS' ? smsParts(r.text).parts : null } : { sample, ok: false, reason: r.reason, field: r.field };
+  });
+}
+
+/** Where a template is used: a journey step (with its channels and whether it is on), or another of the engine's messages. */
+export interface TemplateUse {
+  /** A journey step, `selfConfirmAnswer`, `advanceRequest`, `consentReply`, `autoReply` or `cancelDuplicate`. */
+  use: string;
+  channels: MessageChannel[];
+  on: boolean;
+}
+
+export interface TemplateUseSettings {
+  journey: Journey;
+  duplicateTemplate: string;
+  advance: { template: string; channels: { SMS: boolean; WHATSAPP: boolean } };
+  consentTemplates: readonly string[];
+  consentReplyOn: boolean;
+  autoReply: { enabled: boolean; template: string };
+}
+
+const stepChannels = (s: JourneyStepConfig): MessageChannel[] => [...new Set<MessageChannel>([s.channel, ...(s.fallback !== 'NONE' ? [s.fallback] : []), ...(s.email ? (['EMAIL'] as const) : [])])];
+
+/** Which message sends which template, on which channels (the template editor's "used by"). */
+export function templateUses(c: TemplateUseSettings): Map<string, TemplateUse[]> {
+  const out = new Map<string, TemplateUse[]>();
+  const add = (key: string, u: TemplateUse) => out.set(key, [...(out.get(key) ?? []), u]);
+  for (const [step, s] of Object.entries(c.journey) as [JourneyStep, JourneyStepConfig][]) add(s.template, { use: step, channels: stepChannels(s), on: s.on });
+  const cancelled = c.journey.cancelled;
+  add(c.duplicateTemplate, { use: 'cancelDuplicate', channels: stepChannels(cancelled), on: cancelled.on });
+  const sc = c.journey.selfConfirm;
+  for (const a of Object.values(SELF_CONFIRM_ANSWERS)) add(a.template, { use: SELF_CONFIRM_ANSWER, channels: stepChannels(sc), on: sc.on });
+  const adv = (['SMS', 'WHATSAPP'] as const).filter((ch) => c.advance.channels[ch]);
+  add(c.advance.template, { use: 'advanceRequest', channels: adv, on: adv.length > 0 });
+  for (const k of c.consentTemplates) add(k, { use: 'consentReply', channels: ['SMS', 'WHATSAPP'], on: c.consentReplyOn });
+  add(c.autoReply.template, { use: 'autoReply', channels: ['WHATSAPP'], on: c.autoReply.enabled });
+  return out;
+}
+
+/** PR 505 — an auto-reply's no-repeat key: one per number in each window of `hours` (counted from the epoch). */
+export const autoReplyKey = (phone: string, at: Date, hours: number): string => `autoReply:${phone}:${Math.floor(at.getTime() / (Math.max(1, hours) * 3_600_000))}`;
+
+/** PR 505 — is `at` inside the shop's open hours (in its time zone)? `open` = `close` never happens (the setting refuses it). */
+export function withinHours(at: Date, timeZone: string, openHour: number, closeHour: number): boolean {
+  const h = zoned(at, timeZone).h;
+  return openHour < closeHour ? h >= openHour && h < closeHour : h >= openHour || h < closeHour;
+}

@@ -139,8 +139,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courier'] }] },
     ],
   },
-  // S14 (PR 291): the Message log (MSG-04) and Channels & limits (MSG-05). The order journey, campaigns and templates
-  // join as their PRs are built.
+  // S14 (PR 291): the Message log (MSG-04) and Channels & limits (MSG-05). PR 505: the Order journey (MSG-01) and the
+  // Templates (MSG-03) come first, in the demo's order. Campaigns join with their PR.
   {
     id: 'messages',
     icon: 'msg',
@@ -148,6 +148,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     base: '/admin/messages',
     guide: 'comms',
     tabs: [
+      { id: 'journey', pages: [{ href: '/admin/messages/journey', perm: 'messages.journey.read', keys: ['messagesJourney'] }] },
+      { id: 'templates', pages: [{ href: '/admin/messages/templates', perm: 'messages.templates.read', keys: ['messagesTemplates'] }] },
       { id: 'log', pages: [{ href: '/admin/messages/log', perm: 'messages.log.view', keys: ['messagesLog'] }] },
       // PR 298: Consent is the Channels & limits tab's second page
       {

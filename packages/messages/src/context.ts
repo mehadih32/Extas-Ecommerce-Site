@@ -142,6 +142,9 @@ export const MESSAGE_PERMISSIONS = [
   // PR 298: Messages › Consent
   'messages.consent.view',
   'messages.consent.write',
+  // PR 505: Messages › Templates
+  'messages.templates.read',
+  'messages.templates.write',
 ] as const;
 export type MessagesPermission = (typeof MESSAGE_PERMISSIONS)[number];
 

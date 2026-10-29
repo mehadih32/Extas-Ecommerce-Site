@@ -62,7 +62,7 @@ export async function recordConsentChange(db: Db, storeId: number, c: ConsentCha
 }
 
 /** The customer behind a number in this store, when he has an account. */
-async function customerOf(db: Db, storeId: number, phone: string): Promise<string | null> {
+export async function customerOf(db: Db, storeId: number, phone: string): Promise<string | null> {
   return (await db.customer.findFirst({ where: { storeId, phone, archivedAt: null }, orderBy: { createdAt: 'asc' }, select: { id: true } }))?.id ?? null;
 }
 

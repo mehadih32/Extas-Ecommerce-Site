@@ -907,6 +907,22 @@
       "name": "Messages on again (the answer to a start word)",
       "enabled": true,
       "body": "{storeName}: messages are on again. Write STOP to stop them."
+    },
+    {
+      "key": "reply.received",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Auto-reply (a customer wrote to the shop)",
+      "enabled": true,
+      "body": "আপনার মেসেজ পেয়েছি, ধন্যবাদ। {storeName}-এর টিম যত তাড়াতাড়ি পারে উত্তর দেবে।"
+    },
+    {
+      "key": "reply.received",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Auto-reply (a customer wrote to the shop)",
+      "enabled": true,
+      "body": "Thank you, we have your message. The {storeName} team will answer as soon as it can."
     }
   ]
 }

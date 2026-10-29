@@ -3,8 +3,8 @@
 // shows a raw code.
 import { describe, expect, it } from 'vitest';
 import { WHATSAPP_TEMPLATE_STATES } from '@extas/adapters';
-import { WA_BODY_PROBLEMS } from '@extas/messages/pure';
-import { JOURNEY_STEPS, MESSAGE_CHANNELS } from '@extas/settings';
+import { SAMPLE_CASES, TEMPLATE_PROBLEMS, WA_BODY_PROBLEMS } from '@extas/messages/pure';
+import { AUTO_REPLY_WHEN, JOURNEY_STEPS, MESSAGE_CHANNELS } from '@extas/settings';
 import bn from '../../../messages/admin-messages.bn.json';
 import en from '../../../messages/admin-messages.en.json';
 import { t, type Dict } from '../i18n';
@@ -27,13 +27,20 @@ describe('the Messages pages` words', () => {
       const has = (k: string) => expect(t(d, k), k).not.toBe(k);
       for (const s of ['QUEUED', 'SENT', 'DELIVERED', 'FAILED', 'SKIPPED', 'BLOCKED_BY_GUARD']) has(`msg.status.${s}`);
       for (const c of MESSAGE_CHANNELS) has(`msg.channel.${c}`);
-      for (const s of [...JOURNEY_STEPS, 'selfConfirmAnswer', 'advanceRequest', 'consentReply']) has(`msg.step.${s}`);
+      for (const s of [...JOURNEY_STEPS, 'selfConfirmAnswer', 'advanceRequest', 'consentReply', 'autoReply', 'cancelDuplicate']) has(`msg.step.${s}`);
       for (const r of REASONS) has(`msg.reason.${r}`);
       for (const m of ['MOCK', 'SANDBOX', 'LIVE', 'none']) has(`msg.mode.${m}`);
       for (const e of ['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'NOT_FOUND', 'NOT_RETRYABLE', 'PROVIDER_ERROR', 'network', 'other']) has(`msg.err.${e}`);
       // PR 292: every state Meta gives a template, and every reason it would refuse one
       for (const s of [...WHATSAPP_TEMPLATE_STATES, 'none']) has(`msg.wa.state.${s}`);
       for (const p of WA_BODY_PROBLEMS) has(`msg.wa.problem.${p}`);
+      // PR 505: every problem the template editor names, every sample order, the journey's and the auto-reply's choices
+      for (const p of TEMPLATE_PROBLEMS) has(`msg.tpl.problem.${p}`);
+      for (const c of SAMPLE_CASES) has(`msg.tpl.sample.${c}`);
+      for (const w of ['now', 'after', 'at']) has(`msg.journey.whenOpt.${w}`);
+      for (const w of ['all', 'cod', 'prepaid']) has(`msg.journey.whoOpt.${w}`);
+      for (const w of ['store', 'bn', 'en']) has(`msg.journey.languageOpt.${w}`);
+      for (const w of AUTO_REPLY_WHEN) has(`msg.auto.whenOpt.${w}`);
       expect(label(d, 'reason', 'SOMETHING_NEW')).toBe('SOMETHING_NEW');
       expect(label(d, 'reason', null)).toBe('');
       expect(msgError(d, 'SOMETHING_NEW')).toBe(t(d, 'msg.err.other'));

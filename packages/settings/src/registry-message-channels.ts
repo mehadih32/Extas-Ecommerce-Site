@@ -7,6 +7,7 @@
 // PR 292 — the WhatsApp Business Platform: the template language codes, the approval category and the webhook's size.
 // PR 298 — consent and opt-out: the words that stop and restart messages, what a stop covers, which journey steps are
 // offers (sent only to a customer who said yes), and whether a stop is answered. Honouring a stop is never switched off.
+// PR 505 — the auto-reply to a customer who writes on WhatsApp (its template, how often, at which hours); off.
 //
 // Nothing here sends anything on its own, moves money or changes a price.
 import { z } from 'zod';
@@ -92,7 +93,30 @@ export const consentSettingsSchema = z
   .refine((c) => !c.stopWords.some((s) => c.startWords.some((t) => t.toUpperCase() === s.toUpperCase())), { message: 'a word cannot both stop and start', path: ['startWords'] });
 export type ConsentSettings = z.output<typeof consentSettingsSchema>;
 
-const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'messages', version: V } as const;
+/**
+ * PR 505 — the auto-reply: when a customer writes to the shop on WhatsApp (anything that is not a self-confirm answer or
+ * a stop / start word), he gets the `template` once in each `onceEveryHours` (his number, the window), `always` or only
+ * `outsideHours` (before `openHour` or from `closeHour` on, in the store's time zone; the hours may wrap midnight). A
+ * customer who stopped messages on the channel gets nothing. Off as it ships.
+ */
+export const AUTO_REPLY_WHEN = ['always', 'outsideHours'] as const;
+export const autoReplySchema = z
+  .object({
+    enabled: z.boolean(),
+    template: z
+      .string()
+      .regex(/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)*$/, { message: 'dotted camelCase key' })
+      .max(80),
+    onceEveryHours: z.int().min(1).max(24 * 30),
+    when: z.enum(AUTO_REPLY_WHEN),
+    openHour: z.int().min(0).max(23),
+    closeHour: z.int().min(0).max(23),
+  })
+  .strict()
+  .refine((a) => a.openHour !== a.closeHour, { message: 'the shop opens and closes at different hours', path: ['closeHour'] });
+export type AutoReplySettings = z.output<typeof autoReplySchema>;
+
+const base ={ scope: 'store', isOwnerData: false, isPublic: false, group: 'messages', version: V } as const;
 
 export const messageChannelSettings = {
   // ---- PR 291 · the SMS gateway ----
@@ -139,5 +163,15 @@ export const messageChannelSettings = {
     labelKey: 'messages.consent.label',
     helpKey: 'messages.consent.help',
     sortOrder: 230,
+  }),
+  // ---- PR 505 · the auto-reply ----
+  'messages.autoReply': setting({
+    ...base,
+    schema: autoReplySchema,
+    default: { enabled: false, template: 'reply.received', onceEveryHours: 24, when: 'always', openHour: 10, closeHour: 22 },
+    valueType: 'JSON',
+    labelKey: 'messages.autoReply.label',
+    helpKey: 'messages.autoReply.help',
+    sortOrder: 240,
   }),
 };

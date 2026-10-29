@@ -63,7 +63,9 @@
       },
       "messages": {
         "log": "মেসেজ লগ",
-        "channels": "চ্যানেল আর সীমা"
+        "channels": "চ্যানেল আর সীমা",
+        "journey": "অর্ডারের মেসেজ",
+        "templates": "টেমপ্লেট"
       }
     },
     "purpose": {

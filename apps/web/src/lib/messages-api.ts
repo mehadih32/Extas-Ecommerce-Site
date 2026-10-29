@@ -27,6 +27,12 @@
 //   PUT   /api/admin/messages/consent          {version?, consent} the stop words and their rules (STALE in between)
 //   POST  /api/admin/messages/consent/record   {phone, channels, action: stopAll | allowAll | stopOffers | allowOffers}
 //                                            a customer's stop or start, recorded at his request
+//   GET   /api/admin/messages/templates    PR 505: every template grouped by key, where each is used, the missing
+//                                            languages, the problems, the sample previews, the auto-reply
+//   POST  /api/admin/messages/templates    {key, channel, locale, body, subject?} a missing one added
+//   PUT   /api/admin/messages/templates/auto-reply   {version?, autoReply} the auto-reply's settings (STALE in between)
+//   PUT   /api/admin/messages/templates/:id          {version, body, subject?} its words (STALE in between)
+//   POST  /api/admin/messages/templates/:id/reset    {version} its default words back
 // The WhatsApp provider's own webhook is not here: app/api/whatsapp/webhook (signed, no session).
 import { createConnections, messageAdapters } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -112,6 +118,26 @@ export async function messagesRoute(request: Request, deps: AdminDeps | null, pa
         return { consent: await ms.saveConsentSettings(x.deps, x.who, input, versionOf(version)) };
       });
     return notAllowed();
+  }
+  if (a === 'templates') {
+    // PR 505: the template editor and the auto-reply
+    if (path.length > 3) return fail(404, 'not-found');
+    if (b === undefined) {
+      if (m === 'GET') return handle(request, deps, 'messages.templates.read', async (x) => ({ templates: await ms.templatesScreen(x.deps, x.who) }));
+      if (m === 'POST') return handle(request, deps, 'messages.templates.write', async (x) => ({ templates: await ms.createTemplate(x.deps, x.who, await body(request)) }));
+      return notAllowed();
+    }
+    if (b === 'auto-reply' && c === undefined)
+      return m === 'PUT'
+        ? handle(request, deps, 'messages.templates.write', async (x) => {
+            const { version, ...input } = await body(request);
+            return { templates: await ms.saveAutoReply(x.deps, x.who, input, versionOf(version)) };
+          })
+        : notAllowed();
+    if (!isUuid(b)) return fail(400, 'INVALID_INPUT', ['id']);
+    if (c === undefined) return m === 'PUT' ? handle(request, deps, 'messages.templates.write', async (x) => ({ templates: await ms.saveTemplate(x.deps, x.who, b, await body(request)) })) : notAllowed();
+    if (c === 'reset') return m === 'POST' ? handle(request, deps, 'messages.templates.write', async (x) => ({ templates: await ms.resetTemplate(x.deps, x.who, b, await body(request)) })) : notAllowed();
+    return fail(404, 'not-found');
   }
   if (b !== undefined) return fail(404, 'not-found');
   if (a === 'journey') {
