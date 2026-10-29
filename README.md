@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৫৭টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬১টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,18 +36,18 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) কুরিয়ার (S08: কাঠামো, Steadfast, Pathao) আর কাস্টমার (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) তৈরি হচ্ছে। মোট ৬১৫টা PR-এর মধ্যে ২৫৭টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬১টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 236/305** · 69 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S14 3/24** (wave 4) · total **257/615** active PRs |
+| Launch | **Launch 240/305** · 65 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S14 7/24** (wave 4) · total **261/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 02:02 (Dhaka) · commit `9e01e00` (#49, PR [184](docs/stages/S08.md#pr-184), 185, 187–191, 525, 526 courier sync, exchanges, returns, refused parcels; PR [573](docs/stages/S03.md#pr-573) combo speed) · **success**, smoke test 170 pages OK |
+| Last deploy | 30 Oct 2026, 03:35 (Dhaka) · commit `56d4e0e` (#50, PR 4: the smoke test opens Returns and Refused parcels) · **success**, smoke test 174 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
-| Last update | 29 Oct 2026 |
+| Last update | 30 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
 [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md#build-status). Keep the "Stages" row above identical to it.
@@ -75,7 +75,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 0 / 22 | In progress (PR 222 partly) |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
-| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 3 / 24 | In progress |
+| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 7 / 24 | In progress |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 0 / 22 | Not started |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **257 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **261 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1320,11 +1320,14 @@ Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 - **Admin:** Delivery → Couriers (`/admin/delivery/couriers`: accounts, practice or live, the area list summary, "Read the list now") and one courier's page (parcels waiting, not paired with candidates, paired, dropped). Guides: [couriers](docs/admin-guide/pages/delivery/couriers.md), [one courier](docs/admin-guide/pages/delivery/courier.md).
 - Still planned in S06: the rest of the fraud engine (162–164, 522–524, 540, 543, 545), the rest (556–557, 559, 562, 567).
 
-### S14 · CRM & customers — In progress (3/24)
+### S14 · CRM & customers — In progress (7/24)
 
 > **বাংলায় সংক্ষেপে:** কাস্টমারের সেকশন তৈরি: সব কাস্টমারের তালিকা (ফোন দিয়ে প্রতিটা মানুষের এক সারি, ভাগ, খোঁজা), একজন
 > কাস্টমারের নিজের পাতা (সব অর্ডার, বিক্রি শুধু ডেলিভারি হওয়া, বদল, সাপোর্ট) আর "যাচাই বাকি" — একই মানুষের দুইটা প্রোফাইল একজন
 > মানুষ দেখে একসাথে করেন, কিছু মোছে না, আবার আলাদা করা যায়। পুরো নম্বর শুধু অনুমতিতে; কে পাতা খুলেছেন বা নম্বর কপি করেছেন, লগে থাকে।
+> এছাড়া কাস্টমারকে SMS আর WhatsApp পাঠানোর ব্যবস্থা তৈরি। চাবি (key) না দেওয়া পর্যন্ত সব অনুশীলন মোডে, কোনো আসল নম্বরে
+> কিছু যায় না। কেউ "বন্ধ" লিখলে তাকে আর মেসেজ যায় না, "চালু" লিখলে আবার যায়; সব হিসাব থাকে। মেসেজের লেখা এখন অ্যাডমিন থেকেই
+> বদলানো যায়, বাংলা-ইংরেজি পাশাপাশি, নমুনা অর্ডারে সাথে সাথে দেখা যায়। কোন ঘটনায় কোন মেসেজ যায়, সেটাও এক পাতায়। নতুন সব সুবিধা বন্ধ অবস্থায় আসে।
 
 **Built (PR 284, 285, 286): the customers section on the new admin shell.** New package `@extas/customers`; migration
 `0047_customer_merge` (additive: `Customer.mergedIntoId` / `mergedAt`, `CustomerMerge`); settings registry v60
@@ -1354,8 +1357,18 @@ Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 - **Tests:** merges, the single view, the list's views and the customer page on PostgreSQL; the API with the owner and
   a read-only reader (masked numbers, refusals); the settings; every word in both languages. Smoke and device gate open
   the list, To review and the first customer page.
-- Still planned in S14: SMS and messages (291–297), consent and data (298, 505), segments, loyalty and the rest
-  (299–303, 533–535). Register: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
+
+**Built (PR 291, 292, 298, 505; migration `0048_message_channels`, additive; registry v61 `registry-message-channels.ts`).** Every channel stays on its mock until the owner types its key in Keys & connections; no test or CI run sends to a real number.
+- **SMS (291):** the SMS contract and the BulkSMSBD gateway in `@extas/adapters` (one form POST per SMS, unicode for Bengali, its answer codes as words, the credit left for "Test"), its Keys & connections row (API key, sender id); the masking name only when it is approved and wanted; the parts of every SMS (GSM 160/153, unicode 70/67) and its cost (the provider's price, else the owner's part price) in the log.
+- **WhatsApp (292, SIM-F-011):** Meta's Cloud API `whatsappCloud`; a live send the shop starts goes only as a Meta-approved template (else skipped with `WA_TEMPLATE_NOT_APPROVED` and the step's fallback channel); template list, sync and submit for approval; the signed webhook `GET|POST /api/whatsapp/webhook` (X-Hub-Signature-256) records receipts and the customer's 1 / 2 / 3 self-confirm answer by itself; the Caddy preview gate lets only that address through.
+- **Consent (298):** the engine checks consent before every send (a stopped number is skipped as `OPTED_OUT`, an offer step needs a yes); every answer is an append-only ConsentRecord (every message / offers only); stop and start words by WhatsApp; the team records an answer at the customer's request (audited).
+- **Templates (505, SIM-F-001, SIM-F-025, SIM-F-031):** every SMS, WhatsApp and e-mail template, English and Bengali side by side with a live preview on a cash, prepaid and part-paid sample order; where each is used; only known {tokens}; warnings for English words in Bengali, an amount to pay on a paid order and a link promise; Save over the version, Reset to default, a missing language added; an edited approved WhatsApp template goes back for approval; the auto-reply.
+- **Admin pages (Messages section, demo V12.4):** Order journey `/admin/messages/journey`, Templates `/admin/messages/templates`, Message log `/admin/messages/log` (counts, filters, parts, cost, Try again), Channels & limits `/admin/messages/channels` (each channel's provider and mode, the credit, the last 7 days, caps, quiet hours, masking, part prices, the WhatsApp templates card) and Consent `/admin/messages/consent`. Bengali guides in `docs/admin-guide/pages/messages/`.
+- **Admin API:** `/api/admin/messages/` — `channels`, `whatsapp/templates` (+ `sync`, `:id/submit`), `consent`, `consent/record`, `templates`, `templates/:id`, `templates/:id/reset`, `templates/auto-reply`. Permissions `messages.channels.read/write`, `messages.consent.view/write`, `messages.templates.read/write`.
+- **Settings (v61):** `messages.sms.masking` and `messages.sms.rates` (owner data, empty); `messages.whatsapp` (language codes en / bn, category UTILITY, webhook 256 KB, reply window 168 hours); `messages.consent` (stop words STOP, UNSUBSCRIBE, বন্ধ; start words START, চালু; confirm reply off); `messages.autoReply` (off; once in 24 hours per number; always, or outside 10 to 22).
+- **Tests:** PostgreSQL (the SIM-F-011 live path, webhook signatures, receipts and replies, consent on every channel, SIM-F-001 / 025 / 031, template save, version, re-approval, reset and the auto-reply), the pure rules, the SMS gateway against a stand-in fetch, the web API, the page drafts and words; smoke and device gate.
+- Still planned in S14 (after launch): segments, the journey view and builder, e-mail, AI helpers, reviews, rewards, tags, export, win-back, birthdays and retention (287–290, 293–297, 299–303, 533–535).
+Register: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
 
 ### S20 · Fulfilment & documents — Not started
 
@@ -1464,7 +1477,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #51 | PR [182](docs/stages/S08.md#pr-182), [183](docs/stages/S08.md#pr-183), [284](docs/stages/S14.md#pr-284), [285](docs/stages/S14.md#pr-285), [286](docs/stages/S14.md#pr-286), [185](docs/stages/S08.md#pr-185) (follow-up [466](docs/stages/S24.md#pr-466)), [198](docs/stages/S09.md#pr-198) | 30 Oct | Orders → Packing & print → Pack: pick, check every piece, pack (photo and weight checks, off by default) and hand over; a damaged or missing piece opens a card and holds the order until a person decides. Customers: the list with its views and search, one customer's page (orders, Sales delivered only, exchanges, who looked), and To review for the same person's profiles. The Orders tabs no longer squeeze on a phone. |
+| #51 | PR [182](docs/stages/S08.md#pr-182), [183](docs/stages/S08.md#pr-183), [284](docs/stages/S14.md#pr-284), [285](docs/stages/S14.md#pr-285), [286](docs/stages/S14.md#pr-286), [185](docs/stages/S08.md#pr-185) (follow-up [466](docs/stages/S24.md#pr-466)), [198](docs/stages/S09.md#pr-198), [291](docs/stages/S14.md#pr-291), [292](docs/stages/S14.md#pr-292), [298](docs/stages/S14.md#pr-298), [505](docs/stages/S14.md#pr-505) | 30 Oct | Orders → Packing & print → Pack: pick, check every piece, pack (photo and weight checks, off by default) and hand over; a damaged or missing piece opens a card and holds the order until a person decides. Customers: the list with its views and search, one customer's page (orders, Sales delivered only, exchanges, who looked), and To review for the same person's profiles. Messages: SMS (BulkSMSBD) and WhatsApp (Meta) on their mocks until the keys, consent and stop words checked before every send, the template editor with a live preview, the order journey, the message log and channels. The Orders tabs no longer squeeze on a phone. |
 | direct | CN-029 (docs only) | 30 Oct | PR [607–621](docs/stages/README.md) will be built in one run with five builders in parallel (two new section agents, Pherot and Hisabi); each store has its own ERP keys; the old exchange and return code is reworked inside PR [610–614](docs/stages/README.md). Plan in `docs/RETAIL-ERP-MODEL.md` §15–16. |
 | #50 | PR [4](docs/stages/S0A.md#pr-4) | 30 Oct | The nightly and after-deploy smoke test now also opens Orders → Returns and Refused parcels (the check account can see them, still read-only), so a broken returns page rolls the deploy back. |
 | #49 | PR [573](docs/stages/S03.md#pr-573) (follow-up [358](docs/stages/S17.md#pr-358)), [184](docs/stages/S08.md#pr-184), [185](docs/stages/S08.md#pr-185), [187](docs/stages/S08.md#pr-187), [188](docs/stages/S08.md#pr-188), [189](docs/stages/S08.md#pr-189), [190](docs/stages/S08.md#pr-190), [191](docs/stages/S08.md#pr-191), [525](docs/stages/S08.md#pr-525), [526](docs/stages/S08.md#pr-526) | 25 Oct | The combo page paints faster (its own small stylesheet; Lighthouse 2.51 s → 2.23 s). The order now follows its parcel: the courier's news moves it on and shows on the order pages; a "Delivered" our own records contradict is held for a person; why a parcel came back is kept on its one return record; exchanges in four tiers with their money box, Receive & QC with ERP restock or write-off, the size switcher, returns only when the owner's policy allows, who pays the second delivery, and the refused-parcel list a person decides. |

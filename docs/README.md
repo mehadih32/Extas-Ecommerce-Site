@@ -153,6 +153,11 @@ the pages are out of date.
 | [`admin-guide/pages/orders/risk-rules.md`](admin-guide/pages/orders/risk-rules.md) | Page guide (CN-026 six parts): Orders › Risk rules, its Levels card (`/admin/orders/risk-rules`, PR 161) and the Advance request card (PR 542) |
 | [`admin-guide/pages/orders/advance-request.md`](admin-guide/pages/orders/advance-request.md) | Page guide (CN-026 six parts): "Request advance" on the order page, the pay link `/pay/<token>` and the Advance request card (PR 542) |
 | [`admin-guide/pages/delivery/zones.md`](admin-guide/pages/delivery/zones.md) | Page guide (CN-026 six parts): Delivery › Zones & charges (`/admin/delivery/zones`): the three bands, COD limits, the sub-area switch, the area admin (PR 550, 551, 502) |
+| [`admin-guide/pages/messages/journey.md`](admin-guide/pages/messages/journey.md) | Page guide (CN-026 six parts): Messages › Order journey (`/admin/messages/journey`): which event sends which message, each step's switch, channel, fallback, time and template (PR 505) |
+| [`admin-guide/pages/messages/templates.md`](admin-guide/pages/messages/templates.md) | Page guide (CN-026 six parts): Messages › Templates (`/admin/messages/templates`): the words in both languages, the live preview, Reset to default, the auto-reply (PR 505) |
+| [`admin-guide/pages/messages/log.md`](admin-guide/pages/messages/log.md) | Page guide (CN-026 six parts): Messages › Message log (`/admin/messages/log`): every message, its parts and cost, Try again (PR 291) |
+| [`admin-guide/pages/messages/channels.md`](admin-guide/pages/messages/channels.md) | Page guide (CN-026 six parts): Messages › Channels & limits (`/admin/messages/channels`): each channel's service and mode, caps, quiet hours, masking, WhatsApp templates (PR 291, 292) |
+| [`admin-guide/pages/messages/consent.md`](admin-guide/pages/messages/consent.md) | Page guide (CN-026 six parts): Messages › Channels & limits › Consent (`/admin/messages/consent`): who stopped messages, the team's record, the stop words (PR 298) |
 
 ## `reports/` — what got built, in Bengali
 
