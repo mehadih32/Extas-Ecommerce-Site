@@ -402,6 +402,7 @@ model Store {
   supportProductShares    SupportProductShare[]
   supportFollowUps        SupportFollowUp[]
   supportEscalations      SupportEscalation[]
+  conversationEvents      ConversationEvent[]
   knowledgeChunks         KnowledgeChunk[]
   socialAccounts          SocialAccount[]
   studioTemplates         StudioTemplate[]
@@ -8942,14 +8943,27 @@ model Conversation {
   resolvedAt      DateTime?      @db.Timestamptz(3)
   slaDueAt        DateTime?      @db.Timestamptz(3)
   windowExpiresAt DateTime?      @db.Timestamptz(3)
+  /// PR 425: what it is about (a line the team writes, or the first words of the customer's first message).
+  subject         String?
+  /// PR 425: the order it is about, when the team linked one (the order's id; the order itself is never changed here).
+  orderId         String?        @db.Uuid
+  /// PR 425: who wrote last (IN the customer, OUT the shop) and the first words of that message (never a note).
+  lastDirection   String?
+  lastPreview     String?
+  /// PR 425: since when the customer has been waiting for an answer (cleared by the shop's reply).
+  waitingSince    DateTime?      @db.Timestamptz(3)
+  /// PR 425: when the person in assignedToId took it.
+  assignedAt      DateTime?      @db.Timestamptz(3)
   createdAt       DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
 
   messages Message[]
+  events   ConversationEvent[]
 
   @@unique([storeId, refCode])
   @@index([storeId, status, lastMessageAt])
   @@index([storeId, assignedToId, status])
+  @@index([storeId, lastMessageAt])
 }
 
 /// @stage S22 · PR 425, 538 — a message; who replied is always recorded (employee name or EXTAS AI). Links are checked.
@@ -8968,12 +8982,21 @@ model Message {
   externalMessageId String?
   status            String?
   linkSafety        Json?
+  /// PR 425: the sender's name as it was when the message was written (the employee's name, or the shop's AI), kept even if
+  /// the person is renamed later — "who replied" never changes.
+  senderName        String?
+  /// PR 425: the screen's key for one press of Send, so a press sent twice makes one message.
+  requestKey        String?
+  /// PR 425: why a reply did not go out (e.g. CHANNEL_NOT_CONNECTED while the channel's connector is not built).
+  failReason        String?
   sentAt            DateTime     @default(now()) @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
 
   attachments MessageAttachment[]
 
+  @@unique([conversationId, requestKey])
+  @@unique([conversationId, externalMessageId])
   @@index([conversationId, sentAt])
 }
 
@@ -8993,8 +9016,39 @@ model MessageAttachment {
   transcriptBn     String?
   expiresAt        DateTime? @db.Timestamptz(3)
   removedAt        DateTime? @db.Timestamptz(3)
+  /// PR 425: the file's own name, type and size, and (for a file a channel sent) where the channel offered it until it
+  /// is copied to our storage (`status` PENDING → STORED; B4.8).
+  fileName         String?
+  contentType      String?
+  sizeBytes        Int?
+  sourceUrl        String?
   createdAt        DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([messageId])
+}
+
+/// @stage S22 · PR 425 — the who-did-what log of a conversation: every message in, every reply and internal note (with
+/// the employee's name, or EXTAS AI), each assignment and status change. Locked at the database: never changed or removed.
+/// @append-only
+model ConversationEvent {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store        @relation(fields: [storeId], references: [id])
+  conversationId String       @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  /// RECEIVED, REPLIED, NOTED, ASSIGNED, UNASSIGNED, STATUS, REOPENED, SUBJECT, ORDER_LINKED.
+  kind           String
+  actorType      ActorType
+  actorStaffId   String?      @db.Uuid
+  actorName      String?
+  actorAgentKey  String?
+  messageId      String?      @db.Uuid
+  data           Json?
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([conversationId, createdAt])
+  @@index([storeId, kind, createdAt])
 }
 
 /// @stage S22 · PR 431 — a ticket: status, owner, SLA timers, resolution time.

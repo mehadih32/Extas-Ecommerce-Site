@@ -1,5 +1,5 @@
 {
-  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer, order, questions and reviews are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation.",
+  "$comment": "PR 14 — SAMPLE DATA ONLY, for building and testing the screens of the approved demo (docs/demo/src/01-data.js). Nothing here is the owner's: the store, brand, customer, order, questions and reviews are made up and say \"Sample\"; the prices are the demo's sample figures (samplePriceMinor, in poisha), never the owner's prices (PR 509). The phone uses the unallocated +88010 range and the e-mail the reserved example.com domain. Applied only by the explicit `sample` command, never on a new installation. PR 425 (support): a sample live-chat channel, not connected, with three sample conversations (open, waiting for the customer, solved) and their who-did-what lines.",
   "version": 1,
   "marker": "Sample",
   "store": {
@@ -953,5 +953,43 @@
       "size": "w32",
       "publishedAt": "2026-10-20T06:00:00.000Z"
     }
-  ]
+  ],
+  "support": {
+    "channel": { "kind": "livechat", "externalId": "sample-livechat", "name": "Sample live chat" },
+    "conversations": [
+      {
+        "refCode": "CSAMPLE01",
+        "contact": { "externalId": "sample-visitor-1", "name": "Sample Customer", "phone": "+8801000000001" },
+        "subject": "Sample: is the polo in size M?",
+        "status": "OPEN",
+        "order": true,
+        "messages": [
+          { "direction": "IN", "body": "Sample message: is the Essential Pique Polo in size M available in navy?", "at": "2026-10-02T05:00:00.000Z" },
+          { "direction": "OUT", "senderName": "Sample team member", "body": "Sample reply: yes, navy in M is in stock. It is already in your order SAMPLE-0001.", "at": "2026-10-02T05:06:00.000Z" },
+          { "direction": "NOTE", "senderName": "Sample team member", "body": "Sample note: likes navy; call before the delivery.", "at": "2026-10-02T05:07:00.000Z" },
+          { "direction": "IN", "body": "Sample message: thank you! Can I exchange it if it does not fit?", "at": "2026-10-02T05:20:00.000Z" }
+        ]
+      },
+      {
+        "refCode": "CSAMPLE02",
+        "contact": { "externalId": "sample-visitor-2", "name": "Sample visitor" },
+        "subject": "Sample: delivery outside the city?",
+        "status": "WAITING",
+        "messages": [
+          { "direction": "IN", "body": "Sample message: do you deliver outside the city?", "at": "2026-10-03T09:10:00.000Z" },
+          { "direction": "OUT", "senderName": "Sample team member", "body": "Sample reply: yes. Which area should we send it to?", "at": "2026-10-03T09:15:00.000Z" }
+        ]
+      },
+      {
+        "refCode": "CSAMPLE03",
+        "contact": { "externalId": "sample-visitor-3", "name": "Sample shopper" },
+        "subject": "Sample: which size for 175 cm?",
+        "status": "SOLVED",
+        "messages": [
+          { "direction": "IN", "body": "Sample message: I am 175 cm and 72 kg. Which size of the chinos?", "at": "2026-10-04T11:00:00.000Z" },
+          { "direction": "OUT", "senderName": "Sample team member", "body": "Sample reply: W32 fits most at your height; the size chart is on the product page.", "at": "2026-10-04T11:04:00.000Z" }
+        ]
+      }
+    ]
+  }
 }

@@ -163,7 +163,19 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
     ],
   },
-  { id: 'support', icon: 'headset', group: 'daily', base: '/admin/support', tabs: [], guide: 'support' },
+  // S22 · PR 425: the Inbox (one conversation's page is under it) and Support settings. Rider issues, Claims & credits
+  // and Saved replies join with their PRs.
+  {
+    id: 'support',
+    icon: 'headset',
+    group: 'daily',
+    base: '/admin/support',
+    guide: 'support',
+    tabs: [
+      { id: 'inbox', pages: [{ href: '/admin/support', perm: 'support.read', keys: ['supportInbox', 'supportConversation'] }] },
+      { id: 'settings', pages: [{ href: '/admin/support/settings', perm: 'support.read', keys: ['supportSettings'] }] },
+    ],
+  },
   {
     id: 'marketing',
     icon: 'mega',

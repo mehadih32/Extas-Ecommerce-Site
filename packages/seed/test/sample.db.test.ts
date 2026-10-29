@@ -40,6 +40,26 @@ describe.skipIf(!HAS_DB)('sample seed on PostgreSQL', () => {
     });
     expect(r.pack.created.Category).toBe(defaultPack.categories.length);
 
+    // PR 425: the sample conversations, the way the support package writes them
+    const conversations = sampleCatalogue.support?.conversations ?? [];
+    expect(conversations.length).toBeGreaterThan(0);
+    expect(r.created).toMatchObject({
+      SupportChannel: 1,
+      SupportContact: conversations.length,
+      Conversation: conversations.length,
+      Message: conversations.reduce((n, c) => n + c.messages.length, 0),
+    });
+    const first = await db.prisma.conversation.findUniqueOrThrow({
+      where: { storeId_refCode: { storeId, refCode: conversations[0]!.refCode } },
+      include: { messages: { orderBy: { sentAt: 'asc' } }, events: { orderBy: { createdAt: 'asc' } } },
+    });
+    const customer = await db.prisma.customer.findUniqueOrThrow({ where: { storeId_phone: { storeId, phone: sampleCatalogue.customer.phone } } });
+    expect(first).toMatchObject({ status: 'OPEN', customerId: customer.id, lastDirection: 'IN' });
+    expect(first.waitingSince?.toISOString()).toBe(conversations[0]!.messages.at(-1)!.at);
+    expect(first.messages.find((m) => m.isInternalNote)).toMatchObject({ status: null, direction: 'NOTE' });
+    expect(first.messages.find((m) => m.direction === 'OUT')).toMatchObject({ status: 'NOT_SENT', failReason: 'CHANNEL_NOT_CONNECTED' });
+    expect(first.events.map((e) => e.kind)).toEqual(['RECEIVED', 'REPLIED', 'STATUS', 'NOTED', 'RECEIVED']);
+
     // The first store of an installation is the mother store (A4.5).
     expect(await db.prisma.store.findUniqueOrThrow({ where: { id: storeId } })).toMatchObject({ slug: 'sample', isPrimary: true, status: 'LIVE' });
     // Every store-scoped row the seed wrote carries the sample store's id.

@@ -1,0 +1,33 @@
+{
+  "name": "@extas/support",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The support core (S22, PR 425; Blueprint B4.4): conversations and their messages from every channel, threads with files, internal notes the customer never sees, taking and giving a conversation to an employee, open / waiting / solved, and the who-did-what log (append-only). Channels plug in through an adapter (PR 426); until one is connected a reply is kept and marked not sent.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/auth": "workspace:*",
+    "@extas/customers": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}

@@ -69,6 +69,10 @@
       },
       "website": {
         "seo": "SEO"
+      },
+      "support": {
+        "inbox": "ইনবক্স",
+        "settings": "সাপোর্ট সেটিংস"
       }
     },
     "purpose": {

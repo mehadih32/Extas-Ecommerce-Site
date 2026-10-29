@@ -104,6 +104,9 @@ import seoEn from '../messages/seo.en.json';
 // PR 407 (S20; registry v63): the printed invoice, its chat picture and issuing, in messages/invoice.<lang>.json.
 import invoiceBn from '../messages/invoice.bn.json';
 import invoiceEn from '../messages/invoice.en.json';
+// PR 425 (S22; registry v63): the support inbox, files in a conversation and customer numbers, in messages/support.<lang>.json.
+import supportBn from '../messages/support.bn.json';
+import supportEn from '../messages/support.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -139,6 +142,8 @@ messages.en = mergeMessages(messages.en, erpV6En);
 messages.bn = mergeMessages(messages.bn, erpV6Bn);
 messages.en = mergeMessages(messages.en, invoiceEn);
 messages.bn = mergeMessages(messages.bn, invoiceBn);
+messages.en = mergeMessages(messages.en, supportEn);
+messages.bn = mergeMessages(messages.bn, supportBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

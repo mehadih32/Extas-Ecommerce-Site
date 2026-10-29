@@ -105,7 +105,7 @@ describe('the 14 sections', () => {
     expect(sectionHome(sectionById('products')!, OWNER)).toBe('/admin/products');
     expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money');
     // PR 285: the Customers section's front page is All customers
-    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'support', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
+    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
 

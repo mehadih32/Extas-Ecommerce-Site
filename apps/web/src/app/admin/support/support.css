@@ -1,0 +1,57 @@
+/* S22 · PR 425 — Support › Inbox and one conversation: the list of conversations, the thread's bubbles (the customer
+   on the left, the shop on the right, an internal note in the note colour), files, the composer and the log. Built on
+   the admin shell's tokens (shell.css); every tap target is at least 44 px on touch screens. */
+.adm2 .sp-list{list-style:none;margin:12px 0 0;padding:0;background:var(--sf);border:1px solid var(--ln);border-radius:var(--r,12px);overflow:hidden}
+.adm2 .sp-list>li+li{border-top:1px solid var(--ln2)}
+.adm2 .sp-row{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;color:inherit;text-decoration:none;min-height:56px}
+.adm2 .sp-row:hover{background:var(--sf2)}
+.adm2 .sp-av{flex:0 0 36px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--g1);color:var(--g8);font-weight:700;font-size:14px}
+.adm2 .sp-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.adm2 .sp-top{display:flex;align-items:baseline;gap:8px;min-width:0}
+.adm2 .sp-top b{font-weight:650;min-width:0;overflow-wrap:anywhere}
+.adm2 .sp-top .sp-when{margin-left:auto;flex:0 0 auto;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.adm2 .sp-prev{font-size:13px;color:var(--ink2);overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.adm2 .sp-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--mute)}
+.adm2 .sp-pages{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;flex-wrap:wrap}
+.adm2 .sp-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.adm2 .sp-filters .a2-inp{min-width:0;flex:1 1 200px}
+/* the thread */
+.adm2 .sp-thread{display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--sf2);border:1px solid var(--ln);border-radius:var(--r,12px)}
+.adm2 .sp-msg{max-width:min(560px,86%);display:flex;flex-direction:column;gap:4px}
+.adm2 .sp-msg.in{align-self:flex-start}
+.adm2 .sp-msg.out,.adm2 .sp-msg.note{align-self:flex-end;align-items:flex-end}
+.adm2 .sp-bub{padding:9px 12px;border-radius:14px;background:var(--sf);border:1px solid var(--ln);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.adm2 .sp-msg.in .sp-bub{border-bottom-left-radius:4px}
+.adm2 .sp-msg.out .sp-bub{background:var(--g0);border-color:var(--g1);border-bottom-right-radius:4px}
+.adm2 .sp-msg.note .sp-bub{background:#FFFBF2;border:1px dashed #E2CB86;border-bottom-right-radius:4px}
+.adm2 .sp-by{font-size:11.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.adm2 .sp-files{display:flex;flex-wrap:wrap;gap:6px}
+.adm2 .sp-file{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 10px;border-radius:9px;border:1px solid var(--ln);background:var(--sf);font-size:12.5px;color:var(--ink);text-decoration:none;max-width:100%}
+.adm2 .sp-file span{min-width:0;overflow-wrap:anywhere}
+.adm2 a.sp-file:hover{border-color:var(--g6)}
+.adm2 .sp-file img{display:block;max-width:220px;max-height:180px;border-radius:6px}
+.adm2 a.sp-pic{padding:4px}
+/* the composer */
+.adm2 .sp-comp{margin-top:12px}
+.adm2 .sp-comp textarea{width:100%;min-height:96px;resize:vertical}
+.adm2 .sp-comp.note textarea{background:#FFFBF2}
+.adm2 .sp-cbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.adm2 .sp-cbar .sp-grow{flex:1 1 auto}
+.adm2 .sp-attach{position:relative;overflow:hidden}
+.adm2 .sp-attach input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.adm2 .sp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.adm2 .sp-chips .sp-file button{border:0;background:none;padding:0 2px;color:var(--mute);cursor:pointer;min-width:28px;min-height:28px}
+/* the side */
+.adm2 .sp-kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:13px}
+.adm2 .sp-kv>span:nth-child(odd){color:var(--mute)}
+.adm2 .sp-kv>span:nth-child(even){overflow-wrap:anywhere}
+.adm2 .sp-acts{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .sp-file{min-height:44px}
+  .adm2 .sp-chips .sp-file button{min-width:44px;min-height:44px}
+}
+@media (max-width: 767px){
+  .adm2 .sp-row{padding:12px}
+  .adm2 .sp-msg{max-width:92%}
+  .adm2 .sp-file img{max-width:160px}
+}

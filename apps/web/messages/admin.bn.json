@@ -55,7 +55,10 @@
     "messagesChannels": "চ্যানেল আর সীমা",
     "messagesConsent": "অনুমতি",
     "messagesJourney": "অর্ডারের মেসেজ",
-    "messagesTemplates": "টেমপ্লেট"
+    "messagesTemplates": "টেমপ্লেট",
+    "supportInbox": "ইনবক্স",
+    "supportConversation": "কথোপকথন",
+    "supportSettings": "সাপোর্ট সেটিংস"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

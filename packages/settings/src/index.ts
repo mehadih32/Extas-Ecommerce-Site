@@ -59,4 +59,5 @@ export * from './registry-customers';
 export * from './registry-seo';
 export * from './registry-erp-v6';
 export * from './registry-invoice';
+export * from './registry-support';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

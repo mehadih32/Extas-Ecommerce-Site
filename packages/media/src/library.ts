@@ -287,11 +287,16 @@ export interface StoredFileInput {
   name: string;
   extension: string;
   folder?: string | null;
+  /** PR 425: the file's own name (a file the team attaches in support), kept for showing; never trusted for the type. */
+  fileName?: string | null;
+  /** PR 425: the staff member who added it, when a person did (the caller has checked their permission). */
+  uploadedById?: string | null;
 }
 
 /**
- * A file the shop makes itself (a generated invoice PDF, a WhatsApp invoice JPG, a report): stored as it is through
- * the storage adapter and recorded in the library, without renditions. Called by the system (no staff permission).
+ * A file the shop makes itself (a generated invoice PDF, a WhatsApp invoice JPG, a report), or one the team attaches
+ * in support (PR 425, the caller checks `support.reply` and the file's kind): stored as it is through the storage
+ * adapter and recorded in the library, without renditions. No staff permission is checked here.
  */
 export async function storeGeneratedFile(deps: MediaDeps, input: StoredFileInput): Promise<MediaSummary> {
   if (!/^[a-z0-9]{1,8}$/.test(input.extension)) throw new MediaError('INVALID_INPUT', 'extension must be short and lower-case', ['extension']);
@@ -311,12 +316,14 @@ export async function storeGeneratedFile(deps: MediaDeps, input: StoredFileInput
         checksumSha256: checksum,
         isOriginal: true,
         folder: cleanText(input.folder, 'folder') ?? null,
+        originalFileName: cleanText(input.fileName, 'fileName') ?? null,
+        uploadedById: input.uploadedById ?? null,
         tags: [],
         createdAt: nowOf(deps),
       },
       include: COUNTS,
     });
-    await audit(tx, { staffUserId: null }, { storeId: input.storeId, action: 'media.store', entityType: 'MediaAsset', entityId: row.id, after: { storageKey: key, kind: input.kind } }, { source: 'media' });
+    await audit(tx, { staffUserId: input.uploadedById ?? null }, { storeId: input.storeId, action: 'media.store', entityType: 'MediaAsset', entityId: row.id, after: { storageKey: key, kind: input.kind } }, { source: 'media' });
     return row;
   });
   return summary(a, 0);
