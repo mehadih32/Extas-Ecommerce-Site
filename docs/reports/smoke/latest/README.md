@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-30 02:02 (Asia/Dhaka)
+# Smoke test · 2026-10-30 03:35 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (170টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (174টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `9e01e00e8c79` · after deploy · result **PASS** (170 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `56d4e0ecca1b` · after deploy · result **PASS** (174 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -89,6 +89,8 @@ Site: https://new.extas.com.bd · commit `9e01e00e8c79` · after deploy · resul
 | `/admin/settings/system/cache` | phone | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-phone.jpg) |
 | `/admin/orders/risk-rules/checkout` | phone | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-phone.jpg) |
 | `/admin/orders/risk-rules` | phone | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-phone.jpg) |
+| `/admin/orders/returns` | phone | 200 | `/admin/orders/returns` | ok | [picture](admin-orders-returns-phone.jpg) |
+| `/admin/orders/returns/refused` | phone | 200 | `/admin/orders/returns/refused` | ok | [picture](admin-orders-returns-refused-phone.jpg) |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -174,6 +176,8 @@ Site: https://new.extas.com.bd · commit `9e01e00e8c79` · after deploy · resul
 | `/admin/settings/system/cache` | desktop | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-desktop.jpg) |
 | `/admin/orders/risk-rules/checkout` | desktop | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-desktop.jpg) |
 | `/admin/orders/risk-rules` | desktop | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-desktop.jpg) |
+| `/admin/orders/returns` | desktop | 200 | `/admin/orders/returns` | ok | [picture](admin-orders-returns-desktop.jpg) |
+| `/admin/orders/returns/refused` | desktop | 200 | `/admin/orders/returns/refused` | ok | [picture](admin-orders-returns-refused-desktop.jpg) |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
