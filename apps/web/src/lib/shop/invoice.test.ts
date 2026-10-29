@@ -174,7 +174,7 @@ describe('the invoice sheet (Blueprint B2.1, demo inv_sheet)', () => {
 
   it('the parts the owner leaves out are not drawn', () => {
     const off = { ...SET, blocks: { ...SET.blocks, customer: false, address: false, variant: false, marks: false, payment: false, footer: false, sku: true } };
-    const v = invoiceView(ctx('en'), receipt({ shipment: { courier: 'Sample Courier', tracking: 'TRK-1', status: 'IN_TRANSIT' } }), off, NO_SHOP, OPTS);
+    const v = invoiceView(ctx('en'), receipt({ shipment: { courier: 'Sample Courier', tracking: 'TRK-1', consignmentId: null, status: 'IN_TRANSIT' } }), off, NO_SHOP, OPTS);
     expect(v.parties).toEqual([{ label: 'Courier', lines: ['Sample Courier', 'Tracking TRK-1'] }]);
     expect(v.rows[0]!.subs).toEqual(['Code SAMPLE-P1-NAVY-M', `saves ${formatMoney(30_000, 'BDT', 'en', false)}`]);
     expect(v.rows[0]!.marks).toEqual([]);
@@ -211,5 +211,24 @@ describe('the invoice sheet (Blueprint B2.1, demo inv_sheet)', () => {
     // the table head repeats on every printed page (B2.4)
     expect(invoiceCss('body', '')).toContain('thead{display:table-header-group}');
     expect(invoiceCss('.inv-doc', '.inv-doc ')).toContain('.inv-doc .sheet{');
+  });
+});
+
+describe('PR 407 · the issued invoice on the sheet', () => {
+  it('prints the kept number, not the pattern; a later version says when it was revised and carries its mark', () => {
+    const first = invoiceView(ctx('en'), receipt(), { ...SET, number: 'BILL-{number}' }, NO_SHOP, { ...OPTS, issued: { number: 'INV-10042', version: 1, revisedDate: null } });
+    expect(first.invoiceNo).toBe('INV-10042');
+    expect(first.meta).toEqual(['INV-10042', 'Order #EX-10042', OPTS.date]);
+    expect(first.stamp).toBeUndefined();
+    const second = invoiceView(ctx('en'), receipt(), SET, NO_SHOP, { ...OPTS, issued: { number: 'INV-10042', version: 2, revisedDate: '21 Oct 2026, 9:00 am' } });
+    expect(second.meta).toContain('Revised 21 Oct 2026, 9:00 am');
+    expect(second.stamp).toBe('REVISED 2');
+    expect(invoiceView(ctx('bn'), receipt(), SET, NO_SHOP, { ...OPTS, issued: { number: 'INV-10042', version: 2, revisedDate: null } }).stamp).toBe('সংশোধিত ২');
+  });
+
+  it('carries the courier’s own consignment id for the printed barcode, only once a parcel is booked', () => {
+    expect(invoiceView(ctx('en'), receipt(), SET, NO_SHOP, OPTS).courierCode).toBeUndefined();
+    const v = invoiceView(ctx('en'), receipt({ shipment: { courier: 'Sample Courier', tracking: 'TRK-1', consignmentId: 'CN-77', status: 'IN_TRANSIT' } }), SET, NO_SHOP, OPTS);
+    expect(v.courierCode).toEqual({ value: 'CN-77', caption: 'Sample Courier · CN-77' });
   });
 });

@@ -5,6 +5,10 @@
 // Black-and-white safe (B2.4): nothing depends on colour to be read; the table's head repeats on every printed page.
 // Pure: no request, no database — the page, the download and the tests all call the same functions.
 // PR 605: a gift whose sender asked to hide the prices (`prices: false`) has no price columns and no money table.
+// PR 407: the issued invoice's own number (made once, kept for life), its revision mark when the order was edited, and
+// the courier's consignment id for the printed copy's barcode (packages/documents invoice.ts draws the printed copy).
+
+import { invoiceNumberOf } from '@extas/orders/pure';
 
 /** One line of the sheet: what was bought, as stored. */
 export interface InvoiceRow {
@@ -55,6 +59,10 @@ export interface InvoiceView {
   footer: string[];
   /** PR 605: false — a gift with its prices hidden (no unit and amount columns, no totals). Absent: shown. */
   prices?: boolean;
+  /** PR 407: a later version of the issued invoice (the order was edited): its mark, e.g. "REVISED 2". Absent: version 1. */
+  stamp?: string;
+  /** PR 407: the courier's consignment id and its caption, for the printed copy's barcode. Absent: no parcel booked yet. */
+  courierCode?: { value: string; caption: string };
 }
 
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -66,8 +74,7 @@ export const esc = (s: string): string => s.replace(/[&<>"']/g, (ch) => ESC[ch]!
  * as it is, `{digits}` only its digits (EX-10042 → 10042; an order number with no digit keeps itself).
  */
 export function invoiceNumber(pattern: string, orderNumber: string): string {
-  const digits = orderNumber.replace(/\D+/g, '') || orderNumber;
-  return pattern.replace(/\{number\}/g, orderNumber).replace(/\{digits\}/g, digits);
+  return invoiceNumberOf(pattern, orderNumber);
 }
 
 /** The file name the download saves as: the invoice number with only safe characters. */

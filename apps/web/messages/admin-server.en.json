@@ -65,7 +65,8 @@
       "payments_pending_sweep": "Unfinished online payments",
       "courier_track": "Reading parcel updates from the couriers",
       "courier_zones": "Reading and pairing the couriers' area lists",
-      "packing_photos_expire": "Archiving packing photos past their days to keep"
+      "packing_photos_expire": "Archiving packing photos past their days to keep",
+      "invoices_issue": "Issuing the orders' invoices"
     },
     "workers": {
       "title": "Workers",

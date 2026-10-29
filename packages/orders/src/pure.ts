@@ -31,6 +31,8 @@ export * from './risk-level-plan';
 export * from './advance-plan';
 // S08 · PR 185: the exchange tiers, window and money box (exchange-pure.ts).
 export * from './exchange-pure';
+// S20 · PR 407: the invoice's number (invoice-pure.ts).
+export * from './invoice-pure';
 
 /** Every order status (Prisma's OrderStatus, in the order an order normally moves). */
 export const ORDER_STATES = [

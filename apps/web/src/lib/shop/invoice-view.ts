@@ -5,6 +5,9 @@
 // footer (`account.invoice`). No amount is worked out here: each one is a stored figure, only written as money.
 // PR 605: a gift goes "to" the receiver with "a gift from" the sender (and his note); with its prices hidden the sheet
 // has no prices and no totals — only what the receiver still pays at the door, when anything is left.
+// PR 407: the invoice issued for the order (packages/orders invoice.ts) gives the number — made once and kept, even when
+// the owner changes the pattern later — and, after an edit, its version: "Revised <date>" in the heading lines and the
+// printed copy's mark. The courier's consignment id goes with the view for the printed copy's barcode.
 import type { Receipt } from '@extas/checkout';
 import type { AccountInvoiceSettings, ShopLabel } from '@extas/settings';
 import { colourName } from './catalogue';
@@ -30,12 +33,19 @@ export function invoiceView(
   r: Receipt,
   set: AccountInvoiceSettings,
   shop: InvoiceShop,
-  opts: { date: string; methodName: (p: { method: string | null; provider: string | null }) => string; delivered: boolean },
+  opts: {
+    date: string;
+    methodName: (p: { method: string | null; provider: string | null }) => string;
+    delivered: boolean;
+    /** PR 407: the issued invoice: its number, its version and the date of this version (written), when it has one. */
+    issued?: { number: string; version: number; revisedDate: string | null } | null;
+  },
 ): InvoiceView {
   const t = c.t;
   const m = c.money;
   const b = set.blocks;
-  const invoiceNo = invoiceNumber(set.number, r.number);
+  const invoiceNo = opts.issued?.number || invoiceNumber(set.number, r.number);
+  const revised = opts.issued && opts.issued.version > 1 ? opts.issued : null;
   const units = r.lines.reduce((s, l) => s + l.quantity, 0);
   const items = plural(t, 'account.orders.items', units, c.num);
 
@@ -117,7 +127,7 @@ export function invoiceView(
     brand: c.storeName,
     shopLines,
     heading: t('account.invoice.title'),
-    meta: [invoiceNo, t('account.invoice.orderNo', { number: r.number }), opts.date],
+    meta: [invoiceNo, t('account.invoice.orderNo', { number: r.number }), opts.date, ...(revised?.revisedDate ? [t('account.invoice.revised', { date: revised.revisedDate })] : [])],
     parties,
     cols: {
       no: t('account.invoice.colNo'),
@@ -132,6 +142,8 @@ export function invoiceView(
     note: hidden ? [t('account.invoice.giftHidden'), ...own(set.note)] : own(set.note),
     footer,
     ...(hidden ? { prices: false } : {}),
+    ...(revised ? { stamp: t('account.invoice.stamp', { n: c.num(revised.version) }) } : {}),
+    ...(r.shipment?.consignmentId ? { courierCode: { value: r.shipment.consignmentId, caption: t('account.invoice.barcode', { courier: r.shipment.courier, code: r.shipment.consignmentId }) } } : {}),
   };
 }
 

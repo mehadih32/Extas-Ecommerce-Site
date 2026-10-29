@@ -12,7 +12,8 @@
 // - search.ts      PR 72: the search index job and the planner that runs it for a store whose index is behind;
 // - messages.ts    PR 148: the message engine's run per store and slot (the order journey's SMS, WhatsApp, e-mail);
 // - payments.ts    PR 170: the sweep of open online payments per store and slot (recovered or marked abandoned);
-// - courier.ts     PR 176: the courier tracking read per store and slot (the parcels the couriers hold).
+// - courier.ts     PR 176: the courier tracking read per store and slot (the parcels the couriers hold);
+// - invoices.ts    PR 407: the invoice run per store and slot (every placed order's invoice, a new version on edit).
 // This root has no queue client in it, so the web app can read the status. The worker itself (BullMQ, ioredis) is
 // `@extas/jobs/worker` (worker.ts), started by `src/main.ts` as its own process (infra/stack/app.yml `worker`).
 export * from './context';
@@ -28,3 +29,4 @@ export * from './search';
 export * from './messages';
 export * from './payments';
 export * from './courier';
+export * from './invoices';

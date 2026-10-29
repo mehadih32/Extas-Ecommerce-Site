@@ -66,7 +66,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
       ] },
       // S08 · PR 179–181: Packing & print (ORD-04) — the print run of courier stickers, the daily picking list and the
-      // rider's handover. PR 182: Pack (pick, pack and hand over on one screen) is the tab's first page.
+      // rider's handover. PR 182: Pack (pick, pack and hand over on one screen) is the tab's first page; S20 · PR 407: the invoices.
       {
         id: 'packing',
         pages: [
@@ -74,6 +74,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/packing/print', perm: 'fulfilment.read', keys: ['packingPrint'] },
           { href: '/admin/orders/packing/picking', perm: 'fulfilment.read', keys: ['packingPicking'] },
           { href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] },
+          // S20 · PR 407: the customers' invoices — the list, printing (paper, roll, chat picture) and the invoice's settings
+          { href: '/admin/orders/packing/invoices', perm: 'fulfilment.read', keys: ['packingInvoices'] },
         ],
       },
       // S08 · PR 185, 187, 191: Returns & exchanges (the board, a case, starting an exchange) and Receive & QC.

@@ -372,7 +372,11 @@
       "giftTo": "যাঁর কাছে যাবে",
       "giftFrom": "উপহার পাঠিয়েছেন",
       "giftHidden": "এটা উপহার: দাম দেখানো হয়নি।",
-      "leadGift": "অর্ডার #{number}-এর ইনভয়েস {invoice} · {items} · উপহার, দাম লুকানো।"
+      "leadGift": "অর্ডার #{number}-এর ইনভয়েস {invoice} · {items} · উপহার, দাম লুকানো।",
+      "revised": "সংশোধিত {date}",
+      "stamp": "সংশোধিত {n}",
+      "barcode": "{courier} · {code}",
+      "page": "পাতা {n}/{of}"
     },
     "review": {
       "cta": "রেটিং ও রিভিউ",

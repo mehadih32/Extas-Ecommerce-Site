@@ -111,6 +111,10 @@ export const PERMISSIONS = {
   // print or send it. Not a `.read` key on purpose: the read-only smoke check account never gets customers' details.
   // The order screens of S05 add their own keys.
   'orders.invoice': { group: 'orders' },
+  // S20 · PR 407 — Orders › Packing & print › Invoices: change what the invoice says (its parts, number pattern, note and
+  // footer), how it prints, its chat picture and issuing. Seeing the cards is `fulfilment.read`. An invoice already
+  // issued keeps its number; nothing here moves money or changes a price, COD or an order.
+  'orders.invoiceSettings': { group: 'orders' },
   // S05 · PR 138, 144, 145, 147, 153 — orders (BACKEND-ARCHITECTURE §5.3, §9.10): see orders and their timeline; confirm
   // a new order; put an order on hold and release it (with a reason); cancel an order before a courier is booked (with
   // a reason; a paid order's cancel only records a refund request, never a payout); cancel after booking and record the

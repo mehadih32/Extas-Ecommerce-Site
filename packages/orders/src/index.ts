@@ -51,6 +51,9 @@
 // staff waivers with a logged reason and "your mistake" claims (exchange-charge.ts); the rules, the one-trip swap and the
 // linked re-ship after a try-on live in the engine (exchange.ts, exchange-pure.ts). PR 191: refused parcels — the shop's
 // fault marked, the charge paid at the door kept, and the refused-parcel list a person decides (refused.ts).
+// S20 · PR 407: the customer invoice, issued once per order and kept — its number made once, a new version (same number)
+// only when the order is edited, the background run and the admin's invoice list (invoice.ts); the invoice page's
+// settings cards, read with fulfilment.read and saved with orders.invoiceSettings (invoice-settings.ts).
 //
 // Import `@extas/orders/pure` for the machine without a database (the shop's labels, the tests).
 export * from './context';
@@ -94,3 +97,5 @@ export * from './exchange-switch';
 export * from './return-cases';
 export * from './exchange-charge';
 export * from './refused';
+export * from './invoice';
+export * from './invoice-settings';

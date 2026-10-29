@@ -10,6 +10,7 @@
     { "id": "orders/print", "route": "/admin/orders/packing/print" },
     { "id": "orders/picking", "route": "/admin/orders/packing/picking" },
     { "id": "orders/handover", "route": "/admin/orders/packing/handover" },
+    { "id": "orders/invoices", "route": "/admin/orders/packing/invoices" },
     { "id": "orders/returns", "route": "/admin/orders/returns" },
     { "id": "orders/returns-qc", "route": "/admin/orders/returns/qc" },
     { "id": "orders/returns-refused", "route": "/admin/orders/returns/refused" },

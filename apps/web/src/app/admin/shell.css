@@ -651,3 +651,5 @@
   .adm2 .a2-prt a.a2-b { min-height: 44px; display: inline-flex; align-items: center; }
   .adm2 .a2-prow.wrap, .adm2 .a2-prow.full { display: flex; }
 }
+/* PR 407, 425: a card's "More options" fold (<details><summary class="a2-h4">) is one tap target, 44 px tall. */
+.adm2 details > summary.a2-h4 { display: flex; align-items: center; min-height: 44px; cursor: pointer; }

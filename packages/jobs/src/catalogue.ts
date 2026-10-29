@@ -7,7 +7,8 @@
 // The inventory jobs (S09) were shaped for this worker from the start (`@extas/inventory` jobs.ts): the stock pull,
 // the cart-hold expiry, the ERP document relay (the outbox), the low-stock check, the reconcile with the ERP and the
 // default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
-// (search.ts), PR 148 the message engine's run (messages.ts), PR 170 the sweep of open online payments (payments.ts).
+// (search.ts), PR 148 the message engine's run (messages.ts), PR 170 the sweep of open online payments (payments.ts),
+// PR 407 the invoice run (invoices.ts).
 // A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
@@ -16,6 +17,7 @@ import { indexStore } from '@extas/search';
 import { sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
+import { INVOICE_ISSUE_JOB, INVOICE_QUEUE, runInvoiceIssue } from './invoices';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
 import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping';
 import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB } from './courier';
@@ -251,6 +253,23 @@ const packingPhotosJob: JobDefinition<{ storeId: number }> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await expirePackingPhotos({ db: deps.db, now: deps.now }, p.storeId)) }),
 };
 
+/**
+ * PR 407 — one store's invoice run (packages/orders `issueDueInvoices`; planned by invoices.ts `invoicePlanner` per
+ * store and slot of `documents.invoice.issue.everyMinutes`): every placed order gets its invoice, an edited one its next
+ * version (same number). Safe to run twice: an order already compared is not taken again.
+ */
+const invoiceIssueJob: JobDefinition<{ storeId: number }> = {
+  key: INVOICE_ISSUE_JOB,
+  queue: INVOICE_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${INVOICE_ISSUE_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runInvoiceIssue(deps, p.storeId)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -261,6 +280,7 @@ const definitions: JobDefinition<never>[] = [
   courierTrackJob as unknown as JobDefinition<never>,
   courierZonesJob as unknown as JobDefinition<never>,
   packingPhotosJob as unknown as JobDefinition<never>,
+  invoiceIssueJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

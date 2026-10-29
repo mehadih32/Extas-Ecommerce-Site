@@ -1,0 +1,142 @@
+{
+  "inv": {
+    "title": "Invoices",
+    "sub": "Every placed order's invoice, issued by itself and kept: one number for life, a new version only when the order was edited. Print them on paper or the thermal roll, or make the picture for a chat.",
+    "counts": {
+      "all": "Orders",
+      "revised": "Revised after an edit",
+      "waiting": "Waiting for their invoice"
+    },
+    "views": {
+      "label": "Show",
+      "all": "All",
+      "revised": "Revised",
+      "waiting": "Waiting"
+    },
+    "search": "Order or invoice number",
+    "searchGo": "Search",
+    "clear": "Clear",
+    "col": {
+      "order": "Order",
+      "invoice": "Invoice",
+      "version": "Version",
+      "issued": "Issued",
+      "total": "Total",
+      "print": "Print"
+    },
+    "pill": {
+      "first": "Version 1",
+      "revised": "Revised {n}",
+      "waiting": "Not issued yet"
+    },
+    "revisedOn": "revised {date}",
+    "printPage": "Print {n} on paper",
+    "printRoll": "Print {n} on the roll",
+    "printing": "Making the file…",
+    "one": {
+      "page": "Paper",
+      "roll": "Roll",
+      "jpg": "Picture",
+      "view": "Customer's view"
+    },
+    "more": "{n} more are not in this print (most per print: {max}). Search or pick a view to print them.",
+    "empty": "No invoice to show",
+    "emptySub": "Invoices appear here as orders are placed. A new order gets its invoice within a few minutes, or the moment it is opened or printed.",
+    "noPrint": "You can see the invoices. Printing them needs the \"Open and print invoices\" permission.",
+    "waitingNote": "An order without an invoice gets it the moment it is printed here.",
+    "err": {
+      "INVOICE_OFF": "Invoices are switched off. Switch them on in \"Invoice content\" below."
+    },
+    "set": {
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet.",
+      "readOnly": "You can see these settings. Changing them needs the \"Change the invoice\" permission.",
+      "on": "On",
+      "off": "Off",
+      "more": "More options",
+      "moreSub": "The picture sent in a chat, and how invoices are issued.",
+      "err": {
+        "STALE": "Someone else changed this card. It was read again: check it and save again.",
+        "INVALID_INPUT": "Some values are not allowed: {fields}.",
+        "forbidden": "You do not have the permission to change this.",
+        "unauthorized": "You are signed out. Sign in again.",
+        "network": "No connection to the server. Check the internet and try again.",
+        "other": "That did not save. Try again; if it keeps failing, tell the owner."
+      },
+      "content": {
+        "h": "Invoice content",
+        "d": "What every invoice says: the customer's invoice page, its download and the printed copy alike.",
+        "enabled": "Invoices",
+        "enabledHelp": "Off: customers see no invoice and none is printed or issued.",
+        "number": "Number pattern",
+        "numberHelp": "{number} is the order number, {digits} only its digits. An invoice already issued keeps its number.",
+        "blocks": "Parts shown",
+        "block": {
+          "shopDetails": "Shop's details (slogan, contacts, address)",
+          "customer": "Customer's name and phone",
+          "address": "Delivery address",
+          "courier": "Courier and tracking",
+          "variant": "Colour and size",
+          "sku": "Stock code (SKU)",
+          "marks": "Marks (added to parcel, set price)",
+          "payment": "How it is paid",
+          "returnNote": "Exchange line",
+          "footer": "Footer (legal details, your footer)"
+        },
+        "noteEn": "Your note, English",
+        "noteBn": "Your note, Bengali",
+        "noteHelp": "Shown in a box above the footer. Leave both empty for no note.",
+        "footerEn": "Your footer, English",
+        "footerBn": "Your footer, Bengali",
+        "footerHelp": "Leave both empty for \"Computer-generated invoice, no signature needed.\"",
+        "pairHelp": "Fill in both languages, or leave both empty.",
+        "download": "\"Download invoice\" button for customers"
+      },
+      "print": {
+        "h": "Printing",
+        "d": "How the invoice prints from this page and from an order.",
+        "paper": "Paper",
+        "papers": {
+          "a4": "A4",
+          "a5": "A5"
+        },
+        "roll": "Thermal roll",
+        "rolls": {
+          "roll80": "80 mm",
+          "roll58": "58 mm"
+        },
+        "dpi": "Printer dots per inch",
+        "lang": "Language of the printed words",
+        "langs": {
+          "en": "English",
+          "bn": "Bengali"
+        },
+        "barcode": "Courier barcode (once the parcel is booked)",
+        "logo": "Logo at the top (from Brand settings)",
+        "maxPerPdf": "Most invoices in one print"
+      },
+      "image": {
+        "h": "Invoice for a chat",
+        "d": "The copy of the invoice sent in a chat, once a chat is connected.",
+        "format": "Copy sent",
+        "formats": {
+          "jpg": "Picture (JPG)",
+          "pdf": "PDF"
+        },
+        "widthPx": "Picture width (pixels)",
+        "quality": "JPG quality"
+      },
+      "issue": {
+        "h": "Issuing",
+        "d": "Every placed order gets its invoice by itself. An edit makes a new version with the same number; a payment or a delivery never does.",
+        "enabled": "Issue invoices by themselves",
+        "everyMinutes": "Look every (minutes)",
+        "perRun": "Most orders a run",
+        "lookbackDays": "Look back (days)"
+      }
+    }
+  }
+}

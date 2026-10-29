@@ -372,7 +372,11 @@
       "giftTo": "Deliver to",
       "giftFrom": "A gift from",
       "giftHidden": "This is a gift: prices are not shown.",
-      "leadGift": "Invoice {invoice} for order #{number} · {items} · a gift, prices hidden."
+      "leadGift": "Invoice {invoice} for order #{number} · {items} · a gift, prices hidden.",
+      "revised": "Revised {date}",
+      "stamp": "REVISED {n}",
+      "barcode": "{courier} · {code}",
+      "page": "Page {n}/{of}"
     },
     "review": {
       "cta": "Rate & review",
