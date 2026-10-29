@@ -75,13 +75,25 @@ export async function comboMetadata(
   if (!r || r.kind === "missing") return {};
   // only the owner's featured sets are search results; a generated colour pair is one of many of the same rule
   const index = r.page.isFeatured && !(one(search.from) || one(search.added) || one(search.tpl) || one(search.pick));
-  const m = await shopMetadata(c, `combo/${r.page.summary.slug}`, r.env.name, { path: ROUTES.combo(r.page.summary.slug), index });
   const s = r.page.summary;
   const desc =
     ((c.lang === "bn" && s.descriptionBn?.trim()) || s.descriptionEn?.trim()) ??
     "";
-  if (desc) m.description = desc;
-  return m;
+  // PR 221: the set's own description first, then the set template (`seo.titles.combo`): its name, how many pieces,
+  // and the price the page shows (only while it is on sale)
+  return shopMetadata(c, `combo/${s.slug}`, r.env.name, {
+    path: ROUTES.combo(s.slug),
+    index,
+    seo: {
+      kind: "combo",
+      tokens: {
+        name: r.env.name,
+        pieces: c.t("combo.setOf", { n: c.num(r.env.pieces.length) }),
+        price: r.env.onSale && r.env.firstPrice.pay != null ? c.money(r.env.firstPrice.pay) : "",
+      },
+      own: { description: desc || null },
+    },
+  });
 }
 
 function Crumbs({

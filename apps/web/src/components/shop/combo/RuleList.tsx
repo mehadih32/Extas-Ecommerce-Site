@@ -48,7 +48,7 @@ export async function ruleListMetadata(key: string, search: Search): Promise<Met
   if (!d || d === 'missing') return {};
   const title = c.t('ctpl.list.title', { title: ruleTitle(c, d.page) });
   const index = !isFiltered(parseListQuery(search)) && d.page.onSale;
-  return shopMetadata(c, `combos/${d.page.rule.key}`, title, { path: ROUTES.comboRule(d.page.rule.key), index });
+  return shopMetadata(c, `combos/${d.page.rule.key}`, title, { path: ROUTES.comboRule(d.page.rule.key), index, seo: { kind: 'comboList', tokens: { name: title } } });
 }
 
 const ruleTitle = (c: Pick<ShopContext, 'lang'>, page: Pick<RulePage, 'rule'>) => inLang(c.lang, page.rule.titleEn ?? page.rule.nameEn, page.rule.titleBn ?? page.rule.nameBn);

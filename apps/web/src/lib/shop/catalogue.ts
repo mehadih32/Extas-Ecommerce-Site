@@ -368,6 +368,8 @@ const listSelect = {
 type ListRow = Prisma.ProductGetPayload<{ select: typeof listSelect }>;
 
 export interface CategoryHead {
+  /** PR 221: the category's id (its accepted AI search texts are kept under it). */
+  id: string;
   slug: string;
   nameEn: string;
   nameBn: string | null;
@@ -442,6 +444,7 @@ async function readCategory(
   if (cat) {
     // a real category of that name wins over the "New in" page
     head = {
+      id: cat.id,
       slug: cat.slug,
       nameEn: cat.nameEn,
       nameBn: cat.nameBn,
@@ -591,7 +594,7 @@ export function categoriesByIds(storeId: number, ids: readonly string[]): Promis
     const byId = new Map(rows.map((r) => [r.id, r]));
     return ids.flatMap((id) => {
       const r = byId.get(id);
-      return r ? [{ slug: r.slug, nameEn: r.nameEn, nameBn: r.nameBn, introEn: r.introEn, introBn: r.introBn, parent: null }] : [];
+      return r ? [{ id: r.id, slug: r.slug, nameEn: r.nameEn, nameBn: r.nameBn, introEn: r.introEn, introBn: r.introBn, parent: null }] : [];
     });
   });
 }

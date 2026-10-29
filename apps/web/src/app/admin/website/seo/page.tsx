@@ -1,13 +1,15 @@
 // S11 · PR 220–222 — Website → SEO at /admin/website/seo (docs/ADMIN-ARCHITECTURE.md §4.9 "SEO"): whether search engines
 // may list the shop and which pages, the address every page names (the store's primary domain, else the preview), and
-// how many Bengali pages are ready. Seeing needs `seo.read` (the read-only check account has it); saving needs
-// `seo.manage`. Guide: docs/admin-guide/pages/website/seo.md.
+// how many Bengali pages are ready (PR 220); the search titles and descriptions of every kind of page and the AI drafts
+// (PR 221). Seeing needs `seo.read` (the read-only check account has it); saving needs `seo.manage`.
+// Guide: docs/admin-guide/pages/website/seo.md.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
-import { SEO_PAGE_TYPES } from "@extas/settings";
+import { namingTokens, SEO_PAGE_TYPES, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { IndexingCard } from "@/components/admin/website/SeoScreen";
+import { AiDraftsCard, TitlesCard } from "@/components/admin/website/SeoTexts";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { formatNumber } from "@/components/admin/products/model";
@@ -17,9 +19,11 @@ import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
 import { locateKey } from "@/lib/admin-shell/sections";
 import { t, type Dict } from "@/lib/i18n";
 import { seoSnapshot } from "@/lib/seo/admin-api";
+import { draftState } from "@/lib/seo/drafts";
 import bn from "../../../../../messages/admin-seo.bn.json";
 import en from "../../../../../messages/admin-seo.en.json";
 import "../../settings/settings.css";
+import "./seo.css";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +40,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, "seo.metaTitle"), robots: { index: false, follow: false } };
 }
 
+/** The settings the titles card saves. */
+const pick = (v: Awaited<ReturnType<typeof seoSnapshot>>["values"]) => ({
+  "seo.titles": v["seo.titles"],
+  "naming.seoTitleTemplate": v["naming.seoTitleTemplate"],
+  "naming.metaDescriptionTemplate": v["naming.metaDescriptionTemplate"],
+  "naming.seoTitleMaxChars": v["naming.seoTitleMaxChars"],
+  "naming.metaDescriptionMaxChars": v["naming.metaDescriptionMaxChars"],
+});
+
 export default async function SeoPage() {
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess("seo.read", deps, MOTHER_STORE_ID)]);
@@ -48,7 +61,7 @@ export default async function SeoPage() {
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
-  const snap = await seoSnapshot(deps, MOTHER_STORE_ID);
+  const [snap, drafts] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID)]);
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `seo.${k}`, vars);
   const canWrite = access.guard.permissions?.has("seo.manage") ?? false;
@@ -100,6 +113,20 @@ export default async function SeoPage() {
 
       <div className="a2-mt12">
         <IndexingCard d={d} value={idx} defaults={snap.defaults["seo.indexing"]} version={snap.versions["seo.indexing"]} canWrite={canWrite} pageTypes={SEO_PAGE_TYPES} />
+      </div>
+      <div className="a2-mt12">
+        <TitlesCard
+          d={d}
+          value={pick(snap.values)}
+          defaults={pick(snap.defaults)}
+          versions={snap.versions}
+          canWrite={canWrite}
+          kinds={SEO_TEMPLATE_PAGES}
+          tokens={{ product: namingTokens, ...SEO_TEMPLATE_TOKENS }}
+        />
+      </div>
+      <div className="a2-mt12">
+        <AiDraftsCard d={d} value={snap.values["seo.aiDrafts"]} defaults={snap.defaults["seo.aiDrafts"]} version={snap.versions["seo.aiDrafts"]} canWrite={canWrite} initial={drafts} />
       </div>
     </div>
   );

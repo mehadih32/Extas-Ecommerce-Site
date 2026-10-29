@@ -59,7 +59,7 @@ export function fillTemplate(template: string, values: TokenValues, slug?: SlugO
     // separators left next to each other by an empty token ("Polo — | Shop") keep only the last one
     .replace(/(?:\s+[—|·-])+(?=\s)/g, (m) => ` ${m.trim().slice(-1)}`)
     .replace(/\s+([,.।])/g, '$1')
-    .replace(/^[\s,.।|—-]+|[\s,|—-]+$/g, '')
+    .replace(/^[\s,.।|·—-]+|[\s,|·—-]+$/g, '')
     .replace(/([.।])[\s.।]*(?=[.।])/g, '')
     .trim();
 }

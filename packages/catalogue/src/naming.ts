@@ -47,7 +47,7 @@ export interface NamingSettings {
   bulkMax: number;
 }
 
-export async function namingSettings(deps: CatalogueDeps, who: Who, db: Db = deps.db): Promise<NamingSettings> {
+export async function namingSettings(deps: Pick<CatalogueDeps, 'db' | 'settings'>, who: Pick<Who, 'storeId'>, db: Db = deps.db): Promise<NamingSettings> {
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, who, k);
   const [maxLength, ampersand, slugFallback, prefix, statusCode, tSlug, tSeo, tMeta, tFeed, coloursIn, mSeo, mMeta, mFeed, storeName, locale, currency, warn, brands, showBrandLine, showOwnLabel, bulkMax] =
     await Promise.all([
@@ -352,6 +352,42 @@ export async function namingView(deps: CatalogueDeps, who: Who, productId: strin
   const row = await loadRow(deps.db, who.storeId, productId);
   const seo = (await seoOf(deps.db, who.storeId, [row.id])).get(row.id) ?? { title: {}, description: {} };
   return namingViewOf(sourceOf(row), seo, ns, await new TypeCache(deps.db, who.storeId).get(row.categoryId));
+}
+
+/** S11 · PR 221 — a product's search title and description as its shop page shows them. */
+export interface ProductSeoTexts {
+  title: Record<Lang, NamingField>;
+  description: Record<Lang, NamingField>;
+}
+
+/**
+ * S11 · PR 221 — the search title and meta description of a product's shop page: its own (typed in Names & links, or an
+ * AI draft someone accepted), else the store's templates, exactly as the naming table shows them. `tokens` replaces
+ * template tokens for one language (a colour's own page: that colour). No permission: it is what the public page
+ * shows. Null when the product is not in the store.
+ */
+export async function productSeoTexts(
+  deps: Pick<CatalogueDeps, 'db' | 'settings'>,
+  storeId: number,
+  productId: string,
+  tokens: Partial<Record<Lang, TokenValues>> = {},
+): Promise<ProductSeoTexts | null> {
+  const row = await deps.db.product.findFirst({ where: { id: productId, storeId }, include: namingInclude });
+  if (!row) return null;
+  const [ns, seoRows, garment] = await Promise.all([namingSettings(deps, { storeId }), seoOf(deps.db, storeId, [row.id]), new TypeCache(deps.db, storeId).get(row.categoryId)]);
+  const seo = seoRows.get(row.id) ?? { title: {}, description: {} };
+  const p = sourceOf(row);
+  const tk = (lang: Lang) => ({ ...tokenValues(p, ns, garment, lang), ...tokens[lang] });
+  const one = (lang: Lang) => {
+    const v = tk(lang);
+    return {
+      title: field(seo.title[lang], fillTemplate(ns.templates.seoTitle[lang], v), ns.max.seoTitle),
+      description: field(seo.description[lang], fillTemplate(ns.templates.metaDescription[lang], v), ns.max.metaDescription),
+    };
+  };
+  const en = one('en');
+  const bn = one('bn');
+  return { title: { en: en.title, bn: bn.title }, description: { en: en.description, bn: bn.description } };
 }
 
 export interface NamingListFilter {

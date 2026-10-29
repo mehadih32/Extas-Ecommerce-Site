@@ -31,6 +31,9 @@ export * from './payment';
 export * from './courier';
 // PR 602 — the CDN (Cloudflare): dropping what it keeps; the mock until the owner types its token.
 export * from './cdn';
+// S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
+// (not in `allAdapters` until then; see ai-writer/index.ts).
+export * from './ai-writer';
 
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;

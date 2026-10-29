@@ -26,7 +26,8 @@ export async function combosMetadata(): Promise<Metadata> {
   const c = await shopContext();
   const set = await readPageSettings(KEYS, c.storeId);
   const on = set['combos.landing'].on;
-  return shopMetadata(c, on ? 'combos' : 'soon-combos', on ? c.t('combo.hub.title') : c.t('soon.title'), { index: on });
+  if (!on) return shopMetadata(c, 'soon-combos', c.t('soon.title'), { index: false });
+  return shopMetadata(c, 'combos', c.t('combo.hub.title'), { index: true, seo: { kind: 'combosHub', tokens: { name: c.t('combo.hub.title') } } });
 }
 
 type Build = Awaited<ReturnType<typeof buildEntry>>;

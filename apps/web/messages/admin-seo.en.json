@@ -62,6 +62,94 @@
     "FORBIDDEN": "You do not have permission to change the SEO settings.",
     "UNAUTHENTICATED": "Your session has ended. Sign in again.",
     "network": "No connection to the server. Try again.",
-    "server-error": "Something went wrong on the server. Try again."
+    "server-error": "Something went wrong on the server. Try again.",
+    "AI_OFF": "AI drafts are off. Turn on AI for the shop and \"Offer AI drafts\" first.",
+    "AI_UNAVAILABLE": "The AI writer could not be reached. Try again later.",
+    "DECIDED": "Someone already decided this draft. The list shows what is still waiting.",
+    "NOT_FOUND": "This draft no longer exists."
+  },
+  "titles": {
+    "title": "Search titles and descriptions",
+    "desc": "The title and short description Google shows for each kind of page. Words in {braces} are filled in from the page itself. A page's own text always comes first.",
+    "kind": "Kind of page",
+    "kindHint": "A page's own text (typed in for it, or an AI draft someone accepted) comes before this template. An empty description leaves the page's own words, or none.",
+    "productHint": "Each product's own title and description (on its product page) come before these. Products use more words, such as the brand, the colours and the price.",
+    "words": "Words you can use",
+    "token": {
+      "name": "the page's name",
+      "shop": "the shop's name",
+      "count": "how many styles",
+      "intro": "the category's own intro",
+      "pieces": "how many pieces",
+      "price": "the price the page shows",
+      "brand": "the brand",
+      "style": "the name without the brand",
+      "type": "the garment type",
+      "cat": "the category",
+      "colour": "the first colour",
+      "colours": "the colours",
+      "fit": "the fit"
+    },
+    "sample": {
+      "name": "Classic Polo",
+      "shop": "Your shop",
+      "count": "12 styles",
+      "intro": "Soft cotton polos for every day.",
+      "pieces": "Set of 2",
+      "price": "(price)",
+      "brand": "Brand",
+      "style": "Classic Polo",
+      "type": "Polo",
+      "cat": "Polos",
+      "colour": "Navy",
+      "colours": "Navy, White",
+      "fit": "Regular fit"
+    },
+    "preview": "Looks like: {text}",
+    "emptyTitle": "Empty: the page keeps its plain title.",
+    "emptyDescription": "Empty: the page's own words, or no description.",
+    "chars": "({n} of {max} characters)",
+    "none": "(empty)",
+    "max": {
+      "title": "Longest title (characters)",
+      "description": "Longest description (characters)"
+    },
+    "field": {
+      "title": {
+        "en": "Search title (English)",
+        "bn": "Search title (Bengali)"
+      },
+      "description": {
+        "en": "Description (English)",
+        "bn": "Description (Bengali)"
+      }
+    }
+  },
+  "ai": {
+    "title": "AI drafts",
+    "desc": "The AI can write a title and description for products and categories that have none of their own, from the page's own facts. Nothing goes on a page until you accept it.",
+    "shopOff": "AI is off for the whole shop (Settings › AI). Drafts can be made only after it is turned on there.",
+    "enabled": "Offer AI drafts",
+    "enabledHint": "Off by default.",
+    "batchMax": "At most this many pages per press",
+    "list": "Drafts waiting for you",
+    "missing": "Without their own text: {products} product pages, {categories} category pages (each language counts).",
+    "draft": "Draft for pages without their own text",
+    "drafting": "Drafting…",
+    "made": "Drafts made: {n}.",
+    "decided": "Done.",
+    "none": "No drafts are waiting.",
+    "more": "{n} more drafts are waiting; they show here as these are decided.",
+    "accept": "Accept",
+    "discard": "Discard",
+    "practice": "practice text",
+    "subject": {
+      "product": "Product",
+      "category": "Category"
+    },
+    "lang": {
+      "en": "English",
+      "bn": "Bengali"
+    }
   }
 }

@@ -59,7 +59,7 @@ export async function allow(deps: CatalogueDeps, who: Who, permission: Catalogue
 }
 
 /** One setting for the acting store. */
-export const setting = <K extends Key>(deps: CatalogueDeps, who: Who, key: K): Promise<Value<K>> => deps.settings.value(key, { storeId: who.storeId });
+export const setting = <K extends Key>(deps: Pick<CatalogueDeps, 'settings'>, who: Pick<Who, 'storeId'>, key: K): Promise<Value<K>> => deps.settings.value(key, { storeId: who.storeId });
 
 /** How links are made in this store (`naming.slugMaxLength`, `naming.slugAmpersand`). */
 export async function slugOptions(deps: CatalogueDeps, who: Who): Promise<SlugOptions> {

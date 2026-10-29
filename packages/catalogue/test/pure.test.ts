@@ -59,6 +59,9 @@ describe('fillTemplate (demo nm_tpl)', () => {
   it('drops separators left by empty tokens', () => {
     expect(fillTemplate('{name} — {price} | {shop}', v)).toBe('Lacoste Classic Polo | Sample Shop');
     expect(fillTemplate('{name}. {fit}. {shop}.', { name: 'Polo', fit: '', shop: 'S' })).toBe('Polo. S.');
+    // PR 221: the page templates' middle dot too
+    expect(fillTemplate('{name} · {shop}', { name: 'Polos', shop: '' })).toBe('Polos');
+    expect(fillTemplate('{shop} · {name}', { name: 'Polos', shop: '' })).toBe('Polos');
   });
   it('keeps unknown tokens as written', () => {
     expect(fillTemplate('{name} {nope}', { name: 'A' })).toBe('A {nope}');

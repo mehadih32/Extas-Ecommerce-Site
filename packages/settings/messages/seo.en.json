@@ -6,6 +6,44 @@
     "indexing": {
       "label": "Search engines",
       "help": "Off until the shop goes live. On, Google and other search engines may list the kinds of page ticked here, and only on the shop's own address (the store's primary domain); the preview site always stays hidden. Every page names itself as its own address in its language (English at /, Bengali at /bn, the same link words). A Bengali page is listed only after it is marked ready. \"Other languages\" sends searchers with another language to the English page, or nowhere."
+    },
+    "titles": {
+      "label": "Search titles and descriptions",
+      "help": "The title and the short description search engines show for each kind of page, in English and Bengali. Words in {braces} are filled in from the page itself: {name} the page's name, {shop} the shop's name, {count} how many styles a category shows, {intro} the category's own intro, {pieces} how many pieces a set has, {price} the set price the page shows. A page's own text (typed in for that page, or an AI draft someone accepted) comes first; an empty description leaves the page's own words or none. Products keep their own templates in Catalogue › Names & links. Titles and descriptions are cut to the lengths set there."
+    },
+    "aiDrafts": {
+      "label": "AI drafts",
+      "help": "Off. On (and with AI on for the whole shop), the AI writes a title and a description for products and categories that have none of their own, from the page's own facts only. Nothing goes on a page until someone accepts the draft here; an accepted draft fills only what is empty and never replaces text someone typed. \"At most\": how many pages one press drafts. Until an AI provider is connected, a practice writer drafts from the facts alone."
+    }
+  },
+  "defaults": {
+    "seo": {
+      "titles": {
+        "home": {
+          "title": "{shop}",
+          "description": ""
+        },
+        "category": {
+          "title": "{name} · {shop}",
+          "description": "{name}: {count}. {intro}"
+        },
+        "combo": {
+          "title": "{name} · {shop}",
+          "description": "{name}: {pieces}. {shop}."
+        },
+        "comboList": {
+          "title": "{name} · {shop}",
+          "description": ""
+        },
+        "combosHub": {
+          "title": "{name} · {shop}",
+          "description": ""
+        },
+        "help": {
+          "title": "{name} · {shop}",
+          "description": ""
+        }
+      }
     }
   }
 }
