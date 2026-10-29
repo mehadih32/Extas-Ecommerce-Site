@@ -51,7 +51,7 @@ export interface SingleView {
 }
 
 /** A safety bound on one person's orders read for the counts (not a business number). */
-const HISTORY_MAX = 2_000; // hardcode-ok: a read bound, not a business figure
+export const HISTORY_MAX = 2_000; // hardcode-ok: a read bound, not a business figure
 
 export const maskOf = (deps: CustomersDeps, storeId: number): Promise<PhoneMask> => setting(deps, storeId, 'customers.phoneMask');
 

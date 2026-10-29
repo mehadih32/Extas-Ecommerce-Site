@@ -13,6 +13,9 @@
 // PR 285 (`customers.list`): the Customers list — how many customers one page shows, how many orders make a customer
 // "Returning" (fewer is "New"), after how many days without an order a customer who had a delivery is "At risk", and the
 // delivered spend that makes a customer VIP (empty: no VIP view until the owner types his own figure, CN-018).
+//
+// PR 286 (`customers.profile`): one customer's page — how many orders, exchanges and support conversations each list
+// shows before "Older", and how many lines of "Who looked at this customer" it shows.
 import { z } from 'zod';
 import { setting } from './define';
 import { moneyMinorSchema } from './schemas';
@@ -54,6 +57,15 @@ export const customerListSchema = z
   })
   .strict();
 
+/** PR 286 — one customer's page. */
+export const customerProfileSchema = z
+  .object({
+    ordersPerPage: z.int().min(5).max(100),
+    listsPerPage: z.int().min(3).max(50),
+    accessLogShown: z.int().min(0).max(100),
+  })
+  .strict();
+
 export const customerSettings = {
   'customers.merge': setting({
     ...base,
@@ -81,5 +93,14 @@ export const customerSettings = {
     labelKey: 'customers.list.label',
     helpKey: 'customers.list.help',
     sortOrder: 120,
+  }),
+  'customers.profile': setting({
+    ...base,
+    schema: customerProfileSchema,
+    default: { ordersPerPage: 20, listsPerPage: 10, accessLogShown: 10 }, // hardcode-ok: registry default (rows per list)
+    valueType: 'JSON',
+    labelKey: 'customers.profile.label',
+    helpKey: 'customers.profile.help',
+    sortOrder: 130,
   }),
 };

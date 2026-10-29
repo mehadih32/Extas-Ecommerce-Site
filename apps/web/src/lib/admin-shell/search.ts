@@ -217,9 +217,20 @@ async function customerItems(ctx: SearchContext, q: string, digits: string): Pro
     where: { storeId: ctx.storeId, archivedAt: null, erasedAt: null, ...where },
     orderBy: { lastOrderAt: { sort: 'desc', nulls: 'last' } },
     take: ctx.limits.perGroup,
-    select: { name: true, orderCount: true, orders: { where: { status: { not: 'DRAFT' } }, orderBy: { placedAt: 'desc' }, take: 1, select: { id: true, number: true } } },
+    select: { id: true, mergedIntoId: true, name: true, orderCount: true, orders: { where: { status: { not: 'DRAFT' } }, orderBy: { placedAt: 'desc' }, take: 1, select: { id: true, number: true } } },
   });
   const d = adminDicts[ctx.lang];
+  // PR 286: a person allowed customers sees the customer's own page (a merged profile opens the person it belongs to,
+  // once); anyone else keeps the latest order, as before.
+  if (has(ctx.viewer, 'customers.read')) {
+    const seen = new Set<string>();
+    return rows.flatMap((c) => {
+      const id = c.mergedIntoId ?? c.id;
+      if (seen.has(id)) return [];
+      seen.add(id);
+      return [{ label: c.name || c.orders[0]?.number || t(d, 'shell.palette.groups.customers'), sub: t(d, 'shell.palette.orders', { n: c.orderCount }), href: `/admin/customers/${id}`, icon: 'users' as const }];
+    });
+  }
   return rows.flatMap((c) => {
     const last = c.orders[0];
     return last ? [{ label: c.name || last.number, sub: t(d, 'shell.palette.orders', { n: c.orderCount }), href: paletteOrderHref(ctx.viewer, last), icon: 'users' as const }] : [];
@@ -263,7 +274,7 @@ export async function adminSearch(ctx: SearchContext, raw: string): Promise<Sear
     const [products, orders, customers] = await Promise.all([
       !mode && has(v, 'catalogue.read') ? productItems(ctx, q) : [],
       has(v, 'orders.read') || has(v, 'orders.invoice') ? orderItems(ctx, q) : [],
-      !mode && (has(v, 'orders.read') || has(v, 'orders.invoice')) ? customerItems(ctx, q, digits) : [],
+      !mode && (has(v, 'customers.read') || has(v, 'orders.read') || has(v, 'orders.invoice')) ? customerItems(ctx, q, digits) : [],
     ]);
     add('orders', orders);
     add('products', products);

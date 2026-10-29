@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { customerListSchema, customerSettings, MERGE_SIGNALS, mergeRulesSchema, phoneMaskSchema } from '../src/registry-customers';
+import { customerListSchema, customerProfileSchema, customerSettings, MERGE_SIGNALS, mergeRulesSchema, phoneMaskSchema } from '../src/registry-customers';
 
 describe('customers settings (v60)', () => {
   it('every key is in the registry at version 60 in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -42,5 +42,12 @@ describe('customers settings (v60)', () => {
     expect(customerListSchema.safeParse({ ...l, vipMinSalesMinor: -1 }).success).toBe(false);
     expect(customerListSchema.safeParse({ ...l, returningMinOrders: 1 }).success).toBe(false);
     expect(customerListSchema.safeParse({ ...l, pageSize: 1000 }).success).toBe(false);
+  });
+
+  it('PR 286: a customer\'s page lists 20 orders, 10 exchanges or conversations and the last 10 looks', () => {
+    const c = customerSettings['customers.profile'].default;
+    expect(c).toEqual({ ordersPerPage: 20, listsPerPage: 10, accessLogShown: 10 });
+    expect(customerProfileSchema.safeParse({ ...c, accessLogShown: 0 }).success).toBe(true);
+    expect(customerProfileSchema.safeParse({ ...c, ordersPerPage: 1 }).success).toBe(false);
   });
 });

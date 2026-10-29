@@ -48,5 +48,5 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
     cd.settings.value('customers.list', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
   ]);
-  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} />;
+  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => `/admin/customers/${id}`} />;
 }

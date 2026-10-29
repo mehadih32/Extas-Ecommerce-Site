@@ -640,3 +640,13 @@
 .adm2 .ad-tabs { padding: 0 0 6px; margin: 2px 0 16px; }
 .adm2 .ad-tabs .ad-chip { min-height: 44px; border-color: var(--ln); background: var(--sf); color: var(--ink); }
 .adm2 .ad-tabs .ad-chip[aria-current='page'] { background: var(--g); border-color: var(--g); color: #fff; }
+/* S14 · PR 286: a customer's name in a list row or a "Same person?" card opens his page, so on a touch screen it is a
+   44 px tap, and a row of his page keeps the card's full width; his numbers' Copy and Call go under the number on
+   the narrowest phones instead of cutting it off. */
+.adm2 .a2-prow.wrap { flex-wrap: wrap; }
+.adm2 .a2-prow.wrap > .a2-prt { min-width: max-content; }
+.adm2 .a2-prow.full .a2-prt b { white-space: normal; }
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .a2-prt a.a2-b { min-height: 44px; display: inline-flex; align-items: center; }
+  .adm2 .a2-prow.wrap, .adm2 .a2-prow.full { display: flex; }
+}

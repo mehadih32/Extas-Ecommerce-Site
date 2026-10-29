@@ -29,6 +29,7 @@
     { "id": "products/audit", "route": "/admin/products/audit" },
     { "id": "customers/all", "route": "/admin/customers" },
     { "id": "customers/review", "route": "/admin/customers/review" },
+    { "id": "customers/customer", "route": "/admin/customers/[id]" },
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },
     { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]" },

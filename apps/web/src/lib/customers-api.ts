@@ -1,4 +1,4 @@
-// S14 · PR 284, 285 — the customers admin API (BACKEND-ARCHITECTURE §5.5, §9.10). Every route signs the person in
+// S14 · PR 284, 285, 286 — the customers admin API (BACKEND-ARCHITECTURE §5.5, §9.10). Every route signs the person in
 // (guardAdmin), checks the permission in the store it touches (`?storeId=`, default the mother store), then calls
 // @extas/customers, which checks the permission again, masks the phone numbers for anyone without `customers.phone`
 // and writes the audit log in the same transaction as a change. Answers are `{ ok: true, … }` or
@@ -11,6 +11,11 @@
 //   GET   /api/admin/customers/by-phone?phone=        the person a number belongs to, however it is written (customers.read)
 //   GET   /api/admin/customers/:id                    the single view: his profiles, numbers, order counts and lifetime
 //                                                     value; a merged profile answers with its survivor (customers.read)
+//   GET   /api/admin/customers/:id/orders?page=       PR 286: every order over every profile and number, newest first,
+//                                                     a page of the owner's size (customers.read)
+//   GET   /api/admin/customers/:id/exchanges          PR 286: his exchanges (customers.read)
+//   GET   /api/admin/customers/:id/support            PR 286: his conversations and tickets, empty until S22 (customers.read)
+//   GET   /api/admin/customers/:id/looks              PR 286: "Who looked at this customer" (customers.read + audit.read)
 //   POST  /api/admin/customers/:id/access             {action: phone.copy | phone.call} logged before the full number is
 //                                                     used (customers.phone)
 //   GET   /api/admin/customers/merge-suggestions      the pairs the owner's merge rules find (customers.read)
@@ -122,6 +127,15 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
         const view = await cu.customerView(x.deps, x.who, a);
         if (!view) throw new cu.CustomersError('NOT_FOUND', 'no such customer', ['customerId']);
         return { customer: view };
+      });
+    }
+    if (path.length === 2 && (b === 'orders' || b === 'exchanges' || b === 'support' || b === 'looks')) {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'customers.read', async (x) => {
+        if (b === 'orders') return { ...(await cu.customerOrders(x.deps, x.who, a, x.url.searchParams.has('page') ? { page: Number(x.url.searchParams.get('page')) } : {})) };
+        if (b === 'exchanges') return { rows: await cu.customerExchanges(x.deps, x.who, a) };
+        if (b === 'support') return { rows: await cu.customerSupport(x.deps, x.who, a) };
+        return { rows: await cu.customerLooks(x.deps, x.who, a) };
       });
     }
     if (b === 'access' && path.length === 2) {

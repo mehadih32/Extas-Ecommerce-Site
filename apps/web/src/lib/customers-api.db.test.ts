@@ -105,4 +105,19 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await api('GET', '?sort=phone')).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
     expect((await api('POST', '')).status).toBe(405);
   });
+
+  it('PR 286: one customer\'s orders, exchanges and support for a reader; "Who looked" only with the audit key', async () => {
+    const o = await api('GET', `${a}/orders`, { cookie: reader });
+    expect(o.status).toBe(200);
+    expect(o.body).toMatchObject({ ok: true, page: 1, total: 0, hasMore: false, rows: [] });
+    expect((await api('GET', `${a}/orders?page=0`)).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await api('GET', `${a}/exchanges`, { cookie: reader })).body).toEqual({ ok: true, rows: [] });
+    expect((await api('GET', `${a}/support`, { cookie: reader })).body).toEqual({ ok: true, rows: [] });
+    expect((await api('GET', `${a}/looks`, { cookie: reader })).status).toBe(403);
+    const looks = await api('GET', `${a}/looks`);
+    expect(looks.status).toBe(200);
+    expect(Array.isArray(looks.body.rows)).toBe(true);
+    expect((await api('POST', `${a}/orders`)).status).toBe(405);
+    expect((await api('GET', `${a}/nothing`)).status).toBe(404);
+  });
 });
