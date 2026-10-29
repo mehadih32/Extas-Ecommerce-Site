@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬৪টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,14 +36,14 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬৪টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬৬টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 243/305** · 62 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** (wave 4) · total **264/615** active PRs |
+| Launch | **Launch 245/305** · 60 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** (wave 4) · total **266/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 05:23 (Dhaka) · commit `068aaf4` (#51, PR [182](docs/stages/S08.md#pr-182), 183, 284–286, 291, 292, 298, 505 packing, customers, messages) · **success**, smoke test 188 pages OK |
+| Last deploy | 30 Oct 2026, 06:32 (Dhaka) · commit `bac2e8a` (#52, PR [220](docs/stages/S11.md#pr-220), 221, 222 the SEO engine's base) · **success**, smoke test 190 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
@@ -70,7 +70,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 19 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 8 / 10 | In progress |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 17 / 26 | In progress |
-| [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 17 / 19 | In progress |
+| [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 19 / 19 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 3 / 22 | In progress |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **264 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **266 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -659,13 +659,15 @@ Permissions: `media.read/upload/manage`, `catalogue.read/write/prices/publish/im
 storefront size chart / collection pages and "was" price display (S02), AI spec-sheet reading (AI stage), sending
 back-in-stock messages (notifications).
 
-### S09 · Inventory & ERP sync — In progress (17/19)
+### S09 · Inventory & ERP sync — Done (19/19)
 
 > **বাংলায়:** স্টক আসে ERP থেকে। ব্যাগে রাখা পিস আটকে রাখা, অর্ডার ERP-তে কাগজ হিসেবে পাঠানো, কম স্টকের সতর্কতা,
 > বারকোডে গোনা, সিঙ্ক ঠিক চলছে কিনা দেখার পাতা, আর স্টকের আসা-যাওয়ার রিপোর্ট। আসল ERP-এর কী না বসানো পর্যন্ত
 > "প্র্যাকটিস ERP" চলে — আসল স্টকে কিছু বদলায় না।
+> নতুন (PR 607, 608): ERP-এর নতুন চুক্তি (v6) তৈরি, সুইচ `erp.model` দিয়ে — এখন সব দোকান আগের মতো v5-এ চলে। প্রতিটা দোকানের
+> নিজের ERP চাবি; এক দোকানের চাবি দিয়ে অন্য দোকানের কিছু দেখা বা লেখা যায় না। ERP-এর প্রতিটা খবর একবারই, চিরকাল রাখা হয়।
 
-PR 194–207, 497–499. Register: [S09](docs/MASTER-REGISTER.md#s09--inventory--erp-sync--pr-194207). Packages:
+PR 194–207, 497–499, 607, 608. Register: [S09](docs/MASTER-REGISTER.md#s09--inventory--erp-sync--pr-194207). Packages:
 `@extas/inventory`, the ERP adapter in `@extas/adapters`.
 
 - **ERP adapter (PR 498).** One contract (health, variants, stock, stock for one SKU; stable error codes), an HTTP
@@ -728,7 +730,35 @@ Public (no session, signed): `POST /api/erp/webhook` — the ERP's webhooks (PR 
 
 Permissions: `inventory.read/locations/erp/sync/audit`. Settings: `erp.*`, `inventory.*` (registry v11; `erp.webhook.*` v22). Tests in
 `packages/inventory/test` and `packages/adapters/test` (pure + PostgreSQL, including two carts racing for the last
-piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09.
+piece). Screenshots: [`docs/qa/screenshots/pr-205/`](docs/qa/screenshots/pr-205). No schema change in S09 before PR 607.
+
+**Built (PR 607, 608): ERP contract v6, one ERP company per store, and the event ledger** (CN-028, CN-029 Phase 0; backend only, no
+admin screen). Migration `0049_erp_v6` (additive), settings registry v62 (`packages/settings/src/registry-erp-v6.ts`), new package
+`@extas/erp-types`.
+- **The switch (607):** `erp.model` per store, empty (= `v5`) by default, so nothing changes until the ERP announces its switch date.
+  In v6 the shop never reads the ERP's retail price or average cost, and the retired v5 calls (returns, delivered / returned
+  statuses) are kept as RETIRED rows, never sent. The switch is one-way, so it needs the owner's written OK and only PR 619's
+  switch-over sets it. The practice ERP speaks all of v6, so every flow runs with no real key.
+- **One store = one ERP company (§16):** each store talks to the ERP through its own connection, with its own key and secrets in the
+  vault under its id; on the practice ERP each store gets its own sample company and key (`SAMPLE-CO-<storeId>`). Store A's key can
+  never read or write store B (test on PostgreSQL). A store with only a shared connection keeps working in v5 and is refused in v6
+  (`SHARED_LINK`); a key of a company another store's link holds is refused (`SHARED_COMPANY`), also by the database.
+- **Event ledger (608):** every v6 event is kept once by its eventId on the store's own ERP link (`ErpStoreLink`), forever; the body
+  of a stored event can never change (a database trigger). Webhook and hourly pull (`erp.events.pullMinutes`, resuming from its
+  cursor when `erp.sync.maxPagesPerRun` stops it) are one ledger; a correction that arrives first waits for its original (failed
+  after `erp.events.correctionWaitHours`) and undoes only what was applied; a missing or damaged piece becomes one courier claim.
+  The event belongs to the store whose secret signed it; two stores sharing a secret are refused (`SHARED_SECRET`). A broken event
+  or a known eventId with another body is kept, never applied, and shown on Stock → ERP connection.
+- **Shared foundation for PR 609–618:** every new table (orders and lines, delivery results, account and its ledger, payments, the
+  return pipeline, return lists, exchanges, daily summaries, fixed costs, books runs, closes, differences and adjustments) with
+  storeId and the store's link (a composite key, so a row can never hang on another store's link); lump-sum money as BIGINT;
+  ten of them append-only for the app's role, one reversal per entry. Every §11 setting (`erp.hold.*`, `erp.account.*`,
+  `erp.summary.*`, `erp.fixedCosts.*`, `books.*`, `exchange.*`, `returns.handback.photo`, `catalogue.bGrade.listing`,
+  `catalogue.floor.minMarginPercent`) and every §12 permission (`returns.handback`, `exchange.approve`, `books.*`,
+  `erp.account.read`, `erp.payments.record`, `fixedcosts.write`).
+- **Tests:** contract and practice ERP (`packages/adapters/test/erp-v6*.test.ts`), the shared helpers and their database enums
+  (`packages/erp-types`), the ledger and the §16 isolation on PostgreSQL (`packages/inventory/test/erp-v6.db.test.ts`), the
+  append-only ledgers (`packages/db/test/append-only.db.test.ts`), the settings (`packages/settings/test/registry-erp-v6.test.ts`).
 
 ### S02 · Storefront — In progress (45/58)
 
@@ -1501,6 +1531,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #53 | PR [607](docs/stages/S09.md#pr-607), [608](docs/stages/S09.md#pr-608) | 30 Oct | ERP contract v6 behind `erp.model` (v5 until the switch), one ERP company per store with its own keys, the permanent event ledger, and the shared tables, settings and permissions for PR [609–618](docs/stages/README.md) (CN-029 Phase 0). |
 | #52 | PR [220](docs/stages/S11.md#pr-220), [221](docs/stages/S11.md#pr-221), [222](docs/stages/S11.md#pr-222) | 30 Oct | The SEO engine's base: each page names its own address in its own language, search engines stay off until go-live (the preview is always hidden from them), search titles and descriptions from templates with AI drafts a person accepts (off until AI is on), and structured data for the shop, the website, products and sets. New admin page Website › SEO with its guide. |
 | #51 | PR [182](docs/stages/S08.md#pr-182), [183](docs/stages/S08.md#pr-183), [284](docs/stages/S14.md#pr-284), [285](docs/stages/S14.md#pr-285), [286](docs/stages/S14.md#pr-286), [185](docs/stages/S08.md#pr-185) (follow-up [466](docs/stages/S24.md#pr-466)), [198](docs/stages/S09.md#pr-198), [291](docs/stages/S14.md#pr-291), [292](docs/stages/S14.md#pr-292), [298](docs/stages/S14.md#pr-298), [505](docs/stages/S14.md#pr-505) | 30 Oct | Orders → Packing & print → Pack: pick, check every piece, pack (photo and weight checks, off by default) and hand over; a damaged or missing piece opens a card and holds the order until a person decides. Customers: the list with its views and search, one customer's page (orders, Sales delivered only, exchanges, who looked), and To review for the same person's profiles. Messages: SMS (BulkSMSBD) and WhatsApp (Meta) on their mocks until the keys, consent and stop words checked before every send, the template editor with a live preview, the order journey, the message log and channels. The Orders tabs no longer squeeze on a phone. |
 | direct | CN-029 (docs only) | 30 Oct | PR [607–621](docs/stages/README.md) will be built in one run with five builders in parallel (two new section agents, Pherot and Hisabi); each store has its own ERP keys; the old exchange and return code is reworked inside PR [610–614](docs/stages/README.md). Plan in `docs/RETAIL-ERP-MODEL.md` §15–16. |
