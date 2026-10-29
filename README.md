@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৫৪টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৫৭টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,12 +36,12 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao) তৈরি হচ্ছে। মোট ৬০০টা PR-এর মধ্যে ২৫৪টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) কুরিয়ার (S08: কাঠামো, Steadfast, Pathao) আর কাস্টমার (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) তৈরি হচ্ছে। মোট ৬১৫টা PR-এর মধ্যে ২৫৭টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 233/305** · 72 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · total **254/615** active PRs |
+| Launch | **Launch 236/305** · 69 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 17/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S14 3/24** (wave 4) · total **257/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 30 Oct 2026, 02:02 (Dhaka) · commit `9e01e00` (#49, PR [184](docs/stages/S08.md#pr-184), 185, 187–191, 525, 526 courier sync, exchanges, returns, refused parcels; PR [573](docs/stages/S03.md#pr-573) combo speed) · **success**, smoke test 170 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -75,7 +75,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 0 / 22 | In progress (PR 222 partly) |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
-| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 0 / 24 | Not started |
+| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 3 / 24 | In progress |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 0 / 22 | Not started |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **254 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **257 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1320,9 +1320,42 @@ Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 - **Admin:** Delivery → Couriers (`/admin/delivery/couriers`: accounts, practice or live, the area list summary, "Read the list now") and one courier's page (parcels waiting, not paired with candidates, paired, dropped). Guides: [couriers](docs/admin-guide/pages/delivery/couriers.md), [one courier](docs/admin-guide/pages/delivery/courier.md).
 - Still planned in S06: the rest of the fraud engine (162–164, 522–524, 540, 543, 545), the rest (556–557, 559, 562, 567).
 
-### S14 · CRM & customers — Not started
+### S14 · CRM & customers — In progress (3/24)
 
-Planned — see register PRs 284–303, 505, 533–535: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
+> **বাংলায় সংক্ষেপে:** কাস্টমারের সেকশন তৈরি: সব কাস্টমারের তালিকা (ফোন দিয়ে প্রতিটা মানুষের এক সারি, ভাগ, খোঁজা), একজন
+> কাস্টমারের নিজের পাতা (সব অর্ডার, বিক্রি শুধু ডেলিভারি হওয়া, বদল, সাপোর্ট) আর "যাচাই বাকি" — একই মানুষের দুইটা প্রোফাইল একজন
+> মানুষ দেখে একসাথে করেন, কিছু মোছে না, আবার আলাদা করা যায়। পুরো নম্বর শুধু অনুমতিতে; কে পাতা খুলেছেন বা নম্বর কপি করেছেন, লগে থাকে।
+
+**Built (PR 284, 285, 286): the customers section on the new admin shell.** New package `@extas/customers`; migration
+`0047_customer_merge` (additive: `Customer.mergedIntoId` / `mergedAt`, `CustomerMerge`); settings registry v60
+(`packages/settings/src/registry-customers.ts`); `@extas/metrics` `customerKpis`, `customerFiguresSql`, `customerOrdersSql`.
+- **The person by phone (284):** a profile, its merged profiles and every number they ordered with are one person; any
+  written form of a number finds him. Lifetime value from `@extas/metrics`: **Sales** = delivered orders only, beside
+  **Ordered value** (CN-022); refusals never count the shop's own mistakes.
+- **Merges (284):** the merge rules suggest "Same person?" pairs (same e-mail, a WhatsApp number that is the other's
+  phone, the same name and address, the same identity on an order); a person decides — Merge (with an Idempotency-Key),
+  Not the same person, or Split later with a note. A merge only points one profile at the other: nothing moves, nothing
+  is deleted, every decision is audited.
+- **Personal data:** every read checks `customers.read`; the full number needs `customers.phone` (otherwise masked,
+  `customers.phoneMask`); opening a customer and every Copy or Call is written to "Who looked at this customer" first
+  (shown with `audit.read`); `customers.merge` for decisions. No export anywhere here (PR 299 brings its own key).
+- **Screens:** Customers → **All customers** (`/admin/customers`: four numbers, eight views with counts, search, source
+  filter, sorts, a table on a desktop and cards on a phone), **one customer** (`/admin/customers/<id>`: Overview ·
+  Orders · Exchanges · Support, consent, wallets, "Who looked", "Merge with…"), **To review** (`/admin/customers/review`).
+  The command palette's customer results open the customer's page. Guides:
+  [all customers](docs/admin-guide/pages/customers/all.md), [one customer](docs/admin-guide/pages/customers/customer.md),
+  [to review](docs/admin-guide/pages/customers/review.md).
+- **Settings (v60):** `customers.merge` {suggest on, four rules on, 20 a page, note off}; `customers.phoneMask`
+  {first 3, last 3}; `customers.list` {50 a page, returning from 2 orders, at risk after 60 days, VIP figure empty};
+  `customers.profile` {20 orders a page, 10 exchanges and support lines, 10 lines of "Who looked"}.
+- **API:** `/api/admin/customers` — the list, `by-phone`, `<id>` (the single view), `<id>/orders`, `<id>/exchanges`,
+  `<id>/support`, `<id>/looks`, `<id>/access`, `merge-suggestions`, `merge-preview`, `merges`, `merge`, `not-same`,
+  `merges/<id>/undo`.
+- **Tests:** merges, the single view, the list's views and the customer page on PostgreSQL; the API with the owner and
+  a read-only reader (masked numbers, refusals); the settings; every word in both languages. Smoke and device gate open
+  the list, To review and the first customer page.
+- Still planned in S14: SMS and messages (291–297), consent and data (298, 505), segments, loyalty and the rest
+  (299–303, 533–535). Register: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
 
 ### S20 · Fulfilment & documents — Not started
 
