@@ -229,6 +229,8 @@ describe.skipIf(!HAS_TEST_DB)('S09 wave 1 on PostgreSQL: holds, documents, alert
     const second = holdCart(deps(), { storeId: store.B, cartId: await cart(store.B), lines: [{ variantId: v.B!['CAP-NAVY-M']!, quantity: 1 }] }).finally(() => {
       secondDone = true;
     });
+    // its refusal can land while the test still waits on the first; a handler now keeps it from being "unhandled"
+    second.catch(() => undefined);
     await new Promise((r) => setTimeout(r, 300));
     expect(secondDone).toBe(false);
     open();
