@@ -170,6 +170,20 @@ export default async function ChannelsPage() {
         )}
       </section>
       <ChannelsForm dict={md} config={screen.config} version={screen.version} canEdit={screen.perms.write} />
+      <section className="a2-sc a2-mt12" aria-labelledby="mc-consent" data-testid="channels-consent">
+        <div className="a2-sch">
+          <div>
+            <h2 className="a2-h3" id="mc-consent">
+              {x('consent')}
+            </h2>
+            <p className="a2-scd">{x('consentOpen')}</p>
+          </div>
+          <Link className="a2-btn sm" href="/admin/messages/consent">
+            {x('consentLink')}
+            <ShellIcon name="cr" size={14} />
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

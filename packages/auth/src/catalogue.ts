@@ -178,6 +178,10 @@ export const PERMISSIONS = {
   // the SMS masking name, the part prices, the master switch, the caps and the quiet hours; change them. Sends nothing.
   'messages.channels.read': { group: 'messages' },
   'messages.channels.write': { group: 'messages' },
+  // S14 · PR 298 — consent and opt-out: see who stopped which messages (customers' numbers: a `.view` key, like the log)
+  // and the stop words; record a customer's own stop or start at his request, change the stop words. Sends nothing.
+  'messages.consent.view': { group: 'messages' },
+  'messages.consent.write': { group: 'messages' },
   // S07 · PR 165 — payments (BACKEND-ARCHITECTURE §6.5.3): see an order's payments, its amount due and where its money
   // stands, with the reason of every mismatch (`payments.view`; not a `.read` key on purpose: it shows customers' payment
   // references, and the read-only smoke check account never gets them); record money received outside the checkout

@@ -5,10 +5,13 @@
 // and what one SMS part costs, masked and not (the owner's own figures: empty until he types them; the log's cost is an
 // estimate from them when the gateway does not say its price).
 // PR 292 — the WhatsApp Business Platform: the template language codes, the approval category and the webhook's size.
+// PR 298 — consent and opt-out: the words that stop and restart messages, what a stop covers, which journey steps are
+// offers (sent only to a customer who said yes), and whether a stop is answered. Honouring a stop is never switched off.
 //
 // Nothing here sends anything on its own, moves money or changes a price.
 import { z } from 'zod';
 import { setting } from './define';
+import { JOURNEY_STEPS } from './registry-messages';
 
 const V = 61;
 
@@ -57,6 +60,38 @@ export const whatsappSettingsSchema = z
   .strict();
 export type WhatsAppSettings = z.output<typeof whatsappSettingsSchema>;
 
+const word = z.string().trim().min(1).max(30);
+const words = z
+  .array(word)
+  .max(20)
+  .refine((l) => new Set(l.map((w) => w.toUpperCase())).size === l.length, { message: 'every word once' });
+
+/**
+ * PR 298 — consent and opt-out (B5.7, BACKEND-ARCHITECTURE §8.8). A customer's reply that is one of `stopWords` (any
+ * case, Bengali too) records his stop; one of `startWords` takes it back. `stopCovers`: `everything` (no message on
+ * that channel at all, order updates too) or `offers` (only the steps in `offerSteps`). `stopChannels`: the channel he
+ * wrote on, or every channel. `offerSteps`: journey steps that are offers, sent only to a customer whose newest answer
+ * for offers on that channel is yes (the checkout and account ticks). `confirmReply`: answer a stop or start with the
+ * `consent.stopped` / `consent.started` template (off: nothing is sent back).
+ */
+export const CONSENT_STOP_COVERS = ['everything', 'offers'] as const;
+export const CONSENT_STOP_CHANNELS = ['thisChannel', 'allChannels'] as const;
+export const consentSettingsSchema = z
+  .object({
+    stopWords: words,
+    startWords: words,
+    stopCovers: z.enum(CONSENT_STOP_COVERS),
+    stopChannels: z.enum(CONSENT_STOP_CHANNELS),
+    offerSteps: z
+      .array(z.enum(JOURNEY_STEPS))
+      .max(JOURNEY_STEPS.length)
+      .refine((l) => new Set(l).size === l.length, { message: 'every step once' }),
+    confirmReply: z.boolean(),
+  })
+  .strict()
+  .refine((c) => !c.stopWords.some((s) => c.startWords.some((t) => t.toUpperCase() === s.toUpperCase())), { message: 'a word cannot both stop and start', path: ['startWords'] });
+export type ConsentSettings = z.output<typeof consentSettingsSchema>;
+
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'messages', version: V } as const;
 
 export const messageChannelSettings = {
@@ -94,5 +129,15 @@ export const messageChannelSettings = {
     labelKey: 'messages.whatsapp.label',
     helpKey: 'messages.whatsapp.help',
     sortOrder: 220,
+  }),
+  // ---- PR 298 · consent and opt-out ----
+  'messages.consent': setting({
+    ...base,
+    schema: consentSettingsSchema,
+    default: { stopWords: ['STOP', 'UNSUBSCRIBE', 'বন্ধ'], startWords: ['START', 'চালু'], stopCovers: 'everything', stopChannels: 'thisChannel', offerSteps: [], confirmReply: false },
+    valueType: 'JSON',
+    labelKey: 'messages.consent.label',
+    helpKey: 'messages.consent.help',
+    sortOrder: 230,
   }),
 };

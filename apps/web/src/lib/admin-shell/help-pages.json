@@ -35,6 +35,7 @@
     { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]" },
     { "id": "messages/log", "route": "/admin/messages/log" },
     { "id": "messages/channels", "route": "/admin/messages/channels" },
+    { "id": "messages/consent", "route": "/admin/messages/consent" },
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
     { "id": "reports/server", "route": "/admin/server" },

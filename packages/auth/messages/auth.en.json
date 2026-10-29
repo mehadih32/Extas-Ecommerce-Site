@@ -149,6 +149,10 @@
       "channels": {
         "read": "See the message channels (providers, credit, masking name, caps, quiet hours)",
         "write": "Change the message channels and limits"
+      },
+      "consent": {
+        "view": "See who stopped messages (numbers, channels, when) and the stop words",
+        "write": "Record a customer's stop or start at his request, and change the stop words"
       }
     },
     "payments": {

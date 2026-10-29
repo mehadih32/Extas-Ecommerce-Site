@@ -45,7 +45,8 @@
       "onHold": "On hold",
       "advanceRequested": "Advance asked",
       "advanceRequest": "Advance request",
-      "giftReceiver": "Gift receiver"
+      "giftReceiver": "Gift receiver",
+      "consentReply": "Answer to a stop or start"
     },
     "reason": {
       "MASTER_OFF": "The messages master switch was off",
@@ -71,7 +72,9 @@
       "NO_SENDER": "The channel could not be reached",
       "SEND_FAILED": "The provider refused it",
       "PROVIDER_FAILED": "WhatsApp said it could not be delivered",
-      "WA_TEMPLATE_NOT_APPROVED": "WhatsApp has not approved this text yet, so the other channel was used"
+      "WA_TEMPLATE_NOT_APPROVED": "WhatsApp has not approved this text yet, so the other channel was used",
+      "OPTED_OUT": "The customer stopped messages on this channel",
+      "NO_CONSENT": "An offer, and the customer has not said yes to offers"
     },
     "log": {
       "title": "Message log",
@@ -155,7 +158,8 @@
       "quietFrom": "From (hour, 0–23)",
       "quietTo": "To (hour, 0–23)",
       "consent": "Who may get messages",
-      "consentLink": "Opt-outs & consent"
+      "consentLink": "Opt-outs & consent",
+      "consentOpen": "Who stopped messages, and the stop words"
     },
     "err": {
       "STALE": "Someone else saved this page a moment ago. It now shows their version; make your change again.",
@@ -211,6 +215,91 @@
       "submitting": "Sending…",
       "submitted": "Sent. Meta usually answers within a day; press Check approvals then.",
       "submitAsk": "Send this text to Meta for approval? The sample order fills the {words} as examples."
+    },
+    "consent": {
+      "title": "Consent",
+      "sub": "Who stopped which messages. A customer who writes STOP gets nothing more on that channel; offers go only to those who said yes.",
+      "kpi": {
+        "stops": "Stopped (30 days)",
+        "starts": "Started again (30 days)",
+        "offersNo": "No to offers (30 days)"
+      },
+      "lookup": "Find a number",
+      "lookupHelp": "Type a customer's mobile number to see what he said on each channel.",
+      "phone": "Mobile number",
+      "find": "Show",
+      "hasAccount": "has an account",
+      "noAccount": "no account",
+      "answer": {
+        "all": {
+          "yes": "Messages: on",
+          "no": "Messages: stopped",
+          "none": "Messages: on"
+        },
+        "offers": {
+          "yes": "Offers: yes",
+          "no": "Offers: no",
+          "none": "Offers: not asked"
+        }
+      },
+      "noHistory": "Nothing recorded for this number yet.",
+      "recent": "Newest answers",
+      "recentHelp": "Every answer, newest first: from the checkout, the customer's account, his reply, or the team.",
+      "empty": "No answers yet.",
+      "col": {
+        "who": "Number",
+        "what": "Answer",
+        "from": "From"
+      },
+      "row": {
+        "all": {
+          "yes": "Messages on again",
+          "no": "Stopped every message"
+        },
+        "offers": {
+          "yes": "Yes to offers",
+          "no": "No to offers"
+        }
+      },
+      "source": {
+        "checkout": "Checkout tick",
+        "account": "His account",
+        "reply": "His reply",
+        "staff": "The team, at his request"
+      },
+      "by": "by {name}",
+      "rules": "Stop words and rules",
+      "rulesHelp": "The words that stop and restart messages, what a stop covers, and which journey steps are offers. A stop is always honoured.",
+      "stopWords": "Stop words",
+      "startWords": "Start words",
+      "wordsHelp": "Separate words with commas. Capital or small letters do not matter; the whole reply must be the word.",
+      "stopCovers": "A stop covers",
+      "covers": {
+        "everything": "Every message (order updates too)",
+        "offers": "Only offers"
+      },
+      "stopChannels": "A stop applies to",
+      "channels": {
+        "thisChannel": "The channel he wrote on",
+        "allChannels": "Every channel"
+      },
+      "confirmReply": "Answer a stop or start",
+      "confirmReplyHelp": "Off as it ships. On: he gets one short message saying it is done.",
+      "offerSteps": "Journey steps that are offers",
+      "offerStepsHelp": "A ticked step goes only to a customer who said yes to offers on that channel. None is ticked as it ships.",
+      "record": "Record his answer",
+      "recordHelp": "When a customer asks the team by phone or in person. It is saved with your name.",
+      "action": "He wants",
+      "actions": {
+        "stopAll": "Stop every message",
+        "allowAll": "Messages on again",
+        "stopOffers": "No offers",
+        "allowOffers": "Yes to offers"
+      },
+      "onChannels": "On these channels",
+      "recordAsk": "Record this answer for the number? Messages follow it from now on.",
+      "recorded": "Recorded.",
+      "recordButton": "Record"
     }
   }
 }

@@ -29,6 +29,7 @@ export * from './admin';
 export * from './log';
 export * from './channels';
 export * from './whatsapp';
+export * from './consent';
 
 export interface RunResult {
   plan: PlanResult;

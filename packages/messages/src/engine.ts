@@ -31,11 +31,11 @@
 //
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
-import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
-import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates, WhatsAppSettings } from '@extas/settings';
+import type { CancelCode, CancelNotice, ConsentSettings, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates, WhatsAppSettings } from '@extas/settings';
+import { consentBlock } from './consent';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
-import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, templateValues, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, templateValues, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -73,14 +73,6 @@ const ORDER_SELECT = {
 type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER_SELECT }>;
 
 const emailOf = (s: string | null | undefined): string | null => (s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()) ? s.trim() : null);
-/** A phone for SMS and WhatsApp: a Bangladeshi number in any form, or any number already in +country form. */
-export function phoneOf(s: string | null | undefined): string | null {
-  if (!s) return null;
-  const bd = phoneNormalizeBD(s);
-  if (bd.ok) return bd.e164;
-  const t = s.replace(/[\s-]/g, '');
-  return /^\+[1-9]\d{7,14}$/.test(t) ? t : null;
-}
 
 /**
  * Who a step's message goes to on a channel. A gift's updates go to the sender who paid (his phone or e-mail), never to
@@ -221,11 +213,13 @@ export interface RunContext {
   smsRates: SmsRates | null;
   /** PR 292: the WhatsApp templates' language codes (an approved template goes by its name and language). */
   whatsapp: WhatsAppSettings;
+  /** PR 298: the stop words and which steps are offers. */
+  consent: ConsentSettings;
   senders: Map<MessageChannel, Awaited<ReturnType<MessagesDeps['sender']>>>;
 }
 
 export async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
-  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance, masking, smsRates, whatsapp] = await Promise.all([
+  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance, masking, smsRates, whatsapp, consent] = await Promise.all([
     setting(deps, storeId, 'messages.enabled'),
     setting(deps, storeId, 'messages.journey'),
     setting(deps, storeId, 'messages.caps'),
@@ -246,6 +240,7 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     setting(deps, storeId, 'messages.sms.masking'),
     setting(deps, storeId, 'messages.sms.rates'),
     setting(deps, storeId, 'messages.whatsapp'),
+    setting(deps, storeId, 'messages.consent'),
   ]);
   return {
     storeId,
@@ -267,6 +262,7 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     masking,
     smsRates,
     whatsapp,
+    consent,
     senders: new Map(),
   };
 }
@@ -397,6 +393,10 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   if (code && c.cancelNotice.silent.includes(code)) return close(deps, c, row, 'SKIPPED', 'REASON_SILENT').then(() => 'SKIPPED');
   const to = recipientOf(o, step, row.channel as MessageChannel);
   if (!to) return close(deps, c, row, 'SKIPPED', 'NO_RECIPIENT', { recipient: '' }, true).then(() => 'SKIPPED');
+  // PR 298: his stop (every message on this channel) wins; an offer step needs his yes. The fallback channel asks again.
+  const consentPhone = row.channel === 'EMAIL' ? phoneOf(o.isGift && step !== 'giftReceiver' ? o.giftSenderContact : o.phone) : to;
+  const refused = await consentBlock(deps.db, c.storeId, c.consent, { channel: row.channel as MessageChannel, phone: consentPhone, customerId: step === 'giftReceiver' ? null : o.customerId, step: row.step });
+  if (refused) return close(deps, c, row, 'SKIPPED', refused, { recipient: to }, true).then(() => 'SKIPPED');
   if (isCapped(step, c.selfConfirmCounts)) {
     const sent = await sentCounts(deps, c, o.id);
     const cap = c.caps[row.channel as MessageChannel];
@@ -484,6 +484,47 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   }
   await close(deps, c, row, 'FAILED', r.unreachable ? 'UNREACHABLE' : error.startsWith('NO_SENDER') ? 'NO_SENDER' : 'SEND_FAILED', { ...tried, error }, true);
   return 'FAILED';
+}
+
+/** PR 298 — the answer to a stop or start: a message of no order, filled with the shop's own name only. */
+export const CONSENT_REPLY = 'consentReply';
+
+/**
+ * PR 298 — one message that belongs to no order (the answer to the customer's stop or start word): its template in the
+ * shop's language, sent once now (the dedupe key), logged like every message with its try. The master switch still
+ * holds; no caps or quiet hours (he has just written to the shop).
+ */
+export async function sendStandalone(deps: MessagesDeps, c: RunContext, m: { channel: MessageChannel; to: string; customerId: string | null; template: string; step: string; dedupeKey: string }): Promise<SendOutcome> {
+  const made = await deps.db.notificationLog.createManyAndReturn({
+    data: [{ storeId: c.storeId, customerId: m.customerId, channel: m.channel, recipient: m.to, status: 'QUEUED', dedupeKey: m.dedupeKey, step: m.step, sendAfter: null }],
+    skipDuplicates: true,
+    select: { id: true },
+  });
+  const id = made[0]?.id;
+  if (!id) return 'WAITING';
+  const skip = (reason: string, extra: Prisma.NotificationLogUpdateInput = {}) => deps.db.notificationLog.update({ where: { id }, data: { status: 'SKIPPED', reason, ...extra } }).then(() => 'SKIPPED' as const);
+  if (!c.master) return skip('MASTER_OFF');
+  const t = await templateOf(deps, c.storeId, m.template, m.channel, c.locale);
+  if (!t) return skip('NO_TEMPLATE');
+  const lang = t.locale === 'en' ? 'en' : 'bn';
+  const currency = await setting(deps, c.storeId, 'store.currency');
+  const words = render(t.body, m.channel === 'EMAIL' ? (t.subject ?? '') : null, { storeName: c.storeName, customerName: '', orderNumber: '', senderName: '', currency, dueMinor: 0, link: null, amountLine: c.amountLine[lang], exactAmount: null });
+  if (!words.ok) return skip(words.reason, { templateId: t.id, locale: t.locale });
+  let sender = c.senders.get(m.channel) ?? null;
+  let r: SendResult;
+  try {
+    if (!sender) {
+      sender = await deps.sender(c.storeId, m.channel);
+      c.senders.set(m.channel, sender);
+    }
+    r = await sender.send({ to: m.to, text: words.text, subject: words.subject, purpose: m.template });
+  } catch (e) {
+    r = { ok: false, error: errorText(e) };
+  }
+  const tried = { templateId: t.id, locale: t.locale, provider: sender?.provider ?? null, mode: sender?.mode ?? null, attempts: 1, segments: m.channel === 'SMS' ? smsParts(words.text).parts : null } satisfies Prisma.NotificationLogUpdateInput;
+  await deps.db.notificationAttempt.create({ data: { storeId: c.storeId, notificationLogId: id, attempt: 1, channel: m.channel, provider: tried.provider, mode: tried.mode, ok: r.ok, ...(r.ok ? { providerMessageId: r.messageId } : { error: r.error.slice(0, 300) }) } });
+  await deps.db.notificationLog.update({ where: { id }, data: r.ok ? { ...tried, status: 'SENT', providerMessageId: r.messageId, sentAt: c.now } : { ...tried, status: 'FAILED', reason: r.unreachable ? 'UNREACHABLE' : 'SEND_FAILED', error: r.error.slice(0, 300) } });
+  return r.ok ? 'SENT' : 'FAILED';
 }
 
 const errorText = (e: unknown): string => (e instanceof Error ? e.message : String(e)).slice(0, 300);
