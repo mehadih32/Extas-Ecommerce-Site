@@ -6,9 +6,16 @@
 // PR 602: every shop page answers with its cache headers (lib/cache-policy.ts): the bag, the checkout and the account
 // are never kept anywhere; Cloudflare keeps a category or product page only while the owner has page caching at
 // Cloudflare on, and never one asked for with a cookie of the visitor's own.
+// S11 · PR 220: a public page asked for with capital letters moves permanently to its lower-case address (Blueprint
+// C12.1: one address per page, lower case; the query is kept). The slash-free form is Next's own rule (a trailing
+// slash is sent on to the address without it, permanently). No redirect by the browser's language, ever.
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
+import { lowerCaseTarget } from './lib/seo/indexing';
 import { isShopPath, LANG_HEADER, PATH_HEADER, splitLang, THEME_HEADER } from './lib/shop/lang';
+
+/** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
+const PERMANENT = 301;
 
 function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
   const h = shopCacheHeaders(req.nextUrl.pathname, req.cookies.getAll().map((c) => c.name));
@@ -20,6 +27,12 @@ function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
 export function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   if (!isShopPath(pathname)) return NextResponse.next();
+  const lower = lowerCaseTarget(pathname);
+  if (lower) {
+    const url = req.nextUrl.clone();
+    url.pathname = lower;
+    return NextResponse.redirect(url, PERMANENT);
+  }
   const { lang, path } = splitLang(pathname);
   if (!isShopPath(path)) return NextResponse.next(); // /bn/admin is not the admin
   const h = new Headers(req.headers);

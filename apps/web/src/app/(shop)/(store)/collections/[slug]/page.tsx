@@ -62,10 +62,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!data) return {};
   const seo = set['category.seo']?.[slug];
   const name = titleOf(c, data);
-  const m = await shopMetadata(c, `collections/${slug}`, seo?.title?.[c.lang] ?? name);
-  if (seo?.meta) m.description = seo.meta[c.lang];
   // a filtered, sorted or later page, or one the catalogue could not fill, is not a page of its own for search engines
-  if (data.unavailable || isRefined(state, defaultSort)) m.robots = { index: false, follow: true };
+  // (PR 220: its clean address is the canonical one)
+  const m = await shopMetadata(c, `collections/${slug}`, seo?.title?.[c.lang] ?? name, { index: !(data.unavailable || isRefined(state, defaultSort)) });
+  if (seo?.meta) m.description = seo.meta[c.lang];
   return m;
 }
 

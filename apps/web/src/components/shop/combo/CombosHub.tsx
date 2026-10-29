@@ -25,9 +25,8 @@ const KEYS = ['combos.landing', 'combos.seasons'] as const;
 export async function combosMetadata(): Promise<Metadata> {
   const c = await shopContext();
   const set = await readPageSettings(KEYS, c.storeId);
-  const m = await shopMetadata(c, set['combos.landing'].on ? 'combos' : 'soon-combos', set['combos.landing'].on ? c.t('combo.hub.title') : c.t('soon.title'));
-  if (!set['combos.landing'].on) m.robots = { index: false, follow: true };
-  return m;
+  const on = set['combos.landing'].on;
+  return shopMetadata(c, on ? 'combos' : 'soon-combos', on ? c.t('combo.hub.title') : c.t('soon.title'), { index: on });
 }
 
 type Build = Awaited<ReturnType<typeof buildEntry>>;

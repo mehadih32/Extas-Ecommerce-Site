@@ -73,19 +73,14 @@ export async function comboMetadata(
   const c = await shopContext();
   const r = await pageFor(slug, one(search.from));
   if (!r || r.kind === "missing") return {};
-  const m = await shopMetadata(c, `combo/${r.page.summary.slug}`, r.env.name);
-  m.alternates = {
-    ...m.alternates,
-    canonical: hrefIn(c.lang, ROUTES.combo(r.page.summary.slug)),
-  };
+  // only the owner's featured sets are search results; a generated colour pair is one of many of the same rule
+  const index = r.page.isFeatured && !(one(search.from) || one(search.added) || one(search.tpl) || one(search.pick));
+  const m = await shopMetadata(c, `combo/${r.page.summary.slug}`, r.env.name, { path: ROUTES.combo(r.page.summary.slug), index });
   const s = r.page.summary;
   const desc =
     ((c.lang === "bn" && s.descriptionBn?.trim()) || s.descriptionEn?.trim()) ??
     "";
   if (desc) m.description = desc;
-  // only the owner's featured sets are search results; a generated colour pair is one of many of the same rule
-  if (!r.page.isFeatured || one(search.from) || one(search.added) || one(search.tpl) || one(search.pick))
-    m.robots = { index: false, follow: true };
   return m;
 }
 

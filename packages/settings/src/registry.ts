@@ -55,6 +55,7 @@ import { courierSyncSettings } from './registry-courier-sync';
 import { returnsSettings } from './registry-returns';
 import { fulfilmentSettings } from './registry-fulfilment';
 import { customerSettings } from './registry-customers';
+import { seoSettings } from './registry-seo';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1232,6 +1233,8 @@ export const registry = {
   ...fulfilmentSettings,
   // ---- S14 · PR 284–286 · customers: the merge rules, masked phone numbers, the list's views, one customer's page (registry-customers.ts, version 60). ----
   ...customerSettings,
+  // ---- S11 · PR 220–222 · the SEO engine: which pages search engines may list, titles and descriptions, the AI drafts and the structured data (registry-seo.ts, version 64). ----
+  ...seoSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

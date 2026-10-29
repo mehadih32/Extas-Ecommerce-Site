@@ -30,10 +30,8 @@ export async function buildMetadata(group: string | null, search: BuildSearch): 
   const c = await shopContext();
   const preview = previewAsked(search);
   const r = await pageFor(group, preview);
-  const m = await shopMetadata(c, 'combos/build-your-own', c.t('build.title'));
-  m.alternates = { ...m.alternates, canonical: hrefIn(c.lang, ROUTES.buildSet) };
+  const m = await shopMetadata(c, 'combos/build-your-own', c.t('build.title'), { path: ROUTES.buildSet, index: Boolean(r?.env) && !preview && !group });
   if (r?.env && r.group) m.description = `${r.env.ruleName} · ${headline(r.group.tiers, (k, v) => c.t(`build.${k}`, v), c.money, c.num)}`;
-  if (!r?.env || preview || group) m.robots = { index: false, follow: true };
   return m;
 }
 

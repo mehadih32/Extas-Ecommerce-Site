@@ -47,10 +47,8 @@ export async function ruleListMetadata(key: string, search: Search): Promise<Met
   const d = await dataFor(key);
   if (!d || d === 'missing') return {};
   const title = c.t('ctpl.list.title', { title: ruleTitle(c, d.page) });
-  const m = await shopMetadata(c, `combos/${d.page.rule.key}`, title);
-  m.alternates = { ...m.alternates, canonical: hrefIn(c.lang, ROUTES.comboRule(d.page.rule.key)) };
-  if (isFiltered(parseListQuery(search)) || !d.page.onSale) m.robots = { index: false, follow: true };
-  return m;
+  const index = !isFiltered(parseListQuery(search)) && d.page.onSale;
+  return shopMetadata(c, `combos/${d.page.rule.key}`, title, { path: ROUTES.comboRule(d.page.rule.key), index });
 }
 
 const ruleTitle = (c: Pick<ShopContext, 'lang'>, page: Pick<RulePage, 'rule'>) => inLang(c.lang, page.rule.titleEn ?? page.rule.nameEn, page.rule.titleBn ?? page.rule.nameBn);

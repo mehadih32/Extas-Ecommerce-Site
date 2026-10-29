@@ -55,4 +55,6 @@ export * from './registry-wallet';
 export * from './registry-courier-sync';
 export * from './registry-fulfilment';
 export * from './registry-customers';
+// S11 · PR 220–222 — the SEO engine's settings (registry-seo.ts, version 64).
+export * from './registry-seo';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

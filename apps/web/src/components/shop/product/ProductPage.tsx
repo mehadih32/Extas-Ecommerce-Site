@@ -141,13 +141,13 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
   const colourName = route.colour ? model.colours.find((x) => x.key === route.colour)?.name : null;
   const title = colourName ? `${model.name} · ${colourName}` : model.name;
   const prefix = c.s['naming.productPathPrefix'];
-  const m = await shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title);
-  const base = hrefIn(c.lang, `${prefix.replace(/\/+$/, '')}/${encodeURIComponent(data.slug)}`);
-  m.alternates = { ...m.alternates, canonical: canonicalFor(base, route.colour, data.category?.slug ?? null, set['pdp.page']) };
+  // PR 220: the canonical address (the main product, or the colour's own page when the owner says so) is also the one
+  // hreflang names; PR 52: a template preview (`?template=T2`) is never indexed
+  const base = `${prefix.replace(/\/+$/, '')}/${encodeURIComponent(data.slug)}`;
+  const path = canonicalFor(base, route.colour, data.category?.slug ?? null, set['pdp.page']);
+  const m = await shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title, { path, index: !one(search[TEMPLATE_QUERY]) });
   const desc = (c.lang === 'bn' && data.descriptionBn?.trim()) || data.descriptionEn?.trim();
   if (desc) m.description = desc.length > 160 ? `${desc.slice(0, 157).trimEnd()}…` : desc;
-  // PR 52: a template preview (`?template=T2`) is never indexed; the canonical above already names the plain address
-  if (one(search[TEMPLATE_QUERY])) m.robots = { index: false, follow: true };
   return m;
 }
 

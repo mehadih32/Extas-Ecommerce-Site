@@ -40,6 +40,7 @@
     { "id": "messages/templates", "route": "/admin/messages/templates" },
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
+    { "id": "website/seo", "route": "/admin/website/seo" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "settings/keys", "route": "/admin/integrations" },
     { "id": "settings/cache", "route": "/admin/settings/system/cache" },

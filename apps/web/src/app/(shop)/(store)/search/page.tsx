@@ -37,10 +37,9 @@ const searchOnce = cache((c: ShopContext, q: string) => runSearch(c, q, { helpMa
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const [c, sp] = await Promise.all([shopContext(), props.searchParams]);
   const q = queryFrom(sp);
-  const m = await shopMetadata(c, 'search', q ? c.t('search.metaQ', { q }) : c.t('search.crumb'));
-  // a search is an answer to one shopper's words, not a page of its own for search engines (Blueprint C12)
-  m.robots = { index: false, follow: true };
-  return m;
+  // a search is an answer to one shopper's words, not a page of its own for search engines (Blueprint C12; PR 220:
+  // the `search` kind is off in `seo.indexing` by default)
+  return shopMetadata(c, 'search', q ? c.t('search.metaQ', { q }) : c.t('search.crumb'));
 }
 
 function Chips({ list, icon, testId }: { list: readonly SearchChip[]; icon?: boolean; testId?: string }) {
