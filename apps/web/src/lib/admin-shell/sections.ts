@@ -149,7 +149,14 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'comms',
     tabs: [
       { id: 'log', pages: [{ href: '/admin/messages/log', perm: 'messages.log.view', keys: ['messagesLog'] }] },
-      { id: 'channels', pages: [{ href: '/admin/messages/channels', perm: 'messages.channels.read', keys: ['messagesChannels'] }] },
+      // PR 298: Consent is the Channels & limits tab's second page
+      {
+        id: 'channels',
+        pages: [
+          { href: '/admin/messages/channels', perm: 'messages.channels.read', keys: ['messagesChannels'] },
+          { href: '/admin/messages/consent', perm: 'messages.consent.view', keys: ['messagesConsent'] },
+        ],
+      },
     ],
   },
   { id: 'support', icon: 'headset', group: 'daily', base: '/admin/support', tabs: [], guide: 'support' },

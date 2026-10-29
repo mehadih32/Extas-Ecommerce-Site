@@ -21,7 +21,8 @@ import { parseWhatsAppWebhook, verifyWhatsAppSignature, WHATSAPP_CLOUD_PROVIDER,
 import { MOTHER_STORE_ID, type Prisma } from '@extas/db/client';
 import { systemBy } from '@extas/orders';
 import { allow, holds, logChange, MessagesError, nowOf, setting, type MessagesDeps, type Sender, type Who } from './context';
-import { queueFallback, ROW_SELECT, runContext, sampleSettingsOf, type RunContext } from './engine';
+import { consentReply } from './consent';
+import { CONSENT_REPLY, queueFallback, ROW_SELECT, runContext, sampleSettingsOf, sendStandalone, type RunContext } from './engine';
 import { metaBody, sampleInput, selfConfirmAnswerOf, templateValues, waBodyProblems, waTemplateName, type WaBodyProblem } from './pure';
 import { selfConfirmReply } from './self-confirm';
 
@@ -207,17 +208,36 @@ export async function recordWhatsAppReceipts(deps: MessagesDeps, storeId: number
 export interface InboundResult {
   /** Self-confirm answers recorded. */
   answers: number;
+  /** PR 298: stop and start words recorded. */
+  stops: number;
+  starts: number;
   /** Messages that were not an answer the shop reads by itself (left for the team). */
   other: number;
 }
 
-/** The customer's WhatsApp replies: a self-confirm answer ("1", "২" …) to a question asked within the reply window. */
+/**
+ * The customer's WhatsApp replies: a stop or start word (PR 298: his answer recorded, and answered when
+ * `messages.consent.confirmReply` is on), else a self-confirm answer ("1", "২" …) to a question asked within the reply
+ * window.
+ */
 export async function handleWhatsAppInbound(deps: MessagesDeps, storeId: number, inbound: WhatsAppInbound[]): Promise<InboundResult> {
-  const out: InboundResult = { answers: 0, other: 0 };
+  const out: InboundResult = { answers: 0, stops: 0, starts: 0, other: 0 };
   if (!inbound.length) return out;
-  const cfg = await setting(deps, storeId, 'messages.whatsapp');
+  const [cfg, consent] = await Promise.all([setting(deps, storeId, 'messages.whatsapp'), setting(deps, storeId, 'messages.consent')]);
   const since = new Date(nowOf(deps).getTime() - cfg.replyWindowHours * 3_600_000);
+  let c: RunContext | null = null;
   for (const m of inbound) {
+    const said = await consentReply(deps, consent, storeId, { channel: 'WHATSAPP', phone: m.from, text: m.text });
+    if (said) {
+      if (said.word === 'stop') out.stops++;
+      else out.starts++;
+      if (consent.confirmReply) {
+        c ??= await runContext(deps, storeId);
+        const template = said.word === 'stop' ? CONSENT_TEMPLATES.stopped : CONSENT_TEMPLATES.started;
+        await sendStandalone(deps, c, { channel: 'WHATSAPP', to: m.from, customerId: said.customerId, template, step: CONSENT_REPLY, dedupeKey: `consent:${m.messageId}` });
+      }
+      continue;
+    }
     const answer = selfConfirmAnswerOf(m.text);
     const asked = answer
       ? await deps.db.notificationLog.findFirst({
@@ -240,6 +260,9 @@ export async function handleWhatsAppInbound(deps: MessagesDeps, storeId: number,
   }
   return out;
 }
+
+/** PR 298 — the answers to a stop and a start (default pack; editable in Messages › Templates). */
+export const CONSENT_TEMPLATES = { stopped: 'consent.stopped', started: 'consent.started' } as const;
 
 // ---- the webhook ----
 

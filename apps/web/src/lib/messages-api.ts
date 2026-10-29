@@ -22,6 +22,11 @@
 //   GET   /api/admin/messages/whatsapp/templates               PR 292: the WhatsApp templates with Meta's word on each
 //   POST  /api/admin/messages/whatsapp/templates/sync          read Meta's word on every template again
 //   POST  /api/admin/messages/whatsapp/templates/:id/submit    send one for Meta's approval (sample values as examples)
+//   GET   /api/admin/messages/consent          PR 298: the stop words, the last 30 days, the newest answers (?phone: one
+//                                            number's answers per channel)
+//   PUT   /api/admin/messages/consent          {version?, consent} the stop words and their rules (STALE in between)
+//   POST  /api/admin/messages/consent/record   {phone, channels, action: stopAll | allowAll | stopOffers | allowOffers}
+//                                            a customer's stop or start, recorded at his request
 // The WhatsApp provider's own webhook is not here: app/api/whatsapp/webhook (signed, no session).
 import { createConnections, messageAdapters } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -94,6 +99,19 @@ export async function messagesRoute(request: Request, deps: AdminDeps | null, pa
       return m === 'POST' ? handle(request, deps, 'messages.channels.write', async (x) => ({ submit: await ms.submitWaTemplate(x.deps, x.who, c) })) : notAllowed();
     }
     return fail(404, 'not-found');
+  }
+  if (a === 'consent') {
+    // PR 298: who stopped which messages, one number's answers, the stop words; a stop or start at his request
+    if (path.length > 2) return fail(404, 'not-found');
+    if (b === 'record') return m === 'POST' ? handle(request, deps, 'messages.consent.write', async (x) => ({ record: await ms.recordConsentByStaff(x.deps, x.who, await body(request)) })) : notAllowed();
+    if (b !== undefined) return fail(404, 'not-found');
+    if (m === 'GET') return handle(request, deps, 'messages.consent.view', async (x) => ({ consent: await ms.consentScreen(x.deps, x.who, { phone: new URL(request.url).searchParams.get('phone') }) }));
+    if (m === 'PUT')
+      return handle(request, deps, 'messages.consent.write', async (x) => {
+        const { version, ...input } = await body(request);
+        return { consent: await ms.saveConsentSettings(x.deps, x.who, input, versionOf(version)) };
+      });
+    return notAllowed();
   }
   if (b !== undefined) return fail(404, 'not-found');
   if (a === 'journey') {

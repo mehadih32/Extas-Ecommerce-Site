@@ -139,6 +139,9 @@ export const MESSAGE_PERMISSIONS = [
   // PR 291: Messages › Channels & limits
   'messages.channels.read',
   'messages.channels.write',
+  // PR 298: Messages › Consent
+  'messages.consent.view',
+  'messages.consent.write',
 ] as const;
 export type MessagesPermission = (typeof MESSAGE_PERMISSIONS)[number];
 

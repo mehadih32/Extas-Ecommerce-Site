@@ -26,7 +26,8 @@ describe.skipIf(!HAS_TEST_DB)('Messages admin API on PostgreSQL', () => {
   let deps: AdminDeps;
   let owner = '';
   const api = async (method: string, path: string[], body?: unknown, cookie = owner) => {
-    const res = await messagesRoute(call(method, `/api/admin/messages/${path.join('/')}`, { body, cookie }), deps, path);
+    // a query rides on the last part (`consent?phone=…`); the route gets the path without it
+    const res = await messagesRoute(call(method, `/api/admin/messages/${path.join('/')}`, { body, cookie }), deps, path.map((p) => p.split('?')[0]!));
     return { status: res.status, body: (await res.json()) as Record<string, any> };
   };
 
@@ -124,5 +125,26 @@ describe.skipIf(!HAS_TEST_DB)('Messages admin API on PostgreSQL', () => {
     expect((await api('POST', ['whatsapp', 'templates'])).status).toBe(405);
     expect((await api('GET', ['whatsapp', 'other'])).status).toBe(404);
     expect((await api('GET', ['whatsapp', 'templates'], undefined, '')).status).toBe(401);
+  });
+
+  it('PR 298: Consent — the stop words with their version, one number`s answers, a stop recorded at his request', async () => {
+    const r = await api('GET', ['consent']);
+    expect(r.status).toBe(200);
+    expect(r.body.consent.config).toMatchObject({ stopCovers: 'everything', stopChannels: 'thisChannel', confirmReply: false });
+    const version = r.body.consent.version as string;
+    const rec = await api('POST', ['consent', 'record'], { phone: '01700-000298', channels: ['SMS', 'WHATSAPP'], action: 'stopAll' });
+    expect(rec.status).toBe(200);
+    expect(rec.body.record.recorded).toBe(2);
+    expect(rec.body.record.screen.lookup.states.find((s: { channel: string }) => s.channel === 'SMS')).toMatchObject({ all: false });
+    expect((await api('GET', ['consent?phone=01700000298'])).body.consent.lookup.phone).toBe('+8801700000298');
+    expect((await api('POST', ['consent', 'record'], { phone: 'x', channels: ['SMS'], action: 'stopAll' })).body.error).toBe('INVALID_INPUT');
+    expect((await api('POST', ['consent', 'record'], { phone: '01700000298', channels: ['SMS'], action: 'blockHim' })).body.error).toBe('INVALID_INPUT');
+    const saved = await api('PUT', ['consent'], { version, consent: { ...r.body.consent.config, confirmReply: true } });
+    expect(saved.status).toBe(200);
+    expect(saved.body.consent.config.confirmReply).toBe(true);
+    expect((await api('PUT', ['consent'], { version, consent: r.body.consent.config })).body.error).toBe('STALE');
+    expect((await api('GET', ['consent', 'record'])).status).toBe(405);
+    expect((await api('GET', ['consent', 'x', 'y'])).status).toBe(404);
+    expect((await api('GET', ['consent'], undefined, '')).status).toBe(401);
   });
 });

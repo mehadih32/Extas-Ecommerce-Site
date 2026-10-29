@@ -5,6 +5,7 @@
 // still due (SIM-F-001) and never shown for a fully paid order. PR 546 (SIM-F-013): a cancellation says why in plain
 // words (`{cancelReason}`), and a duplicate names the order that goes ahead (`{keptOrderNumber}`, `{keptOrderLink}`).
 // PR 542: an advance request from the order is its own message (`advanceRequest`), with `{advanceAmount}` and `{payLink}`.
+import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { Journey, JourneyStep, JourneyStepConfig, MessageChannel } from '@extas/settings';
 
 export type { Journey, JourneyStep, JourneyStepConfig, MessageChannel };
@@ -466,4 +467,24 @@ export function sampleInput(s: SampleSettings, lang: 'bn' | 'en', sample: Sample
     kept: { number: SAMPLE_ORDER.keptNumber, link: orderLink(s.host, SAMPLE_ORDER.keptNumber) },
     advance: { amountMinor: SAMPLE_ORDER.advanceMinor, link: payLink(s.host, SAMPLE_ORDER.payToken, lang) },
   };
+}
+
+// ---- PR 148, 298 · phones and consent words ----
+
+/** A phone for SMS and WhatsApp: a Bangladeshi number in any form, or any number already in +country form. */
+export function phoneOf(s: string | null | undefined): string | null {
+  if (!s) return null;
+  const bd = phoneNormalizeBD(s);
+  if (bd.ok) return bd.e164;
+  const t = s.replace(/[\s-]/g, '');
+  return /^\+[1-9]\d{7,14}$/.test(t) ? t : null;
+}
+
+/** PR 298 — a reply that is one of the stop or start words (any case; the whole reply, a final full stop allowed). */
+export function consentWordOf(cfg: { stopWords: readonly string[]; startWords: readonly string[] }, text: string): 'stop' | 'start' | null {
+  const w = replyWords(text).replace(/[.!।]+$/, '');
+  if (!w) return null;
+  if (cfg.stopWords.some((s) => replyWords(s) === w)) return 'stop';
+  if (cfg.startWords.some((s) => replyWords(s) === w)) return 'start';
+  return null;
 }

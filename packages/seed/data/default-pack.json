@@ -843,6 +843,70 @@
       "name": "Gift receiver notice",
       "enabled": true,
       "body": "{storeName}: a gift from {senderName} is on its way to you (order {orderNumber}). {amountLine}"
+    },
+    {
+      "key": "consent.stopped",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Messages stopped (the answer to a stop word)",
+      "enabled": true,
+      "body": "{storeName}: ঠিক আছে, এই নম্বরে আর মেসেজ যাবে না। আবার পেতে START লিখুন।"
+    },
+    {
+      "key": "consent.stopped",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Messages stopped (the answer to a stop word)",
+      "enabled": true,
+      "body": "{storeName}: done, no more messages to this number. Write START to get them again."
+    },
+    {
+      "key": "consent.stopped",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Messages stopped (the answer to a stop word)",
+      "enabled": true,
+      "body": "{storeName}: এই নম্বরে আর মেসেজ যাবে না। আবার পেতে START লিখুন।"
+    },
+    {
+      "key": "consent.stopped",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Messages stopped (the answer to a stop word)",
+      "enabled": true,
+      "body": "{storeName}: no more messages to this number. Write START to get them again."
+    },
+    {
+      "key": "consent.started",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Messages on again (the answer to a start word)",
+      "enabled": true,
+      "body": "{storeName}: ধন্যবাদ, আবার মেসেজ পাবেন। বন্ধ করতে STOP লিখুন।"
+    },
+    {
+      "key": "consent.started",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Messages on again (the answer to a start word)",
+      "enabled": true,
+      "body": "{storeName}: thank you, messages are on again. Write STOP to stop them."
+    },
+    {
+      "key": "consent.started",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Messages on again (the answer to a start word)",
+      "enabled": true,
+      "body": "{storeName}: আবার মেসেজ পাবেন। বন্ধ করতে STOP লিখুন।"
+    },
+    {
+      "key": "consent.started",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Messages on again (the answer to a start word)",
+      "enabled": true,
+      "body": "{storeName}: messages are on again. Write STOP to stop them."
     }
   ]
 }

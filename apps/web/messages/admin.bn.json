@@ -51,7 +51,8 @@
     "checkoutAdvance": "চেকআউটে অগ্রিম",
     "packingPack": "প্যাক",
     "messagesLog": "মেসেজ লগ",
-    "messagesChannels": "চ্যানেল আর সীমা"
+    "messagesChannels": "চ্যানেল আর সীমা",
+    "messagesConsent": "অনুমতি"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

@@ -51,7 +51,8 @@
     "checkoutAdvance": "Checkout advance",
     "packingPack": "Pack",
     "messagesLog": "Message log",
-    "messagesChannels": "Channels & limits"
+    "messagesChannels": "Channels & limits",
+    "messagesConsent": "Consent"
   },
   "login": {
     "metaTitle": "Admin sign-in",

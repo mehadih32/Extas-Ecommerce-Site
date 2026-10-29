@@ -66,6 +66,10 @@
     "whatsapp": {
       "label": "WhatsApp Business templates",
       "help": "How the shop's WhatsApp texts go to Meta for approval: the language code for each language (Bengali bn, English en), the category (order updates are UTILITY), the largest webhook message read (KB) and for how many hours a customer's 1, 2 or 3 still answers the self-confirm question. A message the shop starts goes only as an approved template once WhatsApp is live."
+    },
+    "consent": {
+      "label": "Consent and stop words",
+      "help": "A customer who replies with a stop word (STOP, UNSUBSCRIBE, বন্ধ …) gets no more messages on that channel; a start word takes it back. Choose whether a stop covers every message or only offers, the channel he wrote on or every channel, which journey steps are offers (sent only to a customer who ticked yes), and whether the stop is answered. A stop is always honoured."
     }
   }
 }
