@@ -93,7 +93,7 @@
 .adm2 .a2-tabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--ln);margin:0 0 20px;position:relative}
 .adm2 .a2-tabs-s{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;min-width:0}
 .adm2 .a2-tabs-s::-webkit-scrollbar{display:none}
-.adm2 .a2-tab{display:inline-flex;align-items:center;gap:7px;padding:10px 12px 11px;font-size:13.5px;font-weight:500;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;border-radius:6px 6px 0 0}
+.adm2 .a2-tab{flex:none;display:inline-flex;align-items:center;gap:7px;padding:10px 12px 11px;font-size:13.5px;font-weight:500;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;border-radius:6px 6px 0 0}
 .adm2 .a2-tab:hover{color:var(--ink);background:rgba(0,0,0,.025)}
 .adm2 .a2-tab.on{color:var(--g);border-bottom-color:var(--g);font-weight:650}
 .adm2 .a2-tab .a2-cnt{font-size:11.5px;font-weight:650;background:#EFECE5;color:var(--ink2);border-radius:10px;padding:0 7px;line-height:18px}
@@ -420,6 +420,7 @@
   .adm2 .a2-btn, .adm2 .a2-guide, .adm2 .a2-tab, .adm2 .a2-mi, .adm2 .a2-pi { min-height: 44px; }
   .adm2 .a2-lang button { min-width: 44px; height: 44px; }
   .adm2 .a2-seg a { height: 44px; min-width: 44px; justify-content: center; }
+  /* a tab keeps its label's width (flex:none above): the row scrolls sideways, the labels never squeeze into each other (follow-up 466) */
   .adm2 .a2-tab { min-width: 44px; justify-content: center; }
   .adm2 .a2-task { min-height: 44px; }
   .adm2 .a2-crumb a, .adm2 .a2-lnk { display: inline-flex; align-items: center; min-height: 32px; }
