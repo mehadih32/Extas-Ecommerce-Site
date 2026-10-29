@@ -4,6 +4,7 @@
 // PR 291 — the SMS gateway: the shop's masking name (the brand name an SMS comes from, once the gateway had it approved)
 // and what one SMS part costs, masked and not (the owner's own figures: empty until he types them; the log's cost is an
 // estimate from them when the gateway does not say its price).
+// PR 292 — the WhatsApp Business Platform: the template language codes, the approval category and the webhook's size.
 //
 // Nothing here sends anything on its own, moves money or changes a price.
 import { z } from 'zod';
@@ -40,6 +41,22 @@ export const smsRatesSchema = z
   .strict();
 export type SmsRates = z.output<typeof smsRatesSchema>;
 
+/**
+ * PR 292 — the WhatsApp Business Platform: the provider's language code for each language of a template (Meta names
+ * Bengali `bn`, English `en` or `en_US`), the category templates are sent for approval in (order updates are UTILITY),
+ * the largest webhook body read (a bigger one is refused before it is read) and how long a self-confirm reply counts.
+ */
+export const whatsappSettingsSchema = z
+  .object({
+    languageCodes: z.object({ en: z.string().regex(/^[a-z]{2,3}(?:_[A-Z]{2})?$/), bn: z.string().regex(/^[a-z]{2,3}(?:_[A-Z]{2})?$/) }).strict(),
+    category: z.enum(['UTILITY', 'MARKETING']),
+    webhookMaxBodyKb: z.int().min(16).max(4_096),
+    /** How long after the self-confirm question a customer's "1", "2" or "3" is still read as its answer (hours). */
+    replyWindowHours: z.int().min(1).max(720),
+  })
+  .strict();
+export type WhatsAppSettings = z.output<typeof whatsappSettingsSchema>;
+
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'messages', version: V } as const;
 
 export const messageChannelSettings = {
@@ -67,5 +84,15 @@ export const messageChannelSettings = {
     labelKey: 'messages.sms.rates.label',
     helpKey: 'messages.sms.rates.help',
     sortOrder: 210,
+  }),
+  // ---- PR 292 · the WhatsApp Business Platform ----
+  'messages.whatsapp': setting({
+    ...base,
+    schema: whatsappSettingsSchema,
+    default: { languageCodes: { en: 'en', bn: 'bn' }, category: 'UTILITY', webhookMaxBodyKb: 256, replyWindowHours: 168 },
+    valueType: 'JSON',
+    labelKey: 'messages.whatsapp.label',
+    helpKey: 'messages.whatsapp.help',
+    sortOrder: 220,
   }),
 };

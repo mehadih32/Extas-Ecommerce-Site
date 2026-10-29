@@ -12,6 +12,9 @@
 # other method on that path, stays behind the gate. Two separate `not` lines in one matcher must both hold (Caddy
 # answers false as soon as one negated set matches), so the gate asks when there is no cookie AND the request is not
 # that one POST. The path is the app's own route (apps/web/src/app/api/erp/webhook), not a setting.
+# PR 292: the WhatsApp Business Platform's webhook passes the same way, GET (Meta's handshake: the app answers only
+# the verify token from the vault) and POST (signed with the app secret; refused while no secret is in the vault) on
+# /api/whatsapp/webhook only. Each exemption is its own `not` set, so all must hold for the gate to ask.
 set -euo pipefail
 tag="${1:?}"; user="${2:?}"; hash="${3:?}"; token="${4:?}"; days="${5:?}"
 [[ "$token" =~ ^[0-9a-f]{32,128}$ ]] || { echo "auth-block: the cookie token must be hex" >&2; exit 2; }
@@ -19,6 +22,7 @@ tag="${1:?}"; user="${2:?}"; hash="${3:?}"; token="${4:?}"; days="${5:?}"
 printf '%s\n' "$tag"
 printf '@preview_needed {\n'
 printf '\tnot header_regexp Cookie (?:^|;\\s*)extas_preview=%s(?:;|$)\n' "$token"
-printf '\tnot {\n\t\tmethod POST\n\t\tpath /api/erp/webhook\n\t}\n}\n'
+printf '\tnot {\n\t\tmethod POST\n\t\tpath /api/erp/webhook\n\t}\n'
+printf '\tnot {\n\t\tmethod GET POST\n\t\tpath /api/whatsapp/webhook\n\t}\n}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"
 printf '\theader Set-Cookie "extas_preview=%s; Path=/; Max-Age=%s; Secure; HttpOnly; SameSite=Lax"\n}\n' "$token" "$((days * 86400))"

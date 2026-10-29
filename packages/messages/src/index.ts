@@ -12,6 +12,10 @@
 // PR 542: a person's advance request from the order ("Request advance", "Send again") is its own message per channel
 // ticked, with the advance still to pay and its pay link (`{advanceAmount}`, `{payLink}`); never a journey step or cap.
 //
+// PR 291: the SMS gateway (masking name, parts, cost) and Messages › Channels & limits (channels.ts). PR 292: the WhatsApp
+// Business Platform (whatsapp.ts): approved templates only for a live send, their approval, the receipts and the
+// customer's self-confirm replies through the signed webhook.
+//
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';
@@ -24,6 +28,7 @@ export * from './self-confirm';
 export * from './admin';
 export * from './log';
 export * from './channels';
+export * from './whatsapp';
 
 export interface RunResult {
   plan: PlanResult;

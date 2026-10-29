@@ -6,7 +6,7 @@ import { erpAdapters } from './erp';
 import { pageReaderAdapters } from './page-reader';
 import { storageAdapters } from './storage';
 import { liveSmsAdapters, smsAdapters } from './sms';
-import { whatsappAdapters } from './whatsapp';
+import { liveWhatsAppAdapters, whatsappAdapters } from './whatsapp';
 import { emailAdapters } from './email';
 import { paymentAdapters } from './payment';
 import { keyedCourierAdapters } from './courier';
@@ -21,7 +21,8 @@ export * from './erp';
 export * from './page-reader';
 // PR 130 — the SMS sender: the mock until the gateway's key arrives; PR 291 the real gateway (BulkSMSBD, sms/).
 export * from './sms';
-// PR 148 — the WhatsApp and e-mail senders of the order journey: mocks until their keys arrive (like the SMS sender).
+// PR 148 — the WhatsApp and e-mail senders of the order journey: mocks until their keys arrive (like the SMS sender);
+// PR 292 the WhatsApp Business Platform (whatsapp/cloud.ts) with its webhook's signature and receipts.
 export * from './whatsapp';
 export * from './email';
 // PR 167 — the payment gateways: one contract, the practice gateway behind MOCK, bKash (Nagad and card follow).
@@ -35,5 +36,5 @@ export * from './cdn';
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
-// gateway too (its key and Test button); the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...liveSmsAdapters] as const;
+// gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters] as const;

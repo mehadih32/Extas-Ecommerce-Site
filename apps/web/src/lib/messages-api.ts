@@ -19,6 +19,10 @@
 //                                            days, the master switch, caps, quiet hours, SMS masking name and part prices
 //   PUT   /api/admin/messages/channels       {version?, enabled?, caps?, quietHours?, masking?, smsRates?} (STALE when
 //                                            someone saved in between)
+//   GET   /api/admin/messages/whatsapp/templates               PR 292: the WhatsApp templates with Meta's word on each
+//   POST  /api/admin/messages/whatsapp/templates/sync          read Meta's word on every template again
+//   POST  /api/admin/messages/whatsapp/templates/:id/submit    send one for Meta's approval (sample values as examples)
+// The WhatsApp provider's own webhook is not here: app/api/whatsapp/webhook (signed, no session).
 import { createConnections, messageAdapters } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as ms from '@extas/messages';
@@ -79,6 +83,16 @@ export async function messagesRoute(request: Request, deps: AdminDeps | null, pa
     if (!isUuid(b)) return fail(400, 'INVALID_INPUT', ['id']);
     if (c === undefined) return m === 'GET' ? handle(request, deps, 'messages.log.view', async (x) => ({ message: await ms.messageDetail(x.deps, x.who, b) })) : notAllowed();
     if (c === 'retry') return m === 'POST' ? handle(request, deps, 'messages.log.retry', async (x) => ({ retry: await ms.retryMessage(x.deps, x.who, b) })) : notAllowed();
+    return fail(404, 'not-found');
+  }
+  if (a === 'whatsapp' && b === 'templates') {
+    // PR 292: the WhatsApp templates with the provider's word on each, read again, or one sent for approval
+    if (c === undefined) return m === 'GET' ? handle(request, deps, 'messages.channels.read', async (x) => ({ templates: await ms.waTemplatesScreen(x.deps, x.who) })) : notAllowed();
+    if (path.length === 3 && c === 'sync') return m === 'POST' ? handle(request, deps, 'messages.channels.write', async (x) => ({ sync: await ms.syncWaTemplates(x.deps, x.who) })) : notAllowed();
+    if (path.length === 4 && path[3] === 'submit') {
+      if (!isUuid(c)) return fail(400, 'INVALID_INPUT', ['id']);
+      return m === 'POST' ? handle(request, deps, 'messages.channels.write', async (x) => ({ submit: await ms.submitWaTemplate(x.deps, x.who, c) })) : notAllowed();
+    }
     return fail(404, 'not-found');
   }
   if (b !== undefined) return fail(404, 'not-found');
