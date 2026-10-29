@@ -1,0 +1,8 @@
+/* S11 · PR 221 — Website › SEO: the token list, the drafts list and the "longer than the limit" count. */
+.adm2 .seo-tokens{list-style:none;padding:0;margin:6px 0 0}
+.adm2 .seo-tokens .a2-pill{white-space:normal}
+.adm2 .seo-tokens code{font-size:11px}
+.adm2 .seo-drafts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.adm2 .seo-draft{padding:12px;overflow-wrap:anywhere}
+.adm2 .seo-draft .a2-pill{margin-left:6px}
+.adm2 .seo-over{color:var(--bad);font-weight:600}

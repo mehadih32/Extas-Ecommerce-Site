@@ -25,6 +25,7 @@ import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/cont
 import { hrefIn } from '@/lib/shop/lang';
 import { telHref, waHref } from '@/lib/shop/links';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
+import { productPageTexts } from '@/lib/seo/page-texts';
 import { isBottom } from '@/lib/shop/pdp-chart';
 import { sizeGroupOf, sizeWordsFor } from '@/lib/shop/usual-size';
 import { canonicalFor } from '@/lib/shop/pdp-colour';
@@ -145,10 +146,13 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
   // hreflang names; PR 52: a template preview (`?template=T2`) is never indexed
   const base = `${prefix.replace(/\/+$/, '')}/${encodeURIComponent(data.slug)}`;
   const path = canonicalFor(base, route.colour, data.category?.slug ?? null, set['pdp.page']);
-  const m = await shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title, { path, index: !one(search[TEMPLATE_QUERY]) });
-  const desc = (c.lang === 'bn' && data.descriptionBn?.trim()) || data.descriptionEn?.trim();
-  if (desc) m.description = desc.length > 160 ? `${desc.slice(0, 157).trimEnd()}…` : desc;
-  return m;
+  // PR 221: the search title and description from Names & links (own, else the naming templates; a colour's own page
+  // names its colour), the product's description only when neither gives one; {shop} is the shop's name as every
+  // other page writes it (its setting, else the store's own record)
+  const body = (c.lang === 'bn' && data.descriptionBn?.trim()) || data.descriptionEn?.trim() || null;
+  const tokens = { ...(c.storeName ? { shop: c.storeName } : {}), ...(colourName ? { name: title, colour: colourName, colours: colourName } : {}) };
+  const texts = await productPageTexts(c.storeId, data.id, c.lang, tokens, body);
+  return shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title, { path, index: !one(search[TEMPLATE_QUERY]), ...(texts ? { seo: { texts } } : {}) });
 }
 
 /** Every word of the page (`pdp.*` as they are, Find My Size's as `finder.*`, with the owner's own), {slots} left open

@@ -23,6 +23,7 @@ import { isRefined, paragraphs, parseState, placeSoldOut, queryOf, type CatState
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
 import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
+import { categoryDraftTexts } from '@/lib/seo/page-texts';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
@@ -62,11 +63,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!data) return {};
   const seo = set['category.seo']?.[slug];
   const name = titleOf(c, data);
+  // PR 221: the owner's own words first, then an AI draft someone accepted, then the category template (`seo.titles`)
+  const draft = data.head?.id ? await categoryDraftTexts(c.storeId, data.head.id, c.lang) : null;
+  const shown = set['category.page'].soldOut === 'hide' ? data.items.filter((i) => i.inStock).length : data.items.length;
+  const count = shown === 1 ? c.t('cat.style') : c.t('cat.styles', { n: c.num(shown) });
+  const intro = (data.head ? (c.lang === 'bn' && data.head.introBn) || data.head.introEn : c.t('cat.newInBlurb')) || '';
   // a filtered, sorted or later page, or one the catalogue could not fill, is not a page of its own for search engines
   // (PR 220: its clean address is the canonical one)
-  const m = await shopMetadata(c, `collections/${slug}`, seo?.title?.[c.lang] ?? name, { index: !(data.unavailable || isRefined(state, defaultSort)) });
-  if (seo?.meta) m.description = seo.meta[c.lang];
-  return m;
+  return shopMetadata(c, `collections/${slug}`, name, {
+    index: !(data.unavailable || isRefined(state, defaultSort)),
+    seo: {
+      kind: 'category',
+      tokens: { name, count: shown ? count : '', intro: intro.replace(/\s+/g, ' ').trim() },
+      own: { title: seo?.title?.[c.lang] ?? draft?.title, description: seo?.meta?.[c.lang] ?? draft?.description },
+    },
+  });
 }
 
 export default async function CategoryPage(props: Props) {

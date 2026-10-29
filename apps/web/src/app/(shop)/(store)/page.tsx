@@ -31,7 +31,8 @@ import { hrefIn } from '@/lib/shop/lang';
 import { homeReviews } from '@/lib/shop/reviews';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return shopMetadata(await shopContext(), 'home', null);
+  // PR 221: the home page's search title and description (`seo.titles.home`; the shop's name until the owner writes more)
+  return shopMetadata(await shopContext(), 'home', null, { seo: { kind: 'home' } });
 }
 
 /** The hero's pictures: a live campaign collection's products when one is set, else the categories in turns. */
