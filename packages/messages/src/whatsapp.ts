@@ -14,16 +14,17 @@
 //     FAILED (UNREACHABLE when the number is not on WhatsApp) and tries the step's fallback channel;
 //   - the customer's replies: a "1", "2" or "3" (Bengali digits too) to the self-confirm question asked within
 //     `messages.whatsapp.replyWindowHours` is recorded as his answer (`selfConfirmReply`, as if staff had typed it).
-//     Anything else is left for the consent words (PR 298) and the team.
+//     Anything else is left for the consent words (PR 298) and the team; PR 505: with `messages.autoReply` on, it is
+//     answered once per window with the auto-reply template (never to a number that stopped messages).
 // Nothing here moves money, changes a price or sends to a real number on its own.
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { parseWhatsAppWebhook, verifyWhatsAppSignature, WHATSAPP_CLOUD_PROVIDER, type Connections, type WhatsAppInbound, type WhatsAppReceipt } from '@extas/adapters';
 import { MOTHER_STORE_ID, type Prisma } from '@extas/db/client';
 import { systemBy } from '@extas/orders';
 import { allow, holds, logChange, MessagesError, nowOf, setting, type MessagesDeps, type Sender, type Who } from './context';
-import { consentReply } from './consent';
-import { CONSENT_REPLY, queueFallback, ROW_SELECT, runContext, sampleSettingsOf, sendStandalone, type RunContext } from './engine';
-import { metaBody, sampleInput, selfConfirmAnswerOf, templateValues, waBodyProblems, waTemplateName, type WaBodyProblem } from './pure';
+import { consentBlock, consentReply, customerOf } from './consent';
+import { AUTO_REPLY, CONSENT_REPLY, queueFallback, ROW_SELECT, runContext, sampleSettingsOf, sendStandalone, type RunContext } from './engine';
+import { autoReplyKey, metaBody, phoneOf, sampleInput, selfConfirmAnswerOf, templateValues, waBodyProblems, waTemplateName, withinHours, type WaBodyProblem } from './pure';
 import { selfConfirmReply } from './self-confirm';
 
 // ---- the templates ----
@@ -213,6 +214,8 @@ export interface InboundResult {
   starts: number;
   /** Messages that were not an answer the shop reads by itself (left for the team). */
   other: number;
+  /** PR 505: of those, the ones answered with the auto-reply. */
+  autoReplies: number;
 }
 
 /**
@@ -221,9 +224,9 @@ export interface InboundResult {
  * window.
  */
 export async function handleWhatsAppInbound(deps: MessagesDeps, storeId: number, inbound: WhatsAppInbound[]): Promise<InboundResult> {
-  const out: InboundResult = { answers: 0, stops: 0, starts: 0, other: 0 };
+  const out: InboundResult = { answers: 0, stops: 0, starts: 0, other: 0, autoReplies: 0 };
   if (!inbound.length) return out;
-  const [cfg, consent] = await Promise.all([setting(deps, storeId, 'messages.whatsapp'), setting(deps, storeId, 'messages.consent')]);
+  const [cfg, consent, auto] = await Promise.all([setting(deps, storeId, 'messages.whatsapp'), setting(deps, storeId, 'messages.consent'), setting(deps, storeId, 'messages.autoReply')]);
   const since = new Date(nowOf(deps).getTime() - cfg.replyWindowHours * 3_600_000);
   let c: RunContext | null = null;
   for (const m of inbound) {
@@ -248,6 +251,16 @@ export async function handleWhatsAppInbound(deps: MessagesDeps, storeId: number,
       : null;
     if (!answer || !asked?.orderId) {
       out.other++;
+      // PR 505: the auto-reply (off as it ships), once per number in its window, never to a number that stopped messages
+      if (auto.enabled && (await autoReplyFits(deps, storeId, auto))) {
+        const phone = phoneOf(m.from);
+        const customerId = phone ? await customerOf(deps.db, storeId, phone) : null;
+        if (phone && !(await consentBlock(deps.db, storeId, consent, { channel: 'WHATSAPP', phone, customerId, step: AUTO_REPLY }))) {
+          c ??= await runContext(deps, storeId);
+          const sent = await sendStandalone(deps, c, { channel: 'WHATSAPP', to: m.from, customerId, template: auto.template, step: AUTO_REPLY, dedupeKey: autoReplyKey(phone, nowOf(deps), auto.onceEveryHours) });
+          if (sent !== 'WAITING') out.autoReplies++;
+        }
+      }
       continue;
     }
     try {
@@ -259,6 +272,12 @@ export async function handleWhatsAppInbound(deps: MessagesDeps, storeId: number,
     }
   }
   return out;
+}
+
+/** PR 505 — the auto-reply goes `always`, or only outside the shop's hours (its time zone). */
+async function autoReplyFits(deps: MessagesDeps, storeId: number, a: { when: string; openHour: number; closeHour: number }): Promise<boolean> {
+  if (a.when === 'always') return true;
+  return !withinHours(nowOf(deps), await setting(deps, storeId, 'store.timeZone'), a.openHour, a.closeHour);
 }
 
 /** PR 298 — the answers to a stop and a start (default pack; editable in Messages › Templates). */

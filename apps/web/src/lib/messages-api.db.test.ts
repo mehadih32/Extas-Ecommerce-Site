@@ -1,6 +1,7 @@
 // S05 · PR 148 — the Messages admin API on a real PostgreSQL (a throwaway database; skipped without
 // TEST_DATABASE_ADMIN_URL): login, the journey with its version, a save through the settings (and a stale one
 // refused), the self-confirm reply route, the message log and its retry route (PR 149), and the path table's refusals.
+// PR 292, 298, 505: the WhatsApp templates, Consent, and Templates with the auto-reply.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -146,5 +147,35 @@ describe.skipIf(!HAS_TEST_DB)('Messages admin API on PostgreSQL', () => {
     expect((await api('GET', ['consent', 'record'])).status).toBe(405);
     expect((await api('GET', ['consent', 'x', 'y'])).status).toBe(404);
     expect((await api('GET', ['consent'], undefined, '')).status).toBe(401);
+  });
+
+  it('PR 505: Templates — a missing one added, its words saved with their version, a reset without a default refused, the auto-reply', async () => {
+    const r = await api('GET', ['templates']);
+    expect(r.status).toBe(200);
+    expect(r.body.templates.tokens).toContain('amountLine');
+    const placed = r.body.templates.groups.find((g: { key: string }) => g.key === 'order.placed');
+    expect(placed.uses[0]).toMatchObject({ use: 'placed', on: true });
+    const add = await api('POST', ['templates'], { key: 'shop.thanks', channel: 'SMS', locale: 'en', body: '{storeName}: thank you!' });
+    expect(add.status).toBe(200);
+    const row = add.body.templates.groups.find((g: { key: string }) => g.key === 'shop.thanks').rows[0];
+    expect(row.previews[0]).toMatchObject({ ok: true, text: expect.stringContaining('thank you!') });
+    expect((await api('POST', ['templates'], { key: 'shop.thanks', channel: 'SMS', locale: 'en', body: 'again' })).body.error).toBe('STALE');
+    const saved = await api('PUT', ['templates', row.id], { version: row.version, body: '{storeName}: many thanks!' });
+    expect(saved.status).toBe(200);
+    expect((await api('PUT', ['templates', row.id], { version: row.version, body: 'late' })).body.error).toBe('STALE');
+    const now = saved.body.templates.groups.find((g: { key: string }) => g.key === 'shop.thanks').rows[0];
+    expect((await api('PUT', ['templates', row.id], { version: now.version, body: '{nope}' })).body.error).toBe('INVALID_INPUT');
+    expect((await api('POST', ['templates', row.id, 'reset'], { version: now.version })).body.error).toBe('NOT_FOUND');
+    expect((await api('PUT', ['templates', 'not-an-id'], { version: 'x', body: 'y' })).status).toBe(400);
+    const auto = r.body.templates.autoReply;
+    expect(auto.config.autoReply.enabled).toBe(false);
+    const on = await api('PUT', ['templates', 'auto-reply'], { version: auto.version, autoReply: { ...auto.config.autoReply, enabled: true } });
+    expect(on.status).toBe(200);
+    expect(on.body.templates.autoReply.config.autoReply.enabled).toBe(true);
+    expect((await api('PUT', ['templates', 'auto-reply'], { version: auto.version, autoReply: auto.config.autoReply })).body.error).toBe('STALE');
+    expect((await api('GET', ['templates', 'auto-reply'])).status).toBe(405);
+    expect((await api('DELETE', ['templates'])).status).toBe(405);
+    expect((await api('GET', ['templates', row.id, 'reset', 'x'])).status).toBe(404);
+    expect((await api('GET', ['templates'], undefined, '')).status).toBe(401);
   });
 });

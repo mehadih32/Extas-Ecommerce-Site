@@ -488,6 +488,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
 
 /** PR 298 — the answer to a stop or start: a message of no order, filled with the shop's own name only. */
 export const CONSENT_REPLY = 'consentReply';
+/** PR 505 — the auto-reply to a customer who wrote to the shop (`messages.autoReply`). */
+export const AUTO_REPLY = 'autoReply';
 
 /**
  * PR 298 — one message that belongs to no order (the answer to the customer's stop or start word): its template in the

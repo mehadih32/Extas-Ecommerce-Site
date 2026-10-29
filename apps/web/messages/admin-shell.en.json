@@ -63,7 +63,9 @@
       },
       "messages": {
         "log": "Message log",
-        "channels": "Channels & limits"
+        "channels": "Channels & limits",
+        "journey": "Order journey",
+        "templates": "Templates"
       }
     },
     "purpose": {

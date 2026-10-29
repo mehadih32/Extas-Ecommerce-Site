@@ -52,7 +52,9 @@
     "packingPack": "প্যাক",
     "messagesLog": "মেসেজ লগ",
     "messagesChannels": "চ্যানেল আর সীমা",
-    "messagesConsent": "অনুমতি"
+    "messagesConsent": "অনুমতি",
+    "messagesJourney": "অর্ডারের মেসেজ",
+    "messagesTemplates": "টেমপ্লেট"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

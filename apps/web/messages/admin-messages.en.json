@@ -46,7 +46,9 @@
       "advanceRequested": "Advance asked",
       "advanceRequest": "Advance request",
       "giftReceiver": "Gift receiver",
-      "consentReply": "Answer to a stop or start"
+      "consentReply": "Answer to a stop or start",
+      "autoReply": "Auto-reply",
+      "cancelDuplicate": "Cancelled as a duplicate"
     },
     "reason": {
       "MASTER_OFF": "The messages master switch was off",
@@ -300,6 +302,129 @@
       "recordAsk": "Record this answer for the number? Messages follow it from now on.",
       "recorded": "Recorded.",
       "recordButton": "Record"
+    },
+    "tpl": {
+      "title": "Templates",
+      "sub": "Every SMS, WhatsApp and e-mail text the shop sends, in English and Bengali side by side, with a preview on a sample order.",
+      "groups": {
+        "journey": "Order journey",
+        "other": "Other messages",
+        "unused": "Not used now"
+      },
+      "edited": "edited",
+      "problems": "{n} to check",
+      "missing": "{n} missing",
+      "usedBy": "Sent by",
+      "notUsed": "No message sends this template now. A journey step can use it.",
+      "on": "on",
+      "off": "off",
+      "lang": {
+        "en": "English",
+        "bn": "বাংলা"
+      },
+      "subject": "Subject",
+      "body": "Text",
+      "tokens": "Filled in for each order:",
+      "tokensHelp": "{amountLine} is left out when nothing is due. {amountDue} or {total} would skip the whole message for a paid order.",
+      "preview": "Preview",
+      "sample": {
+        "cod": "Cash on delivery",
+        "prepaid": "Fully paid",
+        "partPaid": "Part paid"
+      },
+      "skipped": "Not sent: {why}",
+      "parts": "SMS parts: {n}",
+      "sampleNote": "The preview uses a sample order (Rahim, order 100234), never a real customer.",
+      "noHost": "The shop's web address is not set yet, so links cannot be made: a message with a link is skipped until it is.",
+      "problem": {
+        "EMPTY": "The text is empty.",
+        "UNKNOWN_TOKEN": "A word in {braces} is not one the shop fills in.",
+        "NO_SUBJECT": "An e-mail needs a subject.",
+        "TOO_LONG": "The text is too long.",
+        "NOT_BENGALI": "The Bengali text has no Bengali in it.",
+        "AMOUNT_ON_PAID": "A fully paid order would get no message: use {amountLine}.",
+        "LINK_PROMISE": "It promises a link the shop cannot make yet."
+      },
+      "approval": "WhatsApp approval",
+      "waEditNote": "A change sends it back to WhatsApp for approval; until then a live send uses the step's fallback channel.",
+      "reset": "Reset to default",
+      "resetAsk": "Put the default words back? Your words for this text are replaced.",
+      "resetDone": "The default words are back.",
+      "add": "Add the {lang} text for {channel}",
+      "addHelp": "This message has no {lang} text on {channel}; customers would get the other language.",
+      "addButton": "Add",
+      "added": "Added.",
+      "pick": "Pick a template on the list.",
+      "listLabel": "Templates"
+    },
+    "auto": {
+      "title": "Auto-reply",
+      "help": "When a customer writes to the shop on WhatsApp (not a 1, 2, 3 answer or a stop word), he gets this answer. Off as it ships.",
+      "on": "Send the auto-reply",
+      "template": "Template",
+      "every": "Once in so many hours for one number",
+      "when": "When",
+      "whenOpt": {
+        "always": "Always",
+        "outsideHours": "Only when the shop is closed"
+      },
+      "open": "The shop opens at (hour)",
+      "close": "The shop closes at (hour)",
+      "note": "A customer who stopped messages gets nothing. WhatsApp only: it answers while his message is fresh."
+    },
+    "journey": {
+      "title": "Order journey",
+      "sub": "Which event sends which message: each step's switch, channel, fallback, time, orders and template.",
+      "timeline": "The order's timeline",
+      "events": "Event messages (outside the timeline)",
+      "masterOff": "The master switch is off: nothing is sent to customers.",
+      "masterLink": "Channels & limits",
+      "send": "Send",
+      "channel": "Channel",
+      "fallback": "If it cannot reach him",
+      "fallbackNone": "Nothing else",
+      "alsoEmail": "Also by e-mail when the order has one",
+      "when": "When",
+      "whenOpt": {
+        "now": "At once",
+        "after": "Some minutes later",
+        "at": "At a time of day"
+      },
+      "minutes": "Minutes later",
+      "days": "Days after",
+      "hour": "Hour",
+      "minute": "Minute",
+      "who": "Which orders",
+      "whoOpt": {
+        "all": "Every order",
+        "cod": "Cash on delivery only",
+        "prepaid": "Prepaid only"
+      },
+      "template": "Template",
+      "editWords": "Edit the words",
+      "langs": "Written in: {list}",
+      "noText": "No text on {channel} yet",
+      "summaryOff": "Off",
+      "summaryNow": "at once",
+      "summaryAfter": "{n} min later",
+      "summaryAt": "day {d}, {time}",
+      "capsNote": "Caps per order, quiet hours and the master switch are in Channels & limits.",
+      "more": "More options",
+      "language": "Message language",
+      "languageOpt": {
+        "store": "The shop's language",
+        "bn": "Bengali",
+        "en": "English"
+      },
+      "amountLine": "The amount line",
+      "amountLineHelp": "Filled in for {amountLine}; {amount} is what is still due. Left out when nothing is due.",
+      "selfConfirm": "Self-confirm on WhatsApp",
+      "newOnly": "Only a customer's first order",
+      "waitHours": "No answer after (hours): call queue (0 = never)",
+      "confirmOnYes": "His 1 confirms the order",
+      "countsAsOne": "It is the order's one WhatsApp (the packed WhatsApp then does not go)",
+      "saveAsk": "Save the journey? New messages follow it at once; a step never goes twice to one order.",
+      "badHour": "Hours are 0 to 23, minutes 0 to 59."
     }
   }
 }

@@ -16,6 +16,10 @@
 // Business Platform (whatsapp.ts): approved templates only for a live send, their approval, the receipts and the
 // customer's self-confirm replies through the signed webhook.
 //
+// PR 298: consent and opt-out checked before every send (consent.ts). PR 505: Messages › Templates (templates.ts): every
+// template's words with their preview on the sample order in both languages, where each is used, the missing languages,
+// a default put back, and the auto-reply to a customer who writes on WhatsApp (off).
+//
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';
@@ -30,6 +34,7 @@ export * from './log';
 export * from './channels';
 export * from './whatsapp';
 export * from './consent';
+export * from './templates';
 
 export interface RunResult {
   plan: PlanResult;

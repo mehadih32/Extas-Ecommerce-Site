@@ -201,7 +201,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 292 · WhatsApp Business: approved templates, 
 
     // his "১" (a Bengali 1) is his yes, recorded by itself; anything else is left for the team
     const reply = await post(hook({ messages: [{ from: asked.recipient.slice(1), id: 'wamid.in1', timestamp: at(), type: 'text', text: { body: ' ১ ' } }, { from: asked.recipient.slice(1), id: 'wamid.in2', timestamp: at(), type: 'text', text: { body: 'hello' } }] }));
-    expect(reply.replies).toEqual({ answers: 1, stops: 0, starts: 0, other: 1 });
+    expect(reply.replies).toEqual({ answers: 1, stops: 0, starts: 0, other: 1, autoReplies: 0 });
     expect(await db().orderEvent.findFirstOrThrow({ where: { orderId: o.orderId, type: 'message.selfConfirm.reply' } })).toMatchObject({ reasonCode: 'YES' });
     expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).status).toBe('CONFIRMED');
     // the "thank you" answers him inside his own 24 hours: free text, no template needed
@@ -220,6 +220,6 @@ describe.skipIf(!HAS_TEST_DB)('PR 292 · WhatsApp Business: approved templates, 
     expect(mine(n).map((m) => `${m.channel} ${m.purpose}`)).toContain('SMS order.selfConfirm');
     // an answer long after the question is not read as one
     f.clock.now = new Date(f.clock.now.getTime() + 8 * 24 * 3_600_000);
-    expect((await post(hook({ messages: [{ from: q.recipient.slice(1), id: 'wamid.in3', timestamp: at(), type: 'text', text: { body: '3' } }] }))).replies).toEqual({ answers: 0, stops: 0, starts: 0, other: 1 });
+    expect((await post(hook({ messages: [{ from: q.recipient.slice(1), id: 'wamid.in3', timestamp: at(), type: 'text', text: { body: '3' } }] }))).replies).toEqual({ answers: 0, stops: 0, starts: 0, other: 1, autoReplies: 0 });
   });
 });

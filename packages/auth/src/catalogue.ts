@@ -182,6 +182,11 @@ export const PERMISSIONS = {
   // and the stop words; record a customer's own stop or start at his request, change the stop words. Sends nothing.
   'messages.consent.view': { group: 'messages' },
   'messages.consent.write': { group: 'messages' },
+  // S14 · PR 505 — Messages › Templates: see every SMS, WhatsApp and e-mail template with its preview on sample data in
+  // both languages and where it is used (no customer's data: a `.read` key); change, add or reset a template's words.
+  // Sends nothing; an edited WhatsApp template goes back for approval before a live send uses it.
+  'messages.templates.read': { group: 'messages' },
+  'messages.templates.write': { group: 'messages' },
   // S07 · PR 165 — payments (BACKEND-ARCHITECTURE §6.5.3): see an order's payments, its amount due and where its money
   // stands, with the reason of every mismatch (`payments.view`; not a `.read` key on purpose: it shows customers' payment
   // references, and the read-only smoke check account never gets them); record money received outside the checkout
