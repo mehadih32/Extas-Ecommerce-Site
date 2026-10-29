@@ -193,6 +193,20 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   const withContact: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
   // PR 606: a test server's bulk trial (POST /api/shop/try-bulk) draws the lane as if it were on (never live)
   const s: ShopSettings = tryBulk ? { ...withContact, 'orders.bulkLane': bulkTrial(withContact['orders.bulkLane']) } : withContact;
+  return composeContext({ lang, path, storeId, s, live, cats, rowName, preview: h.get(THEME_HEADER) });
+});
+
+/**
+ * PR 407 — the shop's context for one store and language without a shop request (the admin's printed invoice is in
+ * the print language the owner chose, not the admin's page language): the same settings, words and money format.
+ */
+export async function shopContextFor(storeId: number, lang: ShopLang): Promise<ShopContext> {
+  const [{ values: s, live }, { storeName: rowName }] = await Promise.all([readSettings(storeId), readCategories(storeId)]);
+  return composeContext({ lang, path: '/', storeId, s, live, cats: [], rowName, preview: null });
+}
+
+function composeContext(o: { lang: ShopLang; path: string; storeId: number; s: ShopSettings; live: boolean; cats: ShopCategory[]; rowName: string | null; preview: string | null }): ShopContext {
+  const { lang, path, storeId, s, live, cats, rowName } = o;
   const t = shopT(lang, s['language.labels']);
   const now = new Date();
   const today = todayIn(s['store.timeZone'], now);
@@ -221,8 +235,8 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
     colours: s['theme.colours'],
     fonts: s['theme.fonts'],
     today,
-    preview: h.get(THEME_HEADER),
+    preview: o.preview,
     previewAllowed: s['theme.previewParam'],
   });
   return { lang, path, t, s, live, storeName, theme, today, year: Number(today.slice(0, 4)), flags, vars, cats, bnDigits, num, money, storeId };
-});
+}

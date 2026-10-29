@@ -2931,6 +2931,8 @@ model Order {
   notes     OrderNote[]
   payments  Payment[]
   shipments Shipment[]
+  /// PR 407: the order's issued documents (its invoice, one row per version).
+  documents GeneratedDocument[]
 
   @@unique([storeId, number])
   @@unique([storeId, idempotencyKey])
@@ -2948,6 +2950,8 @@ model Order {
   @@index([customerName(ops: raw("gin_trgm_ops"))], type: Gin, map: "idx_order_name_trgm")
   @@index([shippingAddressText(ops: raw("gin_trgm_ops"))], type: Gin, map: "idx_order_address_trgm")
   @@index([piiExpiresAt])
+  // PR 407: the invoice job finds orders changed since their invoice was last compared.
+  @@index([storeId, updatedAt], map: "idx_order_updated")
 }
 
 enum OrderStatus {
@@ -8652,16 +8656,27 @@ model GeneratedDocument {
   template          DocumentTemplate? @relation(fields: [templateId], references: [id])
   templateVersion   Int?
   orderId           String?           @db.Uuid
+  order             Order?            @relation(fields: [orderId], references: [id])
   refType           String?
   refId             String?
   format            String
   assetId           String?           @db.Uuid
   version           Int               @default(1)
   regeneratedReason String?
+  /// PR 407: the printed number (an invoice keeps one number for life; a revision gets a new version, same number).
+  number            String?
+  /// PR 407: sha256 of the order content the document shows; a new version is made only when this changes.
+  fingerprint       String?
+  /// PR 407: the content as issued (lines, totals, address), so every version can be read back later.
+  data              Json?
+  /// PR 407: the order's last change (its updatedAt) that was compared with this version.
+  checkedAt         DateTime?         @db.Timestamptz(3)
   createdAt         DateTime          @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
 
+  @@unique([storeId, kind, orderId, version])
   @@index([storeId, orderId, kind])
+  @@index([storeId, kind, createdAt])
 }
 
 /// @stage S20 · PR 181; B1.6, B1.7 — a consolidated picking list with its summary line.

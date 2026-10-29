@@ -1,0 +1,18 @@
+{
+  "documents": {
+    "invoice": {
+      "print": {
+        "label": "Printed invoice",
+        "help": "How the invoice prints from Orders → Packing & print → Invoices. \"Paper\": A4 or A5 for a paper invoice. \"Roll\": 80 or 58 mm for a thermal printer; the roll is as long as the invoice. \"Dots per inch\": your printer's (203 for most thermal printers). \"Language\": the printed words (names and the address print as the order stores them). \"Barcode\": the courier's consignment barcode, once the parcel is booked. \"Logo\": your logo from Brand settings at the top instead of the shop name. \"Most per print\": how many invoices one press takes. What the invoice says is set in \"Invoice content\"."
+      },
+      "image": {
+        "label": "Invoice for a chat",
+        "help": "The copy of the invoice sent in a chat (WhatsApp and the others, once connected): a full-page picture (JPG) or the PDF. \"Width\": the picture's width in pixels; its height follows the invoice. \"Quality\": the JPG quality (higher is sharper and bigger)."
+      },
+      "issue": {
+        "label": "Issuing invoices",
+        "help": "On: every placed order gets its invoice (its number and what it showed) without anyone opening it. A background job looks every few minutes at orders changed in the last few days (\"Look back\") and takes at most this many orders a run; an older order gets its invoice the moment it is opened or printed. When an order's items, money, name or address are edited, the invoice gets a new version with the same number; a payment or a delivery never makes a new version."
+      }
+    }
+  }
+}

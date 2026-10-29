@@ -111,6 +111,7 @@
     },
     "orders": {
       "invoice": "Open and print the invoice of any order (it shows the customer's name, phone and address)",
+      "invoiceSettings": "Change the invoice: what it says, its number pattern, how it prints, its chat picture and issuing",
       "read": "See orders, their lines, money, timeline and notes",
       "confirm": "Confirm a new order",
       "hold": "Put an order on hold with a reason, and release it",

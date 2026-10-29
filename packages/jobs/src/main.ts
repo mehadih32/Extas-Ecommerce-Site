@@ -23,6 +23,7 @@ import { errorLine, type JobDeps } from './context';
 import { courierPlanner, courierZonesPlanner, packingPhotosPlanner } from './courier';
 import { messagesPlanner } from './messages';
 import { piiPlanner } from './pii';
+import { invoicePlanner } from './invoices';
 import { paymentsPlanner } from './payments';
 import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
@@ -77,8 +78,8 @@ async function main(): Promise<void> {
     // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue;
     // PR 148: each store's message run per slot; PR 159: each store's purge of kept IP, device and location; PR 170:
     // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot; PR 182:
-    // each store's packing photos past their days to keep, archived once a day
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner],
+    // each store's packing photos past their days to keep, archived once a day; PR 407: each store's invoice run per slot
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

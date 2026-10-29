@@ -7,6 +7,7 @@
 // PR 180: each press carries a key (`keyed`), kept until the PDF arrives, so pressing again after a lost answer gets
 // the same print back instead of counting it twice; a reprint the server asks a reason for (REASON_REQUIRED) opens a
 // short field, and the same press goes again with the reason.
+// PR 407: the invoice's chat copy is a picture (image/jpeg): it opens and downloads the same way.
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import { fulError } from '@/lib/admin-fulfil/words';
@@ -62,7 +63,8 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
     const tab = window.open('', '_blank');
     try {
       const res = await fetch(url, { method, credentials: 'same-origin', cache: 'no-store', headers: sent ? { 'content-type': 'application/json' } : undefined, body: sent ? JSON.stringify(sent) : undefined });
-      if (res.ok && (res.headers.get('content-type') ?? '').includes('application/pdf')) {
+      const type = res.headers.get('content-type') ?? '';
+      if (res.ok && (type.includes('application/pdf') || type.startsWith('image/'))) {
         press.current = null;
         setAsking(false);
         setReason('');

@@ -83,7 +83,9 @@ export type OrdersErrorCode =
    * the customer (`data.why`: POLICY, WINDOW, UNKNOWN, NOT_DELIVERED). */
   | 'RETURN_CLOSED'
   /** PR 189: these pieces are already coming back (another return or an open exchange) (`data.left`). */
-  | 'RETURN_LIMIT';
+  | 'RETURN_LIMIT'
+  /** PR 407: the owner has the invoice switched off (`account.invoice.enabled`), so there is none to print. */
+  | 'INVOICE_OFF';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -138,6 +140,7 @@ export class OrdersError extends Error {
       case 'QC_INCOMPLETE':
       case 'LOSS_REASON_REQUIRED':
       case 'RETURN_CLOSED':
+      case 'INVOICE_OFF':
       case 'RETURN_LIMIT':
         return 422;
       default:

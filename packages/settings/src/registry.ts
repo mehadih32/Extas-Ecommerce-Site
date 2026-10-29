@@ -57,6 +57,7 @@ import { fulfilmentSettings } from './registry-fulfilment';
 import { customerSettings } from './registry-customers';
 import { seoSettings } from './registry-seo';
 import { erpV6Settings } from './registry-erp-v6';
+import { invoiceSettings } from './registry-invoice';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1238,6 +1239,8 @@ export const registry = {
   ...seoSettings,
   // ---- CN-028 · PR 607–618 (CN-029 Phase 0) · Retail and the ERP supplier model: the ERP contract (v5 / v6), the event ledger's pulls, every setting of docs/RETAIL-ERP-MODEL.md §11 (the account hold, the daily summary and fixed costs, the books, exchange and hand-back, B grade and the selling-price floor) (registry-erp-v6.ts, version 62). ----
   ...erpV6Settings,
+  // ---- S20 · PR 407 · the customer invoice: its printed copy (paper and roll), its chat picture and issuing (registry-invoice.ts, version 63). ----
+  ...invoiceSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

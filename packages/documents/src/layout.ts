@@ -110,6 +110,23 @@ export class Sheet {
     this.shapes.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#000" stroke-width="${stroke}"${dashed ? ` stroke-dasharray="${stroke * 4} ${stroke * 3}"` : ''}/>`);
   }
 
+  /**
+   * PR 407 — a picture (the shop's logo) fitted inside `maxW` × `maxH`, kept in proportion, ready to place like a
+   * text block (measured first). A picture that cannot be read is nothing (the caller prints the shop's name instead).
+   */
+  async shapePicture(image: Buffer, maxW: number, maxH: number): Promise<TextBlock> {
+    try {
+      const { data, info } = await sharp(image)
+        .resize({ width: Math.max(1, Math.floor(maxW)), height: Math.max(1, Math.floor(maxH)), fit: 'inside' })
+        .flatten({ background: '#ffffff' })
+        .png()
+        .toBuffer({ resolveWithObject: true });
+      return { png: data, width: info.width, height: info.height };
+    } catch {
+      return EMPTY;
+    }
+  }
+
   /** The barcode of `value` in the box; false when it does not fit (print the value as text instead). */
   barcode(value: string, x: number, y: number, w: number, h: number): boolean {
     const svg = code128Svg(value, x, y, w, h);

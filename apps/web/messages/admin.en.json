@@ -44,6 +44,7 @@
     "packingPrint": "Print run",
     "packingHandover": "Handover",
     "packingPicking": "Picking list",
+    "packingInvoices": "Invoices",
     "ordersReturns": "Exchanges",
     "ordersReturnsQc": "Receive & QC",
     "ordersReturnsRefused": "Refused parcels",
