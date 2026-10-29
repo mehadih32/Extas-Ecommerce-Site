@@ -1,6 +1,6 @@
-# Server report — 2026-10-25 01:09 +06
+# Server report — 2026-10-30 05:19 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `a7d1a5bddb8aafca25f83e4374bdd0665344c424`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `068aaf44cf9160a7e726e520247a37de39b36f87`. Overall: **PASS**.
 
 ## Machine
 
@@ -43,7 +43,7 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 1 · specs recorded | OK | Standard_E8ds_v6, 8 vCPU, 62.8 GiB, MalaysiaWest |
 | PR 2 · OS updates | OK | Ubuntu 24.04 up to date |
 | PR 3 · hardening | OK | SSH key-only, root login off, fail2ban on, security updates on (reboot 04:30), UFW 22/80/443, Asia/Dhaka, host extas-vm |
-| PR 601 · NVMe | OK | /dev/nvme1n1 mounted at /mnt/nvme, 433 GB free; unit runs at every boot before Docker |
+| PR 601 · NVMe | OK | /dev/nvme1n1 mounted at /mnt/nvme, 432 GB free; unit runs at every boot before Docker |
 | PR 3 · data disk | OK | /dev/nvme0n1 → VG extas: 8 volumes + 16 GB swap mounted, 217.97g free for growth |
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
@@ -54,11 +54,11 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
 | PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | OK | 6.2M base + dump; photos: 0 new or changed since the full archive of 20261023-0230; docs of 95e8f2bab0cb; daily at 02:30, WAL every minute |
+| PR 8 · backup (data disk) | FAIL | first backup failed |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261024-0230, 342 tables restored (live has 342); photos: the archive holds no photo yet; docs: docs-20261024-0230.tar.gz back with README, blueprint and register, COMMIT 95e8f2bab0cb matches |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
+| PR 8 · restore test | FAIL | restored database did not come up |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ডিস্ক / 80% ভরে গেছে; ডিস্ক /srv/extas/backups 100% ভরে গেছে; ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
 
