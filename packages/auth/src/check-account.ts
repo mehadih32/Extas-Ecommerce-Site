@@ -16,8 +16,8 @@ import { base32Encode, newTotpSeed } from './totp';
 
 export const CHECK_ROLE_KEY = 'smoke-check';
 
-/** Read-only: the permissions that only let you see. */
-export const CHECK_PERMISSIONS = PERMISSION_KEYS.filter((k) => k.endsWith('.read'));
+/** Read-only: the permissions that only let you see (`*.read`, and the few named `*.view`, e.g. `returns.view`). */
+export const CHECK_PERMISSIONS = PERMISSION_KEYS.filter((k) => k.endsWith('.read') || k.endsWith('.view'));
 
 export interface CheckAccount {
   staffUserId: string;

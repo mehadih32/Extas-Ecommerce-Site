@@ -37,7 +37,8 @@ describe.skipIf(!HAS_TEST_DB)('smoke check account on PostgreSQL (CN-016)', () =
     const r = await ensureCheckAccount(t.prisma, vault(), { email: EMAIL, displayName: 'Smoke check' });
     expect(r.created).toBe(true);
     expect(CHECK_PERMISSIONS.length).toBeGreaterThan(0);
-    expect(CHECK_PERMISSIONS.every((k) => k.endsWith('.read'))).toBe(true);
+    expect(CHECK_PERMISSIONS.every((k) => k.endsWith('.read') || k.endsWith('.view'))).toBe(true);
+    expect(CHECK_PERMISSIONS).toContain('returns.view');
     expect([...(await permissionsFor(t.prisma, r.staffUserId, { storeId: null }))].sort()).toEqual([...CHECK_PERMISSIONS].sort());
 
     const first = await loginStaff(deps(), { email: EMAIL, password: r.password });
