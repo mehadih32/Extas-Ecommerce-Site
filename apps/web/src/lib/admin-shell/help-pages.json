@@ -13,6 +13,7 @@
     { "id": "orders/returns", "route": "/admin/orders/returns" },
     { "id": "orders/returns-qc", "route": "/admin/orders/returns/qc" },
     { "id": "orders/returns-refused", "route": "/admin/orders/returns/refused" },
+    { "id": "orders/pack", "route": "/admin/orders/packing" },
     { "id": "products/all", "route": "/admin/products" },
     { "id": "products/new", "route": "/admin/products/new" },
     { "id": "products/edit", "route": "/admin/products/[id]" },

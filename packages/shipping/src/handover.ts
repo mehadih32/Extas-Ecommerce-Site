@@ -21,7 +21,8 @@ import { bookedReceiver, handoverProblem, STILL_WITH_US, type HandoverProblem } 
 
 const ordersDeps = (deps: ShippingDeps): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
 
-const problemOf = (s: PrintParcelRow): HandoverProblem | null => handoverProblem({ ...printFacts(s), printCount: s.labelPrintCount, orderStatus: s.order.status });
+// PR 182 (follow-up 433): with "mark packed on handover" off, only a packed order is ready (else NOT_PACKED)
+const problemOf = (s: PrintParcelRow, cfg: { packOnHandover: boolean }): HandoverProblem | null => handoverProblem({ ...printFacts(s), printCount: s.labelPrintCount, orderStatus: s.order.status, packedFirst: !cfg.packOnHandover });
 const piecesOf = (s: PrintParcelRow) => s.order.items.reduce((n, i) => n + i.quantity, 0);
 
 /** One parcel on a courier's handover list (no customer's details). */
@@ -58,6 +59,7 @@ const waitingWhere = (storeId: number, courierAccountId?: string) => ({
 /** Every courier with parcels waiting to be handed over, in packing order. */
 export async function handoverList(deps: ShippingDeps, who: Who): Promise<HandoverCourier[]> {
   await allow(deps, who, 'fulfilment.read');
+  const cfg = await setting(deps, who.storeId, 'delivery.handover.sheet');
   const rows = await inPrintOrder(deps.db, who.storeId, await deps.db.shipment.findMany({ where: waitingWhere(who.storeId), select: PRINT_PARCEL_SELECT, orderBy: { bookedAt: 'asc' } }));
   const byCourier = new Map<string, PrintParcelRow[]>();
   for (const r of rows) byCourier.set(r.courierAccount.id, [...(byCourier.get(r.courierAccount.id) ?? []), r]);
@@ -68,7 +70,7 @@ export async function handoverList(deps: ShippingDeps, who: Who): Promise<Handov
   return ids
     .map((id) => {
       const list = byCourier.get(id)!;
-      const parcels = list.map((s) => ({ shipmentId: s.id, orderId: s.orderId, orderNumber: s.order.number, consignmentId: s.consignmentId, collectMinor: s.codAmountMinor, pieces: piecesOf(s), printCount: s.labelPrintCount, problem: problemOf(s) }));
+      const parcels = list.map((s) => ({ shipmentId: s.id, orderId: s.orderId, orderNumber: s.order.number, consignmentId: s.consignmentId, collectMinor: s.codAmountMinor, pieces: piecesOf(s), printCount: s.labelPrintCount, problem: problemOf(s, cfg) }));
       const ready = parcels.filter((p) => !p.problem);
       const batch = open.find((b) => b.courierAccountId === id) ?? null;
       return {
@@ -157,7 +159,7 @@ export async function printHandover(deps: ShippingDeps, who: Who, input: unknown
   if (seen) return seen;
 
   const rows = await inPrintOrder(deps.db, who.storeId, await deps.db.shipment.findMany({ where: waitingWhere(who.storeId, courier.id), select: PRINT_PARCEL_SELECT, orderBy: { bookedAt: 'asc' } }));
-  const ready = rows.filter((r) => !problemOf(r));
+  const ready = rows.filter((r) => !problemOf(r, cfg));
   if (!ready.length) throw new ShippingError('NOTHING_TO_HAND_OVER', 'no parcel of this courier is ready to hand over', [courier.name]);
   const at = nowOf(deps);
   const data: SheetData = {
@@ -219,7 +221,7 @@ export async function completeHandover(deps: ShippingDeps, who: Who, input: unkn
   for (const id of batch.shipmentIds) {
     const r = rows.find((x) => x.id === id);
     if (!r) continue;
-    const problem = problemOf(r);
+    const problem = problemOf(r, cfg);
     if (problem) {
       skipped.push({ orderNumber: r.order.number, reason: problem });
       continue;

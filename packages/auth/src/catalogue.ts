@@ -155,6 +155,13 @@ export const PERMISSIONS = {
   // S08 · PR 180 — print the rider's handover sheet (it can carry the receivers' names) and mark a batch handed over to
   // the courier (each order moves to "handed over"). Never books, re-books or changes a parcel, its COD or a charge.
   'fulfilment.handover': { group: 'fulfilment' },
+  // S08 · PR 182 — Orders › Packing & print › Pack: start picking, scan or type each piece's SKU, add the packing photo,
+  // weigh the parcel and mark the order packed (every step through the order service). Never books, cancels, edits an
+  // order or changes a parcel, its COD or a charge.
+  'fulfilment.pack': { group: 'fulfilment' },
+  // S08 · PR 182 (CN-014c, SIM-F-010) — the owner's override of a required packing photo for one order, with a reason
+  // (audited). Only the owner role holds it until he gives it to another role.
+  'fulfilment.photoWaive': { group: 'fulfilment' },
   // S05 · PR 148 — Messages › Order journey (MSG-01): see the journey (its steps, channels, caps and whether each channel
   // is live or on its mock); change it; and record a customer's self-confirm reply (1, 2 or 3) until the WhatsApp
   // provider's replies arrive by themselves. A 1 confirms the order only with `messages.selfConfirm.confirmOnYes`, as a

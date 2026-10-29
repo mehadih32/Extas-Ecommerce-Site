@@ -43,6 +43,13 @@
 // PR 526: why a parcel came back — the rider's note kept from the courier's door outcome, and the reason a person picks
 // from the owner's list on the parcel's one return record, on the order's timeline and in the phone history (returns.ts).
 //
+// PR 182: the packing step — the queue at each step (Pick → Pack → Ready for courier → Handed over) with one filter for
+// the lists and the bulk "Start picking" (never a cancelled, held or in-review order: SIM-F-002); each piece checked by
+// scan, typed SKU or tick; the packing photo with the owner's override (SIM-F-010) and its days to keep; the parcel's
+// weight against its pieces (follow-up 434); "Mark packed" through the order service with every check under the
+// order's lock; a booking waits for a required photo; the handover needs packed orders (follow-up 433) (packing.ts,
+// packing-pure.ts).
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -63,3 +70,5 @@ export * from './picking';
 export * from './sync';
 export * from './truth';
 export * from './returns';
+export * from './packing-pure';
+export * from './packing';

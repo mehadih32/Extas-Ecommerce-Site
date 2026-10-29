@@ -6,7 +6,7 @@ import { registry } from '../src/registry';
 import { courierBookingSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, handoverSheetSchema, pickingListSchema, rtoCostSchema, shippingSettings, stickerQueueSchema } from '../src/registry-shipping';
 
 /** The registry version each key arrived at. */
-const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56, 'delivery.sticker.queue': 56, 'delivery.handover.sheet': 56, 'delivery.picking.list': 56 };
+const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56, 'delivery.sticker.queue': 56, 'delivery.handover.sheet': 59, 'delivery.picking.list': 56 };
 
 describe('courier shipping settings (v50)', () => {
   it('every key is in the registry at its version (50; PR 554, 179: 56) in the Delivery group, labelled in English and Bengali, its default valid', () => {
@@ -54,7 +54,8 @@ describe('courier shipping settings (v50)', () => {
     expect(shippingSettings['delivery.sticker.queue'].default).toEqual({ reprintReason: true, recentPrints: 20 });
     expect(stickerQueueSchema.safeParse({ reprintReason: true, recentPrints: 1 }).success).toBe(false);
     const h = shippingSettings['delivery.handover.sheet'].default;
-    expect(h).toEqual({ paper: 'a4', dpi: 150, lang: 'en', receiverName: true, signatures: true, packOnHandover: true });
+    // PR 182 (follow-up 433): packed on the packing screen, never by the handover itself unless the owner turns it on
+    expect(h).toEqual({ paper: 'a4', dpi: 150, lang: 'en', receiverName: true, signatures: true, packOnHandover: false });
     expect(handoverSheetSchema.safeParse({ ...h, dpi: 72 }).success).toBe(false);
     expect(handoverSheetSchema.safeParse({ ...h, paper: 'letter' }).success).toBe(false);
   });

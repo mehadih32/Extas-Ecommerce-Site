@@ -34,7 +34,27 @@ export type ShippingErrorCode =
   /** PR 525, 526: the order service refused the step (`data.code`, e.g. CANCEL_PENDING); nothing was changed. */
   | 'ORDER_REFUSED'
   /** PR 526: a return reason is only for a parcel that came back (`data.status`). */
-  | 'NOT_RETURNED';
+  | 'NOT_RETURNED'
+  /** PR 182: the order is not at a packing step this action applies to (`data.status`). */
+  | 'NOT_PACKING'
+  /** PR 182: the scanned or typed code is on no line of this order (nothing is stored). */
+  | 'NOT_IN_ORDER'
+  /** PR 182: every piece of the lines with this code is checked already. */
+  | 'ALREADY_CHECKED'
+  /** PR 182: the owner's piece check does not take this way (typing the SKU is off, or ticking while scanning is on). */
+  | 'CHECK_MODE'
+  /** PR 182: "Mark packed" waits: a line is not checked yet (`data.lines`). */
+  | 'NOT_CHECKED'
+  /** PR 182: an open packing card (a shortage, a damaged or missing piece) waits for a person's decision. */
+  | 'PACKING_ISSUE_OPEN'
+  /** PR 182 (SIM-F-010): the owner's required packing photo is missing (`data.photos`, `data.needed`); packing and booking wait. */
+  | 'PHOTO_REQUIRED'
+  /** PR 182: the packing photo is switched off. */
+  | 'PHOTO_OFF'
+  /** PR 182 (follow-up 434): the owner wants the parcel weighed before it is packed. */
+  | 'WEIGHT_REQUIRED'
+  /** PR 182 (follow-up 434): the reading is far from the pieces' weight (`data`): weigh again or confirm. */
+  | 'WEIGHT_GAP';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;
@@ -64,6 +84,15 @@ export class ShippingError extends Error {
       case 'NO_ZONE_LIST':
       case 'REASON_REQUIRED':
       case 'NOTHING_TO_HAND_OVER':
+      case 'NOT_IN_ORDER':
+      case 'ALREADY_CHECKED':
+      case 'CHECK_MODE':
+      case 'NOT_CHECKED':
+      case 'PACKING_ISSUE_OPEN':
+      case 'PHOTO_REQUIRED':
+      case 'PHOTO_OFF':
+      case 'WEIGHT_REQUIRED':
+      case 'WEIGHT_GAP':
         return 422;
       default:
         return 409;

@@ -17,8 +17,8 @@ import { sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
-import { trackParcels, zoneSyncTurn } from '@extas/shipping';
-import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps } from './courier';
+import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping';
+import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -232,6 +232,23 @@ const courierZonesJob: JobDefinition<{ storeId: number }> = {
   },
 };
 
+/**
+ * PR 182 — one store's packing photos past the owner's days to keep, archived (packages/shipping `expirePackingPhotos`;
+ * planned by courier.ts `packingPhotosPlanner` once per day slot). Safe to run twice: an archived photo is left as it is.
+ * Nothing is deleted: the file stays in the media library.
+ */
+const packingPhotosJob: JobDefinition<{ storeId: number }> = {
+  key: PACKING_PHOTOS_JOB,
+  queue: COURIER_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${PACKING_PHOTOS_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await expirePackingPhotos({ db: deps.db, now: deps.now }, p.storeId)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -241,6 +258,7 @@ const definitions: JobDefinition<never>[] = [
   paymentsSweepJob as unknown as JobDefinition<never>,
   courierTrackJob as unknown as JobDefinition<never>,
   courierZonesJob as unknown as JobDefinition<never>,
+  packingPhotosJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

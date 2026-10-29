@@ -1,0 +1,22 @@
+{
+  "fulfilment": {
+    "packing": {
+      "check": {
+        "label": "Packing: how each piece is checked",
+        "help": "Before an order can be marked packed, every piece is checked against the order. \"Scan\": the packer scans each piece's barcode and the SKU must match a line of the order (a wrong piece is refused). \"Type the SKU\": when the scanner is off, the packer may type the SKU instead. \"Tick\": no scanner at all; the packer ticks each line by hand."
+      },
+      "photo": {
+        "label": "Packing proof photo",
+        "help": "A photo of the open parcel before it is closed, to settle a \"wrong item\" or \"missing piece\" complaint. Off until you turn it on. \"Required\": an order cannot be marked packed or booked with the courier until it has the photos; the owner (or a role he gives the right) can let one order go without it, with a reason. \"Reminder\": the screen asks for it, nothing waits. \"Photos\": how many each parcel needs. \"Days to keep\": after this many days a photo is archived (kept in the media library, not shown on the order)."
+      },
+      "weight": {
+        "label": "Packing: weigh the parcel",
+        "help": "The packer types the scale reading and the shop compares it with the pieces' own weights (from each product's weight). Off until you turn it on. A reading that is off by more than both \"percent\" and \"grams\" is flagged: the packer weighs again or confirms it is right. \"Reading needed\": an order cannot be marked packed without a reading. A piece without a weight is never guessed: then nothing is compared."
+      },
+      "queue": {
+        "label": "Packing screen: lists",
+        "help": "\"Days on Handed over\": how many days an order stays on the last step after it was handed over (0: today only). \"Orders per step\": the most orders one step lists, oldest first."
+      }
+    }
+  }
+}

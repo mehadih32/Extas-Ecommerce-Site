@@ -170,7 +170,9 @@
     "fulfilment": {
       "print": "Print a booked parcel's courier sticker (it shows the receiver's name, phone and address) and a sample sticker",
       "read": "See the print run, the recent prints, the handover lists and the picking list, and print the picking list (no customer's details)",
-      "handover": "Print the rider's handover sheet (it can show the receivers' names) and mark a batch handed over to the courier"
+      "handover": "Print the rider's handover sheet (it can show the receivers' names) and mark a batch handed over to the courier",
+      "pack": "Start picking, scan or type each piece, add the packing photo, weigh the parcel and mark an order packed (never books, cancels or edits an order)",
+      "photoWaive": "Let one order be packed without the required packing photo, with a reason (the owner's override, audited)"
     },
     "returns": {
       "view": "See the returns and exchanges board and every case",

@@ -25,12 +25,31 @@
 //                                              (fulfilment.read; no customer's details)
 //   POST  /api/admin/packing/picking           {from?, to?} the picking list as a PDF; the list is kept with a print
 //                                              job (fulfilment.read)
+//   GET   /api/admin/packing/orders            PR 182: the packing steps with their counts and one step's orders
+//                                              (?step=pick|pack|ready|done; no customer's details) (fulfilment.read)
+//   POST  /api/admin/packing/orders/pick-all   "Start picking" for every order on the Pick step: the list's own filter,
+//                                              never a cancelled, held or in-review order (SIM-F-002) (fulfilment.pack)
+//   GET   /api/admin/packing/orders/{id}       one order at the packing table: its lines and checks, open packing
+//                                              cards, photos, weight, parcel, and what stops "Mark packed" (fulfilment.read)
+//   POST  …/orders/{id}/start                  confirmed → picking started, through the order service [Idempotency-Key]
+//   POST  …/orders/{id}/piece                  {code, source: scan|typed} or {lineId, source: tick}: one piece checked;
+//                                              a code on no line or a complete line is refused (fulfilment.pack)
+//   POST  …/orders/{id}/pack                   {weighedGrams?, weightConfirmed?} "Mark packed" through the order service
+//                                              [Idempotency-Key]: refused NOT_CHECKED, PACKING_ISSUE_OPEN, PHOTO_REQUIRED,
+//                                              WEIGHT_REQUIRED, WEIGHT_GAP (fulfilment.pack)
+//   POST  …/orders/{id}/photo                  multipart `file`: the packing photo, its metadata stripped, kept in the
+//                                              media library for the owner's days (fulfilment.pack; PHOTO_OFF when off)
+//   POST  …/orders/{id}/waive                  {reason} the owner's override of a required photo (fulfilment.photoWaive)
+import sharp from 'sharp';
+import { storeGeneratedFile } from '@extas/media';
+import { isOrdersError } from '@extas/orders';
 import * as sh from '@extas/shipping';
-import { body, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
+import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { handoverPdf, type Letterhead } from './admin-fulfil/handover';
 import { pickingPdf } from './admin-fulfil/picking';
 import { sampleParcel, stickerInput, stickersPdf, pdfName, type StickerContext } from './admin-fulfil/sticker';
 import { fulfilDicts } from './admin-fulfil/i18n';
+import { mediaDeps } from './media';
 import { shippingDeps, shippingFail, storeIdOf } from './shipping-api';
 
 type FulfilPermission = sh.FulfilPermission;
@@ -51,6 +70,8 @@ async function guarded(request: Request, deps: AdminDeps | null, permission: Ful
   try {
     return await fn({ deps: await shippingDeps(deps!), admin: deps!, who: { actor: g.actor, storeId, ctx: g.ctx }, url });
   } catch (e) {
+    // PR 182: a step through the order service answers with the order machine's own refusal (ILLEGAL_TRANSITION, STALE …)
+    if (isOrdersError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ? { data: e.data } : {}) }, { status: e.status });
     return shippingFail(e);
   }
 }
@@ -144,4 +165,68 @@ export async function pickingRoute(request: Request, deps: AdminDeps | null, pat
       return pdf(await pickingPdf(list, cfg, head, timeZone, list.printedAt), pdfName(`picking-list-${list.printedAt.slice(0, 10)}`), { 'x-picking-list': list.listId });
     });
   return fail(405, 'method-not-allowed');
+}
+
+const keyOf = (request: Request) => request.headers.get('idempotency-key')?.trim() || undefined;
+
+/** PR 182 — the packing photo: an image only, within the media upload limit, its metadata (and the place it was taken)
+ * stripped and turned upright, stored in the media library, then added to the order. */
+async function packingPhoto(request: Request, x: Ctx, orderId: string): Promise<Response> {
+  const cfg = await x.deps.settings.value('fulfilment.packing.photo', { storeId: x.who.storeId });
+  if (!cfg.enabled) return json({ ok: false, error: 'PHOTO_OFF' }, { status: 422 });
+  const order = await sh.packingOrder(x.deps, x.who, orderId);
+  const media = mediaDeps();
+  if (!media) return fail(503, 'database-not-configured');
+  const maxBytes = await media.settings.value('media.upload.maxBytes', { storeId: x.who.storeId });
+  const declared = Number(request.headers.get('content-length') ?? '0');
+  if (declared > maxBytes * 1.05 + 64 * 1024) return fail(413, 'TOO_LARGE', [`max:${maxBytes}`]);
+  let file: FormDataEntryValue | null;
+  try {
+    file = (await request.formData()).get('file');
+  } catch {
+    return fail(400, 'INVALID_INPUT', ['file']);
+  }
+  if (!(file instanceof File) || file.size > maxBytes) return fail(400, 'INVALID_INPUT', ['file']);
+  let jpeg: Buffer;
+  try {
+    jpeg = await sharp(new Uint8Array(await file.arrayBuffer())).rotate().jpeg().toBuffer();
+  } catch {
+    return fail(400, 'INVALID_INPUT', ['file']);
+  }
+  const stored = await storeGeneratedFile(media, { storeId: x.who.storeId, kind: 'IMAGE', body: new Uint8Array(jpeg), contentType: 'image/jpeg', name: `packing ${order.orderNumber}`, extension: 'jpg', folder: 'packing' });
+  return json({ ok: true, order: await sh.addPackingPhoto(x.deps, x.who, orderId, { mediaAssetId: stored.id }) });
+}
+
+/** PR 182 — `path` is what comes after /api/admin/packing/orders. */
+export async function packingRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
+  const m = request.method.toUpperCase();
+  if (!path.length) {
+    if (m !== 'GET') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, ...(await sh.packingQueue(x.deps, x.who, { step: x.url.searchParams.get('step') || undefined })) }));
+  }
+  if (path.length === 1 && path[0] === 'pick-all') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, ...(await sh.startPickingAll(x.deps, x.who)) }));
+  }
+  const [id, action, ...rest] = path;
+  if (!isUuid(id) || rest.length) return fail(404, 'not-found');
+  if (!action) {
+    if (m !== 'GET') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, order: await sh.packingOrder(x.deps, x.who, id) }));
+  }
+  if (m !== 'POST') return fail(405, 'method-not-allowed');
+  switch (action) {
+    case 'start':
+      return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, result: await sh.startPicking(x.deps, x.who, id, { idempotencyKey: keyOf(request) }) }));
+    case 'piece':
+      return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, order: await sh.checkPiece(x.deps, x.who, id, await body(request)) }));
+    case 'pack':
+      return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, result: await sh.markPacked(x.deps, x.who, id, await body(request), { idempotencyKey: keyOf(request) }) }));
+    case 'photo':
+      return guarded(request, deps, 'fulfilment.pack', (x) => packingPhoto(request, x, id));
+    case 'waive':
+      return guarded(request, deps, 'fulfilment.photoWaive', async (x) => json({ ok: true, order: await sh.waivePackingPhoto(x.deps, x.who, id, await body(request)) }));
+    default:
+      return fail(404, 'not-found');
+  }
 }
