@@ -40,6 +40,15 @@ export const structuredDataSchema = z
     itemList: z.boolean(),
     /** Product with its Offer (or AggregateOffer when the sizes or colours cost differently) on the product page. */
     product: z.boolean(),
+    // S11 · PR 222 (registry v64; follow-up 110, Blueprint C12.4). A value saved before these existed reads them as on.
+    /** Organization on the home page: the shop's name, address, logo, contact and social pages (only those filled in). */
+    organization: z.boolean().default(true),
+    /** WebSite on the home page: the shop's name and address (the name Google shows above the results). */
+    website: z.boolean().default(true),
+    /** Product with its Offer at the set price on a set page (in stock only while every piece can be sold). */
+    combo: z.boolean().default(true),
+    /** The struck price beside an offer, only when the page itself shows it struck (the honest-price rule, PR 38). */
+    wasPrice: z.boolean().default(true),
   })
   .strict();
 
@@ -131,7 +140,9 @@ export const storefrontFuSettings = {
     ...json,
     group: 'naming',
     schema: structuredDataSchema,
-    default: { breadcrumbs: true, itemList: true, product: true },
+    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true },
+    // PR 222 added the home page, set page and struck-price parts (registry v64)
+    version: 64,
     labelKey: 'seo.structuredData.label',
     helpKey: 'seo.structuredData.help',
     sortOrder: 900,

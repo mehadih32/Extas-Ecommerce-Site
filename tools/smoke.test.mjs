@@ -34,6 +34,9 @@ it('every configured check names its PR and is a page check or a request check',
     expect(Boolean(c.request) !== Boolean(c.page), c.what).toBe(true);
     if (c.page) expect([c.selector, c.attribute, c.equals].every((v) => typeof v === 'string'), c.what).toBe(true);
     else expect(Number.isInteger(c.status), c.what).toBe(true);
+    // PR 220: a head tag (meta) is never visible, so its check waits for it to be attached instead
+    if (c.state !== undefined) expect(['attached', 'visible'], c.what).toContain(c.state);
+    if (c.page && /^meta\b/.test(c.selector)) expect(c.state, c.what).toBe('attached');
   }
 });
 

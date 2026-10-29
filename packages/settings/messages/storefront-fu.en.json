@@ -8,7 +8,7 @@
   "seo": {
     "structuredData": {
       "label": "Data for search engines (structured data)",
-      "help": "What Google reads beside the page, always from what the page itself shows: the breadcrumb trail (sent even when the visible trail is off), the list of products on a category page, and on a product page the product, its price and whether it is in stock. A star rating is never sent until real reviews exist."
+      "help": "What Google reads beside the page, always from what the page itself shows: the breadcrumb trail (sent even when the visible trail is off), the list of products on a category page, on a product page the product, its price and whether it is in stock, on a set page the set at its set price, and on the home page the shop itself (its name, address, logo, contact and social pages, only those filled in) and the website's name. A struck price goes only where the page shows it struck. A star rating is never sent until real reviews exist."
     }
   },
   "pdp": {

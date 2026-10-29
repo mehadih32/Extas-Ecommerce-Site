@@ -422,6 +422,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               currency: c.s['store.currency'],
               onSale: data.state === 'live',
               variants: ldVariants,
+              // PR 222: the struck price the page shows (the honest-price rule), never one it does not
+              wasPrice: sd.wasPrice,
             })
           : null,
       ]}

@@ -11,6 +11,7 @@
 // - flash sale (PR 44, `home.flashSale`): the owner's sale while it runs, two rows sliding past each other and a clock
 //   that ticks; no sale, nothing drawn (lib/shop/flash). A test server's `?try=flash` draws the trial sale.
 // ~~Until the home page is built, it shows the store shell with one sliding row: the live categories.~~
+// S11 · PR 221: its search title and description (`seo.titles.home`); PR 222: the shop's Organization and WebSite JSON-LD.
 import type { Metadata } from 'next';
 import { Fragment, type ReactNode } from 'react';
 import type { HomeSectionId } from '@extas/settings';
@@ -26,7 +27,9 @@ import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } fr
 import { shopContext, type ShopContext } from '@/lib/shop/context';
 import { homeFlash } from '@/lib/shop/flash';
 import { heroSlidePicks, homeSectionsOn, type HeroPick } from '@/lib/shop/home-model';
-import { shopMetadata } from '@/lib/shop/meta';
+import { JsonLd } from '@/components/shop/JsonLd';
+import { shopLd } from '@/lib/seo/shop-ld';
+import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { hrefIn } from '@/lib/shop/lang';
 import { homeReviews } from '@/lib/shop/reviews';
 
@@ -54,6 +57,10 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
   const want = (id: HomeSectionId) => on.includes(id);
   const newIn = c.s['home.newIn'];
   const rev = c.s['home.reviews'];
+  // PR 222: the shop itself and its website name for search engines (only what the owner filled in), read alongside
+  const ldBlocks = shopOrigin(c.storeId)
+    .then((origin) => (origin ? shopLd(c, origin) : []))
+    .catch(() => []);
   const [slides, leads, cards, reviews, flash] = await Promise.all([
     want('hero') ? heroPicks(c) : Promise.resolve([]),
     want('categories') ? categoryLeads(c.storeId, c.cats.map((k) => k.slug)) : Promise.resolve({}),
@@ -61,6 +68,7 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     want('reviews') ? homeReviews(c.storeId, rev.count, rev.minRating) : Promise.resolve({ reviews: [], average: 0, total: 0 }),
     want('flash-sale') ? homeFlash(c, search) : Promise.resolve(null),
   ]);
+  const ld = <JsonLd data={await ldBlocks} />;
   const draw: Partial<Record<HomeSectionId, () => ReactNode>> = {
     hero: () => <HomeHero c={c} media={slides.length ? <HomeHeroSlides c={c} picks={slides} /> : undefined} />,
     categories: () => <HomeCategories c={c} leads={leads} />,
@@ -79,11 +87,13 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
   // H9 · the sliding rows fade at both edges unless the owner switched it off
   return c.s['home.rowFade'] ? (
     <>
+      {ld}
       {body}
       {desk}
     </>
   ) : (
     <div className="hm-nofade" style={{ display: 'contents' }}>
+      {ld}
       {body}
       {desk}
     </div>

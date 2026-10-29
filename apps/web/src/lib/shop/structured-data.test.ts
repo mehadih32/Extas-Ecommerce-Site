@@ -2,7 +2,7 @@
 // lowest and highest, in stock only with a piece to sell, and never a rating.
 import type { ImageSource } from '@extas/media';
 import { describe, expect, it } from 'vitest';
-import { breadcrumbLd, itemListLd, largestUrl, ldJson, majorPrice, productLd, type LdProduct } from './structured-data';
+import { breadcrumbLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, setInStock, setLd, websiteLd, type LdProduct, type LdSet, type LdShop } from './structured-data';
 
 const origin = new URL('https://shop.example.test');
 const base: LdProduct = {
@@ -84,5 +84,78 @@ describe('structured data', () => {
     } as unknown as ImageSource;
     expect(largestUrl(src)).toBe('/m/j1200.jpg');
     expect(largestUrl(null)).toBeNull();
+  });
+
+  // ---- PR 222 ----
+
+  it('PR 222: the struck price only where the page shows one, above the price, on a single offer', () => {
+    const was = { ...base, wasPrice: true, variants: [{ priceMinor: 85000, stock: 3, wasMinor: 100000 }, { priceMinor: 85000, stock: 1, wasMinor: 100000 }] };
+    const offer = (productLd(origin, was)!.offers as Record<string, unknown>);
+    expect(offer.priceSpecification).toEqual([{ '@type': 'UnitPriceSpecification', priceType: 'https://schema.org/StrikethroughPrice', price: '1000.00', priceCurrency: 'BDT' }]);
+    // the switch off, no struck price, a struck price not above the price, or two different ones: none
+    expect((productLd(origin, { ...was, wasPrice: false })!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
+    expect((productLd(origin, base)!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
+    expect((productLd(origin, { ...was, variants: [{ priceMinor: 85000, stock: 1, wasMinor: 85000 }] })!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
+    expect((productLd(origin, { ...was, variants: [{ priceMinor: 85000, stock: 1, wasMinor: 100000 }, { priceMinor: 85000, stock: 1, wasMinor: null }] })!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
+  });
+
+  const shop: LdShop = { name: 'Sample Shop', href: '/', lang: 'en', logo: '/media/logo.png', phone: '+8801700000222', email: 'help@example.test', sameAs: ['https://social.example.test/sample', 'http://insecure.example.test'], languages: ['en', 'bn'] };
+
+  it('PR 222: the shop on its home page, with only what the owner filled in', () => {
+    expect(organizationLd(origin, shop)).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Sample Shop',
+      url: 'https://shop.example.test/',
+      logo: 'https://shop.example.test/media/logo.png',
+      contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer service', telephone: '+8801700000222', email: 'help@example.test', availableLanguage: ['en', 'bn'] }],
+      sameAs: ['https://social.example.test/sample'],
+    });
+    const bare = organizationLd(origin, { ...shop, logo: null, phone: null, email: null, sameAs: [] })!;
+    expect(Object.keys(bare).sort()).toEqual(['@context', '@type', 'name', 'url']);
+    expect(organizationLd(origin, { ...shop, name: ' ' })).toBeNull();
+    expect(websiteLd(origin, { name: 'Sample Shop', href: '/bn', lang: 'bn' })).toEqual({ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Sample Shop', url: 'https://shop.example.test/bn', inLanguage: 'bn' });
+    expect(websiteLd(origin, { name: '', href: '/', lang: 'en' })).toBeNull();
+  });
+
+  it('PR 222: a set is a Product with one Offer at the set price; in stock only while every piece can be sold', () => {
+    const slots = [
+      { productId: 'p1', colourIds: [], sizeIds: [], fixedVariantId: null },
+      { productId: 'p2', colourIds: ['c1'], sizeIds: [], fixedVariantId: null },
+    ];
+    const variants = [
+      { id: 'v1', productId: 'p1', colourId: 'c1', sizeId: 's1', sellable: 2 },
+      { id: 'v2', productId: 'p2', colourId: 'c1', sizeId: 's1', sellable: 1 },
+      { id: 'v3', productId: 'p2', colourId: 'c2', sizeId: 's1', sellable: 9 },
+    ];
+    expect(setInStock(slots, variants)).toBe(true);
+    // the allowed colour of the second piece is sold out (another colour does not count)
+    expect(setInStock(slots, variants.map((v) => (v.id === 'v2' ? { ...v, sellable: 0 } : v)))).toBe(false);
+    // the same product twice needs two pieces
+    const twice = [slots[0]!, { ...slots[0]! }];
+    expect(setInStock(twice, variants)).toBe(true);
+    expect(setInStock(twice, variants.map((v) => (v.id === 'v1' ? { ...v, sellable: 1 } : v)))).toBe(false);
+    expect(setInStock([], variants)).toBe(false);
+
+    const set: LdSet = { name: 'Sample duo', href: '/combo/sample-duo', description: null, images: [], currency: 'BDT', payMinor: 280000, wasMinor: 320000, wasPrice: true, inStock: true };
+    expect(setLd(origin, set)).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Sample duo',
+      url: 'https://shop.example.test/combo/sample-duo',
+      offers: {
+        '@type': 'Offer',
+        url: 'https://shop.example.test/combo/sample-duo',
+        priceCurrency: 'BDT',
+        price: '2800.00',
+        priceSpecification: [{ '@type': 'UnitPriceSpecification', priceType: 'https://schema.org/StrikethroughPrice', price: '3200.00', priceCurrency: 'BDT' }],
+        availability: 'https://schema.org/InStock',
+        itemCondition: 'https://schema.org/NewCondition',
+      },
+    });
+    expect((setLd(origin, { ...set, inStock: false, wasMinor: null })!.offers as Record<string, unknown>)).toMatchObject({ availability: 'https://schema.org/OutOfStock' });
+    expect((setLd(origin, { ...set, wasPrice: false })!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
+    expect(setLd(origin, { ...set, payMinor: null })).toBeNull();
+    expect(JSON.stringify(setLd(origin, set))).not.toContain('aggregateRating');
   });
 });

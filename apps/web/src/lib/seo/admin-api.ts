@@ -20,7 +20,17 @@ import { primaryDomain } from './site';
 /** The settings the SEO page shows and saves (each PR adds its own). */
 // PR 221: the page templates, the product templates and lengths of Names & links (PR 590) shown here with them, and the
 // AI drafts switch.
-export const SEO_KEYS = ['seo.indexing', 'seo.titles', 'naming.seoTitleTemplate', 'naming.metaDescriptionTemplate', 'naming.seoTitleMaxChars', 'naming.metaDescriptionMaxChars', 'seo.aiDrafts'] as const satisfies readonly Key[];
+// PR 222: which structured data the pages carry.
+export const SEO_KEYS = [
+  'seo.indexing',
+  'seo.titles',
+  'naming.seoTitleTemplate',
+  'naming.metaDescriptionTemplate',
+  'naming.seoTitleMaxChars',
+  'naming.metaDescriptionMaxChars',
+  'seo.aiDrafts',
+  'seo.structuredData',
+] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 
 const isSeoKey = (k: unknown): k is SeoKey => typeof k === 'string' && (SEO_KEYS as readonly string[]).includes(k);

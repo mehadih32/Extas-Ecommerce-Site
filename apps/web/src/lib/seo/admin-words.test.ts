@@ -15,11 +15,13 @@ function word(d: unknown, key: string): unknown {
 }
 
 // the families the screens fill in with a variable, each with every value it can take
+const SD = ['breadcrumbs', 'itemList', 'product', 'wasPrice', 'combo', 'organization', 'website'];
 const families = [
   ...['title', 'description'].flatMap((f) => ['en', 'bn'].map((l) => `titles.field.${f}.${l}`)),
   ...['title', 'description'].map((f) => `titles.max.${f}`),
   ...[...new Set([...namingTokens, ...Object.values(SEO_TEMPLATE_TOKENS).flat()])].flatMap((t) => [`titles.token.${t}`, `titles.sample.${t}`]),
   ...SEO_PAGE_TYPES.map((k) => `indexing.page.${k}`),
+  ...SD.map((k) => `sd.part.${k}`),
   ...['product', 'category'].map((k) => `ai.subject.${k}`),
   ...['en', 'bn'].map((k) => `ai.lang.${k}`),
 ];
