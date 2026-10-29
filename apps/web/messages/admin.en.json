@@ -230,6 +230,19 @@
         "senderId": "Sender id the gateway gave you (its number; the masking name is set in Messages → Channels & limits)",
         "baseUrl": "Address — only for a test server"
       }
+    },
+    "whatsappCloud": {
+      "name": "WhatsApp Business (Meta)",
+      "desc": "Order WhatsApp messages, their delivery receipts and the customer's replies. Mock until the keys are in and the test (reading the phone number) passes: nothing is sent before that. Webhook address: /api/whatsapp/webhook",
+      "fields": {
+        "accessToken": "Access token (Meta app → WhatsApp → API setup; a permanent system-user token)",
+        "appSecret": "App secret (Meta app → Settings → Basic) — checks that the webhook really comes from Meta",
+        "verifyToken": "Verify token — any long word you choose; type the same one in Meta's webhook settings",
+        "phoneNumberId": "Phone number ID (Meta app → WhatsApp → API setup)",
+        "businessAccountId": "WhatsApp Business account ID (the templates live there)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
     }
   },
   "errors": {

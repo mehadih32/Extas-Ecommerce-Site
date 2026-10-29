@@ -110,4 +110,19 @@ describe.skipIf(!HAS_TEST_DB)('Messages admin API on PostgreSQL', () => {
     expect((await api('POST', ['channels'], {})).status).toBe(405);
     expect((await api('GET', ['channels'], undefined, '')).status).toBe(401);
   });
+
+  it('PR 292: WhatsApp templates — the practice sender plays the provider; sync and submit routes check their input', async () => {
+    const r = await api('GET', ['whatsapp', 'templates']);
+    expect(r.status).toBe(200);
+    expect(r.body.templates).toMatchObject({ provider: 'mockWhatsApp', mode: 'MOCK', canSync: true, perms: { write: true } });
+    const s = await api('POST', ['whatsapp', 'templates', 'sync']);
+    expect(s.status).toBe(200);
+    expect(s.body.sync.matched).toBe(0);
+    expect((await api('POST', ['whatsapp', 'templates', 'not-an-id', 'submit'])).body.error).toBe('INVALID_INPUT');
+    expect((await api('POST', ['whatsapp', 'templates', '0195a3c0-0000-7000-8000-000000000000', 'submit'])).status).toBe(404);
+    expect((await api('GET', ['whatsapp', 'templates', 'sync'])).status).toBe(405);
+    expect((await api('POST', ['whatsapp', 'templates'])).status).toBe(405);
+    expect((await api('GET', ['whatsapp', 'other'])).status).toBe(404);
+    expect((await api('GET', ['whatsapp', 'templates'], undefined, '')).status).toBe(401);
+  });
 });

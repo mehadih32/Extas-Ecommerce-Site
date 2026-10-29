@@ -357,3 +357,113 @@ export const orderLink = (host: string | null, number: string): string | null =>
 
 /** PR 542 — an advance's pay link on the shop, in the message's language (the shop serves Bengali under `/bn`). */
 export const payLink = (host: string | null, token: string | null, lang: 'bn' | 'en'): string | null => (host && token ? `https://${host}${lang === 'bn' ? '/bn' : ''}/pay/${encodeURIComponent(token)}` : null);
+
+/** PR 292 — a template's name with WhatsApp: its key in lower case, the dots as underscores (`order.placed` → `order_placed`). */
+export const waTemplateName = (key: string): string =>
+  key
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .toLowerCase()
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 512);
+
+/** PR 292 — the body WhatsApp approves: each `{token}` in turn as {{1}}, {{2}} …, and the tokens in that order. */
+export function metaBody(body: string): { text: string; tokens: string[] } {
+  const tokens: string[] = [];
+  const text = body.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (_m, k: string) => {
+    tokens.push(k);
+    return `{{${tokens.length}}}`;
+  });
+  return { text, tokens };
+}
+
+/** PR 292, 298 — a customer's reply as the shop reads it: Bengali digits as Western ones, spaces squeezed, upper case. */
+export const replyWords = (text: string): string =>
+  text
+    .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+
+/** PR 292 — a self-confirm answer in a reply ("1", " ১ ", "1." …), or null for anything else. */
+export function selfConfirmAnswerOf(text: string): SelfConfirmAnswer | null {
+  const m = /^([123])[.)!]?$/.exec(replyWords(text));
+  return m ? (Number(m[1]) as SelfConfirmAnswer) : null;
+}
+
+/**
+ * PR 292 — the values of an approved WhatsApp template, in the order `metaBody` numbered its tokens: each token filled
+ * as the message would fill it. WhatsApp refuses an empty value, so a token with nothing to say is sent as a dash.
+ */
+export function templateValues(body: string, v: RenderInput): string[] {
+  return tokensIn(body).map((tok) => {
+    const r = render(`{${tok}}`, null, v);
+    return r.ok && r.text ? r.text : '-';
+  });
+}
+
+/** PR 292 — why WhatsApp would refuse a body for approval: a value first or last, two values side by side. */
+export const WA_BODY_PROBLEMS = ['STARTS_WITH_VALUE', 'ENDS_WITH_VALUE', 'VALUES_TOUCH', 'TOO_LONG'] as const;
+export type WaBodyProblem = (typeof WA_BODY_PROBLEMS)[number];
+
+/** The provider's rules for a template body (Meta: at most 1,024 characters; no value at either end or next to another). */
+export function waBodyProblems(body: string): WaBodyProblem[] {
+  const text = metaBody(body).text.trim();
+  const out: WaBodyProblem[] = [];
+  if (/^\{\{\d+\}\}/.test(text)) out.push('STARTS_WITH_VALUE');
+  if (/\{\{\d+\}\}[.!?।]?$/.test(text)) out.push('ENDS_WITH_VALUE');
+  if (/\{\{\d+\}\}\s*\{\{\d+\}\}/.test(text)) out.push('VALUES_TOUCH');
+  if ([...text].length > 1_024) out.push('TOO_LONG');
+  return out;
+}
+
+// ---- PR 292, 505 · the sample order ----
+
+/** The orders a preview is shown for: cash on delivery (all due), prepaid (nothing due) and part-paid (some due). */
+export const SAMPLE_CASES = ['cod', 'prepaid', 'partPaid'] as const;
+export type SampleCase = (typeof SAMPLE_CASES)[number];
+
+/**
+ * PR 292, 505 — the sample order a template's preview and its approval examples are filled with: sample data, never a
+ * real customer (the amounts are only a sample's; nothing is charged or sent from them).
+ */
+export const SAMPLE_ORDER = {
+  customerName: { bn: 'রহিম', en: 'Rahim' },
+  senderName: { bn: 'করিম', en: 'Karim' },
+  orderNumber: '100234',
+  keptNumber: '100235',
+  totalMinor: 249_000,
+  paidMinor: { cod: 0, prepaid: 249_000, partPaid: 100_000 }, // hardcode-ok: a sample order's payments, never a price or a fee
+  advanceMinor: 50_000,
+  payToken: 'sample',
+} as const;
+
+export interface SampleSettings {
+  storeName: string;
+  /** The shop's address (null: links show as missing, as they would in a real message). */
+  host: string | null;
+  currency: string;
+  amountLine: { bn: string; en: string };
+  exactAmount: { due: { bn: string; en: string }; paid: { bn: string; en: string } } | null;
+  /** A cancellation's reason in words (the first one the shop has), for `{cancelReason}`. */
+  cancelReason?: { bn: string; en: string } | null;
+}
+
+/** The words a template is filled with for the sample order, in one language and one payment case. */
+export function sampleInput(s: SampleSettings, lang: 'bn' | 'en', sample: SampleCase): RenderInput {
+  const due = Math.max(0, SAMPLE_ORDER.totalMinor - SAMPLE_ORDER.paidMinor[sample]);
+  return {
+    storeName: s.storeName,
+    customerName: SAMPLE_ORDER.customerName[lang],
+    orderNumber: SAMPLE_ORDER.orderNumber,
+    senderName: SAMPLE_ORDER.senderName[lang],
+    currency: s.currency,
+    dueMinor: due,
+    link: orderLink(s.host, SAMPLE_ORDER.orderNumber),
+    amountLine: s.amountLine[lang],
+    exactAmount: s.exactAmount ? { due: s.exactAmount.due[lang], paid: s.exactAmount.paid[lang] } : null,
+    cancelReason: s.cancelReason?.[lang] ?? '',
+    kept: { number: SAMPLE_ORDER.keptNumber, link: orderLink(s.host, SAMPLE_ORDER.keptNumber) },
+    advance: { amountMinor: SAMPLE_ORDER.advanceMinor, link: payLink(s.host, SAMPLE_ORDER.payToken, lang) },
+  };
+}

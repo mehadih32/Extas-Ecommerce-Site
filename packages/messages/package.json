@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The Messages control centre's engine (S05, CN-019): PR 148 — the order journey's messages by SMS, WhatsApp and e-mail, planned from the order timeline, with the no-double-send guard, caps per order, quiet hours, the amount-due rule (SIM-F-001), the WhatsApp self-confirm (CN-014 idea 5) and the exact-amount line (idea 10); PR 149 — every try logged (append-only), retries on their waits, the message log and a retry by hand. Every channel runs on its mock until the owner types a key in.",
+  "description": "The Messages control centre's engine (S05, CN-019): PR 148 — the order journey's messages by SMS, WhatsApp and e-mail, planned from the order timeline, with the no-double-send guard, caps per order, quiet hours, the amount-due rule (SIM-F-001), the WhatsApp self-confirm (CN-014 idea 5) and the exact-amount line (idea 10); PR 149 — every try logged (append-only), retries on their waits, the message log and a retry by hand; PR 291 — the SMS gateway and Channels & limits; PR 292 — WhatsApp Business: approved templates only for a live send, their approval, receipts and replies through the signed webhook. Every channel runs on its mock until the owner types a key in.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

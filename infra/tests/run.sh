@@ -177,11 +177,12 @@ check "gate: 30 days, Secure and HttpOnly" "$(grep -c 'Max-Age=2592000; Secure; 
 check "gate: a token that is not hex is refused" "$(bash "$AB" "# fp" extas H 'x;y' 30 >/dev/null 2>&1; echo $?)" "2"
 # Follow-up 80 (PR 196): only POST /api/erp/webhook passes without the preview login (it proves itself with its HMAC
 # signature); the exemption is one negated set of exactly that method and that path, beside the cookie test.
-want_ex="$(printf '\tnot {\n\t\tmethod POST\n\t\tpath /api/erp/webhook\n\t}')"
-check "gate: the ERP webhook POST is the one exemption" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "1:1:1"
-check "gate: the exemption block, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
-check "gate: cookie test and exemption in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "2"
-check "gate: the server re-writes an older gate (fingerprint v3)" "$(grep -c '# preview gate v3 for' ../server/steps/09-stack.sh)" "1"
+# PR 292: and the WhatsApp webhook (GET handshake, signed POST) on its one path, as a second negated set.
+want_ex="$(printf '\tnot {\n\t\tmethod POST\n\t\tpath /api/erp/webhook\n\t}\n\tnot {\n\t\tmethod GET POST\n\t\tpath /api/whatsapp/webhook\n\t}')"
+check "gate: the ERP and WhatsApp webhooks are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "2:2:2"
+check "gate: the exemption blocks, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
+check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "3"
+check "gate: the server re-writes an older gate (fingerprint v4)" "$(grep -c '# preview gate v4 for' ../server/steps/09-stack.sh)" "1"
 # With a Caddy binary (CADDY_BIN, or caddy on PATH), the gate runs for real: the webhook POST reaches the app with no
 # login and no cookie, and nothing else does. CI has no Caddy, so this part runs where one is installed.
 CADDY="${CADDY_BIN:-$(command -v caddy || true)}"
@@ -197,6 +198,8 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   check "gate (caddy): other methods and paths still ask" "$(code "$u/api/erp/webhook"):$(code -X PUT "$u/api/erp/webhook"):$(code -X POST "$u/api/erp/webhook/x"):$(code -X POST "$u/api/erp/webhooks"):$(code -X POST "$u/admin/login"):$(code "$u/")" "401:401:401:401:401:401"
   check "gate (caddy): the cookie and the login still work" "$(code -H "Cookie: extas_preview=$tok" "$u/"):$(code -u extas:gate-pw "$u/"):$(code -u extas:wrong "$u/")" "200:200:401"
   check "gate (caddy): the webhook answer sets no preview cookie" "$(curl -s -D - -o /dev/null -X POST "$u/api/erp/webhook" | grep -ci 'set-cookie' || true)" "0"
+  check "gate (caddy): the WhatsApp webhook GET and POST pass with no login" "$(code "$u/api/whatsapp/webhook?hub.mode=subscribe"):$(code -X POST "$u/api/whatsapp/webhook" -d '{}')" "200:200"
+  check "gate (caddy): its other methods and paths still ask" "$(code -X PUT "$u/api/whatsapp/webhook"):$(code -X DELETE "$u/api/whatsapp/webhook"):$(code "$u/api/whatsapp/webhook/x"):$(code -X POST "$u/api/whatsapp"):$(code "$u/api/whatsapp/webhooks")" "401:401:401:401:401"
   kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   rm -rf "$T"
 else

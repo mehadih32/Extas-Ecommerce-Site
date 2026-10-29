@@ -4,7 +4,7 @@
 // service (B6.5) and scope every row by `storeId` (A4.1).
 import type { AdapterMode, Prisma, PrismaClient } from '@extas/db/client';
 import { audit, can, requirePermission, type Actor, type RequestContext } from '@extas/auth';
-import type { Connections, EmailSender, SmsSender, WhatsAppSender } from '@extas/adapters';
+import type { Connections, EmailSender, SmsSender, WhatsAppSender, WhatsAppTemplateDraft, WhatsAppTemplateRef, WhatsAppTemplateState, WhatsAppTemplateStatus } from '@extas/adapters';
 import { storeTarget, type Key, type MessageChannel, type Value } from '@extas/settings';
 import type { z } from 'zod';
 
@@ -31,6 +31,8 @@ export interface OutgoingMessage {
   purpose: string;
   /** PR 291 — SMS only: the shop's approved masking name, or null for the gateway's own number. */
   senderId?: string | null;
+  /** PR 292 — WhatsApp only: the provider's approved template (name, language, the body's values in order). */
+  template?: WhatsAppTemplateRef | null;
 }
 
 export type SendResult =
@@ -50,6 +52,9 @@ export interface Sender {
   send(m: OutgoingMessage): Promise<SendResult>;
   /** PR 291 — the credit left on the provider's account (absent or null when the provider does not say). */
   balance?(): Promise<SenderBalance | null>;
+  /** PR 292 — WhatsApp: the provider's word on every template, and sending one for approval. */
+  templates?(): Promise<WhatsAppTemplateStatus[]>;
+  submitTemplate?(t: WhatsAppTemplateDraft): Promise<{ id: string; status: WhatsAppTemplateState }>;
 }
 
 export interface MessagesDeps {
@@ -85,9 +90,12 @@ export function sendersFrom(connections: Pick<Connections, 'use'>): MessagesDeps
         provider: c.provider,
         mode: c.mode,
         send: async (m) => {
-          const r = await c.api.send({ to: m.to, text: m.text, purpose: m.purpose });
+          const r = await c.api.send({ to: m.to, text: m.text, purpose: m.purpose, template: m.template ?? null });
           return r.ok ? r : { ok: false, error: r.error, unreachable: r.notOnWhatsApp === true };
         },
+        // PR 292: the templates' approval (the practice sender plays the provider)
+        ...(c.api.templates ? { templates: () => c.api.templates!() } : {}),
+        ...(c.api.submitTemplate ? { submitTemplate: (t: WhatsAppTemplateDraft) => c.api.submitTemplate!(t) } : {}),
       };
     }
     const c = await connections.use<EmailSender>('EMAIL', { storeId });
@@ -97,7 +105,7 @@ export function sendersFrom(connections: Pick<Connections, 'use'>): MessagesDeps
 
 export class MessagesError extends Error {
   constructor(
-    public readonly code: 'INVALID_INPUT' | 'NOT_FOUND' | 'STALE' | 'NOT_RETRYABLE' | 'IDEMPOTENCY_MISMATCH',
+    public readonly code: 'INVALID_INPUT' | 'NOT_FOUND' | 'STALE' | 'NOT_RETRYABLE' | 'IDEMPOTENCY_MISMATCH' | 'PROVIDER_ERROR',
     message: string,
     public readonly details: string[] = [],
     public readonly data?: Record<string, unknown>,
@@ -107,7 +115,8 @@ export class MessagesError extends Error {
   }
 
   get status(): number {
-    return this.code === 'NOT_FOUND' ? 404 : this.code === 'INVALID_INPUT' ? 400 : 409;
+    // PR 292: the provider refused or did not answer (its words are in the details)
+    return this.code === 'NOT_FOUND' ? 404 : this.code === 'INVALID_INPUT' ? 400 : this.code === 'PROVIDER_ERROR' ? 502 : 409;
   }
 }
 

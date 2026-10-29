@@ -69,7 +69,9 @@
       "STAFF_RETRY": "Tried again by a person",
       "UNREACHABLE": "The number cannot get messages",
       "NO_SENDER": "The channel could not be reached",
-      "SEND_FAILED": "The provider refused it"
+      "SEND_FAILED": "The provider refused it",
+      "PROVIDER_FAILED": "WhatsApp said it could not be delivered",
+      "WA_TEMPLATE_NOT_APPROVED": "WhatsApp has not approved this text yet, so the other channel was used"
     },
     "log": {
       "title": "Message log",
@@ -163,12 +165,52 @@
       "network": "No connection. Try again.",
       "other": "It could not be saved. Try again.",
       "NOT_RETRYABLE": "This message cannot be tried again (it is not failed, or it already went another way).",
-      "NOT_FOUND": "It is not there any more. Reload the page."
+      "NOT_FOUND": "It is not there any more. Reload the page.",
+      "PROVIDER_ERROR": "The service did not answer. Try again in a minute. ({fields})"
     },
     "provider": {
       "mockSms": "Practice SMS",
       "mockWhatsApp": "Practice WhatsApp",
       "mockEmail": "Practice e-mail"
+    },
+    "wa": {
+      "title": "WhatsApp templates",
+      "sub": "A WhatsApp the shop starts goes only with words Meta approved. Send each text for approval here and read Meta's answer back.",
+      "liveNote": "Live: until a text is approved, its message goes by the other channel (the step's fallback).",
+      "mockNote": "Practice mode: messages are not really sent, and the practice service approves at once. Nothing goes to Meta.",
+      "sync": "Check approvals",
+      "syncing": "Checking…",
+      "synced": "Meta's answers were read again.",
+      "noSync": "This service cannot list templates. Connect WhatsApp in Settings → Keys & connections.",
+      "none": "No WhatsApp texts yet. They are added in Messages → Templates.",
+      "values": "{n} values",
+      "lang": {
+        "bn": "Bengali",
+        "en": "English"
+      },
+      "col": {
+        "template": "Text",
+        "status": "Meta's answer",
+        "checked": "Last checked"
+      },
+      "state": {
+        "none": "Not sent yet",
+        "PENDING": "Waiting",
+        "APPROVED": "Approved",
+        "REJECTED": "Refused",
+        "PAUSED": "Paused by Meta",
+        "DISABLED": "Turned off by Meta"
+      },
+      "problem": {
+        "STARTS_WITH_VALUE": "Meta refuses a text that begins with a {word}. Put a word before it.",
+        "ENDS_WITH_VALUE": "Meta refuses a text that ends with a {word}. Put a word after it.",
+        "VALUES_TOUCH": "Two {words} side by side are refused. Put a word between them.",
+        "TOO_LONG": "Too long for WhatsApp (1,024 characters at most)."
+      },
+      "submit": "Send for approval",
+      "submitting": "Sending…",
+      "submitted": "Sent. Meta usually answers within a day; press Check approvals then.",
+      "submitAsk": "Send this text to Meta for approval? The sample order fills the {words} as examples."
     }
   }
 }

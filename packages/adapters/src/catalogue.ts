@@ -159,6 +159,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // S14 · PR 292 — the WhatsApp Business Platform (Meta's Cloud API): the access token, the app secret (the webhook's
+  // signature key) and the webhook's verify token, with the phone number id and the business account id. The mock serves
+  // until the Test (reading the phone number) passes; one WhatsApp provider is on at a time.
+  {
+    id: 'whatsappCloud',
+    kind: 'WHATSAPP',
+    provider: 'whatsappCloud',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }, { field: 'appSecret' }, { field: 'verifyToken' }],
+    config: [{ field: 'phoneNumberId' }, { field: 'businessAccountId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

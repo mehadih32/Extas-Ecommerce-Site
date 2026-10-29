@@ -33,12 +33,15 @@
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { dueOf } from '@extas/orders/pure';
-import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates } from '@extas/settings';
-import { nowOf, setting, TX, type MessagesDeps, type SendResult } from './context';
-import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type TimelineEvent } from './pure';
+import type { CancelCode, CancelNotice, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates, WhatsAppSettings } from '@extas/settings';
+import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, templateValues, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
+
+/** PR 292 — the WhatsApps that answer the customer inside his own 24 hours: free text is allowed (no approved template). */
+export const WA_FREE_TEXT: ReadonlySet<string> = new Set([SELF_CONFIRM_ANSWER]);
 
 /** The order statuses whose timeline rows start a step (the planner reads only these). */
 const STEP_STATUSES = ['CONFIRMED', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED', 'CANCELLED', 'ON_HOLD', 'AWAITING_ADVANCE'] as const;
@@ -71,7 +74,7 @@ type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER_SELECT }>;
 
 const emailOf = (s: string | null | undefined): string | null => (s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()) ? s.trim() : null);
 /** A phone for SMS and WhatsApp: a Bangladeshi number in any form, or any number already in +country form. */
-function phoneOf(s: string | null | undefined): string | null {
+export function phoneOf(s: string | null | undefined): string | null {
   if (!s) return null;
   const bd = phoneNormalizeBD(s);
   if (bd.ok) return bd.e164;
@@ -184,7 +187,7 @@ export async function planMessages(deps: MessagesDeps, storeId: number): Promise
 
 /** The template rows of a store for a key and channel: the message's language first, then the other one. */
 async function templateOf(deps: MessagesDeps, storeId: number, key: string, channel: MessageChannel, locale: 'bn' | 'en') {
-  const rows = await deps.db.notificationTemplate.findMany({ where: { storeId, key, channel, archivedAt: null }, select: { id: true, locale: true, subject: true, body: true } });
+  const rows = await deps.db.notificationTemplate.findMany({ where: { storeId, key, channel, archivedAt: null }, select: { id: true, locale: true, subject: true, body: true, providerTemplateId: true, providerStatus: true } });
   // `enabled` is not read: since PR 148 the journey's step switch decides whether a step sends; a template is its words.
   return rows.find((r) => r.locale === locale) ?? rows.find((r) => r.locale === (locale === 'bn' ? 'en' : 'bn')) ?? null;
 }
@@ -216,11 +219,13 @@ export interface RunContext {
   /** PR 291: the SMS masking name (null: none yet) and what one SMS part costs (null: not known). */
   masking: SmsMasking | null;
   smsRates: SmsRates | null;
+  /** PR 292: the WhatsApp templates' language codes (an approved template goes by its name and language). */
+  whatsapp: WhatsAppSettings;
   senders: Map<MessageChannel, Awaited<ReturnType<MessagesDeps['sender']>>>;
 }
 
 export async function runContext(deps: MessagesDeps, storeId: number): Promise<RunContext> {
-  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance, masking, smsRates] = await Promise.all([
+  const [master, journey, caps, sc, quiet, timeZone, lang, storeLocale, amountLine, exactCfg, exactOn, ownName, store, host, retry, cancelNotice, advance, masking, smsRates, whatsapp] = await Promise.all([
     setting(deps, storeId, 'messages.enabled'),
     setting(deps, storeId, 'messages.journey'),
     setting(deps, storeId, 'messages.caps'),
@@ -240,6 +245,7 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     setting(deps, storeId, 'orders.advanceRequest'),
     setting(deps, storeId, 'messages.sms.masking'),
     setting(deps, storeId, 'messages.sms.rates'),
+    setting(deps, storeId, 'messages.whatsapp'),
   ]);
   return {
     storeId,
@@ -260,8 +266,16 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     advanceTemplate: advance.template,
     masking,
     smsRates,
+    whatsapp,
     senders: new Map(),
   };
+}
+
+/** PR 292, 505 — the shop's own words and address for a sample message (a template's preview, its approval examples). */
+export async function sampleSettingsOf(deps: MessagesDeps, storeId: number): Promise<SampleSettings> {
+  const [c, currency] = await Promise.all([runContext(deps, storeId), setting(deps, storeId, 'store.currency')]);
+  const reason = Object.values(c.cancelNotice.reasons).find((r) => r !== undefined) ?? null;
+  return { storeName: c.storeName, host: c.host, currency, amountLine: c.amountLine, exactAmount: c.exact ? { due: c.exact.due, paid: c.exact.paid } : null, cancelReason: reason };
 }
 
 /** The statuses of an order that is not going ahead any more (or never went): never "the order that goes ahead". */
@@ -345,7 +359,7 @@ async function close(deps: MessagesDeps, c: RunContext, row: Row, status: Extrac
 }
 
 /** The step's fallback channel, when the row was the step's own channel and the fallback is another one. */
-async function queueFallback(deps: MessagesDeps, c: RunContext, row: Row): Promise<void> {
+export async function queueFallback(deps: MessagesDeps, c: RunContext, row: Row): Promise<void> {
   const cfg = c.journey[row.step as JourneyStep];
   if (!cfg || !row.orderId || cfg.fallback === 'NONE' || row.channel !== cfg.channel || cfg.fallback === row.channel) return;
   const o = await deps.db.order.findUnique({ where: { id: row.orderId }, select: { customerId: true, phone: true, email: true, isGift: true, giftSenderContact: true } });
@@ -397,7 +411,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   if (!t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }, true).then(() => 'SKIPPED');
   const lang = t.locale === 'en' ? 'en' : 'bn';
   const wantsAdvance = [...tokensIn(t.body), ...tokensIn(t.subject ?? '')].some((x) => ADVANCE_TOKENS.has(x));
-  const words = render(t.body, row.channel === 'EMAIL' ? (t.subject ?? '') : null, {
+  const input: RenderInput = {
     storeName: c.storeName,
     customerName: (o.isGift ? o.giftSenderName : o.customerName)?.trim() || '',
     orderNumber: o.number,
@@ -410,7 +424,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
     cancelReason: code ? (c.cancelNotice.reasons[code]?.[lang] ?? '') : '',
     kept: dup && kept ? { number: kept.number, link: orderLink(c.host, kept.number) } : null,
     advance: wantsAdvance ? await advanceOf(deps, c, o, lang) : null,
-  });
+  };
+  const words = render(t.body, row.channel === 'EMAIL' ? (t.subject ?? '') : null, input);
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
   const attempt = row.attempts + 1;
   // PR 291: an SMS goes from the approved masking name (else the gateway's own number) and takes this many parts
@@ -418,19 +433,30 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const senderId = sms ? maskingSender(c.masking) : null;
   const segments = sms ? smsParts(words.text).parts : null;
   let sender = c.senders.get(row.channel as MessageChannel) ?? null;
-  let r: SendResult;
+  let noSender: string | null = null;
   try {
     if (!sender) {
       sender = await deps.sender(c.storeId, row.channel as MessageChannel);
       c.senders.set(row.channel as MessageChannel, sender);
     }
+  } catch (e) {
+    noSender = `NO_SENDER: ${errorText(e)}`;
+  }
+  // PR 292: a WhatsApp the shop starts goes only as a template the provider approved (its values in order); the practice
+  // sender takes the plain text, and a reply inside the customer's own 24 hours may be free text
+  let waTemplate: OutgoingMessage['template'] = null;
+  if (sender && row.channel === 'WHATSAPP' && sender.mode !== 'MOCK' && !WA_FREE_TEXT.has(row.step ?? '')) {
+    if (t.providerStatus !== 'APPROVED' || !t.providerTemplateId) return close(deps, c, row, 'SKIPPED', 'WA_TEMPLATE_NOT_APPROVED', { recipient: to, templateId: t.id, locale: t.locale }, true).then(() => 'SKIPPED');
+    waTemplate = { name: t.providerTemplateId, language: c.whatsapp.languageCodes[lang], params: templateValues(t.body, input) };
+  }
+  let r: SendResult;
+  if (!sender) r = { ok: false, error: noSender ?? 'NO_SENDER' };
+  else {
     try {
-      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: template, ...(sms ? { senderId } : {}) });
+      r = await sender.send({ to, text: words.text, subject: words.subject, purpose: template, ...(sms ? { senderId } : {}), ...(waTemplate ? { template: waTemplate } : {}) });
     } catch (e) {
       r = { ok: false, error: errorText(e) };
     }
-  } catch (e) {
-    r = { ok: false, error: `NO_SENDER: ${errorText(e)}` };
   }
   const tried = { recipient: to, templateId: t.id, locale: t.locale, provider: sender?.provider ?? null, mode: sender?.mode ?? null, attempts: attempt, segments } satisfies Prisma.NotificationLogUpdateInput;
   const tryRow = (ok: boolean, more: { error?: string; providerMessageId?: string }) =>
