@@ -148,6 +148,124 @@
         "view": "No one in this view",
         "viewBody": "Other views may have them."
       }
+    },
+    "profile": {
+      "crumb": "All customers",
+      "sub": "{phone} · since {since}",
+      "subSource": "{phone} · {source} · since {since}",
+      "merged": "This profile was merged into {name}. You are seeing the person it belongs to.",
+      "tabsAria": "Customer page parts",
+      "tab": {
+        "overview": "Overview",
+        "orders": "Orders",
+        "exchanges": "Exchanges",
+        "support": "Support"
+      },
+      "kpi": {
+        "orders": "Orders",
+        "ordersNote": "{n} delivered",
+        "sales": "Sales",
+        "salesNote": "delivered orders only",
+        "ordered": "Ordered value",
+        "orderedNote": "every placed order",
+        "refused": "Refused",
+        "refusedNote": "{n} more were the shop's own mistake, not counted",
+        "refusedNoteNone": "at the door, not the shop's fault"
+      },
+      "hist": {
+        "title": "What his orders came to",
+        "orders": "orders",
+        "delivered": "delivered",
+        "refused": "refused",
+        "ourFault": "shop's fault",
+        "cancelled": "cancelled",
+        "returns": "returned after delivery",
+        "open": "still open",
+        "noAnswer": "calls not answered"
+      },
+      "numbers": {
+        "title": "Numbers",
+        "own": "his own",
+        "copy": "Copy",
+        "copied": "Copied",
+        "call": "Call",
+        "masked": "Only people allowed the full number see it."
+      },
+      "profiles": {
+        "title": "Profiles of this person",
+        "main": "Stays",
+        "mergedAt": "merged {at}",
+        "login": "shop login",
+        "review": "Split or check in To review"
+      },
+      "orders": {
+        "title": "Orders",
+        "none": "No order yet.",
+        "guest": "guest order",
+        "gift": "gift",
+        "older": "Older",
+        "newer": "Newer",
+        "all": "All orders ({n})",
+        "open": "Open the order"
+      },
+      "exchanges": {
+        "title": "Exchanges",
+        "none": "No exchange yet."
+      },
+      "support": {
+        "title": "Support history",
+        "none": "No conversation or ticket yet. The support desk will fill this.",
+        "conversation": "Conversation",
+        "ticket": "Ticket"
+      },
+      "consent": {
+        "title": "Offers",
+        "sms": "SMS offers",
+        "whatsapp": "WhatsApp offers",
+        "yes": "yes",
+        "no": "no",
+        "unknown": "not asked"
+      },
+      "wallet": {
+        "title": "Wallet",
+        "balance": "{v}",
+        "none": "No wallet yet.",
+        "profile": "{name}"
+      },
+      "looks": {
+        "title": "Who looked at this customer",
+        "none": "Nobody yet.",
+        "line": "{by} · {at}",
+        "action": {
+          "open": "opened the page",
+          "copy": "copied the number",
+          "call": "called"
+        },
+        "system": "the system"
+      },
+      "address": "The address is shown only inside an order.",
+      "cod": "COD rule: {v}",
+      "mergeWith": {
+        "go": "Merge with…",
+        "label": "The other profile's phone",
+        "find": "Find",
+        "none": "No customer has this number.",
+        "same": "That number is this person's own.",
+        "busy": "Looking…"
+      },
+      "notFound": "This customer does not exist (or was erased).",
+      "back": "Back to all customers",
+      "xst": {
+        "REQUESTED": "Asked",
+        "APPROVED": "Approved",
+        "PICKUP_BOOKED": "Pickup booked",
+        "RECEIVED": "Received back",
+        "QC_PASSED": "Checked, fine",
+        "QC_FAILED": "Checked, not accepted",
+        "COMPLETED": "Done",
+        "REJECTED": "Refused",
+        "CANCELLED": "Cancelled"
+      }
     }
   }
 }

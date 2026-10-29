@@ -2,6 +2,7 @@
 // one that would join it, side by side (stacked on a phone), with the rules that matched, each profile's number as this
 // person may see it, its orders, Sales (delivered only) and last order; then Merge and "Not the same person" for a
 // person with `customers.merge`. No street address is shown here (it stays inside an order).
+import Link from 'next/link';
 import type { MergePair, PairSide } from '@extas/customers';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import type { AdminView } from '@/lib/admin-page';
@@ -24,7 +25,9 @@ export function Side({ view, s, role, money, when }: { view: AdminView; s: PairS
           {initials(s.name)}
         </span>
         <div className="a2-prt">
-          <b>{s.name ?? t(d, 'cus.side.noName')}</b>
+          <b>
+            <Link className="a2-b" href={`/admin/customers/${s.id}`}>{s.name ?? t(d, 'cus.side.noName')}</Link>
+          </b>
           <span className="a2-mono">{s.phone?.text ?? t(d, 'cus.side.noPhone')}</span>
         </div>
         <span className={`a2-pill ${role === 'stays' ? 'ok' : 'line'}`}>{t(d, `cus.side.${role}`)}</span>

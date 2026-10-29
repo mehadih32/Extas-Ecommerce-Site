@@ -123,7 +123,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     base: '/admin/customers',
     guide: 'customers',
     tabs: [
-      { id: 'all', pages: [{ href: '/admin/customers', perm: 'customers.read', keys: ['customers'] }] },
+      { id: 'all', pages: [{ href: '/admin/customers', perm: 'customers.read', keys: ['customers', 'customer'] }] },
       { id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] },
     ],
   },

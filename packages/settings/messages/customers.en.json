@@ -14,6 +14,10 @@
     "list": {
       "label": "Customers list and its views",
       "help": "How many customers one page of the Customers list shows; how many orders make a customer \"Returning\" (fewer is \"New\"); after how many days without an order a customer who already had a delivery shows under \"At risk\"; and the delivered spend (Sales, delivered orders only) that makes a customer \"VIP\". The VIP figure is empty as it ships: the VIP view stays hidden until you type your own figure. Nothing here changes a price, COD or an offer; the views only sort who is who."
+    },
+    "profile": {
+      "label": "One customer's page",
+      "help": "How many orders one customer's page lists before \"Older\"; how many exchanges and support conversations each of its lists shows; and how many lines of \"Who looked at this customer\" (every open of the page and every copy or call of the full number, with who and when) the owner sees there (0 hides the card; the full log stays). Nothing here changes what is recorded."
     }
   }
 }

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Customers (S14, BACKEND-ARCHITECTURE §5.5; Blueprint B5): one customer record keyed by phone, the single view over a person's merged profiles and numbers, the merge rules, merges and splits by a person only (nothing moves or is deleted) and who looked at a customer (PR 284); the Customers list with its views (PR 285). Phone numbers are masked for anyone without the full-number key.",
+  "description": "Customers (S14, BACKEND-ARCHITECTURE §5.5; Blueprint B5): one customer record keyed by phone, the single view over a person's merged profiles and numbers, the merge rules, merges and splits by a person only (nothing moves or is deleted) and who looked at a customer (PR 284); the Customers list with its views (PR 285); one customer's page with his orders, exchanges, support history and who looked (PR 286). Phone numbers are masked for anyone without the full-number key.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

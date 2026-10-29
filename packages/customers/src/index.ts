@@ -12,11 +12,15 @@
 // PR 285: the Customers list — one row per person with his orders, Sales beside Ordered value, refusals that were not
 // the shop's fault and exchanges; the owner's views (New, Returning, VIP, At risk, Refused before, Exchanged, No offers)
 // with their counts, search by name, e-mail or any of his numbers, a source filter and five sorts (list.ts).
+//
+// PR 286: one customer's page — his orders over every profile and number a page at a time, his exchanges, his support
+// history (empty until S22) and "Who looked at this customer" for the owner (profile.ts).
 export * from './access';
 export * from './context';
 export * from './errors';
 export * from './family';
 export * from './list';
 export * from './merge';
+export * from './profile';
 export * from './pure';
 export * from './view';
