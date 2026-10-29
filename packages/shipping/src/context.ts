@@ -44,9 +44,11 @@ export type ShippingPermission = (typeof SHIPPING_PERMISSIONS)[number];
 /**
  * PR 179–181 — Orders › Packing & print: `fulfilment.read` sees the print run, the recent prints, the handover lists and
  * the picking list (no customer's details); `fulfilment.print` prints courier stickers (they carry the receiver's
- * details); `fulfilment.handover` prints the rider's handover sheet and marks a batch handed over.
+ * details); `fulfilment.handover` prints the rider's handover sheet and marks a batch handed over. PR 182:
+ * `fulfilment.pack` starts picking, checks the pieces, adds the packing photo and marks an order packed;
+ * `fulfilment.photoWaive` is the owner's override of a required photo for one order, with a reason.
  */
-export const FULFIL_PERMISSIONS = ['fulfilment.read', 'fulfilment.print', 'fulfilment.handover'] as const;
+export const FULFIL_PERMISSIONS = ['fulfilment.read', 'fulfilment.print', 'fulfilment.handover', 'fulfilment.pack', 'fulfilment.photoWaive'] as const;
 export type FulfilPermission = (typeof FULFIL_PERMISSIONS)[number];
 
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;

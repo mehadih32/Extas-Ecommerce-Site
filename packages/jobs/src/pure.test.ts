@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
 import { retryDelayMs, retryPolicyOf } from './backoff';
 import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogue';
-import { courierPlanner, courierZonesPlanner, ZONE_TURN_MINUTES } from './courier';
+import { courierPlanner, courierZonesPlanner, packingPhotosPlanner, ZONE_TURN_MINUTES } from './courier';
 import { messagesPlanner } from './messages';
 import { paymentsPlanner } from './payments';
 import { searchPlanner, searchRunKey } from './search';
@@ -55,7 +55,7 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'messages.run', 'orders.pii.purge', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'messages.run', 'orders.pii.purge', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
@@ -111,6 +111,19 @@ describe('PR 6 · catalogue', () => {
     const planned = await courierPlanner(deps, at);
     expect(planned.map((p) => p.key)).toEqual([`courier.track/1/${slotOf(at.getTime(), 30 * 60_000)}`]);
     expect(planned[0]!.queue).toBe('courier');
+  });
+
+  it('PR 182: the packing photo sweep needs a store; one per day slot for a store with a photo past its day, no courier needed', async () => {
+    const job = jobDefinition('packing.photos.expire')!;
+    expect(job.queue).toBe('courier');
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    // store 1 has two photos past their day; store 2 none
+    const db = { store: { findMany: async () => [{ id: 1 }, { id: 2 }] }, packingPhoto: { count: async (q: { where: { storeId: number } }) => (q.where.storeId === 1 ? 2 : 0) } };
+    const at = new Date(Date.UTC(2026, 9, 24, 6, 0, 30));
+    const planned = await packingPhotosPlanner({ db } as never, at);
+    expect(planned.map((p) => p.key)).toEqual([`packing.photos.expire/1/${slotOf(at.getTime(), 24 * 60 * 60_000)}`]);
+    // later the same day: the same run
+    expect((await packingPhotosPlanner({ db } as never, new Date(at.getTime() + 3_600_000))).map((p) => p.key)).toEqual(planned.map((p) => p.key));
   });
 
   it('PR 554: the zone sync turn needs a store; one per store and hour slot with the sync on or a run still going', async () => {

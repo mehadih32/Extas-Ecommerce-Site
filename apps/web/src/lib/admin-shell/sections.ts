@@ -66,10 +66,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
       ] },
       // S08 · PR 179–181: Packing & print (ORD-04) — the print run of courier stickers, the daily picking list and the
-      // rider's handover.
+      // rider's handover. PR 182: Pack (pick, pack and hand over on one screen) is the tab's first page.
       {
         id: 'packing',
         pages: [
+          { href: '/admin/orders/packing', perm: 'fulfilment.read', keys: ['packingPack'] },
           { href: '/admin/orders/packing/print', perm: 'fulfilment.read', keys: ['packingPrint'] },
           { href: '/admin/orders/packing/picking', perm: 'fulfilment.read', keys: ['packingPicking'] },
           { href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] },

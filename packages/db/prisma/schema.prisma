@@ -236,6 +236,9 @@ model Store {
   printJobs               PrintJob[]
   handoverBatches         HandoverBatch[]
   packingIssues           PackingIssue[]
+  packingScans            PackingScan[]
+  packingPhotos           PackingPhoto[]
+  packingChecks           PackingCheck[]
   exchanges               Exchange[]
   exchangeItems           ExchangeItem[]
   returnRecords           ReturnRecord[]
@@ -4280,6 +4283,65 @@ model PackingIssue {
   updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
 
   @@index([storeId, resolvedAt])
+}
+
+/// @stage S08 · PR 182 — one piece checked at the packing table: its SKU scanned (or typed when the scanner is off, or
+/// ticked when the owner packs without scanning) against an order line. Rows are only added: a wrong scan is never
+/// stored (it is refused), and a line counts as checked once its scans reach its quantity.
+/// @append-only
+model PackingScan {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store    @relation(fields: [storeId], references: [id])
+  orderId     String   @db.Uuid
+  orderItemId String   @db.Uuid
+  sku         String
+  quantity    Int      @default(1)
+  /// scan · typed · tick
+  source      String
+  scannedById String?  @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, orderId])
+}
+
+/// @stage S08 · PR 182 (CN-014c, SIM-F-010) — a packing proof photo of an order's parcel, kept for the owner's number of
+/// days (`keepUntil`), then archived by the daily sweep (never deleted).
+model PackingPhoto {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store     @relation(fields: [storeId], references: [id])
+  orderId      String    @db.Uuid
+  mediaAssetId String    @db.Uuid
+  takenById    String?   @db.Uuid
+  keepUntil    DateTime? @db.Timestamptz(3)
+  archivedAt   DateTime? @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, orderId])
+  @@index([storeId, keepUntil])
+}
+
+/// @stage S08 · PR 182 — an order's packing check: the scale reading against the pieces' own weights (follow-up 434),
+/// a big gap the packer confirmed, and the owner's override of a required photo with its reason (SIM-F-010).
+model PackingCheck {
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store     @relation(fields: [storeId], references: [id])
+  orderId            String    @db.Uuid
+  weighedGrams       Int?
+  expectedGrams      Int?
+  weighedById        String?   @db.Uuid
+  weighedAt          DateTime? @db.Timestamptz(3)
+  weightGapConfirmed Boolean   @default(false)
+  photoWaivedReason  String?
+  photoWaivedById    String?   @db.Uuid
+  photoWaivedAt      DateTime? @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, orderId])
 }
 
 /// @stage S08 · PR 185–190 — an exchange (size issue, defect, damage or wrong item) with its tier and money box.

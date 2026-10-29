@@ -7,6 +7,9 @@
 // going read on within the owner's `callsPerRun`, and a courier whose list is older than `everyDays` is read again. It is
 // planned once per hour slot for a store with the sync on, or with a run still going (a "Read the list now" of a real
 // courier); the turn itself decides what is due, so an hour planned twice is one run.
+// PR 182: `packing.photos.expire` — the daily sweep of a store's packing photos past the owner's days to keep
+// (packages/shipping packing.ts `expirePackingPhotos`: archived, never deleted). Planned once per day slot for a store
+// that has a photo past its day; it needs no courier connection.
 // This module imports `./keys`, never `./scheduler` (the scheduler imports the catalogue, which imports this).
 import type { ShippingDeps } from '@extas/shipping';
 import type { JobDeps } from './context';
@@ -16,6 +19,8 @@ import type { Planner } from './worker';
 export const COURIER_TRACK_JOB = 'courier.track';
 export const COURIER_QUEUE = 'courier';
 export const COURIER_ZONES_JOB = 'courier.zones';
+/** PR 182: the daily sweep of packing photos past their days to keep. */
+export const PACKING_PHOTOS_JOB = 'packing.photos.expire';
 /** How often a store's zone sync turn is looked at (the owner's `everyDays` decides when a list is read again). */
 export const ZONE_TURN_MINUTES = 60;
 
@@ -51,6 +56,18 @@ export const courierZonesPlanner: Planner = async (deps, now) => {
     if (!cfg.enabled && !(await deps.db.courierZoneSync.count({ where: { storeId: s.id, status: { in: ['QUEUED', 'RUNNING'] } } }))) continue;
     const payload = { storeId: s.id };
     out.push({ queue: COURIER_QUEUE, name: COURIER_ZONES_JOB, payload, key: runKey(COURIER_ZONES_JOB, payload, slotOf(now.getTime(), ZONE_TURN_MINUTES * MINUTE)) });
+  }
+  return out;
+};
+
+/** PR 182: each live store with a packing photo past its day to keep: one sweep per day slot. */
+export const packingPhotosPlanner: Planner = async (deps, now) => {
+  const stores = await deps.db.store.findMany({ where: { status: { not: 'ARCHIVED' }, archivedAt: null }, select: { id: true }, orderBy: { id: 'asc' } });
+  const out: Awaited<ReturnType<Planner>> = [];
+  for (const s of stores) {
+    if (!(await deps.db.packingPhoto.count({ where: { storeId: s.id, archivedAt: null, keepUntil: { lt: now } } }))) continue;
+    const payload = { storeId: s.id };
+    out.push({ queue: COURIER_QUEUE, name: PACKING_PHOTOS_JOB, payload, key: runKey(PACKING_PHOTOS_JOB, payload, slotOf(now.getTime(), 24 * 60 * MINUTE)) });
   }
   return out;
 };

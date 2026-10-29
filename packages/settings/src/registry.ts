@@ -52,6 +52,7 @@ import { advanceRequestSettings } from './registry-advance-request';
 import { walletSettings } from './registry-wallet';
 import { courierSyncSettings } from './registry-courier-sync';
 import { returnsSettings } from './registry-returns';
+import { fulfilmentSettings } from './registry-fulfilment';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1223,6 +1224,8 @@ export const registry = {
   ...courierSyncSettings,
   // ---- S08 · PR 185–191 · exchanges, returns and refused parcels: the exchange tiers and engine, QC, return handling, the exchange charge and the refused-parcel list (registry-returns.ts, version 57). ----
   ...returnsSettings,
+  // ---- S08 · PR 182, 183 · the packing step: how each piece is checked, the packing proof photo (off), the parcel's weight (off), the screen's lists, and what a damaged or missing piece does (registry-fulfilment.ts, version 59). ----
+  ...fulfilmentSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

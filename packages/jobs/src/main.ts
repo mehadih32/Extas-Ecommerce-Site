@@ -20,7 +20,7 @@ import { createVault } from '@extas/vault';
 import { sendersFrom } from '@extas/messages';
 import { meiliFromEnv } from '@extas/search';
 import { errorLine, type JobDeps } from './context';
-import { courierPlanner, courierZonesPlanner } from './courier';
+import { courierPlanner, courierZonesPlanner, packingPhotosPlanner } from './courier';
 import { messagesPlanner } from './messages';
 import { piiPlanner } from './pii';
 import { paymentsPlanner } from './payments';
@@ -76,8 +76,9 @@ async function main(): Promise<void> {
     healthFile: process.env.EXTAS_WORKER_HEALTH_FILE || null,
     // PR 196: verified ERP webhooks waiting to be applied; PR 72: a store whose search index is behind its catalogue;
     // PR 148: each store's message run per slot; PR 159: each store's purge of kept IP, device and location; PR 170:
-    // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner],
+    // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot; PR 182:
+    // each store's packing photos past their days to keep, archived once a day
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

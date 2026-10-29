@@ -363,6 +363,8 @@ export const stepInput = z
  * SIM-F-038: "bought elsewhere", "arrived after Eid" …), so the RTO reports count real reasons instead of "Other".
  * PR 189 (§6.5.0): a parcel coming back — returned, or the refused part of a partial delivery — opens its return record
  * (EXPECTED, every line not kept) in the same transaction, for Receive & QC.
+ * PR 182: `also` runs in the same transaction, under the order's lock (S08's packing checks; throw to refuse), and what
+ * it returns goes on the step's timeline event.
  */
 export async function orderStep(
   deps: OrdersDeps,
@@ -370,7 +372,7 @@ export async function orderStep(
   by: By,
   step: OrderStep,
   input: unknown = {},
-  opts: CommandOptions & { eventData?: Record<string, unknown>; check?: (o: LockedOrder, f: OrderFacts) => void | Promise<void> } = {},
+  opts: CommandOptions & { eventData?: Record<string, unknown>; check?: (o: LockedOrder, f: OrderFacts) => void | Promise<void>; also?: Also } = {},
 ): Promise<CommandResult> {
   const d = parse(stepInput, input, 'step');
   if (step === 'partiallyDelivered' && !d.keptItemIds) throw new OrdersError('INVALID_INPUT', 'a partial delivery names the kept lines', ['keptItemIds']);
@@ -389,7 +391,9 @@ export async function orderStep(
     effect: async (tx, o, _f, { from, now }) => {
       const field = STEP_TIME[step];
       const returnId = step === 'returned' || step === 'partiallyDelivered' ? await openCourierReturn(deps, tx, o, { step, refusalKey: refusal?.key ?? null, keptItemIds: d.keptItemIds ?? [], chargePaidMinor: d.chargePaidMinor ?? 0, now }) : null;
-      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(opts.eventData ?? {}) };
+      // PR 182: the packing step's own checks and records under the order's lock (the SKU scan, the photo, the weight)
+      const more = (await opts.also?.(tx, o, now)) ?? {};
+      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(opts.eventData ?? {}), ...more };
       // PR 184: a pick-up the courier reports before anyone pressed "Handed over" is the hand-over
       const handed = step === 'courierPickedUp' && from !== 'HANDED_OVER' ? { handedOverAt: d.at ?? now } : {};
       return { data: { ...(field ? { [field]: d.at ?? now } : {}), ...handed }, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined };

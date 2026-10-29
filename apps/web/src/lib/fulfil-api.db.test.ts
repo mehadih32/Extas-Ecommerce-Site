@@ -4,7 +4,9 @@
 // drawn with the server's fonts, counted, a second print a reprint; a parcel changed after booking refused (SIM-F-004);
 // the sample sticker. PR 180: a reprint needs its reason, the same press key is the same print, the recent prints; the
 // rider's handover sheet as a real A4 PDF and the batch handed over. PR 181: the picking list as data and as a real
-// PDF, kept with a print job. Every value is a made-up test value.
+// PDF, kept with a print job. PR 182: the packing steps, "Start picking" for all, each piece checked, "Mark packed" with
+// its Idempotency-Key, the refusals in their codes (follow-up 433: the handover sheet takes packed parcels only, so the
+// PR 180 parcel is packed here first). Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { STEADFAST_PROVIDER } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -15,7 +17,7 @@ import { bookOrders } from '@extas/shipping';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { handoverRoute, pickingRoute, stickersRoute } from './fulfil-api';
+import { handoverRoute, packingRoute, pickingRoute, stickersRoute } from './fulfil-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -40,6 +42,17 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
   const stickers = (method: string, path: string[], opts: { body?: unknown; cookie?: string; origin?: string | null } = {}) => stickersRoute(call(method, `/api/admin/packing/stickers/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner, origin: opts.origin }), deps, path);
   const handover = (method: string, path: string[], opts: { body?: unknown; cookie?: string } = {}) => handoverRoute(call(method, `/api/admin/packing/handover/${path.join('/')}`, { body: opts.body, cookie: opts.cookie ?? owner }), deps, path);
   const picking = (method: string, query = '', opts: { body?: unknown; cookie?: string } = {}) => pickingRoute(call(method, `/api/admin/packing/picking${query}`, { body: opts.body, cookie: opts.cookie ?? owner }), deps, []);
+  const packing = (method: string, path: string[], opts: { body?: unknown; cookie?: string; key?: string; query?: string } = {}) => {
+    const req = call(method, `/api/admin/packing/orders/${path.join('/')}${opts.query ?? ''}`, { body: opts.body, cookie: opts.cookie ?? owner });
+    if (opts.key) req.headers.set('idempotency-key', opts.key);
+    return packingRoute(req, deps, path);
+  };
+  /** PR 182: every piece of the order checked by its typed SKU, then "Mark packed". */
+  const packIt = async (orderId: string, key: string) => {
+    const items = await f.t.prisma.orderItem.findMany({ where: { orderId, status: 'ACTIVE' }, select: { sku: true, quantity: true } });
+    for (const i of items) for (let k = 0; k < i.quantity; k++) expect((await packing('POST', [orderId, 'piece'], { body: { code: i.sku.toLowerCase(), source: 'typed' } })).status).toBe(200);
+    return packing('POST', [orderId, 'pack'], { body: {}, key });
+  };
   const booked = async (name: string, phone: string) => {
     const o = await f.place(name, { phone });
     await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
@@ -127,6 +140,10 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
   it('PR 180: the handover list, the rider\'s sheet as a real A4 PDF, and the batch handed over', async () => {
     const d = await booked('fa-4', '01700001904'); // hardcode-ok: a made-up test number
     expect((await stickers('POST', [], { body: { shipmentIds: [d.shipmentId] } })).status).toBe(200);
+    // follow-up 433: not packed yet, so not on the sheet; packed through the packing API, it is
+    const before = (await (await handover('GET', [])).json()) as { couriers: { courierAccountId: string; parcels: { shipmentId: string; problem: string | null }[] }[] };
+    expect(before.couriers.find((c) => c.courierAccountId === courierId)!.parcels.find((p) => p.shipmentId === d.shipmentId)).toMatchObject({ problem: 'NOT_PACKED' });
+    expect((await packIt(d.orderId, 'api-pack-0001')).status).toBe(200);
     expect((await handover('GET', [], { cookie: reader })).status).toBe(403);
     const list = (await (await handover('GET', [])).json()) as { ok: boolean; couriers: { courierAccountId: string; parcels: { shipmentId: string; problem: string | null }[] }[] };
     expect(list.couriers.find((c) => c.courierAccountId === courierId)!.parcels.find((p) => p.shipmentId === d.shipmentId)).toMatchObject({ problem: null });
@@ -168,5 +185,49 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
     const listId = res.headers.get('x-picking-list')!;
     expect(await f.t.prisma.pickingList.findUniqueOrThrow({ where: { id: listId } })).toMatchObject({ orderIds: expect.arrayContaining([e.orderId]) });
     expect((await picking('PATCH')).status).toBe(405);
+  });
+
+  it('PR 182: the packing steps, "Start picking" for all, each piece checked, and "Mark packed" once per press', async () => {
+    const g = await f.place('fa-6', { phone: '01700001906' }); // hardcode-ok: a made-up test number
+    await confirmOrder(f.ordersDeps(), f.staff, g.orderId);
+    expect((await packing('GET', [], { cookie: reader })).status).toBe(403);
+    expect((await packing('GET', [], { query: '?step=sideways' })).status).toBe(400);
+    const pick = (await (await packing('GET', [], { query: '?step=pick' })).json()) as { ok: boolean; step: string; counts: Record<string, number>; rows: { orderId: string; pieces: number }[] };
+    expect(pick).toMatchObject({ ok: true, step: 'pick' });
+    expect(pick.rows.map((r) => r.orderId)).toContain(g.orderId);
+
+    // pieces are checked while the order is confirmed or picking; a code on no line of the order is refused
+    const wrong = await packing('POST', [g.orderId, 'piece'], { body: { code: 'NOT-ON-THIS-ORDER', source: 'typed' } });
+    expect(wrong.status).toBe(422);
+    expect(await wrong.json()).toMatchObject({ ok: false, error: 'NOT_IN_ORDER' });
+    // the shop checks by scan: a tick is the wrong way
+    expect(await (await packing('POST', [g.orderId, 'piece'], { body: { lineId: g.orderId, source: 'tick' } })).json()).toMatchObject({ error: 'CHECK_MODE' });
+
+    const all = (await (await packing('POST', ['pick-all'], { body: {} })).json()) as { ok: boolean; started: string[] };
+    expect(all.ok).toBe(true);
+    expect(all.started).toContain(g.number);
+    expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: g.orderId } })).toMatchObject({ status: 'PROCESSING' });
+
+    const early = await packing('POST', [g.orderId, 'pack'], { body: {}, key: 'api-pack-0002' });
+    expect(early.status).toBe(422);
+    expect(await early.json()).toMatchObject({ ok: false, error: 'NOT_CHECKED' });
+    // the photo is off by default: an upload is refused before it is read
+    expect(await (await packing('POST', [g.orderId, 'photo'])).json()).toMatchObject({ ok: false, error: 'PHOTO_OFF' });
+
+    const packed = await packIt(g.orderId, 'api-pack-0003');
+    expect(packed.status).toBe(200);
+    const first = (await packed.json()) as { ok: boolean; result: { status: string } };
+    expect(first).toMatchObject({ ok: true, result: { status: 'PACKED' } });
+    // the same press again (a lost answer) gets the same answer; the order is packed once
+    const again = await packing('POST', [g.orderId, 'pack'], { body: {}, key: 'api-pack-0003' });
+    expect(again.status).toBe(200);
+    expect(await f.t.prisma.orderEvent.count({ where: { orderId: g.orderId, type: 'order.pack' } })).toBe(1);
+    const view = (await (await packing('GET', [g.orderId])).json()) as { ok: boolean; order: { status: string; step: string; allChecked: boolean; blocked: string | null } };
+    expect(view.order).toMatchObject({ status: 'PACKED', step: 'ready', allChecked: true, blocked: null });
+    // a new press on a packed order is the order machine's refusal
+    expect((await packing('POST', [g.orderId, 'pack'], { body: {}, key: 'api-pack-0004' })).status).toBe(409);
+    expect((await packing('PATCH', [g.orderId, 'pack'])).status).toBe(405);
+    expect((await packing('GET', ['not-a-uuid'])).status).toBe(404);
+    expect((await packing('POST', [g.orderId, 'teleport'])).status).toBe(404);
   });
 });

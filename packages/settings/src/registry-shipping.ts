@@ -28,6 +28,9 @@
 // dots per inch, its language, whether it shows the receiver's name and the signature lines, and whether handing a
 // parcel over also marks it packed when nobody did (until the packing screen, PR 182, is in use).
 //
+// PR 182 (follow-up 433, version 59): `delivery.handover.sheet.packOnHandover` is off by default: an order is packed on
+// the packing screen before it is handed over.
+//
 // PR 181 (registry version 56, `delivery.picking.list`): the daily picking list — its paper, dots per inch and
 // language, and whether a size row short of the shop's stock is marked.
 import { z } from 'zod';
@@ -154,7 +157,8 @@ const listDpiSchema = z.union([z.literal(LIST_DPIS[0]), z.literal(LIST_DPIS[1])]
  * order number and amount to collect, the total to collect, a tick box per parcel. `paper`, `dpi`: see LIST_PAPERS,
  * LIST_DPIS; `lang`: the sheet's own words; `receiverName`: the receiver's name on each line (the rider checks it
  * against the sticker); `signatures`: "handed over by" and "received by" lines at the end; `packOnHandover`: handing an
- * order over also marks it packed when nobody did (off once the packing screen, PR 182, is in use).
+ * order over also marks it packed when nobody did (PR 182, follow-up 433: off by default now that the packing screen is
+ * in; while off, an unpacked order is not ready and "Handed over" leaves it out with NOT_PACKED).
  */
 export const handoverSheetSchema = z
   .object({ paper: z.enum(LIST_PAPERS), dpi: listDpiSchema, lang: z.enum(['en', 'bn']), receiverName: z.boolean(), signatures: z.boolean(), packOnHandover: z.boolean() })
@@ -243,9 +247,11 @@ export const shippingSettings = {
   }),
   'delivery.handover.sheet': setting({
     ...base56,
+    // PR 182 (follow-up 433, version 59): the packing step is in, so handing over no longer packs by itself
+    version: 59,
     valueType: 'JSON',
     schema: handoverSheetSchema,
-    default: { paper: 'a4', dpi: 150, lang: 'en', receiverName: true, signatures: true, packOnHandover: true },
+    default: { paper: 'a4', dpi: 150, lang: 'en', receiverName: true, signatures: true, packOnHandover: false },
     labelKey: 'delivery.handover.sheet.label',
     helpKey: 'delivery.handover.sheet.help',
     sortOrder: 913,

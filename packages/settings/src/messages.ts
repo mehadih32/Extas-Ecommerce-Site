@@ -24,7 +24,8 @@
 // messages/combo-templates.<lang>.json, the payments (S07, PR 165–170; registry v47) in messages/payments.<lang>.json,
 // and courier shipping (S08, PR 175–177; registry v50) in messages/shipping.<lang>.json, and the wallet, refunds, advances
 // and gateway statements (S07, PR 171–174; registry v55) in messages/money.<lang>.json, and Settings → Admin look (PR 12,
-// CN-025, CN-026 (b); registry v51) in messages/admin-look.<lang>.json, merged in here.
+// CN-025, CN-026 (b); registry v51) in messages/admin-look.<lang>.json, and the packing step (S08, PR 182, 183; registry v59)
+// in messages/fulfilment.<lang>.json, merged in here.
 import adminLookBn from '../messages/admin-look.bn.json';
 import adminLookEn from '../messages/admin-look.en.json';
 // and courier shipping (S08, PR 175–177; registry v50) in messages/shipping.<lang>.json, and exchanges, returns and
@@ -88,6 +89,8 @@ import comboTplEn from '../messages/combo-templates.en.json';
 import shippingBn from '../messages/shipping.bn.json';
 import shippingEn from '../messages/shipping.en.json';
 import moneyBn from '../messages/money.bn.json';
+import fulfilmentBn from '../messages/fulfilment.bn.json';
+import fulfilmentEn from '../messages/fulfilment.en.json';
 import moneyEn from '../messages/money.en.json';
 import courierSyncBn from '../messages/courier-sync.bn.json';
 import courierSyncEn from '../messages/courier-sync.en.json';
@@ -115,8 +118,8 @@ export function mergeMessages(a: MessageTree, b: MessageTree, at = ''): MessageT
 }
 
 export const messages: SettingsMessages = {
-  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn), messagesEn), riskEn), comboTplEn), paymentsEn), shippingEn), moneyEn), adminLookEn), courierSyncEn), returnsEn),
-  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn), messagesBn), riskBn), comboTplBn), paymentsBn), shippingBn), moneyBn), adminLookBn), courierSyncBn), returnsBn),
+  en: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(en, mediaEn), publishEn), merchEn), toolsEn), inventoryEn), rulesEn), combosEn), deliveryEn), storefrontEn), bagEn), checkoutEn), jobsEn), shopMoreEn), searchEn), storefrontFuEn), pdpTemplatesEn), accountsEn), comboPagesEn), ordersEn), adminShellEn), checkoutMoreEn), reviewsEn), setBuilderEn), supportLaneEn), messagesEn), riskEn), comboTplEn), paymentsEn), shippingEn), moneyEn), adminLookEn), courierSyncEn), returnsEn), fulfilmentEn),
+  bn: mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(mergeMessages(bn, mediaBn), publishBn), merchBn), toolsBn), inventoryBn), rulesBn), combosBn), deliveryBn), storefrontBn), bagBn), checkoutBn), jobsBn), shopMoreBn), searchBn), storefrontFuBn), pdpTemplatesBn), accountsBn), comboPagesBn), ordersBn), adminShellBn), checkoutMoreBn), reviewsBn), setBuilderBn), supportLaneBn), messagesBn), riskBn), comboTplBn), paymentsBn), shippingBn), moneyBn), adminLookBn), courierSyncBn), returnsBn), fulfilmentBn),
 };
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */

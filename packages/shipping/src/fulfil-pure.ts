@@ -9,6 +9,8 @@
 //   the most pieces; an order with several categories goes with its biggest category.
 // - PR 180 (B1.5) `handoverProblem`: a parcel goes on the rider's handover sheet only when its sticker can be printed,
 //   was printed at least once, and its order is waiting to be handed over (confirmed, picking or packed).
+// - PR 182 (follow-up 433): while the owner's "mark packed on handover" is off (the default once the packing screen is
+//   in), only a packed order is ready: an order nobody packed is NOT_PACKED.
 import { dueOf, type DeliveryTarget } from '@extas/orders/pure';
 import { courierPhone } from './pure';
 
@@ -91,15 +93,17 @@ export function printOrder(parcels: readonly PrintOrderParcel[]): string[] {
 /** PR 180 — the order states a parcel is handed over from (confirmed, picking started, packed). */
 export const HANDOVER_FROM = ['CONFIRMED', 'PROCESSING', 'PACKED'] as const;
 
-/** Why a parcel is not on the handover sheet: a sticker problem, the sticker never printed, or the order not waiting. */
-export const HANDOVER_PROBLEMS = [...STICKER_PROBLEMS, 'NOT_PRINTED', 'NOT_READY'] as const;
+/** Why a parcel is not on the handover sheet: a sticker problem, the sticker never printed, the order not waiting, or
+ * (PR 182) not packed while packing comes first. */
+export const HANDOVER_PROBLEMS = [...STICKER_PROBLEMS, 'NOT_PRINTED', 'NOT_READY', 'NOT_PACKED'] as const;
 export type HandoverProblem = (typeof HANDOVER_PROBLEMS)[number];
 
 /** Why this parcel cannot be handed over now, or null. */
-export function handoverProblem(f: StickerFacts & { printCount: number; orderStatus: string }): HandoverProblem | null {
+export function handoverProblem(f: StickerFacts & { printCount: number; orderStatus: string; packedFirst?: boolean }): HandoverProblem | null {
   const sticker = stickerProblem(f);
   if (sticker) return sticker;
   if (!(HANDOVER_FROM as readonly string[]).includes(f.orderStatus)) return 'NOT_READY';
   if (f.printCount < 1) return 'NOT_PRINTED';
+  if (f.packedFirst && f.orderStatus !== 'PACKED') return 'NOT_PACKED';
   return null;
 }

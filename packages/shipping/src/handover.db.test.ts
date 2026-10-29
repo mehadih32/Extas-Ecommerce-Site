@@ -37,12 +37,16 @@ describe.skipIf(!HAS_TEST_DB)('PR 180 · the print queue and the handover sheet 
     return { ...o, shipmentId: s.id, shipment: s };
   };
   const print = (shipmentIds: string[], extra: Record<string, unknown> = {}) => printStickers(f.shippingDeps(), f.shipper, { shipmentIds, ...extra });
+  // PR 182 (follow-up 433): "mark packed on handover" is off by default now; these tests hand over unpacked orders, so
+  // they turn it on (the packing tests in packing.db.test.ts cover the default)
+  const PACKS = { ...shippingSettings['delivery.handover.sheet'].default, packOnHandover: true };
 
   beforeAll(async () => {
     f = await setUpShipping('shipping_handover');
     courierId = await f.courier(STEADFAST_PROVIDER, 'Steadfast main');
     world.reset();
     world.useClock(() => f.clock.now.getTime());
+    f.overrides.set('delivery.handover.sheet', PACKS);
   });
   afterAll(async () => {
     world.reset();
@@ -106,13 +110,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 180 · the print queue and the handover sheet 
 
     // b's sticker printed: the next sheet is the same batch, now with both parcels, printed a second time
     await print([b.shipmentId]);
-    f.overrides.set('delivery.handover.sheet', { ...shippingSettings['delivery.handover.sheet'].default, receiverName: false });
+    f.overrides.set('delivery.handover.sheet', { ...PACKS, receiverName: false });
     try {
       const second = await printHandover(f.shippingDeps(), f.shipper, { courierAccountId: other });
       expect(second).toMatchObject({ batchId: sheet.batchId, printCount: 2, totals: { parcels: 2 } });
       expect(second.lines.every((l) => l.receiverName === null)).toBe(true);
     } finally {
-      f.overrides.delete('delivery.handover.sheet');
+      f.overrides.set('delivery.handover.sheet', PACKS);
     }
     expect(await db().handoverBatch.count({ where: { courierAccountId: other } })).toBe(1);
     expect(await db().printJob.count({ where: { batchId: sheet.batchId, kind: 'HANDOVER_SHEET' } })).toBe(2);
@@ -139,13 +143,16 @@ describe.skipIf(!HAS_TEST_DB)('PR 180 · the print queue and the handover sheet 
     const sheet = await printHandover(f.shippingDeps(), f.shipper, { courierAccountId: third });
     const order = await db().order.findUniqueOrThrow({ where: { id: b.orderId } });
     await db().order.update({ where: { id: b.orderId }, data: { paidMinor: order.paidMinor + 10_000 } });
-    f.overrides.set('delivery.handover.sheet', { ...shippingSettings['delivery.handover.sheet'].default, packOnHandover: false });
+    f.overrides.set('delivery.handover.sheet', { ...PACKS, packOnHandover: false });
     try {
       const r = await refusal(completeHandover(f.shippingDeps(), f.shipper, { batchId: sheet.batchId, receivedBy: 'Rider Rahim' }));
       expect(r).toMatchObject({ code: 'NOTHING_TO_HAND_OVER' });
       expect(r.data?.skipped).toEqual(expect.arrayContaining([{ orderNumber: a.number, reason: 'NOT_PACKED' }, { orderNumber: b.number, reason: 'COD_CHANGED' }]));
+      // PR 182: the list shows why: the unpacked order is not ready
+      const list = (await handoverList(f.shippingDeps(), f.shipper)).find((c) => c.courierAccountId === third)!;
+      expect(list.parcels.find((x) => x.shipmentId === a.shipmentId)).toMatchObject({ problem: 'NOT_PACKED' });
     } finally {
-      f.overrides.delete('delivery.handover.sheet');
+      f.overrides.set('delivery.handover.sheet', PACKS);
     }
     const done = await completeHandover(f.shippingDeps(), f.shipper, { batchId: sheet.batchId, receivedBy: 'Rider Rahim' });
     expect(done).toMatchObject({ handedOver: [a.number], skipped: [{ orderNumber: b.number, reason: 'COD_CHANGED' }] });

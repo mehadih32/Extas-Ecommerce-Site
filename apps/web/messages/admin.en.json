@@ -48,7 +48,8 @@
     "ordersReturnsQc": "Receive & QC",
     "ordersReturnsRefused": "Refused parcels",
     "riskRules": "Risk rules",
-    "checkoutAdvance": "Checkout advance"
+    "checkoutAdvance": "Checkout advance",
+    "packingPack": "Pack"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -300,7 +301,8 @@
         "NO_ANSWER": "The courier did not answer",
         "NO_WEIGHT": "A piece has no weight — this courier needs it",
         "AREA_UNMAPPED": "Waiting: this courier does not know the area yet — pair it on the courier's page",
-        "AREA_UNKNOWN": "Waiting: the order has no known area — fix the address first"
+        "AREA_UNKNOWN": "Waiting: the order has no known area — fix the address first",
+        "PHOTO_REQUIRED": "Waiting for the packing photo (or the owner's override)"
       }
     }
   }

@@ -15,7 +15,25 @@
       "popup": "The PDF is ready but the browser blocked the new tab. It was downloaded instead.",
       "REASON_REQUIRED": "These stickers were printed before: say why they are printed again.",
       "NOTHING_TO_HAND_OVER": "Nothing is ready to hand over to this courier: {fields}. Print the stickers first, or re-book a parcel that changed.",
-      "ALREADY_HANDED_OVER": "This batch was marked handed over already. Reload the page."
+      "ALREADY_HANDED_OVER": "This batch was marked handed over already. Reload the page.",
+      "NOT_PACKING": "This order is not being picked or packed now. Reload the page.",
+      "NOT_IN_ORDER": "This code is not on this order: {fields}. Check the piece.",
+      "ALREADY_CHECKED": "Every piece of this item is checked already: {fields}.",
+      "CHECK_MODE": "The shop checks pieces another way now. Reload the page.",
+      "NOT_CHECKED": "Some items are not checked yet.",
+      "PACKING_ISSUE_OPEN": "A packing card is open: a person decides it first.",
+      "PHOTO_REQUIRED": "Take the packing photo first (or the owner lets it go without one).",
+      "PHOTO_OFF": "Packing photos are switched off.",
+      "WEIGHT_REQUIRED": "Type the parcel's weight first.",
+      "WEIGHT_GAP": "The weight is far from the expected weight. Weigh again, or confirm it is right.",
+      "TOO_LARGE": "The photo is too large. Take it again at a smaller size.",
+      "ILLEGAL_TRANSITION": "This order has moved on (or is on hold). Reload the page.",
+      "STALE": "Someone changed this order just now. Reload the page.",
+      "CANCEL_PENDING": "A cancel is waiting for this order: it is not packed.",
+      "CANCEL_REQUESTED": "The customer asked to cancel: decide that first.",
+      "IN_REVIEW": "This order waits for a review decision.",
+      "BOOKED": "This order is booked already.",
+      "IDEMPOTENCY_MISMATCH": "That press went twice with different values. Try again."
     },
     "couriers": {
       "title": "Couriers",
@@ -163,7 +181,8 @@
         "COD_CHANGED": "amount changed after booking: re-book",
         "RECEIVER_CHANGED": "receiver changed after booking: re-book",
         "NOT_PRINTED": "sticker not printed yet",
-        "NOT_READY": "order not ready (on hold or moved on)"
+        "NOT_READY": "order not ready (on hold or moved on)",
+        "NOT_PACKED": "not packed yet"
       },
       "words": {
         "to": "To",
@@ -349,6 +368,125 @@
         "foot": "Printed {at}",
         "page": "{n}/{of}",
         "empty": "Nothing to pick"
+      }
+    },
+    "pack": {
+      "title": "Pack",
+      "sub": "Pick → Pack → Ready for courier → Handed over. A shortage always waits for a person — never cancelled by itself.",
+      "stepsLabel": "Packing steps",
+      "steps": {
+        "pick": "Pick",
+        "pack": "Pack",
+        "ready": "Ready for courier",
+        "done": "Handed over"
+      },
+      "printAll": "Print all in packing order",
+      "handAll": "Hand over booked parcels",
+      "startAll": "Start picking for all",
+      "startAllAsk": "Start picking for all {n} orders on the Pick step? Orders on hold, in review or with a cancel asked are not on this list.",
+      "startAllDone": "{n} orders moved to Pack.",
+      "startAllSome": "{n} orders moved to Pack. Left out: {left}.",
+      "settingsTitle": "Packing settings",
+      "mode": {
+        "scan": "Check: scan each piece",
+        "tick": "Check: tick each line"
+      },
+      "typedPill": "Typed SKU: {on}",
+      "photoPill": "Packing photo: {mode} · kept {days} days",
+      "photoPillOff": "Packing photo: off",
+      "photoMode": {
+        "required": "required",
+        "reminder": "a reminder"
+      },
+      "weightPill": "Weight check: more than {p}% and {g} g off",
+      "weightPillOff": "Weight check: off",
+      "settingsNote": "The check, the photo and the weight check are delivery settings (Delivery → More options).",
+      "empty": "Nothing at this step",
+      "emptySub": {
+        "pick": "Confirmed orders arrive here.",
+        "pack": "Orders arrive here when picking starts.",
+        "ready": "Packed orders wait here for the courier.",
+        "done": "Orders handed over today are listed here."
+      },
+      "more": "{n} more at this step: finish these first.",
+      "pcs": "{n} pcs",
+      "gift": "gift",
+      "notBooked": "not booked yet",
+      "issues": "{n} open card",
+      "photos": "{n} photo",
+      "pickOne": "Pick an order",
+      "openOrder": "Order",
+      "status": {
+        "CONFIRMED": "Confirmed",
+        "PROCESSING": "Picking",
+        "PACKED": "Packed",
+        "HANDED_OVER": "Handed over",
+        "ON_HOLD": "On hold"
+      },
+      "giftNote": "Gift · prices hidden on the invoice · deliver on or after {day}",
+      "giftNoteNoDay": "Gift · prices hidden on the invoice",
+      "issueTitle": "Packing card open — packing and booking wait until a person decides",
+      "issueKind": {
+        "SHORTAGE": "Stock shortage",
+        "DAMAGED": "Damaged piece",
+        "NOT_FOUND": "Piece not found"
+      },
+      "issueOpen": "Decide it on the order's page. Nothing is cancelled by itself.",
+      "heldNote": "On hold — nothing moves until the hold is released.",
+      "scanTitle": "Scan each item (SKU must match)",
+      "tickTitle": "Tick each item as it goes into the parcel",
+      "checked": "checked",
+      "progress": "{n} of {q}",
+      "tick": "In the parcel",
+      "scanLabel": "Scan or type the SKU",
+      "scanPh": "Scan the barcode",
+      "typePh": "Scanner offline? Type the SKU here",
+      "scanGo": "Check",
+      "matched": "Matched: {sku}",
+      "photo": {
+        "missing": "Packing photo required before “Mark packed” and booking",
+        "reminder": "Packing photo — a reminder, optional",
+        "ok": "Packing photo kept ({n}) · {days} days",
+        "waived": "No photo — the owner let it go: {reason}"
+      },
+      "photoTake": "Take photo",
+      "photoMore": "Another photo",
+      "photoSending": "Uploading…",
+      "waive": "Pack without the photo",
+      "waiveReason": "Why (kept on the order's record)",
+      "kv": {
+        "courier": "Courier",
+        "stickers": "Stickers printed",
+        "weight": "Weight"
+      },
+      "weight": {
+        "label": "Weight (g)",
+        "need": "needed",
+        "optional": "optional",
+        "expected": "expected {g} g",
+        "expectedNone": "expected weight unknown (a piece has no weight)",
+        "weighed": "weighed {g} g",
+        "gap": "{g} g ({p}%) off the expected weight. Weigh again, or:",
+        "confirm": "The weight is right — pack it"
+      },
+      "start": "Start picking",
+      "packed": "Mark packed",
+      "packing": "Saving…",
+      "packedDone": "Packed — now book the courier.",
+      "book": "Book courier",
+      "bookPick": "Courier account",
+      "booking": "Booking…",
+      "bookDone": "Booked: {cid}",
+      "bookNot": "Not booked: {why}",
+      "noCourier": "No courier account is switched on. Add one in Delivery → Couriers.",
+      "handover": "Hand over",
+      "sticker": "Print sticker",
+      "invoice": "Print invoice",
+      "block": {
+        "NOT_CHECKED": "“Mark packed” opens when every item is checked and matches.",
+        "PACKING_ISSUE_OPEN": "A packing card is open: a person decides it first.",
+        "PHOTO_REQUIRED": "Take the packing photo first (or the owner lets it go without one).",
+        "WEIGHT_REQUIRED": "Type the parcel's weight, then “Mark packed”."
       }
     }
   }

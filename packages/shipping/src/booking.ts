@@ -4,7 +4,8 @@
 // - The orders offered are the order service's own `readyToBook` view (confirmed, not handed over, no cancel asked or
 //   pending, no open review, no live parcel), and each order is booked with `bookWith`, which takes the order's row lock
 //   and refuses a cancelled order, an order held in review, one with a cancel asked or pending, or one booked already
-//   (SIM-F-002, SIM-F-014). A packing card still open refuses it too (`assertBookable`, PR 225).
+//   (SIM-F-002, SIM-F-014). A packing card still open refuses it too (`assertBookable`, PR 225), and so does the owner's
+//   required packing photo while it is missing (PR 182, SIM-F-010: `assertPackingPhoto`).
 // - The parcel goes to the order's delivery target (`deliveryTarget`, PR 605): a gift's receiver, with the owner's gift
 //   line and "deliver on or after" in the rider's note; a gift is not booked before its booking day (SIM-F-007).
 // - The amount to collect is the order's live amount due when it is booked (`dueOf`); after booking the order service
@@ -32,8 +33,9 @@ import { bookWith, DELIVERY_TARGET_SELECT, deliveryTarget, dueOf, isOrdersError,
 import { bookableCourier, courierApi } from './accounts';
 import type { CourierBookingSettings } from '@extas/settings';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Tx, type Who } from './context';
-import { ShippingError } from './errors';
+import { isShippingError, ShippingError } from './errors';
 import { applyEventsIn } from './events';
+import { assertPackingPhoto } from './packing';
 import { addDays, bookingNoteOf, courierPhone, giftBooking, localDay, parcelDescription, parcelWeight, type BookingOutcomeKind, type ParcelLine } from './pure';
 import { zoneNeedOf } from './zone-match';
 import { pairFor } from './zones';
@@ -215,6 +217,8 @@ async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: 
   try {
     await bookWith(ordersDeps(deps), { storeId: who.storeId, orderId }, staffBy(who.actor, who.ctx), async (tx, locked) => {
       await assertBookable(tx, who.storeId, orderId);
+      // PR 182 (SIM-F-010): a required packing photo that is missing waits (the owner may waive it for one order)
+      await assertPackingPhoto(deps, tx, who.storeId, orderId);
       // the row as it is under the lock: an edit that raced this press is what goes to the courier, or the reason why not
       const p = await prepare(tx, who.storeId, courier, orderId, cfg, today, zones.unmapped);
       if (p.skip) throw new Skip(p.skip);
@@ -252,6 +256,7 @@ async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: 
     if (e instanceof Skip) return e.outcome;
     if (isOrdersError(e)) return skipped(orderId, number, e.code, null, e.data);
     if (isInventoryError(e)) return skipped(orderId, number, e.code, null, { details: e.details });
+    if (isShippingError(e) && e.code === 'PHOTO_REQUIRED') return skipped(orderId, number, e.code, null, e.data);
     throw e;
   }
   // a replayed command (same idempotency key) writes nothing new: nothing to send

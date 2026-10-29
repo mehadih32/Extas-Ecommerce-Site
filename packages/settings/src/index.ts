@@ -52,4 +52,5 @@ export * from './registry-risk-levels';
 export * from './registry-advance-request';
 export * from './registry-wallet';
 export * from './registry-courier-sync';
+export * from './registry-fulfilment';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
