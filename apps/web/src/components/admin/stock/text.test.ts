@@ -42,8 +42,10 @@ describe('stock pages messages', () => {
       for (const s of Object.keys(ERP_DEPENDENT_PATHS['stock.pull'])) has(`stock.erp.states.${s}`);
       for (const k of SYNC_KINDS) has(`stock.runs.kind.${keyOf(k)}`);
       for (const s of ['QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELLED']) has(`stock.runs.status.${s}`);
-      for (const s of ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP', 'RETIRED']) has(`stock.docs.status.${s}`);
+      for (const s of ['PENDING', 'SENT', 'FAILED', 'DEAD', 'SKIPPED_NO_ERP', 'RETIRED', 'HELD']) has(`stock.docs.status.${s}`);
       for (const s of ['pending', 'failed', 'dead', 'skipped', 'sent']) has(`stock.docs.counts.${s}`);
+      // PR 608: the v6 ERP events that need a look (failed, or repeated with another body).
+      for (const k of ['events', 'eventsText']) has(`stock.erp.${k}`);
       for (const k of ERP_DOCUMENT_TYPES) has(`stock.docs.type.${keyOf(k)}`);
       for (const k of MISMATCH_KINDS) has(`stock.reconcile.kind.${k}`);
       for (const s of ['COUNTING', 'REVIEW', 'COMPLETED', 'CANCELLED']) {

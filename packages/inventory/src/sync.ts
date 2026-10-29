@@ -88,10 +88,14 @@ export function errorCode(e: unknown): string {
   return 'INTERNAL';
 }
 
-/** Run kinds: the pull (PR 195), one product's re-sync (PR 206), the full check (PR 207), the document relay (PR 199). */
-export type SyncKind = 'stock.pull' | 'stock.resyncProduct' | 'stock.reconcile' | 'documents.push';
-export const SYNC_KINDS: readonly SyncKind[] = ['stock.pull', 'stock.resyncProduct', 'stock.reconcile', 'documents.push'];
-export type SyncResource = 'stock';
+/**
+ * Run kinds: the pull (PR 195), one product's re-sync (PR 206), the full check (PR 207), the document relay (PR 199),
+ * the pull of the ERP's v6 events (PR 608).
+ */
+export type SyncKind = 'stock.pull' | 'stock.resyncProduct' | 'stock.reconcile' | 'documents.push' | 'events.pull';
+export const SYNC_KINDS: readonly SyncKind[] = ['stock.pull', 'stock.resyncProduct', 'stock.reconcile', 'documents.push', 'events.pull'];
+/** Where each pull keeps its place: stock (PR 195), and the v6 returns, exchanges and claims lists (PR 608). */
+export type SyncResource = 'stock' | 'events.returns' | 'events.exchanges' | 'events.claims';
 
 export async function startRun(db: Db, storeId: number, kind: SyncKind, at: Date): Promise<string> {
   const run = await db.erpSyncRun.create({ data: { storeId, kind, status: 'RUNNING', startedAt: at }, select: { id: true } });

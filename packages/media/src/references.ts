@@ -33,6 +33,8 @@ export const MEDIA_REFERENCES: readonly MediaReference[] = [
   ref('Exchange', 'photoAssetIds', true),
   ref('ReturnItem', 'photoAssetIds', true),
   ref('PackingPhoto', 'mediaAssetId'),
+  // PR 612 (CN-028): the photo of a sealed return bag at hand-back.
+  ref('ErpReturnListParcel', 'photoAssetId'),
   ref('SeoMeta', 'ogImageAssetId'),
   ref('SitemapBuild', 'fileAssetId'),
   ref('BlogAuthor', 'avatarAssetId'),

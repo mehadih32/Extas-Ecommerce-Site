@@ -342,7 +342,8 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
 
 // ---- reading and sending again by hand (PR 205, 206) ------------------------------------------------------------------
 
-export type PushStatusName = 'PENDING' | 'SENT' | 'FAILED' | 'DEAD' | 'SKIPPED_NO_ERP' | 'RETIRED';
+/** HELD (PR 610, CN-029 Phase 0 schema): an order the ERP refused while the account is on hold, sent again on release. */
+export type PushStatusName = 'PENDING' | 'SENT' | 'FAILED' | 'DEAD' | 'SKIPPED_NO_ERP' | 'RETIRED' | 'HELD';
 
 export interface PushView {
   id: string;

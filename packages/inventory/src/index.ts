@@ -23,6 +23,11 @@ export * from './context';
 export * from './erp-mode';
 // PR 607 (CN-028): the ERP contract a store speaks (`erp.model`) and the v5 calls v6 retires.
 export * from './erp-model';
+// PR 608 (CN-028): the permanent ERP event ledger, its handlers and the hourly pull of returns, exchanges and claims.
+export * from './erp-events';
+export * from './erp-events-pull';
+// CN-029 §16 (PR 607): one ERP link per store (its own connection and keys; a handover starts a new link).
+export * from './erp-link';
 export * from './guard';
 export * from './sync';
 export * from './locations';

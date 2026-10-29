@@ -151,6 +151,14 @@ export default async function StockPage() {
               {health.stock.resuming ? <div className="ad-mini">{t(d, 'stock.erp.resuming')}</div> : null}
             </div>
           </div>
+          {health.events.failed + health.events.conflicts ? (
+            <div className="ad-row">
+              <div className="ad-row-main">
+                <div className="ad-row-name">{t(d, 'stock.erp.events')}</div>
+                <div className="ad-mini bad st-err">{t(d, 'stock.erp.eventsText', { failed: num(health.events.failed), changed: num(health.events.conflicts) })}</div>
+              </div>
+            </div>
+          ) : null}
           {canSync ? (
             <div className="st-card-acts">
               <ResyncButtons dict={d} locale={view.locale} />

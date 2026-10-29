@@ -55,7 +55,7 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'messages.run', 'orders.pii.purge', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.erp.applyEvents', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'messages.run', 'orders.pii.purge', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
@@ -73,6 +73,10 @@ describe('PR 6 · catalogue', () => {
     expect(pull.storeOf(p)).toBe(4);
     const sweep = jobDefinition('inventory.reservations.release')!;
     expect(sweep.storeOf(sweep.parse(null))).toBeNull();
+    // PR 608: the v6 event pull is per store; applying the stored events is for the installation.
+    expect(() => jobDefinition('inventory.erp.pullEvents')!.parse({})).toThrow(/storeId is required/);
+    const apply = jobDefinition('inventory.erp.applyEvents')!;
+    expect(apply.storeOf(apply.parse(null))).toBeNull();
   });
   it('PR 72: the search index job needs a store; its run key is the store and the catalogue version', async () => {
     const job = jobDefinition('search.index')!;

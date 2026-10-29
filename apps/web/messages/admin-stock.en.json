@@ -70,7 +70,9 @@
       },
       "keys": "Keys & connections",
       "lastStock": "Last good stock update",
-      "resuming": "The last update stopped half way; the next one carries on from there."
+      "resuming": "The last update stopped half way; the next one carries on from there.",
+      "events": "ERP events that need a look",
+      "eventsText": "{failed} could not be read or applied · {changed} came again with different content. Nothing was applied from them."
     },
     "resync": {
       "all": "Re-sync all stock now",
@@ -122,7 +124,8 @@
         "FAILED": "Refused",
         "DEAD": "Gave up",
         "SKIPPED_NO_ERP": "No ERP",
-        "RETIRED": "No longer sent (new ERP rules)"
+        "RETIRED": "No longer sent (new ERP rules)",
+        "HELD": "Waiting: ERP account on hold"
       },
       "type": {
         "order_create": "Order {order}",
@@ -169,7 +172,8 @@
         "stock_pull": "Stock update",
         "stock_resyncProduct": "One product re-synced",
         "stock_reconcile": "Check against the ERP",
-        "documents_push": "Documents sent"
+        "documents_push": "Documents sent",
+        "events_pull": "ERP events fetched"
       },
       "status": {
         "QUEUED": "Queued",

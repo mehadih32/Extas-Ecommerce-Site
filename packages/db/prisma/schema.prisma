@@ -253,6 +253,31 @@ model Store {
   erpSyncStates           ErpSyncState[]
   erpSyncRuns             ErpSyncRun[]
   erpPushes               ErpPush[]
+  erpEvents               ErpEvent[]
+  erpClaims               ErpClaim[]
+  // CN-028 · PR 607–618 (CN-029 Phase 0, migration 0049_erp_v6): one ERP link per store and its books.
+  erpStoreLinks           ErpStoreLink[]
+  erpOrders               ErpOrder[]
+  erpOrderLines           ErpOrderLine[]
+  erpDeliveryResults      ErpDeliveryResult[]
+  erpAccountStates        ErpAccountState[]
+  erpAccountEntries       ErpAccountEntry[]
+  erpPaymentRecords       ErpPaymentRecord[]
+  erpPipelinePieces       ErpPipelinePiece[]
+  erpPipelineMoves        ErpPipelineMove[]
+  erpReturnLists          ErpReturnList[]
+  erpReturnListParcels    ErpReturnListParcel[]
+  erpExchangeLinks        ErpExchangeLink[]
+  erpExchangeLines        ErpExchangeLine[]
+  erpDailySummaries       ErpDailySummary[]
+  erpFixedCostMonths      ErpFixedCostMonth[]
+  erpBooksSends           ErpBooksSend[]
+  booksMatchRuns          BooksMatchRun[]
+  booksDayCloses          BooksDayClose[]
+  booksPeriodCloses       BooksPeriodClose[]
+  booksDifferences        BooksDifference[]
+  booksDifferenceNotes    BooksDifferenceNote[]
+  booksAdjustments        BooksAdjustment[]
   smartRules              SmartRule[]
   smartRuleVersions       SmartRuleVersion[]
   smartRuleConflicts      SmartRuleConflict[]
@@ -1270,6 +1295,8 @@ model Product {
   fabricId         String?         @db.Uuid
   fabric           Fabric?         @relation(fields: [fabricId], references: [id])
   erpStyleCode     String?
+  /// PR 609 (CN-028): the ERP grade this listing sells. A style's B-grade SKUs are a listing of their own.
+  erpGrade         ErpGrade        @default(A)
   slug             String
   /// Name on the site (PR 590); the feed/ad title and SEO title are separate.
   nameEn           String
@@ -1383,6 +1410,17 @@ model ProductVariant {
   erpRetailPriceMinor Int?
   avgCostMinor        Int?
   bGradeAvgCostMinor  Int?
+  /// PR 609 (CN-028): the SKU's ERP grade (B = the factory's own B-grade line: its own SKU, shop price and stock).
+  grade               ErpGrade  @default(A)
+  /// PR 609: what Retail pays the ERP for one piece ("bought from ERP at"), minor units. Never shown to customers.
+  shopPriceMinor      Int?
+  /// PR 609: the buying price before the last change, when it changed, and when the admin saw the change.
+  shopPricePrevMinor  Int?
+  shopPriceChangedAt  DateTime? @db.Timestamptz(3)
+  shopPriceSeenAt     DateTime? @db.Timestamptz(3)
+  /// PR 610: the ERP refused an order because this SKU has no shop price yet (409 NO_SHOP_PRICE): it is not sold until
+  /// a shop price arrives (then this is cleared).
+  shopPriceMissingAt  DateTime? @db.Timestamptz(3)
   /// Shop-owned sale price and compare-at price (B3.7).
   priceMinor          Int?
   compareAtMinor      Int?
@@ -1400,6 +1438,13 @@ model ProductVariant {
   @@unique([storeId, sku], map: "uq_variant_sku")
   @@index([productId, colourId, sizeId], map: "idx_variant_colour_size")
   @@index([barcode])
+  @@index([storeId, shopPriceChangedAt])
+}
+
+/// PR 609 (CN-028): the ERP grade of a SKU and of a listing.
+enum ErpGrade {
+  A
+  B
 }
 
 /// @stage S01 · PR 38, 213 — price history behind every "was" price (the honesty rule).
@@ -4930,6 +4975,978 @@ enum ErpPushStatus {
   SKIPPED_NO_ERP
   /// PR 607 (CN-028): a v5 call that v6 retired on the switch date; kept for the record, never sent.
   RETIRED
+  /// PR 610 (CN-028): the ERP refused the order while Retail's account is on hold (409 ACCOUNT_ON_HOLD); it is sent
+  /// again by itself when the account is released (`account.released`, or the account check).
+  HELD
+}
+
+/// @stage S09 · PR 608 (CN-028, CN-029) — the ERP event ledger: every v6 event (webhook or pull) kept once by its eventId,
+/// forever (the ERP never uses an id again, docs/erp/site-changes-v6.md §2.8). The same event by webhook and by pull is
+/// one row. A correction (`reverses`) that arrives before its original waits for it. One store = one ERP company
+/// (RETAIL-ERP-MODEL §16): every event belongs to the one store whose own key or secret it came through, under that
+/// store's current ERP link. The body of a row is fixed at the database (migration 0049: a trigger refuses any change to
+/// it, and no role may delete a row); only its processing state (status, attempts, result, error) moves.
+model ErpEvent {
+  id              String         @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store          @relation(fields: [storeId], references: [id])
+  /// The store's ERP link (a handover starts a new one, PR 509/619): event ids are unique per link.
+  linkId          String         @db.Uuid
+  link            ErpStoreLink   @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// The store's own ERP connection (Integration.id) the event came through.
+  integrationId   String         @db.Uuid
+  eventId         String
+  type            String
+  source          ErpEventSource
+  status          ErpEventStatus @default(RECEIVED)
+  /// Moves money or credit (§2.8): the books must never lose it.
+  moneyEvent      Boolean        @default(false)
+  occurredAt      DateTime?      @db.Timestamptz(3)
+  /// The ERP's business date (Asia/Dhaka).
+  businessDate    DateTime?      @db.Date
+  /// The eventId this event corrects (undoes), if any.
+  reverses        String?
+  /// The eventId of the correction that undid this event, once applied.
+  reversedBy      String?
+  externalOrderId String?
+  data            Json
+  /// SHA-256 of the event as the ledger reads it (canonical JSON of eventId, type, occurredAt, date, reverses, data):
+  /// the same for the webhook and the pull, so a repeat with another body is seen.
+  bodyHash        String
+  /// SHA-256 of the exact signed raw body, for an event that came by webhook.
+  rawBodyHash     String?
+  /// A repeat of this eventId arrived with another body (never applied, kept to be checked): how often, last when, and
+  /// that body's hash.
+  conflictCount   Int            @default(0)
+  conflictAt      DateTime?      @db.Timestamptz(3)
+  conflictHash    String?
+  /// What applying it did (counts and notes), for the admin and the books match.
+  result          Json?
+  error           String?
+  attempts        Int            @default(0)
+  receivedAt      DateTime       @default(now()) @db.Timestamptz(3)
+  appliedAt       DateTime?      @db.Timestamptz(3)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@unique([linkId, eventId])
+  @@index([status, receivedAt])
+  @@index([linkId, reverses])
+  @@index([storeId, type, businessDate])
+  @@index([storeId, externalOrderId])
+}
+
+enum ErpEventSource {
+  WEBHOOK
+  PULL
+}
+
+enum ErpEventStatus {
+  /// Stored, not applied yet.
+  RECEIVED
+  /// Applied to the shop's records.
+  APPLIED
+  /// Kept in the ledger for the part of the shop that reads it (returns, exchanges, account, books).
+  STORED
+  /// A correction whose original event has not arrived yet.
+  WAITING_ORIGINAL
+  /// Nothing to do (for example an order the shop does not know).
+  IGNORED
+  /// Could not be applied after every try.
+  FAILED
+}
+
+/// @stage S09 · PR 608 (CN-028) — a courier claim the ERP found (a missing parcel or piece, or stain or damage that
+/// may be the courier's fault, §2.5.4): from `return.piece.decided` and from `GET /returns/claims`, one row per piece and
+/// reason. The Returns section (PR 613) works the claim with the courier.
+model ErpClaim {
+  id              String         @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store          @relation(fields: [storeId], references: [id])
+  linkId          String         @db.Uuid
+  link            ErpStoreLink   @relation(fields: [linkId, storeId], references: [id, storeId])
+  integrationId   String         @db.Uuid
+  externalOrderId String
+  /// The order line (empty when the claim is for the whole parcel).
+  lineId          String         @default("")
+  sku             String?
+  reason          String
+  returnListId    String?
+  consignmentId   String?
+  courier         String?
+  handedBackAt    DateTime?      @db.Date
+  decidedAt       DateTime?      @db.Date
+  /// The piece's value at the price paid to the ERP, in minor units.
+  valueMinor      BigInt?
+  source          ErpEventSource
+  /// The decision event, when the claim came by event.
+  eventId         String?
+  status          ErpClaimStatus @default(OPEN)
+  firstSeenAt     DateTime       @default(now()) @db.Timestamptz(3)
+  lastSeenAt      DateTime       @default(now()) @db.Timestamptz(3)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@unique([linkId, externalOrderId, lineId, reason])
+  @@index([storeId, status, handedBackAt])
+}
+
+enum ErpClaimStatus {
+  OPEN
+  /// The owner's decision was reversed in the ERP: kept for the record.
+  REVERSED
+}
+
+// =====================================================================================================================
+// CN-028 · PR 607–618 (CN-029 Phase 0) — Retail as a separate buyer of the ERP (docs/RETAIL-ERP-MODEL.md). Every table
+// of the run is here, made by one migration (0049_erp_v6), so the five lanes never change the schema at the same time.
+// Each row carries its store; the ledgers also carry the store's ERP link (a handover to a new owner starts a new
+// link, and the new keys never reach the old link's rows, §16). Money is in minor units of the store's currency (the
+// ERP speaks whole taka in v6). Ledgers and closes are append-only at the database: a correction is a reversing row
+// plus a new row, never an edit (schema-meta APPEND_ONLY_LOCKED).
+// =====================================================================================================================
+
+/// @stage S09 · PR 607, 619 (CN-029 §16) — one store's link to its own ERP company: the store's own connection
+/// (Integration row with this storeId; its API key, webhook secret and signing secret are in the vault under the store's
+/// id, never here), the company the key belongs to, the switch date, the opening balance and the dry run. One open link
+/// per store; a handover to a new owner ends it (`endedAt`) and starts the next epoch, whose keys never reach the old
+/// link's ledgers (PR 509, 619). No secret is ever stored in this table.
+model ErpStoreLink {
+  id                  String    @id @default(uuid(7)) @db.Uuid
+  storeId             Int
+  store               Store     @relation(fields: [storeId], references: [id])
+  /// 1 for the first link of the store; each handover adds one.
+  epoch               Int       @default(1)
+  /// The store's own ERP connection (Integration.id, storeId = this store).
+  integrationId       String?   @db.Uuid
+  /// The ERP company the store's key belongs to (from `GET /health`, filled when the link opens or at its first pull).
+  erpCompanyId        String?
+  /// `erpCompanyId` while the link is open, null once it ended: kept by a database trigger (migration 0049), never
+  /// written by the app. Unique, so two stores' open links can never hold one ERP company (§16: SHARED_COMPANY).
+  openErpCompanyId    String?   @unique
+  /// The ERP's switch date for this store (v6 from that day, PR 619), and when the switch was made after a dry run.
+  switchDate          DateTime? @db.Date
+  dryRunAt            DateTime? @db.Timestamptz(3)
+  switchedAt          DateTime? @db.Timestamptz(3)
+  /// What Retail owed the ERP at the switch (from the ERP's list of moved orders, at the buying price), minor units.
+  openingBalanceMinor BigInt?
+  openingBalanceDate  DateTime? @db.Date
+  openingImportedAt   DateTime? @db.Timestamptz(3)
+  /// The link was handed over (or replaced): its history stays, unreachable from the new keys.
+  endedAt             DateTime? @db.Timestamptz(3)
+  endedReason         String?
+  createdAt           DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(3)
+
+  events          ErpEvent[]
+  claims          ErpClaim[]
+  orders          ErpOrder[]
+  accountStates   ErpAccountState[]
+  accountEntries  ErpAccountEntry[]
+  paymentRecords  ErpPaymentRecord[]
+  pipelinePieces  ErpPipelinePiece[]
+  pipelineMoves   ErpPipelineMove[]
+  returnLists     ErpReturnList[]
+  exchangeLinks   ErpExchangeLink[]
+  dailySummaries  ErpDailySummary[]
+  fixedCostMonths ErpFixedCostMonth[]
+  booksSends      ErpBooksSend[]
+  matchRuns       BooksMatchRun[]
+  dayCloses       BooksDayClose[]
+  periodCloses    BooksPeriodClose[]
+  differences     BooksDifference[]
+  adjustments     BooksAdjustment[]
+
+  @@unique([storeId, epoch])
+  /// The key of the composite foreign keys (linkId, storeId): a row's link is always its own store's link.
+  @@unique([id, storeId])
+  @@index([storeId, endedAt])
+}
+
+// ---- PR 610 · orders to the ERP v6 ---------------------------------------------------------------------------------------
+
+/// @stage S09 · PR 610, 611 (CN-028) — an order as the ERP has it in contract v6 (docs/erp/site-changes-v6.md §2.3): what
+/// Retail owes for it (`erpTotal`, fixed at the ERP's shop prices when the order is placed), when the parcel was picked
+/// up and the ERP billed it (`POST /shipments`, PR 611), and the ERP's identification of the delivery result.
+model ErpOrder {
+  id              String       @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store        @relation(fields: [storeId], references: [id])
+  linkId          String       @db.Uuid
+  link            ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// The shop's order (Order.id) and its number as the ERP knows it.
+  orderId         String       @db.Uuid
+  externalOrderId String
+  erpOrderId      String?
+  /// An exchange order names the order it exchanges (PR 614); it is not a sale.
+  exchangeOfId    String?      @db.Uuid
+  /// What Retail owes the ERP for the order, minor units (the answer's `erpTotal`); null until the ERP answers.
+  erpTotalMinor   BigInt?
+  acceptedAt      DateTime?    @db.Timestamptz(3)
+  /// The ERP's last refusal of the order (ACCOUNT_ON_HOLD, NO_SHOP_PRICE, INSUFFICIENT_STOCK) and its details.
+  refusal         String?
+  refusalDetails  Json?
+  refusedAt       DateTime?    @db.Timestamptz(3)
+  /// PR 611: the courier confirmed pickup and the shipment went to the ERP (that is when the ERP bills).
+  consignmentId   String?
+  courier         String?
+  pickedUpAt      DateTime?    @db.Timestamptz(3)
+  shipmentSentAt  DateTime?    @db.Timestamptz(3)
+  billedAt        DateTime?    @db.Timestamptz(3)
+  /// PR 611: the ERP's identification of the delivery result (GREEN, YELLOW, ORANGE) and when it came.
+  identification  String?
+  identifiedAt    DateTime?    @db.Timestamptz(3)
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
+
+  lines           ErpOrderLine[]
+  deliveryResults ErpDeliveryResult[]
+
+  @@unique([linkId, externalOrderId])
+  @@unique([linkId, orderId])
+  @@index([storeId, billedAt])
+}
+
+/// @stage S09 · PR 610 (CN-028) — one piece of an order as the ERP has it: its own `lineId` (`<order number>-<n>`, never
+/// reused), the customer's whole-taka price after the combo split and discounts, the grade, and the ERP's answer (the
+/// shop price fixed on the order, whether it came from the ERP's Return stock). A Return-stock piece that fails the
+/// packing check is SHORT (`order.line.short`) until it is filled or the admin decides (WAIT, REPLACE, CANCEL).
+model ErpOrderLine {
+  id                 String         @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store          @relation(fields: [storeId], references: [id])
+  erpOrderId         String         @db.Uuid
+  erpOrder           ErpOrder       @relation(fields: [erpOrderId], references: [id])
+  /// The shop's order line this piece belongs to, and which piece of it (1 … quantity).
+  orderItemId        String?        @db.Uuid
+  piece              Int            @default(1)
+  lineId             String
+  sku                String
+  grade              ErpGrade       @default(A)
+  /// The customer's price for this piece, minor units of whole taka (the remainder of a split is on the last piece).
+  customerPriceMinor Int
+  comboId            String?        @db.Uuid
+  /// An exchange order's line names the line it replaces (PR 614).
+  replacesLineId     String?
+  /// The ERP's shop price fixed on the order for this piece ("bought from ERP at"), minor units.
+  shopPriceMinor     Int?
+  fromReturnStock    Boolean        @default(false)
+  state              ErpLineState   @default(OPEN)
+  shortReason        String?
+  shortAt            DateTime?      @db.Timestamptz(3)
+  filledAt           DateTime?      @db.Timestamptz(3)
+  decision           ErpLineAction?
+  /// REPLACE: the SKU asked for instead.
+  decisionSku        String?
+  decidedAt          DateTime?      @db.Timestamptz(3)
+  decidedById        String?        @db.Uuid
+  createdAt          DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@unique([erpOrderId, lineId])
+  @@index([storeId, state])
+}
+
+enum ErpLineState {
+  OPEN
+  /// The ERP could not fill it (`order.line.short`): the order waits for the admin's decision or the stock.
+  SHORT
+  /// Dropped by the admin's CANCEL: never billed; kept in the order's history.
+  CANCELLED
+  /// No longer in the shop's order (an edit sent the order again without it).
+  REMOVED
+}
+
+enum ErpLineAction {
+  WAIT
+  REPLACE
+  CANCEL
+}
+
+/// @stage S09 · PR 611 (CN-028) — one courier result sent to the ERP (`PUT /orders/{id}/delivery`): delivered, partial
+/// (with the staff's Partial delivery box: the kept lines, what was paid, any discount promised by phone) or returned.
+/// A courier correction is a new row; the ERP's answer (its identification) is kept on the row.
+model ErpDeliveryResult {
+  id                 String             @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store              @relation(fields: [storeId], references: [id])
+  erpOrderId         String             @db.Uuid
+  erpOrder           ErpOrder           @relation(fields: [erpOrderId], references: [id])
+  outcome            ErpDeliveryOutcome
+  courier            String
+  consignmentId      String?
+  /// What the courier collected, minor units of whole taka.
+  collectedMinor     BigInt             @default(0)
+  at                 DateTime           @db.Timestamptz(3)
+  keptLineIds        String[]           @default([])
+  discountGivenMinor BigInt             @default(0)
+  phoneConfirmed     Boolean            @default(false)
+  note               String?
+  markedById         String?            @db.Uuid
+  sentAt             DateTime?          @db.Timestamptz(3)
+  answer             Json?
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, at])
+  @@index([erpOrderId])
+}
+
+enum ErpDeliveryOutcome {
+  DELIVERED
+  PARTIAL
+  RETURNED
+}
+
+/// @stage S09 · PR 610 (CN-028) — Retail's account at the ERP as the ERP last said (`GET /account`, `account.hold`,
+/// `account.released`): what Retail owes, the hold and when it would start. One row per link; the account check and
+/// the hold events refresh it. A cache of the ERP's answer: the books (PR 615) never read their balance from here.
+model ErpAccountState {
+  id                   String       @id @default(uuid(7)) @db.Uuid
+  storeId              Int
+  store                Store        @relation(fields: [storeId], references: [id])
+  linkId               String       @unique @db.Uuid
+  link                 ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  onHold               Boolean      @default(false)
+  reason               String?
+  /// The date the hold starts if no payment comes, and the ERP's own warning window.
+  holdsOn              DateTime?    @db.Date
+  warnFromDays         Int?
+  lastPaymentAt        DateTime?    @db.Date
+  daysSinceLastPayment Int?
+  /// What Retail owes (not counting pieces waiting for the owner's check), and those, and exchanges at risk; minor units.
+  balanceMinor         BigInt?
+  waitingCheckMinor    BigInt?
+  exchangesAtRiskMinor BigInt?
+  heldAt               DateTime?    @db.Timestamptz(3)
+  releasedAt           DateTime?    @db.Timestamptz(3)
+  checkedAt            DateTime?    @db.Timestamptz(3)
+  createdAt            DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime     @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId])
+}
+
+// ---- PR 615 · Retail's ERP account ledger and the pipeline stock ---------------------------------------------------------
+
+/// @stage S09 · PR 615 (CN-028) — Retail's ERP account (docs/RETAIL-ERP-MODEL.md §3.1): one entry per ERP event, never
+/// edited, never deleted. `eventId` is unique forever within the link (an entry the shop writes from an answer or by
+/// hand has a key of its own: `ship:<consignment>`, `adj:<adjustment id>`, `switch:<date>`). The business date is the
+/// ERP's own date (Asia/Dhaka). A correction is a REVERSAL entry (`reverses`) plus a new entry. `seq` and the hash chain
+/// (`prevHash` → `hash`) show any change. Balance = the sum of `amountMinor` (+ what Retail owes more, − less).
+/// @append-only
+model ErpAccountEntry {
+  id              String              @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store               @relation(fields: [storeId], references: [id])
+  linkId          String              @db.Uuid
+  link            ErpStoreLink        @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// Position in the link's chain: 1, 2, 3 … with no gap.
+  seq             Int
+  kind            ErpAccountEntryKind
+  eventId         String
+  businessDate    DateTime            @db.Date
+  /// Signed, minor units of whole taka: + Retail owes more, − Retail owes less.
+  amountMinor     BigInt
+  externalOrderId String?
+  lineId          String?
+  returnListId    String?
+  consignmentId   String?
+  exchangeId      String?
+  paymentRef      String?
+  source          ErpEntrySource
+  /// The eventId this entry reverses (REVERSAL), if any.
+  reverses        String?
+  /// The ledger row of the ERP event it came from (ErpEvent.id), the shop adjustment it came from (BooksAdjustment.id).
+  erpEventRowId   String?             @db.Uuid
+  adjustmentId    String?             @db.Uuid
+  prevHash        String?
+  hash            String
+  createdById     String?             @db.Uuid
+  createdAt       DateTime            @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, eventId])
+  @@unique([linkId, seq])
+  /// One reversal per original entry (PostgreSQL: rows with no `reverses` never clash).
+  @@unique([linkId, reverses])
+  @@index([storeId, businessDate])
+  @@index([linkId, kind, businessDate])
+  @@index([linkId, externalOrderId])
+}
+
+enum ErpAccountEntryKind {
+  /// The order billed when the shipment is recorded (`erpTotal`, `billedAt`): +.
+  BILL
+  /// `exchange.settled` EXTRA (+) / ADJUSTMENT (−).
+  EXCHANGE_EXTRA
+  EXCHANGE_ADJUSTMENT
+  /// `exchange.billed` (+) / `exchange.credited` (−).
+  EXCHANGE_BILL
+  EXCHANGE_CREDIT
+  /// `return.piece.decided` APPROVED or APPROVED_AT_PACKING (`credit`): −.
+  RETURN_CREDIT
+  /// `payment.recorded` (the ERP Accounts team): −.
+  PAYMENT
+  /// The one-time move of old open amounts at the switch date, at the buying price: +.
+  SWITCH_TRANSFER
+  /// Any event with `reverses`: the original undone by an opposite entry: ∓.
+  REVERSAL
+  /// A shop correction by Accounts with the PIN and a reason, paired with the ERP's matching entry: ∓.
+  ADJUSTMENT
+}
+
+enum ErpEntrySource {
+  WEBHOOK
+  PULL
+  /// From an ERP answer (the bill in the answer to `POST /shipments`).
+  ANSWER
+  MANUAL
+  SWITCH
+}
+
+/// @stage S09 · PR 615 (CN-028) — "paid to ERP" as the shop records it (Retail's cash going out; docs/RETAIL-ERP-MODEL.md
+/// §3.1): by the Accounts role or the owner only (`erp.payments.record`). Matched against the ERP's `payment.recorded`
+/// (amount, date within 2 days, reference) by the books match; a wrong record is put right by a new record that reverses
+/// it (`reversesId`), never edited.
+/// @append-only
+model ErpPaymentRecord {
+  id           String       @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store        @relation(fields: [storeId], references: [id])
+  linkId       String       @db.Uuid
+  link         ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  paidOn       DateTime     @db.Date
+  /// Minor units of whole taka; a reversing record carries the opposite amount.
+  amountMinor  BigInt
+  method       String?
+  reference    String?
+  note         String?
+  /// The record this one reverses: one reversal per record.
+  reversesId   String?      @unique @db.Uuid
+  recordedById String       @db.Uuid
+  createdAt    DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, paidOn])
+  @@index([linkId, reference])
+}
+
+/// @stage S09 · PR 615 (CN-028) — one billed piece and where it is now (docs/RETAIL-ERP-MODEL.md §3.2): in the pipeline
+/// (billed and with the courier, coming back, or handed back and waiting for the owner's check) or out of it (delivered
+/// = goods cost, approved = credit, declined = return loss). Built from the shop's own piece states, not from the ERP, so
+/// it is an independent check. Every move is kept in ErpPipelineMove.
+model ErpPipelinePiece {
+  id               String        @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store         @relation(fields: [storeId], references: [id])
+  linkId           String        @db.Uuid
+  link             ErpStoreLink  @relation(fields: [linkId, storeId], references: [id, storeId])
+  orderId          String?       @db.Uuid
+  externalOrderId  String
+  lineId           String
+  sku              String
+  /// The buying price on the bill (the shop price fixed on the order), minor units.
+  buyingPriceMinor Int
+  state            ErpPieceState
+  billedOn         DateTime      @db.Date
+  /// The business date the piece reached its current state.
+  stateDate        DateTime      @db.Date
+  exchangeId       String?
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(3)
+
+  moves ErpPipelineMove[]
+
+  @@unique([linkId, externalOrderId, lineId])
+  @@index([storeId, state])
+  @@index([linkId, state, stateDate])
+}
+
+enum ErpPieceState {
+  /// In the pipeline: billed, with the courier or out for delivery.
+  BILLED
+  /// In the pipeline: the courier is bringing it back.
+  RETURNING
+  /// In the pipeline: handed back, on Hold or in Return stock, not checked yet (equals the ERP's `waitingCheck`).
+  WAITING_CHECK
+  /// Out: delivered to the customer (goods cost on the delivery day).
+  DELIVERED
+  /// Out: checked and approved (a credit, no cost).
+  APPROVED
+  /// Out: checked and declined (a return loss on the decision day).
+  DECLINED
+}
+
+/// @stage S09 · PR 615 (CN-028) — one move of a pipeline piece from a state to the next, on a business date, with the
+/// event that caused it. The pipeline value of any day is rebuilt from these rows.
+/// @append-only
+model ErpPipelineMove {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store            @relation(fields: [storeId], references: [id])
+  linkId           String           @db.Uuid
+  link             ErpStoreLink     @relation(fields: [linkId, storeId], references: [id, storeId])
+  pieceId          String           @db.Uuid
+  piece            ErpPipelinePiece @relation(fields: [pieceId], references: [id])
+  fromState        ErpPieceState?
+  toState          ErpPieceState
+  businessDate     DateTime         @db.Date
+  buyingPriceMinor Int
+  /// The ERP event (or shop fact) that moved it: an eventId, or `delivery:<id>`, `handback:<id>`.
+  cause            String
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@unique([pieceId, cause])
+  @@index([linkId, businessDate])
+}
+
+// ---- PR 612 · courier return lists and the hand-back counts -------------------------------------------------------------
+
+/// @stage S09 · PR 612 (CN-028) — a courier's hand-back, sent to the ERP as a return list (`POST /return-lists`, §2.5.3):
+/// which parcels came back, counted and noted by staff (`returns.handback`). The shop never decides whether a piece can be
+/// sold again: the owner decides in the ERP. A return that does not come through a courier uses `courier` HAND.
+model ErpReturnList {
+  id           String              @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store               @relation(fields: [storeId], references: [id])
+  linkId       String              @db.Uuid
+  link         ErpStoreLink        @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// The list's own id as the ERP gets it (never reused).
+  returnListId String
+  courier      String
+  /// The courier's own date the parcels reached the shop.
+  handedBackAt DateTime            @db.Date
+  status       ErpReturnListStatus @default(OPEN)
+  sentAt       DateTime?           @db.Timestamptz(3)
+  answer       Json?
+  error        String?
+  createdById  String?             @db.Uuid
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime            @updatedAt @db.Timestamptz(3)
+
+  parcels ErpReturnListParcel[]
+
+  @@unique([linkId, returnListId])
+  @@index([storeId, status, handedBackAt])
+}
+
+enum ErpReturnListStatus {
+  /// Being scanned at the desk.
+  OPEN
+  /// Sent, waiting for the ERP's answer (or to be sent again).
+  SENT
+  ACCEPTED
+  REFUSED
+}
+
+/// @stage S09 · PR 612 (CN-028) — one parcel on a return list: the pieces the ERP expects, the pieces counted at the desk,
+/// a short condition note and (with `returns.handback.photo`) a photo of the sealed bag. A count that differs starts the
+/// courier claim at once (`claimStartedAt`). The ERP's answer for the parcel (IN_RETURN_STOCK, HOLD, REFUSED) is kept.
+model ErpReturnListParcel {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store         @relation(fields: [storeId], references: [id])
+  returnListId    String        @db.Uuid
+  returnList      ErpReturnList @relation(fields: [returnListId], references: [id])
+  orderId         String?       @db.Uuid
+  externalOrderId String
+  consignmentId   String?
+  expectedCount   Int?
+  receivedCount   Int
+  note            String?
+  /// The photo of the sealed bag (MediaAsset.id), when `returns.handback.photo` asks for one.
+  photoAssetId    String?       @db.Uuid
+  result          String?
+  countDiffers    Boolean       @default(false)
+  claimStartedAt  DateTime?     @db.Timestamptz(3)
+  scannedById     String?       @db.Uuid
+  scannedAt       DateTime      @default(now()) @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@unique([returnListId, externalOrderId])
+  @@index([storeId, consignmentId])
+}
+
+// ---- PR 614 · exchange through the ERP ----------------------------------------------------------------------------------
+
+/// @stage S09 · PR 614 (CN-028) — an exchange as the ERP has it (§2.10): the shop's exchange case (Exchange.id), the new
+/// order that names the old one, the ERP's exchange id and status, the 4-day return watch and the late-return mark, and
+/// what is at risk until the old piece is back and checked. The customer's original sale stands; the swap difference and
+/// the exchange charge are Retail's own income lines, never sent as ERP events.
+model ErpExchangeLink {
+  id                 String       @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store        @relation(fields: [storeId], references: [id])
+  linkId             String       @db.Uuid
+  link               ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// The shop's exchange case (Exchange.id).
+  exchangeId         String       @db.Uuid
+  erpExchangeId      String?
+  ofExternalOrderId  String
+  newExternalOrderId String?
+  /// The ERP's status (WAITING_STOCK … CANCELLED), as last read.
+  erpStatus          String?
+  approvedAt         DateTime?    @db.Timestamptz(3)
+  approvedById       String?      @db.Uuid
+  /// What the customer pays for a dearer new piece (`exchange.passPriceRiseToCustomer`), minor units.
+  customerPaysMinor  BigInt       @default(0)
+  newDeliveredAt     DateTime?    @db.Timestamptz(3)
+  /// The old piece must be back by then (the ERP's 4 days, `exchange.returnWatch.days`).
+  returnWatchUntil   DateTime?    @db.Timestamptz(3)
+  lateReturnMarkedAt DateTime?    @db.Timestamptz(3)
+  valueAtRiskMinor   BigInt?
+  settledKind        String?
+  settledAmountMinor BigInt?
+  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime     @updatedAt @db.Timestamptz(3)
+
+  lines ErpExchangeLine[]
+
+  @@unique([linkId, exchangeId])
+  @@index([storeId, erpStatus])
+}
+
+/// @stage S09 · PR 614 (CN-028) — one line of an exchange: the old order's line marked exchanged and the new line that
+/// replaces it, with both customer prices and the new piece's shop price of that day.
+model ErpExchangeLine {
+  id                String          @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store           @relation(fields: [storeId], references: [id])
+  exchangeLinkId    String          @db.Uuid
+  exchangeLink      ErpExchangeLink @relation(fields: [exchangeLinkId], references: [id])
+  oldLineId         String
+  oldSku            String
+  newLineId         String?
+  newSku            String
+  oldPriceMinor     Int
+  newPriceMinor     Int
+  newShopPriceMinor Int?
+  createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@unique([exchangeLinkId, oldLineId])
+}
+
+// ---- PR 617, 618 · what Retail sends the ERP: the daily summary and the fixed costs --------------------------------------
+
+/// @stage S09 · PR 617 (CN-028) — one version of a day's summary as the shop built it from its own records (§3.3):
+/// every line with its source, `incomplete` for a category with no figure yet (never sent as 0), `netProfit` before
+/// fixed costs. A late fact makes a new version (while the day is open, `books.resend.days`); every send and the ERP's
+/// reply are in ErpBooksSend.
+/// @append-only
+model ErpDailySummary {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store        @relation(fields: [storeId], references: [id])
+  linkId         String       @db.Uuid
+  link           ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  date           DateTime     @db.Date
+  version        Int
+  /// The body sent (`PUT /daily-summaries/{date}`), its SHA-256 and what was still unknown.
+  body           Json
+  bodyHash       String
+  incomplete     String[]     @default([])
+  netProfitMinor BigInt
+  /// Why this version was built: NIGHTLY, LATE_FACT, MISSING (the ERP's `summary.missing`), BACKFILL (the switch).
+  reason         String
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, date, version])
+  @@index([storeId, date])
+}
+
+/// @stage S09 · PR 618 (CN-028) — one version of a month's fixed costs (salary, rent, utilities, other) as the owner set
+/// them (`fixedcosts.write`); raising one is a new version. Sent by `PUT /fixed-costs/{month}` and spread by the days of
+/// the month with the ERP's rule (exact to the paisa, the remainder on the last day). Never part of `costs.other`.
+/// @append-only
+model ErpFixedCostMonth {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store        @relation(fields: [storeId], references: [id])
+  linkId         String       @db.Uuid
+  link           ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// The month's first day.
+  month          DateTime     @db.Date
+  version        Int
+  salaryMinor    BigInt
+  rentMinor      BigInt
+  utilitiesMinor BigInt
+  otherMinor     BigInt
+  note           String?
+  createdById    String?      @db.Uuid
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, month, version])
+  @@index([storeId, month])
+}
+
+/// @stage S09 · PR 617, 618 (CN-028) — every time the shop sent a daily summary or a month's fixed costs to the ERP, with
+/// the ERP's reply as it came (accepted or not). The admin sees this log; nothing in it is ever changed.
+/// @append-only
+model ErpBooksSend {
+  id         String           @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store            @relation(fields: [storeId], references: [id])
+  linkId     String           @db.Uuid
+  link       ErpStoreLink     @relation(fields: [linkId, storeId], references: [id, storeId])
+  kind       ErpBooksSendKind
+  /// The version sent (ErpDailySummary.id or ErpFixedCostMonth.id).
+  refId      String           @db.Uuid
+  attempt    Int
+  sentAt     DateTime         @db.Timestamptz(3)
+  httpStatus Int?
+  accepted   Boolean
+  answer     Json?
+  error      String?
+  createdAt  DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, kind, sentAt])
+  @@index([refId])
+}
+
+enum ErpBooksSendKind {
+  DAILY_SUMMARY
+  FIXED_COSTS
+}
+
+// ---- PR 616 · the books match engine -------------------------------------------------------------------------------------
+
+/// @stage S09 · PR 616 (CN-028) — one run of the books match (checks A–F, §4.1): nightly at 01:30, or by hand
+/// (`books.reconcile`). The run row is written when it starts and finished when it ends.
+model BooksMatchRun {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store          @relation(fields: [storeId], references: [id])
+  linkId      String         @db.Uuid
+  link        ErpStoreLink   @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// NIGHTLY, MANUAL, RECHECK.
+  trigger     String
+  fromDate    DateTime       @db.Date
+  toDate      DateTime       @db.Date
+  status      BooksRunStatus @default(RUNNING)
+  /// Each check's result (A–F: MATCHED, PARTIAL, PENDING, MISMATCH) and its counts.
+  checks      Json?
+  differences Int            @default(0)
+  error       String?
+  startedById String?        @db.Uuid
+  startedAt   DateTime       @db.Timestamptz(3)
+  finishedAt  DateTime?      @db.Timestamptz(3)
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, startedAt])
+}
+
+enum BooksRunStatus {
+  RUNNING
+  DONE
+  FAILED
+}
+
+/// @stage S09 · PR 616 (CN-028) — the immutable close of one day (§4.2): the shop's balance and the ERP's, the parts of
+/// the tie formula (§3.4), the result and a hash chained to the day before. A re-close is a new version; a change to a
+/// closed day raises HISTORY_CHANGED.
+/// @append-only
+model BooksDayClose {
+  id                     String       @id @default(uuid(7)) @db.Uuid
+  storeId                Int
+  store                  Store        @relation(fields: [storeId], references: [id])
+  linkId                 String       @db.Uuid
+  link                   ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  date                   DateTime     @db.Date
+  version                Int
+  result                 BooksResult
+  runId                  String?      @db.Uuid
+  openingBalanceMinor    BigInt
+  closingBalanceMinor    BigInt
+  erpClosingBalanceMinor BigInt?
+  goodsMinor             BigInt
+  returnLossesMinor      BigInt
+  pipelineStartMinor     BigInt
+  pipelineEndMinor       BigInt
+  switchTransferMinor    BigInt       @default(0)
+  paymentsMinor          BigInt
+  /// What the tie formula leaves over (0 = it ties).
+  tieRemainderMinor      BigInt
+  waitingCheckMinor      BigInt       @default(0)
+  exchangesAtRiskMinor   BigInt       @default(0)
+  /// Every figure of the day with its parts, for the "explain this number" view.
+  figures                Json
+  prevHash               String?
+  hash                   String
+  closedById             String?      @db.Uuid
+  createdAt              DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, date, version])
+  @@index([storeId, date])
+}
+
+/// @stage S09 · PR 616 (CN-028) — a week, month, year or lifetime close built from the day closes (never from raw data):
+/// the parts add up to the whole and the chain of balances holds. A month closes only when every day matched; the
+/// owner's override (reason and PIN) is kept and shown on every report of that month. Re-opening writes a new version.
+/// @append-only
+model BooksPeriodClose {
+  id                  String           @id @default(uuid(7)) @db.Uuid
+  storeId             Int
+  store               Store            @relation(fields: [storeId], references: [id])
+  linkId              String           @db.Uuid
+  link                ErpStoreLink     @relation(fields: [linkId, storeId], references: [id, storeId])
+  level               BooksPeriodLevel
+  periodStart         DateTime         @db.Date
+  periodEnd           DateTime         @db.Date
+  version             Int
+  result              BooksResult
+  openingBalanceMinor BigInt
+  closingBalanceMinor BigInt
+  matchedDays         Int
+  totalDays           Int
+  figures             Json
+  /// Closed with differences by the owner (reason and PIN), or re-opened (`reopens` = the version it re-opens).
+  override            Boolean          @default(false)
+  overrideReason      String?
+  reopens             Int?
+  pinVerified         Boolean          @default(false)
+  closedById          String?          @db.Uuid
+  prevHash            String?
+  hash                String
+  createdAt           DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, level, periodStart, version])
+  @@index([storeId, level, periodStart])
+}
+
+enum BooksPeriodLevel {
+  WEEK
+  MONTH
+  YEAR
+  LIFETIME
+}
+
+enum BooksResult {
+  MATCHED
+  /// Matched as far as v6 lets the shop compare (the v7 requests of §13 are missing).
+  PARTIAL
+  /// A difference the ERP's rows explain, waiting for the pull (`books.timing.maxMinutes`).
+  PENDING
+  MISMATCH
+}
+
+/// @stage S09 · PR 616 (CN-028) — one difference the match found (§4.3), by class, with its amount and what it points at.
+/// It is fixed only by reversing and adding (a pull, a reversal, a `books.adjust` adjustment), never by editing a number;
+/// the row records when and how it was fixed. `key` keeps one row per difference across runs.
+model BooksDifference {
+  id              String                @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store                 @relation(fields: [storeId], references: [id])
+  linkId          String                @db.Uuid
+  link            ErpStoreLink          @relation(fields: [linkId, storeId], references: [id, storeId])
+  date            DateTime              @db.Date
+  check           BooksCheck
+  kind            BooksDifferenceClass
+  key             String
+  status          BooksDifferenceStatus @default(PENDING)
+  amountMinor     BigInt?
+  eventId         String?
+  externalOrderId String?
+  detail          Json
+  firstRunId      String?               @db.Uuid
+  lastRunId       String?               @db.Uuid
+  firstSeenAt     DateTime              @db.Timestamptz(3)
+  lastSeenAt      DateTime              @db.Timestamptz(3)
+  fixedAt         DateTime?             @db.Timestamptz(3)
+  /// How it was fixed: the adjustment or the ledger entry that settled it.
+  adjustmentId    String?               @db.Uuid
+  entryId         String?               @db.Uuid
+  createdAt       DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime              @updatedAt @db.Timestamptz(3)
+
+  notes BooksDifferenceNote[]
+
+  @@unique([linkId, date, kind, key])
+  @@index([storeId, status, date])
+}
+
+enum BooksCheck {
+  /// A. the ERP account and its statement rows.
+  ACCOUNT
+  /// B. the tie formula (§3.4).
+  TIES
+  /// C. returns and exchanges.
+  RETURNS
+  /// D. the stored daily summaries.
+  SUMMARY
+  /// E. fixed costs.
+  FIXED_COSTS
+  /// F. billed orders.
+  ORDERS
+}
+
+enum BooksDifferenceClass {
+  MISSING_EVENT
+  UNKNOWN_ROW
+  AMOUNT_DIFF
+  UNMATCHED_PAYMENT
+  TIE_BROKEN
+  STALE_SUMMARY
+  HISTORY_CHANGED
+}
+
+enum BooksDifferenceStatus {
+  /// Timing: the pull is fetching an event the ERP holds (for `books.timing.maxMinutes`).
+  PENDING
+  MISMATCH
+  FIXED
+  /// Left in a month the owner closed with differences (reason and PIN).
+  OVERRIDDEN
+}
+
+/// @stage S09 · PR 616 (CN-028) — a note on a difference (`books.reconcile`), never edited.
+/// @append-only
+model BooksDifferenceNote {
+  id           String          @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store           @relation(fields: [storeId], references: [id])
+  differenceId String          @db.Uuid
+  difference   BooksDifference @relation(fields: [differenceId], references: [id])
+  text         String
+  createdById  String          @db.Uuid
+  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
+
+  @@index([differenceId])
+}
+
+/// @stage S09 · PR 616 (CN-028) — a shop correction (§4.3): `books.adjust`, the owner's PIN, a reason and the ERP's
+/// matching event; it writes an ADJUSTMENT entry to the account ledger. A late fact on a closed month is a PRIOR_PERIOD
+/// adjustment dated in the open period. Never edited; a wrong adjustment is reversed by another (`reversesId`).
+/// @append-only
+model BooksAdjustment {
+  id           String              @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store               @relation(fields: [storeId], references: [id])
+  linkId       String              @db.Uuid
+  link         ErpStoreLink        @relation(fields: [linkId, storeId], references: [id, storeId])
+  kind         BooksAdjustmentKind
+  /// The business date it counts on (in the open period).
+  date         DateTime            @db.Date
+  /// Signed, minor units of whole taka, as the account entry it writes.
+  amountMinor  BigInt
+  reason       String
+  /// The ERP's matching event (its eventId), which the adjustment pairs with: one adjustment per ERP event.
+  erpEventId   String
+  differenceId String?             @db.Uuid
+  /// The adjustment this one reverses: one reversal per adjustment.
+  reversesId   String?             @unique @db.Uuid
+  pinVerified  Boolean
+  createdById  String              @db.Uuid
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, erpEventId])
+  @@index([storeId, date])
+}
+
+enum BooksAdjustmentKind {
+  ADJUSTMENT
+  PRIOR_PERIOD
 }
 
 /// @stage S27 · parked — goods received into the shared pool when no ERP is connected (the no-ERP seam, PR 499).
@@ -7138,9 +8155,9 @@ model ReportDigest {
 /// packaging), linked to what it was for.
 /// @append-only
 model CostEntry {
-  id          String   @id @default(uuid(7)) @db.Uuid
+  id          String           @id @default(uuid(7)) @db.Uuid
   storeId     Int
-  store       Store    @relation(fields: [storeId], references: [id])
+  store       Store            @relation(fields: [storeId], references: [id])
   service     String
   module      String?
   amountMinor Int
@@ -7149,11 +8166,31 @@ model CostEntry {
   refId       String?
   detail      String?
   source      String
-  occurredAt  DateTime @db.Timestamptz(3)
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  occurredAt  DateTime         @db.Timestamptz(3)
+  /// PR 618 (CN-028): the line of the ERP daily summary this cost feeds (empty: none), and the business day it counts on
+  /// (the store's own date; empty: the day of `occurredAt`).
+  summaryLine CostSummaryLine?
+  costDate    DateTime?        @db.Date
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, service, occurredAt])
   @@index([storeId, refType, refId])
+  @@index([storeId, summaryLine, costDate])
+}
+
+/// PR 618 (CN-028): the cost lines of the ERP daily summary (docs/RETAIL-ERP-MODEL.md §3.3). Fixed costs are never one
+/// of them: they go by `PUT /fixed-costs/{month}` (ErpFixedCostMonth).
+enum CostSummaryLine {
+  PACKAGING
+  ACCESSORIES
+  PAYMENT_FEES
+  DELIVERY
+  ADS_FACEBOOK
+  ADS_INSTAGRAM
+  ADS_GOOGLE
+  ADS_TIKTOK
+  ADS_OTHER
+  OTHER
 }
 
 /// @stage S16 · B3.9 — a prepaid balance (SMS credit) drawn down by usage.
@@ -7188,16 +8225,18 @@ model PrepaidTopUp {
 
 /// @stage S16 · B3.8 — an expense head mapped to the ERP's ExpenseHead.
 model ExpenseHead {
-  id               String    @id @default(uuid(7)) @db.Uuid
+  id               String           @id @default(uuid(7)) @db.Uuid
   storeId          Int
-  store            Store     @relation(fields: [storeId], references: [id])
+  store            Store            @relation(fields: [storeId], references: [id])
   key              String
   nameEn           String
   nameBn           String?
   erpExpenseHeadId String?
-  archivedAt       DateTime? @db.Timestamptz(3)
-  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 618 (CN-028): the daily-summary cost line this head's expenses feed (empty: none).
+  summaryLine      CostSummaryLine?
+  archivedAt       DateTime?        @db.Timestamptz(3)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
 
   expenses RetailExpense[]
 
