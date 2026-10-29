@@ -58,6 +58,7 @@ import { customerSettings } from './registry-customers';
 import { seoSettings } from './registry-seo';
 import { erpV6Settings } from './registry-erp-v6';
 import { invoiceSettings } from './registry-invoice';
+import { supportSettings } from './registry-support';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1241,6 +1242,8 @@ export const registry = {
   ...erpV6Settings,
   // ---- S20 · PR 407 · the customer invoice: its printed copy (paper and roll), its chat picture and issuing (registry-invoice.ts, version 63). ----
   ...invoiceSettings,
+  // ---- S22 · PR 425 · the support core: the inbox, files in a conversation, customer numbers (registry-support.ts, version 63). ----
+  ...supportSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

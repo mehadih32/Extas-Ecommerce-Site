@@ -267,6 +267,15 @@ export const PERMISSIONS = {
   'erp.account.read': { group: 'books' },
   'erp.payments.record': { group: 'books' },
   'fixedcosts.write': { group: 'books' },
+  // S22 · PR 425 — the support inbox (B4.4, B4.12): open the inbox and every conversation with its who-did-what log
+  // (`support.read`); reply, write an internal note, take a conversation, mark it solved or open (`support.reply`);
+  // give a conversation to someone else or take it back from them (`support.assign`); change Support settings
+  // (`support.settings`). A customer's number shows masked as everywhere else (`customers.phoneMask`), in full only
+  // with `customers.phone` (PR 284).
+  'support.read': { group: 'support' },
+  'support.reply': { group: 'support' },
+  'support.assign': { group: 'support' },
+  'support.settings': { group: 'support' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -27,7 +27,8 @@
     "fulfilment": "Packing and print",
     "customers": "Customers",
     "seo": "Website and SEO",
-    "books": "Books and the ERP account"
+    "books": "Books and the ERP account",
+    "support": "Support"
   },
   "permissions": {
     "settings": {
@@ -228,6 +229,12 @@
     },
     "fixedcosts": {
       "write": "Set a month’s fixed costs (salary, rent, utilities, other)"
+    },
+    "support": {
+      "read": "Open the support inbox and conversations (with who replied)",
+      "reply": "Reply, write internal notes, take a conversation, mark it solved",
+      "assign": "Give a conversation to someone else",
+      "settings": "Change Support settings"
     }
   },
   "totp": {

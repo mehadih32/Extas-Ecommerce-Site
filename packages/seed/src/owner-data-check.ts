@@ -140,6 +140,20 @@ export function checkOwnerData(input: CheckInput): Finding[] {
     marked(`reviews[${i}].body (Review)`, r.body);
     marked(`reviews[${i}].name (Review)`, r.name);
   }
+  // PR 425: a sample conversation is plainly a sample — its channel, the person, every message and every team name
+  const support = input.sample.support;
+  if (support) marked('support.channel.name (SupportChannel)', support.channel.name);
+  for (const [i, c] of (support?.conversations ?? []).entries()) {
+    marked(`support.conversations[${i}].contact.name (SupportContact)`, c.contact.name);
+    marked(`support.conversations[${i}].subject (Conversation)`, c.subject);
+    for (const [j, m] of c.messages.entries()) {
+      marked(`support.conversations[${i}].messages[${j}].body (Message)`, m.body);
+      if (m.senderName) marked(`support.conversations[${i}].messages[${j}].senderName (Message)`, m.senderName);
+    }
+    if (c.contact.phone && !SAMPLE_PHONE.test(c.contact.phone)) {
+      add('sample-phone', `sample support.conversations[${i}].contact.phone (SupportContact)`, 'a sample phone must be in the unallocated +88010 range');
+    }
+  }
   if (!SAMPLE_PHONE.test(input.sample.customer.phone)) {
     add('sample-phone', 'sample customer.phone (Customer)', 'a sample phone must be in the unallocated +88010 range');
   }

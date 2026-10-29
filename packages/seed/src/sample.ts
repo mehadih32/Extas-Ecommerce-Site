@@ -142,6 +142,44 @@ const sampleSchema = z
           .strict(),
       )
       .optional(),
+    /**
+     * PR 425: a sample support channel (not connected: its connector is PR 426) with a few conversations, so the
+     * inbox, a conversation's thread, its internal note and its who-did-what log are built and measured on real rows.
+     * Every name and every message says "Sample"; a contact's phone is the sample customer's (+88010 range) or none.
+     */
+    support: z
+      .object({
+        channel: z.object({ kind: z.enum(['whatsapp', 'messenger', 'livechat', 'instagram', 'email']), externalId: text(80), name: text(80) }).strict(),
+        conversations: z
+          .array(
+            z
+              .object({
+                refCode: z.string().regex(/^C[A-Z0-9]{4,12}$/),
+                contact: z.object({ externalId: text(80), name: text(80), phone: z.string().regex(/^\+[1-9]\d{7,14}$/).optional() }).strict(),
+                subject: text(80),
+                status: z.enum(['OPEN', 'WAITING', 'SOLVED']),
+                /** Link the sample order (the conversation is about it). */
+                order: z.boolean().default(false),
+                messages: z
+                  .array(
+                    z
+                      .object({
+                        direction: z.enum(['IN', 'OUT', 'NOTE']),
+                        /** The team member's name on a reply or a note (made up, says "Sample"). */
+                        senderName: text(80).optional(),
+                        body: text(2_000),
+                        at: z.iso.datetime(),
+                      })
+                      .strict(),
+                  )
+                  .min(1),
+              })
+              .strict(),
+          )
+          .min(1),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((s, ctx) => {
@@ -184,6 +222,16 @@ const sampleSchema = z
       if (!products.has(r.product)) bad(`review: unknown product ${r.product}`);
       if (!sizes.has(r.size)) bad(`review of ${r.product}: unknown size ${r.size}`);
       if (r.colour && !colours.has(r.colour)) bad(`review of ${r.product}: unknown colour ${r.colour}`);
+    }
+    const refs = new Set<string>();
+    for (const c of s.support?.conversations ?? []) {
+      if (refs.has(c.refCode)) bad(`support: conversation ${c.refCode} is listed twice`);
+      refs.add(c.refCode);
+      if (c.messages[0]!.direction !== 'IN') bad(`support ${c.refCode}: a conversation starts with the customer's message`);
+      for (const [i, m] of c.messages.entries()) {
+        if (m.direction !== 'IN' && !m.senderName) bad(`support ${c.refCode} message ${i}: a reply or a note names who wrote it`);
+        if (i > 0 && m.at <= c.messages[i - 1]!.at) bad(`support ${c.refCode} message ${i}: messages are in time order`);
+      }
     }
     for (const i of s.order.items) {
       const p = products.get(i.product);
@@ -234,6 +282,11 @@ export const SAMPLE_TABLES = [
   'OrderEvent',
   'ProductQuestion',
   'Review',
+  'SupportChannel',
+  'SupportContact',
+  'Conversation',
+  'Message',
+  'ConversationEvent',
 ] as const;
 export type SampleTable = (typeof SAMPLE_TABLES)[number];
 
@@ -682,6 +735,9 @@ async function seedSampleTx(
     made('OrderEvent');
   }
 
+  // --- PR 425 · the sample support conversations (natural keys: the channel, the contact, the conversation's code) ---
+  if (s.support) await seedSupportTx(tx, storeId, s.support, { phone: s.customer.phone, number: s.order.number }, made);
+
   // --- the marker: this store is the sample store ---
   const recordedBefore = await tx.defaultPackApplication.findFirst({ where: { storeId, packKey: SAMPLE_PACK_KEY, version: s.version } });
   if (!recordedBefore) {
@@ -697,4 +753,126 @@ async function seedSampleTx(
     pack: packReport,
     recorded: !recordedBefore,
   };
+}
+
+type SampleSupport = NonNullable<SampleData['support']>;
+
+/** The first words of a message as the inbox shows them (the support package's rule: spaces folded, 120 characters). */
+const previewOf = (text: string) => {
+  const s = text.replace(/\s+/g, ' ').trim();
+  return s.length > 120 ? `${s.slice(0, 119).trimEnd()}…` : s;
+};
+
+/**
+ * PR 425 — the sample support channel, its contacts and conversations, each message with its who-did-what line, the
+ * way the support package writes them: a customer's message RECEIVED, a reply REPLIED and kept unsent (the channel's
+ * connector is not built: NOT_SENT · CHANNEL_NOT_CONNECTED), a note NOTED, and the reply's move to "waiting".
+ * Created whole or not at all, by the conversation's code; the log is append-only, so nothing is ever rewritten.
+ */
+async function seedSupportTx(
+  tx: Prisma.TransactionClient,
+  storeId: number,
+  s: SampleSupport,
+  sample: { phone: string; number: string },
+  made: (t: SampleTable) => void,
+): Promise<void> {
+  const ch = s.channel;
+  let channel = await tx.supportChannel.findUnique({ where: { storeId_kind_externalId: { storeId, kind: ch.kind, externalId: ch.externalId } }, select: { id: true } });
+  if (!channel) {
+    channel = await tx.supportChannel.create({ data: { storeId, kind: ch.kind, externalId: ch.externalId, name: ch.name, enabled: false }, select: { id: true } });
+    made('SupportChannel');
+  }
+  const customer = await tx.customer.findUnique({ where: { storeId_phone: { storeId, phone: sample.phone } }, select: { id: true } });
+  const order = await tx.order.findUnique({ where: { storeId_number: { storeId, number: sample.number } }, select: { id: true } });
+
+  for (const c of s.conversations) {
+    if (await tx.conversation.findUnique({ where: { storeId_refCode: { storeId, refCode: c.refCode } }, select: { id: true } })) continue;
+    const customerId = c.contact.phone && c.contact.phone === sample.phone ? (customer?.id ?? null) : null;
+    let contact = await tx.supportContact.findUnique({
+      where: { storeId_channelKind_externalId: { storeId, channelKind: ch.kind, externalId: c.contact.externalId } },
+      select: { id: true },
+    });
+    if (!contact) {
+      contact = await tx.supportContact.create({
+        data: { storeId, channelKind: ch.kind, externalId: c.contact.externalId, displayName: c.contact.name, phone: c.contact.phone ?? null, customerId },
+        select: { id: true },
+      });
+      made('SupportContact');
+    }
+
+    // what the conversation row says after these messages
+    const sent = c.messages.filter((m) => m.direction !== 'NOTE');
+    const last = sent[sent.length - 1]!;
+    const firstReply = c.messages.find((m) => m.direction === 'OUT');
+    let waitingSince: string | null = null;
+    for (const m of sent) waitingSince = m.direction === 'IN' ? (waitingSince ?? m.at) : null;
+    const started = new Date(c.messages[0]!.at);
+    const conv = await tx.conversation.create({
+      data: {
+        storeId,
+        channelId: channel.id,
+        contactId: contact.id,
+        customerId,
+        orderId: c.order ? (order?.id ?? null) : null,
+        status: c.status,
+        refCode: c.refCode,
+        tags: [],
+        subject: c.subject,
+        lastMessageAt: new Date(last.at),
+        lastDirection: last.direction,
+        lastPreview: previewOf(last.body),
+        waitingSince: c.status === 'SOLVED' || !waitingSince ? null : new Date(waitingSince),
+        firstResponseAt: firstReply ? new Date(firstReply.at) : null,
+        resolvedAt: c.status === 'SOLVED' ? new Date(last.at) : null,
+        createdAt: started,
+        updatedAt: new Date(c.messages[c.messages.length - 1]!.at),
+      },
+      select: { id: true },
+    });
+    made('Conversation');
+
+    let status = 'OPEN';
+    for (const [i, m] of c.messages.entries()) {
+      const at = new Date(m.at);
+      const incoming = m.direction === 'IN';
+      const note = m.direction === 'NOTE';
+      const message = await tx.message.create({
+        data: {
+          storeId,
+          conversationId: conv.id,
+          direction: m.direction,
+          senderType: incoming ? 'CUSTOMER' : 'STAFF',
+          senderName: incoming ? c.contact.name : m.senderName!,
+          body: m.body,
+          isInternalNote: note,
+          externalMessageId: incoming ? `sample-${c.refCode}-${i}` : null,
+          requestKey: incoming ? null : `sample-${c.refCode}-${i}`,
+          status: incoming ? 'RECEIVED' : note ? null : 'NOT_SENT',
+          failReason: incoming || note ? null : 'CHANNEL_NOT_CONNECTED',
+          sentAt: at,
+          createdAt: at,
+          updatedAt: at,
+        },
+        select: { id: true },
+      });
+      made('Message');
+      const actor = incoming ? { actorType: 'CUSTOMER' as const, actorName: c.contact.name } : { actorType: 'STAFF' as const, actorName: m.senderName! };
+      const kind = incoming ? 'RECEIVED' : note ? 'NOTED' : 'REPLIED';
+      await tx.conversationEvent.create({
+        data: { storeId, conversationId: conv.id, kind, ...actor, messageId: message.id, data: incoming ? { files: 0 } : { files: 0, chars: m.body.length }, createdAt: at },
+      });
+      made('ConversationEvent');
+      if (m.direction === 'OUT' && status === 'OPEN') {
+        await tx.conversationEvent.create({ data: { storeId, conversationId: conv.id, kind: 'STATUS', ...actor, data: { from: 'OPEN', to: 'WAITING', auto: true }, createdAt: at } });
+        made('ConversationEvent');
+        status = 'WAITING';
+      } else if (incoming) status = 'OPEN';
+    }
+    if (c.status === 'SOLVED') {
+      const at = new Date(last.at);
+      const by = [...c.messages].reverse().find((m) => m.senderName)?.senderName ?? null;
+      await tx.conversationEvent.create({ data: { storeId, conversationId: conv.id, kind: 'STATUS', actorType: 'STAFF', actorName: by, data: { from: status, to: 'SOLVED' }, createdAt: at } });
+      made('ConversationEvent');
+    }
+  }
 }

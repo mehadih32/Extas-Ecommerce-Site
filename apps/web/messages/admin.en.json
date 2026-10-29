@@ -55,7 +55,10 @@
     "messagesChannels": "Channels & limits",
     "messagesConsent": "Consent",
     "messagesJourney": "Order journey",
-    "messagesTemplates": "Templates"
+    "messagesTemplates": "Templates",
+    "supportInbox": "Inbox",
+    "supportConversation": "Conversation",
+    "supportSettings": "Support settings"
   },
   "login": {
     "metaTitle": "Admin sign-in",

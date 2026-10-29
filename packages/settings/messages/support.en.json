@@ -1,0 +1,15 @@
+{
+  "groups": {
+    "support": "Support"
+  },
+  "support": {
+    "inbox": {
+      "label": "Support inbox",
+      "help": "How the inbox works (Support → Inbox). \"Per page\": how many conversations one page of the list shows. \"Longest reply\": the most characters a reply or an internal note may have. \"Take it on reply\": a reply to a conversation nobody has taken makes you its owner. \"Waiting after a reply\": your reply moves the conversation to \"Waiting for the customer\" until the customer writes again."
+    },
+    "attachments": {
+      "label": "Files in a conversation",
+      "help": "Files the team may attach to a reply or a note. Files a customer sends are always kept. \"Files per message\": how many one message takes. \"Largest file\": in megabytes. \"Kinds\": pictures, videos and PDFs; each file is checked by its contents, not its name."
+    }
+  }
+}

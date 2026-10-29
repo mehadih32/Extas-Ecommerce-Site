@@ -221,6 +221,7 @@ export const APPEND_ONLY_LOCKED = [
   'ErpDailySummary',
   'ErpFixedCostMonth',
   'ErpBooksSend',
+  'ConversationEvent',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
