@@ -4,6 +4,7 @@
 //   - the demo gate's layout checks, reused from docs/qa/device-matrix.js (pageChecks): PAGE-WIDER-THAN-PHONE,
 //     HORIZONTAL-SCROLL, STICKS-OUT-RIGHT, TEXT-CUT-OFF, TAPS-OVERLAP; plus JS-ERROR and PAGE-STATUS;
 //   - STICKS-OUT-LEFT: nothing is cut off at the left edge;
+//   - TAB-LABEL-SQUEEZED: an admin section tab is never narrower than its label (follow-up 466: the Orders tabs at 390 px);
 //   - TAP-TOO-SMALL (touch sizes): every tap target at least 44 × 44 (inline text links at least 32 tall), measured as
 //     the area that really takes the tap (elementFromPoint), so invisible padding counts;
 //   - INPUT-FONT-UNDER-16 (touch sizes): every form field at least 16 px (no iPhone zoom on focus).
@@ -82,6 +83,13 @@ function appChecks(o) {
     if (r.left < -1 && r.right > 1 && r.width < W * 3) left.push(`${label(e)}←${Math.round(r.left)}`);
   }
   if (left.length) issues.push({ k: 'STICKS-OUT-LEFT', d: list(left) });
+
+  // The admin's section tabs keep their labels' width (the row scrolls sideways): a squeezed tab's label spills into the next.
+  const squeezed = [];
+  for (const e of document.querySelectorAll('[data-testid=a2-tabs] .a2-tab')) {
+    if (vis(e) && e.scrollWidth > e.clientWidth + 1) squeezed.push(`${e.textContent.trim().slice(0, 24)} ${e.clientWidth}<${e.scrollWidth}`);
+  }
+  if (squeezed.length) issues.push({ k: 'TAB-LABEL-SQUEEZED', d: list(squeezed) });
 
   // Form fields at least 16 px on touch screens.
   if (o.inputFont) {
