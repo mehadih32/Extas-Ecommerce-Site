@@ -1,0 +1,30 @@
+{
+  "erp": {
+    "summary": {
+      "tickSeconds": {
+        "label": "Look for summaries to send every (seconds)",
+        "help": "How often the shop looks for a daily summary or a month's fixed costs to send: yesterday's after the send time, a try that is due again, or a day the ERP asked for."
+      },
+      "checkMinutes": {
+        "label": "Check the ERP's copy every (minutes)",
+        "help": "How often the open days are built again (a late cost or courier fact makes a new version) and compared with the copy the ERP keeps. A day the ERP lacks or holds in another version is sent again."
+      },
+      "gapDays": {
+        "label": "Look back for days the ERP lacks (days)",
+        "help": "How many days back the shop asks the ERP which daily summaries it has, so a day it never got is sent by itself."
+      },
+      "noCostLines": {
+        "label": "Costs this shop never has",
+        "help": "Cost lines the shop never spends on (for example accessories). They are sent as 0. Every other cost line needs a figure each day, or the day is marked not complete yet: a missing figure is never sent as 0."
+      }
+    }
+  },
+  "books": {
+    "status": {
+      "waitingCheckWarnDays": {
+        "label": "Flag returns waiting for the owner's check after (days)",
+        "help": "Returned pieces still waiting for the owner's check in the ERP longer than this show under Needs you now on the Books page."
+      }
+    }
+  }
+}

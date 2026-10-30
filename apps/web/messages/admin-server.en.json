@@ -58,6 +58,8 @@
       "inventory_erp_checkOrders": "ERP account and open orders checked",
       "inventory_books_checkAccount": "ERP account statement read into the books",
       "inventory_books_close": "Nightly books match and day close",
+      "inventory_books_summaryTick": "Daily summary and fixed costs to the ERP",
+      "inventory_books_summaryCheck": "Books check against the ERP's copy",
       "inventory_erp_pushDocuments": "Documents to the ERP",
       "inventory_lowStock_evaluate": "Low stock check",
       "inventory_erp_reconcile": "Stock check against the ERP",

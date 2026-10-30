@@ -672,6 +672,9 @@ importers:
       '@extas/erp-types':
         specifier: workspace:*
         version: link:../erp-types
+      '@extas/metrics':
+        specifier: workspace:*
+        version: link:../metrics
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings

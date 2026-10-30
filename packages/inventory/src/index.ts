@@ -15,6 +15,8 @@
 // - PR 205 the sync health panel (sync-health.ts); PR 206 manual re-sync (resync.ts);
 // - PR 207 the stock movement report and the reconciliation with the ERP (movements.ts);
 // - PR 196 the ERP → shop webhooks: verified, stored once, applied by the worker (webhook.ts);
+// - CN-028 · PR 617, 618: what Retail sends the ERP — the daily summary (books-summary.ts), the fixed costs and the extra
+//   cost lines (books-costs.ts), their exact rules (books-rules.ts) and the Books status card (books-status.ts);
 // - background jobs for the BullMQ worker (jobs.ts).
 // Every service takes the database, a settings reader and the connection layer, checks the permission itself and
 // writes the audit log in the same transaction. The admin API is apps/web/src/app/api/admin/inventory.
@@ -53,6 +55,10 @@ export * from './shop-price';
 // PR 620 (CN-028): the ERP's own signed calls to the shop (who is asking, and the log of every call).
 export * from './erp-site-calls';
 export * from './guard';
+// CN-028 · PR 617, 618: the daily summary, the fixed costs and the Books status card.
+export * from './books-rules';
+export * from './books-summary';
+export * from './books-status';
 export * from './sync';
 export * from './locations';
 export * from './stock';

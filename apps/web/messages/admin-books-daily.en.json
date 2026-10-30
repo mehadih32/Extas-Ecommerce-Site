@@ -1,0 +1,128 @@
+{
+  "booksDaily": {
+    "metaTitle": "Daily summary",
+    "title": "Daily summary",
+    "sub": "The daily figures the shop sends the ERP, how each was taken, and what needs you about them.",
+    "state": {
+      "NOT_LINKED": "Starts at the switch-over",
+      "NOT_RUN": "Not run yet",
+      "RAN": "Last match"
+    },
+    "notLinked": "The books with the ERP start when this store switches to the new ERP contract (v6) on the ERP's switch date. Until then nothing here changes and nothing is sent.",
+    "notRun": "The nightly match has not run for this store yet. Each check shows its result after the first run.",
+    "ranAt": "Last run {when}",
+    "card": "Books status",
+    "checksTitle": "The six checks",
+    "check": {
+      "ACCOUNT": "What Retail owes the ERP",
+      "TIES": "Profit and loss ties to the account",
+      "RETURNS": "Returns and exchanges",
+      "SUMMARY": "Daily summaries the ERP keeps",
+      "FIXED_COSTS": "Fixed costs",
+      "ORDERS": "Billed orders"
+    },
+    "result": {
+      "MATCHED": "Matched",
+      "PARTIAL": "Matched as far as v6 allows",
+      "PENDING": "Waiting for the ERP",
+      "MISMATCH": "Differs",
+      "none": "Not run yet",
+      "off": "Starts at the switch-over"
+    },
+    "partialNote": "Matched as far as v6 allows: the ERP does not yet give every number the shop asks for (row ids, the stored body hash). Everything it does give agrees.",
+    "lastClose": "Last day closed",
+    "lastCloseNone": "No day closed yet",
+    "tie": "Tie remainder",
+    "waiting": "Waiting for the owner's check",
+    "waitingNote": "{pieces} pieces · oldest {days} days",
+    "waitingNone": "No returned piece is waiting",
+    "atRisk": "Exchanges at risk",
+    "atRiskNone": "Not reported yet",
+    "needsTitle": "Needs you now",
+    "needsNone": "Nothing needs you now.",
+    "need": {
+      "DIFFERENCES": "{n} open differences: {kind}",
+      "TIE_BROKEN": "The books do not tie on {date}: {amount} {order}",
+      "SUMMARY_REFUSED": "The ERP refused the summary of {date}: {error}",
+      "SUMMARY_MISSING": "{n} days have no summary yet, from {first}",
+      "SUMMARY_INCOMPLETE": "{n} days still have figures not in yet, from {first}",
+      "FIXED_COSTS_MISSING": "The fixed costs of {month} are not in yet",
+      "WAITING_CHECK_OLD": "{pieces} returned pieces have waited {days} days for the owner's check in the ERP"
+    },
+    "kind": {
+      "MISSING_EVENT": "an ERP row the shop lacks",
+      "UNKNOWN_ROW": "a shop row the ERP lacks",
+      "AMOUNT_DIFF": "same row, another amount",
+      "UNMATCHED_PAYMENT": "a payment on one side only",
+      "TIE_BROKEN": "the tie leaves a remainder",
+      "STALE_SUMMARY": "the ERP holds an older summary",
+      "HISTORY_CHANGED": "a closed day moved"
+    },
+    "fixedLink": "Enter fixed costs",
+    "summaries": "Daily summaries sent to the ERP",
+    "summariesSub": "Built from the shop's own records at {time}, sent again by itself when a late fact changes an open day. Last accepted: {last}.",
+    "summariesNone": "No summary built yet",
+    "summariesEmpty": "The first summary is built at the send time after the switch-over.",
+    "col": {
+      "day": "Day",
+      "state": "Sent",
+      "profit": "Profit before fixed costs",
+      "incomplete": "Not in yet",
+      "tries": "Tries",
+      "version": "Version"
+    },
+    "sendState": {
+      "ACCEPTED": "Accepted",
+      "WAITING": "Waiting to send",
+      "RETRYING": "Trying again",
+      "REFUSED": "Refused by the ERP"
+    },
+    "complete": "Complete",
+    "reason": {
+      "NIGHTLY": "nightly",
+      "LATE_FACT": "late fact",
+      "MISSING": "asked by the ERP",
+      "BACKFILL": "filled back"
+    },
+    "line": {
+      "orders": "orders",
+      "sales": "sales",
+      "income": "delivery charges",
+      "deliveries": "deliveries",
+      "goods": "goods cost",
+      "returnLosses": "return losses",
+      "packaging": "packaging",
+      "delivery": "courier",
+      "paymentFees": "payment fees",
+      "accessories": "accessories",
+      "ads": "ads",
+      "other": "other costs",
+      "customers": "customers"
+    },
+    "versions": "v{n} · {reason}",
+    "never": "Nothing here moves money. A difference is put right only by a reversing entry and a new one, with the owner's PIN — never by changing a number.",
+    "status": {
+      "title": "Books status",
+      "off": "Starts at the switch-over",
+      "notRun": "Not run yet",
+      "matched": "Matched",
+      "differs": "{n} open differences",
+      "ranAt": "Last match {when}",
+      "matchedDays": "Days matched",
+      "matchedDaysValue": "{n} of {total}",
+      "open": "Open differences",
+      "byCheck": "By check",
+      "partial": "as far as v6 allows",
+      "balance": "What Retail owes the ERP (shop)",
+      "erpBalance": "The same at the ERP",
+      "waiting": "Waiting for the owner's check",
+      "atRisk": "Exchanges at risk",
+      "monthsClosed": "Months closed",
+      "chain": "Closed days and months",
+      "chainOk": "unchanged since closed",
+      "chainBroken": "a closed record changed",
+      "none": "—",
+      "notRunNote": "The nightly match has not run for this store yet. The numbers show after the first run."
+    }
+  }
+}

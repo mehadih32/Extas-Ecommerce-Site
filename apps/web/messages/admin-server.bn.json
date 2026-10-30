@@ -58,6 +58,8 @@
       "inventory_erp_checkOrders": "ERP অ্যাকাউন্ট আর খোলা অর্ডার মেলানো",
       "inventory_books_checkAccount": "ERP অ্যাকাউন্টের হিসাব খাতায় আনা",
       "inventory_books_close": "রাতে খাতা মেলানো আর দিন বন্ধ",
+      "inventory_books_summaryTick": "ERP-তে দৈনিক হিসাব আর স্থির খরচ পাঠানো",
+      "inventory_books_summaryCheck": "ERP-র কাছে রাখা হিসাবের সাথে মেলানো",
       "inventory_erp_pushDocuments": "ERP-তে কাগজ পাঠানো",
       "inventory_lowStock_evaluate": "কম স্টকের চেক",
       "inventory_erp_reconcile": "ERP-র সাথে স্টক মেলানো",

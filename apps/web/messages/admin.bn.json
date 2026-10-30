@@ -61,7 +61,8 @@
     "messagesTemplates": "টেমপ্লেট",
     "supportInbox": "ইনবক্স",
     "supportConversation": "কথোপকথন",
-    "supportSettings": "সাপোর্ট সেটিংস"
+    "supportSettings": "সাপোর্ট সেটিংস",
+    "booksDaily": "দৈনিক হিসাব"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

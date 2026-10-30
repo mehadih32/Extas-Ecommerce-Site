@@ -63,6 +63,7 @@ import { erpOrdersV6Settings } from './registry-erp-orders-v6';
 import { booksSettings } from './registry-books';
 import { returnsV6Settings } from './registry-returns-v6';
 import { bhandariP1Settings } from './registry-bhandari-p1';
+import { booksSummarySettings } from './registry-books-summary';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1256,6 +1257,8 @@ export const registry = {
   ...returnsV6Settings,
   // ---- CN-029 Phase 1 · PR 609, 620 (Bhandari) · import by style code (the B-grade name), the signed ERP-to-shop calls (registry-bhandari-p1.ts, version 65). ----
   ...bhandariP1Settings,
+  // ---- CN-028 · PR 617, 618 (CN-029 Phase 1) · the daily summary and fixed costs to the ERP: how often they are looked for and checked against the ERP's copy, the cost lines a store never has, the Books status card (registry-books-summary.ts, version 69). ----
+  ...booksSummarySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
