@@ -28,6 +28,11 @@ export * from './erp-events';
 export * from './erp-events-pull';
 // CN-029 §16 (PR 607): one ERP link per store (its own connection and keys; a handover starts a new link).
 export * from './erp-link';
+// PR 610, 611 (CN-028): orders to the ERP v6 (one line per piece, whole-taka prices, the hold and the short line), the
+// shipment at pickup and every delivery result, their event handlers and the relay's v6 steps.
+export * from './erp-orders-v6';
+export * from './erp-orders-v6-events';
+export * from './erp-v6-relay';
 export * from './guard';
 export * from './sync';
 export * from './locations';

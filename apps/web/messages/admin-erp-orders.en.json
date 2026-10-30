@@ -1,0 +1,77 @@
+{
+  "erpOrder": {
+    "title": "ERP order",
+    "sub": "What the ERP has for this order. Shown only when the store speaks ERP contract v6.",
+    "state": {
+      "accepted": "With the ERP",
+      "waiting": "Not at the ERP yet",
+      "held": "Waiting",
+      "refused": "Refused"
+    },
+    "held": {
+      "ACCOUNT_ON_HOLD": "Waiting: the ERP account is on hold. It goes by itself when the ERP releases the account.",
+      "INSUFFICIENT_STOCK": "Waiting: the ERP is short of stock. It goes again by itself when the stock is there.",
+      "NO_SHOP_PRICE": "Waiting: a SKU has no shop price at the ERP yet. That SKU is not sold until it has one.",
+      "LINE_WAITING": "Waiting: a line is short. The shipment goes once the line is decided or filled."
+    },
+    "hold": {
+      "on": "The ERP account is on hold: new orders wait and checkout is paused until the ERP releases it.",
+      "onOpen": "The ERP account is on hold: new orders wait. Checkout stays open (the pause switch is off).",
+      "warn": "The ERP will hold new orders on {date} ({days} days left) unless a payment reaches it.",
+      "settings": "ERP connection settings",
+      "noShopPrice": "Not sold: the ERP has no shop price yet for {skus}. Set the shop price in the ERP. They sell again when the ERP takes an order with them, or after the wait when no order is waiting for them.",
+      "noShopPriceMore": "{skus} and {count} more"
+    },
+    "row": {
+      "number": "ERP order",
+      "total": "ERP total (shop prices)",
+      "billed": "Billed",
+      "picked": "Courier pickup",
+      "consignment": "Consignment",
+      "identification": "ERP identification",
+      "none": "—"
+    },
+    "ident": {
+      "GREEN": "Green · one answer fits",
+      "YELLOW": "Yellow · count and value certain, colour or size not",
+      "ORANGE": "Orange · unclear, the parcel goes on Hold"
+    },
+    "lines": {
+      "title": "Pieces at the ERP",
+      "price": "Customer price",
+      "shop": "Shop price",
+      "fromReturn": "From ERP return stock",
+      "fromReturnHelp": "This piece came back from a customer; it is checked at packing.",
+      "state": {
+        "OPEN": "Open",
+        "SHORT": "Short",
+        "CANCELLED": "Cancelled",
+        "REMOVED": "Removed"
+      },
+      "short": {
+        "RETURN_PIECE_FAILED_CHECK": "The Return-stock piece failed the packing check.",
+        "other": "The ERP cannot fill this line now."
+      },
+      "decided": "Decided: {action}"
+    },
+    "decide": {
+      "title": "This line waits for your decision",
+      "WAIT": "Wait for stock",
+      "REPLACE": "Replace",
+      "CANCEL": "Cancel line",
+      "sku": "New SKU",
+      "skuHint": "Checked for stock and priced at its shop price today.",
+      "reason": "Short reason",
+      "send": "Send to the ERP",
+      "done": "Sent to the ERP"
+    },
+    "err": {
+      "FORBIDDEN": "You do not have permission for this.",
+      "INVALID_INPUT": "Something in the form is not right.",
+      "CONFLICT": "This line is no longer waiting.",
+      "NOT_FOUND": "This order is not at the ERP.",
+      "network": "No connection. Try again.",
+      "other": "It did not work. Try again."
+    }
+  }
+}

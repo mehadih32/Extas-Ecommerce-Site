@@ -209,8 +209,10 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 on PostgreSQL: ERP contract v6', () => {
     const again = signedErpWebhook(secret, JSON.parse(w!.body), clock);
     expect(await deliver({ body: again.body, headers: { ...again.headers, 'x-extas-delivery': w!.id } })).toEqual({ status: 200, code: 'DUPLICATE', eventId: first.eventId });
     expect(await t.prisma.erpEvent.count({ where: { eventId: w!.id } })).toBe(1);
-    expect(await applyErpEvents(deps())).toMatchObject({ seen: 1, stored: 1 });
-    expect((await t.prisma.erpEvent.findUniqueOrThrow({ where: { id: first.eventId! } })).status).toBe('STORED');
+    // ~~stored: 1 / STORED~~ — Updated 30 Oct 2026 (PR 610): `account.released` now has its handler (the held
+    // orders go again), so it is APPLIED; an event without a handler is still only STORED.
+    expect(await applyErpEvents(deps())).toMatchObject({ seen: 1, applied: 1 });
+    expect((await t.prisma.erpEvent.findUniqueOrThrow({ where: { id: first.eventId! } })).status).toBe('APPLIED');
     // Applying again changes nothing.
     expect(await applyErpEvents(deps())).toMatchObject({ seen: 0 });
   });
@@ -250,7 +252,8 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 on PostgreSQL: ERP contract v6', () => {
     expect(row.bodyHash).toMatch(/^[0-9a-f]{64}$/);
     expect((await erpEventProblems(t.prisma, storeA)).conflicts).toBe(1);
     await applyErpEvents(deps());
-    expect((await t.prisma.erpEvent.findUniqueOrThrow({ where: { id: first.eventId! } })).status).toBe('STORED');
+    // ~~STORED~~ — Updated 30 Oct 2026 (PR 610): the stored body (`account.released`) has its handler now.
+    expect((await t.prisma.erpEvent.findUniqueOrThrow({ where: { id: first.eventId! } })).status).toBe('APPLIED');
   });
 
   it('PR 608: returns by webhook and by pull are one ledger; a missing piece becomes one courier claim; a reversal marks it REVERSED', async () => {

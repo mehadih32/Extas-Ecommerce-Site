@@ -55,6 +55,7 @@
       "inventory_reservations_release": "Expired cart holds",
       "inventory_erp_pullEvents": "Events from the ERP (pull)",
       "inventory_erp_applyEvents": "ERP events applied",
+      "inventory_erp_checkOrders": "ERP account and open orders checked",
       "inventory_erp_pushDocuments": "Documents to the ERP",
       "inventory_lowStock_evaluate": "Low stock check",
       "inventory_erp_reconcile": "Stock check against the ERP",

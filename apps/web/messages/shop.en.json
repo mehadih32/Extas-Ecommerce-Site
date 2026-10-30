@@ -319,7 +319,8 @@
       "stock": "An item in your bag just sold out. Please check your bag.",
       "empty": "Your bag is empty.",
       "network": "We could not reach the shop. Press Confirm again — you will not get two orders.",
-      "other": "Something went wrong. Please try again, or message us on WhatsApp."
+      "other": "Something went wrong. Please try again, or message us on WhatsApp.",
+      "paused": "We are not taking new orders for a short while. Your bag is saved — please try again a little later, or message us on WhatsApp."
     },
     "mock": {
       "title": "Pay for your order",

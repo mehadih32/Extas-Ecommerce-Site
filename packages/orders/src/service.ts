@@ -333,7 +333,14 @@ export function inventoryOf(deps: OrdersDeps): InventoryDeps {
  * PR 127: an order whose lines changed after it was sent goes again as `revision` 1, 2, … (its own idempotency key).
  */
 export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder, revision?: number): Promise<string> {
-  const items = await tx.orderItem.findMany({ where: { storeId: o.storeId, orderId: o.id, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { sku: true, quantity: true, unitPriceMinor: true, discountMinor: true } });
+  const items = await tx.orderItem.findMany({
+    where: { storeId: o.storeId, orderId: o.id, status: 'ACTIVE' },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    select: { id: true, sku: true, quantity: true, unitPriceMinor: true, discountMinor: true, lineTotalMinor: true, comboId: true, comboGroupKey: true },
+  });
+  // PR 610: what the v6 document also needs (the v5 document never reads it): the order's own discount and what the
+  // customer paid before the door (online and from the wallet).
+  const money = await tx.order.findUniqueOrThrow({ where: { id: o.id }, select: { discountMinor: true, paidMinor: true, walletAppliedMinor: true } });
   const r = await enqueueOrderPush(
     inventoryOf(deps),
     {
@@ -343,12 +350,14 @@ export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder, re
       customerName: o.customerName?.trim() || o.phone || o.number,
       customerPhone: o.phone || o.number,
       shippingAddress: (o.backfilledAddress || o.shippingAddressText || '').trim() || o.fulfillmentType,
-      items: items.map((i) => ({ sku: i.sku, quantity: i.quantity, unitPriceMinor: i.unitPriceMinor, discountMinor: i.discountMinor })),
+      items: items.map((i) => ({ sku: i.sku, quantity: i.quantity, unitPriceMinor: i.unitPriceMinor, discountMinor: i.discountMinor, orderItemId: i.id, lineTotalMinor: Math.max(0, i.lineTotalMinor), comboId: i.comboId, comboGroupKey: i.comboGroupKey })),
       shippingFeeMinor: o.deliveryChargeMinor,
       codAmountMinor: o.codAmountMinor,
       paymentMethod: o.paymentMethod ?? 'COD',
       note: o.note,
       ...(revision ? { revision } : {}),
+      orderDiscountMinor: Math.max(0, money.discountMinor),
+      advancePaidMinor: Math.max(0, money.paidMinor) + Math.max(0, money.walletAppliedMinor),
     },
     { tx },
   );

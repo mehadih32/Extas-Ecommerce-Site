@@ -59,7 +59,9 @@ export type CheckoutErrorCode =
   /** PR 606: enough enquiries from this number or browser today (`data.perDay`). */
   | 'TOO_MANY'
   /** Follow-up 50: the test page's "paid" or "fail" while test payments are off or a real gateway is connected. */
-  | 'TEST_PAYMENT_OFF';
+  | 'TEST_PAYMENT_OFF'
+  /** PR 610 (ERP contract v6): checkout pauses by itself while the ERP holds Retail's account (`erp.hold.pauseCheckout`). */
+  | 'PAUSED';
 
 /** One error type for every refusal of the checkout. The `code` is stable; the shop turns it into words. */
 export class CheckoutError extends Error {

@@ -58,10 +58,17 @@
 //                                                             order waits for it, the pay link, its messages and a call task
 //                                                             (orders.advance.request; nothing moves money or changes COD)
 //   POST  /api/admin/orders/:id/advance/resend                PR 542: {channels, note?, version?} "Send again" (orders.advance.request)
+//   GET   /api/admin/orders/:id/erp                           PR 610, 611 (ERP contract v6): the order at the ERP — its
+//                                                             pieces, holds, bill and identification (orders.read);
+//                                                             `erp: null` in v5
+//   POST  /api/admin/orders/:id/erp/lines/:lineId             PR 610: {action: WAIT | REPLACE | CANCEL, sku?, grade?,
+//                                                             reason?} a short line's decision, sent to the ERP (orders.lines)
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { decideErpLine, erpOrderView } from '@extas/inventory';
 import * as od from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
+import { shippingFail } from './shipping-api';
 
 interface Ctx {
   deps: od.OrdersDeps;
@@ -169,6 +176,34 @@ export function editBody(input: Record<string, unknown>): Record<string, unknown
   return out;
 }
 
+/**
+ * PR 610 — `/api/admin/orders/:id/erp[/…]` (ERP contract v6). The service checks the permission again (the line
+ * decision `orders.lines`) and writes the timeline and the audit row; their refusals
+ * (inventory or courier codes) are answered as JSON. Nothing here calls the ERP: the documents are queued and the relay
+ * sends them.
+ */
+async function erpRoute(request: Request, deps: AdminDeps | null, orderId: string, m: string, rest: string[]): Promise<Response> {
+  const url = new URL(request.url);
+  const storeId = storeIdOf(url);
+  if (storeId === null) return fail(400, 'invalid-store-id');
+  const [c, lineId] = rest;
+  const permission = !c ? 'orders.read' : c === 'lines' ? 'orders.lines' : null;
+  if (!permission || (c === 'lines' && (!lineId || rest.length !== 2))) return fail(404, 'not-found');
+  if ((!c && m !== 'GET') || (c && m !== 'POST')) return fail(405, 'method-not-allowed');
+  const g = await guardAdmin(request, deps, { permission, storeId });
+  if (g instanceof Response) return g;
+  const who = { actor: g.actor, storeId, ctx: g.ctx };
+  try {
+    if (!c) {
+      return json({ ok: true, erp: await erpOrderView(await inventoryDeps(deps!), who, orderId) });
+    }
+    const input = await body(request);
+    return json({ ok: true, result: await decideErpLine(await inventoryDeps(deps!), who, { ...input, orderId, lineId: decodeURIComponent(lineId!) } as never) });
+  } catch (e) {
+    return shippingFail(e);
+  }
+}
+
 /** Every order admin route: `path` is what comes after /api/admin/orders. */
 export async function ordersRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
@@ -248,6 +283,8 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.reassessOrder(x.deps, x.who, id) }));
   }
+  // PR 610 (ERP contract v6): the order at the ERP, a short line's decision
+  if (b === 'erp') return erpRoute(request, deps, id, m, path.slice(2));
   if (m !== 'POST') return notAllowed();
   const run = (perm: od.OrdersPermission, fn: (x: Ctx, input: Record<string, unknown>, opts: od.CommandOptions) => Promise<od.CommandResult>) =>
     handle(request, deps, perm, async (x) => {

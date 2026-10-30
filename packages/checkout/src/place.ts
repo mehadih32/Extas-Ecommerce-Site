@@ -40,7 +40,7 @@ import { applyOutcome, PAYMENT_CALL_REASON, PAYMENT_EVENTS, PAYMENT_FLAGS } from
 import { findBag } from '@extas/cart';
 import type { Prisma } from '@extas/db/client';
 import { hasAddressDetail } from '@extas/delivery';
-import { convertCart, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
+import { convertCart, erpCheckoutPaused, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
 import { z } from 'zod';
 import { addressInputSchema } from './address';
 import { ADVANCE_PURPOSE, CHECKOUT_PAY_PURPOSES, FLAG_OUTCOMES } from './advance';
@@ -280,6 +280,10 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   // A second press, or a retry after a lost answer: the order this key placed.
   const again = await replayOf(deps, storeId, visitorId, d.idempotencyKey);
   if (again) return again;
+  // PR 610 (CN-028, ERP contract v6): while the ERP holds Retail's account (409 ACCOUNT_ON_HOLD) it keeps no stock for
+  // new orders, so checkout pauses by itself (`erp.hold.pauseCheckout`, on) until the ERP releases it. Nothing is lost:
+  // an order placed before the pause is queued and goes when the account is released.
+  if ((await erpCheckoutPaused(deps, storeId)).paused) throw new CheckoutError('PAUSED', 'checkout is paused while the ERP holds the account');
 
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
   const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck, giftCfg, timeZone, capture] = await Promise.all([

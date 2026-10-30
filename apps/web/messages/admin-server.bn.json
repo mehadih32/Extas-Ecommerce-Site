@@ -55,6 +55,7 @@
       "inventory_reservations_release": "মেয়াদ শেষ কার্ট-হোল্ড ছাড়া",
       "inventory_erp_pullEvents": "ERP-র ঘটনা টেনে আনা",
       "inventory_erp_applyEvents": "ERP-র ঘটনা হিসাবে বসানো",
+      "inventory_erp_checkOrders": "ERP অ্যাকাউন্ট আর খোলা অর্ডার মেলানো",
       "inventory_erp_pushDocuments": "ERP-তে কাগজ পাঠানো",
       "inventory_lowStock_evaluate": "কম স্টকের চেক",
       "inventory_erp_reconcile": "ERP-র সাথে স্টক মেলানো",
