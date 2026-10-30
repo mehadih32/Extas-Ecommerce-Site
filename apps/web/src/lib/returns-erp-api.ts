@@ -15,6 +15,15 @@
 //   POST  /api/admin/returns/handback/lists/:id/send                 send a waiting list again now
 //   POST  /api/admin/returns/handback/lists/:id/resend               {parcelIds?} → the refused parcels on a new list
 // All need `returns.handback` (reading: `returns.handback` or `returns.view`).
+//
+// PR 613 · the Returns section (read-only: the owner decides every piece in the ERP):
+//   GET   /api/admin/returns/erp?tab=                                the seven tabs (counts, one tab's rows), last compare
+//   GET   /api/admin/returns/erp/timeline?ref=                       one parcel (consignment, order number or ERP order id)
+//   GET   /api/admin/returns/erp/losses                              the losses report by month
+//   GET   /api/admin/returns/erp/claims                              the courier claims and the desk's count differences
+//   GET   /api/admin/returns/erp/compare                             the last compare with the ERP
+//   POST  /api/admin/returns/erp/compare                             {date?} pull from the ERP again and compare again
+// All need `returns.view`. A difference is fixed by pulling again, never by editing a number (there is no route for it).
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
 import { handle } from './orders-api';
@@ -65,9 +74,35 @@ async function handbackRoute(request: Request, deps: AdminDeps | null, path: str
   }
 }
 
-/** `handback/*` (PR 612) and, from PR 613, `erp/*`: `path` starts with that word. */
+/** The Returns section: `path` is what comes after /api/admin/returns/erp. */
+async function erpRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
+  const m = request.method.toUpperCase();
+  const [a] = path;
+  if (path.length > 1) return notFound();
+  if (a === 'compare') {
+    if (m === 'POST') return handle(request, deps, 'returns.view', async (x) => ({ compare: await od.pullAndCompareReturns(x.deps, x.who, await body(request)) }));
+    if (m === 'GET') return handle(request, deps, 'returns.view', async (x) => ({ compare: await od.latestReturnsCompare(x.deps, x.who) }));
+    return notAllowed();
+  }
+  if (m !== 'GET') return notAllowed();
+  switch (a ?? '') {
+    case '':
+      return handle(request, deps, 'returns.view', async (x) => ({ overview: await od.returnsErpOverview(x.deps, x.who, { tab: x.url.searchParams.get('tab') ?? undefined }) }));
+    case 'timeline':
+      return handle(request, deps, 'returns.view', async (x) => ({ timeline: found(await od.parcelTimeline(x.deps, x.who, x.url.searchParams.get('ref') ?? ''), 'ref') }));
+    case 'losses':
+      return handle(request, deps, 'returns.view', async (x) => ({ losses: await od.returnsLosses(x.deps, x.who) }));
+    case 'claims':
+      return handle(request, deps, 'returns.view', async (x) => ({ claims: await od.returnsClaims(x.deps, x.who) }));
+    default:
+      return notFound();
+  }
+}
+
+/** `handback/*` (PR 612) and `erp/*` (PR 613): `path` starts with that word. */
 export async function returnsErpRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const [a, ...rest] = path;
   if (a === 'handback') return handbackRoute(request, deps, rest);
+  if (a === 'erp') return erpRoute(request, deps, rest);
   return notFound();
 }

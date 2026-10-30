@@ -15,6 +15,7 @@
     { "id": "orders/returns-qc", "route": "/admin/orders/returns/qc" },
     { "id": "orders/returns-refused", "route": "/admin/orders/returns/refused" },
     { "id": "orders/returns-handback", "route": "/admin/orders/returns/handback" },
+    { "id": "orders/returns-erp", "route": "/admin/orders/returns/erp" },
     { "id": "orders/pack", "route": "/admin/orders/packing" },
     { "id": "support/inbox", "route": "/admin/support" },
     { "id": "support/conversation", "route": "/admin/support/c/[id]" },

@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { returnsV6Settings, RETURNS_ERP_CHECK_DAYS } from '../src/registry-returns-v6';
+import { returnsV6Settings, RETURNS_ERP_CHECK_DAYS, RETURNS_LOSSES_MONTHS } from '../src/registry-returns-v6';
 
 describe('returns and exchanges on the ERP model (v67)', () => {
   it('every key is in the registry at version 67, per store, labelled in English and Bengali, its default valid', () => {
@@ -49,5 +49,12 @@ describe('returns and exchanges on the ERP model (v67)', () => {
     expect(s.default).toBe('01:15');
     expect(s.schema.safeParse('23:59').success).toBe(true);
     expect(s.schema.safeParse('25:00').success).toBe(false);
+  });
+
+  it('the losses report shows 3, 6 or 12 months, 6 by default', () => {
+    const s = returnsV6Settings['returns.losses.months'];
+    expect(s.default).toBe(6);
+    expect([...RETURNS_LOSSES_MONTHS]).toEqual([3, 6, 12]);
+    expect(s.schema.safeParse(24).success).toBe(false);
   });
 });
