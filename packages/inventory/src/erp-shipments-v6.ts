@@ -24,9 +24,8 @@ import type { Prisma } from '@extas/db/client';
 import { nowOf, TX, type Db, type InventoryDeps, type Tx } from './context';
 import { InventoryError } from './errors';
 import { isV6 } from './erp-model';
-import { applyOrderAnswer, digitsOf, erpOrderForRow, wholeTaka, type PushRow } from './erp-orders-v6';
+import { applyOrderAnswer, digitsOf, erpAmount, erpOrderForRow, wholeTaka, type PushRow } from './erp-orders-v6';
 import { enqueueErpDocument, minorToDecimal, type EnqueueResult } from './erp-push';
-import { decimalToMinor } from './webhook';
 
 /** Courier keys as the ERP takes them (`PATHAO`, `STEADFAST`, `HAND` …). */
 export const erpCourier = (providerKey: string | null | undefined): string => (providerKey || 'HAND').toUpperCase().replace(/[^A-Z0-9_]/g, '_');
@@ -178,7 +177,7 @@ export async function afterShipmentSent(deps: InventoryDeps, row: PushRow, answe
   if (!eo) return;
   const now = nowOf(deps);
   const digits = await digitsOf(deps.db, row.storeId);
-  const total = a.erpTotal != null ? decimalToMinor(a.erpTotal, digits) : null;
+  const total = a.erpTotal != null ? erpAmount(a.erpTotal, digits) : null;
   await deps.db.erpOrder.update({ where: { id: eo.id }, data: { shipmentSentAt: now, billedAt: eo.billedAt ?? a.billedAt ?? null, ...(total != null && !eo.exchangeOfId ? { erpTotalMinor: BigInt(total) } : {}), ...(a.consignmentId ? { consignmentId: a.consignmentId } : {}) } });
   // An exchange order is never billed; any other order the ERP shipped without a bill date is flagged for the books.
   if (!eo.billedAt && !a.billedAt && !eo.exchangeOfId) await deps.db.erpPush.update({ where: { id: row.id }, data: { lastError: BILLED_AT_MISSING } });
