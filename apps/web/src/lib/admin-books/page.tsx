@@ -62,6 +62,12 @@ export const booksApi = (storeId: number, path: string): string => withStore(sto
 /** A link to a books page in a store. */
 export const booksHref = (storeId: number, path: string): string => withStore(storeId, path);
 
+/**
+ * qa-gate F1 (CN-029 Phase 3): on a phone a table row is a two-column card, so a status cell that holds "Put right"
+ * spans the whole card (`a2-tdw`) — the opened form never runs off the screen. Desktop keeps its table.
+ */
+export const diffStatusCellClass = (adjust: boolean): string | undefined => (adjust ? 'a2-tdw' : undefined);
+
 /** Opens a books page for `perm`, or answers the element to show instead (no access, no database). */
 export async function openBooksPage(o: { perm: PermissionKey; here: string; current: string; title: string; sub: string; storeId?: number }): Promise<BooksPageCtx | { el: ReactElement }> {
   const deps = adminDeps();

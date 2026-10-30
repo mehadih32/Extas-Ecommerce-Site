@@ -540,6 +540,10 @@
 .adm2 .a2-tbl td.a2-tdx{display:none}
 .adm2 .a2-tbl td.a2-tdc{position:absolute;right:12px;top:12px}
 .adm2 .a2-tbl td.a2-tdc::before{display:none}
+/* qa-gate F1 (PR 616): a books form opened in a row card (Books › Differences › "Put right") takes the cell's whole
+   width, and its long buttons wrap instead of pushing the page wider than the phone. */
+.adm2 .a2-tbl td .a2-bkf{align-self:stretch;min-width:0;max-width:100%}
+.adm2 .a2-bkf .a2-btn{white-space:normal;height:auto;min-height:44px;padding-top:6px;padding-bottom:6px;text-align:center;overflow-wrap:anywhere}
 .adm2 .a2-tblf{border-radius:10px;border:1px solid var(--ln)}
 .adm2 .a2-bulk{bottom:72px}
 .adm2 .a2-dlgf .a2-btn{flex:1 1 auto}
