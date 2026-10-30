@@ -322,6 +322,10 @@
       "other": "Something went wrong. Please try again, or message us on WhatsApp.",
       "paused": "We are not taking new orders for a short while. Your bag is saved — please try again a little later, or message us on WhatsApp."
     },
+    "paused": {
+      "title": "We are not taking new orders just now",
+      "text": "Your bag is saved. Please come back a little later."
+    },
     "mock": {
       "title": "Pay for your order",
       "order": "Order #{number}",

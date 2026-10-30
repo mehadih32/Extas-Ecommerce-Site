@@ -126,6 +126,12 @@
       "expect": ["[data-testid=\"bag-summary\"]", "[data-testid=\"bag-bulk\"]", "[data-testid=\"bag-bulk-go\"]"]
     },
     {
+      "$comment": "PR 610 (CN-029 Phase 3 qa-gate I3) — the bag and the checkout while checkout is paused (the ERP holds the account): the calm \"not taking new orders\" line under the title, from the first paint (POST /api/shop/try-pause, test servers only: the sample bag, and this browser draws the line; nothing paused, nothing written).",
+      "paths": ["/checkout", "/bn/bag"],
+      "fill": "/api/shop/try-pause",
+      "expect": ["[data-testid=\"bag-paused\"], [data-testid=\"co-paused\"]"]
+    },
+    {
       "$comment": "Follow-up 59 — the shop with the store's WhatsApp number and hotline filled in (POST /api/shop/try-contact, test servers only: the sample customer's +88010 number, never anyone's; CI's sample database has no contact, it is the owner's data). The phone header must stay one screen wide with the disc on, the wordmark on one line; the checkout's slim header too.",
       "paths": ["/", "/bn", "/collections/polos", "/p/essential-pique-polo", "/bag", "/account/wishlist", "/checkout", "/checkout/thanks/0", "/bn/checkout/thanks/0", "/help/contact", "/bn/help/contact"],
       "fill": "/api/shop/try-contact",

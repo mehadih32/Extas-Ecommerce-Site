@@ -1,7 +1,7 @@
 // PR 115–126 — the checkout on the server side of the shop: the engines' dependencies, the checkout's settings, the
 // visitor's quote read from the bag cookie, and the words the checkout's client part shows. Without a database (CI,
 // `next build`) or when it is slow, the page draws the empty bag with the registry defaults — never a guess.
-import { checkoutQuote, emptyQuote, orderReceipt, payView, type CheckoutDeps, type CheckoutQuote, type PayView, type Receipt } from '@extas/checkout';
+import { checkoutPaused, checkoutQuote, emptyQuote, orderReceipt, payView, type CheckoutDeps, type CheckoutQuote, type PayView, type Receipt } from '@extas/checkout';
 import { findBag } from '@extas/cart';
 import { checkoutPrefill, type CheckoutPrefill } from '@extas/accounts';
 import { getPrisma } from '@extas/db/client';
@@ -14,6 +14,7 @@ import type { CheckoutApiDeps } from './checkout-api';
 import { shopStoreId, type ShopContext } from './context';
 import { SHOP_DICTS, keysOf } from './dict';
 import { giftTrialSettings, tryGiftOn } from './try-gift';
+import { tryPauseOn } from './try-pause';
 import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-gateway';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
@@ -124,6 +125,24 @@ export async function currentCheckout(c: Pick<ShopContext, 'storeId' | 'lang'>, 
 }
 
 /** Every `checkout.*` word in the page's language (the owner's words win), slots like {store} filled; for the client. */
+/**
+ * CN-029 Phase 3 qa-gate I3 (PR 610): is checkout paused for the store now — the very rule Confirm is refused with
+ * (the ERP holds a v6 store's account and `erp.hold.pauseCheckout` is on)? The bag and the checkout show their calm
+ * line from the first paint. False without a database or when it is slow (Confirm still decides). A test server's
+ * pause trial (POST /api/shop/try-pause) draws the line for the browser that asked.
+ */
+export async function checkoutPausedNow(storeId: number): Promise<boolean> {
+  if (await tryPauseOn()) return true;
+  const deps = checkoutDeps();
+  if (!deps) return false;
+  try {
+    return await withTimeout(checkoutPaused(deps, storeId), settingsTimeoutMs() * 4);
+  } catch (e) {
+    console.warn(`shop: the checkout pause is unknown (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return false;
+  }
+}
+
 export function checkoutWords(c: Pick<ShopContext, 't' | 'vars' | 'lang'>): Record<string, string> {
   return Object.fromEntries(keysOf(SHOP_DICTS[c.lang]).filter((k) => k.startsWith('checkout.')).map((k) => [k.slice('checkout.'.length), c.t(k, c.vars)]));
 }

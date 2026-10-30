@@ -5,6 +5,7 @@
 // PR 606: the bulk / corporate card under the WhatsApp card, while the owner has the lane on (bulk/BulkBagCard).
 // PR 574: each set in its bag template (B1–B5, `combos.template.bag`; the current look by default), `?btpl=` previews
 // another with the template bar while `combos.template.preview` is on.
+// PR 610 (CN-029 Phase 3 qa-gate I3): while checkout is paused (the ERP holds the account) a calm line under the title.
 import './bag.css';
 import { Fragment } from 'react';
 import type { BagView } from '@extas/cart';
@@ -29,6 +30,7 @@ import { OfferSlot } from './OfferSlot';
 import { SizesCard } from './SizesCard';
 import { Upsell } from './Upsell';
 import { BagSummary } from './BagSummary';
+import { PausedNote } from '../checkout/PausedNote';
 
 export function bagWords(c: ShopContext): BagWords {
   const t = c.t;
@@ -53,7 +55,7 @@ export function bagWords(c: ShopContext): BagWords {
   };
 }
 
-export async function BagPage({ c, view, s, btpl = null }: { c: ShopContext; view: BagView; s: BagSettings; btpl?: string | null }) {
+export async function BagPage({ c, view, s, btpl = null, paused = false }: { c: ShopContext; view: BagView; s: BagSettings; btpl?: string | null; paused?: boolean }) {
   const t = c.t;
   const empty = !view.items.length && !view.sets.length;
   const savedOn = s['bag.saved.enabled'];
@@ -99,6 +101,8 @@ export async function BagPage({ c, view, s, btpl = null }: { c: ShopContext; vie
             {t('bag.continue')}
           </a>
         </div>
+        {/* PR 610 (qa-gate I3): checkout is paused now — said before he goes on, and it stays */}
+        {paused ? <PausedNote title={t('checkout.paused.title')} text={t('checkout.paused.text')} testId="bag-paused" /> : null}
         <div className="split-side">
           <div className="stack s16" style={{ minWidth: 0 }}>
             {s['bag.freeProgress.enabled'] ? <FreeBar c={c} free={view.free} /> : null}

@@ -473,3 +473,5 @@ var(--text2) 0 42%, #C6BFB2 49%, #EFEBE3 51%, #C6BFB2 53%, var(--text2) 60% 100%
   border-color: var(--brand);
   color: var(--brand-ink);
 }
+/* CN-029 Phase 3 qa-gate I3 (PR 610): the calm "not taking new orders" line on the bag and the checkout (PausedNote). */
+.shop .sh-paused { gap: 12px; align-items: flex-start; margin-bottom: 16px; }

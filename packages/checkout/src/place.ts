@@ -270,6 +270,15 @@ async function openPayment(db: Db, storeId: number, orderId: string) {
   return db.payment.findFirst({ where: { storeId, orderId, purpose: { in: CHECKOUT_PAY_PURPOSES }, status: { in: ['INITIATED', 'PENDING'] }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
 }
 
+/**
+ * PR 610 (CN-028, ERP contract v6): is checkout paused for this store now (the ERP holds the account and
+ * `erp.hold.pauseCheckout` is on)? The one rule: Confirm is refused by it, and the bag and the checkout read it to tell
+ * the customer as soon as they open (CN-029 Phase 3 qa-gate I3).
+ */
+export async function checkoutPaused(deps: Pick<CheckoutDeps, 'db' | 'settings'>, storeId: number): Promise<boolean> {
+  return (await erpCheckoutPaused(deps, storeId)).paused;
+}
+
 /** Places the order the customer confirmed. Idempotent on `idempotencyKey`; refuses with the checkout's codes. */
 export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise<PlaceResult> {
   checkStoreId(req.storeId);
@@ -283,7 +292,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   // PR 610 (CN-028, ERP contract v6): while the ERP holds Retail's account (409 ACCOUNT_ON_HOLD) it keeps no stock for
   // new orders, so checkout pauses by itself (`erp.hold.pauseCheckout`, on) until the ERP releases it. Nothing is lost:
   // an order placed before the pause is queued and goes when the account is released.
-  if ((await erpCheckoutPaused(deps, storeId)).paused) throw new CheckoutError('PAUSED', 'checkout is paused while the ERP holds the account');
+  if (await checkoutPaused(deps, storeId)) throw new CheckoutError('PAUSED', 'checkout is paused while the ERP holds the account');
 
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
   const [nameMin, addressMin, order, noteOn, noteMax, prefix, start, replayHours, currency, cs, autoCreate, detailCheck, giftCfg, timeZone, capture] = await Promise.all([

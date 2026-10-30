@@ -3,6 +3,7 @@
 // shared rules (stack, split-side, qty, the sticky bar).
 // PR 137: a signed-in customer's own details start the boxes (`prefill`); this browser's memory when the owner allows it.
 // PR 605: `gift` — the checkout opened as a gift with gift mode on: the gift card's limits and dates (store's time zone).
+// PR 610 (qa-gate I3): `paused` — checkout is paused now (the ERP holds the account): the form says so from the start.
 import '../bag/bag.css';
 import './checkout.css';
 import type { CheckoutPrefill } from '@extas/accounts';
@@ -42,7 +43,7 @@ export function EmptyCheckout({ c }: { c: ShopContext }) {
   );
 }
 
-export async function CheckoutPage({ c, quote, s, prefill = null, gift = false }: { c: ShopContext; quote: CheckoutQuote; s: CheckoutSettings; prefill?: CheckoutPrefill | null; gift?: boolean }) {
+export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, paused = false }: { c: ShopContext; quote: CheckoutQuote; s: CheckoutSettings; prefill?: CheckoutPrefill | null; gift?: boolean; paused?: boolean }) {
   const view = quote.bag;
   const bagHref = hrefIn(c.lang, ROUTES.bag);
   // PR 121: the lines' quantity and Remove go through the bag's own script (its API, Undo and redraw); it stays mounted
@@ -87,6 +88,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false }
         backfill={s['checkout.address.backfill'].enabled}
         gift={giftCfg}
         gps={s['risk.capture'].gpsButton && !giftCfg ? { decimals: s['risk.capture'].gpsDecimals, days: s['risk.capture'].retentionDays, waitMs: s['risk.capture'].gpsWaitSeconds * 1000 } : null}
+        paused={paused}
       />
       {actions}
     </div>

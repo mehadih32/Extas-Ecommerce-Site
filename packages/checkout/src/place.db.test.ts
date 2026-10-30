@@ -8,7 +8,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { findBag } from '@extas/cart';
-import { captureDraft, payAction, payView, placeOrder, type PlaceInput } from './place';
+import { noteHold, openErpLink } from '@extas/inventory';
+import { captureDraft, checkoutPaused, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
 import { orderReceipt } from './receipt';
 import { setUpCheckout, type CheckoutFixture } from './testing';
@@ -519,6 +520,37 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
         expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number })).toMatchObject({ account: null });
       } finally {
         f.overrides.delete('account.autoCreate.enabled');
+      }
+    });
+  });
+
+  describe('PR 610 · qa-gate I3: the page knows the pause before Confirm, by the very rule Confirm is refused with', () => {
+    it('while the ERP holds a v6 store the bag and checkout read "paused", Confirm is refused and no order is made; the switch and the release open it', async () => {
+      const s = await shown('paused');
+      const integration = await f.t.prisma.integration.create({ data: { storeId: f.S, kind: 'ERP', provider: 'extasErp', name: 'extasErp', mode: 'MOCK', enabled: true, config: {}, secretNames: [] } });
+      const link = await openErpLink(f.t.prisma, f.S, integration.id);
+      f.overrides.set('erp.model', 'v6');
+      try {
+        expect(await checkoutPaused(f.deps(), f.S)).toBe(false);
+        await noteHold(f.t.prisma, f.S, link.id, { onHold: true, reason: 'PAYMENT_OVERDUE' }, f.clock.now);
+        expect(await checkoutPaused(f.deps(), f.S)).toBe(true);
+        const before = await f.t.prisma.order.count({ where: { storeId: f.S } });
+        expect(await code(s.place())).toBe('PAUSED');
+        expect(await f.t.prisma.order.count({ where: { storeId: f.S } })).toBe(before);
+        // the owner's switch off: no pause (the order would wait for the ERP instead)
+        f.overrides.set('erp.hold.pauseCheckout', false);
+        expect(await checkoutPaused(f.deps(), f.S)).toBe(false);
+        f.overrides.delete('erp.hold.pauseCheckout');
+        // on contract v5 a hold pauses nothing
+        f.overrides.set('erp.model', 'v5');
+        expect(await checkoutPaused(f.deps(), f.S)).toBe(false);
+        f.overrides.set('erp.model', 'v6');
+        await noteHold(f.t.prisma, f.S, link.id, { onHold: false }, f.clock.now);
+        expect(await checkoutPaused(f.deps(), f.S)).toBe(false);
+      } finally {
+        f.overrides.delete('erp.model');
+        f.overrides.delete('erp.hold.pauseCheckout');
+        await f.t.prisma.erpStoreLink.update({ where: { id: link.id }, data: { endedAt: f.clock.now } });
       }
     });
   });
