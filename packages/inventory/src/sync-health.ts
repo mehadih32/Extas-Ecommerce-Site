@@ -11,8 +11,11 @@
 // - `practice` the practice ERP is in use (keys not in yet);
 // - `late`     no good pull for `inventory.admin.lateAfterMinutes`;
 // - `ok`.
+// PR 610 (ERP contract v6): the ERP account's hold and its warning (`erpHold`, null in v5), the documents HELD, and the
+// SKUs not sold for want of a shop price at the ERP (`noShopPrice`, qa-gate).
 import { allow, nowOf, setting, type InventoryDeps, type Who } from './context';
 import { erpEventProblems } from './erp-events';
+import { erpHoldNotice, noShopPriceSkus, type ErpHoldNotice } from './erp-orders-v6';
 import { pushCounts, type PushCounts } from './erp-push';
 import { resolveErp, type ErpLinkState } from './guard';
 import { holdSummary, type HoldSummary } from './reservations';
@@ -40,6 +43,10 @@ export interface SyncHealth {
   pushes: PushCounts;
   /** PR 608: the v6 event ledger's events that need a person (failed, or repeated with another body). */
   events: { failed: number; conflicts: number };
+  /** PR 610: the ERP account's hold now, or the day it will hold new orders (v6 only; null in v5). */
+  erpHold: ErpHoldNotice | null;
+  /** PR 610 (qa-gate): the SKUs not sold because the ERP has no shop price for them yet (409 NO_SHOP_PRICE, v6). */
+  noShopPrice: { count: number; skus: string[]; since: string | null };
   holds: HoldSummary;
   lowStockOpen: number;
   auditsOpen: number;
@@ -60,17 +67,20 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
   await allow(deps, who, 'inventory.read');
   const now = nowOf(deps);
   const db = deps.db;
-  const [link, status, recentN, pollMinutes, lateAfterMinutes] = await Promise.all([
+  const [link, status, recentN, pollMinutes, lateAfterMinutes, listSize] = await Promise.all([
     resolveErp(deps, who.storeId),
     erpSyncStatus(deps, who),
     setting(deps, null, 'inventory.admin.recentRuns'),
     setting(deps, null, 'erp.sync.stockPollMinutes'),
     setting(deps, null, 'inventory.admin.lateAfterMinutes'),
+    setting(deps, null, 'inventory.admin.listSize'),
   ]);
-  const [runs, pushes, events, holds, lowStockOpen, auditsOpen, state] = await Promise.all([
+  const [runs, pushes, events, erpHold, noShopPrice, holds, lowStockOpen, auditsOpen, state] = await Promise.all([
     db.erpSyncRun.findMany({ where: { storeId: who.storeId }, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }], take: recentN }),
     pushCounts(db, who.storeId),
     erpEventProblems(db, who.storeId),
+    erpHoldNotice(deps, who.storeId),
+    noShopPriceSkus(db, who.storeId, listSize),
     holdSummary(db, now),
     db.lowStockAlert.count({ where: { resolvedAt: null } }),
     db.stockAudit.count({ where: { status: { in: ['COUNTING', 'REVIEW'] } } }),
@@ -97,6 +107,8 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
     recentRuns: runs.map((r) => ({ id: r.id, kind: r.kind, status: r.status, itemsOk: r.itemsOk, itemsFailed: r.itemsFailed, error: r.error, startedAt: r.startedAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null })),
     pushes,
     events,
+    erpHold,
+    noShopPrice,
     holds,
     lowStockOpen,
     auditsOpen,

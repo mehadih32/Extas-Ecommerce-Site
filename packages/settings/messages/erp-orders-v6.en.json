@@ -1,0 +1,18 @@
+{
+  "erp": {
+    "orders": {
+      "refusedRetryMinutes": {
+        "label": "Ask the ERP again for a refused order at the latest after (minutes)",
+        "help": "An order the ERP refused for now (short of stock, or a product without a shop price yet) waits and goes again by itself once the stock or the price is there. This is the longest it waits before the shop asks again anyway."
+      },
+      "catchUpDays": {
+        "label": "Check open orders with the ERP for (days)",
+        "help": "The shop reads the ERP's own copy of its open orders from these last days, so a lost message about a short or filled line is never missed."
+      },
+      "catchUpBatch": {
+        "label": "Orders checked with the ERP per run",
+        "help": "How many open orders one check reads from the ERP."
+      }
+    }
+  }
+}

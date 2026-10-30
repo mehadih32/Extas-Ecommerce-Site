@@ -382,6 +382,8 @@ export function CheckoutForm({
       return showToast(formEl, w(`askBn.${a.field === 'phone' && a.problem !== 'empty' ? 'phoneBad' : a.field}`));
     }
     if (a.error === 'NO_PAYMENT') return showToast(formEl, w('need.pay'));
+    // PR 610: checkout pauses by itself while the ERP holds the shop's account; the bag and the form stay as they are.
+    if (a.error === 'PAUSED') return showToast(formEl, w('err.paused'));
     if (a.error === 'OUT_OF_STOCK' || a.error === 'EMPTY' || a.error === 'CART_NOT_OPEN') {
       showToast(formEl, w(a.error === 'OUT_OF_STOCK' ? 'err.stock' : 'err.empty'));
       window.location.assign(bagHref);

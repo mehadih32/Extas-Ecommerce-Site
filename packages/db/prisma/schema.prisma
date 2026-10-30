@@ -4967,9 +4967,17 @@ model ErpPush {
   sentAt         DateTime?     @db.Timestamptz(3)
   createdAt      DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  // ---- PR 610 (CN-028, migration 0053) ----
+  /// The ERP keeps a 4xx answer against its Idempotency-Key (site-changes-v6 §2.3), so a document it refused for now
+  /// (account on hold, short of stock, no shop price yet) goes again with a new key: `<idempotencyKey>:k<keyRound>`.
+  /// The row's own key never changes (one row per document); 0 sends the row's key as it is.
+  keyRound       Int           @default(0)
+  /// Why a HELD document waits: ACCOUNT_ON_HOLD, INSUFFICIENT_STOCK, NO_SHOP_PRICE or LINE_WAITING (a short line).
+  heldReason     String?
 
   @@unique([storeId, idempotencyKey])
   @@index([status, nextAttemptAt])
+  @@index([storeId, status, heldReason])
 }
 
 enum ErpPushStatus {

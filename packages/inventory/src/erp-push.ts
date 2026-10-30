@@ -26,6 +26,14 @@
 // written as a RETIRED row (kept for the record, never sent, never sent again by hand), and a row queued before the
 // switch that is still waiting becomes RETIRED instead of going out.
 //
+// PR 610, 611 (CN-028): while the store speaks v6 the order goes as the v6 document (one line per piece with its own
+// `lineId`, whole-taka customer prices, delivery charge, advance, grade; erp-orders-v6.ts), with its ErpOrder rows in
+// the same transaction; the shipment, the delivery results and the line decisions wait for the order to be at the ERP
+// first. The ERP's answers are kept (erp-v6-relay.ts), and a 409 that means "not now" (account on hold, short of stock,
+// no shop price yet, a shipment behind a short line) makes the row HELD: it goes again by itself, with a new key round
+// (`wireKey`), because the ERP keeps a 4xx answer against its key. A v6 order the shop cancelled before the ERP ever had
+// it is never sent. In v5 none of this runs: the document, its key and every step are exactly as before.
+//
 // Failures: a retryable one (timeout, network, ERP error, rate limit, a refused key) waits `erp.push.backoffBaseSeconds`
 // × 2^(n−1), at most `erp.push.backoffMaxSeconds`, and after `erp.push.maxAttempts` tries the row is DEAD (shown on the
 // sync health panel, PR 205; sent again by hand, PR 206). A document the ERP refuses as wrong (400, 409 short stock,
@@ -39,7 +47,9 @@ import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDep
 import { InventoryError } from './errors';
 import { pushDisposition, resolveErp } from './guard';
 import { checkCompany } from './mapping';
-import { RETIRED_V6, retiredFor } from './erp-model';
+import { isV6, RETIRED_V6, retiredFor } from './erp-model';
+import { CANCELLED_BEFORE_SENT, markSuperseded, orderLinkOf, supersededIds, supersedeOlderRevisions, v6OrderDocument, wireKey } from './erp-orders-v6';
+import { afterSent, cancelledBeforeSent, holdV6Refusal, WAITS_FOR_ORDER } from './erp-v6-relay';
 import { callErp, errorText, retryPolicy } from './sync';
 
 // ---- the minimal order the push needs (orders themselves are built in the checkout stages, S04/S05) --------------
@@ -56,7 +66,22 @@ export const orderPushInput = z
     customerPhone: z.string().trim().min(1).max(32),
     shippingAddress: z.string().trim().min(1).max(1000),
     items: z
-      .array(z.object({ sku: z.string().trim().min(1).max(64), quantity: z.int().min(1), unitPriceMinor: money, discountMinor: money.optional() }).strict())
+      .array(
+        z
+          .object({
+            sku: z.string().trim().min(1).max(64),
+            quantity: z.int().min(1),
+            unitPriceMinor: money,
+            discountMinor: money.optional(),
+            // PR 610 (v6 only; the v5 document never carries them): the shop's line, its price after the line and combo
+            // discounts, and the combo it belongs to.
+            orderItemId: z.uuid().optional(),
+            lineTotalMinor: money.optional(),
+            comboId: z.uuid().nullish(),
+            comboGroupKey: z.string().trim().min(1).max(120).nullish(),
+          })
+          .strict(),
+      )
       .min(1)
       .max(500),
     shippingFeeMinor: money.optional(),
@@ -65,6 +90,9 @@ export const orderPushInput = z
     note: z.string().trim().max(1000).nullish(),
     /** A changed order is sent again as a new revision (its own idempotency key). */
     revision: z.int().min(0).optional(),
+    /** PR 610 (v6 only): the order's own discount (offers, reward) and what the customer paid before the door. */
+    orderDiscountMinor: money.optional(),
+    advancePaidMinor: money.optional(),
   })
   .strict();
 export type OrderPushInput = z.input<typeof orderPushInput>;
@@ -156,6 +184,14 @@ export interface EnqueueResult {
   created: boolean;
 }
 
+/**
+ * Queues one document under its idempotency key (in `tx` when given). PR 610–614 queue their v6 documents through it;
+ * the key must name the document (never a time or chance).
+ */
+export async function enqueueErpDocument(deps: InventoryDeps, storeId: number, referenceId: string, key: string, doc: ErpDocument, tx?: Tx): Promise<EnqueueResult> {
+  return enqueue(deps, storeId, referenceId, key, doc, tx);
+}
+
 async function enqueue(deps: InventoryDeps, storeId: number, referenceId: string, key: string, doc: ErpDocument, tx?: Tx): Promise<EnqueueResult> {
   assertNoJournal(doc);
   const retired = await retiredFor(deps, storeId, doc);
@@ -186,8 +222,51 @@ export async function enqueueOrderPush(deps: InventoryDeps, input: OrderPushInpu
   const d = parse(orderPushInput, input, 'order document');
   const store = await deps.db.store.findUnique({ where: { id: d.storeId }, select: { currency: true, archivedAt: true } });
   if (!store || store.archivedAt) throw new InventoryError('NOT_FOUND', 'no such store', ['storeId']);
+  const key = pushKey('order.create', d.orderId, { revision: d.revision });
+  // PR 610: a v6 store sends the v6 order (one line per piece), with its ErpOrder rows in the same transaction.
+  if (await isV6(deps, d.storeId)) {
+    const link = await orderLinkOf(deps, d.storeId);
+    if (link) {
+      const digits = currencyDigits(store.currency);
+      const write = (db: Tx) =>
+        v6OrderDocument(
+          db,
+          link.id,
+          {
+            storeId: d.storeId,
+            orderId: d.orderId,
+            externalOrderId: d.externalOrderId,
+            customerName: d.customerName,
+            customerPhone: d.customerPhone,
+            shippingAddress: d.shippingAddress,
+            paymentMethod: d.paymentMethod,
+            note: d.note ?? null,
+            items: d.items.map((i) => ({
+              orderItemId: i.orderItemId ?? '',
+              sku: i.sku,
+              quantity: i.quantity,
+              unitPriceMinor: i.unitPriceMinor,
+              lineTotalMinor: i.lineTotalMinor ?? Math.max(0, i.unitPriceMinor * i.quantity - (i.discountMinor ?? 0)),
+              comboId: i.comboId ?? null,
+              comboGroupKey: i.comboGroupKey ?? null,
+            })),
+            orderDiscountMinor: d.orderDiscountMinor ?? 0,
+            deliveryChargeMinor: d.shippingFeeMinor ?? 0,
+            advancePaidMinor: d.advancePaidMinor ?? 0,
+          },
+          digits,
+        )
+          .then((doc) => enqueue(deps, d.storeId, d.orderId, key, doc, db))
+          // qa-gate: revision n replaces every older revision still HELD or waiting (kept FAILED, never sent).
+          .then(async (r) => {
+            await supersedeOlderRevisions(db, d.storeId, d.orderId, key);
+            return r;
+          });
+      return opts.tx ? write(opts.tx) : deps.db.$transaction(write, TX);
+    }
+  }
   const doc = salesOrderDocument(d, currencyDigits(store.currency));
-  return enqueue(deps, d.storeId, d.orderId, pushKey('order.create', d.orderId, { revision: d.revision }), doc, opts.tx);
+  return enqueue(deps, d.storeId, d.orderId, key, doc, opts.tx);
 }
 
 /** Queues an order status change (PATCH /orders/{externalOrderId}); it is sent only after the order itself. */
@@ -240,6 +319,8 @@ export interface RelayResult {
   waiting: number;
   /** PR 607: rows queued before the switch whose call v6 retired (never sent). */
   retired: number;
+  /** PR 610: v6 rows the ERP refused for now (account on hold, stock, shop price, a short line): HELD, sent again later. */
+  held: number;
   runIds: string[];
 }
 
@@ -250,7 +331,7 @@ const docOf = (body: Prisma.JsonValue): ErpDocument => {
 
 /** Sends what is due (job `inventory.erp.pushDocuments`). One store, or every store with something due. */
 export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: number } = {}): Promise<RelayResult> {
-  const out: RelayResult = { stores: 0, sent: 0, replayed: 0, retrying: 0, failed: 0, dead: 0, skipped: 0, waiting: 0, retired: 0, runIds: [] };
+  const out: RelayResult = { stores: 0, sent: 0, replayed: 0, retrying: 0, failed: 0, dead: 0, skipped: 0, waiting: 0, retired: 0, held: 0, runIds: [] };
   const db = deps.db;
   const now = nowOf(deps);
   const due = { status: 'PENDING' as const, OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: now } }] };
@@ -288,7 +369,18 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
       continue;
     }
     const sentOrders = new Set((await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', status: 'SENT', referenceId: { in: rows.map((r) => r.referenceId) } }, select: { referenceId: true } })).map((r) => r.referenceId));
+    // PR 610: an order the shop cancelled before the ERP ever had it (v6): nothing that follows it is sent either.
+    const v6 = await isV6(deps, storeId);
+    const neverSent = v6
+      ? new Set((await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', status: 'FAILED', lastError: CANCELLED_BEFORE_SENT, referenceId: { in: rows.map((r) => r.referenceId) } }, select: { referenceId: true } })).map((r) => r.referenceId))
+      : new Set<string>();
+    // qa-gate (PR 610): an order revision with a newer revision queued never goes (it would roll the ERP order back).
+    const superseded = v6 ? await supersededIds(db, storeId, rows) : new Set<string>();
     for (const row of rows) {
+      if (superseded.has(row.id)) {
+        out.failed += await markSuperseded(db, [row.id]);
+        continue;
+      }
       // PR 607: a call v6 retired never goes out, even when it was queued before the switch.
       if (await retiredFor(deps, storeId, docOf(row.requestBody))) {
         const n = (await db.erpPush.updateMany({ where: { id: row.id, status: 'PENDING' }, data: { status: 'RETIRED', lastError: RETIRED_V6, nextAttemptAt: null } })).count;
@@ -296,8 +388,20 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
         out.retired += n;
         continue;
       }
-      // A status change or a return waits for its order (contract: the order must exist first).
-      if ((row.documentType === 'order.status' || row.documentType === 'return.create') && !sentOrders.has(row.referenceId)) {
+      // PR 610: a v6 order cancelled in the shop before it ever reached the ERP is never sent (kept FAILED).
+      if (v6 && (await cancelledBeforeSent(deps, row))) {
+        neverSent.add(row.referenceId);
+        out.failed++;
+        continue;
+      }
+      // A status change or a return waits for its order (contract: the order must exist first). PR 610, 611: so do the
+      // v6 shipment, delivery results and line decisions.
+      const follows = row.documentType === 'order.status' || row.documentType === 'return.create' || WAITS_FOR_ORDER.has(row.documentType);
+      if (follows && !sentOrders.has(row.referenceId)) {
+        if (neverSent.has(row.referenceId)) {
+          out.failed += (await db.erpPush.updateMany({ where: { id: row.id, status: 'PENDING' }, data: { status: 'FAILED', lastError: CANCELLED_BEFORE_SENT, nextAttemptAt: null } })).count;
+          continue;
+        }
         out.waiting++;
         continue;
       }
@@ -306,13 +410,15 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
       if (!claimed.count) continue;
       const attempts = row.attempts + 1;
       try {
-        const r = (await callErp(deps, policy, (o) => link.api.push(docOf(row.requestBody), { ...o, idempotencyKey: row.idempotencyKey }))).value;
+        const r = (await callErp(deps, policy, (o) => link.api.push(docOf(row.requestBody), { ...o, idempotencyKey: wireKey(row) }))).value;
         await db.erpPush.update({
           where: { id: row.id },
           data: { status: 'SENT', responseStatus: r.status, responseBody: (r.body ?? null) as Prisma.InputJsonValue, erpId: r.erpId, sentAt: nowOf(deps), nextAttemptAt: null, lastError: null },
         });
         if (row.documentType === 'order.create') sentOrders.add(row.referenceId);
         if (row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'RESTOCKED');
+        // PR 610, 611: the v6 answer kept (erpTotal and shop prices, the bill, the identification).
+        if (v6) await afterSent(deps, row, r.body);
         out.sent++;
         if (r.replayed) out.replayed++;
         ok++;
@@ -321,6 +427,11 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
         const text = errorText(e);
         lastError = text;
         bad++;
+        // PR 610, 611: a 409 that means "not now" in v6: HELD, sent again by itself with a new key round.
+        if (v6 && (await holdV6Refusal(deps, row, err, text))) {
+          out.held++;
+          continue;
+        }
         if (REFUSED.has(err.code)) {
           await db.erpPush.update({ where: { id: row.id }, data: { status: 'FAILED', responseStatus: err.status, lastError: text, nextAttemptAt: null } });
           if (row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'ERP_FAILED');
@@ -390,6 +501,8 @@ export interface PushCounts {
   sent: number;
   /** PR 607: documents of a call v6 retired (kept, never sent). */
   retired: number;
+  /** PR 610: documents the ERP refused for now, waiting to go again by themselves. */
+  held: number;
   oldestPendingAt: string | null;
   nextAttemptAt: string | null;
 }
@@ -401,7 +514,7 @@ export async function pushCounts(db: Db, storeId: number): Promise<PushCounts> {
     db.erpPush.findFirst({ where: { storeId, status: 'PENDING', nextAttemptAt: { not: null } }, orderBy: { nextAttemptAt: 'asc' }, select: { nextAttemptAt: true } }),
   ]);
   const n = (s: PushStatusName) => groups.find((g) => g.status === s)?._count._all ?? 0;
-  return { pending: n('PENDING'), failed: n('FAILED'), dead: n('DEAD'), skipped: n('SKIPPED_NO_ERP'), sent: n('SENT'), retired: n('RETIRED'), oldestPendingAt: oldest?.createdAt.toISOString() ?? null, nextAttemptAt: next?.nextAttemptAt?.toISOString() ?? null };
+  return { pending: n('PENDING'), failed: n('FAILED'), dead: n('DEAD'), skipped: n('SKIPPED_NO_ERP'), sent: n('SENT'), retired: n('RETIRED'), held: n('HELD'), oldestPendingAt: oldest?.createdAt.toISOString() ?? null, nextAttemptAt: next?.nextAttemptAt?.toISOString() ?? null };
 }
 
 /** Documents of this store, newest first, optionally of some states (needs `inventory.read`). */

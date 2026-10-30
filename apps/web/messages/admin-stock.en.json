@@ -116,7 +116,8 @@
         "failed": "refused",
         "dead": "gave up",
         "skipped": "no ERP",
-        "sent": "sent"
+        "sent": "sent",
+        "held": "held by the ERP"
       },
       "status": {
         "PENDING": "Waiting",

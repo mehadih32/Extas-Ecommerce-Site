@@ -59,6 +59,7 @@ import { seoSettings } from './registry-seo';
 import { erpV6Settings } from './registry-erp-v6';
 import { invoiceSettings } from './registry-invoice';
 import { supportSettings } from './registry-support';
+import { erpOrdersV6Settings } from './registry-erp-orders-v6';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1244,6 +1245,8 @@ export const registry = {
   ...invoiceSettings,
   // ---- S22 · PR 425 · the support core: the inbox, files in a conversation, customer numbers (registry-support.ts, version 63). ----
   ...supportSettings,
+  // ---- CN-028 · PR 610, 611 (CN-029 Phase 1) · orders to the ERP v6: when a refused order is asked again, and the catch-up of open orders (registry-erp-orders-v6.ts, version 66). ----
+  ...erpOrdersV6Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

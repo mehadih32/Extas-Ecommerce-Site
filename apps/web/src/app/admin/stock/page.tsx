@@ -159,6 +159,35 @@ export default async function StockPage() {
               </div>
             </div>
           ) : null}
+          {/* PR 610 (ERP contract v6): the account's hold, or the warning before it */}
+          {health.erpHold?.warn ? (
+            <div className="ad-row" data-testid="st-erp-hold">
+              <div className="ad-row-main">
+                <div className="ad-row-name">{t(d, 'erpOrder.title')}</div>
+                <div className={`ad-mini st-err${health.erpHold.onHold ? ' bad' : ''}`}>
+                  {health.erpHold.onHold
+                    ? t(d, health.erpHold.checkoutPaused ? 'erpOrder.hold.on' : 'erpOrder.hold.onOpen')
+                    : t(d, 'erpOrder.hold.warn', { date: health.erpHold.holdsOn ?? '', days: num(Math.max(0, health.erpHold.daysLeft ?? 0)) })}
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {/* PR 610 (qa-gate): the SKUs not sold because the ERP has no shop price for them yet */}
+          {health.noShopPrice.count ? (
+            <div className="ad-row" data-testid="st-erp-no-shop-price">
+              <div className="ad-row-main">
+                <div className="ad-row-name">{t(d, 'erpOrder.title')}</div>
+                <div className="ad-mini bad st-err">
+                  {t(d, 'erpOrder.hold.noShopPrice', {
+                    skus:
+                      health.noShopPrice.count > health.noShopPrice.skus.length
+                        ? t(d, 'erpOrder.hold.noShopPriceMore', { skus: health.noShopPrice.skus.join(', '), count: num(health.noShopPrice.count - health.noShopPrice.skus.length) })
+                        : health.noShopPrice.skus.join(', '),
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
           {canSync ? (
             <div className="st-card-acts">
               <ResyncButtons dict={d} locale={view.locale} />
@@ -176,7 +205,8 @@ export default async function StockPage() {
           </div>
           <p className="ad-sub">{t(d, 'stock.docs.sub')}</p>
           <div className="st-counts">
-            {(['pending', 'failed', 'dead', 'skipped', 'sent'] as const).map((k) => (
+            {/* PR 610: "held by the ERP" only when there are some (v6) */}
+            {(['pending', 'held', 'failed', 'dead', 'skipped', 'sent'] as const).filter((k) => k !== 'held' || health.pushes.held > 0).map((k) => (
               <span key={k} className={`st-count c-${k}`}>
                 <b>{num(health.pushes[k])}</b> {t(d, `stock.docs.counts.${k}`)}
               </span>

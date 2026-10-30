@@ -13,6 +13,7 @@ import { t } from '@/lib/i18n';
 import { PageHead } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
 import { AlertExplain } from './AlertExplain';
+import { ErpOrderPanel } from './ErpOrderPanel';
 import { ArchiveNote, CommandButton, DetailGrid, MoreMenu, NoteForm } from './OrderCommands';
 import { Chips } from './OrderTable';
 import { RiskPanel } from './RiskPanel';
@@ -131,6 +132,8 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
     <Card key="courier" testId="order-courier" title={t(d, 'orders.courier.title')} right={<Chips chips={[o.courier.chip]} />}>
       <Kv rows={o.courier.rows} />
     </Card>,
+    // PR 610, 611 (ERP contract v6): the ERP part after the courier; it draws nothing in v5
+    <ErpOrderPanel key="erp" orderId={o.id} currency={o.currency} view={view} />,
     // S06 · PR 160: the risk card (demo V12.3: after the courier, before the money)
     <RiskPanel key="risk" order={{ id: o.id, number: o.number, currency: o.currency }} view={view} />,
     <SupportExplain key="explain" orderId={o.id} view={view} />,

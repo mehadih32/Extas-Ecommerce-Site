@@ -28,6 +28,7 @@ import { createHash } from 'node:crypto';
 import type { Prisma } from '@extas/db/client';
 import { ERP_CLAIM_REASONS, movesMoney, type ErpV6Event, type ErpV6EventType } from '@extas/adapters';
 import { nowOf, setting, TX, type Db, type InventoryDeps, type Tx } from './context';
+import { ERP_ORDER_EVENT_HANDLERS } from './erp-orders-v6-events';
 
 /** One ledger row (ErpEvent). */
 export type ErpEventRow = Prisma.ErpEventGetPayload<true>;
@@ -273,6 +274,8 @@ const pieceDecided: ErpEventHandler = {
  */
 export const ERP_EVENT_HANDLERS: Partial<Record<ErpV6EventType, ErpEventHandler>> = {
   'return.piece.decided': pieceDecided,
+  // PR 610, 611: the account's hold and release, a short or filled order line, the delivery identification.
+  ...ERP_ORDER_EVENT_HANDLERS,
 };
 
 // ---- applying the stored events -----------------------------------------------------------------------------------------
