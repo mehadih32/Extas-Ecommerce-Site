@@ -104,6 +104,12 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
         <ShellIcon name="info" size={15} />
         {t(d, 'returns.refused.open')}
       </Link>
+      {paths.model === 'v6' ? (
+        <Link className="a2-btn" href={`${returnsHref()}/erp`} data-testid="returns-erp-link">
+          <ShellIcon name="info" size={15} />
+          {t(d, 'returns.erp.title')}
+        </Link>
+      ) : null}
       {paths.model === 'v6' && perms.has('returns.handback') ? (
         <Link className="a2-btn pri" href={`${returnsHref()}/handback`} data-testid="returns-handback-link">
           <ShellIcon name="check" size={15} />

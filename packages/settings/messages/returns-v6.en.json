@@ -29,6 +29,12 @@
         "label": "Nightly compare with the ERP at",
         "help": "Every night at this time the Returns section is compared with the ERP's own counts for yesterday. A difference is fixed by pulling from the ERP again, never by editing a number."
       }
+    },
+    "losses": {
+      "months": {
+        "label": "Losses report covers (months)",
+        "help": "How many months the losses report of the Returns section shows: 3, 6 or 12. It only changes what is shown; nothing is deleted."
+      }
     }
   },
   "exchange": {

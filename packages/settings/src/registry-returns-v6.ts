@@ -19,6 +19,7 @@
 //                              many pieces of the new SKU free in the ERP (1 = it never takes the last piece).
 // - `returns.compare.runAt`    when the Returns section is compared with the ERP's `GET /returns/summary` for
 //                              yesterday, every night (after the ERP's own 01:00 night run).
+// - `returns.losses.months`    how many months the losses report of the Returns section shows (3, 6 or 12).
 import { z } from 'zod';
 import { setting } from './define';
 import { clockTimeSchema } from './registry-eid';
@@ -30,6 +31,9 @@ const orders = { scope: 'store', isOwnerData: false, isPublic: false, group: 'or
 /** Owner answer Q4: the owner checks returned pieces within 7, 10 or 15 days of the courier's hand-back. */
 export const RETURNS_ERP_CHECK_DAYS = [7, 10, 15] as const;
 export const returnsErpCheckDaysSchema = z.union([z.literal(7), z.literal(10), z.literal(15)]);
+/** The losses report covers the last 3, 6 or 12 months. */
+export const RETURNS_LOSSES_MONTHS = [3, 6, 12] as const;
+export const returnsLossesMonthsSchema = z.union([z.literal(3), z.literal(6), z.literal(12)]);
 
 export const returnsV6Settings = {
   'returns.legacy.shopQc': setting({
@@ -94,5 +98,14 @@ export const returnsV6Settings = {
     labelKey: 'returns.compare.runAt.label',
     helpKey: 'returns.compare.runAt.help',
     sortOrder: 99,
+  }),
+  'returns.losses.months': setting({
+    ...orders,
+    schema: returnsLossesMonthsSchema,
+    default: 6,
+    valueType: 'INT',
+    labelKey: 'returns.losses.months.label',
+    helpKey: 'returns.losses.months.help',
+    sortOrder: 100,
   }),
 };

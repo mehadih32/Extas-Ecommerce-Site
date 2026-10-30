@@ -345,6 +345,179 @@
     "noRecent": "No list sent yet.",
     "error": "Last try: {text}",
     "tries": "{n} tries",
-    "never": "Nothing here moves money. The owner decides every returned piece in the ERP."
+    "never": "Nothing here moves money. The owner decides every returned piece in the ERP.",
+    "erpLink": "ERP returns"
+  },
+  "erp": {
+    "metaTitle": "ERP returns",
+    "title": "ERP returns",
+    "sub": "What happened to every returned parcel after the hand-back: on Hold, in the ERP's Return stock, approved or declined by the owner in the ERP. Read-only here.",
+    "back": "Returns & exchanges",
+    "v5": "This store still uses the old ERP model. Returns are received and checked on Receive & QC until the switch-over.",
+    "noLink": "The store is not linked to its ERP yet. This page fills in once the first return list is sent.",
+    "never": "Read-only: the owner decides every returned piece in the ERP. A wrong decision is put right in the ERP, then pulled here.",
+    "tabsAria": "Returns by stage",
+    "tab": {
+      "partial": "Partial deliveries",
+      "handedBack": "Handed back",
+      "hold": "On hold in ERP",
+      "returnStock": "In ERP return stock",
+      "exchanges": "Exchanges",
+      "approved": "Approved",
+      "declined": "Declined (our loss)"
+    },
+    "empty": {
+      "partial": "No partial delivery.",
+      "handedBack": "No parcel handed back yet. The hand-back desk sends them.",
+      "hold": "Nothing on hold.",
+      "returnStock": "No piece waiting for the owner's check.",
+      "exchanges": "No exchange through the ERP yet.",
+      "approved": "No approved piece yet.",
+      "declined": "No declined piece."
+    },
+    "state": {
+      "PARTIAL": "Partial",
+      "IN_RETURN_STOCK": "In return stock",
+      "HOLD": "On hold",
+      "REFUSED": "Refused by ERP",
+      "WAITING": "Not sent yet",
+      "APPROVED": "Approved",
+      "DECLINED": "Declined",
+      "NOT_SENT": "Not sent yet",
+      "WAITING_STOCK": "Waiting for stock",
+      "WAITING_DELIVERY": "Out for delivery",
+      "WAITING_RETURN": "Old piece coming back",
+      "RETURNED_WAITING_CHECK": "Old piece back, waiting for check",
+      "SETTLED": "Settled",
+      "BILLED": "Billed to us",
+      "CREDITED": "Credited",
+      "CANCELLED": "Cancelled"
+    },
+    "colour": {
+      "GREEN": "Green",
+      "YELLOW": "Yellow",
+      "ORANGE": "Orange"
+    },
+    "reason": {
+      "B_GRADE": "B grade",
+      "STAIN_OR_DAMAGE": "Stain or damage",
+      "PIECE_MISSING": "Piece missing",
+      "PARCEL_MISSING": "Parcel missing",
+      "NOT_RETURNED": "Customer kept it",
+      "WRONG_PIECE": "Wrong piece",
+      "OTHER": "Other",
+      "NOT_OUR_ORDER": "Not this ERP's order",
+      "ALREADY_HANDED_BACK": "Already handed back",
+      "INSUFFICIENT_STOCK": "No stock"
+    },
+    "decision": {
+      "APPROVED": "Approved",
+      "APPROVED_AT_PACKING": "Approved at packing",
+      "DECLINED": "Declined",
+      "DIFFERENT_PIECE": "A different piece came back"
+    },
+    "pieces": "{n} pieces",
+    "kept": "{n} kept",
+    "daysLeft": "{n} days left",
+    "dueToday": "Check due today",
+    "overdue": "{n} days late",
+    "dueOn": "check by {date}",
+    "watchUntil": "back by {date}",
+    "handedBackOn": "handed back {date}",
+    "decidedOn": "decided {date}",
+    "paid": "{money} paid to ERP",
+    "atRisk": "{money} at risk",
+    "credit": "credit {money}",
+    "claimTag": "Courier claim",
+    "exchangeTag": "Exchange",
+    "countDiffersTag": "Count differed",
+    "lateTag": "Late return marked",
+    "newOrder": "new order {id}",
+    "open": "Timeline",
+    "checkWithin": "The owner checks each piece within {n} days of the hand-back.",
+    "overdueCount": "{n} past the check date",
+    "timeline": {
+      "title": "Parcel {id}",
+      "close": "Close",
+      "none": "Nothing recorded for this parcel yet.",
+      "notFound": "No parcel with that number in this store.",
+      "now": "Pieces now",
+      "delivery": "Courier result {result} · {colour}",
+      "deliveryResult": "Result sent to ERP: {result}",
+      "handedBack": "Handed back on list {list}",
+      "erpAnswer": "ERP answer: {result}",
+      "deskClaim": "Count differed at the desk: claim started",
+      "ownerTick": "Owner ticked the Hold parcel: {result}",
+      "decided": "Piece {line}: {decision}",
+      "courierClaim": "Courier claim: {reason}",
+      "exchange": "Exchange {result}",
+      "reversed": "undone in the ERP",
+      "counted": "counted {n} of {e}",
+      "tickResult": {
+        "RESOLVED": "pieces back",
+        "PARCEL_MISSING": "parcel missing"
+      }
+    },
+    "compare": {
+      "title": "Check against the ERP",
+      "none": "Not compared yet. It runs every night, or pull now.",
+      "matched": "Matches the ERP",
+      "differs": "Differs from the ERP",
+      "failed": "The ERP could not be asked",
+      "line": "{date} · {when} · {trigger}",
+      "trigger": {
+        "night": "nightly",
+        "manual": "by hand",
+        "pull": "after a pull"
+      },
+      "field": {
+        "handedBack": "Handed back",
+        "onHold": "On hold",
+        "inReturnStock": "In return stock",
+        "approved": "Approved",
+        "approvedCreditMinor": "Approved credit",
+        "declined": "Declined",
+        "waitingCheckMinor": "Waiting for check (value)"
+      },
+      "shop": "Shop",
+      "erp": "ERP",
+      "pull": "Pull from the ERP and compare again",
+      "never": "A difference is fixed by pulling from the ERP again, never by editing a number.",
+      "error": "{text}"
+    },
+    "losses": {
+      "title": "What returns cost us",
+      "sub": "Declined pieces at the price paid to the ERP, exchanges billed to us, the courier's charge on returned parcels, and money not collected.",
+      "declined": "Declined pieces",
+      "exchanges": "Exchanges billed (less credited)",
+      "delivery": "Delivery charge of returned parcels",
+      "underpaid": "Paid short",
+      "total": "Total",
+      "count": "{n}",
+      "unknown": "{n} without a price",
+      "allMonths": "All {n} months",
+      "none": "No loss in these months."
+    },
+    "claims": {
+      "title": "Courier claims",
+      "sub": "Pieces missing or damaged that the courier may owe for. Send them to the courier.",
+      "none": "No courier claim.",
+      "desk": "Counts that differed at the desk",
+      "deskNone": "No count differed.",
+      "status": {
+        "OPEN": "Open",
+        "REVERSED": "Undone in the ERP"
+      },
+      "count": "expected {e}, counted {n}"
+    },
+    "more": {
+      "title": "More options",
+      "checkDays": "Owner checks returns within",
+      "days": "{n} days",
+      "runAt": "Nightly compare with the ERP at",
+      "months": "Losses report covers",
+      "monthsN": "{n} months",
+      "where": "These are changed in Settings → Orders."
+    }
   }
 }
