@@ -1,8 +1,8 @@
 // S08 · PR 185 — what the Returns & exchanges board shows, without React: which column each exchange sits in (demo
 // 97s-adm2-orders2.js a2Board: Requested / Approved · on the way / Received & QC / Done), the tone of its reason pill,
 // and the page's own address with a case or a start step open; PR 188's size buttons. The words come from
-// messages/admin-returns.*.json.
-import type { ExchangeSizes, ExchangeView } from '@extas/orders';
+// messages/admin-returns.*.json. qa-gate I7 (PR 614): the v6 case card's exchange window line.
+import type { ExchangeSizes, ExchangeView, ExchangeWindowV6 } from '@extas/orders';
 
 /** One size button of the size switcher (PR 188); `why` says what stops it (another price, none free), null = free. */
 export interface SizeChip {
@@ -72,4 +72,15 @@ export function returnsHref(q: Record<string, string | null | undefined> = {}): 
   for (const [k, v] of Object.entries(q)) if (v) sp.set(k, v);
   const s = sp.toString();
   return s ? `${RETURNS_HREF}?${s}` : RETURNS_HREF;
+}
+
+/**
+ * qa-gate I7 (PR 614): the words of the v6 case card's exchange window — the hours left of the owner's window, closed,
+ * or not started (no "delivered" yet) — as a message key, its blanks and a pill tone; `{at}` is the end, formatted by
+ * the card in the staff's language and time zone.
+ */
+export function windowLine(w: ExchangeWindowV6): { key: 'erpx.windowLeft' | 'erpx.windowClosed' | 'erpx.windowUnknown'; vars: Record<string, number>; endsAt: string | null; tone: 'ok' | 'bad' | 'warn' } {
+  if (w.state === 'OPEN') return { key: 'erpx.windowLeft', vars: { n: w.hoursLeft ?? 0, total: w.windowHours }, endsAt: w.endsAt, tone: 'ok' };
+  if (w.state === 'CLOSED') return { key: 'erpx.windowClosed', vars: { total: w.windowHours }, endsAt: w.endsAt, tone: 'bad' };
+  return { key: 'erpx.windowUnknown', vars: { total: w.windowHours }, endsAt: null, tone: 'warn' };
 }

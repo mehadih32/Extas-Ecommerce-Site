@@ -96,6 +96,9 @@ export type OrdersErrorCode =
   | 'ERP_REFUSED'
   /** PR 612–614: the store's ERP cannot be reached now, or is not set up (`data.reason`); nothing was changed. */
   | 'ERP_UNAVAILABLE'
+  /** PR 614 (qa-gate I6): the store's ERP is the practice one (no real key yet, its practice data off), so nothing goes
+   * to it; said as it is, never as "cannot be reached" (`data.reason`). Nothing was changed. */
+  | 'ERP_ON_PRACTICE'
   /** PR 614: not enough of the new piece is free in the ERP now; regular orders come first, so the exchange waits
    * (`data.shortSkus`). */
   | 'EXCHANGE_WAITING'
@@ -167,6 +170,7 @@ export class OrdersError extends Error {
       case 'EXCHANGE_WAITING':
       case 'NOT_EXPECTED':
       case 'NOT_IN_ERP':
+      case 'ERP_ON_PRACTICE':
         return 422;
       case 'ERP_UNAVAILABLE':
         return 503;
@@ -177,3 +181,12 @@ export class OrdersError extends Error {
 }
 
 export const isOrdersError = (e: unknown): e is OrdersError => e instanceof OrdersError;
+
+/**
+ * PR 614 (qa-gate I6): a store's ERP path that may not go (`returnsV6Path`), as the refusal that names its true reason:
+ * the practice ERP is ERP_ON_PRACTICE; no ERP, no connection or an unusable one is ERP_UNAVAILABLE (`data.reason` keeps
+ * the path's own reason either way).
+ */
+export function erpPathRefusal(path: { reason: string; text: string }, details: string[] = ['erp']): OrdersError {
+  return new OrdersError(path.reason === 'ERP_ON_PRACTICE' ? 'ERP_ON_PRACTICE' : 'ERP_UNAVAILABLE', path.text, details, { reason: path.reason });
+}

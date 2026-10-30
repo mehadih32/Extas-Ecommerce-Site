@@ -12,9 +12,9 @@
 // exchange as the ERP has it (waiting for stock while regular orders come first, the ERP order, the 4-day watch, the
 // value at risk) and the late-return mark; the shop's own QC and "Complete" are not used there (the ERP settles).
 import Link from 'next/link';
-import type { ExchangeChoices, ExchangeErpState, ExchangeSizes, ExchangeView, ReturnChoices } from '@extas/orders';
+import type { ExchangeChoices, ExchangeErpState, ExchangeSizes, ExchangeView, ExchangeWindowV6, ReturnChoices } from '@extas/orders';
 import type { AdminView } from '@/lib/admin-page';
-import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, sizeChips, statusTone } from '@/lib/admin-returns/model';
+import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, sizeChips, statusTone, windowLine } from '@/lib/admin-returns/model';
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -49,7 +49,8 @@ export interface ReturnsData {
   claimPhoto: boolean;
   /** CN-028 · PR 614: the ERP model in use; on v6 who may approve through the ERP and mark a late return, the chosen
    * case's exchange as the ERP has it, and today in the store's zone. */
-  erp?: { model: 'v5' | 'v6'; canApprove: boolean; canLate: boolean; state: ExchangeErpState | null; today: string };
+  /** qa-gate I7: `window` — the chosen case's exchange window now (hours left), by the approval's own rule. */
+  erp?: { model: 'v5' | 'v6'; canApprove: boolean; canLate: boolean; state: ExchangeErpState | null; today: string; window?: ExchangeWindowV6 | null };
 }
 
 
@@ -105,6 +106,12 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
   const dayFmt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeZone: 'UTC', numberingSystem: 'latn' });
   const texts = actionTexts(d);
   const cause = x.rootCause ? (data.causes.find((c) => c.key === x.rootCause)?.label ?? x.rootCause) : null;
+  const win = data.erp?.model === 'v6' && x.status === 'REQUESTED' && data.erp.window ? windowLine(data.erp.window) : null;
+  const liveWindow = win ? (
+    <span key="w" data-testid="exchange-window" data-state={data.erp!.window!.state}>
+      <span className={`a2-pill ${win.tone}`}>{r(d, win.key, { ...win.vars, at: win.endsAt ? dt.format(new Date(win.endsAt)) : '' })}</span>
+    </span>
+  ) : null;
   const kv: [string, React.ReactNode][] = [
     [r(d, 'case.order'), <Link key="o" className="a2-lnk" href={`/admin/orders/${x.orderId}`}>{x.orderNumber}</Link>],
     ...(x.newOrderId ? ([[r(d, 'case.newOrder'), <Link key="n" className="a2-lnk" href={`/admin/orders/${x.newOrderId}`}>{x.newOrderNumber}</Link>]] as [string, React.ReactNode][]) : []),
@@ -115,7 +122,8 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
     ...(x.money.creditMinor ? ([[r(d, 'case.credit'), m(x.money.creditMinor)]] as [string, string][]) : []),
     [r(d, 'case.charge'), `${m(x.money.chargeMinor)}${x.money.chargeState ? ` · ${r(d, `charge.${x.money.chargeState}`)}` : ''}`],
     [r(d, 'case.cod'), <b key="c">{m(x.money.codMinor)}</b>],
-    ...(x.windowEndsAt ? ([[r(d, 'case.window'), dt.format(new Date(x.windowEndsAt))]] as [string, string][]) : []),
+    // qa-gate I7: on v6 a requested case shows its window now (hours left of the owner's window), as the approval counts it
+    ...(liveWindow ? ([[r(d, 'erpx.window'), liveWindow]] as [string, React.ReactNode][]) : x.windowEndsAt ? ([[r(d, 'case.window'), dt.format(new Date(x.windowEndsAt))]] as [string, string][]) : []),
     ...(x.decisionNote ? ([[r(d, 'case.decision'), x.decisionNote]] as [string, string][]) : []),
     ...(x.oneTrip ? ([[r(d, 'case.oneTrip'), r(d, 'case.yes')]] as [string, string][]) : []),
     ...(x.waiveReason ? ([[r(d, 'case.waived'), x.waiveReason]] as [string, string][]) : []),

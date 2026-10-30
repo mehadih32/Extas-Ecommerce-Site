@@ -154,7 +154,8 @@
     "EXCHANGE_WAITING": "Not enough of the new piece is free in the ERP now. Regular orders come first, so the exchange waits.",
     "HANDBACK_STATE": "The list is not at this step now. Open the page again.",
     "NOT_EXPECTED": "This parcel is not expected back, or it is already on a list.",
-    "NOT_IN_ERP": "This order was not sent to the ERP on the new model."
+    "NOT_IN_ERP": "This order was not sent to the ERP on the new model.",
+    "ERP_ON_PRACTICE": "This store's ERP is in practice mode (the real ERP key is not in yet), so nothing goes to it. Nothing changed. Once the real key is in (Settings › ERP link), approve again."
   },
   "qc": {
     "v6Note": "This store is on the new ERP contract (v6): the ERP checks every returned piece. Returned parcels go to the hand-back desk; nothing is checked or restocked here.",
@@ -551,6 +552,10 @@
     "lateDay": "Date it came back",
     "lateNote": "Note (which lot, which courier)",
     "lateSave": "Tell the ERP",
-    "never": "Approving sends the exchange to the ERP. No money moves here and nothing is refunded after delivery; the ERP settles once the owner checks the old piece."
+    "never": "Approving sends the exchange to the ERP. No money moves here and nothing is refunded after delivery; the ERP settles once the owner checks the old piece.",
+    "window": "Exchange window",
+    "windowLeft": "{n} h of {total} h left · ends {at}",
+    "windowClosed": "Closed: the {total} h ended {at}. It cannot be approved now.",
+    "windowUnknown": "Not started: the courier's \"delivered\" is not in yet."
   }
 }
