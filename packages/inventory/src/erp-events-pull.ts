@@ -27,7 +27,7 @@ import { recordErpEvent, upsertClaim } from './erp-events';
 import { openErpLink } from './erp-link';
 import { behaviourOf, resolveErp } from './guard';
 import { callErp, errorCode, errorText, finishRun, readState, retryPolicy, saveState, startRun, type SyncResource } from './sync';
-import { decimalToMinor } from './webhook';
+import { decimalToMinor } from './money';
 
 export interface EventsPullResult {
   status: 'ok' | 'skipped' | 'failed';

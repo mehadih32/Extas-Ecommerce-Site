@@ -1,0 +1,16 @@
+{
+  "catalogue": {
+    "bGrade": {
+      "nameSuffix": {
+        "label": "B-grade listing: added to the name",
+        "help": "Added to the end of a B-grade listing's name when a style is imported from the ERP. You can rename the product afterwards."
+      }
+    },
+    "shopPrice": {
+      "changesShown": {
+        "label": "Changed buying prices listed on \"Import from ERP\"",
+        "help": "How many changed buying prices (not yet seen) the \"Import from ERP\" page lists at once, newest first."
+      }
+    }
+  }
+}

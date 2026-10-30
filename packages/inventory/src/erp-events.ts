@@ -29,6 +29,7 @@ import type { Prisma } from '@extas/db/client';
 import { ERP_CLAIM_REASONS, movesMoney, type ErpV6Event, type ErpV6EventType } from '@extas/adapters';
 import { nowOf, setting, TX, type Db, type InventoryDeps, type Tx } from './context';
 import { ERP_ORDER_EVENT_HANDLERS } from './erp-orders-v6-events';
+import { applyShopPrice } from './shop-price';
 
 /** One ledger row (ErpEvent). */
 export type ErpEventRow = Prisma.ErpEventGetPayload<true>;
@@ -269,6 +270,32 @@ const pieceDecided: ErpEventHandler = {
 };
 
 /**
+ * `shop-price.changed` (PR 609): the SKU's buying price in the store whose ERP company sent it (CN-029 §16: the event's
+ * own store, never another). Flagged for the admin; a selling price never changes by itself.
+ */
+// PR 609 · qa-gate (30 Oct): an event older than one already taken for the same SKU and link (it arrived late, a pull
+// after a webhook) is ignored (OLDER), never applied over the newer price; applyShopPrice also refuses a price older
+// than the one the variant holds (an import's read counts too), with the variant's row locked.
+const shopPriceChanged: ErpEventHandler = {
+  async apply({ tx, row, now }) {
+    const d = dataOf(row);
+    const sku = textOf(d.sku);
+    const price = textOf(typeof d.shopPrice === 'number' ? String(d.shopPrice) : d.shopPrice);
+    if (!sku || !price) return { status: 'IGNORED', result: { why: 'NO_SKU_OR_PRICE' } };
+    if (row.occurredAt) {
+      const newer = await tx.erpEvent.findFirst({
+        where: { storeId: row.storeId, linkId: row.linkId, type: row.type, id: { not: row.id }, status: { in: ['APPLIED', 'IGNORED'] }, occurredAt: { gt: row.occurredAt }, data: { path: ['sku'], equals: sku } },
+        select: { eventId: true },
+      });
+      if (newer) return { status: 'IGNORED', result: { older: 1, why: 'OLDER', newer: newer.eventId } };
+    }
+    const k = await applyShopPrice(tx, row.storeId, sku, price, now, { asOf: row.occurredAt });
+    if (k === 'changed' || k === 'first') return { status: 'APPLIED', result: { [k]: 1 } };
+    return { status: 'IGNORED', result: { [k]: 1, why: k === 'unknown' ? 'UNKNOWN_SKU' : k === 'older' ? 'OLDER' : 'SAME' } };
+  },
+};
+
+/**
  * What each v6 event does in the shop. A type that is not here is STORED: kept in the ledger for the part of the shop
  * that reads it (PR 611–617). PR 609 and 610 add their handlers here.
  */
@@ -276,6 +303,7 @@ export const ERP_EVENT_HANDLERS: Partial<Record<ErpV6EventType, ErpEventHandler>
   'return.piece.decided': pieceDecided,
   // PR 610, 611: the account's hold and release, a short or filled order line, the delivery identification.
   ...ERP_ORDER_EVENT_HANDLERS,
+  'shop-price.changed': shopPriceChanged,
 };
 
 // ---- applying the stored events -----------------------------------------------------------------------------------------

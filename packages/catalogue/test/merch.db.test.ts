@@ -470,6 +470,28 @@ describe.skipIf(!HAS_TEST_DB)('size charts, collections, tags, CSV and the "was"
       expect(await t.prisma.priceHistory.count({ where: { variantId: v.id, priceMinor: 90_000 } })).toBe(1);
     });
 
+    it('PR 609: with a floor margin set, a price below buying price + margin is shown as an issue before anything is applied', async () => {
+      const v = await t.prisma.productVariant.findFirstOrThrow({ where: { sku: 'PLAIN-POLO-M' } });
+      await t.prisma.productVariant.update({ where: { id: v.id }, data: { shopPriceMinor: 80_000 } });
+      const file = csvOf([
+        ['product', 'sku', 'price'],
+        ['plain-polo', 'PLAIN-POLO-M', '950'],
+      ]);
+      try {
+        // Off by default: the price goes through.
+        expect((await previewCsvImport(deps(), as(pricer), file)).rows[0]!.issues).toEqual([]);
+        // 800 × 1.20 = 960 taka.
+        overrides.set('catalogue.floor.minMarginPercent', 20);
+        const p = await previewCsvImport(deps(), as(pricer), file);
+        expect(p.rows[0]!.issues).toEqual([{ code: 'BELOW_FLOOR', column: 'price', detail: 'floor 96000' }]);
+        expect((await applyCsvImport(deps(), as(pricer), file, p.hash)).applied).toBe(0);
+        expect((await t.prisma.productVariant.findUniqueOrThrow({ where: { id: v.id } })).priceMinor).toBe(90_000);
+      } finally {
+        overrides.delete('catalogue.floor.minMarginPercent');
+        await t.prisma.productVariant.update({ where: { id: v.id }, data: { shopPriceMinor: null } });
+      }
+    });
+
     it('refuses a broken file as a whole, with the line', async () => {
       expect(await code(previewCsvImport(deps(), as(importer), ''))).toBe('CSV_INVALID');
       expect(await code(previewCsvImport(deps(), as(importer), 'sku,nameEn\nX,Y'))).toBe('CSV_INVALID');

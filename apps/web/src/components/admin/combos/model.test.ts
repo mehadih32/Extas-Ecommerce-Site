@@ -64,7 +64,7 @@ describe('combo admin messages', () => {
   });
 
   it('every refusal, state, type, blocking reason and the nav have their words', () => {
-    const errors = ['INVALID_INPUT', 'NOT_FOUND', 'SLUG_TAKEN', 'STALE', 'OWNER_OK_REQUIRED', 'NOT_READY', 'KEY_FIXED', 'SET_INVALID', 'CART_NOT_OPEN', 'NO_PIECE_PHOTO', 'NO_STORAGE', 'invalid-store-id', 'not-found', 'method-not-allowed'];
+    const errors = ['INVALID_INPUT', 'NOT_FOUND', 'SLUG_TAKEN', 'STALE', 'OWNER_OK_REQUIRED', 'NOT_READY', 'KEY_FIXED', 'SET_INVALID', 'CART_NOT_OPEN', 'NO_PIECE_PHOTO', 'NO_STORAGE', 'BELOW_FLOOR', 'invalid-store-id', 'not-found', 'method-not-allowed'];
     for (const d of [adminDicts.bn, adminDicts.en]) {
       const has = (k: string) => expect(t(d, k), k).not.toBe(k);
       for (const c of errors) has(`errors.${c}`);

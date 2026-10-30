@@ -493,6 +493,27 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     expect(await ruleTextFor(deps(), { storeId: A, key: 'polo-sale', slot: 'short', locale: 'en-BD' })).toMatch(/^20% off these products until .*Oct/);
   });
 
+  it('PR 609: with a floor margin set, the bag and the product page stop the discount at buying price + margin', async () => {
+    // The polo-sale rule above gives 20% off (100000 -> 80000). Bought from the ERP at 70000; floor 20% = 84000.
+    await t.prisma.productVariant.update({ where: { id: ids.poloV! }, data: { shopPriceMinor: 70000 } });
+    const line = [{ variantId: ids.poloV!, quantity: 1 }];
+    try {
+      expect((await quoteCart(deps(), { storeId: A, lines: line })).discountMinor).toBe(20000);
+      overrides.set('catalogue.floor.minMarginPercent', 20);
+      const q = await quoteCart(deps(), { storeId: A, lines: line });
+      expect([q.discountMinor, q.itemsMinor, q.floorHeld.map((h) => [h.rule.key, h.heldMinor])]).toEqual([16000, 84000, [['polo-sale', 4000]]]);
+      expect(await discountWasFor(deps(), { storeId: A, variantId: ids.poloV! })).toMatchObject({ priceMinor: 100000, discountedMinor: 84000 });
+      // Another store's floor setting never reaches this store.
+      overrides.delete('catalogue.floor.minMarginPercent');
+      overrides.set(`catalogue.floor.minMarginPercent@${B}`, 20);
+      expect((await quoteCart(deps(), { storeId: A, lines: line })).discountMinor).toBe(20000);
+    } finally {
+      overrides.delete('catalogue.floor.minMarginPercent');
+      overrides.delete(`catalogue.floor.minMarginPercent@${B}`);
+      await t.prisma.productVariant.update({ where: { id: ids.poloV! }, data: { shopPriceMinor: null } });
+    }
+  });
+
   // ---- jobs and the sample -------------------------------------------------------------------------------------------
 
   it('the end-date job ends a rule at its end, as a new version', async () => {

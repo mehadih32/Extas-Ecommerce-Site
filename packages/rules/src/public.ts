@@ -9,12 +9,14 @@
 //   exchangeTermsFor the exchange terms for a product and band (S08 reads it; the button hides after the window)
 //   liveRuleValue    one value of a live rule (order edits, held orders … other stages read it)
 //   discountWasFor   a variant's price with its live discount and the honest struck "was" price, if any (PR 213)
+//                    (PR 609: quoteCart and discountWasFor give each line its selling-price floor, so no offer goes
+//                    below the buying price + `catalogue.floor.minMarginPercent`; off while that is empty)
 //   liveNotices      the notices and pop-ups for one place, filled in, with the pop-up limits
 import { checkCoupon, type CouponCheck } from './coupons-service';
 import { cached } from './cache';
 import { nowOf, setting, textContext, type RulesDeps } from './context';
 import { cachedActiveRules, langContext, othersByKey } from './core';
-import { clockFacts, exchangeTerms, liveValue, quote, type ExchangeTerms, type Quote } from './engine';
+import { clockFacts, exchangeTerms, floorMinorOf, liveValue, quote, type ExchangeTerms, type Quote } from './engine';
 import { bandChargeOf, scopeFacts } from './facts';
 import { inScope, resolutionOrder } from './match';
 import { isLive, TEXT_SLOTS, type Rule, type TextSlot } from './model';
@@ -94,17 +96,19 @@ export async function quoteCart(
   input: { storeId: number; lines: CartLineInput[]; bandKey?: string | null; paymentMethod?: string | null; couponCode?: string | null; phone?: string | null; customerId?: string | null; deliveredOrders?: number | null; source?: string | null; locale?: string },
 ): Promise<CartQuote> {
   const now = nowOf(deps);
-  const [rules, maxPercentOff, timeZone, wasAllowed, bandChargeMinor] = await Promise.all([
+  const [rules, maxPercentOff, timeZone, wasAllowed, bandChargeMinor, floorPercent] = await Promise.all([
     cachedActiveRules(deps, input.storeId),
     setting(deps, input.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, input.storeId, 'store.timeZone'),
     setting(deps, input.storeId, 'rules.discount.showWasPrice'),
     // Follow-up 54: the engine's delivery figure is the band's own, the one the checkout charges.
     bandChargeOf(deps.db, input.storeId, input.bandKey ?? null),
+    // PR 609: the store's lowest margin over the buying price (null = the floor is off).
+    setting(deps, input.storeId, 'catalogue.floor.minMarginPercent'),
   ]);
   const variants = await deps.db.productVariant.findMany({
     where: { storeId: input.storeId, id: { in: input.lines.map((l) => l.variantId).filter((id) => UUID.test(id)) }, archivedAt: null, active: true },
-    select: { id: true, productId: true, priceMinor: true },
+    select: { id: true, productId: true, priceMinor: true, shopPriceMinor: true },
   });
   const byId = new Map(variants.map((v) => [v.id, v]));
   const facts = await scopeFacts(deps.db, input.storeId, variants.map((v) => v.productId));
@@ -116,7 +120,7 @@ export async function quoteCart(
       return [];
     }
     const f = facts.get(v.productId)!;
-    return [{ id: l.id ?? `line-${i}`, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: l.quantity, productId: v.productId, categoryIds: f.categoryIds, collectionIds: f.collectionIds, freeDelivery: f.freeDelivery, comboId: l.comboId ?? null }];
+    return [{ id: l.id ?? `line-${i}`, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: l.quantity, productId: v.productId, categoryIds: f.categoryIds, collectionIds: f.collectionIds, freeDelivery: f.freeDelivery, comboId: l.comboId ?? null, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent) }];
   });
   const coupon = input.couponCode?.trim() ? await checkCoupon(deps.db, { storeId: input.storeId, code: input.couponCode, phone: input.phone, customerId: input.customerId, now }) : null;
   const clock = clockFacts(now, timeZone);
@@ -180,18 +184,19 @@ export interface DiscountWas {
 export async function discountWasFor(deps: RulesDeps, input: { storeId: number; variantId: string }): Promise<DiscountWas | null> {
   const now = nowOf(deps);
   if (!UUID.test(input.variantId)) return null;
-  const v = await deps.db.productVariant.findFirst({ where: { id: input.variantId, storeId: input.storeId, archivedAt: null }, select: { id: true, productId: true, priceMinor: true, compareAtMinor: true } });
+  const v = await deps.db.productVariant.findFirst({ where: { id: input.variantId, storeId: input.storeId, archivedAt: null }, select: { id: true, productId: true, priceMinor: true, compareAtMinor: true, shopPriceMinor: true } });
   if (!v || v.priceMinor === null) return null;
-  const [rules, maxPercentOff, allowed, lookbackDays] = await Promise.all([
+  const [rules, maxPercentOff, allowed, lookbackDays, floorPercent] = await Promise.all([
     cachedActiveRules(deps, input.storeId),
     setting(deps, input.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, input.storeId, 'rules.discount.showWasPrice'),
     setting(deps, input.storeId, 'rules.discount.wasLookbackDays'),
+    setting(deps, input.storeId, 'catalogue.floor.minMarginPercent'),
   ]);
   const f = (await scopeFacts(deps.db, input.storeId, [v.productId])).get(v.productId)!;
   const q = quote(
     rules.filter((r) => r.actions.some((a) => a.type === 'discount' && a.target === 'lines' && !a.requiresCoupon && !a.minSubtotalParam)),
-    { now, lines: [{ id: v.id, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: 1, ...f }], bandKey: null, paymentMethod: null, couponCode: null, couponRuleIds: [], customer: { loggedIn: false, deliveredOrders: null }, source: null, weekday: null, hour: null },
+    { now, lines: [{ id: v.id, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: 1, ...f, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent) }], bandKey: null, paymentMethod: null, couponCode: null, couponRuleIds: [], customer: { loggedIn: false, deliveredOrders: null }, source: null, weekday: null, hour: null },
     { maxPercentOff },
   );
   const line = q.lines[0]!;

@@ -116,7 +116,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         ],
       },
       { id: 'charts', guide: 'size-charts', pages: [{ href: '/admin/size-charts', perm: 'catalogue.read', keys: ['sizeCharts'] }] },
-      { id: 'import', more: true, pages: [{ href: '/admin/products/import', perm: 'catalogue.import', keys: ['productImport'] }] },
+      {
+        id: 'import',
+        more: true,
+        pages: [
+          { href: '/admin/products/import', perm: 'catalogue.import', keys: ['productImport'] },
+          // PR 609 (CN-028): import from the ERP by style code
+          { href: '/admin/products/erp-import', perm: 'catalogue.import', keys: ['erpImport'] },
+        ],
+      },
       { id: 'audit', more: true, pages: [{ href: '/admin/products/audit', perm: 'catalogue.read', keys: ['productAudit'] }] },
     ],
   },

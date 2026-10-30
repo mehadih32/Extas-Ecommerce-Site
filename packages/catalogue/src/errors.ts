@@ -61,7 +61,9 @@ export type CatalogueErrorCode =
   /** Only a delivered order can be reviewed (`reviews.submit.onlyDelivered`, PR 65). */
   | 'NOT_DELIVERED'
   /** The time for reviewing that order has passed (`reviews.submit.withinDays`, PR 65). */
-  | 'TOO_LATE';
+  | 'TOO_LATE'
+  /** PR 609: the price is below the lowest margin over the buying price (`catalogue.floor.minMarginPercent`). */
+  | 'BELOW_FLOOR';
 
 export class CatalogueError extends Error {
   readonly code: CatalogueErrorCode;
@@ -91,6 +93,7 @@ export class CatalogueError extends Error {
       case 'CHECKLIST_FAILED':
       case 'CHART_IN_USE':
       case 'NOT_OUT_OF_STOCK':
+      case 'BELOW_FLOOR':
         return 409;
       case 'PRICES_NOT_ALLOWED':
       case 'LINK_IMPORT_OFF':

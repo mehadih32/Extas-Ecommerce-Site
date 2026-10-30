@@ -28,6 +28,11 @@
 //   GET         /api/admin/inventory/erp/styles              ERP styles the shop does not have yet (PR 204)
 //   GET         /api/admin/inventory/movements               ?from=&to=&sku=&locationId= the movement report (PR 207)
 //   POST        /api/admin/inventory/reconcile               check every stock number against the ERP (PR 207)
+//   GET/POST    /api/admin/inventory/erp/style               ?styleCode= what importing a style would do · {styleCode}
+//                                                            import it as a draft (PR 609; also needs `catalogue.import`)
+//   GET         /api/admin/inventory/shop-prices             buying prices that changed and were not seen (PR 609;
+//                                                            also needs `catalogue.prices`)
+//   POST        /api/admin/inventory/shop-prices/seen        {ids} or {all: true} — "seen" (PR 609)
 //
 // The ERP's address and keys are typed in on the Keys & connections page (PR 500) and live in the vault (PR 493); with
 // none, the connection runs on the practice ERP, which never changes real stock (PR 499).
@@ -238,6 +243,26 @@ export function movementsHandler(request: Request, deps: AdminDeps | null): Prom
     const q = (k: string) => c.url.searchParams.get(k)?.trim() || undefined;
     return { report: await inv.stockMovementReport(c.deps, c.who, { from: q('from') ?? '', to: q('to') ?? '', sku: q('sku'), locationId: q('locationId') }) };
   });
+}
+
+// ---- PR 609 (CN-028) · import by style code and the buying price ----------------------------------------------------
+
+/** GET `?styleCode=` the preview (reads the ERP, changes nothing) · POST `{styleCode}` the import (a draft product). */
+export function erpStyleHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const m = method(request);
+  if (m === 'GET') return handle(request, deps, 'inventory.read', async (c) => ({ preview: await inv.previewErpStyle(c.deps, c.who, { styleCode: c.url.searchParams.get('styleCode') ?? '' }) }));
+  if (m !== 'POST') return notAllowed();
+  return handle(request, deps, 'inventory.read', async (c) => ({ imported: await inv.importErpStyle(c.deps, c.who, (await body(request)) as inv.StyleCodeInput) }));
+}
+
+export function shopPricesHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (method(request) !== 'GET') return notAllowed();
+  return handle(request, deps, 'inventory.read', async (c) => ({ changes: await inv.shopPriceChanges(c.deps, c.who) }));
+}
+
+export function shopPricesSeenHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (method(request) !== 'POST') return notAllowed();
+  return handle(request, deps, 'inventory.read', async (c) => inv.markShopPricesSeen(c.deps, c.who, (await body(request)) as inv.SeenInput) as unknown as Promise<Record<string, unknown>>);
 }
 
 export function reconcileHandler(request: Request, deps: AdminDeps | null): Promise<Response> {

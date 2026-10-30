@@ -7,10 +7,12 @@
 // - Prices are the shop's (B3.7): setting the sale or compare-at price needs `catalogue.prices`; every price change
 //   writes a PriceHistory row (the "was" price and the 30-day rules read it). The compare-at price is above the price.
 // - Stock is not set here (the ERP sync and the stock pool own it); the product summary is refreshed after each change.
+// - PR 609: a new selling price below the floor over the buying price is refused (price-floor.ts, BELOW_FLOOR).
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, changed, found, logChange, parse, setting, TX, type CatalogueDeps, type Tx, type Who } from './context';
 import { CatalogueError } from './errors';
+import { assertVariantFloor } from './price-floor';
 import { refreshProductSummary } from './summary';
 
 /** The gap between positions, so one can be slotted in between without renumbering. */
@@ -181,6 +183,7 @@ export async function updateVariant(deps: CatalogueDeps, who: Who, id: string, p
   const cur0 = await loadVariant(deps.db, who.storeId, id);
   const priceMoves = (d.priceMinor !== undefined && d.priceMinor !== cur0.priceMinor) || (d.compareAtMinor !== undefined && d.compareAtMinor !== cur0.compareAtMinor);
   if (priceMoves) await allow(deps, who, 'catalogue.prices');
+  if (d.priceMinor !== undefined && d.priceMinor !== cur0.priceMinor) await assertVariantFloor(deps, who, cur0, d.priceMinor);
   await deps.db.$transaction(async (tx) => {
     const cur = await loadVariant(tx, who.storeId, id);
     if (archived === false && cur.archivedAt) {

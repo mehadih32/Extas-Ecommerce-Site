@@ -36,7 +36,7 @@ describe('product screen messages', () => {
     for (const d of [bn, en]) {
       for (const k of PUBLISH_CHECK_KEYS) for (const f of ['label', 'short', 'ok', 'none']) expect(t(d, `checks.${k}.${f}`)).not.toBe(`checks.${k}.${f}`);
       for (const s of ['PUBLISHED', 'READY_TO_PUBLISH', 'DRAFT', 'UNPUBLISHED', 'ARCHIVED']) expect(t(d, `products.status.${s}`)).not.toContain('products.');
-      for (const c of ['CHECKLIST_FAILED', 'SKU_TAKEN', 'SKU_RETIRED', 'SKU_FORMAT', 'VARIANT_EXISTS', 'SLUG_TAKEN', 'COLOUR_IN_USE', 'CONFLICT', 'NOT_FOUND', 'TOO_LARGE']) expect(t(d, `products.errors.${c}`)).not.toContain('products.');
+      for (const c of ['CHECKLIST_FAILED', 'SKU_TAKEN', 'SKU_RETIRED', 'SKU_FORMAT', 'VARIANT_EXISTS', 'SLUG_TAKEN', 'COLOUR_IN_USE', 'CONFLICT', 'NOT_FOUND', 'TOO_LARGE', 'BELOW_FLOOR']) expect(t(d, `products.errors.${c}`)).not.toContain('products.');
       for (const s of ['product', 'naming', 'retire', 'variants', 'colours', 'create']) expect(t(d, `products.save.steps.${s}`)).not.toContain('products.');
       for (const r of ['new', 'unpublished', 'live-failing']) expect(t(d, `queue.reason.${r}`)).not.toContain('queue.');
     }

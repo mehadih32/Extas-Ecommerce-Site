@@ -9,6 +9,7 @@
     "CART_NOT_OPEN": "The bag is no longer open.",
     "NO_PIECE_PHOTO": "A piece has no photo in its colour yet, so the set photo cannot be made (pieces {fields}).",
     "NO_STORAGE": "Photo storage is not connected yet.",
+    "BELOW_FLOOR": "The set price is below the lowest price allowed over the pieces' buying prices ({fields}).",
     "invalid-store-id": "That store does not exist.",
     "not-found": "That page of the admin does not exist.",
     "method-not-allowed": "That action is not possible here."

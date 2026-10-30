@@ -33,7 +33,19 @@ export type InventoryErrorCode =
   /** The location already has a stock count going on (PR 203). */
   | 'AUDIT_OPEN'
   /** The order has an open packing card (a shortage, follow-up 16): a person decides it before booking. */
-  | 'SHORTAGE_OPEN';
+  | 'SHORTAGE_OPEN'
+  /** PR 609: the practice ERP's data is never saved as real products (import by style code). */
+  | 'ERP_ON_PRACTICE'
+  /** PR 609: the style has colours the shop's colour list does not know; details name them (add them first). */
+  | 'COLOUR_MISSING'
+  /** PR 609: the ERP has no SKU of this style the shop can import. */
+  | 'NOTHING_TO_IMPORT'
+  /** PR 609 (qa-gate): import by style code needs the store on ERP contract v6 (register row 609). */
+  | 'ERP_V5'
+  /** PR 609 (qa-gate): SKUs of the style sit in products the import may not take over; details name the SKUs. */
+  | 'SKU_IN_OTHER_PRODUCT'
+  /** PR 609 (qa-gate): rows the shop cannot take as the ERP sent them; details name the SKU and why. */
+  | 'ROW_NOT_ACCEPTED';
 
 export class InventoryError extends Error {
   readonly code: InventoryErrorCode;
@@ -64,6 +76,12 @@ export class InventoryError extends Error {
       case 'REASON_REQUIRED':
       case 'AUDIT_OPEN':
       case 'SHORTAGE_OPEN':
+      case 'ERP_ON_PRACTICE':
+      case 'COLOUR_MISSING':
+      case 'NOTHING_TO_IMPORT':
+      case 'ERP_V5':
+      case 'SKU_IN_OTHER_PRODUCT':
+      case 'ROW_NOT_ACCEPTED':
         return 409;
       case 'ERP_UNAVAILABLE':
       case 'ERP_ERROR':

@@ -20,6 +20,8 @@ export * from './garment-types';
 export * from './categories';
 export * from './fabrics';
 export * from './variants';
+// PR 609 (CN-028): the selling-price floor over the buying price.
+export * from './price-floor';
 export * from './naming';
 export * from './products';
 export * from './facts';

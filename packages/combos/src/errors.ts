@@ -21,7 +21,9 @@ export type CombosErrorCode =
   /** A piece has no photo in its colour, so the set photo cannot be made (details: the positions). */
   | 'NO_PIECE_PHOTO'
   /** The set photo needs the storage adapter, which the caller did not pass. */
-  | 'NO_STORAGE';
+  | 'NO_STORAGE'
+  /** PR 609: the set price is below the lowest margin over the pieces' buying prices; details carry `floor: …`. */
+  | 'BELOW_FLOOR';
 
 export class CombosError extends Error {
   readonly code: CombosErrorCode;
@@ -48,6 +50,7 @@ export class CombosError extends Error {
       case 'SET_INVALID':
       case 'CART_NOT_OPEN':
       case 'NO_PIECE_PHOTO':
+      case 'BELOW_FLOOR':
         return 409;
       case 'NO_STORAGE':
         return 503;

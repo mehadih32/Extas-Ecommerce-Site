@@ -17,6 +17,8 @@
 //    - variant.changed refreshes the ERP mirror of the variant (barcode, the ERP's retail price and average cost,
 //      `erpUpdatedAt`), never the shop's own sale price; an older change than the one held is ignored the same way.
 //      PR 607: in `erp.model` v6 the ERP's retail price and average cost are never read (owner answer Q7).
+//      PR 609: in v6 its shop price is the buying price ("bought from ERP at"): a change is kept and flagged for the
+//      admin (shop-price.ts), never a change to the selling price.
 //    - Processing an event twice changes nothing the second time (its status is checked first, and the stock path is
 //      idempotent on its own).
 // 3. PR 608 (CN-028): a v6 event (delivery.identified, return.*, order.line.*, exchange.*, summary.missing, account.*,
@@ -34,6 +36,8 @@ import { nowOf, setting, type InventoryDeps } from './context';
 import { storesWithErp } from './erp-mode';
 import { currencyDigits } from './erp-push';
 import { isV6 } from './erp-model';
+import { decimalToMinor } from './money';
+import { applyShopPrice } from './shop-price';
 import { recordBrokenErpEvent, recordErpEvent } from './erp-events';
 import { v6LinkFor } from './erp-link';
 import { behaviourOf, resolveErp } from './guard';
@@ -237,16 +241,8 @@ export interface WebhookProcessResult {
 
 const zero = (): Omit<WebhookProcessResult, 'status' | 'reason'> => ({ stores: 0, applied: 0, unchanged: 0, stale: 0, movements: 0 });
 
-/** An ERP decimal (text) in minor units of a currency, rounded half up at the currency's last digit. */
-export function decimalToMinor(text: string | null, digits: number): number | null {
-  if (text === null) return null;
-  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(text.trim());
-  if (!m) return null;
-  const frac = (m[3] ?? '').padEnd(digits + 1, '0');
-  let minor = Number(m[2]) * 10 ** digits + Number(frac.slice(0, digits) || '0');
-  if (Number(frac[digits]) >= 5) minor += 1;
-  return m[1] ? -minor : minor;
-}
+/** An ERP decimal (text) in minor units of a currency (money.ts; kept exported here for PR 196's callers). */
+export { decimalToMinor };
 
 /** Applies one stored event (the worker's job). Safe to run again: a finished event is left as it is. */
 export async function processErpWebhook(deps: InventoryDeps, eventId: string): Promise<WebhookProcessResult> {
@@ -339,13 +335,18 @@ async function applyVariant(deps: InventoryDeps, stores: number[], row: ErpVaria
     };
     const same = data.barcode === v.barcode && data.erpRetailPriceMinor === v.erpRetailPriceMinor && data.avgCostMinor === v.avgCostMinor && v.erpUpdatedAt?.getTime() === row.updatedAt.getTime();
     if (same) {
-      out.unchanged++;
+      // PR 609: the same row may still carry a new buying price.
+      if (v6 && (await applyShopPrice(deps.db, storeId, row.sku, row.shopPrice ?? null, nowOf(deps))) === 'changed') out.applied++;
+      else out.unchanged++;
       continue;
     }
     // Only if nothing newer landed meanwhile (two events of one variant handled at once).
     const done = await deps.db.productVariant.updateMany({ where: { id: v.id, OR: [{ erpUpdatedAt: null }, { erpUpdatedAt: { lte: row.updatedAt } }] }, data });
-    if (done.count) out.applied++;
-    else out.stale++;
+    if (done.count) {
+      out.applied++;
+      // PR 609: the buying price (v6 only).
+      if (v6) await applyShopPrice(deps.db, storeId, row.sku, row.shopPrice ?? null, nowOf(deps));
+    } else out.stale++;
   }
   return out;
 }

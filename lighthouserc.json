@@ -88,6 +88,7 @@
         "http://127.0.0.1:3000/admin/products",
         "http://127.0.0.1:3000/admin/products/queue",
         "http://127.0.0.1:3000/admin/products/import",
+        "http://127.0.0.1:3000/admin/products/erp-import",
         "http://127.0.0.1:3000/admin/products/audit",
         "http://127.0.0.1:3000/admin/products/back-in-stock",
         "http://127.0.0.1:3000/admin/size-charts",

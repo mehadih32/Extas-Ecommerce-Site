@@ -62,6 +62,7 @@ import { supportSettings } from './registry-support';
 import { erpOrdersV6Settings } from './registry-erp-orders-v6';
 import { booksSettings } from './registry-books';
 import { returnsV6Settings } from './registry-returns-v6';
+import { bhandariP1Settings } from './registry-bhandari-p1';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1253,6 +1254,8 @@ export const registry = {
   ...booksSettings,
   // ---- CN-028 · PR 612–614 (CN-029 Phase 1) · returns and exchanges on the ERP model: the old shop QC, restock, write-off and credit-due paths as per-store switches (on while v5; never run in v6), the owner's check window and the pieces kept for regular orders (registry-returns-v6.ts, version 67). ----
   ...returnsV6Settings,
+  // ---- CN-029 Phase 1 · PR 609, 620 (Bhandari) · import by style code (the B-grade name), the signed ERP-to-shop calls (registry-bhandari-p1.ts, version 65). ----
+  ...bhandariP1Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
