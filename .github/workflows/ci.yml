@@ -86,10 +86,14 @@ jobs:
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh infra/deploy/erp-acceptance.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
-          EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
-          docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh infra/deploy/erp-acceptance.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
+          # PR 620 · round 3: the upstream both ways — as before (Caddy without trusted_proxies) and with Caddy's own
+          # client address (header_up, only when the live configuration trusts Cloudflare alone).
+          for mode in "" client-ip; do
+            EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue $mode > /tmp/sites/upstream.caddy
+            docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+              -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          done
           # PR 6: the background worker runs in each colour too (from the migrate image); deploy.sh sets these.
           printf 'APP_IMAGE=extas-web:test\nWORKER_IMAGE=extas-migrate:test\nWORKER_REPLICAS=1\nEXTAS_COLOR=blue\nEXTAS_ROOT=/srv/extas\nEXTAS_NVME_MOUNT=/mnt/nvme\nEXTAS_TIMEZONE=Asia/Dhaka\n' > /tmp/app.env
           sudo touch /srv/extas/config/secrets/app.env /srv/extas/config/secrets/app-connections.env

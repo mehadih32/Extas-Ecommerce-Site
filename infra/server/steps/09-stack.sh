@@ -3,6 +3,8 @@
 # Redis cache + queue, Meilisearch, Caddy with automatic HTTPS and the preview password. Secrets are generated here,
 # on the server, and never leave it (A1.3, CLAUDE.md rule 2).
 STACK_DIR_REPO="$EXTAS_REPO_DIR/infra/stack"
+# shellcheck source=../../deploy/caddy-live.sh
+. "$EXTAS_REPO_DIR/infra/deploy/caddy-live.sh"
 
 write_stack_env() {
   local s="$EXTAS_SECRETS_DIR"
@@ -167,13 +169,39 @@ write_caddy_client_ip() {
   fi
   if bash "$STACK_DIR_REPO/caddy/client-ip-block.sh" "$src" > "$tmp/client-ip.caddy"; then
     write_file "$d/client-ip.caddy" 0644 < "$tmp/client-ip.caddy" >/dev/null
-    report OK "PR 620 · client address" "CF-Connecting-IP believed from Cloudflare's ranges only"
+    # Round 3: written is not live. The OK comes only from Caddy's own running configuration (`caddy_apply`).
+    report INFO "PR 620 · client address" "Cloudflare's ranges written for Caddy; checked live after the reload"
   else
     # Never left without the file Caddy imports: with no trusted range, every client address is the remote one.
     [ -f "$d/client-ip.caddy" ] || printf '# no trusted proxy: the client address is the remote address\n' | write_file "$d/client-ip.caddy" 0644 >/dev/null
     report FAIL "PR 620 · client address" "the Cloudflare range list is broken; client-ip.caddy kept as it was"
   fi
   rm -rf "$tmp"
+}
+
+# PR 620 · p3 review round 3: the Caddyfile the running Caddy reads is the repo's, a reload that fails is a FAIL, and
+# the client-address block is checked in Caddy's live configuration (infra/deploy/caddy-live.sh). The single-file mount
+# stays on the file's inode, so step_stack copies the Caddyfile in place; when the container still reads another file
+# (a copy made before this fix), the caddy service is recreated, which loads the mounted file fresh.
+caddy_apply() {
+  local file="$EXTAS_ROOT/stack/caddy/Caddyfile" err="$EXTAS_ROOT/logs/caddy-reload.err"
+  if ! caddyfile_live_matches "$file"; then
+    if compose up -d --force-recreate --wait --wait-timeout 120 caddy >/dev/null 2>"$err" && caddyfile_live_matches "$file"; then
+      report WARN "PR 7 · Caddy" "the running Caddy read an older Caddyfile (single-file mount); the caddy container was recreated"
+    else
+      report FAIL "PR 7 · Caddy" "the running Caddy does not read the repo's Caddyfile, even after recreating it: $(tail -2 "$err" 2>/dev/null | tr '\n' ' ')"
+      return 1
+    fi
+  elif ! docker exec "$CADDY_CONTAINER" caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>"$err"; then
+    report FAIL "PR 7 · Caddy" "reload failed, the old configuration keeps running: $(tail -2 "$err" | tr '\n' ' ')"
+    return 1
+  fi
+  if caddy_trusts_proxies; then
+    report OK "PR 620 · client address" "live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration)"
+  else
+    report FAIL "PR 620 · client address" "Caddy's running configuration has no trusted_proxies; the deploy keeps the upstream without header_up"
+    return 1
+  fi
 }
 
 write_caddy_sites() {
@@ -241,7 +269,9 @@ step_stack() {
   pg_changed="$(write_postgres_conf)"
   pgb_changed="$(write_pgbouncer_conf)"
   write_caddy_sites
-  rsync -a --delete --exclude www "$STACK_DIR_REPO"/ "$EXTAS_ROOT/stack"/
+  # Round 3: the Caddyfile is copied in place (its inode is what the container's single-file mount sees).
+  rsync -a --delete --exclude www --exclude /caddy/Caddyfile "$STACK_DIR_REPO"/ "$EXTAS_ROOT/stack"/
+  caddyfile_copy_inplace "$STACK_DIR_REPO/caddy/Caddyfile" "$EXTAS_ROOT/stack/caddy/Caddyfile" >/dev/null
   compose pull -q --ignore-buildable >/dev/null 2>&1 || compose pull -q >/dev/null 2>&1 || true
   if ! compose up -d ${STACK_BUILD_FLAG:---build} --wait --wait-timeout 300 >/dev/null 2>"$EXTAS_ROOT/logs/stack-up.err"; then
     report FAIL "PR 5–7 · stack" "compose up failed: $(tail -2 "$EXTAS_ROOT/logs/stack-up.err" | tr '\n' ' ')"
@@ -254,7 +284,8 @@ step_stack() {
     compose up -d --wait --wait-timeout 300 >/dev/null 2>&1 || true
   fi
   [ -n "$pgb_changed" ] && docker kill -s HUP extas-pgbouncer >/dev/null 2>&1 || true
-  docker exec extas-caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || true
+  local caddy_rc=0
+  caddy_apply || caddy_rc=$?
   touch "$EXTAS_STATE_DIR/stack.started"
   ensure_pg_temp_tablespace
   # PR 139: the app's own role keeps its login in step with the generated password (also after a restore: a dump
@@ -275,11 +306,13 @@ step_stack() {
   up="$(compose ps --format '{{.Service}}:{{.Health}}' | tr '\n' ' ')"
   report OK "PR 5 · PostgreSQL" "v$ver, shared_buffers $(docker exec extas-postgres psql -qtAX -U extas -c 'SHOW shared_buffers'), temp on NVMe, WAL archive on, slow log > ${PROFILE_PG_SLOW_MS} ms, PgBouncer (transaction pool)"
   report OK "PR 6 · Redis" "cache (LRU, NVMe) + queue (no eviction, AOF on data disk)"
-  report OK "PR 7 · Caddy" "$EXTAS_STAGING_HOST, auto HTTPS, HTTP/3, password + noindex"
+  [ "$caddy_rc" = 0 ] && report OK "PR 7 · Caddy" "$EXTAS_STAGING_HOST, auto HTTPS, HTTP/3, password + noindex"
   report INFO "stack health" "$up"
   # The preview password is never sent anywhere (not in chat, not in Git, not as an artifact). The owner reads it
   # on the VM himself: Azure portal → Run command → /usr/local/sbin/extas-preview-login (docs/owner/PREVIEW-LOGIN.md).
   install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-preview-login" /usr/local/sbin/extas-preview-login
   # PR 15 / CN-009 — the same for the admin's first owner login (made by owner-account.yml, which also installs it).
   install -m 0700 "$EXTAS_REPO_DIR/infra/server/bin/extas-owner-login" /usr/local/sbin/extas-owner-login
+  # Round 3: a Caddy that does not run the repo's configuration fails the step (after everything else was done).
+  return "$caddy_rc"
 }

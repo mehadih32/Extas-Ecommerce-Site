@@ -20,11 +20,16 @@
 //     `known` is read again after a secret was changed or a store switched on. The real ERP's calls with a new secret
 //     are answered again at the latest after that time.
 //   The lookup itself reads the current secrets again, so a secret removed since is refused there.
-// ADDRESS_SLOTS is a memory bound of the running app, not a business number (nothing for the owner to set).
+// - Round 3: an address that sent a verified call lately (`rememberVerified`, the last VERIFIED_SLOTS of them) always
+//   keeps its own bucket, even while the map is full: one IPv6 /48 holds 65,536 /64s and could fill every slot in a
+//   minute, which would otherwise put the real ERP into the shared bucket right after a secret change.
+// ADDRESS_SLOTS and VERIFIED_SLOTS are memory bounds of the running app, not business numbers (nothing for the owner to set).
 
 const MINUTE_MS = 60_000;
 /** The most addresses one budget keeps. */
 export const ADDRESS_SLOTS = 4096;
+/** Round 3: the most recently verified addresses that always keep a bucket of their own. */
+export const VERIFIED_SLOTS = 64;
 /** The bucket of every address not kept (and of a call with no address). */
 const SHARED = '*';
 const ADDRESS_MAX_CHARS = 64;
@@ -38,15 +43,19 @@ export interface RefusalBudget {
   fullUntil: number;
   /** Round 2: when an over-limit call last went to the lookup to read the secrets again. */
   probedAt: number;
+  /** Round 3: addresses (their bucket keys) whose calls verified lately, oldest first; at most VERIFIED_SLOTS. */
+  verified: Set<string>;
 }
 
 /** A call's place in its address's count, given back when it verifies. */
 export interface BudgetSlot {
   key: string;
   minuteStart: number;
+  /** The address's own key (differs from `key` when the call counted in the shared bucket). */
+  own: string;
 }
 
-export const newRefusalBudget = (): RefusalBudget => ({ addresses: new Map(), known: [], fullUntil: 0, probedAt: Number.NEGATIVE_INFINITY });
+export const newRefusalBudget = (): RefusalBudget => ({ addresses: new Map(), known: [], fullUntil: 0, probedAt: Number.NEGATIVE_INFINITY, verified: new Set() });
 
 /** The first four groups of an IPv6 address (its /64), or null when it is not one. */
 function ipv6Prefix64(a: string): string | null {
@@ -86,10 +95,10 @@ function prune(b: RefusalBudget, now: number): void {
   b.fullUntil = b.addresses.size >= ADDRESS_SLOTS ? first + MINUTE_MS : 0;
 }
 
-/** The bucket this address counts in now: its own when kept or when there is room, else the shared one. */
+/** The bucket this address counts in now: its own when kept, lately verified or when there is room, else the shared one. */
 function bucketKey(b: RefusalBudget, address: string | null | undefined, now: number): string {
   const key = keyOf(address);
-  if (b.addresses.has(key)) return key;
+  if (b.addresses.has(key) || (key !== SHARED && b.verified.has(key))) return key;
   prune(b, now);
   return b.addresses.size < ADDRESS_SLOTS ? key : SHARED;
 }
@@ -103,13 +112,22 @@ function refusedNow(b: RefusalBudget, key: string, now: number): number {
 /** Counts one refusal for this address (returns its slot). */
 export function countRefusal(b: RefusalBudget, address: string | null | undefined, now: number): BudgetSlot {
   const key = bucketKey(b, address, now);
+  const own = keyOf(address);
   const e = b.addresses.get(key);
   if (!e || expired(e, now)) {
     b.addresses.set(key, { minuteStart: now, refused: 1 });
-    return { key, minuteStart: now };
+    return { key, minuteStart: now, own };
   }
   e.refused += 1;
-  return { key, minuteStart: e.minuteStart };
+  return { key, minuteStart: e.minuteStart, own };
+}
+
+/** Round 3: the call in this slot verified: its address keeps a bucket of its own from now on (the latest VERIFIED_SLOTS). */
+export function rememberVerified(b: RefusalBudget, slot: BudgetSlot | null): void {
+  if (!slot || slot.own === SHARED) return;
+  b.verified.delete(slot.own);
+  b.verified.add(slot.own);
+  while (b.verified.size > VERIFIED_SLOTS) b.verified.delete(b.verified.values().next().value as string);
 }
 
 /** A call that verified: its slot is not a refusal after all (nothing when its minute is already over). */

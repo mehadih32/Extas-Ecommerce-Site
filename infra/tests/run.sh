@@ -235,9 +235,55 @@ printf '10.0.0.0/8\nnot-a-range\n' > "$T/bad.txt"; printf '# nothing\n\n' > "$T/
 check "client ip: a broken or empty range list is refused" "$(bash "$CB" "$T/bad.txt" >/dev/null 2>&1; echo $?):$(bash "$CB" "$T/empty.txt" >/dev/null 2>&1; echo $?):$(bash "$CB" "$T/wide.txt" >/dev/null 2>&1; echo $?):$(bash "$CB" >/dev/null 2>&1; echo $?)" "2:2:2:2"
 rm -rf "$T"
 check "client ip: the Caddyfile reads the trusted ranges inside its servers options" "$(awk '/^\tservers \{$/{f=1} f&&/^\t\}$/{f=0} f&&/import \/etc\/caddy\/sites\/client-ip\*\.caddy/{n++} END{print n+0}' ../stack/caddy/Caddyfile)" "1"
-# shellcheck disable=SC1090
-up="$(source <(sed -n '/^upstream_for() {/,/^CONF$/p' ../deploy/deploy.sh; echo '}'); APP_PORT=3000 upstream_for blue)"
-check "client ip: the app's upstream always sends Caddy's own client address" "$(grep -cxF $'\theader_up CF-Connecting-IP {client_ip}' <<<"$up")" "1"
+# Round 3: the deploy sends Caddy's own client address only when Caddy's live configuration trusts Cloudflare alone;
+# otherwise the upstream is exactly as before (overwriting the header then would give everyone a Cloudflare address).
+up0="$(EXTAS_CONFIG_FILE=../config/server.conf bash ../deploy/deploy.sh upstream blue)"
+up="$(EXTAS_CONFIG_FILE=../config/server.conf bash ../deploy/deploy.sh upstream blue client-ip)"
+check "client ip: the upstream without trusted_proxies is as before, with them it sends Caddy's own client address" "$(grep -c 'header_up' <<<"$up0"):$(tail -n 1 <<<"$up0"):$(grep -cxF $'\theader_up CF-Connecting-IP {client_ip}' <<<"$up"):$(tail -n 1 <<<"$up"):$(diff <(grep -v '^\s*#' <<<"$up0") <(grep -v '^\s*#' <<<"$up" | grep -v 'header_up') >/dev/null && echo same)" "0:}:1:}:same"
+check "client ip: the deploy asks Caddy's live configuration before it adds the header" "$(grep -c '^if caddy_trusts_proxies; then CLIENT_IP=client-ip;' ../deploy/deploy.sh):$(grep -c '^upstream_for "$NEW" "$CLIENT_IP" >' ../deploy/deploy.sh)" "1:1"
+# (a) the Caddyfile is copied into the same inode (a single-file bind mount never sees a new file).
+T="$(mktemp -d)"
+(
+  # shellcheck source=/dev/null
+  . ../deploy/caddy-live.sh
+  printf 'old\n' > "$T/live"; ino="$(stat -c %i "$T/live")"; printf 'new\n' > "$T/repo"
+  a="$(caddyfile_copy_inplace "$T/repo" "$T/live")"; b="$(caddyfile_copy_inplace "$T/repo" "$T/live")"
+  c="$(caddyfile_copy_inplace "$T/repo" "$T/fresh")"
+  echo "$a:$b:$([ "$(stat -c %i "$T/live")" = "$ino" ] && echo same-inode):$(cat "$T/live"):$c:$(cat "$T/fresh")"
+) > "$T/out"
+check "caddy (a): the Caddyfile is copied in place, the mounted inode sees the new content" "$(cat "$T/out")" "changed::same-inode:new:changed:new"
+check "caddy (a): server setup copies the Caddyfile in place and never by rsync" "$(grep -c -- "--exclude /caddy/Caddyfile" ../server/steps/09-stack.sh):$(grep -c 'caddyfile_copy_inplace "$STACK_DIR_REPO/caddy/Caddyfile" "$EXTAS_ROOT/stack/caddy/Caddyfile"' ../server/steps/09-stack.sh):$(grep -c 'caddy reload.*|| true' ../server/steps/09-stack.sh):$(grep -c 'caddy_apply || caddy_rc=' ../server/steps/09-stack.sh)" "1:1:0:1"
+# (a)+(b) caddy_apply against a stand-in docker and compose: what the running Caddy reads, its reload, its live config.
+apply_case() { # apply_case <live sum ok|old> <recreate fixes yes|no> <reload rc> <live trusted yes|no>
+  (
+    export EXTAS_REPO_DIR; EXTAS_REPO_DIR="$(cd ../.. && pwd)"
+    # shellcheck source=/dev/null
+    . ../server/steps/09-stack.sh
+    EXTAS_ROOT="$T/root"; mkdir -p "$EXTAS_ROOT/stack/caddy" "$EXTAS_ROOT/logs"; printf 'repo caddyfile\n' > "$EXTAS_ROOT/stack/caddy/Caddyfile"
+    want="$(sha256sum < "$EXTAS_ROOT/stack/caddy/Caddyfile" | cut -d' ' -f1)"
+    if [ "$1" = ok ]; then echo "$want" > "$T/live.sum"; else echo 0000 > "$T/live.sum"; fi
+    : > "$T/calls"; : > "$T/report"
+    report() { echo "$1 $2" >> "$T/report"; }
+    compose() { echo "compose $*" >> "$T/calls"; [ "$FIX" = yes ] && echo "$want" > "$T/live.sum"; return 0; }
+    docker() {
+      case "$2 $3" in
+        "extas-caddy sha256sum") printf '%s  /etc/caddy/Caddyfile\n' "$(cat "$T/live.sum")" ;;
+        "extas-caddy caddy") echo "reload" >> "$T/calls"; [ "$RELOAD" = 0 ] || { echo "Error: adapting config" >&2; return 1; } ;;
+        "extas-caddy wget") if [ "$TRUST" = yes ]; then printf '{"srv0":{"client_ip_headers":["CF-Connecting-IP"],"trusted_proxies":{"ranges":["173.245.48.0/20"],"source":"static"}}}'; else printf '{"srv0":{"listen":[":443"]}}'; fi ;;
+        *) return 1 ;;
+      esac
+    }
+    FIX="$2" RELOAD="$3" TRUST="$4"
+    rc=0; caddy_apply >/dev/null 2>&1 || rc=$?
+    echo "rc=$rc $(grep -c 'force-recreate.*caddy' "$T/calls") $(grep -c reload "$T/calls") $(tr '\n' ';' < "$T/report")"
+  )
+}
+check "caddy (b): in step, reloaded, live trusted_proxies → OK only from the live check" "$(apply_case ok no 0 yes)" "rc=0 0 1 OK PR 620 · client address;"
+check "caddy (a): an older Caddyfile in the container → caddy recreated, then checked live" "$(apply_case old yes 0 yes)" "rc=0 1 0 WARN PR 7 · Caddy;OK PR 620 · client address;"
+check "caddy (a): still not the repo's Caddyfile after recreating → FAIL" "$(apply_case old no 0 yes)" "rc=1 1 0 FAIL PR 7 · Caddy;"
+check "caddy (a): a failed reload is a FAIL, never swallowed" "$(apply_case ok no 1 yes)" "rc=1 0 1 FAIL PR 7 · Caddy;"
+check "caddy (b): no trusted_proxies in the running configuration → FAIL" "$(apply_case ok no 0 no)" "rc=1 0 1 FAIL PR 620 · client address;"
+rm -rf "$T"
 check "client ip: the server setup writes the trusted ranges for Caddy" "$(grep -c 'write_caddy_client_ip "$d"' ../server/steps/09-stack.sh):$(grep -c 'bash "$STACK_DIR_REPO/caddy/client-ip-block.sh"' ../server/steps/09-stack.sh)" "1:2"
 if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   T="$(mktemp -d)"; pf=18481; pn=18482; pb=18483
@@ -246,7 +292,7 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   bash "$CB" "$T/far.txt" > "$T/far.caddy"; bash "$CB" "$T/near.txt" > "$T/near.caddy"
   hu="$(grep -F 'header_up CF-Connecting-IP' <<<"$up" | tr -d '\t')"
   {
-    printf '{\n\tadmin off\n\tservers :%s {\n\t\timport %s/far.caddy\n\t}\n\tservers :%s {\n\t\timport %s/near.caddy\n\t}\n}\n' "$pf" "$T" "$pn" "$T"
+    printf '{\n\tadmin localhost:18484\n\tservers :%s {\n\t\timport %s/far.caddy\n\t}\n\tservers :%s {\n\t\timport %s/near.caddy\n\t}\n}\n' "$pf" "$T" "$pn" "$T"
     printf ':%s {\n\treverse_proxy 127.0.0.1:%s {\n\t\t%s\n\t}\n}\n' "$pf" "$pb" "$hu"
     printf ':%s {\n\treverse_proxy 127.0.0.1:%s {\n\t\t%s\n\t}\n}\n' "$pn" "$pb" "$hu"
     printf ':%s {\n\trespond "{http.request.header.CF-Connecting-IP}" 200\n}\n' "$pb"
@@ -256,6 +302,21 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   seen() { curl -s "$@"; }
   check "client ip (caddy): a forged CF-Connecting-IP from a non-Cloudflare address never reaches the app" "$(seen -H 'CF-Connecting-IP: 203.0.113.9' "127.0.0.1:$pf/"):$(seen -H 'cf-connecting-ip: 198.51.100.4' "127.0.0.1:$pf/api/erp/webhook"):$(seen "127.0.0.1:$pf/")" "127.0.0.1:127.0.0.1:127.0.0.1"
   check "client ip (caddy): from Cloudflare's ranges, the visitor's address is passed on" "$(seen -H 'CF-Connecting-IP: 203.0.113.9' "127.0.0.1:$pn/"):$(seen "127.0.0.1:$pn/")" "203.0.113.9:127.0.0.1"
+  # (b) and (c) live: `caddy_trusts_proxies` reads a running Caddy's admin API (docker exec stands in for the container).
+  live_trust() { # live_trust <admin port>
+    (
+      # shellcheck source=/dev/null
+      . ../deploy/caddy-live.sh
+      docker() { shift 2; [ "$1" = wget ] && curl -s "$3"; }
+      CADDY_ADMIN_PORT="$1"
+      caddy_trusts_proxies && echo trusted || echo not-trusted
+    )
+  }
+  printf '{\n\tadmin localhost:18486\n}\n:18487 {\n\trespond "plain" 200\n}\n' > "$T/plain.Caddyfile"
+  "$CADDY" run --config "$T/plain.Caddyfile" --adapter caddyfile >"$T/plain.log" 2>&1 & ppid=$!
+  for _ in $(seq 50); do curl -s -o /dev/null "127.0.0.1:18487" && break; sleep 0.1; done
+  check "client ip (caddy): the live check sees trusted_proxies only in a Caddy that runs them" "$(live_trust 18484):$(live_trust 18486):$(live_trust 18499)" "trusted:not-trusted:not-trusted"
+  kill "$ppid" 2>/dev/null || true; wait "$ppid" 2>/dev/null || true
   kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   rm -rf "$T"
 elif [ -n "${CI:-}" ]; then

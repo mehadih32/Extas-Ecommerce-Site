@@ -28,7 +28,7 @@
 //   of its list.
 import type { Prisma } from '@extas/db/client';
 import { erpSignatureShape, EXTAS_ERP_PROVIDER, verifyErpRequest, type SignatureCheck } from '@extas/adapters';
-import { admit, countRefusal, giveBack, newRefusalBudget, overBudget, probeOpen, signedByKnown, type RefusalBudget } from './erp-call-budget';
+import { admit, countRefusal, giveBack, newRefusalBudget, overBudget, probeOpen, rememberVerified, signedByKnown, type RefusalBudget } from './erp-call-budget';
 import { nowOf, setting, type Db } from './context';
 import { v6LinkFor } from './erp-link';
 import { isV6 } from './erp-model';
@@ -193,9 +193,9 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
   // Round 2: the slot is taken now, with no await before it, so calls at the same moment cannot all pass the limit.
   const slot = admit(guard.budget, address, now, { perMinute, refreshSeconds }, signedKnown);
   if (!slot) return refuse(guard, now, endpoint, 429, 'RATE_LIMITED');
-  const { on, keys } = await candidates(deps);
-  guard.budget.known = keys.map((k) => k.secret);
-  const verdict = await (async (): Promise<ErpSiteCaller> => {
+  const lookup = async (): Promise<ErpSiteCaller> => {
+    const { on, keys } = await candidates(deps);
+    guard.budget.known = keys.map((k) => k.secret);
     if (!on) return { ok: false, endpoint, status: 503, code: 'OFF' };
     if (!keys.length) return { ok: false, endpoint, status: 401, code: 'NO_SECRET' };
     const matches: Candidate[] = [];
@@ -211,10 +211,21 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
     const link = await v6LinkFor(deps, match.storeId, match.integrationId);
     if (!link) return { ok: false, endpoint, status: 401, code: 'NO_SECRET' };
     return { ok: true, endpoint, storeId: match.storeId, linkId: link.id, integrationId: match.integrationId };
-  })();
+  };
+  let verdict: ErpSiteCaller;
+  try {
+    verdict = await lookup();
+  } catch (e) {
+    // Round 3: a lookup that throws (say, a short database outage) proved nothing about the caller: its slot is given
+    // back, so an outage never uses up an address's budget.
+    giveBack(guard.budget, slot);
+    throw e;
+  }
   // A verified call gives its slot back; a refused one keeps it (it was counted when it was taken).
-  if (verdict.ok) giveBack(guard.budget, slot);
-  else refuse(guard, now, verdict.endpoint, verdict.status, verdict.code);
+  if (verdict.ok) {
+    giveBack(guard.budget, slot);
+    rememberVerified(guard.budget, slot);
+  } else refuse(guard, now, verdict.endpoint, verdict.status, verdict.code);
   // The store lookup already read the database: the counted refusals may be written now (at most once a window).
   await flushErpSiteRefusals(deps.db, guard, new Date(now)).catch(() => false);
   return verdict;
