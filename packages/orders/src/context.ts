@@ -65,6 +65,10 @@ export const ORDER_PERMISSIONS = [
   // S08 · PR 190: waive an exchange charge, decide a "your mistake" claim
   'returns.waive',
   'returns.claims.decide',
+  // CN-028 · PR 612, 614 (CN-029 Phase 0 catalogue): the hand-back desk and the return list; approving an exchange
+  // through the ERP within its window
+  'returns.handback',
+  'exchange.approve',
 ] as const;
 export type OrdersPermission = (typeof ORDER_PERMISSIONS)[number];
 

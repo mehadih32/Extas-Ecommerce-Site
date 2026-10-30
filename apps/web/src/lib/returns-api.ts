@@ -48,6 +48,7 @@
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
 import { handle } from './orders-api';
+import { returnsErpRoute } from './returns-erp-api';
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
@@ -65,6 +66,8 @@ const list = (url: URL, key: string) => url.searchParams.getAll(key).flatMap((v)
 export async function returnsRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
   const [a, b, c] = path;
+  // CN-028 · PR 612–614: the hand-back desk and the ERP's returns and exchanges (returns-erp-api.ts)
+  if (a === 'handback' || a === 'erp') return returnsErpRoute(request, deps, path);
   if (!a) {
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'returns.view', async (x) => {

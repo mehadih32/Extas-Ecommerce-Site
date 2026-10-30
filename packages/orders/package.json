@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@extas/adapters": "workspace:*",
     "@extas/checkout": "workspace:*",
     "@extas/seed": "workspace:*",
     "@types/node": "^22.20.5",

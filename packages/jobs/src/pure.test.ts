@@ -7,6 +7,7 @@ import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogu
 import { courierPlanner, courierZonesPlanner, packingPhotosPlanner, ZONE_TURN_MINUTES } from './courier';
 import { messagesPlanner } from './messages';
 import { paymentsPlanner } from './payments';
+import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { searchPlanner, searchRunKey } from './search';
 import { errorLine, MAX_ERROR } from './context';
 import { LeaderLock, type LockStore } from './leader';
@@ -55,7 +56,7 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
@@ -260,5 +261,20 @@ describe('PR 6 · one scheduler leader', () => {
       const s = registry[k as keyof typeof registry];
       expect([k, s.scope, s.group, s.isOwnerData]).toEqual([k, 'installation', 'system', false]);
     }
+  });
+});
+
+describe('CN-028 · PR 612–614 · the returns turn with the ERP', () => {
+  it('needs a store, and is planned only for live stores on ERP contract v6, once per slot of erp.events.pullMinutes', async () => {
+    const job = jobDefinition(RETURNS_ERP_JOB)!;
+    expect(job.queue).toBe('returns');
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 2 }))).toBe(2);
+    const settings = { value: async (k: string, o?: { storeId?: number }) => (k === 'erp.model' ? (o?.storeId === 2 ? 'v6' : null) : k === 'erp.events.pullMinutes' ? 60 : null) };
+    const deps = { settings, db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } } } as never;
+    const at = new Date(Date.UTC(2026, 9, 30, 6, 10, 0));
+    const planned = await returnsErpPlanner(deps, at);
+    expect(planned.map((p) => p.key)).toEqual([`orders.returns.erp/2/${slotOf(at.getTime(), 3_600_000)}`]);
+    expect(planned[0]!.payload).toEqual({ storeId: 2 });
   });
 });

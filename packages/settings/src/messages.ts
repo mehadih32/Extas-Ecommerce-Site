@@ -119,6 +119,9 @@ import erpOrdersV6En from '../messages/erp-orders-v6.en.json';
 // CN-028 · PR 615, 616 (registry v68): the ERP account ledger and the books match in messages/books.<lang>.json.
 import booksBn from '../messages/books.bn.json';
 import booksEn from '../messages/books.en.json';
+// CN-028 · PR 612–614 (registry v67): returns and exchanges on the ERP model in messages/returns-v6.<lang>.json, merged below.
+import returnsV6Bn from '../messages/returns-v6.bn.json';
+import returnsV6En from '../messages/returns-v6.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -154,6 +157,8 @@ messages.en = mergeMessages(messages.en, erpOrdersV6En);
 messages.bn = mergeMessages(messages.bn, erpOrdersV6Bn);
 messages.en = mergeMessages(messages.en, booksEn);
 messages.bn = mergeMessages(messages.bn, booksBn);
+messages.en = mergeMessages(messages.en, returnsV6En);
+messages.bn = mergeMessages(messages.bn, returnsV6Bn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

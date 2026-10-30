@@ -66,12 +66,14 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
   const perms = access.guard.permissions ?? new Set<string>();
   const who: od.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const rd = readDeps(access.deps);
-  const [rows, currency, causes, found, chargeRules] = await Promise.all([
+  const [rows, currency, causes, found, chargeRules, paths] = await Promise.all([
     od.listExchanges(rd, who, {}),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('orders.exchange.rootCauses', { storeId: MOTHER_STORE_ID }),
     q.order ? od.exchangeOrderLines(rd, who, q.order) : Promise.resolve(null),
     access.deps.resolver.value('orders.exchange.charge', { storeId: MOTHER_STORE_ID }),
+    // CN-028 · PR 612: on ERP contract v6 the hand-back desk takes the place of Receive & QC
+    od.legacyPaths(rd, MOTHER_STORE_ID),
   ]);
   const chosen = q.case ? (rows.find((r) => r.id === q.case) ?? (await maybe(od.exchangeDetail(rd, who, q.case)))) : null;
   // PR 188: the size switcher, while the piece going out may still change (before the courier has it).
@@ -102,7 +104,13 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
         <ShellIcon name="info" size={15} />
         {t(d, 'returns.refused.open')}
       </Link>
-      {data.canQc ? (
+      {paths.model === 'v6' && perms.has('returns.handback') ? (
+        <Link className="a2-btn pri" href={`${returnsHref()}/handback`} data-testid="returns-handback-link">
+          <ShellIcon name="check" size={15} />
+          {t(d, 'returns.handback.title')}
+        </Link>
+      ) : null}
+      {data.canQc && paths.model === 'v5' ? (
         <Link className="a2-btn pri" href={`${returnsHref()}/qc`} data-testid="returns-qc-link">
           <ShellIcon name="check" size={15} />
           {t(d, 'returns.qc.open')}

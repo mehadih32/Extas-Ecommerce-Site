@@ -22,6 +22,7 @@ import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
 import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping';
 import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
+import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
 export type JobOutcome = { ok: true; stats: Record<string, unknown> } | { ok: false; error: string; stats: Record<string, unknown> };
@@ -276,6 +277,22 @@ const invoiceIssueJob: JobDefinition<{ storeId: number }> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runInvoiceIssue(deps, p.storeId)) }),
 };
 
+/**
+ * CN-028 · PR 612–614 — one v6 store's turn of returns and exchanges with its own ERP (returns-erp.ts; planned per v6
+ * store and slot of `erp.events.pullMinutes`). Safe to run twice: each step keeps its own idempotency.
+ */
+const returnsErpJob: JobDefinition<{ storeId: number }> = {
+  key: RETURNS_ERP_JOB,
+  queue: RETURNS_ERP_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${RETURNS_ERP_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => outcomeOf(await runReturnsErp(deps, p.storeId)),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -287,6 +304,7 @@ const definitions: JobDefinition<never>[] = [
   courierZonesJob as unknown as JobDefinition<never>,
   packingPhotosJob as unknown as JobDefinition<never>,
   invoiceIssueJob as unknown as JobDefinition<never>,
+  returnsErpJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

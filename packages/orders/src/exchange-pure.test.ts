@@ -1,7 +1,7 @@
 // PR 185 (Blueprint B1.8) — the exchange engine's pure rules: the four tiers strictly in order, the window from the
 // courier's delivered mark, the per-piece limit and the money box. Every value is a made-up test value.
 import { describe, expect, it } from 'vitest';
-import { exchangeCharge, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, tierOf, type Candidate, type ChargeRules, type OriginalPiece, type TierSettings } from './exchange-pure';
+import { exchangeCharge, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, tierOf, v6MoneyBox, type Candidate, type ChargeRules, type OriginalPiece, type TierSettings } from './exchange-pure';
 
 const ALL: TierSettings = { sameColour: true, otherColours: true, sameCategory: true, collectionFirst: true, otherCategories: true, maxOptions: 12 };
 const orig: OriginalPiece = { productId: 'oxford', colourId: 'sky', categoryIds: ['shirts'], collectionIds: ['eid'] };
@@ -112,5 +112,25 @@ describe('PR 190 · who pays the second delivery (CN-018 (5), CN-014e)', () => {
   });
   it('our mistake stays free whatever the charge says', () => {
     expect(moneyBox(one, { ourMistake: true, chargeMinor: 9_000, state: 'ONE_TRIP' })).toMatchObject({ chargeMinor: 0, chargeState: 'FREE_OUR_MISTAKE' });
+  });
+});
+
+// CN-028 · PR 614: on ERP contract v6 there are no refunds after delivery; a dearer piece is the customer's only with
+// `exchange.passPriceRiseToCustomer` (on by default), else the shop absorbs it. The delivery charge stays as the rules say.
+describe('the money box on ERP contract v6 (PR 614)', () => {
+  const dearer = [{ oldUnitMinor: 150_000, newUnitMinor: 180_000, quantity: 1 }];
+  const cheaper = [{ oldUnitMinor: 150_000, newUnitMinor: 120_000, quantity: 2 }];
+  const charge = { ourMistake: false, chargeMinor: 6_000 };
+
+  it('a cheaper piece never leaves a credit (no refunds after delivery)', () => {
+    const v5 = moneyBox(cheaper, charge);
+    expect(v5.creditMinor).toBe(60_000);
+    expect(v6MoneyBox(v5, true)).toMatchObject({ creditMinor: 0, owedMinor: 0, codMinor: 6_000 });
+  });
+  it('a dearer piece is collected from the customer while the switch is on', () => {
+    expect(v6MoneyBox(moneyBox(dearer, charge), true)).toMatchObject({ creditMinor: 0, owedMinor: 30_000, codMinor: 36_000, coveredMinor: 150_000 });
+  });
+  it('with the switch off the shop absorbs the rise: only the delivery charge is collected', () => {
+    expect(v6MoneyBox(moneyBox(dearer, charge), false)).toMatchObject({ creditMinor: 0, owedMinor: 0, codMinor: 6_000, coveredMinor: 180_000 });
   });
 });

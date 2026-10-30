@@ -48,6 +48,7 @@
     "ordersReturns": "বদল",
     "ordersReturnsQc": "ফেরত মাল চেক",
     "ordersReturnsRefused": "দরজায় ফেরত",
+    "ordersReturnsHandback": "কুরিয়ার ফেরত জমা",
     "riskRules": "ঝুঁকির নিয়ম",
     "checkoutAdvance": "চেকআউটে অগ্রিম",
     "packingPack": "প্যাক",

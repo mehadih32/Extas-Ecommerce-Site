@@ -24,6 +24,7 @@ import { courierPlanner, courierZonesPlanner, packingPhotosPlanner } from './cou
 import { messagesPlanner } from './messages';
 import { piiPlanner } from './pii';
 import { invoicePlanner } from './invoices';
+import { returnsErpPlanner } from './returns-erp';
 import { paymentsPlanner } from './payments';
 import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
@@ -79,7 +80,8 @@ async function main(): Promise<void> {
     // PR 148: each store's message run per slot; PR 159: each store's purge of kept IP, device and location; PR 170:
     // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot; PR 182:
     // each store's packing photos past their days to keep, archived once a day; PR 407: each store's invoice run per slot
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner],
+    // CN-028 · PR 612–614: each v6 store's returns and exchanges with its own ERP per slot
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

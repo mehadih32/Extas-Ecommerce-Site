@@ -25,11 +25,11 @@
 // The new parcel's amount follows the money box; a wallet credit is only a REQUEST after QC (PR 187).
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
-import { holdOrderUnits, InventoryError, sellableKinds, sellableUnits } from '@extas/inventory';
+import { holdOrderUnits, InventoryError, isV6, sellableKinds, sellableUnits } from '@extas/inventory';
 import { discountWasFor, exchangeTermsFor } from '@extas/rules';
 import { allow, nowOf, parse, setting, TX, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
-import { EXCHANGE_REASON_CODES, exchangeCharge, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, type Candidate, type ChargeRules, type ExchangeReason, type ExchangeTier, type ExchangeWindow, type MoneyBox, type OriginalPiece } from './exchange-pure';
+import { EXCHANGE_REASON_CODES, exchangeCharge, exchangeOffer, exchangeWindow, isOurMistake, lineOnNewOrder, moneyBox, perItemLeft, v6MoneyBox, type Candidate, type ChargeRules, type ExchangeReason, type ExchangeTier, type ExchangeWindow, type MoneyBox, type OriginalPiece } from './exchange-pure';
 import { confirmBy } from './commands';
 import { auditRow, eventRow, execute, inventoryOf, staffBy, type By, type CommandOptions } from './service';
 
@@ -472,6 +472,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
     if (again) return { ...(await resultOf(deps.db, again.id)), replay: true };
   }
   const [engine, causes, excludedSlugs, cs] = await Promise.all([setting(deps, storeId, 'orders.exchange.engine'), setting(deps, storeId, 'orders.exchange.rootCauses'), setting(deps, storeId, 'policy.exchange.excludedCategories'), chargeSettings(deps, storeId)]);
+  const v6 = (await isV6(deps, storeId)) ? { passRise: await setting(deps, storeId, 'exchange.passPriceRiseToCustomer') } : null;
   const ourMistakeReason = isOurMistake(d.reason);
   if (d.reason === 'wrong' && engine.rootCauseForWrong && !d.rootCause) throw new OrdersError('REASON_REQUIRED', 'a wrong item needs its root cause', ['rootCause']);
   if (d.rootCause && !causes.some((c) => c.key === d.rootCause)) throw new OrdersError('REASON_REQUIRED', 'pick a root cause from the list', ['rootCause']);
@@ -529,10 +530,13 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
           lines.push({ item, quantity, newVariantId: x.newVariantId, receivedSku: x.receivedSku ?? null, option, policy });
         }
         const ourMistake = ourMistakeReason && lines.every((l) => l.policy.freeWhenOurMistake);
-        const money = moneyBox(
+        const box = moneyBox(
           lines.map((l) => ({ oldUnitMinor: coveredPerPiece(l.item, o), newUnitMinor: l.option.priceMinor, quantity: l.quantity })),
           { ourMistake, ...exchangeCharge({ reason: d.reason, ruleChargeMinor: lines[0]!.policy.chargeMinor, rules: cs.rules, reship, oneTrip }) },
         );
+        // CN-028 · PR 614: on ERP contract v6 there are no refunds after delivery (no credit), and a dearer piece is the
+        // customer's only with `exchange.passPriceRiseToCustomer` (exchange-v6.ts v6MoneyBox).
+        const money = v6 ? v6MoneyBox(box, v6.passRise) : box;
         const number = await nextExchangeNumber(tx, storeId, engine.numberPrefix, engine.numberStart);
         const ex = await tx.exchange.create({
           data: {
@@ -694,28 +698,45 @@ export interface ApproveResult {
   confirmed: boolean;
 }
 
+/** What placing an exchange's new parcel made (PR 614 reuses it for the ERP path). */
+export interface PlacedParcel {
+  newOrderId: string;
+  newOrderNumber: string;
+  returnId: string;
+  exchangeStatus: 'APPROVED' | 'RECEIVED' | 'QC_PASSED' | 'QC_FAILED';
+  /** Each exchange line and the new order's line made for it. */
+  items: { exchangeItemId: string; orderItemId: string }[];
+  /** The shop's own stock hold was made (false only in v6, where the ERP holds the piece itself). */
+  shopHold: boolean;
+  totalMinor: number;
+}
+
+export interface ParcelOptions {
+  prefix: string;
+  start: number;
+  note: string | null;
+  /** PR 614, ERP contract v6: the ERP took the new piece already; a dearer piece is the customer's only when `passRise`. */
+  v6?: { passRise: boolean };
+}
+
 /**
- * Approves a requested exchange: the linked exchange order (PLACED, Cash on Delivery for the money box's amount, the
+ * Inside an approval's transaction: the linked exchange order (PLACED, Cash on Delivery for the money box's amount, the
  * original's contact, address and band) with its stock held on the shared pool under the checkout's row locks
- * (OUT_OF_STOCK refuses and changes nothing), and the pick-up of the old piece (an EXCHANGE_PICKUP return, EXPECTED,
- * the SKU expected back = what is really coming back, SIM-F-022). Needs `returns.decide`.
+ * (OUT_OF_STOCK refuses and changes nothing), and the pick-up of the old piece (an EXCHANGE_PICKUP return, EXPECTED, the
+ * SKU expected back = what is really coming back, SIM-F-022).
  */
-export async function approveExchange(deps: OrdersDeps, who: Who, id: string, input: unknown = {}, opts: DecideOptions = {}): Promise<ApproveResult> {
-  await allow(deps, who, 'returns.decide');
-  const d = parse(decideInput, input, 'approval');
-  const [prefix, start, engine] = await Promise.all([setting(deps, who.storeId, 'checkout.order.numberPrefix'), setting(deps, who.storeId, 'checkout.order.numberStart'), setting(deps, who.storeId, 'orders.exchange.engine')]);
-  const res = await decideExchange<ApproveResult>(deps, who, id, opts, async (tx, ex, now, by) => {
-    if (ex.status !== 'REQUESTED') throw new OrdersError('EXCHANGE_STATE', 'only a requested exchange is approved', ['status'], { status: ex.status });
+export async function placeExchangeParcel(deps: OrdersDeps, who: Who, tx: Tx, ex: LockedExchange, now: Date, by: By, p: ParcelOptions): Promise<PlacedParcel> {
     const o = await tx.order.findUniqueOrThrow({
       where: { id: ex.orderId },
       select: { id: true, number: true, status: true, customerId: true, fulfillmentType: true, currency: true, phone: true, customerName: true, email: true, shippingAddressText: true, backfilledAddress: true, areaId: true, deliveryBandId: true, visitorId: true },
     });
     const variants = await tx.productVariant.findMany({ where: { storeId: ex.storeId, id: { in: ex.items.map((i) => i.newVariantId!).filter(Boolean) } }, select: { id: true, productId: true, avgCostMinor: true } });
     const vOf = new Map(variants.map((v) => [v.id, v]));
-    const lines = ex.items.map((i) => ({ i, ...lineOnNewOrder({ oldUnitMinor: i.oldUnitMinor, newUnitMinor: i.newUnitMinor, quantity: i.quantity }, ex.isOurMistake) }));
+    // v6 with `exchange.passPriceRiseToCustomer` off: the shop absorbs a dearer piece (the old piece covers it all).
+    const lines = ex.items.map((i) => ({ i, ...lineOnNewOrder({ oldUnitMinor: i.oldUnitMinor, newUnitMinor: i.newUnitMinor, quantity: i.quantity }, ex.isOurMistake || (!!p.v6 && !p.v6.passRise)) }));
     const subtotal = lines.reduce((s, l) => s + l.lineTotalMinor, 0);
     const charge = ex.deliveryChargeMinor;
-    const number = await nextOrderNumberOf(tx, ex.storeId, prefix, start);
+    const number = await nextOrderNumberOf(tx, ex.storeId, p.prefix, p.start);
     const n = await tx.order.create({
       data: {
         storeId: ex.storeId,
@@ -747,9 +768,11 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
       },
       select: { id: true },
     });
+    const newItems: { exchangeItemId: string; orderItemId: string }[] = [];
+    let shopHold = true;
     for (const l of lines) {
       const v = vOf.get(l.i.newVariantId!);
-      await tx.orderItem.create({
+      const oi = await tx.orderItem.create({
         data: {
           storeId: ex.storeId,
           orderId: n.id,
@@ -766,12 +789,16 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
           unitCostMinor: v?.avgCostMinor ?? null,
           addedVia: 'exchange',
         },
+        select: { id: true },
       });
+      newItems.push({ exchangeItemId: l.i.id, orderItemId: oi.id });
       try {
         await holdOrderUnits(inventoryOf(deps), { storeId: ex.storeId, orderId: n.id, variantId: l.i.newVariantId!, quantity: l.i.quantity }, { tx });
       } catch (e) {
-        if (e instanceof InventoryError && e.code === 'OUT_OF_STOCK') throw new OrdersError('OUT_OF_STOCK', 'the new piece is no longer free', e.details);
-        throw e;
+        // v6: the ERP has already taken the piece for this exchange (its own live stock); the shop's mirror follows.
+        if (e instanceof InventoryError && e.code === 'OUT_OF_STOCK' && p.v6) shopHold = false;
+        else if (e instanceof InventoryError && e.code === 'OUT_OF_STOCK') throw new OrdersError('OUT_OF_STOCK', 'the new piece is no longer free', e.details);
+        else throw e;
       }
     }
     await eventRow(tx, by, { storeId: ex.storeId, orderId: n.id, type: 'order.placed', to: 'PLACED', data: { exchange: { id: ex.id, number: ex.number, fromOrderId: o.id, fromNumber: o.number } } });
@@ -796,8 +823,25 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
       },
       select: { id: true },
     });
-    await tx.exchange.update({ where: { id: ex.id }, data: { status: linked?.exchangeStatus ?? 'APPROVED', newOrderId: n.id, decidedById: who.actor.staffUserId, decidedAt: now, decisionNote: d.note ?? null } });
-    return { action: 'approved', message: d.note ?? null, after: { status: 'APPROVED', newOrderId: n.id, newOrderNumber: number, returnId: ret.id }, result: { exchangeId: ex.id, newOrderId: n.id, newOrderNumber: number, returnId: ret.id, confirmed: false } };
+    // v6: no refunds after delivery, so no credit is ever due; the customer pays what the new parcel says.
+    await tx.exchange.update({ where: { id: ex.id }, data: { status: linked?.exchangeStatus ?? 'APPROVED', newOrderId: n.id, decidedById: who.actor.staffUserId, decidedAt: now, decisionNote: p.note, ...(p.v6 ? { walletCreditMinor: 0, codToCollectMinor: subtotal + charge } : {}) } });
+    return { newOrderId: n.id, newOrderNumber: number, returnId: ret.id, exchangeStatus: linked?.exchangeStatus ?? 'APPROVED', items: newItems, shopHold, totalMinor: subtotal + charge };
+}
+
+/**
+ * Approves a requested exchange (ERP contract v5; in v6 the ERP path of PR 614 approves it: exchange-v6.ts): the new
+ * parcel and the pick-up of the old piece (placeExchangeParcel). Needs `returns.decide`.
+ */
+export async function approveExchange(deps: OrdersDeps, who: Who, id: string, input: unknown = {}, opts: DecideOptions = {}): Promise<ApproveResult> {
+  await allow(deps, who, 'returns.decide');
+  // CN-028 · PR 614: in v6 the exchange goes through the store's ERP first (its live stock, its new order).
+  if (await isV6(deps, who.storeId)) throw new OrdersError('ERP_MODEL', 'on ERP contract v6 an exchange is approved through the ERP', ['erp.model'], { model: 'v6', use: 'exchange.approve' });
+  const d = parse(decideInput, input, 'approval');
+  const [prefix, start, engine] = await Promise.all([setting(deps, who.storeId, 'checkout.order.numberPrefix'), setting(deps, who.storeId, 'checkout.order.numberStart'), setting(deps, who.storeId, 'orders.exchange.engine')]);
+  const res = await decideExchange<ApproveResult>(deps, who, id, opts, async (tx, ex, now, by) => {
+    if (ex.status !== 'REQUESTED') throw new OrdersError('EXCHANGE_STATE', 'only a requested exchange is approved', ['status'], { status: ex.status });
+    const placed = await placeExchangeParcel(deps, who, tx, ex, now, by, { prefix, start, note: d.note ?? null });
+    return { action: 'approved', message: d.note ?? null, after: { status: 'APPROVED', newOrderId: placed.newOrderId, newOrderNumber: placed.newOrderNumber, returnId: placed.returnId }, result: { exchangeId: ex.id, newOrderId: placed.newOrderId, newOrderNumber: placed.newOrderNumber, returnId: placed.returnId, confirmed: false } };
   });
   if (engine.autoConfirm) {
     try {
@@ -817,6 +861,8 @@ export async function approveExchange(deps: OrdersDeps, who: Who, id: string, in
  */
 export async function completeExchange(deps: OrdersDeps, who: Who, id: string, input: unknown = {}, opts: DecideOptions = {}): Promise<{ exchangeId: string; status: string }> {
   await allow(deps, who, 'returns.decide');
+  // CN-028 · PR 614: in v6 the ERP settles the exchange (settled, billed, credited or cancelled), never the shop.
+  if (await isV6(deps, who.storeId)) throw new OrdersError('ERP_MODEL', 'on ERP contract v6 the ERP settles an exchange once the owner checks the old piece', ['erp.model'], { model: 'v6' });
   const d = parse(decideInput, input, 'completion');
   return decideExchange(deps, who, id, opts, async (tx, ex) => {
     if (ex.status !== 'QC_PASSED' && ex.status !== 'QC_FAILED') throw new OrdersError('EXCHANGE_STATE', 'an exchange is completed after its old piece is checked', ['status'], { status: ex.status });

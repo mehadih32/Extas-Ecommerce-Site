@@ -278,6 +278,8 @@ model Store {
   booksDifferences        BooksDifference[]
   booksDifferenceNotes    BooksDifferenceNote[]
   booksAdjustments        BooksAdjustment[]
+  // CN-028 · PR 613 (CN-029 Phase 1, migration 0054_returns_v6): the nightly compare of the Returns section.
+  erpReturnsCompares      ErpReturnsCompare[]
   smartRules              SmartRule[]
   smartRuleVersions       SmartRuleVersion[]
   smartRuleConflicts      SmartRuleConflict[]
@@ -5177,6 +5179,8 @@ model ErpStoreLink {
   periodCloses    BooksPeriodClose[]
   differences     BooksDifference[]
   adjustments     BooksAdjustment[]
+  // PR 613 (migration 0054_returns_v6)
+  returnsCompares ErpReturnsCompare[]
 
   @@unique([storeId, epoch])
   /// The key of the composite foreign keys (linkId, storeId): a row's link is always its own store's link.
@@ -5546,6 +5550,12 @@ model ErpReturnList {
   createdById  String?             @db.Uuid
   createdAt    DateTime            @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime            @updatedAt @db.Timestamptz(3)
+  /// PR 612 (CN-029 Phase 1, migration 0054_returns_v6): how often the list was sent and when last; the list whose
+  /// refused parcels this one sends again (a new returnListId, never the old one); who closed it for sending.
+  sendAttempts Int                 @default(0)
+  lastTriedAt  DateTime?           @db.Timestamptz(3)
+  resendOfId   String?             @db.Uuid
+  closedById   String?             @db.Uuid
 
   parcels ErpReturnListParcel[]
 
@@ -5586,6 +5596,15 @@ model ErpReturnListParcel {
   scannedAt       DateTime      @default(now()) @db.Timestamptz(3)
   createdAt       DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+  /// PR 612 (migration 0054_returns_v6): the ERP's refusal reason (NOT_OUR_ORDER, NOT_RETURNED, ALREADY_HANDED_BACK)
+  /// and the pieces it named; a parcel the shop did not expect back (taken with a note); the shop's return records it
+  /// received; the exchange whose old piece it carries; the list it was sent again on after a refusal.
+  reason          String?
+  answerPieces    Json?
+  unexpected      Boolean       @default(false)
+  returnRecordIds String[]      @default([]) @db.Uuid
+  exchangeLinkId  String?       @db.Uuid
+  resentInListId  String?       @db.Uuid
 
   @@unique([returnListId, externalOrderId])
   @@index([storeId, consignmentId])
@@ -5623,6 +5642,20 @@ model ErpExchangeLink {
   settledAmountMinor BigInt?
   createdAt          DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime     @updatedAt @db.Timestamptz(3)
+  /// PR 614 (CN-029 Phase 1, migration 0054_returns_v6): the shop's new parcel (Order.id); each send to the ERP (a
+  /// retry after a stock refusal goes with a new idempotency key: `exchange:<id>:a<attempts>`), the ERP's last refusal and
+  /// its details; the ERP's deadline day and last change; when it finished (settled, billed, credited, cancelled); the
+  /// clear note sent; the late-return mark as sent.
+  newOrderId         String?      @db.Uuid
+  sendAttempts       Int          @default(0)
+  lastRefusal        String?
+  lastRefusalDetails Json?
+  lastTriedAt        DateTime?    @db.Timestamptz(3)
+  deadline           DateTime?    @db.Date
+  erpUpdatedAt       DateTime?    @db.Timestamptz(3)
+  finishedAt         DateTime?    @db.Timestamptz(3)
+  note               String?
+  lateReturn         Json?
 
   lines ErpExchangeLine[]
 
@@ -5647,8 +5680,47 @@ model ErpExchangeLine {
   newShopPriceMinor Int?
   createdAt         DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
+  /// PR 614 (migration 0054_returns_v6): what Retail paid the ERP for the old piece (`replacedShopPrice`), what the
+  /// customer pays for this swap (a dearer piece with `exchange.passPriceRiseToCustomer`; a cheaper one is never
+  /// refunded), and the shop's exchange line and old order line it belongs to.
+  oldShopPriceMinor Int?
+  customerPaysMinor Int             @default(0)
+  exchangeItemId    String?         @db.Uuid
+  oldOrderItemId    String?         @db.Uuid
 
   @@unique([exchangeLinkId, oldLineId])
+}
+
+// ---- PR 613 · the nightly compare of the Returns section (CN-029 Phase 1, migration 0054_returns_v6) ----------------------
+
+/// @stage S09 · PR 613 (CN-028) — one compare of the shop's Returns section with the ERP's `GET /returns/summary?date=`
+/// (docs/erp/site-changes-v6.md §2.9): for one business date, the shop's own counts (pieces handed back, on hold, in
+/// return stock, approved with the total credit, declined, the value waiting for the owner's check), the ERP's, and
+/// every difference. Run every night and after a pull. A difference is never fixed by editing a number here: the shop
+/// pulls `GET /returns?updatedSince=` and compares again. Each run is a new row (the history stays).
+/// @append-only
+model ErpReturnsCompare {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store        @relation(fields: [storeId], references: [id])
+  linkId      String       @db.Uuid
+  link        ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
+  /// The business date compared (Asia/Dhaka, the ERP's own dates).
+  date        DateTime     @db.Date
+  /// `night`, `manual` or `pull` (after a pull asked by a person).
+  trigger     String
+  matched     Boolean
+  shop        Json
+  erp         Json?
+  /// [{ field, shop, erp }] — empty when matched.
+  differences Json         @default("[]")
+  /// The ERP could not be asked (the compare is then not matched and says why).
+  error       String?
+  ranAt       DateTime     @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, date])
+  @@index([linkId, ranAt])
 }
 
 // ---- PR 617, 618 · what Retail sends the ERP: the daily summary and the fixed costs --------------------------------------
