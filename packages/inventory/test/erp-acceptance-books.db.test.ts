@@ -10,7 +10,9 @@
 // - a closed day whose own money moves raises HISTORY_CHANGED; it clears once the day matches again;
 // - an exchange never sent back is billed by the ERP at its deadline, and the books still tie;
 // - a month with a day not matched must not close; once put right it closes without an override;
-// - the tie formula holds for every day, week, month, year and the whole life of the link, chained without a gap;
+// - a payment of the closed month put right counts on its own open day as an earlier-month correction (money review);
+// - the tie formula holds for every day, week, month, year and the whole life of the link, chained without a gap,
+//   counting the shop's corrections and the earlier-month corrections as their own terms;
 // - store B's link, ledger, hold and books are never touched by any of it (CN-029 §16).
 // Every key, secret and amount is a made-up test value; the clock is fixed and moved by the tests.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -385,12 +387,42 @@ describe.skipIf(!HAS_TEST_DB)('PR 621 · ERP v6 acceptance drills of the books (
     await expect(closeMonth(f.deps(), f.who(accounts, A()), { month: '2026-11', pin: PIN })).resolves.toMatchObject({ level: 'MONTH', override: false });
   });
 
+  it('a payment of the closed month put right: the correction counts on its own open day as an earlier-month correction, the closed month stays as it was', async () => {
+    // 2 December: the ERP's payment dated 25 November (500) arrives late; its webhook said 600.
+    at('2026-12-02T04:00:00Z');
+    (erpA() as unknown as { book: (kind: string, amount: number, ref: { reference?: string; eventId?: string; date?: string }) => void }).book('PAYMENT', -500, { reference: 'BANK-NOV-A', eventId: 'evt-a-nov-pay', date: '2026-11-25' });
+    await recordAsWebhook(A(), { eventId: 'evt-a-nov-pay', type: 'payment.recorded', occurredAt: '2026-12-02T04:00:00Z', date: '2026-11-25', data: { amount: '600', reference: 'BANK-NOV-A', method: 'BANK' } });
+    await applyErpEvents(f.deps());
+    await syncErpAccount(f.deps(), { storeId: A() });
+    await recordErpPayment(f.deps(), f.who(accounts, A()), { paidOn: '2026-11-25', amountMinor: 50_000, method: 'BANK', reference: 'BANK-NOV-A' });
+    at('2026-12-02T10:00:00Z');
+    await run(A(), { from: '2026-11-25', through: '2026-12-01' });
+    const diff = (await open(A(), { key: 'A:PAYMENT|evt-a-nov-pay' }))[0]!;
+    expect(await adjustDifference(f.deps(), f.who(accounts, A()), diff.id, { pin: PIN, reason: 'November is closed; the ERP received 500, the webhook said 600.', erpEventId: 'evt-a-nov-pay' })).toMatchObject({ kind: 'PRIOR_PERIOD', date: '2026-12-02' });
+    await bothAgree(A());
+    at('2026-12-03T20:00:00Z');
+    await run(A(), { from: '2026-11-25', through: '2026-12-02' });
+    expect(await open(A(), { kind: { not: 'UNMATCHED_PAYMENT' } })).toEqual([]);
+    const close = (await latestCloses(A(), '2026-12-02', '2026-12-02'))[0]!;
+    expect((close.figures as { tie: Record<string, unknown> }).tie).toMatchObject({ priorPeriodMinor: 10_000, remainderMinor: 0 });
+    // November keeps its one close; the lifetime check at its end counts the correction dated after it.
+    const link = await f.linkOf(A());
+    expect(await f.t.prisma.booksPeriodClose.count({ where: { linkId: link.id, level: 'MONTH' } })).toBe(1);
+    const life = await f.t.prisma.booksPeriodClose.findFirstOrThrow({ where: { linkId: link.id, level: 'LIFETIME' }, orderBy: [{ periodEnd: 'desc' }, { version: 'desc' }] });
+    expect(life.result === 'MATCHED' || life.result === 'PARTIAL').toBe(true);
+  });
+
   it('the tie formula holds for every day, week, month, year and the whole life of the link, chained without a gap', async () => {
-    const closes = await latestCloses(A(), '2026-11-05', '2026-12-01');
+    const closes = await latestCloses(A(), '2026-11-05', '2026-12-02');
     expect(closes.map((c) => c.date.toISOString().slice(0, 10))[0]).toBe('2026-11-05');
-    expect(closes).toHaveLength(27);
+    expect(closes).toHaveLength(28);
     const n = (v: bigint) => Number(v);
-    const adj = (c: (typeof closes)[number]) => Number(((c.figures as { tie?: { adjustmentsMinor?: number } }).tie?.adjustmentsMinor ?? 0) as number);
+    // The shop's own corrections are their own terms: those of the open period and those of a closed month (round 2).
+    const adj = (c: (typeof closes)[number]) => {
+      const tie = (c.figures as { tie?: { adjustmentsMinor?: number; priorPeriodMinor?: number } }).tie;
+      return Number(tie?.adjustmentsMinor ?? 0) + Number(tie?.priorPeriodMinor ?? 0);
+    };
+    expect(closes.some((c) => Number((c.figures as { tie?: { priorPeriodMinor?: number } }).tie?.priorPeriodMinor ?? 0) !== 0)).toBe(true);
     // A day: its own remainder is zero; the next day starts where it ended (balance and pipeline).
     for (const [i, c] of closes.entries()) {
       expect(n(c.tieRemainderMinor), c.date.toISOString()).toBe(0);
