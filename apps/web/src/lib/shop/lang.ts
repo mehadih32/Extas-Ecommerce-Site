@@ -17,8 +17,11 @@ export const BN_PREFIX = '/bn';
 
 export const isShopLang = (v: unknown): v is ShopLang => v === 'en' || v === 'bn';
 
-/** Paths the proxy never touches: the admin, the API, the progress page, media and the framework's own files. */
-const NOT_SHOP = /^\/(admin|api|status|media|_next|favicon\.ico|robots\.txt|sitemap\.xml)(\/|$)/;
+/**
+ * Paths the proxy never touches: the admin, the API, the ERP's signed calls (PR 620), the progress page, media and the
+ * framework's own files.
+ */
+const NOT_SHOP = /^\/(admin|api|erp-api|status|media|_next|favicon\.ico|robots\.txt|sitemap\.xml)(\/|$)/;
 
 export function isShopPath(path: string): boolean {
   return !NOT_SHOP.test(path);

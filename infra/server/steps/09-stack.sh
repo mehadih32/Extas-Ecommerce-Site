@@ -170,8 +170,8 @@ CONF
   # the password or the cookie days changed (a short fingerprint is kept, never the password).
   local tag token days="${EXTAS_PREVIEW_COOKIE_DAYS:-30}"
   # v3 (follow-up 80): the ERP webhook POST passes without the login; v4 (PR 292) the WhatsApp webhook GET and POST
-  # too. A server with an older gate re-writes it.
-  tag="# preview gate v4 for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12) days $days"
+  # too; v5 (PR 620) the ERP's two signed GET calls. A server with an older gate re-writes it.
+  tag="# preview gate v5 for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12) days $days"
   if [ ! -s "$d/auth.caddy" ] || ! grep -qxF "$tag" "$d/auth.caddy"; then
     hash="$(docker run --rm --quiet "$IMG_CADDY" caddy hash-password --plaintext "$pw")"
     token="$(printf 'extas-preview-cookie:%s:%s' "$salt" "$pw" | sha256sum | cut -c1-64)"

@@ -348,6 +348,7 @@
       "/admin/size-charts": [".sc-item"],
       "/admin/stock": ["a.st-name"],
       "/admin/server": ["[data-worker-state]"],
+      "/admin/integrations": ["[data-testid=\"erp-site-api\"]", "[data-testid=\"erp-calls-switch\"]"],
       "/admin/orders": ["[data-testid=\"orders-table\"]", "[data-testid=\"order-row\"]", "[data-testid=\"orders-foot\"]"],
       "/admin/orders?view=toConfirm": ["[data-testid=\"order-row\"]"],
       "/admin/orders/confirm": ["[data-testid=\"call-queue\"]", "[data-testid=\"call-card\"]"],

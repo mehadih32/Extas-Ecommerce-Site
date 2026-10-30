@@ -16,6 +16,8 @@
 // each gateway in a period (reconciled against the gateway's statement).
 // S08 · PR 525: `deliveryTruth` — the parcels a courier marked delivered beside what really happened (delivery.ts; counts).
 // S08 · PR 526: `returnReasons` — why parcels came back, by the owner's reasons and by kind (delivery.ts; counts).
+// CN-028 · PR 620: `salesBySku` — Sales by SKU (pieces, net sales, profit over the cost snapshot) for the ERP's live
+// "Top products" call (skus.ts).
 // The rule lives in pure.ts (SALES_STATUSES, NOT_PLACED_STATUSES, BASIS_RULE). src/guard.test.ts fails the build when
 // any other package adds up order or line money on its own. Until the order state machine exists (it waits for the
 // owner's approval of the architecture draft), no order reaches DELIVERED, so Sales is 0 everywhere — that is correct.
@@ -25,3 +27,4 @@ export * from './views';
 export * from './money';
 export * from './delivery';
 export * from './customers';
+export * from './skus';

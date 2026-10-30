@@ -200,8 +200,8 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   };
 }
 
-/** The search: a name or an e-mail, or (4 digits or more) any number of any of the person's profiles. */
-function searchSql(storeId: number, q: string): Prisma.Sql {
+/** The search: a name or an e-mail, or (4 digits or more) any number of any of the person's profiles (also PR 620's ERP list). */
+export function searchSql(storeId: number, q: string): Prisma.Sql {
   if (!q) return Prisma.empty;
   const like = `%${q.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
   const digits = q.replace(/\D/g, '');

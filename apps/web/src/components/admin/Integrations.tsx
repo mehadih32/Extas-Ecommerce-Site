@@ -201,7 +201,12 @@ function KeySheet({ dict, connection: c, onClose, onSaved }: SheetProps) {
     };
   }, []);
 
-  const ready = c.secrets.every((f) => (secrets[f.field] ?? '').trim().length >= MIN_KEY_CHARS) && c.config.every((f) => f.optional || (config[f.field] ?? '').trim());
+  // PR 620: an optional key (the ERP's signing secret) may stay empty; typed in, it is as long as any key.
+  const keyOk = (f: { field: string; optional: boolean }) => {
+    const n = (secrets[f.field] ?? '').trim().length;
+    return n >= MIN_KEY_CHARS || (f.optional && n === 0);
+  };
+  const ready = c.secrets.every(keyOk) && c.config.every((f) => f.optional || (config[f.field] ?? '').trim());
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();

@@ -27,4 +27,25 @@ describe('Bhandari lane settings (v65)', () => {
     const shown = bhandariP1Settings['catalogue.shopPrice.changesShown'];
     expect([shown.scope, shown.default, shown.schema.safeParse(0).success]).toEqual(['installation', 100, false]);
   });
+
+  it('PR 620: the ERP`s calls to the shop are off per store; the contract`s 5 minutes, 20 products and 50 customers a page', () => {
+    const s = bhandariP1Settings;
+    expect([s['erp.siteApi.enabled'].scope, s['erp.siteApi.enabled'].default]).toEqual(['store', false]);
+    expect([s['erp.siteApi.maxAgeSeconds'].default, s['erp.siteApi.topProductsLimit'].default, s['erp.siteApi.customersPageSize'].default]).toEqual([300, 20, 50]);
+    // The most a call may ask for is never below the defaults it falls back to.
+    expect(s['erp.siteApi.maxRows'].default).toBeGreaterThanOrEqual(Math.max(s['erp.siteApi.topProductsLimit'].default, s['erp.siteApi.customersPageSize'].default));
+    expect([s['erp.siteApi.maxRangeDays'].default, s['erp.siteApi.callsShown'].default]).toEqual([366, 20]);
+  });
+
+  it('PR 620 (qa-gate 30 Oct): the refusal limits and the search length are installation settings, never 0', () => {
+    const s = bhandariP1Settings;
+    const keys = ['erp.siteApi.refusedPerMinute', 'erp.siteApi.refusedLogMinutes', 'erp.siteApi.refusedShownDays', 'erp.siteApi.searchMaxChars'] as const;
+    expect(keys.map((k) => [s[k].scope, s[k].default])).toEqual([
+      ['installation', 60],
+      ['installation', 60],
+      ['installation', 7],
+      ['installation', 100],
+    ]);
+    for (const k of keys) expect(s[k].schema.safeParse(0).success, k).toBe(false);
+  });
 });

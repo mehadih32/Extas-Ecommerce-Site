@@ -6,9 +6,9 @@
 //
 // CN-029 §16 (PR 607): one store = one ERP company. In contract v6 each store has its own connection row (storeId set)
 // with its own secrets in the vault under the store's id (the connection reads them with the store's id in ctx). The
-// API key and the webhook secret are this adapter's `secrets`; the third per-store secret, the signing secret the ERP's
-// own calls to the shop are checked with (`extasErp.signingSecret`, ERP_LINK_SECRET_FIELDS), joins them with PR 620,
-// with its field on the "Keys & connections" page, so the v5 page and its two fields stay as they are until then. An
+// API key, the webhook secret and (PR 620) the signing secret the ERP's own calls to the shop are checked with
+// (`extasErp.signingSecret`, ERP_LINK_SECRET_FIELDS) are this adapter's `secrets`. The signing secret is optional: left
+// empty, the webhook secret checks those calls too, as the contract says (site-changes-v6 §2.7). An
 // installation-wide row (one key for several stores) is refused for a v6 store (the guard's SHARED_LINK). On MOCK each store gets its own practice
 // company and key (`MockErpWorld.companyForStore`), so practice data of one store never reaches another.
 //
@@ -35,7 +35,7 @@ export const extasErp = defineAdapter<ErpApi, ExtasErpConfig>({
   kind: 'ERP',
   provider: EXTAS_ERP_PROVIDER,
   modes: ['SANDBOX', 'LIVE'],
-  secrets: ['apiKey', 'webhookSecret'],
+  secrets: ['apiKey', 'webhookSecret', 'signingSecret'],
   configSchema: extasErpConfig,
   async create(ctx) {
     const apiKey = await requireSecret(ctx, 'apiKey');
