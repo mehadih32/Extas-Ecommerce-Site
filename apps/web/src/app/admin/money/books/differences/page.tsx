@@ -9,7 +9,7 @@ import Link from 'next/link';
 import * as inv from '@extas/inventory';
 import { BooksForm } from '@/components/admin/books/BooksForm';
 import { withBooks } from '@/lib/admin-books/i18n';
-import { BooksOff, openBooksPage, storeOfSearch } from '@/lib/admin-books/page';
+import { BooksOff, diffStatusCellClass, openBooksPage, storeOfSearch } from '@/lib/admin-books/page';
 import { adminView } from '@/lib/admin-page';
 import { t } from '@/lib/i18n';
 
@@ -129,7 +129,7 @@ export default async function BooksDifferencesPage({ searchParams }: { searchPar
                       <td data-l={t(d, 'bk.diff.col.ref')}>
                         <span className="a2-mono">{r.externalOrderId ?? r.eventId ?? '—'}</span>
                       </td>
-                      <td data-l={t(d, 'bk.diff.col.status')}>
+                      <td data-l={t(d, 'bk.diff.col.status')} className={diffStatusCellClass(r.adjustable && canAdjust)}>
                         <span className={`a2-pill ${r.status === 'FIXED' ? 'ok' : r.status === 'PENDING' ? 'gold' : r.status === 'OVERRIDDEN' ? 'line' : 'bad'}`}>{t(d, `bk.dstatus.${r.status}`)}</span>
                         {r.adjustable && canAdjust ? (
                           <div className="a2-mt6">

@@ -41,7 +41,7 @@ export default async function BooksClosesPage({ searchParams }: { searchParams: 
     <section className="a2-card tight a2-mt12" data-testid="books-pin">
       <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
         <b className="a2-sm">{t(d, 'bk.close.pinCard')}</b>
-        <span className={`a2-pill ${view.pinSet ? 'ok' : 'gold'}`}>{t(d, view.pinSet ? 'bk.close.pinSet' : 'bk.close.pinNotSet')}</span>
+        <span className={`a2-pill ${view.pinSet ? 'ok' : 'gold'}`} style={{ whiteSpace: 'normal' }}>{t(d, view.pinSet ? 'bk.close.pinSet' : 'bk.close.pinNotSet')}</span>
       </div>
       <div className="a2-mt6">
         <BooksForm
@@ -63,7 +63,7 @@ export default async function BooksClosesPage({ searchParams }: { searchParams: 
     </section>
   ) : view.model === 'v6' && !view.pinSet ? (
     <section className="a2-card tight a2-mt12" data-testid="books-pin">
-      <span className="a2-pill gold">{t(d, 'bk.close.pinNotSet')}</span>
+      <span className="a2-pill gold" style={{ whiteSpace: 'normal' }}>{t(d, 'bk.close.pinNotSet')}</span>
     </section>
   ) : null;
 

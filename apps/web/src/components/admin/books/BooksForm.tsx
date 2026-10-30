@@ -97,8 +97,9 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
     router.refresh();
   };
 
+  // qa-gate F1: `a2-bkf` lets a phone's row card stretch the form to its width and wrap its buttons (shell.css)
   return (
-    <span className="a2-stack" style={{ gap: 6 }}>
+    <span className="a2-stack a2-bkf" style={{ gap: 6 }}>
       {open ? (
         <span className="a2-stack" style={{ gap: 8 }} data-testid={testId ? `${testId}-panel` : undefined}>
           {warn ? <span className="a2-xs a2-note">{warn}</span> : null}
