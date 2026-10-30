@@ -9,7 +9,8 @@
 //                 row group by row group (`CREDIT|<order>|<line>`, `EXCHANGE|<exchange>`, `PAYMENT|<event>`, `OTHER|<ref>`),
 //                 the opening balance on the books' first day, and each "paid to ERP" record against the ERP's payments.
 //   B TIES        the one formula of §3.4 from the shop's own data: Balance(end) = Balance(start) + goods + returnLosses +
-//                 (I end − I start) + switch transfer − payments (+ the shop's own corrections). goods and returnLosses
+//                 (I end − I start) + switch transfer − payments (+ the shop's own corrections, + the corrections of a
+//                 closed month booked that day: `priorPeriodMinor`, their own visible figure). goods and returnLosses
 //                 are the daily summary's lines when the shop sent one (PR 617), else the same lines from the pipeline
 //                 moves and the exchange entries. Any remainder is TIE_BROKEN.
 //   C RETURNS     pieces handed back, approved and their credit against `GET /returns/summary?date`, and the pieces
@@ -33,11 +34,22 @@
 // Check A also compares each day's closing balances: the shop's against the ERP's (its stated closing on the run's last
 // day), less what open differences explain; anything left is A:closing (found again from the books, never adjusted).
 // One run at a time per link (the run row is claimed under the link's lock; `books.run.staleMinutes`).
+// Money review (PR 616): payments are paired on both sides by the same key — by eventId when the ERP's row carries one,
+// else by reference and amount (`paymentGroups`); a "paid to ERP" record written after its day's close moves that day
+// too; an event group (credit, payment, exchange) whose ERP rows outnumber the shop's entries waits for the pull (no
+// correction by hand); a group put right by a correction whose money moves again is a new difference of that group
+// (`<key>~2`, …); a correction of an exchange group counts in the day's exchange figures as the kind it corrects.
+// Round 2: statement rows with neither eventId nor reference (the contract's normal case) still meet their payment —
+// rows that sum to what a unit lacks go with it together, and one unit short meets one row as an amount difference; the
+// ERP undoing a closed-month correction is compared in the difference's own group and counts as an earlier-month
+// correction; a day close keeps the moment its run read the books (`figures.read`), so a fact booked after that read
+// (or a pipeline move or return list of the day) makes the close stale; the lifetime check counts a closed-month
+// correction booked after the month's end.
 // The system rolls the day closes up into weeks and, on each month's last day, the lifetime check against the ERP's
 // balance (BooksPeriodClose). Months and years are closed by the owner (books-close.ts). Everything is per store link:
 // store A's run never reads or writes store B's rows.
 import { createHash } from 'node:crypto';
-import { minorOf, periodOf, tieRemainder, worstResult, type BooksCheck, type BooksDifferenceClass, type BooksResult, type BooksWeekday } from '@extas/erp-types';
+import { entryKey, minorOf, periodOf, tieRemainder, worstResult, type BooksCheck, type BooksDifferenceClass, type BooksResult, type BooksWeekday } from '@extas/erp-types';
 import { Prisma } from '@extas/db/client';
 import { nowOf, setting, TX, type Db, type InventoryDeps, type Tx } from './context';
 import { InventoryError } from './errors';
@@ -84,6 +96,213 @@ export function erpRowGroup(r: Pick<ErpRow, 'kind' | 'externalOrderId' | 'refere
 
 type EntryRow = Prisma.ErpAccountEntryGetPayload<true>;
 
+/** The ERP event an entry key stands for: `<eventId>`, `<eventId>:new` (a correction's effect), `<eventId>:keep:<entry>`. */
+export const eventOfKey = (key: string): string => key.replace(/:keep:.*$/, '').replace(/:new$/, '');
+
+/** One shop payment entry of a day as the pairing reads it: the ERP event it stands for and the events it undoes. */
+export interface PayShopRow {
+  ref: number;
+  id: string;
+  links: readonly string[];
+  amountMinor: number;
+  reference: string | null;
+}
+
+/** One PAYMENT row of the ERP's statement of the same day. */
+export interface PayErpRow {
+  ref: number;
+  eventId: string | null;
+  reference: string | null;
+  amountMinor: number;
+  id: string | null;
+}
+
+/**
+ * The row groups of one day's payments, the same key on both sides (PR 616 money review: a v6 statement row need not
+ * carry its eventId, and the shop's entries always do). A payment and its corrections of the same day are one unit,
+ * keyed by the payment's event. An ERP row is paired with a unit by its eventId (the unit's own events, else the ones
+ * it undoes); rows without one: all rows of a reference with the unpaired unit of that reference and net, then a row
+ * with an unpaired unit of the same amount (and the same reference when both have one), else with unpaired units of
+ * its reference (a correction's reversal and new effect go together); a row left over is
+ * its own group (`PAYMENT|<eventId or reference or row id>`), so the ERP's payment the shop lacks is still named.
+ * `extra` adds the shop's own corrections already in a group (they move its net, never its key). `guessed` names the
+ * groups whose pairing is only a guess (round 3: one unit short met by a row tied neither by eventId nor by the same
+ * reference — it may be another payment whose event is late): their difference waits, never a correction by hand.
+ */
+export function paymentGroups(shop: readonly PayShopRow[], erp: readonly PayErpRow[], extra: ReadonlyMap<string, number> = new Map()): { shop: Map<number, string>; erp: Map<number, string>; guessed: Set<string> } {
+  const out = { shop: new Map<number, string>(), erp: new Map<number, string>(), guessed: new Set<string>() };
+  const parent = new Map<string, string>();
+  const root = (k: string): string => {
+    let r = k;
+    while (parent.get(r) !== r) r = parent.get(r)!;
+    return r;
+  };
+  for (const r of shop) if (!parent.has(r.id)) parent.set(r.id, r.id);
+  for (const r of shop) {
+    for (const l of r.links) {
+      if (!parent.has(l)) continue;
+      const a = root(r.id);
+      const b = root(l);
+      if (a !== b) parent.set(a, b);
+    }
+  }
+  const units = new Map<string, { net: number; reference: string | null; ids: Set<string>; links: Set<string>; claimed: boolean; paired?: number }>();
+  for (const r of shop) {
+    const k = root(r.id);
+    const u = units.get(k) ?? { net: 0, reference: null, ids: new Set<string>(), links: new Set<string>(), claimed: false };
+    u.net += r.amountMinor;
+    u.reference ??= r.reference;
+    u.ids.add(r.id);
+    for (const l of r.links) u.links.add(l);
+    units.set(k, u);
+    out.shop.set(r.ref, `PAYMENT|${k}`);
+  }
+  for (const [k, u] of units) u.net += extra.get(`PAYMENT|${k}`) ?? 0;
+  const exact = new Map<string, string>();
+  const undoes = new Map<string, string>();
+  for (const [k, u] of units) {
+    for (const i of u.ids) exact.set(i, k);
+    for (const l of u.links) if (!undoes.has(l)) undoes.set(l, k);
+  }
+  const keys = [...units.keys()].sort();
+  const claim = (r: PayErpRow, k: string) => {
+    const u = units.get(k)!;
+    u.claimed = true;
+    u.paired = (u.paired ?? 0) + r.amountMinor;
+    out.erp.set(r.ref, `PAYMENT|${k}`);
+  };
+  /** What a unit still lacks: its net less the ERP rows paired with it so far. */
+  const owed = (k: string) => units.get(k)!.net - (units.get(k)!.paired ?? 0);
+  const noId: PayErpRow[] = [];
+  for (const r of erp) {
+    if (!r.eventId) noId.push(r);
+    else {
+      const k = exact.get(r.eventId) ?? undoes.get(r.eventId);
+      if (k) claim(r, k);
+      else out.erp.set(r.ref, `PAYMENT|${r.eventId}`);
+    }
+  }
+  // A reference's rows together first (a correction's reversal and new effect), then row by row, then by reference.
+  const byRef = new Map<string, PayErpRow[]>();
+  for (const r of noId) if (r.reference) byRef.set(r.reference, [...(byRef.get(r.reference) ?? []), r]);
+  const together = new Set<PayErpRow>();
+  for (const [reference, rows] of byRef) {
+    const sum = rows.reduce((t, r) => t + r.amountMinor, 0);
+    const k = keys.find((x) => !units.get(x)!.claimed && units.get(x)!.reference === reference && units.get(x)!.net === sum);
+    if (!k) continue;
+    for (const r of rows) {
+      together.add(r);
+      claim(r, k);
+    }
+  }
+  const sameRef = (a: string | null, b: string | null) => !a || !b || a === b;
+  let left: PayErpRow[] = [];
+  for (const r of noId.filter((x) => !together.has(x))) {
+    const k = keys.find((x) => !units.get(x)!.claimed && units.get(x)!.net === r.amountMinor && sameRef(r.reference, units.get(x)!.reference));
+    if (k) claim(r, k);
+    else left.push(r);
+  }
+  // Round 2 money review: the rows left of one reference (or of none, the contract's normal case) whose sum is what a
+  // unit still lacks go with it together — a correction's reversal and new effect without ids, on its own day or with
+  // its payment (rows that cancel out join a corrected unit, the one with a correction first).
+  const leftBy = new Map<string, PayErpRow[]>();
+  for (const r of left) leftBy.set(r.reference ?? '', [...(leftBy.get(r.reference ?? '') ?? []), r]);
+  const taken = new Set<PayErpRow>();
+  for (const [reference, rows] of leftBy) {
+    const sum = rows.reduce((t, r) => t + r.amountMinor, 0);
+    const fits = keys.filter((x) => sameRef(reference || null, units.get(x)!.reference) && owed(x) === sum);
+    const k = fits.find((x) => units.get(x)!.links.size) ?? fits[0];
+    if (!k) continue;
+    for (const r of rows) {
+      taken.add(r);
+      claim(r, k);
+    }
+  }
+  left = left.filter((r) => !taken.has(r));
+  const joined = new Set<string>();
+  const rest: PayErpRow[] = [];
+  for (const r of left) {
+    const k = r.reference ? keys.find((x) => (!units.get(x)!.claimed || joined.has(x)) && units.get(x)!.reference === r.reference) : undefined;
+    if (k) {
+      joined.add(k);
+      claim(r, k);
+    } else rest.push(r);
+  }
+  // One unit still short and a row of the same reference left: they are one payment with an amount difference (never a
+  // missing event plus an unknown row); the row nearest to what the unit lacks goes with it. With two units short, no
+  // row is guessed into either.
+  const short = keys.filter((x) => owed(x) !== 0);
+  const only = short.length === 1 ? short[0]! : null;
+  const near = only ? rest.filter((r) => sameRef(r.reference, units.get(only)!.reference)).sort((a, b) => Math.abs(a.amountMinor - owed(only)) - Math.abs(b.amountMinor - owed(only)) || a.ref - b.ref)[0] : undefined;
+  for (const r of rest) {
+    if (only && r === near) {
+      claim(r, only);
+      if (!(r.reference && r.reference === units.get(only)!.reference)) out.guessed.add(`PAYMENT|${only}`);
+    } else out.erp.set(r.ref, `PAYMENT|${r.reference ?? r.id ?? 'row'}`);
+  }
+  return out;
+}
+
+const EXCHANGE_KINDS: ReadonlySet<string> = new Set(['EXCHANGE_EXTRA', 'EXCHANGE_ADJUSTMENT', 'EXCHANGE_BILL', 'EXCHANGE_CREDIT']);
+type ExchangeKind = 'EXCHANGE_EXTRA' | 'EXCHANGE_ADJUSTMENT' | 'EXCHANGE_BILL' | 'EXCHANGE_CREDIT';
+const exchangeKind = (k: string): ExchangeKind | null => (EXCHANGE_KINDS.has(k) ? (k as ExchangeKind) : null);
+
+/**
+ * What the shop's corrections count as in the day's exchange figures (PR 616 money review): a correction of an
+ * exchange group reverses the group's entries and writes one ADJUSTMENT with the ERP's figure (books-adjust.ts), so the
+ * goods and return losses derived from the exchange entries (the tie, the daily summary, PR 617) must count it too. Each
+ * correction (kind ADJUSTMENT) counts as the exchange kind of the largest entry it reversed (a correction of an earlier
+ * correction as that one's kind; with nothing reversed, the kind of its exchange's own entries). `prior` names the
+ * corrections of a closed month (PRIOR_PERIOD): they are their own term, never in those figures.
+ */
+export async function correctionKinds(db: Db, linkId: string, adjIds: readonly string[]): Promise<{ exchange: Map<string, ExchangeKind>; prior: Set<string> }> {
+  const out = { exchange: new Map<string, ExchangeKind>(), prior: new Set<string>() };
+  const seen = new Set<string>();
+  const after = new Map<string, string[]>();
+  let todo = [...new Set(adjIds)];
+  for (let round = 0; todo.length && round < 8; round++) {
+    for (const a of todo) seen.add(a);
+    const adjs = await db.booksAdjustment.findMany({ where: { linkId, id: { in: todo } }, select: { id: true, kind: true } });
+    for (const a of adjs) if (a.kind === 'PRIOR_PERIOD') out.prior.add(a.id);
+    const live = adjs.filter((a) => a.kind === 'ADJUSTMENT').map((a) => a.id);
+    const revs = live.length ? await db.erpAccountEntry.findMany({ where: { linkId, adjustmentId: { in: live }, kind: 'REVERSAL' }, select: { adjustmentId: true, reverses: true } }) : [];
+    const keys = revs.map((r) => r.reverses).filter((x): x is string => !!x);
+    const originals = new Map((keys.length ? await db.erpAccountEntry.findMany({ where: { linkId, eventId: { in: keys } } }) : []).map((o) => [o.eventId, o]));
+    const next: string[] = [];
+    const bare: string[] = [];
+    for (const id of live) {
+      const os = revs.filter((r) => r.adjustmentId === id).map((r) => originals.get(r.reverses ?? '')).filter((o): o is EntryRow => !!o);
+      const base = os.filter((o) => exchangeKind(o.kind)).sort((a, b) => Math.abs(minorOf(b.amountMinor)) - Math.abs(minorOf(a.amountMinor)) || a.seq - b.seq)[0];
+      if (base) {
+        out.exchange.set(id, base.kind as ExchangeKind);
+        continue;
+      }
+      const earlier = os.filter((o) => o.kind === 'ADJUSTMENT' && o.adjustmentId).map((o) => o.adjustmentId!);
+      if (earlier.length) {
+        after.set(id, earlier);
+        next.push(...earlier.filter((x) => !seen.has(x)));
+      } else bare.push(id);
+    }
+    if (bare.length) {
+      // Nothing reversed (the ERP had undone the group's entries already): the kind of its exchange's own entries.
+      const own = await db.erpAccountEntry.findMany({ where: { linkId, eventId: { in: bare.map((id) => entryKey.adjustment(id)) }, exchangeId: { not: null } }, select: { adjustmentId: true, exchangeId: true } });
+      for (const o of own) {
+        const k = await db.erpAccountEntry.findFirst({ where: { linkId, exchangeId: o.exchangeId, kind: { in: [...EXCHANGE_KINDS] as ExchangeKind[] } }, orderBy: { seq: 'desc' }, select: { kind: true } });
+        if (k && o.adjustmentId) out.exchange.set(o.adjustmentId, k.kind as ExchangeKind);
+      }
+    }
+    todo = next;
+  }
+  for (let i = 0; i < 8; i++) {
+    for (const [id, earlier] of after) {
+      if (out.exchange.has(id)) continue;
+      const k = earlier.map((x) => out.exchange.get(x)).find((x): x is ExchangeKind => !!x);
+      if (k) out.exchange.set(id, k);
+    }
+  }
+  return out;
+}
+
 /** The group a shop entry of its own kind belongs to (a reversal and a correction take their original's group). */
 function ownGroup(e: Pick<EntryRow, 'kind' | 'externalOrderId' | 'lineId' | 'exchangeId' | 'eventId' | 'paymentRef'>): string | null {
   switch (e.kind) {
@@ -111,10 +330,17 @@ interface ShopRow {
   group: string;
   /** The kind whose rule it follows (a reversal counts as the kind it undoes); null for a correction of the books. */
   counts: EntryRow['kind'] | null;
+  /** A shop correction (or the ERP's undoing of one) that is its own term of the tie (payment, other, opening, closed month). */
+  term: boolean;
+  /** Part of a correction of a closed month (PRIOR_PERIOD), or the ERP's undoing of one: the earlier-month term of the tie. */
+  prior?: boolean;
 }
 
 /** The group of a correction of a closed month (`PRIOR|<adjustment>`): dated in the open period, compared with nothing. */
 export const PRIOR_GROUP = 'PRIOR|';
+
+/** Row groups whose ERP rows come from the ERP's money events (the pull brings them; books-adjust.ts waits for it). */
+export const EVENT_GROUP = /^(CREDIT|PAYMENT|EXCHANGE)\|/;
 
 /** Groups whose correction is its own term of the tie (not a bill, a credit or an exchange the pipeline explains). */
 const isTermGroup = (g: string) => !/^(BILL|CREDIT|EXCHANGE)\|/.test(g);
@@ -293,19 +519,37 @@ interface FoundDiff {
   status?: 'PENDING' | 'MISMATCH';
 }
 
-/** Keeps the differences of one day (or one month for fixed costs): new ones added, seen ones refreshed, gone ones FIXED. */
+/** The group's own money as a difference saw it: the ERP's figure and the shop's entries that came from the ERP. */
+function ownMoney(detail: unknown): string {
+  const d = (detail ?? {}) as { erpMinor?: unknown; ownRefs?: unknown; shopRefs?: unknown };
+  const refs = (Array.isArray(d.ownRefs) ? d.ownRefs : Array.isArray(d.shopRefs) ? d.shopRefs.filter((r) => typeof r === 'string' && !r.startsWith('adj:')) : []).map(String).sort();
+  return JSON.stringify([d.erpMinor ?? null, refs]);
+}
+
+/**
+ * Keeps the differences of one day (or one month for fixed costs): new ones added, seen ones refreshed, gone ones FIXED.
+ * A difference put right by a correction stays as it was when found again with the same money (a correction of a closed
+ * month leaves the day's group as it was); when the group's own money moved since (an ERP row, or an event booked), it
+ * is a new difference of that group (`<key>~2`, …), open and adjustable — one correction per difference, ever.
+ */
 async function keepDifferences(deps: InventoryDeps, link: BooksLink, runId: string, scope: { dates: string[]; checks?: BooksCheck[] }, found: FoundDiff[], maxMinutes: number): Promise<void> {
   const now = nowOf(deps);
   const seen = new Set<string>();
   for (const f of found) {
-    const where = { linkId_date_kind_key: { linkId: link.id, date: dateOfDay(f.date), kind: f.kind, key: f.key } };
-    const prior = await deps.db.booksDifference.findUnique({ where, select: { id: true, status: true, firstSeenAt: true, adjustmentId: true } });
-    seen.add(`${f.date}|${f.kind}|${f.key}`);
+    const rowOf = (key: string) =>
+      deps.db.booksDifference.findUnique({ where: { linkId_date_kind_key: { linkId: link.id, date: dateOfDay(f.date), kind: f.kind, key } }, select: { id: true, status: true, firstSeenAt: true, adjustmentId: true, detail: true } });
+    let key = f.key;
+    let prior = await rowOf(key);
+    for (let n = 2; prior && prior.status === 'FIXED' && prior.adjustmentId && isGapKey(f.key) && ownMoney(prior.detail) !== ownMoney(f.detail) && n < 100; n++) {
+      key = `${f.key}~${n}`;
+      prior = await rowOf(key);
+    }
+    seen.add(`${f.date}|${f.kind}|${key}`);
     const first = prior?.firstSeenAt ?? now;
     const status = f.status ?? (f.timing && now.getTime() - first.getTime() < maxMinutes * 60_000 ? 'PENDING' : 'MISMATCH');
     const data = { check: f.check, amountMinor: f.amountMinor == null ? null : BigInt(f.amountMinor), eventId: f.eventId, externalOrderId: f.externalOrderId, detail: f.detail as Prisma.InputJsonValue, lastRunId: runId, lastSeenAt: now };
     if (!prior) {
-      await deps.db.booksDifference.create({ data: { storeId: link.storeId, linkId: link.id, date: dateOfDay(f.date), kind: f.kind, key: f.key, status, firstRunId: runId, firstSeenAt: now, ...data } });
+      await deps.db.booksDifference.create({ data: { storeId: link.storeId, linkId: link.id, date: dateOfDay(f.date), kind: f.kind, key, status, firstRunId: runId, firstSeenAt: now, ...data } });
     } else if (prior.status === 'OVERRIDDEN' || (prior.status === 'FIXED' && prior.adjustmentId)) {
       // Left in a month the owner closed, or put right by a correction: it stays as it was.
       await deps.db.booksDifference.update({ where: { id: prior.id }, data: { lastRunId: runId, lastSeenAt: now } });
@@ -357,24 +601,98 @@ async function explainedBefore(db: Db, link: Pick<BooksLink, 'id'>, d: string): 
 }
 
 /**
- * The first closed day (up to `through`) whose books moved after its latest close: an entry booked on it later (a
- * correction, a late event), the month's fixed costs or the day's summary entered later. Null when none.
+ * Round 2 money review: what the corrections of a closed month booked after day `d` put right of the balances up to
+ * `d` (shop − ERP): the differences dated on or before `d` fixed by a PRIOR_PERIOD correction dated after it. Until that
+ * correction's day the shop's balance differs from the ERP's by exactly this, by design (the closed month is never
+ * rewritten), so the lifetime check counts it.
  */
-async function movedSinceClose(db: Db, link: Pick<BooksLink, 'id'>, through: string): Promise<string | null> {
+async function priorPeriodAfter(db: Db, link: Pick<BooksLink, 'id'>, d: string): Promise<number> {
+  const [r] = await db.$queryRaw<{ s: bigint | null }[]>`
+    SELECT SUM(df."amountMinor")::bigint AS "s" FROM "BooksDifference" df
+    JOIN "BooksAdjustment" a ON a."id" = df."adjustmentId" AND a."kind" = 'PRIOR_PERIOD' AND a."date" > ${dateOfDay(d)}::date
+    WHERE df."linkId" = ${link.id}::uuid AND df."date" <= ${dateOfDay(d)}::date AND df."status" = 'FIXED' AND df."amountMinor" IS NOT NULL
+      AND df."key" ~ '^[AF]:' AND df."key" !~ '^A:(paid|erppaid):' AND df."key" <> 'A:closing'`;
+  return minorOf(r?.s ?? 0n);
+}
+
+/**
+ * The first closed day (from `from`, up to `through`) whose books moved after its latest close: an entry booked on it
+ * later (a correction, a late event), a "paid to ERP" record written for it later (money review), the month's fixed
+ * costs or the day's summary entered later, a pipeline move or a courier return list of that day (round 2). Null when
+ * none. The month close refuses a month with such a day (books-close.ts).
+ *
+ * Round 2 money review: "later" is after the run that wrote the close read the books (`figures.read`, the highest entry
+ * `seq` of the link and the database's time just before that run's read), never the close's own `createdAt` — a fact
+ * booked between the run's read and the day's close was not in the close. A close without the mark (written before
+ * it existed) is judged by its `createdAt`.
+ * Round 3: a clock cannot tell a fact whose transaction was still open at the read (its `createdAt` is earlier, it
+ * commits later). Entries are judged by `seq`, everything else by what the run saw (`figures.read.seen`, `seenFacts`):
+ * the day moved when its moves, records, summaries or fixed costs are not as many, or its pieces handed back not as
+ * many, as then.
+ */
+export async function movedSinceClose(db: Db | Tx, link: Pick<BooksLink, 'id'>, through: string, from: string | null = null): Promise<string | null> {
   const [r] = await db.$queryRaw<{ d: Date | null }[]>`
     WITH latest AS (
-      SELECT "date", MAX("createdAt") AS "at" FROM "BooksDayClose"
-      WHERE "linkId" = ${link.id}::uuid AND "date" <= ${dateOfDay(through)}::date GROUP BY "date"
+      SELECT DISTINCT ON ("date") "date",
+        COALESCE(("figures"->'read'->>'at')::timestamptz, "createdAt") AS "at", ("figures"->'read'->>'seq')::int AS "seq",
+        "figures"->'read'->'seen' AS "seen"
+      FROM "BooksDayClose"
+      WHERE "linkId" = ${link.id}::uuid AND "date" <= ${dateOfDay(through)}::date AND "date" >= ${dateOfDay(from ?? '1970-01-01')}::date
+      ORDER BY "date", "version" DESC
+    ),
+    now_seen AS (
+      SELECT l."date", l."at", l."seq", l."seen",
+        (SELECT COUNT(*) FROM "ErpPipelineMove" m WHERE m."linkId" = ${link.id}::uuid AND m."businessDate" = l."date") AS "moves",
+        (SELECT COUNT(*) FROM "ErpPaymentRecord" p WHERE p."linkId" = ${link.id}::uuid AND p."paidOn" = l."date") AS "records",
+        (SELECT COUNT(*) FROM "ErpDailySummary" s WHERE s."linkId" = ${link.id}::uuid AND s."date" = l."date") AS "summaries",
+        (SELECT COUNT(*) FROM "ErpFixedCostMonth" c WHERE c."linkId" = ${link.id}::uuid AND c."month" = date_trunc('month', l."date")::date) AS "costs",
+        (SELECT COALESCE(SUM(pc."receivedCount"), 0) FROM "ErpReturnListParcel" pc JOIN "ErpReturnList" rl ON rl."id" = pc."returnListId"
+          WHERE rl."linkId" = ${link.id}::uuid AND rl."handedBackAt" = l."date" AND rl."status" IN ('SENT', 'ACCEPTED') AND COALESCE(pc."result", '') <> 'REFUSED') AS "handed"
+      FROM latest l
     )
-    SELECT LEAST(
-      (SELECT MIN(l."date") FROM latest l WHERE EXISTS (
-        SELECT 1 FROM "ErpAccountEntry" e WHERE e."linkId" = ${link.id}::uuid AND e."businessDate" = l."date" AND e."createdAt" > l."at")),
-      (SELECT MIN(l."date") FROM latest l WHERE EXISTS (
-        SELECT 1 FROM "ErpFixedCostMonth" m WHERE m."linkId" = ${link.id}::uuid AND m."month" = date_trunc('month', l."date")::date AND m."createdAt" > l."at")),
-      (SELECT MIN(l."date") FROM latest l WHERE EXISTS (
-        SELECT 1 FROM "ErpDailySummary" s WHERE s."linkId" = ${link.id}::uuid AND s."date" = l."date" AND s."createdAt" > l."at"))
-    ) AS "d"`;
+    SELECT MIN(x."date") AS "d" FROM now_seen x WHERE
+      EXISTS (SELECT 1 FROM "ErpAccountEntry" e WHERE e."linkId" = ${link.id}::uuid AND e."businessDate" = x."date"
+        AND (CASE WHEN x."seq" IS NULL THEN e."createdAt" > x."at" ELSE e."seq" > x."seq" END))
+      OR (x."seen" IS NOT NULL AND (
+        x."moves" <> COALESCE((x."seen"->>'moves')::bigint, 0) OR x."records" <> COALESCE((x."seen"->>'records')::bigint, 0)
+        OR x."summaries" <> COALESCE((x."seen"->>'summaries')::bigint, 0) OR x."costs" <> COALESCE((x."seen"->>'costs')::bigint, 0)
+        OR x."handed" <> COALESCE((x."seen"->>'handed')::bigint, 0)))
+      OR (x."seen" IS NULL AND (
+        EXISTS (SELECT 1 FROM "ErpPipelineMove" m WHERE m."linkId" = ${link.id}::uuid AND m."businessDate" = x."date" AND m."createdAt" > x."at")
+        OR EXISTS (SELECT 1 FROM "ErpReturnList" rl WHERE rl."linkId" = ${link.id}::uuid AND rl."handedBackAt" = x."date"
+          AND (rl."updatedAt" > x."at" OR EXISTS (SELECT 1 FROM "ErpReturnListParcel" pc WHERE pc."returnListId" = rl."id" AND pc."updatedAt" > x."at")))
+        OR EXISTS (SELECT 1 FROM "ErpFixedCostMonth" m WHERE m."linkId" = ${link.id}::uuid AND m."month" = date_trunc('month', x."date")::date AND m."createdAt" > x."at")
+        OR EXISTS (SELECT 1 FROM "ErpDailySummary" s WHERE s."linkId" = ${link.id}::uuid AND s."date" = x."date" AND s."createdAt" > x."at")
+        OR EXISTS (SELECT 1 FROM "ErpPaymentRecord" p WHERE p."linkId" = ${link.id}::uuid AND p."paidOn" = x."date" AND p."createdAt" > x."at")))`;
   return r?.d ? dayText(r.d) : null;
+}
+
+/**
+ * Round 3 money review: the facts of each day of a run's range as the run is about to read them (one statement, one
+ * snapshot): its pipeline moves, "paid to ERP" records, summary versions, the fixed-cost versions of its month (all
+ * append-only, so counted) and the pieces handed back on its return lists (the figure check C reads). Kept with the
+ * day close (`figures.read.seen`); `movedSinceClose` compares them with the books as they are now. A writer whose
+ * transaction was open at the read commits later and changes a count — never judged by a clock, so no margin.
+ */
+async function seenFacts(db: Db, link: Pick<BooksLink, 'id'>, from: string, through: string): Promise<Map<string, DaySeen>> {
+  const rows = await db.$queryRaw<{ d: Date; moves: bigint; records: bigint; summaries: bigint; costs: bigint; handed: bigint }[]>`
+    SELECT g::date AS "d",
+      (SELECT COUNT(*) FROM "ErpPipelineMove" m WHERE m."linkId" = ${link.id}::uuid AND m."businessDate" = g::date) AS "moves",
+      (SELECT COUNT(*) FROM "ErpPaymentRecord" p WHERE p."linkId" = ${link.id}::uuid AND p."paidOn" = g::date) AS "records",
+      (SELECT COUNT(*) FROM "ErpDailySummary" s WHERE s."linkId" = ${link.id}::uuid AND s."date" = g::date) AS "summaries",
+      (SELECT COUNT(*) FROM "ErpFixedCostMonth" c WHERE c."linkId" = ${link.id}::uuid AND c."month" = date_trunc('month', g::date)::date) AS "costs",
+      (SELECT COALESCE(SUM(pc."receivedCount"), 0) FROM "ErpReturnListParcel" pc JOIN "ErpReturnList" rl ON rl."id" = pc."returnListId"
+        WHERE rl."linkId" = ${link.id}::uuid AND rl."handedBackAt" = g::date AND rl."status" IN ('SENT', 'ACCEPTED') AND COALESCE(pc."result", '') <> 'REFUSED')::bigint AS "handed"
+    FROM generate_series(${dateOfDay(from)}::date, ${dateOfDay(through)}::date, interval '1 day') g`;
+  return new Map(rows.map((r) => [dayText(r.d), { moves: Number(r.moves), records: Number(r.records), summaries: Number(r.summaries), costs: Number(r.costs), handed: Number(r.handed) }]));
+}
+
+interface DaySeen {
+  moves: number;
+  records: number;
+  summaries: number;
+  costs: number;
+  handed: number;
 }
 
 export interface BooksRunInput {
@@ -404,6 +722,7 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
   if (erp.state === 'none' || !erp.api.v6) return fail(new InventoryError('ERP_UNAVAILABLE', 'this ERP connection has no v6 reads'));
   const reads = erp.api.v6;
   const account = await checkErpAccount(deps, { storeId });
+  const heldOf = new Map((account.held ?? []).map((x) => [x.eventId, x.reason]));
   if (account.status === 'failed') return { ...out, status: 'failed', error: account.error };
   if (account.status === 'skipped') return { ...out, status: 'skipped', reason: account.reason };
   const link = await storeErpLink(deps.db, storeId);
@@ -464,40 +783,69 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
     const stored = new Map((await callErp(deps, policy, (o) => reads.dailySummaries({ from: from!, to: through }, o))).value.map((s) => [s.date, s]));
     const erpFixed = new Map((await callErp(deps, policy, (o) => reads.fixedCosts(o))).value.map((m) => [m.month, m]));
 
+    // Round 2 money review: the moment this run reads the books (the link's highest entry and the database's time), kept
+    // with each day close so a fact booked after it — even before that day's close is written — shows as moved.
+    const [mark] = await deps.db.$queryRaw<{ at: Date; seq: number | null }[]>`
+      SELECT now() AS "at", (SELECT MAX("seq") FROM "ErpAccountEntry" WHERE "linkId" = ${link.id}::uuid) AS "seq"`;
+    const readMark = { at: mark!.at.toISOString(), seq: mark!.seq ?? 0 };
+    const seen = await seenFacts(deps.db, link, from, through);
     // The shop's entries of the range, each with its group and the kind it counts as.
     const entries = await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, businessDate: { gte: dateOfDay(from), lte: dateOfDay(through) } }, orderBy: { seq: 'asc' } });
     const reversed = [...new Set(entries.map((e) => e.reverses).filter((x): x is string => !!x))];
     const originals = new Map((await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, eventId: { in: reversed } } })).map((e) => [e.eventId, e]));
-    const adjIds = [...new Set(entries.map((e) => e.adjustmentId).filter((x): x is string => !!x))];
+    // The corrections of the range, and those an entry of the range undoes (an ERP correction of a corrected group).
+    const adjIds = [...new Set([...entries, ...originals.values()].map((e) => e.adjustmentId).filter((x): x is string => !!x))];
     // A correction counts in the group of the difference it fixed; a correction of a closed month (PRIOR_PERIOD) is dated
     // in the open period and is its own group, compared with nothing (the ERP's row lies in the closed day).
     const adjGroup = new Map<string, string>();
+    // The group of the difference each correction fixed (round 2: where the ERP's undoing of a closed-month correction
+    // is compared, as its row lies in that group of its own day).
+    const diffGroup = new Map<string, string>();
     if (adjIds.length) {
       const adjs = await deps.db.booksAdjustment.findMany({ where: { id: { in: adjIds }, linkId: link.id }, select: { id: true, kind: true, differenceId: true } });
       const diffs = new Map((await deps.db.booksDifference.findMany({ where: { linkId: link.id, id: { in: adjs.map((a) => a.differenceId).filter((x): x is string => !!x) } }, select: { id: true, detail: true } })).map((x) => [x.id, x]));
       for (const a of adjs) {
         const g = (diffs.get(a.differenceId ?? '')?.detail as { group?: unknown } | undefined)?.group;
+        if (typeof g === 'string') diffGroup.set(a.id, g);
         adjGroup.set(a.id, a.kind === 'PRIOR_PERIOD' ? `${PRIOR_GROUP}${a.id}` : typeof g === 'string' ? g : `${PRIOR_GROUP}${a.id}`);
       }
     }
-    const shopRows: (ShopRow & { day: string })[] = [];
+    // Money review: a correction of an exchange group counts as the exchange kind it corrects (see correctionKinds).
+    const corr = await correctionKinds(deps.db, link.id, adjIds);
+    const kindOfCorrection = (adjustmentId: string | null | undefined): EntryRow['kind'] | null => (adjustmentId && !corr.prior.has(adjustmentId) ? (corr.exchange.get(adjustmentId) ?? null) : null);
+    const shopRows: (ShopRow & { day: string; pay?: { id: string; links: string[] } })[] = [];
     for (const e of entries) {
       const original = e.reverses ? originals.get(e.reverses) : undefined;
       let group: string | null = null;
       let counts: EntryRow['kind'] | null = e.kind;
+      // The ERP's correction undoing a shop correction (erp-account.ts `undoDrafts`): a reversal of its ADJUSTMENT.
+      const undoesCorrection = e.kind === 'REVERSAL' && !e.adjustmentId && original?.kind === 'ADJUSTMENT';
+      // Round 2 money review: the ERP undoing a closed-month correction is compared in the difference's own group (the
+      // ERP's row lies there, on the undo's own day), and still counts as an earlier-month correction in the tie.
+      const undoesPrior = undoesCorrection && !!original?.adjustmentId && corr.prior.has(original.adjustmentId);
       if (e.kind === 'REVERSAL') {
-        group = original ? (ownGroup(original) ?? (original.adjustmentId ? (adjGroup.get(original.adjustmentId) ?? null) : null)) : null;
-        counts = original && !e.adjustmentId ? original.kind : null;
+        group = original ? (ownGroup(original) ?? (original.adjustmentId ? ((undoesPrior ? diffGroup.get(original.adjustmentId) : undefined) ?? adjGroup.get(original.adjustmentId) ?? null) : null)) : null;
+        counts = original && !e.adjustmentId ? (undoesCorrection ? kindOfCorrection(original.adjustmentId) : original.kind) : null;
       } else if (e.kind === 'ADJUSTMENT') {
         group = e.adjustmentId ? (adjGroup.get(e.adjustmentId) ?? null) : null;
         counts = null;
       } else group = ownGroup(e);
       if (e.adjustmentId) {
         counts = null;
+        if (e.kind === 'REVERSAL') counts = original ? (corr.prior.has(e.adjustmentId) ? null : (exchangeKind(original.kind) ?? (original.kind === 'ADJUSTMENT' ? kindOfCorrection(original.adjustmentId) : null))) : null;
+        else if (e.kind === 'ADJUSTMENT') counts = kindOfCorrection(e.adjustmentId);
         const own = adjGroup.get(e.adjustmentId);
         if (own?.startsWith(PRIOR_GROUP)) group = own;
       }
-      shopRows.push({ entry: e, group: group ?? `UNGROUPED|${e.eventId}`, counts, day: dayText(e.businessDate) });
+      group ??= `UNGROUPED|${e.eventId}`;
+      const prior = undoesPrior || (!!e.adjustmentId && corr.prior.has(e.adjustmentId));
+      const term = !counts && (!!e.adjustmentId || undoesCorrection) && (prior || isTermGroup(group));
+      // The payments of a day are paired with the ERP's rows by the event they stand for (paymentGroups).
+      let pay: { id: string; links: string[] } | undefined;
+      if (!e.adjustmentId && e.kind === 'PAYMENT') pay = { id: eventOfKey(e.eventId), links: [] };
+      else if (!e.adjustmentId && e.kind === 'REVERSAL' && original?.kind === 'PAYMENT') pay = { id: eventOfKey(e.eventId), links: [eventOfKey(original.eventId)] };
+      else if (undoesCorrection && group.startsWith('PAYMENT|')) pay = { id: eventOfKey(e.eventId), links: [] };
+      shopRows.push({ entry: e, group, counts, term, ...(prior ? { prior } : {}), day: dayText(e.businessDate), ...(pay ? { pay } : {}) });
     }
 
     const flows = await pipelineFlows(deps.db, link.id, from, through);
@@ -542,12 +890,21 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
       const bal = await balanceOn(deps.db, link, d);
 
       // ---- A and F: row groups ----
+      // Payments first: both sides keyed alike (paymentGroups), whether the ERP's rows carry their eventId or not.
+      const extra = new Map<string, number>();
+      for (const r of mine) if (!r.pay && r.group.startsWith('PAYMENT|')) extra.set(r.group, (extra.get(r.group) ?? 0) + minorOf(r.entry.amountMinor));
+      const payShop = mine.flatMap((r, i) => (r.pay ? [{ ref: i, id: r.pay.id, links: r.pay.links, amountMinor: minorOf(r.entry.amountMinor), reference: r.entry.paymentRef }] : []));
+      const payErp = theirs.flatMap((r, i) => (r.kind === 'PAYMENT' ? [{ ref: i, eventId: r.eventId, reference: r.reference, amountMinor: r.amountMinor, id: r.id }] : []));
+      const paid = paymentGroups(payShop, payErp, extra);
       const groups = new Map<string, { shop: (ShopRow & { day: string })[]; erp: ErpRow[] }>();
-      for (const r of mine) groups.set(r.group, { shop: [...(groups.get(r.group)?.shop ?? []), r], erp: groups.get(r.group)?.erp ?? [] });
-      for (const r of theirs) {
-        const g = erpRowGroup(r);
+      mine.forEach((r, i) => {
+        const g = paid.shop.get(i) ?? r.group;
+        groups.set(g, { shop: [...(groups.get(g)?.shop ?? []), r], erp: groups.get(g)?.erp ?? [] });
+      });
+      theirs.forEach((r, i) => {
+        const g = paid.erp.get(i) ?? erpRowGroup(r);
         groups.set(g, { shop: groups.get(g)?.shop ?? [], erp: [...(groups.get(g)?.erp ?? []), r] });
-      }
+      });
       const groupFigures: Record<string, unknown>[] = [];
       for (const [group, g] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
         if (group.startsWith(PRIOR_GROUP)) {
@@ -581,7 +938,17 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
         // carries (round 3, decided by its kind); this list is the extra guard where the ERP sends ids.
         const erpEvents = [...new Set(g.erp.map((r) => r.eventId).filter((x): x is string => !!x))];
         const waitingEvents = await eventsNotBooked(deps.db, link.id, erpEvents);
-        found.push({ date: d, check, kind, key: `${letter}:${group}`, amountMinor: shopNet - erpNet, eventId: g.erp.find((r) => r.eventId)?.eventId ?? null, externalOrderId: ext, detail: { group, shopMinor: shopNet, erpMinor: erpNet, erpRefs, shopRefs, erpEvents, ...(waitingEvents.length ? { waitingEvents } : {}), ...(billedAtMissing ? { billedAtMissing: true, consignmentId: g.erp[0]?.reference ?? null } : {}) }, timing: kind === 'MISSING_EVENT' });
+        // Money review: in a group of events (credit, payment, exchange) the ERP holding more rows than the shop has
+        // entries from the ERP means an event is still on its way, whatever the rows carry: the difference waits for
+        // the pull (books-adjust.ts), a correction now would count that event twice once it arrives.
+        const own = g.shop.filter((r) => !r.entry.adjustmentId);
+        const ownRefs = own.map((r) => r.entry.eventId).sort();
+        const onItsWay = EVENT_GROUP.test(group) && g.erp.length > own.length;
+        // Round 3: a payment paired only by a guess (paymentGroups) waits like an event on its way.
+        const guessed = paid.guessed.has(group);
+        // Round 3: an ERP payment the account check held back (part of a correction on its way), with why.
+        const held = g.erp.map((r) => (r.eventId ? heldOf.get(r.eventId) : undefined)).find((x) => !!x);
+        found.push({ date: d, check, kind, key: `${letter}:${group}`, amountMinor: shopNet - erpNet, eventId: g.erp.find((r) => r.eventId)?.eventId ?? null, externalOrderId: ext, detail: { group, shopMinor: shopNet, erpMinor: erpNet, erpRefs, shopRefs, ownRefs, erpRowCount: g.erp.length, shopEntryCount: own.length, erpEvents, ...(waitingEvents.length ? { waitingEvents } : {}), ...(guessed ? { guessed: true } : {}), ...(held ? { heldBy: held } : {}), ...(billedAtMissing ? { billedAtMissing: true, consignmentId: g.erp[0]?.reference ?? null } : {}) }, timing: kind === 'MISSING_EVENT' || onItsWay || guessed });
       }
       // The books' first day: the opening balance the shop imported against the ERP's.
       if (d === start && bal.startMinor !== erpStart) {
@@ -609,7 +976,12 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
       const sum = (kinds: readonly string[]) => mine.filter((r) => r.counts && kinds.includes(r.counts)).reduce((s, r) => s + minorOf(r.entry.amountMinor), 0);
       // A correction of a bill, a credit or an exchange puts the balance right against goods and the pipeline: no term of
       // its own. A correction of a payment, another charge, the opening or a closed month is its own term.
-      const adjustmentsMinor = mine.filter((r) => r.entry.adjustmentId && isTermGroup(r.group)).reduce((s, r) => s + minorOf(r.entry.amountMinor), 0);
+      const adjustmentsMinor = mine.filter((r) => r.term && !r.prior).reduce((s, r) => s + minorOf(r.entry.amountMinor), 0);
+      // Money review (owner's decision): a correction of a closed month counts in the open period on the day it is
+      // booked, as its own figure of the tie ("earlier-month corrections"), never dropped and never rewriting the
+      // closed month. The daily summary of contract v6 has no line for it (a v7 request), so it stays in the shop's
+      // own figures (`dayFigures().priorPeriod`) and the books screens.
+      const priorPeriodMinor = mine.filter((r) => r.term && r.prior).reduce((s, r) => s + minorOf(r.entry.amountMinor), 0);
       const flow = flows.get(d) ?? { goodsMinor: 0, returnLossesMinor: 0, approvedMinor: 0, billedMinor: 0 };
       const derivedGoods = flow.goodsMinor + sum(['EXCHANGE_EXTRA', 'EXCHANGE_ADJUSTMENT']);
       const derivedLosses = flow.returnLossesMinor + sum(['EXCHANGE_BILL', 'EXCHANGE_CREDIT']);
@@ -632,9 +1004,9 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
         paymentsMinor: -sum(['PAYMENT']),
       };
       // The shop's own corrections move the balance and nothing else: they are their own term of the formula.
-      const remainder = tieRemainder(parts) - adjustmentsMinor;
+      const remainder = tieRemainder(parts) - adjustmentsMinor - priorPeriodMinor;
       if (remainder !== 0) {
-        found.push({ date: d, check: 'TIES', kind: 'TIE_BROKEN', key: 'B:tie', amountMinor: remainder, eventId: null, externalOrderId: null, detail: { ...parts, adjustmentsMinor, remainderMinor: remainder, summaryUsed: useSummary, derivedGoodsMinor: derivedGoods, derivedReturnLossesMinor: derivedLosses }, timing: false });
+        found.push({ date: d, check: 'TIES', kind: 'TIE_BROKEN', key: 'B:tie', amountMinor: remainder, eventId: null, externalOrderId: null, detail: { ...parts, adjustmentsMinor, priorPeriodMinor, remainderMinor: remainder, summaryUsed: useSummary, derivedGoodsMinor: derivedGoods, derivedReturnLossesMinor: derivedLosses }, timing: false });
       }
       pipelinePrev = pipelineEnd;
 
@@ -694,12 +1066,16 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
           erp: theirs.map((r) => JSON.stringify([r.id, r.eventId, r.kind, r.amountMinor])).sort(),
         }),
       );
+      // The day's "paid to ERP" records (money review): one written later makes a new close of the day (movedSinceClose).
+      // Only a day that has records names them, so the closes of every other day keep their figures.
+      const paidRecords = (await deps.db.erpPaymentRecord.findMany({ where: { linkId: link.id, paidOn: dateOfDay(d) }, select: { id: true } })).map((x) => x.id).sort();
       const figures = {
         matched,
         moneyDigest,
+        ...(paidRecords.length ? { paidRecords } : {}),
         checks,
         groups: groupFigures,
-        tie: { ...parts, adjustmentsMinor, remainderMinor: remainder, summaryUsed: useSummary },
+        tie: { ...parts, adjustmentsMinor, ...(priorPeriodMinor ? { priorPeriodMinor } : {}), remainderMinor: remainder, summaryUsed: useSummary },
         erp: { startMinor: erpStart, closingMinor: erpRunning },
         pipeline: { startMinor: parts.pipelineStartMinor, endMinor: pipelineEnd.totalMinor, waitingCheckMinor: pipelineEnd.waitingCheckMinor, pieces: pipelineEnd.pieces },
       };
@@ -713,7 +1089,9 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
         const clear = async () => {
           if (matched) await tx.booksDifference.updateMany({ where: { linkId: link.id, date: dateOfDay(d), kind: 'HISTORY_CHANGED', status: { in: ['PENDING', 'MISMATCH'] }, NOT: { firstRunId: run.id } }, data: { status: 'FIXED', fixedAt: now, lastRunId: run.id } });
         };
-        if (latest && (latest.figures as { digest?: string }).digest === digest) {
+        // The same figures again are no new version — unless the day moved after the read behind its latest close (that
+        // close is stale; this run's read is the newer one, so a new version keeps its mark and the month close sees it).
+        if (latest && (latest.figures as { digest?: string }).digest === digest && (await movedSinceClose(tx, link, d, d)) !== d) {
           await clear();
           return { version: latest.version, changed: false };
         }
@@ -726,7 +1104,7 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
           result,
           openingBalanceMinor: BigInt(bal.startMinor),
           closingBalanceMinor: BigInt(bal.endMinor),
-          figures: { ...figures, digest },
+          figures: { ...figures, digest, read: { ...readMark, seen: seen.get(d) ?? null } },
         };
         const hash = sha(`${prevHash ?? ''}\n${closeCanonical(row)}`);
         await tx.booksDayClose.create({
@@ -827,12 +1205,13 @@ async function rollUps(deps: InventoryDeps, link: BooksLink, o: { from: string; 
     const s = await summary(o.start, d);
     const shopEnd = (await balanceOn(deps.db, link, d)).endMinor;
     const erpEnd = o.erpClosing(d);
-    const base = { shopClosingMinor: shopEnd, erpClosingMinor: erpEnd, days: s.rows.length, matchedDays: s.matched, chained: s.chained };
+    const later = await priorPeriodAfter(deps.db, link, d);
+    const base = { shopClosingMinor: shopEnd, erpClosingMinor: erpEnd, days: s.rows.length, matchedDays: s.matched, chained: s.chained, ...(later ? { priorPeriodLaterMinor: later } : {}) };
     const figures = { ...base, digest: sha(canonical(base)) };
     if (!(await changedFrom('LIFETIME', o.start, figures))) continue;
     const opening = await deps.db.erpStoreLink.findUnique({ where: { id: link.id }, select: { openingBalanceMinor: true } });
     await deps.db.$transaction(
-      (tx) => writePeriodClose(tx, link, { level: 'LIFETIME', start: o.start, end: d, result: shopEnd === erpEnd ? s.result : 'MISMATCH', openingMinor: minorOf(opening?.openingBalanceMinor ?? 0n), closingMinor: shopEnd, matchedDays: s.matched, totalDays: s.rows.length, figures }),
+      (tx) => writePeriodClose(tx, link, { level: 'LIFETIME', start: o.start, end: d, result: shopEnd - later === erpEnd ? s.result : 'MISMATCH', openingMinor: minorOf(opening?.openingBalanceMinor ?? 0n), closingMinor: shopEnd, matchedDays: s.matched, totalDays: s.rows.length, figures }),
       TX,
     );
   }

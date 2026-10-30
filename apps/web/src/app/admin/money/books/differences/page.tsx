@@ -55,7 +55,10 @@ export default async function BooksDifferencesPage({ searchParams }: { searchPar
   const howOf = (r: inv.BooksDifferenceRow) => {
     const g = groupOf(r);
     if (r.check === 'RETURNS') return 'RETURNS';
-    return typeof g === 'string' && (r.check === 'ACCOUNT' || r.check === 'ORDERS') && inv.waitsForPull(r.kind, g, r.detail) ? 'WAITING_EVENT' : r.kind;
+    if (!(typeof g === 'string' && (r.check === 'ACCOUNT' || r.check === 'ORDERS') && inv.waitsForPull(r.kind, g, r.detail))) return r.kind;
+    // Round 3 (money review): why it waits, when the match knows more — a payment the catch-up held back, a guessed pair.
+    const det = r.detail as { heldBy?: unknown; guessed?: unknown } | null;
+    return det?.heldBy ? 'WAITING_HELD' : det?.guessed === true ? 'WAITING_GUESS' : 'WAITING_EVENT';
   };
 
   return (

@@ -161,7 +161,8 @@
       "FIXED_COSTS_MISSING": "The month's fixed costs are not in. Write a reason to close anyway.",
       "MONTH_NOT_ENDED": "This has not ended yet.",
       "NOTHING_TO_CLOSE": "There are no books in this period.",
-      "BUSY": "A run of the books is going on. Try again in a few minutes."
+      "BUSY": "A run of the books is going on. Try again in a few minutes.",
+      "RUN_MATCH_FIRST": "The books of {fields} changed after that day was checked. Run the match again first, then close the month."
     },
     "result": {
       "MATCHED": "Matched",
@@ -241,6 +242,7 @@
         "switchTransferMinor": "+ Switch transfer",
         "paymentsMinor": "− Payments",
         "adjustmentsMinor": "+ Our corrections",
+        "priorPeriodMinor": "+ Earlier-month corrections",
         "balanceEndMinor": "= Balance at end",
         "remainderMinor": "Left over"
       },
@@ -293,7 +295,9 @@
         "UNMATCHED_PAYMENT": "Record the payment, or reverse the wrong record, on the ERP account page.",
         "HISTORY_CHANGED": "A matched day's own money moved. Check it; it settles by itself when the day matches again, otherwise the month closes only with the owner's decision.",
         "RETURNS": "Wait for the ERP check, or find the piece.",
-        "WAITING_EVENT": "The ERP's event for this row has not reached the shop yet. The pull brings it and the next match settles this; nothing is typed by hand."
+        "WAITING_EVENT": "The ERP's event for this row has not reached the shop yet. The pull brings it and the next match settles this; nothing is typed by hand.",
+        "WAITING_HELD": "The ERP corrected a payment of this day and that correction has not reached the shop yet, so this payment was not taken from the ERP's statement (it could be part of it). Once the correction comes, the next check takes it and the match settles this; nothing is typed by hand.",
+        "WAITING_GUESS": "This payment was paired with an ERP row by its amount only (no ERP number, no reference): it may be another payment whose event is late. It waits for the ERP's events and the next match; nothing is typed by hand."
       },
       "billedAtMissing": "The shipment's answer had no bill date (never guessed). It is filled from the ERP's order; or \"Put right\" books the bill from the ERP's row, once."
     },

@@ -5,7 +5,8 @@
 //   (setting `books.close.requireMatched`, on) and its fixed costs are in. Otherwise only with the owner's override — a
 //   reason (at least `books.adjust.reasonMinLength` letters) and the PIN; the override is kept on the close
 //   (`override`, `overrideReason`, `pinVerified`) and every difference left in the month is marked OVERRIDDEN, so every
-//   report of that month can say so.
+//   report of that month can say so. Money review: never on a stale day close — anything dated in the month that moved
+//   after its day's close is RUN_MATCH_FIRST (`details` = that day), override or not.
 // - Re-opening a month (PIN and reason) writes a new version that names the version it re-opens; its OVERRIDDEN
 //   differences are open again. A closed row is never edited (append-only, hash-chained per link).
 // - A financial YEAR (setting `books.fiscalYear.startMonth`) is signed off with the PIN once it has ended and every month
@@ -22,7 +23,7 @@ import type { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Who } from './context';
 import { BooksError } from './books-errors';
-import { booksStart, lockBooksLink, writePeriodClose } from './books-match';
+import { booksStart, lockBooksLink, movedSinceClose, writePeriodClose } from './books-match';
 import { addDay, allowBooks, booksLinkFor, dateOfDay, dayText, storeBooks, storeErpLink, type BooksLink } from './erp-account';
 import { storeDate } from './erp-events-pull';
 import { isV6 } from './erp-model';
@@ -178,6 +179,12 @@ export async function closeMonth(deps: InventoryDeps, who: Who, input: CloseMont
     const first = await booksStart(tx, link);
     const from = first && first > start ? first : start;
     if (!first || from > end) throw new BooksError('NOTHING_TO_CLOSE', 'no day of the books is in this month', [d.month]);
+    // Money review: a day close is stale when anything dated on that day moved after it (an entry booked later, a "paid
+    // to ERP" record written later, the fixed costs or the summary entered later; round 2: after the read of the run
+    // that wrote it, and a pipeline move or return list of the day too). Its result says nothing about the books as
+    // they are now, so the month is refused until the match has run again — the owner's override included.
+    const stale = await movedSinceClose(tx, link, end, from);
+    if (stale) throw new BooksError('RUN_MATCH_FIRST', `the books of ${stale} moved since that day was closed; run the match first`, [stale]);
     const days = await dayStates(tx, link, from, end);
     const unmatched = days.filter((x) => !x.matched).map((x) => x.date);
     if (requireMatched && unmatched.length && !override) throw new BooksError('NOT_MATCHED', 'a month closes only when every day matched', unmatched);

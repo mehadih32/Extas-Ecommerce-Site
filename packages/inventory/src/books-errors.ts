@@ -24,7 +24,9 @@ export type BooksErrorCode =
   /** No day of the books falls in that month (or year): there is nothing to close. */
   | 'NOTHING_TO_CLOSE'
   /** qa-gate: a run of the books is going on for this store (one at a time); try again in a few minutes. */
-  | 'BUSY';
+  | 'BUSY'
+  /** Money review: a day of the month moved after its close (`details` names it); the match runs first, then the close. */
+  | 'RUN_MATCH_FIRST';
 
 export class BooksError extends Error {
   readonly code: BooksErrorCode;
@@ -52,6 +54,7 @@ export class BooksError extends Error {
       case 'MONTH_NOT_ENDED':
       case 'NOTHING_TO_CLOSE':
       case 'BUSY':
+      case 'RUN_MATCH_FIRST':
         return 409;
       default:
         return 400;
