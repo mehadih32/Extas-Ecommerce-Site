@@ -61,6 +61,7 @@ import { invoiceSettings } from './registry-invoice';
 import { supportSettings } from './registry-support';
 import { erpOrdersV6Settings } from './registry-erp-orders-v6';
 import { booksSettings } from './registry-books';
+import { returnsV6Settings } from './registry-returns-v6';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1250,6 +1251,8 @@ export const registry = {
   ...erpOrdersV6Settings,
   // ---- CN-028 · PR 615, 616 (CN-029 Phase 1) · the ERP account ledger, the payments to the ERP and the books match (registry-books.ts, version 68). ----
   ...booksSettings,
+  // ---- CN-028 · PR 612–614 (CN-029 Phase 1) · returns and exchanges on the ERP model: the old shop QC, restock, write-off and credit-due paths as per-store switches (on while v5; never run in v6), the owner's check window and the pieces kept for regular orders (registry-returns-v6.ts, version 67). ----
+  ...returnsV6Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

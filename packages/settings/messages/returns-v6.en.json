@@ -1,0 +1,42 @@
+{
+  "returns": {
+    "legacy": {
+      "shopQc": {
+        "label": "Shop's own quality check of returns",
+        "help": "On: staff check each returned piece at the shop (sellable or not). Only while the store uses the old ERP model; with the new model the owner checks every piece in the ERP and this never runs. Turned off at the switch-over."
+      },
+      "restock": {
+        "label": "Send sellable returns back to ERP stock",
+        "help": "On: a piece the shop marked sellable goes back to the ERP as a return. Only on the old ERP model; turned off at the switch-over."
+      },
+      "writeOff": {
+        "label": "Book unsellable returns as the shop's loss",
+        "help": "On: a piece the shop marked not sellable is booked as a return loss at its cost. Only on the old ERP model; with the new model a declined piece is the loss the ERP reports. Turned off at the switch-over."
+      },
+      "creditDue": {
+        "label": "Note a credit when the exchange piece is cheaper",
+        "help": "On: when the new piece costs less, the difference is noted as due to the customer after the check. Only on the old ERP model: with the new model there are no refunds after delivery. Turned off at the switch-over."
+      }
+    },
+    "erpCheck": {
+      "days": {
+        "label": "Owner checks returns within (days)",
+        "help": "How many days the owner has to check a returned piece in the ERP, counted from the courier's hand-back date: 7, 10 or 15. The ERP keeps this number; the shop shows the countdown with it."
+      }
+    },
+    "compare": {
+      "runAt": {
+        "label": "Nightly compare with the ERP at",
+        "help": "Every night at this time the Returns section is compared with the ERP's own counts for yesterday. A difference is fixed by pulling from the ERP again, never by editing a number."
+      }
+    }
+  },
+  "exchange": {
+    "erp": {
+      "keepForOrders": {
+        "label": "Pieces kept for regular orders",
+        "help": "Regular orders come first: an exchange waits when it would leave fewer than this many pieces of the new size free in the ERP. 1 means an exchange never takes the last piece."
+      }
+    }
+  }
+}

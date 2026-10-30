@@ -87,6 +87,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/returns/qc', perm: 'returns.qc', keys: ['ordersReturnsQc'] },
           // PR 191: refused parcels and the refused-parcel list a person decides
           { href: '/admin/orders/returns/refused', perm: 'returns.view', keys: ['ordersReturnsRefused'] },
+          // CN-028 · PR 612: the hand-back desk (ERP contract v6) — the courier's returned parcels counted and sent to the ERP
+          { href: '/admin/orders/returns/handback', perm: 'returns.handback', keys: ['ordersReturnsHandback'] },
         ],
       },
     ],

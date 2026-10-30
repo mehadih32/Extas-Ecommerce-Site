@@ -332,7 +332,10 @@ export function inventoryOf(deps: OrdersDeps): InventoryDeps {
  * D6 — the confirmed order goes to the ERP (an outbox row, sent by the relay; the practice ERP keeps it waiting).
  * PR 127: an order whose lines changed after it was sent goes again as `revision` 1, 2, … (its own idempotency key).
  */
-export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder, revision?: number): Promise<string> {
+export async function queueErpOrder(deps: OrdersDeps, tx: Tx, o: LockedOrder, revision?: number): Promise<string | null> {
+  // CN-028 · PR 614: an exchange order on ERP contract v6 went to the ERP when it was approved (`POST /orders` with
+  // `exchange`, exchange-v6.ts); confirming it never sends it again as a sale.
+  if (await tx.erpOrder.findFirst({ where: { storeId: o.storeId, orderId: o.id, exchangeOfId: { not: null } }, select: { id: true } })) return null;
   const items = await tx.orderItem.findMany({
     where: { storeId: o.storeId, orderId: o.id, status: 'ACTIVE' },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],

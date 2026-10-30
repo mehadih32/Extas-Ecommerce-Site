@@ -16,6 +16,7 @@
 // (`refundDueMinor`, on the timeline); the refund REQUEST a person approves comes with S07's refunds (follow-up 441).
 // Nothing changes a price, a discount or COD, and nobody is blocked (CLAUDE.md rule 6).
 import { z } from 'zod';
+import { isV6 } from '@extas/inventory';
 import { allow, nowOf, parse, setting, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
 import { OPEN_EXCHANGE, paidPerPiece } from './exchange';
@@ -57,7 +58,10 @@ export function returnClosedWhy(rules: Pick<ReturnRules, 'afterDelivery' | 'ourF
 }
 
 export async function returnRulesFor(deps: OrdersDeps, storeId: number): Promise<ReturnRules> {
-  const [afterDelivery, handling, exchangeHours] = await Promise.all([setting(deps, storeId, 'policy.returns.afterDelivery'), setting(deps, storeId, 'orders.returns.handling'), setting(deps, storeId, 'policy.exchange.windowHours')]);
+  const [afterDelivery, handling, exchangeHours, v6] = await Promise.all([setting(deps, storeId, 'policy.returns.afterDelivery'), setting(deps, storeId, 'orders.returns.handling'), setting(deps, storeId, 'policy.exchange.windowHours'), isV6(deps, storeId)]);
+  // CN-028 · PR 612–614: on ERP contract v6 there are no returns or refunds after delivery, whatever the old switches
+  // say; the customer's way back is an exchange within its window (exchange-v6.ts). Closed as POLICY.
+  if (v6) return { afterDelivery: false, ourFaultReturns: false, windowHours: handling.windowHours ?? exchangeHours };
   return { afterDelivery, ourFaultReturns: handling.ourFaultReturns, windowHours: handling.windowHours ?? exchangeHours };
 }
 

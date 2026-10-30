@@ -13,11 +13,17 @@
 //
 // Never here: moving money or a refund (a difference in the customer's favour is only noted as due; the wallet-credit
 // request comes with the wallet, follow-up 440), changing a price, a discount or COD, or blocking anyone.
+//
+// CN-028 · PR 612 (CN-029 Phase 1): this is the v5 path. While the store speaks ERP contract v6 the shop never receives
+// or checks a returned piece itself (ERP_MODEL: the hand-back desk sends the return list and the owner decides every
+// piece in the ERP); in v5 each part is a switch (`returns.legacy.*`, on by default; legacy.ts): the QC itself, the
+// restock document, the write-off cost and the credit noted as due.
 import { z } from 'zod';
 import { AuthError, can } from '@extas/auth';
 import { enqueueReturnPush } from '@extas/inventory';
 import { nowOf, parse, setting, TX, type Db, type OrdersDeps, type OrdersPermission, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
+import { legacyPaths, requireLegacy } from './legacy';
 import { auditRow, eventRow, inventoryOf, staffBy, type By } from './service';
 
 export const RETURN_STATUSES = ['EXPECTED', 'RECEIVED', 'QC_DONE', 'CLOSED'] as const;
@@ -83,6 +89,8 @@ const noteOnly = z.object({ note: z.string().trim().max(1_000).optional() }).str
 /** The parcel is at the shop (EXPECTED → RECEIVED). Needs `returns.qc`. */
 export async function receiveReturn(deps: OrdersDeps, who: Who, id: string, input: unknown = {}, opts: ReturnStepOptions = {}): Promise<{ returnId: string; status: string }> {
   await allowOne(deps, who, ['returns.qc']);
+  const paths = await legacyPaths(deps, who.storeId);
+  if (paths.model === 'v6') requireLegacy(paths, 'shopQc', 'receiving a parcel at the shop');
   const d = parse(noteOnly, input, 'receipt');
   return onReturn(deps, who, id, opts, async (tx, r, now) => {
     if (r.status !== 'EXPECTED') throw new OrdersError('RETURN_STATE', 'only an expected parcel is received', ['status'], { status: r.status });
@@ -144,6 +152,8 @@ const sameSku = (a: string | null | undefined, b: string) => !!a && a.trim().toL
  */
 export async function qcReturn(deps: OrdersDeps, who: Who, id: string, input: unknown, opts: ReturnStepOptions = {}): Promise<QcResult> {
   await allowOne(deps, who, ['returns.qc']);
+  const paths = await legacyPaths(deps, who.storeId);
+  requireLegacy(paths, 'shopQc', "the shop's own check of a returned parcel");
   const d = parse(qcInput, input, 'QC');
   const [qc, lossReasons] = await Promise.all([setting(deps, who.storeId, 'orders.returns.qc'), setting(deps, who.storeId, 'orders.returns.lossReasons')]);
   const reasonKeys = new Set(lossReasons.map((r) => r.key));
@@ -184,16 +194,18 @@ export async function qcReturn(deps: OrdersDeps, who: Who, id: string, input: un
     const o = await tx.order.findUniqueOrThrow({ where: { id: r.orderId }, select: { number: true } });
     const store = await tx.store.findUniqueOrThrow({ where: { id: r.storeId }, select: { currency: true } });
     const sellable = plan.filter((p) => p.l.disposition === 'SELLABLE');
-    const push = sellable.length
+    // `returns.legacy.restock` off: the sellable pieces are recorded, but no return document goes to the ERP (NO_ERP).
+    const push = sellable.length && paths.restock
       ? await enqueueReturnPush(inv, { storeId: r.storeId, returnId: r.id, orderId: r.orderId, externalOrderId: o.number, reason: (r.reasonCode ?? r.kind).slice(0, 64), items: sellable.map((p) => ({ sku: p.v.sku, quantity: p.item.quantity })), version: r.version }, { tx })
       : null;
     // PR 607: from the switch date (`erp.model` v6) POST /returns is retired: the pieces are not sent (RETIRED).
-    const sellState = push?.status === 'SKIPPED_NO_ERP' || push?.status === 'RETIRED' ? 'NO_ERP' : 'ERP_PENDING';
+    const sellState = !push || push.status === 'SKIPPED_NO_ERP' || push.status === 'RETIRED' ? 'NO_ERP' : 'ERP_PENDING';
 
     const out: QcResult['items'] = [];
     for (const p of plan) {
       let lossCostEntryId: string | null = null;
-      if (p.l.disposition === 'UNSELLABLE' && p.cost !== null && p.cost !== undefined) {
+      // `returns.legacy.writeOff` off: the reason is kept, but no return-loss cost is booked by the shop.
+      if (p.l.disposition === 'UNSELLABLE' && paths.writeOff && p.cost !== null && p.cost !== undefined) {
         const ce = await tx.costEntry.create({
           data: { storeId: r.storeId, service: 'RETURN_LOSS', module: 'returns', amountMinor: p.cost * p.item.quantity, currency: store.currency, refType: 'ReturnItem', refId: p.item.id, detail: p.l.lossReason ?? null, source: 'qc', occurredAt: now },
           select: { id: true },
@@ -232,7 +244,7 @@ export async function qcReturn(deps: OrdersDeps, who: Who, id: string, input: un
       await exchangeTo(tx, r.exchangeId, ['APPROVED', 'PICKUP_BOOKED', 'RECEIVED'], allGood ? 'QC_PASSED' : 'QC_FAILED');
       const ex = await tx.exchange.findUniqueOrThrow({ where: { id: r.exchangeId }, select: { status: true, walletCreditMinor: true } });
       exchangeStatus = ex.status;
-      creditDueMinor = ex.status === 'QC_PASSED' ? ex.walletCreditMinor : 0;
+      creditDueMinor = ex.status === 'QC_PASSED' && paths.creditDue ? ex.walletCreditMinor : 0;
     }
     const items = out.map((x) => ({ id: x.returnItemId, scanned: x.scannedSku, disposition: x.disposition, state: x.dispositionState }));
     return {

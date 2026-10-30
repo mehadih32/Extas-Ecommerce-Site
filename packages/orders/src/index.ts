@@ -99,3 +99,7 @@ export * from './exchange-charge';
 export * from './refused';
 export * from './invoice';
 export * from './invoice-settings';
+// CN-028 · PR 612–614 (CN-029 Phase 1): the old return paths as switches, the hand-back desk on ERP contract v6
+export * from './legacy';
+export * from './handback';
+export * from './erp-returns-run';

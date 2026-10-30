@@ -193,6 +193,16 @@ export function moneyBox(lines: readonly SwapLine[], c: ChargeFacts): MoneyBox {
   return { differenceMinor, owedMinor, creditMinor, chargeMinor, chargeState, codMinor: owedMinor + chargeMinor, coveredMinor: sum((l) => Math.min(l.oldUnitMinor, l.newUnitMinor)) };
 }
 
+/**
+ * CN-028 · PR 614 — the money box on ERP contract v6: no refunds after delivery, so a cheaper piece leaves no credit;
+ * a dearer piece is collected only when `passRise` (`exchange.passPriceRiseToCustomer`), else the shop absorbs it (the
+ * old piece covers the new one in full). The delivery charge stays as the charge rules say.
+ */
+export function v6MoneyBox(box: MoneyBox, passRise: boolean): MoneyBox {
+  const owedMinor = passRise ? box.owedMinor : 0;
+  return { ...box, creditMinor: 0, owedMinor, codMinor: owedMinor + box.chargeMinor, coveredMinor: passRise ? box.coveredMinor : box.coveredMinor + box.owedMinor };
+}
+
 /** What one swapped piece puts on the new order: its price, what the old piece covers, and the rest (owed). */
 export function lineOnNewOrder(l: SwapLine, ourMistake: boolean): { unitPriceMinor: number; discountMinor: number; lineTotalMinor: number } {
   const gross = l.newUnitMinor * l.quantity;

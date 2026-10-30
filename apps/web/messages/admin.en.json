@@ -48,6 +48,7 @@
     "ordersReturns": "Exchanges",
     "ordersReturnsQc": "Receive & QC",
     "ordersReturnsRefused": "Refused parcels",
+    "ordersReturnsHandback": "Hand-back desk",
     "riskRules": "Risk rules",
     "checkoutAdvance": "Checkout advance",
     "packingPack": "Pack",

@@ -28,5 +28,5 @@
 .adm2 .rt-crumb{display:inline-flex;align-items:center;gap:4px}
 .adm2 .rt-seg{display:flex;width:100%}
 .adm2 .rt-seg button{flex:1;justify-content:center}
-.adm2 .rt-check{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4}
-.adm2 .rt-check input{margin-top:2px;width:18px;height:18px;flex:none}
+.adm2 .rt-check{display:flex;gap:8px;align-items:center;min-height:44px;font-size:13px;line-height:1.4}
+.adm2 .rt-check input{width:18px;height:18px;flex:none}

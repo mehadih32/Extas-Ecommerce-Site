@@ -222,6 +222,8 @@ export const APPEND_ONLY_LOCKED = [
   'ErpFixedCostMonth',
   'ErpBooksSend',
   'ConversationEvent',
+  // CN-028 · PR 613 (migration 0054_returns_v6): each compare of the Returns section with the ERP's returns summary.
+  'ErpReturnsCompare',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

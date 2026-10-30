@@ -85,7 +85,26 @@ export type OrdersErrorCode =
   /** PR 189: these pieces are already coming back (another return or an open exchange) (`data.left`). */
   | 'RETURN_LIMIT'
   /** PR 407: the owner has the invoice switched off (`account.invoice.enabled`), so there is none to print. */
-  | 'INVOICE_OFF';
+  | 'INVOICE_OFF'
+  /** PR 612–614 (CN-028): an old shop-side path that never runs while the store speaks ERP contract v6 (the owner
+   * decides every returned piece in the ERP; no refunds after delivery), or a v6 step on a store still on v5
+   * (`data.model`). */
+  | 'ERP_MODEL'
+  /** PR 612–614: an old shop-side path its switch has turned off (`data.setting`: `returns.legacy.*`). */
+  | 'LEGACY_OFF'
+  /** PR 612–614: the store's ERP refused the call (`data.erpCode`: NOT_OUR_ORDER, LINE_NOT_DELIVERED, EXCHANGE_OPEN, …). */
+  | 'ERP_REFUSED'
+  /** PR 612–614: the store's ERP cannot be reached now, or is not set up (`data.reason`); nothing was changed. */
+  | 'ERP_UNAVAILABLE'
+  /** PR 614: not enough of the new piece is free in the ERP now; regular orders come first, so the exchange waits
+   * (`data.shortSkus`). */
+  | 'EXCHANGE_WAITING'
+  /** PR 612: the return list is not in a state for this step (`data.status`). */
+  | 'HANDBACK_STATE'
+  /** PR 612: the parcel is not expected back (`data.why`: NO_RETURN_OPEN, ALREADY_ON_LIST, NOT_FOUND); take it with a note. */
+  | 'NOT_EXPECTED'
+  /** PR 612, 614: the order was never sent to the store's ERP on contract v6 (`data.orderNumber`). */
+  | 'NOT_IN_ERP';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -142,7 +161,15 @@ export class OrdersError extends Error {
       case 'RETURN_CLOSED':
       case 'INVOICE_OFF':
       case 'RETURN_LIMIT':
+      case 'ERP_MODEL':
+      case 'LEGACY_OFF':
+      case 'ERP_REFUSED':
+      case 'EXCHANGE_WAITING':
+      case 'NOT_EXPECTED':
+      case 'NOT_IN_ERP':
         return 422;
+      case 'ERP_UNAVAILABLE':
+        return 503;
       default:
         return 409;
     }
