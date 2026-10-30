@@ -5,8 +5,10 @@
 // broken tie), and the daily summaries the shop sent the ERP with how each was taken (accepted, waiting, trying again,
 // refused). Before the store's switch-over to contract v6 the page says the books start then. Read-only: nothing here
 // moves money. Needs `books.read`. Money → Books and its match, differences and closes pages are PR 615/616's.
+// PR 618: a month without fixed costs links to Money → Costs.
 // Words: messages/admin-books-daily.*.json (`booksDaily.*`).
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as inv from '@extas/inventory';
@@ -109,6 +111,11 @@ export default async function BooksDailyPage() {
                 <li key={`${x.kind}-${i}`} data-testid="bd-need" data-kind={x.kind}>
                   <ShellIcon name="info" size={15} />
                   <span>{needText(x)}</span>
+                  {x.kind === 'FIXED_COSTS_MISSING' ? (
+                    <Link className="bk-act" href="/admin/money/costs" data-testid="bd-fixed-link">
+                      {b('fixedLink')}
+                    </Link>
+                  ) : null}
                 </li>
               ))}
             </ul>

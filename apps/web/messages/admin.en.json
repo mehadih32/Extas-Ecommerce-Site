@@ -62,7 +62,8 @@
     "supportInbox": "Inbox",
     "supportConversation": "Conversation",
     "supportSettings": "Support settings",
-    "booksDaily": "Daily summary"
+    "booksDaily": "Daily summary",
+    "moneyCosts": "Costs"
   },
   "login": {
     "metaTitle": "Admin sign-in",

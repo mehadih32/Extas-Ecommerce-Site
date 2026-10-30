@@ -59,6 +59,7 @@ export * from './guard';
 export * from './books-rules';
 export * from './books-summary';
 export * from './books-status';
+export * from './books-costs';
 export * from './sync';
 export * from './locations';
 export * from './stock';

@@ -217,6 +217,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
   },
   // CN-028 · PR 615, 616: Books — Retail's ERP account, the books match, the differences and the closes.
   // CN-028 · PR 617 (CN-029): Money → Daily summary — the Books status card and the daily summaries sent to the ERP.
+  // PR 618: Money → Costs — the month's fixed costs and the daily cost lines.
   {
     id: 'money',
     icon: 'wallet',
@@ -229,6 +230,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'differences', pages: [{ href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] }] },
       { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },
       { id: 'daily', pages: [{ href: '/admin/money/books/daily', perm: 'books.read', keys: ['booksDaily'] }] },
+      { id: 'costs', pages: [{ href: '/admin/money/costs', perm: 'books.read', keys: ['moneyCosts'] }] },
     ],
   },
   {

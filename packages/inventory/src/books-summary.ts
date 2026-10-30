@@ -26,6 +26,9 @@
 // - the check (`erp.summary.checkMinutes`): the open days built again (late facts), then `GET /daily-summaries` over
 //   the last `erp.summary.gapDays`: a day the ERP lacks or holds in another version is sent again at once. This is the
 //   catch-up when a `summary.missing` webhook is lost (follow-up 490).
+// PR 618: the same tick sends each month's latest fixed-cost version (`PUT /fixed-costs/{month}`, same waits, until
+// accepted), and the same check compares `GET /fixed-costs` and sends a month the ERP lacks or holds otherwise again.
+// The owner sets the months and the cost lines on Money → Costs (books-costs.ts).
 //
 // CN-029 §16: everything is per store and per ERP link. A store's summaries are built from that store's rows only and
 // go out with that store's own key (resolveErp → the store's own connection); store A's job never reads or sends store
@@ -42,7 +45,27 @@ import { v6LinkFor } from './erp-link';
 import { lockLink } from './erp-account';
 import { behaviourOf, resolveErp } from './guard';
 import { retryPolicy } from './sync';
-import { addDays, assembleSummary, dayOpen, daysFrom, emptyDay, isRefusal, minorPerUnit, nextTryAt, sendTimeCome, stableJson, storedVerdict, type AssembledSummary, type DayFigures, type SummaryMinor } from './books-rules';
+import {
+  addDays,
+  assembleSummary,
+  dayOpen,
+  daysFrom,
+  emptyDay,
+  fixedCostsBody,
+  fixedCostsKey,
+  fixedCostsSame,
+  fixedCostsTotal,
+  isRefusal,
+  minorPerUnit,
+  nextTryAt,
+  sendTimeCome,
+  stableJson,
+  storedVerdict,
+  type AssembledSummary,
+  type DayFigures,
+  type FixedCostsMinor,
+  type SummaryMinor,
+} from './books-rules';
 
 const DAY_MS = 86_400_000;
 const dayText = (d: Date) => d.toISOString().slice(0, 10);
@@ -120,16 +143,22 @@ export async function dayFigures(db: Db, q: { storeId: number; linkId: string; d
       LEFT JOIN "ErpAccountEntry" r ON r."linkId" = e."linkId" AND r."eventId" = e."reverses"
       WHERE e."linkId" = ${linkId}::uuid AND e."storeId" = ${storeId} AND e."businessDate" = ${day}::date
         AND e."kind"::text IN ('EXCHANGE_EXTRA', 'EXCHANGE_ADJUSTMENT', 'EXCHANGE_BILL', 'EXCHANGE_CREDIT', 'RETURN_CREDIT', 'REVERSAL')`,
+    // A cost line's figure is known when it has an entry that stands: a reversal (PR 618) and the entry it reversed
+    // still add up (to 0), but neither counts as a figure, so reversing a line's only entry makes it unknown again
+    // (qa-gate) instead of a 0 sent as if it were known.
     db.$queryRaw<{ line: string; minor: bigint; entries: bigint; foreign: bigint }[]>`
       SELECT c."line", COALESCE(sum(c."minor") FILTER (WHERE c."currency" = ${currency}), 0)::bigint AS "minor",
-             count(*) FILTER (WHERE c."currency" = ${currency})::bigint AS "entries", count(*) FILTER (WHERE c."currency" <> ${currency})::bigint AS "foreign"
+             count(*) FILTER (WHERE c."currency" = ${currency} AND NOT c."undone")::bigint AS "entries",
+             count(*) FILTER (WHERE c."currency" <> ${currency} AND NOT c."undone")::bigint AS "foreign"
       FROM (
-        SELECT e."summaryLine"::text AS "line", e."amountMinor" AS "minor", e."currency"
+        SELECT e."summaryLine"::text AS "line", e."amountMinor" AS "minor", e."currency",
+               (COALESCE(e."refType", '') = 'CostEntry'
+                OR EXISTS (SELECT 1 FROM "CostEntry" r WHERE r."storeId" = e."storeId" AND r."refType" = 'CostEntry' AND r."refId" = e."id"::text)) AS "undone"
         FROM "CostEntry" e
         WHERE e."storeId" = ${storeId} AND e."summaryLine" IS NOT NULL
           AND COALESCE(e."costDate", (e."occurredAt" AT TIME ZONE ${timeZone})::date) = ${day}::date
         UNION ALL
-        SELECT h."summaryLine"::text, x."amountMinor", ${currency}
+        SELECT h."summaryLine"::text, x."amountMinor", ${currency}, false
         FROM "RetailExpense" x JOIN "ExpenseHead" h ON h."id" = x."headId" AND h."storeId" = ${storeId}
         WHERE x."storeId" = ${storeId} AND x."archivedAt" IS NULL AND h."summaryLine" IS NOT NULL AND x."date" = ${day}::date
       ) c
@@ -451,6 +480,8 @@ export interface SummaryTickResult {
   waiting: number;
   /** Versions the ERP refused (a 4xx): left for a person, a new version or the ERP asking again. */
   refused: number;
+  /** PR 618: the months' fixed costs sent in the same tick. */
+  fixed: FixedSendResult;
 }
 
 /**
@@ -458,7 +489,7 @@ export interface SummaryTickResult {
  * started that has no version, the days the ERP asked for, and every version not accepted yet whose wait is over.
  */
 export async function summaryTick(deps: InventoryDeps, storeId: number): Promise<SummaryTickResult> {
-  const out: SummaryTickResult = { linked: false, built: 0, sent: 0, accepted: 0, failed: 0, waiting: 0, refused: 0 };
+  const out: SummaryTickResult = { linked: false, built: 0, sent: 0, accepted: 0, failed: 0, waiting: 0, refused: 0, fixed: { sent: 0, accepted: 0, failed: 0, waiting: 0, refused: 0 } };
   const t = await booksTarget(deps, storeId);
   if (!t) return out;
   out.linked = true;
@@ -502,6 +533,7 @@ export async function summaryTick(deps: InventoryDeps, storeId: number): Promise
     if (r.accepted) out.accepted++;
     else out.failed++;
   }
+  out.fixed = await sendDueFixedCosts(deps, t, waits);
   return out;
 }
 
@@ -512,6 +544,8 @@ export interface SummaryCheckResult {
   resent: number;
   stale: string[];
   missing: string[];
+  /** PR 618: the months whose fixed costs the ERP lacked or held otherwise, sent again (check E). */
+  fixedResent: string[];
 }
 
 /**
@@ -520,7 +554,7 @@ export interface SummaryCheckResult {
  * version than the one it accepted is sent again at once (check D; the catch-up for a lost `summary.missing`).
  */
 export async function summaryCheck(deps: InventoryDeps, storeId: number): Promise<SummaryCheckResult> {
-  const out: SummaryCheckResult = { linked: false, rebuilt: 0, checked: 0, resent: 0, stale: [], missing: [] };
+  const out: SummaryCheckResult = { linked: false, rebuilt: 0, checked: 0, resent: 0, stale: [], missing: [], fixedResent: [] };
   const t = await booksTarget(deps, storeId);
   if (!t) return out;
   out.linked = true;
@@ -534,6 +568,7 @@ export async function summaryCheck(deps: InventoryDeps, storeId: number): Promis
     if ((await recordDaySummary(deps, t, day, 'LATE_FACT')).created) out.rebuilt++;
   }
   if (!t.api?.v6) return out;
+  out.fixedResent = await checkFixedCosts(deps, t);
   const from = [t.link.startDay, addDays(today, -gapDays)].sort().at(-1)!;
   if (from > yesterday) return out;
   let stored: ErpStoredSummary[];
@@ -552,6 +587,127 @@ export async function summaryCheck(deps: InventoryDeps, storeId: number): Promis
     if (verdict === 'SAME') continue;
     (verdict === 'MISSING' ? out.missing : out.stale).push(v.date);
     if (!(await sendSummaryVersion(deps, t, v)).skipped) out.resent++;
+  }
+  return out;
+}
+
+// ---- PR 618 · the month's fixed costs to the ERP ---------------------------------------------------------------------------
+
+/** One version of a month's fixed costs (ErpFixedCostMonth, append-only), in minor units. */
+export interface FixedVersionRow {
+  id: string;
+  month: string;
+  version: number;
+  lines: FixedCostsMinor;
+  note: string | null;
+  createdAt: Date;
+}
+
+export const FIXED_SELECT = { id: true, month: true, version: true, salaryMinor: true, rentMinor: true, utilitiesMinor: true, otherMinor: true, note: true, createdAt: true } as const;
+
+export const fixedVersionOf = (r: { id: string; month: Date; version: number; salaryMinor: bigint; rentMinor: bigint; utilitiesMinor: bigint; otherMinor: bigint; note: string | null; createdAt: Date }): FixedVersionRow => ({
+  id: r.id,
+  month: dayText(r.month).slice(0, 7),
+  version: r.version,
+  lines: { salary: minorOf(r.salaryMinor), rent: minorOf(r.rentMinor), utilities: minorOf(r.utilitiesMinor), other: minorOf(r.otherMinor) },
+  note: r.note,
+  createdAt: r.createdAt,
+});
+
+/** A stored version, or null when its amounts leave the exact range (qa-gate: one bad row never stops the rest). */
+export function fixedVersionOrNull(r: Parameters<typeof fixedVersionOf>[0]): FixedVersionRow | null {
+  try {
+    const v = fixedVersionOf(r);
+    fixedCostsTotal(v.lines);
+    return v;
+  } catch (e) {
+    if (e instanceof RangeError) return null;
+    throw e;
+  }
+}
+
+/** The latest version of each month the link has fixed costs for, oldest month first; a month whose latest version is
+ * unreadable (amounts out of the exact range, written before the caps) is left out — the Costs page shows it. */
+export async function latestFixedMonths(db: Db, linkId: string): Promise<FixedVersionRow[]> {
+  const rows = await db.erpFixedCostMonth.findMany({ where: { linkId }, orderBy: [{ month: 'asc' }, { version: 'desc' }], select: FIXED_SELECT });
+  const out: FixedVersionRow[] = [];
+  let last = '';
+  for (const r of rows) {
+    const month = dayText(r.month).slice(0, 7);
+    if (month === last) continue;
+    last = month;
+    const v = fixedVersionOrNull(r);
+    if (v) out.push(v);
+  }
+  return out;
+}
+
+/** `PUT /fixed-costs/{month}` for one version, logged (ErpBooksSend kind FIXED_COSTS). */
+export function sendFixedVersion(deps: InventoryDeps, t: BooksTarget, v: FixedVersionRow, due?: (s: SendState) => boolean): Promise<SendOutcome> {
+  return pushLogged(deps, t, {
+    kind: 'FIXED_COSTS',
+    refId: v.id,
+    doc: { type: 'fixedCosts.put', month: v.month, body: fixedCostsBody(v.month, v.lines, v.note, minorPerUnit(t.currency)) },
+    key: (rounds) => fixedCostsKey(t.link.id, v.month, v.version, rounds),
+    due,
+  });
+}
+
+export interface FixedSendResult {
+  sent: number;
+  accepted: number;
+  failed: number;
+  waiting: number;
+  /** Months the ERP refused (a 4xx): left for a person or a new version. */
+  refused: number;
+}
+
+/** Every month whose latest version the ERP has not accepted yet, once its wait is over (the summary waits). */
+async function sendDueFixedCosts(deps: InventoryDeps, t: BooksTarget, waits: readonly number[]): Promise<FixedSendResult> {
+  const out: FixedSendResult = { sent: 0, accepted: 0, failed: 0, waiting: 0, refused: 0 };
+  const now = nowOf(deps);
+  const months = await latestFixedMonths(deps.db, t.link.id);
+  const states = await sendStates(deps.db, t.link.id, months.map((m) => m.id));
+  const due = (x: SendState | undefined) => sendDue(x, now, waits, null);
+  for (const m of months) {
+    const s = states.get(m.id);
+    if (s?.accepted) continue;
+    if (s?.refused) {
+      out.refused++;
+      continue;
+    }
+    if (!t.api || !due(s)) {
+      out.waiting++;
+      continue;
+    }
+    const r = await sendFixedVersion(deps, t, m, due);
+    if (r.skipped) continue;
+    out.sent++;
+    if (r.accepted) out.accepted++;
+    else out.failed++;
+  }
+  return out;
+}
+
+/** Check E's catch-up: a month the ERP lacks (`GET /fixed-costs`) or holds with other numbers is sent again at once. */
+async function checkFixedCosts(deps: InventoryDeps, t: BooksTarget): Promise<string[]> {
+  if (!t.api?.v6) return [];
+  const months = await latestFixedMonths(deps.db, t.link.id);
+  if (!months.length) return [];
+  let stored: { month: string; costs: { salary: string; rent: string; utilities: string; other: string } }[];
+  try {
+    stored = await t.api.v6.fixedCosts();
+  } catch {
+    return []; // the ERP cannot be reached now: the next check asks again
+  }
+  const theirs = new Map(stored.map((m) => [m.month, m.costs]));
+  const states = await sendStates(deps.db, t.link.id, months.map((m) => m.id));
+  const perUnit = minorPerUnit(t.currency);
+  const out: string[] = [];
+  for (const m of months) {
+    if (!states.get(m.id)?.accepted) continue; // not accepted yet: the tick's retries
+    if (fixedCostsSame(m.lines, theirs.get(m.month), perUnit)) continue;
+    if (!(await sendFixedVersion(deps, t, m)).skipped) out.push(m.month);
   }
   return out;
 }
