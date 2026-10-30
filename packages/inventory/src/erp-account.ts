@@ -10,7 +10,10 @@
 // - A correction from the ERP (`reverses`) is never an edit: a REVERSAL entry undoes the effect of the event it names
 //   (same refs, opposite amount, dated on the correction's own date) and the correction's own effect, if it has one, is a
 //   new entry keyed `<eventId>:new`. One reversal per entry (unique `reverses`). A correction whose original moved no
-//   money only adds its own effect.
+//   money only adds its own effect. Money review: when the shop already corrected the original's group by hand (PR
+//   616), the ERP's correction undoes that correction instead (`undoDrafts`), so it is never dropped.
+// - An event whose amount the books cannot read exactly (more decimals than the currency has) is refused: FAILED with
+//   BAD_PAYLOAD, shown on the health panel, never booked as 0.
 // - The business date is the ERP's own date of the event (never the day the message arrived); a bill is dated on the
 //   store's day of `billedAt`. Amounts are minor units, signed: + Retail owes more, − Retail owes less.
 // - Balance = the opening balance at the switch (counted from its day, `ErpStoreLink.openingBalanceMinor`) + every
@@ -346,12 +349,27 @@ export const effectKey = (ev: { eventId: string; reverses: string | null }): str
 
 const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 200) : null);
 
-/** What an event does to the balance on its own (the kind and the signed amount), or null when it moves no money. */
+/** An ERP event whose amount the books cannot read exactly (PR 615 money review): the event is refused, never booked. */
+export class UnreadableAmount extends Error {
+  constructor(readonly text: string) {
+    super(`the ERP sent an amount the books cannot read exactly: ${JSON.stringify(text.slice(0, 40))}`);
+    this.name = 'UnreadableAmount';
+  }
+}
+
+/**
+ * What an event does to the balance on its own (the kind and the signed amount), or null when it moves no money. The
+ * amount is read exactly, by the rule of `erpAmount` (erp-orders-v6.ts): one with more decimals than the currency has
+ * (or not a plain decimal) throws UnreadableAmount — never read as 0, never rounded, never skipped in silence.
+ */
 export function eventEffect(ev: { type: string; data: Record<string, unknown> }, digits: number): { kind: ErpAccountEntryKind; amountMinor: number } | null {
   const kind = entryKindOfEvent({ type: ev.type as never, reverses: null, data: ev.data });
   if (!kind) return null;
   const raw = kind === 'RETURN_CREDIT' ? ev.data.credit : ev.data.amount;
-  const minor = Math.abs(moneyMinor(raw == null ? null : String(raw), digits) ?? 0);
+  if (raw == null) return null;
+  const read = moneyMinor(String(raw), digits);
+  if (read == null) throw new UnreadableAmount(String(raw));
+  const minor = Math.abs(read);
   if (!minor) return null;
   return { kind, amountMinor: (ENTRY_SIGN[kind] as number) * minor };
 }
@@ -377,7 +395,8 @@ async function pendingMoneyEvents(db: Db, linkId: string, take: number): Promise
             SELECT 1 FROM "ErpEvent" o JOIN "ErpAccountEntry" a
               ON a."linkId" = o."linkId" AND a."eventId" = CASE WHEN o."reverses" IS NULL THEN o."eventId" ELSE o."eventId" || ':new' END
             WHERE o."linkId" = e."linkId" AND o."eventId" = e."reverses"
-              AND NOT EXISTS (SELECT 1 FROM "ErpAccountEntry" r WHERE r."linkId" = a."linkId" AND r."reverses" = a."eventId")
+              -- not reversed yet, or reversed by a shop correction (PR 616), which this correction then undoes
+              AND NOT EXISTS (SELECT 1 FROM "ErpAccountEntry" r WHERE r."linkId" = a."linkId" AND r."reverses" = a."eventId" AND r."adjustmentId" IS NULL)
           )
         )
       )
@@ -403,33 +422,35 @@ export async function ingestAccountEvents(deps: InventoryDeps, link: BooksLink, 
     let wrote = 0;
     for (const id of ids) {
       const n = await deps.db.$transaction(async (tx) => {
+        // The link first (qa-gate): what is undone below is read under the lock every writer of the ledger takes.
+        await lockLink(tx, link);
         const ev = await tx.erpEvent.findUniqueOrThrow({ where: { id } });
         if (ev.linkId !== link.id || ev.storeId !== link.storeId) return 0;
         const data = ev.data && typeof ev.data === 'object' ? (ev.data as Record<string, unknown>) : {};
         const businessDate = ev.businessDate ? dayText(ev.businessDate) : storeDate(ev.occurredAt ?? ev.receivedAt, ctx.timeZone);
+        // The event's own effect first: an amount the books cannot read refuses the whole event (FAILED, BAD_PAYLOAD,
+        // shown on the health panel), so neither its reversal nor a 0 is booked.
+        let eff: ReturnType<typeof eventEffect>;
+        try {
+          eff = eventEffect({ type: ev.type, data }, ctx.digits);
+        } catch (e) {
+          if (!(e instanceof UnreadableAmount)) throw e;
+          await tx.erpEvent.update({ where: { id: ev.id }, data: { status: 'FAILED', error: `BAD_PAYLOAD: ${e.message}`.slice(0, 500) } });
+          return 0;
+        }
         const drafts: EntryDraft[] = [];
         if (ev.reverses) {
           const orig = await tx.erpEvent.findUnique({ where: { linkId_eventId: { linkId: link.id, eventId: ev.reverses } }, select: { eventId: true, reverses: true } });
           const origEntry = orig ? await tx.erpAccountEntry.findUnique({ where: { linkId_eventId: { linkId: link.id, eventId: effectKey(orig) } } }) : null;
           if (origEntry) {
-            drafts.push({
-              kind: 'REVERSAL',
-              eventId: ev.eventId,
-              businessDate,
-              amountMinor: -minorOf(origEntry.amountMinor),
-              externalOrderId: origEntry.externalOrderId,
-              lineId: origEntry.lineId,
-              returnListId: origEntry.returnListId,
-              consignmentId: origEntry.consignmentId,
-              exchangeId: origEntry.exchangeId,
-              paymentRef: origEntry.paymentRef,
-              source: ev.source,
-              reverses: origEntry.eventId,
-              erpEventRowId: ev.id,
-            });
+            const undo = await undoDrafts(tx, link, origEntry, ev);
+            if (undo === 'STUCK') {
+              await tx.erpEvent.update({ where: { id: ev.id }, data: { status: 'FAILED', error: `CORRECTED_BY_HAND: the shop's own correction already took ${origEntry.eventId} out and holds nothing to undo; put the group right by hand`.slice(0, 500) } });
+              return 0;
+            }
+            drafts.push(...undo.map((u) => ({ ...u, businessDate })));
           }
         }
-        const eff = eventEffect({ type: ev.type, data }, ctx.digits);
         if (eff) {
           drafts.push({
             kind: eff.kind,
@@ -455,6 +476,39 @@ export async function ingestAccountEvents(deps: InventoryDeps, link: BooksLink, 
     if (!wrote) break;
   }
   return out;
+}
+
+/**
+ * What an ERP correction writes to undo its original's entry (PR 615 money review), its business date filled in by the
+ * caller. Normally one REVERSAL of that entry. When the shop already put the entry's group right by hand (PR 616: the
+ * correction reversed the group's entries and wrote one ADJUSTMENT with the ERP's figure for the group), the
+ * original's one reversal is taken, so the ERP's correction undoes the shop's correction instead: a REVERSAL of its
+ * ADJUSTMENT, and each other entry that correction had reversed booked again under the event's own key
+ * (`<eventId>:keep:<entry>`). Nothing is edited or deleted; the group then holds the shop's own figures for what the ERP
+ * did not cancel, and any part the ERP figures otherwise shows again as a difference of that group (put right by hand).
+ * Empty when the ERP reversed the entry already (the same correction twice); STUCK when the shop's correction left
+ * nothing to undo (it wrote no ADJUSTMENT): the event is then refused for a person.
+ */
+async function undoDrafts(tx: Tx, link: Pick<BooksLink, 'id'>, entry: AccountEntryRow, ev: { id: string; eventId: string; source: ErpEntrySource }, depth = 0): Promise<Omit<EntryDraft, 'businessDate'>[] | 'STUCK'> {
+  const refs = (e: AccountEntryRow) => ({ externalOrderId: e.externalOrderId, lineId: e.lineId, returnListId: e.returnListId, consignmentId: e.consignmentId, exchangeId: e.exchangeId, paymentRef: e.paymentRef });
+  const reversal = await tx.erpAccountEntry.findUnique({ where: { linkId_reverses: { linkId: link.id, reverses: entry.eventId } } });
+  if (!reversal) return [{ kind: 'REVERSAL', eventId: ev.eventId, amountMinor: -minorOf(entry.amountMinor), ...refs(entry), source: ev.source, reverses: entry.eventId, erpEventRowId: ev.id }];
+  if (!reversal.adjustmentId || depth > 8) return [];
+  const adjKey = entryKey.adjustment(reversal.adjustmentId);
+  const adjEntry = await tx.erpAccountEntry.findUnique({ where: { linkId_eventId: { linkId: link.id, eventId: adjKey } } });
+  if (!adjEntry) return 'STUCK';
+  const adjUndone = await tx.erpAccountEntry.findUnique({ where: { linkId_reverses: { linkId: link.id, reverses: adjKey } }, select: { id: true } });
+  if (adjUndone) {
+    // An earlier ERP correction of the same group undid the shop's correction and booked this entry again: undo that.
+    const kept = await tx.erpAccountEntry.findFirst({ where: { linkId: link.id, eventId: { endsWith: `:keep:${entry.eventId}` } }, orderBy: { seq: 'desc' } });
+    return kept ? undoDrafts(tx, link, kept, ev, depth + 1) : 'STUCK';
+  }
+  const others = await tx.erpAccountEntry.findMany({ where: { linkId: link.id, adjustmentId: reversal.adjustmentId, kind: 'REVERSAL', NOT: { reverses: entry.eventId } }, orderBy: { seq: 'asc' }, select: { reverses: true } });
+  const originals = others.length ? await tx.erpAccountEntry.findMany({ where: { linkId: link.id, eventId: { in: others.map((o) => o.reverses!) } }, orderBy: { seq: 'asc' } }) : [];
+  return [
+    { kind: 'REVERSAL', eventId: ev.eventId, amountMinor: -minorOf(adjEntry.amountMinor), ...refs(entry), source: ev.source, reverses: adjEntry.eventId, erpEventRowId: ev.id },
+    ...originals.map((o) => ({ kind: o.kind, eventId: `${ev.eventId}:keep:${o.eventId}`, amountMinor: minorOf(o.amountMinor), ...refs(o), source: ev.source, erpEventRowId: ev.id })),
+  ];
 }
 
 // ---- the switch -----------------------------------------------------------------------------------------------------------

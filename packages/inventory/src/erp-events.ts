@@ -18,7 +18,9 @@
 //   Applying twice changes nothing: a row is applied once.
 // - Each row keeps the hash of its body (`bodyHash`, the same for webhook and pull) and, by webhook, of the exact signed
 //   raw body. A repeat of an eventId with another body is never applied and never silently accepted: it is counted on
-//   the row (`conflictCount`, `conflictAt`, `conflictHash`) and shown on the health panel.
+//   the row (`conflictCount`, `conflictAt`, `conflictHash`) and shown on the health panel. One exception (PR 615 money
+//   review): a payment the account check caught up from the ERP's statement (`fromStatement`) is the same event when
+//   its real webhook comes later with the same type and amount. `applyErpEvents({ ids })` applies just those rows.
 // - What an event does is its handler (`ERP_EVENT_HANDLERS`). An event with no handler of its own is STORED: kept for
 //   the part of the shop that reads it (the Returns section, exchanges, the account ledger and the books match, PR
 //   611–617). An event that fails is tried again up to `erp.events.maxAttempts`, then FAILED (shown, never lost).
@@ -72,6 +74,27 @@ export function eventBodyHash(ev: Pick<ErpV6Event, 'eventId' | 'type' | 'occurre
   return sha256(stableJson({ eventId: ev.eventId, type: ev.type, occurredAt: ev.occurredAt ?? null, date: ev.date ?? null, reverses: ev.reverses ?? null, data: ev.data }));
 }
 
+const KNOWN_SELECT = { id: true, status: true, bodyHash: true, type: true, data: true } as const;
+
+/** The marker the account check (PR 615) puts on a payment it caught up from the ERP's statement. */
+export const FROM_STATEMENT = 'fromStatement';
+
+const fromStatement = (row: { data: Prisma.JsonValue }): boolean => !!row.data && typeof row.data === 'object' && !Array.isArray(row.data) && (row.data as Record<string, unknown>)[FROM_STATEMENT] === true;
+
+/** Two decimal amounts are the same number (700, "700" and "700.00" are one amount); never rounded. */
+function sameDecimal(a: unknown, b: unknown): boolean {
+  const norm = (v: unknown): string | null => {
+    const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(String(v ?? '').trim());
+    if (!m) return null;
+    const whole = m[2]!.replace(/^0+(?=\d)/, '');
+    const frac = (m[3] ?? '').replace(/0+$/, '');
+    const abs = frac ? `${whole}.${frac}` : whole;
+    return abs === '0' ? abs : `${m[1]}${abs}`;
+  };
+  const x = norm(a);
+  return x !== null && x === norm(b);
+}
+
 /**
  * Keeps one v6 event in the store's ledger, once. The same eventId again (webhook retry, or webhook and pull) is the
  * first row. `storeId` and `linkId` are the store whose own connection the event came through and its open link.
@@ -83,12 +106,19 @@ export async function recordErpEvent(
   const { integrationId, linkId, event: ev } = input;
   const key = { linkId_eventId: { linkId, eventId: ev.eventId } };
   const bodyHash = eventBodyHash(ev);
-  const known = async (row: { id: string; status: ErpEventStatusName; bodyHash: string }): Promise<RecordedEvent> => {
+  const known = async (row: { id: string; status: ErpEventStatusName; bodyHash: string; type: string; data: Prisma.JsonValue }): Promise<RecordedEvent> => {
     if (row.bodyHash === bodyHash) return { id: row.id, created: false, status: row.status };
+    // PR 615 (money review): a payment the account check caught up from the ERP's statement (its webhook was lost) is
+    // kept with the statement's few fields. Its real event arriving later is the same payment when the type and the
+    // amount agree: no conflict for a person to look at, nothing applied twice. Anything else is a conflict as usual.
+    if (fromStatement(row) && row.type === ev.type && !ev.reverses && sameDecimal((row.data as Record<string, unknown>).amount, ev.data.amount)) return { id: row.id, created: false, status: row.status };
+    // Round 2: the other way round — the catch-up's statement body meeting the real event already stored (the webhook
+    // first, or both at the same moment) is the same payment when the type and the amount agree: no conflict either.
+    if (fromStatement({ data: ev.data as Prisma.JsonValue }) && row.type === ev.type && sameDecimal((row.data as Record<string, unknown>).amount, ev.data.amount)) return { id: row.id, created: false, status: row.status };
     await deps.db.erpEvent.update({ where: { id: row.id }, data: { conflictCount: { increment: 1 }, conflictAt: nowOf(deps as InventoryDeps), conflictHash: bodyHash } });
     return { id: row.id, created: false, status: row.status, conflict: true };
   };
-  const found = await deps.db.erpEvent.findUnique({ where: key, select: { id: true, status: true, bodyHash: true } });
+  const found = await deps.db.erpEvent.findUnique({ where: key, select: KNOWN_SELECT });
   if (found) return known(found);
   try {
     const row = await deps.db.erpEvent.create({
@@ -114,7 +144,7 @@ export async function recordErpEvent(
     return { id: row.id, created: true, status: row.status };
   } catch (e) {
     // The same event by webhook and by pull at the same moment: the second finds the first's row.
-    if ((e as { code?: string }).code === 'P2002') return known(await deps.db.erpEvent.findUniqueOrThrow({ where: key, select: { id: true, status: true, bodyHash: true } }));
+    if ((e as { code?: string }).code === 'P2002') return known(await deps.db.erpEvent.findUniqueOrThrow({ where: key, select: KNOWN_SELECT }));
     throw e;
   }
 }
@@ -328,7 +358,7 @@ interface ApplyRules {
 }
 
 /** Applies the stored events still waiting, in the ERP's order. Safe to run twice and in parallel with a webhook. */
-export async function applyErpEvents(deps: InventoryDeps, opts: { limit?: number } = {}): Promise<ApplyEventsResult> {
+export async function applyErpEvents(deps: InventoryDeps, opts: { limit?: number; ids?: readonly string[] } = {}): Promise<ApplyEventsResult> {
   const out: ApplyEventsResult = { seen: 0, applied: 0, stored: 0, ignored: 0, waiting: 0, reversed: 0, retrying: 0, failed: 0 };
   const [batch, maxAttempts, maxChain, waitHours] = await Promise.all([
     setting(deps, null, 'erp.events.applyBatch'),
@@ -347,7 +377,9 @@ export async function applyErpEvents(deps: InventoryDeps, opts: { limit?: number
   out.failed += expired.count;
   // New events first, in the ERP's order; they are read apart from the waiting corrections, so those never block them.
   const order = [{ occurredAt: { sort: 'asc' as const, nulls: 'last' as const } }, { receivedAt: 'asc' as const }, { id: 'asc' as const }];
-  const fresh = await deps.db.erpEvent.findMany({ where: { status: 'RECEIVED' }, orderBy: order, take, select: { id: true } });
+  // `ids` (PR 615, the account check's caught-up payments): only those rows, and the corrections waiting for them.
+  const only = opts.ids ? [...opts.ids] : null;
+  const fresh = await deps.db.erpEvent.findMany({ where: { status: 'RECEIVED', ...(only ? { id: { in: only } } : {}) }, orderBy: order, take, select: { id: true } });
   for (const r of fresh) await applyOne(deps, r.id, out, rules, 0);
   // Then the waiting corrections whose original is in now (and has not failed), chosen in the query itself, so a ready
   // one is never stuck behind more waiting ones than a batch. One just set waiting by this run is not counted twice.
@@ -356,6 +388,7 @@ export async function applyErpEvents(deps: InventoryDeps, opts: { limit?: number
     SELECT w."id" FROM "ErpEvent" w
     JOIN "ErpEvent" o ON o."linkId" = w."linkId" AND o."eventId" = w."reverses"
     WHERE w."status" = 'WAITING_ORIGINAL' AND o."status" <> 'FAILED' AND w."id" <> ALL(${done}::uuid[])
+      AND (${only === null} OR o."id" = ANY(${only ?? []}::uuid[]))
     ORDER BY w."occurredAt" ASC NULLS LAST, w."receivedAt" ASC, w."id" ASC
     LIMIT ${take}`;
   for (const w of ready) await applyOne(deps, w.id, out, rules, 0);
