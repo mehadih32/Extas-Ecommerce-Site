@@ -17,7 +17,9 @@ runs:
     - uses: ./.github/actions/pnpm-install
 
     # What a deploy's migrate step runs, then the sample data (the sample store becomes the mother store on this empty
-    # database).
+    # database). qa-gate I1 (PR 621): then one more sample store that speaks ERP contract v6 (store 2: its practice ERP,
+    # sample books, an adjustable difference, the account hold), so the device gate measures the v6 books and the ERP
+    # forms opened in place (device-gate.json `signedIn.opened`). CI only; staging never runs it.
     - name: Sample database
       shell: bash
       run: |
@@ -28,6 +30,7 @@ runs:
         pnpm --filter @extas/seed sample
         pnpm --filter @extas/rules sample
         pnpm --filter @extas/combos sample
+        pnpm --filter @extas/inventory sample:v6
 
     # A throwaway owner with a generated first password; the device gate changes it at its first sign-in.
     - name: The gate's owner

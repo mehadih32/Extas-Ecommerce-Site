@@ -16,9 +16,13 @@
 // after a size is chosen) and BUY-BELOW-FOLD (desktop: the buy buttons above the fold), device-gate.json `firstScreen`.
 // PR 17 (CN-023): --shard=k/n checks only every n-th size (from the k-th), so CI runs the gate on n runners at once;
 // together the shards check every size and page, each with the same rules.
+// qa-gate I1 (PR 621): signed in, admin forms that open in place are measured open (device-gate.json `signedIn.opened`),
+// once per admin language (`langs`, set with the admin's own language cookie `signedIn.langCookie`), on the CI-only v6
+// sample store (packages/inventory sample:v6). --opened-only measures only those (a quick local run).
 //   node tools/device-gate.mjs [--base=http://127.0.0.1:3000] [--group=phones|tablets|desktop|all] [--shard=k/n]
 //                              [--out=device-gate-report] [--concurrency=8] [--urls=/a,/b (instead of lighthouserc)]
 //                              [--email=… --password-file=… (or DEVICE_GATE_EMAIL / DEVICE_GATE_PASSWORD_FILE)]
+//                              [--opened-only (signed in: only the forms opened in place)]
 // Needs the `playwright` package (CI installs it outside the workspace and sets NODE_PATH) and a running app.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -262,6 +266,31 @@ export function openedPlan(base, opened) {
   });
 }
 
+/**
+ * qa-gate I1 (PR 621) — admin forms that open in place (the Books "Put right" panel, a note, a payment), measured open:
+ * device-gate.json `signedIn.opened`. Each path is opened signed in, `clicks` are pressed in order (a missing one fails
+ * as CONTROL-MISSING) and `expect` must then be there; `langs` measures it once per admin language (the cookie of
+ * `langCookieOf`), `groups` / `maxWidth` limit the sizes. `?gate=opened-<lang>` keeps each language's result apart.
+ */
+export function signedOpenedPlan(base, opened) {
+  return [opened ?? []].flat().flatMap((o) => {
+    if (!o?.clicks?.length) return [];
+    return (o.paths ?? []).flatMap((p) =>
+      (o.langs?.length ? o.langs : [null]).map((lang) => {
+        const u = new URL(p, base);
+        u.searchParams.set('gate', lang ? `opened-${lang}` : 'opened');
+        return { url: u.toString(), signedOut: false, expect: [...(o.expect ?? [])], clicks: [...o.clicks], lang, ...(o.groups ? { groups: [...o.groups] } : {}), ...(o.maxWidth ? { maxWidth: o.maxWidth } : {}) };
+      }),
+    );
+  });
+}
+
+/** The admin's own language cookie (device-gate.json `signedIn.langCookie`) for one page's language; null: none. */
+export function langCookieOf(cookie, base, lang) {
+  if (!lang || !cookie?.name) return null;
+  return { name: cookie.name, value: lang, domain: new URL(base).hostname, path: cookie.path ?? '/', sameSite: 'Lax' };
+}
+
 /** The path and query a result is reported under. */
 const shown = (url) => {
   const u = new URL(url);
@@ -319,6 +348,9 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     hasTouch: device.touch,
     ...(opts.state ? { storageState: opts.state } : {}),
   });
+  // qa-gate I1: the page's admin language (signed in, `signedIn.opened` langs)
+  const lang = langCookieOf(rules.signedIn?.langCookie, url, opts.lang ?? null);
+  if (lang) await ctx.addCookies([lang]);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 120)));
@@ -428,6 +460,7 @@ async function main() {
   const matrix = require(join(root, 'docs/qa/device-matrix.js'));
   const devices = shardOf(deviceList(arg('group', 'all'), matrix), arg('shard', ''));
   const only = arg('urls', '');
+  const openedOnly = process.argv.includes('--opened-only');
   let urls = only ? only.split(',').map((p) => new URL(p, base).toString()) : urlList(base);
   // Signed in (follow-up 5): an account on a database seeded with the sample catalogue. The password is read from a
   // file and never printed (CI makes a throwaway owner on a throwaway database).
@@ -445,11 +478,17 @@ async function main() {
   if (email) {
     if (!passwordFile) throw new Error('--email needs --password-file (or DEVICE_GATE_PASSWORD_FILE)');
     state = await signInOnce(browser, base, { email, password: readFileSync(passwordFile, 'utf8').trim() });
-    const d = only ? { found: [], problems: [] } : await discoverPages(browser, base, state, rules.signedIn?.discover);
+    const d = only || openedOnly ? { found: [], problems: [] } : await discoverPages(browser, base, state, rules.signedIn?.discover);
     setup.push(...d.problems);
     plan = signedInPlan(base, only ? { signedOutPaths: rules.signedIn?.signedOutPaths } : rules.signedIn ?? {}, urls, d.found);
   }
   if (!only) plan.push(...filledPlan(base, rules.filled), ...openedPlan(base, rules.opened));
+  // qa-gate I1: signed in, the admin forms opened in place, once per admin language
+  if (email && !only) plan.push(...signedOpenedPlan(base, rules.signedIn?.opened));
+  if (openedOnly) {
+    if (!email) throw new Error('--opened-only measures signed-in forms: give --email and --password-file');
+    plan = signedOpenedPlan(base, rules.signedIn?.opened);
+  }
   urls = plan.map((p) => p.url);
   const jobs = devices.flatMap((d) => plan.filter((p) => (!p.groups || p.groups.includes(d.group)) && (!p.maxWidth || d.w <= p.maxWidth)).map((p) => [d, p]));
   const results = [];
@@ -457,7 +496,7 @@ async function main() {
   await Promise.all(Array.from({ length: Math.max(1, concurrency) }, async () => {
     while (next < jobs.length) {
       const [d, p] = jobs[next++];
-      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect, fill: p.fill, clicks: p.clicks }));
+      results.push(await checkOne(browser, d, p.url, rules, matrix, { state: p.signedOut ? null : state, expect: p.expect, fill: p.fill, clicks: p.clicks, lang: p.lang }));
     }
   }));
   await browser.close();

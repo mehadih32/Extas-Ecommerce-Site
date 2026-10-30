@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, markdownReport, openedPlan, pickLinks, shardOf, signedInPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, langCookieOf, markdownReport, openedPlan, pickLinks, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -112,6 +112,48 @@ describe('device gate', () => {
     expect(openedPlan('http://h:1', undefined)).toEqual([]);
     expect(openedPlan('http://h:1', [{ paths: ['/'] }])).toEqual([]);
     expect(openedPlan('http://h:1', { paths: ['/x'], clicks: ['b'] })).toEqual([{ url: 'http://h:1/x?gate=opened', signedOut: true, expect: [], clicks: ['b'] }]);
+  });
+
+  it('qa-gate I1 (PR 621) · plans the admin forms opened in place, signed in, once per admin language', () => {
+    const entry = { paths: ['/admin/x?storeId=2'], clicks: ['[data-testid="f"]'], expect: ['[data-testid="f-panel"]'], langs: ['en', 'bn'], groups: ['phone'], maxWidth: 430 };
+    const plan = signedOpenedPlan('http://h:1', [entry]);
+    expect(plan.map((p) => p.url)).toEqual(['http://h:1/admin/x?storeId=2&gate=opened-en', 'http://h:1/admin/x?storeId=2&gate=opened-bn']);
+    expect(plan.map((p) => p.lang)).toEqual(['en', 'bn']);
+    expect(plan.every((p) => !p.signedOut && p.clicks[0] === '[data-testid="f"]' && p.expect[0] === '[data-testid="f-panel"]' && p.groups[0] === 'phone' && p.maxWidth === 430)).toBe(true);
+    // no languages named: the admin's own language, once
+    expect(signedOpenedPlan('http://h:1', { paths: ['/admin/y'], clicks: ['b'] })).toEqual([{ url: 'http://h:1/admin/y?gate=opened', signedOut: false, expect: [], clicks: ['b'], lang: null }]);
+    expect(signedOpenedPlan('http://h:1', undefined)).toEqual([]);
+    expect(signedOpenedPlan('http://h:1', [{ paths: ['/admin/z'] }])).toEqual([]);
+  });
+
+  it('qa-gate I1 (PR 621) · the language cookie is the admin`s own (name and path from the config), on the gate`s host', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const shell = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../apps/web/src/lib/admin-nav.ts'), 'utf8');
+    expect(shell).toContain(`ADMIN_LANG_COOKIE = '${rules.signedIn.langCookie.name}'`);
+    expect(langCookieOf(rules.signedIn.langCookie, 'http://127.0.0.1:3000', 'bn')).toEqual({ name: rules.signedIn.langCookie.name, value: 'bn', domain: '127.0.0.1', path: rules.signedIn.langCookie.path, sameSite: 'Lax' });
+    expect(langCookieOf(rules.signedIn.langCookie, 'http://127.0.0.1:3000', null)).toBeNull();
+    expect(langCookieOf(undefined, 'http://127.0.0.1:3000', 'bn')).toBeNull();
+  });
+
+  it('qa-gate I1 (PR 621) · the shipped config opens the v6 sample store`s ERP forms and its hold notice, in English and Bengali', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const opened = rules.signedIn.opened;
+    const plan = signedOpenedPlan('http://h:1', opened);
+    const clicks = plan.flatMap((p) => p.clicks);
+    for (const id of ['books-adjust', 'books-note', 'books-run', 'books-pin-set', 'books-month-close', 'books-pay']) expect(clicks).toContain(`[data-testid="${id}"]`);
+    // F1: Differences with "Put right" opened, measured on phones from 320 px in both languages
+    const diff = plan.filter((p) => p.url.includes('/admin/money/books/differences'));
+    expect(diff.map((p) => p.lang).sort()).toEqual(['bn', 'en']);
+    expect(diff.every((p) => p.expect.includes('[data-testid="books-adjust-panel"]') && !p.groups && !p.maxWidth)).toBe(true);
+    // the hold notice of the sample store is on
+    expect(plan.flatMap((p) => p.expect)).toContain('[data-testid="books-hold"][data-hold="on"]');
+    // every entry is the v6 sample store's (data/sample-erp-v6.json, seeded in CI only) and expects what it opened
+    for (const p of plan) {
+      expect(new URL(p.url).searchParams.get('storeId')).toBe(String(rules.signedIn.v6SampleStoreId));
+      for (const c of p.clicks) expect(p.expect).toContain(c.replace(/"\]$/, '-panel"]'));
+    }
+    const ci = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../.github/actions/seeded-app/action.yml'), 'utf8');
+    expect(ci).toMatch(/pnpm --filter @extas\/combos sample\n\s+pnpm --filter @extas\/inventory sample:v6/);
   });
 
   it('PR 53 · checks the first screen of every product page: the sizes above the bar on phones, the buy buttons on desktops', () => {

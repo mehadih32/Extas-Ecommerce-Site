@@ -1,0 +1,14 @@
+{
+  "$comment": "CN-029 Phase 3 qa-gate I1 (PR 621): the CI-only sample store on ERP contract v6, so the device gate measures the v6 books, the hold notice and the opened ERP forms. SAMPLE DATA ONLY (CLAUDE.md rule 4): made-up names, ids and amounts, never the owner's; it runs only where the sample catalogue seed ran (`pnpm --filter @extas/inventory sample:v6`, CI's seeded-app action), never on staging or an owner installation. Days count back from today: the books start `switchDaysAgo` days ago, each entry `day` days after that, the day with the differences `difference.daysAgo` days ago.",
+  "version": 1,
+  "store": { "slug": "sample-erp-v6", "name": "Sample ERP store (v6)" },
+  "switchDaysAgo": 45,
+  "openingBalanceMinor": 1250000,
+  "entries": [
+    { "kind": "BILL", "eventId": "ship:C-SAMPLE-0", "day": 7, "amountMinor": 99000, "externalOrderId": "WEB-SAMPLE-0", "consignmentId": "C-SAMPLE-0", "source": "ANSWER" },
+    { "kind": "PAYMENT", "eventId": "evt_sample_pay_1", "day": 22, "amountMinor": -500000, "paymentRef": "BANK-SAMPLE-1", "source": "WEBHOOK" },
+    { "kind": "RETURN_CREDIT", "eventId": "evt_sample_credit_1", "day": 24, "amountMinor": -35000, "externalOrderId": "WEB-SAMPLE-0", "lineId": "WEB-SAMPLE-0-1", "source": "WEBHOOK" }
+  ],
+  "difference": { "daysAgo": 3, "eventId": "ship:C-SAMPLE-1", "externalOrderId": "WEB-SAMPLE-1", "consignmentId": "C-SAMPLE-1", "shopMinor": 65001, "erpMinor": 65000, "erpRowId": "ST-SAMPLE-1" },
+  "hold": { "reason": "PAYMENT_OVERDUE" }
+}

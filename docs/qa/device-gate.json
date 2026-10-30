@@ -402,6 +402,16 @@
       "/bn/combos/build-your-own?try=1": ["[data-testid=\"bs-tiers\"]", "[data-testid=\"bs-card\"]", "[data-testid=\"bs-add\"]", "[data-testid=\"bs-mbar\"]"],
       "/?try=flash": ["[data-testid=\"hm-flash\"]", "[data-testid=\"hm-flash-clock\"]", ".hm-flash-hd .tag.sale", "#hm-flash1 .pcard-w", "#hm-flash2 .pcard-w"],
       "/bn?try=flash": ["[data-testid=\"hm-flash\"]", "[data-testid=\"hm-flash-clock\"]", ".hm-flash-hd .tag.sale", "#hm-flash1 .pcard-w", "#hm-flash2 .pcard-w"]
-    }
+    },
+    "langCookie": { "name": "admin_lang", "path": "/admin" },
+    "v6SampleStoreId": 2,
+    "opened": [
+      { "$comment": "qa-gate I1 (PR 621, CN-029 Phase 3): the ERP admin forms that open in place, measured open on the v6 sample store (store `v6SampleStoreId`, made only in CI by `pnpm --filter @extas/inventory sample:v6`, packages/inventory/data/sample-erp-v6.json: its practice ERP, sample books through yesterday, an adjustable difference and the account hold). Each path is opened signed in, `clicks` open the forms in order and `expect` needs each one's panel (a wrong store or missing data fails as CONTROL-MISSING), once per admin language in `langs` (the admin's own language cookie `langCookie`). Books › Differences with \"Put right\" and a note open (F1: the panel ran off phones in English), the books with the hold notice on and the payment form, Match now, the PIN, month and year closes, and on Settings › ERP link the dry run, a new link and the practice key with the balance card's hold pill." },
+      { "paths": ["/admin/money/books/differences?storeId=2"], "clicks": ["[data-testid=\"books-adjust\"]", "[data-testid=\"books-note\"]"], "expect": ["[data-testid=\"books-adjust-panel\"]", "[data-testid=\"books-note-panel\"]"], "langs": ["en", "bn"] },
+      { "paths": ["/admin/money/books?storeId=2&view=payments"], "clicks": ["[data-testid=\"books-pay\"]"], "expect": ["[data-testid=\"books-pay-panel\"]", "[data-testid=\"books-hold\"][data-hold=\"on\"]"], "langs": ["en", "bn"] },
+      { "paths": ["/admin/money/books/match?storeId=2"], "clicks": ["[data-testid=\"books-run\"]"], "expect": ["[data-testid=\"books-run-panel\"]"], "langs": ["en", "bn"] },
+      { "paths": ["/admin/money/books/closes?storeId=2"], "clicks": ["[data-testid=\"books-pin-set\"]", "[data-testid=\"books-month-close\"]", "[data-testid=\"books-year-close\"]"], "expect": ["[data-testid=\"books-pin-set-panel\"]", "[data-testid=\"books-month-close-panel\"]", "[data-testid=\"books-year-close-panel\"]"], "langs": ["en", "bn"] },
+      { "paths": ["/admin/settings/erp-link?storeId=2"], "clicks": ["[data-testid=\"erp-link-dryrun\"]", "[data-testid=\"erp-link-newlink\"]", "[data-testid=\"erp-link-demo-key\"]"], "expect": ["[data-testid=\"erp-link-dryrun-panel\"]", "[data-testid=\"erp-link-newlink-panel\"]", "[data-testid=\"erp-link-demo-key-panel\"]", "[data-testid=\"erp-link-balance\"] .a2-pill.gold"], "langs": ["en", "bn"] }
+    ]
   }
 }

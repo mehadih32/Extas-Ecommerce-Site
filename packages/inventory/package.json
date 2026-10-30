@@ -7,9 +7,11 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./sample-v6": "./src/sample-v6.ts"
   },
   "scripts": {
+    "sample:v6": "tsx src/cli.ts sample-v6",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
@@ -21,6 +23,7 @@
     "@extas/db": "workspace:*",
     "@extas/erp-types": "workspace:*",
     "@extas/metrics": "workspace:*",
+    "@extas/seed": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"
   },
@@ -28,6 +31,7 @@
     "@eslint/js": "9.39.5",
     "@types/node": "^22.20.5",
     "eslint": "9.39.5",
+    "tsx": "4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.0",
     "vitest": "3.2.7"
