@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-30 07:18 (Asia/Dhaka)
+# Smoke test · 2026-10-30 08:29 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (190টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (194টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · result **PASS** (190 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `c0579fd91f74` · after deploy · result **PASS** (194 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -64,6 +64,7 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/rules` | phone | 200 | `/admin/rules` | ok | [picture](admin-rules-phone.jpg) |
 | `/admin/server` | phone | 200 | `/admin/server` | ok | [picture](admin-server-phone.jpg) |
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | [picture](admin-stock-phone.jpg) |
+| `/admin/support` | phone | 200 | `/admin/support` | ok | [picture](admin-support-phone.jpg) |
 | `/admin/website/seo` | phone | 200 | `/admin/website/seo` | ok | [picture](admin-website-seo-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-phone.jpg) |
@@ -77,7 +78,6 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/rules/notices` | phone | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-phone.jpg) |
 | `/admin/settings/look` | phone | 200 | `/admin/settings/look` | ok | [picture](admin-settings-look-phone.jpg) |
 | `/admin/messages` | phone | 200 | `/admin/messages` | ok | [picture](admin-messages-phone.jpg) |
-| `/admin/support` | phone | 200 | `/admin/support` | ok | [picture](admin-support-phone.jpg) |
 | `/admin/marketing` | phone | 200 | `/admin/marketing` | ok | [picture](admin-marketing-phone.jpg) |
 | `/admin/website` | phone | 200 | `/admin/website` | ok | [picture](admin-website-phone.jpg) |
 | `/admin/money` | phone | 200 | `/admin/money` | ok | [picture](admin-money-phone.jpg) |
@@ -88,6 +88,7 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/orders/packing/print` | phone | 200 | `/admin/orders/packing/print` | ok | [picture](admin-orders-packing-print-phone.jpg) |
 | `/admin/orders/packing/handover` | phone | 200 | `/admin/orders/packing/handover` | ok | [picture](admin-orders-packing-handover-phone.jpg) |
 | `/admin/orders/packing/picking` | phone | 200 | `/admin/orders/packing/picking` | ok | [picture](admin-orders-packing-picking-phone.jpg) |
+| `/admin/orders/packing/invoices` | phone | 200 | `/admin/orders/packing/invoices` | ok | [picture](admin-orders-packing-invoices-phone.jpg) |
 | `/admin/settings/system/cache` | phone | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-phone.jpg) |
 | `/admin/orders/risk-rules/checkout` | phone | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-phone.jpg) |
 | `/admin/orders/risk-rules` | phone | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-phone.jpg) |
@@ -99,6 +100,7 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/messages/channels` | phone | 200 | `/admin/messages/channels` | ok | [picture](admin-messages-channels-phone.jpg) |
 | `/admin/messages/consent` | phone | 200 | `/admin/messages/consent` | ok | [picture](admin-messages-consent-phone.jpg) |
 | `/admin/messages/templates` | phone | 200 | `/admin/messages/templates` | ok | [picture](admin-messages-templates-phone.jpg) |
+| `/admin/support/settings` | phone | 200 | `/admin/support/settings` | ok | [picture](admin-support-settings-phone.jpg) |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -159,6 +161,7 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/rules` | desktop | 200 | `/admin/rules` | ok | [picture](admin-rules-desktop.jpg) |
 | `/admin/server` | desktop | 200 | `/admin/server` | ok | [picture](admin-server-desktop.jpg) |
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | [picture](admin-stock-desktop.jpg) |
+| `/admin/support` | desktop | 200 | `/admin/support` | ok | [picture](admin-support-desktop.jpg) |
 | `/admin/website/seo` | desktop | 200 | `/admin/website/seo` | ok | [picture](admin-website-seo-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-desktop.jpg) |
@@ -172,7 +175,6 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/rules/notices` | desktop | 200 | `/admin/rules/notices` | ok | [picture](admin-rules-notices-desktop.jpg) |
 | `/admin/settings/look` | desktop | 200 | `/admin/settings/look` | ok | [picture](admin-settings-look-desktop.jpg) |
 | `/admin/messages` | desktop | 200 | `/admin/messages` | ok | [picture](admin-messages-desktop.jpg) |
-| `/admin/support` | desktop | 200 | `/admin/support` | ok | [picture](admin-support-desktop.jpg) |
 | `/admin/marketing` | desktop | 200 | `/admin/marketing` | ok | [picture](admin-marketing-desktop.jpg) |
 | `/admin/website` | desktop | 200 | `/admin/website` | ok | [picture](admin-website-desktop.jpg) |
 | `/admin/money` | desktop | 200 | `/admin/money` | ok | [picture](admin-money-desktop.jpg) |
@@ -183,6 +185,7 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/orders/packing/print` | desktop | 200 | `/admin/orders/packing/print` | ok | [picture](admin-orders-packing-print-desktop.jpg) |
 | `/admin/orders/packing/handover` | desktop | 200 | `/admin/orders/packing/handover` | ok | [picture](admin-orders-packing-handover-desktop.jpg) |
 | `/admin/orders/packing/picking` | desktop | 200 | `/admin/orders/packing/picking` | ok | [picture](admin-orders-packing-picking-desktop.jpg) |
+| `/admin/orders/packing/invoices` | desktop | 200 | `/admin/orders/packing/invoices` | ok | [picture](admin-orders-packing-invoices-desktop.jpg) |
 | `/admin/settings/system/cache` | desktop | 200 | `/admin/settings/system/cache` | ok | [picture](admin-settings-system-cache-desktop.jpg) |
 | `/admin/orders/risk-rules/checkout` | desktop | 200 | `/admin/orders/risk-rules/checkout` | ok | [picture](admin-orders-risk-rules-checkout-desktop.jpg) |
 | `/admin/orders/risk-rules` | desktop | 200 | `/admin/orders/risk-rules` | ok | [picture](admin-orders-risk-rules-desktop.jpg) |
@@ -194,7 +197,8 @@ Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · resul
 | `/admin/messages/channels` | desktop | 200 | `/admin/messages/channels` | ok | [picture](admin-messages-channels-desktop.jpg) |
 | `/admin/messages/consent` | desktop | 200 | `/admin/messages/consent` | ok | [picture](admin-messages-consent-desktop.jpg) |
 | `/admin/messages/templates` | desktop | 200 | `/admin/messages/templates` | ok | [picture](admin-messages-templates-desktop.jpg) |
+| `/admin/support/settings` | desktop | 200 | `/admin/support/settings` | ok | [picture](admin-support-settings-desktop.jpg) |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Database (PR 139): ok: 26 tables append-only; the app connects as extas_app.
+Database (PR 139): ok: 27 tables append-only; the app connects as extas_app.
