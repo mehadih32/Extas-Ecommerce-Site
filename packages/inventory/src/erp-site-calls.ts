@@ -12,8 +12,9 @@
 // - Refusals, in this order. From the request alone, touching no database, setting or vault (qa-gate 30 Oct): 404
 //   another path, 405 another method, 401 unsigned, 401 a signature or timestamp that can never verify. Then 429 when
 //   `erp.siteApi.refusedPerMinute` calls were already refused this minute from the same address (nothing is looked up
-//   either), unless the call verifies with a secret the last lookup found (p3 review: the real ERP is never locked out by
-//   others' refusals; erp-call-budget.ts). Then 401 STALE,
+//   either), unless the call verifies with a secret the last lookup found (p3 review: the real ERP is not locked out by
+//   others' refusals; round 2: after a secret change, for at most `system.integrationKeyCacheSeconds`; erp-call-budget.ts).
+//   Then 401 STALE,
 //   a well-formed timestamp older or newer than `erp.siteApi.maxAgeSeconds` from the shop's clock (only that setting is
 //   read; qa-gate re-check). Then, after the store lookup: 503 no store has the calls on, 401 no secret / bad signature / older or newer than
 //   `erp.siteApi.maxAgeSeconds` (the contract's 5 minutes) from the shop's clock / a secret two stores share.
@@ -66,6 +67,8 @@ export const ERP_SITE_REFUSED_EVENT = 'erp.site-call.refused';
  * two limits are the settings as last read (null until a call first reaches the lookup).
  */
 export interface ErpSiteGuard {
+  /** The SecurityEvent kind its summary rows are written as (PR 608 · p3 review: the webhook keeps a guard of its own). */
+  kind: string;
   pending: Map<string, number>;
   pendingFrom: number | null;
   flushedAt: number;
@@ -76,7 +79,7 @@ export interface ErpSiteGuard {
   refreshSeconds: number | null;
 }
 
-export const newErpSiteGuard = (): ErpSiteGuard => ({ pending: new Map(), pendingFrom: null, flushedAt: 0, budget: newRefusalBudget(), perMinute: null, logMinutes: null, refreshSeconds: null });
+export const newErpSiteGuard = (kind: string = ERP_SITE_REFUSED_EVENT): ErpSiteGuard => ({ kind, pending: new Map(), pendingFrom: null, flushedAt: 0, budget: newRefusalBudget(), perMinute: null, logMinutes: null, refreshSeconds: null });
 
 const holder = globalThis as unknown as { __erpSiteGuard?: ErpSiteGuard };
 /** This process's guard. */
@@ -126,11 +129,15 @@ async function candidates(deps: WebhookDeps): Promise<{ on: number; keys: Candid
   return { on, keys };
 }
 
-/** Counts one refusal in the guard (never written by itself). */
-function refuse(guard: ErpSiteGuard, now: number, endpoint: ErpSiteEndpoint | null, status: number, code: ErpSiteCode): ErpSiteCaller {
+/** Counts one refusal by endpoint and reason in the guard (never written by itself; a fixed, small set of keys). */
+export function noteErpRefusal(guard: ErpSiteGuard, now: number, endpoint: string | null, code: string): void {
   const key = `${endpoint ?? 'other'} ${code}`;
   guard.pending.set(key, (guard.pending.get(key) ?? 0) + 1);
   guard.pendingFrom ??= now;
+}
+
+function refuse(guard: ErpSiteGuard, now: number, endpoint: ErpSiteEndpoint | null, status: number, code: ErpSiteCode): ErpSiteCaller {
+  noteErpRefusal(guard, now, endpoint, code);
   return { ok: false, endpoint, status, code };
 }
 
@@ -214,8 +221,9 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
 }
 
 /**
- * Writes the counted refusals as one summary row (`erp.site-call.refused`), when there are any and the last one is at
- * least `erp.siteApi.refusedLogMinutes` old (or `force`: the admin opened the card). Returns whether it wrote.
+ * Writes the counted refusals as one summary row (the guard's kind: `erp.site-call.refused`, or the webhook's
+ * `erp.webhook.refused`), when there are any and the last one is at least `erp.siteApi.refusedLogMinutes` old (or
+ * `force`: the admin opened the card). Returns whether it wrote.
  */
 export async function flushErpSiteRefusals(db: Db, guard: ErpSiteGuard, at: Date, opts: { force?: boolean } = {}): Promise<boolean> {
   if (!guard.pending.size) return false;
@@ -230,7 +238,7 @@ export async function flushErpSiteRefusals(db: Db, guard: ErpSiteGuard, at: Date
   guard.pendingFrom = null;
   guard.flushedAt = now;
   const details: Prisma.InputJsonObject = { from: from.toISOString(), to: at.toISOString(), counts };
-  await db.securityEvent.create({ data: { storeId: null, kind: ERP_SITE_REFUSED_EVENT, severity: 'warning', details, createdAt: at } });
+  await db.securityEvent.create({ data: { storeId: null, kind: guard.kind, severity: 'warning', details, createdAt: at } });
   return true;
 }
 
@@ -241,9 +249,12 @@ export interface ErpSiteRefusalSum {
   lastAt: Date | null;
 }
 
-/** The refused calls summed since a moment (from the summary rows; no store: nobody proved who was asking). */
-export async function erpSiteRefusals(db: Db, since: Date): Promise<ErpSiteRefusalSum> {
-  const rows = await db.securityEvent.findMany({ where: { kind: ERP_SITE_REFUSED_EVENT, createdAt: { gte: since } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { details: true, createdAt: true } });
+/**
+ * The refused calls summed since a moment (from the summary rows; no store: nobody proved who was asking). `kind` picks
+ * the summaries (p3 review round 2: the webhook's `erp.webhook.refused` too, shown apart on the same card).
+ */
+export async function erpSiteRefusals(db: Db, since: Date, kind: string = ERP_SITE_REFUSED_EVENT): Promise<ErpSiteRefusalSum> {
+  const rows = await db.securityEvent.findMany({ where: { kind, createdAt: { gte: since } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { details: true, createdAt: true } });
   const out: ErpSiteRefusalSum = { total: 0, byCode: {}, lastAt: rows[0]?.createdAt ?? null };
   for (const r of rows) {
     const counts = ((r.details ?? {}) as { counts?: unknown }).counts;

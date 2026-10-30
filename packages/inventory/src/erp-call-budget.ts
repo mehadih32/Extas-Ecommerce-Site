@@ -32,7 +32,7 @@ const ADDRESS_MAX_CHARS = 64;
 export interface RefusalBudget {
   /** Refusals this minute, per address (a call in progress already counts: its slot). */
   addresses: Map<string, { minuteStart: number; refused: number }>;
-  /** The secrets the last store lookup found: a call that verifies with one of them is never cut off. */
+  /** The secrets the last store lookup found: a call that verifies with one of them is not cut off. */
   known: string[];
   /** While the map is full of addresses still in their minute: when the first of them ends (no scan before then). */
   fullUntil: number;

@@ -44,12 +44,12 @@
         "help": "How many of the latest calls the Keys & connections page shows."
       },
       "refusedPerMinute": {
-        "label": "ERP calls: refused calls a minute from one address before the shop stops looking",
-        "help": "Counted per sending address. After this many refused calls (wrong or old signature) from one address in one minute, every further call from it that is not yet proven is refused at once, without looking up any store, until the minute is over. Other addresses are not affected, and a call correctly signed with a store's own secret is always answered."
+        "label": "ERP calls and webhooks: refused calls a minute from one address before the shop stops looking",
+        "help": "Counted per sending address, for the ERP's calls and its webhooks alike (each counts its own). After this many refused calls (wrong or old signature) from one address in one minute, every further call from it that is not yet proven is refused at once, without looking up any store, until the minute is over. Other addresses are not affected. A call signed with a secret the shop already holds is let through; right after a secret changes, the shop learns the new one within the key cache time (the System setting for how long keys are kept in memory, 60 seconds as it ships), because one call from a cut-off address is still checked in each such period. The address is the one the shop's own proxy sees (it cannot be faked by the caller); IPv6 addresses count per /64 block."
       },
       "refusedLogMinutes": {
-        "label": "ERP calls: minutes between two summaries of refused calls",
-        "help": "Refused calls are not logged one by one: the shop counts them and keeps one summary in this many minutes."
+        "label": "ERP calls and webhooks: minutes between two summaries of refused calls",
+        "help": "Refused calls and webhooks are not logged one by one: the shop counts them and keeps one summary in this many minutes."
       },
       "refusedShownDays": {
         "label": "ERP calls: days of refused calls counted on Keys & connections",

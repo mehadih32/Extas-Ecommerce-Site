@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { erpSiteGuard, erpSiteRequestRefusal, logErpSiteCall } from '@extas/inventory';
+import { ERP_WEBHOOK_REFUSED_EVENT, erpSiteGuard, erpSiteRequestRefusal, erpWebhookGuard, erpWebhookRequestRefusal, logErpSiteCall } from '@extas/inventory';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
@@ -58,7 +58,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 · the ERP calls card on PostgreSQL', () =
   it('shows the address for the ERP, off as it ships, and no call yet', async () => {
     const r = await ask('GET', owner);
     expect(r.status).toBe(200);
-    expect(r.body).toEqual({ ok: true, enabled: false, v6: false, base: `https://${HOST}/erp-api`, calls: [], refused: { total: 0, byCode: {}, days: 7, lastAt: null }, canWrite: true });
+    expect(r.body).toEqual({ ok: true, enabled: false, v6: false, base: `https://${HOST}/erp-api`, calls: [], refused: { total: 0, byCode: {}, days: 7, lastAt: null }, refusedWebhooks: { total: 0, byCode: {}, days: 7, lastAt: null }, canWrite: true });
     // The preview host the server was given wins over the address the page was opened on.
     await deps.resolver.set('system.stagingHost', 'new.example.test', { level: 'installation' }, { actorId: null, reason: 'test' });
     expect((await erpCallsState(deps, MOTHER_STORE_ID, `https://${HOST}`)).base).toBe('https://new.example.test/erp-api');
@@ -94,5 +94,21 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 · the ERP calls card on PostgreSQL', () =
     const rows = await t.prisma.securityEvent.count();
     expect((await ask('GET', owner)).body.refused.total).toBe(26);
     expect(await t.prisma.securityEvent.count()).toBe(rows);
+  });
+
+  it('p3 review round 2: refused webhooks are written when the card is opened, and shown apart from refused calls', async () => {
+    const at = new Date();
+    for (let i = 0; i < 3; i++) erpWebhookRequestRefusal({ signature: null, timestamp: null, address: '192.0.2.70' }, at);
+    erpWebhookRequestRefusal({ signature: 'not-hex', timestamp: String(Math.floor(at.getTime() / 1000)), address: '192.0.2.70' }, at);
+    const r = await ask('GET', owner);
+    expect([r.body.refusedWebhooks.total, r.body.refusedWebhooks.byCode, r.body.refusedWebhooks.days]).toEqual([4, { UNSIGNED: 3, BAD_SIGNATURE: 1 }, 7]);
+    expect(r.body.refusedWebhooks.lastAt).not.toBeNull();
+    // The ERP's calls keep their own count.
+    expect(r.body.refused.total).toBe(26);
+    expect(erpWebhookGuard().pending.size).toBe(0);
+    expect(await t.prisma.securityEvent.count({ where: { kind: ERP_WEBHOOK_REFUSED_EVENT } })).toBe(1);
+    // Opened again with nothing new: no second row.
+    expect((await ask('GET', owner)).body.refusedWebhooks.total).toBe(4);
+    expect(await t.prisma.securityEvent.count({ where: { kind: ERP_WEBHOOK_REFUSED_EVENT } })).toBe(1);
   });
 });

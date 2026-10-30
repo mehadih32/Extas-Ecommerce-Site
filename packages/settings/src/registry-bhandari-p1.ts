@@ -11,8 +11,10 @@
 // of days; and how many recent calls the Keys & connections page lists.
 // qa-gate (30 Oct): a refused call writes nothing of its own. Refusals are counted in the app and kept as one summary
 // row per `erp.siteApi.refusedLogMinutes`; after `erp.siteApi.refusedPerMinute` refused calls in a minute from one
-// address (p3 review: per address, and a call signed with a known store secret is never cut off), further unverified
-// calls from it are refused at once (429) without looking at any store; the page sums the summaries of the last
+// address (p3 review: per address, and a call signed with a known store secret is ~~never cut off~~ let through; round
+// 2: one call per `system.integrationKeyCacheSeconds` still reaches the lookup, so a changed secret is learnt), further unverified
+// calls from it are refused at once (429) without looking at any store (PR 608 · p3 review: the ERP webhook uses the same
+// two numbers for its own count, `erp.webhook.refused`); the page sums the summaries of the last
 // `erp.siteApi.refusedShownDays` days. The longest customer search text is `erp.siteApi.searchMaxChars`.
 import { z } from 'zod';
 import { setting } from './define';

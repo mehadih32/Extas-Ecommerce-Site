@@ -3,6 +3,7 @@
 // (off as it ships; only someone who may change keys sees it work), whether the store speaks the new ERP contract yet,
 // the store's latest verified calls (never a customer), and how many calls were refused lately (summed apart, so they
 // never push the store's own calls out). API: /api/admin/integrations/erp-calls.
+// p3 review round 2: the refused webhooks (the ERP's events to the shop) on their own line under it.
 // CN-029 · PR 619 (follow-up 524): shown on the store's ERP link page; `storeId` makes every call that store's.
 import { useState } from 'react';
 import type { ErpCallsState } from '@/lib/erp-calls-admin';
@@ -21,9 +22,11 @@ interface Props {
   look?: 'classic' | 'a2';
 }
 
-type Shown = Omit<ErpCallsState, 'calls' | 'refused'> & {
+type Refused = Omit<ErpCallsState['refused'], 'lastAt'> & { lastAt: string | Date | null };
+type Shown = Omit<ErpCallsState, 'calls' | 'refused' | 'refusedWebhooks'> & {
   calls: (Omit<ErpCallsState['calls'][number], 'at'> & { at: string | Date })[];
-  refused: Omit<ErpCallsState['refused'], 'lastAt'> & { lastAt: string | Date | null };
+  refused: Refused;
+  refusedWebhooks: Refused;
 };
 
 export function ErpCalls({ dict, initial, canWrite, locale, timeZone, storeId, look = 'classic' }: Props) {
@@ -33,6 +36,15 @@ export function ErpCalls({ dict, initial, canWrite, locale, timeZone, storeId, l
   const [error, setError] = useState('');
   const when = (at: string | Date) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(new Date(at));
   const k = (key: string, vars?: Record<string, string>) => t(dict, `integrations.erpCalls.${key}`, vars);
+  /** A refused count with its reasons, most first (or the "none" line). */
+  const refusedLine = (r: Refused, some: string, none: string) =>
+    r.total
+      ? k(some, { n: String(r.total), days: String(r.days) }) +
+        ` (${Object.entries(r.byCode)
+          .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+          .map(([code, n]) => `${k(`code.${code}`)}: ${n}`)
+          .join(' · ')})`
+      : k(none, { days: String(r.days) });
 
   const flip = async () => {
     if (!canWrite || busy) return;
@@ -107,13 +119,10 @@ export function ErpCalls({ dict, initial, canWrite, locale, timeZone, storeId, l
         </div>
       )}
       <div className={`ad-mini${s.refused.total ? ' bad' : ''}`} data-testid="erp-calls-refused">
-        {s.refused.total
-          ? k('refused', { n: String(s.refused.total), days: String(s.refused.days) }) +
-            ` (${Object.entries(s.refused.byCode)
-              .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
-              .map(([code, n]) => `${k(`code.${code}`)}: ${n}`)
-              .join(' · ')})`
-          : k('refusedNone', { days: String(s.refused.days) })}
+        {refusedLine(s.refused, 'refused', 'refusedNone')}
+      </div>
+      <div className={`ad-mini${s.refusedWebhooks.total ? ' bad' : ''}`} data-testid="erp-calls-refused-webhooks">
+        {refusedLine(s.refusedWebhooks, 'refusedHooks', 'refusedHooksNone')}
       </div>
     </section>
   );

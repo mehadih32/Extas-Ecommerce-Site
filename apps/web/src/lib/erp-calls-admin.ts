@@ -6,7 +6,8 @@
 //   `/erp-api`), whether the calls are on for this store, whether the store speaks contract v6 yet (they answer only
 //   then), the store's latest verified calls (`erp.siteApi.callsShown`, never a customer), and how many calls were
 //   refused in the last `erp.siteApi.refusedShownDays` days (summed apart, so they never push the store's own calls out;
-//   opening the card writes this app's counted refusals first).
+//   opening the card writes this app's counted refusals first). p3 review round 2: the refused webhooks too
+//   (`erp.webhook.refused`, written first the same way), as their own count (`refusedWebhooks`), labelled apart.
 // - PUT  /api/admin/integrations/erp-calls   {enabled} (needs `vault.write`, like changing a key): switches
 //   `erp.siteApi.enabled` for this store; the settings log and the audit log say who did it.
 // The keys the calls are signed with are typed on the same page (the ERP connection's optional signing secret).
@@ -15,7 +16,7 @@
 // switch is that store's own. ~~Keys & connections~~ shows it no more.
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { ERP_SITE_BASE_PATH, erpSiteCalls, erpSiteGuard, erpSiteRefusals, flushErpSiteRefusals, type ErpSiteCallView, type ErpSiteRefusalSum } from '@extas/inventory';
+import { ERP_SITE_BASE_PATH, ERP_WEBHOOK_REFUSED_EVENT, erpSiteCalls, erpSiteGuard, erpSiteRefusals, erpWebhookGuard, flushErpSiteRefusals, type ErpSiteCallView, type ErpSiteRefusalSum } from '@extas/inventory';
 import { storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { storeOfRequest } from './integrations';
@@ -29,6 +30,8 @@ export interface ErpCallsState {
   calls: ErpSiteCallView[];
   /** Calls refused in the last `days` days (nobody proved who asked, so no store). */
   refused: ErpSiteRefusalSum & { days: number };
+  /** p3 review round 2: webhooks refused in the same days (the ERP's events to the shop), summed apart. */
+  refusedWebhooks: ErpSiteRefusalSum & { days: number };
 }
 
 const DAY_MS = 86_400_000;
@@ -39,8 +42,9 @@ const HOST = /^[a-z0-9.-]+(:\d+)?$/i;
 export async function erpCallsState(deps: Pick<AdminDeps, 'db' | 'resolver'>, storeId: number, origin: string | null): Promise<ErpCallsState> {
   const at = { storeId };
   const now = new Date();
-  // The refusals this app counted since its last summary are written first (one row), so the count is current.
+  // The refusals this app counted since its last summary are written first (one row each), so the counts are current.
   await flushErpSiteRefusals(deps.db, erpSiteGuard(), now, { force: true });
+  await flushErpSiteRefusals(deps.db, erpWebhookGuard(), now, { force: true });
   const [enabled, model, staging, shown, days, primary] = await Promise.all([
     deps.resolver.value('erp.siteApi.enabled', at),
     deps.resolver.value('erp.model', at),
@@ -51,8 +55,9 @@ export async function erpCallsState(deps: Pick<AdminDeps, 'db' | 'resolver'>, st
   ]);
   const host = primary?.hostname.trim().toLowerCase() || staging;
   const site = host && HOST.test(host) ? `https://${host}` : origin;
-  const [calls, refused] = await Promise.all([erpSiteCalls(deps.db, storeId, shown), erpSiteRefusals(deps.db, new Date(now.getTime() - days * DAY_MS))]);
-  return { enabled, v6: model === 'v6', base: site ? `${site.replace(/\/+$/, '')}${ERP_SITE_BASE_PATH}` : null, calls, refused: { ...refused, days } };
+  const since = new Date(now.getTime() - days * DAY_MS);
+  const [calls, refused, refusedWebhooks] = await Promise.all([erpSiteCalls(deps.db, storeId, shown), erpSiteRefusals(deps.db, since), erpSiteRefusals(deps.db, since, ERP_WEBHOOK_REFUSED_EVENT)]);
+  return { enabled, v6: model === 'v6', base: site ? `${site.replace(/\/+$/, '')}${ERP_SITE_BASE_PATH}` : null, calls, refused: { ...refused, days }, refusedWebhooks: { ...refusedWebhooks, days } };
 }
 
 /** GET and PUT /api/admin/integrations/erp-calls (see the file header). */
