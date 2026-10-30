@@ -15,7 +15,9 @@
 //   that names the kept pieces (PR 166) gives the mark; with neither, the ERP works the kept lines out itself (its
 //   identification: GREEN, YELLOW, ORANGE, shown on the order page).
 // - Money: the delivery charge and anything underpaid stay in Retail's own books; only `collected` goes.
-// An exchange parcel (`isExchangeLeg`) is the exchange order's (PR 614): it is not reported from here.
+// An exchange parcel (`isExchangeLeg`) is the exchange order's (PR 614): it is not reported from here. The exchange
+// order's own parcel is (PR 614 gives the exchange order its own ErpOrder, exchangeOfId = the old order): its pickup
+// and result reach the ERP like any order's, which starts the ERP's 4-day watch.
 // `reportParcelToErp` runs after every courier read (sync.ts) and after a check is resolved (truth.ts); the tracking
 // run catches up any parcel whose facts did not reach the ERP yet (`reportErpLagging`).
 import { z } from 'zod';
@@ -127,7 +129,7 @@ export async function reportErpLagging(deps: Base, storeId: number, batch: numbe
   if (!(await isV6(deps, storeId))) return { checked: 0, sent: 0 };
   const rows = await deps.db.$queryRaw<{ id: string }[]>`
     SELECT s."id"::text AS id
-    FROM "Shipment" s JOIN "ErpOrder" e ON e."orderId" = s."orderId" AND e."storeId" = s."storeId" AND e."exchangeOfId" IS NULL
+    FROM "Shipment" s JOIN "ErpOrder" e ON e."orderId" = s."orderId" AND e."storeId" = s."storeId"
     WHERE s."storeId" = ${storeId} AND s."isExchangeLeg" = false
       AND s."status"::text IN ('PICKED_UP','IN_TRANSIT','OUT_FOR_DELIVERY','ATTEMPT_FAILED','ADDRESS_PROBLEM','LOST','DAMAGED','RETURNING','DELIVERED','PARTIALLY_DELIVERED','RETURNED')
       AND (

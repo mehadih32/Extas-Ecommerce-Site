@@ -96,6 +96,15 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
     canClaims: perms.has('returns.claims.decide'),
     claimPhoto: chargeRules.claimPhoto,
   };
+  // CN-028 · PR 614: on ERP contract v6 the chosen case shows its exchange as the ERP has it
+  if (paths.model === 'v6')
+    data.erp = {
+      model: 'v6',
+      canApprove: perms.has('exchange.approve'),
+      canLate: perms.has('exchange.approve') || perms.has('returns.handback'),
+      state: chosen ? await maybe(od.exchangeErpState(rd, who, chosen.id)) : null,
+      today: new Intl.DateTimeFormat('en-CA', { timeZone: view.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
+    };
   const d = view.dict;
   // PR 191: the refused parcels and the refused-parcel list beside Receive & QC
   const right = (
