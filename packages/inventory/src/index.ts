@@ -79,3 +79,5 @@ export * from './jobs';
 export * from './webhook';
 // PR 612–614 (CN-029 Phase 1): returns and exchanges with the store's own ERP in contract v6.
 export * from './erp-returns-v6';
+// CN-028 · PR 619 — the switch-over to ERP contract v6 and the per-store ERP link page's state.
+export * from './erp-switchover';

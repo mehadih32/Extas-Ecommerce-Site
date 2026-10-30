@@ -105,3 +105,5 @@ export * from './handback';
 export * from './erp-returns-run';
 export * from './returns-erp';
 export * from './exchange-v6';
+// CN-028 · PR 619 (follow-up 530): a v5 order waiting at the switch-over sent again as a v6 order
+export * from './erp-switch-resend';

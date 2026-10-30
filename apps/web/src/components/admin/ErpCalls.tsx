@@ -3,6 +3,7 @@
 // (off as it ships; only someone who may change keys sees it work), whether the store speaks the new ERP contract yet,
 // the store's latest verified calls (never a customer), and how many calls were refused lately (summed apart, so they
 // never push the store's own calls out). API: /api/admin/integrations/erp-calls.
+// CN-029 · PR 619 (follow-up 524): shown on the store's ERP link page; `storeId` makes every call that store's.
 import { useState } from 'react';
 import type { ErpCallsState } from '@/lib/erp-calls-admin';
 import { t, type Dict } from '@/lib/i18n';
@@ -14,6 +15,10 @@ interface Props {
   canWrite: boolean;
   locale: string;
   timeZone: string;
+  /** The store the card serves (PR 619); absent = the mother store. */
+  storeId?: number;
+  /** qa-gate N3: `a2` draws the card in the new shell's look (Settings › ERP link); Keys & connections keeps its own. */
+  look?: 'classic' | 'a2';
 }
 
 type Shown = Omit<ErpCallsState, 'calls' | 'refused'> & {
@@ -21,7 +26,8 @@ type Shown = Omit<ErpCallsState, 'calls' | 'refused'> & {
   refused: Omit<ErpCallsState['refused'], 'lastAt'> & { lastAt: string | Date | null };
 };
 
-export function ErpCalls({ dict, initial, canWrite, locale, timeZone }: Props) {
+export function ErpCalls({ dict, initial, canWrite, locale, timeZone, storeId, look = 'classic' }: Props) {
+  const a2 = look === 'a2';
   const [s, setS] = useState<Shown>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -32,16 +38,18 @@ export function ErpCalls({ dict, initial, canWrite, locale, timeZone }: Props) {
     if (!canWrite || busy) return;
     setBusy(true);
     setError('');
-    const a = await call('PUT', '/api/admin/integrations/erp-calls', { enabled: !s.enabled });
+    const a = await call('PUT', storeId == null ? '/api/admin/integrations/erp-calls' : `/api/admin/integrations/erp-calls?storeId=${storeId}`, { enabled: !s.enabled });
     setBusy(false);
     if (a.status === 200) setS(a.data as unknown as Shown);
     else setError(errorText(dict, a));
   };
 
-  return (
-    <section className="ad-card" aria-labelledby="ad-erpcalls-h" id="erp-site-api" data-testid="erp-site-api" data-erp-calls={s.enabled ? 'on' : 'off'}>
-      <h2 id="ad-erpcalls-h">{k('title')}</h2>
-      <div className="ad-sub">{k('sub')}</div>
+  const card = (
+    <section className={a2 ? 'a2-card ad-keys' : 'ad-card'} aria-labelledby="ad-erpcalls-h" id="erp-site-api" data-testid="erp-site-api" data-erp-calls={s.enabled ? 'on' : 'off'}>
+      <h2 id="ad-erpcalls-h" className={a2 ? 'a2-h4' : undefined}>
+        {k('title')}
+      </h2>
+      <div className={a2 ? 'a2-sm a2-mute a2-mt6' : 'ad-sub'}>{k('sub')}</div>
       <div className="ad-row">
         <div className="ad-row-main">
           <div className="ad-row-name">{k('base')}</div>
@@ -109,4 +117,6 @@ export function ErpCalls({ dict, initial, canWrite, locale, timeZone }: Props) {
       </div>
     </section>
   );
+  // In the new shell the rows keep the classic colours and sizes (`.ad`'s own variables), inside the shell's card.
+  return a2 ? <div className="ad ad-embed">{card}</div> : card;
 }

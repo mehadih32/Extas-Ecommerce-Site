@@ -25,7 +25,7 @@ export type ErpEntrySource = (typeof ERP_ENTRY_SOURCES)[number];
 
 /**
  * What each kind does to the balance Retail owes: +1 owes more, −1 owes less, 0 either way (a reversal is the opposite
- * of what it undoes; an adjustment carries its own sign).
+ * of what it undoes; an adjustment and the switch transfer carry their own sign).
  */
 export const ENTRY_SIGN: Readonly<Record<ErpAccountEntryKind, 1 | -1 | 0>> = {
   BILL: 1,
@@ -35,7 +35,9 @@ export const ENTRY_SIGN: Readonly<Record<ErpAccountEntryKind, 1 | -1 | 0>> = {
   EXCHANGE_CREDIT: -1,
   RETURN_CREDIT: -1,
   PAYMENT: -1,
-  SWITCH_TRANSFER: 1,
+  // PR 619: the ERP's one transfer at the switch nets the customer advances it credits against the unpaid amounts it
+  // moves (site-changes-v6 §3.3), so it carries its own sign.
+  SWITCH_TRANSFER: 0,
   REVERSAL: 0,
   ADJUSTMENT: 0,
 };

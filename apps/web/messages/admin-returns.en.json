@@ -157,6 +157,7 @@
     "NOT_IN_ERP": "This order was not sent to the ERP on the new model."
   },
   "qc": {
+    "v6Note": "This store is on the new ERP contract (v6): the ERP checks every returned piece. Returned parcels go to the hand-back desk; nothing is checked or restocked here.",
     "metaTitle": "Receive & QC",
     "title": "Receive & QC",
     "open": "Receive & QC",

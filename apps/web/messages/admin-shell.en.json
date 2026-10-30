@@ -44,6 +44,7 @@
       },
       "settings": {
         "keys": "Keys & connections",
+        "erp": "ERP link",
         "system": "System",
         "look": "Admin look"
       },
@@ -128,7 +129,7 @@
       "money": "finance profit cod refund payment",
       "reports": "report analytics health server worker jobs",
       "ai": "ai agent automation",
-      "settings": "setting keys connections integrations vault api",
+      "settings": "setting keys connections integrations vault api erp link switch-over",
       "help": "guide manual help how"
     },
     "nav": {

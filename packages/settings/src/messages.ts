@@ -127,6 +127,9 @@ import bhandariP1En from '../messages/bhandari-p1.en.json';
 // CN-028 · PR 617, 618 (registry v69): the summary and fixed-cost jobs, the cost lines a store never has, the Books card.
 import booksSummaryBn from '../messages/books-summary.bn.json';
 import booksSummaryEn from '../messages/books-summary.en.json';
+// CN-028 · PR 619, 621 (registry v70): the switch-over, the ERP link page and the acceptance suite.
+import switchoverBn from '../messages/switchover.bn.json';
+import switchoverEn from '../messages/switchover.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -169,6 +172,8 @@ messages.en = mergeMessages(messages.en, bhandariP1En);
 messages.bn = mergeMessages(messages.bn, bhandariP1Bn);
 messages.en = mergeMessages(messages.en, booksSummaryEn);
 messages.bn = mergeMessages(messages.bn, booksSummaryBn);
+messages.en = mergeMessages(messages.en, switchoverEn);
+messages.bn = mergeMessages(messages.bn, switchoverBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

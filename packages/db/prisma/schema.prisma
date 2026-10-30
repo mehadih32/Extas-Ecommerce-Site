@@ -280,6 +280,9 @@ model Store {
   booksAdjustments        BooksAdjustment[]
   // CN-028 · PR 613 (CN-029 Phase 1, migration 0054_returns_v6): the nightly compare of the Returns section.
   erpReturnsCompares      ErpReturnsCompare[]
+  // CN-028 · PR 619 (CN-029 Phase 2, migration 0057_erp_switchover): the switch-over runs and the moved old orders.
+  erpSwitchRuns           ErpSwitchRun[]
+  erpSwitchOrders         ErpSwitchOrder[]
   smartRules              SmartRule[]
   smartRuleVersions       SmartRuleVersion[]
   smartRuleConflicts      SmartRuleConflict[]
@@ -5181,6 +5184,9 @@ model ErpStoreLink {
   adjustments     BooksAdjustment[]
   // PR 613 (migration 0054_returns_v6)
   returnsCompares ErpReturnsCompare[]
+  // PR 619 (migration 0057_erp_switchover)
+  switchRuns      ErpSwitchRun[]
+  switchOrders    ErpSwitchOrder[]
 
   @@unique([storeId, epoch])
   /// The key of the composite foreign keys (linkId, storeId): a row's link is always its own store's link.
@@ -9725,4 +9731,76 @@ model UpdateRelease {
   appliedAt   DateTime? @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+// =====================================================================================================================
+// CN-028 · PR 619 — the switch-over to the ERP model (CN-029 Phase 2, migration 0057_erp_switchover). Additive only.
+// =====================================================================================================================
+
+/// @stage S19 · PR 619 (CN-028, CN-029) — one look at a store's switch to ERP contract v6: a dry run (DRY_RUN: what the
+/// switch would do, read from the ERP's `GET /switch-over` and the shop's own records, nothing changed), the switch
+/// itself (SWITCH: each step and its outcome), or a new link epoch (NEW_LINK: a handover to a new owner, or a wrong
+/// opening balance put right by starting the link again, follow-up 555). `blockers` say why a switch may not go yet;
+/// `fingerprint` is the hash of what the dry run saw, so a switch only goes when the ERP's list is still what the owner
+/// looked at. Each run is a new row and is never changed (the history of the switch stays).
+/// @append-only
+model ErpSwitchRun {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store            @relation(fields: [storeId], references: [id])
+  linkId      String           @db.Uuid
+  link        ErpStoreLink     @relation(fields: [linkId, storeId], references: [id, storeId])
+  kind        ErpSwitchRunKind
+  /// The ERP's switch date the run saw (null: not announced yet).
+  switchDate  DateTime?        @db.Date
+  ok          Boolean
+  blockers    String[]
+  fingerprint String?
+  report      Json
+  /// Who ran it (StaffUser.id; null for the system).
+  actorId     String?          @db.Uuid
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, createdAt])
+  @@index([linkId, kind, createdAt])
+}
+
+enum ErpSwitchRunKind {
+  DRY_RUN
+  SWITCH
+  NEW_LINK
+}
+
+/// @stage S19 · PR 619 (CN-028, CN-029) — one order on the ERP's list of the old orders it moved to the new rules on
+/// the switch date (docs/erp/site-changes-v6.md §3.3): NOT_OUT (billed when it leaves), OUT (billed on the switch date
+/// at the shop prices of its lines), ADVANCE (a customer advance credited to Retail) or UNPAID (the unpaid amount of an
+/// order delivered before the switch, moved to Retail at the buying price). The shop books the same list as its opening
+/// items, per store and per link, once (unique per link, order and kind). Amounts are signed minor units (+ Retail owes
+/// more). `orderId` is the shop's own order when its number matches.
+/// @append-only
+model ErpSwitchOrder {
+  id              String             @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store              @relation(fields: [storeId], references: [id])
+  linkId          String             @db.Uuid
+  link            ErpStoreLink       @relation(fields: [linkId, storeId], references: [id, storeId])
+  switchDate      DateTime           @db.Date
+  externalOrderId String
+  kind            ErpSwitchOrderKind
+  amountMinor     BigInt
+  consignmentId   String?
+  /// [{ lineId, sku, quantity, shopPriceMinor }] — the lines of a NOT_OUT or OUT order as the ERP moved them.
+  lines           Json               @default("[]")
+  orderId         String?            @db.Uuid
+  createdAt       DateTime           @default(now()) @db.Timestamptz(3)
+
+  @@unique([linkId, externalOrderId, kind])
+  @@index([storeId, kind])
+}
+
+enum ErpSwitchOrderKind {
+  NOT_OUT
+  OUT
+  ADVANCE
+  UNPAID
 }

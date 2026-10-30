@@ -10,11 +10,15 @@
 // - PUT  /api/admin/integrations/erp-calls   {enabled} (needs `vault.write`, like changing a key): switches
 //   `erp.siteApi.enabled` for this store; the settings log and the audit log say who did it.
 // The keys the calls are signed with are typed on the same page (the ERP connection's optional signing secret).
+// CN-029 · PR 619 (Bhandari follow-up 524): the card moved to the store's ERP link page (Settings → ERP link) and serves
+// the store that page shows: `?storeId=N` (else the mother store); the person's key is checked in that store and the
+// switch is that store's own. ~~Keys & connections~~ shows it no more.
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { ERP_SITE_BASE_PATH, erpSiteCalls, erpSiteGuard, erpSiteRefusals, flushErpSiteRefusals, type ErpSiteCallView, type ErpSiteRefusalSum } from '@extas/inventory';
 import { storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
+import { storeOfRequest } from './integrations';
 
 export interface ErpCallsState {
   enabled: boolean;
@@ -55,7 +59,10 @@ export async function erpCallsState(deps: Pick<AdminDeps, 'db' | 'resolver'>, st
 export async function erpCallsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   const m = request.method.toUpperCase();
   if (m !== 'GET' && m !== 'PUT') return fail(405, 'method-not-allowed');
-  const g = await guardAdmin(request, deps, { permission: m === 'GET' ? 'vault.read' : 'vault.write', storeId: MOTHER_STORE_ID });
+  const asked = storeOfRequest(request);
+  if (asked === undefined) return fail(400, 'VALIDATION', ['storeId']);
+  const storeId = asked ?? MOTHER_STORE_ID;
+  const g = await guardAdmin(request, deps, { permission: m === 'GET' ? 'vault.read' : 'vault.write', storeId });
   if (g instanceof Response) return g;
   const d = deps as AdminDeps;
   const origin = new URL(request.url).origin;
@@ -63,15 +70,15 @@ export async function erpCallsHandler(request: Request, deps: AdminDeps | null):
     if (m === 'PUT') {
       const b = await body(request);
       if (typeof b.enabled !== 'boolean') return fail(400, 'VALIDATION', ['enabled']);
-      const before = await d.resolver.value('erp.siteApi.enabled', { storeId: MOTHER_STORE_ID });
+      const before = await d.resolver.value('erp.siteApi.enabled', { storeId });
       if (before !== b.enabled) {
         const actorId = g.actor.staffUserId ?? null;
-        await d.resolver.set('erp.siteApi.enabled', b.enabled, storeTarget(MOTHER_STORE_ID), { actorId, reason: 'Keys & connections › the ERP asks the shop' });
-        await audit(d.db, g.actor, { storeId: MOTHER_STORE_ID, action: 'erp.siteApi.enabled', entityType: 'Setting', entityId: 'erp.siteApi.enabled', before: { enabled: before }, after: { enabled: b.enabled } }, { source: 'admin-api', ...g.ctx });
+        await d.resolver.set('erp.siteApi.enabled', b.enabled, storeTarget(storeId), { actorId, reason: 'ERP link › the ERP asks the shop' });
+        await audit(d.db, g.actor, { storeId, action: 'erp.siteApi.enabled', entityType: 'Setting', entityId: 'erp.siteApi.enabled', before: { enabled: before }, after: { enabled: b.enabled } }, { source: 'admin-api', ...g.ctx });
       }
     }
     const canWrite = m === 'PUT' || (g.permissions?.has('vault.write') ?? false);
-    return json({ ok: true, ...(await erpCallsState(d, MOTHER_STORE_ID, origin)), canWrite });
+    return json({ ok: true, ...(await erpCallsState(d, storeId, origin)), canWrite });
   } catch (e) {
     return errorResponse(e);
   }
