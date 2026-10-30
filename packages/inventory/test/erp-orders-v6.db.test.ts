@@ -1,8 +1,8 @@
-// PR 610 (CN-028, ERP contract v6) on a real PostgreSQL (a throwaway database with the real migrations; skipped
+// PR 610, 611 (CN-028, ERP contract v6) on a real PostgreSQL (a throwaway database with the real migrations; skipped
 // without TEST_DATABASE_ADMIN_URL): orders to the ERP v6 — one line per piece with its whole-taka price, the answer
 // kept (erpTotal, shop prices, Return stock), the "not now" refusals HELD and sent again by themselves with a new key
 // round (account on hold → checkout paused; stock; shop price; a short line), the catch-up of lost line webhooks
-// (follow-up 490). The ERP is the practice ERP behind LIVE
+// (follow-up 490), the shipment at pickup and every delivery result. The ERP is the practice ERP behind LIVE
 // connections (its fetch replaces the network); every key and secret is made up here; the clock is fixed.
 // CN-029 §16: store A and store B are each their own ERP company, and nothing of one ever reaches the other.
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -14,9 +14,11 @@ import { createColour, createProduct, createSize, createVariant, type CatalogueD
 import { registry, type Key, type Value } from '@extas/settings';
 import {
   applyErpEvents,
+  BILLED_AT_MISSING,
   checkErpOrders,
   createWarehouse,
-  enqueueErpDocument,
+  enqueueErpDelivery,
+  enqueueErpShipment,
   enqueueOrderPush,
   erpCheckoutPaused,
   erpHoldNotice,
@@ -40,7 +42,7 @@ const T0 = new Date('2026-10-23T04:00:00Z');
 const COMBO = randomUUID();
 const BASE = 'https://erp.example.test';
 
-describe.skipIf(!HAS_TEST_DB)('PR 610 on PostgreSQL: orders to the ERP v6', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and delivery results to the ERP v6', () => {
   let t: TestDatabase;
   let storeA = 0;
   let storeB = 0;
@@ -377,8 +379,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610 on PostgreSQL: orders to the ERP v6', () =
     await deliverAll();
     const line = await t.prisma.erpOrderLine.findFirstOrThrow({ where: { erpOrderId: eo.id, lineId: `${o.ext}-1` } });
     expect([line.state, line.shortReason]).toEqual(['SHORT', 'RETURN_PIECE_FAILED_CHECK']);
-    // The shipment (PR 611 queues it at the courier's pickup): it waits while a line is short.
-    await enqueueErpDocument(deps(), storeA, o.orderId, `shipment:test:${o.ext}`, { type: 'shipment.create', body: { externalOrderId: o.ext, courier: 'PATHAO', consignmentId: `C-${o.ext}`, charge: '60.00', pickedUpAt: clock.toISOString() } });
+    await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: `C-${o.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     expect((await pushOf(storeA, o.orderId, 'shipment.create')).heldReason).toBe('LINE_WAITING');
     expect((await erpOrderView(deps(), { actor: SYSTEM, storeId: storeA }, o.orderId))!.held).toMatchObject({ reason: 'LINE_WAITING' });
@@ -394,6 +395,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 610 on PostgreSQL: orders to the ERP v6', () =
     const ship = await pushOf(storeA, short.orderId, 'shipment.create');
     expect([ship.status, ship.keyRound]).toEqual(['PENDING', 1]);
     expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+    const billed = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: short.orderId }))!;
+    expect(!!billed.billedAt && !!billed.shipmentSentAt).toBe(true);
+    expect([billed.consignmentId, billed.courier]).toEqual([`C-${short.ext}`, 'PATHAO']);
   });
 
   it('Follow-up 490: a lost order.line.short webhook is caught up from GET /orders/{id} by the order check', async () => {
@@ -414,6 +418,67 @@ describe.skipIf(!HAS_TEST_DB)('PR 610 on PostgreSQL: orders to the ERP v6', () =
     world.v6().lineDecision(o.ext, `${o.ext}-1`, { action: 'CANCEL', reason: 'sample' });
     await checkErpOrders(deps(), { storeId: storeA });
     expect((await t.prisma.erpOrderLine.findFirstOrThrow({ where: { erpOrderId: eo.id } })).state).toBe('CANCELLED');
+  });
+
+  it('PR 611: the shipment at pickup bills the order once; every courier result goes once by PUT /orders/{id}/delivery', async () => {
+    const pick = { storeId: storeA, orderId: a1.orderId, courier: 'PATHAO', consignmentId: 'C-A1', chargeMinor: 6_000, pickedUpAt: clock };
+    expect((await enqueueErpShipment(deps(), pick))!.created).toBe(true);
+    expect((await enqueueErpShipment(deps(), pick))!.created).toBe(false);
+    expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+    let eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: a1.orderId }))!;
+    expect(!!eo.billedAt).toBe(true);
+    const doc = (await pushOf(storeA, a1.orderId, 'shipment.create')).requestBody as { body: Record<string, unknown> };
+    expect(doc.body).toMatchObject({ externalOrderId: a1.ext, courier: 'PATHAO', consignmentId: 'C-A1', charge: '60.00' });
+
+    // The courier says partial; the box names the kept lines (2 of 5), what was paid and the discount promised by phone.
+    const mark = { keptLineIds: [`${a1.ext}-1`, `${a1.ext}-3`], discountGivenMinor: 5_000, phoneConfirmed: true, note: 'sample', markedById: null };
+    const r1 = (await enqueueErpDelivery(deps(), { storeId: storeA, orderId: a1.orderId, outcome: 'PARTIAL', courier: 'PATHAO', consignmentId: 'C-A1', collectedMinor: 118_300, at: clock, mark }))!;
+    expect(r1.created).toBe(true);
+    // The same result again is not sent again.
+    expect((await enqueueErpDelivery(deps(), { storeId: storeA, orderId: a1.orderId, outcome: 'PARTIAL', courier: 'PATHAO', consignmentId: 'C-A1', collectedMinor: 118_300, at: clock, mark }))!.created).toBe(false);
+    // A line that is not the order's is refused.
+    await expect(enqueueErpDelivery(deps(), { storeId: storeA, orderId: a1.orderId, outcome: 'PARTIAL', courier: 'PATHAO', consignmentId: 'C-A1', collectedMinor: 0, at: clock, mark: { ...mark, keptLineIds: ['NOT-A-LINE'] } })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    const push = await pushOf(storeA, a1.orderId, 'order.delivery');
+    expect((push.requestBody as { body: Record<string, unknown> }).body).toMatchObject({ status: 'PARTIAL', collected: 1183, mark: { keptLines: [`${a1.ext}-1`, `${a1.ext}-3`], discountGiven: 50, phoneConfirmed: true } });
+    expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+    eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: a1.orderId }))!;
+    expect(eo.identification).toBe('GREEN');
+    const res = await t.prisma.erpDeliveryResult.findUniqueOrThrow({ where: { id: r1.resultId } });
+    expect(res.sentAt?.getTime()).toBe(clock.getTime());
+    // delivery.identified arrives as well: the same identification, applied once.
+    await deliverAll();
+    expect((await erpOrderOf(t.prisma, { storeId: storeA, orderId: a1.orderId }))!.identification).toBe('GREEN');
+  });
+
+  it('PR 611 (qa-gate): a parcel re-booked after pickup sends no second shipment; an answer without billedAt leaves the bill date empty and flagged until the ERP gives it', async () => {
+    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+    await enqueueOrderPush(deps(), o.input);
+    expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+    const first = (await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: 'C-RB-1', chargeMinor: 6_000, pickedUpAt: clock }))!;
+    expect(first.created).toBe(true);
+    // The courier re-books the parcel under a new consignment after pickup: the order is billed once, so no second call.
+    const again = (await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: 'C-RB-2', chargeMinor: 6_000, pickedUpAt: clock }))!;
+    expect([again.created, again.pushId]).toEqual([false, first.pushId]);
+    expect(await t.prisma.erpPush.count({ where: { storeId: storeA, referenceId: o.orderId, documentType: 'shipment.create' } })).toBe(1);
+    // The ERP's answer comes without billedAt: the shop never guesses the bill date (the books match per day).
+    globalThis.fetch = (async (input: string | URL, init?: RequestInit) => {
+      const res = await world.fetch(input as string, init as never);
+      if (!String(input).endsWith('/shipments')) return res;
+      const body = (await res.json()) as Record<string, unknown>;
+      return new Response(JSON.stringify({ ...body, billedAt: null }), { status: res.status, headers: res.headers });
+    }) as typeof fetch;
+    try {
+      expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+    } finally {
+      globalThis.fetch = world.fetch as typeof fetch;
+    }
+    let eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: o.orderId }))!;
+    expect([eo.billedAt, !!eo.shipmentSentAt, eo.consignmentId]).toEqual([null, true, 'C-RB-1']);
+    expect((await pushOf(storeA, o.orderId, 'shipment.create')).lastError).toBe(BILLED_AT_MISSING);
+    // The order check reads the ERP's copy of the order and keeps the ERP's own bill date.
+    await checkErpOrders(deps(), { storeId: storeA });
+    eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: o.orderId }))!;
+    expect(eo.billedAt?.toISOString().slice(0, 10)).toBe((world.v6().getOrder(o.ext).answer as { billedAt: string }).billedAt);
   });
 
   it('CN-029 §16: one store never touches the other — the same order number in store B is its own order, lines and hold', async () => {
@@ -441,9 +506,11 @@ describe.skipIf(!HAS_TEST_DB)('PR 610 on PostgreSQL: orders to the ERP v6', () =
     expect((await erpCheckoutPaused(deps(), storeB)).paused).toBe(false);
   });
 
-  it('a v5 store gets none of it: no hold pause, no order check', async () => {
+  it('a v5 store gets none of it: no hold pause, no order check, no shipment, no delivery result', async () => {
     overrides.set(`erp.model@${storeB}`, 'v5');
     expect(await checkErpOrders(deps(), { storeId: storeB })).toMatchObject({ status: 'skipped', reason: 'ERP_MODEL_V5' });
+    expect(await enqueueErpShipment(deps(), { storeId: storeB, orderId: randomUUID(), courier: 'PATHAO', consignmentId: 'C-X', chargeMinor: null, pickedUpAt: clock })).toBeNull();
+    expect(await enqueueErpDelivery(deps(), { storeId: storeB, orderId: randomUUID(), outcome: 'DELIVERED', courier: 'PATHAO', consignmentId: 'C-X', collectedMinor: 0, at: clock })).toBeNull();
     expect(await erpHoldNotice(deps(), storeB)).toBeNull();
     overrides.set(`erp.model@${storeB}`, 'v6');
   });

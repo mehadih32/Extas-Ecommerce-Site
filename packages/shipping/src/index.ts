@@ -69,6 +69,8 @@ export * from './picking-pure';
 export * from './picking';
 export * from './sync';
 export * from './truth';
+// PR 611 (CN-028, ERP contract v6): the shipment at pickup, every courier result and the Partial delivery box.
+export * from './erp-v6';
 export * from './returns';
 export * from './packing-pure';
 export * from './packing';

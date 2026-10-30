@@ -59,13 +59,18 @@
 //                                                             (orders.advance.request; nothing moves money or changes COD)
 //   POST  /api/admin/orders/:id/advance/resend                PR 542: {channels, note?, version?} "Send again" (orders.advance.request)
 //   GET   /api/admin/orders/:id/erp                           PR 610, 611 (ERP contract v6): the order at the ERP — its
-//                                                             pieces, holds, bill and identification (orders.read);
+//                                                             pieces, holds, bill and identification — and the Partial
+//                                                             delivery box (orders.read; the box needs delivery.read);
 //                                                             `erp: null` in v5
 //   POST  /api/admin/orders/:id/erp/lines/:lineId             PR 610: {action: WAIT | REPLACE | CANCEL, sku?, grade?,
 //                                                             reason?} a short line's decision, sent to the ERP (orders.lines)
+//   POST  /api/admin/orders/:id/erp/partial-delivery          PR 611: {keptLineIds, paidMinor, discountGivenMinor,
+//                                                             phoneConfirmed, note?} the Partial delivery box, sent as the
+//                                                             delivery result's mark (delivery.outcomes); nothing moves money
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { decideErpLine, erpOrderView } from '@extas/inventory';
 import * as od from '@extas/orders';
+import { partialBoxView, savePartialDelivery } from '@extas/shipping';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
 import { shippingFail } from './shipping-api';
@@ -177,8 +182,8 @@ export function editBody(input: Record<string, unknown>): Record<string, unknown
 }
 
 /**
- * PR 610 — `/api/admin/orders/:id/erp[/…]` (ERP contract v6). The service checks the permission again (the line
- * decision `orders.lines`) and writes the timeline and the audit row; their refusals
+ * PR 610, 611 — `/api/admin/orders/:id/erp[/…]` (ERP contract v6). The services check the permission again (the line
+ * decision `orders.lines`, the box `delivery.outcomes`) and write the timeline and the audit row; their refusals
  * (inventory or courier codes) are answered as JSON. Nothing here calls the ERP: the documents are queued and the relay
  * sends them.
  */
@@ -187,18 +192,22 @@ async function erpRoute(request: Request, deps: AdminDeps | null, orderId: strin
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
   const [c, lineId] = rest;
-  const permission = !c ? 'orders.read' : c === 'lines' ? 'orders.lines' : null;
-  if (!permission || (c === 'lines' && (!lineId || rest.length !== 2))) return fail(404, 'not-found');
+  const permission = !c ? 'orders.read' : c === 'lines' ? 'orders.lines' : c === 'partial-delivery' ? 'delivery.outcomes' : null;
+  if (!permission || (c === 'lines' && (!lineId || rest.length !== 2)) || (c === 'partial-delivery' && rest.length !== 1)) return fail(404, 'not-found');
   if ((!c && m !== 'GET') || (c && m !== 'POST')) return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission, storeId });
   if (g instanceof Response) return g;
   const who = { actor: g.actor, storeId, ctx: g.ctx };
+  const base = { db: deps!.db, settings: deps!.resolver, now: deps!.now };
   try {
     if (!c) {
-      return json({ ok: true, erp: await erpOrderView(await inventoryDeps(deps!), who, orderId) });
+      const erp = await erpOrderView(await inventoryDeps(deps!), who, orderId);
+      const box = erp ? await partialBoxView(base, who, orderId).catch(() => null) : null;
+      return json({ ok: true, erp, box });
     }
     const input = await body(request);
-    return json({ ok: true, result: await decideErpLine(await inventoryDeps(deps!), who, { ...input, orderId, lineId: decodeURIComponent(lineId!) } as never) });
+    if (c === 'lines') return json({ ok: true, result: await decideErpLine(await inventoryDeps(deps!), who, { ...input, orderId, lineId: decodeURIComponent(lineId!) } as never) });
+    return json({ ok: true, result: await savePartialDelivery(base, who, { ...input, orderId } as never) });
   } catch (e) {
     return shippingFail(e);
   }
@@ -283,7 +292,7 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.reassessOrder(x.deps, x.who, id) }));
   }
-  // PR 610 (ERP contract v6): the order at the ERP, a short line's decision
+  // PR 610, 611 (ERP contract v6): the order at the ERP, a short line's decision, the Partial delivery box
   if (b === 'erp') return erpRoute(request, deps, id, m, path.slice(2));
   if (m !== 'POST') return notAllowed();
   const run = (perm: od.OrdersPermission, fn: (x: Ctx, input: Record<string, unknown>, opts: od.CommandOptions) => Promise<od.CommandResult>) =>

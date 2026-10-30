@@ -32,6 +32,7 @@ export * from './erp-link';
 // shipment at pickup and every delivery result, their event handlers and the relay's v6 steps.
 export * from './erp-orders-v6';
 export * from './erp-orders-v6-events';
+export * from './erp-shipments-v6';
 export * from './erp-v6-relay';
 export * from './guard';
 export * from './sync';

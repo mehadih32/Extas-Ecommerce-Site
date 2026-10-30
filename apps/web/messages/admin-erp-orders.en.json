@@ -65,11 +65,30 @@
       "send": "Send to the ERP",
       "done": "Sent to the ERP"
     },
+    "box": {
+      "title": "Partial delivery",
+      "sub": "Tick the lines the customer kept, then the amount paid and any discount promised by phone.",
+      "required": "The courier says partial: fill this box.",
+      "closed": "The parcel is handed back: the box is closed.",
+      "courier": "Courier says",
+      "collected": "Courier collected",
+      "kept": "Kept",
+      "paid": "Amount paid (taka)",
+      "discount": "Discount promised by phone (taka)",
+      "discountHint": "Write every discount here: the ERP never guesses one.",
+      "phone": "Confirmed by phone",
+      "note": "Note",
+      "save": "Save and send",
+      "saved": "Saved and sent to the ERP",
+      "last": "Last saved {at}",
+      "money": "The delivery charge and anything underpaid stay in our own books; only the amount paid goes to the ERP."
+    },
     "err": {
       "FORBIDDEN": "You do not have permission for this.",
       "INVALID_INPUT": "Something in the form is not right.",
       "CONFLICT": "This line is no longer waiting.",
       "NOT_FOUND": "This order is not at the ERP.",
+      "NOT_ACTIVE": "The box cannot be saved now.",
       "network": "No connection. Try again.",
       "other": "It did not work. Try again."
     }

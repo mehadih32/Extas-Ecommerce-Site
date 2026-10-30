@@ -285,17 +285,19 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await api('POST', [o.orderId, 'advance'], { body: {} })).status).toBe(404);
   });
 
-  it('PR 610: the ERP part of an order — in v5 there is none; a short line is refused; paths and methods checked', async () => {
+  it('PR 610, 611: the ERP part of an order — in v5 there is none; a short line and the Partial delivery box are refused; paths and methods checked', async () => {
     const o = await f.place('api-erp');
-    expect(await api('GET', [o.orderId, 'erp'], { cookie: reader })).toMatchObject({ status: 200, body: { ok: true, erp: null } });
+    expect(await api('GET', [o.orderId, 'erp'], { cookie: reader })).toMatchObject({ status: 200, body: { ok: true, erp: null, box: null } });
     expect((await api('POST', [o.orderId, 'erp'], { body: {} })).status).toBe(405);
     expect((await api('GET', [o.orderId, 'erp', 'lines', 'X-1'])).status).toBe(405);
     expect((await api('POST', [o.orderId, 'erp', 'teleport'], { body: {} })).status).toBe(404);
     expect((await api('POST', [o.orderId, 'erp', 'lines'], { body: {} })).status).toBe(404);
-    // a reader may not decide a line
+    // a reader may not decide a line nor fill the box
     expect((await api('POST', [o.orderId, 'erp', 'lines', 'X-1'], { body: { action: 'WAIT' }, cookie: reader })).status).toBe(403);
-    // the owner may, but a v5 store has no ERP lines
+    expect((await api('POST', [o.orderId, 'erp', 'partial-delivery'], { body: {}, cookie: reader })).status).toBe(403);
+    // the owner may, but a v5 store has no ERP lines and no box
     expect(await api('POST', [o.orderId, 'erp', 'lines', 'X-1'], { body: { action: 'WAIT' } })).toMatchObject({ body: { ok: false, error: 'CONFLICT' } });
     expect(await api('POST', [o.orderId, 'erp', 'lines', 'X-1'], { body: { action: 'CANCEL' } })).toMatchObject({ body: { ok: false, error: 'INVALID_INPUT' } });
+    expect(await api('POST', [o.orderId, 'erp', 'partial-delivery'], { body: { keptLineIds: [], paidMinor: 0, discountGivenMinor: 0, phoneConfirmed: false } })).toMatchObject({ body: { ok: false, error: 'NOT_ACTIVE' } });
   });
 });
