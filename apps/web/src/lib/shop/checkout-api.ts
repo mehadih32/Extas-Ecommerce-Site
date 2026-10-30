@@ -53,6 +53,17 @@ export function refusal(e: unknown): Response {
   return errorResponse(e);
 }
 
+/**
+ * Confirm's refusal (CN-029 Phase 3 qa-gate I3, PR 610): checkout paused while the ERP holds the shop's account is an
+ * expected state of the shop, not a failed request — it answers 200 with `ok: false` and `PAUSED` (the browser logs
+ * every 4xx as a console error; the page shows its calm notice). No order is made either way. Every other refusal keeps
+ * its own status.
+ */
+export function placeRefusal(e: unknown): Response {
+  if (e instanceof CheckoutError && e.code === 'PAUSED') return json({ ok: false, error: e.code }, { status: 200 });
+  return refusal(e);
+}
+
 export const langOf = (v: unknown): ShopLang => (isShopLang(v) ? v : 'en');
 
 /**
@@ -186,7 +197,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     if (device) headers.append('set-cookie', bagCookie(DEVICE_COOKIE, device, capture.retentionDays));
     return json({ ok: true, number: r.number, replay: r.replay, next: nextHref(lang, r.next, r.number) }, { status: r.replay ? 200 : 201, headers });
   } catch (e) {
-    return refusal(e);
+    return placeRefusal(e);
   }
 }
 

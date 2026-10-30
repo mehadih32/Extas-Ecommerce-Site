@@ -24,6 +24,9 @@
 // PR 605: a gift checkout (`gift`): the "Sending a gift" card above the details, which become the receiver's; every
 // quote and the order say it is a gift, the gift card is checked as the server checks it, and a refused gift field is
 // pointed at like any other.
+// PR 610 (CN-029 Phase 3 qa-gate I3): while checkout is paused (the ERP holds the shop's account) a calm line says so
+// above the form from the first paint and stays; a Confirm that meets the pause (it began after the page opened) shows
+// the same line instead of a toast. Confirm still asks the server, which decides: no order is made during a pause.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, checkGift, GIFT_FIELDS, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type GiftField, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
@@ -37,6 +40,7 @@ import { DetailsFields } from './DetailsFields';
 import { GiftCard, type GiftConfig, type GiftForm } from './GiftCard';
 import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
+import { PausedNote } from './PausedNote';
 import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
 import { clearDraft, forgetDetails, newOrderKey, nextOnEnter, rememberDetails, saveDraft, useDraft, useRemembered } from './draft';
@@ -91,9 +95,13 @@ export interface CheckoutFormProps {
   gift?: GiftConfig | null;
   /** PR 159: "Share my location" (`risk.capture.gpsButton`; never on a gift), how finely and how long it is kept; null: off. */
   gps?: GpsConfig | null;
+  /** PR 610 (qa-gate I3): checkout was paused when the page was drawn. */
+  paused?: boolean;
 }
 
 const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
+/** PR 610 (qa-gate I3): the pause line's id and test id. */
+const PAUSED_ID = 'co-paused';
 
 export function CheckoutForm({
   view: first,
@@ -117,6 +125,7 @@ export function CheckoutForm({
   backfill = false,
   gift: giftCfg = null,
   gps: gpsCfg = null,
+  paused: pausedFirst = false,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -125,6 +134,7 @@ export function CheckoutForm({
     if (rememberDays <= 0) forgetDetails();
   }, [rememberDays]);
   const [view, setView] = useState<CheckoutView>(first);
+  const [paused, setPaused] = useState(pausedFirst);
   const [reading, setReading] = useState(false);
   /** The line the delivery step shows the answer for; while the box says something else, it says "Reading …". */
   const [readLine, setReadLine] = useState<string | null>(null);
@@ -383,7 +393,12 @@ export function CheckoutForm({
     }
     if (a.error === 'NO_PAYMENT') return showToast(formEl, w('need.pay'));
     // PR 610: checkout pauses by itself while the ERP holds the shop's account; the bag and the form stay as they are.
-    if (a.error === 'PAUSED') return showToast(formEl, w('err.paused'));
+    // qa-gate I3: the calm line above the form (it stays), brought into sight — never a toast that is gone in seconds.
+    if (a.error === 'PAUSED') {
+      setPaused(true);
+      requestAnimationFrame(() => document.getElementById(PAUSED_ID)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      return;
+    }
     if (a.error === 'OUT_OF_STOCK' || a.error === 'EMPTY' || a.error === 'CART_NOT_OPEN') {
       showToast(formEl, w(a.error === 'OUT_OF_STOCK' ? 'err.stock' : 'err.empty'));
       window.location.assign(bagHref);
@@ -567,6 +582,7 @@ export function CheckoutForm({
         <div className="split-side">
           <div className="stack s16" style={{ minWidth: 0 }}>
             <h1 className="h1 co-donly">{w('title')}</h1>
+            {paused ? <PausedNote title={w('paused.title')} text={w('paused.text')} testId={PAUSED_ID} /> : null}
             {giftCfg ? (
               <GiftCard
                 cfg={giftCfg}
