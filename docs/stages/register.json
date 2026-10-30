@@ -12901,6 +12901,7 @@
     "date": "2026-10-30",
     "note": "orders to the ERP v6 (v6 stores only; v5 unchanged): one `lineId` per piece with quantity 1 (follow-up 491), `customerPrice` in whole taka (the order's discount spread by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), `deliveryCharge`, `advancePaid` (online + wallet), `grade`; ErpOrder / ErpOrderLine rows kept with the order (line ids stable across revisions); the answer's `erpTotal`, each line's `shopPrice` and `fromReturnStock` stored. A 409 the ERP keeps against its key is HELD with its reason and goes again by itself with a new key round (migration `0053_erp_orders_v6`: `ErpPush.keyRound`, `heldReason`): `ACCOUNT_ON_HOLD` pauses checkout (`erp.hold.pauseCheckout`, on; `PAUSED`, the bag kept) until `account.released` or the account check; `INSUFFICIENT_STOCK` when the ERP has the stock; `NO_SHOP_PRICE` stops that SKU (`shopPriceMissingAt`) until the ERP takes it; an order cancelled before the ERP had it is never sent. `order.line.short` / `filled` handled; the order page's ERP card shows \"From ERP return stock\" and the admin decides a short line (WAIT, REPLACE, CANCEL; `orders.lines`, audited). Follow-up 490: the order check (`inventory.erp.checkOrders`, every `erp.account.checkMinutes`) reads the account and the ERP's own copy of open orders, so a lost line webhook or answer is caught up. Registry v66 (`erp.orders.*`). Store isolation tested",
     "github": [
+     "#61, 31 Oct",
      "#59, 30 Oct",
      "#56, 30 Oct",
      "#55, 30 Oct"
@@ -16615,6 +16616,7 @@
     "date": "2026-10-30",
     "note": "exchange through the ERP (CN-028; extends PR 185–190): on `erp.model` v6 the approval goes through the ERP — only within `policy.exchange.windowHours` of the courier's \"delivered\"; the replaced lines of the old order marked; a live ERP stock check first, regular orders first (`exchange.erp.keepForOrders`): short stock leaves the exchange waiting with the admin told, retried hourly with a new idempotency key; `POST /orders` with `exchange.ofExternalOrderId`, a clear note and per-line `replacesLineId`, the new order `<old>-X<n>`; a dearer piece paid by the customer when `exchange.passPriceRiseToCustomer` is on, no money ever goes back; the original sale stands. The hourly job reads `GET /exchanges` (the 4-day watch; settled, billed, credited or cancelled close the shop exchange); the Exchanges tab shows the exchanges at risk from `GET /exchanges?status=pending`; a late old piece marked once by `POST /exchanges/{id}/late-return`. v5 unchanged",
     "github": [
+     "#61, 31 Oct",
      "#56, 30 Oct"
     ]
    },
@@ -24915,6 +24917,7 @@
     "date": "2026-10-30",
     "note": "The books match engine: checks A–F per store link with zero tolerance (account rows by group, the tie formula, returns, the stored summary, fixed costs, billed orders), job `inventory.books.close` once a night after `books.close.runAt` (looked for every `books.close.checkMinutes`, `books.recheck.days` closed days again), an append-only hash-chained day close per day (a new version when it moves, HISTORY_CHANGED for a matched day), weeks and the lifetime check from the day closes, the month close only when every day matched (`books.close.requireMatched`) or with the owner's override (PIN, reason, kept), re-open as a new version, the year sign-off; a difference fixed only by a reversal plus a new entry (`books.adjust`, the owner's PIN, a reason, the ERP's matching row; PRIOR_PERIOD in a closed month); the owner's books PIN (scrypt hash only, never logged, lock after `books.pin.maxAttempts`); Money → Books → Match, Differences, Closes and the Needs-you-now row; migration `0055_books_pin`; registry v68; CN-029 Phase 1 (Gyani)",
     "github": [
+     "#61, 31 Oct",
      "#60, 31 Oct",
      "#56, 30 Oct"
     ]
@@ -27138,6 +27141,7 @@
     "date": "2026-10-30",
     "note": "switch-over to the ERP model and the per-store ERP link (CN-028, CN-029 Phase 2; migration `0057_erp_switchover`, settings v70 `registry-switchover.ts`): **Settings → ERP link** (`/admin/settings/erp-link?storeId=`, `vault.read` per store): the store's own keys form (API key, webhook secret, signing secret in the vault under the store id only; Keys & connections with `?storeId=`; store A's key never reads or writes store B, tested), what was synced each way, the last summary the ERP accepted, the queues (orders waiting/held/failed, v5 orders kept at the switch, open exchanges, summaries waiting), the balance owed by both books, the books match state and the ERP-calls card moved here (follow-up 524; the per-store signing secret signs v6 calls). The switch: the date from the ERP's `GET /switch-over`, a dry run first (changes nothing but its report, counts for `erp.switchOver.dryRunMaxHours`), then the owner alone with his books PIN and the date typed back: the moved old orders and the opening balance booked once at the buying price, the OUT orders billed and in the pipeline, the month before backfilled from `GET /cost-of-goods`, customer payments, returns and ad spend never sent again, `erp.model` v5 → v6 with `ownerApproved`, the four `returns.legacy.*` switches OFF for that store (never deleted, follow-up 545), a waiting v5 order re-sent as v6 or held (follow-up 530), a wrong opening balance put right by a new link epoch (follow-up 555), a handover revokes the store's keys (follow-up 556). Nobody's store is switched by the build.",
     "github": [
+     "#61, 31 Oct",
      "#58, 30 Oct"
     ]
    },
@@ -27200,6 +27204,7 @@
     "date": "2026-10-30",
     "note": "ERP v6 acceptance suite (a go-live gate; settings v70 `erp.acceptance.*`): `runErpAcceptance` (@extas/adapters, 21 checks of `docs/erp/site-changes-v6.md` §4: contract, catalogue, orders, deliveries, return lists, checks, Return stock, exchanges, summaries, fixed costs, account, the retired v5 calls, switch-over, cost of goods, signed site calls) on the practice ERP in CI with its own actions driven; the books drills on PostgreSQL (switch day, same webhook twice, lost webhook, reversal before its original, wrong amount, hold → checkout pause → resume, a two-day outage, a closed day that moves, an exchange never returned, a month that must not close, the tie formula per day/week/month/year/life, store isolation) and the 72-hour exchange rule. Against the demo ERP every night (`erp-acceptance.yml`) and before every release (`deploy.yml` → `deploy.sh`, ~~before the migration~~ after the migration and before the new colour starts, qa-gate 30 Oct) on the runner (`infra/deploy/erp-acceptance.sh`): read-only unless `erp.acceptance.demoWrites`; \"waiting for the demo key\" (nothing called, nothing failed) until the owner types it on the ERP link page's demo-key card (vault, installation-wide); an unreachable demo ERP or a refused key is reported, not failed; on the demo ERP a time-out, network error, 5xx, 429 or 404 in any check is SKIP and `unreachable` (only a wrong figure or a broken answer fails), a run past the time limit is \"not finished\" and one that cannot read the shop's database is \"not run\" (reported, exit 0); a failed check stops the release before the switch. Report in `docs/reports/erp-acceptance/latest/`.",
     "github": [
+     "#61, 31 Oct",
      "#60, 31 Oct",
      "#58, 30 Oct"
     ]
