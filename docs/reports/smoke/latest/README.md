@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-30 11:07 (Asia/Dhaka)
+# Smoke test · 2026-10-30 14:53 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (194টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (212টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `fbfa4005ab4e` · after deploy · result **PASS** (194 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `b16315ec946f` · after deploy · result **PASS** (212 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -58,6 +58,7 @@ Site: https://new.extas.com.bd · commit `fbfa4005ab4e` · after deploy · resul
 | `/admin/help` | phone | 200 | `/admin/help` | ok | [picture](admin-help-phone.jpg) |
 | `/admin/integrations` | phone | 200 | `/admin/integrations` | ok | [picture](admin-integrations-phone.jpg) |
 | `/admin/messages/journey` | phone | 200 | `/admin/messages/journey` | ok | [picture](admin-messages-journey-phone.jpg) |
+| `/admin/money/books` | phone | 200 | `/admin/money/books` | ok | [picture](admin-money-books-phone.jpg) |
 | `/admin/orders` | phone | 200 | `/admin/orders` | ok | [picture](admin-orders-phone.jpg) |
 | `/admin/orders/confirm` | phone | 200 | `/admin/orders/confirm` | ok | [picture](admin-orders-confirm-phone.jpg) |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | [picture](admin-products-phone.jpg) |
@@ -101,6 +102,14 @@ Site: https://new.extas.com.bd · commit `fbfa4005ab4e` · after deploy · resul
 | `/admin/messages/consent` | phone | 200 | `/admin/messages/consent` | ok | [picture](admin-messages-consent-phone.jpg) |
 | `/admin/messages/templates` | phone | 200 | `/admin/messages/templates` | ok | [picture](admin-messages-templates-phone.jpg) |
 | `/admin/support/settings` | phone | 200 | `/admin/support/settings` | ok | [picture](admin-support-settings-phone.jpg) |
+| `/admin/money/books?view=payments` | phone | 200 | `/admin/money/books` | ok | [picture](admin-money-books-view-payments-phone.jpg) |
+| `/admin/money/books?view=pipeline` | phone | 200 | `/admin/money/books` | ok | [picture](admin-money-books-view-pipeline-phone.jpg) |
+| `/admin/money/books/match` | phone | 200 | `/admin/money/books/match` | ok | [picture](admin-money-books-match-phone.jpg) |
+| `/admin/money/books/differences` | phone | 200 | `/admin/money/books/differences` | ok | [picture](admin-money-books-differences-phone.jpg) |
+| `/admin/money/books/differences?status=all` | phone | 200 | `/admin/money/books/differences` | ok | [picture](admin-money-books-differences-status-all-phone.jpg) |
+| `/admin/money/books/closes` | phone | 200 | `/admin/money/books/closes` | ok | [picture](admin-money-books-closes-phone.jpg) |
+| `/admin/orders/returns/handback` | phone | 200 | `/admin/orders/returns/handback` | ok | [picture](admin-orders-returns-handback-phone.jpg) |
+| `/admin/orders/returns/erp` | phone | 200 | `/admin/orders/returns/erp` | ok | [picture](admin-orders-returns-erp-phone.jpg) |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -155,6 +164,7 @@ Site: https://new.extas.com.bd · commit `fbfa4005ab4e` · after deploy · resul
 | `/admin/help` | desktop | 200 | `/admin/help` | ok | [picture](admin-help-desktop.jpg) |
 | `/admin/integrations` | desktop | 200 | `/admin/integrations` | ok | [picture](admin-integrations-desktop.jpg) |
 | `/admin/messages/journey` | desktop | 200 | `/admin/messages/journey` | ok | [picture](admin-messages-journey-desktop.jpg) |
+| `/admin/money/books` | desktop | 200 | `/admin/money/books` | ok | [picture](admin-money-books-desktop.jpg) |
 | `/admin/orders` | desktop | 200 | `/admin/orders` | ok | [picture](admin-orders-desktop.jpg) |
 | `/admin/orders/confirm` | desktop | 200 | `/admin/orders/confirm` | ok | [picture](admin-orders-confirm-desktop.jpg) |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | [picture](admin-products-desktop.jpg) |
@@ -198,7 +208,15 @@ Site: https://new.extas.com.bd · commit `fbfa4005ab4e` · after deploy · resul
 | `/admin/messages/consent` | desktop | 200 | `/admin/messages/consent` | ok | [picture](admin-messages-consent-desktop.jpg) |
 | `/admin/messages/templates` | desktop | 200 | `/admin/messages/templates` | ok | [picture](admin-messages-templates-desktop.jpg) |
 | `/admin/support/settings` | desktop | 200 | `/admin/support/settings` | ok | [picture](admin-support-settings-desktop.jpg) |
+| `/admin/money/books?view=payments` | desktop | 200 | `/admin/money/books` | ok | [picture](admin-money-books-view-payments-desktop.jpg) |
+| `/admin/money/books?view=pipeline` | desktop | 200 | `/admin/money/books` | ok | [picture](admin-money-books-view-pipeline-desktop.jpg) |
+| `/admin/money/books/match` | desktop | 200 | `/admin/money/books/match` | ok | [picture](admin-money-books-match-desktop.jpg) |
+| `/admin/money/books/differences` | desktop | 200 | `/admin/money/books/differences` | ok | [picture](admin-money-books-differences-desktop.jpg) |
+| `/admin/money/books/differences?status=all` | desktop | 200 | `/admin/money/books/differences` | ok | [picture](admin-money-books-differences-status-all-desktop.jpg) |
+| `/admin/money/books/closes` | desktop | 200 | `/admin/money/books/closes` | ok | [picture](admin-money-books-closes-desktop.jpg) |
+| `/admin/orders/returns/handback` | desktop | 200 | `/admin/orders/returns/handback` | ok | [picture](admin-orders-returns-handback-desktop.jpg) |
+| `/admin/orders/returns/erp` | desktop | 200 | `/admin/orders/returns/erp` | ok | [picture](admin-orders-returns-erp-desktop.jpg) |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Database (PR 139): ok: 27 tables append-only; the app connects as extas_app.
+Database (PR 139): ok: 28 tables append-only; the app connects as extas_app.
