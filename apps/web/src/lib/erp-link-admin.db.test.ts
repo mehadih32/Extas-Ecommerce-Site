@@ -6,7 +6,7 @@
 // replaced by a test one (no network): its test passes for a key starting with "good-". Every value is made up.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { allAdapters, connectionCatalogue, defineAdapter, requireSecret } from '@extas/adapters';
+import { allAdapters, connectionCatalogue, defineAdapter, ERP_ACCEPTANCE_DEMO_KEY, requireSecret } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import * as inv from '@extas/inventory';
@@ -234,8 +234,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 619 · the ERP link page per store (PostgreSQL
     expect(after.body.connections[0]).toMatchObject({ keySaved: false });
   });
 
+  const DEMO_KEY = 'sample-demo-erp-key-621';
+  it('PR 621: the demo ERP key for the acceptance run is the installation`s, saved by a person with keys for every store, never shown, removed by revoking', async () => {
+    expect((await page('GET', A, owner)).body.demoKey).toEqual({ canEdit: true, saved: false, savedAt: null });
+    // A reader of one store neither sees a way to change it nor may change it.
+    expect((await page('GET', A, readerA)).body.demoKey).toMatchObject({ canEdit: false, saved: false });
+    expect(await page('POST', A, readerA, { action: 'demoKey', key: DEMO_KEY })).toMatchObject({ status: 403 });
+    expect(await page('POST', A, owner, { action: 'demoKey', key: 'short' })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    const r = await page('POST', B, owner, { action: 'demoKey', key: ` ${DEMO_KEY} ` });
+    expect(r).toMatchObject({ status: 200, body: { result: { saved: true }, demoKey: { saved: true } } });
+    // Kept for the installation (storeId null), never under a store; the value is the one typed (trimmed).
+    expect(await deps.vault!.get(ERP_ACCEPTANCE_DEMO_KEY, { storeId: null }, { service: 'test' })).toBe(DEMO_KEY);
+    expect(await t.prisma.storeSecret.count({ where: { name: ERP_ACCEPTANCE_DEMO_KEY } })).toBe(0);
+    expect((await page('GET', A, readerA)).body.demoKey).toMatchObject({ canEdit: false, saved: true });
+    const audit = await t.prisma.auditLog.findFirstOrThrow({ where: { action: 'vault.put', entityId: ERP_ACCEPTANCE_DEMO_KEY } });
+    expect(JSON.stringify(audit)).not.toContain(DEMO_KEY);
+    // Removed: revoked (the row stays), and the run goes back to waiting.
+    expect(await page('POST', A, owner, { action: 'demoKeyRemove' })).toMatchObject({ status: 200, body: { result: { saved: false }, demoKey: { saved: false } } });
+    expect(await deps.vault!.get(ERP_ACCEPTANCE_DEMO_KEY, { storeId: null }, { service: 'test' })).toBeNull();
+    expect(await t.prisma.installationSecret.count({ where: { name: ERP_ACCEPTANCE_DEMO_KEY } })).toBe(1);
+  });
+
   it('no answer ever carried a key', () => {
     const all = texts.join('\n');
-    for (const k of [...Object.values(KEYS.A), ...Object.values(KEYS.B)]) expect(all).not.toContain(k);
+    for (const k of [...Object.values(KEYS.A), ...Object.values(KEYS.B), DEMO_KEY]) expect(all).not.toContain(k);
   });
 });

@@ -20,6 +20,7 @@ on:
     paths-ignore:
       - "docs/reports/server/**"
       - "docs/reports/smoke/**"
+      - "docs/reports/erp-acceptance/**"
   # CN-023: nightly.yml (every night and by hand) calls this workflow; its run is named "nightly", so deploy.yml
   # (which follows "ci" runs) never starts for it.
   workflow_call:
@@ -83,7 +84,7 @@ jobs:
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh infra/deploy/erp-acceptance.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
           EXTAS_CONFIG_FILE=infra/config/server.conf infra/deploy/deploy.sh upstream blue > /tmp/sites/upstream.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile

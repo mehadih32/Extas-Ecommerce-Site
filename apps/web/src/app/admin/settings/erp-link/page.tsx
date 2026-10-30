@@ -361,6 +361,36 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
         </section>
       ) : null}
 
+      {v.demoKey.canEdit || v.demoKey.saved ? (
+        <section className="a2-card a2-mt12" data-testid="erp-link-demo" data-saved={v.demoKey.saved ? 'yes' : 'no'}>
+          <h2 className="a2-h4">{e('demo.title')}</h2>
+          <p className="a2-sm a2-mute a2-mt6">{e('demo.sub')}</p>
+          <p className="a2-sm a2-mt6" data-testid="erp-link-demo-state">
+            {v.demoKey.saved && v.demoKey.savedAt ? e('demo.saved', { at: at(v.demoKey.savedAt) }) : e('demo.missing')}
+          </p>
+          {v.demoKey.canEdit ? (
+            <div className="a2-row a2-gap8 a2-wrap a2-mt12">
+              <BooksForm
+                dict={bd}
+                url={api}
+                body={{ action: 'demoKey' }}
+                fields={[{ name: 'key', label: e('demo.key'), kind: 'secret', min: 8, maxLength: 512 }]}
+                label={v.demoKey.saved ? e('demo.replace') : e('demo.save')}
+                busyLabel={e('demo.busy')}
+                sendLabel={e('demo.send')}
+                warn={e('demo.warn')}
+                done={e('demo.done')}
+                tone="ghost"
+                testId="erp-link-demo-key"
+              />
+              {v.demoKey.saved ? (
+                <BooksForm dict={bd} url={api} body={{ action: 'demoKeyRemove' }} fields={[]} label={e('demo.remove')} busyLabel={e('demo.busy')} sendLabel={e('demo.removeSend')} warn={e('demo.removeWarn')} done={e('demo.removed')} tone="ghost" testId="erp-link-demo-remove" />
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       <div className="ad-note a2-mt12">
         <ShellIcon name="shield" size={16} />
         <div>{e('note')}</div>

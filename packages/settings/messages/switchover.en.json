@@ -15,6 +15,20 @@
         "label": "Rows in each list of the ERP link page",
         "help": "How many waiting orders, summaries and calls each list on the ERP link page shows."
       }
+    },
+    "acceptance": {
+      "demoBaseUrl": {
+        "label": "Demo ERP address",
+        "help": "The demo ERP the acceptance check runs against every night and before every release, once the demo shop key is saved. https only."
+      },
+      "timeoutSeconds": {
+        "label": "Wait for each demo ERP answer (seconds)",
+        "help": "How long the acceptance check waits for one answer from the demo ERP."
+      },
+      "demoWrites": {
+        "label": "Let the acceptance check write to the demo ERP",
+        "help": "Off: against the demo ERP only the reading checks run. On: it also places its own sample orders, deliveries, return lists, summaries and fixed costs there (their ids start with ACC-). The practice ERP always runs every check."
+      }
     }
   }
 }

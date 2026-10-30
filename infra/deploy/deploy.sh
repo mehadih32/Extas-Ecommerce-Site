@@ -11,7 +11,7 @@
 #                                           (with the preview login, read on the server and never printed)?
 # Database first (PR 13, 496): before the new colour starts, the migrate image runs `prisma migrate deploy` straight to
 # PostgreSQL and then the settings sync, on the extas network. If either fails, nothing else happens: the live colour
-# keeps the traffic. Migrations only add (expand first, contract in a later release), so the old colour keeps working
+# keeps the traffic. Then (PR 621) the ERP acceptance run against the demo ERP, when deploy.yml asks for it. Migrations only add (expand first, contract in a later release), so the old colour keeps working
 # on the migrated database while the new one starts, and a rollback needs no down-migration.
 # Blue/green: the live colour (blue|green) is in $EXTAS_ROOT/state/app.color. The new colour starts next to the old
 # one, must pass its health check and the smoke test, then Caddy switches its upstream with a graceful reload (open
@@ -246,6 +246,20 @@ if [ -n "${MIGRATE_IMAGE:-}" ]; then
 else
   MIGRATION="skipped (rollback: the database stays as it is)"
   log "rollback: the database stays as it is (migrations only go forward)"
+fi
+
+# ---- 0b. PR 621 (qa-gate B2): the ERP v6 acceptance run against the demo ERP -----------------------------------
+# On the migrated database (so the new version reads the vault and the settings with its own schema), before the new
+# colour starts. deploy.yml passes ERP_ACCEPTANCE_OUT (where the report goes). A failed check stops the release here:
+# the live colour keeps the traffic (it works on the migrated database: migrations only add). Waiting for the demo key,
+# a demo ERP that cannot be reached, a run that is not finished in time or could not read the database is reported
+# and lets the release go (erp-acceptance.sh exits 0). A rollback runs no migration and no acceptance.
+if [ -n "${MIGRATE_IMAGE:-}" ] && [ -n "${ERP_ACCEPTANCE_OUT:-}" ]; then
+  log "ERP acceptance against the demo ERP (or waiting for its key)"
+  if ! bash "$HERE/erp-acceptance.sh" "$ERP_ACCEPTANCE_OUT" "$MIGRATE_IMAGE"; then
+    record fail "ERP acceptance: a check failed against the demo ERP; live version unchanged"
+    die "ERP acceptance found a failed check (live version unchanged)"
+  fi
 fi
 
 # ---- 1. start the new colour next to the old one --------------------------------------------------------------

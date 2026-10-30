@@ -1,0 +1,61 @@
+# CN-029 Phase 2 · PR 621 — the ERP v6 acceptance run against the demo ERP (a go-live gate), every night ON the VM
+# through the self-hosted runner (CN-003), with the live version's migrate image (infra/deploy/erp-acceptance.sh).
+# deploy.yml runs the same check before every release. The demo key lives only in the vault (typed by the owner on
+# Settings → ERP link); this workflow holds no secret. Without the key the report says "waiting for the demo key" and
+# nothing fails. The practice ERP runs every check in CI (the package tests). The report is committed to
+# docs/reports/erp-acceptance/latest/ with [skip ci] (ci.yml ignores docs/reports/erp-acceptance/).
+name: erp-acceptance
+
+on:
+  schedule:
+    - cron: "0 22 * * *"   # 04:00 in Dhaka, after the 03:30 smoke test
+  workflow_dispatch:
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  acceptance:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ERP acceptance against the demo ERP (or waiting for its key)
+        id: run
+        continue-on-error: true
+        run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/erp-acceptance.sh "$RUNNER_TEMP/erp-acceptance"
+
+      - name: Commit the report
+        if: always()
+        env:
+          RESULT: ${{ steps.run.outcome }}
+        run: |
+          set -eu
+          rep="$RUNNER_TEMP/erp-acceptance"
+          [ -f "$rep/README.md" ] || { echo "no report was written (see the step above)"; exit 0; }
+          sudo chown -R "$(id -u):$(id -g)" "$rep"
+          cat "$rep/README.md"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf docs/reports/erp-acceptance/latest && mkdir -p docs/reports/erp-acceptance && cp -r "$rep" docs/reports/erp-acceptance/latest
+            git add -A docs/reports/erp-acceptance/latest
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "erp acceptance report: nightly ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when a check failed
+        if: steps.run.outcome == 'failure'
+        run: |
+          echo "The ERP acceptance run found a check that failed. See docs/reports/erp-acceptance/latest/README.md."
+          exit 1
