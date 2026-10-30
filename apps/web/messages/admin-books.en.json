@@ -1,0 +1,149 @@
+{
+  "bk": {
+    "title": {
+      "account": "ERP account"
+    },
+    "sub": {
+      "account": "What Retail owes the ERP, from the shop's own ledger. An entry is never changed or deleted: a mistake is put right by a new entry."
+    },
+    "v5": "The books start when this store switches to ERP contract v6. Until then nothing is written here.",
+    "noLink": "This store has no ERP connection of its own yet. The books open with its first ERP pull.",
+    "kpi": {
+      "shop": "We owe the ERP (our books)",
+      "erp": "The ERP says",
+      "waiting": "Waiting for the ERP's check",
+      "pipeline": "In the pipeline (billed, not settled)",
+      "pieces": "{n} pieces",
+      "checked": "Read {at}",
+      "never": "Not read yet"
+    },
+    "same": "Same as the ERP",
+    "differs": "Differs from the ERP by {amount}",
+    "hold": {
+      "on": "On hold: the ERP takes no new orders",
+      "off": "Not on hold",
+      "reason": "Why: {reason}",
+      "holdsOn": "A hold starts on {date} if no payment comes",
+      "lastPay": "Last payment {date} ({days} days ago)",
+      "noPay": "No payment recorded by the ERP yet",
+      "since": "Since {at}"
+    },
+    "chain": {
+      "ok": "Ledger intact · {n} entries",
+      "broken": "The ledger was changed outside the shop at entry {seq}. Tell the developer at once."
+    },
+    "opening": "Opening balance at the switch: {amount} from {date}",
+    "viewsAria": "ERP account views",
+    "view": {
+      "entries": "Ledger",
+      "payments": "Paid to ERP",
+      "pipeline": "Pipeline"
+    },
+    "col": {
+      "seq": "#",
+      "date": "Date",
+      "kind": "What",
+      "ref": "Order / reference",
+      "amount": "Amount",
+      "source": "From"
+    },
+    "kind": {
+      "BILL": "Bill (parcel left)",
+      "EXCHANGE_EXTRA": "Exchange: extra",
+      "EXCHANGE_ADJUSTMENT": "Exchange: adjustment",
+      "EXCHANGE_BILL": "Exchange: billed",
+      "EXCHANGE_CREDIT": "Exchange: credited",
+      "RETURN_CREDIT": "Return credit",
+      "PAYMENT": "Payment to the ERP",
+      "SWITCH_TRANSFER": "Switch transfer",
+      "REVERSAL": "Reversal",
+      "ADJUSTMENT": "Correction"
+    },
+    "source": {
+      "WEBHOOK": "ERP message",
+      "PULL": "ERP read",
+      "ANSWER": "ERP answer",
+      "MANUAL": "By hand",
+      "SWITCH": "Switch"
+    },
+    "reversedBy": "Undone by a later entry",
+    "reverses": "Undoes an earlier entry",
+    "filter": {
+      "kind": "What",
+      "all": "All",
+      "q": "Order, reference or event",
+      "go": "Show",
+      "state": "State",
+      "inPipeline": "In the pipeline"
+    },
+    "page": "Page {page} of {pages}",
+    "newer": "Newer",
+    "older": "Older",
+    "empty": {
+      "entries": "No entries yet",
+      "entriesSub": "The first entry comes when an order's parcel leaves (the ERP's bill).",
+      "pipeline": "Nothing in the pipeline",
+      "pipelineSub": "Every billed piece is delivered, approved or declined.",
+      "payments": "No payments recorded yet"
+    },
+    "pay": {
+      "record": "Record a payment",
+      "paidOn": "Paid on",
+      "amount": "Amount",
+      "method": "How (bank, bKash …)",
+      "reference": "Reference (bank or transaction id)",
+      "note": "Note",
+      "send": "Save the record",
+      "busy": "Saving …",
+      "done": "Saved. Nothing was sent to the ERP and no money moved.",
+      "warn": "This only writes down a payment you already made to the ERP. It sends no money and nothing to the ERP.",
+      "readOnly": "Only Accounts or the owner can record a payment to the ERP.",
+      "matched": "Matched with the ERP's payment of {date}",
+      "shopOnly": "The ERP has not recorded it yet",
+      "reversed": "Reversed",
+      "reversal": "Reversal of an earlier record",
+      "reverse": "Reverse",
+      "reverseReason": "Why (it stays in the history)",
+      "reverseBusy": "Reversing …",
+      "reverseDone": "Reversed by a new record.",
+      "erpOnly": "Payments the ERP recorded that are not recorded here",
+      "col": {
+        "paidOn": "Paid on",
+        "amount": "Amount",
+        "method": "How",
+        "reference": "Reference",
+        "match": "Match"
+      }
+    },
+    "pipe": {
+      "col": {
+        "order": "Order",
+        "line": "Piece",
+        "sku": "SKU",
+        "price": "Buying price",
+        "state": "State",
+        "since": "Since"
+      }
+    },
+    "state": {
+      "BILLED": "With the courier",
+      "RETURNING": "Coming back",
+      "WAITING_CHECK": "Waiting for the check",
+      "DELIVERED": "Delivered",
+      "APPROVED": "Approved (credited)",
+      "DECLINED": "Declined (our loss)"
+    },
+    "cancel": "Cancel",
+    "err": {
+      "INVALID_INPUT": "Please check: {fields}",
+      "NOT_FOUND": "It is not there any more. Reload the page.",
+      "NOT_V6": "The books start when this store switches to ERP contract v6.",
+      "NO_LINK": "This store has no ERP connection of its own yet.",
+      "ALREADY": "This is already done.",
+      "CONFLICT": "This cannot be done to this record.",
+      "FORBIDDEN": "You do not have permission for this.",
+      "network": "No connection. Try again.",
+      "default": "That did not work. Try again."
+    }
+  }
+}

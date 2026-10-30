@@ -15,6 +15,8 @@
 // - `inventory.erp.checkOrders` {storeId} — PR 610: the account and its hold (`GET /account`), the held orders woken
 //   when their reason is gone, and the catch-up of open orders from the ERP's own copy (follow-up 490), every
 //   `erp.account.checkMinutes` for each store that speaks v6.
+// - `inventory.books.checkAccount` {storeId} — PR 615: Retail's ERP account (bills, money events, pipeline, then
+//   `GET /account`: lost payments and the hold caught up), every `erp.account.checkMinutes` for each store on v6.
 // - `stockPollPlan` tells the scheduler how often to pull and for which stores: every store whose ERP mode is not
 //   "no ERP", every `erp.sync.stockPollMinutes` (contract: poll `updatedSince` every few minutes). `inventorySchedule`
 //   is the whole timetable, every interval from settings.
@@ -25,6 +27,7 @@ import { relayErpPushes, type RelayResult } from './erp-push';
 import { applyErpEvents, type ApplyEventsResult } from './erp-events';
 import { pullErpEvents, type EventsPullResult } from './erp-events-pull';
 import { checkErpOrders, type OrderCheckResult } from './erp-orders-v6';
+import { checkErpAccount, type AccountCheckResult } from './erp-account-check';
 import { isV6 } from './erp-model';
 import { ensureDefaultLocations } from './locations';
 import { evaluateLowStock, type LowStockRun } from './low-stock';
@@ -44,9 +47,10 @@ export type InventoryJob =
   | { name: 'inventory.erp.reconcile'; storeId: number }
   | { name: 'inventory.erp.pullEvents'; storeId: number }
   | { name: 'inventory.erp.applyEvents' }
-  | { name: 'inventory.erp.checkOrders'; storeId: number };
+  | { name: 'inventory.erp.checkOrders'; storeId: number }
+  | { name: 'inventory.books.checkAccount'; storeId: number };
 
-export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | (LowStockRun & { shortage: ShortageRun }) | ReconcileResult | EventsPullResult | ApplyEventsResult | OrderCheckResult;
+export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | (LowStockRun & { shortage: ShortageRun }) | ReconcileResult | EventsPullResult | ApplyEventsResult | OrderCheckResult | AccountCheckResult;
 
 export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): Promise<InventoryJobResult> {
   switch (job.name) {
@@ -70,6 +74,8 @@ export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): P
       return applyErpEvents(deps);
     case 'inventory.erp.checkOrders':
       return checkErpOrders(deps, { storeId: job.storeId });
+    case 'inventory.books.checkAccount':
+      return checkErpAccount(deps, { storeId: job.storeId });
   }
 }
 
@@ -107,6 +113,8 @@ export async function inventorySchedule(deps: InventoryDeps): Promise<{ everyMs:
           { everyMs: applyS * 1000, jobs: [{ name: 'inventory.erp.applyEvents' } as InventoryJob] },
           // PR 610: the account, the held orders and the catch-up of open orders.
           { everyMs: accountMin * 60_000, jobs: v6Stores.map((storeId): InventoryJob => ({ name: 'inventory.erp.checkOrders', storeId })) },
+          // PR 615: Retail's ERP account, the statement catch-up and the hold.
+          { everyMs: accountMin * 60_000, jobs: v6Stores.map((storeId): InventoryJob => ({ name: 'inventory.books.checkAccount', storeId })) },
         ]
       : []),
   ];

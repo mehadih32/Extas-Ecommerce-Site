@@ -103,7 +103,10 @@ describe('the 14 sections', () => {
     expect(sectionHome(sectionById('dashboard')!, OWNER)).toBe('/admin?home=1');
     expect(sectionHome(sectionById('products')!, viewer(['inventory.read']))).toBe('/admin/stock');
     expect(sectionHome(sectionById('products')!, OWNER)).toBe('/admin/products');
-    expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money');
+    // ~~expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money');~~ CN-028 · PR 615: Money opens Books.
+    expect(sectionHome(sectionById('support')!, OWNER)).toBe('/admin/support');
+    expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money/books');
+    expect(sectionHome(sectionById('money')!, viewer(['customers.read']))).toBe('/admin/money');
     // PR 285: the Customers section's front page is All customers
     expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');

@@ -19,7 +19,7 @@ import {
 import { isCatalogueError } from '@extas/catalogue';
 import { isCombosError } from '@extas/combos';
 import { isDeliveryError } from '@extas/delivery';
-import { isInventoryError } from '@extas/inventory';
+import { isBooksError, isInventoryError } from '@extas/inventory';
 import { isRulesError } from '@extas/rules';
 import { createVault, type Vault } from '@extas/vault';
 import { settingsResolver, settingsTimeoutMs, withTimeout, type AppResolver } from './settings';
@@ -70,6 +70,8 @@ export function errorResponse(e: unknown): Response {
   if (e instanceof AuthError) return fail(httpStatus(e.code), e.code, e.details);
   if (isCatalogueError(e)) return fail(e.status, e.code, e.details);
   if (isInventoryError(e)) return fail(e.status, e.code, e.details);
+  // CN-028 · PR 615, 616: the books' refusals (Money → Books).
+  if (isBooksError(e)) return fail(e.status, e.code, e.details);
   if (isRulesError(e)) return fail(e.status, e.code, e.details);
   if (isCombosError(e)) return fail(e.status, e.code, e.details);
   if (isDeliveryError(e)) return fail(e.status, e.code, e.details);

@@ -1,0 +1,22 @@
+{
+  "books": {
+    "payments": {
+      "matchDays": {
+        "label": "A payment matches the ERP's within (days)",
+        "help": "A payment you recorded as \"paid to ERP\" and the payment the ERP's Accounts team recorded are the same when the amount and the reference are the same and the dates are at most this many days apart. One without a match on the other side is shown as a difference."
+      }
+    },
+    "account": {
+      "lookbackDays": {
+        "label": "Read the ERP's statement back (days)",
+        "help": "Every account check reads the ERP's statement this many days back, so a payment whose message never arrived is still written into the books."
+      }
+    },
+    "ledger": {
+      "pageSize": {
+        "label": "Rows per page in Money → Books",
+        "help": "How many ledger entries, payments or pieces one page shows."
+      }
+    }
+  }
+}
