@@ -104,7 +104,10 @@ export async function reportParcelToErp(deps: Base, ref: { storeId: number; ship
   if (check?.state === 'RESOLVED' && check.resolution) {
     outcome = check.resolution === 'DELIVERED' ? 'DELIVERED' : 'RETURNED';
     collected = check.resolution === 'CHARGE_PAID_RETURN' ? Math.max(0, check.collectedMinor ?? 0) : check.resolution === 'RETURNED' ? 0 : collected;
-    at = check.resolvedAt ?? at;
+    // Money review: a "Delivered" the person confirms keeps the courier's delivered time — the ERP's 72-hour exchange
+    // window counts from it (orders' exchange-v6.ts), never from the moment the check was resolved. A parcel found to
+    // have come back is dated when the person found it, as before.
+    at = check.resolution === 'DELIVERED' ? (s.deliveredAt ?? check.resolvedAt ?? at) : (check.resolvedAt ?? at);
   }
   // The staff's box (kept by the courier's re-reads), else the door record, else none: the ERP identifies.
   // A box staff filled is the shop's own word on what the customer kept: it stands over a later "Delivered" read (only
