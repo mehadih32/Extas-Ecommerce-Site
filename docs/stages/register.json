@@ -102,7 +102,7 @@
     "S16",
     "S21"
    ],
-   "done": 1,
+   "done": 2,
    "total": 84,
    "parkedTotal": 0,
    "why": "The control room and the numbers it governs",
@@ -1163,7 +1163,7 @@
    "wave": "6",
    "range": "342–355, 504, 536–537, 568, 615–618",
    "total": 22,
-   "done": 1,
+   "done": 2,
    "state": "In progress",
    "parked": false,
    "registerStatus": "answered 18 Oct",
@@ -24724,18 +24724,34 @@
    "owner": "Gyani",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-10-30",
+    "note": "The books match engine: checks A–F per store link with zero tolerance (account rows by group, the tie formula, returns, the stored summary, fixed costs, billed orders), job `inventory.books.close` once a night after `books.close.runAt` (looked for every `books.close.checkMinutes`, `books.recheck.days` closed days again), an append-only hash-chained day close per day (a new version when it moves, HISTORY_CHANGED for a matched day), weeks and the lifetime check from the day closes, the month close only when every day matched (`books.close.requireMatched`) or with the owner's override (PIN, reason, kept), re-open as a new version, the year sign-off; a difference fixed only by a reversal plus a new entry (`books.adjust`, the owner's PIN, a reason, the ERP's matching row; PRIOR_PERIOD in a closed month); the owner's books PIN (scrypt hash only, never logged, lock after `books.pin.maxAttempts`); Money → Books → Match, Differences, Closes and the Needs-you-now row; migration `0055_books_pin`; registry v68; CN-029 Phase 1 (Gyani)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "inventory.books.close",
+     "books.close.runAt",
+     "books.close.checkMinutes",
+     "books.recheck.days",
+     "books.close.requireMatched",
+     "books.adjust",
+     "books.pin.maxAttempts"
+    ],
+    "code": [],
+    "names": [
+     "0055_books_pin"
+    ],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “হিসাব, খরচ আর রিপোর্ট” ধাপের অংশ: দোকানের খরচ, লাভ আর টাকার রিপোর্ট; জেলা ধরে বিক্রির হিসাব।",
-   "bnAuto": true,
+   "bn": "প্রতি রাতে দোকানের খাতা ERP-র খাতার সাথে দিন ধরে মেলানো হয়, এক পয়সাও ছাড় নেই; গরমিল ঠিক হয় শুধু উল্টো এন্ট্রি আর নতুন এন্ট্রি দিয়ে, মালিকের PIN দিয়ে; সব দিন মিললে তবেই মাস বন্ধ, নাহলে মালিকের কারণসহ সিদ্ধান্তে",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S16.md#pr-616"
   },

@@ -210,7 +210,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'business',
     base: '/admin/money',
     guide: 'finance',
-    tabs: [{ id: 'books', pages: [{ href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] }] }],
+    tabs: [
+      { id: 'books', pages: [{ href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] }] },
+      { id: 'match', pages: [{ href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] }] },
+      { id: 'differences', pages: [{ href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] }] },
+      { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },
+    ],
   },
   {
     id: 'reports',

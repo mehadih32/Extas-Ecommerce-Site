@@ -57,6 +57,7 @@
       "inventory_erp_applyEvents": "ERP events applied",
       "inventory_erp_checkOrders": "ERP account and open orders checked",
       "inventory_books_checkAccount": "ERP account statement read into the books",
+      "inventory_books_close": "Nightly books match and day close",
       "inventory_erp_pushDocuments": "Documents to the ERP",
       "inventory_lowStock_evaluate": "Low stock check",
       "inventory_erp_reconcile": "Stock check against the ERP",

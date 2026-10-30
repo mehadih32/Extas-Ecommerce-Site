@@ -8,6 +8,8 @@ export * from './tokens';
 export * from './totp';
 export * from './audit';
 export * from './rbac';
+// CN-028 · PR 616: the owner's PIN for the books (books.adjust, books.close).
+export * from './pin';
 export * from './roles';
 export * from './staff-auth';
 export * from './staff-admin';

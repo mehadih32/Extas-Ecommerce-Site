@@ -41,6 +41,12 @@ export * from './erp-account';
 export * from './erp-pipeline';
 export * from './erp-account-check';
 export * from './erp-account-view';
+// PR 616 (CN-028): the books match engine (checks A–F, the day closes and their roll-ups), the owner's closes and PIN,
+// corrections by reversal plus a new entry, and what Money → Books shows (the shapes Hisabi reads are in books-view.ts).
+export * from './books-match';
+export * from './books-close';
+export * from './books-adjust';
+export * from './books-view';
 export * from './guard';
 export * from './sync';
 export * from './locations';

@@ -15,7 +15,13 @@ export type AuthErrorCode =
   | 'LAST_OWNER'
   | 'SYSTEM_ROLE'
   | 'SELF'
-  | 'VAULT_NOT_CONFIGURED';
+  | 'VAULT_NOT_CONFIGURED'
+  // CN-028 · PR 616: the owner's books PIN (pin.ts).
+  | 'PIN_REQUIRED'
+  | 'WRONG_PIN'
+  | 'PIN_LOCKED'
+  | 'PIN_NOT_SET'
+  | 'WEAK_PIN';
 
 export class AuthError extends Error {
   readonly code: AuthErrorCode;
@@ -41,7 +47,13 @@ export function httpStatus(code: AuthErrorCode): number {
     case 'LAST_OWNER':
     case 'SYSTEM_ROLE':
     case 'SELF':
+    case 'PIN_REQUIRED':
+    case 'WRONG_PIN':
       return 403;
+    case 'PIN_LOCKED':
+      return 429;
+    case 'PIN_NOT_SET':
+      return 409;
     case 'NOT_FOUND':
       return 404;
     case 'CONFLICT':

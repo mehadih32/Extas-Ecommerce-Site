@@ -1,11 +1,15 @@
 'use client';
 // CN-028 · PR 615, 616 — the one client part of the Money → Books pages that changes something: a button that opens a
 // small form in place (a warning line, then the fields), sends one command to the books API and reloads the page's data.
-// A money field is typed in taka and sent in minor units (the page passes the currency's digits); a PIN field is a
-// password box that is never kept, logged or shown again (it is cleared after every try). The button is locked while it
-// sends, so a double tap is one record. Every refusal is shown in words from the page's messages (`bk.err.<code>`).
+// A money field is typed in taka and sent in minor units (the page passes the currency's digits): a comma groups digits
+// (1,000 or 1,00,000), Bengali digits are read, and more decimals than the currency has are refused, never cut off
+// (lib/admin-books/money.ts). A PIN field is a password box that is never kept, logged or shown again (it is cleared
+// after every try). The button is locked while it sends, and every opening of the form carries one request key
+// (`Idempotency-Key`): a double tap or a retry after a lost answer is the same request, written once. Every refusal is
+// shown in words from the page's messages (`bk.err.<code>`).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { typedMinor } from '@/lib/admin-books/money';
 import { bkError } from '@/lib/admin-books/words';
 import { t, type Dict } from '@/lib/i18n';
 
@@ -39,12 +43,8 @@ export interface BooksFormProps {
   done?: string;
 }
 
-const toMinor = (text: string, digits: number): number | null => {
-  const m = /^\s*(\d{1,13})(?:[.,](\d{0,6}))?\s*$/.exec(text);
-  if (!m) return null;
-  const frac = (m[2] ?? '').padEnd(digits, '0').slice(0, digits);
-  return Number(m[1]) * 10 ** digits + Number(frac || '0');
-};
+/** A fresh request key for one opening of the form. */
+const newKey = (): string => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `bk-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
 export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body, warn, digits = 2, tone = 'pri', testId, done }: BooksFormProps) {
   const router = useRouter();
@@ -53,6 +53,7 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
   const [busy, setBusy] = useState(false);
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((f) => [f.name, f.value ?? ''])));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [requestKey, setRequestKey] = useState<string>('');
 
   const clearPins = () => setVals((v) => Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fields.find((f) => f.name === k)?.kind === 'pin' ? '' : x])));
 
@@ -62,7 +63,7 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
     for (const f of fields) {
       const raw = (vals[f.name] ?? '').trim();
       if (f.kind === 'money') {
-        const minor = raw ? toMinor(raw, digits) : null;
+        const minor = raw ? typedMinor(raw, digits) : null;
         if (minor === null || minor <= 0) bad.push(f.label);
         else out[f.name] = minor;
       } else if (raw.length < (f.min ?? 0) || (f.min && !raw)) bad.push(f.label);
@@ -77,7 +78,7 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
     let status = 0;
     let data: { ok?: boolean; error?: string; details?: string[] } = {};
     try {
-      const res = await fetch(url, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify(out) });
+      const res = await fetch(url, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json', ...(requestKey ? { 'idempotency-key': requestKey } : {}) }, body: JSON.stringify(out) });
       status = res.status;
       data = (await res.json().catch(() => ({ ok: false, error: 'default' }))) as typeof data;
     } catch {
@@ -149,7 +150,15 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
             </button>
           </>
         ) : (
-          <button type="button" className={`a2-btn sm ${tone}`.trim()} onClick={() => setOpen(true)} data-testid={testId}>
+          <button
+            type="button"
+            className={`a2-btn sm ${tone}`.trim()}
+            onClick={() => {
+              setRequestKey(newKey());
+              setOpen(true);
+            }}
+            data-testid={testId}
+          >
             {label}
           </button>
         )}

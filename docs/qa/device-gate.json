@@ -288,7 +288,10 @@
       "/admin/support",
       "/admin/support?view=all",
       "/admin/support/settings",
-      "/admin/money/books"
+      "/admin/money/books",
+      "/admin/money/books/match",
+      "/admin/money/books/differences",
+      "/admin/money/books/closes"
     ],
     "discover": [
       {
@@ -310,6 +313,9 @@
       "/admin/orders/packing": ["[data-testid=\"pack-page\"]", "[data-testid=\"pack-steps\"]", "[data-testid=\"pack-settings\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/customers/review": ["[data-testid=\"customers-review\"]", "[data-testid=\"review-views\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/money/books": ["[data-testid=\"books-account\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books/match": ["[data-testid=\"books-match\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books/differences": ["[data-testid=\"books-differences\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books/closes": ["[data-testid=\"books-closes\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/log": ["[data-testid=\"messages-log\"]", "[data-testid=\"log-counts\"]", "[data-testid=\"log-filters\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/channels": ["[data-testid=\"messages-channels\"]", "[data-testid=\"channel-row\"]", "[data-testid=\"ch-save\"]", "[data-testid=\"wa-templates\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/consent": ["[data-testid=\"messages-consent\"]", "[data-testid=\"consent-counts\"]", "[data-testid=\"consent-lookup\"]", "[data-testid=\"cs-save\"]", "[data-testid=\"a2-tabs\"]"],

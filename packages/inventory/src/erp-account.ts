@@ -30,7 +30,6 @@ import { BooksError } from './books-errors';
 import { isV6 } from './erp-model';
 import { currencyDigits } from './erp-push';
 import { storeDate } from './erp-events-pull';
-import { decimalToMinor } from './webhook';
 
 // ---- dates ----------------------------------------------------------------------------------------------------------
 
@@ -40,6 +39,24 @@ export const dateOfDay = (d: string): Date => new Date(`${d}T00:00:00Z`);
 export const addDay = (d: string, n: number): string => dayText(new Date(dateOfDay(d).getTime() + n * 86_400_000));
 export const isDay = (d: unknown): d is string => typeof d === 'string' && DAY.test(d) && dayText(dateOfDay(d)) === d;
 export const daySchema = z.string().refine(isDay, { message: 'a day, YYYY-MM-DD' });
+
+// ---- money ----------------------------------------------------------------------------------------------------------
+
+/**
+ * An ERP amount in minor units, read exactly (qa-gate): a plain decimal with at most the currency's digits (a trailing
+ * zero beyond them is fine). More decimals, grouping, words or an empty text answer null: the books never round an
+ * amount and never read a broken one as 0. (The stock sync's `decimalToMinor` still rounds an average cost, PR 196.)
+ */
+export function moneyMinor(text: string | null | undefined, digits: number): number | null {
+  if (text == null) return null;
+  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(String(text).trim());
+  if (!m) return null;
+  const frac = m[3] ?? '';
+  if (/[1-9]/.test(frac.slice(digits))) return null;
+  const minor = Number(m[2]) * 10 ** digits + Number(frac.slice(0, digits).padEnd(digits, '0') || '0');
+  if (!Number.isSafeInteger(minor)) return null;
+  return m[1] ? -minor : minor;
+}
 
 // ---- the store's link -----------------------------------------------------------------------------------------------
 
@@ -87,6 +104,16 @@ export async function booksLinkFor(deps: InventoryDeps, storeId: number): Promis
 export async function storeBooks(db: Db, storeId: number): Promise<{ timeZone: string; digits: number }> {
   const s = await db.store.findUniqueOrThrow({ where: { id: storeId }, select: { timezone: true, currency: true } });
   return { timeZone: s.timezone, digits: currencyDigits(s.currency) };
+}
+
+/**
+ * Locks the store's link row (FOR UPDATE) inside the caller's transaction. The rule of the books (qa-gate): lock the link
+ * BEFORE any read that decides a write and before any insert that references it, so two writers of one link queue up
+ * instead of deciding from the same snapshot (or deadlocking on the foreign key's share lock).
+ */
+export async function lockLink(tx: Tx, link: Pick<BooksLink, 'id' | 'storeId'>): Promise<void> {
+  const locked = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "ErpStoreLink" WHERE "id" = ${link.id}::uuid AND "storeId" = ${link.storeId} FOR UPDATE`;
+  if (!locked.length) throw new BooksError('NOT_FOUND', 'no such ERP link on this store');
 }
 
 /** The permission in that store, and that the store exists and is not archived (as `allow`, for the books' keys). */
@@ -156,8 +183,7 @@ export interface AppendResult {
 export async function appendAccountEntries(tx: Tx, link: Pick<BooksLink, 'id' | 'storeId'>, drafts: readonly EntryDraft[]): Promise<AppendResult> {
   const out: AppendResult = { created: [], existing: 0, alreadyReversed: 0 };
   if (!drafts.length) return out;
-  const locked = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "ErpStoreLink" WHERE "id" = ${link.id}::uuid AND "storeId" = ${link.storeId} FOR UPDATE`;
-  if (!locked.length) throw new BooksError('NOT_FOUND', "no such ERP link on this store");
+  await lockLink(tx, link);
   const last = await tx.erpAccountEntry.findFirst({ where: { linkId: link.id }, orderBy: { seq: 'desc' }, select: { seq: true, hash: true } });
   let seq = last?.seq ?? 0;
   let prevHash = last?.hash ?? null;
@@ -275,6 +301,9 @@ export const billKey = (externalOrderId: string, consignmentId: string | null): 
 
 async function billTx(tx: Tx, link: BooksLink, timeZone: string, b: Omit<BillInput, 'storeId'>): Promise<{ created: boolean; entryId: string | null }> {
   if (!Number.isSafeInteger(b.erpTotalMinor) || b.erpTotalMinor <= 0) return { created: false, entryId: null };
+  // The link first (qa-gate): two bills of one order at the same moment queue here, and the second finds the first. The
+  // database keeps one BILL per order anyway (migration 0055).
+  await lockLink(tx, link);
   const prior = await tx.erpAccountEntry.findFirst({ where: { linkId: link.id, kind: 'BILL', externalOrderId: b.externalOrderId }, select: { id: true } });
   if (prior) return { created: false, entryId: prior.id };
   const r = await appendAccountEntries(tx, link, [
@@ -322,7 +351,7 @@ export function eventEffect(ev: { type: string; data: Record<string, unknown> },
   const kind = entryKindOfEvent({ type: ev.type as never, reverses: null, data: ev.data });
   if (!kind) return null;
   const raw = kind === 'RETURN_CREDIT' ? ev.data.credit : ev.data.amount;
-  const minor = Math.abs(decimalToMinor(raw == null ? null : String(raw), digits) ?? 0);
+  const minor = Math.abs(moneyMinor(raw == null ? null : String(raw), digits) ?? 0);
   if (!minor) return null;
   return { kind, amountMinor: (ENTRY_SIGN[kind] as number) * minor };
 }
@@ -489,19 +518,45 @@ export type ErpPaymentInput = z.input<typeof erpPaymentInput>;
 
 export type PaymentRecordRow = Prisma.ErpPaymentRecordGetPayload<true>;
 
-/** Records a payment Retail made to the ERP (Accounts or the owner). It only writes it down: nothing is sent, no money moves. */
-export async function recordErpPayment(deps: InventoryDeps, who: Who, input: ErpPaymentInput): Promise<PaymentRecordRow> {
+const REQUEST_KEY = /^[A-Za-z0-9._:-]{8,120}$/;
+
+/**
+ * Records a payment Retail made to the ERP (Accounts or the owner). It only writes it down: nothing is sent, no money
+ * moves. With a request key (the form sends one per opening, as `Idempotency-Key`; follow-up 551) the same request again
+ * — a double tap, a retry after a lost answer, two at once — answers the record already written; the same key with other
+ * figures is refused (CONFLICT). The database keeps one record per key and link.
+ */
+export async function recordErpPayment(deps: InventoryDeps, who: Who, input: ErpPaymentInput, opts: { requestKey?: string | null } = {}): Promise<PaymentRecordRow> {
   await allowBooks(deps, who, 'erp.payments.record');
   const d = parse(erpPaymentInput, input, 'payment to the ERP');
   if (!who.actor.staffUserId) throw new BooksError('INVALID_INPUT', 'a payment is recorded by a person', ['actor']);
+  const requestKey = opts.requestKey ? String(opts.requestKey).trim() : null;
+  if (requestKey !== null && !REQUEST_KEY.test(requestKey)) throw new BooksError('INVALID_INPUT', 'the request key is not one the form sends', ['requestKey']);
   const link = await booksLinkFor(deps, who.storeId);
-  return deps.db.$transaction(async (tx) => {
-    const row = await tx.erpPaymentRecord.create({
-      data: { storeId: who.storeId, linkId: link.id, paidOn: dateOfDay(d.paidOn), amountMinor: BigInt(d.amountMinor), method: d.method || null, reference: d.reference || null, note: d.note || null, recordedById: who.actor.staffUserId! },
-    });
-    await logChange(tx, who, { action: 'books.payment.record', entityType: 'ErpPaymentRecord', entityId: row.id, before: null, after: { paidOn: d.paidOn, amountMinor: d.amountMinor, method: row.method, reference: row.reference }, storeId: who.storeId });
-    return row;
-  }, TX);
+  const fields = { paidOn: dateOfDay(d.paidOn), amountMinor: BigInt(d.amountMinor), method: d.method || null, reference: d.reference || null, note: d.note || null };
+  const same = (r: PaymentRecordRow) => r.paidOn.getTime() === fields.paidOn.getTime() && r.amountMinor === fields.amountMinor && r.method === fields.method && r.reference === fields.reference && r.note === fields.note && !r.reversesId;
+  const replay = async (): Promise<PaymentRecordRow | null> => {
+    if (!requestKey) return null;
+    const prior = await deps.db.erpPaymentRecord.findUnique({ where: { linkId_requestKey: { linkId: link.id, requestKey } } });
+    if (prior && !same(prior)) throw new BooksError('CONFLICT', 'this request key was used for another payment', ['requestKey']);
+    return prior;
+  };
+  const prior = await replay();
+  if (prior) return prior;
+  try {
+    return await deps.db.$transaction(async (tx) => {
+      const row = await tx.erpPaymentRecord.create({ data: { storeId: who.storeId, linkId: link.id, ...fields, requestKey, recordedById: who.actor.staffUserId! } });
+      await logChange(tx, who, { action: 'books.payment.record', entityType: 'ErpPaymentRecord', entityId: row.id, before: null, after: { paidOn: d.paidOn, amountMinor: d.amountMinor, method: row.method, reference: row.reference }, storeId: who.storeId });
+      return row;
+    }, TX);
+  } catch (e) {
+    // The same key written a moment ago by the twin request: answer that record.
+    if (isP2002(e) && requestKey) {
+      const twin = await replay();
+      if (twin) return twin;
+    }
+    throw e;
+  }
 }
 
 export const erpPaymentReverseInput = z.object({ reason: z.string().trim().min(3).max(500) }).strict();

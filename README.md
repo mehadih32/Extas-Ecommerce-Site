@@ -1576,11 +1576,71 @@ ERP account, `/admin/money/books`; no migration, settings registry v68 `packages
   `pipelineFlows` gives the books match (PR 616) goods and return losses.
 - **Paid to ERP:** Accounts or the owner (`erp.payments.record`) record a payment already made — nothing is sent, no money
   moves; a wrong record is reversed by a new one; each is matched to the ERP's payment (amount, reference,
-  `books.payments.matchDays` = 2).
+  `books.payments.matchDays` = 2). The form sends one `Idempotency-Key` per opening: a double tap or a retry is one record
+  (`ErpPaymentRecord.requestKey`, unique per link; follow-up 551). The money box takes 1,000 / 1,00,000 and Bengali digits and
+  refuses a third decimal (never cuts it off).
 - **Account check (follow-up 490):** job `inventory.books.checkAccount` every `erp.account.checkMinutes` per v6 store: the
   shop's side, then `GET /account` for `books.account.lookbackDays` (7) — a payment whose webhook was lost is written from the
-  statement, and the hold and the ERP's numbers go into `ErpAccountState`. In v5 nothing runs.
+  statement, and the hold and the ERP's numbers go into `ErpAccountState` through PR 610's `noteHold` (one writer). ERP amounts
+  are read exactly (`moneyMinor`: a third decimal or words are refused, never rounded or read as 0). In v5 nothing runs.
+- **The store:** the page shows `?storeId=` (as the books API takes it), else the mother store; its key is checked there.
 - **Tests:** `packages/inventory/test/erp-account.db.test.ts` (11, PostgreSQL), `packages/settings/test/registry-books.test.ts`.
+
+> **বাংলায়:** নতুন (PR 616): প্রতি রাতে দোকানের খাতা ERP-র খাতার সাথে দিন ধরে মেলানো হয়, এক পয়সাও ছাড় নেই; গরমিল ঠিক হয়
+> শুধু উল্টো এন্ট্রি আর নতুন এন্ট্রি দিয়ে, মালিকের PIN দিয়ে; সব দিন মিললে তবেই মাস বন্ধ, নাহলে মালিকের কারণসহ সিদ্ধান্তে।
+
+**Built (PR 616): the books match engine** (CN-028, CN-029 Phase 1; screens Money → Books → Match `/admin/money/books/match`,
+Differences `/admin/money/books/differences`, Closes `/admin/money/books/closes`; migration `0055_books_pin`, settings
+registry v68 `registry-books.ts`).
+- **Checks A–F** (`runBooksMatch`, `packages/inventory/src/books-match.ts`), per store link, zero tolerance: A every ERP statement
+  row against the shop's entries by row group (credit, exchange, payment, other; the opening on the books' first day; each
+  "paid to ERP" record against the ERP's payments), B the tie formula of §3.4 (`tieRemainder`), C returns handed back,
+  approved and their credit, and what waits for the ERP's check, D the stored daily summary, E the month's fixed costs, F every
+  billed order. A difference is kept once per (day, class, key) in `BooksDifference`; a missing ERP event waits
+  `books.timing.maxMinutes` (PENDING) before it is a MISMATCH. A check v6 cannot make yet is PARTIAL.
+- **Closes:** job `inventory.books.close` every `books.close.checkMinutes` (15) runs once a night after `books.close.runAt`
+  (01:30) through yesterday, rechecking `books.recheck.days` (7) closed days. Each day writes an append-only, hash-chained
+  `BooksDayClose` (a new version only when its figures change; ~~a matched day that moves raises HISTORY_CHANGED~~ a matched day
+  whose OWN money moves — its ledger entries, the shop's corrections left out, or the ERP's rows — raises HISTORY_CHANGED in the
+  same locked transaction as its close, and a later run that finds the day matched clears it); a run also goes back to the
+  first day whose books moved since its close (a correction, a late entry, fixed costs or a summary entered later), however far
+  back; one run at a time per link (`books.run.staleMinutes` 60; a manual run meanwhile answers BUSY). Check A also compares each
+  day's closing balances, less what open differences explain (`A:closing`). Weeks and the lifetime check are built from the
+  day closes (`BooksPeriodClose`). A month (`closeMonth`) closes with `books.close` and the
+  owner's PIN only when every day matched (`books.close.requireMatched`) and its fixed costs are in, else only with the owner's
+  override reason (kept on the close, the month's differences OVERRIDDEN); `reopenMonth` writes a new version; `signOffYear`
+  once every month of the financial year is closed. Each of them locks the store's link first and decides from what it reads
+  under that lock.
+- **Putting a difference right** (`adjustDifference`, `books-adjust.ts`): `books.adjust`, the owner's PIN, a reason
+  (`books.adjust.reasonMinLength` 10) and the ERP's matching row — a REVERSAL of the group's entries plus one ADJUSTMENT with
+  the ERP's amount and a `BooksAdjustment` (PRIOR_PERIOD when the month is closed); one adjustment per ERP event and one per
+  difference (two at the same moment: one books, the other is ALREADY); the ERP's row must belong to the difference (its rows,
+  or an ERP event about the same order); nothing is edited or deleted (the database refuses it). Migration 0055 also keeps one
+  BILL per order and link. ~~A row whose ERP event has not reached the shop's ledger yet (`detail.waitingEvents`, checked again
+  under the lock) is not put right by hand: the pull books it under its own key and the next match settles it (spec §4.3;
+  a hand correction would count it twice). A row with no event behind it (a charge the ERP typed) is put right as before.~~
+  A credit, payment or exchange row the shop lacks (MISSING_EVENT) is never put right by hand, whether or not the ERP's
+  statement row carries an eventId (optional in v6): the pull books it under its own key and the next match settles it
+  (spec §4.3; a hand correction would count it twice). Where ids are sent, a row naming an event the ledger lacks
+  (`detail.waitingEvents`, checked again under the lock) waits too. A charge the ERP typed (OTHER) and a bill the shop
+  never booked are put right by hand. A shipment whose answer had no bill date (PR 611 keeps `billedAt` empty) is
+  never booked on a guessed day: the ERP's bill row is a MISSING_EVENT marked `billedAtMissing` until the order check fills
+  the date, or the correction books the BILL itself from the ERP's row (its own key, so it is never booked twice).
+- **The owner's PIN** (`packages/auth/src/pin.ts`, migration `0055_books_pin`: four `StaffUser.booksPin*` columns): set by the
+  owner with his password, kept only as a scrypt hash, never logged; digits only, `books.pin.minLength` (6), never one digit
+  repeated or a straight run; `books.pin.maxAttempts` (5) wrong tries lock it for `books.pin.lockMinutes` (15). Each try takes
+  its number in the database before the hash is checked, so a burst of tries at once cannot pass the lock; the last number
+  writes the lock end with it, and a count left at its limit with no lock in force (a crash, a lower limit) starts again.
+- **What others read** (`books-view.ts`, shapes kept stable for Hisabi 617/618): `booksStatus` (balance, the ERP's, open
+  differences by class and check, days matched, partial checks, months closed, last run, chain), `explainDay` (a day opened to
+  its row groups, entries, ERP rows, tie parts and versions), `booksDifferences`, `booksDaysForSummary`; the Needs-you-now row
+  `booksDifferences` (MISMATCH rows).
+- **Tests:** `packages/inventory/test/books-match.db.test.ts` (11, PostgreSQL: zero tolerance, fix only by reversal + new entry,
+  month close only when matched or with the override, PIN hashing and lock, store A never reads or writes store B, v5 runs
+  nothing), `packages/inventory/test/books-qa.db.test.ts` (12, PostgreSQL: the qa-gate's reproductions — late equal fixed costs,
+  a back-dated correction, a burst of PIN tries, two corrections at once, a close beside a locked run, two runs at once, the
+  closing balance, the payment request key, the prior-period fix), `packages/inventory/test/books-money.test.ts`,
+  `apps/web/src/lib/admin-books/money.test.ts`, `packages/auth/test/pin.test.ts`, `packages/settings/test/registry-books.test.ts`.
 
 ### S21 · Site Health & Audit — In progress (0/14)
 

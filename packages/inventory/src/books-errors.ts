@@ -11,7 +11,20 @@ export type BooksErrorCode =
   | 'NO_LINK'
   /** Already done, once and for good (an opening balance, a reversal of a record). */
   | 'ALREADY'
-  | 'CONFLICT';
+  | 'CONFLICT'
+  // ---- PR 616 ----
+  /** This difference is not fixed by a correction (a tie, a summary or a moved history is found again from the books). */
+  | 'NOT_ADJUSTABLE'
+  /** A month closes only when every day matched (`books.close.requireMatched`): `details` names the days. */
+  | 'NOT_MATCHED'
+  /** A month closes only with its fixed costs in. */
+  | 'FIXED_COSTS_MISSING'
+  /** The month (or year) has not ended yet. */
+  | 'MONTH_NOT_ENDED'
+  /** No day of the books falls in that month (or year): there is nothing to close. */
+  | 'NOTHING_TO_CLOSE'
+  /** qa-gate: a run of the books is going on for this store (one at a time); try again in a few minutes. */
+  | 'BUSY';
 
 export class BooksError extends Error {
   readonly code: BooksErrorCode;
@@ -33,6 +46,12 @@ export class BooksError extends Error {
       case 'NO_LINK':
       case 'ALREADY':
       case 'CONFLICT':
+      case 'NOT_ADJUSTABLE':
+      case 'NOT_MATCHED':
+      case 'FIXED_COSTS_MISSING':
+      case 'MONTH_NOT_ENDED':
+      case 'NOTHING_TO_CLOSE':
+      case 'BUSY':
         return 409;
       default:
         return 400;

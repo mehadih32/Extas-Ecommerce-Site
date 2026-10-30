@@ -75,7 +75,10 @@
         "settings": "Support settings"
       },
       "money": {
-        "books": "Books"
+        "books": "Books",
+        "match": "Match",
+        "differences": "Differences",
+        "closes": "Closes"
       }
     },
     "purpose": {
@@ -337,7 +340,8 @@
       "jobsDead": "Background jobs that stopped",
       "sub": "{n} waiting · oldest {age}",
       "ordersReturns": "Returns & exchanges",
-      "ordersReturnsQc": "Receive & QC"
+      "ordersReturnsQc": "Receive & QC",
+      "booksDifferences": "Books differences to put right"
     },
     "age": {
       "now": "just now",

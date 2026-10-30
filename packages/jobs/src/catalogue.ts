@@ -77,6 +77,8 @@ const INVENTORY_JOBS = [
   'inventory.erp.checkOrders',
   // PR 615: Retail's ERP account check.
   'inventory.books.checkAccount',
+  // PR 616: the nightly books match and day close.
+  'inventory.books.close',
 ] as const satisfies readonly InventoryJob['name'][];
 
 function inventoryJob(name: InventoryJob['name']): JobDefinition<InventoryJob> {
@@ -87,7 +89,7 @@ function inventoryJob(name: InventoryJob['name']): JobDefinition<InventoryJob> {
       const p = (payload ?? {}) as Record<string, unknown>;
       const storeId = p.storeId;
       if (storeId !== undefined && (!Number.isInteger(storeId) || (storeId as number) < 1)) throw new Error(`${name}: storeId must be a positive integer`);
-      const needsStore = name === 'inventory.erp.pullStock' || name === 'inventory.erp.reconcile' || name === 'inventory.erp.pullEvents' || name === 'inventory.erp.checkOrders' || name === 'inventory.books.checkAccount';
+      const needsStore = name === 'inventory.erp.pullStock' || name === 'inventory.erp.reconcile' || name === 'inventory.erp.pullEvents' || name === 'inventory.erp.checkOrders' || name === 'inventory.books.checkAccount' || name === 'inventory.books.close';
       if (needsStore && storeId === undefined) throw new Error(`${name}: storeId is required`);
       return { ...p, name } as InventoryJob;
     },

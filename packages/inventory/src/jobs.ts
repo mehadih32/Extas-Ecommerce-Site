@@ -17,6 +17,8 @@
 //   `erp.account.checkMinutes` for each store that speaks v6.
 // - `inventory.books.checkAccount` {storeId} — PR 615: Retail's ERP account (bills, money events, pipeline, then
 //   `GET /account`: lost payments and the hold caught up), every `erp.account.checkMinutes` for each store on v6.
+// - `inventory.books.close` {storeId} — PR 616: the nightly books match and day close; looked for every
+//   `books.close.checkMinutes`, it runs once a night after the store's `books.close.runAt`.
 // - `stockPollPlan` tells the scheduler how often to pull and for which stores: every store whose ERP mode is not
 //   "no ERP", every `erp.sync.stockPollMinutes` (contract: poll `updatedSince` every few minutes). `inventorySchedule`
 //   is the whole timetable, every interval from settings.
@@ -28,6 +30,7 @@ import { applyErpEvents, type ApplyEventsResult } from './erp-events';
 import { pullErpEvents, type EventsPullResult } from './erp-events-pull';
 import { checkErpOrders, type OrderCheckResult } from './erp-orders-v6';
 import { checkErpAccount, type AccountCheckResult } from './erp-account-check';
+import { nightlyBooksClose, type BooksRunResult } from './books-match';
 import { isV6 } from './erp-model';
 import { ensureDefaultLocations } from './locations';
 import { evaluateLowStock, type LowStockRun } from './low-stock';
@@ -48,9 +51,10 @@ export type InventoryJob =
   | { name: 'inventory.erp.pullEvents'; storeId: number }
   | { name: 'inventory.erp.applyEvents' }
   | { name: 'inventory.erp.checkOrders'; storeId: number }
-  | { name: 'inventory.books.checkAccount'; storeId: number };
+  | { name: 'inventory.books.checkAccount'; storeId: number }
+  | { name: 'inventory.books.close'; storeId: number };
 
-export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | (LowStockRun & { shortage: ShortageRun }) | ReconcileResult | EventsPullResult | ApplyEventsResult | OrderCheckResult | AccountCheckResult;
+export type InventoryJobResult = StockPullResult | { created: number; restored: number } | SweepResult | RelayResult | (LowStockRun & { shortage: ShortageRun }) | ReconcileResult | EventsPullResult | ApplyEventsResult | OrderCheckResult | AccountCheckResult | BooksRunResult;
 
 export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): Promise<InventoryJobResult> {
   switch (job.name) {
@@ -76,6 +80,8 @@ export async function runInventoryJob(deps: InventoryDeps, job: InventoryJob): P
       return checkErpOrders(deps, { storeId: job.storeId });
     case 'inventory.books.checkAccount':
       return checkErpAccount(deps, { storeId: job.storeId });
+    case 'inventory.books.close':
+      return nightlyBooksClose(deps, { storeId: job.storeId });
   }
 }
 
@@ -87,7 +93,7 @@ export async function stockPollPlan(deps: InventoryDeps): Promise<{ everyMs: num
 
 /** The whole timetable for the scheduler: each entry runs its jobs every `everyMs`. */
 export async function inventorySchedule(deps: InventoryDeps): Promise<{ everyMs: number; jobs: InventoryJob[] }[]> {
-  const [pull, sweepS, relayS, lowMin, reconcileH, stores, eventsMin, applyS, accountMin] = await Promise.all([
+  const [pull, sweepS, relayS, lowMin, reconcileH, stores, eventsMin, applyS, accountMin, closeMin] = await Promise.all([
     stockPollPlan(deps),
     deps.settings.value('inventory.reservation.sweepSeconds'),
     deps.settings.value('erp.push.relaySeconds'),
@@ -97,6 +103,7 @@ export async function inventorySchedule(deps: InventoryDeps): Promise<{ everyMs:
     deps.settings.value('erp.events.pullMinutes'),
     deps.settings.value('erp.events.applySeconds'),
     deps.settings.value('erp.account.checkMinutes'),
+    deps.settings.value('books.close.checkMinutes'),
   ]);
   // PR 608: the v6 event pull and apply, only while a store speaks v6 (in v5 the timetable is exactly as before).
   const v6Stores: number[] = [];
@@ -115,6 +122,8 @@ export async function inventorySchedule(deps: InventoryDeps): Promise<{ everyMs:
           { everyMs: accountMin * 60_000, jobs: v6Stores.map((storeId): InventoryJob => ({ name: 'inventory.erp.checkOrders', storeId })) },
           // PR 615: Retail's ERP account, the statement catch-up and the hold.
           { everyMs: accountMin * 60_000, jobs: v6Stores.map((storeId): InventoryJob => ({ name: 'inventory.books.checkAccount', storeId })) },
+          // PR 616: the nightly books match (it runs once a night, after `books.close.runAt`).
+          { everyMs: closeMin * 60_000, jobs: v6Stores.map((storeId): InventoryJob => ({ name: 'inventory.books.close', storeId })) },
         ]
       : []),
   ];

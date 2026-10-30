@@ -17,6 +17,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { withBooks } from '@/lib/admin-books/i18n';
+import { booksApi, booksHref, storeOfSearch } from '@/lib/admin-books/page';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -26,7 +27,6 @@ import { t, type Dict } from '@/lib/i18n';
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/money/books';
-const API = '/api/admin/books';
 const VIEWS = ['entries', 'payments', 'pipeline'] as const;
 type View = (typeof VIEWS)[number];
 
@@ -52,10 +52,14 @@ function Empty({ title, body, icon = 'wallet' }: { title: string; body?: string;
 
 export default async function BooksAccountPage({ searchParams }: { searchParams: Search }) {
   const deps = adminDeps();
-  const [plain, sp, access] = await Promise.all([adminView(deps), searchParams, pageAccess('erp.account.read', deps, MOTHER_STORE_ID)]);
+  // qa-gate: the page's store is `?storeId=` (as the books API takes it), else the mother store; its key is checked there.
+  const sp = await searchParams;
+  const storeId = storeOfSearch(sp);
+  const [plain, access] = await Promise.all([adminView(deps), pageAccess('erp.account.read', deps, storeId)]);
   const view = withBooks(plain);
   const d = view.dict;
-  if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
+  const go = (path: string) => booksHref(storeId, path);
+  if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(go(HERE))}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="booksAccount" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
@@ -63,14 +67,14 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
         <ShellState view={view} kind="denied" permission="erp.account.read" />
       </div>
     );
-  const who: inv.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
+  const who: inv.Who = { actor: access.guard.actor, storeId, ctx: access.guard.ctx };
   const idp = await inventoryDeps(access.deps);
   const tab: View = (VIEWS as readonly string[]).includes(one(sp.view)) ? (one(sp.view) as View) : 'entries';
   const kind = (ERP_ACCOUNT_ENTRY_KINDS as readonly string[]).includes(one(sp.kind)) ? (one(sp.kind) as inv.AccountEntryView['kind']) : undefined;
   const state = (ERP_PIECE_STATES as readonly string[]).includes(one(sp.state)) ? (one(sp.state) as inv.PipelinePieceRowView['state']) : undefined;
   const q = one(sp.q).trim().slice(0, 80) || undefined;
   const page = Math.max(1, Math.min(100_000, Number.parseInt(one(sp.page), 10) || 1));
-  const [ov, currency] = await Promise.all([inv.accountOverview(idp, who), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>]);
+  const [ov, currency] = await Promise.all([inv.accountOverview(idp, who), access.deps.resolver.value('store.currency', { storeId }) as Promise<string>]);
   const money = moneyOf(currency, view.locale);
   const m = (minor: number | null | undefined) => (minor == null ? '—' : formatMoney(minor, money));
   const n = (x: number) => formatNumber(x, view.locale);
@@ -104,7 +108,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
   ]);
   const pager = (p: { page: number; pageSize: number; total: number }, extra: Record<string, string | undefined>) => {
     const pages = Math.max(1, Math.ceil(p.total / p.pageSize));
-    const href = (to: number) => `${HERE}?${new URLSearchParams(Object.entries({ view: tab, ...extra, page: String(to) }).filter((e): e is [string, string] => !!e[1])).toString()}`;
+    const href = (to: number) => `${HERE}?${new URLSearchParams(Object.entries({ view: tab, ...extra, page: String(to), storeId: storeId === MOTHER_STORE_ID ? '' : String(storeId) }).filter((e): e is [string, string] => !!e[1])).toString()}`;
     return pages > 1 ? (
       <nav className="a2-between a2-mt12" aria-label={t(d, 'bk.page', { page: n(p.page), pages: n(pages) })}>
         {p.page > 1 ? (
@@ -171,7 +175,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
       </section>
       <nav className="a2-views a2-mt12" aria-label={t(d, 'bk.viewsAria')} data-testid="books-views">
         {VIEWS.map((v) => (
-          <Link key={v} className={`a2-view${v === tab ? ' on' : ''}`} href={v === 'entries' ? HERE : `${HERE}?view=${v}`} aria-current={v === tab ? 'page' : undefined} scroll={false} data-view={v}>
+          <Link key={v} className={`a2-view${v === tab ? ' on' : ''}`} href={go(v === 'entries' ? HERE : `${HERE}?view=${v}`)} aria-current={v === tab ? 'page' : undefined} scroll={false} data-view={v}>
             {t(d, `bk.view.${v}`)}
           </Link>
         ))}
@@ -180,6 +184,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
       {entries ? (
         <>
           <form className="a2-fbar a2-mt12" action={HERE} method="get" role="search" aria-label={t(d, 'bk.view.entries')} data-testid="books-filters">
+            {storeId === MOTHER_STORE_ID ? null : <input type="hidden" name="storeId" value={storeId} />}
             <span className="a2-fsel">
               <label className="a2-sr" htmlFor="bk-kind">
                 {t(d, 'bk.filter.kind')}
@@ -260,7 +265,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
               <div className="a2-mt6">
                 <BooksForm
                   dict={bd}
-                  url={`${API}/payments`}
+                  url={booksApi(storeId, '/payments')}
                   label={t(d, 'bk.pay.record')}
                   busyLabel={t(d, 'bk.pay.busy')}
                   sendLabel={t(d, 'bk.pay.send')}
@@ -320,7 +325,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
                               <div className="a2-mt6">
                                 <BooksForm
                                   dict={bd}
-                                  url={`${API}/payments/${r.id}/reverse`}
+                                  url={booksApi(storeId, `/payments/${r.id}/reverse`)}
                                   label={t(d, 'bk.pay.reverse')}
                                   busyLabel={t(d, 'bk.pay.reverseBusy')}
                                   sendLabel={t(d, 'bk.pay.reverse')}
@@ -360,6 +365,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
       {pieces ? (
         <>
           <form className="a2-fbar a2-mt12" action={HERE} method="get" role="search" aria-label={t(d, 'bk.view.pipeline')} data-testid="books-pipe-filters">
+            {storeId === MOTHER_STORE_ID ? null : <input type="hidden" name="storeId" value={storeId} />}
             <input type="hidden" name="view" value="pipeline" />
             <span className="a2-fsel">
               <label className="a2-sr" htmlFor="bk-state">

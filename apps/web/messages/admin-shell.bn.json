@@ -75,7 +75,10 @@
         "settings": "সাপোর্ট সেটিংস"
       },
       "money": {
-        "books": "হিসাবের খাতা"
+        "books": "হিসাবের খাতা",
+        "match": "মেলানো",
+        "differences": "গরমিল",
+        "closes": "হিসাব বন্ধ"
       }
     },
     "purpose": {
@@ -337,7 +340,8 @@
       "jobsDead": "থেমে যাওয়া ব্যাকগ্রাউন্ড কাজ",
       "sub": "{n}টা অপেক্ষায় · সবচেয়ে পুরনো {age}",
       "ordersReturns": "ফেরত আর বদল",
-      "ordersReturnsQc": "ফেরত মাল চেক"
+      "ordersReturnsQc": "ফেরত মাল চেক",
+      "booksDifferences": "ঠিক করা বাকি হিসাবের গরমিল"
     },
     "age": {
       "now": "এইমাত্র",
