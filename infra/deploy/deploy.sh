@@ -87,7 +87,15 @@ app() { # app <color> <compose args...>  (the web app and the background worker 
     docker compose -p "extas-app-$color" -f "$REPO/infra/stack/app.yml" --env-file "$R/config/profile.env" "$@"
 }
 
-upstream_for() { # the Caddy upstream block for one colour: every replica, found through Docker DNS
+# shellcheck source=caddy-live.sh
+. "$HERE/caddy-live.sh"
+
+# upstream_for <colour> [client-ip] — the Caddy upstream block for one colour: every replica, found through Docker DNS.
+# PR 620 · p3 review round 3: with `client-ip` (only when Caddy's live configuration has trusted_proxies,
+# `caddy_trusts_proxies`) the app's client address is Caddy's own answer (Cloudflare's header only from its ranges,
+# infra/stack/caddy/client-ip-block.sh), never a header the caller wrote. Without it the block is exactly as before:
+# overwriting the header with {client_ip} then would give every visitor a Cloudflare server's address.
+upstream_for() {
   cat <<CONF
 # live colour: $1 (written by infra/deploy/deploy.sh)
 reverse_proxy {
@@ -99,11 +107,12 @@ reverse_proxy {
 	lb_policy least_conn
 	lb_try_duration 5s
 	fail_duration 10s
-	# PR 620 · p3 review round 2: the app's client address is Caddy's own answer (Cloudflare's header only from its
-	# ranges, infra/stack/caddy/client-ip-block.sh), never a header the caller wrote.
-	header_up CF-Connecting-IP {client_ip}
-}
 CONF
+  if [ "${2:-}" = client-ip ]; then
+    printf '\t# Caddy runs with trusted_proxies (checked live): the client address is its own answer.\n'
+    printf '\theader_up CF-Connecting-IP {client_ip}\n'
+  fi
+  printf '}\n'
 }
 
 migrate_db() { # migrate_db <image>: schema migrations, then the settings sync — never prints a secret
@@ -160,8 +169,8 @@ verify_live() { # through Caddy's internal port: every answer must come from the
   done
 }
 
-# CI prints the upstream block to validate it with Caddy: deploy.sh upstream <color>
-if [ "${1:-}" = upstream ]; then upstream_for "${2:?colour}"; exit 0; fi
+# CI prints the upstream block to validate it with Caddy: deploy.sh upstream <color> [client-ip]
+if [ "${1:-}" = upstream ]; then upstream_for "${2:?colour}" "${3:-}"; exit 0; fi
 if [ "${1:-}" = public-health ]; then public_health; exit 0; fi
 trap on_exit EXIT
 # shellcheck source=images.sh
@@ -283,7 +292,10 @@ log "new colour $NEW healthy and smoke-tested"
 
 # ---- 2. switch Caddy (graceful: open requests finish on the old colour) ---------------------------------------
 cp "$SITES/upstream.caddy" "$SITES/upstream.caddy.before" 2>/dev/null || true
-upstream_for "$NEW" > "$SITES/upstream.caddy.new" && mv "$SITES/upstream.caddy.new" "$SITES/upstream.caddy"
+# PR 620 · p3 review round 3: Caddy's own client address only when its running configuration trusts Cloudflare alone.
+CLIENT_IP=""
+if caddy_trusts_proxies; then CLIENT_IP=client-ip; else log "Caddy runs without trusted_proxies: the upstream keeps the caller's CF-Connecting-IP (run server-setup stack)"; fi
+upstream_for "$NEW" "$CLIENT_IP" > "$SITES/upstream.caddy.new" && mv "$SITES/upstream.caddy.new" "$SITES/upstream.caddy"
 if ! caddy_reload || ! verify_live "$NEW"; then
   log "switch check failed — giving the traffic back to $CUR"
   mv "$SITES/upstream.caddy.before" "$SITES/upstream.caddy"; caddy_reload || true

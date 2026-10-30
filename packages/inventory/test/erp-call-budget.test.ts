@@ -1,7 +1,7 @@
 // PR 620 · p3 review: the refusal budget of the ERP's signed calls and webhooks — counted per client address, bounded
 // in memory however many addresses send, and a call signed with a secret the shop already knows is never cut off.
 import { describe, expect, it } from 'vitest';
-import { ADDRESS_SLOTS, admit, countRefusal, giveBack, newRefusalBudget, overBudget, probeOpen, signedByKnown } from '../src';
+import { ADDRESS_SLOTS, admit, countRefusal, giveBack, newRefusalBudget, overBudget, probeOpen, rememberVerified, signedByKnown, VERIFIED_SLOTS } from '../src';
 
 const T0 = Date.parse('2026-10-23T04:00:00Z');
 
@@ -90,5 +90,32 @@ describe('PR 620 · the refusal budget', () => {
     expect(probeOpen(b, T0 + 2_000, 0)).toBe(true);
     b.probedAt = T0;
     expect(probeOpen(b, T0 + 500, 0)).toBe(false);
+  });
+
+  it('round 3: one IPv6 /48 filling every slot never pushes a lately verified sender into the shared bucket', () => {
+    const b = newRefusalBudget();
+    const limits = { perMinute: 3, refreshSeconds: 60 };
+    const nobody = () => false;
+    // The real ERP's call verified once (the secret was known then).
+    const erp = '2001:db8:aaaa:1::10';
+    const s0 = admit(b, erp, T0, limits, nobody)!;
+    giveBack(b, s0);
+    rememberVerified(b, s0);
+    // Somebody with one /48 sends from 65,536 /64s: every slot is taken, the rest share one bucket, far over the limit.
+    for (let i = 0; i < ADDRESS_SLOTS + 200; i++) {
+      for (let n = 0; n < 3; n++) countRefusal(b, `2001:db8:bbbb:${i.toString(16)}::1`, T0 + 61_000);
+    }
+    expect(overBudget(b, '2001:db8:bbbb:ffff::1', T0 + 61_000, 3)).toBe(true);
+    expect(b.addresses.size).toBeLessThanOrEqual(ADDRESS_SLOTS + VERIFIED_SLOTS + 1);
+    // Right after a secret change (the ERP's new signature is not known yet), the ERP's address still has its own
+    // bucket: its call goes to the lookup (another /64 of its own /48 that never verified does not).
+    b.probedAt = T0 + 61_000;
+    const s1 = admit(b, '2001:db8:aaaa:1::99', T0 + 62_000, limits, nobody);
+    expect(s1?.key).toBe('2001:db8:aaaa:1::/64');
+    expect(admit(b, '2001:db8:aaaa:2::1', T0 + 62_000, limits, nobody)).toBeNull();
+    // Bounded: only the latest VERIFIED_SLOTS verified addresses are kept.
+    for (let i = 0; i < VERIFIED_SLOTS + 10; i++) rememberVerified(b, countRefusal(b, `198.51.100.${i % 250}`, T0));
+    expect(b.verified.size).toBe(VERIFIED_SLOTS);
+    expect(b.verified.has('2001:db8:aaaa:1::/64')).toBe(false);
   });
 });

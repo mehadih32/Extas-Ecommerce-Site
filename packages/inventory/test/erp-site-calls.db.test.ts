@@ -301,4 +301,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 on PostgreSQL: the ERP`s signed calls to t
     const kept = await t.prisma.securityEvent.findMany({ where: { kind: { in: [ERP_SITE_CALL_EVENT, ERP_SITE_REFUSED_EVENT] } } });
     expect(JSON.stringify(kept)).not.toMatch(/pageSize|search=|\+880/);
   });
+
+  it('round 3: a lookup that throws (a short database outage) gives its slot back, so the real ERP is not cut off after it', async () => {
+    const before = { on: overrides.get(`erp.siteApi.enabled@${storeA}`), model: overrides.get(`erp.model@${storeA}`) };
+    overrides.set(`erp.siteApi.enabled@${storeA}`, true);
+    overrides.set(`erp.model@${storeA}`, 'v6');
+    overrides.set('erp.siteApi.refusedPerMinute', 3);
+    try {
+      const g = newErpSiteGuard();
+      const down: WebhookDeps = { ...deps(), db: new Proxy({}, { get: () => { throw new Error('database unavailable (made up)'); } }) as never };
+      const call = (d: WebhookDeps) => {
+        const h = signedErpSiteCall(signing.a, 'GET', `${PATH}?${QUERY}`, clock).headers;
+        return checkErpSiteCall(d, { method: 'GET', path: PATH, query: QUERY, signature: h[ERP_SIGNATURE_HEADER]!, timestamp: h[ERP_TIMESTAMP_HEADER]!, address: '192.0.2.90' }, g);
+      };
+      for (let i = 0; i < 10; i++) await expect(call(down)).rejects.toThrow('database unavailable');
+      expect(g.budget.addresses.get('192.0.2.90')?.refused ?? 0).toBe(0);
+      // The database is back: the real ERP's next call from the same address is answered, not cut off (429).
+      expect(brief(await call(deps()))).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+    } finally {
+      overrides.delete('erp.siteApi.refusedPerMinute');
+      overrides.set(`erp.siteApi.enabled@${storeA}`, before.on);
+      overrides.set(`erp.model@${storeA}`, before.model);
+      if (before.on === undefined) overrides.delete(`erp.siteApi.enabled@${storeA}`);
+      if (before.model === undefined) overrides.delete(`erp.model@${storeA}`);
+    }
+  });
 });
