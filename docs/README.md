@@ -154,6 +154,7 @@ the pages are out of date.
 | [`admin-guide/pages/orders/advance-request.md`](admin-guide/pages/orders/advance-request.md) | Page guide (CN-026 six parts): "Request advance" on the order page, the pay link `/pay/<token>` and the Advance request card (PR 542) |
 | [`admin-guide/pages/orders/invoices.md`](admin-guide/pages/orders/invoices.md) | Page guide (CN-026 six parts): Orders › Packing & print › Invoices (`/admin/orders/packing/invoices`): the list, printing on paper, roll or as a picture, the invoice cards (PR 407) |
 | [`admin-guide/pages/products/erp-import.md`](admin-guide/pages/products/erp-import.md) | Page guide (CN-026 six parts): Products › Import from ERP (`/admin/products/erp-import`): a style code to drafts, the buying prices that changed, the selling-price floor (PR 609) |
+| [`admin-guide/pages/settings/erp-link.md`](admin-guide/pages/settings/erp-link.md) | Page guide (CN-026 six parts): Settings › ERP link (`/admin/settings/erp-link?storeId=`): each store's own ERP keys, queues, balance, books, the switch-over (PR 619) and the demo-key card of the ERP acceptance run (PR 621) |
 | [`admin-guide/pages/support/inbox.md`](admin-guide/pages/support/inbox.md) | Page guide (CN-026 six parts): Support › Inbox (`/admin/support`): the views, search, the rows (PR 425) |
 | [`admin-guide/pages/support/conversation.md`](admin-guide/pages/support/conversation.md) | Page guide (CN-026 six parts): one conversation (`/admin/support/c/[id]`): reply, internal note, files, take / give, status, the who-did-what log (PR 425) |
 | [`admin-guide/pages/support/settings.md`](admin-guide/pages/support/settings.md) | Page guide (CN-026 six parts): Support settings (`/admin/support/settings`): inbox, files, the customer-number line (PR 425) |
@@ -180,6 +181,7 @@ the pages are out of date.
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
 | [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |
+| `reports/erp-acceptance/latest/` | The newest ERP v6 acceptance run against the demo ERP (every night and before every release; "waiting for the demo key" until the owner types it): README.md with a Bengali summary line and report.json (PR 621) |
 
 ## Where the docs also live (CN-011)
 
