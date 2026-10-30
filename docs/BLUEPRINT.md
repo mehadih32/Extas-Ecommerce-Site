@@ -1110,6 +1110,18 @@ to read code or open GitHub.
 >
 > **(5) Where it is written.** Updated lines on PR 607, 608, 619 and 512 (CN-029) and the new §15–16 of `docs/RETAIL-ERP-MODEL.md`; two new agent profiles `docs/agents/pherot.md` and `docs/agents/hisabi.md`; CLAUDE.md rule 10.
 
+> **CN-030 · 31 Oct 2026 (owner: Google Drive backup works the way it does in the ERP, in one click).** No new PR numbers; the total stays 621 (615 active, 6 parked).
+>
+> **(1) One-click Drive backup and one-click restore.** PR 391 (switched live), 395 and 507 (backup settings and restore drills), 396 (restoring production) are built on the same Google sign-in as the Extas ERP's Backups screen (`google-drive.ts` in the ERP repo is the reference): an OAuth client of the type **"TVs and Limited Input devices"** and the one scope `drive.file`, so the shop sees only the files it made itself; **no web client, no redirect address, no service account** (this replaces the "service account" wording in Blueprint Part B / PR 395). The owner presses **Connect Google Drive**, the screen shows a code, he enters it at google.com/device on his phone and presses Allow. Then backups go by themselves into a folder "Extas E-commerce Backups" in his own Drive.
+>
+> **(2) What the screen shows.** The connected Google account, the backup folder, the free space in that Drive, the Google client's ID and whether it is "(your own)", a **Disconnect** button, and a **Change the Google client (advanced)** form (client ID, client secret, PIN) that ends the connection so he connects again; changing it says plainly that backups are less safe until Drive is connected again. The refresh token, the client secret and the backup key live only in the vault, never in Git, in a log or in chat.
+>
+> **(3) One-click restore.** A **Restore** button lists the backups in the connected Drive, newest first; restoring production asks for the typed confirmation and the PIN, restores to staging first (PR 396), and the monthly restore drill (PR 507) uses a temporary copy, never the live database.
+>
+> **(4) Handover.** A new owner types his own Google client ID and secret (made once in his own Google Cloud: a project, the Drive API on, the consent screen External with the scope `drive.file` and **published ("In production"; in "Testing" Google ends every connection after 7 days)**, then an OAuth client of the type "TVs and Limited Input devices"), presses Connect and has his own backups in his own Drive, and can restore in one click. The Extas ERP's Google project is never reused; Extas E-commerce has a project and client of its own. The same screen and steps serve every store (one connection per store).
+>
+> **(5) Where it is written.** Updated lines on PR 391, 395, 396 and 507 (CN-030).
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 

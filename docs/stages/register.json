@@ -1957,6 +1957,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-030",
+   "date": "31 Oct",
+   "title": "owner: Google Drive backup works the way it does in the ERP, in one click",
+   "text": "No new PR numbers; the total stays 621 (615 active, 6 parked).",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
@@ -26450,7 +26459,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 391, 396** — Updated 31 Oct 2026 (CN-030): going live with Drive means pressing Connect Google Drive and entering the code at google.com/device; restore is one click from the list of backups in the connected Drive, with the typed confirmation and the PIN, staging first."
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -26635,6 +26652,13 @@
      "source": "Scope added to existing PRs (owner, CN-011; no new PR numbers)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
      "text": "**PR 395 / 507 (Google Drive backup, backup settings and restore drills)** — the same docs bundle goes into the Azure Blob and the Google Drive copies; the monthly restore drill checks it."
+    },
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 395, 507** — Updated 31 Oct 2026 (CN-030): Google Drive backup is one click with the owner's own Google client (\"TVs and Limited Input devices\", scope `drive.file`, device-code sign-in, no redirect, no service account), the same way as the Extas ERP; the Backups screen shows account, folder, free space, client, Disconnect and \"Change the Google client (advanced)\" with the PIN; secrets only in the vault; one connection per store."
     }
    ],
    "mentions": [],
@@ -26675,7 +26699,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 391, 396** — Updated 31 Oct 2026 (CN-030): going live with Drive means pressing Connect Google Drive and entering the code at google.com/device; restore is one click from the list of backups in the connected Drive, with the typed confirmation and the PIN, staging first."
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -27008,6 +27040,13 @@
      "source": "Scope added to existing PRs (owner, CN-011; no new PR numbers)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
      "text": "**PR 395 / 507 (Google Drive backup, backup settings and restore drills)** — the same docs bundle goes into the Azure Blob and the Google Drive copies; the monthly restore drill checks it."
+    },
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 395, 507** — Updated 31 Oct 2026 (CN-030): Google Drive backup is one click with the owner's own Google client (\"TVs and Limited Input devices\", scope `drive.file`, device-code sign-in, no redirect, no service account), the same way as the Extas ERP; the Backups screen shows account, folder, free space, client, Disconnect and \"Change the Google client (advanced)\" with the PIN; secrets only in the vault; one connection per store."
     }
    ],
    "mentions": [],

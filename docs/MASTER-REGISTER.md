@@ -647,6 +647,18 @@ the server.*
 >
 > **(5) Where it is written.** Updated lines on PR 607, 608, 619 and 512 (CN-029) and the new §15–16 of `docs/RETAIL-ERP-MODEL.md`; two new agent profiles `docs/agents/pherot.md` and `docs/agents/hisabi.md`; CLAUDE.md rule 10.
 
+> **CN-030 · 31 Oct 2026 (owner: Google Drive backup works the way it does in the ERP, in one click).** No new PR numbers; the total stays 621 (615 active, 6 parked).
+>
+> **(1) One-click Drive backup and one-click restore.** PR 391 (switched live), 395 and 507 (backup settings and restore drills), 396 (restoring production) are built on the same Google sign-in as the Extas ERP's Backups screen (`google-drive.ts` in the ERP repo is the reference): an OAuth client of the type **"TVs and Limited Input devices"** and the one scope `drive.file`, so the shop sees only the files it made itself; **no web client, no redirect address, no service account** (this replaces the "service account" wording in Blueprint Part B / PR 395). The owner presses **Connect Google Drive**, the screen shows a code, he enters it at google.com/device on his phone and presses Allow. Then backups go by themselves into a folder "Extas E-commerce Backups" in his own Drive.
+>
+> **(2) What the screen shows.** The connected Google account, the backup folder, the free space in that Drive, the Google client's ID and whether it is "(your own)", a **Disconnect** button, and a **Change the Google client (advanced)** form (client ID, client secret, PIN) that ends the connection so he connects again; changing it says plainly that backups are less safe until Drive is connected again. The refresh token, the client secret and the backup key live only in the vault, never in Git, in a log or in chat.
+>
+> **(3) One-click restore.** A **Restore** button lists the backups in the connected Drive, newest first; restoring production asks for the typed confirmation and the PIN, restores to staging first (PR 396), and the monthly restore drill (PR 507) uses a temporary copy, never the live database.
+>
+> **(4) Handover.** A new owner types his own Google client ID and secret (made once in his own Google Cloud: a project, the Drive API on, the consent screen External with the scope `drive.file` and **published ("In production"; in "Testing" Google ends every connection after 7 days)**, then an OAuth client of the type "TVs and Limited Input devices"), presses Connect and has his own backups in his own Drive, and can restore in one click. The Extas ERP's Google project is never reused; Extas E-commerce has a project and client of its own. The same screen and steps serve every store (one connection per store).
+>
+> **(5) Where it is written.** Updated lines on PR 391, 395, 396 and 507 (CN-030).
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
@@ -779,6 +791,8 @@ the server.*
 - **PR 619** — Updated 30 Oct 2026 (CN-029): the switch date, opening balance and moved-orders list are kept per store; a handover pack replaces the store's ERP keys (the new owner types their own) and starts the store's own ledgers.
 - **PR 512** — Updated 30 Oct 2026 (CN-029): the multi-store scope carries the ERP link, the account ledger, the day closes and the match results per store.
 - **PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over.
+- **PR 395, 507** — Updated 31 Oct 2026 (CN-030): Google Drive backup is one click with the owner's own Google client ("TVs and Limited Input devices", scope `drive.file`, device-code sign-in, no redirect, no service account), the same way as the Extas ERP; the Backups screen shows account, folder, free space, client, Disconnect and "Change the Google client (advanced)" with the PIN; secrets only in the vault; one connection per store.
+- **PR 391, 396** — Updated 31 Oct 2026 (CN-030): going live with Drive means pressing Connect Google Drive and entering the code at google.com/device; restore is one click from the list of backups in the connected Drive, with the typed confirmation and the PIN, staging first.
 - **PR 184–191, 525, 526 (S08)** — Updated 30 Oct 2026 (CN-029, built in PR 612–614): on `erp.model` v6 the shop's quality check, restock, write-off and credit-due paths never run (each is a per-store switch `returns.legacy.shopQc`, `.restock`, `.writeOff`, `.creditDue`, on while v5, for PR 619 to turn off; nothing deleted); no return opens after delivery; an exchange is approved through the ERP within 72 hours of the courier's "delivered" (PR 614) and completes or cancels from the ERP's own answer, never by the shop's QC; the courier's hand-back is a return list (PR 612). The v5 flow is unchanged until the switch-over.
 
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
