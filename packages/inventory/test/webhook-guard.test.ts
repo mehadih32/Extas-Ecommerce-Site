@@ -11,13 +11,14 @@ const T0 = new Date('2026-10-23T04:00:00Z');
 const SECRET = 'sample-store-secret-for-tests';
 
 /** A database that answers like one store with its own connection and logs every call. */
-function world(log: string[], secret: { value: string } = { value: SECRET }) {
+function world(log: string[], secret: { value: string } = { value: SECRET }, db0: { down: boolean } = { down: false }) {
   const model = (name: string) =>
     new Proxy(
       {},
       {
         get: (_t, op: string) => async () => {
           log.push(`${name}.${op}`);
+          if (db0.down) throw new Error('database unavailable (made up)');
           if (name === 'store' && op === 'findMany') return [{ id: 1, erpMode: 'EXTAS_ERP' }];
           if (name === 'store' && op === 'findUnique') return { erpCompanyId: null, erpMode: 'EXTAS_ERP' };
           if (name === 'webhookEvent' && op === 'count') return 0;
@@ -150,5 +151,19 @@ describe('PR 608 · the ERP webhook refuses before it reads', () => {
     for (let i = 0; i < 6; i++) await at('junk', `evt-k${i}`, new Date(clock.now - 3_600_000));
     expect((await at('the-newest-secret', 'evt-e')).code).toBe('ACCEPTED');
     expect((await at('the-newest-secret', 'evt-f')).code).toBe('ACCEPTED');
+  });
+
+  it('p3 review round 3: a lookup that throws (a short database outage) gives its slot back, so the real ERP is not cut off after it', async () => {
+    const log: string[] = [];
+    const db0 = { down: true };
+    const { deps } = world(log, { value: SECRET }, db0);
+    const guard = newErpWebhookGuard();
+    const from = (id: string) => ({ ...signed(SECRET, id), address: '192.0.2.80' });
+    // Ten correctly signed events while the database is down: each fails (the ERP sends it again later).
+    for (let i = 0; i < 10; i++) await expect(receiveErpWebhook(deps, from(`evt-outage-${i}`), guard)).rejects.toThrow('database unavailable');
+    expect(guard.budget.addresses.get('192.0.2.80')?.refused ?? 0).toBe(0);
+    // The database is back: the next one from the same address is checked and accepted, not cut off (429).
+    db0.down = false;
+    expect(await receiveErpWebhook(deps, from('evt-after-outage'), guard)).toMatchObject({ status: 202 });
   });
 });

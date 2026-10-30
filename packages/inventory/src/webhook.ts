@@ -45,7 +45,7 @@
 import type { Prisma } from '@extas/db/client';
 import { erpSignatureShape, EXTAS_ERP_PROVIDER, parseErpV6Event, parseErpWebhookEvent, verifyErpSignature, type Connections, type ErpStockRow, type ErpVariantRow, type ErpWebhookParse } from '@extas/adapters';
 import { nowOf, setting, type InventoryDeps } from './context';
-import { admit, countRefusal, giveBack, overBudget, probeOpen, signedByKnown } from './erp-call-budget';
+import { admit, countRefusal, giveBack, overBudget, probeOpen, rememberVerified, signedByKnown } from './erp-call-budget';
 import { flushErpSiteRefusals, newErpSiteGuard, noteErpRefusal, type ErpSiteGuard } from './erp-site-calls';
 import { storesWithErp } from './erp-mode';
 import { currencyDigits } from './erp-push';
@@ -210,7 +210,15 @@ export async function receiveErpWebhook(deps: WebhookDeps, req: WebhookRequest, 
   const slot = admit(guard.budget, req.address, at, { perMinute, refreshSeconds }, signedKnown);
   if (!slot) return rateLimited();
 
-  const keys = await candidates(deps);
+  let keys: Candidate[];
+  try {
+    keys = await candidates(deps);
+  } catch (e) {
+    // Round 3: a lookup that throws (say, a short database outage) proved nothing about the sender: its slot is given
+    // back, so an outage never uses up an address's budget.
+    giveBack(guard.budget, slot);
+    throw e;
+  }
   guard.budget.known = keys.map((k) => k.secret);
   const matches: Candidate[] = [];
   let refusal: WebhookCode = keys.length ? 'BAD_SIGNATURE' : 'NO_SECRET';
@@ -225,8 +233,9 @@ export async function receiveErpWebhook(deps: WebhookDeps, req: WebhookRequest, 
   // The lookup already read the database: the counted refusals may be written now (at most once a window).
   await flushErpSiteRefusals(deps.db, guard, now).catch(() => false);
   if (verdict) return verdict;
-  // Verified: its slot is given back (it is not a refusal).
+  // Verified: its slot is given back (it is not a refusal), and its address keeps a bucket of its own (round 3).
   giveBack(guard.budget, slot);
+  rememberVerified(guard.budget, slot);
   const match = matches[0]!;
 
   let json: unknown;
