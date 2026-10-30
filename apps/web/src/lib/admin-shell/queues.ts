@@ -5,17 +5,20 @@
 // cancel requests and cancels waiting for the courier; parcels to book and returns come with S07/S08. PR 541: the
 // prepaid orders to confirm without a call (SIM-F-020), and the review row counts risk reviews beside duplicates.
 // CN-028 · PR 616: the books differences past their timing window (MISMATCH), on Money → Books → Differences.
+// CN-029 Phase 3 qa-gate I4 (PR 619; docs/RETAIL-ERP-MODEL.md §8): the ERP account's hold (v6 only) — one urgent row
+// from when the hold began, until the ERP releases it; it stops new orders, so it leads the dashboard's card.
 // Counts are kept for `admin.shell.badgeCacheSeconds` per store (one count for everyone; the keys filter per person).
 import type { PrismaClient } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
 import { workerStatus } from '@extas/jobs';
+import { erpHoldNotice } from '@extas/inventory';
 import { orderQueueCounts } from '@extas/orders';
 import type { AdminSectionId } from '@extas/settings';
 import type { ShellIconName } from './icons';
 import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold';
 
 export interface QueueDef {
   id: QueueId;
@@ -40,6 +43,7 @@ export const QUEUES: readonly QueueDef[] = [
   { id: 'lowStock', perm: 'inventory.read', href: '/admin/stock#st-low', section: 'products', tone: 'warn', icon: 'box', badge: false, group: 'stock' },
   { id: 'countsReview', perm: 'inventory.read', href: '/admin/stock/counts', section: 'products', tone: 'info', icon: 'check', badge: false, group: 'stock' },
   { id: 'erpFailed', perm: 'inventory.read', href: '/admin/stock#st-docs', section: 'products', tone: 'bad', icon: 'sync', badge: false, group: 'stock' },
+  { id: 'erpHold', perm: 'erp.account.read', href: '/admin/money/books', section: 'money', tone: 'bad', icon: 'alert', badge: false, group: 'urgent' },
   { id: 'booksDifferences', perm: 'books.read', href: '/admin/money/books/differences', section: 'money', tone: 'bad', icon: 'wallet', badge: false, group: 'money' },
   { id: 'jobsDead', perm: 'system.read', href: '/admin/server', section: 'reports', tone: 'bad', icon: 'alert', badge: true, group: 'system' },
 ];
@@ -66,7 +70,7 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 /** Every queue of the store, counted now (no cache, no key filter). */
 export async function countQueues(deps: QueueDeps, storeId: number): Promise<QueueCount[]> {
   const { db } = deps;
-  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld] = await Promise.all([
+  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold] = await Promise.all([
     orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
@@ -80,6 +84,8 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     workerStatus({ db, settings: deps.settings as Parameters<typeof workerStatus>[0]['settings'], now: deps.now }),
     db.booksDifference.count({ where: { storeId, status: 'MISMATCH' } }),
     db.booksDifference.findFirst({ where: { storeId, status: 'MISMATCH' }, orderBy: { firstSeenAt: 'asc' }, select: { firstSeenAt: true } }),
+    // v6 only (null on v5 or with no ERP link); a hold is one row, counted from when it began
+    erpHoldNotice({ db, settings: deps.settings as Parameters<typeof erpHoldNotice>[0]['settings'], now: deps.now }, storeId),
   ]);
   const dead = jobs.failed.filter((r) => r.status === 'DEAD_LETTERED').map((r) => r.startedAt).sort();
   const o = (id: QueueId, view: string): QueueCount => ({ id, n: orders[view]?.n ?? 0, oldest: iso(orders[view]?.oldest) });
@@ -93,6 +99,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     { id: 'lowStock', n: lowN, oldest: iso(lowOld?.createdAt) },
     { id: 'countsReview', n: reviewN, oldest: iso(reviewOld?.updatedAt) },
     { id: 'erpFailed', n: erpN, oldest: iso(erpOld?.createdAt) },
+    { id: 'erpHold', n: hold?.onHold ? 1 : 0, oldest: hold?.onHold ? (hold.heldAt ?? null) : null },
     { id: 'booksDifferences', n: booksN, oldest: iso(booksOld?.firstSeenAt) },
     { id: 'jobsDead', n: jobs.failedCounts.dead, oldest: dead[0] ?? null },
   ];

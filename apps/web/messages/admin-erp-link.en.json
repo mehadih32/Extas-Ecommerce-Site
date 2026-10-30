@@ -60,7 +60,7 @@
       "erp": "By the ERP",
       "checked": "Checked {at}",
       "notChecked": "Not checked yet",
-      "onHold": "Payments are on hold"
+      "onHold": "On hold: the ERP takes no new orders"
     },
     "books": {
       "title": "Books match",

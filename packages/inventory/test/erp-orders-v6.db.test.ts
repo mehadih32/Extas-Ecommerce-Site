@@ -239,7 +239,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     overrides.set(`erp.hold.pauseCheckout@${storeA}`, false);
     expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
     overrides.delete(`erp.hold.pauseCheckout@${storeA}`);
-    expect(await erpHoldNotice(deps(), storeA)).toMatchObject({ onHold: true, warn: true, checkoutPaused: true });
+    expect(await erpHoldNotice(deps(), storeA)).toMatchObject({ onHold: true, warn: true, checkoutPaused: true, heldAt: expect.any(String) });
     // In v5 a hold never pauses anything.
     overrides.set(`erp.model@${storeA}`, 'v5');
     expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);

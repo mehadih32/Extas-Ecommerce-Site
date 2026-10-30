@@ -344,7 +344,8 @@
       "sub": "{n} waiting · oldest {age}",
       "ordersReturns": "Returns & exchanges",
       "ordersReturnsQc": "Receive & QC",
-      "booksDifferences": "Books differences to put right"
+      "booksDifferences": "Books differences to put right",
+      "erpHold": "ERP account on hold: the ERP takes no new orders"
     },
     "age": {
       "now": "just now",
