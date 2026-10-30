@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-30 07:11 (Asia/Dhaka)
+# Smoke test · 2026-10-30 07:18 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (190টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `bac2e8a16804` · nightly · result **PASS** (190 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `d5f1379763bf` · after deploy · result **PASS** (190 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -197,4 +197,4 @@ Site: https://new.extas.com.bd · commit `bac2e8a16804` · nightly · result **P
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Database (PR 139): ok: 16 tables append-only; the app connects as extas_app.
+Database (PR 139): ok: 26 tables append-only; the app connects as extas_app.
