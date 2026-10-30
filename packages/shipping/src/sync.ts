@@ -11,10 +11,12 @@
 // `shipment.outForDelivery`, which starts the out-for-delivery and delivery-day messages (follow-up 283, PR 148).
 //
 // Nothing here moves money, changes COD or decides a refund: a door's money is the payments service's (PR 166).
+import { isV6 } from '@extas/inventory';
 import { isOrdersError, orderStep, type By, type OrdersDeps } from '@extas/orders';
 import type { ShippingDeps } from './context';
 import { orderMovesFor, type OrderMove, type ShipmentStatus } from './pure';
 import { holdsDelivered } from './truth';
+import { reportParcelToErp, type ErpParcelReport } from './erp-v6';
 
 /** The order's timeline type for the courier's "out for delivery" (`@extas/messages` OUT_FOR_DELIVERY_EVENT). */
 export const OUT_FOR_DELIVERY_EVENT = 'shipment.outForDelivery';
@@ -33,6 +35,8 @@ export interface Synced {
   waits: string | null;
   /** The courier's "out for delivery" was written on the order's timeline now. */
   outForDelivery: boolean;
+  /** PR 611: what went to the ERP (v6 only). */
+  erp?: ErpParcelReport;
 }
 
 const ordersDeps = (deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
@@ -92,6 +96,15 @@ export async function syncOrder(deps: Pick<ShippingDeps, 'db' | 'settings' | 'no
     }
   }
   if (s.status === 'OUT_FOR_DELIVERY') out.outForDelivery = await noteOutForDelivery(deps, s, by);
+  // PR 611 (ERP contract v6): the pickup and every courier result go to the ERP. A failure here never stops the order
+  // following its parcel: the tracking run's catch-up (`reportErpLagging`) sends it later.
+  if (await isV6(deps, s.storeId)) {
+    try {
+      out.erp = await reportParcelToErp(deps, { storeId: s.storeId, shipmentId: s.id });
+    } catch (e) {
+      out.erp = { shipment: false, delivery: false, waits: `ERROR: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200) };
+    }
+  }
   return out;
 }
 

@@ -6,6 +6,8 @@
 // - `order.line.short`: a Return-stock piece failed the owner's packing check; its line (and so the order) waits for the
 //   admin's decision (WAIT, REPLACE, CANCEL) or the stock. Undo: the line is open again.
 // - `order.line.filled`: the ERP filled a waiting line; a shipment HELD behind it goes again.
+// - `delivery.identified` (PR 611): the ERP's identification of a delivery result (GREEN, YELLOW, ORANGE), shown on the
+//   order page. The answer to `PUT /orders/{id}/delivery` carries the same, so a lost webhook loses nothing.
 // An event about an order the shop does not have on this link is IGNORED (kept in the ledger).
 import type { ErpEventContext, ErpEventHandler, ErpEventOutcome } from './erp-events';
 import { noteHold, wakeHeld, wakeLineWaiting } from './erp-orders-v6';
@@ -72,10 +74,24 @@ const lineFilled: ErpEventHandler = {
   },
 };
 
+const deliveryIdentified: ErpEventHandler = {
+  async apply(ctx) {
+    const d = dataOf(ctx);
+    const ext = text(d.externalOrderId);
+    if (!ext) return ignored;
+    const order = await ctx.tx.erpOrder.findUnique({ where: { linkId_externalOrderId: { linkId: ctx.row.linkId, externalOrderId: ext } }, select: { id: true } });
+    if (!order) return ignored;
+    const status = text(d.status);
+    await ctx.tx.erpOrder.update({ where: { id: order.id }, data: { identification: status && status !== 'PARTIAL' ? null : text(d.identification), identifiedAt: ctx.now } });
+    return { status: 'APPLIED', result: { identification: text(d.identification) } };
+  },
+};
+
 /** The handlers of PR 610 and 611, merged into `ERP_EVENT_HANDLERS`. */
 export const ERP_ORDER_EVENT_HANDLERS = {
   'account.hold': accountHold,
   'account.released': accountReleased,
   'order.line.short': lineShort,
   'order.line.filled': lineFilled,
+  'delivery.identified': deliveryIdentified,
 } as const satisfies Record<string, ErpEventHandler>;

@@ -15,6 +15,7 @@ import { isOrdersError, orderStep, staffBy, type By, type OrdersDeps } from '@ex
 import { z } from 'zod';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
+import { reportParcelToErp } from './erp-v6';
 import { CHECK_OUTCOMES, correctionStep, truthSignals, type CheckOutcome } from './pure';
 
 type Base = Pick<ShippingDeps, 'db' | 'settings' | 'now'>;
@@ -227,7 +228,7 @@ export async function resolveDeliveryCheck(deps: Base, who: Who, checkId: string
     }
   }
   const now = nowOf(deps);
-  return deps.db.$transaction(async (tx) => {
+  const done = await deps.db.$transaction(async (tx) => {
     let returnId: string | null = null;
     if (d.outcome !== 'DELIVERED') {
       const kind = KIND[d.outcome];
@@ -243,5 +244,9 @@ export async function resolveDeliveryCheck(deps: Base, who: Who, checkId: string
     await logChange(tx, who, 'delivery.check.resolve', 'DeliveryCheck', c.id, { state: c.state, signals: c.signals }, { state: after.state, resolution: after.resolution, orderStep: step, returnId });
     return { check: after, orderStep: step, returnId };
   }, TX);
+  // PR 611 (ERP contract v6): the result held while the check was open goes to the ERP now, as the person found it.
+  // The tracking run's catch-up sends it if this fails.
+  await reportParcelToErp(deps, { storeId: who.storeId, shipmentId: c.shipmentId }).catch(() => null);
+  return done;
 }
 

@@ -1,16 +1,18 @@
-// PR 610 (CN-028, ERP contract v6) — the ERP part of one order's admin page (/admin/orders/<id>): whether the ERP
+// PR 610, 611 (CN-028, ERP contract v6) — the ERP part of one order's admin page (/admin/orders/<id>): whether the ERP
 // has the order or why it waits, the account's hold band, the ERP total and billing (for those who may read the ERP
 // account), each piece with "From ERP return stock", a short line's decision (WAIT, REPLACE, CANCEL; `orders.lines`),
-// and the ERP's identification colour. Self-contained like the support panel: it checks `orders.read` itself and draws nothing in v5, when the order never went to the ERP, or when
+// the ERP's identification colour, and the Partial delivery box (`delivery.outcomes` saves it). Self-contained like the
+// support panel: it checks `orders.read` itself and draws nothing in v5, when the order never went to the ERP, or when
 // it cannot be read (the rest of the order page still shows). Guide: docs/admin-guide/orders.md "ERP order".
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { erpOrderView, type InventoryDeps } from '@extas/inventory';
+import { partialBoxView } from '@extas/shipping';
 import { adminDeps } from '@/lib/admin-auth';
-import { decideTexts, erpPanelView, type ErpPanelView } from '@/lib/admin-orders/erp';
+import { boxTexts, decideTexts, erpPanelView, type ErpPanelView } from '@/lib/admin-orders/erp';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { t } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
-import { ErpLineDecision } from './ErpOrderActions';
+import { ErpLineDecision, ErpPartialBox } from './ErpOrderActions';
 
 /** The page never calls the ERP from here: the views read the shop's own rows only. */
 const NO_ERP = { use: () => Promise.reject(new Error('the order page reads the ERP rows only')) } as unknown as InventoryDeps['connections'];
@@ -26,7 +28,8 @@ export async function ErpOrderPanel({ orderId, currency, view: given }: { orderI
   try {
     view = given ?? (await adminView(deps));
     const erp = await erpOrderView({ ...base, connections: NO_ERP }, who, orderId);
-    v = erpPanelView(view, orderId, currency, erp);
+    const box = erp ? await partialBoxView(base, who, orderId).catch(() => null) : null;
+    v = erpPanelView(view, orderId, currency, erp, box);
   } catch {
     v = null;
   }
@@ -102,6 +105,41 @@ export async function ErpOrderPanel({ orderId, currency, view: given }: { orderI
           </div>
         ))}
       </div>
+      {v.box ? (
+        <div className="a2-mt12" data-testid="erp-box">
+          <h3 className="a2-h4">{t(d, 'erpOrder.box.title')}</h3>
+          <div className="a2-cs">{t(d, 'erpOrder.box.sub')}</div>
+          {v.box.required ? (
+            <div className="a2-band stale a2-mt12" data-testid="erp-box-required">
+              <ShellIcon name="alert" size={16} />
+              <span>{t(d, 'erpOrder.box.required')}</span>
+            </div>
+          ) : null}
+          {v.box.closed ? <div className="a2-note">{v.box.closed}</div> : null}
+          {v.box.courier || v.box.collected ? (
+            <div className="a2-kv2 a2-mt12">
+              {v.box.courier ? (
+                <>
+                  <span>{t(d, 'erpOrder.box.courier')}</span>
+                  <span>{v.box.courier}</span>
+                </>
+              ) : null}
+              {v.box.collected ? (
+                <>
+                  <span>{t(d, 'erpOrder.box.collected')}</span>
+                  <span>{v.box.collected}</span>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+          <ErpPartialBox box={v.box} texts={boxTexts(view!)} orderId={orderId} />
+          {v.box.last ? <div className="a2-xs a2-mute a2-mt12">{v.box.last}</div> : null}
+          <div className="a2-note a2-mt12">
+            <ShellIcon name="info" size={15} />
+            <span>{t(d, 'erpOrder.box.money')}</span>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

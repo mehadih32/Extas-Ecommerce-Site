@@ -16,6 +16,7 @@ import { applyEvents, type Applied } from './events';
 import { ACTIVE_STATES, isException } from './pure';
 import { syncLagging, syncOrder, type Synced } from './sync';
 import { sweepDeliveryChecks } from './truth';
+import { reportErpLagging } from './erp-v6';
 
 const TRACK_SELECT = { id: true, consignmentId: true, trackingCode: true, merchantRef: true, providerStatus: true, courierAccount: { select: { providerKey: true } } } as const;
 
@@ -53,12 +54,14 @@ export interface TrackRun {
   caughtUp: number;
   /** PR 525: true-delivery checks opened by a late sign (the courier's statement, the return received …). */
   checksOpened: number;
+  /** PR 611: parcels whose pickup or result reached the ERP only by this run's catch-up (v6). */
+  erpCaughtUp: number;
 }
 
 /** One store's due parcels read from their couriers (the worker's job). */
 export async function trackParcels(deps: ShippingDeps, storeId: number): Promise<TrackRun> {
   const cfg = await setting(deps, storeId, 'delivery.courier.tracking');
-  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0, checksOpened: 0 };
+  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0, checksOpened: 0, erpCaughtUp: 0 };
   if (!cfg.enabled) return run;
   const now = nowOf(deps);
   const due = new Date(now.getTime() - cfg.everyMinutes * 60_000);
@@ -92,6 +95,8 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
   }
   run.caughtUp = (await syncLagging(deps, storeId, cfg.batch)).moved;
   run.checksOpened = (await sweepDeliveryChecks(deps, storeId, cfg.batch)).opened;
+  // PR 611 (ERP contract v6): any pickup or courier result that has not reached the ERP yet.
+  run.erpCaughtUp = (await reportErpLagging(deps, storeId, cfg.batch).catch(() => ({ sent: 0 }))).sent;
   return run;
 }
 
