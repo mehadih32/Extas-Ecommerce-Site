@@ -34,6 +34,14 @@
 // (`wireKey`), because the ERP keeps a 4xx answer against its key. A v6 order the shop cancelled before the ERP ever had
 // it is never sent. In v5 none of this runs: the document, its key and every step are exactly as before.
 //
+// p3 review (v5 and v6 alike): a document that waits for its order (a status change, a return, the v6 shipment,
+// delivery results and line decisions) never fills the relay's batch. While its order is still on its way (PENDING or
+// HELD) it steps out (`WAITING_FOR_ORDER`, its next attempt pushed `erp.push.backoffMaxSeconds` on) and is woken the
+// moment its order is sent. When its order can no longer reach the ERP (every revision FAILED or DEAD) it ends FAILED
+// with `ORDER_NOT_AT_ERP`, shown with the failed documents (kept, never deleted); sending the order again by hand
+// (PR 206) brings those back with it, and so does (round 2) a newer revision of the order the moment the ERP takes it.
+// So one store's dead orders can never stall every newer document behind them.
+//
 // Failures: a retryable one (timeout, network, ERP error, rate limit, a refused key) waits `erp.push.backoffBaseSeconds`
 // × 2^(n−1), at most `erp.push.backoffMaxSeconds`, and after `erp.push.maxAttempts` tries the row is DEAD (shown on the
 // sync health panel, PR 205; sent again by hand, PR 206). A document the ERP refuses as wrong (400, 409 short stock,
@@ -307,6 +315,22 @@ export function pushBackoffMs(failedAttempts: number, baseSeconds: number, maxSe
 /** ERP answers that mean "this document is wrong": the same document again cannot help. */
 const REFUSED = new Set(['INVALID_REQUEST', 'CONFLICT', 'NOT_FOUND', 'BAD_RESPONSE']);
 
+/** p3 review: a follow-up waiting for its order to be sent (out of the batch until then). */
+export const WAITING_FOR_ORDER = 'WAITING_FOR_ORDER';
+/** p3 review: a follow-up whose order can no longer reach the ERP (FAILED or DEAD): ended, kept, sent again with it. */
+export const ORDER_NOT_AT_ERP = 'ORDER_NOT_AT_ERP';
+
+/** Does this document wait for its order to be at the ERP first? */
+const followsOrder = (documentType: string) => documentType === 'order.status' || documentType === 'return.create' || WAITS_FOR_ORDER.has(documentType);
+
+/** The orders of these references that can no longer reach the ERP: no revision sent or on its way, one FAILED or DEAD. */
+async function ordersNotAtErp(db: Db, storeId: number, referenceIds: string[]): Promise<Set<string>> {
+  if (!referenceIds.length) return new Set();
+  const rows = await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', referenceId: { in: referenceIds } }, select: { referenceId: true, status: true } });
+  const alive = new Set(rows.filter((r) => r.status === 'PENDING' || r.status === 'HELD' || r.status === 'SENT').map((r) => r.referenceId));
+  return new Set(rows.filter((r) => (r.status === 'FAILED' || r.status === 'DEAD') && !alive.has(r.referenceId)).map((r) => r.referenceId));
+}
+
 export interface RelayResult {
   stores: number;
   sent: number;
@@ -376,6 +400,9 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
       : new Set<string>();
     // qa-gate (PR 610): an order revision with a newer revision queued never goes (it would roll the ERP order back).
     const superseded = v6 ? await supersededIds(db, storeId, rows) : new Set<string>();
+    // p3 review: the follow-ups' orders that can no longer reach the ERP (their follow-ups end, never wait forever).
+    const notAtErp = await ordersNotAtErp(db, storeId, [...new Set(rows.filter((r) => followsOrder(r.documentType) && !sentOrders.has(r.referenceId)).map((r) => r.referenceId))]);
+    const waitUntil = new Date(now.getTime() + maxS * 1000);
     for (const row of rows) {
       if (superseded.has(row.id)) {
         out.failed += await markSuperseded(db, [row.id]);
@@ -396,12 +423,20 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
       }
       // A status change or a return waits for its order (contract: the order must exist first). PR 610, 611: so do the
       // v6 shipment, delivery results and line decisions.
-      const follows = row.documentType === 'order.status' || row.documentType === 'return.create' || WAITS_FOR_ORDER.has(row.documentType);
-      if (follows && !sentOrders.has(row.referenceId)) {
+      if (followsOrder(row.documentType) && !sentOrders.has(row.referenceId)) {
         if (neverSent.has(row.referenceId)) {
           out.failed += (await db.erpPush.updateMany({ where: { id: row.id, status: 'PENDING' }, data: { status: 'FAILED', lastError: CANCELLED_BEFORE_SENT, nextAttemptAt: null } })).count;
           continue;
         }
+        // p3 review: its order will never be at the ERP: ended (kept, shown with the failed documents).
+        if (notAtErp.has(row.referenceId)) {
+          const n = (await db.erpPush.updateMany({ where: { id: row.id, status: 'PENDING' }, data: { status: 'FAILED', lastError: ORDER_NOT_AT_ERP, nextAttemptAt: null } })).count;
+          if (n && row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'ERP_FAILED');
+          out.failed += n;
+          continue;
+        }
+        // Its order is still on its way: out of the batch until it is sent (woken then), or the longest wait at most.
+        await db.erpPush.updateMany({ where: { id: row.id, status: 'PENDING' }, data: { lastError: WAITING_FOR_ORDER, nextAttemptAt: waitUntil } });
         out.waiting++;
         continue;
       }
@@ -415,7 +450,18 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
           where: { id: row.id },
           data: { status: 'SENT', responseStatus: r.status, responseBody: (r.body ?? null) as Prisma.InputJsonValue, erpId: r.erpId, sentAt: nowOf(deps), nextAttemptAt: null, lastError: null },
         });
-        if (row.documentType === 'order.create') sentOrders.add(row.referenceId);
+        if (row.documentType === 'order.create') {
+          sentOrders.add(row.referenceId);
+          // p3 review: what waited for this order goes on the next round.
+          await db.erpPush.updateMany({ where: { storeId, referenceId: row.referenceId, status: 'PENDING', lastError: WAITING_FOR_ORDER }, data: { lastError: null, nextAttemptAt: null } });
+          // p3 review round 2: a revision that reached the ERP after an earlier one failed brings back the follow-ups
+          // that were ended for it (never sent, so they go once: the same rows, their own keys).
+          const ended = await db.erpPush.findMany({ where: { storeId, referenceId: row.referenceId, status: 'FAILED', lastError: ORDER_NOT_AT_ERP }, select: { id: true, documentType: true } });
+          if (ended.length) {
+            await db.erpPush.updateMany({ where: { id: { in: ended.map((r) => r.id) }, status: 'FAILED', lastError: ORDER_NOT_AT_ERP }, data: { status: 'PENDING', attempts: 0, lastError: null, nextAttemptAt: null } });
+            await settleReturnItems(db, ended.filter((r) => r.documentType === 'return.create').map((r) => r.id), 'ERP_PENDING');
+          }
+        }
         if (row.documentType === 'return.create') await settleReturnItems(db, [row.id], 'RESTOCKED');
         // PR 610, 611: the v6 answer kept (erpTotal and shop prices, the bill, the identification).
         if (v6) await afterSent(deps, row, r.body);
@@ -540,8 +586,14 @@ export async function retryErpPushes(deps: InventoryDeps, who: Who, input: z.inp
   const d = parse(retryInput, input, 'retry');
   return deps.db.$transaction(async (tx) => {
     const where = { storeId: who.storeId, status: { in: ['FAILED' as const, 'DEAD' as const, 'SKIPPED_NO_ERP' as const] }, ...(d.ids ? { id: { in: d.ids } } : {}) };
-    const rows = await tx.erpPush.findMany({ where, select: { id: true, status: true, documentType: true } });
-    if (!rows.length) return { queued: 0 };
+    const named = await tx.erpPush.findMany({ where, select: { id: true, status: true, documentType: true, referenceId: true } });
+    if (!named.length) return { queued: 0 };
+    // p3 review: an order sent again brings back what was ended because it never reached the ERP.
+    const orders = named.filter((r) => r.documentType === 'order.create').map((r) => r.referenceId);
+    const ended = orders.length
+      ? await tx.erpPush.findMany({ where: { storeId: who.storeId, status: 'FAILED', lastError: ORDER_NOT_AT_ERP, referenceId: { in: orders }, id: { notIn: named.map((r) => r.id) } }, select: { id: true, status: true, documentType: true, referenceId: true } })
+      : [];
+    const rows = [...named, ...ended];
     const n = (await tx.erpPush.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { status: 'PENDING', attempts: 0, nextAttemptAt: null } })).count;
     await settleReturnItems(tx, rows.filter((r) => r.documentType === 'return.create').map((r) => r.id), 'ERP_PENDING');
     await logChange(tx, who, { action: 'erp.push.retry', entityType: 'ErpPush', entityId: d.ids ? rows.map((r) => r.id).join(',').slice(0, 500) : 'all', before: { statuses: [...new Set(rows.map((r) => r.status))] }, after: { status: 'PENDING', count: n }, storeId: who.storeId });

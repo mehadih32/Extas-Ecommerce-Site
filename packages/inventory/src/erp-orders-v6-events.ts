@@ -3,12 +3,20 @@
 // correction (`reverses`) undoes the original first.
 // - `account.hold`: the account is on hold (ErpAccountState): checkout pauses while `erp.hold.pauseCheckout` is on.
 // - `account.released`: the hold is lifted; every order HELD for it goes again (a new key round).
+// - p3 review: an `account.*` event older than the newest one applied on the link (by `occurredAt`), or older than the
+//   account check (`GET /account`, `checkedAt`) that last said the opposite, is IGNORED (OLDER): a late hold never
+//   pauses checkout again after the ERP released the account, and a late release never lifts a newer hold.
+//   Round 2 (two clocks): `occurredAt` is the ERP's clock and `checkedAt` the shop's, so an event is older than a check
+//   only by more than the skew margin (`erp.webhook.maxAgeSeconds`, the same window a signed call may be off by). An
+//   event is placed at its `occurredAt`, but never later than its arrival plus that margin: a far-future date (a wrong
+//   ERP clock) never makes it "newer" than every real event after it.
 // - `order.line.short`: a Return-stock piece failed the owner's packing check; its line (and so the order) waits for the
 //   admin's decision (WAIT, REPLACE, CANCEL) or the stock. Undo: the line is open again.
 // - `order.line.filled`: the ERP filled a waiting line; a shipment HELD behind it goes again.
 // - `delivery.identified` (PR 611): the ERP's identification of a delivery result (GREEN, YELLOW, ORANGE), shown on the
 //   order page. The answer to `PUT /orders/{id}/delivery` carries the same, so a lost webhook loses nothing.
 // An event about an order the shop does not have on this link is IGNORED (kept in the ledger).
+import { setting } from './context';
 import type { ErpEventContext, ErpEventHandler, ErpEventOutcome } from './erp-events';
 import { noteHold, wakeHeld, wakeLineWaiting } from './erp-orders-v6';
 
@@ -28,8 +36,38 @@ async function lineOf(ctx: ErpEventContext) {
 
 const ignored: ErpEventOutcome = { status: 'IGNORED', result: { reason: 'UNKNOWN_ORDER_OR_LINE' } };
 
+const ACCOUNT_EVENTS = ['account.hold', 'account.released'];
+
+/** Round 2: where an event sits in time — its `occurredAt`, but never later than its arrival plus the skew margin. */
+const placedAt = (e: { occurredAt: Date; receivedAt: Date }, marginMs: number): number => Math.min(e.occurredAt.getTime(), e.receivedAt.getTime() + marginMs);
+
+/**
+ * p3 review: is there newer news of the account than this event? A newer `account.*` event applied on the same link,
+ * or an account check made more than the skew margin after it that found the other state (round 2). An event without
+ * `occurredAt` cannot be placed in time: it is applied as before.
+ */
+async function newerAccountNews(ctx: ErpEventContext, onHold: boolean): Promise<ErpEventOutcome | null> {
+  const occurredAt = ctx.row.occurredAt;
+  if (!occurredAt) return null;
+  const marginMs = (await setting(ctx.deps, null, 'erp.webhook.maxAgeSeconds')) * 1000;
+  const at = placedAt({ occurredAt, receivedAt: ctx.row.receivedAt }, marginMs);
+  // Only an event dated after this one can be newer; its own place (capped the same way) decides.
+  const later = await ctx.tx.erpEvent.findMany({
+    where: { storeId: ctx.row.storeId, linkId: ctx.row.linkId, type: { in: ACCOUNT_EVENTS }, id: { not: ctx.row.id }, status: 'APPLIED', occurredAt: { gt: new Date(at) } },
+    orderBy: { occurredAt: 'desc' },
+    select: { eventId: true, occurredAt: true, receivedAt: true },
+  });
+  const newer = later.find((e) => e.occurredAt && placedAt({ occurredAt: e.occurredAt, receivedAt: e.receivedAt }, marginMs) > at);
+  if (newer) return { status: 'IGNORED', result: { why: 'OLDER', newer: newer.eventId } };
+  const state = await ctx.tx.erpAccountState.findUnique({ where: { linkId: ctx.row.linkId }, select: { onHold: true, checkedAt: true } });
+  if (state && state.onHold !== onHold && state.checkedAt && state.checkedAt.getTime() > at + marginMs) return { status: 'IGNORED', result: { why: 'OLDER', checkedAt: state.checkedAt.toISOString() } };
+  return null;
+}
+
 const accountHold: ErpEventHandler = {
   async apply(ctx) {
+    const older = await newerAccountNews(ctx, true);
+    if (older) return older;
     const d = dataOf(ctx);
     await noteHold(ctx.tx, ctx.row.storeId, ctx.row.linkId, { onHold: true, reason: text(d.reason), holdsOn: text(d.holdsOn) }, ctx.now);
     return { status: 'APPLIED', result: { onHold: true } };
@@ -41,6 +79,8 @@ const accountHold: ErpEventHandler = {
 
 const accountReleased: ErpEventHandler = {
   async apply(ctx) {
+    const older = await newerAccountNews(ctx, false);
+    if (older) return older;
     await noteHold(ctx.tx, ctx.row.storeId, ctx.row.linkId, { onHold: false, reason: null }, ctx.now);
     const woken = await wakeHeld(ctx.tx, ctx.row.storeId, { reason: 'ACCOUNT_ON_HOLD' });
     return { status: 'APPLIED', result: { onHold: false, woken } };
