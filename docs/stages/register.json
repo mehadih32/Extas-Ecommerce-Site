@@ -12892,6 +12892,7 @@
     "date": "2026-10-30",
     "note": "orders to the ERP v6 (v6 stores only; v5 unchanged): one `lineId` per piece with quantity 1 (follow-up 491), `customerPrice` in whole taka (the order's discount spread by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), `deliveryCharge`, `advancePaid` (online + wallet), `grade`; ErpOrder / ErpOrderLine rows kept with the order (line ids stable across revisions); the answer's `erpTotal`, each line's `shopPrice` and `fromReturnStock` stored. A 409 the ERP keeps against its key is HELD with its reason and goes again by itself with a new key round (migration `0053_erp_orders_v6`: `ErpPush.keyRound`, `heldReason`): `ACCOUNT_ON_HOLD` pauses checkout (`erp.hold.pauseCheckout`, on; `PAUSED`, the bag kept) until `account.released` or the account check; `INSUFFICIENT_STOCK` when the ERP has the stock; `NO_SHOP_PRICE` stops that SKU (`shopPriceMissingAt`) until the ERP takes it; an order cancelled before the ERP had it is never sent. `order.line.short` / `filled` handled; the order page's ERP card shows \"From ERP return stock\" and the admin decides a short line (WAIT, REPLACE, CANCEL; `orders.lines`, audited). Follow-up 490: the order check (`inventory.erp.checkOrders`, every `erp.account.checkMinutes`) reads the account and the ERP's own copy of open orders, so a lost line webhook or answer is caught up. Registry v66 (`erp.orders.*`). Store isolation tested",
     "github": [
+     "#59, 30 Oct",
      "#56, 30 Oct",
      "#55, 30 Oct"
     ]
@@ -17530,6 +17531,7 @@
     "date": "2026-10-30",
     "note": "ERP contract v6 behind `erp.model` (v5 by default, per store; registry v62): the typed v6 calls and answers in the new shared package `@extas/erp-types` (with the ledger, pipeline, summary and books helpers every PR 607–618 lane uses), the practice ERP speaking all of v6; in v6 the shop never reads `retailPrice` or `avgCost`, and the retired v5 calls are kept as RETIRED rows, never sent. CN-029 §16: one store = one ERP company: each store's own connection and keys from the vault under its id, the practice ERP gives every store its own sample company and key, and a test proves store A's key never reads or writes store B; a store with only a shared connection is refused in v6 (`SHARED_LINK`). Phase 0: migration `0049_erp_v6` with every new table of PR 607–618 (storeId on every row; ledgers and adjustments append-only for the app's role), every §11 setting (off or the document's default), every §12 permission (in `ACCESS_TREE`); later migration numbers reserved per lane (0052–0057)",
     "github": [
+     "#59, 30 Oct",
      "#53, 30 Oct"
     ]
    },
@@ -17599,6 +17601,7 @@
     "date": "2026-10-30",
     "note": "ERP event ledger and the v6 webhook receiver: every v6 event kept once by its eventId on the store's own ERP link (`ErpStoreLink`), forever; its body can never change (database trigger); a correction that arrives first waits for its original; the hourly pull (`erp.events.pullMinutes`) and the webhook are one ledger; a missing or damaged piece becomes one courier claim. CN-029 §16: the event belongs to the store whose secret signed it, even when it names another store's order; two stores sharing a webhook secret are refused (`SHARED_SECRET`); a store's pull never brings in another store's events. In v5 nothing changes",
     "github": [
+     "#59, 30 Oct",
      "#53, 30 Oct"
     ]
    },
@@ -26375,6 +26378,7 @@
     "date": "2026-10-30",
     "note": "signed calls from the ERP to the shop (CN-028, docs/erp/site-changes-v6.md §2.7; no migration): `GET /erp-api/top-products?from&to&limit` (Sales by SKU from `@extas/metrics` `salesBySku`: pieces, net sales, profit over the cost snapshot) and `GET /erp-api/customers?page&pageSize&search` (`@extas/customers` `erpCustomerPage`: one row per person who ordered, total spent = Sales), answered live and never pushed. Signed `X-Extas-Signature` over `METHOD\\nPATH?QUERY\\nTIMESTAMP`, constant-time, refused beyond `erp.siteApi.maxAgeSeconds` (300); the store is the one whose own secret verifies (CN-029 §16: the new optional third ERP key `signingSecret`, else the webhook secret; v6 stores only; a shared secret refused). Today the key and the card are the mother store's, on Keys & connections; each store's own key and card come with its ERP link page (PR 619). Off per store (`erp.siteApi.enabled`, registry v65) until switched on on the new \"The ERP asks the shop\" card on `/admin/integrations` (`vault.write`), which shows the base URL, the latest verified calls and the refused calls summed. qa-gate (30 Oct): a call refused from the request alone (path, method, no or a malformed signature) reads no database, setting or vault; refusals are only counted (one SecurityEvent `erp.site-call.refused` summary per `erp.siteApi.refusedLogMinutes`), after `erp.siteApi.refusedPerMinute` refused calls a minute further unverified calls get 429 without a store lookup, and only a verified caller's call gets its own `erp.site-call` row (no customer data); the search length is `erp.siteApi.searchMaxChars`; the query is signed percent-encoded. The preview gate lets only these two GET paths through, matched on the raw request target case for case, as are the ERP and WhatsApp webhook exemptions (gate v5; CI runs the live gate checks on a pinned Caddy 2.10.2). After launch",
     "github": [
+     "#59, 30 Oct",
      "#57, 30 Oct"
     ]
    },
