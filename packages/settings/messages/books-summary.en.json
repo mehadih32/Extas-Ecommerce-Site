@@ -25,6 +25,20 @@
         "label": "Flag returns waiting for the owner's check after (days)",
         "help": "Returned pieces still waiting for the owner's check in the ERP longer than this show under Needs you now on the Books page."
       }
+    },
+    "costs": {
+      "maxLineMinor": {
+        "label": "The most one cost may be (in paisa)",
+        "help": "A fixed-cost line or one day's cost entry above this is refused as a typing slip (an extra zero). Set it far above your real costs."
+      },
+      "maxMonthMinor": {
+        "label": "The most a month's fixed costs may be in all (in paisa)",
+        "help": "Salary, rent, utilities and other of one month together above this are refused as a typing slip. Set it far above your real costs."
+      },
+      "listLimit": {
+        "label": "Cost entries listed at once",
+        "help": "How many cost entries Money → Costs shows at once, newest first. The page says when there are more."
+      }
     }
   }
 }

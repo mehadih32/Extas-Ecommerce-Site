@@ -62,7 +62,8 @@
     "supportInbox": "ইনবক্স",
     "supportConversation": "কথোপকথন",
     "supportSettings": "সাপোর্ট সেটিংস",
-    "booksDaily": "দৈনিক হিসাব"
+    "booksDaily": "দৈনিক হিসাব",
+    "moneyCosts": "খরচ"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

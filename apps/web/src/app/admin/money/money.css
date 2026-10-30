@@ -20,3 +20,20 @@
   .adm2 .bk-checks li .a2-pill{grid-column:2;justify-self:start;white-space:normal}
   .adm2 .a2-tbl td.bk-inc{grid-column:1/-1}
 }
+/* PR 618 — Money → Costs: the fixed-cost form (four amounts side by side, two on a tablet, one on a phone), the daily
+   cost-line form, the reverse-with-a-reason row and "More options". */
+.adm2 .ct-form{display:grid;gap:12px}
+.adm2 .ct-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.adm2 .ct-hint{margin:0}
+.adm2 .ct-total{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.adm2 .ct-actions{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .ct-undo{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.adm2 .ct-undo .a2-inp{flex:1 1 160px;min-width:0}
+.adm2 .ct-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px}
+.adm2 details.ct-more>summary{cursor:pointer;color:var(--ink2);padding:12px 0;line-height:20px;font-weight:600;min-height:44px}
+@media (max-width:1100px){
+  .adm2 .ct-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:767px){
+  .adm2 .ct-grid,.adm2 .ct-checks{grid-template-columns:minmax(0,1fr)}
+}

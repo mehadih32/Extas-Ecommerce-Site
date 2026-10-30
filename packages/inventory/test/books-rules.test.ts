@@ -11,9 +11,12 @@ import {
   bodyHashOf,
   dayOpen,
   emptyDay,
+  costDayCheck,
   fixedCostDays,
   fixedCostsBody,
+  fixedCostsKey,
   fixedCostsSame,
+  fixedMonthCheck,
   minorPerUnit,
   nextTryAt,
   storedVerdict,
@@ -186,6 +189,35 @@ describe('PR 618 · fixed costs', () => {
     expect(fixedCostsSame(c, { salary: '45000', rent: '20000', utilities: '4500.00', other: '2000' }, BDT)).toBe(true);
     expect(fixedCostsSame(c, { salary: '45000', rent: '20000', utilities: '4500', other: '2001' }, BDT)).toBe(false);
     expect(fixedCostsSame(c, undefined, BDT)).toBe(false);
+  });
+
+  it('a month can be set from the link`s first month up to next month, never in a closed month', () => {
+    const o = { today: '2026-11-20', startDay: '2026-11-01', closedMonths: new Set<string>() };
+    expect(fixedMonthCheck('2026-11', o)).toBe('OK');
+    expect(fixedMonthCheck('2026-12', o)).toBe('OK'); // set ahead, before the month starts
+    expect(fixedMonthCheck('2027-01', o)).toBe('TOO_FAR');
+    expect(fixedMonthCheck('2026-10', o)).toBe('BEFORE_START');
+    expect(fixedMonthCheck('2026-11', { ...o, closedMonths: new Set(['2026-11']) })).toBe('CLOSED');
+    expect(fixedMonthCheck('2026-12', { ...o, today: '2026-12-31' })).toBe('OK');
+    expect(fixedMonthCheck('2027-01', { ...o, today: '2026-12-31' })).toBe('OK'); // across the year
+  });
+
+  it('a new key for every version and for every send after the ERP accepted one (a known key is only replayed)', () => {
+    expect(fixedCostsKey('L1', '2026-11', 2, 0)).toBe('fixedcosts:L1:2026-11:v2:r0');
+    expect(fixedCostsKey('L1', '2026-11', 2, 1)).not.toBe(fixedCostsKey('L1', '2026-11', 2, 0));
+    expect(fixedCostsKey('L2', '2026-11', 2, 0)).not.toBe(fixedCostsKey('L1', '2026-11', 2, 0));
+  });
+});
+
+describe('PR 618 · the extra cost lines', () => {
+  const o = { today: '2026-11-20', startDay: '2026-11-01', resendDays: 7, closedMonths: new Set<string>() };
+  it('a cost can be entered for today and for the open days, which then go to the ERP again', () => {
+    expect(costDayCheck('2026-11-20', o)).toBe('OK');
+    expect(costDayCheck('2026-11-13', o)).toBe('OK');
+    expect(costDayCheck('2026-11-12', o)).toBe('TOO_OLD'); // past books.resend.days: the ERP would never see it
+    expect(costDayCheck('2026-11-21', o)).toBe('FUTURE');
+    expect(costDayCheck('2026-10-31', { ...o, today: '2026-11-03' })).toBe('BEFORE_START');
+    expect(costDayCheck('2026-11-19', { ...o, closedMonths: new Set(['2026-11']) })).toBe('CLOSED');
   });
 });
 

@@ -11,5 +11,6 @@
 - [হিসাবের খাতা — গরমিল](books-differences.md) — যা মেলেনি, আর উল্টো এন্ট্রি আর নতুন এন্ট্রি দিয়ে ঠিক করা, মালিকের PIN দিয়ে (`/admin/money/books/differences`)
 - [হিসাবের খাতা — হিসাব বন্ধ](books-closes.md) — মাস আর অর্থবছর বন্ধ, আবার খোলা, মালিকের হিসাবের PIN (`/admin/money/books/closes`)
 - [দৈনিক হিসাব](books-daily.md) — হিসাবের অবস্থা, এখনই আপনার কাজ, আর ERP-কে পাঠানো দৈনিক হিসাব (`/admin/money/books/daily`)
+- [খরচ](costs.md) — মাসের স্থির খরচ আর প্রতিদিনের খরচের লাইন, যা ERP-তে যায় (`/admin/money/costs`)
 
 পরিকল্পনা: [টাকা](../../finance.md)।

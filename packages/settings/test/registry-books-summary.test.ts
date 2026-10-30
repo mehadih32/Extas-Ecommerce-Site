@@ -24,7 +24,26 @@ describe('books summary settings (v69)', () => {
 
   it('defaults: look every minute, check every hour, a month back, no cost line left out, flag after 7 days', () => {
     const d = Object.fromEntries(Object.entries(booksSummarySettings).map(([k, s]) => [k, s.default]));
-    expect(d).toEqual({ 'erp.summary.tickSeconds': 60, 'erp.summary.checkMinutes': 60, 'erp.summary.gapDays': 31, 'erp.summary.noCostLines': [], 'books.status.waitingCheckWarnDays': 7 });
+    expect(d).toEqual({
+      'erp.summary.tickSeconds': 60,
+      'erp.summary.checkMinutes': 60,
+      'erp.summary.gapDays': 31,
+      'erp.summary.noCostLines': [],
+      'books.status.waitingCheckWarnDays': 7,
+      'books.costs.maxLineMinor': 10_000_000_000,
+      'books.costs.maxMonthMinor': 40_000_000_000,
+      'books.costs.listLimit': 500,
+    });
+  });
+
+  it('qa-gate: the most one cost line and one month may hold stay far inside exact whole numbers', () => {
+    const line = booksSummarySettings['books.costs.maxLineMinor'];
+    const month = booksSummarySettings['books.costs.maxMonthMinor'];
+    expect(line.schema.safeParse(0).success).toBe(false);
+    expect(line.schema.safeParse(Number.MAX_SAFE_INTEGER).success).toBe(false);
+    expect(month.schema.safeParse(Number.MAX_SAFE_INTEGER).success).toBe(false);
+    // Four lines at the highest allowed line cap still add up exactly.
+    expect(Number.isSafeInteger(4 * 10_000_000_000_000)).toBe(true);
   });
 
   it('only how often the shop`s own jobs run is installation-wide; the rest is per store (one store = one ERP company)', () => {

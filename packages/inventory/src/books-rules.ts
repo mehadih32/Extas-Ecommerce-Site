@@ -11,6 +11,7 @@ import {
   COST_LINE_PATH,
   COST_SUMMARY_LINES,
   ERP_FIXED_COST_LINES,
+  minorOf,
   spreadByDays,
   summaryNetProfit,
   worstResult,
@@ -276,7 +277,8 @@ export function fixedCostsBody(month: string, c: FixedCostsMinor, note: string |
   return { month, costs: { salary: unitsExact(c.salary, perUnit), rent: unitsExact(c.rent, perUnit), utilities: unitsExact(c.utilities, perUnit), other: unitsExact(c.other, perUnit) }, note };
 }
 
-export const fixedCostsTotal = (c: FixedCostsMinor): number => c.salary + c.rent + c.utilities + c.other;
+/** The month in all, exact (qa-gate): added as whole numbers, a RangeError when it leaves the exact range. */
+export const fixedCostsTotal = (c: FixedCostsMinor): number => minorOf(BigInt(c.salary) + BigInt(c.rent) + BigInt(c.utilities) + BigInt(c.other));
 
 /**
  * The month's fixed costs day by day with the ERP's rule (`erp.fixedCosts.spread` = by the days of the month): every day
@@ -291,6 +293,41 @@ export function fixedCostDays(month: string, c: FixedCostsMinor): { day: string;
 export function fixedCostsSame(ours: FixedCostsMinor, theirs: { salary: string; rent: string; utilities: string; other: string } | undefined, perUnit: number): boolean {
   if (!theirs) return false;
   return ERP_FIXED_COST_LINES.every((k) => Math.round(Number(theirs[k]) * perUnit) === ours[k]);
+}
+
+/** The idempotency key of one send of a fixed-cost month version (`r` = sends the ERP accepted before, as for summaries). */
+export const fixedCostsKey = (linkId: string, month: string, version: number, rounds: number): string => `fixedcosts:${linkId}:${month}:v${version}:r${rounds}`;
+
+const monthAfter = (month: string): string => {
+  const [y, m] = month.split('-').map(Number) as [number, number];
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+};
+
+export type FixedMonthCheck = 'OK' | 'BEFORE_START' | 'TOO_FAR' | 'CLOSED';
+
+/**
+ * Which months the owner can set (PR 618): from the link's first month up to next month (set ahead before it starts),
+ * never a closed month (the books of a closed month do not move; it is reopened first, PR 616).
+ */
+export function fixedMonthCheck(month: string, o: { today: string; startDay: string; closedMonths: ReadonlySet<string> }): FixedMonthCheck {
+  if (month < o.startDay.slice(0, 7)) return 'BEFORE_START';
+  if (month > monthAfter(o.today.slice(0, 7))) return 'TOO_FAR';
+  if (o.closedMonths.has(month)) return 'CLOSED';
+  return 'OK';
+}
+
+export type CostDayCheck = 'OK' | 'FUTURE' | 'BEFORE_START' | 'TOO_OLD' | 'CLOSED';
+
+/**
+ * Which days a cost line entry can count on (PR 618): today, or an open past day (`books.resend.days`, month not
+ * closed), so every entry reaches the ERP in a summary; never a day before the link started or in the future.
+ */
+export function costDayCheck(day: string, o: { today: string; startDay: string; resendDays: number; closedMonths: ReadonlySet<string> }): CostDayCheck {
+  if (day > o.today) return 'FUTURE';
+  if (day < o.startDay) return 'BEFORE_START';
+  if (o.closedMonths.has(day.slice(0, 7))) return 'CLOSED';
+  if (day !== o.today && !dayOpen(day, o.today, o.resendDays, o.closedMonths)) return 'TOO_OLD';
+  return 'OK';
 }
 
 // ---- the Books status card (§3.4, §4) ------------------------------------------------------------------------------------

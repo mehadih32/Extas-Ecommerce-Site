@@ -79,7 +79,8 @@
         "match": "Match",
         "differences": "Differences",
         "closes": "Closes",
-        "daily": "Daily summary"
+        "daily": "Daily summary",
+        "costs": "Costs"
       }
     },
     "purpose": {

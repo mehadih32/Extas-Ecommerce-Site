@@ -15,6 +15,12 @@
 //   otherwise the day lists it in `incomplete` — a missing figure is never sent as 0.
 // - `books.status.waitingCheckWarnDays`: returned pieces waiting for the owner's check longer than this show in "Needs
 //   you now" on the Books status card (the ERP keeps its own 7, 10 or 15 days; default 7, owner answer Q4).
+// - `books.costs.maxLineMinor`, `books.costs.maxMonthMinor` (PR 618, qa-gate): the most one cost (a fixed-cost line or
+//   one day's cost entry) and one month's fixed costs in all may be, in minor units. A typing slip (an extra zero or
+//   ten) is refused instead of being kept and sent; the caps also keep every sum exact. Defaults ৳10 crore a line and
+//   ৳40 crore a month — far above a shop's real costs, so they only catch mistakes.
+// - `books.costs.listLimit` (PR 618, qa-gate): how many cost entries Money → Costs lists at once (the newest first); the
+//   page says when there are more.
 import { z } from 'zod';
 import { COST_SUMMARY_LINES } from '@extas/erp-types';
 import { setting } from './define';
@@ -77,5 +83,32 @@ export const booksSummarySettings = {
     labelKey: 'books.status.waitingCheckWarnDays.label',
     helpKey: 'books.status.waitingCheckWarnDays.help',
     sortOrder: 7,
+  }),
+  'books.costs.maxLineMinor': setting({
+    ...books,
+    schema: z.int().min(1).max(10_000_000_000_000),
+    default: 10_000_000_000,
+    valueType: 'INT',
+    labelKey: 'books.costs.maxLineMinor.label',
+    helpKey: 'books.costs.maxLineMinor.help',
+    sortOrder: 8,
+  }),
+  'books.costs.maxMonthMinor': setting({
+    ...books,
+    schema: z.int().min(1).max(40_000_000_000_000),
+    default: 40_000_000_000,
+    valueType: 'INT',
+    labelKey: 'books.costs.maxMonthMinor.label',
+    helpKey: 'books.costs.maxMonthMinor.help',
+    sortOrder: 9,
+  }),
+  'books.costs.listLimit': setting({
+    ...books,
+    schema: z.int().min(50).max(5000),
+    default: 500,
+    valueType: 'INT',
+    labelKey: 'books.costs.listLimit.label',
+    helpKey: 'books.costs.listLimit.help',
+    sortOrder: 10,
   }),
 };
