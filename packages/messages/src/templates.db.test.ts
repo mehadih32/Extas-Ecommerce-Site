@@ -211,7 +211,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 505 · the template editor and the auto-reply 
     expect(await write(B, 'where is my order')).toMatchObject({ other: 1, autoReplies: 0 });
     expect(outbox).toHaveLength(2);
 
-    // only outside the shop's hours: inside them nothing goes
+    // only outside the shop's hours: inside them nothing goes. The clock moves forward to the middle of an hour first, so a
+    // run near the top of an hour never crosses into the next one between the steps below (it failed at 14:59 once).
+    f.clock.now = new Date(Math.floor(f.clock.now.getTime() / 3_600_000) * 3_600_000 + 90 * 60_000);
     const h = zoned(f.clock.now, await f.deps().settings.value('store.timeZone', { storeId: f.S })).h;
     f.overrides.set('messages.autoReply', { ...on, when: 'outsideHours', openHour: h, closeHour: (h + 1) % 24 });
     f.clock.now = new Date(f.clock.now.getTime() + 60_000);
