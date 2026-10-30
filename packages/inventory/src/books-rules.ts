@@ -83,6 +83,12 @@ export interface DayFigures {
   returns: { handedBackPieces: number; approvedCreditMinor: number; waitingCheckMinor: number };
   /** Each cost line's entries that day: their sum and how many there are (0 entries = no figure yet). */
   costs: Record<CostSummaryLine, { minor: number; entries: number }>;
+  /**
+   * Money review (owner's decision): the corrections of a closed month booked that day (PRIOR_PERIOD), as their own
+   * "earlier-month corrections" figure of the shop's own P&L (+ Retail owes more). Never in the summary sent to the ERP:
+   * contract v6 has no line for it (a v7 request); the books match counts it as its own term of the tie.
+   */
+  priorPeriod: { minor: number; corrections: number };
 }
 
 /** The summary's lines in minor units, kept beside the body for the books match and the explain view (PR 616). */
@@ -195,6 +201,7 @@ export function emptyDay(day: string): DayFigures {
     customers: { new: 0, returning: 0 },
     goods: { piecesMinor: 0, exchangeMinor: 0, unpricedDeliveries: none },
     returnLosses: { declinedMinor: 0, exchangeMinor: 0 },
+    priorPeriod: { minor: 0, corrections: 0 },
     returns: { handedBackPieces: 0, approvedCreditMinor: 0, waitingCheckMinor: 0 },
     costs: Object.fromEntries(COST_SUMMARY_LINES.map((l) => [l, { minor: 0, entries: 0 }])) as DayFigures['costs'],
   };

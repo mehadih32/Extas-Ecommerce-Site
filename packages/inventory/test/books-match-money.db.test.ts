@@ -10,14 +10,16 @@
 //    a correction never counts an event that is still on its way; a corrected group whose money moves again is open
 //    again (a new difference of the same group).
 // 5. A correction of an exchange group counts in the day's exchange figures (the tie holds, the day matches), and an
-//    ERP correction that undoes the shop's correction does too.
+//    ERP correction that undoes the shop's correction does too; PR 617: the daily summary counts them the same way.
 // 6. After a hand correction of a payment group the ERP's payment still pairs with its "paid to ERP" record.
 // 7. A correction of a closed month (PRIOR_PERIOD) counts on the day it is booked, as its own earlier-month figure of
-//    the tie (never dropped, never rewriting the closed month).
+//    the tie (never dropped, never rewriting the closed month); PR 617: the shop's day figures carry it too, apart
+//    from the exchange lines (contract v6 has no summary line for it).
 // Round 2 of the review:
 // 8. An ERP correction of a payment whose statement rows carry neither eventId nor reference meets its group (no
 //    missing event plus unknown row that can never be put right).
-// 9. The ERP undoing a closed-month correction matches on its own day and counts as an earlier-month correction.
+// 9. The ERP undoing a closed-month correction matches on its own day and counts as an earlier-month correction; PR 617:
+//    the books screen shows it on that day's summary row, never in the summary sent.
 // 10. A day close keeps the moment its run read the books: an entry booked between that read and the close, a late
 //    pipeline move or return list of the day, make it stale, so the month does not close on it.
 // Round 3: 11. An ERP payment the catch-up held back shows with its reason and waits. 12. A pair made only by a guess
@@ -31,6 +33,7 @@ import {
   adjustDifference,
   applyErpEvents,
   closeMonth,
+  dayFigures,
   isAdjustable,
   ledgerBalance,
   movedSinceClose,
@@ -40,6 +43,8 @@ import {
   reverseErpPayment,
   runBooksMatch,
   setBooksPin,
+  summaryLog,
+  summaryTick,
   syncErpAccount,
   writePeriodClose,
 } from '../src';
@@ -127,7 +132,9 @@ function harness(label: string) {
     await syncErpAccount(h.f.deps(), { storeId });
     return recordErpPayment(h.f.deps(), h.f.who(h.accounts, storeId), { paidOn: date, amountMinor: amount * 100, method: 'BANK', reference });
   };
-  return { h, at, practiceOf, open, balances, shopEvent, billed, stripIds, costs, paidBoth };
+  /** The day's figures as the daily summary builds them (PR 617). */
+  const figuresOf = async (storeId: number, d: string) => dayFigures(h.f.t.prisma, { storeId, linkId: (await h.f.linkOf(storeId)).id, day: d, timeZone: 'Asia/Dhaka', currency: 'BDT' });
+  return { h, at, practiceOf, open, balances, shopEvent, billed, stripIds, costs, paidBoth, figuresOf };
 }
 
 describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: payments and month closes', () => {
@@ -200,7 +207,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: payments and m
 });
 
 describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: event groups and exchange corrections', () => {
-  const { h, at, practiceOf, open, balances, shopEvent, billed, stripIds } = harness('booksmoney2');
+  const { h, at, practiceOf, open, balances, shopEvent, billed, stripIds, figuresOf } = harness('booksmoney2');
 
   it('4a: an exchange group with one event still on its way is not put right by hand (the ERP has more rows); its event comes and the day matches', async () => {
     const { f } = h;
@@ -248,6 +255,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: event groups a
     const r1 = await runBooksMatch(f.deps(), { storeId: f.storeB, from: D, through: D });
     expect((await open(f.storeB)).map((d) => [d.kind, d.key])).toEqual([]);
     expect(r1.days.map((d) => [d.date, d.matched])).toEqual([[D, true]]);
+    // PR 617: the day's summary counts the correction too — the exchange loss is what the ERP charged, not 0.
+    expect((await figuresOf(f.storeB, D)).returnLosses).toEqual({ declinedMinor: 0, exchangeMinor: 105000 });
     // The ERP bills the exchange's second piece the same day, at 1050 again; the shop's webhook says 1000.
     at('2026-11-03T22:00:00Z');
     practice.book('EXCHANGE', 1050, { externalOrderId: 'WEB-EXG-Q6', reference: 'EXG-Q6', eventId: 'evt-q6-2', date: D });
@@ -265,6 +274,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: event groups a
     at('2026-11-04T21:00:00Z');
     const r3 = await runBooksMatch(f.deps(), { storeId: f.storeB, from: D, through: D });
     expect(r3.days.map((d) => [d.date, d.matched])).toEqual([[D, true]]);
+    expect((await figuresOf(f.storeB, D)).returnLosses).toEqual({ declinedMinor: 0, exchangeMinor: 210000 });
     expect(await open(f.storeB)).toEqual([]);
     const [shop, erp] = await balances(f.storeB);
     expect(shop).toBe(erp);
@@ -291,6 +301,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: event groups a
       [D, true],
       [D2, true],
     ]);
+    // PR 617: the ERP's cancel undoes the corrected charge in the summary of its own day.
+    expect((await figuresOf(f.storeB, D)).returnLosses.exchangeMinor).toBe(105000);
+    expect((await figuresOf(f.storeB, D2)).returnLosses.exchangeMinor).toBe(-105000);
     expect(await open(f.storeB)).toEqual([]);
     const [shop, erp] = await balances(f.storeB);
     expect(shop).toBe(erp);
@@ -342,6 +355,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: event groups a
     const close = await f.t.prisma.booksDayClose.findFirstOrThrow({ where: { linkId: link.id, date: day('2026-11-08') }, orderBy: { version: 'desc' } });
     expect((close.figures as { tie: Record<string, unknown> }).tie).toMatchObject({ priorPeriodMinor: 5000, adjustmentsMinor: 0, remainderMinor: 0 });
     expect(Number(close.tieRemainderMinor)).toBe(0);
+    // PR 617: the shop's own figures of the day carry it as an earlier-month correction, not in the exchange lines.
+    const fig = await figuresOf(f.storeB, '2026-11-08');
+    expect([fig.priorPeriod, fig.returnLosses.exchangeMinor, fig.goods.exchangeMinor]).toEqual([{ minor: 5000, corrections: 1 }, 0, 0]);
+    expect((await figuresOf(f.storeB, D)).returnLosses.exchangeMinor).toBe(100000);
     // The closed day keeps its difference as it was put right.
     expect((await f.t.prisma.booksDifference.findUniqueOrThrow({ where: { id: diff.id } })).status).toBe('FIXED');
     const [shop, erp] = await balances(f.storeB);
@@ -350,7 +367,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review on PostgreSQL: event groups a
 });
 
 describe.skipIf(!HAS_TEST_DB)('PR 616 money review round 2 on PostgreSQL: corrections without ids, closed-month undo, stale closes', () => {
-  const { h, at, practiceOf, open, balances, shopEvent, billed, stripIds, costs, paidBoth } = harness('booksmoney3');
+  const { h, at, practiceOf, open, balances, shopEvent, billed, stripIds, costs, paidBoth, figuresOf } = harness('booksmoney3');
 
   it('8: the ERP corrects a payment on a later day and its statement rows carry neither eventId nor reference: the group matches', async () => {
     const { f } = h;
@@ -407,6 +424,14 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 money review round 2 on PostgreSQL: correc
     expect(await open(f.storeB)).toEqual([]);
     const close = await f.t.prisma.booksDayClose.findFirstOrThrow({ where: { linkId: link.id, date: day('2026-11-09') }, orderBy: { version: 'desc' } });
     expect((close.figures as { tie: Record<string, unknown> }).tie).toMatchObject({ priorPeriodMinor: -105000, adjustmentsMinor: 0, remainderMinor: 0 });
+    const fig = await figuresOf(f.storeB, '2026-11-09');
+    expect([fig.priorPeriod, fig.returnLosses.exchangeMinor, fig.goods.exchangeMinor]).toEqual([{ minor: -105000, corrections: 1 }, 0, 0]);
+    // The books screen (Money → Daily summary) shows it on that day's row; the summary sent has no line for it.
+    await summaryTick(f.deps(), f.storeB);
+    const row = (await summaryLog(f.deps(), f.who(h.accounts, f.storeB), { days: 31 })).find((x) => x.date === '2026-11-09');
+    expect(row?.priorPeriod).toEqual({ minor: -105000, corrections: 1 });
+    const sent = await f.t.prisma.erpDailySummary.findFirstOrThrow({ where: { linkId: link.id, date: day('2026-11-09') }, orderBy: { version: 'desc' } });
+    expect(JSON.stringify(sent.body)).not.toMatch(/prior/i);
     const [shop, erp] = await balances(f.storeB);
     expect(shop).toBe(erp);
   });

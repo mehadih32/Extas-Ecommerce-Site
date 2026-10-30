@@ -14,6 +14,7 @@
 .adm2 .bk-needs li span{flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
 .adm2 .bk-act{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
 .adm2 .bk-inc .a2-pill{white-space:normal;max-width:100%}
+.adm2 .bk-prior{display:block;margin-top:2px}
 @media (max-width:767px){
   .adm2 .bk-facts{grid-template-columns:minmax(0,1fr)}
   .adm2 .bk-checks li{grid-template-columns:28px minmax(0,1fr)}

@@ -7,10 +7,13 @@
 //   costs.goods          ErpPipelineMove into (+) and out of (−) DELIVERED that day at the buying price, plus the
 //                        account's EXCHANGE_EXTRA and EXCHANGE_ADJUSTMENT entries (and their reversals) of that day
 //   costs.returnLosses   moves into (+) and out of (−) DECLINED that day, plus EXCHANGE_BILL and EXCHANGE_CREDIT entries
+//                        (a shop correction of an exchange group counts as the kind it corrects, PR 616 money review)
 //   returns              moves into WAITING_CHECK that day (pieces handed back), RETURN_CREDIT entries (approved
 //                        credit), and the WAITING_CHECK value at the end of the day — information only, never a cost
 //   costs.packaging …    CostEntry rows (`summaryLine`, `costDate` or the local day of `occurredAt`) and RetailExpense
 //   costs.other          rows of a head with a `summaryLine`, in the store's currency; fixed costs are never here
+//   (priorPeriod)        the shop's own figure, never sent: the corrections of a closed month booked that day (owner's
+//                        decision; contract v6 has no summary line for it, a v7 request)
 //
 // A category with no figure yet goes in `incomplete` (never as 0, books-rules.ts). Each built day is a version
 // (ErpDailySummary, append-only): the same figures again make no new version; a late fact (a cost entry, a courier
@@ -43,6 +46,7 @@ import { InventoryError } from './errors';
 import { isV6 } from './erp-model';
 import { v6LinkFor } from './erp-link';
 import { lockLink } from './erp-account';
+import { correctionKinds } from './books-match';
 import { behaviourOf, resolveErp } from './guard';
 import { retryPolicy } from './sync';
 import {
@@ -137,12 +141,13 @@ export async function dayFigures(db: Db, q: { storeId: number; linkId: string; d
       SELECT COALESCE(sum(CASE WHEN m."toState" = 'WAITING_CHECK' THEN m."buyingPriceMinor" WHEN m."fromState" = 'WAITING_CHECK' THEN -m."buyingPriceMinor" ELSE 0 END), 0)::bigint AS "value"
       FROM "ErpPipelineMove" m
       WHERE m."linkId" = ${linkId}::uuid AND m."storeId" = ${storeId} AND m."businessDate" <= ${day}::date AND m."toState" IS DISTINCT FROM m."fromState"`,
-    db.$queryRaw<{ kind: string; amount: bigint; reversedKind: string | null }[]>`
-      SELECT e."kind"::text AS "kind", e."amountMinor" AS "amount", r."kind"::text AS "reversedKind"
+    db.$queryRaw<{ kind: string; amount: bigint; adjustmentId: string | null; reversedKind: string | null; reversedAdjustmentId: string | null }[]>`
+      SELECT e."kind"::text AS "kind", e."amountMinor" AS "amount", e."adjustmentId"::text AS "adjustmentId",
+             r."kind"::text AS "reversedKind", r."adjustmentId"::text AS "reversedAdjustmentId"
       FROM "ErpAccountEntry" e
       LEFT JOIN "ErpAccountEntry" r ON r."linkId" = e."linkId" AND r."eventId" = e."reverses"
       WHERE e."linkId" = ${linkId}::uuid AND e."storeId" = ${storeId} AND e."businessDate" = ${day}::date
-        AND e."kind"::text IN ('EXCHANGE_EXTRA', 'EXCHANGE_ADJUSTMENT', 'EXCHANGE_BILL', 'EXCHANGE_CREDIT', 'RETURN_CREDIT', 'REVERSAL')`,
+        AND e."kind"::text IN ('EXCHANGE_EXTRA', 'EXCHANGE_ADJUSTMENT', 'EXCHANGE_BILL', 'EXCHANGE_CREDIT', 'RETURN_CREDIT', 'REVERSAL', 'ADJUSTMENT')`,
     // A cost line's figure is known when it has an entry that stands: a reversal (PR 618) and the entry it reversed
     // still add up (to 0), but neither counts as a figure, so reversing a line's only entry makes it unknown again
     // (qa-gate) instead of a 0 sent as if it were known.
@@ -172,8 +177,17 @@ export async function dayFigures(db: Db, q: { storeId: number; linkId: string; d
   f.goods = { piecesMinor: n(moves[0]?.goods), exchangeMinor: 0, unpricedDeliveries: orders.unpricedDeliveries };
   f.returnLosses = { declinedMinor: n(moves[0]?.declined), exchangeMinor: 0 };
   f.returns = { handedBackPieces: n(moves[0]?.handed), approvedCreditMinor: 0, waitingCheckMinor: n(waiting[0]?.value) };
+  // Money review: a shop correction of an exchange group (its REVERSAL and its ADJUSTMENT, PR 616) and the ERP's undoing
+  // of one (a REVERSAL of that ADJUSTMENT, PR 615) count as the exchange kind they correct, as the books match's tie
+  // counts them (`correctionKinds`); a correction of a closed month (PRIOR_PERIOD) is its own term there, so not here.
+  const corr = await correctionKinds(db, linkId, [...new Set(entries.flatMap((e) => [e.adjustmentId, e.reversedAdjustmentId]).filter((x): x is string => !!x))]);
+  const asCorrected = (adjustmentId: string | null) => (adjustmentId && !corr.prior.has(adjustmentId) ? (corr.exchange.get(adjustmentId) ?? null) : null);
+  // The corrections of a closed month booked today (and the ERP's undoing of one): their own figure, never a line sent.
+  f.priorPeriod = (await priorPeriodByDay(db, { linkId, storeId, from: day, to: day })).get(day) ?? { minor: 0, corrections: 0 };
   for (const e of entries) {
-    const kind = e.kind === 'REVERSAL' ? e.reversedKind : e.kind;
+    const priorCorrection = !!e.adjustmentId && corr.prior.has(e.adjustmentId);
+    const base = e.kind === 'REVERSAL' ? (e.reversedKind === 'ADJUSTMENT' ? asCorrected(e.reversedAdjustmentId) : e.reversedKind) : e.kind === 'ADJUSTMENT' ? asCorrected(e.adjustmentId) : e.kind;
+    const kind = priorCorrection && base !== 'RETURN_CREDIT' ? null : base;
     const amount = n(e.amount);
     if (kind === 'EXCHANGE_EXTRA' || kind === 'EXCHANGE_ADJUSTMENT') f.goods.exchangeMinor += amount;
     else if (kind === 'EXCHANGE_BILL' || kind === 'EXCHANGE_CREDIT') f.returnLosses.exchangeMinor += amount;
@@ -727,6 +741,8 @@ export interface SummaryLogRow {
   lastTryAt: Date | null;
   lastError: string | null;
   httpStatus: number | null;
+  /** The day's earlier-month corrections (the shop's own figure, never in the summary sent; `priorPeriodByDay`). */
+  priorPeriod?: { minor: number; corrections: number };
 }
 
 async function readAllowed(deps: InventoryDeps, who: Who): Promise<void> {
@@ -744,6 +760,32 @@ export async function openLinkOf(db: Db, storeId: number): Promise<{ id: string;
  * The summaries log the admin sees (`books.read`): each day's latest version with how it was sent — accepted, waiting
  * for its first try, being tried again, or refused by the ERP (a 4xx answer: a person looks) — newest day first.
  */
+/**
+ * The earlier-month corrections of each day from `from` to `to` (owner's decision, money review): the entries of the
+ * corrections of a closed month (PRIOR_PERIOD) booked that day, and the ERP's undoing of one, with how many corrections
+ * they belong to. The shop's own figure (`DayFigures.priorPeriod`, the books screens); contract v6 sends no line for it.
+ * Days without one are left out.
+ */
+export async function priorPeriodByDay(db: Db, q: { linkId: string; storeId: number; from: string; to: string }): Promise<Map<string, { minor: number; corrections: number }>> {
+  const rows = await db.$queryRaw<{ day: Date; amount: bigint; adj: string }[]>`
+    SELECT e."businessDate" AS "day", e."amountMinor" AS "amount", COALESCE(e."adjustmentId", r."adjustmentId")::text AS "adj"
+    FROM "ErpAccountEntry" e
+    LEFT JOIN "ErpAccountEntry" r ON r."linkId" = e."linkId" AND r."eventId" = e."reverses"
+    JOIN "BooksAdjustment" a ON a."linkId" = e."linkId" AND a."id" = COALESCE(e."adjustmentId", r."adjustmentId") AND a."kind" = 'PRIOR_PERIOD'
+    WHERE e."linkId" = ${q.linkId}::uuid AND e."storeId" = ${q.storeId} AND e."businessDate" BETWEEN ${q.from}::date AND ${q.to}::date
+      AND (e."adjustmentId" IS NOT NULL OR (e."kind" = 'REVERSAL' AND r."kind" = 'ADJUSTMENT'))`;
+  const out = new Map<string, { minor: number; corrections: number; adjs: Set<string> }>();
+  for (const x of rows) {
+    const d = x.day.toISOString().slice(0, 10);
+    const cur = out.get(d) ?? { minor: 0, corrections: 0, adjs: new Set<string>() };
+    cur.minor += Number(x.amount);
+    cur.adjs.add(x.adj);
+    cur.corrections = cur.adjs.size;
+    out.set(d, cur);
+  }
+  return new Map([...out].map(([d, v]) => [d, { minor: v.minor, corrections: v.corrections }]));
+}
+
 export async function summaryLog(deps: InventoryDeps, who: Who, opts: { days?: number } = {}): Promise<SummaryLogRow[]> {
   await readAllowed(deps, who);
   const link = await openLinkOf(deps.db, who.storeId);
@@ -760,6 +802,7 @@ export async function summaryLog(deps: InventoryDeps, who: Who, opts: { days?: n
     if (!latest.length || latest.at(-1)!.date !== v.date) latest.push(v);
   }
   const states = await sendStates(deps.db, link.id, latest.map((v) => v.id));
+  const prior = await priorPeriodByDay(deps.db, { linkId: link.id, storeId: who.storeId, from, to: today });
   return latest.map((v) => {
     const s = states.get(v.id);
     const status = s?.lastStatus ?? null;
@@ -777,6 +820,7 @@ export async function summaryLog(deps: InventoryDeps, who: Who, opts: { days?: n
       lastTryAt: s?.lastAt ?? null,
       lastError: s?.lastError ?? null,
       httpStatus: status,
+      ...(prior.get(v.date)?.minor ? { priorPeriod: prior.get(v.date)! } : {}),
     };
   });
 }

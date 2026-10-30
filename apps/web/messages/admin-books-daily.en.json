@@ -78,6 +78,7 @@
       "REFUSED": "Refused by the ERP"
     },
     "complete": "Complete",
+    "priorPeriod": "+ Earlier-month corrections {amount} (the shop's own figure, not sent to the ERP)",
     "reason": {
       "NIGHTLY": "nightly",
       "LATE_FACT": "late fact",
