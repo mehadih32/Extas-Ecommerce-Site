@@ -22,6 +22,9 @@
 //   stock stops the retries; only the lines the customer kept (a partial delivery) are exchanged; an account hold never
 //   pauses an exchange. The send is kept in the store's ERP outbox as the new order's `order.create` (SENT), so PR 611's
 //   pickup and result and PR 610's cancel follow it through the relay.
+// - qa-gate I6: the exchange window is the rule before the ERP is asked anything (a closed window is said as closed,
+//   whatever the ERP's state), and a practice ERP is named as it is (ERP_ON_PRACTICE), never "cannot be reached".
+// - qa-gate I7: the case card shows the window's hours left (`exchangeWindowV6`), by the same rule the approval uses.
 // Never here: a refund, a price, COD rules or a payment (CLAUDE.md rule 6). CN-029 §16: every row is the store's own,
 // on its own ERP link, sent with its own key.
 import { z } from 'zod';
@@ -29,7 +32,7 @@ import { Prisma } from '@extas/db/client';
 import { can, AuthError } from '@extas/auth';
 import { digitsOf, erpLiveAvailable, erpMinor, InventoryError, isV6, minorToDecimal, openLinkIdOf, readErpExchanges, returnsV6Path, sendExchangeOrderToErp, sendLateReturnToErp, storeDate, wholeTaka } from '@extas/inventory';
 import { allow, nowOf, parse, setting, TX, type OrdersDeps, type OrdersPermission, type Tx, type Who } from './context';
-import { OrdersError } from './errors';
+import { erpPathRefusal, OrdersError } from './errors';
 import { approveExchange, exchangePolicyFor, lockExchange, OPEN_EXCHANGE, placeExchangeParcel, type ApproveResult, type DecideOptions, type LockedExchange } from './exchange';
 import { exchangeWindow, lineOnNewOrder } from './exchange-pure';
 import { confirmBy } from './commands';
@@ -111,15 +114,18 @@ function paysPerPiece(ex: LockedExchange, item: LockedExchange['items'][number],
 /**
  * Approves a requested exchange through the store's ERP (contract v6). Needs `exchange.approve`. Marks the old lines,
  * checks the ERP's live stock and sends the exchange order; when stock is short the exchange waits (WAITING_STOCK) and
- * goes by itself later. Refusals: EXCHANGE_CLOSED (`data.why` WINDOW, UNKNOWN), EXCHANGE_STATE, NOT_IN_ERP,
- * ERP_REFUSED (`data.erpCode`: LINE_NOT_DELIVERED, EXCHANGE_OPEN, ORDER_NOT_FOUND …), ERP_UNAVAILABLE.
+ * goes by itself later. Refusals: EXCHANGE_CLOSED (`data.why` WINDOW, UNKNOWN; checked before the ERP is asked),
+ * EXCHANGE_STATE, NOT_IN_ERP, ERP_REFUSED (`data.erpCode`: LINE_NOT_DELIVERED, EXCHANGE_OPEN, ORDER_NOT_FOUND …),
+ * ERP_ON_PRACTICE (the practice ERP), ERP_UNAVAILABLE.
  */
 export async function approveExchangeV6(deps: OrdersDeps, who: Who, id: string, input: unknown = {}): Promise<ApproveV6Result> {
   await allow(deps, who, 'exchange.approve');
   await requireV6(deps, who.storeId, 'the exchange through the ERP');
   const d = parse(approveV6Input, input, 'approval');
+  // qa-gate I6: the 72 h rule first; only then is the store's ERP looked at
+  await windowFirst(deps, who.storeId, id);
   const path = await returnsV6Path(inventoryOf(deps), who.storeId);
-  if (!path.go) throw new OrdersError('ERP_UNAVAILABLE', path.text, ['erp'], { reason: path.reason });
+  if (!path.go) throw erpPathRefusal(path);
   const by = staffBy(who.actor, who.ctx);
   // approved already (a second press, a second tab): the same answer, the ERP is not asked again
   const done = await sentResult(deps, who.storeId, path.linkId, id);
@@ -179,16 +185,10 @@ async function planExchange(deps: OrdersDeps, who: Who, by: By, linkId: string, 
     const old = await tx.erpOrder.findFirst({ where: { storeId: who.storeId, linkId, orderId: ex.orderId }, include: { lines: { orderBy: [{ orderItemId: 'asc' }, { piece: 'asc' }] } } });
     if (!old) throw new OrdersError('NOT_IN_ERP', 'the order was never sent to this ERP; it cannot be exchanged through it', ['orderId']);
 
-    // the window counts from the courier's "delivered" as the ERP has it (else the shop's own mark)
-    const order = await tx.order.findUniqueOrThrow({ where: { id: ex.orderId }, select: { deliveredAt: true, number: true, deliveryBand: { select: { key: true } } } });
-    const result = await tx.erpDeliveryResult.findFirst({ where: { storeId: who.storeId, erpOrderId: old.id, outcome: { in: ['DELIVERED', 'PARTIAL'] } }, orderBy: { at: 'desc' }, select: { at: true, outcome: true, keptLineIds: true } });
-    const deliveredAt = result?.at ?? order.deliveredAt;
-    for (const item of ex.items) {
-      const oi = await tx.orderItem.findUnique({ where: { id: item.originalOrderItemId }, select: { productId: true } });
-      const policy = await exchangePolicyFor(deps, who.storeId, oi?.productId ?? '', order.deliveryBand?.key ?? null);
-      const w = exchangeWindow(deliveredAt, policy.windowHours, now);
-      if (w.state !== 'OPEN') throw new OrdersError('EXCHANGE_CLOSED', w.state === 'UNKNOWN' ? 'the delivered mark is missing; check the courier' : 'the exchange window has passed', ['deliveredAt'], { why: w.state === 'UNKNOWN' ? 'UNKNOWN' : 'WINDOW' });
-    }
+    // the window counts from the courier's "delivered" as the ERP has it (else the shop's own mark); checked again
+    // here, under the case's lock
+    const { order, result, deliveredAt } = await deliveredOf(tx, who.storeId, ex.orderId, old.id);
+    refuseClosed(await caseWindow(deps, tx, who.storeId, ex, deliveredAt, order.deliveryBand?.key ?? null, now));
     if (had && !had.finishedAt) {
       await tx.erpExchangeLink.update({ where: { id: had.id }, data: { approvedAt: now, approvedById: who.actor.staffUserId ?? null, ...(d.note ? { note: noteOf(order.number, d.note) } : {}) } });
       return had.id;
@@ -258,6 +258,92 @@ async function planExchange(deps: OrdersDeps, who: Who, by: By, linkId: string, 
     await auditRow(tx, by, { storeId: who.storeId, action: 'exchange.erpPlanned', entityType: 'Exchange', entityId: ex.id, before: null, after: { newExternalOrderId, lines: chosen.map((c) => c.line.lineId) } });
     return link.id;
   }, TX);
+}
+
+// ---- the exchange window (qa-gate I6, I7): one rule for the approval and the case card ----------------------------------
+
+export interface ExchangeWindowV6 {
+  /** OPEN: it may be approved; CLOSED: the window has passed; UNKNOWN: no "delivered" yet (the courier's result). */
+  state: 'OPEN' | 'CLOSED' | 'UNKNOWN';
+  /** The window of the case's tightest piece (the owner's `policy.exchange.windowHours`, or its exchange rule's). */
+  windowHours: number;
+  /** Whole hours left, rounded up (0 once closed; null while UNKNOWN). */
+  hoursLeft: number | null;
+  endsAt: string | null;
+  /** The courier's "delivered" as the ERP has it, else the shop's own mark. */
+  deliveredAt: string | null;
+}
+
+type WindowReader = Pick<Tx, 'order' | 'erpOrder' | 'erpDeliveryResult' | 'orderItem'>;
+
+/** The order's "delivered": the latest courier result the shop sent to the ERP for `erpOrderId`, else the shop's mark. */
+async function deliveredOf(db: WindowReader, storeId: number, orderId: string, erpOrderId: string | null) {
+  const order = await db.order.findUniqueOrThrow({ where: { id: orderId }, select: { deliveredAt: true, number: true, deliveryBand: { select: { key: true } } } });
+  const result = erpOrderId ? await db.erpDeliveryResult.findFirst({ where: { storeId, erpOrderId, outcome: { in: ['DELIVERED', 'PARTIAL'] } }, orderBy: { at: 'desc' }, select: { at: true, outcome: true, keptLineIds: true } }) : null;
+  return { order, result, deliveredAt: result?.at ?? order.deliveredAt };
+}
+
+/** Each piece's own window from `deliveredAt`; the tightest piece decides (a closed one first, else the earliest end). */
+async function caseWindow(deps: OrdersDeps, db: WindowReader, storeId: number, ex: { items: { originalOrderItemId: string }[] }, deliveredAt: Date | null, bandKey: string | null, now: Date): Promise<ExchangeWindowV6 | null> {
+  let out: ExchangeWindowV6 | null = null;
+  const rank = (w: ExchangeWindowV6) => (w.state === 'OPEN' && w.endsAt ? Date.parse(w.endsAt) : -Infinity);
+  for (const item of ex.items) {
+    const oi = await db.orderItem.findUnique({ where: { id: item.originalOrderItemId }, select: { productId: true } });
+    const policy = await exchangePolicyFor(deps, storeId, oi?.productId ?? '', bandKey);
+    const w = exchangeWindow(deliveredAt, policy.windowHours, now);
+    const one: ExchangeWindowV6 = {
+      state: w.state,
+      windowHours: policy.windowHours,
+      hoursLeft: w.state === 'OPEN' ? w.hoursLeft : w.state === 'CLOSED' ? 0 : null,
+      endsAt: w.state === 'UNKNOWN' ? null : w.endsAt.toISOString(),
+      deliveredAt: deliveredAt?.toISOString() ?? null,
+    };
+    if (!out || rank(one) < rank(out)) out = one;
+  }
+  return out;
+}
+
+function refuseClosed(w: ExchangeWindowV6 | null): void {
+  if (!w || w.state === 'OPEN') return;
+  throw new OrdersError('EXCHANGE_CLOSED', w.state === 'UNKNOWN' ? 'the delivered mark is missing; check the courier' : 'the exchange window has passed', ['deliveredAt'], { why: w.state === 'UNKNOWN' ? 'UNKNOWN' : 'WINDOW' });
+}
+
+/** The store's open ERP link, read only (null: none yet). */
+async function openLinkRead(deps: OrdersDeps, storeId: number): Promise<string | null> {
+  return (await deps.db.erpStoreLink.findFirst({ where: { storeId, endedAt: null }, orderBy: { epoch: 'desc' }, select: { id: true } }))?.id ?? null;
+}
+
+/** A case's window now, read without a lock (the approval checks it again under the case's lock). */
+async function windowNow(deps: OrdersDeps, storeId: number, ex: { orderId: string; items: { originalOrderItemId: string }[] }): Promise<ExchangeWindowV6 | null> {
+  const linkId = await openLinkRead(deps, storeId);
+  const eo = linkId ? await deps.db.erpOrder.findFirst({ where: { storeId, linkId, orderId: ex.orderId }, select: { id: true } }) : null;
+  const { order, deliveredAt } = await deliveredOf(deps.db, storeId, ex.orderId, eo?.id ?? null);
+  return caseWindow(deps, deps.db, storeId, ex, deliveredAt, order.deliveryBand?.key ?? null, nowOf(deps));
+}
+
+const caseOf = (deps: OrdersDeps, storeId: number, id: string) => deps.db.exchange.findFirst({ where: { id, storeId }, include: { items: { orderBy: { createdAt: 'asc' } } } });
+
+/**
+ * qa-gate I6: before the ERP is asked anything, a requested case not yet with the ERP is in its window (a case that is
+ * not the store's is not found). An approved one goes on to its first answer (a second press).
+ */
+async function windowFirst(deps: OrdersDeps, storeId: number, id: string): Promise<void> {
+  const ex = z.uuid().safeParse(id).success ? await caseOf(deps, storeId, id) : null;
+  if (!ex) throw new OrdersError('NOT_FOUND', 'no such exchange', ['exchangeId']);
+  if (ex.status !== 'REQUESTED') return;
+  if (await deps.db.erpExchangeLink.count({ where: { storeId, exchangeId: id, erpExchangeId: { not: null } } })) return;
+  refuseClosed(await windowNow(deps, storeId, ex));
+}
+
+/**
+ * qa-gate I7: the case's exchange window for the staff's case card (hours left of the owner's window), by the same rule
+ * the approval uses. Null: not on contract v6, or no such case of the store. Needs `returns.view` or `exchange.approve`.
+ */
+export async function exchangeWindowV6(deps: OrdersDeps, who: Who, exchangeId: string): Promise<ExchangeWindowV6 | null> {
+  await allowOne(deps, who, ['returns.view', 'exchange.approve']);
+  if (!z.uuid().safeParse(exchangeId).success || !(await isV6(deps, who.storeId))) return null;
+  const ex = await caseOf(deps, who.storeId, exchangeId);
+  return ex ? windowNow(deps, who.storeId, ex) : null;
 }
 
 type Chosen = { item: LockedExchange['items'][number]; line: { lineId: string; sku: string; customerPriceMinor: number; shopPriceMinor: number | null } }[];

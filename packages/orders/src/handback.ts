@@ -21,7 +21,7 @@ import { z } from 'zod';
 import { AuthError, can } from '@extas/auth';
 import { InventoryError, isV6, openLinkIdOf, returnsV6Path, sendReturnList, withReturnListLock, type ReturnListSendResult } from '@extas/inventory';
 import { nowOf, parse, setting, TX, type Db, type OrdersDeps, type OrdersPermission, type Tx, type Who } from './context';
-import { OrdersError } from './errors';
+import { erpPathRefusal, OrdersError } from './errors';
 import { requireV6 } from './legacy';
 import { auditRow, eventRow, inventoryOf, staffBy, type By } from './service';
 
@@ -167,7 +167,7 @@ async function linkFor(deps: OrdersDeps, storeId: number): Promise<string> {
   } catch (e) {
     return erpFailure(e);
   }
-  if (!path.go) throw new OrdersError('ERP_UNAVAILABLE', path.text, [path.reason], { reason: path.reason });
+  if (!path.go) throw erpPathRefusal(path, [path.reason]);
   return path.linkId;
 }
 

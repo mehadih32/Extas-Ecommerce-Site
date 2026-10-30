@@ -104,6 +104,8 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
       canLate: perms.has('exchange.approve') || perms.has('returns.handback'),
       state: chosen ? await maybe(od.exchangeErpState(rd, who, chosen.id)) : null,
       today: new Intl.DateTimeFormat('en-CA', { timeZone: view.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
+      // qa-gate I7: a requested case's exchange window now (hours left), by the approval's own rule
+      window: chosen && chosen.status === 'REQUESTED' ? await maybe(od.exchangeWindowV6(rd, who, chosen.id)) : null,
     };
   const d = view.dict;
   // PR 191: the refused parcels and the refused-parcel list beside Receive & QC

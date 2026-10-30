@@ -19,6 +19,7 @@ import {
   closeHandbackList,
   exchangeErpState,
   exchangeWatch,
+  exchangeWindowV6,
   markExchangeLateReturn,
   openExchange,
   openHandbackList,
@@ -192,6 +193,53 @@ describe.skipIf(!HAS_TEST_DB)('PR 614 · an exchange through the ERP (PostgreSQL
       f.perStore.delete(`policy.exchange.windowHours@${f.S}`);
       f.perStore.delete(`rules.public.cacheSeconds@${f.S}`);
       f.clock.now = new Date(start.getTime() + 24 * HOUR); // never back (see above)
+    }
+  });
+
+  it('qa-gate I6: the 72 h rule is checked before the ERP is asked; the practice ERP is named as it is, never "cannot be reached"', async () => {
+    const { exchangeId } = await opened('xv-practice');
+    const start = f.clock.now;
+    // the store's ERP is the practice one (no real key yet), its practice data switched off
+    await db().integration.updateMany({ where: { storeId: f.S, kind: 'ERP' }, data: { mode: 'MOCK' } });
+    f.perStore.set('erp.mock.stockEnabled@-', false);
+    try {
+      // within the window: the true reason; nothing planned, nothing sent
+      expect(await erpOrderPosts(() => code(approveExchangeV6(d(), f.staff, exchangeId)))).toEqual({ value: 'ERP_ON_PRACTICE', posts: 0 });
+      expect(await data(approveExchangeV6(d(), f.staff, exchangeId))).toMatchObject({ reason: 'ERP_ON_PRACTICE' });
+      expect(await db().erpExchangeLink.count({ where: { exchangeId } })).toBe(0);
+      // past the window: the 72 h rule answers first, whatever the ERP's state
+      f.clock.now = new Date(start.getTime() + 72 * HOUR);
+      expect(await code(approveExchangeV6(d(), f.staff, exchangeId))).toBe('EXCHANGE_CLOSED');
+      expect(await data(approveExchangeV6(d(), f.staff, exchangeId))).toMatchObject({ why: 'WINDOW' });
+      // a case that is not the store's is still not found, before the ERP is asked
+      expect(await code(approveExchangeV6(d(), f.staff, '00000000-0000-4000-8000-000000000000'))).toBe('NOT_FOUND');
+    } finally {
+      await db().integration.updateMany({ where: { storeId: f.S, kind: 'ERP' }, data: { mode: 'LIVE' } });
+      f.perStore.delete('erp.mock.stockEnabled@-');
+      f.clock.now = new Date(start.getTime() + 72 * HOUR); // never back (see above)
+    }
+    // the real ERP back: the window is still the rule; nothing went meanwhile
+    expect(await erpOrderPosts(() => data(approveExchangeV6(d(), f.staff, exchangeId)))).toEqual({ value: expect.objectContaining({ why: 'WINDOW' }), posts: 0 });
+  });
+
+  it('qa-gate I7: the case shows how many of its window hours are left, by the same rule the approval uses', async () => {
+    const { o, exchangeId } = await opened('xv-hours');
+    const start = f.clock.now;
+    const ends = new Date(start.getTime() + 72 * HOUR).toISOString();
+    // the shop's own mark says later; the ERP's result (the courier's "delivered") is what counts
+    await db().order.update({ where: { id: o.orderId }, data: { deliveredAt: new Date(start.getTime() + 24 * HOUR) } });
+    try {
+      f.clock.now = new Date(start.getTime() + 30 * HOUR + 1);
+      expect(await exchangeWindowV6(d(), f.staff, exchangeId)).toEqual({ state: 'OPEN', windowHours: 72, hoursLeft: 42, endsAt: ends, deliveredAt: start.toISOString() });
+      f.clock.now = new Date(start.getTime() + 72 * HOUR - 1);
+      expect(await exchangeWindowV6(d(), f.staff, exchangeId)).toMatchObject({ state: 'OPEN', hoursLeft: 1 });
+      f.clock.now = new Date(start.getTime() + 72 * HOUR);
+      expect(await exchangeWindowV6(d(), f.staff, exchangeId)).toEqual({ state: 'CLOSED', windowHours: 72, hoursLeft: 0, endsAt: ends, deliveredAt: start.toISOString() });
+      // the same rule refuses the approval at that moment
+      expect(await data(approveExchangeV6(d(), f.staff, exchangeId))).toMatchObject({ why: 'WINDOW' });
+      expect(await exchangeWindowV6(d(), f.staff, 'not-a-case')).toBeNull();
+    } finally {
+      f.clock.now = new Date(start.getTime() + 72 * HOUR); // never back (see above)
     }
   });
 
@@ -410,6 +458,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 614 · an exchange through the ERP (PostgreSQL
     expect(await code(markExchangeLateReturn(d(), f.staffB, exchangeId, { handedBackAt: storeDate(f.clock.now, 'Asia/Dhaka') }))).toBe('NOT_FOUND');
     expect((await exchangeWatch(d(), f.staffB)).rows).toEqual([]);
     expect(await exchangeErpState(d(), f.staffB, exchangeId)).toBeNull();
+    expect(await exchangeWindowV6(d(), f.staffB, exchangeId)).toBeNull();
     expect(await db().erpExchangeLink.count({ where: { storeId: f.B } })).toBe(0);
   });
 });
