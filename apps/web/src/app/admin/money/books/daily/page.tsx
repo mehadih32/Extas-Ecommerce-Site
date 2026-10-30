@@ -6,6 +6,8 @@
 // refused). Before the store's switch-over to contract v6 the page says the books start then. Read-only: nothing here
 // moves money. Needs `books.read`. Money → Books and its match, differences and closes pages are PR 615/616's.
 // PR 618: a month without fixed costs links to Money → Costs.
+// Money review (owner's decision): a day with corrections of a closed month shows them under its profit as its own
+// "earlier-month corrections" line (`SummaryLogRow.priorPeriod`) — the shop's own figure, not in the summary sent.
 // Words: messages/admin-books-daily.*.json (`booksDaily.*`).
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -157,6 +159,11 @@ export default async function BooksDailyPage() {
                     </td>
                     <td className="r" data-l={b('col.profit')}>
                       <span className="a2-num">{m(r.netProfitMinor)}</span>
+                      {r.priorPeriod ? (
+                        <span className="a2-xs a2-mute bk-prior" data-testid="bd-prior">
+                          {b('priorPeriod', { amount: m(r.priorPeriod.minor) })}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="bk-inc" data-l={b('col.incomplete')}>
                       {r.incomplete.length ? <span className="a2-pill warn">{lines(r.incomplete)}</span> : <span className="a2-xs a2-mute">{b('complete')}</span>}

@@ -78,6 +78,7 @@
       "REFUSED": "ERP নেয়নি"
     },
     "complete": "পুরো",
+    "priorPeriod": "+ আগের মাসের সংশোধন {amount} (দোকানের নিজের হিসাব, ERP-তে যায় না)",
     "reason": {
       "NIGHTLY": "রাতের",
       "LATE_FACT": "দেরিতে আসা খবর",
