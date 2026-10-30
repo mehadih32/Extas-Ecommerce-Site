@@ -552,6 +552,7 @@ export class MockErpWorld {
     if (path === '/daily-summaries') return out(v6.storedSummaries(query));
     if (path === '/fixed-costs') return out(v6.fixedCostMonths());
     if (path === '/cost-of-goods') return out(v6.costOfGoods(query));
+    if (path === '/switch-over') return out(v6.switchOverAnswer());
     if (path === '/returns' || path === '/exchanges') {
       const since = query.updatedSince ? new Date(query.updatedSince) : null;
       if (since && Number.isNaN(since.getTime())) return problem(400, 'INVALID_QUERY', 'updatedSince is not a date');

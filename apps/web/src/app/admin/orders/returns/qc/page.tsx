@@ -3,6 +3,8 @@
 // each piece checked — the SKU scanned, sellable or not, the reason and photo of a loss — in one save. Needs
 // `returns.qc`; the order service checks it again on every call. Words: messages/admin-returns.*.json (`returns.qc.*`).
 // PR 189: with `returns.decide`, the checked parcels waiting to be closed, and Close (before QC only with a note).
+// CN-029 · PR 619 (follow-up 545): once the store has switched to ERP contract v6 (its `returns.legacy.*` switches off),
+// the page says so at the top: the ERP checks every returned piece now, and the hand-back desk takes the parcels.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -66,11 +68,12 @@ export default async function ReturnsQcPage({ searchParams }: { searchParams: Se
   const who: od.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const rd = readDeps(access.deps);
   const canDecide = (access.guard.permissions ?? new Set<string>()).has('returns.decide');
-  const [waiting, toClose, qc, lossReasons] = await Promise.all([
+  const [waiting, toClose, qc, lossReasons, paths] = await Promise.all([
     od.listReturns(rd, who, { status: ['EXPECTED', 'RECEIVED'], ...(q.order ? { orderNumber: q.order } : {}) }),
     canDecide ? od.listReturns(rd, who, { status: ['QC_DONE'], ...(q.order ? { orderNumber: q.order } : {}) }) : Promise.resolve([] as od.ReturnView[]),
     access.deps.resolver.value('orders.returns.qc', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('orders.returns.lossReasons', { storeId: MOTHER_STORE_ID }),
+    od.legacyPaths(rd, MOTHER_STORE_ID),
   ]);
   let chosen: od.ReturnView | null = null;
   if (q.id) {
@@ -106,6 +109,16 @@ export default async function ReturnsQcPage({ searchParams }: { searchParams: Se
         }
       />
       <SectionTabs view={view} current={KEY} />
+      {paths.model === 'v6' ? (
+        <section className="a2-card tight a2-mt12" data-testid="qc-v6" role="note">
+          <p className="a2-sm">
+            <ShellIcon name="info" size={15} /> {r('v6Note')}
+          </p>
+          <Link className="a2-btn sm pri a2-mt6" href={`${RETURNS_HREF}/handback`}>
+            {t(d, 'returns.handback.title')}
+          </Link>
+        </section>
+      ) : null}
       <div className="a2-row a2-r12 a2-start">
         <section className="a2-card" data-testid="qc-find">
           <h2 className="a2-h3">{r('step1')}</h2>

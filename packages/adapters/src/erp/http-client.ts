@@ -28,6 +28,7 @@ import {
   erpAccountSchema,
   erpClaimSchema,
   erpCostOfGoodsSchema,
+  erpSwitchOverSchema,
   erpExchangeSchema,
   erpFixedCostMonthSchema,
   erpOrderAnswerSchema,
@@ -318,6 +319,9 @@ export function createErpHttpClient(opts: ErpHttpOptions): ErpApi & { readonly b
       const r = rows(listOf(await get('/cost-of-goods', { from: q.from, to: q.to }, o), 'rows'), erpCostOfGoodsSchema);
       if (r.rejected.length) throw new ErpError('BAD_RESPONSE', `${r.rejected.length} cost row(s) break the contract`, { details: r.rejected.map((x) => x.reason) });
       return r.items;
+    },
+    async switchOver(o) {
+      return answer(await get('/switch-over', {}, o), erpSwitchOverSchema, 'switch-over');
     },
     async order(externalOrderId, o) {
       return answer(await get(`/orders/${encodeURIComponent(externalOrderId)}`, {}, o), erpOrderAnswerSchema, 'order');

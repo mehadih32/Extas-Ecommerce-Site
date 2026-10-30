@@ -393,6 +393,46 @@ export type ErpFixedCostMonth = z.output<typeof erpFixedCostMonthSchema>;
 export const erpCostOfGoodsSchema = z.object({ date: isoDate.transform((v) => v.slice(0, 10)), sku: z.string().min(1), pieces: z.int(), value: decimal });
 export type ErpCostOfGoodsRow = z.output<typeof erpCostOfGoodsSchema>;
 
+// ---- PR 619 · the switch-over (§3; docs/RETAIL-ERP-MODEL.md §9) -------------------------------------------------------
+//
+// The ERP announces a store's switch date and, on that date, moves the store's open old orders to the new rules and
+// sends the list of every order it moved, with the amount (§3.3). The final `openapi.yaml` has not named the call yet:
+// the shop reads it as `GET /switch-over` with the names below (a rename is one change here, follow-up 571).
+// - `NOT_OUT`  confirmed, processing or packed: billed at `shopPrice` when the parcel leaves, like any new order;
+// - `OUT`      out with the courier: billed at `shopPrice` on the switch date (the lines carry the shop prices);
+// - `ADVANCE`  a customer advance the ERP recorded on such an order, moved to Retail's account as a credit;
+// - `UNPAID`   delivered before the switch, the customer's money still unpaid: the unpaid amount moved to Retail at the
+//              buying price (owner's answer "ক").
+// `transfer` is the one entry the ERP books for ADVANCE and UNPAID together (`otherCharges` in `GET /account`; signed: +
+// Retail owes more). `openingBalance` is what Retail owed the ERP before the switch date (the account's balance at the
+// end of the day before). `status` is DONE once the ERP has moved everything and the list is final.
+
+export const ERP_SWITCH_ORDER_KINDS = ['NOT_OUT', 'OUT', 'ADVANCE', 'UNPAID'] as const;
+export type ErpSwitchOrderKind = (typeof ERP_SWITCH_ORDER_KINDS)[number];
+export const ERP_SWITCH_STATUSES = ['NONE', 'ANNOUNCED', 'DONE'] as const;
+export type ErpSwitchStatus = (typeof ERP_SWITCH_STATUSES)[number];
+
+/** One order the ERP moved at the switch. */
+export const erpSwitchOrderSchema = z.object({
+  externalOrderId: z.string().min(1).max(200),
+  kind: z.enum(ERP_SWITCH_ORDER_KINDS),
+  amount: decimal,
+  consignmentId: optText,
+  lines: z.array(z.object({ lineId: z.string().min(1).max(200), sku: z.string().min(1).max(200), quantity: z.int().min(1).default(1), shopPrice: decimal })).default([]),
+});
+export type ErpSwitchOrder = z.output<typeof erpSwitchOrderSchema>;
+
+/** `GET /switch-over`: the store's switch date, the moved orders, the one transfer and the opening balance. */
+export const erpSwitchOverSchema = z.object({
+  status: z.enum(ERP_SWITCH_STATUSES),
+  switchDate: optIsoDate,
+  announcedAt: stamp.nullish().transform((v) => v ?? null),
+  openingBalance: optDecimal,
+  transfer: z.object({ amount: decimal, reference: z.string().min(1).max(200) }).nullish().transform((v) => v ?? null),
+  orders: z.array(erpSwitchOrderSchema).default([]),
+});
+export type ErpSwitchOver = z.output<typeof erpSwitchOverSchema>;
+
 // ---- PR 608 · the v6 events (webhook and pull) ------------------------------------------------------------------------
 //
 // Every v6 event has an `eventId` the ERP makes once and never uses again, the ERP's business `date`, and, for a

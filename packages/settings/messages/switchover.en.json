@@ -1,0 +1,20 @@
+{
+  "erp": {
+    "switchOver": {
+      "dryRunMaxHours": {
+        "label": "How fresh the dry run must be (hours)",
+        "help": "The switch to the new ERP model goes only after a dry run this recent that saw the same list from the ERP. If the ERP's list changed since, run the dry run again."
+      },
+      "queuedV5Orders": {
+        "label": "Orders still waiting in the old form at the switch",
+        "help": "An order that never reached the ERP before the switch: send it again in the new form (one line per piece), like any new order, or keep it for a person to send from the ERP link page."
+      }
+    },
+    "link": {
+      "listShown": {
+        "label": "Rows in each list of the ERP link page",
+        "help": "How many waiting orders, summaries and calls each list on the ERP link page shows."
+      }
+    }
+  }
+}

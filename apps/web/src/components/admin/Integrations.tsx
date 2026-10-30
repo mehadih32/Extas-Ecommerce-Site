@@ -3,6 +3,8 @@
 // ZV_KEYS rows, the add-key sheet zv_keyHTML). Rows come from the API's list (the catalogue in @extas/adapters), never
 // from markup. A key is typed into a password field with autocomplete off, sent once, and the field is emptied: a saved
 // key is never shown again. Save runs the test; only a pass takes a connection out of mock (the server decides).
+// CN-029 · PR 619: with `storeId` the card lists that store's own connections (the ERP link page): every call carries
+// `?storeId=`, so the keys are saved in the vault under that store and its row is that store's.
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import type { ConnectionView } from '@/lib/integrations';
 import { t, type Dict } from '@/lib/i18n';
@@ -16,12 +18,24 @@ interface Props {
   vaultReady: boolean;
   locale: string;
   timeZone: string;
+  /** A store's own connections (PR 619); absent = installation-wide. */
+  storeId?: number;
+  /** The card's own title and line under it (the ERP link page has its own words). */
+  title?: string;
+  sub?: string;
+  /** qa-gate N3: `a2` draws the card in the new shell's look (Settings › ERP link); the classic page keeps its own. */
+  look?: 'classic' | 'a2';
 }
+
+/** The API path for a connection call, for a store when one is given. */
+const apiOf = (path: string, storeId?: number) => (storeId == null ? path : `${path}?storeId=${storeId}`);
 
 const TOAST_MS = 3200;
 const MIN_KEY_CHARS = 1;
 
-export function Integrations({ dict, initial, canWrite, vaultReady, locale, timeZone }: Props) {
+export function Integrations({ dict, initial, canWrite, vaultReady, locale, timeZone, storeId, title, sub, look = 'classic' }: Props) {
+  const a2 = look === 'a2';
+  const btn = a2 ? 'a2-btn sm' : 'ad-btn ad-btn-sm ad-btn-ghost';
   const [rows, setRows] = useState(initial);
   const [open, setOpen] = useState<ConnectionView | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -39,14 +53,14 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const reload = useCallback(async () => {
-    const a = await call('GET', '/api/admin/integrations');
+    const a = await call('GET', apiOf('/api/admin/integrations', storeId));
     if (a.status === 200 && Array.isArray(a.data.connections)) setRows(a.data.connections as ConnectionView[]);
-  }, []);
+  }, [storeId]);
 
   const act = async (c: ConnectionView, body: Record<string, unknown>): Promise<Answer> => {
     setBusy(c.id);
     try {
-      const a = await call('POST', `/api/admin/integrations/${encodeURIComponent(c.id)}`, body);
+      const a = await call('POST', apiOf(`/api/admin/integrations/${encodeURIComponent(c.id)}`, storeId), body);
       if (a.status === 200) await reload();
       return a;
     } finally {
@@ -73,7 +87,7 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
   const dot = (c: ConnectionView) => (live(c) ? 'ad-dot' : c.keySaved ? 'ad-dot warn' : 'ad-dot off');
   const editable = canWrite && vaultReady;
 
-  return (
+  const body = (
     <>
       {!vaultReady ? (
         <div className="ad-note warn ad-note-top">
@@ -81,9 +95,11 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
           <div>{t(dict, 'integrations.vaultMissing')}</div>
         </div>
       ) : null}
-      <section className="ad-card" aria-labelledby="ad-conn-h">
-        <h2 id="ad-conn-h">{t(dict, 'integrations.cardTitle')}</h2>
-        <div className="ad-sub">{t(dict, 'integrations.cardSub')}</div>
+      <section className={a2 ? 'a2-card ad-keys' : 'ad-card'} aria-labelledby="ad-conn-h">
+        <h2 id="ad-conn-h" className={a2 ? 'a2-h4' : undefined}>
+          {title ?? t(dict, 'integrations.cardTitle')}
+        </h2>
+        <div className={a2 ? 'a2-sm a2-mute a2-mt6' : 'ad-sub'}>{sub ?? t(dict, 'integrations.cardSub')}</div>
         {rows.map((c) => (
           <div className="ad-row" key={c.id} id={`ad-key-${c.id}`} data-connection={c.id}>
             <div className="ad-row-main">
@@ -127,17 +143,17 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
               <div className="ad-row-acts">
                 {c.keySaved ? (
                   <>
-                    <button type="button" className="ad-btn ad-btn-sm ad-btn-ghost" disabled={busy !== null} onClick={() => onTest(c)}>
+                    <button type="button" className={btn} disabled={busy !== null} onClick={() => onTest(c)}>
                       {busy === c.id ? t(dict, 'integrations.busy') : t(dict, 'integrations.test')}
                     </button>
-                    <button type="button" className="ad-btn ad-btn-sm ad-btn-ghost" disabled={busy !== null} onClick={() => onRemove(c)}>
+                    <button type="button" className={btn} disabled={busy !== null} onClick={() => onRemove(c)}>
                       {t(dict, 'integrations.remove')}
                     </button>
                   </>
                 ) : (
                   <button
                     type="button"
-                    className="ad-btn ad-btn-sm ad-btn-primary"
+                    className={a2 ? 'a2-btn sm pri' : 'ad-btn ad-btn-sm ad-btn-primary'}
                     disabled={busy !== null}
                     onClick={(e) => {
                       opener.current = e.currentTarget;
@@ -157,6 +173,7 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
         <KeySheet
           dict={dict}
           connection={open}
+          storeId={storeId}
           onClose={close}
           onSaved={async (a) => {
             await reload();
@@ -172,17 +189,21 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
       </div>
     </>
   );
+  // In the new shell the rows, the add-key sheet and the toast still take the classic colours and sizes (`.ad`'s own
+  // variables), inside the shell's card.
+  return a2 ? <div className="ad ad-embed">{body}</div> : body;
 }
 
 /** The add-key sheet: plain settings first (shown again when saved), then the keys (never shown again). */
 interface SheetProps {
   dict: Dict;
   connection: ConnectionView;
+  storeId?: number;
   onClose(): void;
   onSaved(a: Answer): Promise<void>;
 }
 
-function KeySheet({ dict, connection: c, onClose, onSaved }: SheetProps) {
+function KeySheet({ dict, connection: c, storeId, onClose, onSaved }: SheetProps) {
   const [config, setConfig] = useState<Record<string, string>>(() => Object.fromEntries(c.config.map((f) => [f.field, f.value ?? ''])));
   const [secrets, setSecrets] = useState<Record<string, string>>(() => Object.fromEntries(c.secrets.map((f) => [f.field, ''])));
   const [busy, setBusy] = useState(false);
@@ -214,7 +235,7 @@ function KeySheet({ dict, connection: c, onClose, onSaved }: SheetProps) {
     setBusy(true);
     setError('');
     setBad([]);
-    const a = await call('POST', `/api/admin/integrations/${encodeURIComponent(c.id)}`, { action: 'save', secrets, config });
+    const a = await call('POST', apiOf(`/api/admin/integrations/${encodeURIComponent(c.id)}`, storeId), { action: 'save', secrets, config });
     setBusy(false);
     if (a.status === 200) {
       // Never kept: the typed keys leave this form's memory as soon as they are saved.

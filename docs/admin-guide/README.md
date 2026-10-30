@@ -77,6 +77,7 @@
 | নতুন ডিজাইন যোগ করার নিয়ম (প্রোগ্রামারের জন্য, ইংরেজিতে) | [HOW-TO-ADD-A-DESIGN.md](HOW-TO-ADD-A-DESIGN.md) | তৈরি (PR 12) |
 | সাহায্য আর ম্যানুয়াল: সব সেকশনের গাইড এক জায়গায় (`/admin/help`) | [README.md](README.md) (এই পাতা) | তৈরি (PR 6, 12) |
 | চাবি ও সংযোগ (`/admin/integrations`) | [integrations.md](integrations.md) | তৈরি (S00, S09) |
+| ERP সংযোগ: প্রতিটা দোকানের নিজের ERP চাবি, অপেক্ষা, পাওনা, নতুন চুক্তিতে যাওয়া (`/admin/settings/erp-link`) | [integrations.md](integrations.md) · [pages/settings/erp-link.md](pages/settings/erp-link.md) | তৈরি (S18 · PR 619) |
 | প্রোডাক্ট: তালিকা, নতুন, বদলানো, চালুর অপেক্ষায়, লিংক থেকে আনা, ERP থেকে আনা (PR 609), অডিট, স্টকে ফিরলে (`/admin/products/*`) | [products.md](products.md) | তৈরি (S01; ERP থেকে আনা: S09) |
 | সাইজ চার্ট (`/admin/size-charts`) | [size-charts.md](size-charts.md) | তৈরি (S01) |
 | স্টক ও ERP, স্টক গোনা, স্টক চলাচল (`/admin/stock/*`) | [stock.md](stock.md) | তৈরি (S09) |

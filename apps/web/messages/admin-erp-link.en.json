@@ -1,0 +1,159 @@
+{
+  "erpLink": {
+    "metaTitle": "ERP link",
+    "title": "ERP link",
+    "sub": "This store's own link to its ERP company: its keys, what was synced, what is waiting, the balance and the switch to the new ERP contract.",
+    "storePick": "Store",
+    "model": {
+      "v5": "Old ERP contract (v5)",
+      "v6": "New ERP contract (v6)"
+    },
+    "link": {
+      "title": "The link",
+      "none": "This store has no ERP link of its own yet. Type the store's own ERP keys below; the link opens the first time they are used.",
+      "epoch": "Link no. {n}",
+      "company": "ERP company",
+      "switchDate": "Switch date",
+      "switchedAt": "Switched on",
+      "opening": "Opening balance",
+      "notYet": "Not yet"
+    },
+    "keys": {
+      "title": "This store's ERP keys",
+      "sub": "The API key, the webhook secret and the signing secret of this store's own ERP company. They are kept locked in the vault for this store only; another store's keys never serve this one."
+    },
+    "synced": {
+      "title": "Last synced",
+      "orders": "Orders",
+      "shipments": "Shipments",
+      "deliveries": "Deliveries",
+      "returnLists": "Return lists",
+      "events": "Events from the ERP",
+      "account": "Account rows",
+      "summaries": "Daily summaries",
+      "fixedCosts": "Fixed costs",
+      "never": "Never"
+    },
+    "lastSummary": {
+      "title": "Last daily summary the ERP accepted",
+      "none": "None yet.",
+      "line": "{date} · version {n} · accepted {at}"
+    },
+    "queues": {
+      "title": "Waiting",
+      "ordersWaiting": "Messages waiting to go",
+      "ordersHeld": "Messages held",
+      "ordersFailed": "Messages that failed",
+      "exchangesOpen": "Exchanges still open",
+      "summariesWaiting": "Daily summaries not accepted yet",
+      "heldTitle": "Orders kept at the switch",
+      "heldSub": "These orders were confirmed before the switch, and their old message never reached the ERP. Send each one again as a new (v6) order.",
+      "send": "Send as v6",
+      "sendBusy": "Sending…",
+      "sendYes": "Yes, send",
+      "sendWarn": "The order goes to the ERP as a new (v6) order.",
+      "sent": "Sent."
+    },
+    "balance": {
+      "title": "Balance owed to the ERP",
+      "shop": "By the shop's books",
+      "erp": "By the ERP",
+      "checked": "Checked {at}",
+      "notChecked": "Not checked yet",
+      "onHold": "Payments are on hold"
+    },
+    "books": {
+      "title": "Books match",
+      "lastClose": "Last day closed",
+      "open": "Open differences",
+      "openLink": "Open the books match",
+      "none": "None yet"
+    },
+    "switch": {
+      "title": "Switch to the new ERP contract (v6)",
+      "sub": "On the ERP's switch date this store moves to the new contract: the ERP's list of moved old orders and the opening balance come in at the buying price, the month's days are filled from the ERP's cost of goods, customer payments and ad spend stop going to the ERP, and the old return switches turn off (never deleted). First a dry run, then the owner switches with his PIN.",
+      "v6Done": "This store speaks the new contract since {date}.",
+      "dryRun": "Dry run",
+      "dryRunBusy": "Reading the ERP…",
+      "dryRunSend": "Run it",
+      "dryRunWarn": "Reads the ERP's switch list and shows what the switch would do. Nothing changes.",
+      "dryRunDone": "Dry run done.",
+      "lastDry": "Last dry run: {at}",
+      "noDry": "No dry run yet.",
+      "clean": "Clean: nothing stops the switch.",
+      "blocked": "These stop the switch:",
+      "stale": "The last dry run is older than {h} hours. Run it again before switching.",
+      "report": {
+        "switchDate": "Switch date",
+        "opening": "Opening balance",
+        "transfer": "One transfer (advances and unpaid)",
+        "orders": "Moved orders",
+        "backfill": "Days filled from the ERP's cost of goods",
+        "queuedV5": "Old order messages still waiting",
+        "legacy": "Old return switches to turn off",
+        "noneWord": "None"
+      },
+      "kind": {
+        "NOT_OUT": "Not sent out yet",
+        "OUT": "Out with the courier",
+        "ADVANCE": "Advance paid",
+        "UNPAID": "Unpaid"
+      },
+      "action": {
+        "resend": "they go again as v6 orders",
+        "hold": "they wait here for a person"
+      },
+      "go": "Switch this store",
+      "goBusy": "Switching…",
+      "goSend": "Yes, switch now",
+      "goWarn": "Only the owner. This cannot be undone: the store moves to the new ERP contract for good.",
+      "confirmDate": "Type the ERP's switch date",
+      "pin": "Owner's PIN",
+      "goDone": "The store has switched.",
+      "ownerOnly": "Only the owner can switch a store."
+    },
+    "blocker": {
+      "NO_OWN_CONNECTION": "This store's own ERP keys are not saved yet (above).",
+      "ERP_UNREACHABLE": "The ERP could not be asked.",
+      "SHARED_COMPANY": "The key's ERP company is linked to another store.",
+      "NOT_ANNOUNCED": "The ERP has not given a switch date yet.",
+      "ERP_NOT_DONE": "The ERP has not moved the old orders yet.",
+      "BEFORE_SWITCH_DATE": "The switch date has not come yet.",
+      "TRANSFER_MISMATCH": "The advances and unpaid amounts do not add up to the ERP's transfer.",
+      "OPENING_BALANCE_MISSING": "The ERP has not given the opening balance.",
+      "BAD_AMOUNT": "An amount is not exact in the store's money.",
+      "ORDER_UNKNOWN": "An order on the ERP's list is not this store's.",
+      "LINES_MISMATCH": "An order's lines do not add up to its amount.",
+      "ALREADY_SWITCHED": "This store has switched already.",
+      "SWITCH_DATE_CHANGED": "The ERP's switch date is not the one kept here.",
+      "OPENING_DIFFERS": "The opening balance kept here is not the ERP's. Start a new link to put it right."
+    },
+    "newLink": {
+      "title": "Start a new link",
+      "sub": "Ends this store's link to the ERP. Use it when the store is handed to a new owner (his own ERP keys come in, the old ones are switched off) or when the opening balance was wrong. The old link's history stays.",
+      "btn": "Start a new link",
+      "busy": "Ending the link…",
+      "send": "Yes, end this link",
+      "warn": "Only the owner. The link ends now; nothing is deleted.",
+      "reason": "Why",
+      "reasons": {
+        "HANDOVER": "The store goes to a new owner",
+        "OPENING_WRONG": "The opening balance was wrong"
+      },
+      "note": "A few words",
+      "pin": "Owner's PIN",
+      "done": "The link has ended. The next one opens with the store's keys."
+    },
+    "note": "Each store has its own ERP link: its own API key, webhook secret and signing secret, kept only in the vault for that store. A call with one store's key can never read or change another store.",
+    "err": {
+      "OWNER_ONLY": "Only the owner can do this.",
+      "SWITCH_BLOCKED": "Something stops the switch. Run the dry run again to see what.",
+      "CONFIRM_DATE": "The date is not the ERP's switch date.",
+      "DRY_RUN_NEEDED": "Run the dry run first.",
+      "DRY_RUN_STALE": "The ERP's list changed after the dry run. Run it again.",
+      "NOT_AVAILABLE": "This cannot be done from here.",
+      "ERP_MODEL": "The store does not speak the new ERP contract yet.",
+      "UNAUTHENTICATED": "Please sign in again."
+    }
+  }
+}

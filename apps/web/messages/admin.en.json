@@ -63,7 +63,8 @@
     "supportConversation": "Conversation",
     "supportSettings": "Support settings",
     "booksDaily": "Daily summary",
-    "moneyCosts": "Costs"
+    "moneyCosts": "Costs",
+    "erpLink": "ERP link"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -94,6 +95,8 @@
     "noDb": "This server has no database connected yet."
   },
   "integrations": {
+    "erpLinkNote": "Each store has its own ERP link, with its own keys: Settings → ERP link. The ERP row here is the installation-wide one the stores still on the old ERP contract use.",
+    "erpLinkOpen": "Open ERP link",
     "metaTitle": "Keys & connections",
     "eyebrow": "Admin · System",
     "title": "Keys & connections",

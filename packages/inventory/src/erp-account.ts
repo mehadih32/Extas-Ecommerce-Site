@@ -461,11 +461,14 @@ export async function ingestAccountEvents(deps: InventoryDeps, link: BooksLink, 
 
 /**
  * The one-time transfer of old open amounts at the switch date, at the buying price (owner's answer "ক", §9; PR 619
- * calls it with the ERP's list). Once per switch date: the same call again writes nothing.
+ * calls it with the ERP's list): + Retail owes more (the unpaid amounts moved), − less (customer advances credited).
+ * Once per switch date: the same call again writes nothing.
  */
 export async function recordSwitchTransfer(deps: InventoryDeps, input: { storeId: number; switchDate: string; amountMinor: number; reference: string | null }): Promise<{ created: boolean }> {
   if (!isDay(input.switchDate)) throw new BooksError('INVALID_INPUT', 'the switch date is a day', ['switchDate']);
-  if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0) throw new BooksError('INVALID_INPUT', 'the transfer is a positive amount', ['amountMinor']);
+  // PR 619: the ERP's one transfer nets the customer advances it credits against the unpaid amounts it moves, so it may
+  // go either way; it is never 0 (nothing to book).
+  if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor === 0) throw new BooksError('INVALID_INPUT', 'the transfer is a whole amount other than 0', ['amountMinor']);
   const link = await storeErpLink(deps.db, input.storeId);
   if (!link) throw new BooksError('NO_LINK', 'the store has no ERP link of its own yet');
   const r = await deps.db.$transaction(

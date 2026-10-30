@@ -367,4 +367,29 @@ describe('PR 607 · ERP contract v6 against the practice ERP', () => {
     w.failNext({ path: '/account', rawBody: JSON.stringify({ balance: 'lots' }) });
     expect(await refusal(api.v6.account())).toMatchObject({ code: 'BAD_RESPONSE' });
   });
+
+  it('PR 619: GET /switch-over — nothing until announced, then the final list: OUT billed on the switch date, one transfer of ADVANCE and UNPAID', async () => {
+    const { api, v6, w } = setup();
+    expect(await api.v6.switchOver()).toMatchObject({ status: 'NONE', switchDate: null, orders: [] });
+    v6.announceSwitch('2026-10-23');
+    expect(await api.v6.switchOver()).toMatchObject({ status: 'ANNOUNCED', switchDate: '2026-10-23', openingBalance: null });
+    v6.completeSwitch([
+      { externalOrderId: 'OLD-1', kind: 'OUT', consignmentId: 'C-OLD-1', lines: [{ lineId: 'OLD-1-1', sku: 'EX-PL-001-NAVY-M', shopPrice: 650 }] },
+      { externalOrderId: 'OLD-2', kind: 'NOT_OUT', lines: [{ lineId: 'OLD-2-1', sku: 'EX-PL-001-NAVY-L', shopPrice: 700 }] },
+      { externalOrderId: 'OLD-3', kind: 'UNPAID', amount: 900 },
+      { externalOrderId: 'OLD-4', kind: 'ADVANCE', amount: 200 },
+    ]);
+    const s = await api.v6.switchOver();
+    expect(s).toMatchObject({ status: 'DONE', switchDate: '2026-10-23', openingBalance: '0', transfer: { amount: '700', reference: 'SWITCH-2026-10-23' } });
+    expect(s.orders.map((o) => [o.externalOrderId, o.kind, o.amount])).toEqual([
+      ['OLD-1', 'OUT', '650'],
+      ['OLD-2', 'NOT_OUT', '700'],
+      ['OLD-3', 'UNPAID', '900'],
+      ['OLD-4', 'ADVANCE', '-200'],
+    ]);
+    // The ERP's account on the switch date: the OUT bill and the one transfer; the NOT_OUT order is billed when it leaves.
+    expect((await api.v6.account({ from: '2026-10-23', to: '2026-10-23' })).period).toMatchObject({ ordersTotal: '650', otherCharges: '700', closingBalance: '1350' });
+    expect(await api.v6.order('OLD-2')).toMatchObject({ erpTotal: '700', billedAt: null });
+    expect(w.v6().switched).toBe(true);
+  });
 });

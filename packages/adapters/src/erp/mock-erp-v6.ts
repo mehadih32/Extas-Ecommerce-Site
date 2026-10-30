@@ -313,8 +313,76 @@ export class PracticeErpV6 {
   }
 
   /** The one-time switch transfer of old unpaid delivered orders, at the buying price (§3, owner answer ক). */
-  switchTransfer(amount: number, reference: string): void {
-    this.book('OTHER', amount, { reference });
+  switchTransfer(amount: number, reference: string, date?: string): void {
+    this.book('OTHER', amount, { reference, date });
+  }
+
+  // ---- PR 619 · the switch-over (§3) ------------------------------------------------------------------------------------
+
+  /** What `GET /switch-over` answers: nothing until the ERP announces a date, the final list once it has moved them. */
+  switchOverState: {
+    status: 'NONE' | 'ANNOUNCED' | 'DONE';
+    switchDate: string | null;
+    announcedAt: string | null;
+    openingBalance: number | null;
+    transfer: { amount: number; reference: string } | null;
+    orders: { externalOrderId: string; kind: 'NOT_OUT' | 'OUT' | 'ADVANCE' | 'UNPAID'; amount: number; consignmentId: string | null; lines: { lineId: string; sku: string; quantity: number; shopPrice: number }[] }[];
+  } = { status: 'NONE', switchDate: null, announcedAt: null, openingBalance: null, transfer: null, orders: [] };
+
+  /** The ERP announces the store's switch date (step 1 of §3). */
+  announceSwitch(switchDate: string): void {
+    this.switchOverState = { ...this.switchOverState, status: 'ANNOUNCED', switchDate, announcedAt: this.hooks.now().toISOString() };
+  }
+
+  /**
+   * The ERP's own part on the switch date (§3.3): the open old orders move to the new rules. A NOT_OUT order becomes a
+   * v6 order billed when its parcel leaves; an OUT order is billed now at the shop prices of its lines; the ADVANCE and
+   * UNPAID amounts are one transfer (an `otherCharges` row) on the switch date; the retired v5 calls answer 410 from now.
+   */
+  completeSwitch(moved: { externalOrderId: string; kind: 'NOT_OUT' | 'OUT' | 'ADVANCE' | 'UNPAID'; amount?: number; consignmentId?: string | null; lines?: { lineId: string; sku: string; quantity?: number; shopPrice: number }[] }[]): void {
+    const date = this.switchOverState.switchDate ?? this.today();
+    const openingBalance = this.balance(addDays(date, -1));
+    const warehouse = this.hooks.warehouses()[0] ?? 'SAMPLE-WH';
+    const orders: (typeof this.switchOverState)['orders'] = [];
+    let transfer = 0;
+    for (const m of moved) {
+      const lines = (m.lines ?? []).map((l) => ({ lineId: l.lineId, sku: l.sku, quantity: l.quantity ?? 1, shopPrice: l.shopPrice }));
+      const total = lines.reduce((s, l) => s + l.shopPrice * l.quantity, 0);
+      const amount = m.kind === 'OUT' || m.kind === 'NOT_OUT' ? total : Math.abs(m.amount ?? 0);
+      if ((m.kind === 'OUT' || m.kind === 'NOT_OUT') && !this.orders.has(m.externalOrderId)) {
+        const o: V6Order = {
+          erpOrderId: this.nextId('SAMPLE-SO'),
+          externalOrderId: m.externalOrderId,
+          status: 'CONFIRMED',
+          lines: lines.map((l) => ({ lineId: l.lineId, sku: l.sku, quantity: l.quantity, grade: 'A', customerPrice: l.shopPrice, shopPrice: l.shopPrice, fromReturnStock: false, warehouseId: warehouse, state: 'ACTIVE', out: m.kind === 'OUT', delivered: false, returning: false })),
+          deliveryCharge: 0, // hardcode-ok: the practice ERP: a moved order carries no delivery charge
+          advancePaid: 0,
+          billedAt: null,
+          billedAmount: 0,
+          consignmentId: m.consignmentId ?? null,
+          exchangeId: null,
+          delivery: null,
+          handedBack: false,
+        };
+        this.orders.set(m.externalOrderId, o);
+        if (m.kind === 'OUT') {
+          o.billedAt = date;
+          o.billedAmount = total;
+          this.book('BILL', total, { externalOrderId: o.externalOrderId, reference: o.consignmentId, date });
+        }
+      }
+      if (m.kind === 'ADVANCE') transfer -= amount;
+      if (m.kind === 'UNPAID') transfer += amount;
+      orders.push({ externalOrderId: m.externalOrderId, kind: m.kind, amount: m.kind === 'ADVANCE' ? -amount : amount, consignmentId: m.consignmentId ?? null, lines });
+    }
+    const reference = `SWITCH-${date}`;
+    if (transfer) this.switchTransfer(transfer, reference, date);
+    this.switched = true;
+    this.switchOverState = { status: 'DONE', switchDate: date, announcedAt: this.switchOverState.announcedAt ?? this.hooks.now().toISOString(), openingBalance, transfer: transfer ? { amount: transfer, reference } : null, orders };
+  }
+
+  switchOverAnswer(): V6Answer {
+    return ok(200, this.switchOverState);
   }
 
   // ---- orders ---------------------------------------------------------------------------------------------------------

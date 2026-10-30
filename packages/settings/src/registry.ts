@@ -62,6 +62,7 @@ import { supportSettings } from './registry-support';
 import { erpOrdersV6Settings } from './registry-erp-orders-v6';
 import { booksSettings } from './registry-books';
 import { returnsV6Settings } from './registry-returns-v6';
+import { switchoverSettings } from './registry-switchover';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import {
@@ -1259,6 +1260,8 @@ export const registry = {
   ...bhandariP1Settings,
   // ---- CN-028 · PR 617, 618 (CN-029 Phase 1) · the daily summary and fixed costs to the ERP: how often they are looked for and checked against the ERP's copy, the cost lines a store never has, the Books status card (registry-books-summary.ts, version 69). ----
   ...booksSummarySettings,
+  // ---- CN-028 · PR 619, 621 (CN-029 Phase 2, Prohori) · the switch-over and the ERP link page: how fresh the dry run must be, orders still waiting in the old form, the page's list length; the demo ERP the acceptance suite runs against (registry-switchover.ts, version 70). ----
+  ...switchoverSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

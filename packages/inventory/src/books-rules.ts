@@ -128,10 +128,12 @@ const INCOMPLETE_ORDER: readonly ErpSummaryIncompleteKey[] = ['orders', 'sales',
  * - a cost line with no entry that day, unless the store says it never has that cost (`noCostLines`, then it is 0).
  * `sales.customerReturns` is always 0: there are no refunds after delivery (owner's rule), an exchange keeps the
  * original sale.
+ * PR 619: `unknown` lists what the shop never recorded on that day at all (a day before the switch, filled backwards:
+ * §3.5 "with `incomplete` marking what the shop never recorded"); those keys are always listed.
  */
-export function assembleSummary(f: DayFigures, opts: { perUnit: number; noCostLines: readonly CostSummaryLine[] }): AssembledSummary {
+export function assembleSummary(f: DayFigures, opts: { perUnit: number; noCostLines: readonly CostSummaryLine[]; unknown?: readonly ErpSummaryIncompleteKey[] }): AssembledSummary {
   const u = (minor: number) => wholeUnits(minor, opts.perUnit);
-  const missing = new Set<ErpSummaryIncompleteKey>();
+  const missing = new Set<ErpSummaryIncompleteKey>(opts.unknown ?? []);
   if (f.goods.unpricedDeliveries > 0 || f.sales.unlinkedPieces > 0) {
     missing.add('sales');
     missing.add('goods');

@@ -224,6 +224,9 @@ export const APPEND_ONLY_LOCKED = [
   'ConversationEvent',
   // CN-028 · PR 613 (migration 0054_returns_v6): each compare of the Returns section with the ERP's returns summary.
   'ErpReturnsCompare',
+  // CN-028 · PR 619 (migration 0057_erp_switchover): every dry run, switch and new link epoch, and the ERP's list of moved orders.
+  'ErpSwitchRun',
+  'ErpSwitchOrder',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

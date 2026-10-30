@@ -13,6 +13,10 @@
 // storage, backups, CDN and alerts serve every store. Per-store connections (couriers, payments) come with their PRs.
 // PR 620: a key may be optional (the ERP's signing secret): left empty it is not asked for and not saved (one saved
 // before stays), and the connection counts as saved once its required keys are.
+// CN-029 · PR 619: every store has its own ERP link. With `?storeId=N` the same API serves one store's own connections
+// (only the per-store kinds, `PER_STORE_KINDS`: the ERP): its keys go to the vault under that store id, its row carries
+// the store id, the person's key is checked in that store, and "only one per kind" counts that store's rows alone. The
+// ERP link page (Settings → ERP link) uses it; the installation-wide list stays as it was.
 import type { Prisma } from '@extas/db/client';
 import {
   allAdapters,
@@ -69,11 +73,26 @@ export interface Catalogue {
 
 export const defaultCatalogue: Catalogue = { declarations: connectionCatalogue, adapters: allAdapters };
 
+/** The kinds a store has its own connection of (CN-029: one store = one ERP company, its own key and secrets). */
+export const PER_STORE_KINDS: readonly string[] = ['ERP'];
+
+/** The connections listed for a scope: every one installation-wide, the per-store kinds for a store. */
+export const declarationsFor = (cat: Catalogue, storeId: number | null): readonly ConnectionDeclaration[] =>
+  storeId == null ? cat.declarations : cat.declarations.filter((d) => PER_STORE_KINDS.includes(d.kind));
+
+/** `?storeId=` of a request: null when absent (installation-wide), undefined when it is not a store id. */
+export function storeOfRequest(request: Request): number | null | undefined {
+  const raw = new URL(request.url).searchParams.get('storeId');
+  if (raw == null || raw === '') return null;
+  const n = /^\d{1,9}$/.test(raw) ? Number(raw) : NaN;
+  return Number.isSafeInteger(n) && n > 0 ? n : undefined;
+}
+
 const vaultWho = (actor: Actor) => ({ actorId: actor.staffUserId, service: 'admin:keys', purpose: 'keys & connections' });
 const adapterOf = (d: ConnectionDeclaration, cat: Catalogue) => cat.adapters.find((a) => a.kind === d.kind && a.provider === d.provider);
 
-async function rowsOf(db: Db) {
-  return db.integration.findMany({ where: { storeId: null, archivedAt: null }, orderBy: { createdAt: 'asc' } });
+async function rowsOf(db: Db, storeId: number | null) {
+  return db.integration.findMany({ where: { storeId, archivedAt: null }, orderBy: { createdAt: 'asc' } });
 }
 
 function rowFor(rows: Awaited<ReturnType<typeof rowsOf>>, d: ConnectionDeclaration) {
@@ -81,10 +100,10 @@ function rowFor(rows: Awaited<ReturnType<typeof rowsOf>>, d: ConnectionDeclarati
 }
 
 /** The page's list: one entry per declared connection, never a secret value. */
-export async function listConnections(db: Db, vault: Pick<Vault, 'list'> | null, cat: Catalogue = defaultCatalogue): Promise<ConnectionView[]> {
-  const [rows, secrets] = await Promise.all([rowsOf(db), vault ? vault.list({ storeId: null }) : Promise.resolve([] as SecretInfo[])]);
+export async function listConnections(db: Db, vault: Pick<Vault, 'list'> | null, cat: Catalogue = defaultCatalogue, storeId: number | null = null): Promise<ConnectionView[]> {
+  const [rows, secrets] = await Promise.all([rowsOf(db, storeId), vault ? vault.list({ storeId }) : Promise.resolve([] as SecretInfo[])]);
   const byName = new Map(secrets.map((s) => [s.name, s]));
-  return cat.declarations.map((d) => {
+  return declarationsFor(cat, storeId).map((d) => {
     const row = rowFor(rows, d);
     const saved = d.secrets.map((s) => byName.get(secretName(d.provider, s.field)));
     const set = saved.map((s) => Boolean(s && !s.revoked));
@@ -119,10 +138,12 @@ async function connectionsFor(deps: AdminDeps, vault: Vault, cat: Catalogue) {
 
 /** GET /api/admin/integrations */
 export async function integrationsHandler(request: Request, deps: AdminDeps | null, cat: Catalogue = defaultCatalogue): Promise<Response> {
-  const g = await guardAdmin(request, deps, { permission: 'vault.read' });
+  const storeId = storeOfRequest(request);
+  if (storeId === undefined) return fail(400, 'INVALID_INPUT', ['storeId']);
+  const g = await guardAdmin(request, deps, storeId == null ? { permission: 'vault.read' } : { permission: 'vault.read', storeId });
   if (isResponse(g)) return g;
   try {
-    return json({ ok: true, vaultReady: Boolean(deps!.vault), connections: await listConnections(deps!.db, deps!.vault, cat) });
+    return json({ ok: true, vaultReady: Boolean(deps!.vault), connections: await listConnections(deps!.db, deps!.vault, cat, storeId) });
   } catch (e) {
     return errorResponse(e);
   }
@@ -172,7 +193,12 @@ interface Ctx {
   ctx: RequestContext;
   cat: Catalogue;
   connections: Awaited<ReturnType<typeof connectionsFor>>;
+  /** null = installation-wide; a store id = that store's own connection (PR 619). */
+  storeId: number | null;
 }
+
+/** The audit row's store, when the connection is a store's own. */
+const auditStore = (c: Ctx) => (c.storeId == null ? {} : { storeId: c.storeId });
 
 const toJson = (v: unknown) => JSON.parse(JSON.stringify(v ?? null)) as Prisma.InputJsonValue;
 
@@ -184,16 +210,16 @@ async function switchOn(c: Ctx, d: ConnectionDeclaration, integrationId: string)
   if (outcome.ok) {
     await db.$transaction(async (tx) => {
       if (d.exclusive) {
-        const others = await tx.integration.findMany({ where: { storeId: null, kind: d.kind, enabled: true, id: { not: integrationId } } });
+        const others = await tx.integration.findMany({ where: { storeId: c.storeId, kind: d.kind, enabled: true, id: { not: integrationId } } });
         for (const o of others) {
           await tx.integration.update({ where: { id: o.id }, data: { enabled: false } });
-          await audit(tx, c.actor, { action: 'integration.disable', entityType: 'Integration', entityId: o.id, before: { enabled: true, provider: o.provider }, after: { enabled: false, reason: `replaced by ${d.provider}` } }, c.ctx);
+          await audit(tx, c.actor, { ...auditStore(c), action: 'integration.disable', entityType: 'Integration', entityId: o.id, before: { enabled: true, provider: o.provider }, after: { enabled: false, reason: `replaced by ${d.provider}` } }, c.ctx);
         }
       }
       const row = await tx.integration.findUniqueOrThrow({ where: { id: integrationId } });
       if (!row.enabled) {
         await tx.integration.update({ where: { id: integrationId }, data: { enabled: true } });
-        await audit(tx, c.actor, { action: 'integration.enable', entityType: 'Integration', entityId: integrationId, before: { enabled: false }, after: { enabled: true, mode: row.mode } }, c.ctx);
+        await audit(tx, c.actor, { ...auditStore(c), action: 'integration.enable', entityType: 'Integration', entityId: integrationId, before: { enabled: false }, after: { enabled: true, mode: row.mode } }, c.ctx);
       }
     });
   } else {
@@ -202,10 +228,10 @@ async function switchOn(c: Ctx, d: ConnectionDeclaration, integrationId: string)
     if (row.mode !== 'MOCK') await c.connections.setMode(integrationId, 'MOCK', who);
     if (row.enabled) {
       await db.integration.update({ where: { id: integrationId }, data: { enabled: false } });
-      await audit(db, c.actor, { action: 'integration.disable', entityType: 'Integration', entityId: integrationId, before: { enabled: true }, after: { enabled: false, reason: 'test failed' } }, c.ctx);
+      await audit(db, c.actor, { ...auditStore(c), action: 'integration.disable', entityType: 'Integration', entityId: integrationId, before: { enabled: true }, after: { enabled: false, reason: 'test failed' } }, c.ctx);
     }
   }
-  await audit(db, c.actor, { action: 'integration.test', entityType: 'Integration', entityId: integrationId, after: { ok: outcome.ok, mode: outcome.mode, latencyMs: outcome.latencyMs } }, c.ctx);
+  await audit(db, c.actor, { ...auditStore(c), action: 'integration.test', entityType: 'Integration', entityId: integrationId, after: { ok: outcome.ok, mode: outcome.mode, latencyMs: outcome.latencyMs } }, c.ctx);
   return outcome;
 }
 
@@ -214,14 +240,15 @@ async function save(c: Ctx, d: ConnectionDeclaration, b: Record<string, unknown>
   if ('bad' in parsed) return fail(400, 'INVALID_INPUT', parsed.bad);
   const db = c.deps.db;
   for (const [field, value] of Object.entries(parsed.secrets)) {
-    await c.vault.put(secretName(d.provider, field), value, { storeId: null }, vaultWho(c.actor));
+    await c.vault.put(secretName(d.provider, field), value, { storeId: c.storeId }, vaultWho(c.actor));
   }
   const secretNames = d.secrets.map((s) => secretName(d.provider, s.field));
-  const existing = rowFor(await rowsOf(db), d);
+  const existing = rowFor(await rowsOf(db, c.storeId), d);
   const row = existing
     ? await db.integration.update({ where: { id: existing.id }, data: { config: toJson(parsed.config), secretNames } })
-    : await db.integration.create({ data: { storeId: null, kind: d.kind, provider: d.provider, name: d.id, mode: 'MOCK', enabled: false, config: toJson(parsed.config), secretNames } });
+    : await db.integration.create({ data: { storeId: c.storeId, kind: d.kind, provider: d.provider, name: d.id, mode: 'MOCK', enabled: false, config: toJson(parsed.config), secretNames } });
   await audit(db, c.actor, {
+    ...auditStore(c),
     action: 'integration.save',
     entityType: 'Integration',
     entityId: row.id,
@@ -234,7 +261,7 @@ async function save(c: Ctx, d: ConnectionDeclaration, b: Record<string, unknown>
 }
 
 async function viewOf(c: Ctx, d: ConnectionDeclaration): Promise<ConnectionView | undefined> {
-  return (await listConnections(c.deps.db, c.vault, c.cat)).find((x) => x.id === d.id);
+  return (await listConnections(c.deps.db, c.vault, c.cat, c.storeId)).find((x) => x.id === d.id);
 }
 
 async function test(c: Ctx, d: ConnectionDeclaration): Promise<Response> {
@@ -245,7 +272,7 @@ async function test(c: Ctx, d: ConnectionDeclaration): Promise<Response> {
     outcome = await switchOn(c, d, view.integrationId);
   } else {
     outcome = await c.connections.test(view.integrationId, { actorId: c.actor.staffUserId, ip: c.ctx.ip, userAgent: c.ctx.userAgent });
-    await audit(c.deps.db, c.actor, { action: 'integration.test', entityType: 'Integration', entityId: view.integrationId, after: { ok: outcome.ok, mode: outcome.mode, latencyMs: outcome.latencyMs } }, c.ctx);
+    await audit(c.deps.db, c.actor, { ...auditStore(c), action: 'integration.test', entityType: 'Integration', entityId: view.integrationId, after: { ok: outcome.ok, mode: outcome.mode, latencyMs: outcome.latencyMs } }, c.ctx);
   }
   return json({ ok: true, test: outcome, connection: await viewOf(c, d) });
 }
@@ -254,12 +281,13 @@ async function remove(c: Ctx, d: ConnectionDeclaration): Promise<Response> {
   const view = await viewOf(c, d);
   const live = view?.secrets.filter((s) => s.set).map((s) => secretName(d.provider, s.field)) ?? [];
   if (!view?.integrationId && !live.length) return fail(409, 'NOT_CONNECTED');
-  for (const name of live) await c.vault.revoke(name, { storeId: null }, vaultWho(c.actor));
+  for (const name of live) await c.vault.revoke(name, { storeId: c.storeId }, vaultWho(c.actor));
   if (view?.integrationId) {
     const id = view.integrationId;
     if (view.mode !== 'MOCK') await c.connections.setMode(id, 'MOCK', { actorId: c.actor.staffUserId, ip: c.ctx.ip, userAgent: c.ctx.userAgent });
     await c.deps.db.integration.update({ where: { id }, data: { enabled: false } });
     await audit(c.deps.db, c.actor, {
+      ...auditStore(c),
       action: 'integration.remove',
       entityType: 'Integration',
       entityId: id,
@@ -273,15 +301,17 @@ async function remove(c: Ctx, d: ConnectionDeclaration): Promise<Response> {
 
 /** POST /api/admin/integrations/:id {action: 'save' | 'test' | 'remove', …} */
 export async function integrationHandler(request: Request, deps: AdminDeps | null, id: string, cat: Catalogue = defaultCatalogue): Promise<Response> {
-  const g = await guardAdmin(request, deps, { permission: 'vault.write' });
+  const storeId = storeOfRequest(request);
+  if (storeId === undefined) return fail(400, 'INVALID_INPUT', ['storeId']);
+  const g = await guardAdmin(request, deps, storeId == null ? { permission: 'vault.write' } : { permission: 'vault.write', storeId });
   if (isResponse(g)) return g;
-  const d = cat.declarations.find((x) => x.id === id);
+  const d = declarationsFor(cat, storeId).find((x) => x.id === id);
   if (!d) return fail(404, 'NOT_FOUND');
   if (!d.adapter || d.builtIn) return fail(409, 'NOT_AVAILABLE');
   if (!deps!.vault) return fail(503, 'VAULT_NOT_CONFIGURED');
   try {
     const b = await body(request);
-    const c: Ctx = { deps: deps!, vault: deps!.vault, actor: g.actor, ctx: g.ctx, cat, connections: await connectionsFor(deps!, deps!.vault, cat) };
+    const c: Ctx = { deps: deps!, vault: deps!.vault, actor: g.actor, ctx: g.ctx, cat, connections: await connectionsFor(deps!, deps!.vault, cat), storeId };
     if (b.action === 'save') return await save(c, d, b);
     if (b.action === 'test') return await test(c, d);
     if (b.action === 'remove') return await remove(c, d);

@@ -58,6 +58,11 @@ describe('the ERP account ledger (PR 615, §3.1)', () => {
     expect(signIsRight('REVERSAL', 65000)).toBe(true);
     expect(signIsRight('ADJUSTMENT', 0)).toBe(false);
     expect(signIsRight('BILL', 1.5)).toBe(false);
+    // PR 619: the one switch transfer is the ERP's net of the customer advances it credits and the unpaid amounts it
+    // moves (§3.3), so it may go either way; it is still never 0.
+    expect(signIsRight('SWITCH_TRANSFER', 120000)).toBe(true);
+    expect(signIsRight('SWITCH_TRANSFER', -30000)).toBe(true);
+    expect(signIsRight('SWITCH_TRANSFER', 0)).toBe(false);
     const ev = (type: string, data: Record<string, unknown>, reverses: string | null = null) => ({ type: type as never, data, reverses });
     expect(entryKindOfEvent(ev('return.piece.decided', { decision: 'APPROVED' }))).toBe('RETURN_CREDIT');
     expect(entryKindOfEvent(ev('return.piece.decided', { decision: 'APPROVED_AT_PACKING' }))).toBe('RETURN_CREDIT');

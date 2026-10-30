@@ -329,6 +329,11 @@
 /* ---------- PR 12 — the real app's additions ---------- */
 /* the existing pages inside the shell: no second page background or full-height box */
 .adm2 .ad { min-height: 0; background: transparent; }
+/* qa-gate N3 (PR 619): Keys & connections' card and "The ERP asks the shop" inside an a2 page (Settings › ERP link)
+   are a2 cards; their rows, the add-key sheet and the toast keep the classic variables, in the shell's type */
+.adm2 .ad.ad-embed { font-size: inherit; line-height: inherit; color: inherit; }
+.adm2 .ad-keys .ad-row:first-of-type { margin-top: 10px; }
+.adm2 .ad-keys .ad-row-name { gap: 0; font-size: 13.5px; }
 .adm2 .a2-main { min-height: 100vh; }
 .adm2 .a2-skip { position: absolute; left: 8px; top: -60px; z-index: 100; background: var(--g9); color: #fff; padding: 10px 14px; border-radius: 8px; font-weight: 600; }
 .adm2 .a2-skip:focus { top: 8px; }
@@ -611,6 +616,8 @@
   /* a one-word command ("Hold", "ধরে রাখুন") or link ("Order" on the packing card) is still a 44 px wide tap */
   .adm2 .a2-btn, .adm2 .a2-lnk { min-width: 44px; }
   .adm2 .a2-lnk { justify-content: center; }
+  /* PR 619: a classic admin card inside the shell (Keys & connections' card on Settings › ERP link) keeps its 44 px tap */
+  .adm2 .ad-btn { min-height: 44px; }
 }
 /* What a closed "More" holds is not on the page until it is opened (no hidden button under a visible one). */
 .adm2 details:not([open]) > :not(summary) { display: none; }

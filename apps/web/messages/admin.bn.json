@@ -63,7 +63,8 @@
     "supportConversation": "কথোপকথন",
     "supportSettings": "সাপোর্ট সেটিংস",
     "booksDaily": "দৈনিক হিসাব",
-    "moneyCosts": "খরচ"
+    "moneyCosts": "খরচ",
+    "erpLink": "ERP সংযোগ"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",
@@ -94,6 +95,8 @@
     "noDb": "এই সার্ভারে এখনো ডেটাবেস যুক্ত হয়নি।"
   },
   "integrations": {
+    "erpLinkNote": "প্রতিটা দোকানের নিজের ERP সংযোগ আর নিজের চাবি: সেটিংস → ERP সংযোগ। এখানের ERP সারিটা পুরো সাইটের; পুরোনো ERP চুক্তিতে থাকা দোকানগুলো এটা ব্যবহার করে।",
+    "erpLinkOpen": "ERP সংযোগ খুলুন",
     "metaTitle": "চাবি ও সংযোগ",
     "eyebrow": "অ্যাডমিন · সিস্টেম",
     "title": "চাবি ও সংযোগ",
