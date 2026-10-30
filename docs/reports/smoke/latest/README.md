@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-30 05:23 (Asia/Dhaka)
+# Smoke test · 2026-10-30 06:32 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (188টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (190টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `068aaf44cf91` · after deploy · result **PASS** (188 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `bac2e8a16804` · after deploy · result **PASS** (190 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -64,6 +64,7 @@ Site: https://new.extas.com.bd · commit `068aaf44cf91` · after deploy · resul
 | `/admin/rules` | phone | 200 | `/admin/rules` | ok | [picture](admin-rules-phone.jpg) |
 | `/admin/server` | phone | 200 | `/admin/server` | ok | [picture](admin-server-phone.jpg) |
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | [picture](admin-stock-phone.jpg) |
+| `/admin/website/seo` | phone | 200 | `/admin/website/seo` | ok | [picture](admin-website-seo-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-phone.jpg) |
 | `/admin/products/import` | phone | 200 | `/admin/products/import` | ok | [picture](admin-products-import-phone.jpg) |
@@ -158,6 +159,7 @@ Site: https://new.extas.com.bd · commit `068aaf44cf91` · after deploy · resul
 | `/admin/rules` | desktop | 200 | `/admin/rules` | ok | [picture](admin-rules-desktop.jpg) |
 | `/admin/server` | desktop | 200 | `/admin/server` | ok | [picture](admin-server-desktop.jpg) |
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | [picture](admin-stock-desktop.jpg) |
+| `/admin/website/seo` | desktop | 200 | `/admin/website/seo` | ok | [picture](admin-website-seo-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | [picture](admin-products-queue-desktop.jpg) |
 | `/admin/products/import` | desktop | 200 | `/admin/products/import` | ok | [picture](admin-products-import-desktop.jpg) |
