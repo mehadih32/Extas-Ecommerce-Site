@@ -1,11 +1,11 @@
-// CN-029 Phase 2 · Prohori's lane (PR 619; registry v70): every key at version 70, labelled in both languages, its
+// CN-029 Phase 2 · Prohori's lane (PR 619, 621; registry v70): every key at version 70, labelled in both languages, its
 // default valid; nothing here is owner data or needs the owner's OK (the switch itself is `erp.model`, which does).
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
 import { switchoverSettings } from '../src/registry-switchover';
 
-describe('switch-over settings (v70)', () => {
+describe('switch-over and acceptance settings (v70)', () => {
   it('every key is in the registry at version 70, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(switchoverSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
@@ -28,5 +28,14 @@ describe('switch-over settings (v70)', () => {
     expect([s['erp.switchOver.queuedV5Orders'].scope, s['erp.switchOver.queuedV5Orders'].default]).toEqual(['store', 'resend']);
     expect(s['erp.switchOver.queuedV5Orders'].schema.safeParse('hold').success).toBe(true);
     expect(s['erp.link.listShown'].default).toBe(20);
+  });
+
+  it('PR 621: the demo ERP is an https address setting (no key here: the key is only in the vault)', () => {
+    const s = switchoverSettings;
+    expect(s['erp.acceptance.demoBaseUrl'].default).toBe('https://demo.extasbd.com');
+    expect(s['erp.acceptance.demoBaseUrl'].schema.safeParse('http://demo.extasbd.com').success).toBe(false);
+    expect(s['erp.acceptance.timeoutSeconds'].default).toBe(20);
+    // Writing sample documents to the demo ERP is off as it ships.
+    expect(s['erp.acceptance.demoWrites'].default).toBe(false);
   });
 });

@@ -650,6 +650,66 @@ check "cache hook: one call to the new colour, with the token" \
   "$(grep -cE "^ARGS exec extas-caddy wget .*x-extas-cache-hook: tok-0123456789abcdef0123456789abcdef http://app-(blue|green):3000/api/internal/cache/deployed$" "$T/docker.log" || true)" "1"
 rm -rf "$T"
 
+# PR 621 (CN-029): erp-acceptance.sh runs the acceptance CLI in the migrate image with only the database address (the
+# app role's once the app runs as extas_app, else the direct one, as DATABASE_URL — qa-gate N5) and the vault key, in a
+# root-only file gone afterwards; an image without the CLI is "not run" (exit 0); a run past the limit is "not
+# finished" (exit 0, qa-gate B1); a failed check is exit 1; state/erp-acceptance.json gets the result. Docker is a
+# stand-in.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://pooled\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+case "$1" in
+  image) exit 0 ;;
+  images) echo "extas-migrate:newest"; exit 0 ;;
+esac
+if grep -q 'test -f' <<<"$*"; then [ "${FAKE_HAS_CLI:-1}" = 1 ]; exit; fi
+out=""; envf=""; prev=""
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/out) out="${a%:/out}" ;; esac
+  [ "$prev" = --env-file ] && envf="$a"
+  prev="$a"
+done
+cp "$envf" "$FAKE_SEEN"
+[ -z "${FAKE_EXIT:-}" ] || exit "$FAKE_EXIT"   # killed by the time limit before it wrote anything
+printf '{"state":"RAN","passed":%s,"failed":%s,"skipped":0,"unreachable":false,"keyRefused":false}\n' "$FAKE_PASSED" "$FAKE_FAILED" > "$out/report.json"
+echo "# ERP acceptance" > "$out/README.md"
+[ "$FAKE_FAILED" = 0 ]
+STUB
+chmod +x "$T/bin/docker"
+ea() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" ERP_ACCEPTANCE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" FAKE_SEEN="$T/seen.env" \
+  "$@" bash ../deploy/erp-acceptance.sh "$T/out"; }
+rc=0; ea FAKE_PASSED=21 FAKE_FAILED=0 >/dev/null || rc=$?
+check "erp acceptance: a passing run exits 0 and records it" "$rc:$(jq -c '{exit,state,passed,failed}' "$T/root/state/erp-acceptance.json")" '0:{"exit":0,"state":"RAN","passed":21,"failed":0}'
+check "erp acceptance: only the direct database address (as DATABASE_URL) and the vault key go in" \
+  "$(sort "$T/seen.env" | tr '\n' ' ')" "DATABASE_URL=postgresql://u:dbpw@h/d VAULT_MASTER_KEY=vk "
+check "erp acceptance: the live version's migrate image runs it" "$(grep -c 'extas-migrate:aaa sh -c cd /repo/packages/jobs' "$T/docker.log")" "1"
+check "erp acceptance: the report is written" "$(cat "$T/out/README.md")" "# ERP acceptance"
+check "erp acceptance: the secrets file is gone" "$(find "$T/root/config/secrets" -name '.erp-acceptance.*' | wc -l | tr -d ' ')" "0"
+rc=0; ea FAKE_PASSED=20 FAKE_FAILED=1 >/dev/null || rc=$?
+check "erp acceptance: a failed check exits 1 (the release waits)" "$rc:$(jq -c '.failed' "$T/root/state/erp-acceptance.json")" "1:1"
+rc=0; ea FAKE_HAS_CLI=0 FAKE_PASSED=0 FAKE_FAILED=0 >/dev/null || rc=$?
+check "erp acceptance: a version without the run is not run, not failed" "$rc:$(jq -r '.state' "$T/root/state/erp-acceptance.json")" "0:NOT_IN_VERSION"
+rm -rf "$T/out"
+rc=0; ea FAKE_EXIT=124 FAKE_PASSED=0 FAKE_FAILED=0 >/dev/null || rc=$?
+check "erp acceptance: a run past the time limit is not finished, not failed (qa-gate B1)" \
+  "$rc:$(jq -r '.state' "$T/root/state/erp-acceptance.json"):$(grep -c 'Not finished' "$T/out/README.md")" "0:NOT_FINISHED:1"
+rc=0; ea FAKE_EXIT=3 FAKE_PASSED=0 FAKE_FAILED=0 >/dev/null || rc=$?
+check "erp acceptance: a run that stops without a report still fails" "$rc" "1"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://extas_app:apppw@pgb/d?pgbouncer=true\nVAULT_MASTER_KEY=vk\n' > "$T/root/config/secrets/app.env"
+rc=0; ea FAKE_PASSED=21 FAKE_FAILED=0 >/dev/null || rc=$?
+check "erp acceptance: once the app runs as extas_app, that role's address goes in, never the owner's (qa-gate N5)" \
+  "$rc:$(sort "$T/seen.env" | tr '\n' ' ')" "0:DATABASE_URL=postgresql://extas_app:apppw@pgb/d?pgbouncer=true VAULT_MASTER_KEY=vk "
+# qa-gate B2: the release runs it inside deploy.sh, after the migration and before the new colour starts; deploy.yml
+# has no separate step before the migration any more.
+check "workflows: the deploy runs it after the migration, before the new colour; ci ignores its reports" \
+  "$(awk '/^  if ! migrate_db "\$MIGRATE_IMAGE"/{m=NR} /erp-acceptance.sh" "\$ERP_ACCEPTANCE_OUT"/{a=NR} /^if ! app "\$NEW" up/{u=NR} END{print (m && a && u && m<a && a<u) ? "between" : "wrong"}' ../deploy/deploy.sh):$(grep -c 'ERP_ACCEPTANCE_OUT="$RUNNER_TEMP/erp-acceptance" ERP_ACCEPTANCE_TIMEOUT_MIN=8 bash infra/deploy/deploy.sh "extas-web' ../../.github/workflows/deploy.yml):$(grep -c 'bash infra/deploy/erp-acceptance.sh' ../../.github/workflows/deploy.yml):$(grep -c 'docs/reports/erp-acceptance/\*\*' ../../.github/workflows/ci.yml)" "between:1:0:1"
+check "workflows: the nightly run holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/erp-acceptance.yml)" "0"
+rm -rf "$T"
+
 # PR 602: Caddy's cache rules — the never-kept pages (both languages), the hashed files, the internal addresses closed.
 CF=../stack/caddy/Caddyfile
 check "caddy cache: the site imports the cache rules" "$(grep -c '^	import cache_headers$' "$CF")" "1"

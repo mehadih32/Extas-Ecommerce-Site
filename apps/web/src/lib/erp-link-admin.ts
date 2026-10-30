@@ -17,10 +17,13 @@
 //     handover the store's three ERP keys are revoked here (never deleted) and its connection goes back to mock and off.
 //   - `sendHeld` {orderId} (`vault.write`): a v5 order kept at the switch (`erp.switchOver.queuedV5Orders` = hold) sent
 //     now as a v6 order.
+//   - `demoKey` {key} / `demoKeyRemove` (PR 621; `vault.write` for every store, i.e. installation-wide): the demo ERP's
+//     key for the acceptance run (`ERP_ACCEPTANCE_DEMO_KEY`), kept in the vault for the installation, never per store
+//     and never shown again; removing it revokes it (kept, never deleted) and the run goes back to "waiting for the key".
 // Every refusal is a code the page shows in its own words. No key value ever leaves the vault through this API.
-import { audit, can, isOwner } from '@extas/auth';
+import { audit, AuthError, can, isOwner } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { connectionCatalogue, secretName } from '@extas/adapters';
+import { connectionCatalogue, ERP_ACCEPTANCE_DEMO_KEY, secretName } from '@extas/adapters';
 import * as inv from '@extas/inventory';
 import { isOrdersError, resendOrderAsV6 } from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
@@ -46,6 +49,8 @@ export interface ErpLinkView {
   vaultReady: boolean;
   /** The last dry run is clean enough in time to switch on (younger than `erp.switchOver.dryRunMaxHours`). */
   dryRunFresh: boolean;
+  /** PR 621: the demo ERP's key for the acceptance run — whether it is saved (never its value), and who may change it. */
+  demoKey: { canEdit: boolean; saved: boolean; savedAt: string | null };
 }
 
 /** The kinds of connection this page keeps per store (the ERP's declaration in the catalogue). */
@@ -56,18 +61,43 @@ export async function erpLinkView(deps: AdminDeps, who: inv.Who, origin: string 
   const idp = await inventoryDeps(deps);
   const storeId = who.storeId;
   const actorId = who.actor.staffUserId;
-  const [state, connections, erpCalls, stores, owner] = await Promise.all([
+  const [state, connections, erpCalls, stores, owner, demoKey] = await Promise.all([
     inv.erpLinkState(idp, who),
     listConnections(deps.db, deps.vault, undefined, storeId),
     erpCallsState(deps, storeId, origin),
     deps.db.store.findMany({ where: { status: { not: 'ARCHIVED' } }, orderBy: { id: 'asc' }, select: { id: true, name: true } }),
     actorId ? isOwner(deps.db, actorId) : Promise.resolve(false),
+    demoKeyState(deps, who),
   ]);
   const allowed: ErpLinkStoreChoice[] = [];
   for (const s of stores) if (owner || (await can(deps.db, who.actor, 'vault.read', { storeId: s.id }))) allowed.push(s);
   const dry = state.switchOver.lastDryRun;
   const dryRunFresh = dry ? Date.now() - new Date(dry.createdAt).getTime() <= state.switchOver.dryRunMaxHours * 3_600_000 : false;
-  return { storeId, state, connections, erpCalls, stores: allowed, canWrite, owner, vaultReady: Boolean(deps.vault), dryRunFresh };
+  return { storeId, state, connections, erpCalls, stores: allowed, canWrite, owner, vaultReady: Boolean(deps.vault), dryRunFresh, demoKey };
+}
+
+/** The demo key's state: saved or not (from the vault's list, never its value), and whether this person may change it. */
+async function demoKeyState(deps: AdminDeps, who: inv.Who): Promise<ErpLinkView['demoKey']> {
+  const canEdit = Boolean(deps.vault) && (await can(deps.db, who.actor, 'vault.write', { storeId: null }));
+  const row = deps.vault ? (await deps.vault.list({ storeId: null })).find((s) => s.name === ERP_ACCEPTANCE_DEMO_KEY && !s.revoked) : undefined;
+  return { canEdit, saved: Boolean(row), savedAt: row ? row.updatedAt.toISOString() : null };
+}
+
+/** PR 621: saves (or with `key` null revokes) the demo ERP's key, installation-wide; audited by name only. */
+async function setDemoKey(deps: AdminDeps, who: inv.Who, key: unknown): Promise<{ saved: boolean }> {
+  if (!deps.vault) throw new inv.SwitchError('NOT_AVAILABLE', 'the vault is not set up on this server');
+  if (!(await can(deps.db, who.actor, 'vault.write', { storeId: null }))) throw new AuthError('FORBIDDEN', 'needs the keys permission for every store');
+  const by = { actorId: who.actor.staffUserId, service: 'admin:erp-link', purpose: 'ERP acceptance demo key' };
+  if (key === null) {
+    const live = (await deps.vault.list({ storeId: null })).some((s) => s.name === ERP_ACCEPTANCE_DEMO_KEY && !s.revoked);
+    if (live) await deps.vault.revoke(ERP_ACCEPTANCE_DEMO_KEY, { storeId: null }, by);
+    await audit(deps.db, who.actor, { storeId: null, action: 'vault.revoke', entityType: 'Secret', entityId: ERP_ACCEPTANCE_DEMO_KEY, after: { name: ERP_ACCEPTANCE_DEMO_KEY, revoked: live } }, who.ctx);
+    return { saved: false };
+  }
+  if (typeof key !== 'string' || key.trim().length < 8 || key.trim().length > 512 || /\s/.test(key.trim())) throw new inv.SwitchError('INVALID_INPUT', 'the key is 8 to 512 characters with no spaces', ['key']);
+  await deps.vault.put(ERP_ACCEPTANCE_DEMO_KEY, key.trim(), { storeId: null }, by);
+  await audit(deps.db, who.actor, { storeId: null, action: 'vault.put', entityType: 'Secret', entityId: ERP_ACCEPTANCE_DEMO_KEY, after: { name: ERP_ACCEPTANCE_DEMO_KEY } }, who.ctx);
+  return { saved: true };
 }
 
 /** The store's ERP keys revoked (a handover), its connection back to mock and off. Answers the names revoked. */
@@ -142,6 +172,12 @@ export async function erpLinkHandler(request: Request, deps: AdminDeps | null): 
         break;
       case 'sendHeld':
         result = await inv.sendHeldV5Order(await switchDeps(d), who, b.orderId);
+        break;
+      case 'demoKey':
+        result = await setDemoKey(d, who, b.key);
+        break;
+      case 'demoKeyRemove':
+        result = await setDemoKey(d, who, null);
         break;
       default:
         return fail(400, 'INVALID_INPUT', ['action']);

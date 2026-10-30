@@ -154,6 +154,23 @@
       "NOT_AVAILABLE": "This cannot be done from here.",
       "ERP_MODEL": "The store does not speak the new ERP contract yet.",
       "UNAUTHENTICATED": "Please sign in again."
+    },
+    "demo": {
+      "title": "Acceptance test against the demo ERP",
+      "sub": "Every night and before every release the shop checks the ERP contract against the demo ERP. It needs the demo shop's key, typed once here; it is kept only in the vault for the whole installation and never shown again. Without it the check waits and blocks nothing.",
+      "saved": "Demo key saved ({at}).",
+      "missing": "No demo key yet: the check is waiting for it.",
+      "key": "Demo ERP key",
+      "save": "Save the demo key",
+      "replace": "Replace the demo key",
+      "busy": "Saving…",
+      "send": "Yes, save it",
+      "warn": "The key goes into the vault only. The next check uses it.",
+      "done": "Saved. The next check uses it.",
+      "remove": "Remove the demo key",
+      "removeSend": "Yes, remove it",
+      "removeWarn": "The key is switched off (kept in the vault history). The check goes back to waiting.",
+      "removed": "Removed. The check is waiting for a key again."
     }
   }
 }

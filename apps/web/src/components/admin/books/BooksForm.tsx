@@ -17,7 +17,8 @@ export interface BooksField {
   /** The body key it is sent as. */
   name: string;
   label: string;
-  kind: 'text' | 'date' | 'money' | 'pin' | 'select';
+  /** `secret` (PR 621): a key typed once, hidden like a PIN and cleared after each send. */
+  kind: 'text' | 'date' | 'money' | 'pin' | 'secret' | 'select';
   /** Required; for text, at least this many letters. */
   min?: number;
   value?: string;
@@ -55,7 +56,7 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [requestKey, setRequestKey] = useState<string>('');
 
-  const clearPins = () => setVals((v) => Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fields.find((f) => f.name === k)?.kind === 'pin' ? '' : x])));
+  const clearPins = () => setVals((v) => Object.fromEntries(Object.entries(v).map(([k, x]) => [k, ['pin', 'secret'].includes(fields.find((f) => f.name === k)?.kind ?? '') ? '' : x])));
 
   const send = async () => {
     const out: Record<string, unknown> = { ...(body ?? {}) };
@@ -118,9 +119,9 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
                 <input
                   id={`${id}-${f.name}`}
                   className="a2-inp"
-                  type={f.kind === 'date' ? 'date' : f.kind === 'pin' ? 'password' : 'text'}
+                  type={f.kind === 'date' ? 'date' : f.kind === 'pin' || f.kind === 'secret' ? 'password' : 'text'}
                   inputMode={f.kind === 'money' ? 'decimal' : f.kind === 'pin' ? 'numeric' : undefined}
-                  autoComplete={f.kind === 'pin' ? 'off' : undefined}
+                  autoComplete={f.kind === 'pin' || f.kind === 'secret' ? 'off' : undefined}
                   value={vals[f.name] ?? ''}
                   maxLength={f.maxLength ?? (f.kind === 'pin' ? 12 : 500)}
                   onChange={(e) => setVals({ ...vals, [f.name]: e.target.value })}

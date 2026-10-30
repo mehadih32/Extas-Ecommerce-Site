@@ -37,7 +37,9 @@ jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: [self-hosted, extas-vm]
-    timeout-minutes: 30
+    # ~~30~~ 40 minutes (PR 621): the build, the migration, the ERP acceptance (at most ERP_ACCEPTANCE_TIMEOUT_MIN) and the
+    # new colour all fit, so the job is never cut off between the migration and the switch.
+    timeout-minutes: 40
     env:
       SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
@@ -65,13 +67,19 @@ jobs:
 
       # The database is migrated first; a failed migration stops here with the live version untouched.
       # EXTAS_DEPLOY_RUN_ID tags deploy.sh's record with this run, so the report never shows an older run's result.
-      - name: Migrate the database, then blue/green switch (automatic rollback on failure)
+      # PR 621 (CN-029; qa-gate B2): between the migration and the new colour, deploy.sh runs the ERP v6 acceptance
+      # against the demo ERP with the NEW version on the migrated database (infra/deploy/erp-acceptance.sh; the report
+      # goes to ERP_ACCEPTANCE_OUT). ~~It ran as its own step before the migration.~~ A failed check stops the release
+      # before the switch (the live version keeps the traffic); waiting for the demo key, a demo ERP that cannot be
+      # reached or refuses the key, a run not finished in time or one that could not read the database is reported and
+      # lets the release go.
+      - name: Migrate the database, ERP acceptance, then blue/green switch (automatic rollback on failure)
         id: deploy
         run: |
           if [ "${{ inputs.rollback }}" = true ]; then
             sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh rollback
           else
-            sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh "extas-web:${SHA::12}" "extas-migrate:${SHA::12}"
+            sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" ERP_ACCEPTANCE_OUT="$RUNNER_TEMP/erp-acceptance" ERP_ACCEPTANCE_TIMEOUT_MIN=8 bash infra/deploy/deploy.sh "extas-web:${SHA::12}" "extas-migrate:${SHA::12}"
           fi
 
       # Through Cloudflare, like a visitor: https://<staging host>/api/health with the preview login (read on the
@@ -132,6 +140,7 @@ jobs:
             SMOKE="${SMOKE:-}" SMOKE_ROLLBACK="${SMOKE_ROLLBACK:-}" "${rec[@]}" \
             bash infra/deploy/deploy-report.sh "$out"
           smoke="$RUNNER_TEMP/smoke"; [ -f "$smoke/README.md" ] && sudo chown -R "$(id -u):$(id -g)" "$smoke"
+          acc="$RUNNER_TEMP/erp-acceptance"; [ -f "$acc/README.md" ] && sudo chown -R "$(id -u):$(id -g)" "$acc"
           sudo chown -R "$(id -u):$(id -g)" "$out"
           cat "$out/deploy-latest.md"
           git config user.name "extas-vm"
@@ -148,6 +157,10 @@ jobs:
             if [ -f "$smoke/README.md" ]; then
               rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$smoke" docs/reports/smoke/latest
               git add -A docs/reports/smoke/latest
+            fi
+            if [ -f "$acc/README.md" ]; then
+              rm -rf docs/reports/erp-acceptance/latest && mkdir -p docs/reports/erp-acceptance && cp -r "$acc" docs/reports/erp-acceptance/latest
+              git add -A docs/reports/erp-acceptance/latest
             fi
             if git diff --cached --quiet; then exit 0; fi
             git commit -q -m "deploy report: $(cat "$out/summary") [skip ci]"

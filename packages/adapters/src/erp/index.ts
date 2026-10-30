@@ -12,5 +12,7 @@ export * from './mock-erp';
 export * from './signature';
 export * from './extas-erp';
 export * from './webhook';
+// CN-029 Phase 2 · PR 621 — the ERP v6 acceptance checks (the practice ERP in CI, the demo ERP on the server).
+export * from './acceptance';
 
 export const erpAdapters = [extasErp] as const;
