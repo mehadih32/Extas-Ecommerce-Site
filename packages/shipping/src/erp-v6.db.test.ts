@@ -158,6 +158,27 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 · the order journey to the ERP v6 (P
     expect((push!.requestBody as { body: Record<string, unknown> }).body).toMatchObject({ status: 'RETURNED', collected: Math.round(order.deliveryChargeMinor / 100) });
   });
 
+  it('PR 611 (money review): a contradicted "Delivered" a person resolves as DELIVERED goes with the courier`s delivered time, never the moment of the resolution (the 72-hour exchange window counts from it)', async () => {
+    const o = await booked(await confirmed('e6-check-dlv'));
+    await relay();
+    await read(o.shipmentId); // PICKED_UP → shipment
+    const order = await db().order.findUniqueOrThrow({ where: { id: o.orderId }, select: { deliveryChargeMinor: true } });
+    const deliveredAt = new Date(f.clock.now.getTime() + 10 * 60_000);
+    await applyEvents(f.shippingDeps(), { storeId: f.S, shipmentId: o.shipmentId }, [{ providerEventId: `${o.shipmentId}:dlv`, status: 'DELIVERED', rawStatus: 'delivered', occurredAt: deliveredAt, note: null, reasonKey: null, codCollectedMinor: order.deliveryChargeMinor, chargeMinor: null }], 'poll');
+    expect((await syncOrder(f.shippingDeps(), { storeId: f.S, shipmentId: o.shipmentId }))?.erp).toMatchObject({ waits: 'DELIVERY_CHECK_OPEN' });
+    const courierTime = (await db().shipment.findUniqueOrThrow({ where: { id: o.shipmentId }, select: { deliveredAt: true } })).deliveredAt!;
+    expect(courierTime).toBeTruthy();
+    // The person looks two days later and finds it was delivered after all.
+    f.clock.now = new Date(f.clock.now.getTime() + 2 * 86_400_000);
+    const check = await db().deliveryCheck.findUniqueOrThrow({ where: { shipmentId: o.shipmentId } });
+    await resolveDeliveryCheck(f.shippingDeps(), f.shipper, check.id, { outcome: 'DELIVERED' });
+    const eo = await erpOrder(o.orderId);
+    const results = await db().erpDeliveryResult.findMany({ where: { erpOrderId: eo.id }, select: { outcome: true, at: true } });
+    expect(results.map((r) => [r.outcome, r.at.toISOString()])).toEqual([['DELIVERED', courierTime.toISOString()]]);
+    const [push] = await pushes(o.orderId, 'order.delivery');
+    expect((push!.requestBody as { body: Record<string, unknown> }).body).toMatchObject({ status: 'DELIVERED', at: courierTime.toISOString() });
+  });
+
   it('PR 611: the Partial delivery box — required when the courier says partial, saved by a person, sent again only when changed, closed once handed back', async () => {
     const o = await booked(await confirmed('e6-partial', [{ variantId: f.v.skyM }, { variantId: f.v.teeM }]), 'partial');
     await relay();
