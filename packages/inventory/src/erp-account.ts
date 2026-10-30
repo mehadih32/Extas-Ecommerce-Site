@@ -654,8 +654,9 @@ export interface PaymentMatch {
 const dayGap = (a: string, b: string) => Math.abs(Math.round((dateOfDay(a).getTime() - dateOfDay(b).getTime()) / 86_400_000));
 
 /**
- * Pairs each "paid to ERP" record (not reversed) with one ERP payment (a PAYMENT entry not reversed): the same amount,
- * the same reference when both have one, dates at most `books.payments.matchDays` apart. Earliest first.
+ * Pairs each "paid to ERP" record (not reversed) with one ERP payment (a PAYMENT entry the ERP has not reversed; one
+ * the shop corrected by hand counts at its correction's figure): the same amount, the same reference when both have
+ * one, dates at most `books.payments.matchDays` apart. Earliest first.
  */
 export async function paymentMatch(deps: InventoryDeps, link: Pick<BooksLink, 'id' | 'storeId'>): Promise<PaymentMatch> {
   const days = await setting(deps, link.storeId, 'books.payments.matchDays');
@@ -663,8 +664,31 @@ export async function paymentMatch(deps: InventoryDeps, link: Pick<BooksLink, 'i
   const reversed = new Set(recs.filter((r) => r.reversesId).map((r) => r.reversesId!));
   const shop = recs.filter((r) => !r.reversesId && !reversed.has(r.id)).map((r) => ({ recordId: r.id, paidOn: dayText(r.paidOn), amountMinor: minorOf(r.amountMinor), reference: r.reference }));
   const pays = await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, kind: 'PAYMENT' }, orderBy: [{ businessDate: 'asc' }, { seq: 'asc' }] });
-  const undone = new Set((await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, reverses: { in: pays.map((p) => p.eventId) } }, select: { reverses: true } })).map((r) => r.reverses!));
-  const erp = pays.filter((p) => !undone.has(p.eventId)).map((p) => ({ entryEventId: p.eventId, date: dayText(p.businessDate), amountMinor: -minorOf(p.amountMinor), reference: p.paymentRef }));
+  const reversals = await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, reverses: { in: pays.map((p) => p.eventId) } }, select: { reverses: true, adjustmentId: true } });
+  // Undone by the ERP (its own correction): no payment any more. Taken out by a shop correction (PR 616, money
+  // review): the ERP's payment still stands, at the figure the correction wrote for its group (its ADJUSTMENT), so the
+  // "paid to ERP" record of a payment that really happened is never unmatched for the group having been corrected.
+  const undone = new Set(reversals.filter((r) => !r.adjustmentId).map((r) => r.reverses!));
+  const correctedBy = new Map(reversals.filter((r) => r.adjustmentId).map((r) => [r.reverses!, r.adjustmentId!]));
+  const adjKeys = [...new Set(correctedBy.values())].map((a) => entryKey.adjustment(a));
+  const adjEntries = adjKeys.length ? await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, eventId: { in: adjKeys } } }) : [];
+  const adjUndone = new Set(adjEntries.length ? (await deps.db.erpAccountEntry.findMany({ where: { linkId: link.id, reverses: { in: adjEntries.map((a) => a.eventId) } }, select: { reverses: true } })).map((r) => r.reverses!) : []);
+  const standing = new Map(adjEntries.filter((a) => !adjUndone.has(a.eventId)).map((a) => [a.adjustmentId!, a]));
+  const taken = new Set<string>();
+  const erp: { entryEventId: string; date: string; amountMinor: number; reference: string | null }[] = [];
+  for (const p of pays) {
+    if (undone.has(p.eventId)) continue;
+    const adjId = correctedBy.get(p.eventId);
+    if (!adjId) {
+      erp.push({ entryEventId: p.eventId, date: dayText(p.businessDate), amountMinor: -minorOf(p.amountMinor), reference: p.paymentRef });
+      continue;
+    }
+    // One payment per correction (the ERP's figure for the group), named by the first payment it took out.
+    const a = standing.get(adjId);
+    if (!a || taken.has(adjId) || minorOf(a.amountMinor) >= 0) continue;
+    taken.add(adjId);
+    erp.push({ entryEventId: p.eventId, date: dayText(p.businessDate), amountMinor: -minorOf(a.amountMinor), reference: p.paymentRef });
+  }
   const used = new Set<string>();
   const out: PaymentMatch = { matched: [], shopOnly: [], erpOnly: [] };
   for (const s of shop) {

@@ -27,13 +27,19 @@
 // MISSING_EVENT of a group whose rows come from events (CREDIT, PAYMENT, EXCHANGE) always waits for the pull; only a
 // group with no event behind it (OTHER: a charge the ERP typed, the switch transfer) and a bill the shop never booked
 // (its own key, below) are put right by hand. The eventId check above stays as a second guard where ids are sent.
+// Money review: the wait holds for ANY difference of such a group (an AMOUNT_DIFF too) while the ERP has more rows for
+// it than the shop has entries from the ERP (`erpRowCount` > `shopEntryCount`): one of its events is still on its way,
+// and a correction now would count it twice. A corrected group whose money moves again is a new difference of that
+// group (books-match.ts), put right on its own.
+// Round 3: a payment group paired only by a guess (`detail.guessed`: one shop payment short met by an ERP row tied by
+// neither eventId nor reference, which may be another payment whose event is late) waits too.
 // Everything is on the store's own link: a difference of store A is not found from store B (NOT_FOUND).
 import { entryKey, minorOf } from '@extas/erp-types';
 import { z } from 'zod';
 import { logChange, nowOf, parse, TX, type InventoryDeps, type Who } from './context';
 import { BooksError } from './books-errors';
 import { checkBooksPin, needPin, reasonOf } from './books-close';
-import { eventsNotBooked } from './books-match';
+import { EVENT_GROUP, eventsNotBooked } from './books-match';
 import { allowBooks, appendAccountEntries, billKey, booksLinkFor, dateOfDay, dayText, isP2002, lockLink, storeBooks, type EntryDraft } from './erp-account';
 import { storeDate } from './erp-events-pull';
 
@@ -53,6 +59,11 @@ interface GroupDetail {
   erpEvents?: unknown;
   /** Those of them the shop's ledger has no entry for yet: the pull brings them. */
   waitingEvents?: unknown;
+  /** The ERP's rows of the group, and the shop's entries of it that came from the ERP (not its own corrections). */
+  erpRowCount?: unknown;
+  shopEntryCount?: unknown;
+  /** Round 3: the group's ERP row was paired with the shop's payment only by a guess (books-match.ts `paymentGroups`). */
+  guessed?: unknown;
 }
 
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
@@ -69,11 +80,10 @@ export function isAdjustable(d: { check: string; kind: string; key: string; stat
 export function waitsForPull(kind: string, group: string, detail: unknown): boolean {
   const det = detail as GroupDetail | null;
   if (strings(det?.waitingEvents).length) return true;
-  return kind === 'MISSING_EVENT' && EVENT_GROUP.test(group);
+  if (!EVENT_GROUP.test(group)) return false;
+  if (kind === 'MISSING_EVENT' || det?.guessed === true) return true;
+  return typeof det?.erpRowCount === 'number' && typeof det.shopEntryCount === 'number' && det.erpRowCount > det.shopEntryCount;
 }
-
-/** Row groups whose ERP rows come from the ERP's money events (books-match.ts `erpRowGroup`): the pull brings them. */
-const EVENT_GROUP = /^(CREDIT|PAYMENT|EXCHANGE)\|/;
 
 /** Puts one difference right by reversing and adding (see above). Answers the adjustment. */
 export async function adjustDifference(deps: InventoryDeps, who: Who, differenceId: string, input: AdjustInput): Promise<{ id: string; kind: 'ADJUSTMENT' | 'PRIOR_PERIOD'; amountMinor: number; date: string; entries: number }> {
@@ -153,7 +163,11 @@ export async function adjustDifference(deps: InventoryDeps, who: Who, difference
         const already = await tx.erpAccountEntry.findFirst({ where: { linkId: link.id, kind: 'BILL', externalOrderId: diff.externalOrderId }, select: { id: true } });
         if (already) throw new BooksError('CONFLICT', 'the books moved since this difference was found; run the match again', ['differenceId']);
         drafts.push({ kind: 'BILL', eventId: billKey(diff.externalOrderId!, consignmentId), businessDate: date, amountMinor: newMinor, externalOrderId: diff.externalOrderId, consignmentId, source: 'MANUAL', adjustmentId: adj.id, createdById: who.actor.staffUserId });
-      } else if (newMinor !== 0) drafts.push({ kind: 'ADJUSTMENT', eventId: entryKey.adjustment(adj.id), businessDate: date, amountMinor: newMinor, externalOrderId: diff.externalOrderId, source: 'MANUAL', adjustmentId: adj.id, createdById: who.actor.staffUserId });
+      } else if (newMinor !== 0) {
+        // An exchange group's correction names its exchange, so what it counts as is known even when it reversed nothing.
+        const exchangeId = group.startsWith('EXCHANGE|') ? (entries.find((e) => e.exchangeId)?.exchangeId ?? group.slice('EXCHANGE|'.length)) : null;
+        drafts.push({ kind: 'ADJUSTMENT', eventId: entryKey.adjustment(adj.id), businessDate: date, amountMinor: newMinor, externalOrderId: diff.externalOrderId, exchangeId, source: 'MANUAL', adjustmentId: adj.id, createdById: who.actor.staffUserId });
+      }
       const written = await appendAccountEntries(tx, link, drafts);
       if (written.created.length !== drafts.length) throw new BooksError('CONFLICT', 'the books moved since this difference was found; run the match again', ['differenceId']);
       await tx.booksDifference.update({ where: { id: diff.id }, data: { adjustmentId: adj.id, entryId: written.created.at(-1)?.id ?? null } });

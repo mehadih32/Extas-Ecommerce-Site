@@ -16,7 +16,7 @@ import { t } from '@/lib/i18n';
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/money/books/match';
-const TIE_ORDER = ['balanceStartMinor', 'goodsMinor', 'returnLossesMinor', 'pipelineStartMinor', 'pipelineEndMinor', 'switchTransferMinor', 'paymentsMinor', 'adjustmentsMinor', 'balanceEndMinor', 'remainderMinor'] as const;
+const TIE_ORDER = ['balanceStartMinor', 'goodsMinor', 'returnLossesMinor', 'pipelineStartMinor', 'pipelineEndMinor', 'switchTransferMinor', 'paymentsMinor', 'adjustmentsMinor', 'priorPeriodMinor', 'balanceEndMinor', 'remainderMinor'] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = withBooks(await adminView());
