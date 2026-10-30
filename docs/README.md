@@ -153,6 +153,7 @@ the pages are out of date.
 | [`admin-guide/pages/orders/risk-rules.md`](admin-guide/pages/orders/risk-rules.md) | Page guide (CN-026 six parts): Orders › Risk rules, its Levels card (`/admin/orders/risk-rules`, PR 161) and the Advance request card (PR 542) |
 | [`admin-guide/pages/orders/advance-request.md`](admin-guide/pages/orders/advance-request.md) | Page guide (CN-026 six parts): "Request advance" on the order page, the pay link `/pay/<token>` and the Advance request card (PR 542) |
 | [`admin-guide/pages/orders/invoices.md`](admin-guide/pages/orders/invoices.md) | Page guide (CN-026 six parts): Orders › Packing & print › Invoices (`/admin/orders/packing/invoices`): the list, printing on paper, roll or as a picture, the invoice cards (PR 407) |
+| [`admin-guide/pages/products/erp-import.md`](admin-guide/pages/products/erp-import.md) | Page guide (CN-026 six parts): Products › Import from ERP (`/admin/products/erp-import`): a style code to drafts, the buying prices that changed, the selling-price floor (PR 609) |
 | [`admin-guide/pages/support/inbox.md`](admin-guide/pages/support/inbox.md) | Page guide (CN-026 six parts): Support › Inbox (`/admin/support`): the views, search, the rows (PR 425) |
 | [`admin-guide/pages/support/conversation.md`](admin-guide/pages/support/conversation.md) | Page guide (CN-026 six parts): one conversation (`/admin/support/c/[id]`): reply, internal note, files, take / give, status, the who-did-what log (PR 425) |
 | [`admin-guide/pages/support/settings.md`](admin-guide/pages/support/settings.md) | Page guide (CN-026 six parts): Support settings (`/admin/support/settings`): inbox, files, the customer-number line (PR 425) |
@@ -171,6 +172,8 @@ the pages are out of date.
 | [`reports/2026-10-20-S00.md`](reports/2026-10-20-S00.md) | S00 stage report: the foundation (19/19) |
 | [`reports/2026-10-20-S01.md`](reports/2026-10-20-S01.md) | S01 stage report: products, photos and catalogue (22/22) |
 | [`reports/2026-10-20-S10.md`](reports/2026-10-20-S10.md) | S10 stage report: Smart Rules (12/12) |
+| [`reports/2026-10-30-S01.md`](reports/2026-10-30-S01.md) | S01 stage report: done with PR 609, import from the ERP by style code (23/23) |
+| [`reports/2026-10-30-S05.md`](reports/2026-10-30-S05.md) | S05 stage report: done with PR 610, orders to the ERP v6 (21/21) |
 | [`reports/2026-10-24-S04.md`](reports/2026-10-24-S04.md) | S04 stage report: bag, checkout, accounts (41/41) |
 | [`reports/2026-10-24-S05.md`](reports/2026-10-24-S05.md) | S05 stage report: Order management (20/20) |
 | [`reports/2026-10-24-S03.md`](reports/2026-10-24-S03.md) | S03 stage report: combos and sets, with the template ranking (22/22) |
