@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৭৯টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৮১টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,14 +36,14 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৭৯টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৮১টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 257/305** · 48 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 3/22** (wave 5) · **S16 4/22** (wave 6) · **S18 1/14** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **279/615** active PRs |
+| Launch | **Launch 259/305** · 46 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 3/22** (wave 5) · **S16 4/22** (wave 6) · **S18 1/14** · **S19 2/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **281/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 14:53 (Dhaka) · commit `b16315e` (#56, PR [612–614](docs/stages/S08.md) returns and exchange, 615, 616 the books, behind the switch) · **success**, smoke test 212 pages OK |
+| Last deploy | 30 Oct 2026, 15:45 (Dhaka) · commit `9bf1cd3` (#57, PR [609](docs/stages/S01.md#pr-609) import by style code, 617, 618 the daily summary and fixed costs, 620 signed ERP calls, behind the switch) · **success**, smoke test 218 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
@@ -80,7 +80,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 4 / 22 | In progress |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
 | [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 1 / 14 | In progress |
-| [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 0 / 17 | Not started |
+| [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 2 / 17 | In progress |
 | [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
 | [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | In progress (PR 594 readme-guard) |
 | [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 1 / 13 | In progress |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **279 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **281 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1777,9 +1777,9 @@ migration).
 - **Signing:** `X-Extas-Signature: sha256=<hex>` over `METHOD\nPATH?QUERY\nTIMESTAMP`, constant-time, refused beyond
   `erp.siteApi.maxAgeSeconds` (300). The store is the one whose own secret verifies (CN-029 §16): the ERP connection's
   new optional third key `signingSecret`, else its webhook secret; v6 stores only; a secret two stores share is refused.
-  Today the mother store's key and card (Keys & connections); each store's own with PR 619. The query is signed as sent,
-  percent-encoded.
-- **Screen:** the "The ERP asks the shop" card on `/admin/integrations` — the base URL for the ERP, the switch
+  ~~Today the mother store's key and card (Keys & connections); each store's own with PR 619.~~ Since PR 619 each
+  store's own key and card, on Settings → ERP link. The query is signed as sent, percent-encoded.
+- **Screen:** the "The ERP asks the shop" card on ~~`/admin/integrations`~~ `/admin/settings/erp-link?storeId=` (moved by PR 619, follow-up 524) — the base URL for the ERP, the switch
   `erp.siteApi.enabled` (per store, off; `vault.write`), the latest verified calls and the refused calls summed. Guide:
   [`docs/admin-guide/integrations.md`](docs/admin-guide/integrations.md).
 - **Settings** (registry v65): `erp.siteApi.enabled`, `.maxAgeSeconds` 300, `.topProductsLimit` 20,
@@ -1793,10 +1793,64 @@ migration).
   2.10.2). Tests: `packages/adapters/test/erp-site-calls.test.ts`,
   `packages/inventory/test/erp-site-calls.db.test.ts`, `apps/web/src/lib/erp-site-api.db.test.ts`.
 
-### S19 · Deploy, backup, go-live — Not started
+### S19 · Deploy, backup, go-live — In progress (2/17)
 
 Planned — see register PRs 391–403, 507, 587 (backup settings and monthly restore drills, WordPress migration on
 go-live day): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+
+**Built (PR 619): the switch-over to the ERP model and each store's own ERP link** (CN-028, CN-029 Phase 2; migration
+`0057_erp_switchover`, additive; settings registry v70).
+
+> নতুন (PR 619): প্রতিটা দোকানের নিজের ERP সংযোগের পাতা: নিজের চাবি, কী অপেক্ষায়, কত পাওনা; নতুন ERP চুক্তিতে যাওয়া আগে পরীক্ষা করে, শুধু মালিক PIN দিয়ে করেন।
+
+- **Screen:** **Settings → ERP link** (`/admin/settings/erp-link?storeId=`, `vault.read` in that store; a store picker
+  for the stores the person may open): the contract the store speaks, its open link (epoch, ERP company, switch date,
+  opening balance), the store's own keys form, what was synced each way, the last summary the ERP accepted, the queues
+  (orders waiting, held or failed; v5 orders kept at the switch; open exchanges; summaries waiting), the balance by both
+  books, the books match state, the switch card, the "The ERP asks the shop" card (moved from Keys & connections) and
+  the owner's "start a new link". Guide: [`docs/admin-guide/pages/settings/erp-link.md`](docs/admin-guide/pages/settings/erp-link.md).
+- **Keys per store (CN-029):** the API key, webhook secret and signing secret go to the vault under the store id only,
+  through Keys & connections' API with `?storeId=` (`apps/web/src/lib/integrations.ts`); a call with store A's key can
+  never read or write store B (tests in `apps/web/src/lib/erp-link-admin.db.test.ts`). The per-store signing secret
+  signs that store's v6 calls.
+- **The switch-over** (`packages/inventory/src/erp-switchover.ts`): the switch date and the moved old orders from the
+  ERP (`GET /switch-over`); a dry run first (`vault.write`; changes nothing but its report; counts for
+  `erp.switchOver.dryRunMaxHours`, 24); then the owner alone with his books PIN and the switch date typed back: the
+  opening balance, the one transfer and the moved orders booked once at the buying price, the OUT orders billed and in
+  the pipeline, the month before backfilled from `GET /cost-of-goods`, customer payments, returns and ad spend never
+  sent again, `erp.model` v5 → v6 with the owner's OK, the four `returns.legacy.*` switches OFF for that store (never
+  deleted; the QC page says the ERP checks each piece now), a v5 order still waiting re-sent as v6 or kept for a person
+  (`erp.switchOver.queuedV5Orders`), a wrong opening balance put right by a new link epoch, a handover revokes the
+  store's three keys (kept, never deleted). No store is switched by the build.
+- **API:** `GET/POST /api/admin/erp-link?storeId=` (`dryRun`, `switch`, `newLink`, `sendHeld`).
+- **Settings** (v70): `erp.switchOver.dryRunMaxHours` 24, `erp.switchOver.queuedV5Orders` resend (per store),
+  `erp.link.listShown` 20.
+- Tests: `packages/inventory/test/erp-switchover.db.test.ts`, `packages/orders/src/erp-switch-resend.db.test.ts`,
+  `apps/web/src/lib/erp-link-admin.db.test.ts`.
+
+**Built (PR 621): the ERP v6 acceptance suite, a go-live gate** (CN-028; settings v70 `erp.acceptance.*`).
+
+> নতুন (PR 621): ERP-এর সব নিয়ম আর খাতার মহড়া প্রতিটা রিলিজের আগে আর প্রতি রাতে পরীক্ষা হয়; ডেমো চাবি না থাকলে অপেক্ষা করে, কিছু আটকায় না।
+
+- **The checks:** `runErpAcceptance` (`packages/adapters/src/erp/acceptance.ts`), 21 checks of
+  `docs/erp/site-changes-v6.md` §4 (contract, catalogue, orders, deliveries, return lists, checks, Return stock,
+  exchanges, summaries, fixed costs, account, the retired v5 calls, switch-over, cost of goods, signed site calls). On the
+  practice ERP in CI with the ERP's own actions driven (`packages/adapters/test/erp-acceptance.test.ts`).
+- **The books drills** on PostgreSQL (`packages/inventory/test/erp-acceptance-books.db.test.ts`): the switch day, the
+  same webhook twice, a lost webhook, a reversal before its original, a wrong amount, hold → checkout pause → resume, a
+  two-day outage, a closed day that moves, an exchange never returned, a month that must not close, the tie formula for
+  every day, week, month, year and the whole life, store isolation; and the 72-hour exchange rule
+  (`packages/orders/src/erp-acceptance-exchange.db.test.ts`).
+- **Against the demo ERP:** every night (`.github/workflows/erp-acceptance.yml`) and before every release
+  (`deploy.sh`, ~~before the migration~~ after the migration and before the new colour starts: a failed check stops the
+  release before the switch) on the runner
+  (`infra/deploy/erp-acceptance.sh`, `packages/jobs/src/erp-acceptance-cli.ts`). Read-only unless
+  `erp.acceptance.demoWrites`; "waiting for the demo key" (nothing called, nothing failed) until the owner types it on the
+  ERP link page's demo-key card (vault, installation-wide); an unreachable demo ERP or a refused key is reported, not
+  failed; on the demo ERP a time-out, network error, 5xx, 429 or 404 in any check is SKIP (only a wrong figure or a
+  broken answer fails), a run past the time limit is "not finished" and one that cannot read the database is "not run"
+  (both reported, never a stop). Report: `docs/reports/erp-acceptance/latest/`.
+- **Settings** (v70): `erp.acceptance.demoBaseUrl` https://demo.extasbd.com, `.timeoutSeconds` 20, `.demoWrites` off.
 
 ### S26 · Installation, documentation & distribution — Parked
 
@@ -1818,6 +1872,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #58 | PR [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 30 Oct | Each store's own ERP link page (its own keys in the vault, what waits, what is owed) and the switch-over to the ERP model (owner only, with the books PIN, a fresh dry run and the ERP's date typed back; the old return paths become switches that are off, never deleted); the ERP v6 acceptance suite (books drills, the 72-hour exchange rule, store isolation) on the practice ERP in CI, nightly on the demo ERP, and in every deploy after the migration and before the new colour (a down demo ERP, no key or a database it cannot read is reported and never stops a release). |
 | #57 | PR [609](docs/stages/S01.md#pr-609), [617](docs/stages/S16.md#pr-617), [618](docs/stages/S16.md#pr-618), [620](docs/stages/S18.md#pr-620) (+ PR [505](docs/stages/S14.md#pr-505) test fix) | 30 Oct | The daily summary and fixed costs for the ERP v6 (only for a store switched to v6): each shop day is summed from the shop's own records and sent to the ERP once, kept exactly to the paisa for the books match; Money → Costs takes the month's fixed costs (empty until the owner fills them, capped by settings) and extra cost lines, corrected only by a reversing line with a reason; a Books status card on the Daily summary page. Import from the ERP by style code (v6 stores only): a preview first, every SKU of a grade in one go or nothing, an existing product without a style code adopted, archived or switched-off variants left as they are; the buying price kept for the owner's eyes and an optional selling-price floor (off until the owner sets a margin). Signed calls from the ERP to the shop (top products, customers), off per store until switched on; unsigned or stale calls are refused before anything is read, and only these two exact paths pass the preview password. |
 | #56 | PR [612](docs/stages/S08.md#pr-612), [613](docs/stages/S08.md#pr-613), [614](docs/stages/S08.md#pr-614), [615](docs/stages/S16.md#pr-615), [616](docs/stages/S16.md#pr-616) (+ PR [610](docs/stages/S05.md#pr-610), [611](docs/stages/S08.md#pr-611) fixes) | 30 Oct | Returns, exchanges and the books on the ERP v6 (only for a store switched to v6; today every store stays on v5): the courier's return lists go to the ERP from a hand-back desk, a new Returns section shows where every returned parcel is, and exchanges go through the ERP only within 72 hours of the courier's delivered (the old shop QC, restock and write-off paths stay on as switches until the switch-over). Retail's own ERP account ledger, append-only and matched against the ERP with zero tolerance; the nightly match (checks A–F), day, week and month closes, and fixing a difference only by a reversal plus a new entry with the owner's books PIN and a reason; "paid to ERP" only records a payment already made. No refund after delivery. The ERP's totals and shop prices are now read exactly, never rounded. |
 | #55 | PR [610](docs/stages/S05.md#pr-610), [611](docs/stages/S08.md#pr-611) | 30 Oct | Orders to the ERP v6 (only for a store switched to v6; today every store stays on v5): one line per piece in whole taka, refusals held and asked again, checkout paused while the ERP account is on hold, short lines decided by a person; the shipment goes when the courier picks the parcel up, and every delivery result goes to the ERP once. |
