@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৭৫টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৭৯টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,14 +36,14 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৭৫টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৭৯টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 254/305** · 51 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 3/22** (wave 5) · **S16 2/22** (wave 6) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **275/615** active PRs |
+| Launch | **Launch 257/305** · 48 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 3/22** (wave 5) · **S16 4/22** (wave 6) · **S18 1/14** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **279/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 11:07 (Dhaka) · commit `fbfa400` (#55, PR [610](docs/stages/S05.md#pr-610), 611 orders, shipments and delivery results to the ERP v6, behind the switch) · **success**, smoke test 194 pages OK |
+| Last deploy | 30 Oct 2026, 14:53 (Dhaka) · commit `b16315e` (#56, PR [612–614](docs/stages/S08.md) returns and exchange, 615, 616 the books, behind the switch) · **success**, smoke test 212 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
@@ -62,7 +62,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 |---|---|:-:|---|:-:|---|
 | [S0A](docs/stages/S0A.md) | [Server foundation](docs/stages/S0A.md) | [0](docs/stages/README.md#wave-0) | [1–10](docs/stages/S0A.md), [601](docs/stages/S0A.md#pr-601), [604](docs/stages/S0A.md#pr-604) | 12 / 12 | **Done** (all live on the server) |
 | [S00](docs/stages/S00.md) | [Foundation — repo, CI, schema, auth, settings framework](docs/stages/S00.md) | [1](docs/stages/README.md#wave-1) | [11–18](docs/stages/S00.md), [491–496](docs/stages/S00.md), [500](docs/stages/S00.md#pr-500), [508–510](docs/stages/S00.md), [603](docs/stages/S00.md#pr-603) | 19 / 19 | **Done** |
-| [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590), [609](docs/stages/S01.md#pr-609) | 22 / 23 | In progress |
+| [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590), [609](docs/stages/S01.md#pr-609) | 23 / 23 | **Done** |
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 45 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 41 / 41 | **Done** |
@@ -77,9 +77,9 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
 | [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 7 / 24 | In progress |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
-| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 2 / 22 | In progress |
+| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 4 / 22 | In progress |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
-| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 0 / 14 | Not started |
+| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 1 / 14 | In progress |
 | [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 0 / 17 | Not started |
 | [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
 | [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | In progress (PR 594 readme-guard) |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **275 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **279 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -566,7 +566,7 @@ redesigns (follow-ups 380–388), ~~the guide opening where `admin.guideOpens` s
 control takes a 44 px tap (the drawing stays the demo's) and the faint grey is darkened to AA. Screenshots:
 [`docs/qa/screenshots/pr-12-look/`](docs/qa/screenshots/pr-12-look).
 
-### S01 · Catalog, media & images — In progress (22/23)
+### S01 · Catalog, media & images — Done (23/23)
 
 > **বাংলায়:** পণ্য রাখা, সাজানো আর ছবির পুরো ব্যবস্থা: রং-সাইজ-SKU, ক্যাটাগরি, কাপড়, নাম-লিংক, ছবি (৫ সাইজ), চালুর আগে
 > যাচাই, সাইজ চার্ট, কালেকশন, CSV, লিংক থেকে পণ্য, "আবার এলে জানাবেন", অডিট।
@@ -654,6 +654,31 @@ Media API: `/api/admin/media` (search, upload), `/api/admin/media/[id]`, `/orpha
 Permissions: `media.read/upload/manage`, `catalogue.read/write/prices/publish/import/export/interest`. Settings:
 `catalogue.*`, `naming.*`, `media.*`. Tests: package tests in `packages/catalogue/test` and `packages/media/test`
 (pure + PostgreSQL), API tests in `apps/web/src/lib/*.db.test.ts`, UI model tests beside the components.
+
+**Built (PR 609): import from the ERP by style code, the buying price and the selling-price floor** (CN-028, CN-029
+Phase 1; only for a store on ERP contract v6, behind `erp.model`; no migration).
+
+> নতুন (PR 609): ERP-র স্টাইল কোড লিখলে সব SKU খসড়ায় চলে আসে; ERP থেকে কেনা দাম রাখা হয়, বদলালে জানায়; মালিক সবচেয়ে কম মার্জিন দিলে তার নিচে দাম, কম্বো বা ছাড় যায় না (খালি = বন্ধ)।
+
+- **Screen:** `/admin/products/erp-import` (Products › more ▾ › Import from ERP; `catalogue.import`; guide
+  [`docs/admin-guide/pages/products/erp-import.md`](docs/admin-guide/pages/products/erp-import.md)). Type a style code →
+  preview of every SKU (colour, size, barcode, grade, buying price) read with the store's own ERP key → import as drafts
+  grouped into one product. A missing colour or nothing new is refused; on the practice ERP it previews only; a store on
+  contract v5 is refused. At switch-over a product made before the ERP that holds the style's SKUs is adopted (it gets
+  the style code); SKUs in other products or rows the shop cannot take are listed and stop the import before anything is
+  written; the whole import is one transaction. A re-import never turns a variant back on.
+- **B grade** is its own listing when `catalogue.bGrade.listing` is on (off), named with `catalogue.bGrade.nameSuffix`
+  (registry v65, `registry-bhandari-p1.ts`).
+- **Buying price** ("bought from ERP at", `ProductVariant.shopPriceMinor`, never shown to customers) from the import,
+  `variant.changed` and `shop-price.changed`; a change is listed under "Buying prices that changed" until marked seen
+  (`catalogue.shopPrice.changesShown` at once). A late, older price never replaces a newer one. The shop never changes a
+  selling price by itself.
+- **Floor** (`catalogue.floor.minMarginPercent`, the owner's own number, empty = off): a variant price or a combo set
+  price below buying price + margin is refused (`BELOW_FLOOR`); the CSV preview shows it as an issue; in the bag, at
+  checkout and on the product page every discount, coupon and set tier stops at the floor (`Quote.floorHeld`).
+- API: `GET/POST /api/admin/inventory/erp/style`, `GET /api/admin/inventory/shop-prices`, `POST …/shop-prices/seen`.
+  Tests: `packages/inventory/test/erp-import.db.test.ts` (store A and B never touch each other), rules, combos and
+  catalogue floor tests.
 
 **Left for later stages:** the image worker on BullMQ (inline until then), zoom viewer and storefront pages (S02),
 storefront size chart / collection pages and "was" price display (S02), AI spec-sheet reading (AI stage), sending
@@ -1564,7 +1589,7 @@ Planned — see register PRs 437–443: [Blueprint Appendix A](docs/BLUEPRINT.md
 
 Planned — see register PRs 304–341, 506, 577–585: [S15](docs/MASTER-REGISTER.md#s15--ai-360-control-room--pr-304341).
 
-### S16 · Finance, costs & reports — In progress (2/22)
+### S16 · Finance, costs & reports — In progress (4/22)
 
 Planned — see register PRs 342–355, 504, 536–537, 568 and, from CN-028, 615–618 (the ERP account ledger, the books match engine, the daily summary, fixed costs; design in [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
@@ -1652,6 +1677,49 @@ registry v68 `registry-books.ts`).
   closing balance, the payment request key, the prior-period fix), `packages/inventory/test/books-money.test.ts`,
   `apps/web/src/lib/admin-books/money.test.ts`, `packages/auth/test/pin.test.ts`, `packages/settings/test/registry-books.test.ts`.
 
+> **বাংলায়:** নতুন (PR 617, 618): দোকান প্রতিদিন নিজের রেকর্ড থেকে দিনের হিসাব বানিয়ে ERP-তে পাঠায়, আর মালিক মাসের স্থির খরচ আর
+> প্রতিদিনের খরচ লেখেন। টাকা › দৈনিক হিসাব পাতায় হিসাব মিলছে কি না, টাকা › খরচ পাতায় খরচ। কিছুই টাকা নড়ায় না।
+
+**Built (PR 617, 618; CN-029 Phase 1, 30 Oct; not deployed yet).** Design: [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)
+§3.3–§5, contract [`docs/erp/site-changes-v6.md`](docs/erp/site-changes-v6.md) §2.6, §2.11. Migration `0056_books_summary_minor`
+(additive), settings registry v69 (`registry-books-summary.ts`).
+
+- **Daily summary to the ERP (PR 617):** only for a store on contract v6 (`erp.model`) with its own ERP link; a v5 store
+  builds and sends nothing. Each shop day is built from the shop's own records on the delivery-day basis, every line
+  from its one source (`SUMMARY_LINE_SOURCES`): orders placed, delivered pieces at the customer price on the delivered day
+  (`@extas/metrics` `retailDayFigures`), delivery charges, deliveries, customers; goods and return losses from the
+  return-pipeline moves and the account's exchange entries; cost lines from cost entries (a reversed entry and its reversal
+  are not a figure). A line with no figure yet goes in `incomplete`, never as 0. Whole taka on the wire; the exact lines in
+  minor units are kept with each version (`ErpDailySummary.minorLines`), and PR 616's tie reads those (`tieLinesOf`), so a
+  piece at 450.50 ties to the paisa. Every built day is an append-only version: sent at `erp.summary.sendAt`, tried again
+  after `erp.summary.retry.minutes` (1, 5, 15, 60, then hourly) until accepted; a 4xx refusal is not tried again by itself
+  (a new key round when the ERP asks for the day again); a late fact makes a new version within `books.resend.days` (never
+  in a closed month, checked under the link's lock); `summary.missing` is answered at once; the hourly check
+  (`erp.summary.checkMinutes`) compares the ERP's stored copy over `erp.summary.gapDays`. One send at a time per version (an
+  advisory lock), so overlapping ticks never log two tries. Every send and reply is kept (`ErpBooksSend`). Jobs
+  `inventory.books.summaryTick` and `inventory.books.summaryCheck`; guard path `books.send`.
+- **Books status card (PR 617):** **Money → Daily summary** (`/admin/money/books/daily`, `books.read`): PR 616's
+  `booksStatus` (the six checks A–F, days matched, what Retail owes the ERP on both sides, waiting for the owner's check,
+  exchanges at risk, months closed, the closes chain), "not run yet" until the nightly match runs; a failure or another
+  shape never takes the page down. Beside it "Needs you now" (refused, missing and incomplete days, a month without fixed
+  costs, old unchecked returns, open differences, a broken tie) and the summaries sent with how each was taken.
+- **Fixed costs and the extra cost lines (PR 618):** **Money → Costs** (`/admin/money/costs`; seeing `books.read`,
+  writing `fixedcosts.write`). A month's salary, rent, utilities and other ship empty (owner data); each change is an
+  append-only version (`ErpFixedCostMonth`), sent by `PUT /fixed-costs/{month}` from the same tick and checked against
+  `GET /fixed-costs`; shown by day with the ERP's rule (`erp.fixedCosts.spread`: exact to the paisa, the remainder on the
+  last day); never in a day's `costs.other`. Daily cost lines (packaging, accessories, payment and COD fees, courier, ads,
+  other) for today or an open day, each with the form's request key (a double tap writes once); a wrong one is reversed by
+  a negative entry with a reason; the day's summary is built again at once. Caps `books.costs.maxLineMinor` (৳10 crore)
+  and `books.costs.maxMonthMinor` (৳40 crore) refuse a typing slip; a stored month that cannot be added up shows as
+  unreadable. "More options": the lines this shop never has (`erp.summary.noCostLines`).
+- **API:** `GET /api/admin/costs`, `PUT /api/admin/costs/fixed-costs`, `POST /api/admin/costs/cost-entries`,
+  `POST /api/admin/costs/cost-entries/:id/reverse`, `PUT /api/admin/costs/no-cost-lines`.
+- **Tests:** `packages/inventory/test/books-rules.test.ts`, `books.db.test.ts` (13, PostgreSQL: versions, retries,
+  refusals, two ticks at once, `summary.missing`, the stored-copy check, the tie to the paisa, closed months, store A never
+  touching store B, v5 untouched) and `books-costs.db.test.ts` (11), `packages/settings/test/registry-books-summary.test.ts`,
+  `apps/web/src/lib/costs-api.test.ts`, `books-status-view.test.ts`, `messages-unique-keys.test.ts`.
+- **Guides:** [Daily summary](docs/admin-guide/pages/money/books-daily.md), [Costs](docs/admin-guide/pages/money/costs.md).
+
 ### S21 · Site Health & Audit — In progress (0/14)
 
 Started: `readme-guard` in CI (scope on PR 594, CN-011) fails a pull request whose README PR log, stage counts or
@@ -1694,9 +1762,36 @@ Planned — see register PRs 481–490: [Blueprint Appendix A](docs/BLUEPRINT.md
 Planned — see register PRs 356–377, 511–512: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604) and
 [A4](docs/BLUEPRINT.md#a4-multi-store--three-stores-one-server-one-codebase).
 
-### S18 · Compliance, security, manual — Not started
+### S18 · Compliance, security, manual — In progress (1/14)
 
-Planned — see register PRs 378–390 and, from CN-028, 620 (signed ERP-to-shop calls): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+Planned — see register PRs 378–390: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+
+**Built (PR 620, After launch): signed calls from the ERP to the shop** (CN-028, docs/erp/site-changes-v6.md §2.7; no
+migration).
+
+> নতুন (PR 620): ERP-তে "Top products" বা "Customers" চাপলে ERP তখনই দোকানের কাছে তালিকা চায়, দোকানের নিজের গোপন কোডে সই করা থাকলে তবেই উত্তর; দোকান নিজে কিছু পাঠায় না; চাবি ও সংযোগ পাতায় সুইচ (বন্ধ) আর ঠিকানা।
+
+- **Routes:** `GET /erp-api/top-products?from&to&limit` (Sales by SKU, `@extas/metrics` `salesBySku`: pieces, net
+  sales, profit over the cost snapshot) and `GET /erp-api/customers?page&pageSize&search` (`@extas/customers`
+  `erpCustomerPage`: name, address, phone, total spent = Sales, last purchase, orders, first order). Live, never pushed.
+- **Signing:** `X-Extas-Signature: sha256=<hex>` over `METHOD\nPATH?QUERY\nTIMESTAMP`, constant-time, refused beyond
+  `erp.siteApi.maxAgeSeconds` (300). The store is the one whose own secret verifies (CN-029 §16): the ERP connection's
+  new optional third key `signingSecret`, else its webhook secret; v6 stores only; a secret two stores share is refused.
+  Today the mother store's key and card (Keys & connections); each store's own with PR 619. The query is signed as sent,
+  percent-encoded.
+- **Screen:** the "The ERP asks the shop" card on `/admin/integrations` — the base URL for the ERP, the switch
+  `erp.siteApi.enabled` (per store, off; `vault.write`), the latest verified calls and the refused calls summed. Guide:
+  [`docs/admin-guide/integrations.md`](docs/admin-guide/integrations.md).
+- **Settings** (registry v65): `erp.siteApi.enabled`, `.maxAgeSeconds` 300, `.topProductsLimit` 20,
+  `.customersPageSize` 50, `.maxRows` 100, `.maxRangeDays` 366, `.callsShown` 20, `.refusedPerMinute` 60,
+  `.refusedLogMinutes` 60, `.refusedShownDays` 7, `.searchMaxChars` 100.
+- Every verified call is logged as a SecurityEvent `erp.site-call` (never a customer, number or search text). A refused
+  call writes nothing of its own: refusals are counted and kept as one summary `erp.site-call.refused` per
+  `.refusedLogMinutes`; a call refused from the request alone reads nothing at all; past `.refusedPerMinute` refused calls
+  a minute, unverified calls get 429 without a store lookup. The preview gate lets only these two GET paths through,
+  matched on the raw request target case for case (Caddy gate v5; CI runs the live gate checks on a pinned Caddy
+  2.10.2). Tests: `packages/adapters/test/erp-site-calls.test.ts`,
+  `packages/inventory/test/erp-site-calls.db.test.ts`, `apps/web/src/lib/erp-site-api.db.test.ts`.
 
 ### S19 · Deploy, backup, go-live — Not started
 
@@ -1723,6 +1818,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #57 | PR [609](docs/stages/S01.md#pr-609), [617](docs/stages/S16.md#pr-617), [618](docs/stages/S16.md#pr-618), [620](docs/stages/S18.md#pr-620) (+ PR [505](docs/stages/S14.md#pr-505) test fix) | 30 Oct | The daily summary and fixed costs for the ERP v6 (only for a store switched to v6): each shop day is summed from the shop's own records and sent to the ERP once, kept exactly to the paisa for the books match; Money → Costs takes the month's fixed costs (empty until the owner fills them, capped by settings) and extra cost lines, corrected only by a reversing line with a reason; a Books status card on the Daily summary page. Import from the ERP by style code (v6 stores only): a preview first, every SKU of a grade in one go or nothing, an existing product without a style code adopted, archived or switched-off variants left as they are; the buying price kept for the owner's eyes and an optional selling-price floor (off until the owner sets a margin). Signed calls from the ERP to the shop (top products, customers), off per store until switched on; unsigned or stale calls are refused before anything is read, and only these two exact paths pass the preview password. |
 | #56 | PR [612](docs/stages/S08.md#pr-612), [613](docs/stages/S08.md#pr-613), [614](docs/stages/S08.md#pr-614), [615](docs/stages/S16.md#pr-615), [616](docs/stages/S16.md#pr-616) (+ PR [610](docs/stages/S05.md#pr-610), [611](docs/stages/S08.md#pr-611) fixes) | 30 Oct | Returns, exchanges and the books on the ERP v6 (only for a store switched to v6; today every store stays on v5): the courier's return lists go to the ERP from a hand-back desk, a new Returns section shows where every returned parcel is, and exchanges go through the ERP only within 72 hours of the courier's delivered (the old shop QC, restock and write-off paths stay on as switches until the switch-over). Retail's own ERP account ledger, append-only and matched against the ERP with zero tolerance; the nightly match (checks A–F), day, week and month closes, and fixing a difference only by a reversal plus a new entry with the owner's books PIN and a reason; "paid to ERP" only records a payment already made. No refund after delivery. The ERP's totals and shop prices are now read exactly, never rounded. |
 | #55 | PR [610](docs/stages/S05.md#pr-610), [611](docs/stages/S08.md#pr-611) | 30 Oct | Orders to the ERP v6 (only for a store switched to v6; today every store stays on v5): one line per piece in whole taka, refusals held and asked again, checkout paused while the ERP account is on hold, short lines decided by a person; the shipment goes when the courier picks the parcel up, and every delivery result goes to the ERP once. |
 | #54 | PR [407](docs/stages/S20.md#pr-407), [425](docs/stages/S22.md#pr-425) | 30 Oct | The customer invoice: issued once per order, kept, revised when the order is edited, printed on A4 or a roll or saved as a picture (the shop's legal name, address and BIN come from settings, empty until filled). The support core: one inbox of conversations with replies, internal notes, files, assignment and a who-did-what log; channels plug in later (PR [426](docs/stages/S22.md#pr-426)), so replies wait as "not sent" until one is connected. |
