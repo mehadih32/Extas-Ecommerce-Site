@@ -25,4 +25,15 @@ describe('books settings (v68)', () => {
     expect(booksSettings['books.account.lookbackDays'].schema.safeParse(0).success).toBe(false);
     expect(booksSettings['books.ledger.pageSize'].schema.safeParse(500).success).toBe(false);
   });
+
+  it('PR 616: the nightly close is looked for every 15 minutes, a week of closed days is checked again, a reason has 10 letters, the PIN 6 digits and 5 tries, locked 15 minutes', () => {
+    const d = (k: keyof typeof booksSettings) => booksSettings[k].default;
+    expect([d('books.close.checkMinutes'), d('books.recheck.days'), d('books.adjust.reasonMinLength'), d('books.pin.minLength'), d('books.pin.maxAttempts'), d('books.pin.lockMinutes')]).toEqual([15, 7, 10, 6, 5, 15]);
+    expect(booksSettings['books.pin.minLength'].schema.safeParse(3).success).toBe(false);
+  });
+
+  it('qa-gate: a books run still marked running after an hour no longer holds the next one back', () => {
+    expect(booksSettings['books.run.staleMinutes'].default).toBe(60);
+    expect(booksSettings['books.run.staleMinutes'].schema.safeParse(1).success).toBe(false);
+  });
 });

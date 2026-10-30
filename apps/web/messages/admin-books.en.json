@@ -1,10 +1,16 @@
 {
   "bk": {
     "title": {
-      "account": "ERP account"
+      "account": "ERP account",
+      "match": "Books match",
+      "differences": "Differences",
+      "closes": "Closes"
     },
     "sub": {
-      "account": "What Retail owes the ERP, from the shop's own ledger. An entry is never changed or deleted: a mistake is put right by a new entry."
+      "account": "What Retail owes the ERP, from the shop's own ledger. An entry is never changed or deleted: a mistake is put right by a new entry.",
+      "match": "Every night the shop's books are checked against the ERP's, day by day, with zero tolerance. One paisa off is a difference.",
+      "differences": "What did not match, and how it is put right. A number is never edited: a mistake is undone by a reversing entry and a new one.",
+      "closes": "Days close by themselves at night. A month is closed with the owner's PIN once every day matched."
     },
     "v5": "The books start when this store switches to ERP contract v6. Until then nothing is written here.",
     "noLink": "This store has no ERP connection of its own yet. The books open with its first ERP pull.",
@@ -143,7 +149,203 @@
       "CONFLICT": "This cannot be done to this record.",
       "FORBIDDEN": "You do not have permission for this.",
       "network": "No connection. Try again.",
-      "default": "That did not work. Try again."
+      "default": "That did not work. Try again.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "WRONG_PIN": "The PIN is not right.",
+      "PIN_LOCKED": "Too many wrong PINs. Wait a while and try again.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet (Closes page).",
+      "WEAK_PIN": "That PIN is too easy. Use digits, not one digit repeated or a straight run.",
+      "WRONG_PASSWORD": "The password is not right.",
+      "NOT_ADJUSTABLE": "This difference is found again from the books; put the row that is wrong right.",
+      "NOT_MATCHED": "Not every day matched: {fields}. Write a reason to close anyway.",
+      "FIXED_COSTS_MISSING": "The month's fixed costs are not in. Write a reason to close anyway.",
+      "MONTH_NOT_ENDED": "This has not ended yet.",
+      "NOTHING_TO_CLOSE": "There are no books in this period.",
+      "BUSY": "A run of the books is going on. Try again in a few minutes."
+    },
+    "result": {
+      "MATCHED": "Matched",
+      "PARTIAL": "Matched (partly checked)",
+      "PENDING": "Waiting for the ERP",
+      "MISMATCH": "Does not match",
+      "none": "Not closed yet"
+    },
+    "check": {
+      "ACCOUNT": "A · Account rows",
+      "TIES": "B · The tie",
+      "RETURNS": "C · Returns",
+      "SUMMARY": "D · Daily summary",
+      "FIXED_COSTS": "E · Fixed costs",
+      "ORDERS": "F · Billed orders"
+    },
+    "class": {
+      "MISSING_EVENT": "The ERP has a row we do not",
+      "UNKNOWN_ROW": "We have a row the ERP does not",
+      "AMOUNT_DIFF": "Amounts differ",
+      "UNMATCHED_PAYMENT": "Payment without a partner",
+      "TIE_BROKEN": "The tie does not add up",
+      "STALE_SUMMARY": "Summary or costs differ",
+      "HISTORY_CHANGED": "A closed day changed"
+    },
+    "dstatus": {
+      "PENDING": "Waiting",
+      "MISMATCH": "Open",
+      "FIXED": "Put right",
+      "OVERRIDDEN": "Left in a closed month"
+    },
+    "match": {
+      "kpi": {
+        "days": "Days matched",
+        "daysSub": "{n} of {total} days",
+        "open": "Open differences",
+        "months": "Months closed",
+        "last": "Last check",
+        "never": "Not run yet"
+      },
+      "chainOk": "Closes intact · {n} days",
+      "chainBroken": "A close was changed outside the shop. Tell the developer at once.",
+      "partly": "Partly checked (the ERP does not give this yet): {checks}",
+      "run": "Check now",
+      "runBusy": "Checking …",
+      "runSend": "Check the books now",
+      "runWarn": "This reads the ERP and checks every day not closed yet. Nothing is changed in the ERP.",
+      "runDone": "Checked.",
+      "days": "Days",
+      "col": {
+        "date": "Day",
+        "result": "Result",
+        "closing": "We owe at day end",
+        "erp": "The ERP says",
+        "tie": "Tie left over",
+        "open": "Open",
+        "version": "Version"
+      },
+      "explain": "Explain",
+      "back": "All days",
+      "none": "No day is closed yet",
+      "noneSub": "The first close runs tonight after the close time."
+    },
+    "explain": {
+      "title": "The day {date}",
+      "versions": "Versions of this day: {n}",
+      "opening": "At day start",
+      "closing": "At day end",
+      "erp": "The ERP at day end",
+      "tie": "The tie",
+      "tieParts": {
+        "balanceStartMinor": "Balance at start",
+        "goodsMinor": "+ Goods delivered",
+        "returnLossesMinor": "+ Return losses",
+        "pipelineStartMinor": "− Pipeline at start",
+        "pipelineEndMinor": "+ Pipeline at end",
+        "switchTransferMinor": "+ Switch transfer",
+        "paymentsMinor": "− Payments",
+        "adjustmentsMinor": "+ Our corrections",
+        "balanceEndMinor": "= Balance at end",
+        "remainderMinor": "Left over"
+      },
+      "groups": "Row by row",
+      "col": {
+        "group": "Row",
+        "check": "Check",
+        "ours": "Our books",
+        "erp": "The ERP"
+      },
+      "entries": "Our entries",
+      "erpRows": "The ERP's rows",
+      "checks": "The six checks"
+    },
+    "diff": {
+      "filter": {
+        "open": "Open",
+        "all": "All",
+        "FIXED": "Put right",
+        "OVERRIDDEN": "Left in a closed month"
+      },
+      "col": {
+        "date": "Day",
+        "what": "What",
+        "amount": "Difference",
+        "ref": "Order / reference",
+        "status": "State"
+      },
+      "none": "Nothing to put right",
+      "noneSub": "Every check of every closed day matched.",
+      "ours": "Our books: {amount}",
+      "erp": "The ERP: {amount}",
+      "firstSeen": "Seen first {at}",
+      "adjust": "Put right",
+      "adjustBusy": "Saving …",
+      "adjustSend": "Reverse and add the right entry",
+      "adjustWarn": "This writes a reversing entry for our row and a new entry with the ERP's amount. Nothing is edited or deleted. It needs the owner's PIN.",
+      "reason": "Why (it stays in the history)",
+      "event": "The ERP's matching row or event",
+      "pin": "Owner's PIN",
+      "adjustDone": "Put right. The day is checked again tonight (or press Check now).",
+      "note": "Add a note",
+      "noteBusy": "Saving …",
+      "noteSend": "Save the note",
+      "noteText": "Note",
+      "noteDone": "Saved.",
+      "how": {
+        "TIE_BROKEN": "Found again from the entries: put the row that is wrong right, and the tie follows.",
+        "STALE_SUMMARY": "Send the summary or the fixed costs again (Hisabi).",
+        "UNMATCHED_PAYMENT": "Record the payment, or reverse the wrong record, on the ERP account page.",
+        "HISTORY_CHANGED": "A matched day's own money moved. Check it; it settles by itself when the day matches again, otherwise the month closes only with the owner's decision.",
+        "RETURNS": "Wait for the ERP check, or find the piece.",
+        "WAITING_EVENT": "The ERP's event for this row has not reached the shop yet. The pull brings it and the next match settles this; nothing is typed by hand."
+      },
+      "billedAtMissing": "The shipment's answer had no bill date (never guessed). It is filled from the ERP's order; or \"Put right\" books the bill from the ERP's row, once."
+    },
+    "close": {
+      "pinCard": "Owner's books PIN",
+      "pinSet": "The PIN is set.",
+      "pinNotSet": "No PIN yet. Corrections and closes need it.",
+      "pinSetBtn": "Set or change the PIN",
+      "pinBusy": "Saving …",
+      "pinSend": "Save the PIN",
+      "pinPassword": "Your login password",
+      "pinNew": "New PIN (digits only)",
+      "pinDone": "The PIN is saved. It is never shown again.",
+      "pinWarn": "Only the owner. Digits only; not one digit repeated, not 123456.",
+      "months": "Months",
+      "col": {
+        "month": "Month",
+        "state": "State",
+        "days": "Days matched",
+        "versions": "Versions",
+        "action": "Actions"
+      },
+      "state": {
+        "open": "Running",
+        "ended": "Ready to close",
+        "closed": "Closed",
+        "override": "Closed with the owner's decision",
+        "reopened": "Opened again"
+      },
+      "close": "Close the month",
+      "closeBusy": "Closing …",
+      "closeSend": "Close the month",
+      "closeWarn": "Closes only if every day matched and the fixed costs are in. Otherwise write a reason: the month is then closed with your decision, and it says so on every report.",
+      "overrideReason": "Reason, only to close with differences",
+      "closeDone": "The month is closed.",
+      "reopen": "Open again",
+      "reopenBusy": "Opening …",
+      "reopenSend": "Open the month again",
+      "reopenWarn": "A new version is written; the old close stays in the history.",
+      "reopenReason": "Why",
+      "reopenDone": "The month is open again.",
+      "year": "Financial year",
+      "yearOf": "Year starting {year}",
+      "yearSend": "Sign off the year",
+      "yearBusy": "Signing off …",
+      "yearWarn": "Only once the year has ended and every month of it is closed.",
+      "yearDone": "The year is signed off.",
+      "yearNum": "Year it starts in",
+      "weeks": "Weeks (built from the days)",
+      "lifetime": "Since the switch: ours {ours}, the ERP {erp}",
+      "none": "No month yet",
+      "noneSub": "The first month appears with the first day of the books."
     }
   }
 }

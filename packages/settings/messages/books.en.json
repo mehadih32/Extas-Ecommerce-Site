@@ -17,6 +17,44 @@
         "label": "Rows per page in Money → Books",
         "help": "How many ledger entries, payments or pieces one page shows."
       }
+    },
+    "close": {
+      "checkMinutes": {
+        "label": "Look for the nightly close every (minutes)",
+        "help": "How often the shop looks whether the nightly close time has passed. The close itself runs once a night."
+      }
+    },
+    "recheck": {
+      "days": {
+        "label": "Check closed days again (days back)",
+        "help": "Every run also checks this many closed days before it. A day whose own money moved after it matched is shown as a difference. A day whose ledger changed since its close (a correction, fixed costs or a summary entered later) is always checked again."
+      }
+    },
+    "adjust": {
+      "reasonMinLength": {
+        "label": "Shortest reason for a correction (letters)",
+        "help": "A correction of the books, a month closed with differences or a month opened again needs a reason at least this long. It stays in the history."
+      }
+    },
+    "pin": {
+      "minLength": {
+        "label": "Owner's PIN: shortest length (digits)",
+        "help": "The PIN asked for every correction and close. Digits only; one digit repeated or a straight run (123456) is refused."
+      },
+      "maxAttempts": {
+        "label": "Wrong PIN tries before a lock",
+        "help": "After this many wrong tries in a row by one person, the PIN is locked for that person for a while, even the right PIN."
+      },
+      "lockMinutes": {
+        "label": "PIN lock (minutes)",
+        "help": "How long the PIN stays locked after too many wrong tries."
+      }
+    },
+    "run": {
+      "staleMinutes": {
+        "label": "A books run counts as stopped after (minutes)",
+        "help": "Only one run of the books at a time. A run still shown as running after this long is treated as stopped, so the next one can start."
+      }
     }
   }
 }

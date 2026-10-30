@@ -9,8 +9,22 @@
 //   GET   /api/admin/books/entries?page=&kind=&from=&to=&q=   the ledger, newest first, a page at a time (erp.account.read)
 //   GET   /api/admin/books/payments                    the "paid to ERP" records and their match (erp.account.read)
 //   GET   /api/admin/books/pipeline?page=&state=&q=    the pieces in the pipeline (erp.account.read)
-//   POST  /api/admin/books/payments                    {paidOn, amountMinor, method?, reference?, note?} (erp.payments.record)
+//   POST  /api/admin/books/payments                    {paidOn, amountMinor, method?, reference?, note?} (erp.payments.record);
+//                                                      an `Idempotency-Key` header makes a repeat answer the same record
 //   POST  /api/admin/books/payments/:id/reverse        {reason} a reversing record, never an edit (erp.payments.record)
+//   GET   /api/admin/books/status                      PR 616: the match at a glance (books.read)
+//   POST  /api/admin/books/run                         {from?} run the match now: every day not closed yet and every day whose
+//                                                      books moved since its close, or from `from` (books.reconcile)
+//   GET   /api/admin/books/days/:date                  one closed day opened to its rows (books.read)
+//   GET   /api/admin/books/differences?status=&check=&date=&page=   the differences (books.read)
+//   POST  /api/admin/books/differences/:id/adjust      {pin, reason, erpEventId} reversal + new entry (books.adjust, PIN)
+//   POST  /api/admin/books/differences/:id/note        {text} a note, never edited (books.reconcile)
+//   GET   /api/admin/books/closes?month=               the months, years, weeks and the lifetime check (books.read)
+//   POST  /api/admin/books/closes/month                {month, pin, overrideReason?} close a month (books.close, PIN)
+//   POST  /api/admin/books/closes/month/reopen         {month, pin, reason} open it again (books.close, PIN)
+//   POST  /api/admin/books/closes/year                 {year, pin, overrideReason?} sign off a financial year (books.close, PIN)
+//   POST  /api/admin/books/pin                         {password, pin} the owner sets his books PIN (owner only)
+// A PIN is never logged or sent back; the client clears it after every try.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as inv from '@extas/inventory';
 import type { PermissionKey } from '@extas/auth';
@@ -62,7 +76,8 @@ export async function booksRoute(request: Request, deps: AdminDeps | null, path:
         deps,
         'erp.payments.record',
         async (x) => {
-          const r = await inv.recordErpPayment(x.deps, x.who, (await body(x.request)) as inv.ErpPaymentInput);
+          // The form's request key (follow-up 551): the same request again answers the record already written.
+          const r = await inv.recordErpPayment(x.deps, x.who, (await body(x.request)) as inv.ErpPaymentInput, { requestKey: x.request.headers.get('idempotency-key') });
           return { record: { id: r.id } };
         },
         201,
@@ -83,5 +98,23 @@ export async function booksRoute(request: Request, deps: AdminDeps | null, path:
       201,
     );
   }
+  // ---- PR 616 · the books match ----
+  const read = (fn: (x: BooksCtx) => Promise<unknown>) => (m === 'GET' ? booksHandle(request, deps, 'books.read', async (x) => (await fn(x)) as Record<string, unknown>) : notAllowed());
+  const post = (perm: PermissionKey, fn: (x: BooksCtx, b: Record<string, unknown>) => Promise<unknown>) =>
+    m === 'POST' ? booksHandle(request, deps, perm, async (x) => ({ result: await fn(x, ((await body(x.request)) ?? {}) as Record<string, unknown>) })) : notAllowed();
+  if (a === 'status' && !b) return read(async (x) => ({ status: await inv.booksStatus(x.deps, x.who) }));
+  if (a === 'run' && !b) return post('books.reconcile', async (x, v) => inv.runBooksNow(x.deps, x.who, { from: v.from == null ? null : String(v.from) }));
+  if (a === 'days' && b && !c) return read(async (x) => ({ day: await inv.explainDay(x.deps, x.who, b) }));
+  if (a === 'differences' && !b) return read((x) => inv.booksDifferences(x.deps, x.who, params(x.url, ['status', 'check', 'date', 'page']) as Parameters<typeof inv.booksDifferences>[2]));
+  if (a === 'differences' && b && (c === 'adjust' || c === 'note') && path.length === 3) {
+    if (!isUuid(b)) return fail(404, 'NOT_FOUND', ['differenceId']);
+    if (c === 'adjust') return post('books.adjust', (x, v) => inv.adjustDifference(x.deps, x.who, b, { pin: String(v.pin ?? ''), reason: String(v.reason ?? ''), erpEventId: String(v.erpEventId ?? '') }));
+    return post('books.reconcile', (x, v) => inv.noteDifference(x.deps, x.who, b, { text: String(v.text ?? '') }));
+  }
+  if (a === 'closes' && !b) return read((x) => inv.booksCloses(x.deps, x.who, { month: x.url.searchParams.get('month') }) as Promise<unknown>);
+  if (a === 'closes' && b === 'month' && !c) return post('books.close', (x, v) => inv.closeMonth(x.deps, x.who, { month: String(v.month ?? ''), pin: String(v.pin ?? ''), overrideReason: v.overrideReason == null ? null : String(v.overrideReason) }));
+  if (a === 'closes' && b === 'month' && c === 'reopen' && path.length === 3) return post('books.close', (x, v) => inv.reopenMonth(x.deps, x.who, { month: String(v.month ?? ''), pin: String(v.pin ?? ''), reason: String(v.reason ?? '') }));
+  if (a === 'closes' && b === 'year' && !c) return post('books.close', (x, v) => inv.signOffYear(x.deps, x.who, { year: Number(v.year), pin: String(v.pin ?? ''), overrideReason: v.overrideReason == null ? null : String(v.overrideReason) }));
+  if (a === 'pin' && !b) return post('books.close', (x, v) => inv.setBooksPin(x.deps, x.who, { password: String(v.password ?? ''), pin: String(v.pin ?? '') }));
   return notFound();
 }

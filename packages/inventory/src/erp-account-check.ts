@@ -10,13 +10,16 @@
 //     lost, and the hourly pull only reads returns and exchanges) is written into the ledger from the statement
 //     (source PULL). The webhook arriving later is the same eventId: no second entry.
 //   * the hold (`account.hold` / `account.released` lost too) and the ERP's balance, waiting-check and exchanges at risk
-//     go into ErpAccountState (a cache of the ERP's answer, with the moment the hold started or ended). The books never
-//     read their balance from there: the ledger is the shop's own.
+//     go into ErpAccountState (a cache of the ERP's answer, with the moment the hold started or ended) through PR 610's
+//     `noteHold`, the one writer of that row (PR 610's order check reads `GET /account` too, for the held orders). The
+//     books never read their balance from there: the ledger is the shop's own.
+//   * Amounts are read exactly (`moneyMinor`): one with a third decimal or words is left out, never rounded or read as 0
+//     (the books match then shows the ERP's row the shop could not take).
 // Nothing here moves money; in `erp.model` v5 nothing runs. CN-029 §16: the store's own connection and key, its own link.
-import { decimalToMinor } from './webhook';
 import { nowOf, setting, TX, type InventoryDeps } from './context';
 import { InventoryError } from './errors';
-import { appendAccountEntries, ledgerBalance, storeBooks, storeErpLink, syncBills, ingestAccountEvents, type BooksLink } from './erp-account';
+import { appendAccountEntries, ledgerBalance, moneyMinor, storeBooks, storeErpLink, syncBills, ingestAccountEvents, type BooksLink } from './erp-account';
+import { noteHold } from './erp-orders-v6';
 import { syncPipeline } from './erp-pipeline';
 import { storeDate } from './erp-events-pull';
 import { openErpLink } from './erp-link';
@@ -66,8 +69,7 @@ export interface AccountCheckResult extends Omit<AccountSyncResult, 'status' | '
 
 const blank = (): AccountCheckResult => ({ status: 'ok', reason: null, bills: 0, events: 0, entries: 0, pieces: 0, moves: 0, caughtUp: 0, onHold: null, erpBalanceMinor: null, shopBalanceMinor: null });
 
-const minorText = (v: unknown, digits: number): number | null => (v == null ? null : decimalToMinor(String(v), digits));
-const dateOrNull = (d: string | null | undefined): Date | null => (d ? new Date(`${d.slice(0, 10)}T00:00:00Z`) : null);
+const minorText = (v: unknown, digits: number): number | null => (v == null ? null : moneyMinor(String(v), digits));
 
 /** The account check: the shop's side, then the ERP's statement and hold (follow-up 490). */
 export async function checkErpAccount(deps: InventoryDeps, job: { storeId: number }): Promise<AccountCheckResult> {
@@ -109,26 +111,28 @@ export async function checkErpAccount(deps: InventoryDeps, job: { storeId: numbe
       result.caughtUp += r.created.length;
     }
 
-    // The hold and the ERP's own numbers (ErpAccountState: one row per link).
+    // The hold and the ERP's own numbers (ErpAccountState: one row per link, written by PR 610's `noteHold`). A number
+    // the books cannot read exactly keeps the one before.
     const hold = acct.hold;
-    const prior = await deps.db.erpAccountState.findUnique({ where: { linkId: link.id }, select: { onHold: true } });
-    const started = hold.onHold && !prior?.onHold;
-    const ended = !hold.onHold && !!prior?.onHold;
-    const data = {
-      onHold: hold.onHold,
-      reason: hold.reason ?? null,
-      holdsOn: dateOrNull(hold.holdsOn),
-      warnFromDays: hold.warnFromDays ?? null,
-      lastPaymentAt: dateOrNull(hold.lastPaymentAt),
-      daysSinceLastPayment: hold.daysSinceLastPayment ?? null,
-      balanceMinor: BigInt(minorText(acct.balance, digits) ?? 0),
-      waitingCheckMinor: BigInt(minorText(acct.waitingCheck, digits) ?? 0),
-      exchangesAtRiskMinor: BigInt(minorText(acct.exchangesAtRisk, digits) ?? 0),
-      checkedAt: now,
-      ...(started ? { heldAt: now } : {}),
-      ...(ended ? { releasedAt: now } : {}),
-    };
-    await deps.db.erpAccountState.upsert({ where: { linkId: link.id }, create: { storeId, linkId: link.id, ...data }, update: data });
+    const kept = (v: unknown) => minorText(v, digits) ?? undefined;
+    await noteHold(
+      deps.db,
+      storeId,
+      link.id,
+      {
+        onHold: hold.onHold,
+        reason: hold.reason ?? null,
+        holdsOn: hold.holdsOn ?? null,
+        warnFromDays: hold.warnFromDays ?? null,
+        lastPaymentAt: hold.lastPaymentAt ?? null,
+        daysSinceLastPayment: hold.daysSinceLastPayment ?? null,
+        balanceMinor: kept(acct.balance),
+        waitingCheckMinor: kept(acct.waitingCheck),
+        exchangesAtRiskMinor: kept(acct.exchangesAtRisk),
+        checked: true,
+      },
+      now,
+    );
     result.onHold = hold.onHold;
     result.erpBalanceMinor = minorText(acct.balance, digits);
     result.shopBalanceMinor = await ledgerBalance(deps.db, link);

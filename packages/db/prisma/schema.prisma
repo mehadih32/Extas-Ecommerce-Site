@@ -739,6 +739,14 @@ model StaffUser {
   sessions          StaffSession[]
   roleAssignments   StaffRoleAssignment[]
   pushSubscriptions StaffPushSubscription[]
+
+  // ---- CN-028 · PR 616 (migration 0055_books_pin): the owner's PIN for the books (`books.adjust`, `books.close`) ----
+  /// The owner's books PIN as a scrypt hash (never the PIN itself; set again with his password).
+  booksPinHash      String?
+  booksPinSetAt     DateTime? @db.Timestamptz(3)
+  /// Wrong PIN tries typed by this person since the last right one, and the lock they earned (`books.pin.*`).
+  booksPinFailures  Int       @default(0)
+  booksPinLockedTil DateTime? @db.Timestamptz(3)
 }
 
 enum StaffUserStatus {
@@ -5436,9 +5444,12 @@ model ErpPaymentRecord {
   note         String?
   /// The record this one reverses: one reversal per record.
   reversesId   String?      @unique @db.Uuid
+  /// PR 616 (follow-up 551): the form's request key (`Idempotency-Key`): the same request again answers this record.
+  requestKey   String?
   recordedById String       @db.Uuid
   createdAt    DateTime     @default(now()) @db.Timestamptz(3)
 
+  @@unique([linkId, requestKey])
   @@index([storeId, paidOn])
   @@index([linkId, reference])
 }
@@ -5954,6 +5965,8 @@ model BooksAdjustment {
   createdAt    DateTime            @default(now()) @db.Timestamptz(3)
 
   @@unique([linkId, erpEventId])
+  /// PR 616 (qa-gate): one correction per difference, ever (a second one at the same moment is refused here too).
+  @@unique([linkId, differenceId])
   @@index([storeId, date])
 }
 
