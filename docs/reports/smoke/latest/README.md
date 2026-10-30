@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-31 02:40 (Asia/Dhaka)
+# Smoke test · 2026-10-31 04:07 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (220টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `c14cd3224ed7` · after deploy · result **PASS** (220 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `94ca58e3bd62` · after deploy · result **PASS** (220 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
