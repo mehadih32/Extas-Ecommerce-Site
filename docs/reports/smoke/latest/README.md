@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-30 14:53 (Asia/Dhaka)
+# Smoke test · 2026-10-30 15:45 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (212টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (218টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `b16315ec946f` · after deploy · result **PASS** (212 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `9bf1cd345972` · after deploy · result **PASS** (218 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -110,6 +110,9 @@ Site: https://new.extas.com.bd · commit `b16315ec946f` · after deploy · resul
 | `/admin/money/books/closes` | phone | 200 | `/admin/money/books/closes` | ok | [picture](admin-money-books-closes-phone.jpg) |
 | `/admin/orders/returns/handback` | phone | 200 | `/admin/orders/returns/handback` | ok | [picture](admin-orders-returns-handback-phone.jpg) |
 | `/admin/orders/returns/erp` | phone | 200 | `/admin/orders/returns/erp` | ok | [picture](admin-orders-returns-erp-phone.jpg) |
+| `/admin/products/erp-import` | phone | 200 | `/admin/products/erp-import` | ok | [picture](admin-products-erp-import-phone.jpg) |
+| `/admin/money/books/daily` | phone | 200 | `/admin/money/books/daily` | ok | [picture](admin-money-books-daily-phone.jpg) |
+| `/admin/money/costs` | phone | 200 | `/admin/money/costs` | ok | [picture](admin-money-costs-phone.jpg) |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-phone.jpg) |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -216,6 +219,9 @@ Site: https://new.extas.com.bd · commit `b16315ec946f` · after deploy · resul
 | `/admin/money/books/closes` | desktop | 200 | `/admin/money/books/closes` | ok | [picture](admin-money-books-closes-desktop.jpg) |
 | `/admin/orders/returns/handback` | desktop | 200 | `/admin/orders/returns/handback` | ok | [picture](admin-orders-returns-handback-desktop.jpg) |
 | `/admin/orders/returns/erp` | desktop | 200 | `/admin/orders/returns/erp` | ok | [picture](admin-orders-returns-erp-desktop.jpg) |
+| `/admin/products/erp-import` | desktop | 200 | `/admin/products/erp-import` | ok | [picture](admin-products-erp-import-desktop.jpg) |
+| `/admin/money/books/daily` | desktop | 200 | `/admin/money/books/daily` | ok | [picture](admin-money-books-daily-desktop.jpg) |
+| `/admin/money/costs` | desktop | 200 | `/admin/money/costs` | ok | [picture](admin-money-costs-desktop.jpg) |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
