@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬৮টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,14 +36,14 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬৬টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬৮টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 245/305** · 60 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** (wave 4) · total **266/615** active PRs |
+| Launch | **Launch 247/305** · 58 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **268/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 06:32 (Dhaka) · commit `bac2e8a` (#52, PR [220](docs/stages/S11.md#pr-220), 221, 222 the SEO engine's base) · **success**, smoke test 190 pages OK |
+| Last deploy | 30 Oct 2026, 07:18 (Dhaka) · commit `d5f1379` (#53, PR [607](docs/stages/S09.md#pr-607), 608 ERP contract v6 and the event ledger, behind the switch) · **success**, smoke test 190 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
@@ -81,15 +81,15 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
 | [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 0 / 14 | Not started |
 | [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 0 / 17 | Not started |
-| [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 0 / 9 | Not started |
+| [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
 | [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | In progress (PR 594 readme-guard) |
-| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 0 / 13 | Not started |
+| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 1 / 13 | In progress |
 | [S23](docs/stages/S23.md) | [Social & content studio](docs/stages/S23.md) | [5](docs/stages/README.md#wave-5) | [437–443](docs/stages/S23.md) | 0 / 7 | Not started |
 | [S24](docs/stages/S24.md) | [Virtual Photoshoot Studio](docs/stages/S24.md) | [7](docs/stages/README.md#wave-7) | [444–480](docs/stages/S24.md), [539](docs/stages/S24.md#pr-539) | 0 / 38 | Not started |
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **266 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **268 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1400,13 +1400,67 @@ Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 - Still planned in S14 (after launch): segments, the journey view and builder, e-mail, AI helpers, reviews, rewards, tags, export, win-back, birthdays and retention (287–290, 293–297, 299–303, 533–535).
 Register: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
 
-### S20 · Fulfilment & documents — Not started
+### S20 · Fulfilment & documents — In progress (1/9)
 
-Planned — see register PRs 404–412: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+> **বাংলায় সংক্ষেপে:** প্রতিটা অর্ডারের ইনভয়েস নিজে থেকে তৈরি হয়ে থাকে — একটা অর্ডারে একটাই নম্বর; অর্ডার বদলালে একই নম্বরে "সংশোধিত"।
+> অর্ডার → প্যাকিং আর প্রিন্ট → ইনভয়েস: সবগুলো একসাথে কাগজে বা থার্মাল রোলে, একটা অর্ডারের চ্যাটের ছবি (JPG)। ইনভয়েসে শুধু অর্ডারে যা আছে তাই।
 
-### S22 · Support (all-in-one) — Not started
+**Built (PR 407): the customer invoice.** Migration `0050_invoice_support` (additive: `GeneratedDocument` number, fingerprint,
+data, checked time); settings registry v63 (`packages/settings/src/registry-invoice.ts`, group `orders`); code in
+`packages/orders/src/invoice.ts`, the PDF and picture in `packages/documents/src/invoice.ts`, the job in
+`packages/jobs/src/invoices.ts`.
+- **Issued and kept:** every placed order's invoice is issued once and kept (`GeneratedDocument`, kind `INVOICE`): one number per
+  order for life (the `account.invoice` pattern), a new version with the same number ("Revised 2") only when the order's content
+  changes — lines, money, names, address. Payments, confirms and status steps never make one. The worker job `invoices.issue`
+  issues new and edited orders; an older order gets its invoice when it is opened or printed. The invoice only shows what the
+  order holds: no price, discount or total is worked out again (CN-022).
+- **Orders → Packing & print → Invoices** (`/admin/orders/packing/invoices`): counts, views (all, revised, waiting), search by order or
+  invoice number; one PDF of many on paper (A4/A5) or the thermal roll (80/58 mm); per order paper, roll or the chat picture (JPG).
+  The letterhead and column names on every page, a row never split over two pages, the courier's consignment barcode once booked.
+  The customer's own invoice page shows the same number, "Revised n" and the barcode.
+- **Settings (v63), as cards on the page:** `account.invoice` (PR 248); `documents.invoice.print` — A4, roll 80 mm, 203 dpi, English,
+  barcode on, logo on, 100 per print (1–500); under More options `documents.invoice.image` — JPG, 1240 px (600–2400), quality 85
+  (50–100) and `documents.invoice.issue` — on, every 10 minutes (1–1440), 200 a run (1–5000), 30 days back (1–3650). The shop's legal
+  name, address and VAT/BIN come from the store profile settings and ship empty.
+- **Permissions:** `fulfilment.read` to see, `orders.invoice` to print, new `orders.invoiceSettings` to change the cards.
+- **API:** `GET /api/admin/invoices` (list), `POST /api/admin/invoices/file` (PDF or JPG), `GET/PUT /api/admin/invoices/settings`.
+- **Tests:** issue, revise and keep on PostgreSQL; the PDF and the picture; the job; the settings. Guide:
+  [Invoices](docs/admin-guide/pages/orders/invoices.md) and the [Orders guide](docs/admin-guide/orders.md).
 
-Planned — see register PRs 425–436, 538: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+Still planned in S20: register PRs 404–406, 408–412.
+
+### S22 · Support (all-in-one) — In progress (1/13)
+
+> **বাংলায় সংক্ষেপে:** সাপোর্ট ইনবক্স তৈরি: সব চ্যানেলের কথোপকথন এক তালিকায়, কে উত্তর দিয়েছেন নামসহ, টিমের ভেতরের নোট, ফাইল, দায়িত্ব আর
+> "কে কী করেছে"-র লগ (কেউ মুছতে পারে না)। চ্যানেল (WhatsApp, Messenger, সাইটের চ্যাট) যুক্ত হবে PR 426-এ; ততদিন উত্তর রাখা হয়, "পাঠানো হয়নি" লেখা থাকে।
+
+**Built (PR 425): the support core.** New package `@extas/support`; migration `0050_invoice_support` (additive; the
+who-did-what log `ConversationEvent` is append-only at the database); settings registry v63
+(`packages/settings/src/registry-support.ts`, group `support`).
+- **Conversations:** one per person per channel, with a reference code; the customer's messages, the shop's replies and internal
+  notes in one thread, oldest first. Every message keeps the sender's name as it was. A message that arrives twice is kept once; a
+  solved conversation reopens when the customer writes; a contact whose phone matches a customer is linked to him.
+- **Replies:** a press sent twice is one message (request key); a screen that missed a change is refused (`STALE`) and the words stay.
+  Files (image, video, PDF) are checked by their contents, not their names, and kept in our storage. OPEN → WAITING after a reply
+  (setting), back to OPEN when the customer writes, SOLVED by a person.
+- **Channels plug in later (PR 426):** a channel kind (`whatsapp`, `messenger`, `livechat`, `instagram`, `email`) and an adapter
+  (`SupportChannelAdapter.send`); a channel's webhook calls `receiveMessage`. None is connected yet, so a reply is kept as
+  NOT_SENT with the reason `CHANNEL_NOT_CONNECTED`, never lost.
+- **Pages:** Support → Inbox (`/admin/support`: views open, waiting, mine, not taken, solved, all, with counts; search; channel);
+  one conversation (`/admin/support/c/[id]`: the thread, the reply / note box with files, status, take / let go / give, customer
+  and order, the log; two tabs on the phone); Support settings (`/admin/support/settings`).
+- **Settings (v63):** `support.inbox` — 50 a page (10–200), 2000 characters (100–4000), take it on reply off, waiting after a reply
+  on; under More options `support.attachments` — on, 4 a message (1–10), 10 MB (1–50), image / video / PDF on. A customer's
+  number is masked the shop's one way (`customers.phoneMask`, PR 284) and shown whole only with `customers.phone`.
+- **Permissions:** `support.read`, `support.reply`, `support.assign`, `support.settings`.
+- **API:** `/api/admin/support` — the inbox, `c/:id`, `c/:id/messages`, `c/:id/assign`, `c/:id/status`, `files`, `files/:id`,
+  `staff`, `settings`.
+- **Tests:** the package on PostgreSQL (receive, reply, note, files, assign, status, the log, settings); the API on PostgreSQL; the
+  words in both languages; the sample seed's three sample conversations. Guides: [Inbox](docs/admin-guide/pages/support/inbox.md),
+  [Conversation](docs/admin-guide/pages/support/conversation.md), [Support settings](docs/admin-guide/pages/support/settings.md),
+  [Support](docs/admin-guide/support.md).
+
+Still planned in S22: register PRs 426–436, 538.
 
 ### S11 · SEO engine — In progress (3/22)
 
@@ -1531,6 +1585,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #54 | PR [407](docs/stages/S20.md#pr-407), [425](docs/stages/S22.md#pr-425) | 30 Oct | The customer invoice: issued once per order, kept, revised when the order is edited, printed on A4 or a roll or saved as a picture (the shop's legal name, address and BIN come from settings, empty until filled). The support core: one inbox of conversations with replies, internal notes, files, assignment and a who-did-what log; channels plug in later (PR [426](docs/stages/S22.md#pr-426)), so replies wait as "not sent" until one is connected. |
 | #53 | PR [607](docs/stages/S09.md#pr-607), [608](docs/stages/S09.md#pr-608) | 30 Oct | ERP contract v6 behind `erp.model` (v5 until the switch), one ERP company per store with its own keys, the permanent event ledger, and the shared tables, settings and permissions for PR [609–618](docs/stages/README.md) (CN-029 Phase 0). |
 | #52 | PR [220](docs/stages/S11.md#pr-220), [221](docs/stages/S11.md#pr-221), [222](docs/stages/S11.md#pr-222) | 30 Oct | The SEO engine's base: each page names its own address in its own language, search engines stay off until go-live (the preview is always hidden from them), search titles and descriptions from templates with AI drafts a person accepts (off until AI is on), and structured data for the shop, the website, products and sets. New admin page Website › SEO with its guide. |
 | #51 | PR [182](docs/stages/S08.md#pr-182), [183](docs/stages/S08.md#pr-183), [284](docs/stages/S14.md#pr-284), [285](docs/stages/S14.md#pr-285), [286](docs/stages/S14.md#pr-286), [185](docs/stages/S08.md#pr-185) (follow-up [466](docs/stages/S24.md#pr-466)), [198](docs/stages/S09.md#pr-198), [291](docs/stages/S14.md#pr-291), [292](docs/stages/S14.md#pr-292), [298](docs/stages/S14.md#pr-298), [505](docs/stages/S14.md#pr-505) | 30 Oct | Orders → Packing & print → Pack: pick, check every piece, pack (photo and weight checks, off by default) and hand over; a damaged or missing piece opens a card and holds the order until a person decides. Customers: the list with its views and search, one customer's page (orders, Sales delivered only, exchanges, who looked), and To review for the same person's profiles. Messages: SMS (BulkSMSBD) and WhatsApp (Meta) on their mocks until the keys, consent and stop words checked before every send, the template editor with a live preview, the order journey, the message log and channels. The Orders tabs no longer squeeze on a phone. |
