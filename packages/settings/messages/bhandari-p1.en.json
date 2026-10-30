@@ -12,5 +12,53 @@
         "help": "How many changed buying prices (not yet seen) the \"Import from ERP\" page lists at once, newest first."
       }
     }
+  },
+  "erp": {
+    "siteApi": {
+      "enabled": {
+        "label": "The ERP may ask the shop for top products and customers",
+        "help": "When on, the ERP can ask this store, live, for its best-selling products and its customer list, only when you click \"Top products\" or \"Customers\" in the ERP. Each call must be signed with this store's own secret, and every call is logged. The ERP shows the list and does not keep it; the shop never sends it by itself. Off until you switch it on."
+      },
+      "maxAgeSeconds": {
+        "label": "ERP calls: how old a signature may be (seconds)",
+        "help": "A call signed longer ago than this, or this far ahead of the shop's clock, is refused. The contract says 5 minutes (300)."
+      },
+      "topProductsLimit": {
+        "label": "ERP calls: products in a \"Top products\" answer",
+        "help": "How many products the answer holds when the ERP does not say."
+      },
+      "customersPageSize": {
+        "label": "ERP calls: customers on one page",
+        "help": "How many customers one page holds when the ERP does not say."
+      },
+      "maxRows": {
+        "label": "ERP calls: the most rows one call may ask for",
+        "help": "A call that asks for more products or customers than this gets this many."
+      },
+      "maxRangeDays": {
+        "label": "ERP calls: the longest span of days for top products",
+        "help": "A \"Top products\" call over more days than this is refused."
+      },
+      "callsShown": {
+        "label": "ERP calls: recent calls listed on Keys & connections",
+        "help": "How many of the latest calls the Keys & connections page shows."
+      },
+      "refusedPerMinute": {
+        "label": "ERP calls: refused calls a minute before the shop stops looking",
+        "help": "After this many refused calls (wrong or old signature) in one minute, every further call that is not yet proven is refused at once, without looking up any store, until the minute is over. A correctly signed call that arrives in that moment is asked to try again."
+      },
+      "refusedLogMinutes": {
+        "label": "ERP calls: minutes between two summaries of refused calls",
+        "help": "Refused calls are not logged one by one: the shop counts them and keeps one summary in this many minutes."
+      },
+      "refusedShownDays": {
+        "label": "ERP calls: days of refused calls counted on Keys & connections",
+        "help": "The Keys & connections page shows how many calls were refused in this many days."
+      },
+      "searchMaxChars": {
+        "label": "ERP calls: the longest customer search",
+        "help": "A \"Customers\" call whose search is longer than this many characters is refused."
+      }
+    }
   }
 }

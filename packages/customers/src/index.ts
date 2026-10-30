@@ -15,8 +15,11 @@
 //
 // PR 286: one customer's page — his orders over every profile and number a page at a time, his exchanges, his support
 // history (empty until S22) and "Who looked at this customer" for the owner (profile.ts).
+// CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
+// total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
 export * from './context';
+export * from './erp-page';
 export * from './errors';
 export * from './family';
 export * from './list';

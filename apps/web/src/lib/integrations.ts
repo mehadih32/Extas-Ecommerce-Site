@@ -11,6 +11,8 @@
 // Every change is in the audit log (who, when, from where; never a value). The connection list is data
 // (`connectionCatalogue` in @extas/adapters), never markup. Connections are installation-wide here (storeId null):
 // storage, backups, CDN and alerts serve every store. Per-store connections (couriers, payments) come with their PRs.
+// PR 620: a key may be optional (the ERP's signing secret): left empty it is not asked for and not saved (one saved
+// before stays), and the connection counts as saved once its required keys are.
 import type { Prisma } from '@extas/db/client';
 import {
   allAdapters,
@@ -93,10 +95,10 @@ export async function listConnections(db: Db, vault: Pick<Vault, 'list'> | null,
       kind: d.kind,
       adapter: d.adapter,
       builtIn: Boolean(d.builtIn),
-      secrets: d.secrets.map((s, i) => ({ field: s.field, optional: false, set: set[i] ?? false })),
+      secrets: d.secrets.map((s, i) => ({ field: s.field, optional: Boolean(s.optional), set: set[i] ?? false })),
       config: d.config.map((c) => ({ field: c.field, optional: Boolean(c.optional), value: typeof cfg[c.field] === 'string' ? (cfg[c.field] as string) : null })),
       // A connection with no key (the page reader) counts as saved once its settings are.
-      keySaved: d.secrets.length > 0 ? set.every(Boolean) : !d.builtIn && row !== null,
+      keySaved: d.secrets.length > 0 ? d.secrets.every((s, i) => s.optional || set[i]) : !d.builtIn && row !== null,
       savedAt: times.length ? new Date(Math.max(...times)).toISOString() : null,
       integrationId: row?.id ?? null,
       mode: row?.mode ?? null,
@@ -144,8 +146,9 @@ export function parseSave(d: ConnectionDeclaration, b: Record<string, unknown>, 
   for (const s of d.secrets) {
     const v = inSecrets[s.field];
     const value = typeof v === 'string' ? v.trim() : '';
-    if (!value || value.length > MAX_VALUE) bad.push(`secrets.${s.field}`);
-    else secrets[s.field] = value;
+    if (value.length > MAX_VALUE) bad.push(`secrets.${s.field}`);
+    else if (value) secrets[s.field] = value;
+    else if (!s.optional) bad.push(`secrets.${s.field}`);
   }
   const config: Record<string, string> = {};
   for (const c of d.config) {

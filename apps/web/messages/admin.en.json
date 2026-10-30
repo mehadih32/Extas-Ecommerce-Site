@@ -134,6 +134,42 @@
       "testOk": "Test passed",
       "testFail": "Test failed",
       "removed": "Removed from the vault"
+    },
+    "erpCalls": {
+      "title": "The ERP asks the shop",
+      "sub": "When you click \"Top products\" or \"Customers\" in the ERP, the ERP asks this shop, live. The shop answers only a call signed with this store's own secret, and never sends a list by itself.",
+      "base": "Address to put into the ERP",
+      "baseUnknown": "Shown once the shop has its own address",
+      "baseHow": "In the ERP: shop settings → the site's address. The ERP signs with the signing secret above (or the webhook secret while that is empty).",
+      "switch": "Let the ERP ask for top products and customers",
+      "on": "On: a correctly signed call is answered, and logged below",
+      "off": "Off: every call is refused (and counted below)",
+      "v5": "Answers only after this store moves to the new ERP contract (v6)",
+      "recent": "Latest calls from the ERP",
+      "none": "No call yet",
+      "refused": "Refused in the last {days} days: {n}",
+      "refusedNone": "No call refused in the last {days} days",
+      "rows": "{n} rows",
+      "searched": "with a search",
+      "endpoint": {
+        "top-products": "Top products",
+        "customers": "Customers",
+        "unknown": "Another address"
+      },
+      "code": {
+        "OK": "Answered",
+        "OFF": "Refused: switched off",
+        "NOT_FOUND": "Refused: no such address",
+        "METHOD": "Refused: wrong kind of call",
+        "NO_SECRET": "Refused: no secret saved for this store",
+        "UNSIGNED": "Refused: not signed",
+        "BAD_SIGNATURE": "Refused: wrong signature",
+        "STALE": "Refused: signed too long ago",
+        "SHARED_SECRET": "Refused: two stores have the same secret",
+        "BAD_QUERY": "Refused: the question was not clear",
+        "SERVER_ERROR": "The shop could not answer",
+        "RATE_LIMITED": "Refused: too many wrong calls this minute"
+      }
     }
   },
   "connections": {
@@ -185,7 +221,8 @@
       "fields": {
         "baseUrl": "ERP address (https://…)",
         "apiKey": "API key (from the ERP's E-commerce page)",
-        "webhookSecret": "Webhook secret (from the same page)"
+        "webhookSecret": "Webhook secret (from the same page)",
+        "signingSecret": "Signing secret for the ERP's calls to the shop (leave empty to use the webhook secret)"
       }
     },
     "bkash": {

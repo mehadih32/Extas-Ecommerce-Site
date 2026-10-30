@@ -51,5 +51,5 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   // Static files and the framework's own paths never reach the proxy.
-  matcher: ['/((?!_next/|admin|api/|status|media/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)'],
+  matcher: ['/((?!_next/|admin|api/|erp-api/|status|media/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)'],
 };

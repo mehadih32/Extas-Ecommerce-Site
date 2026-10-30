@@ -14,7 +14,7 @@ import type { Kind, Mode } from './define';
 export interface FieldDeclaration {
   /** For a secret: the vault name is `<provider>.<field>`. For config: the key in Integration.config. */
   field: string;
-  /** Optional config fields may be left empty. Secrets are always required. */
+  /** Optional fields may be left empty. A secret is required unless it is marked optional (PR 620: the ERP's signing secret). */
   optional?: boolean;
 }
 
@@ -76,12 +76,13 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
   },
   // PR 497, 498 (CN-005) — the shop's own ERP: its address, API key and webhook secret. Runs on the practice ERP
   // (MOCK) until these are entered and the Test button (`/health`) passes. One ERP connection is on at a time.
+  // PR 620: a third, optional key, the signing secret of the ERP's own calls to the shop (empty = the webhook secret).
   {
     id: 'extasErp',
     kind: 'ERP',
     provider: 'extasErp',
     adapter: true,
-    secrets: [{ field: 'apiKey' }, { field: 'webhookSecret' }],
+    secrets: [{ field: 'apiKey' }, { field: 'webhookSecret' }, { field: 'signingSecret', optional: true }],
     config: [{ field: 'baseUrl' }],
     exclusive: true,
     targetMode: 'LIVE',

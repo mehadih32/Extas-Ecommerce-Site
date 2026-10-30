@@ -115,6 +115,9 @@ describe('PR 84 · English at the root, Bengali under /bn', () => {
     expect(isShopPath('/admin/products')).toBe(false);
     expect(isShopPath('/api/health')).toBe(false);
     expect(isShopPath('/status')).toBe(false);
+    // PR 620: the ERP's signed calls are not shop pages (no language, no shop cache headers).
+    expect(isShopPath('/erp-api/customers')).toBe(false);
+    expect(isShopPath('/erp-apis')).toBe(true);
     expect(isShopPath('/checkout')).toBe(true);
     expect(isShopPath('/administrator')).toBe(true);
   });

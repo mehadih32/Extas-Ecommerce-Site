@@ -237,11 +237,11 @@ describe('the ERP adapter (PR 497, 498)', () => {
     secret: async (f) => secrets[f] ?? null,
   });
 
-  it('is registered with the adapters, with mock / sandbox / live, its key and webhook secret', () => {
+  it('is registered with the adapters, with mock / sandbox / live, its key, webhook secret and (PR 620) signing secret', () => {
     expect(allAdapters).toContain(extasErp);
     expect(extasErp.kind).toBe('ERP');
     expect(extasErp.modes).toEqual(['SANDBOX', 'LIVE']);
-    expect([...extasErp.secrets]).toEqual(['apiKey', 'webhookSecret']);
+    expect([...extasErp.secrets]).toEqual(['apiKey', 'webhookSecret', 'signingSecret']);
     expect(extasErp.configSchema.safeParse({ baseUrl: 'http://erp.example.test' }).success).toBe(false);
     expect(extasErp.configSchema.safeParse({ baseUrl: BASE }).success).toBe(true);
   });

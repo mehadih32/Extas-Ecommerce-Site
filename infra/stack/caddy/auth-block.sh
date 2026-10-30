@@ -15,6 +15,15 @@
 # PR 292: the WhatsApp Business Platform's webhook passes the same way, GET (Meta's handshake: the app answers only
 # the verify token from the vault) and POST (signed with the app secret; refused while no secret is in the vault) on
 # /api/whatsapp/webhook only. Each exemption is its own `not` set, so all must hold for the gate to ask.
+# PR 620: the ERP's own calls to the shop pass the same way, GET only, on exactly its two paths (/erp-api/top-products
+# and /erp-api/customers). Each is signed with the asking store's own secret, and the app refuses every call while no
+# store has them switched on (`erp.siteApi.enabled`, off by default) and every call without a good signature.
+# qa-gate (30 Oct): Caddy's `path` matcher ignores case and compares the decoded, cleaned path, while the app routes on
+# the raw one: `/ERP-API/CUSTOMER%53` or `/x%2f..%2ferp-api%2fcustomers` matched the exemption and reached the app (its
+# not-found page) with no login. Every exemption therefore matches the raw request target as it arrived
+# ({http.request.orig_uri}: the path exactly as sent, then any query), case for case, by one anchored pattern of its
+# exact path: an encoded letter or slash, a dot segment, a double or trailing slash, other capitals, HEAD or any other
+# method all stay behind the gate. `[?]` keeps the patterns free of backslashes.
 set -euo pipefail
 tag="${1:?}"; user="${2:?}"; hash="${3:?}"; token="${4:?}"; days="${5:?}"
 [[ "$token" =~ ^[0-9a-f]{32,128}$ ]] || { echo "auth-block: the cookie token must be hex" >&2; exit 2; }
@@ -22,7 +31,10 @@ tag="${1:?}"; user="${2:?}"; hash="${3:?}"; token="${4:?}"; days="${5:?}"
 printf '%s\n' "$tag"
 printf '@preview_needed {\n'
 printf '\tnot header_regexp Cookie (?:^|;\\s*)extas_preview=%s(?:;|$)\n' "$token"
-printf '\tnot {\n\t\tmethod POST\n\t\tpath /api/erp/webhook\n\t}\n'
-printf '\tnot {\n\t\tmethod GET POST\n\t\tpath /api/whatsapp/webhook\n\t}\n}\n'
+exempt() { printf '\tnot {\n\t\tmethod %s\n\t\texpression `{http.request.orig_uri}.matches(\x27^%s([?].*)?$\x27)`\n\t}\n' "$1" "$2"; }
+exempt POST '/api/erp/webhook'
+exempt 'GET POST' '/api/whatsapp/webhook'
+exempt GET '/erp-api/(top-products|customers)'
+printf '}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"
 printf '\theader Set-Cookie "extas_preview=%s; Path=/; Max-Age=%s; Secure; HttpOnly; SameSite=Lax"\n}\n' "$token" "$((days * 86400))"

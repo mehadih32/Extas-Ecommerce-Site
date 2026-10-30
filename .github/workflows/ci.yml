@@ -53,6 +53,18 @@ jobs:
           for f in .github/workflows/*.yml .github/actions/*/action.yml; do python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$f" || { echo "::error file=$f::not valid YAML"; exit 1; }; done
       - name: ShellCheck
         run: shellcheck -x -S warning -e SC2034 infra/server/setup.sh infra/server/lib.sh infra/server/steps/*.sh infra/server/bin/* infra/tests/run.sh infra/bootstrap/install-runner.sh
+      # The preview gate's live checks (infra/tests/run.sh, PR 7/196/292/620) need a real Caddy: the release that matches
+      # the server's image (IMG_CADDY caddy:2.10-alpine), pinned by version and checksum. Without it run.sh fails in CI.
+      - name: Caddy for the live preview-gate checks (pinned)
+        env:
+          CADDY_VERSION: 2.10.2
+          CADDY_SHA256: 5c218bc34c9197369263da7e9317a83acdbd80ef45d94dca5eff76e727c67cdd
+        run: |
+          curl -fsSL -o /tmp/caddy.tar.gz "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz"
+          echo "${CADDY_SHA256}  /tmp/caddy.tar.gz" | sha256sum -c -
+          mkdir -p /tmp/caddy-bin && tar -xzf /tmp/caddy.tar.gz -C /tmp/caddy-bin caddy
+          /tmp/caddy-bin/caddy version
+          echo "CADDY_BIN=/tmp/caddy-bin/caddy" >> "$GITHUB_ENV"
       - name: Infra unit tests (disk detection, NVMe detection, auto profile)
         run: infra/tests/run.sh
       - name: Compose file is valid
