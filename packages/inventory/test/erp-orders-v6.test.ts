@@ -1,7 +1,7 @@
 // PR 610 (CN-028, ERP contract v6, site-changes-v6 §2.5.1): the order's pieces and their whole-taka customer prices.
 // Pure: no database. Every amount is in minor units (BDT: 2 decimals), so 1 taka = 100.
 import { describe, expect, it } from 'vitest';
-import { erpPieces, wholeTaka, wireKey, type ErpItemInput } from '../src';
+import { erpAmount, erpPieces, wholeTaka, wireKey, type ErpItemInput } from '../src';
 
 const T = 100;
 const item = (id: string, sku: string, quantity: number, unitTaka: number, lineTaka: number, combo?: string): ErpItemInput => ({
@@ -66,5 +66,24 @@ describe('PR 610: erpPieces', () => {
   it('the wire key: the row key, then a new round after a refusal the ERP keeps against the key', () => {
     expect(wireKey({ idempotencyKey: 'order:abc:r0', keyRound: 0 })).toBe('order:abc:r0');
     expect(wireKey({ idempotencyKey: 'order:abc:r0', keyRound: 2 })).toBe('order:abc:r0:k2');
+  });
+});
+
+describe("PR 610: the ERP's amounts are read exactly, never rounded (the books match them with zero tolerance)", () => {
+  it('reads plain decimals and a trailing zero past the currency digits', () => {
+    expect(erpAmount('1950', 2)).toBe(195000);
+    expect(erpAmount('1950.5', 2)).toBe(195050);
+    expect(erpAmount('1950.50', 2)).toBe(195050);
+    expect(erpAmount('1950.500', 2)).toBe(195050);
+    expect(erpAmount('-12.34', 2)).toBe(-1234);
+    expect(erpAmount(null, 2)).toBeNull();
+    expect(erpAmount(undefined, 2)).toBeNull();
+  });
+
+  it('refuses an amount with more decimals than the currency has, or one it cannot read, instead of rounding it', () => {
+    expect(() => erpAmount('1950.005', 2)).toThrow(/exactly/);
+    expect(() => erpAmount('1950.5', 0)).toThrow(/exactly/);
+    expect(() => erpAmount('1,950', 2)).toThrow(/exactly/);
+    expect(() => erpAmount('', 2)).toThrow(/exactly/);
   });
 });

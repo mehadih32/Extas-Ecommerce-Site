@@ -57,7 +57,7 @@ import { readErpSetup } from './erp-mode';
 import { resolveErp } from './guard';
 import { callErp, errorText, retryPolicy } from './sync';
 import { canonical, enqueueErpDocument } from './erp-push';
-import { decimalToMinor } from './webhook';
+import { moneyMinor } from './erp-account';
 
 // ---- the pieces and their whole-taka prices (pure) ---------------------------------------------------------------------
 
@@ -328,6 +328,18 @@ export async function digitsOf(db: Db, storeId: number): Promise<number> {
   return new Intl.NumberFormat('en', { style: 'currency', currency: s?.currency ?? 'BDT' }).resolvedOptions().maximumFractionDigits ?? 0;
 }
 
+/**
+ * An amount the ERP sent (erpTotal, a line's shop price, the account), in minor units, read exactly: the books match
+ * them with zero tolerance, so an amount with more decimals than the currency has (or one that is not a plain decimal)
+ * is a contract error, never rounded.
+ */
+export function erpAmount(text: string | null | undefined, digits: number): number | null {
+  if (text == null) return null;
+  const v = moneyMinor(text, digits);
+  if (v == null) throw new InventoryError('INVALID_INPUT', `the ERP sent an amount the shop cannot read exactly: ${JSON.stringify(text)}`, ['amount']);
+  return v;
+}
+
 const big = (v: number | null) => (v == null ? null : BigInt(v));
 
 /** The ERP's order answer applied to ErpOrder and its lines (POST /orders, PATCH …/lines, GET /orders/{id}). */
@@ -336,7 +348,7 @@ export async function applyOrderAnswer(db: Db, erpOrderId: string, answer: unkno
   if (!a.success) throw new InventoryError('INVALID_INPUT', 'the ERP order answer is not what the contract says', a.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).slice(0, 5));
   const order = await db.erpOrder.findUniqueOrThrow({ where: { id: erpOrderId }, select: { id: true, storeId: true, billedAt: true } });
   const digits = await digitsOf(db, order.storeId);
-  const total = decimalToMinor(a.data.erpTotal, digits);
+  const total = erpAmount(a.data.erpTotal, digits);
   await db.erpOrder.update({
     where: { id: order.id },
     data: {
@@ -351,7 +363,7 @@ export async function applyOrderAnswer(db: Db, erpOrderId: string, answer: unkno
   for (const l of a.data.lines) {
     const mine = lines.find((x) => x.lineId === l.lineId);
     if (!mine) continue;
-    const shop = decimalToMinor(l.shopPrice, digits);
+    const shop = erpAmount(l.shopPrice, digits);
     const state = l.state ? LINE_STATE[l.state] : undefined;
     const data: Prisma.ErpOrderLineUpdateInput = {};
     if (shop != null && shop !== mine.shopPriceMinor) data.shopPriceMinor = shop;
@@ -663,9 +675,9 @@ export async function checkErpOrders(deps: InventoryDeps, job: { storeId: number
         warnFromDays: acc.hold.warnFromDays,
         lastPaymentAt: acc.hold.lastPaymentAt,
         daysSinceLastPayment: acc.hold.daysSinceLastPayment,
-        balanceMinor: decimalToMinor(acc.balance, digits),
-        waitingCheckMinor: decimalToMinor(acc.waitingCheck, digits),
-        exchangesAtRiskMinor: decimalToMinor(acc.exchangesAtRisk, digits),
+        balanceMinor: erpAmount(acc.balance, digits),
+        waitingCheckMinor: erpAmount(acc.waitingCheck, digits),
+        exchangesAtRiskMinor: erpAmount(acc.exchangesAtRisk, digits),
         checked: true,
       },
       now,
