@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৬৮টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৭০টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,14 +36,14 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৬৮টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৭০টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 247/305** · 58 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 20/21** · **S07 8/10** · **S08 17/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **268/615** active PRs |
+| Launch | **Launch 249/305** · 56 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 22/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 18/26** (wave 3) · **S11 3/22** (wave 5) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **270/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
-| Last deploy | 30 Oct 2026, 07:18 (Dhaka) · commit `d5f1379` (#53, PR [607](docs/stages/S09.md#pr-607), 608 ERP contract v6 and the event ledger, behind the switch) · **success**, smoke test 190 pages OK |
+| Last deploy | 30 Oct 2026, 08:29 (Dhaka) · commit `c0579fd` (#54, PR [407](docs/stages/S20.md#pr-407), 425 the customer invoice and the support core) · **success**, smoke test 194 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
 | Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
@@ -66,10 +66,10 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 45 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 41 / 41 | **Done** |
-| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546), [610](docs/stages/S05.md#pr-610) | 20 / 21 | In progress |
+| [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546), [610](docs/stages/S05.md#pr-610) | 21 / 21 | **Done** |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 19 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 8 / 10 | In progress |
-| [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 17 / 26 | In progress |
+| [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 18 / 26 | In progress |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 19 / 19 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 3 / 22 | In progress |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **268 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **270 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -666,8 +666,11 @@ back-in-stock messages (notifications).
 > "প্র্যাকটিস ERP" চলে — আসল স্টকে কিছু বদলায় না।
 > নতুন (PR 607, 608): ERP-এর নতুন চুক্তি (v6) তৈরি, সুইচ `erp.model` দিয়ে — এখন সব দোকান আগের মতো v5-এ চলে। প্রতিটা দোকানের
 > নিজের ERP চাবি; এক দোকানের চাবি দিয়ে অন্য দোকানের কিছু দেখা বা লেখা যায় না। ERP-এর প্রতিটা খবর একবারই, চিরকাল রাখা হয়।
+> নতুন (PR 610, 611, শুধু v6 দোকানে): অর্ডার প্রতিটা পিস আলাদা লাইনে পুরো টাকার দামে ERP-তে যায়; ERP "এখন না" বললে অর্ডার
+> অপেক্ষা করে আর নিজে থেকেই আবার যায় (অ্যাকাউন্ট হোল্ডে থাকলে চেকআউট বন্ধ)। কুরিয়ার পার্সেল নিলে শিপমেন্ট, প্রতিটা ডেলিভারির
+> ফল ERP-তে যায়; অর্ডারের পাতায় "ERP অর্ডার" কার্ড, শর্ট লাইনের সিদ্ধান্ত আর আংশিক ডেলিভারির বক্স।
 
-PR 194–207, 497–499, 607, 608. Register: [S09](docs/MASTER-REGISTER.md#s09--inventory--erp-sync--pr-194207). Packages:
+PR 194–207, 497–499, 607, 608, 610, 611. Register: [S09](docs/MASTER-REGISTER.md#s09--inventory--erp-sync--pr-194207). Packages:
 `@extas/inventory`, the ERP adapter in `@extas/adapters`.
 
 - **ERP adapter (PR 498).** One contract (health, variants, stock, stock for one SKU; stable error codes), an HTTP
@@ -759,6 +762,38 @@ admin screen). Migration `0049_erp_v6` (additive), settings registry v62 (`packa
 - **Tests:** contract and practice ERP (`packages/adapters/test/erp-v6*.test.ts`), the shared helpers and their database enums
   (`packages/erp-types`), the ledger and the §16 isolation on PostgreSQL (`packages/inventory/test/erp-v6.db.test.ts`), the
   append-only ledgers (`packages/db/test/append-only.db.test.ts`), the settings (`packages/settings/test/registry-erp-v6.test.ts`).
+
+**Built (PR 610, 611): orders, shipments and delivery results to the ERP v6** (CN-028, CN-029 Phase 1). Only for a store whose
+`erp.model` is v6; in v5 nothing changes and the order page's ERP card draws nothing. Migration `0053_erp_orders_v6` (additive:
+`ErpPush.keyRound`, `heldReason`), settings registry v66 (`packages/settings/src/registry-erp-orders-v6.ts`).
+- **The order (610):** one line per piece (`lineId` `<order number>-<n>`, quantity 1), its `customerPrice` in whole taka (the
+  order's discount spread over the lines by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), with
+  `deliveryCharge`, `advancePaid` (paid online + wallet) and `grade`. The pieces are ErpOrder / ErpOrderLine rows kept with the order
+  (their ids stay the same across revisions); the ERP's `erpTotal`, each line's `shopPrice` and `fromReturnStock` are stored.
+- **"Not now" from the ERP (610):** a 409 the ERP keeps against its Idempotency-Key is HELD with its reason and goes again by itself
+  under a new key round (`<key>:k<n>`): `ACCOUNT_ON_HOLD` (checkout pauses with `PAUSED` while `erp.hold.pauseCheckout` is on, the bag
+  kept, until `account.released` or the account check says released), `INSUFFICIENT_STOCK` (when the ERP has the stock, at the
+  latest after `erp.orders.refusedRetryMinutes`), `NO_SHOP_PRICE` (that SKU is not sold until the ERP takes it), and a shipment's
+  `LINE_WAITING`. An order cancelled in the shop before the ERP had it is never sent (FAILED `ORDER_CANCELLED_BEFORE_SENT`).
+- **Short lines (610):** `order.line.short` (a Return-stock piece failed the packing check) makes the line SHORT; the order page
+  offers WAIT, REPLACE (another SKU) or CANCEL (`orders.lines`, audited, `PATCH /orders/{id}/lines/{lineId}`); `order.line.filled`
+  opens it again and the held shipment goes. The order check job `inventory.erp.checkOrders` (every `erp.account.checkMinutes`) reads
+  the account and the ERP's own copy of the open orders of the last `erp.orders.catchUpDays`, so a lost webhook or answer is
+  caught up (follow-up 490).
+- **Shipment and results (611):** `POST /shipments` when the courier confirms pickup (that is when the ERP bills; never at booking),
+  every courier result (DELIVERED, PARTIAL, RETURNED) by `PUT /orders/{id}/delivery` once, with what was collected; a "Delivered"
+  a true-delivery check (PR 525) holds waits, and the resolved truth goes. The **Partial delivery** box on the order page (kept lines,
+  amount paid, discount promised by phone, phone-confirmed, note; `delivery.outcomes`) is required when the courier says partial,
+  sent again whenever it changes, and closed once the parcel is handed back. The ERP's identification (green, yellow, orange) shows
+  on the order page. The delivery charge and underpaid amounts stay in Retail's own books.
+- **Screens:** the ERP card on `/admin/orders/<id>` (state and why it waits, the hold band, ERP total and shop prices with
+  `erp.account.read`, "From ERP return stock", the line decision, the identification, the Partial delivery box), the hold warning and
+  "held by the ERP" count on Stock → ERP connection. Routes: `GET /api/admin/orders/:id/erp`, `POST …/erp/lines/:lineId`,
+  `POST …/erp/partial-delivery`. Guide: [`docs/admin-guide/pages/orders/order.md`](docs/admin-guide/pages/orders/order.md).
+- **Tests:** whole-taka pieces (`packages/inventory/test/erp-orders-v6.test.ts`); the holds, the catch-up, the handlers and store
+  isolation on PostgreSQL (`packages/inventory/test/erp-orders-v6.db.test.ts`); the whole journey through the real checkout and the
+  courier (`packages/shipping/src/erp-v6.db.test.ts`); the routes (`apps/web/src/lib/orders-api.db.test.ts`), the card's words
+  (`apps/web/src/lib/admin-orders/erp.test.ts`), the settings (`packages/settings/test/registry-erp-orders-v6.test.ts`).
 
 ### S02 · Storefront — In progress (45/58)
 
@@ -1106,11 +1141,15 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 
 S04 is complete (41/41); stage report [2026-10-24-S04](docs/reports/2026-10-24-S04.md). ~~Next: PR 558 and 560 (the checkout's advance rules), the rest of S04.~~ Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
-### S05 · Order management — In progress (20/21)
+### S05 · Order management — Done (21/21)
 
 Stage report (Bengali): [`docs/reports/2026-10-24-S05.md`](docs/reports/2026-10-24-S05.md).
 
 > **বাংলায়:** "বিক্রি" এখন একটাই হিসাব — শুধু ডেলিভারি হওয়া অর্ডার, ডেলিভারির দিনে গোনা; "অর্ডারের মূল্য" (সব দেওয়া অর্ডার) আলাদা করে পাশে দেখায়। সব রিপোর্ট একই হিসাব থেকে নেয়। অডিট লগ আর অন্য ইতিহাস এখন ডাটাবেসেই আটকানো: ওয়েবসাইট নতুন লাইন লিখতে পারে, কিন্তু বদলাতে বা মুছতে পারে না, কেউই পারে না। অর্ডারের ধাপ এখন একটাই নিয়মে চলে: ভুল ধাপ আটকে যায়, প্রতিটা বদল টাইমলাইনে লেখা থাকে; কারণসহ বাতিল আর হোল্ড, টাকা দেওয়া অর্ডার বাতিলে শুধু রিফান্ডের অনুরোধ (টাকা যায় না), ডুপ্লিকেট অর্ডারের যাচাই-তালিকা, নোট আর ফ্ল্যাগ। অর্ডারের অ্যাডমিন পাতাও এখন তৈরি: অর্ডারের তালিকা (কোন অর্ডার কোন অবস্থায় আছে তার ভিউ, খোঁজা, ফিল্টার, ফোনে এক অর্ডার এক কার্ড), এক অর্ডারের পুরো পাতা (সব তথ্য, টাইমলাইন, আর এখন যে কাজগুলো করা যায় শুধু সেগুলোর বাটন — প্রতিটায় "কী হবে" লেখা থাকে), কনফার্ম করার লাইন, আর একসাথে অনেক অর্ডার কনফার্ম / হোল্ড / ছাড়া। টাকা, দাম বা ডিসকাউন্ট কোনো পাতা বদলায় না; টাকা দেওয়া অর্ডার বাতিলে শুধু রিফান্ডের অনুরোধ জমা হয়। রিফান্ড আর রিটার্ন পরের ধাপে। অর্ডার এডিটও এখন তৈরি: কাস্টমার ফোন করলে টিম অর্ডারের পাতা থেকেই নাম, ফোন (লগসহ), ঠিকানা, একই দামে অন্য সাইজ বা একটা পণ্য বাদ দিতে পারে — কারণ আর মাধ্যমসহ টাইমলাইনে লেখা থাকে; কাস্টমারের নিজের এডিট আর "দুই সাইজ" প্রশ্ন (S আর M একসাথে নিলে কোনটা রাখবেন; পরিবারের জন্য হলে শুধু নোট) — দুটোই শুরুতে বন্ধ। কুরিয়ার বুক হলে কোনো এডিট হয় না। কাস্টমারের "আমার অর্ডার" এখন পুরো ইতিহাস রাখে: পাতা পাতা করে সব অর্ডার, অর্ডার বেশি হলে "সব · পথে আছে · ডেলিভারি হয়েছে · বাতিল ও ফেরত" বাছাই, আর প্রতিটা অর্ডারের পাতায় ভাঁজ করা "যা যা হয়েছে" — কখন কী হলো, কে কী বদলাল (টিমের নোট বা ফ্ল্যাগ কখনো না)। অর্ডারের পাতায় কাস্টমারের নিজের এডিটের কার্ড আর "দুই সাইজ" প্রশ্নের কার্ডও এখন আছে — সুইচ চালু করলেই দেখা যাবে।
+
+**Built (PR 610): orders to the ERP v6** (CN-029 Phase 1; only for a store on ERP contract v6) — one line per piece in whole taka,
+the ERP's "not now" answers held and sent again by themselves, checkout paused while the ERP account is on hold, short lines decided
+on the order page (WAIT, REPLACE, CANCEL), and the order page's ERP card. Details under S09 · Inventory & ERP sync, "Built (PR 610, 611)".
 
 **Built (PR 541, with follow-up 295): the risk-sectioned order list.** Registry v46 (`risk.sections` in `packages/settings/src/registry-risk-more.ts`, on), no migration, no new admin section (the `/admin/orders` list and the order page, demo V12.3). Marking is instant; the decision never is.
 - **Sections (541):** the moment an order lands (after the duplicate check and the score) it is placed in **one** section with a note on its timeline: possible duplicate, re-order, new identity, high risk, watch, prepaid or clear (command `riskSection`, the status untouched). Re-order, new identity and high risk **wait for a person**: a "Risk review · <section>" card on `/admin/orders/<id>` says why and lists the matched orders, with Looks fine · Hold (a reason) · Ask the customer (a `RISK_CHECK` call task) · One parcel · Decline (`RISK_DECLINED`, never a block). Re-placed after an edit or "Score again".
@@ -1221,7 +1260,7 @@ Register: [S05](docs/MASTER-REGISTER.md#s05--order-management--pr-138155).
 - Still planned in S07 (after launch): Nagad (168), card (169).
 Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 
-### S08 · Courier, returns, exchange — In progress (17/26)
+### S08 · Courier, returns, exchange — In progress (18/26)
 
 > **বাংলায় সংক্ষেপে:** কুরিয়ারের কাঠামো তৈরি: Steadfast আর Pathao একই নিয়মে চলে, চাবি না দেওয়া পর্যন্ত প্র্যাকটিস মোডে।
 > বদল, ফেরত মাল চেক আর দরজায় ফেরতের পাতা তৈরি: যে পিস আসলে ফেরত আসে স্টকে সেটাই ফেরে; নিজের সাইজ বাছাইয়ে দ্বিতীয় ডেলিভারি কাস্টমার দেন, আমাদের ভুলে ফ্রি;
@@ -1231,6 +1270,11 @@ Register: [S07](docs/MASTER-REGISTER.md#s07--payments--wallet--pr-165174).
 > নতুন: অর্ডার → প্যাকিং আর প্রিন্ট — স্টিকার (বারকোড, আসল COD, গিফট হলে যে পাবেন), আবার প্রিন্ট করলে কারণ লেখা থাকে; দৈনিক পিকিং লিস্ট (ক্যাটাগরি → স্টাইল → রং → সাইজ, কম স্টক দাগানো, হোল্ডের অর্ডার আলাদা); রাইডারের হ্যান্ডওভার শিট আর "হ্যান্ডওভার হয়েছে"।
 > নতুন: কুরিয়ারের খবরে অর্ডার নিজে এগোয় (নিয়ম মেনে); কুরিয়ার "পৌঁছেছে" বললেও আমাদের হিসাবে ফেরত মনে হলে একজন যাচাই করেন; পার্সেল কেন ফেরত এলো — রাইডারের কথা আর মালিকের তালিকা থেকে কারণ। সব নতুন সুইচ শুরুতে বন্ধ।
 > নতুন: প্যাক পাতা — পিক, প্রতিটা পিস স্ক্যান, সব মিললে তবেই "প্যাক হয়েছে", তারপর কুরিয়ার বুক আর হ্যান্ডওভার; প্যাকিংয়ের ছবি আর ওজন মেলানো (দুটোই শুরুতে বন্ধ)। পিস ভাঙা বা পাওয়া না গেলে কার্ড খোলে, অর্ডার হোল্ডে যায়; একজন মানুষ ঠিক করেন — পাওয়া গেছে, অন্য সাইজ, বাকিটা পাঠান, ফোন বা বাতিল। নিজে থেকে কিছু বাতিল হয় না, টাকা ফেরত শুধু মালিকের কাছে অনুরোধ।
+
+**Built (PR 611): the shipment at pickup and every delivery result to the ERP v6** (CN-029 Phase 1; v6 stores only) — the shipment
+goes when the courier confirms pickup (the ERP's bill), every courier result by `PUT /orders/{id}/delivery` (held while a PR 525
+check is open), the order page's Partial delivery box and the ERP's identification colour. Details under S09 · Inventory & ERP
+sync, "Built (PR 610, 611)".
 
 **Built (PR 175, 176, 177): couriers behind one adapter.** New package `@extas/shipping`; the courier contract in `@extas/adapters` (`src/courier/`); migration `0033_courier` (additive: parcel mode, try, reference, receiver, note, exception, tracking time; event id, reason, source); settings registry v50 (`packages/settings/src/registry-shipping.ts`, group `delivery`); backend and admin API only — the Delivery screens come on the new admin shell (follow-up 370).
 - **The contract (175):** one `CourierApi` — book, find by the shop's reference, track, health — with the shop's own parcel states and the courier exceptions of SIM-F-017 (a failed try, an address problem, lost, damaged), each with a reason. A courier word the table does not know is stored raw and flagged, never guessed. A courier never invents money: a charge or a collected amount is only what the courier itself said.
@@ -1585,6 +1629,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #55 | PR [610](docs/stages/S05.md#pr-610), [611](docs/stages/S08.md#pr-611) | 30 Oct | Orders to the ERP v6 (only for a store switched to v6; today every store stays on v5): one line per piece in whole taka, refusals held and asked again, checkout paused while the ERP account is on hold, short lines decided by a person; the shipment goes when the courier picks the parcel up, and every delivery result goes to the ERP once. |
 | #54 | PR [407](docs/stages/S20.md#pr-407), [425](docs/stages/S22.md#pr-425) | 30 Oct | The customer invoice: issued once per order, kept, revised when the order is edited, printed on A4 or a roll or saved as a picture (the shop's legal name, address and BIN come from settings, empty until filled). The support core: one inbox of conversations with replies, internal notes, files, assignment and a who-did-what log; channels plug in later (PR [426](docs/stages/S22.md#pr-426)), so replies wait as "not sent" until one is connected. |
 | #53 | PR [607](docs/stages/S09.md#pr-607), [608](docs/stages/S09.md#pr-608) | 30 Oct | ERP contract v6 behind `erp.model` (v5 until the switch), one ERP company per store with its own keys, the permanent event ledger, and the shared tables, settings and permissions for PR [609–618](docs/stages/README.md) (CN-029 Phase 0). |
 | #52 | PR [220](docs/stages/S11.md#pr-220), [221](docs/stages/S11.md#pr-221), [222](docs/stages/S11.md#pr-222) | 30 Oct | The SEO engine's base: each page names its own address in its own language, search engines stay off until go-live (the preview is always hidden from them), search titles and descriptions from templates with AI drafts a person accepts (off until AI is on), and structured data for the shop, the website, products and sets. New admin page Website › SEO with its guide. |
