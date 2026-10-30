@@ -669,6 +669,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../db
+      '@extas/erp-types':
+        specifier: workspace:*
+        version: link:../erp-types
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings

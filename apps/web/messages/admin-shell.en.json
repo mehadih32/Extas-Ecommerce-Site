@@ -73,6 +73,9 @@
       "support": {
         "inbox": "Inbox",
         "settings": "Support settings"
+      },
+      "money": {
+        "books": "Books"
       }
     },
     "purpose": {

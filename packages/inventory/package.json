@@ -19,6 +19,7 @@
     "@extas/auth": "workspace:*",
     "@extas/catalogue": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/erp-types": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"
   },

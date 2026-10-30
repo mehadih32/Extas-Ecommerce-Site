@@ -60,6 +60,7 @@ import { erpV6Settings } from './registry-erp-v6';
 import { invoiceSettings } from './registry-invoice';
 import { supportSettings } from './registry-support';
 import { erpOrdersV6Settings } from './registry-erp-orders-v6';
+import { booksSettings } from './registry-books';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1247,6 +1248,8 @@ export const registry = {
   ...supportSettings,
   // ---- CN-028 · PR 610, 611 (CN-029 Phase 1) · orders to the ERP v6: when a refused order is asked again, and the catch-up of open orders (registry-erp-orders-v6.ts, version 66). ----
   ...erpOrdersV6Settings,
+  // ---- CN-028 · PR 615, 616 (CN-029 Phase 1) · the ERP account ledger, the payments to the ERP and the books match (registry-books.ts, version 68). ----
+  ...booksSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

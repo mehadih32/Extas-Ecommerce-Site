@@ -55,7 +55,7 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
@@ -66,6 +66,8 @@ describe('PR 6 · catalogue', () => {
   it('checks payloads: a store-bound job needs a store; a store must be a positive whole number', () => {
     const pull = jobDefinition('inventory.erp.pullStock')!;
     expect(() => pull.parse({})).toThrow(/storeId is required/);
+    // CN-028 · PR 615: the account check is per store.
+    expect(() => jobDefinition('inventory.books.checkAccount')!.parse({})).toThrow(/storeId is required/);
     expect(() => pull.parse({ storeId: 0 })).toThrow(/positive integer/);
     expect(() => pull.parse({ storeId: '1' })).toThrow(/positive integer/);
     const p = pull.parse({ storeId: 4 });

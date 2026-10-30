@@ -61,4 +61,6 @@ export * from './registry-erp-v6';
 export * from './registry-invoice';
 export * from './registry-support';
 export * from './registry-erp-orders-v6';
+// CN-028 · PR 615, 616 — the ERP account ledger and the books match (registry-books.ts, version 68).
+export * from './registry-books';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

@@ -73,6 +73,9 @@
       "support": {
         "inbox": "ইনবক্স",
         "settings": "সাপোর্ট সেটিংস"
+      },
+      "money": {
+        "books": "হিসাবের খাতা"
       }
     },
     "purpose": {

@@ -1558,6 +1558,30 @@ Planned — see register PRs 304–341, 506, 577–585: [S15](docs/MASTER-REGIST
 
 Planned — see register PRs 342–355, 504, 536–537, 568 and, from CN-028, 615–618 (the ERP account ledger, the books match engine, the daily summary, fixed costs; design in [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
+> **বাংলায়:** নতুন (PR 615): রিটেইল ERP-কে কত টাকা দেবে, তার নিজের খাতা — কোনো এন্ট্রি বদলায় না বা মোছে না, ERP-র হিসাবের
+> সাথে এক টাকাও এদিক-ওদিক না; ERP-কে দেওয়া টাকা শুধু লিখে রাখা হয় (কোনো টাকা নড়ে না); পাইপলাইনে কত টাকার পিস, দোকানের নিজের রেকর্ড থেকে।
+
+**Built (PR 615): Retail's ERP account ledger and the pipeline stock** (CN-028, CN-029 Phase 1; screen Money → Books →
+ERP account, `/admin/money/books`; no migration, settings registry v68 `packages/settings/src/registry-books.ts`).
+- **The ledger:** `ErpAccountEntry`, one entry per ERP event on the store's own link, append-only at the database and
+  hash-chained (`verifyAccountChain` names the first changed entry): the bill when the parcel leaves (`ship:<consignment>`,
+  once per order, at `erpTotal`; `recordBill` for PR 611, the account check books any billed order without one), return
+  credits at the price paid, exchange extra / adjustment / bill / credit, payments, the switch transfer (`recordSwitchTransfer`
+  for PR 619) and the opening balance (`importOpeningBalance`, once per link). A correction from the ERP is a REVERSAL entry plus
+  the new effect (`<eventId>:new`), never an edit; an original already undone (`reversedBy`) is respected. The shop's balance
+  (`balanceOn`, `ledgerBalance`) equals the ERP's with zero tolerance (tests on PostgreSQL).
+- **The pipeline stock:** `ErpPipelinePiece` / `ErpPipelineMove` from the shop's own records — bill → courier result (PARTIAL:
+  the ERP's identification, a correction moves it again) → hand-back → the ERP's check or the Hold resolution
+  (WAITING_CHECK → DELIVERED when the customer kept it, PARCEL_MISSING → DECLINED). `pipelineOn(day)` reads any past day;
+  `pipelineFlows` gives the books match (PR 616) goods and return losses.
+- **Paid to ERP:** Accounts or the owner (`erp.payments.record`) record a payment already made — nothing is sent, no money
+  moves; a wrong record is reversed by a new one; each is matched to the ERP's payment (amount, reference,
+  `books.payments.matchDays` = 2).
+- **Account check (follow-up 490):** job `inventory.books.checkAccount` every `erp.account.checkMinutes` per v6 store: the
+  shop's side, then `GET /account` for `books.account.lookbackDays` (7) — a payment whose webhook was lost is written from the
+  statement, and the hold and the ERP's numbers go into `ErpAccountState`. In v5 nothing runs.
+- **Tests:** `packages/inventory/test/erp-account.db.test.ts` (11, PostgreSQL), `packages/settings/test/registry-books.test.ts`.
+
 ### S21 · Site Health & Audit — In progress (0/14)
 
 Started: `readme-guard` in CI (scope on PR 594, CN-011) fails a pull request whose README PR log, stage counts or

@@ -102,7 +102,7 @@
     "S16",
     "S21"
    ],
-   "done": 0,
+   "done": 1,
    "total": 84,
    "parkedTotal": 0,
    "why": "The control room and the numbers it governs",
@@ -1163,8 +1163,8 @@
    "wave": "6",
    "range": "342–355, 504, 536–537, 568, 615–618",
    "total": 22,
-   "done": 0,
-   "state": "Not started",
+   "done": 1,
+   "state": "In progress",
    "parked": false,
    "registerStatus": "answered 18 Oct",
    "intro": "",
@@ -24674,18 +24674,39 @@
    "owner": "Gyani",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-10-30",
+    "note": "Retail's ERP account ledger (`ErpAccountEntry` append-only and hash-chained, one entry per ERP event per store link; bill at `erpTotal` once per order; return credit, exchange extra / adjustment / bill / credit, payment, switch transfer, opening balance once; a correction = REVERSAL + new effect, `reversedBy` respected; balance = the ERP's with zero tolerance), the pipeline stock from the shop's own records (`ErpPipelinePiece` / `ErpPipelineMove`, any past day), \"paid to ERP\" only recorded (`erp.payments.record`, reversal by a new record, matched by amount, reference and `books.payments.matchDays`), job `inventory.books.checkAccount` every `erp.account.checkMinutes` with the `GET /account` catch-up of lost payments and the hold (follow-up 490), Money → Books → ERP account (`/admin/money/books`); registry v68; CN-029 Phase 1 (Gyani)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [
+     "/admin/money/books"
+    ],
+    "settings": [
+     "erp.payments.record",
+     "books.payments.matchDays",
+     "inventory.books.checkAccount",
+     "erp.account.checkMinutes"
+    ],
+    "code": [
+     "GET /account"
+    ],
+    "names": [
+     "ErpAccountEntry",
+     "erpTotal",
+     "reversedBy",
+     "ErpPipelinePiece",
+     "ErpPipelineMove"
+    ],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “হিসাব, খরচ আর রিপোর্ট” ধাপের অংশ: দোকানের খরচ, লাভ আর টাকার রিপোর্ট; জেলা ধরে বিক্রির হিসাব।",
-   "bnAuto": true,
+   "bn": "রিটেইল ERP-কে কত টাকা দেবে তার নিজের খাতা: কোনো এন্ট্রি বদলায় না বা মোছে না, ERP-র হিসাবের সাথে এক টাকাও এদিক-ওদিক না; ERP-কে দেওয়া টাকা শুধু লিখে রাখা হয়; পাইপলাইনে কত টাকার পিস, দোকানের নিজের রেকর্ড থেকে",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S16.md#pr-615"
   },

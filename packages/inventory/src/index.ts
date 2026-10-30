@@ -34,6 +34,13 @@ export * from './erp-orders-v6';
 export * from './erp-orders-v6-events';
 export * from './erp-shipments-v6';
 export * from './erp-v6-relay';
+// PR 615 (CN-028): Retail's ERP account ledger (append-only, hash-chained), the pipeline stock, "paid to ERP", the
+// account check with the statement catch-up (follow-up 490), and what Money → Books → ERP account shows.
+export * from './books-errors';
+export * from './erp-account';
+export * from './erp-pipeline';
+export * from './erp-account-check';
+export * from './erp-account-view';
 export * from './guard';
 export * from './sync';
 export * from './locations';

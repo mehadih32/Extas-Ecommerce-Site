@@ -203,7 +203,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'site',
     tabs: [{ id: 'seo', guide: 'seo', pages: [{ href: '/admin/website/seo', perm: 'seo.read', keys: ['seo'] }] }],
   },
-  { id: 'money', icon: 'wallet', group: 'business', base: '/admin/money', tabs: [], guide: 'finance' },
+  // CN-028 · PR 615, 616: Books — Retail's ERP account, the books match, the differences and the closes.
+  {
+    id: 'money',
+    icon: 'wallet',
+    group: 'business',
+    base: '/admin/money',
+    guide: 'finance',
+    tabs: [{ id: 'books', pages: [{ href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] }] }],
+  },
   {
     id: 'reports',
     icon: 'chart',

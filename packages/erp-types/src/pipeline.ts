@@ -19,11 +19,13 @@ export const PIPELINE_EXIT: Readonly<Record<'DELIVERED' | 'APPROVED' | 'DECLINED
 /**
  * The moves a piece may make. Out of the pipeline is final, except a later `DIFFERENT_PIECE` decision or an ERP
  * correction (a reversal), which restates the piece from where the correction puts it (§10): those moves are listed too.
+ * PR 615: a piece handed back on a Hold parcel (WAITING_CHECK) that the owner's tick (`return.parcel.resolved`) says
+ * never came back was kept by the customer after all: WAITING_CHECK → DELIVERED (goods cost on the resolution day).
  */
 export const PIECE_MOVES: Readonly<Record<ErpPieceState, readonly ErpPieceState[]>> = {
   BILLED: ['DELIVERED', 'RETURNING', 'WAITING_CHECK'],
   RETURNING: ['WAITING_CHECK', 'DELIVERED'],
-  WAITING_CHECK: ['APPROVED', 'DECLINED'],
+  WAITING_CHECK: ['APPROVED', 'DECLINED', 'DELIVERED'],
   DELIVERED: ['RETURNING', 'WAITING_CHECK'],
   APPROVED: ['WAITING_CHECK', 'DECLINED'],
   DECLINED: ['WAITING_CHECK', 'APPROVED'],
