@@ -223,6 +223,47 @@ else
   echo "SKIP gate (caddy): no Caddy binary here (set CADDY_BIN to run the live gate checks)"
 fi
 
+# PR 620 · p3 review round 2: the client address the app counts refused ERP calls by is Caddy's alone. Caddy believes
+# CF-Connecting-IP only from Cloudflare's ranges (client-ip-block.sh, from infra/config/cloudflare-ips.txt) and the
+# upstream overwrites the header with {client_ip}, so a forged header from anyone else never reaches the app.
+CB=../stack/caddy/client-ip-block.sh
+cfr="$(grep -cvE '^\s*(#|$)' ../config/cloudflare-ips.txt)"
+cblk="$(bash "$CB" ../config/cloudflare-ips.txt)"
+check "client ip: every Cloudflare range is trusted, v4 and v6, and only the Cloudflare header is read" "$(grep -c '^trusted_proxies static ' <<<"$cblk"):$(sed -n 's/^trusted_proxies static //p' <<<"$cblk" | wc -w):$(grep -c ':' <<<"$(sed -n 's/^trusted_proxies static //p' <<<"$cblk" | tr ' ' '\n')"):$(grep -cx 'client_ip_headers CF-Connecting-IP' <<<"$cblk")" "1:$cfr:$(grep -vE '^\s*(#|$)' ../config/cloudflare-ips.txt | grep -c ':'):1"
+T="$(mktemp -d)"
+printf '10.0.0.0/8\nnot-a-range\n' > "$T/bad.txt"; printf '# nothing\n\n' > "$T/empty.txt"; printf '10.0.0.0/33\n' > "$T/wide.txt"
+check "client ip: a broken or empty range list is refused" "$(bash "$CB" "$T/bad.txt" >/dev/null 2>&1; echo $?):$(bash "$CB" "$T/empty.txt" >/dev/null 2>&1; echo $?):$(bash "$CB" "$T/wide.txt" >/dev/null 2>&1; echo $?):$(bash "$CB" >/dev/null 2>&1; echo $?)" "2:2:2:2"
+rm -rf "$T"
+check "client ip: the Caddyfile reads the trusted ranges inside its servers options" "$(awk '/^\tservers \{$/{f=1} f&&/^\t\}$/{f=0} f&&/import \/etc\/caddy\/sites\/client-ip\*\.caddy/{n++} END{print n+0}' ../stack/caddy/Caddyfile)" "1"
+# shellcheck disable=SC1090
+up="$(source <(sed -n '/^upstream_for() {/,/^CONF$/p' ../deploy/deploy.sh; echo '}'); APP_PORT=3000 upstream_for blue)"
+check "client ip: the app's upstream always sends Caddy's own client address" "$(grep -cxF $'\theader_up CF-Connecting-IP {client_ip}' <<<"$up")" "1"
+check "client ip: the server setup writes the trusted ranges for Caddy" "$(grep -c 'write_caddy_client_ip "$d"' ../server/steps/09-stack.sh):$(grep -c 'bash "$STACK_DIR_REPO/caddy/client-ip-block.sh"' ../server/steps/09-stack.sh)" "1:2"
+if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
+  T="$(mktemp -d)"; pf=18481; pn=18482; pb=18483
+  # "far": a list without this machine (the caller is not Cloudflare); "near": this machine stands in for Cloudflare.
+  printf '192.0.2.0/24\n2001:db8::/32\n' > "$T/far.txt"; printf '127.0.0.0/8\n::1/128\n' > "$T/near.txt"
+  bash "$CB" "$T/far.txt" > "$T/far.caddy"; bash "$CB" "$T/near.txt" > "$T/near.caddy"
+  hu="$(grep -F 'header_up CF-Connecting-IP' <<<"$up" | tr -d '\t')"
+  {
+    printf '{\n\tadmin off\n\tservers :%s {\n\t\timport %s/far.caddy\n\t}\n\tservers :%s {\n\t\timport %s/near.caddy\n\t}\n}\n' "$pf" "$T" "$pn" "$T"
+    printf ':%s {\n\treverse_proxy 127.0.0.1:%s {\n\t\t%s\n\t}\n}\n' "$pf" "$pb" "$hu"
+    printf ':%s {\n\treverse_proxy 127.0.0.1:%s {\n\t\t%s\n\t}\n}\n' "$pn" "$pb" "$hu"
+    printf ':%s {\n\trespond "{http.request.header.CF-Connecting-IP}" 200\n}\n' "$pb"
+  } > "$T/Caddyfile"
+  "$CADDY" run --config "$T/Caddyfile" --adapter caddyfile >"$T/log" 2>&1 & cpid=$!
+  for _ in $(seq 50); do curl -s -o /dev/null "127.0.0.1:$pf" && curl -s -o /dev/null "127.0.0.1:$pn" && break; sleep 0.1; done
+  seen() { curl -s "$@"; }
+  check "client ip (caddy): a forged CF-Connecting-IP from a non-Cloudflare address never reaches the app" "$(seen -H 'CF-Connecting-IP: 203.0.113.9' "127.0.0.1:$pf/"):$(seen -H 'cf-connecting-ip: 198.51.100.4' "127.0.0.1:$pf/api/erp/webhook"):$(seen "127.0.0.1:$pf/")" "127.0.0.1:127.0.0.1:127.0.0.1"
+  check "client ip (caddy): from Cloudflare's ranges, the visitor's address is passed on" "$(seen -H 'CF-Connecting-IP: 203.0.113.9' "127.0.0.1:$pn/"):$(seen "127.0.0.1:$pn/")" "203.0.113.9:127.0.0.1"
+  kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
+  rm -rf "$T"
+elif [ -n "${CI:-}" ]; then
+  check "client ip (caddy): CI runs the live client-address checks" "no Caddy binary (CADDY_BIN)" "a Caddy binary"
+else
+  echo "SKIP client ip (caddy): no Caddy binary here (set CADDY_BIN to run the live client-address checks)"
+fi
+
 # Deploy report (PR 4): commit, Dhaka time, result, migration, health check, the failing step in plain English — and
 # nothing that looks like a connection string or an e-mail, and never an older run's result.
 T="$(mktemp -d)"; D=../deploy/deploy-report.sh

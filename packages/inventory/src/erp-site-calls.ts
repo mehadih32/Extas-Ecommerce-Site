@@ -11,19 +11,23 @@
 //   default) is asked; in v5 nothing changes. A secret that verifies for two stores is refused (SHARED_SECRET).
 // - Refusals, in this order. From the request alone, touching no database, setting or vault (qa-gate 30 Oct): 404
 //   another path, 405 another method, 401 unsigned, 401 a signature or timestamp that can never verify. Then 429 when
-//   `erp.siteApi.refusedPerMinute` calls were already refused this minute (nothing is looked up either). Then 401 STALE,
+//   `erp.siteApi.refusedPerMinute` calls were already refused this minute from the same address (nothing is looked up
+//   either), unless the call verifies with a secret the last lookup found (p3 review: the real ERP is never locked out by
+//   others' refusals; erp-call-budget.ts). Then 401 STALE,
 //   a well-formed timestamp older or newer than `erp.siteApi.maxAgeSeconds` from the shop's clock (only that setting is
 //   read; qa-gate re-check). Then, after the store lookup: 503 no store has the calls on, 401 no secret / bad signature / older or newer than
 //   `erp.siteApi.maxAgeSeconds` (the contract's 5 minutes) from the shop's clock / a secret two stores share.
 // - Only a verified caller's call gets its own row: a SecurityEvent (`erp.site-call`, append-only) with the store and its
 //   link, the call, the answer's status and code, how many rows went out and whether a search was given; never a
 //   customer, a number, a search text or a secret. A refused call writes nothing of its own: the running app counts
-//   refusals by address and reason (a fixed, small set of counters, `ErpSiteGuard`) and keeps them as one summary row
+//   refusals by endpoint and reason (a fixed, small set of counters, `ErpSiteGuard`), and per client address for the
+//   cut-off (bounded, `RefusalBudget`), and keeps the counts by reason as one summary row
 //   (`erp.site-call.refused`) at most every `erp.siteApi.refusedLogMinutes`, written when a call reaches the store
 //   lookup or the admin opens the card. So nobody on the internet can fill the table or push a store's real calls out
 //   of its list.
 import type { Prisma } from '@extas/db/client';
 import { erpSignatureShape, EXTAS_ERP_PROVIDER, verifyErpRequest, type SignatureCheck } from '@extas/adapters';
+import { admit, countRefusal, giveBack, newRefusalBudget, overBudget, probeOpen, signedByKnown, type RefusalBudget } from './erp-call-budget';
 import { nowOf, setting, type Db } from './context';
 import { v6LinkFor } from './erp-link';
 import { isV6 } from './erp-model';
@@ -56,21 +60,23 @@ export const ERP_SITE_CALL_EVENT = 'erp.site-call';
 export const ERP_SITE_REFUSED_EVENT = 'erp.site-call.refused';
 
 /**
- * The running app's own record of refused calls (one per process; tests make their own): a counter per address and
- * reason (at most 3 × 12 keys, so it cannot grow), when they were last written, and how many calls were refused after
- * a store lookup this minute. The two limits are the settings as last read (null until a call first reaches the lookup).
+ * The running app's own record of refused calls (one per process; tests make their own): a counter per endpoint and
+ * reason (at most 3 × 12 keys, so it cannot grow) and when they were last written; and (p3 review) the refusals after a
+ * store lookup this minute per client address, with the secrets that lookup found (`budget`, erp-call-budget.ts). The
+ * two limits are the settings as last read (null until a call first reaches the lookup).
  */
 export interface ErpSiteGuard {
   pending: Map<string, number>;
   pendingFrom: number | null;
   flushedAt: number;
-  minuteStart: number;
-  refusedThisMinute: number;
+  budget: RefusalBudget;
   perMinute: number | null;
   logMinutes: number | null;
+  /** Round 2: `system.integrationKeyCacheSeconds` as last read (how often an over-limit call may refresh the secrets). */
+  refreshSeconds: number | null;
 }
 
-export const newErpSiteGuard = (): ErpSiteGuard => ({ pending: new Map(), pendingFrom: null, flushedAt: 0, minuteStart: 0, refusedThisMinute: 0, perMinute: null, logMinutes: null });
+export const newErpSiteGuard = (): ErpSiteGuard => ({ pending: new Map(), pendingFrom: null, flushedAt: 0, budget: newRefusalBudget(), perMinute: null, logMinutes: null, refreshSeconds: null });
 
 const holder = globalThis as unknown as { __erpSiteGuard?: ErpSiteGuard };
 /** This process's guard. */
@@ -86,6 +92,8 @@ export interface ErpSiteCall {
   query: string;
   signature: string | null;
   timestamp: string | null;
+  /** p3 review: the client's address (CF-Connecting-IP, else the proxy's), for the per-address cut-off; null = shared. */
+  address?: string | null;
 }
 
 export type ErpSiteCaller =
@@ -154,24 +162,35 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
   const early = fromRequest(call);
   if (early) return refuse(guard, now, early.endpoint, early.status, early.code);
   const endpoint = endpointOf(call.path)!;
-  if (now - guard.minuteStart >= MINUTE_MS || now < guard.minuteStart) {
-    guard.minuteStart = now;
-    guard.refusedThisMinute = 0;
-  }
-  if (guard.perMinute !== null && guard.refusedThisMinute >= guard.perMinute) return refuse(guard, now, endpoint, 429, 'RATE_LIMITED');
-  // A signature too old or too far ahead is refused before any store, connection or vault is read.
-  const maxAge = await setting(deps, null, 'erp.siteApi.maxAgeSeconds');
+  const address = call.address ?? null;
+  const pathAndQuery = call.query ? `${call.path}?${call.query}` : call.path;
+  // p3 review: the cut-off is this address's own, and a call signed with a secret the last lookup found passes it (the
+  // HMAC only, in memory; its age and its store are checked below as for every call).
+  const signedKnown = (secret: string) => verifyErpRequest({ secret, method: 'GET', pathAndQuery, signature: call.signature, timestamp: call.timestamp, maxAgeSeconds: Number.POSITIVE_INFINITY, now }).ok;
+  // Cut off already (the limits as last read): nothing is read at all.
+  if (overBudget(guard.budget, address, now, guard.perMinute) && !signedByKnown(guard.budget, signedKnown) && !probeOpen(guard.budget, now, guard.refreshSeconds)) return refuse(guard, now, endpoint, 429, 'RATE_LIMITED');
+  // The limits and the allowed age: settings only, before any store, connection or vault is read.
+  const [maxAge, perMinute, logMinutes, refreshSeconds] = await Promise.all([
+    setting(deps, null, 'erp.siteApi.maxAgeSeconds'),
+    setting(deps, null, 'erp.siteApi.refusedPerMinute'),
+    setting(deps, null, 'erp.siteApi.refusedLogMinutes'),
+    setting(deps, null, 'system.integrationKeyCacheSeconds'),
+  ]);
+  Object.assign(guard, { perMinute, logMinutes, refreshSeconds });
+  // A signature too old or too far ahead is refused before any store, connection or vault is read (counted for its
+  // address; it never takes the refresh call, which only a call that reaches the lookup may use).
   if (!erpSignatureShape(call.signature, call.timestamp, { maxAgeSeconds: maxAge, now }).ok) {
-    guard.refusedThisMinute += 1;
+    if (!overBudget(guard.budget, address, now, perMinute)) countRefusal(guard.budget, address, now);
     return refuse(guard, now, endpoint, 401, 'STALE');
   }
-  const [{ on, keys }, perMinute, logMinutes] = await Promise.all([candidates(deps), setting(deps, null, 'erp.siteApi.refusedPerMinute'), setting(deps, null, 'erp.siteApi.refusedLogMinutes')]);
-  guard.perMinute = perMinute;
-  guard.logMinutes = logMinutes;
+  // Round 2: the slot is taken now, with no await before it, so calls at the same moment cannot all pass the limit.
+  const slot = admit(guard.budget, address, now, { perMinute, refreshSeconds }, signedKnown);
+  if (!slot) return refuse(guard, now, endpoint, 429, 'RATE_LIMITED');
+  const { on, keys } = await candidates(deps);
+  guard.budget.known = keys.map((k) => k.secret);
   const verdict = await (async (): Promise<ErpSiteCaller> => {
     if (!on) return { ok: false, endpoint, status: 503, code: 'OFF' };
     if (!keys.length) return { ok: false, endpoint, status: 401, code: 'NO_SECRET' };
-    const pathAndQuery = call.query ? `${call.path}?${call.query}` : call.path;
     const matches: Candidate[] = [];
     let refusal: ErpSiteCode = 'BAD_SIGNATURE';
     for (const k of keys) {
@@ -186,10 +205,9 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
     if (!link) return { ok: false, endpoint, status: 401, code: 'NO_SECRET' };
     return { ok: true, endpoint, storeId: match.storeId, linkId: link.id, integrationId: match.integrationId };
   })();
-  if (!verdict.ok) {
-    guard.refusedThisMinute += 1;
-    refuse(guard, now, verdict.endpoint, verdict.status, verdict.code);
-  }
+  // A verified call gives its slot back; a refused one keeps it (it was counted when it was taken).
+  if (verdict.ok) giveBack(guard.budget, slot);
+  else refuse(guard, now, verdict.endpoint, verdict.status, verdict.code);
   // The store lookup already read the database: the counted refusals may be written now (at most once a window).
   await flushErpSiteRefusals(deps.db, guard, new Date(now)).catch(() => false);
   return verdict;

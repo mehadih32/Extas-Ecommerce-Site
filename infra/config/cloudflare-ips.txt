@@ -1,0 +1,32 @@
+# Cloudflare's address ranges (PR 620 · p3 review round 2): the only senders whose CF-Connecting-IP header Caddy
+# believes (infra/stack/caddy/client-ip-block.sh → /srv/extas/config/caddy/sites/client-ip.caddy). From anyone else
+# Caddy uses the real remote address and overwrites the header it passes to the app, so nobody can choose the address
+# the app's per-address limits count by.
+# Source: https://www.cloudflare.com/ips-v4 and https://www.cloudflare.com/ips-v6 (they change rarely).
+# How it is refreshed: every server setup run (server-setup.yml, infra/server/steps/09-stack.sh) fetches both lists
+# fresh and uses them; when they differ from this file the setup report shows a WARN to update this file in a PR.
+# When the fetch fails, this file is used as it is. One range per line; # starts a comment.
+# IPv4
+173.245.48.0/20
+103.21.244.0/22
+103.22.200.0/22
+103.31.4.0/22
+141.101.64.0/18
+108.162.192.0/18
+190.93.240.0/20
+188.114.96.0/20
+197.234.240.0/22
+198.41.128.0/17
+162.158.0.0/15
+104.16.0.0/13
+104.24.0.0/14
+172.64.0.0/13
+131.0.72.0/22
+# IPv6
+2400:cb00::/32
+2606:4700::/32
+2803:f800::/32
+2405:b500::/32
+2405:8100::/32
+2a06:98c0::/29
+2c0f:f248::/32

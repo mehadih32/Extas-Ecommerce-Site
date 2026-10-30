@@ -6,6 +6,11 @@
 	admin localhost:2019
 	servers {
 		protocols h1 h2 h3
+		# PR 620 · p3 review round 2: CF-Connecting-IP is believed from Cloudflare's ranges only (written by the server
+		# setup from infra/config/cloudflare-ips.txt, infra/stack/caddy/client-ip-block.sh); the upstream overwrites the
+		# header with {client_ip}, so the app's client address is always Caddy's.
+		# A glob, so a server whose setup has not yet written the file still loads (Caddy only warns on no match).
+		import /etc/caddy/sites/client-ip*.caddy
 	}
 }
 

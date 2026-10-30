@@ -44,8 +44,8 @@
         "help": "How many of the latest calls the Keys & connections page shows."
       },
       "refusedPerMinute": {
-        "label": "ERP calls: refused calls a minute before the shop stops looking",
-        "help": "After this many refused calls (wrong or old signature) in one minute, every further call that is not yet proven is refused at once, without looking up any store, until the minute is over. A correctly signed call that arrives in that moment is asked to try again."
+        "label": "ERP calls: refused calls a minute from one address before the shop stops looking",
+        "help": "Counted per sending address. After this many refused calls (wrong or old signature) from one address in one minute, every further call from it that is not yet proven is refused at once, without looking up any store, until the minute is over. Other addresses are not affected, and a call correctly signed with a store's own secret is always answered."
       },
       "refusedLogMinutes": {
         "label": "ERP calls: minutes between two summaries of refused calls",
