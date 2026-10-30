@@ -13,14 +13,19 @@ describe('PR 608 · v6 events', () => {
     expect(parseErpV6Event('not an object')).toEqual({ ok: false, reason: 'NOT_V6', type: null });
   });
 
-  it('reads the event id from the body (eventId or id) or from X-Extas-Delivery, and the business date and reverses', () => {
+  it('reads the event id from the signed body (eventId or id), and the business date and reverses', () => {
     const a = parseErpV6Event({ eventId: 'evt-1', type: 'payment.recorded', occurredAt: T0.toISOString(), date: '2026-10-23', data: { amount: '5000.00' } });
     expect(a).toEqual({ ok: true, event: { eventId: 'evt-1', type: 'payment.recorded', occurredAt: T0, date: '2026-10-23', reverses: null, data: { amount: '5000.00' } } });
     const b = parseErpV6Event({ id: 'evt-2', type: 'account.released', data: {} });
     expect(b.ok && b.event.eventId).toBe('evt-2');
-    const c = parseErpV6Event({ type: 'account.released', data: {} }, 'evt-3');
+    // X-Extas-Delivery may repeat the body's id; it never stands in for it (it is not signed).
+    const c = parseErpV6Event({ eventId: 'evt-3', type: 'account.released', data: {} }, 'evt-3');
     expect(c.ok && c.event.eventId).toBe('evt-3');
     expect(parseErpV6Event({ type: 'account.released', data: {} })).toMatchObject({ ok: false, reason: 'BAD_PAYLOAD', detail: 'eventId: missing' });
+    // p3 review: a captured signed body replayed with a new header would become a new ledger row. The id must be signed.
+    expect(parseErpV6Event({ type: 'account.released', data: {} }, 'evt-3')).toMatchObject({ ok: false, reason: 'BAD_PAYLOAD', eventId: null, detail: 'eventId: missing' });
+    expect(parseErpV6Event({ eventId: 'evt-3', type: 'account.released', data: {} }, 'evt-3b')).toMatchObject({ ok: false, reason: 'BAD_PAYLOAD', eventId: 'evt-3', detail: 'eventId: X-Extas-Delivery differs from the body' });
+    expect(parseErpV6Event({ id: 'evt-3', type: 'account.released', data: {} }, ' evt-3 ')).toMatchObject({ ok: true, event: { eventId: 'evt-3' } });
     const r = parseErpV6Event({ eventId: 'evt-4', type: 'return.piece.decided', reverses: 'evt-0', data: { externalOrderId: 'SAMPLE-1', lineId: 'L1', decision: 'DECLINED', reason: 'B_GRADE', credit: 0 } });
     expect(r.ok && [r.event.reverses, r.event.data.credit]).toEqual(['evt-0', '0']);
   });
