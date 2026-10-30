@@ -571,6 +571,62 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 on PostgreSQL: ERP contract v6', () => {
     }
   });
 
+  it('p3 review: a shared webhook secret is refused for every event type — stock.changed and variant.changed too', async () => {
+    vaultValues.set(vaultKey('extasErp.webhookSecret', storeB), secret);
+    try {
+      for (const model of ['v5', 'v6'] as const) {
+        overrides.set(`erp.model@${storeA}`, model);
+        overrides.set(`erp.model@${storeB}`, model);
+        const before = await t.prisma.webhookEvent.count();
+        const stock = world.stockChangedWebhook(secret, 'TEE-NAVY-M', 'SAMPLE-WH-1', { id: `evt_shared_stock_${model}` });
+        expect(await deliver(stock)).toEqual({ status: 401, code: 'SHARED_SECRET' });
+        const variant = world.variantChangedWebhook(secret, 'TEE-NAVY-M', { id: `evt_shared_variant_${model}` });
+        expect(await deliver(variant)).toEqual({ status: 401, code: 'SHARED_SECRET' });
+        // Nothing stored, so nothing can be applied to the first store that happened to match.
+        expect(await t.prisma.webhookEvent.count()).toBe(before);
+      }
+    } finally {
+      vaultValues.set(vaultKey('extasErp.webhookSecret', storeB), secretB);
+      overrides.delete(`erp.model@${storeA}`);
+      overrides.delete(`erp.model@${storeB}`);
+    }
+  });
+
+  it('p3 review: the same v5 event id from two stores` own connections is two events, each kept once', async () => {
+    const a = world.stockChangedWebhook(secret, 'TEE-NAVY-M', 'SAMPLE-WH-1', { id: 'evt_same_in_two_stores' });
+    const b = signedErpWebhook(secretB, JSON.parse(a.body), clock);
+    const first = await deliver(a);
+    expect(first).toMatchObject({ status: 202, code: 'ACCEPTED' });
+    const second = await deliver(b);
+    expect(second).toMatchObject({ status: 202, code: 'ACCEPTED' });
+    expect(second.eventId).not.toBe(first.eventId);
+    // A retry through each connection is that connection's duplicate.
+    expect(await deliver(signedErpWebhook(secret, JSON.parse(a.body), clock))).toEqual({ status: 200, code: 'DUPLICATE', eventId: first.eventId });
+    expect(await deliver(signedErpWebhook(secretB, JSON.parse(a.body), clock))).toEqual({ status: 200, code: 'DUPLICATE', eventId: second.eventId });
+    const rows = await t.prisma.webhookEvent.findMany({ where: { id: { in: [first.eventId!, second.eventId!] } }, orderBy: { receivedAt: 'asc' } });
+    expect(rows.map((r) => (r.payload as { integrationId: string }).integrationId).sort()).toEqual([integrationId, integrationB].sort());
+    // A row stored before this fix (its key the bare event id) still counts as that connection's own duplicate.
+    await t.prisma.webhookEvent.create({ data: { storeId: storeA, source: 'erp', eventType: 'stock.changed', idempotencyKey: 'evt_legacy_key', signatureValid: true, payload: { integrationId, event: {} }, status: 'PROCESSED', receivedAt: clock } });
+    const legacy = world.stockChangedWebhook(secret, 'TEE-NAVY-M', 'SAMPLE-WH-1', { id: 'evt_legacy_key' });
+    expect(await deliver(legacy)).toMatchObject({ status: 200, code: 'DUPLICATE' });
+    expect(await deliver(signedErpWebhook(secretB, JSON.parse(legacy.body), clock))).toMatchObject({ status: 202, code: 'ACCEPTED' });
+  });
+
+  it('p3 review: a captured v6 body sent again with a new X-Extas-Delivery never becomes a new ledger event', async () => {
+    bothV6();
+    const ev = { eventId: 'evt_sample_replayed', type: 'account.released', occurredAt: clock.toISOString(), date: '2026-10-27', data: {} };
+    const w = signedFor(secret, ev);
+    expect(await deliver(w)).toMatchObject({ status: 202, code: 'ACCEPTED' });
+    const r = await deliver({ body: w.body, headers: { ...w.headers, 'x-extas-delivery': 'evt_sample_forged' } });
+    expect(r.code).not.toBe('ACCEPTED');
+    expect(await t.prisma.erpEvent.count({ where: { eventId: { in: ['evt_sample_forged', 'evt_sample_replayed'] } } })).toBe(1);
+    // A body without its own id is never given the header's.
+    const noId = signedErpWebhook(secret, { type: 'account.released', occurredAt: clock.toISOString(), data: {} } as never, clock);
+    const n = await deliver({ body: noId.body, headers: { ...noId.headers, 'x-extas-delivery': 'evt_sample_header_only' } });
+    expect(n.code).toBe('KEPT_FAILED');
+    expect(await t.prisma.erpEvent.count({ where: { eventId: 'evt_sample_header_only' } })).toBe(0);
+  });
+
   it('CN-029 §16: a store with only a shared ERP connection keeps working in v5 and is refused in v6 (SHARED_LINK)', async () => {
     const storeC = (await t.prisma.store.create({ data: { slug: 'sample-c', name: 'Sample store C', defaultLocale: 'en-GB', currency: 'BDT', timezone: 'Asia/Dhaka' } })).id;
     const sharedSecret = randomBytes(24).toString('hex');

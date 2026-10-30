@@ -10,8 +10,11 @@
 // the rows a call gets when it does not say (20 products, 50 customers) and the most it may ask for; the longest span
 // of days; and how many recent calls the Keys & connections page lists.
 // qa-gate (30 Oct): a refused call writes nothing of its own. Refusals are counted in the app and kept as one summary
-// row per `erp.siteApi.refusedLogMinutes`; after `erp.siteApi.refusedPerMinute` refused calls in a minute, further
-// unverified calls are refused at once (429) without looking at any store; the page sums the summaries of the last
+// row per `erp.siteApi.refusedLogMinutes`; after `erp.siteApi.refusedPerMinute` refused calls in a minute from one
+// address (p3 review: per address, and a call signed with a known store secret is ~~never cut off~~ let through; round
+// 2: one call per `system.integrationKeyCacheSeconds` still reaches the lookup, so a changed secret is learnt), further unverified
+// calls from it are refused at once (429) without looking at any store (PR 608 · p3 review: the ERP webhook uses the same
+// two numbers for its own count, `erp.webhook.refused`); the page sums the summaries of the last
 // `erp.siteApi.refusedShownDays` days. The longest customer search text is `erp.siteApi.searchMaxChars`.
 import { z } from 'zod';
 import { setting } from './define';
@@ -112,7 +115,8 @@ export const bhandariP1Settings = {
   }),
   'erp.siteApi.refusedPerMinute': setting({
     ...erp,
-    // How many refused calls a minute still get a store lookup; past it, unverified calls are refused at once.
+    // How many refused calls a minute from one address still get a store lookup; past it, that address's unverified
+    // calls are refused at once (a call signed with a known store secret still goes on).
     schema: z.int().min(1).max(10000),
     default: 60,
     valueType: 'INT',

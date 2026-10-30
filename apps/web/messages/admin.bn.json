@@ -154,6 +154,8 @@
       "none": "এখনো কোনো ডাক আসেনি",
       "refused": "গত {days} দিনে ফেরানো ডাক: {n}",
       "refusedNone": "গত {days} দিনে কোনো ডাক ফেরানো হয়নি",
+      "refusedHooks": "গত {days} দিনে ফেরানো ERP-র খবর (webhook): {n}",
+      "refusedHooksNone": "গত {days} দিনে ERP-র কোনো খবর (webhook) ফেরানো হয়নি",
       "rows": "{n}টা সারি",
       "searched": "খোঁজসহ",
       "endpoint": {

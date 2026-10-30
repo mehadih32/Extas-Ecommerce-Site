@@ -127,13 +127,14 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 on PostgreSQL: the ERP`s signed calls to t
     const s0 = await erpSiteRefusals(t.prisma, since);
     for (let i = 0; i < 100; i++) await checkErpSiteCall(deps(), { method: 'GET', path: PATH, query: `page=${i}`, signature: null, timestamp: null }, guard);
     expect(await rows()).toBe(before);
-    // Well-formed but wrong: each is looked up until `refusedPerMinute`, then refused at once (429) for the minute.
+    // Well-formed but wrong: each is looked up until `refusedPerMinute` (round 2: plus the one refresh call of
+    // `system.integrationKeyCacheSeconds`), then refused at once (429) for the minute.
     overrides.set('erp.siteApi.refusedPerMinute', 5);
     const wrong = randomBytes(24).toString('hex');
     const codes: string[] = [];
     for (let i = 0; i < 20; i++) codes.push(brief(await call(wrong)).code as string);
-    expect(codes.filter((c) => c === 'BAD_SIGNATURE')).toHaveLength(5);
-    expect(codes.slice(5).every((c) => c === 'RATE_LIMITED')).toBe(true);
+    expect(codes.filter((c) => c === 'BAD_SIGNATURE')).toHaveLength(6);
+    expect(codes.slice(6).every((c) => c === 'RATE_LIMITED')).toBe(true);
     expect(brief(await call(wrong))).toEqual({ ok: false, status: 429, code: 'RATE_LIMITED' });
     // At most one summary row in `refusedLogMinutes` (the first lookup wrote it; the rest wait in the counter).
     expect((await rows()) - before).toBeLessThanOrEqual(1);
@@ -144,7 +145,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 on PostgreSQL: the ERP`s signed calls to t
     const sum = await erpSiteRefusals(t.prisma, since);
     expect(sum.total - s0.total).toBe(121);
     expect((sum.byCode.UNSIGNED ?? 0) - (s0.byCode.UNSIGNED ?? 0)).toBe(100);
-    expect((sum.byCode.RATE_LIMITED ?? 0) - (s0.byCode.RATE_LIMITED ?? 0)).toBe(16);
+    expect((sum.byCode.RATE_LIMITED ?? 0) - (s0.byCode.RATE_LIMITED ?? 0)).toBe(15);
     // A new minute: lookups again.
     const later = new Date(clock.getTime() + 61_000);
     const h = signedErpSiteCall(signing.a, 'GET', `${PATH}?${QUERY}`, later).headers;
@@ -153,6 +154,87 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 on PostgreSQL: the ERP`s signed calls to t
     overrides.delete('erp.siteApi.refusedPerMinute');
     overrides.delete(`erp.siteApi.enabled@${storeA}`);
     overrides.delete(`erp.model@${storeA}`);
+  });
+
+  it('p3 review: the cut-off is per address, and a call signed with a store`s own secret is never locked out by it', async () => {
+    overrides.set(`erp.siteApi.enabled@${storeA}`, true);
+    overrides.set(`erp.model@${storeA}`, 'v6');
+    overrides.set('erp.siteApi.refusedPerMinute', 5);
+    try {
+      const at = (secret: string, address: string | null) => {
+        const h = signedErpSiteCall(secret, 'GET', `${PATH}?${QUERY}`, clock).headers;
+        return checkErpSiteCall(deps(), { method: 'GET', path: PATH, query: QUERY, signature: h[ERP_SIGNATURE_HEADER]!, timestamp: h[ERP_TIMESTAMP_HEADER]!, address }, guard).then(brief);
+      };
+      const wrong = randomBytes(24).toString('hex');
+      const codes: string[] = [];
+      for (let i = 0; i < 70; i++) codes.push((await at(wrong, '203.0.113.9')).code as string);
+      expect(codes.filter((c) => c === 'BAD_SIGNATURE')).toHaveLength(6);
+      expect(codes.slice(6).every((c) => c === 'RATE_LIMITED')).toBe(true);
+      // Another address still gets its own lookups (and its own budget).
+      expect(await at(wrong, '198.51.100.7')).toEqual({ ok: false, status: 401, code: 'BAD_SIGNATURE' });
+      // The real ERP is answered, from another address and even from the flooded one.
+      expect(await at(signing.a, '198.51.100.7')).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+      expect(await at(signing.a, '203.0.113.9')).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+      // The flooded address stays cut off for unverified calls.
+      expect(await at(wrong, '203.0.113.9')).toEqual({ ok: false, status: 429, code: 'RATE_LIMITED' });
+      // A fresh app (nothing known yet) whose shared bucket is full: the first lookup is still made for a new address.
+      const g = newErpSiteGuard();
+      g.perMinute = 5;
+      for (let i = 0; i < 10; i++) await checkErpSiteCall(deps(), { method: 'GET', path: PATH, query: QUERY, signature: `sha256=${'a'.repeat(64)}`, timestamp: String(Math.floor(clock.getTime() / 1000)), address: null }, g);
+      const h = signedErpSiteCall(signing.a, 'GET', `${PATH}?${QUERY}`, clock).headers;
+      expect(brief(await checkErpSiteCall(deps(), { method: 'GET', path: PATH, query: QUERY, signature: h[ERP_SIGNATURE_HEADER]!, timestamp: h[ERP_TIMESTAMP_HEADER]!, address: '192.0.2.1' }, g))).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+    } finally {
+      overrides.delete('erp.siteApi.refusedPerMinute');
+      overrides.delete(`erp.siteApi.enabled@${storeA}`);
+      overrides.delete(`erp.model@${storeA}`);
+    }
+  });
+
+  it('round 2: fifty wrong signatures at the same moment get no more lookups than the limit (plus one refresh)', async () => {
+    overrides.set(`erp.siteApi.enabled@${storeA}`, true);
+    overrides.set(`erp.model@${storeA}`, 'v6');
+    overrides.set('erp.siteApi.refusedPerMinute', 3);
+    try {
+      const g = newErpSiteGuard();
+      const wrong = randomBytes(24).toString('hex');
+      const h = signedErpSiteCall(wrong, 'GET', `${PATH}?${QUERY}`, clock).headers;
+      const one = () => checkErpSiteCall(deps(), { method: 'GET', path: PATH, query: QUERY, signature: h[ERP_SIGNATURE_HEADER]!, timestamp: h[ERP_TIMESTAMP_HEADER]!, address: '203.0.113.1' }, g).then((r) => (r.ok ? 'OK' : r.code));
+      const codes = await Promise.all(Array.from({ length: 50 }, one));
+      const tally: Record<string, number> = {};
+      for (const c of codes) tally[c] = (tally[c] ?? 0) + 1;
+      expect(tally).toEqual({ BAD_SIGNATURE: 4, RATE_LIMITED: 46 });
+    } finally {
+      overrides.delete('erp.siteApi.refusedPerMinute');
+      overrides.delete(`erp.siteApi.enabled@${storeA}`);
+      overrides.delete(`erp.model@${storeA}`);
+    }
+  });
+
+  it('round 2: stale calls from the ERP`s own address never keep its calls with a new secret out for good', async () => {
+    overrides.set(`erp.siteApi.enabled@${storeA}`, true);
+    overrides.set(`erp.model@${storeA}`, 'v6');
+    overrides.set('erp.siteApi.refusedPerMinute', 3);
+    const newer = randomBytes(24).toString('hex');
+    try {
+      const g = newErpSiteGuard();
+      const at = (secret: string, when: Date, now: Date) => {
+        const h = signedErpSiteCall(secret, 'GET', `${PATH}?${QUERY}`, when).headers;
+        return checkErpSiteCall({ ...deps(), now: () => now }, { method: 'GET', path: PATH, query: QUERY, signature: h[ERP_SIGNATURE_HEADER]!, timestamp: h[ERP_TIMESTAMP_HEADER]!, address: '192.0.2.10' }, g).then(brief);
+      };
+      expect(await at(signing.a, clock, clock)).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+      // The owner changes the store's signing secret; stale calls from the same address fill its minute, three minutes running.
+      vaultValues.set(vaultKey('extasErp.signingSecret', storeA), newer);
+      for (let m = 0; m < 3; m++) {
+        const now = new Date(clock.getTime() + m * 61_000);
+        for (let i = 0; i < 4; i++) await at(randomBytes(24).toString('hex'), new Date(now.getTime() - 3_600_000), now);
+        expect(await at(newer, now, now)).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+      }
+    } finally {
+      vaultValues.set(vaultKey('extasErp.signingSecret', storeA), signing.a);
+      overrides.delete('erp.siteApi.refusedPerMinute');
+      overrides.delete(`erp.siteApi.enabled@${storeA}`);
+      overrides.delete(`erp.model@${storeA}`);
+    }
   });
 
   it('off by default, and while the store still speaks v5: a good signature changes nothing', async () => {

@@ -52,8 +52,10 @@ export * from './books-view';
 // PR 609 (CN-028): import from the ERP by style code, and the buying price with its change flag.
 export * from './erp-import';
 export * from './shop-price';
-// PR 620 (CN-028): the ERP's own signed calls to the shop (who is asking, and the log of every call).
+// PR 620 (CN-028): the ERP's own signed calls to the shop (who is asking, and the log of every call); p3 review: the
+// refusal budget per client address that its calls and its webhooks share in design (erp-call-budget.ts).
 export * from './erp-site-calls';
+export * from './erp-call-budget';
 export * from './guard';
 // CN-028 · PR 617, 618: the daily summary, the fixed costs and the Books status card.
 export * from './books-rules';

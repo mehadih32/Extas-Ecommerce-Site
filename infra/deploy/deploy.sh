@@ -99,6 +99,9 @@ reverse_proxy {
 	lb_policy least_conn
 	lb_try_duration 5s
 	fail_duration 10s
+	# PR 620 · p3 review round 2: the app's client address is Caddy's own answer (Cloudflare's header only from its
+	# ranges, infra/stack/caddy/client-ip-block.sh), never a header the caller wrote.
+	header_up CF-Connecting-IP {client_ip}
 }
 CONF
 }

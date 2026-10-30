@@ -118,7 +118,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 · the ERP asks the shop (route handler, P
   });
 
   it('refuses a bad signature, a bad query and a span beyond the setting; the limits are settings', async () => {
-    expect((await ask(randomBytes(24).toString('hex'), '/erp-api/customers')).body).toEqual({ ok: false, code: 'BAD_SIGNATURE' });
+    // Round 2: every 401 is one code; the reason (BAD_SIGNATURE) is only counted on the shop.
+    expect((await ask(randomBytes(24).toString('hex'), '/erp-api/customers')).body).toEqual({ ok: false, code: 'UNAUTHORIZED' });
     expect((await ask('a', '/erp-api/customers', 'POST')).status).toBe(405);
     for (const q of ['from=2026-10-22&to=2026-10-01', 'from=yesterday&to=2026-10-01', 'to=2026-10-22', 'from=2026-10-01&to=2026-10-22&limit=0']) {
       expect((await ask('a', `/erp-api/top-products?${q}`)).body, q).toEqual({ ok: false, code: 'BAD_QUERY' });
@@ -147,6 +148,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 · the ERP asks the shop (route handler, P
     expect(JSON.stringify(rows)).not.toMatch(/Rahim|\+880|House/);
   });
 
+  it("p3 review: a flood of wrong signatures from one address cuts off that address only, never the ERP's signed calls", async () => {
+    overrides.set('erp.siteApi.refusedPerMinute', 3);
+    const own = { ...deps, guard: newErpSiteGuard() };
+    const from = async (key: string, ip: string) => {
+      const h = signedErpSiteCall(key, 'GET', '/erp-api/customers?page=1', T0).headers;
+      const res = await erpSiteApiHandler(new Request(`${SITE}/erp-api/customers?page=1`, { headers: { ...h, 'cf-connecting-ip': ip } }), own);
+      return `${res.status} ${((await res.json()) as { code?: string }).code ?? 'OK'}`;
+    };
+    try {
+      const wrong = randomBytes(24).toString('hex');
+      const codes: string[] = [];
+      for (let i = 0; i < 10; i++) codes.push(await from(wrong, '203.0.113.50'));
+      // Round 2: three, then the one refresh call; every 401 is UNAUTHORIZED.
+      expect(codes.slice(0, 4)).toEqual(['401 UNAUTHORIZED', '401 UNAUTHORIZED', '401 UNAUTHORIZED', '401 UNAUTHORIZED']);
+      expect(codes.slice(4).every((c) => c === '429 RATE_LIMITED')).toBe(true);
+      expect(await from(wrong, '198.51.100.50')).toBe('401 UNAUTHORIZED');
+      expect(await from(secret.a, '198.51.100.50')).toBe('200 OK');
+      expect(await from(secret.a, '203.0.113.50')).toBe('200 OK');
+    } finally {
+      overrides.delete('erp.siteApi.refusedPerMinute');
+    }
+  });
+
   it('qa-gate: refused from the request alone, the handler touches nothing and still answers no-store', async () => {
     const boom = (what: string) =>
       new Proxy({}, { get: (_t, k) => (k === 'then' ? undefined : () => { throw new Error(`${what} touched (${String(k)})`); }) });
@@ -155,15 +179,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 · the ERP asks the shop (route handler, P
       const r = await erpSiteApiHandler(new Request(`${SITE}${path}`, init), none);
       return [r.status, ((await r.json()) as { code: string }).code, r.headers.get('cache-control')];
     };
-    expect(await send('/erp-api/customers')).toEqual([401, 'UNSIGNED', 'no-store']);
+    expect(await send('/erp-api/customers')).toEqual([401, 'UNAUTHORIZED', 'no-store']);
     expect(await send('/erp-api/customers', { method: 'POST' })).toEqual([405, 'METHOD', 'no-store']);
     expect(await send('/erp-api/orders')).toEqual([404, 'NOT_FOUND', 'no-store']);
-    expect(await send('/erp-api/customers', { headers: { 'x-extas-signature': 'sha256=00', 'x-extas-timestamp': '1' } })).toEqual([401, 'BAD_SIGNATURE', 'no-store']);
+    expect(await send('/erp-api/customers', { headers: { 'x-extas-signature': 'sha256=00', 'x-extas-timestamp': '1' } })).toEqual([401, 'UNAUTHORIZED', 'no-store']);
   });
 
   it('qa-gate: the route answers request-only refusals before it builds any deps', async () => {
     for (const [init, path, want] of [
-      [{}, '/erp-api/customers?page=1&pageSize=50', [401, 'UNSIGNED']],
+      [{}, '/erp-api/customers?page=1&pageSize=50', [401, 'UNAUTHORIZED']],
       [{ method: 'DELETE' }, '/erp-api/customers', [405, 'METHOD']],
       [{ method: 'HEAD' }, '/erp-api/top-products', [405, null]],
     ] as const) {
@@ -185,6 +209,6 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 · the ERP asks the shop (route handler, P
     // A raw space is sent by no HTTP client; signed raw, it would not match what the shop reads: refused.
     const h = signedErpSiteCall(secret.a, 'GET', '/erp-api/customers?search=Sample Rahim', T0).headers;
     const raw = await erpSiteApiHandler(new Request(`${SITE}/erp-api/customers?search=Sample Rahim`, { headers: h }), deps);
-    expect([raw.status, ((await raw.json()) as { code: string }).code]).toEqual([401, 'BAD_SIGNATURE']);
+    expect([raw.status, ((await raw.json()) as { code: string }).code]).toEqual([401, 'UNAUTHORIZED']);
   });
 });

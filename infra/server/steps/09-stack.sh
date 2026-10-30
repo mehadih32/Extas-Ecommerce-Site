@@ -151,6 +151,31 @@ CONF
   printf '"extas" "%s"\n"extas_app" "%s"\n' "$pw" "$app_pw" | write_file "$EXTAS_ROOT/config/pgbouncer/userlist.txt" 0644
 }
 
+# PR 620 · p3 review round 2: the client address comes from Caddy alone. Cloudflare's ranges are fetched fresh (they
+# change rarely) and checked; when they differ from infra/config/cloudflare-ips.txt the report asks for that file to be
+# updated; when the fetch fails, the file is used as it is (client-ip-block.sh refuses anything that is not a range).
+write_caddy_client_ip() {
+  local d="$1" repo="$EXTAS_REPO_DIR/infra/config/cloudflare-ips.txt" tmp src
+  tmp="$(mktemp -d)"
+  src="$repo"
+  if curl -fsS -m 10 https://www.cloudflare.com/ips-v4 > "$tmp/v4" && curl -fsS -m 10 https://www.cloudflare.com/ips-v6 > "$tmp/v6" \
+    && cat "$tmp/v4" <(echo) "$tmp/v6" > "$tmp/all" && bash "$STACK_DIR_REPO/caddy/client-ip-block.sh" "$tmp/all" > /dev/null 2>&1; then
+    src="$tmp/all"
+    if ! diff -q <(grep -vE '^\s*(#|$)' "$repo" | sort) <(grep -vE '^\s*(#|$)' "$tmp/all" | sort) > /dev/null; then
+      report WARN "PR 620 · client address" "Cloudflare's ranges changed: the fresh list is used; update infra/config/cloudflare-ips.txt"
+    fi
+  fi
+  if bash "$STACK_DIR_REPO/caddy/client-ip-block.sh" "$src" > "$tmp/client-ip.caddy"; then
+    write_file "$d/client-ip.caddy" 0644 < "$tmp/client-ip.caddy" >/dev/null
+    report OK "PR 620 · client address" "CF-Connecting-IP believed from Cloudflare's ranges only"
+  else
+    # Never left without the file Caddy imports: with no trusted range, every client address is the remote one.
+    [ -f "$d/client-ip.caddy" ] || printf '# no trusted proxy: the client address is the remote address\n' | write_file "$d/client-ip.caddy" 0644 >/dev/null
+    report FAIL "PR 620 · client address" "the Cloudflare range list is broken; client-ip.caddy kept as it was"
+  fi
+  rm -rf "$tmp"
+}
+
 write_caddy_sites() {
   local d="$EXTAS_ROOT/config/caddy/sites" pw hash salt
   install -d -m 0755 "$d" "$EXTAS_ROOT/config/caddy/data" "$EXTAS_ROOT/config/caddy/config" "$EXTAS_ROOT/logs/caddy"
@@ -178,6 +203,7 @@ CONF
     bash "$STACK_DIR_REPO/caddy/auth-block.sh" "$tag" "$EXTAS_STAGING_USER" "$hash" "$token" "$days" \
       | write_file "$d/auth.caddy" 0600 >/dev/null
   fi
+  write_caddy_client_ip "$d"
   # The upstream belongs to deploy.yml once the app exists; until then the static page.
   if [ ! -f "$d/upstream.caddy" ]; then
     printf 'root * /srv/www\nfile_server\n' | write_file "$d/upstream.caddy" 0644 >/dev/null

@@ -437,7 +437,7 @@ export type ErpSwitchOver = z.output<typeof erpSwitchOverSchema>;
 //
 // Every v6 event has an `eventId` the ERP makes once and never uses again, the ERP's business `date`, and, for a
 // correction, `reverses: <the eventId it undoes>` (§2.8). The same event comes by webhook (body `eventId` or `id`, also
-// in the `X-Extas-Delivery` header) and in the pulls (`GET /returns`, `GET /exchanges`): the shop's one ledger keeps it
+// in the `X-Extas-Delivery` header, which is not signed: the body's id is the one read) and in the pulls (`GET /returns`, `GET /exchanges`): the shop's one ledger keeps it
 // once. `stock.changed` and `variant.changed` stay on the PR 196 path (webhook.ts) with its 72-hour filter.
 
 export const ERP_V6_EVENT_TYPES = [
@@ -522,14 +522,21 @@ const v6Envelope = z.object({
 
 const v6Issues = (e: z.ZodError) => e.issues.map((i) => `${i.path.join('.') || '(event)'}: ${i.message}`).join('; ').slice(0, 300);
 
-/** Reads one v6 event (a webhook body, or one event of a pull). `headerId` is `X-Extas-Delivery`. Never throws. */
+/**
+ * Reads one v6 event (a webhook body, or one event of a pull). Never throws. The eventId is the body's own (`eventId`,
+ * or `id`): it is what the signature covers. `headerId` is `X-Extas-Delivery`, which is not signed: it may repeat the
+ * body's id, never stand in for it, and one that differs makes the event BAD_PAYLOAD (p3 review: a captured signed body
+ * replayed with a new header must never become a new ledger row).
+ */
 export function parseErpV6Event(body: unknown, headerId: string | null = null): ErpV6EventParse {
   const type = body && typeof body === 'object' && typeof (body as { type?: unknown }).type === 'string' ? (body as { type: string }).type : null;
   if (!isErpV6EventType(type)) return { ok: false, reason: 'NOT_V6', type };
   const env = v6Envelope.safeParse(body);
   if (!env.success) return { ok: false, reason: 'BAD_PAYLOAD', eventId: null, type, detail: v6Issues(env.error) };
-  const eventId = env.data.eventId ?? env.data.id ?? headerId?.trim().slice(0, 200) ?? null;
+  const eventId = env.data.eventId ?? env.data.id ?? null;
   if (!eventId) return { ok: false, reason: 'BAD_PAYLOAD', eventId: null, type, detail: 'eventId: missing' };
+  const header = headerId?.trim();
+  if (header && header !== eventId) return { ok: false, reason: 'BAD_PAYLOAD', eventId, type, detail: 'eventId: X-Extas-Delivery differs from the body' };
   const data = V6_DATA[type].safeParse(env.data.data);
   if (!data.success) return { ok: false, reason: 'BAD_PAYLOAD', eventId, type, detail: v6Issues(data.error) };
   return { ok: true, event: { eventId, type, occurredAt: env.data.occurredAt, date: env.data.date, reverses: env.data.reverses, data: data.data } };

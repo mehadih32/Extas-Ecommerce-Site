@@ -7,7 +7,7 @@
 // CN-029 §16: store A and store B are each their own ERP company, and nothing of one ever reaches the other.
 import { randomBytes, randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { allAdapters, createConnections, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, mockErp } from '@extas/adapters';
+import { allAdapters, createConnections, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, mockErp, signedErpWebhook } from '@extas/adapters';
 import { SYSTEM, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { createColour, createProduct, createSize, createVariant, type CatalogueDeps } from '@extas/catalogue';
@@ -30,6 +30,7 @@ import {
   pushCounts,
   receiveErpWebhook,
   relayErpPushes,
+  retryErpPushes,
   SUPERSEDED_BY_REVISION,
   syncHealth,
   v6OrderDocument,
@@ -504,6 +505,193 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     world.v6('SAMPLE-CO-2').release();
     await deliverAll('SAMPLE-CO-2');
     expect((await erpCheckoutPaused(deps(), storeB)).paused).toBe(false);
+  });
+
+  it('p3 review: a late account.hold never pauses checkout again after the ERP released the account (nor a late release lifts a newer hold)', async () => {
+    const eventOf = (eventId: string) => t.prisma.erpEvent.findFirstOrThrow({ where: { storeId: storeA, eventId } });
+    // The ERP holds, then releases a minute later; the release arrives first, the hold only afterwards (a retry, or
+    // the hourly pull).
+    const hold = world.v6().hold('PAYMENT_OVERDUE');
+    const holdHooks = world.v6Webhooks(secret);
+    clock = new Date(clock.getTime() + 60_000);
+    world.v6().release();
+    await deliverAll();
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
+    for (const h of holdHooks) await deliver(h);
+    await applyErpEvents(deps());
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
+    expect((await eventOf(hold.eventId)).status).toBe('IGNORED');
+    expect((await eventOf(hold.eventId)).result).toMatchObject({ why: 'OLDER' });
+
+    // The other way round: a release older than the hold the shop already applied is ignored; checkout stays paused.
+    clock = new Date(clock.getTime() + 60_000);
+    const release = world.v6().release();
+    const releaseHooks = world.v6Webhooks(secret);
+    clock = new Date(clock.getTime() + 60_000);
+    world.v6().hold('PAYMENT_OVERDUE');
+    await deliverAll();
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(true);
+    for (const h of releaseHooks) await deliver(h);
+    await applyErpEvents(deps());
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(true);
+    expect((await eventOf(release.eventId)).status).toBe('IGNORED');
+
+    // The account check (GET /account) is news too: a hold older than the check that said "not on hold" is ignored.
+    clock = new Date(clock.getTime() + 60_000);
+    world.v6().release();
+    world.v6().takeEvents();
+    clock = new Date(clock.getTime() + 60_000);
+    expect(await checkErpOrders(deps(), { storeId: storeA })).toMatchObject({ status: 'ok', onHold: false });
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
+    // Round 2: the check is the shop's clock and occurredAt the ERP's, so only a hold older than the check by more than
+    // the skew margin (erp.webhook.maxAgeSeconds, 5 minutes) is ignored.
+    const stale = { eventId: `evt_sample_stale_hold_${randomUUID()}`, type: 'account.hold', occurredAt: new Date(clock.getTime() - 10 * 60_000).toISOString(), date: '2026-10-23', data: { reason: 'PAYMENT_OVERDUE' } };
+    const w = signedErpWebhook(secret, stale as never, clock);
+    expect(await deliver({ body: w.body, headers: { ...w.headers, 'x-extas-delivery': stale.eventId } })).toMatchObject({ status: 202, code: 'ACCEPTED' });
+    await applyErpEvents(deps());
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
+    expect((await eventOf(stale.eventId)).status).toBe('IGNORED');
+  });
+
+  it('p3 review round 2: two clocks — a hold a little before the account check is applied; a far-future event never freezes the account', async () => {
+    const eventOf = (eventId: string) => t.prisma.erpEvent.findFirstOrThrow({ where: { storeId: storeA, eventId } });
+    const send = async (ev: { eventId: string }) => {
+      const w = signedErpWebhook(secret, ev as never, clock);
+      expect(await deliver({ body: w.body, headers: { ...w.headers, 'x-extas-delivery': ev.eventId } })).toMatchObject({ status: 202, code: 'ACCEPTED' });
+      await applyErpEvents(deps());
+    };
+    world.v6().release();
+    world.v6().takeEvents();
+    expect(await checkErpOrders(deps(), { storeId: storeA })).toMatchObject({ status: 'ok', onHold: false });
+    // The ERP's clock runs a minute behind the shop's: its hold "a minute before" the check is within the margin.
+    const near = { eventId: `evt_sample_skew_hold_${randomUUID()}`, type: 'account.hold', occurredAt: new Date(clock.getTime() - 60_000).toISOString(), date: '2026-10-23', data: { reason: 'PAYMENT_OVERDUE' } };
+    await send(near);
+    expect((await eventOf(near.eventId)).status).toBe('APPLIED');
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(true);
+    // The same margin decides with a setting: at 30 seconds (the lowest allowed), a hold a minute older than a new
+    // check is ignored.
+    overrides.set('erp.webhook.maxAgeSeconds', 30);
+    try {
+      clock = new Date(clock.getTime() + 60_000);
+      world.v6().release();
+      world.v6().takeEvents();
+      expect(await checkErpOrders(deps(), { storeId: storeA })).toMatchObject({ status: 'ok', onHold: false });
+      const old = { eventId: `evt_sample_skew_old_${randomUUID()}`, type: 'account.hold', occurredAt: new Date(clock.getTime() - 60_000).toISOString(), date: '2026-10-23', data: { reason: 'PAYMENT_OVERDUE' } };
+      await send(old);
+      expect([(await eventOf(old.eventId)).status, (await eventOf(old.eventId)).result]).toMatchObject(['IGNORED', { why: 'OLDER' }]);
+      expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
+    } finally {
+      overrides.delete('erp.webhook.maxAgeSeconds');
+    }
+    // A release dated ten days ahead (a wrong ERP clock) is applied, but it is placed at its arrival plus the margin:
+    // a real hold a minute later still pauses checkout.
+    clock = new Date(clock.getTime() + 60_000);
+    const future = { eventId: `evt_sample_future_release_${randomUUID()}`, type: 'account.released', occurredAt: new Date(clock.getTime() + 10 * 86_400_000).toISOString(), date: '2026-10-23', data: {} };
+    await send(future);
+    expect((await eventOf(future.eventId)).status).toBe('APPLIED');
+    clock = new Date(clock.getTime() + 6 * 60_000);
+    const hold = { eventId: `evt_sample_after_future_${randomUUID()}`, type: 'account.hold', occurredAt: clock.toISOString(), date: '2026-10-23', data: { reason: 'PAYMENT_OVERDUE' } };
+    await send(hold);
+    expect((await eventOf(hold.eventId)).status).toBe('APPLIED');
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(true);
+    // And a far-future hold is placed the same way: the release that follows it a minute later still lifts it.
+    clock = new Date(clock.getTime() + 60_000);
+    const fHold = { eventId: `evt_sample_future_hold_${randomUUID()}`, type: 'account.hold', occurredAt: new Date(clock.getTime() + 10 * 86_400_000).toISOString(), date: '2026-10-23', data: { reason: 'PAYMENT_OVERDUE' } };
+    await send(fHold);
+    clock = new Date(clock.getTime() + 6 * 60_000);
+    const release = { eventId: `evt_sample_after_future_hold_${randomUUID()}`, type: 'account.released', occurredAt: clock.toISOString(), date: '2026-10-23', data: {} };
+    await send(release);
+    expect((await eventOf(release.eventId)).status).toBe('APPLIED');
+    expect((await erpCheckoutPaused(deps(), storeA)).paused).toBe(false);
+  });
+
+  it('p3 review: follow-ups of an order the ERP never took never fill the relay; they end FAILED with the reason, never deleted', async () => {
+    overrides.set('erp.push.batchSize', 3);
+    try {
+      // Three orders the ERP refuses as wrong (400): FAILED. Each already has its shipment waiting behind it.
+      const refused = [order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]), order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]), order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }])];
+      for (const o of refused) await enqueueOrderPush(deps(), o.input);
+      for (const o of refused) await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: `C-${o.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
+      world.failNext({ path: '/orders', status: 400, times: 3 });
+      expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ failed: 3, sent: 0 });
+      // A new order after them still goes: the three shipments never hold the batch.
+      const fresh = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+      await enqueueOrderPush(deps(), fresh.input);
+      const r1 = await relayErpPushes(deps(), { storeId: storeA });
+      const r2 = await relayErpPushes(deps(), { storeId: storeA });
+      expect(r1.failed + r2.failed).toBe(3);
+      expect((await pushOf(storeA, fresh.orderId)).status).toBe('SENT');
+      for (const o of refused) {
+        const s = await pushOf(storeA, o.orderId, 'shipment.create');
+        expect([s.status, s.lastError]).toEqual(['FAILED', 'ORDER_NOT_AT_ERP']);
+      }
+      // Sent again by hand, the order brings its shipment back with it.
+      const first = await pushOf(storeA, refused[0]!.orderId);
+      expect(await retryErpPushes(deps(), { actor: SYSTEM, storeId: storeA }, { ids: [first.id] })).toEqual({ queued: 2 });
+      expect((await pushOf(storeA, refused[0]!.orderId, 'shipment.create')).status).toBe('PENDING');
+      await relayErpPushes(deps(), { storeId: storeA });
+      await relayErpPushes(deps(), { storeId: storeA });
+      expect((await pushOf(storeA, refused[0]!.orderId)).status).toBe('SENT');
+      expect((await pushOf(storeA, refused[0]!.orderId, 'shipment.create')).status).toBe('SENT');
+
+      // A follow-up whose order is only waiting (HELD while the account is on hold) steps out of the batch until its
+      // order goes, then goes right after it.
+      world.v6().hold('PAYMENT_OVERDUE');
+      world.v6().takeEvents();
+      const held = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+      await enqueueOrderPush(deps(), held.input);
+      expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ held: 1 });
+      await enqueueErpShipment(deps(), { storeId: storeA, orderId: held.orderId, courier: 'PATHAO', consignmentId: `C-${held.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
+      expect((await relayErpPushes(deps(), { storeId: storeA })).waiting).toBe(1);
+      const waitingRow = await pushOf(storeA, held.orderId, 'shipment.create');
+      expect([waitingRow.status, waitingRow.lastError]).toEqual(['PENDING', 'WAITING_FOR_ORDER']);
+      expect(waitingRow.nextAttemptAt!.getTime()).toBeGreaterThan(clock.getTime());
+      expect((await relayErpPushes(deps(), { storeId: storeA })).waiting).toBe(0);
+      world.v6().release();
+      await deliverAll();
+      await relayErpPushes(deps(), { storeId: storeA });
+      await relayErpPushes(deps(), { storeId: storeA });
+      expect((await pushOf(storeA, held.orderId)).status).toBe('SENT');
+      expect((await pushOf(storeA, held.orderId, 'shipment.create')).status).toBe('SENT');
+    } finally {
+      overrides.delete('erp.push.batchSize');
+    }
+  });
+
+  it('p3 review round 2: a new revision of an order the ERP refused brings back the follow-ups it ended, and each goes once', async () => {
+    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+    await enqueueOrderPush(deps(), o.input);
+    await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: `C-${o.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
+    world.failNext({ path: '/orders', status: 400, times: 1 });
+    // The shipment waits for its order (out of the batch for the longest wait), then ends with it.
+    const longest = (registry['erp.push.backoffMaxSeconds'].default as number) * 1000 + 1_000;
+    for (let i = 0; i < 3; i++) {
+      await relayErpPushes(deps(), { storeId: storeA });
+      clock = new Date(clock.getTime() + longest);
+    }
+    const r0 = await pushOf(storeA, o.orderId);
+    expect(r0.status).toBe('FAILED');
+    const ended = await pushOf(storeA, o.orderId, 'shipment.create');
+    expect([ended.status, ended.lastError]).toEqual(['FAILED', 'ORDER_NOT_AT_ERP']);
+    // Staff correct the order (revision 1) and the ERP takes it: the shipment it ended is back, on the next round.
+    const shipCalls = () => world.calls.filter((c) => c.method === 'POST' && c.path.includes('/shipments')).length;
+    const before = shipCalls();
+    const r1 = order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }]);
+    await enqueueOrderPush(deps(), { ...r1.input, orderId: o.orderId, externalOrderId: o.ext, revision: 1 });
+    await relayErpPushes(deps(), { storeId: storeA });
+    expect((await pushOf(storeA, o.orderId)).status).toBe('SENT');
+    const back = await t.prisma.erpPush.findUniqueOrThrow({ where: { id: ended.id } });
+    expect([back.status, back.lastError, back.attempts, back.nextAttemptAt]).toEqual(['PENDING', null, 0, null]);
+    for (let i = 0; i < 3; i++) {
+      await relayErpPushes(deps(), { storeId: storeA });
+      clock = new Date(clock.getTime() + 60_000);
+    }
+    expect((await t.prisma.erpPush.findUniqueOrThrow({ where: { id: ended.id } })).status).toBe('SENT');
+    // Sent once: the same row (never a copy), one call to the ERP.
+    expect(await t.prisma.erpPush.count({ where: { storeId: storeA, referenceId: o.orderId, documentType: 'shipment.create' } })).toBe(1);
+    expect(shipCalls() - before).toBe(1);
+    // The first revision stays as it was (FAILED, kept): it is never sent again.
+    expect((await t.prisma.erpPush.findUniqueOrThrow({ where: { id: r0.id } })).status).toBe('FAILED');
   });
 
   it('a v5 store gets none of it: no hold pause, no order check, no shipment, no delivery result', async () => {

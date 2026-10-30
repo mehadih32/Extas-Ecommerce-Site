@@ -121,7 +121,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 196 on PostgreSQL: ERP webhooks', () => {
     const again = await receive(w);
     expect(again).toEqual({ status: 200, code: 'DUPLICATE', eventId: first.eventId });
     const row = await event(first.eventId!);
-    expect([row.source, row.eventType, row.idempotencyKey, row.status, row.signatureValid]).toEqual(['erp', 'stock.changed', 'evt_stock_1', 'RECEIVED', true]);
+    // p3 review: kept under the connection's own key (`<integrationId>:<event id>`), so two stores' ERPs may share an id.
+    expect([row.source, row.eventType, row.idempotencyKey, row.status, row.signatureValid]).toEqual(['erp', 'stock.changed', `${integrationId}:evt_stock_1`, 'RECEIVED', true]);
     expect((row.payload as { integrationId: string }).integrationId).toBe(integrationId);
     expect(await waitingErpWebhooks(deps())).toEqual([first.eventId]);
 
@@ -182,8 +183,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 196 on PostgreSQL: ERP webhooks', () => {
     world.setStock('TEE-NAVY-M', 'SAMPLE-WH-1', { onHand: 3 });
     const r = await receive(world.stockChangedWebhook(secret, 'TEE-NAVY-M', 'SAMPLE-WH-1', { id: 'evt_stock_1' }));
     expect(r).toMatchObject({ status: 202, code: 'ACCEPTED' });
-    expect((await event(r.eventId!)).idempotencyKey).toBe(`evt_stock_1@${clock.toISOString()}`);
-    expect(await t.prisma.webhookEvent.count({ where: { idempotencyKey: { startsWith: 'evt_stock_1' } } })).toBe(2);
+    expect((await event(r.eventId!)).idempotencyKey).toBe(`${integrationId}:evt_stock_1@${clock.toISOString()}`);
+    expect(await t.prisma.webhookEvent.count({ where: { idempotencyKey: { startsWith: `${integrationId}:evt_stock_1` } } })).toBe(2);
     // Within the (short) window again: a duplicate of the new one.
     expect(await receive(world.stockChangedWebhook(secret, 'TEE-NAVY-M', 'SAMPLE-WH-1', { id: 'evt_stock_1' }))).toEqual({ status: 200, code: 'DUPLICATE', eventId: r.eventId });
     expect((await processErpWebhook(deps(), r.eventId!)).status).toBe('processed');

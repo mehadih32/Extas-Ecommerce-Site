@@ -99,7 +99,12 @@ export function clearCookie(name: string): string {
   return `${name}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }
 
-/** Where the request came from, for the logs: Cloudflare's header, then the proxy's, then Caddy's. */
+/**
+ * Where the request came from, for the logs and the per-address limits on refused ERP calls. On the server the
+ * CF-Connecting-IP header is always Caddy's own answer (PR 620 · p3 review round 2): Caddy believes Cloudflare's header
+ * only from Cloudflare's ranges and overwrites it on the way to the app (infra/stack/caddy/client-ip-block.sh,
+ * infra/deploy/deploy.sh `upstream_for`), so a caller cannot choose it. The other two are fallbacks for local runs.
+ */
 export function requestContext(request: Request): RequestContext {
   const h = request.headers;
   const ip = h.get('cf-connecting-ip') ?? h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? null;

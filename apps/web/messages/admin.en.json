@@ -154,6 +154,8 @@
       "none": "No call yet",
       "refused": "Refused in the last {days} days: {n}",
       "refusedNone": "No call refused in the last {days} days",
+      "refusedHooks": "ERP events (webhooks) refused in the last {days} days: {n}",
+      "refusedHooksNone": "No ERP event (webhook) refused in the last {days} days",
       "rows": "{n} rows",
       "searched": "with a search",
       "endpoint": {

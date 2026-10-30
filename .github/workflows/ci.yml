@@ -80,6 +80,8 @@ jobs:
           # The preview gate exactly as server setup writes it (a throwaway password; PR 7).
           hash="$(docker run --rm caddy:2.10-alpine caddy hash-password --plaintext ci-only)"
           bash infra/stack/caddy/auth-block.sh "# ci" extas "$hash" "$(printf ci | sha256sum | cut -c1-64)" 30 > /tmp/sites/auth.caddy
+          # PR 620: the trusted Cloudflare ranges exactly as server setup writes them (the import is a glob, so it also loads without).
+          bash infra/stack/caddy/client-ip-block.sh infra/config/cloudflare-ips.txt > /tmp/sites/client-ip.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid

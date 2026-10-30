@@ -13,9 +13,11 @@
 // - PATH?QUERY is the path and query as the URL standard reads the request: the ERP percent-encodes its query (RFC 3986,
 //   as every HTTP client does) and signs exactly what it sends. A query sent with raw spaces, quotes or letters outside
 //   ASCII would be read differently and is refused BAD_SIGNATURE (docs/admin-guide/integrations.md).
+// - Round 2 (p3 review): every 401 answers one code, UNAUTHORIZED; the reasons are only counted on the shop.
 // - qa-gate (30 Oct): a call refused from the request alone (another method, no or a broken signature) is answered by
 //   `erpSiteRoute` before any connection is made or setting read; refused calls are only counted (a bounded summary,
-//   @extas/inventory `ErpSiteGuard`), and only a verified caller's call gets its own log row.
+//   @extas/inventory `ErpSiteGuard`), and only a verified caller's call gets its own log row. p3 review: the cut-off
+//   after too many refusals is per client address, and a call signed with a known store secret is never cut off.
 // - Top products are Sales by SKU (@extas/metrics `salesBySku`: delivered orders on the day they were delivered, the
 //   store's own days in its time zone, both days included); customers are @extas/customers `erpCustomerPage` (one row per
 //   person who ordered, total spent = Sales). Amounts are decimals in the store's currency, as the ERP contract writes
@@ -43,7 +45,7 @@ import {
   type WebhookDeps,
 } from '@extas/inventory';
 import { daysPeriod, salesBySku, ymdIn } from '@extas/metrics';
-import { adminDeps } from './admin-auth';
+import { adminDeps, requestContext } from './admin-auth';
 
 export interface ErpSiteDeps {
   db: PrismaClient;
@@ -85,6 +87,13 @@ export async function erpSiteDeps(): Promise<ErpSiteDeps | null> {
   return { db: deps.db, settings: deps.resolver, connections: hit.connections, now: deps.now };
 }
 
+/**
+ * A refused call as the sender sees it (round 2): every 401 is UNAUTHORIZED, whatever the reason (no secret yet,
+ * unsigned, wrong, stale, a secret two stores share), so a sender learns nothing about the shop's secrets. The reason is
+ * counted on the shop only (`ErpSiteGuard`, the card's refused calls).
+ */
+export const refusal = (r: { status: number; code: ErpSiteCode }): Response => answer(r.status, { ok: false, code: r.status === 401 ? 'UNAUTHORIZED' : r.code });
+
 /** The answer when the app has no database (the route cannot ask anything). */
 export const erpSiteUnavailable = () => answer(503, { ok: false, code: 'UNAVAILABLE' });
 
@@ -94,10 +103,20 @@ const serverError = (e: unknown) => {
   return answer(500, { ok: false, code: 'SERVER_ERROR' });
 };
 
-/** The call as the shop reads it: the path, the query as the URL standard reads it, the two headers. */
+/**
+ * The call as the shop reads it: the path, the query as the URL standard reads it, the two headers, and (p3 review) the
+ * client's address for the per-address cut-off (Cloudflare's CF-Connecting-IP, then the proxy's).
+ */
 function callOf(request: Request): ErpSiteCall {
   const url = new URL(request.url);
-  return { method: request.method, path: url.pathname, query: url.search.replace(/^\?/, ''), signature: request.headers.get(ERP_SIGNATURE_HEADER), timestamp: request.headers.get(ERP_TIMESTAMP_HEADER) };
+  return {
+    method: request.method,
+    path: url.pathname,
+    query: url.search.replace(/^\?/, ''),
+    signature: request.headers.get(ERP_SIGNATURE_HEADER),
+    timestamp: request.headers.get(ERP_TIMESTAMP_HEADER),
+    address: requestContext(request).ip,
+  };
 }
 
 /**
@@ -106,7 +125,7 @@ function callOf(request: Request): ErpSiteCall {
  */
 export async function erpSiteRoute(request: Request): Promise<Response> {
   const early = erpSiteRequestRefusal(callOf(request), new Date());
-  if (early) return answer(early.status, { ok: false, code: early.code });
+  if (early) return refusal(early);
   try {
     const deps = await erpSiteDeps();
     return deps ? await erpSiteApiHandler(request, deps) : erpSiteUnavailable();
@@ -126,7 +145,7 @@ export async function erpSiteApiHandler(request: Request, deps: ErpSiteDeps): Pr
     return serverError(e);
   }
   // A refusal is only counted (checkErpSiteCall): nobody proved who was asking, so it gets no row of its own.
-  if (!caller.ok) return answer(caller.status, { ok: false, code: caller.code });
+  if (!caller.ok) return refusal(caller);
   const { storeId, linkId, endpoint } = caller;
   const log = (status: number, code: ErpSiteCode, rows: number | null, searched = false) =>
     logErpSiteCall(deps.db, { storeId, linkId, endpoint, status, code, rows, searched, at: now }).catch(() => {});
