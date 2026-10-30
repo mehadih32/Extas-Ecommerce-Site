@@ -77,6 +77,18 @@
     (`books.pin.maxAttempts`, `books.pin.lockMinutes`)। PIN কখনো লেখা বা দেখানো হয় না।
   - পাতার গাইড: [pages/money/books-match.md](pages/money/books-match.md) ·
     [pages/money/books-differences.md](pages/money/books-differences.md) · [pages/money/books-closes.md](pages/money/books-closes.md)।
+- **দৈনিক হিসাব (PR 617, CN-029)** — পাতা: **টাকা › দৈনিক হিসাব** (`/admin/money/books/daily`), দেখতে লাগে `books.read`।
+  পাতার গাইড: [দৈনিক হিসাব](pages/money/books-daily.md)।
+  - শুধু যে দোকান ERP-র নতুন নিয়মে (v6) গেছে, সেখানে চলে। তার আগে কার্ডে লেখা "সুইচের দিন থেকে শুরু", কিছু পাঠানো হয় না।
+  - প্রতিদিন পাঠানোর সময়ে (`erp.summary.sendAt`) আগের দিনের হিসাব দোকানের নিজের রেকর্ড থেকে বানানো হয় (ডেলিভারির দিন
+    ধরে), প্রতিটা লাইন এক জায়গা থেকে। ERP না নেওয়া পর্যন্ত আবার চেষ্টা হয়।
+  - খোলা দিনে (`books.resend.days`) দেরিতে খবর এলে নতুন ভার্সন যায়; পুরনো ভার্সন থাকে, কিছু মোছে না। বন্ধ মাসে নতুন ভার্সন হয় না।
+  - "কত দিন পেছনের হারানো দিন ধরবে" (`erp.summary.gapDays`): **31**। "যে খরচের লাইন এই দোকানে নেই"
+    (`erp.summary.noCostLines`): **খালি** — খালি থাকলে যে লাইনের অঙ্ক নেই সেটা "এখনো আসেনি" দেখায়।
+    "ফেরত পিস কত দিন অপেক্ষার পর সাবধান করবে" (`books.status.waitingCheckWarnDays`): **7**।
+    কত সেকেন্ড পরপর দেখবে (`erp.summary.tickSeconds`): **60**; ERP-র কপির সাথে কত মিনিট পরপর মেলাবে
+    (`erp.summary.checkMinutes`): **60**।
+  - এখান থেকে কোনো টাকা নড়ে না, কোনো অঙ্ক বদলানো যায় না।
 
 ## তারপর কী হয়
 

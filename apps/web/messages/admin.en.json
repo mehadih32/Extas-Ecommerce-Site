@@ -61,7 +61,8 @@
     "messagesTemplates": "Templates",
     "supportInbox": "Inbox",
     "supportConversation": "Conversation",
-    "supportSettings": "Support settings"
+    "supportSettings": "Support settings",
+    "booksDaily": "Daily summary"
   },
   "login": {
     "metaTitle": "Admin sign-in",

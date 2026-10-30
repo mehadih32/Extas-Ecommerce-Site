@@ -45,7 +45,9 @@ export type InventoryErrorCode =
   /** PR 609 (qa-gate): SKUs of the style sit in products the import may not take over; details name the SKUs. */
   | 'SKU_IN_OTHER_PRODUCT'
   /** PR 609 (qa-gate): rows the shop cannot take as the ERP sent them; details name the SKU and why. */
-  | 'ROW_NOT_ACCEPTED';
+  | 'ROW_NOT_ACCEPTED'
+  /** CN-028 · PR 617, 618: the store's books with the ERP start at the switch-over (contract v6 and its own ERP link). */
+  | 'BOOKS_NOT_LINKED';
 
 export class InventoryError extends Error {
   readonly code: InventoryErrorCode;
@@ -82,6 +84,7 @@ export class InventoryError extends Error {
       case 'ERP_V5':
       case 'SKU_IN_OTHER_PRODUCT':
       case 'ROW_NOT_ACCEPTED':
+      case 'BOOKS_NOT_LINKED':
         return 409;
       case 'ERP_UNAVAILABLE':
       case 'ERP_ERROR':

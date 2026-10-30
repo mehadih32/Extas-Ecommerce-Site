@@ -120,15 +120,21 @@ export const ERP_DEPENDENT_PATHS = {
    * `erp.mock.stockEnabled` (its practice data switched on), like the stock pull.
    */
   'events.pull': { none: 'skip', mock: 'skip', unavailable: 'fail', connected: 'run' },
+  /**
+   * PR 617, 618 — the daily summary and the month's fixed costs to the ERP (`PUT /daily-summaries`, `PUT /fixed-costs`)
+   * and the check of the ERP's stored copy. Built and kept by the shop in every state; while the ERP cannot be reached
+   * they wait (nothing is logged as a try) and go out in order once it can. On the practice ERP only with its data on.
+   */
+  'books.send': { none: 'skip', mock: 'hold', unavailable: 'hold', connected: 'run' },
 } as const satisfies Record<string, Record<ErpLinkState, string>>;
 
 export type ErpDependentPath = keyof typeof ERP_DEPENDENT_PATHS;
 
 /**
- * Paths that read the ERP's stock (and, PR 608, its events): on the practice ERP they run once its data is switched on
+ * Paths that read the ERP's stock (and, PR 608, its events; PR 617, 618, the books sent to it): on the practice ERP they run once its data is switched on
  * (`erp.mock.stockEnabled`).
  */
-const STOCK_PATHS: ReadonlySet<ErpDependentPath> = new Set(['stock.pull', 'stock.liveCheck', 'stock.resync', 'stock.reconcile', 'webhook.apply', 'events.pull']);
+const STOCK_PATHS: ReadonlySet<ErpDependentPath> = new Set(['stock.pull', 'stock.liveCheck', 'stock.resync', 'stock.reconcile', 'webhook.apply', 'events.pull', 'books.send']);
 
 /** The behaviour of a path for a link (`mock` with the practice stock switched on behaves like `connected`). */
 export function behaviourOf(path: ErpDependentPath, link: ErpLink): string {

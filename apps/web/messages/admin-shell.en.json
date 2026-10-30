@@ -78,7 +78,8 @@
         "books": "Books",
         "match": "Match",
         "differences": "Differences",
-        "closes": "Closes"
+        "closes": "Closes",
+        "daily": "Daily summary"
       }
     },
     "purpose": {

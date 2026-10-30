@@ -18,6 +18,8 @@
 // S08 · PR 526: `returnReasons` — why parcels came back, by the owner's reasons and by kind (delivery.ts; counts).
 // CN-028 · PR 620: `salesBySku` — Sales by SKU (pieces, net sales, profit over the cost snapshot) for the ERP's live
 // "Top products" call (skus.ts).
+// CN-028 · PR 617: `retailDayFigures` — the order side of Retail's daily summary to the ERP: orders placed, delivered
+// pieces at the customer's price on the delivered day, delivery charges, deliveries and customers (retail-day.ts).
 // The rule lives in pure.ts (SALES_STATUSES, NOT_PLACED_STATUSES, BASIS_RULE). src/guard.test.ts fails the build when
 // any other package adds up order or line money on its own. Until the order state machine exists (it waits for the
 // owner's approval of the architecture draft), no order reaches DELIVERED, so Sales is 0 everywhere — that is correct.
@@ -28,3 +30,5 @@ export * from './money';
 export * from './delivery';
 export * from './customers';
 export * from './skus';
+// CN-028 · PR 617: the order side of Retail's daily summary to the ERP (delivered pieces on the delivered day).
+export * from './retail-day';

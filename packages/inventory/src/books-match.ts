@@ -45,6 +45,7 @@ import { BooksError } from './books-errors';
 import { addDay, balanceOn, dateOfDay, dayText, isDay, lockLink, moneyMinor, paymentMatch, storeBooks, storeErpLink, type BooksLink } from './erp-account';
 import { checkErpAccount } from './erp-account-check';
 import { pipelineFlows, pipelineOn } from './erp-pipeline';
+import { tieLinesOf } from './books-rules';
 import { storeDate } from './erp-events-pull';
 import { isV6 } from './erp-model';
 import { behaviourOf, resolveErp } from './guard';
@@ -501,8 +502,8 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
 
     const flows = await pipelineFlows(deps.db, link.id, from, through);
     const pay = await paymentMatch(deps, link);
-    const summaries = await deps.db.$queryRaw<{ date: Date; version: number; body: Prisma.JsonValue; bodyHash: string; incomplete: string[]; netProfitMinor: bigint }[]>`
-      SELECT DISTINCT ON ("date") "date", "version", "body", "bodyHash", "incomplete", "netProfitMinor" FROM "ErpDailySummary"
+    const summaries = await deps.db.$queryRaw<{ date: Date; version: number; body: Prisma.JsonValue; bodyHash: string; incomplete: string[]; netProfitMinor: bigint; minorLines: Prisma.JsonValue | null }[]>`
+      SELECT DISTINCT ON ("date") "date", "version", "body", "bodyHash", "incomplete", "netProfitMinor", "minorLines" FROM "ErpDailySummary"
       WHERE "linkId" = ${link.id}::uuid AND "date" BETWEEN ${dateOfDay(from)}::date AND ${dateOfDay(through)}::date ORDER BY "date", "version" DESC`;
     const summaryOf = new Map(summaries.map((s) => [dayText(s.date), s]));
     const statusOfFound = (f: FoundDiff) => f.status ?? (f.timing ? 'PENDING' : 'MISMATCH');
@@ -612,11 +613,13 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
       const flow = flows.get(d) ?? { goodsMinor: 0, returnLossesMinor: 0, approvedMinor: 0, billedMinor: 0 };
       const derivedGoods = flow.goodsMinor + sum(['EXCHANGE_EXTRA', 'EXCHANGE_ADJUSTMENT']);
       const derivedLosses = flow.returnLossesMinor + sum(['EXCHANGE_BILL', 'EXCHANGE_CREDIT']);
+      // PR 617 (qa-gate): the summary's exact minor lines (`minorLines`), never its whole-taka body; the books' own
+      // figures when the version has none or lists them as not known yet.
       const summary = summaryOf.get(d);
-      const body = (summary?.body ?? null) as { costs?: { goods?: unknown; returnLosses?: unknown } } | null;
-      const useSummary = !!summary && !summary.incomplete.includes('goods') && !summary.incomplete.includes('returnLosses') && body?.costs?.goods != null;
-      const goods = useSummary ? minor(body!.costs!.goods) : derivedGoods;
-      const losses = useSummary ? minor(body!.costs!.returnLosses) : derivedLosses;
+      const tie = tieLinesOf(summary, { goodsMinor: derivedGoods, returnLossesMinor: derivedLosses });
+      const useSummary = tie.summaryUsed;
+      const goods = tie.goodsMinor;
+      const losses = tie.returnLossesMinor;
       const pipelineEnd = await pipelineOn(deps.db, link.id, d);
       const parts = {
         balanceStartMinor: bal.startMinor,

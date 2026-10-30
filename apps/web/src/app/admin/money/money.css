@@ -1,0 +1,22 @@
+/* CN-028 · PR 617, 618 — Money → Books and Costs: the six checks as rows with their result, the facts under them, the
+   "Needs you now" rows, and (PR 618) the fixed-cost month form and the daily cost lines. Shell tokens only; every row
+   wraps or steps down at phone width, never scrolls the page sideways. */
+.adm2 .bk-checks{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.adm2 .bk-checks li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:44px;padding:6px 10px;border:1px solid var(--ln2);border-radius:10px;background:var(--sf2)}
+.adm2 .bk-letter{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--g1);color:var(--g)}
+.adm2 .bk-name{font-size:13.5px;line-height:1.35;min-width:0}
+.adm2 .bk-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.adm2 .bk-fv{font-size:15px;font-weight:650;margin-top:2px;overflow-wrap:anywhere}
+.adm2 .bk-warn{color:var(--warn);font-weight:600}
+.adm2 .bk-needs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .bk-needs li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.45;padding:10px 12px;border-radius:10px;background:var(--warnbg);color:var(--ink);flex-wrap:wrap}
+.adm2 .bk-needs li svg{flex:none;margin-top:2px;color:var(--warn)}
+.adm2 .bk-needs li span{flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.adm2 .bk-act{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.adm2 .bk-inc .a2-pill{white-space:normal;max-width:100%}
+@media (max-width:767px){
+  .adm2 .bk-facts{grid-template-columns:minmax(0,1fr)}
+  .adm2 .bk-checks li{grid-template-columns:28px minmax(0,1fr)}
+  .adm2 .bk-checks li .a2-pill{grid-column:2;justify-self:start;white-space:normal}
+  .adm2 .a2-tbl td.bk-inc{grid-column:1/-1}
+}

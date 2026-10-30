@@ -5743,6 +5743,9 @@ model ErpDailySummary {
   bodyHash       String
   incomplete     String[]     @default([])
   netProfitMinor BigInt
+  /// qa-gate (0056): the same lines exactly, in minor units (books-rules.ts `SummaryMinor`); the books match ties the day
+  /// with these, never with the whole-taka body. Empty on a version built before 0056.
+  minorLines     Json?
   /// Why this version was built: NIGHTLY, LATE_FACT, MISSING (the ERP's `summary.missing`), BACKFILL (the switch).
   reason         String
   createdAt      DateTime     @default(now()) @db.Timestamptz(3)

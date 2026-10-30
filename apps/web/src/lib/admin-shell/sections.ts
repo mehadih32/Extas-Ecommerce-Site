@@ -216,6 +216,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [{ id: 'seo', guide: 'seo', pages: [{ href: '/admin/website/seo', perm: 'seo.read', keys: ['seo'] }] }],
   },
   // CN-028 · PR 615, 616: Books — Retail's ERP account, the books match, the differences and the closes.
+  // CN-028 · PR 617 (CN-029): Money → Daily summary — the Books status card and the daily summaries sent to the ERP.
   {
     id: 'money',
     icon: 'wallet',
@@ -227,6 +228,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'match', pages: [{ href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] }] },
       { id: 'differences', pages: [{ href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] }] },
       { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },
+      { id: 'daily', pages: [{ href: '/admin/money/books/daily', perm: 'books.read', keys: ['booksDaily'] }] },
     ],
   },
   {
