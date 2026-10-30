@@ -12,6 +12,9 @@
 //      unknown band or a charge the owner has not set gives "no charge known" (null), never a made-up number;
 //   5. COD (payment rules), and the festive cut-offs for the band (PR 214).
 // Fixed combo lines are priced by their combo (S03) and take no tier or discount here.
+// PR 609 (CN-028): a line may carry its selling-price floor (`floorMinor`, the buying price from the ERP plus the
+// owner's lowest margin, `catalogue.floor.minMarginPercent`; none when the floor is off). No set tier, discount or coupon
+// takes a line below it: an offer stops at the floor, and what it held back is listed in `floorHeld`.
 //
 // Money is integer minor units throughout. Every rounding is down, so a discount is never larger than its rule says.
 import { conditionHolds, inScope, resolutionOrder, type ConditionFacts, type ScopeFacts } from './match';
@@ -26,6 +29,8 @@ export interface LineFact extends ScopeFacts {
   freeDelivery?: boolean | null;
   /** Part of a fixed combo: the combo's own price stands. */
   comboId?: string | null;
+  /** PR 609: the lowest price one piece may sell at (null or left out = no floor). */
+  floorMinor?: number | null;
 }
 
 export interface CartFacts {
@@ -122,6 +127,14 @@ export interface Quote {
   applied: Applied[];
   /** Rules that would apply but wait for something (a coupon, a larger cart). */
   waiting: { rule: RuleRef; why: 'COUPON' | 'MIN_SUBTOTAL' }[];
+  /** PR 609: how much of each offer the selling-price floor held back (empty when no floor stopped anything). */
+  floorHeld: { rule: RuleRef; heldMinor: number }[];
+}
+
+/** PR 609: the lowest selling price over a buying price at a margin (rounded up); null when either is not known. */
+export function floorMinorOf(buyMinor: number | null | undefined, marginPercent: number | null | undefined): number | null {
+  if (buyMinor == null || marginPercent == null) return null;
+  return Math.ceil((buyMinor * (100 + marginPercent)) / 100);
 }
 
 export interface EngineLimits {
@@ -250,6 +263,8 @@ function lineAccepts(s: LineState, stackable: boolean): boolean {
 }
 
 const net = (s: LineState) => s.base - s.discount;
+/** PR 609: how much more a line may be reduced before it reaches its floor (no floor: no limit). */
+const room = (s: LineState) => (s.fact.floorMinor == null ? Number.POSITIVE_INFINITY : Math.max(0, net(s) - s.fact.floorMinor * s.fact.quantity));
 
 /** The engine. `rules` may hold drafts or archived rules: only live ones count. */
 export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits): Quote {
@@ -257,6 +272,13 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
   const lines: LineState[] = f.lines.map((l) => ({ fact: l, base: l.unitPriceMinor * l.quantity, discount: NOTHING, offers: [] }));
   const applied: Applied[] = [];
   const waiting: Quote['waiting'] = [];
+  const held = new Map<string, { rule: RuleRef; heldMinor: number }>();
+  const hold = (r: Rule, amount: number) => {
+    if (amount <= 0) return;
+    const h = held.get(r.id) ?? { rule: ref(r), heldMinor: NOTHING };
+    h.heldMinor += amount;
+    held.set(r.id, h);
+  };
   const actions = (type: Action['type']) => live.flatMap((r) => r.actions.filter((a) => a.type === type).map((a) => ({ rule: r, action: a })));
 
   // ---- 2. set tiers ----
@@ -278,12 +300,18 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
     const saved = new Array<number>(eligible.length).fill(NOTHING);
     units.forEach((u, i) => (saved[u.li]! += u.p - paid[i]!));
     let total = NOTHING;
+    let heldHere = NOTHING;
     eligible.forEach((s, i) => {
       if (saved[i]! <= 0) return;
-      s.discount += saved[i]!;
-      s.offers.push({ rule: ref(rule), kind: 'setTier', amountMinor: saved[i]!, stackable: false });
-      total += saved[i]!;
+      // PR 609: never below the line's floor.
+      const give = Math.min(saved[i]!, room(s));
+      heldHere += saved[i]! - give;
+      if (give <= 0) return;
+      s.discount += give;
+      s.offers.push({ rule: ref(rule), kind: 'setTier', amountMinor: give, stackable: false });
+      total += give;
     });
+    hold(rule, heldHere);
     let separate = NOTHING;
     let inSets = NOTHING;
     units.forEach((u, i) => {
@@ -291,7 +319,7 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
       separate += u.p;
       inSets += paid[i]!;
     });
-    if (total > 0) applied.push({ rule: ref(rule), kind: rule.kind, effect: 'setTier', amountMinor: total, separateMinor: separate, setMinor: inSets });
+    if (total > 0) applied.push({ rule: ref(rule), kind: rule.kind, effect: 'setTier', amountMinor: total, separateMinor: separate, setMinor: inSets + heldHere });
   }
 
   // ---- 3. discounts ----
@@ -322,7 +350,10 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
     if (max !== null && sum(cuts) > max) cuts = spread(max, cuts);
     let total = NOTHING;
     eligible.forEach((s, i) => {
-      const c = Math.max(NOTHING, Math.min(cuts[i]!, net(s)));
+      const want = Math.max(NOTHING, Math.min(cuts[i]!, net(s)));
+      // PR 609: never below the line's floor.
+      const c = Math.min(want, room(s));
+      hold(rule, want - c);
       if (c <= 0) return;
       s.discount += c;
       s.offers.push({ rule: ref(rule), kind: 'discount', amountMinor: c, stackable: rule.stackable });
@@ -427,7 +458,7 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
   }
   if (cutoffs.length) for (const c of cutoffs) if (!applied.some((a) => a.rule.id === c.rule.id && a.effect === 'cutoff')) applied.push({ rule: c.rule, kind: 'festive', effect: 'cutoff', amountMinor: null });
 
-  return { lines: lineQuotes, subtotalMinor, discountMinor, itemsMinor, delivery, cod, cutoffs, totalMinor, totalKnown, applied, waiting };
+  return { lines: lineQuotes, subtotalMinor, discountMinor, itemsMinor, delivery, cod, cutoffs, totalMinor, totalKnown, applied, waiting, floorHeld: [...held.values()] };
 }
 
 // ---------------------------------------------------------------------------------------------------------------

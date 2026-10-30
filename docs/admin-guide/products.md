@@ -9,11 +9,13 @@
 SKU আর স্টক আসে ERP থেকে। এখান থেকে স্টক লেখা যায় না, শুধু দেখা যায়।
 
 ## মেনু আর পাতা
-ক্যাটালগ দলে ছয়টা পাতা (প্রোডাক্টের পাতাগুলোর উপরে একই সারিতে):
+ক্যাটালগ দলে সাতটা পাতা (প্রোডাক্টের পাতাগুলোর উপরে একই সারিতে):
 1. **প্রোডাক্ট** (`/admin/products`)
 2. **চালুর অপেক্ষায়** (`/admin/products/queue`)
 3. **সাইজ চার্ট** (`/admin/size-charts`) — আলাদা গাইড: [size-charts.md](size-charts.md)
 4. **লিংক থেকে আনা** (`/admin/products/import`)
+   - **ERP থেকে আনা** (`/admin/products/erp-import`, PR 609, **আরও ▾**-এ) — ERP-র স্টাইল কোড দিয়ে সব SKU খসড়ায়, আর
+     "কেনা দাম বদলেছে" তালিকা। আলাদা গাইড: [pages/products/erp-import.md](pages/products/erp-import.md)
 5. **প্রোডাক্ট অডিট** (`/admin/products/audit`)
 6. **স্টকে ফিরলে** (`/admin/products/back-in-stock`)
 

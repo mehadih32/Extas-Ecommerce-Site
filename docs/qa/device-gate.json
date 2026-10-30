@@ -327,6 +327,7 @@
       "/admin/support?view=all": ["[data-testid=\"support-inbox\"]", "[data-testid=\"support-row\"]", "[data-testid=\"support-search\"]"],
       "/admin/support/settings": ["[data-testid=\"support-settings\"]", "[data-testid=\"support-set-inbox\"]", "[data-testid=\"support-set-phones\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/invoices": ["[data-testid=\"invoices\"]", "[data-testid=\"invoice-row\"]", "[data-testid=\"invoice-print\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/products/erp-import": ["[data-erp-state]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/picking": ["[data-testid=\"picking-page\"]", "[data-testid=\"picking-summary\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/handover": ["[data-testid=\"handover-page\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/returns/handback": ["[data-testid=\"handback-page\"]", "[data-testid=\"a2-tabs\"]"],

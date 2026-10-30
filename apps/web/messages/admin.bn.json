@@ -31,6 +31,7 @@
     "server": "সার্ভার",
     "integrations": "চাবি ও সংযোগ",
     "sizeCharts": "সাইজ চার্ট",
+    "erpImport": "ERP থেকে আনা",
     "productImport": "লিংক থেকে আনা",
     "productAudit": "প্রোডাক্ট অডিট",
     "backInStock": "স্টকে ফিরলে",

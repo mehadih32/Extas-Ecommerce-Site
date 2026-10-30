@@ -16,6 +16,7 @@ import {
   setWasPrice,
   exchangeOpen,
   exchangeTerms,
+  floorMinorOf,
   fixDrift,
   isSearchReferrer,
   literalsIn,
@@ -537,5 +538,46 @@ describe('PR 209 · templates', () => {
     expect(c.params.find((p) => p.key === 'perItem')!.value).toBeNull();
     const only = await contentFromTemplate(t, { value: async () => null }, { placements: ['faq'] });
     expect(only.placements).toEqual(['faq']);
+  });
+});
+
+describe('PR 609 · the selling-price floor holds every offer (catalogue.floor.minMarginPercent)', () => {
+  const pct = (value: number, over: Partial<RuleContent> = {}) =>
+    rule({ kind: 'discount', params: [{ key: 'pct', type: 'percent', value, labelEn: 'p' }], actions: [{ type: 'discount', mode: 'percent', param: 'pct', target: 'lines', requiresCoupon: false, showWas: false }], ...over });
+  it('the floor is the buying price plus the margin, rounded up; off without either', () => {
+    expect(floorMinorOf(76000, 20)).toBe(91200);
+    expect(floorMinorOf(33333, 10)).toBe(36667);
+    expect(floorMinorOf(76000, null)).toBeNull();
+    expect(floorMinorOf(null, 20)).toBeNull();
+  });
+  it('a discount stops at the floor; what it held back is told; no floor, no change', () => {
+    const free = quote([pct(15)], cart([line('a', 100000)]), ENGINE);
+    expect([free.discountMinor, free.floorHeld]).toEqual([15000, []]);
+    const held = quote([pct(15)], cart([line('a', 100000, 1, { floorMinor: 91200 })]), ENGINE);
+    expect(held.discountMinor).toBe(8800);
+    expect(held.lines[0]!.finalMinor).toBe(91200);
+    expect(held.floorHeld).toEqual([{ rule: expect.objectContaining({ key: held.applied[0]!.rule.key }), heldMinor: 6200 }]);
+    // Already at or under the floor: the offer gives nothing and is not counted as applied.
+    const none = quote([pct(15)], cart([line('a', 90000, 2, { floorMinor: 95000 })]), ENGINE);
+    expect([none.discountMinor, none.applied.length, none.floorHeld[0]!.heldMinor]).toEqual([0, 0, 27000]);
+  });
+  it('a coupon on the order is held per line by its floor', () => {
+    const coupon = rule({ kind: 'discount', params: [money('off', 30000)], actions: [{ type: 'discount', mode: 'amount', param: 'off', target: 'order', requiresCoupon: true, showWas: false }] });
+    const q = quote([coupon], cart([line('a', 100000, 1, { floorMinor: 95000 }), line('b', 50000)], { couponRuleIds: [coupon.id] }), ENGINE);
+    // 30000 spread 2:1 is 20000 on a and 10000 on b; a may give only 5000.
+    expect(q.lines.map((l) => l.discountMinor)).toEqual([5000, 10000]);
+    expect([q.discountMinor, q.floorHeld[0]!.heldMinor]).toEqual([15000, 15000]);
+  });
+  it('a set tier is held too, and its set price says what the set really costs', () => {
+    const tiers = rule({
+      kind: 'setTier',
+      params: [money('tier2', 150000)],
+      scope: { include: [{ type: 'category', id: CAT_POLO }], exclude: [] },
+      actions: [{ type: 'setTier', tiers: [{ quantity: 2, param: 'tier2' }] }],
+    });
+    const q = quote([tiers], cart([line('a', 90000, 2, { floorMinor: 80000 })]), ENGINE);
+    expect(q.itemsMinor).toBe(160000);
+    expect(q.applied[0]).toMatchObject({ effect: 'setTier', amountMinor: 20000, separateMinor: 180000, setMinor: 160000 });
+    expect(q.floorHeld[0]!.heldMinor).toBe(10000);
   });
 });

@@ -128,6 +128,26 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       await updateCombo(deps(), as('writer'), ids.pair!, { ...input(), setPriceMinor: 150000 }, next.version);
     });
 
+    it('PR 609: with a floor margin set, a set price below its pieces\' buying prices + margin is refused', async () => {
+      // Bought from the ERP at 70000 a piece; floor 20%: a pair may not sell below 2 × 84000 = 168000.
+      await t.prisma.productVariant.updateMany({ where: { productId: ids['essential-pique-polo']! }, data: { shopPriceMinor: 70000 } });
+      try {
+        // Off (empty) by default: nothing is stopped.
+        expect(registry['catalogue.floor.minMarginPercent'].default).toBeNull();
+        expect((await setComboPrice(deps(), as('owner'), ids.pair!, 140000)).setPriceMinor).toBe(140000);
+        overrides.set('catalogue.floor.minMarginPercent', 20);
+        expect(await code(setComboPrice(deps(), as('owner'), ids.pair!, 160000))).toBe('BELOW_FLOOR');
+        const c = await getCombo(deps(), as('writer'), ids.pair!);
+        expect(await code(updateCombo(deps(), as('owner'), ids.pair!, { ...input(), setPriceMinor: 150000 }, c.version))).toBe('BELOW_FLOOR');
+        expect(await code(createCombo(deps(), as('owner'), { ...input(), slug: 'test-floor-pair', setPriceMinor: 167999 }))).toBe('BELOW_FLOOR');
+        expect((await setComboPrice(deps(), as('owner'), ids.pair!, 168000)).setPriceMinor).toBe(168000);
+      } finally {
+        overrides.delete('catalogue.floor.minMarginPercent');
+        await t.prisma.productVariant.updateMany({ where: { productId: ids['essential-pique-polo']! }, data: { shopPriceMinor: null } });
+        await setComboPrice(deps(), as('owner'), ids.pair!, 150000);
+      }
+    });
+
     it('a slot must be the store’s own product, colour and size', async () => {
       expect(await code(createCombo(deps(), as('writer'), { ...input(), slug: 'test-bad', items: [{ productId: ids['essential-pique-polo']!, colourIds: [ids['heavy-cotton-tee/ecru']!], quantity: 2 }] }))).toBe('INVALID_INPUT');
       const other = await t.prisma.product.create({ data: { storeId: B, slug: 'other-polo', nameEn: 'Other polo' } });

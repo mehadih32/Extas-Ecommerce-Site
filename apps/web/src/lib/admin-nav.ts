@@ -26,6 +26,8 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   { key: 'sizeCharts', href: '/admin/size-charts', icon: 'ruler', group: 'catalogue' },
   // PR 33 import from a link · PR 39 product audit · PR 36 back in stock (no demo screen: the product pages' style)
   { key: 'productImport', href: '/admin/products/import', icon: 'plus', group: 'catalogue' },
+  // PR 609 (CN-028) — import from the ERP by style code, and the buying prices that changed
+  { key: 'erpImport', href: '/admin/products/erp-import', icon: 'sync', group: 'catalogue' },
   { key: 'productAudit', href: '/admin/products/audit', icon: 'doc', group: 'catalogue' },
   { key: 'backInStock', href: '/admin/products/back-in-stock', icon: 'eye', group: 'catalogue' },
   // S09 · PR 202–207 — stock and the ERP sync (health panel, re-sync, documents, low stock), stock counts, movements

@@ -16,6 +16,7 @@
 - [স্টকে ফিরলে](back-in-stock.md) — কে কোন প্রোডাক্ট ফেরার অপেক্ষায় (`/admin/products/back-in-stock`)
 - [সাইজ চার্ট](size-charts.md) — প্রতিটা ফিটের মাপ (`/admin/size-charts`)
 - [লিংক থেকে আনা](import.md) — অন্য সাইটের পেজ থেকে খসড়া (`/admin/products/import`)
+- [ERP থেকে আনা](erp-import.md) — স্টাইল কোড দিয়ে ERP-র সব SKU খসড়ায়, কেনা দাম বদলের তালিকা (`/admin/products/erp-import`)
 - [প্রোডাক্ট অডিট](audit.md) — কোন প্রোডাক্টে কী বাকি (`/admin/products/audit`)
 
 বড় গাইড: [প্রোডাক্ট](../../products.md) · [স্টক ও ERP](../../stock.md) · [কম্বো](../../combos.md) ·

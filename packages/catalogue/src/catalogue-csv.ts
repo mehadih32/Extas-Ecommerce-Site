@@ -19,6 +19,7 @@ import { CatalogueError, isCatalogueError } from './errors';
 import { namingSettings, slugProblem } from './naming';
 import { createProduct, productInput, updateProduct, type ProductPatch } from './products';
 import { isSlug } from './text';
+import { floorOf, floorPercent } from './price-floor';
 import { createVariant, updateVariant, type VariantPatch } from './variants';
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -191,6 +192,8 @@ export type CsvIssueCode =
   | 'SLUG_TAKEN'
   | 'CONFLICTING_VALUE'
   | 'PRICES_NOT_ALLOWED'
+  /** PR 609: a price below the buying price + the lowest margin (`catalogue.floor.minMarginPercent`); detail `floor <minor>`. */
+  | 'BELOW_FLOOR'
   | 'TOO_MANY'
   /** Applying the row failed although its preview passed (something changed meanwhile). */
   | 'FAILED';
@@ -288,7 +291,7 @@ async function plan(deps: CatalogueDeps, who: Who, text: string): Promise<Planne
   const many = (c: CsvColumn) => [...new Set(table.rows.flatMap((r) => split(cell(r.cells, c))))];
   const one = (c: CsvColumn) => [...new Set(table.rows.map((r) => cell(r.cells, c)).filter(Boolean))];
   const storeId = who.storeId;
-  const [products, variants, categories, brands, colours, sizes, tags, collections, canSetPrices, ns] = await Promise.all([
+  const [products, variants, categories, brands, colours, sizes, tags, collections, canSetPrices, ns, floorPct] = await Promise.all([
     deps.db.product.findMany({
       where: { storeId, slug: { in: slugs } },
       select: {
@@ -307,7 +310,7 @@ async function plan(deps: CatalogueDeps, who: Who, text: string): Promise<Planne
         variants: { where: { archivedAt: null }, select: { colourId: true, sizeId: true } },
       },
     }),
-    deps.db.productVariant.findMany({ where: { storeId, sku: { in: skus } }, select: { id: true, sku: true, productId: true, colourId: true, sizeId: true, barcode: true, priceMinor: true, compareAtMinor: true, weightGrams: true, active: true, archivedAt: true } }),
+    deps.db.productVariant.findMany({ where: { storeId, sku: { in: skus } }, select: { id: true, sku: true, productId: true, colourId: true, sizeId: true, barcode: true, priceMinor: true, compareAtMinor: true, weightGrams: true, active: true, archivedAt: true, shopPriceMinor: true } }),
     deps.db.category.findMany({ where: { storeId, slug: { in: one('category') } }, select: { id: true, slug: true, archivedAt: true } }),
     deps.db.brand.findMany({ where: { storeId, slug: { in: one('brand') } }, select: { id: true, slug: true, archivedAt: true } }),
     deps.db.colour.findMany({ where: { storeId, key: { in: one('colour') } }, select: { id: true, key: true, archivedAt: true } }),
@@ -316,6 +319,7 @@ async function plan(deps: CatalogueDeps, who: Who, text: string): Promise<Planne
     deps.db.collection.findMany({ where: { storeId, slug: { in: many('collections') } }, select: { id: true, slug: true, kind: true, archivedAt: true, _count: { select: { products: { where: { archivedAt: null } } } } } }),
     can(deps.db, who.actor, 'catalogue.prices', { storeId }),
     namingSettings(deps, who),
+    floorPercent(deps, who),
   ]);
   const productIds = products.map((p) => p.id);
   const [tagLinks, colLinks] = await Promise.all([
@@ -482,6 +486,9 @@ async function plan(deps: CatalogueDeps, who: Who, text: string): Promise<Planne
         const nextCompare = p.compareAtMinor ?? v.compareAtMinor;
         if (nextPrice != null && nextCompare != null && nextCompare <= nextPrice) issue('INVALID_VALUE', 'compareAt', 'the compare-at price must be above the price');
         if ((p.priceMinor !== undefined || p.compareAtMinor !== undefined) && !canSetPrices) issue('PRICES_NOT_ALLOWED', p.priceMinor !== undefined ? 'price' : 'compareAt');
+        // PR 609: shown here, before anything is applied (the variant service refuses it too).
+        const floor = p.priceMinor != null ? floorOf(variants.find((x) => x.id === v.id)?.shopPriceMinor, floorPct) : null;
+        if (floor !== null && p.priceMinor! < floor) issue('BELOW_FLOOR', 'price', `floor ${floor}`);
         if (Object.keys(p).length) variantPatch = p;
       } else {
         const pair = `${colourId ?? null}|${sizeId ?? null}`;
@@ -561,7 +568,7 @@ async function plan(deps: CatalogueDeps, who: Who, text: string): Promise<Planne
         variantAction = 'create';
         ops.push({ op: 'createVariant', slug, sku, data: variantCreate });
         st.pairs.add(`${variantCreate.colourId ?? null}|${variantCreate.sizeId ?? null}`);
-        variantBySku.set(sku, { id: '', sku, productId: st.id ?? '', colourId: variantCreate.colourId ?? null, sizeId: variantCreate.sizeId ?? null, barcode: variantCreate.barcode ?? null, priceMinor: variantCreate.priceMinor ?? null, compareAtMinor: variantCreate.compareAtMinor ?? null, weightGrams: variantCreate.weightGrams ?? null, active: variantCreate.active ?? true, archivedAt: null });
+        variantBySku.set(sku, { id: '', sku, productId: st.id ?? '', colourId: variantCreate.colourId ?? null, sizeId: variantCreate.sizeId ?? null, barcode: variantCreate.barcode ?? null, priceMinor: variantCreate.priceMinor ?? null, compareAtMinor: variantCreate.compareAtMinor ?? null, weightGrams: variantCreate.weightGrams ?? null, active: variantCreate.active ?? true, archivedAt: null, shopPriceMinor: null });
       } else if (sku && variantPatch) {
         variantAction = 'update';
         const v = variantBySku.get(sku)!;

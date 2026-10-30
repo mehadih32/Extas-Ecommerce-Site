@@ -47,6 +47,9 @@ export * from './books-match';
 export * from './books-close';
 export * from './books-adjust';
 export * from './books-view';
+// PR 609 (CN-028): import from the ERP by style code, and the buying price with its change flag.
+export * from './erp-import';
+export * from './shop-price';
 export * from './guard';
 export * from './sync';
 export * from './locations';

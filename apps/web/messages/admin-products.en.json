@@ -259,6 +259,7 @@
       }
     },
     "errors": {
+      "BELOW_FLOOR": "The price is below the lowest price allowed over the buying price ({fields}). Raise the price, or change the lowest margin in the Products settings.",
       "CHECKLIST_FAILED": "Not ready yet — still missing: {fields}.",
       "CONFLICT": "This cannot be done in its current state.",
       "NOT_FOUND": "It was not found; it may have been changed meanwhile.",

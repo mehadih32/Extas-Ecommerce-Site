@@ -13,6 +13,7 @@ import {
   auditLineHandler,
   auditsHandler,
   erpHandler,
+  erpStyleHandler,
   erpStylesHandler,
   erpVerifyHandler,
   erpWarehousesHandler,
@@ -25,6 +26,8 @@ import {
   pushesRetryHandler,
   reconcileHandler,
   resyncHandler,
+  shopPricesHandler,
+  shopPricesSeenHandler,
   stockHandler,
   warehouseHandler,
   warehouseLocationsHandler,
@@ -177,5 +180,25 @@ describe.skipIf(!HAS_TEST_DB)('inventory admin API on PostgreSQL', () => {
     expect([check.status, check.body.reconcile.status, check.body.reconcile.reason]).toEqual([200, 'skipped', 'ERP_ON_PRACTICE']);
     const logged = await t.prisma.auditLog.count({ where: { action: { in: ['erp.resync', 'erp.push.retry', 'stock.audit.start', 'stock.audit.complete'] } } });
     expect(logged).toBeGreaterThanOrEqual(3);
+  });
+
+  it('PR 609: import by style code previews on the practice ERP but never saves; the buying-price list and "seen" answer', async () => {
+    const styles = await read(await erpStylesHandler(call('GET', '/api/admin/inventory/erp/styles', { cookie: owner }), deps));
+    const code = (styles.body.styles.styles[0]?.styleCode as string | undefined) ?? 'SAMPLE-NONE';
+    const p = await read(await erpStyleHandler(call('GET', `/api/admin/inventory/erp/style?styleCode=${encodeURIComponent(code)}`, { cookie: owner }), deps));
+    expect([p.status, p.body.preview.state, p.body.preview.blocking]).toEqual([200, 'practice', expect.arrayContaining(['ERP_ON_PRACTICE'])]);
+    const imp = await read(await erpStyleHandler(call('POST', '/api/admin/inventory/erp/style', { cookie: owner, body: { styleCode: code } }), deps));
+    expect([imp.status, imp.body.error]).toEqual([409, 'ERP_ON_PRACTICE']);
+    expect(await t.prisma.product.count({ where: { erpStyleCode: code } })).toBe(0);
+    const empty = await read(await erpStyleHandler(call('GET', '/api/admin/inventory/erp/style', { cookie: owner }), deps));
+    expect([empty.status, empty.body.error]).toEqual([400, 'INVALID_INPUT']);
+    expect((await erpStyleHandler(call('PATCH', '/api/admin/inventory/erp/style', { cookie: owner, body: {} }), deps)).status).toBe(405);
+
+    const changes = await read(await shopPricesHandler(call('GET', '/api/admin/inventory/shop-prices', { cookie: owner }), deps));
+    expect([changes.status, changes.body.changes]).toEqual([200, { total: 0, items: [] }]);
+    const seen = await read(await shopPricesSeenHandler(call('POST', '/api/admin/inventory/shop-prices/seen', { cookie: owner, body: { all: true } }), deps));
+    expect([seen.status, seen.body.seen]).toEqual([200, 0]);
+    const bad = await read(await shopPricesSeenHandler(call('POST', '/api/admin/inventory/shop-prices/seen', { cookie: owner, body: {} }), deps));
+    expect([bad.status, bad.body.error]).toEqual([400, 'INVALID_INPUT']);
   });
 });

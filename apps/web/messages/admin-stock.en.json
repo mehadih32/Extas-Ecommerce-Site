@@ -1,5 +1,84 @@
 {
   "stock": {
+    "erpImport": {
+      "metaTitle": "Import from the ERP",
+      "title": "Import from the ERP",
+      "intro": "Type a style code: every SKU of that style comes in from the ERP as one draft product, with its colour, size, barcode and buying price. You set the selling price on the product page.",
+      "state": {
+        "connected": "The ERP is connected.",
+        "practice": "The practice ERP is running: you can preview a style, but nothing is saved as real products.",
+        "none": "This store runs without an ERP, so there is nothing to import.",
+        "unavailable": "The ERP connection does not work right now."
+      },
+      "model": {
+        "v5": "The ERP connection still uses the old contract (v5): buying prices come once the ERP model is v6.",
+        "v6": "The ERP sells to the shop at its shop price (v6)."
+      },
+      "keysLink": "Keys & connections",
+      "practice": "Practice ERP: this preview is sample data. Nothing is saved.",
+      "form": {
+        "label": "Style code",
+        "placeholder": "e.g. EX-PL-009",
+        "read": "Look it up",
+        "reading": "Looking it up…",
+        "help": "The style code is the ERP's code for one design; all its colours and sizes come together."
+      },
+      "preview": {
+        "title": "What comes in: {style}",
+        "missingColours": "These colours are not in your colour list yet; add them first: {list}",
+        "newSizes": "Sizes that will be made: {list}",
+        "newDraft": "a new draft, “{name}” ({n} SKUs)",
+        "into": "into the existing product “{name}” ({n} SKUs)",
+        "barcode": "barcode {code}",
+        "buying": "Bought from ERP at {price}",
+        "noSelling": "No selling price is set here, and customers never see the buying price.",
+        "v5": "Import by style code works only once this store is on the new ERP contract (v6). Until then products come as before.",
+        "adopt": "into “{name}”, made before the ERP: it gets this style code ({n} SKUs)",
+        "conflicts": "These SKUs already sit in other products, so nothing is imported. Move or archive them first, then look the style up again:",
+        "invalid": "The shop cannot take these rows as the ERP sent them, so nothing is imported. Fix them in the ERP first:"
+      },
+      "grade": {
+        "A": "Regular",
+        "B": "B grade"
+      },
+      "action": {
+        "create": "New",
+        "update": "Refresh",
+        "skip": "Left out"
+      },
+      "skip": {
+        "B_GRADE_OFF": "B grade listing is off",
+        "OTHER_PRODUCT": "already in another product",
+        "INACTIVE": "not active in the ERP",
+        "ARCHIVED": "Archived in the shop (restore it on the product page first)"
+      },
+      "invalid": {
+        "SKU": "the SKU is too long",
+        "BARCODE": "the barcode is too long",
+        "SIZE": "the size name is too long",
+        "GARMENT_CHANGED": "the SKU already exists here with another colour or size"
+      },
+      "import": "Import as draft",
+      "importing": "Importing…",
+      "done": "Imported: {created} new, {updated} refreshed, {skipped} left out.",
+      "open": "Open the product ({grade})",
+      "noWrite": "Making the draft needs the permission to change products.",
+      "noPrices": "Buying prices are shown only to people with the prices permission.",
+      "none": "—",
+      "changes": {
+        "title": "Buying price changed",
+        "intro": "The ERP changed what it sells these {n} pieces to the shop for. Your selling price has not changed: check it.",
+        "moved": "Bought at {before} → now {now}",
+        "selling": "Your selling price {price}",
+        "floor": "lowest allowed {price}",
+        "belowFloor": "Below the lowest margin",
+        "belowCost": "Below the buying price",
+        "seen": "Seen",
+        "seenAll": "Mark all as seen",
+        "seenDone": "{n} marked as seen.",
+        "empty": "No buying price has changed."
+      }
+    },
     "metaTitle": "Stock and ERP sync",
     "eyebrow": "Stock",
     "title": "Stock and ERP sync",
@@ -202,6 +281,9 @@
       "ERP_UNAVAILABLE": "The ERP connection does not work."
     },
     "errors": {
+      "ERP_ON_PRACTICE": "The practice ERP's data is only a preview; it is never saved as real products.",
+      "COLOUR_MISSING": "Add these colours to the colour list first: {fields}",
+      "NOTHING_TO_IMPORT": "The ERP has nothing of this style the shop can import.",
       "ERP_NOT_CONNECTED": "This store runs without an ERP.",
       "ERP_UNAVAILABLE": "The ERP connection does not work. Check Keys & connections.",
       "AUDIT_OPEN": "This place is being counted already. Open that count instead.",
@@ -210,7 +292,10 @@
       "PARENT_ARCHIVED": "This place is archived.",
       "NOT_FOUND": "Not found. Check the SKU.",
       "INVALID_INPUT": "Something is not filled in right: {fields}",
-      "FORBIDDEN": "You do not have the permission for this."
+      "FORBIDDEN": "You do not have the permission for this.",
+      "ERP_V5": "Import by style code works only once this store is on the new ERP contract (v6).",
+      "SKU_IN_OTHER_PRODUCT": "Some SKUs of this style already sit in other products: {fields}. Nothing was imported.",
+      "ROW_NOT_ACCEPTED": "The shop cannot take some rows as the ERP sent them: {fields}. Nothing was imported."
     },
     "counts": {
       "metaTitle": "Stock counts",

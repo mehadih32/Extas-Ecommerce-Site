@@ -31,6 +31,7 @@
     "server": "Server",
     "integrations": "Keys & connections",
     "sizeCharts": "Size charts",
+    "erpImport": "Import from the ERP",
     "productImport": "Import from a link",
     "productAudit": "Product audit",
     "backInStock": "Back in stock",

@@ -5,6 +5,7 @@
 // out of a combo is archived. Every change writes an audit row in the same transaction.
 import type { Prisma } from '@extas/db/client';
 import { actorId, allow, allowPrice, found, logChange, nowOf, parse, setting, TX, type CombosDeps, type Db, type Who } from './context';
+import { setFloorMinor } from '@extas/catalogue';
 import { CombosError } from './errors';
 import { colourPrice, productFacts, type ProductFact } from './facts';
 import {
@@ -235,6 +236,13 @@ async function slugFree(db: Db, storeId: number, slug: string, except?: string):
   if (other) throw new CombosError('SLUG_TAKEN', 'that combo link is already used', ['slug']);
 }
 
+/** PR 609 (CN-028): a set price below the floor over its pieces' buying prices is refused (`catalogue.floor.minMarginPercent`). */
+async function assertSetFloor(db: Db, deps: CombosDeps, storeId: number, items: readonly { productId: string | null; fixedVariantId: string | null; quantity: number }[], setPriceMinor: number | null): Promise<void> {
+  if (setPriceMinor === null) return;
+  const floor = await setFloorMinor(db, deps, { storeId }, items.map((i) => ({ productId: i.productId, fixedVariantId: i.fixedVariantId, quantity: i.quantity })));
+  if (floor !== null && setPriceMinor < floor) throw new CombosError('BELOW_FLOOR', 'the set price is below the lowest margin over the buying prices', [`floor: ${floor}`]);
+}
+
 /** A new fixed combo. It starts as a draft (not on sale) until someone with `combos.publish` switches it on. */
 export async function createCombo(deps: CombosDeps, who: Who, input: FixedComboInput): Promise<ComboView> {
   await allow(deps, who, 'combos.write');
@@ -244,6 +252,7 @@ export async function createCombo(deps: CombosDeps, who: Who, input: FixedComboI
   const id = await deps.db.$transaction(async (tx) => {
     await slugFree(tx, who.storeId, d.slug);
     await checkItems(tx, who.storeId, d);
+    await assertSetFloor(tx, deps, who.storeId, d.items, d.setPriceMinor);
     const c = await tx.combo.create({
       data: {
         storeId: who.storeId,
@@ -287,6 +296,7 @@ export async function updateCombo(deps: CombosDeps, who: Who, id: string, input:
   await deps.db.$transaction(async (tx) => {
     await slugFree(tx, who.storeId, d.slug, id);
     await checkItems(tx, who.storeId, d);
+    await assertSetFloor(tx, deps, who.storeId, d.items, d.setPriceMinor);
     const moved = await tx.combo.updateMany({
       where: { id, version: before.version },
       data: {
@@ -328,6 +338,8 @@ export async function setComboPrice(deps: CombosDeps, who: Who, id: string, setP
   if (version !== undefined && version !== before.version) throw new CombosError('STALE', 'the combo was changed by someone else', [`version ${before.version}`]);
   if (before.setPriceMinor !== setPriceMinor) {
     await deps.db.$transaction(async (tx) => {
+      const items = await tx.comboItem.findMany({ where: { comboId: id, archivedAt: null }, select: { productId: true, fixedVariantId: true, quantity: true } });
+      await assertSetFloor(tx, deps, who.storeId, items, setPriceMinor);
       const moved = await tx.combo.updateMany({ where: { id, version: before.version }, data: { setPriceMinor, updatedById: actorId(who), version: { increment: 1 } } });
       if (moved.count !== 1) throw new CombosError('STALE', 'the combo was changed by someone else');
       await logChange(tx, who, { action: 'combo.price', entityType: 'Combo', entityId: id, before: { setPriceMinor: before.setPriceMinor }, after: { setPriceMinor } });
