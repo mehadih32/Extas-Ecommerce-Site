@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 00:12 +06
+# Server report — 2026-10-31 02:35 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `6aeb88f54e15a05f06e9d60d6adddfb45adb5cb6`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `c14cd3224ed701309efe0d6fef060f9c2f58ee6c`. Overall: **PASS**.
 
 ## Machine
 
@@ -49,7 +49,9 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; starts after NVMe + data disk |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
-| PR 620 · client address | OK | CF-Connecting-IP believed from Cloudflare's ranges only |
+| PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
+| PR 7 · Caddy | WARN | the running Caddy read an older Caddyfile (single-file mount); the caddy container was recreated |
+| PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
 | PR 139 · app database role | OK | extas_app may add to the audit log and the history tables, never change or remove them |
 | PR 5 · PostgreSQL | OK | v17.11 (Debian 17.11-1.pgdg13+2), shared_buffers 16GB, temp on NVMe, WAL archive on, slow log > 100 ms, PgBouncer (transaction pool) |
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
@@ -59,7 +61,7 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · restore test | FAIL | restored database did not come up |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ডিস্ক / 96% ভরে গেছে; ডিস্ক /srv/extas/backups 100% ভরে গেছে; ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ডিস্ক / 97% ভরে গেছে; ডিস্ক /srv/extas/backups 100% ভরে গেছে; ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
 
