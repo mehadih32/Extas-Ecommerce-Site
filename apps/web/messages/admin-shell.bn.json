@@ -344,7 +344,8 @@
       "sub": "{n}টা অপেক্ষায় · সবচেয়ে পুরনো {age}",
       "ordersReturns": "ফেরত আর বদল",
       "ordersReturnsQc": "ফেরত মাল চেক",
-      "booksDifferences": "ঠিক করা বাকি হিসাবের গরমিল"
+      "booksDifferences": "ঠিক করা বাকি হিসাবের গরমিল",
+      "erpHold": "ERP অ্যাকাউন্ট হোল্ডে: ERP নতুন অর্ডার নিচ্ছে না"
     },
     "age": {
       "now": "এইমাত্র",

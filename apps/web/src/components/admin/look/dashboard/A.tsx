@@ -91,6 +91,8 @@ export function problemsOf(p: DashProps): { icon: ShellIconName; tone: 'bad' | '
     const r = pick(id);
     if (r) out.push({ icon, tone, title: p.f.t(`dash.queue.${r.id}`), sub: r.oldest ? p.f.t('dash.queue.sub', { n: p.f.n(r.n), age: p.f.ago(r.oldest) }) : p.f.t('shell.nav.waiting', { n: p.f.n(r.n) }), href: r.def.href });
   };
+  // PR 619 (qa-gate I4): the ERP's hold stops every new order — first
+  add('erpHold', 'alert', 'bad');
   add('ordersCancelRequests', 'uturn', 'bad');
   add('ordersCancelPending', 'clock', 'gold');
   add('ordersReview', 'shield', 'gold');

@@ -567,6 +567,8 @@ export interface ErpHoldNotice {
   /** From `warnFromDays` (the ERP's) or `erp.hold.warnDays`: the warning shows. */
   warn: boolean;
   checkoutPaused: boolean;
+  /** When this hold began (ISO), while on hold (CN-029 Phase 3 qa-gate I4: the dashboard's "Needs you now" row). */
+  heldAt?: string | null;
 }
 
 export async function erpHoldNotice(deps: Pick<InventoryDeps, 'db' | 'settings' | 'now'>, storeId: number): Promise<ErpHoldNotice | null> {
@@ -582,7 +584,7 @@ export async function erpHoldNotice(deps: Pick<InventoryDeps, 'db' | 'settings' 
   // Counted in days since the last payment (owner answer Q3); with no payment yet, in days left before the hold.
   const window = s.daysSinceLastPayment != null ? s.daysSinceLastPayment >= from : daysLeft != null && daysLeft <= from;
   const pause = await deps.settings.value('erp.hold.pauseCheckout', { storeId });
-  return { onHold: s.onHold, reason: s.reason, holdsOn, daysLeft, warn: s.onHold || (!!holdsOn && window), checkoutPaused: s.onHold && pause };
+  return { onHold: s.onHold, reason: s.reason, holdsOn, daysLeft, warn: s.onHold || (!!holdsOn && window), checkoutPaused: s.onHold && pause, heldAt: s.onHold && s.heldAt ? s.heldAt.toISOString() : null };
 }
 
 // ---- the short line: the admin's decision (§2.3) ----------------------------------------------------------------------
