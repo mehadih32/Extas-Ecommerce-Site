@@ -104,3 +104,4 @@ export * from './legacy';
 export * from './handback';
 export * from './erp-returns-run';
 export * from './returns-erp';
+export * from './exchange-v6';

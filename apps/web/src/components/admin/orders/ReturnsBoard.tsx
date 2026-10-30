@@ -8,13 +8,17 @@
 // PR 189: under "Start an exchange", a return after receipt — only when the policy allows it (no returns after receipt
 // by default, said in words). PR 190: who pays the second delivery — waive (reason logged), the "your mistake" claim
 // and its decision, the one-trip swap box, and the re-ship of a parcel refused after a try-on.
+// CN-028 · PR 614: on ERP contract v6 "Approve" goes through the store's ERP (`exchange.approve`), the case shows the
+// exchange as the ERP has it (waiting for stock while regular orders come first, the ERP order, the 4-day watch, the
+// value at risk) and the late-return mark; the shop's own QC and "Complete" are not used there (the ERP settles).
 import Link from 'next/link';
-import type { ExchangeChoices, ExchangeSizes, ExchangeView, ReturnChoices } from '@extas/orders';
+import type { ExchangeChoices, ExchangeErpState, ExchangeSizes, ExchangeView, ReturnChoices } from '@extas/orders';
 import type { AdminView } from '@/lib/admin-page';
 import { boardOf, BOARD_COLUMNS, reasonTone, returnsHref, sizeChips, statusTone } from '@/lib/admin-returns/model';
 import { t, type Dict } from '@/lib/i18n';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { ShellIcon } from '../shell/ShellIcon';
+import { ExchangeLateReturn } from './ErpReturns';
 import { ClaimForm, OpenExchangeForm, OpenReturnForm, ReturnsAction, SizeSwitch, type ActionTexts } from './ReturnsActions';
 
 export interface StartStep {
@@ -43,6 +47,9 @@ export interface ReturnsData {
   canWaive: boolean;
   canClaims: boolean;
   claimPhoto: boolean;
+  /** CN-028 · PR 614: the ERP model in use; on v6 who may approve through the ERP and mark a late return, the chosen
+   * case's exchange as the ERP has it, and today in the store's zone. */
+  erp?: { model: 'v5' | 'v6'; canApprove: boolean; canLate: boolean; state: ExchangeErpState | null; today: string };
 }
 
 
@@ -95,6 +102,7 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
   const d = view.dict;
   const m = (n: number) => formatMoney(n, data.money);
   const dt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' });
+  const dayFmt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeZone: 'UTC', numberingSystem: 'latn' });
   const texts = actionTexts(d);
   const cause = x.rootCause ? (data.causes.find((c) => c.key === x.rootCause)?.label ?? x.rootCause) : null;
   const kv: [string, React.ReactNode][] = [
@@ -135,13 +143,17 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
         ) : null}
       </>
     ) : null;
+  // PR 614: on v6 approving goes through the ERP (`exchange.approve`); the ERP settles, so no shop QC or "Complete"
+  const v6 = data.erp?.model === 'v6';
+  const canApprove = v6 ? !!data.erp?.canApprove : data.canDecide;
+  const st = v6 ? (data.erp?.state ?? null) : null;
   const acts =
-    x.status === 'REQUESTED' && data.canDecide ? (
+    x.status === 'REQUESTED' && (canApprove || data.canDecide) ? (
       <>
-        <ReturnsAction label={r(d, 'act.approve')} url={`${base}/approve`} body={{ version: x.version }} tone="pri" texts={texts} testId="exchange-approve" />
-        <ReturnsAction label={r(d, 'act.refuse')} url={`${base}/refuse`} body={{ version: x.version }} tone="badf" note={{ label: r(d, 'act.refuseNote'), required: true }} texts={texts} testId="exchange-refuse" />
+        {canApprove ? <ReturnsAction label={st?.waitingStock ? r(d, 'erpx.tryNow') : st?.needsResend ? r(d, 'erpx.resendBtn') : r(d, 'act.approve')} url={`${base}/approve`} body={{ version: x.version }} tone="pri" texts={texts} testId="exchange-approve" /> : null}
+        {data.canDecide ? <ReturnsAction label={r(d, 'act.refuse')} url={`${base}/refuse`} body={{ version: x.version }} tone="badf" note={{ label: r(d, 'act.refuseNote'), required: true }} texts={texts} testId="exchange-refuse" /> : null}
       </>
-    ) : pickupOpen && data.canQc ? (
+    ) : v6 ? null : pickupOpen && data.canQc ? (
       <Link className="a2-btn pri" href={`${returnsHref()}/qc?id=${p!.returnId}`} data-testid="exchange-qc">
         {r(d, 'qc.open')}
       </Link>
@@ -204,12 +216,64 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
           ) : null}
         </div>
       ) : null}
+      {st ? (
+        <div className="a2-mt12" data-testid="exchange-erp" data-status={st.status ?? 'none'}>
+          <div className="a2-h4">
+            {r(d, 'erpx.title')}
+            {st.status ? <span className={`a2-pill ${st.waitingStock || st.status.startsWith('WAITING') ? 'warn' : st.status === 'CANCELLED' || st.status === 'BILLED' ? 'bad' : 'ok'} rt-ml`}>{r(d, `erp.state.${st.status}`)}</span> : null}
+          </div>
+          {st.waitingStock ? (
+            <div className="a2-note warn">
+              <ShellIcon name="alert" size={15} />
+              <span>{r(d, 'erpx.waiting', { skus: st.shortSkus.map((s) => s.sku).join(', ') })}</span>
+            </div>
+          ) : null}
+          {st.needsResend ? (
+            <div className="a2-note warn" data-testid="exchange-erp-resend">
+              <ShellIcon name="alert" size={15} />
+              <span>{r(d, 'erpx.resend')}</span>
+            </div>
+          ) : null}
+          {st.lastRefusal && !st.waitingStock && !st.erpExchangeId && !st.needsResend ? <div className="a2-xs rt-bad a2-mt6">{r(d, 'erpx.refused', { code: r(d, `erp.reason.${st.lastRefusal}`).startsWith('returns.') ? st.lastRefusal : r(d, `erp.reason.${st.lastRefusal}`) })}</div> : null}
+          <div className="a2-kv2 a2-mt6">
+            {st.newExternalOrderId ? (
+              <>
+                <span>{r(d, 'erpx.order')}</span>
+                <span className="a2-mono">{st.newExternalOrderId}</span>
+              </>
+            ) : null}
+            {st.deadline ? (
+              <>
+                <span>{r(d, 'erpx.deadline')}</span>
+                <span>{`${dayFmt.format(new Date(`${st.deadline}T00:00:00Z`))}${st.daysLeft === null ? '' : ` · ${st.daysLeft >= 0 ? r(d, 'erp.daysLeft', { n: st.daysLeft }) : r(d, 'erp.overdue', { n: -st.daysLeft })}`}`}</span>
+              </>
+            ) : null}
+            {st.atRiskMinor ? (
+              <>
+                <span>{r(d, 'erpx.atRisk')}</span>
+                <span>{m(st.atRiskMinor)}</span>
+              </>
+            ) : null}
+            <span>{r(d, 'erpx.pays')}</span>
+            <span>{m(st.customerPaysMinor)}</span>
+            {st.lateReturnMarkedAt ? (
+              <>
+                <span>{r(d, 'erpx.lateMarked')}</span>
+                <span>{dt.format(new Date(st.lateReturnMarkedAt))}</span>
+              </>
+            ) : null}
+          </div>
+          {st.erpExchangeId && !st.lateReturnMarkedAt && !st.finished && data.erp?.canLate ? (
+            <ExchangeLateReturn url={`${base}/late-return`} today={data.erp.today} texts={{ open: r(d, 'erpx.lateBtn'), day: r(d, 'erpx.lateDay'), note: r(d, 'erpx.lateNote'), save: r(d, 'erpx.lateSave'), cancel: r(d, 'act.cancel'), errors: texts.errors }} />
+          ) : null}
+        </div>
+      ) : null}
       <div className="a2-kv2 a2-mt12">{kv.flatMap(([k, v]) => [<span key={`${k}-k`}>{k}</span>, <span key={`${k}-v`}>{v}</span>])}</div>
       <div className="a2-cmds a2-mt12">{acts ?? <span className="a2-sm a2-mute">{r(d, 'case.nothing')}</span>}</div>
       {charge ? <div className="a2-cmds a2-mt12" data-testid="exchange-charge">{charge}</div> : null}
       <div className="a2-note">
         <ShellIcon name="info" size={15} />
-        <span>{r(d, 'case.never')}</span>
+        <span>{v6 ? r(d, 'erpx.never') : r(d, 'case.never')}</span>
       </div>
     </section>
   );

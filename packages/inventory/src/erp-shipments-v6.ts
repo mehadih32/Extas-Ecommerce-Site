@@ -46,8 +46,10 @@ const shipmentKey = (erpOrderId: string) => `shipment:${erpOrderId}`;
 /** On a shipment row whose answer had no `billedAt` (not an exchange order): the bill date is left empty, never guessed. */
 export const BILLED_AT_MISSING = 'BILLED_AT_MISSING';
 
+// The order's own ERP row. An exchange order (PR 614) has its own ErpOrder (exchangeOfId = the old order), so its
+// parcel's pickup and result go the same way.
 const ofOrder = (db: Db, storeId: number, orderId: string, erpOrderId?: string) =>
-  db.erpOrder.findFirst({ where: erpOrderId ? { id: erpOrderId, storeId } : { storeId, orderId, exchangeOfId: null }, orderBy: { createdAt: 'desc' } });
+  db.erpOrder.findFirst({ where: erpOrderId ? { id: erpOrderId, storeId } : { storeId, orderId }, orderBy: { createdAt: 'desc' } });
 
 /** Queues the shipment of a picked-up parcel (PR 611). Null when the order is not a v6 ERP order. */
 export async function enqueueErpShipment(deps: InventoryDeps, input: ShipmentInput & { erpOrderId?: string }, opts: { tx?: Tx } = {}): Promise<EnqueueResult | null> {

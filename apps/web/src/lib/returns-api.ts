@@ -9,7 +9,13 @@
 //   GET   /api/admin/returns?status=                            the board: the exchanges, newest first (returns.view)
 //   GET   /api/admin/returns/exchanges/:id                      one exchange with its pieces and money box
 //   POST  /api/admin/returns/exchanges/:id/approve              {note?, version?} → the linked exchange order, its stock
-//                                                               held, the pick-up opened (returns.decide)
+//                                                               held, the pick-up opened (returns.decide). CN-028 · PR 614:
+//                                                               on ERP contract v6 it goes through the store's ERP
+//                                                               ({note?, lines?: [{exchangeItemId, lineIds}]}, `exchange.approve`;
+//                                                               the order service checks the permission of the model in use)
+//   POST  /api/admin/returns/exchanges/:id/late-return          {handedBackAt, courier?, returnListId?, consignmentId?, note?}
+//                                                               — PR 614: the old piece came back late with no matching
+//                                                               consignment (returns.handback or exchange.approve)
 //   POST  /api/admin/returns/exchanges/:id/refuse               {note, version?} (returns.decide)
 //   GET   /api/admin/returns/orders/:orderId/choices?orderItemId=&reason=&sizeKey=&quantity=
 //                                                               the window, the limits and the pieces the first tier with
@@ -110,10 +116,13 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
           return { result: await od.decideExchangeClaim(x.deps, x.who, b, d.input, { version: d.version }) };
         });
       case 'approve':
-        return handle(request, deps, 'returns.decide', async (x) => {
+        // CN-028 · PR 614: v5 needs returns.decide, v6 exchange.approve; the order service checks the one in use
+        return handle(request, deps, null, async (x) => {
           const d = await decision(request);
-          return { result: await od.approveExchange(x.deps, x.who, b, d.input, { version: d.version }) };
+          return { result: await od.approveExchangeFor(x.deps, x.who, b, d.input, { version: d.version }) };
         });
+      case 'late-return':
+        return handle(request, deps, null, async (x) => ({ result: await od.markExchangeLateReturn(x.deps, x.who, b, await body(request)) }));
       case 'refuse':
         return handle(request, deps, 'returns.decide', async (x) => {
           const d = await decision(request);

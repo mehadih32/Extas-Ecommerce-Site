@@ -11,8 +11,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { allAdapters, createConnections, MOCK_COURIER_PROVIDER, mockCourierWorld, mockErp, type MockScenario } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { checkErpOrders, decideErpLine, erpOrderLinesOf, erpOrderOf, erpOrderView, relayErpPushes, type InventoryDeps } from '@extas/inventory';
-import { cancelOrder, confirmOrder } from '@extas/orders';
-import { applyEvents, bookOrders, partialBoxView, reportParcelToErp, resolveDeliveryCheck, savePartialDelivery, syncOrder, trackParcel } from './index';
+import { approveExchangeV6, cancelOrder, confirmOrder, openExchange } from '@extas/orders';
+import { applyEvents, bookOrders, partialBoxView, reportErpLagging, reportParcelToErp, resolveDeliveryCheck, savePartialDelivery, syncOrder, trackParcel } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -255,5 +255,38 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 · the order journey to the ERP v6 (P
     f.overrides.set('erp.model', 'v5');
     expect((await f.place('e6-noprice-v5', { phone: phone(), lines: [{ variantId: f.v.linenM }] })).number).toBeTruthy();
     f.overrides.set('erp.model', 'v6');
+  });
+
+  // CN-029 Phase 1 · PR 614 (Pherot) with PR 611: the exchange order is the ERP's own order (ErpOrder with exchangeOfId).
+  it('PR 614 with PR 611: an exchange order`s own parcel — its pickup and result reach the ERP, by the catch-up too', async () => {
+    const o = await confirmed('e6-exchange', [{ variantId: f.v.skyM }]);
+    await relay();
+    const b = await booked(o);
+    for (let i = 0; i < 4; i++) await read(b.shipmentId); // picked up … delivered
+    await relay();
+    const od = { ...f.ordersDeps(), inventory: inv() };
+    const item = await db().orderItem.findFirstOrThrow({ where: { orderId: o.orderId } });
+    const ex = await openExchange(od, f.staff, o.orderId, { reason: 'size', items: [{ orderItemId: item.id, newVariantId: f.v.skyL }] });
+    erp.setStock(sku.skyL!, 'SAMPLE-WH-1', { onHand: 50 }); // an earlier test here used the last L
+    const r = await approveExchangeV6(od, f.staff, ex.exchangeId);
+    expect(r).toMatchObject({ status: 'SENT', erpExchangeId: expect.any(String) });
+    const n = { orderId: r.newOrderId!, number: r.newOrderNumber! };
+    if (!r.confirmed) await confirmOrder(f.ordersDeps(), f.staff, n.orderId);
+    const nb = await booked(n);
+    // the courier is read while the store speaks v5 for a moment: nothing of v6 goes (a report that never ran)
+    f.overrides.set('erp.model', 'v5');
+    for (let i = 0; i < 4; i++) await read(nb.shipmentId);
+    f.overrides.set('erp.model', 'v6');
+    expect((await pushes(n.orderId, 'shipment.create')).length).toBe(0);
+    // the tracking run's catch-up finds the exchange order's parcel: its pickup and its result go to the ERP
+    expect(await reportErpLagging(f.shippingDeps(), f.S, 10)).toMatchObject({ sent: 1 });
+    await relay();
+    expect((await pushes(n.orderId, 'shipment.create')).map((x) => x.status)).toEqual(['SENT']);
+    expect((await pushes(n.orderId, 'order.delivery')).map((x) => x.status)).toEqual(['SENT']);
+    // the ERP's 4-day watch starts; an exchange order is never billed
+    const x = erp.v6('SAMPLE-CO-1').exchanges.get(r.erpExchangeId!)!;
+    expect(x.status).toBe('WAITING_RETURN');
+    expect(x.deadline).toBeTruthy();
+    expect((await erpOrder(n.orderId)).billedAt).toBeNull();
   });
 });

@@ -7,6 +7,8 @@
 //   - Beside: the check against the ERP (`GET /returns/summary`, every night and on "Pull from the ERP and compare
 //     again" — the only way to fix a difference), the courier claims, the losses report, and under "More options" the
 //     section's settings as they stand (changed in Settings → Orders).
+// PR 614: on the Exchanges tab, the exchanges at risk read now from the ERP (`GET /exchanges?status=pending`): the old
+// piece not back and checked yet, the 4-day watch (late ones marked), the value billed to us if it never comes back.
 // On v5 the page says the old Receive & QC is still used. Needs `returns.view`; the order service checks it again.
 // Words: messages/admin-returns.*.json (`returns.erp.*`).
 import type { Metadata } from 'next';
@@ -83,7 +85,9 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
     access.deps.resolver.value('returns.losses.months', at),
   ]);
   const live = overview.model === 'v6' && overview.linked;
-  const [losses, claims, timeline] = live ? await Promise.all([od.returnsLosses(rd, who), od.returnsClaims(rd, who), parcel ? od.parcelTimeline(rd, who, parcel) : Promise.resolve(null)]) : [null, null, null];
+  const [losses, claims, timeline, watch] = live
+    ? await Promise.all([od.returnsLosses(rd, who), od.returnsClaims(rd, who), parcel ? od.parcelTimeline(rd, who, parcel) : Promise.resolve(null), tab === 'exchanges' ? od.exchangeWatch(rd, who) : Promise.resolve(null)])
+    : [null, null, null, null];
 
   const d = view.dict;
   const e = (key: string, vars?: Record<string, string | number>) => t(d, `returns.erp.${key}`, vars);
@@ -238,6 +242,44 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
             ) : null}
             {overview.rows.length ? overview.rows.map(row) : <div className="a2-sm a2-mute a2-mt12">{e(`empty.${tab}`)}</div>}
           </section>
+          {watch ? (
+            <section className="a2-card" data-testid="erp-returns-watch" data-source={watch.source}>
+              <div className="a2-ch">
+                <div>
+                  <h2 className="a2-h3">{e('watch.title')}</h2>
+                  <div className="a2-cs">{e('watch.sub')}</div>
+                </div>
+                <b>{m(watch.totalAtRiskMinor)}</b>
+              </div>
+              {watch.error ? <div className="a2-xs a2-mute a2-mt6">{e('watch.stale')}</div> : null}
+              {watch.rows.length ? (
+                watch.rows.map((w) => (
+                  <div key={w.erpExchangeId} className="a2-card tight a2-mt6" data-testid="erp-returns-watch-row" data-late={String(w.late)}>
+                    <div className="a2-between">
+                      <b>
+                        {w.orderId ? (
+                          <Link className="a2-lnk" href={`${RETURNS_HREF}?case=${w.exchangeId ?? ''}`}>
+                            {w.exchangeNumber ?? w.ofExternalOrderId}
+                          </Link>
+                        ) : (
+                          w.ofExternalOrderId
+                        )}
+                        <span className="a2-mono a2-mute">{` · ${w.externalOrderId}`}</span>
+                      </b>
+                      <span className={`a2-pill ${stateTone(w.erpStatus)}`}>{word('state', w.erpStatus)}</span>
+                    </div>
+                    <div className="a2-xs a2-mt6">{[w.orderNumber, e('atRisk', { money: m(w.atRiskMinor) }), w.deadline ? e('watchUntil', { date: day(w.deadline) }) : null].filter(Boolean).join(' · ')}</div>
+                    <div className="a2-gap8 a2-mt6">
+                      {w.daysLeft !== null ? <span className={`a2-pill ${w.late ? 'bad' : w.daysLeft <= 1 ? 'warn' : 'line'}`}>{w.late ? `${e('watch.late')} · ${e('overdue', { n: n(-w.daysLeft) })}` : e('daysLeft', { n: n(w.daysLeft) })}</span> : null}
+                      {w.lateReturnMarkedAt ? <span className="a2-pill info">{e('watch.lateTag')}</span> : null}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="a2-sm a2-mute a2-mt6">{e('watch.none')}</div>
+              )}
+            </section>
+          ) : null}
           {parcel ? (
             <section className="a2-card" data-testid="erp-returns-timeline">
               <div className="a2-ch">

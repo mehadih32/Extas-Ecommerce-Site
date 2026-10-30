@@ -399,7 +399,9 @@ export async function cancelEffects(deps: OrdersDeps, tx: Tx, o: LockedOrder, by
   await request(o.paidMinor, 'original', `cancel:${o.id}`, paid.length === 1 ? paid[0]!.id : null);
   await request(o.walletAppliedMinor, 'wallet', `cancel:${o.id}:wallet`, null);
   const pushed = await tx.erpPush.findFirst({ where: { storeId: o.storeId, referenceId: o.id, documentType: 'order.create' }, select: { id: true } });
-  const erpPushId = pushed ? (await enqueueOrderStatus(inventoryOf(deps), { storeId: o.storeId, orderId: o.id, externalOrderId: o.number, status: 'CANCELLED' }, { tx })).pushId : null;
+  // the ERP knows the order by its own id: the shop's number, or `<old order>-X<n>` for an exchange order (PR 614)
+  const ext = pushed ? ((await tx.erpOrder.findFirst({ where: { storeId: o.storeId, orderId: o.id }, orderBy: { createdAt: 'desc' }, select: { externalOrderId: true } }))?.externalOrderId ?? o.number) : o.number;
+  const erpPushId = pushed ? (await enqueueOrderStatus(inventoryOf(deps), { storeId: o.storeId, orderId: o.id, externalOrderId: ext, status: 'CANCELLED' }, { tx })).pushId : null;
   await tx.callTask.updateMany({ where: { storeId: o.storeId, orderId: o.id, status: { in: ['OPEN', 'IN_PROGRESS'] } }, data: { status: 'DISMISSED', outcome: 'ORDER_CANCELLED', closedAt: now } });
   await tx.fraudAlert.updateMany({ where: { storeId: o.storeId, orderId: o.id, status: 'OPEN' }, data: { status: 'AUTO_RESOLVED', decisionReason: 'ORDER_CANCELLED', decidedAt: now } });
   return { releasedHolds: released, cancelledPayments, refundRequestIds, erpPushId };

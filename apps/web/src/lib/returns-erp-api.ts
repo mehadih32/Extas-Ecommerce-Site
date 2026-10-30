@@ -23,6 +23,7 @@
 //   GET   /api/admin/returns/erp/claims                              the courier claims and the desk's count differences
 //   GET   /api/admin/returns/erp/compare                             the last compare with the ERP
 //   POST  /api/admin/returns/erp/compare                             {date?} pull from the ERP again and compare again
+//   GET   /api/admin/returns/erp/watch                               PR 614: the exchanges at risk (`GET /exchanges?status=pending`)
 // All need `returns.view`. A difference is fixed by pulling again, never by editing a number (there is no route for it).
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
@@ -94,6 +95,8 @@ async function erpRoute(request: Request, deps: AdminDeps | null, path: string[]
       return handle(request, deps, 'returns.view', async (x) => ({ losses: await od.returnsLosses(x.deps, x.who) }));
     case 'claims':
       return handle(request, deps, 'returns.view', async (x) => ({ claims: await od.returnsClaims(x.deps, x.who) }));
+    case 'watch':
+      return handle(request, deps, null, async (x) => ({ watch: await od.exchangeWatch(x.deps, x.who) }));
     default:
       return notFound();
   }

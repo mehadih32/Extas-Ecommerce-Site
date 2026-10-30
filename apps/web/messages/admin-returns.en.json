@@ -391,7 +391,8 @@
       "SETTLED": "Settled",
       "BILLED": "Billed to us",
       "CREDITED": "Credited",
-      "CANCELLED": "Cancelled"
+      "CANCELLED": "Cancelled",
+      "CLOSED": "Closed before it went"
     },
     "colour": {
       "GREEN": "Green",
@@ -408,7 +409,11 @@
       "OTHER": "Other",
       "NOT_OUR_ORDER": "Not this ERP's order",
       "ALREADY_HANDED_BACK": "Already handed back",
-      "INSUFFICIENT_STOCK": "No stock"
+      "INSUFFICIENT_STOCK": "No stock",
+      "LINE_NOT_DELIVERED": "Line not delivered",
+      "EXCHANGE_OPEN": "Exchange already open",
+      "ORDER_NOT_FOUND": "Order not in this ERP",
+      "SHOP_CLOSED": "Closed in the shop"
     },
     "decision": {
       "APPROVED": "Approved",
@@ -518,6 +523,33 @@
       "months": "Losses report covers",
       "monthsN": "{n} months",
       "where": "These are changed in Settings → Orders."
+    },
+    "watch": {
+      "title": "Exchanges at risk",
+      "sub": "The old piece is not back and checked yet. Billed to us if it is not back by the deadline.",
+      "none": "Nothing at risk.",
+      "late": "Late",
+      "stale": "The ERP could not be asked; this is the last known list.",
+      "total": "Total at risk",
+      "lateTag": "Late return marked"
     }
+  },
+  "erpx": {
+    "title": "Through the ERP",
+    "waiting": "Waiting for ERP stock: regular orders come first. It goes by itself once {skus} is free again.",
+    "tryNow": "Try the ERP again now",
+    "resend": "The ERP could not be reached, so nothing was sent. It is not tried again by itself: press \"Send to the ERP again\" once the ERP is back.",
+    "resendBtn": "Send to the ERP again",
+    "refused": "The ERP refused it: {code}. Nothing was placed and the old piece is free; fix the cause and approve again.",
+    "order": "ERP exchange order",
+    "deadline": "Old piece back by",
+    "atRisk": "At risk until it is back",
+    "pays": "Customer pays for the swap",
+    "lateMarked": "Late return marked",
+    "lateBtn": "Old piece came back late",
+    "lateDay": "Date it came back",
+    "lateNote": "Note (which lot, which courier)",
+    "lateSave": "Tell the ERP",
+    "never": "Approving sends the exchange to the ERP. No money moves here and nothing is refunded after delivery; the ERP settles once the owner checks the old piece."
   }
 }
