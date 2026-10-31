@@ -434,5 +434,45 @@
     "autoHint": "On: a photo added to a product gets its description at once, if it has none.",
     "max": "Longest description (letters)",
     "maxHint": "Default {v} ({min} to {max}). A longer one is cut at a whole word."
+  },
+  "se": {
+    "title": "Search Console and Bing",
+    "desc": "Prove to Google and Bing that the shop is yours, then hand them the sitemap, so they read the shop's pages sooner.",
+    "step1": "In Google Search Console (and Bing Webmaster Tools) add the property for the shop's address: {site}. Choose \"HTML tag\".",
+    "step2": "Paste the tag (or only its code) below and press Save. Every shop page then carries it.",
+    "step3": "Back in Search Console and Bing, press \"Verify\".",
+    "step4": "Connect each in Keys & connections and press \"Send the sitemap\" here, or add {sitemap} under Sitemaps there yourself.",
+    "noSite": "(set the shop's own domain first)",
+    "codes": {
+      "google": "Google Search Console code",
+      "bing": "Bing Webmaster Tools code"
+    },
+    "codesHint": "Paste the whole tag or only its code; one per line, at most {n}. Empty as shipped.",
+    "tags": "What every shop page carries",
+    "noTags": "No code yet: the pages carry nothing.",
+    "col": {
+      "engine": "Search engine",
+      "link": "Connection"
+    },
+    "engine": {
+      "google": "Google Search Console",
+      "bing": "Bing Webmaster Tools"
+    },
+    "connected": "Connected",
+    "practice": "Not connected: add the key in Keys & connections",
+    "send": "Send the sitemap",
+    "sending": "Sending…",
+    "sendHint": "Each connected engine gets the sitemap for the shop's property. An engine without a key sends nothing.",
+    "out": {
+      "sent": "sent to {property}",
+      "practice": "not connected, nothing sent",
+      "noProperty": "the account has no property for the shop's address; add and verify it first",
+      "unreachable": "did not answer; try again later",
+      "failed": "refused ({error})"
+    },
+    "blocked": {
+      "noDomain": "The shop has no domain of its own yet; nothing was sent.",
+      "sitemapsOff": "Sitemaps are off (Sitemaps card); nothing was sent."
+    }
   }
 }

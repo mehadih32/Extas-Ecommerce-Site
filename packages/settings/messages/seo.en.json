@@ -46,6 +46,10 @@
     "altText": {
       "label": "Photo descriptions",
       "help": "The shop writes the English description (alt text) of each product photo that has none; Bengali comes from the dictionary."
+    },
+    "verification": {
+      "label": "Search Console and Bing",
+      "help": "The verification codes Google Search Console and Bing Webmaster Tools give (\"HTML tag\"). Every shop page carries each code as its meta tag, so the engine can confirm the shop is yours. Empty as shipped."
     }
   },
   "defaults": {

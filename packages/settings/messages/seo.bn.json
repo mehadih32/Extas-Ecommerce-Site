@@ -46,6 +46,10 @@
     "altText": {
       "label": "ছবির বর্ণনা",
       "help": "যে প্রোডাক্টের ছবিতে বর্ণনা (alt text) নেই, দোকান নিজেই তার ইংরেজি বর্ণনা লেখে; বাংলা আসে অভিধান থেকে।"
+    },
+    "verification": {
+      "label": "Search Console আর Bing",
+      "help": "Google Search Console আর Bing Webmaster Tools যে যাচাইয়ের কোড দেয় (\"HTML tag\")। দোকানের প্রতিটা পাতা কোডটা meta tag হিসেবে রাখে, তাই সার্চ ইঞ্জিন বুঝতে পারে দোকানটা আপনার। শুরুতে খালি।"
     }
   },
   "defaults": {

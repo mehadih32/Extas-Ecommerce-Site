@@ -15,6 +15,7 @@ import { telegramAdapters } from './telegram';
 import { certificateAdapters } from './certificate';
 import { googleDriveAdapters } from './google-drive';
 import { liveMessengerAdapters, messengerAdapters } from './messenger';
+import { searchConsoleAdapters } from './search-console';
 
 export * from './define';
 export * from './connections';
@@ -43,6 +44,8 @@ export * from './certificate';
 export * from './google-drive';
 // S22 · PR 426 — Facebook Messenger (the Page's messages) for the Support inbox: the mock until the Page's keys arrive.
 export * from './messenger';
+// S11 · PR 233 — Google Search Console and Bing Webmaster: the properties and the sitemap; the mock until a key is in.
+export * from './search-console';
 // S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
 // (not in `allAdapters` until then; see ai-writer/index.ts).
 export * from './ai-writer';
@@ -52,7 +55,7 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters] as const;
 
 /** PR 426 — the Support inbox's channels (WhatsApp, Messenger) for `createConnections`: each falls back to its mock. */
 export const supportAdapters = [...whatsappAdapters, ...messengerAdapters] as const;

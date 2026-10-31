@@ -45,6 +45,8 @@ export const SEO_KEYS = [
   'seo.robots',
   // PR 232: the photo descriptions
   'seo.altText',
+  // PR 233: the Search Console and Bing verification codes
+  'seo.verification',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 
