@@ -10,8 +10,14 @@
 //   inbound.ts  receiveMessage — what a channel's webhook calls (PR 426 builds the webhooks)
 //   inbox.ts    supportInbox, supportThread, supportFile — what the team reads
 //   actions.ts  replyToConversation, assignConversation, setConversationStatus, supportStaff — what the team does
-//   channels.ts the adapter a channel registers to send replies; none is connected yet, so a reply is NOT_SENT
+//   channels.ts the adapter a channel registers to send replies; a kind with none keeps its reply NOT_SENT
 //   settings.ts the Support settings cards
+//
+// PR 426: the connectors.
+//   connectors.ts Messenger and WhatsApp webhooks into the inbox (receiveFromChannel), the reply adapters with Meta's
+//                 reply window (supportChannelAdapters), and the channels list of Support settings (add, rename,
+//                 switch, put away; never deleted)
+//   livechat.ts   the site's own chat: a visitor's thread and messages (off as it ships: support.liveChat)
 //
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
@@ -21,3 +27,5 @@ export * from './inbound';
 export * from './inbox';
 export * from './actions';
 export * from './settings';
+export * from './connectors';
+export * from './livechat';

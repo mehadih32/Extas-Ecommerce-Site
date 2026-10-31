@@ -329,6 +329,18 @@
         "apiVersion": "API version — leave empty for the one the shop was built with",
         "baseUrl": "Address — only for a test server"
       }
+    },
+    "messengerPage": {
+      "name": "Facebook Messenger (Page)",
+      "desc": "The Page's Messenger messages in the Support inbox, and the team's replies. Mock until the keys are in and the test (reading the Page) passes: nothing is sent before that. Messages stay in the Page inbox too. Webhook address: /api/messenger/webhook",
+      "fields": {
+        "pageAccessToken": "Page access token (Meta app → Messenger → API settings; a long-lived Page token)",
+        "appSecret": "App secret (Meta app → Settings → Basic) — checks that the webhook really comes from Meta",
+        "verifyToken": "Verify token — any long word you choose; type the same one in Meta's webhook settings",
+        "pageId": "Page ID (the Page → About → Page transparency, or Meta app → Messenger)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
     }
   },
   "errors": {

@@ -5,9 +5,13 @@
 // - POST proves itself with its signature (X-Hub-Signature-256, made with the app secret in the vault). With no secret,
 //   every post is refused. A verified post's receipts and replies are recorded (@extas/messages whatsapp.ts).
 // A body over `messages.whatsapp.webhookMaxBodyKb` is refused before it is read. Answers: `{ ok, code }`.
+// PR 426: a verified post's customer messages go on to the Support inbox too, to the store's WhatsApp channel with that
+// phone number id (lib/support-connect; a number not added in Support, or switched off, takes nothing).
 import { createConnections, messageAdapters, WHATSAPP_SIGNATURE_HEADER, type Connections } from '@extas/adapters';
 import { receiveWhatsAppWebhook, sendersFrom, verifyWhatsAppWebhook, whatsappWebhookMaxBytes, type WhatsAppWebhookDeps } from '@extas/messages';
+import * as sp from '@extas/support';
 import { adminDeps } from '@/lib/admin-auth';
+import { whatsappToSupport } from '@/lib/support-connect';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +27,14 @@ async function depsFor(deps: NonNullable<ReturnType<typeof adminDeps>>): Promise
     hit = { connections, at: now, ttlMs: cacheSeconds * 1000 };
     holder.__whatsappWebhookConnections = hit;
   }
-  return { db: deps.db, settings: deps.resolver, sender: sendersFrom(hit.connections), connections: hit.connections, now: deps.now };
+  return {
+    db: deps.db,
+    settings: deps.resolver,
+    sender: sendersFrom(hit.connections),
+    connections: hit.connections,
+    now: deps.now,
+    onInbound: (storeId, inbound) => sp.receiveFromChannel({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, 'whatsapp', whatsappToSupport(inbound)),
+  };
 }
 
 const answer = (status: number, body: Record<string, unknown>) => Response.json(body, { status, headers: { 'cache-control': 'no-store' } });

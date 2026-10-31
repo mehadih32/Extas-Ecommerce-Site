@@ -214,6 +214,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // S22 · PR 426 — the Facebook Page's Messenger for the Support inbox: the Page access token, the app secret (the
+  // webhook's signature key) and the webhook's verify token, with the Page id. The mock serves until the Test (reading
+  // the Page) passes; one Page is on at a time.
+  {
+    id: 'messengerPage',
+    kind: 'MESSENGER',
+    provider: 'messengerPage',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }, { field: 'appSecret' }, { field: 'verifyToken' }],
+    config: [{ field: 'pageId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

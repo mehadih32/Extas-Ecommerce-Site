@@ -100,6 +100,8 @@ describe('PR 292 · the webhook', () => {
             field: 'messages',
             value: {
               messaging_product: 'whatsapp',
+              metadata: { display_phone_number: '8801700000000', phone_number_id: '1092' },
+              contacts: [{ wa_id: '8801700000292', profile: { name: 'Sample customer' } }],
               statuses: [
                 { id: 'wamid.ONE', status: 'delivered', timestamp: '1761300000', recipient_id: '8801700000292' },
                 { id: 'wamid.TWO', status: 'failed', timestamp: '1761300060', errors: [{ code: 131026, title: 'Message undeliverable' }] },
@@ -109,6 +111,7 @@ describe('PR 292 · the webhook', () => {
                 { from: '8801700000292', id: 'wamid.IN1', timestamp: '1761300100', type: 'text', text: { body: '১' } },
                 { from: '8801700000292', id: 'wamid.IN2', timestamp: '1761300200', type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'b1', title: 'STOP' } } },
                 { from: '8801700000292', id: 'wamid.IN3', timestamp: '1761300300', type: 'image', image: { id: 'm1' } },
+                { from: '8801700000292', id: 'wamid.IN4', timestamp: '1761300400', type: 'document', document: { id: 'm2', caption: 'my receipt', filename: 'receipt.pdf', mime_type: 'application/pdf' } },
               ],
             },
           },
@@ -139,7 +142,13 @@ describe('PR 292 · the webhook', () => {
       ['+8801700000292', '১'],
       ['+8801700000292', 'STOP'],
       ['+8801700000292', ''],
+      ['+8801700000292', 'my receipt'],
     ]);
+    // PR 426: the shop's number it came to, the profile name and the files (Meta's media ids), for the Support inbox
+    expect(p.inbound[0]).toMatchObject({ phoneNumberId: '1092', name: 'Sample customer' });
+    expect(p.inbound[0]!.files).toBeUndefined();
+    expect(p.inbound[2]!.files).toEqual([{ kind: 'IMAGE', mediaId: 'm1' }]);
+    expect(p.inbound[3]!.files).toEqual([{ kind: 'DOCUMENT', mediaId: 'm2', fileName: 'receipt.pdf', contentType: 'application/pdf' }]);
     expect(parseWhatsAppWebhook(null)).toEqual({ receipts: [], inbound: [] });
     expect(parseWhatsAppWebhook({ entry: 'x' })).toEqual({ receipts: [], inbound: [] });
   });

@@ -2,12 +2,15 @@
 // the skip link, the header, the page, the footer, the phone's bottom bar and the floating WhatsApp disc (PR 70: a
 // switch, off by default, with a per-page choice and its place — `shell.fab`). PR 72: the search window, opened by the
 // header's search icon and the menu's "Search" (`search.panel`).
+// PR 426: the live chat button (`support.liveChat`, off as it ships): drawn only while the owner has it on, on the side
+// the WhatsApp disc does not take.
 import { StoreFooter } from '@/components/shop/StoreFooter';
 import { StoreHeader } from '@/components/shop/StoreHeader';
 import { BottomNav } from '@/components/shop/BottomNav';
 import { ShellEffects } from '@/components/shop/ShellEffects';
 import { SearchPanel } from '@/components/shop/search/SearchPanel';
 import { WaGlyph } from '@/components/shop/Icon';
+import { LiveChat, type LiveChatTexts } from '@/components/shop/LiveChat';
 import { cookies } from 'next/headers';
 import { badgeCount, COUNT_COOKIE } from '@/lib/shop/bag-model';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
@@ -21,12 +24,17 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
   // switches it on, the kinds of page he ticked show it (never the home page, the product page or the bag by default:
   // C3, §49.4, demo FAB_PAGES).
   // ~~C3: off the home page and the bag, every other page has it whenever the number is set~~
-  const more = await readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel'] as const, c.storeId);
+  const more = await readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel', 'support.liveChat'] as const, c.storeId);
   const fabSet = more['shell.fab'];
   const waLink = waHref(c.s['contact.whatsapp'], c.t('fab.message', c.vars));
   const fab = fabShows(fabSet, fabPage(c.path, c.s['naming.productPathPrefix']), waLink) ? waLink : null;
   // PR 105: the bag's piece count, from the cookie the bag's API keeps current (a number only; never used for money).
   const bagCount = badgeCount((await cookies()).get(COUNT_COOKIE)?.value);
+  const chat = more['support.liveChat'];
+  const chatTexts = (): LiveChatTexts => ({
+    ...(Object.fromEntries((['open', 'title', 'sub', 'close', 'placeholder', 'send', 'sending', 'empty', 'me', 'shop'] as const).map((k) => [k, c.t(`chat.${k}`, c.vars)])) as Omit<LiveChatTexts, 'err'>),
+    err: Object.fromEntries((['RATE_LIMITED', 'TOO_LONG', 'EMPTY', 'LIVE_CHAT_OFF', 'network', 'other'] as const).map((k) => [k, c.t(`chat.err.${k}`, c.vars)])) as LiveChatTexts['err'],
+  });
   return (
     <>
       <a className="skip" href="#main" data-act="skip">
@@ -45,6 +53,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
           <WaGlyph size={27} />
         </a>
       ) : null}
+      {chat.enabled ? <LiveChat texts={chatTexts()} side={fab && fabSet.side !== 'left' ? 'left' : 'right'} pollSeconds={chat.pollSeconds} maxChars={chat.maxChars} /> : null}
       <ShellEffects />
       <SearchPanel {...searchPanelProps(c, more['search.panel'])} />
     </>

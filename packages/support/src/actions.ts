@@ -167,7 +167,7 @@ export async function replyToConversation(deps: SupportDeps, who: Who, input: un
         delivery = 'SENT';
         externalMessageId = r.externalMessageId;
       } else {
-        delivery = 'FAILED';
+        delivery = r.notSent ? 'NOT_SENT' : 'FAILED';
         failReason = r.error.slice(0, 200);
       }
     } catch (e) {

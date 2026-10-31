@@ -15,13 +15,25 @@
 //   GET   /api/admin/support/files/:id          one file of a conversation, our stored copy (support.read)
 //   GET   /api/admin/support/staff              who can take conversations here (support.read)
 //   GET   /api/admin/support/settings           the Support settings cards with their versions (support.read)
-//   PUT   /api/admin/support/settings           {key, value, version} one card saved whole (support.settings)
+//   PUT   /api/admin/support/settings           {key, value, version} one card saved whole (support.settings); the
+//                                               live chat switched on makes its channel (PR 426)
+//   GET   /api/admin/support/channels           PR 426: the store's channels with their conversations (support.read)
+//   POST  /api/admin/support/channels           {action: add|rename|switch|archive, …} a Messenger Page or a WhatsApp
+//                                               number added (switched off), renamed, switched, put away; never deleted
+//                                               (support.settings)
+// PR 426: replies go out through the channels' connectors (lib/support-connect: Messenger, WhatsApp with Meta's reply
+// window, the site's live chat), each the practice mock until its key is in Keys & connections.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { storeGeneratedFile, type MediaDeps } from '@extas/media';
 import type { PermissionKey } from '@extas/auth';
 import * as sp from '@extas/support';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { mediaDeps } from './media';
+import { supportConnections, supportSenders } from './support-connect';
+import inboxEn from '../../messages/admin-inbox.en.json';
+
+/** How the inbox names the live chat's channel when it is made (the team can rename it). */
+export const LIVE_CHAT_CHANNEL_NAME = inboxEn.sup.kind.livechat;
 
 function storeIdOf(url: URL): number | null {
   const raw = url.searchParams.get('storeId');
@@ -34,8 +46,11 @@ function supportFail(e: unknown): Response {
   return errorResponse(e);
 }
 
-/** The support core's dependencies from the admin's (no channel is connected yet: PR 426). */
-export const supportDeps = (d: AdminDeps): sp.SupportDeps => ({ db: d.db, settings: d.resolver, now: d.now });
+/** The support core's dependencies from the admin's, with the channels' reply adapters (PR 426). */
+export const supportDeps = (d: AdminDeps): sp.SupportDeps => {
+  const base = { db: d.db, settings: d.resolver, now: d.now };
+  return { ...base, channels: sp.supportChannelAdapters(base, supportSenders(() => supportConnections(d))) };
+};
 
 type Route = { perm: PermissionKey; methods: string[] };
 
@@ -50,6 +65,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === 'files' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'staff' && b === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'settings' && b === undefined) return { perm: method === 'PUT' ? 'support.settings' : 'support.read', methods: ['GET', 'PUT'] };
+  if (a === 'channels' && b === undefined) return { perm: method === 'POST' ? 'support.settings' : 'support.read', methods: ['GET', 'POST'] };
   return null;
 }
 
@@ -135,9 +151,17 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       return id ? await download(d, files, who, id) : await upload(request, d, files, storeId, g.actor.staffUserId);
     }
     if (a === 'staff') return json({ ok: true, staff: await sp.supportStaff(sd, who) });
+    if (a === 'channels') {
+      if (m === 'GET') return json({ ok: true, ...(await sp.supportChannels(sd, who)) });
+      const saved = await sp.saveSupportChannel(sd, who, await body(request));
+      return json({ ok: true, ...saved, ...(await sp.supportChannels(sd, who)) });
+    }
     const settings = { db: d.db, settings: d.resolver };
     if (m === 'GET') return json({ ok: true, cards: await sp.supportSettingsView(settings, who) });
-    return json({ ok: true, cards: await sp.saveSupportSetting(settings, who, await body(request)) });
+    const cards = await sp.saveSupportSetting(settings, who, await body(request));
+    // the live chat switched on: its channel is there for the inbox and the channels list straight away
+    if (cards['support.liveChat'].value.enabled) await sp.ensureLiveChatChannel(d, storeId, LIVE_CHAT_CHANNEL_NAME);
+    return json({ ok: true, cards });
   } catch (e) {
     return supportFail(e);
   }

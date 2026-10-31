@@ -2,6 +2,7 @@
 // TEST_DATABASE_ADMIN_URL): login and the path table's refusals, the inbox with its views, one conversation, a file
 // uploaded (checked by its contents) and read back, a reply kept as NOT_SENT while no channel is connected, a note, a
 // stale press refused, take / status, the who-did-what log, a read-only person refused at the door, and the settings.
+// PR 426: the channels list (add, switch, rename, put away) and the live chat switched on making its channel.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -114,8 +115,9 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
 
     const sent = await j('POST', ['c', conversationId, 'messages'], { body: { body: 'Sample: yes, here it is.', assetIds: [up.body.file.id], requestKey: 'sample-press-0001' } });
     expect(sent.status).toBe(200);
-    // no connector is built yet (PR 426): the reply is kept, never lost, and says why it did not go out
-    expect(sent.body).toMatchObject({ delivery: 'NOT_SENT', failReason: 'CHANNEL_NOT_CONNECTED', replay: false });
+    // ~~no connector is built yet (PR 426)~~ PR 426: the site chat is off as it ships, so the reply is kept, never lost,
+    // and says why it did not go out
+    expect(sent.body).toMatchObject({ delivery: 'NOT_SENT', failReason: 'LIVE_CHAT_OFF', replay: false });
     const again = await j('POST', ['c', conversationId, 'messages'], { body: { body: 'Sample: yes, here it is.', assetIds: [up.body.file.id], requestKey: 'sample-press-0001' } });
     expect(again.body).toMatchObject({ messageId: sent.body.messageId, replay: true });
 
@@ -162,7 +164,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['support.attachments', 'support.inbox']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['support.attachments', 'support.channels', 'support.inbox', 'support.liveChat']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -171,5 +173,31 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     expect((await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxMb: 99 }, version: saved.body.cards['support.attachments'].version } })).status).toBe(400);
     // put it back for the tests after this one
     expect((await j('PUT', ['settings'], { body: { key: 'support.attachments', value: files, version: saved.body.cards['support.attachments'].version } })).status).toBe(200);
+  });
+
+  it('PR 426: the channels list — a reader sees it, an owner adds a Page (off), switches, renames, puts it away; the chat switched on makes its channel', async () => {
+    const list = await j('GET', ['channels'], { cookie: reader });
+    expect(list.status).toBe(200);
+    expect(list.body).toMatchObject({ canEdit: false, rows: [expect.objectContaining({ kind: 'livechat', externalId: 'sample-chat', conversations: 1, liveChatOn: false })] });
+    expect((await api('POST', ['channels'], { cookie: reader, body: { action: 'add', kind: 'messenger', externalId: '100200300', name: 'Sample Page' } })).status).toBe(403);
+    expect((await api('PUT', ['channels'])).status).toBe(405);
+    expect((await j('POST', ['channels'], { body: { action: 'add', kind: 'messenger', externalId: 'not digits', name: 'Sample Page' } })).body.error).toBe('INVALID_INPUT');
+    const added = await j('POST', ['channels'], { body: { action: 'add', kind: 'messenger', externalId: '100200300', name: 'Sample Page' } });
+    expect(added.status).toBe(200);
+    const page = added.body.rows.find((r: { id: string }) => r.id === added.body.id);
+    expect(page).toMatchObject({ kind: 'messenger', enabled: false, archived: false });
+    const on = await j('POST', ['channels'], { body: { action: 'switch', id: page.id, enabled: true, version: page.version } });
+    expect(on.body.rows.find((r: { id: string }) => r.id === page.id)).toMatchObject({ enabled: true });
+    expect((await j('POST', ['channels'], { body: { action: 'rename', id: page.id, name: 'Sample Page 2', version: page.version } })).body.error).toBe('STALE');
+    expect((await j('POST', ['channels'], { body: { action: 'archive', id: page.id, archived: true } })).body.rows.find((r: { id: string }) => r.id === page.id)).toMatchObject({ archived: true, enabled: false });
+    expect(await t.prisma.auditLog.count({ where: { entityType: 'SupportChannel', entityId: page.id } })).toBe(3);
+
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.liveChat'].value).toMatchObject({ enabled: false });
+    const chat = { ...cards['support.liveChat'].value, enabled: true };
+    expect((await j('PUT', ['settings'], { body: { key: 'support.liveChat', value: chat, version: cards['support.liveChat'].version } })).status).toBe(200);
+    expect(await t.prisma.supportChannel.findUniqueOrThrow({ where: { storeId_kind_externalId: { storeId, kind: 'livechat', externalId: 'site' } } })).toMatchObject({ name: 'Site chat', enabled: true });
+    const after = (await j('GET', ['settings'])).body.cards['support.liveChat'];
+    expect((await j('PUT', ['settings'], { body: { key: 'support.liveChat', value: { ...chat, enabled: false }, version: after.version } })).status).toBe(200);
   });
 });

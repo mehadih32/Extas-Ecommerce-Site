@@ -944,5 +944,25 @@
       "fill": "Fill a sample bag"
     },
     "gift": "Send as a gift"
+  },
+  "chat": {
+    "open": "Chat with us",
+    "title": "Chat with {store}",
+    "sub": "Write your question; the team answers here.",
+    "close": "Close the chat",
+    "placeholder": "Your message",
+    "send": "Send",
+    "sending": "Sending…",
+    "empty": "No messages yet. Ask us anything about an item, a size or your order.",
+    "me": "You",
+    "shop": "{store}",
+    "err": {
+      "RATE_LIMITED": "Too many messages in a minute. Wait a little and send again.",
+      "TOO_LONG": "The message is too long.",
+      "EMPTY": "Write a message first.",
+      "LIVE_CHAT_OFF": "The chat is closed right now.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
   }
 }

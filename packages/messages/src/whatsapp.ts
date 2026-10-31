@@ -287,6 +287,10 @@ export const CONSENT_TEMPLATES = { stopped: 'consent.stopped', started: 'consent
 
 export interface WhatsAppWebhookDeps extends MessagesDeps {
   connections: Pick<Connections, 'secretOf'>;
+  /** PR 426: the customers' messages go on to the Support inbox too (the app passes @extas/support's connector). It runs
+   *  before any automatic answer, so a failure here answers 500 and the provider sends the post again (both sides
+   *  take the same message once). */
+  onInbound?: (storeId: number, inbound: WhatsAppInbound[]) => Promise<unknown>;
 }
 
 export type WhatsAppWebhookCode = 'OK' | 'NOT_CONNECTED' | 'TOO_LARGE' | 'BAD_SIGNATURE' | 'BAD_JSON';
@@ -324,6 +328,7 @@ export async function receiveWhatsAppWebhook(deps: WhatsAppWebhookDeps, req: { r
   }
   const { receipts, inbound } = parseWhatsAppWebhook(body);
   const r = await recordWhatsAppReceipts(deps, match.storeId, receipts);
+  if (inbound.length && deps.onInbound) await deps.onInbound(match.storeId, inbound);
   const replies = await handleWhatsAppInbound(deps, match.storeId, inbound);
   return { status: 200, code: 'OK', receipts: r, replies };
 }

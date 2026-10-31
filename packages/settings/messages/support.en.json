@@ -10,6 +10,14 @@
     "attachments": {
       "label": "Files in a conversation",
       "help": "Files the team may attach to a reply or a note. Files a customer sends are always kept. \"Files per message\": how many one message takes. \"Largest file\": in megabytes. \"Kinds\": pictures, videos and PDFs; each file is checked by its contents, not its name."
+    },
+    "channels": {
+      "label": "Messenger and WhatsApp replies",
+      "help": "Meta's rule, kept by design: a reply on Messenger or WhatsApp goes only within \"Reply window\" hours after the customer's last message (Meta allows 24). Outside it the reply is kept in the conversation and marked \"not sent\". \"Largest webhook\": the biggest Messenger message body the shop reads, in kilobytes."
+    },
+    "liveChat": {
+      "label": "Live chat on the shop",
+      "help": "The chat button on the shop's pages: a visitor writes straight from the site and the team answers from the inbox. Off as it ships. \"Check for answers every\": seconds between an open chat's checks. \"Longest message\": characters one message may have. \"Messages a minute\": how many one visitor may send in a minute. \"Keep a chat for\": days a visitor's chat stays his on that browser."
     }
   }
 }

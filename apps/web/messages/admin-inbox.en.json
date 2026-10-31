@@ -50,7 +50,7 @@
     "empty": "No conversations here",
     "emptySub": "Customers' messages arrive here once a channel is connected (WhatsApp, Messenger, the site's chat).",
     "emptySearch": "Nothing matches this search.",
-    "noChannel": "No channel is connected yet, so replies cannot go out: they are kept in the conversation and marked \"Not sent\".",
+    "noChannel": "No channel is switched on yet, so no messages come in and replies cannot go out: they are kept in the conversation and marked \"Not sent\". Add your Facebook Page or WhatsApp number, or switch on the site chat, in Support settings.",
     "prev": "Newer",
     "next": "Older",
     "pageOf": "Page {n} of {of}",
@@ -75,7 +75,10 @@
       "why": "Why: {reason}",
       "reason": {
         "CHANNEL_NOT_CONNECTED": "the channel is not connected yet",
-        "CHANNEL_OFF": "the channel is switched off"
+        "CHANNEL_OFF": "the channel is switched off",
+        "OUTSIDE_WINDOW": "more than the reply window since the customer's last message",
+        "FILES_NOT_SENT": "files do not go out on this channel yet; send the words alone",
+        "LIVE_CHAT_OFF": "the site chat is switched off"
       },
       "pending": "Copying the file…",
       "open": "Open file",
@@ -159,7 +162,7 @@
     },
     "set": {
       "title": "Support settings",
-      "sub": "How the inbox works and files in a conversation.",
+      "sub": "Where messages come from, the site's chat, how the inbox works and files in a conversation.",
       "save": "Save",
       "saving": "Saving…",
       "saved": "Saved.",
@@ -200,6 +203,60 @@
         "unauthorized": "You have been signed out. Sign in again.",
         "network": "No connection. Try again.",
         "other": "Something went wrong. Try again."
+      },
+      "channels": {
+        "h": "Channels",
+        "d": "Where the inbox's messages come from. A Facebook Page or a WhatsApp number takes messages once it is added here and switched on, and its keys are in Keys & connections.",
+        "empty": "No channel yet. Add your Facebook Page or WhatsApp number below; the site chat appears here once it is switched on.",
+        "conversations": "{n} conversations",
+        "on": "On",
+        "off": "Off",
+        "archivedTag": "Put away",
+        "chatOff": "the chat button is off on the shop (Site chat card)",
+        "switchOn": "Switch on",
+        "switchOff": "Switch off",
+        "archive": "Put away",
+        "restore": "Bring back",
+        "rename": "Rename",
+        "save": "Save",
+        "cancel": "Cancel",
+        "addH": "Add a channel",
+        "addKind": "Kind",
+        "addId": "Page id or phone number id",
+        "addIdHelp": "Digits only, from the Meta app (the Page's id, or WhatsApp's phone number id). It comes in switched off.",
+        "addName": "Name in the inbox",
+        "add": "Add",
+        "added": "Added, switched off. Switch it on once its keys are in.",
+        "saved": "Saved.",
+        "err": {
+          "STALE": "Someone changed this channel in between; the list was read again.",
+          "INVALID_INPUT": "Something is not right: {fields}",
+          "NOT_FOUND": "This channel is not there any more.",
+          "forbidden": "You do not have permission for this.",
+          "FORBIDDEN": "You do not have permission for this.",
+          "unauthorized": "You have been signed out. Sign in again.",
+          "network": "No connection. Try again.",
+          "other": "Something went wrong. Try again."
+        }
+      },
+      "liveChat": {
+        "h": "Site chat",
+        "d": "A chat button on the shop's pages. Visitors write; the team answers here in the inbox.",
+        "enabled": "Chat button on the shop",
+        "enabledHelp": "Off as it ships. Switched on, every shop page shows the button (on the other side from the WhatsApp disc).",
+        "maxChars": "Longest visitor message (characters)",
+        "perMinute": "Messages a visitor may send in a minute",
+        "perMinuteHelp": "Beyond this the chat asks him to wait a little (it stops floods).",
+        "pollSeconds": "How often an open chat looks for answers (seconds)",
+        "cookieDays": "How long a chat stays with a browser (days)",
+        "cookieDaysHelp": "The visitor sees his earlier messages on the same browser for this long."
+      },
+      "window": {
+        "h": "Meta's reply window",
+        "d": "Messenger and WhatsApp let a shop answer freely only for a while after the customer last wrote. Outside it a reply is kept and marked \"Not sent\".",
+        "replyWindowHours": "Reply window (hours)",
+        "replyWindowHoursHelp": "Meta's rule is 24 hours. Raise it only if Meta has given your Page or number longer.",
+        "webhookMaxBodyKb": "Largest Messenger message read (KB)"
       }
     }
   }

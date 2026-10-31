@@ -72,6 +72,8 @@ export * from './registry-switchover';
 export * from './registry-backups';
 // CN-033 — the shop follows the ERP's retail decisions of 30 Oct 2026 (registry-erp-retail.ts, version 72).
 export * from './registry-erp-retail';
+// S22 · PR 426 — the Support channel connectors (registry-support-channels.ts, version 72).
+export * from './registry-support-channels';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).
