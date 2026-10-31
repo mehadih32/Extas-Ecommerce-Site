@@ -249,14 +249,64 @@ osdisk_stale_views() {
   done
 }
 
-# osdisk_repair_images — the stack's containers (container_name in infra/stack/compose.yml) and the pulled images
-# they run from are checked. A broken pulled image is removed with containerd's own clean-up at once and pulled again;
-# a container that is broken, or runs from a broken image, or is not running, is stopped and removed so the stack step
-# makes it again (all their data is in host folders, never in a container). The app's own images (extas-web, worker)
-# are only reported: the next deploy builds them again.
+# osdisk_pull <image> — pulls it and checks it; on failure the error's last line is left in OSDISK_PULL_ERR.
+osdisk_pull() {
+  local out
+  if out="$(docker pull -q "$1" </dev/null 2>&1)" && osdisk_image_sound "$1"; then return 0; fi
+  OSDISK_PULL_ERR="$(printf '%s' "$out" | tail -1 | cut -c1-200)"; [ -n "$OSDISK_PULL_ERR" ] || OSDISK_PULL_ERR="pulled, but its tools are missing"
+  return 1
+}
+
+# Docker Hub answers (401 without a token is an answer): a failed pull is then the store's fault, not the network's.
+osdisk_registry_up() { curl -s -o /dev/null -m 15 -w '%{http_code}' https://registry-1.docker.io/v2/ 2>/dev/null | grep -qE '^(200|401)$'; }
+
+# osdisk_reset_store — the last resort when pulls fail although the registry answers (31 Oct: the store's own records
+# pointed at files that were gone, so even a fresh pull could not unpack). Docker is stopped, everything in the store
+# is set aside on the same volume (nothing is deleted now; a later run removes it after STORE_ASIDE_KEEP_DAYS), Docker
+# starts on an empty store, and every container (its layers were in that store) and the build cache are removed. All
+# the stack's data is in host folders; the images are pulled or built again and the next deploy builds the app.
+# Every container goes (their layers are in the store being set aside); their data is in host folders.
+osdisk_rm_all() {
+  local ids
+  ids="$(docker ps -aq </dev/null | paste -sd' ')"
+  # shellcheck disable=SC2086  # a list of container ids
+  [ -z "$ids" ] || docker rm -f $ids </dev/null >/dev/null 2>&1 || true
+}
+
+osdisk_reset_store() {
+  local aside i
+  mountpoint -q "$CONTAINERD_ROOT" || { report FAIL "PR 4 · image check" "pulls fail and the store is not on its own volume: not reset"; return 1; }
+  aside="$CONTAINERD_ROOT/broken-$(date -u +%Y%m%d%H%M%S)"
+  log "image check: pulls fail with the registry up — setting the store aside in $aside and starting on an empty one"
+  osdisk_rm_all
+  systemctl stop docker.socket docker.service containerd.service
+  mkdir -p "$aside"
+  find "$CONTAINERD_ROOT" -mindepth 1 -maxdepth 1 ! -name 'broken-*' ! -name lost+found -exec mv -t "$aside" {} +
+  osdisk_services_up
+  for i in $(seq 1 30); do docker info >/dev/null 2>&1 && break; sleep 2; done
+  osdisk_rm_all
+  docker builder prune -af >/dev/null 2>&1 || true
+  date -u +%s > "$EXTAS_STATE_DIR/store-reset.at"
+  report WARN "PR 4 · image check" "the image store was broken beyond repair: set aside ($(basename "$aside")) and started empty; images pulled and built again, the next deploy builds the app"
+}
+
+# The set-aside stores go after STORE_ASIDE_KEEP_DAYS (never the live store: only broken-* folders at its top level).
+osdisk_aside_cleanup() {
+  mountpoint -q "$CONTAINERD_ROOT" || return 0
+  find "$CONTAINERD_ROOT" -mindepth 1 -maxdepth 1 -name 'broken-*' -mtime +"${STORE_ASIDE_KEEP_DAYS:-2}" -exec rm -rf --one-file-system {} + 2>/dev/null || true
+}
+
+# osdisk_repair_images — the stack's pulled images (IMG_* in server.conf) and its containers (container_name in
+# infra/stack/compose.yml) are checked. A missing or broken pulled image is removed with containerd's own clean-up at
+# once and pulled again; a container that is broken, or runs from a broken image, or is not running, is stopped and
+# removed so the stack step makes it again (all their data is in host folders, never in a container). When pulls still
+# fail with the registry up, the store is reset once (osdisk_reset_store). Images built here go for the stack step's
+# --build; the app's own images are made again by the next deploy.
 osdisk_repair_images() {
-  local names name img imgs=() bad_img=() bad_ct=() fixed=() built=() rc=0
+  local names name img imgs=() bad_img=() bad_ct=() fixed=() built=() failed=() rc=0 last
   osdisk_stale_views
+  osdisk_aside_cleanup
+  for img in "${IMG_POSTGRES:-}" "${IMG_REDIS:-}" "${IMG_MEILI:-}" "${IMG_CADDY:-}"; do [ -z "$img" ] || imgs+=("$img"); done
   names="$(sed -n 's/^ *container_name: *//p' "$EXTAS_REPO_DIR/infra/stack/compose.yml" 2>/dev/null | tr -d '"' | sort -u)"
   for name in $names; do
     img="$(docker inspect -f '{{.Config.Image}}' "$name" </dev/null 2>/dev/null || true)"
@@ -266,7 +316,10 @@ osdisk_repair_images() {
     fi
     case " ${imgs[*]} " in *" $img "*) ;; *) imgs+=("$img") ;; esac
   done
-  for img in "${imgs[@]}"; do osdisk_image_sound "$img" || bad_img+=("$img"); done
+  for img in "${imgs[@]}"; do
+    case "$img" in extas/*|extas-*) docker image inspect "$img" >/dev/null 2>&1 || continue ;; esac
+    osdisk_image_sound "$img" || bad_img+=("$img")
+  done
   for img in "${bad_img[@]}"; do
     for name in $names; do
       [ "$(docker inspect -f '{{.Config.Image}}' "$name" </dev/null 2>/dev/null)" = "$img" ] || continue
@@ -286,9 +339,21 @@ osdisk_repair_images() {
   done
   for img in "${bad_img[@]}"; do
     case "$img" in extas/*|extas-*) continue ;; esac
-    if docker pull -q "$img" </dev/null >/dev/null 2>&1 && osdisk_image_sound "$img"; then fixed+=("$img")
-    else report FAIL "PR 4 · image check" "$img is still broken after a fresh pull"; rc=1; fi
+    if osdisk_pull "$img"; then fixed+=("$img"); else failed+=("$img"); last="$OSDISK_PULL_ERR"; fi
   done
+  if [ "${#failed[@]}" -gt 0 ]; then
+    if ! osdisk_registry_up; then
+      report FAIL "PR 4 · image check" "could not pull ${failed[*]} and Docker Hub does not answer (${last:-?}); nothing reset"; return 1
+    elif [ -f "$EXTAS_STATE_DIR/store-reset.at" ] && [ $(( $(date -u +%s) - $(cat "$EXTAS_STATE_DIR/store-reset.at") )) -lt 21600 ]; then
+      report FAIL "PR 4 · image check" "could not pull ${failed[*]} (${last:-?}); the store was already reset in the last 6 hours"; return 1
+    fi
+    osdisk_reset_store || return 1
+    imgs=("${failed[@]}" "${fixed[@]}"); failed=()
+    for img in "${imgs[@]}"; do
+      if osdisk_pull "$img"; then case " ${fixed[*]} " in *" $img "*) ;; *) fixed+=("$img") ;; esac
+      else failed+=("$img"); report FAIL "PR 4 · image check" "$img does not pull on an empty store: $OSDISK_PULL_ERR"; rc=1; fi
+    done
+  fi
   report OK "PR 4 · image check" "files had gone missing in the store: made again by the stack step: ${bad_ct[*]:-none}; pulled again: ${fixed[*]:-none}; built again: ${built[*]:-none}"
   return "$rc"
 }
