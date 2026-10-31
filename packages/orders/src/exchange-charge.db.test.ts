@@ -66,7 +66,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 190 · exchange delivery charge and who pays (
     expect(fee).toBeGreaterThan(0);
     expect(opt.money).toMatchObject({ differenceMinor: opt.priceMinor, chargeState: 'SET', codMinor: opt.priceMinor + fee });
     const ex = await openExchange(d(), f.staff, o.orderId, { reason: 'size', items: [{ orderItemId: line.id, newVariantId: f.v.skyL }] });
+    await db().order.update({ where: { id: o.orderId }, data: { lang: 'en' } });
     const ap = await approveExchange(d(), f.staff, ex.exchangeId);
+    // review R3 (customer minor 2): the new parcel keeps the language he ordered in
+    expect((await db().order.findUniqueOrThrow({ where: { id: ap.newOrderId } })).lang).toBe('en');
     const refusedReturn = await db().returnRecord.findFirstOrThrow({ where: { orderId: o.orderId, kind: 'REFUSED_AT_DOOR' }, include: { items: true } });
     expect(ap.returnId).toBe(refusedReturn.id);
     expect(refusedReturn.exchangeId).toBe(ex.exchangeId);

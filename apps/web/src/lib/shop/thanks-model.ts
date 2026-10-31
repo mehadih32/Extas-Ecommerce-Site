@@ -38,3 +38,17 @@ export function nextSteps(words: { placed: string; confirm: string; courier: str
     { key: 'delivered', title: words.delivered, note: promise, state: 'later' },
   ];
 }
+
+/** The states after the shop confirmed the order (the page then may say "confirmed"). */
+const CONFIRMED_STATES: ReadonlySet<string> = new Set(['CONFIRMED', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED']);
+
+/**
+ * PR 505 follow-up (go-live gate SIM-F-031): the line under "Thank you" says only what is true. A new order is placed,
+ * not confirmed (the shop confirms it with a call or the self-confirm); "confirmed" only once the order is; paid when the
+ * payment went through; "pay below" while a prepaid payment waits.
+ */
+export function thanksSubKey(status: string, pay: 'cod' | 'paid' | 'due' | 'failed'): 'ty.subPay' | 'ty.subConfirmed' | 'ty.subPaid' | 'ty.sub' {
+  if (pay === 'due' || pay === 'failed') return 'ty.subPay';
+  if (CONFIRMED_STATES.has(status)) return 'ty.subConfirmed';
+  return pay === 'paid' ? 'ty.subPaid' : 'ty.sub';
+}

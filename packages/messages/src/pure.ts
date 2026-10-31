@@ -340,9 +340,14 @@ export function smsCostMinor(parts: number, rates: { maskedMinor: number | null;
   return rate === null ? null : rate * parts;
 }
 
-/** The language of a message: the setting, or the store's own language (`bn-BD` → `bn`). */
-export function messageLocale(setting: 'store' | 'bn' | 'en', storeLocale: string): 'bn' | 'en' {
-  if (setting !== 'store') return setting;
+/**
+ * The language of a message: always Bengali or English when the owner says so; "customer" (as shipped, PR 505 follow-up,
+ * SIM-F-025/F-047) the language the customer ordered in (`orderLang`); otherwise, or when the order has none, the store's
+ * own language (`bn-BD` → `bn`).
+ */
+export function messageLocale(setting: 'customer' | 'store' | 'bn' | 'en', storeLocale: string, orderLang?: string | null): 'bn' | 'en' {
+  if (setting === 'bn' || setting === 'en') return setting;
+  if (setting === 'customer' && (orderLang === 'bn' || orderLang === 'en')) return orderLang;
   return storeLocale.toLowerCase().startsWith('bn') ? 'bn' : 'en';
 }
 

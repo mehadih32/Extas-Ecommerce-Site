@@ -39,7 +39,7 @@ describe('the Messages pages` words', () => {
       for (const c of SAMPLE_CASES) has(`msg.tpl.sample.${c}`);
       for (const w of ['now', 'after', 'at']) has(`msg.journey.whenOpt.${w}`);
       for (const w of ['all', 'cod', 'prepaid']) has(`msg.journey.whoOpt.${w}`);
-      for (const w of ['store', 'bn', 'en']) has(`msg.journey.languageOpt.${w}`);
+      for (const w of ['customer', 'store', 'bn', 'en']) has(`msg.journey.languageOpt.${w}`);
       for (const w of AUTO_REPLY_WHEN) has(`msg.auto.whenOpt.${w}`);
       expect(label(d, 'reason', 'SOMETHING_NEW')).toBe('SOMETHING_NEW');
       expect(label(d, 'reason', null)).toBe('');

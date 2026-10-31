@@ -115,6 +115,36 @@ describe.skipIf(!HAS_TEST_DB)('PR 291 · the SMS gateway in the engine and Chann
     expect((await placedRow(bn.orderId)).segments).toBe(text.length <= 70 ? 1 : Math.ceil(text.length / 67));
   });
 
+  it('PR 505 follow-up (go-live gate SIM-F-025/F-047): each order`s messages in the language the customer ordered in; the store`s for an order with none; the owner`s "always" wins', async () => {
+    f.overrides.set('store.locale', 'en-GB');
+    const placedIn = async (name: string, lang: string | null) => {
+      const o = await f.place(name);
+      await db().order.update({ where: { id: o.orderId }, data: { lang } });
+      await run();
+      return { text: smsOf(o)[0]!.text, row: await placedRow(o.orderId) };
+    };
+    // as shipped ("customer"): a Bengali order on an English store goes in Bengali, an English one in English
+    const bn = await placedIn('lang-bn', 'bn');
+    expect(bn.text).toMatch(/[অ-হ]/);
+    expect(bn.row.locale).toBe('bn');
+    const en = await placedIn('lang-en', 'en');
+    expect(en.text).not.toMatch(/[অ-হ]/); // Bengali letters (the taka sign ৳ is in both)
+    expect(en.row.locale).toBe('en');
+    // an order with no language (older, or from another channel): the store's
+    expect((await placedIn('lang-none', null)).row.locale).toBe('en');
+    // the owner's "store" and "always English" win over the order's language
+    f.overrides.set('messages.language', 'store');
+    expect((await placedIn('lang-store', 'bn')).row.locale).toBe('en');
+    f.overrides.set('messages.language', 'en');
+    expect((await placedIn('lang-always-en', 'bn')).row.locale).toBe('en');
+    f.overrides.delete('store.locale');
+  });
+
+  it('PR 505 follow-up: an order keeps the language of the checkout it was placed from (the fixture places in English)', async () => {
+    const o = await f.place('lang-kept');
+    expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId }, select: { lang: true } })).lang).toBe('en');
+  });
+
   it('cost: the provider`s own price wins; else the owner`s part price (masked or not) times the parts; unknown = none', async () => {
     mode = 'LIVE';
     const none = await f.place('cost-none');

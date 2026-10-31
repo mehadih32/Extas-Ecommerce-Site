@@ -75,7 +75,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 546 · the cancellation notice on PostgreSQL',
     expect(rows.map((r) => [r.step, r.channel, r.status])).toEqual([['cancelled', 'SMS', 'SENT']]);
     const sms = mine(o).filter((m) => m.purpose === 'order.cancelled');
     expect(sms).toHaveLength(1);
-    expect(sms[0]!.text).toContain(DEFAULT_CANCEL_NOTICE.reasons.OUT_OF_STOCK!.bn);
+    // PR 505 follow-up: the fixture orders in English, so his notice is in English (the language he ordered in)
+    expect(sms[0]!.text).toContain(DEFAULT_CANCEL_NOTICE.reasons.OUT_OF_STOCK!.en);
     expect(sms[0]!.text).toContain(`https://shop.example/account/orders/${o.number}`);
     expect(sms[0]!.text).not.toContain('supplier');
   });
@@ -133,7 +134,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 546 · the cancellation notice on PostgreSQL',
     await run();
     const [p] = mine(lone).filter((x) => x.purpose.startsWith('order.cancelled'));
     expect(p).toMatchObject({ purpose: 'order.cancelled' });
-    expect(p!.text).toContain(DEFAULT_CANCEL_NOTICE.reasons.DUPLICATE_ORDER!.bn);
+    expect(p!.text).toContain(DEFAULT_CANCEL_NOTICE.reasons.DUPLICATE_ORDER!.en);
   });
 
   it('SIM-F-013: a fake or test decline sends nothing, and the log says why', async () => {

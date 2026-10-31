@@ -429,6 +429,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           source: 'WEBSITE',
           currency,
           placedAt: now,
+          // PR 505 follow-up (SIM-F-025): the language he ordered in; his messages follow it
+          lang: d.lang,
           phone: check.phone.e164,
           customerName: d.form.name.trim(),
           shippingAddressText: d.form.address.trim(),

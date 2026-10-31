@@ -8,7 +8,8 @@ export const STEP_CHANNELS = ['SMS', 'WHATSAPP', 'EMAIL'] as const;
 export const FALLBACKS = ['NONE', 'SMS', 'WHATSAPP', 'EMAIL'] as const;
 export const WHEN_KINDS = ['now', 'after', 'at'] as const;
 export const AUDIENCES = ['all', 'cod', 'prepaid'] as const;
-export const LANGUAGES = ['store', 'bn', 'en'] as const;
+// PR 505 follow-up (SIM-F-025/F-047): "customer" (as shipped) — the language each customer ordered in
+export const LANGUAGES = ['customer', 'store', 'bn', 'en'] as const;
 
 /** The timeline's steps (in order), then the event messages outside it. */
 export const TIMELINE_STEPS = ['placed', 'selfConfirm', 'confirmed', 'packed', 'booked', 'outForDelivery', 'deliveryDay', 'delivered', 'day1Care', 'day3Review'] as const satisfies readonly JourneyStep[];

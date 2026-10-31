@@ -103,6 +103,13 @@ describe('steps', () => {
     expect(messageLocale('store', 'bn-BD')).toBe('bn');
     expect(messageLocale('store', 'en-GB')).toBe('en');
     expect(messageLocale('en', 'bn-BD')).toBe('en');
+    // PR 505 follow-up (SIM-F-025/F-047): the buyer's own language; the store's when the order has none; the owner's "always" wins
+    expect(messageLocale('customer', 'en-GB', 'bn')).toBe('bn');
+    expect(messageLocale('customer', 'bn-BD', 'en')).toBe('en');
+    expect(messageLocale('customer', 'en-GB', null)).toBe('en');
+    expect(messageLocale('customer', 'bn-BD', 'fr')).toBe('bn');
+    expect(messageLocale('store', 'en-GB', 'bn')).toBe('en');
+    expect(messageLocale('en', 'en-GB', 'bn')).toBe('en');
   });
 });
 

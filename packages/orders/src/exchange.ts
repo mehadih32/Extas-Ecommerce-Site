@@ -728,7 +728,7 @@ export interface ParcelOptions {
 export async function placeExchangeParcel(deps: OrdersDeps, who: Who, tx: Tx, ex: LockedExchange, now: Date, by: By, p: ParcelOptions): Promise<PlacedParcel> {
     const o = await tx.order.findUniqueOrThrow({
       where: { id: ex.orderId },
-      select: { id: true, number: true, status: true, customerId: true, fulfillmentType: true, currency: true, phone: true, customerName: true, email: true, shippingAddressText: true, backfilledAddress: true, areaId: true, deliveryBandId: true, visitorId: true },
+      select: { id: true, number: true, status: true, customerId: true, fulfillmentType: true, currency: true, phone: true, customerName: true, email: true, shippingAddressText: true, backfilledAddress: true, areaId: true, deliveryBandId: true, visitorId: true, lang: true },
     });
     const variants = await tx.productVariant.findMany({ where: { storeId: ex.storeId, id: { in: ex.items.map((i) => i.newVariantId!).filter(Boolean) } }, select: { id: true, productId: true, avgCostMinor: true } });
     const vOf = new Map(variants.map((v) => [v.id, v]));
@@ -763,6 +763,8 @@ export async function placeExchangeParcel(deps: OrdersDeps, who: Who, tx: Tx, ex
         paidMinor: 0,
         paymentMethod: 'COD',
         visitorId: o.visitorId,
+        // review R3 (customer minor 2): the new parcel's messages go in the language he ordered in
+        lang: o.lang,
         idempotencyKey: `exchange:${ex.id}`,
         flags: [EXCHANGE_ORDER_FLAG],
       },
