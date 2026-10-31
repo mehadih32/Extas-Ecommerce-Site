@@ -281,6 +281,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/reports/health/problems', perm: 'health.read', keys: ['healthProblems'] },
           // S21 · PR 417 — REP-07c Speed: month by month against the targets, the lab run and "Measure now".
           { href: '/admin/reports/health/speed', perm: 'health.read', keys: ['healthSpeed'] },
+          // S21 · PR 418 — REP-07e Smoke runs: the newest run after a deploy and at night, page by page with pictures.
+          { href: '/admin/reports/health/smoke', perm: 'health.read', keys: ['healthSmoke'] },
           { href: '/admin/server', perm: 'system.read', keys: ['server'] },
         ],
       },

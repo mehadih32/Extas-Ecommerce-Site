@@ -22,3 +22,11 @@
 .adm2 .sp-path{overflow-wrap:anywhere}
 .adm2 .a2-kv.sp-kvt{white-space:normal;overflow-wrap:anywhere;font-size:16px}
 .adm2 .sp-tbl tbody tr{cursor:default}
+/* PR 418 — the Smoke runs page: each screen's result, its problems and the picture link (44px to tap). */
+.adm2 .sk-views{align-items:center}
+.adm2 .sk-cell{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.adm2 .sk-problems{margin:0;padding-left:18px;color:var(--bad);overflow-wrap:anywhere}
+.adm2 .sk-problems li+li{margin-top:2px}
+.adm2 .sk-wrap{overflow-wrap:anywhere;min-width:0}
+.adm2 .sk-pic{display:inline-flex;align-items:center;min-height:44px;min-width:44px;font-weight:600;color:var(--g);text-decoration:underline}
+.adm2 .sk-bad{color:var(--bad);font-weight:600}

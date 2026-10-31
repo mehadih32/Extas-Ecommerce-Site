@@ -85,7 +85,8 @@
     "seoBengali": "বাংলা পাতা",
     "adsTracking": "ট্র্যাকিং",
     "manual": "সাইট ম্যানুয়াল",
-    "healthSpeed": "গতি"
+    "healthSpeed": "গতি",
+    "healthSmoke": "স্মোক টেস্ট"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",
