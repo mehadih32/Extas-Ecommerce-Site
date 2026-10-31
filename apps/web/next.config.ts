@@ -11,6 +11,10 @@ const config: NextConfig = {
   transpilePackages: ['@extas/db', '@extas/accounts', '@extas/settings', '@extas/vault', '@extas/auth', '@extas/adapters', '@extas/media', '@extas/catalogue', '@extas/inventory', '@extas/rules', '@extas/combos', '@extas/delivery', '@extas/cart', '@extas/checkout', '@extas/jobs', '@extas/metrics', '@extas/search', '@extas/messages', '@extas/cache', '@extas/erp-types'],
   // PR 22: sharp (the image pipeline) is a native module: loaded from node_modules at run time, never bundled.
   serverExternalPackages: ['sharp'],
+  // PR 378: the proxy now sees /api (cross-site check, request limits); Next keeps only this much of a request body
+  // there (10 MB by default), so it is the highest media upload the settings allow (media.upload.maxBytes, at most
+  // 200 MB). Each route still enforces its own setting.
+  experimental: { proxyClientMaxBodySize: '200mb' },
 };
 
 export default config;

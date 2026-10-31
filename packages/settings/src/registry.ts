@@ -66,6 +66,7 @@ import { switchoverSettings } from './registry-switchover';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
+import { webSecuritySettings } from './registry-web-security';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1265,6 +1266,8 @@ export const registry = {
   ...switchoverSettings,
   // ---- S11 · CN-031 lane A · PR 235 · redirects and the 404 report (registry-seo-reach.ts, version 71; later lane-A PRs add theirs). ----
   ...seoReachSettings,
+  // ---- S18 · PR 378 · the page protection policy (report only by default), the outside addresses pages may use, the per-address request limits (observe by default) (registry-web-security.ts, version 73). ----
+  ...webSecuritySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
