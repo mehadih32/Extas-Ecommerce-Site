@@ -1,6 +1,8 @@
 # shellcheck shell=bash
 # PR 8 — backup timers, the first backup and the first restore test (a backup never restored is not a backup).
-timer_unit() { # timer_unit <name> <description> <command> <OnCalendar>
+# R1 ops review (minor 8): [timeout minutes] — a one-shot unit that hangs (an upload that never ends) stays "active" and
+# its timer starts nothing more until it is stopped; with a limit systemd stops it and the next run starts as planned.
+timer_unit() { # timer_unit <name> <description> <command> <OnCalendar> [timeout minutes]
   write_file "/etc/systemd/system/$1.service" 0644 >/dev/null <<UNIT
 [Unit]
 Description=$2
@@ -11,6 +13,7 @@ Type=oneshot
 Nice=10
 IOSchedulingClass=idle
 ExecStart=$3
+${5:+TimeoutStartSec=${5}min}
 UNIT
   write_file "/etc/systemd/system/$1.timer" 0644 >/dev/null <<UNIT
 [Unit]
@@ -28,12 +31,12 @@ step_backup() {
   local b
   for b in extas-backup extas-restore; do install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/$b" "/usr/local/sbin/$b"; done
   install -m 0644 "$EXTAS_REPO_DIR/infra/config/server.conf" /etc/extas/server.conf
-  timer_unit extas-backup-daily "EXTAS daily backup" "/usr/local/sbin/extas-backup daily" "*-*-* $BACKUP_TIME:00"
-  timer_unit extas-backup-wal "EXTAS WAL push to Blob" "/usr/local/sbin/extas-backup wal" "*-*-* *:*:30"
-  timer_unit extas-backup-prune "EXTAS backup retention" "/usr/local/sbin/extas-backup prune" "*-*-* 05:15:00"
+  timer_unit extas-backup-daily "EXTAS daily backup" "/usr/local/sbin/extas-backup daily" "*-*-* $BACKUP_TIME:00" "${BACKUP_UNIT_TIMEOUT_MIN:-360}"
+  timer_unit extas-backup-wal "EXTAS WAL push to Blob" "/usr/local/sbin/extas-backup wal" "*-*-* *:*:30" "${BACKUP_WAL_TIMEOUT_MIN:-30}"
+  timer_unit extas-backup-prune "EXTAS backup retention" "/usr/local/sbin/extas-backup prune" "*-*-* 05:15:00" "${BACKUP_UNIT_TIMEOUT_MIN:-360}"
   # PR 507: the monthly drill restores the server's own copy and, when connected, Blob's and Drive's; the day and time
   # come from the admin's settings (extas-backup schedule, below).
-  timer_unit extas-restore-test "EXTAS monthly restore drill" "/usr/local/sbin/extas-restore drill" "*-*-01 03:30:00"
+  timer_unit extas-restore-test "EXTAS monthly restore drill" "/usr/local/sbin/extas-restore drill" "*-*-01 03:30:00" "${BACKUP_UNIT_TIMEOUT_MIN:-360}"
   systemctl daemon-reload
   systemctl enable --now extas-backup-daily.timer extas-backup-wal.timer extas-backup-prune.timer extas-restore-test.timer >/dev/null 2>&1
   /usr/local/sbin/extas-backup schedule >/dev/null 2>&1 || true

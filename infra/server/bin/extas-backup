@@ -238,6 +238,18 @@ fail_day() {
 }
 
 daily() {
+  # R1 ops review (minor 3): one daily backup at a time. The timer, "Back up now" (extas-vault-sync) and server setup
+  # can meet; in the same minute they shared $STAGE/$NOW and the second one's `rm -rf` wiped the first one's work. A
+  # second run waits for the first (at most BACKUP_LOCK_WAIT_MIN), then takes its own stamp.
+  exec 7>"$STATE/backup.lock"
+  if ! flock -w $(( ${BACKUP_LOCK_WAIT_MIN:-120} * 60 )) 7; then
+    status daily local fail "another backup was still running after ${BACKUP_LOCK_WAIT_MIN:-120} minutes; this one did not start"
+    exit 1
+  fi
+  if [ -z "${EXTAS_BACKUP_STAMP:-}" ]; then
+    NOW="$(date +%Y%m%d-%H%M)"
+    while [ -e "$LOCAL/base/$NOW" ]; do sleep 5; NOW="$(date +%Y%m%d-%H%M)"; done
+  fi
   local work="$STAGE/$NOW" rc=0 step=""
   make_room
   rm -rf "$work"; mkdir -p "$work"; chown 999:999 "$work"
@@ -279,20 +291,19 @@ daily() {
   else status daily blob off "not connected — add the key in Keys & connections"; fi
 
   if drive_on; then
-    encrypt "$LOCAL/dump/extas-$NOW.dump" "$work/extas-$NOW.dump.gpg"
-    encrypt "$LOCAL/config/config-$NOW.tgz" "$work/config-$NOW.tgz.gpg"
-    # The photos with the same key, into the same dated folder as the database.
-    if [ -n "$MEDIA_NAME" ]; then
-      encrypt "$LOCAL/media/$MEDIA_NAME.tar" "$work/$MEDIA_NAME.tar.gpg"
-      encrypt "$LOCAL/media/media-$NOW.sha256" "$work/media-$NOW.sha256.gpg"
-    fi
-    if [ -n "$DOCS_NAME" ]; then
-      encrypt "$LOCAL/docs/$DOCS_NAME.tar.gz" "$work/$DOCS_NAME.tar.gz.gpg"
-      encrypt "$LOCAL/docs/$DOCS_NAME.commit" "$work/$DOCS_NAME.commit.gpg"
-    fi
-    # Uploaded, then every file checked against Drive's own checksum; only then the CHECKED marker, so retention
-    # (prune) counts only backups that are whole in Drive (CN-030: Drive keeps the newest BACKUP_DRIVE_KEEP checked).
-    if ! rclone copy -q "$work" "$(dpath "$NOW")" --include '*.gpg'; then status daily drive fail "upload failed"; rc=1
+    # R1 ops review (minor 2): a failed encryption (the NVMe full, say) used to end the script under `set -e` with no
+    # Drive status, so yesterday's "ok" stayed, and the work folder and the retention were left. Now it is a Drive fail.
+    if ! { encrypt "$LOCAL/dump/extas-$NOW.dump" "$work/extas-$NOW.dump.gpg" \
+        && encrypt "$LOCAL/config/config-$NOW.tgz" "$work/config-$NOW.tgz.gpg" \
+        && { [ -z "$MEDIA_NAME" ] || { encrypt "$LOCAL/media/$MEDIA_NAME.tar" "$work/$MEDIA_NAME.tar.gpg" \
+          && encrypt "$LOCAL/media/media-$NOW.sha256" "$work/media-$NOW.sha256.gpg"; }; } \
+        && { [ -z "$DOCS_NAME" ] || { encrypt "$LOCAL/docs/$DOCS_NAME.tar.gz" "$work/$DOCS_NAME.tar.gz.gpg" \
+          && encrypt "$LOCAL/docs/$DOCS_NAME.commit" "$work/$DOCS_NAME.commit.gpg"; }; }; }; then
+      status daily drive fail "encrypting the Drive copy failed ($(free_pct)% of the backup disk free)"; rc=1
+    # The photos and the docs go with the same key, into the same dated folder as the database. Uploaded, then every
+    # file checked against Drive's own checksum; only then the CHECKED marker, so retention (prune) counts only
+    # backups that are whole in Drive (CN-030: Drive keeps the newest BACKUP_DRIVE_KEEP checked).
+    elif ! rclone copy -q "$work" "$(dpath "$NOW")" --include '*.gpg'; then status daily drive fail "upload failed"; rc=1
     elif ! rclone check -q --one-way "$work" "$(dpath "$NOW")" --include '*.gpg'; then status daily drive fail "uploaded, but the check against Drive failed"; rc=1
     elif ! rclone touch -q "$(dpath "$NOW/CHECKED")"; then status daily drive fail "uploaded and checked, but the CHECKED mark could not be written"; rc=1
     else status daily drive ok "$NOW, every file checked in Drive"; fi

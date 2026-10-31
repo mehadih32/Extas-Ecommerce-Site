@@ -691,7 +691,17 @@ check "backup: a diff carries everything since the full one" "$(cut -c67- "$L/me
 # The full backup disk of 31 Oct 2026 (PR 8 fix): every base backup carries its own WAL; the WAL archive is gzip and
 # kept only BACKUP_KEEP_LOCAL_WAL_DAYS, also when no base backup exists; a full disk is pruned before the backup
 check "backup: the base backup carries its WAL (-X stream)" "$(ls "$BR/backups/base/$C" | tr '\n' ' ')" "base.tar.gz pg_wal.tar.gz "
-check "backup: the WAL archive is compressed" "$(grep -c "archive_command = 'test ! -f /wal-archive/%f.gz && gzip -1 -c %p" ../server/steps/09-stack.sh):$(grep -c '^wal_recycle = off' ../server/steps/09-stack.sh)" "1:1"
+check "backup: the WAL archive is compressed" "$(grep -c "else gzip -1 -c %p > /wal-archive/%f.gz.part" ../server/steps/09-stack.sh):$(grep -c '^wal_recycle = off' ../server/steps/09-stack.sh)" "1:1"
+# R1 ops review (M4): the archive_command exactly as server setup writes it, run by sh like PostgreSQL does: a new
+# segment is archived; the same segment again (a crash after the rename) succeeds; different content never overwrites.
+WT="$(mktemp -d)"; mkdir -p "$WT/arch"
+acmd="$(sed -n "s/^archive_command = '\(.*\)'$/\1/p" ../server/steps/09-stack.sh | sed -e 's/\\\$/$/g' -e "s#/wal-archive#$WT/arch#g" -e "s#%p#$WT/seg#g" -e 's#%f#000000010000000000000001#g')"
+head -c 65536 /dev/urandom > "$WT/seg"
+r1=0; sh -c "$acmd" || r1=$?; r2=0; sh -c "$acmd" || r2=$?
+head -c 65536 /dev/urandom > "$WT/seg"; r3=0; sh -c "$acmd" 2>/dev/null || r3=$?
+check "backup (M4): archive once, again the same segment succeeds, different content fails and is kept" \
+  "$r1:$r2:$([ "$r3" -ne 0 ] && echo refused):$(ls "$WT/arch" | paste -sd' ')" "0:0:refused:000000010000000000000001.gz"
+rm -rf "$WT"
 check "restore: reads compressed and plain WAL" "$(grep -c 'gunzip -c /restore-wal/%f.gz > %p || cp /restore-wal/%f %p' ../server/bin/extas-restore)" "1"
 W="$BR/backups/wal"; : > "$W/000000010000000000000001.gz"; touch -d '3 days ago' "$W/000000010000000000000001.gz"
 : > "$W/000000010000000000000002.gz"; touch -d "1 day ago" "$W/000000010000000000000002.gz"
@@ -881,6 +891,19 @@ sed -i 's/^BACKUP_IMMUTABLE=.*/BACKUP_IMMUTABLE="no"/' "$T/server.conf"
 : > "$T/remote/log"
 "${BENV[@]}" "$B/extas-backup" prune >/dev/null 2>&1
 check "lock: unlocked, prune deletes old Blob copies as before" "$(grep -c '^delete blob:' "$T/remote/log" || true)" "1"
+# R1 ops review (minor 2): a failed encryption for Drive is a Drive fail with the work folder gone, never a stale "ok".
+mkdir -p "$T/gpgfail"; printf '#!/bin/sh\nexit 2\n' > "$T/gpgfail/gpg"; chmod +x "$T/gpgfail/gpg"
+rc=0; "${BENV[@]}" PATH="$T/gpgfail:$T/bin:$PATH" EXTAS_BACKUP_STAMP="$(stamp '3 minutes')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup (minor 2): a failed Drive encryption is a Drive fail, the day's work folder is removed" \
+  "$rc:$(jq -r .result "$BR/state/backup-daily-drive.json"):$(jq -r .detail "$BR/state/backup-daily-drive.json" | grep -c 'encrypting the Drive copy failed'):$(find "$T/nvme/backup-staging" -mindepth 1 -maxdepth 1 | wc -l)" "1:fail:1:0"
+# R1 ops review (minor 3): one daily backup at a time; a second one waits for the lock (here: gives up at once).
+exec 6>"$BR/state/backup.lock"; flock 6
+sed -i 's/^BACKUP_LOCK_WAIT_MIN=.*/BACKUP_LOCK_WAIT_MIN=0/' "$T/server.conf"
+rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '4 minutes')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup (minor 3): a second daily backup never runs beside the first" "$rc:$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'another backup was still running')" "1:1"
+exec 6>&-
+check "backup (minor 8): the backup units have a time limit from server.conf" \
+  "$(grep -c '"${BACKUP_UNIT_TIMEOUT_MIN:-360}"$' ../server/steps/10-backup.sh):$(grep -c '"${BACKUP_WAL_TIMEOUT_MIN:-30}"$' ../server/steps/10-backup.sh):$(grep -c 'TimeoutStartSec=${5}min' ../server/steps/10-backup.sh)" "3:1:1"
 rm -rf "$T"
 
 # The app's own database role (PR 139, infra/deploy/app-role.sh) with a stand-in `docker`: nothing switches until the
