@@ -83,7 +83,7 @@ export default async function GoLivePage() {
         <ShellIcon name="shield" size={16} />
         <div>
           <b>{c("safe.title")}</b> {c("safe.text")}{" "}
-          <Link href="/admin/settings/system/backups">{c("safe.backups")}</Link>
+          <Link className="a2-lnk" href="/admin/settings/system/backups">{c("safe.backups")}</Link>
         </div>
       </div>
 

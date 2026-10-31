@@ -46,7 +46,8 @@ export type OriginCert = {
   error?: string | null;
 };
 // CN-016: infra/deploy/smoke.sh after every deploy and every night (every built page, signed out and as the admin).
-export type Smoke = { ok?: boolean; at?: string; kind?: string; pages?: number; failed?: number };
+// R1 ops review (M8): `at` is ISO with its offset (infra/deploy/smoke.sh); `atText` the same time in words for people.
+export type Smoke = { ok?: boolean; at?: string; atText?: string; kind?: string; pages?: number; failed?: number };
 
 export const buildStatus = generated as BuildStatus;
 

@@ -140,7 +140,7 @@ export default async function StatusPage() {
                 : t(dict, "smokeFail", {
                     failed: num(Math.max(smoke.failed ?? 0, 1), d),
                   })}
-            {smoke?.at ? ` · ${smoke.at.replace(/\s*\(.*\)$/, "")}` : ""}
+            {(smoke?.atText ?? smoke?.at) ? ` · ${(smoke?.atText ?? smoke?.at ?? "").replace(/\s*\(.*\)$/, "")}` : ""}
           </p>
         </div>
         <div className="rounded-xl border border-line bg-surface p-4">

@@ -33,6 +33,16 @@ export interface GoLiveContext {
   connections?: { kinds: readonly string[]; on: readonly { kind: string; provider: string; mode: string; lastTestOk: boolean | null }[] };
   /** PR 401: search engines let in (Website → SEO, `seo.indexing.searchEngines`); it only counts on a primary domain. */
   searchEngines?: boolean;
+  /**
+   * Review R1 (security B1): the stores going live whose test payments are still on, and the online methods they offer
+   * that still run on the practice gateway (`store: method`).
+   */
+  payments?: { testOn: readonly string[]; practice: readonly string[] };
+  /**
+   * Review R1 (security M2): the request limits' mode (`security.rateLimit.mode`), whether two-step sign-in is required
+   * of every staff member, and how many active staff members who can change anything have no two-step sign-in.
+   */
+  security?: { rateLimitMode: string; twoFactorRequired: boolean; withoutTwoFactor: number };
 }
 
 export interface GoLiveResult {
@@ -170,6 +180,36 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     }),
   },
   { key: 'searchConsole', pr: 401, kind: 'signoff' },
+  // Review R1 (security B1) — no customer can mark an order paid on the practice gateway: test payments are off on every
+  // store that goes live, and every online method offered there runs on a real gateway (else it is not offered at all).
+  // It only reports: the owner switches test payments off himself (Money → Payments).
+  {
+    key: 'testPayments',
+    pr: 400,
+    kind: 'auto',
+    check: ({ payments: p }) => ({
+      ok: Boolean(p) && (p?.testOn ?? []).length === 0 && (p?.practice ?? []).length === 0,
+      vars: { stores: (p?.testOn ?? []).join(', ') || '—', methods: (p?.practice ?? []).join(', ') || '—' },
+    }),
+  },
+  // Review R1 (security M2) — the security baselines of a live shop, each the owner's own switch (never flipped here):
+  // the per-address request limits enforce (not only observe), and every staff member who can change anything signs in
+  // with two steps (or two-step sign-in is required of everybody).
+  {
+    key: 'rateLimit',
+    pr: 393,
+    kind: 'auto',
+    check: ({ security: x }) => ({ ok: x?.rateLimitMode === 'enforce', vars: { mode: x?.rateLimitMode ?? '—' } }),
+  },
+  {
+    key: 'staffTwoFactor',
+    pr: 393,
+    kind: 'auto',
+    check: ({ security: x }) => ({
+      ok: Boolean(x) && (x?.twoFactorRequired === true || x?.withoutTwoFactor === 0),
+      vars: { without: x?.withoutTwoFactor ?? 0, required: x?.twoFactorRequired ? 'on' : 'off' },
+    }),
+  },
   { key: 'runbook', pr: 398, kind: 'signoff' },
   { key: 'qaGate', pr: 393, kind: 'signoff' },
   { key: 'acceptance', pr: 393, kind: 'signoff' },
