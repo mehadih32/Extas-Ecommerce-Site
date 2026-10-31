@@ -14,6 +14,12 @@ on:
     # (state/first-week.json `smokeDue`, infra/server/bin/extas-first-week); otherwise only the `due` job runs.
     - cron: "40 * * * *"
   workflow_dispatch:
+    inputs:
+      # R1 ops review (M7): runbook step 7 and the first-week watch test the main domain, not only the staging host.
+      host:
+        description: "Which host: empty = the staging host; main = the main domain (first of EXTAS_EXTRA_HOSTS); or that host itself"
+        required: false
+        default: ""
 
 # No workflow-wide concurrency: only the smoke job joins the VM's queue (group extas-vm), and only when it is due.
 # GitHub keeps one pending run per group, so an hourly run that is not due must never enter it: it would cancel a
@@ -75,9 +81,11 @@ jobs:
         env:
           LIVE: ${{ steps.live.outputs.sha }}
           KIND: ${{ needs.due.outputs.kind }}
+          # PR 402 / R1 ops review (M7): the first-week watch tests the main domain; a run by hand the host it names.
+          HOST: ${{ needs.due.outputs.kind == 'first-week' && 'main' || inputs.host }}
         run: |
           live="$LIVE"
-          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "$KIND" "$live"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" SMOKE_HOST="$HOST" bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "$KIND" "$live"
 
       - name: Commit the smoke report
         if: always()
