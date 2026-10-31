@@ -1,7 +1,7 @@
 // S18 · PR 383 — the placeholder guard: the texts that once shipped in the footer ("[your DBID number]", "[number]",
 // "[support email]") and their cousins are caught, in plain and two-language values; real values pass.
 import { describe, expect, it } from 'vitest';
-import { isPlaceholderGuarded, looksLikePlaceholder, withoutPlaceholder } from '../src/placeholder';
+import { hasStandIn, isPlaceholderGuarded, looksLikePlaceholder, withoutPlaceholder } from '../src/placeholder';
 
 describe('placeholder guard (PR 383)', () => {
   it('catches bracketed, templated and filler values', () => {
@@ -31,5 +31,12 @@ describe('placeholder guard (PR 383)', () => {
     expect(isPlaceholderGuarded('contact.email')).toBe(true);
     expect(isPlaceholderGuarded('social.facebook')).toBe(true);
     expect(isPlaceholderGuarded('home.hero')).toBe(false);
+  });
+});
+
+describe('stand-ins inside a longer text (PR 384)', () => {
+  it('catches a stand-in left in the owner`s words, and lets real words with brackets pass', () => {
+    for (const v of ['Write to [support email] for help.', 'Call [number] any day.', 'Exchange within [days] of delivery.', 'Returns are TBD.', 'Hi {{name}}']) expect(hasStandIn(v), v).toBe(true);
+    for (const v of ['Exchange within {exchange.windowHours} hours.', 'Sizes [S, M, L] fit as charted.', 'We keep your data safe.']) expect(hasStandIn(v), v).toBe(false);
   });
 });

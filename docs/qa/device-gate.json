@@ -249,6 +249,7 @@
       "/admin/settings/security",
       "/admin/settings/privacy",
       "/admin/settings/store",
+      "/admin/settings/policies",
       "/admin/orders/risk-rules",
       "/pay/0",
       "/bn/pay/0",

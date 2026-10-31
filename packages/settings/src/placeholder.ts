@@ -37,3 +37,11 @@ export function looksLikePlaceholder(v: unknown): boolean {
 export function withoutPlaceholder<T>(key: string, value: T, empty: T): T {
   return isPlaceholderGuarded(key) && looksLikePlaceholder(value) ? empty : value;
 }
+
+/**
+ * PR 384 — a stand-in left inside a longer text ("Write to [support email]", "Call [number]"): the owner's own words
+ * on the help pages are refused with one. Narrower than `looksLikePlaceholder`: a long text may use brackets for real.
+ */
+const STAND_IN = /\[(?:your\b[^\]]*|number|phone|e-?mail|support email|address|name|dbid|trade licen[cs]e|bin|link|url|date|amount|price|days?|hours?)\]|\{\{[^}]*\}\}|\b(?:lorem ipsum|TBD|TBA)\b/i;
+
+export const hasStandIn = (text: string): boolean => STAND_IN.test(text);

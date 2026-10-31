@@ -226,7 +226,7 @@ export const pagesHelpSchema = z
   })
   .strict();
 
-const pageWordsSchema = z
+export const pageWordsSchema = z
   .object({
     title: localizedTextSchema(80).nullable(),
     lede: localizedTextSchema(400).nullable(),
