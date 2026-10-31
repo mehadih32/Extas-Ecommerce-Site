@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ৩০৯টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ৩২৫টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,16 +36,16 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। পুরোনো লিংক ঠিক পাতায় পাঠানো আর ৪০৪-এর তালিকা, বিক্রি শেষ হওয়া পণ্যের পাতা না হারানো, ডেমোর # লিংক আসল পাতায় নেওয়া (S11); নিরাপত্তার পাহারা, বট ধরার নীরব ব্যবস্থা, অ্যাডমিনের সাইন-ইন নিয়ম আর প্যাকেজের দুর্বলতা খোঁজা (S18); টেলিগ্রাম সতর্কবার্তা, এক ক্লিকে Google Drive ব্যাকআপ আর প্রতি মাসে ব্যাকআপ ফিরিয়ে দেখা (S19) তৈরি। নতুন: প্রাইভেসি আর তথ্য মোছা, দোকানের আইনি নম্বর, হেল্প পাতার লেখা, ব্যাকআপ লকের ব্যবস্থা আর Cloudflare সুরক্ষা (S18); Cloudflare ক্যাশের নিয়ম (S17); সাইটের অবস্থা এক পাতায় (S21); Blob আর Drive ব্যাকআপ চালু, দোকান ফেরানো, 'চালুর আগে' তালিকা, চালুর দিনের গাইড আর প্রথম সপ্তাহের নজর (S19); টাকার সারসংক্ষেপ (S16) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ৩০৯টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। পুরোনো লিংক ঠিক পাতায় পাঠানো আর ৪০৪-এর তালিকা, বিক্রি শেষ হওয়া পণ্যের পাতা না হারানো, ডেমোর # লিংক আসল পাতায় নেওয়া (S11); নিরাপত্তার পাহারা, বট ধরার নীরব ব্যবস্থা, অ্যাডমিনের সাইন-ইন নিয়ম আর প্যাকেজের দুর্বলতা খোঁজা (S18); টেলিগ্রাম সতর্কবার্তা, এক ক্লিকে Google Drive ব্যাকআপ আর প্রতি মাসে ব্যাকআপ ফিরিয়ে দেখা (S19) তৈরি। প্রাইভেসি আর তথ্য মোছা, দোকানের আইনি নম্বর, হেল্প পাতার লেখা, ব্যাকআপ লকের ব্যবস্থা আর Cloudflare সুরক্ষা (S18); Cloudflare ক্যাশের নিয়ম (S17); সাইটের অবস্থা এক পাতায় (S21); Blob আর Drive ব্যাকআপ চালু, দোকান ফেরানো, 'চালুর আগে' তালিকা, চালুর দিনের গাইড আর প্রথম সপ্তাহের নজর (S19); টাকার সারসংক্ষেপ (S16) তৈরি, এগুলো এখন new.extas.com.bd-তে চালু। নতুন: Google-এর জন্য বাকি সব কাজ — কালেকশনের সার্চের লেখা, sitemap, robots.txt, ছবির বিবরণ, Search Console আর Bing, আসল কাস্টমারের গতি, বাংলা-ইংরেজি পাতার জোড়া আর বাংলা পাতা 'তৈরি' চিহ্ন (S11); Meta, Google আর TikTok-কে সার্ভার থেকে কেনাকাটার খবর (S13, শুরুতে বন্ধ); খরচের খাতা, খুচরা খরচ, খরচ ও ফি-র ঘর আর মাস শেষের হিসাব (S16); নিজে থেকে চলা ব্রাউজার পরীক্ষা আর কাস্টমারের সমস্যার তালিকা (S21); Messenger, WhatsApp আর সাইটের চ্যাট সাপোর্ট ইনবক্সে (S22)। **চালুর তালিকার বানানোর মতো সব কাজ শেষ** — বাকি শুধু আপনার চালুর দিন (PR 403) আর মূল ডোমেইন বদল (PR 587)। মোট ৬১৫টা PR-এর মধ্যে ৩২৫টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 287/305** · 18 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 6/22** (wave 5) · **S16 5/22** · **S21 1/14** (wave 6) · **S17 1/24** · **S18 10/14** · **S19 15/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **309/615** active PRs |
-| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups |
-| Last deploy | 31 Oct 2026, 17:25 (Dhaka) · commit `311dbd6` (#68 lane batch 1: PR [235](docs/stages/S11.md#pr-235), 527, 586, 378–381, 392, 395, 507, after the #65–#67 server repairs) · **success**, smoke test 226 pages OK; batch 2 (#69) goes live with the next deploy |
+| Launch | **Launch 303/305** · every buildable Launch row is built (#70). 2 left, both on go-live day: PR [403](docs/stages/S19.md#pr-403) (the owner names the day, BLOCKED 25) and PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the whole-site review and the CN-013 go-live gate). The After-launch list runs meanwhile, by priority (CN-031) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 14/22** · **S13 1/35** (wave 5) · **S16 9/22** · **S21 3/14** (wave 6) · **S17 1/24** · **S18 10/14** · **S19 15/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 2/13** (wave 4) · total **325/615** active PRs |
+| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview |
+| Last deploy | 31 Oct 2026, 19:14 (Dhaka) · commit `83e2def` (#69 lane batch 2: PR [342](docs/stages/S16.md#pr-342), 362, 382–386, 391, 393, 394, 396–402, 413) · **success**, smoke test 240 pages OK; batch 3 (#70) goes live with the next deploy |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
-| Waiting on the owner | 12 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17–25); none stops the build ([table below](#what-waits-on-the-owner)). New for go-live: 22 lock the Blob backups (cannot be undone, a cost; PR [385](docs/stages/S18.md#pr-385)), 23 connect Azure Blob and Google Drive (PR [391](docs/stages/S19.md#pr-391)), 24 type his own store data (PR [399](docs/stages/S19.md#pr-399)), 25 the day and time to switch extas.com.bd (PR [403](docs/stages/S19.md#pr-403)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
+| Waiting on the owner | 13 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17–26); none stops the build ([table below](#what-waits-on-the-owner)). New: 26 whether old customer-problem records may ever be cleaned up (deleting data needs his OK; PR [423](docs/stages/S21.md#pr-423)). For go-live: 22 lock the Blob backups (cannot be undone, a cost; PR [385](docs/stages/S18.md#pr-385)), 23 connect Azure Blob and Google Drive (PR [391](docs/stages/S19.md#pr-391)), 24 type his own store data (PR [399](docs/stages/S19.md#pr-399)), 25 the day and time to switch extas.com.bd (PR [403](docs/stages/S19.md#pr-403)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
 | Last update | 31 Oct 2026 |
 
@@ -72,24 +72,24 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 21 / 26 | In progress |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 19 / 19 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
-| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 6 / 22 | In progress |
+| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 14 / 22 | In progress |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
-| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
+| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 1 / 35 | In progress |
 | [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 7 / 24 | In progress |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
-| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 5 / 22 | In progress |
+| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 9 / 22 | In progress |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 1 / 24 | In progress |
 | [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 10 / 14 | In progress |
 | [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 15 / 17 | In progress |
 | [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
-| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 1 / 14 | In progress |
-| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 1 / 13 | In progress |
+| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 3 / 14 | In progress |
+| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 2 / 13 | In progress |
 | [S23](docs/stages/S23.md) | [Social & content studio](docs/stages/S23.md) | [5](docs/stages/README.md#wave-5) | [437–443](docs/stages/S23.md) | 0 / 7 | Not started |
 | [S24](docs/stages/S24.md) | [Virtual Photoshoot Studio](docs/stages/S24.md) | [7](docs/stages/README.md#wave-7) | [444–480](docs/stages/S24.md), [539](docs/stages/S24.md#pr-539) | 0 / 38 | Not started |
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **309 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **325 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -114,6 +114,7 @@ in the backend later (CN-009).
 | 22 | Lock the Azure Blob backups (immutability, 35 days): nobody, not even someone who takes over the server, can delete a copy, but the lock cannot be shortened or removed and Azure charges for the space (PR 385) | Open — default: no lock (`BACKUP_IMMUTABLE="no"`); the steps are in `docs/security/BREAK-GLASS-RESTORE.md` §1 |
 | 23 | Make the Azure storage account and the `extas-backups` container, enter them in Keys & connections → Azure Blob and press Test; connect Google Drive once on the Backups page (PR 391) | Owner step: the server's own nightly backup runs meanwhile; the go-live list shows both as not ready until then |
 | 24 | Each live store's own data before go-live: phone, address, registered name, trade licence (Settings → Store details) and the delivery charges (PR 399) | Owner data, not a question: the go-live list names what is still empty; an empty field never shows on the shop |
+| 26 | Customer-problem records (PR 423) are kept for ever: may a clean-up job ever delete old ones (the number of days would be his setting), or never? | Open — default: nothing is deleted; the records hold no name, phone or address |
 | 25 | Go-live day: the day and time the password and noindex come off extas.com.bd (the main domain only; staging stays closed) (PR 403) | Open — nothing changes on the main domain until he names it; the steps are in `docs/golive/RUNBOOK.md` |
 | Sim 1–9 | The nine questions of the 50-order simulation (prepaid reward, risky customers, delivery-day and Day-1 messages, sets, exchange charge, Eid pre-order, rider overcharge, apology credit, coupons) | Answered (CN-018); questions 3 and 9 decided in CN-019 (Messages control centre) |
 | 16 | Who receives low-stock alerts, and from how many pieces | Owner data, not a question: set in the backend; default 2 pieces, shown in the admin, no message sent |
@@ -1524,7 +1525,7 @@ data, checked time); settings registry v63 (`packages/settings/src/registry-invo
 
 Still planned in S20: register PRs 404–406, 408–412.
 
-### S22 · Support (all-in-one) — In progress (1/13)
+### S22 · Support (all-in-one) — In progress (2/13)
 
 > **বাংলায় সংক্ষেপে:** সাপোর্ট ইনবক্স তৈরি: সব চ্যানেলের কথোপকথন এক তালিকায়, কে উত্তর দিয়েছেন নামসহ, টিমের ভেতরের নোট, ফাইল, দায়িত্ব আর
 > "কে কী করেছে"-র লগ (কেউ মুছতে পারে না)। চ্যানেল (WhatsApp, Messenger, সাইটের চ্যাট) যুক্ত হবে PR 426-এ; ততদিন উত্তর রাখা হয়, "পাঠানো হয়নি" লেখা থাকে।
@@ -1555,9 +1556,31 @@ who-did-what log `ConversationEvent` is append-only at the database); settings r
   [Conversation](docs/admin-guide/pages/support/conversation.md), [Support settings](docs/admin-guide/pages/support/settings.md),
   [Support](docs/admin-guide/support.md).
 
-Still planned in S22: register PRs 426–436, 538.
+Still planned in S22: register PRs 427–436, 538.
 
-### S11 · SEO engine — In progress (6/22)
+**Built (PR [426](docs/stages/S22.md#pr-426); 31 Oct, CN-031 lane A; not deployed yet): the channels come in.**
+
+> নতুন (PR 426): Messenger, WhatsApp আর সাইটের চ্যাটের মেসেজ এখন সাপোর্ট ইনবক্সে আসে, উত্তরও সেখান থেকে যায়। নতুন চ্যানেল যোগ করলে শুরুতে বন্ধ থাকে; Meta-র উত্তরের সময়সীমা পার হলে উত্তর যায় না, কারণসহ লেখা থাকে। সাইটের চ্যাট শুরুতে বন্ধ।
+
+- **Channels:** Facebook Messenger Page (new adapter, mock until its keys; a Keys & connections row), WhatsApp Business
+  (inbound now carries the phone number id, the profile name and files, and reaches the inbox before any automatic answer)
+  and the site's live chat. A message is taken only from a channel added and switched on in that store; the same message
+  twice is one. Support settings lists the channels: add (off), rename, switch, put away; never deleted; audited.
+- **Replies:** Messenger and WhatsApp only inside `support.channels.replyWindowHours` (Meta's window, kept on the
+  conversation), words only; the site chat while it is on. A refused reply is kept as NOT_SENT with its reason.
+- **Site chat:** `/api/shop/support-chat` with a visitor token in an httpOnly cookie (only its hash stored), a per-minute and
+  a length limit; the visitor sees sent answers only, never a note. The shop's chat button is drawn only while
+  `support.liveChat` is on (off as it ships).
+- **Webhook:** `/api/messenger/webhook` (verify token, signed posts, size limit); the preview gate (v6) and the edge gate
+  let it through as signed.
+- **Settings:** registry v72 (`registry-support-channels.ts`): `support.channels`, `support.liveChat` (off). No migration.
+- **Guides:** [Support settings](docs/admin-guide/pages/support/settings.md), [Inbox](docs/admin-guide/pages/support/inbox.md),
+  [Conversation](docs/admin-guide/pages/support/conversation.md), [Keys & connections](docs/admin-guide/pages/settings/keys.md).
+- **Tests:** `packages/adapters/test/messenger.test.ts`, `whatsapp.test.ts`, `packages/support/src/connectors.db.test.ts`,
+  `packages/messages/src/whatsapp.db.test.ts`, `apps/web/src/lib/support-connect.db.test.ts`, `support-api.db.test.ts`,
+  `edge-gate.test.ts`, the settings test; checked in a real browser at 390, 768, 1366 and 1920 px in English and Bengali.
+
+### S11 · SEO engine — In progress (14/22)
 
 > **বাংলায়:** দোকানের ঠিকানার নিয়ম, প্রতিটা পাতার সার্চের শিরোনাম আর বিবরণ, আর Google-এর জন্য পাতার তথ্য (দাম, স্টক, পথ, দোকানের পরিচয়) তৈরি। আপনি চালু না করা পর্যন্ত Google-এ দোকান আসে না, AI খসড়াও বন্ধ।
 
@@ -1623,15 +1646,90 @@ Built (PR [220](docs/stages/S11.md#pr-220), 221, 222; 29 Oct; not deployed yet):
   `hash-forward.test.ts`, `packages/settings/test/registry-seo-reach.test.ts`; checked in a real browser at 390, 768,
   1366 and 1920 px in English and Bengali.
 
-Planned — see register PRs 223–234, 236–238, 588: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
+**Built (PR [227](docs/stages/S11.md#pr-227), 228, 229, 232, 233, 234, 236, 588; 31 Oct, CN-031 lanes A and B; not deployed yet): everything Google needs before go-live.**
+
+> নতুন (PR 227–236, 588): কালেকশনের নিজের সার্চের লেখা আর আপনার নাম দেওয়া ফিল্টার পাতা; ভাগ করা sitemap; সেটিংস থেকে robots.txt আর AI রোবটের সুইচ; ছবির বিবরণ নিজে থেকে লেখা; Search Console আর Bing-এর সংযোগ; আসল কাস্টমারের ফোনে পাতার গতি আর মাসে একবার ধীর 4G-তে পরীক্ষা; বাংলা-ইংরেজি পাতার জোড়া প্রতিটা ডিপ্লয়ে পরীক্ষা; বাংলা পাতা 'তৈরি' চিহ্ন দেওয়ার পাতা। চালুর আগে দোকান Google-এ যায় না।
+
+- **Collection pages (PR 227):** Website › SEO › Collection pages (`/admin/website/seo/categories`): each collection's and
+  sub-collection's own search title, search line, heading and text (`category.seo`, both languages or neither). A filtered
+  page is its own search page only when the owner named it (one size, colour or fit, one value, its own name in both
+  languages) and it shows at least `minProducts` styles (`seo.filterPages`, off and empty); every other combination points
+  to the clean collection page.
+- **Sitemaps (PR 228):** `/sitemap.xml` is an index of `/sitemaps/<kind>-<n>.xml` (pages, collections, products, combos),
+  only pages that may be listed, split at `seo.sitemaps.perFile` (5,000) and capped at `maxUrls` (50,000); a Bengali twin
+  once marked ready; kept for `cacheMinutes` (60) and purged at the CDN when a product goes on or off the shop. Card with
+  the files, the counts and "Make the sitemaps now" (audited).
+- **robots.txt (PR 229):** every robot kept out while the shop is closed to search engines or the request is not on the
+  store's primary domain; open, the admin, the API, the ERP's calls, a customer's own pages and unlisted search results stay
+  out, then the sitemap's address. AI robots (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) welcome as shipped, one
+  switch keeps them out (`seo.robots`). Card "Robots and AI assistants" with the live text.
+- **Photo descriptions (PR 232):** the English alt text of a photo that has none is written from the product's name, the
+  photo's colour and kind in the dictionary's words, on adding a photo or with "Write them now" (`seo.altText`, on, 125
+  letters); a typed description is never changed; Bengali pages build their own from the Bengali words.
+- **Search Console and Bing (PR 233):** the verification codes (`seo.verification`, owner data, empty) as meta tags on every
+  shop page; two Keys & connections rows (Google service account key, Bing API key), on the mock until a key passes its
+  Test; "Send the sitemap" once the shop has its own domain (audited).
+- **Real visitors' speed (PR 234):** shop pages report LCP, CLS, INP, TTFB and FCP to `/api/shop/vitals`; only daily counts
+  per metric, kind of page and phone/desktop are kept (`WebVitalDay`, migration `0066_web_vitals`), never a visitor,
+  address or time (`seo.vitals`, targets from PR 10, every number editable). The SEO card and the Server page show the 75th
+  percentile against the targets. `vitals-monthly.yml` runs the monthly lab on the VM (`tools/vitals-lab.mjs`: home,
+  category and product on a phone over slow 4G, the admin on desktop) into `state/vitals-lab.json`.
+- **Language pairs (PR 236):** hreflang in the HTML head only (Blueprint C12.1); the sitemaps still list both twins, the
+  pairs in them only behind `seo.hreflang.inSitemaps` (off). Card "Language pairs (hreflang)". Every deploy's smoke test
+  runs `tools/hreflang-check.mjs`: exactly en and bn plus x-default = English, absolute addresses on one host, its own
+  canonical, a twin that answers 200 and names the same pair back.
+- **Bengali pages (PR 588):** Website › SEO › Bengali pages (`/admin/website/seo/bengali`): every page that could be listed,
+  whether its main content has Bengali text and whether it is marked ready; coverage by kind; "Mark ready" / "Not ready"
+  per page or for a page of the list (`seo.manage`, audited), only with Bengali text, never by itself.
+  `language.bengali.readyPages` still drives hreflang, robots and the sitemap. A not-ready Bengali page is kept out of
+  search (`language.bengali.gate` = `unlisted`, as shipped) or sent to its English twin (`english`, an uncached 307;
+  bag, checkout, account and search never move).
+- **Settings:** registry v72 (`registry-seo-reach.ts`: `seo.filterPages`, `seo.sitemaps`, `seo.robots`, `seo.altText`,
+  `seo.verification`, `seo.vitals`, `seo.hreflang`; `registry-category.ts`: `category.seo`) and v84
+  (`registry-bengali.ts`: `language.bengali.gate`).
+- **Guides:** [SEO](docs/admin-guide/pages/website/seo.md), [Collection pages](docs/admin-guide/pages/website/seo-categories.md),
+  [Bengali pages](docs/admin-guide/pages/website/seo-bengali.md), [Server](docs/admin-guide/pages/reports/server.md),
+  [Keys & connections](docs/admin-guide/pages/settings/keys.md).
+- **Tests:** `apps/web/src/lib/seo/` — `filter-pages`, `category-seo-words`, `sitemap`, `sitemap-data.db`, `robots`,
+  `alt-text`, `alt-text-data.db`, `verification`, `search-engines.db`, `vitals`, `vitals-data.db`, `hreflang`,
+  `bengali-gate`, `bengali.db`, `admin-api.db`; `packages/adapters/test/search-console.test.ts`,
+  `tools/vitals-lab.test.mjs`, `tools/hreflang-check.test.mjs`, `packages/settings/test/registry-seo-reach.test.ts`;
+  checked in a real browser at 390, 768, 1366 and 1920 px in English and Bengali.
+
+Planned — see register PRs 223–226, 230, 231, 237, 238: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
 
 ### S12 · Content & blog — Not started
 
 Planned — see register PRs 239–253, 528–530, 547, 591–593: [S12](docs/MASTER-REGISTER.md#s12--content--blog--pr-239253).
 
-### S13 · Marketing & ads — Not started
+### S13 · Marketing & ads — In progress (1/35)
 
-Planned — see register PRs 254–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
+**Built (PR [257](docs/stages/S13.md#pr-257); 31 Oct, CN-031 lane B; not deployed yet): server-side event tracking.**
+
+> নতুন (PR 257): দোকানের সার্ভার নিজে Meta, Google আর TikTok-কে জানায় কে পণ্য দেখল, ব্যাগে নিল, চেকআউট খুলল আর অর্ডার দিল — বিজ্ঞাপন ঠিক মানুষের কাছে যায়। চাবি দিয়ে পরীক্ষা পাস না হওয়া পর্যন্ত কিছু বাইরে যায় না; কারো নাম, ঠিকানা বা ফোন খোলা অবস্থায় যায় না। শুরুতে বন্ধ।
+
+- **Events:** a product page seen and the checkout opened (a same-site beacon, `/api/shop/track`, counted in the proxy's
+  report bucket), an item put in the bag and an order placed (event id `purchase-<number>`, never counted twice on a
+  replay). Prices, value, category, colour and size are read on the server, never from the browser; every hook is quiet
+  (one cached setting read while off, errors caught, the send after the answer).
+- **Privacy:** `TrackedEvent` (migration `0067_tracked_events`), one row per event id per store with the delivery state per
+  platform. Only hashes leave: the visitor/customer id; the order's phone and e-mail only while customer matching is on
+  (off), a gift's receiver never. No name, address or IP address.
+- **Platforms:** Meta Conversions API, Google Analytics 4 Measurement Protocol and TikTok Events API (`packages/adapters/src/ads`),
+  each a Keys & connections row with its Test; on the mock until a key is in and its test passes; no key in any address or
+  error. A failed send is tried again with the next event, up to the owner's number of attempts.
+- **Screen:** **Marketing › Tracking** (`/admin/marketing/tracking`; `ads.tracking.read`, changes `ads.tracking.manage`):
+  each platform's connection, recorded counts for 7 and 30 days, sent per event and platform, waiting events with "Send
+  waiting now", "Send test event" (each platform's test mode, never counted), the newest events and the settings card;
+  audited.
+- **Settings:** registry v85 (`registry-tracking.ts`): `ads.tracking` — the switch (off), the events, the platforms (none
+  ticked), customer matching (off), attempts.
+- **Guide:** [`docs/admin-guide/pages/marketing/tracking.md`](docs/admin-guide/pages/marketing/tracking.md).
+- **Tests:** `packages/adapters/test/ads.test.ts`, `apps/web/src/lib/tracking/model.test.ts`, `tracking.db.test.ts`
+  (PostgreSQL), `edge-gate.test.ts`; smoke check and device gate. Later: the delivered-order event (PR 258), the richer
+  stage events (PR 532), the masking layer (PR 311) and a browser pixel sharing the event ids.
+
+Planned — see register PRs 254–256, 258–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
 
 ### S23 · Social & content studio — Not started
 
@@ -1641,9 +1739,9 @@ Planned — see register PRs 437–443: [Blueprint Appendix A](docs/BLUEPRINT.md
 
 Planned — see register PRs 304–341, 506, 577–585: [S15](docs/MASTER-REGISTER.md#s15--ai-360-control-room--pr-304341).
 
-### S16 · Finance, costs & reports — In progress (5/22)
+### S16 · Finance, costs & reports — In progress (9/22)
 
-Planned — see register PRs 343–355, 504, 536–537, 568 and, from CN-028, 615–618 (the ERP account ledger, the books match engine, the daily summary, fixed costs; design in [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+Planned — see register PRs 347–355, 504, 536–537, 568 and, from CN-028, 615–618 (the ERP account ledger, the books match engine, the daily summary, fixed costs; design in [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 > **বাংলায়:** নতুন (PR 615): রিটেইল ERP-কে কত টাকা দেবে, তার নিজের খাতা — কোনো এন্ট্রি বদলায় না বা মোছে না, ERP-র হিসাবের
 > সাথে এক টাকাও এদিক-ওদিক না; ERP-কে দেওয়া টাকা শুধু লিখে রাখা হয় (কোনো টাকা নড়ে না); পাইপলাইনে কত টাকার পিস, দোকানের নিজের রেকর্ড থেকে।
@@ -1772,7 +1870,7 @@ registry v68 `registry-books.ts`).
   `apps/web/src/lib/costs-api.test.ts`, `books-status-view.test.ts`, `messages-unique-keys.test.ts`.
 - **Guides:** [Daily summary](docs/admin-guide/pages/money/books-daily.md), [Costs](docs/admin-guide/pages/money/costs.md).
 
-**Built (PR [342](docs/stages/S16.md#pr-342); 31 Oct, CN-031 lane C; not deployed yet): the Money overview.**
+**Built (PR [342](docs/stages/S16.md#pr-342); 31 Oct, CN-031 lane C; live since 31 Oct 19:14, #69): the Money overview.**
 
 > নতুন (PR 342): টাকা › সারসংক্ষেপ — কত টাকা এসেছে, কুরিয়ারের কাছে কত COD পাওনা, কাস্টমারদের কত ফেরত বাকি, এক পাতায়; শুধু দেখা, এখান থেকে কোনো টাকা নড়ে না।
 
@@ -1784,13 +1882,45 @@ registry v68 `registry-books.ts`).
 - **Tests:** `apps/web/src/lib/money-overview.test.ts`, `money-overview.db.test.ts` (PostgreSQL); checked in a real browser
   at 390, 768, 1366 and 1920 px.
 
-### S21 · Site Health & Audit — In progress (1/14)
+**Built (PR [343](docs/stages/S16.md#pr-343), 344, 345, 346; 31 Oct, CN-031 lane C; not deployed yet): costs, expenses and the month-end sheet.**
+
+> নতুন (PR 343–346): খরচের খাতা (প্রতিটা টাকা লাগা মেসেজের খরচ, SMS ব্যালান্স), খুচরা খরচ লেখা (ভুল হলে উল্টো এন্ট্রি, কিছু মোছে না; রসিদের ছবি শুরুতে বন্ধ), খরচ ও ফি-র ঘর (গেটওয়ের ফি, প্যাকেজিং, ডলারের রেট, কুরিয়ারের রেট — সব আপনি দেবেন) আর মাস শেষের হিসাবের পাতা। শুধু লেখা আর দেখা; কোনো টাকা নড়ে না, কোনো দাম বা চার্জ বদলায় না।
+
+- **Cost ledger (PR 343):** a message sent with a known cost writes one `CostEntry` in the same transaction (service = channel,
+  what it was for = the message log row) and draws that service's `PrepaidBalance` down; a mock send costs nothing. **Money ›
+  Cost ledger** (`/admin/money/cost-ledger`, `books.read`): today, this month and this year by service in the store's time
+  zone, the latest rows, the prepaid balances with a top-up record and a low mark (new permission `costs.write`, audited,
+  once per request key) and a CSV export (cut at `costs.ledger.exportMaxRows`). The rows never feed the ERP daily summary.
+- **Expenses (PR 344):** **Money › Expenses** (`/admin/money/expenses`; seeing `books.read`, entering `fixedcosts.write`):
+  head, day, amount and note for today or an open day, through PR 618's cost line on the head's summary line, so it reaches
+  the ERP with its day's summary and is never typed twice; a wrong one is reversed with a reason (never twice, never
+  deleted). Heads are the owner's own (none shipped): add, put away, bring back. A receipt photo or PDF while
+  `costs.receipts` is on (off; checked by its contents, 5 MB, media folder "expense-receipts"; migration
+  `0070_expense_receipts`).
+- **Costs & fees (PR 345):** **Money › Costs & fees** (`/admin/money/fees`; changes need `costs.write`, audited): gateway fees
+  per provider (`costs.gatewayFees`: basis points plus a fixed amount) and the packaging cost of one order
+  (`costs.packaging`), both owner data and empty as shipped, saved with their version after a second "Yes, save"; the USD
+  rate as `ExchangeRate` rows; courier rates as `CourierRateCard` rows per account, delivery band and weight band (ended,
+  never deleted). The RTO cost inputs stay on Delivery › Couriers (PR 192), linked. An unknown fee is never 0.
+- **Month-end (PR 346):** **Money › Month-end** (`/admin/money/month-end?month=`, `books.read`, read-only): the total per
+  service split into what goes to the ERP and the shop's own ledger, what the ERP has (each day's latest daily summary:
+  accepted, waiting, refused, not made; the month's fixed costs), the days not posted, the month's differences and its close,
+  with links to Books. MNY-05's monthly expense push is superseded by CN-028 (the daily summary and fixed costs), so nothing
+  reaches the ERP twice.
+- **Settings:** registry v77 (`registry-costs.ts`: `costs.ledger`, `costs.gatewayFees`, `costs.packaging`) and v90
+  (`costs.receipts`).
+- **Guides:** [Cost ledger](docs/admin-guide/pages/money/cost-ledger.md), [Expenses](docs/admin-guide/pages/money/expenses.md),
+  [Costs & fees](docs/admin-guide/pages/money/fees.md), [Month-end](docs/admin-guide/pages/money/month-end.md).
+- **Tests:** `apps/web/src/lib/cost-ledger.test.ts`, `cost-ledger.db.test.ts`, `expenses-api.db.test.ts`,
+  `fees-api.db.test.ts`, `month-sheet.db.test.ts` (PostgreSQL), `packages/messages/src/channels.db.test.ts`; checked in a
+  real browser at 390, 768, 1366 and 1920 px.
+
+### S21 · Site Health & Audit — In progress (3/14)
 
 Started: `readme-guard` in CI (scope on PR 594, CN-011) fails a pull request whose README PR log, stage counts or
 feature states disagree with the register. Every deploy copies README.md and docs/ to `$EXTAS_ROOT/docs/<commit>/`
 (`infra/deploy/docs-sync.sh`, `current` link, newest `DOCS_KEEP_VERSIONS` kept), mounted read-only in the app as
-`/docs/current` for the admin tabs still to be built. Planned — see register PRs 414–424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin;
-423 = the Server page): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+`/docs/current` for the admin tabs still to be built. Planned — see register PRs 415–422, 424, 570, 594 (594 = the PR register and "Blueprint & files" inside the admin): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 **Page guides (scope on PR 594, CN-026 cut by CN-027, 24 Oct):**
 
@@ -1813,7 +1943,7 @@ icon (`docs/qa/smoke.json`). No setting, no migration, no permission. After laun
 hints, "Show me", the pop-up and own-page modes and the Admin look setting (CN-025), the live label check, the AI helper.
 Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
 
-**Built (PR [413](docs/stages/S21.md#pr-413); 31 Oct, CN-031 lane B; not deployed yet): the Site health hub.**
+**Built (PR [413](docs/stages/S21.md#pr-413); 31 Oct, CN-031 lane B; live since 31 Oct 19:14, #69): the Site health hub.**
 
 > নতুন (PR 413): রিপোর্ট › সাইটের অবস্থা — দোকান ঠিক চলছে কি না, পাঁচ লাইনে: কাস্টমারের সমস্যা, সার্ভার, গতি, অডিট আর সব পাতার পরীক্ষা। সবচেয়ে খারাপ লাইনটাই উপরে দেখায়।
 
@@ -1828,6 +1958,35 @@ Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
 - **Guide:** [`docs/admin-guide/pages/reports/health.md`](docs/admin-guide/pages/reports/health.md).
 - **Tests:** `apps/web/src/lib/admin-health/hub.test.ts`, `api.db.test.ts` (PostgreSQL); smoke check and device gate.
 
+**Built (PR [414](docs/stages/S21.md#pr-414), 423; 31 Oct, CN-031 lane B; not deployed yet): saved journeys and customer problems.**
+
+> নতুন (PR 414, 423): কাস্টমার, অ্যাডমিন, হিসাবরক্ষক আর গুদামের কাজের পথ আপনার ঠিক করা সময়ে নিজে থেকে ব্রাউজারে চালিয়ে দেখা (শুরুতে বন্ধ; কোনো অর্ডার হয় না)। আর কাস্টমার সাইটে কোথায় সমস্যায় পড়ছে — ভুল, ধীর পাতা, ভাঙা ছবি, বারবার চাপা — তার তালিকা, জরুরিটা আগে; কারো নাম, ফোন বা ঠিকানা রাখা হয় না। কিছু আটকায় না, দোকান বদলায় না।
+
+- **Saved journeys (PR 414):** `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps for customer, admin,
+  accountant and warehouse on a phone and a desktop screen, with the smoke test's sign-in and error watch; the customer
+  never adds to the bag or orders; the staff journeys run as the read-only check account and prove writes are refused.
+  `health.journeys` (v82, off): hourly, daily or weekly at the owner's hour, runs kept, "Run now"; the hourly
+  `journeys.yml` (`infra/deploy/journeys.sh`, its own concurrency group, never in a deploy's way) keeps the newest runs in
+  `state/journeys/` and commits a report only on a failure or a recovery. Site health gains a sixth line.
+- **Customer problems (PR 423, CN-015):** a small probe in the shop layout reports script errors, failed or slow calls to
+  the shop's server, failed or slow pages, a form field refused again and again, rage clicks and broken pictures (the
+  "Start fresh" screen too); anonymous by construction (masked page patterns, scrubbed messages, device and browser
+  families, a random per-tab id); admin pages are never recorded. `POST /api/problems` (same-site, size-capped, rate bucket
+  `report`, always 204) keeps one `CustomerProblem` per cause with append-only `ProblemRecord` rows (migration
+  `0065_customer_problems`). A break on the bag or checkout, or one that hit `urgentVisitors` in a day, is Urgent.
+  **Reports › Site health › Customer problems** (`/admin/reports/health/problems`: today, yesterday, 7 days, all, a day;
+  two-week bars; short glitches apart; the recorder card) and one problem's page (devices, browsers, networks, last
+  reports, status with a note; `health.problems.manage`, leaving an owner's step `health.problems.approve`; audited). The
+  hub's Customer problems line is live. `health.problems` (v83, on as it ships, CN-015). BLOCKED 26: whether old records
+  may ever be cleaned up.
+- **Guides:** [Site health](docs/admin-guide/pages/reports/health.md),
+  [Customer problems](docs/admin-guide/pages/reports/health-problems.md),
+  [One problem](docs/admin-guide/pages/reports/health-problem.md).
+- **Tests:** `tools/journeys.test.mjs`, `packages/jobs/src/server-sync.test.ts`, `apps/web/src/lib/problems/probe.test.ts`,
+  `kinds.test.ts`, `admin-problems/days.test.ts`, `admin-problems/api.db.test.ts`, `admin-health/hub.test.ts`,
+  `api.db.test.ts` (PostgreSQL), `edge-gate.test.ts`; smoke, device gate and journeys entries; checked in a real browser at
+  390, 768, 1366 and 1920 px.
+
 ### S24 · Virtual Photoshoot Studio — Not started
 
 Planned — see register PRs 444–480, 539: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
@@ -1838,7 +1997,7 @@ Planned — see register PRs 481–490: [Blueprint Appendix A](docs/BLUEPRINT.md
 
 ### S17 · Multi-store — In progress (1/24)
 
-**Built (PR [362](docs/stages/S17.md#pr-362), the launch slice; 31 Oct, CN-031 lane B; not deployed yet): the Cloudflare
+**Built (PR [362](docs/stages/S17.md#pr-362), the launch slice; 31 Oct, CN-031 lane B; live since 31 Oct 19:14, #69): the Cloudflare
 cache rule and extra host names.**
 
 > নতুন (PR 362): Cloudflare-এ ক্যাশের নিয়ম — ব্যাগ, চেকআউট, অ্যাকাউন্ট আর অ্যাডমিন কখনো ক্যাশ হয় না; ক্যাটাগরি আর পণ্যের পাতা ক্যাশ সেটিংস মেনে চলে। সার্ভার বাড়তি ডোমেইনও নিজের সার্টিফিকেটসহ চালাতে পারে (চালুর দিনে মূল ডোমেইন, পরে প্রতিটা দোকানের নিজের ডোমেইন)।
@@ -1904,7 +2063,7 @@ safety layer.**
   Rules, combo and build-your-own pages — Zod 4's one-time `new Function` probe. `apps/web/src/instrumentation-client.ts`
   sets Zod jitless before the page wakes up (same answers, no eval), so the policy can be enforced; a test beside it.
 
-**Built (PR [382](docs/stages/S18.md#pr-382), 383, 384, 385, 386; 31 Oct, CN-031 lane B; not deployed yet): privacy,
+**Built (PR [382](docs/stages/S18.md#pr-382), 383, 384, 385, 386; 31 Oct, CN-031 lane B; live since 31 Oct 19:14, #69): privacy,
 the shop's legal words and the last line of defence.**
 
 > নতুন (PR 382–386): প্রাইভেসির পাতা আর কাস্টমারের তথ্য মোছা (শুরুতে বন্ধ, মোছেন শুধু মালিক); দোকানের আইনি নম্বর এক পাতায়, বানানো লেখা কখনো দোকানে যায় না; হেল্প পাতার লেখা সেটিংস থেকে, স্মার্ট রুলের সংখ্যা নিজে বসে; ব্লবের ব্যাকআপ লকের ব্যবস্থা (আপনার সিদ্ধান্ত, BLOCKED 22) আর সার্ভার হারালে ফেরানোর গাইড; Cloudflare-এর সুরক্ষার নিয়ম শুধু দোকানের ঠিকানায়।
@@ -2067,7 +2226,7 @@ backups from the admin.**
   fake Google: code, Allow, Deny, expiry, reconnect, revoked), `backup-requests.test.ts`,
   `apps/web/src/lib/backups-api.test.ts`, `infra/tests/run.sh` (the drill of each copy, requests, timers).
 
-**Built (PR [391](docs/stages/S19.md#pr-391), 393, 394, 396–402; 31 Oct, CN-030, CN-031 lane C; not deployed yet): ready
+**Built (PR [391](docs/stages/S19.md#pr-391), 393, 394, 396–402; 31 Oct, CN-030, CN-031 lane C; live since 31 Oct 19:14, #69): ready
 for real orders — backups off the server, restore, and the go-live list.**
 
 > নতুন (PR 391–402): Azure Blob আর Google Drive-এ ব্যাকআপ (চাবি দিলে); ব্যাকআপ থেকে দোকান ফেরানো, আগে পরীক্ষার কপিতে; 'চালুর আগে' পাতা — আসল অর্ডারের আগে যা ঠিক থাকতে হবে তার তালিকা (সার্ভার, সার্টিফিকেট, আপনার তথ্য, পেমেন্ট-কুরিয়ার-SMS, Google); চালুর দিনের গাইড আর প্রথম সপ্তাহের নজর। মূল ডোমেইন বদলায় শুধু আপনার কথায় (BLOCKED 25)।
@@ -2123,7 +2282,23 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #69 | PR [342](docs/stages/S16.md#pr-342) | 31 Oct | Money › Overview (`/admin/money`, second tab; Money still opens Books): cash that came in (24 hours, 7 and 30 days, by method), COD a rider collected that no courier has paid out yet (by courier, oldest age), refunds owed and failed payouts. Read-only, `payments.view`; nothing moves money. CN-031 lane batch 2 (#69, three builders). Not deployed yet |
+| #70 | PR [257](docs/stages/S13.md#pr-257) | 31 Oct | Server-side event tracking: a product page seen, the checkout opened, an item put in the bag and an order placed go from the shop's own server to Meta, Google Analytics 4 and TikTok (migration `0067_tracked_events`, `ads.tracking` v85, off); prices read on the server, only hashes leave, on the mock until each key passes its Test; Marketing › Tracking. CN-031 lane batch 3 (#70, three builders); Launch building finished. Not deployed yet |
+| #70 | PR [588](docs/stages/S11.md#pr-588) | 31 Oct | The Bengali translation gate: Website › SEO › Bengali pages with the coverage report, "Mark ready" / "Not ready" (audited, never by itself); a not-ready Bengali page kept out of search, or sent to its English twin (`language.bengali.gate` v84). |
+| #70 | PR [346](docs/stages/S16.md#pr-346) | 31 Oct | Money › Month-end (read-only): the total per service, what the ERP has, the days not posted, the month's differences and its close; the monthly push of MNY-05 is replaced by CN-028's daily summary, so nothing reaches the ERP twice. |
+| #70 | PR [345](docs/stages/S16.md#pr-345) | 31 Oct | Money › Costs & fees: gateway fees and packaging (owner data, empty), the USD rate and courier rate cards, every change audited and kept; inputs only, no price, charge or COD changes. |
+| #70 | PR [344](docs/stages/S16.md#pr-344) | 31 Oct | Money › Expenses: quick entry on the owner's own heads, sent to the ERP with the day's summary; a wrong one reversed, never deleted; a receipt photo while `costs.receipts` is on (off; migration `0070_expense_receipts`). |
+| #70 | PR [343](docs/stages/S16.md#pr-343) | 31 Oct | Money › Cost ledger: each message with a known cost writes one cost row and draws the prepaid SMS balance down; top-ups, a low mark and a CSV export (new permission `costs.write`); records only. |
+| #70 | PR [423](docs/stages/S21.md#pr-423) | 31 Oct | Reports › Site health › Customer problems with the privacy-safe recorder (CN-015; migration `0065_customer_problems`, `health.problems` v83, on): script errors, failed or slow calls and pages, refused fields, rage clicks and broken pictures, Urgent first, no personal data; BLOCKED 26 (cleaning up old records). |
+| #70 | PR [414](docs/stages/S21.md#pr-414) | 31 Oct | Saved browser journeys for customer, admin, accountant and warehouse on phone and desktop, replayed on the owner's schedule (`health.journeys` v82, off; `journeys.yml`); a sixth Site health line. |
+| #70 | PR [236](docs/stages/S11.md#pr-236) | 31 Oct | Language pairs (hreflang) in the HTML head only, the sitemap pairs behind a switch (off); every deploy checks each pair and its way back (`tools/hreflang-check.mjs`). |
+| #70 | PR [234](docs/stages/S11.md#pr-234) | 31 Oct | Core Web Vitals from real visitors (daily counts only, migration `0066_web_vitals`, `seo.vitals`) on Website › SEO and the Server page, plus the monthly slow-4G lab run on the VM (`vitals-monthly.yml`). |
+| #70 | PR [233](docs/stages/S11.md#pr-233) | 31 Oct | Search Console and Bing Webmaster: the verification codes as meta tags on every shop page (`seo.verification`, empty), two Keys & connections rows on the mock until tested, "Send the sitemap". |
+| #70 | PR [232](docs/stages/S11.md#pr-232) | 31 Oct | Product photo descriptions (alt text) written by the shop in English (`seo.altText`, on); a typed one is never changed; Bengali pages use the Bengali words. |
+| #70 | PR [229](docs/stages/S11.md#pr-229) | 31 Oct | `robots.txt` from settings: everything closed until the shop opens on its own domain; the admin, the API and customers' own pages always out; the AI robots switch (`seo.robots`, welcome). |
+| #70 | PR [228](docs/stages/S11.md#pr-228) | 31 Oct | Sitemaps split by kind (`/sitemap.xml` index, `/sitemaps/<kind>-<n>.xml`) with only listable pages, kept fresh and purged at the CDN when a product goes on or off (`seo.sitemaps`); follow-ups 402 and 517 built. |
+| #70 | PR [227](docs/stages/S11.md#pr-227) | 31 Oct | Website › SEO › Collection pages: each collection's own search words in both languages, and the owner-named filter pages that may be listed (`seo.filterPages`, off). |
+| #70 | PR [426](docs/stages/S22.md#pr-426) | 31 Oct | Messenger, WhatsApp and the site chat into the Support inbox: channels added off, Meta's reply window kept, refusals kept with their reason; the site chat off as it ships (`support.channels`, `support.liveChat` v72). |
+| #69 | PR [342](docs/stages/S16.md#pr-342) | 31 Oct | Money › Overview (`/admin/money`, second tab; Money still opens Books): cash that came in (24 hours, 7 and 30 days, by method), COD a rider collected that no courier has paid out yet (by courier, oldest age), refunds owed and failed payouts. Read-only, `payments.view`; nothing moves money. CN-031 lane batch 2 (#69, three builders). Live since 31 Oct 19:14 |
 | #69 | PR [402](docs/stages/S19.md#pr-402) | 31 Oct | The first-week watch after go-live (`golive.firstWeek`, off): started on the go-live page; a daily Telegram check at the set time for 7 days (server, all pages, last night's backup) and the smoke test every few hours while it lasts (`extas-first-week`, hourly `smoke.yml`). |
 | #69 | PR [401](docs/stages/S19.md#pr-401) | 31 Oct | Main-domain indexing on go-live day: a go-live row that passes once search engines are let in on a store's primary domain, and the Search Console sign-off (property verified, sitemap submitted); runbook step 8. Staging stays closed to search engines. |
 | #69 | PR [400](docs/stages/S19.md#pr-400) | 31 Oct | A go-live row for payment, courier and SMS: it counts only a connection that is switched on, LIVE and passed its last test (`golive.connections`). |
