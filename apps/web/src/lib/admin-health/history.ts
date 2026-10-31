@@ -4,10 +4,13 @@
 // holds (state/smoke-runs/, state/journeys/), so a run is in the history even if that import did not happen. A run is
 // kept once (its source key). One run's page compares it with the run of the same tool before it: what is new, what
 // is still failing, what was fixed since. Seeing needs `health.read`. Nothing here deletes a run.
+// PR 422: one run's page also says what the run says (run-summary.ts, by rules, AI not needed) with how many runs of
+// that tool failed in a row.
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
+import { summariseRun, type RunSummary } from './run-summary';
 import { FINDING_SEVERITIES, journeysRunInput, keepRun, RUN_TOOLS, smokeRunInput, type FindingSeverity, type RunInput, type RunTool } from '@extas/jobs';
 
 export const HISTORY_PAGE_SIZE = 25;
@@ -73,6 +76,10 @@ export interface HistoryRunView {
   previous: HistoryRow | null;
   /** The previous run's findings that this run no longer has. */
   fixedSince: Pick<HistoryFinding, 'severity' | 'title' | 'page' | 'device' | 'reproduce'>[];
+  /** PR 422: failed runs of this tool in a row, this one included (0 when it passed). */
+  streak: number;
+  /** PR 422: what this run says, by rules. */
+  said: RunSummary;
 }
 
 export class HistoryError extends Error {
@@ -87,6 +94,8 @@ export const isHistoryError = (e: unknown): e is HistoryError => e instanceof Hi
 
 const S = MOTHER_STORE_ID;
 const DAY = 86_400_000;
+/** How far back a failing streak is counted (PR 422). */
+const STREAK_LOOK = 30; // hardcode-ok: how many earlier runs the streak reads, not a business number
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const toolOf = (trigger: string): RunTool => (trigger.startsWith('journeys:') ? 'journeys' : 'smoke');
 const SEV_ORDER: Record<string, number> = Object.fromEntries(FINDING_SEVERITIES.map((s, i) => [s, i]));
@@ -180,21 +189,29 @@ export async function historyRunView(deps: HistoryDeps, who: HistoryWho, id: str
   const run = await deps.db.siteAuditRun.findFirst({ where: { id, storeId: S }, select: RUN_SELECT });
   if (!run) throw new HistoryError('NOT_FOUND', 404);
   const tool = toolOf(run.trigger);
-  const prev = await deps.db.siteAuditRun.findFirst({
-    where: { storeId: S, trigger: { startsWith: `${tool}:` }, OR: [{ startedAt: { lt: run.startedAt } }, { startedAt: run.startedAt, id: { lt: run.id } }] },
-    orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
-    select: RUN_SELECT,
-  });
+  const before = { storeId: S, trigger: { startsWith: `${tool}:` }, OR: [{ startedAt: { lt: run.startedAt } }, { startedAt: run.startedAt, id: { lt: run.id } }] };
+  const [prev, earlier] = await Promise.all([
+    deps.db.siteAuditRun.findFirst({ where: before, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }], select: RUN_SELECT }),
+    run.status === 'FAILED' ? deps.db.siteAuditRun.findMany({ where: before, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }], take: STREAK_LOOK, select: { status: true } }) : Promise.resolve([]),
+  ]);
+  let streak = run.status === 'FAILED' ? 1 : 0;
+  for (const e of earlier) {
+    if (e.status !== 'FAILED') break;
+    streak += 1;
+  }
   const fields = { id: true, severity: true, title: true, page: true, device: true, reproduce: true, suggestedFix: true, fixStatus: true } as const;
-  const [mine, before] = await Promise.all([
+  const [mine, beforeFindings] = await Promise.all([
     deps.db.siteAuditFinding.findMany({ where: { runId: run.id, storeId: S }, select: fields, orderBy: { id: 'asc' } }),
     prev ? deps.db.siteAuditFinding.findMany({ where: { runId: prev.id, storeId: S }, select: fields, orderBy: { id: 'asc' } }) : Promise.resolve([]),
   ]);
-  const beforeKeys = new Set(before.map(findingKey));
+  const beforeKeys = new Set(beforeFindings.map(findingKey));
   const mineKeys = new Set(mine.map(findingKey));
   const findings = mine
     .map((f) => ({ ...f, severity: asSeverity(f.severity), isNew: !!prev && !beforeKeys.has(findingKey(f)) }))
     .sort((a, b) => (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9) || Number(b.isNew) - Number(a.isNew));
-  const fixedSince = before.filter((f) => !mineKeys.has(findingKey(f))).map((f) => ({ severity: asSeverity(f.severity), title: f.title, page: f.page, device: f.device, reproduce: f.reproduce }));
-  return { run: { ...rowOf(run), summary: isObj(run.summary) ? run.summary : {} }, findings, previous: prev ? rowOf(prev) : null, fixedSince };
+  const fixedSince = beforeFindings.filter((f) => !mineKeys.has(findingKey(f))).map((f) => ({ severity: asSeverity(f.severity), title: f.title, page: f.page, device: f.device, reproduce: f.reproduce }));
+  const row = { ...rowOf(run), summary: isObj(run.summary) ? run.summary : {} };
+  const previous = prev ? rowOf(prev) : null;
+  const said = summariseRun({ ok: row.ok, passed: row.passed, failed: row.failed, sha: row.sha, summary: row.summary, findings, previous, streak });
+  return { run: row, findings, previous, fixedSince, streak, said };
 }

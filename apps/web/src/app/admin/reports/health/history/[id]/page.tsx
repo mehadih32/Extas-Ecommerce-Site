@@ -2,6 +2,7 @@
 // (severity, page and screen, how to repeat it, the suggested fix and whether one was applied), compared with the run
 // of the same tool before it: new, still failing, fixed since. Seeing needs `health.read`. Read-only.
 // PR 420: each finding's proposed fix shows where its approval stands, with a link to Fixes to approve while it waits.
+// PR 422: "What this run says" — the run's summary and likely cause, written by rules (AI not needed).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -12,6 +13,7 @@ import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { FIX_STATUSES } from '@/lib/admin-health/fixes';
 import { historyRunView, isHistoryError, type HistoryFinding, type HistoryRow } from '@/lib/admin-health/history';
+import type { SummaryLine } from '@/lib/admin-health/run-summary';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -63,6 +65,9 @@ export default async function HistoryRunPage({ params }: { params: Promise<{ id:
   const run = v.run;
   const fresh = v.findings.filter((f) => f.isNew).length;
   const problems = Array.isArray(run.summary.problems) ? run.summary.problems.filter((x): x is string => typeof x === 'string') : [];
+  // PR 422: a summary line in the page's language (numbers and screens put into words here)
+  const line = (l: SummaryLine) =>
+    s(`sum.${l.key}`, Object.fromEntries(Object.entries(l.vars ?? {}).map(([k, x]) => [k, typeof x === 'number' ? num(x) : k === 'screen' ? s(`screen.${x}`) : x])));
   const where = (f: Pick<HistoryFinding, 'page' | 'device'>) =>
     f.page || f.device ? s('where', { page: f.page ?? '—', screen: f.device ? s(`screen.${f.device}`) : '—' }) : null;
 
@@ -112,6 +117,23 @@ export default async function HistoryRunPage({ params }: { params: Promise<{ id:
           </div>
         </div>
       </div>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="hs-said-h" data-testid="history-said" data-streak={v.streak}>
+        <h2 className="a2-h3" id="hs-said-h">
+          {s('sum.h')}
+        </h2>
+        <p className="hs-title a2-mt12">{line(v.said.headline)}</p>
+        {v.said.causes.length ? (
+          <ul className="hs-said a2-sm a2-mt12" data-testid="history-said-causes">
+            {v.said.causes.map((c) => (
+              <li key={c.key} data-key={c.key}>
+                {line(c)}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <p className="a2-sm a2-mute a2-mt12">{s('sum.by')}</p>
+      </section>
 
       {!v.previous ? (
         <p className="a2-sm a2-mute a2-mt12" data-testid="history-run-first">

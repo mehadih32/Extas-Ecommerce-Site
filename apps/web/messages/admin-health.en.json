@@ -413,6 +413,28 @@
       "expired": "Expired: nobody decided in time; nothing was changed.",
       "fixed": "Fixed: the same check passed again.",
       "rolled-back": "Rolled back: the check got worse, so the fix was undone."
+    },
+    "sum": {
+      "h": "What this run says",
+      "by": "Written by rules from this run and the one before it; AI is not needed for it.",
+      "headOk": "Passed: {passed} checked without a problem.",
+      "headFailed": "Failed: {urgent} urgent, {important} important, {canWait} that can wait.",
+      "headStuck": "The test itself did not run through.",
+      "recovered": "Fixed since the run before: that one failed, this one passed.",
+      "passedWithNotes": "{n} small notes were kept, but none stopped the run.",
+      "stuck": "Nothing is known about the shop from this run (for example the server was busy or the test timed out). Look at the next run.",
+      "down": "Nearly every page failed ({failed} of {total}): the site or the server was probably down or unreachable. Check Server first.",
+      "serverErrors": "{n} pages answered with a server error (5xx): the shop's server had a problem there.",
+      "rolledBack": "The new version {sha} was rolled back by itself because this test failed.",
+      "newVersion": "The run before passed and this one runs a new version ({sha}): the failure probably came with that version.",
+      "money": "{n} problems are on the bag or checkout: customers may not be able to order. Look at these first.",
+      "adminOnly": "Only admin pages failed: customers are not affected.",
+      "shopOnly": "Only shop pages failed: customers may see it.",
+      "oneScreen": "It fails only on the {screen}: probably the layout for that screen.",
+      "looksOnly": "Everything still works; it only looks wrong (cut text, small buttons and the like).",
+      "streak": "This test has failed {n} times in a row: the problem is not going away by itself.",
+      "same": "The same problems as the run before: nothing new broke.",
+      "few": "Problems on {pages} pages; see the list below."
     }
   },
   "fxg": {
