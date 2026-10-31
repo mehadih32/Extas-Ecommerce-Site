@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALL_SCOPE,
+  percentCut,
   ALWAYS,
   bestTierGrouping,
   capAllows,
@@ -283,6 +284,25 @@ describe('PR 213 · discounts, coupons and the "was" price', () => {
     const q = quote([amt], cart([line('a', 100000), line('b', 50000)]), ENGINE);
     expect(q.discountMinor).toBe(20000);
     expect(q.lines.map((l) => l.discountMinor).reduce((s, x) => s + x, 0)).toBe(20000);
+  });
+  it('review R1 (M5): with a rounding step every percentage cut — and so the total — is whole taka, in the customer’s favour', () => {
+    // 10% of ৳1,499 is ৳149.90: rounded up to ৳150 off, so the total is ৳1,349 — a figure a rider can collect
+    const q = quote([pct(10)], cart([line('a', 149_900)]), { ...ENGINE, roundingStepMinor: 100 });
+    expect(q.discountMinor).toBe(15_000);
+    expect(q.subtotalMinor - q.discountMinor).toBe(134_900);
+    for (const price of [149_900, 99_950, 33_333, 120_001]) {
+      for (const p of [5, 10, 12.5, 15, 33]) {
+        const x = quote([pct(p)], cart([line('a', price), line('b', 77_700)]), { ...ENGINE, roundingStepMinor: 100 });
+        expect(x.discountMinor % 100).toBe(0);
+        expect(x.discountMinor).toBeLessThanOrEqual(x.subtotalMinor);
+      }
+    }
+    // the order-wide form too, and step 1 keeps the old rounding down
+    const order = rule({ kind: 'discount', params: [{ key: 'pct', type: 'percent', value: 10, labelEn: 'p' }], actions: [{ type: 'discount', mode: 'percent', param: 'pct', target: 'order', requiresCoupon: false, showWas: false }] });
+    expect(quote([order], cart([line('a', 149_900), line('b', 77_750)]), { ...ENGINE, roundingStepMinor: 100 }).discountMinor % 100).toBe(0);
+    expect(quote([pct(10)], cart([line('a', 149_900)]), { ...ENGINE, roundingStepMinor: 1 }).discountMinor).toBe(14_990);
+    expect(percentCut(149_900, 10, 500)).toBe(15_000);
+    expect(percentCut(50, 50, 100)).toBe(50);
   });
   it('a percentage above the store limit is clamped by the engine and refused by the check', () => {
     expect(quote([pct(95)], cart([line('a', 10000)]), ENGINE).discountMinor).toBe(9000);

@@ -85,11 +85,12 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
   const at = base.startsAt && Date.parse(base.startsAt) > now.getTime() ? new Date(base.startsAt) : now;
   const cand: Rule = { ...base, status: 'ACTIVE', archived: false, endsAt: base.endsAt && Date.parse(base.endsAt) > at.getTime() ? base.endsAt : null };
 
-  const [days, maxOrders, maxPercentOff, timeZone] = await Promise.all([
+  const [days, maxOrders, maxPercentOff, timeZone, roundingStepMinor] = await Promise.all([
     b.days ?? setting(deps, who.storeId, 'rules.simulation.defaultDays'),
     setting(deps, who.storeId, 'rules.simulation.maxOrders'),
     setting(deps, who.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, who.storeId, 'store.timeZone'),
+    setting(deps, who.storeId, 'checkout.money.roundingStepMinor'),
   ]);
   const from = new Date(now.getTime() - days * DAY_MS);
   const live = (await activeRules(deps.db, who.storeId)).filter((r) => r.id !== row.id);
@@ -111,7 +112,7 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
   const coupons = codes.length ? await deps.db.coupon.findMany({ where: { storeId: who.storeId, code: { in: codes } }, select: { code: true, ruleId: true } }) : [];
   const couponRule = new Map(coupons.map((c) => [c.code, c.ruleId]));
   const clock = clockFacts(at, timeZone);
-  const limits = { maxPercentOff };
+  const limits = { maxPercentOff, roundingStepMinor };
 
   const before = zero();
   const after = zero();

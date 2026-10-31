@@ -109,7 +109,7 @@ export async function quoteCart(
   input: { storeId: number; lines: CartLineInput[]; bandKey?: string | null; paymentMethod?: string | null; couponCode?: string | null; phone?: string | null; customerId?: string | null; deliveredOrders?: number | null; source?: string | null; locale?: string },
 ): Promise<CartQuote> {
   const now = nowOf(deps);
-  const [rules, maxPercentOff, timeZone, wasAllowed, bandChargeMinor, floorPercent] = await Promise.all([
+  const [rules, maxPercentOff, timeZone, wasAllowed, bandChargeMinor, floorPercent, roundingStepMinor] = await Promise.all([
     cachedActiveRules(deps, input.storeId),
     setting(deps, input.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, input.storeId, 'store.timeZone'),
@@ -118,6 +118,8 @@ export async function quoteCart(
     bandChargeOf(deps.db, input.storeId, input.bandKey ?? null),
     // PR 609: the store's lowest margin over the buying price (null = the floor is off).
     setting(deps, input.storeId, 'catalogue.floor.minMarginPercent'),
+    // review R1 (M5): a percentage cut is rounded so the total stays collectable
+    setting(deps, input.storeId, 'checkout.money.roundingStepMinor'),
   ]);
   const variants = await deps.db.productVariant.findMany({
     where: { storeId: input.storeId, id: { in: input.lines.map((l) => l.variantId).filter((id) => UUID.test(id)) }, archivedAt: null, active: true },
@@ -152,7 +154,7 @@ export async function quoteCart(
       weekday: clock.weekday,
       hour: clock.hour,
     },
-    { maxPercentOff },
+    { maxPercentOff, roundingStepMinor },
   );
   let deliveryLine: string | null = null;
   const freeRule = q.delivery.freeRule ? rules.find((r) => r.id === q.delivery.freeRule!.id) : rules.filter((r) => isLive(r, now) && r.actions.some((a) => a.type === 'freeDeliveryOver')).sort(resolutionOrder)[0];
@@ -199,18 +201,19 @@ export async function discountWasFor(deps: RulesDeps, input: { storeId: number; 
   if (!UUID.test(input.variantId)) return null;
   const v = await deps.db.productVariant.findFirst({ where: { id: input.variantId, storeId: input.storeId, archivedAt: null }, select: { id: true, productId: true, priceMinor: true, compareAtMinor: true, shopPriceMinor: true } });
   if (!v || v.priceMinor === null) return null;
-  const [rules, maxPercentOff, allowed, lookbackDays, floorPercent] = await Promise.all([
+  const [rules, maxPercentOff, allowed, lookbackDays, floorPercent, roundingStepMinor] = await Promise.all([
     cachedActiveRules(deps, input.storeId),
     setting(deps, input.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, input.storeId, 'rules.discount.showWasPrice'),
     setting(deps, input.storeId, 'rules.discount.wasLookbackDays'),
     setting(deps, input.storeId, 'catalogue.floor.minMarginPercent'),
+    setting(deps, input.storeId, 'checkout.money.roundingStepMinor'),
   ]);
   const f = (await scopeFacts(deps.db, input.storeId, [v.productId])).get(v.productId)!;
   const q = quote(
     rules.filter((r) => r.actions.some((a) => a.type === 'discount' && a.target === 'lines' && !a.requiresCoupon && !a.minSubtotalParam)),
     { now, lines: [{ id: v.id, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: 1, ...f, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent) }], bandKey: null, paymentMethod: null, couponCode: null, couponRuleIds: [], customer: { loggedIn: false, deliveredOrders: null }, source: null, weekday: null, hour: null },
-    { maxPercentOff },
+    { maxPercentOff, roundingStepMinor },
   );
   const line = q.lines[0]!;
   const offer = line.offers.find((o) => o.kind === 'discount');

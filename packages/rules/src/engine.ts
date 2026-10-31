@@ -140,6 +140,18 @@ export function floorMinorOf(buyMinor: number | null | undefined, marginPercent:
 export interface EngineLimits {
   /** rules.discount.maxPercentOff — a percentage above it is clamped (check.ts refuses to save one). */
   maxPercentOff: number;
+  /**
+   * Review R1 (M5) — `checkout.money.roundingStepMinor`: a percentage cut is rounded up to this step (the customer's
+   * favour, never above what it cuts from), so a total stays an amount a rider can collect. 1 or absent: not rounded.
+   */
+  roundingStepMinor?: number;
+}
+
+/** A percentage cut of `base`, rounded up to `step` (never above `base`). */
+export function percentCut(base: number, pct: number, step = 1): number {
+  const raw = Math.floor((base * pct) / 100);
+  if (step <= 1 || raw <= 0) return raw;
+  return Math.min(base, Math.ceil(raw / step) * step);
 }
 
 const NOTHING = 0;
@@ -342,7 +354,8 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
     let cuts: number[];
     if (action.mode === 'percent') {
       const pct = Math.min(amount, limits.maxPercentOff);
-      cuts = action.target === 'lines' ? eligible.map((s) => Math.floor((net(s) * pct) / 100)) : spread(Math.floor((eligibleTotal * pct) / 100), eligible.map(net));
+      const step = limits.roundingStepMinor ?? 1;
+      cuts = action.target === 'lines' ? eligible.map((s) => percentCut(net(s), pct, step)) : spread(percentCut(eligibleTotal, pct, step), eligible.map(net));
     } else {
       cuts = action.target === 'lines' ? eligible.map((s) => Math.min(net(s), amount * s.fact.quantity)) : spread(Math.min(amount, eligibleTotal), eligible.map(net));
     }
