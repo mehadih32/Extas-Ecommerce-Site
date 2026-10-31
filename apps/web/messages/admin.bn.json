@@ -83,7 +83,8 @@
     "golive": "চালুর আগে",
     "healthProblems": "কাস্টমারের সমস্যা",
     "seoBengali": "বাংলা পাতা",
-    "adsTracking": "ট্র্যাকিং"
+    "adsTracking": "ট্র্যাকিং",
+    "manual": "সাইট ম্যানুয়াল"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

@@ -1,0 +1,17 @@
+{
+  "man": {
+    "metaTitle": "Site manual · Admin",
+    "title": "Site manual",
+    "sub": "How to run every part of the shop from this back end, written for a new owner or a new team member. One chapter per section, every page with what it is, why it is there, how to use it and what each button does.",
+    "contents": "Contents",
+    "chapter": "Chapter {n}",
+    "pages": "{n} pages",
+    "about": "About this section",
+    "open": "Open this page",
+    "top": "Back to the contents",
+    "prev": "Previous chapter",
+    "next": "Next chapter",
+    "noGuide": "This section has no page guides yet. They arrive with its pages.",
+    "noDocs": "The guide files are not on this server yet. They are copied with every deploy."
+  }
+}

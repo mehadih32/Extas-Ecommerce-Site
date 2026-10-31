@@ -57,7 +57,8 @@
         "look": "Admin look"
       },
       "help": {
-        "manual": "Help & manual"
+        "manual": "Help & manual",
+        "book": "Site manual"
       },
       "orders": {
         "all": "All orders",
@@ -378,7 +379,8 @@
     "sub": "Every section's guide, in Bengali. The same guides open from each page.",
     "built": "Ready",
     "planned": "Planned",
-    "open": "Open the section"
+    "open": "Open the section",
+    "read": "Read in the manual"
   },
   "dsh": {
     "soon": "{what} comes with {stage}. Until then this card stays empty — no number is made up.",

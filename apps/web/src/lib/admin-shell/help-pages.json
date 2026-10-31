@@ -83,7 +83,8 @@
     { "id": "settings/backups", "route": "/admin/settings/system/backups" },
     { "id": "settings/go-live", "route": "/admin/settings/system/go-live" },
     { "id": "settings/look", "route": "/admin/settings/look" },
-    { "id": "help/manual", "route": "/admin/help" }
+    { "id": "help/manual", "route": "/admin/help" },
+    { "id": "help/site-manual", "route": "/admin/help/manual" }
   ],
   "notGuided": [
     { "route": "/admin/login", "why": "the sign-in page has no shell (no top bar, no guide icon); docs/admin-guide/login.md explains it" },

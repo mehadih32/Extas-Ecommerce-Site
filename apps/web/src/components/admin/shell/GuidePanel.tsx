@@ -133,6 +133,10 @@ function Blocks({ blocks, onGuide, boxes }: { blocks: Block[]; onGuide: OnGuide;
   );
 }
 
+/** PR 387: the same drawing for the Site manual (components/admin/help/ManualChapter.tsx), so a guide looks alike in both. */
+export { Blocks as GuideBlocks };
+export type { OnGuide };
+
 interface PageRow {
   id: string;
   title: string;
