@@ -29,11 +29,13 @@ export interface DetailsProps {
   suggest?: SuggestConfig | null;
   /** Follow-up 57: he picked a place; the new line is read at once. */
   onAddressPick?: (line: string) => void;
+  /** CN-020 (4): drawn under the address box (the voice address's mic), inside its field. */
+  addressExtra?: React.ReactNode;
 }
 
 const PHONE_DIGITS = 11;
 
-export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlur, onAddressBlur, addressMax, w, n, wrap, invalid = {}, suggest = null, onAddressPick }: DetailsProps) {
+export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlur, onAddressBlur, addressMax, w, n, wrap, invalid = {}, suggest = null, onAddressPick, addressExtra = null }: DetailsProps) {
   const ph = phoneNormalizeBD(form.phone);
   const showWarn = !ph.ok && !ph.empty && phoneChecked;
   const chipRef = useRef<HTMLSpanElement>(null);
@@ -158,6 +160,7 @@ export function DetailsFields({ fields, form, onChange, phoneChecked, onPhoneBlu
           />
           {sug.list(form.address)}
         </div>
+        {addressExtra}
       </>,
     ),
   };

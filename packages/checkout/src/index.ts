@@ -22,3 +22,5 @@ export * from './place';
 export * from './receipt';
 export * from './advance';
 export * from './bulk-service';
+// CN-020 (4) — the voice address: a recording of the address, its words and how sure the reading was.
+export * from './voice';

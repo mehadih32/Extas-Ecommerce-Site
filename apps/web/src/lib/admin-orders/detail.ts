@@ -132,6 +132,8 @@ export interface OrderDetailView {
   invoice: string | null;
   noteMax: number;
   noteUrl: string;
+  /** CN-020 (4): the address the customer spoke at checkout (null: typed). `audio`: the recording to play, if kept. */
+  voice: { words: string; sure: string; low: boolean; audio: string | null } | null;
 }
 
 interface OrderFields {
@@ -994,6 +996,22 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     invoice: perms.has('orders.invoice') ? invoiceHref(o.number) : null,
     noteMax,
     noteUrl: commandUrl(o.id, 'notes'),
+    voice: await voiceOf(deps, who, view, o),
+  };
+}
+
+/** CN-020 (4): the newest recording of the order's address, as the customer card shows it. */
+async function voiceOf(deps: od.OrdersDeps, who: od.Who, view: AdminView, o: { id: string; flags: string[] }): Promise<OrderDetailView['voice']> {
+  if (!o.flags.includes('VOICE_ENTERED')) return null;
+  const v = await deps.db.checkoutVoice.findFirst({ where: { storeId: who.storeId, orderId: o.id }, orderBy: { createdAt: 'desc' }, select: { transcript: true, confidence: true, assetId: true } });
+  if (!v) return null;
+  const d = view.dict;
+  const pct = new Intl.NumberFormat(view.locale, { style: 'percent', maximumFractionDigits: 0, numberingSystem: 'latn' } as Intl.NumberFormatOptions);
+  return {
+    words: v.transcript ?? t(d, 'orders.voice.none'),
+    sure: v.confidence === null ? t(d, 'orders.voice.unknown') : t(d, 'orders.voice.sure', { p: pct.format(v.confidence) }),
+    low: o.flags.includes('VOICE_CALL'),
+    audio: v.assetId ? `/api/admin/orders/${o.id}/voice?storeId=${who.storeId}` : null,
   };
 }
 

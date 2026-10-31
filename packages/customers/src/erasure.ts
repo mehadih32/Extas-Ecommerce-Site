@@ -10,7 +10,9 @@
 //     password replaced by a value nothing matches, every session revoked); his orders (and guest orders with his
 //     numbers) keep their lines, money, status and history but lose the name, number, e-mail, address text and the
 //     kept device facts; his unfinished checkouts and back-in-stock requests lose their contact details; the identity
-//     graph's links of his orders go. An audit row records who and when (never what was erased).
+//     graph's links of his orders go; the spoken address of his checkouts (CN-020 (4), PR 117: the CheckoutVoice rows of
+//     his orders and of the browsers they came from) loses its words and its recording, the recording's library row
+//     archived (review R3 M1). An audit row records who and when (never what was erased).
 //   - Kept on purpose, and said on the page: the message log and the consent history (the record of what was sent and
 //     agreed), the security log, fraud and courier-check records, and money and stock records.
 // A request can be cancelled while it waits.
@@ -101,6 +103,8 @@ export interface ErasureDone {
   profiles: number;
   orders: number;
   addresses: number;
+  /** Review R3 (M1): the spoken addresses cleared (their words and recordings). */
+  voices: number;
 }
 
 /**
@@ -127,14 +131,23 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
     const phones = profilesOf(found.family).flatMap((p) => [p.phone, p.whatsappNumber]).filter((x): x is string => !!x);
     const emails = profilesOf(found.family).map((p) => p.email).filter((x): x is string => !!x);
 
-    const orders = await tx.order.findMany({ where: orderWhere, select: { id: true } });
+    const orders = await tx.order.findMany({ where: orderWhere, select: { id: true, visitorId: true } });
     const orderIds = orders.map((o) => o.id);
+    const visitorIds = [...new Set(orders.flatMap((o) => (o.visitorId ? [o.visitorId] : [])))];
     if (orderIds.length) {
       await tx.order.updateMany({
         where: { id: { in: orderIds } },
         data: { customerName: null, phone: null, email: null, shippingAddressText: null, backfilledAddress: null, addressResolution: Prisma.DbNull, ip: null, deviceId: null, gpsLat: null, gpsLng: null, piiExpiresAt: null },
       });
       await tx.identityLink.deleteMany({ where: { storeId: who.storeId, orderId: { in: orderIds } } });
+    }
+    // review R3 (M1): the spoken address — its words and its recording (the library row archived, never deleted)
+    const voiceWhere: Prisma.CheckoutVoiceWhereInput = { storeId: who.storeId, OR: [...(orderIds.length ? [{ orderId: { in: orderIds } }] : []), ...(visitorIds.length ? [{ orderId: null, visitorId: { in: visitorIds } }] : [])] };
+    const voices = voiceWhere.OR!.length ? await tx.checkoutVoice.findMany({ where: voiceWhere, select: { id: true, assetId: true } }) : [];
+    if (voices.length) {
+      const assetIds = voices.flatMap((x) => (x.assetId ? [x.assetId] : []));
+      if (assetIds.length) await tx.mediaAsset.updateMany({ where: { storeId: who.storeId, id: { in: assetIds }, archivedAt: null }, data: { archivedAt: now } });
+      await tx.checkoutVoice.updateMany({ where: { id: { in: voices.map((x) => x.id) } }, data: { transcript: null, assetId: null } });
     }
     const addresses = await tx.customerAddress.updateMany({ where: { storeId: who.storeId, customerId: { in: ids } }, data: { name: '', phone: '', addressLine: '', postcode: null, label: null, isDefault: false, archivedAt: now } });
     await tx.customer.updateMany({
@@ -152,7 +165,7 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
       data: { status: ERASURE_STATUS.done, executedAt: now },
       select: { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true },
     });
-    await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.done', entityType: 'CustomerErasureRequest', entityId: req.id, after: { profiles: ids.length, orders: orderIds.length, addresses: addresses.count } }, who.ctx);
-    return { request, profiles: ids.length, orders: orderIds.length, addresses: addresses.count };
+    await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.done', entityType: 'CustomerErasureRequest', entityId: req.id, after: { profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length } }, who.ctx);
+    return { request, profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length };
   }, TX);
 }

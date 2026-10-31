@@ -58,6 +58,7 @@ export const MEDIA_REFERENCES: readonly MediaReference[] = [
   ref('ImageEdit', 'resultAssetId'),
   ref('DetailRegion', 'assetId'),
   ref('ColourVerification', 'assetId'),
+  ref('CheckoutVoice', 'assetId'),
   ref('VideoJob', 'sourceAssetId'),
   ref('VideoJob', 'outputAssetId'),
   ref('Reel', 'musicAssetId'),

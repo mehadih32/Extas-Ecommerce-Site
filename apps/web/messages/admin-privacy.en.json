@@ -58,7 +58,7 @@
       "ownerOnly": "Only the owner can erase.",
       "confirmTitle": "Erase this customer's details?",
       "confirmEffects": [
-        "His name, numbers, e-mail, birthday and saved addresses are removed from his profile and his orders. This cannot be undone.",
+        "His name, numbers, e-mail, birthday, saved addresses and spoken addresses (the words and the recording) are removed from his profile and his orders. This cannot be undone.",
         "His orders, their money and stock stay; the courier records keep the order numbers only.",
         "He can no longer sign in; a new order makes a new profile."
       ],

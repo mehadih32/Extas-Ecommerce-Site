@@ -73,6 +73,7 @@ import { stickerLatinSettings } from './registry-sticker-latin';
 import { districtPromiseSettings } from './registry-district-promise';
 import { comboSplitSettings } from './registry-combo-split';
 import { callMeSettings } from './registry-call-me';
+import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
@@ -1322,6 +1323,8 @@ export const registry = {
   ...comboSplitSettings,
   // ---- CN-020 (3) · checkout follow-up · "Call me" when someone struggles at checkout (registry-call-me.ts, version 99). ----
   ...callMeSettings,
+  // ---- CN-020 (4) · PR 117 follow-up · the voice address at checkout (registry-voice-address.ts, version 140). ----
+  ...voiceAddressSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

@@ -442,6 +442,8 @@ model Store {
   setBuilderAdds          SetBuilderAdd[]
   courierClaims           CourierClaim[]
   riderIssues             RiderIssue[]
+  /// CN-020 (4): the addresses spoken into the checkout's mic (SIM-F-047).
+  checkoutVoices          CheckoutVoice[]
 }
 
 enum StoreStatus {
@@ -1003,6 +1005,9 @@ enum IntegrationKind {
   /// S19 · PR 397: a certificate the server shows (the Cloudflare Origin certificate), its own kind so it never stands
   /// in for the CDN (cache purge) or any other one-per-kind connection.
   CERTIFICATE
+  /// S04 · PR 117 follow-up (CN-020 (4)): speech to text for the checkout's voice address, its own kind so it never
+  /// stands in for the AI writer (AI_PROVIDER) or a one-per-kind OTHER connection such as the page reader.
+  SPEECH
 }
 
 enum AdapterMode {
@@ -10220,4 +10225,27 @@ enum ErpSwitchOrderKind {
   OUT
   ADVANCE
   UNPAID
+}
+
+/// @stage S04 · PR 117 follow-up (CN-020 (4), SIM-F-047): one recording of a customer saying his address into the checkout's mic —
+/// the words read (by his phone's speech engine, BROWSER; by the server's speech-to-text connection, SERVER; or none,
+/// NONE: the team listens), how sure the reader was (0–1), and the recording when the owner keeps it (a library file).
+/// `orderId` is set when the order is placed with it (the order is flagged VOICE_ENTERED, and VOICE_CALL when unsure).
+model CheckoutVoice {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store    @relation(fields: [storeId], references: [id])
+  visitorId  String
+  orderId    String?  @db.Uuid
+  assetId    String?  @db.Uuid
+  transcript String?
+  confidence Float?
+  engine     String
+  lang       String
+  durationMs Int?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, visitorId, createdAt])
+  @@index([orderId])
 }

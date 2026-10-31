@@ -190,6 +190,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // CN-020 (4) · PR 117 follow-up — speech to text for the checkout's voice address on phones without their own speech
+  // engine: a Google Cloud API key restricted to Speech-to-Text. The mock hears nothing (the team listens) until the
+  // key's test passes.
+  {
+    id: 'googleSpeech',
+    kind: 'SPEECH',
+    provider: 'googleSpeech',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'lang', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   // PR 176 — Steadfast Courier: the API key and the secret key from its merchant panel. Runs on its practice world
   // (MOCK) until both are entered and the Test (the balance read) passes. Several couriers may be on at once.
   {

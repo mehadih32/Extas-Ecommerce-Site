@@ -1,7 +1,8 @@
 // PR 382 on a real PostgreSQL (a throwaway database with the real migrations; skipped without TEST_DATABASE_ADMIN_URL):
 // erasure requests are off until switched on; a request changes nothing; only the owner carries one out, with the word
 // typed exactly, never while an order is on its way; then every profile of the person and his orders lose the
-// personal details while the money stays, his sign-in is closed, and the request is done (once). Made-up test values.
+// personal details while the money stays, his sign-in is closed, and the request is done (once); review R3 (M1): his
+// spoken addresses lose their words and recordings, the library rows archived. Made-up test values.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { OWNER_ROLE_KEY } from '@extas/auth';
 import { cancelErasure, carryOutErasure, listErasureRequests, requestErasure } from './erasure';
@@ -71,11 +72,23 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     await expect(carryOutErasure(d, owner, { requestId: r.id, confirm: 'erase it', expected: WORD })).rejects.toMatchObject({ code: 'CONFIRM_MISMATCH' });
     const moving = await order(a, A, 'IN_TRANSIT');
     await expect(carryOutErasure(d, owner, { requestId: r.id, confirm: WORD, expected: WORD })).rejects.toMatchObject({ code: 'OPEN_ORDERS', data: { open: 1 } });
-    await f.t.prisma.order.update({ where: { id: moving }, data: { status: 'DELIVERED' } });
+    await f.t.prisma.order.update({ where: { id: moving }, data: { status: 'DELIVERED', visitorId: 'visitor-e382' } });
+    // review R3 (M1): his spoken address on the order, and one from the same browser that never became an order
+    const asset = (key: string) => f.t.prisma.mediaAsset.create({ data: { storeId: f.S, kind: 'AUDIO', storage: 'LOCAL_DISK', storageKey: key, mimeType: 'audio/webm', bytes: BigInt(10), checksumSha256: key, folder: 'voice' }, select: { id: true } });
+    const [a1, a2, a3] = [await asset('voice/e382-1.webm'), await asset('voice/e382-2.webm'), await asset('voice/e382-3.webm')];
+    const voice = (assetId: string, orderId: string | null, visitorId: string) => f.t.prisma.checkoutVoice.create({ data: { storeId: f.S, visitorId, orderId, assetId, transcript: 'House 1, Road 2', engine: 'BROWSER', lang: 'bn-BD' }, select: { id: true } });
+    const onOrder = await voice(a1.id, moving, 'visitor-e382');
+    const left = await voice(a2.id, null, 'visitor-e382');
+    const someoneElse = await voice(a3.id, null, 'visitor-other');
 
     const done = await carryOutErasure(d, owner, { requestId: r.id, confirm: ` ${WORD} `, expected: WORD });
-    expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, request: { status: 'DONE' } });
+    expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, voices: 2, request: { status: 'DONE' } });
     const p = f.t.prisma;
+    for (const v of [onOrder, left]) expect(await p.checkoutVoice.findUniqueOrThrow({ where: { id: v.id } })).toMatchObject({ transcript: null, assetId: null });
+    expect(await p.checkoutVoice.findUniqueOrThrow({ where: { id: someoneElse.id } })).toMatchObject({ transcript: 'House 1, Road 2', assetId: a3.id });
+    // the recordings' library rows stay, archived (never deleted)
+    for (const x of [a1, a2]) expect(await p.mediaAsset.findUniqueOrThrow({ where: { id: x.id } })).toMatchObject({ archivedAt: expect.any(Date) });
+    expect((await p.mediaAsset.findUniqueOrThrow({ where: { id: a3.id } })).archivedAt).toBeNull();
     for (const id of [a, b]) {
       expect(await p.customer.findUniqueOrThrow({ where: { id } })).toMatchObject({ name: null, phone: null, email: null, erasedAt: expect.any(Date), archivedAt: expect.any(Date) });
     }

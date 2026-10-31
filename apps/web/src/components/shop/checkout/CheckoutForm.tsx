@@ -44,6 +44,7 @@ import { PausedNote } from './PausedNote';
 import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
 import { CallMeCard, useCallMe, type CallMeConfig } from './CallMeCard';
+import { VoiceAddress, type VoiceConfig, type VoiceSaved } from './VoiceAddress';
 import { clearDraft, forgetDetails, newOrderKey, nextOnEnter, rememberDetails, saveDraft, useDraft, useRemembered } from './draft';
 import { DRAFT_URL, fetchQuote, latest, ORDERS_URL, postJson, useSettle, type Choices, type PlaceAnswer } from './quote-client';
 import { humanSignals, watchHumanInput } from '@/lib/security/human-signals';
@@ -101,6 +102,8 @@ export interface CheckoutFormProps {
   paused?: boolean;
   /** CN-020 (3), SIM-F-046: "Call me" after refused tries on one box or a long pause (`checkout.callMe`); null: off. */
   callMe?: CallMeConfig | null;
+  /** CN-020 (4), SIM-F-047: the mic in the address box (`checkout.voice`); null: off. */
+  voice?: VoiceConfig | null;
 }
 
 const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
@@ -131,6 +134,7 @@ export function CheckoutForm({
   gps: gpsCfg = null,
   paused: pausedFirst = false,
   callMe: callMeCfg = null,
+  voice: voiceCfg = null,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -349,6 +353,8 @@ export function CheckoutForm({
   const [placing, setPlacing] = useState(false);
   // PR 159: the point he chose to share (only after his tap), sent with the order
   const [point, setPoint] = useState<GpsPoint | null>(null);
+  // CN-020 (4): the recording he made in the address box (its id goes with the order)
+  const [spoken, setSpoken] = useState<VoiceSaved | null>(null);
   const askField = (formEl: HTMLFormElement, field: Field | GiftField) => {
     setTried(true);
     setPhoneChecked(true);
@@ -376,6 +382,7 @@ export function CheckoutForm({
       note: note || null,
       ...(giftCfg ? { gift: { ...giftForm, note: giftForm.note || null, deliverAfter: giftForm.deliverAfter || null } } : {}),
       ...(gpsCfg && point ? { gps: point } : {}),
+      ...(voiceCfg && spoken ? { voice: { id: spoken.id } } : {}),
       fingerprint: view.fingerprint,
       human: humanSignals(),
     });
@@ -637,6 +644,20 @@ export function CheckoutForm({
                   n={n}
                   wrap={wrapField}
                   invalid={invalid}
+                  addressExtra={
+                    voiceCfg ? (
+                      <VoiceAddress
+                        cfg={voiceCfg}
+                        w={w}
+                        onWords={(text) => {
+                          // the words join what he typed; the line is read at once, like a picked place
+                          change('address', form.address.trim() ? `${form.address.trim()} ${text}` : text);
+                          settle.blur();
+                        }}
+                        onSaved={setSpoken}
+                      />
+                    ) : null
+                  }
                 />
                 {gpsCfg ? <GpsShare cfg={gpsCfg} value={point} onChange={setPoint} w={w} /> : null}
                 {callMe.offer ? <CallMeCard offer={callMe.offer} phone={form.phone} name={form.name} lang={money.lang} w={w} onAway={callMe.putAway} /> : null}

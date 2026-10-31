@@ -2,7 +2,7 @@
 // settings inside their section): first the holiday mode card (Blueprint B1.14) — the switch, the break's first and
 // last day, how many days before the notice shows, and the words of the notice and of the checkout's "ships from …";
 // then the sticker's Latin address line (SIM-F-048, PR 179 follow-up) and the delivery promise per district (SIM-F-048,
-// PR 550 follow-up).
+// PR 550 follow-up), and the voice address at checkout (CN-020 (4), SIM-F-047, PR 117 follow-up).
 // Seeing needs `delivery.read`; saving `delivery.charges` (the API checks again). Off as shipped. The demo's other
 // cards (stuck hours, book after packing, the suggestion rule, the exact-amount line, trial at delivery) join with
 // their PRs. Guide: docs/admin-guide/pages/delivery/settings.md.
@@ -76,6 +76,18 @@ export default async function DeliverySettingsPage() {
   const pk = (k: string) => t(d, `eta.promise.${k}`);
   const promise = cards['delivery.promise.districts'];
   const bn = view.lang === 'bn';
+  const vk = (k: string) => t(d, `eta.voice.${k}`);
+  const voice = cards['checkout.voice'];
+  const CONFIDENCE = ['0.3', '0.5', '0.6', '0.7', '0.8', '0.9'];
+  const voiceFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: vk('enabled'), help: vk('enabledHelp') },
+    { kind: 'text', path: 'speechLang', label: vk('speechLang'), help: vk('speechLangHelp'), max: 10 },
+    { kind: 'select', path: 'minConfidence', label: vk('minConfidence'), help: vk('minConfidenceHelp'), numeric: true, options: CONFIDENCE.map((v) => ({ value: v, label: vk(`conf.${v.replace('.', '')}`) })) },
+    { kind: 'switch', path: 'keepRecording', label: vk('keepRecording'), help: vk('keepRecordingHelp') },
+    { kind: 'number', path: 'maxSeconds', label: vk('maxSeconds'), min: 5, max: 120 },
+    { kind: 'number', path: 'maxKb', label: vk('maxKb'), min: 64, max: 4096 },
+    { kind: 'number', path: 'maxPerHour', label: vk('maxPerHour'), help: vk('maxPerHourHelp'), min: 1, max: 60 },
+  ];
   const promiseFields: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: pk('enabled'), help: pk('enabledHelp') },
     {
@@ -108,6 +120,7 @@ export default async function DeliverySettingsPage() {
         testId="delivery-sticker-latin"
       />
       <FieldsCard url={API} screen={{ key: promise.key, value: promise.value, version: promise.version }} fields={promiseFields} texts={{ ...texts, h: pk('h'), d: pk('d') }} canEdit={canEdit} testId="delivery-promise" />
+      <FieldsCard url={API} screen={{ key: voice.key, value: voice.value, version: voice.version }} fields={voiceFields} texts={{ ...texts, h: vk('h'), d: vk('d') }} canEdit={canEdit} testId="delivery-voice" />
     </div>
   );
 }

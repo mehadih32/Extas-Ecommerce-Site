@@ -428,6 +428,14 @@
         "testEventCode": "Test event code — needed for the test; from Events Manager → the pixel → Test events",
         "baseUrl": "Address — only for a test server"
       }
+    },
+    "googleSpeech": {
+      "name": "Speech to text (voice address)",
+      "desc": "Reads the address a customer says into the checkout's mic on phones without their own speech engine. A Google Cloud API key restricted to Speech-to-Text. Until it passes its Test nothing is read and the team listens to the recording.",
+      "fields": {
+        "apiKey": "API key (Google Cloud → Credentials)",
+        "lang": "Language for the Test, e.g. bn-BD — optional"
+      }
     }
   },
   "errors": {

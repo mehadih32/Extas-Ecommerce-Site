@@ -174,6 +174,8 @@ import comboSplitEn from '../messages/combo-split.en.json';
 // CN-020 (3) — "Call me" at checkout (registry v99).
 import callMeBn from '../messages/call-me.bn.json';
 import callMeEn from '../messages/call-me.en.json';
+import voiceAddressBn from '../messages/voice-address.bn.json';
+import voiceAddressEn from '../messages/voice-address.en.json';
 import trackingEn from '../messages/tracking.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
@@ -264,6 +266,8 @@ messages.bn = mergeMessages(messages.bn, comboSplitBn);
 // CN-020 (3) (registry v99): "Call me" at checkout.
 messages.en = mergeMessages(messages.en, callMeEn);
 messages.bn = mergeMessages(messages.bn, callMeBn);
+messages.en = mergeMessages(messages.en, voiceAddressEn);
+messages.bn = mergeMessages(messages.bn, voiceAddressBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

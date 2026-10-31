@@ -11,13 +11,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { districtPromiseSchema, holidaySchema, stickerLatinSchema, storeTarget } from '@extas/settings';
+import { districtPromiseSchema, holidaySchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys this page saves (one card each). */
-export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts'] as const;
+export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice'] as const;
 export type DeliverySettingKey = (typeof DELIVERY_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -25,6 +25,8 @@ const CARDS: Record<DeliverySettingKey, { schema: ZodType<Record<string, unknown
   'delivery.holiday': { schema: holidaySchema, reason: 'Delivery › Delivery settings › Holiday mode', action: 'delivery.holiday.save' },
   'delivery.sticker.latin': { schema: stickerLatinSchema, reason: 'Delivery › Delivery settings › Sticker address in Latin letters', action: 'delivery.sticker.latin.save' },
   'delivery.promise.districts': { schema: districtPromiseSchema, reason: 'Delivery › Delivery settings › Delivery promise per district', action: 'delivery.promise.districts.save' },
+  // CN-020 (4): the checkout address box's mic (the address the rider needs, said aloud)
+  'checkout.voice': { schema: voiceAddressSchema, reason: 'Delivery › Delivery settings › Voice address at checkout', action: 'checkout.voice.save' },
 };
 
 /** A district of the gazetteer, for the promise card's picker (its code is what a row names). */

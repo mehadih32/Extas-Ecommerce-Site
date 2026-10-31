@@ -16,6 +16,8 @@ import { SHOP_DICTS, keysOf } from './dict';
 import { giftTrialSettings, tryGiftOn } from './try-gift';
 import { tryPauseOn } from './try-pause';
 import { tryCallMeOn } from './try-callme';
+import { voiceHooks } from './voice';
+import { tryVoiceOn } from './try-voice';
 import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-gateway';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
@@ -51,6 +53,8 @@ export function checkoutApiDeps(): CheckoutApiDeps | null {
     // PR 170: "Pay" opens the gateway's page (the practice gateway until the keys are in)
     payments: shopPaymentsDeps,
     callbackBase: callbackBaseUrl,
+    // CN-020 (4): the voice address's recordings (the media library) and the speech-to-text connection
+    voice: voiceHooks,
   };
 }
 
@@ -86,6 +90,8 @@ const KEYS = [
   'risk.capture',
   // CN-020 (3), SIM-F-046: "Call me" after refused tries or a long pause
   'checkout.callMe',
+  // CN-020 (4), SIM-F-047: the mic in the address box
+  'checkout.voice',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
@@ -102,6 +108,8 @@ export async function checkoutSettings(storeId: number): Promise<CheckoutSetting
     const s = Object.fromEntries(KEYS.map((k, i) => [k, vals[i]])) as CheckoutSettings;
     // SIM-F-046: a test server's "Call me" trial (the cookie of /api/shop/try-callme) offers the card after one refusal
     if (await tryCallMeOn()) s['checkout.callMe'] = { ...s['checkout.callMe'], enabled: true, failedTries: 1 };
+    // SIM-F-047: a test server's voice trial (the cookie of /api/shop/try-voice) draws the address box's mic
+    if (await tryVoiceOn()) s['checkout.voice'] = { ...s['checkout.voice'], enabled: true };
     return s;
   } catch {
     return defaultCheckoutSettings();
