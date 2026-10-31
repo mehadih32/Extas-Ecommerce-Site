@@ -99,6 +99,8 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
   const dt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' });
   const monthFmt = new Intl.DateTimeFormat(view.locale, { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' });
   const word = (group: string, key: string | null) => (key ? (t(d, `returns.erp.${group}.${key}`) === `returns.erp.${group}.${key}` ? key : t(d, `returns.erp.${group}.${key}`)) : '');
+  // CN-033: a refused exchange parcel waits for its NEW piece, so its state says so (never "old piece coming back")
+  const stateWord = (s: string, newPiece: boolean) => word('state', newPiece && (s === 'WAITING_RETURN' || s === 'RETURNED_WAITING_CHECK') ? `${s}_NEW` : s);
   const errors = actionTexts(d).errors;
   const countdown = (r: { daysLeft: number | null; dueOn: string | null }) =>
     r.daysLeft === null ? null : r.daysLeft > 0 ? e('daysLeft', { n: n(r.daysLeft) }) : r.daysLeft === 0 ? e('dueToday') : e('overdue', { n: n(-r.daysLeft) });
@@ -162,7 +164,7 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
             )}
             {r.consignmentId ? <span className="a2-mono a2-mute">{` · ${r.consignmentId}`}</span> : null}
           </b>
-          <span className={`a2-pill ${stateTone(r.state)}`}>{r.state.startsWith('REFUSED:') ? word('reason', r.reason) : word('state', r.state)}</span>
+          <span className={`a2-pill ${stateTone(r.state)}`}>{r.state.startsWith('REFUSED:') ? word('reason', r.reason) : stateWord(r.state, r.newPiece)}</span>
         </div>
         <div className="a2-xs a2-mt6">{bits.join(' · ')}</div>
         {r.note && tab !== 'exchanges' ? <div className="a2-xs a2-mute a2-mt6">{r.note}</div> : null}
@@ -266,7 +268,9 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
                         )}
                         <span className="a2-mono a2-mute">{` · ${w.externalOrderId}`}</span>
                       </b>
-                      <span className={`a2-pill ${stateTone(w.erpStatus)}`}>{word('state', w.erpStatus)}</span>
+                      <span className={`a2-pill ${stateTone(w.erpStatus)}`} data-testid="erp-returns-watch-state" data-piece={w.piece}>
+                        {stateWord(w.erpStatus, w.piece === 'NEW')}
+                      </span>
                     </div>
                     <div className="a2-xs a2-mt6">{[w.orderNumber, e('atRisk', { money: m(w.atRiskMinor) }), w.deadline ? e('watchUntil', { date: day(w.deadline) }) : null].filter(Boolean).join(' · ')}</div>
                     <div className="a2-gap8 a2-mt6">

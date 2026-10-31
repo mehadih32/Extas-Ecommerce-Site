@@ -12,7 +12,13 @@
 // - delivery results with the partial-delivery engine (GREEN, YELLOW, ORANGE), courier return lists (Return stock or
 //   Hold, refusals), the owner's checks (approved credit at the price paid, declined = Retail's loss), courier claims;
 // - exchanges: sent unbilled, a 4-day watch from the exchange parcel's delivery, settled by the difference, billed when
-//   late or declined, credited when back after the bill, cancelled when the customer refuses the parcel;
+//   late or declined, credited when back after the bill;
+// - CN-033 (the ERP's retail loss rule of 30 Oct 2026): a refused exchange parcel is not cancelled. Its new piece is
+//   the shop's until it is back and approved: the exchange waits (WAITING_RETURN, no delivery day, a deadline) for the
+//   new piece; back and approved before the bill, nothing is owed (CANCELLED, no money); back and declined,
+//   `exchange.billed` NEW_PIECE_DECLINED; not back by the deadline, `exchange.billed` DEADLINE_PASSED the night after;
+//   back later and approved, `exchange.credited` LATE_RETURN. `refusedExchange = 'cancel'` is the earlier behaviour
+//   (the refusal cancels the exchange at once, nothing billed), kept for the tests of an ERP before that rule;
 // - the account: the ledger, the hold after `holdDays` without a payment while money is owed (warning from
 //   `warnFromDays`), the period and its statement; daily summaries and fixed costs with every version kept; the cost
 //   of goods by day and SKU;
@@ -117,6 +123,8 @@ interface V6Exchange {
   billed: boolean;
   updatedAt: string;
   eventIds: string[];
+  /** CN-033: the exchange lines whose parcel the customer refused; each waits for its own new piece. */
+  refusedLines: string[];
 }
 
 interface LedgerRow {
@@ -204,6 +212,9 @@ export class PracticeErpV6 {
   warnFromDays = 15;
   /** The exchange watch (§2.10.1 rule 5) and the owner's check window (Q4, shown only). */
   exchangeReturnDays = 4;
+  /** CN-033: a refused exchange parcel waits for its new piece and is billed at the deadline (the ERP's rule of 30 Oct
+   *  2026); `cancel` is the earlier behaviour (cancelled at once, nothing billed). */
+  refusedExchange: 'bill-at-deadline' | 'cancel' = 'bill-at-deadline';
   private forcedHold: string | null = null;
   private seq = 0;
 
@@ -445,7 +456,8 @@ export class PracticeErpV6 {
       for (const i of items) {
         const old = of.lines.find((l) => l.lineId === i.replacesLineId);
         if (!old || !old.delivered || old.returning) return err(409, 'LINE_NOT_DELIVERED', 'the line was never delivered or has come back', [String(i.replacesLineId ?? '')]);
-        const open = [...this.exchanges.values()].some((x) => !['SETTLED', 'BILLED', 'CREDITED', 'CANCELLED'].includes(x.status) && x.lines.some((l) => l.replacesLineId === old.lineId));
+        // a refused line (CN-033) took no old piece: it never blocks a new exchange of that line
+        const open = [...this.exchanges.values()].some((x) => !['SETTLED', 'BILLED', 'CREDITED', 'CANCELLED'].includes(x.status) && x.lines.some((l) => l.replacesLineId === old.lineId && !x.refusedLines.includes(l.lineId)));
         if (open) return err(409, 'EXCHANGE_OPEN', 'that line already has an exchange that is not settled', [old.lineId]);
         if ((i.quantity as number) > old.quantity) return err(400, 'INVALID_ORDER', 'more than the customer still has on that line');
       }
@@ -498,6 +510,7 @@ export class PracticeErpV6 {
         billed: false,
         updatedAt: this.hooks.now().toISOString(),
         eventIds: [],
+        refusedLines: [],
       };
       this.exchanges.set(x.exchangeId, x);
       order.exchangeId = x.exchangeId;
@@ -590,9 +603,16 @@ export class PracticeErpV6 {
     const returnedLines = live.filter((l) => !kept.includes(l.lineId)).map((l) => l.lineId);
     const ev = this.emit('delivery.identified', { externalOrderId: ext, status, identification, keptLines: kept, returnedLines });
     if (status !== 'DELIVERED') this.record(ext, o.consignmentId, { stage: 'DELIVERY_RESULT' }, ev.eventId);
-    // An exchange parcel: delivered starts the watch; refused cancels the exchange (§2.10.3).
+    // An exchange parcel: delivered starts the watch for the old piece. CN-033: a refused line waits for its own new
+    // piece with the same deadline and no delivery day; `refusedExchange = 'cancel'`: refused cancels it (§2.10.3).
     const x = o.exchangeId ? this.exchanges.get(o.exchangeId) : null;
-    if (x) {
+    if (x && this.refusedExchange === 'bill-at-deadline') {
+      x.status = 'WAITING_RETURN';
+      x.refusedLines = x.lines.filter((l) => !kept.includes(l.lineId)).map((l) => l.lineId);
+      x.deliveredAt = kept.length ? this.today() : null;
+      x.deadline = addDays(this.today(), this.exchangeReturnDays);
+      x.updatedAt = this.hooks.now().toISOString();
+    } else if (x) {
       if (status === 'RETURNED' || (status === 'PARTIAL' && !kept.length)) {
         x.status = 'CANCELLED';
         const c = this.emit('exchange.cancelled', { exchangeId: x.exchangeId, externalOrderId: ext, amount: 0 });
@@ -704,12 +724,17 @@ export class PracticeErpV6 {
         row('REFUSED', 'ALREADY_HANDED_BACK');
         continue;
       }
-      // An exchange parcel names the exchange order: the old pieces come back on it (§2.10.3).
+      // An exchange parcel names the exchange order: the old pieces come back on it (§2.10.3); CN-033: a refused line's
+      // own new piece comes back instead.
       const x = o.exchangeId ? this.exchanges.get(o.exchangeId) : null;
       let back: { lineId: string; sku: string; price: number; warehouseId: string; ext: string }[] = [];
       if (x && x.status !== 'CANCELLED') {
         const of = this.orders.get(x.ofExternalOrderId)!;
         back = x.lines.map((l) => {
+          if (x.refusedLines.includes(l.lineId)) {
+            const nl = o.lines.find((ol) => ol.lineId === l.lineId)!;
+            return { lineId: nl.lineId, sku: nl.sku, price: nl.shopPrice, warehouseId: nl.warehouseId, ext };
+          }
           const old = of.lines.find((ol) => ol.lineId === l.replacesLineId)!;
           old.returning = true;
           return { lineId: old.lineId, sku: old.sku, price: old.shopPrice, warehouseId: old.warehouseId, ext: of.externalOrderId };
@@ -729,7 +754,8 @@ export class PracticeErpV6 {
         if (!hold && !x) this.hooks.adjust(l.sku, l.warehouseId, { ret: 1 });
         return piece;
       });
-      if (x) {
+      // a cancelled exchange stays cancelled; a billed one stays billed until its check credits it (as a late return)
+      if (x && x.status !== 'CANCELLED' && !x.billed) {
         x.status = 'RETURNED_WAITING_CHECK';
         x.updatedAt = this.hooks.now().toISOString();
       }
@@ -820,7 +846,8 @@ export class PracticeErpV6 {
 
   private settleExchange(exchangeId: string, decision: 'APPROVED' | 'DECLINED', piece: V6Piece): V6Event[] {
     const x = this.exchanges.get(exchangeId)!;
-    const line = x.lines.find((l) => l.replacesLineId === piece.lineId);
+    if (piece.externalOrderId === x.externalOrderId && x.refusedLines.includes(piece.lineId)) return this.settleRefusedPiece(x, decision, piece);
+    const line = x.lines.find((l) => l.replacesLineId === piece.lineId && !x.refusedLines.includes(l.lineId));
     if (!line) return [];
     const out: V6Event[] = [];
     if (x.billed) {
@@ -852,6 +879,35 @@ export class PracticeErpV6 {
     return out;
   }
 
+  /**
+   * CN-033: the new piece of a refused exchange parcel is checked. Approved: back in stock; credited in full when it
+   * was billed already (LATE_RETURN), else nothing is owed (CANCELLED, no money, no event, as the ERP). Declined:
+   * billed in full (NEW_PIECE_DECLINED) unless the deadline billed it already.
+   */
+  private settleRefusedPiece(x: V6Exchange, decision: 'APPROVED' | 'DECLINED', piece: V6Piece): V6Event[] {
+    const line = x.lines.find((l) => l.lineId === piece.lineId);
+    if (!line) return [];
+    const out: V6Event[] = [];
+    if (decision === 'APPROVED' && x.billed) {
+      const ev = this.emit('exchange.credited', { exchangeId: x.exchangeId, externalOrderId: x.externalOrderId, reason: 'LATE_RETURN', amount: line.shopPrice });
+      this.book('EXCHANGE', -line.shopPrice, { externalOrderId: x.externalOrderId, reference: x.exchangeId, eventId: ev.eventId });
+      x.status = 'CREDITED';
+      x.eventIds.push(ev.eventId);
+      out.push(ev);
+    } else if (decision === 'APPROVED') {
+      x.status = 'CANCELLED';
+    } else if (!x.billed) {
+      const ev = this.emit('exchange.billed', { exchangeId: x.exchangeId, externalOrderId: x.externalOrderId, reason: 'NEW_PIECE_DECLINED', amount: line.shopPrice });
+      this.book('EXCHANGE', line.shopPrice, { externalOrderId: x.externalOrderId, reference: x.exchangeId, eventId: ev.eventId });
+      x.status = 'BILLED';
+      x.billed = true;
+      x.eventIds.push(ev.eventId);
+      out.push(ev);
+    }
+    x.updatedAt = this.hooks.now().toISOString();
+    return out;
+  }
+
   lateReturn(exchangeId: string, b: Record<string, unknown>): V6Answer {
     const x = this.exchanges.get(exchangeId);
     if (!x) return err(404, 'EXCHANGE_NOT_FOUND', 'no such exchange');
@@ -859,8 +915,10 @@ export class PracticeErpV6 {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(handedBackAt)) return err(400, 'INVALID_LATE_RETURN', 'handedBackAt is a day');
     const of = this.orders.get(x.ofExternalOrderId)!;
     for (const l of x.lines) {
-      const old = of.lines.find((ol) => ol.lineId === l.replacesLineId)!;
-      this.pieces.push({ id: this.nextId('PC'), externalOrderId: of.externalOrderId, lineId: old.lineId, sku: old.sku, warehouseId: old.warehouseId, price: old.shopPrice, stage: 'HOLD', returnListId: typeof b.returnListId === 'string' ? b.returnListId : null, consignmentId: typeof b.consignmentId === 'string' ? b.consignmentId : null, courier: typeof b.courier === 'string' ? b.courier : null, handedBackAt, exchangeId, decidedAt: null, reason: null, decisionEventId: null });
+      // CN-033: a refused line's own new piece comes back late, on the exchange order
+      const on = x.refusedLines.includes(l.lineId) ? this.orders.get(x.externalOrderId)! : of;
+      const old = on === of ? of.lines.find((ol) => ol.lineId === l.replacesLineId)! : on.lines.find((ol) => ol.lineId === l.lineId)!;
+      this.pieces.push({ id: this.nextId('PC'), externalOrderId: on.externalOrderId, lineId: old.lineId, sku: old.sku, warehouseId: old.warehouseId, price: old.shopPrice, stage: 'HOLD', returnListId: typeof b.returnListId === 'string' ? b.returnListId : null, consignmentId: typeof b.consignmentId === 'string' ? b.consignmentId : null, courier: typeof b.courier === 'string' ? b.courier : null, handedBackAt, exchangeId, decidedAt: null, reason: null, decisionEventId: null });
     }
     if (!x.billed) x.status = 'RETURNED_WAITING_CHECK';
     x.updatedAt = this.hooks.now().toISOString();

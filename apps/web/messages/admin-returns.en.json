@@ -394,7 +394,9 @@
       "BILLED": "Billed to us",
       "CREDITED": "Credited",
       "CANCELLED": "Cancelled",
-      "CLOSED": "Closed before it went"
+      "CLOSED": "Closed before it went",
+      "WAITING_RETURN_NEW": "New piece not back (parcel refused)",
+      "RETURNED_WAITING_CHECK_NEW": "New piece back, waiting for check"
     },
     "colour": {
       "GREEN": "Green",
@@ -528,7 +530,7 @@
     },
     "watch": {
       "title": "Exchanges at risk",
-      "sub": "The old piece is not back and checked yet. Billed to us if it is not back by the deadline.",
+      "sub": "The old piece (or, from a refused parcel, the new piece) is not back and checked yet. Billed to us if it is not back by the deadline; credited if it comes back later and is approved.",
       "none": "Nothing at risk.",
       "late": "Late",
       "stale": "The ERP could not be asked; this is the last known list.",

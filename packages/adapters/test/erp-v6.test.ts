@@ -221,7 +221,7 @@ describe('PR 607 · ERP contract v6 against the practice ERP', () => {
     expect(v6.takeEvents().some((e) => e.type === 'order.line.filled' && e.data.lineId === 'WEB-32-1')).toBe(true);
   });
 
-  it('exchanges: unbilled, a 4-day watch; on time and approved settles +50; late is billed 700 then credited 650; refused is cancelled', async () => {
+  it('exchanges: unbilled, a 4-day watch; on time and approved settles +50; late is billed 700 then credited 650; refused waits for the new piece (CN-033)', async () => {
     const { api, v6, days } = setup();
     const placed = async (ext: string) => {
       await push(api, order(ext, [line(`${ext}-1`, 'EX-PL-001-NAVY-M', 1190)]));
@@ -256,12 +256,61 @@ describe('PR 607 · ERP contract v6 against the practice ERP', () => {
     const net = v6.ledger.filter((r) => r.reference && r.externalOrderId === 'WEB-41-X1').reduce((s, r) => s + r.amount, 0);
     expect(net).toBe(50);
 
-    // Refused by the customer: cancelled, nothing billed.
+    // CN-033 · PR 614 + 621: refused by the customer: not cancelled. The new piece is watched (no delivery day), billed
+    // in full the night after the deadline, and credited in full when it comes back late and is approved.
     await placed('WEB-42');
     await exchange('WEB-42-X1', 'WEB-42', 'EX-PL-001-NAVY-L');
     await deliver(api, 'WEB-42-X1', 'RETURNED', 0);
-    expect(v6.takeEvents().some((e) => e.type === 'exchange.cancelled' && e.data.externalOrderId === 'WEB-42-X1')).toBe(true);
+    expect(v6.takeEvents().some((e) => e.type === 'exchange.cancelled' && e.data.externalOrderId === 'WEB-42-X1')).toBe(false);
+    const refused = (await api.v6.exchanges({ status: 'pending', limit: 10 })).items.find((i) => i.externalOrderId === 'WEB-42-X1');
+    expect(refused).toMatchObject({ status: 'WAITING_RETURN', atRisk: '700', deliveredAt: null, deadline: '2026-11-04' });
     expect(v6.ledger.some((r) => r.externalOrderId === 'WEB-42-X1')).toBe(false);
+    days(5);
+    expect(v6.runNight()).toEqual([expect.objectContaining({ type: 'exchange.billed', data: expect.objectContaining({ externalOrderId: 'WEB-42-X1', reason: 'DEADLINE_PASSED', amount: 700 }) })]);
+    await handBack(api, 'RL-42', [{ externalOrderId: 'WEB-42-X1' }]);
+    const [, lateCredit] = v6.decidePiece('WEB-42-X1', 'WEB-42-X1-1', 'APPROVED');
+    expect(lateCredit).toMatchObject({ type: 'exchange.credited', data: { reason: 'LATE_RETURN', amount: 700 } });
+    expect(v6.ledger.filter((r) => r.externalOrderId === 'WEB-42-X1').reduce((s, r) => s + r.amount, 0)).toBe(0);
+    expect(v6.exchanges.get(refused!.exchangeId)!.status).toBe('CREDITED');
+  });
+
+  it('CN-033: a refused parcel`s new piece back in time: approved owes nothing (CANCELLED), declined is billed in full; the old line may be exchanged again; `cancel` keeps the earlier rule', async () => {
+    const { api, v6 } = setup();
+    const placed = async (ext: string) => {
+      await push(api, order(ext, [line(`${ext}-1`, 'EX-PL-001-NAVY-M', 1190)]));
+      await ship(api, ext);
+      await deliver(api, ext, 'DELIVERED', 1190);
+    };
+    const exchange = (ext: string, of: string) => push(api, order(ext, [line(`${ext}-1`, 'EX-PL-001-NAVY-L', 0, { replacesLineId: `${of}-1` })], { exchange: { ofExternalOrderId: of, note: `Exchange of order ${of}, line 1` } }));
+    const net = (ext: string) => v6.ledger.filter((r) => r.externalOrderId === ext).reduce((s, r) => s + r.amount, 0);
+    await placed('WEB-43');
+    await exchange('WEB-43-X1', 'WEB-43');
+    await deliver(api, 'WEB-43-X1', 'RETURNED', 0);
+    // the old piece stayed with the customer: the same line may be exchanged again (the refused line holds nothing)
+    await exchange('WEB-43-X2', 'WEB-43');
+    await handBack(api, 'RL-43', [{ externalOrderId: 'WEB-43-X1' }]);
+    const approved = v6.decidePiece('WEB-43-X1', 'WEB-43-X1-1', 'APPROVED');
+    expect(approved.map((e) => e.type)).toEqual(['return.piece.decided']);
+    expect(net('WEB-43-X1')).toBe(0);
+    expect([...v6.exchanges.values()].find((x) => x.externalOrderId === 'WEB-43-X1')!.status).toBe('CANCELLED');
+
+    await placed('WEB-44');
+    await exchange('WEB-44-X1', 'WEB-44');
+    await deliver(api, 'WEB-44-X1', 'RETURNED', 0);
+    await handBack(api, 'RL-44', [{ externalOrderId: 'WEB-44-X1' }]);
+    const [, bill] = v6.decidePiece('WEB-44-X1', 'WEB-44-X1-1', 'DECLINED', 'DAMAGED');
+    expect(bill).toMatchObject({ type: 'exchange.billed', data: { reason: 'NEW_PIECE_DECLINED', amount: 700 } });
+    expect(net('WEB-44-X1')).toBe(700);
+    expect(v6.runNight().some((e) => e.data.externalOrderId === 'WEB-44-X1')).toBe(false);
+
+    // the earlier rule, for an ERP before the decision of 30 Oct 2026: refused cancels the exchange at once, no bill
+    v6.refusedExchange = 'cancel';
+    await placed('WEB-45');
+    await exchange('WEB-45-X1', 'WEB-45');
+    await deliver(api, 'WEB-45-X1', 'RETURNED', 0);
+    expect(v6.takeEvents().some((e) => e.type === 'exchange.cancelled' && e.data.externalOrderId === 'WEB-45-X1')).toBe(true);
+    expect([...v6.exchanges.values()].find((x) => x.externalOrderId === 'WEB-45-X1')!.status).toBe('CANCELLED');
+    expect(net('WEB-45-X1')).toBe(0);
   });
 
   it('an exchange of an exchange (650 → 700 → 720), both old pieces approved, ends at 720; short stock refuses, a new key goes through later', async () => {

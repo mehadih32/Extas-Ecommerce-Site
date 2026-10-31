@@ -25,6 +25,11 @@
 // - qa-gate I6: the exchange window is the rule before the ERP is asked anything (a closed window is said as closed,
 //   whatever the ERP's state), and a practice ERP is named as it is (ERP_ON_PRACTICE), never "cannot be reached".
 // - qa-gate I7: the case card shows the window's hours left (`exchangeWindowV6`), by the same rule the approval uses.
+// - CN-033 · PR 614 + 621 (the ERP's retail loss rule of 30 Oct 2026): a refused exchange parcel is not cancelled at
+//   once. Its new piece is the shop's until it is back and approved: the ERP watches it (WAITING_RETURN, a deadline and
+//   no delivery day), bills it in full the night after the deadline and credits it when it comes back later and is
+//   approved. The risk list says "new piece not back" for such a row (`piece: 'NEW'`); once the ERP finishes it
+//   (cancelled, billed or credited), the shop's case is CANCELLED: the customer never kept the new piece.
 // Never here: a refund, a price, COD rules or a payment (CLAUDE.md rule 6). CN-029 §16: every row is the store's own,
 // on its own ERP link, sent with its own key.
 import { z } from 'zod';
@@ -553,7 +558,7 @@ export async function retryWaitingExchanges(deps: OrdersDeps, storeId: number): 
 /**
  * Reads `GET /exchanges?status=all&updatedSince=` and keeps each of the store's exchanges as the ERP has it: its status,
  * delivery and deadline (the 4-day watch), the value at risk, how it settled. The shop's exchange follows: settled,
- * billed or credited → COMPLETED; cancelled (the customer refused the parcel) → CANCELLED.
+ * billed or credited → COMPLETED; cancelled, or (CN-033) any end of a refused parcel → CANCELLED.
  */
 export async function syncErpExchanges(deps: OrdersDeps, storeId: number): Promise<{ read: number; updated: number }> {
   const db = deps.db;
@@ -594,13 +599,16 @@ async function applyExchange(deps: OrdersDeps, by: By, store: { timezone: string
     if (!done || link.erpStatus === x.status) return;
     const ex = await lockExchange(tx, (await tx.erpExchangeLink.findUniqueOrThrow({ where: { id: link.id }, select: { storeId: true } })).storeId, link.exchangeId);
     if (!(OPEN_EXCHANGE as readonly string[]).includes(ex.status)) return;
-    const to = x.status === 'CANCELLED' ? 'CANCELLED' : 'COMPLETED';
+    const to = x.status === 'CANCELLED' || refusedParcel(x) ? 'CANCELLED' : 'COMPLETED';
     await tx.exchange.update({ where: { id: ex.id }, data: { status: to, version: { increment: 1 } } });
     await eventRow(tx, by, { storeId: ex.storeId, orderId: ex.orderId, type: `exchange.erp${x.status.charAt(0)}${x.status.slice(1).toLowerCase()}`, message: null, data: { exchangeId: ex.id, number: ex.number, erpExchangeId: x.exchangeId, erpStatus: x.status } });
     await auditRow(tx, by, { storeId: ex.storeId, action: 'exchange.erpFinished', entityType: 'Exchange', entityId: ex.id, before: { status: ex.status }, after: { status: to, erpStatus: x.status } });
   }, TX);
   return true;
 }
+
+/** CN-033: the customer refused the exchange parcel: the ERP gave it a deadline but no delivery day. */
+const refusedParcel = (x: { deliveredAt?: string | null; deadline?: string | null }): boolean => Boolean(x.deadline) && !x.deliveredAt;
 
 export interface ExchangeWatchRow {
   linkId: string;
@@ -618,7 +626,9 @@ export interface ExchangeWatchRow {
   deliveredAt: string | null;
   deadline: string | null;
   daysLeft: number | null;
-  /** The deadline has passed and the old piece is not back. */
+  /** Which piece is awaited: the old one (the customer kept the new one), or (CN-033) the new one of a refused parcel. */
+  piece: 'OLD' | 'NEW';
+  /** The deadline has passed and the awaited piece is not back. */
   late: boolean;
   lateReturnMarkedAt: string | null;
 }
@@ -633,7 +643,8 @@ export interface ExchangeWatch {
   totalAtRiskMinor: number;
 }
 
-/** The risk list: exchanges whose old piece is not back and checked yet, with the 4-day watch. Needs `returns.view`. */
+/** The risk list: exchanges whose old piece (or, from a refused parcel, new piece) is not back and checked yet, with the
+ * 4-day watch. Needs `returns.view`. */
 export async function exchangeWatch(deps: OrdersDeps, who: Who): Promise<ExchangeWatch> {
   await allowOne(deps, who, ['returns.view', 'exchange.approve']);
   const v6 = await isV6(deps, who.storeId);
@@ -672,6 +683,7 @@ export async function exchangeWatch(deps: OrdersDeps, who: Who): Promise<Exchang
       deliveredAt: x.deliveredAt,
       deadline: x.deadline,
       daysLeft,
+      piece: refusedParcel(x) ? 'NEW' : 'OLD',
       late: daysLeft !== null && daysLeft < 0 && x.status === 'WAITING_RETURN',
       lateReturnMarkedAt: l?.lateReturnMarkedAt?.toISOString() ?? null,
     };

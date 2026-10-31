@@ -111,7 +111,7 @@ export const ERP_ACCEPTANCE_CHECKS: readonly AcceptanceCheck[] = [
   { id: 'exchanges.watch', area: 'exchanges', kind: 'write', title: 'An exchange bills nothing and is watched with its amount at risk until 4 days after delivery; a second one on the same line is refused' },
   { id: 'exchanges.settled', area: 'exchanges', kind: 'driver', title: 'The old piece back on day 3 and approved: settled for the difference only' },
   { id: 'exchanges.neverBack', area: 'exchanges', kind: 'driver', title: 'The old piece never back: billed in full after the deadline; a late approved return credits it, net the difference' },
-  { id: 'exchanges.refused', area: 'exchanges', kind: 'write', title: 'The customer refuses the exchange parcel: cancelled, no bill' },
+  { id: 'exchanges.refused', area: 'exchanges', kind: 'write', title: 'The customer refuses the exchange parcel: not billed and not cancelled, the new piece watched; on the practice ERP, billed in full after the deadline and credited after a late approved return' },
   { id: 'exchanges.chain', area: 'exchanges', kind: 'driver', title: 'An exchange of an exchange (650 → 700 → 720), both old pieces approved, ends at 720; short stock is refused, a new key goes through later' },
   { id: 'summaries.replace', area: 'daily summaries', kind: 'write', title: 'A summary with incomplete ads, then the full day again: a new version replaces it' },
   { id: 'fixedCosts.spread', area: 'fixed costs', kind: 'write', title: '71500 for a 30-day month is 2383.33 a day, and the month reads back whole' },
@@ -502,9 +502,26 @@ const CHECKS: Record<string, (c: Ctx) => Promise<string | null | void>> = {
     const id = `${of}-X1`;
     await push(c, exchangeDoc(id, of, fx.a[1]!.sku));
     await deliver(c, id, 'RETURNED', 0);
-    const all = await c.api.v6.exchanges({ status: 'all', limit: 500 }, call(c)); // hardcode-ok: a page size of the acceptance read, not a business limit
-    expectEq('cancelled', all.items.find((i) => i.externalOrderId === id)?.status, 'CANCELLED');
-    expectEq('no bill', await balance(c), before);
+    // CN-033 (the ERP's retail loss rule of 30 Oct 2026): the new piece is the shop's until it is back and approved.
+    const read = async () => (await c.api.v6.exchanges({ status: 'all', limit: 500 }, call(c))).items.find((i) => i.externalOrderId === id); // hardcode-ok: a page size of the acceptance read, not a business limit
+    const x = await read();
+    expectTrue('the exchange is listed', Boolean(x));
+    expectEq('not cancelled: it waits for the new piece', x!.status, 'WAITING_RETURN');
+    expectEq('no delivery day (the parcel was refused)', x!.deliveredAt ?? null, null);
+    expectTrue('the new piece has a deadline', Boolean(x!.deadline));
+    expectEq('the new piece is at risk at its shop price', minor(x!.atRisk), fx.a[1]!.shopMinor);
+    expectEq('no bill yet', await balance(c), before);
+    if (!c.d) return "the bill after the deadline and the late credit need the ERP's own action (practice ERP only)";
+    const d = c.d;
+    d.days(5);
+    const night = d.v6.runNight().filter((e) => e.type === 'exchange.billed' && (e.data as { externalOrderId?: string }).externalOrderId === id);
+    expectEq('the new piece not back is billed in full the night after the deadline', night.map((e) => [(e.data as { reason?: string }).reason, minor((e.data as { amount: number }).amount)]), [['DEADLINE_PASSED', fx.a[1]!.shopMinor]]);
+    expectEq('billed', await balance(c), before + fx.a[1]!.shopMinor);
+    await handBack(c, ext(c, 'XR-RL'), [{ externalOrderId: id }]);
+    const credited = d.v6.decidePiece(id, `${id}-1`, 'APPROVED').find((e) => e.type === 'exchange.credited');
+    expectEq('back late and approved: credited in full', minor((credited?.data as { amount?: number } | undefined)?.amount), fx.a[1]!.shopMinor);
+    expectEq('net, nothing', await balance(c), before);
+    expectEq('credited', (await read())?.status, 'CREDITED');
   },
 
   async 'exchanges.chain'(c) {
