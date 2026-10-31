@@ -141,6 +141,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // PR 168 — Nagad (merchant check-out): the address Nagad gives (sandbox or live), the merchant id and Nagad number,
+  // and the two keys (the merchant's private key, Nagad's public key). The practice gateway serves until they are
+  // entered and the Test button passes; no customer is offered Nagad online until the owner switches it on in checkout.
+  {
+    id: 'nagad',
+    kind: 'PAYMENT',
+    provider: 'nagad',
+    adapter: true,
+    secrets: [{ field: 'merchantPrivateKey' }, { field: 'nagadPublicKey' }],
+    config: [{ field: 'baseUrl' }, { field: 'merchantId' }, { field: 'merchantNumber' }, { field: 'ipV4', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   {
     id: 'localDisk',
     kind: 'STORAGE',
