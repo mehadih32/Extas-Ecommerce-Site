@@ -1,0 +1,11 @@
+/* S06 · PR 543 — Reports › Decisions & learning: the suggestions list, the people table's notes and the link to the risk
+   rules. The tables reuse the Fraud & RTO page's (fraud.css); the shell's tokens only. */
+.adm2 .lrn-sug{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.adm2 .lrn-sug>li{margin:0}
+.adm2 .lrn-people td{font-size:13.5px;padding:10px 12px;vertical-align:top}
+.adm2 .lrn-people th[scope=row]{vertical-align:top;white-space:nowrap;padding-top:10px}
+.adm2 .lrn-note+.lrn-note{margin-top:6px}
+.adm2 .lrn-link{padding:9px 0;font-weight:600}
+@media (max-width:767px){
+  .adm2 .lrn-people td{padding:0}
+}

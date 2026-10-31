@@ -96,6 +96,10 @@
     "approval": {
       "label": "The engine acts only with your OK",
       "help": "When on, the risk engine acts on nothing by itself: the duplicate check's, a risk level's and the blocklist's holds become proposed holds that a person holds or lets go, \"one parcel by itself\" stays a proposal, and no advance is asked by itself, whatever those switches say. Today's digest lists what waits. Also the most rows each waiting list shows. Off as shipped."
+    },
+    "learning": {
+      "label": "Learn from the team's decisions",
+      "help": "Every decision a person takes on what the engine stopped or proposed is kept with its note. When on, Reports › Decisions & learning shows, per rule and per person, how often people let the engine's stop go or kept it and how the orders let go ended; a rule decided often enough that people mostly let go (or mostly keep) gets a suggestion, and an open review shows what people did with ones like it. It only suggests: no rule changes by itself. Also how many days it reads, the fewest decisions before it says anything, the share for a suggestion and the most decisions one report reads. Off as shipped."
     }
   },
   "defaults": {

@@ -22,10 +22,11 @@ import { blockProposalRows, registerFactsOf, personOrders, registerFacts, type B
 import { allow, nowOf, parse, setting, TX, UUID, type OrdersDeps, type Who } from './context';
 import { holdWith } from './commands';
 import { gateOn, proposeHold } from './approval-gate';
+import { recordDecision } from './learning';
 import { clusterFamily, clusterOfOrder } from './identity-family';
 import { isOrdersError, OrdersError } from './errors';
 import type { SettingsWriter } from './rule-switches';
-import { execute, systemBy, type By } from './service';
+import { execute, staffBy, systemBy, type By } from './service';
 
 /** The order flag of an order from a listed number (Order.flags; the team's screens show it, never the customer). */
 export const BLOCKLIST_FLAG = 'RISK_BLOCKLIST';
@@ -201,6 +202,8 @@ export async function decideBlockProposal(deps: OrdersDeps, who: Who, id: string
     const fresh = await tx.riskBlockProposal.findUniqueOrThrow({ where: { id } });
     if (fresh.state !== 'PROPOSED') throw new OrdersError('NOTHING_CHANGED', 'this proposal was decided already', ['id']);
     const decided = { decidedById: by, decidedAt: now, decisionReason: d.reason, rejectionsAtDecision: fresh.rejections, version: { increment: 1 } };
+    // PR 543: the decision log the learning reads
+    await recordDecision(tx, staffBy(who.actor, who.ctx), { storeId: who.storeId, kind: 'blockProposal', decision: d.decision, orderId: fresh.lastOrderId, note: d.reason });
     if (d.decision === 'dismiss') {
       await tx.riskBlockProposal.update({ where: { id }, data: { state: 'DISMISSED', ...decided } });
       return { blockId: null, phone: fresh.phone, rejections: fresh.rejections };

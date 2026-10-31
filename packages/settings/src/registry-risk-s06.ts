@@ -47,6 +47,14 @@
 // level's and the blocklist's holds become proposed holds a person holds or lets go, "one parcel by itself" stays a
 // proposal, and no advance is asked by itself — whatever those switches say. `maxRows`: the most rows each waiting
 // list shows.
+//
+// PR 543 (`risk.learning`, version 108): the decision learning loop. Every decision a person takes on what the engine
+// stopped or proposed — a review approved, declined, held or asked; a proposed hold held or let go; a blocklist proposal
+// blocked or not — is kept with its note (FraudDecision, always, as the decision log). When on (`enabled`, off as shipped),
+// Reports › Decisions & learning reads the last `days` days of them (at most `maxRows`): per rule and per person how
+// often people let the engine's stop go or kept it, and how the orders let go ended; a rule decided at least
+// `minDecisions` times that people let go (or kept) at least `suggestPercent` of the time gets a suggestion for the
+// owner, and an open review shows what people did with ones like it. It suggests only: no rule changes by itself.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -66,6 +74,8 @@ const V524 = 105;
 const V524R = 106;
 /** PR 540's version. */
 const V540 = 107;
+/** PR 543's version. */
+const V543 = 108;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -193,6 +203,23 @@ export const riskApprovalSchema = z
 export type RiskApproval = z.output<typeof riskApprovalSchema>;
 export const RISK_APPROVAL_DEFAULT: RiskApproval = { gate: false, maxRows: 100 };
 
+export const riskLearningSchema = z
+  .object({
+    /** The learning reads the decisions: the report's figures and suggestions, and the line on an open review. */
+    enabled: z.boolean(),
+    /** How many days of decisions it reads, today included. */
+    days: z.int().min(7).max(366),
+    /** The fewest decisions on one rule before it says anything about that rule. */
+    minDecisions: z.int().min(3).max(1000),
+    /** A rule people let go (or kept) at least this share of the time gets a suggestion. */
+    suggestPercent: z.int().min(50).max(100),
+    /** The most decisions one report reads (the newest first). */
+    maxRows: z.int().min(100).max(20_000),
+  })
+  .strict();
+export type RiskLearning = z.output<typeof riskLearningSchema>;
+export const RISK_LEARNING_DEFAULT: RiskLearning = { enabled: false, days: 90, minDecisions: 10, suggestPercent: 80, maxRows: 5000 }; // hardcode-ok: registry default (the owner changes it in the learning card)
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -272,5 +299,15 @@ export const riskS06Settings = {
     labelKey: 'risk.approval.label',
     helpKey: 'risk.approval.help',
     sortOrder: 337,
+  }),
+  'risk.learning': setting({
+    ...base,
+    version: V543,
+    schema: riskLearningSchema,
+    default: RISK_LEARNING_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.learning.label',
+    helpKey: 'risk.learning.help',
+    sortOrder: 338,
   }),
 };

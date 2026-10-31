@@ -155,6 +155,13 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
         ) : null}
         {/* S06 · PR 521: one click explains the alert */}
         {r.explain ? <AlertExplain e={r.explain} /> : null}
+        {/* S06 · PR 543: what the team did with reviews like this one */}
+        {r.learned ? (
+          <div className="a2-note a2-mt12" role="note" data-testid="review-learned">
+            <ShellIcon name="info" size={15} />
+            <span>{r.learned}</span>
+          </div>
+        ) : null}
         {r.specs.length ? (
           <div className="a2-cmds a2-mt12">
             <Buttons specs={r.specs} size="sm" open={open} />

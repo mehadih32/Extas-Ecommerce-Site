@@ -1,5 +1,20 @@
 {
   "orders": {
+    "learn": {
+      "rule": {
+        "dup": "Duplicate check (older reviews)",
+        "dupLetter": "{letter} · {name}",
+        "sec": "Risk review · {name}",
+        "unknown": "Another rule",
+        "blockProposal": "Blocklist proposal",
+        "gate": {
+          "duplicateHold": "Proposed hold · the duplicate check",
+          "levelHold": "Proposed hold · a risk level",
+          "blocklistHold": "Proposed hold · the blocklist"
+        }
+      },
+      "hint": "Learned from the team: {letGo} of {decided} reviews like this ({rule}) were let go; {refused} of those came back at the door."
+    },
     "metaTitle": "Orders",
     "list": {
       "sub": "Every order from placed to done. Four separate statuses: order, courier, payment, return.",

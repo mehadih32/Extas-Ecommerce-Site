@@ -14,7 +14,9 @@
 // (`risk.report`) with its card, the card saved (`settings.write`, an emptied warning is "never"), stale refused. PR 540:
 // the digest read by a reader of orders with the gate's card (off as shipped); the card saved (`risk.rules.write`,
 // audited), out of range and stale refused; a proposed hold decided through the API (`orders.hold`): "Let it go" and
-// "Hold", decided twice refused. Every value is a made-up test value.
+// "Hold", decided twice refused. PR 543: the learning report read (`risk.report`) off as shipped with its card; the card
+// saved (`settings.write`, audited), out of range and stale refused; on, the hold proposals decided above are counted.
+// Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -331,5 +333,29 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(rows.find((r) => r.id === b.orderId)).toMatchObject({ status: 'ON_HOLD', holdReasonCode: 'risk-check' });
     for (const r of rows) expect(r.flags).not.toContain(od.HOLD_PROPOSED_FLAG);
     expect((await api('GET', ['digest'])).body.digest.holds.total).toBe(0);
+  });
+
+  it('PR 543: the learning report off as shipped with its card; a reader is refused; the card audited; on, the decisions counted', async () => {
+    const got = await api('GET', ['learning']);
+    expect(got.status).toBe(200);
+    expect(got.body.report).toMatchObject({ enabled: false, decisions: 0, rules: [], people: [] });
+    const card = got.body.cards.learning as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'learning', value: { enabled: false, days: 90, minDecisions: 10, suggestPercent: 80, maxRows: 5000 } });
+    expect((await api('GET', ['learning'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['learning', 'x'])).status).toBe(404);
+    expect((await api('POST', ['learning'], { body: {} })).status).toBe(405);
+    expect((await api('PUT', ['learning'], { cookie: reader, body: { key: 'learning', value: card.value, version: card.version } })).status).toBe(403);
+    expect(await api('PUT', ['learning'], { body: { key: 'learning', value: { ...card.value, suggestPercent: 40 }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['suggestPercent'] } });
+    const put = await api('PUT', ['learning'], { body: { key: 'learning', value: { ...card.value, enabled: true, minDecisions: 3 }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { learning: { value: { enabled: true, minDecisions: 3 } } } } });
+    expect(await api('PUT', ['learning'], { body: { key: 'learning', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.learning.save' } })).toBe(1);
+    // the blocklist proposal decided in PR 523's test and the two proposed holds of PR 540's, all by the owner
+    f.clock.now = new Date(Math.max(Date.now(), f.clock.now.getTime()) + 60_000);
+    const on = await api('GET', ['learning']);
+    expect(on.body.report).toMatchObject({ enabled: true });
+    expect(on.body.report.rules.find((r: { key: string }) => r.key === 'gate.levelHold')).toMatchObject({ decided: 2, letGo: 1, kept: 1 });
+    expect(on.body.report.rules.find((r: { key: string }) => r.key === 'blockProposal')).toMatchObject({ decided: 1, kept: 1 });
+    expect(on.body.report.people[0]).toMatchObject({ actorType: 'STAFF', decided: 3, notes: [expect.objectContaining({ note: 'call first' }), expect.objectContaining({ note: 'known customer' }), expect.objectContaining({ kind: 'blockProposal', decision: 'block' })] });
   });
 });

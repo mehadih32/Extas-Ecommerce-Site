@@ -1,0 +1,98 @@
+{
+  "lrn": {
+    "metaTitle": "Decisions & learning",
+    "title": "Decisions & learning",
+    "sub": "What the team decided on what the engine stopped or proposed, per rule and per person, and what that teaches. It only suggests: nothing changes by itself.",
+    "showing": "Decisions from {from} to {to} (the last {days} days).",
+    "off": "Learning is off. Every decision is still kept with its note; turn learning on in the card below to read them here and on open reviews.",
+    "cut": "More decisions than the report reads: only the newest {n} are counted. Raise the most decisions in the card below.",
+    "kpi": {
+      "decisions": "Decisions",
+      "decisionsFoot": "People deciding: {people}",
+      "letGo": "Let go",
+      "letGoFoot": "{pct} of the decisions: the engine's stop was let go",
+      "kept": "Kept",
+      "keptFoot": "Declined, held or blocked",
+      "refused": "Let go, then refused",
+      "refusedFoot": "Orders let go that came back at the door"
+    },
+    "sug": {
+      "h": "What the decisions suggest",
+      "d": "A rule decided at least {n} times that people let go (or kept) at least {pct} of the time. Change a rule only in Risk rules, if you agree.",
+      "none": "Nothing to suggest yet: no rule has enough decisions, people decide its reviews both ways, or too many of the orders let go came back at the door.",
+      "relax": "{rule}: people let {share} of {n} go, and those orders were mostly delivered. The rule may be too strict — consider making it a watch, or raising its limits.",
+      "keep": "{rule}: people kept {share} of {n}. The rule is doing its job."
+    },
+    "rules": {
+      "h": "By rule",
+      "d": "Each review or proposal counts once, with its last decision. \"Let go, delivered\" means the person was right to let it go."
+    },
+    "people": {
+      "h": "By person",
+      "d": "Every decision counts, with each person's latest notes. Use it to coach, not to blame: a rule that fires wrongly makes everyone let go."
+    },
+    "col": {
+      "rule": "Rule",
+      "decided": "Decided",
+      "letGo": "Let go",
+      "kept": "Kept",
+      "other": "Asked or one parcel",
+      "letGoDelivered": "Let go, delivered",
+      "letGoRefused": "Let go, refused",
+      "letGoShare": "Let go share",
+      "person": "Person",
+      "mostly": "Mostly decided",
+      "notes": "Latest notes"
+    },
+    "ruleLine": "{rule}: {letGo} let go, {kept} kept",
+    "noteSub": "{decision} · {when}",
+    "who": {
+      "STAFF": "A team member",
+      "SYSTEM": "The system",
+      "CUSTOMER": "The customer",
+      "COURIER": "The courier",
+      "AI_AGENT": "The AI helper",
+      "ERP": "The ERP"
+    },
+    "dec": {
+      "approve": "Let go",
+      "decline": "Declined",
+      "hold": "Held",
+      "ask": "Asked the customer",
+      "merge": "One parcel",
+      "dismiss": "Let go",
+      "block": "Blocked"
+    },
+    "empty": "No decision in these days.",
+    "note": "To change a rule, go to Orders › Risk rules. To see what the engine stopped, Reports › Stopped by the engine.",
+    "rulesLink": "Open Risk rules",
+    "card": {
+      "h": "Learning settings",
+      "d": "Whether the learning reads the team's decisions, how far back, and when it says something.",
+      "enabled": "Learn from the team's decisions",
+      "days": "Days of decisions it reads",
+      "daysHelp": "7 to 366, today included. 90 as shipped.",
+      "minDecisions": "Fewest decisions on a rule before it says anything",
+      "minDecisionsHelp": "3 to 1,000. Keeps a few decisions from making a suggestion.",
+      "suggestPercent": "Suggest when people decide one way this share (%) of the time",
+      "suggestPercentHelp": "50 to 100.",
+      "maxRows": "Most decisions one report reads",
+      "maxRowsHelp": "100 to 20,000."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "discard": "Discard",
+    "unsaved": "There are unsaved changes",
+    "readOnly": "Only someone allowed to change settings can change this.",
+    "err": {
+      "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+      "INVALID_INPUT": "Check: {fields}.",
+      "FORBIDDEN": "You cannot change settings.",
+      "forbidden": "You cannot change settings.",
+      "unauthorized": "Sign in again.",
+      "network": "No connection. Nothing was saved; try again.",
+      "other": "Something went wrong. Nothing was saved; try again."
+    }
+  }
+}
