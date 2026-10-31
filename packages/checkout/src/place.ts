@@ -258,11 +258,18 @@ export async function nextOrderNumber(tx: Tx, storeId: number, prefix: string, s
 
 const isUnique = (e: unknown) => (e as { code?: string }).code === 'P2002';
 
-/** The order a key already placed, for this visitor only. */
-async function replayOf(deps: CheckoutDeps, storeId: number, visitorId: string, key: string): Promise<PlaceResult | null> {
-  const o = await deps.db.order.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: key } }, select: { id: true, number: true, visitorId: true } });
+/**
+ * The order a key already placed, for this visitor only.
+ * Review R2 (m5): and only for the same checkout — the money fingerprint the page sent must be the one the order stored.
+ * A lost answer followed by a new bag in the same tab sends the old key with a new fingerprint: that is refused
+ * (IDEMPOTENCY; the page then drops the key and asks him to press again), never answered with the old order.
+ */
+async function replayOf(deps: CheckoutDeps, storeId: number, visitorId: string, key: string, fingerprint: string): Promise<PlaceResult | null> {
+  const o = await deps.db.order.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: key } }, select: { id: true, number: true, visitorId: true, addressResolution: true } });
   if (!o) return null;
   if (o.visitorId !== visitorId) throw new CheckoutError('IDEMPOTENCY', 'this order key belongs to another order', ['idempotencyKey']);
+  const stored = (o.addressResolution as { fingerprint?: unknown } | null)?.fingerprint;
+  if (typeof stored === 'string' && stored !== fingerprint) throw new CheckoutError('IDEMPOTENCY', 'this order key placed a different checkout', ['idempotencyKey']);
   return { orderId: o.id, number: o.number, next: (await openPayment(deps.db, storeId, o.id)) ? 'pay' : 'thanks', replay: true };
 }
 
@@ -288,7 +295,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   const customerId = req.customerId ?? null;
 
   // A second press, or a retry after a lost answer: the order this key placed.
-  const again = await replayOf(deps, storeId, visitorId, d.idempotencyKey);
+  const again = await replayOf(deps, storeId, visitorId, d.idempotencyKey, d.fingerprint);
   if (again) return again;
   // PR 610 (CN-028, ERP contract v6): while the ERP holds Retail's account (409 ACCOUNT_ON_HOLD) it keeps no stock for
   // new orders, so checkout pauses by itself (`erp.hold.pauseCheckout`, on) until the ERP releases it. Nothing is lost:
@@ -555,7 +562,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   } catch (e) {
     // Two presses at the same moment: the second waited for the first and finds its order.
     if (isUnique(e)) {
-      const r = await replayOf(deps, storeId, visitorId, d.idempotencyKey);
+      const r = await replayOf(deps, storeId, visitorId, d.idempotencyKey, d.fingerprint);
       if (r) return r;
     }
     // Review R1 (B1): the code was used up (or used by him already) a moment ago — nothing was stored; he sees the

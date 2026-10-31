@@ -395,6 +395,11 @@ export function CheckoutForm({
       return showToast(formEl, w(`askBn.${a.field === 'phone' && a.problem !== 'empty' ? 'phoneBad' : a.field}`));
     }
     if (a.error === 'NO_PAYMENT') return showToast(formEl, w('need.pay'));
+    // review R2 (m5): the kept key placed another checkout (a lost answer, then a new bag): a new key, and he presses again
+    if (a.error === 'IDEMPOTENCY') {
+      saveDraft({ orderKey: undefined });
+      return showToast(formEl, w('err.again'));
+    }
     // PR 610: checkout pauses by itself while the ERP holds the shop's account; the bag and the form stay as they are.
     // qa-gate I3: the calm line above the form (it stays), brought into sight — never a toast that is gone in seconds.
     if (a.error === 'PAUSED') {

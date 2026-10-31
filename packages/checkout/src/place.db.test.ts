@@ -424,6 +424,23 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(await code(placeOrder(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', input: s.input }))).toBe('IDEMPOTENCY');
     });
 
+    it('review R2 (m5): a lost answer, then a new bag with the old key — refused, never answered with the old order', async () => {
+      const s = await shown('lost-answer');
+      const first = await s.place();
+      // the same tab fills a new bag; its page shows a new checkout (another fingerprint) but sends the kept key
+      const nb = await f.bag('lost-answer', [{ variantId: shirt().id, quantity: 2 }]);
+      expect(nb.cartId).not.toBe(s.cartId);
+      const q = await checkoutQuote(f.deps(), { storeId: f.S, cartId: nb.cartId, lang: 'en', address: { line: FORM.address, confirmed: null }, details: { name: FORM.name, phone: FORM.phone } });
+      expect(q.fingerprint).not.toBe(s.input.fingerprint);
+      expect(await code(s.place({ fingerprint: q.fingerprint }))).toBe('IDEMPOTENCY');
+      // the same checkout again still gets its own order back (a retry after a lost answer)
+      expect(await s.place()).toMatchObject({ orderId: first.orderId, replay: true });
+      // with a new key, the new bag becomes its own order
+      const next = await s.place({ idempotencyKey: randomUUID(), fingerprint: q.fingerprint });
+      expect(next.orderId).not.toBe(first.orderId);
+      expect(await f.t.prisma.order.count({ where: { visitorId: s.visitorId } })).toBe(2);
+    });
+
     it('the bag becomes the order: its pieces held for the order, the bag closed, a new bag next time', async () => {
       const s = await shown('stock');
       const r = await s.place();
