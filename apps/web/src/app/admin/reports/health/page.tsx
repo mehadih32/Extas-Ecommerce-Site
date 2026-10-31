@@ -2,12 +2,15 @@
 // the server, speed, the site audit and the smoke test (lib/admin-health), each linking to its own page once built
 // (the Server page now; Customer problems with PR 423). Seeing needs `health.read`; the limits card `settings.write`.
 // No customer's name, phone or address is on this page.
+// PR 414: the saved browser journeys — their line, "Run now", the recent runs and when they run (`settings.write`).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { JOURNEY_EVERY } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { JourneysRun } from '@/components/admin/settings/JourneysRun';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -77,6 +80,22 @@ export default async function HealthHubPage() {
     { kind: 'number', path: 'siteSlowMs', label: s('card.siteSlowMs'), help: s('card.siteSlowMsHelp'), min: 200, max: 20_000 },
     { kind: 'number', path: 'smokeStaleHours', label: s('card.smokeStaleHours'), help: s('card.smokeStaleHoursHelp'), min: 1, max: 168 },
   ];
+  const clock = (h: number) => new Intl.DateTimeFormat(view.locale, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(h * 3_600_000));
+  const jTexts: FieldsCardTexts = { ...texts, h: s('jcard.h'), d: s('jcard.d'), readOnly: s('jcard.readOnly') };
+  const jFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('jcard.enabled'), help: s('jcard.enabledHelp') },
+    { kind: 'select', path: 'every', label: s('jcard.every'), options: JOURNEY_EVERY.map((e) => ({ value: e, label: s(`jcard.${e}`) })) },
+    { kind: 'select', path: 'hour', label: s('jcard.hour'), help: s('jcard.hourHelp'), numeric: true, options: Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: clock(h) })) },
+    { kind: 'select', path: 'weekday', label: s('jcard.weekday'), numeric: true, options: Array.from({ length: 7 }, (_, i) => ({ value: String(i + 1), label: s(`jcard.day.${i + 1}`) })) },
+    { kind: 'number', path: 'keepRuns', label: s('jcard.keepRuns'), help: s('jcard.keepRunsHelp'), min: 1, max: 200 },
+  ];
+  const runTexts = {
+    run: s('j.run'),
+    running: s('j.running'),
+    asked: s('j.asked'),
+    waiting: s('j.waiting'),
+    err: Object.fromEntries(['INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, s(`j.err.${c}`)])),
+  };
 
   return (
     <div className="a2-z" data-testid="health-page">
@@ -125,6 +144,49 @@ export default async function HealthHubPage() {
           ))}
         </ul>
       </section>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="journeys-h" data-testid="journeys-card">
+        <div className="a2-sch">
+          <div>
+            <h2 className="a2-h3" id="journeys-h">
+              {s('j.h')}
+            </h2>
+            <p className="a2-scd">{s('j.d')}</p>
+          </div>
+        </div>
+        <div className="a2-mt12">{canEdit ? <JourneysRun url={API} texts={runTexts} waiting={v.runAsked} /> : <p className="a2-sm a2-mute">{s('j.noPerm')}</p>}</div>
+        <h3 className="a2-h3 a2-mt12">{s('j.runsH')}</h3>
+        {v.runs.length ? (
+          <div className="a2-tblw a2-mt12">
+            <table className="a2-tbl" data-testid="journeys-runs">
+              <thead>
+                <tr>
+                  <th>{s('j.col.when')}</th>
+                  <th>{s('j.col.result')}</th>
+                  <th>{s('j.col.what')}</th>
+                  <th>{s('j.col.first')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {v.runs.map((r) => (
+                  <tr key={r.at} data-ok={r.ok ? 'yes' : 'no'}>
+                    <td className="a2-sm">{when(r.at)}</td>
+                    <td>
+                      <span className={`a2-pill ${r.ok ? 'ok' : 'bad'}`}>{s(r.ok ? 'j.runPass' : 'j.runFail')}</span>
+                    </td>
+                    <td className="a2-sm">{s('j.runLine', words({ journeys: r.journeys, steps: r.steps, failed: r.failed }))}</td>
+                    <td className="a2-sm hl-first">{r.first}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="a2-sm a2-mute a2-mt12">{s('j.runsNone')}</p>
+        )}
+      </section>
+
+      <FieldsCard url={API} screen={{ key: v.cards.journeys.key, value: v.cards.journeys.value, version: v.cards.journeys.version }} fields={jFields} texts={jTexts} canEdit={canEdit} testId="journeys-schedule" />
 
       <FieldsCard url={API} screen={{ key: v.cards.hub.key, value: v.cards.hub.value, version: v.cards.hub.version }} fields={fields} texts={texts} canEdit={canEdit} testId="health-limits" />
     </div>

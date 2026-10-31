@@ -3,6 +3,10 @@
     "hub": {
       "label": "Site health: when a line turns yellow",
       "help": "The Site health page shows one line each for customer problems, the server, speed, the site audit and the smoke test. A line turns yellow when the server's health check is later than these minutes, the home page answers slower than these milliseconds, or the last smoke test is older than these hours. It only changes how the lines are judged, nothing on the server."
+    },
+    "journeys": {
+      "label": "Site health: when the saved journeys run",
+      "help": "The saved browser journeys (a customer, the admin, an accountant and the warehouse, on a phone and a desktop screen) are replayed on this schedule: hourly, daily or weekly at the hour chosen, in the server's time zone. Off as it ships: then they run only when someone presses Run now. The customer journey never puts anything in the bag and never places an order. The server keeps this many runs for comparison."
     }
   }
 }

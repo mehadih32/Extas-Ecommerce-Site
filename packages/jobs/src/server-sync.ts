@@ -22,6 +22,8 @@
 //                  is on and LIVE (its Test passed) and the pair still reads; empty otherwise, so the server goes back to
 //                  its automatic certificate (infra/server/bin/extas-origin-cert checks the pair again and gives it to
 //                  Caddy).
+//   journeys-settings.env  PR 414: when the saved browser journeys run (Reports › Site health; infra/deploy/journeys.sh),
+//                  and the last "Run now"; from the settings alone.
 //
 // - Nothing is read from the vault when nothing it depends on changed: every run first works out a fingerprint of the
 //   connection rows, the vault's list (names, dates, never a value) and each part's own inputs; the server passes back
@@ -236,7 +238,28 @@ export const firstWeekPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart];
+/**
+ * PR 414 (B7.3): when the saved browser journeys run, for infra/deploy/journeys.sh (Reports › Site health). Built from
+ * the setting alone. JOURNEYS_REQUESTED is the "Run now" press in seconds since 1970 (empty when never pressed).
+ */
+export const journeysSettingsPart: ServerFilePart = {
+  file: 'journeys-settings.env',
+  watch: async (ctx) => settingOr(ctx, 'health.journeys', registry['health.journeys'].default),
+  async build(ctx) {
+    const j = await settingOr(ctx, 'health.journeys', registry['health.journeys'].default);
+    const asked = j.runRequestedAt ? Math.floor(Date.parse(j.runRequestedAt) / 1000) : NaN;
+    return envLines({
+      JOURNEYS_ON: yesNo(j.enabled),
+      JOURNEYS_EVERY: j.every,
+      JOURNEYS_HOUR: String(j.hour),
+      JOURNEYS_WEEKDAY: String(j.weekday),
+      JOURNEYS_KEEP: String(j.keepRuns),
+      JOURNEYS_REQUESTED: Number.isFinite(asked) ? String(asked) : '',
+    });
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart];
 
 export interface SyncResult {
   fingerprint: string;

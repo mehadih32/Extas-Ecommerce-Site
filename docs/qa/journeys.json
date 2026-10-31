@@ -1,0 +1,60 @@
+{
+  "$comment": "S21 · PR 414 (Blueprint B7.3) — the saved browser journeys, replayed by tools/journeys.mjs on the owner's schedule (Reports › Site health; infra/deploy/journeys.sh) on a phone and a desktop screen. Plain Playwright, AI not needed. Each journey is a list of steps: `open` a path (signed out for the customer, as the read-only check account for the others) and `expect` a selector there; `follow` the first link matching a selector (the products and categories are the owner's, so none is named here; with `optional`, a shop with none skips the rest of that journey and says so); `click` the first enabled element matching a selector; `api` sends a request from the page and expects a status (the permission limits: each write here is harmless even if it were allowed, an invalid body, and must be refused with 403). The staff journeys sign in as the read-only check account (like the smoke test), so they walk what each role opens and prove a write is refused; a role's own account per journey is a follow-up. A step fails on a 5xx, the error screen, a console error, a page error, a failed request, or a missing `expect`. The customer journey never adds to the bag (that would hold real stock) and never places an order (a real order on the live shop); the order, invoice and tracking pages are opened with no order (their 'not found' cards). `expectAny`: any one of the selectors.",
+  "screens": [
+    { "id": "phone", "width": 390, "height": 844 },
+    { "id": "desktop", "width": 1366, "height": 900 }
+  ],
+  "journeys": [
+    {
+      "id": "customer",
+      "signedIn": false,
+      "steps": [
+        { "open": "/", "expect": "main" },
+        { "follow": "a[href^='/collections/']", "expect": "main", "optional": true },
+        { "follow": "a.pcard-lnk", "expect": ".size-pill", "optional": true },
+        { "click": ".size-pill:not(.out):not([disabled])", "expect": ".size-pill.on", "optional": true },
+        { "open": "/search", "expect": "[data-testid=search-page-form]" },
+        { "open": "/bag", "expect": "[data-testid=bag-page]" },
+        { "open": "/checkout", "expectAny": ["[data-testid=co-form]", "[data-testid=bag-page]", "main"] },
+        { "open": "/account/orders/0", "expect": "main" },
+        { "open": "/account/orders/0/invoice", "expect": "body" }
+      ]
+    },
+    {
+      "id": "admin",
+      "signedIn": true,
+      "steps": [
+        { "open": "/admin?home=1", "expect": "h1" },
+        { "open": "/admin/products", "expect": "h1" },
+        { "open": "/admin/orders", "expect": "h1" },
+        { "open": "/admin/stock", "expect": "h1" },
+        { "open": "/admin/orders/packing", "expect": "h1" },
+        { "open": "/admin/reports/health", "expect": "[data-testid=health-lines]" }
+      ]
+    },
+    {
+      "id": "accountant",
+      "signedIn": true,
+      "steps": [
+        { "open": "/admin/money/books", "expect": "h1" },
+        { "open": "/admin/money/books?view=payments", "expect": "h1" },
+        { "open": "/admin/orders/packing/invoices", "expect": "h1" },
+        { "open": "/admin/money/costs", "expect": "h1" },
+        { "api": "/api/admin/health", "method": "PUT", "body": { "key": "nope" }, "status": 403 },
+        { "api": "/api/admin/health", "method": "POST", "body": { "action": "nope" }, "status": 403 },
+        { "api": "/api/admin/edge", "method": "PUT", "body": { "key": "nope" }, "status": 403 }
+      ]
+    },
+    {
+      "id": "warehouse",
+      "signedIn": true,
+      "steps": [
+        { "open": "/admin/stock", "expect": "h1" },
+        { "open": "/admin/stock/counts", "expect": "h1" },
+        { "open": "/admin/orders/packing/picking", "expect": "h1" },
+        { "open": "/admin/orders/packing", "expect": "h1" },
+        { "open": "/admin/orders/returns", "expect": "h1" }
+      ]
+    }
+  ]
+}
