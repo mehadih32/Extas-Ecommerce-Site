@@ -244,6 +244,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },
       { id: 'daily', pages: [{ href: '/admin/money/books/daily', perm: 'books.read', keys: ['booksDaily'] }] },
       { id: 'costs', pages: [{ href: '/admin/money/costs', perm: 'books.read', keys: ['moneyCosts'] }] },
+      // S16 · PR 343: Money → Cost ledger — every paid call's cost row, prepaid balances, export.
+      { id: 'ledger', pages: [{ href: '/admin/money/cost-ledger', perm: 'books.read', keys: ['moneyCostLedger'] }] },
     ],
   },
   {

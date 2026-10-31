@@ -64,6 +64,7 @@ import { booksSettings } from './registry-books';
 import { returnsV6Settings } from './registry-returns-v6';
 import { switchoverSettings } from './registry-switchover';
 import { backupsSettings } from './registry-backups';
+import { costsSettings } from './registry-costs';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
@@ -1293,6 +1294,8 @@ export const registry = {
   ...healthSettings,
   // ---- S22 · CN-031 lane A · PR 426 · the Support channel connectors: Meta's reply window and webhook size, the site's live chat (off) (registry-support-channels.ts, version 72). ----
   ...supportChannelSettings,
+  // ---- S16 · PR 343 · the cost ledger: the rows listed and the export's size (registry-costs.ts, version 77). ----
+  ...costsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

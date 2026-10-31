@@ -34,6 +34,7 @@ import type { Prisma } from '@extas/db/client';
 import { dueOf } from '@extas/orders/pure';
 import type { CancelCode, CancelNotice, ConsentSettings, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates, WhatsAppSettings } from '@extas/settings';
 import { consentBlock } from './consent';
+import { recordSendCost } from './costs';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
 import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, templateValues, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
@@ -467,11 +468,14 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
     const messageId = r.messageId;
     // PR 291: the provider's own price, else the owner's part price (an estimate); a mock send costs nothing
     const costMinor = sender?.mode === 'MOCK' ? null : (r.costMinor ?? (sms ? smsCostMinor(segments ?? 0, c.smsRates, senderId !== null) : null));
+    // PR 343: a message with a cost writes its cost row (and draws a prepaid balance down) in the same transaction
+    const currency = costMinor !== null && costMinor > 0 ? await setting(deps, c.storeId, 'store.currency') : null;
     await deps.db.$transaction(async (tx) => {
       await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null, costMinor } });
       await tx.notificationAttempt.create({
         data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok: true, providerMessageId: messageId, retriedById: opts.retriedById ?? null, costMinor },
       });
+      if (currency !== null) await recordSendCost(tx, { storeId: c.storeId, channel: row.channel, costMinor, currency, logId: row.id, template, provider: sender?.provider ?? null, at: c.now });
     }, TX);
     return 'SENT';
   }

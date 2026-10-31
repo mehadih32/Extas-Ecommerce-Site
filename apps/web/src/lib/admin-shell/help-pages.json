@@ -51,6 +51,7 @@
     { "id": "website/redirects", "route": "/admin/website/seo/redirects" },
     { "id": "website/seo-categories", "route": "/admin/website/seo/categories" },
     { "id": "money/overview", "route": "/admin/money" },
+    { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
     { "id": "money/books-account", "route": "/admin/money/books" },
     { "id": "money/books-match", "route": "/admin/money/books/match" },
     { "id": "money/books-differences", "route": "/admin/money/books/differences" },

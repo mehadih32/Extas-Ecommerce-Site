@@ -130,12 +130,14 @@ describe('permission catalogue (PR 16, 495)', () => {
     expect([...inTree].sort()).toEqual([...PERMISSION_KEYS].sort());
     expect(new Set(inTree).size).toBe(inTree.length);
     for (const b of ACCESS_TREE) for (const k of b.keys) expect(PERMISSIONS[k].group, k).toBe(b.group);
-    expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write']);
+    // ~~expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write']);~~
+    // PR 343: the cost ledger's `costs.write` joins the books group.
+    expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write', 'costs.write']);
     // A correction of the books and a month closed with differences also need the owner's PIN.
     expect([...PIN_PERMISSIONS]).toEqual(['books.adjust', 'books.close']);
     // The read-only smoke check account may see the books, never change them or record money.
     expect(CHECK_PERMISSIONS).toEqual(expect.arrayContaining(['books.read', 'erp.account.read']));
-    for (const k of ['books.reconcile', 'books.adjust', 'books.close', 'erp.payments.record', 'fixedcosts.write', 'returns.handback', 'exchange.approve']) expect(CHECK_PERMISSIONS, k).not.toContain(k);
+    for (const k of ['books.reconcile', 'books.adjust', 'books.close', 'erp.payments.record', 'fixedcosts.write', 'costs.write', 'returns.handback', 'exchange.approve']) expect(CHECK_PERMISSIONS, k).not.toContain(k);
   });
 
   it('keys look like area.action', () => {

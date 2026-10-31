@@ -1,0 +1,8 @@
+{
+  "costs": {
+    "ledger": {
+      "label": "Cost ledger: rows listed and export size",
+      "help": "How many of the latest cost rows Money → Cost ledger lists (10–500), and the most rows one export file holds (a longer period is cut and says so)."
+    }
+  }
+}

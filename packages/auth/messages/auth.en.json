@@ -236,6 +236,9 @@
     "fixedcosts": {
       "write": "Set a month’s fixed costs (salary, rent, utilities, other)"
     },
+    "costs": {
+      "write": "Record a prepaid top-up (SMS credit) and its low mark; set the costs & fees figures"
+    },
     "support": {
       "read": "Open the support inbox and conversations (with who replied)",
       "reply": "Reply, write internal notes, take a conversation, mark it solved",

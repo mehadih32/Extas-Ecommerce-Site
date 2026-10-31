@@ -38,3 +38,5 @@
 @media (max-width:767px){
   .adm2 .ct-grid,.adm2 .ct-checks{grid-template-columns:minmax(0,1fr)}
 }
+/* PR 343 — Money → Cost ledger: the second line under a row's name (when, what for; the last top-up). */
+.adm2 .cl-sub{display:block;margin-top:2px;overflow-wrap:anywhere}
