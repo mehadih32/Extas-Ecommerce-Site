@@ -26,6 +26,7 @@
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { holdOrderUnits, InventoryError, isV6, sellableKinds, sellableUnits } from '@extas/inventory';
+import { settleReturnRefundsForExchange } from '@extas/payments';
 import { discountWasFor, exchangeTermsFor } from '@extas/rules';
 import { allow, nowOf, parse, setting, TX, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
@@ -83,6 +84,17 @@ export function coveredPerPiece(i: Pick<ItemFacts, 'lineTotalMinor' | 'quantity'
   if (o.status !== 'RETURNED') return paidPerPiece(i);
   const share = o.totalMinor > 0 ? Math.min(1, Math.max(0, o.paidMinor) / o.totalMinor) : 0;
   return Math.floor(paidPerPiece(i) * share);
+}
+
+/**
+ * Review R3 (M1) — a refused parcel's money that is still the customer's to put towards a re-ship: what was paid less
+ * every refund a person approved or paid out of it (an open request gives way to the exchange: its approval cuts it,
+ * @extas/payments settleReturnRefundsForExchange). Any other order as it is.
+ */
+async function withFreePaid<T extends { id: string; status: string; paidMinor: number }>(db: Db, storeId: number, o: T): Promise<T> {
+  if (o.status !== 'RETURNED' || o.paidMinor <= 0) return o;
+  const out = await db.refund.aggregate({ where: { storeId, orderId: o.id, method: 'original', status: { in: ['APPROVED', 'FAILED', 'COMPLETED'] } }, _sum: { amountMinor: true } });
+  return { ...o, paidMinor: Math.max(0, o.paidMinor - (out._sum.amountMinor ?? 0)) };
 }
 
 /** PR 190 (SIM-F-021): a refused parcel may take a size exchange when its refusal is one of the owner's re-ship reasons. */
@@ -324,8 +336,9 @@ export async function exchangeChoices(deps: OrdersDeps, who: Who, orderId: strin
   await allow(deps, who, 'returns.view');
   const d = parse(choicesInput, input, 'exchange choice');
   const db = deps.db;
-  const o = await db.order.findFirst({ where: { id: orderId, storeId: who.storeId }, select: ORDER_FACTS });
-  if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
+  const found = await db.order.findFirst({ where: { id: orderId, storeId: who.storeId }, select: ORDER_FACTS });
+  if (!found) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
+  const o = await withFreePaid(db, who.storeId, found);
   const item = await itemOf(db, who.storeId, o.id, d.orderItemId);
   const piece = await pieceOf(db, who.storeId, item);
   const policy = await exchangePolicyFor(deps, who.storeId, item.productId ?? piece?.productId ?? '', o.deliveryBand?.key ?? null);
@@ -492,7 +505,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
       command: 'exchange',
       input: d as unknown as Record<string, unknown>,
       effect: async (tx, lo, _f, { now }) => {
-        const o = await tx.order.findUniqueOrThrow({ where: { id: lo.id }, select: ORDER_FACTS });
+        const o = await withFreePaid(tx, storeId, await tx.order.findUniqueOrThrow({ where: { id: lo.id }, select: ORDER_FACTS }));
         const refusal = await refusalOf(tx, storeId, o);
         const reship = reshipAllowed(o.status, refusal, d.reason, cs.rules.reshipRefusals);
         const allowed = meta.hooks?.allowState ? meta.hooks.allowState(o.status, refusal) : o.status === 'DELIVERED' || o.status === 'PARTIALLY_DELIVERED' || reship;
@@ -805,6 +818,14 @@ export async function placeExchangeParcel(deps: OrdersDeps, who: Who, tx: Tx, ex
     }
     await eventRow(tx, by, { storeId: ex.storeId, orderId: n.id, type: 'order.placed', to: 'PLACED', data: { exchange: { id: ex.id, number: ex.number, fromOrderId: o.id, fromNumber: o.number } } });
     await auditRow(tx, by, { storeId: ex.storeId, action: 'order.exchangePlaced', entityType: 'Order', entityId: n.id, before: null, after: { number, exchangeId: ex.id, fromOrderId: o.id, totalMinor: subtotal + charge } });
+    // review R3 (M1): the refused parcel's money its old pieces cover pays for the new parcel, so its open refund request
+    // is cut by as much in this transaction (never refunded twice); money a person already approved or paid back is not
+    // free, and then the approval is refused
+    if (o.status === 'RETURNED') {
+      const usedMinor = ex.items.reduce((sum, i) => sum + Math.max(0, i.oldUnitMinor) * i.quantity, 0);
+      const settled = await settleReturnRefundsForExchange(tx, deps, ex.storeId, o.id, usedMinor, { exchangeId: ex.id, number: ex.number, newOrderNumber: number });
+      if (settled.shortMinor > 0) throw new OrdersError('REFUND_TAKEN', "part of the refused parcel's money is already approved or paid back as a refund; withdraw that refund or refuse the exchange", ['refund'], { shortMinor: settled.shortMinor });
+    }
     // PR 190 (SIM-F-021): a re-ship after a try-on — the refused parcel is already on its way back (its courier return,
     // PR 189) and becomes this exchange's pick-up; the exchange moves on with it (checked already → its QC result).
     const linked = o.status === 'RETURNED' ? await linkRefusedReturn(tx, ex) : null;

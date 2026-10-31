@@ -1,8 +1,9 @@
 // S16 · PR 342 — Money → Overview at /admin/money (BACKEND-ARCHITECTURE §5 MNY-01; B3.10): cash received in the last
 // 24 hours, 7 and 30 days (and by method), the COD the couriers still owe (by courier) and the refunds owed to
-// customers, from the shop's own records (lib/money-overview.ts). Read-only: approving or paying a refund stays on the
-// order and is the owner's. Seeing it needs `payments.view`. Words: messages/admin-money.*.json (`moneyOverview.*`).
+// customers, from the shop's own records (lib/money-overview.ts). Read-only: approving or paying a refund is on Money ›
+// Refunds & wallet (gate F-041) and is the owner's. Seeing it needs `payments.view`. Words: messages/admin-money.*.json (`moneyOverview.*`).
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
@@ -142,6 +143,9 @@ export default async function MoneyOverviewPage() {
           <p className="a2-xs a2-mute">{c('refunds.none')}</p>
         )}
         <p className="a2-xs a2-mute a2-mt12">{c('refunds.where')}</p>
+        <Link className="a2-btn sm a2-mt6" href="/admin/money/refunds" data-testid="mo-refunds-open">
+          {c('refunds.open')}
+        </Link>
       </section>
     </div>
   );

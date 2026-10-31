@@ -257,6 +257,8 @@
       "/admin/reports/health/smoke",
       "/admin/reports/health/history",
       "/admin/ai/audit",
+      "/admin/money/refunds",
+      "/admin/money/refunds?view=all",
       "/admin/reports/health/fixes",
       "/admin/website/seo/bengali",
       "/admin/marketing/tracking",

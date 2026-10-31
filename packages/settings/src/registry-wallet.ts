@@ -16,9 +16,10 @@
 // customer received the goods — exchange is the post-delivery route — except the sources the owner lists (the rider's
 // overcharge, CN-018 #7, by default). Whether real money may go back to the wallet as store credit instead (off: the
 // way it came). An RTO of a prepaid parcel (SIM-F-041) gives everything back, or keeps the delivery charge when the
-// owner says so. Four eyes (off): the person who asked a refund may not approve it. Every refund still needs the
-// approval of someone with the "approve refunds" permission (the owner; CLAUDE.md rule 6), and money back by bKash or
-// the bank is sent by a person, never by the shop itself.
+// owner says so; a delivery-charge advance is kept unless he says to ask it back (review R3 M3, v141). Four eyes
+// (off): the person who asked a refund may not approve it. Every refund still needs the approval of someone with the
+// "approve refunds" permission (the owner; CLAUDE.md rule 6), and money back by bKash or the bank is sent by a person,
+// never by the shop itself.
 //
 // PR 173 (`payments.partial`): partial payment — a pre-order's advance asked online now, the rest at the door. Off by
 // default. The cap (§59 answer 29: a percentage, 10% by default) is the most the shop may ask as an advance, of the
@@ -84,6 +85,12 @@ export const refundRulesSchema = z
     afterDeliverySources: z.array(z.enum(REFUND_RULE_SOURCES)).max(REFUND_RULE_SOURCES.length),
     rtoDeliveryCharge: z.enum(['REFUND', 'KEEP']),
     fourEyes: z.boolean(),
+    /**
+     * Review R3 (M3, registry v141) — a delivery-charge advance (the repeat refuser's "charge first") on a refused
+     * parcel: KEEP (default, the safer one for the shop: it is not asked back by itself) or ASK (asked back like the rest,
+     * still only a request a person approves). A value saved before this field existed reads as KEEP.
+     */
+    rtoAdvance: z.enum(['KEEP', 'ASK']).default('KEEP'),
   })
   .strict()
   .refine((v) => new Set(v.afterDeliverySources).size === v.afterDeliverySources.length, { message: 'every source once' });
@@ -148,7 +155,9 @@ export const walletSettings = {
   'payments.refunds': setting({
     ...base,
     schema: refundRulesSchema,
-    default: { toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false },
+    default: { toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false, rtoAdvance: 'KEEP' },
+    version: 141, // review R3 (M3): `rtoAdvance` added (the next registry version after 140)
+    since: 55,
     valueType: 'JSON',
     labelKey: 'payments.refunds.label',
     helpKey: 'payments.refunds.help',

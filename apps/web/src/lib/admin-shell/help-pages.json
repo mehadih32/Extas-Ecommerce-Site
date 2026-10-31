@@ -53,6 +53,7 @@
     { "id": "website/seo-categories", "route": "/admin/website/seo/categories" },
     { "id": "website/seo-bengali", "route": "/admin/website/seo/bengali" },
     { "id": "money/overview", "route": "/admin/money" },
+    { "id": "money/refunds", "route": "/admin/money/refunds" },
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
     { "id": "money/expenses", "route": "/admin/money/expenses" },
     { "id": "money/fees", "route": "/admin/money/fees" },

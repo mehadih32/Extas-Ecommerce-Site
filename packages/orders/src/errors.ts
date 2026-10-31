@@ -53,6 +53,8 @@ export type OrdersErrorCode =
   | 'RISK_OFF'
   /** PR 542: an advance of the delivery charge for an order that has none. */
   | 'NO_CHARGE'
+  /** Review R3 (M1): a re-ship exchange whose refused parcel's money is already approved or paid back as a refund. */
+  | 'REFUND_TAKEN'
   /** PR 542: a part of the amount asked while the owner has not set its percent (`risk.levels.partialPercent`). */
   | 'PARTIAL_UNSET'
   /** PR 542: nothing is left to pay on this order, so there is no advance to ask. */
@@ -154,6 +156,7 @@ export class OrdersError extends Error {
       case 'EDIT_CLOSED':
       case 'EXPORT_TOO_LARGE':
       case 'NO_CHARGE':
+      case 'REFUND_TAKEN':
       case 'PARTIAL_UNSET':
       case 'NOTHING_DUE':
       case 'NO_CHANNEL':

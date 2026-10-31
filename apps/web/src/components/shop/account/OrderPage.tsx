@@ -19,6 +19,9 @@
 // Follow-up 260 (PR 143): "Change address, phone or size" under the items (demo ord_editCard), while the owner lets
 // customers edit (`orders.edit.customer`, off): open with "Edit order (n left)", or closed with the reason.
 // S05 · PR 150: "What happened" under it, folded shut — the order's life as he may see it (`account.history.timeline`).
+// Gate F-041 (PR 172 follow-up): beside the payment summary, his refunds on this order — the amount, the way it goes
+// back (as he paid, or his wallet) and where it stands (being checked, approved and on its way, sent with the day, or
+// not approved), only when there is one.
 import '../bag/bag.css';
 import './account.css';
 import type { ReactNode } from 'react';
@@ -450,6 +453,19 @@ export async function OrderPage({
               </div>
             ) : null}
           </section>
+          {extras?.refunds?.length ? (
+            <section className="card p20" aria-labelledby="orf-h" data-testid="order-refunds">
+              <h2 className="h3" id="orf-h">
+                {t('account.refund.title')}
+              </h2>
+              {extras.refunds.map((x, i) => (
+                <div key={i} className="soft ord-pay mt12" data-testid="order-refund" data-state={x.state}>
+                  <div className="small bold">{t(x.state === 'checking' ? 'account.refund.asked' : x.toWallet ? 'account.refund.toWallet' : 'account.refund.back', { amount: m(x.amountMinor) })}</div>
+                  <div className="xs muted">{t(`account.refund.${x.state}`, { date: dateText(c, new Date(x.at).toISOString(), false) })}</div>
+                </div>
+              ))}
+            </section>
+          ) : null}
           {wa ? (
             <section className="card p20" aria-labelledby="oh-h">
               <h2 className="h3" id="oh-h">

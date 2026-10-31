@@ -8,16 +8,16 @@
 //   refunds after the customer received the goods except the listed sources) and never more than the order's money not
 //   yet held by another refund. To the wallet only while the owner allows it. One Idempotency-Key = one request. The
 //   cancel and edit requests of the order service (PR 144, 142) are the same records.
-// - `requestReturnRefund` (system): the refund an RTO of a paid order owes (SIM-F-041), once per order; S08 calls it
-//   when a prepaid parcel comes back (follow-up 420).
+// - `requestReturnRefund` (system): the refund an RTO of a paid order owes (SIM-F-041), once per order; the order
+//   service's `returned` and `deliveryCorrected` steps call it in their transaction (follow-up 420, gate F-041).
 // - `approveRefund` / `rejectRefund` (`payments.refunds.approve`, the owner): the OK before any money goes back, with
 //   [confirm]; optionally to the wallet instead (when allowed); four eyes when the owner switches it on.
 // - `completeRefund` (`payments.refunds.execute`): an approved refund paid out — to the wallet, a ledger credit in the
 //   same transaction (wallet.ts), or the way it came: a person sent the money by hand (bKash send-money, a bank
 //   transfer) and records its reference. The payment it came from becomes PARTIALLY_REFUNDED / REFUNDED (derived).
 //   `failRefund`: the payout did not go through (tried again later with `completeRefund`).
-// - `listRefunds` (`payments.view`): the refunds by state, newest first, with the money owed to customers always on top
-//   (@extas/metrics `owedToCustomers`, F-041).
+// - `listRefunds` (`payments.view`): the refunds by state (or OWED, or PAYOUT: approved or failed), newest first, with
+//   the money owed to customers always on top (@extas/metrics `owedToCustomers`, F-041).
 // No gateway refund call is made here: a gateway's own refund API joins behind the owner's approval when its keys and
 // terms are known (follow-up 421).
 import { owedToCustomers, type OwedFigure } from '@extas/metrics';
@@ -26,7 +26,7 @@ import { z } from 'zod';
 import { allow, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, type Tx, type Who } from './context';
 import { PaymentsError } from './errors';
 import { CASH_OUTCOMES } from './cod-match';
-import { HELD_REFUND_STATES, MANUAL_REFUND_SOURCES, refundAllowed, refundedPaymentState, refundMove, refundRoom, REFUND_METHODS, REFUND_STATES, rtoRefundAmount, type RefundMethod, type RefundSource, type RefundState } from './refund-pure';
+import { HELD_REFUND_STATES, MANUAL_REFUND_SOURCES, refundAllowed, refundedPaymentState, refundMove, refundRoom, REFUND_METHODS, REFUND_STATES, rtoRefundAmount, rtoRefundSplit, type RefundMethod, type RefundSource, type RefundState } from './refund-pure';
 import { auditMoney, postWalletEntry } from './wallet';
 
 /** The timeline's event types of a refund. */
@@ -87,10 +87,11 @@ type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER }>;
 
 /** The order's money a refund may still give back, and what the rider over-collected (under the caller's order lock). */
 async function roomOf(tx: Tx, storeId: number, o: OrderFacts): Promise<{ roomMinor: number; overMinor: number; inMinor: number }> {
-  const [held, doors, overRefunds] = await Promise.all([
+  const [held, doors, overRefunds, usedMinor] = await Promise.all([
     tx.refund.aggregate({ where: { storeId, orderId: o.id, status: { in: [...HELD_REFUND_STATES] } }, _sum: { amountMinor: true } }),
     tx.codCollection.findMany({ where: { storeId, orderId: o.id, outcome: { in: [...CASH_OUTCOMES] }, state: { notIn: ['REJECTED', 'PENDING_APPROVAL'] } }, select: { expectedMinor: true, collectedMinor: true, chargeCollectedMinor: true } }),
     tx.refund.aggregate({ where: { storeId, orderId: o.id, source: 'RIDER_OVERCHARGE', status: { in: [...HELD_REFUND_STATES] } }, _sum: { amountMinor: true } }),
+    exchangeUsedMinor(tx, storeId, o),
   ]);
   let collectedMinor = 0;
   let overMinor = 0;
@@ -99,10 +100,23 @@ async function roomOf(tx: Tx, storeId: number, o: OrderFacts): Promise<{ roomMin
     overMinor += Math.max(0, d.collectedMinor - d.expectedMinor);
   }
   return {
-    roomMinor: refundRoom({ paidMinor: o.paidMinor, walletAppliedMinor: o.walletAppliedMinor, collectedMinor, heldMinor: held._sum.amountMinor ?? 0 }),
+    roomMinor: Math.max(0, refundRoom({ paidMinor: o.paidMinor, walletAppliedMinor: o.walletAppliedMinor, collectedMinor, heldMinor: held._sum.amountMinor ?? 0 }) - usedMinor),
     overMinor: Math.max(0, overMinor - (overRefunds._sum.amountMinor ?? 0)),
-    inMinor: o.paidMinor + o.walletAppliedMinor + collectedMinor,
+    inMinor: Math.max(0, o.paidMinor + o.walletAppliedMinor + collectedMinor - usedMinor),
   };
+}
+
+/** The exchange states in which an exchange's new parcel stands (approved and not refused or cancelled). */
+const EXCHANGE_USING = ['APPROVED', 'PICKUP_BOOKED', 'RECEIVED', 'QC_PASSED', 'QC_FAILED', 'COMPLETED'] as const;
+
+/**
+ * Review R3 (M1) — the money of a refused (RETURNED) parcel that its approved re-ship exchanges put towards their new
+ * parcels (each old piece's covered amount, PR 190): it paid for the new parcel, so it is never refunded as well.
+ */
+async function exchangeUsedMinor(tx: Tx, storeId: number, o: Pick<OrderFacts, 'id' | 'status'>): Promise<number> {
+  if (o.status !== 'RETURNED') return 0;
+  const items = await tx.exchangeItem.findMany({ where: { exchange: { storeId, orderId: o.id, status: { in: [...EXCHANGE_USING] } } }, select: { oldUnitMinor: true, quantity: true } });
+  return items.reduce((s, i) => s + Math.max(0, i.oldUnitMinor) * i.quantity, 0);
 }
 
 /**
@@ -200,29 +214,102 @@ export async function requestRefund(deps: PaymentsDeps, who: Who, orderId: strin
 
 /**
  * SIM-F-041 — the refund a returned paid parcel owes, asked by the system once per order (the paid part by the way it
- * came, the wallet part back to the wallet). Run in the caller's transaction (S08's return step); a second call finds
- * the first. Returns the refund ids (none when nothing was paid).
+ * came, the wallet part back to the wallet). Run in the caller's transaction (the order service's `returned` and
+ * `deliveryCorrected` steps, under the order's lock, gate F-041); a second call finds the first. Returns the refund ids
+ * (none when nothing was paid). Review R3 (M3, minor 2): a delivery-charge advance is kept unless the owner says to ask
+ * it back (`rtoAdvance`), the KEEP rule reaches the wallet part too, and a refusal that is the shop's own fault
+ * (`ourFault`) asks everything back (`rtoRefundSplit`).
  */
-export async function requestReturnRefund(tx: Tx, deps: Pick<PaymentsDeps, 'settings'>, storeId: number, orderId: string): Promise<string[]> {
+export async function requestReturnRefund(tx: Tx, deps: Pick<PaymentsDeps, 'settings'>, storeId: number, orderId: string, opts: { ourFault?: boolean } = {}): Promise<string[]> {
   const o = await tx.order.findFirst({ where: { id: orderId, storeId }, select: ORDER });
   if (!o) throw new PaymentsError('NOT_FOUND', 'no such order', ['orderId']);
   const rules = await setting(deps, storeId, 'payments.refunds');
+  const paid = await tx.payment.findMany({ where: { storeId, orderId, status: 'PAID' }, select: { id: true, purpose: true, amountMinor: true, receivedMinor: true } });
+  const advances = paid.filter((p) => p.purpose === 'ADVANCE_DELIVERY_CHARGE');
+  const advanceMinor = advances.reduce((s, p) => s + (p.receivedMinor ?? p.amountMinor), 0);
+  const split = rtoRefundSplit(rules, { ...o, advanceMinor, ourFault: opts.ourFault === true });
+  const keptAdvance = rules.rtoAdvance !== 'ASK' && !opts.ourFault;
+  const from = keptAdvance ? paid.filter((p) => p.purpose !== 'ADVANCE_DELIVERY_CHARGE') : paid;
+  return askReturn(tx, storeId, o, split, `rto:${orderId}`, from.length === 1 ? from[0]!.id : null);
+}
+
+/** The system's return refund requests (the way it came, then the wallet part), each capped by the order's room. */
+async function askReturn(tx: Tx, storeId: number, o: OrderFacts, split: { originalMinor: number; walletMinor: number }, key: string, paymentId: string | null): Promise<string[]> {
   const ids: string[] = [];
-  const ask = async (amountMinor: number, method: RefundMethod, key: string) => {
+  const ask = async (amountMinor: number, method: RefundMethod, k: string, pay: string | null) => {
     if (amountMinor <= 0) return;
-    const existing = await tx.refund.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: key } }, select: { id: true } });
+    const existing = await tx.refund.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: k } }, select: { id: true } });
     if (existing) return void ids.push(existing.id);
     // review R1 (M4): never more than the order has left to refund (an edit or a cancel may have asked part already)
     const capped = Math.min(amountMinor, (await roomOf(tx, storeId, o)).roomMinor);
     if (capped <= 0) return;
-    const r = await tx.refund.create({ data: { storeId, orderId, amountMinor: capped, method, reason: 'RTO', source: 'RTO', status: 'REQUESTED', idempotencyKey: key }, select: { id: true } });
+    const r = await tx.refund.create({ data: { storeId, orderId: o.id, paymentId: pay, amountMinor: capped, method, reason: 'RTO', source: 'RTO', status: 'REQUESTED', idempotencyKey: k }, select: { id: true } });
     ids.push(r.id);
   };
-  const paid = await tx.payment.findMany({ where: { storeId, orderId, status: 'PAID' }, select: { id: true } });
-  await ask(rtoRefundAmount(rules, o), 'original', `rto:${orderId}`);
-  if (paid.length === 1 && ids[0]) await tx.refund.updateMany({ where: { id: ids[0], paymentId: null }, data: { paymentId: paid[0]!.id } });
-  await ask(o.walletAppliedMinor, 'wallet', `rto:${orderId}:wallet`);
+  await ask(split.originalMinor, 'original', key, paymentId);
+  await ask(split.walletMinor, 'wallet', `${key}:wallet`, null);
   return ids;
+}
+
+/** The note the system writes on a return refund an exchange used (the customer's page leaves such a refund out). */
+export const EXCHANGE_USED_NOTE = 'Used for exchange';
+
+/**
+ * Review R3 (M1) — an exchange is approved on a refused (RETURNED) paid parcel and its old pieces cover `usedMinor` of
+ * the money paid (PR 190): in the approval's transaction, under the order's lock, the open return refund REQUESTS of
+ * that parcel are cut by that much through the refund state machine — each one used up is REJECTED with the system's
+ * note; one used in part is REJECTED and what is left is asked again as a new REQUEST — nothing is deleted. A refund a
+ * person already approved (or paid) is never touched: when what is left to refund cannot cover the rest, nothing changes
+ * and `shortMinor` says how much is missing (the caller refuses the approval). Returns the refunds closed and asked.
+ */
+export async function settleReturnRefundsForExchange(
+  tx: Tx,
+  deps: Pick<PaymentsDeps, 'now'>,
+  storeId: number,
+  orderId: string,
+  usedMinor: number,
+  ex: { exchangeId: string; number: string; newOrderNumber: string },
+): Promise<{ closedIds: string[]; askedIds: string[]; shortMinor: number }> {
+  const out = { closedIds: [] as string[], askedIds: [] as string[], shortMinor: 0 };
+  const o = await lockOrder(tx, storeId, orderId);
+  if (o.status !== 'RETURNED' || usedMinor <= 0) return out;
+  const open = await tx.refund.findMany({ where: { storeId, orderId, source: 'RTO', status: 'REQUESTED' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: ROW });
+  // the paid money first (what the old piece's cover is made of), then the wallet part
+  open.sort((a, b) => Number(a.method === 'wallet') - Number(b.method === 'wallet'));
+  const plan: { r: (typeof open)[number]; takeMinor: number }[] = [];
+  let left = usedMinor;
+  for (const r of open) {
+    if (left <= 0) break;
+    const takeMinor = Math.min(left, r.amountMinor);
+    plan.push({ r, takeMinor });
+    left -= takeMinor;
+  }
+  if (left > 0) {
+    // what is not in an open request must still be free on the order (not approved or paid back already)
+    const freed = plan.reduce((s, p) => s + p.takeMinor, 0);
+    const room = (await roomOf(tx, storeId, o)).roomMinor + freed;
+    if (room < usedMinor) return { ...out, shortMinor: usedMinor - room };
+  }
+  const now = nowOf(deps);
+  const system: Who = { actor: { staffUserId: null }, storeId, ctx: { source: 'system' } };
+  for (const { r, takeMinor } of plan) {
+    const note = `${EXCHANGE_USED_NOTE} ${ex.number} (new order ${ex.newOrderNumber}): ${takeMinor} of ${r.amountMinor} pays for the new parcel`;
+    await tx.refund.update({ where: { id: r.id }, data: { status: 'REJECTED', decidedAt: now, decisionNote: note } });
+    await event(tx, system, orderId, REFUND_EVENTS.rejected, { refundId: r.id, amountMinor: r.amountMinor, method: r.method, exchangeId: ex.exchangeId, usedMinor: takeMinor });
+    await auditMoney(tx, system, 'refund.reject', 'Refund', r.id, { status: r.status, amountMinor: r.amountMinor }, { status: 'REJECTED', note, exchangeId: ex.exchangeId, usedMinor: takeMinor });
+    out.closedIds.push(r.id);
+    const rest = r.amountMinor - takeMinor;
+    if (rest > 0) {
+      const n = await tx.refund.create({
+        data: { storeId, orderId, paymentId: r.paymentId, amountMinor: rest, method: r.method, reason: r.reason, source: r.source, status: 'REQUESTED', idempotencyKey: `${r.id}:after:${ex.exchangeId}`, note: `What is left of the refund after exchange ${ex.number}` },
+        select: { id: true },
+      });
+      await event(tx, system, orderId, REFUND_EVENTS.requested, { refundId: n.id, amountMinor: rest, method: r.method, source: r.source, after: r.id, exchangeId: ex.exchangeId });
+      await auditMoney(tx, system, 'refund.request', 'Refund', n.id, undefined, { orderId, amountMinor: rest, method: r.method, source: r.source, after: r.id, exchangeId: ex.exchangeId });
+      out.askedIds.push(n.id);
+    }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -366,10 +453,11 @@ export interface RefundList {
 export async function listRefunds(deps: PaymentsDeps, who: Who, opts: { state?: string; orderId?: string; limit?: number } = {}): Promise<RefundList> {
   await allow(deps, who, 'payments.view');
   const state = opts.state === undefined || opts.state === '' ? null : opts.state.toUpperCase();
-  if (state !== null && !(REFUND_STATES as readonly string[]).includes(state) && state !== 'OWED') throw new PaymentsError('INVALID_INPUT', 'no such refund state', ['state']);
+  if (state !== null && !(REFUND_STATES as readonly string[]).includes(state) && state !== 'OWED' && state !== 'PAYOUT') throw new PaymentsError('INVALID_INPUT', 'no such refund state', ['state']);
   if (opts.orderId !== undefined && !UUID.test(opts.orderId)) throw new PaymentsError('INVALID_INPUT', 'no such order', ['orderId']);
   const take = Math.min(Math.max(1, Math.trunc(opts.limit ?? 50) || 50), 200);
-  const status = state === 'OWED' ? { in: ['REQUESTED', 'APPROVED', 'FAILED'] as RefundState[] } : state ? (state as RefundState) : undefined;
+  // gate F-041: PAYOUT is what waits for a person to send the money (approved, or a payout that failed)
+  const status = state === 'OWED' ? { in: ['REQUESTED', 'APPROVED', 'FAILED'] as RefundState[] } : state === 'PAYOUT' ? { in: ['APPROVED', 'FAILED'] as RefundState[] } : state ? (state as RefundState) : undefined;
   const [owed, rows] = await Promise.all([
     owedToCustomers(deps.db, who.storeId),
     deps.db.refund.findMany({ where: { storeId: who.storeId, ...(status ? { status } : {}), ...(opts.orderId ? { orderId: opts.orderId } : {}) }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take, select: ROW }),

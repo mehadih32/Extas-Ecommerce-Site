@@ -249,6 +249,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'books', pages: [{ href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] }] },
       // S16 · PR 342: Money → Overview — cash received, COD the couriers owe, refunds waiting (read-only); second, so Money still opens Books (CN-028 · PR 615).
       { id: 'overview', pages: [{ href: '/admin/money', perm: 'payments.view', keys: ['moneyOverview'] }] },
+      // Go-live gate F-041 / F-054 (PR 172, 171 follow-ups): Money → Refunds & wallet — approve and record refunds, the apology credit, the money rules.
+      { id: 'refunds', pages: [{ href: '/admin/money/refunds', perm: 'payments.view', keys: ['moneyRefunds'] }] },
       { id: 'match', pages: [{ href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] }] },
       { id: 'differences', pages: [{ href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] }] },
       { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },

@@ -3,12 +3,15 @@
 // fulfilment, courier events) take who acts from their caller, which checks its own permission.
 //
 // Never here: moving money, a refund payout, a COD, price or discount change, or blocking anyone (CLAUDE.md rule 6). A
-// paid order's cancel records a refund REQUEST for the owner (F-041), nothing more.
+// paid order's cancel records a refund REQUEST for the owner (F-041), nothing more; so does a paid parcel that comes
+// back (gate F-041: the `returned` and `deliveryCorrected` steps, @extas/payments requestReturnRefund).
+import { requestReturnRefund } from '@extas/payments';
 import { z } from 'zod';
 import { allow, parse, setting, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
 import { CANCEL_CODES, NOT_A_RISK_SIGNAL, NOTE_REQUIRED, type CancelCode, type OrderCommand } from './pure';
 import { openCourierReturn } from './return-cases';
+import { ourFaultRefusal } from './refused';
 import { cancelEffects, execute, queueErpOrder, staffBy, type By, type CommandOptions, type CommandResult, type LockedOrder, type OrderFacts } from './service';
 
 const NOTE_MAX = 2_000;
@@ -370,6 +373,9 @@ export const stepInput = z
  * (EXPECTED, every line not kept) in the same transaction, for Receive & QC.
  * PR 182: `also` runs in the same transaction, under the order's lock (S08's packing checks; throw to refuse), and what
  * it returns goes on the step's timeline event.
+ * Gate F-041 (follow-up 420): a parcel of a paid order that comes back — `returned`, or a delivery corrected to returned
+ * — asks its refund in the same transaction (what was paid online, by the owner's RTO rule, and the wallet part), once,
+ * as a REQUEST that waits for the owner's approval on Money › Refunds & wallet. Nothing is paid here.
  */
 export async function orderStep(
   deps: OrdersDeps,
@@ -398,10 +404,13 @@ export async function orderStep(
       const returnId = step === 'returned' || step === 'partiallyDelivered' ? await openCourierReturn(deps, tx, o, { step, refusalKey: refusal?.key ?? null, keptItemIds: d.keptItemIds ?? [], chargePaidMinor: d.chargePaidMinor ?? 0, now }) : null;
       // PR 182: the packing step's own checks and records under the order's lock (the SKU scan, the photo, the weight)
       const more = (await opts.also?.(tx, o, now)) ?? {};
-      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(opts.eventData ?? {}), ...more };
+      // review R3 (minor 2): a refusal for one of the owner's "our fault" reasons asks everything back (a request only)
+      const refundRequestIds =
+        step === 'returned' || step === 'deliveryCorrected' ? await requestReturnRefund(tx, deps, o.storeId, o.id, { ourFault: await ourFaultRefusal(deps, o.storeId, refusal?.key ?? null) }) : [];
+      const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(refundRequestIds.length ? { refundRequestIds } : {}), ...(opts.eventData ?? {}), ...more };
       // PR 184: a pick-up the courier reports before anyone pressed "Handed over" is the hand-over
       const handed = step === 'courierPickedUp' && from !== 'HANDED_OVER' ? { handedOverAt: d.at ?? now } : {};
-      return { data: { ...(field ? { [field]: d.at ?? now } : {}), ...handed }, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined };
+      return { data: { ...(field ? { [field]: d.at ?? now } : {}), ...handed }, reasonCode: refusal?.key ?? null, message: d.note ?? null, eventData: Object.keys(eventData).length ? eventData : undefined, refundRequestIds };
     },
   }, opts);
 }

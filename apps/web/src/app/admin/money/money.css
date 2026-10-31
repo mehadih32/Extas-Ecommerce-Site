@@ -44,3 +44,17 @@
 /* PR 346 — Month-end: the month's name between the earlier and later buttons. */
 .adm2 .me-month{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
 .adm2 .ex-sum{cursor:pointer;min-height:44px;display:flex;align-items:center}
+/* Go-live gate F-041 / F-054 — Money › Refunds & wallet (and the customer page's wallet): one refund or late order per
+   row, its facts wrapping, its next step opening a small form under it. Finger-sized, never wider than the phone. */
+.adm2 .rf-rows{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .rf-row{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--ln2);border-radius:10px;background:var(--sf2);min-width:0}
+.adm2 .rf-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.adm2 .rf-amt{font-size:15px}
+.adm2 .rf-facts{display:flex;flex-wrap:wrap;align-items:center;gap:0 12px;overflow-wrap:anywhere}
+.adm2 .rf-facts a{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.adm2 .rf-act{margin-top:4px}
+.adm2 .rf-act .a2-gap8{flex-wrap:wrap}
+.adm2 .rf-act .a2-btn{min-height:44px}
+.adm2 .rf-form{display:grid;gap:8px;max-width:520px;padding:10px;border-radius:10px;background:var(--sf);border:1px solid var(--ln2)}
+.adm2 .rf-form .a2-chkl{min-height:44px}
+.adm2 .rf-views .a2-view{min-width:44px;justify-content:center}

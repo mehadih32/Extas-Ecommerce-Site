@@ -152,6 +152,7 @@
     "ERP_REFUSED": "The ERP did not take it.",
     "ERP_UNAVAILABLE": "The ERP cannot be reached now. Nothing changed; try again in a little while.",
     "EXCHANGE_WAITING": "Not enough of the new piece is free in the ERP now. Regular orders come first, so the exchange waits.",
+    "REFUND_TAKEN": "The refused parcel's money is already approved or paid back as a refund. Withdraw that refund on Money › Refunds & wallet, or refuse the exchange.",
     "HANDBACK_STATE": "The list is not at this step now. Open the page again.",
     "NOT_EXPECTED": "This parcel is not expected back, or it is already on a list.",
     "NOT_IN_ERP": "This order was not sent to the ERP on the new model.",
