@@ -16,6 +16,8 @@
 #   - before each daily backup the disk is pruned until BACKUP_MIN_FREE_PCT is free (oldest first; the newest base
 #     backup always stays), and retention runs again after it;
 #   - a failed day leaves nothing half-written behind (it is staged on NVMe and moved in by one rename).
+#   extas-backup lock-check — PR 385: proves the Blob copies are immutable (a delete from this server is refused);
+#                          also run by every daily backup once BACKUP_IMMUTABLE=yes
 # Blob and Drive are "not connected" until the owner enters their keys in the admin vault (PR 493); the backup then
 # still runs locally and the status says so. Nothing here ever prints a secret.
 set -euo pipefail
@@ -69,6 +71,12 @@ tg() {
 [ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
 blob_on()  { [ -n "${RCLONE_CONFIG_BLOB_TYPE:-}" ]; }
 drive_on() { [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ]; }
+# PR 385 (B6.1): immutable backups. With BACKUP_IMMUTABLE=yes the Blob container is locked by its own immutability
+# policy and the server's Blob key may add and read but not delete, so an attacker who takes this server cannot wipe
+# the off-server copies. The server then never deletes or overwrites in Blob (Azure's lifecycle rule removes copies
+# after BACKUP_KEEP_BLOB_DAYS) and checks every day that a delete is refused (lock_check).
+imm_on() { [ "${BACKUP_IMMUTABLE:-no}" = yes ]; }
+IMM=(); if imm_on; then IMM=(--immutable); fi
 BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"
 # PR 395 (CN-030): with the one-click Google sign-in the remote's root is the shop's own backup folder
 # (RCLONE_CONFIG_DRIVE_ROOT_FOLDER_ID, from the vault sync) and BACKUP_DRIVE_FOLDER is empty: the dated folders go
@@ -183,6 +191,26 @@ docs_backup() {
 # free_pct: how much of the backup disk is free, in whole per cent.
 free_pct() { df -P "$LOCAL" | awk 'NR==2 { gsub("%", "", $5); print 100 - $5 }'; }
 
+# lock_check: a small marker goes to lock-check/ in Blob and is then deleted with the server's own key. The delete must
+# be refused and the marker still be there; when the delete works, anyone holding this server could wipe the backups,
+# so the check fails and the monitor alerts. Off (and saying why) until Blob is connected and BACKUP_IMMUTABLE=yes.
+lock_check() {
+  local m
+  if ! blob_on; then status lock blob off "not connected — add the key in Keys & connections"; return 0; fi
+  if ! imm_on; then status lock blob off "the Blob copies are not locked yet (BACKUP_IMMUTABLE)"; return 0; fi
+  mkdir -p "$STAGE"; m="$STAGE/lock-check-$NOW"
+  printf 'EXTAS lock check %s\n' "$NOW" > "$m"
+  if ! rclone copy -q "${IMM[@]}" "$m" "blob:$BLOB_PATH/lock-check/"; then rm -f "$m"; status lock blob fail "the check marker did not upload"; return 1; fi
+  rm -f "$m"
+  if rclone deletefile -q "blob:$BLOB_PATH/lock-check/lock-check-$NOW" 2>/dev/null; then
+    status lock blob fail "a delete was NOT refused: the Blob copies can be deleted from this server"; return 1
+  fi
+  if [ -z "$(rclone lsf "blob:$BLOB_PATH/lock-check" --include "lock-check-$NOW" 2>/dev/null)" ]; then
+    status lock blob fail "the check marker is gone although its delete was refused"; return 1
+  fi
+  status lock blob ok "a delete from this server was refused ($NOW)"
+}
+
 # make_room: prune by the retention settings, then — while less than BACKUP_MIN_FREE_PCT is free — the oldest archived
 # WAL (older than an hour) and then the oldest base backup (never the newest), until there is room or nothing more may
 # go. Sets ROOM_NOTE.
@@ -239,12 +267,14 @@ daily() {
   status daily local ok "$ROOM_NOTE$(du -sh "$LOCAL/base/$NOW" | cut -f1) base + dump; $MEDIA_NOTE; $DOCS_NOTE; $(free_pct)% of the backup disk free"
 
   if blob_on; then
-    if rclone copy -q "$LOCAL/base/$NOW" "blob:$BLOB_PATH/base/$NOW" && rclone copy -q "$LOCAL/dump/extas-$NOW.dump" "blob:$BLOB_PATH/dump/" \
-      && { [ -z "$MEDIA_NAME" ] || { rclone copy -q "$LOCAL/media/$MEDIA_NAME.tar" "blob:$BLOB_PATH/media/" \
-        && rclone copy -q "$LOCAL/media/media-$NOW.sha256" "blob:$BLOB_PATH/media/"; }; } \
-      && { [ -z "$DOCS_NAME" ] || { rclone copy -q "$LOCAL/docs/$DOCS_NAME.tar.gz" "blob:$BLOB_PATH/docs/" \
-        && rclone copy -q "$LOCAL/docs/$DOCS_NAME.commit" "blob:$BLOB_PATH/docs/"; }; }; then
+    if rclone copy -q "${IMM[@]}" "$LOCAL/base/$NOW" "blob:$BLOB_PATH/base/$NOW" && rclone copy -q "${IMM[@]}" "$LOCAL/dump/extas-$NOW.dump" "blob:$BLOB_PATH/dump/" \
+      && { [ -z "$MEDIA_NAME" ] || { rclone copy -q "${IMM[@]}" "$LOCAL/media/$MEDIA_NAME.tar" "blob:$BLOB_PATH/media/" \
+        && rclone copy -q "${IMM[@]}" "$LOCAL/media/media-$NOW.sha256" "blob:$BLOB_PATH/media/"; }; } \
+      && { [ -z "$DOCS_NAME" ] || { rclone copy -q "${IMM[@]}" "$LOCAL/docs/$DOCS_NAME.tar.gz" "blob:$BLOB_PATH/docs/" \
+        && rclone copy -q "${IMM[@]}" "$LOCAL/docs/$DOCS_NAME.commit" "blob:$BLOB_PATH/docs/"; }; }; then
       status daily blob ok "$NOW"
+      # PR 385: the lock is proved with every backup once it is switched on
+      lock_check || rc=1
     else status daily blob fail "upload failed"; rc=1; fi
   else status daily blob off "not connected — add the key in Keys & connections"; fi
 
@@ -277,7 +307,7 @@ daily() {
 wal() {
   blob_on || { status wal blob off "not connected"; exit 0; }
   # Upload each archived segment once; the local copy stays until prune (local point-in-time restore too).
-  if rclone copy -q --ignore-existing "$LOCAL/wal" "blob:$BLOB_PATH/wal/" --min-age 5s 2>/dev/null; then
+  if rclone copy -q --ignore-existing "${IMM[@]}" "$LOCAL/wal" "blob:$BLOB_PATH/wal/" --min-age 5s 2>/dev/null; then
     status wal blob ok "pushed"
   else status wal blob fail "push failed"; exit 1; fi
 }
@@ -342,7 +372,9 @@ drive_prune() {
 prune() {
   prune_files
   # Remote copies (database, config, photo archives and docs bundles alike) by their age.
-  blob_on && rclone delete -q --min-age "${BACKUP_KEEP_BLOB_DAYS}d" "blob:$BLOB_PATH" || true
+  # PR 385: locked Blob copies are never deleted from here; the container's lifecycle rule removes them after
+  # BACKUP_KEEP_BLOB_DAYS (an attempt would be refused anyway, and a key that could delete is exactly what the lock stops)
+  if ! imm_on; then blob_on && rclone delete -q --min-age "${BACKUP_KEEP_BLOB_DAYS}d" "blob:$BLOB_PATH" || true; fi
   drive_on && drive_prune
   return 0
   status prune local ok "kept ${BACKUP_KEEP_LOCAL_DAYS} days locally"
@@ -396,5 +428,6 @@ case "${1:-}" in
   prune) prune ;;
   schedule) schedule ;;
   request) shift; request "$@" ;;
-  *) echo "usage: extas-backup daily|wal|prune|schedule|request <id> <kind> [source]" >&2; exit 2 ;;
+  lock-check) lock_check ;;
+  *) echo "usage: extas-backup daily|wal|prune|schedule|request <id> <kind> [source]|lock-check" >&2; exit 2 ;;
 esac

@@ -492,10 +492,11 @@ cat > "$T/bin/rclone" <<'FAKE'
 # stand-in for rclone: blob:<path> and drive:<path> are folders under $FAKE_REMOTE; copy / lsf / delete with --include
 set -euo pipefail
 p() { case "$1" in blob:*|drive:*) echo "$FAKE_REMOTE/${1%%:*}/${1#*:}" ;; *) echo "$1" ;; esac; }
+echo "$*" >> "$FAKE_REMOTE/argv"
 cmd="$1"; shift; args=(); inc=(); dirs=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    -q|--ignore-existing|--one-way) shift ;;
+    -q|--ignore-existing|--one-way|--immutable) shift ;;
     --min-age) shift 2 ;;
     --include) inc+=("$2"); shift 2 ;;
     --dirs-only) dirs=1; shift ;;
@@ -515,6 +516,10 @@ case "$cmd" in
     (cd "$s" && find . -type f) | while read -r f; do want "$f" || continue; cmp -s "$s/$f" "$d/$f" || exit 1; done ;;
   touch) d="$(p "${args[0]}")"; mkdir -p "$(dirname "$d")"; : > "$d" ;;
   purge) rm -rf "$(p "${args[0]}")" ;;
+  deletefile|delete)
+    # PR 385: a locked container (FAKE_LOCKED=1) refuses every delete, as Azure's immutability policy does
+    [ -n "${FAKE_LOCKED:-}" ] && { echo "409 This operation is not permitted as the blob is immutable" >&2; exit 1; }
+    t="$(p "${args[0]}")"; if [ "$cmd" = deletefile ]; then rm -f "$t"; fi ;;
   lsf)
     s="$(p "${args[0]}")"; [ -d "$s" ] || exit 0
     if [ -n "$dirs" ]; then find "$s" -mindepth 1 -maxdepth 1 -type d -printf '%f/\n' | sort
@@ -687,6 +692,26 @@ check "backup: a docs copy without the register fails the backup" "$rc:$(jq -r .
 sed -i 's/^BACKUP_MEDIA=.*/BACKUP_MEDIA="yes"/' "$T/server.conf"
 rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
 check "restore test: photos on disk but no archive fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'no photo archive')" "1:1"
+# Immutable backups (PR 385, B6.1): off until BACKUP_IMMUTABLE=yes; then every daily backup proves that a delete from
+# this server is refused, the copies go up with --immutable, and prune never deletes in Blob
+echo register > "$T/repo/docs/MASTER-REGISTER.md"
+env EXTAS_CONFIG_FILE="$T/server.conf" bash ../deploy/docs-sync.sh ffffffffffff6666666666666666666666666666 "$T/repo" >/dev/null
+rc=0; "${BENV[@]}" "$B/extas-backup" lock-check >/dev/null 2>&1 || rc=$?
+check "lock: off until switched on, and says why" "$rc:$(jq -r .result "$BR/state/backup-lock-blob.json"):$(jq -r .detail "$BR/state/backup-lock-blob.json" | grep -c 'not locked yet')" "0:off:1"
+sed -i 's/^BACKUP_IMMUTABLE=.*/BACKUP_IMMUTABLE="yes"/' "$T/server.conf"
+rc=0; "${BENV[@]}" FAKE_LOCKED=1 EXTAS_BACKUP_STAMP="$(stamp '2 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "lock: a locked container passes the daily check" "$rc:$(jq -r .result "$BR/state/backup-lock-blob.json")" "0:ok"
+check "lock: the copies go up with --immutable" "$(grep -c '^copy -q --immutable .* blob:extas-backups/dump/' "$T/remote/argv" || true)" "1"
+check "lock: the check marker stays" "$(ls "$T/remote/blob/extas-backups/lock-check" | wc -l)" "1"
+rc=0; "${BENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '1 minute ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "lock: a delete that works fails the backup" "$rc:$(jq -r .result "$BR/state/backup-lock-blob.json"):$(jq -r .detail "$BR/state/backup-lock-blob.json" | grep -c 'NOT refused')" "1:fail:1"
+: > "$T/remote/log"
+"${BENV[@]}" "$B/extas-backup" prune >/dev/null 2>&1
+check "lock: prune never deletes in Blob (Drive still pruned)" "$(grep -c '^delete blob:' "$T/remote/log" || true):$(grep -q ' drive:' "$T/remote/log" && echo yes || echo no)" "0:yes"
+sed -i 's/^BACKUP_IMMUTABLE=.*/BACKUP_IMMUTABLE="no"/' "$T/server.conf"
+: > "$T/remote/log"
+"${BENV[@]}" "$B/extas-backup" prune >/dev/null 2>&1
+check "lock: unlocked, prune deletes old Blob copies as before" "$(grep -c '^delete blob:' "$T/remote/log" || true)" "1"
 rm -rf "$T"
 
 # The app's own database role (PR 139, infra/deploy/app-role.sh) with a stand-in `docker`: nothing switches until the
