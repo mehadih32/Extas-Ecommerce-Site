@@ -101,6 +101,21 @@ describe.skipIf(!HAS_TEST_DB)('combo admin API on PostgreSQL', () => {
     expect((await api('GET', [id, 'photo'])).status).toBe(405);
   });
 
+  it('CN-018 (4) — sets Fixed or Flexible: the store setting (off as shipped) and one set\'s own choice, by the owner', async () => {
+    expect((await api('GET', ['split'])).body.split).toEqual({ enabled: false, defaultMode: 'FLEXIBLE', priceRule: 'PRO_RATA', chargeUnderFreeLimit: false });
+    expect((await api('PUT', ['split'])).status).toBe(405);
+    expect((await api('POST', ['split'], { defaultMode: 'HALF' })).body.error).toBe('INVALID_INPUT');
+    const on = await api('POST', ['split'], { enabled: true, defaultMode: 'FIXED' });
+    expect(on.body.split).toMatchObject({ enabled: true, defaultMode: 'FIXED', priceRule: 'PRO_RATA' });
+    const c = (await api('GET', [])).body.combos[0] as { id: string };
+    const set = await api('POST', [c.id, 'split'], { splitMode: 'FLEXIBLE', splitPriceRule: 'OWN_PRICE' });
+    expect(set.body.combo).toMatchObject({ splitMode: 'FLEXIBLE', splitPriceRule: 'OWN_PRICE' });
+    expect((await api('GET', [c.id, 'split'])).status).toBe(405);
+    expect((await api('POST', [c.id, 'split'], { splitMode: 'FIXED' })).body.error).toBe('INVALID_INPUT');
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['combo.split', 'combos.split.save'] } } })).toBe(2);
+    await api('POST', ['split'], { enabled: false, defaultMode: 'FLEXIBLE' });
+  });
+
   it('PR 571 — an auto rule: live count, a draft, on, dates, options, add 1 more, its pairs, the shop templates', async () => {
     const rule = { key: 'api-polo-2', nameEn: 'API polo pairs', productIds: [ids['essential-pique-polo'], ids['contrast-collar-polo']], pieces: 2, pairing: 'STYLE', priceMode: 'PERCENT', percentOff: 10 };
     const pv = await api('POST', ['rules', 'preview'], { rule });

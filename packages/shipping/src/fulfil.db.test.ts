@@ -138,6 +138,23 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     }
   });
 
+  it('CN-018 (4): a Fixed set is named on the sticker (in both languages) only with the owner\'s setting on', async () => {
+    const s = await booked('st-set');
+    const combo = await db().combo.create({ data: { storeId: f.S, slug: 'st-fixed-pair', nameEn: 'Fixed pair', nameBn: 'ফিক্সড জোড়া', type: 'FIXED_SET', pieceCount: 2, splitMode: 'FIXED' } });
+    const flexible = await db().combo.create({ data: { storeId: f.S, slug: 'st-flex-pair', nameEn: 'Flexible pair', type: 'FIXED_SET', pieceCount: 2 } });
+    const [line] = await db().orderItem.findMany({ where: { orderId: s.orderId }, orderBy: { createdAt: 'asc' } });
+    await db().orderItem.update({ where: { id: line!.id }, data: { comboId: combo.id, comboGroupKey: 'st-g' } });
+    const extra = await db().orderItem.create({ data: { storeId: f.S, orderId: s.orderId, sku: line!.sku, productName: line!.productName, quantity: 1, unitPriceMinor: 0, lineTotalMinor: 0, comboId: flexible.id, comboGroupKey: 'st-g2' } });
+    expect((await print([s.shipmentId]))[0]!.fixedSets).toEqual([]);
+    f.overrides.set('combos.split', { enabled: true, defaultMode: 'FLEXIBLE', priceRule: 'PRO_RATA', chargeUnderFreeLimit: false });
+    try {
+      expect((await print([s.shipmentId], { reason: 'set line check' }))[0]!.fixedSets).toEqual([{ nameEn: 'Fixed pair', nameBn: 'ফিক্সড জোড়া' }]);
+    } finally {
+      f.overrides.delete('combos.split');
+      await db().orderItem.update({ where: { id: extra.id }, data: { status: 'REMOVED' } });
+    }
+  });
+
   it('a parcel the courier has picked up is not in the run and is not printed; staff without the permission cannot print', async () => {
     const a = await booked('st-picked');
     await db().shipment.update({ where: { id: a.shipmentId }, data: { status: 'PICKED_UP' } });

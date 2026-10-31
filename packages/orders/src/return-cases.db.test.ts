@@ -7,7 +7,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { closeReturn, confirmOrder, openExchange, openReturn, orderStep, qcReturn, returnChoices, systemBy } from './index';
+import { closeReturn, confirmOrder, keptDeliveryCharge, openExchange, openReturn, orderStep, qcReturn, returnChoices, systemBy } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -115,6 +115,50 @@ describe.skipIf(!HAS_TEST_DB)('PR 189 · return handling, no returns after recei
     expect(await code(openReturn(d(), f.staff, o2.orderId, { reason: 'changed-mind', items: [{ orderItemId: l2.id }] }))).toBe('RETURN_LIMIT');
     f.overrides.delete('policy.returns.afterDelivery');
     f.overrides.delete('orders.returns.handling');
+  });
+
+  it('CN-018 (4): a Fixed set comes back whole or not at all (our own mistake may come back alone); off as shipped', async () => {
+    f.overrides.set('policy.returns.afterDelivery', true);
+    const o = await delivered('rc-set', [{ variantId: f.v.skyM }, { variantId: f.v.teeM }, { variantId: f.v.skyL }]);
+    const [a, b, loose] = await db().orderItem.findMany({ where: { orderId: o.orderId }, orderBy: { createdAt: 'asc' } });
+    const combo = await db().combo.create({ data: { storeId: f.S, slug: 'rc-fixed-set', nameEn: 'Shirt and tee', type: 'FIXED_SET', pieceCount: 2, splitMode: 'FIXED' } });
+    await db().orderItem.updateMany({ where: { id: { in: [a!.id, b!.id] } }, data: { comboId: combo.id, comboGroupKey: 'rc-set-g' } });
+    const back = (...ids: string[]) => ({ reason: 'changed-mind', items: ids.map((orderItemId) => ({ orderItemId })) });
+    // off as shipped: one piece of the set may come back
+    expect(await code(openReturn(d(), f.staff, o.orderId, back(a!.id), { idempotencyKey: `rc-${randomUUID()}` }))).toBe('ok');
+    const o2 = await delivered('rc-set2', [{ variantId: f.v.skyM }, { variantId: f.v.teeM }, { variantId: f.v.skyL }]);
+    const [c, e, loose2] = await db().orderItem.findMany({ where: { orderId: o2.orderId }, orderBy: { createdAt: 'asc' } });
+    await db().orderItem.updateMany({ where: { id: { in: [c!.id, e!.id] } }, data: { comboId: combo.id, comboGroupKey: 'rc-set2-g' } });
+    f.overrides.set('combos.split', { enabled: true, defaultMode: 'FLEXIBLE', priceRule: 'PRO_RATA', chargeUnderFreeLimit: false });
+    const err = await openReturn(d(), f.staff, o2.orderId, back(c!.id, loose2!.id)).catch((x: unknown) => x as { code: string; data: unknown });
+    expect(err).toMatchObject({ code: 'SET_FIXED', data: { sets: ['Shirt and tee'] } });
+    expect(await db().returnRecord.count({ where: { orderId: o2.orderId } })).toBe(0);
+    // the loose piece alone, or the whole set, may come back; a wrong piece of ours may come back alone
+    expect(await code(openReturn(d(), f.staff, o2.orderId, back(loose2!.id)))).toBe('ok');
+    expect(await code(openReturn(d(), f.staff, o2.orderId, back(c!.id, e!.id)))).toBe('ok');
+    f.overrides.set('orders.returns.handling', { ourFaultReturns: true, windowHours: null });
+    const o3 = await delivered('rc-set3', [{ variantId: f.v.skyM }, { variantId: f.v.teeM }]);
+    const [g, h] = await db().orderItem.findMany({ where: { orderId: o3.orderId }, orderBy: { createdAt: 'asc' } });
+    await db().orderItem.updateMany({ where: { id: { in: [g!.id, h!.id] } }, data: { comboId: combo.id, comboGroupKey: 'rc-set3-g' } });
+    expect(await code(openReturn(d(), f.staff, o3.orderId, { reason: 'wrong', items: [{ orderItemId: g!.id }] }))).toBe('ok');
+    f.overrides.delete('orders.returns.handling');
+    expect(loose).toBeTruthy();
+    f.overrides.delete('combos.split');
+    f.overrides.delete('policy.returns.afterDelivery');
+  });
+
+  it('CN-018 (4): the kept part owes the band charge only when the whole order was free there and the kept part is not', async () => {
+    const o = await delivered('rc-kept', [{ variantId: f.v.skyM }, { variantId: f.v.teeM }]);
+    const [a] = await db().orderItem.findMany({ where: { orderId: o.orderId }, orderBy: { createdAt: 'asc' } });
+    const paid = await db().order.findUniqueOrThrow({ where: { id: o.orderId }, select: { deliveryChargeMinor: true, deliveryBandId: true } });
+    expect(paid.deliveryBandId).not.toBeNull();
+    // the order paid its charge: never asked again
+    expect(paid.deliveryChargeMinor).toBeGreaterThan(0);
+    expect(await keptDeliveryCharge(d(), f.S, o.orderId, [a!.id])).toBe(0);
+    // a charge waived by hand (no free-delivery rule gives it): nothing is added either
+    await db().order.update({ where: { id: o.orderId }, data: { deliveryChargeMinor: 0 } });
+    expect(await keptDeliveryCharge(d(), f.S, o.orderId, [a!.id])).toBe(0);
+    expect(await keptDeliveryCharge(d(), f.S, o.orderId, [])).toBe(0);
   });
 
   it('a person closes it: a checked return, or one never checked only with a note; closed stays closed', async () => {

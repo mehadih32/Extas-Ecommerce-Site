@@ -71,6 +71,7 @@ import { holidaySettings } from './registry-holiday';
 import { chargeMismatchSettings } from './registry-charge-mismatch';
 import { stickerLatinSettings } from './registry-sticker-latin';
 import { districtPromiseSettings } from './registry-district-promise';
+import { comboSplitSettings } from './registry-combo-split';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
@@ -1316,6 +1317,8 @@ export const registry = {
   ...stickerLatinSettings,
   // ---- SIM-F-048 · PR 550 follow-up · the delivery promise per district (registry-district-promise.ts, version 97). ----
   ...districtPromiseSettings,
+  // ---- CN-018 (4) · PR 89 follow-up · sets Fixed or Flexible, the split-price rule (registry-combo-split.ts, version 98). ----
+  ...comboSplitSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

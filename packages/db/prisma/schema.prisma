@@ -2387,6 +2387,12 @@ model Combo {
   version         Int            @default(1)
   createdById     String?        @db.Uuid
   updatedById     String?        @db.Uuid
+  /// CN-018 (4) · PR 89 follow-up (0073): FIXED (no single piece kept or returned) or FLEXIBLE; null = the store's
+  /// default in `combos.split`. Read only while that setting is on.
+  splitMode       String?
+  /// CN-018 (4) (0073): a flexible set's split price — PRO_RATA (the kept pieces' share of the set price) or OWN_PRICE
+  /// (each kept piece at its own price, the set saving lost); null = the store's default.
+  splitPriceRule  String?
 
   items        ComboItem[]
   popularPairs PopularPair[]

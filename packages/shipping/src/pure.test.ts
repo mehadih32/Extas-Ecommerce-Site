@@ -127,6 +127,8 @@ describe('booking rules (PR 176)', () => {
     const line = 'Gift from {sender}: deliver on or after {date}. {note}';
     expect(bookingNoteOf({ customerNote: 'Call before coming', gift: null, giftLine: line })).toBe('Call before coming');
     expect(bookingNoteOf({ customerNote: '  ', gift: null, giftLine: line })).toBeNull();
+    // CN-018 (4): a Fixed set's line comes first, before the customer's own note
+    expect(bookingNoteOf({ customerNote: 'Call before coming', gift: null, giftLine: line, setLines: ['Set Eid pair: deliver whole', ' '] })).toBe('Set Eid pair: deliver whole | Call before coming');
     expect(bookingNoteOf({ customerNote: 'Gate 2', gift: { senderName: 'Rafiq', note: 'Happy Eid!', deliverAfter: '2026-11-02' }, giftLine: line })).toBe('Gift from Rafiq: deliver on or after 2026-11-02. Happy Eid! | Gate 2'); // hardcode-ok: a fixed test day
     expect(bookingNoteOf({ customerNote: null, gift: { senderName: 'R', note: 'x'.repeat(600), deliverAfter: null }, giftLine: line })!.length).toBe(500);
   });

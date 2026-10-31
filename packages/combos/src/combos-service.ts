@@ -6,6 +6,8 @@
 import type { Prisma } from '@extas/db/client';
 import { actorId, allow, allowPrice, found, logChange, nowOf, parse, setting, TX, type CombosDeps, type Db, type Who } from './context';
 import { setFloorMinor } from '@extas/catalogue';
+import { comboSplitSchema, SET_SPLIT_MODES, SET_SPLIT_PRICE_RULES, type ComboSplitSettings, type SetSplitMode, type SetSplitPriceRule } from '@extas/settings';
+import { z } from 'zod';
 import { CombosError } from './errors';
 import { colourPrice, productFacts, type ProductFact } from './facts';
 import {
@@ -53,6 +55,9 @@ export interface ComboView {
   endsOn: string | null;
   autoApply: boolean;
   sameColour: boolean;
+  /** CN-018 (4): the set's own "Fixed" or "Flexible" and its split-price rule (null = the store's `combos.split` default). */
+  splitMode: SetSplitMode | null;
+  splitPriceRule: SetSplitPriceRule | null;
   isFeatured: boolean;
   listTemplateKey: string | null;
   pageTemplateKey: string | null;
@@ -84,6 +89,8 @@ export const comboSelect = {
   endsAt: true,
   autoApply: true,
   sameColour: true,
+  splitMode: true,
+  splitPriceRule: true,
   isFeatured: true,
   listTemplateKey: true,
   pageTemplateKey: true,
@@ -152,6 +159,8 @@ export function toComboView(c: ComboRow, facts: ReadonlyMap<string, ProductFact>
     ...daysFromWindow(c, ctx.timeZone),
     autoApply: c.autoApply,
     sameColour: c.sameColour,
+    splitMode: (SET_SPLIT_MODES as readonly string[]).includes(c.splitMode ?? '') ? (c.splitMode as SetSplitMode) : null,
+    splitPriceRule: (SET_SPLIT_PRICE_RULES as readonly string[]).includes(c.splitPriceRule ?? '') ? (c.splitPriceRule as SetSplitPriceRule) : null,
     isFeatured: c.isFeatured,
     listTemplateKey: c.listTemplateKey,
     pageTemplateKey: c.pageTemplateKey,
@@ -362,6 +371,50 @@ export async function setComboFlags(deps: CombosDeps, who: Who, id: string, flag
     }, TX);
   }
   return getCombo(deps, who, id);
+}
+
+const splitInput = z.object({ splitMode: z.enum(SET_SPLIT_MODES).nullable(), splitPriceRule: z.enum(SET_SPLIT_PRICE_RULES).nullable() }).strict();
+
+/**
+ * CN-018 (4) (SIM-F-051): one set's "Fixed" or "Flexible" and its split-price rule (null = the store's default). It
+ * decides what a rider collects for a set that is split at the door, so it is the owner's money decision:
+ * `combos.prices`. A fixed set keeps no rule of its own (it never splits). Audited.
+ */
+export async function setComboSplit(deps: CombosDeps, who: Who, id: string, input: unknown): Promise<ComboView> {
+  await allow(deps, who, 'combos.write');
+  await allowPrice(deps, who);
+  const d = parse(splitInput, input, 'set split');
+  const data = { splitMode: d.splitMode, splitPriceRule: d.splitMode === 'FIXED' ? null : d.splitPriceRule };
+  const before = found(await deps.db.combo.findFirst({ where: { id, storeId: who.storeId }, select: { id: true, splitMode: true, splitPriceRule: true } }), 'combo');
+  if (before.splitMode !== data.splitMode || before.splitPriceRule !== data.splitPriceRule) {
+    await deps.db.$transaction(async (tx) => {
+      await tx.combo.update({ where: { id }, data: { ...data, updatedById: actorId(who), version: { increment: 1 } } });
+      await logChange(tx, who, { action: 'combo.split', entityType: 'Combo', entityId: id, before: { splitMode: before.splitMode, splitPriceRule: before.splitPriceRule }, after: data });
+    }, TX);
+  }
+  return getCombo(deps, who, id);
+}
+
+/** CN-018 (4): the store's set-split setting (`combos.split`), as the Fixed combos tab shows it. */
+export async function splitOptions(deps: CombosDeps, who: Who): Promise<ComboSplitSettings> {
+  await allow(deps, who, 'combos.read');
+  return setting(deps, who.storeId, 'combos.split');
+}
+
+/** Changes the store's set-split setting (the owner's money decision: `combos.prices`); in the settings change log and audited. */
+export async function setSplitOptions(deps: CombosDeps, who: Who, patch: unknown): Promise<ComboSplitSettings> {
+  await allow(deps, who, 'combos.write');
+  await allowPrice(deps, who);
+  const write = deps.settings.set;
+  if (!write) throw new CombosError('NOT_READY', 'settings cannot be written here');
+  const current = await setting(deps, who.storeId, 'combos.split');
+  const next = comboSplitSchema.safeParse({ ...current, ...(patch && typeof patch === 'object' && !Array.isArray(patch) ? patch : {}) });
+  if (!next.success) throw new CombosError('INVALID_INPUT', 'not a setting of the set split', next.error.issues.map((i) => `${i.path.join('.') || '(input)'}: ${i.message}`));
+  if (JSON.stringify(next.data) !== JSON.stringify(current)) {
+    await write.call(deps.settings, 'combos.split', next.data as never, { level: 'store', storeId: who.storeId }, { actorId: actorId(who), reason: 'combos admin: set split' });
+    await logChange(deps.db, who, { action: 'combos.split.save', entityType: 'Setting', entityId: 'combos.split', before: { ...current }, after: { ...next.data } });
+  }
+  return setting(deps, who.storeId, 'combos.split');
 }
 
 /**

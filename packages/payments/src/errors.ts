@@ -72,7 +72,9 @@ export type PaymentsErrorCode =
   /** PR 192: this parcel already has an open claim of this kind, or an open rider issue (`data.id`). */
   | 'ALREADY_OPEN'
   /** PR 192: this parcel's records do not show it lost or damaged (`data.status`). */
-  | 'NOT_CLAIMABLE';
+  | 'NOT_CLAIMABLE'
+  /** CN-018 (4): a Fixed set is kept or returned whole; this would split it (`data.sets`: the sets' names). */
+  | 'SET_FIXED';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;

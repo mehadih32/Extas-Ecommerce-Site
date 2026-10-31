@@ -44,6 +44,7 @@ export function stickerWords(lang: 'en' | 'bn'): StickerWords {
     page: w('page'),
     continued: w('continued'),
     practice: w('practice'),
+    setWhole: w('setWhole'),
   };
 }
 
@@ -82,6 +83,7 @@ export function stickerInput(p: StickerParcel, c: StickerContext): StickerInput 
     note: p.note,
     reprint: p.reprint,
     practice: p.practice,
+    fixedSets: (p.fixedSets ?? []).map((s) => (c.layout.lang === 'bn' ? (s.nameBn ?? s.nameEn) : s.nameEn)),
   };
 }
 
@@ -116,6 +118,7 @@ export function sampleParcel(dict: Dict, currency: string): StickerParcel {
     gift: null,
     note: s('note'),
     reprint: null,
+    fixedSets: [],
   };
 }
 

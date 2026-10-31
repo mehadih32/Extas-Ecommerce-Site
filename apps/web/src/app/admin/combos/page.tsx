@@ -59,6 +59,8 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
     a.deps.settings.value('combos.price.roundingStepMinor', { storeId: a.storeId }) as Promise<number>,
     tab === 'fixed' ? cb.listSetTiers(a.deps, a.who) : Promise.resolve([]),
   ]);
+  // CN-018 (4): the store's set-split setting (Fixed / Flexible), on the fixed tab only
+  const split = tab === 'fixed' ? await cb.splitOptions(a.deps, a.who) : null;
   const report = tab === 'report' ? await cb.comboReport(a.deps, a.who, { days: daysOf(one(sp.days)) }) : null;
   const photos = await setPhotoUrls(a, combos);
   const editRule = ruleId ? (rules.find((r) => r.id === ruleId && !r.upsellOf) ?? null) : null;
@@ -84,6 +86,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
         products={options.products}
         photos={photos}
         perms={a.perms}
+        split={split}
         tiers={
           tab === 'fixed' ? (
             <SetTiers

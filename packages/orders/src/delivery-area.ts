@@ -176,3 +176,27 @@ export async function setDeliveryArea(deps: OrdersDeps, who: Who, orderId: strin
     opts,
   );
 }
+
+/** No delivery charge owed. */
+const NONE = 0;
+
+/**
+ * CN-018 (4) · follow-up 330 (the payments door hook `keptChargeMinor`): the delivery charge a free-delivery order
+ * owes when only some of its lines stay with the customer — its band's own charge when the whole order gets free
+ * delivery there by the same Smart Rules the checkout reads and the kept lines alone do not; else 0. Read only: the
+ * door record keeps it as the rider's expected amount, which a person approves (nothing is charged here).
+ */
+export async function keptDeliveryCharge(deps: Pick<OrdersDeps, 'db' | 'settings' | 'now'>, storeId: number, orderId: string, keptItemIds: readonly string[]): Promise<number> {
+  const o = await deps.db.order.findFirst({
+    where: { id: orderId, storeId },
+    select: { deliveryChargeMinor: true, deliveryBand: { select: { key: true, chargeMinor: true } }, items: { where: { status: 'ACTIVE' }, select: { id: true, variantId: true, quantity: true, comboGroupKey: true } } },
+  });
+  if (!o || o.deliveryChargeMinor !== 0 || !o.deliveryBand?.chargeMinor) return 0;
+  const linesOf = (items: typeof o.items) => items.flatMap((i, n) => (i.variantId ? [{ id: `line-${n}`, variantId: i.variantId, quantity: i.quantity, comboId: i.comboGroupKey }] : []));
+  const kept = o.items.filter((i) => keptItemIds.includes(i.id));
+  if (!kept.length) return 0;
+  const d = { db: deps.db, settings: deps.settings, now: deps.now };
+  const [all, part] = await Promise.all([quoteCart(d, { storeId, lines: linesOf(o.items), bandKey: o.deliveryBand.key, source: 'admin' }), quoteCart(d, { storeId, lines: linesOf(kept), bandKey: o.deliveryBand.key, source: 'admin' })]);
+  const owes = all.delivery.free && !part.delivery.free;
+  return owes ? o.deliveryBand.chargeMinor : NONE;
+}

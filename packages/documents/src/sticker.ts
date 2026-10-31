@@ -37,6 +37,8 @@ export interface StickerWords {
   continued: string;
   /** A practice parcel (the courier is on its practice mode): never a real parcel. */
   practice: string;
+  /** CN-018 (4): a Fixed set in the parcel ({name}): "Set {name}: deliver whole". */
+  setWhole: string;
 }
 
 export interface StickerItem {
@@ -66,6 +68,8 @@ export interface StickerInput {
   /** The reprint number (1 for the first reprint), or null for the first print. */
   reprint: number | null;
   practice: boolean;
+  /** CN-018 (4): the names of the parcel's Fixed sets (kept or returned whole), in the sticker's language. */
+  fixedSets?: readonly string[];
 }
 
 export interface StickerLayout {
@@ -159,6 +163,11 @@ async function partsAt(input: StickerInput, words: StickerWords, sheet: Sheet, s
     const g = [input.gift.from ? `${words.giftFrom} ${input.gift.from}` : null, input.gift.deliverAfter ? `${words.deliverAfter} ${input.gift.deliverAfter}` : null].filter(Boolean).join(' · ');
     head.push(text(await shape(g, st('body', { bold: true }))));
     if (input.gift.note) head.push(text(await shape(input.gift.note, st('small'))));
+    head.push(space());
+  }
+  // CN-018 (4): a Fixed set is delivered whole — said before the pieces, in bold, so the rider never splits it
+  if (input.fixedSets?.length) {
+    for (const name of input.fixedSets) head.push(text(await shape(fill(words.setWhole, { name }), st('body', { bold: true }))));
     head.push(space());
   }
   head.push(text(await shape(words.items, st('small', { bold: true }))));

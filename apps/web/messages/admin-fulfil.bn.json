@@ -208,7 +208,8 @@
         "reprint": "REPRINT {n}",
         "page": "{n}/{of}",
         "continued": "বাকিটা পরের স্টিকারে",
-        "practice": "অনুশীলন: আসল পার্সেল নয়"
+        "practice": "অনুশীলন: আসল পার্সেল নয়",
+        "setWhole": "সেট {name}: পুরোটা দিন — একটা পিস রাখা বা ফেরত নয়"
       },
       "sample": {
         "order": "SAMPLE-1",

@@ -24,6 +24,7 @@ import { bengaliToLatin } from '@extas/delivery';
 import { DELIVERY_TARGET_SELECT, deliveryTarget } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
+import { fixedSetsOf, type FixedSetName } from './set-line';
 import { bookedReceiver, printOrder, STILL_WITH_US, stickerProblem, type StickerProblem } from './fulfil-pure';
 
 export const PRINT_PARCEL_SELECT = {
@@ -51,7 +52,7 @@ export const PRINT_PARCEL_SELECT = {
       paidMinor: true,
       areaId: true,
       ...DELIVERY_TARGET_SELECT,
-      items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, productId: true } },
+      items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, productId: true, comboId: true } },
     },
   },
 } as const satisfies Prisma.ShipmentSelect;
@@ -140,9 +141,11 @@ export interface StickerParcel {
   note: string | null;
   /** "REPRINT n" (1 = the first reprint), or null on the first print. */
   reprint: number | null;
+  /** CN-018 (4): the parcel's Fixed sets (kept or returned whole), for the "deliver whole" line; empty while off. */
+  fixedSets: FixedSetName[];
 }
 
-const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, string | null> = new Map()): StickerParcel => {
+const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, string | null> = new Map(), sets: ReadonlyMap<string, FixedSetName[]> = new Map()): StickerParcel => {
   const booked = bookedReceiver(s.receiver);
   const gift = booked.gift ?? deliveryTarget(s.order).gift;
   return {
@@ -159,8 +162,16 @@ const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, 
     gift: gift ? { from: gift.senderName, deliverAfter: gift.deliverAfter, note: gift.note } : null,
     note: s.order.note?.trim() || null,
     reprint: count > 1 ? count - 1 : null,
+    fixedSets: sets.get(s.id) ?? [],
   };
 };
+
+/** CN-018 (4): each parcel's Fixed sets (the sticker tells the rider to deliver them whole); nothing while off. */
+export async function fixedSetLines(deps: Pick<ShippingDeps, 'db' | 'settings'>, storeId: number, rows: readonly PrintParcelRow[]): Promise<Map<string, FixedSetName[]>> {
+  const out = new Map<string, FixedSetName[]>();
+  for (const r of rows) if (r.order.items.some((i) => i.comboId)) out.set(r.id, await fixedSetsOf(deps.db, deps, storeId, r.order.items));
+  return out;
+}
 
 /**
  * SIM-F-048: each parcel's Bengali address in Latin letters, with its area and district as the gazetteer names them in
@@ -216,8 +227,8 @@ async function replayPrint(deps: ShippingDeps, who: Who, job: { id: string; kind
   const rows = await deps.db.shipment.findMany({ where: { storeId: who.storeId, id: { in: job.shipmentIds } }, select: PRINT_PARCEL_SELECT });
   const prints = printsOf(job.data);
   const ordered = await inPrintOrder(deps.db, who.storeId, rows);
-  const latin = await latinLines(deps, who.storeId, ordered);
-  return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount, latin)) };
+  const [latin, sets] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered)]);
+  return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount, latin, sets)) };
 }
 
 /**
@@ -264,8 +275,8 @@ export async function printStickers(deps: ShippingDeps, who: Who, input: unknown
       await tx.printJob.update({ where: { id: job.id }, data: { status: 'SUCCEEDED', printedAt: at, data: { prints } } });
       return { jobId: job.id, prints };
     }, TX);
-    const latin = await latinLines(deps, who.storeId, ordered);
-    return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!, latin)) };
+    const [latin, sets] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered)]);
+    return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!, latin, sets)) };
   } catch (e) {
     if (!isUnique(e) || !d.requestKey) throw e;
     const again = await findJob();

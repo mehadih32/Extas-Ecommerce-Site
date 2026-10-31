@@ -88,6 +88,8 @@ export type OrdersErrorCode =
   | 'RETURN_CLOSED'
   /** PR 189: these pieces are already coming back (another return or an open exchange) (`data.left`). */
   | 'RETURN_LIMIT'
+  /** CN-018 (4): a Fixed set is kept or returned whole; this return would split it (`data.sets`: the sets' names). */
+  | 'SET_FIXED'
   /** PR 407: the owner has the invoice switched off (`account.invoice.enabled`), so there is none to print. */
   | 'INVOICE_OFF'
   /** PR 612–614 (CN-028): an old shop-side path that never runs while the store speaks ERP contract v6 (the owner
@@ -173,6 +175,7 @@ export class OrdersError extends Error {
       case 'RETURN_CLOSED':
       case 'INVOICE_OFF':
       case 'RETURN_LIMIT':
+      case 'SET_FIXED':
       case 'ERP_MODEL':
       case 'LEGACY_OFF':
       case 'ERP_REFUSED':

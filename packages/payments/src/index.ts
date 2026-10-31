@@ -35,6 +35,7 @@ export * from './outcome';
 export * from './record';
 export * from './cod-match';
 export * from './cod';
+export * from './set-split';
 export * from './gateway';
 export * from './advance-link';
 export * from './wallet';

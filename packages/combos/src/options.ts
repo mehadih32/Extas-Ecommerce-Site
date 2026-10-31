@@ -75,6 +75,8 @@ export async function previewCombo(deps: CombosDeps, who: Who, input: FixedCombo
     ...windowFromDays(d.startsOn, d.endsOn, timeZone),
     autoApply: d.autoApply,
     sameColour: d.sameColour,
+    splitMode: null,
+    splitPriceRule: null,
     isFeatured: d.isFeatured,
     listTemplateKey: d.listTemplateKey,
     pageTemplateKey: d.pageTemplateKey,

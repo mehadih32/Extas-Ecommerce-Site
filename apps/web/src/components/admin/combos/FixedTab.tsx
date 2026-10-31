@@ -5,6 +5,7 @@
 // never here, so the price in words and the price charged stay one decision.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ComboView } from '@extas/combos';
+import type { ComboSplitSettings } from '@extas/settings';
 import { setPricing } from '@extas/combos/pure';
 import { call, errorText } from '../api';
 import { Icon } from '../Icon';
@@ -13,6 +14,7 @@ import { COMBOS_API } from './ComboEditor';
 import { nameIn, saveWords, toMajorText, toMinor, type Lang } from './model';
 import { MoneyBox, Row, StatePill, Switch } from './parts';
 import { SetArt, type ArtPiece } from './SetArt';
+import { SetSplitRow, SplitCard } from './SplitCard';
 
 const TYPING_PAUSE_MS = 700;
 /** A fixed set price is used as typed: no rounding step applies. */
@@ -33,9 +35,13 @@ export interface FixedTabProps {
   say(text: string): void;
   /** PR 99 — "What customers can combine". */
   tiers?: ReactNode;
+  /** CN-018 (4) — the store's set-split setting; null when it was not read. */
+  split?: ComboSplitSettings | null;
 }
 
-export function FixedTab(p: FixedTabProps) {
+export function FixedTab(props: FixedTabProps) {
+  const [split, setSplit] = useState(props.split ?? null);
+  const p = { ...props, split };
   const { dict: d, combos } = p;
   const tt = (k: string, vars?: Record<string, string | number>) => t(d, `combos.${k}`, vars);
   const active = combos.filter((c) => c.state === 'live').length;
@@ -71,6 +77,7 @@ export function FixedTab(p: FixedTabProps) {
           <b>{tt('fixed.autoTitle')}</b> {tt('fixed.autoText')}
         </div>
       </div>
+      {split ? <SplitCard dict={d} split={split} canEdit={p.perms.prices} onSaved={setSplit} /> : null}
       {p.tiers}
     </div>
   );
@@ -164,6 +171,7 @@ function ComboCard(p: FixedTabProps & { combo: ComboView }) {
           <Row label={tt('autoApply')}>
             <Switch on={c.autoApply} label={tt('autoApplyOf', { name })} disabled={!p.perms.write} onChange={(v) => void post('flags', { autoApply: v }, () => p.say(tt(v ? 'toast.autoOn' : 'toast.autoOff', { name })))} />
           </Row>
+          {p.split?.enabled ? <SetSplitRow dict={d} combo={c} split={p.split} name={name} canEdit={p.perms.prices} onChange={(v) => { p.onChange(v); p.say(tt('split.toast', { name })); }} onError={setErr} /> : null}
           {c.oneProduct ? (
             <Row label={tt('sameColour')}>
               <Switch on={c.sameColour} label={tt('sameColourOf', { name })} disabled={!p.perms.write} onChange={(v) => void post('flags', { sameColour: v }, () => p.say(tt(v ? 'toast.sameOn' : 'toast.sameOff', { name })))} />
