@@ -2008,6 +2008,7 @@ the register.
 | CN-030 | 31 Oct | Google Drive backup and restore in one click like the ERP (own Google client, device code, `drive.file`, one connection per store); replaces the service-account wording | [register](docs/MASTER-REGISTER.md#build-status) |
 | CN-031 | 31 Oct | Finish Launch in one run; never idle; three builders; lighter reviews; After-launch by priority | [track](docs/LAUNCH-TRACK.md) |
 | CN-032 | 31 Oct | A page never stays blank in one browser because of what it saved: browser translation off, a self-mending safety net, and a "Start fresh" page that clears only this site's data in that browser (PR 12) | [register](docs/MASTER-REGISTER.md#build-status) |
+| CN-033 | 31 Oct | The shop follows the ERP's 30 Oct retail decisions: switch-over as a fresh start (no moved orders, no cost-of-goods), B-grade lines held until the ERP opens them, a refused exchange parcel billed at the deadline and credited when it comes back approved (PR 610, 614, 619, 621) | [register](docs/MASTER-REGISTER.md#build-status) |
 
 ---
 

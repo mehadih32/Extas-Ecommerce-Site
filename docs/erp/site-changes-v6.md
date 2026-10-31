@@ -120,6 +120,7 @@ The owner has decided on a new business model:
   - `409 INSUFFICIENT_STOCK` (`details.shortSkus`: `sku`, `wanted`, `available`): nothing is saved or reserved.
     - The ERP keeps 4xx answers against the `Idempotency-Key`, so **retry with a new key** after stock arrives.
 - **Grade:** each order line needs `grade` ("A", the default, or "B").
+  - Updated 31 Oct 2026 (CN-033): until the ERP's separate B-grade release, a B-grade line (and a REPLACE with grade B) answers `422 VALIDATION` with `details.bGradeSkus`. The shop holds such an order (`B_GRADE_CLOSED`) while `erp.orders.bGradeOpen` is off.
 - **Lines filled from Return stock.**
   - The ERP takes main stock first, and Return stock only when main stock is out.
   - Such a line comes back with `fromReturnStock: true`.
@@ -487,7 +488,7 @@ An exchange is a customer swapping a piece they received for another (another si
 | **Not back** by the deadline             | Bills the new piece at its full `shopPrice`, the night after the deadline (01:00)                                                                    | `exchange.billed`    |
 | Back **after** the bill and approved     | Credits the old piece at the price Retail paid for it. The final figure is the same as an exchange on time                                           | `exchange.credited`  |
 | Back after the bill and declined         | Nothing more: the bill stands                                                                                                                        | none                 |
-| Customer **refused** the exchange parcel | The exchange is cancelled. No bill. The original order stays as it was                                                                               | `exchange.cancelled` |
+| Customer **refused** the exchange parcel | ~~The exchange is cancelled. No bill. The original order stays as it was~~ Updated 31 Oct 2026 (CN-033): the new piece gets the deadline of a delivered one (`WAITING_RETURN`); not back by then, it is billed in full the night after; back later and approved, it is credited (the ERP's retail loss rule, 30 Oct 2026) | ~~`exchange.cancelled`~~ `exchange.billed`, then `exchange.credited` |
 
 - **Prices.** The new piece's price is its `shopPrice` when the exchange order is placed. The old piece's price is what Retail paid for it.
 - **Exchange charges** (exchange fee, courier, delivery) are all Retail's own. They never reach the ERP. The difference the customer pays or gets back is also Retail's own business.
@@ -542,7 +543,7 @@ An exchange is a customer swapping a piece they received for another (another si
 
 - **The exchange parcel's delivery result** uses `PUT /orders/{exchangeOrderId}/delivery` like any order:
   - `DELIVERED` starts the deadline.
-  - `RETURNED` means the customer refused it: the exchange is cancelled (`exchange.cancelled`). The new piece comes back by the normal return path.
+  - `RETURNED` means the customer refused it: ~~the exchange is cancelled (`exchange.cancelled`).~~ Updated 31 Oct 2026 (CN-033): the exchange waits for the new piece (`WAITING_RETURN`, deadline as for a delivered piece); not back by the deadline it is billed in full (`exchange.billed`, the night after); back later and approved it is credited (`exchange.credited`). The new piece comes back by the normal return path.
   - `PARTIAL`, with the kept lines in `mark`, starts the deadline for the kept lines and cancels the rest.
   - The ERP ignores `collected` on an exchange order: the customer's money is Retail's own.
 - **The old piece** comes back on a courier return list as a parcel naming the **exchange order**: `{ "consignmentId": "...", "externalOrderId": "WEB-1043-X1" }`. The consignment may be the exchange parcel's or a separate pickup consignment; the ERP matches by the order.
@@ -677,21 +678,21 @@ All of them will be in the final `openapi.yaml` that comes with the ERP build.
    - **Delivered before the switch, customer money still unpaid (owner: Q5):** the unpaid amount moves, as it was booked, from the walk-in customer to Retail's account, because the site now collects that money.
      - This is one transfer on the switch date, shown in `GET /account` as `otherCharges`.
      - Past sales and profit do not change.
-   - The ERP sends the site a list of every order it moved, with the amount, so the site can book the same.
+   - ~~The ERP sends the site a list of every order it moved, with the amount, so the site can book the same.~~ Updated 31 Oct 2026 (CN-033): the website never sent real orders to the live ERP through the old link, so the ERP does not build this list (decision 30 Oct 2026); the shop's switch-over runs as `fresh-start` (`erp.switchOver.mode`): no moved orders, no opening balance, no transfer.
 4. **Returns of old orders after the switch (owner: Q6).**
    - A piece delivered before the switch that comes back afterwards goes through the same return list and check.
    - If it is approved, the credit is **the price the ERP booked for that piece** in the old sale (the customer's price after the discount), because that is what the ERP counted.
    - If it is declined, there is no credit.
 5. **Filling the month backwards.**
    - On the switch date, send the daily summaries backwards from the first day of that month, so the owner's month is complete.
-   - For days before the switch, the ERP has no bill to Retail. To get `costs.goods` for those days, call `GET /cost-of-goods?from&to` (new). For each day and SKU it gives the pieces delivered and their value at the shop price that applied that day (or the switch-day price, if no shop price existed yet).
+   - For days before the switch, the ERP has no bill to Retail. ~~To get `costs.goods` for those days, call `GET /cost-of-goods?from&to` (new).~~ Updated 31 Oct 2026 (CN-033): `GET /cost-of-goods` is not built in the ERP; on `fresh-start` the days before the switch are simply not sent. For each day and SKU it gives the pieces delivered and their value at the shop price that applied that day (or the switch-day price, if no shop price existed yet).
    - These figures are for Retail's own books only. They never change the ERP's books.
 6. **A short admin page:** what is synced, when the last summary was accepted, any queued orders, exchanges or summaries, and the balance owed to the ERP.
 
 ## 4. Test checklist
 
 - **Orders and billing:**
-  - An order of an A-grade and a B-grade SKU is quoted at the shop prices, and `erpTotal` is stored.
+  - ~~An order of an A-grade and a B-grade SKU is quoted at the shop prices, and `erpTotal` is stored.~~ Updated 31 Oct 2026 (CN-033): until B-grade opens, an order with a B-grade line answers `422` and the shop holds it (`B_GRADE_CLOSED`); an A-grade order is quoted at the shop prices and `erpTotal` is stored.
   - It is billed only when the shipment is recorded. An order cancelled before that is never billed.
 - **Partial deliveries:**
   - Three pieces at 850, 1190 and 980, with `collected` 1310, come back `GREEN` (1190 kept).
@@ -710,7 +711,7 @@ All of them will be in the final `openapi.yaml` that comes with the ERP build.
   - Placing one bills nothing, and `GET /exchanges?status=pending` shows it with `atRisk` and a deadline 4 days after delivery.
   - The old piece comes back on day 3 and is approved: `exchange.settled` arrives with the difference only (+50 for 650 to 700).
   - The old piece never comes back: `exchange.billed` arrives the night after the deadline with the full 700. A late approved return then gives `exchange.credited` 650, so the final figure is again 50.
-  - The customer refuses the exchange parcel: `exchange.cancelled`, and no bill.
+  - The customer refuses the exchange parcel: ~~`exchange.cancelled`, and no bill.~~ Updated 31 Oct 2026 (CN-033): right after the refusal nothing is billed and the exchange is not cancelled; past the deadline the new piece is billed in full, and a late approved return credits it (net 0).
   - An exchange of an exchange (650 to 700 to 720), with both old pieces approved, ends at 720 in all.
   - An exchange call short of stock gets `409 INSUFFICIENT_STOCK`. A retry with a new key after `stock.changed` goes through.
 - **Daily summaries and fixed costs:**
