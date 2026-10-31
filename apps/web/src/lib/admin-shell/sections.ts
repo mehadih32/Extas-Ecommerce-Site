@@ -259,6 +259,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         guide: 'server',
         pages: [
           { href: '/admin/reports/health', perm: 'health.read', keys: ['health'] },
+          // S21 · PR 423 — REP-07c Customer problems (CN-015): what went wrong for visitors, found from real visits.
+          { href: '/admin/reports/health/problems', perm: 'health.read', keys: ['healthProblems'] },
           { href: '/admin/server', perm: 'system.read', keys: ['server'] },
         ],
       },

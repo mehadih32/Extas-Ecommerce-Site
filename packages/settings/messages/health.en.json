@@ -7,6 +7,10 @@
     "journeys": {
       "label": "Site health: when the saved journeys run",
       "help": "The saved browser journeys (a customer, the admin, an accountant and the warehouse, on a phone and a desktop screen) are replayed on this schedule: hourly, daily or weekly at the hour chosen, in the server's time zone. Off as it ships: then they run only when someone presses Run now. The customer journey never puts anything in the bag and never places an order. The server keeps this many runs for comparison."
+    },
+    "problems": {
+      "label": "Site health: the customer problem recorder",
+      "help": "The shop's pages report what goes wrong for a visitor — a script error, a failed or slow call to the shop's server, a page that failed, the error screen, a form field refused again and again, rage clicks, broken pictures and slow loads — never a name, phone, address or payment detail (visitor ids are random). The same cause becomes one problem on Reports › Site health › Customer problems. The numbers decide what is slow, what counts as a rage click or a stuck form, how many reports one page may send, when a problem is Urgent, how many days the lists show, and what is a short glitch."
     }
   }
 }

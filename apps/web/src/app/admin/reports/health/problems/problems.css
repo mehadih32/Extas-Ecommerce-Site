@@ -1,0 +1,22 @@
+/* S21 · PR 423 — Reports › Site health › Customer problems: the views, the two-week bars and the problem lines (the shell's tokens only). */
+.adm2 .pb-views{align-items:center}
+.adm2 .pb-day{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm2 .pb-day .a2-inp{width:auto;height:32px}
+.adm2 .pb-trend{list-style:none;margin:0;padding:0;display:flex;align-items:flex-end;gap:4px;height:72px}
+.adm2 .pb-trend li{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.adm2 .pb-bar{display:block;width:100%;min-height:2px;border-radius:3px 3px 0 0;background:var(--g)}
+.adm2 .a2-kv.pb-kvt{font-size:16px;line-height:1.35;font-weight:600;white-space:normal;overflow-wrap:anywhere}
+.adm2 .pb-what{min-width:220px}
+.adm2 .pb-kind{font-weight:600;color:var(--ink);margin-top:4px}
+.adm2 .pb-path,.adm2 .pb-detail{overflow-wrap:anywhere}
+.adm2 .pb-detail{color:var(--ink2);margin-top:2px}
+.adm2 .pb-back{color:var(--bad);margin-top:2px}
+.adm2 .pb-by{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.adm2 .pb-by ul{list-style:none;margin:6px 0 0;padding:0}
+.adm2 .pb-by li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid var(--ln2)}
+.adm2 .pb-by li:first-child{border-top:0}
+.adm2 .pb-note{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink2)}
+@media (max-width:600px){
+  .adm2 .pb-day .a2-inp{flex:1;min-width:0}
+  .adm2 .pb-by{grid-template-columns:1fr}
+}

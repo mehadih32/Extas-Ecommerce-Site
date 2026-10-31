@@ -74,7 +74,8 @@
     "security": "লগইন ও নিরাপত্তা",
     "edge": "Cloudflare সুরক্ষা",
     "health": "সাইটের অবস্থা",
-    "golive": "চালুর আগে"
+    "golive": "চালুর আগে",
+    "healthProblems": "কাস্টমারের সমস্যা"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

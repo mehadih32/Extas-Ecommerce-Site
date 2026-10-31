@@ -78,14 +78,14 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health on PostgreSQL (PR 413)', 
     return { status: res.status, a: (await res.json()) as Answer };
   };
 
-  it('needs a sign-in; with no server reports every line is grey and says so', async () => {
+  it('needs a sign-in; with no server reports every server line is grey and says so', async () => {
     expect((await healthHandler(call('GET'), deps, { stateDir: null })).status).toBe(401);
     const g = await send('GET', undefined, null);
     expect(g.status).toBe(200);
     expect(g.a.view.serverConnected).toBe(false);
     // no worker has ever beaten in a fresh database: the server line still has nothing to judge without a report
     expect(g.a.view.lines.map((l) => [l.id, l.state])).toEqual([
-      ['problems', 'off'],
+      ['problems', 'ok'],
       ['server', 'off'],
       ['speed', 'off'],
       ['audit', 'off'],
@@ -95,7 +95,8 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health on PostgreSQL (PR 413)', 
     expect(g.a.view.lines.at(-1)?.reason).toBe('scheduleOff');
     expect(g.a.view.runs).toEqual([]);
     expect(g.a.view.cards.journeys.value).toEqual({ enabled: false, every: 'daily', hour: 6, weekday: 5, keepRuns: 30 });
-    expect(g.a.view.overall).toBe('off');
+    // PR 423: the recorder is on as it ships and nothing is open, so the problems line is green
+    expect(g.a.view.overall).toBe('ok');
   });
 
   it("reads the server's files: a failed smoke test is red, a slow home page yellow", async () => {

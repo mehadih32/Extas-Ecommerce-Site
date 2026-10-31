@@ -1289,7 +1289,7 @@ export const registry = {
   // ---- S18 · PR 386 · the shop's own rules at Cloudflare, limited to its host names; sent by hand (registry-edge.ts, version 80). ----
   ...edgeSettings,
   // ---- S21 · PR 413 · the Site health hub: when a status line turns yellow (registry-health.ts, version 81); PR 414:
-  // when the saved browser journeys run (version 82). ----
+  // when the saved browser journeys run (version 82); PR 423: the customer problem recorder (version 83). ----
   ...healthSettings,
   // ---- S22 · CN-031 lane A · PR 426 · the Support channel connectors: Meta's reply window and webhook size, the site's live chat (off) (registry-support-channels.ts, version 72). ----
   ...supportChannelSettings,

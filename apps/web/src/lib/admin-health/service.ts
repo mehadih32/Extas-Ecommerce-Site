@@ -13,6 +13,7 @@ import { audit, requirePermission, type Actor, type RequestContext } from '@exta
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { workerStatus } from '@extas/jobs';
 import { healthHubSchema, healthJourneysSchema, INSTALLATION, type HealthHubSettings, type HealthJourneysSettings } from '@extas/settings';
+import { openProblemCounts } from '../admin-problems/service';
 import type { AppResolver } from '../settings';
 import { hubLines, hubOverall, runAsked, type HubLine, type HubLineState, type JourneysResult, type K6Baseline, type MonitorHealth, type SmokeResult, type StateFile } from './hub';
 
@@ -132,7 +133,7 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
   await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
   const dir = deps.stateDir === undefined ? process.env.EXTAS_STATE_DIR || null : deps.stateDir;
-  const [limits, schedule, health, smoke, k6, journeys, runs, worker, connected] = await Promise.all([
+  const [limits, schedule, health, smoke, k6, journeys, runs, worker, connected, problems] = await Promise.all([
     deps.resolver.value('health.hub'),
     deps.resolver.value('health.journeys'),
     stateFile<MonitorHealth>(dir, 'health.json'),
@@ -142,8 +143,9 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
     keptRuns(dir),
     workerStatus({ db: deps.db, settings: deps.resolver, now: () => now }),
     dir ? stat(dir).then(() => true, () => false) : Promise.resolve(false),
+    openProblemCounts(deps),
   ]);
-  const lines = hubLines({ now, limits, health, smoke, k6, worker: worker.state, journeys, schedule });
+  const lines = hubLines({ now, limits, health, smoke, k6, worker: worker.state, journeys, schedule, problems });
   return {
     overall: hubOverall(lines),
     lines,

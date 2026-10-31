@@ -13,6 +13,7 @@ const base: HubInput = {
   smoke: { data: { ok: true, pages: 42, failed: 0 }, writtenAt: ago(60) },
   k6: { data: { p95_ms: 41.6, rps: 900 }, writtenAt: ago(10_000) },
   worker: 'ok',
+  problems: { enabled: true, urgent: 0, important: 0, canWait: 0, lastSeenAt: null },
   journeys: { data: { ok: true, journeys: 8, failed: 0, steps: 52, skipped: 0 }, writtenAt: ago(120) },
   schedule: { enabled: true, every: 'daily', hour: 4, weekday: 5, keepRuns: 30, runRequestedAt: null },
 };
@@ -23,7 +24,7 @@ describe('PR 413 · the Site health hub', () => {
   it('shows six lines in order; all green when every report is fresh and fine', () => {
     const lines = hubLines(base);
     expect(lines.map((l) => l.id)).toEqual(['problems', 'server', 'speed', 'audit', 'smoke', 'journeys']);
-    expect(lines.map((l) => l.state)).toEqual(['off', 'ok', 'ok', 'off', 'ok', 'ok']);
+    expect(lines.map((l) => l.state)).toEqual(['ok', 'ok', 'ok', 'off', 'ok', 'ok']);
     expect(line(base, 'speed')).toMatchObject({ vars: { ms: 180 }, note: { key: 'k6', vars: { p95: 42 } } });
     expect(line(base, 'server').href).toBe('/admin/server');
     expect(hubOverall(lines)).toBe('ok');
@@ -55,7 +56,19 @@ describe('PR 413 · the Site health hub', () => {
   it('the headline is the worst line; grey only when nothing reports', () => {
     expect(hubOverall(hubLines({ ...base, worker: 'never' }))).toBe('warn');
     expect(hubOverall(hubLines({ ...base, smoke: { data: { ok: false }, writtenAt: ago(1) }, worker: 'never' }))).toBe('bad');
-    expect(hubOverall(hubLines({ ...base, health: null, smoke: null, k6: null, journeys: null, worker: 'ok' }))).toBe('off');
+    expect(hubOverall(hubLines({ ...base, health: null, smoke: null, k6: null, journeys: null, problems: null, worker: 'ok' }))).toBe('off');
+  });
+
+  it('PR 423: the customer problems line from the open problems; red for an urgent one, whatever the switch', () => {
+    const at = ago(3);
+    const p = (o: Partial<NonNullable<HubInput['problems']>>) => line({ ...base, problems: { ...base.problems!, ...o } }, 'problems');
+    expect(p({})).toMatchObject({ state: 'ok', reason: 'none', href: '/admin/reports/health/problems' });
+    expect(p({ canWait: 2 })).toMatchObject({ state: 'ok', reason: 'minor', vars: { open: 2 } });
+    expect(p({ important: 1, canWait: 2 })).toMatchObject({ state: 'warn', reason: 'important', vars: { n: 1, open: 3 } });
+    expect(p({ urgent: 2, important: 1, lastSeenAt: at })).toMatchObject({ state: 'bad', reason: 'urgent', vars: { n: 2, open: 3 }, at: at.toISOString() });
+    expect(p({ enabled: false })).toMatchObject({ state: 'off', reason: 'off' });
+    expect(p({ enabled: false, urgent: 1 }).state).toBe('bad');
+    expect(pick(line({ ...base, problems: null }, 'problems'))).toEqual(['off', 'notYet']);
   });
 
   it('PR 414: judges the saved journeys by their own schedule; "Run now" waits until a newer run', () => {

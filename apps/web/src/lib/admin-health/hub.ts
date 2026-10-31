@@ -3,7 +3,7 @@
 // file, no database, no clock of its own. Each line says green (ok), yellow (warn), red (bad) or grey (off: nothing
 // to judge yet), with a reason the page turns into words (messages/admin-health.<lang>.json `hlt.line.<id>.<reason>`).
 // PR 414: a sixth line, the saved browser journeys (journeys.json from infra/deploy/journeys.sh), judged against their
-// own schedule (`health.journeys`).
+// own schedule (`health.journeys`). PR 423: the customer problems line from the open problems (Customer problems).
 import type { WorkerState } from '@extas/jobs';
 import type { HealthHubSettings, HealthJourneysSettings } from '@extas/settings';
 
@@ -69,10 +69,23 @@ export interface HubInput {
   smoke: StateFile<SmokeResult> | null;
   k6: StateFile<K6Baseline> | null;
   worker: WorkerState;
+  /** PR 423: the open customer problems by severity, and whether the recorder is on (null: not read). */
+  problems: OpenProblems | null;
   /** PR 414: the last journeys run and their schedule. */
   journeys: StateFile<JourneysResult> | null;
   schedule: HealthJourneysSettings;
 }
+
+/** PR 423: the open customer problems (lib/admin-problems/service.ts `openProblemCounts`). */
+export interface OpenProblems {
+  enabled: boolean;
+  urgent: number;
+  important: number;
+  canWait: number;
+  lastSeenAt: Date | null;
+}
+
+export const PROBLEMS_PAGE = '/admin/reports/health/problems';
 
 /** The hours between two scheduled journey runs; a run older than two of them is late. */
 export const JOURNEY_PERIOD_HOURS: Record<HealthJourneysSettings['every'], number> = { hourly: 1, daily: 24, weekly: 168 };
@@ -137,10 +150,21 @@ function journeysLine(i: HubInput): HubLine {
   return { ...base, state: 'ok', reason: r.skipped ? 'okSkipped' : 'ok', vars: { journeys: r.journeys ?? 0, steps: r.steps ?? 0, skipped: r.skipped ?? 0 } };
 }
 
-/** The six lines, in the hub's order. Problems (PR 423) and the site audit (PR 570) are grey until they report. */
+function problemsLine(i: HubInput): HubLine {
+  const p = i.problems;
+  const base = { id: 'problems' as const, at: p?.lastSeenAt ? p.lastSeenAt.toISOString() : null, href: PROBLEMS_PAGE };
+  if (!p) return { ...base, state: 'off', reason: 'notYet', vars: {} };
+  const open = p.urgent + p.important + p.canWait;
+  if (p.urgent) return { ...base, state: 'bad', reason: 'urgent', vars: { n: p.urgent, open } };
+  if (p.important) return { ...base, state: 'warn', reason: 'important', vars: { n: p.important, open } };
+  if (!p.enabled) return { ...base, state: 'off', reason: 'off', vars: { open } };
+  return { ...base, state: 'ok', reason: open ? 'minor' : 'none', vars: { open } };
+}
+
+/** The six lines, in the hub's order. The site audit (PR 570) is grey until it reports. */
 export function hubLines(i: HubInput): HubLine[] {
   return [
-    { id: 'problems', state: 'off', reason: 'notYet', vars: {}, at: null, href: null },
+    problemsLine(i),
     serverLine(i),
     speedLine(i),
     { id: 'audit', state: 'off', reason: 'notYet', vars: {}, at: null, href: null },

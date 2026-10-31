@@ -398,6 +398,8 @@ model Store {
   siteAuditSchedules      SiteAuditSchedule[]
   siteAuditRuns           SiteAuditRun[]
   siteAuditFindings       SiteAuditFinding[]
+  customerProblems        CustomerProblem[]
+  problemRecords          ProblemRecord[]
   supportChannels         SupportChannel[]
   supportContacts         SupportContact[]
   conversations           Conversation[]
@@ -8997,6 +8999,84 @@ model CacheStatSample {
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([layer, createdAt])
+}
+
+/// @stage S21 · PR 423 (CN-015) — a customer problem: every record the shop's pages sent with the same cause (the kind,
+/// the page's address pattern and the shape of the message) is one problem, judged Urgent / Important / Can wait, with
+/// the status the team gives it (Reports › Site health › Customer problems). Never a name, phone, address or payment
+/// detail: `detail` is the scrubbed message (no digits runs, no e-mail, no query). Never deleted.
+model CustomerProblem {
+  id          String                  @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store                   @relation(fields: [storeId], references: [id])
+  /// sha256 of the kind, the address pattern and the message's shape: the same cause, the same problem.
+  fingerprint String
+  /// script_error · request_failed · slow_request · page_failed · error_screen · form_stuck · rage_click ·
+  /// broken_image · slow_load (lib/problems/kinds.ts).
+  kind        String
+  /// landing · browse · product · bag · checkout · tracking · account · other.
+  step        String
+  /// The page's address with its changing parts masked (`/p/:slug`, `/account/orders/:n`), no language prefix.
+  path        String
+  detail      String
+  severity    CustomerProblemSeverity @default(CAN_WAIT)
+  status      CustomerProblemStatus   @default(NEW)
+  /// How it was fixed, why it could not be, or what the owner is asked.
+  statusNote  String?
+  statusById  String?                 @db.Uuid
+  statusAt    DateTime?               @db.Timestamptz(3)
+  records     Int                     @default(0)
+  firstSeenAt DateTime                @db.Timestamptz(3)
+  lastSeenAt  DateTime                @db.Timestamptz(3)
+  createdAt   DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime                @updatedAt @db.Timestamptz(3)
+
+  hits ProblemRecord[]
+
+  @@unique([storeId, fingerprint])
+  @@index([storeId, status, lastSeenAt])
+}
+
+enum CustomerProblemSeverity {
+  URGENT
+  IMPORTANT
+  CAN_WAIT
+}
+
+/// CN-015 (3): New · Fixing · Fixed (with how) · Could not fix (why) · Needs owner permission · Fixed, waiting for the
+/// owner's check before going live.
+enum CustomerProblemStatus {
+  NEW
+  FIXING
+  FIXED
+  COULD_NOT_FIX
+  NEEDS_OWNER
+  WAITING_OWNER_CHECK
+}
+
+/// @stage S21 · PR 423 (CN-015) — one report from a visitor's browser, for counting visitors and the date view. The
+/// visitor id is random per browser tab and never linked to a customer, an order or an address; device, browser and
+/// network are coarse families. Never deleted; the lists read only the last `health.problems.showDays` days.
+/// @append-only
+model ProblemRecord {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store           @relation(fields: [storeId], references: [id])
+  problemId String          @db.Uuid
+  problem   CustomerProblem @relation(fields: [problemId], references: [id])
+  visitorId String
+  /// phone · tablet · desktop.
+  device    String
+  /// chrome · safari · firefox · edge · samsung · opera · other.
+  browser   String
+  /// slow-2g · 2g · 3g · 4g, or null when the browser does not say.
+  network   String?
+  /// How slow, for the slow kinds (milliseconds).
+  ms        Int?
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, createdAt])
+  @@index([problemId, createdAt])
 }
 
 /// @stage S21 · PR 594 — a PR of the register, generated from docs/MASTER-REGISTER.md on every build.

@@ -29,7 +29,8 @@
         { "open": "/admin/orders", "expect": "h1" },
         { "open": "/admin/stock", "expect": "h1" },
         { "open": "/admin/orders/packing", "expect": "h1" },
-        { "open": "/admin/reports/health", "expect": "[data-testid=health-lines]" }
+        { "open": "/admin/reports/health", "expect": "[data-testid=health-lines]" },
+        { "open": "/admin/reports/health/problems", "expect": "[data-testid=problems-kpi-open]" }
       ]
     },
     {

@@ -295,6 +295,11 @@ export const PERMISSIONS = {
   // S21 · PR 413 (REP-07) — Reports › Site health: see the hub's status lines (customer problems, the server, speed, the
   // site audit, the smoke test). Seeing only; no customer's name, phone or address is on these pages (CN-015).
   'health.read': { group: 'health' },
+  // S21 · PR 423 (CN-015) — Customer problems: set a problem's status with its note (`health.problems.manage`); a problem
+  // that needs the owner's permission, or waits for his check, moves on only with `health.problems.approve`. Nothing
+  // here blocks anyone or changes the shop.
+  'health.problems.manage': { group: 'health' },
+  'health.problems.approve': { group: 'health' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
