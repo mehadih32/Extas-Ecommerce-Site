@@ -2291,6 +2291,7 @@
     "date": "2026-10-20",
     "note": "PostgreSQL 17 tuned from the profile, PgBouncer, temp on NVMe, WAL archive, slow log 100 ms",
     "github": [
+     "#65, 31 Oct",
      "#1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)"
     ]
    },
