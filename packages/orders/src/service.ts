@@ -138,7 +138,7 @@ const isUnique = (e: unknown) => (e as { code?: string }).code === 'P2002';
 const scopeOf = (storeId: number) => `orders.command:${storeId}`;
 
 /** The order fields the machine reads (besides the facts). */
-export const MACHINE_SELECT = { id: true, storeId: true, status: true, cancelPending: true, cancelRequestedAt: true, holdFromStatus: true, paidMinor: true, advanceRequiredMinor: true } satisfies Prisma.OrderSelect;
+export const MACHINE_SELECT = { id: true, storeId: true, status: true, cancelPending: true, cancelRequestedAt: true, holdFromStatus: true, paidMinor: true, advanceRequiredMinor: true, paymentMethod: true, totalMinor: true, walletAppliedMinor: true } satisfies Prisma.OrderSelect;
 export type MachineRow = Pick<LockedOrder, keyof typeof MACHINE_SELECT>;
 
 /** The machine's view of an order (read under its lock for a command; without one for a screen). */
@@ -152,6 +152,8 @@ export const machineOf = (o: MachineRow, f: OrderFacts): MachineOrder => ({
   paidMinor: o.paidMinor,
   advanceRequiredMinor: o.advanceRequiredMinor,
   deliveryCheckOpen: f.deliveryCheckOpen ?? false,
+  // review R1 (M3): paid ahead (not Cash on Delivery) and money still due — the payment has not come in
+  paymentDue: o.paymentMethod !== null && o.paymentMethod !== 'COD' && Math.max(0, o.totalMinor - o.walletAppliedMinor - o.paidMinor) > 0,
 });
 
 /** A shipment that counts as "booked": anything but a failed or cancelled booking (D5). */

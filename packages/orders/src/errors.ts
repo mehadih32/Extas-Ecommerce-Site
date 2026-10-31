@@ -132,6 +132,7 @@ export class OrdersError extends Error {
         return 404;
       case 'CANCEL_NOT_ALLOWED':
       case 'ADVANCE_SHORT':
+      case 'PAYMENT_DUE':
       case 'NOT_MERGEABLE':
       case 'ADD_ON_CLOSED':
       case 'ADD_ON_LIMIT':
