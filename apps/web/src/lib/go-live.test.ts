@@ -23,6 +23,7 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     originCert: { at: ago(3), mode: 'origin', active: true, names: ['example.test', '*.example.test'], daysLeft: 5400, error: null },
     primaryHosts: ['example.test'],
     ownerData: [{ name: 'Main', missing: [], bands: 2 }],
+    connections: { kinds: ['PAYMENT', 'COURIER', 'SMS'], on: [{ kind: 'PAYMENT', provider: 'bkash', mode: 'LIVE', lastTestOk: true }, { kind: 'COURIER', provider: 'steadfast', mode: 'LIVE', lastTestOk: true }, { kind: 'SMS', provider: 'bulkSmsBd', mode: 'LIVE', lastTestOk: true }] },
     ...over,
   };
 }
@@ -71,6 +72,16 @@ describe('go-live checklist (PR 393)', () => {
     const r = goLiveChecks(ctx({ ownerData: [{ name: 'Main', missing: ['legal.tradeLicence'], bands: 0 }, { name: 'Two', missing: [], bands: 1 }, { name: 'Three', missing: [], bands: null }] }));
     expect(r.items.find((i) => i.key === 'ownerData')).toMatchObject({ ok: false, vars: { stores: 3, missing: 'Main: legal.tradeLicence, delivery band' } });
     expect(open(ctx({ ownerData: [{ name: 'Main', missing: [], bands: null }] }))).toEqual([]);
+  });
+
+  it('PR 400: every kind on the list has a connection that left the mock by a passing test', () => {
+    const on = ctx().connections!.on;
+    expect(open(ctx({ connections: undefined }))).toEqual(['connections']);
+    const sms = (over: object) => ({ kinds: ['PAYMENT', 'COURIER', 'SMS'], on: [...on.slice(0, 2), { ...on[2]!, ...over }] });
+    for (const over of [{ mode: 'MOCK' }, { lastTestOk: false }, { lastTestOk: null }]) {
+      expect(goLiveChecks(ctx({ connections: sms(over) })).items.find((i) => i.key === 'connections')).toMatchObject({ ok: false, vars: { missing: 'SMS', live: 'bkash, steadfast' } });
+    }
+    expect(open(ctx({ connections: { kinds: ['COURIER', 'SMS'], on: on.slice(1) } }))).toEqual([]);
   });
 
   it('PR 398: the runbook is a sign-off, and its file exists', () => {

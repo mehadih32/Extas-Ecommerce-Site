@@ -1,4 +1,4 @@
-// S19 · PR 393, 397, 399 — Settings → System → Go-live on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
+// S19 · PR 393, 397, 399, 400 — Settings → System → Go-live on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
 // the list from the database and the server's files, the owner's own data checked per store that goes live (the mother
 // store; a draft store is not asked), a delivery band counted, a sign-off recorded with who and audited, and refused
 // without its permission. Every value is made up.
@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
+import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
@@ -78,6 +78,18 @@ describe.skipIf(!HAS_TEST_DB)('go-live checklist API on PostgreSQL (PR 393, 397,
       missing: 'Sample store A: contact.phone, contact.address, legal.registeredName, legal.tradeLicence, delivery band',
     });
     expect(item(r.body.items, 'originCert').ok).toBe(false);
+    expect(item(r.body.items, 'connections').vars).toEqual({ live: '—', missing: 'PAYMENT, COURIER, SMS' });
+  });
+
+  it('PR 400: a connection counts only switched on, LIVE and with a passing last test', async () => {
+    const row = (kind: 'PAYMENT' | 'COURIER' | 'SMS', provider: string, mode: 'MOCK' | 'LIVE', lastTestOk: boolean | null) =>
+      t.prisma.integration.create({ data: { storeId: null, kind, provider, name: provider, mode, enabled: true, config: {}, secretNames: [], lastTestOk } });
+    await row('PAYMENT', 'bkash', 'LIVE', true);
+    await row('COURIER', 'steadfast', 'MOCK', null);
+    await row('SMS', 'bulkSmsBd', 'LIVE', false);
+    expect(item((await get()).body.items, 'connections').vars).toEqual({ live: 'bkash', missing: 'COURIER, SMS' });
+    await deps.resolver.set('golive.connections', { kinds: ['PAYMENT'] }, INSTALLATION, { actorId: ownerId, reason: 'test' });
+    expect(item((await get()).body.items, 'connections')).toMatchObject({ ok: true });
   });
 
   it("PR 399: the owner's fields filled in and a band switched on (a free one too) make the line done", async () => {

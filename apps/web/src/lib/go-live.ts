@@ -29,6 +29,8 @@ export interface GoLiveContext {
   primaryHosts?: readonly string[];
   /** PR 399: each store that goes live, the owner's fields still empty there, and its switched-on delivery bands. */
   ownerData?: readonly { name: string; missing: readonly string[]; bands: number | null }[];
+  /** PR 400: the kinds that must be live, and the switched-on connections with their mode and last test. */
+  connections?: { kinds: readonly string[]; on: readonly { kind: string; provider: string; mode: string; lastTestOk: boolean | null }[] };
 }
 
 export interface GoLiveResult {
@@ -138,6 +140,21 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     },
   },
   // PR 398 — docs/golive/RUNBOOK.md read, and the rollback rehearsed on staging (back one version and forward again).
+  // PR 400 (A1.3) — every kind of `golive.connections` (payment, courier, SMS by default) has a connection that left
+  // the mock by a passing test: switched on, LIVE, and its last test passed. A connection is moved in Keys & connections.
+  {
+    key: 'connections',
+    pr: 400,
+    kind: 'auto',
+    check: ({ connections: c }) => {
+      const live = (c?.on ?? []).filter((x) => x.mode === 'LIVE' && x.lastTestOk === true);
+      const missing = (c?.kinds ?? []).filter((k) => !live.some((x) => x.kind === k));
+      return {
+        ok: Boolean(c) && missing.length === 0,
+        vars: { live: [...new Set(live.map((x) => x.provider))].join(', ') || '—', missing: missing.join(', ') || '—' },
+      };
+    },
+  },
   { key: 'runbook', pr: 398, kind: 'signoff' },
   { key: 'qaGate', pr: 393, kind: 'signoff' },
   { key: 'acceptance', pr: 393, kind: 'signoff' },
