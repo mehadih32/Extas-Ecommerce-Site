@@ -17,6 +17,12 @@
 // PR 164 (`risk.report`, version 102): the fraud report on Reports › Fraud & RTO — how many days it shows when no dates
 // are picked, and the most orders and returned parcels one report reads (past it the page says it is cut short). A
 // report only reads; nothing here blocks anyone, cancels an order or moves money.
+//
+// PR 522 (`risk.bundling`, version 103): several open orders of one person (the same identity or number) to the same
+// address within the owner's window go in one parcel (an order group with a note) instead of one parcel each. "propose"
+// (as shipped) marks the newest order for a person to press "One parcel"; "group" groups them by itself. Each order
+// keeps its lines, prices, charges and payments; nothing is cancelled or blocked. The window is empty until the owner
+// sets it (nothing happens until then). Off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
 import { dictionaryKeySchema } from './schemas';
@@ -26,6 +32,8 @@ const V = 100;
 const V163 = 101;
 /** PR 164's version. */
 const V164 = 102;
+/** PR 522's version. */
+const V522 = 103;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -77,6 +85,24 @@ export const riskReportSchema = z
 export type RiskReport = z.output<typeof riskReportSchema>;
 export const RISK_REPORT_DEFAULT: RiskReport = { days: 30, maxRows: 5_000 };
 
+/** What a match does: a proposal on the order for a person, or the group made by itself. */
+export const RISK_BUNDLING_ACTIONS = ['propose', 'group'] as const;
+export type RiskBundlingAction = (typeof RISK_BUNDLING_ACTIONS)[number];
+
+export const riskBundlingSchema = z
+  .object({
+    /** A new order looks for the same person's other open orders to the same address (off: nothing is looked for). */
+    enabled: z.boolean(),
+    /** How many hours back an earlier order still joins; null until the owner sets it (nothing happens until then). */
+    windowHours: z.int().min(1).max(168).nullable(),
+    action: z.enum(RISK_BUNDLING_ACTIONS),
+    /** The most orders in one parcel. */
+    maxOrders: z.int().min(2).max(20),
+  })
+  .strict();
+export type RiskBundling = z.output<typeof riskBundlingSchema>;
+export const RISK_BUNDLING_DEFAULT: RiskBundling = { enabled: false, windowHours: null, action: 'propose', maxOrders: 5 };
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -106,5 +132,15 @@ export const riskS06Settings = {
     labelKey: 'risk.report.label',
     helpKey: 'risk.report.help',
     sortOrder: 332,
+  }),
+  'risk.bundling': setting({
+    ...base,
+    version: V522,
+    schema: riskBundlingSchema,
+    default: RISK_BUNDLING_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.bundling.label',
+    helpKey: 'risk.bundling.help',
+    sortOrder: 333,
   }),
 };

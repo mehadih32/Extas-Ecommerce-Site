@@ -27,11 +27,15 @@
 //   GET   /api/admin/risk/report    PR 164: the fraud report and the RTO cost book (?from, ?to) with its settings card
 //                                   (risk.report); PUT {key: 'report', value, version} its days and size (settings.write)
 //                                   — lib/admin-reports/fraud-api.ts
+//   GET   /api/admin/risk/bundling  PR 522: one parcel for one person's orders, the card (risk.rules.read); PUT {key, value,
+//                                   version} saves it (risk.rules.write); POST /api/admin/risk/bundle {orderId, note?} is
+//                                   "One parcel" on an order (orders.merge) — lib/admin-orders/bundling-api.ts
 // A switch only decides whether a rule marks and proposes (the blocklist: marks or holds for a person): nothing here cancels, decides an order, moves money or
 // changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
 import { body, fail, type AdminDeps } from './admin-auth';
 import { fraudReportRoute } from './admin-reports/fraud-api';
+import { bundleRoute, bundlingSettingsRoute } from './admin-orders/bundling-api';
 import { handle } from './orders-api';
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
@@ -80,6 +84,8 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
     return notFound();
   }
   if (path[0] === 'report') return fraudReportRoute(request, deps, path);
+  if (path[0] === 'bundling') return bundlingSettingsRoute(request, deps, path);
+  if (path[0] === 'bundle') return bundleRoute(request, deps, path);
   if (path[0] !== 'rules' || path.length > 1) return notFound();
   if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskRules(x.deps, x.who)) }));
   if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.switchRules({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));

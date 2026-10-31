@@ -6,7 +6,9 @@
 // with nothing written). PR 162: the blocklist listed, undone and switched through the API, each with its permission
 // and its audit row; the switch never offers a cancel. PR 163: the repeat refusers read, their terms chosen and ended
 // (`risk.refuser.terms`) and the switch saved, each audited. PR 164: the fraud report read (`risk.report`) with its card,
-// the card saved (`settings.write`, audited), a stale or out-of-range card refused. Every value is a made-up test value.
+// the card saved (`settings.write`, audited), a stale or out-of-range card refused. PR 522: the one-parcel card off as
+// shipped, saved (an emptied hours box is "not set"), stale refused; "One parcel" groups one person's orders
+// (`orders.merge`), audited. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -186,5 +188,34 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(await deps.resolver.value('risk.report', { storeId: f.S })).toEqual({ days: 7, maxRows: 1_000 });
     expect(await api('PUT', ['report'], { body: { key: 'report', value: { days: 9, maxRows: 1_000 }, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
     expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.report.save' } })).toBe(1);
+  });
+
+  it('PR 522: one parcel — the card off as shipped and saved; "One parcel" groups one person\'s orders; a reader is refused', async () => {
+    const got = await api('GET', ['bundling']);
+    const card = got.body.cards.bundling as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'bundling', value: { enabled: false, windowHours: null, action: 'propose', maxOrders: 5 } });
+    expect((await api('GET', ['bundling'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['bundling', 'x'])).status).toBe(404);
+    expect((await api('POST', ['bundling'], { body: {} })).status).toBe(405);
+    expect((await api('PUT', ['bundling'], { cookie: reader, body: { key: 'bundling', value: card.value, version: card.version } })).status).toBe(403);
+    expect(await api('PUT', ['bundling'], { body: { key: 'bundling', value: { ...card.value, maxOrders: 1 }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['maxOrders'] } });
+    expect(await api('PUT', ['bundling'], { body: { key: 'bundling', value: { ...card.value, enabled: true, windowHours: '' }, version: card.version } })).toMatchObject({ status: 200, body: { cards: { bundling: { value: { enabled: true, windowHours: null } } } } });
+    expect(await api('PUT', ['bundling'], { body: { key: 'bundling', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    // nothing to group until the window is set
+    const a = await f.place('api-bn-a', { phone: '01700000851' });
+    const b = await f.place('api-bn-b', { phone: '01700000851' });
+    expect(await api('POST', ['bundle'], { body: { orderId: b.orderId } })).toMatchObject({ status: 422, body: { error: 'NOT_MERGEABLE' } });
+    const now = (await api('GET', ['bundling'])).body.cards.bundling as typeof card;
+    expect((await api('PUT', ['bundling'], { body: { key: 'bundling', value: { ...now.value, windowHours: 24 }, version: now.version } })).status).toBe(200);
+    expect(await deps.resolver.value('risk.bundling', { storeId: f.S })).toEqual({ enabled: true, windowHours: 24, action: 'propose', maxOrders: 5 });
+    expect((await api('POST', ['bundle'], { cookie: reader, body: { orderId: b.orderId } })).status).toBe(403);
+    expect((await api('GET', ['bundle'])).status).toBe(405);
+    const done = await api('POST', ['bundle'], { body: { orderId: b.orderId, note: 'pack together' } });
+    expect(done.status).toBe(200);
+    const ids = await f.t.prisma.order.findMany({ where: { id: { in: [a.orderId, b.orderId] } }, select: { orderGroupId: true } });
+    expect(new Set(ids.map((r) => r.orderGroupId)).size).toBe(1);
+    expect(ids[0]!.orderGroupId).toBe(done.body.groupId);
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.bundling.save' } })).toBe(2);
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'order.bundle' } })).toBe(2);
   });
 });

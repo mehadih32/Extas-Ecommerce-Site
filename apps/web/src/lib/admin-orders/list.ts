@@ -148,6 +148,8 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
   if (r.flags.includes(od.BLOCKLIST_FLAG)) out.push({ label: t(d, 'orders.flag.blocklist'), tone: 'bad' });
   // PR 163: the owner chose terms for this number (a proposal on the order, a person sends it)
   if (r.flags.includes(od.REFUSER_FLAG)) out.push({ label: t(d, 'orders.flag.refuser'), tone: 'warn' });
+  // PR 522: the same person's other open orders to this address could go in one parcel (a person presses "One parcel")
+  if (r.flags.includes(od.BUNDLE_FLAG) && !r.orderGroupId) out.push({ label: t(d, 'orders.flag.bundle'), tone: 'info' });
   if (r.orderGroupId) out.push({ label: t(d, 'orders.flag.merged'), tone: 'info' });
   for (const f of r.internalFlags) out.push({ label: labels.flags.get(f) ?? f, tone: 'gold' });
   if (r.source !== 'WEBSITE') out.push({ label: t(d, `orders.source.${r.source}`), tone: 'line' });
