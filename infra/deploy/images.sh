@@ -19,6 +19,8 @@ worker_image_of() {
 #   rollback_target <last-good-deploy.json>
 rollback_target() {
   local web worker
+  # R1 ops review (M3): a record a rollback wrote has no target (its `previous` in older records is the broken version).
+  [ "$(jq -r '.kind // empty' "$1" 2>/dev/null || true)" != rollback ] || return 0
   web="$(jq -r '.previous // empty' "$1" 2>/dev/null || true)"
   [ -n "$web" ] || return 0
   worker="$(jq -r '.previous_worker // empty' "$1" 2>/dev/null || true)"

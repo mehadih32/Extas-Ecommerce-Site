@@ -11,8 +11,10 @@ on:
     - cron: "0 22 * * *"   # 04:00 in Dhaka, after the 03:30 smoke test
   workflow_dispatch:
 
+# R1 ops review (M1): its own group (the nightly run replaces only a waiting ERP acceptance run); ~~the shared `extas-vm` group~~ let any other VM
+# workflow cancel it while it waited. One job at a time on the VM comes from the single runner (see deploy.yml).
 concurrency:
-  group: extas-vm
+  group: extas-vm-erp
   cancel-in-progress: false
 
 permissions:

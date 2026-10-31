@@ -482,6 +482,7 @@ fi
 cp "$envf" "$FAKE_SEEN"
 printf '{"at":"x","sha":"s","ok":%s,"pages":4,"failed":%s,"problems":%s}\n' "$FAKE_OK" "$FAKE_FAILED" "$FAKE_PROBLEMS" > "$out/result.json"
 echo "# r" > "$out/README.md"
+[ -z "${FAKE_SHOT:-}" ] || : > "$out/admin-x.jpg"   # an older smoke.mjs that still drops admin pictures here
 [ "$FAKE_OK" = true ]
 STUB
 chmod +x "$T/bin/docker"
@@ -496,6 +497,15 @@ check "smoke: the browser never gets the database or the vault key" "$(grep -cE 
 check "smoke: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.smoke*' | wc -l)" "0"
 check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-migrate:aaa sh -c' "$T/docker.log")" "1"
 check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
+# Review R1 (security M1): the admin pictures go to the server's root-only private folder, never the report folder.
+check "smoke (M1): the browser gets a private folder for the admin pictures, root-only" \
+  "$(grep -c -- '-e SMOKE_PRIVATE_OUT=/private .*-v '"$T"'/root/private/smoke-admin:/private ' "$T/docker.log"):$(stat -c %a "$T/root/private/smoke-admin")" "1:700"
+mkdir -p "$T/out"; : > "$T/root/private/smoke-admin/old.jpg"
+FAKE_SHOT=1 sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null || true
+check "smoke (M1): an admin picture in the report folder moves to the private folder; the last run's only" \
+  "$(find "$T/out" -name 'admin*' | wc -l):$(ls "$T/root/private/smoke-admin")" "0:admin-x.jpg"
+check "smoke (M1): deploy.yml and smoke.yml never commit an admin picture; ci refuses one in Git" \
+  "$(grep -c "find docs/reports/smoke/latest -name 'admin\*' -type f -delete" ../../.github/workflows/deploy.yml ../../.github/workflows/smoke.yml | cut -d: -f2 | tr '\n' ' ')$(grep -c 'No admin smoke pictures in Git' ../../.github/workflows/ci.yml)" "1 1 1"
 rc=0; sm FAKE_OK=false FAKE_FAILED=1 FAKE_PROBLEMS='["/admin (phone): shows the error screen"]' >/dev/null || rc=$?
 check "smoke: a failing run fails and says what" "$rc:$(jq -r '.problems[0]' "$T/root/state/smoke.json")" "1:/admin (phone): shows the error screen"
 # PR 139: the database check rides along — recorded in result.json and README; a guard problem fails a passing run
@@ -1050,11 +1060,20 @@ cp "$T/good.json" "$T/root/state/last-good-deploy.json"
 dep() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" EXTAS_CONFIG_FILE="$T/conf" DEPLOY_DRAIN_SECONDS=0 bash ../deploy/deploy.sh "$@" >/dev/null 2>&1; }
 rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new extas-migrate:oldw" dep rollback || rc=$?
 check "rollback: runs" "$rc:$(jq -r .result "$T/root/state/last-deploy.json")" "0:ok"
+check "deploy record: a normal deploy says so" "$(grep -c -- '--arg kind "${DEPLOY_KIND:-deploy}"' ../deploy/deploy.sh)" "1"
 check "rollback: the previous version's worker starts with the app" \
   "$(grep '^COMPOSE -d --wait ' "$T/docker.log" | sed 's/^COMPOSE -d --wait --wait-timeout 180 //')" "WORKER_IMAGE=extas-migrate:oldw WORKER_REPLICAS=1 APP_IMAGE=extas-web:old"
 check "rollback: the record names the worker it runs" "$(jq -r '.image, .worker_image, .worker' "$T/root/state/last-deploy.json" | paste -sd'|')" \
   "extas-web:old|extas-migrate:oldw|on: 1 copy/copies from extas-migrate:oldw"
-check "rollback: the rolled-back-from version is the next rollback target, with its worker" "$(jq -r '.previous, .previous_worker' "$T/root/state/last-deploy.json" | paste -sd'|')" "extas-web:new|extas-migrate:new"
+# R1 ops review (M3): the version a rollback left is the broken one, so it is never the next rollback target, and a
+# second rollback is refused with the reason instead of bringing it back.
+check "rollback: the record is a rollback and names no rollback target" "$(jq -r '.kind, .previous, .previous_worker' "$T/root/state/last-deploy.json" | paste -sd'|')" "rollback||"
+check "images: a rollback's record has no rollback target, even one from before that names the left version" \
+  "$(img rollback_target "$T/root/state/last-good-deploy.json"):$(jq '.kind="rollback"' "$T/good.json" > "$T/rb.json"; img rollback_target "$T/rb.json")" ":"
+cp "$T/root/state/last-good-deploy.json" "$T/after-rb.json"; : > "$T/docker.log"
+rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new extas-migrate:oldw" dep rollback || rc=$?
+check "rollback: a second rollback is refused, the live version stays and says why" \
+  "$rc:$(grep -c '^COMPOSE' "$T/docker.log" || true):$(jq -r .detail "$T/root/state/last-deploy.json" | grep -c 'put back by a rollback'):$(cmp -s "$T/after-rb.json" "$T/root/state/last-good-deploy.json" && echo same)" "1:0:1:same"
 check "rollback: no image a record needs is removed" "$(grep -c '^RMI' "$T/docker.log" || true)" "0"
 : > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
 rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new" dep rollback || rc=$?
@@ -1069,6 +1088,31 @@ rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new extas-migrate:o
 check "cache hook: the deploy still succeeds" "$rc:$(jq -r .result "$T/root/state/last-deploy.json")" "0:ok"
 check "cache hook: one call to the new colour, with the token" \
   "$(grep -cE "^ARGS exec extas-caddy wget .*x-extas-cache-hook: tok-0123456789abcdef0123456789abcdef http://app-(blue|green):3000/api/internal/cache/deployed$" "$T/docker.log" || true)" "1"
+rm -rf "$T"
+
+# R1 ops review (M1): GitHub keeps one pending run per concurrency group and a newer one cancels it, so no scheduled
+# workflow may share a group with a deploy, a server setup or a run by hand (restore, owner account, store settings).
+W=../../.github/workflows
+check "vm queue (M1): no workflow uses the shared group extas-vm any more" "$(cat "$W"/*.yml | grep -cE '^\s*group: extas-vm\s*$' || true)" "0"
+check "vm queue (M1): deploy, setup, ERP acceptance and smoke have their own groups; runs by hand have none" \
+  "$(grep -h '^\s*group:' "$W/deploy.yml" "$W/server-setup.yml" "$W/erp-acceptance.yml" "$W/smoke.yml" | tr -d ' ' | paste -sd' '):$(cat "$W/restore.yml" "$W/owner-account.yml" "$W/owner-reset.yml" "$W/store-settings.yml" | grep -c '^\s*group:' || true)" \
+  "group:extas-vm-deploy group:extas-vm-setup group:extas-vm-erp group:extas-vm-smoke:0"
+sched_groups="$(for f in $(grep -l '^  schedule:' "$W"/*.yml); do grep -h '^\s*group:' "$f"; done | tr -d ' ' | sort -u | paste -sd' ')"
+check "vm queue (M1): no scheduled workflow shares a group with a deploy or a server setup" "$(grep -cE 'group:extas-vm-(deploy|setup)\b' <<<"$sched_groups" || true)" "0"
+check "vm queue (M1): exactly one runner, so one job at a time on the VM" "$(grep -c -- '--name extas-vm --labels extas-vm --replace' ../bootstrap/install-runner.sh)" "1"
+# R1 ops review (M2): a commit already behind the live one is not deployed over it; everything else deploys.
+T="$(mktemp -d)"; mkdir -p "$T/bin"
+printf '#!/usr/bin/env bash\necho "$*" >> "%s/curl.log"\n[ "${FAKE_CMP:-}" = fail ] && exit 22\nprintf %s "${FAKE_CMP:-ahead}"\n' "$T" "'{\"status\":\"%s\"}'" > "$T/bin/curl"; chmod +x "$T/bin/curl"
+A=1111111111111111111111111111111111111111; Bc=2222222222222222222222222222222222222222
+ord() { PATH="$T/bin:$PATH" API=https://api.example.test/repos/o/r GH_TOKEN=t FAKE_CMP="$1" bash ../deploy/deploy-order.sh "$2" "$3" 2>/dev/null; }
+check "deploy order (M2): behind the live commit → skipped; ahead, diverged, no answer → deployed" \
+  "$(ord behind "$A" "$Bc"):$(ord ahead "$Bc" "$A"):$(ord diverged "$Bc" "$A"):$(ord fail "$Bc" "$A")" "skip=true:skip=false:skip=false:skip=false"
+check "deploy order (M2): GitHub compares live...commit" "$(tail -1 "$T/curl.log" | grep -c "https://api.example.test/repos/o/r/compare/$A...$Bc$")" "1"
+: > "$T/curl.log"
+check "deploy order (M2): the same commit, no live version or a short one deploy without asking GitHub" \
+  "$(ord behind "$A" "$A"):$(ord behind "$A" ""):$(ord behind abc "$Bc"):$(wc -l < "$T/curl.log")" "skip=false:skip=false:skip=false:0"
+check "deploy order (M2): deploy.yml asks after ci, and a skipped run builds, deploys and reports nothing" \
+  "$(grep -c 'bash infra/deploy/deploy-order.sh "$SHA" "$live" >> "$GITHUB_OUTPUT"' "$W/deploy.yml"):$(grep -c "steps.order.outputs.skip != 'true'" "$W/deploy.yml")" "1:7"
 rm -rf "$T"
 
 # PR 621 (CN-029): erp-acceptance.sh runs the acceptance CLI in the migrate image with only the database address (the
@@ -1185,6 +1229,18 @@ check "disk tidy: too little free space fails the guard, with the setting named"
   "$rc:$(jq -r '.ok' "$T/disk.json"):$(grep -c '::error::.*only 3 GB free.*DISK_ROOT_MIN_FREE_GB' <<<"$out")" "1:false:1"
 rc=0; FAKE_FREE=3 tidy --tidy >/dev/null || rc=$?
 check "disk tidy: a rollback only tidies, never stops on it" "$rc" "0"
+# R1 ops review (minor 1): containerd's store and Docker's folder, each on its own volume, are checked too.
+printf '#!/usr/bin/env bash\ncase "$2" in *containerd*|/var/lib/docker) [ -n "${FAKE_STORE_FREE:-}" ] ;; *) exit 1 ;; esac\n' > "$T/bin/mountpoint"
+printf '#!/usr/bin/env bash\nf="$FAKE_FREE"; case "$*" in *containerd*) f="${FAKE_STORE_FREE:-$FAKE_FREE}" ;; esac\necho "Filesystem 1G-blocks Used Available Capacity Mounted"\necho "/dev/x 125G 100G ${f}G 80%% /"\n' > "$T/bin/df"
+chmod +x "$T/bin/mountpoint" "$T/bin/df"
+rc=0; out="$(FAKE_FREE=20 FAKE_STORE_FREE=5 tidy --guard "$T/disk.json")" || rc=$?
+check "disk tidy: a nearly full image store stops the build too, with the setting named" \
+  "$rc:$(jq -r '.ok, .stores_low' "$T/disk.json" | paste -sd'|'):$(grep -c '::error::The image store has too little free space.*DISK_STORE_MIN_FREE_GB' <<<"$out")" "1:false|/var/lib/containerd (5 GB):1"
+rc=0; FAKE_FREE=20 FAKE_STORE_FREE=5 tidy --tidy >/dev/null || rc=$?
+check "disk tidy: a rollback still only tidies with a full store" "$rc" "0"
+rc=0; FAKE_FREE=20 FAKE_STORE_FREE=50 tidy --guard "$T/disk.json" >/dev/null || rc=$?
+check "disk tidy: a store with room passes" "$rc:$(jq -r .ok "$T/disk.json")" "0:true"
+rm -f "$T/bin/mountpoint"
 : > "$T/docker.log"; FAKE_OLD_DOCKER=1 FAKE_FREE=20 tidy --tidy >/dev/null
 check "disk tidy: an older Docker gets --keep-storage" "$(grep -c '^ARGS builder prune -af --keep-storage 40gb$' "$T/docker.log")" "1"
 check "disk tidy: a wrong mode is refused" "$(FAKE_FREE=20 tidy --all >/dev/null 2>&1; echo $?)" "2"
@@ -1216,7 +1272,7 @@ check "docker: daemon.json keeps the build cache under the setting" \
 check "docker: containerd and Docker wait for containerd's store" \
   "$(grep -c '^RequiresMountsFor=.* /var/lib/docker \$CONTAINERD_ROOT$' ../server/steps/07-docker.sh):$(grep -c '^RequiresMountsFor=\$CONTAINERD_ROOT$' ../server/steps/07-docker.sh)" "1:1"
 check "setup: the OS-disk step runs right after Docker, not critical" "$(grep -A1 '^docker    step_docker' ../server/setup.sh | tail -1 | tr -s ' ')" "osdisk step_osdisk 0"
-for k in LV_CONTAINERD_GB CONTAINERD_ROOT DOCKER_BUILD_CACHE_KEEP_GB DEPLOY_KEEP_WEB_IMAGES DEPLOY_KEEP_MIGRATE_IMAGES DISK_ROOT_MIN_FREE_GB JOURNAL_MAX_USE_MB RUNNER_DIR RUNNER_DIAG_KEEP_DAYS DISK_SNAPSHOT_PCT DISK_SNAPSHOT_KEEP TMP_KEEP_DAYS; do
+for k in LV_CONTAINERD_GB CONTAINERD_ROOT DOCKER_BUILD_CACHE_KEEP_GB DEPLOY_KEEP_WEB_IMAGES DEPLOY_KEEP_MIGRATE_IMAGES DISK_ROOT_MIN_FREE_GB DISK_STORE_MIN_FREE_GB OSDISK_RESET_MAX_PCT JOURNAL_MAX_USE_MB RUNNER_DIR RUNNER_DIAG_KEEP_DAYS DISK_SNAPSHOT_PCT DISK_SNAPSHOT_KEEP TMP_KEEP_DAYS; do
   grep -q "^$k=" ../config/server.conf || { echo "FAIL server.conf has no $k"; fail=1; }
 done
 # R1 ops review (M4, M5, minor 2): extas-monitor with stand-ins for docker, curl, df and mountpoint — a fast 500, a
@@ -1304,7 +1360,7 @@ docker() {
     "exec "*) [ "$2" != "${SICK_CT:-}" ] ;;
     "rm -f") touch "$T/gone-$3"; [ "$3" != cid1 ] || touch "$T/wiped" ;;
     "pull -q") if [ -n "${FAIL_PULL_ONCE:-}" ] && [ ! -f "$T/pullfailed" ]; then touch "$T/pullfailed"; echo "unpack: no such file"; return 1; fi
-      if [ -n "${FAIL_PULL:-}" ]; then echo "failed to extract layer: no such file"; return 1; fi; touch "$T/pulled" ;;
+      if [ -n "${FAIL_PULL:-}" ]; then echo "${FAKE_PULL_ERR:-failed to extract layer: no such file}"; return 1; fi; touch "$T/pulled" ;;
     "image inspect") : ;;
     "info "*|"info") : ;;
   esac
@@ -1312,6 +1368,7 @@ docker() {
 ctr() { echo "ctr $*" >> "$L"; }
 curl() { echo "${FAKE_REG:-401}"; }
 findmnt() { [ -z "${FAKE_VIEW:-}" ] || echo "$FAKE_VIEW$STORE"; }
+df() { echo "Use%"; echo " ${FAKE_STORE_PCT:-40}%"; }
 STUBS
 osd() { # osd <function> [env…]: one run in its own shell; prints the return code
   ( for kv in "${@:2}"; do export "${kv?}"; done
@@ -1321,7 +1378,7 @@ osd() { # osd <function> [env…]: one run in its own shell; prints the return c
     . ../server/lib.sh; . ../server/steps/13-osdisk.sh; . "$T/stubs.sh"
     rc=0; "$1" 2>/dev/null || rc=$?; echo "$rc" )
 }
-reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/pulled" "$T/pullfailed" "$T"/gone-* "$T/root/state/containerd-moved.at" "$T/root/state/store-reset.at" "$T/wiped"; rm -rf "$T/var/lib/containerd/"broken-*; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
+reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/pulled" "$T/pullfailed" "$T"/gone-* "$T/root/state/containerd-moved.at" "$T/root/state/store-reset.at" "$T/root/state/store-reset.redeploy" "$T/wiped"; rm -rf "$T/var/lib/containerd/"broken-*; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
 mkdir -p "$T/root/state"; reset_osd
 rc="$(osd containerd_to_lv)"
 order="$(awk '/^rsync1 /{a=NR} /^systemctl stop docker.socket docker.service containerd.service/{b=NR} /^rsync2 /{c=NR} /^mount \/dev\/extas\/containerd .*var\/lib\/containerd$/{d=NR} /^systemctl start containerd.service docker.socket docker.service/{if(!e)e=NR} /^docker run --rm --network none --entrypoint test extas-web:live -d \//{f=NR}
@@ -1371,8 +1428,16 @@ rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL_ONCE=1)"
 check "osdisk image check: pull fails with the registry up: all containers go, store set aside (not deleted), empty store, pulled again" \
   "$rc:$(awk '/^docker rm -f cid1 cid2$/{if(!a)a=NR} /^systemctl stop docker.socket docker.service containerd.service$/{b=NR} /^systemctl start containerd.service/{if(b&&!c)c=NR} /^docker builder prune -af$/{d=NR} END{print (a&&a<b&&b<c&&c<d) ? "in order" : "wrong " a" "b" "c" "d}' "$T/osd.log"):$(ls -d "$T"/var/lib/containerd/broken-*/io.containerd.content.v1.content >/dev/null 2>&1 && echo aside):$([ -e "$T/var/lib/containerd/io.containerd.content.v1.content" ] && echo still || echo empty):$(grep -c '| WARN | the image store was broken beyond repair' "$T/report"):$(grep -c 'pulled again: postgres:17' "$T/report")" \
   "0:in order:aside:empty:1:1"
+check "osdisk image check (M6): after a reset a deploy is asked for at once (server-setup.yml starts it)" \
+  "$([ -f "$T/root/state/store-reset.redeploy" ] && echo asked):$(grep -c 'store-reset.redeploy' ../../.github/workflows/server-setup.yml):$(grep -c 'actions/workflows/deploy.yml/dispatches' ../../.github/workflows/server-setup.yml)" "asked:2:1"
 rm -f "$T/pullfailed" "$T/pulled" "$T/wiped"; : > "$T/report"; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1)"
 check "osdisk image check: never a second reset within 6 hours" "$rc:$(grep -c 'already reset in the last 6 hours' "$T/report")" "1:1"
+# R1 ops review (M6): a rate limit, a full disk or a nearly full store volume is not a broken store: nothing is reset
+# (a reset removes every container, the live app's too).
+for case in "FAKE_PULL_ERR=toomanyrequests: You have reached your pull rate limit|Docker Hub's rate limit" "FAKE_PULL_ERR=write /var/lib/containerd/x: no space left on device|the disk is full" "FAKE_STORE_PCT=93|the image store is 93% full"; do
+  reset_osd; touch "$T/mounted"; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1 "${case%%|*}")"
+  check "osdisk image check (M6): no reset on ${case#*|}" "$rc:$(grep -c "| FAIL | could not pull postgres:17 .*${case#*|}.*nothing reset, the app keeps running" "$T/report"):$(grep -cE '^docker rm -f cid1|^systemctl stop' "$T/osd.log" || true):$([ -f "$T/root/state/store-reset.redeploy" ] && echo asked || echo none)" "1:1:0:none"
+done
 reset_osd; touch "$T/mounted"; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1)"
 check "osdisk image check: still not pulling on an empty store is a FAIL with the reason" "$rc:$(grep -c '| FAIL | postgres:17 does not pull on an empty store: failed to extract layer' "$T/report")" "1:1"
 mkdir -p "$T/var/lib/containerd/broken-old" "$T/var/lib/containerd/io.containerd.keep"; touch -d '5 days ago' "$T/var/lib/containerd/broken-old"; reset_osd 2>/dev/null; mkdir -p "$T/var/lib/containerd/broken-old"; touch -d '5 days ago' "$T/var/lib/containerd/broken-old"; touch "$T/mounted"

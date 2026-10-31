@@ -3,7 +3,7 @@
 # but a pull request), the device gate on every size, the end to end and the database tests. A pull request's run only
 # measures the core set and the pages it touches; this catches anything that slipped past between releases.
 # Called (workflow_call) rather than a schedule inside ci.yml: this run is named "nightly", and deploy.yml only follows
-# "ci" runs, so the nightly never deploys and never puts a deploy run into the VM's queue (concurrency group extas-vm).
+# "ci" runs, so the nightly never deploys and never puts a deploy run into the VM's queue (concurrency group extas-vm-deploy).
 # Nothing here runs on the VM.
 name: nightly
 

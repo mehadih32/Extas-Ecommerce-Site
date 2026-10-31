@@ -11,7 +11,9 @@
 // on the Server page).
 // S11 · PR 236: on the first screen, every storefront page that names a language pair (hreflang) is checked with its
 // twin (tools/hreflang-check.mjs): complete, absolute, itself included, and named back.
-// Writes <SMOKE_OUT>/result.json, README.md and one screenshot per page and screen. Never prints or stores a password.
+// Writes <SMOKE_OUT>/result.json, README.md and one screenshot per storefront page and screen; admin pages' screenshots
+// go only to SMOKE_PRIVATE_OUT when it is set (kept on the server, never committed: review R1 security M1). Never
+// prints or stores a password.
 // What it opens and the known exceptions are in docs/qa/smoke.json. Needs the `playwright` package (NODE_PATH).
 import { createHmac, randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -308,8 +310,17 @@ export async function signIn(page, base, creds) {
   return problems;
 }
 
-/** Opens one path on one screen; returns its row for the report. */
-async function visit(page, base, ignore, path, screen, out) {
+/**
+ * Review R1 (security M1) — where a page's picture may go: a storefront page into the report folder (committed to
+ * docs/reports/smoke/latest/), an admin page only into SMOKE_PRIVATE_OUT (kept on the server, never in Git: after
+ * go-live the admin shows real customers' names, phones and addresses). No private folder: no admin picture at all.
+ */
+export function shotDir(path, out, privateOut) {
+  return /^\/admin(\/|$)/.test(path) ? privateOut || null : out || null;
+}
+
+/** Opens one path on one screen; returns its row for the report. `dirs` is {out, privateOut} (null: no picture). */
+async function visit(page, base, ignore, path, screen, dirs) {
   let status = 0;
   let landed = path;
   let problems = [];
@@ -325,11 +336,12 @@ async function visit(page, base, ignore, path, screen, out) {
   problems.push(...watch.map((w) => `${path}: ${w}`));
   if (path.startsWith("/admin") && landed.startsWith("/admin/login"))
     problems.push(`${path}: sent back to the sign-in page`);
-  const shot = out ? slug(path, screen) : null;
-  if (out)
+  const dir = dirs ? shotDir(path, dirs.out, dirs.privateOut) : null;
+  const shot = dir ? slug(path, screen) : null;
+  if (dir)
     await page
       .screenshot({
-        path: join(out, shot),
+        path: join(dir, shot),
         type: "jpeg",
         quality: 60,
         fullPage: false,
@@ -342,7 +354,8 @@ async function visit(page, base, ignore, path, screen, out) {
     landed,
     ok: problems.length === 0,
     problems,
-    screenshot: shot,
+    // only a picture in the report folder is linked from the committed report
+    screenshot: dir && dir === dirs?.out ? shot : null,
   };
 }
 
@@ -374,6 +387,7 @@ export async function runSmoke(opts) {
   // PR 228: a page an owner's switch may close (smoke.json `mayBeOff`) may answer 404; a 5xx still fails (pageProblems)
   const ignore = [...(config.ignoreRequests ?? []), ...(config.mayBeOff?.paths ?? []).map((path) => ({ path }))];
   if (opts.out) mkdirSync(opts.out, { recursive: true });
+  if (opts.privateOut) mkdirSync(opts.privateOut, { recursive: true });
   const browser = await chromium.launch(
     opts.chromiumPath ? { executablePath: opts.chromiumPath } : {},
   );
@@ -410,7 +424,7 @@ export async function runSmoke(opts) {
         return row;
       };
       for (const path of config.storefront)
-        rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts.out)));
+        rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts)));
       // PR 49: the pages a built page links to (the product pages New in shows).
       for (const d of config.discover ?? []) {
         const from = await visit(gp, opts.base, ignore, d.from, vp.name, null);
@@ -420,7 +434,7 @@ export async function runSmoke(opts) {
               .catch(() => [])
           : [];
         for (const path of discovered(hrefs, d.take))
-          rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts.out)));
+          rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts)));
       }
       // Signed out, an admin page sends you to the sign-in page (never an error).
       const out = await visit(
@@ -460,7 +474,7 @@ export async function runSmoke(opts) {
         signedIn = await admin.storageState();
         const landing = new URL(page.url()).pathname;
         rows.push(
-          await visit(page, opts.base, ignore, landing, vp.name, opts.out),
+          await visit(page, opts.base, ignore, landing, vp.name, opts),
         );
       } else {
         await page.goto(`${opts.base}/admin`);
@@ -478,7 +492,7 @@ export async function runSmoke(opts) {
       for (const path of adminPaths(links, config.admin ?? []))
         if (!seen.has(path))
           rows.push(
-            await visit(page, opts.base, ignore, path, vp.name, opts.out),
+            await visit(page, opts.base, ignore, path, vp.name, opts),
           );
       // Follow-up 200: admin pages found on a built admin page, signed in (one order's page from the order list; a
       // shop with no order yet opens none).
@@ -491,7 +505,7 @@ export async function runSmoke(opts) {
           : [];
         for (const path of discovered(hrefs, d.take))
           if (!seen.has(path))
-            rows.push(await visit(page, opts.base, ignore, path, vp.name, opts.out));
+            rows.push(await visit(page, opts.base, ignore, path, vp.name, opts));
       }
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])
@@ -500,7 +514,7 @@ export async function runSmoke(opts) {
         );
       // PR 155: the pages that show Sales and Ordered value load, and show the two as separate figures.
       for (const f of config.figures ?? []) {
-        const row = await visit(page, opts.base, ignore, f.path, vp.name, opts.out);
+        const row = await visit(page, opts.base, ignore, f.path, vp.name, opts);
         const found = row.ok
           ? await Promise.all(
               f.selectors.map((sel) =>
@@ -593,6 +607,7 @@ async function main() {
     creds,
     httpCredentials,
     out,
+    privateOut: process.env.SMOKE_PRIVATE_OUT || null,
     chromiumPath: process.env.CHROMIUM_PATH,
   });
   for (const r of result.rows)

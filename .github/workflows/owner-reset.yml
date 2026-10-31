@@ -9,9 +9,9 @@ name: owner-reset
 on:
   workflow_dispatch:
 
-concurrency:
-  group: extas-vm
-  cancel-in-progress: false
+# R1 ops review (M1): no concurrency group. A run by hand must never be cancelled by another run: ~~the shared
+# `extas-vm` group~~ let the next deploy, smoke or ERP run cancel it while it waited behind a running job. One job at a
+# time on the VM comes from the single runner (see deploy.yml); two runs by hand simply run one after the other.
 
 permissions:
   contents: write

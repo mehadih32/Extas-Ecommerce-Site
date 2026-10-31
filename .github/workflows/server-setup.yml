@@ -30,12 +30,15 @@ on:
       - "infra/config/**"
       - ".github/workflows/server-setup.yml"
 
+# R1 ops review (M1): its own group (a newer setup replaces only an older waiting setup (both apply the newest main)); ~~the shared `extas-vm` group~~ let any other VM
+# workflow cancel it while it waited. One job at a time on the VM comes from the single runner (see deploy.yml).
 concurrency:
-  group: extas-vm
+  group: extas-vm-setup
   cancel-in-progress: false
 
 permissions:
   contents: write
+  actions: write   # R1 ops review (M6): start a deploy after the image check had to reset the store
 
 jobs:
   setup:
@@ -57,6 +60,25 @@ jobs:
           [ -n "$ONLY" ] && args=(--only "$ONLY")
           sudo env EXTAS_DATA_DISK="$DATA_DISK" K6_FORCE="$K6_FORCE" ROTATE_STAGING="$ROTATE_STAGING" \
             GITHUB_SHA="$GITHUB_SHA" bash infra/server/setup.sh "${args[@]}"
+
+      # R1 ops review (M6): when the image check had to set the store aside (infra/server/steps/13-osdisk.sh), every
+      # container went with it, the app's too, and a deploy only runs on a merge. A deploy of main starts at once (a
+      # workflow_dispatch made with this run's token does start a run); it waits for the runner behind this job.
+      - name: Start a deploy when the image store was reset
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API: ${{ github.api_url }}/repos/${{ github.repository }}
+        run: |
+          sudo test -f /srv/extas/state/store-reset.redeploy || exit 0
+          if curl -fsS -m 20 -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "$API/actions/workflows/deploy.yml/dispatches" -d '{"ref":"main"}'; then
+            sudo rm -f /srv/extas/state/store-reset.redeploy
+            echo "::warning::The image store was reset; a deploy of main was started to bring the app back."
+          else
+            echo "::error::The image store was reset and the deploy could not be started: run deploy.yml by hand."
+            exit 1
+          fi
 
       # The preview password is generated on the server and never leaves it: no artifact, no log, no chat.
       # The owner reads it on the VM with `extas-preview-login` (docs/owner/PREVIEW-LOGIN.md).

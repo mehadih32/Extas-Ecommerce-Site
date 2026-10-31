@@ -11,7 +11,8 @@
 # starts no workflow anyway; no ci run means no deploy. No secret, password, connection string or e-mail is in it.
 # CN-016: after the switch, the smoke test opens every built page signed out and as the read-only check account, on a
 # phone and a desktop screen, through Cloudflare (infra/deploy/smoke.sh). A failure puts the previous version back
-# automatically and fails this run; its report and pictures are committed to docs/reports/smoke/latest/.
+# automatically and fails this run; its report and the storefront pictures are committed to docs/reports/smoke/latest/
+# (the admin pictures stay on the server: review R1 security M1).
 name: deploy
 
 on:
@@ -26,8 +27,14 @@ on:
         type: boolean
         default: false
 
+# R1 ops review (M1): GitHub keeps ONE pending run per concurrency group and a newer one cancels it. ~~One group
+# `extas-vm` for every VM workflow~~ let a nightly smoke or ERP acceptance run cancel a waiting deploy, server setup or
+# restore. Now each kind has its own group: a newer deploy replaces only an older waiting deploy (the newest commit
+# wins, which is wanted). One job at a time on the VM comes from the runner itself: infra/bootstrap/install-runner.sh
+# registers exactly one runner (`extas-vm`, --replace), a runner runs one job at a time, and GitHub's runner queue
+# never cancels a waiting job. infra/tests/run.sh fails when a VM workflow joins a shared group again.
 concurrency:
-  group: extas-vm
+  group: extas-vm-deploy
   cancel-in-progress: false
 
 permissions:
@@ -48,6 +55,19 @@ jobs:
         with:
           ref: ${{ env.SHA }}
 
+      # R1 ops review (M2): ci runs per push in parallel, so an older commit's ci can finish after a newer one's and was
+      # deployed over it. A commit that is already behind the live one is skipped (a green run, no report); anything else
+      # deploys as before (infra/deploy/deploy-order.sh). Only after ci: a run by hand always goes.
+      - name: Is a newer version already live?
+        id: order
+        if: github.event_name == 'workflow_run'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API: ${{ github.api_url }}/repos/${{ github.repository }}
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          bash infra/deploy/deploy-order.sh "$SHA" "$live" >> "$GITHUB_OUTPUT"
+
       # PR 4 follow-up (31 Oct): / reached 97% and the build killed the runner twice. First the clean-up (build cache
       # above DOCKER_BUILD_CACHE_KEEP_GB, untagged layers, old extas images but never the live or rollback ones, runner
       # logs, apt cache, journal; infra/deploy/disk-tidy.sh), then the check: with less than DISK_ROOT_MIN_FREE_GB free on
@@ -55,6 +75,7 @@ jobs:
       # only tidies and never stops on it.
       - name: Free space on the main disk (clean up, then check)
         id: disk
+        if: steps.order.outputs.skip != 'true'
         run: |
           mode=--guard
           if [ "${{ inputs.rollback }}" = true ]; then mode=--tidy; fi
@@ -66,13 +87,14 @@ jobs:
       # This checkout's server.conf (DOCS_KEEP_VERSIONS can be newer than the installed copy). Never stops a deploy.
       - name: Copy the docs to the server
         id: docs
+        if: steps.order.outputs.skip != 'true'
         continue-on-error: true
         run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/docs-sync.sh "$SHA" "$PWD"
 
       # Two images from one Dockerfile: the app, and the one-shot migrate image (prisma migrate deploy + settings sync).
       - name: Build the images on the server
         id: build
-        if: ${{ !inputs.rollback }}
+        if: ${{ !inputs.rollback && steps.order.outputs.skip != 'true' }}
         run: |
           sudo docker build -f apps/web/Dockerfile --target migrate --build-arg GIT_SHA="$SHA" -t "extas-migrate:${SHA::12}" .
           sudo docker build -f apps/web/Dockerfile --build-arg GIT_SHA="$SHA" -t "extas-web:${SHA::12}" .
@@ -87,6 +109,7 @@ jobs:
       # lets the release go.
       - name: Migrate the database, ERP acceptance, then blue/green switch (automatic rollback on failure)
         id: deploy
+        if: steps.order.outputs.skip != 'true'
         run: |
           if [ "${{ inputs.rollback }}" = true ]; then
             sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh rollback
@@ -99,7 +122,7 @@ jobs:
       # whether the old version still answers.
       - name: Health check on the preview host
         id: health
-        if: always() && steps.checkout.outcome == 'success'
+        if: always() && steps.checkout.outcome == 'success' && steps.order.outputs.skip != 'true'
         continue-on-error: true
         run: |
           sudo bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/health.json"
@@ -122,13 +145,13 @@ jobs:
           sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh rollback
 
       - name: What happened
-        if: always()
+        if: always() && steps.order.outputs.skip != 'true'
         run: sudo cat /srv/extas/state/last-deploy.json 2>/dev/null || true
 
       # Written from this run's own record first, then the workspace moves to the newest main for the commit. Each
       # attempt starts from the newest main, so it never conflicts with another report.
       - name: Commit the deploy report
-        if: always()
+        if: always() && steps.order.outputs.skip != 'true'
         env:
           CHECKOUT: ${{ steps.checkout.outcome }}
           DISK: ${{ steps.disk.outcome }}
@@ -169,6 +192,8 @@ jobs:
             git add docs/reports/server/deploy-latest.md "$h"
             if [ -f "$smoke/README.md" ]; then
               rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$smoke" docs/reports/smoke/latest
+              # Review R1 (security M1): admin pictures carry customers' data; they stay on the server, never in Git.
+              find docs/reports/smoke/latest -name 'admin*' -type f -delete
               git add -A docs/reports/smoke/latest
             fi
             if [ -f "$acc/README.md" ]; then

@@ -39,8 +39,8 @@ record() { # record <result> <detail>  (the newest entry is last-deploy.json; hi
     --arg color "${NEW:-}" --arg previous "${PREV_IMAGE:-}" --arg migrate "${MIGRATE_IMAGE:-}" --arg at "$(date -Is)" \
     --arg migration "$MIGRATION" --arg run "${EXTAS_DEPLOY_RUN_ID:-}" \
     --arg worker "${WORKER_NOTE:-not reached}" --arg worker_image "${WORKER_ON_IMAGE:-}" \
-    --arg previous_worker "${PREV_WORKER_IMAGE:-}" \
-    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run,worker:$worker,worker_image:$worker_image,previous_worker:$previous_worker}' > "$f"
+    --arg previous_worker "${PREV_WORKER_IMAGE:-}" --arg kind "${DEPLOY_KIND:-deploy}" \
+    '{result:$result,detail:$detail,image:$image,sha:$sha,color:$color,previous:$previous,migrate:$migrate,at:$at,migration:$migration,run:$run,worker:$worker,worker_image:$worker_image,previous_worker:$previous_worker,kind:$kind}' > "$f"
   cp "$f" "$STATE/last-deploy.json"
   [ "$1" = ok ] && cp "$f" "$STATE/last-good-deploy.json"
   RECORDED=1
@@ -184,8 +184,16 @@ PREV_WORKER_IMAGE=""
   "$(jq -r '.worker_image // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)")"
 ROLLBACK_WORKER=""
 if [ "${1:-}" = rollback ]; then
+  # R1 ops review (M3): a rollback's record names no rollback target of its own. Its `previous` used to be the version
+  # it had just left — the broken one — so a second "Go back to the previous version" (after the smoke test's automatic
+  # rollback, say) brought the broken version back. Now the second one is refused with the reason; a fix is deployed.
+  DEPLOY_KIND=rollback
+  if [ "$(jq -r '.kind // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)" = rollback ]; then
+    die "the live version was itself put back by a rollback; the version before it is the one that failed, so there is nothing safe to go back to (deploy a fix instead)"
+  fi
   read -r IMAGE ROLLBACK_WORKER < <(rollback_target "$STATE/last-good-deploy.json") || true
   [ -n "${IMAGE:-}" ] || die "no previous image to roll back to"
+  PREV_IMAGE=""; PREV_WORKER_IMAGE=""
   log "rollback to $IMAGE (worker: $ROLLBACK_WORKER)"
 else
   IMAGE="${1:?usage: deploy.sh <image> <migrate-image> | rollback}"
