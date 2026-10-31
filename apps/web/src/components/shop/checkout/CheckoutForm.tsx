@@ -45,6 +45,7 @@ import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
 import { clearDraft, forgetDetails, newOrderKey, nextOnEnter, rememberDetails, saveDraft, useDraft, useRemembered } from './draft';
 import { DRAFT_URL, fetchQuote, latest, ORDERS_URL, postJson, useSettle, type Choices, type PlaceAnswer } from './quote-client';
+import { humanSignals, watchHumanInput } from '@/lib/security/human-signals';
 
 const EMPTY_FORM: DetailsForm = { name: '', phone: '', address: '' };
 const FIELDS: readonly Field[] = ['name', 'phone', 'address'];
@@ -133,6 +134,7 @@ export function CheckoutForm({
   useEffect(() => {
     if (rememberDays <= 0) forgetDetails();
   }, [rememberDays]);
+  useEffect(() => watchHumanInput(), []); // PR 379: the quiet bot check (counts only; nothing shown or asked)
   const [view, setView] = useState<CheckoutView>(first);
   const [paused, setPaused] = useState(pausedFirst);
   const [reading, setReading] = useState(false);
@@ -368,6 +370,7 @@ export function CheckoutForm({
       ...(giftCfg ? { gift: { ...giftForm, note: giftForm.note || null, deliverAfter: giftForm.deliverAfter || null } } : {}),
       ...(gpsCfg && point ? { gps: point } : {}),
       fingerprint: view.fingerprint,
+      human: humanSignals(),
     });
     const a = r.data;
     if (a?.ok && a.next) {

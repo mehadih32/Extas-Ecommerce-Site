@@ -43,6 +43,7 @@ import { cardsTrialSettings, tryCardsCookie, tryCardsOnRequest, tryTwoSizeOrder 
 import { accountCookie, CUSTOMER_COOKIE, clearAccountCookie, customerOfRequest, DEVICE_COOKIE, newDeviceToken } from './account';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
+import { noteBotSignals } from '../security/bot-check';
 
 /** The largest request body the account API takes (Profile: a few addresses in Bengali, three bytes a letter). */
 export const ACCOUNT_BODY_MAX = 16_384;
@@ -105,6 +106,10 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
   try {
     const b = await body(request);
     const lang = langOf(b.lang);
+    // PR 379: the quiet bot check on asking for a code and on signing in (a note for staff, never a refusal)
+    if (action === 'code' || action === 'login') {
+      await noteBotSignals({ db: a.db, settings: a.settings }, { form: 'signIn', sent: b.human, storeId: deps.storeId, ip: requestContext(request).ip ?? null });
+    }
     switch (action) {
       case 'code': {
         const sent = await askForCode(a, { storeId: deps.storeId, phone: text(b.phone, 40), lang, storeName: await deps.storeName() }, ctxOf(request));

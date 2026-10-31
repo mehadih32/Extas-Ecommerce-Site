@@ -59,6 +59,17 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     expect(o.riskScore).toBeNull();
   });
 
+  it('S18 · PR 379: an order sent like a program still goes through; the quiet bot check only writes a note', async () => {
+    // one more order than the other tests use: room in the sample stock for it
+    await f.t.prisma.stockLevel.updateMany({ where: { variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }, data: { onHand: { increment: 1 }, available: { increment: 1 } } });
+    const p = await page('api-bot');
+    const r = await placeHandler(req('/api/checkout/orders', { ...p.order, human: { ms: 300, inputs: 0, auto: true } }, { cookie: p.cookie }), deps());
+    expect(r.status).toBe(201);
+    const ev = await f.t.prisma.securityEvent.findFirst({ where: { kind: 'bot.signal', storeId: f.S }, orderBy: { createdAt: 'desc' } });
+    expect(ev?.details).toMatchObject({ form: 'checkout', score: 100, reasons: ['automation', 'tooFast', 'noInput'] });
+    expect(JSON.stringify(ev?.details)).not.toContain('192.0.2.125');
+  });
+
   it('S06 · PR 159: a new browser gets the shop\'s own device id (kept the owner\'s days); the next order keeps the same one; a shared point is kept rounded', async () => {
     // two more orders than the other tests use: room in the sample stock for them
     await f.t.prisma.stockLevel.updateMany({ where: { variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }, data: { onHand: { increment: 2 }, available: { increment: 2 } } });

@@ -1,0 +1,22 @@
+{
+  "security": {
+    "bot": {
+      "mode": {
+        "label": "Quiet bot check on sign-in and checkout",
+        "help": "The customer never sees a puzzle or a box to tick. The page quietly tells the server how the form was filled in; a form that looks like a program, not a person, is written in the security log for staff. Nothing is ever refused because of it. Observe (the default) or Off."
+      },
+      "minFillSeconds": {
+        "label": "Fastest a person fills a form (seconds)",
+        "help": "A form sent faster than this counts as a sign of a program: the checkout, the customer sign-in and the staff sign-in each have their own number. 0 turns the sign off for that form."
+      },
+      "weights": {
+        "label": "How much each sign counts",
+        "help": "Points each sign adds to the score (0 to 100; 0 ignores it): no signs sent at all (a script, not a page), the browser says it is run by automation, filled in too fast, no key, tap or mouse used."
+      },
+      "noteScore": {
+        "label": "Write to the security log from this score",
+        "help": "A sign-in or an order whose score reaches this number is written in the security log. It is only a note: the order and the sign-in go through as usual."
+      }
+    }
+  }
+}
