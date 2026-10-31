@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-31 14:01 (Asia/Dhaka)
+# Smoke test · 2026-10-31 14:23 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (220টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (224টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `7bf998124206` · after deploy · result **PASS** (220 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `f1266bbd545b` · after deploy · result **PASS** (224 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -47,6 +47,8 @@ Site: https://new.extas.com.bd · commit `7bf998124206` · after deploy · resul
 | `/combos/build-your-own` | phone | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-phone.jpg) |
 | `/bn/combos/build-your-own` | phone | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-phone.jpg) |
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
+| `/fresh-start` | phone | 200 | `/fresh-start` | ok | [picture](fresh-start-phone.jpg) |
+| `/bn/fresh-start` | phone | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-phone.jpg) |
 | `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
 | `/bn/account/orders/0/invoice` | phone | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-phone.jpg) |
 | `/pay/0` | phone | 200 | `/pay/0` | ok | [picture](pay-0-phone.jpg) |
@@ -157,6 +159,8 @@ Site: https://new.extas.com.bd · commit `7bf998124206` · after deploy · resul
 | `/combos/build-your-own` | desktop | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-desktop.jpg) |
 | `/bn/combos/build-your-own` | desktop | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-desktop.jpg) |
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
+| `/fresh-start` | desktop | 200 | `/fresh-start` | ok | [picture](fresh-start-desktop.jpg) |
+| `/bn/fresh-start` | desktop | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-desktop.jpg) |
 | `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
 | `/bn/account/orders/0/invoice` | desktop | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-desktop.jpg) |
 | `/pay/0` | desktop | 200 | `/pay/0` | ok | [picture](pay-0-desktop.jpg) |
