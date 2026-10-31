@@ -45,6 +45,38 @@ while read -r mp pct; do
 done < <(df --output=target,pcent -x tmpfs -x devtmpfs -x overlay -x squashfs -x efivarfs | tail -n +2 | awk '{print $1, $2}')
 DISKS_JSON="${DISKS_JSON%,}]"
 
+# PR 4 follow-up: when / passes DISK_SNAPSHOT_PCT, keep a picture of what fills it (at most every MONITOR_REPEAT_MIN),
+# so a fill-up is explained even if a restart clears it: biggest folders on / alone, files over 1 GB, and deleted
+# files still held open by a program (these use space but no folder shows them).
+root_pct="$(df --output=pcent / | tail -1 | tr -dc '0-9')"
+SNAP_DIR="$R/logs/disk-snapshots"
+if [ "${root_pct:-0}" -ge "${DISK_SNAPSHOT_PCT:-60}" ]; then
+  last="$(ls -1t "$SNAP_DIR" 2>/dev/null | head -1)"
+  if [ -z "$last" ] || [ $(( $(date +%s) - $(stat -c %Y "$SNAP_DIR/$last") )) -ge $((MONITOR_REPEAT_MIN * 60)) ]; then
+    mkdir -p "$SNAP_DIR"
+    {
+      echo "# / at ${root_pct}% — $(date -Is)"
+      df -h /
+      echo; echo "## Biggest folders on / alone"
+      timeout 300 du -x -h -d 3 / 2>/dev/null | sort -rh | head -25
+      echo; echo "## Files over 1 GB on /"
+      timeout 300 find / -xdev -type f -size +1G -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -20 \
+        | awk -F'\t' '{printf "%.1f GB\t%s\n", $1/1073741824, $2}'
+      echo; echo "## Deleted files still held open (program → size)"
+      for fd in /proc/[0-9]*/fd/*; do
+        tgt="$(readlink "$fd" 2>/dev/null)" || continue
+        case "$tgt" in *' (deleted)') ;; *) continue ;; esac
+        sz="$(stat -L -c %s "$fd" 2>/dev/null || echo 0)"
+        [ "$sz" -ge 104857600 ] || continue
+        pid="${fd#/proc/}"; pid="${pid%%/*}"
+        awk -v s="$sz" -v c="$(cat "/proc/$pid/comm" 2>/dev/null)" -v p="$pid" -v t="$tgt" \
+          'BEGIN{printf "%.1f GB\t%s (pid %s)\t%s\n", s/1073741824, c, p, t}'
+      done | sort -rh | head -20
+    } > "$SNAP_DIR/$(date +%Y%m%d-%H%M).txt" 2>&1
+    ls -1t "$SNAP_DIR" | tail -n +$(( ${DISK_SNAPSHOT_KEEP:-20} + 1 )) | sed "s|^|$SNAP_DIR/|" | xargs -r rm -f
+  fi
+fi
+
 # NVMe (PR 601)
 nvme="mounted"
 if [ -f /run/extas/nvme-missing ] || ! mountpoint -q "$EXTAS_NVME_MOUNT"; then nvme="missing"; fi
