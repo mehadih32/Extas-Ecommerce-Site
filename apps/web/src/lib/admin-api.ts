@@ -53,6 +53,7 @@ import {
 } from './admin-auth';
 import { adminSettingsResponse } from './settings';
 import { noteBotSignals } from './security/bot-check';
+import { addressRefused } from './admin-security/access';
 
 const str =(v: unknown) => (typeof v === 'string' ? v : '');
 const isResponse = (v: unknown): v is Response => v instanceof Response;
@@ -84,6 +85,8 @@ export async function loginHandler(request: Request, deps: AdminDeps | null): Pr
   if (!deps) return fail(503, 'database-not-configured');
   if (!sameOrigin(request)) return fail(403, 'cross-site-request');
   try {
+    // PR 380: the owner's optional address list (off by default) is checked before the password
+    if (await addressRefused(deps.resolver, requestContext(request).ip)) return fail(403, 'ADDRESS_NOT_ALLOWED');
     const b = await body(request);
     // PR 379: the quiet bot check on the staff sign-in (a note in the security log, never a refusal)
     await noteBotSignals({ db: deps.db, settings: deps.resolver }, { form: 'adminSignIn', sent: b.human, storeId: null, ip: requestContext(request).ip ?? null });
@@ -99,6 +102,7 @@ export async function twoFactorHandler(request: Request, deps: AdminDeps | null)
   if (!deps) return fail(503, 'database-not-configured');
   if (!sameOrigin(request)) return fail(403, 'cross-site-request');
   try {
+    if (await addressRefused(deps.resolver, requestContext(request).ip)) return fail(403, 'ADDRESS_NOT_ALLOWED');
     const b = await body(request);
     const r = await verifyStaffTwoFactor(await staffDeps(deps), { challenge: readCookie(request, CHALLENGE_COOKIE) ?? '', code: str(b.code) }, requestContext(request));
     return loginAnswer(r, nowOf(deps));

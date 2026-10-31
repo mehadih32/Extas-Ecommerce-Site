@@ -51,7 +51,8 @@
       "read": "See the change history (who, when, from where)"
     },
     "security": {
-      "read": "See logins and security alerts"
+      "read": "See logins and security alerts",
+      "write": "Change sign-in and security settings (2FA, the admin address list, page protection, request limits)"
     },
     "dashboard": {
       "read": "Open the Dashboard and its waiting work"

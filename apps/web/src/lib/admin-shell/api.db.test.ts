@@ -1,5 +1,5 @@
 // PR 12, PR 6 (follow-up 84) — the shell's admin API on a real PostgreSQL: badges and "Needs you now" from the real
-// tables, only what the person may open; the palette's search; the person's notifications (honestly empty); and the
+// tables, only what the person may open; the palette's search; the person's notifications (honestly empty; PR 380 new-device sign-ins for security.read); and the
 // guides, and (PR 594) the page guide of an address. A throwaway database (skipped without TEST_DATABASE_ADMIN_URL).
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -98,6 +98,15 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
   it('notifications: the person\'s own, an honest empty list until a source exists', async () => {
     const n = (await (await notificationsHandler(call('GET', '/api/admin/notifications', { cookie: staff }), deps)).json()) as { items: unknown[]; unread: number; source: string };
     expect(n).toMatchObject({ items: [], unread: 0, source: 'none' });
+  });
+
+  it('notifications (PR 380): the people who see security get the new-device staff sign-ins, linked to the page', async () => {
+    const n = (await (await notificationsHandler(call('GET', '/api/admin/notifications', { cookie: owner }), deps)).json()) as { items: { title: string; body: string; href: string }[]; source: string };
+    expect(n.source).toBe('security');
+    expect(n.items.length).toBeGreaterThan(0);
+    expect(n.items[0]).toMatchObject({ href: '/admin/settings/security' });
+    expect(n.items.map((i) => i.body).join(' ')).toContain('Sample owner');
+    expect(JSON.stringify(n.items)).not.toContain('192.0.2.21');
   });
 
   it('guides: one parsed guide by name; an unknown or unsafe name is 404', async () => {

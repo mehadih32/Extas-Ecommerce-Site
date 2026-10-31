@@ -1,0 +1,16 @@
+{
+  "security": {
+    "adminIpAllowlist": {
+      "label": "Open the admin only from these addresses",
+      "help": "Off by default. When on, the admin opens only from an internet address on the list (one address, or a range such as 203.0.113.0/24). Safer, but if your internet address changes you are locked out until someone on the list or the server takes you off. The list must hold the address you save it from."
+    },
+    "newLoginNoteDays": {
+      "label": "Keep new-device sign-ins in the notifications (days)",
+      "help": "A staff sign-in from a phone or computer not seen before shows in the notifications of everyone who sees security, for this many days."
+    },
+    "eventsListSize": {
+      "label": "Security events listed",
+      "help": "How many of the latest security events (sign-ins from a new device, wrong-password pauses, bot notes) the Sign-in & security page lists."
+    }
+  }
+}

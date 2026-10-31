@@ -2,7 +2,7 @@
 //   GET /api/admin/shell/badges      the sidebar badges: waiting work per section, only what the person may open
 //   GET /api/admin/dashboard/queues  "Needs you now": each waiting list with its count, oldest age and link (dashboard.read)
 //   GET /api/admin/search?q=         the command palette (lib/admin-shell/search.ts)
-//   GET /api/admin/notifications     the person's own notifications (none yet: no staff notification store exists)
+//   GET /api/admin/notifications     the person's own notifications (PR 380: new-device staff sign-ins for security.read)
 //   GET /api/admin/help/<slug>       one admin guide, parsed (lib/admin-shell/guide.ts)
 //   GET /api/admin/guide?path=|page= PR 594 (CN-026): the guide of the page at an address (or a page guide by its id),
 //                                    with its section's overview and the section's other pages (lib/admin-shell/help-pages.ts)
@@ -11,7 +11,8 @@
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { isOwner, permissionsFor, type PermissionKey } from '@extas/auth';
 import { adminDeps, errorResponse, fail, guardAdmin, json, readCookie, type AdminDeps, type Guarded } from '../admin-auth';
-import { ADMIN_LANG_COOKIE, pickAdminLang, type AdminLang } from '../admin-i18n';
+import { ADMIN_LANG_COOKIE, adminLocale, pickAdminLang, type AdminLang } from '../admin-i18n';
+import { loginNotes } from '../admin-security/login-notes';
 import { guideDir, readGuide, readPageGuide } from './guide';
 import { guidePlace, PAGE_GUIDE_ID, sectionOfGuide, sectionPages } from './help-pages';
 import { todoItems } from './model';
@@ -88,9 +89,21 @@ export async function searchHandler(request: Request, deps: AdminDeps | null = a
 export async function notificationsHandler(request: Request, deps: AdminDeps | null = adminDeps()): Promise<Response> {
   const c = await shellCall(request, deps);
   if (c instanceof Response) return c;
-  // No staff notification store yet (approvals, failed syncs and backups, mentions arrive with their PRs): an honest
-  // empty list, never a sample.
-  return json({ ok: true, items: [], unread: 0, source: 'none' });
+  // No staff notification store yet (approvals, failed syncs and backups, mentions arrive with their PRs). PR 380: the
+  // people who may see security (`security.read`) get the new-device staff sign-ins of the last
+  // `security.newLoginNoteDays` days; everyone else an honest empty list, never a sample.
+  if (!c.viewer.owner && !c.viewer.perms.has('security.read')) return json({ ok: true, items: [], unread: 0, source: 'none' });
+  try {
+    const [lang, locale, timeZone] = await Promise.all([
+      langOf(request, c.deps),
+      c.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+      c.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+    ]);
+    const items = await loginNotes(c.deps, lang, { locale: adminLocale(lang, locale), timeZone });
+    return json({ ok: true, items, unread: items.length, source: items.length ? 'security' : 'none' });
+  } catch (e) {
+    return errorResponse(e);
+  }
 }
 
 export async function helpHandler(request: Request, slug: string, deps: AdminDeps | null = adminDeps()): Promise<Response> {

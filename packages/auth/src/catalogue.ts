@@ -19,6 +19,9 @@ export const PERMISSIONS = {
   'staff.manage': { group: 'staff' },
   'audit.read': { group: 'security' },
   'security.read': { group: 'security' },
+  // S18 · PR 380 — SET-04d Sign-in & security: change the sign-in rules, the admin address list, the page protection,
+  // the request limits and the quiet bot check (`security.read` opens the page).
+  'security.write': { group: 'security' },
   // PR 12 (CN-022) — the admin shell: open the Dashboard (the "Needs you now" queues of the sections the person can
   // see), see the money tiles (Sales and Ordered value, from @extas/metrics) and open the admin guides.
   'dashboard.read': { group: 'admin' },

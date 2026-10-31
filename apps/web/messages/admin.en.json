@@ -315,6 +315,8 @@
     "WRONG_PASSWORD": "The current password is not right.",
     "WEAK_PASSWORD": "That password will not do — use a longer sentence of your own.",
     "invalid-credentials": "The e-mail or password is not right.",
+    "ADDRESS_NOT_ALLOWED": "The admin opens only from the addresses the owner listed, and this internet connection is not one of them. Use an allowed connection, or ask the owner to add this one.",
+    "ADDRESS_NOT_ON_LIST": "The list must hold the address you are saving from ({fields}), or you would lock yourself out.",
     "locked": "Too many wrong tries. Try again after {time}.",
     "cross-site-request": "A request from another site was refused.",
     "database-not-configured": "This server has no database connected yet.",

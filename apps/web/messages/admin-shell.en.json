@@ -45,6 +45,7 @@
       "settings": {
         "keys": "Keys & connections",
         "erp": "ERP link",
+        "security": "Sign-in & security",
         "system": "System",
         "look": "Admin look"
       },
@@ -226,7 +227,11 @@
       "empty": "All caught up",
       "emptyNote": "Nothing has happened yet that needs telling.",
       "note": "Notifications are things that happened once. Live work waiting for you is on the Dashboard under “Needs you now”.",
-      "close": "Close"
+      "close": "Close",
+      "newDevice": {
+        "title": "Staff sign-in from a new device",
+        "someone": "A staff member"
+      }
     },
     "state": {
       "notfound": {

@@ -68,6 +68,7 @@ import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
 import { webSecuritySettings } from './registry-web-security';
 import { botCheckSettings } from './registry-bot-check';
+import { adminAccessSettings } from './registry-admin-access';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1271,6 +1272,8 @@ export const registry = {
   ...webSecuritySettings,
   // ---- S18 · PR 379 · the quiet bot check on sign-in and checkout: observe only, a note in the security log, never a refusal (registry-bot-check.ts, version 74). ----
   ...botCheckSettings,
+  // ---- S18 · PR 380 · the admin address list (off by default), how long new-device sign-ins stay in the notifications, the security events listed (registry-admin-access.ts, version 78). ----
+  ...adminAccessSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
