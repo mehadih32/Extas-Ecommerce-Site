@@ -72,3 +72,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-10-31 15:46 | `1a9564886a3b` | deploy | FAILED | not reached | FAILED (521) | Building the new version on the server failed (the app or the migrate image did not build). The live site was not touched. |
 | 2026-10-31 16:28 | `7301dfe4b22c` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-10-31 17:25 | `311dbd60375b` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-10-31 19:14 | `83e2defd79d0` | deploy | OK | ok | OK, smoke OK | — |
