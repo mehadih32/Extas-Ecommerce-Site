@@ -552,6 +552,8 @@ if grep -q check-account <<<"$*"; then
   grep -q '^VAULT_MASTER_KEY=vk$' "$envf" && ! grep -q OTHER "$envf" || exit 9
   printf 'SMOKE_EMAIL=c@check.invalid\nSMOKE_PASSWORD=pw1\nSMOKE_TOTP_SECRET=SEED\n' > "$out/check.env"; exit 0
 fi
+# PR 419: the run history import (and its probe) in the migrate image
+grep -q run-history-cli <<<"$*" && exit 0
 cp "$envf" "$FAKE_SEEN"
 printf '{"at":"x","sha":"s","ok":%s,"pages":4,"failed":%s,"problems":%s}\n' "$FAKE_OK" "$FAKE_FAILED" "$FAKE_PROBLEMS" > "$out/result.json"
 echo "# r" > "$out/README.md"
@@ -568,7 +570,8 @@ check "smoke (M8): the time is ISO with its offset for the app, the words beside
 check "smoke: the browser gets the check account and the preview login" "$(grep -c '^SMOKE_PASSWORD=pw1$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_PASSWORD=stagepw$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_USER=extas$' "$T/seen.env")" "1:1:1"
 check "smoke: the browser never gets the database or the vault key" "$(grep -cE 'DATABASE|VAULT' "$T/seen.env")" "0"
 check "smoke: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.smoke*' | wc -l)" "0"
-check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-migrate:aaa sh -c' "$T/docker.log")" "1"
+check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-migrate:aaa sh -c .*check-account' "$T/docker.log")" "1"
+check "run history (419): the smoke run goes into the history from the live migrate image" "$(grep -c 'run .*extas-migrate:aaa sh -c .*run-history-cli.ts --tool' "$T/docker.log")" "1"
 check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
 check "smoke (R2 M2): the preview host is a staging host for the host-only checks" "$(grep -c 'BASE=https://new.extas.com.bd -e SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1"
 # Review R1 (security M1): the admin pictures go to the server's root-only private folder, never the report folder.
@@ -607,7 +610,7 @@ check "smoke (M7): the first-week watch asks for the main domain; a run by hand 
   "$(grep -c "HOST: \${{ needs.due.outputs.kind == 'first-week' && 'main' || inputs.host }}" ../../.github/workflows/smoke.yml):$(grep -c 'SMOKE_HOST="$HOST" bash infra/deploy/smoke.sh' ../../.github/workflows/smoke.yml)" "1:1"
 echo '{"migrate":"extas-migrate:gone"}' > "$T/root/state/last-good-deploy.json"; : > "$T/docker.log"
 sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
-check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c' "$T/docker.log")" "1"
+check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c .*check-account' "$T/docker.log")" "1"
 rm -rf "$T"
 
 # Monthly speed lab (S11 · PR 234): vitals-lab.sh makes the check account the same way as smoke.sh, hands the browser
@@ -1741,6 +1744,15 @@ check "smoke runs (418): a new run replaces its slot whole, the other slot and n
   "$(cat "$SK/runs/deploy/result.json"):$(ls "$SK/runs/deploy" | tr '\n' ' '):$(find "$SK/runs" -mindepth 1 -maxdepth 1 | wc -l)" '{"ok":false}:cart-phone.jpg result.json rows.json :1'
 rm -f "$SK/out/result.json"
 check "smoke runs (418): a run without a result keeps the previous one" "$( ( . ../deploy/smoke-lib.sh; smoke_keep "$SK/out" "$SK/runs" deploy ) || echo kept):$(cat "$SK/runs/deploy/result.json")" 'kept:{"ok":false}'
+# PR 419: the run history import never fails the run; an older release without the command is skipped.
+HB="$SK/bin"; mkdir -p "$HB"
+printf '#!/bin/sh\necho "$*" >> "%s/docker.log"\ncase "$*" in *"test -f"*) exit "${PROBE_RC:-0}";; *run-history-cli*) exit "${RUN_RC:-0}";; esac\n' "$SK" > "$HB/docker"; chmod +x "$HB/docker"
+rh() { ( PATH="$HB:$PATH"; . ../deploy/smoke-lib.sh; run_history "$@"; echo "rc=$?" ) }
+check "run history (419): the command runs in the migrate image with the run folder read-only" \
+  "$(rh smoke "$SK/runs/deploy" extas-migrate:x "$SK/db.env" | tail -1):$(grep -c -- "--network extas --env-file $SK/db.env -v $SK/runs/deploy:/in:ro extas-migrate:x" "$SK/docker.log"):$(grep -c 'run-history-cli.ts --tool "\$1" --dir /in.* sh smoke' "$SK/docker.log")" "rc=0:1:1"
+check "run history (419): a failed import is said, the run goes on" "$(RUN_RC=3 rh journeys "$SK/out" extas-migrate:x "$SK/db.env" | tr '\n' ' ')" "run history: not kept (exit 3) rc=0 "
+check "run history (419): an older release without the command is skipped" "$(PROBE_RC=1 rh smoke "$SK/out" extas-migrate:x "$SK/db.env" | tr '\n' ' ')" "run history: this release cannot keep runs yet (no run-history-cli.ts) rc=0 "
+check "run history (419): smoke.sh and journeys.sh keep every run" "$(grep -c 'run_history smoke "$STATE/smoke-runs/' ../deploy/smoke.sh):$(grep -c 'run_history journeys "$OUT" "$mig" "$work/db.env"' ../deploy/journeys.sh)" "1:1"
 check "smoke runs (418): smoke.sh keeps each run after state/smoke.json" "$(grep -c 'smoke_keep "$OUT" "$STATE/smoke-runs" "$(smoke_slot "$KIND")"' ../deploy/smoke.sh)" "1"
 JK="$T/jkeep"; mkdir -p "$JK"
 for s in 20261027-060101 20261028-060101 20261029-060101 20261030-060101; do echo '{}' > "$JK/$s.json"; done

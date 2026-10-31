@@ -313,5 +313,96 @@
     "noneFailed": "No page failed in this run.",
     "noRows": "This run is from before the page-by-page list; the next run fills it. Its summary is above.",
     "adminShots": "Pictures of admin pages are hidden for you: they can show customers' names. Seeing them needs the permission health.smoke.shots (the owner adds it to a role)."
+  },
+  "hst": {
+    "metaTitle": "Run history — Site health",
+    "title": "Run history",
+    "sub": "Every smoke test and saved-journeys run, with what passed and what failed. Old runs stay for comparison.",
+    "tools": {
+      "all": "All",
+      "smoke": "Smoke test",
+      "journeys": "Saved journeys"
+    },
+    "results": {
+      "all": "All runs",
+      "failed": "Failed only"
+    },
+    "kpi": {
+      "kept": "Runs kept",
+      "keptFoot": "smoke tests and journeys runs",
+      "failedWeek": "Failed in the last 7 days",
+      "failedWeekFoot": "runs that found a problem",
+      "last": "Last {tool}",
+      "none": "None yet"
+    },
+    "col": {
+      "when": "When",
+      "run": "Run",
+      "result": "Result",
+      "counts": "Passed / failed",
+      "findings": "Findings"
+    },
+    "tool": {
+      "smoke": "Smoke test",
+      "journeys": "Saved journeys"
+    },
+    "kind": {
+      "deploy": "after a deploy",
+      "nightly": "nightly",
+      "firstWeek": "first week",
+      "scheduled": "on schedule",
+      "runNow": "Run now",
+      "other": "{kind}"
+    },
+    "ok": "Passed",
+    "fail": "Failed",
+    "counts": {
+      "smoke": "{passed} passed · {failed} failed page views",
+      "journeys": "{passed} passed · {failed} failed journeys"
+    },
+    "findings": "{n} findings",
+    "open": "Open",
+    "none": "No run kept yet. The smoke test runs after every deploy and every night; the saved journeys on their schedule or with Run now.",
+    "noneFiltered": "No run matches what you chose.",
+    "newer": "Newer",
+    "older": "Older",
+    "pageOf": "Page {page} of {pages}",
+    "caught": "{n} runs were added from the server's files just now.",
+    "version": "version {sha}",
+    "run": {
+      "metaTitle": "One run — Run history",
+      "title": "{tool} · {when}",
+      "sub": "{kind} · {version}",
+      "back": "Back to the run history",
+      "result": "Result",
+      "passed": "Passed",
+      "failed": "Failed",
+      "findings": "Findings",
+      "findingsFoot": "{new} new since the run before",
+      "compare": "Compared with",
+      "compareFoot": "the run before ({result})",
+      "firstRun": "the first run kept",
+      "findingsH": "What failed",
+      "noFindings": "Nothing failed in this run.",
+      "problemsH": "The run's first problem lines",
+      "fixedH": "Fixed since the run before",
+      "fixedD": "These failed in the run before and not in this one.",
+      "firstNote": "This is the first run of this kind in the history, so there is nothing to compare with yet."
+    },
+    "sev": {
+      "URGENT": "Urgent",
+      "IMPORTANT": "Important",
+      "CAN_WAIT": "Can wait"
+    },
+    "new": "New",
+    "still": "Still failing",
+    "where": "{page} · {screen}",
+    "screen": {
+      "phone": "phone",
+      "desktop": "desktop"
+    },
+    "repeat": "How to repeat: {steps}",
+    "fix": "Suggested fix: {fix}",
+    "fixNone": "No fix applied. A fix waits for the owner's approval (coming with the approval gate)."
   }
 }

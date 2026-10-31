@@ -255,6 +255,7 @@
       "/admin/reports/health/problems",
       "/admin/reports/health/speed",
       "/admin/reports/health/smoke",
+      "/admin/reports/health/history",
       "/admin/website/seo/bengali",
       "/admin/marketing/tracking",
       "/admin/help/manual",

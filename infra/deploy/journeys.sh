@@ -24,6 +24,8 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 . "$CONF"
 # shellcheck source=journeys-lib.sh
 . "$HERE/journeys-lib.sh"
+# shellcheck source=smoke-lib.sh
+. "$HERE/smoke-lib.sh"
 OUT="${1:?usage: journeys.sh <out-dir> [due|now] [<commit sha>]}"
 MODE="${2:-due}"
 SHA="${3:-}"
@@ -101,5 +103,9 @@ chmod 0644 "$STATE/journeys.json.tmp"
 cp "$STATE/journeys.json.tmp" "$STATE/journeys/$(date -d "@$now" +%Y%m%d-%H%M%S).json"
 mv "$STATE/journeys.json.tmp" "$STATE/journeys.json"
 journeys_keep "$STATE/journeys" "$JOURNEYS_KEEP"
+# PR 419: every run in the history (Reports › Site health › Run history), with each failed step as a finding
+if [ -f "$OUT/result.json" ]; then
+  log "$(run_history journeys "$OUT" "$mig" "$work/db.env")"
+fi
 log "$(jq -r 'if .ok then "PASS: \(.journeys) journeys, \(.steps) steps (\(.skipped) skipped)" else "FAIL: \(.problems | join("; "))" end' "$STATE/journeys.json")"
 exit "$rc"

@@ -1,5 +1,5 @@
 # S21 · PR 418 (REP-07e) — the smoke test's newest run of each kind for Reports › Site health › Smoke runs (sourced by
-# infra/deploy/smoke.sh and the infra tests). The admin reads state/smoke-runs/<deploy|scheduled>/ through the app's
+# infra/deploy/smoke.sh, journeys.sh (PR 419: run_history) and the infra tests). The admin reads state/smoke-runs/<deploy|scheduled>/ through the app's
 # read-only /state mount: result.json, rows.json (each page × screen, tools/smoke.mjs) and the pictures.
 # shellcheck shell=bash
 
@@ -30,4 +30,21 @@ smoke_keep() {
   fi
   mv "$tmp" "$dir/$slot"
   rm -rf "${dir:?}/.$slot.old.$$"
+}
+
+# PR 419 (B7.3) — run_history <smoke|journeys> <run folder> <migrate image> <env file>: keeps the run in the history
+# (SiteAuditRun with its findings; packages/jobs/src/run-history-cli.ts in the release's migrate image, as the node
+# user, the folder read-only). Never fails the caller: a release without the command, or a database that cannot be
+# written, is said in one line and the run goes on.
+run_history() {
+  local tool="$1" dir="$2" img="$3" envf="$4" rc=0
+  if ! docker run --rm --name "extas-history-probe-$$" "$img" test -f /repo/packages/jobs/src/run-history-cli.ts >/dev/null 2>&1; then
+    echo "run history: this release cannot keep runs yet (no run-history-cli.ts)"
+    return 0
+  fi
+  # shellcheck disable=SC2016  # $1 is the tool, expanded inside the container
+  docker run --rm --name "extas-history-$$" --network extas --env-file "$envf" -v "$dir:/in:ro" "$img" \
+    sh -c 'cd /repo/packages/jobs && exec ./node_modules/.bin/tsx src/run-history-cli.ts --tool "$1" --dir /in' sh "$tool" || rc=$?
+  [ "$rc" -eq 0 ] || echo "run history: not kept (exit $rc)"
+  return 0
 }
