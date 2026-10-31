@@ -710,7 +710,7 @@ cat > "$T/bin/docker" <<'FAKE'
 # stand-in for docker in deploy.sh: images exist when listed in FAKE_IMAGES; compose logs what each colour runs
 echo "ARGS $*" >> "$FAKE_LOG"
 case "$1" in
-  image) img="${*: -1}"; grep -qxF "$img" <(tr ' ' '\n' <<<"$FAKE_IMAGES") || exit 1
+  image) img="${*: -1}"; grep -qxF -e "$img" <(tr ' ' '\n' <<<"$FAKE_IMAGES") || exit 1
          [ "${2:-}" != inspect ] || [ "${3:-}" != -f ] || echo "GIT_SHA=${img##*:}" ;;
   compose) echo "COMPOSE ${*: -4} WORKER_IMAGE=$WORKER_IMAGE WORKER_REPLICAS=$WORKER_REPLICAS APP_IMAGE=$APP_IMAGE" >> "$FAKE_LOG" ;;
   exec) case "$*" in *wget*) echo '{"ok":true}' ;; esac ;;
@@ -897,9 +897,15 @@ check "docker: daemon.json keeps the build cache under the setting" \
 check "docker: containerd and Docker wait for containerd's store" \
   "$(grep -c '^RequiresMountsFor=.* /var/lib/docker \$CONTAINERD_ROOT$' ../server/steps/07-docker.sh):$(grep -c '^RequiresMountsFor=\$CONTAINERD_ROOT$' ../server/steps/07-docker.sh)" "1:1"
 check "setup: the OS-disk step runs right after Docker, not critical" "$(grep -A1 '^docker    step_docker' ../server/setup.sh | tail -1 | tr -s ' ')" "osdisk step_osdisk 0"
-for k in LV_CONTAINERD_GB CONTAINERD_ROOT DOCKER_BUILD_CACHE_KEEP_GB DEPLOY_KEEP_WEB_IMAGES DEPLOY_KEEP_MIGRATE_IMAGES DISK_ROOT_MIN_FREE_GB JOURNAL_MAX_USE_MB RUNNER_DIR RUNNER_DIAG_KEEP_DAYS; do
+for k in LV_CONTAINERD_GB CONTAINERD_ROOT DOCKER_BUILD_CACHE_KEEP_GB DEPLOY_KEEP_WEB_IMAGES DEPLOY_KEEP_MIGRATE_IMAGES DISK_ROOT_MIN_FREE_GB JOURNAL_MAX_USE_MB RUNNER_DIR RUNNER_DIAG_KEEP_DAYS DISK_SNAPSHOT_PCT DISK_SNAPSHOT_KEEP TMP_KEEP_DAYS; do
   grep -q "^$k=" ../config/server.conf || { echo "FAIL server.conf has no $k"; fail=1; }
 done
+check "monitor: a snapshot of what fills / (folders, big files, deleted files held open) once / passes DISK_SNAPSHOT_PCT" \
+  "$(grep -q 'DISK_SNAPSHOT_PCT' ../server/bin/extas-monitor && grep -q "(deleted)" ../server/bin/extas-monitor && grep -q 'DISK_SNAPSHOT_KEEP' ../server/bin/extas-monitor && echo yes)" "yes"
+check "osdisk: the top-10 folders list survives sort's broken pipe under set -e (failed on the server 31 Oct)" \
+  "$(bash -c 'set -euo pipefail; seq 1 200000 | sort -rn | awk "{ if (++c == 10) exit }" || true; echo ok')" "ok"
+check "osdisk: old files in /tmp and /var/tmp age out; the report shows the last snapshot" \
+  "$(grep -q 'e /tmp - - - %sd' ../server/steps/13-osdisk.sh && grep -q 'disk-snapshots' ../server/steps/13-osdisk.sh && echo yes)" "yes"
 check "osdisk: the volume leaves room in the VG (218 GB free when it came)" "$(bash -c '. ../config/server.conf; echo $(( LV_CONTAINERD_GB < 200 ))')" "1"
 
 # The move of containerd's store (steps/13-osdisk.sh) with stand-ins for every system command (no disk, no Docker):

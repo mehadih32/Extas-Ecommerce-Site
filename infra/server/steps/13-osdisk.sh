@@ -15,7 +15,7 @@ OSDISK_FSTAB="${EXTAS_FSTAB:-/etc/fstab}"
 
 # osdisk_usage <when> — read-only: df of / and the size of each big folder on the OS disk, into the report.
 osdisk_usage() {
-  local when="$1" view="" du_out d sz note img root
+  local when="$1" view="" du_out d sz note img root snap
   du_out="$(mktemp)"
   view="$(mktemp -d)"
   # Only the OS disk itself (no volume mounted under it), so content hidden under a mountpoint is counted too.
@@ -47,10 +47,19 @@ osdisk_usage() {
     root="${view:-}"
     sort -rn "$du_out" | awk -F'\t' -v v="$root" '
       { p = substr($2, length(v) + 1); if (p == "" || p == "/") next; n = gsub(/\//, "/", p); if (n > 3) next
-        printf "- `%s` %.1f GB\n", p, $1/1048576; if (++c == 10) exit }'
+        printf "- `%s` %.1f GB\n", p, $1/1048576; if (++c == 10) exit }' || true  # awk stops after 10 rows; sort's broken pipe is not a failure
     echo
     img="$(docker info -f '{{.Driver}} ({{range .DriverStatus}}{{index . 0}}={{index . 1}} {{end}})' 2>/dev/null || true)"
     echo "Docker image store: ${img:-Docker not answering}; Docker folder: $(docker info -f '{{.DockerRootDir}}' 2>/dev/null || echo '?')."
+    snap="$(ls -1t "$EXTAS_ROOT/logs/disk-snapshots" 2>/dev/null | head -1 || true)"
+    if [ -n "$snap" ]; then
+      echo
+      echo "Last disk snapshot by the monitor (\`logs/disk-snapshots/$snap\`, / passed ${DISK_SNAPSHOT_PCT}%):"
+      echo
+      echo '```'
+      head -60 "$EXTAS_ROOT/logs/disk-snapshots/$snap"
+      echo '```'
+    fi
   } >> "$REPORT_FILE.profile"
   if [ -n "$view" ]; then umount "$view" 2>/dev/null || true; rmdir "$view" 2>/dev/null || true; fi
   rm -f "$du_out"
@@ -66,6 +75,9 @@ osdisk_limits() {
     printf '# EXTAS (PR 4 follow-up) — the runner keeps its own logs %s days\ne %s/_diag - - - %sd\n' \
       "$RUNNER_DIAG_KEEP_DAYS" "$RUNNER_DIR" "$RUNNER_DIAG_KEEP_DAYS" | write_file /etc/tmpfiles.d/extas-runner.conf 0644 >/dev/null
   fi
+  # A crashed job's leftovers in /tmp never pile up between restarts (Ubuntu only empties /tmp at boot).
+  printf '# EXTAS (PR 4 follow-up) — temp files untouched %s days are removed\ne /tmp - - - %sd\ne /var/tmp - - - %sd\n' \
+    "$TMP_KEEP_DAYS" "$TMP_KEEP_DAYS" "$TMP_KEEP_DAYS" | write_file /etc/tmpfiles.d/extas-tmp.conf 0644 >/dev/null
   return 0
 }
 
