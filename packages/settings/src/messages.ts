@@ -171,6 +171,9 @@ import districtPromiseEn from '../messages/district-promise.en.json';
 // CN-018 (4) · PR 89 follow-up — sets Fixed or Flexible (registry v98).
 import comboSplitBn from '../messages/combo-split.bn.json';
 import comboSplitEn from '../messages/combo-split.en.json';
+// CN-020 (3) — "Call me" at checkout (registry v99).
+import callMeBn from '../messages/call-me.bn.json';
+import callMeEn from '../messages/call-me.en.json';
 import trackingEn from '../messages/tracking.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
@@ -258,6 +261,9 @@ messages.bn = mergeMessages(messages.bn, districtPromiseBn);
 // CN-018 (4) · PR 89 follow-up (registry v98): sets Fixed or Flexible.
 messages.en = mergeMessages(messages.en, comboSplitEn);
 messages.bn = mergeMessages(messages.bn, comboSplitBn);
+// CN-020 (3) (registry v99): "Call me" at checkout.
+messages.en = mergeMessages(messages.en, callMeEn);
+messages.bn = mergeMessages(messages.bn, callMeBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

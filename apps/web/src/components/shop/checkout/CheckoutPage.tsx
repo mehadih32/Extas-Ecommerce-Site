@@ -88,6 +88,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, 
         backfill={s['checkout.address.backfill'].enabled}
         gift={giftCfg}
         gps={s['risk.capture'].gpsButton && !giftCfg ? { decimals: s['risk.capture'].gpsDecimals, days: s['risk.capture'].retentionDays, waitMs: s['risk.capture'].gpsWaitSeconds * 1000 } : null}
+        callMe={s['checkout.callMe'].enabled ? { failedTries: s['checkout.callMe'].failedTries, idleSeconds: s['checkout.callMe'].idleSeconds } : null}
         paused={paused}
       />
       {actions}

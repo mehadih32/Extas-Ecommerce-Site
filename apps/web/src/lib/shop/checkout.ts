@@ -15,6 +15,7 @@ import { shopStoreId, type ShopContext } from './context';
 import { SHOP_DICTS, keysOf } from './dict';
 import { giftTrialSettings, tryGiftOn } from './try-gift';
 import { tryPauseOn } from './try-pause';
+import { tryCallMeOn } from './try-callme';
 import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-gateway';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
@@ -83,6 +84,8 @@ const KEYS = [
   'checkout.gift',
   // PR 159: the "Share my location" button and how long the point is kept
   'risk.capture',
+  // CN-020 (3), SIM-F-046: "Call me" after refused tries or a long pause
+  'checkout.callMe',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
@@ -96,7 +99,10 @@ export async function checkoutSettings(storeId: number): Promise<CheckoutSetting
   if (!r) return defaultCheckoutSettings();
   try {
     const vals = await withTimeout(Promise.all(KEYS.map((k) => r.value(k, { storeId }))), settingsTimeoutMs());
-    return Object.fromEntries(KEYS.map((k, i) => [k, vals[i]])) as CheckoutSettings;
+    const s = Object.fromEntries(KEYS.map((k, i) => [k, vals[i]])) as CheckoutSettings;
+    // SIM-F-046: a test server's "Call me" trial (the cookie of /api/shop/try-callme) offers the card after one refusal
+    if (await tryCallMeOn()) s['checkout.callMe'] = { ...s['checkout.callMe'], enabled: true, failedTries: 1 };
+    return s;
   } catch {
     return defaultCheckoutSettings();
   }

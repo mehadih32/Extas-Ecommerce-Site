@@ -46,6 +46,9 @@ export const SUPPORT_ERROR_CODES = [
   'FILE_PENDING',
   'NOT_ASSIGNABLE',
   'IDEMPOTENCY_MISMATCH',
+  // CN-020 (3): "Call me" at checkout is switched off, or this number asked too often today
+  'CALLBACK_OFF',
+  'TOO_MANY',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
@@ -64,6 +67,7 @@ export class SupportError extends Error {
     if (this.code === 'NOT_FOUND' || this.code === 'FILE_PENDING') return 404;
     if (this.code === 'INVALID_INPUT' || this.code === 'EMPTY' || this.code === 'TOO_LONG') return 400;
     if (this.code === 'STALE' || this.code === 'IDEMPOTENCY_MISMATCH') return 409;
+    if (this.code === 'TOO_MANY') return 429;
     return 422;
   }
 }

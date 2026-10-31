@@ -427,6 +427,19 @@
       "remove": "Remove",
       "off": "Your location is not available. The address you typed is enough.",
       "note": "Optional. Kept only for this delivery and deleted after {days} days."
+    },
+    "callMe": {
+      "titleTries": "Stuck on this box? We can call you.",
+      "titleIdle": "Need a hand finishing your order?",
+      "text": "Tap below and someone from our team will call you to help. Your bag and what you typed stay as they are.",
+      "phone": "Your mobile number",
+      "go": "Call me",
+      "sending": "Sending…",
+      "away": "Not now",
+      "done": "Thanks! We will call you soon on {phone}.",
+      "many": "We already have your request. We will call you on {phone}.",
+      "keep": "You can keep going with your order meanwhile.",
+      "error": "That did not go through. Please try again."
     }
   },
   "notFound": {

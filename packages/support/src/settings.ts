@@ -2,13 +2,14 @@
 // (`support.attachments`). Read with `support.read`, saved one card at a time with `support.settings`, with the card's
 // version (a save in between is STALE) and an audit row. Customer numbers follow `customers.phoneMask` (PR 284).
 // PR 426: two more cards, the channels' reply window (`support.channels`) and the site's live chat (`support.liveChat`).
+// CN-020 (3): one more, "Call me" at checkout (`checkout.callMe`), whose call-backs land in this inbox.
 import { createHash } from 'node:crypto';
-import { registry, storeTarget, supportAttachmentsSchema, supportChannelsSchema, supportInboxSchema, supportLiveChatSchema, type Key, type Value } from '@extas/settings';
+import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportChannelsSchema, supportInboxSchema, supportLiveChatSchema, type Key, type Value } from '@extas/settings';
 import { z } from 'zod';
 import { allow, logChange, parse, setting, SupportError, type SettingsWriter, type SupportDeps, type Who } from './context';
 
 /** The keys Support settings edits, each one card. */
-export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat'] as const satisfies readonly Key[];
+export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe'] as const satisfies readonly Key[];
 export type SupportSettingKey = (typeof SUPPORT_SETTING_KEYS)[number];
 
 const SCHEMAS = {
@@ -16,6 +17,8 @@ const SCHEMAS = {
   'support.attachments': supportAttachmentsSchema,
   'support.channels': supportChannelsSchema,
   'support.liveChat': supportLiveChatSchema,
+  // CN-020 (3): "Call me" at checkout — its call-backs land in this inbox
+  'checkout.callMe': callMeSchema,
 } as const satisfies Record<SupportSettingKey, z.ZodType>;
 
 export interface SupportSettingCard<K extends SupportSettingKey = SupportSettingKey> {
@@ -36,8 +39,14 @@ async function card<K extends SupportSettingKey>(deps: Pick<SupportDeps, 'settin
 }
 
 async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Promise<SupportSettingsView> {
-  const [a, b, c, d] = await Promise.all([card(deps, storeId, 'support.inbox'), card(deps, storeId, 'support.attachments'), card(deps, storeId, 'support.channels'), card(deps, storeId, 'support.liveChat')]);
-  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d };
+  const [a, b, c, d, e] = await Promise.all([
+    card(deps, storeId, 'support.inbox'),
+    card(deps, storeId, 'support.attachments'),
+    card(deps, storeId, 'support.channels'),
+    card(deps, storeId, 'support.liveChat'),
+    card(deps, storeId, 'checkout.callMe'),
+  ]);
+  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e };
 }
 
 /** Every card's data (`support.read`). */

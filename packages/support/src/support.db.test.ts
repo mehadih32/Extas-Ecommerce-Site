@@ -230,5 +230,11 @@ describe.skipIf(!HAS_TEST_DB)('PR 425 · the support core (PostgreSQL)', () => {
     expect(await code(save(who.lead, inbox, v['support.inbox'].version))).toBe('STALE');
     expect(await t.prisma.auditLog.count({ where: { action: 'support.settings.save', entityId: 'support.inbox' } })).toBe(1);
     overrides.delete('support.inbox');
+    // CN-020 (3): the "Call me" card ships off and saves the same way
+    expect(v['checkout.callMe'].value).toEqual({ enabled: false, failedTries: 3, idleSeconds: 90, perPhonePerDay: 3 });
+    const cm = (value: unknown) => saveSupportSetting({ db: t.prisma, settings }, who.lead, { key: 'checkout.callMe', value, version: v['checkout.callMe'].version });
+    expect(await code(cm({ ...v['checkout.callMe'].value, failedTries: 0 }))).toBe('INVALID_INPUT');
+    expect((await cm({ ...v['checkout.callMe'].value, enabled: true }))['checkout.callMe'].value.enabled).toBe(true);
+    overrides.delete('checkout.callMe');
   });
 });

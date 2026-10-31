@@ -43,6 +43,7 @@ import { OffersCard } from './OffersCard';
 import { PausedNote } from './PausedNote';
 import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
+import { CallMeCard, useCallMe, type CallMeConfig } from './CallMeCard';
 import { clearDraft, forgetDetails, newOrderKey, nextOnEnter, rememberDetails, saveDraft, useDraft, useRemembered } from './draft';
 import { DRAFT_URL, fetchQuote, latest, ORDERS_URL, postJson, useSettle, type Choices, type PlaceAnswer } from './quote-client';
 import { humanSignals, watchHumanInput } from '@/lib/security/human-signals';
@@ -98,6 +99,8 @@ export interface CheckoutFormProps {
   gps?: GpsConfig | null;
   /** PR 610 (qa-gate I3): checkout was paused when the page was drawn. */
   paused?: boolean;
+  /** CN-020 (3), SIM-F-046: "Call me" after refused tries on one box or a long pause (`checkout.callMe`); null: off. */
+  callMe?: CallMeConfig | null;
 }
 
 const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
@@ -127,6 +130,7 @@ export function CheckoutForm({
   gift: giftCfg = null,
   gps: gpsCfg = null,
   paused: pausedFirst = false,
+  callMe: callMeCfg = null,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -313,6 +317,8 @@ export function CheckoutForm({
   const [tried, setTried] = useState(false);
   const [ask, setAsk] = useState<Field | null>(null);
   const asking = stillAsked(ask, check);
+  // SIM-F-046: the pause clock starts again on every change he makes
+  const callMe = useCallMe(callMeCfg, !check.ok, JSON.stringify(form));
   const invalid: Partial<Record<Field, string>> = tried && !check.ok ? Object.fromEntries(Object.keys(check.all).map((f) => [f, '1'])) : {};
   const askLine = (f: Field) => {
     const k = askKey(f, check);
@@ -348,6 +354,7 @@ export function CheckoutForm({
     setPhoneChecked(true);
     if (isGiftField(field)) setGiftAsk(field);
     else setAsk(field);
+    callMe.refused(field);
     const box = formEl.querySelector(`[data-field="co-${field}"]`);
     box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const input = document.getElementById(`co-${field}`);
@@ -632,6 +639,7 @@ export function CheckoutForm({
                   invalid={invalid}
                 />
                 {gpsCfg ? <GpsShare cfg={gpsCfg} value={point} onChange={setPoint} w={w} /> : null}
+                {callMe.offer ? <CallMeCard offer={callMe.offer} phone={form.phone} name={form.name} lang={money.lang} w={w} onAway={callMe.putAway} /> : null}
               </div>
             </section>
             <section className="card co-sec" data-testid="co-delivery">

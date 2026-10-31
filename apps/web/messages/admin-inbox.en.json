@@ -34,7 +34,8 @@
       "messenger": "Messenger",
       "livechat": "Site chat",
       "instagram": "Instagram",
-      "email": "E-mail"
+      "email": "E-mail",
+      "callback": "Call-back"
     },
     "nobody": "Not taken",
     "you": "You",
@@ -158,7 +159,9 @@
       "unauthorized": "You have been signed out. Sign in again.",
       "UNAUTHENTICATED": "You have been signed out. Sign in again.",
       "network": "No connection. Try again.",
-      "other": "Something went wrong. Try again."
+      "other": "Something went wrong. Try again.",
+      "CALLBACK_OFF": "“Call me” at checkout is switched off.",
+      "TOO_MANY": "This number asked for a call-back too often today."
     },
     "set": {
       "title": "Support settings",
@@ -257,6 +260,16 @@
         "replyWindowHours": "Reply window (hours)",
         "replyWindowHoursHelp": "Meta's rule is 24 hours. Raise it only if Meta has given your Page or number longer.",
         "webhookMaxBodyKb": "Largest Messenger message read (KB)"
+      },
+      "callMe": {
+        "h": "“Call me” at checkout",
+        "d": "When a customer struggles at checkout, a small “Call me” offer appears. His tap lands here in the inbox as a call-back (channel “Call-back”), with his number. There is no permanent button.",
+        "enabled": "Offer “Call me” when someone struggles",
+        "enabledHelp": "Off as it ships. Switched on, it shows only after the tries or the pause below.",
+        "failedTries": "Refused tries on one box before it shows",
+        "idleSeconds": "Seconds without progress before it shows",
+        "perPhonePerDay": "Call-backs one number may leave a day",
+        "perPhonePerDayHelp": "Stops one number filling the inbox."
       }
     }
   }
