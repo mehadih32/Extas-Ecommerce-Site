@@ -530,5 +530,25 @@
       "adminMs": "Target: admin page load (ms, monthly check)",
       "hint": "Default {v} ({min} to {max})."
     }
+  },
+  "hl": {
+    "title": "Language pairs (hreflang)",
+    "desc": "A page whose Bengali twin is ready names both languages in its head, so Google shows English searchers the English page and Bengali searchers the Bengali one. A page with no ready twin names none.",
+    "off": "Bengali is off, so no page names a Bengali twin.",
+    "noneReady": "No page is marked Bengali-ready yet, so no page names a pair.",
+    "count": "{n} of {m} Bengali-ready pages name their pair.",
+    "tags": "What a page with a pair carries",
+    "tagsHint": "In the head of both twins, the same three lines; x-default sends any other language to the English page.",
+    "tagsHintNoDefault": "In the head of both twins, the same lines; no x-default (Search engines › More options › Searchers in other languages).",
+    "col": {
+      "en": "English page",
+      "bn": "Bengali page",
+      "named": "Pair named"
+    },
+    "yes": "Yes",
+    "hidden": "No: this kind of page is hidden from search engines",
+    "more": "and {n} more",
+    "inSitemaps": "Also name the pairs in the sitemaps",
+    "inSitemapsHint": "Off: the pairs are only in each page's head, one method, as Google advises. On: the sitemaps carry the same pairs too."
   }
 }

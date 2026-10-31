@@ -21,14 +21,22 @@ describe('sitemaps (PR 228)', () => {
     expect(filesOf(list, 1).map((f) => f.length)).toEqual([1, 1, 1, 1]);
   });
 
-  it('writes absolute addresses, the twins only when ready, x-default as the owner keeps it, escaped', () => {
-    const xml = urlsetXml(origin, [e('/collections/polos?colour=navy&x=1', false, new Date('2026-10-30T22:00:00Z')), e('/', true)], 'en');
+  it('PR 236: writes both twins of a ready page but no language pair (the HTML head names it), as shipped', () => {
+    const xml = urlsetXml(origin, [e('/', true), e('/a')], 'en');
+    expect(xml.match(/<loc>[^<]*<\/loc>/g)).toEqual(['<loc>https://shop.example.test/</loc>', '<loc>https://shop.example.test/bn</loc>', '<loc>https://shop.example.test/a</loc>']);
+    expect(xml).not.toContain('xhtml');
+    expect(xml).not.toContain('hreflang');
+  });
+
+  it('writes absolute addresses, the twins only when ready, x-default as the owner keeps it, escaped (pairs switched on)', () => {
+    const xml = urlsetXml(origin, [e('/collections/polos?colour=navy&x=1', false, new Date('2026-10-30T22:00:00Z')), e('/', true)], 'en', true);
     expect(xml).toContain('<loc>https://shop.example.test/collections/polos?colour=navy&amp;x=1</loc><lastmod>2026-10-30</lastmod></url>');
     expect(xml).toContain('<url><loc>https://shop.example.test/</loc><xhtml:link rel="alternate" hreflang="en" href="https://shop.example.test/"/>');
     expect(xml).toContain('<url><loc>https://shop.example.test/bn</loc>');
     expect(xml).toContain('hreflang="x-default" href="https://shop.example.test/"');
     expect(xml.match(/<url>/g)).toHaveLength(3);
-    expect(urlsetXml(origin, [e('/', true)], 'none')).not.toContain('x-default');
+    expect(xml).toContain('xmlns:xhtml=');
+    expect(urlsetXml(origin, [e('/', true)], 'none', true)).not.toContain('x-default');
     expect(urlsetXml(origin, [], 'en')).toContain('<urlset');
     expect(xmlEscape(`a&b<c>"d'`)).toBe('a&amp;b&lt;c&gt;&quot;d&apos;');
   });

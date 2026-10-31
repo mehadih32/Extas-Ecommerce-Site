@@ -5,8 +5,10 @@
 //   sets hub and builder), `collections` (collections, sub-collections and the named filter pages of PR 227),
 //   `products`, `combos` (featured sets and the colour-pair lists on sale).
 // - Every address is absolute on the shop's own domain (lib/seo/site). A page whose Bengali twin passed the translation
-//   gate (PR 588) is written twice, English and Bengali, each naming both (hreflang, and x-default → English when the
-//   owner keeps it); a page without a ready twin is written once, in English.
+//   gate (PR 588) is written twice, English and Bengali; a page without a ready twin is written once, in English.
+//   ~~each naming both (hreflang, and x-default → English when the owner keeps it)~~ PR 236: the pairs live in each
+//   page's HTML head only (one method, Blueprint C12.1); the sitemaps name them only while `seo.hreflang.inSitemaps`
+//   is on (`pairs`).
 // - A kind that is empty still has its file (an empty list), so the index never names a file that answers 404.
 import { hrefIn } from '../shop/lang';
 
@@ -63,13 +65,13 @@ export function latest(entries: readonly SitemapEntry[]): Date | null {
   return best;
 }
 
-/** One file of addresses (`<urlset>`), with the Bengali twins and their hreflang pair. */
-export function urlsetXml(origin: URL, entries: readonly SitemapEntry[], xDefault: 'en' | 'none'): string {
-  const out: string[] = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
+/** One file of addresses (`<urlset>`), with the Bengali twins; `pairs` (PR 236): each also names its hreflang pair. */
+export function urlsetXml(origin: URL, entries: readonly SitemapEntry[], xDefault: 'en' | 'none', pairs = false): string {
+  const out: string[] = ['<?xml version="1.0" encoding="UTF-8"?>', `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${pairs ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : ''}>`];
   for (const e of entries) {
     const en = abs(origin, hrefIn('en', e.path));
     const bn = abs(origin, hrefIn('bn', e.path));
-    const pair = e.bn
+    const pair = pairs && e.bn
       ? [`<xhtml:link rel="alternate" hreflang="en" href="${xmlEscape(en)}"/>`, `<xhtml:link rel="alternate" hreflang="bn" href="${xmlEscape(bn)}"/>`, ...(xDefault === 'en' ? [`<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(en)}"/>`] : [])]
       : [];
     const mod = e.lastmod ? `<lastmod>${day(e.lastmod)}</lastmod>` : '';

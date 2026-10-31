@@ -54,6 +54,10 @@
     "vitals": {
       "label": "Real visitors' speed",
       "help": "Shop pages report how fast they loaded for real visitors (Core Web Vitals: LCP, CLS, INP, TTFB), kept only as daily counts, never who visited. The admin shows the 75th percentile of the last days against the targets, next to the monthly measurement on a phone over 4G."
+    },
+    "hreflang": {
+      "label": "Language pairs (hreflang)",
+      "help": "A page whose Bengali twin is ready names both (en, bn, and x-default for the English one) in its HTML head, so Google shows each searcher the right language. Optionally the sitemaps carry the same pairs; off as shipped (one method, as Google advises)."
     }
   },
   "defaults": {

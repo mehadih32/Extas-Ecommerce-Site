@@ -9,6 +9,8 @@
 //   BASE=https://… [SMOKE_HTTP_USER=… SMOKE_HTTP_PASSWORD=…] SMOKE_OUT=<dir> node tools/smoke.mjs
 // Then, signed in, the extra checks of docs/qa/smoke.json `checks` (PR 6: the background worker's heartbeat is fresh
 // on the Server page).
+// S11 · PR 236: on the first screen, every storefront page that names a language pair (hreflang) is checked with its
+// twin (tools/hreflang-check.mjs): complete, absolute, itself included, and named back.
 // Writes <SMOKE_OUT>/result.json, README.md and one screenshot per page and screen. Never prints or stores a password.
 // What it opens and the known exceptions are in docs/qa/smoke.json. Needs the `playwright` package (NODE_PATH).
 import { createHmac, randomBytes } from "node:crypto";
@@ -16,6 +18,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { pagePairProblems } from "./hreflang-check.mjs";
 
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -396,8 +399,16 @@ export async function runSmoke(opts) {
         preview ? { ...screen, storageState: preview } : screen,
       );
       const gp = await guest.newPage();
+      // PR 236: the language pair of a shop page, once (it is the server's answer, not the screen's)
+      const withPair = async (row) => {
+        if (vp === config.viewports[0] && row.ok) {
+          row.problems.push(...(await pagePairProblems(gp, opts.base, row.path)));
+          row.ok = row.problems.length === 0;
+        }
+        return row;
+      };
       for (const path of config.storefront)
-        rows.push(await visit(gp, opts.base, ignore, path, vp.name, opts.out));
+        rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts.out)));
       // PR 49: the pages a built page links to (the product pages New in shows).
       for (const d of config.discover ?? []) {
         const from = await visit(gp, opts.base, ignore, d.from, vp.name, null);
@@ -407,7 +418,7 @@ export async function runSmoke(opts) {
               .catch(() => [])
           : [];
         for (const path of discovered(hrefs, d.take))
-          rows.push(await visit(gp, opts.base, ignore, path, vp.name, opts.out));
+          rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts.out)));
       }
       // Signed out, an admin page sends you to the sign-in page (never an error).
       const out = await visit(

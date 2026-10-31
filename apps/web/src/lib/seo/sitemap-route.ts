@@ -1,7 +1,7 @@
 // S11 · PR 228 — the answers of /sitemap.xml (the index) and /sitemaps/<kind>-<n>.xml (one file): XML on the shop's own
 // address (lib/seo/site), made from the kept set (lib/seo/sitemap-data). Off (`seo.sitemaps.enabled`), or a file that
 // does not exist, answers 404. A sitemap is never a search result itself (X-Robots-Tag), and a cache in front keeps it
-// no longer than the set is kept here.
+// no longer than the set is kept here. PR 236: the language pairs only while `seo.hreflang.inSitemaps` is on.
 import { shopStoreId } from '../shop/store-id';
 import { siteAddress } from './site';
 import { filesOfSet, indexXml, parseSitemapFile, urlsetXml } from './sitemap';
@@ -32,5 +32,5 @@ export async function sitemapResponse(file: string | null): Promise<Response> {
   const files = filesOfSet(entries, s.perFile);
   if (!asked) return xml(indexXml(site.origin, files), s.cacheMinutes);
   const one = files.find((f) => f.kind === asked.kind && f.n === asked.n);
-  return one ? xml(urlsetXml(site.origin, one.entries, set['seo.indexing'].xDefault), s.cacheMinutes) : missing();
+  return one ? xml(urlsetXml(site.origin, one.entries, set['seo.indexing'].xDefault, set['seo.hreflang'].inSitemaps), s.cacheMinutes) : missing();
 }
