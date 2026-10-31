@@ -1,17 +1,15 @@
 {
-  "at": "2026-10-31 15:04 (Asia/Dhaka)",
+  "at": "2026-10-31 16:24 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "42b8f00d33e0",
+  "sha": "7301dfe4b22c",
   "kind": "after deploy",
   "rolledBack": true,
-  "ok": false,
+  "ok": true,
   "pages": 224,
   "failed": 0,
-  "problems": [
-    "problem: the append-only check could not read the database (postgres:17 running since 2026-10-31T07:30:36.575859967Z; PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/17/bin; sh: 1: tr: not found exec PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/17/bin )"
-  ],
+  "problems": [],
   "database": {
-    "appendOnly": "problem: the append-only check could not read the database (postgres:17 running since 2026-10-31T07:30:36.575859967Z; PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/17/bin; sh: 1: tr: not found exec PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/17/bin )",
+    "appendOnly": "ok: 30 tables append-only",
     "appRole": "extas_app"
   }
 }
