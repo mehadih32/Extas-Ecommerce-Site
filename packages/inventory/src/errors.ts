@@ -49,7 +49,9 @@ export type InventoryErrorCode =
   /** CN-028 · PR 617, 618: the store's books with the ERP start at the switch-over (contract v6 and its own ERP link). */
   | 'BOOKS_NOT_LINKED'
   /** CN-028 · PR 618: the day or month is no longer open in the books (past `books.resend.days`, or its month closed). */
-  | 'BOOKS_DAY_CLOSED';
+  | 'BOOKS_DAY_CLOSED'
+  /** CN-033 · PR 610: B-grade pieces are not open at the ERP yet (`erp.orders.bGradeOpen` off); details name the SKU. */
+  | 'B_GRADE_CLOSED';
 
 export class InventoryError extends Error {
   readonly code: InventoryErrorCode;
@@ -88,6 +90,7 @@ export class InventoryError extends Error {
       case 'ROW_NOT_ACCEPTED':
       case 'BOOKS_NOT_LINKED':
       case 'BOOKS_DAY_CLOSED':
+      case 'B_GRADE_CLOSED':
         return 409;
       case 'ERP_UNAVAILABLE':
       case 'ERP_ERROR':

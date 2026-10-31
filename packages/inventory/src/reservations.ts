@@ -29,7 +29,7 @@ import { z } from 'zod';
 import type { LocationKindName } from '@extas/settings';
 import { nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx } from './context';
 import { InventoryError } from './errors';
-import { isV6 } from './erp-model';
+import { bGradeClosed, isV6 } from './erp-model';
 import { sellableKinds } from './locations';
 import { recomputeVariantStock } from './stock';
 
@@ -252,13 +252,16 @@ export async function holdCart(deps: InventoryDeps, input: HoldInput, opts: { tx
 
     const current = await tx.stockReservation.findMany({ where: { storeId: d.storeId, cartId: d.cartId, status: 'ACTIVE', releasedAt: null } });
     const ids = [...new Set([...want.keys(), ...current.map((r) => r.variantId)])];
-    const variants = await tx.productVariant.findMany({ where: { storeId: d.storeId, id: { in: ids } }, select: { id: true, sku: true, archivedAt: true, shopPriceMissingAt: true } });
+    const variants = await tx.productVariant.findMany({ where: { storeId: d.storeId, id: { in: ids } }, select: { id: true, sku: true, archivedAt: true, shopPriceMissingAt: true, grade: true } });
     const byId = new Map(variants.map((v) => [v.id, v]));
     const bad = [...want.keys()].filter((id) => !byId.get(id) || byId.get(id)!.archivedAt);
     if (bad.length) throw new InventoryError('INVALID_INPUT', 'not a live variant of this store', bad.map((id) => `variantId:${id}`));
     // PR 610 (v6): a SKU the ERP refused for having no shop price yet (409 NO_SHOP_PRICE) is not sold until it has one.
     const noPrice = [...want.keys()].filter((id) => byId.get(id)!.shopPriceMissingAt);
     if (noPrice.length && (await isV6(deps, d.storeId))) throw new InventoryError('OUT_OF_STOCK', 'not for sale until the ERP has its shop price', noPrice.map((id) => `${byId.get(id)!.sku}:0`));
+    // CN-033 (v6): a B-grade piece is not sold while the ERP takes no B-grade line (`erp.orders.bGradeOpen` off).
+    const bGrade = [...want.keys()].filter((id) => byId.get(id)!.grade === 'B');
+    if (bGrade.length && (await bGradeClosed(deps, d.storeId))) throw new InventoryError('OUT_OF_STOCK', 'B-grade pieces are not sold until the ERP opens them', bGrade.map((id) => `${byId.get(id)!.sku}:0`));
 
     const rows = await lockPools(tx, variants.map((v) => v.sku));
     await deps.hooks?.afterPoolLock?.();

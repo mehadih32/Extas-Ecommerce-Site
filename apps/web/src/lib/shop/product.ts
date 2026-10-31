@@ -7,7 +7,7 @@
 // than a guess.
 import { getPrisma, type Prisma } from '@extas/db/client';
 import { activeSizeEase, bothUnits, ghostState, groupKey, productFitKey, readMeta, readRows, sortRows, wasPriceFor, type GhostReason } from '@extas/catalogue';
-import { sellableUnits } from '@extas/inventory';
+import { bGradeClosed, sellableUnits } from '@extas/inventory';
 import { imageSources, type ImageSource } from '@extas/media';
 import { cachedProductPage, cachedStock } from '../cache';
 import { placeTexts } from '../rules-public';
@@ -157,15 +157,22 @@ export async function productData(storeId: number, slug: string, now = new Date(
   }
 }
 
-/** PR 602: each variant's sellable stock now, as the page shows it (0 when it is marked sold out). */
+/**
+ * PR 602: each variant's sellable stock now, as the page shows it (0 when it is marked sold out). PR 610: a B-grade piece
+ * counts 0 while the ERP takes no B-grade line (`bGradeClosed`), as the bag refuses it.
+ */
 async function liveStock(storeId: number, productId: string): Promise<Map<string, number>> {
   const r = settingsResolver();
-  const kinds = new Set(r ? await r.value('inventory.sellableLocationKinds', { storeId }) : (['WAREHOUSE'] as const));
+  const [kinds, closed] = await Promise.all([
+    r ? r.value('inventory.sellableLocationKinds', { storeId }) : Promise.resolve(['WAREHOUSE'] as const),
+    r ? bGradeClosed({ settings: r }, storeId) : Promise.resolve(false),
+  ]);
+  const kindSet = new Set(kinds);
   const rows = await getPrisma().productVariant.findMany({
     where: { storeId, productId, archivedAt: null, active: true },
-    select: { id: true, inStock: true, stockLevels: productSelect.variants.select.stockLevels },
+    select: { id: true, inStock: true, grade: true, stockLevels: productSelect.variants.select.stockLevels },
   });
-  return new Map(rows.map((v) => [v.id, v.inStock ? sellableUnits(v.stockLevels, kinds) : 0]));
+  return new Map(rows.map((v) => [v.id, v.inStock && !(closed && v.grade === 'B') ? sellableUnits(v.stockLevels, kindSet) : 0]));
 }
 
 const fieldsOf = (json: unknown): { key: string; labelEn: string; labelBn: string; unit: 'inch' | 'cm' }[] =>

@@ -10,12 +10,12 @@ import { demoAcceptancePage, errorLine, runDemoAcceptance, type DemoAcceptanceDe
 
 const T0 = new Date('2026-10-30T04:00:00Z');
 
-function deps(o: { key: string | null; writes?: boolean; vault?: boolean; revoked?: boolean; mode?: string }, w = new MockErpWorld()) {
+function deps(o: { key: string | null; writes?: boolean; vault?: boolean; revoked?: boolean; mode?: string; bGrade?: boolean }, w = new MockErpWorld()) {
   w.now = () => T0;
   const asked: string[] = [];
   const listed: string[] = [];
   const calls: string[] = [];
-  const values: Record<string, unknown> = { 'erp.acceptance.demoBaseUrl': 'https://demo.example.test', 'erp.acceptance.timeoutSeconds': 5, 'erp.acceptance.demoWrites': o.writes ?? false, 'erp.switchOver.mode': o.mode };
+  const values: Record<string, unknown> = { 'erp.acceptance.demoBaseUrl': 'https://demo.example.test', 'erp.acceptance.timeoutSeconds': 5, 'erp.acceptance.demoWrites': o.writes ?? false, 'erp.switchOver.mode': o.mode, 'erp.orders.bGradeOpen': o.bGrade };
   const d: DemoAcceptanceDeps = {
     settings: { value: async (k) => values[k] },
     vault:
@@ -116,6 +116,16 @@ describe('PR 621 · the acceptance run against the demo ERP', () => {
     expect(o.report.failed).toBe(0);
     expect(o.report.results.filter((r) => r.status === 'SKIP').every((r) => r.kind === 'driver' || r.note?.startsWith('not built in the ERP'))).toBe(true);
     expect(w.v6().orders.size).toBeGreaterThan(0);
+    // CN-033: B grade closed (as it ships): no B-grade line went to the demo ERP.
+    expect([...w.v6().orders.values()].some((x) => x.lines.some((l) => l.grade === 'B'))).toBe(false);
+    // Open (the ERP opened B grade and the owner turned the switch on): the order check sends one.
+    const w2 = new MockErpWorld();
+    seedAcceptanceStyle({ world: w2 });
+    w2.v6().bGradeOpen = true;
+    const o2 = await runDemoAcceptance(deps({ key: w2.defaultKey, writes: true, bGrade: true }, w2).d);
+    if (o2.state !== 'RAN') throw new Error('expected a run');
+    expect(o2.report.failed).toBe(0);
+    expect([...w2.v6().orders.values()].some((x) => x.lines.some((l) => l.grade === 'B'))).toBe(true);
   });
 
   it('CN-033: as it ships (a fresh start) the switch-over reads are "not built in the ERP" and never asked; the ERP`s list reads them', async () => {

@@ -150,6 +150,18 @@ describe('PR 621 · the ERP v6 acceptance checks against the practice ERP', () =
     expect(r.unreachable).toBe(false);
   });
 
+  it('CN-033: B grade closed (as it ships) the order check sends A only and says why; open, it sends A + B and both pass', async () => {
+    const closed = practice();
+    const r1 = await runErpAcceptance(closed.api, { target: 'practice', runId: 'BG0', writes: true, driver: closed.driver, timeoutMs: 5000, now: closed.now, only: ['orders.billAtShipment'] });
+    expect(byId(r1)['orders.billAtShipment']).toMatchObject({ status: 'PASS', note: expect.stringContaining('B grade is closed') });
+    expect([...closed.driver.v6.orders.values()].flatMap((o) => o.lines.map((l) => l.grade))).toEqual(['A']);
+    const open = practice();
+    open.driver.v6.bGradeOpen = true;
+    const r2 = await runErpAcceptance(open.api, { target: 'practice', runId: 'BG1', writes: true, driver: open.driver, timeoutMs: 5000, now: open.now, bGradeOpen: true, only: ['orders.billAtShipment'] });
+    expect(byId(r2)['orders.billAtShipment']).toMatchObject({ status: 'PASS', note: null });
+    expect([...open.driver.v6.orders.values()].flatMap((o) => o.lines.map((l) => l.grade))).toEqual(['A', 'B']);
+  });
+
   it('an ERP that answers a wrong figure fails the check that saw it, with what it got', async () => {
     const { api, driver, now } = practice();
     // The ERP quotes one paisa more than its own shop prices.
@@ -162,7 +174,9 @@ describe('PR 621 · the ERP v6 acceptance checks against the practice ERP', () =
         return r;
       },
     };
-    const r = await runErpAcceptance(wrong, { target: 'practice', runId: 'T5', writes: true, driver, timeoutMs: 5000, now, only: ['orders.billAtShipment', 'orders.cancelNeverBilled'] });
+    // B grade open at the ERP and in the shop (the earlier behaviour, CN-033): the order is A + B.
+    driver.v6.bGradeOpen = true;
+    const r = await runErpAcceptance(wrong, { target: 'practice', runId: 'T5', writes: true, driver, timeoutMs: 5000, now, bGradeOpen: true, only: ['orders.billAtShipment', 'orders.cancelNeverBilled'] });
     expect(byId(r)['orders.billAtShipment']).toMatchObject({ status: 'FAIL', note: expect.stringContaining('erpTotal at the shop prices: got 105001, expected 105000') });
     expect(byId(r)['orders.cancelNeverBilled']!.status).toBe('PASS');
   });

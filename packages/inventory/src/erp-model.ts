@@ -16,6 +16,15 @@ export async function erpModelOf(deps: Pick<InventoryDeps, 'settings'>, storeId:
 
 export const isV6 = async (deps: Pick<InventoryDeps, 'settings'>, storeId: number): Promise<boolean> => (await erpModelOf(deps, storeId)) === 'v6';
 
+/**
+ * PR 610 (CN-033): B-grade pieces (`ProductVariant.grade` B) are not sold while the store speaks v6 and the ERP takes no
+ * B-grade line (`erp.orders.bGradeOpen` off). The bag refuses them (holdCart) and the shop counts them as 0 in stock
+ * (the product page, the wishlist and back-in-stock: apps/web lib/shop/product.ts, sellable.ts), so no page offers one.
+ */
+export async function bGradeClosed(deps: Pick<InventoryDeps, 'settings'>, storeId: number): Promise<boolean> {
+  return (await isV6(deps, storeId)) && !(await deps.settings.value('erp.orders.bGradeOpen', { storeId }));
+}
+
 /** The error text a retired document carries on its row. */
 export const RETIRED_V6 = 'RETIRED_V6';
 

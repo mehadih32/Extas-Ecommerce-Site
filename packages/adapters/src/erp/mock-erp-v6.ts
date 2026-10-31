@@ -4,6 +4,9 @@
 //   or at the delivery result when no shipment came; a cancelled order that never left is never billed;
 // - refusals: `409 ACCOUNT_ON_HOLD` (not for exchanges), `409 NO_SHOP_PRICE`, `409 INSUFFICIENT_STOCK` with
 //   `details.shortSkus`, `409 LINE_NOT_DELIVERED`, `409 EXCHANGE_OPEN`, `404` for another shop's order;
+// - CN-033: until the ERP's own B-grade release, a B-grade order line (and a REPLACE with grade B) answers
+//   `422 VALIDATION` with `details.bGradeSkus` (the ERP's decision of 30 Oct 2026); `bGradeOpen = true` is the earlier
+//   behaviour, kept for the tests of an ERP that has opened B grade;
 // - main stock first, then Return stock (`fromReturnStock: true`); a piece that fails the packing check is declined
 //   once (on its earlier return) and its new line waits (`order.line.short`) for WAIT, REPLACE or CANCEL;
 // - delivery results with the partial-delivery engine (GREEN, YELLOW, ORANGE), courier return lists (Return stock or
@@ -194,6 +197,8 @@ export class PracticeErpV6 {
   readonly seededCostOfGoods: { date: string; sku: string; pieces: number; value: number }[] = [];
   /** The switch date has passed: the retired v5 calls answer 410. */
   switched = false;
+  /** CN-033: B-grade order lines are open at this ERP (off: 422 VALIDATION with `bGradeSkus`, as the real ERP today). */
+  bGradeOpen = false;
   /** The ERP's hold rule (owner answer Q3: 30 days, a warning from day 15). */
   holdDays = 30;
   warnFromDays = 15;
@@ -430,6 +435,8 @@ export class PracticeErpV6 {
       if (i.customerPrice !== undefined && !Number.isInteger(i.customerPrice)) return err(400, 'INVALID_ORDER', 'customerPrice is whole taka');
     }
     if (this.orders.has(ext)) return err(409, 'DUPLICATE_EXTERNAL_ORDER', 'this externalOrderId is already an order', [this.orders.get(ext)!.erpOrderId]);
+    const bGrade = [...new Set(items.filter((i) => i.grade === 'B').map((i) => i.sku as string))];
+    if (bGrade.length && !this.bGradeOpen) return err(422, 'VALIDATION', 'B-grade order lines are not open yet', { bGradeSkus: bGrade });
     const ex = isObj(b.exchange) ? b.exchange : null;
     let of: V6Order | null = null;
     if (ex) {
@@ -614,6 +621,7 @@ export class PracticeErpV6 {
       const sku = typeof b.sku === 'string' ? b.sku : '';
       const v = this.hooks.variant(sku);
       if (!v) return err(404, 'SKU_NOT_FOUND', 'no such SKU', [sku]);
+      if (b.grade === 'B' && !this.bGradeOpen) return err(422, 'VALIDATION', 'B-grade order lines are not open yet', { bGradeSkus: [sku] });
       if (v.shopPrice == null) return err(409, 'NO_SHOP_PRICE', 'a SKU has no shop price yet', { skus: [sku] });
       const p = this.pick(sku, l.quantity);
       if (!p) return err(409, 'INSUFFICIENT_STOCK', 'not enough stock', { shortSkus: [{ sku, wanted: l.quantity, available: this.available(sku) }] });

@@ -22,7 +22,10 @@
 // - `409 NO_SHOP_PRICE`: the order is HELD and its SKUs stop selling (`ProductVariant.shopPriceMissingAt`: the cart hold
 //   refuses them in v6) until the ERP has a shop price; the order goes again once the price is there;
 // - `409 INSUFFICIENT_STOCK` (`details.shortSkus`): nothing is saved at the ERP; the order is HELD and goes again when
-//   the ERP's live stock covers it.
+//   the ERP's live stock covers it;
+// - CN-033: `422 VALIDATION` naming `details.bGradeSkus` (the ERP takes no B-grade line until its own release): the
+//   order is HELD with `B_GRADE_CLOSED`, never FAILED, and goes again only once `erp.orders.bGradeOpen` is on. While the
+//   switch is off a B-grade piece is not sold on a v6 store (the cart hold) and no B-grade replacement is asked for.
 // The ERP keeps a 4xx answer against its Idempotency-Key, so every new try after a refusal goes with a NEW key: the
 // row's key stays (one row per document, PR 200) and the wire key gets a round (`<key>:k<n>`, `wireKey`). A network
 // retry of the same try keeps the same key, so the ERP never makes the order twice. At the latest every
@@ -298,7 +301,7 @@ export async function erpOrderLinesOf(db: Db, erpOrderId: string) {
 // ---- the relay's v6 steps (erp-push.ts calls these) ------------------------------------------------------------------
 
 /** Why a HELD document waits. */
-export const HELD_REASONS = ['ACCOUNT_ON_HOLD', 'INSUFFICIENT_STOCK', 'NO_SHOP_PRICE', 'LINE_WAITING'] as const;
+export const HELD_REASONS = ['ACCOUNT_ON_HOLD', 'INSUFFICIENT_STOCK', 'NO_SHOP_PRICE', 'LINE_WAITING', 'B_GRADE_CLOSED'] as const;
 export type HeldReason = (typeof HELD_REASONS)[number];
 
 /** The key the ERP gets for this try: the row's own key, with the round after a refusal the ERP keeps against it. */
@@ -421,15 +424,20 @@ const HOLD_ON: Readonly<Record<string, readonly HeldReason[]>> = {
   'shipment.create': ['LINE_WAITING'],
 };
 
+/** CN-033: the ERP's 422 for B-grade order lines (`details.bGradeSkus` names them) on a new order. */
+function bGradeRefusal(row: PushRow, err: { status: number | null; detailsBody: unknown }): boolean {
+  if (row.documentType !== 'order.create' || err.status !== 422 || !isObj(err.detailsBody)) return false;
+  const skus = err.detailsBody.bGradeSkus;
+  return Array.isArray(skus) && skus.some((s) => typeof s === 'string');
+}
+
 /**
- * A 409 the ERP gave a v6 document: HELD (with its reason) when it means "not now", with what the refusal tells the
+ * A 409 the ERP gave a v6 document (or, CN-033, its 422 naming B-grade SKUs): HELD (with its reason) when it means "not now", with what the refusal tells the
  * shop noted (the account's hold, the SKUs without a shop price, the short SKUs). Null when the refusal is not one of
  * these (the relay then fails the row as before).
  */
 export async function holdV6Refusal(deps: InventoryDeps, row: PushRow, err: { code: string; status: number | null; erpCode: string | null; detailsBody: unknown }, text: string): Promise<HeldReason | null> {
-  if (err.code !== 'CONFLICT' || !err.erpCode) return null;
-  const reasons = HOLD_ON[row.documentType] ?? [];
-  const reason = reasons.find((r) => r === err.erpCode);
+  const reason = bGradeRefusal(row, err) ? 'B_GRADE_CLOSED' : err.code === 'CONFLICT' && err.erpCode ? (HOLD_ON[row.documentType] ?? []).find((r) => r === err.erpCode) : undefined;
   if (!reason) return null;
   if (row.documentType === 'order.create' && !isV6OrderDoc(row.requestBody as unknown as ErpDocument)) return null;
   if (!(await isV6(deps, row.storeId))) return null;
@@ -612,6 +620,11 @@ export async function decideErpLine(deps: InventoryDeps, who: Who, input: LineDe
   await requirePermission(deps.db, who.actor, 'orders.lines', { storeId: who.storeId });
   const d = parse(lineDecisionInput, input, 'line decision');
   if (!(await isV6(deps, who.storeId))) throw new InventoryError('CONFLICT', 'line decisions are for ERP contract v6', ['erp.model']);
+  // CN-033: no B-grade replacement while B grade is closed at the ERP (named B, or a SKU whose variant is B grade).
+  if (d.action === 'REPLACE' && !(await setting(deps, who.storeId, 'erp.orders.bGradeOpen'))) {
+    const grade = d.grade ?? (await gradesOf(deps.db, who.storeId, [d.sku!])).get(d.sku!);
+    if (grade === 'B') throw new InventoryError('B_GRADE_CLOSED', 'B-grade pieces are not open at the ERP yet', [d.sku!]);
+  }
   const eo = await erpOrderOf(deps.db, { storeId: who.storeId, orderId: d.orderId });
   if (!eo) throw new InventoryError('NOT_FOUND', 'this order is not at the ERP', ['orderId']);
   const now = nowOf(deps);
@@ -721,6 +734,21 @@ export async function checkErpOrders(deps: InventoryDeps, job: { storeId: number
       }
     }
     if (wake.length) out.woken += await wakeHeld(db, storeId, { ids: wake });
+
+    // 2a. CN-033: orders held for B-grade lines go again only once the store's switch says the ERP opened B grade
+    // (after the same wait, so an ERP that still refuses is not asked every check).
+    if (await setting(deps, storeId, 'erp.orders.bGradeOpen')) {
+      const bHeld = await db.erpPush.findMany({ where: { storeId, status: 'HELD', heldReason: 'B_GRADE_CLOSED' }, orderBy: { createdAt: 'asc' }, take: 200 });
+      const bOld = await supersededIds(db, storeId, bHeld);
+      await markSuperseded(db, bOld);
+      const bWake: string[] = [];
+      for (const row of bHeld) {
+        if (bOld.has(row.id) || (await cancelledBeforeSent(deps, row))) continue;
+        const eo = await erpOrderForRow(db, row);
+        if ((eo?.refusedAt ?? row.updatedAt).getTime() <= now.getTime() - retryMin * 60_000) bWake.push(row.id);
+      }
+      if (bWake.length) out.woken += await wakeHeld(db, storeId, { ids: bWake });
+    }
 
     // 2b. qa-gate: a SKU stopped for NO_SHOP_PRICE whose order no longer waits for it (cancelled, the SKU taken out of
     // the order, the order sent without it) sells again once the wait has passed; the next real order asks the ERP.

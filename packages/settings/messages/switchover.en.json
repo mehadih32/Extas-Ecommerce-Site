@@ -33,6 +33,12 @@
         "label": "Let the acceptance check write to the demo ERP",
         "help": "Off: against the demo ERP only the reading checks run. On: it also places its own sample orders, deliveries, return lists, summaries and fixed costs there (their ids start with ACC-). The practice ERP always runs every check."
       }
+    },
+    "orders": {
+      "bGradeOpen": {
+        "label": "B-grade pieces are open at the ERP",
+        "help": "Off (as it ships): the ERP does not take B-grade order lines yet, so on the new ERP contract a B-grade piece is not sold, no B-grade replacement is asked for, and an order the ERP refuses for a B-grade piece waits with a message (it is not failed). Turn it on only once the ERP opens B grade: those orders then go again by themselves."
+      }
     }
   }
 }

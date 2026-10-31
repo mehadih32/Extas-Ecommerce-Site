@@ -9,6 +9,11 @@
 //                   orders, the opening balance is 0, no switch transfer and no cost-of-goods backfill (days before the
 //                   switch are simply not sent). The only way a store reaches v6 against the real ERP today.
 //     `erp-list`    the earlier way, kept whole for an ERP that offers those calls.
+// - `erp.orders.bGradeOpen` (PR 610, per store; off as it ships): the ERP answers a B-grade order line (and a REPLACE
+//   with grade B) with `422 VALIDATION` naming `bGradeSkus` until its own release with full checks of wholesale sales.
+//   Off: on a v6 store a B-grade piece is not sold, no B-grade replacement is asked for, and an order the ERP refuses
+//   for B-grade SKUs waits HELD (`B_GRADE_CLOSED`) with a message for the admin, never FAILED. On (the earlier
+//   behaviour, once the ERP opens B grade): sold and sent as before, and the held orders go again by themselves.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -31,5 +36,18 @@ export const erpRetailSettings = {
     labelKey: 'erp.switchOver.mode.label',
     helpKey: 'erp.switchOver.mode.help',
     sortOrder: 63,
+  }),
+  'erp.orders.bGradeOpen': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'erp',
+    version: V,
+    schema: z.boolean(),
+    default: false,
+    valueType: 'BOOLEAN',
+    labelKey: 'erp.orders.bGradeOpen.label',
+    helpKey: 'erp.orders.bGradeOpen.help',
+    sortOrder: 64,
   }),
 };

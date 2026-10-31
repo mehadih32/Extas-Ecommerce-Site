@@ -81,8 +81,21 @@ describe('PR 607 · ERP contract v6 against the practice ERP', () => {
     expect(stock[0]).toMatchObject({ grade: 'B', fromReturnStock: 0, available: 5 });
   });
 
+  it('CN-033: until the ERP opens B grade, a B-grade line (and a REPLACE with grade B) answers 422 VALIDATION naming bGradeSkus; nothing is saved', async () => {
+    const { api, v6 } = setup();
+    expect(v6.bGradeOpen).toBe(false);
+    const e = await refusal(push(api, order('WEB-B1', [line('WEB-B1-1', 'EX-PL-001-NAVY-M', 1190), line('WEB-B1-2', 'EX-PL-001-NAVY-M-B', 600, { grade: 'B' })])));
+    expect([e.code, e.status, e.erpCode, e.detailsBody]).toEqual(['INVALID_REQUEST', 422, 'VALIDATION', { bGradeSkus: ['EX-PL-001-NAVY-M-B'] }]);
+    expect(v6.orders.has('WEB-B1')).toBe(false);
+    await push(api, order('WEB-B2', [line('WEB-B2-1', 'EX-PL-001-NAVY-M', 1190)]));
+    const r = await refusal(push(api, { type: 'order.line', externalOrderId: 'WEB-B2', lineId: 'WEB-B2-1', body: { action: 'REPLACE', sku: 'EX-PL-001-NAVY-M-B', grade: 'B' } }));
+    expect([r.status, r.erpCode, r.detailsBody]).toEqual([422, 'VALIDATION', { bGradeSkus: ['EX-PL-001-NAVY-M-B'] }]);
+  });
+
   it('an A + B order is quoted at the shop prices; it is billed only when the parcel leaves, a cancelled one never', async () => {
     const { api, v6 } = setup();
+    // The earlier behaviour (B grade open at the ERP), kept behind the practice ERP's switch (CN-033).
+    v6.bGradeOpen = true;
     const r = await push(api, order('WEB-1', [line('WEB-1-1', 'EX-PL-001-NAVY-M', 1190), line('WEB-1-2', 'EX-PL-001-NAVY-M-B', 600, { grade: 'B' })]));
     expect(r.body).toMatchObject({ erpTotal: 1050, billedAt: null, lines: [{ lineId: 'WEB-1-1', shopPrice: 650, fromReturnStock: false }, { lineId: 'WEB-1-2', grade: 'B', shopPrice: 400 }] });
     expect((await api.v6.account()).balance).toBe('0');

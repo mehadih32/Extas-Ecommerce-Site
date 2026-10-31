@@ -52,7 +52,7 @@ describe('PR 610, 611 · the ERP part of the order page', () => {
   it('both languages carry the same words, and every code the views can give has its words', () => {
     expect(keysOf(bn).sort()).toEqual(keysOf(en).sort());
     for (const lang of ['en', 'bn'] as const) {
-      for (const r of ['ACCOUNT_ON_HOLD', 'INSUFFICIENT_STOCK', 'NO_SHOP_PRICE', 'LINE_WAITING']) expect(adminDicts[lang], `${lang} ${r}`).toHaveProperty(['erpOrder', 'held', r]);
+      for (const r of ['ACCOUNT_ON_HOLD', 'INSUFFICIENT_STOCK', 'NO_SHOP_PRICE', 'LINE_WAITING', 'B_GRADE_CLOSED']) expect(adminDicts[lang], `${lang} ${r}`).toHaveProperty(['erpOrder', 'held', r]);
       for (const s of ['OPEN', 'SHORT', 'CANCELLED', 'REMOVED']) expect(adminDicts[lang]).toHaveProperty(['erpOrder', 'lines', 'state', s]);
       for (const c of ['GREEN', 'YELLOW', 'ORANGE']) expect(adminDicts[lang]).toHaveProperty(['erpOrder', 'ident', c]);
     }

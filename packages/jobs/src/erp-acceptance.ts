@@ -10,12 +10,13 @@
 // access is logged otherwise), and a run that cannot read the shop's database (it is down, or its tables are not the
 // ones this version knows) is "not run" with the reason, never a failure: the practice ERP in CI is the hard gate.
 // CN-033: the way the shop switches (`erp.switchOver.mode`, read for the installation: fresh-start as it ships) is
-// passed on, so the switch-over reads the ERP does not build are "not built in the ERP", never "could not be reached".
+// passed on, so the switch-over reads the ERP does not build are "not built in the ERP", never "could not be reached";
+// and `erp.orders.bGradeOpen` (off as it ships): the order check sends a B-grade line only once B grade is open.
 import { acceptanceMarkdown, createErpHttpClient, ERP_ACCEPTANCE_DEMO_KEY, EXTAS_ERP_PROVIDER, runErpAcceptance, type AcceptanceReport } from '@extas/adapters';
 import type { Vault } from '@extas/vault';
 
 export interface DemoAcceptanceDeps {
-  settings: { value(key: 'erp.acceptance.demoBaseUrl' | 'erp.acceptance.timeoutSeconds' | 'erp.acceptance.demoWrites' | 'erp.switchOver.mode'): Promise<unknown> };
+  settings: { value(key: 'erp.acceptance.demoBaseUrl' | 'erp.acceptance.timeoutSeconds' | 'erp.acceptance.demoWrites' | 'erp.switchOver.mode' | 'erp.orders.bGradeOpen'): Promise<unknown> };
   /** null when the server has no vault key (then there can be no demo key either). */
   vault: Pick<Vault, 'get' | 'list'> | null;
   runId: string;
@@ -45,17 +46,17 @@ export function errorLine(e: unknown): string {
 /** The run against the demo ERP, "waiting for the demo key" (no call made) or "not run" (the database could not be read). */
 export async function runDemoAcceptance(deps: DemoAcceptanceDeps): Promise<DemoAcceptanceOutcome> {
   let key: string | null = null;
-  let baseUrl: unknown, timeoutSeconds: unknown, writes: unknown, mode: unknown;
+  let baseUrl: unknown, timeoutSeconds: unknown, writes: unknown, mode: unknown, bGrade: unknown;
   try {
     const set = deps.vault ? (await deps.vault.list({ storeId: null })).some((x) => x.name === ERP_ACCEPTANCE_DEMO_KEY && !x.revoked) : false;
     key = set && deps.vault ? await deps.vault.get(ERP_ACCEPTANCE_DEMO_KEY, { storeId: null }, { service: 'jobs:erp-acceptance', purpose: 'ERP acceptance against the demo ERP' }) : null;
     if (!key) return { state: 'WAITING_FOR_KEY' };
-    [baseUrl, timeoutSeconds, writes, mode] = await Promise.all([deps.settings.value('erp.acceptance.demoBaseUrl'), deps.settings.value('erp.acceptance.timeoutSeconds'), deps.settings.value('erp.acceptance.demoWrites'), deps.settings.value('erp.switchOver.mode')]);
+    [baseUrl, timeoutSeconds, writes, mode, bGrade] = await Promise.all([deps.settings.value('erp.acceptance.demoBaseUrl'), deps.settings.value('erp.acceptance.timeoutSeconds'), deps.settings.value('erp.acceptance.demoWrites'), deps.settings.value('erp.switchOver.mode'), deps.settings.value('erp.orders.bGradeOpen')]);
   } catch (e) {
     return { state: 'NOT_RUN', reason: `the shop's database could not be read: ${errorLine(e)}` };
   }
   const api = createErpHttpClient({ baseUrl: String(baseUrl), apiKey: key, provider: EXTAS_ERP_PROVIDER, ...(deps.fetch ? { fetch: deps.fetch } : {}) });
-  const report = await runErpAcceptance(api, { target: 'demo', runId: deps.runId, writes: writes === true, driver: null, timeoutMs: Number(timeoutSeconds) * 1000, now: deps.now, switchOver: mode === 'erp-list' ? 'erp-list' : 'fresh-start' });
+  const report = await runErpAcceptance(api, { target: 'demo', runId: deps.runId, writes: writes === true, driver: null, timeoutMs: Number(timeoutSeconds) * 1000, now: deps.now, switchOver: mode === 'erp-list' ? 'erp-list' : 'fresh-start', bGradeOpen: bGrade === true });
   return { state: 'RAN', report };
 }
 

@@ -1278,7 +1278,7 @@ export const registry = {
   ...adminAccessSettings,
   // ---- S19 · PR 395, 507 (CN-030) · the backups: the Drive folder and copies kept, the schedule, retention, alerts and the monthly restore drill (registry-backups.ts, versions 75–76). ----
   ...backupsSettings,
-  // ---- CN-033 · PR 610, 614, 619, 621 · the shop follows the ERP's retail decisions of 30 Oct 2026: the switch-over way (fresh start or the ERP's list) (registry-erp-retail.ts, version 72). ----
+  // ---- CN-033 · PR 610, 614, 619, 621 · the shop follows the ERP's retail decisions of 30 Oct 2026: the switch-over way (fresh start or the ERP's list), B-grade order lines closed until the ERP opens them (registry-erp-retail.ts, version 72). ----
   ...erpRetailSettings,
 } satisfies RegistryShape;
 
