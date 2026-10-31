@@ -86,7 +86,7 @@ const ORDER = { id: true, number: true, status: true, customerId: true, paidMino
 type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER }>;
 
 /** The order's money a refund may still give back, and what the rider over-collected (under the caller's order lock). */
-async function roomOf(tx: Tx, storeId: number, o: OrderFacts): Promise<{ roomMinor: number; overMinor: number }> {
+async function roomOf(tx: Tx, storeId: number, o: OrderFacts): Promise<{ roomMinor: number; overMinor: number; inMinor: number }> {
   const [held, doors, overRefunds] = await Promise.all([
     tx.refund.aggregate({ where: { storeId, orderId: o.id, status: { in: [...HELD_REFUND_STATES] } }, _sum: { amountMinor: true } }),
     tx.codCollection.findMany({ where: { storeId, orderId: o.id, outcome: { in: [...CASH_OUTCOMES] }, state: { notIn: ['REJECTED', 'PENDING_APPROVAL'] } }, select: { expectedMinor: true, collectedMinor: true, chargeCollectedMinor: true } }),
@@ -101,7 +101,19 @@ async function roomOf(tx: Tx, storeId: number, o: OrderFacts): Promise<{ roomMin
   return {
     roomMinor: refundRoom({ paidMinor: o.paidMinor, walletAppliedMinor: o.walletAppliedMinor, collectedMinor, heldMinor: held._sum.amountMinor ?? 0 }),
     overMinor: Math.max(0, overMinor - (overRefunds._sum.amountMinor ?? 0)),
+    inMinor: o.paidMinor + o.walletAppliedMinor + collectedMinor,
   };
+}
+
+/**
+ * Review R1 (M4) — what an order has left to refund now (paid, from the wallet and collected at the door, less every
+ * refund asked, approved or paid), for the refunds the system asks by itself (cancel, edit, RTO): each one is capped by
+ * it, so the requests of one order never add up to more than came in. Run under the caller's order lock.
+ */
+export async function refundRoomOf(tx: Tx, storeId: number, orderId: string): Promise<number> {
+  const o = await tx.order.findFirst({ where: { id: orderId, storeId }, select: ORDER });
+  if (!o) throw new PaymentsError('NOT_FOUND', 'no such order', ['orderId']);
+  return (await roomOf(tx, storeId, o)).roomMinor;
 }
 
 const lockOrder = async (tx: Tx, storeId: number, orderId: string): Promise<OrderFacts> => {
@@ -199,7 +211,11 @@ export async function requestReturnRefund(tx: Tx, deps: Pick<PaymentsDeps, 'sett
   const ask = async (amountMinor: number, method: RefundMethod, key: string) => {
     if (amountMinor <= 0) return;
     const existing = await tx.refund.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: key } }, select: { id: true } });
-    const r = existing ?? (await tx.refund.create({ data: { storeId, orderId, amountMinor, method, reason: 'RTO', source: 'RTO', status: 'REQUESTED', idempotencyKey: key }, select: { id: true } }));
+    if (existing) return void ids.push(existing.id);
+    // review R1 (M4): never more than the order has left to refund (an edit or a cancel may have asked part already)
+    const capped = Math.min(amountMinor, (await roomOf(tx, storeId, o)).roomMinor);
+    if (capped <= 0) return;
+    const r = await tx.refund.create({ data: { storeId, orderId, amountMinor: capped, method, reason: 'RTO', source: 'RTO', status: 'REQUESTED', idempotencyKey: key }, select: { id: true } });
     ids.push(r.id);
   };
   const paid = await tx.payment.findMany({ where: { storeId, orderId, status: 'PAID' }, select: { id: true } });
@@ -238,6 +254,12 @@ async function decide(deps: PaymentsDeps, who: Who, refundId: string, to: 'APPRO
         if (!o.customerId) throw new PaymentsError('NO_CUSTOMER', 'the order has no customer, so there is no wallet', ['method']);
       }
       if (d.method === 'original' && r.method === 'wallet' && o.paidMinor <= 0) throw new PaymentsError('METHOD_NOT_ALLOWED', 'nothing was paid on this order the way it came', ['method']);
+      // review R1 (M4): the refunds of this order the owner stands behind (approved, paid or failing) plus this one never
+      // pass what came in; a request asked twice for the same money is rejected instead
+      const others = await tx.refund.aggregate({ where: { storeId, orderId: o.id, id: { not: r.id }, status: { in: ['APPROVED', 'FAILED', 'COMPLETED'] } }, _sum: { amountMinor: true } });
+      const { inMinor } = await roomOf(tx, storeId, o);
+      const leftMinor = Math.max(0, inMinor - (others._sum.amountMinor ?? 0));
+      if (r.amountMinor > leftMinor) throw new PaymentsError('OVER_REFUNDABLE', 'with the refunds already approved this is more than came in on the order', ['amountMinor'], { roomMinor: leftMinor });
       if (d.confirm !== true) throw new PaymentsError('CONFIRM_REQUIRED', 'confirm the refund first', ['confirm'], { amountMinor: r.amountMinor, method: d.method ?? r.method });
     }
     const now = nowOf(deps);

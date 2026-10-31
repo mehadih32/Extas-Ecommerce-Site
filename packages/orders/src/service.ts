@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import type { Actor, RequestContext } from '@extas/auth';
 import { Prisma } from '@extas/db/client';
 import { enqueueOrderPush, enqueueOrderStatus, releaseOrderHolds, type InventoryDeps } from '@extas/inventory';
+import { refundRoomOf } from '@extas/payments';
 import { nowOf, setting, TX, type Db, type OrdersDeps, type Tx } from './context';
 import { OrdersError } from './errors';
 import { plan, type MachineOrder, type OrderCommand, type OrderState } from './pure';
@@ -387,12 +388,14 @@ export async function cancelEffects(deps: OrdersDeps, tx: Tx, o: LockedOrder, by
   const request = async (amountMinor: number, method: string, key: string, paymentId: string | null) => {
     if (amountMinor <= 0) return;
     const existing = await tx.refund.findUnique({ where: { storeId_idempotencyKey: { storeId: o.storeId, idempotencyKey: key } }, select: { id: true } });
-    const row =
-      existing ??
-      (await tx.refund.create({
-        data: { storeId: o.storeId, orderId: o.id, paymentId, amountMinor, method, reason: code, status: 'REQUESTED', source: 'CANCEL', idempotencyKey: key, requestedById: by.actorType === 'STAFF' ? by.actorId : null },
-        select: { id: true },
-      }));
+    if (existing) return void refundRequestIds.push(existing.id);
+    // review R1 (M4): never more than the order has left to refund (an edit may have asked part of it already)
+    const capped = Math.min(amountMinor, await refundRoomOf(tx, o.storeId, o.id));
+    if (capped <= 0) return;
+    const row = await tx.refund.create({
+      data: { storeId: o.storeId, orderId: o.id, paymentId, amountMinor: capped, method, reason: code, status: 'REQUESTED', source: 'CANCEL', idempotencyKey: key, requestedById: by.actorType === 'STAFF' ? by.actorId : null },
+      select: { id: true },
+    });
     refundRequestIds.push(row.id);
   };
   const paid = await tx.payment.findMany({ where: { storeId: o.storeId, orderId: o.id, status: 'PAID' }, select: { id: true } });

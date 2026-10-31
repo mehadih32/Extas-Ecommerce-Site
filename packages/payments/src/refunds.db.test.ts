@@ -166,6 +166,26 @@ describe.skipIf(!HAS_TEST_DB)('PR 172 · refunds', () => {
     }
   });
 
+  it('review R1 (M4): system refunds never ask more than came in, and the owner cannot approve past it', async () => {
+    const o = await paidOrder('R-8', 'RETURNED');
+    f.overrides.set('payments.refunds', { toWallet: false, afterDelivery: false, afterDeliverySources: [], rtoDeliveryCharge: 'REFUND', fourEyes: false });
+    try {
+      // an edit asked 40,000 back already: the RTO asks only the 60,000 left
+      await f.t.prisma.refund.create({ data: { storeId: f.A, orderId: o.id, amountMinor: 40_000, method: 'original', reason: 'customer-asked', source: 'EDIT', status: 'REQUESTED', idempotencyKey: `edit:${o.id}:1` } });
+      await f.t.prisma.$transaction((tx) => requestReturnRefund(tx, f.deps(), f.A, o.id));
+      expect((await f.t.prisma.refund.findUniqueOrThrow({ where: { storeId_idempotencyKey: { storeId: f.A, idempotencyKey: `rto:${o.id}` } } })).amountMinor).toBe(60_000);
+      // two requests that together pass what came in (made before this guard): the second approval is refused
+      const o2 = await paidOrder('R-9', 'CONFIRMED');
+      const mk = (key: string, amountMinor: number) => f.t.prisma.refund.create({ data: { storeId: f.A, orderId: o2.id, amountMinor, method: 'original', reason: 'CANCEL', source: 'CANCEL', status: 'REQUESTED', idempotencyKey: key }, select: { id: true } });
+      const a = await mk(`old-a:${o2.id}`, 70_000);
+      const b = await mk(`old-b:${o2.id}`, 70_000);
+      expect((await approveRefund(f.deps(), f.staff, a.id, { confirm: true })).refund.status).toBe('APPROVED');
+      expect(await code(approveRefund(f.deps(), f.staff, b.id, { confirm: true }))).toBe('OVER_REFUNDABLE');
+    } finally {
+      f.overrides.delete('payments.refunds');
+    }
+  });
+
   it('the list: by state, newest first, with the money owed to customers always on top (F-041)', async () => {
     const all = await listRefunds(f.deps(), f.viewer);
     expect(all.rows.length).toBeGreaterThan(3);

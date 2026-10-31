@@ -123,6 +123,14 @@ describe.skipIf(!HAS_TEST_DB)('PR 142, 143 · order edits by the team and by the
     expect(refund).toMatchObject({ status: 'REQUESTED', amountMinor: tee.lineTotalMinor, source: 'EDIT', requestedById: f.staffId });
     expect(await db().payment.findMany({ where: { orderId: o.orderId }, select: { id: true, status: true, amountMinor: true } })).toEqual(payments);
     expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).paidMinor).toBe(before.paidMinor);
+    // review R1 (M4): he then cancels — the cancel asks only what is left, so the requests never pass what he paid
+    await cancelOrder(d(), f.staff, o.orderId, { reasonCode: 'CUSTOMER_BEFORE_CONFIRM' });
+    const asked = await db().refund.findMany({ where: { orderId: o.orderId }, select: { source: true, amountMinor: true }, orderBy: { createdAt: 'asc' } });
+    expect(asked).toEqual([
+      { source: 'EDIT', amountMinor: tee.lineTotalMinor },
+      { source: 'CANCEL', amountMinor: before.paidMinor - tee.lineTotalMinor },
+    ]);
+    expect(asked.reduce((a, x) => a + x.amountMinor, 0)).toBe(before.paidMinor);
   });
 
   it('SIM-F-004: once a courier is booked every edit is refused (the parcel is the parcel), and nothing changes', async () => {
