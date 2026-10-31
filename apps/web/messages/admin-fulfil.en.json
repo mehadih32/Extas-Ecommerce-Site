@@ -488,6 +488,17 @@
       "bookDone": "Booked: {cid}",
       "bookNot": "Not booked: {why}",
       "noCourier": "No courier account is switched on. Add one in Delivery → Couriers.",
+      "cost": {
+        "title": "Courier cost for this parcel",
+        "cheapest": "cheapest",
+        "none": "No courier has a rate for this parcel yet: pick one yourself.",
+        "why": {
+          "NO_BAND": "the order has no delivery band",
+          "NO_RATE": "no rate for this band and weight",
+          "NO_WEIGHT": "a piece has no weight, and the rates go by weight"
+        },
+        "note": "What the shop pays the courier (Money → Costs & fees). The customer's delivery charge does not change."
+      },
       "handover": "Hand over",
       "sticker": "Print sticker",
       "invoice": "Print invoice",

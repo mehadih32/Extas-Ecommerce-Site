@@ -11,6 +11,9 @@
 // each open card shows what a person can decide — found it, another size or colour, send the rest, call the customer,
 // cancel the order — each carried out by the order service with its own permission. Nothing is decided by itself;
 // a card past the owner's hours is marked late.
+// PR 178: while `delivery.courier.selection` is on, "Book courier" offers the cheapest courier first and lists every
+// courier's cost for this parcel (its own rate card for the band and weight, plus the COD fee) or why it has none. The
+// shop's cost only: the customer's delivery charge is never read or changed, and a person still presses Book.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -32,6 +35,7 @@ import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { shippingDeps } from '@/lib/shipping-api';
+import { moneyText } from '@/lib/admin-messages/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,10 +92,20 @@ export default async function PackPage({ searchParams }: Props) {
   const checking = !!order && (order.status === 'CONFIRMED' || order.status === 'PROCESSING');
   const canPack = can('fulfilment.pack');
   let couriers: { id: string; name: string }[] = [];
+  // PR 178: each courier's cost for this parcel, the cheapest first (only while `delivery.courier.selection` is on)
+  let choice: sh.CourierChoice | null = null;
+  let currency = '';
   if (order && order.status === 'PACKED' && !order.parcel && can('delivery.book')) {
     try {
       const list = await sh.listCouriers(sd, who);
       couriers = list.couriers.filter((c) => c.enabled && !c.archived).map((c) => ({ id: c.id, name: c.mode === 'MOCK' ? `${c.name} · ${t(d, 'ful.packing.pill.practice')}` : c.name }));
+      const [choices, cur] = await Promise.all([sh.courierChoices(sd, who, [order.orderId]), sd.settings.value('store.currency', at)]);
+      currency = cur;
+      choice = choices[0]?.enabled ? choices[0] : null;
+      if (choice) {
+        const rank = new Map(choice.costs.map((c, i) => [c.courierAccountId, i]));
+        couriers = [...couriers].sort((a, b) => (rank.get(a.id) ?? 1e9) - (rank.get(b.id) ?? 1e9));
+      }
     } catch (e) {
       if (!sh.isShippingError(e)) throw e;
     }
@@ -361,6 +375,24 @@ export default async function PackPage({ searchParams }: Props) {
                   <p className="a2-xs a2-mute a2-mt6" data-testid="pack-blocked">
                     {t(d, `ful.pack.block.${order.blocked}`)}
                   </p>
+                ) : null}
+                {choice && couriers.length ? (
+                  <div className="a2-mt6" data-testid="pack-courier-costs">
+                    <p className="a2-xs a2-b">{t(d, 'ful.pack.cost.title')}</p>
+                    {choice.cheapest ? (
+                      <ul className="a2-xs" style={{ margin: '4px 0', paddingInlineStart: 18 }}>
+                        {choice.costs.map((c) => (
+                          <li key={c.courierAccountId} data-testid="pack-courier-cost">
+                            {c.name}: {c.costMinor !== null ? moneyText(c.costMinor, view.locale, currency) : t(d, `ful.pack.cost.why.${c.why}`)}
+                            {c.courierAccountId === choice.cheapest ? <span className="a2-pill ok" style={{ marginInlineStart: 6 }}>{t(d, 'ful.pack.cost.cheapest')}</span> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="a2-xs a2-mute">{t(d, 'ful.pack.cost.none')}</p>
+                    )}
+                    <p className="a2-xs a2-mute">{t(d, 'ful.pack.cost.note')}</p>
+                  </div>
                 ) : null}
               </div>
             </>

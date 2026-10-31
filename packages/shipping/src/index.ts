@@ -81,3 +81,5 @@ export * from './packing';
 export * from './packing-issues';
 export * from './fraud-report-pure';
 export * from './fraud-report';
+// PR 178: the courier picked by the real cost of the parcel (the shop's cost only; booking stays a person's press).
+export * from './courier-choice';

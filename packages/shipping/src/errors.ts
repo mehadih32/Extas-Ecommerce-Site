@@ -66,7 +66,9 @@ export type ShippingErrorCode =
   /** Gate F-004: a re-booking waits — the customer asked to cancel. */
   | 'CANCEL_REQUESTED'
   /** Gate F-004: a re-booking waits — the order has an open review. */
-  | 'IN_REVIEW';
+  | 'IN_REVIEW'
+  /** PR 178: "Book with the cheapest" while the courier choice by cost (`delivery.courier.selection`) is off. */
+  | 'SELECTION_OFF';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;
@@ -105,6 +107,7 @@ export class ShippingError extends Error {
       case 'PHOTO_OFF':
       case 'WEIGHT_REQUIRED':
       case 'WEIGHT_GAP':
+      case 'SELECTION_OFF':
         return 422;
       default:
         return 409;

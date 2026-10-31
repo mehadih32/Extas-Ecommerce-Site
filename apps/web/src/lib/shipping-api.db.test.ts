@@ -3,19 +3,20 @@
 // permission; the courier accounts; the parcels with an exception recorded by staff; the RTO cost book. PR 176: the
 // orders ready to book, a press of "Book" with Steadfast on its practice world, a parcel read now, "Try again" refused on
 // a parcel the courier holds. PR 184: the late view. PR 525: the true-delivery checks and their resolution. PR 526: why
-// the parcel came back. Every value is a made-up test value.
+// the parcel came back. PR 178: every courier's cost for an order, and "Book with the cheapest" (off until switched on).
+// Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { MOCK_COURIER_PROVIDER, STEADFAST_PROVIDER } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { setUpShipping, type ShippingFixture } from '@extas/shipping/testing';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { confirmOrder } from '@extas/orders';
 import { applyEvents, syncOrder } from '@extas/shipping';
-import { bookingsRoute, checksRoute, couriersRoute, parcelsRoute, rtoCostRoute } from './shipping-api';
+import { bookCheapestRoute, bookingsRoute, checksRoute, courierChoiceRoute, couriersRoute, parcelsRoute, rtoCostRoute } from './shipping-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -183,5 +184,25 @@ describe.skipIf(!HAS_TEST_DB)('courier admin API on PostgreSQL (S08 · PR 175)',
     expect((await couriers('GET', [id, 'zones'], { qs: '?tab=teleport' })).status).toBe(400);
     expect((await couriers('GET', [id, 'zone-sync'])).status).toBe(405);
     expect((await couriers('GET', [id, 'teleport'])).status).toBe(404);
+  });
+
+  it('PR 178: every courier\'s cost for an order, "Book with the cheapest" — refused while the choice by cost is off', async () => {
+    const choice = (qs: string, cookie = owner) => courierChoiceRoute(call('GET', `/api/admin/delivery/courier-choice${qs}`, { cookie }), deps).then(read);
+    const cheapest = (body: unknown, cookie = owner) => bookCheapestRoute(call('POST', '/api/admin/delivery/bookings/cheapest', { body, cookie }), deps).then(read);
+    const o = await f.place('api-cheapest', { phone: '01700001790' }); // hardcode-ok: a made-up test number
+    await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
+    expect((await choice(`?orderIds=${o.orderId}`, reader)).status).toBe(403);
+    expect((await courierChoiceRoute(call('POST', '/api/admin/delivery/courier-choice', { body: {}, cookie: owner }), deps)).status).toBe(405);
+    expect((await bookCheapestRoute(call('GET', '/api/admin/delivery/bookings/cheapest', { cookie: owner }), deps)).status).toBe(405);
+    expect(await choice(`?orderIds=${o.orderId}`)).toMatchObject({ status: 200, body: { ok: true, choices: [{ orderId: o.orderId, enabled: false, costs: [], cheapest: null }] } });
+    expect(await choice('?orderIds=nope')).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    expect(await cheapest({ orderIds: [o.orderId] })).toMatchObject({ status: 422, body: { error: 'SELECTION_OFF' } });
+    // switched on: the couriers with their reason (no rate card entered here), nothing booked without a known cost
+    await deps.resolver.set('delivery.courier.selection', { enabled: true, codFee: true }, storeTarget(f.S), { actorId: null, reason: 'test' });
+    const on = await choice(`?orderIds=${o.orderId}`);
+    expect(on.body.choices[0]).toMatchObject({ enabled: true, cheapest: null });
+    expect(on.body.choices[0].costs.length).toBeGreaterThan(0);
+    expect(on.body.choices[0].costs.every((c: { costMinor: number | null }) => c.costMinor === null)).toBe(true);
+    expect(await cheapest({ orderIds: [o.orderId] })).toMatchObject({ status: 200, body: { ok: true, runs: [], noCost: [o.orderId] } });
   });
 });

@@ -49,6 +49,12 @@
 // PR 526 — why a parcel came back:
 //   POST  /api/admin/delivery/parcels/:id/return-reason    {reasonKey, note?} a reason from the owner's orders.refusal.reasons
 //                                                          and the rider's words, on the parcel's return record (delivery.outcomes)
+// PR 178 — the courier by the real cost of the parcel (off until `delivery.courier.selection` is on; the shop's cost only,
+// never the customer's delivery charge):
+//   GET   /api/admin/delivery/courier-choice?orderIds=a,b  every courier's cost for each order, the cheapest first, and
+//                                                          why a courier has none (NO_BAND, NO_RATE, NO_WEIGHT) (delivery.book)
+//   POST  /api/admin/delivery/bookings/cheapest            {orderIds: [...]} each order booked with its own cheapest; the ones
+//                                                          with no known cost come back in `noCost` (delivery.book)
 import { courierAdapters, createConnections } from '@extas/adapters';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
@@ -202,6 +208,21 @@ export async function bookingsRoute(request: Request, deps: AdminDeps | null): P
   if (m === 'GET') return handle(request, deps, 'delivery.book', async (x) => ({ ...(await sh.readyToBook(x.deps, x.who, query(x.url, ['limit']))) }));
   if (m === 'POST') return handle(request, deps, 'delivery.book', async (x) => ({ ...(await sh.bookOrders(x.deps, x.who, await body(request))) }));
   return notAllowed();
+}
+
+/** PR 178 — "Book with the cheapest": each ticked order with its own cheapest courier (only while the choice by cost is on). */
+export async function bookCheapestRoute(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (request.method.toUpperCase() !== 'POST') return notAllowed();
+  return handle(request, deps, 'delivery.book', async (x) => ({ ...(await sh.bookCheapest(x.deps, x.who, await body(request))) }));
+}
+
+/** PR 178 — every courier's cost for a few orders (`orderIds=a,b,c`), the cheapest first. */
+export async function courierChoiceRoute(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (request.method.toUpperCase() !== 'GET') return notAllowed();
+  return handle(request, deps, 'delivery.book', async (x) => {
+    const ids = (x.url.searchParams.get('orderIds') ?? '').split(',').filter(Boolean);
+    return { choices: await sh.courierChoices(x.deps, x.who, ids) };
+  });
 }
 
 /** The RTO cost book. */
