@@ -112,6 +112,11 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
                 <div className="ad-mini">
                   {t(dict, 'integrations.notConnected')} · {t(dict, 'integrations.later')}
                 </div>
+              ) : c.managedAt ? (
+                <div className="ad-mini">
+                  {t(dict, c.enabled && c.mode === 'LIVE' ? 'integrations.managedOn' : 'integrations.notConnected')} ·{' '}
+                  <a href={c.managedAt}>{t(dict, 'integrations.managedLink')}</a>
+                </div>
               ) : c.builtIn ? (
                 <div className="ad-mini">
                   {t(dict, 'integrations.builtIn')} · {t(dict, c.inUse ? 'integrations.inUse' : 'integrations.standby')}
@@ -127,7 +132,7 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
               ) : (
                 <div className="ad-mini">{t(dict, 'integrations.notConnected')}</div>
               )}
-              {c.adapter && !c.builtIn && c.lastTest ? (
+              {c.adapter && !c.builtIn && !c.managedAt && c.lastTest ? (
                 <div className={`ad-mini ${c.lastTest.ok ? 'ok' : 'bad'}`} suppressHydrationWarning>
                   {t(dict, c.lastTest.ok ? 'integrations.lastTestOk' : 'integrations.lastTestFail', { time: when(c.lastTest.at) })}
                   {!c.lastTest.ok && c.lastTest.message ? (
@@ -139,7 +144,7 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
                 </div>
               ) : null}
             </div>
-            {editable && c.adapter && !c.builtIn ? (
+            {editable && c.adapter && !c.builtIn && !c.managedAt ? (
               <div className="ad-row-acts">
                 {c.keySaved ? (
                   <>

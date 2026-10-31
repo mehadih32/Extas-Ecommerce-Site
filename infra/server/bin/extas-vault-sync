@@ -67,6 +67,8 @@ while IFS= read -r name; do
   [[ "$name" =~ ^[a-z][a-z0-9.-]{0,40}$ ]] || continue
   src="$work/out/files/$name"
   [ -f "$src" ] || continue
+  # A key file (backup.key) is never emptied: no key in the vault yet keeps the server's own.
+  [[ "$name" == *.key ]] && [ ! -s "$src" ] && continue
   if [ -f "$SEC/$name" ] && cmp -s "$src" "$SEC/$name"; then continue; fi
   install -m 0600 -o root -g root "$src" "$SEC/$name.new" 2>/dev/null || install -m 0600 "$src" "$SEC/$name.new"
   mv "$SEC/$name.new" "$SEC/$name"

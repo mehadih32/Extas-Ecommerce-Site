@@ -29,32 +29,32 @@ describe('server sync (PR 392)', () => {
   it('a LIVE Telegram connection becomes telegram.env, single-quoted', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
     const r = await serverSync(d);
-    expect(r.files).toEqual({ 'telegram.env': `TELEGRAM_BOT_TOKEN='${TOKEN}'\nTELEGRAM_CHAT_ID='-1001'\n` });
+    expect(r.files?.['telegram.env']).toBe(`TELEGRAM_BOT_TOKEN='${TOKEN}'\nTELEGRAM_CHAT_ID='-1001'\n`);
     expect(r.fingerprint).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('a MOCK, switched-off or store-only connection leaves the file empty (alerts stay in the server log)', async () => {
     for (const row of [tg({ mode: 'MOCK' }), tg({ enabled: false }), tg({ storeId: 3 }), tg({ archivedAt: new Date() }), tg({ config: {} })]) {
       const { d } = deps([row], { 'telegram.botToken': TOKEN });
-      expect((await serverSync(d)).files).toEqual({ 'telegram.env': '' });
+      expect((await serverSync(d)).files?.['telegram.env']).toBe('');
     }
     const { d } = deps([tg()], {});
-    expect((await serverSync(d)).files).toEqual({ 'telegram.env': '' });
+    expect((await serverSync(d)).files?.['telegram.env']).toBe('');
   });
 
   it('no vault key on the server: everything empty, nothing read', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
-    expect((await serverSync({ ...d, vault: null })).files).toEqual({ 'telegram.env': '' });
+    expect((await serverSync({ ...d, vault: null })).files).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '' });
   });
 
   it('the same fingerprint again reads nothing from the vault; a change reads again', async () => {
     const rows = [tg()];
     const { d, reads } = deps(rows, { 'telegram.botToken': TOKEN });
     const first = await serverSync(d);
-    expect(reads).toEqual(['telegram.botToken']);
+    expect(reads).toEqual(['telegram.botToken', 'googleDrive.backupKey']);
     const again = await serverSync(d, { previous: first.fingerprint });
     expect(again).toEqual({ fingerprint: first.fingerprint, files: null });
-    expect(reads).toHaveLength(1);
+    expect(reads).toHaveLength(2);
     rows[0] = tg({ config: { chatId: '-1002' } });
     const changed = await serverSync(d, { previous: first.fingerprint });
     expect(changed.fingerprint).not.toBe(first.fingerprint);

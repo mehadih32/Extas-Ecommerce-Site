@@ -20,7 +20,8 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 . "$CONF"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"; LOCAL="$R/backups"
 [ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
-BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"; DRIVE_PATH="${BACKUP_DRIVE_FOLDER:-EXTAS-backups}"
+BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"; DRIVE_PATH="${BACKUP_DRIVE_FOLDER-EXTAS-backups}"
+dpath() { echo "drive:${DRIVE_PATH:+$DRIVE_PATH/}$1"; }   # see extas-backup (PR 395: empty = the backup folder itself)
 TS="$(date +%Y%m%d-%H%M%S)"
 WORK="$EXTAS_NVME_MOUNT/scratch/restore-$TS"
 NAME="extas-pg-restore"
@@ -153,13 +154,13 @@ media_restore() {
     drive)
       [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ] || { echo "Google Drive is not connected"; exit 1; }
       # The newest day that has a photo archive; a diff names the day of its full archive.
-      for dir in $(rclone lsf --dirs-only "drive:$DRIVE_PATH" | tr -d / | sort -r); do
-        last="$(rclone lsf "drive:$DRIVE_PATH/$dir" --include 'media-*.tar.gpg' | head -1)"
+      for dir in $(rclone lsf --dirs-only "$(dpath "")" | tr -d / | sort -r); do
+        last="$(rclone lsf "$(dpath "$dir")" --include 'media-*.tar.gpg' | head -1)"
         [ -n "$last" ] && break
       done
       [ -n "${last:-}" ] || { echo "no photo archive on Google Drive"; exit 1; }
-      rclone copy -q "drive:$DRIVE_PATH/$dir" "$WORK/drive" --include 'media-*'
-      case "$last" in *-diff-*) s="${last##*-diff-}"; s="${s%.tar.gpg}"; rclone copy -q "drive:$DRIVE_PATH/$s" "$WORK/drive" --include 'media-*' ;; esac
+      rclone copy -q "$(dpath "$dir")" "$WORK/drive" --include 'media-*'
+      case "$last" in *-diff-*) s="${last##*-diff-}"; s="${s%.tar.gpg}"; rclone copy -q "$(dpath "$s")" "$WORK/drive" --include 'media-*' ;; esac
       for f in "$WORK/drive"/*.gpg; do
         gpg --batch --yes --pinentry-mode loopback --passphrase-file "$SEC/backup.key" -o "$src/$(basename "$f" .gpg)" -d "$f"
       done ;;
@@ -200,8 +201,13 @@ pick_base() { # newest base backup taken before $AT (or newest overall)
 
 if [ "$FROM" = drive ]; then
   [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ] || { echo "Google Drive is not connected"; exit 1; }
-  last="$(rclone lsf --dirs-only "drive:$DRIVE_PATH" | sort | tail -1 | tr -d /)"
-  rclone copy -q "drive:$DRIVE_PATH/$last" "$WORK/drive"
+  # The newest backup that was checked whole in Drive (PR 395), else the newest one there.
+  last=""
+  for dir in $(rclone lsf --dirs-only "$(dpath "")" | tr -d / | sort -r); do
+    if [ -n "$(rclone lsf "$(dpath "$dir")" --include CHECKED 2>/dev/null)" ]; then last="$dir"; break; fi
+  done
+  [ -n "$last" ] || last="$(rclone lsf --dirs-only "$(dpath "")" | sort | tail -1 | tr -d /)"
+  rclone copy -q "$(dpath "$last")" "$WORK/drive"
   gpg --batch --yes --pinentry-mode loopback --passphrase-file "$SEC/backup.key" -o "$WORK/extas.dump" -d "$WORK/drive/extas-$last.dump.gpg"
   BASE=""
 else

@@ -12,6 +12,7 @@ import { paymentAdapters } from './payment';
 import { keyedCourierAdapters } from './courier';
 import { cdnAdapters } from './cdn';
 import { telegramAdapters } from './telegram';
+import { googleDriveAdapters } from './google-drive';
 
 export * from './define';
 export * from './connections';
@@ -34,6 +35,8 @@ export * from './courier';
 export * from './cdn';
 // S19 · PR 392 — Telegram alerts to the owner's bot: the mock until the token and the chat are entered and tested.
 export * from './telegram';
+// S19 · PR 395 (CN-030) — Google Drive for the backups: the device-code sign-in, the Drive client and the fake Google.
+export * from './google-drive';
 // S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
 // (not in `allAdapters` until then; see ai-writer/index.ts).
 export * from './ai-writer';
@@ -43,4 +46,4 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters] as const;

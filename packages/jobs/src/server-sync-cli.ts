@@ -6,6 +6,7 @@
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { disconnectPrisma, getPrisma } from '@extas/db/client';
+import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import { serverSync } from './server-sync';
 
@@ -24,7 +25,9 @@ async function main(argv: string[]): Promise<number> {
   try {
     const master = process.env.VAULT_MASTER_KEY;
     const vault = master && master.length >= 32 ? createVault(db, master) : null;
-    const r = await serverSync({ db, vault }, { previous: process.env.SYNC_PREVIOUS || null });
+    const resolver = new SettingsResolver(prismaBackend(db), registry);
+    const settings = { value: (key: string) => resolver.value(key as never) as Promise<unknown> };
+    const r = await serverSync({ db, vault, settings }, { previous: process.env.SYNC_PREVIOUS || null });
     mkdirSync(join(out, 'files'), { recursive: true, mode: 0o700 });
     const names = r.files ? Object.keys(r.files) : [];
     for (const name of names) {

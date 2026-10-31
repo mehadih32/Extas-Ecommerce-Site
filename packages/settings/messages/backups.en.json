@@ -1,0 +1,8 @@
+{
+  "backups": {
+    "drive": {
+      "label": "Google Drive: the backup folder and how many copies it keeps",
+      "help": "The folder Connect Google Drive makes in your own Drive, and how many of the newest backups that were checked whole Drive keeps (older ones go to the Drive's bin). 0 keeps them by age instead."
+    }
+  }
+}

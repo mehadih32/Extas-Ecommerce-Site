@@ -68,6 +68,8 @@ export * from './registry-books';
 export * from './registry-returns-v6';
 // CN-028 · PR 619, 621 — the switch-over, the ERP link page and the acceptance suite (registry-switchover.ts, version 70).
 export * from './registry-switchover';
+// S19 · PR 395, 507 — the backups (registry-backups.ts, versions 75–76).
+export * from './registry-backups';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

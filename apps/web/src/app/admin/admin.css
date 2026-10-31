@@ -223,6 +223,7 @@ label.ad-label { margin-bottom: 0; padding-bottom: 7px; }
   .ad .pa-cols { row-gap: 8px; }
   /* inline text links: taller hit area, same line box (vertical padding on an inline box does not move the text) */
   .ad .ad-note a, .ad .ad-intro a, .ad .ad-sub a { padding: 8px 0; }
+  .ad .ad-mini a { padding: 10px 0; } /* 12 px text: a 14–15 px box + 20 clears the 32 px an inline link needs */
 }
 
 .ad-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 20px; border-radius: var(--ad-btn-radius); font-size: var(--ad-fs-body); font-weight: 600; cursor: pointer; border: 1.5px solid transparent; white-space: nowrap; transition: background 0.15s, border-color 0.15s; line-height: 1.6; }
