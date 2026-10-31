@@ -97,6 +97,9 @@
         "fees": "Costs & fees",
         "ledger": "Cost ledger",
         "monthEnd": "Month-end"
+      },
+      "ai": {
+        "audit": "Checklist audit"
       }
     },
     "purpose": {

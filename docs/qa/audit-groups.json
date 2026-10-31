@@ -1,0 +1,22 @@
+{
+  "$comment": "S21 · PR 570 — which automated checks cover each checklist group (docs/qa/audit-checklist.json, from ECOMMERCE-CHECKLIST.md). `paths`: regular expressions on the smoke test's page addresses (tools/smoke.mjs rows.json; '*' = every page of that side); `journeys`: the saved journeys (docs/qa/journeys.json) whose failures count for the group. A group with neither is judged by the audit agents only (tools/audit-report.mjs says it waits for them). Groups not listed here have no automated cover.",
+  "groups": {
+    "1": { "paths": ["^/$", "^/(bn/)?collections/", "^/(bn/)?search"], "journeys": ["customer"] },
+    "2": { "paths": ["*shop"], "journeys": ["customer"] },
+    "3": { "paths": ["^/$", "^/bn$"], "journeys": ["customer"] },
+    "4": { "paths": ["^/(bn/)?search"], "journeys": ["customer"] },
+    "5": { "paths": ["^/(bn/)?collections/"], "journeys": ["customer"] },
+    "6": { "paths": ["^/(bn/)?p/"], "journeys": ["customer"] },
+    "7": { "paths": ["^/(bn/)?combos"], "journeys": [] },
+    "8": { "paths": ["^/(bn/)?bag"], "journeys": ["customer"] },
+    "9": { "paths": ["^/(bn/)?checkout(\\?|$)", "^/(bn/)?checkout/pay", "^/(bn/)?pay/"], "journeys": [] },
+    "10": { "paths": ["^/(bn/)?checkout/thanks", "^/(bn/)?account/orders/"], "journeys": [] },
+    "11": { "paths": ["^/(bn/)?account"], "journeys": [] },
+    "15": { "paths": ["^/(bn/)?account/login", "^/(bn/)?checkout(\\?|$)"], "journeys": [] },
+    "16": { "paths": ["^/bn(/|$)"], "journeys": [] },
+    "17": { "paths": ["^/(bn/)?help/"], "journeys": [] },
+    "19": { "paths": ["sitemap"], "journeys": [] },
+    "22": { "paths": ["^/status$", "^/(bn/)?fresh-start"], "journeys": [] },
+    "23": { "paths": ["*admin"], "journeys": ["admin", "accountant", "warehouse"] }
+  }
+}

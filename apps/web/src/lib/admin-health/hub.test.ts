@@ -96,3 +96,14 @@ describe('PR 413 · the Site health hub', () => {
     expect(runAsked({ journeys: null, schedule: base.schedule })).toBe(false);
   });
 });
+
+describe('PR 570 · the site audit line', () => {
+  it('grey until an audit reports; red when a chosen group failed; green otherwise, saying who waits for the agents', () => {
+    expect(line(base, 'audit')).toMatchObject({ state: 'off', reason: 'notYet', href: '/admin/ai/audit' });
+    const failed = { ...base, audit: { data: { ok: false, chosen: 24, failedGroups: 2, problems: ['8. Bag: /bag (phone): console error'] }, writtenAt: ago(30) } };
+    expect(line(failed, 'audit')).toMatchObject({ state: 'bad', reason: 'failed', vars: { failed: 2, chosen: 24, first: '8. Bag: /bag (phone): console error' } });
+    expect(hubOverall(hubLines(failed))).toBe('bad');
+    expect(pick(line({ ...base, audit: { data: { ok: true, chosen: 24, passedGroups: 16, agentGroups: 8 }, writtenAt: ago(30) } }, 'audit'))).toEqual(['ok', 'okAgents']);
+    expect(pick(line({ ...base, audit: { data: { ok: true, chosen: 3, passedGroups: 3, agentGroups: 0 }, writtenAt: ago(30) } }, 'audit'))).toEqual(['ok', 'ok']);
+  });
+});

@@ -31,6 +31,10 @@
     "runAlerts": {
       "label": "Site health: Telegram when a test fails",
       "help": "A line to you on Telegram when the smoke test or the saved journeys fail, again at most once within the hours you choose while it keeps failing, and one line when it passes again. Off as it ships. It uses the bot on Keys & connections; until that is connected, the lines are only written to the server's alert log."
+    },
+    "audit": {
+      "label": "AI: the checklist audit runner",
+      "help": "When the e-commerce checklist is audited on the live preview (daily or weekly, or \"Run now\"), which groups, how many audit agents, and whether the report goes to Telegram. Off as it ships. Fixes only with your OK on Fixes to approve."
     }
   }
 }

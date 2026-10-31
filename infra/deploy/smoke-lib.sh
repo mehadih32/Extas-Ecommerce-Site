@@ -101,6 +101,14 @@ run_alert() {
     if [ "$on" = yes ] && [ "$want" = yes ]; then echo "run alert: nothing to say"; else echo "run alert: off"; fi
     return 0
   fi
+  echo "run alert: $(alert_send "$text" "$sec" "$logf")"
+  return 0
+}
+
+# alert_send <text> <secrets dir> <alert log>: the line goes to the alert log, and to the owner's Telegram when
+# telegram.env holds the bot (PR 392); says which. Never fails. (PR 424; PR 570 shares it with the audit's report.)
+alert_send() {
+  local text="$1" sec="$2" logf="$3"
   mkdir -p "$(dirname "$logf")"
   echo "$(date -Is) $text" >> "$logf"
   if [ -f "$sec/telegram.env" ] && ( set +u
@@ -109,9 +117,9 @@ run_alert() {
       [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || exit 1
       curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=$text" >/dev/null 2>&1 ); then
-    echo "run alert: sent on Telegram"
+    echo "sent on Telegram"
   else
-    echo "run alert: written to the alert log (Telegram not connected or not reached)"
+    echo "written to the alert log (Telegram not connected or not reached)"
   fi
   return 0
 }

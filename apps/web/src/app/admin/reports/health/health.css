@@ -42,3 +42,6 @@
 .adm2 .hs-fix{white-space:pre-wrap;overflow-wrap:anywhere}
 /* PR 422 — What this run says: the likely causes as a short list. */
 .adm2 .hs-said{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+/* PR 570 — Checklist audit: a group's points in a fold (the summary is a 44px tap), the points as a short list. */
+.adm2 details.hs-fold>summary{cursor:pointer;padding:12px 0;line-height:20px;color:var(--ink2)}
+.adm2 .hs-points{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}

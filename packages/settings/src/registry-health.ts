@@ -69,6 +69,18 @@
 // - `smoke` / `journeys`: which test's failures send a line.
 // - `repeatHours`: while a test keeps failing, the line comes again at most once within these hours.
 // - `recovered`: one line when a test that was said to fail passes again.
+//
+// PR 570 (B7.3 · Note 14/21, registry version 115): `health.audit`, the checklist audit runner (AI › Checklist audit).
+// Off as it ships; synced to the server as audit-settings.env; the server's hourly check (audit.yml,
+// infra/deploy/audit.sh) runs an audit when one is due: the smoke test and the saved journeys with every UI check, then
+// a report per checklist group (tools/audit-report.mjs). Fixes only through Fixes to approve (PR 420).
+// - `enabled` / `every` / `weekday` / `hour`: the schedule (daily or weekly, the server's time zone); off = only when
+//   someone presses "Run now".
+// - `groups`: the checklist groups to audit (empty = all).
+// - `agents`: how many audit agents judge the points no script covers (1-3; a mock until the AI key is in the vault).
+// - `telegram`: the report and the problem list go to the owner's Telegram (the bot on Keys & connections).
+// - `keepRuns`: how many audits the server keeps for comparison.
+// - `runRequestedAt`: set by "Run now"; never typed in by hand.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -80,6 +92,7 @@ const V416 = 111;
 const V417 = 112;
 const V420 = 113;
 const V424 = 114;
+const V570 = 115;
 
 export const healthHubSchema = z
   .object({
@@ -163,6 +176,22 @@ export const healthRunAlertsSchema = z
   })
   .strict();
 export type HealthRunAlertsSettings = z.output<typeof healthRunAlertsSchema>;
+/** PR 570: a checklist group's id (its section number, or `timing` for L32/L33). */
+export const AUDIT_GROUP_ID = /^(\d{1,2}|timing)$/;
+export const healthAuditSchema = z
+  .object({
+    enabled: z.boolean(),
+    every: z.enum(['daily', 'weekly']),
+    weekday: z.int().min(1).max(7),
+    hour: z.int().min(0).max(23),
+    groups: z.array(z.string().regex(AUDIT_GROUP_ID)).max(40),
+    agents: z.int().min(1).max(3),
+    telegram: z.boolean(),
+    keepRuns: z.int().min(1).max(52),
+    runRequestedAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .strict();
+export type HealthAuditSettings = z.output<typeof healthAuditSchema>;
 
 /** PR 416: the families of UI checks, in the order the server file lists them. */
 export const UI_CHECK_FAMILIES = ['layout', 'text', 'images', 'taps'] as const;
@@ -271,5 +300,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 957,
     version: V424,
+  }),
+  'health.audit': setting({
+    scope: 'installation',
+    schema: healthAuditSchema,
+    default: { enabled: false, every: 'weekly', weekday: 1, hour: 3, groups: [], agents: 2, telegram: true, keepRuns: 12, runRequestedAt: null },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.audit.label',
+    helpKey: 'health.audit.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 958,
+    version: V570,
   }),
 };

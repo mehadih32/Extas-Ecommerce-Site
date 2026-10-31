@@ -1785,6 +1785,25 @@ rm -rf "$RA/state/run-alerts"; ( cd "$RA" && printf "RUN_ALERTS_ON='yes'\nRUN_AL
 ral smoke >/dev/null; jq -c --argjson t "$(( $(date +%s) - 23 * 3600 ))" '.told = $t' "$RA/state/run-alerts/smoke.json" > "$RA/x" && mv "$RA/x" "$RA/state/run-alerts/smoke.json"
 check "run alert (424): a bad hours value is never run and counts as 24; a summary that is not JSON is a failure" \
   "$([ -e "$RA/ran" ] && echo ran || echo safe):$(ral smoke):$(echo 'not json' > "$RA/sum.json"; ral journeys):$(jq -r .failing "$RA/state/run-alerts/journeys.json")" "safe:run alert: nothing to say:run alert: off:true"
+# PR 570: the checklist audit — due by its own schedule or a "Run now" press; bad values take their defaults; the
+# report goes through the same sender; audit.sh runs the smoke test, the journeys with every UI check, then the report.
+adue() { ( . ../deploy/journeys-lib.sh; . ../deploy/smoke-lib.sh; . ../deploy/audit-lib.sh; AUDIT_ON="$1"; AUDIT_EVERY="$2"; AUDIT_HOUR=3; AUDIT_WEEKDAY=1; AUDIT_REQUESTED="$3"; audit_due "$4" "$5" Asia/Dhaka || echo no ) }
+mon="$(TZ=Asia/Dhaka date -d '2026-11-02 05:00' +%s)"; monlast="$(TZ=Asia/Dhaka date -d '2026-11-01 05:00' +%s)"
+check "audit (570): off and never pressed → not due; a press after the last audit → asked" "$(adue no weekly '' "$mon" 0):$(adue no weekly "$((mon - 60))" "$mon" "$monlast")" "no:asked"
+check "audit (570): weekly on Monday 03:00 → due after it, not again; a bad schedule is never due" \
+  "$(adue yes weekly '' "$mon" "$monlast"):$(adue yes weekly '' "$mon" "$((mon - 60))"):$(adue yes hourly '' "$mon" 0):$(adue yes 'x;rm' '' "$mon" 0)" "scheduled:no:no:no"
+aclean() { ( . ../deploy/audit-lib.sh; AUDIT_KEEP="$1"; AUDIT_AGENTS="$2"; AUDIT_GROUPS="$3"; AUDIT_TELEGRAM="$4"; audit_clean; echo "$AUDIT_KEEP|$AUDIT_AGENTS|$AUDIT_GROUPS|$AUDIT_TELEGRAM" ) }
+check "audit (570): the owner's values made safe" "$(aclean 6 3 '8,9,timing' yes):$(aclean 0 9 '8;rm -rf /' maybe)" "6|3|8,9,timing|yes:12|1||no"
+printf "TELEGRAM_BOT_TOKEN='1:x'\nTELEGRAM_CHAT_ID='-1'\n" > "$RA/sec/telegram.env"
+echo '{"at":"2026-11-02 03:10","chosen":24,"points":448,"passedGroups":15,"failedGroups":1,"agentGroups":8,"problems":["8. Bag: /bag (phone): console error"]}' > "$RA/audit.json"
+check "audit (570): the report and the problem list in one line, with the link" \
+  "$( ( PATH="$HB:$PATH"; . ../deploy/smoke-lib.sh; . ../deploy/audit-lib.sh; audit_tell "$RA/audit.json" "$RA/sec" new.extas.test "$RA/alerts.log" ) ):$(grep -c 'চেকলিস্ট অডিট (2026-11-02 03:10) — 24টা গ্রুপ, 448টা পয়েন্ট: 15টা পাস, 1টা ব্যর্থ, 8টা অডিট এজেন্টের অপেক্ষায়। সমস্যা: 8. Bag: /bag (phone): console error। দেখুন: https://new.extas.test/admin/ai/audit' "$RA/curl.log")" \
+  "audit report: sent on Telegram:1"
+check "audit (570): no summary — nothing sent" "$( ( . ../deploy/smoke-lib.sh; . ../deploy/audit-lib.sh; audit_tell "$RA/none.json" "$RA/sec" h "$RA/alerts.log" ) )" "audit report: nothing to send (no summary)"
+check "audit (570): audit.sh runs the smoke test, the journeys with every UI check, the report, keeps and tells" \
+  "$(grep -c 'bash "$HERE/smoke.sh" "$OUT/smoke" audit "$SHA"' ../deploy/audit.sh):$(grep -c 'AUDIT_UI="layout,text,images,taps" bash "$HERE/journeys.sh" "$OUT/journeys" now "$SHA"' ../deploy/audit.sh):$(grep -c 'node /w/tools/audit-report.mjs' ../deploy/audit.sh):$(grep -c 'journeys_keep "$STATE/audit" "$AUDIT_KEEP"' ../deploy/audit.sh):$(grep -c 'audit_tell "$STATE/audit.json"' ../deploy/audit.sh):$(grep -c '\[\[ "${AUDIT_UI:-}" =~ ^\[a-z,\]+\$ \]\] && JOURNEYS_UI="$AUDIT_UI"' ../deploy/journeys.sh)" "1:1:1:1:1:1"
+check "audit (570): the report container has no network at all" "$(grep -c 'extas-audit-$$" --network none' ../deploy/audit.sh)" "1"
+check "audit (570): the hourly check runs audit.sh in its due mode on the VM" "$(grep -c 'bash infra/deploy/audit.sh "$RUNNER_TEMP/audit" "$MODE" "$live"' ../../.github/workflows/audit.yml):$(grep -c 'extas-vm' ../../.github/workflows/audit.yml)" "1:1"
 check "run alert (424): smoke.sh and journeys.sh tell after every run" \
   "$(grep -c 'run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log"' ../deploy/smoke.sh):$(grep -c 'run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log"' ../deploy/journeys.sh)" "1:1"
 JK="$T/jkeep"; mkdir -p "$JK"
