@@ -37,6 +37,8 @@ async function readJson<T>(name: string): Promise<T | null> {
   }
 }
 
+export type RuntimeState = Awaited<ReturnType<typeof runtimeState>>;
+
 export async function runtimeState() {
   const [deploy, health, local, blob, drive, smoke, restoreTest, drill] = await Promise.all([
     readJson<Deploy>('last-good-deploy.json'),

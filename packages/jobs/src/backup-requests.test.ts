@@ -3,7 +3,7 @@
 // hours; a wrong id or a finished request is never changed again; the settings file the server reads.
 import { describe, expect, it } from 'vitest';
 import { backupRequests, requestBackup, serverRequests } from './backup-requests';
-import { backupSettingsPart, type PartContext } from './server-sync';
+import { backupPart, backupSettingsPart, type PartContext, type SyncConnection } from './server-sync';
 
 type Row = Record<string, unknown> & { id: string; kind: string; status: string; createdAt: Date; startedAt: Date | null };
 
@@ -119,5 +119,30 @@ describe('backup requests (PR 507)', () => {
     expect(set).toContain("BACKUP_DRILL_ON='no'\n");
     expect(set).toContain("BACKUP_DRILL_DRIVE='no'\n");
     expect(set).toContain("BACKUP_TELEGRAM_OK='yes'\n");
+  });
+
+  it('PR 391: a LIVE Azure Blob connection and its key become the Blob remote, on its own or beside Drive', async () => {
+    const blob: SyncConnection = { id: 'b', kind: 'STORAGE', provider: 'azureBlob', mode: 'LIVE', enabled: true, config: { accountName: 'shopstore', container: 'media' } };
+    const drive: SyncConnection = { id: 'd', kind: 'GOOGLE_DRIVE', provider: 'googleDrive', mode: 'LIVE', enabled: true, config: { clientId: 'cid', folderId: 'fid' } };
+    const keys: Record<string, string> = { 'azureBlob.accountKey': 'a2V5', 'googleDrive.clientSecret': 's', 'googleDrive.refreshToken': 't' };
+    const ctx = (connections: SyncConnection[], settings: Record<string, unknown> = {}, k = keys) =>
+      ({ db: null, vault: null, connections, secret: async (n: string) => k[n] ?? null, settings: { value: async (n: string) => settings[n] } }) as unknown as PartContext;
+    const only = await backupPart.build(ctx([blob]));
+    expect(only.split('\n').filter(Boolean)).toEqual([
+      "RCLONE_CONFIG_BLOB_TYPE='azureblob'",
+      "RCLONE_CONFIG_BLOB_ACCOUNT='shopstore'",
+      "RCLONE_CONFIG_BLOB_KEY='a2V5'",
+      "BACKUP_BLOB_CONTAINER='extas-backups'",
+    ]);
+    const both = await backupPart.build(ctx([{ ...blob, config: { ...blob.config, endpoint: 'https://shopstore.blob.core.windows.net' } }, drive], { 'backups.blob': { container: 'shop-backups' } }));
+    expect(both).toContain("BACKUP_BLOB_CONTAINER='shop-backups'\n");
+    expect(both).toContain("RCLONE_CONFIG_BLOB_ENDPOINT='https://shopstore.blob.core.windows.net'\n");
+    expect(both).toContain("RCLONE_CONFIG_DRIVE_TYPE='drive'\n");
+    // MOCK, switched off, no account or no key: no Blob remote, and Drive is untouched by it
+    for (const c of [{ ...blob, mode: 'MOCK' }, { ...blob, enabled: false }, { ...blob, config: {} }]) expect(await backupPart.build(ctx([c]))).toBe('');
+    expect(await backupPart.build(ctx([blob], {}, { ...keys, 'azureBlob.accountKey': '' }))).toBe('');
+    const driveOnly = await backupPart.build(ctx([{ ...blob, mode: 'MOCK' }, drive]));
+    expect(driveOnly).not.toContain('BLOB');
+    expect(driveOnly).toContain("RCLONE_CONFIG_DRIVE_TYPE='drive'\n");
   });
 });

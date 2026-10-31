@@ -12,6 +12,12 @@
 // - `backups.drill`: the monthly restore drill — on which day and time, and which copies besides the server's own it
 //   restores into a throw-away database (Blob, Drive); never the live one.
 // - `backups.alerts`: Telegram when a backup or a drill fails (on) and when it went well (off).
+// S19 · PR 391 (version 77) — Blob and Drive switched live:
+// - `backups.blob`: the container in the owner's Azure storage account the backups go to (the media has its own
+//   container on the Azure Blob connection); the account and its key are that connection's, typed into the vault.
+// - `backups.gate`: what "ready for real orders" asks of the backups on Settings → System → Backups (CN-031 gate): the
+//   last copy in Blob and in Drive no older than `freshHours`, and a restore drill of each that passed within
+//   `drillDays`.
 // Nothing here moves money, changes a price or is the owner's data. Deleting an old copy in Drive moves it to the
 // Drive's own bin; the newest checked copies always stay.
 import { z } from 'zod';
@@ -19,6 +25,7 @@ import { setting } from './define';
 
 const V = 75;
 const V507 = 76;
+const V391 = 77;
 
 const base = { scope: 'installation', isOwnerData: false, isPublic: false, group: 'system', version: V } as const;
 
@@ -59,6 +66,15 @@ export type BackupsDrill = z.output<typeof backupsDrillSchema>;
 export const backupsAlertsSchema = z.object({ telegramOnFail: z.boolean(), telegramOnSuccess: z.boolean() }).strict();
 export type BackupsAlerts = z.output<typeof backupsAlertsSchema>;
 
+/** An Azure container name: 3–63 small letters, digits and single dashes. */
+export const backupsBlobSchema = z
+  .object({ container: z.string().regex(/^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){2,62}$/, { message: 'an Azure container name' }) })
+  .strict();
+export type BackupsBlob = z.output<typeof backupsBlobSchema>;
+
+export const backupsGateSchema = z.object({ freshHours: z.int().min(6).max(168), drillDays: z.int().min(1).max(92) }).strict();
+export type BackupsGate = z.output<typeof backupsGateSchema>;
+
 export const backupsSettings = {
   'backups.drive': setting({
     ...base,
@@ -98,5 +114,25 @@ export const backupsSettings = {
     labelKey: 'backups.alerts.label',
     helpKey: 'backups.alerts.help',
     sortOrder: 953,
+  }),
+  'backups.blob': setting({
+    ...base,
+    version: V391,
+    schema: backupsBlobSchema,
+    default: { container: 'extas-backups' },
+    valueType: 'JSON',
+    labelKey: 'backups.blob.label',
+    helpKey: 'backups.blob.help',
+    sortOrder: 954,
+  }),
+  'backups.gate': setting({
+    ...base,
+    version: V391,
+    schema: backupsGateSchema,
+    default: { freshHours: 36, drillDays: 35 },
+    valueType: 'JSON',
+    labelKey: 'backups.gate.label',
+    helpKey: 'backups.gate.help',
+    sortOrder: 955,
   }),
 };

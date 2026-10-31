@@ -15,6 +15,14 @@
     "alerts": {
       "label": "Telegram for backups",
       "help": "A Telegram message when a backup or a restore drill fails (recommended on), and when it went well (off: no message on a good night)."
+    },
+    "blob": {
+      "label": "Azure Blob: the backups' container",
+      "help": "The container in your Azure storage account the nightly backups and the WAL go to (the photos have their own container on the Azure Blob connection). Turn on soft delete and versioning for it in Azure."
+    },
+    "gate": {
+      "label": "Backups ready for real orders",
+      "help": "What \"ready\" asks of the backups: the last copy in Blob and in Drive no older than these hours, and a restore drill of each that passed within these days."
     }
   }
 }

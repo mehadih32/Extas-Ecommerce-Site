@@ -1,7 +1,7 @@
 // S19 · PR 395 (CN-030) — the Backups admin API (Settings → System → Backups). `path` is what comes after
 // /api/admin/backups:
 //   GET   /api/admin/backups                   the Google Drive connection (never a secret), the server's last
-//                                              backups (state files) (system.read)
+//                                              backups (state files), PR 391: the go-live checks (system.read)
 //   GET   /api/admin/backups/drive/list        the connected Drive's account, free space and backups, newest first
 //   POST  /api/admin/backups/drive/client      {clientId, clientSecret, pin?} the owner's own Google client; when one
 //                                              is set already it needs the PIN, and it ends the connection (vault.write)
@@ -9,7 +9,7 @@
 //                                              needs the PIN (vault.write)
 //   POST  /api/admin/backups/drive/poll        has the owner pressed Allow? (vault.write)
 //   POST  /api/admin/backups/drive/disconnect  {pin} Google forgets the access, the token is revoked (vault.write)
-//   PUT   /api/admin/backups/settings          PR 507 {plan?, drill?, alerts?, drive?} the backup settings; each part
+//   PUT   /api/admin/backups/settings          PR 507 {plan?, drill?, alerts?, drive?, blob?, gate?} the backup settings; each part
 //                                              whole, checked against its setting (system.backup)
 //   POST  /api/admin/backups/request           PR 507 {kind: BACKUP|RESTORE_DRILL, source?} the server runs it within
 //                                              a few minutes; one open request of each kind (system.backup)
@@ -33,7 +33,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import bn from '../../messages/admin-backups.bn.json';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { t, type Dict } from './i18n';
-import { runtimeState } from './status';
+import { backupGateChecks } from './backup-gate';
+import { runtimeState, type RuntimeState } from './status';
 
 const PIN_MAX_DIGITS = 12;
 
@@ -77,17 +78,50 @@ async function alertOwner(deps: AdminDeps, key: 'clientChanged' | 'connected' | 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
 /** PR 507: the backup settings this page changes, by the body's field. */
-const SETTINGS = { drive: 'backups.drive', plan: 'backups.plan', drill: 'backups.drill', alerts: 'backups.alerts' } as const;
+// PR 391: the Blob container and the go-live checks' hours and days.
+const SETTINGS = {
+  drive: 'backups.drive',
+  plan: 'backups.plan',
+  drill: 'backups.drill',
+  alerts: 'backups.alerts',
+  blob: 'backups.blob',
+  gate: 'backups.gate',
+} as const;
 type SettingField = keyof typeof SETTINGS;
 
 async function settingsNow(deps: AdminDeps) {
-  const [drive, plan, drill, alerts] = await Promise.all([
+  const [drive, plan, drill, alerts, blob, gate] = await Promise.all([
     deps.resolver.value('backups.drive'),
     deps.resolver.value('backups.plan'),
     deps.resolver.value('backups.drill'),
     deps.resolver.value('backups.alerts'),
+    deps.resolver.value('backups.blob'),
+    deps.resolver.value('backups.gate'),
   ]);
-  return { drive, plan, drill, alerts };
+  return { drive, plan, drill, alerts, blob, gate };
+}
+
+/**
+ * PR 391: the backups' go-live checks now. A place counts as connected only as the server sees it: its connection
+ * installation-wide, switched on and LIVE (its Test passed) — the same rule the vault sync uses.
+ */
+export async function backupGateNow(deps: Pick<AdminDeps, 'db' | 'resolver' | 'now'>, state: RuntimeState) {
+  const [gate, rows] = await Promise.all([
+    deps.resolver.value('backups.gate'),
+    deps.db.integration.findMany({
+      where: { storeId: null, archivedAt: null, enabled: true, mode: 'LIVE', provider: { in: ['azureBlob', 'googleDrive', 'telegram'] } },
+      select: { provider: true, kind: true },
+    }),
+  ]);
+  const has = (kind: string, provider: string) => rows.some((r) => r.kind === kind && r.provider === provider);
+  return backupGateChecks({
+    now: deps.now ? deps.now() : new Date(),
+    gate,
+    live: { blob: has('STORAGE', 'azureBlob'), drive: has('GOOGLE_DRIVE', 'googleDrive'), telegram: has('TELEGRAM', 'telegram') },
+    backups: state.backups,
+    drill: state.drill,
+    restoreTest: state.restoreTest,
+  });
 }
 
 /** Every Backups admin route. */
@@ -113,7 +147,8 @@ export async function backupsRoute(request: Request, deps: AdminDeps | null, pat
   try {
     if (where === '') {
       const [drive, state, settings, requests] = await Promise.all([deps!.vault ? driveView(d) : null, runtimeState(), settingsNow(deps!), backupRequests(deps!.db)]);
-      return json({ ok: true, drive, server: state.backups, restoreTest: state.restoreTest, drill: state.drill, settings, requests });
+      const gate = await backupGateNow(deps!, state);
+      return json({ ok: true, drive, server: state.backups, restoreTest: state.restoreTest, drill: state.drill, settings, requests, gate });
     }
     if (where === 'settings') {
       const b = await body(request);

@@ -3,7 +3,7 @@
 // now" with the last requests (the server runs each within a few minutes and writes back what happened), and the
 // backup settings card — the nightly time, the days each copy is kept, how many checked copies Drive keeps, the monthly
 // restore drill (day, time, Blob, Drive) and Telegram, with the rare ones (WAL days, the free share, the Drive folder's
-// name) under "More options". Seeing needs `system.read`; the buttons and Save need `system.backup` (the API checks
+// name; PR 391: the Blob container and the go-live checks' hours and days) under "More options". Seeing needs `system.read`; the buttons and Save need `system.backup` (the API checks
 // again). Every word is from messages/admin-backups.<lang>.json.
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
@@ -30,6 +30,9 @@ export interface BackupSettings {
     drive: boolean;
   };
   alerts: { telegramOnFail: boolean; telegramOnSuccess: boolean };
+  /** PR 391 */
+  blob: { container: string };
+  gate: { freshHours: number; drillDays: number };
 }
 
 export interface RequestRow {
@@ -339,6 +342,8 @@ export function BackupSettingsCard({
     setV((x) => ({ ...x, alerts: { ...x.alerts, ...p } }));
   const drive = (p: Partial<BackupSettings["drive"]>) =>
     setV((x) => ({ ...x, drive: { ...x.drive, ...p } }));
+  const gate = (p: Partial<BackupSettings["gate"]>) =>
+    setV((x) => ({ ...x, gate: { ...x.gate, ...p } }));
   const save = async () => {
     setBusy(true);
     setNote(null);
@@ -542,6 +547,52 @@ export function BackupSettingsCard({
                 {local(d, "plan.default", { v: defaults.drive.folderName })}
               </span>
             </div>
+            <div className="a2-fld">
+              <label className="a2-lbl" htmlFor={id("container")}>
+                {local(d, "plan.container")}
+              </label>
+              <input
+                id={id("container")}
+                className="a2-inp"
+                maxLength={63}
+                value={v.blob.container}
+                disabled={ro}
+                onChange={(e) =>
+                  setV((x) => ({
+                    ...x,
+                    blob: { container: e.target.value.toLowerCase() },
+                  }))
+                }
+                data-testid="bk-container"
+              />
+              <span className="a2-def a2-blk">
+                {local(d, "plan.containerHint")} ·{" "}
+                {local(d, "plan.default", { v: defaults.blob.container })}
+              </span>
+            </div>
+            <NumberField
+              id={id("fresh")}
+              d={d}
+              label={local(d, "plan.freshHours")}
+              hint={local(d, "plan.freshHint")}
+              value={v.gate.freshHours}
+              min={6}
+              max={168}
+              def={defaults.gate.freshHours}
+              disabled={ro}
+              onChange={(freshHours) => gate({ freshHours })}
+            />
+            <NumberField
+              id={id("drilldays")}
+              d={d}
+              label={local(d, "plan.drillDays")}
+              value={v.gate.drillDays}
+              min={1}
+              max={92}
+              def={defaults.gate.drillDays}
+              disabled={ro}
+              onChange={(drillDays) => gate({ drillDays })}
+            />
           </div>
         </details>
         {canWrite ? (
