@@ -252,6 +252,8 @@ export function NotFoundActions({ d, id, path, suggestion, canWrite }: { d: Dict
 export interface RedirectSettings {
   "seo.redirects": { wordpressMapLive: boolean; keepMonths: number; listShown: number };
   "seo.notFound": { record: boolean; maxRows: number; suggestMatchAtLeast: number };
+  /** PR 586: old demo `#/…` links. */
+  "seo.hashLinks": { forward: boolean };
 }
 
 /** The WordPress map's switch (go-live day) — its own card, saved on its own. */
@@ -274,6 +276,7 @@ const num = (v: string, fallback: number) => {
 export function RedirectOptions({ d, values, versions, defaults, canWrite }: { d: Dict; values: RedirectSettings; versions: Record<keyof RedirectSettings, number>; defaults: RedirectSettings; canWrite: boolean }) {
   const red = useSeoSave(d, "seo.redirects", values["seo.redirects"], versions["seo.redirects"]);
   const nf = useSeoSave(d, "seo.notFound", values["seo.notFound"], versions["seo.notFound"]);
+  const hash = useSeoSave(d, "seo.hashLinks", values["seo.hashLinks"], versions["seo.hashLinks"]);
   const ro = !canWrite;
   const field = (id: string, label: string, hint: string, value: number, min: number, max: number, set: (n: number) => void) => (
     <div className="a2-fld a2-mt12">
@@ -299,6 +302,18 @@ export function RedirectOptions({ d, values, versions, defaults, canWrite }: { d
         {field("rd-max", r(d, "opt.maxRows"), r(d, "opt.default", { v: defaults["seo.notFound"].maxRows }), nf.value.maxRows, 100, 100000, (n) => nf.setValue({ ...nf.value, maxRows: n }))}
         {field("rd-pct", r(d, "opt.percent"), r(d, "opt.default", { v: defaults["seo.notFound"].suggestMatchAtLeast }), nf.value.suggestMatchAtLeast, 10, 100, (n) => nf.setValue({ ...nf.value, suggestMatchAtLeast: n }))}
         <SeoSaveRow d={d} canWrite={canWrite} busy={nf.busy} note={nf.note} onSave={nf.save} testId="rd-nf" />
+        <div className="a2-mt12">
+          <SeoSwitch
+            d={d}
+            label={r(d, "opt.hash")}
+            hint={`${r(d, "opt.hashHint")} ${r(d, "opt.default", { v: seoText(d, defaults["seo.hashLinks"].forward ? "indexing.on" : "indexing.off") })}`}
+            on={hash.value.forward}
+            disabled={ro || hash.busy}
+            onChange={(v) => hash.setValue({ forward: v })}
+            testId="rd-hash"
+          />
+        </div>
+        <SeoSaveRow d={d} canWrite={canWrite} busy={hash.busy} note={hash.note} onSave={hash.save} testId="rd-hash" />
       </div>
     </details>
   );

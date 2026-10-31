@@ -292,7 +292,9 @@
       "recordHint": "On by default. Counts every shop address that has no page.",
       "maxRows": "Different addresses kept at most",
       "percent": "Suggest a page from this match (%)",
-      "default": "Default: {v}"
+      "default": "Default: {v}",
+      "hash": "Forward old demo links (#/…)",
+      "hashHint": "A shop page opened with a link to the approved demo (…/#/p/…, #/c/…) moves on to its live page at once."
     }
   },
   "up": {

@@ -78,8 +78,13 @@ export interface RedirectsSnapshot {
   counts: Record<RedirectView, number>;
   wordpress: { rows: number; live: boolean };
   notFound: { open: NotFoundView[]; openCount: number; ignoredCount: number; fixedCount: number };
-  values: { 'seo.redirects': (typeof registry)['seo.redirects']['default']; 'seo.notFound': (typeof registry)['seo.notFound']['default'] };
-  versions: { 'seo.redirects': number; 'seo.notFound': number };
+  values: {
+    'seo.redirects': (typeof registry)['seo.redirects']['default'];
+    'seo.notFound': (typeof registry)['seo.notFound']['default'];
+    /** PR 586: old demo `#/…` links forwarded (More options). */
+    'seo.hashLinks': (typeof registry)['seo.hashLinks']['default'];
+  };
+  versions: { 'seo.redirects': number; 'seo.notFound': number; 'seo.hashLinks': number };
   defaults: RedirectsSnapshot['values'];
   statusCode: number;
 }
@@ -122,7 +127,13 @@ export async function redirectsSnapshot(deps: Pick<AdminDeps, 'db' | 'resolver'>
   const view: RedirectView = (REDIRECT_VIEWS as readonly string[]).includes(opts.view ?? '') ? (opts.view as RedirectView) : 'all';
   const q = redirectKey(opts.q ?? '') === '/' ? '' : (opts.q ?? '').trim().toLowerCase().slice(0, 200);
   const at = { storeId };
-  const [red, nf, status, prefix] = await Promise.all([deps.resolver.get('seo.redirects', at), deps.resolver.get('seo.notFound', at), deps.resolver.value('naming.redirectStatusCode', at), deps.resolver.value('naming.productPathPrefix', at)]);
+  const [red, nf, hash, status, prefix] = await Promise.all([
+    deps.resolver.get('seo.redirects', at),
+    deps.resolver.get('seo.notFound', at),
+    deps.resolver.get('seo.hashLinks', at),
+    deps.resolver.value('naming.redirectStatusCode', at),
+    deps.resolver.value('naming.productPathPrefix', at),
+  ]);
   const take = red.value.listShown;
   const db = deps.db;
   const [rows, counts, wpRows, open, openCount, ignoredCount, fixedCount, cands] = await Promise.all([
@@ -156,9 +167,9 @@ export async function redirectsSnapshot(deps: Pick<AdminDeps, 'db' | 'resolver'>
       ignoredCount,
       fixedCount,
     },
-    values: { 'seo.redirects': red.value, 'seo.notFound': nf.value },
-    versions: { 'seo.redirects': red.version, 'seo.notFound': nf.version },
-    defaults: { 'seo.redirects': registry['seo.redirects'].default, 'seo.notFound': registry['seo.notFound'].default },
+    values: { 'seo.redirects': red.value, 'seo.notFound': nf.value, 'seo.hashLinks': hash.value },
+    versions: { 'seo.redirects': red.version, 'seo.notFound': nf.version, 'seo.hashLinks': hash.version },
+    defaults: { 'seo.redirects': registry['seo.redirects'].default, 'seo.notFound': registry['seo.notFound'].default, 'seo.hashLinks': registry['seo.hashLinks'].default },
     statusCode: status,
   };
 }

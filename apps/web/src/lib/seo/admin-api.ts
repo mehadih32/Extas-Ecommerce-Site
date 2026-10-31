@@ -35,6 +35,7 @@ export const SEO_KEYS = [
   'seo.redirects',
   'seo.notFound',
   'seo.urlPolicy',
+  'seo.hashLinks',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

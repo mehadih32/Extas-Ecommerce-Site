@@ -1,12 +1,15 @@
 // S02 — every shop page sits in this wrapper: the theme of the day as CSS variables (PR 82 / 501), the page language
 // (PR 84), the owner's sweep switches (PR 86) and the shop's own stylesheet and fonts. The admin and the progress page
 // never load any of it.
+// S11 · PR 586: the hash forwarder, first in the page: a demo `#/…` link moves on to its live address before anything
+// else draws (lib/seo/hash-forward, `seo.hashLinks`).
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import '../../fonts/shop.css';
 import './shop.css';
 import './shop-app.css';
-import { shopContext } from '@/lib/shop/context';
+import { readPageSettings, shopContext } from '@/lib/shop/context';
+import { hashRulesFor, hashScript } from '@/lib/seo/hash-forward';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
@@ -17,6 +20,7 @@ const BENGALI_FONT_COOKIE_AGE = 31_536_000; // hardcode-ok: technical cookie lif
 
 export default async function ShopLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const c = await shopContext();
+  const { 'seo.hashLinks': hashLinks } = await readPageSettings(['seo.hashLinks'] as const, c.storeId);
   // The Bengali shop switched off: its addresses lead to the English twin.
   if (c.lang === 'bn' && !c.s['language.bengali.enabled']) redirect(hrefIn('en', c.path));
   // The first screen's faces start loading with the page, so they are in before the first paint (the demo's type).
@@ -31,6 +35,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
   const sweep = sweepCss(c.s['shop.sweep']);
   return (
     <div id="app" className="shop" data-theme={c.theme.choice.preset} lang={c.lang} data-large-text={c.s['theme.largeText'] ? '1' : undefined}>
+      {hashLinks.forward ? <script data-hash-forward="" dangerouslySetInnerHTML={{ __html: hashScript(hashRulesFor(c.s['naming.productPathPrefix'])) }} /> : null}
       {fonts.map((href) => (
         <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="anonymous" />
       ))}

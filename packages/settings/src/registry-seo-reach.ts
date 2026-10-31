@@ -17,6 +17,10 @@
 // archived the same; a category archived after it had products on the shop answers with a short "resting"
 // page that sends people on, instead of "page not found". Whether such pages stay listed in search engines is a
 // switch each (both listed as shipped: the page keeps its rank; a restock makes it a normal page again by itself).
+//
+// PR 586 (`seo.hashLinks`; Blueprint C12.2): links to the approved demo (`…/#/p/<product>`, `#/c/<category>` …) were
+// shared while the shop was built. A browser never sends what follows `#`, so a tiny script in every shop page sends
+// such a link on to its live address (lib/seo/hash-forward). On as shipped; off, the `#/…` part is simply ignored.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -68,6 +72,15 @@ export const seoUrlPolicySchema = z
 export type SeoUrlPolicy = z.output<typeof seoUrlPolicySchema>;
 export const SEO_URL_POLICY_DEFAULT: SeoUrlPolicy = { alternatives: true, alternativesMax: 4, soldOutIndexed: true, retiredIndexed: true, retiredCategoryPage: true };
 
+export const seoHashLinksSchema = z
+  .object({
+    /** A shop page opened with a demo `#/…` link moves on to the live address. */
+    forward: z.boolean(),
+  })
+  .strict();
+export type SeoHashLinks = z.output<typeof seoHashLinksSchema>;
+export const SEO_HASH_LINKS_DEFAULT: SeoHashLinks = { forward: true };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -95,5 +108,15 @@ export const seoReachSettings = {
     labelKey: 'seo.urlPolicy.label',
     helpKey: 'seo.urlPolicy.help',
     sortOrder: 42,
+  }),
+  // ---- PR 586 · old demo #/ links ----
+  'seo.hashLinks': setting({
+    ...base,
+    version: V2,
+    schema: seoHashLinksSchema,
+    default: SEO_HASH_LINKS_DEFAULT,
+    labelKey: 'seo.hashLinks.label',
+    helpKey: 'seo.hashLinks.help',
+    sortOrder: 43,
   }),
 };
