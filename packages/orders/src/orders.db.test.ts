@@ -418,7 +418,7 @@ describe.skipIf(!HAS_TEST_DB)('the order core on PostgreSQL (S05)', () => {
       expect(await code(listOrders(d(), f.staff, { view: 'nope' }))).toBe('INVALID_INPUT');
       const detail = await getOrder(d(), f.staff, o.orderId);
       expect(detail.order).toMatchObject({ status: 'PLACED', version: 0 });
-      expect(detail.allowed).toEqual(['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'blocklistMatch', 'refuserTerms', 'bundleProposal', 'blockProposal', 'goodCustomer', 'awaitAdvance']);
+      expect(detail.allowed).toEqual(['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'blocklistMatch', 'refuserTerms', 'bundleProposal', 'blockProposal', 'goodCustomer', 'holdProposed', 'holdProposalDecided', 'awaitAdvance']);
       expect(detail.money.payment).toBe('COD_TO_COLLECT');
       expect(detail.customerCancel).toBe('tap');
       expect(detail.timeline[0]).toMatchObject({ type: 'order.placed' });

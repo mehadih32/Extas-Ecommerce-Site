@@ -92,6 +92,10 @@
     "stopReport": {
       "label": "Stopped by the engine — the weekly report",
       "help": "How many days the report shows (a week as shipped), when a rule is flagged (the share of its stopped orders that were delivered all the same; empty: never), the fewest stops before it can be flagged, and the most orders one report lists. The report only reads."
+    },
+    "approval": {
+      "label": "The engine acts only with your OK",
+      "help": "When on, the risk engine acts on nothing by itself: the duplicate check's, a risk level's and the blocklist's holds become proposed holds that a person holds or lets go, \"one parcel by itself\" stays a proposal, and no advance is asked by itself, whatever those switches say. Today's digest lists what waits. Also the most rows each waiting list shows. Off as shipped."
     }
   },
   "defaults": {

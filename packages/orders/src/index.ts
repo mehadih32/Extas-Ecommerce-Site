@@ -98,6 +98,8 @@ export * from './block-proposal';
 // S06 · PR 524: the good-customer override (good-customer.ts) and the stop report (stop-report.ts).
 export * from './good-customer';
 export * from './stop-report';
+// S06 · PR 540: the approval digest and the permission gate (approval-gate.ts).
+export * from './approval-gate';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

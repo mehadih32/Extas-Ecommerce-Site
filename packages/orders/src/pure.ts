@@ -99,6 +99,9 @@ export const ORDER_COMMANDS = [
   'blockProposal',
   // PR 524: the good-customer override spared the order an automatic hold (a mark and a timeline line; the status stays)
   'goodCustomer',
+  // PR 540: the gate turned an engine's hold into a proposal (a mark and a timeline line); "Let it go" clears it
+  'holdProposed',
+  'holdProposalDecided',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -178,6 +181,9 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   blockProposal: OPEN_STATES,
   // PR 524: written when the engine would have held it, while it is open
   goodCustomer: OPEN_STATES,
+  // PR 540: proposed while open; decided (let go) while open
+  holdProposed: OPEN_STATES,
+  holdProposalDecided: OPEN_STATES,
   // PR 542: "Send again" on an order waiting for its advance
   advanceResend: ['AWAITING_ADVANCE'],
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's

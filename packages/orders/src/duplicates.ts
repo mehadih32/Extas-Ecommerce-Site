@@ -32,6 +32,7 @@ import { phoneForms } from './phone-history';
 import { OPEN_STATES, overlapOf, severityRank, type LineFacts, type OrderState, type Severity } from './pure';
 import { auditRow, eventRow, factsOf, lockOrder, staffBy, systemBy, type By, type CommandResult } from './service';
 import { goodCustomerOf, noteGoodCustomer } from './good-customer';
+import { gateOn, proposeHold } from './approval-gate';
 
 /** The FraudAlert section of a duplicate review (the risk engine of S06 writes its own sections). */
 export const DUPLICATE_SECTION = 'duplicate';
@@ -317,7 +318,9 @@ export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orde
   if (good) await noteGoodCustomer(deps, ref, by, 'duplicateHold', good);
   else if (alertId && cfg.autoHold && top === 'high' && !opts.again) {
     const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
-    if (reasons.some((r) => r.key === DUPLICATE_HOLD_KEY)) {
+    // PR 540: with the gate on the hold is only proposed; a person holds it or lets it go
+    if (reasons.some((r) => r.key === DUPLICATE_HOLD_KEY) && (await gateOn(deps, ref.storeId))) await proposeHold(deps, ref, by, 'duplicateHold', DUPLICATE_HOLD_KEY);
+    else if (reasons.some((r) => r.key === DUPLICATE_HOLD_KEY)) {
       try {
         await holdWith(deps, ref, by, DUPLICATE_HOLD_KEY, undefined);
         held = true;

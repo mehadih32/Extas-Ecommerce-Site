@@ -63,7 +63,8 @@
         "confirm": "To confirm",
         "riskrules": "Risk rules",
         "packing": "Packing & print",
-        "returns": "Returns & exchanges"
+        "returns": "Returns & exchanges",
+        "digest": "Today's digest"
       },
       "customers": {
         "all": "All customers",

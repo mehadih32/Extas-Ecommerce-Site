@@ -43,7 +43,8 @@ function levelSteps(view: AdminView, x: { watch?: unknown; hold?: unknown; call?
   const out: string[] = [];
   if (x.hold === 'held') out.push(t(d, 'orders.risk.level.held'));
   // PR 524: GOOD_CUSTOMER — the good-customer override skipped the hold
-  else if (x.hold === 'NO_REASON' || x.hold === 'NOT_HOLDABLE' || x.hold === 'GOOD_CUSTOMER') out.push(t(d, `orders.risk.level.${x.hold}`));
+  // PR 540: GATED — the gate made the hold a proposal for a person
+  else if (x.hold === 'NO_REASON' || x.hold === 'NOT_HOLDABLE' || x.hold === 'GOOD_CUSTOMER' || x.hold === 'GATED') out.push(t(d, `orders.risk.level.${x.hold}`));
   if (x.watch === true) out.push(t(d, 'orders.risk.level.watch'));
   if (x.call === true) out.push(t(d, 'orders.risk.level.call'));
   return out;

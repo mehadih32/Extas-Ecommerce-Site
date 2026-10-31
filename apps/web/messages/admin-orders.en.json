@@ -165,7 +165,8 @@
       "refuser": "Repeat refuser",
       "bundle": "One parcel?",
       "blockProposal": "Proposed for blocklist",
-      "goodCustomer": "Good customer"
+      "goodCustomer": "Good customer",
+      "holdProposed": "Hold proposed"
     },
     "page": {
       "all": "All orders",
@@ -260,7 +261,8 @@
       "blockWhy": "Why (required)",
       "blockWhyPh": "What happened, so the next person knows",
       "bundleNote": "Note for the packers (optional)",
-      "propWhy": "Reason (the next person reads it)"
+      "propWhy": "Reason (the next person reads it)",
+      "propNote": "Why (a short note)"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -435,6 +437,18 @@
         "title": "Keep the number of order {n} off the blocklist",
         "ok": "Keep it off",
         "done": "The number of order {n} stays off the blocklist"
+      },
+      "propHold": {
+        "label": "Hold",
+        "title": "Hold {n}",
+        "ok": "Hold the order",
+        "done": "{n} is on hold"
+      },
+      "propLetGo": {
+        "label": "Let it go",
+        "title": "Let {n} go",
+        "ok": "Let it go",
+        "done": "The proposed hold on {n} is let go"
       }
     },
     "eff": {
@@ -478,7 +492,10 @@
       "propBlock": "The number goes on the blocklist with your reason and what we know (names, addresses, products with dates)",
       "propBlockNext": "What its new orders get is the blocklist switch's choice (a mark, or a hold for a person)",
       "propNever": "This order is not cancelled or held, and the customer is told nothing",
-      "propDismiss": "The number stays off the list; it is asked again only after a new rejection"
+      "propDismiss": "The number stays off the list; it is asked again only after a new rejection",
+      "propHold": "The order goes on hold with the proposed reason; your note is in the timeline",
+      "propLetGo": "The order goes on as it is; your note is in the timeline",
+      "propNoCancel": "Nothing is cancelled and the customer is told nothing"
     },
     "review": {
       "title": "Duplicate review",
@@ -710,6 +727,14 @@
         "duplicateHold": "The duplicate check's hold",
         "levelHold": "The risk level's hold",
         "levelAdvance": "The automatic advance request"
+      },
+      "order_holdProposed": "Hold proposed",
+      "order_holdProposalDecided": "Proposed hold let go",
+      "holdProposed": "{rule} wanted to hold it: {reason}",
+      "gateRule": {
+        "duplicateHold": "The duplicate check",
+        "levelHold": "The risk level",
+        "blocklistHold": "The blocklist"
       }
     },
     "band": {
@@ -722,7 +747,8 @@
       "deliveryCheck": "{courier} says delivered, but our records say it came back: {signs}. Check with the courier and the customer, then record what really happened.",
       "returnReason": "The parcel came back from {courier}. Ask the rider or the customer why, and record it — the reports and the customer's history count it.",
       "bundle": "The same person has other open orders to this address: {numbers}. Send them in one parcel?",
-      "blockProposal": "This number has {n} rejections ({refused} refused at the door, {declined} cancelled) and is proposed for the blocklist. A person decides; the order goes on as usual."
+      "blockProposal": "This number has {n} rejections ({refused} refused at the door, {declined} cancelled) and is proposed for the blocklist. A person decides; the order goes on as usual.",
+      "holdProposed": "The engine wants to hold this order ({rule}: {reason}). Nothing was held: you decide."
     },
     "items": {
       "title": "Items",
@@ -842,7 +868,8 @@
           "codOff": "Proposed: no cash on delivery for this order — ask the whole amount first"
         },
         "askNote": "Only a proposal: press “Request advance” on this order to send it.",
-        "GOOD_CUSTOMER": "not held: a good customer"
+        "GOOD_CUSTOMER": "not held: a good customer",
+        "GATED": "not held: proposed, waiting for a person"
       }
     },
     "section": {

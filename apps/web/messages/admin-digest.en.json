@@ -1,0 +1,111 @@
+{
+  "dg": {
+    "metaTitle": "Today's digest",
+    "title": "Today's digest",
+    "sub": "What came in on a day, what the risk engine saw, and what waits for your OK. The engine reports and waits.",
+    "day": {
+      "label": "Day",
+      "go": "Show",
+      "showing": "Orders placed on {day}."
+    },
+    "head": {
+      "h": "In short",
+      "none": "No orders on {day}",
+      "stop": ".",
+      "placed": "Orders on {day}: {n}",
+      "movedOn": "{n} confirmed and moved on",
+      "toConfirm": "{n} still to confirm",
+      "held": "{n} held ({reasons})",
+      "cancelled": "{n} cancelled",
+      "running": "{n} had another order running, {dup} of those look like duplicates",
+      "reason": "{name}: {n}"
+    },
+    "kpi": {
+      "placed": "Orders",
+      "placedFoot": "Placed on this day",
+      "movedOn": "Confirmed and moved on",
+      "movedOnFoot": "{pct} of the day's orders",
+      "toConfirm": "Still to confirm",
+      "toConfirmFoot": "{n} more wait for an advance",
+      "held": "On hold",
+      "heldFoot": "By reason below",
+      "running": "Another order running",
+      "runningFoot": "{n} look like duplicates"
+    },
+    "held": { "h": "Held, by reason" },
+    "cancelled": { "h": "Cancelled, by reason" },
+    "col": {
+      "reason": "Reason",
+      "orders": "Orders",
+      "order": "Order",
+      "rule": "Rule",
+      "holdReason": "Hold reason",
+      "proposed": "Proposed",
+      "sure": "How sure",
+      "when": "When"
+    },
+    "noReason": "No reason given",
+    "none": "None on this day.",
+    "wait": {
+      "h": "Waiting for your OK",
+      "d": "What the engine proposed and a person still has to decide, from any day. Open an order to decide it there."
+    },
+    "gate": {
+      "on": "The gate is on: the engine holds nothing, puts nothing in one parcel and asks no advance by itself. Its holds wait here as proposals.",
+      "off": "The gate is off: the switches in Risk rules decide what the engine does by itself. Turn the gate on in the card below to make every engine hold wait for a person."
+    },
+    "holds": {
+      "h": "Proposed holds",
+      "d": "The engine wanted to hold these. Open the order and press “Hold” or “Let it go”."
+    },
+    "reviews": {
+      "h": "Reviews waiting",
+      "d": "Orders the duplicate or risk rules sent to a person."
+    },
+    "bundles": {
+      "h": "One parcel proposals",
+      "d": "One person's orders that could go in one parcel."
+    },
+    "blocks": {
+      "line": "{n} numbers proposed for the blocklist wait in Risk rules.",
+      "none": "No number waits for the blocklist.",
+      "link": "Open Risk rules"
+    },
+    "empty": "Nothing waits.",
+    "more": "Showing {shown} of {total}. Raise the most rows in the card below to see more.",
+    "rule": {
+      "duplicateHold": "Duplicate check",
+      "levelHold": "Risk level",
+      "blocklistHold": "Blocklist"
+    },
+    "action": {
+      "CANCEL": "Cancel",
+      "HOLD": "Hold",
+      "WARN": "Look at it",
+      "ALLOW": "Let it go"
+    },
+    "sure": "{n}% sure",
+    "card": {
+      "h": "The engine acts only with your OK",
+      "d": "When on, the engine acts on nothing by itself: the duplicate check's, a risk level's and the blocklist's holds become proposed holds a person decides, “one parcel by itself” stays a proposal, and no advance is asked by itself, whatever those switches say.",
+      "gate": "Make every engine action wait for a person",
+      "maxRows": "Most rows each waiting list shows",
+      "maxRowsHelp": "10 to 500."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "discard": "Discard",
+    "unsaved": "There are unsaved changes",
+    "readOnly": "Only someone allowed to change the risk rules can change this.",
+    "err": {
+      "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+      "INVALID_INPUT": "Check: {fields}.",
+      "FORBIDDEN": "You cannot change the risk rules.",
+      "forbidden": "You cannot change the risk rules.",
+      "unauthorized": "Sign in again.",
+      "network": "No connection. Nothing was saved; try again.",
+      "other": "Something went wrong. Nothing was saved; try again."
+    }
+  }
+}

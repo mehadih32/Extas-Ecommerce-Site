@@ -39,6 +39,10 @@
 //   GET   /api/admin/risk/stopped   PR 524: the stop report with its card (risk.report); PUT {key: 'stopReport', value,
 //                                   version} its days, warning share, fewest stops and size (settings.write)
 //                                   — lib/admin-reports/stop-report-api.ts
+//   GET   /api/admin/risk/digest    PR 540: the approval digest (?from, ?to) with the gate's card (orders.read); PUT
+//                                   {key: 'approval', value, version} the gate and the list size (risk.rules.write);
+//                                   POST /api/admin/risk/hold-proposals/<orderId> {decision, note} a person decides a
+//                                   proposed hold (orders.hold) — lib/admin-orders/digest-api.ts
 // A switch only decides whether a rule marks and proposes (the blocklist: marks or holds for a person): nothing here cancels, decides an order, moves money or
 // changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
@@ -48,6 +52,7 @@ import { stopReportRoute } from './admin-reports/stop-report-api';
 import { blockProposalSettingsRoute } from './admin-orders/block-proposal-api';
 import { bundleRoute, bundlingSettingsRoute } from './admin-orders/bundling-api';
 import { goodCustomerSettingsRoute } from './admin-orders/good-customer-api';
+import { digestRoute, holdProposalRoute } from './admin-orders/digest-api';
 import { handle } from './orders-api';
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
@@ -105,6 +110,8 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
   if (path[0] === 'bundle') return bundleRoute(request, deps, path);
   if (path[0] === 'good-customer') return goodCustomerSettingsRoute(request, deps, path);
   if (path[0] === 'stopped') return stopReportRoute(request, deps, path);
+  if (path[0] === 'digest') return digestRoute(request, deps, path);
+  if (path[0] === 'hold-proposals') return holdProposalRoute(request, deps, path);
   if (path[0] !== 'rules' || path.length > 1) return notFound();
   if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskRules(x.deps, x.who)) }));
   if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.switchRules({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
