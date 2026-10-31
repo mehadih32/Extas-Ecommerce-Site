@@ -264,6 +264,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'erp', guide: 'integrations', pages: [{ href: '/admin/settings/erp-link', perm: 'vault.read', keys: ['erpLink'] }] },
       // S18 · PR 380 — SET-04d Sign-in & security (Team & roles' security page; People and Roles join with their PRs).
       { id: 'security', guide: 'settings', pages: [{ href: '/admin/settings/security', perm: 'security.read', keys: ['security'] }] },
+      // S18 · PR 382 — SET-08d Privacy & data (the IP/GPS keeping period and its clean-up, customers' erasure requests).
+      { id: 'privacy', guide: 'settings', pages: [{ href: '/admin/settings/privacy', perm: 'security.read', keys: ['privacy'] }] },
       // S02 · PR 602 — SET-08b Cache (System); S19 · PR 395 (CN-030) — Backups (the one-click Google Drive); Images,
       // Data purge join with their PRs.
       {

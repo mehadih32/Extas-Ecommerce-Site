@@ -248,6 +248,9 @@ export const PERMISSIONS = {
   'customers.read': { group: 'customers' },
   'customers.phone': { group: 'customers' },
   'customers.merge': { group: 'customers' },
+  // S18 · PR 382 — CUS-07: file and cancel a customer's erasure request and see the list (`customers.privacy`); only the
+  // owner carries one out, with a typed confirmation (the service checks it again).
+  'customers.privacy': { group: 'customers' },
   // S11 · PR 220–222 — Website → SEO: see which pages search engines may list, the title and description templates, the
   // AI drafts waiting and the structured data (`seo.read`); change them, write AI drafts and accept or discard a draft
   // (`seo.manage`). Nothing here touches a price, an order or a customer.

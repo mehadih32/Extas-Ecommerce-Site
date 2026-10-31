@@ -59,6 +59,7 @@
     { "id": "settings/keys", "route": "/admin/integrations" },
     { "id": "settings/erp-link", "route": "/admin/settings/erp-link" },
     { "id": "settings/security", "route": "/admin/settings/security" },
+    { "id": "settings/privacy", "route": "/admin/settings/privacy" },
     { "id": "settings/cache", "route": "/admin/settings/system/cache" },
     { "id": "settings/backups", "route": "/admin/settings/system/backups" },
     { "id": "settings/look", "route": "/admin/settings/look" },
