@@ -1,8 +1,9 @@
 // S11 · PR 220–222 — the Website → SEO admin routes: the settings and (PR 221) the AI drafts, lib/seo/admin-api.ts.
-// PR 235: the redirects and the 404 report, lib/seo/redirects-admin.ts.
+// PR 235: the redirects and the 404 report, lib/seo/redirects-admin.ts. PR 228: "Make the sitemaps now", lib/seo/sitemap-admin.ts.
 import { adminDeps, fail } from '@/lib/admin-auth';
 import { seoDraftsRoute, seoSettingsRoute } from '@/lib/seo/admin-api';
 import { seoRedirectsRoute } from '@/lib/seo/redirects-admin';
+import { seoSitemapsRoute } from '@/lib/seo/sitemap-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ async function run(request: Request, ctx: Ctx): Promise<Response> {
   if (path.length === 0) return seoSettingsRoute(request, adminDeps());
   if (path[0] === 'drafts') return seoDraftsRoute(request, adminDeps(), path.slice(1));
   if (path[0] === 'redirects') return seoRedirectsRoute(request, adminDeps(), path.slice(1));
+  if (path[0] === 'sitemaps') return seoSitemapsRoute(request, adminDeps(), path.slice(1));
   return fail(404, 'not-found');
 }
 

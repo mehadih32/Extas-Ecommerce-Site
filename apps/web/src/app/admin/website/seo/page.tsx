@@ -2,17 +2,18 @@
 // may list the shop and which pages, the address every page names (the store's primary domain, else the preview), and
 // how many Bengali pages are ready (PR 220); the search titles and descriptions of every kind of page and the AI drafts
 // (PR 221); which data for search engines (structured data) the pages carry (PR 222); the pages that stay when a
-// product or collection cannot be bought (PR 527, "Pages that stay"). Seeing needs `seo.read` (the
+// product or collection cannot be bought (PR 527, "Pages that stay"); the sitemaps (PR 228). Seeing needs `seo.read` (the
 // read-only check account has it); saving needs `seo.manage`.
 // Guide: docs/admin-guide/pages/website/seo.md.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
-import { namingTokens, SEO_PAGE_TYPES, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
+import { namingTokens, SEO_PAGE_TYPES, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { IndexingCard, StructuredDataCard } from "@/components/admin/website/SeoScreen";
 import { AiDraftsCard, TitlesCard } from "@/components/admin/website/SeoTexts";
 import { UrlPolicyCard } from "@/components/admin/website/UrlPolicyCard";
+import { SitemapsCard } from "@/components/admin/website/SitemapsCard";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { formatNumber } from "@/components/admin/products/model";
@@ -23,6 +24,7 @@ import { locateKey } from "@/lib/admin-shell/sections";
 import { t, type Dict } from "@/lib/i18n";
 import { seoSnapshot } from "@/lib/seo/admin-api";
 import { draftState } from "@/lib/seo/drafts";
+import { sitemapsState } from "@/lib/seo/sitemap-admin";
 import bn from "../../../../../messages/admin-seo.bn.json";
 import en from "../../../../../messages/admin-seo.en.json";
 import "../../settings/settings.css";
@@ -64,7 +66,7 @@ export default async function SeoPage() {
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
-  const [snap, drafts] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID)]);
+  const [snap, drafts, sitemaps] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID), sitemapsState(MOTHER_STORE_ID)]);
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `seo.${k}`, vars);
   const canWrite = access.guard.permissions?.has("seo.manage") ?? false;
@@ -133,6 +135,19 @@ export default async function SeoPage() {
       </div>
       <div className="a2-mt12">
         <UrlPolicyCard d={d} value={snap.values["seo.urlPolicy"]} defaults={snap.defaults["seo.urlPolicy"]} version={snap.versions["seo.urlPolicy"]} canWrite={canWrite} />
+      </div>
+      <div className="a2-mt12">
+        <SitemapsCard
+          d={d}
+          value={snap.values["seo.sitemaps"]}
+          defaults={snap.defaults["seo.sitemaps"]}
+          limits={SEO_SITEMAP_LIMITS}
+          version={snap.versions["seo.sitemaps"]}
+          canWrite={canWrite}
+          initial={sitemaps}
+          locale={view.locale}
+          timeZone={view.timeZone}
+        />
       </div>
       <div className="a2-mt12">
         <AiDraftsCard d={d} value={snap.values["seo.aiDrafts"]} defaults={snap.defaults["seo.aiDrafts"]} version={snap.versions["seo.aiDrafts"]} canWrite={canWrite} initial={drafts} />

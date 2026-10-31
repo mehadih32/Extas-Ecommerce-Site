@@ -365,7 +365,8 @@ export async function runSmoke(opts) {
   const config = JSON.parse(
     readFileSync(opts.config ?? join(root, "docs/qa/smoke.json"), "utf8"),
   );
-  const ignore = config.ignoreRequests ?? [];
+  // PR 228: a page an owner's switch may close (smoke.json `mayBeOff`) may answer 404; a 5xx still fails (pageProblems)
+  const ignore = [...(config.ignoreRequests ?? []), ...(config.mayBeOff?.paths ?? []).map((path) => ({ path }))];
   if (opts.out) mkdirSync(opts.out, { recursive: true });
   const browser = await chromium.launch(
     opts.chromiumPath ? { executablePath: opts.chromiumPath } : {},

@@ -34,6 +34,10 @@
     "filterPages": {
       "label": "Filter pages in search engines",
       "help": "A filtered collection page (for example the polos in navy) is normally not a page of its own for search engines: it points to the clean collection page. Name here only the few that people really search for: one filter (size, colour or fit) on one collection, with its own name in both languages. Such a page is listed only while the switch is on and it shows at least the set number of styles. Off and empty as shipped."
+    },
+    "sitemaps": {
+      "label": "Sitemaps",
+      "help": "The list of the shop's pages that search engines read at /sitemap.xml: one file per kind (pages, collections, products, sets), each split when it grows long. Made from the catalogue on request and kept for the set minutes, so a new product appears within that time. It lists only pages that may be listed, and only the Bengali pages marked ready."
     }
   },
   "defaults": {

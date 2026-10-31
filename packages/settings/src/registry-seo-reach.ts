@@ -29,6 +29,12 @@
 // least `minProducts` styles; every other combination keeps pointing to the clean collection page. At most `maxPages`
 // rows. Off and empty as shipped. A collection's or sub-collection's own SEO words (title, search line, heading, text)
 // are `category.seo` (PR 45), edited on the same admin page.
+//
+// PR 228 (`seo.sitemaps`; Blueprint C12.1 "sitemaps split by type, regenerated automatically"): `/sitemap.xml` is an
+// index of one file per kind (pages, collections, products, sets), each split at `perFile` addresses, made on request
+// from the catalogue and kept `cacheMinutes` (a new product shows within that time; the admin can make them at once).
+// Never more than `maxUrls` addresses in all. On as shipped: the sitemaps only list what the pages themselves let
+// search engines list, and nothing is listed until the owner opens the shop to search engines (`seo.indexing`).
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -131,6 +137,24 @@ export const seoFilterPagesSchema = z
 export type SeoFilterPages = z.output<typeof seoFilterPagesSchema>;
 export const SEO_FILTER_PAGES_DEFAULT: SeoFilterPages = { enabled: false, minProducts: 4, maxPages: 50, pages: [] };
 
+/** The limits of the sitemaps' numbers (the admin screen shows the same). */
+export const SEO_SITEMAP_LIMITS = { cacheMinutes: { min: 5, max: 1440 }, perFile: { min: 100, max: 50000 }, maxUrls: { min: 100, max: 200000 } } as const;
+
+export const seoSitemapsSchema = z
+  .object({
+    /** Answer /sitemap.xml and its files. */
+    enabled: z.boolean(),
+    /** How long a made set is kept before it is made again. */
+    cacheMinutes: z.int().min(SEO_SITEMAP_LIMITS.cacheMinutes.min).max(SEO_SITEMAP_LIMITS.cacheMinutes.max),
+    /** The most addresses in one file (search engines read at most 50,000). */
+    perFile: z.int().min(SEO_SITEMAP_LIMITS.perFile.min).max(SEO_SITEMAP_LIMITS.perFile.max),
+    /** The most addresses in all the files together. */
+    maxUrls: z.int().min(SEO_SITEMAP_LIMITS.maxUrls.min).max(SEO_SITEMAP_LIMITS.maxUrls.max),
+  })
+  .strict();
+export type SeoSitemaps = z.output<typeof seoSitemapsSchema>;
+export const SEO_SITEMAPS_DEFAULT: SeoSitemaps = { enabled: true, cacheMinutes: 60, perFile: 5000, maxUrls: 50000 };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -178,5 +202,15 @@ export const seoReachSettings = {
     labelKey: 'seo.filterPages.label',
     helpKey: 'seo.filterPages.help',
     sortOrder: 44,
+  }),
+  // ---- PR 228 · the sitemaps ----
+  'seo.sitemaps': setting({
+    ...base,
+    version: V2,
+    schema: seoSitemapsSchema,
+    default: SEO_SITEMAPS_DEFAULT,
+    labelKey: 'seo.sitemaps.label',
+    helpKey: 'seo.sitemaps.help',
+    sortOrder: 45,
   }),
 };
