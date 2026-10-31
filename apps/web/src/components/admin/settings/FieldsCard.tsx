@@ -1,7 +1,7 @@
 'use client';
 // S20 · PR 407 — one settings card inside its section (CN-018: settings sit where they are used), first for Orders ›
 // Packing & print › Invoices, then Support › Support settings (PR 425). The card is drawn from a plain list of its
-// fields (switch, choice, number, text, ticks, a text in both languages) — words and choices come from the page, so no
+// fields (switch, choice, number, text, ticks, a text in both languages; PR 193: a calendar day) — words and choices come from the page, so no
 // function crosses from the server page. Saved whole to the page's own API (`url`: GET answers `{cards}`, PUT takes
 // `{key, value, version}`) with the card's version: a card changed by someone else in between is read again and said
 // so. A person without the page's write permission sees it locked.
@@ -16,6 +16,8 @@ export type FieldsCardField =
   | { kind: 'select'; path: string; label: string; help?: string; numeric?: boolean; options: { value: string; label: string }[] }
   | { kind: 'number'; path: string; label: string; help?: string; min: number; max: number }
   | { kind: 'text'; path: string; label: string; help?: string; max: number }
+  // PR 193: a calendar day (`YYYY-MM-DD`); empty is kept as null (no day set)
+  | { kind: 'date'; path: string; label: string; help?: string }
   | { kind: 'checks'; path: string; label: string; options: { value: string; label: string }[] }
   // PR 384: `rows` makes a taller box for a long text (a policy page's words)
   | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number; rows?: number };
@@ -130,6 +132,16 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
             {f.label}
           </label>
           <input id={fid} className="a2-inp" value={String(draft[f.path] ?? '')} maxLength={f.max} disabled={off} onChange={(e) => edit(f.path, e.target.value)} data-testid={`${testId}-${f.path}`} />
+          {help}
+        </div>
+      );
+    if (f.kind === 'date')
+      return (
+        <div className="a2-fld" key={f.path}>
+          <label className="a2-lbl" htmlFor={fid}>
+            {f.label}
+          </label>
+          <input id={fid} className="a2-inp" type="date" value={String(draft[f.path] ?? '')} disabled={off} onChange={(e) => edit(f.path, e.target.value === '' ? null : e.target.value)} data-testid={`${testId}-${f.path}`} />
           {help}
         </div>
       );

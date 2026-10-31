@@ -212,7 +212,8 @@
       "blockProposal": "Proposed for blocklist",
       "goodCustomer": "Good customer",
       "holdProposed": "Hold proposed",
-      "newCustomer": "New customer"
+      "newCustomer": "New customer",
+      "preorder": "Eid pre-order"
     },
     "page": {
       "all": "All orders",

@@ -156,6 +156,9 @@ import costsEn from '../messages/costs.en.json';
 import bengaliGateBn from '../messages/bengali-gate.bn.json';
 import bengaliGateEn from '../messages/bengali-gate.en.json';
 import trackingBn from '../messages/tracking.bn.json';
+// S08 · PR 193 — holiday mode (registry v94).
+import holidayBn from '../messages/holiday.bn.json';
+import holidayEn from '../messages/holiday.en.json';
 import trackingEn from '../messages/tracking.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
@@ -228,6 +231,9 @@ messages.bn = mergeMessages(messages.bn, bengaliGateBn);
 // S13 · PR 257 — server-side event tracking (registry-tracking.ts).
 messages.en = mergeMessages(messages.en, trackingEn);
 messages.bn = mergeMessages(messages.bn, trackingBn);
+// S08 · PR 193 (registry v94): holiday mode.
+messages.en = mergeMessages(messages.en, holidayEn);
+messages.bn = mergeMessages(messages.bn, holidayBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

@@ -22,6 +22,7 @@ import { bandExempt } from '@extas/delivery/exempt';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { CHECKOUT_PAY_PURPOSES } from './advance';
 import type { CheckoutDeps } from './context';
+import { checkoutEta } from '@extas/rules';
 import { MOCK_PROVIDER, ORDER_EVENTS, type PaymentMethod } from './place';
 
 export interface ReceiptLine {
@@ -210,4 +211,19 @@ export async function orderReceipt(
     pay,
     gift,
   };
+}
+
+/**
+ * PR 193 — what the thank-you page says about when this order comes, as the checkout said it when he placed it (the
+ * clock is the order's own `placedAt`): "ships from …" placed during the shop's holiday, "may arrive after Eid" placed
+ * past its place's Eid date (SIM-F-019). Empty: the usual hours promise stands. Read for an order the caller already
+ * showed him (orderReceipt decided that).
+ */
+export async function receiptEta(deps: Pick<CheckoutDeps, 'db' | 'settings' | 'now'>, storeId: number, number: string, lang: 'en' | 'bn'): Promise<string[]> {
+  const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { placedAt: true, areaId: true, addressResolution: true, deliveryBand: { select: { key: true } } } });
+  if (!o) return [];
+  const res = o.addressResolution as { band?: unknown } | null;
+  const band = typeof res?.band === 'string' ? res.band : (o.deliveryBand?.key ?? null);
+  const eta = await checkoutEta(deps, storeId, { place: band ? { band, areaId: o.areaId } : null, locale: lang === 'bn' ? 'bn-BD' : 'en-BD', at: o.placedAt });
+  return eta.lines;
 }

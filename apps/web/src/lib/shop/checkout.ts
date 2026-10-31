@@ -1,7 +1,7 @@
 // PR 115–126 — the checkout on the server side of the shop: the engines' dependencies, the checkout's settings, the
 // visitor's quote read from the bag cookie, and the words the checkout's client part shows. Without a database (CI,
 // `next build`) or when it is slow, the page draws the empty bag with the registry defaults — never a guess.
-import { checkoutPaused, checkoutQuote, emptyQuote, orderReceipt, payView, type CheckoutDeps, type CheckoutQuote, type PayView, type Receipt } from '@extas/checkout';
+import { checkoutPaused, checkoutQuote, emptyQuote, orderReceipt, payView, receiptEta, type CheckoutDeps, type CheckoutQuote, type PayView, type Receipt } from '@extas/checkout';
 import { findBag } from '@extas/cart';
 import { checkoutPrefill, type CheckoutPrefill } from '@extas/accounts';
 import { getPrisma } from '@extas/db/client';
@@ -223,5 +223,21 @@ export async function currentReceipt(c: Pick<ShopContext, 'storeId'>, number: st
   } catch (e) {
     console.warn(`shop: the order is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return null;
+  }
+}
+
+/**
+ * PR 193 — what the thank-you page says about when the order comes, as the checkout said it when he placed it ("ships
+ * from …" placed during the holiday, "may arrive after Eid" past its place's date). Empty: the usual hours promise. Read
+ * only after `currentReceipt` showed the order is his; nothing (the usual promise) when the database is slow or away.
+ */
+export async function currentEta(c: Pick<ShopContext, 'storeId' | 'lang'>, number: string): Promise<string[]> {
+  const deps = checkoutDeps();
+  if (!deps) return [];
+  try {
+    return await withTimeout(receiptEta(deps, c.storeId, number, c.lang), settingsTimeoutMs() * 4);
+  } catch (e) {
+    console.warn(`shop: the delivery line is unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return [];
   }
 }

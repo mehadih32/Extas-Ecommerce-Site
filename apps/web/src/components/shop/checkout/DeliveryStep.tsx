@@ -8,6 +8,8 @@
 //   per band (its charge and hours when set); his answer is kept until the address changes, and "change" takes it back.
 // - Found: the band, the place it read ("Mirpur 12 · Dhaka", so he confirms it by sight — SIM-F-003), the promise for
 //   that band, and its charge; a band with no charge yet says the charge is confirmed on the call.
+// - PR 193: `eta` — the owner's lines that replace the hours promise: "ships from …" during the shop's holiday, "may
+//   arrive after Eid" for a place past its Eid order-by date (SIM-F-019: never the hours then). Empty: the usual promise.
 import type { BandOut, DeliveryCharge, DeliveryView } from '@extas/checkout/pure';
 import { anyBandHours, hoursOf, named, placeLine } from '@/lib/shop/checkout-model';
 import type { ShopLang } from '@/lib/shop/lang';
@@ -33,11 +35,15 @@ export interface DeliveryStepProps {
   onPick: (band: BandOut, areaId: string | null) => void;
   /** "change": take back his answer (ask again), or — for a read from the line — go back to the address. */
   onChange: () => void;
+  /** PR 193: the lines in place of the hours promise (the holiday, the Eid date of this place); empty: the usual one. */
+  eta?: string[];
 }
 
-export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, hasAddress, lang, w, m, n, onPick, onChange }: DeliveryStepProps) {
+export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, hasAddress, lang, w, m, n, onPick, onChange, eta = [] }: DeliveryStepProps) {
   const found = delivery.state === 'found' && !reading ? delivery : null;
   const promiseOf = (b: Pick<BandOut, 'hoursMin' | 'hoursMax'>, key: 'del.promise' | 'del.promiseAny') => {
+    // PR 193: the holiday or the Eid date speaks instead of the hours
+    if (eta.length) return eta.join(' ');
     const hours = hoursOf(b, n);
     return hours ? w(key, { hours }) : null;
   };
@@ -59,7 +65,7 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
         </div>
         {promise ? (
           <div className="co-promrow">
-            <p className="co-fdays co-promise" data-testid="co-promise">
+            <p className="co-fdays co-promise" data-testid={eta.length ? 'co-eta' : 'co-promise'}>
               <Icon name="clock" size={14} />
               <span>{promise}</span>
             </p>
@@ -71,7 +77,7 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
 
   if (found) {
     const where = placeLine(lang, found.place);
-    const promise = found.band.priced ? promiseOf(found.band, 'del.promise') : null;
+    const promise = found.band.priced || eta.length ? promiseOf(found.band, 'del.promise') : null;
     return (
       <div className="co-zone mt16" data-testid="co-zone-box">
         <Icon name="truck" size={22} />
@@ -85,7 +91,9 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
             </div>
           ) : null}
           <div className="small text2">
-            {charge.state === 'not-set' ? <span data-testid="co-charge-later">{w('del.notSet')}</span> : promise ? <span>{promise}</span> : null}{' '}
+            {charge.state === 'not-set' ? <span data-testid="co-charge-later">{w('del.notSet')}</span> : null}
+            {charge.state === 'not-set' && eta.length ? ' ' : null}
+            {promise && (charge.state !== 'not-set' || eta.length) ? <span data-testid={eta.length ? 'co-eta' : undefined}>{promise}</span> : null}{' '}
             <button type="button" className="link co-zchg" onClick={onChange} data-testid="co-zone-change">
               {w('del.change')}
             </button>
@@ -107,6 +115,12 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
     return (
       <div data-testid="co-zone-ask">
         <p className="co-zask">{w('del.ask')}</p>
+        {eta.length ? (
+          <p className="co-fdays" data-testid="co-eta">
+            <Icon name="clock" size={14} />
+            <span>{eta.join(' ')}</span>
+          </p>
+        ) : null}
         {two ? (
           <p className="co-zboth">
             <Icon name="info" size={14} />
@@ -156,6 +170,12 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
         <Icon name="info" size={14} />
         <span>{w(hasAddress ? 'del.reading' : 'del.write')}</span>
       </p>
+      {eta.length ? (
+        <p className="co-fdays" data-testid="co-eta">
+          <Icon name="clock" size={14} />
+          <span>{eta.join(' ')}</span>
+        </p>
+      ) : null}
       {freeGapMinor !== null && freeGapMinor > 0 ? (
         <p className="co-fdays" data-testid="co-free-gap">
           <Icon name="gift" size={14} />

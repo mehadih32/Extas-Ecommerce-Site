@@ -79,6 +79,8 @@ export * from './registry-support-channels';
 export * from './registry-costs';
 // S08 · PR 192 — the RTO cost book switch, courier claims, rider issues (registry-courier-report.ts, version 93).
 export * from './registry-courier-report';
+// S08 · PR 193 — holiday mode (registry-holiday.ts, version 94).
+export * from './registry-holiday';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

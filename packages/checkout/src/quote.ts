@@ -20,7 +20,14 @@
 // owner's Parameter for Checkout may flag him; then Cash on Delivery goes (codOff ADVANCE), the prepaid methods stay,
 // and `advance` says what is paid now and what at the door. The money is the Cash on Delivery money for a part or the
 // delivery charge ahead (no prepaid reward), an ordinary prepaid order for the full amount. `flag` stays on the server.
+// PR 193 — when the order comes (@extas/rules checkoutEta, both owner switches off as shipped): `eta.lines` replace the
+// usual hours promise — "ships from …" during the shop's holiday, "may arrive after Eid" for a place past its Eid
+// order-by date (SIM-F-019: never the normal promise then). Past that date, and only while the owner has Eid pre-order
+// switched on with its advance (CN-018, `rules.approve`), the order is a pre-order: Cash on Delivery goes (codOff
+// ADVANCE) and the advance is taken exactly like PR 560's (`advance`, the same payment page, the same AWAITING_ADVANCE);
+// `eta.preorder` is its line. A flagged customer, a gift, or a store with no prepaid method open gets no pre-order.
 import { createHash } from 'node:crypto';
+import { checkoutEta } from '@extas/rules';
 import { bagView, emptyBag, type BagLang, type BagView } from '@extas/cart';
 import { bandOut, loadBandMap, type AskReason, type BandMap, type BandOut } from '@extas/delivery';
 import { deliveryDeps, placeName, readAddress, type AddressInput, type AddressRead, type PlaceName } from './address';
@@ -68,6 +75,14 @@ export interface WalletView {
   balanceMinor: number;
   on: boolean;
   usedMinor: number;
+}
+
+/** PR 193 — when the order comes: lines in place of the usual hours promise, and the pre-order line (with its amounts). */
+export interface EtaView {
+  /** Empty: the usual promise stands. */
+  lines: string[];
+  /** The pre-order's line ("৳300 now, ৳1,200 on delivery …"), when this order is a pre-order. */
+  preorder: string | null;
 }
 
 /** The delivery step as the page draws it (PR 117–119). */
@@ -158,6 +173,10 @@ export interface CheckoutQuote {
   advance: AdvanceView | null;
   /** PR 560: the layer that flagged him — the server's own record, never sent to the page. */
   flag: AdvanceFlag | null;
+  /** PR 193: when the order comes (the holiday, the Eid date of this place) and the pre-order line. */
+  eta: EtaView;
+  /** PR 193: this order is an Eid pre-order (its advance is `advance`); placement records it. */
+  preorder: boolean;
   /** A hash of every amount on the page: placement refuses an order whose money changed since the page showed it. */
   fingerprint: string;
 }
@@ -183,6 +202,8 @@ export interface CheckoutView {
   gift: GiftView | null;
   /** PR 560: the one neutral line of a flagged checkout (no score, no reason). */
   advance: AdvanceView | null;
+  /** PR 193: the lines in place of the hours promise, and the pre-order line. */
+  eta: EtaView;
   fingerprint: string;
 }
 
@@ -203,6 +224,8 @@ export const emptyQuote = (): CheckoutQuote => {
     gift: null,
     advance: null,
     flag: null,
+    eta: { lines: [], preorder: null },
+    preorder: false,
     fingerprint: fingerprintOf({ totals }),
   };
 };
@@ -225,6 +248,7 @@ export function viewOf(q: CheckoutQuote): CheckoutView {
     wallet: q.wallet,
     gift: q.gift,
     advance: q.advance,
+    eta: q.eta,
     fingerprint: q.fingerprint,
   };
 }
@@ -285,9 +309,14 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
       if (f && advanceAmountOf(f.requirement, f.partPercent, { dueMinor: codTotal, chargeMinor: before.state === 'charge' ? before.chargeMinor : null }) > ZERO) flag = f;
     }
   }
+  // PR 193: when the order comes (the band the address settled and its place), and the Eid pre-order — only past this
+  // place's date with the owner's pre-order on, for an order that would otherwise be Cash on Delivery
+  const place = address.status === 'resolved' ? { band: address.read.band.key, areaId: address.line.area.areaId } : null;
+  const eta = await checkoutEta(deps, input.storeId, { place, locale: input.lang === 'bn' ? 'bn-BD' : 'en-BD' });
+  const pre = flag === null && codOff === null && !giftOn && eta.preorder && openMethods(ps, false).length > 0 ? eta.preorder(codTotal) : null;
   /** A part or the delivery charge ahead: the rest is Cash on Delivery, and the order is priced as one. */
-  const partial = flag !== null && flag.requirement !== 'FULL_AMOUNT';
-  const off: PaymentView['codOff'] = codOff ?? (flag ? 'ADVANCE' : null);
+  const partial = (flag !== null && flag.requirement !== 'FULL_AMOUNT') || (pre !== null && pre.restMinor > ZERO);
+  const off: PaymentView['codOff'] = codOff ?? (flag || pre ? 'ADVANCE' : null);
   if (off) {
     const moved = choosePayment(asked, ps, false);
     const priceAs = partial ? COD_RULES : rulesPaymentMethod(moved);
@@ -325,7 +354,14 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
   const pay: PaymentView = { cod: off === null, codOff: off, mobile: ps.mobile, card: ps.card, online: ps.online, chosen: choice, reward: partial ? null : reward };
   // PR 560: the one neutral line — what is paid now, what at the door
   const ahead$ = flag ? advanceAmountOf(flag.requirement, flag.partPercent, { dueMinor: totals.dueMinor, chargeMinor: charge.state === 'charge' ? charge.chargeMinor : null }) : ZERO;
-  const advance: AdvanceView | null = flag && ahead$ > ZERO ? { kind: KIND_OF[flag.requirement], amountMinor: ahead$, restMinor: totals.dueMinor - ahead$ } : null;
+  // PR 193: the pre-order's advance on what is left to pay (the same path: the payment page, then AWAITING_ADVANCE)
+  const preAsk = pre && eta.preorder ? eta.preorder(totals.dueMinor) : null;
+  const advance: AdvanceView | null =
+    flag && ahead$ > ZERO
+      ? { kind: KIND_OF[flag.requirement], amountMinor: ahead$, restMinor: totals.dueMinor - ahead$ }
+      : preAsk
+        ? { kind: preAsk.restMinor > ZERO ? 'part' : 'full', amountMinor: preAsk.advanceMinor, restMinor: preAsk.restMinor }
+        : null;
   // PR 605: the part paid ahead is worked out on what is left to pay at the door
   const ahead = giftOn ? giftAdvanceOf(giftOn.advance, totals.dueMinor) : null;
   const gift: GiftView | null = ahead ? { advance: ahead.kind, partMinor: ahead.kind === 'part' && choice?.method === 'cod' ? ahead.amountMinor : null } : null;
@@ -352,6 +388,8 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     gift,
     advance,
     flag: advance ? flag : null,
+    eta: { lines: eta.lines, preorder: preAsk && advance ? preAsk.line : null },
+    preorder: preAsk !== null && advance !== null,
     fingerprint,
   };
 }

@@ -37,6 +37,8 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
   // S10 · PR 208–219 — Smart Rules (demo #/admin/rules) and the notices and pop-ups that quote them (PR 216)
   { key: 'rules', href: '/admin/rules', icon: 'bolt', group: 'rules' },
   { key: 'notices', href: '/admin/rules/notices', icon: 'notice', group: 'rules' },
+  // S08 · PR 193 — Eid order-by dates and Eid pre-order (CN-014 g)
+  { key: 'eidDates', href: '/admin/rules/eid', icon: 'notice', group: 'rules' },
   // S03 · PR 90, 571 — combos and customer sets (demo #/admin/combos), in their own section (the owner's biggest seller)
   { key: 'combos', href: '/admin/combos', icon: 'layers', group: 'combos' },
   // S06 · PR 550, 551 — the delivery bands, the sub-area list and the address check (demo: the Couriers page's

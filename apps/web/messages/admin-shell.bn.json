@@ -34,7 +34,8 @@
       },
       "delivery": {
         "zones": "এলাকা আর চার্জ",
-        "couriers": "কুরিয়ার"
+        "couriers": "কুরিয়ার",
+        "settings": "ডেলিভারির সেটিং"
       },
       "marketing": {
         "rules": "স্মার্ট নিয়ম",

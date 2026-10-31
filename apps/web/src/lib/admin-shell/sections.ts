@@ -157,6 +157,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'zones', pages: [{ href: '/admin/delivery/zones', perm: 'delivery.read', keys: ['delivery'] }] },
       // PR 554: the courier accounts with their area lists (the zone sync); one courier's page is under it
       { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courier'] }] },
+      // S08 · PR 193 — Delivery settings (demo /admin/delivery/settings): holiday mode first; the other cards join with their PRs
+      { id: 'settings', pages: [{ href: '/admin/delivery/settings', perm: 'delivery.read', keys: ['deliverySettings'] }] },
     ],
   },
   // S14 (PR 291): the Message log (MSG-04) and Channels & limits (MSG-05). PR 505: the Order journey (MSG-01) and the
@@ -209,6 +211,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/rules', perm: 'rules.read', keys: ['rules'] },
           { href: '/admin/rules/notices', perm: 'rules.read', keys: ['notices'] },
+          // S08 · PR 193 — Eid order-by dates, the "may arrive after Eid" line and Eid pre-order (CN-014 g)
+          { href: '/admin/rules/eid', perm: 'rules.read', keys: ['eidDates'] },
         ],
       },
       // S13 · PR 257: server-side event tracking (the ad platforms' server APIs; mocks until their keys are in).

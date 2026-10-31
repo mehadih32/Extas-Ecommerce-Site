@@ -34,7 +34,8 @@
       },
       "delivery": {
         "zones": "Zones & charges",
-        "couriers": "Couriers"
+        "couriers": "Couriers",
+        "settings": "Delivery settings"
       },
       "marketing": {
         "rules": "Smart Rules",

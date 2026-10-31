@@ -23,6 +23,7 @@ import { HomeNewIn } from '@/components/shop/home/HomeNewIn';
 import { HomeReviews } from '@/components/shop/home/HomeReviews';
 import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
+import { EtaBanner } from '@/components/shop/EtaBanner';
 import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from '@/lib/shop/catalogue';
 import { shopContext, type ShopContext } from '@/lib/shop/context';
 import { homeFlash } from '@/lib/shop/flash';
@@ -76,7 +77,11 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     'flash-sale': () => <HomeFlash c={c} sale={flash} />,
     reviews: () => <HomeReviews c={c} row={reviews} />,
   };
-  const body = on.map((id) => <Fragment key={id}>{draw[id]?.()}</Fragment>);
+  const sections = on.map((id) => <Fragment key={id}>{draw[id]?.()}</Fragment>);
+  // PR 193: the Eid order-by dates / pre-order line and the holiday notice, under the hero (nothing while both are off)
+  const eta = <EtaBanner c={c} testId="home-eta" wrap="container sh-etawrap" />;
+  const at = on.indexOf('hero') + 1;
+  const body = [...sections.slice(0, at), <Fragment key="eta">{eta}</Fragment>, ...sections.slice(at)];
   // follow-up 21: the cards' back view and Quick add (computer with a mouse), and the added-to-bag panel it opens
   const desk = (
     <>
