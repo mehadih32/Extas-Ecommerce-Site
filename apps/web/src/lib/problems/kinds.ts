@@ -8,7 +8,11 @@ import { BN_PREFIX } from '../shop/lang';
 import { ROUTES } from '../shop/routes';
 
 export const PROBLEM_KINDS = ['script_error', 'request_failed', 'slow_request', 'page_failed', 'error_screen', 'form_stuck', 'rage_click', 'broken_image', 'slow_load'] as const;
-export type ProblemKind = (typeof PROBLEM_KINDS)[number];
+/** PR 415: what the shop's own server records (an answer of 5xx or a call that broke on the server); a page never
+ * reports these. */
+export const SERVER_KINDS = ['server_error'] as const;
+/** Every kind a problem can have: the pages' and the server's (PR 415). */
+export type ProblemKind = (typeof PROBLEM_KINDS)[number] | (typeof SERVER_KINDS)[number];
 
 export const JOURNEY_STEPS = ['landing', 'browse', 'product', 'bag', 'checkout', 'tracking', 'account', 'other'] as const;
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];
@@ -20,7 +24,7 @@ export const SEVERITIES = ['URGENT', 'IMPORTANT', 'CAN_WAIT'] as const;
 export type Severity = (typeof SEVERITIES)[number];
 
 /** Something stopped working for the visitor (not only slow or annoying). */
-export const ERROR_KINDS: readonly ProblemKind[] = ['script_error', 'request_failed', 'page_failed', 'error_screen', 'form_stuck'];
+export const ERROR_KINDS: readonly ProblemKind[] = ['script_error', 'request_failed', 'page_failed', 'error_screen', 'form_stuck', 'server_error'];
 /** The steps where a problem costs an order at once. */
 export const MONEY_STEPS: readonly JourneyStep[] = ['bag', 'checkout'];
 

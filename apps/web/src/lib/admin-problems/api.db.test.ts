@@ -5,6 +5,9 @@
 // `health.read`; a status needs `health.problems.manage` and a note when it says how or why; leaving an owner's step
 // needs `health.problems.approve`; a stale status is refused; every change is audited; the recorder's numbers need
 // `settings.write`. A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values.
+// PR 415: the server's own failures on the money routes are problems too (nothing personal kept, the error thrown on);
+// the owner's Telegram alerts are off as they ship, then one line per problem within the hours set, for Urgent and for a
+// sudden rise; their card needs `settings.write` and is audited.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -17,6 +20,7 @@ import { openProblemCounts } from './service';
 import type { ProblemDetail, ProblemsView } from './service';
 import { problemHandler, problemsListHandler } from './api';
 import { problemsHandler } from '../problems/ingest';
+import { watchShop } from '../problems/server';
 
 const HOST = 'shop.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -57,6 +61,10 @@ describe.skipIf(!HAS_TEST_DB)('Customer problems on PostgreSQL (PR 423)', () => 
   let owner = '';
   let fixer = '';
   let now = new Date('2026-10-31T06:00:00Z');
+  const sent: string[] = [];
+  const alert = async (line: string) => {
+    sent.push(line);
+  };
 
   async function staffWith(email: string, permissions: string[]): Promise<string> {
     const role = await rolesHandler(
@@ -153,6 +161,7 @@ describe.skipIf(!HAS_TEST_DB)('Customer problems on PostgreSQL (PR 423)', () => 
       db: deps.db,
       resolver: deps.resolver,
       now: () => now,
+      alert,
     });
   const list = async (when = 'today', cookie = owner) => {
     const res = await problemsListHandler(
@@ -421,5 +430,90 @@ describe.skipIf(!HAS_TEST_DB)('Customer problems on PostgreSQL (PR 423)', () => 
     ).toBe(204);
     expect(await t.prisma.problemRecord.count()).toBe(before);
     expect((await list()).a.view.enabled).toBe(false);
+  });
+
+  const putCard = async (key: 'problems' | 'alerts', patch: Record<string, unknown>, cookie = owner) => {
+    const card = (await list()).a.view.cards[key];
+    return problemsListHandler(
+      call('PUT', {
+        path: '/api/admin/health/problems',
+        cookie,
+        body: { key, value: { ...card.value, ...patch }, version: card.version },
+      }),
+      deps,
+    );
+  };
+  // the server's clock may move on by hours without signing the staff out (their sessions use `now`)
+  let shift = 0;
+  const serverDeps = () => ({ db: deps.db, resolver: deps.resolver, now: () => new Date(now.getTime() + shift), alert });
+  const placeCall = (cookie?: string) => call('POST', { path: '/api/checkout/orders', body: { sample: true }, cookie });
+
+  it("PR 415: the server's own failures on a money route are problems; a good answer and the switch-off keep nothing", async () => {
+    expect((await putCard('problems', { enabled: true })).status).toBe(200);
+    const broken = watchShop('checkout', '/api/checkout/orders', async () => new Response('down', { status: 503 }), serverDeps);
+    const fine = watchShop('checkout', '/api/checkout/orders', async () => new Response('ok', { status: 200 }), serverDeps);
+    const threw = watchShop('bag', '/api/bag/lines', async (): Promise<Response> => {
+      throw new Error('db gone for 01712345678');
+    }, serverDeps);
+
+    const before = await t.prisma.problemRecord.count();
+    expect((await fine(placeCall())).status).toBe(200);
+    expect(await t.prisma.problemRecord.count()).toBe(before);
+
+    expect((await broken(placeCall('__Host-extas_dev=sample-device-token'))).status).toBe(503);
+    await broken(placeCall('__Host-extas_dev=sample-device-token'));
+    const p = await t.prisma.customerProblem.findFirstOrThrow({ where: { kind: 'server_error', step: 'checkout' } });
+    expect(p).toMatchObject({ path: '/api/checkout/orders', detail: 'POST /api/checkout/orders 503', severity: 'URGENT', records: 2 });
+    const recs = await t.prisma.problemRecord.findMany({ where: { problemId: p.id } });
+    expect(new Set(recs.map((r) => r.visitorId)).size).toBe(1);
+    expect(recs[0]!.visitorId).toMatch(/^srv-[0-9a-f]{32}$/);
+    expect(recs[0]).toMatchObject({ device: 'phone', browser: 'chrome', network: null });
+
+    await expect(threw(call('POST', { path: '/api/bag/lines', body: {} }))).rejects.toThrow('db gone');
+    const b = await t.prisma.customerProblem.findFirstOrThrow({ where: { kind: 'server_error', step: 'bag' } });
+    expect(b.detail).toBe('POST /api/bag/lines threw');
+    expect(JSON.stringify(await t.prisma.customerProblem.findMany())).not.toMatch(/sample-device-token|0171|db gone/);
+    expect(sent).toEqual([]); // the alerts are off as they ship
+
+    expect((await putCard('problems', { enabled: false })).status).toBe(200);
+    const kept = await t.prisma.problemRecord.count();
+    await broken(placeCall());
+    expect(await t.prisma.problemRecord.count()).toBe(kept);
+    expect((await putCard('problems', { enabled: true })).status).toBe(200);
+  });
+
+  it('PR 415: Telegram alerts — the card needs settings.write; Urgent sends one line per problem within the hours', async () => {
+    expect((await putCard('alerts', { enabled: true }, fixer)).status).toBe(403);
+    expect((await putCard('alerts', { repeatHours: 0 })).status).toBe(400);
+    expect((await putCard('alerts', { enabled: true })).status).toBe(200);
+    expect(await t.prisma.auditLog.count({ where: { action: 'health.alerts.save' } })).toBe(1);
+
+    const broken = watchShop('checkout', '/api/checkout/orders', async () => new Response('down', { status: 500 }), serverDeps);
+    await broken(placeCall());
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toContain('জরুরি');
+    expect(sent[0]).toContain('/api/checkout/orders');
+    await broken(placeCall());
+    await Promise.all([broken(placeCall()), broken(placeCall())]);
+    expect(sent).toHaveLength(1);
+    shift += 7 * 3_600_000;
+    await broken(placeCall());
+    expect(sent).toHaveLength(2);
+  });
+
+  it('PR 415: a sudden rise of a small problem sends a line; Urgent alone does not when that is switched off', async () => {
+    expect((await putCard('alerts', { onUrgent: false, spikeVisitors: 3, spikeMinutes: 30 })).status).toBe(200);
+    const n = sent.length;
+    const slow = (v: string) => report({ v, p: '/', r: [{ k: 'slow_load', ms: 9_000 }] });
+    await slow('tab-spike-0001');
+    await slow('tab-spike-0002');
+    expect(sent).toHaveLength(n);
+    await slow('tab-spike-0003');
+    expect(sent).toHaveLength(n + 1);
+    expect(sent.at(-1)).toContain('হঠাৎ');
+    const broken = watchShop('checkout', '/api/checkout/orders', async () => new Response('down', { status: 500 }), serverDeps);
+    shift += 7 * 3_600_000;
+    await broken(placeCall());
+    expect(sent).toHaveLength(n + 1);
   });
 });

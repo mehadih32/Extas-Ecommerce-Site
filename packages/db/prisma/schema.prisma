@@ -9134,6 +9134,8 @@ model CustomerProblem {
   statusById  String?                 @db.Uuid
   statusAt    DateTime?               @db.Timestamptz(3)
   records     Int                     @default(0)
+  /// PR 415: when the owner was last told about it on Telegram (`health.alerts`); null = never.
+  alertedAt   DateTime?               @db.Timestamptz(3)
   firstSeenAt DateTime                @db.Timestamptz(3)
   lastSeenAt  DateTime                @db.Timestamptz(3)
   createdAt   DateTime                @default(now()) @db.Timestamptz(3)

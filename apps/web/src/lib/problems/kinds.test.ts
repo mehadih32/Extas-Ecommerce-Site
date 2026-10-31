@@ -85,6 +85,11 @@ describe('judge', () => {
     expect(judge('broken_image', 'browse', 1, 5)).toBe('IMPORTANT');
     expect(judge('slow_load', 'landing', 9, 5)).toBe('IMPORTANT');
   });
+  it("PR 415: the server's own failure is a break, urgent on the money steps", () => {
+    expect(judge('server_error', 'checkout', 1, 5)).toBe('URGENT');
+    expect(judge('server_error', 'bag', 1, 5)).toBe('URGENT');
+    expect(judge('server_error', 'other', 1, 5)).toBe('IMPORTANT');
+  });
   it('can wait when it is only slow or annoying for a few', () => {
     expect(judge('slow_request', 'checkout', 1, 5)).toBe('CAN_WAIT');
     expect(judge('rage_click', 'product', 2, 5)).toBe('CAN_WAIT');

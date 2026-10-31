@@ -31,12 +31,21 @@
 //   payment pages one is enough).
 // - `showDays`: the lists count and show the last this many days.
 // - `glitchMinutes`: a problem seen only within this many minutes, and not since, is a "short glitch".
+//
+// PR 415 (CN-015, registry version 110): `health.alerts`, a Telegram line to the owner when a customer problem needs
+// him now. Off as it ships (CN-013: a new optional feature starts off); the owner's bot is the one on Keys &
+// connections (PR 392), the practice copy until it is connected.
+// - `enabled`: the alerts on or off.
+// - `onUrgent`: a line when a problem becomes Urgent (new, or judged Urgent after more visitors).
+// - `spikeVisitors` / `spikeMinutes`: a line when one problem hit this many visitors within these minutes.
+// - `repeatHours`: at most one line per problem within these hours, however often it happens.
 import { z } from 'zod';
 import { setting } from './define';
 
 const V = 81;
 const V414 = 82;
 const V423 = 83;
+const V415 = 110;
 
 export const healthHubSchema = z
   .object({
@@ -74,6 +83,17 @@ export const healthProblemsSchema = z
   })
   .strict();
 export type HealthProblemsSettings = z.output<typeof healthProblemsSchema>;
+
+export const healthAlertsSchema = z
+  .object({
+    enabled: z.boolean(),
+    onUrgent: z.boolean(),
+    spikeVisitors: z.int().min(2).max(10_000),
+    spikeMinutes: z.int().min(5).max(1_440),
+    repeatHours: z.int().min(1).max(168),
+  })
+  .strict();
+export type HealthAlertsSettings = z.output<typeof healthAlertsSchema>;
 
 export const healthSettings = {
   'health.hub': setting({
@@ -114,5 +134,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 952,
     version: V423,
+  }),
+  'health.alerts': setting({
+    scope: 'store',
+    schema: healthAlertsSchema,
+    default: { enabled: false, onUrgent: true, spikeVisitors: 10, spikeMinutes: 60, repeatHours: 6 },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.alerts.label',
+    helpKey: 'health.alerts.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 953,
+    version: V415,
   }),
 };

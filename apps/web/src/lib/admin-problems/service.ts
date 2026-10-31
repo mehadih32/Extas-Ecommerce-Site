@@ -5,10 +5,11 @@
 // says how, why or what is asked; a problem that needs the owner's permission, or waits for his check, moves on only
 // with `health.problems.approve`. The recorder's numbers (`health.problems`) need `settings.write`. Every change is
 // audited. No name, phone, address or payment detail exists here to show; the visitor ids are never shown either.
+// PR 415: a second card, the owner's Telegram alerts (`health.alerts`, `settings.write`, audited as health.alerts.save).
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { healthProblemsSchema, storeTarget, type HealthProblemsSettings } from '@extas/settings';
+import { healthAlertsSchema, healthProblemsSchema, storeTarget, type HealthAlertsSettings, type HealthProblemsSettings } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import type { JourneyStep, ProblemKind, Severity } from '../problems/kinds';
 import { addDays, dayOf, dayStartAt, parseWhen, windowOf, type ProblemsWhen } from './days';
@@ -77,6 +78,13 @@ export interface ProblemsCard {
   version: string;
 }
 
+/** PR 415: the owner's Telegram alerts for customer problems. */
+export interface AlertsCard {
+  key: 'alerts';
+  value: HealthAlertsSettings;
+  version: string;
+}
+
 export interface ProblemsView {
   when: ProblemsWhen;
   /** The view's first and last day (YYYY-MM-DD, the shop's time zone). */
@@ -89,7 +97,7 @@ export interface ProblemsView {
   glitches: ProblemRow[];
   /** Reports a day for the last two weeks, oldest first. */
   trend: { day: string; records: number }[];
-  cards: { problems: ProblemsCard };
+  cards: { problems: ProblemsCard; alerts: AlertsCard };
 }
 
 export interface ProblemDetail {
@@ -156,7 +164,11 @@ async function trendOf(db: PrismaClient, where: { storeId: number; problemId?: s
 export async function problemsView(deps: ProblemsDeps, who: ProblemsWho, when: ProblemsWhen): Promise<ProblemsView> {
   await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
-  const [cfg, timeZone] = await Promise.all([deps.resolver.value('health.problems', { storeId: S }), deps.resolver.value('store.timeZone', { storeId: S })]);
+  const [cfg, alerts, timeZone] = await Promise.all([
+    deps.resolver.value('health.problems', { storeId: S }),
+    deps.resolver.value('health.alerts', { storeId: S }),
+    deps.resolver.value('store.timeZone', { storeId: S }),
+  ]);
   const win = windowOf(when, now, timeZone, cfg.showDays);
   const hits = await deps.db.problemRecord.groupBy({
     by: ['problemId', 'visitorId'],
@@ -203,6 +215,7 @@ export async function problemsView(deps: ProblemsDeps, who: ProblemsWho, when: P
     trend: await trendOf(deps.db, { storeId: S }, addDays(today, 1 - TREND_DAYS), TREND_DAYS, timeZone),
     cards: {
       problems: { key: 'problems', value: cfg, version: versionOf(cfg) },
+      alerts: { key: 'alerts', value: alerts, version: versionOf(alerts) },
     },
   };
 }
@@ -325,17 +338,25 @@ export async function setProblemStatus(deps: ProblemsDeps, who: ProblemsWho, id:
   return problemDetail(deps, who, p.id);
 }
 
-/** The recorder's numbers (`settings.write`, audited). */
+/** The cards' settings: the recorder (`health.problems`) and, PR 415, the owner's alerts (`health.alerts`). */
+const CARDS = {
+  problems: { key: 'health.problems', schema: healthProblemsSchema },
+  alerts: { key: 'health.alerts', schema: healthAlertsSchema },
+} as const;
+
+/** The recorder's numbers or the alerts (`settings.write`, audited). */
 export async function saveProblemsCard(deps: ProblemsDeps, who: ProblemsWho, input: unknown): Promise<ProblemsView> {
   await requirePermission(deps.db, who.actor, 'settings.write', { storeId: S });
-  if (!isObj(input) || input.key !== 'problems') throw new ProblemsError('INVALID_INPUT', 400, ['key']);
-  const before = await deps.resolver.value('health.problems', { storeId: S });
+  if (!isObj(input) || (input.key !== 'problems' && input.key !== 'alerts')) throw new ProblemsError('INVALID_INPUT', 400, ['key']);
+  const card = CARDS[input.key];
+  const before: Record<string, unknown> = await deps.resolver.value(card.key, { storeId: S });
   if (input.version !== versionOf(before)) throw new ProblemsError('STALE', 409);
-  const ok = healthProblemsSchema.safeParse(input.value);
+  const ok = card.schema.safeParse(input.value);
   if (!ok.success) throw new ProblemsError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
-  const changed = (Object.keys(ok.data) as (keyof HealthProblemsSettings)[]).filter((k) => ok.data[k] !== before[k]);
+  const after: Record<string, unknown> = ok.data;
+  const changed = Object.keys(after).filter((k) => after[k] !== before[k]);
   if (changed.length) {
-    await deps.resolver.set('health.problems', ok.data, storeTarget(S), {
+    await deps.resolver.set(card.key, ok.data as never, storeTarget(S), {
       actorId: who.actor.staffUserId ?? null,
       reason: 'Reports › Site health › Customer problems',
     });
@@ -344,11 +365,11 @@ export async function saveProblemsCard(deps: ProblemsDeps, who: ProblemsWho, inp
       who.actor,
       {
         storeId: S,
-        action: 'health.problems.save',
+        action: `${card.key}.save`,
         entityType: 'Setting',
-        entityId: 'health.problems',
+        entityId: card.key,
         before: { ...before },
-        after: { ...ok.data, changed },
+        after: { ...after, changed },
       },
       who.ctx,
     );

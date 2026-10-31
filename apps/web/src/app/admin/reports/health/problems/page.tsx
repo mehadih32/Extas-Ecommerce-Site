@@ -165,6 +165,16 @@ export default async function CustomerProblemsPage({ searchParams }: { searchPar
     },
   ];
 
+  // PR 415: the owner's Telegram alerts for customer problems
+  const alertTexts: FieldsCardTexts = { ...texts, h: s('alerts.h'), d: s('alerts.d'), readOnly: s('alerts.readOnly') };
+  const alertFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('alerts.enabled'), help: s('alerts.enabledHelp') },
+    { kind: 'switch', path: 'onUrgent', label: s('alerts.onUrgent') },
+    { kind: 'number', path: 'spikeVisitors', label: s('alerts.spikeVisitors'), min: 2, max: 10_000 },
+    { kind: 'number', path: 'spikeMinutes', label: s('alerts.spikeMinutes'), min: 5, max: 1_440 },
+    { kind: 'number', path: 'repeatHours', label: s('alerts.repeatHours'), min: 1, max: 168 },
+  ];
+
   const table = (rows: ProblemRow[], testId: string) => (
     <div className="a2-tblw a2-mt12">
       <table className="a2-tbl" data-testid={testId}>
@@ -319,6 +329,18 @@ export default async function CustomerProblemsPage({ searchParams }: { searchPar
         texts={texts}
         canEdit={canEdit}
         testId="problems-recorder"
+      />
+      <FieldsCard
+        url={API}
+        screen={{
+          key: v.cards.alerts.key,
+          value: v.cards.alerts.value,
+          version: v.cards.alerts.version,
+        }}
+        fields={alertFields}
+        texts={alertTexts}
+        canEdit={canEdit}
+        testId="problems-alerts"
       />
     </div>
   );
