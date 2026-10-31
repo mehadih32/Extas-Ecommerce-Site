@@ -502,6 +502,22 @@ check "smoke: a failing run fails and says what" "$rc:$(jq -r '.problems[0]' "$T
 check "smoke: the append-only check is recorded" "$(jq -r '.database.appendOnly' "$T/out/result.json"):$(grep -c 'Database (PR 139): ok: 14 tables append-only' "$T/out/README.md")" "ok: 14 tables append-only:1"
 rc=0; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' FAKE_GUARDS='problem: guard off or app role may change AuditLog' >/dev/null || rc=$?
 check "smoke: a guard problem fails the run and says which table" "$rc:$(jq -c '{ok,problems}' "$T/root/state/smoke.json")" '1:{"ok":false,"problems":["problem: guard off or app role may change AuditLog"]}'
+# R1 ops review (M7, PR 402): the host. "main" is the first extra host, with the preview login while it is locked and
+# without once EXTAS_MAIN_OPEN=yes; any host the server does not serve is refused; no main domain yet → the staging host.
+: > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null || true
+check "smoke (M7): no main domain yet, the staging host instead" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
+printf 'EXTAS_EXTRA_HOSTS="Shop.Example.TEST www.example.test"\n' >> "$T/conf"
+: > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null || true
+check "smoke (M7): main = the first extra host, locked: with the preview login" \
+  "$(grep -c 'BASE=https://shop.example.test ' "$T/docker.log"):$(grep -c '^SMOKE_HTTP_USER=extas$' "$T/seen.env"):$(jq -r .host "$T/root/state/smoke.json")" "1:1:shop.example.test"
+printf 'EXTAS_MAIN_OPEN="yes"\n' >> "$T/conf"
+: > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=www.example.test >/dev/null || true
+check "smoke (M7): an open extra host goes without the preview login; staging always with it" \
+  "$(grep -c 'BASE=https://www.example.test ' "$T/docker.log"):$(grep -c 'SMOKE_HTTP' "$T/seen.env" || true):$(sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null; grep -c '^SMOKE_HTTP_USER=extas$' "$T/seen.env")" "1:0:1"
+rc=0; : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=evil.example.test >/dev/null 2>&1 || rc=$?
+check "smoke (M7): a host the server does not serve is refused before anything runs" "$rc:$(wc -l < "$T/docker.log")" "2:0"
+check "smoke (M7): the first-week watch asks for the main domain; a run by hand names its host" \
+  "$(grep -c "HOST: \${{ needs.due.outputs.kind == 'first-week' && 'main' || inputs.host }}" ../../.github/workflows/smoke.yml):$(grep -c 'SMOKE_HOST="$HOST" bash infra/deploy/smoke.sh' ../../.github/workflows/smoke.yml)" "1:1"
 echo '{"migrate":"extas-migrate:gone"}' > "$T/root/state/last-good-deploy.json"; : > "$T/docker.log"
 sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
 check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c' "$T/docker.log")" "1"

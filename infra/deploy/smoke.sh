@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # CN-016 (PR 4/17) — the smoke test against the preview host, on the VM: after every deploy (deploy.yml, which rolls
 # back when it fails) and every night (smoke.yml).
-#   sudo [SMOKE_ROLLS_BACK=1] infra/deploy/smoke.sh <out-dir> <kind> [<commit sha>]   (1 = deploy.yml rolls back on failure)
+#   sudo [SMOKE_ROLLS_BACK=1] [SMOKE_HOST=<host>|main] infra/deploy/smoke.sh <out-dir> <kind> [<commit sha>]
+#   (1 = deploy.yml rolls back on failure; SMOKE_HOST: below, R1 ops review M7)
 # 1. The read-only check account gets a fresh password and two-step seed (auth cli.ts check-account, run in the live
 #    migrate image like extas-owner-create); they go to a root-only temporary file and are gone when this ends.
 # 2. A browser (extas-smoke:<SMOKE_PLAYWRIGHT_VERSION>, built once from smoke.Dockerfile) opens every built
@@ -22,6 +23,23 @@ SHA="${3:-}"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"
 log() { echo "[smoke $(date +%H:%M:%S)] $*"; }
+
+# R1 ops review (M7, PR 402): which host. SMOKE_HOST empty = the staging host (after every deploy, every night);
+# "main" = the main domain, the first of EXTAS_EXTRA_HOSTS (runbook step 7, the first-week watch); otherwise exactly
+# the staging host or one of the extra hosts, never any other address. The preview login goes along, except on an extra
+# host once it is open (server.conf EXTAS_MAIN_OPEN="yes", PR 403).
+# shellcheck source=caddy-live.sh
+. "$HERE/caddy-live.sh"
+EXTRAS="$(site_extra_hosts "$EXTAS_STAGING_HOST" "${EXTAS_EXTRA_HOSTS:-}" 2>/dev/null)"
+HOST="${SMOKE_HOST:-}"; HOST="${HOST,,}"
+case "$HOST" in
+  ""|"${EXTAS_STAGING_HOST,,}") HOST="$EXTAS_STAGING_HOST" ;;
+  main) HOST="${EXTRAS%% *}"
+    if [ -z "$HOST" ]; then HOST="$EXTAS_STAGING_HOST"; log "no main domain in EXTAS_EXTRA_HOSTS yet: the staging host instead"; fi ;;
+  *) case " $EXTRAS " in *" $HOST "*) ;; *) log "FAIL: $HOST is not a host this server serves (EXTAS_STAGING_HOST, EXTAS_EXTRA_HOSTS)"; exit 2 ;; esac ;;
+esac
+GATE=yes
+[ "$HOST" != "$EXTAS_STAGING_HOST" ] && [ "${EXTAS_MAIN_OPEN:-no}" = yes ] && GATE=no
 
 work="$(mktemp -d "$SEC/.smoke.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
@@ -45,8 +63,10 @@ docker run --rm --name "extas-check-$$" --network extas --env-file "$work/db.env
 [ -s "$work/acct/check.env" ] || { log "FAIL: the check account could not be prepared"; exit 1; }
 {
   cat "$work/acct/check.env"
-  echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
-  echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  if [ "$GATE" = yes ]; then
+    echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
+    echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  fi
 } > "$work/smoke.env"
 rm -f "$work/acct/check.env"
 
@@ -55,7 +75,7 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
   docker build -q -f "$HERE/smoke.Dockerfile" --build-arg PLAYWRIGHT_VERSION="$SMOKE_PLAYWRIGHT_VERSION" -t "$IMG" "$HERE" >/dev/null
 fi
 
-log "opening every page on https://$EXTAS_STAGING_HOST ($KIND)"
+log "opening every page on https://$HOST ($KIND$([ "$GATE" = yes ] && echo ', with the preview login'))"
 rm -rf "${OUT:?}"/*
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 # R1 ops review (M8): state/smoke.json's `at` is ISO with its offset (the app reads it with Date.parse in UTC, where
@@ -64,7 +84,7 @@ at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 at_iso="$(date -Is)"
 rc=0
 timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-smoke-$$" --ipc=host --env-file "$work/smoke.env" \
-  -e BASE="https://$EXTAS_STAGING_HOST" -e SMOKE_OUT=/out -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
+  -e BASE="https://$HOST" -e SMOKE_OUT=/out -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" \
   "$IMG" node /w/tools/smoke.mjs || rc=$?
 
@@ -85,10 +105,10 @@ fi
 case "$guards" in problem:*) [ "$rc" -ne 0 ] || rc=1 ;; esac
 
 if [ -f "$OUT/result.json" ]; then
-  jq -c --arg kind "$KIND" --arg iso "$at_iso" '{at: $iso, atText: .at, kind: $kind, sha, ok, pages, failed, problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/smoke.json.tmp"
+  jq -c --arg kind "$KIND" --arg iso "$at_iso" --arg host "$HOST" '{at: $iso, atText: .at, host: $host, kind: $kind, sha, ok, pages, failed, problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/smoke.json.tmp"
 else
-  jq -cn --arg at "$at_iso" --arg text "$at ($EXTAS_TIMEZONE)" --arg kind "$KIND" --arg sha "${SHA:0:12}" --arg rc "$rc" \
-    '{at:$at, atText:$text, kind:$kind, sha:$sha, ok:false, pages:0, failed:0, problems:["the smoke test did not finish (exit " + $rc + ")"]}' > "$STATE/smoke.json.tmp"
+  jq -cn --arg at "$at_iso" --arg text "$at ($EXTAS_TIMEZONE)" --arg kind "$KIND" --arg sha "${SHA:0:12}" --arg rc "$rc" --arg host "$HOST" \
+    '{at:$at, atText:$text, host:$host, kind:$kind, sha:$sha, ok:false, pages:0, failed:0, problems:["the smoke test did not finish (exit " + $rc + ")"]}' > "$STATE/smoke.json.tmp"
 fi
 chmod 0644 "$STATE/smoke.json.tmp" && mv "$STATE/smoke.json.tmp" "$STATE/smoke.json"
 log "$(jq -r 'if .ok then "PASS: \(.pages) page views" else "FAIL: \(.problems | join("; "))" end' "$STATE/smoke.json")"
