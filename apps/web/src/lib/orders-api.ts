@@ -329,6 +329,9 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
       return one ? run('orders.notes', (x, i, o) => od.setFlags(x.deps, x.who, id, i, o)) : notFound();
     case 'edit':
       return one ? run('orders.edit', (x, i, o) => od.editOrder(x.deps, x.who, id, editBody(i), o)) : notFound();
+    case 'delivery-area':
+      // review R1 (M2): the team sets the band (its own charge) or the place of an order the checkout could not settle
+      return one ? run('orders.edit', (x, i, o) => od.setDeliveryArea(x.deps, x.who, id, i, o)) : notFound();
     case 'two-size':
       return one ? run('orders.edit', (x, i, o) => od.answerTwoSize(x.deps, x.who, id, i, o)) : notFound();
     case 'advance': {

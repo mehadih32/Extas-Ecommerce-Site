@@ -89,6 +89,7 @@ export * from './risk-levels';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';
+export * from './delivery-area';
 export * from './checkout-layers';
 export * from './checkout-risk';
 export * from './exchange';

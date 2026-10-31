@@ -10,7 +10,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { cancelOrder, confirmOrder, customerEdit, customerEditState, editChoices, editOrder, holdOrder, orderStep, systemBy } from './index';
+import { cancelOrder, confirmOrder, customerEdit, customerEditState, editChoices, editOrder, holdOrder, orderStep, setDeliveryArea, systemBy } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -131,6 +131,33 @@ describe.skipIf(!HAS_TEST_DB)('PR 142, 143 · order edits by the team and by the
       { source: 'CANCEL', amountMinor: before.paidMinor - tee.lineTotalMinor },
     ]);
     expect(asked.reduce((a, x) => a + x.amountMinor, 0)).toBe(before.paidMinor);
+  });
+
+  it('review R1 (M2): "Set delivery area" — the band the team settled adds its own charge, fixes it, closes the call; never twice', async () => {
+    const o = await f.place('edit-area', { address: 'House 9, Road 2, Gabtoli' });
+    const before = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+    expect(before).toMatchObject({ chargeFixed: false, addressUnclear: true, deliveryChargeMinor: 0, areaId: null });
+    expect(before.flags).toContain('ADDRESS_UNCLEAR');
+    expect(await db().callTask.count({ where: { orderId: o.orderId, status: 'OPEN' } })).toBe(1);
+    const outside = await db().deliveryBand.findFirstOrThrow({ where: { storeId: f.S, key: 'outside-dhaka' }, select: { id: true } });
+    expect(await code(setDeliveryArea(d(), f.reader, o.orderId, { bandId: outside.id, reasonKey: 'address-detail' }))).toBe('FORBIDDEN');
+    expect(await code(setDeliveryArea(d(), f.staff, o.orderId, { bandId: outside.id, reasonKey: 'no-such-reason' }))).toBe('REASON_REQUIRED');
+    const r = await setDeliveryArea(d(), f.staff, o.orderId, { bandId: outside.id, reasonKey: 'address-detail', channel: 'phone-call', note: 'Near the bus stand, Gabtoli' }, { version: before.version });
+    expect(r).toMatchObject({ command: 'edit', status: 'PLACED' });
+    const after = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+    expect(after).toMatchObject({ deliveryBandId: outside.id, deliveryChargeMinor: 9_000, chargeFixed: true, addressUnclear: false, totalMinor: before.totalMinor + 9_000, codAmountMinor: before.codAmountMinor + 9_000 });
+    expect(after.flags).not.toContain('ADDRESS_UNCLEAR');
+    expect(await db().callTask.findFirstOrThrow({ where: { orderId: o.orderId } })).toMatchObject({ status: 'DONE', outcome: 'AREA_SET' });
+    const ev = await db().orderEvent.findFirstOrThrow({ where: { orderId: o.orderId, type: 'order.edit' } });
+    expect(ev).toMatchObject({ actorType: 'STAFF', actorId: f.staffId, reasonCode: 'address-detail' });
+    expect(ev.data).toMatchObject({ deliveryArea: { before: { deliveryChargeMinor: 0, chargeFixed: false }, after: { deliveryChargeMinor: 9_000, chargeFixed: true } } });
+    expect(await db().auditLog.count({ where: { entityId: o.orderId, action: 'order.edit' } })).toBe(1);
+    // the charge is fixed now: never changed again by this command (shown = stored)
+    expect(await code(setDeliveryArea(d(), f.staff, o.orderId, { bandId: outside.id, reasonKey: 'address-detail' }))).toBe('CHARGE_FIXED');
+    // a band that is switched off is not offered
+    const off = await db().deliveryBand.findFirst({ where: { storeId: f.S, enabled: false }, select: { id: true } });
+    const o2 = await f.place('edit-area-2', { address: 'House 9, Road 2, Gabtoli' });
+    if (off) expect(await code(setDeliveryArea(d(), f.staff, o2.orderId, { bandId: off.id, reasonKey: 'address-detail' }))).toBe('INVALID_INPUT');
   });
 
   it('SIM-F-004: once a courier is booked every edit is refused (the parcel is the parcel), and nothing changes', async () => {

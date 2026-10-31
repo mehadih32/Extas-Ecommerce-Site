@@ -250,7 +250,8 @@
       "lineKeep": "Keep ({size})",
       "lineTo": "Change to {size}",
       "lineRemove": "Take this piece out",
-      "pickReason": "Pick a reason"
+      "pickReason": "Pick a reason",
+      "band": "Delivery band (its charge from Delivery)"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -264,6 +265,7 @@
       "IN_REVIEW": "A review is open (duplicate or risk). Decide it first.",
       "ADVANCE_SHORT": "The advance is not paid in full yet.",
       "PAYMENT_DUE": "The customer's payment has not come in yet. Wait for it (pending and failed payments have their own list), or cancel the order.",
+      "CHARGE_FIXED": "The checkout already fixed this order's delivery charge; it is never changed here.",
       "REASON_REQUIRED": "Pick a reason from the list (and write the note “Other” needs).",
       "INVALID_INPUT": "Something in the form is not right. Check it and try again.",
       "NOT_FOUND": "This order (or note, or review) was not found.",
@@ -364,6 +366,12 @@
         "ok": "Save the number",
         "done": "Phone of {n} corrected · logged on the timeline"
       },
+      "deliveryArea": {
+        "label": "Set delivery area",
+        "title": "Set the delivery area of {n}",
+        "ok": "Set the area",
+        "done": "Delivery area of {n} set · its charge added · logged on the timeline"
+      },
       "twoSizeAll": {
         "label": "Keep all",
         "title": "Keep every size on {n}",
@@ -416,6 +424,8 @@
       "editArea": "The delivery area and its charge stay as the checkout stored them; if the new address is in another area, tell the owner",
       "editStock": "A new size is held from stock and the old one goes back; the duplicate check runs again",
       "editPaid": "A paid order: anything paid beyond the new total becomes a refund request for the owner — no money moves",
+      "areaCharge": "The band's own charge from Delivery is added to the total and the amount to collect (nothing if the order gets free delivery there). It is then fixed, like a charge the checkout settled.",
+      "areaCall": "The address call is closed and the address flags are cleared; an order the ERP already has goes again.",
       "phoneNext": "The courier, the messages and the duplicate check use the new number from now on",
       "twoSizeAll": "Every size goes in the parcel; nothing on the order changes.",
       "twoSizeOut": "{sizes} is taken out: the total and the amount to collect fall by exactly its price, and its stock is freed.",

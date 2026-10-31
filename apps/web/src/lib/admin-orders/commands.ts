@@ -18,6 +18,8 @@ export const COMMAND_PATHS = {
   notes: 'notes',
   // PR 142: the team's edit (the full dialog, and "Correct phone")
   edit: 'edit',
+  // review R1 (M2): "Set delivery area" (the band and its own charge, or the place, of an unsettled address)
+  deliveryArea: 'delivery-area',
   // PR 146: the two-size answer (keep all, or only one size)
   twoSize: 'two-size',
   // PR 160: "Score again" on the risk card (a new dated score; the old one stays)
@@ -41,6 +43,7 @@ export const KNOWN_ERRORS = [
   'IN_REVIEW',
   'ADVANCE_SHORT',
   'PAYMENT_DUE',
+  'CHARGE_FIXED',
   'REASON_REQUIRED',
   'INVALID_INPUT',
   'NOT_FOUND',
