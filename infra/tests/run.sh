@@ -939,20 +939,31 @@ docker() {
     "images --format") if [ -f "$T/mounted" ] && [ -n "${LOSE_IMAGE:-}" ]; then echo extas-web:live; else printf 'extas-web:live\npostgres:17\n'; fi ;;
     "inspect -f") case "$3" in
         *StartedAt*) if [ -f "$T/restarted" ]; then date -u -d '+1 minute' +%Y-%m-%dT%H:%M:%SZ; else echo 2026-10-20T00:00:00Z; fi ;;
-        *Status*) echo running ;; *Name*) echo /extas-postgres ;; esac ;;
+        *Status*) echo running ;; *Name*) echo /extas-postgres ;;
+        *Config.Image*) [ -f "$T/gone-$4" ] && return 1; case "$4" in extas-postgres) echo postgres:17 ;; extas-pgbouncer) echo extas/pgbouncer:local ;; *) echo redis:7 ;; esac ;;
+        *State.Running*) [ "$4" = "${STOPPED_CT:-}" ] && echo false || echo true ;; esac ;;
     "restart -t") [ -n "${RESTART_FAILS:-}" ] || touch "$T/restarted" ;;
-    "run --rm") [ -z "${FAIL_RUN:-}" ] ;;
+    "run --rm") case "$*" in
+        *"--entrypoint sh"*) [ "$7" != "${SICK_IMAGE:-}" ] || [ -f "$T/pulled" ] || return 1
+          [ "${7%%:*}" != "${SICK_ON_NEW:-}" ] || [ ! -f "$T/mounted" ] ;;
+        *) [ -z "${FAIL_RUN:-}" ] ;; esac ;;
+    "exec "*) [ "$2" != "${SICK_CT:-}" ] ;;
+    "rm -f") touch "$T/gone-$3" ;;
+    "pull -q") [ -n "${FAIL_PULL:-}" ] || touch "$T/pulled" ;;
   esac
 }
+ctr() { echo "ctr $*" >> "$L"; }
+findmnt() { [ -z "${FAKE_VIEW:-}" ] || echo "$FAKE_VIEW$STORE"; }
 STUBS
 osd() { # osd <function> [env…]: one run in its own shell; prints the return code
   ( for kv in "${@:2}"; do export "${kv?}"; done
-    export EXTAS_FSTAB="$T/fstab" EXTAS_CONFIG_FILE="$T/sconf" REPORT_FILE="$T/report" T
+    EXTAS_REPO_DIR="$(cd ../.. && pwd)"
+    export EXTAS_FSTAB="$T/fstab" EXTAS_CONFIG_FILE="$T/sconf" REPORT_FILE="$T/report" T EXTAS_REPO_DIR
     # shellcheck source=../server/lib.sh
     . ../server/lib.sh; . ../server/steps/13-osdisk.sh; . "$T/stubs.sh"
     rc=0; "$1" 2>/dev/null || rc=$?; echo "$rc" )
 }
-reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/root/state/containerd-moved.at"; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
+reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/pulled" "$T"/gone-* "$T/root/state/containerd-moved.at"; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
 mkdir -p "$T/root/state"; reset_osd
 rc="$(osd containerd_to_lv)"
 order="$(awk '/^rsync1 /{a=NR} /^systemctl stop docker.socket docker.service containerd.service/{b=NR} /^rsync2 /{c=NR} /^mount \/dev\/extas\/containerd .*var\/lib\/containerd$/{d=NR} /^systemctl start containerd.service docker.socket docker.service/{if(!e)e=NR} /^docker run --rm --network none --entrypoint test extas-web:live -d \//{f=NR}
@@ -966,7 +977,7 @@ check "osdisk move: nothing is removed during the move" "$(grep -cE '^docker (rm
 : > "$T/osd.log"
 check "osdisk move: a second run changes nothing" "$(osd containerd_to_lv):$(grep -c 'systemctl stop\|rsync' "$T/osd.log" || true)" "0:0"
 # Failures: everything back as it was, Docker and containerd started again, no boot entry, FAIL in the report
-for case in "FAIL_RSYNC=2:final copy failed" "LOSE_IMAGE=1:images missing on the new store: postgres:17" "FAIL_RUN=1:the live image extas-web:live does not start" "FAIL_MOUNT=1:the volume did not mount"; do
+for case in "FAIL_RSYNC=2:final copy failed" "LOSE_IMAGE=1:images missing on the new store: postgres:17" "SICK_ON_NEW=postgres:images lost files on the new store: postgres:17" "FAIL_RUN=1:the live image extas-web:live does not start" "FAIL_MOUNT=1:the volume did not mount"; do
   reset_osd
   rc="$(osd containerd_to_lv "${case%%:*}")"
   back="$(awk '/^systemctl stop docker.socket/{s=NR} /^systemctl start containerd.service docker.socket docker.service/{t=NR} END{print (t>s) ? "started" : "left stopped"}' "$T/osd.log")"
@@ -985,6 +996,25 @@ reset_osd; touch "$T/mounted"; date -u +%s > "$T/root/state/containerd-moved.at"
 rc="$(osd containerd_old_copy_cleanup RESTART_FAILS=1)"
 check "osdisk old copy: kept while a container still runs from it" \
   "$rc:$(grep -c '^mount --bind' "$T/osd.log" || true):$([ -f "$T/root/state/containerd-moved.at" ] && echo kept):$(grep -c '| FAIL | still running from the old copy: extas-postgres' "$T/report")" "1:0:kept:1"
+# The image check after the store move (31 Oct: files had gone missing under the running database)
+reset_osd; rc="$(osd osdisk_repair_images)"
+check "osdisk image check: all sound, nothing stopped, removed or pulled" "$rc:$(grep -cE '^docker (stop|rm|rmi|pull)|^ctr' "$T/osd.log" || true)" "0:0"
+reset_osd; rc="$(osd osdisk_repair_images SICK_CT=extas-postgres)"
+check "osdisk image check: a broken container (sound image) is stopped gently and removed, its image kept" \
+  "$rc:$(grep -c '^docker stop -t 60 extas-postgres$' "$T/osd.log"):$(grep -c '^docker rm -f extas-postgres$' "$T/osd.log"):$(grep -cE '^docker (rmi|pull)|^ctr' "$T/osd.log" || true):$(grep -c '| OK | files had gone missing in the store: made again by the stack step: extas-postgres;' "$T/report")" "0:1:1:0:1"
+reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17)"
+check "osdisk image check: a broken pulled image: its container goes, containerd drops it at once, pulled again" \
+  "$rc:$(awk '/^docker rm -f extas-postgres$/{a=NR} /^docker rmi -f postgres:17$/{b=NR} /^ctr -n moby images rm --sync docker.io\/library\/postgres:17$/{c=NR} /^docker pull -q postgres:17$/{d=NR} END{print (a&&a<b&&b<c&&c<d) ? "in order" : "wrong " a" "b" "c" "d}' "$T/osd.log"):$(grep -c 'pulled again: postgres:17;' "$T/report")" "0:in order:1"
+reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1)"
+check "osdisk image check: still broken after the pull is a FAIL" "$rc:$(grep -c '| FAIL | postgres:17 is still broken after a fresh pull' "$T/report")" "1:1"
+reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=extas/pgbouncer:local)"
+check "osdisk image check: an image built here is removed for the stack step to build, never pulled" \
+  "$rc:$(grep -c '^docker rmi -f extas/pgbouncer:local$' "$T/osd.log"):$(grep -cE '^docker pull|^ctr' "$T/osd.log" || true):$(grep -c 'built again: extas/pgbouncer:local' "$T/report")" "0:1:0:1"
+reset_osd; rc="$(osd osdisk_repair_images STOPPED_CT=extas-caddy)"
+check "osdisk image check: a stack container that is not running is made again" "$rc:$(grep -c '^docker rm -f extas-caddy$' "$T/osd.log")" "0:1"
+reset_osd; rc="$(osd osdisk_repair_images FAKE_VIEW=/tmp/tmp.AbC123)"
+check "osdisk image check: a stale view of / with the volume inside is taken down (nothing deleted)" \
+  "$rc:$(grep -c "^umount -l /tmp/tmp.AbC123$T/var/lib/containerd\$" "$T/osd.log"):$(grep -c '^umount -l /tmp/tmp.AbC123$' "$T/osd.log")" "0:1:1"
 rm -rf "$T"
 
 exit $fail
