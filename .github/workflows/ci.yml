@@ -110,7 +110,7 @@ jobs:
           rm -rf /tmp/sites/tls.caddy /tmp/sites/origin
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh infra/deploy/journeys.sh infra/deploy/journeys-lib.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/manual-md.sh infra/deploy/smoke.sh infra/deploy/journeys.sh infra/deploy/journeys-lib.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
           # PR 620 · round 3: the upstream both ways — as before (Caddy without trusted_proxies) and with Caddy's own
           # client address (header_up, only when the live configuration trusts Cloudflare alone).
           for mode in "" client-ip; do

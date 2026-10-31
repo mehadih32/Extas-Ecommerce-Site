@@ -8,6 +8,7 @@
 // PR 388: a page's picture with numbered marks, from the latest smoke run (lib/admin-shell/shots.ts).
 // PR 389: the search box (`?q=`: every word in a guide of a section the person sees, best first, each hit linking to its
 // place) and "What's new" (`?new=1`: the newest built PRs with their plain line; lib/admin-shell/manual-search.ts).
+// PR 390: "Download (.md)" — the whole manual in one Markdown file, made on every deploy beside the blueprint.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -19,6 +20,7 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { manualAnchor, manualOutline, readChapter } from '@/lib/admin-shell/manual';
+import { hasManualMd } from '@/lib/admin-shell/manual-md';
 import { queryWords, readWhatsNew, SEARCH_MIN_CHARS, searchManual } from '@/lib/admin-shell/manual-search';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { readShots } from '@/lib/admin-shell/shots';
@@ -61,7 +63,7 @@ export default async function ManualPage(props: Props) {
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `man.${k}`, vars);
   const secName = (id: string) => t(d, `shell.sec.${id}`);
   const viewer = await shellViewer();
-  const outline = await manualOutline(viewer);
+  const [outline, mdReady] = await Promise.all([manualOutline(viewer), hasManualMd()]);
   const here = locateKey(KEY);
   const q = (typeof sp.q === 'string' ? sp.q : '').trim().slice(0, Q_MAX);
   const mode: 'search' | 'new' | 'chapter' = q ? 'search' : sp.new === '1' ? 'new' : 'chapter';
@@ -184,6 +186,11 @@ export default async function ManualPage(props: Props) {
         <Link className={`a2-btn${mode === 'new' ? ' on' : ''}`} href={`${HERE}?new=1`} data-testid="manual-new-link" aria-current={mode === 'new' ? 'page' : undefined}>
           {s('newH')}
         </Link>
+        {mdReady ? (
+          <a className="a2-btn" href="/api/admin/help/manual-md" download data-testid="manual-download">
+            {s('download')}
+          </a>
+        ) : null}
       </form>
       <div className="a2-man" id="man-top">
         <nav className="a2-card a2-man-toc" aria-label={s('contents')} data-testid="manual-toc">

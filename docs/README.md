@@ -32,6 +32,7 @@ docs file (CN-011).
 |---|---|
 | [`admin-guide/README.md`](admin-guide/README.md) | Bengali guide per admin section (CN-014), the index |
 | `admin-guide/pages/<section>/` | One Bengali guide per built admin page in six fixed parts, plus `index.md` per section (the section overview); opened from the admin top bar's guide icon; CI fails on a built page without one (`tools/admin-guide-check.mjs`; PR 594, CN-026) |
+| `MANUAL.md` (on the server only) | The Site manual in one Markdown file (PR 390): made on every deploy in the server's copy of `docs/` by `infra/deploy/manual-md.sh` (from `docs-sync.sh`), beside `BLUEPRINT.md`; in every backup's docs bundle and downloadable from Help › Site manual. Never committed |
 | [`admin-guide/marks.json`](admin-guide/marks.json) | The Site manual's pictures (PR 388): which page guide gets a screenshot and which parts of the page get numbered marks; the smoke test takes them and writes `reports/smoke/latest/marks.json` |
 | [`admin-guide/dashboard.md`](admin-guide/dashboard.md) | The Dashboard: ~~Sales and Ordered value tiles, Needs you now~~ the V12.4 default design (delivered-sales story, where orders are now, four cards, Money & marketing), role start pages (`/admin`, PR 12, 155, 495) |
 | [`admin-guide/admin-look.md`](admin-guide/admin-look.md) | Settings → Admin look: page designs and where the guide opens (`/admin/settings/look`, PR 12, CN-025, CN-026) |

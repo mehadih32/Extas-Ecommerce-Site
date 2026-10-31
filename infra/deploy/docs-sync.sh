@@ -7,6 +7,7 @@
 # copy). Files that did not change since the previous copy are hard links to it, so a copy costs only what changed.
 # Keeps the newest DOCS_KEEP_VERSIONS copies; older ones are removed: they are only copies of what is in Git and are
 # made again from it. Nothing is ever copied from the server back into the repository.
+# PR 390: docs/MANUAL.md, the Site manual in one file (manual-md.sh), is made in the copy (never in the checkout).
 # Readers: the admin's "PR register" and "Blueprint & files" tabs (PR 594) read /docs/current in the app (app.yml
 # mounts $EXTAS_ROOT/docs read-only as /docs, EXTAS_DOCS_DIR); every backup takes a dated docs bundle from it (PR 8).
 # Writes state/docs-latest.json and prints one line. Nothing here is secret: everything copied is in Git already.
@@ -35,6 +36,11 @@ if ! grep -qx "commit=$SHA" "$D/$short/COMMIT" 2>/dev/null; then
     echo "copied=$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
     echo "timezone=$EXTAS_TIMEZONE"
   } > "$new/COMMIT"
+  # PR 390 (B7.5): the Site manual as one Markdown file beside the blueprint (docs/MANUAL.md), made from the page guides
+  # of this commit; a checkout without guides gets none, and a failure here never stops the deploy.
+  mrc=0
+  bash "$HERE/manual-md.sh" "$SRC" "$new/docs/MANUAL.md" "$SHA" "$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')" || mrc=$?
+  [ "$mrc" -eq 0 ] || [ "$mrc" -eq 3 ] || echo "docs-sync: the manual copy was not made (exit $mrc)" >&2
   chmod 0755 "$new"; chmod 0644 "$new/COMMIT"
   rm -rf "${D:?}/$short"
   mv "$new" "$D/$short"

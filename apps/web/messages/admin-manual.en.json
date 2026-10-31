@@ -24,6 +24,7 @@
     "newSub": "The newest parts of the shop and its back end, newest first. Each one also has its page guide in the manual.",
     "newNone": "Nothing is listed yet.",
     "pr": "PR {n}",
+    "download": "Download (.md)",
     "noDocs": "The guide files are not on this server yet. They are copied with every deploy."
   }
 }
