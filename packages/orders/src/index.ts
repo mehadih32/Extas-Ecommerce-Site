@@ -106,6 +106,8 @@ export * from './approval-gate';
 export * from './learning';
 // S06 · PR 545: the new-customer verification queue (new-customer.ts; the call is recorded in calls.ts).
 export * from './new-customer';
+// S06 · PR 556: the in-transit duplicate notice at checkout and its campaign report (transit-duplicate.ts).
+export * from './transit-duplicate';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

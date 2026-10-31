@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, linkIdentity, newCustomerOnOrder, refuserTermsOnOrder, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -311,6 +311,46 @@ export async function paymentHandler(request: Request, deps: CheckoutApiDeps | n
 
 /** The gateway's callback answered: the thank-you page once paid, the payment page otherwise (it shows the state). */
 export const callbackNext = (lang: ShopLang, status: string | null, number: string): string => hrefIn(lang, status === 'PAID' ? ROUTES.thanks(number) : ROUTES.checkoutPay(number));
+
+/**
+ * POST /api/checkout/transit {phone, campaign?} — S06 · PR 556: the phone check of the in-transit duplicate notice (off
+ * until the owner turns `checkout.transitDuplicate` on). The bag is this browser's own (the cookie), the customer this
+ * browser, its device id and a signed-in account; the answer names the bag lines already on their way, with the earlier
+ * order's number and link only for an order tied to them. A refused or failed check answers no notices: it never stops
+ * the form.
+ */
+export async function transitHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    const b = await body(request);
+    const [{ visitor, cartId }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
+    const device = readCookie(request, DEVICE_COOKIE);
+    const r = await transitDuplicateCheck(
+      { db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now },
+      { storeId: deps.storeId, cartId, visitorId: visitor, deviceId: device && visitorIdSchema.safeParse(device).success ? device : null, customerId, ip: requestContext(request).ip ?? null },
+      b,
+    );
+    return json({ ok: true, ...r });
+  } catch (e) {
+    if (isOrdersError(e)) return fail(e.status, e.code, e.details);
+    console.warn(`transit check: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+    return json({ ok: true, enabled: true, notices: [] });
+  }
+}
+
+/** POST /api/checkout/transit/answer {eventId, action: 'removed' | 'kept'} — PR 556: what he chose on the notice (kept once). */
+export async function transitAnswerHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    const r = await transitDuplicateAnswer({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, deps.storeId, await body(request));
+    return json({ ok: true, ...r });
+  } catch (e) {
+    if (isOrdersError(e)) return fail(e.status, e.code, e.details);
+    return errorResponse(e);
+  }
+}
 
 /** POST /api/checkout/draft — SIM-F-026: keeps what he typed for the team's follow-up, when the owner's switch is on. */
 export async function draftHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {

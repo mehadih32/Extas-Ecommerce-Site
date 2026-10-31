@@ -94,6 +94,8 @@ const KEYS = [
   'checkout.callMe',
   // CN-020 (4), SIM-F-047: the mic in the address box
   'checkout.voice',
+  // PR 556: the in-transit duplicate notice
+  'checkout.transitDuplicate',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

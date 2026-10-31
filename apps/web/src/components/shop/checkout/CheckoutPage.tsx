@@ -4,11 +4,13 @@
 // PR 137: a signed-in customer's own details start the boxes (`prefill`); this browser's memory when the owner allows it.
 // PR 605: `gift` — the checkout opened as a gift with gift mode on: the gift card's limits and dates (store's time zone).
 // PR 610 (qa-gate I3): `paused` — checkout is paused now (the ERP holds the account): the form says so from the start.
+// S06 · PR 556: while the in-transit duplicate notice is on (never on a gift), each bag line's picture and name go to the
+// form for the notice (TransitNotice).
 import '../bag/bag.css';
 import './checkout.css';
 import type { CheckoutPrefill } from '@extas/accounts';
 import { fieldOrder, giftDateWindow, storeToday, viewOf, type CheckoutQuote } from '@extas/checkout';
-import { cardsByIds } from '@/lib/shop/catalogue';
+import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords, type CheckoutSettings } from '@/lib/shop/checkout';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
@@ -17,6 +19,7 @@ import { ROUTES } from '@/lib/shop/routes';
 import { Icon } from '../Icon';
 import { BagActions } from '../bag/BagActions';
 import { bagWords } from '../bag/BagPage';
+import { nameOf, Thumb } from '../bag/BagLines';
 import { CheckoutForm } from './CheckoutForm';
 import { CheckoutLines } from './CheckoutLines';
 
@@ -63,6 +66,12 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, 
   const giftCfg = gift
     ? { noteMax: g.noteMaxChars, maxDays: g.deliverAfterMaxDays, window: giftDateWindow(today, g.deliverAfterMaxDays), hidePricesDefault: g.hidePricesDefault, today, plainHref: hrefIn(c.lang, ROUTES.checkout) }
     : null;
+  const transit = s['checkout.transitDuplicate'].enabled && !giftCfg
+    ? {
+        thumbs: Object.fromEntries(view.items.map((i) => [i.lineId, <Thumb key={i.lineId} c={c} card={cards.get(i.productId)} colourKey={i.colour?.key} hex={i.colour?.hex ?? ''} alt={nameOf(i, c)} />])),
+        names: Object.fromEntries(view.items.map((i) => [i.lineId, [nameOf(i, c), i.colour ? colourName(i.colour, c.lang) : null, i.size?.label].filter(Boolean).join(' · ')])),
+      }
+    : null;
   const wa = s['checkout.help.enabled'] ? waHref(c.s['contact.whatsapp'], c.t('checkout.help.message', c.vars)) : null;
   return (
     <div className="co-page" data-bag-root="" data-testid="co-page">
@@ -91,6 +100,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, 
         callMe={s['checkout.callMe'].enabled ? { failedTries: s['checkout.callMe'].failedTries, idleSeconds: s['checkout.callMe'].idleSeconds } : null}
         voice={s['checkout.voice'].enabled ? { speechLang: s['checkout.voice'].speechLang, maxSeconds: s['checkout.voice'].maxSeconds, maxKb: s['checkout.voice'].maxKb, keepRecording: s['checkout.voice'].keepRecording, retentionDays: s['checkout.voice'].retentionDays } : null}
         paused={paused}
+        transit={transit}
       />
       {actions}
     </div>
