@@ -299,6 +299,7 @@ model Store {
   speedMeasurements       SpeedMeasurement[]
   webVitalDays            WebVitalDay[]
   riskBlocks              RiskBlock[]
+  refuserTerms            RefuserTerm[]
   internalLinkRules       InternalLinkRule[]
   seoIssues               SeoIssue[]
   blogCategories          BlogCategory[]
@@ -3495,6 +3496,37 @@ model RiskBlock {
   @@index([storeId, phone])
   @@index([storeId, clusterId])
   @@index([storeId, blockedAt])
+}
+
+/// @stage S06 · PR 163 — a repeat refuser's terms, chosen by the owner per case (answer 5): nothing, the delivery charge
+/// first, the full amount first, or no cash on delivery; with the reason, who and when, and how many refusals the number
+/// had then. "End" (reversible by hand) keeps the row with who, when and why; a new choice ends the old one. While
+/// `risk.refusers` is on, a new order from the number (or its identity) carries the terms as a proposal a person sends
+/// ("Request advance"); nothing here changes COD by itself. Never deleted.
+model RefuserTerm {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store     @relation(fields: [storeId], references: [id])
+  /// The number in its one stored form (the BD phone helper).
+  phone             String
+  /// The identity of the number's newest linked order when the terms were chosen (PR 519), when the graph knew it.
+  clusterId         String?   @db.Uuid
+  /// none · delivery · full · codOff (the advance request's kinds; `none` records "nothing", so it is not asked again).
+  terms             String
+  reason            String
+  /// The refusals that counted against the number when the terms were chosen.
+  refusedAtDecision Int
+  decidedById       String?   @db.Uuid
+  decidedAt         DateTime  @default(now()) @db.Timestamptz(3)
+  endedAt           DateTime? @db.Timestamptz(3)
+  endedById         String?   @db.Uuid
+  endReason         String?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, phone])
+  @@index([storeId, clusterId])
+  @@index([storeId, decidedAt])
 }
 
 /// @stage S06 · PR 519 — one identity built from phone, name, address, IP and device (a customer who changes his number

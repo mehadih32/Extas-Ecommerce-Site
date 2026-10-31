@@ -4,7 +4,8 @@
 // a stale screen, an unknown rule refused with nothing written. PR 161: the levels read and saved whole (off as they ship;
 // a stale screen, a band that does not exist, a hold reason not on the list and a partial ask without its percent refused
 // with nothing written). PR 162: the blocklist listed, undone and switched through the API, each with its permission
-// and its audit row; the switch never offers a cancel. Every value is a made-up test value.
+// and its audit row; the switch never offers a cancel. PR 163: the repeat refusers read, their terms chosen and ended
+// (`risk.refuser.terms`) and the switch saved, each audited. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -146,5 +147,25 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(await deps.resolver.value('risk.blocklist', { storeId: f.S })).toMatchObject({ enabled: true, onOrder: 'hold' });
     for (const action of ['risk.block', 'risk.unblock', 'risk.blocklist.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBe(1);
     expect(await f.t.prisma.riskBlock.count()).toBe(1);
+  });
+
+  it('PR 163: repeat refusers ship off with no number; terms chosen and ended with a reason; a reader is refused', async () => {
+    const got = await api('GET', ['refusers']);
+    expect(got).toMatchObject({ status: 200, body: { value: { enabled: false, minRefused: null }, candidates: [], active: [], ended: [] } });
+    expect((await api('GET', ['refusers'], { cookie: reader })).status).toBe(403);
+    expect((await api('POST', ['refusers', 'terms'], { cookie: reader, body: { phone: '01700000801', terms: 'full', reason: 'refused two parcels' } })).status).toBe(403);
+    expect((await api('POST', ['refusers', 'terms'], { body: { phone: '01700000801', terms: 'cancel', reason: 'refused two parcels' } })).body).toMatchObject({ error: 'INVALID_INPUT' });
+    const chose = await api('POST', ['refusers', 'terms'], { body: { phone: '01700000801', terms: 'full', reason: 'refused two parcels' } });
+    expect(chose).toMatchObject({ status: 200, body: { active: [{ phone: '+8801700000801', terms: 'full', decidedBy: 'Sample owner' }] } });
+    expect(await api('POST', ['refusers', 'terms'], { body: { phone: '+8801700000801', terms: 'full', reason: 'the same again' } })).toMatchObject({ status: 409, body: { error: 'NOTHING_CHANGED' } });
+    const id = chose.body.active[0].id as string;
+    expect((await api('POST', ['refusers', 'terms', id, 'end'], { cookie: reader, body: { reason: 'paid in advance now' } })).status).toBe(403);
+    expect(await api('POST', ['refusers', 'terms', id, 'end'], { body: { reason: 'paid in advance now' } })).toMatchObject({ status: 200, body: { active: [], ended: [{ id, endReason: 'paid in advance now' }] } });
+    expect((await api('GET', ['refusers', 'terms'])).status).toBe(405);
+    expect((await api('GET', ['refusers', 'x'])).status).toBe(404);
+    expect((await api('PUT', ['refusers'], { cookie: reader, body: { value: got.body.value } })).status).toBe(403);
+    expect(await api('PUT', ['refusers'], { body: { value: { enabled: true, minRefused: 2 } } })).toMatchObject({ status: 200, body: { value: { enabled: true, minRefused: 2 } } });
+    expect(await deps.resolver.value('risk.refusers', { storeId: f.S })).toEqual({ enabled: true, minRefused: 2 });
+    for (const action of ['risk.refuser.terms', 'risk.refuser.end', 'risk.refusers.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBe(1);
   });
 });

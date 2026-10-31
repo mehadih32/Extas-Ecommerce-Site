@@ -58,6 +58,8 @@ export const ORDER_PERMISSIONS = [
   // S06 · PR 162: the blocklist (list a number, undo a listing)
   'risk.block',
   'risk.unblock',
+  // S06 · PR 163: a repeat refuser's terms (the owner's choice per case)
+  'risk.refuser.terms',
   // S06 · PR 542: "Request advance" from the order
   'orders.advance.request',
   // S08 · PR 185: exchanges and returns (ORD-05)
