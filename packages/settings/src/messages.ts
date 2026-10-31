@@ -142,6 +142,8 @@ import adminAccessEn from '../messages/admin-access.en.json';
 // S19 · PR 395, 507 — the backups (registry v75–76).
 import backupsBn from '../messages/backups.bn.json';
 import backupsEn from '../messages/backups.en.json';
+import privacyBn from '../messages/privacy.bn.json';
+import privacyEn from '../messages/privacy.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -194,6 +196,8 @@ messages.en = mergeMessages(messages.en, adminAccessEn);
 messages.bn = mergeMessages(messages.bn, adminAccessBn);
 messages.en = mergeMessages(messages.en, backupsEn);
 messages.bn = mergeMessages(messages.bn, backupsBn);
+messages.en = mergeMessages(messages.en, privacyEn);
+messages.bn = mergeMessages(messages.bn, privacyBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

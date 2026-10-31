@@ -80,4 +80,6 @@ export * from './registry-web-security';
 export * from './registry-bot-check';
 // S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).
 export * from './registry-admin-access';
+// S18 · PR 382 — customers' erasure requests (registry-privacy.ts, version 79).
+export * from './registry-privacy';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

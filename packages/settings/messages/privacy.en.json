@@ -1,0 +1,15 @@
+{
+  "privacy": {
+    "erasureRequests": {
+      "label": "Take customers' requests to erase their details",
+      "help": "Off by default. When on, the team can file a customer's request to erase his personal details, and only the owner carries it out, with a typed confirmation. His name, numbers, e-mail and addresses are removed from his profile and his orders; money and stock records stay. It cannot be undone."
+    },
+    "requestsListSize": {
+      "label": "Erasure requests listed",
+      "help": "How many of the latest erasure requests the Privacy & data page lists."
+    }
+  },
+  "groups": {
+    "privacy": "Privacy and data"
+  }
+}

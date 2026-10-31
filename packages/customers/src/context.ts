@@ -31,7 +31,7 @@ export interface Who {
 }
 
 /** The customers permissions (packages/auth/src/catalogue.ts; BACKEND-ARCHITECTURE §5.5, §9.10). */
-export const CUSTOMER_PERMISSIONS = ['customers.read', 'customers.phone', 'customers.merge'] as const satisfies readonly PermissionKey[];
+export const CUSTOMER_PERMISSIONS = ['customers.read', 'customers.phone', 'customers.merge', 'customers.privacy'] as const satisfies readonly PermissionKey[];
 export type CustomersPermission = (typeof CUSTOMER_PERMISSIONS)[number];
 
 /** What the person reading may see, from the keys they hold in the store. */

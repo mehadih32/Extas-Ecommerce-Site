@@ -247,6 +247,7 @@
       "/admin/money/costs",
       "/admin/settings/erp-link",
       "/admin/settings/security",
+      "/admin/settings/privacy",
       "/admin/orders/risk-rules",
       "/pay/0",
       "/bn/pay/0",

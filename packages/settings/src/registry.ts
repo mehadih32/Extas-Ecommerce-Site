@@ -71,6 +71,7 @@ import { webSecuritySettings } from './registry-web-security';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
+import { privacySettings } from './registry-privacy';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1280,6 +1281,8 @@ export const registry = {
   ...backupsSettings,
   // ---- CN-033 · PR 610, 614, 619, 621 · the shop follows the ERP's retail decisions of 30 Oct 2026: the switch-over way (fresh start or the ERP's list), B-grade order lines closed until the ERP opens them (registry-erp-retail.ts, version 72). ----
   ...erpRetailSettings,
+  // ---- S18 · PR 382 · customers' erasure requests (off by default; the owner carries one out), the requests listed (registry-privacy.ts, version 79). ----
+  ...privacySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

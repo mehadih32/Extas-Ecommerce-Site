@@ -1,0 +1,95 @@
+{
+  "prv": {
+    "metaTitle": "Privacy & data",
+    "title": "Privacy & data",
+    "sub": "How long orders keep the internet address, device and shared location, the clean-up that removes them, and customers' requests to erase their details.",
+    "confirmWord": "ERASE",
+    "kpi": {
+      "days": "Kept for",
+      "daysN": "{n} days",
+      "lastRun": "Last clean-up",
+      "never": "Not run yet",
+      "holding": "Orders still holding these facts",
+      "overdue": "Past the period",
+      "overdueNone": "none",
+      "erasure": "Erasure requests",
+      "on": "Taken",
+      "off": "Off"
+    },
+    "status": {
+      "SUCCEEDED": "done",
+      "FAILED": "failed",
+      "DEAD_LETTERED": "failed",
+      "CANCELLED": "cancelled",
+      "SKIPPED": "skipped"
+    },
+    "overdueNote": "{n} order(s) are past the period and still hold these facts. The clean-up runs in the background worker; if this does not go to zero within the hour, look at Reports › Server.",
+    "keep": {
+      "h": "What orders keep, and for how long",
+      "d": "For the risk checks an order keeps the internet address, the device and (when the customer shares it) the location. The clean-up removes them after the period; the order, its money and its history stay.",
+      "retentionDays": "Keep these facts for (days)",
+      "retentionHelp": "180 days by default. After this, the clean-up removes them from the order.",
+      "purgeEveryMinutes": "Run the clean-up every (minutes)",
+      "erasureRequests": "Take customers' requests to erase their details",
+      "erasureHelp": "Off by default. When on, the team can file a request below; only the owner carries it out."
+    },
+    "consent": {
+      "h": "Message consent",
+      "d": "Who agreed to offers by SMS or WhatsApp, and every change with when and where, is on Messages › Consent.",
+      "link": "Open Messages › Consent"
+    },
+    "req": {
+      "h": "Erasure requests",
+      "d": "A customer asked to remove his personal details. Filing a request changes nothing; the owner carries it out. Money and stock records stay; the message log, the consent history, the security log and fraud checks are kept as the record.",
+      "off": "Erasure requests are off. Turn them on in the card above to take one.",
+      "phone": "Customer's mobile number",
+      "reason": "What he asked, and how (phone, shop, message)",
+      "file": "File the request",
+      "filed": "Request filed. The owner can carry it out below.",
+      "none": "No requests yet.",
+      "when": "Filed",
+      "who": "Customer",
+      "why": "Reason",
+      "state": "Status",
+      "erased": "erased",
+      "states": { "REQUESTED": "Waiting", "DONE": "Erased", "CANCELLED": "Cancelled" },
+      "cancel": "Cancel",
+      "erase": "Erase now",
+      "ownerOnly": "Only the owner can erase.",
+      "confirmTitle": "Erase this customer's details?",
+      "confirmEffects": [
+        "His name, numbers, e-mail, birthday and saved addresses are removed from his profile and his orders. This cannot be undone.",
+        "His orders, their money and stock stay; the courier records keep the order numbers only.",
+        "He can no longer sign in; a new order makes a new profile."
+      ],
+      "confirmLabel": "Type ERASE to confirm",
+      "confirmOk": "Erase",
+      "confirmCancel": "Keep",
+      "working": "Erasing…",
+      "close": "Close",
+      "done": "Erased."
+    },
+    "err": {
+      "STALE": "Someone else changed this card; it shows their values now.",
+      "INVALID_INPUT": "Some values are not right: {fields}",
+      "NOT_FOUND": "No customer with this number.",
+      "SWITCHED_OFF": "Erasure requests are off.",
+      "OWNER_ONLY": "Only the owner can erase.",
+      "CONFIRM_MISMATCH": "Type the word exactly as shown.",
+      "OPEN_ORDERS": "One of his orders is still on its way. Erase after it is delivered or returned.",
+      "ALREADY_REQUESTED": "A request for this customer is waiting already.",
+      "NOT_WAITING": "This request is already done or cancelled.",
+      "forbidden": "You do not have permission to do this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not work. Please try again."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "discard": "Discard",
+    "unsaved": "Not saved yet",
+    "readOnly": "You can see these settings; changing them needs the security permission.",
+    "pairHelp": "Write both languages."
+  }
+}

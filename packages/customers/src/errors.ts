@@ -18,7 +18,19 @@ export type CustomersErrorCode =
   /** PR 284: the profile moved on since this merge (merged again elsewhere): it is not this merge's to undo. */
   | 'MOVED_ON'
   /** PR 284: the same Idempotency-Key with a different request. */
-  | 'KEY_REUSED';
+  | 'KEY_REUSED'
+  /** PR 382: erasure requests are switched off (`privacy.erasureRequests`). */
+  | 'SWITCHED_OFF'
+  /** PR 382: only the owner carries out an erasure. */
+  | 'OWNER_ONLY'
+  /** PR 382: the confirmation word was not typed exactly. */
+  | 'CONFIRM_MISMATCH'
+  /** PR 382: an order of the person is still on its way (`data.open`). */
+  | 'OPEN_ORDERS'
+  /** PR 382: a request for this person is waiting already (`data.requestId`). */
+  | 'ALREADY_REQUESTED'
+  /** PR 382: the request is done or cancelled (`data.status`). */
+  | 'NOT_WAITING';
 
 export class CustomersError extends Error {
   readonly code: CustomersErrorCode;
@@ -43,7 +55,12 @@ export class CustomersError extends Error {
       case 'SAME_PROFILE':
       case 'NOTE_REQUIRED':
       case 'NOT_ACTIVE':
+      case 'CONFIRM_MISMATCH':
+      case 'OPEN_ORDERS':
         return 422;
+      case 'OWNER_ONLY':
+      case 'SWITCHED_OFF':
+        return 403;
       default:
         return 409;
     }
