@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 15:34 +06
+# Server report — 2026-10-31 16:02 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `1a9564886a3b0b3ec6f54837b92e46bada6695dc`. Overall: **NEEDS ATTENTION**.
+Run by `infra/server/setup.sh` (S0A) from commit `502cd35a4f4fabadbcbe9ae9f5fb51352e524647`. Overall: **PASS**.
 
 ## Machine
 
@@ -16,14 +16,13 @@ Run by `infra/server/setup.sh` (S0A) from commit `1a9564886a3b0b3ec6f54837b92e46
 ### Disks
 
 ```
-NAME                SIZE TYPE FSTYPE      MOUNTPOINTS                            MODEL
-nvme0n1             128G disk                                                    MSFT NVMe Accelerator v1.0
-├─nvme0n1p1         127G part ext4        /tmp/tmp.74CoW7UNbi
-│                                         /
+NAME                SIZE TYPE FSTYPE      MOUNTPOINTS              MODEL
+nvme0n1             128G disk                                      MSFT NVMe Accelerator v1.0
+├─nvme0n1p1         127G part ext4        /
 ├─nvme0n1p14          4M part
 ├─nvme0n1p15        106M part vfat        /boot/efi
 └─nvme0n1p16        913M part ext4        /boot
-nvme0n2               1T disk LVM2_member                                        MSFT NVMe Accelerator v1.0
+nvme0n2               1T disk LVM2_member                          MSFT NVMe Accelerator v1.0
 ├─extas-base         10G lvm  ext4        /srv/extas
 ├─extas-postgres    250G lvm  ext4        /srv/extas/data/postgres
 ├─extas-redis        20G lvm  ext4        /srv/extas/data/redis
@@ -33,9 +32,8 @@ nvme0n2               1T disk LVM2_member                                       
 ├─extas-logs         30G lvm  ext4        /srv/extas/logs
 ├─extas-docker      200G lvm  ext4        /var/lib/docker
 ├─extas-swap         16G lvm  swap        [SWAP]
-└─extas-containerd  120G lvm  ext4        /tmp/tmp.74CoW7UNbi/var/lib/containerd
-                                          /var/lib/containerd
-nvme1n1             440G disk ext4        /mnt/nvme                              Microsoft NVMe Direct Disk v2
+└─extas-containerd  120G lvm  ext4
+nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVMe Direct Disk v2
 ```
 
 ## Steps
@@ -50,28 +48,34 @@ nvme1n1             440G disk ext4        /mnt/nvme                             
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · image check | FAIL | caddy:2.10-alpine is still broken after a fresh pull |
-| PR 4 · image check | FAIL | getmeili/meilisearch:v1.15 is still broken after a fresh pull |
-| PR 4 · image check | FAIL | postgres:17 is still broken after a fresh pull |
-| PR 4 · image check | FAIL | redis:7.4-alpine is still broken after a fresh pull |
-| PR 4 · image check | OK | files had gone missing in the store: made again by the stack step: extas-caddy extas-meilisearch extas-pgbouncer extas-postgres extas-redis-cache extas-redis-queue; pulled again: none; built again: extas/pgbouncer:local |
-| PR 4 · OS disk | FAIL | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (16G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · OS disk | OK | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (16G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
-| PR 5–7 · stack | FAIL | compose up failed: Error response from daemon: No such image: getmeili/meilisearch:v1.15 Error response from daemon: No such image: postgres:17  |
-| run stopped | FAIL | later steps depend on 'stack' |
+| PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
+| PR 139 · app database role | OK | extas_app may add to the audit log and the history tables, never change or remove them |
+| PR 5 · PostgreSQL | OK | v17.11 (Debian 17.11-1.pgdg13+2), shared_buffers 16GB, temp on NVMe, WAL archive on, slow log > 100 ms, PgBouncer (transaction pool) |
+| PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
+| PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
+| stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
+| PR 8 · backup (data disk) | FAIL | first backup failed |
+| PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
+| PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
+| PR 8 · restore test | FAIL | restored database did not come up |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ডিস্ক /srv/extas/backups 93% ভরে গেছে; ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
+| PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
+| public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
 
 ## OS disk (/) — before this run
 
 ```
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       123G  4.3G  119G   4% /
+/dev/root       123G  4.0G  119G   4% /
 ```
 
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (140M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -107,7 +111,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB |  |
+| `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
 | `/var/lib/docker` | 0.0 GB | own volume here (140M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
