@@ -319,6 +319,7 @@
       "stock": "An item in your bag just sold out. Please check your bag.",
       "empty": "Your bag is empty.",
       "network": "We could not reach the shop. Press Confirm again — you will not get two orders.",
+      "again": "Your bag changed after your last press. Please check it and press Confirm again. An order you already placed stays as it is.",
       "other": "Something went wrong. Please try again, or message us on WhatsApp.",
       "paused": "We are not taking new orders for a short while. Your bag is saved — please try again a little later, or message us on WhatsApp."
     },
