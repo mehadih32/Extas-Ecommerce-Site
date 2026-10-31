@@ -3,17 +3,24 @@
 // page guide in its six parts, drawn with the guide panel's own renderer (GuideBlocks: parsed blocks, never HTML). A link
 // to another page guide goes to that page's place in the manual (its chapter, its anchor); a link to a section guide
 // opens it in the guide panel beside the manual.
+// PR 388: a page with a picture (docs/admin-guide/marks.json, taken by the smoke test) shows it under its title with the
+// numbered marks (ManualShots).
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Guide, BoxKind } from '@/lib/admin-shell/guide';
 import { GuideBlocks, type OnGuide } from '../shell/GuidePanel';
 import { openGuide } from '../shell/events';
+import type { PageShot } from '@/lib/admin-shell/shots';
+import { ManualShots } from './ManualShots';
 
 export interface ManualChapterTexts {
   about: string;
   open: string;
   top: string;
   boxes: Record<BoxKind, string>;
+  /** PR 388: the picture's alt text and "taken …" line. */
+  shot: string;
+  taken: string | null;
 }
 
 export interface ManualChapterPage {
@@ -21,6 +28,7 @@ export interface ManualChapterPage {
   anchor: string;
   href: string | null;
   guide: Guide;
+  shots: PageShot[];
 }
 
 export function ManualChapter({
@@ -70,6 +78,7 @@ export function ManualChapter({
               </Link>
             ) : null}
           </header>
+          <ManualShots shots={p.shots} title={p.guide.title} alt={texts.shot} taken={texts.taken} />
           <GuideBlocks blocks={p.guide.blocks} onGuide={onGuide} boxes={texts.boxes} />
           <a className="a2-man-top" href="#man-top">
             {texts.top}

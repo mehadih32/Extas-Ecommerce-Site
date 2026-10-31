@@ -14,6 +14,9 @@
 // Writes <SMOKE_OUT>/result.json, README.md and one screenshot per storefront page and screen; admin pages' screenshots
 // go only to SMOKE_PRIVATE_OUT when it is set (kept on the server, never committed: review R1 security M1). Never
 // prints or stores a password.
+// S18 · PR 388 (B7.5): signed in, it also opens each page of docs/admin-guide/marks.json and writes where each marked
+// part sat on its picture. Those are admin pictures, so they and their marks.json go only to SMOKE_PRIVATE_OUT (never
+// the committed folder); the Site manual shows none until it reads that folder. A missing mark fails nothing.
 // What it opens and the known exceptions are in docs/qa/smoke.json. Needs the `playwright` package (NODE_PATH).
 import { createHmac, randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -202,6 +205,40 @@ export function totpCode(secret, time = Date.now()) {
     .padStart(6, "0");
 }
 
+/**
+ * PR 388 — where each marked part of a page sits on its picture, as fractions of the screen (the picture is the
+ * screen, not the full page). `boxes` holds each selector's first element's box, or null when it is not on the page; a
+ * part off the screen is kept with `shown: false` so the manual leaves it out. Rounded to 4 places.
+ */
+export function markBoxes(marks, boxes, viewport) {
+  const r = (v) => Math.round(v * 10000) / 10000;
+  return marks.map((m, i) => {
+    const b = boxes[i];
+    const base = { n: i + 1, label: m.label };
+    if (!b || !(b.width > 0) || !(b.height > 0)) return { ...base, shown: false };
+    const shown =
+      b.x < viewport.width && b.y < viewport.height && b.x + b.width > 0 && b.y + b.height > 0;
+    return {
+      ...base,
+      shown,
+      x: r(b.x / viewport.width),
+      y: r(b.y / viewport.height),
+      w: r(b.width / viewport.width),
+      h: r(b.height / viewport.height),
+    };
+  });
+}
+
+/** PR 388 — the marks config (docs/admin-guide/marks.json), or none when the file is missing. */
+export function readMarks(file = join(root, "docs/admin-guide/marks.json")) {
+  try {
+    const shots = JSON.parse(readFileSync(file, "utf8")).shots;
+    return Array.isArray(shots) ? shots : [];
+  } catch {
+    return [];
+  }
+}
+
 const slug = (path, screen) =>
   `${(path.replace(/^\//, "").replace(/[^a-z0-9]+/gi, "-") || "home").replace(/-+$/, "")}-${screen}.jpg`;
 
@@ -328,8 +365,11 @@ export function shotDir(path, out, privateOut) {
   return /^\/admin(\/|$)/.test(path) ? privateOut || null : out || null;
 }
 
-/** Opens one path on one screen; returns its row for the report. `dirs` is {out, privateOut} (null: no picture). */
-async function visit(page, base, ignore, path, screen, dirs) {
+/**
+ * Opens one path on one screen; returns its row for the report. `dirs` is {out, privateOut} (null: no picture). PR 388:
+ * `before` runs before the picture and adds to the row; `file` is the picture's name wherever it went.
+ */
+async function visit(page, base, ignore, path, screen, dirs, before) {
   let status = 0;
   let landed = path;
   let problems = [];
@@ -347,6 +387,7 @@ async function visit(page, base, ignore, path, screen, dirs) {
     problems.push(`${path}: sent back to the sign-in page`);
   const dir = dirs ? shotDir(path, dirs.out, dirs.privateOut) : null;
   const shot = dir ? slug(path, screen) : null;
+  const extra = before ? await before(page).catch(() => ({})) : {};
   if (dir)
     await page
       .screenshot({
@@ -365,6 +406,8 @@ async function visit(page, base, ignore, path, screen, dirs) {
     problems,
     // only a picture in the report folder is linked from the committed report
     screenshot: dir && dir === dirs?.out ? shot : null,
+    file: shot,
+    ...extra,
   };
 }
 
@@ -402,6 +445,8 @@ export async function runSmoke(opts) {
   );
   const rows = [];
   const problems = [];
+  const shots = [];
+  const marks = opts.marks ?? readMarks();
   try {
     // The preview login is answered once, like the owner does in Chrome; after that only its cookie goes along. A page
     // or request that asks for the preview login again fails (401), as it did for the owner's admin sign-in (PR 7).
@@ -545,6 +590,22 @@ export async function runSmoke(opts) {
         row.ok = row.problems.length === 0;
         rows.push(row);
       }
+      // PR 388: the Site manual's pictures with their marks (a page that fails here fails like any other page).
+      for (const s of marks) {
+        const viewport = screen.viewport;
+        const row = await visit(page, opts.base, ignore, s.path, vp.name, opts, async (p) => {
+          const boxes = await Promise.all(
+            (s.marks ?? []).map((m) =>
+              p.locator(m.sel).first().boundingBox({ timeout: 2_000 }).catch(() => null),
+            ),
+          );
+          return { marks: markBoxes(s.marks ?? [], boxes, viewport) };
+        });
+        problems.push(...row.problems.map((p) => `${p} (${vp.name})`));
+        // review R1: an admin picture exists only in the private folder (none without one)
+        if (row.ok && row.file && opts.privateOut)
+          shots.push({ guide: s.guide, path: s.path, screen: vp.name, screenshot: row.file, marks: row.marks ?? [] });
+      }
       await admin.close();
     }
   } finally {
@@ -558,6 +619,7 @@ export async function runSmoke(opts) {
     failed: rows.filter((r) => !r.ok).length,
     problems,
     rows,
+    shots,
   };
 }
 
@@ -611,12 +673,13 @@ async function main() {
       }
     : undefined;
   const out = process.env.SMOKE_OUT || null;
+  const privateOut = process.env.SMOKE_PRIVATE_OUT || null;
   const result = await runSmoke({
     base,
     creds,
     httpCredentials,
     out,
-    privateOut: process.env.SMOKE_PRIVATE_OUT || null,
+    privateOut,
     chromiumPath: process.env.CHROMIUM_PATH,
     // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
     hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
@@ -638,6 +701,13 @@ async function main() {
       `${JSON.stringify({ ...meta, ok: result.ok, pages: result.pages, failed: result.failed, problems: result.problems }, null, 2)}\n`,
     );
     writeFileSync(join(out, "README.md"), reportMarkdown(result, meta));
+    // PR 388: the Site manual's pictures and where their marks sit, beside the pictures in the private folder (review
+    // R1: never in the committed report folder).
+    if (result.shots.length && privateOut)
+      writeFileSync(
+        join(privateOut, "marks.json"),
+        `${JSON.stringify({ at: meta.at, shots: result.shots }, null, 2)}\n`,
+      );
   }
   if (!result.ok) {
     console.error(
