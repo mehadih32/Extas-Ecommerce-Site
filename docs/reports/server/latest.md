@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 14:50 +06
+# Server report — 2026-10-31 15:34 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `42b8f00d33e033cc597bc35618692fe2d73bf683`. Overall: **NEEDS ATTENTION**.
+Run by `infra/server/setup.sh` (S0A) from commit `1a9564886a3b0b3ec6f54837b92e46bada6695dc`. Overall: **NEEDS ATTENTION**.
 
 ## Machine
 
@@ -50,10 +50,15 @@ nvme1n1             440G disk ext4        /mnt/nvme                             
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 4% used, 119 GB free (a deploy needs 15); containerd store: on its own volume (15G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · image check | FAIL | caddy:2.10-alpine is still broken after a fresh pull |
+| PR 4 · image check | FAIL | getmeili/meilisearch:v1.15 is still broken after a fresh pull |
+| PR 4 · image check | FAIL | postgres:17 is still broken after a fresh pull |
+| PR 4 · image check | FAIL | redis:7.4-alpine is still broken after a fresh pull |
+| PR 4 · image check | OK | files had gone missing in the store: made again by the stack step: extas-caddy extas-meilisearch extas-pgbouncer extas-postgres extas-redis-cache extas-redis-queue; pulled again: none; built again: extas/pgbouncer:local |
+| PR 4 · OS disk | FAIL | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (16G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
-| PR 5–7 · stack | FAIL | compose up failed:  Container extas-postgres Error dependency postgres failed to start dependency failed to start: container extas-postgres is unhealthy  |
+| PR 5–7 · stack | FAIL | compose up failed: Error response from daemon: No such image: getmeili/meilisearch:v1.15 Error response from daemon: No such image: postgres:17  |
 | run stopped | FAIL | later steps depend on 'stack' |
 
 ## OS disk (/) — before this run
@@ -65,7 +70,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (15G used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
 | `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
@@ -97,13 +102,13 @@ Docker image store: overlayfs (driver-type=io.containerd.snapshotter.v1 ); Docke
 
 ```
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       123G  4.2G  119G   4% /
+/dev/root       123G  3.9G  120G   4% /
 ```
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (15G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
+| `/var/lib/containerd` | 0.0 GB |  |
+| `/var/lib/docker` | 0.0 GB | own volume here (140M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
