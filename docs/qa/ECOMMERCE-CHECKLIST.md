@@ -444,6 +444,8 @@ Marks below are from **QA round R15** (build `proto/dist/qa-snap.html`, 2026-10-
 - [SC08] ✅ · **R15b ✅** · **R15c ✅** · **R15d ✅** External links use rel="noopener". *(R15b: injected markup inert in search and checkout; all target=_blank links noopener)*
 - [SC09] ✅ · **R15b ✅** · **R15c ✅** · **R15d ✅** No secrets/API keys in the page source. *(R15 wave 1: measured)*
 - [SC10] ✅ · **R15b ✅** · **R15c ✅** · **R15d ✅** Cookie / storage use is explained in the privacy policy. *(R15 wave 1: fixed — privacy page explains on-phone storage)*
+- [SC11] — Dependency vulnerability gate green: no high advisory in what ships, no critical in the build tools, every acceptance with a reason and an end date (`tools/dep-audit.mjs`, CI job `deps`; PR 381, added 31 Oct 2026).
+- [SC12] — The independent security review is signed off before the payment gateways' live keys are typed in (`docs/security/REVIEW.md`; PR 381, added 31 Oct 2026).
 
 ## 21. Offline & slow network
 - [OF01] — · **R15b —** · **R15c —** · **R15d —** On a slow network the page shows content progressively (no long white screen). *(needs real network / server)*

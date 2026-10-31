@@ -1,0 +1,30 @@
+{
+  "$comment": "PR 381 (B6.1) — the dependency vulnerability gate (tools/dep-audit.mjs, CI job `deps`, and every night through nightly.yml). `failAt`: the lowest severity that fails the build, for what ships (prod) and for the build tools (dev). `accepted`: a known advisory that cannot be fixed yet, each with the package, why it is safe for now, the day it was written (`since`) and an end date (`until`, at most 90 days after `since`); after `until` the build fails again until it is fixed or looked at again. Never a silent ignore.",
+  "failAt": {
+    "prod": "high",
+    "dev": "critical"
+  },
+  "accepted": [
+    {
+      "ghsa": "GHSA-ggr8-5vv4-36mx",
+      "package": "deepmerge-ts",
+      "why": "Only the Prisma CLI's config loader uses it (packages/db > @prisma/client > prisma > @prisma/config), to merge our own prisma.config file when migrations run; no visitor's input ever reaches it. The fix (8.x) comes with a Prisma update.",
+      "since": "2026-10-31",
+      "until": "2027-01-29"
+    },
+    {
+      "ghsa": "GHSA-5gmw-xhrv-c9v3",
+      "package": "tinypool",
+      "why": "Only the test runner (vitest 3 > tinypool 1.1.1) uses it, on CI and developer machines, with our own test files; it is never in the app image and never sees a visitor's input. The fix needs vitest 4 across every package (a follow-up of PR 381).",
+      "since": "2026-10-31",
+      "until": "2027-01-29"
+    },
+    {
+      "ghsa": "GHSA-85c8-ppgw-ccpr",
+      "package": "tinypool",
+      "why": "Only the test runner (vitest 3 > tinypool 1.1.1) uses it, on CI and developer machines, with our own test files; it is never in the app image and never sees a visitor's input. The fix needs vitest 4 across every package (a follow-up of PR 381).",
+      "since": "2026-10-31",
+      "until": "2027-01-29"
+    }
+  ]
+}
