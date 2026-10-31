@@ -279,8 +279,59 @@ check "caddy (a): the Caddyfile is copied in place, the mounted inode sees the n
   echo "$a|$b|$(wc -l < "$T/err")|$c|"
 ) > "$T/out"
 check "hosts (362): extra hosts are lower case, once each, never the staging host; a bad name is left out and named" "$(cat "$T/out")" "shop.example.test www.example.test|ok.example.test|3||"
-check "hosts (362): server setup and the stack pass the cleaned extra hosts to Caddy" "$(grep -c 'EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}' ../stack/compose.yml):$(grep -c '^{$EXTAS_STAGING_HOST} {$EXTAS_EXTRA_HOSTS} {$' ../stack/caddy/Caddyfile)" "1:1:1"
+check "hosts (362): server setup and the stack pass the cleaned extra hosts to Caddy" "$(grep -c 'EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}' ../stack/compose.yml):$(grep -c '^{$EXTAS_STAGING_HOST} {$' ../stack/caddy/Caddyfile):$(grep -c '^import /etc/caddy/sites/hosts\*\.caddy$' ../stack/caddy/Caddyfile)" "1:1:1:1"
 check "caddy (a): server setup copies the Caddyfile in place and never by rsync" "$(grep -c -- "--exclude /caddy/Caddyfile" ../server/steps/09-stack.sh):$(grep -c 'caddyfile_copy_inplace "$STACK_DIR_REPO/caddy/Caddyfile" "$EXTAS_ROOT/stack/caddy/Caddyfile"' ../server/steps/09-stack.sh):$(grep -c 'caddy reload.*|| true' ../server/steps/09-stack.sh):$(grep -c 'caddy_apply || caddy_rc=' ../server/steps/09-stack.sh)" "1:1:0:1"
+# S19 · PR 403: the staging host and the extra hosts (the main domain) are two site blocks. The staging block always has
+# the preview gate and noindex; the extra hosts' block (sites/hosts.caddy, hosts-block.sh) is locked the same way until
+# server.conf EXTAS_MAIN_OPEN="yes", which ships "no" (opening it is the owner's go-live day step, BLOCKED 25).
+HB=../stack/caddy/hosts-block.sh
+check "main domain (403): ships locked" "$(bash -c '. ../config/server.conf; echo "$EXTAS_MAIN_OPEN"')" "no"
+check "main domain (403): the staging block always imports the gate and noindex, the extra hosts only their own file" \
+  "$(awk '/^\{\$EXTAS_STAGING_HOST\} \{$/{f=1} f&&/^\}$/{f=0} f' ../stack/caddy/Caddyfile | grep -cE 'import /etc/caddy/sites/(noindex|auth)\.caddy'):$(grep -c 'EXTAS_EXTRA_HOSTS}' ../stack/caddy/Caddyfile)" "2:0"
+lk="$(bash "$HB" no shop.example.test www.example.test)"; op="$(bash "$HB" yes shop.example.test www.example.test)"; od="$(bash "$HB" maybe shop.example.test)"
+check "main domain (403): locked = gate and noindex; open = neither; anything but \"yes\" stays locked" \
+  "$(grep -c 'auth.caddy\|X-Robots-Tag\|Disallow' <<<"$lk"):$(grep -c 'auth.caddy\|X-Robots-Tag\|Disallow' <<<"$op"):$(grep -c 'auth.caddy' <<<"$od"):$(grep -c '^shop.example.test www.example.test {$' <<<"$lk")" "3:0:1:1"
+check "main domain (403): no host or a bad one is refused" "$(bash "$HB" no >/dev/null 2>&1; echo $?):$(bash "$HB" no 'a.test {' >/dev/null 2>&1; echo $?)" "2:2"
+check "main domain (403): server setup writes hosts.caddy only with extra hosts, open only on EXTAS_MAIN_OPEN=yes" \
+  "$(grep -c 'hosts-block.sh" "$open" $EXTAS_EXTRA_HOSTS | write_file "$d/hosts.caddy"' ../server/steps/09-stack.sh):$(grep -c '\[ "${EXTAS_MAIN_OPEN:-no}" = yes \] && open=yes' ../server/steps/09-stack.sh):$(grep -c 'rm -f "$d/hosts.caddy"' ../server/steps/09-stack.sh)" "1:1:1"
+if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
+  # The real Caddyfile, run on plain HTTP ports with the server's sites files: the staging host stays 401 + noindex
+  # when the main domain is open, and the main domain is 401 + noindex until it is opened.
+  T4="$(mktemp -d)"; port=18495
+  bash "$AB" "# fp" extas "$("$CADDY" hash-password --plaintext gate-pw)" "$tok" 30 > "$T4/auth.caddy"
+  printf 'header X-Robots-Tag "noindex, nofollow"\nrespond /robots.txt "User-agent: *\nDisallow: /\n" 200\n' > "$T4/noindex.caddy"
+  printf 'respond "app" 200\n' > "$T4/upstream.caddy"
+  sed -e "s#/etc/caddy/sites#$T4#g" -e "s#/var/log/caddy#$T4#g" -e 's#admin localhost:2019#admin off#' -e 's#^:8080 {#:18496 {#' \
+    ../stack/caddy/Caddyfile > "$T4/Caddyfile"
+  main_case() { # main_case <open yes|no> → "staging code robots | main code robots | main robots.txt"
+    bash "$HB" "$1" "http://main.test:$port" | sed "s#/etc/caddy/sites#$T4#g" > "$T4/hosts.caddy"
+    EXTAS_STAGING_HOST="http://staging.test:$port" "$CADDY" run --config "$T4/Caddyfile" --adapter caddyfile >"$T4/log" 2>&1 & cpid=$!
+    for _ in $(seq 50); do curl -s -o /dev/null "localhost:$port" && break; sleep 0.1; done
+    hd() { curl -s -D - -o /dev/null -H "Host: $1" "http://127.0.0.1:$port${2:-/}"; }
+    sc() { hd "$1" | head -1 | cut -d' ' -f2; }; rb() { hd "$1" | grep -ci '^x-robots-tag: noindex' || true; }
+    echo "$(sc "staging.test:$port") $(rb "staging.test:$port") | $(sc "main.test:$port") $(rb "main.test:$port") | $(curl -s -u extas:gate-pw -H "Host: main.test:$port" "http://127.0.0.1:$port/robots.txt" | grep -c 'Disallow: /' || true)"
+    kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
+  }
+  check "main domain (caddy, 403): locked as shipped — both hosts ask for the login and say noindex" "$(main_case no)" "401 1 | 401 1 | 1"
+  check "main domain (caddy, 403): opened — the main domain answers with no login and no noindex, staging still locked" "$(main_case yes)" "401 1 | 200 0 | 0"
+  check "main domain (caddy, 403): the server's Caddyfile validates locked and opened" \
+    "$(for o in no yes; do bash "$HB" "$o" shop.example.test > "$T4/hosts.caddy"; sed -i "s#/etc/caddy/sites#$T4#g" "$T4/hosts.caddy"; EXTAS_STAGING_HOST=staging.example.test "$CADDY" validate --config "$T4/Caddyfile" >/dev/null 2>&1 && printf ok; done)" "okok"
+  # Review R1 (security m5): the access log keeps no query string, no advance pay link's token and no Referer.
+  bash "$HB" no "http://main.test:$port" | sed "s#/etc/caddy/sites#$T4#g" > "$T4/hosts.caddy"; rm -f "$T4/access.log"
+  EXTAS_STAGING_HOST="http://staging.test:$port" "$CADDY" run --config "$T4/Caddyfile" --adapter caddyfile >"$T4/log" 2>&1 & cpid=$!
+  for _ in $(seq 50); do curl -s -o /dev/null "localhost:$port" && break; sleep 0.1; done
+  for u in "/pay/tok-secret?x=1" "/bn/pay/tok-secret" "/api/delivery/suggest?q=typed-address" "/collections/new-in"; do
+    curl -s -o /dev/null -H "Host: staging.test:$port" -H "Referer: http://staging.test/pay/tok-secret" "http://127.0.0.1:$port$u"
+  done
+  sleep 0.5; kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
+  check "access log (caddy, m5): no query string, no pay link token, no Referer; the path stays" \
+    "$(grep -c 'tok-secret\|typed-address\|Referer' "$T4/access.log" || true):$(jq -r .request.uri "$T4/access.log" 2>/dev/null | grep -v '^/$' | tr '\n' ' ')" "0:/pay/ /bn/pay/ /api/delivery/suggest /collections/new-in "
+  rm -rf "$T4"
+elif [ -n "${CI:-}" ]; then
+  check "main domain (caddy, 403): CI runs the live checks" "no Caddy binary (CADDY_BIN)" "a Caddy binary"
+else
+  echo "SKIP main domain (caddy, 403): no Caddy binary here (set CADDY_BIN)"
+fi
 # (a)+(b) caddy_apply against a stand-in docker and compose: what the running Caddy reads, its reload, its live config.
 apply_case() { # apply_case <live sum ok|old> <recreate fixes yes|no> <reload rc> <live trusted yes|no>
   (

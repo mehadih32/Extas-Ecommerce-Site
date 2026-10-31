@@ -32,7 +32,7 @@ week PR 402.
 | 1 | Nobody merges into `main` until step 8 is done (a deploy in the middle would mix two changes). | — |
 | 2 | **Settings → System → Backups → Back up now**; wait for "done" on every copy (PR 507). | — |
 | 3 | Write down the old shop's last order number (WordPress admin), so orders on either side can be matched later. | — |
-| 4 | Server: the main domain is added to Caddy's sites beside new.extas.com.bd, with the preview password and `noindex` only on the staging host (PR 403); setup run shows every step OK. | Run setup again without the main domain. |
+| 4 | Server: the main domain is added to Caddy's sites beside new.extas.com.bd, with the preview password and `noindex` only on the staging host (PR 403): in `infra/config/server.conf` the main domain goes into `EXTAS_EXTRA_HOSTS` and, with the owner's OK for this day (BLOCKED 25), `EXTAS_MAIN_OPEN="yes"`; the push re-runs server setup, which must show every step OK and the line "PR 403 · main domain: open". `curl -sI https://new.extas.com.bd` still answers 401 with `X-Robots-Tag: noindex`. | `EXTAS_MAIN_OPEN="no"` locks the main domain again; or run setup again without the main domain. |
 | 5 | Cloudflare → DNS: the main domain's A/AAAA (or CNAME) records point at the VM, **proxied** (orange cloud). With Cloudflare in front the change reaches visitors within a minute or two. | Put the exported records back (step 0) — the old shop answers again. |
 | 6 | Open `https://extas.com.bd` on a phone and a desktop: home, a category, a product, the bag, checkout; an old address redirects to its new page (PR 587). | Steps 5 and 4 back. |
 | 7 | The smoke test runs against the main domain (Actions → Smoke test); it must pass (CN-016). | See section 2. |

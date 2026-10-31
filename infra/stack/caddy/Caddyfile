@@ -50,9 +50,8 @@
 	respond @internal 404
 }
 
-# PR 362: the extra host names (server.conf EXTAS_EXTRA_HOSTS, cleaned by server setup) are served the same way, each
-# with its own automatic certificate; empty, only the staging host.
-{$EXTAS_STAGING_HOST} {$EXTAS_EXTRA_HOSTS} {
+# PR 403: what every public host shares — the headers, the cache rules, compression, the certificate and the log.
+(extas_site) {
 	import security_headers
 	import cache_headers
 	encode zstd gzip
@@ -60,17 +59,36 @@
 	# is in the vault and checked, else Caddy's automatic certificate (Let's Encrypt, Caddy's own as the fallback).
 	# A glob: a server whose setup has not yet written the file still loads, on the automatic certificate.
 	import /etc/caddy/sites/tls*.caddy
+	# Review R1 (security m5): the access log never keeps what a link or a box carries: no query string at all (the
+	# address being typed in ?q=, a payment callback's ids and signature, Meta's verify token), no advance pay link's
+	# token (/pay/<token>, /bn/pay/<token>), and no Referer header (it repeats the page's whole address).
 	log {
 		output file /var/log/caddy/access.log {
 			roll_size 50MiB
 			roll_keep 10
 		}
-		format json
+		format filter {
+			wrap json
+			request>uri regexp "^(/(?:bn/)?pay/).*$|[?].*$" "${1}"
+			request>headers>Referer delete
+		}
 	}
+}
+
+# PR 403: the staging host is ALWAYS behind the preview password and noindex, also after go-live.
+# ~~PR 362: the extra host names were served in this same block, so they shared the gate.~~
+{$EXTAS_STAGING_HOST} {
+	import extas_site
 	import /etc/caddy/sites/noindex.caddy
 	import /etc/caddy/sites/auth.caddy
 	import /etc/caddy/sites/upstream.caddy
 }
+
+# PR 362 / PR 403: the extra host names (server.conf EXTAS_EXTRA_HOSTS, cleaned by server setup: the main domain on
+# go-live day, a store's own domain) have their own block, each with its own automatic certificate. Server setup writes
+# it (infra/stack/caddy/hosts-block.sh): locked like the staging host until server.conf EXTAS_MAIN_OPEN="yes" (the
+# owner's go-live day step). No extra hosts, no file: a glob.
+import /etc/caddy/sites/hosts*.caddy
 
 # Internal only — not published. Health checks, the k6 baseline and deploy smoke tests use it.
 :8080 {

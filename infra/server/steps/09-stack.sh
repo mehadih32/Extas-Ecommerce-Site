@@ -240,6 +240,22 @@ CONF
       | write_file "$d/auth.caddy" 0600 >/dev/null
   fi
   write_caddy_client_ip "$d"
+  # PR 403: the extra host names get their own site block (sites/hosts.caddy, infra/stack/caddy/hosts-block.sh), locked
+  # like the staging host until server.conf EXTAS_MAIN_OPEN="yes" — the owner's go-live day step (BLOCKED 25, runbook
+  # step 4). The staging host keeps the preview password and noindex always. No extra hosts, no file.
+  if [ -n "${EXTAS_EXTRA_HOSTS:-}" ]; then
+    local open=no
+    [ "${EXTAS_MAIN_OPEN:-no}" = yes ] && open=yes
+    # shellcheck disable=SC2086  # the cleaned host names, one word each (site_extra_hosts)
+    bash "$STACK_DIR_REPO/caddy/hosts-block.sh" "$open" $EXTAS_EXTRA_HOSTS | write_file "$d/hosts.caddy" 0644 >/dev/null
+    if [ "$open" = yes ]; then
+      report INFO "PR 403 · main domain" "open: $EXTAS_EXTRA_HOSTS without the preview password and noindex; $EXTAS_STAGING_HOST stays locked"
+    else
+      report INFO "PR 403 · main domain" "locked: $EXTAS_EXTRA_HOSTS behind the preview password and noindex, like $EXTAS_STAGING_HOST (EXTAS_MAIN_OPEN=no)"
+    fi
+  else
+    rm -f "$d/hosts.caddy"
+  fi
   # PR 397: tls.caddy — the Cloudflare Origin certificate when its checked pair is in the vault (extas-vault-sync
   # brings it and runs the same script again), else Caddy's automatic certificate. The Caddy reload follows below.
   install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-origin-cert" /usr/local/sbin/extas-origin-cert
