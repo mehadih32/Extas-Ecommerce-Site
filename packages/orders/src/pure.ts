@@ -97,6 +97,8 @@ export const ORDER_COMMANDS = [
   'bundleProposal',
   // PR 523: the number proposed for the blocklist (a mark and a timeline line; a person decides, the status stays)
   'blockProposal',
+  // PR 524: the good-customer override spared the order an automatic hold (a mark and a timeline line; the status stays)
+  'goodCustomer',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -174,6 +176,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   bundleProposal: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
   // PR 523: proposed when the order lands, while it is open
   blockProposal: OPEN_STATES,
+  // PR 524: written when the engine would have held it, while it is open
+  goodCustomer: OPEN_STATES,
   // PR 542: "Send again" on an order waiting for its advance
   advanceResend: ['AWAITING_ADVANCE'],
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's

@@ -95,6 +95,9 @@ export * from './identity-family';
 export * from './bundling';
 // S06 · PR 523: the proposal that fills the blocklist, and what the register holds (block-proposal.ts).
 export * from './block-proposal';
+// S06 · PR 524: the good-customer override (good-customer.ts) and the stop report (stop-report.ts).
+export * from './good-customer';
+export * from './stop-report';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

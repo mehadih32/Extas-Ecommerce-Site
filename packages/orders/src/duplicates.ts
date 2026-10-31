@@ -31,6 +31,7 @@ import { clusterOrders } from './identity-graph';
 import { phoneForms } from './phone-history';
 import { OPEN_STATES, overlapOf, severityRank, type LineFacts, type OrderState, type Severity } from './pure';
 import { auditRow, eventRow, factsOf, lockOrder, staffBy, systemBy, type By, type CommandResult } from './service';
+import { goodCustomerOf, noteGoodCustomer } from './good-customer';
 
 /** The FraudAlert section of a duplicate review (the risk engine of S06 writes its own sections). */
 export const DUPLICATE_SECTION = 'duplicate';
@@ -311,7 +312,10 @@ export async function screenOrder(deps: OrdersDeps, ref: { storeId: number; orde
   }, TX);
   if (alertId === undefined) return none;
   let held = false;
-  if (alertId && cfg.autoHold && top === 'high' && !opts.again) {
+  // PR 524: a good customer is never held by the engine by itself (the review still waits for a person)
+  const good = alertId && cfg.autoHold && top === 'high' && !opts.again ? await goodCustomerOf(deps, ref) : null;
+  if (good) await noteGoodCustomer(deps, ref, by, 'duplicateHold', good);
+  else if (alertId && cfg.autoHold && top === 'high' && !opts.again) {
     const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
     if (reasons.some((r) => r.key === DUPLICATE_HOLD_KEY)) {
       try {

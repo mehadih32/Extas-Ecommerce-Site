@@ -26,6 +26,7 @@ import { OrdersError, isOrdersError } from './errors';
 import { levelPlanOf, type LevelPlan } from './pure';
 import type { SettingsWriter } from './rule-switches';
 import { execute, systemBy, type By, type CommandResult } from './service';
+import { GOOD_CUSTOMER_FLAG, goodCustomerOf, noteGoodCustomer } from './good-customer';
 
 /** The order flag of a watched order (Order.flags; the team's screens show it, never the customer). */
 export const RISK_WATCH_FLAG = 'RISK_WATCH';
@@ -38,12 +39,13 @@ export const RISK_LEVEL_EVENT = 'order.riskLevel';
 export interface LevelApplied {
   plan: LevelPlan;
   /** The hold: done, or why not (no such hold reason on the owner's list, or the order could not be held now). */
-  hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | null;
+  hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | 'GOOD_CUSTOMER' | null;
   callTaskId: string | null;
   command: CommandResult;
   /**
    * PR 542: the owner's auto option (`orders.advanceRequest.auto`, off) asked the level's advance by itself — the
-   * request, or why it could not be asked (NOTHING_DUE, NO_CHARGE …); null when the option is off or nothing is asked.
+   * request, or why it could not be asked (NOTHING_DUE, NO_CHARGE …; PR 524: GOOD_CUSTOMER, the good-customer override
+   * skipped it); null when the option is off or nothing is asked.
    */
   advance: AdvanceRequestResult | string | null;
 }
@@ -86,7 +88,13 @@ export async function applyRiskLevel(deps: OrdersDeps, ref: { storeId: number; o
   const by = opts.by ?? systemBy('risk-levels');
   // the hold first, through the order service's own command (its timeline row and audit row)
   let hold: LevelApplied['hold'] = null;
-  if (plan.hold) {
+  // PR 524: a good customer is never held, nor asked an advance, by the engine by itself (the ask stays a proposal)
+  const autoAsk = plan.ask !== 'none' && (await setting(deps, ref.storeId, 'orders.advanceRequest')).auto;
+  const good = plan.hold || autoAsk ? await goodCustomerOf(deps, ref) : null;
+  if (good && plan.hold) {
+    await noteGoodCustomer(deps, ref, by, 'levelHold', good);
+    hold = 'GOOD_CUSTOMER';
+  } else if (plan.hold) {
     const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
     if (!reasons.some((r) => r.key === cfg.holdReasonKey)) hold = 'NO_REASON';
     else {
@@ -127,7 +135,7 @@ export async function applyRiskLevel(deps: OrdersDeps, ref: { storeId: number; o
       { idempotencyKey: `risk-level:${opts.assessmentId}` },
     );
     // PR 542: only with the owner's auto option on; otherwise the ask stays a proposal for a person
-    const advance = await autoAdvance(deps, ref, plan.ask, `risk-level-advance:${opts.assessmentId}`, by);
+    const advance = good && autoAsk ? (await noteGoodCustomer(deps, ref, by, 'levelAdvance', good), GOOD_CUSTOMER_FLAG) : await autoAdvance(deps, ref, plan.ask, `risk-level-advance:${opts.assessmentId}`, by);
     return { plan, hold, callTaskId, command, advance };
   } catch (e) {
     // the order moved on (cancelled in the same second): nothing to mark

@@ -58,6 +58,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   bundleProposal: { PLACED: FLAG, AWAITING_ADVANCE: FLAG, CONFIRMED: FLAG, ON_HOLD: FLAG },
   // PR 523: the blocklist proposal marks an open order; the status stays
   blockProposal: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
+  // PR 524: the good-customer override marks an open order; the status stays
+  goodCustomer: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   // PR 541 (SIM-F-014): a courier is booked for a confirmed order before it is handed over; the status stays
   book: { CONFIRMED: FLAG, PROCESSING: FLAG, PACKED: FLAG },
   awaitAdvance: { PLACED: 'AWAITING_ADVANCE', CONFIRMED: 'AWAITING_ADVANCE', ON_HOLD: 'AWAITING_ADVANCE' },
@@ -142,7 +144,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'blocklistMatch', 'refuserTerms', 'bundleProposal', 'blockProposal', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'blocklistMatch', 'refuserTerms', 'bundleProposal', 'blockProposal', 'goodCustomer', 'awaitAdvance'] });
   });
 });
 

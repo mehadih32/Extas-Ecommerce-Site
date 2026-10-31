@@ -164,7 +164,8 @@
       "blocklist": "Blocklist",
       "refuser": "Repeat refuser",
       "bundle": "One parcel?",
-      "blockProposal": "Proposed for blocklist"
+      "blockProposal": "Proposed for blocklist",
+      "goodCustomer": "Good customer"
     },
     "page": {
       "all": "All orders",
@@ -702,7 +703,14 @@
       "bundleWith": "with {numbers}",
       "bundleAuto": "by the owner's setting",
       "order_blockProposal": "Proposed for the blocklist",
-      "blockProposal": "{n} rejections: {refused} refused, {declined} cancelled"
+      "blockProposal": "{n} rejections: {refused} refused, {declined} cancelled",
+      "order_goodCustomer": "Good customer: not held",
+      "goodCustomer": "{skipped} skipped · {delivered} delivered, {refused} refused before",
+      "gcSkip": {
+        "duplicateHold": "The duplicate check's hold",
+        "levelHold": "The risk level's hold",
+        "levelAdvance": "The automatic advance request"
+      }
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -833,7 +841,8 @@
           "full": "Proposed: ask the whole amount first",
           "codOff": "Proposed: no cash on delivery for this order — ask the whole amount first"
         },
-        "askNote": "Only a proposal: press “Request advance” on this order to send it."
+        "askNote": "Only a proposal: press “Request advance” on this order to send it.",
+        "GOOD_CUSTOMER": "not held: a good customer"
       }
     },
     "section": {
@@ -1200,6 +1209,25 @@
         "saved": "Saved",
         "discard": "Discard",
         "unsaved": "There are unsaved changes",
+        "readOnly": "Only someone allowed to change the risk rules can change this.",
+        "err": {
+          "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+          "INVALID_INPUT": "Check: {fields}.",
+          "FORBIDDEN": "You cannot change the risk rules.",
+          "forbidden": "You cannot change the risk rules.",
+          "unauthorized": "Sign in again.",
+          "network": "No connection. Nothing was saved; try again.",
+          "other": "Something went wrong. Nothing was saved; try again."
+        }
+      },
+      "gc": {
+        "h": "Good customers",
+        "d": "When on, a customer with at least the delivered orders you set, and no more refusals than you allow, is never held by the engine by itself: the duplicate check's automatic hold and a risk level's hold are skipped, and the order says “Good customer”. A review still opens for a person. What the engine stopped shows in Reports › Stopped by the engine.",
+        "enabled": "Never hold a good customer by itself",
+        "minDelivered": "Delivered orders that make a good customer",
+        "minDeliveredHelp": "1 to 100, counted on the phone number. Empty until you set it: nobody counts as one until then.",
+        "maxRefused": "Refusals a good customer may have",
+        "maxRefusedHelp": "0 to 20. Parcels refused at the door count (never your “our fault” reasons or a try-on).",
         "readOnly": "Only someone allowed to change the risk rules can change this.",
         "err": {
           "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",

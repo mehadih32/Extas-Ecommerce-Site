@@ -30,6 +30,15 @@
 // cancel codes — the number is *proposed* for the blocklist with what we know (the names and addresses given, every
 // product ordered with its date). A person blocks it or says "not now" with a reason; nothing is ever blocked by
 // itself, the order is never held or cancelled. The number is empty until the owner sets it. Off as shipped.
+//
+// PR 524 (`risk.goodCustomer`, version 105; `risk.stopReport`, version 106): false-positive protection. A good customer
+// (at least the owner's number of delivered orders and at most his number of refusals, counted as the phone history
+// counts them) is never held by the engine by itself: the duplicate check's automatic hold, a risk level's hold and its
+// automatic advance request are skipped and written on the order as "good customer" (a review still opens for a person). Off, and the number unset,
+// as shipped. The stop report (Reports › Stopped by the engine) lists every order the engine stopped in the last `days`
+// days (a week as shipped) with its rule, how sure the rule was and what became of the order; a rule whose stopped
+// orders were delivered all the same at least `warnWrongPercent` of the time (over at least `minStops` stops) is
+// flagged, so a wrong rule is caught within days. The report only reads.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -44,6 +53,9 @@ const V164 = 102;
 const V522 = 103;
 /** PR 523's version. */
 const V523 = 104;
+/** PR 524's versions. */
+const V524 = 105;
+const V524R = 106;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -132,6 +144,34 @@ export const riskBlockProposalSchema = z
 export type RiskBlockProposal = z.output<typeof riskBlockProposalSchema>;
 export const RISK_BLOCK_PROPOSAL_DEFAULT: RiskBlockProposal = { enabled: false, minRejections: null, cancelCodes: ['RISK_DECLINED'] };
 
+export const riskGoodCustomerSchema = z
+  .object({
+    /** A good customer's new order is never held by the engine by itself (off: every rule acts as it is set). */
+    enabled: z.boolean(),
+    /** Delivered orders that make a good customer; null until the owner sets it (nobody counts as one until then). */
+    minDelivered: z.int().min(1).max(100).nullable(),
+    /** The most refusals (not our fault) a good customer may have. */
+    maxRefused: z.int().min(0).max(20),
+  })
+  .strict();
+export type RiskGoodCustomer = z.output<typeof riskGoodCustomerSchema>;
+export const RISK_GOOD_CUSTOMER_DEFAULT: RiskGoodCustomer = { enabled: false, minDelivered: null, maxRefused: 0 };
+
+export const riskStopReportSchema = z
+  .object({
+    /** The days the stop report shows, today included (a week as shipped). */
+    days: z.int().min(1).max(92),
+    /** A rule is flagged when this share (%) of its stopped orders were delivered all the same; null: never flagged. */
+    warnWrongPercent: z.int().min(1).max(100).nullable(),
+    /** The fewest stops (that reached an end) before a rule can be flagged. */
+    minStops: z.int().min(1).max(1000),
+    /** The most stopped orders one report lists. */
+    maxRows: z.int().min(10).max(5000),
+  })
+  .strict();
+export type RiskStopReport = z.output<typeof riskStopReportSchema>;
+export const RISK_STOP_REPORT_DEFAULT: RiskStopReport = { days: 7, warnWrongPercent: null, minStops: 5, maxRows: 500 };
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -181,5 +221,25 @@ export const riskS06Settings = {
     labelKey: 'risk.blockProposal.label',
     helpKey: 'risk.blockProposal.help',
     sortOrder: 334,
+  }),
+  'risk.goodCustomer': setting({
+    ...base,
+    version: V524,
+    schema: riskGoodCustomerSchema,
+    default: RISK_GOOD_CUSTOMER_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.goodCustomer.label',
+    helpKey: 'risk.goodCustomer.help',
+    sortOrder: 335,
+  }),
+  'risk.stopReport': setting({
+    ...base,
+    version: V524R,
+    schema: riskStopReportSchema,
+    default: RISK_STOP_REPORT_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.stopReport.label',
+    helpKey: 'risk.stopReport.help',
+    sortOrder: 336,
   }),
 };

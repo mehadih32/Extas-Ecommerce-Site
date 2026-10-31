@@ -42,7 +42,8 @@
       },
       "reports": {
         "health": "সাইটের অবস্থা",
-        "fraud": "ফ্রড ও RTO"
+        "fraud": "ফ্রড ও RTO",
+        "stopped": "ইঞ্জিন যা থামিয়েছে"
       },
       "settings": {
         "store": "দোকানের তথ্য",

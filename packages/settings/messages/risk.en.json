@@ -84,6 +84,14 @@
     "blockProposal": {
       "label": "Propose numbers for the blocklist",
       "help": "When on, a new order from a person (the number, or the same person under another number) with at least the rejections you set — parcels refused at the door (not your fault, never a try-on) plus orders cancelled with the codes you tick — proposes the number for the blocklist, with the names and addresses given and every product ordered with its date. A person blocks it or says \"Not now\"; nothing is blocked by itself and the order goes on as usual. Until you set the number, nothing is proposed. Off as shipped."
+    },
+    "goodCustomer": {
+      "label": "Good customers are never held by the engine",
+      "help": "When on, a customer with at least the delivered orders you set and at most the refusals you allow (counted as the phone history counts them) is never held by the engine by itself: the duplicate check's automatic hold, a risk level's hold and its automatic advance request are skipped, and the order says \"good customer\". A review still opens for a person. Until you set the number, nobody counts as one. Off as shipped."
+    },
+    "stopReport": {
+      "label": "Stopped by the engine — the weekly report",
+      "help": "How many days the report shows (a week as shipped), when a rule is flagged (the share of its stopped orders that were delivered all the same; empty: never), the fewest stops before it can be flagged, and the most orders one report lists. The report only reads."
     }
   },
   "defaults": {

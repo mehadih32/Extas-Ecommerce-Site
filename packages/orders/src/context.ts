@@ -60,6 +60,8 @@ export const ORDER_PERMISSIONS = [
   'risk.unblock',
   // S06 · PR 163: a repeat refuser's terms (the owner's choice per case)
   'risk.refuser.terms',
+  // S06 · PR 524: Reports › Stopped by the engine (the same right as the fraud report)
+  'risk.report',
   // S06 · PR 542: "Request advance" from the order
   'orders.advance.request',
   // S08 · PR 185: exchanges and returns (ORD-05)

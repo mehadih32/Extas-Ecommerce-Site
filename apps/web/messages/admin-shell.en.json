@@ -42,7 +42,8 @@
       },
       "reports": {
         "health": "Site health",
-        "fraud": "Fraud & RTO"
+        "fraud": "Fraud & RTO",
+        "stopped": "Stopped by the engine"
       },
       "settings": {
         "store": "Store details",
