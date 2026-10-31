@@ -54,7 +54,8 @@ export const shellSession = cache(async (): Promise<ShellSession> => {
   const g = await guardAdmin(await forwardedRequest(), deps, {});
   if (g instanceof Response) {
     const code = ((await g.json().catch(() => ({}))) as { error?: string }).error;
-    if (g.status === 401) return { kind: 'login' };
+    // PR 380: an address not on the owner's list goes to the sign-in page, which says why
+    if (g.status === 401 || code === 'ADDRESS_NOT_ALLOWED') return { kind: 'login' };
     if (code === 'PASSWORD_CHANGE_REQUIRED' || code === 'TWO_FACTOR_SETUP_REQUIRED') return { kind: 'password' };
     return { kind: 'unavailable' };
   }

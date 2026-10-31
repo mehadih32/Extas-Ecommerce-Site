@@ -12,6 +12,7 @@ export * from './rbac';
 export * from './pin';
 export * from './roles';
 export * from './staff-auth';
+export * from './ip-allow';
 export * from './staff-admin';
 export * from './customer-auth';
 export * from './owner';

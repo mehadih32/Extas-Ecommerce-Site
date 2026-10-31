@@ -136,6 +136,9 @@ import webSecurityEn from '../messages/web-security.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
+// S18 · PR 380 (registry v78): the admin address list and the new-login notes.
+import adminAccessBn from '../messages/admin-access.bn.json';
+import adminAccessEn from '../messages/admin-access.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -184,6 +187,8 @@ messages.en = mergeMessages(messages.en, webSecurityEn);
 messages.bn = mergeMessages(messages.bn, webSecurityBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
+messages.en = mergeMessages(messages.en, adminAccessEn);
+messages.bn = mergeMessages(messages.bn, adminAccessBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

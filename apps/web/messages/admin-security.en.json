@@ -1,0 +1,149 @@
+{
+  "metaTitle": "Sign-in & security",
+  "title": "Sign-in & security",
+  "sub": "Two-step sign-in, how long a login lasts, the wrong-password pause, new-device alerts, the admin address list and the shop's quiet protections.",
+  "kpi": {
+    "twoFactor": "Staff using two-step sign-in",
+    "twoFactorOf": "{n} of {total}",
+    "required": "Required for everyone",
+    "optional": "Each person chooses",
+    "list": "Admin address list",
+    "listOn": "On",
+    "listOff": "Off",
+    "breakGlass": "Opened from the server",
+    "protection": "Page protection",
+    "limits": "Request limits"
+  },
+  "mode": {
+    "off": "Off",
+    "report": "Report only",
+    "enforce": "On (enforce)",
+    "observe": "Observe only"
+  },
+  "advice2fa": "Two-step sign-in is not required yet. Turning it on is the strongest single protection for the admin: a stolen password alone is then not enough.",
+  "signIn": {
+    "h": "Sign-in",
+    "d": "How staff sign in and how long a login lasts.",
+    "twoFactor": "Everyone must use two-step sign-in",
+    "twoFactorHelp": "After the password, a 6-digit code from an app on the phone. A person without it sets it up at the next sign-in.",
+    "idleMinutes": "Log out after this many idle minutes",
+    "maxHours": "Log out after this many hours in total",
+    "maxAttempts": "Wrong passwords before a pause",
+    "lockoutMinutes": "Pause after too many wrong passwords (minutes)",
+    "loginAlerts": "Note every staff sign-in, and alert on a new device",
+    "loginAlertsHelp": "A sign-in from a phone or computer not seen before shows in the notifications of everyone who sees security, and goes to Telegram once the bot is connected.",
+    "noteDays": "Keep new-device sign-ins in the notifications (days)"
+  },
+  "allowlist": {
+    "h": "Admin address list",
+    "d": "Off by default. When on, the admin opens only from these internet addresses.",
+    "enabled": "Open the admin only from the addresses below",
+    "entries": "Addresses (one a line; a range such as 203.0.113.0/24 is fine)",
+    "you": "You are on {ip} now.",
+    "youOn": "It is on the list.",
+    "youOff": "It is not on the list.",
+    "unknown": "The address you are on cannot be read here.",
+    "addMine": "Add my address",
+    "warn": "If your internet address changes (a new router, mobile data), you cannot open the admin until someone on the list or the server takes the list off.",
+    "breakGlass": "The server has the list switched off right now (EXTAS_ADMIN_ALLOWLIST_OFF). It applies again when that is removed."
+  },
+  "protection": {
+    "h": "Shop protection",
+    "d": "Quiet protections the customer never sees. Each starts in a safe mode that only watches.",
+    "csp": "Page protection (what a page may load)",
+    "cspHelp": "Report only writes down what would be stopped; On makes the browser stop it. Turn on after a week without reports.",
+    "rate": "Request limits per internet address",
+    "rateHelp": "Observe only writes a log line when an address sends too much; On asks it to wait a minute. Many phones share one mobile address, so the limits are generous.",
+    "bot": "Quiet bot check on sign-in and checkout",
+    "botHelp": "Writes a note in the security list below when a form looks filled by a program. It never stops an order or a sign-in."
+  },
+  "more": "More options",
+  "moreSub": "The numbers behind the request limits and the bot check.",
+  "limits": {
+    "h": "Requests a minute for one address",
+    "d": "Used only when request limits are on or observing.",
+    "signIn": "Sign-in and codes",
+    "checkout": "Checkout and pay links",
+    "shopWrite": "Other shop changes (bag, wishlist)",
+    "report": "Browser problem reports",
+    "webhook": "Webhooks from outside services"
+  },
+  "bot": {
+    "h": "Bot check numbers",
+    "d": "A form sent faster than these seconds counts as a sign of a program (0 = no time check).",
+    "checkoutSeconds": "Checkout: fastest a person fills it (seconds)",
+    "signInSeconds": "Customer sign-in (seconds)",
+    "adminSignInSeconds": "Staff sign-in (seconds)",
+    "noteScore": "Write a note from this score (1–100)"
+  },
+  "devices": {
+    "h": "Your logins",
+    "d": "The phones and computers where you are logged in now.",
+    "current": "This device",
+    "seen": "Last used {when}",
+    "from": "from {ip}",
+    "end": "Log out",
+    "all": "Log out everywhere else",
+    "allDone": "Logged out on {n} other device(s).",
+    "none": "Only this device.",
+    "confirmTitle": "Log out everywhere else?",
+    "confirmText": "Every other phone and computer where you are logged in must sign in again.",
+    "confirm": "Log out the others",
+    "cancel": "Cancel",
+    "error": "That did not work. Please try again."
+  },
+  "events": {
+    "h": "Latest security events",
+    "d": "Sign-ins from a new device, wrong-password pauses and bot notes, the newest first.",
+    "when": "When",
+    "what": "What",
+    "level": "Level",
+    "detail": "Detail",
+    "none": "No security events yet.",
+    "kind": {
+      "staff_login": "Staff sign-in",
+      "staff_login_newDevice": "Staff sign-in from a new device",
+      "staff_password_changed": "Staff password changed",
+      "staff_2fa_enabled": "Two-step sign-in turned on",
+      "staff_2fa_disabled": "Two-step sign-in turned off",
+      "staff_2fa_reset": "Two-step sign-in reset by the owner",
+      "staff_owner_granted": "Owner rights given",
+      "customer_password_changed": "Customer password changed",
+      "bot_signal": "Bot note",
+      "other": "Security event"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Warning",
+      "critical": "Critical"
+    },
+    "field": {
+      "who": "Who",
+      "by": "By",
+      "device": "Device",
+      "address": "Address mark",
+      "twoFactor": "Two-step",
+      "form": "Form",
+      "score": "Score",
+      "reasons": "Signs"
+    },
+    "yes": "yes",
+    "no": "no"
+  },
+  "save": "Save",
+  "saving": "Saving…",
+  "saved": "Saved.",
+  "discard": "Discard",
+  "unsaved": "Not saved yet",
+  "readOnly": "You can see these settings; changing them needs the security permission.",
+  "pairHelp": "Write both languages.",
+  "err": {
+    "STALE": "Someone else changed this card; it shows their values now.",
+    "INVALID_INPUT": "Some values are not right: {fields}",
+    "ADDRESS_NOT_ON_LIST": "The list must hold the address you are saving from ({fields}), or you would lock yourself out.",
+    "forbidden": "You do not have permission to change this.",
+    "unauthorized": "Your sign-in has ended — please sign in again.",
+    "network": "No connection. Please try again.",
+    "other": "That did not save. Please try again."
+  }
+}

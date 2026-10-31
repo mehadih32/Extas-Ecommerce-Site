@@ -246,6 +246,7 @@
       "/admin/money/books/daily",
       "/admin/money/costs",
       "/admin/settings/erp-link",
+      "/admin/settings/security",
       "/admin/orders/risk-rules",
       "/pay/0",
       "/bn/pay/0",

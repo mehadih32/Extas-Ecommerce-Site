@@ -22,6 +22,7 @@ import { isDeliveryError } from '@extas/delivery';
 import { isBooksError, isInventoryError } from '@extas/inventory';
 import { isRulesError } from '@extas/rules';
 import { createVault, type Vault } from '@extas/vault';
+import { addressRefused } from './admin-security/access';
 import { sameOriginRequest } from './security/same-origin';
 import { settingsResolver, settingsTimeoutMs, withTimeout, type AppResolver } from './settings';
 
@@ -143,6 +144,8 @@ export async function guardAdmin(request: Request, deps: AdminDeps | null, opts:
   if (!deps) return fail(503, 'database-not-configured');
   if (!sameOrigin(request)) return fail(403, 'cross-site-request');
   try {
+    // PR 380: the owner's optional address list (off by default)
+    if (await addressRefused(deps.resolver, requestContext(request).ip)) return fail(403, 'ADDRESS_NOT_ALLOWED');
     const sd = await staffDeps(deps);
     const auth = await authenticateStaff(sd, readCookie(request, SESSION_COOKIE));
     if (!auth) return fail(401, 'UNAUTHENTICATED');

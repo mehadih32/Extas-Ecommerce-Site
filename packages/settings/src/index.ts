@@ -74,4 +74,6 @@ export * from './registry-books-summary';
 export * from './registry-web-security';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';
+// S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).
+export * from './registry-admin-access';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
