@@ -5,11 +5,14 @@
 // or a stale file without anyone pressing anything. If the page still fails, it shows "Start fresh" (lib/fresh-start.ts)
 // and "Try again", in Bengali and English (no language is known here: the layouts did not draw), with the error's short
 // id or first line for the team. Nothing personal is shown.
+// S21 · PR 423 (CN-015): the screen reports itself once to Customer problems (lib/problems/probe `reportErrorScreen`;
+// the server keeps it only while the recorder is on), with the same short id or first line — nothing personal.
 import { useEffect, useState } from 'react';
 import bn from '../../messages/recover.bn.json';
 import en from '../../messages/recover.en.json';
 import { FreshStartButton, freshStart } from '@/components/FreshStart';
 import { AUTO_KEY, mayAutoRecover } from '@/lib/fresh-start';
+import { reportErrorScreen } from '@/lib/problems/probe';
 import { t } from '@/lib/i18n';
 import './global-error.css';
 
@@ -32,12 +35,13 @@ function markAuto(now: number): boolean {
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const [trying, setTrying] = useState(true);
+  const detail = error.digest ?? error.message.split('\n')[0]?.slice(0, 160);
+  useEffect(() => reportErrorScreen(detail), [detail]);
   useEffect(() => {
     const now = Date.now();
     const auto = mayAutoRecover(readAuto(), now) && markAuto(now);
     void (auto ? freshStart('soft') : Promise.resolve(false)).then((ok) => (ok ? window.location.reload() : setTrying(false)));
   }, []);
-  const detail = error.digest ?? error.message.split('\n')[0]?.slice(0, 160);
   return (
     <html lang="bn" translate="no">
       <body className="ge">

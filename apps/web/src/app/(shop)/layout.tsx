@@ -3,6 +3,7 @@
 // never load any of it.
 // S11 · PR 586: the hash forwarder, first in the page: a demo `#/…` link moves on to its live address before anything
 // else draws (lib/seo/hash-forward, `seo.hashLinks`).
+// S21 · PR 423 (CN-015): the privacy-safe problem recorder (components/shop/ProblemProbe) while `health.problems` is on.
 // S11 · PR 233: every shop page carries the Search Console and Bing verification codes as their meta tags
 // (lib/seo/verification, `seo.verification`; none while no code is set).
 // S11 · PR 234: while `seo.vitals.collect` is on, the page reports its speed (components/shop/VitalsReporter).
@@ -16,6 +17,7 @@ import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { hashRulesFor, hashScript } from '@/lib/seo/hash-forward';
 import { verificationMetadata } from '@/lib/seo/verification';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
+import { ProblemProbe } from '@/components/shop/ProblemProbe';
 import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
@@ -33,7 +35,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ShopLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const c = await shopContext();
-  const { 'seo.hashLinks': hashLinks, 'seo.vitals': vitals } = await readPageSettings(['seo.hashLinks', 'seo.vitals'] as const, c.storeId);
+  const {
+    'seo.hashLinks': hashLinks,
+    'health.problems': problems,
+    'seo.vitals': vitals,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals'] as const, c.storeId);
   // The Bengali shop switched off: its addresses lead to the English twin.
   if (c.lang === 'bn' && !c.s['language.bengali.enabled']) redirect(hrefIn('en', c.path));
   // The first screen's faces start loading with the page, so they are in before the first paint (the demo's type).
@@ -57,6 +63,11 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
       {bnCached ? <style dangerouslySetInnerHTML={{ __html: bengaliFontFaces() }} /> : null}
       {!bnCached && c.lang === 'bn' ? (
         <BengaliFontWarm urls={bengaliFontUrls()} cookie={BENGALI_FONT_COOKIE} maxAgeSeconds={BENGALI_FONT_COOKIE_AGE} />
+      ) : null}
+      {problems.enabled ? (
+        <ProblemProbe
+          cfg={{ storeId: c.storeId, slowRequestMs: problems.slowRequestMs, slowLoadMs: problems.slowLoadMs, rageClicks: problems.rageClicks, formErrorRepeats: problems.formErrorRepeats, maxPerPage: problems.maxPerPage }}
+        />
       ) : null}
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}

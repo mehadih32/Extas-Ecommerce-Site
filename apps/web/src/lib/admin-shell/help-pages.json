@@ -58,6 +58,8 @@
     { "id": "money/books-daily", "route": "/admin/money/books/daily" },
     { "id": "money/costs", "route": "/admin/money/costs" },
     { "id": "reports/health", "route": "/admin/reports/health" },
+    { "id": "reports/health-problems", "route": "/admin/reports/health/problems" },
+    { "id": "reports/health-problem", "route": "/admin/reports/health/problems/[id]" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/policies", "route": "/admin/settings/policies" },

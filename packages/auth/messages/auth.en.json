@@ -243,7 +243,11 @@
       "settings": "Change Support settings"
     },
     "health": {
-      "read": "See Site health: customer problems, the server, speed, the site audit and the smoke test (no customer's details)"
+      "read": "See Site health: customer problems, the server, speed, the site audit and the smoke test (no customer's details)",
+      "problems": {
+        "manage": "Set a customer problem's status (fixing, fixed with how, could not fix with why, needs the owner)",
+        "approve": "Give the owner's go-ahead on a customer problem that needs his permission or his check"
+      }
     }
   },
   "totp": {

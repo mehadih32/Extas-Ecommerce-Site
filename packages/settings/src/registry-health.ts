@@ -18,11 +18,25 @@
 // - `keepRuns`: how many runs the server keeps for comparison.
 // - `runRequestedAt`: set by "Run now" (the time it was pressed); the next hourly check runs once when it is newer than
 //   the last run. Never typed in by hand.
+//
+// PR 423 (CN-015, registry version 83): `health.problems`, the privacy-safe problem recorder on the shop's pages
+// (Reports › Site health › Customer problems). On as it ships, as the owner asked (CN-015 (1): found automatically from
+// real visits); it never records a name, phone, address or payment detail, and visitor ids are random per browser tab.
+// - `enabled`: the shop's pages report what goes wrong (off: nothing is sent or kept).
+// - `slowRequestMs` / `slowLoadMs`: a call to the shop's own server, or a page load, slower than this is recorded.
+// - `rageClicks`: this many clicks within a second on one spot count as a "rage" click.
+// - `formErrorRepeats`: the same form field refused this many times on one page is a stuck form.
+// - `maxPerPage`: the most reports one page view sends (a broken page cannot flood the server).
+// - `urgentVisitors`: a problem that hit this many visitors in a day is Urgent wherever it is (on the bag, checkout or
+//   payment pages one is enough).
+// - `showDays`: the lists count and show the last this many days.
+// - `glitchMinutes`: a problem seen only within this many minutes, and not since, is a "short glitch".
 import { z } from 'zod';
 import { setting } from './define';
 
 const V = 81;
 const V414 = 82;
+const V423 = 83;
 
 export const healthHubSchema = z
   .object({
@@ -45,6 +59,21 @@ export const healthJourneysSchema = z
   })
   .strict();
 export type HealthJourneysSettings = z.output<typeof healthJourneysSchema>;
+
+export const healthProblemsSchema = z
+  .object({
+    enabled: z.boolean(),
+    slowRequestMs: z.int().min(500).max(60_000),
+    slowLoadMs: z.int().min(1_000).max(60_000),
+    rageClicks: z.int().min(3).max(10),
+    formErrorRepeats: z.int().min(2).max(10),
+    maxPerPage: z.int().min(1).max(50),
+    urgentVisitors: z.int().min(1).max(1_000),
+    showDays: z.int().min(1).max(365),
+    glitchMinutes: z.int().min(1).max(1_440),
+  })
+  .strict();
+export type HealthProblemsSettings = z.output<typeof healthProblemsSchema>;
 
 export const healthSettings = {
   'health.hub': setting({
@@ -72,5 +101,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 951,
     version: V414,
+  }),
+  'health.problems': setting({
+    scope: 'store',
+    schema: healthProblemsSchema,
+    default: { enabled: true, slowRequestMs: 4_000, slowLoadMs: 8_000, rageClicks: 4, formErrorRepeats: 3, maxPerPage: 10, urgentVisitors: 5, showDays: 30, glitchMinutes: 10 },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.problems.label',
+    helpKey: 'health.problems.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 952,
+    version: V423,
   }),
 };

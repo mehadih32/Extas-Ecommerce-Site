@@ -29,7 +29,12 @@
     },
     "line": {
       "problems": {
-        "notYet": "Not recording yet. The privacy-safe problem recorder comes next and fills this line."
+        "notYet": "Not recording yet. The privacy-safe problem recorder comes next and fills this line.",
+        "urgent": "{n} urgent problem open ({open} open in all). Customers are stuck: open it now.",
+        "important": "{n} important problem open ({open} open in all).",
+        "off": "The recorder is off ({open} still open).",
+        "minor": "Only problems that can wait are open ({open}).",
+        "none": "No open problem."
       },
       "server": {
         "noReport": "No report from the server's health check yet.",

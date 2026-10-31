@@ -1,0 +1,137 @@
+{
+  "prb": {
+    "metaTitle": "Customer problems",
+    "title": "Customer problems",
+    "sub": "What went wrong for visitors on the shop's pages, found by itself from real visits: one line per cause, Urgent first. No name, phone, address or payment detail is ever recorded.",
+    "views": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Last 7 days",
+      "all": "All ({days} days)"
+    },
+    "dayPick": "Another day",
+    "dayGo": "Show",
+    "dayShown": "Showing {day}",
+    "kpi": {
+      "open": "Open problems",
+      "openFoot": "{urgent} urgent · {important} important",
+      "visitors": "Visitors who hit a problem",
+      "visitorsFoot": "{from} – {to}",
+      "recorder": "Recorder",
+      "on": "On",
+      "off": "Off",
+      "recorderFoot": "On every shop page"
+    },
+    "offNote": "The recorder is off: the shop's pages report nothing. Switch it on in the card below.",
+    "trendH": "Reports a day (last two weeks)",
+    "trendBar": "{day}: {n} reports",
+    "listH": "Problems in this view",
+    "none": "No problem reported in this view.",
+    "glitchesH": "Short glitches (seen for a few minutes, not since)",
+    "col": {
+      "problem": "Problem",
+      "who": "Who it hit",
+      "status": "Status",
+      "last": "Last seen"
+    },
+    "sev": {
+      "URGENT": "Urgent",
+      "IMPORTANT": "Important",
+      "CAN_WAIT": "Can wait"
+    },
+    "status": {
+      "NEW": "New",
+      "FIXING": "Fixing",
+      "FIXED": "Fixed",
+      "COULD_NOT_FIX": "Could not fix",
+      "NEEDS_OWNER": "Needs owner permission",
+      "WAITING_OWNER_CHECK": "Fixed, waiting for the owner's check"
+    },
+    "kind": {
+      "script_error": "A script on the page broke",
+      "request_failed": "A call to the shop's server failed",
+      "slow_request": "A call to the shop's server was slow",
+      "page_failed": "A page failed to open",
+      "error_screen": "The error screen showed",
+      "form_stuck": "A form field was refused again and again",
+      "rage_click": "Rage clicks (many quick clicks on one spot)",
+      "broken_image": "A picture did not load",
+      "slow_load": "A page loaded slowly"
+    },
+    "step": {
+      "landing": "Home page",
+      "browse": "Browsing",
+      "product": "Product page",
+      "bag": "Bag",
+      "checkout": "Checkout",
+      "tracking": "Order tracking",
+      "account": "My account",
+      "other": "Other page"
+    },
+    "where": "{step} · {path}",
+    "whoLine": "{visitors} visitors · {records} reports",
+    "back": "Seen again after it was marked fixed",
+    "open": "Open",
+    "card": {
+      "h": "The problem recorder",
+      "d": "What the shop's pages report, and when a problem is urgent. Nothing personal is ever sent.",
+      "enabled": "Record problems on the shop's pages",
+      "enabledHelp": "Off: nothing is sent or kept.",
+      "slowRequestMs": "A call is slow above (milliseconds)",
+      "slowLoadMs": "A page load is slow above (milliseconds)",
+      "rageClicks": "Rage click: clicks within a second on one spot",
+      "formErrorRepeats": "Stuck form: the same field refused this many times",
+      "maxPerPage": "Most reports one page view may send",
+      "urgentVisitors": "Urgent anywhere when it hits this many visitors in a day",
+      "urgentVisitorsHelp": "On the bag and checkout one visitor is enough.",
+      "showDays": "Days the lists show",
+      "glitchMinutes": "Short glitch: seen only within this many minutes",
+      "readOnly": "You can see the recorder's numbers; changing them needs the settings permission."
+    },
+    "d": {
+      "backToList": "All problems",
+      "firstSeen": "First seen {at}",
+      "lastSeen": "Last seen {at}",
+      "whatH": "What happened",
+      "detail": "Message",
+      "noDetail": "No message (the page itself was slow or failed)",
+      "byH": "Who it hit (last {days} days)",
+      "device": "Device",
+      "browser": "Browser",
+      "network": "Network",
+      "devices": {
+        "phone": "Phone",
+        "tablet": "Tablet",
+        "desktop": "Desktop"
+      },
+      "notSaid": "not said",
+      "count": "{n} reports",
+      "lastH": "Last reports",
+      "at": "When",
+      "ms": "How slow",
+      "msValue": "{ms} ms",
+      "statusH": "Status",
+      "statusNow": "Now: {status}",
+      "statusSince": "Since {at}",
+      "statusPick": "New status",
+      "note": "Note (how it was fixed, why it could not be, or what the owner is asked)",
+      "save": "Save status",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "noManage": "Changing the status needs the problems permission.",
+      "ownerHint": "Leaving “Needs owner permission” or “Waiting for the owner's check” is the owner's call.",
+      "err": {
+        "NOTE_NEEDED": "Write a note: how it was fixed, why it could not be, or what the owner is asked.",
+        "OWNER_ONLY": "Only the owner (or someone he allowed) can move this problem on.",
+        "STALE": "Someone else changed this problem; it shows their status now.",
+        "INVALID_INPUT": "Pick a status and keep the note short.",
+        "NOT_FOUND": "This problem is not there any more.",
+        "forbidden": "You do not have permission to do this.",
+        "unauthorized": "Your sign-in has ended — please sign in again.",
+        "network": "No connection. Please try again.",
+        "other": "That did not save. Please try again."
+      },
+      "notFound": "This problem is not there."
+    }
+  }
+}

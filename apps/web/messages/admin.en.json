@@ -74,7 +74,8 @@
     "security": "Sign-in & security",
     "edge": "Cloudflare protection",
     "health": "Site health",
-    "golive": "Go-live"
+    "golive": "Go-live",
+    "healthProblems": "Customer problems"
   },
   "login": {
     "metaTitle": "Admin sign-in",

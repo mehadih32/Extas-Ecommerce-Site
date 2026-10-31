@@ -262,6 +262,7 @@ export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   SpeedMeasurement: SAMPLES,
   AiCitation: SAMPLES,
   ServiceHealthSample: SAMPLES,
+  ProblemRecord: SAMPLES, // PR 423 (CN-015): anonymous browser reports; a retention rule is a follow-up
   CacheStatSample: SAMPLES,
   LayoutRestore: NOT_BUILT,
   ComboTemplateScore: NOT_BUILT,
