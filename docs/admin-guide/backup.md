@@ -1,6 +1,6 @@
 # ব্যাকআপ
 
-ঠিকানা: `#/admin/backup`
+~~ঠিকানা: `#/admin/backup`~~ (ডেমোর পুরনো ঠিকানা)। এখন: **সেটিংস** › **সিস্টেম** › **ব্যাকআপ** (`/admin/settings/system/backups`), PR 395 (CN-030)। পাতার গাইড: [ব্যাকআপ](pages/settings/backups.md).
 
 ## এই সেকশন কিসের জন্য
 

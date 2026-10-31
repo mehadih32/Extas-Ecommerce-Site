@@ -36,6 +36,11 @@ export interface ConnectionDeclaration {
   targetMode: Exclude<Mode, 'MOCK'>;
   /** Needs no key at all (runs from the server's own settings), e.g. local disk. */
   builtIn?: boolean;
+  /**
+   * PR 395: set up on its own admin page, never by typing its keys here (Google Drive: a one-click sign-in returns the
+   * refresh token). Keys & connections shows its state with a link to that page and offers no form.
+   */
+  managedAt?: string;
 }
 
 export const connectionCatalogue: readonly ConnectionDeclaration[] = [
@@ -49,7 +54,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
-  { id: 'googleDrive', kind: 'GOOGLE_DRIVE', provider: 'googleDrive', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
+  // S19 · PR 395 (CN-030) — Google Drive: the owner's own Google client (secret) and the refresh token of the one-click
+  // sign-in, with the client id, the backup folder and the account. Set up on Settings → System → Backups only.
+  {
+    id: 'googleDrive',
+    kind: 'GOOGLE_DRIVE',
+    provider: 'googleDrive',
+    adapter: true,
+    secrets: [{ field: 'clientSecret' }, { field: 'refreshToken' }],
+    config: [{ field: 'clientId' }, { field: 'folderId', optional: true }, { field: 'folderName', optional: true }, { field: 'account', optional: true }],
+    exclusive: true,
+    targetMode: 'LIVE',
+    managedAt: '/admin/settings/system/backups',
+  },
   { id: 'googleDriveAddOnly', kind: 'GOOGLE_DRIVE', provider: 'googleDriveAddOnly', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
   // PR 602 — Cloudflare's cache purge: an API token with the zone's "Cache Purge" right, the zone id and the shop's host
   // names. The mock records the purges until the token's test passes.

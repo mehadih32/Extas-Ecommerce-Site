@@ -5,7 +5,12 @@
 // `config/secrets/` folder (0600), one file per part:
 //   telegram.env   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — only while the Telegram connection is on and LIVE (its Test
 //                  passed); empty otherwise, so the server's alerts stay in its log, never on a half-set bot.
-// Later parts (PR 395, 507) add the backup copies' keys and the backup settings the same way.
+//   backup.env     PR 395 (CN-030): the one-click Google Drive for rclone (the owner's client, the refresh token, the
+//                  scope drive.file, the backup folder as the remote's root) and how many checked copies Drive keeps
+//                  (`backups.drive.keepCopies`); empty while Drive is not connected (the server says "not connected").
+//   backup.key     the key that locks the Drive copies, made in the vault at the first connect (never emptied on the
+//                  server: no key in the vault keeps the server's own).
+// Later parts (PR 391, 507) add the Blob copy and the backup settings the same way.
 //
 // - Nothing is read from the vault when nothing it depends on changed: every run first works out a fingerprint of the
 //   connection rows, the vault's list (names, dates, never a value) and each part's own inputs; the server passes back
@@ -22,6 +27,8 @@ export interface SyncDeps {
   db: Db;
   /** Null when the server has no vault key yet: every part is then empty. */
   vault: Pick<Vault, 'get' | 'list'> | null;
+  /** The installation's settings (the backup settings); absent: every part uses its registry default. */
+  settings?: { value(key: string): Promise<unknown> };
 }
 
 /** One installation-wide connection as the parts see it (never a secret). */
@@ -83,7 +90,58 @@ export const telegramPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart];
+/** A setting's value, or `fallback` when there is no resolver (tests) or it cannot be read. */
+async function settingOr<T>(ctx: Pick<SyncDeps, 'settings'>, key: string, fallback: T): Promise<T> {
+  if (!ctx.settings) return fallback;
+  try {
+    return ((await ctx.settings.value(key)) as T) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const DRIVE_DEFAULT = { folderName: 'Extas E-commerce Backups', keepCopies: 3 };
+
+/** PR 395 (CN-030): the one-click Google Drive for the server's rclone copy. */
+export const backupPart: ServerFilePart = {
+  file: 'backup.env',
+  watch: (ctx) => settingOr(ctx, 'backups.drive', DRIVE_DEFAULT),
+  async build(ctx) {
+    const values: Record<string, string> = {};
+    const drive = liveConnection(ctx, 'GOOGLE_DRIVE', 'googleDrive');
+    const clientId = typeof drive?.config.clientId === 'string' ? drive.config.clientId : '';
+    const folderId = typeof drive?.config.folderId === 'string' ? drive.config.folderId : '';
+    if (drive && clientId && folderId) {
+      const [secret, token] = [await ctx.secret('googleDrive.clientSecret'), await ctx.secret('googleDrive.refreshToken')];
+      if (secret && token) {
+        const keep = (await settingOr(ctx, 'backups.drive', DRIVE_DEFAULT)).keepCopies;
+        Object.assign(values, {
+          RCLONE_CONFIG_DRIVE_TYPE: 'drive',
+          RCLONE_CONFIG_DRIVE_CLIENT_ID: clientId,
+          RCLONE_CONFIG_DRIVE_CLIENT_SECRET: secret,
+          RCLONE_CONFIG_DRIVE_SCOPE: 'drive.file',
+          RCLONE_CONFIG_DRIVE_ROOT_FOLDER_ID: folderId,
+          // An expired access token: rclone gets a fresh one from the refresh token at once.
+          RCLONE_CONFIG_DRIVE_TOKEN: JSON.stringify({ access_token: '', token_type: 'Bearer', refresh_token: token, expiry: '2000-01-01T00:00:00Z' }),
+          BACKUP_DRIVE_FOLDER: '',
+          BACKUP_DRIVE_KEEP: String(keep),
+        });
+      }
+    }
+    return Object.keys(values).length ? envLines(values) : '';
+  },
+};
+
+/** PR 395: the key of the Drive copies (one line, base64). */
+export const backupKeyPart: ServerFilePart = {
+  file: 'backup.key',
+  async build(ctx) {
+    const k = await ctx.secret('googleDrive.backupKey');
+    return k && /^[A-Za-z0-9+/=]{40,200}$/.test(k) ? `${k}\n` : '';
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart];
 
 export interface SyncResult {
   fingerprint: string;

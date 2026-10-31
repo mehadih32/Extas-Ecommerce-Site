@@ -63,6 +63,7 @@ import { erpOrdersV6Settings } from './registry-erp-orders-v6';
 import { booksSettings } from './registry-books';
 import { returnsV6Settings } from './registry-returns-v6';
 import { switchoverSettings } from './registry-switchover';
+import { backupsSettings } from './registry-backups';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
@@ -1274,6 +1275,8 @@ export const registry = {
   ...botCheckSettings,
   // ---- S18 · PR 380 · the admin address list (off by default), how long new-device sign-ins stay in the notifications, the security events listed (registry-admin-access.ts, version 78). ----
   ...adminAccessSettings,
+  // ---- S19 · PR 395, 507 (CN-030) · the backups: the Drive folder and copies kept, the schedule, retention, alerts and the monthly restore drill (registry-backups.ts, versions 75–76). ----
+  ...backupsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

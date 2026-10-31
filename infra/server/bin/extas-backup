@@ -37,7 +37,11 @@ mkdir -p "$LOCAL/base" "$LOCAL/dump" "$LOCAL/config" "$LOCAL/media" "$LOCAL/docs
 blob_on()  { [ -n "${RCLONE_CONFIG_BLOB_TYPE:-}" ]; }
 drive_on() { [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ]; }
 BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"
-DRIVE_PATH="${BACKUP_DRIVE_FOLDER:-EXTAS-backups}"
+# PR 395 (CN-030): with the one-click Google sign-in the remote's root is the shop's own backup folder
+# (RCLONE_CONFIG_DRIVE_ROOT_FOLDER_ID, from the vault sync) and BACKUP_DRIVE_FOLDER is empty: the dated folders go
+# straight into "Extas E-commerce Backups". Unset, it keeps the old sub-folder.
+DRIVE_PATH="${BACKUP_DRIVE_FOLDER-EXTAS-backups}"
+dpath() { echo "drive:${DRIVE_PATH:+$DRIVE_PATH/}$1"; }   # dpath <stamp>[/<file>] → the remote path
 
 # The Drive copy is encrypted with a key generated on this server. The owner keeps a copy of it in the vault.
 key_file() {
@@ -223,8 +227,12 @@ daily() {
       encrypt "$LOCAL/docs/$DOCS_NAME.tar.gz" "$work/$DOCS_NAME.tar.gz.gpg"
       encrypt "$LOCAL/docs/$DOCS_NAME.commit" "$work/$DOCS_NAME.commit.gpg"
     fi
-    if rclone copy -q "$work" "drive:$DRIVE_PATH/$NOW" --include '*.gpg'; then status daily drive ok "$NOW"
-    else status daily drive fail "upload failed"; rc=1; fi
+    # Uploaded, then every file checked against Drive's own checksum; only then the CHECKED marker, so retention
+    # (prune) counts only backups that are whole in Drive (CN-030: Drive keeps the newest BACKUP_DRIVE_KEEP checked).
+    if ! rclone copy -q "$work" "$(dpath "$NOW")" --include '*.gpg'; then status daily drive fail "upload failed"; rc=1
+    elif ! rclone check -q --one-way "$work" "$(dpath "$NOW")" --include '*.gpg'; then status daily drive fail "uploaded, but the check against Drive failed"; rc=1
+    elif ! rclone touch -q "$(dpath "$NOW/CHECKED")"; then status daily drive fail "uploaded and checked, but the CHECKED mark could not be written"; rc=1
+    else status daily drive ok "$NOW, every file checked in Drive"; fi
   else status daily drive off "not connected — add the key in Keys & connections"; fi
   rm -rf "$work"
   prune_files
@@ -277,11 +285,31 @@ prune_files() {
   return 0
 }
 
+# drive_prune: with BACKUP_DRIVE_KEEP > 0 (the one-click Drive, PR 395/507) Drive keeps the newest that many backups
+# that were checked whole (CHECKED marker); an unchecked one older than the oldest kept goes too (a newer unchecked one
+# stays until a later checked one passes it). A removed folder goes to the Drive's bin, as Drive does. With 0, by age
+# (BACKUP_KEEP_DRIVE_DAYS) as before.
+drive_prune() {
+  local keep="${BACKUP_DRIVE_KEEP:-0}" d n=0 oldest_kept="" all
+  if [ "$keep" -le 0 ]; then rclone delete -q --min-age "${BACKUP_KEEP_DRIVE_DAYS}d" "$(dpath "")" || true; return 0; fi
+  all="$(rclone lsf --dirs-only "$(dpath "")" 2>/dev/null | tr -d / | grep -E '^[0-9]{8}-[0-9]{4}$' | sort -r || true)"
+  for d in $all; do
+    if [ -n "$(rclone lsf "$(dpath "$d")" --include CHECKED 2>/dev/null)" ]; then
+      n=$((n + 1))
+      if [ "$n" -le "$keep" ]; then oldest_kept="$d"; continue; fi
+      rclone purge -q "$(dpath "$d")" || true
+    elif [ -n "$oldest_kept" ] && [ "$n" -ge "$keep" ] && [[ "$d" < "$oldest_kept" ]]; then
+      rclone purge -q "$(dpath "$d")" || true
+    fi
+  done
+}
+
 prune() {
   prune_files
   # Remote copies (database, config, photo archives and docs bundles alike) by their age.
   blob_on && rclone delete -q --min-age "${BACKUP_KEEP_BLOB_DAYS}d" "blob:$BLOB_PATH" || true
-  drive_on && rclone delete -q --min-age "${BACKUP_KEEP_DRIVE_DAYS}d" "drive:$DRIVE_PATH" || true
+  drive_on && drive_prune
+  return 0
   status prune local ok "kept ${BACKUP_KEEP_LOCAL_DAYS} days locally"
 }
 

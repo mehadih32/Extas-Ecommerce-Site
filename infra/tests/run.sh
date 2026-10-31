@@ -495,7 +495,7 @@ p() { case "$1" in blob:*|drive:*) echo "$FAKE_REMOTE/${1%%:*}/${1#*:}" ;; *) ec
 cmd="$1"; shift; args=(); inc=(); dirs=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    -q|--ignore-existing) shift ;;
+    -q|--ignore-existing|--one-way) shift ;;
     --min-age) shift 2 ;;
     --include) inc+=("$2"); shift 2 ;;
     --dirs-only) dirs=1; shift ;;
@@ -510,6 +510,11 @@ case "$cmd" in
     if [ -f "$s" ]; then cp -p "$s" "$d/"; exit 0; fi
     [ -d "$s" ] || exit 0
     (cd "$s" && find . -type f) | while read -r f; do want "$f" || continue; mkdir -p "$d/$(dirname "$f")"; cp -p "$s/$f" "$d/$f"; done ;;
+  check)
+    s="$(p "${args[0]}")"; d="$(p "${args[1]}")"
+    (cd "$s" && find . -type f) | while read -r f; do want "$f" || continue; cmp -s "$s/$f" "$d/$f" || exit 1; done ;;
+  touch) d="$(p "${args[0]}")"; mkdir -p "$(dirname "$d")"; : > "$d" ;;
+  purge) rm -rf "$(p "${args[0]}")" ;;
   lsf)
     s="$(p "${args[0]}")"; [ -d "$s" ] || exit 0
     if [ -n "$dirs" ]; then find "$s" -mindepth 1 -maxdepth 1 -type d -printf '%f/\n' | sort
@@ -547,6 +552,7 @@ check "backup: photos in Blob" "$(ls "$T/remote/blob/extas-backups/media" | tr '
 check "backup: photos on Drive, encrypted, with the database" "$(find "$T/remote/drive/EXTAS-backups/$A" -name 'media-*.gpg' | wc -l):$(find "$T/remote/drive/EXTAS-backups/$A" -name 'extas-*.dump.gpg' | wc -l)" "2:1"
 gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$BR/config/secrets/backup.key" -o "$T/drive.tar" -d "$T/remote/drive/EXTAS-backups/$A/media-$A-full.tar.gpg" 2>/dev/null
 check "backup: the Drive copy opens with the database's key" "$(cmp -s "$T/drive.tar" "$L/media-$A-full.tar" && echo same)" "same"
+check "backup: Drive copy checked and marked" "$([ -f "$T/remote/drive/EXTAS-backups/$A/CHECKED" ] && echo marked):$(jq -r .detail "$BR/state/backup-daily-drive.json")" "marked:$A, every file checked in Drive"
 check "backup: no photo name in the clear on Drive" "$(grep -rlc 'one.avif' "$T/remote/drive" | wc -l)" "0"
 check "backup: staging on NVMe cleared" "$(ls "$T/nvme/backup-staging")" ""
 check "backup: a dated docs bundle with its commit" "$(ls "$LD" | tr '\n' ' '):$(cat "$LD/docs-$A.commit")" "docs-$A.commit docs-$A.tar.gz :$DSHA"
@@ -630,6 +636,13 @@ done
 touch -d '9 days ago' "$L/media-$A-full.tar" "$L/media-$A-full.snar" "$L/media-$A.sha256" "$L/media-$Bs-diff-$A.tar" "$L/media-$Bs.sha256" "$L/media-$C-diff-$A.tar" "$L/media-$C.sha256"
 "${BENV[@]}" "$B/extas-backup" prune >/dev/null 2>&1
 check "prune: old photo archives go, the newest set stays" "$(ls "$L" | tr '\n' ' ')" "media-$A-full.snar media-$A-full.tar media-$A.sha256 media-$C-diff-$A.tar media-$C.sha256 "
+# Drive keeps the newest BACKUP_DRIVE_KEEP (3) checked backups (PR 395, CN-030); an unchecked one older than them goes
+KT="$T/remote/drive/keeptest"
+for d in 20260101-0230:c 20260102-0230:u 20260103-0230:c 20260104-0230:u 20260105-0230:c 20260106-0230:c 20260107-0230:u; do
+  mkdir -p "$KT/${d%:*}"; : > "$KT/${d%:*}/extas.dump.gpg"; [ "${d#*:}" = c ] && : > "$KT/${d%:*}/CHECKED"
+done
+"${BENV[@]}" BACKUP_DRIVE_FOLDER=keeptest "$B/extas-backup" prune >/dev/null 2>&1
+check "prune: Drive keeps the newest 3 checked, a newer unchecked stays, older ones go" "$(ls "$KT" | tr '\n' ' ')" "20260103-0230 20260104-0230 20260105-0230 20260106-0230 20260107-0230 "
 # The cadence: a full archive at least as often as the shortest retention
 sed -i 's/^BACKUP_KEEP_LOCAL_DAYS=.*/BACKUP_KEEP_LOCAL_DAYS=1/' "$T/server.conf"
 "${BENV[@]}" "$B/extas-backup" daily >/dev/null 2>&1

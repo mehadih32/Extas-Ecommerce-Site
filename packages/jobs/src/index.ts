@@ -28,6 +28,9 @@ export * from './webhooks';
 export * from './search';
 export * from './messages';
 export * from './payments';
+// S19 · PR 392, 395 — the vault's keys for the server's scripts and the one-click Google Drive of the backups.
+export * from './server-sync';
+export * from './backups';
 export * from './courier';
 export * from './invoices';
 export * from './returns-erp';

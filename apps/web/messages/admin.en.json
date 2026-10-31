@@ -66,7 +66,9 @@
     "moneyCosts": "Costs",
     "erpLink": "ERP link",
     "seoRedirects": "Redirects & 404",
-    "seo": "Search settings"
+    "seo": "Search settings",
+    "cache": "Cache",
+    "backups": "Backups"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -179,7 +181,9 @@
         "SERVER_ERROR": "The shop could not answer",
         "RATE_LIMITED": "Refused: too many wrong calls this minute"
       }
-    }
+    },
+    "managedOn": "connected",
+    "managedLink": "set up on the Backups page"
   },
   "connections": {
     "azureBlob": {
@@ -194,7 +198,15 @@
     },
     "googleDrive": {
       "name": "Google Drive",
-      "desc": "Daily encrypted backup copy"
+      "desc": "Daily encrypted backup copy in your own Google Drive (one-click sign-in on the Backups page)",
+      "fields": {
+        "clientId": "Client ID (your own Google client, type \"TVs and Limited Input devices\")",
+        "clientSecret": "Client secret (only in the vault)",
+        "refreshToken": "Google access (made by Connect on the Backups page)",
+        "folderId": "Backup folder (made at the first connect)",
+        "folderName": "Backup folder name",
+        "account": "Google account"
+      }
     },
     "googleDriveAddOnly": {
       "name": "Second Google Drive (add-only)",

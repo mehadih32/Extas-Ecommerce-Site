@@ -49,6 +49,8 @@ export interface ConnectionView {
   adapter: boolean;
   /** Needs no key (local disk). */
   builtIn: boolean;
+  /** PR 395: set up on its own page (this path), not here. */
+  managedAt: string | null;
   secrets: (FieldState & { set: boolean })[];
   /** Plain settings (not secret) with their saved value, so the form can show them again. */
   config: (FieldState & { value: string | null })[];
@@ -114,6 +116,7 @@ export async function listConnections(db: Db, vault: Pick<Vault, 'list'> | null,
       kind: d.kind,
       adapter: d.adapter,
       builtIn: Boolean(d.builtIn),
+      managedAt: d.managedAt ?? null,
       secrets: d.secrets.map((s, i) => ({ field: s.field, optional: Boolean(s.optional), set: set[i] ?? false })),
       config: d.config.map((c) => ({ field: c.field, optional: Boolean(c.optional), value: typeof cfg[c.field] === 'string' ? (cfg[c.field] as string) : null })),
       // A connection with no key (the page reader) counts as saved once its settings are.
@@ -307,7 +310,8 @@ export async function integrationHandler(request: Request, deps: AdminDeps | nul
   if (isResponse(g)) return g;
   const d = declarationsFor(cat, storeId).find((x) => x.id === id);
   if (!d) return fail(404, 'NOT_FOUND');
-  if (!d.adapter || d.builtIn) return fail(409, 'NOT_AVAILABLE');
+  // PR 395: a connection set up on its own page (Google Drive's sign-in) takes no keys, tests or removal here.
+  if (!d.adapter || d.builtIn || d.managedAt) return fail(409, 'NOT_AVAILABLE');
   if (!deps!.vault) return fail(503, 'VAULT_NOT_CONFIGURED');
   try {
     const b = await body(request);

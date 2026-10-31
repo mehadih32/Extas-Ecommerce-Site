@@ -15,7 +15,9 @@ export type BuildStatus = {
 };
 export type Deploy = { sha?: string; at?: string; color?: string };
 export type Health = { at?: string; problems?: string[] };
-export type Backup = { result?: 'ok' | 'off' | 'fail'; at?: string };
+export type Backup = { result?: 'ok' | 'off' | 'fail'; at?: string; detail?: string };
+// PR 395: extas-restore test (the monthly restore test into a throw-away database).
+export type RestoreTest = { result?: 'ok' | 'fail'; at?: string; detail?: string; from?: string };
 // CN-016: infra/deploy/smoke.sh after every deploy and every night (every built page, signed out and as the admin).
 export type Smoke = { ok?: boolean; at?: string; kind?: string; pages?: number; failed?: number };
 
@@ -34,13 +36,14 @@ async function readJson<T>(name: string): Promise<T | null> {
 }
 
 export async function runtimeState() {
-  const [deploy, health, local, blob, drive, smoke] = await Promise.all([
+  const [deploy, health, local, blob, drive, smoke, restoreTest] = await Promise.all([
     readJson<Deploy>('last-good-deploy.json'),
     readJson<Health>('health.json'),
     readJson<Backup>('backup-daily-local.json'),
     readJson<Backup>('backup-daily-blob.json'),
     readJson<Backup>('backup-daily-drive.json'),
     readJson<Smoke>('smoke.json'),
+    readJson<RestoreTest>('restore-test.json'),
   ]);
-  return { deploy, health, backups: { local, blob, drive }, smoke };
+  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest };
 }

@@ -264,8 +264,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'erp', guide: 'integrations', pages: [{ href: '/admin/settings/erp-link', perm: 'vault.read', keys: ['erpLink'] }] },
       // S18 · PR 380 — SET-04d Sign-in & security (Team & roles' security page; People and Roles join with their PRs).
       { id: 'security', guide: 'settings', pages: [{ href: '/admin/settings/security', perm: 'security.read', keys: ['security'] }] },
-      // S02 · PR 602 — SET-08b Cache (System); Backups, Images, Data purge join with their PRs.
-      { id: 'system', guide: 'cache', pages: [{ href: '/admin/settings/system/cache', perm: 'system.read', keys: ['cache'] }] },
+      // S02 · PR 602 — SET-08b Cache (System); S19 · PR 395 (CN-030) — Backups (the one-click Google Drive); Images,
+      // Data purge join with their PRs.
+      {
+        id: 'system',
+        guide: 'cache',
+        pages: [
+          { href: '/admin/settings/system/cache', perm: 'system.read', keys: ['cache'] },
+          { href: '/admin/settings/system/backups', perm: 'system.read', keys: ['backups'] },
+        ],
+      },
       // PR 12 (CN-025): Settings → Admin look (the page designs, where the guide opens).
       { id: 'look', guide: 'admin-look', pages: [{ href: '/admin/settings/look', perm: 'settings.read', keys: ['adminLook'] }] },
     ],
