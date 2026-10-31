@@ -1,6 +1,7 @@
 // S08 · PR 193 — Delivery › Delivery settings (demo 97t-adm2-delivery.js /admin/delivery/settings; docs/ADMIN-ARCHITECTURE.md:
 // settings inside their section): first the holiday mode card (Blueprint B1.14) — the switch, the break's first and
-// last day, how many days before the notice shows, and the words of the notice and of the checkout's "ships from …".
+// last day, how many days before the notice shows, and the words of the notice and of the checkout's "ships from …";
+// then the sticker's Latin address line (SIM-F-048, PR 179 follow-up).
 // Seeing needs `delivery.read`; saving `delivery.charges` (the API checks again). Off as shipped. The demo's other
 // cards (stuck hours, book after packing, the suggestion rule, the exact-amount line, trial at delivery) join with
 // their PRs. Guide: docs/admin-guide/pages/delivery/settings.md.
@@ -69,11 +70,21 @@ export default async function DeliverySettingsPage() {
     { kind: 'pair', path: 'promise', label: pair('promise'), max: 200 },
   ];
   const c = cards['delivery.holiday'];
+  const sk = (k: string) => t(d, `eta.sticker.${k}`);
+  const latin = cards['delivery.sticker.latin'];
   return (
     <div className="a2-z" data-testid="delivery-settings">
       <PageHead view={view} place={locateKey(KEY)} title={h('title')} sub={h('sub')} />
       <SectionTabs view={view} current={KEY} />
       <FieldsCard url={API} screen={{ key: c.key, value: c.value, version: c.version }} fields={holiday} texts={texts} canEdit={canEdit} testId="delivery-holiday" />
+      <FieldsCard
+        url={API}
+        screen={{ key: latin.key, value: latin.value, version: latin.version }}
+        fields={[{ kind: 'switch', path: 'enabled', label: sk('enabled'), help: sk('enabledHelp') }]}
+        texts={{ ...texts, h: sk('h'), d: sk('d') }}
+        canEdit={canEdit}
+        testId="delivery-sticker-latin"
+      />
     </div>
   );
 }

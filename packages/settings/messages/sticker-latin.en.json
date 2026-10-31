@@ -1,0 +1,10 @@
+{
+  "delivery": {
+    "sticker": {
+      "latin": {
+        "label": "Address in Latin letters on the sticker",
+        "help": "When the address is written in Bengali, the sticker prints it again under it in Latin letters, with the area and district in English, for riders who read Latin letters faster. The Bengali address stays the one that counts. Off until switched on."
+      }
+    }
+  }
+}

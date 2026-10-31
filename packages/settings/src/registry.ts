@@ -69,6 +69,7 @@ import { costsSettings } from './registry-costs';
 import { courierReportSettings } from './registry-courier-report';
 import { holidaySettings } from './registry-holiday';
 import { chargeMismatchSettings } from './registry-charge-mismatch';
+import { stickerLatinSettings } from './registry-sticker-latin';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
@@ -1310,6 +1311,8 @@ export const registry = {
   ...holidaySettings,
   // ---- S08 · PR 564 · the charge mismatch log: record only, nothing changed or messaged (registry-charge-mismatch.ts, version 95). ----
   ...chargeMismatchSettings,
+  // ---- SIM-F-048 · PR 179 follow-up · the sticker's Latin address line (registry-sticker-latin.ts, version 96). ----
+  ...stickerLatinSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

@@ -72,7 +72,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     const p = first.find((s) => s.shipmentId === paid.shipmentId)!;
     expect(c).toMatchObject({ orderNumber: order.number, courierName: 'Steadfast main', practice: true, consignmentId: cod.shipment.consignmentId, trackingCode: 'SF-TRK-1', collectMinor: order.totalMinor - order.walletAppliedMinor - order.paidMinor, currency: order.currency, reprint: null, gift: null });
     expect(c.collectMinor).toBeGreaterThan(0);
-    expect(c.receiver).toEqual({ name: order.customerName, phone: courierPhone(order.phone), address: order.shippingAddressText });
+    expect(c.receiver).toEqual({ name: order.customerName, phone: courierPhone(order.phone), address: order.shippingAddressText, addressLatin: null });
     expect(c.items.length).toBeGreaterThan(0);
     expect(p.collectMinor).toBe(0);
     expect(await db().shipment.findUniqueOrThrow({ where: { id: cod.shipmentId } })).toMatchObject({ labelPrintCount: 1 });
@@ -116,6 +116,25 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     } finally {
       f.overrides.delete('checkout.gift');
       f.overrides.delete('delivery.courier.booking');
+    }
+  });
+
+  it('SIM-F-048: with the owner\'s switch on, a Bengali address carries its Latin line and its English place; never otherwise', async () => {
+    const bn = await booked('st-bn', { address: 'বাসা ৪, রোড ৫, ধানমন্ডি, ঢাকা ১২০৯' });
+    const en = await booked('st-en');
+    const off = await print([bn.shipmentId, en.shipmentId]);
+    expect(off.every((p) => p.receiver.addressLatin === null)).toBe(true);
+    f.overrides.set('delivery.sticker.latin', { enabled: true });
+    try {
+      const on = await print([bn.shipmentId, en.shipmentId], { reason: 'latin line check' });
+      const line = on.find((p) => p.shipmentId === bn.shipmentId)!.receiver.addressLatin!;
+      expect(line.startsWith('Basa 4, Rod 5, Dhanmondi, Dhaka 1209')).toBe(true);
+      const order = await db().order.findUniqueOrThrow({ where: { id: bn.orderId }, select: { area: { select: { nameEn: true } } } });
+      if (order.area) expect(line).toContain(` · ${order.area.nameEn}`);
+      // an address already in Latin letters needs no second line
+      expect(on.find((p) => p.shipmentId === en.shipmentId)!.receiver.addressLatin).toBeNull();
+    } finally {
+      f.overrides.delete('delivery.sticker.latin');
     }
   });
 

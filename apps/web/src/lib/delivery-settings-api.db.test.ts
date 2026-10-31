@@ -83,4 +83,19 @@ describe.skipIf(!HAS_TEST_DB)('Delivery settings API on PostgreSQL (PR 193 holid
     expect(await t.prisma.auditLog.count({ where: { action: 'delivery.holiday.save' } })).toBe(1);
     expect((await api('PUT', { cookie: owner, body: { key: 'delivery.other', value: {}, version: 'x' } })).status).toBe(400);
   });
+
+  it('SIM-F-048: the sticker Latin line card ships off; the owner switches it on, audited; a bad value is refused', async () => {
+    const card = (await api('GET', { cookie: owner })).body.cards!['delivery.sticker.latin']!;
+    expect(card.value).toEqual({ enabled: false });
+    const readerPut = await api('PUT', { cookie: reader, body: { key: 'delivery.sticker.latin', value: { enabled: true }, version: card.version } });
+    expect(readerPut.status).toBe(403);
+    expect((await api('PUT', { cookie: owner, body: { key: 'delivery.sticker.latin', value: { enabled: 'yes' }, version: card.version } })).status).toBe(400);
+    const ok = await api('PUT', { cookie: owner, body: { key: 'delivery.sticker.latin', value: { enabled: true }, version: card.version } });
+    expect(ok.status).toBe(200);
+    expect(ok.body.cards!['delivery.sticker.latin']!.value).toEqual({ enabled: true });
+    expect(await deps.resolver.value('delivery.sticker.latin', { storeId: MOTHER_STORE_ID })).toEqual({ enabled: true });
+    expect(await t.prisma.auditLog.count({ where: { action: 'delivery.sticker.latin.save' } })).toBe(1);
+    // the holiday card is untouched by it
+    expect(ok.body.cards!['delivery.holiday']!.value).toMatchObject({ enabled: true, from: '2027-04-08' });
+  });
 });

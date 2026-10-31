@@ -81,6 +81,17 @@ describe('the courier sticker', () => {
     expect(engine.calls).toContain('Pay exactly ৳1,580. The rider may not ask for more.');
   });
 
+  it('SIM-F-048: a Bengali address carries its Latin line under it, in the order the rider reads them', async () => {
+    const engine = boxText();
+    const address = 'মাস্টারপাড়া, গাবতলী, বগুড়া';
+    const latin = 'Mastarpara, Gabtoli, Bogura · Gabtali, Bogura';
+    await stickerPages(sampleSticker({ receiver: { name: 'Rahim Uddin', phone: '01711111111', address, addressLatin: latin } }), SAMPLE_WORDS, LAYOUT, engine);
+    expect(engine.calls.indexOf(latin)).toBe(engine.calls.indexOf(address) + 1);
+    const plain = boxText();
+    await stickerPages(sampleSticker(), SAMPLE_WORDS, LAYOUT, plain);
+    expect(plain.calls.some((c) => c.includes('·') && c.includes('Bogura'))).toBe(false);
+  });
+
   it('SIM-F-007: a gift shows who it is from and the day, under the receiver', async () => {
     const engine = boxText();
     await stickerPages(sampleSticker({ gift: { from: 'Ayesha', deliverAfter: '2026-10-30', note: 'Happy Eid' } }), SAMPLE_WORDS, LAYOUT, engine);

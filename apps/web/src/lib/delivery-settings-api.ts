@@ -11,13 +11,21 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { holidaySchema, storeTarget } from '@extas/settings';
+import { holidaySchema, stickerLatinSchema, storeTarget } from '@extas/settings';
+import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys this page saves (one card each). */
-export const DELIVERY_SETTING_KEYS = ['delivery.holiday'] as const;
+export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin'] as const;
 export type DeliverySettingKey = (typeof DELIVERY_SETTING_KEYS)[number];
+
+/** Each card's schema, its line in the settings change log and its audit action. */
+const CARDS: Record<DeliverySettingKey, { schema: ZodType<Record<string, unknown>>; reason: string; action: string }> = {
+  'delivery.holiday': { schema: holidaySchema, reason: 'Delivery › Delivery settings › Holiday mode', action: 'delivery.holiday.save' },
+  'delivery.sticker.latin': { schema: stickerLatinSchema, reason: 'Delivery › Delivery settings › Sticker address in Latin letters', action: 'delivery.sticker.latin.save' },
+};
+const isKey = (k: unknown): k is DeliverySettingKey => typeof k === 'string' && (DELIVERY_SETTING_KEYS as readonly string[]).includes(k);
 
 export interface DeliverySettingCard {
   key: DeliverySettingKey;
@@ -48,21 +56,28 @@ type Deps = Pick<AdminDeps, 'db' | 'resolver'>;
 /** The page's cards with their versions (`delivery.read`). */
 export async function deliverySettingCards(deps: Deps, who: Who): Promise<Record<DeliverySettingKey, DeliverySettingCard>> {
   await requirePermission(deps.db, who.actor, 'delivery.read', { storeId: S });
-  const holiday = (await deps.resolver.value('delivery.holiday', { storeId: S })) as unknown as Record<string, unknown>;
-  return { 'delivery.holiday': { key: 'delivery.holiday', value: holiday, version: versionOf(holiday) } };
+  const entries = await Promise.all(
+    DELIVERY_SETTING_KEYS.map(async (key) => {
+      const value = (await deps.resolver.value(key, { storeId: S })) as unknown as Record<string, unknown>;
+      return [key, { key, value, version: versionOf(value) }] as const;
+    }),
+  );
+  return Object.fromEntries(entries) as Record<DeliverySettingKey, DeliverySettingCard>;
 }
 
 /** Saves one card whole (`delivery.charges`): checked against its schema and the version the page showed; audited. */
 export async function saveDeliverySetting(deps: Deps, who: Who, input: unknown): Promise<Record<DeliverySettingKey, DeliverySettingCard>> {
   await requirePermission(deps.db, who.actor, 'delivery.charges', { storeId: S });
-  if (!isObj(input) || input.key !== 'delivery.holiday') throw new DeliverySettingsError('INVALID_INPUT', 400, ['key']);
-  const before = await deps.resolver.value('delivery.holiday', { storeId: S });
+  if (!isObj(input) || !isKey(input.key)) throw new DeliverySettingsError('INVALID_INPUT', 400, ['key']);
+  const key = input.key;
+  const card = CARDS[key];
+  const before = await deps.resolver.value(key, { storeId: S });
   if (input.version !== versionOf(before)) throw new DeliverySettingsError('STALE', 409);
-  const ok = holidaySchema.safeParse(input.value);
+  const ok = card.schema.safeParse(input.value);
   if (!ok.success) throw new DeliverySettingsError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
   if (versionOf(ok.data) !== versionOf(before)) {
-    await deps.resolver.set('delivery.holiday', ok.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Delivery › Delivery settings › Holiday mode' });
-    await audit(deps.db, who.actor, { storeId: S, action: 'delivery.holiday.save', entityType: 'Setting', entityId: 'delivery.holiday', before: { ...before }, after: { ...ok.data } }, who.ctx);
+    await deps.resolver.set(key, ok.data as never, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: card.reason });
+    await audit(deps.db, who.actor, { storeId: S, action: card.action, entityType: 'Setting', entityId: key, before: { ...before }, after: { ...ok.data } }, who.ctx);
   }
   return deliverySettingCards(deps, who);
 }

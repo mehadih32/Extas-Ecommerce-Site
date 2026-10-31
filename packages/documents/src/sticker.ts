@@ -4,7 +4,8 @@
 // courier, never made by the shop), the receiver (a gift's receiver, never the sender's phone), the order number, the
 // amount the rider collects — big, on a black band — or "paid, collect nothing", the exact-amount line when the owner
 // turned it on (never on a paid parcel), a gift's sender and "deliver on or after", every piece in a bordered box
-// (name, colour, size, quantity; no prices), the delivery note, and "REPRINT n" on a reprint.
+// (name, colour, size, quantity; no prices), the delivery note, and "REPRINT n" on a reprint. SIM-F-048: a Bengali
+// address may carry a second, smaller line in Latin letters under it (the owner's switch).
 //
 // Nothing is cut and nothing overlaps: the sticker is measured first; when it does not fit, the type is made smaller,
 // down to the owner's smallest size, and only then do the remaining pieces carry on onto a second sticker ("2/2") with
@@ -53,7 +54,8 @@ export interface StickerInput {
   consignmentId: string | null;
   trackingCode: string | null;
   orderNumber: string;
-  receiver: { name: string | null; phone: string | null; address: string | null };
+  /** SIM-F-048: `addressLatin` — the Bengali address again in Latin letters, printed small under it (null: none). */
+  receiver: { name: string | null; phone: string | null; address: string | null; addressLatin?: string | null };
   /** The amount the rider collects, formatted ("৳1,580"); null when there is nothing to collect. */
   collect: string | null;
   /** The exact-amount line (owner's switch; never on a paid parcel). */
@@ -133,7 +135,10 @@ async function partsAt(input: StickerInput, words: StickerWords, sheet: Sheet, s
   head.push(text(await shape(words.to, st('small'))));
   head.push(text(await shape(input.receiver.name, st('name', { bold: true }))));
   head.push(text(await shape(input.receiver.phone, st('name', { bold: true }))));
-  head.push(text(await shape(input.receiver.address, st('body'))), space());
+  head.push(text(await shape(input.receiver.address, st('body'))));
+  // SIM-F-048: the same address in Latin letters, small, under the Bengali one
+  if (input.receiver.addressLatin) head.push(text(await shape(input.receiver.addressLatin, st('small'))));
+  head.push(space());
   // the order number and the pieces
   const pieces = input.items.reduce((s, i) => s + i.quantity, 0);
   const order = await shape(`${words.order} ${input.orderNumber}`, st('body', { bold: true }), Math.round(w * 0.6));

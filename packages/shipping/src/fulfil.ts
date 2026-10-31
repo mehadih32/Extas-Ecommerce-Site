@@ -20,6 +20,7 @@
 // - A parcel handed over to the courier (PR 180's handover) is no longer with us: it leaves the print run.
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
+import { bengaliToLatin } from '@extas/delivery';
 import { DELIVERY_TARGET_SELECT, deliveryTarget } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
@@ -48,6 +49,7 @@ export const PRINT_PARCEL_SELECT = {
       totalMinor: true,
       walletAppliedMinor: true,
       paidMinor: true,
+      areaId: true,
       ...DELIVERY_TARGET_SELECT,
       items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, productId: true } },
     },
@@ -126,7 +128,9 @@ export interface StickerParcel {
   practice: boolean;
   consignmentId: string;
   trackingCode: string | null;
-  receiver: { name: string | null; phone: string | null; address: string | null };
+  /** SIM-F-048: `addressLatin` — a Bengali address again in Latin letters with its area and district in English (the
+   *  owner's `delivery.sticker.latin`; null when off or when the address is already in Latin letters). */
+  receiver: { name: string | null; phone: string | null; address: string | null; addressLatin: string | null };
   /** The amount the rider collects (the courier's COD, equal to the live amount due). 0: nothing to collect. */
   collectMinor: number;
   currency: string;
@@ -138,7 +142,7 @@ export interface StickerParcel {
   reprint: number | null;
 }
 
-const stickerOf = (s: PrintParcelRow, count: number): StickerParcel => {
+const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, string | null> = new Map()): StickerParcel => {
   const booked = bookedReceiver(s.receiver);
   const gift = booked.gift ?? deliveryTarget(s.order).gift;
   return {
@@ -148,7 +152,7 @@ const stickerOf = (s: PrintParcelRow, count: number): StickerParcel => {
     practice: s.mode === 'MOCK',
     consignmentId: s.consignmentId!,
     trackingCode: s.trackingCode,
-    receiver: { name: booked.name, phone: booked.phone, address: booked.address },
+    receiver: { name: booked.name, phone: booked.phone, address: booked.address, addressLatin: latin.get(s.id) ?? null },
     collectMinor: s.codAmountMinor,
     currency: s.order.currency,
     items: s.order.items.map((i) => ({ name: i.productName, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity })),
@@ -157,6 +161,32 @@ const stickerOf = (s: PrintParcelRow, count: number): StickerParcel => {
     reprint: count > 1 ? count - 1 : null,
   };
 };
+
+/**
+ * SIM-F-048: each parcel's Bengali address in Latin letters, with its area and district as the gazetteer names them in
+ * English ("Mastarpara, Gabtoli, Bogura · Gabtali, Bogura") — only while the owner's `delivery.sticker.latin` is on.
+ */
+export async function latinLines(deps: Pick<ShippingDeps, 'db' | 'settings'>, storeId: number, rows: readonly PrintParcelRow[]): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>();
+  if (!rows.length || !(await setting(deps, storeId, 'delivery.sticker.latin')).enabled) return out;
+  const areaIds = [...new Set(rows.map((r) => r.order.areaId).filter((x): x is string => !!x))];
+  const areas = areaIds.length ? await deps.db.geoArea.findMany({ where: { id: { in: areaIds } }, select: { id: true, level: true, nameEn: true, ancestorIds: true } }) : [];
+  const districtIds = [...new Set(areas.flatMap((a) => a.ancestorIds))];
+  const districts = districtIds.length ? await deps.db.geoArea.findMany({ where: { id: { in: districtIds }, level: 'DISTRICT' }, select: { id: true, nameEn: true } }) : [];
+  const districtOf = new Map(districts.map((d) => [d.id, d.nameEn]));
+  const placeOf = new Map(
+    areas.map((a) => {
+      const district = a.level === 'DISTRICT' ? null : (a.ancestorIds.map((id) => districtOf.get(id)).find(Boolean) ?? null);
+      return [a.id, [a.nameEn, district].filter(Boolean).join(', ')];
+    }),
+  );
+  for (const r of rows) {
+    const line = bengaliToLatin(bookedReceiver(r.receiver).address);
+    const place = r.order.areaId ? placeOf.get(r.order.areaId) : null;
+    out.set(r.id, line ? [line, place].filter(Boolean).join(' · ') : null);
+  }
+  return out;
+}
 
 /** One press of Print: the job, whether it is a repeat of a press already done (nothing counted again), the stickers. */
 export interface StickerPrint {
@@ -186,7 +216,8 @@ async function replayPrint(deps: ShippingDeps, who: Who, job: { id: string; kind
   const rows = await deps.db.shipment.findMany({ where: { storeId: who.storeId, id: { in: job.shipmentIds } }, select: PRINT_PARCEL_SELECT });
   const prints = printsOf(job.data);
   const ordered = await inPrintOrder(deps.db, who.storeId, rows);
-  return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount)) };
+  const latin = await latinLines(deps, who.storeId, ordered);
+  return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount, latin)) };
 }
 
 /**
@@ -233,7 +264,8 @@ export async function printStickers(deps: ShippingDeps, who: Who, input: unknown
       await tx.printJob.update({ where: { id: job.id }, data: { status: 'SUCCEEDED', printedAt: at, data: { prints } } });
       return { jobId: job.id, prints };
     }, TX);
-    return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!)) };
+    const latin = await latinLines(deps, who.storeId, ordered);
+    return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!, latin)) };
   } catch (e) {
     if (!isUnique(e) || !d.requestKey) throw e;
     const again = await findJob();
