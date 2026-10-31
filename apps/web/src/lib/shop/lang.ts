@@ -12,6 +12,13 @@ export const LANG_HEADER = 'x-extas-lang';
 export const PATH_HEADER = 'x-extas-path';
 /** `?theme=` from the address (PR 82 preview link), handed over by the proxy. */
 export const THEME_HEADER = 'x-extas-theme';
+/**
+ * PR 84 follow-up (review R1): the proxy's mark on its own /bn rewrite. When the server's address and the rewritten
+ * address differ (a server bound to 127.0.0.1, an address Next calls "localhost"), Next sends the rewrite on as a new
+ * request and the proxy runs again on the English path; a request carrying this process's own mark keeps the Bengali it
+ * was given. The mark is random per process, so a browser can never send it (it is overwritten like the others).
+ */
+export const REWRITE_MARK_HEADER = 'x-extas-rewrite';
 /** The Bengali prefix. */
 export const BN_PREFIX = '/bn';
 

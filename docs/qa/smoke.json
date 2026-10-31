@@ -10,6 +10,7 @@
   "adminDiscover": [{ "from": "/admin/orders", "selector": "[data-testid=order-row] a.a2-b", "take": 1 }, { "from": "/admin/customers", "selector": "[data-testid=cus-row] a.a2-b", "take": 1 }, { "from": "/admin/support", "selector": "[data-testid=support-row]", "take": 1 }, { "from": "/admin/reports/health/problems", "selector": "[data-testid=problems-rows] a.a2-btn", "take": 1 }],
   "ignoreRequests": [],
   "checks": [
+    { "pr": 84, "what": "a Bengali page draws in Bengali (<html lang=\"bn\">), also when Next sends the /bn rewrite on as a second request (review R1)", "page": "/bn/bag", "selector": "html", "attribute": "lang", "equals": "bn" },
     { "pr": 384, "what": "the Policies & texts page counts the help pages that show on the shop", "page": "/admin/settings/policies", "selector": "[data-testid=pol-kpi-shows]", "attribute": "data-testid", "equals": "pol-kpi-shows" },
     { "pr": 257, "what": "Marketing › Tracking shows what was sent to the ad platforms (the orders count)", "page": "/admin/marketing/tracking", "selector": "[data-testid=tracking-kpi-purchase]", "attribute": "data-testid", "equals": "tracking-kpi-purchase" },
     { "pr": 588, "what": "Website › SEO › Bengali pages shows the Bengali coverage", "page": "/admin/website/seo/bengali", "selector": "[data-testid=bengali-kpi-coverage]", "attribute": "data-testid", "equals": "bengali-kpi-coverage" },
