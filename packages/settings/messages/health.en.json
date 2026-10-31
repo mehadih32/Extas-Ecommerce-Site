@@ -27,6 +27,10 @@
     "fixGate": {
       "label": "Site health: agent fixes and new skills need your OK",
       "help": "Whether agents and the audit runner may propose a fix for a finding or a new skill at all (off: nothing is proposed), and after how many days an undecided proposal expires (0 = never). Every proposal waits on Reports › Site health › Fixes to approve; nothing is fixed or switched on without your OK."
+    },
+    "runAlerts": {
+      "label": "Site health: Telegram when a test fails",
+      "help": "A line to you on Telegram when the smoke test or the saved journeys fail, again at most once within the hours you choose while it keeps failing, and one line when it passes again. Off as it ships. It uses the bot on Keys & connections; until that is connected, the lines are only written to the server's alert log."
     }
   }
 }

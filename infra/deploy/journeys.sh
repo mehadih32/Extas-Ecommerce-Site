@@ -15,6 +15,8 @@
 #    state/journeys/<time>.json keeps each run for comparison (the newest JOURNEYS_KEEP).
 #    PR 416: with UI checks on (JOURNEYS_UI from the owner's switches) every step is also measured for a broken layout,
 #    cut-off text, pictures not loaded and buttons that cannot be pressed; the summary counts them (`ui`).
+# 4. PR 424: a failed run (and the first pass after it) is a Telegram line to the owner when he switched it on
+#    (run_alert in smoke-lib.sh; Reports › Site health › Run history).
 # Exit 0 = every step passed, or nothing was due. No password, seed or connection string is printed or kept.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -107,5 +109,6 @@ journeys_keep "$STATE/journeys" "$JOURNEYS_KEEP"
 if [ -f "$OUT/result.json" ]; then
   log "$(run_history journeys "$OUT" "$mig" "$work/db.env")"
 fi
+log "$(run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
 log "$(jq -r 'if .ok then "PASS: \(.journeys) journeys, \(.steps) steps (\(.skipped) skipped)" else "FAIL: \(.problems | join("; "))" end' "$STATE/journeys.json")"
 exit "$rc"

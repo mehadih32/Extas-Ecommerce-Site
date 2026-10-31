@@ -1754,6 +1754,39 @@ check "run history (419): a failed import is said, the run goes on" "$(RUN_RC=3 
 check "run history (419): an older release without the command is skipped" "$(PROBE_RC=1 rh smoke "$SK/out" extas-migrate:x "$SK/db.env" | tr '\n' ' ')" "run history: this release cannot keep runs yet (no run-history-cli.ts) rc=0 "
 check "run history (419): smoke.sh and journeys.sh keep every run" "$(grep -c 'run_history smoke "$STATE/smoke-runs/' ../deploy/smoke.sh):$(grep -c 'run_history journeys "$OUT" "$mig" "$work/db.env"' ../deploy/journeys.sh)" "1:1"
 check "smoke runs (418): smoke.sh keeps each run after state/smoke.json" "$(grep -c 'smoke_keep "$OUT" "$STATE/smoke-runs" "$(smoke_slot "$KIND")"' ../deploy/smoke.sh)" "1"
+# PR 424: a Telegram line when a test fails, again at most every few hours while it keeps failing, one when it passes
+# again; off (or no switches file) nothing is sent; without the bot only the alert log; the switches file is never run.
+RA="$T/ralert"; mkdir -p "$RA/state" "$RA/sec"
+printf '#!/bin/sh\necho "$*" >> "%s/curl.log"\n' "$RA" > "$HB/curl"; chmod +x "$HB/curl"
+printf "TELEGRAM_BOT_TOKEN='1:x'\nTELEGRAM_CHAT_ID='-1'\n" > "$RA/sec/telegram.env"
+ral() { ( PATH="$HB:$PATH"; . ../deploy/smoke-lib.sh; run_alert "$1" "$RA/sum.json" "$RA/state" "$RA/sec" new.extas.test "$RA/alerts.log" ) }
+rsum() { if [ "$1" = ok ]; then echo '{"at":"2026-10-31 09:00","ok":true,"problems":[]}'; else echo '{"at":"2026-10-31 08:00","ok":false,"problems":["home (phone): console error","cart (desktop): answered 502","a","b"]}'; fi > "$RA/sum.json"; }
+ron() { printf "RUN_ALERTS_ON='%s'\nRUN_ALERTS_SMOKE='%s'\nRUN_ALERTS_JOURNEYS='yes'\nRUN_ALERTS_REPEAT_H='%s'\nRUN_ALERTS_RECOVERED='yes'\n" "$1" "${2:-yes}" "${3:-24}" > "$RA/sec/run-alerts.env"; }
+sent() { cat "$RA/curl.log" 2>/dev/null | grep -c sendMessage; }
+rsum fail
+check "run alert (424): no switches file — nothing sent, the failure still remembered" "$(ral smoke):$(sent):$(jq -c '{failing, told}' "$RA/state/run-alerts/smoke.json")" 'run alert: off:0:{"failing":true,"told":0}'
+rsum ok; ral smoke >/dev/null
+check "run alert (424): passing after an untold failure says nothing" "$(sent):$(cat "$RA/state/run-alerts/smoke.json")" '0:{"failing":false,"told":0}'
+ron yes; rsum fail
+check "run alert (424): on — a failed run is one line with the problems and the link" \
+  "$(ral smoke):$(sent):$(grep -c 'স্মোক টেস্ট ব্যর্থ (2026-10-31 08:00)। home (phone): console error; cart (desktop): answered 502; a। দেখুন: https://new.extas.test/admin/reports/health/history?tool=smoke&result=failed' "$RA/curl.log"):$(grep -c 'স্মোক টেস্ট ব্যর্থ' "$RA/alerts.log")" \
+  "run alert: sent on Telegram:1:1:1"
+check "run alert (424): failing again within the hours — no second line" "$(ral smoke):$(sent)" "run alert: nothing to say:1"
+jq -c --argjson t "$(( $(date +%s) - 25 * 3600 ))" '.told = $t | .since = $t' "$RA/state/run-alerts/smoke.json" > "$RA/x" && mv "$RA/x" "$RA/state/run-alerts/smoke.json"
+check "run alert (424): still failing after the hours — said again, with how long" "$(ral smoke):$(sent):$(grep -c 'স্মোক টেস্ট এখনো ব্যর্থ, 25 ঘণ্টা ধরে' "$RA/curl.log")" "run alert: sent on Telegram:2:1"
+rsum ok
+check "run alert (424): passing again — one line, then quiet; the last line's time is kept" "$(ral smoke):$(ral smoke):$(sent):$(grep -c 'স্মোক টেস্ট আবার পাস করেছে (2026-10-31 09:00)' "$RA/curl.log"):$(jq -r '.failing, (.told > 0)' "$RA/state/run-alerts/smoke.json" | tr '\n' ' ')" "run alert: sent on Telegram:run alert: nothing to say:3:1:false true "
+ron yes no; rsum fail
+check "run alert (424): the smoke test switched off, the journeys still told; each test keeps its own state" \
+  "$(ral smoke):$(ral journeys):$(sent):$(grep -c 'সেভ করা জার্নি ব্যর্থ' "$RA/curl.log"):$(ls "$RA/state/run-alerts" | tr '\n' ' ')" "run alert: off:run alert: sent on Telegram:4:1:journeys.json smoke.json "
+rm -f "$RA/sec/telegram.env"; rm -rf "$RA/state/run-alerts"; ron yes
+check "run alert (424): without the bot — only the alert log (the mock)" "$(ral smoke):$(sent):$(grep -c 'স্মোক টেস্ট ব্যর্থ' "$RA/alerts.log")" "run alert: written to the alert log (Telegram not connected or not reached):4:2"
+rm -rf "$RA/state/run-alerts"; ( cd "$RA" && printf "RUN_ALERTS_ON='yes'\nRUN_ALERTS_SMOKE='yes'\nRUN_ALERTS_REPEAT_H='\$(touch %s/ran)'\n" "$RA" > "$RA/sec/run-alerts.env" )
+ral smoke >/dev/null; jq -c --argjson t "$(( $(date +%s) - 23 * 3600 ))" '.told = $t' "$RA/state/run-alerts/smoke.json" > "$RA/x" && mv "$RA/x" "$RA/state/run-alerts/smoke.json"
+check "run alert (424): a bad hours value is never run and counts as 24; a summary that is not JSON is a failure" \
+  "$([ -e "$RA/ran" ] && echo ran || echo safe):$(ral smoke):$(echo 'not json' > "$RA/sum.json"; ral journeys):$(jq -r .failing "$RA/state/run-alerts/journeys.json")" "safe:run alert: nothing to say:run alert: off:true"
+check "run alert (424): smoke.sh and journeys.sh tell after every run" \
+  "$(grep -c 'run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log"' ../deploy/smoke.sh):$(grep -c 'run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log"' ../deploy/journeys.sh)" "1:1"
 JK="$T/jkeep"; mkdir -p "$JK"
 for s in 20261027-060101 20261028-060101 20261029-060101 20261030-060101; do echo '{}' > "$JK/$s.json"; done
 echo keep > "$JK/notes.txt"
