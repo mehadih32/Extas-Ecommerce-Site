@@ -10,6 +10,8 @@
 // - PR 218 rule history (history.ts); PR 219 rule simulation (simulate-service.ts);
 // - PR 214 follow-up (CN-014 g): Eid order-by dates per band and district, the "may arrive after Eid" line and
 //   pre-order with an advance (eid.ts the engine, eid-service.ts the settings, the admin screen and the storefront read);
+// - PR 193 holiday mode (holiday.ts) and what the shop says about when an order comes (eta-service.ts: the home and
+//   bag lines, the checkout's lines in place of the hours promise, and the Eid pre-order offer);
 // - background jobs (jobs.ts); the sample rules for the sample store are `@extas/rules/sample` (sample.ts), kept out of
 //   the app's bundle.
 // Every service takes the database and a settings reader, checks the permission itself and writes the audit log in
@@ -29,5 +31,6 @@ export * from './simulate-service';
 export * from './notices-service';
 export * from './coupons-service';
 export * from './eid-service';
+export * from './eta-service';
 export * from './public';
 export * from './jobs';

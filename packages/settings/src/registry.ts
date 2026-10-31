@@ -67,6 +67,7 @@ import { switchoverSettings } from './registry-switchover';
 import { backupsSettings } from './registry-backups';
 import { costsSettings } from './registry-costs';
 import { courierReportSettings } from './registry-courier-report';
+import { holidaySettings } from './registry-holiday';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
@@ -1304,6 +1305,8 @@ export const registry = {
   ...costsSettings,
   // ---- S08 · PR 192 · the RTO cost book on Reports, courier claims, Support › Rider issues (registry-courier-report.ts, version 93). ----
   ...courierReportSettings,
+  // ---- S08 · PR 193 · holiday mode: the break's days, the storefront notice and the checkout's promise (registry-holiday.ts, version 94). ----
+  ...holidaySettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

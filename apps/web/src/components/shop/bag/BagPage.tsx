@@ -31,6 +31,7 @@ import { SizesCard } from './SizesCard';
 import { Upsell } from './Upsell';
 import { BagSummary } from './BagSummary';
 import { PausedNote } from '../checkout/PausedNote';
+import { EtaBanner } from '../EtaBanner';
 
 export function bagWords(c: ShopContext): BagWords {
   const t = c.t;
@@ -103,6 +104,8 @@ export async function BagPage({ c, view, s, btpl = null, paused = false }: { c: 
         </div>
         {/* PR 610 (qa-gate I3): checkout is paused now — said before he goes on, and it stays */}
         {paused ? <PausedNote title={t('checkout.paused.title')} text={t('checkout.paused.text')} testId="bag-paused" /> : null}
+        {/* PR 193: the Eid order-by date per band (or the pre-order line) and the holiday notice, before he goes on */}
+        <EtaBanner c={c} testId="bag-eta" />
         <div className="split-side">
           <div className="stack s16" style={{ minWidth: 0 }}>
             {s['bag.freeProgress.enabled'] ? <FreeBar c={c} free={view.free} /> : null}

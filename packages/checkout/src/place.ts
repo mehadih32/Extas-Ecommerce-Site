@@ -144,6 +144,8 @@ export const ORDER_FLAGS = {
   paymentPending: PAYMENT_FLAGS.pending,
   paymentFailed: PAYMENT_FLAGS.failed,
   giftAdvance: 'GIFT_ADVANCE',
+  /** PR 193: an Eid pre-order — placed past its place's order-by date with the owner's pre-order on; ships after Eid. */
+  preorder: 'EID_PREORDER',
 } as const;
 /** Why the team calls (CallTask.reason). */
 export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: PAYMENT_CALL_REASON, giftAdvance: 'GIFT_ADVANCE' } as const;
@@ -386,6 +388,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   // PR 605: a part of the gift paid ahead — the team calls for it until S07's part payment
   const giftPart = q.gift?.partMinor ?? null;
   if (giftPart) flags.push(ORDER_FLAGS.giftAdvance);
+  // PR 193: an Eid pre-order, its advance taken like PR 560's (the order service's AWAITING_ADVANCE)
+  const preorder = adv !== null && q.preorder;
+  if (preorder) flags.push(ORDER_FLAGS.preorder);
   const consent = consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
   // Review R1 (B1): the code the order uses is redeemed in the order's own transaction (its limits hold under load)
@@ -478,6 +483,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
               }
             : {}),
           ...(adv && flagged ? { advanceRequirement: flagged.requirement, advanceRequiredMinor: adv.amountMinor } : {}),
+          ...(preorder ? { advanceRequirement: adv.kind === 'full' ? 'FULL_AMOUNT' : 'PART_AMOUNT', advanceRequiredMinor: adv.amountMinor } : {}),
         },
         select: { id: true },
       });
@@ -524,6 +530,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(gift ? { gift: { advance: q.gift?.advance ?? 'none', partMinor: giftPart, deliverAfter: gift.deliverAfter, hidePrices: gift.hidePrices } } : {}),
             // PR 560: what the checkout asked ahead (the layer is on the flag event, for the team only)
             ...(adv ? { advance: { kind: adv.kind, amountMinor: adv.amountMinor } } : {}),
+            // PR 193: an Eid pre-order (the reason the advance was asked; no risk layer involved)
+            ...(preorder ? { preorder: true } : {}),
           },
         },
       });

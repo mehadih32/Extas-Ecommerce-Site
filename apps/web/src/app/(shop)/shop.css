@@ -1058,3 +1058,10 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (min-width: 1024px) { html .shop .ftr-dref .fdr-brand .fdr-slog { margin: 0px; } }
 @media (min-width: 1024px) { html .shop .ftr-dref .fdr-brand .logo { padding-left: 0px !important; margin-left: -1px; } }
 @media (prefers-reduced-motion: reduce) { .shop .wa-fab.wa-mid { transform: translateY(-50%) !important; } }
+/* PR 193 — the strip about when orders come (Eid order-by dates, Eid pre-order, holiday notice): home and bag */
+.shop .sh-eta { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius); background: var(--brand-tint); box-shadow: inset 0 0 0 1px var(--brand-line); color: var(--brand-dark); font-size: 14px; font-weight: 600; line-height: 1.4; }
+.shop .sh-eta svg { flex-shrink: 0; margin-top: 1px; }
+.shop .sh-eta-l { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.shop .sh-eta-l p { margin: 0; }
+.shop .sh-etawrap { margin-top: 14px; }
+.shop .bg-wrap > .sh-eta { margin-bottom: 16px; }

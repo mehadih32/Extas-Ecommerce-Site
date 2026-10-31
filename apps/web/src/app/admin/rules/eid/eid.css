@@ -1,0 +1,7 @@
+/* S08 · PR 193 — Marketing › Smart Rules › Eid dates: a district's row (district, date, Remove), the words' boxes and the
+   preview list. */
+.adm2 .eid-drow { align-items: end; }
+.adm2 .eid-dend { justify-content: flex-end; }
+.adm2 .eid-ta { height: auto; padding: 8px 12px; line-height: 1.5; }
+.adm2 .eid-pv { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.adm2 details.a2-more-opts > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }

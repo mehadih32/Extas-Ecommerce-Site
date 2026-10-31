@@ -28,11 +28,13 @@ export interface PaymentStepProps {
   covered?: boolean;
   /** PR 560: what a flagged checkout pays now and at the door (null: not flagged). */
   advance?: AdvanceView | null;
+  /** PR 193: an Eid pre-order — its line (the advance now, the rest on delivery) says why the advance is asked. */
+  preorder?: string | null;
   /** PR 560: said after what is left for the door while the delivery charge is not known yet (" + delivery"). */
   restPlus?: string;
 }
 
-export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = false, advance = null, restPlus = '' }: PaymentStepProps) {
+export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = false, advance = null, restPlus = '', preorder = null }: PaymentStepProps) {
   const name = (id: string) => w(`pm.${id}`);
   const mark = (id: string) => <PayMark key={id} id={id} name={name(id)} short={w(`mk.${id}`)} />;
   const marks = (list: readonly string[], max: number) => <span className="co-pmks">{list.slice(0, max).map(mark)}</span>;
@@ -184,7 +186,12 @@ export function PaymentStep({ pay, due, open, w, m, n, onChoose, wa, covered = f
           <span>{w(pay.codOff === 'GIFT' ? 'pay.codGift' : 'pay.codNotHere')}</span>
         </p>
       ) : null}
-      {pay.codOff === 'ADVANCE' && advance ? (
+      {pay.codOff === 'ADVANCE' && advance && preorder ? (
+        <p className="co-fdays" data-testid="co-pay-preorder" data-kind={advance.kind}>
+          <Icon name="clock" size={14} />
+          <span>{preorder}</span>
+        </p>
+      ) : pay.codOff === 'ADVANCE' && advance ? (
         <p className="co-fdays" data-testid="co-pay-advance" data-kind={advance.kind}>
           <Icon name="info" size={14} />
           <span>{w(`pay.advance.${advance.kind}`, { amount: m(advance.amountMinor), rest: m(advance.restMinor) + restPlus })}</span>

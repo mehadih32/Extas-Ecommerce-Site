@@ -1,0 +1,14 @@
+{
+  "delivery": {
+    "holiday": {
+      "label": "Holiday mode",
+      "help": "The days the shop sends nothing. The shop shows a notice with the dates, and checkout says the order ships from the day after the break instead of the usual hours. The shop stays open and every page stays visible. Off until switched on; needs the first and last day."
+    }
+  },
+  "defaults": {
+    "holiday": {
+      "notice": "We are on a break from {from} to {to}. Orders placed in those days ship from {resume}.",
+      "promise": "We are on a break: your order ships from {resume}."
+    }
+  }
+}

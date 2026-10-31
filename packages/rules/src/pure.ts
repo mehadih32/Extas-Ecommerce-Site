@@ -10,3 +10,4 @@ export * from './history';
 export * from './was-price';
 export * from './notices-model';
 export * from './eid';
+export * from './holiday';

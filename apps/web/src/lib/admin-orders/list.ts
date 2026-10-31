@@ -142,6 +142,8 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
   // PR 146 (demo 02-core.js): the same piece in two sizes — to ask, or the family's "for someone else" (SIM-F-036)
   if (r.flags.includes('TWO_SIZES')) out.push({ label: t(d, 'orders.flag.twoSizes'), tone: 'warn' });
   if (r.flags.includes('TWO_SIZES_OTHER')) out.push({ label: t(d, 'orders.flag.twoSizesOther'), tone: 'mute' });
+  // PR 193: an Eid pre-order (placed past its place's order-by date with the owner's pre-order on; ships after Eid)
+  if (r.flags.includes('EID_PREORDER')) out.push({ label: t(d, 'orders.flag.preorder'), tone: 'info' });
   // PR 161: the watch mark a risk level put on the order
   if (r.flags.includes(od.RISK_WATCH_FLAG)) out.push({ label: t(d, 'orders.flag.riskWatch'), tone: 'warn' });
   // PR 162: the number (or the same person) is on the blocklist; a person decides, nothing was cancelled

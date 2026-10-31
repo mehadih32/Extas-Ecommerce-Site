@@ -43,3 +43,9 @@ export const liveFreeOverMinor = (input: { storeId: number; variantId: string })
 
 /** PR 384 — fills the owner's policy texts from the live rules; without them, every line holding a token is left out. */
 export const policyFiller = (input: { storeId: number; locale?: string }) => safe<(text: string) => string>(rl.withoutPolicyTokens, (d) => rl.policyFillerFor(d, input));
+
+/**
+ * PR 193 — the shop-wide lines about when orders come (home, bag): the Eid order-by dates (or the pre-order line once
+ * they passed) and the holiday notice; both owner switches are off as shipped, so this is empty until he sets them.
+ */
+export const etaBanner = (input: { storeId: number; locale?: string }) => safe<string[]>([], (d) => rl.storefrontBanner(d, input.storeId, { locale: input.locale }));

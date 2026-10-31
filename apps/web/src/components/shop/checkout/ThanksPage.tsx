@@ -11,6 +11,7 @@
 // with and that the code comes by SMS to it. Never a password (SIM-F-039); "You're logged in" when he ordered signed in.
 // PR 136: "Invoice · print or download" under the order's money opens its invoice (demo inv-btn), while invoices are on.
 // PR 565: a free order shows no band name and no "we call about the area" line, only its promise in hours.
+// PR 193: `eta` — "ships from …" (placed during the holiday) or "may arrive after Eid" replaces the hours promise.
 // PR 127: a line added after placing ("Add to this parcel") carries the demo's "Added" tag (ty_items).
 // PR 605: a gift says who it is for, who sends it, its note and its day, and that the receiver's invoice hides prices.
 // PR 128: "Complete your look" in the right column (demo ty_look, block 4) while the owner has it on (`thanks.look`):
@@ -105,6 +106,7 @@ export async function ThanksPage({
   accountCard = true,
   invoice = false,
   look = null,
+  eta = [],
 }: {
   c: ShopContext;
   r: Receipt;
@@ -116,6 +118,8 @@ export async function ThanksPage({
   invoice?: boolean;
   /** PR 128: "Complete your look" (null: off, or nothing honest to show). */
   look?: LookData | null;
+  /** PR 193: the lines in place of the hours promise (placed during the holiday, or past its place's Eid date). */
+  eta?: string[];
 }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -126,7 +130,9 @@ export async function ThanksPage({
   const pay = r.pay;
   const hours = r.band ? hoursOf(r.band, n) : null;
   // PR 565: a free order never says "we call about the area" and never names a band — only its promise, when it has one
-  const promise = r.freeDelivery ? (hours ? w('del.promise', { hours }) : null) : r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
+  const usual = r.freeDelivery ? (hours ? w('del.promise', { hours }) : null) : r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
+  // PR 193 (SIM-F-019): never the hours for an order that ships after the break or may arrive after Eid
+  const promise = eta.length && (r.freeDelivery || (!r.addressUnclear && r.band)) ? eta.join(' ') : usual;
   const cards = await cardsByIds(c.storeId, [...r.lines.map((l) => l.productId).filter((x): x is string => !!x), ...(look ? look.products.keys() : [])]);
   const wa = waOn ? waHref(c.s['contact.whatsapp'], w('ty.waMsg', { number: r.number })) : null;
   // follow-up 58 · the trial at the door (the shop's own switch), the note said back, what happens next

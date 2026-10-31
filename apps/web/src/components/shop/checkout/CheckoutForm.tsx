@@ -652,9 +652,10 @@ export function CheckoutForm({
                 n={n}
                 onPick={(band, areaId) => pick(band.id, areaId)}
                 onChange={changeBand}
+                eta={view.eta.lines}
               />
             </section>
-            <PaymentStep pay={view.pay} due={view.advance ? m(view.advance.amountMinor) : amount} advance={view.advance} restPlus={t.known ? '' : ` ${w('sum.plusDelivery')}`} open={payOpens(form.address)} covered={covered} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
+            <PaymentStep pay={view.pay} due={view.advance ? m(view.advance.amountMinor) : amount} advance={view.advance} preorder={view.eta.preorder} restPlus={t.known ? '' : ` ${w('sum.plusDelivery')}`} open={payOpens(form.address)} covered={covered} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
             <OffersCard
               wallet={view.wallet}
               w={w}

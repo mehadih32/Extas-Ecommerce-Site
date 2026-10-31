@@ -212,7 +212,8 @@
       "blockProposal": "ব্লকের প্রস্তাব",
       "goodCustomer": "ভালো কাস্টমার",
       "holdProposed": "হোল্ডের প্রস্তাব",
-      "newCustomer": "নতুন কাস্টমার"
+      "newCustomer": "নতুন কাস্টমার",
+      "preorder": "ঈদের প্রি-অর্ডার"
     },
     "page": {
       "all": "সব অর্ডার",
