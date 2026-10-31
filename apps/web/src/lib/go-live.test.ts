@@ -25,6 +25,8 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     ownerData: [{ name: 'Main', missing: [], bands: 2 }],
     searchEngines: true,
     connections: { kinds: ['PAYMENT', 'COURIER', 'SMS'], on: [{ kind: 'PAYMENT', provider: 'bkash', mode: 'LIVE', lastTestOk: true }, { kind: 'COURIER', provider: 'steadfast', mode: 'LIVE', lastTestOk: true }, { kind: 'SMS', provider: 'bulkSmsBd', mode: 'LIVE', lastTestOk: true }] },
+    payments: { testOn: [], practice: [] },
+    security: { rateLimitMode: 'enforce', twoFactorRequired: false, withoutTwoFactor: 0 },
     ...over,
   };
 }
@@ -44,6 +46,14 @@ describe('go-live checklist (PR 393)', () => {
     expect(open(ctx({ smoke: { ok: false, at: ago(5), pages: 40, failed: 2 } }))).toEqual(['smoke']);
     expect(open(ctx({ smoke: { ok: true, at: ago(37 * 60) } }))).toEqual(['smoke']);
     expect(open(ctx({ smoke: null, health: null }))).toEqual(['smoke', 'health']);
+    // R1 ops review (M8): smoke.sh writes `at` as ISO with its offset; a fresh pass in Dhaka time (+06:00) counts at once
+    // and an old one is old, whatever the app's own time zone.
+    const dhaka = (minutes: number) => {
+      const t = new Date(now.getTime() - minutes * 60_000 + 6 * 3_600_000).toISOString().slice(0, 19);
+      return `${t}+06:00`;
+    };
+    expect(open(ctx({ smoke: { ok: true, at: dhaka(2), pages: 40, failed: 0 } }))).toEqual([]);
+    expect(open(ctx({ smoke: { ok: true, at: dhaka(37 * 60), pages: 40, failed: 0 } }))).toEqual(['smoke']);
     expect(open(ctx({ health: { at: ago(1), problems: ['disk 91%'] } }))).toEqual(['health']);
     expect(open(ctx({ health: { at: ago(45), problems: [] } }))).toEqual(['health']);
     expect(open(ctx({ backups: { ready: false, todo: 3 } }))).toEqual(['backups']);
@@ -84,6 +94,20 @@ describe('go-live checklist (PR 393)', () => {
       expect(goLiveChecks(ctx({ connections: sms(over) })).items.find((i) => i.key === 'connections')).toMatchObject({ ok: false, vars: { missing: 'SMS', live: 'bkash, steadfast' } });
     }
     expect(open(ctx({ connections: { kinds: ['COURIER', 'SMS'], on: on.slice(1) } }))).toEqual([]);
+  });
+
+  it('review R1 (security B1): test payments off on every live store, and no online method left on the practice gateway', () => {
+    expect(open(ctx({ payments: undefined }))).toEqual(['testPayments']);
+    expect(open(ctx({ payments: { testOn: ['Main'], practice: [] } }))).toEqual(['testPayments']);
+    expect(goLiveChecks(ctx({ payments: { testOn: [], practice: ['Main: nagad', 'Main: online'] } })).items.find((i) => i.key === 'testPayments')).toMatchObject({ ok: false, vars: { stores: '—', methods: 'Main: nagad, Main: online' } });
+  });
+
+  it('review R1 (security M2): the request limits enforce, and every staff member who can change things signs in with two steps', () => {
+    expect(open(ctx({ security: { rateLimitMode: 'observe', twoFactorRequired: false, withoutTwoFactor: 0 } }))).toEqual(['rateLimit']);
+    expect(open(ctx({ security: { rateLimitMode: 'enforce', twoFactorRequired: false, withoutTwoFactor: 2 } }))).toEqual(['staffTwoFactor']);
+    // required of everybody: the count of those still setting it up does not hold it back
+    expect(open(ctx({ security: { rateLimitMode: 'enforce', twoFactorRequired: true, withoutTwoFactor: 2 } }))).toEqual([]);
+    expect(open(ctx({ security: undefined }))).toEqual(['rateLimit', 'staffTwoFactor']);
   });
 
   it('PR 401: indexing — the switch on and a main domain for it to count on; Search Console is a sign-off', () => {

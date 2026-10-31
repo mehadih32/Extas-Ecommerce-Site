@@ -13,6 +13,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { backupGateNow } from './backups-api';
 import { goLiveChecks, SIGNOFF_KEYS } from './go-live';
+import { paymentModeOf } from './payments-gateway';
 import { runtimeState } from './status';
 
 type Deps = Pick<AdminDeps, 'db' | 'resolver' | 'now'>;
@@ -58,11 +59,58 @@ async function ownerDataNow(deps: Deps) {
   );
 }
 
+/**
+ * Review R1 (security B1): on every store that goes live, whether test payments are still on, and the online methods it
+ * offers whose gateway is still the practice one (`store: method`). Only names leave here.
+ */
+async function paymentsNow(deps: Deps) {
+  const stores = await deps.db.store.findMany({
+    where: { archivedAt: null, OR: [{ isPrimary: true }, { status: { in: ['LIVE', 'PAUSED'] } }] },
+    select: { id: true, name: true },
+    orderBy: { id: 'asc' },
+  });
+  const testOn: string[] = [];
+  const practice: string[] = [];
+  for (const s of stores) {
+    const o = { storeId: s.id };
+    const [test, mobileOn, mobile, cardOn, card, online] = await Promise.all([
+      deps.resolver.value('payments.testPayments', o),
+      deps.resolver.value('checkout.pay.mobile.enabled', o),
+      deps.resolver.value('checkout.pay.mobile.list', o),
+      deps.resolver.value('checkout.pay.card.enabled', o),
+      deps.resolver.value('checkout.pay.card.list', o),
+      deps.resolver.value('checkout.pay.online.enabled', o),
+    ]);
+    if (test) testOn.push(s.name);
+    const offered = [...(mobileOn ? mobile : []), ...(cardOn ? card : []), ...(online ? ['online'] : [])];
+    for (const provider of offered) {
+      const mode = await paymentModeOf(s.id, provider).catch(() => 'MOCK' as const);
+      if (mode === 'MOCK') practice.push(`${s.name}: ${provider}`);
+    }
+  }
+  return { testOn, practice };
+}
+
+/** Review R1 (security M2): the request limits' mode and the staff members who can change anything without two steps. */
+async function securityNow(deps: Deps) {
+  const [rateLimitMode, twoFactorRequired, staff] = await Promise.all([
+    deps.resolver.value('security.rateLimit.mode'),
+    deps.resolver.value('security.staffTwoFactorRequired'),
+    deps.db.staffUser.findMany({
+      where: { status: 'ACTIVE', archivedAt: null, twoFactorEnabled: false },
+      select: { roleAssignments: { where: { revokedAt: null }, select: { role: { select: { archivedAt: true, permissions: { select: { permission: { select: { key: true } } } } } } } } },
+    }),
+  ]);
+  const writes = (key: string) => !/\.(read|view)$/.test(key);
+  const withoutTwoFactor = staff.filter((u) => u.roleAssignments.some((a) => a.role.archivedAt === null && a.role.permissions.some((p) => writes(p.permission.key)))).length;
+  return { rateLimitMode, twoFactorRequired, withoutTwoFactor };
+}
+
 /** The checklist now, and the names of the people who confirmed items. */
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
   const [wanted, seo] = await Promise.all([deps.resolver.value('golive.connections'), deps.resolver.value('seo.indexing', { storeId: MOTHER_STORE_ID })]); // the mother store's value, as Website → SEO saves it
-  const [gate, domains, ownerData, on] = await Promise.all([
+  const [gate, domains, ownerData, on, payments, security] = await Promise.all([
     backupGateNow(deps, state),
     deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
     ownerDataNow(deps),
@@ -71,6 +119,8 @@ export async function goLiveNow(deps: Deps) {
       where: { enabled: true, archivedAt: null, kind: { in: [...wanted.kinds] } },
       select: { kind: true, provider: true, mode: true, lastTestOk: true },
     }),
+    paymentsNow(deps),
+    securityNow(deps),
   ]);
   const result = goLiveChecks({
     now: deps.now ? deps.now() : new Date(),
@@ -85,6 +135,8 @@ export async function goLiveNow(deps: Deps) {
     ownerData,
     connections: { kinds: wanted.kinds, on },
     searchEngines: seo.searchEngines,
+    payments,
+    security,
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length

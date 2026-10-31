@@ -58,6 +58,10 @@ fi
 log "opening every page on https://$EXTAS_STAGING_HOST ($KIND)"
 rm -rf "${OUT:?}"/*
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
+# R1 ops review (M8): state/smoke.json's `at` is ISO with its offset (the app reads it with Date.parse in UTC, where
+# "2026-10-31 19:10 (Asia/Dhaka)" was 6 hours in the future, so the go-live smoke line stayed red after a pass); the
+# words for people stay in `atText`.
+at_iso="$(date -Is)"
 rc=0
 timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-smoke-$$" --ipc=host --env-file "$work/smoke.env" \
   -e BASE="https://$EXTAS_STAGING_HOST" -e SMOKE_OUT=/out -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
@@ -81,10 +85,10 @@ fi
 case "$guards" in problem:*) [ "$rc" -ne 0 ] || rc=1 ;; esac
 
 if [ -f "$OUT/result.json" ]; then
-  jq -c --arg kind "$KIND" '{at, kind: $kind, sha, ok, pages, failed, problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/smoke.json.tmp"
+  jq -c --arg kind "$KIND" --arg iso "$at_iso" '{at: $iso, atText: .at, kind: $kind, sha, ok, pages, failed, problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/smoke.json.tmp"
 else
-  jq -cn --arg at "$at" --arg kind "$KIND" --arg sha "${SHA:0:12}" --arg rc "$rc" \
-    '{at:$at, kind:$kind, sha:$sha, ok:false, pages:0, failed:0, problems:["the smoke test did not finish (exit " + $rc + ")"]}' > "$STATE/smoke.json.tmp"
+  jq -cn --arg at "$at_iso" --arg text "$at ($EXTAS_TIMEZONE)" --arg kind "$KIND" --arg sha "${SHA:0:12}" --arg rc "$rc" \
+    '{at:$at, atText:$text, kind:$kind, sha:$sha, ok:false, pages:0, failed:0, problems:["the smoke test did not finish (exit " + $rc + ")"]}' > "$STATE/smoke.json.tmp"
 fi
 chmod 0644 "$STATE/smoke.json.tmp" && mv "$STATE/smoke.json.tmp" "$STATE/smoke.json"
 log "$(jq -r 'if .ok then "PASS: \(.pages) page views" else "FAIL: \(.problems | join("; "))" end' "$STATE/smoke.json")"

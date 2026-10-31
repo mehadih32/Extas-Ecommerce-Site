@@ -68,6 +68,21 @@
       "title": "Search Console on the main domain, sitemap sent",
       "how": "In Google Search Console: the main domain's property is verified (a DNS record in Cloudflare is the simplest), /sitemap.xml is submitted under Sitemaps, and the old shop's property is kept to watch the move (PR 587). Then confirm."
     },
+    "testPayments": {
+      "title": "Test payments off, every online method on a real gateway",
+      "ok": "off on every live store; every online method is real",
+      "how": "Money → Payments → switch \"Test payment buttons\" off on every store that goes live (still on: {stores}). Every wallet, card or online method offered must have its real gateway live in Keys & connections, or be switched off in the checkout's payment settings (still on practice: {methods})."
+    },
+    "rateLimit": {
+      "title": "Request limits enforce",
+      "ok": "the limits enforce",
+      "how": "Settings → Security → Request limits: set the mode to \"enforce\" (now: {mode}), so sign-in guessing and fake orders are slowed down. Raise the per-minute numbers there first if many customers share one mobile address."
+    },
+    "staffTwoFactor": {
+      "title": "Two-step sign-in for every staff member who can change things",
+      "ok": "every such staff member signs in with two steps",
+      "how": "{without} active staff member(s) who can change something have no two-step sign-in yet. Each turns it on for their own sign-in, or the owner requires it of everybody (Settings → Security → \"Everyone must use two-step sign-in\"; now: {required})."
+    },
     "runbook": {
       "title": "Go-live runbook read, rollback rehearsed",
       "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm."

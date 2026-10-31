@@ -489,6 +489,8 @@ sm() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" SMOKE_IMAGE_UID="$(id
   "$@" bash ../deploy/smoke.sh "$T/out" "after deploy" 0123456789abcdef0123; }
 rc=0; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null || rc=$?
 check "smoke: a passing run exits 0 and records it" "$rc:$(jq -c '{ok,pages,kind}' "$T/root/state/smoke.json")" '0:{"ok":true,"pages":4,"kind":"after deploy"}'
+check "smoke (M8): the time is ISO with its offset for the app, the words beside it" \
+  "$(jq -r '.at' "$T/root/state/smoke.json" | grep -cE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:[0-9]{2}$'):$(jq -r .atText "$T/root/state/smoke.json")" "1:x"
 check "smoke: the browser gets the check account and the preview login" "$(grep -c '^SMOKE_PASSWORD=pw1$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_PASSWORD=stagepw$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_USER=extas$' "$T/seen.env")" "1:1:1"
 check "smoke: the browser never gets the database or the vault key" "$(grep -cE 'DATABASE|VAULT' "$T/seen.env")" "0"
 check "smoke: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.smoke*' | wc -l)" "0"

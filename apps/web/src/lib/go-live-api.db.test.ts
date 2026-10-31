@@ -81,6 +81,11 @@ describe.skipIf(!HAS_TEST_DB)('go-live checklist API on PostgreSQL (PR 393, 397,
     expect(item(r.body.items, 'connections').vars).toEqual({ live: '—', missing: 'PAYMENT, COURIER, SMS' });
     // PR 401: search engines stay out on a new installation, and there is no main domain yet
     expect(item(r.body.items, 'indexing')).toMatchObject({ ok: false, vars: { hosts: '—', on: 'off' } });
+    // review R1: the shipped defaults are not a live shop — wallets on the practice gateway, limits only observing,
+    // the owner without two-step sign-in; nothing here switches them (the owner does)
+    expect(item(r.body.items, 'testPayments').vars?.methods).toContain('bkash');
+    expect(item(r.body.items, 'rateLimit')).toMatchObject({ ok: false, vars: { mode: 'observe' } });
+    expect(item(r.body.items, 'staffTwoFactor')).toMatchObject({ ok: false });
   });
 
   it('PR 400: a connection counts only switched on, LIVE and with a passing last test', async () => {
