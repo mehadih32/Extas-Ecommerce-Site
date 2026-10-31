@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, shotDir, totpCode } from './smoke.mjs';
+import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, shotDir, totpCode } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -24,6 +24,20 @@ it('follow-up 80: an anonymous request check passes only on the app\'s own answe
   const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
   const gate = config.checks.find((c) => c.request?.anonymous);
   expect(gate).toMatchObject({ pr: 7, request: { method: 'POST', path: '/api/erp/webhook' }, field: 'code' });
+});
+
+it('R2 ops M2 (PR 402): a check with `host` runs only on that kind of host; the preview noindex check never on the main domain', () => {
+  expect(checkApplies({ pr: 1 }, 'staging')).toBe(true);
+  expect(checkApplies({ pr: 1 }, 'extra')).toBe(true);
+  expect(checkApplies({ pr: 1, host: 'staging' }, 'staging')).toBe(true);
+  expect(checkApplies({ pr: 1, host: 'staging' }, 'extra')).toBe(false);
+  expect(checkApplies({ pr: 1, host: 'extra' }, 'staging')).toBe(false);
+  expect(checkApplies({ pr: 1, host: 'staging' })).toBe(true);
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  const noindex = config.checks.filter((c) => c.selector === 'meta[name=robots]' && /noindex/.test(c.equals));
+  expect(noindex.length).toBeGreaterThan(0);
+  for (const c of noindex) expect(c.host, c.what).toBe('staging');
+  for (const c of config.checks) if (c.host !== undefined) expect(['staging', 'extra'], c.what).toContain(c.host);
 });
 
 it('every configured check names its PR and is a page check or a request check', () => {

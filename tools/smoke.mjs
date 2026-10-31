@@ -130,10 +130,19 @@ export function checkProblem(check, observed) {
   return observed.value === check.equals ? null : `${name}: ${check.selector} ${check.attribute} is "${observed.value ?? "missing"}", expected "${check.equals}"`;
 }
 
+/**
+ * R2 ops review (M2, PR 402) — does a check run on this host? A check with `host` ("staging" or "extra") runs only on
+ * that kind of host; one without runs everywhere. The first-week watch smokes the main domain (an extra host), where
+ * the preview-only noindex check (PR 220) is wrong by design once search engines are let in.
+ */
+export function checkApplies(check, hostKind = "staging") {
+  return !check.host || check.host === hostKind;
+}
+
 /** Runs the extra checks with the signed-in page; returns their problems. `bare` makes a request client with no cookie. */
-async function runChecks(page, base, checks, bare) {
+async function runChecks(page, base, checks, bare, hostKind) {
   const out = [];
-  for (const check of checks) {
+  for (const check of checks.filter((c) => checkApplies(c, hostKind))) {
     let observed;
     try {
       if (check.request) {
@@ -510,7 +519,7 @@ export async function runSmoke(opts) {
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])
         problems.push(
-          ...(await runChecks(page, opts.base, config.checks ?? [], () => requestApi.newContext())),
+          ...(await runChecks(page, opts.base, config.checks ?? [], () => requestApi.newContext(), opts.hostKind)),
         );
       // PR 155: the pages that show Sales and Ordered value load, and show the two as separate figures.
       for (const f of config.figures ?? []) {
@@ -609,6 +618,8 @@ async function main() {
     out,
     privateOut: process.env.SMOKE_PRIVATE_OUT || null,
     chromiumPath: process.env.CHROMIUM_PATH,
+    // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
+    hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
   });
   for (const r of result.rows)
     console.log(
