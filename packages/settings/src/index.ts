@@ -74,6 +74,8 @@ export * from './registry-backups';
 export * from './registry-erp-retail';
 // S22 · PR 426 — the Support channel connectors (registry-support-channels.ts, version 72).
 export * from './registry-support-channels';
+// S16 · PR 343 — the cost ledger (registry-costs.ts, version 77).
+export * from './registry-costs';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

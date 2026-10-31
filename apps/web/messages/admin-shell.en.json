@@ -86,7 +86,8 @@
         "differences": "Differences",
         "closes": "Closes",
         "daily": "Daily summary",
-        "costs": "Costs"
+        "costs": "Costs",
+        "ledger": "Cost ledger"
       }
     },
     "purpose": {

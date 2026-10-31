@@ -283,6 +283,10 @@ export const PERMISSIONS = {
   'erp.account.read': { group: 'books' },
   'erp.payments.record': { group: 'books' },
   'fixedcosts.write': { group: 'books' },
+  // S16 · PR 343, 345 (BACKEND-ARCHITECTURE §5 MNY-06) — the cost ledger and the costs & fees inputs: record a top-up of
+  // a prepaid balance (SMS credit) the shop already paid for, set its low mark, and (PR 345) the costs & fees figures.
+  // Records only: nothing here pays anyone or moves money.
+  'costs.write': { group: 'books' },
   // S22 · PR 425 — the support inbox (B4.4, B4.12): open the inbox and every conversation with its who-did-what log
   // (`support.read`); reply, write an internal note, take a conversation, mark it solved or open (`support.reply`);
   // give a conversation to someone else or take it back from them (`support.assign`); change Support settings

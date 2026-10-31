@@ -139,6 +139,32 @@ describe.skipIf(!HAS_TEST_DB)('PR 291 · the SMS gateway in the engine and Chann
     const priced = await f.place('cost-provider');
     await run();
     expect((await placedRow(priced.orderId)).costMinor).toBe(41);
+
+    // PR 343: every message with a cost wrote one cost row (service = channel, what it was for = the log row); none for
+    // a message whose cost is unknown
+    const costOf = async (orderId: string) => db().costEntry.findMany({ where: { storeId: f.S, refType: 'notification', refId: (await placedRow(orderId)).id } });
+    expect(await costOf(none.orderId)).toEqual([]);
+    for (const [o, minor] of [[plain, r1.costMinor], [masked, r2.costMinor], [priced, 41]] as const) {
+      const rows = await costOf(o.orderId);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ service: 'SMS', module: 'messages', amountMinor: minor, source: 'system', summaryLine: null });
+      expect(rows[0]!.detail).toContain('bulkSmsBd');
+    }
+  });
+
+  it('PR 343: a prepaid SMS balance is drawn down by each cost; a mock send writes no cost row and draws nothing', async () => {
+    const bal = await db().prepaidBalance.create({ data: { storeId: f.S, service: 'SMS', balanceMinor: 10_000 } });
+    mode = 'LIVE';
+    price = 41;
+    const a = await f.place('prepaid-a');
+    await run();
+    expect((await db().prepaidBalance.findUniqueOrThrow({ where: { id: bal.id } })).balanceMinor).toBe(10_000 - 41);
+    mode = 'MOCK';
+    const b = await f.place('prepaid-mock');
+    await run();
+    expect((await db().prepaidBalance.findUniqueOrThrow({ where: { id: bal.id } })).balanceMinor).toBe(10_000 - 41);
+    expect(await db().costEntry.count({ where: { refType: 'notification', refId: (await placedRow(b.orderId)).id } })).toBe(0);
+    expect(await db().costEntry.count({ where: { refType: 'notification', refId: (await placedRow(a.orderId)).id } })).toBe(1);
   });
 
   it('Channels & limits: providers with their mode and credit, the week, the settings with a version; checked saves', async () => {

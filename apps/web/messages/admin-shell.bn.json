@@ -86,7 +86,8 @@
         "differences": "গরমিল",
         "closes": "হিসাব বন্ধ",
         "daily": "দৈনিক হিসাব",
-        "costs": "খরচ"
+        "costs": "খরচ",
+        "ledger": "খরচের খাতা"
       }
     },
     "purpose": {

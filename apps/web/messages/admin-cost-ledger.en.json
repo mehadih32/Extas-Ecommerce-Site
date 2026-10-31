@@ -1,0 +1,83 @@
+{
+  "moneyCostLedger": {
+    "metaTitle": "Cost ledger",
+    "title": "Cost ledger",
+    "sub": "What the shop spent on paid services: every paid message writes a row here by itself, with the daily cost lines and return losses beside them. Nothing is paid from here.",
+    "asOf": "As of {at}",
+    "period": {
+      "today": "Today",
+      "month": "This month",
+      "year": "This year"
+    },
+    "spend": {
+      "title": "Spend",
+      "sub": "Days, months and years in the shop's own time zone",
+      "rows": "{n} row(s)",
+      "byService": "This month by service",
+      "none": "No cost this month yet."
+    },
+    "service": {
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp",
+      "EMAIL": "Email",
+      "AI": "AI",
+      "MAPS": "Maps",
+      "GATEWAY": "Payment gateway",
+      "COURIER": "Courier",
+      "books.costLine": "Daily cost lines (Money → Costs)",
+      "RETURN_LOSS": "Return losses"
+    },
+    "source": {
+      "system": "by itself",
+      "admin": "typed in",
+      "admin.reversal": "reversal",
+      "qc": "quality check"
+    },
+    "prepaid": {
+      "title": "Prepaid balances",
+      "sub": "Credit bought in advance (SMS credit …). Each paid message draws its cost from it, so what is left is always here.",
+      "none": "No prepaid balance yet. Record the first top-up below when you buy credit.",
+      "noTopUp": "no top-up recorded",
+      "last": "last top-up {amount} on {at}",
+      "lastWithCredits": "last top-up {amount} ({credits} credits) on {at}",
+      "noLow": "no low mark",
+      "lowAt": "warns below {low}",
+      "low": "low",
+      "service": "Service",
+      "amount": "Amount paid",
+      "credits": "Credits (optional)",
+      "note": "Note (optional)",
+      "add": "Record top-up",
+      "saving": "Saving…",
+      "added": "Recorded. Balance now {balance}.",
+      "badAmount": "Write the amount as a number, for example 1,000.",
+      "badCredits": "Credits are a whole number, or leave it empty.",
+      "lowField": "Low mark",
+      "lowHint": "The page warns when the balance goes under it. Leave empty to have no low mark.",
+      "lowSave": "Save low mark",
+      "lowSaved": "Saved: warns below {low}.",
+      "lowCleared": "Saved: no low mark.",
+      "readOnly": "You can see the balances. Recording a top-up needs the \"Costs\" permission."
+    },
+    "export": {
+      "title": "Export",
+      "sub": "Every cost row of a period as a CSV file (amounts in poisha, times in UTC).",
+      "from": "From",
+      "to": "To",
+      "download": "Download CSV",
+      "badRange": "The start must not be after the end."
+    },
+    "recent": {
+      "title": "Latest rows",
+      "sub": "Every cost row, newest first.",
+      "latest": "The latest {n} rows, newest first. Export a period for all of them.",
+      "none": "No cost row yet."
+    },
+    "err": {
+      "other": "That did not work. Try again.",
+      "network": "No connection. Check the internet and try again.",
+      "costs.INVALID_INPUT": "Check the amount and try again.",
+      "forbidden": "You do not have permission for this."
+    }
+  }
+}
