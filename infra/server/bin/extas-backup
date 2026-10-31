@@ -5,6 +5,13 @@
 #                          disk, uploaded to Azure Blob and (encrypted) to Google Drive
 #   extas-backup wal     — push archived WAL segments to Blob (every minute)
 #   extas-backup prune   — retention from the config (later from the admin, PR 507)
+# The backup disk must never fill up (31 Oct 2026: /srv/extas/backups reached 100% and every daily backup failed):
+#   - archived WAL is gzip-compressed by PostgreSQL's archive_command (09-stack.sh) and kept here only for
+#     BACKUP_KEEP_LOCAL_WAL_DAYS; each base backup carries the WAL it needs itself (-X stream), so an older base backup
+#     still restores without the archive;
+#   - before each daily backup the disk is pruned until BACKUP_MIN_FREE_PCT is free (oldest first; the newest base
+#     backup always stays), and retention runs again after it;
+#   - a failed day leaves nothing half-written behind (it is staged on NVMe and moved in by one rename).
 # Blob and Drive are "not connected" until the owner enters their keys in the admin vault (PR 493); the backup then
 # still runs locally and the status says so. Nothing here ever prints a secret.
 set -euo pipefail
@@ -39,6 +46,20 @@ key_file() {
 }
 encrypt() { # encrypt <in> <out>: the Drive copy, with the same key for every file
   gpg --batch --yes --pinentry-mode loopback --passphrase-file "$(key_file)" --symmetric --cipher-algo AES256 -o "$2" "$1"
+}
+
+# The PostgreSQL tools inside the container (31 Oct 2026, GitHub #65): /usr/bin/pg_dump, psql and pg_basebackup there
+# are Debian's pg_wrapper, which fails ("You must install at least one postgresql-client-<version> package") since the
+# containerd move; the server's own tools are in /usr/lib/postgresql/<n>/bin, put first on PATH. Same as
+# infra/deploy/pg-exec.sh `pg_exec`, for any container (the restore test's own one too).
+PG_PATH='PATH="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1):$PATH"'
+pgx() { # pgx [-i] [-u user] <container> <tool> <args…>
+  local o=()
+  while [ "${1:-}" = -i ] || [ "${1:-}" = -u ]; do
+    if [ "$1" = -u ]; then o+=(-u "$2"); shift 2; else o+=(-i); shift; fi
+  done
+  local c="$1"; shift
+  docker exec "${o[@]}" "$c" bash -c "$PG_PATH"'; exec "$@"' pgx "$@"
 }
 
 status() { # status <kind> <target> <ok|fail|off> <detail>
@@ -122,33 +143,63 @@ docs_backup() {
   DOCS_NAME="docs-$NOW"; DOCS_NOTE="docs of ${sha:0:12}"
 }
 
-daily() {
-  local work="$STAGE/$NOW" rc=0
-  rm -rf "$work"; mkdir -p "$work"; chown 999:999 "$work"
-  # 1. Physical base backup (tar, compressed) — the starting point for WAL replay to any minute.
-  docker exec -u postgres extas-postgres bash -c "rm -rf /nvme/pgtemp/.bb-$NOW && mkdir -p /nvme/pgtemp/.bb-$NOW && \
-    pg_basebackup -U extas -D /nvme/pgtemp/.bb-$NOW -Ft -z -X none -c fast" \
-    && mv "$EXTAS_NVME_MOUNT/pgtemp/.bb-$NOW" "$work/base" || rc=1
-  # 2. Logical dump — portable, restorable on any PostgreSQL 17+.
-  docker exec extas-postgres pg_dump -U extas -d extas -Fc -Z 6 > "$work/extas.dump" || rc=1
-  # 3. Config (secrets included, so the Drive copy is encrypted; the local copy stays on the 700 config disk).
-  tar -C "$R" -czf "$work/config.tgz" config || rc=1
-  if [ $rc -ne 0 ]; then status daily local fail "backup step failed"; rm -rf "$work"; exit 1; fi
+# free_pct: how much of the backup disk is free, in whole per cent.
+free_pct() { df -P "$LOCAL" | awk 'NR==2 { gsub("%", "", $5); print 100 - $5 }'; }
 
-  mkdir -p "$LOCAL/base/$NOW"
-  mv "$work/base"/* "$LOCAL/base/$NOW"/
-  mv "$work/extas.dump" "$LOCAL/dump/extas-$NOW.dump"
-  mv "$work/config.tgz" "$LOCAL/config/config-$NOW.tgz"
+# make_room: prune by the retention settings, then — while less than BACKUP_MIN_FREE_PCT is free — the oldest archived
+# WAL (older than an hour) and then the oldest base backup (never the newest), until there is room or nothing more may
+# go. Sets ROOM_NOTE.
+ROOM_NOTE=""
+make_room() {
+  local before f n
+  before="$(free_pct)"
+  [ "$before" -ge "$BACKUP_MIN_FREE_PCT" ] && return 0
+  prune_files
+  while [ "$(free_pct)" -lt "$BACKUP_MIN_FREE_PCT" ]; do
+    f="$(find "$LOCAL/wal" -type f -mmin +60 -printf '%T@ %p\n' 2>/dev/null | sort -n | head -1 | cut -d' ' -f2-)"
+    if [ -n "$f" ]; then rm -f "$f"; continue; fi
+    n="$(find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | wc -l)"
+    [ "$n" -gt 1 ] || break
+    rm -rf "$(find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | sort | head -1)"
+  done
+  ROOM_NOTE="backup disk was ${before}% free, made room to $(free_pct)%; "
+}
+
+# fail_day <message>: the day's status, its work folder and anything half-moved removed, exit 1.
+fail_day() {
+  status daily local fail "$ROOM_NOTE$1"
+  rm -rf "${STAGE:?}/$NOW" "${LOCAL:?}/base/.$NOW.part"
+  exit 1
+}
+
+daily() {
+  local work="$STAGE/$NOW" rc=0 step=""
+  make_room
+  rm -rf "$work"; mkdir -p "$work"; chown 999:999 "$work"
+  # 1. Physical base backup (tar, compressed) — the starting point for WAL replay to any minute. -X stream puts the
+  #    WAL this backup needs into it (pg_wal.tar.gz), so it restores on its own, even after the archive is pruned.
+  docker exec -u postgres extas-postgres bash -c "$PG_PATH; rm -rf /nvme/pgtemp/.bb-$NOW && mkdir -p /nvme/pgtemp/.bb-$NOW && \
+    pg_basebackup -U extas -D /nvme/pgtemp/.bb-$NOW -Ft -z -X stream -c fast" \
+    && mv "$EXTAS_NVME_MOUNT/pgtemp/.bb-$NOW" "$work/base" || { rc=1; step="base backup (pg_basebackup)"; }
+  # 2. Logical dump — portable, restorable on any PostgreSQL 17+.
+  pgx extas-postgres pg_dump -U extas -d extas -Fc -Z 6 > "$work/extas.dump" || { rc=1; step="${step:-database dump (pg_dump)}"; }
+  # 3. Config (secrets included, so the Drive copy is encrypted; the local copy stays on the 700 config disk).
+  tar -C "$R" -czf "$work/config.tgz" config || { rc=1; step="${step:-config archive}"; }
+  if [ $rc -ne 0 ]; then fail_day "backup step failed: $step"; fi
+
+  # Onto the data disk: the base backup under a hidden name first, then one rename, so a full disk never leaves a
+  # half-copied base backup that a restore would pick.
+  mkdir -p "$LOCAL/base/.$NOW.part"
+  mv "$work/base"/* "$LOCAL/base/.$NOW.part"/ 2>/dev/null || fail_day "the base backup did not fit on the backup disk ($(free_pct)% free)"
+  mv "$LOCAL/base/.$NOW.part" "$LOCAL/base/$NOW"
+  mv "$work/extas.dump" "$LOCAL/dump/extas-$NOW.dump" 2>/dev/null || fail_day "the dump did not fit on the backup disk ($(free_pct)% free)"
+  mv "$work/config.tgz" "$LOCAL/config/config-$NOW.tgz" 2>/dev/null || fail_day "the config archive did not fit on the backup disk"
   chmod 600 "$LOCAL/config/config-$NOW.tgz"
   # 4. The product photos on the local disk. If they fail, the day's backup fails (the database part above is kept).
-  if ! media_backup "$work"; then
-    status daily local fail "database backed up, but the $MEDIA_NOTE"; rm -rf "$work"; exit 1
-  fi
+  if ! media_backup "$work"; then fail_day "database backed up, but the $MEDIA_NOTE"; fi
   # 5. The docs bundle (CN-011). The same: a failed bundle fails the day's backup.
-  if ! docs_backup "$work"; then
-    status daily local fail "database and photos backed up, but $DOCS_NOTE"; rm -rf "$work"; exit 1
-  fi
-  status daily local ok "$(du -sh "$LOCAL/base/$NOW" | cut -f1) base + dump; $MEDIA_NOTE; $DOCS_NOTE"
+  if ! docs_backup "$work"; then fail_day "database and photos backed up, but $DOCS_NOTE"; fi
+  status daily local ok "$ROOM_NOTE$(du -sh "$LOCAL/base/$NOW" | cut -f1) base + dump; $MEDIA_NOTE; $DOCS_NOTE; $(free_pct)% of the backup disk free"
 
   if blob_on; then
     if rclone copy -q "$LOCAL/base/$NOW" "blob:$BLOB_PATH/base/$NOW" && rclone copy -q "$LOCAL/dump/extas-$NOW.dump" "blob:$BLOB_PATH/dump/" \
@@ -176,6 +227,7 @@ daily() {
     else status daily drive fail "upload failed"; rc=1; fi
   else status daily drive off "not connected — add the key in Keys & connections"; fi
   rm -rf "$work"
+  prune_files
   exit $rc
 }
 
@@ -187,11 +239,14 @@ wal() {
   else status wal blob fail "push failed"; exit 1; fi
 }
 
-prune() {
+# prune_files: the local retention (the remote copies are pruned by `prune`).
+prune_files() {
+  # Leftovers of a day that failed half-way are never a backup.
+  find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -name '.*.part' -mmin +240 -exec rm -rf {} +
   find "$LOCAL/dump" -name '*.dump' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
   find "$LOCAL/config" -name '*.tgz' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
   find "$LOCAL/docs" -name 'docs-*' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -delete
-  find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -exec rm -rf {} +
+  find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -mtime +"$BACKUP_KEEP_LOCAL_DAYS" -exec rm -rf {} +
   # Photo archives: the same days as the database. The newest set (the newest full archive with its snapshot file and
   # the newest diff on it) always stays, even when it is older than that (a full archive is made at least as often as
   # the shortest retention, so this only matters when the backups stopped). A diff whose full archive is gone is
@@ -212,10 +267,18 @@ prune() {
     s="${f##*-diff-}"; s="${s%.tar}"
     [ -e "$LOCAL/media/media-$s-full.tar" ] || rm -f "$f" "$LOCAL/media/media-$(basename "$f" | cut -c7-19).sha256"
   done
-  # WAL older than the oldest kept base backup is no longer needed locally.
+  # WAL: kept here for BACKUP_KEEP_LOCAL_WAL_DAYS (every base backup carries its own), and never older than the
+  # oldest kept base backup. With no base backup at all (the first ones failed) the window alone bounds it — before
+  # 31 Oct 2026 it was kept for ever then, and it filled the backup disk.
   local oldest
-  oldest="$(find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d -printf '%T@\n' | sort -n | head -1 | cut -d. -f1)"
+  find "$LOCAL/wal" -type f -mmin +"$(( BACKUP_KEEP_LOCAL_WAL_DAYS * 1440 ))" -delete
+  oldest="$(find "$LOCAL/base" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%T@\n' | sort -n | head -1 | cut -d. -f1)"
   [ -n "$oldest" ] && find "$LOCAL/wal" -type f ! -newermt "@$oldest" -delete
+  return 0
+}
+
+prune() {
+  prune_files
   # Remote copies (database, config, photo archives and docs bundles alike) by their age.
   blob_on && rclone delete -q --min-age "${BACKUP_KEEP_BLOB_DAYS}d" "blob:$BLOB_PATH" || true
   drive_on && rclone delete -q --min-age "${BACKUP_KEEP_DRIVE_DAYS}d" "drive:$DRIVE_PATH" || true

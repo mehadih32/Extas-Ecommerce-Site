@@ -473,9 +473,12 @@ cat > "$T/bin/docker" <<'FAKE'
 # stand-in for docker: the base backup is a real tar of a fake data folder; the database answers like a healthy one
 case "$1" in
   exec)
+    [ -z "${FAKE_DOCKER_LOG:-}" ] || echo "$*" >> "$FAKE_DOCKER_LOG"
     case "$*" in
-      *pg_basebackup*) d="$(grep -o '\.bb-[0-9-]*' <<<"$*" | head -1)"; mkdir -p "$FAKE_NVME/pgtemp/$d"
-        tar -czf "$FAKE_NVME/pgtemp/$d/base.tar.gz" -C "$FAKE_PG" . ;;
+      *pg_basebackup*) [ -n "${FAKE_BB_FAIL:-}" ] && exit 1
+        d="$(grep -o '\.bb-[0-9-]*' <<<"$*" | head -1)"; mkdir -p "$FAKE_NVME/pgtemp/$d"
+        tar -czf "$FAKE_NVME/pgtemp/$d/base.tar.gz" -C "$FAKE_PG" .
+        grep -q -- '-X stream' <<<"$*" && tar -czf "$FAKE_NVME/pgtemp/$d/pg_wal.tar.gz" -T /dev/null ;;
       *pg_dump*) echo "dump of the database" ;;
       *pg_is_in_recovery*) echo t ;;
       *information_schema.tables*) echo 42 ;;
@@ -514,8 +517,16 @@ case "$cmd" in
 esac
 FAKE
 printf '#!/bin/sh\nexit 0\n' > "$T/bin/chown"; printf '#!/bin/sh\nexit 0\n' > "$T/bin/sleep"
+# stand-in for df: the backup disk is as full as $FAKE_DF_FILE says (default 10%), minus 1% per WAL segment removed
+cat > "$T/bin/df" <<'FAKE'
+#!/usr/bin/env bash
+u="$(cat "$FAKE_DF_FILE" 2>/dev/null || echo 10)"
+w="$(find "$FAKE_WAL" -type f 2>/dev/null | wc -l)"; [ -f "$FAKE_DF_FILE" ] && u=$(( u - ${FAKE_DF_BASE_WAL:-0} + w ))
+printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\nfake 100 %s %s %s%% /backups\n' "$u" "$((100-u))" "$u"
+FAKE
 chmod +x "$T/bin/"*
-BENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_NVME="$T/nvme" FAKE_PG="$T/pg" FAKE_REMOTE="$T/remote")
+BENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_NVME="$T/nvme" FAKE_PG="$T/pg" FAKE_REMOTE="$T/remote"
+  FAKE_WAL="$BR/backups/wal" FAKE_DF_FILE="$T/df-used" FAKE_DOCKER_LOG="$T/docker-exec.log")
 stamp() { date -d "$1" +%Y%m%d-%H%M; }
 A="$(stamp '2 days ago')"; Bs="$(stamp '1 day ago')"; C="$(stamp '10 minutes ago')"
 M="$BR/data/media"; L="$BR/backups/media"; LD="$BR/backups/docs"
@@ -551,9 +562,33 @@ check "backup: a diff has no snapshot of its own" "$(find "$L" -name '*.snar' | 
 rm "$M/p/two.webp"; echo "photo five" > "$M/five.jpg"
 "${BENV[@]}" EXTAS_BACKUP_STAMP="$C" "$B/extas-backup" daily >/dev/null 2>&1
 check "backup: a diff carries everything since the full one" "$(cut -c67- "$L/media-$C.sha256" | sort | tr '\n' ' ')" "./five.jpg ./p/four.avif "
+# The full backup disk of 31 Oct 2026 (PR 8 fix): every base backup carries its own WAL; the WAL archive is gzip and
+# kept only BACKUP_KEEP_LOCAL_WAL_DAYS, also when no base backup exists; a full disk is pruned before the backup
+check "backup: the base backup carries its WAL (-X stream)" "$(ls "$BR/backups/base/$C" | tr '\n' ' ')" "base.tar.gz pg_wal.tar.gz "
+check "backup: the WAL archive is compressed" "$(grep -c "archive_command = 'test ! -f /wal-archive/%f.gz && gzip -1 -c %p" ../server/steps/09-stack.sh):$(grep -c '^wal_recycle = off' ../server/steps/09-stack.sh)" "1:1"
+check "restore: reads compressed and plain WAL" "$(grep -c 'gunzip -c /restore-wal/%f.gz > %p || cp /restore-wal/%f %p' ../server/bin/extas-restore)" "1"
+W="$BR/backups/wal"; : > "$W/000000010000000000000001.gz"; touch -d '3 days ago' "$W/000000010000000000000001.gz"
+: > "$W/000000010000000000000002.gz"; touch -d "1 day ago" "$W/000000010000000000000002.gz"
+mv "$BR/backups/base" "$T/base-aside"; mkdir -p "$BR/backups/base"
+"${BENV[@]}" "$B/extas-backup" prune >/dev/null 2>&1
+check "prune: WAL past the window goes even with no base backup" "$(ls "$W" | tr '\n' ' ')" "000000010000000000000002.gz "
+rm -rf "$BR/backups/base"; mv "$T/base-aside" "$BR/backups/base"
+for i in 3 4 5; do : > "$W/00000001000000000000000$i.gz"; touch -d "$i hours ago" "$W/00000001000000000000000$i.gz"; done
+touch -d "10 hours ago" "$BR/backups/base"/*; echo 84 > "$T/df-used"; rc=0
+"${BENV[@]}" FAKE_DF_BASE_WAL="$(ls "$W" | wc -l)" EXTAS_BACKUP_STAMP="$(stamp '8 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: a full disk is pruned first, oldest WAL first, then backs up" "$rc:$(ls "$W" | wc -l):$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'backup disk was 16% free, made room to 20%')" "0:0:1"
+rm -f "$T/df-used"
+rc=0; "${BENV[@]}" FAKE_BB_FAIL=1 EXTAS_BACKUP_STAMP="$(stamp '7 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: a failed base backup says which step, leaves nothing half-done" "$rc:$(jq -r .detail "$BR/state/backup-daily-local.json"):$(find "$BR/backups/base" -mindepth 1 -maxdepth 1 -name "*$(stamp "7 minutes ago")*" | wc -l):$(ls "$T/nvme/backup-staging" | wc -l)" "1:backup step failed: base backup (pg_basebackup):0:0"
+S8="$(stamp "8 minutes ago")"; rm -rf "$BR/backups/base/$S8" "$L/media-$S8"* "$LD/docs-$S8"*
 # The restore test: database as before, plus one sample photo checked against its checksum
 rc=0; out="$("${BENV[@]}" bash "$B/extas-restore" test 2>&1)" || rc=$?
 check "restore test: passes" "$rc:$(jq -r .result "$BR/state/restore-test.json")" "0:ok"
+# GitHub #65: inside the container Debian's /usr/bin pg_wrapper fails; every PostgreSQL tool runs with the server's own
+# /usr/lib/postgresql/<n>/bin first on PATH (backup and restore alike).
+pgcalls="$(grep -cE 'pg_dump|pg_basebackup|psql|pg_restore' "$T/docker-exec.log" || true)"
+check "backup and restore: every psql, pg_dump, pg_basebackup and pg_restore uses the server's own tools" \
+  "$([ "$pgcalls" -gt 3 ] && echo some):$(grep -E 'pg_dump|pg_basebackup|psql|pg_restore' "$T/docker-exec.log" | grep -vc '/usr/lib/postgresql/' || true)" "some:0"
 check "restore test: a sample photo came back with its checksum" "$(jq -r .detail "$BR/state/restore-test.json" | grep -c "restored from media-$C-diff-$A.tar, checksum matches")" "1"
 check "restore test: its work folder is removed" "$(ls "$T/nvme/scratch" 2>/dev/null | wc -l)" "0"
 cp "$L/media-$C.sha256" "$T/keep.sha256"
@@ -598,7 +633,7 @@ check "prune: old photo archives go, the newest set stays" "$(ls "$L" | tr '\n' 
 # The cadence: a full archive at least as often as the shortest retention
 sed -i 's/^BACKUP_KEEP_LOCAL_DAYS=.*/BACKUP_KEEP_LOCAL_DAYS=1/' "$T/server.conf"
 "${BENV[@]}" "$B/extas-backup" daily >/dev/null 2>&1
-check "backup: a full archive again when the shortest retention says so" "$(find "$L" -name '*-full.tar' | wc -l)" "2"
+check "backup: a full archive again when the shortest retention says so (the old one pruned after it)" "$(find "$L" -name "*-full.tar" -mmin -5 | wc -l):$(find "$L" -name "*-full.tar" | wc -l)" "1:1"
 # Switched off: no photo archive, the backup and the restore test still pass and say so
 sed -i 's/^BACKUP_MEDIA=.*/BACKUP_MEDIA="no"/' "$T/server.conf"
 rm -rf "${L:?}"/*

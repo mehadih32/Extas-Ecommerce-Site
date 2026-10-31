@@ -41,6 +41,19 @@ while [ $# -gt 0 ]; do
 done
 
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; [ "$MODE" = test ] && rm -rf "$WORK"; return 0; }
+# The PostgreSQL tools inside the container (31 Oct 2026, GitHub #65): /usr/bin/pg_dump, psql and pg_basebackup there
+# are Debian's pg_wrapper, which fails ("You must install at least one postgresql-client-<version> package") since the
+# containerd move; the server's own tools are in /usr/lib/postgresql/<n>/bin, put first on PATH. Same as
+# infra/deploy/pg-exec.sh `pg_exec`, for any container (the restore test's own one too).
+PG_PATH='PATH="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1):$PATH"'
+pgx() { # pgx [-i] [-u user] <container> <tool> <args…>
+  local o=()
+  while [ "${1:-}" = -i ] || [ "${1:-}" = -u ]; do
+    if [ "$1" = -u ]; then o+=(-u "$2"); shift 2; else o+=(-i); shift; fi
+  done
+  local c="$1"; shift
+  docker exec "${o[@]}" "$c" bash -c "$PG_PATH"'; exec "$@"' pgx "$@"
+}
 result() { printf '{"result":"%s","detail":"%s","from":"%s","at":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" > "$STATE/restore-$MODE.json"; }
 
 # ---- product photos (PR 8) ----------------------------------------------------------------------------------------
@@ -206,19 +219,29 @@ else
   else
     if [ "$MODE" = test ]; then
       # Close the current WAL segment so the test sees everything committed up to now, then let the archiver copy it.
-      docker exec extas-postgres psql -qtAX -U extas -d extas -c "SELECT pg_switch_wal()" >/dev/null 2>&1 || true
+      pgx extas-postgres psql -qtAX -U extas -d extas -c "SELECT pg_switch_wal()" >/dev/null 2>&1 || true
       sleep 5
     fi
     BASE="$(pick_base "$LOCAL/base")"
     [ -n "$BASE" ] || { result fail "no local base backup yet"; echo "no local base backup yet"; exit 1; }
     BASEDIR="$LOCAL/base/$BASE"
-    cp -a "$LOCAL/wal/." "$WORK/wal/" 2>/dev/null || true
+    # Only the WAL archived since this base backup (it carries the WAL before that itself): copying the whole archive
+    # made the restore test slow and, with a full archive, too slow to finish (31 Oct 2026).
+    find "$LOCAL/wal" -maxdepth 1 -type f -newermt "@$(( $(stat -c %Y "$BASEDIR/base.tar.gz") - 600 ))" \
+      -exec cp -p {} "$WORK/wal/" \; 2>/dev/null || true
   fi
   tar -xzf "$BASEDIR/base.tar.gz" -C "$WORK/pgdata"
+  # -X fetch (since 31 Oct 2026): the WAL the base backup needs is in pg_wal.tar.gz beside it.
+  [ -f "$BASEDIR/pg_wal.tar.gz" ] && tar -xzf "$BASEDIR/pg_wal.tar.gz" -C "$WORK/pgdata/pg_wal"
+  # The temp tablespace on the NVMe (nvme_temp, /nvme/pgtemp) comes as <oid>.tar.gz; the restored copy gets a folder of
+  # its own at the same path, so its tablespace_map points somewhere real.
+  mkdir -p "$WORK/tblspc"
+  for f in "$BASEDIR"/[0-9]*.tar.gz; do [ -e "$f" ] && tar -xzf "$f" -C "$WORK/tblspc"; done
   chown -R 999:999 "$WORK"
   touch "$WORK/pgdata/recovery.signal"
   {
-    echo "restore_command = 'cp /restore-wal/%f %p'"
+    # Archived WAL is gzip-compressed since 31 Oct 2026 (09-stack.sh); older segments are plain.
+    echo "restore_command = 'test -f /restore-wal/%f.gz && gunzip -c /restore-wal/%f.gz > %p || cp /restore-wal/%f %p'"
     [ -n "$AT" ] && echo "recovery_target_time = '$AT $EXTAS_TIMEZONE'"
     echo "recovery_target_action = 'promote'"
     echo "archive_mode = off"
@@ -229,29 +252,34 @@ trap cleanup EXIT
 if [ -n "$BASE" ]; then
   docker run -d --name "$NAME" --network extas -u 999:999 \
     -e PGDATA=/var/lib/postgresql/data/pgdata \
-    -v "$WORK/pgdata:/var/lib/postgresql/data/pgdata" -v "$WORK/wal:/restore-wal:ro" \
+    -v "$WORK/pgdata:/var/lib/postgresql/data/pgdata" -v "$WORK/wal:/restore-wal:ro" -v "$WORK/tblspc:/nvme/pgtemp" \
     "$IMG_POSTGRES" postgres -c shared_buffers=256MB -c temp_tablespaces='' -c archive_mode=off \
     -c logging_collector=off -c shared_preload_libraries=pg_stat_statements >/dev/null
 else
   docker run -d --name "$NAME" --network extas -e POSTGRES_USER=extas -e POSTGRES_DB=extas \
     -e POSTGRES_HOST_AUTH_METHOD=trust -v "$WORK/pgdata:/var/lib/postgresql/data" "$IMG_POSTGRES" >/dev/null
 fi
-for _ in $(seq 1 180); do
-  if docker exec "$NAME" psql -qtAX -U extas -d extas -c "SELECT NOT pg_is_in_recovery()" 2>/dev/null | grep -q t; then break; fi
+# The WAL replay since the base backup must finish within RESTORE_TEST_WAIT_MIN.
+for _ in $(seq 1 $(( ${RESTORE_TEST_WAIT_MIN:-30} * 30 ))); do
+  if pgx "$NAME" psql -qtAX -U extas -d extas -c "SELECT NOT pg_is_in_recovery()" 2>/dev/null | grep -q t; then break; fi
   sleep 2
 done
 if [ -z "$BASE" ]; then
   docker cp "$WORK/extas.dump" "$NAME:/tmp/extas.dump"
   # PR 139: the dump grants rights to the app's own role, which lives outside the database; make it first (no login;
   # server setup and the deploy give it one) so every grant and the append-only guards come back as they were.
-  docker exec "$NAME" psql -qX -v ON_ERROR_STOP=1 -U extas -d extas \
+  pgx "$NAME" psql -qX -v ON_ERROR_STOP=1 -U extas -d extas \
     -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'extas_app') THEN CREATE ROLE extas_app NOLOGIN; END IF; END \$\$" >/dev/null
-  docker exec "$NAME" pg_restore -U extas -d extas --no-owner /tmp/extas.dump
+  pgx "$NAME" pg_restore -U extas -d extas --no-owner /tmp/extas.dump
 fi
 
-tables="$(docker exec "$NAME" psql -qtAX -U extas -d extas -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')" 2>/dev/null || echo x)"
-live="$(docker exec extas-postgres psql -qtAX -U extas -d extas -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')" 2>/dev/null || echo x)"
-if [ "$tables" = x ]; then result fail "restored database did not come up"; echo "FAIL: restored database did not come up"; exit 1; fi
+tables="$(pgx "$NAME" psql -qtAX -U extas -d extas -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')" 2>/dev/null || echo x)"
+live="$(pgx extas-postgres psql -qtAX -U extas -d extas -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')" 2>/dev/null || echo x)"
+if [ "$tables" = x ]; then
+  result fail "restored database did not come up within ${RESTORE_TEST_WAIT_MIN:-30} min (base ${BASE:-drive dump})"
+  echo "FAIL: restored database did not come up"; docker logs --tail 20 "$NAME" 2>&1 | sed 's/^/  postgres: /' >&2 || true
+  exit 1
+fi
 detail="base ${BASE:-drive dump}, $tables tables restored (live has $live)"
 
 if [ "$MODE" = test ]; then

@@ -101,7 +101,11 @@ temp_tablespaces = 'nvme_temp'
 # WAL archive → point-in-time restore to the minute (PR 8)
 wal_level = replica
 archive_mode = on
-archive_command = 'test ! -f /wal-archive/%f && cp %p /wal-archive/%f'
+# gzip-compressed (31 Oct 2026: the plain 16 MB segments, one a minute, filled the backup disk); extas-restore reads
+# both. With wal_recycle off every new segment is zero-filled, so a segment closed early by archive_timeout compresses
+# to almost nothing.
+archive_command = 'test ! -f /wal-archive/%f.gz && gzip -1 -c %p > /wal-archive/%f.gz.part && mv /wal-archive/%f.gz.part /wal-archive/%f.gz'
+wal_recycle = off
 archive_timeout = $PG_ARCHIVE_TIMEOUT_S
 # Slow query log (PR 603): anything over ${PG_SLOW_MS} ms
 logging_collector = on
