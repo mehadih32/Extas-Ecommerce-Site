@@ -50,6 +50,21 @@
 	respond @internal 404
 }
 
+# R2 security review (m3, PR 602): a host behind the preview password never lets Cloudflare keep a page. The gate is
+# Caddy's alone, so a page Cloudflare kept for a signed-in team member ("Cloudflare keeps pages", cache.pages.cdn, and
+# its cache rule on the shop's hosts) would reach anyone without the password. On a gated host every answer but
+# Next.js's hashed files (code, never the shop's content) says no-store to Cloudflare and private to the browser,
+# whatever the app or that switch says. Imported by the staging block and by a locked extra host (hosts-block.sh).
+(gated_cache) {
+	@gated_pages not path /_next/static/*
+	header @gated_pages {
+		Cache-Control "private, no-store"
+		CDN-Cache-Control "no-store"
+		Cloudflare-CDN-Cache-Control "no-store"
+		defer
+	}
+}
+
 # R2 security review (m1, PR 378): no request body bigger than the server.conf limits reaches the app. Next's proxy
 # holds a whole body in memory (up to its 200 MB, apps/web/next.config.ts) before a route can refuse it, so a few dozen
 # large anonymous POSTs could run an app copy out of memory. Caddy answers 413 instead: CADDY_UPLOAD_MAX_MB on the
@@ -97,6 +112,7 @@
 # ~~PR 362: the extra host names were served in this same block, so they shared the gate.~~
 {$EXTAS_STAGING_HOST} {
 	import extas_site
+	import gated_cache
 	import /etc/caddy/sites/noindex.caddy
 	import /etc/caddy/sites/auth.caddy
 	import /etc/caddy/sites/upstream.caddy

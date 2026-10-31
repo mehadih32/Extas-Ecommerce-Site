@@ -332,9 +332,11 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   sleep 0.5; kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   check "access log (caddy, m5): no query string, no pay link token, no Referer; the path stays" \
     "$(grep -c 'tok-secret\|typed-address\|Referer' "$T4/access.log" || true):$(jq -r .request.uri "$T4/access.log" 2>/dev/null | grep -v '^/$' | tr '\n' ' ')" "0:/pay/ /bn/pay/ /api/delivery/suggest /collections/new-in "
-  # R2 security review (m1): behind Caddy an app that reads every body (a stand-in on a local port). The body limits come
-  # from the container's environment (server.conf through stack.env): a bigger body gets 413 from Caddy, with or without
-  # a length; the admin uploads have their own larger limit.
+  # R2 security review (m1, m3): behind Caddy an app that reads every body and says "public" for every page (a stand-in
+  # on a local port). The body limits come from the container's environment (server.conf through stack.env): a bigger
+  # body gets 413 from Caddy, with or without a length; the admin uploads have their own larger limit. A gated host
+  # (staging, a locked extra host) says no-store to Cloudflare and private to the browser on every page; the hashed files
+  # and an opened main domain keep the app's own headers.
   bport=18497
   cat > "$T4/app.py" <<'PY'
 import sys, http.server
@@ -387,8 +389,15 @@ PY
     echo "$(post /api/x b05) $(post /api/x b15) $(post /api/x b15 chunked) $(post /api/admin/media b15) $(post /api/admin/support/t1/files b15 chunked) $(post /api/admin/media b25) | $(cc "staging.test:$port" /products/x) | $(cc "main.test:$port" /products/x) | $(cc "staging.test:$port" /_next/static/a.js)"
     kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   }
+  gated='cache-control: private, no-store;cdn-cache-control: no-store;cloudflare-cdn-cache-control: no-store;'
+  public='cache-control: public, max-age=600;cdn-cache-control: public, max-age=600;'
+  hashed='cache-control: public, max-age=600;cdn-cache-control: public, max-age=31536000, immutable;'
   check "body limit (caddy, R2 m1): 413 above the limit with or without a length; the admin uploads have their own" \
     "$(edge_case no | cut -d'|' -f1)" "200 413 413 200 200 413 "
+  check "edge cache (caddy, R2 m3): locked — staging and the main domain say no-store to Cloudflare; hashed files stay" \
+    "$(edge_case no | cut -d'|' -f2-)" " $gated | $gated | $hashed"
+  check "edge cache (caddy, R2 m3): opened — the main domain keeps the app's headers, staging still no-store" \
+    "$(edge_case yes | cut -d'|' -f2-)" " $gated | $public | $hashed"
   kill "$apid" 2>/dev/null || true; wait "$apid" 2>/dev/null || true
   rm -rf "$T4"
 elif [ -n "${CI:-}" ]; then
@@ -1301,7 +1310,11 @@ miss=""; for p in /bag /checkout /account /bn/bag /bn/checkout /bn/account /admi
   grep -q " $p" <<<"$never" || miss="$miss $p"; done
 check "caddy cache: bag, checkout, account, admin and the API are never kept" "${miss:-none}" "none"
 check "caddy cache: never kept means no-store for the browser and Cloudflare" \
-  "$(grep -c 'Cache-Control "private, no-store"' "$CF"):$(grep -c 'CDN-Cache-Control "no-store"' "$CF")" "1:1"
+  "$(awk '/^\(cache_headers\) \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c 'Cache-Control "private, no-store"'):$(awk '/^\(cache_headers\) \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c '	CDN-Cache-Control "no-store"')" "1:1"
+# R2 security review (m3): a gated host (staging, a locked extra host) never lets Cloudflare keep a page; the open main
+# domain keeps the app's own cache headers (the live check is with the real Caddy above).
+check "caddy cache (R2 m3): the staging block and a locked extra host import gated_cache; an open one does not" \
+  "$(awk '/^\{\$EXTAS_STAGING_HOST\} \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c '^	import gated_cache$'):$(bash ../stack/caddy/hosts-block.sh no a.test | grep -c '	import gated_cache'):$(bash ../stack/caddy/hosts-block.sh yes a.test | grep -c 'gated_cache' || true)" "1:1:0"
 check "caddy cache: hashed files keep a year at Cloudflare" "$(grep -c '@hashed_files CDN-Cache-Control "public, max-age=31536000, immutable"' "$CF")" "1"
 check "caddy cache: the internal addresses answer 404 from outside" "$(grep -c '^	respond @internal 404$' "$CF")" "1"
 check "setup: the cache hook token is made on the server" "$(grep -c 'gen_secret "$s/app.env" CACHE_HOOK_TOKEN 48' ../server/steps/09-stack.sh)" "1"
