@@ -32,8 +32,8 @@ const OFFLINE = ['COD', 'WALLET', 'CASH', 'BANK_TRANSFER'] as const;
 
 /**
  * The app's gateway resolver from its connection layer for the payment adapters: the provider's connection when the
- * owner switched one on, else its practice gateway. A provider with no adapter yet (Nagad and card come in PR 168 and
- * 169) runs on the practice gateway too (A1.3), which works only while test payments are on.
+ * owner switched one on, else its practice gateway. A provider with no adapter yet (the card gateway comes in PR 169;
+ * Rocket and Upay have none) runs on the practice gateway too (A1.3), which works only while test payments are on.
  */
 export function connectionGateways(connections: Connections): GatewayResolver {
   return async (storeId, provider) => {
