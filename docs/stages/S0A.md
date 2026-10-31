@@ -150,6 +150,7 @@
 
 - **Status:** Live · 2026-10-20
   - Build status row: PostgreSQL 17 tuned from the profile, PgBouncer, temp on NVMe, WAL archive, slow log 100 ms
+  - GitHub pull request #65, 31 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** PostgreSQL tuned for 8 vCPU / 64 GB — connections, shared buffers, work memory, autovacuum.
 - **Filed under:** [S0A · Server foundation — PR 1–10](../MASTER-REGISTER.md#s0a--server-foundation--pr-110)
