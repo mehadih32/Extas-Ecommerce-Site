@@ -4,13 +4,15 @@
 // Advance request card (send the proposal by itself — off; the ways ticked first; the pay link's service); PR 162: under it
 // the Blocklist card (list a number with a reason, `risk.block`; Undo with a reason, `risk.unblock`; the switch and what a
 // match gets, mark or hold — never a cancel); PR 163: under it the Repeat refusers card (the owner's terms per number,
-// `risk.refuser.terms`, only ever a proposal on a new order). The risk matrix, the rule switches (PR 544's API), the duplicate rules and
+// `risk.refuser.terms`, only ever a proposal on a new order); PR 522: the One parcel card; PR 523: the Blocklist proposal
+// card (the number of rejections that proposes a number; a person decides in the Blocklist card). The risk matrix, the rule switches (PR 544's API), the duplicate rules and
 // protection & learning join with their PRs. Seeing needs `risk.rules.read`, saving `risk.rules.write`; the API checks
 // each again. Everything ships off.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { advanceSettings, blocklist, refusers, riskLevels } from '@extas/orders';
+import { BLOCK_PROPOSAL_CANCEL_CODES } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { AdvanceRequestCard } from '@/components/admin/orders/AdvanceRequestCard';
@@ -23,6 +25,7 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { advanceCardScreen, advanceCardTexts } from '@/lib/admin-orders/advance-card';
 import { blocklistCardScreen, blocklistCardTexts } from '@/lib/admin-orders/blocklist-card';
+import { blockProposalCard } from '@/lib/admin-orders/block-proposal-api';
 import { bundlingCard } from '@/lib/admin-orders/bundling-api';
 import { refusersCardScreen, refusersCardTexts } from '@/lib/admin-orders/refusers-card';
 import { levelsScreen, levelsTexts } from '@/lib/admin-orders/risk-levels';
@@ -56,12 +59,14 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf, bd] = await Promise.all([
+  const [data, adv, bl, rf, bd, bp, cancelReasons] = await Promise.all([
     riskLevels(readDeps(access.deps), who),
     advanceSettings(readDeps(access.deps), who),
     blocklist(readDeps(access.deps), who),
     refusers(readDeps(access.deps), who),
     bundlingCard(access.deps, MOTHER_STORE_ID),
+    blockProposalCard(access.deps, MOTHER_STORE_ID),
+    access.deps.resolver.value('orders.cancel.reasons', { storeId: MOTHER_STORE_ID }),
   ]);
   const d = view.dict;
   // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
@@ -84,6 +89,15 @@ export default async function RiskRulesPage() {
     { kind: 'select', path: 'action', label: bw('action'), help: bw('actionHelp'), options: ['propose', 'group'].map((a) => ({ value: a, label: bw(`act.${a}`) })) },
     { kind: 'number', path: 'maxOrders', label: bw('maxOrders'), help: bw('maxOrdersHelp'), min: 2, max: 20 },
   ];
+  // PR 523: the proposal that fills the blocklist (the setting `risk.blockProposal`, off as shipped)
+  const pw = (k: string) => t(d, `orders.rr.bp.${k}`);
+  const bpTexts: FieldsCardTexts = { ...bdTexts, h: pw('h'), d: pw('d'), readOnly: pw('readOnly'), err: Object.fromEntries(Object.keys(bdTexts.err).map((c) => [c, pw(`err.${c}`)])) };
+  const cancelName = new Map(cancelReasons.map((r) => [r.code as string, view.lang === 'bn' ? r.bn : r.en]));
+  const bpFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: pw('enabled') },
+    { kind: 'number', path: 'minRejections', label: pw('minRejections'), help: pw('minRejectionsHelp'), min: 1, max: 50 },
+    { kind: 'checks', path: 'cancelCodes', label: pw('cancelCodes'), options: BLOCK_PROPOSAL_CANCEL_CODES.map((c) => ({ value: c, label: cancelName.get(c) ?? c })) },
+  ];
   return (
     <div className="a2-z" data-testid="risk-rules">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'orders.page.riskRules')} sub={t(d, 'orders.rr.sub')} />
@@ -94,6 +108,9 @@ export default async function RiskRulesPage() {
       <RefusersCard screen={refusersCardScreen(view, rf)} texts={refusersCardTexts(view)} canEdit={canEdit} canDecide={held?.has('risk.refuser.terms') ?? false} />
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/bundling" screen={{ key: bd.key, value: bd.value, version: bd.version }} fields={bdFields} texts={bdTexts} canEdit={canEdit} testId="risk-bundling" />
+      </div>
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/risk/block-proposal" screen={{ key: bp.key, value: bp.value, version: bp.version }} fields={bpFields} texts={bpTexts} canEdit={canEdit} testId="risk-block-proposal" />
       </div>
       <p className="a2-xs a2-mute a2-mt12">{t(d, 'orders.rr.later')}</p>
     </div>

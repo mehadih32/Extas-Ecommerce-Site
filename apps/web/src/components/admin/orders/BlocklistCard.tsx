@@ -4,10 +4,12 @@
 // to decide), the form that lists a number with a reason (`risk.block`), the listed numbers (reason, who, when, the order
 // it came from, the same person) each with "Undo" and its reason (`risk.unblock`), and the newest undone ones. Nothing
 // here cancels an order or tells the customer. After a change the page reads the list again.
+// PR 523: the numbers proposed for the list, each with its rejections and "What we know", and "Block" or "Not now" with a
+// reason (`risk.block`); the newest decided proposals; "What we know" on every listing too.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import type { RiskBlocklist, RiskBlocklistEffect } from '@extas/settings';
-import type { BlocklistCardScreen, BlocklistCardTexts, BlocklistRowScreen } from '@/lib/admin-orders/blocklist-card';
+import type { BlocklistCardScreen, BlocklistCardTexts, BlocklistRowScreen, FactsScreen, ProposalScreen } from '@/lib/admin-orders/blocklist-card';
 import { BLOCKLIST_EFFECTS, blocklistDraftProblem, sameBlocklist } from '@/lib/admin-orders/blocklist-draft';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -174,6 +176,20 @@ export function BlocklistCard({ screen, texts: x, canEdit, canBlock, canUnblock 
         {listSaid?.text ?? ''}
       </p>
 
+      <h3 className="a2-h4 a2-mt12">{x.propH.replace('{n}', String(screen.proposals.length))}</h3>
+      <p className="a2-xs a2-mute">{x.propD}</p>
+      {screen.proposals.length ? (
+        <ul className="a2-bl-list a2-mt6" data-testid="rr-bl-proposals">
+          {screen.proposals.map((p) => (
+            <Proposal key={p.id} p={p} x={x} limits={screen.reasonLimits} canBlock={canBlock} onDone={(s) => setListSaid(s)} />
+          ))}
+        </ul>
+      ) : (
+        <p className="a2-xs a2-mute" data-testid="rr-bl-propnone">
+          {x.propNone}
+        </p>
+      )}
+
       <h3 className="a2-h4 a2-mt12">{x.activeH.replace('{n}', String(screen.active.length))}</h3>
       {screen.active.length ? (
         <ul className="a2-bl-list" data-testid="rr-bl-active">
@@ -187,7 +203,7 @@ export function BlocklistCard({ screen, texts: x, canEdit, canBlock, canUnblock 
         </p>
       )}
       {screen.undone.length ? (
-        <details className="a2-mt12" data-testid="rr-bl-undone">
+        <details className="a2-mt12 a2-more-opts" data-testid="rr-bl-undone">
           <summary className="a2-sm">{x.undoneH.replace('{n}', String(screen.undone.length))}</summary>
           <ul className="a2-bl-list a2-mt6">
             {screen.undone.map((r) => (
@@ -197,6 +213,24 @@ export function BlocklistCard({ screen, texts: x, canEdit, canBlock, canUnblock 
                   <span className="a2-sm">{r.reason}</span>
                   <span className="a2-xs a2-mute">{x.by.replace('{who}', r.who).replace('{when}', r.when)}</span>
                   <span className="a2-xs a2-mute">{x.undoneBy.replace('{who}', r.undoneWho ?? '').replace('{when}', r.undoneWhen ?? '').replace('{why}', r.undoReason ?? '')}</span>
+                  <Facts f={r.facts} x={x} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      {screen.decided.length ? (
+        <details className="a2-mt12 a2-more-opts" data-testid="rr-bl-decided">
+          <summary className="a2-sm">{x.decidedH.replace('{n}', String(screen.decided.length))}</summary>
+          <ul className="a2-bl-list a2-mt6">
+            {screen.decided.map((p) => (
+              <li key={p.id} className="a2-bl-row is-undone" data-testid="rr-bl-decided-row">
+                <div className="a2-bl-main">
+                  <strong className="a2-bl-phone">{p.phone}</strong>
+                  <span className="a2-sm">{p.counts}</span>
+                  <span className="a2-xs a2-mute">{p.decided}</span>
+                  <Facts f={p.facts} x={x} />
                 </div>
               </li>
             ))}
@@ -243,6 +277,7 @@ function Row({ row: r, x, limits, canUnblock, onDone }: { row: BlocklistRowScree
           ) : null}
           {r.identity ? ` · ${x.identity}` : null}
         </span>
+        <Facts f={r.facts} x={x} />
       </div>
       {canUnblock ? (
         open ? (
@@ -281,6 +316,145 @@ function Row({ row: r, x, limits, canUnblock, onDone }: { row: BlocklistRowScree
           </button>
         )
       ) : null}
+    </li>
+  );
+}
+
+/** PR 523: "What we know" about the person — the numbers, names and addresses given, every product ordered with its date. */
+function Facts({ f, x }: { f: FactsScreen | null; x: BlocklistCardTexts }) {
+  return (
+    <details className="a2-more-opts a2-mt6" data-testid="rr-bl-facts">
+      <summary className="a2-sm">{x.factsH}</summary>
+      {f && (f.orders.length || f.phones.length) ? (
+        <dl className="a2-bl-facts">
+          {f.phones.length ? (
+            <>
+              <dt className="a2-xs a2-mute">{x.factsPhones}</dt>
+              <dd className="a2-sm">{f.phones.join(', ')}</dd>
+            </>
+          ) : null}
+          {f.names.length ? (
+            <>
+              <dt className="a2-xs a2-mute">{x.factsNames}</dt>
+              <dd className="a2-sm">{f.names.join(', ')}</dd>
+            </>
+          ) : null}
+          {f.addresses.length ? (
+            <>
+              <dt className="a2-xs a2-mute">{x.factsAddresses}</dt>
+              <dd className="a2-sm">
+                {f.addresses.map((a) => (
+                  <span key={a} className="a2-blk">
+                    {a}
+                  </span>
+                ))}
+              </dd>
+            </>
+          ) : null}
+          {f.orders.length ? (
+            <>
+              <dt className="a2-xs a2-mute">{x.factsOrders}</dt>
+              <dd className="a2-sm">
+                <ul className="a2-bl-orders">
+                  {f.orders.map((o) => (
+                    <li key={o.key}>
+                      <span className="a2-xs a2-mute a2-blk">{o.head}</span>
+                      {o.products}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </>
+          ) : null}
+        </dl>
+      ) : (
+        <p className="a2-xs a2-mute">{x.factsNone}</p>
+      )}
+    </details>
+  );
+}
+
+/** PR 523: one number proposed for the list: its rejections, what we know, and "Block" or "Not now" with a reason. */
+function Proposal({ p, x, limits, canBlock, onDone }: { p: ProposalScreen; x: BlocklistCardTexts; limits: BlocklistCardScreen['reasonLimits']; canBlock: boolean; onDone(s: Said): void }) {
+  const id = useId();
+  const router = useRouter();
+  const [open, setOpen] = useState<'block' | 'dismiss' | null>(null);
+  const [why, setWhy] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [bad, setBad] = useState<string | null>(null);
+
+  function start(d: 'block' | 'dismiss') {
+    setOpen(d);
+    setWhy(d === 'block' ? p.draft : '');
+    setBad(null);
+  }
+
+  async function decide() {
+    if (!open) return;
+    setBusy(true);
+    const a = await call('POST', `${URL}/proposals/${p.id}`, { decision: open, reason: why.trim() });
+    setBusy(false);
+    if (a.status === 200) {
+      onDone({ text: open === 'block' ? x.propBlocked : x.propDismissed, bad: false });
+      setOpen(null);
+      return router.refresh();
+    }
+    setBad(x.err[a.status === 0 ? 'network' : (a.data.error ?? 'other')] ?? x.err.other!);
+  }
+
+  return (
+    <li className="a2-bl-row" data-testid="rr-bl-proposal">
+      <div className="a2-bl-main">
+        <strong className="a2-bl-phone">{p.phone}</strong>
+        <span className="a2-sm">{p.counts}</span>
+        <span className="a2-xs a2-mute">
+          {p.when}
+          {p.order ? (
+            <>
+              {' · '}
+              <a href={p.order.href}>{x.propFrom.replace('{n}', p.order.number)}</a>
+            </>
+          ) : null}
+          {p.identity ? ` · ${x.identity}` : null}
+        </span>
+        <Facts f={p.facts} x={x} />
+      </div>
+      {canBlock ? (
+        open ? (
+          <div className="a2-bl-undo">
+            <label className="a2-lbl" htmlFor={`${id}-why`}>
+              {open === 'block' ? x.propBlockWhy : x.propDismissWhy}
+            </label>
+            <textarea id={`${id}-why`} className="a2-ta" rows={2} minLength={limits.min} maxLength={limits.max} value={why} disabled={busy} onChange={(e) => setWhy(e.target.value)} data-testid="rr-bl-propwhy" />
+            <span className="a2-xs a2-mute">{x.whyHelp.replace('{min}', String(limits.min))}</span>
+            {bad ? (
+              <span className="a2-sm" role="alert">
+                {bad}
+              </span>
+            ) : null}
+            <div className="a2-gap8">
+              <button type="button" className="a2-btn" disabled={busy} onClick={() => setOpen(null)}>
+                {x.cancel}
+              </button>
+              <button type="button" className="a2-btn pri" disabled={busy || why.trim().length < limits.min} onClick={decide} data-testid="rr-bl-propok">
+                {open === 'block' ? x.propBlockOk : x.propDismissOk}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="a2-gap8">
+            <button type="button" className="a2-btn" onClick={() => start('dismiss')} data-testid="rr-bl-propdismiss">
+              {x.propDismiss}
+            </button>
+            <button type="button" className="a2-btn pri" onClick={() => start('block')} data-testid="rr-bl-propblock">
+              <ShellIcon name="shield" size={14} />
+              {x.propBlock}
+            </button>
+          </div>
+        )
+      ) : (
+        <span className="a2-xs a2-mute">{x.propNoBlock}</span>
+      )}
     </li>
   );
 }

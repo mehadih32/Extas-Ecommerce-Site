@@ -444,6 +444,12 @@ function bundleSummary(view: AdminView, data: unknown): string | null {
   return [numbers ? t(view.dict, 'orders.ev.bundleWith', { numbers }) : null, auto ? t(view.dict, 'orders.ev.bundleAuto') : null].filter(Boolean).join(' · ') || null;
 }
 
+/** PR 523: the timeline words of a blocklist proposal: the rejections that made it. */
+function proposalLine(view: AdminView, data: unknown): string | null {
+  const c = proposalCounts(data);
+  return c ? t(view.dict, 'orders.ev.blockProposal', c) : null;
+}
+
 /** PR 522: "One parcel" on an order the bundling marked (`orders.merge`); null when it is not marked or may not. */
 export function bundleSpec(view: AdminView, o: { id: string; number: string; flags: string[]; orderGroupId: string | null; status: OrderState }, numbers: string, perms: ReadonlySet<string>): CommandSpec | null {
   if (!o.flags.includes(od.BUNDLE_FLAG) || o.orderGroupId || !od.BUNDLEABLE.includes(o.status) || !perms.has('orders.merge')) return null;
@@ -465,6 +471,38 @@ export function bundleSpec(view: AdminView, o: { id: string; number: string; fla
   };
 }
 
+/** PR 523: where "Block the number" and "Not now" send (the risk API; it checks `risk.block` again). */
+const PROPOSAL_URL = '/api/admin/risk/blocklist/proposals';
+
+/** PR 523: the counts a proposal line names. */
+function proposalCounts(data: unknown): { n: string; refused: string; declined: string } | null {
+  const x = (data ?? {}) as { rejections?: unknown; refused?: unknown; declined?: unknown };
+  return typeof x.rejections === 'number' ? { n: String(x.rejections), refused: String(x.refused ?? 0), declined: String(x.declined ?? 0) } : null;
+}
+
+/** PR 523: "Block the number" and "Not now" on an order whose number is proposed (`risk.block`); each asks a reason. */
+export function proposalSpecs(view: AdminView, proposalId: string, number: string, perms: ReadonlySet<string>): CommandSpec[] {
+  if (!perms.has('risk.block')) return [];
+  const d = view.dict;
+  const why = { name: 'reason', kind: 'textarea' as const, label: t(d, 'orders.dlg.propWhy'), required: true, maxLength: od.BLOCK_REASON_MAX };
+  const one = (id: 'propBlock' | 'propDismiss', decision: 'block' | 'dismiss', effects: string[]): CommandSpec => ({
+    id,
+    label: t(d, `orders.cmd.${id}.label`),
+    url: `${PROPOSAL_URL}/${proposalId}`,
+    version: null,
+    fixed: { decision },
+    title: t(d, `orders.cmd.${id}.title`, { n: number }),
+    icon: decision === 'block' ? 'shield' : 'x',
+    tone: decision === 'block' ? 'pri' : '',
+    effects,
+    fields: [why],
+    ok: t(d, `orders.cmd.${id}.ok`),
+    okTone: 'pri',
+    done: t(d, `orders.cmd.${id}.done`, { n: number }),
+  });
+  return [one('propDismiss', 'dismiss', [t(d, 'orders.eff.propDismiss'), t(d, 'orders.eff.propNever')]), one('propBlock', 'block', [t(d, 'orders.eff.propBlock'), t(d, 'orders.eff.propBlockNext'), t(d, 'orders.eff.propNever')])];
+}
+
 const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.cancel': 'bad',
   'order.courierCancelConfirmed': 'bad',
@@ -474,6 +512,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.deliveryCorrected': 'bad',
   'return.reason': 'warn',
   'order.bundleProposal': 'mute',
+  'order.blockProposal': 'warn',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -766,7 +805,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
@@ -794,6 +833,13 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     const numbers = bundleNumbers(proposal.data);
     const spec = bundleSpec(view, o, numbers, perms);
     bands.push({ id: 'bundle', kind: 'stale', text: t(d, 'orders.band.bundle', { numbers }), specs: spec ? [spec] : [] });
+  }
+  // PR 523: the number proposed for the blocklist, while the proposal is open (a person decides; the order goes on)
+  const proposed = o.flags.includes(od.BLOCK_PROPOSED_FLAG) ? [...detail.timeline].reverse().find((e) => e.type === od.BLOCK_PROPOSAL_EVENT) : undefined;
+  const proposalId = (proposed?.data as { proposalId?: unknown } | null)?.proposalId;
+  const open = typeof proposalId === 'string' ? await od.blockProposalState(deps, who.storeId, proposalId) : null;
+  if (open?.state === 'PROPOSED') {
+    bands.push({ id: 'blockProposal', kind: 'stale', text: t(d, 'orders.band.blockProposal', { n: String(open.rejections), refused: String(open.refused), declined: String(open.declined) }), specs: proposalSpecs(view, open.id, o.number, perms) });
   }
   if (back && !back.reasonKey) {
     const asked = returnReasonSpecs(view, back.shipmentId, o.number, perms, reasons, back.riderNote);

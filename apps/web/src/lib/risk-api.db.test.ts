@@ -8,7 +8,9 @@
 // (`risk.refuser.terms`) and the switch saved, each audited. PR 164: the fraud report read (`risk.report`) with its card,
 // the card saved (`settings.write`, audited), a stale or out-of-range card refused. PR 522: the one-parcel card off as
 // shipped, saved (an emptied hours box is "not set"), stale refused; "One parcel" groups one person's orders
-// (`orders.merge`), audited. Every value is a made-up test value.
+// (`orders.merge`), audited. PR 523: the proposal card off as shipped and saved (an emptied number is "not set"); a
+// proposal decided through the API (`risk.block`): "Not now" and "Block", each audited, decided twice refused. Every value
+// is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -16,6 +18,7 @@ import { HAS_TEST_DB } from '@extas/auth/testing';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
+import * as od from '@extas/orders';
 import { riskRoute } from './risk-api';
 
 const HOST = 'admin.example.test';
@@ -217,5 +220,39 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(ids[0]!.orderGroupId).toBe(done.body.groupId);
     expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.bundling.save' } })).toBe(2);
     expect(await f.t.prisma.auditLog.count({ where: { action: 'order.bundle' } })).toBe(2);
+  });
+
+  it('PR 523: the proposal card off as shipped and saved; a proposal decided with risk.block, each audited; a reader is refused', async () => {
+    const got = await api('GET', ['block-proposal']);
+    const card = got.body.cards.proposal as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'proposal', value: { enabled: false, minRejections: null, cancelCodes: ['RISK_DECLINED'] } });
+    expect((await api('GET', ['block-proposal'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['block-proposal', 'x'])).status).toBe(404);
+    expect((await api('PUT', ['block-proposal'], { cookie: reader, body: { key: 'proposal', value: card.value, version: card.version } })).status).toBe(403);
+    expect(await api('PUT', ['block-proposal'], { body: { key: 'proposal', value: { ...card.value, cancelCodes: ['NOT_ORDERED'] }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['cancelCodes'] } });
+    const put = await api('PUT', ['block-proposal'], { body: { key: 'proposal', value: { ...card.value, enabled: true, minRejections: '' }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { proposal: { value: { enabled: true, minRejections: null } } } } });
+    const now = put.body.cards.proposal as typeof card;
+    expect((await api('PUT', ['block-proposal'], { body: { key: 'proposal', value: { ...now.value, minRejections: 1 }, version: now.version } })).status).toBe(200);
+    expect(await api('PUT', ['block-proposal'], { body: { key: 'proposal', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await deps.resolver.value('risk.blockProposal', { storeId: f.S })).toEqual({ enabled: true, minRejections: 1, cancelCodes: ['RISK_DECLINED'] });
+    // a refused parcel, then a new order: proposed (the order goes on); decided through the API
+    const gone = await f.place('api-bp-a', { phone: '01700000861' });
+    await f.t.prisma.order.update({ where: { id: gone.orderId }, data: { status: 'RETURNED' } });
+    const next = await f.place('api-bp-b', { phone: '01700000861' });
+    // the order service reads the settings the API saved
+    const p = (await od.blockProposalOnOrder({ ...f.ordersDeps(), settings: deps.resolver }, { storeId: f.S, orderId: next.orderId }))!;
+    expect(p).toMatchObject({ rejections: 1 });
+    const list = await api('GET', ['blocklist']);
+    expect(list.body.proposals).toEqual([expect.objectContaining({ id: p.proposalId, state: 'PROPOSED' })]);
+    expect((await api('POST', ['blocklist', 'proposals', p.proposalId], { cookie: reader, body: { decision: 'block', reason: 'refused a parcel' } })).status).toBe(403);
+    expect((await api('GET', ['blocklist', 'proposals', p.proposalId])).status).toBe(405);
+    expect(await api('POST', ['blocklist', 'proposals', p.proposalId], { body: { decision: 'cancel', reason: 'refused a parcel' } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    const blocked = await api('POST', ['blocklist', 'proposals', p.proposalId], { body: { decision: 'block', reason: 'refused a parcel, fake address' } });
+    expect(blocked).toMatchObject({ status: 200, body: { proposals: [], decidedProposals: [expect.objectContaining({ id: p.proposalId, state: 'BLOCKED' })] } });
+    expect(blocked.body.active.find((r: { phone: string }) => r.phone === '+8801700000861')).toMatchObject({ reason: 'refused a parcel, fake address', facts: { phones: ['+8801700000861'] } });
+    expect(await api('POST', ['blocklist', 'proposals', p.proposalId], { body: { decision: 'dismiss', reason: 'changed my mind' } })).toMatchObject({ status: 409, body: { error: 'NOTHING_CHANGED' } });
+    expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: next.orderId }, select: { status: true } })).toEqual({ status: 'PLACED' });
+    for (const action of ['risk.blockProposal.save', 'risk.blockProposal.block']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBeGreaterThanOrEqual(1);
   });
 });

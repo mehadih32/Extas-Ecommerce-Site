@@ -16,9 +16,11 @@ const view = (lang: 'en' | 'bn'): AdminView => ({ lang, dict: adminDicts[lang], 
 const ORDER = '0b9f3c1e-5a4d-4c2b-9e8f-1a2b3c4d5e6f';
 const VIEW: BlocklistView = {
   value: { enabled: false, onOrder: 'mark', holdReasonKey: 'risk-check' },
-  active: [{ id: 'a1', phone: '+8801700000501', reason: 'refused three parcels', orderId: ORDER, orderNumber: 'EX-1001', identity: true, blockedAt: '2026-10-31T04:00:00.000Z', blockedBy: 'Sample staff', undoneAt: null, undoneBy: null, undoReason: null }],
-  undone: [{ id: 'u1', phone: '+8801700000502', reason: 'a fake order', orderId: null, orderNumber: null, identity: false, blockedAt: '2026-10-30T04:00:00.000Z', blockedBy: null, undoneAt: '2026-10-31T05:00:00.000Z', undoneBy: 'Sample owner', undoReason: 'paid in advance now' }],
+  active: [{ id: 'a1', phone: '+8801700000501', reason: 'refused three parcels', orderId: ORDER, orderNumber: 'EX-1001', identity: true, blockedAt: '2026-10-31T04:00:00.000Z', blockedBy: 'Sample staff', undoneAt: null, undoneBy: null, undoReason: null, facts: null }],
+  undone: [{ id: 'u1', phone: '+8801700000502', reason: 'a fake order', orderId: null, orderNumber: null, identity: false, blockedAt: '2026-10-30T04:00:00.000Z', blockedBy: null, undoneAt: '2026-10-31T05:00:00.000Z', undoneBy: 'Sample owner', undoReason: 'paid in advance now', facts: null }],
   holdReasons: [{ key: 'risk-check', en: 'Risk check', bn: 'ঝুঁকি যাচাই' }],
+  proposals: [],
+  decidedProposals: [],
   reasonLimits: { min: 5, max: 500 },
 };
 

@@ -80,6 +80,10 @@
     "bundling": {
       "label": "One parcel for one person's orders",
       "help": "When on, a new order looks for the same person's other open orders (the same identity or number) to the same address, placed within the hours you set, not yet with the courier. \"Propose\" (as shipped) marks the order so a person presses \"One parcel\"; \"Group\" puts them in one parcel by itself. Each order keeps its lines, prices, charges and payments; nothing is cancelled or blocked. Until you set the hours, nothing happens. Off as shipped."
+    },
+    "blockProposal": {
+      "label": "Propose numbers for the blocklist",
+      "help": "When on, a new order from a person (the number, or the same person under another number) with at least the rejections you set — parcels refused at the door (not your fault, never a try-on) plus orders cancelled with the codes you tick — proposes the number for the blocklist, with the names and addresses given and every product ordered with its date. A person blocks it or says \"Not now\"; nothing is blocked by itself and the order goes on as usual. Until you set the number, nothing is proposed. Off as shipped."
     }
   },
   "defaults": {

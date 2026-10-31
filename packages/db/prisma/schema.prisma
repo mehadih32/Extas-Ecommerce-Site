@@ -300,6 +300,7 @@ model Store {
   webVitalDays            WebVitalDay[]
   riskBlocks              RiskBlock[]
   refuserTerms            RefuserTerm[]
+  riskBlockProposals      RiskBlockProposal[]
   internalLinkRules       InternalLinkRule[]
   seoIssues               SeoIssue[]
   blogCategories          BlogCategory[]
@@ -3490,6 +3491,9 @@ model RiskBlock {
   undoneAt    DateTime? @db.Timestamptz(3)
   undoneById  String?   @db.Uuid
   undoReason  String?
+  /// PR 523: what the register holds about the person when the number was listed — the numbers, the names and addresses
+  /// given, and every product ordered with its date (the newest orders), as the block-proposal module writes it.
+  facts       Json?
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
 
@@ -3527,6 +3531,44 @@ model RefuserTerm {
   @@index([storeId, phone])
   @@index([storeId, clusterId])
   @@index([storeId, decidedAt])
+}
+
+/// @stage S06 · PR 523 — a number proposed for the blocklist (the proposal that fills the register). While
+/// `risk.blockProposal` is on, a new order from a person with at least the owner's number of rejections (refused parcels
+/// not the shop's fault, plus the owner's counted cancels; the number or the same identity) proposes the number once,
+/// with what we know. A person blocks it (a RiskBlock row, `blockId`) or says "not now" with a reason; one dismissed or
+/// unblocked later is proposed again only after a new rejection. Nothing is blocked by itself. Never deleted.
+model RiskBlockProposal {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  storeId              Int
+  store                Store     @relation(fields: [storeId], references: [id])
+  /// The number in its one stored form (the BD phone helper).
+  phone                String
+  /// The identity of the order that proposed it (PR 519), when the graph knew it.
+  clusterId            String?   @db.Uuid
+  /// PROPOSED · BLOCKED · DISMISSED.
+  state                String
+  /// Rejections when last proposed: refused parcels plus counted cancels.
+  rejections           Int
+  refused              Int
+  declined             Int
+  /// The order that proposed it last.
+  lastOrderId          String?   @db.Uuid
+  /// What we know: the numbers, the names and addresses given, every product ordered with its date (the newest orders).
+  facts                Json
+  /// The rejections when a person last decided (a new proposal needs more than this).
+  rejectionsAtDecision Int?
+  decidedById          String?   @db.Uuid
+  decidedAt            DateTime? @db.Timestamptz(3)
+  decisionReason       String?
+  /// The listing a "Block" made.
+  blockId              String?   @db.Uuid
+  version              Int       @default(1)
+  createdAt            DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, phone])
+  @@index([storeId, state, updatedAt])
 }
 
 /// @stage S06 · PR 519 — one identity built from phone, name, address, IP and device (a customer who changes his number
