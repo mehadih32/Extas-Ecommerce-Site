@@ -89,6 +89,8 @@ export * from './registry-sticker-latin';
 export * from './registry-district-promise';
 // CN-018 (4) · PR 89 follow-up — sets Fixed or Flexible and the split-price rule (registry-combo-split.ts, version 98).
 export * from './registry-combo-split';
+// CN-020 (3) — "Call me" when someone struggles at checkout (registry-call-me.ts, version 99).
+export * from './registry-call-me';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

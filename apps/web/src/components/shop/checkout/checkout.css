@@ -495,3 +495,10 @@
 .shop .co-gps .co-gps-btn { width: 100%; min-height: 44px; justify-content: center; gap: 8px; }
 .shop .co-gps .co-gps-on { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
 .shop .co-gps .co-gps-x { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
+/* CN-020 (3) · SIM-F-046 — "Call me" (checkout.callMe, off as shipped): one calm card under the details. */
+.shop .co-callme { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper, transparent); }
+.shop .co-callme-l { font-size: 13px; font-weight: 600; }
+.shop .co-callme-in { min-height: 44px; }
+.shop .co-callme-err { color: var(--sale, rgb(176, 42, 42)); }
+.shop .co-callme-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.shop .co-callme-row .btn { min-height: 44px; flex: 1 1 140px; justify-content: center; }

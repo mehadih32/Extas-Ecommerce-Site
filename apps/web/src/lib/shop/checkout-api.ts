@@ -13,6 +13,8 @@ import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 import { noteBotSignals } from '../security/bot-check';
 import { trackPurchase } from '../tracking/shop';
+import { isSupportError, requestCallBack } from '@extas/support';
+import { phoneNormalizeBD } from '../phone-bd';
 
 /** The largest request body the checkout takes (the delivery details, a note, the choices). */
 export const CHECKOUT_BODY_MAX = 8_192;
@@ -316,6 +318,40 @@ export async function draftHandler(request: Request, deps: CheckoutApiDeps | nul
     const customerId = await customerOf(request, deps);
     return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, input: b })) });
   } catch (e) {
+    return refusal(e);
+  }
+}
+
+/**
+ * POST /api/checkout/call-me — CN-020 (3), SIM-F-046: the customer who got stuck taps "Call me"; a call-back lands in
+ * the Support inbox from his number (the store's `checkout.callMe` switch; off: CALLBACK_OFF). Needs the bag cookie (the
+ * same tap twice is one call-back). Nothing changes an order and nothing is sent to him.
+ */
+export async function callMeHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    const b = (await body(request)) as Record<string, unknown>;
+    const { visitor } = await bagOfRequest(request, deps);
+    if (!visitor) return fail(400, 'NO_BAG');
+    const phone = phoneNormalizeBD(typeof b.phone === 'string' ? b.phone : '');
+    if (!phone.ok) return fail(400, 'INVALID_INPUT', ['phone']);
+    const r = await requestCallBack(
+      { db: deps.checkout.db, settings: deps.checkout.settings },
+      {
+        storeId: deps.storeId,
+        phone: phone.e164,
+        ...(typeof b.name === 'string' && b.name.trim() ? { name: b.name.trim().slice(0, 120) } : {}),
+        reason: b.reason === 'idle' ? 'idle' : 'tries',
+        ...(typeof b.field === 'string' ? { field: (['name', 'phone', 'address'] as const).find((f) => f === b.field) ?? 'other' } : {}),
+        visitorId: visitor,
+        lang: langOf(b.lang),
+      },
+    );
+    return json({ ok: true, duplicate: r.duplicate });
+  } catch (e) {
+    // switched off meanwhile, or already asked today: calm states of the shop (200, as PR 610's pause), not failures
+    if (isSupportError(e)) return json({ ok: false, error: e.code }, { status: e.code === 'CALLBACK_OFF' || e.code === 'TOO_MANY' ? 200 : e.status });
     return refusal(e);
   }
 }

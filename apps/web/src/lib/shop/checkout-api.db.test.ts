@@ -8,7 +8,7 @@ import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
 import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
-import { draftHandler, paymentHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
+import { callMeHandler, draftHandler, paymentHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
 
 const ORIGIN = 'https://shop.example.test';
 const FORM = { name: 'Test Customer', phone: '01700000125', address: 'House 4, Road 5, Dhanmondi, Dhaka 1209' };
@@ -186,6 +186,30 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
       expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: o.id } })).toMatchObject({ status: 'PLACED', paidMinor: 8_000, paymentMethod: 'COD' });
     } finally {
       f.overrides.delete('checkout.advance');
+    }
+  });
+
+  it('CN-020 (3) · SIM-F-046: "Call me" puts one call-back in the Support inbox, only with the switch on', async () => {
+    const p = await page('api-callme');
+    const tap = async (b: Record<string, unknown> = {}, o: { cookie?: string; site?: string } = { cookie: p.cookie }) =>
+      read(await callMeHandler(req('/api/checkout/call-me', { phone: '০১৭০০-০০০১২৫', name: FORM.name, reason: 'tries', field: 'address', lang: 'bn', ...b }, o), deps()));
+    expect(await tap()).toMatchObject({ status: 200, body: { ok: false, error: 'CALLBACK_OFF' } });
+    f.overrides.set('checkout.callMe', { enabled: true, failedTries: 3, idleSeconds: 90, perPhonePerDay: 1 });
+    try {
+      expect(await tap({}, { cookie: p.cookie, site: 'cross-site' })).toMatchObject({ status: 403 });
+      expect(await tap({}, {})).toMatchObject({ status: 400, body: { error: 'NO_BAG' } });
+      expect(await tap({ phone: '12345' })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+      expect(await tap()).toMatchObject({ status: 200, body: { ok: true, duplicate: false } });
+      expect(await tap()).toMatchObject({ status: 200, body: { ok: true, duplicate: true } });
+      const conv = await f.t.prisma.conversation.findFirstOrThrow({ where: { storeId: f.S, channel: { kind: 'callback' } }, include: { contact: true } });
+      expect(conv.tags).toContain('callback');
+      expect(conv.contact.phone).toBe('+8801700000125');
+      // another visitor with the same number past the day's limit: a calm answer, nothing new
+      const other = await page('api-callme-2');
+      expect(await tap({ reason: 'idle', field: undefined }, { cookie: other.cookie })).toMatchObject({ status: 200, body: { ok: false, error: 'TOO_MANY' } });
+      expect(await f.t.prisma.message.count({ where: { conversationId: conv.id } })).toBe(1);
+    } finally {
+      f.overrides.delete('checkout.callMe');
     }
   });
 });

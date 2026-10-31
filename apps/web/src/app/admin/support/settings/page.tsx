@@ -4,6 +4,7 @@
 // a conversation (on or off, how many, how big, which kinds). Read with `support.read`, each card saved whole with `support.settings` (the API checks again).
 // PR 426: the channels (a Facebook Page or a WhatsApp number added by its id, switched on, renamed, put away; the site's
 // live chat once it is on), the live chat card (off as it ships) and, under "More options", Meta's reply window.
+// CN-020 (3): the "Call me" card (off as it ships) — when the checkout offers it; its call-backs land in the inbox.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -79,6 +80,13 @@ export default async function SupportSettingsPage() {
     { kind: 'number', path: 'pollSeconds', label: s('liveChat.pollSeconds'), min: 2, max: 60 },
     { kind: 'number', path: 'cookieDays', label: s('liveChat.cookieDays'), min: 1, max: 365, help: s('liveChat.cookieDaysHelp') },
   ];
+  // CN-020 (3): "Call me" at checkout (off as it ships); its call-backs land in this inbox
+  const callMe: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('callMe.enabled'), help: s('callMe.enabledHelp') },
+    { kind: 'number', path: 'failedTries', label: s('callMe.failedTries'), min: 1, max: 10 },
+    { kind: 'number', path: 'idleSeconds', label: s('callMe.idleSeconds'), min: 15, max: 900 },
+    { kind: 'number', path: 'perPhonePerDay', label: s('callMe.perPhonePerDay'), min: 1, max: 20, help: s('callMe.perPhonePerDayHelp') },
+  ];
   const windowFields: FieldsCardField[] = [
     { kind: 'number', path: 'replyWindowHours', label: s('window.replyWindowHours'), min: 1, max: 168, help: s('window.replyWindowHoursHelp') },
     { kind: 'number', path: 'webhookMaxBodyKb', label: s('window.webhookMaxBodyKb'), min: 16, max: 2048 },
@@ -101,6 +109,7 @@ export default async function SupportSettingsPage() {
       <ChannelsCard rows={channels.rows} canEdit={canEdit && channels.canEdit} texts={channelTexts} />
       <FieldsCard url={API} screen={screen('support.liveChat')} fields={liveChat} texts={texts('liveChat')} canEdit={canEdit} testId="support-set-livechat" />
       <FieldsCard url={API} screen={screen('support.inbox')} fields={inbox} texts={texts('inbox')} canEdit={canEdit} testId="support-set-inbox" />
+      <FieldsCard url={API} screen={screen('checkout.callMe')} fields={callMe} texts={texts('callMe')} canEdit={canEdit} testId="support-set-callme" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

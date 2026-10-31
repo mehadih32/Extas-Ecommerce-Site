@@ -29,3 +29,5 @@ export * from './actions';
 export * from './settings';
 export * from './connectors';
 export * from './livechat';
+// CN-020 (3) — "Call me" at checkout: the call-back lands in the inbox.
+export * from './callback';

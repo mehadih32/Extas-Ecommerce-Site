@@ -1,0 +1,14 @@
+{
+  "checkout": {
+    "callMe": {
+      "label": "“Call me” when someone struggles at checkout",
+      "help": "Shows a small “Call me” offer only when a customer struggles: after the set number of refused tries on one box, or after the set seconds without progress. A tap leaves a call-back in Support with his number. There is no permanent button. Off until switched on.",
+      "text": {
+        "tries": "Please call me — I could not get past the {field} box at checkout.",
+        "idle": "Please call me — I stopped at checkout and need help.",
+        "fields": { "name": "name", "phone": "phone number", "address": "address", "other": "details" }
+      },
+      "channel": "Call-back requests"
+    }
+  }
+}
