@@ -1140,9 +1140,13 @@ rm -rf "$T"
 # workflow may share a group with a deploy, a server setup or a run by hand (restore, owner account, store settings).
 W=../../.github/workflows
 check "vm queue (M1): no workflow uses the shared group extas-vm any more" "$(cat "$W"/*.yml | grep -cE '^\s*group: extas-vm\s*$' || true)" "0"
-check "vm queue (M1): deploy, setup, ERP acceptance and smoke have their own groups; runs by hand have none" \
+# R2 ops review (M1): a deploy and a server setup are each their own group per run, so a waiting newer commit's deploy,
+# a waiting rollback or a waiting setup by hand is never cancelled by the next one queued.
+check "vm queue (M1): deploy and setup one group per run, ERP acceptance and smoke their own groups; runs by hand have none" \
   "$(grep -h '^\s*group:' "$W/deploy.yml" "$W/server-setup.yml" "$W/erp-acceptance.yml" "$W/smoke.yml" | tr -d ' ' | paste -sd' '):$(cat "$W/restore.yml" "$W/owner-account.yml" "$W/owner-reset.yml" "$W/store-settings.yml" | grep -c '^\s*group:' || true)" \
-  "group:extas-vm-deploy group:extas-vm-setup group:extas-vm-erp group:extas-vm-smoke:0"
+  'group:extas-vm-deploy-${{github.run_id}} group:extas-vm-setup-${{github.run_id}} group:extas-vm-erp group:extas-vm-smoke:0'
+check "vm queue (R2 M1): no VM workflow group without the run id can hold a deploy or a setup" \
+  "$(cat "$W"/*.yml | grep -cE '^\s*group:\s*extas-vm-(deploy|setup)\s*$' || true)" "0"
 sched_groups="$(for f in $(grep -l '^  schedule:' "$W"/*.yml); do grep -h '^\s*group:' "$f"; done | tr -d ' ' | sort -u | paste -sd' ')"
 check "vm queue (M1): no scheduled workflow shares a group with a deploy or a server setup" "$(grep -cE 'group:extas-vm-(deploy|setup)\b' <<<"$sched_groups" || true)" "0"
 check "vm queue (M1): exactly one runner, so one job at a time on the VM" "$(grep -c -- '--name extas-vm --labels extas-vm --replace' ../bootstrap/install-runner.sh)" "1"

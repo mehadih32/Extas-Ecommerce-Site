@@ -30,10 +30,13 @@ on:
       - "infra/config/**"
       - ".github/workflows/server-setup.yml"
 
-# R1 ops review (M1): its own group (a newer setup replaces only an older waiting setup (both apply the newest main)); ~~the shared `extas-vm` group~~ let any other VM
-# workflow cancel it while it waited. One job at a time on the VM comes from the single runner (see deploy.yml).
+# R1 ops review (M1): ~~its own group (a newer setup replaces only an older waiting setup (both apply the newest main))~~;
+# ~~the shared `extas-vm` group~~ let any other VM workflow cancel it while it waited. R2 ops review (M1): one group for
+# every setup still let a push to infra/** cancel a waiting setup started by hand with rotate_staging_password or
+# data_disk, so every run is its own group now (extas-vm-setup-<run id>) and none is ever cancelled. One job at a time
+# on the VM comes from the single runner (see deploy.yml).
 concurrency:
-  group: extas-vm-setup
+  group: extas-vm-setup-${{ github.run_id }}
   cancel-in-progress: false
 
 permissions:
