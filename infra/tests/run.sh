@@ -193,15 +193,16 @@ check "gate: a token that is not hex is refused" "$(bash "$AB" "# fp" extas H 'x
 # signature); the exemption is one negated set of exactly that method and that path, beside the cookie test.
 # PR 292: and the WhatsApp webhook (GET handshake, signed POST) on its one path, as a second negated set.
 # PR 620: and the ERP's two signed GET calls (/erp-api/top-products, /erp-api/customers), as a third.
+# PR 426: and the Messenger webhook (GET handshake, signed POST) on its one path, as a fourth.
 # qa-gate (30 Oct): each one matches the raw request target ({http.request.orig_uri}), case for case, anchored on its
 # exact path; never Caddy's `path` matcher, which ignores case and decodes and cleans the path first.
 x() { printf '\tnot {\n\t\tmethod %s\n\t\texpression `{http.request.orig_uri}.matches(\x27^%s([?].*)?$\x27)`\n\t}' "$1" "$2"; }
-want_ex="$(x POST /api/erp/webhook; echo; x 'GET POST' /api/whatsapp/webhook; echo; x GET '/erp-api/(top-products|customers)')"
-check "gate: the ERP and WhatsApp webhooks and the ERP's calls are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'expression ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "3:3:3:0"
-check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "3:0"
+want_ex="$(x POST /api/erp/webhook; echo; x 'GET POST' /api/whatsapp/webhook; echo; x 'GET POST' /api/messenger/webhook; echo; x GET '/erp-api/(top-products|customers)')"
+check "gate: the ERP, WhatsApp and Messenger webhooks and the ERP's calls are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'expression ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "4:4:4:0"
+check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "4:0"
 check "gate: the exemption blocks, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
-check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "4"
-check "gate: the server re-writes an older gate (fingerprint v5)" "$(grep -c '# preview gate v5 for' ../server/steps/09-stack.sh)" "1"
+check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "5"
+check "gate: the server re-writes an older gate (fingerprint v6)" "$(grep -c '# preview gate v6 for' ../server/steps/09-stack.sh)" "1"
 # With a Caddy binary (CADDY_BIN, or caddy on PATH), the gate runs for real: the webhook POST reaches the app with no
 # login and no cookie, and nothing else does. CI downloads the release that matches the server's image (IMG_CADDY) and
 # runs this part; anywhere else it runs when a Caddy is installed.
@@ -220,6 +221,8 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   check "gate (caddy): the webhook answer sets no preview cookie" "$(curl -s -D - -o /dev/null -X POST "$u/api/erp/webhook" | grep -ci 'set-cookie' || true)" "0"
   check "gate (caddy): the WhatsApp webhook GET and POST pass with no login" "$(code "$u/api/whatsapp/webhook?hub.mode=subscribe"):$(code -X POST "$u/api/whatsapp/webhook" -d '{}')" "200:200"
   check "gate (caddy): its other methods and paths still ask" "$(code -X PUT "$u/api/whatsapp/webhook"):$(code -X DELETE "$u/api/whatsapp/webhook"):$(code "$u/api/whatsapp/webhook/x"):$(code -X POST "$u/api/whatsapp"):$(code "$u/api/whatsapp/webhooks")" "401:401:401:401:401"
+  check "gate (caddy): the Messenger webhook GET and POST pass with no login" "$(code "$u/api/messenger/webhook?hub.mode=subscribe"):$(code -X POST "$u/api/messenger/webhook" -d '{}')" "200:200"
+  check "gate (caddy): its other methods, paths and spellings still ask" "$(code -X PUT "$u/api/messenger/webhook"):$(code "$u/api/messenger/webhook/x"):$(code "$u/API/MESSENGER/WEBHOOK"):$(code -X POST "$u/api/messenger/webhoo%6b"):$(code -I "$u/api/messenger/webhook")" "401:401:401:401:401"
   check "gate (caddy): the ERP's two GET calls pass with no login" "$(code "$u/erp-api/top-products?from=2026-10-01&to=2026-10-22"):$(code "$u/erp-api/customers?page=1")" "200:200"
   check "gate (caddy): nothing else under /erp-api passes" "$(code -X POST "$u/erp-api/customers"):$(code "$u/erp-api/orders"):$(code "$u/erp-api/customers/x"):$(code "$u/erp-api")" "401:401:401:401"
   # qa-gate (30 Oct): Caddy's `path` matcher ignores case and matches the decoded, cleaned path while the app routes on

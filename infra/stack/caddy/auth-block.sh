@@ -18,6 +18,8 @@
 # PR 620: the ERP's own calls to the shop pass the same way, GET only, on exactly its two paths (/erp-api/top-products
 # and /erp-api/customers). Each is signed with the asking store's own secret, and the app refuses every call while no
 # store has them switched on (`erp.siteApi.enabled`, off by default) and every call without a good signature.
+# PR 426: Facebook Messenger's webhook passes the same way as WhatsApp's, GET (the handshake, the verify token from the
+# vault) and POST (signed with the Page's app secret; refused while none is in the vault) on /api/messenger/webhook only.
 # qa-gate (30 Oct): Caddy's `path` matcher ignores case and compares the decoded, cleaned path, while the app routes on
 # the raw one: `/ERP-API/CUSTOMER%53` or `/x%2f..%2ferp-api%2fcustomers` matched the exemption and reached the app (its
 # not-found page) with no login. Every exemption therefore matches the raw request target as it arrived
@@ -34,6 +36,7 @@ printf '\tnot header_regexp Cookie (?:^|;\\s*)extas_preview=%s(?:;|$)\n' "$token
 exempt() { printf '\tnot {\n\t\tmethod %s\n\t\texpression `{http.request.orig_uri}.matches(\x27^%s([?].*)?$\x27)`\n\t}\n' "$1" "$2"; }
 exempt POST '/api/erp/webhook'
 exempt 'GET POST' '/api/whatsapp/webhook'
+exempt 'GET POST' '/api/messenger/webhook'
 exempt GET '/erp-api/(top-products|customers)'
 printf '}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"

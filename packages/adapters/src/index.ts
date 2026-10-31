@@ -14,6 +14,7 @@ import { cdnAdapters } from './cdn';
 import { telegramAdapters } from './telegram';
 import { certificateAdapters } from './certificate';
 import { googleDriveAdapters } from './google-drive';
+import { liveMessengerAdapters, messengerAdapters } from './messenger';
 
 export * from './define';
 export * from './connections';
@@ -40,6 +41,8 @@ export * from './telegram';
 export * from './certificate';
 // S19 · PR 395 (CN-030) — Google Drive for the backups: the device-code sign-in, the Drive client and the fake Google.
 export * from './google-drive';
+// S22 · PR 426 — Facebook Messenger (the Page's messages) for the Support inbox: the mock until the Page's keys arrive.
+export * from './messenger';
 // S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
 // (not in `allAdapters` until then; see ai-writer/index.ts).
 export * from './ai-writer';
@@ -49,4 +52,7 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters] as const;
+
+/** PR 426 — the Support inbox's channels (WhatsApp, Messenger) for `createConnections`: each falls back to its mock. */
+export const supportAdapters = [...whatsappAdapters, ...messengerAdapters] as const;

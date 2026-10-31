@@ -29,6 +29,7 @@ export const CSP_REPORT_PATH = '/api/security/csp-report';
 export const EXEMPT_ROUTES: readonly ExemptRoute[] = [
   { prefix: '/api/erp/webhook', proof: 'signature', why: 'the ERP signs every message (PR 196)' },
   { prefix: '/api/whatsapp/webhook', proof: 'WHATSAPP_SIGNATURE_HEADER', why: 'Meta signs every message; the subscribe check needs the verify token (PR 292)' },
+  { prefix: '/api/messenger/webhook', proof: 'MESSENGER_SIGNATURE_HEADER', why: 'Meta signs every Messenger message with the app secret; the subscribe check needs the verify token (PR 426)' },
   { prefix: '/api/payments/callback/', proof: 'receiveCallback', why: 'the gateway calls back from its own site; what it claims is checked with the gateway (PR 167)' },
   { prefix: '/api/internal/', proof: 'CACHE_HOOK_TOKEN', why: 'the deploy calls inside the server; Caddy answers 404 from outside (PR 602)' },
   { prefix: '/erp-api/', proof: 'signature', why: 'the ERP signs every call with its key (PR 620)' },

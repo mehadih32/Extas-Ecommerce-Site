@@ -72,7 +72,8 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     <div className="a2-z" data-testid="support-inbox">
       <PageHead view={view} place={locateKey('supportInbox')} title={t(d, 'sup.title')} sub={t(d, 'sup.sub')} />
       <SectionTabs view={view} current="supportInbox" />
-      {!Object.keys(sd.channels ?? {}).length ? (
+      {/* PR 426: ~~no adapter connected~~ no channel switched on yet (Support settings → Channels) */}
+      {!box.channels.some((c) => c.enabled) ? (
         <div className="a2-note warn" data-testid="support-no-channel">
           <ShellIcon name="info" size={15} />
           <span>{t(d, 'sup.noChannel')}</span>

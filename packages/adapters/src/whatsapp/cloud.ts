@@ -181,10 +181,22 @@ export interface WhatsAppInbound {
   /** The customer's number in +country form. */
   from: string;
   messageId: string;
-  /** The words he sent (a text, or a button's title); '' for media. */
+  /** The words he sent (a text, a button's title, or a file's caption); '' for a file with no caption. */
   text: string;
   at: Date;
+  /** PR 426: the shop's WhatsApp number it came to (the phone number id), the name the customer's profile shows, and
+   *  his files (Meta's media id; the file itself is fetched with the token when it is copied to our storage). */
+  phoneNumberId?: string;
+  name?: string;
+  files?: { kind: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT' | 'OTHER'; mediaId: string; fileName?: string; contentType?: string }[];
 }
+
+/** PR 426: where a customer's WhatsApp file is read from (Meta's media address; it answers only with the token, so the
+ *  file is copied to our storage by the connector that holds it, B4.8). */
+export const whatsappMediaUrl = (mediaId: string, opts: { baseUrl?: string; apiVersion?: string } = {}): string =>
+  `${(opts.baseUrl ?? WHATSAPP_CLOUD_DEFAULT_BASE_URL).replace(/\/+$/, '')}/${opts.apiVersion ?? WHATSAPP_CLOUD_DEFAULT_API_VERSION}/${encodeURIComponent(mediaId)}`;
+
+const WA_FILE_KINDS: Record<string, NonNullable<WhatsAppInbound['files']>[number]['kind']> = { image: 'IMAGE', video: 'VIDEO', audio: 'AUDIO', voice: 'AUDIO', document: 'DOCUMENT', sticker: 'IMAGE' };
 
 const RECEIPTS = new Set(['sent', 'delivered', 'read', 'failed']);
 const dateOf = (s: unknown): Date => {
@@ -213,15 +225,21 @@ export function parseWhatsAppWebhook(body: unknown): { receipts: WhatsAppReceipt
           notOnWhatsApp: err?.code !== undefined && WHATSAPP_CLOUD_CODES[err.code]?.notOnWhatsApp === true,
         });
       }
+      const phoneNumberId = (change.value.metadata as { phone_number_id?: unknown } | undefined)?.phone_number_id;
+      const names = new Map(((change.value.contacts ?? []) as { wa_id?: unknown; profile?: { name?: unknown } }[]).flatMap((c) => (typeof c.wa_id === 'string' && typeof c.profile?.name === 'string' ? [[c.wa_id, c.profile.name.slice(0, 120)] as const] : [])));
       for (const m of (change.value.messages ?? []) as Record<string, unknown>[]) {
         if (typeof m.from !== 'string' || typeof m.id !== 'string') continue;
+        const media = typeof m.type === 'string' ? (m[m.type] as { id?: unknown; caption?: unknown; filename?: unknown; mime_type?: unknown } | undefined) : undefined;
+        const fileKind = typeof m.type === 'string' ? WA_FILE_KINDS[m.type] : undefined;
+        const files = fileKind && typeof media?.id === 'string' ? [{ kind: fileKind, mediaId: media.id, ...(typeof media.filename === 'string' ? { fileName: media.filename.slice(0, 300) } : {}), ...(typeof media.mime_type === 'string' ? { contentType: media.mime_type.slice(0, 120) } : {}) }] : [];
         const text =
           (m.text as { body?: string } | undefined)?.body ??
           (m.button as { text?: string } | undefined)?.text ??
           (m.interactive as { button_reply?: { title?: string }; list_reply?: { title?: string } } | undefined)?.button_reply?.title ??
           (m.interactive as { list_reply?: { title?: string } } | undefined)?.list_reply?.title ??
-          '';
-        inbound.push({ from: `+${m.from.replace(/^\+/, '')}`, messageId: m.id, text: String(text).slice(0, 1000), at: dateOf(m.timestamp) });
+          (typeof media?.caption === 'string' ? media.caption : '');
+        const name = names.get(m.from);
+        inbound.push({ from: `+${m.from.replace(/^\+/, '')}`, messageId: m.id, text: String(text).slice(0, 1000), at: dateOf(m.timestamp), ...(typeof phoneNumberId === 'string' ? { phoneNumberId } : {}), ...(name ? { name } : {}), ...(files.length ? { files } : {}) });
       }
     }
   }

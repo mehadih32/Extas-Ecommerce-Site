@@ -33,7 +33,7 @@ describe('cross-site check', () => {
   });
 
   it('only the callers that prove themselves another way pass without it', () => {
-    for (const p of ['/api/erp/webhook', '/api/whatsapp/webhook', '/api/payments/callback/bkash', '/api/internal/cache/deployed', '/erp-api/customers', '/api/security/csp-report']) {
+    for (const p of ['/api/erp/webhook', '/api/whatsapp/webhook', '/api/messenger/webhook', '/api/payments/callback/bkash', '/api/internal/cache/deployed', '/erp-api/customers', '/api/security/csp-report']) {
       expect(needsSameOrigin('POST', p), p).toBe(false);
       expect(apiGate(req('POST', p), { policy: null }), p).toEqual({ kind: 'pass' });
     }
@@ -58,6 +58,8 @@ describe('request kinds', () => {
     expect(rateBucketOf('POST', '/api/security/csp-report')).toBe('report');
     expect(rateBucketOf('POST', '/api/erp/webhook')).toBe('webhook');
     expect(rateBucketOf('GET', '/api/whatsapp/webhook')).toBe('webhook');
+    expect(rateBucketOf('POST', '/api/messenger/webhook')).toBe('webhook');
+    expect(rateBucketOf('POST', '/api/shop/support-chat')).toBe('shopWrite');
     expect(rateBucketOf('POST', '/erp-api/customers')).toBe('webhook');
     expect(rateBucketOf('POST', '/api/internal/cache/deployed')).toBeNull();
   });

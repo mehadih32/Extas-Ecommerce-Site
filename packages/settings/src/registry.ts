@@ -74,6 +74,7 @@ import { erpRetailSettings } from './registry-erp-retail';
 import { privacySettings } from './registry-privacy';
 import { edgeSettings } from './registry-edge';
 import { healthSettings } from './registry-health';
+import { supportChannelSettings } from './registry-support-channels';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1289,6 +1290,8 @@ export const registry = {
   ...edgeSettings,
   // ---- S21 · PR 413 · the Site health hub: when a status line turns yellow (registry-health.ts, version 81). ----
   ...healthSettings,
+  // ---- S22 · CN-031 lane A · PR 426 · the Support channel connectors: Meta's reply window and webhook size, the site's live chat (off) (registry-support-channels.ts, version 72). ----
+  ...supportChannelSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

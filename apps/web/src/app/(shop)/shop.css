@@ -995,6 +995,32 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 .shop .wa-fab.wa-left { right: auto; left: 12px; }
 .shop .wa-fab.wa-mid { top: 50%; bottom: auto; transform: translateY(-50%); }
 @media (min-width: 1024px) { .shop .wa-fab.wa-left { left: 20px; right: auto; } }
+/* PR 426 — the live chat button and window (support.liveChat, off as it ships): above the phone's bottom bar, on the side
+ * the WhatsApp disc does not take; the window fills the phone's width and sits in the corner on a desktop. */
+.shop .lc-btn { position: fixed; right: 12px; bottom: 74px; z-index: 44; width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); background: var(--brand); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 26px rgba(0,0,0,.24), 0 2px 6px rgba(0,0,0,.16); cursor: pointer; }
+.shop .lc-btn.lc-left { right: auto; left: 12px; }
+.shop .lc-win { position: fixed; left: 12px; right: 12px; bottom: 132px; z-index: 45; max-height: min(70vh, 520px); display: flex; flex-direction: column; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 18px 44px rgba(0,0,0,.22); overflow: hidden; }
+.shop .lc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.shop .lc-head h2 { margin: 0; font-size: 16px; line-height: 1.3; }
+.shop .lc-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.shop .lc-x { min-width: 44px; min-height: 44px; margin: -10px -10px 0 0; border: 0; background: none; color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer; }
+.shop .lc-list { list-style: none; margin: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; min-height: 120px; overscroll-behavior: contain; }
+.shop .lc-list li { max-width: 85%; padding: 8px 10px; border-radius: 12px; font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shop .lc-list .lc-me { align-self: flex-end; background: var(--brand); color: var(--brand-ink); }
+.shop .lc-list .lc-shop { align-self: flex-start; background: var(--line2); }
+.shop .lc-list .lc-empty { max-width: none; align-self: stretch; color: var(--muted); padding: 8px 0; }
+.shop .lc-who { display: block; font-size: 11px; opacity: .75; margin-bottom: 2px; }
+.shop .lc-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.shop .lc-form textarea { flex: 1; min-width: 0; resize: none; font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.shop .lc-form button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--brand); color: var(--brand-ink); font-weight: 600; cursor: pointer; }
+.shop .lc-form button:disabled { opacity: .55; cursor: default; }
+.shop .lc-said { margin: 0; padding: 0 14px 10px; font-size: 13px; color: var(--sale); }
+@media (min-width: 1024px) {
+  .shop .lc-btn { width: 56px; height: 56px; right: 20px; bottom: 20px; }
+  .shop .lc-btn.lc-left { left: 20px; right: auto; }
+  .shop .lc-win { left: auto; right: 20px; bottom: 88px; width: 360px; }
+  .shop .lc-win.lc-left { right: auto; left: 20px; }
+}
 /* ---- V12.2 (CN-012: owner Notes 54 and 58), docs/demo/src/r12-zzzz-n54.css, last in the demo's cascade, scoped the
  * same way: the desktop footer's link icons (#1) and social marks (#2, Note 58 C), the Hotline box under the WhatsApp
  * box (Note 58 B), the slogan under the footer logo (Note 58 D), and the phone footer's social row (Note 58 A). ---- */

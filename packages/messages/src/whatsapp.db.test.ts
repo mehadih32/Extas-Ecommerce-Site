@@ -222,4 +222,24 @@ describe.skipIf(!HAS_TEST_DB)('PR 292 · WhatsApp Business: approved templates, 
     f.clock.now = new Date(f.clock.now.getTime() + 8 * 24 * 3_600_000);
     expect((await post(hook({ messages: [{ from: q.recipient.slice(1), id: 'wamid.in3', timestamp: at(), type: 'text', text: { body: '3' } }] }))).replies).toEqual({ answers: 0, stops: 0, starts: 0, other: 1, autoReplies: 0 });
   });
+
+  it('PR 426: a customer\'s messages go on to the Support inbox first; a failure there answers before any automatic answer, so the post comes again', async () => {
+    const got: { storeId: number; from: string; text: string; phoneNumberId?: string }[] = [];
+    let broken = false;
+    const onInbound: NonNullable<WhatsAppWebhookDeps['onInbound']> = async (storeId, inbound) => {
+      if (broken) throw new Error('inbox down');
+      for (const m of inbound) got.push({ storeId, from: m.from, text: m.text, ...(m.phoneNumberId ? { phoneNumberId: m.phoneNumberId } : {}) });
+    };
+    const signed = (body: unknown) => {
+      const rawBody = JSON.stringify(body);
+      return receiveWhatsAppWebhook({ ...deps(), onInbound }, { rawBody, signature: whatsappSignature(rawBody, APP_SECRET) });
+    };
+    const value = { metadata: { phone_number_id: '555000111' }, messages: [{ from: '15550100426', id: 'wamid.sup1', timestamp: at(), type: 'text', text: { body: 'Is the navy polo back?' } }] };
+    expect((await signed(hook({ statuses: [] }))).code).toBe('OK');
+    expect(got).toEqual([]);
+    expect((await signed(hook(value))).code).toBe('OK');
+    expect(got).toEqual([{ storeId: f.S, from: '+15550100426', text: 'Is the navy polo back?', phoneNumberId: '555000111' }]);
+    broken = true;
+    await expect(signed(hook(value))).rejects.toThrow('inbox down');
+  });
 });
