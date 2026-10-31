@@ -56,6 +56,15 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
   }
   const orderOf = (id: string) => f.t.prisma.order.findUniqueOrThrow({ where: { id }, include: { items: true, events: true, payments: true } });
 
+  describe('PR 505 follow-up (go-live gate SIM-F-025/F-047) · the order keeps the language it was placed in', () => {
+    it('a Bengali checkout writes bn, an English one en (his messages follow it)', async () => {
+      const b = await shown('lang-bn', { phone: '01800000183' });
+      expect((await orderOf((await b.place({ lang: 'bn' })).orderId)).lang).toBe('bn');
+      const e = await shown('lang-en', { phone: '01800000184' });
+      expect((await orderOf((await e.place()).orderId)).lang).toBe('en');
+    });
+  });
+
   describe('PR 159 · what the order keeps for the risk checks, and until when', () => {
     it('the IP, the device id and the shared point (rounded) with the day they are cleared; each switch keeps its own', async () => {
       const device = randomUUID();

@@ -70,6 +70,8 @@ const ORDER_SELECT = {
   cancelReasonCode: true,
   // PR 542: the advance it waits for ({advanceAmount})
   advanceRequiredMinor: true,
+  // PR 505 follow-up (SIM-F-025/F-047): the language he ordered in
+  lang: true,
 } satisfies Prisma.OrderSelect;
 type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER_SELECT }>;
 
@@ -200,7 +202,11 @@ export interface RunContext {
   selfConfirmCounts: boolean;
   quiet: { on: boolean; fromHour: number; toHour: number };
   timeZone: string;
+  /** The language of a message with no order (the setting, or the store's language). */
   locale: 'bn' | 'en';
+  /** PR 505 follow-up: the owner's choice (`messages.language`) and the store's language, for each order's own language. */
+  language: 'customer' | 'store' | 'bn' | 'en';
+  storeLocale: string;
   storeName: string;
   host: string | null;
   amountLine: { en: string; bn: string };
@@ -253,6 +259,8 @@ export async function runContext(deps: MessagesDeps, storeId: number): Promise<R
     quiet,
     timeZone,
     locale: messageLocale(lang, storeLocale),
+    language: lang,
+    storeLocale,
     storeName: ownName?.trim() || store.name,
     host,
     amountLine,
@@ -406,9 +414,11 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   }
   // a duplicate whose other order goes ahead: its own words, naming that order (without them, the plain notice)
   const kept = code === 'DUPLICATE_ORDER' ? await keptOrderOf(deps, c, row, o) : null;
-  const dup = kept ? await templateOf(deps, c.storeId, c.cancelNotice.duplicateTemplate, row.channel as MessageChannel, c.locale) : null;
+  // PR 505 follow-up (SIM-F-025/F-047): the language he ordered in, unless the owner chose one for every message
+  const locale = messageLocale(c.language, c.storeLocale, o.lang);
+  const dup = kept ? await templateOf(deps, c.storeId, c.cancelNotice.duplicateTemplate, row.channel as MessageChannel, locale) : null;
   const template = dup ? c.cancelNotice.duplicateTemplate : cfg.template;
-  const t = dup ?? (await templateOf(deps, c.storeId, cfg.template, row.channel as MessageChannel, c.locale));
+  const t = dup ?? (await templateOf(deps, c.storeId, cfg.template, row.channel as MessageChannel, locale));
   if (!t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }, true).then(() => 'SKIPPED');
   const lang = t.locale === 'en' ? 'en' : 'bn';
   const wantsAdvance = [...tokensIn(t.body), ...tokensIn(t.subject ?? '')].some((x) => ADVANCE_TOKENS.has(x));

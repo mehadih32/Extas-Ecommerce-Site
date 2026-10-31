@@ -344,10 +344,12 @@
       "unavailable": "Online payment is not open right now. Your order is saved — please try again a little later, or call us."
     },
     "ty": {
-      "pageTitle": "Order confirmed",
+      "pageTitle": "Order placed",
       "title": "Thank you, {name}!",
       "titleNoName": "Thank you!",
-      "sub": "Your order is confirmed.",
+      "sub": "We have your order. We will confirm it with you soon.",
+      "subPaid": "We have your order and your payment. We will confirm it with you soon.",
+      "subConfirmed": "Your order is confirmed.",
       "subPay": "Your order is saved — pay below to finish it.",
       "etaCall": "We will call you to confirm the address and the delivery time.",
       "number": "Order number",

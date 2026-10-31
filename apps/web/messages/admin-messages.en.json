@@ -412,6 +412,7 @@
       "more": "More options",
       "language": "Message language",
       "languageOpt": {
+        "customer": "The language the customer ordered in",
         "store": "The shop's language",
         "bn": "Bengali",
         "en": "English"

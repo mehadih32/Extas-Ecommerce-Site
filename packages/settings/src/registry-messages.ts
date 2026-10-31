@@ -1,7 +1,9 @@
 // S05 · the Messages control centre — PR 148 (order status messages by SMS, WhatsApp and e-mail with the no-double-send
 // guard; CN-014 idea 5 the WhatsApp self-confirm and idea 10 the exact-amount line; CN-019 the order journey with caps)
 // (BACKEND-ARCHITECTURE §5.7 MSG-01, MSG-05; §6.5.6; §8.8). Registry version 40; PR 149 (the log with retries) 41;
-// PR 546 (the cancellation notice, SIM-F-013) and follow-up 287 (the "cancel request refused" notice) 45.
+// PR 546 (the cancellation notice, SIM-F-013) and follow-up 287 (the "cancel request refused" notice) 45. PR 505
+// follow-up (go-live gate SIM-F-025/F-047, lane A version 109): `messages.language` "customer" (as shipped) — each
+// order's messages in the language the customer ordered in (Order.lang), the store's language when the order has none.
 // Labels: messages/messages.<lang>.json.
 // The words of every message are templates (NotificationTemplate, the default pack); only the short lines the engine
 // adds to a template (`{amountLine}`, `{exactAmountLine}`) are texts here, in both languages.
@@ -261,8 +263,9 @@ export const messageSettings = {
   }),
   'messages.language': setting({
     ...base,
-    schema: z.enum(['store', 'bn', 'en']),
-    default: 'store',
+    version: 109,
+    schema: z.enum(['customer', 'store', 'bn', 'en']),
+    default: 'customer',
     valueType: 'ENUM',
     labelKey: 'messages.language.label',
     helpKey: 'messages.language.help',

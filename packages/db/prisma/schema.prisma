@@ -2872,6 +2872,9 @@ model Order {
   advanceRequirement       AdvanceRequirement @default(NONE)
   paymentMethod            PaymentMethod?
   couponCode               String?
+  /// The language the customer ordered in (`en`, `bn`; the checkout's page). The messages follow it while
+  /// `messages.language` is "customer" (PR 505 follow-up, SIM-F-025/F-047); null: the store's language.
+  lang                     String?
   /// Risk score and section, set the moment the order lands (PR 156, 541); never shown to the customer.
   riskScore                Int?
   riskBand                 String?

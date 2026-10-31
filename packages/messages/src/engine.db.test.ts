@@ -145,8 +145,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 148, 149 · the order journey and its log on P
       ['confirmed', 'SMS', 'SENT', 'MOCK'],
       ['packed', 'WHATSAPP', 'SENT', 'MOCK'],
     ]);
-    // no message text is kept: the row says which template, language and sender
-    expect(rows[0]).toMatchObject({ provider: 'test', locale: 'bn', attempts: 1, reason: null });
+    // no message text is kept: the row says which template, language and sender (PR 505 follow-up: the language he
+    // ordered in; the fixture orders in English)
+    expect(rows[0]).toMatchObject({ provider: 'test', locale: 'en', attempts: 1, reason: null });
     expect(rows[0]!.templateId).not.toBeNull();
   });
 

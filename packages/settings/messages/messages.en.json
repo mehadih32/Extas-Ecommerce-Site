@@ -21,7 +21,7 @@
     },
     "language": {
       "label": "Message language",
-      "help": "The language of the messages: the store's language, or always Bengali, or always English."
+      "help": "The language of the messages: the language the customer ordered in (as shipped; the store's language when an order has none), the store's language, or always Bengali, or always English."
     },
     "quietHours": {
       "label": "Quiet hours",

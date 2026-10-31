@@ -28,7 +28,7 @@ import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
-import { dayText, nextSteps, placedText } from '@/lib/shop/thanks-model';
+import { dayText, nextSteps, placedText, thanksSubKey } from '@/lib/shop/thanks-model';
 import type { LookData } from '@/lib/shop/thanks-look';
 import { openColours } from '@/lib/shop/thanks-look-model';
 import { Icon, WaGlyph } from '../Icon';
@@ -124,7 +124,6 @@ export async function ThanksPage({
   const methodName = (p: { method: string | null; provider: string | null }) =>
     p.method === 'ONLINE' || p.provider === 'online' ? w('pay.online') : p.provider && words[`pm.${p.provider}`] ? w(`pm.${p.provider}`) : (p.provider ?? p.method ?? '');
   const pay = r.pay;
-  const waiting = pay.kind === 'due' || pay.kind === 'failed';
   const hours = r.band ? hoursOf(r.band, n) : null;
   // PR 565: a free order never says "we call about the area" and never names a band — only its promise, when it has one
   const promise = r.freeDelivery ? (hours ? w('del.promise', { hours }) : null) : r.addressUnclear || !r.band ? w('ty.etaCall') : hours ? w('del.promise', { hours }) : null;
@@ -365,7 +364,7 @@ export async function ThanksPage({
           <Icon name="check" size={38} />
         </div>
         <h1 className="h1">{r.firstName ? w('ty.title', { name: r.firstName }) : w('ty.titleNoName')}</h1>
-        <p className="ty-sub">{w(waiting ? 'ty.subPay' : 'ty.sub')}</p>
+        <p className="ty-sub" data-testid="ty-sub">{w(thanksSubKey(r.status, pay.kind))}</p>
         {promise ? (
           <div className="ty-eta" data-testid="ty-eta">
             <span className="ty-eta-ic">
