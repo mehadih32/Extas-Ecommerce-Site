@@ -30,7 +30,8 @@
     "books": "Books and the ERP account",
     "support": "Support",
     "health": "Site health",
-    "ads": "Ads and tracking"
+    "ads": "Ads and tracking",
+    "reports": "Reports"
   },
   "permissions": {
     "settings": {
@@ -107,7 +108,8 @@
       "book": "Book a courier for orders ready to go (never a cancelled, held or in-review order), try a failed booking again",
       "exceptions": "Record what the courier said on the phone: a failed delivery try, an address problem, a lost or damaged parcel",
       "couriers": "Add a courier account, rename it, switch it on or off, archive it (nothing is deleted)",
-      "outcomes": "Resolve a parcel the courier called delivered while our records say it came back, and record why a parcel came back (never moves money or changes COD)"
+      "outcomes": "Resolve a parcel the courier called delivered while our records say it came back, and record why a parcel came back (never moves money or changes COD)",
+      "claims": "Raise and follow claims with couriers (lost, damaged, a rider's extra)"
     },
     "system": {
       "read": "See the Server page: is the background worker alive, and which jobs failed",
@@ -250,7 +252,11 @@
       "read": "Open the support inbox and conversations (with who replied)",
       "reply": "Reply, write internal notes, take a conversation, mark it solved",
       "assign": "Give a conversation to someone else",
-      "settings": "Change Support settings"
+      "settings": "Change Support settings",
+      "riderIssues": {
+        "write": "Log a rider overcharge complaint with its proof",
+        "decide": "Approve or reject a rider overcharge complaint (opens the courier claim)"
+      }
     },
     "health": {
       "read": "See Site health: customer problems, the server, speed, the site audit and the smoke test (no customer's details)",
@@ -271,6 +277,9 @@
         "read": "See Marketing › Tracking: what the shop's server sent to the ad platforms (no customer's details)",
         "manage": "Switch server-side tracking on or off, choose its events and platforms, allow customer matching and send a test event"
       }
+    },
+    "reports": {
+      "read": "See Reports › Delivery & RTO (courier performance, late parcels, RTO cost)"
     }
   },
   "totp": {

@@ -104,6 +104,9 @@ export const PERMISSIONS = {
   // shop's records say it came back) and record why a parcel came back (the rider's note, the reason from the owner's
   // list). It never moves money, changes COD or decides a refund: a return is recorded, the money stays with payments.
   'delivery.outcomes': { group: 'delivery' },
+  // S08 · PR 192 (SIM-F-017) — raise a claim with a courier for a lost or damaged parcel and record what became of it
+  // (sent, settled with the amount the courier paid, rejected). A record only: nothing here pays or takes money.
+  'delivery.claims': { group: 'delivery' },
   // S0A · PR 6 — the Server page: whether the background worker is alive, which one leads the scheduler, and the jobs
   // that failed with their reason and next try. Seeing only; nothing here changes anything.
   'system.read': { group: 'system' },
@@ -307,6 +310,12 @@ export const PERMISSIONS = {
   'support.reply': { group: 'support' },
   'support.assign': { group: 'support' },
   'support.settings': { group: 'support' },
+  // S08 · PR 192 (CN-018 (7), SUP-02) — Support › Rider issues: log a customer's overcharge complaint with its proof
+  // (`support.riderIssues.write`); approve or reject one (`support.riderIssues.decide`, the owner and managers: approval
+  // opens the courier claim for the exact extra). Asking the refund of the extra also needs `payments.refunds.request`,
+  // and the refund itself still waits for the owner's own approval (PR 172). Nothing here pays anyone.
+  'support.riderIssues.write': { group: 'support' },
+  'support.riderIssues.decide': { group: 'support' },
   // S21 · PR 413 (REP-07) — Reports › Site health: see the hub's status lines (customer problems, the server, speed, the
   // site audit, the smoke test). Seeing only; no customer's name, phone or address is on these pages (CN-015).
   'health.read': { group: 'health' },
@@ -328,6 +337,9 @@ export const PERMISSIONS = {
   // (`ads.tracking.manage`). Keys are typed on Keys & connections (`vault.write`), never here. No money moves.
   'ads.tracking.read': { group: 'ads' },
   'ads.tracking.manage': { group: 'ads' },
+  // S08 · PR 192 (REP-06) — Reports › Delivery & RTO: courier performance (on time, refused, by zone), parcels past
+  // their promise and the RTO cost book. Seeing only.
+  'reports.read': { group: 'reports' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

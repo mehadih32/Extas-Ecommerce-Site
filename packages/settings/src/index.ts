@@ -77,6 +77,8 @@ export * from './registry-erp-retail';
 export * from './registry-support-channels';
 // S16 · PR 343 — the cost ledger (registry-costs.ts, version 77).
 export * from './registry-costs';
+// S08 · PR 192 — the RTO cost book switch, courier claims, rider issues (registry-courier-report.ts, version 93).
+export * from './registry-courier-report';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

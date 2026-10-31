@@ -150,6 +150,8 @@ import healthBn from '../messages/health.bn.json';
 import healthEn from '../messages/health.en.json';
 // S16 · PR 343 — the cost ledger (registry v77).
 import costsBn from '../messages/costs.bn.json';
+import courierReportBn from '../messages/courier-report.bn.json';
+import courierReportEn from '../messages/courier-report.en.json';
 import costsEn from '../messages/costs.en.json';
 import bengaliGateBn from '../messages/bengali-gate.bn.json';
 import bengaliGateEn from '../messages/bengali-gate.en.json';
@@ -217,6 +219,9 @@ messages.en = mergeMessages(messages.en, healthEn);
 messages.bn = mergeMessages(messages.bn, healthBn);
 messages.en = mergeMessages(messages.en, costsEn);
 messages.bn = mergeMessages(messages.bn, costsBn);
+// PR 192 (registry v93): the RTO cost book switch, courier claims, Support › Rider issues.
+messages.en = mergeMessages(messages.en, courierReportEn);
+messages.bn = mergeMessages(messages.bn, courierReportBn);
 // S11 · PR 588 — the Bengali translation gate (registry-bengali.ts).
 messages.en = mergeMessages(messages.en, bengaliGateEn);
 messages.bn = mergeMessages(messages.bn, bengaliGateBn);

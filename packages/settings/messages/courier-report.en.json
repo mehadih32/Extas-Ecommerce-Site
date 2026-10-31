@@ -1,0 +1,20 @@
+{
+  "delivery": {
+    "courier": {
+      "rtoBook": {
+        "label": "RTO cost book on Reports",
+        "help": "Shows what each returned parcel really cost (both courier legs, packaging, handling, ad share) on Reports › Delivery & RTO, by district, campaign, product, courier and reason. Off until switched on. The figures come from Money › Costs & fees; a part not entered is named, never counted as zero."
+      },
+      "claims": {
+        "label": "Courier claims for lost or damaged parcels",
+        "help": "Lets staff raise a claim with the courier for a lost or damaged parcel (its declared value) and follow it until the courier settles or rejects it. Off until switched on. A claim is a record only; nothing is paid from here."
+      }
+    }
+  },
+  "support": {
+    "riderIssues": {
+      "label": "Rider issues (overcharge complaints)",
+      "help": "Support › Rider issues: a customer says the rider took more than the parcel asked. Staff log it with photo proof; a person approves or rejects it, and approval opens a courier claim for the exact extra. 'Ask a refund' only creates a refund request that still needs the owner's approval on the refunds list. Off until switched on."
+    }
+  }
+}

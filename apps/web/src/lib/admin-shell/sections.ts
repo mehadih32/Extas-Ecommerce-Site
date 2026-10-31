@@ -192,6 +192,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       { id: 'inbox', pages: [{ href: '/admin/support', perm: 'support.read', keys: ['supportInbox', 'supportConversation'] }] },
       { id: 'settings', pages: [{ href: '/admin/support/settings', perm: 'support.read', keys: ['supportSettings'] }] },
+      // S08 · PR 192 — SUP-02 Rider issues: a rider took more than the parcel asked; logged with proof, approved by a person.
+      { id: 'riderIssues', pages: [{ href: '/admin/support/rider-issues', perm: 'support.read', keys: ['supportRiderIssues'] }] },
     ],
   },
   {
@@ -310,6 +312,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         guide: 'analytics',
         pages: [{ href: '/admin/reports/learning', perm: 'risk.report', keys: ['reportsLearning'] }],
       },
+      // S08 · PR 192 — REP-05 Delivery & RTO: courier performance by courier, zone and district, late parcels, RTO cost book.
+      { id: 'delivery', pages: [{ href: '/admin/reports/delivery', perm: 'reports.read', keys: ['reportsDelivery'] }] },
     ],
   },
   {
