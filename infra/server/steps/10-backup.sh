@@ -37,7 +37,7 @@ step_backup() {
 
   # First backup now if there is none yet, then prove it restores.
   if [ -z "$(ls -A "$EXTAS_ROOT/backups/base" 2>/dev/null)" ]; then
-    docker exec extas-postgres psql -qX -U extas -d extas -c "SELECT pg_switch_wal()" >/dev/null 2>&1 || true
+    pg_exec psql -qX -U extas -d extas -c "SELECT pg_switch_wal()" >/dev/null 2>&1 || true
     /usr/local/sbin/extas-backup daily >/dev/null 2>&1 || true
   fi
   local bl dr

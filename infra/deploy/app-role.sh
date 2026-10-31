@@ -14,9 +14,11 @@
 # switch puts the old app.env back (deploy.sh on_exit), so the old colour and a rollback start exactly as before.
 
 APP_DB_ROLE=extas_app
+# shellcheck source=pg-exec.sh
+. "$(dirname "${BASH_SOURCE[0]}")/pg-exec.sh"
 
 # The owner's psql inside the database container; the SQL comes on stdin (never on a command line, where ps sees it).
-app_role_psql() { docker exec -i extas-postgres psql -qtAX -v ON_ERROR_STOP=1 -U extas -d extas; }
+app_role_psql() { pg_exec -i psql -qtAX -v ON_ERROR_STOP=1 -U extas -d extas; }
 
 # True when migration 0010 is in: the role may insert audit rows, may not update them, and the trigger is there.
 app_role_ready() {
@@ -55,7 +57,7 @@ SELECT CASE
 app_role_guards() {
   local r
   r="$(printf '%s\n' "$APP_ROLE_GUARDS_SQL" | app_role_psql 2>/dev/null || true)"
-  case "$r" in ok:*|problem:*) echo "$r" ;; *) echo "problem: the append-only check could not read the database" ;; esac
+  case "$r" in ok:*|problem:*) echo "$r" ;; *) echo "problem: the append-only check could not read the database ($(pg_exec_diag 2>/dev/null | cut -c1-300))" ;; esac
 }
 
 # app_role_password <secrets dir>: the generated password (letters and digits only), or nothing.
