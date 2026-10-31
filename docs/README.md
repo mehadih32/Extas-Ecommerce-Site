@@ -22,6 +22,7 @@ docs file (CN-011).
 | [`RETAIL-ERP-MODEL.md`](RETAIL-ERP-MODEL.md) | **CN-028 (25 Oct 2026)** — Retail as the ERP's separate buyer: who keeps which books, the two ledgers, the day/week/month/year/lifetime match engine, exchange and return flow, hold, switch-over, settings, permissions and requests to the ERP (supersedes the parts of the ERP sync that CN-028 names) |
 | [`erp/`](erp/) | The ERP project's own contract text, kept as received: `site-changes-v5.md` (history) and `site-changes-v6.md` (controlling) |
 | [`golive/ACCEPTANCE.md`](golive/ACCEPTANCE.md) | The staging acceptance list walked before real orders (PR 393); confirmed on Settings → System → Go-live |
+| [`golive/RUNBOOK.md`](golive/RUNBOOK.md) | The go-live runbook and rollback plan for the main-domain switch (PR 398); rehearsed and confirmed on Settings → System → Go-live |
 | [`SERVER.md`](SERVER.md) | The server in plain Bengali: what runs, the three disks, restart, RAM/CPU split, alerts, restore, where to see status (PR 10 runbook) |
 | [`README.md`](README.md) | This index |
 

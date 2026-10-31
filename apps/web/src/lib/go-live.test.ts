@@ -1,5 +1,7 @@
 // S19 · PR 393 — the go-live checklist: automatic items from what the server wrote (fresh enough), sign-offs from the
 // setting, ready only when every item is done; every item has its words in both languages; the API's paths.
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import bn from '../../messages/admin-golive.bn.json';
 import en from '../../messages/admin-golive.en.json';
@@ -61,6 +63,11 @@ describe('go-live checklist (PR 393)', () => {
     expect(r).toMatchObject({ ok: false, vars: { missing: 'shop.other.test', days: 5400 } });
     expect(open(ctx({ primaryHosts: [] }))).toEqual([]);
     expect(open(ctx({ signoff: { ...ctx().signoff, sslStrict: undefined as never } }))).toEqual(['sslStrict']);
+  });
+
+  it('PR 398: the runbook is a sign-off, and its file exists', () => {
+    expect(SIGNOFF_KEYS).toContain('runbook');
+    expect(existsSync(fileURLToPath(new URL('../../../../docs/golive/RUNBOOK.md', import.meta.url)))).toBe(true);
   });
 
   it('sign-offs: done only when confirmed, with who and when; nothing is confirmed on a new installation', () => {
