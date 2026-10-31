@@ -127,6 +127,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 171 · the wallet', () => {
     try {
       const list = await apologyCandidates(f.deps(), f.viewer);
       expect(list.rows.filter((r) => r.number === 'W-1')).toEqual([{ orderId: o.id, number: 'W-1', customerId: c.id, deliveredAt: expect.any(Date), lateHours: 12, ruleMinor: null }]);
+      // gate F-054: one customer's page lists only his own late orders
+      expect((await apologyCandidates(f.deps(), f.viewer, { customerIds: [c.id] })).rows.map((r) => r.number)).toEqual(['W-1']);
+      expect((await apologyCandidates(f.deps(), f.viewer, { customerIds: [] })).rows).toEqual([]);
       expect(await code(giveApology(f.deps(), f.viewer, o.id, { amountMinor: 5_000, confirm: true }))).toBe('FORBIDDEN');
       expect(await code(giveApology(f.deps(), f.staff, guest.id, { amountMinor: 5_000, confirm: true }))).toBe('NO_CUSTOMER');
       expect(await code(giveApology(f.deps(), f.staff, o.id, { confirm: true }))).toBe('INVALID_INPUT');

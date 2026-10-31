@@ -354,15 +354,18 @@ export interface ApologyCandidate {
   ruleMinor: number | null;
 }
 
-/** The delivered orders that came late and have no apology yet, latest first (`payments.view`). */
-export async function apologyCandidates(deps: PaymentsDeps, who: Who, opts: { limit?: number } = {}): Promise<{ enabled: boolean; rows: ApologyCandidate[] }> {
+/**
+ * The delivered orders that came late and have no apology yet, latest first (`payments.view`). Gate F-054: `customerIds`
+ * keeps only these customers' orders (one customer's page, his merged profiles with him).
+ */
+export async function apologyCandidates(deps: PaymentsDeps, who: Who, opts: { limit?: number; customerIds?: readonly string[] } = {}): Promise<{ enabled: boolean; rows: ApologyCandidate[] }> {
   await allow(deps, who, 'payments.view');
   const rule = await setting(deps, who.storeId, 'payments.wallet.apology');
   if (!rule.enabled) return { enabled: false, rows: [] };
   const limit = Math.min(Math.max(1, Math.trunc(opts.limit ?? 50)), 200);
   const now = nowOf(deps);
   const orders = await deps.db.order.findMany({
-    where: { storeId: who.storeId, status: { in: [...LATE_STATUSES] }, customerId: { not: null }, deliveredAt: { not: null }, archivedAt: null, deliveryBand: { hoursMax: { not: null } } },
+    where: { storeId: who.storeId, status: { in: [...LATE_STATUSES] }, customerId: opts.customerIds ? { in: opts.customerIds.filter((x) => UUID.test(x)) } : { not: null }, deliveredAt: { not: null }, archivedAt: null, deliveryBand: { hoursMax: { not: null } } },
     orderBy: { deliveredAt: 'desc' },
     take: limit * 5,
     select: APOLOGY_ORDER,

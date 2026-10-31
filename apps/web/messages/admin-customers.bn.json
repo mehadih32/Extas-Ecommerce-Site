@@ -159,7 +159,8 @@
         "overview": "সারাংশ",
         "orders": "অর্ডার",
         "exchanges": "বদল",
-        "support": "সাপোর্ট"
+        "support": "সাপোর্ট",
+        "wallet": "ওয়ালেট"
       },
       "kpi": {
         "orders": "অর্ডার",
@@ -230,7 +231,8 @@
         "title": "ওয়ালেট",
         "balance": "{v}",
         "none": "এখনো ওয়ালেট নেই।",
-        "profile": "{name}"
+        "profile": "{name}",
+        "open": "ওয়ালেট খুলুন"
       },
       "looks": {
         "title": "কে দেখেছেন",
