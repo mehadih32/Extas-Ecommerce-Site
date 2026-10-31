@@ -20,6 +20,10 @@
       "swap": {
         "label": "One-trip size swap",
         "help": "The rider brings the new size and takes the old piece back in the same trip, at the swap's own price, only in the delivery bands listed. Off by default; an empty price means nothing is collected."
+      },
+      "account": {
+        "label": "Exchange from the customer's account",
+        "help": "The customer asks for the exchange himself, from his order in My account: the piece, the reason (too small, too big, or faulty, damaged or wrong), the new size and the piece the exchange rules offer, with the money shown before he confirms. The same window, limits and rules as staff use; the request waits for staff to approve it, and nothing is booked or paid until then. \"Claim\": on a size exchange he may say we sent the wrong size, with a note (and a photo when the claim photo is on); staff decide it. \"Photos\": how many he may add, and how large. Off until you turn it on."
       }
     },
     "returns": {

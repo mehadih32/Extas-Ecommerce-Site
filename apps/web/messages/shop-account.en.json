@@ -528,6 +528,207 @@
       "sending": "Approved. It is on its way to you.",
       "sent": "Sent on {date}.",
       "closed": "Not approved. Message us if you have a question."
+    },
+    "exchange": {
+      "pageTitle": "Exchange · Order #{number}",
+      "crumb": "Exchange",
+      "title": "Exchange a size",
+      "sub": "Size exchange or a free replacement",
+      "order": "Order #{number}",
+      "delivered": "Delivered {date}",
+      "items": {
+        "one": "{n} item",
+        "other": "{n} items"
+      },
+      "hoursLeft": {
+        "one": "{n} hour left to exchange",
+        "other": "{n} hours left to exchange"
+      },
+      "windowClosed": "Exchange window closed",
+      "loginTitle": "Log in to exchange a size",
+      "loginText": "Exchanges are asked for from your account, so we can find your order.",
+      "closed": {
+        "OFF": {
+          "title": "Exchanges are not asked for online here",
+          "text": "Please message us and we will help you with the exchange."
+        },
+        "NOT_DELIVERED": {
+          "title": "This order is not delivered yet",
+          "text": "You can ask for a size exchange after the order is delivered."
+        },
+        "UNKNOWN": {
+          "title": "We can't open an exchange yet",
+          "text": "We are still waiting for the courier to confirm the delivery. Message us if you need help."
+        },
+        "WINDOW": {
+          "title": "The exchange window has closed",
+          "text": "A size exchange can be asked for within {hours} hours of delivery."
+        },
+        "NONE_LEFT": {
+          "title": "Nothing in this order can be exchanged now",
+          "text": "Every item already has an exchange, or the exchange rules don't cover it. You can follow your exchanges on the order page."
+        }
+      },
+      "back": "Back to order",
+      "wa": "Message us on WhatsApp",
+      "waMsg": "Hi {store}, about an exchange on order #{number}",
+      "step": {
+        "1": "Item",
+        "2": "Reason",
+        "3": "New size",
+        "3problem": "Replacement",
+        "4": "Review & confirm",
+        "sr": "Step {n}: "
+      },
+      "change": "Change",
+      "next": "Next",
+      "prev": "Back",
+      "cancel": "Cancel",
+      "confirm": "Confirm exchange",
+      "sending": "Sending…",
+      "whichItem": "Which item do you want to exchange?",
+      "why": {
+        "OPEN": "This item already has an exchange",
+        "LIMIT": "No exchanges left for this item",
+        "EXCLUDED": "This item can't be exchanged",
+        "NOT_COVERED": "This item can't be exchanged",
+        "REASON": "This reason isn't taken for this item",
+        "ONE_SIZE": "This item is one size"
+      },
+      "reasonAsk": "What's the problem with your {name} (size {size})?",
+      "reason": {
+        "small": "Too small",
+        "smallSub": "I need a bigger size",
+        "big": "Too big",
+        "bigSub": "I need a smaller size",
+        "problem": "Faulty, damaged or wrong item",
+        "problemSub": "We replace it free — same size"
+      },
+      "freeTitle": "We replace it free — same size.",
+      "freeText": "No exchange delivery charge, because the mistake is ours.",
+      "photo": "Add photo",
+      "photoRequired": "Required",
+      "photoOptional": "Optional",
+      "photoHint": "A clear photo of the problem — or of the wrong item — helps us approve it fast.",
+      "photoAdded": "Photo added",
+      "photoRemove": "Remove photo",
+      "note": "What's wrong?",
+      "optional": "(optional)",
+      "notePh": "e.g. Seam open on the left sleeve",
+      "rules": "Colour changes and “didn't like it” are not exchangeable.",
+      "claimAsk": "Did we send the wrong size?",
+      "claimText": "Tell us what happened and add a photo of the size label. If we sent the wrong size, we pay the exchange delivery.",
+      "claimNote": "What happened?",
+      "claimPh": "e.g. I ordered M, the label says L",
+      "sizeAsk": "Pick your new size for the {name}.",
+      "sizeSmall": "Too small — bigger sizes are shown first.",
+      "sizeBig": "Too big — smaller sizes are shown first.",
+      "yourSize": "your size",
+      "loading": "Looking for your options…",
+      "tier": {
+        "1": "Your new size is in stock",
+        "2": "Your new size, in another colour",
+        "3": "Similar items in your new size",
+        "4": "Other items in your new size",
+        "note": "These are the only options available for your exchange under our rules."
+      },
+      "none": "Not in stock in this size",
+      "noneText": "Message us on WhatsApp and we will tell you when it is back.",
+      "same": "Same price as yours",
+      "more": "Pay {amount} more",
+      "less": "{amount} back to your wallet",
+      "sizeX": "Size {size}",
+      "sendBack": "You send back",
+      "get": "You get",
+      "money": {
+        "label": "Money for this exchange",
+        "old": "Old item (what you paid)",
+        "new": "New item price",
+        "diff": "Difference",
+        "charge": "Exchange delivery",
+        "free": "free — our mistake",
+        "pay": "Pay on delivery",
+        "paySub": "Cash to the courier when the new item arrives",
+        "nothing": "Nothing to pay",
+        "wallet": "Added to your wallet",
+        "walletSub": "After we receive the old item"
+      },
+      "how": "How it works",
+      "how1": "Our courier brings your new item and takes the old one back in the same trip.",
+      "how2": "Keep the old item unworn and unwashed, with tags on. The courier checks it at the door.",
+      "how2problem": "Keep the item with its tags and packaging so we can check the problem.",
+      "how3": "Wallet credit (if any) is added after the old item passes our check.",
+      "how4": "We check your request and confirm it before anything is sent.",
+      "doneTitle": "Exchange requested",
+      "doneLine": "Request {exchange} · Order #{number}",
+      "doneText": "We'll check your request and let you know when it is approved.",
+      "claimSent": "Your claim is with our team. If we sent the wrong size, the exchange delivery is free.",
+      "tl": {
+        "requested": "Requested",
+        "approved": "Approved",
+        "swap": "Courier swap",
+        "done": "Done"
+      },
+      "list": "Exchanges",
+      "requests": {
+        "one": "{n} request",
+        "other": "{n} requests"
+      },
+      "newItem": "New item",
+      "status": {
+        "REQUESTED": "Requested",
+        "APPROVED": "Approved",
+        "PICKUP_BOOKED": "Courier booked",
+        "RECEIVED": "Old item received",
+        "QC_PASSED": "Checked",
+        "QC_FAILED": "Being checked",
+        "COMPLETED": "Completed",
+        "REJECTED": "Not approved",
+        "CANCELLED": "Cancelled"
+      },
+      "claim": {
+        "PENDING": "Your claim is being checked",
+        "ACCEPTED": "Claim accepted — the delivery is free",
+        "REFUSED": "Claim not accepted"
+      },
+      "newOrder": "New parcel #{number}",
+      "lineBtn": "Exchange size",
+      "lineBtnProblem": "Report a problem",
+      "hint": {
+        "item": "Choose the item you want to exchange",
+        "reason": "Choose a reason",
+        "photo": "Add a photo of the problem to continue",
+        "size": "Pick your new size",
+        "option": "Choose one option to continue",
+        "claim": "Add what happened and a photo of the label"
+      },
+      "err": {
+        "default": "Something went wrong. Please try again.",
+        "offline": "You seem to be offline. Please try again.",
+        "PHOTO_REQUIRED": "Please add a photo.",
+        "EXCHANGE_CLOSED": "The exchange window has just closed.",
+        "EXCHANGE_LIMIT": "This item already has an exchange.",
+        "NOT_OFFERED": "This option is no longer available. Please choose again.",
+        "NOT_EXCHANGEABLE": "This item can't be exchanged.",
+        "TOO_LARGE": "The photo is too large.",
+        "NOT_AN_IMAGE": "The file is not a photo.",
+        "TYPE_NOT_ALLOWED": "This kind of photo is not accepted.",
+        "INVALID_INPUT": "Please check the form.",
+        "SIGNED_OUT": "Please log in again."
+      },
+      "reasonOf": {
+        "size": "Size",
+        "defect": "Faulty item",
+        "damage": "Damaged item",
+        "wrong": "Wrong item"
+      },
+      "x": {
+        "pay": "Pay on delivery: {amount}",
+        "wallet": "Wallet credit: {amount}",
+        "walletAfter": "(after we receive the old item)",
+        "walletAdded": "(added)",
+        "lineTag": "Exchange · {exchange} · {status}"
+      }
     }
   }
 }

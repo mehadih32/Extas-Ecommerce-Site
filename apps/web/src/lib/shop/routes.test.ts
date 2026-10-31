@@ -72,5 +72,8 @@ describe('coming-soon pages (CN-010)', () => {
     expect(ROUTES.invoice('EX-1001')).toBe('/account/orders/EX-1001/invoice');
     expect(ROUTES.invoiceFile('EX 1/2')).toBe('/account/orders/EX%201%2F2/invoice/file');
     for (const p of [ROUTES.invoice('T-1001'), ROUTES.invoiceFile('T-1001')]) expect(comingSoon(p, '/p'), p).toBeNull();
+    // PR 186: the exchange asked for from the account
+    expect(ROUTES.exchange('EX 1/2')).toBe('/account/orders/EX%201%2F2/exchange');
+    expect(comingSoon(ROUTES.exchange('T-1001'), '/p')).toBeNull();
   });
 });

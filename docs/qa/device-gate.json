@@ -71,6 +71,26 @@
       "expect": ["[data-testid=\"order-two-size\"]", "[data-testid=\"order-two-size-all\"]", "[data-testid=\"order-two-size-only\"]", "[data-testid=\"order-edit-form\"]", "[data-testid=\"order-edit-size\"]", "[data-testid=\"order-edit-save\"]"]
     },
     {
+      "$comment": "S08 · PR 186 — the account's exchange page on the sample delivered order (TRY-65), under the same try-cards fill (this browser reads `orders.exchange.account` as on; nothing written to the settings): the title, the order strip and either the four steps or, once the window has passed, the card that says why.",
+      "paths": ["/account/orders/TRY-65/exchange?cards=1", "/bn/account/orders/TRY-65/exchange?cards=1"],
+      "fill": "/api/account/try-cards",
+      "expect": ["[data-testid=\"exchange-page\"]", "[data-testid=\"exc-strip\"]"]
+    },
+    {
+      "$comment": "S08 · PR 186 — the same exchange page walked on: step 2 open (too small, with \"Did we send the wrong size?\" ticked: its note and the label photo), then step 3 (the size pills, the piece offered in the new size, the steps above folded with \"Change\"). Nothing is sent.",
+      "paths": ["/account/orders/TRY-65/exchange?cards=1&step=2", "/bn/account/orders/TRY-65/exchange?cards=1&step=2"],
+      "fill": "/api/account/try-cards",
+      "clicks": ["[data-testid=\"exc-next-1\"]:visible, [data-testid=\"exc-bar-next\"]:visible", "[data-testid=\"exc-reason-small\"]", "[data-testid=\"exc-claim-on\"]"],
+      "expect": ["[data-testid=\"exc-claim-note\"]"]
+    },
+    {
+      "$comment": "S08 · PR 186 — step 3 of the same walk: the size pills (the piece offered is measured once its answer is in; on a slow phone it may still be loading, so it is not required).",
+      "paths": ["/account/orders/TRY-65/exchange?cards=1&step=3", "/bn/account/orders/TRY-65/exchange?cards=1&step=3"],
+      "fill": "/api/account/try-cards",
+      "clicks": ["[data-testid=\"exc-next-1\"]:visible, [data-testid=\"exc-bar-next\"]:visible", "[data-testid=\"exc-reason-small\"]", "[data-testid=\"exc-next-2\"]:visible, [data-testid=\"exc-bar-next\"]:visible", "[data-testid=\"exc-size\"]"],
+      "expect": ["[data-testid=\"exc-size\"]"]
+    },
+    {
       "$comment": "S05 · PR 150 — the whole order history: My orders showing one group (?show=delivered) with the groups as chips and their counts, signed in as the sample customer (/api/account/try).",
       "paths": ["/account?show=delivered", "/bn/account?show=delivered", "/account/orders?show=open"],
       "fill": "/api/account/try",

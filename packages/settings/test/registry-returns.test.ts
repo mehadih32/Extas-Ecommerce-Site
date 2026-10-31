@@ -1,15 +1,19 @@
 // S08 · PR 185–191 (registry v57): every exchange, return and refused-parcel key at version 57 in the Orders group,
 // never owner data, labelled in both languages, its default valid; money figures ship empty and new perks ship off.
+// PR 186 (registry v92): `orders.exchange.account`, the exchange asked for from the account (off).
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { exchangeChargeSchema, exchangeEngineSchema, exchangeSwapSchema, exchangeTiersSchema, refusedListSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
+import { exchangeAccountSchema, exchangeChargeSchema, exchangeEngineSchema, exchangeSwapSchema, exchangeTiersSchema, refusedListSchema, returnsHandlingSchema, returnsQcSchema, returnsSettings } from '../src/registry-returns';
+
+/** Keys added after v57, at the version they came in. */
+const SINCE: Record<string, number> = { 'orders.exchange.account': 92 };
 
 describe('exchange and return settings (v57)', () => {
   it('every key is in the registry at version 57 in the Orders group, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(returnsSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(57);
+      expect(spec.version, key).toBe(SINCE[key] ?? 57);
       expect(spec.group, key).toBe('orders');
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -59,5 +63,12 @@ describe('exchange and return settings (v57)', () => {
   it('PR 191: the refused-parcel list is off; when on, a person decides every number it proposes', () => {
     expect(returnsSettings['orders.refused.list'].default).toEqual({ enabled: false, minRefusals: 2 });
     expect(refusedListSchema.safeParse({ enabled: true, minRefusals: 0 }).success).toBe(false);
+  });
+
+  it('PR 186: the account\'s exchange ships off, with the claim on and a few small photos', () => {
+    expect(returnsSettings['orders.exchange.account'].default).toEqual({ enabled: false, claim: true, maxPhotos: 3, photoMaxMb: 5 });
+    expect(exchangeAccountSchema.safeParse({ enabled: true, claim: false, maxPhotos: 0, photoMaxMb: 5 }).success).toBe(false);
+    expect(exchangeAccountSchema.safeParse({ enabled: true, claim: false, maxPhotos: 10, photoMaxMb: 21 }).success).toBe(false);
+    expect(exchangeAccountSchema.safeParse({ enabled: true, claim: false, maxPhotos: 10, photoMaxMb: 20 }).success).toBe(true);
   });
 });

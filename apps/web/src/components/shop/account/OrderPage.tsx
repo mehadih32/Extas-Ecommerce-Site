@@ -3,7 +3,7 @@
 // quantity (an add-on and a set's piece marked as such), and on the side the money as stored — subtotal, offers, wallet,
 // delivery, total — with how it is paid, and help on WhatsApp with the order number. Read for the signed-in customer
 // whose order it is, or for the browser that placed it; anyone else is asked to log in (no word on whose order it is).
-// Left out until their PRs: ~~the invoice (PR 136)~~, reviews, size exchange and order edits (S06/S05), the demo-only
+// Left out until their PRs: ~~the invoice (PR 136)~~, reviews, ~~size exchange~~ (PR 186) and order edits (S06/S05), the demo-only
 // controls. ~~The tracking steps and the welcome panel come with PR 135.~~
 // PR 184: the courier's news under the steps when the owner turns it on (out for delivery, a failed try, the address,
 // "we are checking with the courier").
@@ -22,8 +22,11 @@
 // Gate F-041 (PR 172 follow-up): beside the payment summary, his refunds on this order — the amount, the way it goes
 // back (as he paid, or his wallet) and where it stands (being checked, approved and on its way, sent with the day, or
 // not approved), only when there is one.
+// S08 · PR 186: "Exchange size" / "Report a problem" under each piece he may still exchange, and his exchanges on the
+// order (demo 60-account.js ord_line, ord_exchanges), while the owner has the account's exchange on.
 import '../bag/bag.css';
 import './account.css';
+import './exchange.css';
 import type { ReactNode } from 'react';
 import type { Receipt } from '@extas/checkout';
 import type { OrderReviewBox } from '@/lib/shop/account-review';
@@ -32,6 +35,7 @@ import { phoneNormalizeBD } from '@/lib/phone-bd';
 import { courierNewsOf, lateOf, riderAmountOf, trackOf, type LateRule, type OrderState } from '@extas/accounts/pure';
 import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords } from '@/lib/shop/checkout';
+import { canProblem, canSize } from '@/lib/shop/exchange-model';
 import { hoursOf } from '@/lib/shop/checkout-model';
 import type { ShopContext } from '@/lib/shop/context';
 import { dateText } from '@/lib/shop/account-view';
@@ -164,7 +168,9 @@ export async function OrderPage({
   const hours = r.band && !r.addressUnclear ? hoursOf(r.band, c.num) : null;
   const news = courierNewsOf(r.shipment, status, opts.courier);
   const units = r.lines.reduce((s, l) => s + l.quantity, 0);
-  const cards = await cardsByIds(c.storeId, r.lines.map((l) => l.productId).filter((x): x is string => !!x));
+  // PR 186: the new pieces of his exchanges are drawn too
+  const newIds = (extras?.exchange?.exchanges ?? []).flatMap((x) => x.items.flatMap((i) => (i.newProductId ? [i.newProductId] : [])));
+  const cards = await cardsByIds(c.storeId, [...r.lines.map((l) => l.productId).filter((x): x is string => !!x), ...newIds]);
   const wa = waOn ? waHref(c.s['contact.whatsapp'], t('account.order.helpMsg', { ...c.vars, number: r.number })) : null;
   const pay = r.pay;
   const waNumber = waOn ? c.s['contact.whatsapp'] : null;
@@ -193,6 +199,42 @@ export async function OrderPage({
         text: t('account.twoSize.text', { product: q.product, colour: q.colour ? ` · ${q.colour}` : '', sizes: listText(q.sizes.map((s) => s.label), t('bag.sizes.and')) }),
       }))
     : null;
+  // PR 186: which pieces he may still exchange, and his exchanges on this order
+  const xs = extras?.exchange ?? null;
+  const xLine = (lineId: string) => xs?.lines.find((x) => x.lineId === lineId) ?? null;
+  const xRowsOf = (lineId: string) => (xs ? xs.exchanges.filter((x) => x.items.some((i) => i.lineId === lineId)) : []);
+  const xTag = (status: string) => {
+    const doneish = status === 'COMPLETED';
+    const ended = status === 'REJECTED' || status === 'CANCELLED';
+    return (
+      <span className={doneish ? 'tag' : ended ? 'tag plain' : 'tag warn'} data-testid="order-x-status" data-status={status}>
+        <Icon name={doneish ? 'check' : 'clock'} size={12} />
+        {t(`account.exchange.status.${status}`)}
+      </span>
+    );
+  };
+  function LineExchange({ l }: { l: string }) {
+    const x = xLine(l);
+    const rows = xRowsOf(l);
+    const open = x && xs ? (canSize(x) ? 'size' : canProblem(x, xs.problemReason) ? 'problem' : null) : null;
+    if (!rows.length && !open) return null;
+    return (
+      <div className="row wrap mt12" style={{ gap: 8 }} data-testid="order-line-exchange">
+        {rows.map((row) => (
+          <span key={row.number} className="tag plain">
+            <Icon name="swap" size={12} />
+            {t('account.exchange.x.lineTag', { exchange: row.number, status: t(`account.exchange.status.${row.status}`) })}
+          </span>
+        ))}
+        {open ? (
+          <a className="btn btn-sm btn-secondary" href={`${hrefIn(c.lang, ROUTES.exchange(r.number))}?line=${encodeURIComponent(l)}`} data-testid="order-exchange-btn" data-kind={open}>
+            <Icon name="swap" size={15} />
+            {t(open === 'size' ? 'account.exchange.lineBtn' : 'account.exchange.lineBtnProblem')}
+          </a>
+        ) : null}
+      </div>
+    );
+  }
   const methodName = (p: { method: string | null; provider: string | null }) =>
     p.method === 'ONLINE' || p.provider === 'online' ? w('pay.online') : p.provider && words[`pm.${p.provider}`] ? w(`pm.${p.provider}`) : (p.provider ?? p.method ?? '');
   const row = (k: string, v: ReactNode, cls = '', testId?: string) => (
@@ -348,6 +390,7 @@ export async function OrderPage({
                         ) : null}
                       </div>
                     ) : null}
+                    {xs ? <LineExchange l={l.id} /> : null}
                   </div>
                   {/* PR 65: the review sits on its own full-width row of the line, so the stars and the two
                       measurement boxes have the whole card to use on a 320 px phone, not the text column */}
@@ -387,6 +430,79 @@ export async function OrderPage({
               </div>
             ) : null}
           </section>
+          {xs && xs.exchanges.length ? (
+            <section className="card" aria-labelledby="ox-h" data-testid="order-exchanges">
+              <div className="ord-cardhd">
+                <h2 className="h3" id="ox-h">
+                  {t('account.exchange.list')}
+                </h2>
+                <span className="xs muted">{plural(t, 'account.exchange.requests', xs.exchanges.length, c.num)}</span>
+              </div>
+              {xs.exchanges.map((x) => {
+                const item = x.items[0];
+                const old = item?.lineId ? r.lines.find((l) => l.id === item.lineId) : undefined;
+                const oldName = old ? nameOf(old, c) : (item?.oldSku ?? '');
+                const money: ReactNode[] = [];
+                if (x.money.codMinor > 0) money.push(<span key="pay">{t('account.exchange.x.pay', { amount: m(x.money.codMinor) })}</span>);
+                if (x.money.creditMinor > 0)
+                  money.push(
+                    <span key="wallet">
+                      {t('account.exchange.x.wallet', { amount: m(x.money.creditMinor) })} {t(x.status === 'COMPLETED' ? 'account.exchange.x.walletAdded' : 'account.exchange.x.walletAfter')}
+                    </span>,
+                  );
+                if (!money.length) money.push(<span key="none">{t('account.exchange.money.nothing')}</span>);
+                return (
+                  <div className="ord-x" key={x.number} data-testid="order-x" data-number={x.number}>
+                    <div className="row between wrap" style={{ gap: 8 }}>
+                      <div className="row wrap" style={{ gap: 8 }}>
+                        <b className="small">{x.number}</b>
+                        <span className="xs muted">
+                          {t(`account.exchange.reasonOf.${x.reason}`)} · {dateText(c, x.createdAt)}
+                        </span>
+                      </div>
+                      {xTag(x.status)}
+                    </div>
+                    {item ? (
+                      <div className="ord-x-swap mt12">
+                        <div className="ord-thumb" style={{ width: 44 }}>
+                          <Thumb c={c} card={old?.productId ? cards.get(old.productId) : undefined} colourKey={old?.colour?.key || undefined} hex={old?.colour?.hex ?? ''} alt={oldName} />
+                        </div>
+                        <div className="xs" style={{ minWidth: 0 }}>
+                          <div className="muted">{t('account.exchange.sendBack')}</div>
+                          <div className="bold">{oldName}</div>
+                          <div className="text2">{[old?.colour ? colourName(old.colour, c.lang) : null, old?.size].filter(Boolean).join(' · ')}</div>
+                        </div>
+                        <span className="ord-x-arr" aria-hidden="true">
+                          <Icon name="right" size={16} />
+                        </span>
+                        <div className="ord-thumb" style={{ width: 44 }}>
+                          <Thumb c={c} card={item.newProductId ? cards.get(item.newProductId) : undefined} colourKey={item.newColour?.key || undefined} hex={item.newColour?.hex ?? ''} alt={item.newName ?? ''} />
+                        </div>
+                        <div className="xs" style={{ minWidth: 0 }}>
+                          <div className="muted">{t('account.exchange.newItem')}</div>
+                          <div className="bold">{item.newName ?? ''}</div>
+                          <div className="text2">{[item.newColourName, item.newSizeLabel].filter(Boolean).join(' · ')}</div>
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="small text2 mt12 row wrap" style={{ gap: '4px 10px' }} data-testid="order-x-money">
+                      {money}
+                    </div>
+                    {x.claimState ? (
+                      <div className="xs text2 mt8" data-testid="order-x-claim" data-claim={x.claimState}>
+                        {t(`account.exchange.claim.${x.claimState}`)}
+                      </div>
+                    ) : null}
+                    {x.newOrderNumber ? (
+                      <a className="link xs bold mt8" style={{ display: 'inline-block' }} href={hrefIn(c.lang, ROUTES.order(x.newOrderNumber))} data-testid="order-x-new">
+                        {t('account.exchange.newOrder', { number: x.newOrderNumber })}
+                      </a>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </section>
+          ) : null}
           {edit ? (
             <OrderEditCard
               words={editWords}

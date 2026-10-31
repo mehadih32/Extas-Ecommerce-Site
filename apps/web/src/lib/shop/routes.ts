@@ -22,6 +22,8 @@ export const ROUTES = {
   /** PR 136: an order's invoice, and the same invoice as one file to keep. */
   invoice: (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice`,
   invoiceFile: (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice/file`,
+  /** PR 186: an exchange asked for from the account, for one of his delivered orders (`orders.exchange.account`). */
+  exchange: (number: string) => `/account/orders/${encodeURIComponent(number)}/exchange`,
   search: '/search',
   newIn: '/collections/new-in',
   /** PR 103: the sets landing page; ~~a rule's own list (`/combos/<rule>`, PR 572) is still to come~~ built below. ~~and the set builder (PR 98)~~ built: PR 98, 100. */
