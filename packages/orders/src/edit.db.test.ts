@@ -160,6 +160,39 @@ describe.skipIf(!HAS_TEST_DB)('PR 142, 143 · order edits by the team and by the
     if (off) expect(await code(setDeliveryArea(d(), f.staff, o2.orderId, { bandId: off.id, reasonKey: 'address-detail' }))).toBe('INVALID_INPUT');
   });
 
+  it('review R2 (M2): "Set delivery area" never makes money due on a confirmed order paid ahead (one figure for the door)', async () => {
+    const o = await f.place('edit-area-paid', { address: 'House 9, Road 2, Gabtoli', payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const paid = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+    expect(paid).toMatchObject({ paymentMethod: 'BKASH', chargeFixed: false, codAmountMinor: 0 });
+    expect(paid.paidMinor).toBe(paid.totalMinor);
+    await confirmOrder(d(), f.staff, o.orderId);
+    const outside = await db().deliveryBand.findFirstOrThrow({ where: { storeId: f.S, key: 'outside-dhaka' }, select: { id: true } });
+    const before = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+    expect(await code(setDeliveryArea(d(), f.staff, o.orderId, { bandId: outside.id, reasonKey: 'address-detail' }))).toBe('PAYMENT_DUE');
+    const after = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+    expect(after).toMatchObject({ totalMinor: before.totalMinor, deliveryChargeMinor: 0, codAmountMinor: 0, chargeFixed: false, version: before.version });
+    // the place alone may still be set (it moves no money)
+    const area = await db().geoArea.findFirst({ select: { id: true } });
+    if (area) expect(await setDeliveryArea(d(), f.staff, o.orderId, { areaId: area.id, reasonKey: 'address-detail' })).toMatchObject({ command: 'edit' });
+  });
+
+  it('review R2 (M2): the order paid ahead gets the prepaid "free delivery" reward, as the checkout gives it', async () => {
+    const o = await f.place('edit-area-reward', { address: 'House 9, Road 2, Gabtoli', payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const before = await db().order.findUniqueOrThrow({ where: { id: o.orderId } });
+    const outside = await db().deliveryBand.findFirstOrThrow({ where: { storeId: f.S, key: 'outside-dhaka' }, select: { id: true } });
+    f.overrides.set('checkout.prepaidReward.enabled', true);
+    f.overrides.set('checkout.prepaidReward.type', 'freeDelivery');
+    try {
+      await setDeliveryArea(d(), f.staff, o.orderId, { bandId: outside.id, reasonKey: 'address-detail' });
+    } finally {
+      f.overrides.delete('checkout.prepaidReward.enabled');
+      f.overrides.delete('checkout.prepaidReward.type');
+    }
+    expect(await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).toMatchObject({ deliveryBandId: outside.id, deliveryChargeMinor: 0, totalMinor: before.totalMinor, codAmountMinor: 0, chargeFixed: true });
+    // and it can be confirmed: nothing is due
+    expect(await confirmOrder(d(), f.staff, o.orderId)).toMatchObject({ status: 'CONFIRMED' });
+  });
+
   it('SIM-F-004: once a courier is booked every edit is refused (the parcel is the parcel), and nothing changes', async () => {
     const o = await f.place('edit-booked');
     await confirmOrder(d(), f.staff, o.orderId);
