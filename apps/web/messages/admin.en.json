@@ -86,7 +86,8 @@
     "adsTracking": "Tracking",
     "manual": "Site manual",
     "healthSpeed": "Speed",
-    "healthSmoke": "Smoke runs"
+    "healthSmoke": "Smoke runs",
+    "healthHistory": "Run history"
   },
   "login": {
     "metaTitle": "Admin sign-in",

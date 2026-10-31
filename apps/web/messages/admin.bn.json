@@ -86,7 +86,8 @@
     "adsTracking": "ট্র্যাকিং",
     "manual": "সাইট ম্যানুয়াল",
     "healthSpeed": "গতি",
-    "healthSmoke": "স্মোক টেস্ট"
+    "healthSmoke": "স্মোক টেস্ট",
+    "healthHistory": "পরীক্ষার ইতিহাস"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

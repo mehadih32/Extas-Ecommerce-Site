@@ -9029,6 +9029,8 @@ model SiteAuditRun {
   store         Store            @relation(fields: [storeId], references: [id])
   scheduleId    String?          @db.Uuid
   trigger       String
+  /// PR 419: which run this is ("smoke:<at>|<kind>|<sha>", "journeys:…"), so the import keeps it once.
+  sourceKey     String?
   status        BackgroundStatus
   passed        Int              @default(0)
   failed        Int              @default(0)
@@ -9041,6 +9043,7 @@ model SiteAuditRun {
 
   findings SiteAuditFinding[]
 
+  @@unique([storeId, sourceKey])
   @@index([storeId, startedAt])
 }
 
@@ -9062,6 +9065,8 @@ model SiteAuditFinding {
   approvalRequestId String?      @db.Uuid
   createdAt         DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
+
+  @@index([runId])
 }
 
 /// @stage S21 · PR 423, 604 — a service's state and resources against its limit.

@@ -283,6 +283,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/reports/health/speed', perm: 'health.read', keys: ['healthSpeed'] },
           // S21 · PR 418 — REP-07e Smoke runs: the newest run after a deploy and at night, page by page with pictures.
           { href: '/admin/reports/health/smoke', perm: 'health.read', keys: ['healthSmoke'] },
+          // S21 · PR 419 — B7.3 Run history: every smoke test and journeys run with its findings, kept for comparison.
+          { href: '/admin/reports/health/history', perm: 'health.read', keys: ['healthHistory'] },
           { href: '/admin/server', perm: 'system.read', keys: ['server'] },
         ],
       },

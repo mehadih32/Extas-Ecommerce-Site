@@ -38,3 +38,5 @@ export * from './restore-requests';
 export * from './courier';
 export * from './invoices';
 export * from './returns-erp';
+// S21 · PR 419 — run history: every smoke test and journeys run kept with its findings.
+export * from './run-history';
