@@ -7,6 +7,7 @@
 // It only reports and records confirmations: nothing is switched, opened or blocked by it.
 import { audit } from '@extas/auth';
 import { INSTALLATION } from '@extas/settings';
+import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { backupGateNow } from './backups-api';
 import { goLiveChecks, SIGNOFF_KEYS } from './go-live';
@@ -58,7 +59,7 @@ async function ownerDataNow(deps: Deps) {
 /** The checklist now, and the names of the people who confirmed items. */
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
-  const wanted = await deps.resolver.value('golive.connections');
+  const [wanted, seo] = await Promise.all([deps.resolver.value('golive.connections'), deps.resolver.value('seo.indexing', { storeId: MOTHER_STORE_ID })]); // the mother store's value, as Website → SEO saves it
   const [gate, domains, ownerData, on] = await Promise.all([
     backupGateNow(deps, state),
     deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
@@ -81,6 +82,7 @@ export async function goLiveNow(deps: Deps) {
     primaryHosts: domains.map((d) => d.hostname),
     ownerData,
     connections: { kinds: wanted.kinds, on },
+    searchEngines: seo.searchEngines,
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length

@@ -59,6 +59,15 @@
       "ok": "live: {live}",
       "how": "In Keys & connections, enter each provider's keys and press Save and test; a passing test moves it from practice to live. Still on practice: {missing} (the list is the setting golive.connections). Live now: {live}."
     },
+    "indexing": {
+      "title": "Main domain open to search engines",
+      "ok": "on for {hosts}",
+      "how": "On go-live day, after the switch: Website → SEO → let search engines in. It only counts on a store's main domain (Settings → Stores); the staging site always stays out. Main domains now: {hosts}."
+    },
+    "searchConsole": {
+      "title": "Search Console on the main domain, sitemap sent",
+      "how": "In Google Search Console: the main domain's property is verified (a DNS record in Cloudflare is the simplest), /sitemap.xml is submitted under Sitemaps, and the old shop's property is kept to watch the move (PR 587). Then confirm."
+    },
     "runbook": {
       "title": "Go-live runbook read, rollback rehearsed",
       "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm."

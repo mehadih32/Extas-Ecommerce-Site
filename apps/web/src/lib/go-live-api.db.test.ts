@@ -1,4 +1,4 @@
-// S19 · PR 393, 397, 399, 400 — Settings → System → Go-live on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
+// S19 · PR 393, 397, 399, 400, 401 — Settings → System → Go-live on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
 // the list from the database and the server's files, the owner's own data checked per store that goes live (the mother
 // store; a draft store is not asked), a delivery band counted, a sign-off recorded with who and audited, and refused
 // without its permission. Every value is made up.
@@ -79,6 +79,8 @@ describe.skipIf(!HAS_TEST_DB)('go-live checklist API on PostgreSQL (PR 393, 397,
     });
     expect(item(r.body.items, 'originCert').ok).toBe(false);
     expect(item(r.body.items, 'connections').vars).toEqual({ live: '—', missing: 'PAYMENT, COURIER, SMS' });
+    // PR 401: search engines stay out on a new installation, and there is no main domain yet
+    expect(item(r.body.items, 'indexing')).toMatchObject({ ok: false, vars: { hosts: '—', on: 'off' } });
   });
 
   it('PR 400: a connection counts only switched on, LIVE and with a passing last test', async () => {
