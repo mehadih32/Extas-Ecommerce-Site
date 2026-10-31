@@ -106,7 +106,23 @@ export interface CartQuote extends Quote {
 /** A cart priced by the live rules. Prices come from the database, never from the browser. */
 export async function quoteCart(
   deps: RulesDeps,
-  input: { storeId: number; lines: CartLineInput[]; bandKey?: string | null; paymentMethod?: string | null; couponCode?: string | null; phone?: string | null; customerId?: string | null; deliveredOrders?: number | null; source?: string | null; locale?: string },
+  input: {
+    storeId: number;
+    lines: CartLineInput[];
+    bandKey?: string | null;
+    paymentMethod?: string | null;
+    couponCode?: string | null;
+    /**
+     * Review R2 (M2): the code an order already redeemed (its CouponRedemption), when an order is priced again by the
+     * team. It counts as unlocked and is not checked again — the order's own use would otherwise refuse it.
+     */
+    redeemedCoupon?: { couponId: string; code: string; ruleId: string | null } | null;
+    phone?: string | null;
+    customerId?: string | null;
+    deliveredOrders?: number | null;
+    source?: string | null;
+    locale?: string;
+  },
 ): Promise<CartQuote> {
   const now = nowOf(deps);
   const [rules, maxPercentOff, timeZone, wasAllowed, bandChargeMinor, floorPercent, roundingStepMinor] = await Promise.all([
@@ -137,7 +153,12 @@ export async function quoteCart(
     const f = facts.get(v.productId)!;
     return [{ id: l.id ?? `line-${i}`, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: l.quantity, productId: v.productId, categoryIds: f.categoryIds, collectionIds: f.collectionIds, freeDelivery: f.freeDelivery, comboId: l.comboId ?? null, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent) }];
   });
-  const coupon = input.couponCode?.trim() ? await checkCoupon(deps.db, { storeId: input.storeId, code: input.couponCode, phone: input.phone, customerId: input.customerId, now }) : null;
+  const redeemed = input.redeemedCoupon ?? null;
+  const coupon: CouponCheck | null = redeemed
+    ? { ok: true, reason: null, couponId: redeemed.couponId, ruleId: redeemed.ruleId, code: redeemed.code }
+    : input.couponCode?.trim()
+      ? await checkCoupon(deps.db, { storeId: input.storeId, code: input.couponCode, phone: input.phone, customerId: input.customerId, now })
+      : null;
   const clock = clockFacts(now, timeZone);
   const q = quote(
     rules,

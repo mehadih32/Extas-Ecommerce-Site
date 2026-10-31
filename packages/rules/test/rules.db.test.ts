@@ -445,6 +445,14 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     expect(again.replayed).toBe(true);
     expect(await code(t.prisma.$transaction((tx) => redeemCoupon(tx, { storeId: A, code: 'SAMPLE-ONE', orderId: o2!.id, discountMinor: 10000, now: clock })))).toBe('COUPON_NOT_USABLE');
     expect((await t.prisma.coupon.findUniqueOrThrow({ where: { id: c.id } })).usedCount).toBe(1);
+    // review R2 (M2): used up, the code is refused to a new bag — but the order that redeemed it, priced again by the
+    // team, keeps it unlocked (it is not checked again)
+    const usedUp = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], bandKey: 'dhaka-city', couponCode: 'Sample-One' });
+    expect(usedUp.coupon).toMatchObject({ ok: false, reason: 'USED_UP' });
+    expect(usedUp.discountMinor).toBe(0);
+    const own = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], bandKey: 'dhaka-city', redeemedCoupon: { couponId: c.id, code: 'SAMPLE-ONE', ruleId: rule.id } });
+    expect(own.coupon).toMatchObject({ ok: true, code: 'SAMPLE-ONE' });
+    expect(own.discountMinor).toBe(10000);
     expect(await code(archiveCoupon(deps(), as(publisher), c.id, { archived: true }))).toBe('RULE_ACTIVE');
   });
 
