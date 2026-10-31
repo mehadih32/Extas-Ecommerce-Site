@@ -38,6 +38,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { linkOrderAccount } from '@extas/accounts';
 import { applyOutcome, PAYMENT_CALL_REASON, PAYMENT_EVENTS, PAYMENT_FLAGS } from '@extas/payments';
 import { findBag } from '@extas/cart';
+import { redeemCoupon, RulesError } from '@extas/rules';
 import type { Prisma } from '@extas/db/client';
 import { hasAddressDetail } from '@extas/delivery';
 import { convertCart, erpCheckoutPaused, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
@@ -329,7 +330,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   const cartId = await findBag(deps, { storeId, visitorId });
   if (!cartId) throw new CheckoutError('EMPTY', 'there is no bag to order');
   const before = stampOf(await bagLines(deps.db, storeId, cartId));
-  const q = await checkoutQuote(deps, {
+  const quoteNow = () => checkoutQuote(deps, {
     storeId,
     cartId,
     lang: d.lang,
@@ -342,6 +343,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     // PR 560: the finished details, so the owner's Parameter for Checkout looks at exactly what the page showed
     details: { name: d.form.name, phone: check.phone.e164 },
   });
+  const q = await quoteNow();
   if (!q.bag.items.length && !q.bag.sets.length) throw new CheckoutError('EMPTY', 'the bag has nothing to order');
   if (q.bag.blocked.length) throw new CheckoutError('OUT_OF_STOCK', 'a line cannot be ordered now', q.bag.blocked.map((b) => `${b.lineId}:${b.free}`));
   // SIM-F-003: the money stored is the money shown, or nothing is stored.
@@ -379,6 +381,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (giftPart) flags.push(ORDER_FLAGS.giftAdvance);
   const consent = consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
+  // Review R1 (B1): the code the order uses is redeemed in the order's own transaction (its limits hold under load)
+  const coupon = q.bag.summary.offers.find((x) => x.code) ?? null;
+  const couponMinor = q.bag.summary.offers.filter((x) => x.code).reduce((a, o) => a + o.amountMinor, 0);
   const scope = scopeOf(storeId);
   const inv = inventoryDeps(deps);
 
@@ -443,7 +448,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           codAmountMinor: method === 'COD' ? t.dueMinor : 0,
           paidMinor: 0,
           paymentMethod: method,
-          couponCode: q.bag.summary.offers.find((x) => x.code)?.code ?? null,
+          couponCode: coupon?.code ?? null,
           smsMarketingConsent: consent.sms,
           whatsappMarketingConsent: consent.whatsapp,
           visitorId,
@@ -486,6 +491,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           addedVia: r.source,
         })),
       });
+      // who may use it is judged as the quote judged it: the signed-in customer (a guest is counted by his phone)
+      if (coupon?.code) await redeemCoupon(tx, { storeId, code: coupon.code, orderId: o.id, phone: check.phone.e164, customerId, discountMinor: couponMinor, now });
       await convertCart(inv, { storeId, cartId, orderId: o.id }, { tx });
       const closed = await tx.cart.updateMany({ where: { id: cartId, storeId, status: 'ACTIVE' }, data: { status: 'CONVERTED', convertedOrderId: o.id, lastActivityAt: now } });
       if (closed.count !== 1) throw new CheckoutError('CART_NOT_OPEN', 'the bag became an order already');
@@ -551,6 +558,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       const r = await replayOf(deps, storeId, visitorId, d.idempotencyKey);
       if (r) return r;
     }
+    // Review R1 (B1): the code was used up (or used by him already) a moment ago — nothing was stored; he sees the
+    // checkout as it is now (the code refused, the price without it) and confirms again.
+    if (e instanceof RulesError && e.code === 'COUPON_NOT_USABLE') throw new CheckoutError('PRICE_CHANGED', 'the code cannot be used any more', e.details, { view: viewOf(await quoteNow()) });
     throw e;
   }
 }
@@ -648,8 +658,13 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
     if (open) return { number: d.number, status: 'INITIATED', next: 'pay' };
     if (last.status === 'PAID') return { number: d.number, status: 'PAID', next: 'thanks' };
     const tries = await tx.payment.count({ where: { storeId, orderId: o.id, purpose: { in: CHECKOUT_PAY_PURPOSES } } });
+    // review R1 (m2): the new try asks what is due now (an edit may have changed the total since the first try): the
+    // order's amount due, or for an advance what of it is still missing
+    const money = await tx.order.findUniqueOrThrow({ where: { id: o.id }, select: { totalMinor: true, walletAppliedMinor: true, paidMinor: true, advanceRequiredMinor: true } });
+    const dueNow = last.purpose === 'ORDER' ? Math.max(0, money.totalMinor - money.walletAppliedMinor - money.paidMinor) : Math.max(0, (money.advanceRequiredMinor ?? last.amountMinor) - money.paidMinor);
+    if (dueNow <= 0) return { number: d.number, status: 'PAID', next: 'thanks' };
     await tx.payment.create({
-      data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: last.purpose, status: 'INITIATED', amountMinor: last.amountMinor, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}`, attempt: tries + 1, statusAt: now },
+      data: { storeId, orderId: o.id, method: last.method, provider: last.provider, purpose: last.purpose, status: 'INITIATED', amountMinor: dueNow, currency: last.currency, idempotencyKey: `${o.idempotencyKey}:pay:${tries + 1}`, attempt: tries + 1, statusAt: now },
     });
     await tx.order.update({ where: { id: o.id }, data: { flags: [...without(ORDER_FLAGS.paymentPending, ORDER_FLAGS.paymentFailed), ORDER_FLAGS.paymentPending], version: { increment: 1 } } });
     await event(ORDER_EVENTS.retry, { tries: tries + 1 });
