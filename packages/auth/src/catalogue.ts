@@ -318,6 +318,11 @@ export const PERMISSIONS = {
   // S21 · PR 418 (REP-07e) — Smoke runs: see the smoke test's pictures of admin pages, which can show customers' names
   // (the Orders list). The shop's own pages and every result need only `health.read`.
   'health.smoke.shots': { group: 'health' },
+  // S21 · PR 420 (B7.3) — the approval gate for agent auto-fixes and new skills: file a proposal (the agents' and the
+  // audit runner's account, `health.fixes.propose`, and only while `health.fixGate` allows proposals) and approve or
+  // reject one (`health.fixes.approve`, the owner). Nobody approves their own proposal; nothing is fixed without an OK.
+  'health.fixes.propose': { group: 'health' },
+  'health.fixes.approve': { group: 'health' },
   // S13 · PR 257 (Blueprint C6.2) — Marketing › Tracking: see what the shop's server sent to the ad platforms
   // (`ads.tracking.read`); switch it on, tick the events and platforms, allow customer matching and send a test event
   // (`ads.tracking.manage`). Keys are typed on Keys & connections (`vault.write`), never here. No money moves.

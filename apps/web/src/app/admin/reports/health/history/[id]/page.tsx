@@ -1,6 +1,7 @@
 // S21 · PR 419 (B7.3) — one run of the history at /admin/reports/health/history/<id>: its result, every finding
 // (severity, page and screen, how to repeat it, the suggested fix and whether one was applied), compared with the run
 // of the same tool before it: new, still failing, fixed since. Seeing needs `health.read`. Read-only.
+// PR 420: each finding's proposed fix shows where its approval stands, with a link to Fixes to approve while it waits.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -9,6 +10,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { FIX_STATUSES } from '@/lib/admin-health/fixes';
 import { historyRunView, isHistoryError, type HistoryFinding, type HistoryRow } from '@/lib/admin-health/history';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -22,7 +24,9 @@ import { kindKey, SEV_TONE } from '../kinds';
 export const dynamic = 'force-dynamic';
 
 const LIST = '/admin/reports/health/history';
+const FIXES = '/admin/reports/health/fixes';
 const KEY = 'healthHistory';
+const known = (s: string) => (FIX_STATUSES as readonly string[]).includes(s);
 
 function withScreen(view: AdminView): AdminView {
   const extra = (view.lang === 'bn' ? [hbn] : [hen]) as unknown as Dict[];
@@ -143,7 +147,17 @@ export default async function HistoryRunPage({ params }: { params: Promise<{ id:
                 <div className="hs-title sk-wrap">{f.title}</div>
                 {where(f) ? <div className="a2-sm a2-mute sk-wrap">{where(f)}</div> : null}
                 {f.reproduce ? <div className="a2-sm sk-wrap">{s('repeat', { steps: f.reproduce })}</div> : null}
-                <div className="a2-sm a2-mute">{f.suggestedFix ? s('fix', { fix: f.suggestedFix }) : s('fixNone')}</div>
+                {f.suggestedFix ? <div className="a2-sm hs-fix">{s('fix', { fix: f.suggestedFix })}</div> : null}
+                <div className="a2-sm a2-mute" data-testid="history-fix-status" data-status={f.fixStatus}>
+                  {f.suggestedFix && known(f.fixStatus) ? s(`fixStatus.${f.fixStatus}`) : s('fixNone')}
+                </div>
+                {f.fixStatus === 'proposed' ? (
+                  <div className="a2-sm">
+                    <Link className="sk-pic" href={FIXES} data-testid="history-fix-open">
+                      {s('fixOpen')}
+                    </Link>
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

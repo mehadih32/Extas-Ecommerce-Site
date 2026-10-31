@@ -403,6 +403,135 @@
     },
     "repeat": "How to repeat: {steps}",
     "fix": "Suggested fix: {fix}",
-    "fixNone": "No fix applied. A fix waits for the owner's approval (coming with the approval gate)."
+    "fixNone": "No fix proposed. A fix needs the owner's OK on Fixes to approve.",
+    "fixOpen": "Open Fixes to approve",
+    "fixStatus": {
+      "none": "No fix on the finding now.",
+      "proposed": "The fix waits for a decision.",
+      "approved": "Approved: waiting to be fixed on the test server and checked again.",
+      "rejected": "Rejected: nothing was changed.",
+      "expired": "Expired: nobody decided in time; nothing was changed.",
+      "fixed": "Fixed: the same check passed again.",
+      "rolled-back": "Rolled back: the check got worse, so the fix was undone."
+    }
+  },
+  "fxg": {
+    "metaTitle": "Fixes to approve · Site health",
+    "title": "Fixes to approve",
+    "sub": "Agents' proposed fixes and new skills. Nothing changes without your OK.",
+    "rule": "Nothing changes without your OK. An agent proposes a fix → you approve it → it is fixed on the test server first → the same check runs again → only then it goes live, and if anything gets worse it is rolled back. An approved new skill is ready but stays switched off until it is turned on in the skill library.",
+    "off": "Agents may not propose anything now (the switch below is off), so nothing new will wait here.",
+    "kpi": {
+      "fixes": "Fixes waiting",
+      "fixesFoot": "proposed for run-history findings",
+      "skills": "Skills waiting",
+      "skillsFoot": "new skills and new versions",
+      "approved": "Approved in {days} days",
+      "approvedFoot": "fixes and skills",
+      "gate": "Proposals",
+      "on": "Allowed",
+      "off": "Off",
+      "expire": "an undecided one expires after {days} days",
+      "noExpire": "undecided ones never expire"
+    },
+    "views": "Which proposals",
+    "show": {
+      "waiting": "Waiting for you",
+      "decided": "Decided"
+    },
+    "kind": {
+      "fix": "Fix",
+      "skillNew": "New skill",
+      "skillUpdate": "Skill update"
+    },
+    "sev": {
+      "URGENT": "Urgent",
+      "IMPORTANT": "Important",
+      "CAN_WAIT": "Can wait"
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled"
+    },
+    "fixStatus": {
+      "none": "No fix on the finding now.",
+      "proposed": "The fix waits for a decision.",
+      "approved": "Approved: waiting to be fixed on the test server and checked again.",
+      "rejected": "Rejected: nothing was changed.",
+      "expired": "Expired: nobody decided in time; nothing was changed.",
+      "fixed": "Fixed: the same check passed again.",
+      "rolled-back": "Rolled back: the check got worse, so the fix was undone."
+    },
+    "screen": {
+      "phone": "phone",
+      "desktop": "desktop"
+    },
+    "where": "{page} · {screen}",
+    "repeat": "How to see it again: {steps}",
+    "proposal": "Proposed fix:",
+    "skillKey": "Skill {key} · version {version}",
+    "purpose": "What it is for: {purpose}",
+    "change": "What changed: {note}",
+    "by": "Proposed by {agent} · {when}",
+    "noAgent": "a staff account",
+    "expires": "expires {when}",
+    "decided": "Decided {when}",
+    "note": "reason: {note}",
+    "own": "Your proposal",
+    "ownNote": "You proposed this one, so someone else has to decide it.",
+    "cannotDecide": "Only the owner (or someone allowed to approve fixes) can decide this.",
+    "openRun": "Open the run this came from",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveD": {
+      "title": "Approve this proposal?",
+      "fix1": "The fix is allowed to run, on the test server first.",
+      "fix2": "The same check runs again; only if it passes does the fix go live.",
+      "fix3": "If anything gets worse, it is rolled back by itself.",
+      "skill1": "This version becomes the skill's current version.",
+      "skill2": "A new skill stays switched off until it is turned on in the skill library.",
+      "reason": "Note for the log (optional)",
+      "ok": "Approve"
+    },
+    "rejectD": {
+      "title": "Reject this proposal?",
+      "fix1": "Nothing is changed on the site.",
+      "fix2": "The finding stays open; an agent can propose a different fix.",
+      "skill1": "The skill version is kept, but it is not used.",
+      "skill2": "An agent can propose a better version later.",
+      "reason": "Why not? (optional, helps the agent)",
+      "ok": "Reject"
+    },
+    "dlg": {
+      "cancel": "Cancel",
+      "working": "Saving…",
+      "close": "Close"
+    },
+    "err": {
+      "DECIDED": "Someone already decided this one. The list is fresh now.",
+      "NOT_FOUND": "This proposal is no longer here. The list is fresh now.",
+      "OWN_PROPOSAL": "You cannot decide your own proposal.",
+      "INVALID_INPUT": "The note is too long.",
+      "forbidden": "You are not allowed to decide proposals.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Could not save. Try again."
+    },
+    "none": {
+      "waiting": "Nothing is waiting for your OK.",
+      "decided": "Nothing has been decided yet."
+    },
+    "card": {
+      "h": "The approval gate",
+      "d": "Whether agents may propose fixes and new skills at all, and when an undecided proposal expires. Approving is always a person's step.",
+      "readOnly": "Only someone who can change settings can change this.",
+      "proposals": "Agents may propose fixes and new skills",
+      "proposalsHelp": "Off: nothing is proposed and nothing waits. On: every proposal waits here for your OK.",
+      "expireDays": "Days before an undecided proposal expires",
+      "expireDaysHelp": "0 = never. An expired one changes nothing and can be proposed again."
+    }
   }
 }

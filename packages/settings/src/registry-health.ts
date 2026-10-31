@@ -53,6 +53,13 @@
 // - `months`: how many months the monthly table shows (real visitors' 75th percentile, and the lab run of that month).
 // - `runRequestedAt`: set by "Measure now" (the time it was pressed); the server's hourly check (vitals-monthly.yml,
 //   infra/deploy/vitals-lab.sh asked) measures once when it is newer than the last lab run. Never typed in by hand.
+//
+// PR 420 (B7.3, registry version 113): `health.fixGate`, the approval gate for agent auto-fixes and new skills
+// (Reports › Site health › Fixes to approve). A proposal waits for the owner; nothing is fixed or switched on without
+// his OK. Off as it ships:
+// - `proposals`: agents (and the audit runner) may file fix proposals and new skills at all. Off: every proposal is
+//   refused and nothing waits. Approving is always a person's step; there is no automatic approval.
+// - `expireDays`: a proposal nobody decided within these days expires (it can be filed again); 0 = never.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -62,6 +69,7 @@ const V423 = 83;
 const V415 = 110;
 const V416 = 111;
 const V417 = 112;
+const V420 = 113;
 
 export const healthHubSchema = z
   .object({
@@ -128,6 +136,13 @@ export const healthSpeedSchema = z
   })
   .strict();
 export type HealthSpeedSettings = z.output<typeof healthSpeedSchema>;
+export const healthFixGateSchema = z
+  .object({
+    proposals: z.boolean(),
+    expireDays: z.int().min(0).max(90),
+  })
+  .strict();
+export type HealthFixGateSettings = z.output<typeof healthFixGateSchema>;
 
 /** PR 416: the families of UI checks, in the order the server file lists them. */
 export const UI_CHECK_FAMILIES = ['layout', 'text', 'images', 'taps'] as const;
@@ -210,5 +225,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 955,
     version: V417,
+  }),
+  'health.fixGate': setting({
+    scope: 'installation',
+    schema: healthFixGateSchema,
+    default: { proposals: false, expireDays: 0 },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.fixGate.label',
+    helpKey: 'health.fixGate.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 956,
+    version: V420,
   }),
 };

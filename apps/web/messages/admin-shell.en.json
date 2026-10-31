@@ -364,7 +364,8 @@
       "ordersReturns": "Returns & exchanges",
       "ordersReturnsQc": "Receive & QC",
       "booksDifferences": "Books differences to put right",
-      "erpHold": "ERP account on hold: the ERP takes no new orders"
+      "erpHold": "ERP account on hold: the ERP takes no new orders",
+      "agentFixes": "Agent fixes and new skills waiting for your OK"
     },
     "age": {
       "now": "just now",

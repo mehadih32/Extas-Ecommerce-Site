@@ -23,6 +23,10 @@
     "speed": {
       "label": "Site health: the Speed page",
       "help": "How many months Reports › Site health › Speed shows, and the last \"Measure now\" press (the server measures once within the hour). The targets are on Website › SEO."
+    },
+    "fixGate": {
+      "label": "Site health: agent fixes and new skills need your OK",
+      "help": "Whether agents and the audit runner may propose a fix for a finding or a new skill at all (off: nothing is proposed), and after how many days an undecided proposal expires (0 = never). Every proposal waits on Reports › Site health › Fixes to approve; nothing is fixed or switched on without your OK."
     }
   }
 }

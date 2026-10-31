@@ -87,7 +87,8 @@
     "manual": "Site manual",
     "healthSpeed": "Speed",
     "healthSmoke": "Smoke runs",
-    "healthHistory": "Run history"
+    "healthHistory": "Run history",
+    "healthFixes": "Fixes to approve"
   },
   "login": {
     "metaTitle": "Admin sign-in",

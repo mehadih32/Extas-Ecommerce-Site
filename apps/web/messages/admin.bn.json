@@ -87,7 +87,8 @@
     "manual": "সাইট ম্যানুয়াল",
     "healthSpeed": "গতি",
     "healthSmoke": "স্মোক টেস্ট",
-    "healthHistory": "পরীক্ষার ইতিহাস"
+    "healthHistory": "পরীক্ষার ইতিহাস",
+    "healthFixes": "অনুমতির অপেক্ষায়"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

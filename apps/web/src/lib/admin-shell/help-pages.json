@@ -70,6 +70,7 @@
     { "id": "reports/health-smoke", "route": "/admin/reports/health/smoke" },
     { "id": "reports/health-history", "route": "/admin/reports/health/history" },
     { "id": "reports/health-history-run", "route": "/admin/reports/health/history/[id]" },
+    { "id": "reports/health-fixes", "route": "/admin/reports/health/fixes" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },
