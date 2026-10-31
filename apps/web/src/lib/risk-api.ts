@@ -48,6 +48,9 @@
 //                                   — lib/admin-reports/learning-api.ts
 //   GET   /api/admin/risk/calls     PR 545: the new-customer card and the call outcomes card (orders.read); PUT {key:
 //                                   'newCustomer' | 'outcomes', value, version} (risk.rules.write) — lib/admin-orders/calls-api.ts
+//   GET   /api/admin/risk/transit   PR 556: the in-transit duplicate notice's card and its report by campaign
+//                                   (risk.rules.read; the report risk.report); PUT {key: 'transit', value, version}
+//                                   (risk.rules.write) — lib/admin-orders/transit-api.ts
 // A switch only decides whether a rule marks and proposes (the blocklist: marks or holds for a person): nothing here cancels, decides an order, moves money or
 // changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
@@ -59,6 +62,7 @@ import { callsRoute } from './admin-orders/calls-api';
 import { blockProposalSettingsRoute } from './admin-orders/block-proposal-api';
 import { bundleRoute, bundlingSettingsRoute } from './admin-orders/bundling-api';
 import { goodCustomerSettingsRoute } from './admin-orders/good-customer-api';
+import { transitSettingsRoute } from './admin-orders/transit-api';
 import { digestRoute, holdProposalRoute } from './admin-orders/digest-api';
 import { handle } from './orders-api';
 
@@ -116,6 +120,7 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
   if (path[0] === 'block-proposal') return blockProposalSettingsRoute(request, deps, path);
   if (path[0] === 'bundle') return bundleRoute(request, deps, path);
   if (path[0] === 'good-customer') return goodCustomerSettingsRoute(request, deps, path);
+  if (path[0] === 'transit') return transitSettingsRoute(request, deps, path);
   if (path[0] === 'stopped') return stopReportRoute(request, deps, path);
   if (path[0] === 'digest') return digestRoute(request, deps, path);
   if (path[0] === 'hold-proposals') return holdProposalRoute(request, deps, path);

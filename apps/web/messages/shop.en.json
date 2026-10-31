@@ -455,6 +455,16 @@
       "error": "That did not go through. Please try again or type the address.",
       "consentKept": "Your voice is recorded to write your address, read by a speech service, and kept for {days} days.",
       "consent": "Your voice is used only to write your address (read by a speech service) and is not kept."
+    },
+    "transit": {
+      "title": "It's already on its way to you",
+      "order": "In order {number}",
+      "text": "Your order {number} with this same piece is already on its way to your area — there is no need to order it again.",
+      "textAnon": "An order with this same piece is already on its way to this number — there is no need to order it again.",
+      "track": "Track order {number}",
+      "remove": "No need — take it out",
+      "keep": "No, I want another one",
+      "close": "Close"
     }
   },
   "notFound": {

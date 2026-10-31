@@ -61,6 +61,12 @@
 // first order — never a hold, a decline or an advance, and nothing on the risk score. A prepaid order gets no call unless
 // `prepaid` is on (SIM-F-020). The call outcomes are what a person records on Orders › Calls to make: each with its words
 // and whether it closes the call (the others keep the task for the next try). Off as shipped.
+// PR 556 (`checkout.transitDuplicate`, version 109): the in-transit duplicate notice at checkout. While on, a whole phone
+// number looks for this customer's order already on its way (or, with `include: 'open'`, any open order) holding the very
+// piece in the bag, within `windowDays`; the checkout then shows the piece, the earlier order's number and its tracking
+// link and two buttons (take it out, or "I want another one"). The order's number and link only for an order tied to this
+// browser or account; a match by the number alone shows nothing unless `byPhoneAlone` is on (then without them). Every
+// firing is kept with its campaign; the report reads `reportDays`. Off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -82,7 +88,7 @@ const V524R = 106;
 const V540 = 107;
 /** PR 543's version. */
 const V543 = 108;
-// PR 545: the new-customer call and the call outcomes
+// PR 545: the new-customer call and the call outcomes; PR 556: the in-transit duplicate notice (the same version)
 const V545 = 109;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
@@ -265,6 +271,24 @@ export const CALL_OUTCOMES_DEFAULT: CallOutcomes = [
   { key: 'NOT_ORDERED', en: 'Says he did not order', bn: 'বলছে অর্ডার করেনি', done: true },
 ];
 
+/** PR 556: which earlier orders count as "already coming" — handed to the courier or in transit, or any open order. */
+export const TRANSIT_INCLUDE = ['shipped', 'open'] as const;
+export const checkoutTransitDuplicateSchema = z
+  .object({
+    /** The phone check at checkout shows the notice when a piece in the bag is already on its way to this customer. */
+    enabled: z.boolean(),
+    include: z.enum(TRANSIT_INCLUDE),
+    /** How far back an earlier order may have been placed. */
+    windowDays: z.number().int().min(1).max(120),
+    /** A match by the number alone (not this browser or account) shows the notice too — without the order's number or link. */
+    byPhoneAlone: z.boolean(),
+    /** The report's period (Orders › Risk rules). */
+    reportDays: z.number().int().min(1).max(365),
+  })
+  .strict();
+export type CheckoutTransitDuplicate = z.output<typeof checkoutTransitDuplicateSchema>;
+export const CHECKOUT_TRANSIT_DUPLICATE_DEFAULT: CheckoutTransitDuplicate = { enabled: false, include: 'shipped', windowDays: 30, byPhoneAlone: false, reportDays: 30 }; // hardcode-ok: registry default (the owner changes it on Orders › Risk rules)
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -374,5 +398,15 @@ export const riskS06Settings = {
     labelKey: 'risk.callOutcomes.label',
     helpKey: 'risk.callOutcomes.help',
     sortOrder: 340,
+  }),
+  'checkout.transitDuplicate': setting({
+    ...base,
+    version: V545,
+    schema: checkoutTransitDuplicateSchema,
+    default: CHECKOUT_TRANSIT_DUPLICATE_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.transitDuplicate.label',
+    helpKey: 'risk.transitDuplicate.help',
+    sortOrder: 341,
   }),
 };

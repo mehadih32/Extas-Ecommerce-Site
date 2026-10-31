@@ -27,6 +27,8 @@
 // PR 610 (CN-029 Phase 3 qa-gate I3): while checkout is paused (the ERP holds the shop's account) a calm line says so
 // above the form from the first paint and stays; a Confirm that meets the pause (it began after the page opened) shows
 // the same line instead of a toast. Confirm still asks the server, which decides: no order is made during a pause.
+// S06 · PR 556: `transit` — while the owner's in-transit duplicate notice is on, a whole phone number is checked once and
+// a piece already on its way to him opens the notice (TransitNotice).
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, checkGift, GIFT_FIELDS, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type GiftField, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
@@ -41,6 +43,7 @@ import { GiftCard, type GiftConfig, type GiftForm } from './GiftCard';
 import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
 import { PausedNote } from './PausedNote';
+import { TransitNotice, type TransitConfig } from './TransitNotice';
 import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
 import { CallMeCard, useCallMe, type CallMeConfig } from './CallMeCard';
@@ -104,6 +107,8 @@ export interface CheckoutFormProps {
   callMe?: CallMeConfig | null;
   /** CN-020 (4), SIM-F-047: the mic in the address box (`checkout.voice`); null: off. */
   voice?: VoiceConfig | null;
+  /** PR 556: the in-transit duplicate notice is on — each bag line's picture and name; null: off (or a gift). */
+  transit?: TransitConfig | null;
 }
 
 const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
@@ -135,6 +140,7 @@ export function CheckoutForm({
   paused: pausedFirst = false,
   callMe: callMeCfg = null,
   voice: voiceCfg = null,
+  transit = null,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -661,6 +667,7 @@ export function CheckoutForm({
                 />
                 {gpsCfg ? <GpsShare cfg={gpsCfg} value={point} onChange={setPoint} w={w} /> : null}
                 {callMe.offer ? <CallMeCard offer={callMe.offer} phone={form.phone} name={form.name} lang={money.lang} w={w} onAway={callMe.putAway} /> : null}
+                {transit ? <TransitNotice phone={form.phone} cfg={transit} w={w} lang={money.lang} /> : null}
               </div>
             </section>
             <section className="card co-sec" data-testid="co-delivery">

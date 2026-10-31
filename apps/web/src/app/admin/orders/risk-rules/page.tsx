@@ -7,7 +7,8 @@
 // `risk.refuser.terms`, only ever a proposal on a new order); PR 522: the One parcel card; PR 523: the Blocklist proposal
 // card (the number of rejections that proposes a number; a person decides in the Blocklist card); PR 524: the Good
 // customers card (a good customer is never held by the engine by itself; the stops show in Reports › Stopped by the
-// engine). The risk matrix, the rule switches (PR 544's API), the duplicate rules and
+// engine); PR 556: the Parcel already on its way card (the checkout notice) and its report by campaign (`risk.report`).
+// The risk matrix, the rule switches (PR 544's API), the duplicate rules and
 // protection & learning join with their PRs. Seeing needs `risk.rules.read`, saving `risk.rules.write`; the API checks
 // each again. Everything ships off.
 import type { Metadata } from 'next';
@@ -30,6 +31,8 @@ import { blocklistCardScreen, blocklistCardTexts } from '@/lib/admin-orders/bloc
 import { blockProposalCard } from '@/lib/admin-orders/block-proposal-api';
 import { bundlingCard } from '@/lib/admin-orders/bundling-api';
 import { goodCustomerCard } from '@/lib/admin-orders/good-customer-api';
+import { transitCard, transitReportFor } from '@/lib/admin-orders/transit-api';
+import { TRANSIT_INCLUDE } from '@extas/settings';
 import { refusersCardScreen, refusersCardTexts } from '@/lib/admin-orders/refusers-card';
 import { levelsScreen, levelsTexts } from '@/lib/admin-orders/risk-levels';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -62,7 +65,7 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf, bd, bp, gc, cancelReasons] = await Promise.all([
+  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport] = await Promise.all([
     riskLevels(readDeps(access.deps), who),
     advanceSettings(readDeps(access.deps), who),
     blocklist(readDeps(access.deps), who),
@@ -71,6 +74,8 @@ export default async function RiskRulesPage() {
     blockProposalCard(access.deps, MOTHER_STORE_ID),
     goodCustomerCard(access.deps, MOTHER_STORE_ID),
     access.deps.resolver.value('orders.cancel.reasons', { storeId: MOTHER_STORE_ID }),
+    transitCard(access.deps, MOTHER_STORE_ID),
+    transitReportFor(access.deps, who),
   ]);
   const d = view.dict;
   // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
@@ -110,6 +115,18 @@ export default async function RiskRulesPage() {
     { kind: 'number', path: 'minDelivered', label: gw('minDelivered'), help: gw('minDeliveredHelp'), min: 1, max: 100 },
     { kind: 'number', path: 'maxRefused', label: gw('maxRefused'), help: gw('maxRefusedHelp'), min: 0, max: 20 },
   ];
+  // PR 556: the in-transit duplicate notice at checkout (the setting `checkout.transitDuplicate`, off as shipped) and its
+  // report by campaign (risk.report)
+  const tw = (k: string, vars?: Record<string, string | number>) => t(d, `orders.rr.td.${k}`, vars);
+  const tdTexts: FieldsCardTexts = { ...bdTexts, h: tw('h'), d: tw('d'), readOnly: tw('readOnly'), err: Object.fromEntries(Object.keys(bdTexts.err).map((c) => [c, tw(`err.${c}`)])) };
+  const tdFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: tw('enabled') },
+    { kind: 'select', path: 'include', label: tw('include'), help: tw('includeHelp'), options: TRANSIT_INCLUDE.map((x) => ({ value: x, label: tw(`inc.${x}`) })) },
+    { kind: 'number', path: 'windowDays', label: tw('windowDays'), help: tw('windowDaysHelp'), min: 1, max: 120 },
+    { kind: 'switch', path: 'byPhoneAlone', label: tw('byPhoneAlone'), help: tw('byPhoneAloneHelp') },
+    { kind: 'number', path: 'reportDays', label: tw('reportDays'), help: tw('reportDaysHelp'), min: 1, max: 365 },
+  ];
+  const count = (x: number) => String(x);
   return (
     <div className="a2-z" data-testid="risk-rules">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'orders.page.riskRules')} sub={t(d, 'orders.rr.sub')} />
@@ -127,6 +144,47 @@ export default async function RiskRulesPage() {
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/good-customer" screen={{ key: gc.key, value: gc.value, version: gc.version }} fields={gcFields} texts={gcTexts} canEdit={canEdit} testId="risk-good-customer" />
       </div>
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/risk/transit" screen={{ key: td.key, value: td.value, version: td.version }} fields={tdFields} texts={tdTexts} canEdit={canEdit} testId="risk-transit" />
+      </div>
+      {tdReport ? (
+        <div className="a2-card a2-mt12" data-testid="risk-transit-report">
+          <h3 className="a2-h4">{tw('repH', { days: count(tdReport.days) })}</h3>
+          <p className="a2-xs a2-mute">{tw('repD')}</p>
+          {tdReport.rows.length ? (
+            <div className="a2-tblw a2-mt6">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{tw('col.campaign')}</th>
+                    <th className="r">{tw('col.shown')}</th>
+                    <th className="r">{tw('col.removed')}</th>
+                    <th className="r">{tw('col.kept')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tdReport.rows.map((r) => (
+                    <tr key={r.campaign ?? ''} data-testid="risk-transit-row">
+                      <td className="a2-tdh">{r.campaign ?? tw('noCampaign')}</td>
+                      <td className="r" data-l={tw('col.shown')}>
+                        <span className="a2-num">{count(r.shown)}</span>
+                      </td>
+                      <td className="r" data-l={tw('col.removed')}>
+                        <span className="a2-num">{count(r.removed)}</span>
+                      </td>
+                      <td className="r" data-l={tw('col.kept')}>
+                        <span className="a2-num">{count(r.kept)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{tw('none')}</p>
+          )}
+        </div>
+      ) : null}
       <p className="a2-xs a2-mute a2-mt12">{t(d, 'orders.rr.later')}</p>
     </div>
   );

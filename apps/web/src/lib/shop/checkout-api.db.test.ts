@@ -8,7 +8,7 @@ import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
 import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
-import { callMeHandler, draftHandler, paymentHandler, voiceHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
+import { callMeHandler, draftHandler, paymentHandler, voiceHandler, placeHandler, quoteHandler, transitAnswerHandler, transitHandler, type CheckoutApiDeps } from './checkout-api';
 import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from '../tracking/attribution';
 
 const ORIGIN = 'https://shop.example.test';
@@ -256,6 +256,35 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
       expect(row).toMatchObject({ visitorId: p.visitorId, storeId: f.S, durationMs: 3100 });
     } finally {
       f.overrides.delete('checkout.voice');
+    }
+  });
+
+  it('S06 · PR 556: the phone check names the bag line already on its way from this browser (off: nothing); the answer is kept once', async () => {
+    await f.t.prisma.stockLevel.updateMany({ where: { variantId: f.variant('oxford-cotton-shirt', 'sky', 'L').id }, data: { onHand: { increment: 2 }, available: { increment: 2 } } });
+    const p = await page('api-transit', null, 'L');
+    const placed = (await (await placeHandler(req('/api/checkout/orders', p.order, { cookie: p.cookie }), deps())).json()) as { number: string };
+    await f.t.prisma.order.updateMany({ where: { storeId: f.S, number: placed.number }, data: { status: 'IN_TRANSIT' } });
+    // the same browser starts a new bag with the same piece
+    const again = await f.bag('api-transit-2', [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'L').id }]);
+    await f.t.prisma.cart.update({ where: { id: again.cartId }, data: { visitorId: p.visitorId } });
+    await f.t.prisma.cart.updateMany({ where: { storeId: f.S, visitorId: p.visitorId, id: { not: again.cartId } }, data: { status: 'CONVERTED' } });
+    const ask = async (b: unknown, site?: string) => read(await transitHandler(req('/api/checkout/transit', b, { cookie: p.cookie, site }), deps()));
+    expect(await ask({ phone: FORM.phone })).toMatchObject({ status: 200, body: { ok: true, enabled: false, notices: [] } });
+    f.overrides.set('checkout.transitDuplicate', { enabled: true, include: 'shipped', windowDays: 30, byPhoneAlone: false, reportDays: 30 });
+    try {
+      expect((await ask({ phone: FORM.phone }, 'cross-site')).status).toBe(403);
+      expect((await ask({ phone: FORM.phone, extra: 1 })).status).toBe(400);
+      const r = await ask({ phone: FORM.phone, campaign: { source: 'facebook', campaign: 'api-test' } });
+      const notices = r.body.notices as { eventId: string; number: string; href: string }[];
+      expect(notices).toHaveLength(1);
+      expect(notices[0]).toMatchObject({ number: placed.number, href: `/account/orders/${placed.number}` });
+      const answer = async (b: unknown) => read(await transitAnswerHandler(req('/api/checkout/transit/answer', b, { cookie: p.cookie }), deps()));
+      expect(await answer({ eventId: notices[0]!.eventId, action: 'removed' })).toMatchObject({ status: 200, body: { ok: true, action: 'removed' } });
+      expect(await answer({ eventId: notices[0]!.eventId, action: 'kept' })).toMatchObject({ status: 200, body: { action: 'removed' } });
+      expect((await answer({ eventId: randomUUID(), action: 'kept' })).status).toBe(404);
+      expect(await f.t.prisma.duplicateNoticeEvent.count({ where: { storeId: f.S, campaignRef: 'api-test' } })).toBe(2);
+    } finally {
+      f.overrides.delete('checkout.transitDuplicate');
     }
   });
 });

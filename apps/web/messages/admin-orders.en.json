@@ -1327,6 +1327,43 @@
           "network": "No connection. Nothing was saved; try again.",
           "other": "Something went wrong. Nothing was saved; try again."
         }
+      },
+      "td": {
+        "h": "Parcel already on its way",
+        "d": "When on, the moment a customer types a whole phone number at checkout, the shop looks for his order already on its way with the very piece in his bag (same product, colour and size). He sees the piece, that order's number and its tracking link, and chooses: take it out, or \"No, I want another one\". Nothing is cancelled or blocked. Each notice is kept with the campaign that brought him, below.",
+        "enabled": "Show the notice at checkout",
+        "include": "Which earlier orders count",
+        "includeHelp": "On its way: handed to the courier or in transit. Any open order: also ones not yet packed or sent.",
+        "inc": {
+          "shipped": "Only orders on their way",
+          "open": "Any open order"
+        },
+        "windowDays": "How far back (days)",
+        "windowDaysHelp": "1 to 120. An earlier order placed longer ago does not count.",
+        "byPhoneAlone": "Also when only the number matches",
+        "byPhoneAloneHelp": "Off: the notice shows only when the earlier order was placed from the same browser, device or account. On: a match by the number alone shows it too, but without the order's number or link, so a stranger learns nothing about someone else's order.",
+        "reportDays": "Report period (days)",
+        "reportDaysHelp": "1 to 365. How many days the table below counts.",
+        "readOnly": "Only someone allowed to change the risk rules can change this.",
+        "repH": "Notices by campaign · last {days} days",
+        "repD": "A campaign whose customers often order what is already on its way may be shown to them too often: cut its frequency cap.",
+        "col": {
+          "campaign": "Campaign",
+          "shown": "Shown",
+          "removed": "Took it out",
+          "kept": "Wanted another"
+        },
+        "noCampaign": "No campaign",
+        "none": "No notice in this period.",
+        "err": {
+          "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+          "INVALID_INPUT": "Check: {fields}.",
+          "FORBIDDEN": "You cannot change the risk rules.",
+          "forbidden": "You cannot change the risk rules.",
+          "unauthorized": "Sign in again.",
+          "network": "No connection. Nothing was saved; try again.",
+          "other": "Something went wrong. Nothing was saved; try again."
+        }
       }
     },
     "adv": {

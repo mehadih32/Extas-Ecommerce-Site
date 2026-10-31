@@ -8,6 +8,7 @@
 // (lib/seo/verification, `seo.verification`; none while no code is set).
 // S11 · PR 234: while `seo.vitals.collect` is on, the page reports its speed (components/shop/VitalsReporter).
 // S13 · PR 257: the tracking beacon (components/shop/TrackingBeacon) while `ads.tracking` is on with a page event ticked.
+// S06 · PR 556: while the in-transit duplicate notice is on, the visit's campaign is kept in the tab (CampaignKeep).
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -21,6 +22,7 @@ import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
 import { ProblemProbe } from '@/components/shop/ProblemProbe';
 import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { TrackingBeacon } from '@/components/shop/TrackingBeacon';
+import { CampaignKeep } from '@/components/shop/CampaignKeep';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
@@ -43,7 +45,8 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'health.problems': problems,
     'seo.vitals': vitals,
     'ads.tracking': tracking,
-  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking'] as const, c.storeId);
+    'checkout.transitDuplicate': transit,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate'] as const, c.storeId);
   const trackView = tracking.on && tracking.events.view;
   const trackCheckout = tracking.on && tracking.events.checkout;
   // The Bengali shop switched off: its addresses lead to the English twin.
@@ -76,6 +79,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
         />
       ) : null}
       {trackView || trackCheckout ? <TrackingBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], checkoutPath: ROUTES.checkout, view: trackView, checkout: trackCheckout }} /> : null}
+      {transit.enabled ? <CampaignKeep /> : null}
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
     </div>

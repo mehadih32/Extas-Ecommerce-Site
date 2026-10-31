@@ -1252,7 +1252,7 @@ export const registry = {
   ...advanceSettings,
   // ---- S06 · PR 161 · what happens at each risk level: watch, hold, a call, the advance asked (registry-risk-levels.ts, version 54). ----
   ...riskLevelSettings,
-  // ---- S06 after launch · CN-031 lane A · PR 162 · the blocklist (registry-risk-s06.ts, version 100); PR 163 · repeat refusers (101); PR 164 · the fraud report's period and size (102); PR 522 · one parcel for one person's orders (103); PR 523 · the blocklist proposal (104); PR 524 · good customers (105) and the stop report (106); PR 540 · the approval digest and gate (107); PR 543 · the decision learning loop (108); PR 545 · the new-customer call and the call outcomes (109); later S06 PRs add theirs. ----
+  // ---- S06 after launch · CN-031 lane A · PR 162 · the blocklist (registry-risk-s06.ts, version 100); PR 163 · repeat refusers (101); PR 164 · the fraud report's period and size (102); PR 522 · one parcel for one person's orders (103); PR 523 · the blocklist proposal (104); PR 524 · good customers (105) and the stop report (106); PR 540 · the approval digest and gate (107); PR 543 · the decision learning loop (108); PR 545 · the new-customer call and the call outcomes (109); PR 556 · the in-transit duplicate notice (109); later S06 PRs add theirs. ----
   ...riskS06Settings,
   // ---- S06 · PR 542 · the one-click advance request from the order: its channels, pay service, words and auto option (off) (registry-advance-request.ts, version 54). ----
   ...advanceRequestSettings,
