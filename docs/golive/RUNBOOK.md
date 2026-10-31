@@ -50,7 +50,8 @@ Decide within **30 minutes** of the problem being seen; a slow decision costs mo
    undo). The old WordPress shop answers again within minutes. The new site stays on new.extas.com.bd; the orders it
    took in between stay in its database and are handled from its admin — nothing is lost or deleted.
 3. **Data is wrong** (only this needs a restore): Settings → System → Backups → restore to the check copy first, then
-   production with the typed confirmation and the PIN (PR 396). The old database is kept on the server. This is the
+   production with the typed confirmation and the PIN (PR 396). The old database is kept on the server, and the
+   restored one is migrated to the live version's schema before the shop starts again (R2 ops M3). This is the
    last step and is never needed for a domain problem.
 
 After any rollback: the cause becomes a fix PR with a smoke check for it (CN-016), and the switch is tried again only

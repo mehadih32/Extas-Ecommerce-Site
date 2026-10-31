@@ -25,7 +25,10 @@
 #       production: replaces the live database after typing RESTORE (or --confirm RESTORE, PR 396). The old data is
 #       kept, never deleted: a base backup swaps the data folder (the old one stays beside it), a Drive dump goes into the
 #       live server under a new name and the names are swapped (the old database stays as extas_before_restore_<time>).
-#       The shop's containers it stopped start again.
+#       Before the shop's containers it stopped start again, the restored database is brought to the live version's
+#       schema with that version's migrate image (the deploy's migrate step: migrations, then the settings sync), so a
+#       backup from before a newer deploy never meets a newer app (R2 ops M3). A failed migration, a failed step, a
+#       cancel or a timeout (INT, TERM, HUP) puts the live database back (R2 ops M4).
 #   extas-restore request <id> staging|production <local|blob|drive> <backup|-> <minute (ISO, UTC)|-> <staging id|->
 #       PR 396, a restore asked for in the admin (the vault sync starts it in a transient unit): staging restores into
 #       the check copy and keeps proof of it (state/restore-staging.json: the request, the copy, the backup used);
@@ -512,22 +515,38 @@ fi
 mapfile -t stopped < <(docker ps --format '{{.Names}}' | grep -E '^extas-(app|worker|jobs|pgbouncer)' || true)
 # R1 ops review (M9): if any step of the swap fails, the live data folder goes back, the database and the shop's
 # containers start again, and the result says so (the half-copied folder is set aside, never deleted).
+why="stopped half way"
 swap_undo() {
   local rc=$?
   [ "$rc" -ne 0 ] || return 0
-  echo "FAIL: the restore stopped half way (exit $rc); putting the live database back" >&2
+  # R2 ops review (M4): a second signal (the runner sends INT, then TERM) never cuts the undo itself short.
+  trap '' INT TERM HUP
+  echo "FAIL: the restore $why (exit $rc); putting the live database back" >&2
   if [ -n "$BASE" ] && [ -d "$R/data/postgres/pgdata.before-restore-$TS" ]; then
     docker stop -t 60 extas-postgres >/dev/null 2>&1 || true
     [ ! -e "$R/data/postgres/pgdata" ] || mv "$R/data/postgres/pgdata" "$R/data/postgres/pgdata.failed-restore-$TS"
     mv "$R/data/postgres/pgdata.before-restore-$TS" "$R/data/postgres/pgdata"
+  elif [ -z "$BASE" ] && [ -n "${old:-}" ] \
+    && pgx extas-postgres psql -qtAX -U extas -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '$old'" 2>/dev/null | grep -q 1; then
+    # R2 ops review (M3): a Drive dump already swapped in by name goes back the same way; the restored copy is kept
+    # beside it as extas_failed_restore_<time>, never dropped.
+    pgx extas-postgres psql -qX -v ON_ERROR_STOP=1 -U extas -d postgres -c \
+      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'extas' AND pid <> pg_backend_pid(); ALTER DATABASE extas RENAME TO extas_failed_restore_${TS//-/_}; ALTER DATABASE $old RENAME TO extas;" >/dev/null 2>&1 \
+      || echo "FAIL: could not rename $old back to extas" >&2
   fi
   docker start extas-postgres >/dev/null 2>&1 || true
   for c in "${stopped[@]}"; do docker start "$c" >/dev/null 2>&1 || true; done
-  result fail "production restore stopped half way (exit $rc); the live database was put back and the shop started again"
+  result fail "production restore $why (exit $rc); the live database was put back and the shop started again"
   cleanup
   return "$rc"
 }
 trap swap_undo EXIT
+# R2 ops review (M4): a cancelled or timed-out run (the runner's INT then TERM, systemd's TERM at a reboot) used to skip
+# the undo: the EXIT trap ran with $? = 0 on TERM and not at all on INT. Each signal now exits non-zero, so the EXIT trap
+# undoes the swap.
+trap 'why="was cancelled (INT)"; exit 130' INT
+trap 'why="was stopped (TERM)"; exit 143' TERM
+trap 'why="was stopped (HUP)"; exit 129' HUP
 if [ -n "$BASE" ]; then
   docker stop "$NAME" >/dev/null
   for c in "${stopped[@]}"; do docker stop "$c" >/dev/null; done
@@ -554,7 +573,30 @@ for _ in $(seq 1 $(( ${RESTORE_TEST_WAIT_MIN:-30} * 30 ))); do
   pgx extas-postgres psql -qtAX -U extas -d extas -c "SELECT 1" >/dev/null 2>&1 && break
   sleep 2
 done
+# R2 ops review (M3): the live app is the newest deployed version; a backup from before its migrations would answer
+# every query on a changed table with an error (P2022) until the next deploy. The restored database is migrated
+# forward first with the live version's own migrate image, exactly as infra/deploy/deploy.sh migrate_db runs it (only
+# DATABASE_DIRECT_URL, as DATABASE_URL too, through a root-only file; migrations only add, so forward is safe). A
+# failed migration puts the live database back (swap_undo). No migrate image (no app deployed yet): nothing to match.
+mig="$(jq -r '.migrate // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
+if [ -n "$mig" ] && ! docker image inspect "$mig" >/dev/null 2>&1; then
+  mig="$(docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate 2>/dev/null | head -n 1 || true)"
+fi
+migrated="not migrated (no app deployed yet)"
+if [ -n "$mig" ]; then
+  why="could not bring the restored database to the live version's schema"
+  envf="$(mktemp "$SEC/.restore-migrate.XXXXXX")"; chmod 600 "$envf"
+  grep -E '^DATABASE_DIRECT_URL=' "$SEC/app.env" > "$envf" 2>/dev/null || true
+  sed -n 's/^DATABASE_DIRECT_URL=/DATABASE_URL=/p' "$SEC/app.env" >> "$envf" 2>/dev/null || true
+  grep -q '^DATABASE_DIRECT_URL=' "$envf" || { rm -f "$envf"; echo "FAIL: DATABASE_DIRECT_URL is not in app.env" >&2; exit 1; }
+  echo "Bringing the restored database to the live version's schema ($mig)"
+  mrc=0; docker run --rm --name "extas-restore-migrate-$$" --network extas --env-file "$envf" "$mig" || mrc=$?
+  rm -f "$envf"
+  [ "$mrc" -eq 0 ] || exit 1
+  why="stopped half way"
+  migrated="migrated to the live version's schema"
+fi
 trap cleanup EXIT
 for c in "${stopped[@]}"; do docker start "$c" >/dev/null 2>&1 || true; done
-echo "Done. $kept; the shop's containers started again (${#stopped[@]})."
-result ok "production restored: $detail; $kept"
+echo "Done. $kept; $migrated; the shop's containers started again (${#stopped[@]})."
+result ok "production restored: $detail; $migrated; $kept"
