@@ -20,6 +20,11 @@ import { reportParcelToErp, type ErpParcelReport } from './erp-v6';
 
 /** The order's timeline type for the courier's "out for delivery" (`@extas/messages` OUT_FOR_DELIVERY_EVENT). */
 export const OUT_FOR_DELIVERY_EVENT = 'shipment.outForDelivery';
+/**
+ * PR 148 follow-up (SIM-F-053) — the order's timeline type for a failed delivery try (`@extas/messages`
+ * ATTEMPT_FAILED_EVENT: the "delivery try failed" notice, off as shipped). It never moves the order.
+ */
+export const ATTEMPT_FAILED_EVENT = 'shipment.attemptFailed';
 
 /** The courier acting through its reports. */
 export const courierBy = (provider: string | null): By => ({ actorType: 'COURIER', actorId: null, source: provider ? `courier:${provider}` : 'courier' });
@@ -35,6 +40,8 @@ export interface Synced {
   waits: string | null;
   /** The courier's "out for delivery" was written on the order's timeline now. */
   outForDelivery: boolean;
+  /** PR 148 follow-up: the courier's failed delivery try was written on the order's timeline now (only on such a read). */
+  attemptFailed?: boolean;
   /** PR 611: what went to the ERP (v6 only). */
   erp?: ErpParcelReport;
 }
@@ -96,6 +103,7 @@ export async function syncOrder(deps: Pick<ShippingDeps, 'db' | 'settings' | 'no
     }
   }
   if (s.status === 'OUT_FOR_DELIVERY') out.outForDelivery = await noteOutForDelivery(deps, s, by);
+  if (s.status === 'ATTEMPT_FAILED') out.attemptFailed = await noteTrip(deps, s, by, 'ATTEMPT_FAILED', ATTEMPT_FAILED_EVENT);
   // PR 611 (ERP contract v6): the pickup and every courier result go to the ERP. A failure here never stops the order
   // following its parcel: the tracking run's catch-up (`reportErpLagging`) sends it later.
   if (await isV6(deps, s.storeId)) {
@@ -113,10 +121,18 @@ export async function syncOrder(deps: Pick<ShippingDeps, 'db' | 'settings' | 'no
  * (a second trip after a failed try is a second one; the messages' own dedupe still sends the customer one message).
  */
 async function noteOutForDelivery(deps: Pick<ShippingDeps, 'db'>, s: { id: string; storeId: number; orderId: string }, by: By): Promise<boolean> {
-  const trips = (await deps.db.shipmentEvent.findMany({ where: { shipmentId: s.id, status: 'OUT_FOR_DELIVERY' }, select: { data: true, occurredAt: true } })).filter((e) => (e.data as { unmapped?: boolean } | null)?.unmapped !== true);
-  const noted = await deps.db.orderEvent.count({ where: { storeId: s.storeId, orderId: s.orderId, type: OUT_FOR_DELIVERY_EVENT, data: { path: ['shipmentId'], equals: s.id } } });
+  return noteTrip(deps, s, by, 'OUT_FOR_DELIVERY', OUT_FOR_DELIVERY_EVENT);
+}
+
+/**
+ * One timeline row of `type` for each courier event of `status` on the parcel (PR 148 follow-up: a failed delivery try
+ * the same way as a trip out): a read again of the same event writes nothing more.
+ */
+async function noteTrip(deps: Pick<ShippingDeps, 'db'>, s: { id: string; storeId: number; orderId: string }, by: By, status: 'OUT_FOR_DELIVERY' | 'ATTEMPT_FAILED', type: string): Promise<boolean> {
+  const trips = (await deps.db.shipmentEvent.findMany({ where: { shipmentId: s.id, status }, select: { data: true, occurredAt: true } })).filter((e) => (e.data as { unmapped?: boolean } | null)?.unmapped !== true);
+  const noted = await deps.db.orderEvent.count({ where: { storeId: s.storeId, orderId: s.orderId, type, data: { path: ['shipmentId'], equals: s.id } } });
   if (!trips.length || noted >= trips.length) return false;
-  await deps.db.orderEvent.create({ data: { storeId: s.storeId, orderId: s.orderId, type: OUT_FOR_DELIVERY_EVENT, actorType: by.actorType, actorId: by.actorId, source: by.source, data: { shipmentId: s.id, trip: noted + 1 } } });
+  await deps.db.orderEvent.create({ data: { storeId: s.storeId, orderId: s.orderId, type, actorType: by.actorType, actorId: by.actorId, source: by.source, data: { shipmentId: s.id, trip: noted + 1 } } });
   return true;
 }
 

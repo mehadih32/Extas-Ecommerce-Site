@@ -704,6 +704,8 @@
       "shipment_areaHeld": "Courier booking waits: the courier does not know this area yet",
       "shipment_bookingFailed": "Courier booking failed",
       "shipment_outForDelivery": "Courier out for delivery",
+      "shipment_attemptFailed": "Courier could not deliver this time",
+      "shipment_late": "Parcel past its delivery promise",
       "delivery_checkOpened": "Courier said delivered — our records disagree",
       "delivery_checkResolved": "Delivery check resolved",
       "order_deliveryCorrected": "Corrected: came back, not delivered",

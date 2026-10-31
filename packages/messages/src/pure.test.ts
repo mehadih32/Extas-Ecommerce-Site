@@ -23,6 +23,11 @@ import {
   CANCEL_REFUSED_EVENT,
   OUT_FOR_DELIVERY_EVENT,
   SELF_CONFIRM_ANSWERS,
+  ATTEMPT_FAILED_EVENT,
+  EXCHANGE_APPROVED_EVENT,
+  LATE_EVENT,
+  REFUND_DONE_EVENT,
+  STEP_EVENT_TYPES,
   type RenderInput,
 } from './pure';
 
@@ -211,5 +216,54 @@ describe('PR 542 · the advance request words', () => {
     expect(render(t, null, { ...base, advance: { amountMinor: 0, link: 'https://shop.example/pay/tok_123' } })).toEqual({ ok: false, reason: 'AMOUNT_RULE', field: 'advanceAmount' });
     expect(render(t, null, { ...base, advance: { amountMinor: 12_000, link: null } })).toEqual({ ok: false, reason: 'NO_LINK', field: 'payLink' });
     expect(render(t, null, base)).toEqual({ ok: false, reason: 'AMOUNT_RULE', field: 'advanceAmount' });
+  });
+});
+
+describe('PR 148 follow-up · the refund, exchange, failed-try and late notices (go-live gate SIM-F-052/F-053)', () => {
+  it('each starts from its own timeline row, which the planner reads', () => {
+    expect(stepsOf({ type: REFUND_DONE_EVENT, toStatus: null })).toEqual(['refunded']);
+    expect(stepsOf({ type: EXCHANGE_APPROVED_EVENT, toStatus: null })).toEqual(['exchangeApproved']);
+    expect(stepsOf({ type: ATTEMPT_FAILED_EVENT, toStatus: null })).toEqual(['attemptFailed']);
+    expect(stepsOf({ type: LATE_EVENT, toStatus: null })).toEqual(['lateApology']);
+    // the refund asked or approved is not yet the money back
+    expect(stepsOf({ type: 'refund.approved', toStatus: null })).toEqual([]);
+    for (const t of [REFUND_DONE_EVENT, EXCHANGE_APPROVED_EVENT, ATTEMPT_FAILED_EVENT, LATE_EVENT]) expect(STEP_EVENT_TYPES).toContain(t);
+  });
+
+  it('the money back and the exchange stay true after a cancel or return; a failed try or late parcel says nothing once it arrived', () => {
+    for (const s of ['CANCELLED', 'RETURNED', 'DELIVERED', 'CONFIRMED']) {
+      expect(stillFits('refunded', s)).toBe(true);
+      expect(stillFits('exchangeApproved', s)).toBe(true);
+    }
+    for (const step of ['attemptFailed', 'lateApology']) {
+      expect(stillFits(step, 'IN_TRANSIT')).toBe(true);
+      expect(stillFits(step, 'DELIVERED')).toBe(false);
+      expect(stillFits(step, 'RETURNED')).toBe(false);
+      expect(stillFits(step, 'CANCELLED')).toBe(false);
+    }
+  });
+
+  it('ship off, by SMS, outside the caps; a journey saved before them reads them as off', () => {
+    const later = ['refunded', 'exchangeApproved', 'attemptFailed', 'lateApology'] as const;
+    for (const k of later) {
+      expect(DEFAULT_JOURNEY[k]).toMatchObject({ on: false, channel: 'SMS', who: 'all' });
+      expect(isCapped(k, true)).toBe(false);
+    }
+    const before = Object.fromEntries(Object.entries(DEFAULT_JOURNEY).filter(([k]) => !(later as readonly string[]).includes(k)));
+    const r = journeySchema.safeParse(before);
+    expect(r.success).toBe(true);
+    expect(r.data?.refunded).toMatchObject({ on: false, template: 'order.refunded' });
+    expect(r.data?.lateApology).toMatchObject({ on: false, template: 'order.lateApology' });
+  });
+
+  it('the refund names its amount; the exchange its new parcel and what its rider collects — never an empty promise', () => {
+    expect(render('Refunded {refundAmount} for {orderNumber}.', null, { ...base, dueMinor: 0, refundMinor: 85_000 })).toMatchObject({ ok: true, text: 'Refunded ৳850 for S-1001.' });
+    expect(render('Refunded {refundAmount}.', null, base)).toEqual({ ok: false, reason: 'NO_EVENT', field: 'refundAmount' });
+    expect(render('Refunded {refundAmount}.', null, { ...base, refundMinor: 0 })).toEqual({ ok: false, reason: 'NO_EVENT', field: 'refundAmount' });
+    const ex = 'New parcel: order {exchangeOrderNumber}. {exchangeAmountLine} Thanks!';
+    expect(render(ex, null, { ...base, exchange: { number: 'S-1002', collectMinor: 10_000 } })).toMatchObject({ ok: true, text: 'New parcel: order S-1002. Pay ৳100 at the door. Thanks!' });
+    // nothing to collect: no line (and the original order's own due never leaks into it)
+    expect(render(ex, null, { ...base, exchange: { number: 'S-1002', collectMinor: 0 } })).toMatchObject({ ok: true, text: 'New parcel: order S-1002. Thanks!' });
+    expect(render(ex, null, base)).toEqual({ ok: false, reason: 'NO_EVENT', field: 'exchangeOrderNumber' });
   });
 });

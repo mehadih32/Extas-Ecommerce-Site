@@ -29,14 +29,20 @@
 // (`order:<id>:advanceRequest:<eventId>:<channel>`, so "Send again" goes again), with `{advanceAmount}` and `{payLink}`.
 // It is skipped once the order no longer waits for its advance.
 //
+// PR 148 follow-up (go-live gate SIM-F-052/F-053): four more notices, each off as shipped and outside the caps — the
+// refund paid out (`refund.completed`: `{refundAmount}`), the exchange approved (`exchange.approved`: the new parcel's
+// `{exchangeOrderNumber}` and `{exchangeAmountLine}`, what its rider collects), a failed delivery try
+// (`shipment.attemptFailed`) and the late apology (`shipment.late`), both written by the courier tracking. The amounts
+// are read from the timeline row that started the message; a row without them sends nothing (NO_EVENT).
+//
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
-import { dueOf } from '@extas/orders/pure';
+import { codToCollect, dueOf } from '@extas/orders/pure';
 import type { CancelCode, CancelNotice, ConsentSettings, Journey, JourneyStep, MessageChannel, SmsMasking, SmsRates, WhatsAppSettings } from '@extas/settings';
 import { consentBlock } from './consent';
 import { recordSendCost } from './costs';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
-import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, templateValues, tokensIn, CANCEL_REFUSED_EVENT, OUT_FOR_DELIVERY_EVENT, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -118,7 +124,7 @@ export async function planMessages(deps: MessagesDeps, storeId: number): Promise
     where: {
       storeId,
       createdAt: { gte: new Date(now.getTime() - engine.lookbackMinutes * 60_000), lte: now },
-      OR: [{ type: { in: ['order.placed', OUT_FOR_DELIVERY_EVENT, CANCEL_REFUSED_EVENT, ADVANCE_RESEND_EVENT] } }, { toStatus: { in: [...STEP_STATUSES] } }],
+      OR: [{ type: { in: [...STEP_EVENT_TYPES, ADVANCE_RESEND_EVENT] } }, { toStatus: { in: [...STEP_STATUSES] } }],
     },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     select: { id: true, orderId: true, type: true, toStatus: true, createdAt: true, data: true },
@@ -333,6 +339,18 @@ async function advanceOf(deps: MessagesDeps, c: RunContext, o: OrderFacts, lang:
   return { amountMinor: Math.max(0, o.advanceRequiredMinor - o.paidMinor), link: payLink(c.host, p?.linkToken ?? null, lang) };
 }
 
+/**
+ * PR 148 follow-up — what the timeline row that started a notice says: the refund paid out (`amountMinor`), and the
+ * exchange's new parcel (`newOrderId`: its number and what its rider collects — nothing for a prepaid parcel).
+ */
+async function eventFactsOf(deps: MessagesDeps, c: RunContext, row: Row): Promise<Pick<RenderInput, 'refundMinor' | 'exchange'>> {
+  const ev = row.eventId ? await deps.db.orderEvent.findFirst({ where: { id: row.eventId, storeId: c.storeId }, select: { data: true } }) : null;
+  const data = ev?.data && typeof ev.data === 'object' && !Array.isArray(ev.data) ? (ev.data as Record<string, unknown>) : {};
+  const refundMinor = typeof data.amountMinor === 'number' && Number.isInteger(data.amountMinor) && data.amountMinor > 0 ? data.amountMinor : null;
+  const n = typeof data.newOrderId === 'string' ? await deps.db.order.findFirst({ where: { id: data.newOrderId, storeId: c.storeId }, select: { number: true, paymentMethod: true, totalMinor: true, walletAppliedMinor: true, paidMinor: true } }) : null;
+  return { refundMinor, exchange: n ? { number: n.number, collectMinor: codToCollect(n) } : null };
+}
+
 /** How one row ended this run. */
 export type SendOutcome = 'SENT' | 'SKIPPED' | 'BLOCKED' | 'FAILED' | 'RETRYING' | 'WAITING';
 
@@ -421,7 +439,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const t = dup ?? (await templateOf(deps, c.storeId, cfg.template, row.channel as MessageChannel, locale));
   if (!t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }, true).then(() => 'SKIPPED');
   const lang = t.locale === 'en' ? 'en' : 'bn';
-  const wantsAdvance = [...tokensIn(t.body), ...tokensIn(t.subject ?? '')].some((x) => ADVANCE_TOKENS.has(x));
+  const used = [...tokensIn(t.body), ...tokensIn(t.subject ?? '')];
+  const wantsAdvance = used.some((x) => ADVANCE_TOKENS.has(x));
   const input: RenderInput = {
     storeName: c.storeName,
     customerName: (o.isGift ? o.giftSenderName : o.customerName)?.trim() || '',
@@ -435,6 +454,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
     cancelReason: code ? (c.cancelNotice.reasons[code]?.[lang] ?? '') : '',
     kept: dup && kept ? { number: kept.number, link: orderLink(c.host, kept.number) } : null,
     advance: wantsAdvance ? await advanceOf(deps, c, o, lang) : null,
+    // PR 148 follow-up: the refund or the exchange parcel of the timeline row that started it
+    ...(used.some((x) => EVENT_TOKENS.has(x)) ? await eventFactsOf(deps, c, row) : {}),
   };
   const words = render(t.body, row.channel === 'EMAIL' ? (t.subject ?? '') : null, input);
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');

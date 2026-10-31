@@ -8,10 +8,12 @@
 // PR 184: after each read the parcel's order follows it through the order service (sync.ts `syncOrder`: in transit,
 // delivered, returned …), and each run then catches up the orders still behind their parcel (`syncLagging`).
 // PR 525: each run also looks for late signs against a courier's "Delivered" (truth.ts `sweepDeliveryChecks`).
+// PR 148 follow-up (SIM-F-053): each run writes a parcel past its promise on its order's timeline once (`noteLateParcels`).
 import type { CourierApi } from '@extas/adapters';
 import { courierApi } from './accounts';
 import { allow, nowOf, setting, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
+import { noteLateParcels } from './parcels';
 import { applyEvents, type Applied } from './events';
 import { ACTIVE_STATES, isException } from './pure';
 import { syncLagging, syncOrder, type Synced } from './sync';
@@ -56,12 +58,14 @@ export interface TrackRun {
   checksOpened: number;
   /** PR 611: parcels whose pickup or result reached the ERP only by this run's catch-up (v6). */
   erpCaughtUp: number;
+  /** PR 148 follow-up: late parcels written on their order's timeline by this run. */
+  lateNoted: number;
 }
 
 /** One store's due parcels read from their couriers (the worker's job). */
 export async function trackParcels(deps: ShippingDeps, storeId: number): Promise<TrackRun> {
   const cfg = await setting(deps, storeId, 'delivery.courier.tracking');
-  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0, checksOpened: 0, erpCaughtUp: 0 };
+  const run: TrackRun = { off: !cfg.enabled, read: 0, changed: 0, exceptions: 0, failed: 0, firstError: null, ordersMoved: 0, caughtUp: 0, checksOpened: 0, erpCaughtUp: 0, lateNoted: 0 };
   if (!cfg.enabled) return run;
   const now = nowOf(deps);
   const due = new Date(now.getTime() - cfg.everyMinutes * 60_000);
@@ -97,6 +101,7 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
   run.checksOpened = (await sweepDeliveryChecks(deps, storeId, cfg.batch)).opened;
   // PR 611 (ERP contract v6): any pickup or courier result that has not reached the ERP yet.
   run.erpCaughtUp = (await reportErpLagging(deps, storeId, cfg.batch).catch(() => ({ sent: 0 }))).sent;
+  run.lateNoted = (await noteLateParcels(deps, storeId, cfg.batch)).noted;
   return run;
 }
 

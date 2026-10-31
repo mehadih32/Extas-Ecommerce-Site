@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MOCK_COURIER_PROVIDER, mockCourierWorld, type MockScenario } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder, getOrder } from '@extas/orders';
-import { bookOrders, listParcels, OUT_FOR_DELIVERY_EVENT, syncLagging, syncOrder, trackParcel, trackParcels } from './index';
+import { ATTEMPT_FAILED_EVENT, bookOrders, LATE_EVENT, listParcels, noteLateParcels, OUT_FOR_DELIVERY_EVENT, syncLagging, syncOrder, trackParcel, trackParcels } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 
 describe.skipIf(!HAS_TEST_DB)('PR 184 · the order follows its parcel (PostgreSQL)', () => {
@@ -77,6 +77,11 @@ describe.skipIf(!HAS_TEST_DB)('PR 184 · the order follows its parcel (PostgreSQ
     const p = await db().shipment.findUniqueOrThrow({ where: { id: o.shipmentId } });
     expect(p).toMatchObject({ status: 'ATTEMPT_FAILED', exceptionKey: 'receiverUnreachable' });
     expect(await status(o.orderId)).toBe('IN_TRANSIT');
+    // PR 148 follow-up (SIM-F-053): the failed try is on the order's timeline once (the "delivery try failed" notice)
+    expect(await syncOrder(f.shippingDeps(), { storeId: f.S, shipmentId: o.shipmentId })).toMatchObject({ attemptFailed: false });
+    const tries = await db().orderEvent.findMany({ where: { orderId: o.orderId, type: ATTEMPT_FAILED_EVENT } });
+    expect(tries).toHaveLength(1);
+    expect(tries[0]).toMatchObject({ actorType: 'COURIER', data: { shipmentId: o.shipmentId, trip: 1 } });
     await read(o.shipmentId); // OUT_FOR_DELIVERY again
     await read(o.shipmentId); // DELIVERED
     expect(await status(o.orderId)).toBe('DELIVERED');
@@ -118,6 +123,12 @@ describe.skipIf(!HAS_TEST_DB)('PR 184 · the order follows its parcel (PostgreSQ
     const now = await late();
     expect(now.rows.map((r) => r.id)).toContain(o.shipmentId);
     expect(now.counts.late).toBeGreaterThanOrEqual(1);
+    // PR 148 follow-up (SIM-F-053): the late parcel is written on its order's timeline once (the late apology starts there)
+    const lateRows = () => db().orderEvent.findMany({ where: { orderId: o.orderId, type: LATE_EVENT } });
+    expect((await noteLateParcels(f.shippingDeps(), f.S, 50)).noted).toBeGreaterThanOrEqual(1);
+    await noteLateParcels(f.shippingDeps(), f.S, 50);
+    expect(await lateRows()).toHaveLength(1);
+    expect((await lateRows())[0]).toMatchObject({ actorType: 'SYSTEM', source: 'courier.track', data: { shipmentId: o.shipmentId } });
     // the owner's grace hours push the promise out
     f.overrides.set('account.track.late', { enabled: true, graceHours: 72 });
     try {
@@ -133,7 +144,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 184 · the order follows its parcel (PostgreSQ
     const o = await booked('sy-worker');
     f.clock.now = new Date(f.clock.now.getTime() + 61 * 60_000);
     const run = await trackParcels(f.shippingDeps(), f.S);
-    expect(run).toMatchObject({ off: false, failed: 0 });
+    expect(run).toMatchObject({ off: false, failed: 0, lateNoted: expect.any(Number) });
     expect(run.ordersMoved).toBeGreaterThanOrEqual(1);
     expect(await status(o.orderId)).toBe('IN_TRANSIT');
   });

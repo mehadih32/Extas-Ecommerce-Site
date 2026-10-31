@@ -4,6 +4,9 @@
 // PR 546 (the cancellation notice, SIM-F-013) and follow-up 287 (the "cancel request refused" notice) 45. PR 505
 // follow-up (go-live gate SIM-F-025/F-047, lane A version 109): `messages.language` "customer" (as shipped) — each
 // order's messages in the language the customer ordered in (Order.lang), the store's language when the order has none.
+// PR 148 follow-up (go-live gate SIM-F-052/F-053, lane A version 109): four more event notices, each off as shipped —
+// `refunded` (the money went back, with the amount), `exchangeApproved` (with the new parcel's number and what the rider
+// collects), `attemptFailed` (the rider could not deliver) and `lateApology` (the parcel is past its promise).
 // Labels: messages/messages.<lang>.json.
 // The words of every message are templates (NotificationTemplate, the default pack); only the short lines the engine
 // adds to a template (`{amountLine}`, `{exactAmountLine}`) are texts here, in both languages.
@@ -45,6 +48,12 @@ export const JOURNEY_STEPS = [
   'onHold',
   'advanceRequested',
   'giftReceiver',
+  // PR 148 follow-up (registry v109, SIM-F-052/F-053): the refund paid, the exchange approved, a failed delivery try,
+  // the parcel past its promise
+  'refunded',
+  'exchangeApproved',
+  'attemptFailed',
+  'lateApology',
 ] as const;
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];
 
@@ -90,6 +99,10 @@ const step = (on: boolean, channel: MessageChannel, template: string, more: Part
 /** Steps added after the journey shipped: a journey saved before one existed reads it as its default (off). */
 const LATER_STEPS: Partial<Record<JourneyStep, JourneyStepConfig>> = {
   cancelRefused: step(false, 'SMS', 'order.cancelRefused'),
+  refunded: step(false, 'SMS', 'order.refunded'),
+  exchangeApproved: step(false, 'SMS', 'order.exchangeApproved'),
+  attemptFailed: step(false, 'SMS', 'order.attemptFailed'),
+  lateApology: step(false, 'SMS', 'order.lateApology'),
 };
 
 export const journeySchema = z
@@ -114,13 +127,17 @@ export const DEFAULT_JOURNEY: Journey = {
   onHold: step(false, 'SMS', 'order.onHold'),
   advanceRequested: step(false, 'SMS', 'order.advanceRequested'),
   giftReceiver: step(false, 'SMS', 'gift.receiver'),
+  refunded: LATER_STEPS.refunded!,
+  exchangeApproved: LATER_STEPS.exchangeApproved!,
+  attemptFailed: LATER_STEPS.attemptFailed!,
+  lateApology: LATER_STEPS.lateApology!,
 };
 
 /**
  * The caps per order (MSG-01, Doot D09): at most this many messages of the order journey on each channel, and in
  * total; `null` = no cap. A message over a cap is not sent and is logged as blocked. The follow-ups after delivery
- * (Day-1, Day-3) and the event notices (cancelled, cancel request refused, on hold, advance, gift receiver) are outside
- * the caps.
+ * (Day-1, Day-3) and the event notices (cancelled, cancel request refused, on hold, advance, gift receiver; follow-up:
+ * refunded, exchange approved, failed delivery try, late apology) are outside the caps.
  */
 export const capsSchema = z
   .object({
@@ -234,8 +251,9 @@ export const messageSettings = {
   }),
   'messages.journey': setting({
     ...base,
-    // follow-up 287: the "cancel request refused" step (a journey saved before reads it as off)
-    version: 45,
+    // follow-up 287: the "cancel request refused" step (a journey saved before reads it as off); PR 148 follow-up
+    // (v109): the refunded, exchange approved, failed try and late apology notices, off the same way
+    version: 109,
     schema: journeySchema,
     default: DEFAULT_JOURNEY,
     valueType: 'JSON',
