@@ -1,0 +1,51 @@
+{
+  "moneyOverview": {
+    "metaTitle": "Money overview",
+    "title": "Money overview",
+    "sub": "Where the shop's money stands now: what came in, what the couriers still owe, what is owed to customers. From the shop's own records; nothing is changed here.",
+    "received": {
+      "title": "Cash received",
+      "sub": "Payments that came in (also those refunded since — the money did arrive)",
+      "day": "Last 24 hours",
+      "week": "Last 7 days",
+      "month": "Last 30 days",
+      "count": "{n} payment(s)",
+      "byMethod": "Last 30 days by method",
+      "none": "No payment came in during the last 30 days."
+    },
+    "cod": {
+      "title": "COD due from couriers",
+      "sub": "Cash riders collected that no courier payout has settled yet",
+      "total": "Owed now",
+      "parcels": "{n} parcel(s)",
+      "oldest": "oldest {n} day(s) ago",
+      "oldestToday": "oldest from today",
+      "noCourier": "No courier named",
+      "none": "No courier owes the shop anything now."
+    },
+    "refunds": {
+      "title": "Refunds waiting",
+      "sub": "Money owed to customers: asked for or approved, not yet paid out",
+      "waiting": "Owed to customers",
+      "count": "{n} refund(s)",
+      "oldest": "oldest {n} day(s) ago",
+      "oldestToday": "oldest from today",
+      "failed": "Payouts that failed",
+      "none": "No refund is waiting.",
+      "where": "Approving and paying a refund is done on the order, by the owner."
+    },
+    "method": {
+      "COD": "Cash on delivery",
+      "BKASH": "bKash",
+      "NAGAD": "Nagad",
+      "CARD": "Card",
+      "CASH": "Cash",
+      "WALLET": "Wallet",
+      "BANK_TRANSFER": "Bank transfer",
+      "ROCKET": "Rocket",
+      "UPAY": "Upay",
+      "ONLINE": "Online"
+    },
+    "asOf": "As of {at}"
+  }
+}
