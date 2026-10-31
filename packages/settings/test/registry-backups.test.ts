@@ -3,13 +3,13 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings } from '../src/registry-backups';
+import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings } from '../src/registry-backups';
 
-describe('backups settings (v75–76)', () => {
+describe('backups settings (v75–77)', () => {
   it('every key is in the registry, labelled in English and Bengali, its default valid, not owner data', () => {
     for (const [key, s] of Object.entries(backupsSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect([75, 76], key).toContain(s.version);
+      expect([75, 76, 77], key).toContain(s.version);
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       expect(s.isOwnerData, key).toBe(false);
       for (const lang of ['en', 'bn'] as const) {
@@ -33,5 +33,12 @@ describe('backups settings (v75–76)', () => {
     expect(backupsPlanSchema.safeParse({ ...backupsSettings['backups.plan'].default, dailyTime: '24:00' }).success).toBe(false);
     expect(backupsPlanSchema.safeParse({ ...backupsSettings['backups.plan'].default, keepLocalDays: 0 }).success).toBe(false);
     expect(backupsDrillSchema.safeParse({ ...backupsSettings['backups.drill'].default, dayOfMonth: 31 }).success).toBe(false);
+  });
+
+  it('PR 391: the Blob container is the server\'s own default and an Azure name; the gate has its hours and days', () => {
+    expect(backupsSettings['backups.blob'].default).toEqual({ container: 'extas-backups' });
+    expect(backupsBlobSchema.safeParse({ container: 'Extas_Backups' }).success).toBe(false);
+    expect(backupsBlobSchema.safeParse({ container: 'a--b' }).success).toBe(false);
+    expect(backupsSettings['backups.gate'].default).toEqual({ freshHours: 36, drillDays: 35 });
   });
 });

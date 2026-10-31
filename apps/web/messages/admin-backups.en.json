@@ -83,7 +83,8 @@
   "blob": {
     "title": "Azure Blob",
     "desc": "The second copy away from the server. Its keys are in Keys & connections (Azure Blob).",
-    "open": "Open Keys & connections"
+    "open": "Open Keys & connections",
+    "container": "Backups go to the container \"{name}\" (change it under More options below)."
   },
   "server": {
     "title": "Last nightly runs",
@@ -203,6 +204,41 @@
     "saving": "Saving…",
     "saved": "Saved. The server uses it within a few minutes.",
     "unchanged": "Nothing changed.",
-    "readOnly": "You can see the settings. Changing them needs the \"Backups\" permission."
+    "readOnly": "You can see the settings. Changing them needs the \"Backups\" permission.",
+    "container": "Azure Blob container for the backups",
+    "containerHint": "small letters, digits and dashes, 3–63; make it in Azure first",
+    "freshHours": "\"Ready\": newest copy no older than (hours)",
+    "freshHint": "for the go-live checks above",
+    "drillDays": "\"Ready\": restore drill passed within (days)"
+  },
+  "gate": {
+    "title": "Backups ready for real orders",
+    "sub": "Each copy away from the server connected, its newest copy no older than {hours} hours, and brought back by the restore drill within {days} days.",
+    "ready": "Ready",
+    "notReady": "{n} still to do",
+    "ok": "Done",
+    "todo": "To do",
+    "done": "Connected",
+    "lastAt": "last: {at}",
+    "check": {
+      "local": "The server's own copy of last night",
+      "blobLive": "Azure Blob connected",
+      "blobFresh": "A fresh copy in Azure Blob",
+      "driveLive": "Google Drive connected",
+      "driveFresh": "A fresh copy in Google Drive",
+      "drillBlob": "The Blob copy brought back (restore drill)",
+      "drillDrive": "The Drive copy brought back (restore drill)",
+      "telegram": "Telegram connected (a failed night reaches your phone)"
+    },
+    "fix": {
+      "local": "Press \"Back up now\" below; if it fails, the Server page says why.",
+      "blobLive": "Keys & connections → Azure Blob: type the account and its key, press Test.",
+      "blobFresh": "After Blob is connected, press \"Back up now\" (or wait for tonight).",
+      "driveLive": "Connect Google Drive in the card below (one-time sign-in).",
+      "driveFresh": "After Drive is connected, press \"Back up now\" (or wait for tonight).",
+      "drillBlob": "Press \"Run the restore drill now\" once Blob has a copy.",
+      "drillDrive": "Press \"Run the restore drill now\" once Drive has a copy.",
+      "telegram": "Keys & connections → Telegram: the bot's token and the chat, press Test."
+    }
   }
 }

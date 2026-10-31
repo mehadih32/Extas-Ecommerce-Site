@@ -6,6 +6,8 @@
 // `system.read`; connecting, disconnecting and the client need `vault.write`, and the risky ones the owner's PIN.
 // PR 507: "Back up now" and "Run the restore drill now" with the last requests, the last drill (each copy), and the
 // backup settings card (time, days kept, Drive copies, the monthly drill, Telegram); both need `system.backup`.
+// PR 391: the go-live checks card ("ready for real orders": each place connected, its last copy fresh, its restore
+// drill passed, Telegram on), and Azure Blob's card says whether Blob is connected and the backups' container.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -30,6 +32,7 @@ import { ADMIN_LOGIN } from "@/lib/admin-nav";
 import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
 import { locateKey } from "@/lib/admin-shell/sections";
 import { t, type Dict } from "@/lib/i18n";
+import { backupGateNow } from "@/lib/backups-api";
 import { runtimeState, type Backup } from "@/lib/status";
 import bn from "../../../../../../messages/admin-backups.bn.json";
 import en from "../../../../../../messages/admin-backups.en.json";
@@ -82,7 +85,7 @@ export default async function BackupsPage() {
     t(d, `backups.${k}`, vars);
   const vault = access.deps.vault;
   const r = access.deps.resolver;
-  const [state, drive, settings, plan, drill, alerts, requests] =
+  const [state, drive, settings, plan, drill, alerts, blob, gateSet, requests] =
     await Promise.all([
       runtimeState(),
       vault
@@ -92,17 +95,30 @@ export default async function BackupsPage() {
       r.value("backups.plan"),
       r.value("backups.drill"),
       r.value("backups.alerts"),
+      r.value("backups.blob"),
+      r.value("backups.gate"),
       backupRequests(access.deps.db, 10),
     ]);
+  const gate = await backupGateNow(access.deps, state);
+  const blobLive = gate.checks.find((x) => x.key === "blobLive")?.ok ?? false;
   const canWrite =
     Boolean(vault) && (access.guard.permissions?.has("vault.write") ?? false);
   const canBackup = access.guard.permissions?.has("system.backup") ?? false;
-  const values: BackupSettings = { drive: settings, plan, drill, alerts };
+  const values: BackupSettings = {
+    drive: settings,
+    plan,
+    drill,
+    alerts,
+    blob,
+    gate: gateSet,
+  };
   const defaults: BackupSettings = {
     drive: registry["backups.drive"].default,
     plan: registry["backups.plan"].default,
     drill: registry["backups.drill"].default,
     alerts: registry["backups.alerts"].default,
+    blob: registry["backups.blob"].default,
+    gate: registry["backups.gate"].default,
   };
   const lastDrill = state.drill;
   const when = (iso?: string) =>
@@ -184,6 +200,54 @@ export default async function BackupsPage() {
         </div>
       </div>
 
+      <section
+        className="a2-card a2-mt12"
+        aria-labelledby="bk-gate"
+        data-testid="bk-gate"
+        data-ready={gate.ready ? "yes" : "no"}
+      >
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3" id="bk-gate">
+              {c("gate.title")}
+            </h2>
+            <div className="a2-cs">
+              {c("gate.sub", {
+                hours: gateSet.freshHours,
+                days: gateSet.drillDays,
+              })}
+            </div>
+          </div>
+          <span className={`a2-pill ${gate.ready ? "ok" : "warn"}`}>
+            {c(gate.ready ? "gate.ready" : "gate.notReady", {
+              n: gate.checks.filter((x) => !x.ok).length,
+            })}
+          </span>
+        </div>
+        {gate.checks.map((check) => (
+          <div
+            key={check.key}
+            className="a2-rule"
+            data-testid={`bk-gate-${check.key}`}
+            data-ok={check.ok ? "yes" : "no"}
+          >
+            <span>
+              <b className="a2-blk">{c(`gate.check.${check.key}`)}</b>
+              <span className="a2-xs a2-mute">
+                {check.ok
+                  ? check.at
+                    ? c("gate.lastAt", { at: when(check.at) })
+                    : c("gate.done")
+                  : c(`gate.fix.${check.key}`)}
+              </span>
+            </span>
+            <span className={`a2-pill ${check.ok ? "ok" : "line"}`}>
+              {c(check.ok ? "gate.ok" : "gate.todo")}
+            </span>
+          </div>
+        ))}
+      </section>
+
       <div className="a2-row a2-r21 a2-mt12">
         <div>
           {drive ? (
@@ -221,7 +285,16 @@ export default async function BackupsPage() {
               </h2>
               <div className="a2-cs">{c("blob.desc")}</div>
             </div>
+            <span
+              className={`a2-pill ${blobLive ? "ok" : "line"}`}
+              data-testid="bk-blob-state"
+            >
+              {c(blobLive ? "kpi.connected" : "kpi.notConnected")}
+            </span>
           </div>
+          <p className="a2-sm a2-mt12">
+            {c("blob.container", { name: blob.container })}
+          </p>
           <Link className="a2-btn a2-mt12" href="/admin/integrations">
             <ShellIcon name="ext" size={14} />
             {c("blob.open")}

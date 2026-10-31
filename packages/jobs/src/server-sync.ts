@@ -13,7 +13,9 @@
 //   backup-settings.env  PR 507: the backup settings of Settings → System → Backups for extas-backup, extas-restore
 //                  and extas-monitor (the time, the days kept, the free share, the monthly drill, Telegram); built
 //                  from the settings alone, so it is there before any key is.
-// Later parts (PR 391) add the Blob copy the same way.
+//                  PR 391: also the owner's Azure storage account for rclone (the Azure Blob connection's account,
+//                  its key and endpoint) and the backups' own container (`backups.blob.container`); Blob and Drive
+//                  are each written on their own, so one connected without the other still backs up.
 //
 // - Nothing is read from the vault when nothing it depends on changed: every run first works out a fingerprint of the
 //   connection rows, the vault's list (names, dates, never a value) and each part's own inputs; the server passes back
@@ -105,13 +107,32 @@ async function settingOr<T>(ctx: Pick<SyncDeps, 'settings'>, key: string, fallba
 }
 
 const DRIVE_DEFAULT = registry['backups.drive'].default;
+const BLOB_DEFAULT = registry['backups.blob'].default;
+const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
-/** PR 395 (CN-030): the one-click Google Drive for the server's rclone copy. */
+/** PR 391: the owner's Azure storage account for the Blob copy (the Azure Blob connection, LIVE), or nothing. */
+async function blobValues(ctx: PartContext): Promise<Record<string, string>> {
+  const blob = liveConnection(ctx, 'STORAGE', 'azureBlob');
+  const account = str(blob?.config.accountName);
+  if (!blob || !account) return {};
+  const key = await ctx.secret('azureBlob.accountKey');
+  if (!key) return {};
+  const endpoint = str(blob.config.endpoint);
+  return {
+    RCLONE_CONFIG_BLOB_TYPE: 'azureblob',
+    RCLONE_CONFIG_BLOB_ACCOUNT: account,
+    RCLONE_CONFIG_BLOB_KEY: key,
+    ...(endpoint ? { RCLONE_CONFIG_BLOB_ENDPOINT: endpoint } : {}),
+    BACKUP_BLOB_CONTAINER: (await settingOr(ctx, 'backups.blob', BLOB_DEFAULT)).container,
+  };
+}
+
+/** PR 395 (CN-030): the one-click Google Drive for the server's rclone copy; PR 391: the Azure Blob copy beside it. */
 export const backupPart: ServerFilePart = {
   file: 'backup.env',
-  watch: (ctx) => settingOr(ctx, 'backups.drive', DRIVE_DEFAULT),
+  watch: async (ctx) => [await settingOr(ctx, 'backups.drive', DRIVE_DEFAULT), await settingOr(ctx, 'backups.blob', BLOB_DEFAULT)],
   async build(ctx) {
-    const values: Record<string, string> = {};
+    const values: Record<string, string> = await blobValues(ctx);
     const drive = liveConnection(ctx, 'GOOGLE_DRIVE', 'googleDrive');
     const clientId = typeof drive?.config.clientId === 'string' ? drive.config.clientId : '';
     const folderId = typeof drive?.config.folderId === 'string' ? drive.config.folderId : '';
