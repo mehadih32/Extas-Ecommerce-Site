@@ -1,0 +1,50 @@
+{
+  "moneyMonthEnd": {
+    "metaTitle": "Month-end",
+    "title": "Month-end",
+    "sub": "One page that makes the month tally: what was spent per service, what the ERP has, what is not posted yet, the differences and the month's close. Only shows; sending and closing are on Books.",
+    "prev": "← Earlier month",
+    "next": "Later month →",
+    "notLinked": "The books with the ERP have not started for this store yet, so only the shop's own costs are shown.",
+    "services": {
+      "title": "Total per service",
+      "sub": "Every cost row of the month",
+      "toErp": "goes to the ERP",
+      "shopOnly": "shop's own ledger",
+      "none": "No cost this month.",
+      "split": "To the ERP on the daily summaries: {erp} · in the shop's own ledger only: {shop}"
+    },
+    "erp": {
+      "title": "What the ERP has",
+      "sub": "Each day's latest summary and the month's fixed costs, as the ERP answered",
+      "days": "Daily summaries accepted",
+      "daysOf": "{n} of {of}",
+      "daysParts": "waiting {waiting} · refused {refused} · not made {none}",
+      "fixed": "Fixed costs of the month",
+      "notPosted": "Not posted yet: {days}",
+      "allPosted": "Every day so far is posted.",
+      "link": "Open the daily summaries"
+    },
+    "send": {
+      "ACCEPTED": "accepted",
+      "WAITING": "waiting",
+      "REFUSED": "refused",
+      "NONE": "not entered"
+    },
+    "close": {
+      "title": "Differences and close",
+      "differences": "Differences found",
+      "open": "{n} open",
+      "diffParts": "fixed {fixed} · left by the owner {overridden}",
+      "month": "The month",
+      "override": "closed with differences (owner's PIN)",
+      "state": {
+        "OPEN": "open",
+        "CLOSED": "closed",
+        "REOPENED": "re-opened"
+      },
+      "diffLink": "Open the differences",
+      "closeLink": "Close the month"
+    }
+  }
+}
