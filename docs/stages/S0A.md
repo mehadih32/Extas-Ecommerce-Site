@@ -114,6 +114,7 @@
 
 - **Status:** Live · 2026-10-20
   - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`. 23 Oct: the nightly run checks out the live commit's checks (`last-good-deploy.json`), so a check merged before its deploy can't fail the live version
+  - GitHub pull request #62, 31 Oct
   - GitHub pull request #50, 30 Oct
   - GitHub pull request #23, 23 Oct
   - GitHub pull request #20, 20 Oct
