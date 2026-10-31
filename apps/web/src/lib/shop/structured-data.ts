@@ -42,6 +42,8 @@ export interface LdProduct {
   variants: readonly LdOfferVariant[];
   /** PR 222: send the struck price the page shows (`seo.structuredData.wasPrice`). */
   wasPrice?: boolean;
+  /** PR 527: archived for good (not only sold out): the offer says Discontinued while nothing can be bought. */
+  retired?: boolean;
 }
 
 type Ld = Record<string, unknown>;
@@ -97,7 +99,7 @@ export function productLd(origin: URL | string, p: LdProduct): Ld | null {
   if (!priced.length) return null;
   const url = absolute(origin, p.href);
   const inStock = p.onSale && priced.some((v) => v.stock > 0);
-  const availability = `${CONTEXT}/${inStock ? 'InStock' : 'OutOfStock'}`;
+  const availability = `${CONTEXT}/${inStock ? 'InStock' : p.retired ? 'Discontinued' : 'OutOfStock'}`;
   const prices = priced.map((v) => v.priceMinor);
   const low = Math.min(...prices);
   const high = Math.max(...prices);

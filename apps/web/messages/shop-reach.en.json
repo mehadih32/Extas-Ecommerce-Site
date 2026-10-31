@@ -1,0 +1,14 @@
+{
+  "reach": {
+    "alt": {
+      "title": "Available now",
+      "titleOf": "Available now · {category}"
+    },
+    "rest": {
+      "title": "{name} is resting",
+      "text": "This collection is not on the shop right now. Its styles may come back; until then, these are on the shop.",
+      "parent": "See {name}",
+      "collections": "Collections on the shop"
+    }
+  }
+}

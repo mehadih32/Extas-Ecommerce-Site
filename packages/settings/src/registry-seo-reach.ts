@@ -1,4 +1,4 @@
-// S11 · CN-031 Launch lane A (reach and growth). Registry version 71. Labels: messages/seo.<lang>.json (group `seo`).
+// S11 · CN-031 Launch lane A (reach and growth). Registry versions 71 (PR 235) and 72 (the lane's later rows). Labels: messages/seo.<lang>.json (group `seo`).
 // The admin's place is Website → SEO (`/admin/website/seo` and its sub-pages, docs/ADMIN-ARCHITECTURE.md §4.9).
 //
 // PR 235 (`seo.redirects`, `seo.notFound`; Blueprint C12.2): the redirect manager and the 404 report.
@@ -10,10 +10,18 @@
 // - `seo.notFound`: a shop address that has no page is counted (path, how often, the last time, where the visitor came
 //   from without its query), at most `maxRows` different addresses, so a scan cannot fill the database; the report
 //   suggests the closest live page when the words of the address match it at least `suggestMatchAtLeast`.
+//
+// PR 527 (`seo.urlPolicy`; Blueprint C12.1, App. answers #8 "never 404 a page that has earned rankings"): a product,
+// category or page that was on the shop keeps answering. A sold-out product page stays as it is (honest "sold out", the
+// "tell me when it is back" form, and a row of what can be bought now from its category); a product taken off or
+// archived the same; a category archived after it had products on the shop answers with a short "resting"
+// page that sends people on, instead of "page not found". Whether such pages stay listed in search engines is a
+// switch each (both listed as shipped: the page keeps its rank; a restock makes it a normal page again by itself).
 import { z } from 'zod';
 import { setting } from './define';
 
 const V = 71;
+const V2 = 72;
 
 const base = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, group: 'seo', version: V } as const;
 
@@ -43,6 +51,23 @@ export const seoNotFoundSchema = z
 export type SeoNotFound = z.output<typeof seoNotFoundSchema>;
 export const SEO_NOT_FOUND_DEFAULT: SeoNotFound = { record: true, maxRows: 5000, suggestMatchAtLeast: 50 };
 
+export const seoUrlPolicySchema = z
+  .object({
+    /** A sold-out, taken-off or archived product page shows a row of what can be bought now from its category. */
+    alternatives: z.boolean(),
+    /** How many products that row shows. */
+    alternativesMax: z.int().min(2).max(12),
+    /** A sold-out product page stays listed in search engines (it keeps its rank until the restock). */
+    soldOutIndexed: z.boolean(),
+    /** A product taken off the shop or archived (and a resting category) stays listed in search engines. */
+    retiredIndexed: z.boolean(),
+    /** A category archived after it had products on the shop answers with a resting page, never a 404. */
+    retiredCategoryPage: z.boolean(),
+  })
+  .strict();
+export type SeoUrlPolicy = z.output<typeof seoUrlPolicySchema>;
+export const SEO_URL_POLICY_DEFAULT: SeoUrlPolicy = { alternatives: true, alternativesMax: 4, soldOutIndexed: true, retiredIndexed: true, retiredCategoryPage: true };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -60,5 +85,15 @@ export const seoReachSettings = {
     labelKey: 'seo.notFound.label',
     helpKey: 'seo.notFound.help',
     sortOrder: 41,
+  }),
+  // ---- PR 527 · the permanent URL policy ----
+  'seo.urlPolicy': setting({
+    ...base,
+    version: V2,
+    schema: seoUrlPolicySchema,
+    default: SEO_URL_POLICY_DEFAULT,
+    labelKey: 'seo.urlPolicy.label',
+    helpKey: 'seo.urlPolicy.help',
+    sortOrder: 42,
   }),
 };
