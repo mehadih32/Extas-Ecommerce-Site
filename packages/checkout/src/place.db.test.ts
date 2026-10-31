@@ -37,7 +37,7 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
     city = await f.priceBand('dhaka-city', 8_000);
     outside = await f.priceBand('outside-dhaka', 13_000);
     set({ 'payment.cod.enabled': true });
-    await f.t.prisma.stockLevel.updateMany({ where: { variantId: shirt().id }, data: { onHand: 100, available: 100 } });
+    await f.t.prisma.stockLevel.updateMany({ where: { variantId: shirt().id }, data: { onHand: 200, available: 200 } }); // review R2: the hold tests keep more orders' pieces held
   });
   afterAll(async () => {
     await f?.t.drop();
@@ -159,6 +159,78 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
         expect((await sweepReservations(inv)).ordersTimedOut).toBeGreaterThanOrEqual(1);
         expect((await holds())[0]!.releasedAt).not.toBeNull();
       } finally {
+        f.clock.now = at;
+      }
+    });
+  });
+
+  describe('review R2 M1/m1 · an unpaid order does not keep its pieces for ever; a kept hold never lapses', () => {
+    const invOf = () => ({ db: f.t.prisma, settings: f.deps().settings, now: () => f.clock.now, connections: { use: () => Promise.reject(new Error('no ERP here')) } }) as unknown as InventoryDeps;
+    const holdsOf = (orderId: string) => f.t.prisma.stockReservation.findMany({ where: { orderId }, select: { status: true, releasedAt: true, expiresAt: true } });
+
+    it('an open order is renewed half its time before the hold runs out, so it counts the whole time', async () => {
+      const r = await (await shown('hold-ahead')).place();
+      const at = f.clock.now;
+      const [first] = await holdsOf(r.orderId);
+      try {
+        f.clock.now = new Date(at.getTime() + 13 * 3_600_000);
+        expect((await sweepReservations(invOf())).ordersRenewed).toBeGreaterThanOrEqual(1);
+        const [h] = await holdsOf(r.orderId);
+        expect(h).toMatchObject({ status: 'CONVERTED', releasedAt: null });
+        expect(h!.expiresAt.getTime()).toBeGreaterThan(first!.expiresAt.getTime());
+        expect(h!.expiresAt.getTime()).toBe(f.clock.now.getTime() + 24 * 3_600_000);
+      } finally {
+        f.clock.now = at;
+      }
+    });
+
+    it('a placed order whose online payment never came in lets its pieces go after unpaidHoldHours; a COD one is kept', async () => {
+      const unpaid = await (await shown('hold-unpaid')).place();
+      const cod = await (await shown('hold-cod')).place();
+      await f.t.prisma.order.update({ where: { id: unpaid.orderId }, data: { flags: ['PAYMENT_PENDING'] } });
+      const at = f.clock.now;
+      try {
+        // half-way: the unpaid order is not renewed past its limit (placed + 24 h), the COD one is
+        f.clock.now = new Date(at.getTime() + 13 * 3_600_000);
+        await sweepReservations(invOf());
+        expect((await holdsOf(unpaid.orderId))[0]!.expiresAt.getTime()).toBeLessThanOrEqual(at.getTime() + 24 * 3_600_000 + 1_000);
+        f.clock.now = new Date(at.getTime() + 25 * 3_600_000);
+        expect((await sweepReservations(invOf())).ordersTimedOut).toBeGreaterThanOrEqual(1);
+        expect((await holdsOf(unpaid.orderId))[0]!.releasedAt).not.toBeNull();
+        expect((await holdsOf(cod.orderId))[0]).toMatchObject({ status: 'CONVERTED', releasedAt: null });
+        // the order itself is untouched: still placed, still waiting for its money
+        expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: unpaid.orderId }, select: { status: true, flags: true } })).toEqual({ status: 'PLACED', flags: ['PAYMENT_PENDING'] });
+      } finally {
+        f.clock.now = at;
+      }
+    });
+
+    it('an advance wait counts from when it was asked; 0 keeps an unpaid order’s pieces while it is open', async () => {
+      const adv = await (await shown('hold-advance')).place();
+      const at = f.clock.now;
+      await f.t.prisma.order.update({ where: { id: adv.orderId }, data: { status: 'AWAITING_ADVANCE' } });
+      await f.t.prisma.orderEvent.create({ data: { storeId: f.S, orderId: adv.orderId, type: 'order.awaitAdvance', actorType: 'STAFF', source: 'admin', createdAt: new Date(at.getTime() + 20 * 3_600_000) } });
+      try {
+        // asked at +20 h: kept until +44 h, not beyond
+        f.clock.now = new Date(at.getTime() + 25 * 3_600_000);
+        await sweepReservations(invOf());
+        expect((await holdsOf(adv.orderId))[0]).toMatchObject({ releasedAt: null, expiresAt: new Date(at.getTime() + 44 * 3_600_000) });
+        f.clock.now = new Date(at.getTime() + 45 * 3_600_000);
+        await sweepReservations(invOf());
+        expect((await holdsOf(adv.orderId))[0]!.releasedAt).not.toBeNull();
+      } finally {
+        f.clock.now = at;
+      }
+      const keep = await (await shown('hold-unpaid-0')).place();
+      await f.t.prisma.order.update({ where: { id: keep.orderId }, data: { flags: ['PAYMENT_FAILED'] } });
+      try {
+        f.overrides.set('inventory.reservation.unpaidHoldHours', 0);
+        f.clock.now = new Date(at.getTime() + 25 * 3_600_000);
+        await sweepReservations(invOf());
+        expect((await holdsOf(keep.orderId))[0]).toMatchObject({ releasedAt: null });
+        expect((await holdsOf(keep.orderId))[0]!.expiresAt.getTime()).toBe(f.clock.now.getTime() + 24 * 3_600_000);
+      } finally {
+        f.overrides.delete('inventory.reservation.unpaidHoldHours');
         f.clock.now = at;
       }
     });

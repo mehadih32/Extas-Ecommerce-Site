@@ -388,6 +388,21 @@ export const inventorySettings = {
     sortOrder: 130,
     version: V11,
   }),
+  // Review R2 (M1, registry version 121): an order still waiting for its online payment or its advance keeps its pieces
+  // at most this many hours from when it started waiting; then the hold ends (the order itself is never cancelled).
+  // The default is the order hold's own default; 0 keeps them for as long as the order is open.
+  'inventory.reservation.unpaidHoldHours': setting({
+    schema: z.int().min(0).max(24 * 14),
+    default: 24,
+    scope: 'installation',
+    valueType: 'INT',
+    group: 'inventory',
+    labelKey: 'inventory.reservation.unpaidHoldHours.label',
+    helpKey: 'inventory.reservation.unpaidHoldHours.help',
+    isOwnerData: false,
+    sortOrder: 135,
+    version: 121,
+  }),
   'inventory.reservation.maxUnitsPerLine': setting({
     schema: z.int().min(1).max(10_000),
     default: 20,
