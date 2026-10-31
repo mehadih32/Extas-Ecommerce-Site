@@ -80,7 +80,14 @@ export type BackupsBlob = z.output<typeof backupsBlobSchema>;
 export const backupsGateSchema = z.object({ freshHours: z.int().min(6).max(168), drillDays: z.int().min(1).max(92) }).strict();
 export type BackupsGate = z.output<typeof backupsGateSchema>;
 
-export const goLiveChecksSchema = z.object({ smokeHours: z.int().min(1).max(168), healthMinutes: z.int().min(2).max(1440) }).strict();
+export const goLiveChecksSchema = z
+  .object({
+    smokeHours: z.int().min(1).max(168),
+    healthMinutes: z.int().min(2).max(1440),
+    /** PR 397: the origin certificate must still have this many days (Cloudflare offers 15 years). */
+    certDays: z.int().min(1).max(3650).default(30),
+  })
+  .strict();
 export type GoLiveChecks = z.output<typeof goLiveChecksSchema>;
 
 /** One confirmed item: when, and by which staff user (null: an account since removed). */
@@ -154,7 +161,7 @@ export const backupsSettings = {
     ...base,
     version: V391,
     schema: goLiveChecksSchema,
-    default: { smokeHours: 36, healthMinutes: 30 },
+    default: { smokeHours: 36, healthMinutes: 30, certDays: 30 },
     valueType: 'JSON',
     labelKey: 'golive.checks.label',
     helpKey: 'golive.checks.help',

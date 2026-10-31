@@ -5,7 +5,8 @@
 #     network, with only the database address and VAULT_MASTER_KEY in a root-only temporary env file, like
 #     erp-acceptance.sh; the last fingerprint goes with it, so an unchanged vault decrypts nothing;
 #   - installs each file it returns into config/secrets/ (0600, root) when its content changed: telegram.env (the
-#     owner's bot for extas-monitor); later parts add the backup copies' keys (PR 395, 507);
+#     owner's bot for extas-monitor); later parts add the backup copies' keys (PR 395, 507) and the Cloudflare Origin
+#     certificate (PR 397, origin-cert.pem + origin-key.pem, handed to extas-origin-cert);
 #   - writes state/vault-sync.json: the result, the time, the fingerprint and the names of the files that changed —
 #     never a value;
 #   - PR 507: hands back the admin's requests the server finished (state/requests/<id>.json → done.json; then moved
@@ -121,6 +122,11 @@ if [[ " ${changed[*]} " == *" telegram.env "* ]] && [ -s "$SEC/telegram.env" ]; 
   ( . "$SEC/telegram.env"
     curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
       --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${VAULT_SYNC_TELEGRAM_HELLO}" >/dev/null 2>&1 ) || true
+fi
+# PR 397: a new (or removed) Cloudflare Origin certificate goes to Caddy at once (checked again there; a refused pair
+# leaves the automatic certificate serving).
+if [[ " ${changed[*]} " == *" origin-cert.pem "* || " ${changed[*]} " == *" origin-key.pem "* ]]; then
+  "$BIN/extas-origin-cert" apply >/dev/null 2>&1 || asked="$asked; the origin certificate could not be applied"
 fi
 # PR 507: new backup settings go onto the timers at once (the scripts themselves read the file on each run).
 if [[ " ${changed[*]} " == *" backup-settings.env "* ]]; then

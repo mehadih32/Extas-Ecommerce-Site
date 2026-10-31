@@ -28,7 +28,7 @@
   "golive": {
     "checks": {
       "label": "Go-live: how fresh the automatic checks must be",
-      "help": "The last smoke test of every page no older than these hours, and the server's own health check no older than these minutes, for the go-live checklist."
+      "help": "The last smoke test of every page no older than these hours, and the server's own health check no older than these minutes, for the go-live checklist. PR 397: the Cloudflare Origin certificate must still have at least these days (30)."
     },
     "signoff": {
       "label": "Go-live: the items a person confirmed",

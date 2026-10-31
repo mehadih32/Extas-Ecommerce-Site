@@ -234,6 +234,14 @@
         "botToken": "Bot token (from @BotFather)"
       }
     },
+    "cloudflareOrigin": {
+      "name": "Cloudflare origin certificate",
+      "desc": "The certificate the server shows Cloudflare, so its SSL/TLS mode can be Full (strict). Until a pair passes the test, the server keeps its automatic certificate",
+      "fields": {
+        "certificate": "Origin certificate (Cloudflare → SSL/TLS → Origin Server → Create certificate; the whole text with BEGIN and END)",
+        "privateKey": "Private key (shown once when the certificate is made)"
+      }
+    },
     "s3": {
       "name": "S3-compatible storage",
       "desc": "AWS S3, Cloudflare R2, Backblaze B2 — a place for photos and media instead of Azure",

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveSignoffSchema } from '../src/registry-backups';
+import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveChecksSchema, goLiveSignoffSchema } from '../src/registry-backups';
 
 describe('backups settings (v75–77)', () => {
   it('every key is in the registry, labelled in English and Bengali, its default valid, not owner data', () => {
@@ -36,7 +36,10 @@ describe('backups settings (v75–77)', () => {
   });
 
   it('PR 393: the go-live checks have their hours and minutes; nothing is confirmed by default; a sign-off is checked', () => {
-    expect(backupsSettings['golive.checks'].default).toEqual({ smokeHours: 36, healthMinutes: 30 });
+    expect(backupsSettings['golive.checks'].default).toEqual({ smokeHours: 36, healthMinutes: 30, certDays: 30 });
+    // PR 397: the origin certificate's days to spare; a value saved before it gets the default
+    expect(goLiveChecksSchema.parse({ smokeHours: 36, healthMinutes: 30 })).toEqual({ smokeHours: 36, healthMinutes: 30, certDays: 30 });
+    expect(goLiveChecksSchema.safeParse({ smokeHours: 36, healthMinutes: 30, certDays: 0 }).success).toBe(false);
     expect(backupsSettings['golive.signoff'].default).toEqual({});
     expect(goLiveSignoffSchema.safeParse({ qaGate: { at: '2026-10-31T10:00:00.000Z', by: 'u1' } }).success).toBe(true);
     expect(goLiveSignoffSchema.safeParse({ qaGate: { at: 'yesterday', by: 'u1' } }).success).toBe(false);

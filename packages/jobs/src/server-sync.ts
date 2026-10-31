@@ -16,6 +16,10 @@
 //                  PR 391: also the owner's Azure storage account for rclone (the Azure Blob connection's account,
 //                  its key and endpoint) and the backups' own container (`backups.blob.container`); Blob and Drive
 //                  are each written on their own, so one connected without the other still backs up.
+//   origin-cert.pem, origin-key.pem  PR 397: the Cloudflare Origin certificate and its key, only while that connection
+//                  is on and LIVE (its Test passed) and the pair still reads; empty otherwise, so the server goes back to
+//                  its automatic certificate (infra/server/bin/extas-origin-cert checks the pair again and gives it to
+//                  Caddy).
 //
 // - Nothing is read from the vault when nothing it depends on changed: every run first works out a fingerprint of the
 //   connection rows, the vault's list (names, dates, never a value) and each part's own inputs; the server passes back
@@ -24,6 +28,7 @@
 // - It never prints a value: the CLI prints the file names only.
 import { createHash } from 'node:crypto';
 import type { PrismaClient } from '@extas/db/client';
+import { CERT_LABEL, inspectOriginCert, KEY_LABEL, normalizePem, ORIGIN_CERT_PROVIDER } from '@extas/adapters';
 import { registry } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 
@@ -198,7 +203,21 @@ export const backupSettingsPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart];
+/** PR 397: the Cloudflare Origin pair, both or neither (a certificate without its key would only be refused). */
+async function originPair(ctx: PartContext): Promise<{ cert: string; key: string } | null> {
+  if (!liveConnection(ctx, 'CERTIFICATE', ORIGIN_CERT_PROVIDER)) return null;
+  const cert = await ctx.secret(`${ORIGIN_CERT_PROVIDER}.certificate`);
+  const key = await ctx.secret(`${ORIGIN_CERT_PROVIDER}.privateKey`);
+  if (!cert || !key || !inspectOriginCert(cert, key).ok) return null;
+  const c = normalizePem(cert, CERT_LABEL);
+  const k = normalizePem(key, KEY_LABEL);
+  return c && k ? { cert: c, key: k } : null;
+}
+
+export const originCertPart: ServerFilePart = { file: 'origin-cert.pem', build: async (ctx) => (await originPair(ctx))?.cert ?? '' };
+export const originKeyPart: ServerFilePart = { file: 'origin-key.pem', build: async (ctx) => (await originPair(ctx))?.key ?? '' };
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart];
 
 export interface SyncResult {
   fingerprint: string;

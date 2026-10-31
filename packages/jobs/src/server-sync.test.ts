@@ -45,7 +45,7 @@ describe('server sync (PR 392)', () => {
   it('no vault key on the server: everything empty, nothing read', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
     const noVault = (await serverSync({ ...d, vault: null })).files!;
-    expect({ ...noVault, 'backup-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined });
+    expect({ ...noVault, 'backup-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '' });
     // PR 507: the backup settings need no key, so they are there before the vault is
     expect(noVault['backup-settings.env']).toContain("BACKUP_TIME='02:30'\n");
   });

@@ -1,5 +1,5 @@
 # EXTAS Caddy (PR 7). Automatic HTTPS (Let's Encrypt, with Caddy's internal CA as a fallback so Cloudflare
-# "Full" always reaches us), HTTP/2 + HTTP/3, compression, security headers.
+# "Full" always reaches us; PR 397: the Cloudflare Origin certificate instead once it is in the vault, for "Full (strict)"), HTTP/2 + HTTP/3, compression, security headers.
 # The host names are settings (infra/config/server.conf → EXTAS_STAGING_HOST, EXTAS_EXTRA_HOSTS). The preview password and the
 # upstream (static page → app, blue/green) are files in /srv/extas/config/caddy/sites written by the scripts.
 {
@@ -56,10 +56,10 @@
 	import security_headers
 	import cache_headers
 	encode zstd gzip
-	tls {
-		issuer acme
-		issuer internal
-	}
+	# PR 397: sites/tls.caddy (infra/server/bin/extas-origin-cert) names the Cloudflare Origin certificate once its pair
+	# is in the vault and checked, else Caddy's automatic certificate (Let's Encrypt, Caddy's own as the fallback).
+	# A glob: a server whose setup has not yet written the file still loads, on the automatic certificate.
+	import /etc/caddy/sites/tls*.caddy
 	log {
 		output file /var/log/caddy/access.log {
 			roll_size 50MiB

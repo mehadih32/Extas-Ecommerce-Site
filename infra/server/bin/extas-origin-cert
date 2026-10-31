@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# S19 · PR 397 — the Cloudflare Origin certificate on the server, so Cloudflare's SSL/TLS mode can be "Full (strict)".
+#   extas-origin-cert apply [--no-reload]
+# The pair comes from the vault (Keys & connections → Cloudflare origin certificate, its Test passed) through
+# extas-vault-sync: config/secrets/origin-cert.pem and origin-key.pem (0600). This script
+#   - checks the pair again here: a certificate and its own key, valid now and for at least ORIGIN_CERT_MIN_DAYS more,
+#     covering the shop's host (EXTAS_STAGING_HOST; the main domain is added on go-live day);
+#   - gives a passing pair to Caddy: config/caddy/sites/origin/ (the key 0600) and sites/tls.caddy naming it; otherwise
+#     tls.caddy keeps Caddy's automatic certificate (Let's Encrypt, Caddy's own as the fallback), as before this PR;
+#   - reloads Caddy when tls.caddy changed; when Caddy refuses the pair, goes back to the automatic certificate at once;
+#   - writes state/origin-cert.json for the go-live checklist: the mode, the names, the end date, the days left and
+#     what was wrong — never a key.
+# Nothing here is irreversible: removing the connection brings the automatic certificate back on the next sync.
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; SEC="$R/config/secrets"; SITES="$R/config/caddy/sites"; STATE="$R/state"
+CADDY_CONTAINER="${CADDY_CONTAINER:-extas-caddy}"
+MIN_DAYS="${ORIGIN_CERT_MIN_DAYS:-7}"
+cmd="${1:-apply}"; reload=yes
+[ "${2:-}" = "--no-reload" ] && reload=no
+[ "$cmd" = apply ] || { echo "usage: extas-origin-cert apply [--no-reload]" >&2; exit 2; }
+mkdir -p "$STATE" "$SITES"
+
+cert="$SEC/origin-cert.pem"; key="$SEC/origin-key.pem"
+mode=auto; error=""; names="[]"; not_after=""; days=""; issuer=""
+
+auto_block() { printf '# PR 397: no origin certificate — Caddy'"'"'s automatic certificate\ntls {\n\tissuer acme\n\tissuer internal\n}\n'; }
+origin_block() { printf '# PR 397: the Cloudflare Origin certificate (Keys & connections)\ntls /etc/caddy/sites/origin/cert.pem /etc/caddy/sites/origin/key.pem\n'; }
+
+# check_pair — sets error (empty = the pair is good) and the facts.
+check_pair() {
+  local end_s now_s
+  if ! openssl x509 -in "$cert" -noout >/dev/null 2>&1; then error="the certificate cannot be read"; return; fi
+  if ! openssl pkey -in "$key" -noout >/dev/null 2>&1; then error="the private key cannot be read"; return; fi
+  names="$(openssl x509 -in "$cert" -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | sed -n 's/^ *DNS:\(.*\)$/\1/p' \
+    | tr 'A-Z' 'a-z' | jq -R . | jq -sc .)"
+  issuer="$(openssl x509 -in "$cert" -noout -issuer 2>/dev/null | sed 's/^issuer= *//')"
+  not_after="$(date -u -d "$(openssl x509 -in "$cert" -noout -enddate | cut -d= -f2)" +%Y-%m-%dT%H:%M:%SZ)"
+  end_s="$(date -d "$not_after" +%s)"; now_s="$(date +%s)"
+  days=$(( (end_s - now_s) / 86400 ))
+  if [ "$(openssl x509 -in "$cert" -noout -pubkey | sha256sum)" != "$(openssl pkey -in "$key" -pubout | sha256sum)" ]; then
+    error="the private key does not belong to this certificate"; return
+  fi
+  if ! openssl x509 -in "$cert" -noout -checkend $(( MIN_DAYS * 86400 )) >/dev/null; then
+    error="the certificate ends in less than $MIN_DAYS days"; return
+  fi
+  if ! openssl x509 -in "$cert" -noout -checkhost "$EXTAS_STAGING_HOST" 2>/dev/null | grep -q 'does match'; then
+    error="the certificate does not cover $EXTAS_STAGING_HOST"; return
+  fi
+}
+
+if [ -s "$cert" ] && [ -s "$key" ]; then
+  check_pair
+  [ -z "$error" ] && mode=origin
+fi
+
+new="$(mktemp)"; trap 'rm -f "$new"' EXIT
+if [ "$mode" = origin ]; then
+  install -d -m 0700 "$SITES/origin"
+  install -m 0644 "$cert" "$SITES/origin/cert.pem"
+  install -m 0600 "$key" "$SITES/origin/key.pem"
+  origin_block > "$new"
+else
+  auto_block > "$new"
+fi
+
+changed=no
+if ! [ -f "$SITES/tls.caddy" ] || ! cmp -s "$new" "$SITES/tls.caddy"; then
+  install -m 0644 "$new" "$SITES/tls.caddy"; changed=yes
+fi
+
+caddy_reload() { docker exec "$CADDY_CONTAINER" caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1; }
+if [ "$changed" = yes ] && [ "$reload" = yes ] && docker inspect "$CADDY_CONTAINER" >/dev/null 2>&1; then
+  if ! caddy_reload && [ "$mode" = origin ]; then
+    # Caddy kept its old configuration; the file goes back too, so a restart can never start on a refused pair.
+    auto_block > "$new"; install -m 0644 "$new" "$SITES/tls.caddy"
+    caddy_reload || true
+    mode=auto; error="Caddy refused the certificate; the automatic certificate stays"
+  fi
+fi
+[ "$mode" = auto ] && rm -rf "$SITES/origin"
+
+jq -n --arg at "$(date -Is)" --arg mode "$mode" --argjson names "$names" --arg notAfter "$not_after" \
+  --arg days "$days" --arg issuer "$issuer" --arg error "$error" --arg host "$EXTAS_STAGING_HOST" \
+  '{at:$at, mode:$mode, active:($mode == "origin"), names:$names, host:$host,
+    notAfter:(if $notAfter == "" then null else $notAfter end), daysLeft:(if $days == "" then null else ($days|tonumber) end),
+    issuer:$issuer, error:(if $error == "" then null else $error end)}' > "$STATE/origin-cert.json.tmp"
+mv "$STATE/origin-cert.json.tmp" "$STATE/origin-cert.json"
+echo "origin certificate: $mode${error:+ ($error)}"

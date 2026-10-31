@@ -33,6 +33,18 @@ export type ServerSetup = {
   counts?: { ok: number; fail: number; warn: number };
   steps?: { step: string; status: string; detail: string }[];
 };
+// PR 397: infra/server/bin/extas-origin-cert — the certificate Caddy shows Cloudflare (never a key).
+export type OriginCert = {
+  at?: string;
+  mode?: 'origin' | 'auto';
+  active?: boolean;
+  names?: string[];
+  host?: string;
+  notAfter?: string | null;
+  daysLeft?: number | null;
+  issuer?: string;
+  error?: string | null;
+};
 // CN-016: infra/deploy/smoke.sh after every deploy and every night (every built page, signed out and as the admin).
 export type Smoke = { ok?: boolean; at?: string; kind?: string; pages?: number; failed?: number };
 
@@ -53,7 +65,7 @@ async function readJson<T>(name: string): Promise<T | null> {
 export type RuntimeState = Awaited<ReturnType<typeof runtimeState>>;
 
 export async function runtimeState() {
-  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup] = await Promise.all([
+  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup, originCert] = await Promise.all([
     readJson<Deploy>('last-good-deploy.json'),
     readJson<Health>('health.json'),
     readJson<Backup>('backup-daily-local.json'),
@@ -65,6 +77,7 @@ export async function runtimeState() {
     readJson<RestoreStaging>('restore-staging.json'),
     readJson<RestoreProduction>('restore-production.json'),
     readJson<ServerSetup>('server-setup.json'),
+    readJson<OriginCert>('origin-cert.json'),
   ]);
-  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup };
+  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup, originCert };
 }
