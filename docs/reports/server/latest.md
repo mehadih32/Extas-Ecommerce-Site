@@ -1,6 +1,6 @@
-# Server report — 2026-11-01 02:14 +06
+# Server report — 2026-11-01 03:59 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `684e993d832cd3904173f65fe9dddc7401e75bb0`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `f5d916fafcae3ea51cf9662f1a21d0442b8e8faf`. Overall: **PASS**.
 
 ## Machine
 
@@ -57,10 +57,10 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
 | PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | OK | 17M base + dump; photos: all 0 in a full archive; docs of 311dbd60375b; 97% of the backup disk free; daily at 02:30, WAL every minute |
+| PR 8 · backup (data disk) | OK | 18M base + dump; photos: 0 new or changed since the full archive of 20261031-1850; docs of 684e993d832c; 98% of the backup disk free; daily at 02:30, WAL every minute |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261031-1850, 383 tables restored (live has 383); photos: the archive holds no photo yet; docs: docs-20261031-1850.tar.gz back with README, blueprint and register, COMMIT 311dbd60375b matches |
+| PR 8 · restore test | OK | base 20261101-0230, 383 tables restored (live has 383); photos: the archive holds no photo yet; docs: docs-20261101-0230.tar.gz back with README, blueprint and register, COMMIT 684e993d832c matches |
 | PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
 | PR 392 · vault keys for the server | INFO | every 2 min: ok — unchanged |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
@@ -76,7 +76,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (27G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (147M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -113,7 +113,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (27G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (147M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
