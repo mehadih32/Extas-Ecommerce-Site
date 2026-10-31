@@ -54,11 +54,17 @@ describe('PR 170 · the gateway resolver from the connection layer', () => {
     const asked: string[] = [];
     const connections = { use: async (_k: string, w: { provider: string }) => (asked.push(w.provider), { api: { provider: w.provider }, mode: 'LIVE' }) } as never;
     const resolve = connectionGateways(connections);
-    const visa = await resolve(1, 'visa');
-    expect(visa.mode).toBe('MOCK');
-    expect(visa.api.provider).toBe('visa');
+    // ~~const visa = await resolve(1, 'visa'); expect(visa.mode).toBe('MOCK'); expect(visa.api.provider).toBe('visa');~~
+    // PR 169: a card type goes to the card gateway's connection; a wallet with no adapter (Rocket) stays practice
+    const rocket = await resolve(1, 'rocket');
+    expect(rocket.mode).toBe('MOCK');
+    expect(rocket.api.provider).toBe('rocket');
     expect(await resolve(1, 'bkash')).toMatchObject({ mode: 'LIVE', api: { provider: 'bkash' } });
-    expect(asked).toEqual(['bkash']);
+    expect(await resolve(1, 'visa')).toMatchObject({ mode: 'LIVE', api: { provider: 'sslcommerz' } });
+    expect(await resolve(1, 'online')).toMatchObject({ api: { provider: 'sslcommerz' } });
+    expect(await resolve(1, 'nagad')).toMatchObject({ api: { provider: 'nagad' } });
+    // ~~expect(asked).toEqual(['bkash']);~~
+    expect(asked).toEqual(['bkash', 'sslcommerz', 'sslcommerz', 'nagad']);
   });
 });
 
@@ -175,15 +181,28 @@ describe.skipIf(!HAS_TEST_DB)('PR 170 · payment callbacks, the sweep and SIM-F-
     expect((await orderOf(o2.id)).flags).toContain('PAYMENT_MISMATCH');
   });
 
+  it('PR 169: a callback naming another session than the payment opened is refused, never asked about', async () => {
+    const g = scripted();
+    const d = f.deps({ gateways: async () => ({ api: g.api, mode: 'LIVE' }) });
+    const { o, p } = await prepaid('G-3016');
+    const s = await startPayment(d, { storeId: f.A, paymentId: p.id, callbackBaseUrl: BASE });
+    g.s.confirm = paid('TR-SOMEONE-ELSE', 150_000);
+    expect(await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, 'TR-SOMEONE-ELSE', 'success') })).toMatchObject({ code: 'INVALID' });
+    expect(await paymentOf(p.id)).toMatchObject({ status: 'PENDING', providerRef: s.providerRef });
+    expect((await orderOf(o.id)).paidMinor).toBe(0);
+    g.s.confirm = paid(s.providerRef, 150_000);
+    expect(await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, s.providerRef, 'success') })).toMatchObject({ code: 'PROCESSED', status: 'PAID' });
+  });
+
   it('a gateway that does not answer leaves the payment open; the sweep records the money that came in', async () => {
     const g = scripted();
     const d = f.deps({ gateways: async () => ({ api: g.api, mode: 'LIVE' }) });
     const { o, p } = await prepaid('G-3007');
-    await startPayment(d, { storeId: f.A, paymentId: p.id, callbackBaseUrl: BASE });
+    const started = await startPayment(d, { storeId: f.A, paymentId: p.id, callbackBaseUrl: BASE });
     g.s.confirm = new Error('socket hang up');
-    // review R1 (security m1): a gateway payment id of another session is refused before the gateway is asked
+    // review R1 (security m1) and PR 169: a gateway payment id of another session is refused before the gateway is asked
     expect(await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, 'TR-7', 'success') })).toMatchObject({ code: 'INVALID' });
-    const r = await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, `TR-${p.id.slice(-6)}`, 'success') });
+    const r = await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, started.providerRef, 'success') });
     expect(r).toMatchObject({ code: 'PENDING', status: 'PENDING' });
     expect(await f.t.prisma.webhookEvent.findUniqueOrThrow({ where: { id: r.eventId! } })).toMatchObject({ status: 'FAILED', error: expect.stringContaining('GATEWAY_ERROR') });
     // too early for the sweep

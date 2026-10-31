@@ -17,7 +17,7 @@
 // - `paymentIssues` (`payments.view`): the failed, abandoned and waiting payments for the team, newest first.
 // When money completes an order's advance, the caller's `orders.advancePaid` hook moves the order (order service).
 import { createHash } from 'node:crypto';
-import { createMockGateway, paymentAdapters, type CallbackRead, type Connections, type GatewayOutcome, type PaymentGateway } from '@extas/adapters';
+import { createMockGateway, gatewayProviderOf, paymentAdapters, type CallbackRead, type Connections, type GatewayOutcome, type PaymentGateway } from '@extas/adapters';
 import { Prisma } from '@extas/db/client';
 import { allow, nowOf, setting, TX, UUID, type GatewayResolver, type PaymentsDeps, type Who } from './context';
 import { PaymentsError } from './errors';
@@ -32,11 +32,13 @@ const OFFLINE = ['COD', 'WALLET', 'CASH', 'BANK_TRANSFER'] as const;
 
 /**
  * The app's gateway resolver from its connection layer for the payment adapters: the provider's connection when the
- * owner switched one on, else its practice gateway. A provider with no adapter yet (the card gateway comes in PR 169;
- * Rocket and Upay have none) runs on the practice gateway too (A1.3), which works only while test payments are on.
+ * owner switched one on, else its practice gateway. A card type or "Pay online" runs on the card gateway (PR 169,
+ * `gatewayProviderOf`). A provider with no adapter (Rocket, Upay) runs on the practice gateway too (A1.3), which works
+ * only while test payments are on.
  */
 export function connectionGateways(connections: Connections): GatewayResolver {
-  return async (storeId, provider) => {
+  return async (storeId, asked) => {
+    const provider = gatewayProviderOf(asked);
     if (!paymentAdapters.some((a) => a.provider === provider)) return { api: createMockGateway(provider), mode: 'MOCK' };
     const c = await connections.use<PaymentGateway>('PAYMENT', { storeId, provider });
     return { api: c.api, mode: c.mode };
@@ -174,9 +176,9 @@ export async function receiveCallback(deps: PaymentsDeps, req: { provider: strin
   const read: CallbackRead = gw.api.readCallback({ params });
   if (!read.ok) return invalid(`signature ${read.reason}`);
   if (read.paymentId !== payment.id) return invalid('signature for another payment');
-  // R1 (security m1): the gateway's own payment id must be the one this payment's session opened (a signed callback
-  // URL of one order is never replayed with another order's gateway payment).
-  if (payment.providerRef && read.providerRef && read.providerRef !== payment.providerRef) return invalid('gateway payment of another session');
+  // R1 (security m1) and PR 169: the gateway's own payment id must be the one this payment's session opened (a signed
+  // callback URL of one order is never replayed with another order's gateway payment, nor with none)
+  if (payment.providerRef && read.providerRef !== payment.providerRef) return invalid('another session than this payment opened');
 
   const now = () => nowOf(deps);
   const base = { paymentId: payment.id, number: payment.order?.number ?? null };
