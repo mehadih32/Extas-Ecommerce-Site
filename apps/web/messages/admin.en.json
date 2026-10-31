@@ -79,7 +79,8 @@
     "edge": "Cloudflare protection",
     "health": "Site health",
     "golive": "Go-live",
-    "healthProblems": "Customer problems"
+    "healthProblems": "Customer problems",
+    "seoBengali": "Bengali pages"
   },
   "login": {
     "metaTitle": "Admin sign-in",

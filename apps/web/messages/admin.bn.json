@@ -79,7 +79,8 @@
     "edge": "Cloudflare সুরক্ষা",
     "health": "সাইটের অবস্থা",
     "golive": "চালুর আগে",
-    "healthProblems": "কাস্টমারের সমস্যা"
+    "healthProblems": "কাস্টমারের সমস্যা",
+    "seoBengali": "বাংলা পাতা"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

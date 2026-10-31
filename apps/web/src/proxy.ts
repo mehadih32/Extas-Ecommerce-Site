@@ -14,9 +14,12 @@
 // (lib/seo/redirect-table: the table is kept in this process, so the proxy never waits on the database).
 // S18 · PR 378: every API call passes the cross-site check and the request limits first (lib/security/edge-gate.ts),
 // and every page (the shop's and the admin's) gets the page protection policy the settings say.
+// S11 · PR 588: the Bengali translation gate — while the owner chose `english` (`language.bengali.gate`), a Bengali
+// content page not marked ready goes to its English twin for now (lib/seo/bengali-gate).
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
+import { bengaliGateSends } from './lib/seo/bengali-gate';
 import { lowerCaseTarget } from './lib/seo/indexing';
 import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-table';
 import { isShopPath, LANG_HEADER, PATH_HEADER, splitLang, THEME_HEADER } from './lib/shop/lang';
@@ -24,6 +27,8 @@ import { shopStoreId } from './lib/shop/store-id';
 
 /** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
 const PERMANENT = 301;
+/** PR 588: a move for now (the Bengali page opens once it is marked ready). */
+const TEMPORARY = 307;
 
 function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
   const h = shopCacheHeaders(req.nextUrl.pathname, req.cookies.getAll().map((c) => c.name));
@@ -67,6 +72,12 @@ export async function proxy(req: NextRequest) {
   }
   const { lang, path } = splitLang(pathname);
   if (!isShopPath(path)) return NextResponse.next(); // /bn/admin is not the admin
+  // PR 588: a Bengali page not marked ready goes to its English twin while the owner chose so (temporary, never cached)
+  if (lang === 'bn' && (req.method === 'GET' || req.method === 'HEAD') && (await bengaliGateSends(shopStoreId(), path))) {
+    const res = NextResponse.redirect(new URL(`${path}${req.nextUrl.search}`, req.nextUrl), TEMPORARY);
+    res.headers.set('cache-control', 'no-store');
+    return res;
+  }
   const h = new Headers(req.headers);
   h.set(LANG_HEADER, lang);
   h.set(PATH_HEADER, path);

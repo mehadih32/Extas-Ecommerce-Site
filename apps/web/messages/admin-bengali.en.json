@@ -1,0 +1,105 @@
+{
+  "bng": {
+    "metaTitle": "Bengali pages",
+    "title": "Bengali pages",
+    "sub": "A Bengali page is listed by search engines, named in the sitemap and linked as the Bengali twin only once it is marked ready here: its main content translated and checked.",
+    "bengaliOff": "The Bengali shop is switched off (Settings › Language), so no Bengali page is shown or listed now. You can still prepare the pages here.",
+    "kpi": {
+      "coverage": "Bengali coverage",
+      "coverageFoot": "{ready} of {total} pages ready",
+      "withText": "With Bengali text",
+      "withTextFoot": "of {total} pages",
+      "waiting": "Waiting for your check",
+      "waitingFoot": "Bengali text there, not marked ready",
+      "missing": "Bengali text missing",
+      "missingFoot": "write it first (Products, Collections, Sets)"
+    },
+    "byKindH": "Coverage by kind",
+    "byKindLine": "{ready} of {total} ready",
+    "kind": {
+      "all": "All",
+      "pages": "Shop pages",
+      "collections": "Collections",
+      "products": "Products",
+      "combos": "Sets"
+    },
+    "state": {
+      "all": "All",
+      "ready": "Ready",
+      "waiting": "Waiting",
+      "missing": "Missing text"
+    },
+    "page": {
+      "home": "Home page",
+      "combos": "Sets page",
+      "buildSet": "Build your own set",
+      "newIn": "New in",
+      "help": {
+        "faq": "Help: questions",
+        "delivery": "Help: delivery",
+        "exchange": "Help: exchange",
+        "privacy": "Help: privacy",
+        "terms": "Help: terms",
+        "story": "Help: our story",
+        "contact": "Help: contact"
+      }
+    },
+    "col": {
+      "page": "Page",
+      "text": "Bengali text",
+      "ready": "Ready",
+      "act": "Action"
+    },
+    "text": {
+      "ok": "There",
+      "words": "Shop words (always there)",
+      "missing": "Missing: {fields}"
+    },
+    "field": {
+      "name": "name",
+      "description": "description",
+      "intro": "intro",
+      "title": "title"
+    },
+    "ready": {
+      "yes": "Ready",
+      "no": "Not ready"
+    },
+    "readyMissing": "Marked ready, but its Bengali text has since been removed",
+    "mark": "Mark ready",
+    "unmark": "Not ready",
+    "markAll": "Mark all {n} on this page ready",
+    "working": "Saving…",
+    "none": "No page in this view.",
+    "noManage": "Marking pages needs the SEO permission.",
+    "leftOver": "{n} pages marked ready earlier are not on the shop any more (removed products or collections). They are kept and do nothing.",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "err": {
+      "NO_BENGALI": "This page has no Bengali text yet. Write its Bengali name and description first.",
+      "NOT_FOUND": "This page is not on the shop any more.",
+      "STALE": "Someone else changed the list just now; it shows their change now.",
+      "INVALID_INPUT": "That did not work. Please try again.",
+      "forbidden": "You do not have permission to do this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not save. Please try again."
+    },
+    "card": {
+      "h": "Bengali pages that are not ready yet",
+      "d": "What a visitor sees on a Bengali page that is not marked ready. Either way it stays out of search engines and the sitemap.",
+      "notReady": "On a Bengali page that is not ready",
+      "unlisted": "Show it in Bengali, kept out of search engines",
+      "english": "Send the visitor to the English page for now",
+      "notReadyHelp": "The bag, checkout, account and search pages are never sent anywhere.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can see this choice; changing it needs the SEO permission.",
+      "pairHelp": "Write both languages."
+    }
+  }
+}

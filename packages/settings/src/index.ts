@@ -90,6 +90,8 @@ export * from './registry-privacy';
 export * from './registry-edge';
 // S21 · PR 413 — the Site health hub (registry-health.ts, version 81).
 export * from './registry-health';
+// S11 · PR 588 — the Bengali translation gate (registry-bengali.ts, version 84).
+export * from './registry-bengali';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
