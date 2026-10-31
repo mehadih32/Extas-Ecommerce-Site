@@ -33,6 +33,8 @@ export * from './server-sync';
 export * from './backups';
 // S19 · PR 507 — "Back up now" and "Run the restore drill now", run by the server's vault sync.
 export * from './backup-requests';
+// S19 · PR 396 — restoring from the admin: staging first, then the same backup on the live shop.
+export * from './restore-requests';
 export * from './courier';
 export * from './invoices';
 export * from './returns-erp';

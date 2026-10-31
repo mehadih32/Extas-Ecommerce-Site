@@ -111,7 +111,8 @@
     "system": {
       "read": "See the Server page: is the background worker alive, and which jobs failed",
       "cache": "Set how long the cache keeps pages, and clear every cache (Settings → System → Cache)",
-      "backup": "Change the backup settings, and ask for a backup or a restore drill now (Settings → System → Backups)"
+      "backup": "Change the backup settings, and ask for a backup or a restore drill now (Settings → System → Backups)",
+      "restore": "Put a checked backup on the live shop, with RESTORE typed and the owner's PIN (Settings → System → Backups › Restore)"
     },
     "orders": {
       "invoice": "Open and print the invoice of any order (it shows the customer's name, phone and address)",

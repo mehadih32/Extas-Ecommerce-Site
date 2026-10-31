@@ -114,6 +114,9 @@ export const PERMISSIONS = {
   // restore drill, Telegram) and ask the server for a backup or a restore drill now. A drill restores into a throw-away
   // copy, never the live database; restoring production is not this key (PR 396).
   'system.backup': { group: 'system' },
+  // S19 · PR 396 — put a backup on the live shop (Settings → System → Backups › Restore): only the newest check copy
+  // that passed, with RESTORE typed and the owner's PIN. The old data is kept on the server, never deleted.
+  'system.restore': { group: 'system' },
   // S04 · PR 136 — open the invoice of any order of the store (its customer's name, phone and address are on it), to
   // print or send it. Not a `.read` key on purpose: the read-only smoke check account never gets customers' details.
   // The order screens of S05 add their own keys.

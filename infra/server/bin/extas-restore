@@ -15,11 +15,23 @@
 #       The product photos from the newest full photo archive and the newest diff on it, every checksum checked.
 #       Default: into a folder on the NVMe for checking (the path is printed). --into live copies the photos that are
 #       missing back into the photo folder after typing RESTORE; it never overwrites or deletes a photo.
-#   extas-restore --from local|blob|drive [--at "YYYY-MM-DD HH:MM"] [--target staging|production]
+#   extas-restore --from local|blob|drive [--at "YYYY-MM-DD HH:MM"] [--backup YYYYMMDD-HHMM] [--target staging|production]
+#                 [--confirm RESTORE]
 #       local/blob: base backup + WAL replay to the chosen minute (default: as late as possible).
 #       drive: the daily encrypted dump (no minute choice) — the fallback when Blob is unavailable.
-#       staging (default): leaves a restored copy running as container extas-pg-restore for checking.
-#       production: replaces the live database after typing RESTORE. The old data is kept, never deleted.
+#       --backup: exactly that backup (PR 396), not the newest before the minute.
+#       staging (default): leaves a restored copy running as container extas-pg-restore for checking (until the next
+#       restore, test or drill, which starts its own).
+#       production: replaces the live database after typing RESTORE (or --confirm RESTORE, PR 396). The old data is
+#       kept, never deleted: a base backup swaps the data folder (the old one stays beside it), a Drive dump goes into the
+#       live server under a new name and the names are swapped (the old database stays as extas_before_restore_<time>).
+#       The shop's containers it stopped start again.
+#   extas-restore request <id> staging|production <local|blob|drive> <backup|-> <minute (ISO, UTC)|-> <staging id|->
+#       PR 396, a restore asked for in the admin (the vault sync starts it in a transient unit): staging restores into
+#       the check copy and keeps proof of it (state/restore-staging.json: the request, the copy, the backup used);
+#       production runs only when that proof is for the same staging request, copy, backup and minute, it passed, and
+#       it is no older than RESTORE_STAGING_VALID_H hours. The outcome goes to state/requests/<id>.json for the admin
+#       and, for production, to state/restore-production.json and the owner's Telegram.
 set -euo pipefail
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../../config/server.conf
@@ -63,11 +75,16 @@ NAME="extas-pg-restore"
 MEDIA="$R/data/media"   # the product photos on the local disk (see extas-backup)
 DOCS="$R/docs/current"  # the server's copy of the repository's docs (PR 594, CN-011)
 
-FROM=local; AT=""; TARGET=staging; MODE=restore; INTO=""; ONLY=all
-case "${1:-}" in test) MODE="test"; shift ;; media) MODE="media"; shift ;; drill) MODE="drill"; shift ;; esac
+FROM=local; AT=""; TARGET=staging; MODE=restore; INTO=""; ONLY=all; BACKUP=""; CONFIRM=""; REQ=()
+case "${1:-}" in
+  test) MODE="test"; shift ;; media) MODE="media"; shift ;; drill) MODE="drill"; shift ;;
+  request) MODE="request"; shift; REQ=("$@"); set -- ;;
+esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --only) ONLY="$2"; shift 2 ;;
+    --backup) BACKUP="$2"; shift 2 ;;
+    --confirm) CONFIRM="$2"; shift 2 ;;
     --from) FROM="$2"; shift 2 ;;
     --at) AT="$2"; shift 2 ;;
     --target) TARGET="$2"; shift 2 ;;
@@ -75,6 +92,28 @@ while [ $# -gt 0 ]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
+
+# One restore at a time (PR 396): a staging restore, the restore test and the drill share the container $NAME and its
+# `docker rm -f`, so two at once would kill each other's copy. The first run takes state/restore.lock and waits at most
+# RESTORE_LOCK_WAIT_S for one already running; the runs it starts itself (the drill's tests, a request's restore)
+# share its lock (EXTAS_RESTORE_LOCK_HELD).
+if [ -z "${EXTAS_RESTORE_LOCK_HELD:-}" ]; then
+  mkdir -p "$STATE"
+  exec 9>"$STATE/restore.lock"
+  if ! flock -w "${RESTORE_LOCK_WAIT_S:-3600}" 9; then
+    busy="another restore, restore test or drill was still running after ${RESTORE_LOCK_WAIT_S:-3600} s; nothing was changed"
+    case "$MODE" in
+      test|restore) printf '{"result":"fail","detail":"%s","from":"%s","at":"%s","backup":"","target":"%s"}\n' "$busy" "$FROM" \
+        "$(date -Is)" "$TARGET" > "$STATE/restore-$MODE.json" ;;
+      request) if [[ "${REQ[0]:-}" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+          mkdir -p "$STATE/requests"
+          jq -n --arg id "${REQ[0]}" --arg detail "$busy" '{id:$id, ok:false, detail:$detail}' > "$STATE/requests/${REQ[0]}.json"
+        fi ;;
+    esac
+    echo "FAIL: $busy" >&2; exit 1
+  fi
+  export EXTAS_RESTORE_LOCK_HELD=1
+fi
 
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; [ "$MODE" = test ] && rm -rf "$WORK"; return 0; }
 # The PostgreSQL tools inside the container (31 Oct 2026, GitHub #65): /usr/bin/pg_dump, psql and pg_basebackup there
@@ -90,8 +129,10 @@ pgx() { # pgx [-i] [-u user] <container> <tool> <args…>
   local c="$1"; shift
   docker exec "${o[@]}" "$c" bash -c "$PG_PATH"'; exec "$@"' pgx "$@"
 }
+RESTORED=""   # PR 396: the backup a restore used (its stamp), for the admin
 result() {
-  printf '{"result":"%s","detail":"%s","from":"%s","at":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" > "$STATE/restore-$MODE.json"
+  printf '{"result":"%s","detail":"%s","from":"%s","at":"%s","backup":"%s","target":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" \
+    "$RESTORED" "$TARGET" > "$STATE/restore-$MODE.json"
   # PR 507: each copy's own last test too, for the Backups page and the drill.
   [ "$MODE" = test ] && cp "$STATE/restore-test.json" "$STATE/restore-test-$FROM.json"
   return 0
@@ -132,6 +173,63 @@ drill() {
   echo "FAIL: $line"; exit 1
 }
 if [ "$MODE" = drill ]; then drill; fi
+
+# ---- a restore asked for in the admin (PR 396) --------------------------------------------------------------------
+restore_request() { # <id> <staging|production> <from> <backup|-> <at|-> <staging id|->
+  local id="${1:-}" env="${2:-}" from="${3:-}" bk="${4:--}" at="${5:--}" sof="${6:--}" out rc=0 ok=false detail used
+  local args=() since now
+  req_done() { jq -n --arg id "$id" --argjson ok "$1" --arg detail "$2" --arg backup "${3:-}" \
+    '{id:$id, ok:$ok, detail:$detail} + (if $backup == "" then {} else {backup:$backup} end)' > "$STATE/requests/$id.json"; }
+  [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || { echo "request: an id" >&2; exit 2; }
+  mkdir -p "$STATE/requests"
+  [ "$bk" = - ] && bk=""; [ "$at" = - ] && at=""; [ "$sof" = - ] && sof=""
+  if ! [[ "$env" =~ ^(staging|production)$ ]] || ! [[ "$from" =~ ^(local|blob|drive)$ ]] \
+    || { [ -n "$bk" ] && ! [[ "$bk" =~ ^[0-9]{8}-[0-9]{4}$ ]]; } \
+    || { [ -n "$at" ] && ! [[ "$at" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]{1,3})?)?Z$ ]]; } \
+    || { [ -n "$sof" ] && ! [[ "$sof" =~ ^[0-9a-f-]{36}$ ]]; }; then
+    req_done false "not a restore this server runs"; exit 2
+  fi
+  args=(--from "$from"); [ -n "$bk" ] && args+=(--backup "$bk")
+  # The minute comes in UTC; the restore takes it in the server's own time zone (EXTAS_TIMEZONE).
+  [ -n "$at" ] && args+=(--at "$(TZ="$EXTAS_TIMEZONE" date -d "$at" '+%Y-%m-%d %H:%M')")
+  rm -f "$STATE/restore-restore.json"
+  if [ "$env" = staging ]; then
+    out="$(bash "$0" "${args[@]}" --target staging 2>&1)" || rc=$?
+    [ "$rc" = 0 ] && jq -e '.result == "ok"' "$STATE/restore-restore.json" >/dev/null 2>&1 && ok=true
+    used="$(jq -r '.backup // empty' "$STATE/restore-restore.json" 2>/dev/null || true)"
+    detail="$(jq -r '.detail // empty' "$STATE/restore-restore.json" 2>/dev/null || true)"; [ -n "$detail" ] || detail="$(tail -1 <<<"$out")"
+    [ -n "$used" ] || ok=false
+    jq -n --arg id "$id" --argjson ok "$ok" --arg from "$from" --arg backup "$used" --arg at "$at" --arg detail "$detail" \
+      --arg finishedAt "$(date -Is)" '{id:$id, ok:$ok, from:$from, backup:$backup, at:$at, detail:$detail, finishedAt:$finishedAt}' \
+      > "$STATE/restore-staging.json"
+    req_done "$ok" "$detail" "$used"
+    [ "$ok" = true ] && exit 0 || exit 1
+  fi
+  # production: only after the check copy of the very same backup passed, recently
+  now="$(date +%s)"
+  since="$(jq -r '.finishedAt // empty' "$STATE/restore-staging.json" 2>/dev/null || true)"
+  if [ -z "$sof" ] || [ -z "$bk" ] || [ -z "$since" ] \
+    || ! jq -e --arg id "$sof" --arg from "$from" --arg bk "$bk" --arg at "$at" \
+      '.id == $id and .ok == true and .from == $from and .backup == $bk and .at == $at' "$STATE/restore-staging.json" >/dev/null 2>&1 \
+    || [ $(( now - $(date -d "$since" +%s) )) -gt $(( ${RESTORE_STAGING_VALID_H:-24} * 3600 )) ]; then
+    detail="the check copy of this backup has not passed within ${RESTORE_STAGING_VALID_H:-24} hours: restore it to staging first"
+    req_done false "$detail" "$bk"
+    jq -n --arg detail "$detail" --arg at "$(date -Is)" --arg from "$from" --arg backup "$bk" \
+      '{result:"refused", detail:$detail, at:$at, from:$from, backup:$backup}' > "$STATE/restore-production.json"
+    exit 1
+  fi
+  out="$(bash "$0" "${args[@]}" --target production --confirm RESTORE 2>&1)" || rc=$?
+  [ "$rc" = 0 ] && jq -e '.result == "ok"' "$STATE/restore-restore.json" >/dev/null 2>&1 && ok=true
+  detail="$(jq -r '.detail // empty' "$STATE/restore-restore.json" 2>/dev/null || true)"; [ -n "$detail" ] || detail="$(tail -1 <<<"$out")"
+  jq -n --arg result "$([ "$ok" = true ] && echo ok || echo fail)" --arg detail "$detail" --arg at "$(date -Is)" \
+    --arg from "$from" --arg backup "$bk" --arg id "$id" \
+    '{result:$result, detail:$detail, at:$at, from:$from, backup:$backup, request:$id}' > "$STATE/restore-production.json"
+  req_done "$ok" "$detail" "$bk"
+  if [ "$ok" = true ]; then tg "${RESTORE_PROD_OK_TEXT:-production restored} ($from, $bk)"; exit 0; fi
+  tg "${RESTORE_PROD_FAIL_TEXT:-production restore failed}: $detail"; exit 1
+}
+if [ "$MODE" = request ]; then restore_request "${REQ[@]}"; fi
+[ -z "$BACKUP" ] || [[ "$BACKUP" =~ ^[0-9A-Za-z_-]{1,40}$ ]] || { echo "--backup: a backup's stamp" >&2; exit 2; }
 
 # ---- product photos (PR 8) ----------------------------------------------------------------------------------------
 # media_set <dir>: the newest full photo archive in <dir> and the newest diff made on it → MEDIA_FULL, MEDIA_DIFF
@@ -267,8 +365,9 @@ fi
 mkdir -p "$WORK/pgdata" "$WORK/wal"
 chown -R 999:999 "$WORK"; chmod 700 "$WORK/pgdata"
 
-pick_base() { # newest base backup taken before $AT (or newest overall)
+pick_base() { # newest base backup taken before $AT (or newest overall); PR 396: exactly --backup when given
   local d best=""
+  if [ -n "$BACKUP" ]; then [ -d "$1/$BACKUP" ] && echo "$BACKUP"; return 0; fi
   for d in $(ls -1 "$1" 2>/dev/null | sort); do
     if [ -z "$AT" ] || [ "$(date -d "${d:0:8} ${d:9:2}:${d:11:2}" +%s)" -le "$(date -d "$AT" +%s)" ]; then best="$d"; fi
   done
@@ -279,10 +378,17 @@ if [ "$FROM" = drive ]; then
   [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ] || { echo "Google Drive is not connected"; exit 1; }
   # The newest backup that was checked whole in Drive (PR 395), else the newest one there.
   last=""
-  for dir in $(rclone lsf --dirs-only "$(dpath "")" | tr -d / | sort -r); do
-    if [ -n "$(rclone lsf "$(dpath "$dir")" --include CHECKED 2>/dev/null)" ]; then last="$dir"; break; fi
-  done
-  [ -n "$last" ] || last="$(rclone lsf --dirs-only "$(dpath "")" | sort | tail -1 | tr -d /)"
+  if [ -n "$BACKUP" ]; then
+    rclone lsf --dirs-only "$(dpath "")" | tr -d / | grep -qx "$BACKUP" || { echo "no backup $BACKUP in Google Drive"; exit 1; }
+    last="$BACKUP"
+  else
+    for dir in $(rclone lsf --dirs-only "$(dpath "")" | tr -d / | sort -r); do
+      if [ -n "$(rclone lsf "$(dpath "$dir")" --include CHECKED 2>/dev/null)" ]; then last="$dir"; break; fi
+    done
+    [ -n "$last" ] || last="$(rclone lsf --dirs-only "$(dpath "")" | sort | tail -1 | tr -d /)"
+  fi
+  [ -n "$last" ] || { echo "no backup in Google Drive yet"; exit 1; }
+  RESTORED="$last"
   rclone copy -q "$(dpath "$last")" "$WORK/drive"
   gpg --batch --yes --pinentry-mode loopback --passphrase-file "$SEC/backup.key" -o "$WORK/extas.dump" -d "$WORK/drive/extas-$last.dump.gpg"
   BASE=""
@@ -292,9 +398,10 @@ else
     mkdir -p "$WORK/blob-base"
     rclone lsf --dirs-only "blob:$BLOB_PATH/base" | tr -d / > "$WORK/list"
     BASE=""; while read -r d; do
+      if [ -n "$BACKUP" ]; then [ "$d" = "$BACKUP" ] && BASE="$d"; continue; fi
       if [ -z "$AT" ] || [ "$(date -d "${d:0:8} ${d:9:2}:${d:11:2}" +%s)" -le "$(date -d "$AT" +%s)" ]; then BASE="$d"; fi
     done < <(sort "$WORK/list")
-    [ -n "$BASE" ] || { echo "no base backup in Blob before ${AT:-now}"; exit 1; }
+    [ -n "$BASE" ] || { echo "no base backup${BACKUP:+ $BACKUP} in Blob before ${AT:-now}"; exit 1; }
     rclone copy -q "blob:$BLOB_PATH/base/$BASE" "$WORK/blob-base/$BASE"
     rclone copy -q "blob:$BLOB_PATH/wal" "$WORK/wal"
     BASEDIR="$WORK/blob-base/$BASE"
@@ -305,13 +412,14 @@ else
       sleep 5
     fi
     BASE="$(pick_base "$LOCAL/base")"
-    [ -n "$BASE" ] || { result fail "no local base backup yet"; echo "no local base backup yet"; exit 1; }
+    [ -n "$BASE" ] || { result fail "no local base backup${BACKUP:+ $BACKUP} yet"; echo "no local base backup${BACKUP:+ $BACKUP} yet"; exit 1; }
     BASEDIR="$LOCAL/base/$BASE"
     # Only the WAL archived since this base backup (it carries the WAL before that itself): copying the whole archive
     # made the restore test slow and, with a full archive, too slow to finish (31 Oct 2026).
     find "$LOCAL/wal" -maxdepth 1 -type f -newermt "@$(( $(stat -c %Y "$BASEDIR/base.tar.gz") - 600 ))" \
       -exec cp -p {} "$WORK/wal/" \; 2>/dev/null || true
   fi
+  RESTORED="$BASE"
   tar -xzf "$BASEDIR/base.tar.gz" -C "$WORK/pgdata"
   # -X fetch (since 31 Oct 2026): the WAL the base backup needs is in pg_wal.tar.gz beside it.
   [ -f "$BASEDIR/pg_wal.tar.gz" ] && tar -xzf "$BASEDIR/pg_wal.tar.gz" -C "$WORK/pgdata/pg_wal"
@@ -331,6 +439,8 @@ else
 fi
 
 trap cleanup EXIT
+# A check copy left running by an earlier staging restore makes way (PR 396): it is a throw-away copy.
+docker rm -f "$NAME" >/dev/null 2>&1 || true
 if [ -n "$BASE" ]; then
   docker run -d --name "$NAME" --network extas -u 999:999 \
     -e PGDATA=/var/lib/postgresql/data/pgdata \
@@ -385,14 +495,36 @@ fi
 
 # production
 echo "This replaces the LIVE database with: $detail."
-read -r -p "Type RESTORE to continue: " ok
+if [ "$CONFIRM" = RESTORE ]; then ok=RESTORE; else read -r -p "Type RESTORE to continue: " ok; fi
 [ "$ok" = "RESTORE" ] || { echo "cancelled"; exit 1; }
-docker stop "$NAME" >/dev/null
-for c in $(docker ps --format '{{.Names}}' | grep -E '^extas-app|^extas-worker|^extas-jobs' || true); do docker stop "$c" >/dev/null; done
-docker stop -t 60 extas-postgres >/dev/null
-mv "$R/data/postgres/pgdata" "$R/data/postgres/pgdata.before-restore-$TS"
-rsync -a "$WORK/pgdata/" "$R/data/postgres/pgdata/"
-sed -i '/^restore_command\|^recovery_target\|^archive_mode = off/d' "$R/data/postgres/pgdata/postgresql.auto.conf"
-docker start extas-postgres >/dev/null
-echo "Done. The previous data is kept at $R/data/postgres/pgdata.before-restore-$TS. Start the app with deploy.yml (or docker start)."
-result ok "production restored: $detail"
+# The shop's own containers stop for the swap and start again after it (PR 396), PgBouncer with them.
+mapfile -t stopped < <(docker ps --format '{{.Names}}' | grep -E '^extas-(app|worker|jobs|pgbouncer)' || true)
+if [ -n "$BASE" ]; then
+  docker stop "$NAME" >/dev/null
+  for c in "${stopped[@]}"; do docker stop "$c" >/dev/null; done
+  docker stop -t 60 extas-postgres >/dev/null
+  mv "$R/data/postgres/pgdata" "$R/data/postgres/pgdata.before-restore-$TS"
+  rsync -a "$WORK/pgdata/" "$R/data/postgres/pgdata/"
+  sed -i '/^restore_command\|^recovery_target\|^archive_mode = off/d' "$R/data/postgres/pgdata/postgresql.auto.conf"
+  docker start extas-postgres >/dev/null
+  kept="the previous data folder is kept at $R/data/postgres/pgdata.before-restore-$TS"
+else
+  # A Drive dump: into the live server under a new name (its roles, passwords and access rules stay as they are),
+  # then the names are swapped in one step; the old database stays beside it.
+  new="extas_restore_${TS//-/_}"; old="extas_before_restore_${TS//-/_}"
+  pgx extas-postgres psql -qX -v ON_ERROR_STOP=1 -U extas -d postgres -c "CREATE DATABASE $new" >/dev/null
+  docker cp "$WORK/extas.dump" "extas-postgres:/tmp/$new.dump"
+  pgx extas-postgres pg_restore -U extas -d "$new" --no-owner "/tmp/$new.dump"
+  for c in "${stopped[@]}"; do docker stop "$c" >/dev/null; done
+  pgx extas-postgres psql -qX -v ON_ERROR_STOP=1 -U extas -d postgres -c \
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'extas' AND pid <> pg_backend_pid(); ALTER DATABASE extas RENAME TO $old; ALTER DATABASE $new RENAME TO extas;" >/dev/null
+  docker exec extas-postgres rm -f "/tmp/$new.dump" >/dev/null 2>&1 || true
+  kept="the previous database is kept as $old"
+fi
+for _ in $(seq 1 $(( ${RESTORE_TEST_WAIT_MIN:-30} * 30 ))); do
+  pgx extas-postgres psql -qtAX -U extas -d extas -c "SELECT 1" >/dev/null 2>&1 && break
+  sleep 2
+done
+for c in "${stopped[@]}"; do docker start "$c" >/dev/null 2>&1 || true; done
+echo "Done. $kept; the shop's containers started again (${#stopped[@]})."
+result ok "production restored: $detail; $kept"

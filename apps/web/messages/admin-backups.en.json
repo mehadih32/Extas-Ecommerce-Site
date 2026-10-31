@@ -112,7 +112,8 @@
       "NO_SIGN_IN": "No sign-in is waiting. Press Connect Google Drive.",
       "INVALID_INPUT": "Please check: {fields}",
       "GOOGLE": "Google said: {message}",
-      "BUSY": "One is already waiting or running. Wait for it to finish (this list shows it)."
+      "BUSY": "One is already waiting or running. Wait for it to finish (this list shows it).",
+      "STAGING_FIRST": "Restore it to the check copy first and wait until it passes (only the newest check copy can go on the live shop)."
     },
     "PIN_REQUIRED": "Type the owner's PIN.",
     "WRONG_PIN": "That PIN is not right.",
@@ -128,7 +129,8 @@
     "clientChanged": "{store}: the Google client was changed — no backup goes to Google Drive until it is connected again.",
     "connected": "{store}: Google Drive is connected ({account}) — the nightly backup now goes to the folder \"{folder}\".",
     "yourAccount": "your account",
-    "disconnected": "{store}: the Google Drive connection was ended — no backup goes to Drive until it is connected again."
+    "disconnected": "{store}: the Google Drive connection was ended — no backup goes to Drive until it is connected again.",
+    "restoreAsked": "{store}: a restore of the live shop from backup {backup} was asked for. The server starts it within a few minutes; the old data stays on the server."
   },
   "requests": {
     "title": "Back up or test now",
@@ -239,6 +241,43 @@
       "drillBlob": "Press \"Run the restore drill now\" once Blob has a copy.",
       "drillDrive": "Press \"Run the restore drill now\" once Drive has a copy.",
       "telegram": "Keys & connections → Telegram: the bot's token and the chat, press Test."
+    }
+  },
+  "restore": {
+    "title": "Restore from a backup",
+    "sub": "Always into the check copy first (never the live shop). When it passed, the same backup can go on the live shop with RESTORE typed and the owner's PIN.",
+    "source": "Restore from",
+    "from": {
+      "blob": "Azure Blob",
+      "local": "The server's disk",
+      "drive": "Google Drive"
+    },
+    "backup": "Which backup",
+    "backupHint": "Google Drive keeps whole nights; newest first",
+    "newest": "The newest",
+    "minute": "To a minute (optional)",
+    "minuteHint": "your device's time; empty = as late as the backups go",
+    "stage": "Restore to the check copy",
+    "asked": "Asked. The server starts within a few minutes; this list shows the outcome. The live shop is not touched.",
+    "readOnly": "You can see the restores. Asking for one needs the \"Backups\" permission.",
+    "readyTitle": "The check copy of {backup} passed.",
+    "readyText": "Putting it on the live shop takes the shop back to that backup: what came after it is no longer in the live database (the old data stays on the server, never deleted).",
+    "goLive": "Put this on the live shop…",
+    "type": "Type {word} to confirm",
+    "live": "Restore the live shop",
+    "cancel": "Cancel",
+    "liveAsked": "Asked. The server restores the live shop within a few minutes and tells you on Telegram. The shop is closed for those minutes.",
+    "backupCol": "Backup",
+    "env": {
+      "staging": "Check copy",
+      "production": "Live shop"
+    },
+    "none": "No restore asked yet.",
+    "lastLive": "Last restore of the live shop: {at}",
+    "result": {
+      "ok": "Done",
+      "fail": "Failed",
+      "refused": "Refused"
     }
   }
 }

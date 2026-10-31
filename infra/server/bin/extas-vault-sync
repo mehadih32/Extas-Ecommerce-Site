@@ -75,16 +75,27 @@ fp="$(jq -r '.fingerprint' "$work/out/result.json")"
 # PR 507: the finished requests are handed back; the ones the CLI took start now, each in its own transient unit.
 for f in "${done_files[@]}"; do mv "$f" "$STATE/requests/reported/" 2>/dev/null || true; done
 started=0
-while IFS=$'\t' read -r id kind src; do
+# PR 396: a restore (RESTORE_STAGING / RESTORE_PRODUCTION) goes to extas-restore with its backup, minute and the
+# staging request it follows; "-" stands for "none" (an empty field would shift the others).
+while IFS=$'\t' read -r id kind src bk at sof; do
   [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || continue
-  [[ "$kind" =~ ^(BACKUP|RESTORE_DRILL)$ ]] && [[ "$src" =~ ^(|all|local|blob|drive)$ ]] || continue
-  if "${VAULT_SYNC_RUNNER:-systemd-run}" --no-block --collect --unit "extas-request-${id:0:8}" \
-      "$BIN/extas-backup" request "$id" "$kind" "${src:-all}" >/dev/null 2>&1; then
+  [ "$src" = - ] && src=""
+  case "$kind" in
+    BACKUP|RESTORE_DRILL)
+      [[ "$src" =~ ^(|all|local|blob|drive)$ ]] || continue
+      cmd=("$BIN/extas-backup" request "$id" "$kind" "${src:-all}") ;;
+    RESTORE_STAGING|RESTORE_PRODUCTION)
+      [[ "$src" =~ ^(local|blob|drive)$ ]] || continue
+      where="$([ "$kind" = RESTORE_PRODUCTION ] && echo production || echo staging)"
+      cmd=(bash "$BIN/extas-restore" request "$id" "$where" "$src" "${bk:--}" "${at:--}" "${sof:--}") ;;
+    *) continue ;;
+  esac
+  if "${VAULT_SYNC_RUNNER:-systemd-run}" --no-block --collect --unit "extas-request-${id:0:8}" "${cmd[@]}" >/dev/null 2>&1; then
     started=$((started + 1))
   else
     jq -n --arg id "$id" '{id:$id, ok:false, detail:"the server could not start it"}' > "$STATE/requests/$id.json"
   fi
-done < <(jq -r '.requests[]? | [.id, .kind, (.source // "")] | @tsv' "$work/out/result.json")
+done < <(jq -r '.requests[]? | [.id, .kind, (.source // "-"), (.backup // "-"), (.at // "-"), (.stagingOf // "-")] | @tsv' "$work/out/result.json")
 asked="$([ "$started" -gt 0 ] && echo "; started $started request(s)" || true)"
 
 if [ "$(jq -r '.changed' "$work/out/result.json")" != true ]; then

@@ -8660,10 +8660,18 @@ model RestoreTest {
 }
 
 /// @stage S19 · PR 396 — a restore: staging first, typed confirmation for production.
+/// Settings › System › Backups › Restore: `environment` "staging" restores a backup into the check copy (container
+/// extas-pg-restore, never the live database); "production" puts the same backup on the live shop and is accepted only
+/// for the newest staging restore that SUCCEEDED (`stagingOfId`), with RESTORE typed (`confirmationTyped`) and the
+/// owner's PIN (`approvedById`). The server's vault sync takes a QUEUED row (RUNNING) and writes the outcome back.
+/// After a production restore the live database is the backup's, so this row of it is gone: the server keeps the
+/// outcome (state/restore-production.json) and tells the owner on Telegram. Never deleted.
 /// @scope installation — the one server.
 model RestoreRequest {
   id                String           @id @default(uuid(7)) @db.Uuid
+  /// What is restored: `database` (the photos have their own command, extas-restore media).
   target            String
+  /// `staging` or `production`.
   environment       String
   pointInTime       DateTime?        @db.Timestamptz(3)
   confirmationTyped Boolean          @default(false)
@@ -8674,6 +8682,16 @@ model RestoreRequest {
   finishedAt        DateTime?        @db.Timestamptz(3)
   createdAt         DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
+  /// PR 396: where from — `local` (the server's disk), `blob` (Azure Blob) or `drive` (Google Drive).
+  source            String?
+  /// PR 396: the backup's stamp (YYYYMMDD-HHMM); null = the newest. The server writes back the one it used.
+  backup            String?
+  /// PR 396: what the server said.
+  detail            String?
+  /// PR 396: a production restore names the staging restore of the same backup it follows.
+  stagingOfId       String?          @db.Uuid
+
+  @@index([status, createdAt])
 }
 
 /// @stage S19 · PR 507 (CN-030) — a backup or a restore drill asked for in the admin (Settings › System › Backups:
