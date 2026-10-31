@@ -5,6 +5,8 @@
 // still due (SIM-F-001) and never shown for a fully paid order. PR 546 (SIM-F-013): a cancellation says why in plain
 // words (`{cancelReason}`), and a duplicate names the order that goes ahead (`{keptOrderNumber}`, `{keptOrderLink}`).
 // PR 542: an advance request from the order is its own message (`advanceRequest`), with `{advanceAmount}` and `{payLink}`.
+// PR 148 follow-up (SIM-F-052/F-053): the refund paid (`{refundAmount}`), the exchange approved (`{exchangeOrderNumber}`,
+// `{exchangeAmountLine}`), a failed delivery try and the late apology start their own notices.
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { Journey, JourneyStep, JourneyStepConfig, MessageChannel } from '@extas/settings';
 
@@ -55,11 +57,28 @@ export const OUT_FOR_DELIVERY_EVENT = 'shipment.outForDelivery';
 /** Follow-up 287: the timeline row of a refused cancel request (the order's status does not change). */
 export const CANCEL_REFUSED_EVENT = 'order.refuseCancelRequest';
 
+/**
+ * PR 148 follow-up (SIM-F-052/F-053) — the timeline rows that start the later notices: the refund paid out
+ * (@extas/payments `refund.completed`, its `amountMinor`), an exchange approved (@extas/orders `exchange.approved`, its
+ * `newOrderId`), and two the courier tracking writes (@extas/shipping): a failed delivery try and a parcel past its
+ * promise. None of them changes the order's status.
+ */
+export const REFUND_DONE_EVENT = 'refund.completed';
+export const EXCHANGE_APPROVED_EVENT = 'exchange.approved';
+export const ATTEMPT_FAILED_EVENT = 'shipment.attemptFailed';
+export const LATE_EVENT = 'shipment.late';
+/** The timeline types (beside the status changes) that start a step; the planner reads only these. */
+export const STEP_EVENT_TYPES = ['order.placed', OUT_FOR_DELIVERY_EVENT, CANCEL_REFUSED_EVENT, REFUND_DONE_EVENT, EXCHANGE_APPROVED_EVENT, ATTEMPT_FAILED_EVENT, LATE_EVENT] as const;
+
 /** The steps an order event starts. */
 export function stepsOf(e: Pick<TimelineEvent, 'type' | 'toStatus'>): JourneyStep[] {
   if (e.type === 'order.placed') return ['placed', 'selfConfirm'];
   if (e.type === OUT_FOR_DELIVERY_EVENT) return ['outForDelivery', 'deliveryDay'];
   if (e.type === CANCEL_REFUSED_EVENT) return ['cancelRefused'];
+  if (e.type === REFUND_DONE_EVENT) return ['refunded'];
+  if (e.type === EXCHANGE_APPROVED_EVENT) return ['exchangeApproved'];
+  if (e.type === ATTEMPT_FAILED_EVENT) return ['attemptFailed'];
+  if (e.type === LATE_EVENT) return ['lateApology'];
   switch (e.toStatus) {
     case 'CONFIRMED':
       return ['confirmed'];
@@ -107,8 +126,16 @@ export function stillFits(step: string, status: string): boolean {
       return DELIVERED.includes(status);
     case 'cancelled':
       return status === 'CANCELLED';
+    // PR 148 follow-up: like a refused cancel, a failed try or a late parcel says nothing once the order arrived, came
+    // back or was cancelled
     case 'cancelRefused':
+    case 'attemptFailed':
+    case 'lateApology':
       return !DONE.includes(status) && !DELIVERED.includes(status);
+    // the money went back, the exchange was approved: true whatever the order did since (a cancel, a return)
+    case 'refunded':
+    case 'exchangeApproved':
+      return true;
     case 'onHold':
       return status === 'ON_HOLD';
     case 'advanceRequested':
@@ -247,9 +274,16 @@ export interface RenderInput {
   kept?: { number: string; link: string | null } | null;
   /** PR 542 — the advance still to pay (asked − paid) and its pay link, when the order waits for one. */
   advance?: { amountMinor: number; link: string | null } | null;
+  /** PR 148 follow-up — the refund paid out, from its timeline row (the `refunded` notice). */
+  refundMinor?: number | null;
+  /** PR 148 follow-up — the exchange's new parcel: its order number and what the rider collects for it (0: nothing). */
+  exchange?: { number: string; collectMinor: number } | null;
 }
 
-export type Rendered = { ok: true; text: string; subject: string | null } | { ok: false; reason: 'AMOUNT_RULE' | 'NO_LINK' | 'NO_KEPT_ORDER' | 'UNKNOWN_TOKEN'; field: string };
+export type Rendered = { ok: true; text: string; subject: string | null } | { ok: false; reason: 'AMOUNT_RULE' | 'NO_LINK' | 'NO_KEPT_ORDER' | 'NO_EVENT' | 'UNKNOWN_TOKEN'; field: string };
+
+/** PR 148 follow-up — the tokens that read the timeline row that started the message (never filled with nothing). */
+export const EVENT_TOKENS: ReadonlySet<string> = new Set(['refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine']);
 
 const fill = (text: string, vars: Record<string, string>) => text.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (m, k: string) => vars[k] ?? m);
 const tidy = (text: string) =>
@@ -272,6 +306,8 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     if (t === 'keptOrderLink' && !v.kept?.link) return { ok: false, reason: 'NO_LINK', field: t };
     if (t === 'advanceAmount' && !(v.advance && v.advance.amountMinor > 0)) return { ok: false, reason: 'AMOUNT_RULE', field: t };
     if (t === 'payLink' && !v.advance?.link) return { ok: false, reason: 'NO_LINK', field: t };
+    if (t === 'refundAmount' && !(v.refundMinor && v.refundMinor > 0)) return { ok: false, reason: 'NO_EVENT', field: t };
+    if ((t === 'exchangeOrderNumber' || t === 'exchangeAmountLine') && !v.exchange) return { ok: false, reason: 'NO_EVENT', field: t };
   }
   const amount = formatAmount(Math.max(0, v.dueMinor), v.currency);
   const exactWords = v.exactAmount && all.includes('exactAmountLine') ? (v.dueMinor > 0 ? v.exactAmount.due : v.exactAmount.paid) : null;
@@ -294,6 +330,10 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     keptOrderLink: v.kept?.link ?? '',
     advanceAmount: v.advance ? formatAmount(Math.max(0, v.advance.amountMinor), v.currency) : '',
     payLink: v.advance?.link ?? '',
+    refundAmount: v.refundMinor ? formatAmount(v.refundMinor, v.currency) : '',
+    exchangeOrderNumber: v.exchange?.number ?? '',
+    // what the rider collects for the new parcel, in the amount line's words; nothing to collect: no line
+    exchangeAmountLine: v.exchange && v.exchange.collectMinor > 0 ? fill(v.amountLine, { amount: formatAmount(v.exchange.collectMinor, v.currency) }) : '',
   };
   for (const t of all) if (!(t in vars)) return { ok: false, reason: 'UNKNOWN_TOKEN', field: t };
   return { ok: true, text: tidy(fill(body, vars)), subject: subject === null ? null : tidy(fill(subject, vars)) };
@@ -442,6 +482,10 @@ export const SAMPLE_ORDER = {
   paidMinor: { cod: 0, prepaid: 249_000, partPaid: 100_000 }, // hardcode-ok: a sample order's payments, never a price or a fee
   advanceMinor: 50_000,
   payToken: 'sample',
+  // PR 148 follow-up: a sample refund and a sample exchange parcel (its number, and what its rider would collect)
+  refundMinor: 120_000, // hardcode-ok: a sample refund for the preview, never a price or a fee
+  exchangeNumber: '100236',
+  exchangeCollectMinor: 10_000, // hardcode-ok: a sample exchange parcel's amount for the preview, never a fee
 } as const;
 
 export interface SampleSettings {
@@ -471,6 +515,8 @@ export function sampleInput(s: SampleSettings, lang: 'bn' | 'en', sample: Sample
     cancelReason: s.cancelReason?.[lang] ?? '',
     kept: { number: SAMPLE_ORDER.keptNumber, link: orderLink(s.host, SAMPLE_ORDER.keptNumber) },
     advance: { amountMinor: SAMPLE_ORDER.advanceMinor, link: payLink(s.host, SAMPLE_ORDER.payToken, lang) },
+    refundMinor: SAMPLE_ORDER.refundMinor,
+    exchange: { number: SAMPLE_ORDER.exchangeNumber, collectMinor: SAMPLE_ORDER.exchangeCollectMinor },
   };
 }
 
@@ -500,7 +546,7 @@ export function consentWordOf(cfg: { stopWords: readonly string[]; startWords: r
  * The `{tokens}` a template may use: exactly what `render` fills (the default pack checks the same list, @extas/seed
  * `TEMPLATE_TOKENS`). A token outside it would go out as written, so the editor refuses it.
  */
-export const MESSAGE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'amountDue', 'amountLine', 'exactAmountLine', 'trackingLink', 'orderLink', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink'] as const;
+export const MESSAGE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'amountDue', 'amountLine', 'exactAmountLine', 'trackingLink', 'orderLink', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink', 'refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine'] as const;
 export type MessageToken = (typeof MESSAGE_TOKENS)[number];
 
 /** The longest body and subject a template keeps (the default pack's own limits). */

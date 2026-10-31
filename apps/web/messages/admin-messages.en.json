@@ -46,6 +46,10 @@
       "advanceRequested": "Advance asked",
       "advanceRequest": "Advance request",
       "giftReceiver": "Gift receiver",
+      "refunded": "Refund paid",
+      "exchangeApproved": "Exchange approved",
+      "attemptFailed": "Delivery try failed",
+      "lateApology": "Late delivery apology",
       "consentReply": "Answer to a stop or start",
       "autoReply": "Auto-reply",
       "cancelDuplicate": "Cancelled as a duplicate"
@@ -67,6 +71,7 @@
       "AMOUNT_RULE": "Nothing left to pay, so a line with the amount was not sent",
       "NO_LINK": "The shop's address is not known yet, so the link could not go",
       "NO_KEPT_ORDER": "No other order goes ahead",
+      "NO_EVENT": "The refund or exchange it is about was not found",
       "UNKNOWN_TOKEN": "The text has a {word} the system does not know",
       "RETRY": "Failed; it will be tried again",
       "STAFF_RETRY": "Tried again by a person",

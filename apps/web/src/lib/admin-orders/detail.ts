@@ -550,6 +550,9 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.courierCancelConfirmed': 'bad',
   'order.returned': 'bad',
   'shipment.outForDelivery': 'mute',
+  // PR 148 follow-up (SIM-F-053): the courier tracking's failed try and late parcel
+  'shipment.attemptFailed': 'warn',
+  'shipment.late': 'warn',
   'delivery.checkOpened': 'warn',
   'order.deliveryCorrected': 'bad',
   'return.reason': 'warn',

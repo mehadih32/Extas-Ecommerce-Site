@@ -704,6 +704,8 @@
       "shipment_areaHeld": "কুরিয়ার বুকিং অপেক্ষায়: কুরিয়ার এই এলাকা এখনো চেনে না",
       "shipment_bookingFailed": "কুরিয়ার বুকিং হয়নি",
       "shipment_outForDelivery": "কুরিয়ার ডেলিভারিতে বের হয়েছে",
+      "shipment_attemptFailed": "কুরিয়ার এবার ডেলিভারি দিতে পারেনি",
+      "shipment_late": "পার্সেল কথা দেওয়া সময় পার করেছে",
       "delivery_checkOpened": "কুরিয়ার বলছে পৌঁছেছে — আমাদের হিসাব মেলে না",
       "delivery_checkResolved": "ডেলিভারি যাচাইয়ের মীমাংসা",
       "order_deliveryCorrected": "ঠিক করা হলো: ফেরত এসেছে, ডেলিভারি হয়নি",

@@ -721,6 +721,134 @@
       "body": "Hi {customerName}, we could not cancel order {orderNumber}; it goes ahead as planned. Questions? {orderLink}"
     },
     {
+      "key": "order.refunded",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Refunded",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber}-এর {refundAmount} আপনাকে ফেরত দেওয়া হয়েছে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.refunded",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Refunded",
+      "enabled": true,
+      "body": "{storeName}: we have refunded {refundAmount} for order {orderNumber}. Questions? {orderLink}"
+    },
+    {
+      "key": "order.refunded",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Refunded",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber}-এর {refundAmount} আপনাকে ফেরত দেওয়া হয়েছে। কিছু জানার থাকলে: {orderLink}"
+    },
+    {
+      "key": "order.refunded",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Refunded",
+      "enabled": true,
+      "body": "Hi {customerName}, we have refunded {refundAmount} for order {orderNumber}. Questions? {orderLink}"
+    },
+    {
+      "key": "order.exchangeApproved",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Exchange approved",
+      "enabled": true,
+      "body": "{storeName}: অর্ডার {orderNumber}-এর এক্সচেঞ্জ মঞ্জুর হয়েছে। নতুন পার্সেল আসছে অর্ডার {exchangeOrderNumber} হিসেবে। {exchangeAmountLine}"
+    },
+    {
+      "key": "order.exchangeApproved",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Exchange approved",
+      "enabled": true,
+      "body": "{storeName}: your exchange for order {orderNumber} is approved. The new parcel comes as order {exchangeOrderNumber}. {exchangeAmountLine}"
+    },
+    {
+      "key": "order.exchangeApproved",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Exchange approved",
+      "enabled": true,
+      "body": "{customerName}, অর্ডার {orderNumber}-এর এক্সচেঞ্জ মঞ্জুর হয়েছে। নতুন পার্সেল আসছে অর্ডার {exchangeOrderNumber} হিসেবে। {exchangeAmountLine} ধন্যবাদ!"
+    },
+    {
+      "key": "order.exchangeApproved",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Exchange approved",
+      "enabled": true,
+      "body": "Hi {customerName}, your exchange for order {orderNumber} is approved. The new parcel comes as order {exchangeOrderNumber}. {exchangeAmountLine} Thank you!"
+    },
+    {
+      "key": "order.attemptFailed",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Delivery try failed",
+      "enabled": true,
+      "body": "{storeName}: এবার অর্ডার {orderNumber} আপনার কাছে পৌঁছানো যায়নি। কুরিয়ার আবার চেষ্টা করবে, ফোন খোলা রাখুন। খবর দেখুন: {trackingLink}"
+    },
+    {
+      "key": "order.attemptFailed",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Delivery try failed",
+      "enabled": true,
+      "body": "{storeName}: the rider could not deliver order {orderNumber} this time. The courier will try again; please keep your phone on. Track it: {trackingLink}"
+    },
+    {
+      "key": "order.attemptFailed",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Delivery try failed",
+      "enabled": true,
+      "body": "{customerName}, এবার অর্ডার {orderNumber} আপনার কাছে পৌঁছানো যায়নি। কুরিয়ার আবার চেষ্টা করবে, ফোন খোলা রাখুন। খবর দেখুন: {trackingLink}"
+    },
+    {
+      "key": "order.attemptFailed",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Delivery try failed",
+      "enabled": true,
+      "body": "Hi {customerName}, the rider could not deliver order {orderNumber} this time. The courier will try again; please keep your phone on. Track it: {trackingLink}"
+    },
+    {
+      "key": "order.lateApology",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Late apology",
+      "enabled": true,
+      "body": "{storeName}: দুঃখিত, অর্ডার {orderNumber} পৌঁছাতে বলা সময়ের চেয়ে বেশি লাগছে। পার্সেল পথে আছে, খবর দেখুন: {trackingLink}"
+    },
+    {
+      "key": "order.lateApology",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Late apology",
+      "enabled": true,
+      "body": "{storeName}: sorry, order {orderNumber} is taking longer than we said. It is on its way; track it: {trackingLink}"
+    },
+    {
+      "key": "order.lateApology",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Late apology",
+      "enabled": true,
+      "body": "{customerName}, দুঃখিত, অর্ডার {orderNumber} পৌঁছাতে বলা সময়ের চেয়ে বেশি লাগছে। পার্সেল পথে আছে, খবর দেখুন: {trackingLink}"
+    },
+    {
+      "key": "order.lateApology",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Late apology",
+      "enabled": true,
+      "body": "Hi {customerName}, sorry, order {orderNumber} is taking longer than we said. It is on its way; track it: {trackingLink}"
+    },
+    {
       "key": "order.onHold",
       "channel": "SMS",
       "locale": "bn",

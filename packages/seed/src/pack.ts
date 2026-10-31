@@ -22,8 +22,10 @@ import { lockSeed } from './lock';
  * amount due too. `{exactAmountLine}`: CN-014 idea 10. `{senderName}`: a gift's sender (PR 605). PR 546: `{cancelReason}`
  * (a cancellation's reason in plain words), `{keptOrderNumber}` and `{keptOrderLink}` (the order that goes ahead).
  * PR 542: `{advanceAmount}` (the advance still to pay) and `{payLink}` (its pay link) of an advance request.
+ * PR 148 follow-up (SIM-F-052/F-053): `{refundAmount}` (the refund paid out), `{exchangeOrderNumber}` and
+ * `{exchangeAmountLine}` (the exchange's new parcel, and the amount line for what its rider collects; none when nothing).
  */
-export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink'] as const;
+export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink', 'refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine'] as const;
 
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'lower-case words joined by -' });
 const dottedKey = z.string().regex(/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)*$/, { message: 'dotted camelCase key' });

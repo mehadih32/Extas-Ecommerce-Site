@@ -79,6 +79,28 @@ export async function lateParcelIds(deps: Pick<ShippingDeps, 'db' | 'settings' |
   return rows.map((r) => r.id);
 }
 
+/** PR 148 follow-up (SIM-F-053) — the order's timeline type for a parcel past its promise (`@extas/messages` LATE_EVENT). */
+export const LATE_EVENT = 'shipment.late';
+
+/**
+ * PR 148 follow-up — each late parcel (`lateParcelIds`) gets one `shipment.late` row on its order's timeline, once per
+ * parcel: the team sees it on the order, and the "late apology" notice (off as shipped) starts from it. Up to `batch`
+ * parcels a run; nothing else changes.
+ */
+export async function noteLateParcels(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>, storeId: number, batch: number): Promise<{ noted: number }> {
+  const ids = await lateParcelIds(deps, storeId);
+  if (!ids.length) return { noted: 0 };
+  const parcels = await deps.db.shipment.findMany({ where: { storeId, id: { in: ids } }, select: { id: true, orderId: true }, orderBy: { createdAt: 'asc' } });
+  const done = new Set(
+    (await deps.db.orderEvent.findMany({ where: { storeId, type: LATE_EVENT, orderId: { in: parcels.map((p) => p.orderId) } }, select: { data: true } })).map((e) => (e.data as { shipmentId?: string } | null)?.shipmentId),
+  );
+  const todo = parcels.filter((p) => !done.has(p.id)).slice(0, batch);
+  if (todo.length) {
+    await deps.db.orderEvent.createMany({ data: todo.map((p) => ({ storeId, orderId: p.orderId, type: LATE_EVENT, actorType: 'SYSTEM' as const, actorId: null, source: 'courier.track', data: { shipmentId: p.id } })) });
+  }
+  return { noted: todo.length };
+}
+
 /** The store's parcels in one view, newest first. */
 export async function listParcels(deps: ShippingDeps, who: Who, query: unknown = {}): Promise<{ rows: ParcelRow[]; next: string | null; counts: Record<ParcelView, number> }> {
   await allow(deps, who, 'delivery.parcels');
