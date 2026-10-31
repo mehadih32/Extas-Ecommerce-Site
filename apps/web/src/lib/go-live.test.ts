@@ -22,6 +22,7 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     serverSetup: { at: ago(600), full: true, passed: true, counts: { ok: 13, fail: 0, warn: 1 }, steps: [] },
     originCert: { at: ago(3), mode: 'origin', active: true, names: ['example.test', '*.example.test'], daysLeft: 5400, error: null },
     primaryHosts: ['example.test'],
+    ownerData: [{ name: 'Main', missing: [], bands: 2 }],
     ...over,
   };
 }
@@ -63,6 +64,13 @@ describe('go-live checklist (PR 393)', () => {
     expect(r).toMatchObject({ ok: false, vars: { missing: 'shop.other.test', days: 5400 } });
     expect(open(ctx({ primaryHosts: [] }))).toEqual([]);
     expect(open(ctx({ signoff: { ...ctx().signoff, sslStrict: undefined as never } }))).toEqual(['sslStrict']);
+  });
+
+  it('PR 399: the owner\'s data — every live store has its fields and a delivery band; named, never shown', () => {
+    expect(open(ctx({ ownerData: [] }))).toEqual(['ownerData']);
+    const r = goLiveChecks(ctx({ ownerData: [{ name: 'Main', missing: ['legal.tradeLicence'], bands: 0 }, { name: 'Two', missing: [], bands: 1 }, { name: 'Three', missing: [], bands: null }] }));
+    expect(r.items.find((i) => i.key === 'ownerData')).toMatchObject({ ok: false, vars: { stores: 3, missing: 'Main: legal.tradeLicence, delivery band' } });
+    expect(open(ctx({ ownerData: [{ name: 'Main', missing: [], bands: null }] }))).toEqual([]);
   });
 
   it('PR 398: the runbook is a sign-off, and its file exists', () => {

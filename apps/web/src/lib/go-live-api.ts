@@ -14,12 +14,54 @@ import { runtimeState } from './status';
 
 type Deps = Pick<AdminDeps, 'db' | 'resolver' | 'now'>;
 
+/** Something typed in: a non-empty text, list or number; a text in two languages counts when one is there. */
+const filled = (v: unknown): boolean =>
+  v == null
+    ? false
+    : typeof v === 'string'
+      ? v.trim() !== ''
+      : Array.isArray(v)
+        ? v.length > 0
+        : typeof v === 'object'
+          ? Object.values(v as Record<string, unknown>).some(filled)
+          : true;
+
+/**
+ * PR 399: the stores that go live (the mother store and every live or paused one), each with the owner's fields of
+ * `golive.ownerData` still empty there and its switched-on delivery bands. Only names and counts leave here.
+ */
+async function ownerDataNow(deps: Deps) {
+  const want = await deps.resolver.value('golive.ownerData');
+  const stores = await deps.db.store.findMany({
+    where: { archivedAt: null, OR: [{ isPrimary: true }, { status: { in: ['LIVE', 'PAUSED'] } }] },
+    select: { id: true, name: true },
+    orderBy: { id: 'asc' },
+  });
+  return Promise.all(
+    stores.map(async (s) => {
+      const missing: string[] = [];
+      for (const key of want.keys) {
+        let v: unknown = null;
+        try {
+          v = await (deps.resolver.value as (k: string, o: { storeId: number }) => Promise<unknown>)(key, { storeId: s.id });
+        } catch {
+          v = null; // a name the registry does not know counts as missing, so it is seen and fixed
+        }
+        if (!filled(v)) missing.push(key);
+      }
+      const bands = want.deliveryBand ? await deps.db.deliveryBand.count({ where: { storeId: s.id, enabled: true, archivedAt: null } }) : null;
+      return { name: s.name, missing, bands };
+    }),
+  );
+}
+
 /** The checklist now, and the names of the people who confirmed items. */
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
-  const [gate, domains] = await Promise.all([
+  const [gate, domains, ownerData] = await Promise.all([
     backupGateNow(deps, state),
     deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
+    ownerDataNow(deps),
   ]);
   const result = goLiveChecks({
     now: deps.now ? deps.now() : new Date(),
@@ -31,6 +73,7 @@ export async function goLiveNow(deps: Deps) {
     serverSetup: state.serverSetup,
     originCert: state.originCert,
     primaryHosts: domains.map((d) => d.hostname),
+    ownerData,
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length
