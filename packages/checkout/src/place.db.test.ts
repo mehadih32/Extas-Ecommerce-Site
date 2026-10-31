@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { findBag, setBagCode } from '@extas/cart';
-import { noteHold, openErpLink } from '@extas/inventory';
+import { noteHold, openErpLink, sweepReservations, type InventoryDeps } from '@extas/inventory';
 import { captureDraft, checkoutPaused, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
 import { orderReceipt } from './receipt';
@@ -135,6 +135,32 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       const refused = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
       expect((refused.reason as { code?: string }).code).toBe('PRICE_CHANGED');
       expect(await f.t.prisma.couponRedemption.count({ where: { coupon: { code: 'TEST-RACE' } } })).toBe(1);
+    });
+  });
+
+  describe('review R1 M1 · an open order keeps its pieces past the hold time', () => {
+    it('a placed order waiting 25 h keeps its hold (renewed); once cancelled, the next sweep lets it go', async () => {
+      const s = await shown('hold-25h');
+      const r = await s.place();
+      const holds = () => f.t.prisma.stockReservation.findMany({ where: { orderId: r.orderId }, select: { status: true, releasedAt: true, expiresAt: true } });
+      expect((await holds()).map((h) => [h.status, h.releasedAt])).toEqual([['CONVERTED', null]]);
+      const at = f.clock.now;
+      const inv = { db: f.t.prisma, settings: f.deps().settings, now: () => f.clock.now, connections: { use: () => Promise.reject(new Error('no ERP here')) } } as unknown as InventoryDeps;
+      try {
+        f.clock.now = new Date(at.getTime() + 25 * 3_600_000);
+        const swept = await sweepReservations(inv);
+        expect(swept.ordersRenewed).toBeGreaterThanOrEqual(1);
+        const [h] = await holds();
+        expect(h).toMatchObject({ status: 'CONVERTED', releasedAt: null });
+        expect(h!.expiresAt.getTime()).toBeGreaterThan(f.clock.now.getTime());
+        // cancelled: the hold is no longer the order's to keep
+        await f.t.prisma.order.update({ where: { id: r.orderId }, data: { status: 'CANCELLED' } });
+        f.clock.now = new Date(h!.expiresAt.getTime() + 1_000);
+        expect((await sweepReservations(inv)).ordersTimedOut).toBeGreaterThanOrEqual(1);
+        expect((await holds())[0]!.releasedAt).not.toBeNull();
+      } finally {
+        f.clock.now = at;
+      }
     });
   });
 
