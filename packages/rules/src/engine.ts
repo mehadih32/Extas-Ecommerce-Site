@@ -131,10 +131,16 @@ export interface Quote {
   floorHeld: { rule: RuleRef; heldMinor: number }[];
 }
 
-/** PR 609: the lowest selling price over a buying price at a margin (rounded up); null when either is not known. */
-export function floorMinorOf(buyMinor: number | null | undefined, marginPercent: number | null | undefined): number | null {
+/**
+ * PR 609: the lowest selling price over a buying price at a margin (rounded up); null when either is not known.
+ * Review R2 (m2): rounded up to `checkout.money.roundingStepMinor` (`step`), so a cut held at the floor still leaves a
+ * total a rider can collect — up, never down, so the owner's margin always holds. 1 or absent: to the paisa.
+ */
+export function floorMinorOf(buyMinor: number | null | undefined, marginPercent: number | null | undefined, step = 1): number | null {
   if (buyMinor == null || marginPercent == null) return null;
-  return Math.ceil((buyMinor * (100 + marginPercent)) / 100);
+  const raw = Math.ceil((buyMinor * (100 + marginPercent)) / 100);
+  const s = Number.isInteger(step) && step > 1 ? step : 1;
+  return Math.ceil(raw / s) * s;
 }
 
 export interface EngineLimits {
