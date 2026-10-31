@@ -1,0 +1,40 @@
+# S11 · PR 234 — the monthly lab measurement of the shop's speed, ON the VM through the self-hosted runner (CN-003):
+# home, a category and a product page on a phone over slow 4G, and an admin page on a desktop as the read-only check
+# account (infra/deploy/vitals-lab.sh, tools/vitals-lab.mjs). The result stays on the server (state/vitals-lab.json);
+# the admin shows it on Website → SEO and Server and judges it against `seo.vitals.targets`. Nothing is committed.
+name: vitals-monthly
+
+on:
+  schedule:
+    - cron: "0 21 1 * *"   # 03:00 in Dhaka on the 2nd of each month, after the backup and before the smoke test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 30
+    # Its own group, never extas-vm: GitHub keeps one pending run per group, so joining it could cancel a deploy,
+    # server setup or restore waiting there (as journeys.yml). The VM's single runner still takes one job at a time.
+    concurrency:
+      group: extas-vitals
+      cancel-in-progress: false
+    steps:
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      - name: Measure the pages (phone over 4G, admin on a desktop)
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+        run: |
+          live="$LIVE"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/vitals-lab.sh "$live"

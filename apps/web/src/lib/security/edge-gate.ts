@@ -36,6 +36,9 @@ export const EXEMPT_ROUTES: readonly ExemptRoute[] = [
   { prefix: CSP_REPORT_PATH, proof: 'cspReportHandler', why: 'the browser reports what the page policy stopped; nothing is changed' },
 ];
 
+/** PR 234: a real visitor's page sends its speed readings here (same-site, counted like the other reports). */
+export const VITALS_REPORT_PATH = '/api/shop/vitals';
+
 /** True when `path` is under `prefix`: the address itself or below it, never a longer name (`/api/erp/webhookx`). */
 export function underPrefix(path: string, prefix: string): boolean {
   const base = prefix.replace(/\/$/, '');
@@ -51,6 +54,7 @@ const ADMIN_SIGN_IN = ['/api/admin/auth/login', '/api/admin/auth/2fa', '/api/adm
 export function rateBucketOf(method: string, path: string): RateBucket | null {
   if (path === CSP_REPORT_PATH) return 'report';
   if (exemptOf(path)) return path.startsWith('/api/internal/') ? null : 'webhook';
+  if (path === VITALS_REPORT_PATH) return 'report';
   if (isSafeMethod(method)) return null;
   if (ADMIN_SIGN_IN.some((p) => path === p)) return 'signIn';
   if (path.startsWith('/api/admin/')) return null;

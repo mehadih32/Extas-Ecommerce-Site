@@ -474,5 +474,61 @@
       "noDomain": "The shop has no domain of its own yet; nothing was sent.",
       "sitemapsOff": "Sitemaps are off (Sitemaps card); nothing was sent."
     }
+  },
+  "vt": {
+    "title": "Real visitors' speed",
+    "desc": "How fast the shop really loads for its visitors (Core Web Vitals), the number Google ranks by, against the targets. Kept only as daily counts, never who visited.",
+    "span": "The 75th percentile of the last {days} days ({n} page loads): three visits in four were this fast or faster.",
+    "noReadings": "No reading yet in the last {days} days. Pages report once visitors open them.",
+    "col": {
+      "metric": "Measure",
+      "phone": "Phone",
+      "desktop": "Desktop",
+      "target": "Target"
+    },
+    "m": {
+      "LCP": "main picture shown",
+      "CLS": "page jumps",
+      "INP": "answer to a tap",
+      "TTFB": "first answer from the server",
+      "FCP": "first thing drawn"
+    },
+    "none": "—",
+    "byKind": "LCP on a phone by page:",
+    "kind": {
+      "home": "Home",
+      "category": "Category",
+      "product": "Product",
+      "combo": "Sets",
+      "help": "Help",
+      "search": "Search",
+      "checkout": "Bag and checkout",
+      "account": "Account",
+      "other": "Other"
+    },
+    "lab": "Monthly check (a phone over 4G)",
+    "labOk": "{when}: every page on target. {profile}",
+    "labMiss": "{when}: a page missed a target (in red). {profile}",
+    "noLab": "Not run yet. It runs by itself on the 2nd of each month, on the server, against the preview address.",
+    "kb": "{n} KB",
+    "load": "loads in {v}",
+    "misses": "missed: {list}",
+    "collect": "Measure real visitors",
+    "collectHint": "On: each page reports its speed as it loads. Nothing about the visitor is kept.",
+    "f": {
+      "share": "Visits that report (in a hundred)",
+      "shareHint": "Default {v} ({min} to {max}). Fewer is enough on a busy shop.",
+      "days": "Days read",
+      "daysHint": "Default {v} ({min} to {max}). Google reads the last 28 days."
+    },
+    "t": {
+      "lcpMs": "Target: main picture shown (ms)",
+      "clsThousandths": "Target: page jumps (× 1000; 100 = 0.1)",
+      "inpMs": "Target: answer to a tap (ms)",
+      "ttfbMs": "Target: first answer (ms)",
+      "categoryKb": "Target: category page weight (KB, monthly check)",
+      "adminMs": "Target: admin page load (ms, monthly check)",
+      "hint": "Default {v} ({min} to {max})."
+    }
   }
 }

@@ -3,13 +3,14 @@
 // how many Bengali pages are ready (PR 220); the search titles and descriptions of every kind of page and the AI drafts
 // (PR 221); which data for search engines (structured data) the pages carry (PR 222); the pages that stay when a
 // product or collection cannot be bought (PR 527, "Pages that stay"); the sitemaps (PR 228); robots.txt and the AI
-// robots (PR 229); the photo descriptions (PR 232); Search Console and Bing (PR 233). Seeing needs `seo.read` (the
+// robots (PR 229); the photo descriptions (PR 232); Search Console and Bing (PR 233); real visitors' speed (PR 234).
+// Seeing needs `seo.read` (the
 // read-only check account has it); saving needs `seo.manage`.
 // Guide: docs/admin-guide/pages/website/seo.md.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
-import { namingTokens, SEO_ALT_TEXT_LIMITS, SEO_VERIFICATION_LIMITS, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
+import { namingTokens, SEO_ALT_TEXT_LIMITS, SEO_VERIFICATION_LIMITS, SEO_VITALS_LIMITS, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { IndexingCard, StructuredDataCard } from "@/components/admin/website/SeoScreen";
 import { AiDraftsCard, TitlesCard } from "@/components/admin/website/SeoTexts";
@@ -18,6 +19,7 @@ import { SitemapsCard } from "@/components/admin/website/SitemapsCard";
 import { RobotsCard } from "@/components/admin/website/RobotsCard";
 import { AltTextCard } from "@/components/admin/website/AltTextCard";
 import { SearchEnginesCard } from "@/components/admin/website/SearchEnginesCard";
+import { VitalsCard } from "@/components/admin/website/VitalsCard";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { formatNumber } from "@/components/admin/products/model";
@@ -34,6 +36,7 @@ import { altTextFor } from "@/lib/seo/alt-text";
 import { missingAlt } from "@/lib/seo/alt-text-data";
 import { searchEngineState } from "@/lib/seo/search-engines";
 import { SITEMAP_INDEX } from "@/lib/seo/sitemap";
+import { labReport, vitalsReport } from "@/lib/seo/vitals-data";
 import { shopContextFor } from "@/lib/shop/context";
 import bn from "../../../../../messages/admin-seo.bn.json";
 import en from "../../../../../messages/admin-seo.en.json";
@@ -85,6 +88,8 @@ export default async function SeoPage() {
   // PR 229: what /robots.txt answers on the shop's own domain
   const robots = robotsTxt(snap.values["seo.robots"], { open, searchListed: idx.pages.search, sitemap: snap.values["seo.sitemaps"].enabled ? sitemaps.index : null });
   // PR 232: a description as the shop writes it, in the shop's English words (always English: that one goes live)
+  // PR 234: real visitors' speed and the newest monthly lab run
+  const [vReport, vLab] = await Promise.all([vitalsReport(deps.db, MOTHER_STORE_ID, snap.values["seo.vitals"]), labReport(deps.db, MOTHER_STORE_ID, snap.values["seo.vitals"])]);
   // PR 233: the shop's own address (the store's primary domain) is what Search Console and Bing verify
   const primarySite = snap.site.primary ? `https://${snap.site.primary}/` : null;
   const primarySitemap = snap.site.primary ? new URL(SITEMAP_INDEX, `https://${snap.site.primary}`).toString() : null;
@@ -168,6 +173,9 @@ export default async function SeoPage() {
       </div>
       <div className="a2-mt12">
         <RobotsCard d={d} value={snap.values["seo.robots"]} defaults={snap.defaults["seo.robots"]} limits={SEO_ROBOTS_LIMITS} version={snap.versions["seo.robots"]} canWrite={canWrite} preview={robots} />
+      </div>
+      <div className="a2-mt12">
+        <VitalsCard d={d} value={snap.values["seo.vitals"]} defaults={snap.defaults["seo.vitals"]} limits={SEO_VITALS_LIMITS} version={snap.versions["seo.vitals"]} canWrite={canWrite} report={vReport} lab={vLab} locale={view.locale} timeZone={view.timeZone} />
       </div>
       <div className="a2-mt12">
         <SearchEnginesCard d={d} value={snap.values["seo.verification"]} limits={SEO_VERIFICATION_LIMITS} version={snap.versions["seo.verification"]} canWrite={canWrite} engines={engines} site={primarySite} sitemap={primarySitemap} />

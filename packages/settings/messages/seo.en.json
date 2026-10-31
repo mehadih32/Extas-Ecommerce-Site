@@ -50,6 +50,10 @@
     "verification": {
       "label": "Search Console and Bing",
       "help": "The verification codes Google Search Console and Bing Webmaster Tools give (\"HTML tag\"). Every shop page carries each code as its meta tag, so the engine can confirm the shop is yours. Empty as shipped."
+    },
+    "vitals": {
+      "label": "Real visitors' speed",
+      "help": "Shop pages report how fast they loaded for real visitors (Core Web Vitals: LCP, CLS, INP, TTFB), kept only as daily counts, never who visited. The admin shows the 75th percentile of the last days against the targets, next to the monthly measurement on a phone over 4G."
     }
   },
   "defaults": {

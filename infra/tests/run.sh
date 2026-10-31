@@ -454,6 +454,42 @@ sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
 check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c' "$T/docker.log")" "1"
 rm -rf "$T"
 
+# Monthly speed lab (S11 · PR 234): vitals-lab.sh makes the check account the same way as smoke.sh, hands the browser
+# only its sign-in and the preview login, and keeps the browser's numbers as state/vitals-lab.json (readable, swapped in
+# whole); a run that measured nothing fails and leaves the old file. Docker is a stand-in that plays both containers.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
+printf 'STAGING_PASSWORD=stagepw\n' > "$T/root/config/secrets/staging.env"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+case "$1" in image) exit 0 ;; images) echo "extas-migrate:newest"; exit 0 ;; build) exit 0 ;; esac
+out=""; envf=""; prev=""
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/out) out="${a%:/out}" ;; esac
+  [ "$prev" = --env-file ] && envf="$a"
+  prev="$a"
+done
+if grep -q check-account <<<"$*"; then
+  printf 'SMOKE_EMAIL=c@check.invalid\nSMOKE_PASSWORD=pw1\nSMOKE_TOTP_SECRET=SEED\n' > "$out/check.env"; exit 0
+fi
+cp "$envf" "$FAKE_SEEN"
+printf '{"at":"x","sha":"s","profile":"p","pages":%s}\n' "$FAKE_PAGES" > "$out/vitals-lab.json"
+STUB
+chmod +x "$T/bin/docker"
+vl() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" SMOKE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" FAKE_SEEN="$T/seen.env" \
+  "$@" bash ../deploy/vitals-lab.sh 0123456789abcdef0123; }
+rc=0; vl FAKE_PAGES='[{"path":"/","kind":"home","lcpMs":1800,"kb":700}]' >/dev/null || rc=$?
+check "speed lab: a finished run exits 0 and keeps the numbers" "$rc:$(jq -c '.pages[0] | {kind,lcpMs}' "$T/root/state/vitals-lab.json"):$(stat -c %a "$T/root/state/vitals-lab.json")" '0:{"kind":"home","lcpMs":1800}:644'
+check "speed lab: the browser gets the check account and the preview login only" "$(grep -c '^SMOKE_PASSWORD=pw1$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_PASSWORD=stagepw$' "$T/seen.env"):$(grep -cE 'DATABASE|VAULT' "$T/seen.env")" "1:1:0"
+check "speed lab: the preview host and the commit" "$(grep -c 'BASE=https://new.extas.com.bd .*LAB_SHA=0123456789ab ' "$T/docker.log")" "1"
+check "speed lab: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.vitals*' | wc -l)" "0"
+rc=0; vl FAKE_PAGES='[]' >/dev/null 2>&1 || rc=$?
+check "speed lab: a run that measured nothing fails and keeps the last result" "$rc:$(jq -r '.pages[0].kind' "$T/root/state/vitals-lab.json")" "1:home"
+rm -rf "$T"
+
 # Docs on the server (PR 594, CN-011): docs-sync.sh copies README.md + docs/ of a checkout to $EXTAS_ROOT/docs/<sha12>/
 # with a COMMIT file, points `current` at it in one step, links unchanged files to the previous copy, keeps the newest
 # DOCS_KEEP_VERSIONS (never the current one), copies nothing back and refuses anything that is not a commit hash.
