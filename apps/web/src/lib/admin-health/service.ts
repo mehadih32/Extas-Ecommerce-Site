@@ -6,13 +6,15 @@
 // PR 414: the saved browser journeys — their last run (journeys.json), the runs kept for comparison (journeys/*.json,
 // newest first), their schedule (`health.journeys`, `settings.write`, audited) and "Run now" (`settings.write`,
 // audited): it only records the press; the server's hourly check starts the run (infra/deploy/journeys.sh).
+// PR 416: the UI checks in those runs (`health.uiChecks`, `settings.write`, audited as health.uiChecks.save) and each
+// kept run's UI findings.
 import { createHash } from 'node:crypto';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { workerStatus } from '@extas/jobs';
-import { healthHubSchema, healthJourneysSchema, INSTALLATION, type HealthHubSettings, type HealthJourneysSettings } from '@extas/settings';
+import { healthHubSchema, healthJourneysSchema, healthUiChecksSchema, INSTALLATION, type HealthHubSettings, type HealthJourneysSettings, type HealthUiChecksSettings } from '@extas/settings';
 import { openProblemCounts } from '../admin-problems/service';
 import type { AppResolver } from '../settings';
 import { hubLines, hubOverall, runAsked, type HubLine, type HubLineState, type JourneysResult, type K6Baseline, type MonitorHealth, type SmokeResult, type StateFile } from './hub';
@@ -43,6 +45,13 @@ export interface JourneysCard {
   version: string;
 }
 
+/** PR 416: the UI checks in the saved journeys' runs. */
+export interface UiChecksCard {
+  key: 'uiChecks';
+  value: HealthUiChecksSettings;
+  version: string;
+}
+
 /** One kept journeys run, newest first. */
 export interface JourneyRun {
   at: string;
@@ -53,12 +62,14 @@ export interface JourneyRun {
   steps: number;
   skipped: number;
   first: string;
+  /** PR 416: the UI findings of the run; null when the UI checks were off for it. */
+  ui: number | null;
 }
 
 export interface HubView {
   overall: HubLineState;
   lines: HubLine[];
-  cards: { hub: HubCard; journeys: JourneysCard };
+  cards: { hub: HubCard; journeys: JourneysCard; uiChecks: UiChecksCard };
   /** Whether the state folder is there at all (false on a developer machine). */
   serverConnected: boolean;
   /** PR 414: the kept journeys runs, newest first (at most RUNS_SHOWN). */
@@ -125,6 +136,7 @@ async function keptRuns(dir: string | null): Promise<JourneyRun[]> {
       steps: num(f.data.steps),
       skipped: num(f.data.skipped),
       first: typeof f.data.problems?.[0] === 'string' ? f.data.problems[0].slice(0, 160) : '',
+      ui: Array.isArray(f.data.ui?.kinds) && f.data.ui.kinds.length ? num(f.data.ui.issues) : null,
     }));
 }
 
@@ -133,9 +145,10 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
   await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
   const dir = deps.stateDir === undefined ? process.env.EXTAS_STATE_DIR || null : deps.stateDir;
-  const [limits, schedule, health, smoke, k6, journeys, runs, worker, connected, problems] = await Promise.all([
+  const [limits, schedule, uiChecks, health, smoke, k6, journeys, runs, worker, connected, problems] = await Promise.all([
     deps.resolver.value('health.hub'),
     deps.resolver.value('health.journeys'),
+    deps.resolver.value('health.uiChecks'),
     stateFile<MonitorHealth>(dir, 'health.json'),
     stateFile<SmokeResult>(dir, 'smoke.json'),
     stateFile<K6Baseline>(dir, 'k6-baseline.json'),
@@ -149,7 +162,7 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
   return {
     overall: hubOverall(lines),
     lines,
-    cards: { hub: cardOf(limits), journeys: journeysCardOf(schedule) },
+    cards: { hub: cardOf(limits), journeys: journeysCardOf(schedule), uiChecks: { key: 'uiChecks', value: uiChecks, version: versionOf(uiChecks) } },
     serverConnected: connected,
     runs,
     runAsked: runAsked({ journeys, schedule }),
@@ -160,6 +173,7 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
 export async function saveHubCard(deps: HealthDeps, who: HealthWho, input: unknown): Promise<HubView> {
   await requirePermission(deps.db, who.actor, 'settings.write', { storeId: S });
   if (isObj(input) && input.key === 'journeys') return saveJourneysCard(deps, who, input);
+  if (isObj(input) && input.key === 'uiChecks') return saveUiChecksCard(deps, who, input);
   if (!isObj(input) || input.key !== 'hub') throw new HealthPageError('INVALID_INPUT', 400, ['key']);
   const before = await deps.resolver.value('health.hub');
   if (input.version !== versionOf(before)) throw new HealthPageError('STALE', 409);
@@ -174,6 +188,20 @@ export async function saveHubCard(deps: HealthDeps, who: HealthWho, input: unkno
 }
 
 const issuesOf = (e: { issues: { path: PropertyKey[] }[] }) => [...new Set(e.issues.map((i) => String(i.path[0] ?? 'value')))];
+
+/** PR 416: the UI checks in the journeys' runs (`settings.write`, checked by the caller; audited). */
+async function saveUiChecksCard(deps: HealthDeps, who: HealthWho, input: Record<string, unknown>): Promise<HubView> {
+  const before = await deps.resolver.value('health.uiChecks');
+  if (input.version !== versionOf(before)) throw new HealthPageError('STALE', 409);
+  const ok = healthUiChecksSchema.safeParse(input.value);
+  if (!ok.success) throw new HealthPageError('INVALID_INPUT', 400, issuesOf(ok.error));
+  const changed = (Object.keys(ok.data) as (keyof HealthUiChecksSettings)[]).filter((k) => ok.data[k] !== before[k]);
+  if (changed.length) {
+    await deps.resolver.set('health.uiChecks', ok.data, INSTALLATION, { actorId: who.actor.staffUserId ?? null, reason: 'Reports › Site health' });
+    await audit(deps.db, who.actor, { storeId: S, action: 'health.uiChecks.save', entityType: 'Setting', entityId: 'health.uiChecks', before: { ...before }, after: { ...ok.data, changed } }, who.ctx);
+  }
+  return hubView(deps, who);
+}
 
 /** PR 414: the journeys' schedule; the last "Run now" press is kept as it was. */
 async function saveJourneysCard(deps: HealthDeps, who: HealthWho, input: Record<string, unknown>): Promise<HubView> {

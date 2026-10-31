@@ -59,7 +59,8 @@ export function urlList(base, lighthouserc = readJson('lighthouserc.json')) {
 }
 
 /* ---------- checks that run inside the page (serialised by Playwright: no closures over module scope) ---------- */
-function appChecks(o) {
+// PR 416: also run by the saved journeys' UI checks (tools/journeys.mjs).
+export function appChecks(o) {
   const issues = [];
   const W = innerWidth;
   const vis = (e) => {

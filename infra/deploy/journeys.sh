@@ -13,6 +13,8 @@
 # 3. <out-dir> gets README.md, result.json and a picture of each failed step (journeys.yml commits them when a run
 #    fails, or passes again after a failure); state/journeys.json gets the summary for Reports › Site health, and
 #    state/journeys/<time>.json keeps each run for comparison (the newest JOURNEYS_KEEP).
+#    PR 416: with UI checks on (JOURNEYS_UI from the owner's switches) every step is also measured for a broken layout,
+#    cut-off text, pictures not loaded and buttons that cannot be pressed; the summary counts them (`ui`).
 # Exit 0 = every step passed, or nothing was due. No password, seed or connection string is printed or kept.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -85,12 +87,12 @@ at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 kind="$([ "$why" = scheduled ] && echo scheduled || echo "run now")"
 rc=0
 timeout "$((JOURNEYS_TIMEOUT_MIN * 60))" docker run --rm --name "extas-journeys-$$" --ipc=host --env-file "$work/journeys.env" \
-  -e BASE="https://$EXTAS_STAGING_HOST" -e JOURNEYS_OUT=/out -e JOURNEYS_KIND="$kind" -e JOURNEYS_SHA="${SHA:0:12}" -e JOURNEYS_AT="$at ($EXTAS_TIMEZONE)" \
+  -e BASE="https://$EXTAS_STAGING_HOST" -e JOURNEYS_UI="${JOURNEYS_UI:-}" -e JOURNEYS_OUT=/out -e JOURNEYS_KIND="$kind" -e JOURNEYS_SHA="${SHA:0:12}" -e JOURNEYS_AT="$at ($EXTAS_TIMEZONE)" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" \
   "$IMG" node /w/tools/journeys.mjs || rc=$?
 
 if [ -f "$OUT/result.json" ]; then
-  jq -c --arg kind "$kind" '{at, kind: $kind, sha, ok, journeys, failed, steps, skipped, problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/journeys.json.tmp"
+  jq -c --arg kind "$kind" '{at, kind: $kind, sha, ok, journeys, failed, steps, skipped, ui: (.ui // null), problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/journeys.json.tmp"
 else
   jq -cn --arg at "$at" --arg kind "$kind" --arg sha "${SHA:0:12}" --arg rc "$rc" \
     '{at:$at, kind:$kind, sha:$sha, ok:false, journeys:0, failed:0, steps:0, skipped:0, problems:["the journeys did not finish (exit " + $rc + ")"]}' > "$STATE/journeys.json.tmp"

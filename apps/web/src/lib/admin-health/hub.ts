@@ -60,6 +60,8 @@ export interface JourneysResult {
   steps?: number;
   skipped?: number;
   problems?: string[];
+  /** PR 416: the UI checks that ran (none: off) and how many findings they had. */
+  ui?: { kinds?: string[]; issues?: number } | null;
 }
 
 export interface HubInput {

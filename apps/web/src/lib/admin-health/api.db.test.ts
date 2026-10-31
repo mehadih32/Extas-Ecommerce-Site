@@ -134,7 +134,7 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health on PostgreSQL (PR 413)', 
       utimesSync(join(dir, 'journeys', name), t0, t0);
     };
     run('20261030-0400.json', JSON.stringify({ ok: true, kind: 'scheduled', journeys: 8, failed: 0, steps: 52, skipped: 4, problems: [] }), 24 * 60);
-    run('20261031-0400.json', JSON.stringify({ ok: false, kind: 'scheduled', journeys: 8, failed: 1, steps: 52, skipped: 0, problems: ['admin (phone) step 2 open /admin/products: request 500: /admin/products'] }), 5);
+    run('20261031-0400.json', JSON.stringify({ ok: false, kind: 'scheduled', journeys: 8, failed: 1, steps: 52, skipped: 0, ui: { kinds: ['layout', 'taps'], issues: 3 }, problems: ['admin (phone) step 2 open /admin/products: request 500: /admin/products'] }), 5);
     run('broken.json', '{', 1);
     run('notes.txt', 'not a run', 1);
     const g = await send('GET');
@@ -144,6 +144,22 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health on PostgreSQL (PR 413)', 
       [true, 4],
     ]);
     expect(g.a.view.runs[0]!.first).toContain('/admin/products');
+    // PR 416: a run with the UI checks on says how many findings it had; one without them says nothing was measured
+    expect(g.a.view.runs.map((r) => r.ui)).toEqual([3, null]);
+  });
+
+  it('PR 416: the UI checks card is off as it ships; saved with settings.write (audited); a stale or bad value is refused', async () => {
+    const card = (await send('GET')).a.view.cards.uiChecks;
+    expect(card.value).toEqual({ enabled: false, layout: true, text: true, images: true, taps: true });
+    expect((await send('PUT', { key: 'uiChecks', value: { ...card.value, enabled: 'yes' }, version: card.version })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['enabled'] });
+    expect((await send('PUT', { key: 'uiChecks', value: { ...card.value, colours: true }, version: card.version })).status).toBe(400);
+    const saved = await send('PUT', { key: 'uiChecks', value: { ...card.value, enabled: true, text: false }, version: card.version });
+    expect(saved.status).toBe(200);
+    expect(saved.a.view.cards.uiChecks.value).toMatchObject({ enabled: true, text: false });
+    expect(await deps.resolver.value('health.uiChecks')).toMatchObject({ enabled: true, text: false });
+    expect(await t.prisma.auditLog.count({ where: { action: 'health.uiChecks.save' } })).toBe(1);
+    expect((await send('PUT', { key: 'uiChecks', value: card.value, version: card.version })).status).toBe(409);
+    expect((await send('PUT', { key: 'uiChecks', value: card.value, version: saved.a.view.cards.uiChecks.version }, dir, watcher)).status).toBe(403);
   });
 
   it('PR 414: the schedule is saved (audited) without touching "Run now"; Run now is recorded once until a newer run', async () => {

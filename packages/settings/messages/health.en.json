@@ -15,6 +15,10 @@
     "alerts": {
       "label": "Site health: Telegram alerts for customer problems",
       "help": "A line to the owner's Telegram (Keys & connections) when a customer problem needs him now: when a problem becomes Urgent, or when one problem hit this many visitors within these minutes. At most one line per problem within the hours set. Off as it ships; nothing is blocked or changed in the shop."
+    },
+    "uiChecks": {
+      "label": "Site health: UI checks in the saved journeys",
+      "help": "After every step of the saved journeys, on the phone and the desktop screen: a broken layout, cut-off text, pictures that did not load, and buttons that cannot be pressed. Each finding fails its step and shows in the run. Off as it ships; nothing in the shop is changed."
     }
   }
 }

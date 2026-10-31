@@ -7,15 +7,114 @@
 //   BASE=https://… SMOKE_EMAIL=… SMOKE_PASSWORD=… SMOKE_TOTP_SECRET=… [SMOKE_HTTP_USER=… SMOKE_HTTP_PASSWORD=…]
 //   JOURNEYS_OUT=<dir> [JOURNEYS_ONLY=customer,admin] node tools/journeys.mjs
 // Writes <JOURNEYS_OUT>/result.json, README.md and a screenshot of each failed step. Never prints or stores a password.
+// PR 416 (B7.3): UI checks at the phone and desktop widths of the run (JOURNEYS_UI=layout,text,images,taps, from the
+// owner's switches `health.uiChecks` through journeys-settings.env; empty = off): after every step that opens or changes
+// a page, the device gate's own measures (tools/device-gate.mjs, docs/qa/device-matrix.js, the rules of
+// docs/qa/device-gate.json) look for a broken layout (wider than the screen, sticking out, a squeezed tab), cut-off
+// text and small form text, pictures that did not load, and buttons that cannot be reached (too small on a touch
+// screen, on top of each other, or covered by something else). Each finding fails its step as `UI <KIND>: …`.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { appChecks } from "./device-gate.mjs";
 import { pageProblems, previewCookie, signIn, watched } from "./smoke.mjs";
 
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STEP_KINDS = ["open", "follow", "click", "api"];
+
+/** PR 416: the owner's UI check switches and the device gate's findings each one covers. */
+export const UI_KINDS = {
+  layout: ["PAGE-WIDER-THAN-PHONE", "HORIZONTAL-SCROLL", "STICKS-OUT-RIGHT", "STICKS-OUT-LEFT", "TAB-LABEL-SQUEEZED"],
+  text: ["TEXT-CUT-OFF", "INPUT-FONT-UNDER-16"],
+  images: ["IMAGE-NOT-LOADED"],
+  taps: ["TAP-TOO-SMALL", "TAPS-OVERLAP", "TAP-COVERED"],
+};
+
+/** The UI checks asked for (`layout,text,…`); unknown names are left out, an empty list is off. */
+export function uiKindsOf(list) {
+  return [...new Set(String(list ?? "").split(",").map((x) => x.trim()).filter((x) => Object.hasOwn(UI_KINDS, x)))];
+}
+
+/** The findings the chosen checks cover (the measures return more; the rest are dropped). */
+export function uiFilter(issues, kinds) {
+  const keep = new Set(kinds.flatMap((k) => UI_KINDS[k]));
+  return issues.filter((i) => keep.has(i.k));
+}
+
+/**
+ * PR 416 — measured inside the page (serialised: no closures). IMAGE-NOT-LOADED: a shown picture the browser finished
+ * and could not draw (a lazy one not yet asked for is not counted). TAP-COVERED: a shown button or link whose centre,
+ * once scrolled into view, belongs to something else (a bar, a banner or a dialog over it), so nobody can press it.
+ */
+export function reachChecks(o) {
+  const issues = [];
+  const vis = (e) => {
+    const s = getComputedStyle(e);
+    if (s.display === "none" || s.visibility === "hidden" || +s.opacity === 0) return false;
+    const r = e.getBoundingClientRect();
+    return r.width > 2 && r.height > 2;
+  };
+  const label = (e) => (e.getAttribute("data-testid") || e.getAttribute("aria-label") || e.getAttribute("alt") || e.id || (e.className && e.className.toString().split(" ").slice(0, 2).join(".")) || e.tagName).slice(0, 40);
+  const list = (arr) => arr.slice(0, 5).join(", ") + (arr.length > 5 ? ` (+${arr.length - 5})` : "");
+  if (o.images) {
+    const broken = [...document.images].filter((i) => vis(i) && i.complete && i.currentSrc && i.naturalWidth === 0).map(label);
+    if (broken.length) issues.push({ k: "IMAGE-NOT-LOADED", d: list(broken) });
+  }
+  if (o.taps) {
+    const modal = [...document.querySelectorAll('[aria-modal="true"]')].filter(vis).pop() ?? null;
+    const targets = [...document.querySelectorAll("a[href], button, [role=button], [role=tab], [role=switch]")]
+      .filter((e) => vis(e) && !e.disabled && e.getAttribute("aria-hidden") !== "true" && getComputedStyle(e).pointerEvents !== "none" && !e.closest("[inert]"))
+      .filter((e) => !modal || modal.contains(e))
+      .slice(0, o.max);
+    const covered = [];
+    const y0 = scrollY;
+    const x0 = scrollX;
+    for (const e of targets) {
+      const r0 = e.getBoundingClientRect();
+      if (r0.right <= 0 || r0.left >= innerWidth) continue; // a skip link or a closed drawer, off to the side
+      e.scrollIntoView({ block: "center", inline: "nearest" });
+      const r = e.getBoundingClientRect();
+      // still wholly off the screen after scrolling to it: a skip link shown only on focus, nothing to press
+      if (r.bottom <= 0 || r.top >= innerHeight) continue;
+      const x = Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1);
+      const y = Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1);
+      const hit = document.elementFromPoint(x, y);
+      if (!hit || hit === e || e.contains(hit) || hit.contains(e)) continue;
+      if (hit.tagName === "NEXTJS-PORTAL") continue; // the development server's own badge, never on the live site
+      // a label for the control takes the tap for it
+      const lab = hit.closest("label");
+      if (lab && (lab.contains(e) || lab.control === e)) continue;
+      covered.push(`${label(e)} under ${label(hit)}`);
+    }
+    scrollTo(x0, y0);
+    if (covered.length) issues.push({ k: "TAP-COVERED", d: list(covered) });
+  }
+  return issues;
+}
+
+/** PR 416: the UI findings on the page as it is now, for the chosen checks, on this screen. */
+export async function uiProblems(page, screen, kinds, rules, matrix) {
+  if (!kinds.length) return [];
+  const touch = screen.touch === true;
+  await page.waitForTimeout(rules.settleMs ?? 400);
+  const found = [];
+  // layout first, taps last: the tap measures scroll the page
+  found.push(...(await page.evaluate(matrix.pageChecks, screen.width)).issues);
+  found.push(
+    ...(await page.evaluate(appChecks, {
+      inputFont: touch && kinds.includes("text"),
+      taps: touch && kinds.includes("taps"),
+      tapMinPx: rules.tapMinPx,
+      inlineLinkMinPx: rules.inlineLinkMinPx,
+      inputMinFontPx: rules.inputMinFontPx,
+    })),
+  );
+  found.push(...(await page.evaluate(reachChecks, { images: kinds.includes("images"), taps: kinds.includes("taps"), max: rules.uiReachMax ?? 300 })));
+  await page.evaluate(() => scrollTo(0, 0)).catch(() => {});
+  return uiFilter(found, kinds).map((i) => `UI ${i.k}: ${i.d}`);
+}
 
 /** What is wrong with the saved journeys (an empty list when nothing is). */
 export function journeyProblems(config) {
@@ -60,13 +159,16 @@ export function stepLabel(s) {
 }
 
 /** The run's summary: every journey on every screen passed; the failed steps first. */
-export function summarise(rows) {
+export function summarise(rows, uiKinds = []) {
   const problems = rows.flatMap((r) =>
     r.steps.filter((s) => !s.ok).map((s) => `${r.journey} (${r.screen}) step ${s.n} ${s.what}: ${s.problems[0] ?? "failed"}`),
   );
   const skipped = rows.reduce((n, r) => n + r.steps.filter((s) => s.skipped).length, 0);
+  // PR 416: the UI findings counted apart, so the Site health page can say how many there were
+  const uiIssues = rows.reduce((n, r) => n + r.steps.reduce((m, s) => m + s.problems.filter((p) => p.startsWith("UI ")).length, 0), 0);
   return {
     ok: problems.length === 0,
+    ui: { kinds: uiKinds, issues: uiIssues },
     journeys: rows.length,
     failed: rows.filter((r) => !r.ok).length,
     steps: rows.reduce((n, r) => n + r.steps.length, 0),
@@ -82,6 +184,8 @@ export function reportMarkdown(result, meta) {
     `${meta.at} · ${meta.base} · ${meta.kind}${meta.sha ? ` · ${meta.sha}` : ""}`,
     "",
     `${result.journeys} journeys (journey × screen), ${result.failed} failed; ${result.steps} steps, ${result.skipped} skipped.`,
+    "",
+    result.ui?.kinds?.length ? `UI checks (${result.ui.kinds.join(", ")}): ${result.ui.issues} finding(s).` : "UI checks: off.",
     "",
   ];
   for (const r of result.rows) {
@@ -101,7 +205,7 @@ async function expectOn(page, s) {
 }
 
 /** Runs one step; returns its row. `skip`: an earlier optional step found nothing, so this one is skipped. */
-async function runStep(page, base, ignore, s, n, skip, out, tag) {
+async function runStep(page, base, ignore, s, n, skip, out, tag, ui) {
   const row = { n, what: stepLabel(s), ok: true, skipped: null, problems: [], screenshot: null };
   if (skip) return { ...row, skipped: skip };
   let status = 0;
@@ -140,6 +244,9 @@ async function runStep(page, base, ignore, s, n, skip, out, tag) {
     row.problems.push(...(await expectOn(page, s)));
   });
   row.problems.push(...watch);
+  // PR 416: the UI checks on the page the step opened or changed (an api step changes no page)
+  if (ui?.kinds.length && !s.api && !row.skipped)
+    row.problems.push(...(await uiProblems(page, ui.screen, ui.kinds, ui.rules, ui.matrix).catch((e) => [`UI checks could not run: ${String(e instanceof Error ? e.message : e).slice(0, 120)}`])));
   row.ok = row.problems.length === 0;
   if (!row.ok && out) {
     row.screenshot = `${tag}-${n}.jpg`;
@@ -155,6 +262,9 @@ export async function runJourneys(opts) {
   if (bad.length) throw new Error(`docs/qa/journeys.json: ${bad.join("; ")}`);
   const smokeConfig = JSON.parse(readFileSync(join(root, "docs/qa/smoke.json"), "utf8"));
   const ignore = smokeConfig.ignoreRequests ?? [];
+  const uiKinds = uiKindsOf(opts.ui);
+  const uiRules = uiKinds.length ? JSON.parse(readFileSync(join(root, "docs/qa/device-gate.json"), "utf8")) : null;
+  const matrix = uiKinds.length ? require(join(root, "docs/qa/device-matrix.js")) : null;
   if (opts.out) mkdirSync(opts.out, { recursive: true });
   const browser = await chromium.launch(opts.chromiumPath ? { executablePath: opts.chromiumPath } : {});
   const rows = [];
@@ -162,7 +272,9 @@ export async function runJourneys(opts) {
     const preview = opts.httpCredentials ? await previewCookie(browser, opts.base, opts.httpCredentials) : null;
     for (const j of pickJourneys(config, opts.only)) {
       for (const scr of config.screens) {
-        const ctx = await browser.newContext({ viewport: { width: scr.width, height: scr.height }, ...(preview ? { storageState: preview } : {}) });
+        // PR 416: a touch screen opens as a phone does (its viewport tag honoured, touch taps)
+        const touch = scr.touch === true ? { isMobile: true, hasTouch: true } : {};
+        const ctx = await browser.newContext({ viewport: { width: scr.width, height: scr.height }, ...touch, ...(preview ? { storageState: preview } : {}) });
         const page = await ctx.newPage();
         const steps = [];
         try {
@@ -171,7 +283,7 @@ export async function runJourneys(opts) {
           for (const [i, s] of j.steps.entries()) {
             // only a follow or click that found nothing skips the follows and clicks after it; an `open` starts afresh
             if (s.open || s.api) skip = null;
-            const row = await runStep(page, opts.base, ignore, s, i + 1, skip, opts.out, `${j.id}-${scr.id}`);
+            const row = await runStep(page, opts.base, ignore, s, i + 1, skip, opts.out, `${j.id}-${scr.id}`, { kinds: uiKinds, screen: scr, rules: uiRules, matrix });
             if (row.skipped && !skip) skip = `step ${i + 1} found nothing`;
             steps.push(row);
           }
@@ -186,7 +298,7 @@ export async function runJourneys(opts) {
   } finally {
     await browser.close();
   }
-  return { ...summarise(rows), rows };
+  return { ...summarise(rows, uiKinds), rows };
 }
 
 async function main() {
@@ -195,7 +307,7 @@ async function main() {
   if (!creds.email || !creds.password) throw new Error("sign-in details missing (SMOKE_EMAIL/SMOKE_PASSWORD)");
   const httpCredentials = process.env.SMOKE_HTTP_USER ? { username: process.env.SMOKE_HTTP_USER, password: process.env.SMOKE_HTTP_PASSWORD ?? "" } : undefined;
   const out = process.env.JOURNEYS_OUT || null;
-  const result = await runJourneys({ base, creds, httpCredentials, out, only: process.env.JOURNEYS_ONLY, chromiumPath: process.env.CHROMIUM_PATH });
+  const result = await runJourneys({ base, creds, httpCredentials, out, only: process.env.JOURNEYS_ONLY, ui: process.env.JOURNEYS_UI, chromiumPath: process.env.CHROMIUM_PATH });
   for (const r of result.rows) console.log(`${r.ok ? "ok  " : "FAIL"} ${r.journey.padEnd(10)} ${r.screen}`);
   if (out) {
     const meta = { at: process.env.JOURNEYS_AT || new Date().toISOString(), base, sha: process.env.JOURNEYS_SHA || "", kind: process.env.JOURNEYS_KIND || "run" };
