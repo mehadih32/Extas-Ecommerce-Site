@@ -1,0 +1,67 @@
+{
+  "moneyExpenses": {
+    "metaTitle": "Expenses",
+    "title": "Expenses",
+    "sub": "Quick entry of the shop's own expenses on heads you name (office, tea, repairs …). Each one reaches the ERP with its day's summary. Salary and rent are the month's fixed costs on Costs.",
+    "notLinked": "Expenses go to the ERP from the day this store switches to the new ERP contract (v6). Until then nothing can be entered here.",
+    "readOnly": "You can see the expenses. Entering them needs the \"Set fixed costs\" permission.",
+    "entry": {
+      "title": "Add an expense",
+      "sub": "For today or a day still open in the books.",
+      "head": "Head",
+      "day": "Day",
+      "amount": "Amount",
+      "note": "Note (optional)",
+      "where": "It counts on the cost line \"{line}\" of that day's summary to the ERP.",
+      "add": "Add expense",
+      "adding": "Adding…",
+      "added": "Added. It goes to the ERP with the day's summary.",
+      "needHead": "Choose a head.",
+      "badAmount": "Write the amount as a number above 0, for example 250.",
+      "noHeads": "No head yet. Add your first head under More options below.",
+      "receipt": "Receipt photo (optional)",
+      "receiptHint": "A photo or PDF, up to {mb} MB.",
+      "receiptAdding": "Adding the receipt…",
+      "receiptAdded": "Receipt added: {name}",
+      "receiptRemove": "Remove",
+      "receiptOpen": "receipt"
+    },
+    "list": {
+      "title": "Expenses of {month}",
+      "sub": "By head, then every entry, newest first. A wrong one is reversed, never deleted.",
+      "count": "{n} expense(s)",
+      "rows": "Every entry",
+      "reversal": "reversal",
+      "reversed": "reversed",
+      "none": "No expense this month yet.",
+      "reverse": "Reverse",
+      "reason": "Why is it reversed?",
+      "reverseGo": "Reverse it",
+      "cancel": "Cancel",
+      "reversedNow": "Reversed. The day's summary is sent again."
+    },
+    "heads": {
+      "title": "More options: expense heads",
+      "sub": "The names you enter expenses under, each with the cost line it counts on. A head is put away, never deleted; its past expenses stay.",
+      "none": "No head yet.",
+      "nameEn": "Name (English)",
+      "nameBn": "Name (Bengali, optional)",
+      "line": "Cost line",
+      "add": "Add head",
+      "added": "Head added.",
+      "needName": "Write the English name.",
+      "archived": "put away",
+      "archive": "Put away",
+      "restore": "Bring back"
+    },
+    "err": {
+      "CONFLICT": "This is already there (a head with this name, or the expense was reversed already).",
+      "other": "Something went wrong. Try again.",
+      "RECEIPTS_OFF": "Receipt photos are off. Switch them on in the setting \"Receipt photo on expenses\".",
+      "TOO_LARGE": "The file is too big.",
+      "FILE_NOT_ALLOWED": "Only a photo (JPG, PNG, WebP) or a PDF can be added.",
+      "EMPTY": "The file is empty.",
+      "network": "No connection. Try again."
+    }
+  }
+}

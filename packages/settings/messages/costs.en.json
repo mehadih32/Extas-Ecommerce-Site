@@ -3,6 +3,10 @@
     "ledger": {
       "label": "Cost ledger: rows listed and export size",
       "help": "How many of the latest cost rows Money → Cost ledger lists (10–500), and the most rows one export file holds (a longer period is cut and says so)."
+    },
+    "receipts": {
+      "label": "Receipt photo on expenses",
+      "help": "Lets a photo or PDF of the receipt be added to an expense on Money → Expenses, up to the size set here (1–20 MB). Off until switched on; only pictures and PDFs are taken, checked by their contents."
     }
   }
 }
