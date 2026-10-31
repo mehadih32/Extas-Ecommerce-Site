@@ -3,12 +3,14 @@
 // - follow-up 260 (PR 143): the customer's own edit — what he may change now, or why not (`orders.edit.customer`, off
 //   by default: no card at all while it is off, and none on a cancelled or returned order);
 // - follow-up 261 (PR 146): the two-size question still open on it (`orders.twoSize`, off by default);
-// - S05 · PR 150: "What happened" — the order's life as he may see it (`account.history.timeline`).
-// - Gate F-041 (PR 172 follow-up): the refunds on it and where each stands (always, when there is one: it is his money).
+// - S05 · PR 150: "What happened" — the order's life as he may see it (`account.history.timeline`);
+// - Gate F-041 (PR 172 follow-up): the refunds on it and where each stands (always, when there is one: it is his money);
+// - S08 · PR 186: the exchange part — which pieces he may still exchange (the buttons under each line) and his exchanges
+//   on this order (`orders.exchange.account`, off by default; his account only, never a guest's browser).
 // A test server's browser that asked for the cards (POST /api/account/try-cards) reads the two switches as on. Without
 // a database, or when a read is slow or fails, that part is simply not drawn — the page never guesses.
 import { orderLifecycle, orderRefunds, type CustomerRefund, type LifeStep } from '@extas/accounts';
-import { customerEditState, customerTwoSizeState, type CustomerEditState, type CustomerRef, type CustomerTwoSizeState, type OrdersDeps } from '@extas/orders';
+import { customerEditState, customerExchangeState, customerTwoSizeState, type CustomerEditState, type CustomerExchangeState, type CustomerRef, type CustomerTwoSizeState, type OrdersDeps } from '@extas/orders';
 import { settingsTimeoutMs, withTimeout } from '../settings';
 import { accountDeps, signedIn } from './account';
 import { visitorId } from './bag';
@@ -27,9 +29,11 @@ export interface OrderExtras {
   life: LifeStep[] | null;
   /** Gate F-041: his refunds on this order (null: none, or not readable now). */
   refunds: CustomerRefund[] | null;
+  /** PR 186: the pieces he may still exchange and his exchanges on this order (null: off, a guest, or none of it). */
+  exchange: CustomerExchangeState | null;
 }
 
-const NONE: OrderExtras = { edit: null, twoSize: null, life: null, refunds: null };
+const NONE: OrderExtras = { edit: null, twoSize: null, life: null, refunds: null, exchange: null };
 
 /** States after which there is nothing to change or answer (the edit card is not drawn at all). */
 const ENDED = new Set(['CANCELLED', 'RETURNED']);
@@ -52,7 +56,7 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: strin
   if (!who.customerId && !who.visitorId) return NONE;
   const settings = trial ? cardsTrialSettings(deps.settings) : deps.settings;
   const od: OrdersDeps = { db: deps.db, settings, ...(deps.now ? { now: deps.now } : {}) };
-  const [edit, twoSize, life, refunds] = await Promise.all([
+  const [edit, twoSize, life, refunds, exchange] = await Promise.all([
     ENDED.has(status)
       ? null
       : part('edit card', async () => {
@@ -62,6 +66,8 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: strin
     ENDED.has(status) ? null : part('two-size question', async () => customerTwoSizeState(od, who, number)),
     opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })) : null,
     part('refunds', () => orderRefunds(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })),
+    who.customerId ? part('exchange part', () => customerExchangeState(od, { ...who, visitorId: null }, number)) : null,
   ]);
-  return { edit, twoSize: twoSize?.open ? twoSize : null, life, refunds: refunds?.length ? refunds : null };
+  const hasExchange = !!exchange && exchange.closed !== 'OFF' && (exchange.open || exchange.exchanges.length > 0);
+  return { edit, twoSize: twoSize?.open ? twoSize : null, life, refunds: refunds?.length ? refunds : null, exchange: hasExchange ? exchange : null };
 }

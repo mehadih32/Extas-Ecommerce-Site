@@ -54,9 +54,12 @@ describe.skipIf(!HAS_TEST_DB)('the order page cards fill for test pages on Postg
     const two = await customerTwoSizeState(on, who, TRY_TWO_SIZE_ORDER);
     expect(two.open).toBe(true);
     expect(two.questions[0]!.sizes).toHaveLength(2);
+    // PR 186: the account's exchange reads as on as well
+    expect((await on.settings.value('orders.exchange.account')).enabled).toBe(true);
+    expect((await settings.value('orders.exchange.account')).enabled).toBe(false);
     // nothing was written to the store's settings
-    expect(await t.prisma.storeSettingValue.count({ where: { key: { in: ['orders.edit.customer', 'orders.twoSize'] } } })).toBe(0);
-    expect(await t.prisma.installationSettingValue.count({ where: { key: { in: ['orders.edit.customer', 'orders.twoSize'] } } })).toBe(0);
+    expect(await t.prisma.storeSettingValue.count({ where: { key: { in: ['orders.edit.customer', 'orders.twoSize', 'orders.exchange.account'] } } })).toBe(0);
+    expect(await t.prisma.installationSettingValue.count({ where: { key: { in: ['orders.edit.customer', 'orders.twoSize', 'orders.exchange.account'] } } })).toBe(0);
   });
 
   it('the cookie is read only on a test server', () => {

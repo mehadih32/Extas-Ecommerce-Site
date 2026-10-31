@@ -6,6 +6,8 @@
 // switches as on (`orders.edit.customer`, `orders.twoSize`; both off by default) — nothing is written to the store's
 // settings. Sample data only: the number is the test server's own and the phone is in the unallocated +88010 range.
 // On the live shop the door answers 404 and the cookie is never read.
+// S08 · PR 186: the same cookie also reads the account's exchange as on (`orders.exchange.account`, off by default), so
+// the gate measures the order page's exchange buttons and the exchange page itself on the sample delivered order.
 import { cookies } from 'next/headers';
 import type { AccountsDeps } from '@extas/accounts';
 import { twoSizeCheck, type OrdersDeps } from '@extas/orders';
@@ -34,7 +36,7 @@ export function tryCardsOnRequest(request: Request): boolean {
 /** The cookie the fill sets (an hour, this site only). */
 export const tryCardsCookie = (): string => `${TRY_CARDS_COOKIE}=1; Path=/; SameSite=Lax; Max-Age=3600`;
 
-/** The settings as they are, with the customer's edit and the two-size question on (test servers only). */
+/** The settings as they are, with the customer's edit, the two-size question and the account's exchange on (test servers only). */
 export function cardsTrialSettings<S extends AccountsDeps['settings']>(settings: S): S {
   return {
     ...settings,
@@ -42,6 +44,7 @@ export function cardsTrialSettings<S extends AccountsDeps['settings']>(settings:
       const v = await settings.value(key, opts);
       if (key === 'orders.edit.customer') return { ...(v as Value<'orders.edit.customer'>), enabled: true } as Value<K>;
       if (key === 'orders.twoSize') return { ...(v as Value<'orders.twoSize'>), enabled: true, askCustomer: true } as Value<K>;
+      if (key === 'orders.exchange.account') return { ...(v as Value<'orders.exchange.account'>), enabled: true } as Value<K>;
       return v;
     },
   } as S;

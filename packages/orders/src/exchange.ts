@@ -334,6 +334,12 @@ async function usedOn(db: Db, storeId: number, orderItemId: string): Promise<{ c
 /** The exchange choices for one line: the window, the limits and the pieces the first tier with stock offers. */
 export async function exchangeChoices(deps: OrdersDeps, who: Who, orderId: string, input: unknown): Promise<ExchangeChoices> {
   await allow(deps, who, 'returns.view');
+  return exchangeChoicesIn(deps, who.storeId, orderId, input);
+}
+
+/** PR 186: the same choices for a caller that checked who may see the order itself (the customer's own account). */
+export async function exchangeChoicesIn(deps: OrdersDeps, storeId: number, orderId: string, input: unknown): Promise<ExchangeChoices> {
+  const who = { storeId };
   const d = parse(choicesInput, input, 'exchange choice');
   const db = deps.db;
   const found = await db.order.findFirst({ where: { id: orderId, storeId: who.storeId }, select: ORDER_FACTS });
@@ -487,7 +493,8 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
   const [engine, causes, excludedSlugs, cs] = await Promise.all([setting(deps, storeId, 'orders.exchange.engine'), setting(deps, storeId, 'orders.exchange.rootCauses'), setting(deps, storeId, 'policy.exchange.excludedCategories'), chargeSettings(deps, storeId)]);
   const v6 = (await isV6(deps, storeId)) ? { passRise: await setting(deps, storeId, 'exchange.passPriceRiseToCustomer') } : null;
   const ourMistakeReason = isOurMistake(d.reason);
-  if (d.reason === 'wrong' && engine.rootCauseForWrong && !d.rootCause) throw new OrdersError('REASON_REQUIRED', 'a wrong item needs its root cause', ['rootCause']);
+  // PR 186: a customer's request from his account has no root cause (he cannot know it); staff find it at QC
+  if (d.reason === 'wrong' && engine.rootCauseForWrong && !d.rootCause && meta.source !== 'shop') throw new OrdersError('REASON_REQUIRED', 'a wrong item needs its root cause', ['rootCause']);
   if (d.rootCause && !causes.some((c) => c.key === d.rootCause)) throw new OrdersError('REASON_REQUIRED', 'pick a root cause from the list', ['rootCause']);
   if (ourMistakeReason && (engine.ourMistakePhoto === 'always' || (engine.ourMistakePhoto === 'customer' && meta.source === 'shop')) && !d.photoAssetIds?.length) {
     throw new OrdersError('PHOTO_REQUIRED', 'our mistake needs a photo', ['photoAssetIds']);
@@ -666,10 +673,14 @@ export interface DecideOptions {
 
 /** A decision on an exchange, written with its timeline row on the original order and its audit row (PR 190 reuses it). */
 export async function decideExchange<T>(deps: OrdersDeps, who: Who, id: string, opts: DecideOptions, fn: (tx: Tx, ex: LockedExchange, now: Date, by: By) => Promise<{ action: string; after: Record<string, unknown>; result: T; message?: string | null }>): Promise<T> {
-  const by = staffBy(who.actor, who.ctx);
+  return decideExchangeBy(deps, who.storeId, staffBy(who.actor, who.ctx), id, opts, fn);
+}
+
+/** PR 186: the same step for any actor — the customer's own claim from his account comes through here with his `By`. */
+export async function decideExchangeBy<T>(deps: OrdersDeps, storeId: number, by: By, id: string, opts: DecideOptions, fn: (tx: Tx, ex: LockedExchange, now: Date, by: By) => Promise<{ action: string; after: Record<string, unknown>; result: T; message?: string | null }>): Promise<T> {
   const now = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
-    const ex = await lockExchange(tx, who.storeId, id);
+    const ex = await lockExchange(tx, storeId, id);
     if (opts.version !== undefined && opts.version !== ex.version) throw new OrdersError('STALE', 'the exchange changed since it was read', ['version'], { version: ex.version, status: ex.status });
     const before = { status: ex.status, version: ex.version, chargeState: ex.chargeState, codToCollectMinor: ex.codToCollectMinor };
     const out = await fn(tx, ex, now, by);

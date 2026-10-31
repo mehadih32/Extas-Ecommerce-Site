@@ -1,0 +1,112 @@
+/* S08 · PR 186 — the account's exchange flow and the order page's exchanges (demo 61-exchange.js and 60-account.js
+   ord_exchanges, V12.2), scoped to the shop. Ported rule for rule from the demo's own CSS. */
+.shop .exc-page { padding-top:16px;padding-bottom:8px }
+@media (min-width:1024px) { .shop .exc-page { padding-top:26px } }
+.shop .exc-top { display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:14px }
+.shop .exc-strip { display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;padding:12px 14px;margin:14px 0 16px }
+@media (min-width:1024px) { .shop .exc-strip { padding:14px 20px;margin-bottom:22px } }
+.shop .exc-strip .iconbtn { margin-left:-6px }
+.shop .exc-steps { display:flex;flex-direction:column;gap:12px;min-width:0 }
+.shop .exc-step { background:var(--surface);border:1px solid var(--line);border-radius:var(--card-radius) }
+.shop .exc-step.cur { border-color:var(--brand-line);box-shadow:0 2px 0 var(--brand-line) }
+.shop .exc-step.todo .exc-step-hd { opacity:.5 }
+.shop .exc-step-hd { display:flex;align-items:center;gap:12px;padding:15px 16px }
+@media (min-width:1024px) { .shop .exc-step-hd { padding:18px 22px } }
+.shop .exc-num { width:28px;height:28px;border-radius:50%;border:1.5px solid var(--input);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--muted);flex-shrink:0;background:var(--surface) }
+.shop .exc-step.cur .exc-num { background:var(--brand);border-color:var(--brand);color:var(--brand-ink) }
+.shop .exc-step.done .exc-num { background:var(--brand-tint);border-color:var(--brand-line);color:var(--brand) }
+.shop .exc-step-sum { font-size:13px;color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis }
+.shop .exc-step-bd { padding:0 16px 18px }
+@media (min-width:1024px) { .shop .exc-step-bd { padding:0 22px 22px 62px } }
+.shop .exc-fs { border:0;margin:0;padding:0;min-width:0 }
+.shop .exc-opt { display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid var(--line);border-radius:var(--radius);cursor:pointer;background:var(--surface);min-height:56px }
+.shop .exc-opt+.exc-opt { margin-top:8px }
+.shop .exc-opt:hover { border-color:var(--input) }
+.shop .exc-opt.on { border-color:var(--brand);background:var(--brand-tint) }
+.shop .exc-opt.dis { opacity:.5;cursor:not-allowed }
+.shop .exc-opt input { width:18px;height:18px;accent-color:var(--brand);flex-shrink:0;margin:0 }
+.shop .exc-ri { width:34px;height:34px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2) }
+.shop .exc-opt.on .exc-ri { background:var(--surface);color:var(--brand) }
+.shop .exc-photo-row { display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px }
+.shop .exc-photo { width:96px;height:96px;border:1.5px dashed var(--input);border-radius:var(--radius);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;padding:0;flex-shrink:0 }
+.shop .exc-photo.has { border:1.5px solid var(--brand);position:relative;overflow:hidden;cursor:default }
+.shop .exc-photo.has .pimg { width:100%;height:100% }
+.shop .exc-sizes { display:flex;flex-wrap:wrap;gap:8px }
+.shop .exc-sp { display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:78px;padding:8px 12px;line-height:1.2 }
+.shop .exc-sp .m { font-size:10.5px;font-weight:500;opacity:.8 }
+.shop .exc-sp.cur { background:var(--bg);border-style:dashed;color:var(--muted);cursor:default }
+.shop .exc-opts { border-top:1px solid var(--line2);padding-top:18px }
+.shop .exc-opts-hd { display:flex;gap:12px;align-items:flex-start }
+.shop .exc-opts-i { width:36px;height:36px;border-radius:50%;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0 }
+.shop .exc-opts-i.warn { background:var(--warn-bg);color:var(--warn) }
+.shop .exc-ogrid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px }
+@media (min-width:768px) { .shop .exc-ogrid.c3 { grid-template-columns:repeat(3,minmax(0,1fr)) } }
+@media (min-width:1024px) { .shop .exc-ogrid.c3 { grid-template-columns:repeat(4,minmax(0,1fr)) } }
+.shop .exc-ogrid.list { grid-template-columns:minmax(0,1fr) }
+@media (min-width:768px) { .shop .exc-ogrid.list { grid-template-columns:repeat(2,minmax(0,1fr)) } }
+.shop .exc-ocard { position:relative;display:flex;flex-direction:column;text-align:left;border:1.5px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:0;cursor:pointer;overflow:hidden;font:inherit;color:var(--ink);min-width:0 }
+.shop .exc-ocard:hover { border-color:var(--input) }
+.shop .exc-ocard.on { border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) }
+.shop .exc-ocard .pimg { border-radius:0 }
+.shop .exc-oinfo { padding:10px 12px 12px;display:block;min-width:0 }
+.shop .exc-prow { flex-direction:row;align-items:stretch }
+.shop .exc-prow .exc-oimg { width:92px;min-height:116px;flex-shrink:0;position:relative;overflow:hidden }
+.shop .exc-prow .exc-oimg .pimg { position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto }
+.shop .exc-prow .exc-oinfo { flex:1;padding-right:36px }
+.shop .exc-prow .swatch { width:30px;height:30px }
+.shop .exc-radio { position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--surface);border:1.5px solid var(--input);display:flex;align-items:center;justify-content:center;color:var(--brand-ink) }
+.shop .exc-ocard.on .exc-radio { background:var(--brand);border-color:var(--brand) }
+.shop .exc-diff { color:var(--text2) }
+.shop .exc-only { display:flex;gap:8px;align-items:flex-start;margin:18px 0 2px;font-weight:600;color:var(--ink) }
+.shop .exc-money { border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface) }
+.shop .exc-mrow { display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px;font-size:14px }
+.shop .exc-mrow+.exc-mrow { border-top:1px solid var(--line2) }
+.shop .exc-mrow .v { font-weight:700;font-family:var(--font-display);white-space:nowrap }
+.shop .exc-mfinal { background:var(--brand-tint);font-weight:700;font-size:15px }
+.shop .exc-mfinal .sub { display:block;font-size:12px;font-weight:500;color:var(--text2) }
+.shop .exc-swap { display:grid;grid-template-columns:minmax(0,1fr);gap:6px;align-items:center }
+.shop .exc-swap .exc-arrow { justify-self:center;transform:rotate(90deg);color:var(--muted) }
+@media (min-width:768px) { .shop .exc-swap { grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr);gap:8px } .shop .exc-swap .exc-arrow { transform:none } }
+.shop .exc-mini { border:1px solid var(--line);border-radius:var(--radius);padding:10px;display:flex;gap:12px;align-items:center;background:var(--surface);min-width:0 }
+.shop .exc-how { list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:10px }
+.shop .exc-how li { display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--text2);line-height:1.45 }
+.shop .exc-how .i { width:30px;height:30px;border-radius:50%;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0 }
+.shop .exc-dnav { display:none }
+@media (min-width:1024px) { .shop .exc-dnav { display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line2) } }
+.shop .exc-hint { font-size:12.5px;color:var(--warn);font-weight:500 }
+.shop .exc-side { display:none }
+@media (min-width:1024px) { .shop .exc-side { display:block } }
+.shop .exc-sum-hd { padding:16px 20px;border-bottom:1px solid var(--line2) }
+.shop .exc-sum-item { display:flex;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line2) }
+.shop .exc-dl { margin:0;padding:6px 20px }
+.shop .exc-dl>div { display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:13.5px }
+.shop .exc-dl>div+div { border-top:1px solid var(--line2) }
+.shop .exc-dl dt { color:var(--muted) }
+.shop .exc-dl dd { margin:0;text-align:right;font-weight:600 }
+.shop .exc-sum-money { padding:4px 20px 14px }
+.shop .exc-sum-ft { padding:14px 20px;border-top:1px solid var(--line2);background:var(--surface2) }
+.shop .exc-mbar { margin:16px -16px 0;bottom:58px }
+@media (min-width:1024px) { .shop .exc-mbar { bottom:0 } }
+.shop .exc-mbar .btn { min-height:48px }
+.shop .exc-done { max-width:700px;margin:8px auto 0;padding:30px 18px;text-align:center }
+@media (min-width:768px) { .shop .exc-done { padding:40px 44px } }
+.shop .exc-done-check { width:66px;height:66px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:inline-flex;align-items:center;justify-content:center }
+.shop .exc-dtl { list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0;margin:24px 0 }
+.shop .exc-dtl li { position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);text-align:center }
+.shop .exc-dtl li::before { content:'';position:absolute;top:11px;left:-50%;right:50%;height:2px;background:var(--line) }
+.shop .exc-dtl li.ln::before { background:var(--brand) }
+.shop .exc-dtl li:first-child::before { display:none }
+.shop .exc-dtl .tl-dot { position:relative;z-index:1 }
+.shop .exc-dtl li.done { color:var(--ink) }
+.shop .ord-x { padding:14px 16px;border-top:1px solid var(--line2) }
+@media (min-width:1024px) { .shop .ord-x { padding:16px 20px } }
+.shop .ord-x-swap { display:grid;grid-template-columns:44px minmax(0,1fr) 18px 44px minmax(0,1fr);gap:8px;align-items:center }
+.shop .ord-x-arr { color:var(--muted) }
+.shop .ord-photo-x { position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:none;background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);z-index:2 }
+.shop .p24 { padding:24px }
+/* The phone's step bar stands in for the bottom bar (bag.css hides that one while it shows), so it sits on the bottom
+   bar's own layer (45), above the footer (39): on a short step the footer reaches the bottom and would take the tap.
+   Fixed to the screen edges there, it keeps its own side padding (no demo bleed margin). */
+@media (max-width: 1023px) { .shop .mbar.exc-mbar { z-index: 45; margin-left: 0; margin-right: 0; } }
+/* "Change" on a folded step: the whole 44 px square takes the tap, without moving the line it sits on. */
+.shop .exc-chg { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; margin: -10px -6px; padding: 0 6px; }

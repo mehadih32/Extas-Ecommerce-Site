@@ -42,6 +42,21 @@ const V = 57;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
+/** PR 186 (lane C's range): the exchange request from the customer's own account. */
+const V186 = 92;
+
+/**
+ * PR 186 (`orders.exchange.account`) — the customer asks for the exchange himself, from his order in My account, within
+ * the window and the owner's exchange policy (the same engine and checks as staff). Off by default: then the order page
+ * shows no exchange button and staff open exchanges as before. `claim`: on a size exchange he may say the shop sent the
+ * wrong size, with a note (and a photo when `orders.exchange.charge.claimPhoto` is on); staff decide it. `maxPhotos` and
+ * `photoMaxMb`: the photos he may add (a faulty, damaged or wrong item, or a claim).
+ */
+export const exchangeAccountSchema = z
+  .object({ enabled: z.boolean(), claim: z.boolean(), maxPhotos: z.int().min(1).max(10), photoMaxMb: z.int().min(1).max(20) })
+  .strict();
+export type ExchangeAccountSettings = z.output<typeof exchangeAccountSchema>;
+
 const list = dictionarySchema.refine((l) => l.length > 0, { message: 'at least one entry' });
 
 /**
@@ -204,5 +219,15 @@ export const returnsSettings = {
     labelKey: 'orders.refused.list.label',
     helpKey: 'orders.refused.list.help',
     sortOrder: 408,
+  }),
+  'orders.exchange.account': setting({
+    ...base,
+    version: V186,
+    valueType: 'JSON',
+    schema: exchangeAccountSchema,
+    default: { enabled: false, claim: true, maxPhotos: 3, photoMaxMb: 5 },
+    labelKey: 'orders.exchange.account.label',
+    helpKey: 'orders.exchange.account.help',
+    sortOrder: 409,
   }),
 };
