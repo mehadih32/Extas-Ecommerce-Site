@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, linkIdentity, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, blocklistOnOrder, linkIdentity, refuserTermsOnOrder, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -150,6 +150,19 @@ async function checkBlocklist(deps: CheckoutApiDeps, orderId: string): Promise<v
 }
 
 /**
+ * S06 · PR 163 — a repeat refuser's terms the moment the order lands (off until the owner turns `risk.refusers` on): the
+ * owner's terms for the number (or its identity) become the order's advance proposal, for a person to send. Never fails
+ * the order, changes COD by itself or tells the customer.
+ */
+async function checkRefuserTerms(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await refuserTermsOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`refuser terms: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
+/**
  * S05 · PR 541 — the order's section the moment it lands, after the duplicate screen and the score (`risk.sections`):
  * a duplicate, a re-order, a new identity, high risk, watch, prepaid or clear, with its note on the timeline; the strong
  * sections wait for a person. Marking only: nothing is cancelled, held or blocked, and the customer's order never fails.
@@ -205,6 +218,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       await checkTwoSizes(deps, r.orderId);
       await scoreRisk(deps, r.orderId);
       await checkBlocklist(deps, r.orderId);
+      await checkRefuserTerms(deps, r.orderId);
       await sectionRisk(deps, r.orderId);
       await waitForAdvance(deps, r.orderId);
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)

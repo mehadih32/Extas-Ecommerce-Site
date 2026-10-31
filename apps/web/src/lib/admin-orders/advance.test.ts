@@ -14,6 +14,7 @@ const O = { id: '01a16af2-30f0-7462-aab8-719bb3ce5542', number: 'S-1042', versio
 const ADV: AdvanceRequestView = {
   amounts: { delivery: { ok: false, code: 'NO_CHARGE' }, partial: { ok: false, code: 'PARTIAL_UNSET' }, full: { ok: true, amountMinor: 250_000 }, codOff: { ok: true, amountMinor: 250_000 } },
   proposed: 'full',
+  proposedBy: 'level',
   defaultKind: 'full',
   channels: ['SMS', 'CALL'],
   messagesOn: true,

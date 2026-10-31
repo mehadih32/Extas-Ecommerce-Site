@@ -19,6 +19,11 @@
 //                                   ALREADY_LISTED
 //   PUT   /api/admin/risk/blocklist {value} the switch, what a match gets, the hold reason (risk.rules.write)
 //   POST  /api/admin/risk/blocklist/<id>/unblock {reason} undoes a listing, the row kept (risk.unblock)
+//   GET   /api/admin/risk/refusers  PR 163: the repeat refusers (from the owner's number of refusals), their terms, the
+//                                   ended ones, the switch (risk.rules.read)
+//   PUT   /api/admin/risk/refusers  {value} the switch and the number of refusals (risk.rules.write)
+//   POST  /api/admin/risk/refusers/terms {phone, terms, reason} the owner's terms for a number (risk.refuser.terms)
+//   POST  /api/admin/risk/refusers/terms/<id>/end {reason} ends them, the row kept (risk.refuser.terms)
 // A switch only decides whether a rule marks and proposes (the blocklist: marks or holds for a person): nothing here cancels, decides an order, moves money or
 // changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
@@ -50,6 +55,22 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
     }
     if (path.length === 3 && path[2] === 'unblock') {
       if (m === 'POST') return handle(request, deps, 'risk.unblock', async (x) => ({ ...(await od.unblockNumber(x.deps, x.who, path[1]!, await body(request))) }));
+      return notAllowed();
+    }
+    return notFound();
+  }
+  if (path[0] === 'refusers') {
+    if (path.length === 1) {
+      if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.refusers(x.deps, x.who)) }));
+      if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveRefusers({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
+      return notAllowed();
+    }
+    if (path.length === 2 && path[1] === 'terms') {
+      if (m === 'POST') return handle(request, deps, 'risk.refuser.terms', async (x) => ({ ...(await od.setRefuserTerms(x.deps, x.who, await body(request))) }));
+      return notAllowed();
+    }
+    if (path.length === 4 && path[1] === 'terms' && path[3] === 'end') {
+      if (m === 'POST') return handle(request, deps, 'risk.refuser.terms', async (x) => ({ ...(await od.endRefuserTerms(x.deps, x.who, path[2]!, await body(request))) }));
       return notAllowed();
     }
     return notFound();

@@ -15,6 +15,7 @@ import { RISK_BLOCK_REASON_LIMITS, riskBlocklistSchema, storeTarget, type RiskBl
 import { z } from 'zod';
 import { allow, nowOf, parse, setting, TX, UUID, type OrdersDeps, type Who } from './context';
 import { holdWith } from './commands';
+import { clusterFamily, clusterOfOrder } from './identity-family';
 import { isOrdersError, OrdersError } from './errors';
 import type { SettingsWriter } from './rule-switches';
 import { execute, systemBy, type By } from './service';
@@ -99,12 +100,6 @@ export async function blocklist(deps: OrdersDeps, who: Who): Promise<BlocklistVi
   return viewOf(deps, who.storeId);
 }
 
-/** The identity an order belongs to (PR 519), when the graph has linked it. */
-async function clusterOfOrder(tx: Prisma.TransactionClient | OrdersDeps['db'], storeId: number, orderId: string): Promise<string | null> {
-  const link = await tx.identityLink.findFirst({ where: { storeId, orderId }, select: { clusterId: true } });
-  return link?.clusterId ?? null;
-}
-
 /** Lists a number with a reason (`risk.block`): typed, or the number of an order. A number listed already is refused. */
 export async function blockNumber(deps: OrdersDeps, who: Who, input: unknown): Promise<BlocklistView> {
   await allow(deps, who, 'risk.block');
@@ -182,7 +177,9 @@ export async function blocklistOnOrder(deps: OrdersDeps, ref: { storeId: number;
   const p = order.phone ? phoneNormalizeBD(order.phone) : null;
   const phone = p?.ok ? p.e164 : null;
   const clusterId = await clusterOfOrder(deps.db, ref.storeId, ref.orderId);
-  const or: Prisma.RiskBlockWhereInput[] = [...(phone ? [{ phone }] : []), ...(clusterId ? [{ clusterId }] : [])];
+  // PR 163: the identity and every identity since merged into it (a listing made before a merge names the old one)
+  const family = clusterId ? await clusterFamily(deps.db, ref.storeId, clusterId) : [];
+  const or: Prisma.RiskBlockWhereInput[] = [...(phone ? [{ phone }] : []), ...(family.length ? [{ clusterId: { in: family } }] : [])];
   if (!or.length) return null;
   const hit = await deps.db.riskBlock.findFirst({ where: { storeId: ref.storeId, undoneAt: null, OR: or }, orderBy: [{ blockedAt: 'asc' }, { id: 'asc' }] });
   if (!hit) return null;

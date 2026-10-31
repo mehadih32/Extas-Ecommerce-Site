@@ -66,7 +66,7 @@ export function advanceSpecs(
     allowed.includes('awaitAdvance') && usable.length
       ? spec('advanceRequest', {
           ...(adv.proposed ? { tone: 'pri' as const } : {}),
-          sub: adv.proposed ? t(d, 'orders.adv.proposed', { what: t(d, `orders.adv.kindName.${adv.proposed}`) }) : undefined,
+          sub: adv.proposed ? t(d, adv.proposedBy === 'refuser' ? 'orders.adv.proposedRefuser' : 'orders.adv.proposed', { what: t(d, `orders.adv.kindName.${adv.proposed}`) }) : undefined,
           effects: [
             t(d, 'orders.eff.to', { st: t(d, 'orders.st.AWAITING_ADVANCE') }),
             t(d, 'orders.adv.eff.link'),

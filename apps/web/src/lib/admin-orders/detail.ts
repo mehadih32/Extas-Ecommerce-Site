@@ -18,6 +18,7 @@ import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { identitySummary } from './identity';
 import { blocklistSummary } from './blocklist-card';
+import { refuserSummary } from './refusers-card';
 import { levelSummary, riskSummary } from './risk';
 import { advanceBand, advanceSpecs, advanceSummary } from './advance';
 
@@ -443,6 +444,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.riskSection': 'warn',
   'order.riskLevel': 'warn',
   'order.blocklistMatch': 'bad',
+  'order.refuserTerms': 'warn',
   'order.awaitAdvance': 'warn',
   'order.advanceResend': 'mute',
   'order.identityLinked': 'mute',
@@ -717,10 +719,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

@@ -128,7 +128,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 542 · the advance request from the order (Pos
     const off = await f.place('adv-auto-off', { phone: '01700000505' });
     await assessRisk(f.ordersDeps(), ref(off.orderId));
     expect((await money(off.orderId)).status).toBe('PLACED');
-    expect((await advanceRequestView(f.ordersDeps(), f.S, off.orderId))!).toMatchObject({ proposed: 'full', defaultKind: 'full' });
+    expect((await advanceRequestView(f.ordersDeps(), f.S, off.orderId))!).toMatchObject({ proposed: 'full', proposedBy: 'level', defaultKind: 'full' });
 
     f.overrides.set('orders.advanceRequest', { ...registry['orders.advanceRequest'].default, auto: true, channels: { SMS: true, WHATSAPP: false, CALL: false } });
     const on = await f.place('adv-auto-on', { phone: '01700000506' });

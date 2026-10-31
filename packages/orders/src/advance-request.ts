@@ -204,8 +204,10 @@ export interface AdvanceLinkView {
 export interface AdvanceRequestView {
   /** Each kind's amount for this order now (or why it cannot be asked). */
   amounts: Record<AdvanceRequestKind, AdvanceAmount>;
-  /** The risk level's proposal, when it proposed an ask. */
+  /** The risk level's proposal, when it proposed an ask, or a repeat refuser's terms (PR 163). */
   proposed: AdvanceRequestKind | null;
+  /** PR 163: who proposed it — the risk level, or the owner's terms for a repeat refuser. */
+  proposedBy: 'level' | 'refuser' | null;
   /** The kind the dialog opens with. */
   defaultKind: AdvanceRequestKind;
   /** The ways ticked when it opens (`orders.advanceRequest.channels`). */
@@ -240,16 +242,19 @@ export async function advanceRequestView(deps: OrdersDeps, storeId: number, orde
     setting(deps, storeId, 'risk.levels'),
     setting(deps, storeId, 'orders.advance.waitHours'),
     setting(deps, storeId, 'messages.enabled'),
-    deps.db.orderEvent.findFirst({ where: { storeId, orderId, type: 'order.riskLevel' }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { data: true } }),
+    // PR 163: a repeat refuser's terms propose the same way; the newest of the two wins
+    deps.db.orderEvent.findFirst({ where: { storeId, orderId, type: { in: ['order.riskLevel', 'order.refuserTerms'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { type: true, data: true } }),
     advanceLinkOf(deps, storeId, orderId),
   ]);
   const amounts = advanceAmounts(o, levels.partialPercent);
-  // the risk level's proposal (risk-levels.ts writes it on the order's `order.riskLevel` row)
+  // the risk level's proposal (risk-levels.ts writes it on the order's `order.riskLevel` row), or the repeat refuser's
+  // terms (refusers.ts, `order.refuserTerms`)
   const ask = level?.data && typeof level.data === 'object' && !Array.isArray(level.data) ? (level.data as Record<string, unknown>).ask : null;
   const proposed = typeof ask === 'string' && (ADVANCE_KINDS as readonly string[]).includes(ask) ? (ask as AdvanceRequestKind) : null;
   return {
     amounts,
     proposed,
+    proposedBy: proposed ? (level?.type === 'order.refuserTerms' ? 'refuser' : 'level') : null,
     defaultKind: defaultAdvanceKind(proposed, amounts),
     channels: ADVANCE_CHANNELS.filter((c) => cfg.channels[c]),
     messagesOn,

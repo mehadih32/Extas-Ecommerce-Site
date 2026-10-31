@@ -68,6 +68,10 @@
     "blocklist": {
       "label": "Blocklist",
       "help": "Phone numbers a person listed, each with the reason, who and when; Undo keeps the line with who undid it and why. When on, a new order from a listed number (or the same person under another number) is marked for the team, or held for a person to decide. Nothing is ever cancelled and the customer is never told. Off as shipped."
+    },
+    "refusers": {
+      "label": "Repeat refusers",
+      "help": "Numbers that refused parcels again and again (not our fault), from how many refusals you set. You choose per case what the number's new orders get: nothing, the delivery charge first, the full amount first, or no cash on delivery — with a reason, and you can end it any time. When on, the terms reach a new order as a proposal that a person sends. Nothing changes COD by itself. Off as shipped."
     }
   },
   "defaults": {

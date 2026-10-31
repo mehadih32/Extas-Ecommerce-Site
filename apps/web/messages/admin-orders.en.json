@@ -161,7 +161,8 @@
       "twoSizes": "2 sizes — check",
       "twoSizesOther": "2 sizes — for someone else",
       "riskWatch": "Watch",
-      "blocklist": "Blocklist"
+      "blocklist": "Blocklist",
+      "refuser": "Repeat refuser"
     },
     "page": {
       "all": "All orders",
@@ -660,7 +661,11 @@
       "blocklistWhy": "listed because: {why}",
       "blocklistIdentity": "the same person under another number",
       "blocklistHeld": "held for a person to decide",
-      "blocklistNotHeld": "not held (check the hold reason) — marked only"
+      "blocklistNotHeld": "not held (check the hold reason) — marked only",
+      "order_refuserTerms": "Repeat refuser: the owner's terms",
+      "refuserCount": "{n} refusals when chosen",
+      "refuserWhy": "because: {why}",
+      "refuserProposal": "a proposal — a person sends it"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -1029,6 +1034,63 @@
           "network": "No connection. Nothing was changed — try again.",
           "other": "It did not work. Nothing was changed — try again."
         }
+      },
+      "rf": {
+        "h": "Repeat refusers",
+        "d": "Numbers that refused parcels again and again. For each one you choose what its new orders get, with a reason; you can end it any time. Off until you switch it on.",
+        "master": "Put the terms on new orders",
+        "masterHelp": "When on, a new order from a number with terms (or the same person under another number) gets them as a proposal on the order. A person sends it with \"Request advance\".",
+        "offNote": "Off — the list and the terms are kept, but nothing happens to orders.",
+        "min": "Refusals that put a number on the list",
+        "minPh": "You set it",
+        "minHelp": "Counted like the phone history: a refusal for one of your \"our fault\" reasons never counts. Empty: the list shows nothing.",
+        "minBad": "Write a whole number from 1, or leave it empty.",
+        "never": "Never by itself: changing COD, a price or a charge, cancelling an order or telling the customer. The terms are only a proposal a person sends — unless you switched on \"Send the proposal by itself\" above.",
+        "terms": {
+          "none": "Nothing — orders go on as usual",
+          "delivery": "Ask the delivery charge first",
+          "full": "Ask the full amount first",
+          "codOff": "No cash on delivery for this number"
+        },
+        "short": {
+          "none": "Nothing",
+          "delivery": "Delivery charge first",
+          "full": "Full amount first",
+          "codOff": "No COD"
+        },
+        "listH": "On the list ({n})",
+        "listUnset": "Set the number of refusals above to see the list.",
+        "listNone": "No number has that many refusals.",
+        "counts": "refused {refused} · delivered {delivered} · orders {orders}",
+        "last": "last order {when}",
+        "now": "now: {terms}",
+        "choose": "Choose terms",
+        "activeH": "Terms now ({n})",
+        "activeNone": "No number has terms.",
+        "chosenBy": "by {who}, {when} · {n} refusals then",
+        "identity": "the same person is recognised under another number",
+        "end": "End",
+        "endWhy": "Why end them",
+        "endOk": "End the terms",
+        "ended": "Ended. The line is kept below.",
+        "endedH": "Ended ({n})",
+        "endedBy": "ended by {who}, {when}: {why}",
+        "otherH": "Terms for another number",
+        "termsLabel": "Terms",
+        "whyPh": "Why these terms, so the next person knows",
+        "saveTerms": "Save the terms",
+        "termsSaved": "Saved. New orders from the number get them while the switch is on.",
+        "noDecide": "Choosing terms is the owner's decision: it needs the \"Choose a repeat refuser's terms\" permission.",
+        "readOnly": "You can see the list. Changing the switch or the number needs the permission to change the risk rules.",
+        "err": {
+          "INVALID_INPUT": "Check the number (a Bangladeshi mobile number) and write the reason in a sentence.",
+          "NOTHING_CHANGED": "Nothing changed — the number has these terms already, or they have ended already.",
+          "NOT_FOUND": "These terms are not here any more. The list has been loaded again.",
+          "FORBIDDEN": "You don't have the permission for this.",
+          "UNAUTHENTICATED": "You are signed out. Sign in again.",
+          "network": "No connection. Nothing was changed — try again.",
+          "other": "It did not work. Nothing was changed — try again."
+        }
       }
     },
     "adv": {
@@ -1073,7 +1135,8 @@
         "asked": "Asked {amount} ({what}) · {ways}",
         "again": "The pay link sent again · {ways}",
         "newTry": "a fresh try of the link"
-      }
+      },
+      "proposedRefuser": "Your terms for this number propose {what}."
     },
     "check": {
       "sig": {

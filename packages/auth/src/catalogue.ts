@@ -152,6 +152,10 @@ export const PERMISSIONS = {
   // and undo a listing with a reason. Listing never cancels an order or tells the customer; a person decides.
   'risk.block': { group: 'orders' },
   'risk.unblock': { group: 'orders' },
+  // S06 · PR 163 — a repeat refuser's terms, the owner's choice per case (answer 5): nothing, the delivery charge or the
+  // full amount first, or no cash on delivery, and "End". The terms only become a proposal on a new order; a person sends
+  // it. Touches COD, so only the owner holds it until he gives it to someone (CLAUDE.md rule 6).
+  'risk.refuser.terms': { group: 'orders' },
   // S06 · PR 542 — ask a customer for an advance from the order ("Request advance"): the pay link, its SMS/WhatsApp and a
   // call task. The order waits for the money; nothing moves money, changes COD, a price or a charge, or blocks anyone.
   'orders.advance.request': { group: 'orders' },
