@@ -936,6 +936,7 @@ docker() {
   echo "docker $*" >> "$L"
   case "$1 ${2:-}" in
     "ps -q") echo cid1; echo cid2 ;;
+    "ps -aq") [ -f "$T/wiped" ] || { echo cid1; echo cid2; } ;;
     "images --format") if [ -f "$T/mounted" ] && [ -n "${LOSE_IMAGE:-}" ]; then echo extas-web:live; else printf 'extas-web:live\npostgres:17\n'; fi ;;
     "inspect -f") case "$3" in
         *StartedAt*) if [ -f "$T/restarted" ]; then date -u -d '+1 minute' +%Y-%m-%dT%H:%M:%SZ; else echo 2026-10-20T00:00:00Z; fi ;;
@@ -948,11 +949,15 @@ docker() {
           [ "${7%%:*}" != "${SICK_ON_NEW:-}" ] || [ ! -f "$T/mounted" ] ;;
         *) [ -z "${FAIL_RUN:-}" ] ;; esac ;;
     "exec "*) [ "$2" != "${SICK_CT:-}" ] ;;
-    "rm -f") touch "$T/gone-$3" ;;
-    "pull -q") [ -n "${FAIL_PULL:-}" ] || touch "$T/pulled" ;;
+    "rm -f") touch "$T/gone-$3"; [ "$3" != cid1 ] || touch "$T/wiped" ;;
+    "pull -q") if [ -n "${FAIL_PULL_ONCE:-}" ] && [ ! -f "$T/pullfailed" ]; then touch "$T/pullfailed"; echo "unpack: no such file"; return 1; fi
+      if [ -n "${FAIL_PULL:-}" ]; then echo "failed to extract layer: no such file"; return 1; fi; touch "$T/pulled" ;;
+    "image inspect") : ;;
+    "info "*|"info") : ;;
   esac
 }
 ctr() { echo "ctr $*" >> "$L"; }
+curl() { echo "${FAKE_REG:-401}"; }
 findmnt() { [ -z "${FAKE_VIEW:-}" ] || echo "$FAKE_VIEW$STORE"; }
 STUBS
 osd() { # osd <function> [env…]: one run in its own shell; prints the return code
@@ -963,7 +968,7 @@ osd() { # osd <function> [env…]: one run in its own shell; prints the return c
     . ../server/lib.sh; . ../server/steps/13-osdisk.sh; . "$T/stubs.sh"
     rc=0; "$1" 2>/dev/null || rc=$?; echo "$rc" )
 }
-reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/pulled" "$T"/gone-* "$T/root/state/containerd-moved.at"; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
+reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/pulled" "$T/pullfailed" "$T"/gone-* "$T/root/state/containerd-moved.at" "$T/root/state/store-reset.at" "$T/wiped"; rm -rf "$T/var/lib/containerd/"broken-*; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
 mkdir -p "$T/root/state"; reset_osd
 rc="$(osd containerd_to_lv)"
 order="$(awk '/^rsync1 /{a=NR} /^systemctl stop docker.socket docker.service containerd.service/{b=NR} /^rsync2 /{c=NR} /^mount \/dev\/extas\/containerd .*var\/lib\/containerd$/{d=NR} /^systemctl start containerd.service docker.socket docker.service/{if(!e)e=NR} /^docker run --rm --network none --entrypoint test extas-web:live -d \//{f=NR}
@@ -1005,8 +1010,21 @@ check "osdisk image check: a broken container (sound image) is stopped gently an
 reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17)"
 check "osdisk image check: a broken pulled image: its container goes, containerd drops it at once, pulled again" \
   "$rc:$(awk '/^docker rm -f extas-postgres$/{a=NR} /^docker rmi -f postgres:17$/{b=NR} /^ctr -n moby images rm --sync docker.io\/library\/postgres:17$/{c=NR} /^docker pull -q postgres:17$/{d=NR} END{print (a&&a<b&&b<c&&c<d) ? "in order" : "wrong " a" "b" "c" "d}' "$T/osd.log"):$(grep -c 'pulled again: postgres:17;' "$T/report")" "0:in order:1"
-reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1)"
-check "osdisk image check: still broken after the pull is a FAIL" "$rc:$(grep -c '| FAIL | postgres:17 is still broken after a fresh pull' "$T/report")" "1:1"
+reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1 FAKE_REG=000)"
+check "osdisk image check: pull fails and Docker Hub does not answer: FAIL with the error, the store is not reset" \
+  "$rc:$(grep -c '| FAIL | could not pull postgres:17 and Docker Hub does not answer (failed to extract layer: no such file); nothing reset' "$T/report"):$(grep -c '^systemctl stop' "$T/osd.log" || true)" "1:1:0"
+reset_osd; touch "$T/mounted"; mkdir -p "$T/var/lib/containerd/io.containerd.content.v1.content"
+rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL_ONCE=1)"
+check "osdisk image check: pull fails with the registry up: all containers go, store set aside (not deleted), empty store, pulled again" \
+  "$rc:$(awk '/^docker rm -f cid1 cid2$/{if(!a)a=NR} /^systemctl stop docker.socket docker.service containerd.service$/{b=NR} /^systemctl start containerd.service/{if(b&&!c)c=NR} /^docker builder prune -af$/{d=NR} END{print (a&&a<b&&b<c&&c<d) ? "in order" : "wrong " a" "b" "c" "d}' "$T/osd.log"):$(ls -d "$T"/var/lib/containerd/broken-*/io.containerd.content.v1.content >/dev/null 2>&1 && echo aside):$([ -e "$T/var/lib/containerd/io.containerd.content.v1.content" ] && echo still || echo empty):$(grep -c '| WARN | the image store was broken beyond repair' "$T/report"):$(grep -c 'pulled again: postgres:17' "$T/report")" \
+  "0:in order:aside:empty:1:1"
+rm -f "$T/pullfailed" "$T/pulled" "$T/wiped"; : > "$T/report"; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1)"
+check "osdisk image check: never a second reset within 6 hours" "$rc:$(grep -c 'already reset in the last 6 hours' "$T/report")" "1:1"
+reset_osd; touch "$T/mounted"; rc="$(osd osdisk_repair_images SICK_IMAGE=postgres:17 FAIL_PULL=1)"
+check "osdisk image check: still not pulling on an empty store is a FAIL with the reason" "$rc:$(grep -c '| FAIL | postgres:17 does not pull on an empty store: failed to extract layer' "$T/report")" "1:1"
+mkdir -p "$T/var/lib/containerd/broken-old" "$T/var/lib/containerd/io.containerd.keep"; touch -d '5 days ago' "$T/var/lib/containerd/broken-old"; reset_osd 2>/dev/null; mkdir -p "$T/var/lib/containerd/broken-old"; touch -d '5 days ago' "$T/var/lib/containerd/broken-old"; touch "$T/mounted"
+rc="$(osd osdisk_aside_cleanup)"
+check "osdisk image check: a set-aside store goes after its days, the live store stays" "$rc:$([ -d "$T/var/lib/containerd/broken-old" ] && echo kept || echo gone):$([ -d "$T/var/lib/containerd/io.containerd.keep" ] && echo live)" "0:gone:live"
 reset_osd; rc="$(osd osdisk_repair_images SICK_IMAGE=extas/pgbouncer:local)"
 check "osdisk image check: an image built here is removed for the stack step to build, never pulled" \
   "$rc:$(grep -c '^docker rmi -f extas/pgbouncer:local$' "$T/osd.log"):$(grep -cE '^docker pull|^ctr' "$T/osd.log" || true):$(grep -c 'built again: extas/pgbouncer:local' "$T/report")" "0:1:0:1"
