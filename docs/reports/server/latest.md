@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 16:18 +06
+# Server report — 2026-10-31 17:17 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `7301dfe4b22c12a051e75ba652d5a968b676b858`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `311dbd60375bfa8a171582345e41fd7b17bba13b`. Overall: **PASS**.
 
 ## Machine
 
@@ -48,7 +48,7 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (16G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · OS disk | OK | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (18G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
 | PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
@@ -57,11 +57,12 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
 | PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | FAIL | first backup failed |
+| PR 8 · backup (data disk) | FAIL | backup step failed; 3% of the backup disk used |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | FAIL | restored database did not come up |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ডিস্ক /srv/extas/backups 93% ভরে গেছে; ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
+| PR 8 · restore test | FAIL | restored database did not come up within 30 min (base 20261029-0230) |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ |
+| PR 392 · vault keys for the server | INFO | every 2 min: waiting — the live version predates PR 392; the next deploy brings it |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
 
@@ -74,7 +75,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (18G used on it) |
 | `/var/lib/docker` | 0.0 GB | own volume here (141M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
@@ -111,7 +112,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (18G used on it) |
 | `/var/lib/docker` | 0.0 GB | own volume here (141M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
