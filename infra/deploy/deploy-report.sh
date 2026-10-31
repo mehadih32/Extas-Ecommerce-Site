@@ -95,7 +95,7 @@ smoke=""; smoke_short="—"
 SMOKE_JSON="${SMOKE_JSON:-${EXTAS_ROOT:-/srv/extas}/state/smoke.json}"
 case "${SMOKE:-}" in
   success)
-    smoke="OK — $(jq -r '.pages // 0' "$SMOKE_JSON" 2>/dev/null || echo 0) page views, signed out and as the admin, phone and desktop (pictures: \`docs/reports/smoke/latest/\`)"
+    smoke="OK — $(jq -r '.pages // 0' "$SMOKE_JSON" 2>/dev/null || echo 0) page views, signed out and as the admin, phone and desktop (storefront pictures: \`docs/reports/smoke/latest/\`; the admin pictures stay on the server)"
     smoke_short="OK" ;;
   failure)
     p="$(clean "$(jq -r '(.problems // []) | .[:3] | join("; ")' "$SMOKE_JSON" 2>/dev/null || true)")"

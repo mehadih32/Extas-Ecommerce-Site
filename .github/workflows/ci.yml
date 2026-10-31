@@ -215,6 +215,11 @@ jobs:
       - uses: ./.github/actions/pnpm-install
       - name: Hardcode guard (PR 494)
         run: node tools/hardcode-guard.mjs
+      # Review R1 (security M1, PR 4): admin smoke pictures carry customers' data and stay on the server; none may be
+      # in Git (deploy.yml and smoke.yml commit only the storefront pictures).
+      - name: No admin smoke pictures in Git
+        run: |
+          if git ls-files docs/reports/smoke | grep -E '/admin[^/]*$'; then echo "::error::admin smoke pictures are committed (above): remove them"; exit 1; fi
       # PR 509 — no default, default-pack value or sample value is the owner's own data; the register matches the schema
       # and the installation export can never read a register table or column.
       - name: Owner-data register check (PR 509)

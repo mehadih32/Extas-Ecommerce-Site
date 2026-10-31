@@ -8,8 +8,11 @@
 # 2. A browser (extas-smoke:<SMOKE_PLAYWRIGHT_VERSION>, built once from smoke.Dockerfile) opens every built
 #    storefront page signed out and every admin page signed in, on a phone and a desktop screen, through Cloudflare
 #    with the preview login (tools/smoke.mjs, docs/qa/smoke.json).
-# 3. <out-dir> gets README.md, result.json and the screenshots (deploy.yml / smoke.yml commit them to
-#    docs/reports/smoke/latest/); state/smoke.json gets the result for the status page.
+# 3. <out-dir> gets README.md, result.json and the storefront screenshots (deploy.yml / smoke.yml commit them to
+#    docs/reports/smoke/latest/); state/smoke.json gets the result for the status page. Review R1 (security M1): the
+#    admin pages' screenshots carry customers' names, phones and addresses after go-live, so they go only to the
+#    server's root-only folder SMOKE_PRIVATE_DIR (default <EXTAS_ROOT>/private/smoke-admin, the last run's), never
+#    into <out-dir> or Git.
 # Exit 0 = every page passed. No password, seed or connection string is printed or kept.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,6 +47,8 @@ GATE=yes
 work="$(mktemp -d "$SEC/.smoke.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$OUT" "$STATE"
+PRIV="${SMOKE_PRIVATE_DIR:-$R/private/smoke-admin}"
+mkdir -p "$(dirname "$PRIV")"; install -d -m 0700 "$PRIV"
 
 # The live version's migrate image holds the auth command; a docs-only deploy records a tag that was never built,
 # so the newest migrate image stands in.
@@ -76,7 +81,7 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
 fi
 
 log "opening every page on https://$HOST ($KIND$([ "$GATE" = yes ] && echo ', with the preview login'))"
-rm -rf "${OUT:?}"/*
+rm -rf "${OUT:?}"/* "${PRIV:?}"/*
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 # R1 ops review (M8): state/smoke.json's `at` is ISO with its offset (the app reads it with Date.parse in UTC, where
 # "2026-10-31 19:10 (Asia/Dhaka)" was 6 hours in the future, so the go-live smoke line stayed red after a pass); the
@@ -84,9 +89,12 @@ at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 at_iso="$(date -Is)"
 rc=0
 timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-smoke-$$" --ipc=host --env-file "$work/smoke.env" \
-  -e BASE="https://$HOST" -e SMOKE_OUT=/out -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
-  -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" \
+  -e BASE="https://$HOST" -e SMOKE_OUT=/out -e SMOKE_PRIVATE_OUT=/private -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
+  -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" -v "$PRIV:/private" \
   "$IMG" node /w/tools/smoke.mjs || rc=$?
+# Review R1 (security M1): an admin picture that still landed in the report folder (an older smoke.mjs) moves to the
+# private folder.
+find "$OUT" -maxdepth 1 -type f -name 'admin*' -exec mv -f -t "$PRIV" {} + 2>/dev/null || true
 
 # PR 139 (CN-022): the audit log and the history tables are still append-only (each trigger on; the app's role has no
 # UPDATE, DELETE or TRUNCATE on them), checked as the owner; and which role the live app connects as.

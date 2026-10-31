@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, totpCode } from './smoke.mjs';
+import { adminLinks, adminPaths, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, shotDir, totpCode } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -119,4 +119,13 @@ it('the report starts with a Bengali line and lists every page', () => {
   expect(md).toContain('বাংলায়');
   expect(md).toContain('আগের ভালো ভার্সনে');
   expect(md).toContain('| `/admin` | phone | 500 |');
+});
+
+it('review R1 (security M1): an admin page\'s picture never goes into the committed report folder', () => {
+  expect(shotDir('/', 'docs-out', null)).toBe('docs-out');
+  expect(shotDir('/products/x', 'docs-out', '/srv/state/smoke')).toBe('docs-out');
+  for (const p of ['/admin', '/admin/orders', '/admin/customers/1'])
+    expect(shotDir(p, 'docs-out', null)).toBeNull();
+  expect(shotDir('/admin/orders', 'docs-out', '/srv/state/smoke')).toBe('/srv/state/smoke');
+  expect(shotDir('/administrator-tips', 'docs-out', null)).toBe('docs-out');
 });

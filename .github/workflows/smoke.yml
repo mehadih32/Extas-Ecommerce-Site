@@ -3,8 +3,9 @@
 # page signed out and every admin page as the read-only check account (its password and two-step seed are made fresh
 # on the server each run and never leave it), on a phone and a desktop screen, through Cloudflare. It fails on an error
 # screen, a console error or a failed request. Nothing is rolled back here (nothing changed since the deploy); a red
-# run is fixed before any new PR. The report and the pictures are committed to docs/reports/smoke/latest/ with
-# [skip ci] (ci.yml ignores docs/reports/smoke/), and the status page shows the result (state/smoke.json).
+# run is fixed before any new PR. The report and the storefront pictures are committed to docs/reports/smoke/latest/
+# with [skip ci] (ci.yml ignores docs/reports/smoke/), and the status page shows the result (state/smoke.json). The
+# admin pictures stay on the server (state of the last run in private/smoke-admin; review R1 security M1).
 name: smoke
 
 on:
@@ -21,9 +22,9 @@ on:
         required: false
         default: ""
 
-# No workflow-wide concurrency: only the smoke job joins the VM's queue (group extas-vm), and only when it is due.
-# GitHub keeps one pending run per group, so an hourly run that is not due must never enter it: it would cancel a
-# pending deploy, server setup, restore or ERP acceptance run.
+# No workflow-wide concurrency: only the smoke job has a group (extas-vm-smoke, R1 ops review M1), and only when it
+# is due. ~~It shared the group extas-vm, where GitHub's one pending run per group let it cancel a pending deploy,
+# server setup, restore or ERP acceptance run.~~
 
 permissions:
   contents: write
@@ -31,7 +32,7 @@ permissions:
 jobs:
   # PR 402: the nightly run and a run by hand always go; an hourly one only when the first-week watch asks for it.
   # This job has no concurrency group: it only reads one state file (a few seconds on the runner) and never joins
-  # or cancels anything in the extas-vm queue.
+  # or cancels anything.
   due:
     runs-on: [self-hosted, extas-vm]
     timeout-minutes: 5
@@ -58,8 +59,10 @@ jobs:
     if: needs.due.outputs.run == 'yes'
     runs-on: [self-hosted, extas-vm]
     timeout-minutes: 30
+    # R1 ops review (M1): its own group; a smoke run waiting here can only be replaced by a newer smoke run, never
+    # cancel a deploy, server setup or restore (one job at a time on the VM comes from the single runner).
     concurrency:
-      group: extas-vm
+      group: extas-vm-smoke
       cancel-in-progress: false
     steps:
       # The checks come from the version that is live, not from the newest main: a check merged before its deploy
@@ -103,6 +106,8 @@ jobs:
             git fetch -q origin main
             git reset -q --hard origin/main
             rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$smoke" docs/reports/smoke/latest
+            # Review R1 (security M1): admin pictures carry customers' data; they stay on the server, never in Git.
+            find docs/reports/smoke/latest -name 'admin*' -type f -delete
             git add -A docs/reports/smoke/latest
             if git diff --cached --quiet; then exit 0; fi
             git commit -q -m "smoke report: ${KIND} ${RESULT} [skip ci]"

@@ -273,6 +273,22 @@ osdisk_rm_all() {
   [ -z "$ids" ] || docker rm -f $ids </dev/null >/dev/null 2>&1 || true
 }
 
+# R1 ops review (M6): a reset removes every container, the live app's too, so it is only for a store that is really
+# broken. A pull refused by Docker Hub's rate limit or by a full disk is not that (a full store also fails the image
+# check's `docker run`): nothing is reset then, and OSDISK_NO_RESET says why.
+osdisk_reset_allowed() { # osdisk_reset_allowed <last pull error>
+  local pct
+  case "${1,,}" in
+    *toomanyrequests*|*"rate limit"*|*"too many requests"*) OSDISK_NO_RESET="Docker Hub's rate limit, not a broken store"; return 1 ;;
+    *"no space left"*) OSDISK_NO_RESET="the disk is full, not a broken store"; return 1 ;;
+  esac
+  pct="$(df --output=pcent "$CONTAINERD_ROOT" 2>/dev/null | tail -1 | tr -dc '0-9')"
+  if [ -n "$pct" ] && [ "$pct" -ge "${OSDISK_RESET_MAX_PCT:-90}" ]; then
+    OSDISK_NO_RESET="the image store is ${pct}% full (OSDISK_RESET_MAX_PCT ${OSDISK_RESET_MAX_PCT:-90}), not broken"; return 1
+  fi
+  return 0
+}
+
 osdisk_reset_store() {
   local aside i
   mountpoint -q "$CONTAINERD_ROOT" || { report FAIL "PR 4 · image check" "pulls fail and the store is not on its own volume: not reset"; return 1; }
@@ -287,7 +303,10 @@ osdisk_reset_store() {
   osdisk_rm_all
   docker builder prune -af >/dev/null 2>&1 || true
   date -u +%s > "$EXTAS_STATE_DIR/store-reset.at"
-  report WARN "PR 4 · image check" "the image store was broken beyond repair: set aside ($(basename "$aside")) and started empty; images pulled and built again, the next deploy builds the app"
+  # R1 ops review (M6): the app's containers went with the store, and a deploy only runs on a merge, so server-setup.yml
+  # starts one at once when it finds this file (and removes it).
+  date -u +%s > "$EXTAS_STATE_DIR/store-reset.redeploy"
+  report WARN "PR 4 · image check" "the image store was broken beyond repair: set aside ($(basename "$aside")) and started empty; images pulled and built again, a deploy is started at once to build the app again"
 }
 
 # The set-aside stores go after STORE_ASIDE_KEEP_DAYS (never the live store: only broken-* folders at its top level).
@@ -346,6 +365,8 @@ osdisk_repair_images() {
       report FAIL "PR 4 · image check" "could not pull ${failed[*]} and Docker Hub does not answer (${last:-?}); nothing reset"; return 1
     elif [ -f "$EXTAS_STATE_DIR/store-reset.at" ] && [ $(( $(date -u +%s) - $(cat "$EXTAS_STATE_DIR/store-reset.at") )) -lt 21600 ]; then
       report FAIL "PR 4 · image check" "could not pull ${failed[*]} (${last:-?}); the store was already reset in the last 6 hours"; return 1
+    elif ! osdisk_reset_allowed "${last:-}"; then
+      report FAIL "PR 4 · image check" "could not pull ${failed[*]} (${last:-?}); $OSDISK_NO_RESET: nothing reset, the app keeps running"; return 1
     fi
     osdisk_reset_store || return 1
     imgs=("${failed[@]}" "${fixed[@]}"); failed=()

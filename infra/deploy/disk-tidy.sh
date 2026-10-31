@@ -53,7 +53,7 @@ tidy_host() {
 }
 
 tidy_main() {
-  local mode="${1:-}" out="${2:-}" conf before after min ok=true
+  local mode="${1:-}" out="${2:-}" conf before after min ok=true store free low=""
   case "$mode" in --guard|--tidy) ;; *) echo "usage: disk-tidy.sh --guard|--tidy [<json>]" >&2; return 2 ;; esac
   conf="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
   # shellcheck source=../config/server.conf
@@ -64,12 +64,28 @@ tidy_main() {
   tidy_host
   after="$(root_free_gb /)"
   [ "$mode" = --guard ] && [ "${after:-0}" -lt "$min" ] && ok=false
+  # R1 ops review (minor 1): the build lands in containerd's store, on its own volume since the PR 4 follow-up, and
+  # Docker's own folder is another; checking / alone let a full store fail the build half way. Each one that is its
+  # own mount needs DISK_STORE_MIN_FREE_GB free.
+  for store in "${CONTAINERD_ROOT:-/var/lib/containerd}" /var/lib/docker; do
+    mountpoint -q "$store" 2>/dev/null || continue
+    free="$(root_free_gb "$store")"
+    if [ -n "$free" ] && [ "$free" -lt "${DISK_STORE_MIN_FREE_GB:-20}" ]; then
+      low="${low:+$low, }$store ($free GB)"
+      [ "$mode" = --guard ] && ok=false
+    fi
+  done
   if [ -n "$out" ]; then
     mkdir -p "$(dirname "$out")"
     jq -n --argjson ok "$ok" --arg mode "${mode#--}" --argjson before "${before:-0}" --argjson free "${after:-0}" \
-      --argjson min "$min" '{ok:$ok,mode:$mode,free_gb_before:$before,free_gb:$free,min_free_gb:$min}' > "$out"
+      --argjson min "$min" --arg low "$low" '{ok:$ok,mode:$mode,free_gb_before:$before,free_gb:$free,min_free_gb:$min}
+        + (if $low == "" then {} else {stores_low:$low} end)' > "$out"
   fi
   echo "main disk /: ${after:-?} GB free after the clean-up (was ${before:-?} GB; a build needs at least $min GB)"
+  if [ "$ok" = false ] && [ -n "$low" ]; then
+    echo "::error::The image store has too little free space: $low; at least ${DISK_STORE_MIN_FREE_GB:-20} GB is needed (DISK_STORE_MIN_FREE_GB in infra/config/server.conf). A build now would fail half way, so this deploy stops here; the live site is untouched."
+    return 1
+  fi
   if [ "$ok" = false ]; then
     echo "::error::The server's main disk (/) has only ${after:-0} GB free, at least $min GB is needed (DISK_ROOT_MIN_FREE_GB in infra/config/server.conf). A build now would fill it and stop the runner, so this deploy stops here; the live site is untouched. Run server-setup: it moves Docker's store to the data disk and lists what fills / in docs/reports/server/latest.md."
     return 1
