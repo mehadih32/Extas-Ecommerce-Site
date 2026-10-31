@@ -260,6 +260,10 @@
       },
       "smoke": {
         "shots": "See the smoke test's pictures of admin pages on Site health › Smoke runs (they can show customers' names)"
+      },
+      "fixes": {
+        "propose": "Propose a fix for a site-health finding or a new agent skill (it waits for the owner's OK)",
+        "approve": "Approve or reject an agent's proposed fix or new skill (nothing is fixed or switched on without it)"
       }
     },
     "ads": {

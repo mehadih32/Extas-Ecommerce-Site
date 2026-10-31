@@ -285,6 +285,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/reports/health/smoke', perm: 'health.read', keys: ['healthSmoke'] },
           // S21 · PR 419 — B7.3 Run history: every smoke test and journeys run with its findings, kept for comparison.
           { href: '/admin/reports/health/history', perm: 'health.read', keys: ['healthHistory'] },
+          // S21 · PR 420 — B7.3 Fixes to approve: agents' proposed fixes and new skills wait for the owner's OK.
+          { href: '/admin/reports/health/fixes', perm: 'health.read', keys: ['healthFixes'] },
           { href: '/admin/server', perm: 'system.read', keys: ['server'] },
         ],
       },
