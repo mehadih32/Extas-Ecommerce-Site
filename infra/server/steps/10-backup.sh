@@ -35,8 +35,10 @@ step_backup() {
   systemctl daemon-reload
   systemctl enable --now extas-backup-daily.timer extas-backup-wal.timer extas-backup-prune.timer extas-restore-test.timer >/dev/null 2>&1
 
-  # First backup now if there is none yet, then prove it restores.
-  if [ -z "$(ls -A "$EXTAS_ROOT/backups/base" 2>/dev/null)" ]; then
+  # A backup now if there is no whole base backup yet or the last one failed (31 Oct 2026: a failed first backup left
+  # an empty folder that counted as "there is one"), then prove it restores.
+  if [ -z "$(find "$EXTAS_ROOT/backups/base" -mindepth 2 -maxdepth 2 -name base.tar.gz -print -quit 2>/dev/null)" ] \
+    || ! jq -e '.result=="ok"' "$EXTAS_STATE_DIR/backup-daily-local.json" >/dev/null 2>&1; then
     pg_exec psql -qX -U extas -d extas -c "SELECT pg_switch_wal()" >/dev/null 2>&1 || true
     /usr/local/sbin/extas-backup daily >/dev/null 2>&1 || true
   fi
@@ -46,7 +48,7 @@ step_backup() {
   if jq -e '.result=="ok"' "$EXTAS_STATE_DIR/backup-daily-local.json" >/dev/null 2>&1; then
     report OK "PR 8 · backup (data disk)" "$(jq -r .detail "$EXTAS_STATE_DIR/backup-daily-local.json"); daily at $BACKUP_TIME, WAL every minute"
   else
-    report FAIL "PR 8 · backup (data disk)" "first backup failed"
+    report FAIL "PR 8 · backup (data disk)" "$(jq -r .detail "$EXTAS_STATE_DIR/backup-daily-local.json" 2>/dev/null || echo 'first backup failed'); $(df -P "$EXTAS_ROOT/backups" | awk 'NR==2 {print $5}') of the backup disk used"
   fi
   report INFO "PR 8 · Azure Blob" "$bl"
   report INFO "PR 8 · Google Drive" "$dr"
