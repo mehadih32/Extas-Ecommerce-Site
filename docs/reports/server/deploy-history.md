@@ -65,3 +65,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-10-31 02:43 | `c14cd3224ed7` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-10-31 04:10 | `94ca58e3bd62` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-10-31 12:56 | `19d12457c1cd` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-10-31 13:57 | `d632bae17181` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (problem: the append-only check could not read the database), so the previous version was put back automatically. The fix comes before any new work. |

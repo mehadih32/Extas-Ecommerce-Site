@@ -1,15 +1,17 @@
 {
-  "at": "2026-10-31 12:53 (Asia/Dhaka)",
+  "at": "2026-10-31 13:53 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "19d12457c1cd",
+  "sha": "d632bae17181",
   "kind": "after deploy",
   "rolledBack": true,
-  "ok": true,
+  "ok": false,
   "pages": 220,
   "failed": 0,
-  "problems": [],
+  "problems": [
+    "problem: the append-only check could not read the database"
+  ],
   "database": {
-    "appendOnly": "ok: 30 tables append-only",
+    "appendOnly": "problem: the append-only check could not read the database",
     "appRole": "extas_app"
   }
 }
