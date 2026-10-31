@@ -154,6 +154,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // PR 169 — the card and bank gateway, SSLCommerz (hosted page): the address it gives (sandbox or live), the store id,
+  // the shop's contact e-mail and the store password. It takes every card type and "Pay online"; the practice gateway
+  // serves until they are entered and the Test passes, and no customer sees cards until the owner switches them on.
+  {
+    id: 'sslcommerz',
+    kind: 'PAYMENT',
+    provider: 'sslcommerz',
+    adapter: true,
+    secrets: [{ field: 'storePassword' }],
+    config: [{ field: 'baseUrl' }, { field: 'storeId' }, { field: 'contactEmail' }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   {
     id: 'localDisk',
     kind: 'STORAGE',

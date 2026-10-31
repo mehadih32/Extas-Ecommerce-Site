@@ -304,6 +304,16 @@
         "nagadPublicKey": "Nagad public key"
       }
     },
+    "sslcommerz": {
+      "name": "Card & bank payments (SSLCommerz)",
+      "desc": "Customers pay by Visa, Mastercard, Amex or internet banking on SSLCommerz's own page; also used for \"Pay online\". Practice mode (no money moves) until the address, the store id, a contact e-mail and the store password are in and the Test passes.",
+      "fields": {
+        "baseUrl": "SSLCommerz address (https://…, the sandbox or live one SSLCommerz gave you)",
+        "storeId": "Store id (from SSLCommerz)",
+        "contactEmail": "Shop's contact e-mail (shown on SSLCommerz's page)",
+        "storePassword": "Store password (from SSLCommerz)"
+      }
+    },
     "localDisk": {
       "name": "Server disk",
       "desc": "When no other storage is on, photos and media stay on the server's own disk"
