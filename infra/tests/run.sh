@@ -825,12 +825,14 @@ check "prune: WAL past the window goes even with no base backup" "$(ls "$W" | tr
 rm -rf "$BR/backups/base"; mv "$T/base-aside" "$BR/backups/base"
 for i in 3 4 5; do : > "$W/00000001000000000000000$i.gz"; touch -d "$i hours ago" "$W/00000001000000000000000$i.gz"; done
 touch -d "10 hours ago" "$BR/backups/base"/*; echo 84 > "$T/df-used"; rc=0
-"${BENV[@]}" FAKE_DF_BASE_WAL="$(ls "$W" | wc -l)" EXTAS_BACKUP_STAMP="$(stamp '8 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+# The two stamps are taken once: a minute that turns between the backup and the clean-up would leave the extra backup.
+S8="$(stamp "8 minutes ago")"; S7="$(stamp "7 minutes ago")"
+"${BENV[@]}" FAKE_DF_BASE_WAL="$(ls "$W" | wc -l)" EXTAS_BACKUP_STAMP="$S8" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
 check "backup: a full disk is pruned first, oldest WAL first, then backs up" "$rc:$(ls "$W" | wc -l):$(jq -r .detail "$BR/state/backup-daily-local.json" | grep -c 'backup disk was 16% free, made room to 20%')" "0:0:1"
 rm -f "$T/df-used"
-rc=0; "${BENV[@]}" FAKE_BB_FAIL=1 EXTAS_BACKUP_STAMP="$(stamp '7 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
-check "backup: a failed base backup says which step, leaves nothing half-done" "$rc:$(jq -r .detail "$BR/state/backup-daily-local.json"):$(find "$BR/backups/base" -mindepth 1 -maxdepth 1 -name "*$(stamp "7 minutes ago")*" | wc -l):$(ls "$T/nvme/backup-staging" | wc -l)" "1:backup step failed: base backup (pg_basebackup):0:0"
-S8="$(stamp "8 minutes ago")"; rm -rf "$BR/backups/base/$S8" "$L/media-$S8"* "$LD/docs-$S8"*
+rc=0; "${BENV[@]}" FAKE_BB_FAIL=1 EXTAS_BACKUP_STAMP="$S7" "$B/extas-backup" daily >/dev/null 2>&1 || rc=$?
+check "backup: a failed base backup says which step, leaves nothing half-done" "$rc:$(jq -r .detail "$BR/state/backup-daily-local.json"):$(find "$BR/backups/base" -mindepth 1 -maxdepth 1 -name "*$S7*" | wc -l):$(ls "$T/nvme/backup-staging" | wc -l)" "1:backup step failed: base backup (pg_basebackup):0:0"
+rm -rf "$BR/backups/base/$S8" "$L/media-$S8"* "$LD/docs-$S8"*
 # The restore test: database as before, plus one sample photo checked against its checksum
 rc=0; out="$("${BENV[@]}" bash "$B/extas-restore" test 2>&1)" || rc=$?
 check "restore test: passes" "$rc:$(jq -r .result "$BR/state/restore-test.json")" "0:ok"
