@@ -4,7 +4,8 @@
 # sign-in end to end, the device gate (4 runners) and Lighthouse (one runner per shard of pages, tools/lh-pages.mjs)
 # run in parallel on that one build. `web` and `device-gate` keep their names (branch protection may require them) and
 # fail when any of their gates fails:
-#   web          = build + lint/type-check + unit tests + sign-in and session end to end + Lighthouse
+#   web          = build + lint/type-check + unit tests + dependency vulnerabilities + sign-in and session end to end
+#                  + Lighthouse
 #   device-gate  = the device gate on every size + Lighthouse on the sample data (it ran in that job before)
 # Lighthouse measures one page list (lighthouserc.json): on a pull request the core set plus the pages the diff
 # touches; on every push to main (what deploys: deploy.yml waits for this workflow) the full set, so a failing page
@@ -228,6 +229,20 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+  # PR 381 (B6.1) — dependency vulnerability scanning: `pnpm audit` for what ships (fails at high) and for the build
+  # tools (fails at critical), against tools/dep-audit.json, where an advisory that cannot be fixed yet is accepted
+  # with a reason and an end date (at most 90 days). Part of `web`, so no deploy goes out over one; every night too
+  # (nightly.yml runs this workflow), so a new advisory on an unchanged main is seen the next morning.
+  deps:
+    name: dependency vulnerabilities
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/pnpm-install
+      - name: Dependency vulnerabilities (PR 381)
+        run: node tools/dep-audit.mjs
+
   # PR 4 (owner, 20 Oct): log in → the admin loads, on the build job's two images and a fresh installation (the migrate
   # image's own command, the first owner with a generated password, a real browser). PR 508 (follow-up 19): the admin
   # session end to end on the same build's standalone server (sign in, refresh, the sign-in page while signed in, log
@@ -416,11 +431,11 @@ jobs:
   # a failed, skipped or cancelled part fails it.
   web:
     if: ${{ !cancelled() }}
-    needs: [build, checks, unit, e2e, lighthouse]
+    needs: [build, checks, unit, deps, e2e, lighthouse]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Build, lint and type-check, unit tests, end to end and Lighthouse all passed
+      - name: Build, lint and type-check, unit tests, dependency vulnerabilities, end to end and Lighthouse all passed
         env:
           NEEDS: ${{ toJSON(needs) }}
         run: |

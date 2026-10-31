@@ -131,6 +131,12 @@ docs file (CN-011).
 | `qa/tools/owner-answers/`, `owner-fix-B-tests/`, `owner-fix-C/`, `owner-fix-E/`, `owner-fix-QA-tools3/` | Tests and before-copies from the owner fix rounds |
 | `qa/tools/v2/` | Scripts that built and verified blueprint V2 / V2.1 |
 
+## `security/` — security review, runbooks and edge protection (S18)
+
+| Path | What it is |
+|---|---|
+| [`security/REVIEW.md`](security/REVIEW.md) | The independent security review before real money flows: the automated checks (dependency audit `tools/dep-audit.mjs`, PR 381), the review list R1–R14, findings and the sign-off the payment gateways' live keys wait for |
+
 ## `stages/` — stage and PR pages (generated)
 
 | Path | What it is |
