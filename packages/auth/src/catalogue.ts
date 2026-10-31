@@ -110,6 +110,10 @@ export const PERMISSIONS = {
   // S02 · PR 602 — the Cache page (SET-08b): change how long each layer keeps a page, and "Clear all". Clearing loses
   // nothing (orders, products and settings are untouched); pages are built again on the next visit.
   'system.cache': { group: 'system' },
+  // S19 · PR 507 (CN-030) — Settings → System → Backups: change the backup settings (time, days kept, the monthly
+  // restore drill, Telegram) and ask the server for a backup or a restore drill now. A drill restores into a throw-away
+  // copy, never the live database; restoring production is not this key (PR 396).
+  'system.backup': { group: 'system' },
   // S04 · PR 136 — open the invoice of any order of the store (its customer's name, phone and address are on it), to
   // print or send it. Not a `.read` key on purpose: the read-only smoke check account never gets customers' details.
   // The order screens of S05 add their own keys.

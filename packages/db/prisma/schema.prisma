@@ -47,8 +47,8 @@
 //                                                                               — the shared AI 360 control room (A4.3, C1, C10)
 //   ManualArticle, ChecklistPoint, PrRegisterEntry, PrRegisterUpdate, RegisterDocument, ChangeRequest
 //                                                                               — system content: manual, QA checklist, PR register
-//   ServiceHealthSample, SlowQuery, CacheStatSample, BackupRun, RestoreTest, RestoreRequest, DeployRecord, GoLiveCheck
-//                                                                               — the one server (S19, S21)
+//   ServiceHealthSample, SlowQuery, CacheStatSample, BackupRun, RestoreTest, RestoreRequest, BackupRequest,
+//   DeployRecord, GoLiveCheck                                                   — the one server (S19, S21)
 //   InstallationSetupRun, UpdateRelease                                         — installation pack (S26, parked)
 // @installation-level-end
 //
@@ -8674,6 +8674,35 @@ model RestoreRequest {
   finishedAt        DateTime?        @db.Timestamptz(3)
   createdAt         DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
+}
+
+/// @stage S19 · PR 507 (CN-030) — a backup or a restore drill asked for in the admin (Settings › System › Backups:
+/// "Back up now", "Run the restore drill now"). The server's vault sync (infra/server/bin/extas-vault-sync) takes a
+/// QUEUED row within a few minutes (RUNNING), runs it on the server and writes the outcome back (SUCCEEDED or FAILED,
+/// with the server's own words). Never deleted; a request the server never reported is FAILED after
+/// `BACKUP_REQUEST_STALE_H` hours. It never restores into the live database (that is RestoreRequest, PR 396).
+/// @scope installation — the one server.
+model BackupRequest {
+  id            String            @id @default(uuid(7)) @db.Uuid
+  kind          BackupRequestKind
+  /// The drill's copies: `all` (the server's disk and each copy the drill settings name), `local`, `blob` or `drive`.
+  /// Null for a backup.
+  source        String?
+  status        BackgroundStatus  @default(QUEUED)
+  /// The server's own words on the outcome (never a key, never a value).
+  detail        String?
+  requestedById String?           @db.Uuid
+  startedAt     DateTime?         @db.Timestamptz(3)
+  finishedAt    DateTime?         @db.Timestamptz(3)
+  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime          @updatedAt @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+}
+
+enum BackupRequestKind {
+  BACKUP
+  RESTORE_DRILL
 }
 
 /// @stage S19 · PR 4, 391 — a blue/green deploy and whether it rolled back.

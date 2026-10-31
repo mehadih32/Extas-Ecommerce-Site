@@ -611,6 +611,23 @@ tar -C "$T" -czf "$T/broken.tgz" repo/README.md; cp "$LD/docs-$C.tar.gz" "$T/kee
 rc=0; "${BENV[@]}" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
 check "restore test: an incomplete docs bundle fails it" "$rc:$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'did not come back')" "1:1"
 cp "$T/keep.tgz" "$LD/docs-$C.tar.gz"
+# PR 507: the monthly drill — the server's own copy, Blob's and Drive's, each into the throw-away database; a copy the
+# drill settings leave out is not restored and says so; a drill asked for in the admin writes its outcome back.
+rc=0; "${BENV[@]}" bash "$B/extas-restore" drill >/dev/null 2>&1 || rc=$?
+check "drill: the server's copy, Blob and Drive each restored and checked" \
+  "$rc:$(jq -r '[.runs[] | .from + "=" + .result] | join(" ")' "$BR/state/restore-drill.json"):$(find "$BR/state" -name 'restore-test-*.json' | wc -l)" "0:local=ok blob=ok drive=ok:3"
+printf "BACKUP_DRILL_DRIVE='no'\nBACKUP_DRILL_BLOB='\$(touch $T/pwned)'\n" > "$BR/config/secrets/backup-settings.env"
+"${BENV[@]}" bash "$B/extas-restore" drill >/dev/null 2>&1 || true
+check "drill: a copy the settings leave out is not restored and says so; a bad value is ignored" \
+  "$(jq -r '.runs[] | select(.from=="drive") | .result + " " + .detail' "$BR/state/restore-drill.json"):$(jq -r '.runs[] | select(.from=="blob") | .result' "$BR/state/restore-drill.json"):$([ -e "$T/pwned" ] && echo ran || echo no)" \
+  "off not in the drill (settings):ok:no"
+rm -f "$BR/config/secrets/backup-settings.env"
+RQ=0190a3c4-0000-7000-8000-0000000000aa
+rc=0; "${BENV[@]}" bash "$B/extas-backup" request "$RQ" RESTORE_DRILL local >/dev/null 2>&1 || rc=$?
+check "request: a drill from the admin writes its outcome for the vault sync" \
+  "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$RQ.json"):$(jq -r .detail "$BR/state/requests/$RQ.json" | grep -c '^local: ok')" "0:true:1"
+rc=0; "${BENV[@]}" bash "$B/extas-backup" request "../x" BACKUP >/dev/null 2>&1 || rc=$?
+check "request: a bad id or kind is refused" "$rc:$("${BENV[@]}" bash "$B/extas-backup" request "$RQ" DROP >/dev/null 2>&1; echo $?)" "2:2"
 # Every photo back, from each copy: deleted photos stay deleted, every checksum is checked, the live folder untouched
 for from in local blob drive; do
   rm -rf "$T/nvme/scratch"
@@ -1103,16 +1120,23 @@ case "$1" in
       *server-sync-cli.ts*)
         envf="$(sed -n 's/.*--env-file \([^ ]*\).*/\1/p' <<<"$*")"; out="$(sed -n 's/.* -v \([^:]*\):\/out.*/\1/p' <<<"$*")"
         grep -h '^SYNC_PREVIOUS=' "$envf" >> "$FAKE_LOG"
+        echo "done: $(jq -c . "$out/done.json" 2>/dev/null)" >> "$FAKE_DONE"
         prev="$(sed -n 's/^SYNC_PREVIOUS=//p' "$envf")"
-        if [ "$prev" = "$FAKE_FP" ]; then echo "{\"fingerprint\":\"$FAKE_FP\",\"changed\":false,\"files\":[]}" > "$out/result.json"; exit 0; fi
+        req="${FAKE_REQ:-[]}"
+        if [ "$prev" = "$FAKE_FP" ]; then echo "{\"fingerprint\":\"$FAKE_FP\",\"changed\":false,\"files\":[],\"requests\":$req}" > "$out/result.json"; exit 0; fi
         mkdir -p "$out/files"; printf '%b' "$FAKE_TG" > "$out/files/telegram.env"; printf 'x' > "$out/files/../escape"
-        echo "{\"fingerprint\":\"$FAKE_FP\",\"changed\":true,\"files\":[\"telegram.env\",\"../escape\"]}" > "$out/result.json" ;;
+        list='"telegram.env","../escape"'
+        if [ -n "${FAKE_SETTINGS:-}" ]; then printf '%b' "$FAKE_SETTINGS" > "$out/files/backup-settings.env"; list="$list,\"backup-settings.env\""; fi
+        echo "{\"fingerprint\":\"$FAKE_FP\",\"changed\":true,\"files\":[$list],\"requests\":$req}" > "$out/result.json" ;;
     esac ;;
 esac
 FAKE
 printf '#!/bin/sh\necho "$*" >> "$FAKE_CURL"\n' > "$T/bin/curl"; printf '#!/bin/sh\nexit 0\n' > "$T/bin/chown"
+printf '#!/bin/sh\necho "$*" >> "$FAKE_RUN"\n[ -z "$FAKE_RUN_FAILS" ]\n' > "$T/bin/systemd-run"
+printf '#!/bin/sh\necho "$*" >> "$FAKE_SYSTEMCTL"\n' > "$T/bin/systemctl"
 chmod +x "$T/bin/"*
-VENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_LOG="$T/docker.log" FAKE_CURL="$T/curl.log")
+VENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_LOG="$T/docker.log" FAKE_CURL="$T/curl.log"
+  FAKE_DONE="$T/done.log" FAKE_RUN="$T/run.log" FAKE_SYSTEMCTL="$T/systemctl.log" EXTAS_SYSTEMD_DIR="$T/systemd")
 S="$T/root/config/secrets"
 rc=0; "${VENV[@]}" FAKE_FP=fp1 FAKE_TG="TELEGRAM_BOT_TOKEN='123:abc'\nTELEGRAM_CHAT_ID='-1001'\n" "$B/extas-vault-sync" || rc=$?
 check "vault sync: the bot lands in telegram.env, root-only" "$rc:$(stat -c %a "$S/telegram.env"):$(grep -c "TELEGRAM_CHAT_ID='-1001'" "$S/telegram.env")" "0:600:1"
@@ -1127,6 +1151,22 @@ check "vault sync: a disconnected bot empties the file" "$(wc -c < "$S/telegram.
 check "vault sync: no work folder left behind" "$(find "$S" -name '.vault-sync.*' | wc -l)" "0"
 rc=0; "${VENV[@]}" FAKE_HAS_CLI=no "$B/extas-vault-sync" || rc=$?
 check "vault sync: a version without the CLI is waiting, not a failure" "$rc:$(jq -r .result "$T/root/state/vault-sync.json")" "0:waiting"
+# PR 507: the admin's requests. A finished one goes back in done.json and is moved aside; the ones the CLI took start
+# as transient units (a bad id or kind never does); one that cannot start is reported failed on the next run.
+I1=0190a3c4-0000-7000-8000-000000000001; I2=0190a3c4-0000-7000-8000-000000000002; I3=0190a3c4-0000-7000-8000-000000000003
+echo "{\"id\":\"$I1\",\"ok\":true,\"detail\":\"local: ok\"}" > "$T/root/state/requests/$I1.json"
+"${VENV[@]}" FAKE_FP=fp2 FAKE_TG="" FAKE_REQ="[{\"id\":\"$I2\",\"kind\":\"RESTORE_DRILL\",\"source\":\"blob\"},{\"id\":\"x; rm -rf /\",\"kind\":\"BACKUP\"},{\"id\":\"$I3\",\"kind\":\"RESTORE\"}]" "$B/extas-vault-sync"
+check "vault sync (507): a finished request goes back once and is moved aside" \
+  "$(tail -1 "$T/done.log" | grep -c "\"id\":\"$I1\",\"ok\":true"):$([ -f "$T/root/state/requests/reported/$I1.json" ] && echo moved)" "1:moved"
+check "vault sync (507): a taken drill starts in its own unit, nothing else does" \
+  "$(grep -c "^--no-block --collect --unit extas-request-0190a3c4 .*/extas-backup request $I2 RESTORE_DRILL blob$" "$T/run.log"):$(wc -l < "$T/run.log"):$(jq -r .detail "$T/root/state/vault-sync.json")" "1:1:no file changed; started 1 request(s)"
+"${VENV[@]}" FAKE_FP=fp2 FAKE_TG="" FAKE_RUN_FAILS=1 FAKE_REQ="[{\"id\":\"$I3\",\"kind\":\"BACKUP\",\"source\":null}]" "$B/extas-vault-sync"
+check "vault sync (507): a request that cannot start is reported failed" "$(jq -r '.ok|tostring' "$T/root/state/requests/$I3.json")" "false"
+"${VENV[@]}" FAKE_FP=fp3 FAKE_TG="" FAKE_SETTINGS="BACKUP_TIME='01:15'\nBACKUP_DRILL_ON='yes'\nBACKUP_DRILL_DAY='9'\nBACKUP_DRILL_TIME='04:05'\nBACKUP_TIME='\$(touch /tmp/x)'\n" "$B/extas-vault-sync"
+check "vault sync (507): new backup settings go onto the timers (a drop-in each), a bad value is ignored" \
+  "$(grep -c '^OnCalendar=\*-\*-\* 01:15:00$' "$T/systemd/extas-backup-daily.timer.d/schedule.conf"):$(grep -c '^OnCalendar=\*-\*-09 04:05:00$' "$T/systemd/extas-restore-test.timer.d/schedule.conf"):$(grep -c '^enable --now extas-restore-test.timer$' "$T/systemctl.log")" "1:1:1"
+"${VENV[@]}" FAKE_FP=fp4 FAKE_TG="" FAKE_SETTINGS="BACKUP_DRILL_ON='no'\n" "$B/extas-vault-sync"
+check "vault sync (507): the drill switched off stops its timer" "$(grep -c '^disable --now extas-restore-test.timer$' "$T/systemctl.log")" "1"
 rm -rf "$T"
 
 exit $fail

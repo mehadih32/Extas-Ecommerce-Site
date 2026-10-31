@@ -63,7 +63,7 @@ export interface DriveView {
 
 export class BackupError extends Error {
   constructor(
-    readonly code: 'NO_CLIENT' | 'NOT_CONNECTED' | 'NO_SIGN_IN' | 'INVALID_INPUT' | 'GOOGLE',
+    readonly code: 'NO_CLIENT' | 'NOT_CONNECTED' | 'NO_SIGN_IN' | 'INVALID_INPUT' | 'GOOGLE' | 'BUSY',
     message: string,
   ) {
     super(message);

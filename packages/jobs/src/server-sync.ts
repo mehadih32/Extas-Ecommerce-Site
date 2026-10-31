@@ -10,7 +10,10 @@
 //                  (`backups.drive.keepCopies`); empty while Drive is not connected (the server says "not connected").
 //   backup.key     the key that locks the Drive copies, made in the vault at the first connect (never emptied on the
 //                  server: no key in the vault keeps the server's own).
-// Later parts (PR 391, 507) add the Blob copy and the backup settings the same way.
+//   backup-settings.env  PR 507: the backup settings of Settings → System → Backups for extas-backup, extas-restore
+//                  and extas-monitor (the time, the days kept, the free share, the monthly drill, Telegram); built
+//                  from the settings alone, so it is there before any key is.
+// Later parts (PR 391) add the Blob copy the same way.
 //
 // - Nothing is read from the vault when nothing it depends on changed: every run first works out a fingerprint of the
 //   connection rows, the vault's list (names, dates, never a value) and each part's own inputs; the server passes back
@@ -19,6 +22,7 @@
 // - It never prints a value: the CLI prints the file names only.
 import { createHash } from 'node:crypto';
 import type { PrismaClient } from '@extas/db/client';
+import { registry } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 
 type Db = Pick<PrismaClient, 'integration'>;
@@ -100,7 +104,7 @@ async function settingOr<T>(ctx: Pick<SyncDeps, 'settings'>, key: string, fallba
   }
 }
 
-const DRIVE_DEFAULT = { folderName: 'Extas E-commerce Backups', keepCopies: 3 };
+const DRIVE_DEFAULT = registry['backups.drive'].default;
 
 /** PR 395 (CN-030): the one-click Google Drive for the server's rclone copy. */
 export const backupPart: ServerFilePart = {
@@ -141,7 +145,39 @@ export const backupKeyPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart];
+const yesNo = (b: boolean) => (b ? 'yes' : 'no');
+
+/** PR 507: the backup settings for the server's scripts (they read it after server.conf, so it wins). */
+export const backupSettingsPart: ServerFilePart = {
+  file: 'backup-settings.env',
+  watch: async (ctx) => [
+    await settingOr(ctx, 'backups.plan', registry['backups.plan'].default),
+    await settingOr(ctx, 'backups.drill', registry['backups.drill'].default),
+    await settingOr(ctx, 'backups.alerts', registry['backups.alerts'].default),
+  ],
+  async build(ctx) {
+    const plan = await settingOr(ctx, 'backups.plan', registry['backups.plan'].default);
+    const drill = await settingOr(ctx, 'backups.drill', registry['backups.drill'].default);
+    const alerts = await settingOr(ctx, 'backups.alerts', registry['backups.alerts'].default);
+    return envLines({
+      BACKUP_TIME: plan.dailyTime,
+      BACKUP_KEEP_LOCAL_DAYS: String(plan.keepLocalDays),
+      BACKUP_KEEP_BLOB_DAYS: String(plan.keepBlobDays),
+      BACKUP_KEEP_DRIVE_DAYS: String(plan.keepDriveDays),
+      BACKUP_KEEP_LOCAL_WAL_DAYS: String(plan.keepLocalWalDays),
+      BACKUP_MIN_FREE_PCT: String(plan.minFreePct),
+      BACKUP_DRILL_ON: yesNo(drill.enabled),
+      BACKUP_DRILL_DAY: String(drill.dayOfMonth),
+      BACKUP_DRILL_TIME: drill.time,
+      BACKUP_DRILL_BLOB: yesNo(drill.blob),
+      BACKUP_DRILL_DRIVE: yesNo(drill.drive),
+      BACKUP_TELEGRAM_FAIL: yesNo(alerts.telegramOnFail),
+      BACKUP_TELEGRAM_OK: yesNo(alerts.telegramOnSuccess),
+    });
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart];
 
 export interface SyncResult {
   fingerprint: string;

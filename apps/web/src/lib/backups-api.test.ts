@@ -12,10 +12,13 @@ describe('Backups admin API (PR 395)', () => {
     expect((await backupsRoute(req('POST'), null, [])).status).toBe(405);
     expect((await backupsRoute(req('GET'), null, ['drive', 'connect'])).status).toBe(405);
     expect((await backupsRoute(req('POST'), null, ['drive', 'list'])).status).toBe(405);
+    // PR 507
+    expect((await backupsRoute(req('POST'), null, ['settings'])).status).toBe(405);
+    expect((await backupsRoute(req('GET'), null, ['request'])).status).toBe(405);
   });
 
   it('without the database nothing is read or changed', async () => {
-    for (const [m, p] of [['GET', []], ['GET', ['drive', 'list']], ['POST', ['drive', 'client']], ['POST', ['drive', 'disconnect']]] as const) {
+    for (const [m, p] of [['GET', []], ['GET', ['drive', 'list']], ['POST', ['drive', 'client']], ['POST', ['drive', 'disconnect']], ['PUT', ['settings']], ['POST', ['request']]] as const) {
       expect((await backupsRoute(req(m), null, [...p])).status).toBe(503);
     }
   });

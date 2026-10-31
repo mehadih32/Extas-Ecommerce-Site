@@ -12,6 +12,9 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 R="$EXTAS_ROOT"; STATE="$R/state"; SEC="$R/config/secrets"
 mkdir -p "$STATE/alerts" "$R/logs"
 [ -f "$SEC/telegram.env" ] && . "$SEC/telegram.env"   # TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (from the vault)
+# PR 507: "Telegram when a backup fails" (Settings → System → Backups); off, those alerts stay in the log and the
+# health page only.
+BACKUP_TELEGRAM_FAIL="$(sed -n "s/^BACKUP_TELEGRAM_FAIL='\(yes\|no\)'$/\1/p" "$SEC/backup-settings.env" 2>/dev/null || true)"
 
 send() {
   local text="$1"
@@ -29,9 +32,13 @@ alert() { # alert <key> <bad:0|1> <message in simple Bengali>
   if [ "$bad" = 1 ]; then
     PROBLEMS+=("$msg")
     last="$(cat "$f" 2>/dev/null || echo 0)"
-    if [ $((now - last)) -ge $((MONITOR_REPEAT_MIN * 60)) ]; then send "⚠️ EXTAS সার্ভার: $msg"; echo "$now" > "$f"; fi
+    if [ $((now - last)) -ge $((MONITOR_REPEAT_MIN * 60)) ]; then
+      if [ -n "${QUIET:-}" ]; then echo "$(date -Is) (quiet) $msg" >> "$R/logs/alerts.log"; else send "⚠️ EXTAS সার্ভার: $msg"; fi
+      echo "$now" > "$f"
+    fi
   elif [ -f "$f" ]; then
-    send "✅ EXTAS সার্ভার: ঠিক হয়েছে — $key"; rm -f "$f"
+    if [ -z "${QUIET:-}" ]; then send "✅ EXTAS সার্ভার: ঠিক হয়েছে — $key"; fi
+    rm -f "$f"
   fi
 }
 
@@ -101,19 +108,22 @@ ms="$(curl -s -o /dev/null -m 10 -w '%{time_total}' http://127.0.0.1:8080/ 2>/de
 alert slow "$([ "${ms:-99999}" -gt "$MONITOR_SLOW_MS" ] && echo 1 || echo 0)" "সাইট ধীর (${ms} ms)"
 
 # Backups: the daily local backup must be fresh; a failed Blob/Drive upload alerts (an unconnected one does not)
+BQ=""; [ "${BACKUP_TELEGRAM_FAIL:-yes}" = no ] && BQ=1
 bk_age_h=9999
 if [ -f "$STATE/backup-daily-local.json" ]; then
   bk_age_h=$(( ($(date +%s) - $(stat -c %Y "$STATE/backup-daily-local.json")) / 3600 ))
   grep -q '"result":"fail"' "$STATE/backup-daily-local.json" && bk_age_h=9999
 fi
 if [ -f "$STATE/stack.started" ] && [ $(( $(date +%s) - $(stat -c %Y "$STATE/stack.started") )) -gt $((MONITOR_BACKUP_MAX_AGE_H * 3600)) ]; then
-  alert backup_local "$([ "$bk_age_h" -gt "$MONITOR_BACKUP_MAX_AGE_H" ] && echo 1 || echo 0)" "ব্যাকআপ ${MONITOR_BACKUP_MAX_AGE_H} ঘণ্টার বেশি পুরনো বা ব্যর্থ"
+  QUIET="$BQ" alert backup_local "$([ "$bk_age_h" -gt "$MONITOR_BACKUP_MAX_AGE_H" ] && echo 1 || echo 0)" "ব্যাকআপ ${MONITOR_BACKUP_MAX_AGE_H} ঘণ্টার বেশি পুরনো বা ব্যর্থ"
 fi
 for t in blob drive; do
   f="$STATE/backup-daily-$t.json"
-  alert "backup_$t" "$(grep -q '"result":"fail"' "$f" 2>/dev/null && echo 1 || echo 0)" "$t ব্যাকআপ ব্যর্থ হয়েছে"
+  QUIET="$BQ" alert "backup_$t" "$(grep -q '"result":"fail"' "$f" 2>/dev/null && echo 1 || echo 0)" "$t ব্যাকআপ ব্যর্থ হয়েছে"
 done
-[ -f "$STATE/restore-test.json" ] && alert restore_test "$(grep -q '"result":"fail"' "$STATE/restore-test.json" && echo 1 || echo 0)" "ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ"
+[ -f "$STATE/restore-test.json" ] && QUIET="$BQ" alert restore_test "$(grep -q '"result":"fail"' "$STATE/restore-test.json" && echo 1 || echo 0)" "ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ"
+# PR 507: the monthly drill as a whole (one copy failing is enough, even when the last one passed).
+[ -f "$STATE/restore-drill.json" ] && QUIET="$BQ" alert restore_drill "$(jq -e '.result == "fail"' "$STATE/restore-drill.json" >/dev/null 2>&1 && echo 1 || echo 0)" "মাসিক ফেরানোর মহড়া ব্যর্থ: $(jq -r '.detail' "$STATE/restore-drill.json" 2>/dev/null | cut -c1-300)"
 
 load="$(cut -d' ' -f1 /proc/loadavg)"
 mem_used_pct="$(free | awk '/^Mem:/{printf "%d", ($3/$2)*100}')"

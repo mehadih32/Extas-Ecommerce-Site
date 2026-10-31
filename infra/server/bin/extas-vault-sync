@@ -7,14 +7,19 @@
 #   - installs each file it returns into config/secrets/ (0600, root) when its content changed: telegram.env (the
 #     owner's bot for extas-monitor); later parts add the backup copies' keys (PR 395, 507);
 #   - writes state/vault-sync.json: the result, the time, the fingerprint and the names of the files that changed —
-#     never a value.
+#     never a value;
+#   - PR 507: hands back the admin's requests the server finished (state/requests/<id>.json → done.json; then moved
+#     to state/requests/reported/), starts the ones the CLI took (`extas-backup request`, a transient systemd unit, so
+#     a long backup never holds this run), and puts a changed backup-settings.env onto the timers (`extas-backup
+#     schedule`).
 # A version without the CLI yet, or no deploy yet, is "waiting", not a failure. Exit 1 only when the run itself failed.
 set -euo pipefail
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../../config/server.conf
 . "$CONF"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
-mkdir -p "$STATE"; install -d -m 0700 "$SEC"
+BIN="$(cd "$(dirname "$0")" && pwd)"
+mkdir -p "$STATE/requests/reported"; install -d -m 0700 "$SEC"
 OUTF="$STATE/vault-sync.json"
 
 finish() { # finish <ok|waiting|fail> <detail> [changed json] [fingerprint]
@@ -47,9 +52,17 @@ chown "${VAULT_SYNC_IMAGE_UID:-1000}:${VAULT_SYNC_IMAGE_UID:-1000}" "$work/out" 
   fi
   grep -E '^VAULT_MASTER_KEY=' "$SEC/app.env" 2>/dev/null || true
   printf 'SYNC_PREVIOUS=%s\n' "$(jq -r '.fingerprint // empty' "$OUTF" 2>/dev/null || true)"
+  printf 'SYNC_STALE_H=%s\n' "${BACKUP_REQUEST_STALE_H:-12}"
 } > "$work/db.env"
 chmod 600 "$work/db.env"
 grep -q '^DATABASE_URL=' "$work/db.env" || finish waiting "no database address in the server's secrets yet (server setup first)"
+
+# PR 507: what the server finished since the last run goes back with this one.
+done_files=()
+for f in "$STATE/requests"/*.json; do [ -e "$f" ] && done_files+=("$f"); done
+if [ ${#done_files[@]} -gt 0 ]; then jq -s '.' "${done_files[@]}" > "$work/out/done.json" 2>/dev/null || echo '[]' > "$work/out/done.json"
+else echo '[]' > "$work/out/done.json"; fi
+chmod 644 "$work/out/done.json"
 
 rc=0
 timeout "$(( ${VAULT_SYNC_TIMEOUT_MIN:-3} * 60 ))" docker run --rm --name "extas-vault-sync-$$" --network extas \
@@ -58,8 +71,24 @@ timeout "$(( ${VAULT_SYNC_TIMEOUT_MIN:-3} * 60 ))" docker run --rm --name "extas
 [ "$rc" = 0 ] && [ -f "$work/out/result.json" ] || finish fail "the sync run failed (exit $rc)"
 
 fp="$(jq -r '.fingerprint' "$work/out/result.json")"
+
+# PR 507: the finished requests are handed back; the ones the CLI took start now, each in its own transient unit.
+for f in "${done_files[@]}"; do mv "$f" "$STATE/requests/reported/" 2>/dev/null || true; done
+started=0
+while IFS=$'\t' read -r id kind src; do
+  [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || continue
+  [[ "$kind" =~ ^(BACKUP|RESTORE_DRILL)$ ]] && [[ "$src" =~ ^(|all|local|blob|drive)$ ]] || continue
+  if "${VAULT_SYNC_RUNNER:-systemd-run}" --no-block --collect --unit "extas-request-${id:0:8}" \
+      "$BIN/extas-backup" request "$id" "$kind" "${src:-all}" >/dev/null 2>&1; then
+    started=$((started + 1))
+  else
+    jq -n --arg id "$id" '{id:$id, ok:false, detail:"the server could not start it"}' > "$STATE/requests/$id.json"
+  fi
+done < <(jq -r '.requests[]? | [.id, .kind, (.source // "")] | @tsv' "$work/out/result.json")
+asked="$([ "$started" -gt 0 ] && echo "; started $started request(s)" || true)"
+
 if [ "$(jq -r '.changed' "$work/out/result.json")" != true ]; then
-  finish ok "unchanged" "[]" "$fp"
+  finish ok "unchanged$asked" "[]" "$fp"
 fi
 changed=()
 while IFS= read -r name; do
@@ -82,5 +111,9 @@ if [[ " ${changed[*]} " == *" telegram.env "* ]] && [ -s "$SEC/telegram.env" ]; 
     curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
       --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${VAULT_SYNC_TELEGRAM_HELLO}" >/dev/null 2>&1 ) || true
 fi
-finish ok "$([ ${#changed[@]} -eq 0 ] && echo 'no file changed' || echo "updated: ${changed[*]}")" \
+# PR 507: new backup settings go onto the timers at once (the scripts themselves read the file on each run).
+if [[ " ${changed[*]} " == *" backup-settings.env "* ]]; then
+  "$BIN/extas-backup" schedule >/dev/null 2>&1 || asked="$asked; the backup timers could not be updated"
+fi
+finish ok "$([ ${#changed[@]} -eq 0 ] && echo 'no file changed' || echo "updated: ${changed[*]}")$asked" \
   "$(printf '%s\n' "${changed[@]}" | jq -R . | jq -sc 'map(select(length > 0))')" "$fp"

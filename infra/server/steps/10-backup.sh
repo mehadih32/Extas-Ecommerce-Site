@@ -31,9 +31,12 @@ step_backup() {
   timer_unit extas-backup-daily "EXTAS daily backup" "/usr/local/sbin/extas-backup daily" "*-*-* $BACKUP_TIME:00"
   timer_unit extas-backup-wal "EXTAS WAL push to Blob" "/usr/local/sbin/extas-backup wal" "*-*-* *:*:30"
   timer_unit extas-backup-prune "EXTAS backup retention" "/usr/local/sbin/extas-backup prune" "*-*-* 05:15:00"
-  timer_unit extas-restore-test "EXTAS monthly restore test" "/usr/local/sbin/extas-restore test" "*-*-01 03:30:00"
+  # PR 507: the monthly drill restores the server's own copy and, when connected, Blob's and Drive's; the day and time
+  # come from the admin's settings (extas-backup schedule, below).
+  timer_unit extas-restore-test "EXTAS monthly restore drill" "/usr/local/sbin/extas-restore drill" "*-*-01 03:30:00"
   systemctl daemon-reload
   systemctl enable --now extas-backup-daily.timer extas-backup-wal.timer extas-backup-prune.timer extas-restore-test.timer >/dev/null 2>&1
+  /usr/local/sbin/extas-backup schedule >/dev/null 2>&1 || true
 
   # A backup now if there is no whole base backup yet or the last one failed (31 Oct 2026: a failed first backup left
   # an empty folder that counted as "there is one"), then prove it restores.

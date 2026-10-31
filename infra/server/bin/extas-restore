@@ -5,6 +5,12 @@
 #       one sample product photo from the newest photo archives and compares its checksum; unpacks the newest docs
 #       bundle and checks that README.md, the blueprint and the register came back and that its COMMIT matches.
 #       Run after every setup and monthly by a timer; the result is shown in the admin and alerted (PR 9, 395, 507).
+#   extas-restore drill [--only all|local|blob|drive]
+#       PR 507, the monthly restore drill (its timer) and "Run the restore drill now" in the admin: `test` from the
+#       server's disk, then from Azure Blob and from Google Drive when the drill settings name them and they are
+#       connected — each into the same throw-away database, never the live one. Each writes restore-test-<from>.json;
+#       the drill writes restore-drill.json (every run and its words) and, when the owner asked, a good result on
+#       Telegram (a failure comes from extas-monitor).
 #   extas-restore media [--from local|blob|drive] [--into live]
 #       The product photos from the newest full photo archive and the newest diff on it, every checksum checked.
 #       Default: into a folder on the NVMe for checking (the path is printed). --into live copies the photos that are
@@ -19,6 +25,34 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../../config/server.conf
 . "$CONF"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"; LOCAL="$R/backups"
+# PR 507: the backup settings of Settings → System → Backups (the vault sync writes them); they win over server.conf.
+# Only the known names, each checked, so a broken file can never set anything else.
+load_backup_settings() {
+  local f="$SEC/backup-settings.env" k v
+  [ -f "$f" ] || return 0
+  while IFS='=' read -r k v; do
+    v="${v#\'}"; v="${v%\'}"
+    case "$k" in
+      BACKUP_TIME|BACKUP_DRILL_TIME) [[ "$v" =~ ^([01][0-9]|2[0-3]):[0-5][0-9]$ ]] || continue ;;
+      BACKUP_KEEP_LOCAL_DAYS|BACKUP_KEEP_BLOB_DAYS|BACKUP_KEEP_DRIVE_DAYS|BACKUP_KEEP_LOCAL_WAL_DAYS|BACKUP_MIN_FREE_PCT|BACKUP_DRILL_DAY)
+        [[ "$v" =~ ^[0-9]{1,4}$ ]] || continue ;;
+      BACKUP_DRILL_ON|BACKUP_DRILL_BLOB|BACKUP_DRILL_DRIVE|BACKUP_TELEGRAM_FAIL|BACKUP_TELEGRAM_OK) [[ "$v" =~ ^(yes|no)$ ]] || continue ;;
+      *) continue ;;
+    esac
+    printf -v "$k" '%s' "$v"
+  done < "$f"
+}
+load_backup_settings
+# A Telegram line to the owner (telegram.env from the vault sync, PR 392); without the bot it goes to the log only.
+tg() {
+  echo "$(date -Is) $1" >> "$R/logs/alerts.log" 2>/dev/null || true
+  [ -f "$SEC/telegram.env" ] || return 0
+  # shellcheck disable=SC1091
+  ( . "$SEC/telegram.env"
+    [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || exit 0
+    curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=$1" >/dev/null 2>&1 ) || true
+}
 [ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
 BLOB_PATH="${BACKUP_BLOB_CONTAINER:-extas-backups}"; DRIVE_PATH="${BACKUP_DRIVE_FOLDER-EXTAS-backups}"
 dpath() { echo "drive:${DRIVE_PATH:+$DRIVE_PATH/}$1"; }   # see extas-backup (PR 395: empty = the backup folder itself)
@@ -29,10 +63,11 @@ NAME="extas-pg-restore"
 MEDIA="$R/data/media"   # the product photos on the local disk (see extas-backup)
 DOCS="$R/docs/current"  # the server's copy of the repository's docs (PR 594, CN-011)
 
-FROM=local; AT=""; TARGET=staging; MODE=restore; INTO=""
-case "${1:-}" in test) MODE="test"; shift ;; media) MODE="media"; shift ;; esac
+FROM=local; AT=""; TARGET=staging; MODE=restore; INTO=""; ONLY=all
+case "${1:-}" in test) MODE="test"; shift ;; media) MODE="media"; shift ;; drill) MODE="drill"; shift ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
+    --only) ONLY="$2"; shift 2 ;;
     --from) FROM="$2"; shift 2 ;;
     --at) AT="$2"; shift 2 ;;
     --target) TARGET="$2"; shift 2 ;;
@@ -55,7 +90,48 @@ pgx() { # pgx [-i] [-u user] <container> <tool> <args…>
   local c="$1"; shift
   docker exec "${o[@]}" "$c" bash -c "$PG_PATH"'; exec "$@"' pgx "$@"
 }
-result() { printf '{"result":"%s","detail":"%s","from":"%s","at":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" > "$STATE/restore-$MODE.json"; }
+result() {
+  printf '{"result":"%s","detail":"%s","from":"%s","at":"%s"}\n' "$1" "$2" "$FROM" "$(date -Is)" > "$STATE/restore-$MODE.json"
+  # PR 507: each copy's own last test too, for the Backups page and the drill.
+  [ "$MODE" = test ] && cp "$STATE/restore-test.json" "$STATE/restore-test-$FROM.json"
+  return 0
+}
+
+# ---- the monthly restore drill (PR 507) ---------------------------------------------------------------------------
+drill() {
+  local f runs=() ok=yes line r d
+  [[ "$ONLY" =~ ^(all|local|blob|drive)$ ]] || { echo "--only all, local, blob or drive" >&2; exit 2; }
+  for f in local blob drive; do
+    [ "$ONLY" = all ] || [ "$ONLY" = "$f" ] || continue
+    if [ "$ONLY" = all ]; then
+      case "$f" in
+        blob) [ "${BACKUP_DRILL_BLOB:-yes}" = yes ] || { runs+=("$f|off|not in the drill (settings)"); continue; } ;;
+        drive) [ "${BACKUP_DRILL_DRIVE:-yes}" = yes ] || { runs+=("$f|off|not in the drill (settings)"); continue; } ;;
+      esac
+    fi
+    case "$f" in
+      blob) [ -n "${RCLONE_CONFIG_BLOB_TYPE:-}" ] || { runs+=("$f|off|not connected"); continue; } ;;
+      drive) { [ -n "${RCLONE_CONFIG_DRIVE_TYPE:-}" ] && [ -s "$SEC/backup.key" ]; } || { runs+=("$f|off|not connected"); continue; } ;;
+    esac
+    rm -f "$STATE/restore-test.json"
+    bash "$0" test --from "$f" >/dev/null 2>&1 || true
+    r="$(jq -r '.result // "fail"' "$STATE/restore-test.json" 2>/dev/null || echo fail)"
+    d="$(jq -r '.detail // "no result"' "$STATE/restore-test.json" 2>/dev/null || echo 'no result')"
+    [ "$r" = ok ] || ok=no
+    runs+=("$f|$r|$d")
+  done
+  line="$(for x in "${runs[@]}"; do IFS='|' read -r f r d <<<"$x"; echo "$f: $r — $d"; done | paste -sd ';' -)"
+  printf '%s\n' "${runs[@]}" | jq -R 'split("|") | {from:.[0], result:.[1], detail:(.[2:] | join("|"))}' | jq -s \
+    --arg result "$([ "$ok" = yes ] && echo ok || echo fail)" --arg detail "$line" --arg at "$(date -Is)" \
+    '{result:$result, detail:$detail, at:$at, runs:.}' > "$STATE/restore-drill.json.tmp"
+  mv "$STATE/restore-drill.json.tmp" "$STATE/restore-drill.json"
+  if [ "$ok" = yes ]; then
+    [ "${BACKUP_TELEGRAM_OK:-no}" = yes ] && tg "${BACKUP_DRILL_OK_TEXT:-restore drill ok}"
+    echo "OK: $line"; exit 0
+  fi
+  echo "FAIL: $line"; exit 1
+}
+if [ "$MODE" = drill ]; then drill; fi
 
 # ---- product photos (PR 8) ----------------------------------------------------------------------------------------
 # media_set <dir>: the newest full photo archive in <dir> and the newest diff made on it → MEDIA_FULL, MEDIA_DIFF
