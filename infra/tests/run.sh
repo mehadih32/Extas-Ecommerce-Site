@@ -69,6 +69,20 @@ env_set "$E" DATABASE_DIRECT_URL 'postgresql://u:p@h:5432/d'
 check "env_set leaves an unchanged file alone" "$(stat -c %i "$E"):$(wc -l < "$E")" "$inode:3"
 rm -rf "$T"
 
+# report_json (PR 394): the setup report as data for the go-live checklist — every step, the counts, passed only for a
+# full run without a failure; a "|" inside a detail survives
+T="$(mktemp -d)"
+printf '| specs | OK | E8ds_v6, 8 vCPU |\n| public HTTPS | WARN | Cloudflare error 526 — SSL mode a\\|b |\n| backup | OK | done |\n' > "$T/r.md"
+report_json "$T/r.md" "$T/s.json" yes abc123
+check "report_json: every step with its counts, a full run without a failure passes" \
+  "$(jq -r '[(.steps | length), .counts.ok, .counts.warn, .counts.fail, .passed, .full, .commit] | map(tostring) | join(" ")' "$T/s.json")" "3 2 1 0 true true abc123"
+check "report_json: a '|' in a detail survives" "$(jq -r '.steps[1].detail' "$T/s.json")" "Cloudflare error 526 — SSL mode a|b"
+printf '| docker | FAIL | step failed |\n' >> "$T/r.md"
+report_json "$T/r.md" "$T/s.json" yes abc123
+report_json "$T/r.md" "$T/p.json" no abc123
+check "report_json: a failure, or a partial run, never passes" "$(jq -r .passed "$T/s.json"):$(jq -r .passed "$T/p.json")" "false:false"
+rm -rf "$T"
+
 # First owner account (PR 15, CN-009): extas-owner-create with a stand-in `docker` (no server, no database). The
 # e-mail never reaches the output or the report, the first password lands in a 0600 file the reader shows, a second
 # run refuses and changes nothing, a database that already has an owner is refused, and a bad e-mail stops early.

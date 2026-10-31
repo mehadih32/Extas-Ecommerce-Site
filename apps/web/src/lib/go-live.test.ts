@@ -17,6 +17,7 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     smoke: { ok: true, at: ago(120), pages: 40, failed: 0 },
     health: { at: ago(2), problems: [] },
     backups: { ready: true, todo: 0 },
+    serverSetup: { at: ago(600), full: true, passed: true, counts: { ok: 13, fail: 0, warn: 1 }, steps: [] },
     ...over,
   };
 }
@@ -40,6 +41,14 @@ describe('go-live checklist (PR 393)', () => {
     expect(open(ctx({ health: { at: ago(45), problems: [] } }))).toEqual(['health']);
     expect(open(ctx({ backups: { ready: false, todo: 3 } }))).toEqual(['backups']);
     expect(goLiveChecks(ctx({ backups: { ready: false, todo: 3 } })).items.find((i) => i.key === 'backups')?.vars).toEqual({ todo: 3 });
+  });
+
+  it('PR 394: the server — only a full setup run that passed; a failure names its steps', () => {
+    expect(open(ctx({ serverSetup: null }))).toEqual(['server']);
+    expect(open(ctx({ serverSetup: { full: false, passed: false } }))).toEqual(['server']);
+    const failed = { full: true, passed: false, counts: { ok: 11, fail: 2, warn: 0 }, steps: [{ step: 'backup', status: 'FAIL', detail: '' }, { step: 'monitor', status: 'FAIL', detail: '' }, { step: 'docker', status: 'OK', detail: '' }] };
+    const r = goLiveChecks(ctx({ serverSetup: failed })).items.find((i) => i.key === 'server');
+    expect(r).toMatchObject({ ok: false, vars: { steps: 3, fail: 2, warn: 0, failed: 'backup, monitor' } });
   });
 
   it('sign-offs: done only when confirmed, with who and when; nothing is confirmed on a new installation', () => {

@@ -9,7 +9,7 @@
 // Later PRs add their items to GO_LIVE (394 the server, 397 the certificate, 398 the runbook, 400 the connections,
 // 401 indexing, 402 the first week). One pure function evaluates the list; it only reports: nothing is switched,
 // opened or blocked by it.
-import type { Health, Smoke } from './status';
+import type { Health, ServerSetup, Smoke } from './status';
 
 export type GoLiveKind = 'auto' | 'signoff' | 'owner';
 
@@ -21,6 +21,8 @@ export interface GoLiveContext {
   health: Health | null;
   /** The backups' own go-live checks (PR 391): ready, and how many are still to do. */
   backups: { ready: boolean; todo: number };
+  /** PR 394: the last full server setup run (infra/server/setup.sh → state/server-setup.json). */
+  serverSetup?: ServerSetup | null;
 }
 
 export interface GoLiveResult {
@@ -75,6 +77,23 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     }),
   },
   { key: 'backups', pr: 393, kind: 'auto', check: ({ backups }) => ({ ok: backups.ready, vars: { todo: backups.todo } }) },
+  // PR 394 — every server item of Blueprint A2.9 (A2.9.16): the last full setup run passed every step. A warning (for
+  // example the public HTTPS answer while DNS is new) is shown with the number but does not hold it back.
+  {
+    key: 'server',
+    pr: 394,
+    kind: 'auto',
+    check: ({ serverSetup: s }) => ({
+      ok: s?.full === true && s.passed === true,
+      at: s?.at,
+      vars: {
+        steps: s?.steps?.length ?? 0,
+        fail: s?.counts?.fail ?? 0,
+        warn: s?.counts?.warn ?? 0,
+        failed: (s?.steps ?? []).filter((x) => x.status === 'FAIL').map((x) => x.step).join(', ') || '—',
+      },
+    }),
+  },
   { key: 'qaGate', pr: 393, kind: 'signoff' },
   { key: 'acceptance', pr: 393, kind: 'signoff' },
   { key: 'realPhones', pr: 393, kind: 'signoff' },

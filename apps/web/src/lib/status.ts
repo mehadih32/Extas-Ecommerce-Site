@@ -24,6 +24,15 @@ export type RestoreDrill = { result?: 'ok' | 'fail'; at?: string; detail?: strin
 // kept here because after it the database is the backup's, without the request that asked for it.
 export type RestoreStaging = { id?: string; ok?: boolean; from?: string; backup?: string; at?: string; detail?: string; finishedAt?: string };
 export type RestoreProduction = { result?: 'ok' | 'fail' | 'refused'; at?: string; detail?: string; from?: string; backup?: string; request?: string };
+// PR 394: infra/server/setup.sh — the last full server setup run (every A2.9 step) as data.
+export type ServerSetup = {
+  at?: string;
+  commit?: string;
+  full?: boolean;
+  passed?: boolean;
+  counts?: { ok: number; fail: number; warn: number };
+  steps?: { step: string; status: string; detail: string }[];
+};
 // CN-016: infra/deploy/smoke.sh after every deploy and every night (every built page, signed out and as the admin).
 export type Smoke = { ok?: boolean; at?: string; kind?: string; pages?: number; failed?: number };
 
@@ -44,7 +53,7 @@ async function readJson<T>(name: string): Promise<T | null> {
 export type RuntimeState = Awaited<ReturnType<typeof runtimeState>>;
 
 export async function runtimeState() {
-  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production] = await Promise.all([
+  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup] = await Promise.all([
     readJson<Deploy>('last-good-deploy.json'),
     readJson<Health>('health.json'),
     readJson<Backup>('backup-daily-local.json'),
@@ -55,6 +64,7 @@ export async function runtimeState() {
     readJson<RestoreDrill>('restore-drill.json'),
     readJson<RestoreStaging>('restore-staging.json'),
     readJson<RestoreProduction>('restore-production.json'),
+    readJson<ServerSetup>('server-setup.json'),
   ]);
-  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production } };
+  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup };
 }
