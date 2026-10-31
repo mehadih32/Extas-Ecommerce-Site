@@ -802,6 +802,20 @@ check "restore request: production after its staging passed — the backup in pl
   "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R3.json"):$(jq -r '.result + " " + .backup' "$BR/state/restore-production.json"):$(cat "$BR/data/postgres/pgdata.before-restore-"*/marker):$([ -e "$BR/data/postgres/pgdata/marker" ] && echo old || echo new):$(grep -c '^restore_command' "$BR/data/postgres/pgdata/postgresql.auto.conf")" \
   "0:true:ok $SB:live before:new:0"
 check "restore request: production says where the old data is" "$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'previous data folder is kept at')" "1"
+# R1 ops review (M9): a swap that fails half way puts the live data folder back and says so; a restored copy that does
+# not fit on the database disk is refused before anything stops.
+rm -rf "$BR/data/postgres"; mkdir -p "$BR/data/postgres/pgdata"; echo "live again" > "$BR/data/postgres/pgdata/marker"
+mkdir -p "$T/rsyncfail"; printf '#!/bin/sh\nexit 23\n' > "$T/rsyncfail/rsync"; chmod +x "$T/rsyncfail/rsync"
+R4=0190a3c4-0000-7000-8000-0000000000b4; R5=0190a3c4-0000-7000-8000-0000000000b5
+rc=0; "${BENV[@]}" PATH="$T/rsyncfail:$T/bin:$PATH" bash "$B/extas-restore" request "$R4" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore (M9): a failed copy puts the live data folder back and says so" \
+  "$([ "$rc" -ne 0 ] && echo failed):$(cat "$BR/data/postgres/pgdata/marker"):$(ls -d "$BR/data/postgres/pgdata.before-restore-"* 2>/dev/null | wc -l):$(jq -r .result "$BR/state/restore-production.json"):$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'live database was put back')" \
+  "failed:live again:0:fail:1"
+echo 99 > "$T/df-used"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R5" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore (M9): no room for the restored copy: refused, the live data folder untouched" \
+  "$rc:$(cat "$BR/data/postgres/pgdata/marker"):$(ls -d "$BR/data/postgres/pgdata."* 2>/dev/null | wc -l):$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'not enough room on the database disk')" "1:live again:0:1"
+rm -f "$T/df-used"
 rm -rf "$BR/data/postgres"
 D1=0190a3c4-0000-7000-8000-0000000000c1; D2=0190a3c4-0000-7000-8000-0000000000c2
 "${BENV[@]}" bash "$B/extas-restore" request "$D1" staging drive "$A" - - >/dev/null 2>&1 || true

@@ -497,8 +497,37 @@ fi
 echo "This replaces the LIVE database with: $detail."
 if [ "$CONFIRM" = RESTORE ]; then ok=RESTORE; else read -r -p "Type RESTORE to continue: " ok; fi
 [ "$ok" = "RESTORE" ] || { echo "cancelled"; exit 1; }
+# R1 ops review (M9): the restored copy goes onto the same volume as the live data folder (which stays beside it), so
+# it must fit before anything stops; a half-done swap used to leave the shop down with the live data folder renamed.
+if [ -n "$BASE" ]; then
+  need_kb="$(du -sk "$WORK/pgdata" 2>/dev/null | cut -f1)"
+  free_kb="$(df -Pk "$R/data/postgres" 2>/dev/null | awk 'NR==2{print $4}')"
+  if [ -n "$need_kb" ] && [ -n "$free_kb" ] && [ "$free_kb" -lt $(( need_kb + need_kb / 20 )) ]; then
+    result fail "not enough room on the database disk for the restored copy (needs $(( need_kb / 1024 )) MB, $(( free_kb / 1024 )) MB free); the live database was not touched"
+    echo "FAIL: not enough room on the database disk for the restored copy; nothing was changed" >&2
+    exit 1
+  fi
+fi
 # The shop's own containers stop for the swap and start again after it (PR 396), PgBouncer with them.
 mapfile -t stopped < <(docker ps --format '{{.Names}}' | grep -E '^extas-(app|worker|jobs|pgbouncer)' || true)
+# R1 ops review (M9): if any step of the swap fails, the live data folder goes back, the database and the shop's
+# containers start again, and the result says so (the half-copied folder is set aside, never deleted).
+swap_undo() {
+  local rc=$?
+  [ "$rc" -ne 0 ] || return 0
+  echo "FAIL: the restore stopped half way (exit $rc); putting the live database back" >&2
+  if [ -n "$BASE" ] && [ -d "$R/data/postgres/pgdata.before-restore-$TS" ]; then
+    docker stop -t 60 extas-postgres >/dev/null 2>&1 || true
+    [ ! -e "$R/data/postgres/pgdata" ] || mv "$R/data/postgres/pgdata" "$R/data/postgres/pgdata.failed-restore-$TS"
+    mv "$R/data/postgres/pgdata.before-restore-$TS" "$R/data/postgres/pgdata"
+  fi
+  docker start extas-postgres >/dev/null 2>&1 || true
+  for c in "${stopped[@]}"; do docker start "$c" >/dev/null 2>&1 || true; done
+  result fail "production restore stopped half way (exit $rc); the live database was put back and the shop started again"
+  cleanup
+  return "$rc"
+}
+trap swap_undo EXIT
 if [ -n "$BASE" ]; then
   docker stop "$NAME" >/dev/null
   for c in "${stopped[@]}"; do docker stop "$c" >/dev/null; done
@@ -525,6 +554,7 @@ for _ in $(seq 1 $(( ${RESTORE_TEST_WAIT_MIN:-30} * 30 ))); do
   pgx extas-postgres psql -qtAX -U extas -d extas -c "SELECT 1" >/dev/null 2>&1 && break
   sleep 2
 done
+trap cleanup EXIT
 for c in "${stopped[@]}"; do docker start "$c" >/dev/null 2>&1 || true; done
 echo "Done. $kept; the shop's containers started again (${#stopped[@]})."
 result ok "production restored: $detail; $kept"
