@@ -56,6 +56,7 @@
     { "id": "money/books-daily", "route": "/admin/money/books/daily" },
     { "id": "money/costs", "route": "/admin/money/costs" },
     { "id": "reports/server", "route": "/admin/server" },
+    { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/keys", "route": "/admin/integrations" },
     { "id": "settings/erp-link", "route": "/admin/settings/erp-link" },
     { "id": "settings/security", "route": "/admin/settings/security" },

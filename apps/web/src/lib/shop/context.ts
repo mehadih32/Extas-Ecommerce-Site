@@ -5,7 +5,7 @@
 import { cache } from 'react';
 import { headers } from 'next/headers';
 import { getPrisma } from '@extas/db/client';
-import { registry, type Key, type Value } from '@extas/settings';
+import { registry, withoutPlaceholder, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { shopT, type ShopT, type Vars } from './dict';
 import { formatMoney, isShopLang, LANG_HEADER, PATH_HEADER, THEME_HEADER, toBnDigits, type ShopLang } from './lang';
@@ -78,12 +78,20 @@ export function defaultShopSettings(): ShopSettings {
 /** The store the shop serves: the mother store, or another one the server names (lib/shop/store-id, PR 235). */
 export { shopStoreId };
 
+/**
+ * PR 383 (F2 q27): an owner detail the shop prints (legal numbers, contacts, social links) that is only a filler
+ * ("[your DBID number]", "TBD", "xxx") is read as not set, so its line is left out instead of reaching the live site.
+ */
+function printable<K extends Key>(key: K, value: Value<K>): Value<K> {
+  return withoutPlaceholder(key, value, registry[key].default as Value<K>);
+}
+
 async function readSettings(storeId: number): Promise<{ values: ShopSettings; live: boolean }> {
   const resolver = settingsResolver();
   if (!resolver) return { values: defaultShopSettings(), live: false };
   try {
     const vals = await withTimeout(Promise.all(KEYS.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs());
-    return { values: Object.fromEntries(KEYS.map((k, i) => [k, vals[i]])) as ShopSettings, live: true };
+    return { values: Object.fromEntries(KEYS.map((k, i) => [k, printable(k, vals[i] as Value<typeof k>)])) as ShopSettings, live: true };
   } catch (e) {
     console.warn(`shop: settings unavailable, drawing with the defaults (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return { values: defaultShopSettings(), live: false };
@@ -100,7 +108,7 @@ export async function readPageSettings<K extends Key>(keys: readonly K[], storeI
   if (!resolver) return defaults();
   try {
     const vals = await withTimeout(Promise.all(keys.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs());
-    return Object.fromEntries(keys.map((k, i) => [k, vals[i]])) as { [P in K]: Value<P> };
+    return Object.fromEntries(keys.map((k, i) => [k, printable(k, vals[i] as Value<typeof k>)])) as { [P in K]: Value<P> };
   } catch (e) {
     console.warn(`shop: page settings unavailable, drawing with the defaults (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return defaults();
