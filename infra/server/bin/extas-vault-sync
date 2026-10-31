@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# S19 · PR 392 — the vault's keys for the server's own scripts (packages/jobs/src/server-sync.ts). Runs every
+# VAULT_SYNC_EVERY_MIN minutes (extas-vault-sync.timer, 11-monitor.sh):
+#   - runs `server-sync-cli.ts` in the live version's migrate image (state/last-good-deploy.json `.migrate`) on the extas
+#     network, with only the database address and VAULT_MASTER_KEY in a root-only temporary env file, like
+#     erp-acceptance.sh; the last fingerprint goes with it, so an unchanged vault decrypts nothing;
+#   - installs each file it returns into config/secrets/ (0600, root) when its content changed: telegram.env (the
+#     owner's bot for extas-monitor); later parts add the backup copies' keys (PR 395, 507);
+#   - writes state/vault-sync.json: the result, the time, the fingerprint and the names of the files that changed —
+#     never a value.
+# A version without the CLI yet, or no deploy yet, is "waiting", not a failure. Exit 1 only when the run itself failed.
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
+mkdir -p "$STATE"; install -d -m 0700 "$SEC"
+OUTF="$STATE/vault-sync.json"
+
+finish() { # finish <ok|waiting|fail> <detail> [changed json] [fingerprint]
+  jq -n --arg result "$1" --arg detail "$2" --argjson changed "${3:-[]}" --arg fp "${4:-}" --arg at "$(date -Is)" \
+    '{result:$result,detail:$detail,changed:$changed,fingerprint:$fp,at:$at}' > "$OUTF.tmp"
+  mv "$OUTF.tmp" "$OUTF"
+  [ "$1" = fail ] && exit 1
+  exit 0
+}
+
+IMG="$(jq -r '.migrate // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
+if [ -z "$IMG" ] || ! docker image inspect "$IMG" >/dev/null 2>&1; then
+  IMG="$(docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate | head -n 1 || true)"
+fi
+[ -n "$IMG" ] || finish waiting "no migrate image on this server yet (deploy first)"
+if ! docker run --rm --name "extas-vault-sync-probe-$$" "$IMG" test -f /repo/packages/jobs/src/server-sync-cli.ts >/dev/null 2>&1; then
+  finish waiting "the live version predates PR 392; the next deploy brings it"
+fi
+
+work="$(mktemp -d "$SEC/.vault-sync.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+mkdir -p "$work/out"
+chown "${VAULT_SYNC_IMAGE_UID:-1000}:${VAULT_SYNC_IMAGE_UID:-1000}" "$work/out"   # the migrate image runs as `node`
+{
+  # The app's own role once a deploy moved the app to it (app-role.sh); before that, the direct owner address.
+  if grep -q '^DATABASE_URL=postgresql://extas_app:' "$SEC/app.env" 2>/dev/null; then
+    grep -E '^DATABASE_URL=' "$SEC/app.env" | head -n 1
+  else
+    grep -E '^DATABASE_DIRECT_URL=' "$SEC/app.env" 2>/dev/null | sed 's/^DATABASE_DIRECT_URL=/DATABASE_URL=/'
+  fi
+  grep -E '^VAULT_MASTER_KEY=' "$SEC/app.env" 2>/dev/null || true
+  printf 'SYNC_PREVIOUS=%s\n' "$(jq -r '.fingerprint // empty' "$OUTF" 2>/dev/null || true)"
+} > "$work/db.env"
+chmod 600 "$work/db.env"
+grep -q '^DATABASE_URL=' "$work/db.env" || finish waiting "no database address in the server's secrets yet (server setup first)"
+
+rc=0
+timeout "$(( ${VAULT_SYNC_TIMEOUT_MIN:-3} * 60 ))" docker run --rm --name "extas-vault-sync-$$" --network extas \
+  --env-file "$work/db.env" -v "$work/out:/out" "$IMG" \
+  sh -c 'cd /repo/packages/jobs && exec ./node_modules/.bin/tsx src/server-sync-cli.ts --out /out' >/dev/null 2>&1 || rc=$?
+[ "$rc" = 0 ] && [ -f "$work/out/result.json" ] || finish fail "the sync run failed (exit $rc)"
+
+fp="$(jq -r '.fingerprint' "$work/out/result.json")"
+if [ "$(jq -r '.changed' "$work/out/result.json")" != true ]; then
+  finish ok "unchanged" "[]" "$fp"
+fi
+changed=()
+while IFS= read -r name; do
+  # Only plain names from the CLI's own list; never a path.
+  [[ "$name" =~ ^[a-z][a-z0-9.-]{0,40}$ ]] || continue
+  src="$work/out/files/$name"
+  [ -f "$src" ] || continue
+  if [ -f "$SEC/$name" ] && cmp -s "$src" "$SEC/$name"; then continue; fi
+  install -m 0600 -o root -g root "$src" "$SEC/$name.new" 2>/dev/null || install -m 0600 "$src" "$SEC/$name.new"
+  mv "$SEC/$name.new" "$SEC/$name"
+  changed+=("$name")
+done < <(jq -r '.files[]' "$work/out/result.json")
+# A newly connected bot says so once on Telegram, so the owner knows the server's alerts reach him (the app's Test
+# button only reads the bot and the chat).
+if [[ " ${changed[*]} " == *" telegram.env "* ]] && [ -s "$SEC/telegram.env" ]; then
+  # shellcheck disable=SC1091
+  ( . "$SEC/telegram.env"
+    curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${VAULT_SYNC_TELEGRAM_HELLO}" >/dev/null 2>&1 ) || true
+fi
+finish ok "$([ ${#changed[@]} -eq 0 ] && echo 'no file changed' || echo "updated: ${changed[*]}")" \
+  "$(printf '%s\n' "${changed[@]}" | jq -R . | jq -sc 'map(select(length > 0))')" "$fp"
