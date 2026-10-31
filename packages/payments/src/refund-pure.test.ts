@@ -3,7 +3,7 @@
 // state. Every value is made up.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { HELD_REFUND_STATES, OWED_REFUND_STATES, REFUND_STATES, refundAllowed, refundedPaymentState, refundMove, refundRoom, rtoRefundAmount, type RefundRules } from './refund-pure';
+import { HELD_REFUND_STATES, OWED_REFUND_STATES, REFUND_STATES, refundAllowed, refundedPaymentState, refundMove, refundRoom, rtoRefundAmount, rtoRefundSplit, type RefundRules } from './refund-pure';
 
 const RULES: RefundRules = registry['payments.refunds'].default;
 
@@ -19,7 +19,7 @@ describe('PR 172 · refund rules', () => {
   });
 
   it('the default rules: off after delivery except the rider overcharge; an RTO only once the parcel came back', () => {
-    expect(RULES).toEqual({ toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false });
+    expect(RULES).toEqual({ toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false, rtoAdvance: 'KEEP' });
     expect(refundAllowed(RULES, 'CONFIRMED', 'OUR_MISTAKE')).toEqual({ ok: true });
     expect(refundAllowed(RULES, 'DELIVERED', 'OUR_MISTAKE')).toEqual({ ok: false, rule: 'AFTER_DELIVERY' });
     expect(refundAllowed(RULES, 'PARTIALLY_DELIVERED', 'OTHER')).toEqual({ ok: false, rule: 'AFTER_DELIVERY' });
@@ -42,6 +42,21 @@ describe('PR 172 · refund rules', () => {
     expect(rtoRefundAmount(RULES, o)).toBe(160_000);
     expect(rtoRefundAmount({ ...RULES, rtoDeliveryCharge: 'KEEP' }, o)).toBe(150_000);
     expect(rtoRefundAmount({ ...RULES, rtoDeliveryCharge: 'KEEP' }, { paidMinor: 5_000, deliveryChargeMinor: 10_000 })).toBe(0);
+  });
+
+  it('review R3 (M3, minor 2) — a delivery-charge advance is kept unless asked back; KEEP reaches the wallet; our fault gives all', () => {
+    const o = { paidMinor: 12_000, walletAppliedMinor: 0, deliveryChargeMinor: 12_000, advanceMinor: 12_000, ourFault: false };
+    expect(rtoRefundSplit(RULES, o)).toEqual({ originalMinor: 0, walletMinor: 0 });
+    expect(rtoRefundSplit({ ...RULES, rtoAdvance: 'ASK' }, o)).toEqual({ originalMinor: 12_000, walletMinor: 0 });
+    expect(rtoRefundSplit(RULES, { ...o, ourFault: true })).toEqual({ originalMinor: 12_000, walletMinor: 0 });
+    // an advance and a fully paid order: the advance kept, the rest back; KEEP never keeps the charge twice
+    const both = { paidMinor: 172_000, walletAppliedMinor: 0, deliveryChargeMinor: 12_000, advanceMinor: 12_000, ourFault: false };
+    expect(rtoRefundSplit(RULES, both).originalMinor).toBe(160_000);
+    expect(rtoRefundSplit({ ...RULES, rtoDeliveryCharge: 'KEEP' }, both).originalMinor).toBe(160_000);
+    // a value saved before `rtoAdvance` existed reads as KEEP
+    expect(rtoRefundSplit({ ...RULES, rtoAdvance: undefined as unknown as 'KEEP' }, o).originalMinor).toBe(0);
+    // KEEP with the wallet: what the online money cannot cover comes off the wallet part
+    expect(rtoRefundSplit({ ...RULES, rtoDeliveryCharge: 'KEEP' }, { paidMinor: 5_000, walletAppliedMinor: 20_000, deliveryChargeMinor: 10_000, advanceMinor: 0, ourFault: false })).toEqual({ originalMinor: 0, walletMinor: 15_000 });
   });
 
   it('the payment state from its paid-out refunds (derived, never set by hand)', () => {

@@ -63,8 +63,28 @@ export function refundRoom(m: { paidMinor: number; walletAppliedMinor: number; c
  * delivery charge the order carried. Never below 0.
  */
 export function rtoRefundAmount(rules: RefundRules, o: { paidMinor: number; deliveryChargeMinor: number }): number {
+  return rtoRefundSplit(rules, { ...o, walletAppliedMinor: 0, advanceMinor: 0, ourFault: false }).originalMinor;
+}
+
+/**
+ * Review R3 (M3, minor 2) — what a refused parcel gives back, the way it came and to the wallet:
+ * - a delivery-charge advance (a repeat refuser's "charge first", PR 163 / 542) is kept unless the owner says to ask it
+ *   back (`rtoAdvance` ASK; KEEP by default, the money that advance was taken to keep);
+ * - with `rtoDeliveryCharge` KEEP the delivery charge is kept too (no more than once: an advance kept counts towards it),
+ *   from the online money first, then from the wallet part;
+ * - a refusal for one of the owner's "our fault" reasons (PR 191) keeps nothing: everything paid goes back.
+ * Each part is only ever a REQUEST that waits for a person's approval.
+ */
+export function rtoRefundSplit(
+  rules: RefundRules,
+  o: { paidMinor: number; walletAppliedMinor: number; deliveryChargeMinor: number; advanceMinor: number; ourFault: boolean },
+): { originalMinor: number; walletMinor: number } {
   const paid = Math.max(0, o.paidMinor);
-  return rules.rtoDeliveryCharge === 'KEEP' ? Math.max(0, paid - o.deliveryChargeMinor) : paid;
+  const wallet = Math.max(0, o.walletAppliedMinor);
+  if (o.ourFault) return { originalMinor: paid, walletMinor: wallet };
+  const advanceKept = rules.rtoAdvance === 'ASK' ? 0 : Math.min(paid, Math.max(0, o.advanceMinor));
+  const keep = rules.rtoDeliveryCharge === 'KEEP' ? Math.max(advanceKept, Math.max(0, o.deliveryChargeMinor)) : advanceKept;
+  return { originalMinor: Math.max(0, paid - keep), walletMinor: Math.max(0, wallet - Math.max(0, keep - paid)) };
 }
 
 /** A payment's state from the refunds paid out of it (derived, never set by hand: §6.5.3). */

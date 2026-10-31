@@ -10,7 +10,8 @@ describe('wallet, refunds, advances and statements settings (v55)', () => {
   it('every key is in the registry at version 55 in the payment group, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(walletSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(55);
+      // review R3 (M3): the refund rules changed at v141 (`rtoAdvance`)
+      expect(spec.version, key).toBe(key === 'payments.refunds' ? 141 : 55);
       expect(spec.group, key).toBe('payment');
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -31,9 +32,17 @@ describe('wallet, refunds, advances and statements settings (v55)', () => {
     expect(apologySchema.safeParse({ ...a, to: 'NEXT_ORDER' }).success).toBe(false);
   });
 
+  it('review R3 (M3): a delivery-charge advance is kept by default; a value saved before v141 reads as KEEP', () => {
+    expect(walletSettings['payments.refunds'].default.rtoAdvance).toBe('KEEP');
+    expect(walletSettings['payments.refunds'].since).toBe(55);
+    const old = { toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false };
+    expect(refundRulesSchema.parse(old)).toMatchObject({ rtoAdvance: 'KEEP' });
+    expect(refundRulesSchema.safeParse({ ...old, rtoAdvance: 'GIFT' }).success).toBe(false);
+  });
+
   it('PR 172: the refund rules ship at their safest: no wallet refunds, none after delivery but the rider overcharge', () => {
     const r = walletSettings['payments.refunds'].default;
-    expect(r).toEqual({ toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false });
+    expect(r).toEqual({ toWallet: false, afterDelivery: false, afterDeliverySources: ['RIDER_OVERCHARGE'], rtoDeliveryCharge: 'REFUND', fourEyes: false, rtoAdvance: 'KEEP' });
     expect(refundRulesSchema.safeParse({ ...r, afterDeliverySources: ['OTHER', 'OTHER'] }).success).toBe(false);
     expect(refundRulesSchema.safeParse({ ...r, afterDeliverySources: ['CANCEL'] }).success).toBe(false);
   });

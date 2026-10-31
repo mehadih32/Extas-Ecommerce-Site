@@ -518,6 +518,16 @@
       "only": "Only {size}",
       "done": "Thanks — we've noted your choice.",
       "err": "This can't be changed here any more."
+    },
+    "refund": {
+      "title": "Refund",
+      "asked": "Refund request: {amount}",
+      "back": "{amount} back the way you paid",
+      "toWallet": "{amount} to your wallet",
+      "checking": "Waiting for our approval (asked {date}). Nothing is sent before it is approved.",
+      "sending": "Approved. It is on its way to you.",
+      "sent": "Sent on {date}.",
+      "closed": "Not approved. Message us if you have a question."
     }
   }
 }

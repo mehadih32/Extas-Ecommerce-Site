@@ -32,7 +32,8 @@
       "oldestToday": "oldest from today",
       "failed": "Payouts that failed",
       "none": "No refund is waiting.",
-      "where": "Approving and paying a refund is done on the order, by the owner."
+      "where": "Approve and record each refund on Refunds & wallet.",
+      "open": "Open Refunds & wallet"
     },
     "method": {
       "COD": "Cash on delivery",

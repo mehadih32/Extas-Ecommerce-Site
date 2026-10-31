@@ -1,0 +1,208 @@
+{
+  "moneyRefunds": {
+    "metaTitle": "Refunds & wallet",
+    "title": "Refunds & wallet",
+    "sub": "Every refund the shop owes, from asking to paid out, and the late-delivery apology credit. Nothing is paid by itself: you approve, a person sends the money, then records it here.",
+    "kpi": {
+      "owed": "Owed to customers",
+      "owedNote": "{n} refund(s) not paid out yet",
+      "approve": "To approve",
+      "payout": "To pay out",
+      "failed": "{amount} in failed payouts",
+      "done": "Paid out"
+    },
+    "views": "Refund views",
+    "view": {
+      "approve": "To approve",
+      "payout": "To pay out",
+      "done": "Paid out",
+      "rejected": "Rejected",
+      "all": "All"
+    },
+    "none": {
+      "approve": "No refund is waiting for approval.",
+      "payout": "No approved refund is waiting to be paid out.",
+      "done": "No refund has been paid out yet.",
+      "rejected": "No refund has been rejected.",
+      "all": "No refund yet. A paid order that is cancelled or comes back asks for one by itself."
+    },
+    "list": {
+      "title": "Refunds",
+      "more": "Showing the newest {n}. Older ones are on their orders."
+    },
+    "state": {
+      "REQUESTED": "Waiting for approval",
+      "APPROVED": "Approved, to pay out",
+      "FAILED": "Payout failed",
+      "COMPLETED": "Paid out",
+      "REJECTED": "Rejected"
+    },
+    "source": {
+      "CANCEL": "Paid order cancelled",
+      "EDIT": "Order changed",
+      "RTO": "Prepaid parcel came back",
+      "RIDER_OVERCHARGE": "Rider took too much",
+      "OUR_MISTAKE": "Our mistake",
+      "OTHER": "Other"
+    },
+    "method": {
+      "original": "Back the way it was paid",
+      "wallet": "To the customer's wallet"
+    },
+    "row": {
+      "order": "Order {number}",
+      "asked": "Asked {at} by {who}",
+      "askedShop": "Asked {at} by the shop itself",
+      "approved": "Approved {at} by {who}",
+      "rejected": "Rejected {at} by {who}",
+      "paid": "Paid out {at} by {who}",
+      "someone": "a team member",
+      "reference": "Reference {ref}",
+      "failed": "Payout failed: {note}",
+      "note": "Note: {note}",
+      "decision": "Decision: {note}",
+      "customer": "Customer page"
+    },
+    "apology": {
+      "title": "Late orders: apology credit",
+      "sub": "Delivered later than promised, no apology credit yet. The credit goes to the customer's wallet, once per order.",
+      "off": "The apology credit is off. Switch it on under More options below.",
+      "none": "No late order is waiting for an apology credit.",
+      "late": "{h} hour(s) late",
+      "delivered": "Delivered {at}",
+      "rule": "The rule gives {amount}",
+      "ruleUnset": "The rule has no amount yet",
+      "customer": "{name}",
+      "noName": "Customer"
+    },
+    "w": {
+      "btn": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "complete": "Mark paid",
+        "completeWallet": "Credit the wallet",
+        "fail": "Payout failed",
+        "apology": "Give apology credit"
+      },
+      "what": {
+        "approve": "Approving says {amount} may go back to the customer. It sends no money.",
+        "reject": "The refund is closed and not paid. The customer sees it was not approved.",
+        "complete": "Send {amount} to the customer first (bKash send-money or the bank), then write its reference here.",
+        "completeWallet": "{amount} is added to the customer's wallet now, as store credit.",
+        "fail": "The money did not reach the customer (a wrong number, a bounced transfer). It stays owed; mark it paid when it goes through.",
+        "apology": "Type the credit for this order. It goes to the customer's wallet, once.",
+        "apologyRule": "The owner's rule gives {amount}. It goes to the customer's wallet, once."
+      },
+      "f": {
+        "toWallet": "Give it as store credit to the wallet instead",
+        "reference": "Reference of the money sent (TrxID or bank reference)",
+        "reason": "Reason (for the log)",
+        "note": "Note (optional)",
+        "sure": "I checked: {amount}",
+        "amount": "Amount",
+        "sureApology": "I checked the amount"
+      },
+      "go": {
+        "approve": "Approve refund",
+        "reject": "Reject refund",
+        "complete": "Record as paid",
+        "fail": "Record failed payout",
+        "apology": "Give credit"
+      },
+      "working": "Working…",
+      "cancel": "Cancel",
+      "done": {
+        "approve": "Approved.",
+        "reject": "Rejected.",
+        "complete": "Recorded as paid.",
+        "fail": "Recorded as failed.",
+        "apology": "Apology credit given."
+      },
+      "err": {
+        "CONFIRM_REQUIRED": "Tick the box to confirm first.",
+        "SAME_PERSON": "Four eyes is on: the person who asked for this refund may not approve it.",
+        "NOT_PENDING": "This refund has moved on already. The page is read again.",
+        "METHOD_NOT_ALLOWED": "That way is not allowed by the refund rules.",
+        "NO_CUSTOMER": "The order has no customer, so there is no wallet.",
+        "INVALID_INPUT": "Something is missing or wrong in the form.",
+        "IDEMPOTENCY_MISMATCH": "This was already recorded differently. Read the page again.",
+        "NOT_FOUND": "Not found. It may have been removed from view.",
+        "APOLOGY_OFF": "The apology credit is off.",
+        "NOT_LATE": "The order did not come late enough for the rule.",
+        "OVER_LIMIT": "More than the limit.",
+        "NOT_CONFIGURED": "The rule has no amount yet.",
+        "ALREADY_RECORDED": "This order has its apology credit already.",
+        "ORDER_CLOSED": "This order is not one to apologise for.",
+        "WALLET_OFF": "Changing a wallet by hand is off.",
+        "INSUFFICIENT_BALANCE": "The wallet does not hold that much.",
+        "NOT_REVERSIBLE": "This line is put right through a refund, not a reversal.",
+        "WALLET_CLOSED": "The wallet is not active.",
+        "forbidden": "You do not have the permission for this.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Try again.",
+        "other": "That did not work. Try again."
+      }
+    },
+    "more": "More options: the money rules",
+    "card": {
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "Only someone who may change settings can change this.",
+      "pairHelp": "Fill in both languages.",
+      "err": {
+        "STALE": "Someone else changed this card. It is read again; check and save once more.",
+        "INVALID_INPUT": "Check: {fields}",
+        "forbidden": "You do not have the permission for this.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Try again.",
+        "other": "That did not work. Try again."
+      },
+      "refunds": {
+        "h": "Refund rules",
+        "d": "When a refund may be asked and how it goes back. Every refund still needs approval.",
+        "toWallet": "Allow store credit instead",
+        "toWalletHelp": "Off: money goes back the way it was paid.",
+        "afterDelivery": "Allow refunds after delivery",
+        "afterDeliveryHelp": "Off: after delivery the route is an exchange, except the reasons ticked below.",
+        "sources": "Refund after delivery still allowed for",
+        "rto": "A prepaid parcel that comes back",
+        "rtoREFUND": "Give everything back",
+        "rtoKEEP": "Keep the delivery charge",
+        "rtoAdvance": "A delivery-charge advance on a refused parcel",
+        "rtoAdvanceKEEP": "Keep it (not asked back)",
+        "rtoAdvanceASK": "Ask it back with the rest",
+        "fourEyes": "Four eyes",
+        "fourEyesHelp": "The person who asked for a refund may not approve it."
+      },
+      "walletManual": {
+        "h": "Wallet credit or debit by hand",
+        "d": "Lets a team member with the wallet permission add or take store credit on a customer's page, with a reason.",
+        "enabled": "Allow wallet changes by hand",
+        "enabledHelp": "Off as it ships.",
+        "max": "Largest single entry",
+        "maxHelp": "Empty: no limit."
+      },
+      "apology": {
+        "h": "Late-delivery apology credit",
+        "d": "Store credit for an order that arrived later than promised, once per order.",
+        "enabled": "Give apology credits",
+        "mode": "Who decides the amount",
+        "modePER_ORDER": "A person types it for each order",
+        "modeRULE": "The rule below decides",
+        "kind": "The rule's credit",
+        "kindAMOUNT": "A fixed amount",
+        "kindPERCENT": "A percentage of the goods",
+        "amount": "Fixed amount",
+        "amountHelp": "Empty: none yet.",
+        "percent": "Percentage of the goods",
+        "cap": "Most one order gets",
+        "capHelp": "Empty: no limit.",
+        "lateAfterHours": "Late by at least (hours)",
+        "lateHelp": "Rule only. 0: any time after the promise."
+      }
+    }
+  }
+}

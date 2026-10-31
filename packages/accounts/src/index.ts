@@ -12,6 +12,8 @@
 // - PR 137 a signed-in customer's checkout starts with his own name, number and address (profile.ts checkoutPrefill).
 // - S05 · PR 150 his whole order history, a page of one group at a time (history.ts), and each order's life as he may
 //   see it: its steps and the timeline rows about him or his parcel, never the team's own (lifecycle.ts).
+// - Gate F-041 (PR 172 follow-up) the refunds of his own order as he may see them: amount, how it goes back and where it
+//   stands, never the team's notes (refunds.ts).
 export * from './context';
 export * from './identity';
 export * from './codes';
@@ -22,3 +24,4 @@ export * from './profile';
 export * from './offers';
 export * from './lifecycle';
 export * from './history';
+export * from './refunds';
