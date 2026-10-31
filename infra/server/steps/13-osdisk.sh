@@ -138,6 +138,8 @@ containerd_to_lv() {
   fi
   ps_before="$(docker ps -q --no-trunc | sort)"
   img_before="$(docker images --format '{{.Repository}}:{{.Tag}}' | sort -u)"
+  local sound_before="" i
+  for i in $(echo "$img_before" | grep -v '<none>'); do osdisk_image_sound "$i" && sound_before="$sound_before $i"; done
   # From here on Docker is never left stopped: putback (or the EXIT trap) starts it again.
   trap osdisk_services_up EXIT
   systemctl stop docker.socket docker.service containerd.service
@@ -155,6 +157,9 @@ containerd_to_lv() {
   img_after="$(docker images --format '{{.Repository}}:{{.Tag}}' | sort -u)"
   missing="$(comm -23 <(echo "$img_before") <(echo "$img_after") | grep . | paste -sd' ')"
   if [ -n "$missing" ]; then rm -f "$EXTAS_STATE_DIR/containerd-moved.at"; osdisk_putback "" "images missing on the new store: $missing"; return 1; fi
+  local sick=""
+  for i in $sound_before; do osdisk_image_sound "$i" || sick="$sick $i"; done
+  if [ -n "$sick" ]; then rm -f "$EXTAS_STATE_DIR/containerd-moved.at"; osdisk_putback "" "images lost files on the new store:$sick"; return 1; fi
   live="$(jq -r '.image // empty' "$EXTAS_STATE_DIR/last-good-deploy.json" 2>/dev/null || true)"
   if [ -n "$live" ] && grep -qxF "$live" <<<"$img_before"; then
     if ! docker image inspect "$live" >/dev/null 2>&1 || ! docker run --rm --network none --entrypoint test "$live" -d / >/dev/null 2>&1; then
@@ -199,11 +204,93 @@ containerd_old_copy_cleanup() {
   fi
   view="$(mktemp -d)"
   if ! mount --bind / "$view"; then rmdir "$view"; report FAIL "PR 4 · containerd store" "could not reach the old copy to remove it"; return 1; fi
-  [ -d "$view$CONTAINERD_ROOT" ] && find "$view$CONTAINERD_ROOT" -mindepth 1 -maxdepth 1 -exec rm -rf --one-file-system {} +
-  umount "$view"; rmdir "$view"
+  # The view is private (no later mount reaches it), and the folder must be the old copy on / itself: never the
+  # volume (31 Oct: a shared view took the volume with it and the removal went into the live store).
+  mount --make-private "$view" 2>/dev/null || true
+  if [ -d "$view$CONTAINERD_ROOT" ]; then
+    if mountpoint -q "$view$CONTAINERD_ROOT" || [ "$(stat -c %d "$view$CONTAINERD_ROOT")" != "$(stat -c %d "$view")" ] \
+       || [ "$(stat -c %d "$view$CONTAINERD_ROOT")" = "$(stat -c %d "$CONTAINERD_ROOT")" ]; then
+      umount -l "$view" 2>/dev/null || true; rmdir "$view" 2>/dev/null || true
+      report FAIL "PR 4 · containerd store" "the old copy could not be told apart from the volume; nothing removed"; return 1
+    fi
+    find "$view$CONTAINERD_ROOT" -mindepth 1 -maxdepth 1 -exec rm -rf --one-file-system {} +
+  fi
+  umount "$view" 2>/dev/null || umount -l "$view" 2>/dev/null || true; rmdir "$view" 2>/dev/null || true
   rm -f "$marker"
   OSDISK_NOTE="${OSDISK_NOTE:+$OSDISK_NOTE; }the old copy on / removed"
   return 0
+}
+
+# PR 4 follow-up (31 Oct, after the move): the old copy's removal went through a view of / that the new volume had
+# reached (a bind mount of a shared / takes later mounts with it), so files went missing from the new store under
+# running containers. postgres:17 still ran (its programs were loaded), but inside it `tr` and pg_isready were gone,
+# its health check failed and every deploy rolled back. A sound image or container has a shell and the basic tools.
+OSDISK_TOOLS='for b in ls cat tr; do command -v "$b" >/dev/null || exit 1; done'
+osdisk_image_sound() { docker run --rm --network none --entrypoint sh "$1" -c "$OSDISK_TOOLS" </dev/null >/dev/null 2>&1; }
+osdisk_container_sound() { docker exec "$1" sh -c "$OSDISK_TOOLS" </dev/null >/dev/null 2>&1; }
+
+# The full name containerd keeps an image under (Docker's short names: postgres:17 → docker.io/library/postgres:17).
+osdisk_image_ref() {
+  case "$1" in
+    */*/*|*.*/*|localhost/*) echo "$1" ;;
+    */*) echo "docker.io/$1" ;;
+    *) echo "docker.io/library/$1" ;;
+  esac
+}
+
+# A view of / left mounted by an earlier removal (with the store volume inside it) is taken down; nothing is deleted.
+osdisk_stale_views() {
+  local t
+  for t in $(findmnt -rn -o TARGET 2>/dev/null | grep -E "^/tmp/tmp\.[A-Za-z0-9]+${CONTAINERD_ROOT}\$" || true); do
+    umount -l "$t" 2>/dev/null || true
+    umount -l "${t%"$CONTAINERD_ROOT"}" 2>/dev/null || true
+    rmdir "${t%"$CONTAINERD_ROOT"}" 2>/dev/null || true
+    log "took down a stale view of / ($t)"
+  done
+}
+
+# osdisk_repair_images — the stack's containers (container_name in infra/stack/compose.yml) and the pulled images
+# they run from are checked. A broken pulled image is removed with containerd's own clean-up at once and pulled again;
+# a container that is broken, or runs from a broken image, or is not running, is stopped and removed so the stack step
+# makes it again (all their data is in host folders, never in a container). The app's own images (extas-web, worker)
+# are only reported: the next deploy builds them again.
+osdisk_repair_images() {
+  local names name img imgs=() bad_img=() bad_ct=() fixed=() built=() rc=0
+  osdisk_stale_views
+  names="$(sed -n 's/^ *container_name: *//p' "$EXTAS_REPO_DIR/infra/stack/compose.yml" 2>/dev/null | tr -d '"' | sort -u)"
+  for name in $names; do
+    img="$(docker inspect -f '{{.Config.Image}}' "$name" </dev/null 2>/dev/null || true)"
+    [ -n "$img" ] || continue
+    if [ "$(docker inspect -f '{{.State.Running}}' "$name" </dev/null 2>/dev/null)" != true ] || ! osdisk_container_sound "$name"; then
+      bad_ct+=("$name")
+    fi
+    case " ${imgs[*]} " in *" $img "*) ;; *) imgs+=("$img") ;; esac
+  done
+  for img in "${imgs[@]}"; do osdisk_image_sound "$img" || bad_img+=("$img"); done
+  for img in "${bad_img[@]}"; do
+    for name in $names; do
+      [ "$(docker inspect -f '{{.Config.Image}}' "$name" </dev/null 2>/dev/null)" = "$img" ] || continue
+      case " ${bad_ct[*]} " in *" $name "*) ;; *) bad_ct+=("$name") ;; esac
+    done
+  done
+  [ "${#bad_ct[@]}" -gt 0 ] || [ "${#bad_img[@]}" -gt 0 ] || { log "image check: the stack's images and containers are sound"; return 0; }
+  log "image check: making again ${bad_ct[*]:-no container}; pulling again ${bad_img[*]:-no image}"
+  for name in "${bad_ct[@]}"; do
+    docker stop -t 60 "$name" </dev/null >/dev/null 2>&1 || true
+    docker rm -f "$name" </dev/null >/dev/null 2>&1 || true
+  done
+  for img in "${bad_img[@]}"; do
+    docker rmi -f "$img" </dev/null >/dev/null 2>&1 || true
+    case "$img" in extas/*|extas-*) built+=("$img"); continue ;; esac   # the stack step builds it again (--build)
+    ctr -n moby images rm --sync "$(osdisk_image_ref "$img")" </dev/null >/dev/null 2>&1 || true
+  done
+  for img in "${bad_img[@]}"; do
+    case "$img" in extas/*|extas-*) continue ;; esac
+    if docker pull -q "$img" </dev/null >/dev/null 2>&1 && osdisk_image_sound "$img"; then fixed+=("$img")
+    else report FAIL "PR 4 · image check" "$img is still broken after a fresh pull"; rc=1; fi
+  done
+  report OK "PR 4 · image check" "files had gone missing in the store: made again by the stack step: ${bad_ct[*]:-none}; pulled again: ${fixed[*]:-none}; built again: ${built[*]:-none}"
+  return "$rc"
 }
 
 step_osdisk() {
@@ -216,6 +303,7 @@ step_osdisk() {
   osdisk_limits || rc=1
   if containerd_to_lv; then containerd_old_copy_cleanup || rc=1; else rc=1; fi
   osdisk_services_up
+  osdisk_repair_images || rc=1
   osdisk_usage "after this run"
   free="$(root_free_gb /)"
   pct="$(df --output=pcent / | tail -1 | tr -dc '0-9')"
