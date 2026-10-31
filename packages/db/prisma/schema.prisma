@@ -6287,19 +6287,22 @@ model Redirect {
 
 /// @stage S11 · PR 235 — the 404 report with one-click fixes.
 model NotFoundHit {
-  id          String   @id @default(uuid(7)) @db.Uuid
+  id          String    @id @default(uuid(7)) @db.Uuid
   storeId     Int
-  store       Store    @relation(fields: [storeId], references: [id])
+  store       Store     @relation(fields: [storeId], references: [id])
   path        String
   referrer    String?
-  hits        Int      @default(1)
-  firstSeenAt DateTime @default(now()) @db.Timestamptz(3)
-  lastSeenAt  DateTime @default(now()) @db.Timestamptz(3)
-  redirectId  String?  @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  hits        Int       @default(1)
+  firstSeenAt DateTime  @default(now()) @db.Timestamptz(3)
+  lastSeenAt  DateTime  @default(now()) @db.Timestamptz(3)
+  redirectId  String?   @db.Uuid
+  /// PR 235: a person marked the address as nothing to fix (a scan, a bot); it stays counted, out of the open list.
+  ignoredAt   DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
 
   @@unique([storeId, path])
+  @@index([storeId, lastSeenAt])
 }
 
 /// @stage S11 · PR 228 — a generated sitemap file.

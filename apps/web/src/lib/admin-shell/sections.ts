@@ -213,7 +213,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'grow',
     base: '/admin/website',
     guide: 'site',
-    tabs: [{ id: 'seo', guide: 'seo', pages: [{ href: '/admin/website/seo', perm: 'seo.read', keys: ['seo'] }] }],
+    // PR 235: Redirects & 404 is the SEO tab's second page (demo WEB-04a).
+    tabs: [
+      {
+        id: 'seo',
+        guide: 'seo',
+        pages: [
+          { href: '/admin/website/seo', perm: 'seo.read', keys: ['seo'] },
+          { href: '/admin/website/seo/redirects', perm: 'seo.read', keys: ['seoRedirects'] },
+        ],
+      },
+    ],
   },
   // CN-028 · PR 615, 616: Books — Retail's ERP account, the books match, the differences and the closes.
   // CN-028 · PR 617 (CN-029): Money → Daily summary — the Books status card and the daily summaries sent to the ERP.

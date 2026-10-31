@@ -64,7 +64,9 @@
     "supportSettings": "Support settings",
     "booksDaily": "Daily summary",
     "moneyCosts": "Costs",
-    "erpLink": "ERP link"
+    "erpLink": "ERP link",
+    "seoRedirects": "Redirects & 404",
+    "seo": "Search settings"
   },
   "login": {
     "metaTitle": "Admin sign-in",

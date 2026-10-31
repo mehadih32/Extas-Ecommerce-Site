@@ -57,6 +57,7 @@ export * from './registry-fulfilment';
 export * from './registry-customers';
 // S11 · PR 220–222 — the SEO engine's settings (registry-seo.ts, version 64).
 export * from './registry-seo';
+export * from './registry-seo-reach';
 export * from './registry-erp-v6';
 export * from './registry-invoice';
 export * from './registry-support';

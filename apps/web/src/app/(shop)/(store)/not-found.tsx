@@ -1,8 +1,11 @@
 // The shop's "page not found" (demo PAGES.notfound): a short line and the way home. On a desktop it also helps the
 // shopper recover (D-019): a search box, the live categories and the WhatsApp line. Bestsellers join with the product
 // cards (PR 43). Names and counts come from the catalogue, nothing typed here.
+// S11 · PR 235: every address that ends here is counted for the 404 report (lib/seo/not-found, in the background).
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Icon, WaGlyph } from '@/components/shop/Icon';
+import { recordNotFound } from '@/lib/seo/not-found';
 import { shopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
@@ -16,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function NotFound() {
   const c = await shopContext();
+  recordNotFound(c.storeId, c.path, (await headers()).get('referer'));
   const t = c.t;
   const wa = waHref(c.s['contact.whatsapp'], t('notFound.waMessage', c.vars));
   const cats = c.cats.filter((k) => k.count > 0);

@@ -48,6 +48,7 @@
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
     { "id": "website/seo", "route": "/admin/website/seo" },
+    { "id": "website/redirects", "route": "/admin/website/seo/redirects" },
     { "id": "money/books-account", "route": "/admin/money/books" },
     { "id": "money/books-match", "route": "/admin/money/books/match" },
     { "id": "money/books-differences", "route": "/admin/money/books/differences" },
