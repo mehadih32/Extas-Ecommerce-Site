@@ -1,0 +1,95 @@
+/* PR 12 (CN-032) — the blank-page safety net (global-error.tsx) and the Start fresh page: plain, readable on a 320 px
+   phone, light and dark, with no font or stylesheet of the site's own needed. */
+.ge {
+  --ge-bg: #f7f5f1;
+  --ge-card: #ffffff;
+  --ge-text: #1d1b18;
+  --ge-muted: #5f5a52;
+  --ge-line: #e2ddd4;
+  --ge-pri: #1d1b18;
+  --ge-pri-text: #ffffff;
+  margin: 0;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--ge-bg);
+  color: var(--ge-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+  line-height: 1.55;
+}
+@media (prefers-color-scheme: dark) {
+  .ge {
+    --ge-bg: #151412;
+    --ge-card: #1f1d1a;
+    --ge-text: #f1ede6;
+    --ge-muted: #b5ada1;
+    --ge-line: #34312c;
+    --ge-pri: #f1ede6;
+    --ge-pri-text: #151412;
+  }
+}
+.ge-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--ge-card);
+  border: 1px solid var(--ge-line);
+  border-radius: 14px;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+.ge-lang + .ge-lang {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ge-line);
+}
+.ge-card h1 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+.ge-card p {
+  margin: 0 0 8px;
+  color: var(--ge-muted);
+  font-size: 15px;
+}
+.ge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.ge-actions [role='status'] {
+  flex-basis: 100%;
+  font-size: 13px;
+}
+.ge-btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid var(--ge-line);
+  background: transparent;
+  color: var(--ge-text);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.ge-btn.pri {
+  background: var(--ge-pri);
+  border-color: var(--ge-pri);
+  color: var(--ge-pri-text);
+}
+.ge-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.ge-btn:focus-visible {
+  outline: 2px solid var(--ge-text);
+  outline-offset: 2px;
+}
+.ge-detail {
+  margin-top: 14px !important;
+  font-size: 12px !important;
+  font-family: ui-monospace, monospace;
+}

@@ -82,6 +82,7 @@
         "http://127.0.0.1:3000/help/faq",
         "http://127.0.0.1:3000/bn/help/exchange",
         "http://127.0.0.1:3000/status",
+        "http://127.0.0.1:3000/bn/fresh-start",
         "http://127.0.0.1:3000/admin/login",
         "http://127.0.0.1:3000/admin",
         "http://127.0.0.1:3000/admin/help",

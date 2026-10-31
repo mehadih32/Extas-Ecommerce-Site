@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   // CN-016: the tab icon always answers (app/favicon.ico/route.ts: the owner's icon or a neutral one).
   icons: { icon: '/favicon.ico' },
+  // PR 12 (CN-032): the browser's own page translation is off. The shop has its own Bengali pages and the admin its own
+  // বাং switch; a translator rewrites the page's text behind React's back, and the next update then breaks the page
+  // (blank admin, a sign-in that does nothing) in that one browser only.
+  other: { google: 'notranslate' },
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
@@ -27,7 +31,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // line from them and the first paint came ~250 ms later on a slow phone line).
   if (isShopLang(lang)) for (const href of shopDefaultFontPreloads()) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous', fetchPriority: 'low' });
   return (
-    <html lang={isShopLang(lang) ? lang : 'bn'}>
+    <html lang={isShopLang(lang) ? lang : 'bn'} translate="no">
       <body className="min-h-dvh font-sans antialiased">{children}</body>
     </html>
   );
