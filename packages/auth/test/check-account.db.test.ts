@@ -5,11 +5,13 @@ import {
   authenticateStaff,
   base32Decode,
   CHECK_PERMISSIONS,
+  CHECK_REPORT_READS,
   CHECK_ROLE_KEY,
   counterAt,
   createFirstOwner,
   defaultSecurityPolicy,
   ensureCheckAccount,
+  isCheckAccount,
   loginStaff,
   permissionsFor,
   syncAuth,
@@ -37,8 +39,10 @@ describe.skipIf(!HAS_TEST_DB)('smoke check account on PostgreSQL (CN-016)', () =
     const r = await ensureCheckAccount(t.prisma, vault(), { email: EMAIL, displayName: 'Smoke check' });
     expect(r.created).toBe(true);
     expect(CHECK_PERMISSIONS.length).toBeGreaterThan(0);
-    expect(CHECK_PERMISSIONS.every((k) => k.endsWith('.read') || k.endsWith('.view'))).toBe(true);
+    expect(CHECK_PERMISSIONS.every((k) => k.endsWith('.read') || k.endsWith('.view') || (CHECK_REPORT_READS as readonly string[]).includes(k))).toBe(true);
     expect(CHECK_PERMISSIONS).toContain('returns.view');
+    // review R3 (admin M2): the smoke test opens the three risk reports
+    expect(CHECK_PERMISSIONS).toContain('risk.report');
     expect([...(await permissionsFor(t.prisma, r.staffUserId, { storeId: null }))].sort()).toEqual([...CHECK_PERMISSIONS].sort());
 
     const first = await loginStaff(deps(), { email: EMAIL, password: r.password });
@@ -68,5 +72,19 @@ describe.skipIf(!HAS_TEST_DB)('smoke check account on PostgreSQL (CN-016)', () =
     await expect(ensureCheckAccount(t.prisma, vault(), { email: owner.email, displayName: 'x' })).rejects.toMatchObject({ code: 'CONFLICT' });
     await t.prisma.staffUser.update({ where: { email: EMAIL }, data: { status: 'SUSPENDED' } });
     await expect(ensureCheckAccount(t.prisma, vault(), { email: EMAIL, displayName: 'Smoke check' })).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
+  it('PR 421 (B6.6): a write permission added to the check role by hand grants nothing; the account is known as the auditor', async () => {
+    const check = await t.prisma.staffUser.findUniqueOrThrow({ where: { email: EMAIL } });
+    const owner = await t.prisma.staffUser.findUniqueOrThrow({ where: { email: 'owner@example.test' } });
+    const role = await t.prisma.role.findUniqueOrThrow({ where: { key: CHECK_ROLE_KEY } });
+    const writes = await t.prisma.permission.findMany({ where: { key: { in: ['settings.write', 'orders.confirm', 'health.fixes.approve'] } }, select: { id: true } });
+    expect(writes).toHaveLength(3);
+    await t.prisma.rolePermission.createMany({ data: writes.map((p) => ({ roleId: role.id, permissionId: p.id })) });
+    const held = await permissionsFor(t.prisma, check.id, { storeId: null });
+    expect([...held].sort()).toEqual([...CHECK_PERMISSIONS].sort());
+    expect(held.has('settings.write')).toBe(false);
+    expect(await isCheckAccount(t.prisma, check.id)).toBe(true);
+    expect(await isCheckAccount(t.prisma, owner.id)).toBe(false);
   });
 });

@@ -1841,6 +1841,15 @@ fw '8 days ago' '1 hour ago' '00:00'
 "${FENV[@]}" "$B/extas-first-week"; "${FENV[@]}" "$B/extas-first-week"
 check "first week (402): over — said once, not active, no smoke due" \
   "$(grep -c 'নজরদারি শেষ' "$T/curl.log"):$(jq -r '[.active, .smokeDue] | map(tostring) | join(" ")' "$ST/first-week.json")" "1:false false"
+# PR 421 (B6.6): the site auditor never touches the database. Its browsers (the smoke test, the journeys, the lab run)
+# reach the shop only over HTTPS as a visitor and as the read-only check account: their `docker run` gets no database
+# network, no database env file and no database address (the check account is prepared before, in its own container).
+browser_run() { awk '/docker run/{c=1} c{printf "%s ", $0} c && !/\\$/{print ""; c=0}' "$1" | grep 'node /w/tools/'; }
+for f in smoke journeys vitals-lab; do
+  line="$(browser_run "../deploy/$f.sh")"
+  check "auditor sandbox (421): $f's browser is one docker run" "$(printf '%s\n' "$line" | grep -c 'node /w/tools/')" "1"
+  check "auditor sandbox (421): $f's browser gets no database network, env file or address" "$(printf '%s' "$line" | grep -c -e '--network' -e 'db\.env' -e 'DATABASE')" "0"
+done
 rm -rf "$T"
 
 exit $fail

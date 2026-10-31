@@ -3,11 +3,13 @@
 // paused account), then — unless the route is the person's own password/2FA set-up — that the first password was
 // changed and that 2FA is set up when the owner requires it, then the permission for that action and store. The
 // functions in @extas/auth check the permission again themselves, so no action depends on the page alone.
+// PR 421 (B6.6): the site auditor's check account only reads; the guard refuses its writes before anything else.
 import { getPrisma, type PrismaClient } from '@extas/db/client';
 import {
   AuthError,
   authenticateStaff,
   httpStatus,
+  isCheckAccount,
   requirePermission,
   securityPolicy,
   type Actor,
@@ -139,6 +141,9 @@ export interface GuardOptions {
   selfService?: boolean;
 }
 
+/** The methods that only read (the site auditor's account may use only these, PR 421). */
+const READ_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
+
 /** Returns the signed-in staff member, or the refusal to send. */
 export async function guardAdmin(request: Request, deps: AdminDeps | null, opts: GuardOptions = {}): Promise<Guarded | Response> {
   if (!deps) return fail(503, 'database-not-configured');
@@ -151,6 +156,9 @@ export async function guardAdmin(request: Request, deps: AdminDeps | null, opts:
     if (!auth) return fail(401, 'UNAUTHENTICATED');
     if (!opts.selfService && auth.mustChangePassword) return fail(403, 'PASSWORD_CHANGE_REQUIRED');
     if (!opts.selfService && auth.mustSetUpTwoFactor) return fail(403, 'TWO_FACTOR_SETUP_REQUIRED');
+    // PR 421 (B6.6): the site auditor (the smoke test's and the journeys' check account) only reads: every admin write
+    // from its sessions is refused here, before any permission check, so no permission added to its role can change it
+    if (!READ_METHODS.has(request.method.toUpperCase()) && (await isCheckAccount(deps.db, auth.staff.id))) return fail(403, 'READ_ONLY_ACCOUNT');
     const actor: Actor = { staffUserId: auth.staff.id };
     const permissions = opts.permission ? await requirePermission(deps.db, actor, opts.permission, { storeId: opts.storeId }) : undefined;
     return { auth, actor, deps: sd, ctx: requestContext(request), permissions };
