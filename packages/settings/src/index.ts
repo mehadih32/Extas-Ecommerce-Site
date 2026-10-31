@@ -83,6 +83,8 @@ export * from './registry-courier-report';
 export * from './registry-holiday';
 // S08 · PR 564 — the charge mismatch log (registry-charge-mismatch.ts, version 95).
 export * from './registry-charge-mismatch';
+// SIM-F-048 · PR 179 follow-up — the sticker's Latin address line (registry-sticker-latin.ts, version 96).
+export * from './registry-sticker-latin';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

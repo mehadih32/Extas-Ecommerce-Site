@@ -108,6 +108,12 @@
         "network": "No connection. Try again.",
         "other": "Something went wrong. Try again."
       }
+    },
+    "sticker": {
+      "h": "Sticker address in Latin letters",
+      "d": "Prints a Bengali address again in Latin letters under it on the courier sticker, with the area and district in English, for riders and hub staff who read Latin letters faster. The Bengali address stays the one that counts.",
+      "enabled": "Print the Latin line",
+      "enabledHelp": "Only for addresses written in Bengali. An address already in Latin letters prints once."
     }
   }
 }

@@ -39,3 +39,5 @@ export * from './suggest';
 export * from './quote';
 export * from './phone';
 export * from './phone-area';
+// SIM-F-048 (PR 179 follow-up): a Bengali address in Latin letters for the sticker's second line.
+export * from './latin';

@@ -106,7 +106,7 @@ export function sampleParcel(dict: Dict, currency: string): StickerParcel {
     practice: true,
     consignmentId: s('consignment'),
     trackingCode: s('tracking'),
-    receiver: { name: s('name'), phone: s('phone'), address: s('address') },
+    receiver: { name: s('name'), phone: s('phone'), address: s('address'), addressLatin: null },
     collectMinor: Number(s('amountMinor')) || 0,
     currency,
     items: [
